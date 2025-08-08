@@ -47,7 +47,7 @@ class qgd_N_Qubit_Decomposition_Plywood(qgd_N_Qubit_Decomposition_Plywood_Wrappe
 # @param config std::map conatining custom config parameters
 # @param accelerator_num The number of DFE accelerators used in the calculations
 # @return An instance of the class
-    def __init__( self, Umtx, level_limit_max=8, topology=None, config={}, minimum_level=3, accelerator_num=0 ):
+    def __init__( self, Umtx, level_limit_max=8, topology=None, config={}, accelerator_num=0 ):
 
         ## the number of qubits
         self.qbit_num = int(round( np.log2( len(Umtx) ) ))
@@ -76,7 +76,7 @@ class qgd_N_Qubit_Decomposition_Plywood(qgd_N_Qubit_Decomposition_Plywood_Wrappe
             return
 
         # call the constructor of the wrapper class
-        super().__init__(Umtx, self.qbit_num, level_limit_max, topology=topology_validated, config=config,minimum_level=minimum_level, accelerator_num=accelerator_num)
+        super().__init__(Umtx, self.qbit_num, level_limit_max, topology=topology_validated, config=config, accelerator_num=accelerator_num)
 
         
 ##

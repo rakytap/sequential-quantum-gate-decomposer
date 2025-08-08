@@ -73,9 +73,9 @@ typedef struct qgd_N_Qubit_Decomposition_Plywood_Wrapper {
 @return Return with a  pointer pointing to an instance of N_Qubit_Decomposition_Plywood class.
 */
 N_Qubit_Decomposition_Plywood* 
-create_N_Qubit_Decomposition_Plywood( Matrix& Umtx, int qbit_num, int level_limit, std::vector<matrix_base<int>> topology_in, std::map<std::string, Config_Element>& config,int minimum_level_in, int accelerator_num ) {
+create_N_Qubit_Decomposition_Plywood( Matrix& Umtx, int qbit_num, int level_limit, std::vector<matrix_base<int>> topology_in, std::map<std::string, Config_Element>& config, int accelerator_num ) {
 
-    return new N_Qubit_Decomposition_Plywood( Umtx, qbit_num, level_limit, topology_in, config, minimum_level_in, accelerator_num );
+    return new N_Qubit_Decomposition_Plywood( Umtx, qbit_num, level_limit, topology_in, config,  accelerator_num );
 }
 
 
@@ -158,7 +158,7 @@ static int
 qgd_N_Qubit_Decomposition_Plywood_Wrapper_init(qgd_N_Qubit_Decomposition_Plywood_Wrapper *self, PyObject *args, PyObject *kwds)
 {
     // The tuple of expected keywords
-    static char *kwlist[] = {(char*)"Umtx", (char*)"qbit_num", (char*)"method", (char*)"topology", (char*)"config", (char*) "minimum_level",(char*)"accelerator_num", NULL};
+    static char *kwlist[] = {(char*)"Umtx", (char*)"qbit_num", (char*)"method", (char*)"topology", (char*)"config",(char*)"accelerator_num", NULL};
  
     // initiate variables for input arguments
     PyArrayObject *Umtx_arg = NULL;
@@ -167,11 +167,11 @@ qgd_N_Qubit_Decomposition_Plywood_Wrapper_init(qgd_N_Qubit_Decomposition_Plywood
     int level_limit = 0;
     PyObject *topology = NULL;
     int accelerator_num = 0;
-    int minimum_level = 0;
+
 
     // parsing input arguments
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OiiOOii", kwlist,
-                                     &Umtx_arg, &qbit_num, &level_limit, &topology, &config_arg, &minimum_level, &accelerator_num))
+                                     &Umtx_arg, &qbit_num, &level_limit, &topology, &config_arg, &accelerator_num))
         return -1;
 
     // convert python object array to numpy C API array
@@ -267,7 +267,7 @@ qgd_N_Qubit_Decomposition_Plywood_Wrapper_init(qgd_N_Qubit_Decomposition_Plywood
     // create an instance of the class N_Qubit_Decomposition
     if (qbit_num > 0 ) {
         try {
-            self->decomp = create_N_Qubit_Decomposition_Plywood( Umtx_mtx, qbit_num, level_limit, topology_Cpp, config,minimum_level, accelerator_num);
+            self->decomp = create_N_Qubit_Decomposition_Plywood( Umtx_mtx, qbit_num, level_limit, topology_Cpp, config, accelerator_num);
         }
         catch (std::string err ) {
             PyErr_SetString(PyExc_Exception, err.c_str());

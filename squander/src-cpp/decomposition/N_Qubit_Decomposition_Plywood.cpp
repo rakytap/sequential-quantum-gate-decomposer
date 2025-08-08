@@ -58,9 +58,9 @@ N_Qubit_Decomposition_Plywood::N_Qubit_Decomposition_Plywood() : N_Qubit_Decompo
 @param accelerator_num The number of DFE accelerators used in the calculations
 @return An instance of the class
 */
-N_Qubit_Decomposition_Plywood::N_Qubit_Decomposition_Plywood( Matrix Umtx_in, int qbit_num_in, int level_limit_in, std::map<std::string, Config_Element>& config, int minimum_level_in, int accelerator_num ) : N_Qubit_Decomposition_Tabu_Search( Umtx_in, qbit_num_in, level_limit_in, config, accelerator_num) {
+N_Qubit_Decomposition_Plywood::N_Qubit_Decomposition_Plywood( Matrix Umtx_in, int qbit_num_in, int level_limit_in, std::map<std::string, Config_Element>& config, int accelerator_num ) : N_Qubit_Decomposition_Tabu_Search( Umtx_in, qbit_num_in, level_limit_in, config, accelerator_num) {
+    minimum_level=0;
 
-    minimum_level = minimum_level_in;
 }
 
 
@@ -75,12 +75,11 @@ N_Qubit_Decomposition_Plywood::N_Qubit_Decomposition_Plywood( Matrix Umtx_in, in
 @param accelerator_num The number of DFE accelerators used in the calculations
 @return An instance of the class
 */
-N_Qubit_Decomposition_Plywood::N_Qubit_Decomposition_Plywood( Matrix Umtx_in, int qbit_num_in, int level_limit_in, std::vector<matrix_base<int>> topology_in, std::map<std::string, Config_Element>& config, int minimum_level_in,  int accelerator_num) : N_Qubit_Decomposition_Tabu_Search( Umtx_in, qbit_num_in, level_limit_in, topology_in, config, accelerator_num ) {
+N_Qubit_Decomposition_Plywood::N_Qubit_Decomposition_Plywood( Matrix Umtx_in, int qbit_num_in, int level_limit_in, std::vector<matrix_base<int>> topology_in, std::map<std::string, Config_Element>& config,  int accelerator_num) : N_Qubit_Decomposition_Tabu_Search( Umtx_in, qbit_num_in, level_limit_in, topology_in, config, accelerator_num ) {
 
     // A string labeling the gate operation
     name = "Plywood";
-    minimum_level = minimum_level_in;
-
+    minimum_level=0;
 }
 
 /**
@@ -133,8 +132,15 @@ N_Qubit_Decomposition_Plywood::start_decomposition() {
     }
 
     Gates_block* gate_structure_loc = determine_gate_structure(optimized_parameters_mtx);
-    
-
+     
+    long long minimum_level_loc;
+    if ( config.count("minimum_level") > 0 ) {
+        config["minimum_level"].get_property( minimum_level_loc );  
+    }
+    else {
+        minimum_level_loc = 0;
+    } 
+    minimum_level = (int)minimum_level_loc;
     double optimization_tolerance_loc;
     if ( config.count("optimization_tolerance") > 0 ) {
         config["optimization_tolerance"].get_property( optimization_tolerance_loc );  

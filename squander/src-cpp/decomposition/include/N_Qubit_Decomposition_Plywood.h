@@ -70,7 +70,7 @@ N_Qubit_Decomposition_Plywood();
 @param accelerator_num The number of DFE accelerators used in the calculations
 @return An instance of the class
 */
-N_Qubit_Decomposition_Plywood( Matrix Umtx_in, int qbit_num_in, int level_limit_in, std::map<std::string, Config_Element>& config, int minimum_level_in, int accelerator_num=0 );
+N_Qubit_Decomposition_Plywood( Matrix Umtx_in, int qbit_num_in, int level_limit_in, std::map<std::string, Config_Element>& config, int accelerator_num=0 );
 
 
 /**
@@ -83,7 +83,7 @@ N_Qubit_Decomposition_Plywood( Matrix Umtx_in, int qbit_num_in, int level_limit_
 @param accelerator_num The number of DFE accelerators used in the calculations
 @return An instance of the class
 */
-N_Qubit_Decomposition_Plywood( Matrix Umtx_in, int qbit_num_in, int level_limit_in, std::vector<matrix_base<int>> topology_in, std::map<std::string, Config_Element>& config, int minimum_level_in, int accelerator_num=0 );
+N_Qubit_Decomposition_Plywood( Matrix Umtx_in, int qbit_num_in, int level_limit_in, std::vector<matrix_base<int>> topology_in, std::map<std::string, Config_Element>& config, int accelerator_num=0 );
 
 
 
