@@ -164,7 +164,7 @@ def _remove_best_partition(qubit_results, g, rg, gate_to_qubit, S, start_qubit, 
 def _test_tdag_qasm(use_gtqcp=False):
     K = 3
     # filename = "examples/partitioning/qasm_samples/heisenberg-16-20.qasm" 
-    filename = "benchmarks/partitioning/test_circuit/9symml_195.qasm"
+    filename = "benchmarks/partitioning/test_circuit/adr4_197_squander.qasm"
     from squander import utils
     
     circ, parameters = utils.qasm_to_squander_circuit(filename)
