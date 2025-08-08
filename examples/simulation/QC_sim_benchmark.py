@@ -79,14 +79,14 @@ for qbit_num in range(qbit_num_min, qbit_num_max+1, 1):
 		for control_qbit in range(qbit_num-1):
 			for target_qbit in range(control_qbit+1, qbit_num):
 
-				circuit_squander.add_U3(target_qbit, True, True, True )
-				circuit_squander.add_U3(control_qbit, True, True, True )
+				circuit_squander.add_U3(target_qbit)
+				circuit_squander.add_U3(control_qbit)
 				#circuit_squander.add_CNOT( target_qbit=target_qbit, control_qbit=control_qbit )
 				circuit_squander.add_CRY( target_qbit=target_qbit, control_qbit=control_qbit )
 				gates_num = gates_num + 3
 
 	for target_qbit in range(qbit_num):
-		circuit_squander.add_U3(target_qbit, True, True, True )
+		circuit_squander.add_U3(target_qbit)
 		gates_num = gates_num + 1
 		break		
 

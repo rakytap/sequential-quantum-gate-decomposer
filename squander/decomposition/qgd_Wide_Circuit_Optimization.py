@@ -17,11 +17,8 @@ from multiprocessing import Process, Pool
 import os
 
 
-from squander.partitioning.partition import (
-    get_qubits,
-    PartitionCircuit
-)
-
+from squander.partitioning.partition import PartitionCircuit
+from squander.partitioning.tools import get_qubits
 
 
 
@@ -79,7 +76,7 @@ class qgd_Wide_Circuit_Optimization:
         strategy = config[ 'strategy' ]
         allowed_startegies = ['TreeSearch', 'TabuSearch' ]
         if not strategy in allowed_startegies :
-            raise Exception(f"The decomposition startegy should be either of {allowed_startegies}, got {startegy}.")
+            raise Exception(f"The decomposition startegy should be either of {allowed_startegies}, got {strategy}.")
 
 
         parallel = config[  'parallel' ]

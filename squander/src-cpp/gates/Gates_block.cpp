@@ -1023,7 +1023,7 @@ void Gates_block::add_cr_to_front(int target_qbit, int control_qbit ) {
 
 
 /**
-@brief Append a RY gate to the list of gates
+@brief Append a CROT gate to the list of gates
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
 */
@@ -1039,7 +1039,7 @@ void Gates_block::add_crot(int target_qbit, int control_qbit) {
 
 
 /**
-@brief Add a RY gate to the front of the list of gates
+@brief Add a CROT gate to the front of the list of gates
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
 */
@@ -1796,7 +1796,7 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
                     theta0 = std::fmod( 2*parameters_data[parameter_idx], 4*M_PI);
                     phi0 = std::fmod( parameters_data[parameter_idx+1], 2*M_PI);
                     parameter_idx = parameter_idx + 2;
-            		sstream << gate_idx << "th gate: CROT_OPPOSITE with control qubit: " << crot_gate->get_control_qbit() << " and target qubit: " << crot_gate->get_target_qbit()<< " and parameters theta=" << theta0 <<" and phi="<< phi0 << std::endl;
+            		sstream << gate_idx << "th gate: CROT with control qubit: " << crot_gate->get_control_qbit() << " and target qubit: " << crot_gate->get_target_qbit()<< " and parameters theta=" << theta0 <<" and phi="<< phi0 << std::endl;
 		print(sstream, 1);
                 gate_idx = gate_idx + 1;
             }
