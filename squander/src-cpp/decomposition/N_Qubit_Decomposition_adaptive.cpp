@@ -419,6 +419,7 @@ void N_Qubit_Decomposition_adaptive::compress_circuit() {
 
 
 
+
 /**
 @brief Call to replace adaptive gates with conventional gates and refine the gate structure.
 */
@@ -945,7 +946,6 @@ return NULL;
     return gate_structure_loc;
        
 }
-
 
 
 /**
@@ -2036,7 +2036,275 @@ N_Qubit_Decomposition_adaptive::extract_theta_from_layer( Gates_block* gate_stru
     return ThetaOver2;
 }
 
+/**
+@brief Call to compress the gate structure by removing adaptive layers.
+*/
+void N_Qubit_Decomposition_adaptive::compress_circuit_PBC() {
+
+// temporarily turn off OpenMP parallelism
+#if BLAS==0 // undefined BLAS
+    num_threads = omp_get_max_threads();
+    omp_set_num_threads(1);
+#elif BLAS==1 // MKL
+    num_threads = mkl_get_max_threads();
+    MKL_Set_Num_Threads(1);
+#elif BLAS==2 //OpenBLAS
+    num_threads = openblas_get_num_threads();
+    openblas_set_num_threads(1);
+#endif
+
+    Gates_block* gate_structure_loc = NULL;
+    if ( gates.size() > 0 ) {
+
+        gate_structure_loc =  static_cast<Gates_block*>(this)->clone();
+    }
+    else {
+        std::stringstream sstream;
+        sstream << "No circuit initalised." << std::endl;
+        print(sstream, 1);
+        return;
+    }
+    
+    int iter = 0;
+    int uncompressed_iter_num = 0;
+    
+    
+    while ( iter<25 || uncompressed_iter_num <= 5 ) {
+        std::stringstream sstream;
+        sstream.str("");
+        sstream << "iteration " << iter+1 << ": ";
+        print(sstream, 1);	
+        Gates_block* gate_structure_compressed;
+
+        gate_structure_compressed = compress_gate_structure_PBC( gate_structure_loc,uncompressed_iter_num );
+        if ( gate_structure_compressed->get_gate_num() < gate_structure_loc->get_gate_num() ) {
+            uncompressed_iter_num = 0;
+        }
+        else {
+            uncompressed_iter_num++;
+        }
+
+        if ( gate_structure_compressed != gate_structure_loc ) {
+
+            delete( gate_structure_loc );
+            gate_structure_loc = gate_structure_compressed;
+            gate_structure_compressed = NULL;
+            
+        }
+
+        iter++;
+
+        if (uncompressed_iter_num>1) break;
+            // store the decomposing gate structure
+    }
+
+    release_gates();
+
+
+    combine( gate_structure_loc );
+    delete( gate_structure_loc );
+
+#if BLAS==0 // undefined BLAS
+    omp_set_num_threads(num_threads);
+#elif BLAS==1 //MKL
+    MKL_Set_Num_Threads(num_threads);
+#elif BLAS==2 //OpenBLAS
+    openblas_set_num_threads(num_threads);
+#endif
+
+}
+
+/**
+@brief Call to run compression iterations on the circuit. (Trying to remove a CRY block in each iteration) with PBC
+@param gate_structure The gate structure to be optimized
+*/
+Gates_block*
+N_Qubit_Decomposition_adaptive::compress_gate_structure_PBC( Gates_block* gate_structure, int uncompressed_iter_num ) {
 
 
 
+    int layer_num_max;
+    int layer_num_orig = gate_structure->get_gate_num()-1; // TODO: see line 1558 to explain the -1: the last finalyzing layer of U3 gates is not tested for removal
+    if ( layer_num_orig < 50 ) layer_num_max = layer_num_orig;
+    else if ( layer_num_orig < 60 ) layer_num_max = 4;
+    else layer_num_max = 2;
+    double optimization_tolerance_loc;
+    if ( config.count("optimization_tolerance") > 0 ) {
+        config["optimization_tolerance"].get_property( optimization_tolerance_loc );  
+    }
+    else {
+        optimization_tolerance_loc = optimization_tolerance;
+    }         
 
+    // random generator of integers   
+    std::uniform_int_distribution<> distrib_int(0, 5000);  
+    // create a list of layers to be tested for removal.
+    std::vector<int> layers_to_remove;
+    if (uncompressed_iter_num==0){
+    layer_num_max = 5<layer_num_orig ? 5 : layer_num_orig;
+    // create a list of layers to be tested for removal.
+    std::vector<double> layers_parameters(layer_num_orig,15.0);
+    std::vector<int> layers_idx_sorted(layer_num_orig,0);
+    //layers_to_remove.reserve(layer_num_orig);
+    for (int idx=0; idx<layer_num_orig;idx++){
+        layers_parameters[idx] = extract_theta_from_layer(gate_structure,idx,optimized_parameters_mtx);
+        layers_idx_sorted[idx] = idx;
+    }
+    
+     std::iota(layers_idx_sorted.begin(),layers_idx_sorted.end(),0); //Initializing
+     sort( layers_idx_sorted.begin(),layers_idx_sorted.end(), [&](int i,int j){return layers_parameters[i]<layers_parameters[j];} );
+    
+    for (int idx=0; idx<layer_num_max; idx++ ) { // TODO: see line 1558 to explain the -1
+        layers_to_remove.push_back( layers_idx_sorted[idx]);
+    }   
+    }
+    else{
+    layers_to_remove.reserve(layer_num_orig); 
+    for (int idx=0; idx<layer_num_orig; idx++ ) { // TODO: see line 1558 to explain the -1
+        layers_to_remove.push_back(idx);
+    }   
+    
+
+    while ( (int)layers_to_remove.size() > layer_num_max ) {
+        int remove_idx = distrib_int(gen) % layers_to_remove.size();
+       
+        layers_to_remove.erase( layers_to_remove.begin() + remove_idx );
+    }
+    }
+    
+    
+#ifdef __MPI__        
+    MPI_Bcast( &layers_to_remove[0], layers_to_remove.size(), MPI_INT, 0, MPI_COMM_WORLD);
+#endif    
+
+    // make a copy of the original unitary. (By removing trivial gates global phase might be added to the unitary)
+    Matrix&& Umtx_orig = Umtx.copy();
+
+    int panelties_num = layer_num_max < layer_num_orig ? layer_num_max : layer_num_orig;
+
+    if ( panelties_num == 0 ) {
+        return gate_structure;
+    }
+
+    // preallocate panelties associated with the number of remaining two-qubit controlled gates
+    std::vector<unsigned int> panelties(panelties_num, 1<<31);
+    std::vector<Gates_block*> gate_structures_vec(panelties_num, NULL);
+    std::vector<double> current_minimum_vec(panelties_num, DBL_MAX);
+    std::vector<int> iteration_num_vec(panelties_num, 0);
+
+
+    std::vector<Matrix_real> optimized_parameters_vec(panelties_num, Matrix_real(0,0));
+    std::vector<Matrix> Umtx_vec(panelties_num, Matrix(0,0));
+  
+
+
+    for (int idx=0; idx<panelties_num; idx++) {
+
+        Umtx = Umtx_orig.copy();
+
+        double current_minimum_loc = DBL_MAX;//current_minimum;
+        int iteration_num = 0;
+        Matrix_real optimized_parameters_loc = optimized_parameters_mtx.copy();
+
+        Gates_block* gate_structure_reduced = compress_gate_structure( gate_structure, layers_to_remove[idx], optimized_parameters_loc,  current_minimum_loc, iteration_num  );
+        if ( optimized_parameters_loc.size() == 0 ) {
+            optimized_parameters_loc = optimized_parameters_mtx.copy();
+        }
+
+        // remove further adaptive gates if possible
+        Gates_block* gate_structure_tmp;
+        if ( gate_structure_reduced->get_gate_num() ==  gate_structure->get_gate_num() ) {
+            gate_structure_tmp = gate_structure_reduced->clone();
+        }
+        else {
+            gate_structure_tmp = remove_trivial_gates( gate_structure_reduced, optimized_parameters_loc, current_minimum_loc ); //TODO: reverse gate order
+        }
+      
+        panelties[idx]                = get_panelty(gate_structure_tmp, optimized_parameters_loc);
+        gate_structures_vec[idx]      = gate_structure_tmp;
+        current_minimum_vec[idx]      = current_minimum_loc;
+        iteration_num_vec[idx]        = iteration_num; // the accumulated number of optimization iterations
+
+
+        optimized_parameters_vec[idx] = optimized_parameters_loc;
+        Umtx_vec[idx]                 = Umtx;
+        
+
+        delete(gate_structure_reduced);
+
+
+    }
+
+
+
+    // determine the reduction with the lowest penalty
+    unsigned int panelty_min = panelties[0];
+    unsigned int idx_min     = 0;
+
+    for (size_t idx=0; idx<panelties.size(); idx++) {
+        if ( panelty_min > panelties[idx] ) {
+            panelty_min = panelties[idx];
+            idx_min = idx;
+        }
+
+        else if ( panelty_min == panelties[idx] ) {
+
+            if ( (distrib_int(gen) % 2) == 1 ) {
+                idx_min = idx;
+
+                panelty_min = panelties[idx];
+            }
+
+        }
+
+    }
+
+#ifdef __MPI__        
+    MPI_Bcast( &idx_min, 1, MPI_UNSIGNED, 0, MPI_COMM_WORLD);
+#endif    
+
+
+    // release gate structures other than the best one
+    for (size_t idx=0; idx<panelties.size(); idx++) {
+        if (idx==idx_min) {
+            continue;
+        }
+
+
+        if ( gate_structures_vec[idx] == gate_structure) {
+            continue;
+        }
+
+        if ( gate_structures_vec[idx]  ) {
+            delete( gate_structures_vec[idx] );
+            gate_structures_vec[idx] = NULL;
+        }
+
+    }
+
+
+    gate_structure           = gate_structures_vec[idx_min];
+    optimized_parameters_mtx = optimized_parameters_vec[idx_min];
+    current_minimum          = current_minimum_vec[idx_min];
+    number_of_iters         += iteration_num_vec[idx_min]; // the total number of the accumulated optimization iterations
+    Umtx                     = Umtx_vec[idx_min];
+    
+    int layer_num = gate_structure->get_gate_num();
+
+    if ( layer_num < layer_num_orig+1 ) {
+       std::stringstream sstream;
+       sstream << "gate structure reduced from " << layer_num_orig+1 << " to " << layer_num << " decomposing layers" << std::endl;
+       print(sstream, 1);	
+    }
+    else {
+       std::stringstream sstream;
+       sstream << "gate structure kept at " << layer_num << " layers" << std::endl;
+       print(sstream, 1);		            
+    }
+
+
+    return gate_structure;
+
+
+
+}
