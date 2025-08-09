@@ -25,7 +25,6 @@ def _get_starting_gates(g, rg, gate_to_qubit, S):
 
 def tdag_max_partitions(c, max_qubit, use_gtqcp=False):
     gate_dict, g, rg, gate_to_qubit, S = build_dependency(c)
-    #gate_to_qubit = {x: frozenset(y) for x, y in gate_to_qubit.items()}
     L = []
     start_qubit = _get_starting_gates(g, rg, gate_to_qubit, S)
     while g:
