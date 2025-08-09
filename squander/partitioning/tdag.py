@@ -47,6 +47,7 @@ def _get_gate_dependencies(g, rg, gate_to_qubit, S, max_qubit):
             deps[curr_gate] = set.union(gate_to_qubit[curr_gate], *(deps[gate] for gate in rg[curr_gate]))
             if len(deps[curr_gate]) <= max_qubit:
                 next_level |= g[curr_gate]
+            else: visited |= g[curr_gate]
         level, next_level = next_level, level
         next_level.clear()
     return deps
