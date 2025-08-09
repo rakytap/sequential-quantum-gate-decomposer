@@ -5,11 +5,11 @@
 from squander.gates.qgd_Circuit import qgd_Circuit as Circuit
 from squander.partitioning.tools import build_dependency
 
-def _get_topo_order(g, rg, S):
+def _get_starting_gates(g, rg, gate_to_qubit, S):
     g = { x: set(y) for x, y in g.items() }
     rg = { x: set(y) for x, y in rg.items() }
     S = set(S)
-    L = []
+    start_qubit = {}
     while S:
         n = S.pop()
         assert not rg[n]
@@ -18,39 +18,30 @@ def _get_topo_order(g, rg, S):
             rg[m].remove(n)
             if not rg[m]:
                 S.add(m)
-        L.append(n)
-    return { x: i for i, x in enumerate(L) }
-
-def _get_starting_gates(L, g, gate_to_qubit):
-    start_qubit = {}
-    for gate in L:    
-        if gate not in g:
-            continue
-        for qubit in gate_to_qubit[gate]:
-            if qubit not in start_qubit:
-                start_qubit[qubit] = gate
+        for qubit in gate_to_qubit[n]:
+            if not qubit in start_qubit: start_qubit[qubit] = {}
+            start_qubit[qubit][n] = None
     return start_qubit
-
 
 def tdag_max_partitions(c, max_qubit, use_gtqcp=False):
     gate_dict, g, rg, gate_to_qubit, S = build_dependency(c)
     L = []
-    topo = _get_topo_order(g, rg, S)
-    start_qubit = _get_starting_gates(topo, g, gate_to_qubit)
+    start_qubit = _get_starting_gates(g, rg, gate_to_qubit, S)
     while g:
-        groups = _enumerate_groups(c, g, gate_to_qubit, start_qubit, max_qubit, use_gtqcp)
-        L.append(_remove_best_partition(groups, g, rg, gate_to_qubit, S, start_qubit, topo))
+        groups = _enumerate_groups(g, gate_to_qubit, start_qubit, max_qubit, use_gtqcp)
+        L.append(_remove_best_partition(groups, g, rg, gate_to_qubit, start_qubit))
     assert sum(len(x) for x in L) == len(gate_dict), (sum(len(x) for x in L), len(gate_dict))
     from squander.partitioning.kahn import kahn_partition_preparts
     return kahn_partition_preparts(c, max_qubit, preparts=L)
 
 
-def _get_gate_dependencies(c, g, gate_to_qubit, S, max_qubit):
+def _get_gate_dependencies(g, gate_to_qubit, S, max_qubit):
     deps = {}
     level, next_level = set(), set()
     for qubit in S:
-        next_level.add(S[qubit])
-        deps[S[qubit]] = set(gate_to_qubit[S[qubit]])
+        gate = next(iter(S[qubit]))
+        next_level.add(gate)
+        deps[gate] = set(gate_to_qubit[gate])
     while next_level:
         tmp = level
         level = next_level
@@ -62,19 +53,17 @@ def _get_gate_dependencies(c, g, gate_to_qubit, S, max_qubit):
                     deps[gate] = set(gate_to_qubit[gate])
                 deps[gate] |= deps[curr_gate]
             next_level |= g[curr_gate]
-        if all(len(deps[gate]) >= max_qubit for gate in next_level):
+        if all(len(deps[gate]) > max_qubit for gate in next_level):
             break
     return deps
 
 
-def _enumerate_groups(c, g, gate_to_qubit, S, max_qubit, use_gtqcp):
-    deps = _get_gate_dependencies(c, g, gate_to_qubit, S, max_qubit)
+def _enumerate_groups(g, gate_to_qubit, S, max_qubit, use_gtqcp):
+    deps = _get_gate_dependencies(g, gate_to_qubit, S, max_qubit)
     result = set()
     func = _enumerate if not use_gtqcp else _enumerate_gtqcp
-    for qubit in range(c.get_Qbit_Num()):
-        if qubit not in S:
-            continue
-        result |= func(S[qubit], qubit, {qubit} if use_gtqcp else {frozenset({qubit})}, deps, g, gate_to_qubit, S, max_qubit)
+    for qubit in S:
+        result |= func(next(iter(S[qubit])), qubit, {qubit} if use_gtqcp else {frozenset({qubit})}, deps, g, gate_to_qubit, S, max_qubit)
     return result
 
 
@@ -108,23 +97,24 @@ def _enumerate_gtqcp(target_gate, target_qubit, input_groups, deps, g, gate_to_q
         if next_gate is None or next_gate not in deps or len(input_groups | deps[next_gate]) > max_qubit:
             break
         gate = next_gate
-    if len(input_groups | deps[gate]) > max_qubit:
-        return result
     group = frozenset(input_groups) | frozenset(deps[gate])
+    if len(group) > max_qubit:
+        return result
     if group not in result:
         result.add(group)
         if len(group) < max_qubit:
             for qubit in group - input_groups:
                 if qubit not in S:
                     continue
-                _enumerate_gtqcp(S[qubit], qubit, input_groups | frozenset({qubit}), deps, g, gate_to_qubit, S, max_qubit)
+                gate = next(iter(S[qubit]))
+                _enumerate_gtqcp(gate, qubit, input_groups | frozenset({qubit}), deps, g, gate_to_qubit, S, max_qubit)
     return result
 
 
-def _remove_best_partition(qubit_results, g, rg, gate_to_qubit, S, start_qubit, topo):
+def _remove_best_partition(qubit_results, g, rg, gate_to_qubit, start_qubit):
     gate_info = []
     for result in qubit_results:
-        pos_gates, gates = set(S), set()
+        pos_gates, gates = set(gate for qubit in result for gate in (next(iter(start_qubit[qubit])),) if len(rg[gate]) == 0), set()
         while True:
             t = {x for x in pos_gates if gate_to_qubit[x] <= result}
             if not t:
@@ -134,37 +124,24 @@ def _remove_best_partition(qubit_results, g, rg, gate_to_qubit, S, start_qubit, 
             pos_gates -= t
         gate_info.append(gates)
     best_part = max(gate_info, key=lambda x: len(x))
-    
-    d = { qubit : set() for gate in best_part for qubit in gate_to_qubit[gate] }
     for gate in best_part:
         for child in g[gate]:
-            for qubit in gate_to_qubit[gate] & gate_to_qubit[child]:
-                if child not in best_part:
-                    d[qubit].add(child)
             rg[child].remove(gate)
         for child in rg[gate]:
             g[child].remove(gate)
     for gate in best_part:
         del g[gate]
         del rg[gate]
-    
-    S.clear()
-    for m in rg:
-        if not rg[m]:
-            S.add(m)
-    
-    for qubit in d:
-        if not d[qubit]:
-            del start_qubit[qubit]
-        else:
-            start_qubit[qubit] = min((x for x in d[qubit]), key=lambda y: topo[y])
+        for qubit in gate_to_qubit[gate]:
+            del start_qubit[qubit][gate]
+            if len(start_qubit[qubit]) == 0: del start_qubit[qubit]
 
     return best_part
 
 def _test_tdag_qasm(use_gtqcp=False):
     K = 3
     # filename = "examples/partitioning/qasm_samples/heisenberg-16-20.qasm" 
-    filename = "benchmarks/partitioning/test_circuit/adr4_197_squander.qasm"
+    filename = "benchmarks/partitioning/test_circuit/9symml_195.qasm"
     from squander import utils
     
     circ, parameters = utils.qasm_to_squander_circuit(filename)
@@ -183,11 +160,11 @@ def _test_tdag_single_qubit():
 
     gate_dict, g, rg, gate_to_qubit, S = build_dependency(c)
 
-    result = _get_gate_dependencies(c, g, gate_to_qubit, S, K)
+    result = _get_gate_dependencies(g, gate_to_qubit, S, K)
 
     # print("gate_dependencies: ", result)
 
-    _enumerate_groups(c, g, gate_to_qubit, S, K, False)
+    _enumerate_groups(g, gate_to_qubit, S, K, False)
 
     partition = tdag_max_partitions(c, K)
 
@@ -210,14 +187,13 @@ def _test_gtqcp():
     
     gate_dict, g, rg, gate_to_qubit, S = build_dependency(c)
     
-    topo = _get_topo_order(g, rg, S)
-    start_qubit = _get_starting_gates(topo, g, gate_to_qubit)
+    start_qubit = _get_starting_gates(g, rg, gate_to_qubit, S)
 
-    result = _get_gate_dependencies(c, g, gate_to_qubit, start_qubit, K)
+    result = _get_gate_dependencies(g, gate_to_qubit, start_qubit, K)
 
     assert result == expected, (result, expected)
 
-    result_groups = _enumerate_groups(c, g, gate_to_qubit, start_qubit, K, True)
+    result_groups = _enumerate_groups(g, gate_to_qubit, start_qubit, K, True)
 
     assert result_groups == expected_groups, (result_groups, expected_groups)
 
@@ -245,14 +221,13 @@ def _test_tdag():
     
     gate_dict, g, rg, gate_to_qubit, S = build_dependency(c)
 
-    topo = _get_topo_order(g, rg, S)
-    start_qubit = _get_starting_gates(topo, g, gate_to_qubit)
+    start_qubit = _get_starting_gates(g, rg, gate_to_qubit, S)
 
-    result = _get_gate_dependencies(c, g, gate_to_qubit, start_qubit, K)
+    result = _get_gate_dependencies(g, gate_to_qubit, start_qubit, K)
 
     assert result == expected, (result, expected)
 
-    result_groups = _enumerate_groups(c, g, gate_to_qubit, start_qubit, K, False)
+    result_groups = _enumerate_groups(g, gate_to_qubit, start_qubit, K, False)
 
     assert result_groups == expected_groups, (result_groups, expected_groups)
 
