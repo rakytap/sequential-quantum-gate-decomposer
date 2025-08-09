@@ -25,6 +25,7 @@ def _get_starting_gates(g, rg, gate_to_qubit, S):
 
 def tdag_max_partitions(c, max_qubit, use_gtqcp=False):
     gate_dict, g, rg, gate_to_qubit, S = build_dependency(c)
+    #gate_to_qubit = {x: frozenset(y) for x, y in gate_to_qubit.items()}
     L = []
     start_qubit = _get_starting_gates(g, rg, gate_to_qubit, S)
     while g:
@@ -40,21 +41,19 @@ def _get_gate_dependencies(g, gate_to_qubit, S, max_qubit):
     level, next_level = set(), set()
     for qubit in S:
         gate = next(iter(S[qubit]))
-        next_level.add(gate)
+        level.add(gate)
         deps[gate] = set(gate_to_qubit[gate])
-    while next_level:
-        tmp = level
-        level = next_level
-        next_level = tmp
-        tmp.clear()
+    while any(len(deps[gate]) <= max_qubit for gate in level):
         for curr_gate in level:
-            for gate in g[curr_gate]:
+            curchild, curdeps = g[curr_gate], deps[curr_gate]
+            for gate in curchild:
                 if gate not in deps:
                     deps[gate] = set(gate_to_qubit[gate])
-                deps[gate] |= deps[curr_gate]
-            next_level |= g[curr_gate]
-        if all(len(deps[gate]) > max_qubit for gate in next_level):
-            break
+                elif len(deps[gate]) > max_qubit: continue
+                deps[gate] |= curdeps
+            next_level |= curchild
+        level, next_level = next_level, level
+        next_level.clear()
     return deps
 
 
