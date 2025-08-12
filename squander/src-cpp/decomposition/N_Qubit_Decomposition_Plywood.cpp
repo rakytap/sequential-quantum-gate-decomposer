@@ -59,8 +59,10 @@ N_Qubit_Decomposition_Plywood::N_Qubit_Decomposition_Plywood() : N_Qubit_Decompo
 @return An instance of the class
 */
 N_Qubit_Decomposition_Plywood::N_Qubit_Decomposition_Plywood( Matrix Umtx_in, int qbit_num_in, int level_limit_in, std::map<std::string, Config_Element>& config, int accelerator_num ) : N_Qubit_Decomposition_Tree_Search( Umtx_in, qbit_num_in, level_limit_in, config, accelerator_num) {
-    minimum_level=0;
-
+    name = "Plywood";
+    jump_level=0;
+    jump_edges = std::vector<matrix_base<int>>{};
+    max_jump_iter = 0;
 }
 
 
@@ -79,7 +81,9 @@ N_Qubit_Decomposition_Plywood::N_Qubit_Decomposition_Plywood( Matrix Umtx_in, in
 
     // A string labeling the gate operation
     name = "Plywood";
-    minimum_level=0;
+    jump_level=0;
+    jump_edges = std::vector<matrix_base<int>>{};
+    max_jump_iter = 0;
 }
 
 /**
@@ -124,19 +128,20 @@ N_Qubit_Decomposition_Plywood::start_decomposition() {
     //measure the time for the decompositin
     tbb::tick_count start_time = tbb::tick_count::now();
 
-    if (level_limit == 0 ) {
-        std::stringstream sstream;
-        sstream << "please increase level limit" << std::endl;
-        print(sstream, 0);	
-        return;
-    }
-    long long minimum_level_loc;
-    if ( config.count("minimum_level") > 0 ) {
-        config["minimum_level"].get_property( minimum_level_loc );  
+    long long jump_level_loc;
+    if ( config.count("jump_level") > 0 ) {
+        config["jump_level"].get_property( jump_level_loc );  
     }
     else {
-        minimum_level_loc = 0;
+        jump_level_loc = 2;
     } 
+    long long max_jump_iter_loc;
+    if ( config.count("max_jump_iter") > 0 ) {
+        config["max_jump_iter"].get_property( max_jump_iter_loc );  
+    }
+    else {
+        max_jump_iter_loc = 10;
+    }
     double optimization_tolerance_loc;
     if ( config.count("optimization_tolerance") > 0 ) {
         config["optimization_tolerance"].get_property( optimization_tolerance_loc );  
@@ -145,18 +150,78 @@ N_Qubit_Decomposition_Plywood::start_decomposition() {
         optimization_tolerance_loc = optimization_tolerance;
     }      
 
-    minimum_level = (int)minimum_level_loc;
+    jump_level = (int)jump_level_loc;
+    max_jump_iter = (int)max_jump_iter_loc;
+    
+    for (int level_idx=0; level_idx<jump_level; level_idx++){
+        for( int element_idx = 0; element_idx<topology.size(); element_idx++ ) {
+           matrix_base<int>& edge = topology[ element_idx ];
+           jump_edges.push_back( edge );
+        }    
+    }
 
-    Gates_block* gate_structure_loc = determine_gate_structure(optimized_parameters_mtx);
+    int jump_idx = 0;
+    Gates_block* gate_structure_loc = NULL;
+    while ( current_minimum > optimization_tolerance_loc && jump_idx < max_jump_iter) {
+        std::stringstream sstream;
+        sstream << "Plywood starting jump iter " << jump_idx << "." << std::endl;
+        print(sstream, 1);
+        gate_structure_loc = determine_gate_structure(optimized_parameters_mtx);
+        if ( current_minimum < optimization_tolerance_loc ) {
+            break;
+        }
+        jump_edges = extract_edges_from_circuit(gate_structure_loc);
+        
+        for (int level_idx=0; level_idx<jump_level; level_idx++){
+            for( int element_idx = 0; element_idx<topology.size(); element_idx++ ) {
+                matrix_base<int>& edge = topology[ element_idx ];
+                jump_edges.push_back( edge );
+            }    
+        }
+        
+        jump_idx++;
+    }
+
+
+    Gates_block* gate_structure_compressed =  parameter_based_compression(gate_structure_loc, optimized_parameters_mtx);
+    // store the created gate structure
+    release_gates();
+	combine( gate_structure_compressed );
+	delete( gate_structure_loc );
+	delete( gate_structure_compressed );
+	
+    decomposition_error = current_minimum;
+	
+	
+#if BLAS==0 // undefined BLAS
+    omp_set_num_threads(num_threads);
+#elif BLAS==1 //MKL
+    MKL_Set_Num_Threads(num_threads);
+#elif BLAS==2 //OpenBLAS
+    openblas_set_num_threads(num_threads);
+#endif
+}
+
+Gates_block* 
+N_Qubit_Decomposition_Plywood::parameter_based_compression( Gates_block* gate_structure,  Matrix_real& optimized_parameters ) {
+
+    double optimization_tolerance_loc;
+    if ( config.count("optimization_tolerance") > 0 ) {
+        config["optimization_tolerance"].get_property( optimization_tolerance_loc );  
+    }
+    else {
+        optimization_tolerance_loc = optimization_tolerance;
+    }      
+
     // solve the optimization problem
     N_Qubit_Decomposition_adaptive cDecomp_custom;
     // solve the optimization problem in isolated optimization process
     cDecomp_custom = N_Qubit_Decomposition_adaptive( Umtx.copy(), qbit_num, 10, 1, config, accelerator_num);
-    cDecomp_custom.set_custom_gate_structure( gate_structure_loc );
-    cDecomp_custom.set_optimized_parameters( optimized_parameters_mtx.get_data(), optimized_parameters_mtx.size() );
-    cDecomp_custom.set_optimization_blocks( gate_structure_loc->get_gate_num() );
+    cDecomp_custom.set_custom_gate_structure( gate_structure );
+    cDecomp_custom.set_optimized_parameters( optimized_parameters.get_data(), optimized_parameters.size() );
+    cDecomp_custom.set_optimization_blocks( gate_structure->get_gate_num() );
     cDecomp_custom.set_max_iteration( max_outer_iterations );
-    cDecomp_custom.set_verbose(verbose);
+    cDecomp_custom.set_verbose(0);
     cDecomp_custom.set_cost_function_variant( cost_fnc );
     cDecomp_custom.set_debugfile("");
     cDecomp_custom.set_iteration_loops( iteration_loops );
@@ -165,7 +230,7 @@ N_Qubit_Decomposition_Plywood::start_decomposition() {
     cDecomp_custom.set_optimizer( alg );  
     cDecomp_custom.set_project_name( project_name );
     if (alg==ADAM || alg==BFGS2) { 
-        int param_num_loc = gate_structure_loc->get_parameter_num();
+        int param_num_loc = gate_structure->get_parameter_num();
         int max_inner_iterations_loc = (double)param_num_loc/852 * 1e7;
         cDecomp_custom.set_max_inner_iterations( max_inner_iterations_loc );  
         cDecomp_custom.set_random_shift_count_max( 10000 );          
@@ -183,26 +248,9 @@ N_Qubit_Decomposition_Plywood::start_decomposition() {
     }
     cDecomp_custom.compress_circuit_PBC();
     std::map<std::string, int>&& gate_nums = cDecomp_custom.get_gate_nums();
-    optimized_parameters_mtx = cDecomp_custom.get_optimized_parameters();
-    gate_structure_loc = NULL;
-    gate_structure_loc =  (static_cast<Gates_block*>(&cDecomp_custom))->clone();
-    sstream << std::endl;
-    print(sstream, 1);	    	
-    // store the created gate structure
-    release_gates();
-	combine( gate_structure_loc );
-	delete( gate_structure_loc );
-
-    decomposition_error = current_minimum;
-	
-	
-#if BLAS==0 // undefined BLAS
-    omp_set_num_threads(num_threads);
-#elif BLAS==1 //MKL
-    MKL_Set_Num_Threads(num_threads);
-#elif BLAS==2 //OpenBLAS
-    openblas_set_num_threads(num_threads);
-#endif
+    optimized_parameters = cDecomp_custom.get_optimized_parameters();
+    
+    return (static_cast<Gates_block*>(&cDecomp_custom))->clone();
 }
 
 
@@ -237,18 +285,17 @@ N_Qubit_Decomposition_Plywood::construct_gate_structure_from_Gray_code( const Gr
     //  ----------- contruct the gate structure to be optimized ----------- 
     Gates_block* gate_structure_loc = new Gates_block(qbit_num);
     
-    int n_ary_limit_max = topology.size();
+    int n_ary_limit_max = jump_edges.size();
     
-    for (int layer_idx = 0; layer_idx<minimum_level; layer_idx++){
-        for( int element_idx = 0; element_idx<n_ary_limit_max; element_idx++ ) {
 
-           matrix_base<int>& edge = topology[ element_idx ];
-           int target_qbit = edge[0];
-           int control_qbit = edge[1]; 
-           add_two_qubit_block( gate_structure_loc, target_qbit, control_qbit);
-     
-        }    
-    }
+    for( int element_idx = 0; element_idx<n_ary_limit_max; element_idx++ ) {
+
+       matrix_base<int>& edge = jump_edges[ element_idx ];
+       int target_qbit = edge[0];
+       int control_qbit = edge[1]; 
+       add_two_qubit_block( gate_structure_loc, target_qbit, control_qbit);
+ 
+    }    
                             
     for (int gcode_idx=0; gcode_idx<gcode.size(); gcode_idx++) {      
             
@@ -263,6 +310,25 @@ N_Qubit_Decomposition_Plywood::construct_gate_structure_from_Gray_code( const Gr
 
 }
 
+std::vector<matrix_base<int>> 
+N_Qubit_Decomposition_Plywood::extract_edges_from_circuit( Gates_block* circuit ) {
+
+    std::vector<matrix_base<int>> gate_edges{};
+
+    Gates_block* flat_circuit = static_cast<Gates_block*>(circuit->get_flat_circuit());
+    int gate_num = flat_circuit->get_gate_num();
+    for (int gate_idx; gate_idx<gate_num; gate_idx++){
+        Gate* gate_tmp = flat_circuit->get_gate(gate_idx);
+        if (gate_tmp->get_control_qbit() != -1){
+            matrix_base<int> new_edge(2,1);
+            new_edge[0] = gate_tmp->get_target_qbit();
+            new_edge[1] = gate_tmp->get_control_qbit();
+            gate_edges.push_back(new_edge);
+        }
+    }
+    
+    return gate_edges;
+}
 
 
 
