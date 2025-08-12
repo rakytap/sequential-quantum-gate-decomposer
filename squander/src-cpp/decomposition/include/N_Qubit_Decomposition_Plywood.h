@@ -50,7 +50,11 @@ protected:
     
     std::vector< std::pair<GrayCode, double> > best_solutions;
     
-    int minimum_level;
+    int jump_level;
+    
+    int max_jump_iter;
+    
+    std::vector<matrix_base<int>> jump_edges;
 
 public:
 
@@ -101,14 +105,16 @@ virtual ~N_Qubit_Decomposition_Plywood();
 */
 virtual void start_decomposition() override;
 
+Gates_block* parameter_based_compression( Gates_block* gate_structure,  Matrix_real& optimized_parameters );
+
 /**
 @brief  Call to construct a gate structure corresponding to the configuration of the two-qubit gates described by the Gray code  
 @param gcode The N-ary Gray code describing the configuration of the two-qubit gates.
 @return Returns with the generated circuit
 */
-virtual Gates_block* 
-construct_gate_structure_from_Gray_code( const GrayCode& gcode ) override;
+virtual Gates_block* construct_gate_structure_from_Gray_code( const GrayCode& gcode ) override;
 
+std::vector<matrix_base<int>> extract_edges_from_circuit( Gates_block* circuit );
 
 };
 
