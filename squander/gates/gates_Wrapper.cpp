@@ -120,6 +120,11 @@ static PyObject *
         return NULL;   
     }
 
+    if (qbit_num == -1){
+        PyErr_SetString(PyExc_ValueError, "Qubit_num must be set!");
+        return NULL;   
+    }
+
 
     Gate_Wrapper *self;
     self = (Gate_Wrapper *) type->tp_alloc(type, 0);
@@ -154,7 +159,15 @@ static PyObject *
         return NULL;   
     }
 
+    if (qbit_num == -1 || target_qbit == -1){
+        PyErr_SetString(PyExc_ValueError, "Qubit_num and target_qubit all must be set!");
+        return NULL;   
+    }
 
+    if (qbit_num <= target_qbit ){
+        PyErr_SetString(PyExc_ValueError, "Target_qubit cannot be larger or equal than qubit_num!");
+        return NULL;   
+    }
     Gate_Wrapper *self;
     self = (Gate_Wrapper *) type->tp_alloc(type, 0);
     if (self != NULL) {
@@ -188,6 +201,15 @@ static PyObject *
         return NULL;   
     }
 
+    if ((qbit_num == -1 || target_qbit == -1) || control_qbit == -1){
+        PyErr_SetString(PyExc_ValueError, "Qubit_num, target_qubit and control_qubit all must be set!");
+        return NULL;   
+    }
+    
+    if (qbit_num <= target_qbit || qbit_num <= control_qbit ){
+        PyErr_SetString(PyExc_ValueError, "Target_qubit or control_qbit cannot be larger or equal than qubit_num!");
+        return NULL;   
+    }
 
     Gate_Wrapper *self;
     self = (Gate_Wrapper *) type->tp_alloc(type, 0);
