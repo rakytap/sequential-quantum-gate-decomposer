@@ -2,15 +2,20 @@ import os
 from squander.partitioning.tools import get_qubits
 
 
-
-#@brief Partitions a circuit using ILP to maximize gates per partition
-#@param c The SQUANDER circuit to be partitioned
-#@param max_qubits_per_partition Maximum qubits allowed per partition
-#@return Tuple: 
-#   - Partitioned 2-level circuit
-#   - Tuples specifying new parameter positions: source_idx, dest_idx, param_count
-#   - Partition assignments
 def ilp_max_partitions(c, max_qubits_per_partition):
+    """
+    Partitions a circuit using ILP to maximize gates per partition
+
+    Args:
+
+        c: SQUANDER Circuit to partition
+
+        max_qubits_per_partition: Max qubits per partition
+    
+    Returns:
+
+        Partitioned circuit, parameter order (source_idx, dest_idx, param_count), partition assignments
+    """
     gatedict = {i: gate for i, gate in enumerate(c.get_Gates())}
     num_gates = len(gatedict)
     parts = []
@@ -40,13 +45,22 @@ def ilp_max_partitions(c, max_qubits_per_partition):
     return kahn_partition_preparts(c, max_qubits_per_partition, L)
 
 
-
-#@brief Finds the next biggest optimal partition using ILP
-#@param c The SQUANDER circuit to be partitioned
-#@param max_qubits_per_partition Maximum qubits allowed per partition
-#@param prevparts Previously determined partitions to exclude
-#@return gates Set of gate indices forming next biggest partition
 def find_next_biggest_partition(c, max_qubits_per_partition, prevparts=None):
+    """
+    Find the largest partition using ILP, optionally excluding previous partitions
+
+    Args:
+
+        c: SQUANDER Circuit to partition
+
+        max_qubits_per_partition: Max qubits per partition
+        
+        prevparts: Previously determined partitions
+
+    Returns:
+        
+        Set of gate indices for the next partition
+    """
     import pulp
     gatedict = {i: gate for i, gate in enumerate(c.get_Gates())}
     all_qubits = set(range(c.get_Qbit_Num()))

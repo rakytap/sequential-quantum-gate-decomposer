@@ -4,15 +4,22 @@ from squander.gates.qgd_Circuit import qgd_Circuit as Circuit
 from squander.partitioning.tools import build_dependency
 
 
-#@brief Partitions a flat circuit into subcircuits using Kahn's algorithm
-#@param c The SQUANDER circuit to be partitioned
-#@param max_qubit Maximum number of qubits allowed per partition
-#@param preparts Optional prefedefined partitioning scheme
-#@return Tuple: 
-#   - Partitioned 2-level circuit
-#   - Tuples specifying new parameter positions: source_idx, dest_idx, param_count
-#   - Partition assignments
 def kahn_partition(c, max_qubit, preparts=None):
+    """
+    Partition a circuit greedily using Kahn's algorithm
+
+    Args:
+        
+        c: SQUANDER Circuit to partition
+        
+        max_qubit: Max qubits per partition
+        
+        preparts: Optional predefined partitions
+
+    Returns:
+        
+        Partitioned circuit, parameter order (source_idx, dest_idx, param_count), partition assignments
+    """
     # Build dependency graphs
     gate_dict, g, rg, gate_to_qubit, S = build_dependency(c)
     
@@ -66,7 +73,21 @@ def kahn_partition(c, max_qubit, preparts=None):
 
 
 def kahn_partition_preparts(c, max_qubit, preparts):
+    """
+    Build partitioned circuit from predefined partitions
 
+    Args:
+        
+        c: SQUANDER Circuit to partition
+        
+        max_qubit: Max qubits per partition
+        
+        preparts: Predefined partition assignments
+
+    Returns:
+        
+        Partitioned circuit, parameter order (source_idx, dest_idx, param_count), partition assignments
+    """
     top_circuit = Circuit(c.get_Qbit_Num())
 
     # Build dependency graphs
@@ -135,6 +156,21 @@ def kahn_partition_preparts(c, max_qubit, preparts):
 
 
 def split_partition(preparts, g, rg):
+    """
+    Split partitions into connected components
+
+    Args:
+        
+        preparts: Initial partitions
+        
+        g: Forward dependency graph
+        
+        rg: Reverse dependency graph
+
+    Returns:
+        
+        List of split partitions
+    """
     L = []
     for part in preparts:
         V = set(part)
@@ -153,6 +189,9 @@ def split_partition(preparts, g, rg):
 
 
 def test_split_partition():
+    """
+    Test split_partition function for correctness.
+    """
     q = 3
     c = Circuit(q)
 

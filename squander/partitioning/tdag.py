@@ -6,6 +6,23 @@ from squander.gates.qgd_Circuit import qgd_Circuit as Circuit
 from squander.partitioning.tools import build_dependency
 
 def _get_starting_gates(g, rg, gate_to_qubit, S):
+    """
+    Get starting gates for each qubit in the circuit
+
+    Args:
+        
+        g: Forward dependency graph
+        
+        rg: Reverse dependency graph
+        
+        gate_to_qubit: Mapping of gates to qubits
+        
+        S: Set of initial gates
+
+    Returns:
+        
+        Dictionary mapping qubits to their starting gates
+    """
     g = { x: set(y) for x, y in g.items() }
     rg = { x: set(y) for x, y in rg.items() }
     S = set(S)
@@ -24,6 +41,21 @@ def _get_starting_gates(g, rg, gate_to_qubit, S):
     return start_qubit
 
 def tdag_max_partitions(c, max_qubit, use_gtqcp=False):
+    """
+    Partition a circuit using TDAG algorithm
+
+    Args:
+        
+        c: SQUANDER Circuit to partition
+        
+        max_qubit: Max qubits per partition
+        
+        use_gtqcp: Use GTQCP variant
+
+    Returns:
+       
+        Partitioned circuit, parameter order (source_idx, dest_idx, param_count), partition assignments
+    """
     gate_dict, g, rg, gate_to_qubit, S = build_dependency(c)
     L = []
     start_qubit = _get_starting_gates(g, rg, gate_to_qubit, S)
@@ -36,6 +68,25 @@ def tdag_max_partitions(c, max_qubit, use_gtqcp=False):
 
 
 def _get_gate_dependencies(g, rg, gate_to_qubit, S, max_qubit):
+    """
+    Get gate dependencies for each gate within qubit constraints
+
+    Args:
+        
+        g: Forward dependency graph
+        
+        rg: Reverse dependency graph
+        
+        gate_to_qubit: Mapping of gates to qubits
+        
+        S: Starting gates per qubit
+        
+        max_qubit: Max qubits per partition
+
+    Returns:
+        
+        Dictionary of gate dependencies
+    """
     deps, visited = {}, set()
     level, next_level = set(), set()
     for qubit in S:
@@ -54,6 +105,27 @@ def _get_gate_dependencies(g, rg, gate_to_qubit, S, max_qubit):
 
 
 def _enumerate_groups(g, rg, gate_to_qubit, S, max_qubit, use_gtqcp):
+    """
+    Enumerate possible gate groups for partitioning
+
+    Args:
+        
+        g: Forward dependency graph
+        
+        rg: Reverse dependency graph
+        
+        gate_to_qubit: Mapping of gates to qubits
+        
+        S: Starting gates per qubit
+        
+        max_qubit: Max qubits per partition
+        
+        use_gtqcp: Use GTQCP variant
+
+    Returns:
+       
+        Set of gate groups and their dependencies
+    """
     deps = _get_gate_dependencies(g, rg, gate_to_qubit, S, max_qubit)
     result = set()
     func = _enumerate if not use_gtqcp else _enumerate_gtqcp
@@ -63,6 +135,31 @@ def _enumerate_groups(g, rg, gate_to_qubit, S, max_qubit, use_gtqcp):
 
 
 def _enumerate(target_gate, target_qubit, input_groups, deps, g, gate_to_qubit, S, max_qubit):
+    """
+    Recursively enumerate gate groups for a target gate
+
+    Args:
+        
+        target_gate: Gate to start enumeration
+        
+        target_qubit: Qubit index
+        
+        input_groups: Current qubit groups
+        
+        deps: Gate dependencies
+        
+        g: Forward dependency graph
+        
+        gate_to_qubit: Mapping of gates to qubits
+    
+        S: Starting gates per qubit
+        
+        max_qubit: Max qubits per partition
+
+    Returns:
+        
+        Set of valid qubit groups
+    """
     output, result = set(), set() # qubit groups
     if not target_gate in deps: return result
     for group in input_groups:
@@ -86,6 +183,31 @@ def _enumerate(target_gate, target_qubit, input_groups, deps, g, gate_to_qubit, 
     return result
 
 def _enumerate_gtqcp(target_gate, target_qubit, input_groups, deps, g, gate_to_qubit, S, max_qubit):
+    """
+    Recursively enumerate gate groups for a target gate using GTQCP variant.
+
+    Args:
+        
+        target_gate: Gate to start enumeration
+        
+        target_qubit: Qubit index
+        
+        input_groups: Current qubit groups
+        
+        deps: Gate dependencies
+        
+        g: Forward dependency graph
+        
+        gate_to_qubit: Mapping of gates to qubits
+        
+        S: Starting gates per qubit
+        
+        max_qubit: Max qubits per partition
+
+    Returns:
+        
+        Set of valid qubit groups
+    """
     result = set()
     if not target_gate in deps: return result
     gate = target_gate
@@ -109,6 +231,27 @@ def _enumerate_gtqcp(target_gate, target_qubit, input_groups, deps, g, gate_to_q
 
 
 def _remove_best_partition(qubit_results, g, rg, gate_to_qubit, start_qubit, deps):
+    """
+    Remove the best partition from the dependency graphs
+
+    Args:
+        
+        qubit_results: Candidate qubit groups
+        
+        g: Forward dependency graph
+        
+        rg: Reverse dependency graph
+        
+        gate_to_qubit: Mapping of gates to qubits
+        
+        start_qubit: Starting gates per qubit
+        
+        deps: Gate dependencies
+
+    Returns:
+        
+        List of gate indices in the best partition
+    """
     gate_info = [[x for x, y in deps.items() if y <= result] for result in qubit_results]
     best_part = max(gate_info, key=lambda x: len(x))
     for gate in best_part:
@@ -126,6 +269,13 @@ def _remove_best_partition(qubit_results, g, rg, gate_to_qubit, start_qubit, dep
     return best_part
 
 def _test_tdag_qasm(use_gtqcp=False):
+    """
+    Test TDAG partitioning on a QASM file
+
+    Args:
+        
+        use_gtqcp: Use GTQCP variant
+    """
     K = 3
     # filename = "examples/partitioning/qasm_samples/heisenberg-16-20.qasm" 
     filename = "benchmarks/partitioning/test_circuit/9symml_195.qasm"
@@ -138,6 +288,9 @@ def _test_tdag_qasm(use_gtqcp=False):
 
 
 def _test_tdag_single_qubit():
+    """
+    Test TDAG partitioning on a simple two-qubit circuit
+    """
     K = 4
 
     c = Circuit(2)
@@ -158,6 +311,9 @@ def _test_tdag_single_qubit():
     # print(partition)
 
 def _test_gtqcp():
+    """
+    Test GTQCP variant for TDAG partitioning
+    """
     K = 5
 
     c = Circuit(6)
@@ -190,6 +346,9 @@ def _test_gtqcp():
 
 
 def _test_tdag():
+    """
+    Test TDAG partitioning on a sample circuit
+    """
     K = 4
 
     c = Circuit(8)
