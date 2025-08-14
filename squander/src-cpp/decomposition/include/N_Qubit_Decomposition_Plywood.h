@@ -50,15 +50,11 @@ protected:
     
     std::vector< std::pair<GrayCode, double> > best_solutions;
     
-    Gates_block* jump_circuit;
-    
     int jump_level;
     
     int max_jump_iter;
     
     std::vector<matrix_base<int>> jump_edges;
-    
-    Matrix_real jump_parameters;
 
 public:
 
@@ -118,13 +114,7 @@ Gates_block* parameter_based_compression( Gates_block* gate_structure,  Matrix_r
 */
 virtual Gates_block* construct_gate_structure_from_Gray_code( const GrayCode& gcode ) override;
 
-virtual N_Qubit_Decomposition_custom perform_optimization(Gates_block* gate_structure_loc) override;
-
-N_Qubit_Decomposition_custom optimize_jump_circuit(Gates_block* gate_structure_loc);
-
-Gates_block* N_Qubit_Decomposition_Plywood::construct_jump_circuit();
-
-void append_edges_from_circuit( Gates_block* circuit );
+std::vector<matrix_base<int>> extract_edges_from_circuit( Gates_block* circuit );
 
 };
 
