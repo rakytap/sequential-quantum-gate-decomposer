@@ -149,7 +149,7 @@ GrayCode tree_search_over_gate_structures( int level_num );
 @brief Call to perform the optimization on the given gate structure
 @param gate_structure_loc The gate structure to be optimized
 */
-virtual N_Qubit_Decomposition_custom perform_optimization(Gates_block* gate_structure_loc);
+N_Qubit_Decomposition_custom perform_optimization(Gates_block* gate_structure_loc);
 
 
 
