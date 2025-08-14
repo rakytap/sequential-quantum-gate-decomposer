@@ -2070,6 +2070,9 @@ void N_Qubit_Decomposition_adaptive::compress_circuit_PBC() {
             uncompressed_iter_num = 0;
         }
         else {
+            std::stringstream sstream2;
+            sstream2 << "PBC:: unsucessfull compression." << std::endl;
+            print(sstream2, 0);
             uncompressed_iter_num++;
         }
 
