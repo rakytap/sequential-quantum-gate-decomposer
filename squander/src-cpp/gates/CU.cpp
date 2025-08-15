@@ -29,7 +29,7 @@ using namespace std;
 /**
 @brief Nullary constructor of the class.
 */
-CU::CU() {
+CU::CU() : U3() {
 
     // A string labeling the gate operation
     name = "CU";
@@ -62,33 +62,14 @@ CU::CU() {
 @param target_qbit_in The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
 @param control_qbit_in The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
 */
-CU::CU(int qbit_num_in,  int target_qbit_in, int control_qbit_in) {
+CU::CU(int qbit_num_in,  int target_qbit_in, int control_qbit_in) : U3(qbit_num_in,  target_qbit_in) {
 
 
     // A string labeling the gate operation
     name = "CU";
 
-    // number of qubits spanning the matrix of the gate
-    qbit_num = qbit_num_in;
-
-    // the size of the matrix
-    matrix_size = Power_of_2(qbit_num);
-
     // A string describing the type of the gate
     type = CU_OPERATION;
-
-    // The number of free parameters
-    parameter_num = 0;
-
-    if (target_qbit_in >= qbit_num) {
-        std::stringstream sstream;	   
-        sstream << "The index of the target qubit is larger than the number of qubits" << std::endl;
-        print(sstream, 0);	    	
-        throw sstream.str();
-    }
-
-    // The index of the qubit on which the gate acts (target_qbit >= 0)
-    target_qbit = target_qbit_in;
 
 
     if (control_qbit_in >= qbit_num) {
