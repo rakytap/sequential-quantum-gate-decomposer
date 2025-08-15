@@ -65,7 +65,8 @@ typedef enum gate_type {GENERAL_OPERATION=1,
                         U2_OPERATION=32,
                         CR_OPERATION=33,
                         S_OPERATION=34,
-                        CUSTOM_KERNEL_1QUBIT_GATE_OPERATION=35} gate_type;
+                        SDG_OPERATION=35,
+                        CUSTOM_KERNEL_1QUBIT_GATE_OPERATION=36} gate_type;
 
 
 

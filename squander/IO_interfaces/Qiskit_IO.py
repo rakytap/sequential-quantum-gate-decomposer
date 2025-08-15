@@ -39,6 +39,8 @@ from squander.gates.gates_Wrapper import (
     Y,
     Z,
     T,
+    S,
+    Sdg,
     Tdg,
     R,
     CH,
@@ -146,6 +148,14 @@ def get_Qiskit_Circuit( Squander_circuit, parameters ):
         elif isinstance( gate, Z ):
             # Z gate
             circuit.z( gate.get_Target_Qbit() )  
+
+        elif isinstance( gate, S ):
+            # S gate
+            circuit.s( gate.get_Target_Qbit() )  
+
+        elif isinstance( gate, Sdg ):
+            # Sdg gate
+            circuit.sdg( gate.get_Target_Qbit() )  
 
         elif isinstance( gate, SX ):
             # SX gate
@@ -257,7 +267,15 @@ def get_Qiskit_Circuit_inverse( Squander_circuit, parameters ):
 
         elif isinstance( gate, Z ):
             # Z gate
-            circuit.z( gate.get_Target_Qbit() )  
+            circuit.z( gate.get_Target_Qbit() ) 
+
+        elif isinstance( gate, S ):
+            # S gate
+            circuit.sdg( gate.get_Target_Qbit() )  
+
+        elif isinstance( gate, Sdg ):
+            # Sdg gate
+            circuit.s( gate.get_Target_Qbit() )  
 
         elif isinstance( gate, SX ):
             # SX gate
@@ -437,6 +455,18 @@ def convert_Qiskit_to_Squander( qc_in ):
             qubit = q_register.index( qubits[0] ) 
 
             Circuit_Squander.add_Z( qubit )
+
+        elif name == "s":
+            qubits = gate.qubits                
+            qubit = q_register.index( qubits[0] ) 
+
+            Circuit_Squander.add_S( qubit )
+
+        elif name == "sdg":
+            qubits = gate.qubits                
+            qubit = q_register.index( qubits[0] ) 
+
+            Circuit_Squander.add_Sdg( qubit )
 
         elif name == "sx":
             qubits = gate.qubits                

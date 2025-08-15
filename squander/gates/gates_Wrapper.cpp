@@ -47,6 +47,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "Y.h"
 #include "Z.h"
 #include "S.h"
+#include "SDG.h"
 #include "T.h"
 #include "Tdg.h"
 #include "R.h"
@@ -258,6 +259,7 @@ Gate_Wrapper_get_Matrix( Gate_Wrapper *self, PyObject *args, PyObject *kwds ) {
     // parsing input arguments
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|O", kwlist, &parameters_arr )) {
         std::string err( "Unable to parse keyword arguments");
+        PyErr_SetString(PyExc_Exception, err.c_str());
         return NULL;
     }
 
@@ -269,6 +271,7 @@ Gate_Wrapper_get_Matrix( Gate_Wrapper *self, PyObject *args, PyObject *kwds ) {
 
         if( parameters_arr != NULL ) {
             std::string err( "The gate contains no parameters to set, but parameter array was given as input");
+            PyErr_SetString(PyExc_Exception, err.c_str());
             return NULL;
         }
 
@@ -280,6 +283,7 @@ Gate_Wrapper_get_Matrix( Gate_Wrapper *self, PyObject *args, PyObject *kwds ) {
 
         if( parameters_arr == NULL ) {
             std::string err( "The gate has free parameters to set, but no parameter array was given as input");
+            PyErr_SetString(PyExc_Exception, err.c_str());
             return NULL;
         }
 
@@ -308,6 +312,7 @@ Gate_Wrapper_get_Matrix( Gate_Wrapper *self, PyObject *args, PyObject *kwds ) {
     }
     else {
         std::string err( "The number of parameters in a gate is set to a negative value");
+        PyErr_SetString(PyExc_Exception, err.c_str());
         return NULL;
 
     }
@@ -339,6 +344,7 @@ Gate_Wrapper_Wrapper_apply_to( Gate_Wrapper *self, PyObject *args, PyObject *kwd
     // parsing input arguments
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|Oi", kwlist, &input, &parameters_arr, &parallel )) {
         std::string err( "Unable to parse keyword arguments");
+        PyErr_SetString(PyExc_Exception, err.c_str());
         return NULL;
     }
 
@@ -375,6 +381,7 @@ Gate_Wrapper_Wrapper_apply_to( Gate_Wrapper *self, PyObject *args, PyObject *kwd
             // Parameterized gate
             if( parameters_arr == NULL ) {
                 std::string err( "The gate has free parameters to set, but no parameter array was given as input");
+                PyErr_SetString(PyExc_Exception, err.c_str());
                 return NULL;
             }
 
@@ -457,6 +464,7 @@ Gate_Wrapper_get_Gate_Kernel( Gate_Wrapper *self, PyObject *args, PyObject *kwds
     // parsing input arguments
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|ddd", kwlist, &ThetaOver2, &Phi, &Lambda ))  {
         std::string err( "Unable to parse keyword arguments");
+        PyErr_SetString(PyExc_Exception, err.c_str());
         return NULL;
     }
 
@@ -474,6 +482,7 @@ Gate_Wrapper_get_Gate_Kernel( Gate_Wrapper *self, PyObject *args, PyObject *kwds
     }
     else {
         std::string err( "The number of parameters in a gate is set to a negative value");
+        PyErr_SetString(PyExc_Exception, err.c_str());
         return NULL;
 
     }
@@ -917,6 +926,10 @@ Gate_Wrapper_setstate( Gate_Wrapper *self, PyObject *args ) {
     case S_OPERATION: {
         gate = create_gate<S>( qbit_num, target_qbit );
         break;
+    }   
+    case SDG_OPERATION: {
+        gate = create_gate<SDG>( qbit_num, target_qbit );
+        break;
     }    
     case SX_OPERATION: {
         gate = create_gate<SX>( qbit_num, target_qbit );
@@ -1266,6 +1279,16 @@ struct S_Wrapper_Type : Gate_Wrapper_Type_tmp {
     }
 };
 
+struct SDG_Wrapper_Type : Gate_Wrapper_Type_tmp {
+
+    SDG_Wrapper_Type() {    
+        tp_name      = "Sdg";
+        tp_doc       = "Object to represent python binding for a SDG gate of the Squander package.";
+        tp_new      = (newfunc) Gate_Wrapper_new<SDG>;
+        tp_base      = &Gate_Wrapper_Type;
+    }
+};
+
 
 struct T_Wrapper_Type : Gate_Wrapper_Type_tmp {
 
@@ -1337,6 +1360,7 @@ static X_Wrapper_Type X_Wrapper_Type_ins;
 static Y_Wrapper_Type Y_Wrapper_Type_ins;
 static Z_Wrapper_Type Z_Wrapper_Type_ins;
 static S_Wrapper_Type S_Wrapper_Type_ins;
+static SDG_Wrapper_Type SDG_Wrapper_Type_ins;
 static T_Wrapper_Type T_Wrapper_Type_ins;
 static Tdg_Wrapper_Type Tdg_Wrapper_Type_ins;
 static R_Wrapper_Type R_Wrapper_Type_ins;
@@ -1396,6 +1420,7 @@ PyInit_gates_Wrapper(void)
         PyType_Ready(&Y_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&Z_Wrapper_Type_ins) < 0 || 
         PyType_Ready(&S_Wrapper_Type_ins) < 0 || 
+        PyType_Ready(&SDG_Wrapper_Type_ins) < 0 || 
         PyType_Ready(&T_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&Tdg_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&CR_Wrapper_Type_ins) < 0 ||
@@ -1532,6 +1557,13 @@ PyInit_gates_Wrapper(void)
     Py_INCREF(&S_Wrapper_Type_ins);
     if (PyModule_AddObject(m, "S", (PyObject *) & S_Wrapper_Type_ins) < 0) {
         Py_DECREF(& S_Wrapper_Type_ins);
+        Py_DECREF(m);
+        return NULL;
+    }
+
+    Py_INCREF(&SDG_Wrapper_Type_ins);
+    if (PyModule_AddObject(m, "Sdg", (PyObject *) & SDG_Wrapper_Type_ins) < 0) {
+        Py_DECREF(& SDG_Wrapper_Type_ins);
         Py_DECREF(m);
         return NULL;
     }

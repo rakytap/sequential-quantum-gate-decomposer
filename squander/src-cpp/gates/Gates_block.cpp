@@ -37,6 +37,7 @@ limitations under the License.
 #include "Y.h"
 #include "Z.h"
 #include "S.h"
+#include "SDG.h"
 #include "T.h"
 #include "Tdg.h"
 #include "SX.h"
@@ -182,9 +183,8 @@ Gates_block::get_matrix( Matrix_real& parameters, int parallel ) {
 
 #ifdef DEBUG
     if (block_mtx.isnan()) {
-        std::stringstream sstream;
-	sstream << "Gates_block::get_matrix: block_mtx contains NaN." << std::endl;
-        print(sstream, 0);		       
+        std::string err( "Gates_block::get_matrix: block_mtx contains NaN." ) ;
+	    throw( err );       
     }
 #endif
 
@@ -355,9 +355,8 @@ Gates_block::apply_to( Matrix_real& parameters_mtx_in, Matrix& input, int parall
             }
 #ifdef DEBUG
         if (input.isnan()) {
-            std::stringstream sstream;
-	    sstream << "Gates_block::apply_to: transformed matrix contains NaN." << std::endl;
-            print(sstream, 0);	
+            std::string err( "Gates_block::apply_to: transformed matrix contains NaN." );
+	        throw( err );
         }
 #endif
 
@@ -589,7 +588,7 @@ Gates_block::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
         case X_OPERATION: case Y_OPERATION:
         case Z_OPERATION: case SX_OPERATION:
         case T_OPERATION: case TDG_OPERATION:
-        case S_OPERATION:
+        case S_OPERATION: case SDG_OPERATION:
         case GENERAL_OPERATION: case H_OPERATION:
             operation->apply_from_right(input);
             break;
@@ -677,9 +676,8 @@ Gates_block::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
 
 #ifdef DEBUG
         if (input.isnan()) { 
-            std::stringstream sstream;
-	    sstream << "Gates_block::apply_from_right: transformed matrix contains NaN." << std::endl;
-            print(sstream, 0);	            
+            std::string err( "Gates_block::apply_from_right: transformed matrix contains NaN." );
+	        throw( err );            
         }
 #endif
 
@@ -1333,6 +1331,35 @@ void Gates_block::add_s_to_front(int target_qbit ) {
 
 
 
+/**
+@brief Append a Sdg gate to the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void Gates_block::add_sdg(int target_qbit) {
+
+        // create the operation
+        Gate* operation = static_cast<Gate*>(new SDG( qbit_num, target_qbit));
+
+        // adding the operation to the end of the list of gates
+        add_gate( operation );
+}
+
+/**
+@brief Add a Sdg gate to the front of the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void Gates_block::add_sdg_to_front(int target_qbit ) {
+
+        // create the operation
+        Gate* gate = static_cast<Gate*>(new SDG( qbit_num, target_qbit ));
+
+        // adding the operation to the front of the list of gates
+        add_gate_to_front( gate );
+
+}
+
+
+
 
 /**
 @brief Append a T gate to the list of gates
@@ -1797,7 +1824,7 @@ int Gates_block::get_gate_num() {
 @param start_index The ordinal number of the first gate.
 */
 void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
-
+//TODO: rewrite the function with switch statement
 
 	//The stringstream input to store the output messages.
 	std::stringstream sstream;
@@ -2003,6 +2030,14 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
 		print(sstream, 1);	    	
                 gate_idx = gate_idx + 1;
             }
+            else if (gate->get_type() == SDG_OPERATION) {
+                // get the inverse parameters of the U3 rotation
+                SDG* sdg_gate = static_cast<SDG*>(gate);
+		std::stringstream sstream;
+		sstream << gate_idx << "th gate: Sdg on target qubit: " << sdg_gate->get_target_qbit() << std::endl;
+		print(sstream, 1);	    	
+                gate_idx = gate_idx + 1;
+            }
             else if (gate->get_type() == SX_OPERATION) {
                 // get the inverse parameters of the U3 rotation
                 SX* sx_gate = static_cast<SX*>(gate);
@@ -2116,8 +2151,8 @@ Gates_block::create_remapped_circuit( const std::map<int, int>& qbit_map, const 
         case SX_OPERATION: case BLOCK_OPERATION:
         case GENERAL_OPERATION: case UN_OPERATION:
         case ON_OPERATION: case COMPOSITE_OPERATION:
-        case ADAPTIVE_OPERATION:
-        case H_OPERATION: case S_OPERATION:
+        case ADAPTIVE_OPERATION: case H_OPERATION: 
+        case S_OPERATION: case SDG_OPERATION:
         case T_OPERATION: case TDG_OPERATION:
         case CZ_NU_OPERATION:
         {
@@ -2284,8 +2319,10 @@ void Gates_block::set_qbit_num( int qbit_num_in ) {
         switch (op->get_type()) {
         case CNOT_OPERATION: case CZ_OPERATION:
         case CH_OPERATION: case SYC_OPERATION:
-        case U1_OPERATION: case U2_OPERATION: case U3_OPERATION:
-        case RY_OPERATION: case CRY_OPERATION: case RX_OPERATION: case CR_OPERATION:
+        case U1_OPERATION: case U2_OPERATION: 
+        case U3_OPERATION:
+        case RY_OPERATION: case CRY_OPERATION: 
+        case RX_OPERATION: case CR_OPERATION:
         case RZ_OPERATION: case X_OPERATION:
         case Y_OPERATION: case Z_OPERATION:
         case SX_OPERATION: case BLOCK_OPERATION:
@@ -2293,7 +2330,8 @@ void Gates_block::set_qbit_num( int qbit_num_in ) {
         case ON_OPERATION: case COMPOSITE_OPERATION:
         case ADAPTIVE_OPERATION: case CROT_OPERATION:
         case H_OPERATION: case R_OPERATION:
-        case CZ_NU_OPERATION: case S_OPERATION:
+        case CZ_NU_OPERATION: 
+        case S_OPERATION: case SDG_OPERATION:
         case T_OPERATION: case TDG_OPERATION:
             op->set_qbit_num( qbit_num_in );
             break;
@@ -2343,8 +2381,10 @@ int Gates_block::extract_gates( Gates_block* op_block ) {
         switch (op->get_type()) {
         case CNOT_OPERATION: case CZ_OPERATION:
         case CH_OPERATION: case SYC_OPERATION:
-        case U1_OPERATION: case U2_OPERATION: case U3_OPERATION:
-        case RY_OPERATION: case CRY_OPERATION: case RX_OPERATION: case CR_OPERATION:
+        case U1_OPERATION: case U2_OPERATION: 
+        case U3_OPERATION:
+        case RY_OPERATION: case CRY_OPERATION: 
+        case RX_OPERATION: case CR_OPERATION:
         case RZ_OPERATION: case X_OPERATION:
         case Y_OPERATION: case Z_OPERATION:
         case SX_OPERATION: case BLOCK_OPERATION:
@@ -2352,7 +2392,8 @@ int Gates_block::extract_gates( Gates_block* op_block ) {
         case ON_OPERATION: case COMPOSITE_OPERATION:
         case ADAPTIVE_OPERATION: case CROT_OPERATION:
         case H_OPERATION:  case R_OPERATION:
-        case CZ_NU_OPERATION: case S_OPERATION:
+        case CZ_NU_OPERATION: 
+        case S_OPERATION: case SDG_OPERATION:
         case T_OPERATION: case TDG_OPERATION:
         {
             Gate* op_cloned = op->clone();
@@ -3109,6 +3150,11 @@ void Gates_block::adjust_parameters_for_derivation( DFEgate_kernel_type* DFEgate
                 throw error;	 
 
             }
+            else if (gate->get_type() == SDG_OPERATION) {
+                std::string error("Gates_block::convert_to_DFE_gates: Sdg_gate not implemented");
+                throw error;	 
+
+            }
             else if (gate->get_type() == H_OPERATION) {
                 std::string error("Gates_block::convert_to_DFE_gates: H_gate not implemented");
                 throw error;	 
@@ -3564,6 +3610,12 @@ void Gates_block::convert_to_DFE_gates( const Matrix_real& parameters_mtx, DFEga
                 std::string error("Gates_block::convert_to_DFE_gates: S_gate not implemented");
                 throw error;	    	
             }
+            else if (gate->get_type() == SDG_OPERATION) {
+                // get the inverse parameters of the U3 rotation
+                SDG* s_gate = static_cast<SDG*>(gate);
+                std::string error("Gates_block::convert_to_DFE_gates: Sdg_gate not implemented");
+                throw error;	    	
+            }
             else if (gate->get_type() == SX_OPERATION) {
                 // get the inverse parameters of the U3 rotation
                 SX* sx_gate = static_cast<SX*>(gate);
@@ -3629,7 +3681,13 @@ void Gates_block::convert_to_DFE_gates( const Matrix_real& parameters_mtx, DFEga
 
 #ifdef __GROQ__
 
-//TODO docstring
+/**
+@brief Use to exptract gate kernels to perform the gate operation on the Groq card
+@param u3_qbit Container of single qubit kernels
+@param target_qbit Container of target_qbits
+@param control_qbit Container of control_qbits
+@param parameters_mtx Parameter array
+*/
 void 
 Gates_block::extract_gate_kernels_target_and_control_qubits(std::vector<Matrix> &u3_qbit, std::vector<int> &target_qbit, std::vector<int> &control_qbit, Matrix_real& parameters_mtx)
 {   
@@ -3694,6 +3752,11 @@ Gates_block::extract_gate_kernels_target_and_control_qubits(std::vector<Matrix> 
         case S_OPERATION: {
             S* s_operation = static_cast<S*>(operation);
             u3_qbit.push_back(s_operation->calc_one_qubit_u3());
+            break;
+        }
+        case SDG_OPERATION: {
+            SDG* sdg_operation = static_cast<SDG*>(operation);
+            u3_qbit.push_back(sdg_operation->calc_one_qubit_u3());
             break;
         }
         case TDG_OPERATION: {
@@ -3820,8 +3883,11 @@ Gates_block::extract_gate_kernels_target_and_control_qubits(std::vector<Matrix> 
 
 
 /**
-@brief ?????????
-@return Return with ?????????
+@brief Use to export a quantum circuit into binary format.
+@param parameters Parameters of corresponding to the circuit
+@param gates_block The Squander circuit.
+@param filename Filename into which export the circuit
+@param verbosity The verbosity parameter
 */
 void 
 export_gate_list_to_binary(Matrix_real& parameters, Gates_block* gates_block, const std::string& filename, int verbosity) {
@@ -3848,8 +3914,11 @@ export_gate_list_to_binary(Matrix_real& parameters, Gates_block* gates_block, co
 
 
 /**
-@brief ?????????
-@return Return with ?????????
+@brief Use to export a quantum circuit into binary format.
+@param parameters Parameters of corresponding to the circuit
+@param gates_block The Squander circuit.
+@param pFile Pointer to the opened file.
+@param verbosity The verbosity parameter
 */
 void 
 export_gate_list_to_binary(Matrix_real& parameters, Gates_block* gates_block, FILE* pFile, int verbosity) {
@@ -3904,7 +3973,7 @@ export_gate_list_to_binary(Matrix_real& parameters, Gates_block* gates_block, FI
             fwrite(parameters_data, sizeof(double), parameter_num, pFile);
         }
         
-        else if (gt_type == X_OPERATION || gt_type == Y_OPERATION || gt_type == Z_OPERATION || gt_type == S_OPERATION || gt_type == SX_OPERATION || gt_type == H_OPERATION) {
+        else if (gt_type == X_OPERATION || gt_type == Y_OPERATION || gt_type == Z_OPERATION || gt_type == S_OPERATION || gt_type == SDG_OPERATION || gt_type == SX_OPERATION || gt_type == H_OPERATION) {
             int target_qbit = op->get_target_qbit();
             fwrite(&target_qbit, sizeof(int), 1, pFile);
         }
@@ -3936,8 +4005,10 @@ export_gate_list_to_binary(Matrix_real& parameters, Gates_block* gates_block, FI
 
 
 /**
-@brief ?????????
-@return Return with ?????????
+@brief Use to import a quantum circuit from a binary format.
+@param parameters Parameters of corresponding to the circuit (the loaded parameters are returned via this argument)
+@param filename The file containing the binary file.
+@param verbosity The verbosity parameter
 */
 Gates_block* import_gate_list_from_binary(Matrix_real& parameters, const std::string& filename, int verbosity) {
 
@@ -3960,8 +4031,10 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, const std::st
 }
 
 /**
-@brief ?????????
-@return Return with ?????????
+@brief Use to import a quantum circuit from a binary format.
+@param parameters Parameters of corresponding to the circuit (the loaded parameters are returned via this argument)
+@param pFile Pointer to the binary file.
+@param verbosity The verbosity parameter
 */
 Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, int verbosity) {
 
@@ -4217,6 +4290,18 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
             sstream << "target_qbit: " << target_qbit << std::endl;
 
             gate_block_levels[current_level]->add_s(target_qbit);
+            gate_block_level_gates_num[current_level]--;
+
+        }
+        else if (gt_type == SDG_OPERATION) {
+
+            sstream << "importing Sdg gate" << std::endl;
+
+            int target_qbit;
+            fread(&target_qbit, sizeof(int), 1, pFile);
+            sstream << "target_qbit: " << target_qbit << std::endl;
+
+            gate_block_levels[current_level]->add_sdg(target_qbit);
             gate_block_level_gates_num[current_level]--;
 
         }

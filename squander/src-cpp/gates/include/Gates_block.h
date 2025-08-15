@@ -412,6 +412,19 @@ void add_s_to_front(int target_qbit);
 
 
 /**
+@brief Append a Sdg gate to the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_sdg(int target_qbit);
+
+/**
+@brief Add a Sdg gate to the front of the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_sdg_to_front(int target_qbit);
+
+
+/**
 @brief Append a T gate to the list of gates
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 */
