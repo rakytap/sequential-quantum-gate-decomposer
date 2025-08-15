@@ -14,6 +14,9 @@ CORRECTNESS TESTS
 
 @pytest.mark.parametrize("max_qubits", [3, 4, 5])
 def test_PartitionEmptyCircuit(max_qubits):
+    """
+    Test partitioning an empty circuit
+    """
     empty_c = Circuit(5)
     top_c, param_order, _  = kahn_partition(empty_c, max_qubits)
     assert len(top_c.get_Gates()) == 1 # NOTE: should be 0
@@ -22,6 +25,9 @@ def test_PartitionEmptyCircuit(max_qubits):
 
 @pytest.mark.parametrize("max_qubits", [3, 4, 5])
 def test_PartitionSingleGate(max_qubits):
+    """
+    Test partitioning a circuit with a single gate
+    """
     single_c = Circuit(5)
     single_c.add_CNOT(0, 1)
     top_c, param_order, _  = kahn_partition(single_c, max_qubits)
@@ -31,6 +37,9 @@ def test_PartitionSingleGate(max_qubits):
 
 @pytest.mark.parametrize("max_qubits", [3, 4, 5])
 def test_PartitionTotalGates(max_qubits):
+    """
+    Test total gates after partitioning matches original
+    """
     c = Circuit(5)
     c.add_CNOT(0, 1)
     c.add_CNOT(1, 2)
@@ -42,6 +51,9 @@ def test_PartitionTotalGates(max_qubits):
 
 @pytest.mark.parametrize("max_qubits", [3, 4, 5])
 def test_PartitionMaxQubitConstraint(max_qubits):
+    """
+    Test that each partition respects max qubit constraint
+    """
     c = Circuit(5)
     c.add_CNOT(0, 1)
     c.add_CNOT(1, 2)
@@ -54,6 +66,9 @@ def test_PartitionMaxQubitConstraint(max_qubits):
 
 @pytest.mark.parametrize("max_qubits", [3, 4, 5])
 def test_PartitionMaxQubitsEqualsTotalQubits(max_qubits):
+    """
+    Test partitioning when max qubits equals total qubits
+    """
     c = Circuit(max_qubits)
     c.add_CNOT(0, 1)
     c.add_CNOT(1, 2)
@@ -64,6 +79,9 @@ def test_PartitionMaxQubitsEqualsTotalQubits(max_qubits):
     
     
 def test_CorrectnessOfPartitionedCircuit():
+    """
+    Test correctness of partitioned circuit by comparing output states
+    """
     filename = "examples/partitioning/qasm_samples/heisenberg-16-20.qasm"
     
     initial_circuit, initial_parameters = utils.qasm_to_squander_circuit(filename)
