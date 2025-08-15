@@ -20,6 +20,7 @@ limitations under the License.
     \brief Class responsible for grouping gates into subcircuits. (Subcircuits can be nested)
 */
 
+#include "CU.h"
 #include "CZ.h"
 #include "CH.h"
 #include "CNOT.h"
@@ -591,51 +592,17 @@ Gates_block::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
         case S_OPERATION: case SDG_OPERATION:
         case GENERAL_OPERATION: case H_OPERATION:
             operation->apply_from_right(input);
-            break;
-        case U1_OPERATION: {
-            U1* u1_operation = static_cast<U1*>(operation);
-            u1_operation->apply_from_right( parameters_mtx, input );
-            break; 
-        }
-        case U2_OPERATION: {
-            U2* u2_operation = static_cast<U2*>(operation);
-            u2_operation->apply_from_right( parameters_mtx, input );
-            break; 
-        }
-        case U3_OPERATION: {
-            U3* u3_operation = static_cast<U3*>(operation);
-            u3_operation->apply_from_right( parameters_mtx, input );
-            break; 
-        }
-        case R_OPERATION: {
-            R* r_operation = static_cast<R*>(operation);
-            r_operation->apply_from_right( parameters_mtx, input );
-            break; 
-        }
-        case RX_OPERATION: {
-            RX* rx_operation = static_cast<RX*>(operation);
-            rx_operation->apply_from_right( parameters_mtx, input );
-            break; 
-        }
-        case RY_OPERATION: {
-            RY* ry_operation = static_cast<RY*>(operation);
-            ry_operation->apply_from_right( parameters_mtx, input );
-            break; 
-        }
-        case CRY_OPERATION: {
-            CRY* cry_operation = static_cast<CRY*>(operation);
-            cry_operation->apply_from_right( parameters_mtx, input );
-            break; 
-        }
-        case CR_OPERATION: {
-            CR* cr_operation = static_cast<CR*>(operation);
-            cr_operation->apply_from_right( parameters_mtx, input );
-            break; 
-        }
-        case RZ_OPERATION: {
-            RZ* rz_operation = static_cast<RZ*>(operation);
-            rz_operation->apply_from_right( parameters_mtx, input );
-            break;         
+            break;  
+                  
+        case U1_OPERATION: case U2_OPERATION:
+        case U3_OPERATION: case CU_OPERATION:
+        case R_OPERATION: case RX_OPERATION:
+        case RY_OPERATION: case RZ_OPERATION:
+        case CRY_OPERATION: case CR_OPERATION:
+        case CZ_NU_OPERATION:
+        case ADAPTIVE_OPERATION:
+        {
+            operation->apply_from_right( parameters_mtx, input );
         }
         case UN_OPERATION: {
             UN* un_operation = static_cast<UN*>(operation);
@@ -651,20 +618,10 @@ Gates_block::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
             Gates_block* block_operation = static_cast<Gates_block*>(operation);
             block_operation->apply_from_right(parameters_mtx, input);
             break;
-        }
-        case CZ_NU_OPERATION: {
-            CZ_NU* cz_nu_operation = static_cast<CZ_NU*>(operation);
-            cz_nu_operation->apply_from_right( parameters_mtx, input );
-            break; 
-        }        
+        }       
         case COMPOSITE_OPERATION: {
             Composite* com_operation = static_cast<Composite*>(operation);
             com_operation->apply_from_right( parameters_mtx, input );
-            break; 
-        }
-        case ADAPTIVE_OPERATION: {
-            Adaptive* ad_operation = static_cast<Adaptive*>(operation);
-            ad_operation->apply_from_right( parameters_mtx, input );
             break; 
         }
         default:
@@ -2154,7 +2111,7 @@ Gates_block::create_remapped_circuit( const std::map<int, int>& qbit_map, const 
         case ADAPTIVE_OPERATION: case H_OPERATION: 
         case S_OPERATION: case SDG_OPERATION:
         case T_OPERATION: case TDG_OPERATION:
-        case CZ_NU_OPERATION:
+        case CZ_NU_OPERATION: case CU_OPERATION:
         {
             Gate* cloned_op = op->clone();
 
@@ -2330,7 +2287,7 @@ void Gates_block::set_qbit_num( int qbit_num_in ) {
         case ON_OPERATION: case COMPOSITE_OPERATION:
         case ADAPTIVE_OPERATION: case CROT_OPERATION:
         case H_OPERATION: case R_OPERATION:
-        case CZ_NU_OPERATION: 
+        case CZ_NU_OPERATION: case CU_OPERATION:
         case S_OPERATION: case SDG_OPERATION:
         case T_OPERATION: case TDG_OPERATION:
             op->set_qbit_num( qbit_num_in );
@@ -2392,7 +2349,7 @@ int Gates_block::extract_gates( Gates_block* op_block ) {
         case ON_OPERATION: case COMPOSITE_OPERATION:
         case ADAPTIVE_OPERATION: case CROT_OPERATION:
         case H_OPERATION:  case R_OPERATION:
-        case CZ_NU_OPERATION: 
+        case CZ_NU_OPERATION: case CU_OPERATION:
         case S_OPERATION: case SDG_OPERATION:
         case T_OPERATION: case TDG_OPERATION:
         {
@@ -3145,6 +3102,11 @@ void Gates_block::adjust_parameters_for_derivation( DFEgate_kernel_type* DFEgate
 	    	
                 gate_idx = gate_idx + 1;
             }
+            else if (gate->get_type() == CU_OPERATION) {
+                std::string error("Gates_block::convert_to_DFE_gates: CU_gate not implemented");
+                throw error;	 
+
+            }
             else if (gate->get_type() == S_OPERATION) {
                 std::string error("Gates_block::convert_to_DFE_gates: S_gate not implemented");
                 throw error;	 
@@ -3603,6 +3565,12 @@ void Gates_block::convert_to_DFE_gates( const Matrix_real& parameters_mtx, DFEga
                 DFEGate.metadata = 0;
 	    	
                 gate_idx = gate_idx + 1;
+            }
+            else if (gate->get_type() == CU_OPERATION) {
+                // get the inverse parameters of the U3 rotation
+                CU* s_gate = static_cast<CU*>(gate);
+                std::string error("Gates_block::convert_to_DFE_gates: CU_gate not implemented");
+                throw error;	    	
             }
             else if (gate->get_type() == S_OPERATION) {
                 // get the inverse parameters of the U3 rotation

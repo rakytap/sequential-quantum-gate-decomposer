@@ -330,6 +330,7 @@ list(APPEND qgd_files
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/optimization_engines/COSINE.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/optimization_engines/GRAD_DESCEND.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/optimization_engines/GRAD_DESCEND_PARAMETER_SHIFT_RULE.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/CU.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/CNOT.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/SYC.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/CZ.cpp

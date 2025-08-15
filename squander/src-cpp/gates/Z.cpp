@@ -177,9 +177,9 @@ Z::apply_from_right( Matrix& input ) {
 
     if (input.cols != matrix_size ) {
         std::stringstream sstream;
-	sstream << "Wrong matrix size in U3 apply_from_right" << std::endl;
+	    sstream << "Wrong matrix size in U3 apply_from_right" << std::endl;
         print(sstream, 0);	  
-        exit(-1);
+        throw( sstream.str() );
     }
 
 
@@ -211,27 +211,6 @@ Z* Z::clone() {
 
 
 
-
-/**
-@brief Call to reorder the qubits in the matrix of the gate
-@param qbit_list The reordered list of qubits spanning the matrix
-*/
-void Z::reorder_qubits( std::vector<int> qbit_list) {
-
-    Gate::reorder_qubits(qbit_list);
-
-}
-
-
-/**
-@brief Call to set the number of qubits spanning the matrix of the gate
-@param qbit_num_in The number of qubits
-*/
-void Z::set_qbit_num(int qbit_num_in) {
-
-        // setting the number of qubits
-        Gate::set_qbit_num(qbit_num_in);
-}
 
 /**
 @brief Set static values for matrix of the gates.

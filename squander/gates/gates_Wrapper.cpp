@@ -30,6 +30,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include <Python.h>
 #include "structmember.h"
 #include "Gate.h"
+#include "CU.h"
 #include "CH.h"
 #include "CNOT.h"
 #include "CZ.h"
@@ -959,6 +960,10 @@ Gate_Wrapper_setstate( Gate_Wrapper *self, PyObject *args ) {
         gate = create_gate<U3>( qbit_num, target_qbit );
         break; 
     }
+    case CU_OPERATION: {
+        gate = create_controlled_gate<CU>( qbit_num, target_qbit, control_qbit );
+        break; 
+    }
     case R_OPERATION: {
         gate = create_gate<R>( qbit_num, target_qbit );
         break;
@@ -1238,6 +1243,17 @@ struct U3_Wrapper_Type : Gate_Wrapper_Type_tmp {
     }
 };
 
+
+struct CU_Wrapper_Type : Gate_Wrapper_Type_tmp {
+
+    CU_Wrapper_Type() {    
+        tp_name      = "CU";
+        tp_doc       = "Object to represent python binding for a CU gate of the Squander package.";
+        tp_new       = (newfunc) controlled_gate_Wrapper_new<CU>;
+        tp_base      = &Gate_Wrapper_Type;
+    }
+};
+
 struct X_Wrapper_Type : Gate_Wrapper_Type_tmp {
 
     X_Wrapper_Type() {    
@@ -1356,6 +1372,7 @@ static SYC_Wrapper_Type SYC_Wrapper_Type_ins;
 static U1_Wrapper_Type U1_Wrapper_Type_ins;
 static U2_Wrapper_Type U2_Wrapper_Type_ins;
 static U3_Wrapper_Type U3_Wrapper_Type_ins;
+static CU_Wrapper_Type CU_Wrapper_Type_ins;
 static X_Wrapper_Type X_Wrapper_Type_ins;
 static Y_Wrapper_Type Y_Wrapper_Type_ins;
 static Z_Wrapper_Type Z_Wrapper_Type_ins;
@@ -1416,6 +1433,7 @@ PyInit_gates_Wrapper(void)
         PyType_Ready(&U1_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&U2_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&U3_Wrapper_Type_ins) < 0 ||
+        PyType_Ready(&CU_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&X_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&Y_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&Z_Wrapper_Type_ins) < 0 || 
@@ -1529,6 +1547,13 @@ PyInit_gates_Wrapper(void)
     Py_INCREF(&U3_Wrapper_Type_ins);
     if (PyModule_AddObject(m, "U3", (PyObject *) & U3_Wrapper_Type_ins) < 0) {
         Py_DECREF(& U3_Wrapper_Type_ins);
+        Py_DECREF(m);
+        return NULL;
+    }
+
+    Py_INCREF(&CU_Wrapper_Type_ins);
+    if (PyModule_AddObject(m, "CU", (PyObject *) & CU_Wrapper_Type_ins) < 0) {
+        Py_DECREF(& CU_Wrapper_Type_ins);
         Py_DECREF(m);
         return NULL;
     }

@@ -71,8 +71,8 @@ U3::U3(int qbit_num_in, int target_qbit_in) {
     if (target_qbit_in >= qbit_num) {
         std::stringstream sstream;
         sstream << "The index of the target qubit is larger than the number of qubits" << std::endl;
-    print(sstream, 0);        
-        throw "The index of the target qubit is larger than the number of qubits";
+        print(sstream, 0);        
+        throw sstream.str();
     }
 	
     // The index of the qubit on which the gate acts (target_qbit >= 0)
@@ -119,10 +119,8 @@ U3::get_matrix( Matrix_real& parameters, int parallel ) {
 
 #ifdef DEBUG
         if (U3_matrix.isnan()) {
-            std::stringstream sstream;
-	    sstream << "U3::get_matrix: U3_matrix contains NaN." << std::endl;
-	    verbose_level=1;
-            print(sstream,verbose_level);	  
+            std::string err( "U3::get_matrix: U3_matrix contains NaN." );
+            throw( err );	  
         }
 #endif
 
@@ -256,20 +254,19 @@ U3::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input, int parallel 
     return ret;
 }
 
-/**
-@brief Call to set the number of qubits spanning the matrix of the gate
-@param qbit_num_in The number of qubits
-*/
-void U3::set_qbit_num(int qbit_num_in) {
-    Gate::set_qbit_num(qbit_num_in); // setting the number of qubits
-}
 
 /**
-@brief Call to reorder the qubits in the matrix of the gate
-@param qbit_list The reordered list of qubits spanning the matrix
+@brief Calculate the matrix of a U3 gate gate corresponding to the given parameters acting on a single qbit space.
+@param ThetaOver2 Real parameter standing for the parameter theta/2.
+@param Phi Real parameter standing for the parameter phi.
+@param Lambda Real parameter standing for the parameter lambda.
+@return Returns with the matrix of the one-qubit matrix.
 */
-void U3::reorder_qubits( std::vector<int> qbit_list) {
-    Gate::reorder_qubits(qbit_list);
+void 
+U3::parameters_for_calc_one_qubit( double& ThetaOver2, double& Phi, double& Lambda){
+
+    // ThetaOver2, Lambda, Phi are passed through unchanged
+
 }
 
 /**

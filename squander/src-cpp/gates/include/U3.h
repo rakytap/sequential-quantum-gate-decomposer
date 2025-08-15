@@ -108,20 +108,14 @@ virtual void apply_from_right( Matrix_real& parameters, Matrix& input );
 */
 virtual std::vector<Matrix> apply_derivate_to( Matrix_real& parameters, Matrix& input, int parallel );
 
-
 /**
-@brief Call to set the number of qubits spanning the matrix of the gate
-@param qbit_num_in The number of qubits
+@brief Calculate the matrix of a U3 gate gate corresponding to the given parameters acting on a single qbit space.
+@param ThetaOver2 Real parameter standing for the parameter theta/2.
+@param Phi Real parameter standing for the parameter phi.
+@param Lambda Real parameter standing for the parameter lambda.
+@return Returns with the matrix of the one-qubit matrix.
 */
-virtual void set_qbit_num(int qbit_num_in);
-
-
-/**
-@brief Call to reorder the qubits in the matrix of the gate
-@param qbit_list The reordered list of qubits spanning the matrix
-*/
-virtual void reorder_qubits( std::vector<int> qbit_list);
-
+virtual void parameters_for_calc_one_qubit( double& ThetaOver2, double& Phi, double& Lambda);
 
 /**
 @brief Call to create a clone of the present class
