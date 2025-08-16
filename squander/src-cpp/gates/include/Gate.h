@@ -65,7 +65,9 @@ typedef enum gate_type {GENERAL_OPERATION=1,
                         U2_OPERATION=32,
                         CR_OPERATION=33,
                         S_OPERATION=34,
-                        CUSTOM_KERNEL_1QUBIT_GATE_OPERATION=35} gate_type;
+                        SDG_OPERATION=35,
+                        CU_OPERATION=36,
+                        CUSTOM_KERNEL_1QUBIT_GATE_OPERATION=37} gate_type;
 
 
 
@@ -201,6 +203,13 @@ virtual std::vector<Matrix> apply_derivate_to( Matrix_real& parameters_mtx_in, M
 @param input The input array on which the gate is applied
 */
 virtual void apply_from_right( Matrix& input );
+
+/**
+@brief Call to apply the gate on the input array/matrix by input*Gate
+@param parameter_mtx An array of the input parameters.
+@param input The input array on which the gate is applied
+*/
+void Gate::apply_from_right( Matrix_real& parameter_mtx, Matrix& input );
 
 /**
 @brief Call to set the stored matrix in the operation.

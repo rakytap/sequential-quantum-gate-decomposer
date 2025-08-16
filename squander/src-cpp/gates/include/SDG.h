@@ -16,12 +16,12 @@ limitations under the License.
 
 @author: Peter Rakyta, Ph.D.
 */
-/*! \file S.h
-    \brief Header file for a class representing the S gate.
+/*! \file SDG.h
+    \brief Header file for a class representing the Sdg gate.
 */
 
-#ifndef S_H
-#define S_H
+#ifndef SDG_H
+#define SDG_H
 
 #include "U3.h"
 //#include "Gate.h"
@@ -31,9 +31,9 @@ limitations under the License.
 
 
 /**
-@brief A class representing a S gate.
+@brief A class representing an Sdg gate.
 */
-class S: public U3 {
+class SDG: public U3 {
 
 
 public:
@@ -41,7 +41,7 @@ public:
 /**
 @brief NullaRX constructor of the class.
 */
-S();
+SDG();
 
 
 /**
@@ -52,12 +52,12 @@ S();
 @param phi_in logical value indicating whether the matrix creation takes an argument phi
 @param lambda_in logical value indicating whether the matrix creation takes an argument lambda
 */
-S(int qbit_num_in, int target_qbit_in);
+SDG(int qbit_num_in, int target_qbit_in);
 
 /**
 @brief Destructor of the class
 */
-~S();
+~SDG();
 
 
 /**
@@ -95,7 +95,7 @@ void apply_from_right( Matrix& input );
 @brief Call to create a clone of the present class
 @return Return with a pointer pointing to the cloned object
 */
-S* clone();
+SDG* clone();
 
 
 /**
@@ -122,5 +122,5 @@ Matrix calc_one_qubit_u3( );
 };
 
 
-#endif //S
+#endif //SDG
 

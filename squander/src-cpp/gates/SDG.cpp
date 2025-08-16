@@ -16,11 +16,11 @@ limitations under the License.
 
 @author: Peter Rakyta, Ph.D.
 */
-/*! \file S.cpp
-    \brief Class representing a S gate.
+/*! \file Sgd.cpp
+    \brief Class representing a Sdg gate.
 */
 
-#include "S.h"
+#include "SDG.h"
 
 
 
@@ -28,17 +28,17 @@ limitations under the License.
 /**
 @brief NullaRX constructor of the class.
 */
-S::S() {
+SDG::SDG() {
 
     // A string labeling the gate operation
-    name = "S";
+    name = "SDG";
 
     // number of qubits spanning the matrix of the gate
     qbit_num = -1;
     // the size of the matrix
     matrix_size = -1;
     // A string describing the type of the gate
-    type = S_OPERATION;
+    type = SDG_OPERATION;
 
     // The index of the qubit on which the gate acts (target_qbit >= 0)
     target_qbit = -1;
@@ -61,16 +61,16 @@ S::S() {
 @param phi_in logical value indicating whether the matrix creation takes an argument phi
 @param lambda_in logical value indicating whether the matrix creation takes an argument lambda
 */
-S::S(int qbit_num_in, int target_qbit_in) {
+SDG::SDG(int qbit_num_in, int target_qbit_in) {
 
     // A string labeling the gate operation
-    name = "S";
+    name = "SDG";
     // number of qubits spanning the matrix of the gate
     qbit_num = qbit_num_in;
     // the size of the matrix
     matrix_size = Power_of_2(qbit_num);
     // A string describing the type of the gate
-    type = S_OPERATION;
+    type = SDG_OPERATION;
 
 
     if (target_qbit_in >= qbit_num) {
@@ -95,7 +95,7 @@ S::S(int qbit_num_in, int target_qbit_in) {
 /**
 @brief Destructor of the class
 */
-S::~S() {
+SDG::~SDG() {
 
 }
 
@@ -105,7 +105,7 @@ S::~S() {
 @return Returns with a matrix of the gate
 */
 Matrix
-S::get_matrix() {
+SDG::get_matrix() {
 
         return get_matrix( false );
 
@@ -119,20 +119,20 @@ S::get_matrix() {
 @return Returns with a matrix of the gate
 */
 Matrix
-S::get_matrix( int parallel) {
+SDG::get_matrix( int parallel) {
 
-        Matrix S_matrix = create_identity(matrix_size);
-        apply_to(S_matrix, parallel);
+        Matrix SDG_matrix = create_identity(matrix_size);
+        apply_to(SDG_matrix, parallel);
 
 #ifdef DEBUG
-        if (S_matrix.isnan()) {
+        if (SDG_matrix.isnan()) {
             std::stringstream sstream;
-	    sstream << "S::get_matrix: S_matrix contains NaN." << std::endl;
+	    sstream << "SDG::get_matrix: S_matrix contains NaN." << std::endl;
             print(sstream, 1);	          
         }
 #endif
 
-        return S_matrix;
+        return SDG_matrix;
 
 }
 
@@ -145,10 +145,10 @@ S::get_matrix( int parallel) {
 @param parallel Set 0 for sequential execution (default), 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
 void 
-S::apply_to( Matrix& input, int parallel ) {
+SDG::apply_to( Matrix& input, int parallel ) {
 
     if (input.rows != matrix_size ) {
-        std::string err("S::apply_to: Wrong input size in S gate apply");     
+        std::string err("SDG::apply_to: Wrong input size in S gate apply");     
         throw(err);
     }
 
@@ -170,7 +170,7 @@ S::apply_to( Matrix& input, int parallel ) {
 @param input The input array on which the gate is applied
 */
 void 
-S::apply_from_right( Matrix& input ) {
+SDG::apply_from_right( Matrix& input ) {
 
     if (input.cols != matrix_size ) {
         std::string err( "Wrong matrix size in apply_from_right" );
@@ -192,9 +192,9 @@ S::apply_from_right( Matrix& input ) {
 @brief Call to create a clone of the present class
 @return Return with a pointer pointing to the cloned object
 */
-S* S::clone() {
+SDG* SDG::clone() {
 
-    S* ret = new S(qbit_num, target_qbit);
+    SDG* ret = new SDG(qbit_num, target_qbit);
     
     ret->set_parameter_start_idx( get_parameter_start_idx() );
     ret->set_parents( parents );
@@ -211,7 +211,7 @@ S* S::clone() {
 @brief Call to reorder the qubits in the matrix of the gate
 @param qbit_list The reordered list of qubits spanning the matrix
 */
-void S::reorder_qubits( std::vector<int> qbit_list) {
+void SDG::reorder_qubits( std::vector<int> qbit_list) {
 
     Gate::reorder_qubits(qbit_list);
 
@@ -222,7 +222,7 @@ void S::reorder_qubits( std::vector<int> qbit_list) {
 @brief Call to set the number of qubits spanning the matrix of the gate
 @param qbit_num_in The number of qubits
 */
-void S::set_qbit_num(int qbit_num_in) {
+void SDG::set_qbit_num(int qbit_num_in) {
 
         // setting the number of qubits
         Gate::set_qbit_num(qbit_num_in);
@@ -233,13 +233,13 @@ void S::set_qbit_num(int qbit_num_in) {
 @param u3_1qbit Matrix parameter for the gate.
 */
 Matrix 
-S::calc_one_qubit_u3( ){
+SDG::calc_one_qubit_u3( ){
 
     Matrix u3_1qbit = Matrix(2,2); 
     u3_1qbit[0].real = 1.0; u3_1qbit[0].imag = 0.0; 
     u3_1qbit[1].real = 0.0; u3_1qbit[1].imag = 0.0;
     u3_1qbit[2].real = 0.0; u3_1qbit[2].imag = 0.0;
-    u3_1qbit[3].real = 0.0;u3_1qbit[3].imag = 1.0;
+    u3_1qbit[3].real = 0.0;u3_1qbit[3].imag = -1.0;
     return u3_1qbit;
 
 }

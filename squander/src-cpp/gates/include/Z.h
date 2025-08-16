@@ -97,21 +97,6 @@ void apply_from_right( Matrix& input );
 */
 Z* clone();
 
-
-/**
-@brief Call to set the number of qubits spanning the matrix of the gate
-@param qbit_num_in The number of qubits
-*/
-void set_qbit_num(int qbit_num_in);
-
-
-
-/**
-@brief Call to reorder the qubits in the matrix of the gate
-@param qbit_list The reordered list of qubits spanning the matrix
-*/
-void reorder_qubits( std::vector<int> qbit_list);
-
 /**
 @brief Set static values for matrix of the gates.
 @param u3_1qbit Matrix parameter for the gate.

@@ -16,7 +16,7 @@ limitations under the License.
 
 @author: Peter Rakyta, Ph.D.
 */
-/*! \file CRY.h
+/*! \file CR.h
     \brief Header file for a class representing a controlled rotation gate around the Y axis.
 */
 
@@ -59,43 +59,12 @@ virtual ~CR();
 
 
 /**
-@brief Call to apply the gate on the input array/matrix by CRY*input
-@param parameters An array of the input parameters.
-@param input The input array on which the gate is applied
-@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
-*/
-virtual void apply_to( Matrix_real& parameters, Matrix& input, int parallel  );
-
-
-/**
-@brief Call to apply the gate on the input array/matrix by input*CRY
-@param parameters An array of parameters to calculate the matrix of the U3 gate.
-@param input The input array on which the gate is applied
-*/
-virtual void apply_from_right( Matrix_real& parameters, Matrix& input );
-
-/**
-@brief Call to evaluate the derivate of the circuit on an inout with respect to all of the free parameters.
-@param parameters An array of the input parameters.
-@param input The input array on which the gate is applied
-@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
-*/
-virtual std::vector<Matrix> apply_derivate_to( Matrix_real& parameters, Matrix& input, int parallel );
-
-
-/**
 @brief Call to create a clone of the present class
 @return Return with a pointer pointing to the cloned object
 */
 virtual CR* clone();
 
 
-/**
-@brief Call to extract parameters from the parameter array corresponding to the circuit, in which the gate is embedded.
-@param parameters The parameter array corresponding to the circuit in which the gate is embedded
-@return Returns with the array of the extracted parameters.
-*/
-virtual Matrix_real extract_parameters( Matrix_real& parameters );
 
 };
 

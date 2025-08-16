@@ -24,7 +24,7 @@ limitations under the License.
 #define CNOT_H
 
 #include "matrix.h"
-#include "Gate.h"
+#include "X.h"
 #define _USE_MATH_DEFINES
 #include <math.h>
 
@@ -32,7 +32,7 @@ limitations under the License.
 /**
 @brief A class representing a CNOT operation.
 */
-class CNOT: public Gate {
+class CNOT: public X {
 
 protected:
 
@@ -58,54 +58,8 @@ CNOT(int qbit_num_in, int target_qbit_in,  int control_qbit_in);
 */
 virtual ~CNOT();
 
-/**
-@brief Call to retrieve the operation matrix
-@param parallel Set true to apply parallel kernels, false otherwise
-@return Returns with the matrix of the operation
-*/
-Matrix get_matrix();
-
-/**
-@brief Call to retrieve the operation matrix
-@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
-@return Returns with the matrix of the operation
-*/
-Matrix get_matrix(int parallel);
-
-/**
-@brief Call to apply the gate on the input array/matrix by CNOT*input
-@param input The input array on which the gate is applied
-@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
-*/
-virtual void apply_to( Matrix& input, int parallel );
 
 
-/**
-@brief Call to apply the gate on the input array/matrix by input*CNOT
-@param input The input array on which the gate is applied
-*/
-virtual void apply_from_right( Matrix& input );
-
-
-/**
-@brief Call to set the number of qubits spanning the matrix of the operation
-@param qbit_num The number of qubits
-*/
-virtual void set_qbit_num(int qbit_num);
-
-/**
-@brief Call to reorder the qubits in the matrix of the operation
-@param qbit_list The reordered list of qubits spanning the matrix
-*/
-virtual void reorder_qubits( std::vector<int> qbit_list);
-
-
-/**
-@brief Set static values for matrix of the gates.
-@param u3_1qbit Matrix parameter for the gate.
-
-*/
-Matrix calc_one_qubit_u3( );
 
 /**
 @brief Call to create a clone of the present class
