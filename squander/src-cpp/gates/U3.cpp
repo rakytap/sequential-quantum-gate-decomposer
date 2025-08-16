@@ -77,6 +77,7 @@ U3::U3(int qbit_num_in, int target_qbit_in) {
 	
     // The index of the qubit on which the gate acts (target_qbit >= 0)
     target_qbit = target_qbit_in;
+    
     // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gates
     control_qbit = -1;
 
@@ -146,7 +147,7 @@ U3::apply_to_list( Matrix_real& parameters_mtx, std::vector<Matrix>& inputs, int
         work_batch = 1;
     }
 
-
+    //TODO: also implement with OpenMP
     tbb::parallel_for( tbb::blocked_range<int>(0,inputs.size(),work_batch), [&](tbb::blocked_range<int> r) {
         for (int idx=r.begin(); idx<r.end(); ++idx) { 
 
@@ -175,6 +176,11 @@ U3::apply_to( Matrix_real& parameters_mtx, Matrix& input, int parallel ) {
         throw err;    
     }
 
+    if (parameters_mtx.size() < parameter_num ) {
+        std::string err("U3::apply_to: Input parameter array should contain at least " +  std::to_string(parameter_num) + " parameters");
+        throw err;    
+    }
+
     double ThetaOver2 = parameters_mtx[0];
     double Phi = parameters_mtx[1];
     double Lambda = parameters_mtx[2];
@@ -195,6 +201,11 @@ U3::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
     
     if (input.cols != matrix_size ) {
         std::string err("U3::apply_from_right: Wrong matrix size in U3 apply_from_right.");
+        throw err;    
+    }
+
+    if (parameters_mtx.size() < parameter_num ) {
+        std::string err("U3::apply_from_right: Input parameter array should contain at least " +  std::to_string(parameter_num) + " parameters");
         throw err;    
     }
 
@@ -219,6 +230,11 @@ U3::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input, int parallel 
     
     if (input.rows != matrix_size ) {
         std::string err("U3::apply_derivate_to: Wrong matrix size in U3 gate apply.");
+        throw err;    
+    }
+
+    if (parameters_mtx.size() < parameter_num ) {
+        std::string err("U3::apply_derivate_to: Input parameter array should contain at least " +  std::to_string(parameter_num) + " parameters");
         throw err;    
     }
 
@@ -294,11 +310,11 @@ Matrix_real
 U3::extract_parameters( Matrix_real& parameters ) {
 
     if ( get_parameter_start_idx() + get_parameter_num() > parameters.size()  ) {
-        std::string err("U3::extract_parameters: Cant extract parameters, since the dinput arary has not enough elements.");
+        std::string err("U3::extract_parameters: Cant extract parameters, since the input arary has not enough elements.");
         throw err;     
     }
 
-    Matrix_real extracted_parameters(1, 3);
+    Matrix_real extracted_parameters(1, parameter_num);
 
     extracted_parameters[0] = std::fmod( 2*parameters[ get_parameter_start_idx() ], 4*M_PI);
     extracted_parameters[1] = std::fmod( parameters[ get_parameter_start_idx()+1 ], 2*M_PI);
