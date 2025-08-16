@@ -120,7 +120,7 @@ CU::apply_to( Matrix_real& parameters_mtx, Matrix& input, int parallel ) {
     global_phase_factor.imag = 0.0;
 
 	if (global_phase != 0.0) {
-        sincos(ThetaOver2, &global_phase_factor.imag, &global_phase_factor.real);
+        sincos(global_phase, &global_phase_factor.imag, &global_phase_factor.real);
     }
 
     // apply the global phase on th egate kernel
@@ -163,7 +163,7 @@ CU::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
     global_phase_factor.imag = 0.0;
 
 	if (global_phase != 0.0) {
-        sincos(ThetaOver2, &global_phase_factor.imag, &global_phase_factor.real);
+        sincos(global_phase, &global_phase_factor.imag, &global_phase_factor.real);
     }
 
     // apply the global phase on th egate kernel
@@ -209,7 +209,7 @@ CU::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input, int parallel 
     global_phase_factor.imag = 0.0;
 
 	if (global_phase != 0.0) {
-        sincos(ThetaOver2, &global_phase_factor.imag, &global_phase_factor.real);
+        sincos(global_phase, &global_phase_factor.imag, &global_phase_factor.real);
     }
 
     // apply the global phase on th egate kernel
