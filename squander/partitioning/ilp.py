@@ -157,24 +157,28 @@ def get_float_ops(num_qubit, gate_qubits, control_qubits):
     # (a + bi) * (c + di) = (ac - bd) + (ad + bc)i => 6 ops for 4m2a
     return 2**(num_qubit-control_qubits) * (g_size * (4 + 2) + 2 * (g_size - 1))
 
-def contract_single_qubit_chains(g, rg, gate_to_qubit, topo_order):
+def contract_single_qubit_chains(go, rgo, gate_to_qubit, topo_order):
     # Identify and contract single-qubit chains in the circuit
-    g = { x: set(y) for x, y in g.items() }
-    rg = { x: set(y) for x, y in rg.items() }
+    g = { x: set(y) for x, y in go.items() }
+    rg = { x: set(y) for x, y in rgo.items() }
     single_qubit_gates = {x for x, y in gate_to_qubit.items() if len(y) == 1}
     single_qubit_chains = {}
     for gate in topo_order:
         if gate in single_qubit_gates:
             # Contract the single-qubit chain
-            if rg[gate]:
-                v = next(iter(rg[gate]))
+            if rgo[gate]:
+                v = next(iter(rgo[gate]))
                 single_qubit_chains[gate] = single_qubit_chains[v] if v in single_qubit_chains else []
-                if not v in single_qubit_gates: g[v].remove(gate)
             else: single_qubit_chains[gate] = []
             single_qubit_chains[gate].append(gate)
+            if rg[gate]:
+                v = next(iter(rg[gate]))
+                g[v].remove(gate)
+                g[v] |= g[gate]
             if g[gate]:
                 v = next(iter(g[gate]))
-                if not v in single_qubit_gates: rg[v].remove(gate)
+                rg[v].remove(gate)
+                rg[v] |= rg[gate]
             del g[gate]; del rg[gate]
     topo_order = [x for x in topo_order if not x in single_qubit_gates]
     return g, rg, topo_order, single_qubit_chains
@@ -192,7 +196,25 @@ def recombine_single_qubit_chains(g, rg, single_qubit_chains, L):
             L.append(frozenset(chain))
     return L
 
-def max_partitions(c, max_qubits_per_partition):
+def ilp_global_optimal(allparts, g):
+    import pulp
+    allparts = list(allparts)
+    gate_to_parts = {x: [] for x in g}
+    for i, part in enumerate(allparts):
+        for gate in part: gate_to_parts[gate].append(i)
+    prob = pulp.LpProblem("OptimalPartitioning", pulp.LpMinimize)
+    x = pulp.LpVariable.dicts("x", (i for i in range(len(allparts))), cat="Binary") #is partition i included
+    for i in g: prob += pulp.lpSum(x[j] for j in gate_to_parts[i]) == 1 #constraint that all gates are included exactly once
+    prob.setObjective(pulp.lpSum(x[i] for i in range(len(allparts))))
+    #from gurobilic import get_gurobi_options
+    #prob.solve(pulp.GUROBI(manageEnv=True, msg=False, envOptions=get_gurobi_options()))
+    prob.solve(pulp.GUROBI(manageEnv=True, msg=False, timeLimit=180, Threads=os.cpu_count()))
+    #prob.solve(pulp.PULP_CBC_CMD(msg=False))
+    #print(f"Status: {pulp.LpStatus[prob.status]}")
+    L = [allparts[i] for i in range(len(allparts)) if int(pulp.value(x[i]))]
+    return L
+
+def max_partitions(c, max_qubits_per_partition, use_ilp=True):
     gate_dict, go, rgo, gate_to_qubit, S = build_dependency(c)
     topo_order = _get_topo_order(go, rgo)
     g, rg, topo_order, single_qubit_chains = contract_single_qubit_chains(go, rgo, gate_to_qubit, topo_order)
@@ -226,20 +248,24 @@ def max_partitions(c, max_qubits_per_partition):
                 Ynew, Anew, Bnew = Y - R, A - R, B - R
                 for x in R: Anew |= reach[x] & Ynew; Bnew |= revreach[x] & Ynew
                 stack.append((X | R, Ynew, Anew, Bnew, list(sorted(Anew, key=topo_index.__getitem__)), list(sorted(Bnew, key=topo_index.__getitem__, reverse=True)), newQ))
-    L, excluded = [], set()
-    for part in sorted(allparts, key=len, reverse=True):
-        if len(part & excluded) != 0: continue
-        excluded |= part
-        L.append(part)
+    if use_ilp:
+        L = ilp_global_optimal(allparts, g)
+    else:
+        L, excluded = [], set()
+        for part in sorted(allparts, key=len, reverse=True):
+            if len(part & excluded) != 0: continue
+            excluded |= part
+            L.append(part)
     L = recombine_single_qubit_chains(go, rgo, single_qubit_chains, L)
     return topo_sort_partitions(c, max_qubits_per_partition, L)
 
 def _test_max_qasm():
-    K = 4
+    K = 3
     filename = "examples/partitioning/qasm_samples/heisenberg-16-20.qasm" 
     #filename = "benchmarks/partitioning/test_circuit/0410184_169.qasm"
     #filename = "benchmarks/partitioning/test_circuit/9symml_195.qasm"
     #filename = "benchmarks/partitioning/test_circuit/adr4_197_qsearch.qasm"
+    filename = "benchmarks/partitioning/test_circuit/squar5_261.qasm"
     
     from squander import utils
     
