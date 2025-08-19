@@ -512,6 +512,16 @@ void add_permutation(std::vector<int> pattern);
 void add_permutation_to_front(std::vector<int> pattern);
 
 /**
+@brief Append a permutation gate to the list of gates
+*/
+void add_permutation_nu();
+
+/**
+@brief Add a permutation gate to the front of the list of gates
+*/
+void add_permutation_nu_to_front();
+
+/**
 @brief Append a Composite gate to the list of gates
 */
 void add_composite();

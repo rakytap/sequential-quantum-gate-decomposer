@@ -51,6 +51,7 @@ limitations under the License.
 #include "Composite.h"
 #include "Gates_block.h"
 #include "N_Qubit_Permutation.h"
+#include "N_Qubit_Permutation_NU.h"
 #include "custom_kernel_1qubit_gate.h"
 
 
@@ -1550,6 +1551,31 @@ void Gates_block::add_permutation_to_front(std::vector<int> pattern) {
 
         // create the operation
         Gate* gate = static_cast<Gate*>(new N_Qubit_Permutation( qbit_num, pattern ));
+
+        // adding the operation to the front of the list of gates
+        add_gate_to_front( gate );
+
+}
+
+/**
+@brief Append a UN gate to the list of gates
+*/
+void Gates_block::add_permutation_nu() {
+
+        // create the operation
+        Gate* operation = static_cast<Gate*>(new N_Qubit_Permutation_NU( qbit_num ));
+
+        // adding the operation to the end of the list of gates
+        add_gate( operation );
+}
+
+/**
+@brief Add a UN gate to the front of the list of gates
+*/
+void Gates_block::add_permutation_nu_to_front() {
+
+        // create the operation
+        Gate* gate = static_cast<Gate*>(new N_Qubit_Permutation_NU( qbit_num ));
 
         // adding the operation to the front of the list of gates
         add_gate_to_front( gate );

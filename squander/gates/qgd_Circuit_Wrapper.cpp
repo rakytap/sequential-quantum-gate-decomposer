@@ -327,7 +327,20 @@ qgd_Circuit_Wrapper_add_R(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *k
 
 }
 
+/**
+@brief Wrapper function to add a R gate to the front of the gate structure.
+@param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper.
+@param args A tuple of the input arguments: target_qbit (int)
+@param kwds A tuple of keywords
+*/
+static PyObject *
+qgd_Circuit_Wrapper_add_Permutation_NU(qgd_Circuit_Wrapper *self){
 
+    self->circuit->add_permutation_nu();
+
+    return Py_BuildValue("i", 0);
+
+}
 
 /**
 @brief Wrapper function to add a RY gate to the front of the gate structure.
@@ -2658,6 +2671,9 @@ static PyMethodDef qgd_Circuit_Wrapper_Methods[] = {
      "Call to add a CH gate to the front of the gate structure"
     },
     {"add_Permutation", (PyCFunction) qgd_Circuit_Wrapper_add_Permutation, METH_VARARGS | METH_KEYWORDS,
+     "Call to add a permutation gate to the front of the gate structure"
+    },
+    {"add_Permutation_NU", (PyCFunction) qgd_Circuit_Wrapper_add_Permutation_NU, METH_NOARGS,
      "Call to add a permutation gate to the front of the gate structure"
     },
     {"add_SYC", (PyCFunction) qgd_Circuit_Wrapper_add_SYC, METH_VARARGS | METH_KEYWORDS,
