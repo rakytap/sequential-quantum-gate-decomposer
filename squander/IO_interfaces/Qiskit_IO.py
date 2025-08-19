@@ -39,6 +39,8 @@ from squander.gates.gates_Wrapper import (
     Y,
     Z,
     T,
+    S,
+    Sdg,
     Tdg,
     R,
     CH,
@@ -49,7 +51,8 @@ from squander.gates.gates_Wrapper import (
     RZ,
     SX,
     SYC,
-    CRY )
+    CRY,
+    CU )
 
 
 
@@ -112,6 +115,11 @@ def get_Qiskit_Circuit( Squander_circuit, parameters ):
             parameters_gate = gate.Extract_Parameters( parameters )
             circuit.u( parameters_gate[0], parameters_gate[1], parameters_gate[2], gate.get_Target_Qbit() )
 
+        elif isinstance( gate, CU ):
+            # adding U3 gate to the quantum circuit
+            parameters_gate = gate.Extract_Parameters( parameters )
+            circuit.cu( parameters_gate[0], parameters_gate[1], parameters_gate[2], gate.get_Control_Qbit(), gate.get_Target_Qbit() )
+
         elif isinstance( gate, RX ):
             # RX gate
             parameters_gate = gate.Extract_Parameters( parameters )
@@ -146,6 +154,14 @@ def get_Qiskit_Circuit( Squander_circuit, parameters ):
         elif isinstance( gate, Z ):
             # Z gate
             circuit.z( gate.get_Target_Qbit() )  
+
+        elif isinstance( gate, S ):
+            # S gate
+            circuit.s( gate.get_Target_Qbit() )  
+
+        elif isinstance( gate, Sdg ):
+            # Sdg gate
+            circuit.sdg( gate.get_Target_Qbit() )  
 
         elif isinstance( gate, SX ):
             # SX gate
@@ -228,6 +244,11 @@ def get_Qiskit_Circuit_inverse( Squander_circuit, parameters ):
             parameters_gate = [scalar(p) for p in gate.Extract_Parameters( parameters )]
             circuit.u( -parameters_gate[0], -parameters_gate[2], -parameters_gate[1], gate.get_Target_Qbit() )   
 
+        elif isinstance( gate, CU ):
+            # adding U3 gate to the quantum circuit
+            parameters_gate = [scalar(p) for p in gate.Extract_Parameters( parameters )]
+            circuit.cu( -parameters_gate[0], -parameters_gate[2], -parameters_gate[1], gate.get_Control_Qbit(), gate.get_Target_Qbit() )   
+
         elif isinstance( gate, RX ):
             # RX gate
             parameters_gate = [scalar(p) for p in gate.Extract_Parameters( parameters )]
@@ -257,7 +278,15 @@ def get_Qiskit_Circuit_inverse( Squander_circuit, parameters ):
 
         elif isinstance( gate, Z ):
             # Z gate
-            circuit.z( gate.get_Target_Qbit() )  
+            circuit.z( gate.get_Target_Qbit() ) 
+
+        elif isinstance( gate, S ):
+            # S gate
+            circuit.sdg( gate.get_Target_Qbit() )  
+
+        elif isinstance( gate, Sdg ):
+            # Sdg gate
+            circuit.s( gate.get_Target_Qbit() )  
 
         elif isinstance( gate, SX ):
             # SX gate
@@ -344,6 +373,20 @@ def convert_Qiskit_to_Squander( qc_in ):
                 parameters = parameters + [float(param)]
 
             Circuit_Squander.add_U3( qubit )
+
+        elif name == 'cu' :
+            # add CU gate - theta/2 handled internally by U3 gate implementation
+            qubits = gate.qubits                
+            qubit0 = q_register.index( qubits[0] )
+            qubit1 = q_register.index( qubits[1] )
+
+            params = gate.operation.params
+            params[0] = params[0]/2 #SQUADER works with theta/2            
+
+            for param in params:
+                parameters = parameters + [float(param)]
+
+            Circuit_Squander.add_CU( qubit1, qubit0 )
 
         elif name == 'cx':
             # add cx gate 
@@ -437,6 +480,18 @@ def convert_Qiskit_to_Squander( qc_in ):
             qubit = q_register.index( qubits[0] ) 
 
             Circuit_Squander.add_Z( qubit )
+
+        elif name == "s":
+            qubits = gate.qubits                
+            qubit = q_register.index( qubits[0] ) 
+
+            Circuit_Squander.add_S( qubit )
+
+        elif name == "sdg":
+            qubits = gate.qubits                
+            qubit = q_register.index( qubits[0] ) 
+
+            Circuit_Squander.add_Sdg( qubit )
 
         elif name == "sx":
             qubits = gate.qubits                

@@ -256,6 +256,9 @@ Gate::apply_to( Matrix& input, int parallel ) {
 void 
 Gate::apply_to( Matrix_real& parameter_mtx, Matrix& input, int parallel ) {
 
+    std::string err("Unimplemented abstract function apply_to");
+    throw( err );
+
     return;
 }
 
@@ -286,6 +289,22 @@ Gate::apply_from_right( Matrix& input ) {
 
     Matrix ret = dot(input, matrix_alloc);
     memcpy( input.get_data(), ret.get_data(), ret.size()*sizeof(QGD_Complex16) );
+
+}
+
+
+/**
+@brief Call to apply the gate on the input array/matrix by input*Gate
+@param parameter_mtx An array of the input parameters.
+@param input The input array on which the gate is applied
+*/
+void 
+Gate::apply_from_right( Matrix_real& parameter_mtx, Matrix& input ) {
+
+    std::string err("Unimplemented abstract function apply_from_right");
+    throw( err );
+    
+    return;
 
 }
 

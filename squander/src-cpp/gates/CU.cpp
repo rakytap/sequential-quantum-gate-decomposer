@@ -16,118 +16,75 @@ limitations under the License.
 
 @author: Peter Rakyta, Ph.D.
 */
-/*! \file U3.cpp
-    \brief Class representing a U3 gate.
+/*! \file CU.cpp
+    \brief Class representing a CNOT gate.
 */
 
-#include "U3.h"
-#include "tbb/tbb.h"
+#include "CU.h"
+
 
 // pi/2
 static double M_PIOver2 = M_PI/2;
 
-//static tbb::spin_mutex my_mutex;
+
+
 /**
 @brief Nullary constructor of the class.
 */
-U3::U3() {
+CU::CU() : U3() {
 
     // A string labeling the gate operation
-    name = "U3";
+    name = "CU";
 
-    // number of qubits spanning the matrix of the gate
-    qbit_num = -1;
-    // the size of the matrix
-    matrix_size = -1;
     // A string describing the type of the gate
-    type = U3_OPERATION;
+    type = CU_OPERATION;
 
-    // The index of the qubit on which the gate acts (target_qbit >= 0)
-    target_qbit = -1;
-    // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gates
+    // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gate
     control_qbit = -1;
 
-    parameter_num = 0;
 
 }
+
 
 /**
 @brief Constructor of the class.
-@param qbit_num_in The number of qubits spanning the gate.
-@param target_qbit_in The 0<=ID<qbit_num of the target qubit.
+@param qbit_num_in The number of qubits in the unitaries
+@param target_qbit_in The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
+@param control_qbit_in The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
 */
-U3::U3(int qbit_num_in, int target_qbit_in) {
-    
+CU::CU(int qbit_num_in,  int target_qbit_in, int control_qbit_in) : U3(qbit_num_in,  target_qbit_in) {
+
+
     // A string labeling the gate operation
-    name = "U3";
+    name = "CU";
 
-    // number of qubits spanning the matrix of the gate
-    qbit_num = qbit_num_in;
-    // the size of the matrix
-    matrix_size = Power_of_2(qbit_num);
     // A string describing the type of the gate
-    type = U3_OPERATION;
+    type = CU_OPERATION;
 
-    if (target_qbit_in >= qbit_num) {
+
+    if (control_qbit_in >= qbit_num) {
         std::stringstream sstream;
-        sstream << "The index of the target qubit is larger than the number of qubits" << std::endl;
-        print(sstream, 0);        
+        sstream << "The index of the control qubit is larger than the number of qubits" << std::endl;
+        print(sstream, 0);	    	
         throw sstream.str();
     }
-	
-    // The index of the qubit on which the gate acts (target_qbit >= 0)
-    target_qbit = target_qbit_in;
     
-    // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gates
-    control_qbit = -1;
+    // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gate
+    control_qbit = control_qbit_in;
 
-    parameter_num = 3;
+    // compared to U3 here we have another parameter controling the global phase on the target qubit
+    parameter_num = 4;
+
 
 }
-
 
 /**
 @brief Destructor of the class
 */
-U3::~U3() {
+CU::~CU() {
 
 }
 
-
-/**
-@brief Call to retrieve the gate matrix
-@param parameters An array of parameters to calculate the matrix of the U3 gate.
-@return Returns with a matrix of the gate
-*/
-Matrix
-U3::get_matrix( Matrix_real& parameters ) {
-        
-        return get_matrix( parameters, false );
-}
-
-
-/**
-@brief Call to retrieve the gate matrix
-@param parameters An array of parameters to calculate the matrix of the U3 gate.
-@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
-@return Returns with a matrix of the gate
-*/
-Matrix
-U3::get_matrix( Matrix_real& parameters, int parallel ) {
-
-        Matrix U3_matrix = create_identity(matrix_size);
-        apply_to(parameters, U3_matrix, parallel);
-
-#ifdef DEBUG
-        if (U3_matrix.isnan()) {
-            std::string err( "U3::get_matrix: U3_matrix contains NaN." );
-            throw( err );	  
-        }
-#endif
-
-        return U3_matrix;
-
-}
 
 
 /**
@@ -137,39 +94,7 @@ U3::get_matrix( Matrix_real& parameters, int parallel ) {
 @param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
 void 
-U3::apply_to_list( Matrix_real& parameters_mtx, std::vector<Matrix>& inputs, int parallel ) {
-
-    int work_batch = 1;
-    if ( parallel == 0 ) {
-        work_batch = inputs.size();
-    }
-    else {
-        work_batch = 1;
-    }
-
-    //TODO: also implement with OpenMP
-    tbb::parallel_for( tbb::blocked_range<int>(0,inputs.size(),work_batch), [&](tbb::blocked_range<int> r) {
-        for (int idx=r.begin(); idx<r.end(); ++idx) { 
-
-            Matrix* input = &inputs[idx];
-
-            apply_to( parameters_mtx, *input, parallel );
-
-        }
-
-    });
-
-}
-
-
-/**
-@brief Call to apply the gate on the input array/matrix by U3*input
-@param parameters An array of parameters to calculate the matrix of the U3 gate.
-@param input The input array on which the gate is applied
-@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
-*/
-void 
-U3::apply_to( Matrix_real& parameters_mtx, Matrix& input, int parallel ) {
+CU::apply_to( Matrix_real& parameters_mtx, Matrix& input, int parallel ) {
     
     if (input.rows != matrix_size ) {
         std::string err("U3::apply_to: Wrong input size in U3 gate apply.");
@@ -177,19 +102,34 @@ U3::apply_to( Matrix_real& parameters_mtx, Matrix& input, int parallel ) {
     }
 
     if (parameters_mtx.size() < parameter_num ) {
-        std::string err("U3::apply_to: Input parameter array should contain at least " +  std::to_string(parameter_num) + " parameters");
+        std::string err("CU::apply_to: Input parameter array should contain at least " +  std::to_string(parameter_num) + " parameters");
         throw err;    
     }
 
     double ThetaOver2 = parameters_mtx[0];
     double Phi = parameters_mtx[1];
     double Lambda = parameters_mtx[2];
+    double global_phase = parameters_mtx[3];
 
     // get the U3 gate of one qubit
     Matrix u3_1qbit = calc_one_qubit_u3(ThetaOver2, Phi, Lambda );
 
+    
+    QGD_Complex16 global_phase_factor;
+    global_phase_factor.real = 1.0;
+    global_phase_factor.imag = 0.0;
+
+	if (global_phase != 0.0) {
+        sincos(global_phase, &global_phase_factor.imag, &global_phase_factor.real);
+    }
+
+    // apply the global phase on th egate kernel
+    mult( global_phase_factor, u3_1qbit);
+
+
     apply_kernel_to( u3_1qbit, input, false, parallel );
 }
+
 
 /**
 @brief Call to apply the gate on the input array/matrix by input*U3
@@ -197,27 +137,42 @@ U3::apply_to( Matrix_real& parameters_mtx, Matrix& input, int parallel ) {
 @param input The input array on which the gate is applied
 */
 void 
-U3::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
-    
+CU::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
+    //TODO: check
+
     if (input.cols != matrix_size ) {
-        std::string err("U3::apply_from_right: Wrong matrix size in U3 apply_from_right.");
+        std::string err("CU::apply_from_right: Wrong matrix size in apply_from_right.");
         throw err;    
     }
 
     if (parameters_mtx.size() < parameter_num ) {
-        std::string err("U3::apply_from_right: Input parameter array should contain at least " +  std::to_string(parameter_num) + " parameters");
+        std::string err("CU::apply_from_right: Input parameter array should contain at least " +  std::to_string(parameter_num) + " parameters");
         throw err;    
     }
 
     double ThetaOver2 = parameters_mtx[0];
     double Phi = parameters_mtx[1];
     double Lambda = parameters_mtx[2];
+    double global_phase = parameters_mtx[3];
 
     // get the U3 gate of one qubit
     Matrix u3_1qbit = calc_one_qubit_u3(ThetaOver2, Phi, Lambda );
 
+    QGD_Complex16 global_phase_factor;
+    global_phase_factor.real = 1.0;
+    global_phase_factor.imag = 0.0;
+
+	if (global_phase != 0.0) {
+        sincos(global_phase, &global_phase_factor.imag, &global_phase_factor.real);
+    }
+
+    // apply the global phase on th egate kernel
+    mult( global_phase_factor, u3_1qbit);
+
     apply_kernel_from_right(u3_1qbit, input);
 }
+
+
 
 /**
 @brief Call to evaluate the derivate of the circuit on an inout with respect to all of the free parameters.
@@ -226,15 +181,16 @@ U3::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
 @param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
 std::vector<Matrix> 
-U3::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input, int parallel ) {
-    
+CU::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input, int parallel ) {
+    //TODO: check
+
     if (input.rows != matrix_size ) {
-        std::string err("U3::apply_derivate_to: Wrong matrix size in U3 gate apply.");
+        std::string err("CU::apply_derivate_to: Wrong matrix size.");
         throw err;    
     }
 
     if (parameters_mtx.size() < parameter_num ) {
-        std::string err("U3::apply_derivate_to: Input parameter array should contain at least " +  std::to_string(parameter_num) + " parameters");
+        std::string err("CU::apply_derivate_to: Input parameter array should contain at least " +  std::to_string(parameter_num) + " parameters");
         throw err;    
     }
 
@@ -243,28 +199,66 @@ U3::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input, int parallel 
     double ThetaOver2 = parameters_mtx[0];
     double Phi = parameters_mtx[1];
     double Lambda = parameters_mtx[2];
+    double global_phase = parameters_mtx[3];
     bool deriv = true;
 
 
     Matrix u3_1qbit_theta = calc_one_qubit_u3(ThetaOver2+M_PIOver2, Phi, Lambda);
+    QGD_Complex16 global_phase_factor;
+    global_phase_factor.real = 1.0;
+    global_phase_factor.imag = 0.0;
+
+	if (global_phase != 0.0) {
+        sincos(global_phase, &global_phase_factor.imag, &global_phase_factor.real);
+    }
+
+    // apply the global phase on th egate kernel
+    mult( global_phase_factor, u3_1qbit_theta);
+
     Matrix res_mtx_theta = input.copy();
     apply_kernel_to( u3_1qbit_theta, res_mtx_theta, deriv, parallel );
     ret.push_back(res_mtx_theta);
 
-
+    /////////////////////////////////////////////////////////
     Matrix u3_1qbit_phi = calc_one_qubit_u3(ThetaOver2, Phi+M_PIOver2, Lambda );
     memset(u3_1qbit_phi.get_data(), 0.0, 2*sizeof(QGD_Complex16) );
+
+    // apply the global phase on th egate kernel
+    mult( global_phase_factor, u3_1qbit_phi);
+
     Matrix res_mtx_phi = input.copy();
     apply_kernel_to( u3_1qbit_phi, res_mtx_phi, deriv, parallel );
     ret.push_back(res_mtx_phi);
 
-
+    //////////////////////////////////////////////////////////
     Matrix u3_1qbit_lambda = calc_one_qubit_u3(ThetaOver2, Phi, Lambda+M_PIOver2 );
     memset(u3_1qbit_lambda.get_data(), 0.0, sizeof(QGD_Complex16) );
     memset(u3_1qbit_lambda.get_data()+2, 0.0, sizeof(QGD_Complex16) );
+
+    // apply the global phase on th egate kernel
+    mult( global_phase_factor, u3_1qbit_lambda);
+
     Matrix res_mtx_lambda = input.copy();
     apply_kernel_to( u3_1qbit_lambda, res_mtx_lambda, deriv, parallel );
     ret.push_back(res_mtx_lambda);
+
+
+    ///////////////////////////////////////////////////////////
+    Matrix u3_1qbit_global_phase = calc_one_qubit_u3(ThetaOver2, Phi, Lambda );
+
+    // derivate of the global phase 
+    double tmp = global_phase_factor.real;
+    global_phase_factor.real = -global_phase_factor.imag;
+    global_phase_factor.imag = tmp;
+
+    // apply the global phase on th egate kernel
+    mult( global_phase_factor, u3_1qbit_global_phase);
+
+    Matrix res_mtx_phase_factor = input.copy();
+    apply_kernel_to( u3_1qbit_global_phase, res_mtx_phase_factor, deriv, parallel );
+    ret.push_back(res_mtx_phase_factor);
+
+
 
 
     return ret;
@@ -272,33 +266,22 @@ U3::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input, int parallel 
 
 
 /**
-@brief Calculate the matrix of a U3 gate gate corresponding to the given parameters acting on a single qbit space.
-@param ThetaOver2 Real parameter standing for the parameter theta/2.
-@param Phi Real parameter standing for the parameter phi.
-@param Lambda Real parameter standing for the parameter lambda.
-@return Returns with the matrix of the one-qubit matrix.
-*/
-void 
-U3::parameters_for_calc_one_qubit( double& ThetaOver2, double& Phi, double& Lambda){
-
-    // ThetaOver2, Lambda, Phi are passed through unchanged
-
-}
-
-/**
 @brief Call to create a clone of the present class
 @return Return with a pointer pointing to the cloned object
 */
-U3* U3::clone() {
+CU* CU::clone() {
 
-    U3* ret = new U3(qbit_num, target_qbit);
+    CU* ret = new CU( qbit_num, target_qbit, control_qbit );
     
     ret->set_parameter_start_idx( get_parameter_start_idx() );
     ret->set_parents( parents );
     ret->set_children( children );
 
     return ret;
+
 }
+
+
 
 
 /**
@@ -307,10 +290,10 @@ U3* U3::clone() {
 @return Returns with the array of the extracted parameters.
 */
 Matrix_real 
-U3::extract_parameters( Matrix_real& parameters ) {
+CU::extract_parameters( Matrix_real& parameters ) {
 
     if ( get_parameter_start_idx() + get_parameter_num() > parameters.size()  ) {
-        std::string err("U3::extract_parameters: Cant extract parameters, since the input arary has not enough elements.");
+        std::string err("CU::extract_parameters: Cant extract parameters, since the input arary has not enough elements.");
         throw err;     
     }
 
@@ -319,6 +302,7 @@ U3::extract_parameters( Matrix_real& parameters ) {
     extracted_parameters[0] = std::fmod( 2*parameters[ get_parameter_start_idx() ], 4*M_PI);
     extracted_parameters[1] = std::fmod( parameters[ get_parameter_start_idx()+1 ], 2*M_PI);
     extracted_parameters[2] = std::fmod( parameters[ get_parameter_start_idx()+2 ], 2*M_PI);
+    extracted_parameters[3] = std::fmod( parameters[ get_parameter_start_idx()+3 ], 2*M_PI);
 
     return extracted_parameters;
 }

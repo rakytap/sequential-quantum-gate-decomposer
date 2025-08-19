@@ -330,6 +330,7 @@ list(APPEND qgd_files
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/optimization_engines/COSINE.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/optimization_engines/GRAD_DESCEND.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/optimization_engines/GRAD_DESCEND_PARAMETER_SHIFT_RULE.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/CU.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/CNOT.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/SYC.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/CZ.cpp
@@ -343,6 +344,8 @@ list(APPEND qgd_files
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/X.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/Y.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/Z.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/S.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/SDG.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/T.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/Tdg.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/SX.cpp

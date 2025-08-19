@@ -16,12 +16,12 @@ limitations under the License.
 
 @author: Peter Rakyta, Ph.D.
 */
-/*! \file Z.h
-    \brief Header file for a class representing the Z gate.
+/*! \file SDG.h
+    \brief Header file for a class representing the Sdg gate.
 */
 
-#ifndef Z_H
-#define Z_H
+#ifndef SDG_H
+#define SDG_H
 
 #include "U3.h"
 //#include "Gate.h"
@@ -31,9 +31,9 @@ limitations under the License.
 
 
 /**
-@brief A class representing a U3 gate.
+@brief A class representing an Sdg gate.
 */
-class Z: public U3 {
+class SDG: public U3 {
 
 
 public:
@@ -41,7 +41,7 @@ public:
 /**
 @brief NullaRX constructor of the class.
 */
-Z();
+SDG();
 
 
 /**
@@ -52,12 +52,12 @@ Z();
 @param phi_in logical value indicating whether the matrix creation takes an argument phi
 @param lambda_in logical value indicating whether the matrix creation takes an argument lambda
 */
-Z(int qbit_num_in, int target_qbit_in);
+SDG(int qbit_num_in, int target_qbit_in);
 
 /**
 @brief Destructor of the class
 */
-~Z();
+~SDG();
 
 
 /**
@@ -95,7 +95,22 @@ void apply_from_right( Matrix& input );
 @brief Call to create a clone of the present class
 @return Return with a pointer pointing to the cloned object
 */
-Z* clone();
+SDG* clone();
+
+
+/**
+@brief Call to set the number of qubits spanning the matrix of the gate
+@param qbit_num_in The number of qubits
+*/
+void set_qbit_num(int qbit_num_in);
+
+
+
+/**
+@brief Call to reorder the qubits in the matrix of the gate
+@param qbit_list The reordered list of qubits spanning the matrix
+*/
+void reorder_qubits( std::vector<int> qbit_list);
 
 /**
 @brief Set static values for matrix of the gates.
@@ -107,5 +122,5 @@ Matrix calc_one_qubit_u3( );
 };
 
 
-#endif //Z
+#endif //SDG
 

@@ -111,7 +111,7 @@ RY::apply_to( Matrix_real& parameters, Matrix& input, int parallel  ) {
 
 
     if (input.rows != matrix_size ) {
-        std::string err("RY::apply_to: Wrong input size in RY gate apply.");
+        std::string err("apply_to: Wrong matrix size in  gate apply.");
         throw err;    
     }
 
@@ -120,12 +120,14 @@ RY::apply_to( Matrix_real& parameters, Matrix& input, int parallel  ) {
 
     ThetaOver2 = parameters[0];
     parameters_for_calc_one_qubit(ThetaOver2, Phi, Lambda);
-    
+
+
     // get the U3 gate of one qubit
     Matrix u3_1qbit = calc_one_qubit_u3(ThetaOver2, Phi, Lambda );
 
 
-    apply_kernel_to( u3_1qbit, input, false, parallel );
+    // apply the computing kernel on the matrix
+    apply_kernel_to(u3_1qbit, input, false, parallel);
 
 
 }
@@ -141,21 +143,22 @@ void
 RY::apply_from_right( Matrix_real& parameters, Matrix& input ) {
 
     if (input.cols != matrix_size ) {
-        std::stringstream sstream;
-	sstream << "Wrong matrix size in U3 apply_from_right" << std::endl;
+	    std::stringstream sstream;
+	    sstream << "Wrong matrix size in apply_from_right" << std::endl;
         print(sstream, 0);	
-        exit(-1);
+        throw sstream.str();
     }
 
     double ThetaOver2, Phi, Lambda;
 
     ThetaOver2 = parameters[0];
     parameters_for_calc_one_qubit(ThetaOver2, Phi, Lambda);
-  
+
+
     // get the U3 gate of one qubit
     Matrix u3_1qbit = calc_one_qubit_u3(ThetaOver2, Phi, Lambda );
 
-
+    // apply the computing kernel on the matrix
     apply_kernel_from_right(u3_1qbit, input);
 
 
@@ -173,25 +176,31 @@ RY::apply_from_right( Matrix_real& parameters, Matrix& input ) {
 std::vector<Matrix> 
 RY::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input, int parallel ) {
 
-    if (input.rows != matrix_size ) {
-        std::stringstream sstream;
-	sstream << "Wrong matrix size in RY apply_derivate_to" << std::endl;
-        print(sstream, 0);	
-        exit(-1);
-    }
-
     std::vector<Matrix> ret;
 
-    Matrix_real parameters_tmp(1,1);
+    double ThetaOver2, Phi, Lambda;
 
-    parameters_tmp[0] = parameters_mtx[0] + M_PI/2;
-    Matrix res_mtx = input.copy();
-    apply_to(parameters_tmp, res_mtx, parallel);
+    ThetaOver2 = parameters_mtx[0]+M_PI/2;
+    parameters_for_calc_one_qubit(ThetaOver2, Phi, Lambda);
+
+    // the resulting matrix
+    Matrix res_mtx = input.copy();   
+
+
+    // get the U3 gate of one qubit
+    Matrix u3_1qbit = calc_one_qubit_u3(ThetaOver2, Phi, Lambda );
+
+
+    // apply the computing kernel on the matrix
+    bool deriv = true;
+    apply_kernel_to(u3_1qbit, res_mtx, deriv, parallel);
+
     ret.push_back(res_mtx);
-
-
-   
     return ret;
+
+
+
+    
 
 
 }

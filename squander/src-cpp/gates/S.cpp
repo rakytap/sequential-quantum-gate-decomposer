@@ -16,11 +16,11 @@ limitations under the License.
 
 @author: Peter Rakyta, Ph.D.
 */
-/*! \file Z.cpp
-    \brief Class representing a Z gate.
+/*! \file S.cpp
+    \brief Class representing a S gate.
 */
 
-#include "Z.h"
+#include "S.h"
 
 
 
@@ -28,17 +28,17 @@ limitations under the License.
 /**
 @brief NullaRX constructor of the class.
 */
-Z::Z() {
+S::S() {
 
     // A string labeling the gate operation
-    name = "Z";
+    name = "S";
 
     // number of qubits spanning the matrix of the gate
     qbit_num = -1;
     // the size of the matrix
     matrix_size = -1;
     // A string describing the type of the gate
-    type = Z_OPERATION;
+    type = S_OPERATION;
 
     // The index of the qubit on which the gate acts (target_qbit >= 0)
     target_qbit = -1;
@@ -61,16 +61,16 @@ Z::Z() {
 @param phi_in logical value indicating whether the matrix creation takes an argument phi
 @param lambda_in logical value indicating whether the matrix creation takes an argument lambda
 */
-Z::Z(int qbit_num_in, int target_qbit_in) {
+S::S(int qbit_num_in, int target_qbit_in) {
 
     // A string labeling the gate operation
-    name = "Z";
+    name = "S";
     // number of qubits spanning the matrix of the gate
     qbit_num = qbit_num_in;
     // the size of the matrix
     matrix_size = Power_of_2(qbit_num);
     // A string describing the type of the gate
-    type = Z_OPERATION;
+    type = S_OPERATION;
 
 
     if (target_qbit_in >= qbit_num) {
@@ -95,7 +95,7 @@ Z::Z(int qbit_num_in, int target_qbit_in) {
 /**
 @brief Destructor of the class
 */
-Z::~Z() {
+S::~S() {
 
 }
 
@@ -105,7 +105,7 @@ Z::~Z() {
 @return Returns with a matrix of the gate
 */
 Matrix
-Z::get_matrix() {
+S::get_matrix() {
 
         return get_matrix( false );
 
@@ -119,20 +119,20 @@ Z::get_matrix() {
 @return Returns with a matrix of the gate
 */
 Matrix
-Z::get_matrix( int parallel) {
+S::get_matrix( int parallel) {
 
-        Matrix Z_matrix = create_identity(matrix_size);
-        apply_to(Z_matrix, parallel);
+        Matrix S_matrix = create_identity(matrix_size);
+        apply_to(S_matrix, parallel);
 
 #ifdef DEBUG
-        if (Z_matrix.isnan()) {
+        if (S_matrix.isnan()) {
             std::stringstream sstream;
-	        sstream << "Z::get_matrix: Z_matrix contains NaN." << std::endl;
+	    sstream << "S::get_matrix: S_matrix contains NaN." << std::endl;
             print(sstream, 1);	          
         }
 #endif
 
-        return Z_matrix;
+        return S_matrix;
 
 }
 
@@ -145,10 +145,10 @@ Z::get_matrix( int parallel) {
 @param parallel Set 0 for sequential execution (default), 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
 void 
-Z::apply_to( Matrix& input, int parallel ) {
+S::apply_to( Matrix& input, int parallel ) {
 
     if (input.rows != matrix_size ) {
-        std::string err("Z::apply_to: Wrong input size in Z gate apply");     
+        std::string err("S::apply_to: Wrong input size in S gate apply");     
         throw(err);
     }
 
@@ -170,16 +170,11 @@ Z::apply_to( Matrix& input, int parallel ) {
 @param input The input array on which the gate is applied
 */
 void 
-Z::apply_from_right( Matrix& input ) {
-
-    //The stringstream input to store the output messages.
-    std::stringstream sstream;
+S::apply_from_right( Matrix& input ) {
 
     if (input.cols != matrix_size ) {
-        std::stringstream sstream;
-	    sstream << "Wrong matrix size in U3 apply_from_right" << std::endl;
-        print(sstream, 0);	  
-        throw( sstream.str() );
+        std::string err( "Wrong matrix size in apply_from_right" );
+        throw( err ) ;
     }
 
 
@@ -197,9 +192,9 @@ Z::apply_from_right( Matrix& input ) {
 @brief Call to create a clone of the present class
 @return Return with a pointer pointing to the cloned object
 */
-Z* Z::clone() {
+S* S::clone() {
 
-    Z* ret = new Z(qbit_num, target_qbit);
+    S* ret = new S(qbit_num, target_qbit);
     
     ret->set_parameter_start_idx( get_parameter_start_idx() );
     ret->set_parents( parents );
@@ -213,17 +208,38 @@ Z* Z::clone() {
 
 
 /**
+@brief Call to reorder the qubits in the matrix of the gate
+@param qbit_list The reordered list of qubits spanning the matrix
+*/
+void S::reorder_qubits( std::vector<int> qbit_list) {
+
+    Gate::reorder_qubits(qbit_list);
+
+}
+
+
+/**
+@brief Call to set the number of qubits spanning the matrix of the gate
+@param qbit_num_in The number of qubits
+*/
+void S::set_qbit_num(int qbit_num_in) {
+
+        // setting the number of qubits
+        Gate::set_qbit_num(qbit_num_in);
+}
+
+/**
 @brief Set static values for matrix of the gates.
 @param u3_1qbit Matrix parameter for the gate.
 */
 Matrix 
-Z::calc_one_qubit_u3( ){
+S::calc_one_qubit_u3( ){
 
     Matrix u3_1qbit = Matrix(2,2); 
     u3_1qbit[0].real = 1.0; u3_1qbit[0].imag = 0.0; 
     u3_1qbit[1].real = 0.0; u3_1qbit[1].imag = 0.0;
     u3_1qbit[2].real = 0.0; u3_1qbit[2].imag = 0.0;
-    u3_1qbit[3].real = -1.0;u3_1qbit[3].imag = 0.0;
+    u3_1qbit[3].real = 0.0;u3_1qbit[3].imag = 1.0;
     return u3_1qbit;
 
 }

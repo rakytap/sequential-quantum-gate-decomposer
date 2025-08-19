@@ -17,6 +17,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see http://www.gnu.org/licenses/.
 '''
 
+import importlib
 import pytest
 import inspect
 
@@ -44,19 +45,23 @@ class Test_Gate_inheritance:
         r"""
         Test that gates properly inherits from the base Gate class.
         """
-
+        
         from squander import Gate
-        exec(f"from squander import {gate_class}")
-
+        
+        control_gates = ["CH","CNOT","CRY","CZ","SYC"]
+        
         # Test class inheritance
-        gate_cls = eval(gate_class)
+        module = importlib.import_module('squander')
+        gate_cls = getattr(module, gate_class)
+
         assert issubclass(gate_cls, Gate)
         
         # Create an instance
-        if hasattr(gate_cls, "control_qbit"):    
+        if gate_class in control_gates:    
             gate_ins = gate_cls(3, 0, 1) # 3 qubits, target 0, control 1
         else:
             gate_ins = gate_cls(3, 0)
+
         assert isinstance(gate_ins, Gate)
 
     @pytest.mark.parametrize("gate_class", [
@@ -82,17 +87,18 @@ class Test_Gate_inheritance:
         """
 
         from squander import Gate
-        exec(f"from squander import {gate_class}")
+
+        control_gates = ["CH","CNOT","CRY","CZ","SYC"]
+        
+        module = importlib.import_module('squander')
+        gate_cls = getattr(module, gate_class)
         
         # Create an instance of the base Gate class to get its methods
         base_gate       = Gate(3)
         base_methods    = [name for name, obj in inspect.getmembers(base_gate) 
-                           if (callable(obj) and not name.startswith('_'))]
-        
-        gate_cls = eval(gate_class)
-
+                           if (callable(obj) and not name.startswith('_'))]    
         # Create an instance
-        if hasattr(gate_cls, "control_qbit"):    
+        if gate_class in control_gates:  
             gate_ins = gate_cls(3, 0, 1) # 3 qubits, target 0, control 1
         else:
             gate_ins = gate_cls(3, 0)
@@ -103,7 +109,7 @@ class Test_Gate_inheritance:
 
         # Test method results
         assert gate_ins.get_Target_Qbit() == 0
-        if hasattr(gate_cls, "control_qbit"):
+        if gate_class in control_gates:  
             assert gate_ins.get_Control_Qbit() == 1
         
         name = gate_ins.get_Name()

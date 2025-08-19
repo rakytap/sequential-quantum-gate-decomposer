@@ -106,34 +106,22 @@ void
 R::apply_to( Matrix_real& parameters, Matrix& input, int parallel ) {
 
     if (input.rows != matrix_size ) {
-        std::stringstream sstream;
-	sstream << "Wrong matrix size in RX gate apply" << std::endl;
-        print(sstream, 0);	        
-        exit(-1);
+        std::string err("R::apply_to: Wrong matrix size in gate apply.");
+        throw err;    
     }
 
 
     double ThetaOver2, Phi, Lambda;
 
     ThetaOver2 = parameters[0];
-    Phi = parameters[1];
+    Phi = parameters[1]-M_PI/2;
+    Lambda = -1.*parameters[1] + M_PI/2;
     
-    
-    Matrix u3_1qbit = Matrix(2,2);
-    u3_1qbit[0].real = std::cos(ThetaOver2); 
-    u3_1qbit[0].imag = 0;
-    
-    u3_1qbit[1].real = -1.*std::sin(ThetaOver2)*std::sin(Phi); 
-    u3_1qbit[1].imag = -1.*std::sin(ThetaOver2)*std::cos(Phi);
-    
-    u3_1qbit[2].real = std::sin(ThetaOver2)*std::sin(Phi); 
-    u3_1qbit[2].imag = -1.*std::sin(ThetaOver2)*std::cos(Phi);
-    
-    u3_1qbit[3].real = std::cos(ThetaOver2); 
-    u3_1qbit[3].imag = 0;
+    Matrix u3_1qbit = calc_one_qubit_u3(ThetaOver2, Phi, Lambda );
 
 
-    apply_kernel_to( u3_1qbit, input, false, parallel );
+    // apply the computing kernel on the matrix
+    apply_kernel_to(u3_1qbit, input, false, parallel);
 
 
 }
@@ -149,24 +137,23 @@ void
 R::apply_from_right( Matrix_real& parameters, Matrix& input ) {
 
     if (input.cols != matrix_size ) {
-        std::stringstream sstream;
-	sstream << "Wrong matrix size in U3 apply_from_right" << std::endl;
-        print(sstream, 0);	   
-        exit(-1);
+	    std::stringstream sstream;
+	    sstream << "Wrong matrix size in CR apply_from_right" << std::endl;
+        print(sstream, 0);	
+        throw( sstream.str() );
     }
-
 
     double ThetaOver2, Phi, Lambda;
 
-    ThetaOver2 = parameters[0]; 
-    Phi = parameters[1] - M_PI/2;
+    ThetaOver2 = parameters[0];
+    Phi = parameters[1]-M_PI/2;
     Lambda = -1.*parameters[1] + M_PI/2;
     
-    
+
     // get the U3 gate of one qubit
     Matrix u3_1qbit = calc_one_qubit_u3(ThetaOver2, Phi, Lambda );
 
-
+    // apply the computing kernel on the matrix
     apply_kernel_from_right(u3_1qbit, input);
 
 
@@ -184,53 +171,31 @@ std::vector<Matrix>
 R::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input, int parallel ) {
 
     if (input.rows != matrix_size ) {
-        std::stringstream sstream;
-	sstream << "Wrong matrix size in RX apply_derivate_to" << std::endl;
-        print(sstream, 0);	      
-        exit(-1);
+	std::stringstream sstream;
+	    sstream << "Wrong matrix size in R gate apply_derivate_to" << std::endl;
+        print(sstream, 0);	   
+        throw( sstream.str() );
     }
 
-
     std::vector<Matrix> ret;
-
-
     
-    double ThetaOver2,Phi;
+    double ThetaOver2, Phi, Lambda;
+    
     ThetaOver2 = parameters_mtx[0];
-    Phi = parameters_mtx[1];
-
+    Phi = parameters_mtx[1]-M_PI/2;
+    Lambda = -1.*parameters_mtx[1] + M_PI/2;
+    
+    
     Matrix res_mtx = input.copy();
-    Matrix u3_1qbit = Matrix(2,2);
-    u3_1qbit[0].real = std::cos(ThetaOver2+ M_PI/2); 
-    u3_1qbit[0].imag = 0;
-    
-    u3_1qbit[1].real = -1.*std::sin(ThetaOver2+ M_PI/2)*std::sin(Phi); 
-    u3_1qbit[1].imag = -1.*std::sin(ThetaOver2+ M_PI/2)*std::cos(Phi);
-    
-    u3_1qbit[2].real = std::sin(ThetaOver2+ M_PI/2)*std::sin(Phi); 
-    u3_1qbit[2].imag = -1.*std::sin(ThetaOver2+ M_PI/2)*std::cos(Phi);
-    
-    u3_1qbit[3].real = std::cos(ThetaOver2+ M_PI/2); 
-    u3_1qbit[3].imag = 0;
-    
+    Matrix u3_1qbit = calc_one_qubit_u3(ThetaOver2 + M_PI/2, Phi, Lambda );
     apply_kernel_to( u3_1qbit, res_mtx, true, parallel );
     ret.push_back(res_mtx);
-
-
     Matrix res_mtx2 = input.copy();
-    u3_1qbit = Matrix(2,2);
-    u3_1qbit[0].real = 0; 
-    u3_1qbit[0].imag = 0;
-    
-    u3_1qbit[1].real = -1.*std::sin(ThetaOver2)*std::sin(Phi+ M_PI/2); 
-    u3_1qbit[1].imag = -1.*std::sin(ThetaOver2)*std::cos(Phi+ M_PI/2);
-    
-    u3_1qbit[2].real = std::sin(ThetaOver2)*std::sin(Phi+ M_PI/2); 
-    u3_1qbit[2].imag = -1.*std::sin(ThetaOver2)*std::cos(Phi+ M_PI/2);
-    
-    u3_1qbit[3].real = 0; 
-    u3_1qbit[3].imag = 0;
-    
+    u3_1qbit = calc_one_qubit_u3(ThetaOver2, Phi + M_PI/2, Lambda - M_PI/2 );
+    u3_1qbit[0].real = 0.; 
+    u3_1qbit[0].imag = 0.;
+    u3_1qbit[3].real = 0.; 
+    u3_1qbit[3].imag = 0.;
     apply_kernel_to( u3_1qbit, res_mtx2, true, parallel );
     ret.push_back(res_mtx2);
     

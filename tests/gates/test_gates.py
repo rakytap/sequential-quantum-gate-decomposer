@@ -423,12 +423,12 @@ class Test_operations:
             obj = getattr(gates, name)
 
             if inspect.isclass(obj):
-                print(f"testing gate: {name}")
-
+                
                 if name == "SYC" or name == "Gate" or name=="CR" or name=="CROT":
                     continue
 
-                # NEEDS FIXING: CRY, RX, RY, U1, U2, U3
+                print(f"testing gate: {name}")
+
                 self.perform_gate_matrix_testing( obj )
                 self.perform_gate_apply_to_testing( obj )
 

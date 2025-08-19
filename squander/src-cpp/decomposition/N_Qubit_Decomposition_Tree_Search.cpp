@@ -82,16 +82,13 @@ N_Qubit_Decomposition_Tree_Search::N_Qubit_Decomposition_Tree_Search() : Optimiz
 @brief Constructor of the class.
 @param Umtx_in The unitary matrix to be decomposed
 @param qbit_num_in The number of qubits spanning the unitary Umtx
-@param level_limit_in The maximal number of two-qubit gates in the decomposition
 @param config std::map conatining custom config parameters
 @param accelerator_num The number of DFE accelerators used in the calculations
 @return An instance of the class
 */
-N_Qubit_Decomposition_Tree_Search::N_Qubit_Decomposition_Tree_Search( Matrix Umtx_in, int qbit_num_in, int level_limit_in, std::map<std::string, Config_Element>& config, int accelerator_num ) : Optimization_Interface(Umtx_in, qbit_num_in, false, config, RANDOM, accelerator_num) {
+N_Qubit_Decomposition_Tree_Search::N_Qubit_Decomposition_Tree_Search( Matrix Umtx_in, int qbit_num_in, std::map<std::string, Config_Element>& config, int accelerator_num ) : Optimization_Interface(Umtx_in, qbit_num_in, false, config, RANDOM, accelerator_num) {
 
-
-    // set the level limit
-    level_limit = level_limit_in;
+    level_limit = 0;
 
     // BFGS is better for smaller problems, while ADAM for larger ones
     if ( qbit_num <= 5 ) {
@@ -149,18 +146,17 @@ N_Qubit_Decomposition_Tree_Search::N_Qubit_Decomposition_Tree_Search( Matrix Umt
 @brief Constructor of the class.
 @param Umtx_in The unitary matrix to be decomposed
 @param qbit_num_in The number of qubits spanning the unitary Umtx
-@param level_limit_in The maximal number of two-qubit gates in the decomposition
 @param topology_in A list of <target_qubit, control_qubit> pairs describing the connectivity between qubits.
 @param config std::map conatining custom config parameters
 @param accelerator_num The number of DFE accelerators used in the calculations
 @return An instance of the class
 */
-N_Qubit_Decomposition_Tree_Search::N_Qubit_Decomposition_Tree_Search( Matrix Umtx_in, int qbit_num_in, int level_limit_in, std::vector<matrix_base<int>> topology_in, std::map<std::string, Config_Element>& config, int accelerator_num ) : Optimization_Interface(Umtx_in, qbit_num_in, false, config, RANDOM, accelerator_num) {
+N_Qubit_Decomposition_Tree_Search::N_Qubit_Decomposition_Tree_Search( Matrix Umtx_in, int qbit_num_in, std::vector<matrix_base<int>> topology_in, std::map<std::string, Config_Element>& config, int accelerator_num ) : Optimization_Interface(Umtx_in, qbit_num_in, false, config, RANDOM, accelerator_num) {
 
 
 
     // set the level limit
-    level_limit = level_limit_in;
+    level_limit = 0;
 
     // Maximal number of iteartions in the optimization process
     max_outer_iterations = 1;
@@ -259,14 +255,6 @@ N_Qubit_Decomposition_Tree_Search::start_decomposition() {
     //measure the time for the decompositin
     tbb::tick_count start_time = tbb::tick_count::now();
 
-    if (level_limit == 0 ) {
-        std::stringstream sstream;
-        sstream << "please increase level limit" << std::endl;
-        print(sstream, 0);	
-        return;
-    }
-
-
 
 
     Gates_block* gate_structure_loc = determine_gate_structure(optimized_parameters_mtx);
@@ -344,12 +332,20 @@ N_Qubit_Decomposition_Tree_Search::determine_gate_structure(Matrix_real& optimiz
         level_max = 14;
     }
    
-     level_limit = (int)level_max;
    
+     level_limit = (int)level_max;
+     
+    if (level_limit == 0 ) {
+        std::stringstream sstream;
+        sstream << "please increase level limit" << std::endl;
+        print(sstream, 0);	
+        return;
+    }
+
     GrayCode gcode_best_solution;
     double minimum_best_solution  = current_minimum; 
 
-    for ( int level = 0; level <= level_max; level++ ) { 
+    for ( int level = 0; level <= level_limit; level++ ) { 
 
         GrayCode&& gcode = tree_search_over_gate_structures( level );   
 

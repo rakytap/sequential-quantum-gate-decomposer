@@ -42,12 +42,11 @@ class qgd_N_Qubit_Decomposition_Tree_Search(qgd_N_Qubit_Decomposition_Tree_Searc
 # @brief Constructor of the class.
 # @param Umtx_in The unitary matrix to be decomposed
 # @param qbit_num_in The number of qubits spanning the unitary Umtx
-# @param level_limit_max The maximal number of two-qubit gates in the decomposition
 # @param topology_in A list of <target_qubit, control_qubit> pairs describing the connectivity between qubits.
 # @param config std::map conatining custom config parameters
 # @param accelerator_num The number of DFE accelerators used in the calculations
 # @return An instance of the class
-    def __init__( self, Umtx, level_limit_max=8, topology=None, config={}, accelerator_num=0 ):
+    def __init__( self, Umtx, topology=None, config={}, accelerator_num=0 ):
 
         ## the number of qubits
         self.qbit_num = int(round( np.log2( len(Umtx) ) ))
@@ -76,7 +75,7 @@ class qgd_N_Qubit_Decomposition_Tree_Search(qgd_N_Qubit_Decomposition_Tree_Searc
             return
 
         # call the constructor of the wrapper class
-        super().__init__(Umtx, self.qbit_num, level_limit_max, topology=topology_validated, config=config, accelerator_num=accelerator_num)
+        super().__init__(Umtx, self.qbit_num, topology=topology_validated, config=config, accelerator_num=accelerator_num)
 
         
 ##

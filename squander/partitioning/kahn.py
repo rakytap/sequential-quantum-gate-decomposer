@@ -1,25 +1,32 @@
 from itertools import dropwhile
 
 from squander.gates.qgd_Circuit import qgd_Circuit as Circuit
-from squander.partitioning.tools import get_qubits, build_dependency
+from squander.partitioning.tools import build_dependency
 
 
-#@brief Partitions a flat circuit into subcircuits using Kahn's algorithm
-#@param c The SQUANDER circuit to be partitioned
-#@param max_qubit Maximum number of qubits allowed per partition
-#@param preparts Optional prefedefined partitioning scheme
-#@return Tuple: 
-#   - Partitioned 2-level circuit
-#   - Tuples specifying new parameter positions: source_idx, dest_idx, param_count
-#   - Partition assignments
 def kahn_partition(c, max_qubit, preparts=None):
+    """
+    Partition a circuit greedily using Kahn's algorithm
+
+    Args:
+        
+        c: SQUANDER Circuit to partition
+        
+        max_qubit: Max qubits per partition
+        
+        preparts: Optional predefined partitions
+
+    Returns:
+        
+        Partitioned circuit, parameter order (source_idx, dest_idx, param_count), partition assignments
+    """
     # Build dependency graphs
-    gate_dict, g, rg = build_dependency(c)
+    gate_dict, g, rg, gate_to_qubit, S = build_dependency(c)
     
-    L, S = [], {m for m in rg if len(rg[m]) == 0}
+    L = []
 
     def partition_condition(gate):
-        return len(get_qubits(gate_dict[gate]) | curr_partition) > max_qubit
+        return len(gate_to_qubit[gate] | curr_partition) > max_qubit
     
     curr_partition = set()
     curr_idx = 0
@@ -45,7 +52,7 @@ def kahn_partition(c, max_qubit, preparts=None):
 
         # Add gate to current partition
         parts[-1].append(n)
-        curr_partition |= get_qubits(gate_dict[n])
+        curr_partition |= gate_to_qubit[n]
         curr_idx += gate_dict[n].get_Parameter_Num()
 
         # Update dependencies
@@ -66,18 +73,33 @@ def kahn_partition(c, max_qubit, preparts=None):
 
 
 def kahn_partition_preparts(c, max_qubit, preparts):
-    preparts = split_partition(c, preparts)
+    """
+    Build partitioned circuit from predefined partitions
 
+    Args:
+        
+        c: SQUANDER Circuit to partition
+        
+        max_qubit: Max qubits per partition
+        
+        preparts: Predefined partition assignments
+
+    Returns:
+        
+        Partitioned circuit, parameter order (source_idx, dest_idx, param_count), partition assignments
+    """
     top_circuit = Circuit(c.get_Qbit_Num())
 
     # Build dependency graphs
-    gate_dict, g, rg = build_dependency(c)
+    gate_dict, g, rg, gate_to_qubit, S = build_dependency(c)
     
-    L, S = [], {m for m in rg if len(rg[m]) == 0}
+    preparts = split_partition(preparts, g, rg)
+
+    L = []
     param_order = []
 
     def partition_condition(gate):
-        return len(get_qubits(gate_dict[gate]) | curr_partition) > max_qubit
+        return len(gate_to_qubit[gate] | curr_partition) > max_qubit
     
     c = Circuit(c.get_Qbit_Num())
     curr_partition = set()
@@ -106,7 +128,7 @@ def kahn_partition_preparts(c, max_qubit, preparts):
 
         # Add gate to current partition
         parts[-1].append(n)
-        curr_partition |= get_qubits(gate_dict[n])
+        curr_partition |= gate_to_qubit[n]
         c.add_Gate(gate_dict[n])
         param_order.append((
             gate_dict[n].get_Parameter_Start_Index(), 
@@ -133,8 +155,22 @@ def kahn_partition_preparts(c, max_qubit, preparts):
     return top_circuit, param_order, parts
 
 
-def split_partition(c, preparts):
-    _, g, rg = build_dependency(c)
+def split_partition(preparts, g, rg):
+    """
+    Split partitions into connected components
+
+    Args:
+        
+        preparts: Initial partitions
+        
+        g: Forward dependency graph
+        
+        rg: Reverse dependency graph
+
+    Returns:
+        
+        List of split partitions
+    """
     L = []
     for part in preparts:
         V = set(part)
@@ -153,6 +189,9 @@ def split_partition(c, preparts):
 
 
 def test_split_partition():
+    """
+    Test split_partition function for correctness.
+    """
     q = 3
     c = Circuit(q)
 
@@ -164,7 +203,9 @@ def test_split_partition():
 
     expected = [[0, 1, 2], [3, 4]]
 
-    split = split_partition(c, preparts=[[0, 1, 2, 3, 4]])
+    _, g, rg, _, _ = build_dependency(c)
+
+    split = split_partition([[0, 1, 2, 3, 4]], g, rg)
     
     print(split)
 
