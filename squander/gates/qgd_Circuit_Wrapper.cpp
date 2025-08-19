@@ -425,7 +425,51 @@ qgd_Circuit_Wrapper_add_CNOT(qgd_Circuit_Wrapper *self, PyObject *args, PyObject
 
 }
 
+/**
+@brief Wrapper function to add a CNOT gate to the front of the gate structure.
+@param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper.
+@param args A tuple of the input arguments: control_qbit (int), target_qbit (int)
+@param kwds A tuple of keywords
+*/
+static PyObject *
+qgd_Circuit_Wrapper_add_Permutation(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *kwds)
+{
 
+    // The tuple of expected keywords
+    static char *kwlist[] = {(char*)"pattern", NULL};
+    PyObject *pattern_py = NULL;
+    // parsing input arguments
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|O", kwlist,
+                                     &pattern_py))
+        return Py_BuildValue("i", -1);
+
+    // create C++ variant of the list
+    std::vector<int> pattern_cpp;
+    bool is_None = pattern_py == Py_None;
+    if ( !is_None ) {
+
+        // get the number of qbubits
+        Py_ssize_t element_num = PyList_GET_SIZE(pattern_py);
+
+        for ( Py_ssize_t idx=0; idx<element_num; idx++ ) {
+
+            int element = (int) PyLong_AsLong(  PyList_GetItem(pattern_py, idx ));
+
+            pattern_cpp.push_back( element );        
+        }
+    }
+    if ((int)pattern_cpp.size()!=self->circuit->get_qbit_num()){
+        std::string err( "Pattern must include all qubits");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+    self->circuit->add_permutation(pattern_cpp);
+    
+
+    return Py_BuildValue("i", 0);
+
+}
 
 /**
 @brief Wrapper function to add a CZ gate to the front of the gate structure.
@@ -2612,6 +2656,9 @@ static PyMethodDef qgd_Circuit_Wrapper_Methods[] = {
     },
     {"add_CH", (PyCFunction) qgd_Circuit_Wrapper_add_CH, METH_VARARGS | METH_KEYWORDS,
      "Call to add a CH gate to the front of the gate structure"
+    },
+    {"add_Permutation", (PyCFunction) qgd_Circuit_Wrapper_add_Permutation, METH_VARARGS | METH_KEYWORDS,
+     "Call to add a permutation gate to the front of the gate structure"
     },
     {"add_SYC", (PyCFunction) qgd_Circuit_Wrapper_add_SYC, METH_VARARGS | METH_KEYWORDS,
      "Call to add a Sycamore gate to the front of the gate structure"

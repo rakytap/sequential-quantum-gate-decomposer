@@ -27,7 +27,6 @@ limitations under the License.
 #include <map>
 #include "common.h"
 #include "matrix_real.h"
-#include "CROT.h"
 #include "Gate.h"
 
 #ifdef __DFE__
@@ -502,6 +501,15 @@ void add_on();
 */
 void add_on_to_front();
 
+/**
+@brief Append a permutation gate to the list of gates
+*/
+void add_permutation(std::vector<int> pattern);
+
+/**
+@brief Add a permutation gate to the front of the list of gates
+*/
+void add_permutation_to_front(std::vector<int> pattern);
 
 /**
 @brief Append a Composite gate to the list of gates
