@@ -222,7 +222,7 @@ def ilp_global_optimal(allparts, g):
         #prob.solve(pulp.GUROBI(manageEnv=True, msg=False, envOptions=get_gurobi_options()))
         prob.solve(pulp.GUROBI(manageEnv=True, msg=False, timeLimit=180, Threads=os.cpu_count()))
         #prob.solve(pulp.PULP_CBC_CMD(msg=False))
-        #print(f"Status: {pulp.LpStatus[prob.status]}")
+        print(f"Status: {pulp.LpStatus[prob.status]}")
         L = [i for i in range(len(allparts)) if int(pulp.value(x[i]))]
         gate_to_part = {}
         for i in L:
@@ -235,10 +235,11 @@ def ilp_global_optimal(allparts, g):
                     if i != j:
                         G_part[i].add(j)
         scc, _ = nuutila_reach_scc(G_part)
-        badsccs = {frozenset(v) for k, v in scc.items() if len(v) > 1}
+        badsccs = {frozenset(v) for v in scc.values() if len(v) > 1}
         if not badsccs: break #if all partitions do not have any cycles with more than one element per SCC terminate
+        print(badsccs)
         for badscc in badsccs:
-            prob += pulp.lpSum(x[j] for j in badscc) == 1
+            prob += pulp.lpSum(x[j] for j in badscc) <= len(badscc) - 1 #remove at least one partition from the SCC
     return [allparts[i] for i in L]
 
 def max_partitions(c, max_qubits_per_partition, use_ilp=True):
@@ -248,30 +249,29 @@ def max_partitions(c, max_qubits_per_partition, use_ilp=True):
     topo_index = {x: i for i, x in enumerate(topo_order)} #all topological sorts of the DAG are the same as acyclic orderings of the transitive closure
     _, reach = nuutila_reach_scc(g)
     _, revreach = nuutila_reach_scc(rg)
-    def bfs_reach(x, g, rg, reach):
-        level, nextlevel, visited = {x}, set(), set()
+    def bfs_reach(X, g, rg, reach, Q):
+        level, nextlevel, visited = set(X), set(), set()
         Qs = {}
         while level:
             for v in level:
                 R = rg[v] & reach
                 if not R <= visited: continue
-                Qs[v] = set.union(gate_to_qubit[v], *(Qs[u] for u in R))
+                Qs[v] = Q if v in X else set.union(gate_to_qubit[v], *(Qs[u] for u in R))
                 if len(Qs[v]) <= max_qubits_per_partition:
-                    nextlevel |= g[v]
+                    nextlevel |= g[v] & reach
                     visited.add(v)
                 else: del Qs[v]
             level, nextlevel = nextlevel, level
             nextlevel.clear()
-        del Qs[x]
         return set(Qs)
-    #reach = {x: bfs_reach(x, g, rg, reach[x]) for x in g} #reach[x] is the set of qubits reachable from x with budget max_qubits_per_partition
-    #revreach = {x: bfs_reach(x, rg, g, revreach[x]) for x in g}
     #https://www.sciencedirect.com/science/article/pii/S1570866708000622
     allparts = set()
     for t in topo_index:
         X, Y, Q = {t}, set(topo_order[topo_index[t]+1:]), gate_to_qubit[t]
-        Y -= reach[t] - bfs_reach(t, g, rg, reach[t])
         Anew, Bnew = reach[t] & Y, revreach[t] & Y
+        assert len(Bnew) == 0
+        prune = Anew - bfs_reach(X, g, rg, Anew, Q)
+        Y -= prune; Anew -= prune
         stack = [({t}, Y, Anew, Bnew, list(sorted(Anew, key=topo_index.__getitem__)), list(sorted(Bnew, key=topo_index.__getitem__, reverse=True)), Q)]
         while stack:
             X, Y, A, B, As, Bs, Q = stack.pop()
@@ -293,10 +293,15 @@ def max_partitions(c, max_qubits_per_partition, use_ilp=True):
                 newQ |= gate_to_qubit[x]
                 if len(newQ) > max_qubits_per_partition: break
             else:
-                Ynew, Anew, Bnew = Y - R, A - R, B - R
+                Xnew, Ynew, Anew, Bnew = X | R, Y - R, A - R, B - R
                 for x in R: Anew |= reach[x] & Ynew; Bnew |= revreach[x] & Ynew
-                stack.append((X | R, Ynew, Anew, Bnew, list(sorted(Anew, key=topo_index.__getitem__)), list(sorted(Bnew, key=topo_index.__getitem__, reverse=True)), newQ))
+                prune = Anew - bfs_reach(Xnew, g, rg, Anew, newQ)
+                Ynew -= prune; Anew -= prune
+                prune = Bnew - bfs_reach(Xnew, rg, g, Bnew, newQ)
+                Ynew -= prune; Bnew -= prune
+                stack.append((Xnew, Ynew, Anew, Bnew, list(sorted(Anew, key=topo_index.__getitem__)), list(sorted(Bnew, key=topo_index.__getitem__, reverse=True)), newQ))
     if use_ilp:
+        print(len(allparts))
         L = ilp_global_optimal(allparts, g)
     else:
         L, excluded = [], set()
@@ -313,9 +318,10 @@ def _test_max_qasm():
     K = 4
     filename = "examples/partitioning/qasm_samples/heisenberg-16-20.qasm" 
     #filename = "benchmarks/partitioning/test_circuit/0410184_169.qasm"
-    filename = "benchmarks/partitioning/test_circuit/ham15_107_squander.qasm"
-    #filename = "benchmarks/partitioning/test_circuit/adr4_197_qsearch.qasm"
+    #filename = "benchmarks/partitioning/test_circuit/ham15_107_squander.qasm"
+    filename = "benchmarks/partitioning/test_circuit/adr4_197_qsearch.qasm"
     #filename = "benchmarks/partitioning/test_circuit/con1_216_squander.qasm"
+    filename = "benchmarks/partitioning/test_circuit/hwb8_113.qasm"
     
     from squander import utils
     
