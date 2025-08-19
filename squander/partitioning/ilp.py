@@ -20,7 +20,7 @@ def topo_sort_partitions(c, max_qubits_per_partition, parts):
             rg[m].remove(n)
             if len(rg[m]) == 0:
                 S.add(m)
-    assert len(L) == len(parts)
+    assert len(L) == len(parts), (len(L), len(parts), g, rg, partdict)
     
     from squander.partitioning.kahn import kahn_partition_preparts
     return kahn_partition_preparts(c, max_qubits_per_partition, L)
@@ -179,9 +179,10 @@ def contract_single_qubit_chains(go, rgo, gate_to_qubit, topo_order):
                 v = next(iter(g[gate]))
                 rg[v].remove(gate)
                 rg[v] |= rg[gate]
-            del g[gate]; del rg[gate]
-    topo_order = [x for x in topo_order if not x in single_qubit_gates]
+            del g[gate]; del rg[gate]    
+    topo_order = [x for x in topo_order if not x in single_qubit_gates] #topo_order = _get_topo_order(g, rg)
     return g, rg, topo_order, single_qubit_chains
+
 def recombine_single_qubit_chains(g, rg, single_qubit_chains, L):
     L = [set(x) for x in L]
     gate_to_part = {x: part for part in L for x in part}
@@ -206,13 +207,30 @@ def ilp_global_optimal(allparts, g):
     x = pulp.LpVariable.dicts("x", (i for i in range(len(allparts))), cat="Binary") #is partition i included
     for i in g: prob += pulp.lpSum(x[j] for j in gate_to_parts[i]) == 1 #constraint that all gates are included exactly once
     prob.setObjective(pulp.lpSum(x[i] for i in range(len(allparts))))
-    #from gurobilic import get_gurobi_options
-    #prob.solve(pulp.GUROBI(manageEnv=True, msg=False, envOptions=get_gurobi_options()))
-    prob.solve(pulp.GUROBI(manageEnv=True, msg=False, timeLimit=180, Threads=os.cpu_count()))
-    #prob.solve(pulp.PULP_CBC_CMD(msg=False))
-    #print(f"Status: {pulp.LpStatus[prob.status]}")
-    L = [allparts[i] for i in range(len(allparts)) if int(pulp.value(x[i]))]
-    return L
+    while True:
+        #from gurobilic import get_gurobi_options
+        #prob.solve(pulp.GUROBI(manageEnv=True, msg=False, envOptions=get_gurobi_options()))
+        prob.solve(pulp.GUROBI(manageEnv=True, msg=False, timeLimit=180, Threads=os.cpu_count()))
+        #prob.solve(pulp.PULP_CBC_CMD(msg=False))
+        #print(f"Status: {pulp.LpStatus[prob.status]}")
+        L = [i for i in range(len(allparts)) if int(pulp.value(x[i]))]
+        gate_to_part = {}
+        for i in L:
+            for gate in allparts[i]: gate_to_part[gate] = i
+        G_part = {i: set() for i in L}
+        for i in L: #build partition get strongly connected components to block invalid cyclic solutions
+            for u in allparts[i]:
+                for v in g[u]:
+                    j = gate_to_part[v]
+                    if i != j:
+                        G_part[i].add(j)
+        scc, _ = nuutila_reach_scc(G_part)
+        badsccs = {frozenset(v) for k, v in scc.items() if len(v) > 1}
+        if not badsccs: break #if all partitions do not have any cycles with more than one element per SCC terminate
+        for badscc in badsccs:
+            prob += pulp.lpSum(x[j] for j in badscc) == 1
+
+    return [allparts[i] for i in L]
 
 def max_partitions(c, max_qubits_per_partition, use_ilp=True):
     gate_dict, go, rgo, gate_to_qubit, S = build_dependency(c)
@@ -232,12 +250,14 @@ def max_partitions(c, max_qubits_per_partition, use_ilp=True):
             if A:
                 v = As.pop()
                 A.remove(v)
-                R = revreach[v] & A; R.add(v)
+                R = A & revreach[v]; R.add(v)
             elif B:
                 v = Bs.pop()
                 B.remove(v)
-                R = reach[v] & B; R.add(v)
-            else: allparts.add(frozenset(X)); continue
+                R = B & reach[v]; R.add(v)
+            else:
+                #assert all((reach[u] & revreach[v]) <= X for u in X for v in X if u != v)
+                allparts.add(frozenset(X)); continue
             Y.remove(v)
             stack.append((X, Y, A, B, As, Bs, Q))
             newQ = set(Q)
@@ -247,6 +267,12 @@ def max_partitions(c, max_qubits_per_partition, use_ilp=True):
             else:
                 Ynew, Anew, Bnew = Y - R, A - R, B - R
                 for x in R: Anew |= reach[x] & Ynew; Bnew |= revreach[x] & Ynew
+                lQ = len(newQ)
+                # for x in Anew:
+                #     if lQ + len(gate_to_qubit[x] - newQ) > max_qubits_per_partition: Ynew.remove(x)
+                # for x in Bnew:
+                #     if lQ + len(gate_to_qubit[x] - newQ) > max_qubits_per_partition: Ynew.remove(x)
+                # Anew &= Ynew; Bnew &= Ynew
                 stack.append((X | R, Ynew, Anew, Bnew, list(sorted(Anew, key=topo_index.__getitem__)), list(sorted(Bnew, key=topo_index.__getitem__, reverse=True)), newQ))
     if use_ilp:
         L = ilp_global_optimal(allparts, g)
@@ -256,16 +282,18 @@ def max_partitions(c, max_qubits_per_partition, use_ilp=True):
             if len(part & excluded) != 0: continue
             excluded |= part
             L.append(part)
+    assert sum(len(x) for x in L) == len(g), (sum(len(x) for x in L), len(g))
     L = recombine_single_qubit_chains(go, rgo, single_qubit_chains, L)
+    assert sum(len(x) for x in L) == len(go), (sum(len(x) for x in L), len(go))
     return topo_sort_partitions(c, max_qubits_per_partition, L)
 
 def _test_max_qasm():
-    K = 3
+    K = 4
     filename = "examples/partitioning/qasm_samples/heisenberg-16-20.qasm" 
     #filename = "benchmarks/partitioning/test_circuit/0410184_169.qasm"
-    #filename = "benchmarks/partitioning/test_circuit/9symml_195.qasm"
+    filename = "benchmarks/partitioning/test_circuit/ham15_107_squander.qasm"
     #filename = "benchmarks/partitioning/test_circuit/adr4_197_qsearch.qasm"
-    filename = "benchmarks/partitioning/test_circuit/squar5_261.qasm"
+    filename = "benchmarks/partitioning/test_circuit/con1_216_squander.qasm"
     
     from squander import utils
     
