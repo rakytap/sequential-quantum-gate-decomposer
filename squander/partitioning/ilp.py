@@ -33,6 +33,15 @@ def topo_sort_partitions(c, max_qubits_per_partition, parts):
 #   - Tuples specifying new parameter positions: source_idx, dest_idx, param_count
 #   - Partition assignments
 def ilp_max_partitions(c, max_qubits_per_partition):
+    """
+    Partitions a circuit using ILP to maximize gates per partition
+    Args:
+        c: SQUANDER Circuit to partition
+        max_qubits_per_partition: Max qubits per partition
+    
+    Returns:
+        Partitioned circuit, parameter order (source_idx, dest_idx, param_count), partition assignments
+    """
     gatedict = {i: gate for i, gate in enumerate(c.get_Gates())}
     num_gates = len(gatedict)
     parts = []
