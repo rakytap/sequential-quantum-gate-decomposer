@@ -87,6 +87,7 @@ def find_next_biggest_partition(c, max_qubits_per_partition, prevparts=None):
     #print(f"Status: {pulp.LpStatus[prob.status]}  Found partition with {len(gates)} gates: {gates} and {len(qubits)} qubits: {qubits}")
     return gates
 
+#https://www.sciencedirect.com/science/article/abs/pii/0020019094901287
 def nuutila_reach_scc(succ, subg=None):
   index, s, sc, sccs, reach = 0, [], [], {}, {}
   indexes, lowlink, croot, stackheight = {}, {}, {}, {}
@@ -229,7 +230,6 @@ def ilp_global_optimal(allparts, g):
         if not badsccs: break #if all partitions do not have any cycles with more than one element per SCC terminate
         for badscc in badsccs:
             prob += pulp.lpSum(x[j] for j in badscc) == 1
-
     return [allparts[i] for i in L]
 
 def max_partitions(c, max_qubits_per_partition, use_ilp=True):
@@ -239,12 +239,31 @@ def max_partitions(c, max_qubits_per_partition, use_ilp=True):
     topo_index = {x: i for i, x in enumerate(topo_order)} #all topological sorts of the DAG are the same as acyclic orderings of the transitive closure
     _, reach = nuutila_reach_scc(g)
     _, revreach = nuutila_reach_scc(rg)
+    def bfs_reach(x, g, rg, reach):
+        level, nextlevel, visited = {x}, set(), set()
+        Qs = {}
+        while level:
+            for v in level:
+                R = rg[v] & reach
+                if not R <= visited: continue
+                Qs[v] = set.union(gate_to_qubit[v], *(Qs[u] for u in R))
+                if len(Qs[v]) <= max_qubits_per_partition:
+                    nextlevel |= g[v]
+                    visited.add(v)
+                else: del Qs[v]
+            level, nextlevel = nextlevel, level
+            nextlevel.clear()
+        del Qs[x]
+        return set(Qs)
+    #reach = {x: bfs_reach(x, g, rg, reach[x]) for x in g} #reach[x] is the set of qubits reachable from x with budget max_qubits_per_partition
+    #revreach = {x: bfs_reach(x, rg, g, revreach[x]) for x in g}
     #https://www.sciencedirect.com/science/article/pii/S1570866708000622
     allparts = set()
     for t in topo_index:
-        Y = set(topo_order[topo_index[t]+1:])
+        X, Y, Q = {t}, set(topo_order[topo_index[t]+1:]), gate_to_qubit[t]
+        Y -= reach[t] - bfs_reach(t, g, rg, reach[t])
         Anew, Bnew = reach[t] & Y, revreach[t] & Y
-        stack = [({t}, Y, Anew, Bnew, list(sorted(Anew, key=topo_index.__getitem__)), list(sorted(Bnew, key=topo_index.__getitem__, reverse=True)), gate_to_qubit[t])]
+        stack = [({t}, Y, Anew, Bnew, list(sorted(Anew, key=topo_index.__getitem__)), list(sorted(Bnew, key=topo_index.__getitem__, reverse=True)), Q)]
         while stack:
             X, Y, A, B, As, Bs, Q = stack.pop()
             if A:
@@ -267,18 +286,12 @@ def max_partitions(c, max_qubits_per_partition, use_ilp=True):
             else:
                 Ynew, Anew, Bnew = Y - R, A - R, B - R
                 for x in R: Anew |= reach[x] & Ynew; Bnew |= revreach[x] & Ynew
-                lQ = len(newQ)
-                # for x in Anew:
-                #     if lQ + len(gate_to_qubit[x] - newQ) > max_qubits_per_partition: Ynew.remove(x)
-                # for x in Bnew:
-                #     if lQ + len(gate_to_qubit[x] - newQ) > max_qubits_per_partition: Ynew.remove(x)
-                # Anew &= Ynew; Bnew &= Ynew
                 stack.append((X | R, Ynew, Anew, Bnew, list(sorted(Anew, key=topo_index.__getitem__)), list(sorted(Bnew, key=topo_index.__getitem__, reverse=True)), newQ))
     if use_ilp:
         L = ilp_global_optimal(allparts, g)
     else:
         L, excluded = [], set()
-        for part in sorted(allparts, key=len, reverse=True):
+        for part in sorted(allparts, key=len, reverse=True): #this will not work without making sure part does not induce a cycle
             if len(part & excluded) != 0: continue
             excluded |= part
             L.append(part)
@@ -293,7 +306,7 @@ def _test_max_qasm():
     #filename = "benchmarks/partitioning/test_circuit/0410184_169.qasm"
     filename = "benchmarks/partitioning/test_circuit/ham15_107_squander.qasm"
     #filename = "benchmarks/partitioning/test_circuit/adr4_197_qsearch.qasm"
-    filename = "benchmarks/partitioning/test_circuit/con1_216_squander.qasm"
+    #filename = "benchmarks/partitioning/test_circuit/con1_216_squander.qasm"
     
     from squander import utils
     
