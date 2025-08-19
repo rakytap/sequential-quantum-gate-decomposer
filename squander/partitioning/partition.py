@@ -6,7 +6,7 @@ from squander.gates.qgd_Circuit import qgd_Circuit as Circuit
 from squander import utils
 
 from squander.partitioning.kahn import kahn_partition
-from squander.partitioning.ilp import ilp_max_partitions
+from squander.partitioning.ilp import max_partitions
 from squander.partitioning.tdag import tdag_max_partitions
 from squander.partitioning.tools import translate_param_order, get_qiskit_partitions, get_bqskit_partitions
 
@@ -14,7 +14,7 @@ PartitionStrategy = Literal["kahn", "ilp", "tdag", "qiskit", "bqskit-Quick", "bq
 
 PARTITION_FUNCTIONS = {
     "kahn": kahn_partition,
-    "ilp": ilp_max_partitions, 
+    "ilp": max_partitions, 
     "tdag": tdag_max_partitions,
     "gtqcp": functools.partial(tdag_max_partitions, use_gtqcp = True),
     "qiskit": get_qiskit_partitions,
