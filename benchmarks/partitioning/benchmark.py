@@ -27,6 +27,12 @@ SUPPORTED_GATES_NAMES = {n for n in dir(gate) if not n.startswith("_") and issub
 SUPPORTED_GATES_NAMES.remove("S")
 
 def test_partitions(max_qubits = 4):
+    """
+    Benchmark partitioning strategies on QASM circuits
+    Args:
+        
+        max_qubits: Max qubits per partition
+    """
     files = glob.glob("benchmarks/partitioning/test_circuit/*.qasm")
     print(f"Total QASM: {len(files)}, max qubits: {max_qubits}")
     allfiles = {}
