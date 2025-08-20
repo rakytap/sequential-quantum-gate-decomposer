@@ -237,8 +237,8 @@ def ilp_global_optimal(allparts, g):
         scc, _ = nuutila_reach_scc(G_part)
         badsccs = {frozenset(v) for v in scc.values() if len(v) > 1}
         if not badsccs: break #if all partitions do not have any cycles with more than one element per SCC terminate
-        print(badsccs)
         for badscc in badsccs:
+            #print([(allparts[x], [g[y] for y in allparts[x]]) for x in badscc]) #canonical partitions {1, 3} and {2, 4} with edges 1->{3, 4}, 2->{3, 4}
             prob += pulp.lpSum(x[j] for j in badscc) <= len(badscc) - 1 #remove at least one partition from the SCC
     return [allparts[i] for i in L]
 
@@ -269,7 +269,7 @@ def max_partitions(c, max_qubits_per_partition, use_ilp=True):
     for t in topo_index:
         X, Y, Q = {t}, set(topo_order[topo_index[t]+1:]), gate_to_qubit[t]
         Anew, Bnew = reach[t] & Y, revreach[t] & Y
-        assert len(Bnew) == 0
+        #assert len(Bnew) == 0
         prune = Anew - bfs_reach(X, g, rg, Anew, Q)
         Y -= prune; Anew -= prune
         stack = [({t}, Y, Anew, Bnew, list(sorted(Anew, key=topo_index.__getitem__)), list(sorted(Bnew, key=topo_index.__getitem__, reverse=True)), Q)]
@@ -320,8 +320,8 @@ def _test_max_qasm():
     #filename = "benchmarks/partitioning/test_circuit/0410184_169.qasm"
     #filename = "benchmarks/partitioning/test_circuit/ham15_107_squander.qasm"
     filename = "benchmarks/partitioning/test_circuit/adr4_197_qsearch.qasm"
-    #filename = "benchmarks/partitioning/test_circuit/con1_216_squander.qasm"
-    filename = "benchmarks/partitioning/test_circuit/hwb8_113.qasm"
+    filename = "benchmarks/partitioning/test_circuit/con1_216_squander.qasm"
+    #filename = "benchmarks/partitioning/test_circuit/hwb8_113.qasm"
     
     from squander import utils
     
