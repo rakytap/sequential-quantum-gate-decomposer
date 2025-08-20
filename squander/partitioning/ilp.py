@@ -222,7 +222,7 @@ def ilp_global_optimal(allparts, g):
         #prob.solve(pulp.GUROBI(manageEnv=True, msg=False, envOptions=get_gurobi_options()))
         prob.solve(pulp.GUROBI(manageEnv=True, msg=False, timeLimit=180, Threads=os.cpu_count()))
         #prob.solve(pulp.PULP_CBC_CMD(msg=False))
-        print(f"Status: {pulp.LpStatus[prob.status]}")
+        #print(f"Status: {pulp.LpStatus[prob.status]}")
         L = [i for i in range(len(allparts)) if int(pulp.value(x[i]))]
         gate_to_part = {}
         for i in L:
@@ -301,7 +301,7 @@ def max_partitions(c, max_qubits_per_partition, use_ilp=True):
                 Ynew -= prune; Bnew -= prune
                 stack.append((Xnew, Ynew, Anew, Bnew, list(sorted(Anew, key=topo_index.__getitem__)), list(sorted(Bnew, key=topo_index.__getitem__, reverse=True)), newQ))
     if use_ilp:
-        print(len(allparts))
+        #print(len(allparts))
         L = ilp_global_optimal(allparts, g)
     else:
         L, excluded = [], set()
