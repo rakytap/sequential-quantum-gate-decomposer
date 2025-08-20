@@ -207,6 +207,25 @@ def recombine_single_qubit_chains(g, rg, single_qubit_chains, L):
             L.append(frozenset(chain))
     return L
 
+def two_cycles_from_dag_edges(g, gate_to_parts):
+    # edges: iterable of (u, v) over the original DAG
+    seen = {}       # (a,b) with a<b -> 1 if a->b seen, 2 if b->a seen, 3 if both
+    twocycles = []  # list of (a,b) with 2-cycle detected
+    for u in g:
+        for v in g[u]:
+            pu = gate_to_parts[u]  # iterable of partition ids containing u
+            pv = gate_to_parts[v]  # iterable of partition ids containing v
+            for i in pu:
+                for j in pv:
+                    if i == j: continue
+                    a, b = (i, j) if i < j else (j, i)
+                    bit   = 1 if i < j else 2
+                    prev = seen.get((a, b), 0)
+                    new  = prev | bit
+                    if new == 3 and prev != 3:   # <-- only on first time reaching 3
+                        twocycles.append((a, b))   # a<->b found
+                    seen[(a, b)] = new
+    return twocycles
 def ilp_global_optimal(allparts, g):
     import pulp
     allparts = list(allparts)
@@ -216,13 +235,15 @@ def ilp_global_optimal(allparts, g):
     prob = pulp.LpProblem("OptimalPartitioning", pulp.LpMinimize)
     x = pulp.LpVariable.dicts("x", (i for i in range(len(allparts))), cat="Binary") #is partition i included
     for i in g: prob += pulp.lpSum(x[j] for j in gate_to_parts[i]) == 1 #constraint that all gates are included exactly once
+    for u, v in two_cycles_from_dag_edges(g, gate_to_parts):
+        prob += x[u] + x[v] <= 1 #constraint that no two cycles are included
     prob.setObjective(pulp.lpSum(x[i] for i in range(len(allparts))))
     while True:
         #from gurobilic import get_gurobi_options
         #prob.solve(pulp.GUROBI(manageEnv=True, msg=False, envOptions=get_gurobi_options()))
         prob.solve(pulp.GUROBI(manageEnv=True, msg=False, timeLimit=180, Threads=os.cpu_count()))
         #prob.solve(pulp.PULP_CBC_CMD(msg=False))
-        #print(f"Status: {pulp.LpStatus[prob.status]}")
+        print(f"Status: {pulp.LpStatus[prob.status]}")
         L = [i for i in range(len(allparts)) if int(pulp.value(x[i]))]
         gate_to_part = {}
         for i in L:
@@ -322,6 +343,7 @@ def _test_max_qasm():
     filename = "benchmarks/partitioning/test_circuit/adr4_197_qsearch.qasm"
     filename = "benchmarks/partitioning/test_circuit/con1_216_squander.qasm"
     #filename = "benchmarks/partitioning/test_circuit/hwb8_113.qasm"
+    filename = "benchmarks/partitioning/test_circuit/urf1_278.qasm"
     
     from squander import utils
     
