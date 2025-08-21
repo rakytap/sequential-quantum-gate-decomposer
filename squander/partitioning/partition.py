@@ -46,12 +46,12 @@ def PartitionCircuit( circ: Circuit, parameters: np.ndarray, max_partition_size:
        
     func = PARTITION_FUNCTIONS.get(strategy, kahn_partition)
     if strategy in ["qiskit", "bqskit-Quick", "bqskit-Scan", "bqskit-Greedy", "bqskit-Cluster"]:
-        parameters, partitioned_circ, param_order, _ = func(filename, max_partition_size)
+        parameters, partitioned_circ, param_order, L = func(filename, max_partition_size)
     else:
-        partitioned_circ, param_order, _ = func(circ, max_partition_size)
+        partitioned_circ, param_order, L = func(circ, max_partition_size)
     
     param_reordered = translate_param_order(parameters, param_order)
-    return partitioned_circ, param_reordered
+    return partitioned_circ, param_reordered, L
 
 
 
