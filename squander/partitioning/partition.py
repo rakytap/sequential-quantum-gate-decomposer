@@ -10,11 +10,12 @@ from squander.partitioning.ilp import max_partitions
 from squander.partitioning.tdag import tdag_max_partitions
 from squander.partitioning.tools import translate_param_order, get_qiskit_partitions, get_qiskit_fusion_partitions, get_bqskit_partitions
 
-PartitionStrategy = Literal["kahn", "ilp", "tdag", "qiskit", "qiskit-fusion", "bqskit-Quick", "bqskit-Scan", "bqskit-Greedy", "bqskit-Cluster"]
+PartitionStrategy = Literal["kahn", "ilp", "ilp-fusion", "tdag", "qiskit", "qiskit-fusion", "bqskit-Quick", "bqskit-Scan", "bqskit-Greedy", "bqskit-Cluster"]
 
 PARTITION_FUNCTIONS = {
     "kahn": kahn_partition,
-    "ilp": max_partitions, 
+    "ilp": max_partitions,
+    "ilp-fusion": functools.partial(max_partitions, fusion_cost=True),
     "tdag": tdag_max_partitions,
     "gtqcp": functools.partial(tdag_max_partitions, use_gtqcp = True),
     "qiskit": get_qiskit_partitions,
