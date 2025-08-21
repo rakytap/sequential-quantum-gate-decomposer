@@ -1,6 +1,7 @@
 from squander.partitioning.partition import PartitionCircuitQasm
 from qiskit import QuantumCircuit
-from squander.partitioning.tools import qiskit_to_squander_name
+from squander.partitioning.tools import qiskit_to_squander_name, get_qubits, total_float_ops
+from squander import utils
 
 import timeit
 import glob
@@ -45,6 +46,10 @@ def test_partitions(max_qubits = 4):
             print(f"Skipping {fname}; qubits {qc.num_qubits} gates {qc_gates_names} num_gates {num_gates}")
             continue
         print(fname, qc.num_qubits, num_gates, f"k={max_qubits}")
+        circ, _ = utils.qasm_to_squander_circuit(filename)
+        gate_dict = {i: gate for i, gate in enumerate(circ.get_Gates())}
+        gate_to_qubit = { i: get_qubits(g) for i, g in gate_dict.items() }
+        gate_to_tqubit = { i: g.get_Target_Qbit() for i, g in gate_dict.items() }
         res = {}
         for method in METHOD_NAMES:
             print(method)
@@ -52,10 +57,11 @@ def test_partitions(max_qubits = 4):
             def f():
                 ls.extend(PartitionCircuitQasm( filename, max_qubits, method ))
             t = timeit.timeit(f, number=1)
-            partitioned_circuit, parameters = ls
-            res[method] = len(partitioned_circuit.get_Gates()), t
+            partitioned_circuit, parameters, L = ls
+            res[method] = len(partitioned_circuit.get_Gates()), t, total_float_ops(qc.num_qubits, max_qubits, gate_to_qubit, gate_to_tqubit, L)
         allfiles[fname] = (qc.num_qubits, num_gates, res)
         print(fname, allfiles[fname])
+        if len(allfiles) == 3: break
     import json
     print(json.dumps(allfiles, indent=2))    
     import matplotlib.pyplot as plt
@@ -74,11 +80,11 @@ def test_partitions(max_qubits = 4):
         print("\n".join(" & ".join((name.replace(".qasm", "").replace("_", r"\_"), str(allfiles[name][0]), str(allfiles[name][1]),
                                     *((r"\textbf{" if allfiles[name][2][method][0] == m else "") + str(allfiles[name][2][method][0]) + (r"}" if allfiles[name][2][method][0] == m else "") for method in METHOD_NAMES))) + r"\\" for name in circuits_sorted for m in (min(allfiles[name][2][method][0] for method in METHOD_NAMES),)))
     markers = ["o", "*", "D", "s", "+", "<", ">", "v", "^"]
-    for perf in (True, False):
-        title = "Partition Count" if not perf else "Runtime Performance"
-        y_label = "Partition Count" if not perf else "Time in seconds"
+    for j in range(3):
+        title = ["Total Partitions", "Runtime Performance", "Total Float Ops for Fusion"][j]
+        y_label = ["Partition Count", "Time in seconds", "Number of Float Ops"][j]
         for i, strat in enumerate(METHOD_NAMES):
-            y = [allfiles[name][2][strat][1 if perf else 0] for name in circuits_sorted]
+            y = [allfiles[name][2][strat][j] for name in circuits_sorted]
             plt.plot(circuits_labels, y, marker=markers[i], label=strat)
         plt.xlabel("Circuit (sorted by qubits, gates)")
         plt.ylabel(y_label, fontsize=6)
