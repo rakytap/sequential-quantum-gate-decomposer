@@ -61,7 +61,6 @@ def test_partitions(max_qubits = 4):
             res[method] = len(partitioned_circuit.get_Gates()), t, total_float_ops(qc.num_qubits, max_qubits, gate_to_qubit, gate_to_tqubit, L)
         allfiles[fname] = (qc.num_qubits, num_gates, res)
         print(fname, allfiles[fname])
-        if len(allfiles) == 3: break
     import json
     print(json.dumps(allfiles, indent=2))    
     import matplotlib.pyplot as plt
