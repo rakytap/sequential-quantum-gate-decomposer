@@ -61,7 +61,7 @@ def build_dependency(c: Circuit) -> Tuple[Dict[int, Gate], Dict[int, Set[int]], 
         Gate dict, forward graph, reverse graph, qubit mapping, start set.
     """
     gate_dict = {i: gate for i, gate in enumerate(c.get_Gates())}
-    gate_to_qubit = { i: get_qubits(g) for i, g in enumerate(c.get_Gates())}
+    gate_to_qubit = { i: get_qubits(g) for i, g in gate_dict.items() }
     g, rg = {i: set() for i in gate_dict}, {i: set() for i in gate_dict}
     
     for gate in gate_dict:
