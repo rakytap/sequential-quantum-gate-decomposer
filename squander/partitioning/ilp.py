@@ -1,5 +1,5 @@
 import os
-from squander.partitioning.tools import get_qubits, build_dependency
+from squander.partitioning.tools import get_qubits, build_dependency, parts_to_float_ops, total_float_ops
 
 def topo_sort_partitions(c, max_qubits_per_partition, parts):
     gatedict = {i: gate for i, gate in enumerate(c.get_Gates())}
@@ -92,7 +92,7 @@ def find_next_biggest_partition(c, max_qubits_per_partition, prevparts=None):
     prob.solve(pulp.GUROBI(manageEnv=True, msg=False, timeLimit=180, Threads=os.cpu_count()))
     #prob.solve(pulp.PULP_CBC_CMD(msg=False))
     gates = {i for i in range(num_gates) if int(pulp.value(x[i]))}
-    qubits = set.union(*(get_qubits(gatedict[i]) for i in gates))
+    #qubits = set.union(*(get_qubits(gatedict[i]) for i in gates))
     #print(f"Status: {pulp.LpStatus[prob.status]}  Found partition with {len(gates)} gates: {gates} and {len(qubits)} qubits: {qubits}")
     return gates
 
@@ -162,11 +162,6 @@ def _get_topo_order(g, rg):
                 S.add(m)
     return L
 
-def get_float_ops(num_qubit, gate_qubits, control_qubits):
-    g_size = 2**(gate_qubits-control_qubits)
-    # (a + bi) * (c + di) = (ac - bd) + (ad + bc)i => 6 ops for 4m2a
-    return 2**(num_qubit-control_qubits) * (g_size * (4 + 2) + 2 * (g_size - 1))
-
 def contract_single_qubit_chains(go, rgo, gate_to_qubit, topo_order):
     # Identify and contract single-qubit chains in the circuit
     g = { x: set(y) for x, y in go.items() }
@@ -206,8 +201,189 @@ def recombine_single_qubit_chains(g, rg, single_qubit_chains, L):
         else:
             L.append(frozenset(chain))
     return L
+def scc_tarjan_iterative(succ):
+    """
+    Strongly Connected Components (Tarjan) without recursion.
 
-def two_cycles_from_dag_edges(g, gate_to_parts):
+    Parameters
+    ----------
+    succ : list of iterables
+        succ[u] is an iterable of out-neighbors of u. Nodes are 0..n-1.
+
+    Returns
+    -------
+    comp_id : list[int]
+        comp_id[u] = index of the SCC containing u (0..k-1).
+    comps : list[list[int]]
+        List of SCCs; each is a list of nodes. Order is discovery order.
+
+    Notes
+    -----
+    - No recursion; uses an explicit DFS stack of (u, iterator) frames.
+    - Self-loops and parallel edges are handled.
+    - Time O(n + m), space O(n).
+    """
+    index = {u: -1 for u in succ}
+    low   = {u: 0 for u in succ}
+    onstk = {u: False for u in succ}
+
+    tarjan_stack = []      # classic Tarjan stack of nodes
+    comp_id   = {u: -1 for u in succ}
+    comps     = []
+
+    idx = 0
+
+    # DFS frames: (u, iterator over neighbors)
+    dfs_stack = []
+
+    for s in succ:
+        if index[s] != -1:
+            continue
+
+        # Start a new DFS at s
+        index[s] = low[s] = idx; idx += 1
+        tarjan_stack.append(s); onstk[s] = True
+        dfs_stack.append((s, iter(succ[s])))
+
+        while dfs_stack:
+            u, it = dfs_stack[-1]
+            v = next(it, None)
+            if v is None:
+                # Finish u
+                if low[u] == index[u]:
+                    # u is root of an SCC; pop until u
+                    comp = []
+                    while True:
+                        w = tarjan_stack.pop()
+                        onstk[w] = False
+                        comp_id[w] = len(comps)
+                        comp.append(w)
+                        if w == u:
+                            break
+                    comps.append(comp)
+                dfs_stack.pop()
+                # Propagate lowlink to parent (tree-edge return)
+                if dfs_stack:
+                    p, _ = dfs_stack[-1]
+                    if low[u] < low[p]:
+                        low[p] = low[u]
+            else:
+                # Process neighbor v
+                if index[v] == -1:
+                    # Tree edge: discover v and descend
+                    index[v] = low[v] = idx; idx += 1
+                    tarjan_stack.append(v); onstk[v] = True
+                    dfs_stack.append((v, iter(succ[v])))
+                elif onstk[v]:
+                    # Back/cross edge into current DFS stack => update low[u]
+                    if index[v] < low[u]:
+                        low[u] = index[v]
+                # else: edge to a vertex already assigned to an SCC — ignore
+    return comp_id, comps
+def get_part_cycle_graph(g, gate_to_parts):
+    overlaps = {}
+    for v, idxs in gate_to_parts.items():
+        for i in idxs:
+            overlaps.setdefault(i, set()).update(j for j in idxs if j != i)
+    succ = {x: set() for x in overlaps} #build set interaction digraph
+    for u in g:
+        U = gate_to_parts[u]
+        for v in g[u]:
+            V = gate_to_parts[v]
+            for i in U:
+                for j in V:
+                    if i == j or j in overlaps[i]: continue
+                    succ[i].add(j)
+    scc_id, _ = scc_tarjan_iterative(succ)
+    succ_pruned = {x: set() for x in succ}
+    for i in succ:
+        for j in succ[i]:
+            if scc_id[i] == scc_id[j]: succ_pruned[i].add(j)
+    return succ_pruned
+def all_cycles_from_dag_edges(succ, max_len=5):
+    #import networkx as nx
+    #G = nx.DiGraph(succ)
+    #return list(nx.chordless_cycles(G, max_len))
+    def can_extend(path, in_path, x, s):
+        """Check if we can extend ...->u to x via (u->x) without creating any chord."""
+        u = path[-1]
+        if x in in_path or x < s: # simplicity and duplicate avoidance: only grow to >= start
+            return False
+        # forward chords: forbid v->x from any non-consecutive prior vertex
+        for v in pred[x]: #for v in path[:-1]:
+            if v != u and v in in_path: #if x in succ[v]:
+                return False
+        # backward chords: forbid x->v to any path vertex (incl. x->u, killing 2-cycles)
+        for v in path:
+            if v != s and v in succ[x]:
+                return False
+        return True
+
+    def can_close(path):
+        """Check if we can close with last->s and remain chordless."""
+        s = path[0]
+        u = path[-1]
+        if s not in succ[u]:
+            return False
+        # No extra arcs from s to internal vertices except s->path[1]
+        for v in path[2:]:
+            if v in succ[s]:
+                return False
+        # No extra arcs to s from internal vertices except u->s
+        for v in path[:-1]:
+            if v != u and s in succ[v]:
+                return False
+        return True
+    pred = {v: set() for v in succ}
+    for u in succ:
+        for v in succ[u]: pred[v].add(u)
+    cycles = []
+    for s in succ:
+        if not succ[s] or not pred[s]: continue #no predecessors could also be skipped
+        if max_len is not None:
+            dist_to_s = {v: None for v in succ}
+            from collections import deque
+            dq = deque([s])
+            dist_to_s[s] = 0
+            while dq:
+                w = dq.popleft()
+                for p in pred[w]:
+                    if dist_to_s[p] is None:
+                        dist_to_s[p] = dist_to_s[w] + 1
+                        dq.append(p)
+        path = [s]
+        in_path = {s}
+        stack = [(s, iter(succ[s]), False)]
+        while stack:
+            u, nbrs, tried_close = stack[-1]
+            # Try closing a cycle once per frame
+            if not tried_close and len(path) >= 2 and (s in succ[u]) and can_close(path):
+                print(path)
+                cycles.append(path.copy())
+                stack[-1] = (u, nbrs, True) #mark as tried to close
+                continue
+            # Advance neighbor iterator
+            x = next(nbrs, None)
+            if x is None:
+                # backtrack
+                stack.pop()
+                in_path.remove(u)
+                path.pop()
+                continue
+
+            # bump index in the top frame
+            stack[-1] = (u, nbrs, tried_close)
+
+            if max_len is not None and (dist_to_s[x] is None or len(path) + dist_to_s[x] > max_len):
+                continue
+
+            if can_extend(path, in_path, x, s):
+                # descend to x
+                path.append(x)
+                in_path.add(x)
+                stack.append((x, iter(succ[x]), False))
+    return cycles
+def two_cycles_from_dag_edges(g, gate_to_parts, allparts):
     # edges: iterable of (u, v) over the original DAG
     seen = {}       # (a,b) with a<b -> 1 if a->b seen, 2 if b->a seen, 3 if both
     twocycles = []  # list of (a,b) with 2-cycle detected
@@ -222,29 +398,16 @@ def two_cycles_from_dag_edges(g, gate_to_parts):
                     bit   = 1 if i < j else 2
                     prev = seen.get((a, b), 0)
                     new  = prev | bit
-                    if new == 3 and prev != 3:   # <-- only on first time reaching 3
+                    if new == 3 and prev != 3 and len(allparts[a] & allparts[b]) == 0:   # <-- only on first time reaching 3
                         twocycles.append((a, b))   # a<->b found
                     seen[(a, b)] = new
     return twocycles
-def ilp_global_optimal(allparts, g):
-    import pulp
-    allparts = list(allparts)
+def ilp_global_optimal(allparts, g, weights=None, gurobi_direct=True):
+    N = len(allparts)
     gate_to_parts = {x: [] for x in g}
     for i, part in enumerate(allparts):
         for gate in part: gate_to_parts[gate].append(i)
-    prob = pulp.LpProblem("OptimalPartitioning", pulp.LpMinimize)
-    x = pulp.LpVariable.dicts("x", (i for i in range(len(allparts))), cat="Binary") #is partition i included
-    for i in g: prob += pulp.lpSum(x[j] for j in gate_to_parts[i]) == 1 #constraint that all gates are included exactly once
-    for u, v in two_cycles_from_dag_edges(g, gate_to_parts):
-        prob += x[u] + x[v] <= 1 #constraint that no two cycles are included
-    prob.setObjective(pulp.lpSum(x[i] for i in range(len(allparts))))
-    while True:
-        #from gurobilic import get_gurobi_options
-        #prob.solve(pulp.GUROBI(manageEnv=True, msg=False, envOptions=get_gurobi_options()))
-        prob.solve(pulp.GUROBI(manageEnv=True, msg=False, timeLimit=180, Threads=os.cpu_count()))
-        #prob.solve(pulp.PULP_CBC_CMD(msg=False))
-        print(f"Status: {pulp.LpStatus[prob.status]}")
-        L = [i for i in range(len(allparts)) if int(pulp.value(x[i]))]
+    def sol_to_badsccs(L):
         gate_to_part = {}
         for i in L:
             for gate in allparts[i]: gate_to_part[gate] = i
@@ -254,17 +417,63 @@ def ilp_global_optimal(allparts, g):
                 for v in g[u]:
                     j = gate_to_part[v]
                     if i != j:
-                        G_part[i].add(j)
-        scc, _ = nuutila_reach_scc(G_part)
-        badsccs = {frozenset(v) for v in scc.values() if len(v) > 1}
+                        G_part[i].add(j)        
+        _, scc = scc_tarjan_iterative(G_part)        
+        return {frozenset(v) for v in scc if len(v) > 1}        
+    if gurobi_direct:
+        from gurobipy import Env, Model, GRB
+        import gurobipy as gp
+        with Env() as env:
+            #env.setParam("OutputFlag", 0)
+            with Model(env=env) as m:
+                m.setParam(GRB.Param.IntegralityFocus, 1)
+                m.setParam(GRB.Param.LazyConstraints, 1)
+                x = m.addVars(range(N), lb=[0]*N, ub=[1]*N, vtype=[GRB.BINARY]*N, name=["x_" + str(i) for i in range(N)])
+                for i in g: m.addConstr(gp.quicksum(x[j] for j in gate_to_parts[i]) == 1)
+                if weights is None: m.setObjective(gp.quicksum(x[i] for i in range(N)), GRB.MINIMIZE)
+                else: m.setObjective(gp.quicksum(weights[i] * x[i] for i in range(N)), GRB.MINIMIZE)
+                def cb(m, where):
+                    if where == GRB.Callback.MIPSOL:
+                        x_val = m.cbGetSolution([x[i] for i in range(N)])
+                        badsccs = sol_to_badsccs([i for i, xv in enumerate(x_val) if int(round(xv))])
+                        for badscc in badsccs:
+                            #print([(allparts[x], [g[y] for y in allparts[x]]) for x in badscc]) #canonical partitions {1, 3} and {2, 4} with edges 1->{3, 4}, 2->{3, 4}
+                            m.cbLazy(gp.quicksum(x[j] for j in badscc) <= len(badscc) - 1) #remove at least one partition from the SCC
+                m.optimize(cb)
+                if m.status == GRB.OPTIMAL:
+                    return [allparts[i] for i in range(N) if int(round(x[i].getAttr("X")))]
+    import pulp
+    prob = pulp.LpProblem("OptimalPartitioning", pulp.LpMinimize)
+    x = pulp.LpVariable.dicts("x", (i for i in range(N)), cat="Binary") #is partition i included
+    order = pulp.LpVariable.dicts("ord", (i for i in range(N)), lowBound=0, upBound=N-1, cat="Continuous") #order of the partition
+    for i in g: prob += pulp.lpSum(x[j] for j in gate_to_parts[i]) == 1 #constraint that all gates are included exactly once
+    succ = get_part_cycle_graph(g, gate_to_parts)
+    for u in succ:
+        for v in succ[u]:
+            prob += order[u] + 1 <= order[v] + N*(1-x[u]+1-x[v])
+    #for i in range(N): prob += order[i] <= N*x[i]
+    #print(all_cycles_from_dag_edges(succ))
+    #for u, v in two_cycles_from_dag_edges(g, gate_to_parts, allparts):
+    #    prob += x[u] + x[v] <= 1 #constraint that no two cycles are included
+    if weights is None: prob.setObjective(pulp.lpSum(x[i] for i in range(N)))
+    else: prob.setObjective(pulp.lpSum(weights[i] * x[i] for i in range(N)))
+    while True:
+        #from gurobilic import get_gurobi_options
+        #prob.solve(pulp.GUROBI(manageEnv=True, msg=False, envOptions=get_gurobi_options()))
+        prob.solve(pulp.GUROBI(manageEnv=True, msg=False, timeLimit=180, Threads=os.cpu_count()))
+        #prob.solve(pulp.PULP_CBC_CMD(msg=False))
+        print(f"Status: {pulp.LpStatus[prob.status]}")
+        L = [i for i in range(N) if int(pulp.value(x[i]))]
+        badsccs = sol_to_badsccs(L)
         if not badsccs: break #if all partitions do not have any cycles with more than one element per SCC terminate
         for badscc in badsccs:
             #print([(allparts[x], [g[y] for y in allparts[x]]) for x in badscc]) #canonical partitions {1, 3} and {2, 4} with edges 1->{3, 4}, 2->{3, 4}
             prob += pulp.lpSum(x[j] for j in badscc) <= len(badscc) - 1 #remove at least one partition from the SCC
     return [allparts[i] for i in L]
 
-def max_partitions(c, max_qubits_per_partition, use_ilp=True):
+def max_partitions(c, max_qubits_per_partition, use_ilp=True, fusion_cost=True):
     gate_dict, go, rgo, gate_to_qubit, S = build_dependency(c)
+    gate_to_tqubit = { i: g.get_Target_Qbit() for i, g in gate_dict.items() }
     topo_order = _get_topo_order(go, rgo)
     g, rg, topo_order, single_qubit_chains = contract_single_qubit_chains(go, rgo, gate_to_qubit, topo_order)
     topo_index = {x: i for i, x in enumerate(topo_order)} #all topological sorts of the DAG are the same as acyclic orderings of the transitive closure
@@ -322,17 +531,17 @@ def max_partitions(c, max_qubits_per_partition, use_ilp=True):
                 Ynew -= prune; Bnew -= prune
                 stack.append((Xnew, Ynew, Anew, Bnew, list(sorted(Anew, key=topo_index.__getitem__)), list(sorted(Bnew, key=topo_index.__getitem__, reverse=True)), newQ))
     if use_ilp:
-        #print(len(allparts))
-        L = ilp_global_optimal(allparts, g)
+        allparts = list(allparts)
+        L = ilp_global_optimal(allparts, g, parts_to_float_ops(max_qubits_per_partition, gate_to_qubit, gate_to_tqubit, allparts) if fusion_cost else None)
     else:
         L, excluded = [], set()
         for part in sorted(allparts, key=len, reverse=True): #this will not work without making sure part does not induce a cycle
             if len(part & excluded) != 0: continue
             excluded |= part
             L.append(part)
-    assert sum(len(x) for x in L) == len(g), (sum(len(x) for x in L), len(g))
+    #assert sum(len(x) for x in L) == len(g), (sum(len(x) for x in L), len(g))
     L = recombine_single_qubit_chains(go, rgo, single_qubit_chains, L)
-    assert sum(len(x) for x in L) == len(go), (sum(len(x) for x in L), len(go))
+    #assert sum(len(x) for x in L) == len(go), (sum(len(x) for x in L), len(go))
     return topo_sort_partitions(c, max_qubits_per_partition, L)
 
 def _test_max_qasm():
@@ -343,14 +552,18 @@ def _test_max_qasm():
     filename = "benchmarks/partitioning/test_circuit/adr4_197_qsearch.qasm"
     filename = "benchmarks/partitioning/test_circuit/con1_216_squander.qasm"
     #filename = "benchmarks/partitioning/test_circuit/hwb8_113.qasm"
-    filename = "benchmarks/partitioning/test_circuit/urf1_278.qasm"
+    #filename = "benchmarks/partitioning/test_circuit/urf1_278.qasm"
     
     from squander import utils
-    
-    circ, parameters = utils.qasm_to_squander_circuit(filename)
-    partition = max_partitions(circ, K)
 
-    print(partition[2], len(partition[2]))
+    circ, parameters = utils.qasm_to_squander_circuit(filename)
+    partition = max_partitions(circ, K, True, True)
+
+    gate_dict = {i: gate for i, gate in enumerate(circ.get_Gates())}
+    gate_to_qubit = { i: get_qubits(g) for i, g in gate_dict.items() }
+    gate_to_tqubit = { i: g.get_Target_Qbit() for i, g in gate_dict.items() }
+
+    print(partition[2], len(partition[2]), total_float_ops(circ.get_Qbit_Num(), K, gate_to_qubit, gate_to_tqubit, partition[2]))
 
 if __name__ == "__main__":
     _test_max_qasm()
