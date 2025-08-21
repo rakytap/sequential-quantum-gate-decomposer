@@ -23,7 +23,22 @@ def get_qubits(gate: Gate) -> Set[int]:
     """
     return {gate.get_Target_Qbit()} | ({control} if (control := gate.get_Control_Qbit()) != -1 else set())
 
+def get_float_ops(num_qubit, gate_qubits, control_qubits):
+    g_size = 2**(gate_qubits-control_qubits)
+    # (a + bi) * (c + di) = (ac - bd) + (ad + bc)i => 6 ops for 4m2a
+    return 2**(num_qubit-control_qubits) * (g_size * (4 + 2) + 2 * (g_size - 1))
 
+def parts_to_float_ops(num_qubit, gate_to_qubit, gate_to_tqubit, allparts):
+    weights = []
+    for part in allparts:
+        qubits = set.union(*(gate_to_qubit[x] for x in part))
+        tqubits = {gate_to_tqubit[x] for x in part}
+        weights.append(get_float_ops(num_qubit, len(qubits), len(qubits)-len(tqubits)))
+    return weights
+
+def total_float_ops(num_qubit, max_qubits_per_partition, gate_to_qubit, gate_to_tqubit, allparts):
+    weights = parts_to_float_ops(max_qubits_per_partition, gate_to_qubit, gate_to_tqubit, allparts)
+    return 2**(num_qubit-max_qubits_per_partition) * sum(weights)
 
 def translate_param_order(params: np.ndarray, param_order: List[Tuple[int,int]]) -> np.ndarray:
     """
