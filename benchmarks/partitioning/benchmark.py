@@ -21,7 +21,7 @@ METHOD_NAMES = [
     # "bqskit-Greedy", 
     # "bqskit-Scan",
     # "bqskit-Cluster", 
-] + (["ilp"] if USE_ILP else [])
+] + (["ilp", "ilp-fusion"] if USE_ILP else [])
 
 from squander.gates import gates_Wrapper as gate
 SUPPORTED_GATES = {x for n in dir(gate) for x in (getattr(gate, n),) if not n.startswith("_") and issubclass(x, gate.Gate) and n != "Gate"}
@@ -46,11 +46,11 @@ def test_partitions(max_qubits = 4):
         if num_gates > MAX_GATES_ALLOWED or not qc_gates_names.issubset(SUPPORTED_GATES_NAMES) or filename.endswith("_qsearch.qasm") or filename.endswith("_squander.qasm"):
             print(f"Skipping {fname}; qubits {qc.num_qubits} gates {qc_gates_names} num_gates {num_gates}")
             continue
-        print(fname, qc.num_qubits, num_gates, f"k={max_qubits}")
         circ, _ = utils.qasm_to_squander_circuit(filename)
         gate_dict = {i: gate for i, gate in enumerate(circ.get_Gates())}
         gate_to_qubit = { i: get_qubits(g) for i, g in gate_dict.items() }
         gate_to_tqubit = { i: g.get_Target_Qbit() for i, g in gate_dict.items() }
+        print(fname, qc.num_qubits, num_gates, f"k={max_qubits}", "Max. float ops:", total_float_ops(qc.num_qubits, max_qubits, gate_to_qubit, gate_to_tqubit, [[i] for i in gate_dict]))
         res = {}
         for method in METHOD_NAMES:
             print(method)
