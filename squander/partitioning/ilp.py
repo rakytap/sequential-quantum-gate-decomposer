@@ -416,7 +416,10 @@ def two_cycles_from_dag_edges(g, gate_to_parts, allparts):
                     seen[(a, b)] = new
     return twocycles
 def ilp_global_optimal(allparts, g, weighted_info=None, gurobi_direct=True):
-    if weighted_info is not None: single_qubit_chains_pre, single_qubit_chains_post, max_qubits_per_partition, go, gate_to_qubit, gate_to_tqubit = weighted_info
+    if weighted_info is not None:
+        single_qubit_chains, max_qubits_per_partition, go, rgo, gate_to_qubit, gate_to_tqubit = weighted_info
+        single_qubit_chains_pre = {x[0]: x for x in single_qubit_chains if rgo[x[0]]}
+        single_qubit_chains_post = {x[0]: x for x in single_qubit_chains if go[x[-1]]}
     N = len(allparts)
     gate_to_parts = {x: [] for x in g}
     for i, part in enumerate(allparts):
@@ -438,27 +441,28 @@ def ilp_global_optimal(allparts, g, weighted_info=None, gurobi_direct=True):
         from gurobipy import Env, Model, GRB
         import gurobipy as gp
         with Env() as env:
-            #env.setParam("OutputFlag", 0)
+            env.setParam("OutputFlag", 0)
             with Model(env=env) as m:
                 m.setParam(GRB.Param.IntegralityFocus, 1)
                 m.setParam(GRB.Param.LazyConstraints, 1)
                 x = m.addVars(range(N), lb=[0]*N, ub=[1]*N, vtype=[GRB.BINARY]*N, name=["x_" + str(i) for i in range(N)])
                 if weighted_info is not None:
                     Npre, Npost = len(single_qubit_chains_pre), len(single_qubit_chains_post)
-                    prelbl = [single_qubit_chains_pre[s][0] for s in single_qubit_chains_pre]
-                    postlbl = [single_qubit_chains_post[s][0] for s in single_qubit_chains_post]
-                    pre = m.addVars(prelbl, lb=[0]*Npre, ub=[1]*Npre, vtype=[GRB.BINARY]*Npre, name=["pre_" + str(i) for i in prelbl])
-                    post = m.addVars(postlbl, lb=[0]*Npost, ub=[1]*Npost, vtype=[GRB.BINARY]*Npost, name=["post_" + str(i) for i in postlbl])
-                    for s in pre:
-                        if s in post: m.addConstr(pre[s] + post[s] <= 1) #no pre and post for the same gate
+                    pre = m.addVars(list(single_qubit_chains_pre), lb=[0]*Npre, ub=[1]*Npre, vtype=[GRB.BINARY]*Npre, name=["pre_" + str(i) for i in single_qubit_chains_pre])
+                    post = m.addVars(list(single_qubit_chains_post), lb=[0]*Npost, ub=[1]*Npost, vtype=[GRB.BINARY]*Npost, name=["post_" + str(i) for i in single_qubit_chains_post])
+                    prepostlbl = [x for x in pre if x in post]
+                    noprepost = m.addVars(prepostlbl, lb=[0]*len(prepostlbl), ub=[1]*len(prepostlbl), vtype=[GRB.BINARY]*len(prepostlbl), name=["prepost_" + str(i) for i in prepostlbl])
                     m.update()
                 for i in g: m.addConstr(gp.quicksum(x[j] for j in gate_to_parts[i]) == 1)
                 if weighted_info is None: m.setObjective(gp.quicksum(x[i] for i in range(N)), GRB.MINIMIZE)
                 else:
                     S = []
+                    surrounded = {s: set() for s in prepostlbl}
                     for i in range(N):
                         p = allparts[i]
-                        part = frozenset.union(p, *(single_qubit_chains_pre[x] for x in p if x in single_qubit_chains_pre and go[single_qubit_chains_pre[x][-1]] and next(iter(go[single_qubit_chains_pre[x][-1]])) in p))
+                        surrounded_chains = {t for s in p for t in go[s] if t in single_qubit_chains_pre and go[single_qubit_chains_pre[t][-1]] and next(iter(go[single_qubit_chains_pre[t][-1]])) in p}
+                        for v in surrounded_chains: surrounded[v].add(i)
+                        part = frozenset.union(p, *(single_qubit_chains_pre[t] for t in surrounded_chains))
                         qubits = set.union(*(gate_to_qubit[x] for x in part))
                         tqubits = {gate_to_tqubit[x] for x in part}
                         cqubits = qubits - tqubits
@@ -473,11 +477,11 @@ def ilp_global_optimal(allparts, g, weighted_info=None, gurobi_direct=True):
                                 if t in cqubits: targets.setdefault(t, set()).add(post[single_qubit_chains_post[s][0]])
                         Nu = len(targets); Nt = Nu+1
                         t = m.addVars(range(Nt), lb=[0]*Nt, ub=[1]*Nt, vtype=[GRB.BINARY]*Nt, name=[f"t_{i}_" + str(j) for j in range(Nt)])
-                        u = m.addVars(list(targets), lb=[0]*Nu, ub=[1]*Nu, vtype=[GRB.BINARY]*Nu, name=[f"u_{i}_" + str(j) for j in range(Nu)])
+                        u = m.addVars(list(targets), lb=[0]*Nu, ub=[1]*Nu, vtype=[GRB.BINARY]*Nu, name=[f"u_{i}_" + str(j) for j in targets])
                         for s in u: m.addConstr(u[s] <= x[i])
                         for target in targets:
-                            for a in targets[target]: m.addConstr(u[target] == a)
-                        m.addConstr(gp.quicksum(t[j] for j in range(Nt)) == 1) #only one target count selected
+                            for a in targets[target]: m.addConstr(u[target] >= a)
+                        m.addConstr(gp.quicksum(t[j] for j in range(Nt)) == x[i]) #only one target count selected
                         m.addConstr(gp.quicksum(j*t[j] for j in range(Nt)) == gp.quicksum(u))
                         gate_qubits = len(qubits)
                         for j in range(Nt):
@@ -486,7 +490,9 @@ def ilp_global_optimal(allparts, g, weighted_info=None, gurobi_direct=True):
                             S.append(t[j] * 2**(max_qubits_per_partition-control_qubits) * (g_size * (4 + 2) + 2 * (g_size - 1)))
                     for s in pre:
                         if not s in post: S.append((1-pre[s])*2**max_qubits_per_partition * (2 * (4 + 2) + 2))
-                        else: S.append((1-pre[s])*(1-post[s])*2**max_qubits_per_partition * (2 * (4 + 2) + 2))
+                        else:
+                            m.addConstr(pre[s] + post[s] + noprepost[s] + gp.quicksum(x[i] for i in surrounded[s]) == 1) #no pre and post for the same gate
+                            S.append(noprepost[s]*2**max_qubits_per_partition * (2 * (4 + 2) + 2))
                     for s in post:
                         if not s in pre: S.append((1-post[s])*2**max_qubits_per_partition * (2 * (4 + 2) + 2))
                     m.setObjective(gp.quicksum(S), GRB.MINIMIZE)
@@ -537,8 +543,6 @@ def max_partitions(c, max_qubits_per_partition, use_ilp=True, fusion_cost=False)
     gate_to_tqubit = { i: g.get_Target_Qbit() for i, g in gate_dict.items() }
     topo_order = _get_topo_order(go, rgo)
     g, rg, topo_order, single_qubit_chains = contract_single_qubit_chains(go, rgo, gate_to_qubit, topo_order)
-    single_qubit_chains_pre = {next(iter(rgo[x[0]])): x for x in single_qubit_chains if rgo[x[0]]}
-    single_qubit_chains_post = {next(iter(go[x[-1]])): x for x in single_qubit_chains if go[x[-1]]}
     topo_index = {x: i for i, x in enumerate(topo_order)} #all topological sorts of the DAG are the same as acyclic orderings of the transitive closure
     _, reach = nuutila_reach_scc(g)
     _, revreach = nuutila_reach_scc(rg)
@@ -595,7 +599,7 @@ def max_partitions(c, max_qubits_per_partition, use_ilp=True, fusion_cost=False)
                 stack.append((Xnew, Ynew, Anew, Bnew, list(sorted(Anew, key=topo_index.__getitem__)), list(sorted(Bnew, key=topo_index.__getitem__, reverse=True)), newQ))
     if use_ilp:
         allparts = list(allparts)
-        L = ilp_global_optimal(allparts, g, (single_qubit_chains_pre, single_qubit_chains_post, max_qubits_per_partition, go, gate_to_qubit, gate_to_tqubit) if fusion_cost else None)
+        L = ilp_global_optimal(allparts, g, (single_qubit_chains, max_qubits_per_partition, go, rgo, gate_to_qubit, gate_to_tqubit) if fusion_cost else None)
     else:
         L, excluded = [], set()
         for part in sorted(allparts, key=len, reverse=True): #this will not work without making sure part does not induce a cycle
@@ -616,7 +620,7 @@ def _test_max_qasm():
     filename = "benchmarks/partitioning/test_circuit/con1_216_squander.qasm"
     #filename = "benchmarks/partitioning/test_circuit/hwb8_113.qasm"
     #filename = "benchmarks/partitioning/test_circuit/urf1_278.qasm"
-    filename = "benchmarks/partitioning/test_circuit/adr4_197.qasm"
+    #filename = "benchmarks/partitioning/test_circuit/adr4_197.qasm"
     from squander import utils
 
     circ, parameters = utils.qasm_to_squander_circuit(filename)
