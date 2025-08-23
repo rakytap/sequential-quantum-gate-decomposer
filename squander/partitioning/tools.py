@@ -23,17 +23,18 @@ def get_qubits(gate: Gate) -> Set[int]:
     """
     return {gate.get_Target_Qbit()} | ({control} if (control := gate.get_Control_Qbit()) != -1 else set())
 
-def get_float_ops(num_qubit, gate_qubits, control_qubits):
+def get_float_ops(num_qubit, gate_qubits, control_qubits, is_pure=False):
     g_size = 2**(gate_qubits-control_qubits)
     # (a + bi) * (c + di) = (ac - bd) + (ad + bc)i => 6 ops for 4m2a
-    return 2**(num_qubit-control_qubits) * (g_size * (4 + 2) + 2 * (g_size - 1))
+    return 2**(num_qubit-(control_qubits if is_pure else 0)) * (g_size * (4 + 2) + 2 * (g_size - 1))
 
 def parts_to_float_ops(num_qubit, gate_to_qubit, gate_to_tqubit, allparts):
     weights = []
     for part in allparts:
         qubits = set.union(*(gate_to_qubit[x] for x in part))
         tqubits = {gate_to_tqubit[x] for x in part}
-        weights.append(get_float_ops(num_qubit, len(qubits), len(qubits)-len(tqubits)))
+        is_pure = len({gate_to_qubit[x]-gate_to_tqubit[x] for x in part}) == 1
+        weights.append(get_float_ops(num_qubit, len(qubits), len(qubits)-len(tqubits), is_pure))
     return weights
 
 def total_float_ops(num_qubit, max_qubits_per_partition, gate_to_qubit, gate_to_tqubit, allparts):
