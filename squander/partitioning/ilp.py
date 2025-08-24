@@ -487,9 +487,10 @@ def ilp_global_optimal(allparts, g, weighted_info=None, gurobi_direct=True):
                                         for z in fortet_inequalities(pre[s], x[i], a): m.addConstr(z)
                                         targets[i].setdefault(v, []).append(a)
                                     elif not s in fullpart:
-                                        if s in noprepost: m.addConstr(pre[s] + post[single_qubit_chains_prepost[s][-1]] >= x[i])
-                                        else: m.addConstr(pre[s] >= x[i])
                                         if is_pure: impurities.append(pre[s])
+                                        else:
+                                            if s in noprepost: m.addConstr(pre[s] + post[single_qubit_chains_prepost[s][-1]] >= x[i])
+                                            else: m.addConstr(pre[s] >= x[i])
                             for s in rgo[p]:
                                 if s in single_qubit_chains_post:
                                     v = gate_to_tqubit[s]
@@ -499,9 +500,10 @@ def ilp_global_optimal(allparts, g, weighted_info=None, gurobi_direct=True):
                                         for z in fortet_inequalities(post[s], x[i], a): m.addConstr(z)
                                         targets[i].setdefault(v, []).append(a)
                                     elif not s in fullpart:
-                                        if s in noprepost: m.addConstr(post[s] + pre[single_qubit_chains_prepost[s][0]] >= x[i])
-                                        else: m.addConstr(post[s] >= x[i])
                                         if is_pure: impurities.append(post[s])
+                                        else:
+                                            if s in noprepost: m.addConstr(post[s] + pre[single_qubit_chains_prepost[s][0]] >= x[i])
+                                            else: m.addConstr(post[s] >= x[i])                                        
                         Nu = len(targets[i]); Nt = Nu+1
                         t[i] = m.addVars(range(Nt), lb=[0]*Nt, ub=[1]*Nt, vtype=[GRB.BINARY]*Nt, name=[f"t_{i}_" + str(j) for j in range(Nt)])
                         u[i] = m.addVars(list(targets[i]), lb=[0]*Nu, ub=[1]*Nu, vtype=[GRB.BINARY]*Nu, name=[f"u_{i}_" + str(j) for j in targets[i]])
