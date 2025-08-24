@@ -22,7 +22,7 @@ METHOD_NAMES = [
     # "bqskit-Greedy", 
     # "bqskit-Scan",
     # "bqskit-Cluster", 
-] + (["ilp", "ilp-fusion"] if USE_ILP else [])
+] + (["ilp", "ilp-fusion", "ilp-fusion-ca"] if USE_ILP else [])
 
 from squander.gates import gates_Wrapper as gate
 SUPPORTED_GATES = {x for n in dir(gate) for x in (getattr(gate, n),) if not n.startswith("_") and issubclass(x, gate.Gate) and n != "Gate"}
@@ -144,7 +144,9 @@ def test_partitions(max_qubits = 4):
         gate_dict = {i: gate for i, gate in enumerate(circ.get_Gates())}
         gate_to_qubit = { i: get_qubits(g) for i, g in gate_dict.items() }
         gate_to_tqubit = { i: g.get_Target_Qbit() for i, g in gate_dict.items() }
-        print(fname, qc.num_qubits, num_gates, f"k={max_qubits}", "Max. float ops:", total_float_ops(qc.num_qubits, max_qubits, gate_to_qubit, gate_to_tqubit, [[i] for i in gate_dict]))
+        print(fname, qc.num_qubits, num_gates, f"k={max_qubits}",
+              "Max. float ops:", total_float_ops(qc.num_qubits, max_qubits, gate_to_qubit, gate_to_tqubit, [[i] for i in gate_dict]),
+              "Control-aware Max. float ops:", total_float_ops(qc.num_qubits, max_qubits, gate_to_qubit, None, [[i] for i in gate_dict]))
         res = {}
         for method in METHOD_NAMES:
             print(method)
@@ -153,7 +155,7 @@ def test_partitions(max_qubits = 4):
                 ls.extend(PartitionCircuitQasm( filename, max_qubits, method ))
             t = timeit.timeit(f, number=1)
             partitioned_circuit, parameters, L = ls
-            res[method] = len(partitioned_circuit.get_Gates()), t, total_float_ops(qc.num_qubits, max_qubits, gate_to_qubit, gate_to_tqubit, L)
+            res[method] = len(partitioned_circuit.get_Gates()), t, total_float_ops(qc.num_qubits, max_qubits, gate_to_qubit, None, L), total_float_ops(qc.num_qubits, max_qubits, gate_to_qubit, gate_to_tqubit, L)
         allfiles[fname] = (qc.num_qubits, num_gates, res)
         print(fname, allfiles[fname])
     import json
@@ -174,15 +176,15 @@ def test_partitions(max_qubits = 4):
         print("\n".join(" & ".join((name.replace(".qasm", "").replace("_", r"\_"), str(allfiles[name][0]), str(allfiles[name][1]),
                                     *((r"\textbf{" if allfiles[name][2][method][0] == m else "") + str(allfiles[name][2][method][0]) + (r"}" if allfiles[name][2][method][0] == m else "") for method in METHOD_NAMES))) + r"\\" for name in circuits_sorted for m in (min(allfiles[name][2][method][0] for method in METHOD_NAMES),)))
     markers = ["o", "*", "D", "s", "+", "<", ">", "v", "^"]
-    for j in range(3):
-        title = ["Total Partitions", "Runtime Performance", "Total Float Ops for Fusion"][j]
-        y_label = ["Partition Count", "Time in seconds", "Number of Float Ops"][j]
+    for j in range(4):
+        title = ["Total Partitions", "Runtime Performance", "Total Float Ops for Fusion", "Total Float Ops for Control-Aware Fusion"][j]
+        y_label = ["Partition Count", "Time in seconds", "Number of Float Ops", "Number of Float Ops"][j]
         for i, strat in enumerate(METHOD_NAMES):
             y = [allfiles[name][2][strat][j] for name in circuits_sorted]
             plt.plot(circuits_labels, y, marker=markers[i], label=strat)
         plt.xlabel("Circuit (sorted by qubits, gates)")
         plt.ylabel(y_label, fontsize=6)
-        plt.title(f"{y_label} - Maximum k={max_qubits} Qubits per Circuit")
+        plt.title(f"{y_label} - Maximum k={max_qubits} Qubits per Partition")
         plt.xticks(rotation=45, ha="right")
         plt.legend()
         plt.tight_layout()
