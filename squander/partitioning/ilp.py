@@ -427,7 +427,7 @@ def two_cycles_from_dag_edges(g, gate_to_parts, allparts):
 def ilp_global_optimal(allparts, g, weighted_info=None, gurobi_direct=True):
     if weighted_info is not None:
         single_qubit_chains, max_qubits_per_partition, go, rgo, gate_to_qubit, gate_to_tqubit = weighted_info
-        ignored_chains = {x for x in single_qubit_chains if rgo[x[0]] and gate_to_tqubit[next(iter(rgo[x[0]]))] == gate_to_tqubit[x[0]] or go[x[-1]] and gate_to_tqubit[next(iter(go[x[-1]]))] == gate_to_tqubit[x[-1]]}
+        ignored_chains = {x for x in single_qubit_chains if False} # Placeholder for ignored chains of identity, barrier, delay, measure
         single_qubit_chains_pre = {x[0]: x for x in single_qubit_chains if rgo[x[0]] and not x in ignored_chains}
         single_qubit_chains_post = {x[-1]: x for x in single_qubit_chains if go[x[-1]] and not x in ignored_chains}
         single_qubit_chains_prepost = {x[0]: x for x in single_qubit_chains if x[0] in single_qubit_chains_pre and x[-1] in single_qubit_chains_post}
@@ -479,6 +479,8 @@ def ilp_global_optimal(allparts, g, weighted_info=None, gurobi_direct=True):
                         tqubits = {gate_to_tqubit[v] for v in fullpart}
                         cqubits = qubits - tqubits
                         targets[i] = {}
+                        impurities = []
+                        is_pure = len({frozenset(gate_to_qubit[x]-{gate_to_tqubit[x]}) for x in fullpart}) == 1
                         for p in part:
                             for s in go[p]:
                                 if s in single_qubit_chains_pre:
@@ -491,6 +493,7 @@ def ilp_global_optimal(allparts, g, weighted_info=None, gurobi_direct=True):
                                     elif not s in fullpart:
                                         if s in noprepost: m.addConstr(pre[s] + post[single_qubit_chains_prepost[s][-1]] >= x[i])
                                         else: m.addConstr(pre[s] >= x[i])
+                                        if is_pure: impurities.append(pre[s])
                             for s in rgo[p]:
                                 if s in single_qubit_chains_post:
                                     v = gate_to_tqubit[s]
@@ -502,6 +505,7 @@ def ilp_global_optimal(allparts, g, weighted_info=None, gurobi_direct=True):
                                     elif not s in fullpart:
                                         if s in noprepost: m.addConstr(post[s] + pre[single_qubit_chains_prepost[s][0]] >= x[i])
                                         else: m.addConstr(post[s] >= x[i])
+                                        if is_pure: impurities.append(post[s])
                         Nu = len(targets[i]); Nt = Nu+1
                         t[i] = m.addVars(range(Nt), lb=[0]*Nt, ub=[1]*Nt, vtype=[GRB.BINARY]*Nt, name=[f"t_{i}_" + str(j) for j in range(Nt)])
                         u[i] = m.addVars(list(targets[i]), lb=[0]*Nu, ub=[1]*Nu, vtype=[GRB.BINARY]*Nu, name=[f"u_{i}_" + str(j) for j in targets[i]])
@@ -510,12 +514,22 @@ def ilp_global_optimal(allparts, g, weighted_info=None, gurobi_direct=True):
                             for a in targets[i][target]: m.addConstr(u[i][target] >= a)
                         m.addConstr(gp.quicksum(t[i][j] for j in range(Nt)) == x[i]) #only one target count selected
                         m.addConstr(gp.quicksum(j*t[i][j] for j in range(Nt)) == gp.quicksum(u[i][s] for s in u[i]))
+                        if is_pure and impurities:
+                            isimpure = m.addVar(lb=0, ub=1, vtype=GRB.BINARY, name=f"impurity_{i}")
+                            for z in impurities: m.addConstr(isimpure >= z)
                         gate_qubits = len(qubits)
                         for j in range(Nt):
                             control_qubits = len(cqubits) - j
                             g_size = 2**(gate_qubits-control_qubits)
-                            S.append(t[i][j] * (2**(max_qubits_per_partition-control_qubits) * (g_size * (4 + 2) + 2 * (g_size - 1))))
-                    for s in pre:                        
+                            if is_pure and j==0 and impurities:
+                                t0 = m.addVars(range(2), lb=[0]*2, ub=[1]*2, vtype=[GRB.BINARY]*2, name=[f"t0_{i}_" + str(k) for k in range(2)])
+                                for z in fortet_inequalities(t[i][j], isimpure, t0[0]): m.addConstr(z)
+                                for z in fortet_inequalities(t[i][j], 1-isimpure, t0[1]): m.addConstr(z)
+                                S.append(t0[0] * (2**max_qubits_per_partition * (g_size * (4 + 2) + 2 * (g_size - 1))))
+                                S.append(t0[1] * (2**(max_qubits_per_partition-control_qubits) * (g_size * (4 + 2) + 2 * (g_size - 1))))
+                            else:
+                                S.append(t[i][j] * (2**(max_qubits_per_partition-(control_qubits if is_pure and j==0 else 0)) * (g_size * (4 + 2) + 2 * (g_size - 1))))
+                    for s in pre:
                         if not s in noprepost:
                             S.append((1-pre[s])*(2**max_qubits_per_partition * (2 * (4 + 2) + 2)))
                         else:
