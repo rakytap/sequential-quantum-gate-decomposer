@@ -145,8 +145,8 @@ def test_partitions(max_qubits = 4):
         gate_to_qubit = { i: get_qubits(g) for i, g in gate_dict.items() }
         gate_to_tqubit = { i: g.get_Target_Qbit() for i, g in gate_dict.items() }
         print(fname, qc.num_qubits, num_gates, f"k={max_qubits}",
-              "Max. float ops:", total_float_ops(qc.num_qubits, max_qubits, gate_to_qubit, gate_to_tqubit, [[i] for i in gate_dict]),
-              "Control-aware Max. float ops:", total_float_ops(qc.num_qubits, max_qubits, gate_to_qubit, None, [[i] for i in gate_dict]))
+              "Max. float ops:", total_float_ops(qc.num_qubits, max_qubits, gate_to_qubit, None, [[i] for i in gate_dict]),
+              "Control-aware Max. float ops:", total_float_ops(qc.num_qubits, max_qubits, gate_to_qubit, gate_to_tqubit, [[i] for i in gate_dict]))
         res = {}
         for method in METHOD_NAMES:
             print(method)
