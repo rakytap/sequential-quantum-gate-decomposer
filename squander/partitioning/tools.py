@@ -32,10 +32,13 @@ def parts_to_float_ops(num_qubit, gate_to_qubit, gate_to_tqubit, allparts):
     weights = []
     for part in allparts:
         qubits = set.union(*(gate_to_qubit[x] for x in part))
-        tqubits = {gate_to_tqubit[x] for x in part}
-        is_pure = len({frozenset(gate_to_qubit[x]-{gate_to_tqubit[x]}) for x in part}) == 1
-        weights.append(get_float_ops(num_qubit, len(qubits), len(qubits)-len(tqubits), is_pure))
+        if gate_to_tqubit is not None:
+            tqubits = {gate_to_tqubit[x] for x in part}
+            is_pure = len({frozenset(gate_to_qubit[x]-{gate_to_tqubit[x]}) for x in part}) == 1
+            weights.append(get_float_ops(num_qubit, len(qubits), len(qubits)-len(tqubits), is_pure))
+        else: weights.append(get_float_ops(num_qubit, len(qubits), 0, False))
     return weights
+
 
 def total_float_ops(num_qubit, max_qubits_per_partition, gate_to_qubit, gate_to_tqubit, allparts):
     weights = parts_to_float_ops(max_qubits_per_partition, gate_to_qubit, gate_to_tqubit, allparts)
