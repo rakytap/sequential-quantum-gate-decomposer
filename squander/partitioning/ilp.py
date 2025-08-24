@@ -534,7 +534,7 @@ def ilp_global_optimal(allparts, g, weighted_info=None, gurobi_direct=True):
                     for s in post:                        
                         if not single_qubit_chains_post[s][0] in noprepost:
                             S.append((1-post[s])*(2**max_qubits_per_partition * (2 * (4 + 2) + 2)))
-                    m.setObjective(gp.quicksum(S), GRB.MINIMIZE)
+                    m.setObjective(gp.quicksum(S)*N+gp.quicksum(x[i] for i in range(N)), GRB.MINIMIZE)
                 def cb(m, where):
                     if where == GRB.Callback.MIPSOL:
                         x_val = m.cbGetSolution([x[i] for i in range(N)])
