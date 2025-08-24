@@ -193,31 +193,23 @@ def recombine_single_qubit_chains(g, rg, single_qubit_chains, gate_to_tqubit, L,
     gate_to_part = {x: part for part in L for x in part}
     if fusion_info is not None: inpre, inpost = fusion_info
     for chain in single_qubit_chains:
-        if rg[chain[0]] and g[chain[-1]]:
-            qbitidx = gate_to_tqubit[chain[0]]
-            v = next(iter(rg[chain[0]]))
-            w = next(iter(g[chain[-1]]))
-            if gate_to_part[v] == gate_to_part[w]:
-                gate_to_part[v] |= frozenset(chain)
-    for chain in single_qubit_chains:
-        qbitidx = gate_to_tqubit[chain[0]]
+        #qbitidx = gate_to_tqubit[chain[0]]        
         if rg[chain[0]] and g[chain[-1]]:
             v = next(iter(rg[chain[0]]))
             w = next(iter(g[chain[-1]]))
-            if v == w: continue
-            if fusion_info is None or any(gate_to_tqubit[x] == qbitidx for x in gate_to_part[v]) or chain[0] in inpre:
+            if fusion_info is None or gate_to_part[v] == gate_to_part[w] or chain[0] in inpre:
                 gate_to_part[v] |= frozenset(chain)
-            elif fusion_info is None or any(gate_to_tqubit[x] == qbitidx for x in gate_to_part[w]) or chain[-1] in inpost:
+            elif fusion_info is None or chain[-1] in inpost:
                 gate_to_part[w] |= frozenset(chain)
-            else: L.append(frozenset(chain)) 
+            else: L.append(frozenset(chain))
         elif rg[chain[0]]:
             v = next(iter(rg[chain[0]]))
-            if fusion_info is None or any(gate_to_tqubit[x] == qbitidx for x in gate_to_part[v]) or chain[0] in inpre:
+            if fusion_info is None or chain[0] in inpre:
                 gate_to_part[v] |= frozenset(chain)
             else: L.append(frozenset(chain))
         elif g[chain[-1]]:
             v = next(iter(g[chain[-1]]))
-            if fusion_info is None or any(gate_to_tqubit[x] == qbitidx for x in gate_to_part[v]) or chain[-1] in inpost:
+            if fusion_info is None or chain[-1] in inpost:
                 gate_to_part[v] |= frozenset(chain)
             else: L.append(frozenset(chain))
         else:
@@ -454,7 +446,7 @@ def ilp_global_optimal(allparts, g, weighted_info=None, gurobi_direct=True):
         from gurobipy import Env, Model, GRB
         import gurobipy as gp
         with Env() as env:
-            env.setParam("OutputFlag", 0)
+            #env.setParam("OutputFlag", 0)
             with Model(env=env) as m:
                 m.setParam(GRB.Param.IntegralityFocus, 1)
                 m.setParam(GRB.Param.LazyConstraints, 1)
@@ -661,7 +653,7 @@ def _test_max_qasm():
     filename = "benchmarks/partitioning/test_circuit/con1_216_squander.qasm"
     #filename = "benchmarks/partitioning/test_circuit/hwb8_113.qasm"
     #filename = "benchmarks/partitioning/test_circuit/urf1_278.qasm"
-    filename = "benchmarks/partitioning/test_circuit/qft_10.qasm"
+    filename = "benchmarks/partitioning/test_circuit/rd73_140.qasm"
     from squander import utils
 
     circ, parameters = utils.qasm_to_squander_circuit(filename)
