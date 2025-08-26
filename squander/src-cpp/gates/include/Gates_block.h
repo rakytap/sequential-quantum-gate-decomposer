@@ -523,6 +523,15 @@ void add_phase_gate();
 */
 void add_phase_gate_to_front();
 
+/**
+@brief Append a Composite gate to the list of gates
+*/
+void add_cnz();
+
+/**
+@brief Add a Composite gate to the front of the list of gates
+*/
+void add_cnz_to_front();
 
 /**
 @brief Append a Adaptive gate to the list of gates

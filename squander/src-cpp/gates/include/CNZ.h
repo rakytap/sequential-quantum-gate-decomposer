@@ -20,8 +20,8 @@ limitations under the License.
     \brief Header file for a class for a composite gate operation.
 */
 
-#ifndef NPG_H
-#define NPG_H
+#ifndef CNZ_H
+#define CNZ_H
 
 #include <vector>
 #include "common.h"
@@ -43,7 +43,7 @@ limitations under the License.
 /**
 @brief Base class for the representation of general gate operations.
 */
-class N_Qubit_Phase_Gate : public Gate {
+class CNZ : public Gate {
 
 
 protected:
@@ -57,12 +57,12 @@ public:
 @brief Default constructor of the class.
 @return An instance of the class
 */
-N_Qubit_Phase_Gate();
+CNZ();
 
 /**
 @brief Destructor of the class
 */
-virtual ~N_Qubit_Phase_Gate();
+virtual ~CNZ();
 
 
 /**
@@ -70,7 +70,7 @@ virtual ~N_Qubit_Phase_Gate();
 @param qbit_num_in The number of qubits spanning the unitaries
 @return An instance of the class
 */
-N_Qubit_Phase_Gate(int qbit_num_in);
+CNZ(int qbit_num_in);
 
 
 /**
@@ -78,7 +78,7 @@ N_Qubit_Phase_Gate(int qbit_num_in);
 @param parallel Set true to apply parallel kernels, false otherwise 
 @return Returns with a matrix of the operation
 */
-Matrix get_matrix(Matrix_real& parameters);
+Matrix get_matrix();
 
 
 
@@ -87,59 +87,31 @@ Matrix get_matrix(Matrix_real& parameters);
 @param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 @return Returns with a matrix of the operation
 */
-Matrix get_matrix(Matrix_real& parameters, int parallel);
+Matrix get_matrix(int parallel);
 
-void apply_to_list( Matrix_real& parameters_mtx, std::vector<Matrix>& input );
+void apply_to_list(  std::vector<Matrix>& input );
 
-void apply_to_list( Matrix_real& parameters_mtx, std::vector<Matrix>& inputs, int parallel );
+void apply_to_list(  std::vector<Matrix>& inputs, int parallel );
 
 /**
 @brief Call to apply the gate on the input array/matrix
 @param input The input array on which the gate is applied
 @param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
-void apply_to( Matrix_real& parameters, Matrix& input, int parallel );
+void apply_to( Matrix& input, int parallel );
 
 
 /**
 @brief Call to apply the gate on the input array/matrix by input*Gate
 @param input The input array on which the gate is applied
 */
-void apply_from_right( Matrix_real& parameters, Matrix& input );
-
-virtual std::vector<Matrix> apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input, int parallel );
-
+void apply_from_right(  Matrix& input );
 
 /**
 @brief Set the number of qubits spanning the matrix of the operation
 @param qbit_num_in The number of qubits spanning the matrix
 */
 virtual void set_qbit_num( int qbit_num_in );
-
-/**
-@brief Call to reorder the qubits in the matrix of the operation
-@param qbit_list The reordered list of qubits spanning the matrix
-*/
-virtual void reorder_qubits( std::vector<int> qbit_list );
-
-
-/**
-@brief Call to set the final optimized parameters of the gate.
-@param parameters_ Real array of the optimized parameters
-*/
-void set_optimized_parameters( Matrix_real parameters_ );
-
-/**
-@brief Call to get the final optimized parameters of the gate.
-*/
-Matrix_real get_optimized_parameters();
-
-/**
-@brief Call to get the number of free parameters
-@return Return with the number of the free parameters
-*/
-int get_parameter_num();
-
 
 /**
 @brief Call to get the type of the operation
@@ -157,7 +129,7 @@ int get_qbit_num();
 @brief Call to create a clone of the present class
 @return Return with a pointer pointing to the cloned object
 */
-N_Qubit_Phase_Gate* clone();
+CNZ* clone();
 
 };
 

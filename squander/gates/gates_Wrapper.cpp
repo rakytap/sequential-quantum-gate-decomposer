@@ -54,6 +54,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "R.h"
 #include "CR.h"
 #include "CROT.h"
+#include "CNZ.h"
+#include "N_Qubit_Phase_Gate.h"
 #include "numpy_interface.h"
 
 
@@ -86,6 +88,11 @@ Gate* create_controlled_gate( int qbit_num, int target_qbit, int control_qbit ) 
         
 }
 
+template<typename GateT>
+Gate* create_n_qubit_gate( int qbit_num) {
+    GateT* gate = new GateT( qbit_num );
+    return static_cast<Gate*>( gate );
+}
 
 
 /**
@@ -223,7 +230,40 @@ static PyObject *
     
 }
 
+/**
+@brief Method called when a python instance of the class  qgd_CH_Wrapper is allocated
+@param type A pointer pointing to a structure describing the type of the class  qgd_CH_Wrapper.
+*/
+template<typename GateT>
+static PyObject *
+ n_qubit_Gate_Wrapper_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
+{
 
+    static char *kwlist[] = {(char*)"qbit_num", NULL};
+    int qbit_num = -1; 
+
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i", kwlist, &qbit_num)) {
+        std::string err( "Unable to parse arguments");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;   
+    }
+
+    if (qbit_num == -1){
+        PyErr_SetString(PyExc_ValueError, "Qubit_num must be set!");
+        return NULL;   
+    }
+
+
+    Gate_Wrapper *self;
+    self = (Gate_Wrapper *) type->tp_alloc(type, 0);
+    if (self != NULL) {
+        self->gate =create_n_qubit_gate<GateT>( qbit_num );
+    }
+
+
+    return (PyObject *) self;
+}
 /**
 @brief Method called when a python instance of a non-controlled gate class is initialized
 @param self A pointer pointing to an instance of the class  Gate_Wrapper.
@@ -1357,6 +1397,25 @@ struct CROT_Wrapper_Type : Gate_Wrapper_Type_tmp {
         tp_base      = &Gate_Wrapper_Type;
     }
 };
+struct N_QUBIT_PHASE_Wrapper_Type : Gate_Wrapper_Type_tmp {
+
+    N_QUBIT_PHASE_Wrapper_Type() {    
+        tp_name      = "N_Qubit_Phase";
+        tp_doc       = "Object to represent python binding for a CNZ gate of the Squander package.";
+        tp_new      = (newfunc) n_qubit_Gate_Wrapper_new<N_Qubit_Phase_Gate>;
+        tp_base      = &Gate_Wrapper_Type;
+    }
+};
+struct CNZ_Wrapper_Type : Gate_Wrapper_Type_tmp {
+
+    CNZ_Wrapper_Type() {    
+        tp_name      = "CNZ";
+        tp_doc       = "Object to represent python binding for a CNZ gate of the Squander package.";
+        tp_new      = (newfunc) n_qubit_Gate_Wrapper_new<CNZ>;
+        tp_base      = &Gate_Wrapper_Type;
+    }
+};
+
 
 
 static CH_Wrapper_Type CH_Wrapper_Type_ins;
@@ -1383,6 +1442,8 @@ static Tdg_Wrapper_Type Tdg_Wrapper_Type_ins;
 static R_Wrapper_Type R_Wrapper_Type_ins;
 static CR_Wrapper_Type CR_Wrapper_Type_ins;
 static CROT_Wrapper_Type CROT_Wrapper_Type_ins;
+static CNZ_Wrapper_Type CNZ_Wrapper_Type_ins;
+static N_QUBIT_PHASE_Wrapper_Type N_QUBIT_PHASE_Wrapper_Type_ins;
 
 
 
@@ -1443,6 +1504,8 @@ PyInit_gates_Wrapper(void)
         PyType_Ready(&Tdg_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&CR_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&CROT_Wrapper_Type_ins) < 0 ||
+        PyType_Ready(&N_QUBIT_PHASE_Wrapper_Type_ins) < 0 ||
+        PyType_Ready(&CNZ_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&R_Wrapper_Type_ins) < 0 ) {
 
         Py_DECREF(m);
@@ -1627,6 +1690,18 @@ PyInit_gates_Wrapper(void)
     Py_INCREF(&CROT_Wrapper_Type_ins);
     if (PyModule_AddObject(m, "CROT", (PyObject *) & CROT_Wrapper_Type_ins) < 0) {
         Py_DECREF(&CROT_Wrapper_Type_ins);
+        Py_DECREF(m);
+        return NULL;
+    }
+    Py_INCREF(&CNZ_Wrapper_Type_ins);
+    if (PyModule_AddObject(m, "CNZ", (PyObject *) & CNZ_Wrapper_Type_ins) < 0) {
+        Py_DECREF(&CNZ_Wrapper_Type_ins);
+        Py_DECREF(m);
+        return NULL;
+    }
+    Py_INCREF(&N_QUBIT_PHASE_Wrapper_Type_ins);
+    if (PyModule_AddObject(m, "N_Qubit_Phase", (PyObject *) & N_QUBIT_PHASE_Wrapper_Type_ins) < 0) {
+        Py_DECREF(&N_QUBIT_PHASE_Wrapper_Type_ins);
         Py_DECREF(m);
         return NULL;
     }
