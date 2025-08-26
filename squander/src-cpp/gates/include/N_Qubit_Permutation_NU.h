@@ -88,6 +88,8 @@ public:
 
     // Clone function
     N_Qubit_Permutation_NU* clone();
+    
+    Matrix_real extract_parameters( Matrix_real& parameters );
 
 };
 

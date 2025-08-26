@@ -600,7 +600,7 @@ Gates_block::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
         case R_OPERATION: case RX_OPERATION:
         case RY_OPERATION: case RZ_OPERATION:
         case CRY_OPERATION: case CR_OPERATION:
-        case CZ_NU_OPERATION:
+        case CZ_NU_OPERATION: 
         case ADAPTIVE_OPERATION:
         {
             operation->apply_from_right( parameters_mtx, input );
@@ -2199,6 +2199,11 @@ Gates_block::create_remapped_circuit( const std::map<int, int>& qbit_map, const 
 
             break;
         }
+        case N_QUBIT_PERMUTATION_OPERATION: 
+        case N_QUBIT_PERMUTATION_NU_OPERATION:
+        {
+        continue;
+        }
         default:
             std::string err("Gates_block::create_remapped_circuit: unimplemented gate"); 
             throw err;
@@ -2340,6 +2345,8 @@ void Gates_block::set_qbit_num( int qbit_num_in ) {
         case CZ_NU_OPERATION: case CU_OPERATION:
         case S_OPERATION: case SDG_OPERATION:
         case T_OPERATION: case TDG_OPERATION:
+        case N_QUBIT_PERMUTATION_OPERATION: 
+        case N_QUBIT_PERMUTATION_NU_OPERATION:
             op->set_qbit_num( qbit_num_in );
             break;
         default:
@@ -2402,6 +2409,8 @@ int Gates_block::extract_gates( Gates_block* op_block ) {
         case CZ_NU_OPERATION: case CU_OPERATION:
         case S_OPERATION: case SDG_OPERATION:
         case T_OPERATION: case TDG_OPERATION:
+        case N_QUBIT_PERMUTATION_OPERATION: 
+        case N_QUBIT_PERMUTATION_NU_OPERATION:
         {
             Gate* op_cloned = op->clone();
             op_block->add_gate( op_cloned );

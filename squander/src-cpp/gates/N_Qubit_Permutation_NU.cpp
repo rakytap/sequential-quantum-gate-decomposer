@@ -376,5 +376,20 @@ N_Qubit_Permutation_NU* N_Qubit_Permutation_NU::clone() {
 
 }
 
+Matrix_real 
+N_Qubit_Permutation_NU::extract_parameters( Matrix_real& parameters ) {
+
+    if ( get_parameter_start_idx() + get_parameter_num() > parameters.size()  ) {
+        std::string err("RY::extract_parameters: Cant extract parameters, since the dinput arary has not enough elements.");
+        throw err;     
+    }
+
+    Matrix_real extracted_parameters(1,1);
+
+    extracted_parameters[0] = parameters[ get_parameter_start_idx() ];
+
+    return extracted_parameters;
+
+}
 
 
