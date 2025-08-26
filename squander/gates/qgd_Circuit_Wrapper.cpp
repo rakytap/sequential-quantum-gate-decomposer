@@ -970,11 +970,24 @@ qgd_Circuit_Wrapper_add_phase_gate(qgd_Circuit_Wrapper *self)
 }
 
 static PyObject *
-qgd_Circuit_Wrapper_add_cnz(qgd_Circuit_Wrapper *self)
+qgd_Circuit_Wrapper_add_cnz(qgd_Circuit_Wrapper *self,  PyObject *args, PyObject *kwds)
 {
 
+    static char *kwlist[] = {(char*)"Phase State", NULL};
+    PyObject* phase_string=NULL; 
 
-    self->circuit->add_cnz();
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|O", kwlist, &phase_string)) {
+        std::string err( "Unable to parse arguments");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;   
+    }
+    PyObject* phase_string_py = PyObject_Str(phase_string);
+    PyObject* phase_string_py_unicode = PyUnicode_AsEncodedString(phase_string_py, "utf-8", "~E~");
+    const char* phase_string_C = PyBytes_AS_STRING(phase_string_py_unicode);
+    std::string phase_string_str = ( phase_string_C );
+    int phase_idx = std::stoi(phase_string_str, nullptr, 2); 
+    self->circuit->add_cnz(phase_idx);
     
 
     return Py_BuildValue("i", 0);
@@ -2824,7 +2837,7 @@ static PyMethodDef qgd_Circuit_Wrapper_Methods[] = {
     {"add_Phase_Gate", (PyCFunction) qgd_Circuit_Wrapper_add_phase_gate, METH_NOARGS,
      "Call to add an phase gate to the front of the gate structure"
     },
-    {"add_CNZ", (PyCFunction) qgd_Circuit_Wrapper_add_cnz, METH_NOARGS,
+    {"add_CNZ", (PyCFunction) qgd_Circuit_Wrapper_add_cnz, METH_VARARGS | METH_KEYWORDS,
      "Call to add an phase gate to the front of the gate structure"
     },
     {"add_Circuit", (PyCFunction) qgd_Circuit_Wrapper_add_Circuit, METH_VARARGS,

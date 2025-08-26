@@ -94,6 +94,12 @@ Gate* create_n_qubit_gate( int qbit_num) {
     return static_cast<Gate*>( gate );
 }
 
+template<typename GateT>
+Gate* create_cnz_gate( int qbit_num, int phase_idx) {
+    GateT* gate = new GateT( qbit_num, phase_idx );
+    return static_cast<Gate*>( gate );
+}
+
 
 /**
 @brief Method called when a python instance of the class  Gate_Wrapper is destroyed
@@ -259,6 +265,45 @@ static PyObject *
     self = (Gate_Wrapper *) type->tp_alloc(type, 0);
     if (self != NULL) {
         self->gate =create_n_qubit_gate<GateT>( qbit_num );
+    }
+
+
+    return (PyObject *) self;
+}
+/**
+@brief Method called when a python instance of the class  qgd_CH_Wrapper is allocated
+@param type A pointer pointing to a structure describing the type of the class  qgd_CH_Wrapper.
+*/
+template<typename GateT>
+static PyObject *
+ cnz_Gate_Wrapper_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
+{
+
+    static char *kwlist[] = {(char*)"qbit_num",(char*)"Phase State", NULL};
+    int qbit_num = -1; 
+    PyObject* phase_string=NULL; 
+
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|iO", kwlist, &qbit_num, &phase_string)) {
+        std::string err( "Unable to parse arguments");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;   
+    }
+    PyObject* phase_string_py = PyObject_Str(phase_string);
+    PyObject* phase_string_py_unicode = PyUnicode_AsEncodedString(phase_string_py, "utf-8", "~E~");
+    const char* phase_string_C = PyBytes_AS_STRING(phase_string_py_unicode);
+    std::string phase_string_str = ( phase_string_C );
+    int phase_idx = std::stoi(phase_string_str, nullptr, 2); 
+    if (qbit_num == -1){
+        PyErr_SetString(PyExc_ValueError, "Qubit_num must be set!");
+        return NULL;   
+    }
+
+
+    Gate_Wrapper *self;
+    self = (Gate_Wrapper *) type->tp_alloc(type, 0);
+    if (self != NULL) {
+        self->gate =create_cnz_gate<GateT>( qbit_num,phase_idx );
     }
 
 
@@ -1411,7 +1456,7 @@ struct CNZ_Wrapper_Type : Gate_Wrapper_Type_tmp {
     CNZ_Wrapper_Type() {    
         tp_name      = "CNZ";
         tp_doc       = "Object to represent python binding for a CNZ gate of the Squander package.";
-        tp_new      = (newfunc) n_qubit_Gate_Wrapper_new<CNZ>;
+        tp_new      = (newfunc) cnz_Gate_Wrapper_new<CNZ>;
         tp_base      = &Gate_Wrapper_Type;
     }
 };

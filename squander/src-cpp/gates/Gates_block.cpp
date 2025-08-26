@@ -1560,10 +1560,10 @@ void Gates_block::add_phase_gate_to_front()  {
 /**
 @brief Append a Composite gate to the list of gates
 */
-void Gates_block::add_cnz()  {
+void Gates_block::add_cnz(int phase_idx)  {
 
         // create the operation
-        Gate* operation = static_cast<Gate*>(new CNZ( qbit_num ));
+        Gate* operation = static_cast<Gate*>(new CNZ( qbit_num,phase_idx ));
 
         // adding the operation to the end of the list of gates
         add_gate( operation );
@@ -1572,10 +1572,10 @@ void Gates_block::add_cnz()  {
 /**
 @brief Add a Composite gate to the front of the list of gates
 */
-void Gates_block::add_cnz_to_front()  {
+void Gates_block::add_cnz_to_front(int phase_idx)  {
 
         // create the operation
-        Gate* gate = static_cast<Gate*>(new CNZ( qbit_num ));
+        Gate* gate = static_cast<Gate*>(new CNZ( qbit_num,phase_idx ));
 
         // adding the operation to the front of the list of gates
         add_gate_to_front( gate );

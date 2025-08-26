@@ -49,6 +49,7 @@ CNZ::CNZ() {
     control_qbit = -1;
     // the number of free parameters of the operation
     parameter_num = 0;
+    phase_idx = 0;
 }
 
 
@@ -58,7 +59,7 @@ CNZ::CNZ() {
 @param qbit_num_in The number of qubits spanning the unitaries
 @return An instance of the class
 */
-CNZ::CNZ(int qbit_num_in) {
+CNZ::CNZ(int qbit_num_in, int phase_idx_in) {
 
     // A string labeling the gate operation
     name = "CNZ";
@@ -75,6 +76,7 @@ CNZ::CNZ(int qbit_num_in) {
     control_qbit = -1;
     // The number of parameters
     parameter_num = 0;
+    phase_idx = phase_idx_in;
 }
 
 
@@ -169,7 +171,7 @@ CNZ::get_matrix(  int parallel ) {
     for (int idx = 0; idx<matrix_size; idx++){
         com_matrix[idx].real = 1.;
     }
-    com_matrix[matrix_size-1].real=-1.;
+    com_matrix[phase_idx].real=-1.;
 //com_matrix.print_matrix();
 #ifdef DEBUG
         if (com_matrix.isnan()) {
@@ -197,12 +199,7 @@ CNZ::apply_to(Matrix& input, int parallel ) {
         throw err;    
     }
 
-    if (parameters.size() < parameter_num) {
-	std::stringstream sstream;
-	sstream << "Not enough parameters given for the Composite gate" << std::endl;
-        print(sstream, 0);	
-        exit(-1);
-    }
+
 
 
     Matrix com_matrix = get_matrix( );
@@ -228,12 +225,6 @@ CNZ::apply_from_right(Matrix& input ) {
         exit(-1);
     }
 
-    if (parameters.size() < parameter_num) {
-	std::stringstream sstream;
-        sstream << "Not enough parameters given for the Composite gate" << std::endl;
-        print(sstream, 0);	 
-        exit(-1);
-    }
 
     Matrix com_matrix = get_matrix(  );
     apply_diagonal_gate_to_matrix_input(com_matrix,input,input.rows);
@@ -271,7 +262,7 @@ CNZ::get_qbit_num() {
 */
 CNZ* CNZ::clone() {
 
-    CNZ* ret = new CNZ( qbit_num );
+    CNZ* ret = new CNZ( qbit_num, phase_idx );
 
     ret->set_parents( parents );
     ret->set_children( children );
