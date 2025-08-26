@@ -49,7 +49,7 @@ class CNZ : public Gate {
 protected:
 
    /// Parameters theta, phi, lambda of the U3 gate after the decomposition of the unitary is done
-   Matrix_real parameters;
+   int phase_idx;
 
 public:
 
@@ -70,7 +70,7 @@ virtual ~CNZ();
 @param qbit_num_in The number of qubits spanning the unitaries
 @return An instance of the class
 */
-CNZ(int qbit_num_in);
+CNZ(int qbit_num_in, int phase_idx_in);
 
 
 /**
