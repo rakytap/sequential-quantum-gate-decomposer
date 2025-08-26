@@ -67,8 +67,8 @@ typedef enum gate_type {GENERAL_OPERATION=1,
                         S_OPERATION=34,
                         SDG_OPERATION=35,
                         CU_OPERATION=36,
-                        CUSTOM_KERNEL_1QUBIT_GATE_OPERATION=37} gate_type;
-                        N_QUBIT_PHASE_OPERATION=32} gate_type;
+                        CUSTOM_KERNEL_1QUBIT_GATE_OPERATION=37,
+                        N_QUBIT_PHASE_OPERATION=38} gate_type;
 
 
 #ifdef _WIN32
