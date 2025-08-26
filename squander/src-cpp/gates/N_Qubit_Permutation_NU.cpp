@@ -80,7 +80,7 @@ N_Qubit_Permutation_NU::N_Qubit_Permutation_NU(int qbit_num_in) {
     centers = std::vector<double> {};
     //load up center vector 
     for (int idx=0; idx<n_perm;idx++){
-        centers.push_back(idx/(double)(n_perm-1));
+        centers.push_back(idx);
     }
 }
 
@@ -300,34 +300,24 @@ Matrix N_Qubit_Permutation_NU::construct_matrix_from_pattern(std::vector<int> pa
 
 // Evaluate Lagrange basis function f_k(x)
 double N_Qubit_Permutation_NU::f_k(double x, int k) {
-    double result = 1.0;
-    for (int j = 0; j < n_perm; j++) {
-        if (j == k) continue;
-        result *= (x - centers[j]) / (centers[k] - centers[j]);
-    }
-    return result;
+    return std::exp(-10.*(x-centers[k])*(x-centers[k]));
 }
 
 // Derivative of f_k(x) using optimized formula
 double N_Qubit_Permutation_NU::f_k_derivative(double x, int k) {
     double fk = f_k(x, k);
-    double sum = 0.0;
-    for (int j = 0; j < n_perm; j++) {
-        if (j == k) continue;
-        sum += 1.0 / (x - centers[j]);
-    }
-    return fk * sum;
+    return fk * -20.0 * (x-centers[k]);
 }
 
 // Normalized non-negative Lagrange function g_k(x)
 double N_Qubit_Permutation_NU::g_k(double x, int k) {
-    double sum_sq = 0.0;
+    double sum = 0.0;
     for (int j = 0; j < n_perm; j++) {
         double fj = f_k(x, j);
-        sum_sq += fj * fj;
+        sum += fj ;
     }
     double fk = f_k(x, k);
-    return (fk * fk) / sum_sq;
+    return (fk) / sum;
 }
 
 // Derivative of g_k(x) using chain rule
@@ -335,17 +325,14 @@ double N_Qubit_Permutation_NU::g_k_derivative(double x, int k) {
     double fk = f_k(x, k);
     double fk_prime = f_k_derivative(x, k);
 
-    double sum_sq = 0.0;
-    double sum_sq_prime = 0.0;
+    double sum = 0.0;
 
     for (int j = 0; j < n_perm; j++) {
         double fj = f_k(x, j);
-        double fj_prime = f_k_derivative(x, j);
-        sum_sq += fj * fj;
-        sum_sq_prime += 2.0 * fj * fj_prime;
+        sum += fj;
     }
 
-    return (2.0 * fk * fk_prime * sum_sq - fk * fk * sum_sq_prime) / (sum_sq * sum_sq);
+    return (fk_prime * sum - fk * fk_prime) / (sum * sum);
 }
 
 void N_Qubit_Permutation_NU::matrix_addition(Matrix& lhs, Matrix rhs){
