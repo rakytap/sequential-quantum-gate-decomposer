@@ -906,6 +906,18 @@ qgd_Circuit_Wrapper_add_phase_gate(qgd_Circuit_Wrapper *self)
 
 }
 
+static PyObject *
+qgd_Circuit_Wrapper_add_cnz(qgd_Circuit_Wrapper *self)
+{
+
+
+    self->circuit->add_cnz();
+    
+
+    return Py_BuildValue("i", 0);
+
+}
+
 
 /**
 @brief Wrapper function to add a block of operations to the front of the gate structure.
@@ -2669,6 +2681,9 @@ static PyMethodDef qgd_Circuit_Wrapper_Methods[] = {
      "Call to add an adaptive gate to the front of the gate structure"
     },
     {"add_Phase_Gate", (PyCFunction) qgd_Circuit_Wrapper_add_phase_gate, METH_NOARGS,
+     "Call to add an phase gate to the front of the gate structure"
+    },
+    {"add_CNZ", (PyCFunction) qgd_Circuit_Wrapper_add_cnz, METH_NOARGS,
      "Call to add an phase gate to the front of the gate structure"
     },
     {"add_Circuit", (PyCFunction) qgd_Circuit_Wrapper_add_Circuit, METH_VARARGS,
