@@ -125,9 +125,9 @@ qiskit_version = qiskit.version.get_version_info()
 from qiskit import QuantumCircuit
 import qiskit_aer as Aer    
     
-if qiskit_version[0] == '1':
+if qiskit_version[0] == '1' or qiskit_version[0] == '2':
     from qiskit import transpile
-else :
+elif qiskit_version[0] == '0':
     from qiskit import execute
     
     
