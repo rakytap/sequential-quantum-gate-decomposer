@@ -243,16 +243,18 @@ Gates_block::apply_to( Matrix_real& parameters_mtx_in, Matrix& input, int parall
         std::string err("Gates_block::apply_to: Wrong input size in Gates_block gate apply.");
         throw err;    
     }
-       
-    // TODO: GATE fusion has not been adopted to reversed parameter ordering!!!!!!!!!!!!!!!!!!!
+
+    /**
+     * Multi-qubit gate fusion
+     * Fuses sequential gates operating on overlapping qubit sets into combined unitary matrices to reduce kernel calls
+     * Gates are processed in forward chronological order.
+     */
     if(max_fusion !=-1 && ((qbit_num>max_fusion && input.cols == 1) && involved_qubits.size()>1)){
-
-
-        std::string error("Gates_block::apply_to: GATE fusion has not been adopted to reversed parameter ordering!!!!!!!!!!!!!!!!!!!");
-        throw error; 
         
-        double* parameters = parameters_mtx_in.get_data();     
+        double* parameters = parameters_mtx_in.get_data();
 
+        // Breaks circuit into fusion blocks if needed
+        // Creates block_end[] indices that work for both forward/backward iteration
         if (fragmented==false){
             fragment_circuit();
         };  
@@ -260,8 +262,10 @@ Gates_block::apply_to( Matrix_real& parameters_mtx_in, Matrix& input, int parall
         int outer_idx = gates.size()-1;
         for (int block_idx=0; block_idx<involved_qbits.size(); block_idx++){
 
-            if (block_type[block_idx] != 1){
+            if (block_type[block_idx] != 1){ 
+            // Multi-qubit fusion block: contains gates operating on multiple qubits
 
+                // Creates reduced mini-circuit containing only gates from this fusion block
                 Gates_block gates_block_mini = Gates_block(block_type[block_idx]);
                 std::vector<int> qbits = involved_qbits[block_idx];
 #ifdef _WIN32
@@ -270,55 +274,67 @@ Gates_block::apply_to( Matrix_real& parameters_mtx_in, Matrix& input, int parall
                 int indices[qbit_num];
 #endif
 
+                // Creates mapping from global qubit indices to local mini-circuit indices
                 for (int jdx=0; jdx<(int)qbits.size(); jdx++){
                     indices[qbits[jdx]]=jdx;
                 }
 
-                for (int idx=outer_idx; idx>=block_end[block_idx]; idx--){
-
+                // Process gates in forward chronological order within this fusion block
+                for (int idx=block_end[block_idx]; idx<=outer_idx; idx++){
                     Gate* gate = gates[idx]->clone();
                     int trgt_qbit = gate->get_target_qbit();
                     int ctrl_qbit = gate->get_control_qbit();
+                    
+                    // Remap qubit from global index to mini-circuit indices
                     int target_qubit_new = indices[trgt_qbit];
                     gate->set_target_qbit(target_qubit_new);
 
                     int control_qubit_new = (ctrl_qbit==-1) ? -1:indices[ctrl_qbit];
                     gate->set_control_qbit(control_qubit_new);
+
+                    // Updates gate to operate on reduced qubit space
+                    gate->set_qbit_num(block_type[block_idx]);
                     gates_block_mini.add_gate(gate);
                 }
 
+                // Builds combined unitary matrix for this fusion block
                 Matrix Umtx_mini = create_identity(Power_of_2(block_type[block_idx]));
-                parameters       = parameters - gates_block_mini.get_parameter_num();
 
-                Matrix_real parameters_mtx(parameters, 1, gates_block_mini.get_parameter_num());
+                Matrix_real parameters_mtx(parameters_mtx_in.get_data() + gates[block_end[block_idx]]->get_parameter_start_idx(), 1, gates_block_mini.get_parameter_num());
                 gates_block_mini.apply_to(parameters_mtx, Umtx_mini);
 
+                // Ensures each gate processed exactly once
                 outer_idx        = block_end[block_idx]-1;
 
 #ifdef USE_AVX
                 apply_large_kernel_to_input_AVX(Umtx_mini, input, qbits, input.size() );
 #else
-                apply_large_kernel_to_state_vector_input(Umtx_mini, input, qbits, input.size() );
+                apply_large_kernel_to_input(Umtx_mini, input, qbits, input.size() );
 #endif                
        
 
 
             }
-            else{
+            else{ 
+            // Single-qubit fusion block: contains gates operating on a single qubit
 
                 Gates_block gates_block_mini = Gates_block(qbit_num);
-                for (int idx=outer_idx;idx>=0;idx--){
+                
+                for (int idx=block_end[block_idx]; idx<=outer_idx; idx++){
                     Gate* gate = gates[idx]->clone();
                     gates_block_mini.add_gate(gate);
                 }
-                parameters = parameters - gates_block_mini.get_parameter_num();
-                Matrix_real parameters_mtx(parameters, 1, gates_block_mini.get_parameter_num());
+                
+                Matrix_real parameters_mtx(parameters_mtx_in.get_data() + gates[block_end[block_idx]]->get_parameter_start_idx(), 1, gates_block_mini.get_parameter_num());
                 gates_block_mini.apply_to(parameters_mtx, input);
+                
+                // Ensures each gate processed exactly once
+                outer_idx = block_end[block_idx]-1;
             }
         }
     }
     else if  ( involved_qubits.size() == 1 && gates.size() > 1 && qbit_num > 1 ) {
-    // merge successive single qubit gates
+    // Merge successive single qubit gates
     
                 Gates_block gates_block_mini = Gates_block(1);
   
