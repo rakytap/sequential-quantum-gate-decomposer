@@ -416,7 +416,7 @@ def two_cycles_from_dag_edges(g, gate_to_parts, allparts):
                         twocycles.append((a, b))   # a<->b found
                     seen[(a, b)] = new
     return twocycles
-def ilp_global_optimal(allparts, g, weighted_info=None, gurobi_direct=True):
+def ilp_global_optimal(allparts, g, weighted_info=None, gurobi_direct=False, use_order=False):
     if weighted_info is not None:
         single_qubit_chains, max_qubits_per_partition, go, rgo, gate_to_qubit, gate_to_tqubit = weighted_info
         if not single_qubit_chains is None:
@@ -452,18 +452,17 @@ def ilp_global_optimal(allparts, g, weighted_info=None, gurobi_direct=True):
                 m.setParam(GRB.Param.IntegralityFocus, 1)
                 m.setParam(GRB.Param.LazyConstraints, 1)
                 x = m.addVars(range(N), lb=[0]*N, ub=[1]*N, vtype=[GRB.BINARY]*N, name=["x_" + str(i) for i in range(N)])
-                if weighted_info is not None and single_qubit_chains is not None:
-                    Npre, Npost, Nprepost = len(single_qubit_chains_pre), len(single_qubit_chains_post), len(single_qubit_chains_prepost)
-                    pre = m.addVars(list(single_qubit_chains_pre), lb=[0]*Npre, ub=[1]*Npre, vtype=[GRB.BINARY]*Npre, name=["pre_" + str(i) for i in single_qubit_chains_pre])
-                    post = m.addVars(list(single_qubit_chains_post), lb=[0]*Npost, ub=[1]*Npost, vtype=[GRB.BINARY]*Npost, name=["post_" + str(i) for i in single_qubit_chains_post])
-                    noprepost = m.addVars(list(single_qubit_chains_prepost), lb=[0]*Nprepost, ub=[1]*Nprepost, vtype=[GRB.BINARY]*Nprepost, name=["prepost_" + str(i) for i in single_qubit_chains_prepost])
-                    m.update()
                 for i in g: m.addConstr(gp.quicksum(x[j] for j in gate_to_parts[i]) == 1)
                 if weighted_info is None: m.setObjective(gp.quicksum(x[i] for i in range(N)), GRB.MINIMIZE)
                 elif single_qubit_chains is None:
                     weights = parts_to_float_ops(max_qubits_per_partition, gate_to_qubit, None, allparts)
                     m.setObjective(gp.quicksum((weights[i]*N+1) * x[i] for i in range(N)), GRB.MINIMIZE)
                 else:
+                    Npre, Npost, Nprepost = len(single_qubit_chains_pre), len(single_qubit_chains_post), len(single_qubit_chains_prepost)
+                    pre = m.addVars(list(single_qubit_chains_pre), lb=[0]*Npre, ub=[1]*Npre, vtype=[GRB.BINARY]*Npre, name=["pre_" + str(i) for i in single_qubit_chains_pre])
+                    post = m.addVars(list(single_qubit_chains_post), lb=[0]*Npost, ub=[1]*Npost, vtype=[GRB.BINARY]*Npost, name=["post_" + str(i) for i in single_qubit_chains_post])
+                    noprepost = m.addVars(list(single_qubit_chains_prepost), lb=[0]*Nprepost, ub=[1]*Nprepost, vtype=[GRB.BINARY]*Nprepost, name=["prepost_" + str(i) for i in single_qubit_chains_prepost])
+                    m.update()
                     S, t, u, targets = [], {}, {}, {}
                     surrounded = {s: [] for s in noprepost}
                     for i in range(N):
@@ -550,22 +549,111 @@ def ilp_global_optimal(allparts, g, weighted_info=None, gurobi_direct=True):
     import pulp
     prob = pulp.LpProblem("OptimalPartitioning", pulp.LpMinimize)
     x = pulp.LpVariable.dicts("x", (i for i in range(N)), cat="Binary") #is partition i included
-    order = pulp.LpVariable.dicts("ord", (i for i in range(N)), lowBound=0, upBound=N-1, cat="Continuous") #order of the partition
     for i in g: prob += pulp.lpSum(x[j] for j in gate_to_parts[i]) == 1 #constraint that all gates are included exactly once
-    succ = get_part_cycle_graph(g, gate_to_parts)
-    for u in succ:
-        for v in succ[u]:
-            prob += order[u] + 1 <= order[v] + N*(1-x[u]+1-x[v])
-    #for i in range(N): prob += order[i] <= N*x[i]
+    if use_order:
+        order = pulp.LpVariable.dicts("ord", (i for i in range(N)), lowBound=0, upBound=N-1, cat="Continuous") #order of the partition
+        succ = get_part_cycle_graph(g, gate_to_parts)
+        for u in succ:
+            for v in succ[u]:
+                prob += order[u] + 1 <= order[v] + N*(1-x[u]+1-x[v])
+        #for i in range(N): prob += order[i] <= N*x[i]
     #print(all_cycles_from_dag_edges(succ))
     #for u, v in two_cycles_from_dag_edges(g, gate_to_parts, allparts):
     #    prob += x[u] + x[v] <= 1 #constraint that no two cycles are included
     if weighted_info is None: prob.setObjective(pulp.lpSum(x[i] for i in range(N)))
-    #else: prob.setObjective(pulp.lpSum((weights[i]*N+1) * x[i] for i in range(N)))
+    elif single_qubit_chains is None:
+        weights = parts_to_float_ops(max_qubits_per_partition, gate_to_qubit, None, allparts)
+        prob.setObjective(pulp.lpSum((weights[i]*N+1) * x[i] for i in range(N)))
+    else:
+        Npre, Npost, Nprepost = len(single_qubit_chains_pre), len(single_qubit_chains_post), len(single_qubit_chains_prepost)
+        pre = pulp.LpVariable.dicts("pre", list(single_qubit_chains_pre), cat="Binary")
+        post = pulp.LpVariable.dicts("post", list(single_qubit_chains_post), cat="Binary")
+        noprepost = pulp.LpVariable.dicts("prepost", list(single_qubit_chains_prepost), cat="Binary")
+        S, t, u, targets = [], {}, {}, {}
+        surrounded = {s: [] for s in noprepost}
+        for i in range(N):
+            part = allparts[i]
+            surrounded_chains = {t for s in part for t in go[s] if t in single_qubit_chains_prepost and go[single_qubit_chains_prepost[t][-1]] and next(iter(go[single_qubit_chains_prepost[t][-1]])) in part}
+            for v in surrounded_chains: surrounded[v].append(i)
+            fullpart = frozenset.union(part, *(single_qubit_chains_prepost[v] for v in surrounded_chains))
+            qubits = set.union(*(gate_to_qubit[v] for v in fullpart))
+            tqubits = {gate_to_tqubit[v] for v in fullpart}
+            cqubits = qubits - tqubits
+            targets[i] = {}
+            impurities = []
+            is_pure = len({frozenset(gate_to_qubit[x]-{gate_to_tqubit[x]}) for x in fullpart}) == 1
+            for p in part:
+                for s in go[p]:
+                    if s in single_qubit_chains_pre:
+                        v = gate_to_tqubit[s]
+                        if v in cqubits:
+                            a = pulp.LpVariable(f"pre_t_{i}_{s}", cat="Binary")
+                            for z in fortet_inequalities(pre[s], x[i], a): prob += z
+                            targets[i].setdefault(v, []).append(a)
+                        elif not s in fullpart:
+                            if is_pure: impurities.append(pre[s])
+                            else:
+                                if s in noprepost: prob += pre[s] + post[single_qubit_chains_prepost[s][-1]] >= x[i]
+                                else: prob += pre[s] >= x[i]
+                for s in rgo[p]:
+                    if s in single_qubit_chains_post:
+                        v = gate_to_tqubit[s]
+                        if v in cqubits:
+                            a = pulp.LpVariable(f"post_t_{i}_{s}", cat="Binary")
+                            for z in fortet_inequalities(post[s], x[i], a): prob += z
+                            targets[i].setdefault(v, []).append(a)
+                        elif not s in fullpart:
+                            if is_pure: impurities.append(post[s])
+                            else:
+                                if s in noprepost: prob += post[s] + pre[single_qubit_chains_prepost[s][0]] >= x[i]
+                                else: prob += post[s] >= x[i]
+            Nu = len(targets[i]); Nt = Nu+1
+            t[i] = pulp.LpVariable.dicts("t", range(Nt), cat="Binary")
+            u[i] = pulp.LpVariable.dicts("u", list(targets[i]), cat="Binary")
+            for s in u[i]: prob += u[i][s] <= x[i]
+            for target in targets[i]:
+                for a in targets[i][target]: prob += u[i][target] >= a
+            prob += pulp.lpSum(t[i][j] for j in range(Nt)) == x[i] #only one target count selected
+            prob += pulp.lpSum(j*t[i][j] for j in range(Nt)) == pulp.lpSum(u[i][s] for s in u[i])
+            if is_pure and impurities:
+                isimpure = pulp.LpVariable(f"impurity_{i}", cat="Binary")
+                for z in impurities: prob += isimpure >= z
+            gate_qubits = len(qubits)
+            for j in range(Nt):
+                control_qubits = len(cqubits) - j
+                g_size = 2**(gate_qubits-control_qubits)
+                if is_pure and j==0 and impurities:
+                    t0 = pulp.LpVariable.dicts("t0", range(2), cat="Binary")
+                    for z in fortet_inequalities(t[i][j], isimpure, t0[0]): prob += z
+                    for z in fortet_inequalities(t[i][j], 1-isimpure, t0[1]): prob += z
+                    S.append(t0[0] * (2**max_qubits_per_partition * (g_size * (4 + 2) + 2 * (g_size - 1))))
+                    S.append(t0[1] * (2**(max_qubits_per_partition-control_qubits) * (g_size * (4 + 2) + 2 * (g_size - 1))))
+                else:
+                    S.append(t[i][j] * (2**(max_qubits_per_partition-(control_qubits if is_pure and j==0 else 0)) * (g_size * (4 + 2) + 2 * (g_size - 1))))
+        for s in pre:
+            if not s in noprepost:
+                S.append((1-pre[s])*(2**max_qubits_per_partition * (2 * (4 + 2) + 2)))
+            else:
+                prob += pre[s] + post[single_qubit_chains_prepost[s][-1]] + noprepost[s] + pulp.lpSum(x[i] for i in surrounded[s]) == 1 #no pre and post for the same gate
+                S.append(noprepost[s]*(2**max_qubits_per_partition * (2 * (4 + 2) + 2)))
+        for s in post:                        
+            if not single_qubit_chains_post[s][0] in noprepost:
+                S.append((1-post[s])*(2**max_qubits_per_partition * (2 * (4 + 2) + 2)))
+        prob.setObjective(pulp.lpSum(S)*N+pulp.lpSum(x[i] for i in range(N)))
     while True:
+        from gurobipy import GRB
+        import gurobipy as gp
+        def cb(m, where):
+            if where == GRB.Callback.MIPSOL:
+                xg = [m.getVarByName(x[i].name) for i in range(N)]
+                x_val = m.cbGetSolution([xg[i] for i in range(N)])
+                badsccs = sol_to_badsccs([i for i, xv in enumerate(x_val) if int(round(xv))])
+                for badscc in badsccs:
+                    #print([(allparts[x], [g[y] for y in allparts[x]]) for x in badscc]) #canonical partitions {1, 3} and {2, 4} with edges 1->{3, 4}, 2->{3, 4}
+                    m.cbLazy(gp.quicksum(xg[j] for j in badscc) <= len(badscc) - 1) #remove at least one partition from the SCC
         #from gurobilic import get_gurobi_options
         #prob.solve(pulp.GUROBI(manageEnv=True, msg=False, envOptions=get_gurobi_options()))
-        prob.solve(pulp.GUROBI(manageEnv=True, msg=False, timeLimit=180, Threads=os.cpu_count()))
+        prob.solve(pulp.GUROBI(manageEnv=True, msg=False, timeLimit=180, Threads=os.cpu_count(), IntegralityFocus=1, LazyConstraints=1), callback=cb)
         #prob.solve(pulp.PULP_CBC_CMD(msg=False))
         print(f"Status: {pulp.LpStatus[prob.status]}")
         L = [i for i in range(N) if int(pulp.value(x[i]))]
