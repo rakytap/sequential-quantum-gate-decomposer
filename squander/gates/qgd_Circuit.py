@@ -270,7 +270,12 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
 
 	# call the C wrapper function
         super().add_adaptive(target_qbit, control_qbit)
-        
+
+    def add_CNZ( self, phase_string=None):
+        if phase_string == None:
+            phase_string = "1"*self.get_Qbit_Num()
+	# call the C wrapper function
+        super().add_CNZ(phase_string)        
 #@brief Call to add a CROT gate to the front of the gate structure.
 #@param self A pointer pointing to an instance of the class qgd_Circuit.
 #@param Input arguments: target_qbit (int).
