@@ -4,6 +4,8 @@
 #include "matrix.h"
 #include "common.h"
 #include "apply_large_kernel_to_input.h"
+#include "apply_large_kernel_to_input_AVX.h"
+#include "Gates_block.h"
 
 class ApplyKernelTestSuite {
     std::mt19937 rng;
@@ -94,6 +96,33 @@ void test5QubitGate() {
     assert(std::abs(fid - 1.0) < 1e-10);
 }
 
+void test5QubitGate_Parallel_GHZ() {
+    int num_qubits = 5;
+    Matrix state = generateRandomState(num_qubits);
+    Matrix_real params = Matrix_real(1,1);
+    Matrix test_state = state.copy();
+    std::vector<int> qubits = {1,2,4};
+    Matrix Umtx = create_identity(1<<qubits.size());
+    memset(params.get_data(), 0.0, params.size()*sizeof(double) );  
+    Gates_block GHZ_circ = Gates_block(5);
+    GHZ_circ.add_h(1);
+    GHZ_circ.add_cnot(2,1);
+    GHZ_circ.add_cnot(4,1);
+    GHZ_circ.apply_to(params,state);
+    Gates_block GHZ_circ_mini = Gates_block(3);
+    GHZ_circ_mini.add_h(0);
+    GHZ_circ_mini.add_cnot(1,0);
+    GHZ_circ_mini.add_cnot(2,0);
+    GHZ_circ_mini.apply_to(params,Umtx);
+    apply_unitary_parallel(Umtx, test_state, qubits, 1 << num_qubits);
+    test_state.print_matrix();
+    state.print_matrix();
+    double fid = fidelity(state, test_state);
+    std::cout << "6-qubit GHZ gate fidelity: " << fid << std::endl;
+    assert(std::abs(fid - 1.0) < 1e-10);
+}
+
+
 
 };
 
@@ -103,5 +132,6 @@ int main() {
     suite.test3QubitGate();
     suite.test4QubitGate();
     suite.test5QubitGate();
+    suite.test5QubitGate_Parallel_GHZ();
     return 0;
 }

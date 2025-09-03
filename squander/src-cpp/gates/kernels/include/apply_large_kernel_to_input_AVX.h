@@ -36,6 +36,12 @@ __m256d complex_mult_AVX(__m256d input_vec, __m256d unitary_row_vec, __m256d neg
 
 void apply_large_kernel_to_input_AVX(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size);
 
+inline void get_block_indices(int N, const std::vector<int> &tq, const std::vector<int> &non_targets,int iter_idx, std::vector<int> &indices);
+
+std::vector<__m256d> construct_mv_xy_vectors(Matrix& gate_kernel_unitary, const int& matrix_size);
+
+void apply_unitary_parallel( Matrix& gate_kernel_unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size );
+
 void apply_2qbit_kernel_to_state_vector_input_AVX(Matrix& two_qbit_unitary, Matrix& input, const int& inner_qbit, const int& outer_qbit, const int& matrix_size);
 
 void apply_2qbit_kernel_to_matrix_input_AVX(Matrix& two_qbit_unitary, Matrix& input, const int& inner_qbit, const int& outer_qbit, const int& matrix_size);

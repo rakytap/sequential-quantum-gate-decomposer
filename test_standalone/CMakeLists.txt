@@ -34,6 +34,7 @@ target_include_directories(custom_gate_structure_test PRIVATE
 
 target_include_directories(apply_kernel_test PRIVATE
                             ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/include
+                            ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/include
                             ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/kernels/include
                             ${EXTRA_INCLUDES})
 
