@@ -52,6 +52,34 @@ void test2QubitGate() {
     assert(std::abs(fid - 1.0) < 1e-10);
 }
 
+void test3QubitGate() {
+    int num_qubits = 4;
+    Matrix state = generateRandomState(num_qubits);
+    Matrix identity = create_identity(8);
+    Matrix test_state = state.copy();
+    std::vector<int> qubits = {0,1,2};
+
+    apply_3qbit_kernel_to_state_vector_input(identity, test_state, qubits, 1 << num_qubits);
+
+    double fid = fidelity(state, test_state);
+    std::cout << "3-qubit identity gate fidelity: " << fid << std::endl;
+    assert(std::abs(fid - 1.0) < 1e-10);
+}
+
+void test4QubitGate() {
+    int num_qubits = 4;
+    Matrix state = generateRandomState(num_qubits);
+    Matrix identity = create_identity(16);
+    Matrix test_state = state.copy();
+    std::vector<int> qubits = {0,1,2,3};
+
+    apply_4qbit_kernel_to_state_vector_input(identity, test_state, qubits, 1 << num_qubits);
+
+    double fid = fidelity(state, test_state);
+    std::cout << "4-qubit identity gate fidelity: " << fid << std::endl;
+    assert(std::abs(fid - 1.0) < 1e-10);
+}
+
 void test5QubitGate() {
     int num_qubits = 5;
     Matrix state = generateRandomState(num_qubits);
@@ -72,6 +100,8 @@ void test5QubitGate() {
 int main() {
     ApplyKernelTestSuite suite;
     suite.test2QubitGate();
+    suite.test3QubitGate();
+    suite.test4QubitGate();
     suite.test5QubitGate();
     return 0;
 }
