@@ -114,11 +114,9 @@ void test5QubitGate_Parallel_GHZ() {
     GHZ_circ_mini.add_cnot(1,0);
     GHZ_circ_mini.add_cnot(2,0);
     GHZ_circ_mini.apply_to(params,Umtx);
-    apply_unitary_parallel(Umtx, test_state, qubits, 1 << num_qubits);
-    test_state.print_matrix();
-    state.print_matrix();
+    apply_nqbit_unitary_parallel_AVX(Umtx, test_state, qubits, 1 << num_qubits);
     double fid = fidelity(state, test_state);
-    std::cout << "6-qubit GHZ gate fidelity: " << fid << std::endl;
+    std::cout << "5-qubit GHZ gate fidelity: " << fid << std::endl;
     assert(std::abs(fid - 1.0) < 1e-10);
 }
 

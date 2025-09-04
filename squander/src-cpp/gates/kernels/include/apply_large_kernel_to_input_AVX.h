@@ -40,7 +40,9 @@ inline void get_block_indices(int N, const std::vector<int> &tq, const std::vect
 
 std::vector<__m256d> construct_mv_xy_vectors(Matrix& gate_kernel_unitary, const int& matrix_size);
 
-void apply_unitary_parallel( Matrix& gate_kernel_unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size );
+void apply_nqbit_unitary_AVX( Matrix& gate_kernel_unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size );
+
+void apply_nqbit_unitary_parallel_AVX( Matrix& gate_kernel_unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size );
 
 void apply_2qbit_kernel_to_state_vector_input_AVX(Matrix& two_qbit_unitary, Matrix& input, const int& inner_qbit, const int& outer_qbit, const int& matrix_size);
 
