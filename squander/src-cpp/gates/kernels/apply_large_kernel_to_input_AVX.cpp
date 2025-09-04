@@ -89,9 +89,47 @@ inline void get_block_indices(
     }
 }
 
+inline void write_out_block(Matrix& input, const std::vector<double>& new_block_real,const std::vector<double>& new_block_imag, const std::vector<int>& indices){
+
+    for (int kdx = 0; kdx < new_block_real.size(); kdx++) {
+        input[indices[kdx]].real = new_block_real[kdx];
+        input[indices[kdx]].imag = new_block_imag[kdx];
+    }
+    return;
+
+}
+
+inline void complex_prod_AVX(const std::vector<__m256d>& mv_xy, int rdx, int cdx,  const std::vector<int>& indices, const Matrix& input, std::vector<double>& new_block_real, std::vector<double>& new_block_imag){
+    int block_size = (int)indices.size();
+    int current_idx = indices[cdx];
+    int current_idx_pair = indices[cdx+1];
+
+    // Assuming Matrix stores contiguous QGD_Complex16 entries and has get_data()
+    const double* data_ptr = (const double*)input.get_data();
+
+    // load interleaved: [pair.imag, pair.real, cur.imag, cur.real]
+    __m256d data = _mm256_set_pd(
+        data_ptr[2*current_idx_pair + 1], // imag
+        data_ptr[2*current_idx_pair + 0], // real
+        data_ptr[2*current_idx + 1],      // imag
+        data_ptr[2*current_idx + 0]);     // real
+        __m256d mv_x0 = mv_xy[block_size*rdx+cdx];
+        __m256d mv_x1 = mv_xy[block_size*rdx+cdx+1];
+        __m256d data_u0 = _mm256_mul_pd(data, mv_x0);
+        __m256d data_u1 = _mm256_mul_pd(data, mv_x1);
+        __m256d data_u2 = _mm256_hadd_pd(data_u0,data_u1);
+        new_block_real[rdx] += ((double*)&data_u2)[0] + ((double*)&data_u2)[2];
+        new_block_imag[rdx] += ((double*)&data_u2)[1] + ((double*)&data_u2)[3];
+        
+        return;
+}
+
+/**
+*/
 std::vector<__m256d> construct_mv_xy_vectors(Matrix& gate_kernel_unitary, const int& matrix_size)
 {
-    std::vector<__m256d> mv_xy{};
+    std::vector<__m256d> mv_xy;
+    mv_xy.reserve(matrix_size*matrix_size);
     for (int rdx=0; rdx<matrix_size; rdx++){
         for (int cdx=0; cdx<matrix_size; cdx+=2){
             mv_xy.push_back(_mm256_set_pd(-gate_kernel_unitary[matrix_size*rdx+cdx+1].imag, gate_kernel_unitary[matrix_size*rdx+cdx+1].real, -gate_kernel_unitary[matrix_size*rdx+cdx].imag, gate_kernel_unitary[matrix_size*rdx+cdx].real));
@@ -100,7 +138,10 @@ std::vector<__m256d> construct_mv_xy_vectors(Matrix& gate_kernel_unitary, const 
     }
     return mv_xy;
 }
+
+
 void apply_nqbit_unitary_AVX( Matrix& gate_kernel_unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size ) {
+
     int n = involved_qbits.size();
     int qubit_num = (int) std::log2(input.rows);
     int block_size = 1 << n;
@@ -124,30 +165,18 @@ void apply_nqbit_unitary_AVX( Matrix& gate_kernel_unitary, Matrix& input, std::v
         get_block_indices(qubit_num, involved_qbits, non_targets, iter_idx, indices);
         std::fill(new_block_real.begin(), new_block_real.end(), 0.0);
         std::fill(new_block_imag.begin(), new_block_imag.end(), 0.0);
+        
         for (int rdx=0; rdx<block_size; rdx++){
             for (int cdx=0; cdx<block_size; cdx+=2){
-                int current_idx = indices[cdx];
-                int current_idx_pair = indices[cdx+1];
-                __m256d data = _mm256_set_pd(input[current_idx_pair].imag,
-                input[current_idx_pair].real,
-                input[current_idx].imag,
-                input[current_idx].real);
-                __m256d mv_x0 = mv_xy[block_size*rdx+cdx];
-                __m256d mv_x1 = mv_xy[block_size*rdx+cdx+1];
-                __m256d data_u0 = _mm256_mul_pd(data, mv_x0);
-                __m256d data_u1 = _mm256_mul_pd(data, mv_x1);
-                __m256d data_u2 = _mm256_hadd_pd(data_u0,data_u1);
-                new_block_real[rdx] += ((double*)&data_u2)[0] + ((double*)&data_u2)[2];
-                new_block_imag[rdx] += ((double*)&data_u2)[1] + ((double*)&data_u2)[3];
+                complex_prod_AVX(mv_xy, rdx, cdx, indices, input, new_block_real, new_block_imag);
             }
         }
-        for (int kdx = 0; kdx < block_size; kdx++) {
-            input[indices[kdx]].real = new_block_real[kdx];
-            input[indices[kdx]].imag = new_block_imag[kdx];
-        }
+        write_out_block(input, new_block_real, new_block_imag, indices);
+
     }
  
 }
+
 void apply_nqbit_unitary_parallel_AVX( Matrix& gate_kernel_unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size ) {
     int n = involved_qbits.size();
     int qubit_num = (int) std::log2(input.rows);
@@ -164,73 +193,51 @@ void apply_nqbit_unitary_parallel_AVX( Matrix& gate_kernel_unitary, Matrix& inpu
 
 
     std::vector<__m256d> mv_xy = construct_mv_xy_vectors(gate_kernel_unitary, gate_kernel_unitary.rows);
-#pragma omp parallel
-    {
+    /*if (non_targets.size()<5){
         std::vector<int> indices(block_size);
-        std::vector<double> new_block_real(block_size,0.0);
-        std::vector<double> new_block_imag(block_size,0.0);
-        
-        #pragma omp for schedule(static)
-        for (int iter_idx = 0; iter_idx < num_blocks; iter_idx++) {
-            get_block_indices(qubit_num, involved_qbits, non_targets, iter_idx, indices);
-            std::fill(new_block_real.begin(), new_block_real.end(), 0.0);
-            std::fill(new_block_imag.begin(), new_block_imag.end(), 0.0);
-            for (int rdx=0; rdx<block_size; rdx++){
-                for (int cdx=0; cdx<block_size; cdx+=2){
-                    int current_idx = indices[cdx];
-                    int current_idx_pair = indices[cdx+1];
-                    __m256d data = _mm256_set_pd(input[current_idx_pair].imag, input[current_idx_pair].real, input[current_idx].imag, input[current_idx].real);
-                    __m256d mv_x0 = mv_xy[block_size*rdx+cdx];
-                    __m256d mv_x1 = mv_xy[block_size*rdx+cdx+1];
-                    __m256d data_u0 = _mm256_mul_pd(data, mv_x0);
-                    __m256d data_u1 = _mm256_mul_pd(data, mv_x1);
-                    __m256d data_u2 = _mm256_hadd_pd(data_u0,data_u1);
-                    new_block_real[rdx] += ((double*)&data_u2)[0] + ((double*)&data_u2)[2];
-                    new_block_imag[rdx] += ((double*)&data_u2)[1] + ((double*)&data_u2)[3];
-                }
-            }
-            for (int kdx = 0; kdx < block_size; kdx++) {
-                input[indices[kdx]].real = new_block_real[kdx];
-                input[indices[kdx]].imag = new_block_imag[kdx];
-            }
-        }
-    } 
-}
-// TODO: Use this when the number of blocks is small.
-/**
-    std::vector<int> indices(block_size);
 
         for (int iter_idx = 0; iter_idx < num_blocks; iter_idx++) {
             // Compute block indices
             get_block_indices(qubit_num, involved_qbits, non_targets, iter_idx, indices);
             std::vector<double> new_block_real(block_size,0.0);
             std::vector<double> new_block_imag(block_size,0.0);
-        
-            // Print indices for this block
+
             #pragma omp parallel for schedule(static)
             for (int rdx=0; rdx<block_size; rdx++){
                 for (int cdx=0; cdx<block_size; cdx+=2){
-                    int current_idx = indices[cdx];
-                    int current_idx_pair = indices[cdx+1];
-                    __m256d data = _mm256_set_pd(input[current_idx_pair].imag, input[current_idx_pair].real, input[current_idx].imag, input[current_idx].real);
-                    __m256d mv_x0 = _mm256_set_pd(-gate_kernel_unitary[block_size*rdx+cdx+1].imag, gate_kernel_unitary[block_size*rdx+cdx+1].real, -gate_kernel_unitary[block_size*rdx+cdx].imag, gate_kernel_unitary[block_size*rdx+cdx].real);
-                    __m256d mv_x1 = _mm256_set_pd(gate_kernel_unitary[block_size*rdx+cdx+1].real, gate_kernel_unitary[block_size*rdx+cdx+1].imag, gate_kernel_unitary[block_size*rdx+cdx].real, gate_kernel_unitary[block_size*rdx+cdx].imag);
-                    __m256d data_u0 = _mm256_mul_pd(data, mv_x0);
-                    __m256d data_u1 = _mm256_mul_pd(data, mv_x1);
-                    __m256d data_u2 = _mm256_hadd_pd(data_u0,data_u1);
-                    new_block_real[rdx] += ((double*)&data_u2)[0] + ((double*)&data_u2)[2];
-                    new_block_imag[rdx] += ((double*)&data_u2)[1] + ((double*)&data_u2)[3];
+                    complex_prod_AVX(mv_xy, rdx, cdx, indices, input, new_block_real, new_block_imag);
+                }
+            }
+        write_out_block(input, new_block_real, new_block_imag, indices);
+        }
+    }
+    else{*/
+    #pragma omp parallel
+    {
+        std::vector<int> indices(block_size);
+        std::vector<double> new_block_real(block_size,0.0);
+        std::vector<double> new_block_imag(block_size,0.0);
+        #pragma omp for schedule(static)
+        for (int iter_idx = 0; iter_idx < num_blocks; iter_idx++) {
+            get_block_indices(qubit_num, involved_qbits, non_targets, iter_idx, indices);
+            std::fill(new_block_real.begin(), new_block_real.end(), 0.0);
+            std::fill(new_block_imag.begin(), new_block_imag.end(), 0.0);
+            
+
+            for (int rdx=0; rdx<block_size; rdx++){
+                for (int cdx=0; cdx<block_size; cdx+=2){
+                    complex_prod_AVX(mv_xy, rdx, cdx, indices, input, new_block_real, new_block_imag);
                 }
             }
 
             // Write back
-            for (int kdx = 0; kdx < block_size; kdx++) {
-                input[indices[kdx]].real = new_block_real[kdx];
-                input[indices[kdx]].imag = new_block_imag[kdx];
-            }
+        write_out_block(input, new_block_real, new_block_imag, indices);
         }
-     
-*/
+        
+
+    } 
+    //}
+}
 
 /**
 @brief Call to apply kernel to apply two qubit gate kernel on a state vector using AVX

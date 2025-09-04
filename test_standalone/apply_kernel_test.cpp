@@ -7,6 +7,8 @@
 #include "apply_large_kernel_to_input_AVX.h"
 #include "Gates_block.h"
 
+
+
 class ApplyKernelTestSuite {
     std::mt19937 rng;
     
@@ -97,27 +99,54 @@ void test5QubitGate() {
 }
 
 void test5QubitGate_Parallel_GHZ() {
-    int num_qubits = 5;
+    int num_qubits = 20;
     Matrix state = generateRandomState(num_qubits);
     Matrix_real params = Matrix_real(1,1);
     Matrix test_state = state.copy();
-    std::vector<int> qubits = {1,2,4};
+    Matrix test_state2 = state.copy();
+    std::vector<int> qubits = {1,2,3,4};
     Matrix Umtx = create_identity(1<<qubits.size());
     memset(params.get_data(), 0.0, params.size()*sizeof(double) );  
-    Gates_block GHZ_circ = Gates_block(5);
+    
+    Gates_block GHZ_circ = Gates_block(20);
     GHZ_circ.add_h(1);
     GHZ_circ.add_cnot(2,1);
+    GHZ_circ.add_cnot(3,1);
     GHZ_circ.add_cnot(4,1);
     GHZ_circ.apply_to(params,state);
-    Gates_block GHZ_circ_mini = Gates_block(3);
+    
+    Gates_block GHZ_circ_mini = Gates_block(4);
     GHZ_circ_mini.add_h(0);
     GHZ_circ_mini.add_cnot(1,0);
     GHZ_circ_mini.add_cnot(2,0);
+    GHZ_circ_mini.add_cnot(3,0);
     GHZ_circ_mini.apply_to(params,Umtx);
-    apply_nqbit_unitary_parallel_AVX(Umtx, test_state, qubits, 1 << num_qubits);
+    
+    double nqbit_kernel_time = 0.0;
+    tbb::tick_count nqbit_kernel_start = tbb::tick_count::now();
+    
+    apply_nqbit_unitary_AVX(Umtx, test_state, qubits, 1 << num_qubits);
+    
+    tbb::tick_count nqbit_kernel_end = tbb::tick_count::now();
+    nqbit_kernel_time  = nqbit_kernel_time + (nqbit_kernel_end-nqbit_kernel_start).seconds();
+    
     double fid = fidelity(state, test_state);
-    std::cout << "5-qubit GHZ gate fidelity: " << fid << std::endl;
+    std::cout << num_qubits <<"-qubit GHZ gate fidelity: " << fid << std::endl;
+    
+    double fqbit_kernel_time = 0.0;
+    tbb::tick_count fqbit_kernel_start = tbb::tick_count::now();
+    
+    apply_4qbit_kernel_to_state_vector_input_parallel_AVX(Umtx, test_state2, qubits, 1 << num_qubits);
+    
+    tbb::tick_count fqbit_kernel_end = tbb::tick_count::now();
+    fqbit_kernel_time  = fqbit_kernel_time + (fqbit_kernel_end-fqbit_kernel_start).seconds();
+    
+    double fid2 = fidelity(state, test_state2);
+    std::cout << num_qubits <<"-qubit GHZ gate fidelity: " << fid2 << std::endl;
+    
+    std::cout << "4 qubit kernel simulation time: " << fqbit_kernel_time <<" N qubit kernel simulation time: " << nqbit_kernel_time<< std::endl;
     assert(std::abs(fid - 1.0) < 1e-10);
+
 }
 
 
