@@ -261,8 +261,7 @@ int get_control_qbit();
 @brief Call to get the qubits involved in the gate operation.
 @return Return with a list of the involved qubits
 */
-virtual std::vector<int> get_involved_qubits();
-
+virtual std::vector<int> get_involved_qubits(bool only_target=false);
 
 /**
 @brief Call to add a child gate to the current gate 

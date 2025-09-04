@@ -629,7 +629,7 @@ virtual void reorder_qubits( std::vector<int> qbit_list );
 @brief Call to get the qubits involved in the gates stored in the block of gates.
 @return Return with a list of the involved qubits
 */
-std::vector<int> get_involved_qubits();
+std::vector<int> get_involved_qubits(bool only_target=false);
 
 /**
 @brief Call to get the gates stored in the class.
@@ -650,6 +650,9 @@ Gate* get_gate(int idx);
 */
 void combine(Gates_block* op_block);
 
+
+
+void set_max_fusion( int max_fusion );
 
 /**
 @brief Set the number of qubits spanning the matrix of the gates stored in the block of gates.

@@ -402,7 +402,7 @@ int Gate::get_control_qbit()  {
 @brief Call to get the qubits involved in the gate operation.
 @return Return with a list of the involved qubits
 */
-std::vector<int> Gate::get_involved_qubits() {
+std::vector<int> Gate::get_involved_qubits(bool only_target) {
 
     std::vector<int> involved_qbits;
     
