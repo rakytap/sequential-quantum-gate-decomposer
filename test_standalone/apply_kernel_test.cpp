@@ -91,9 +91,9 @@ void testSmallCircuit() {
     Gates_block* circuit_inner = new Gates_block(num_qubits);
     Gates_block* circuit_inner_2 = new Gates_block(num_qubits);
     
+    circuit_inner->add_u3(2);
     circuit_inner->add_u3(0);
     circuit_inner->add_u3(1);
-    circuit_inner->add_u3(2);
 
     circuit_inner->add_cry(0, 1);
     circuit_inner->add_cry(1, 2);

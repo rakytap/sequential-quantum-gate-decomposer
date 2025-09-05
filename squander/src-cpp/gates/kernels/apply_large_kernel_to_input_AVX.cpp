@@ -57,22 +57,22 @@ inline __m256d complex_mult_AVX(__m256d input_vec, __m256d unitary_row_vec, __m2
 */
 void apply_large_kernel_to_input_AVX(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size){
     if (input.cols==1){
-      //switch((int)involved_qbits.size()){
-      //case 2:{
-              //apply_2qbit_kernel_to_state_vector_input_parallel_AVX(unitary,input,involved_qbits,matrix_size);
-              apply_2qbit_kernel_to_state_vector_input_AVX(unitary, input, involved_qbits[0], involved_qbits[1], matrix_size);
-      //}
-      //case 3:{
-        //  apply_3qbit_kernel_to_state_vector_input_parallel_AVX(unitary,input,involved_qbits,matrix_size);
-      //}
-      //case 4:{
-       //       apply_4qbit_kernel_to_state_vector_input_parallel_AVX(unitary,input,involved_qbits,matrix_size);
-      //}
-      //}
-  }
-  else{
-      apply_2qbit_kernel_to_matrix_input_AVX(unitary, input, involved_qbits[0], involved_qbits[1], matrix_size);
-  }
+        switch((int)involved_qbits.size()){
+            case 2:{
+                apply_2qbit_kernel_to_state_vector_input_parallel_AVX(unitary,input,involved_qbits,matrix_size);
+                // apply_2qbit_kernel_to_state_vector_input_AVX(unitary, input, involved_qbits[0], involved_qbits[1], matrix_size);
+            }
+            case 3:{
+                apply_3qbit_kernel_to_state_vector_input_parallel_AVX(unitary,input,involved_qbits,matrix_size);
+            }
+            case 4:{
+                apply_4qbit_kernel_to_state_vector_input_parallel_AVX(unitary,input,involved_qbits,matrix_size);
+            }
+        }
+    }
+    else{
+        apply_2qbit_kernel_to_matrix_input_AVX(unitary, input, involved_qbits[0], involved_qbits[1], matrix_size);
+    }
 }
 
 

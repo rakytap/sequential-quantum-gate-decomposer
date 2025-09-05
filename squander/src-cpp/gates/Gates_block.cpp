@@ -250,6 +250,7 @@ Gates_block::apply_to( Matrix_real& parameters_mtx_in, Matrix& input, int parall
 
     if (max_fusion != -1 && qbit_num > max_fusion && size <= 5 && qbit_num != size && gates.size() > 1) {
         
+        std::sort(involved_qubits.begin(), involved_qubits.end());
 
         Matrix Umtx_mini = create_identity(Power_of_2(size));
 
@@ -262,7 +263,7 @@ Gates_block::apply_to( Matrix_real& parameters_mtx_in, Matrix& input, int parall
         int old_qbit_num = qbit_num;
         reorder_qubits(old_to_new);
         set_qbit_num(size);
-        apply_to(parameters_mtx_in, Umtx_mini, parallel);
+        apply_to(parameters_mtx_in, Umtx_mini, parallel);        
         set_qbit_num(old_qbit_num);
         reorder_qubits(new_to_old);
 
