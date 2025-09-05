@@ -20,6 +20,7 @@ limitations under the License.
     \brief Class responsible for grouping gates into subcircuits. (Subcircuits can be nested)
 */
 
+#include <set>
 #include "CU.h"
 #include "CZ.h"
 #include "CH.h"
@@ -94,7 +95,7 @@ Gates_block::Gates_block(int qbit_num_in) : Gate(qbit_num_in) {
     
     fragmented = false;
     fragmentation_type = -1;
-    max_fusion = -1;
+    min_fusion = -1;
     
 }
 
@@ -243,107 +244,41 @@ Gates_block::apply_to( Matrix_real& parameters_mtx_in, Matrix& input, int parall
         std::string err("Gates_block::apply_to: Wrong input size in Gates_block gate apply.");
         throw err;    
     }
-       
-    // TODO: GATE fusion has not been adopted to reversed parameter ordering!!!!!!!!!!!!!!!!!!!
-    if(max_fusion !=-1 && ((qbit_num>max_fusion && input.cols == 1) && involved_qubits.size()>1)){
 
+    int size = involved_qubits.size();
 
-        std::string error("Gates_block::apply_to: GATE fusion has not been adopted to reversed parameter ordering!!!!!!!!!!!!!!!!!!!");
-        throw error; 
+    if (min_fusion != -1 && qbit_num >= min_fusion && size <= (input.cols == 1 ? 5 : 2) && qbit_num != size && gates.size() > 1) {
         
-        double* parameters = parameters_mtx_in.get_data();     
+        Matrix Umtx_mini = create_identity(Power_of_2(size));
 
-        if (fragmented==false){
-            fragment_circuit();
-        };  
-
-        int outer_idx = gates.size()-1;
-        for (int block_idx=0; block_idx<involved_qbits.size(); block_idx++){
-
-            if (block_type[block_idx] != 1){
-
-                Gates_block gates_block_mini = Gates_block(block_type[block_idx]);
-                std::vector<int> qbits = involved_qbits[block_idx];
-#ifdef _WIN32
-                int* indices = (int*)_malloca(qbit_num*sizeof(int));
-#else
-                int indices[qbit_num];
-#endif
-
-                for (int jdx=0; jdx<(int)qbits.size(); jdx++){
-                    indices[qbits[jdx]]=jdx;
-                }
-
-                for (int idx=outer_idx; idx>=block_end[block_idx]; idx--){
-
-                    Gate* gate = gates[idx]->clone();
-                    int trgt_qbit = gate->get_target_qbit();
-                    int ctrl_qbit = gate->get_control_qbit();
-                    int target_qubit_new = indices[trgt_qbit];
-                    gate->set_target_qbit(target_qubit_new);
-
-                    int control_qubit_new = (ctrl_qbit==-1) ? -1:indices[ctrl_qbit];
-                    gate->set_control_qbit(control_qubit_new);
-                    gates_block_mini.add_gate(gate);
-                }
-
-                Matrix Umtx_mini = create_identity(Power_of_2(block_type[block_idx]));
-                parameters       = parameters - gates_block_mini.get_parameter_num();
-
-                Matrix_real parameters_mtx(parameters, 1, gates_block_mini.get_parameter_num());
-                gates_block_mini.apply_to(parameters_mtx, Umtx_mini);
-
-                outer_idx        = block_end[block_idx]-1;
-
-#ifdef USE_AVX
-                apply_large_kernel_to_input_AVX(Umtx_mini, input, qbits, input.size() );
-#else
-                apply_large_kernel_to_state_vector_input(Umtx_mini, input, qbits, input.size() );
-#endif                
-       
-
-
-            }
-            else{
-
-                Gates_block gates_block_mini = Gates_block(qbit_num);
-                for (int idx=outer_idx;idx>=0;idx--){
-                    Gate* gate = gates[idx]->clone();
-                    gates_block_mini.add_gate(gate);
-                }
-                parameters = parameters - gates_block_mini.get_parameter_num();
-                Matrix_real parameters_mtx(parameters, 1, gates_block_mini.get_parameter_num());
-                gates_block_mini.apply_to(parameters_mtx, input);
-            }
+        std::vector<int> old_to_new(qbit_num, -2), new_to_old(qbit_num, -2);
+        for (int i = 0; i < size; i++){
+            old_to_new[i] = involved_qubits[i];
+            new_to_old[involved_qubits[i]] = i;
         }
-    }
-    else if  ( involved_qubits.size() == 1 && gates.size() > 1 && qbit_num > 1 ) {
-    // merge successive single qubit gates
-    
-                Gates_block gates_block_mini = Gates_block(1);
-  
-                for (int idx=0; idx<gates.size(); idx++){
 
-                    Gate* gate = gates[idx]->clone();
-                    gate->set_target_qbit(0);
-                    gate->set_qbit_num(1);
+        int old_qbit_num = qbit_num;
+        reorder_qubits(old_to_new);
+        set_qbit_num(size);
+        apply_to(parameters_mtx_in, Umtx_mini, parallel);        
+        set_qbit_num(old_qbit_num);
+        reorder_qubits(new_to_old);
 
-                    gates_block_mini.add_gate(gate);
-                }
-                    // TODO check gates block
-                Matrix Umtx_mini = create_identity(2);
-
-                Matrix_real parameters_mtx_loc(parameters_mtx_in.get_data() + gates[0]->get_parameter_start_idx(), 1, gates_block_mini.get_parameter_num());                
-                gates_block_mini.apply_to(parameters_mtx_loc, Umtx_mini);
-
-                custom_kernel_1qubit_gate merged_gate( qbit_num, involved_qubits[0], Umtx_mini );
-                merged_gate.apply_to( input );
-    }
-    else {
-    
-        // No gate fusion
+        if (size == 1) {
+            custom_kernel_1qubit_gate merged_gate( qbit_num, involved_qubits[0], Umtx_mini );
+            merged_gate.apply_to( input );
+        }
+        else
+        {
+#ifdef USE_AVX
+            if (size <= 4)
+                apply_large_kernel_to_input_AVX(Umtx_mini, input, involved_qubits, input.size() );
+            else
+#endif
+                apply_large_kernel_to_input(Umtx_mini, input, involved_qubits, input.size() );
+        }
+    } else {
         for( int idx=0; idx<gates.size(); idx++) {
-
             Gate* operation = gates[idx];
             
             Matrix_real parameters_mtx_loc(parameters_mtx_in.get_data() + operation->get_parameter_start_idx(), 1, operation->get_parameter_num());
@@ -355,17 +290,13 @@ Gates_block::apply_to( Matrix_real& parameters_mtx_in, Matrix& input, int parall
                 operation->apply_to( parameters_mtx_loc, input, parallel );
             }
 #ifdef DEBUG
-        if (input.isnan()) {
-            std::string err( "Gates_block::apply_to: transformed matrix contains NaN." );
-	        throw( err );
-        }
+            if (input.isnan()) {
+                std::string err( "Gates_block::apply_to: transformed matrix contains NaN." );
+                throw( err );
+            }
 #endif
-
-
-       }
-
-   }
-
+        }
+    }
 }
 
 
@@ -401,7 +332,7 @@ void Gates_block::fragment_circuit(){
 
     std::vector<int> qbits;
     int num_of_qbits=0;
-    int max_fusion_temp = (fragmentation_type==-1) ? max_fusion:fragmentation_type;
+    int min_fusion_temp = (fragmentation_type==-1) ? min_fusion:fragmentation_type;
 
     for (int idx = gates.size()-1; idx>=0; idx--){      
       
@@ -418,7 +349,7 @@ void Gates_block::fragment_circuit(){
         bool target_contained  = is_qbit_present(qbits,target_new,num_of_qbits);
         bool control_contained = (control_new==-1) ? true : is_qbit_present(qbits, control_new, num_of_qbits);
 
-        if (num_of_qbits == max_fusion_temp && (target_contained == false || control_contained == false)){
+        if (num_of_qbits == min_fusion_temp && (target_contained == false || control_contained == false)){
             int vidx = 1;
 
             while(vidx<num_of_qbits){
@@ -437,19 +368,19 @@ void Gates_block::fragment_circuit(){
             involved_qbits.push_back(qbits);
             block_end.push_back(idx+1);
             block_type.push_back(num_of_qbits);
-            max_fusion_temp = max_fusion;
+            min_fusion_temp = min_fusion;
             idx++;    
             qbits=std::vector<int>{};
             num_of_qbits=0;
             continue;
         }
 
-        if (num_of_qbits<max_fusion_temp && target_contained==false){
+        if (num_of_qbits<min_fusion_temp && target_contained==false){
             qbits.push_back(target_new);
             num_of_qbits++;
         }
 
-        if (num_of_qbits<max_fusion_temp && control_contained==false){
+        if (num_of_qbits<min_fusion_temp && control_contained==false){
             qbits.push_back(control_new);
             num_of_qbits++;
         }
@@ -460,6 +391,7 @@ void Gates_block::fragment_circuit(){
     if (num_of_qbits == 1){
         involved_qbits.push_back(qbits);
         block_type.push_back(1);
+        block_end.push_back(0);
     }
 
     else{
@@ -483,7 +415,6 @@ void Gates_block::fragment_circuit(){
         block_end.push_back(0);
     }
 
-    block_end.push_back(0);
     fragmented = true;
 
 }
@@ -2181,31 +2112,39 @@ void Gates_block::reorder_qubits( std::vector<int>  qbit_list ) {
 @brief Call to get the qubits involved in the gates stored in the block of gates.
 @return Return with a list of the invovled qubits
 */
-std::vector<int> Gates_block::get_involved_qubits() {
+std::vector<int> Gates_block::get_involved_qubits(bool only_target) {
 
-    std::vector<int> involved_qbits;
+    std::set<int> involved_qbits;
 
     int qbit;
-
 
     for(std::vector<Gate*>::iterator it = gates.begin(); it != gates.end(); ++it) {
 
         Gate* gate = *it;
 
-        qbit = gate->get_target_qbit();
-        if (qbit != -1) {
-            add_unique_elelement( involved_qbits, qbit );
+        if (gate->get_type() == BLOCK_OPERATION) {
+            std::vector<int> inner_qbits = gate->get_involved_qubits();    
+            for (std::vector<int>::iterator in_it = inner_qbits.begin(); in_it != inner_qbits.end(); ++in_it){
+                involved_qbits.insert(*in_it);
+            }
+            continue;
         }
 
-
-        qbit = gate->get_control_qbit();
+        qbit = gate->get_target_qbit();
         if (qbit != -1) {
-            add_unique_elelement( involved_qbits, qbit );
+            involved_qbits.insert(qbit);
+        }
+
+        if (!only_target) {
+            qbit = gate->get_control_qbit();
+            if (qbit != -1) {
+                involved_qbits.insert(qbit);
+            }
         }
 
     }
 
-    return involved_qbits;
+    return std::vector<int>(involved_qbits.begin(), involved_qbits.end());
 }
 
 
@@ -2255,6 +2194,14 @@ void Gates_block::combine(Gates_block* op_block) {
 
 }
 
+void Gates_block::set_min_fusion( int min_fusion ) {
+    this->min_fusion = min_fusion;
+    for (int i = 0; i < gates.size(); i++){
+        if ( gates[i]->get_type() == BLOCK_OPERATION ) {
+            ((Gates_block*)gates[i])->set_min_fusion( min_fusion );
+        }
+    }
+}
 
 /**
 @brief Set the number of qubits spanning the matrix of the gates stored in the block of gates.

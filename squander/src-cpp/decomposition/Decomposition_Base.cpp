@@ -731,7 +731,8 @@ int Decomposition_Base::set_max_layer_num( std::map<int, int> max_layer_num_in )
 */
 void Decomposition_Base::reorder_qubits( std::vector<int>  qbit_list) {
 
-    Gates_block::reorder_qubits( qbit_list );
+
+    Gates_block::reorder_qubits( qbit_list);
 
     // now reorder the unitary to be decomposed
 
@@ -740,32 +741,21 @@ void Decomposition_Base::reorder_qubits( std::vector<int>  qbit_list) {
     perm_indices.reserve(matrix_size);
 
     for (int idx=0; idx<matrix_size; idx++) {
+       
         int row_idx=0;
 
-        // get the binary representation of idx
-        std::vector<int> bin_rep;
-        bin_rep.reserve(qbit_num);
-        for (int i = 1 << (qbit_num-1); i > 0; i = i / 2) {
-            (idx & i) ? bin_rep.push_back(1) : bin_rep.push_back(0);
+        // contruct the index corresponding to the premuted qubits
+        for( int qbit_idx=0; qbit_idx<qbit_num; qbit_idx++ ) {
+
+            // state of qubit qbit_list[qbit_idx] in the index idx
+            int qbit_state = ( idx >> qbit_list[qbit_idx] ) & 1;
+
+            row_idx = row_idx + qbit_state*Power_of_2(qbit_idx);
         }
 
-        // determine the permutation row index
-        for (int jdx=0; jdx<qbit_num; jdx++) {
-            row_idx = row_idx + bin_rep[qbit_num-1-qbit_list[jdx]]*Power_of_2(qbit_num-1-jdx);
-        }
         perm_indices.push_back(row_idx);
-    }
 
-/*
-    for (auto it=qbit_list.begin(); it!=qbit_list.end(); it++) {
-        std::cout << *it;
     }
-    std::cout << std::endl;
-
-    for (auto it=perm_indices.begin(); it!=perm_indices.end(); it++) {
-        std::cout << *it << std::endl;
-    }
-*/
 
     // reordering the matrix elements
     Matrix reordered_mtx = Matrix(matrix_size, matrix_size);
@@ -778,6 +768,7 @@ void Decomposition_Base::reorder_qubits( std::vector<int>  qbit_list) {
     }
 
     Umtx = reordered_mtx;
+
 }
 
 

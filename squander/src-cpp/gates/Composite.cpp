@@ -210,7 +210,7 @@ Composite::apply_from_right( Matrix_real& parameters, Matrix& input ) {
 
 
 /**
-@brief Call to reorder the qubits in the matrix of the operation
+@brief Call to reorder the qub`ts in the matrix of the operation
 @param qbit_list The reordered list of qubits spanning the matrix
 */
 void Composite::reorder_qubits( std::vector<int> qbit_list ) {
@@ -230,10 +230,10 @@ void Composite::reorder_qubits( std::vector<int> qbit_list ) {
     // setting the new value for the target qubit
     for (int idx=0; idx<qbit_num; idx++) {
         if (target_qbit == qbit_list[idx]) {
-            target_qbit_new = qbit_num-1-idx;
+            target_qbit_new = idx;
         }
         if (control_qbit == qbit_list[idx]) {
-            control_qbit_new = qbit_num-1-idx;
+            control_qbit_new = idx;
         }
     }
 
