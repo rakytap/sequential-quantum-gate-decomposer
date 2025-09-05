@@ -37,8 +37,8 @@ np.set_printoptions(linewidth=200)
 
 
 # number of qubits
-qbit_num_min = 17
-qbit_num_max = 27
+qbit_num_min = 4
+qbit_num_max = 24
 
 # number of levels
 levels = 4
@@ -101,7 +101,7 @@ for qbit_num in range(qbit_num_min, qbit_num_max+1, 1):
 
 	partitioned_circuit_squander, parameters_reordered = PartitionCircuit(circuit_squander, parameters, 4, "gtqcp")
 	
-	partitioned_circuit_squander.set_min_fusion(0)
+	partitioned_circuit_squander.set_min_fusion(14)
 
 	t0 = time.time()
 	partitioned_circuit_squander.apply_to( parameters_reordered, initial_state )
