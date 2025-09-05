@@ -170,17 +170,33 @@ void apply_nqbit_unitary_AVX( Matrix& gate_kernel_unitary, Matrix& input, std::v
         get_block_indices(qubit_num, involved_qbits, non_targets, iter_idx, indices);
         std::fill(new_block_real.begin(), new_block_real.end(), 0.0);
         std::fill(new_block_imag.begin(), new_block_imag.end(), 0.0);
-        
-        for (int rdx=0; rdx<block_size; rdx++){
-             __m256d result = _mm256_setzero_pd();
-            for (int cdx=0; cdx<block_size; cdx+=2){
-                complex_prod_AVX(mv_xy, rdx, cdx, indices, input, result);
-            }
-        alignas(32) double tmp[4];
-        _mm256_store_pd(tmp, result); 
-        new_block_real[rdx]=tmp[0]+tmp[2];
-        new_block_imag[rdx]=tmp[1]+tmp[3];
+            
+    for (int rdx = 0; rdx < block_size; rdx++) {
+        __m256d result = _mm256_setzero_pd();
+
+        for (int cdx = 0; cdx < block_size; cdx += 2) {
+            complex_prod_AVX(mv_xy, rdx, cdx, indices, input, result);
         }
+
+        // Step 1: swap 128-bit lanes: [a0,a1,a2,a3] -> [a2,a3,a0,a1]
+        __m256d perm = _mm256_permute2f128_pd(result, result, 0x01);
+
+        // Step 2: add to original to compute pairwise sums
+        __m256d sum = _mm256_add_pd(result, perm);
+        // sum = [a0+a2, a1+a3, a2+a0, a3+a1]
+
+        // Step 3: extract the low 128 bits containing [a0+a2, a1+a3]
+        __m128d low128 = _mm256_castpd256_pd128(sum);
+
+        // Step 4: extract scalars correctly
+        double real = _mm_cvtsd_f64(low128);                        // element 0 = a0+a2
+        double imag = _mm_cvtsd_f64(_mm_unpackhi_pd(low128, low128)); // element 1 = a1+a3
+
+        new_block_real[rdx] = real;
+        new_block_imag[rdx] = imag;
+    }
+
+        
         write_out_block(input, new_block_real, new_block_imag, indices);
 
     }
@@ -229,7 +245,7 @@ void apply_nqbit_unitary_parallel_AVX( Matrix& gate_kernel_unitary, Matrix& inpu
         }
     } */
 
-    } 
+   
 
 }
 
