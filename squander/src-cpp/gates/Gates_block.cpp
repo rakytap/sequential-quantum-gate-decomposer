@@ -95,7 +95,7 @@ Gates_block::Gates_block(int qbit_num_in) : Gate(qbit_num_in) {
     
     fragmented = false;
     fragmentation_type = -1;
-    min_fusion = -1;
+    min_fusion = 0;
     
 }
 
@@ -239,8 +239,6 @@ void
 Gates_block::apply_to( Matrix_real& parameters_mtx_in, Matrix& input, int parallel ) {
 
     std::vector<int> involved_qubits = get_involved_qubits();
-
-    // std::cout << input.rows << ", " << matrix_size << std::endl;
     
     if (input.rows != matrix_size ) {
         std::string err("Gates_block::apply_to: Wrong input size in Gates_block gate apply.");

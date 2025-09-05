@@ -238,8 +238,8 @@ void apply_3qbit_kernel_to_state_vector_input(Matrix& unitary, Matrix& input, st
 		        }
         	  }
             }
-            current_idx = current_idx + (index_step_outer << 1);
         }
+        current_idx = current_idx + (index_step_outer << 1);
      }
 }
 
@@ -268,13 +268,15 @@ void apply_4qbit_kernel_to_state_vector_input(Matrix& unitary, Matrix& input, st
 
             // q1 loop
             for (int current_idx_q1 = 0; current_idx_q1 < index_step_q2; current_idx_q1 += (index_step_q1 << 1)) {
+
+                for (int current_idx_q0 = 0; current_idx_q0 < index_step_q1; current_idx_q0 += (index_step_q0 << 1)) {
                 
                 // q0 loop (innermost)
                 for (int idx = 0; idx < index_step_q0; idx++) {
 
                     // base indices for current iteration
-                    int current_idx_loc = current_idx + current_idx_q2 + current_idx_q1 + idx;
-                    int current_idx_pair_loc = current_idx_pair_q3 + idx + current_idx_q1 + current_idx_q2;
+                    int current_idx_loc = current_idx + current_idx_q2 + current_idx_q1 + current_idx_q0 + idx;
+                    int current_idx_pair_loc = current_idx_pair_q3 + idx + current_idx_q1 + current_idx_q2 + current_idx_q0;
 
                     // q3=0 states (first 8 states)
                     int current_idx_q0_0_loc = current_idx_loc; // |0000>
@@ -349,6 +351,8 @@ void apply_4qbit_kernel_to_state_vector_input(Matrix& unitary, Matrix& input, st
                         + tmp12.imag + tmp13.imag + tmp14.imag + tmp15.imag;
                     }
                 }
+
+                }
             }
         }
         current_idx += (index_step_q3 << 1);
@@ -385,12 +389,14 @@ void apply_5qbit_kernel_to_state_vector_input(Matrix& unitary, Matrix& input, st
                 // q1 loop
                 for (int current_idx_q1 = 0; current_idx_q1 < index_step_q2; current_idx_q1 += (index_step_q1 << 1)) {
 
+                    for (int current_idx_q0 = 0; current_idx_q0 < index_step_q1; current_idx_q0 += (index_step_q0 << 1)) {
+
                     // q0 loop (innermost)
                     for (int idx = 0; idx < index_step_q0; idx++) {
 
                     // base indices for current iteration
-                    int current_idx_loc = current_idx + current_idx_q3 + current_idx_q2 + current_idx_q1 + idx;
-                    int current_idx_pair_q4_loc = current_idx_pair_q4 + idx + current_idx_q1 + current_idx_q2 + current_idx_q3;
+                    int current_idx_loc = current_idx + current_idx_q3 + current_idx_q2 + current_idx_q1 + current_idx_q0 + idx;
+                    int current_idx_pair_q4_loc = current_idx_pair_q4 + idx + current_idx_q1 + current_idx_q2 + current_idx_q3 + current_idx_q0;
 
                     // q4=0 states (first 16 states)
                     int current_idx_q0_0_loc = current_idx_loc; // |00000>
@@ -545,6 +551,8 @@ void apply_5qbit_kernel_to_state_vector_input(Matrix& unitary, Matrix& input, st
                         + tmp29.imag + tmp30.imag + tmp31.imag + tmp32.imag;
                     }
                     }
+                }
+
                 }
             }
         }
