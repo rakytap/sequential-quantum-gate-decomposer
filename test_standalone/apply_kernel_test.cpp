@@ -40,58 +40,44 @@ class ApplyKernelTestSuite {
 
 public:
 
-void test2QubitGate() {
-    int num_qubits = 3;
+void testNQubitGate(int num_qubits) {
+
     Matrix state = generateRandomState(num_qubits);
-    Matrix identity = create_identity(4);
     Matrix test_state = state.copy();
 
-    apply_2qbit_kernel_to_state_vector_input(identity, test_state, 0, 1, 1 << num_qubits);
+    Gates_block circuit(num_qubits);
+
+    for (int i = 0; i < num_qubits; i++){
+        circuit.add_u3(i);
+    }
+    for (int i = 0; i < num_qubits; i++){
+        for (int j = i+1; j < num_qubits; j++){
+            circuit.add_cry(i, j);
+        }
+    }
+    
+    int num_params = circuit.get_parameter_num();
+    Matrix_real parameters(num_params, 1);
+    for (int i = 0; i < num_params; i++) {
+        parameters[i] = (i+1) / (M_PI*2);
+    }
+
+    Matrix identity = create_identity(1 << num_qubits);
+
+    circuit.apply_to(parameters, identity);
+
+    circuit.apply_to(parameters, state);
+ 
+    switch (num_qubits) {
+        case 2: apply_2qbit_kernel_to_state_vector_input(identity, test_state, 0, 1, 1 << num_qubits); break;
+        case 3: apply_3qbit_kernel_to_state_vector_input(identity, test_state, {0,1,2}, 1 << num_qubits); break;
+        case 4: apply_4qbit_kernel_to_state_vector_input(identity, test_state, {0,1,2,3}, 1 << num_qubits); break;
+        case 5: apply_5qbit_kernel_to_state_vector_input(identity, test_state, {0,1,2,3,4}, 1 << num_qubits); break;
+        default: throw std::invalid_argument("Unsupported number of qubits for state vector.");
+    }
 
     double fid = fidelity(state, test_state);
-    std::cout << "2-qubit identity gate fidelity: " << fid << std::endl;
-    assert(std::abs(fid - 1.0) < 1e-10);
-}
-
-void test3QubitGate() {
-    int num_qubits = 4;
-    Matrix state = generateRandomState(num_qubits);
-    Matrix identity = create_identity(8);
-    Matrix test_state = state.copy();
-    std::vector<int> qubits = {0,1,2};
-
-    apply_3qbit_kernel_to_state_vector_input(identity, test_state, qubits, 1 << num_qubits);
-
-    double fid = fidelity(state, test_state);
-    std::cout << "3-qubit identity gate fidelity: " << fid << std::endl;
-    assert(std::abs(fid - 1.0) < 1e-10);
-}
-
-void test4QubitGate() {
-    int num_qubits = 4;
-    Matrix state = generateRandomState(num_qubits);
-    Matrix identity = create_identity(16);
-    Matrix test_state = state.copy();
-    std::vector<int> qubits = {0,1,2,3};
-
-    apply_4qbit_kernel_to_state_vector_input(identity, test_state, qubits, 1 << num_qubits);
-
-    double fid = fidelity(state, test_state);
-    std::cout << "4-qubit identity gate fidelity: " << fid << std::endl;
-    assert(std::abs(fid - 1.0) < 1e-10);
-}
-
-void test5QubitGate() {
-    int num_qubits = 5;
-    Matrix state = generateRandomState(num_qubits);
-    Matrix identity = create_identity(32);
-    Matrix test_state = state.copy();
-    std::vector<int> qubits = {0,1,2,3,4};
-
-    apply_5qbit_kernel_to_state_vector_input(identity, test_state, qubits, 1 << num_qubits);
-
-    double fid = fidelity(state, test_state);
-    std::cout << "5-qubit identity gate fidelity: " << fid << std::endl;
+    std::cout << num_qubits << "-qubit identity gate fidelity: " << fid << std::endl;
     assert(std::abs(fid - 1.0) < 1e-10);
 }
 
@@ -145,9 +131,9 @@ void testSmallCircuit() {
 int main() {
     ApplyKernelTestSuite suite;
     suite.testSmallCircuit();
-    // suite.test2QubitGate();
-    // suite.test3QubitGate();
-    // suite.test4QubitGate();
-    // suite.test5QubitGate();
+    suite.testNQubitGate(2);
+    suite.testNQubitGate(3);
+    suite.testNQubitGate(4);
+    suite.testNQubitGate(5);
     return 0;
 }
