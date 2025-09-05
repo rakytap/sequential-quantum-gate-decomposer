@@ -91,15 +91,21 @@ inline void get_block_indices(
 
 inline void write_out_block(Matrix& input, const std::vector<double>& new_block_real,const std::vector<double>& new_block_imag, const std::vector<int>& indices){
 
-    for (int kdx = 0; kdx < new_block_real.size(); kdx++) {
-        input[indices[kdx]].real = new_block_real[kdx];
-        input[indices[kdx]].imag = new_block_imag[kdx];
+    const double* real_ptr = new_block_real.data();
+    const double* imag_ptr = new_block_imag.data();
+    const int* idx_ptr = indices.data();
+
+    const int block_size = (int)new_block_real.size();
+    for (int k = 0; k < block_size; ++k) {
+        auto& elem = input[idx_ptr[k]];
+        elem.real = real_ptr[k];
+        elem.imag = imag_ptr[k];
     }
     return;
 
 }
 
-inline void complex_prod_AVX(const std::vector<__m256d>& mv_xy, int rdx, int cdx,  const std::vector<int>& indices, const Matrix& input, std::vector<double>& new_block_real, std::vector<double>& new_block_imag){
+inline void complex_prod_AVX(const std::vector<__m256d>& mv_xy, int rdx, int cdx,  const std::vector<int>& indices, const Matrix& input, __m256d& result){
     int block_size = (int)indices.size();
     int current_idx = indices[cdx];
     int current_idx_pair = indices[cdx+1];
@@ -118,8 +124,7 @@ inline void complex_prod_AVX(const std::vector<__m256d>& mv_xy, int rdx, int cdx
         __m256d data_u0 = _mm256_mul_pd(data, mv_x0);
         __m256d data_u1 = _mm256_mul_pd(data, mv_x1);
         __m256d data_u2 = _mm256_hadd_pd(data_u0,data_u1);
-        new_block_real[rdx] += ((double*)&data_u2)[0] + ((double*)&data_u2)[2];
-        new_block_imag[rdx] += ((double*)&data_u2)[1] + ((double*)&data_u2)[3];
+        result = _mm256_add_pd(result,data_u2);
         
         return;
 }
@@ -167,9 +172,14 @@ void apply_nqbit_unitary_AVX( Matrix& gate_kernel_unitary, Matrix& input, std::v
         std::fill(new_block_imag.begin(), new_block_imag.end(), 0.0);
         
         for (int rdx=0; rdx<block_size; rdx++){
+             __m256d result = _mm256_setzero_pd();
             for (int cdx=0; cdx<block_size; cdx+=2){
-                complex_prod_AVX(mv_xy, rdx, cdx, indices, input, new_block_real, new_block_imag);
+                complex_prod_AVX(mv_xy, rdx, cdx, indices, input, result);
             }
+        alignas(32) double tmp[4];
+        _mm256_store_pd(tmp, result); 
+        new_block_real[rdx]=tmp[0]+tmp[2];
+        new_block_imag[rdx]=tmp[1]+tmp[3];
         }
         write_out_block(input, new_block_real, new_block_imag, indices);
 
