@@ -410,10 +410,11 @@ std::vector<int> Gate::get_involved_qubits(bool only_target) {
         involved_qbits.push_back( target_qbit );
     }
     
-    if( control_qbit != -1 ) {
-        involved_qbits.push_back( control_qbit );
-    }    
-    
+    if (!only_target){
+        if( control_qbit != -1 ) {
+            involved_qbits.push_back( control_qbit );
+        }    
+    }
     
     return involved_qbits;
     

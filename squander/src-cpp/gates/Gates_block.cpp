@@ -20,6 +20,7 @@ limitations under the License.
     \brief Class responsible for grouping gates into subcircuits. (Subcircuits can be nested)
 */
 
+#include <set>
 #include "CU.h"
 #include "CZ.h"
 #include "CH.h"
@@ -250,8 +251,6 @@ Gates_block::apply_to( Matrix_real& parameters_mtx_in, Matrix& input, int parall
 
     if (max_fusion != -1 && qbit_num > max_fusion && size <= 5 && qbit_num != size && gates.size() > 1) {
         
-        std::sort(involved_qubits.begin(), involved_qubits.end());
-
         Matrix Umtx_mini = create_identity(Power_of_2(size));
 
         std::vector<int> old_to_new(qbit_num, -2), new_to_old(qbit_num, -2);
@@ -2117,7 +2116,7 @@ void Gates_block::reorder_qubits( std::vector<int>  qbit_list ) {
 */
 std::vector<int> Gates_block::get_involved_qubits(bool only_target) {
 
-    std::vector<int> involved_qbits;
+    std::set<int> involved_qbits;
 
     int qbit;
 
@@ -2126,28 +2125,28 @@ std::vector<int> Gates_block::get_involved_qubits(bool only_target) {
         Gate* gate = *it;
 
         if (gate->get_type() == BLOCK_OPERATION) {
-            std::vector<int> inner_qbits = gate->get_involved_qubits();
+            std::vector<int> inner_qbits = gate->get_involved_qubits();    
             for (std::vector<int>::iterator in_it = inner_qbits.begin(); in_it != inner_qbits.end(); ++in_it){
-                add_unique_elelement( involved_qbits, *in_it );
+                involved_qbits.insert(*in_it);
             }
             continue;
         }
 
         qbit = gate->get_target_qbit();
         if (qbit != -1) {
-            add_unique_elelement( involved_qbits, qbit );
+            involved_qbits.insert(qbit);
         }
 
         if (!only_target) {
             qbit = gate->get_control_qbit();
             if (qbit != -1) {
-                add_unique_elelement( involved_qbits, qbit );
+                involved_qbits.insert(qbit);
             }
         }
 
     }
 
-    return involved_qbits;
+    return std::vector<int>(involved_qbits.begin(), involved_qbits.end());
 }
 
 
