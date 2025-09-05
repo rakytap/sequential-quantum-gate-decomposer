@@ -8,7 +8,6 @@
 #include "Gates_block.h"
 
 
-
 class ApplyKernelTestSuite {
     std::mt19937 rng;
     
@@ -121,7 +120,7 @@ void test5QubitGate_Parallel_GHZ() {
     double nqbit_kernel_time = 0.0;
     tbb::tick_count nqbit_kernel_start = tbb::tick_count::now();
     
-    apply_nqbit_unitary_AVX(Umtx, test_state, qubits, 1 << num_qubits);
+   apply_large_kernel_to_input_AVX(Umtx, test_state, qubits, 1 << num_qubits);
     
     tbb::tick_count nqbit_kernel_end = tbb::tick_count::now();
     nqbit_kernel_time  = nqbit_kernel_time + (nqbit_kernel_end-nqbit_kernel_start).seconds();

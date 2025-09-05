@@ -188,7 +188,7 @@ void apply_nqbit_unitary_AVX( Matrix& gate_kernel_unitary, Matrix& input, std::v
 }
 
 void apply_nqbit_unitary_parallel_AVX( Matrix& gate_kernel_unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size ) {
-    int n = involved_qbits.size();
+    /*int n = involved_qbits.size();
     int qubit_num = (int) std::log2(input.rows);
     int block_size = 1 << n;
     int num_blocks = 1 << (qubit_num - n);
@@ -227,7 +227,7 @@ void apply_nqbit_unitary_parallel_AVX( Matrix& gate_kernel_unitary, Matrix& inpu
         }
         write_out_block(input, new_block_real, new_block_imag, indices);
         }
-        
+    } */
 
     } 
 
@@ -853,212 +853,147 @@ void apply_4qbit_kernel_to_state_vector_input_parallel_AVX(Matrix& unitary, Matr
     
     __m256d neg = _mm256_setr_pd(1.0, -1.0, 1.0, -1.0);
     
-    int index_step_inner = 1 << involved_qbits[0];
-    
+    int index_step_inner   = 1 << involved_qbits[0];
     int index_step_middle1 = 1 << involved_qbits[1];
-    
     int index_step_middle2 = 1 << involved_qbits[2];
+    int index_step_outer   = 1 << involved_qbits[3];
     
-    int index_step_outer = 1 << involved_qbits[3];
+    int parallel_outer_cycles   = matrix_size / (index_step_outer << 1);
+    int parallel_inner_cycles   = index_step_middle1 / (index_step_inner << 1);
+    int parallel_middle1_cycles = index_step_middle2 / (index_step_middle1 << 1);
+    int parallel_middle2_cycles = index_step_outer   / (index_step_middle2 << 1);
     
-    int parallel_outer_cycles = matrix_size/(index_step_outer << 1);
-    
-    int parallel_inner_cycles = index_step_middle1/(index_step_inner << 1);
-    
-    int parallel_middle1_cycles = index_step_middle2/(index_step_middle1 << 1);
-    
-    int parallel_middle2_cycles = index_step_outer/(index_step_middle2 << 1);
-    
-    int outer_grain_size = get_grain_size(index_step_outer);
-    int inner_grain_size = get_grain_size(index_step_outer);
-    int middle1_grain_size = get_grain_size(index_step_middle1);
-    int middle2_grain_size = get_grain_size(index_step_middle2);
-    
-    tbb::parallel_for( tbb::blocked_range<int>(0,parallel_outer_cycles,outer_grain_size), [&](tbb::blocked_range<int> r) { 
-    
-        int current_idx = r.begin()*(index_step_outer<<1);
-        
+    for (int outer_rdx = 0; outer_rdx < parallel_outer_cycles; outer_rdx++) {
+        int current_idx = outer_rdx * (index_step_outer << 1);
         int current_idx_pair_outer = current_idx + index_step_outer;
         
-
-        for (int outer_rdx=r.begin(); outer_rdx<r.end(); outer_rdx++){
-        
-        tbb::parallel_for( tbb::blocked_range<int>(0,parallel_middle2_cycles,middle2_grain_size), [&](tbb::blocked_range<int> r) {
+        for (int middle2_rdx = 0; middle2_rdx < parallel_middle2_cycles; middle2_rdx++) {
+            int current_idx_middle2 = middle2_rdx * (index_step_middle2 << 1);
             
-            int current_idx_middle2 = r.begin()*(index_step_middle2<<1);
-            
-            for (int middle2_rdx=r.begin(); middle2_rdx<r.end(); middle2_rdx++){
-            
-            tbb::parallel_for( tbb::blocked_range<int>(0,parallel_middle1_cycles,middle1_grain_size), [&](tbb::blocked_range<int> r) {
-            
-            int current_idx_middle1 = r.begin()*(index_step_middle1<<1);
-            
-            for (int middle1_rdx=r.begin(); middle1_rdx<r.end(); middle1_rdx++){
-            
-            tbb::parallel_for( tbb::blocked_range<int>(0,parallel_inner_cycles,inner_grain_size), [&](tbb::blocked_range<int> r) {
+            for (int middle1_rdx = 0; middle1_rdx < parallel_middle1_cycles; middle1_rdx++) {
+                int current_idx_middle1 = middle1_rdx * (index_step_middle1 << 1);
                 
-                int current_idx_inner = r.begin()*(index_step_inner<<1);
-
-                for (int inner_rdx=r.begin(); inner_rdx<r.end(); inner_rdx++){
-
-                    tbb::parallel_for(tbb::blocked_range<int>(0,index_step_inner,64),[&](tbb::blocked_range<int> r){
+                for (int inner_rdx = 0; inner_rdx < parallel_inner_cycles; inner_rdx++) {
+                    int current_idx_inner = inner_rdx * (index_step_inner << 1);
                     
-        	            for (int idx=r.begin(); idx<r.end(); ++idx){
-        	
-                    	    int current_idx_loc = current_idx + idx + current_idx_inner + current_idx_middle1 + current_idx_middle2  ;
-                            int current_idx_pair_loc = current_idx_pair_outer + idx + current_idx_inner + current_idx_middle1 + current_idx_middle2;
+                    for (int idx = 0; idx < index_step_inner; ++idx) {
+                        
+                        int current_idx_loc = current_idx + idx + current_idx_inner + current_idx_middle1 + current_idx_middle2;
+                        int current_idx_pair_loc = current_idx_pair_outer + idx + current_idx_inner + current_idx_middle1 + current_idx_middle2;
 
-		                    int current_idx_outer_loc = current_idx_loc;
-		                    int current_idx_inner_loc = current_idx_loc + index_step_inner;
-		                    
-		                    int current_idx_middle1_loc = current_idx_loc + index_step_middle1;
-		                    int current_idx_middle1_inner_loc = current_idx_loc + index_step_middle1 + index_step_inner;
-		                    
-		                    int current_idx_middle2_loc = current_idx_loc + index_step_middle2;
-		                    int current_idx_middle2_inner_loc = current_idx_loc + index_step_middle2 + index_step_inner;
-		                    
-		                    int current_idx_middle12_loc = current_idx_loc + index_step_middle1 + index_step_middle2;
-		                    int current_idx_middle12_inner_loc = current_idx_loc + index_step_middle1 + index_step_middle2 + index_step_inner;
-		                    
-                        	int current_idx_outer_pair_loc = current_idx_pair_loc;
-		                    int current_idx_inner_pair_loc = current_idx_pair_loc + index_step_inner;
-		                    
-		                    int current_idx_middle1_pair_loc =current_idx_pair_loc + index_step_middle1;
-		                    int current_idx_middle1_inner_pair_loc = current_idx_pair_loc + index_step_middle1 + index_step_inner;
-		                    
-		                    int current_idx_middle2_pair_loc = current_idx_pair_loc + index_step_middle2;
-		                    int current_idx_middle2_inner_pair_loc = current_idx_pair_loc + index_step_middle2 + index_step_inner;
-		                    
-		                    int current_idx_middle12_pair_loc = current_idx_pair_loc + index_step_middle1 + index_step_middle2;
-		                    int current_idx_middle12_inner_pair_loc = current_idx_pair_loc + index_step_middle1 + index_step_middle2 + index_step_inner;
-			                
-			                QGD_Complex16 results[16];
-			                
-                            double* element_outer = (double*)input.get_data() + 2 * current_idx_outer_loc;
-                            double* element_inner = (double*)input.get_data() + 2 * current_idx_inner_loc;
-                            
-                            double* element_middle1 = (double*)input.get_data() + 2 * current_idx_middle1_loc;
-                            double* element_middle1_inner = (double*)input.get_data() + 2 * current_idx_middle1_inner_loc;
-                            
-                            double* element_middle2 = (double*)input.get_data() + 2 * current_idx_middle2_loc;
-                            double* element_middle2_inner = (double*)input.get_data() + 2 * current_idx_middle2_inner_loc;
-                            
-                            double* element_middle12 = (double*)input.get_data() + 2 * current_idx_middle12_loc;
-                            double* element_middle12_inner = (double*)input.get_data() + 2 * current_idx_middle12_inner_loc;
-                            
-                            double* element_outer_pair = (double*)input.get_data() + 2 * current_idx_outer_pair_loc;
-                            double* element_inner_pair = (double*)input.get_data() + 2 * current_idx_inner_pair_loc;
-                                                        
-                            double* element_middle1_pair = (double*)input.get_data() + 2 * current_idx_middle1_pair_loc;
-                            double* element_middle1_inner_pair = (double*)input.get_data() + 2 * current_idx_middle1_inner_pair_loc;
-                            
-                            double* element_middle2_pair = (double*)input.get_data() + 2 * current_idx_middle2_pair_loc;
-                            double* element_middle2_inner_pair = (double*)input.get_data() + 2 * current_idx_middle2_inner_pair_loc;
-                            
-                            double* element_middle12_pair = (double*)input.get_data() + 2 * current_idx_middle12_pair_loc;
-                            double* element_middle12_inner_pair = (double*)input.get_data() + 2 * current_idx_middle12_inner_pair_loc;
-                            
-			                
-                            __m256d outer_inner_vec = get_AVX_vector(element_outer, element_inner);
+                        int current_idx_outer_loc = current_idx_loc;
+                        int current_idx_inner_loc = current_idx_loc + index_step_inner;
+                        
+                        int current_idx_middle1_loc = current_idx_loc + index_step_middle1;
+                        int current_idx_middle1_inner_loc = current_idx_loc + index_step_middle1 + index_step_inner;
+                        
+                        int current_idx_middle2_loc = current_idx_loc + index_step_middle2;
+                        int current_idx_middle2_inner_loc = current_idx_loc + index_step_middle2 + index_step_inner;
+                        
+                        int current_idx_middle12_loc = current_idx_loc + index_step_middle1 + index_step_middle2;
+                        int current_idx_middle12_inner_loc = current_idx_loc + index_step_middle1 + index_step_middle2 + index_step_inner;
+                        
+                        int current_idx_outer_pair_loc = current_idx_pair_loc;
+                        int current_idx_inner_pair_loc = current_idx_pair_loc + index_step_inner;
+                        
+                        int current_idx_middle1_pair_loc = current_idx_pair_loc + index_step_middle1;
+                        int current_idx_middle1_inner_pair_loc = current_idx_pair_loc + index_step_middle1 + index_step_inner;
+                        
+                        int current_idx_middle2_pair_loc = current_idx_pair_loc + index_step_middle2;
+                        int current_idx_middle2_inner_pair_loc = current_idx_pair_loc + index_step_middle2 + index_step_inner;
+                        
+                        int current_idx_middle12_pair_loc = current_idx_pair_loc + index_step_middle1 + index_step_middle2;
+                        int current_idx_middle12_inner_pair_loc = current_idx_pair_loc + index_step_middle1 + index_step_middle2 + index_step_inner;
+                        
+                        QGD_Complex16 results[16];
+                        
+                        double* element_outer = (double*)input.get_data() + 2 * current_idx_outer_loc;
+                        double* element_inner = (double*)input.get_data() + 2 * current_idx_inner_loc;
+                        
+                        double* element_middle1 = (double*)input.get_data() + 2 * current_idx_middle1_loc;
+                        double* element_middle1_inner = (double*)input.get_data() + 2 * current_idx_middle1_inner_loc;
+                        
+                        double* element_middle2 = (double*)input.get_data() + 2 * current_idx_middle2_loc;
+                        double* element_middle2_inner = (double*)input.get_data() + 2 * current_idx_middle2_inner_loc;
+                        
+                        double* element_middle12 = (double*)input.get_data() + 2 * current_idx_middle12_loc;
+                        double* element_middle12_inner = (double*)input.get_data() + 2 * current_idx_middle12_inner_loc;
+                        
+                        double* element_outer_pair = (double*)input.get_data() + 2 * current_idx_outer_pair_loc;
+                        double* element_inner_pair = (double*)input.get_data() + 2 * current_idx_inner_pair_loc;
+                                                    
+                        double* element_middle1_pair = (double*)input.get_data() + 2 * current_idx_middle1_pair_loc;
+                        double* element_middle1_inner_pair = (double*)input.get_data() + 2 * current_idx_middle1_inner_pair_loc;
+                        
+                        double* element_middle2_pair = (double*)input.get_data() + 2 * current_idx_middle2_pair_loc;
+                        double* element_middle2_inner_pair = (double*)input.get_data() + 2 * current_idx_middle2_inner_pair_loc;
+                        
+                        double* element_middle12_pair = (double*)input.get_data() + 2 * current_idx_middle12_pair_loc;
+                        double* element_middle12_inner_pair = (double*)input.get_data() + 2 * current_idx_middle12_inner_pair_loc;
+                        
+                        __m256d outer_inner_vec     = get_AVX_vector(element_outer, element_inner);
+                        __m256d middle1_inner_vec   = get_AVX_vector(element_middle1, element_middle1_inner);
+                        __m256d middle2_inner_vec   = get_AVX_vector(element_middle2, element_middle2_inner);
+                        __m256d middle12_inner_vec  = get_AVX_vector(element_middle12, element_middle12_inner);
+                        __m256d outer_inner_pair_vec     = get_AVX_vector(element_outer_pair, element_inner_pair);
+                        __m256d middle1_inner_pair_vec   = get_AVX_vector(element_middle1_pair, element_middle1_inner_pair);
+                        __m256d middle2_inner_pair_vec   = get_AVX_vector(element_middle2_pair, element_middle2_inner_pair);
+                        __m256d middle12_inner_pair_vec  = get_AVX_vector(element_middle12_pair, element_middle12_inner_pair);
 
-                           __m256d middle1_inner_vec = get_AVX_vector(element_middle1,element_middle1_inner);
+                        for (int mult_idx = 0; mult_idx < 16; mult_idx++) {
+                            double* unitary_row_1 = (double*)unitary.get_data() + 32*mult_idx;
+                            double* unitary_row_2 = unitary_row_1 + 4;
+                            double* unitary_row_3 = unitary_row_1 + 8;
+                            double* unitary_row_4 = unitary_row_1 + 12;
+                            double* unitary_row_5 = unitary_row_1 + 16;
+                            double* unitary_row_6 = unitary_row_1 + 20;
+                            double* unitary_row_7 = unitary_row_1 + 24;
+                            double* unitary_row_8 = unitary_row_1 + 28;
                             
-                            __m256d middle2_inner_vec = get_AVX_vector(element_middle2, element_middle2_inner);
-
-                           __m256d middle12_inner_vec = get_AVX_vector(element_middle12,element_middle12_inner);
-
-                            __m256d outer_inner_pair_vec =  get_AVX_vector(element_outer_pair, element_inner_pair);
+                            __m256d result_upper_vec        = complex_mult_AVX(outer_inner_vec,     _mm256_loadu_pd(unitary_row_1), neg);
+                            __m256d result_upper_middle1_vec= complex_mult_AVX(middle1_inner_vec,   _mm256_loadu_pd(unitary_row_2), neg);
+                            __m256d result_upper_middle2_vec= complex_mult_AVX(middle2_inner_vec,   _mm256_loadu_pd(unitary_row_3), neg);
+                            __m256d result_upper_middle12_vec=complex_mult_AVX(middle12_inner_vec,  _mm256_loadu_pd(unitary_row_4), neg);
+                            __m256d result_lower_vec        = complex_mult_AVX(outer_inner_pair_vec,_mm256_loadu_pd(unitary_row_5), neg);
+                            __m256d result_lower_middle1_vec= complex_mult_AVX(middle1_inner_pair_vec,_mm256_loadu_pd(unitary_row_6), neg);
+                            __m256d result_lower_middle2_vec= complex_mult_AVX(middle2_inner_pair_vec,_mm256_loadu_pd(unitary_row_7), neg);
+                            __m256d result_lower_middle12_vec=complex_mult_AVX(middle12_inner_pair_vec,_mm256_loadu_pd(unitary_row_8), neg);
                             
-                            __m256d middle1_inner_pair_vec =  get_AVX_vector(element_middle1_pair, element_middle1_inner_pair);
+                            __m256d result1_vec = _mm256_hadd_pd(result_upper_vec,        result_upper_middle1_vec);
+                            __m256d result2_vec = _mm256_hadd_pd(result_upper_middle2_vec, result_upper_middle12_vec);
+                            __m256d result3_vec = _mm256_hadd_pd(result_lower_vec,        result_lower_middle1_vec);
+                            __m256d result4_vec = _mm256_hadd_pd(result_lower_middle2_vec, result_lower_middle12_vec);
+                            __m256d result5_vec = _mm256_hadd_pd(result1_vec, result2_vec);
+                            __m256d result6_vec = _mm256_hadd_pd(result3_vec, result4_vec);
+                            __m256d result_vec  = _mm256_hadd_pd(result5_vec, result6_vec);
+                            result_vec          = _mm256_hadd_pd(result_vec, result_vec);
                             
-                            __m256d middle2_inner_pair_vec =  get_AVX_vector(element_middle2_pair, element_middle2_inner_pair);
-                            
-                            __m256d middle12_inner_pair_vec =  get_AVX_vector(element_middle12_pair, element_middle12_inner_pair);
-
-
-			                for (int mult_idx=0; mult_idx<16; mult_idx++){
-			                
-			                    double* unitary_row_1 = (double*)unitary.get_data() + 32*mult_idx;
-			                    double* unitary_row_2 = (double*)unitary.get_data() + 32*mult_idx + 4;
-			                    double* unitary_row_3 = (double*)unitary.get_data() + 32*mult_idx + 8;
-			                    double* unitary_row_4 = (double*)unitary.get_data() + 32*mult_idx + 12;
-			                    double* unitary_row_5 = (double*)unitary.get_data() + 32*mult_idx + 16;
-			                    double* unitary_row_6 = (double*)unitary.get_data() + 32*mult_idx + 20;
-			                    double* unitary_row_7 = (double*)unitary.get_data() + 32*mult_idx + 24;
-			                    double* unitary_row_8 = (double*)unitary.get_data() + 32*mult_idx + 28;
-			                    
-                                __m256d unitary_row_1_vec = _mm256_loadu_pd(unitary_row_1);
-                                __m256d unitary_row_2_vec = _mm256_loadu_pd(unitary_row_2);
-                                __m256d unitary_row_3_vec = _mm256_loadu_pd(unitary_row_3);
-                                __m256d unitary_row_4_vec = _mm256_loadu_pd(unitary_row_4);
-                                __m256d unitary_row_5_vec = _mm256_loadu_pd(unitary_row_5);
-                                __m256d unitary_row_6_vec = _mm256_loadu_pd(unitary_row_6);
-                                __m256d unitary_row_7_vec = _mm256_loadu_pd(unitary_row_7);
-                                __m256d unitary_row_8_vec = _mm256_loadu_pd(unitary_row_8);
-                                
-                                __m256d result_upper_vec = complex_mult_AVX(outer_inner_vec,unitary_row_1_vec,neg);
-                                
-                                __m256d result_upper_middle1_vec = complex_mult_AVX(middle1_inner_vec,unitary_row_2_vec,neg);
-                                
-                                __m256d result_upper_middle2_vec = complex_mult_AVX(middle2_inner_vec,unitary_row_3_vec,neg);
-                                
-                                __m256d result_upper_middle12_vec = complex_mult_AVX(middle12_inner_vec,unitary_row_4_vec,neg);
-                                
-                                __m256d result_lower_vec = complex_mult_AVX(outer_inner_pair_vec,unitary_row_5_vec,neg);
-                                
-                                __m256d result_lower_middle1_vec = complex_mult_AVX(middle1_inner_pair_vec,unitary_row_6_vec,neg);
-                                
-                                __m256d result_lower_middle2_vec = complex_mult_AVX(middle2_inner_pair_vec,unitary_row_7_vec,neg);
-                                
-                                __m256d result_lower_middle12_vec = complex_mult_AVX(middle12_inner_pair_vec,unitary_row_8_vec,neg);
-                                
-                                
-                                __m256d result1_vec = _mm256_hadd_pd(result_upper_vec,result_upper_middle1_vec);
-                                __m256d result2_vec = _mm256_hadd_pd(result_upper_middle2_vec,result_upper_middle12_vec);
-                                __m256d result3_vec = _mm256_hadd_pd(result_lower_vec,result_lower_middle1_vec);
-                                __m256d result4_vec = _mm256_hadd_pd(result_lower_middle2_vec,result_lower_middle12_vec);
-                                __m256d result5_vec = _mm256_hadd_pd(result1_vec,result2_vec);
-                                __m256d result6_vec = _mm256_hadd_pd(result3_vec,result4_vec);
-                                __m256d result_vec  = _mm256_hadd_pd(result5_vec,result6_vec);
-                                result_vec          = _mm256_hadd_pd(result_vec,result_vec);
-                                double* result = (double*)&result_vec;
-                                results[mult_idx].real = result[0];
-                                results[mult_idx].imag = result[2];
-			                }
-		                input[current_idx_outer_loc] = results[0];
-		                input[current_idx_inner_loc] = results[1];
-		                input[current_idx_middle1_loc]  = results[2];
-		                input[current_idx_middle1_inner_loc] = results[3];
-		                input[current_idx_middle2_loc]  = results[4];
-		                input[current_idx_middle2_inner_loc] = results[5];
-		                input[current_idx_middle12_loc]  = results[6];
-		                input[current_idx_middle12_inner_loc] = results[7];
-		                input[current_idx_outer_pair_loc] = results[8];
-		                input[current_idx_inner_pair_loc] = results[9];
-		                input[current_idx_middle1_pair_loc] = results[10];
-		                input[current_idx_middle1_inner_pair_loc] = results[11];
-		                input[current_idx_middle2_pair_loc] = results[12];
-		                input[current_idx_middle2_inner_pair_loc] = results[13];
-		                input[current_idx_middle12_pair_loc] = results[14];
-		                input[current_idx_middle12_inner_pair_loc] = results[15];
-            	    }
-                   });
-                
-               
-                current_idx_inner = current_idx_inner +(index_step_inner << 1);
+                            double* result = (double*)&result_vec;
+                            results[mult_idx].real = result[0];
+                            results[mult_idx].imag = result[2];
+                        }
+                        
+                        input[current_idx_outer_loc]           = results[0];
+                        input[current_idx_inner_loc]           = results[1];
+                        input[current_idx_middle1_loc]         = results[2];
+                        input[current_idx_middle1_inner_loc]   = results[3];
+                        input[current_idx_middle2_loc]         = results[4];
+                        input[current_idx_middle2_inner_loc]   = results[5];
+                        input[current_idx_middle12_loc]        = results[6];
+                        input[current_idx_middle12_inner_loc]  = results[7];
+                        input[current_idx_outer_pair_loc]      = results[8];
+                        input[current_idx_inner_pair_loc]      = results[9];
+                        input[current_idx_middle1_pair_loc]    = results[10];
+                        input[current_idx_middle1_inner_pair_loc] = results[11];
+                        input[current_idx_middle2_pair_loc]    = results[12];
+                        input[current_idx_middle2_inner_pair_loc] = results[13];
+                        input[current_idx_middle12_pair_loc]   = results[14];
+                        input[current_idx_middle12_inner_pair_loc] = results[15];
+                    }
                 }
-            });
-                current_idx_middle1 = current_idx_middle1 +(index_step_middle1 << 1);
             }
-            });
-                current_idx_middle2 = current_idx_middle2 +(index_step_middle2 << 1);
-            }
-            });
-        current_idx = current_idx + (index_step_outer << 1);
-        current_idx_pair_outer = current_idx_pair_outer + (index_step_outer << 1);
-
+        }
     }
-    });
 }
 
 /**
