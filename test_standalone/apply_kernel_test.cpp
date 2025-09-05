@@ -47,6 +47,8 @@ void testNQubitGate(int num_qubits) {
 
     Gates_block circuit(num_qubits);
 
+    circuit.set_min_fusion(-1);
+
     for (int i = 0; i < num_qubits; i++){
         circuit.add_u3(i);
     }
@@ -112,9 +114,13 @@ void testSmallCircuit() {
         parameters[i] = (i+1) / (M_PI*2);
     }
 
+    circuit.set_min_fusion(-1);
+    circuit_inner->set_min_fusion(-1);
+    circuit_inner_2->set_min_fusion(-1);
+
     circuit.apply_to(parameters, state);
 
-    // circuit.set_max_fusion(0);
+    circuit.set_min_fusion(0);
     circuit_inner->set_min_fusion(0);
     circuit_inner_2->set_min_fusion(0);
 
