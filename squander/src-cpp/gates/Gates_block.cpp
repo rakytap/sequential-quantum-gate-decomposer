@@ -95,7 +95,7 @@ Gates_block::Gates_block(int qbit_num_in) : Gate(qbit_num_in) {
     
     fragmented = false;
     fragmentation_type = -1;
-    max_fusion = -1;
+    min_fusion = -1;
     
 }
 
@@ -249,7 +249,7 @@ Gates_block::apply_to( Matrix_real& parameters_mtx_in, Matrix& input, int parall
 
     int size = involved_qubits.size();
 
-    if (max_fusion != -1 && qbit_num > max_fusion && size <= 5 && qbit_num != size && gates.size() > 1) {
+    if (min_fusion != -1 && qbit_num >= min_fusion && size <= (input.cols == 1 ? 5 : 2) && qbit_num != size && gates.size() > 1) {
         
         Matrix Umtx_mini = create_identity(Power_of_2(size));
 
@@ -334,7 +334,7 @@ void Gates_block::fragment_circuit(){
 
     std::vector<int> qbits;
     int num_of_qbits=0;
-    int max_fusion_temp = (fragmentation_type==-1) ? max_fusion:fragmentation_type;
+    int min_fusion_temp = (fragmentation_type==-1) ? min_fusion:fragmentation_type;
 
     for (int idx = gates.size()-1; idx>=0; idx--){      
       
@@ -351,7 +351,7 @@ void Gates_block::fragment_circuit(){
         bool target_contained  = is_qbit_present(qbits,target_new,num_of_qbits);
         bool control_contained = (control_new==-1) ? true : is_qbit_present(qbits, control_new, num_of_qbits);
 
-        if (num_of_qbits == max_fusion_temp && (target_contained == false || control_contained == false)){
+        if (num_of_qbits == min_fusion_temp && (target_contained == false || control_contained == false)){
             int vidx = 1;
 
             while(vidx<num_of_qbits){
@@ -370,19 +370,19 @@ void Gates_block::fragment_circuit(){
             involved_qbits.push_back(qbits);
             block_end.push_back(idx+1);
             block_type.push_back(num_of_qbits);
-            max_fusion_temp = max_fusion;
+            min_fusion_temp = min_fusion;
             idx++;    
             qbits=std::vector<int>{};
             num_of_qbits=0;
             continue;
         }
 
-        if (num_of_qbits<max_fusion_temp && target_contained==false){
+        if (num_of_qbits<min_fusion_temp && target_contained==false){
             qbits.push_back(target_new);
             num_of_qbits++;
         }
 
-        if (num_of_qbits<max_fusion_temp && control_contained==false){
+        if (num_of_qbits<min_fusion_temp && control_contained==false){
             qbits.push_back(control_new);
             num_of_qbits++;
         }
@@ -2196,8 +2196,8 @@ void Gates_block::combine(Gates_block* op_block) {
 
 }
 
-void Gates_block::set_max_fusion( int max_fusion ) {
-    this->max_fusion = max_fusion;
+void Gates_block::set_min_fusion( int min_fusion ) {
+    this->min_fusion = min_fusion;
 }
 
 /**
