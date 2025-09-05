@@ -21,6 +21,7 @@ limitations under the License.
 */
 #include "Generative_Quantum_Machine_Learning_Base.h"
 #include <iostream>
+#include <algorithm>
 
 static tbb::spin_mutex my_mutex;
 
@@ -82,7 +83,7 @@ Generative_Quantum_Machine_Learning_Base::Generative_Quantum_Machine_Learning_Ba
 @param config_in A map that can be used to set hyperparameters during the process
 @return An instance of the class
 */
-Generative_Quantum_Machine_Learning_Base::Generative_Quantum_Machine_Learning_Base(std::vector<int> x_vectors_in, std::vector<std::vector<int>> x_bitstrings_in, Matrix_real P_star_in, double sigma_in, int qbit_num_in, bool use_lookup_table_in, std::map<std::string, Config_Element>& config_in) : Optimization_Interface(Matrix(Power_of_2(qbit_num_in),1), qbit_num_in, false, config_in, RANDOM, accelerator_num) {
+Generative_Quantum_Machine_Learning_Base::Generative_Quantum_Machine_Learning_Base(std::vector<int> x_vectors_in, std::vector<std::vector<int>> x_bitstrings_in, Matrix_real P_star_in, double sigma_in, int qbit_num_in, bool use_lookup_table_in, std::vector<std::vector<int>> cliques_in, std::map<std::string, Config_Element>& config_in) : Optimization_Interface(Matrix(Power_of_2(qbit_num_in),1), qbit_num_in, false, config_in, RANDOM, accelerator_num) {
 
 	x_vectors = x_vectors_in;
 
@@ -140,6 +141,8 @@ Generative_Quantum_Machine_Learning_Base::Generative_Quantum_Machine_Learning_Ba
     if (use_lookup) {
         fill_lookup_table();
     }
+
+    cliques = cliques_in;
 }
 
 
@@ -727,11 +730,73 @@ void Generative_Quantum_Machine_Learning_Base::generate_circuit( int layers, int
 
             return;
         }        
+
+        case QCMRF:
+        {
+            int num_cliques = cliques.size();
+            if (cliques.size() == 0) {
+                std::string error("Variational_Quantum_Eigensolver_Base::generate_initial_circuit: input the cliques for using QCMRF ansatz");
+                throw error;
+            }
+            release_gates();
+            for (int qbit_idx=0; qbit_idx < qbit_num; qbit_idx++) {
+                add_h(qbit_idx);
+            }
+
+            std::vector<std::vector<int>> all_subsets;
+            for (int clique_idx = 0; clique_idx < num_cliques; clique_idx++) {
+                int clique_size = cliques[clique_idx].size();
+                std::vector<int> subset;
+                generate_clique_circuit(0, cliques[clique_idx], all_subsets, subset);
+            }
+            for (int qbit_idx=0; qbit_idx < qbit_num; qbit_idx++) {
+                add_h(qbit_idx);
+            }
+            return;
+        }
         default:
-            std::string error("Variational_Quantum_Eigensolver_Base::generate_initial_circuit: ansatz not implemented");
+            std::string error("Generative_Quantum_Machine_Learning_Base::generate_initial_circuit: ansatz not implemented");
             throw error;
     }
 
+}
+
+/**
+@brief Call to generate a MultiRZ gate
+@param qbits The qbits the gate operates on. The depth of the generated circuit is 2*number of qbits
+*/
+void Generative_Quantum_Machine_Learning_Base::MultyRZ(std::vector<int>& qbits) {
+    for (int idx=0; idx<qbits.size()-1; idx++) {
+        add_cnot(qbits[idx+1], qbits[idx]);
+    }
+    add_rz(qbits[qbits.size()-1]);
+    for (int idx=qbits.size()-1; idx>0; idx--) {
+        add_cnot(qbits[idx], qbits[idx-1]);
+    }
+}
+
+/**
+@brief Call to generate the circuit ansatz for the given clique
+@param qbits The qbits in the clique.
+@param res The qbits for previously generated gates to avoid duplication
+@param subset Temporary variable for storing subsets.
+*/
+void Generative_Quantum_Machine_Learning_Base::generate_clique_circuit(int i, std::vector<int>& arr, std::vector<std::vector<int>>& res, std::vector<int>& subset) {
+    if (i == arr.size()) {
+        if (subset.size() != 0) {
+            if (std::find(res.begin(), res.end(), subset) == res.end()) {
+                res.push_back(subset);
+                MultyRZ(subset);
+            }
+        }
+        return;
+    }
+
+    subset.push_back(arr[i]);
+    generate_clique_circuit(i+1, arr, res, subset);
+
+    subset.pop_back();
+    generate_clique_circuit(i+1, arr, res, subset);
 }
 
 void 

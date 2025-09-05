@@ -70,9 +70,9 @@ typedef struct qgd_Generative_Quantum_Machine_Learning_Base_Wrapper{
 @return Return with a void pointer pointing to an instance of Generative_Quantum_Machine_Learning_Base class.
 */
 Generative_Quantum_Machine_Learning_Base* 
-create_qgd_Generative_Quantum_Machine_Learning_Base( std::vector<int> x_vectors, std::vector<std::vector<int>> x_bitstrings, Matrix_real P_star, double sigma, int qbit_num, bool use_lookup_table, std::map<std::string, Config_Element>& config) {
+create_qgd_Generative_Quantum_Machine_Learning_Base( std::vector<int> x_vectors, std::vector<std::vector<int>> x_bitstrings, Matrix_real P_star, double sigma, int qbit_num, bool use_lookup_table, std::vector<std::vector<int>> cliques, std::map<std::string, Config_Element>& config) {
 
-    return new Generative_Quantum_Machine_Learning_Base( x_vectors, x_bitstrings, P_star, sigma, qbit_num, use_lookup_table, config);
+    return new Generative_Quantum_Machine_Learning_Base( x_vectors, x_bitstrings, P_star, sigma, qbit_num, use_lookup_table, cliques, config);
 }
 
 
@@ -147,26 +147,27 @@ qgd_Generative_Quantum_Machine_Learning_Base_Wrapper_new(PyTypeObject *type, PyO
 /**
 @brief Method called when a python instance of the class qgd_Generative_Quantum_Machine_Learning_Base_Wrapper is initialized
 @param self A pointer pointing to an instance of the class qgd_Generative_Quantum_Machine_Learning_Base_Wrapper.
-@param args A tuple of the input arguments: x_bitsring_data (numpy array), p_star_data (numpy array), sigma (double), qbit_num (integer), use_lookup_table (bool)
+@param args A tuple of the input arguments: x_bitsring_data (numpy array), p_star_data (numpy array), sigma (double), qbit_num (integer), cliques (numpy array), use_lookup_table (bool)
 @param kwds A tuple of keywords
 */
 static int
 qgd_Generative_Quantum_Machine_Learning_Base_Wrapper_init(qgd_Generative_Quantum_Machine_Learning_Base_Wrapper *self, PyObject *args, PyObject *kwds)
 {
     // The tuple of expected keywords
-    static char *kwlist[] = {(char*)"x_bitstring_data", (char*)"p_star_data", (char*) "sigma", (char*)"qbit_num", (char*)"use_lookup_table", (char*)"config", NULL};
+    static char *kwlist[] = {(char*)"x_bitstring_data", (char*)"p_star_data", (char*) "sigma", (char*)"qbit_num", (char*)"use_lookup_table", (char*)"cliques", (char*)"config", NULL};
  
     // initiate variables for input arguments
     PyArrayObject *x_bitstring_data_arg = NULL;
     PyArrayObject *p_star_data_arg = NULL;
+    PyArrayObject *cliques_data_arg = NULL;
     double sigma=1.0;
     int  qbit_num = -1; 
     int use_lookup_table;
     PyObject *config_arg = NULL;
     
     // parsing input arguments
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OOdipO", kwlist,
-                                   &x_bitstring_data_arg, &p_star_data_arg, &sigma, &qbit_num, &use_lookup_table, &config_arg))
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OOdipOO", kwlist,
+                                   &x_bitstring_data_arg, &p_star_data_arg, &sigma, &qbit_num, &use_lookup_table, &cliques_data_arg, &config_arg))
         return -1;
     
     int shape = Power_of_2(qbit_num);
@@ -216,6 +217,26 @@ qgd_Generative_Quantum_Machine_Learning_Base_Wrapper_init(qgd_Generative_Quantum
 
     Matrix_real p_stars = Matrix_real(p_star_data, p_star_shape, 1);
 
+    if ( cliques_data_arg == NULL ) return -1;
+
+    cliques_data_arg = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)cliques_data_arg, NPY_INT, NPY_ARRAY_IN_ARRAY);
+    int* cliques_data = (int*)PyArray_DATA(cliques_data_arg);
+    int cliques_ndim = PyArray_NDIM(cliques_data_arg);
+    npy_intp* cliques_shape = PyArray_DIMS(cliques_data_arg);
+
+    if ( cliques_ndim != 2 ) {
+        PyErr_SetString(PyExc_ValueError, "cliqes should be a 2D array");
+        return -1;
+    }
+
+    std::vector<int> cliques_continous(cliques_data, cliques_data+(cliques_shape[0]*cliques_shape[1]));
+    std::vector<std::vector<int>> cliques(cliques_shape[0], std::vector<int>(cliques_shape[1]));
+    for (int idx_row=0; idx_row<cliques_shape[0]; idx_row++) {
+        for (int idx_col=0; idx_col<cliques_shape[1]; idx_col++) {
+            cliques[idx_row][idx_col] = cliques_continous[idx_row*cliques_shape[1]+idx_col];
+        }
+    }
+
     // integer type config metadata utilized during the optimization
     std::map<std::string, Config_Element> config;
 
@@ -255,7 +276,7 @@ qgd_Generative_Quantum_Machine_Learning_Base_Wrapper_init(qgd_Generative_Quantum
 
     // create an instance of the class Generative_Quantum_Machine_Learning_Base
     if (qbit_num > 0 ) {
-        self->gqml =  create_qgd_Generative_Quantum_Machine_Learning_Base(x_indices, x_bitstrings, p_stars, sigma, qbit_num, use_lookup_table, config);
+        self->gqml =  create_qgd_Generative_Quantum_Machine_Learning_Base(x_indices, x_bitstrings, p_stars, sigma, qbit_num, use_lookup_table, cliques, config);
     }
     else {
         std::cout << "The number of qubits should be given as a positive integer, " << qbit_num << "  was given" << std::endl;
@@ -678,6 +699,9 @@ qgd_Generative_Quantum_Machine_Learning_Base_Wrapper_set_Ansatz( qgd_Generative_
     }
     else if ( strcmp("hea_zyz", ansatz_C) == 0 || strcmp("HEA_ZYZ", ansatz_C) == 0) {
         qgd_ansatz = HEA_ZYZ;        
+    }
+    else if ( strcmp("qcmrf", ansatz_C) == 0 || strcmp("QCMRF", ansatz_C) == 0) {
+        qgd_ansatz = QCMRF;        
     }
     else {
         std::cout << "Wrong ansatz. Using default: HEA" << std::endl; 

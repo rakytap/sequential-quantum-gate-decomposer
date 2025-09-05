@@ -140,7 +140,7 @@ def generate_MRF_dataset(n_nodes, graph_type, dataset_size, path = None):
     if path is not None:
         mrf.save(path)
 
-    return training_set, mrf.distribution
+    return training_set, mrf.distribution, list(nx.find_cliques(mrf.graph))
 
 if __name__ == "__main__":
     n_nodes = 9
@@ -148,7 +148,7 @@ if __name__ == "__main__":
     dataset_size = 1000
     saveas = "dataset.txt"
     
-    training_set, target_distribution = generate_MRF_dataset(n_nodes, graph_type, dataset_size)
+    training_set, target_distribution, _ = generate_MRF_dataset(n_nodes, graph_type, dataset_size)
     
     np.savetxt(saveas, training_set.astype(int))
     

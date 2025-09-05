@@ -27,7 +27,7 @@ limitations under the License.
 #include "Optimization_Interface.h"
 
 /// @brief Type definition of the fifferent types of ansatz
-typedef enum ansatz_type {HEA, HEA_ZYZ} ansatz_type;
+typedef enum ansatz_type {HEA, HEA_ZYZ, QCMRF} ansatz_type;
     
 #ifdef __cplusplus
 extern "C" 
@@ -93,6 +93,8 @@ private:
 
     bool use_lookup;
 
+    std::vector<std::vector<int>> cliques;
+
 public:
 
 
@@ -114,7 +116,7 @@ Generative_Quantum_Machine_Learning_Base();
 @param config_in A map that can be used to set hyperparameters during the process
 @return An instance of the class
 */
-Generative_Quantum_Machine_Learning_Base( std::vector<int> x_vectors_in, std::vector<std::vector<int>> x_bitstrings_in, Matrix_real P_star_in, double sigma_in, int qbit_num_in, bool use_lookup_table_in, std::map<std::string, Config_Element>& config_in);
+Generative_Quantum_Machine_Learning_Base( std::vector<int> x_vectors_in, std::vector<std::vector<int>> x_bitstrings_in, Matrix_real P_star_in, double sigma_in, int qbit_num_in, bool use_lookup_table_in, std::vector<std::vector<int>> cliques_in, std::map<std::string, Config_Element>& config_in);
 
 /**
 @brief Destructor of the class
@@ -244,6 +246,21 @@ void set_ansatz(ansatz_type ansatz_in);
 */
 void generate_circuit( int layers, int inner_blocks );
 
+
+/**
+@brief Call to generate the circuit ansatz for the given clique
+@param qbits The qbits in the clique.
+@param res The qbits for previously generated gates to avoid duplication
+@param subset Temporary variable for storing subsets.
+*/
+void generate_clique_circuit(int i, std::vector<int>& qbits, std::vector<std::vector<int>>& res, std::vector<int>& subset);
+
+
+/**
+@brief Call to generate a MultiRZ gate
+@param qbits The qbits the gate operates on. The depth of the generated circuit is 2*number of qbits
+*/
+void MultyRZ(std::vector<int>& qbits);
 
 /**
 @brief Call to set custom layers to the gate structure that are intended to be used in the GQML process.
