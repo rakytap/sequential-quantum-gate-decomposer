@@ -54,7 +54,7 @@ protected:
     bool fragmented;
     int fragmentation_type;
     /// maximal number of qubits in partitions
-    int max_fusion;
+    int min_fusion;
     std::vector< std::vector<int>> involved_qbits;
     std::vector<int> block_end;
     std::vector<int> block_type;
@@ -652,7 +652,7 @@ void combine(Gates_block* op_block);
 
 
 
-void set_max_fusion( int max_fusion );
+void set_min_fusion( int min_fusion );
 
 /**
 @brief Set the number of qubits spanning the matrix of the gates stored in the block of gates.

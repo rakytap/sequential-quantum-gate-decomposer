@@ -115,8 +115,8 @@ void testSmallCircuit() {
     circuit.apply_to(parameters, state);
 
     // circuit.set_max_fusion(0);
-    circuit_inner->set_max_fusion(0);
-    circuit_inner_2->set_max_fusion(0);
+    circuit_inner->set_min_fusion(0);
+    circuit_inner_2->set_min_fusion(0);
 
     circuit.apply_to(parameters, test_state);
 
