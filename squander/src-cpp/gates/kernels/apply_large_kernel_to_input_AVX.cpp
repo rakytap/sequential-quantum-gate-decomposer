@@ -203,25 +203,6 @@ void apply_nqbit_unitary_parallel_AVX( Matrix& gate_kernel_unitary, Matrix& inpu
 
 
     std::vector<__m256d> mv_xy = construct_mv_xy_vectors(gate_kernel_unitary, gate_kernel_unitary.rows);
-    /*if (non_targets.size()<5){
-        std::vector<int> indices(block_size);
-
-        for (int iter_idx = 0; iter_idx < num_blocks; iter_idx++) {
-            // Compute block indices
-            get_block_indices(qubit_num, involved_qbits, non_targets, iter_idx, indices);
-            std::vector<double> new_block_real(block_size,0.0);
-            std::vector<double> new_block_imag(block_size,0.0);
-
-            #pragma omp parallel for schedule(static)
-            for (int rdx=0; rdx<block_size; rdx++){
-                for (int cdx=0; cdx<block_size; cdx+=2){
-                    complex_prod_AVX(mv_xy, rdx, cdx, indices, input, new_block_real, new_block_imag);
-                }
-            }
-        write_out_block(input, new_block_real, new_block_imag, indices);
-        }
-    }
-    else{*/
     #pragma omp parallel
     {
         std::vector<int> indices(block_size);
@@ -234,19 +215,22 @@ void apply_nqbit_unitary_parallel_AVX( Matrix& gate_kernel_unitary, Matrix& inpu
             std::fill(new_block_imag.begin(), new_block_imag.end(), 0.0);
             
 
-            for (int rdx=0; rdx<block_size; rdx++){
-                for (int cdx=0; cdx<block_size; cdx+=2){
-                    complex_prod_AVX(mv_xy, rdx, cdx, indices, input, new_block_real, new_block_imag);
-                }
+        for (int rdx=0; rdx<block_size; rdx++){
+             __m256d result = _mm256_setzero_pd();
+            for (int cdx=0; cdx<block_size; cdx+=2){
+                complex_prod_AVX(mv_xy, rdx, cdx, indices, input, result);
             }
-
-            // Write back
+        alignas(32) double tmp[4];
+        _mm256_store_pd(tmp, result); 
+        new_block_real[rdx]=tmp[0]+tmp[2];
+        new_block_imag[rdx]=tmp[1]+tmp[3];
+        }
         write_out_block(input, new_block_real, new_block_imag, indices);
         }
         
 
     } 
-    //}
+
 }
 
 /**
