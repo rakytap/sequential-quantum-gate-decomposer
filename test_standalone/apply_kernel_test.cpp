@@ -116,35 +116,38 @@ void test5QubitGate_Parallel_GHZ() {
     GHZ_circ_mini.add_h(0);
     GHZ_circ_mini.add_cnot(1,0);
     GHZ_circ_mini.apply_to(params,Umtx);
-    int samples = 500;
-    double nqbit_kernel_time = 0.0;
-    tbb::tick_count nqbit_kernel_start = tbb::tick_count::now();
-    for (int idx=0; idx<samples;idx++){
-        apply_large_kernel_to_input_AVX(Umtx, test_state, qubits, 1 << num_qubits);
-    }
-    tbb::tick_count nqbit_kernel_end = tbb::tick_count::now();
-    
-    nqbit_kernel_time  = (nqbit_kernel_time + (nqbit_kernel_end-nqbit_kernel_start).seconds())/samples;
-    
+    apply_nqbit_unitary_AVX(Umtx, test_state, qubits, 1 << num_qubits);
     double fid = fidelity(state, test_state);
     std::cout << num_qubits <<"-qubit GHZ gate fidelity: " << fid << std::endl;
-    
-    double fqbit_kernel_time = 0.0;
-    tbb::tick_count fqbit_kernel_start = tbb::tick_count::now();
-        for (int idx=0; idx<samples;idx++){
-    apply_4qbit_kernel_to_state_vector_input_parallel_AVX(Umtx, test_state2, qubits, 1 << num_qubits);
-  }  
-    tbb::tick_count fqbit_kernel_end = tbb::tick_count::now();
-    fqbit_kernel_time  = (fqbit_kernel_time + (fqbit_kernel_end-fqbit_kernel_start).seconds())/samples;
-    
-    double fid2 = fidelity(state, test_state2);
-    std::cout << num_qubits <<"-qubit GHZ gate fidelity: " << fid2 << std::endl;
-    
-    std::cout << qubits.size()<<" qubit kernel simulation time: " << fqbit_kernel_time <<" N qubit kernel simulation time: " << nqbit_kernel_time<< std::endl;
     assert(std::abs(fid - 1.0) < 1e-10);
 
 }
 
+void testNQubit_Gate_speed() {
+    int num_qubits = 20;
+    Matrix state = generateRandomState(num_qubits);
+    Matrix test_state = state.copy();
+    Matrix test_state2 = state.copy();
+    for (int n=2; n<5; n++){
+        std::vector<int> qubits;
+        for (int qubit=3;qubit<3+n;qubit++){
+            qubits.push_back(qubit);
+        }
+        Matrix Umtx = create_identity(1<<qubits.size());
+
+        int samples = 500;
+        double nqbit_kernel_time = 0.0;
+        tbb::tick_count nqbit_kernel_start = tbb::tick_count::now();
+        for (int idx=0; idx<samples;idx++){
+            apply_nqbit_unitary_AVX(Umtx, test_state, qubits, 1 << num_qubits);
+        }
+        tbb::tick_count nqbit_kernel_end = tbb::tick_count::now();
+
+        nqbit_kernel_time  = (nqbit_kernel_time + (nqbit_kernel_end-nqbit_kernel_start).seconds())/samples;
+
+        std::cout << qubits.size()<<" qubit kernel simulation time: " << nqbit_kernel_time<< std::endl;
+    }
+}
 
 
 };
@@ -156,5 +159,6 @@ int main() {
     suite.test4QubitGate();
     suite.test5QubitGate();
     suite.test5QubitGate_Parallel_GHZ();
+    suite.testNQubit_Gate_speed();
     return 0;
 }

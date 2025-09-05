@@ -40,9 +40,9 @@ inline void get_block_indices(int N, const std::vector<int> &tq, const std::vect
 
 inline void write_out_block(Matrix& input, const std::vector<double>& new_block_real, const std::vector<double>& new_block_imag, const std::vector<int>& indices);
 
-inline void complex_prod_AVX(const std::vector<__m256d>& mv_xy, int rdx, int cdx,  const std::vector<int>& indices, const Matrix& input, __m256d& result);
+inline void complex_prod_AVX(const __m256d* mv_xy, int rdx, int cdx,  const std::vector<int>& indices, const Matrix& input, __m256d& result);
 
-std::vector<__m256d> construct_mv_xy_vectors(Matrix& gate_kernel_unitary, const int& matrix_size);
+inline __m256d* construct_mv_xy_vectors(const Matrix& gate_kernel_unitary, const int& matrix_size);
 
 void apply_nqbit_unitary_AVX( Matrix& gate_kernel_unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size );
 
