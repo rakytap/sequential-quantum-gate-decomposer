@@ -253,8 +253,8 @@ Gates_block::apply_to( Matrix_real& parameters_mtx_in, Matrix& input, int parall
 
         std::vector<int> old_to_new(qbit_num, -2), new_to_old(qbit_num, -2);
         for (int i = 0; i < size; i++){
-            old_to_new[qbit_num-1-i] = involved_qubits[i];
-            new_to_old[qbit_num-1-involved_qubits[i]] = i;
+            old_to_new[i] = involved_qubits[i];
+            new_to_old[involved_qubits[i]] = i;
         }
 
         int old_qbit_num = qbit_num;
