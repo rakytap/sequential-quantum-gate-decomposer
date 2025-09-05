@@ -5,17 +5,46 @@ import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 import matplotlib
 import dataset_generator
+import networkx as nx
 
-n_nodes = 9
+
+def generate_MRF_dataset(n_nodes, graph_type, dataset_size, path = None, G=None):
+    if graph_type != "custom":
+        mrf = dataset_generator.GeneralBinaryMRF(graph_type, n_nodes)
+    else:
+        mrf = dataset_generator.GeneralBinaryMRF(graph_type, n_nodes, G=G)
+    mrf_samples = np.random.choice(
+        range(2**mrf.n_vertices), size=dataset_size, p=mrf.distribution
+    )
+    training_set = np.array(
+        [
+            np.array(list(format(i, "b").zfill(mrf.n_vertices))).astype(int)
+            for i in mrf_samples
+        ]
+    )
+
+    if path is not None:
+        mrf.save(path)
+
+    return training_set, mrf.distribution, list(nx.find_cliques(mrf.graph))
+
+n_nodes = 4
 graph_type = "grid"
-dataset_size = 4000
+dataset_size = 100
 
-training_set, target_distribution, cliques = dataset_generator.generate_MRF_dataset(n_nodes, graph_type, dataset_size)
+G = nx.Graph()
+G.add_nodes_from(range(n_nodes))
+edges = [(x, x+1) for x in range(n_nodes-1)]
+edges.append((n_nodes-1, 0))
+G.add_edges_from(edges)
+training_set, target_distribution, cliques = generate_MRF_dataset(n_nodes, graph_type, dataset_size, G=G)
 print(cliques)
+
+
 # generate configuration dictionary for the solver
 config = {"max_inner_iterations":800, 
-	"batch_size": 2,
-    "check_for_convergence": True,
+	"batch_size": 3,
+    "check_for_convergence": False,
 	"convergence_length": 20,
     "output_periodicity": 50}
 qbit_num = n_nodes
@@ -23,7 +52,6 @@ sigma = 10
 x = np.astype(training_set, np.int32)
 P_star = target_distribution
 # print(P_star)
-mrf_samples = np.array(range(2**qbit_num))
 use_lookup_table = True
 
 GQML = Generative_Quantum_Machine_Learning(x, P_star, sigma, qbit_num, use_lookup_table, cliques, config)
@@ -53,37 +81,47 @@ GQML.apply_to( parameters, state_to_transform );
 P_theta = np.abs(state_to_transform)**2
 print("TV",np.sum(np.abs(P_theta - P_star))/2)
 
-# param_copy = parameters.copy()
-# print(parameters, param_copy)
-# thetas = np.linspace(0, 1*np.pi, 100)
-# mmds = []
-# for i in range(4):
-#     mmds.append([])
-#     for fi in thetas:
-#         parameters[i] = fi
-#         mmds[i].append(GQML.Optimization_Problem(parameters))
-#     parameters = param_copy.copy() 
-#     print(parameters[i], mmds[i][0])
-#     plt.scatter(parameters[i], mmds[i][0])
-#     plt.plot(thetas, mmds[i])
 
+tvs0 = []
+for i in range(1):
+    parameters = np.zeros(param_num)
+    print("MMD", GQML.Optimization_Problem(parameters))
+    GQML.set_Optimized_Parameters(parameters)
+    GQML.Start_Optimization()
+    parameters = GQML.get_Optimized_Parameters()
+    initial_state = np.zeros( (1 << qbit_num), dtype=np.complex128 )
+    initial_state[0] = 1.0 + 0j        
+    state_to_transform = initial_state.copy()    
+    GQML.apply_to( parameters, state_to_transform );   
+    P_theta = np.abs(state_to_transform)**2
+    print("TV", np.sum(np.abs(P_theta - P_star))/2)
+    tvs0.append(np.sum(np.abs(P_theta - P_star))/2)
+       
+    plt.plot(P_star)
+    plt.plot(P_theta)
+    plt.show()
 
-parameters = np.zeros(param_num)
-print("MMD", GQML.Optimization_Problem(parameters))
-GQML.set_Optimized_Parameters(parameters)
-GQML.Start_Optimization()
-parameters = GQML.get_Optimized_Parameters()
-initial_state = np.zeros( (1 << qbit_num), dtype=np.complex128 )
-initial_state[0] = 1.0 + 0j        
-state_to_transform = initial_state.copy()    
-GQML.apply_to( parameters, state_to_transform );   
-P_theta = np.abs(state_to_transform)**2
-print("TV", np.sum(np.abs(P_theta - P_star))/2)
-   
-# plt.plot(P_star)
-# plt.plot(P_theta)
-# plt.show()
+tvsr = []
+for i in range(0):
+    GQML.set_Ansatz("HEA")
 
-# for i in range(2**qbit_num):
-#     print(every_sample[i], P_star[i], P_theta[i])
-
+    GQML.Generate_Circuit(1, 1)
+    param_num  = GQML.get_Parameter_Num()
+    parameters = np.zeros(param_num)
+    print(param_num)
+    print(GQML.get_Qiskit_Circuit())
+    print("MMD", GQML.Optimization_Problem(parameters))
+    GQML.set_Optimized_Parameters(parameters)
+    GQML.Start_Optimization()
+    parameters = GQML.get_Optimized_Parameters()
+    initial_state = np.zeros( (1 << qbit_num), dtype=np.complex128 )
+    initial_state[0] = 1.0 + 0j        
+    state_to_transform = initial_state.copy()    
+    GQML.apply_to( parameters, state_to_transform );   
+    P_theta = np.abs(state_to_transform)**2
+    print("TV", np.sum(np.abs(P_theta - P_star))/2)
+    tvsr.append(np.sum(np.abs(P_theta - P_star))/2)
+       
+    plt.plot(P_star)
+    plt.plot(P_theta)
+    plt.show()

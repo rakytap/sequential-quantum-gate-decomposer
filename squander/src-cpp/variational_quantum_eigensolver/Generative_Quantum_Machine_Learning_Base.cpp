@@ -22,6 +22,7 @@ limitations under the License.
 #include "Generative_Quantum_Machine_Learning_Base.h"
 #include <iostream>
 #include <algorithm>
+#include <random>
 
 static tbb::spin_mutex my_mutex;
 
@@ -74,8 +75,8 @@ Generative_Quantum_Machine_Learning_Base::Generative_Quantum_Machine_Learning_Ba
 
 /**
 @brief Constructor of the class.
-@param x_vectors_in The input data indices
-@param x_bitstrings_in The input data bitstrings
+@param sample_indices_in The input data indices
+@param sample_bitstrings_in The input data bitstrings
 @param P_star_in The distribution to approximate
 @param sigma_in Parameter of the gaussian kernels
 @param qbit_num_in The number of qubits spanning the unitary Umtx
@@ -83,9 +84,11 @@ Generative_Quantum_Machine_Learning_Base::Generative_Quantum_Machine_Learning_Ba
 @param config_in A map that can be used to set hyperparameters during the process
 @return An instance of the class
 */
-Generative_Quantum_Machine_Learning_Base::Generative_Quantum_Machine_Learning_Base(std::vector<int> x_vectors_in, std::vector<std::vector<int>> x_bitstrings_in, Matrix_real P_star_in, double sigma_in, int qbit_num_in, bool use_lookup_table_in, std::vector<std::vector<int>> cliques_in, std::map<std::string, Config_Element>& config_in) : Optimization_Interface(Matrix(Power_of_2(qbit_num_in),1), qbit_num_in, false, config_in, RANDOM, accelerator_num) {
+Generative_Quantum_Machine_Learning_Base::Generative_Quantum_Machine_Learning_Base(std::vector<int> sample_indices_in, std::vector<std::vector<int>> sample_bitstrings_in, Matrix_real P_star_in, double sigma_in, int qbit_num_in, bool use_lookup_table_in, std::vector<std::vector<int>> cliques_in, std::map<std::string, Config_Element>& config_in) : Optimization_Interface(Matrix(Power_of_2(qbit_num_in),1), qbit_num_in, false, config_in, RANDOM, accelerator_num) {
 
-	x_vectors = x_vectors_in;
+	sample_indices = sample_indices_in;
+
+    sample_size = sample_indices.size();
 
     P_star = P_star_in;
     // config maps
@@ -134,13 +137,24 @@ Generative_Quantum_Machine_Learning_Base::Generative_Quantum_Machine_Learning_Ba
 
     sigma = sigma_in;
 
-    x_bitstrings = x_bitstrings_in;
+    sample_bitstrings = sample_bitstrings_in;
 
     use_lookup = use_lookup_table_in;
+
+    
+    for (int idx=0; idx<1<<qbit_num; idx++) {
+        std::vector<int> bitstring;
+        for (int j = qbit_num - 1; j >= 0; --j) {
+            bitstring.push_back(((idx) >> j) & 1);
+        }
+        all_bitstrings.push_back(bitstring);
+    }
+
     ev_P_star_P_star = expectation_value_P_star_P_star();
     if (use_lookup) {
         fill_lookup_table();
     }
+
 
     cliques = cliques_in;
 }
@@ -203,16 +217,16 @@ void Generative_Quantum_Machine_Learning_Base::start_optimization(){
 
 /**
 @brief Call to evaluate the value of one gaussian kernel function
-@param x The index of the first input data
-@param y The index of the second input data
+@param x The first bitstring input
+@param y The second bitstring input
 @param sigma The parameters of the kernel
 @return The calculated value of the kernel function
 */
-double Generative_Quantum_Machine_Learning_Base::Gaussian_kernel(int x, int y, double sigma) {
+double Generative_Quantum_Machine_Learning_Base::Gaussian_kernel(std::vector<int>& x, std::vector<int>& y, double sigma) {
     // The norm stores the distance between the two data points (the more qbit they differ in the bigger it is)
     double norm=0;
     for (int idx=0; idx<qbit_num; idx++) {
-        norm += (x_bitstrings[x][idx] - x_bitstrings[y][idx])*(x_bitstrings[x][idx]-x_bitstrings[y][idx]);
+        norm += (x[idx] - y[idx])*(x[idx]-y[idx]);
     }
     double norm_squared = norm*norm;
     double result = (exp(-norm_squared*0.5*4)+ exp(-norm_squared*0.5*0.1)+ exp(-norm_squared*0.5*0.001))/3;
@@ -223,10 +237,10 @@ double Generative_Quantum_Machine_Learning_Base::Gaussian_kernel(int x, int y, d
 @brief Call to calculate and save the values of the gaussian kernel needed for traing
 */
 void Generative_Quantum_Machine_Learning_Base::fill_lookup_table() {
-    gaussian_lookup_table = std::vector<std::vector<double>>(x_vectors.size(), std::vector<double>(x_vectors.size(), 0));
-    for (int idx1=0; idx1 < x_vectors.size(); idx1++) {
-        for (int idx2=0; idx2 < x_vectors.size(); idx2++) {
-            gaussian_lookup_table[idx1][idx2] = Gaussian_kernel(idx1, idx2, 10);
+    gaussian_lookup_table = std::vector<std::vector<double>>(sample_size, std::vector<double>(sample_size, 0));
+    for (int idx1=0; idx1 < all_bitstrings.size(); idx1++) {
+        for (int idx2=0; idx2 < all_bitstrings.size(); idx2++) {
+            gaussian_lookup_table[idx1][idx2] = Gaussian_kernel(all_bitstrings[idx1], all_bitstrings[idx2], 10);
         }
     }
 }
@@ -238,20 +252,20 @@ void Generative_Quantum_Machine_Learning_Base::fill_lookup_table() {
 double Generative_Quantum_Machine_Learning_Base::expectation_value_P_star_P_star() {
     double ev=0.0;
     tbb::combinable<double> priv_partial_ev{[](){return 0.0;}};
-    tbb::parallel_for( tbb::blocked_range<int>(0, x_vectors.size(), 1024), [&](tbb::blocked_range<int> r) {
+    tbb::parallel_for( tbb::blocked_range<int>(0, sample_size, 1024), [&](tbb::blocked_range<int> r) {
         double& ev_local = priv_partial_ev.local();
         for (int idx1=r.begin(); idx1<r.end(); idx1++) {
-            for (int idx2=0; idx2<x_vectors.size(); idx2++) {
-                // if (idx1 != idx2) {
-                    ev_local += P_star[x_vectors[idx1]]*P_star[x_vectors[idx2]]*Gaussian_kernel(idx1, idx2, sigma);
-                // }
+            for (int idx2=0; idx2<sample_size; idx2++) {
+                if (idx1 != idx2) {
+                    ev_local += Gaussian_kernel(sample_bitstrings[idx1], sample_bitstrings[idx2], sigma);
+                }
             }
         }
     });
     priv_partial_ev.combine_each([&ev](double a) {
         ev += a;
     });
-    ev /= x_vectors.size()*x_vectors.size();
+    ev /= sample_size*(sample_size-1);
     return ev;
 }
 
@@ -293,31 +307,45 @@ double Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions( Matri
     }
 
     // We calculate the distribution created by our circuit at the given traing data points "we sample our distribution"
-    std::vector<double> P_theta;
-    for (size_t x_idx=0; x_idx<x_vectors.size(); x_idx++){
-        QGD_Complex16 x_times_state = State_right[x_vectors[x_idx]];
+    std::vector<double> P_theta(1<<qbit_num);
+    tbb::parallel_for( tbb::blocked_range<int>(0, 1<<qbit_num, 1024), [&](tbb::blocked_range<int> r) {
+        for (int idx=r.begin(); idx<r.end(); idx++) {
+            P_theta[idx] = State_right[idx].real*State_right[idx].real + State_right[idx].imag*State_right[idx].imag;
+        }
+    });
 
-        P_theta.push_back(x_times_state.real*x_times_state.real + x_times_state.imag*x_times_state.imag);
-    }
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::discrete_distribution<> dist(P_theta.begin(), P_theta.end());
 
+    std::vector<int> theta_sample_indices(sample_size);
+    tbb::parallel_for( tbb::blocked_range<int>(0, sample_size, 1024), [&](tbb::blocked_range<int> r) {
+        for (int sample_idx=r.begin(); sample_idx < r.end(); sample_idx++) {
+            theta_sample_indices[sample_idx] = dist(gen);
+        }
+    });
 
     // Calculate the expectation values 
     double ev_P_theta_P_theta   = 0.0;
     double ev_P_theta_P_star    = 0.0;
     tbb::combinable<double> priv_partial_ev_P_theta_P_theta{[](){return 0.0;}};
     tbb::combinable<double> priv_partial_ev_P_theta_P_star{[](){return 0.0;}};
-    tbb::parallel_for( tbb::blocked_range<int>(0, x_vectors.size(), 1024), [&](tbb::blocked_range<int> r) {
+    tbb::parallel_for( tbb::blocked_range2d<int>(0, sample_size, 0, sample_size), [&](tbb::blocked_range2d<int> r) {
         double& ev_P_theta_P_theta_local = priv_partial_ev_P_theta_P_theta.local();
         double& ev_P_theta_P_star_local = priv_partial_ev_P_theta_P_star.local();
-        for (int idx1=r.begin(); idx1<r.end(); idx1++) {
-            for (int idx2=0; idx2 < x_vectors.size(); idx2++) {
+        for (int idx1=r.rows().begin(); idx1<r.rows().end(); idx1++) {
+            for (int idx2=r.cols().begin(); idx2<r.cols().end(); idx2++) {
                 if (use_lookup) {
-                    ev_P_theta_P_theta_local += P_theta[idx1]*P_theta[idx2]*gaussian_lookup_table[idx1][idx2];
-                    ev_P_theta_P_star_local += P_theta[idx1]*P_star[x_vectors[idx2]]*gaussian_lookup_table[idx1][idx2];
+                    if (idx1 != idx2) {
+                        ev_P_theta_P_theta_local += gaussian_lookup_table[theta_sample_indices[idx1]][theta_sample_indices[idx2]];
+                    }
+                    ev_P_theta_P_star_local += gaussian_lookup_table[theta_sample_indices[idx1]][sample_indices[idx2]];
                 }
                 else {
-                    ev_P_theta_P_theta_local += P_theta[idx1]*P_theta[idx2]*Gaussian_kernel(idx1, idx2, sigma);
-                    ev_P_theta_P_star_local += P_theta[idx1]*P_star[x_vectors[idx2]]*Gaussian_kernel(idx1, idx2, sigma);
+                    if (idx1 != idx2) {
+                        ev_P_theta_P_theta_local += Gaussian_kernel(all_bitstrings[theta_sample_indices[idx1]], all_bitstrings[theta_sample_indices[idx2]], sigma);
+                    }
+                    ev_P_theta_P_star_local += Gaussian_kernel(all_bitstrings[theta_sample_indices[idx1]], sample_bitstrings[idx2], sigma);
                 }
             }
         }
@@ -329,8 +357,8 @@ double Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions( Matri
         ev_P_theta_P_star += a;
     });
 
-    ev_P_theta_P_theta /= x_vectors.size()*x_vectors.size();
-    ev_P_theta_P_star /= x_vectors.size()*x_vectors.size();
+    ev_P_theta_P_theta /= sample_size*(sample_size-1);
+    ev_P_theta_P_star /= sample_size*sample_size;
 
     {
         tbb::spin_mutex::scoped_lock my_lock{my_mutex};

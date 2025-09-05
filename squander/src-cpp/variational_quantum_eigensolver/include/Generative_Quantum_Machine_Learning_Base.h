@@ -68,10 +68,10 @@ public:
 private:
 
     /// The state vector's corresponding indices of the training data
-    std::vector<int> x_vectors;
+    std::vector<int> sample_indices;
 
     /// Same as the x_vectors but in binary 
-    std::vector<std::vector<int>> x_bitstrings;
+    std::vector<std::vector<int>> sample_bitstrings;
 
     /// The distribution we are trying to approximate
     Matrix_real P_star;
@@ -89,10 +89,18 @@ private:
     /// TODO: an array of 3 different sigmas
     double sigma;
     
+    // Lookup table for the gauss kernels
     std::vector<std::vector<double>> gaussian_lookup_table;
 
+    // Decide to use lookup table
     bool use_lookup;
 
+    std::vector<std::vector<int>> all_bitstrings;
+
+    // Number samples
+    int sample_size;
+
+    // The cliques in the graph
     std::vector<std::vector<int>> cliques;
 
 public:
@@ -107,8 +115,8 @@ Generative_Quantum_Machine_Learning_Base();
 
 /**
 @brief Constructor of the class.
-@param x_vectors_in The input data indices
-@param x_bitstrings_in The input data bitstrings
+@param sample_indices_in The input data indices
+@param sample_bitstrings_in The input data bitstrings
 @param P_star_in The distribution to approximate
 @param sigma_in Parameter of the gaussian kernels
 @param qbit_num_in The number of qubits spanning the unitary Umtx
@@ -116,7 +124,7 @@ Generative_Quantum_Machine_Learning_Base();
 @param config_in A map that can be used to set hyperparameters during the process
 @return An instance of the class
 */
-Generative_Quantum_Machine_Learning_Base( std::vector<int> x_vectors_in, std::vector<std::vector<int>> x_bitstrings_in, Matrix_real P_star_in, double sigma_in, int qbit_num_in, bool use_lookup_table_in, std::vector<std::vector<int>> cliques_in, std::map<std::string, Config_Element>& config_in);
+Generative_Quantum_Machine_Learning_Base( std::vector<int> sample_indices_in, std::vector<std::vector<int>> sample_bitstrings_in, Matrix_real P_star_in, double sigma_in, int qbit_num_in, bool use_lookup_table_in, std::vector<std::vector<int>> cliques_in, std::map<std::string, Config_Element>& config_in);
 
 /**
 @brief Destructor of the class
@@ -131,7 +139,7 @@ virtual ~Generative_Quantum_Machine_Learning_Base();
 @param sigma The parameters of the kernel
 @return The calculated value of the kernel function
 */
-double Gaussian_kernel(int x, int y, double sigma);
+double Gaussian_kernel(std::vector<int>& x, std::vector<int>& y, double sigma);
 
 /**
 @brief Call to evaluate the expectation value of the square of distribution we want to approximate
