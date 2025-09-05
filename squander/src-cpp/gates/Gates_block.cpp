@@ -2196,6 +2196,11 @@ void Gates_block::combine(Gates_block* op_block) {
 
 void Gates_block::set_min_fusion( int min_fusion ) {
     this->min_fusion = min_fusion;
+    for (int i = 0; i < gates.size(); i++){
+        if ( gates[i]->get_type() == BLOCK_OPERATION ) {
+            ((Gates_block*)gates[i])->set_min_fusion( min_fusion );
+        }
+    }
 }
 
 /**
