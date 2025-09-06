@@ -2,6 +2,20 @@ import os
 from squander.partitioning.tools import get_qubits, build_dependency, parts_to_float_ops, total_float_ops
 
 def topo_sort_partitions(c, max_qubits_per_partition, parts):
+    """
+    Topologically sort partition groups and re-partition with Kahn’s algorithm.
+
+    Args:
+        c: SQUANDER circuit object.
+        max_qubits_per_partition (int): Maximum number of qubits allowed in a partition.
+        parts (list[Iterable[int]]): Precomputed gate groups (each is an iterable of gate indices).
+
+    Returns:
+        tuple: (partitioned_circ, param_order, parts)
+            partitioned_circ: 2-level partitioned circuit (SQUANDER object).
+            param_order (list[tuple[int,int,int]]): Tuples (source_idx, dest_idx, param_count).
+            parts (list[frozenset[int]]): Final partition assignments (topologically sorted).
+    """
     gatedict = {i: gate for i, gate in enumerate(c.get_Gates())}
     partdict = {gate: i for i, part in enumerate(parts) for gate in part}
     g, rg = {i: set() for i in range(len(parts))}, {i: set() for i in range(len(parts))}
@@ -50,13 +64,19 @@ def ilp_max_partitions(c, max_qubits_per_partition):
     return topo_sort_partitions(c, max_qubits_per_partition, parts)
 
 
-
-#@brief Finds the next biggest optimal partition using ILP
-#@param c The SQUANDER circuit to be partitioned
-#@param max_qubits_per_partition Maximum qubits allowed per partition
-#@param prevparts Previously determined partitions to exclude
-#@return gates Set of gate indices forming next biggest partition
 def find_next_biggest_partition(c, max_qubits_per_partition, prevparts=None):
+    """
+    Find the next largest feasible gate partition via ILP (single partition step).
+
+    Args:
+        c: SQUANDER circuit to be partitioned.
+        max_qubits_per_partition (int): Maximum number of qubits allowed in the partition.
+        prevparts (Iterable[Iterable[int]] | None): Previously selected partitions whose
+            gates must be excluded in this step.
+
+    Returns:
+        set[int]: Set of gate indices forming the next largest partition.
+    """
     import pulp
     gatedict = {i: gate for i, gate in enumerate(c.get_Gates())}
     all_qubits = set(range(c.get_Qbit_Num()))
@@ -98,6 +118,19 @@ def find_next_biggest_partition(c, max_qubits_per_partition, prevparts=None):
 
 #https://www.sciencedirect.com/science/article/abs/pii/0020019094901287
 def nuutila_reach_scc(succ, subg=None):
+  """
+    Compute SCCs and intra-SCC reachability using Nuutila's variant (iterative).
+
+    Args:
+        succ (dict[Hashable, Iterable[Hashable]]): Successor adjacency list.
+        subg (set[Hashable] | None): Optional node subset to restrict the search.
+
+    Returns:
+        tuple: (sccs, reach)
+            sccs (dict[Hashable, set]): Map from SCC root to set of vertices in that SCC.
+            reach (dict[Hashable, set]): For each SCC root, the set of vertices reachable
+                from that SCC (including the SCC itself iff it has a self-loop).
+  """
   index, s, sc, sccs, reach = 0, [], [], {}, {}
   indexes, lowlink, croot, stackheight = {}, {}, {}, {}
   def nuutila(v, index):
@@ -147,6 +180,16 @@ def nuutila_reach_scc(succ, subg=None):
   return sccs, reach #keys are SCCs, values are reachable vertices
 
 def _get_topo_order(g, rg):
+    """
+    Get a topological order of a DAG given forward and reverse adjacency.
+
+    Args:
+        g (dict[int, set[int]]): Forward adjacency (u -> successors).
+        rg (dict[int, set[int]]): Reverse adjacency (v -> predecessors).
+
+    Returns:
+        list[int]: A topological ordering of nodes.
+    """
     g = { x: set(y) for x, y in g.items() }
     rg = { x: set(y) for x, y in rg.items() }
     S = {m for m in rg if len(rg[m]) == 0}
@@ -163,6 +206,22 @@ def _get_topo_order(g, rg):
     return L
 
 def contract_single_qubit_chains(go, rgo, gate_to_qubit, topo_order):
+    """
+    Contract maximal chains of single-qubit gates to simplify the DAG.
+
+    Args:
+        go (dict[int, set[int]]): Forward gate DAG (gate -> children).
+        rgo (dict[int, set[int]]): Reverse gate DAG (gate -> parents).
+        gate_to_qubit (dict[int, set[int]]): Gate index -> acted-on qubits.
+        topo_order (list[int]): A topological order of the original DAG.
+
+    Returns:
+        tuple: (g, rg, topo_order_reduced, chains)
+            g (dict[int, set[int]]): Reduced forward DAG after contraction.
+            rg (dict[int, set[int]]): Reduced reverse DAG after contraction.
+            topo_order_reduced (list[int]): Topological order without single-qubit gates.
+            chains (set[tuple[int,...]]): Set of contracted chains (each a tuple of gate ids).
+    """
     # Identify and contract single-qubit chains in the circuit
     g = { x: set(y) for x, y in go.items() }
     rg = { x: set(y) for x, y in rgo.items() }
@@ -189,6 +248,21 @@ def contract_single_qubit_chains(go, rgo, gate_to_qubit, topo_order):
     return g, rg, topo_order, set(tuple(x) for x in single_qubit_chains.values())
 
 def recombine_single_qubit_chains(g, rg, single_qubit_chains, gate_to_tqubit, L, fusion_info):
+    """
+    Re-insert contracted single-qubit chains back into partition groups.
+
+    Args:
+        g (dict[int, set[int]]): Forward DAG of original gates.
+        rg (dict[int, set[int]]): Reverse DAG of original gates.
+        single_qubit_chains (set[tuple[int,...]]): Contracted chains to re-attach.
+        gate_to_tqubit (dict[int, int]): Gate -> target qubit id.
+        L (Iterable[Iterable[int]]): Current partition groups.
+        fusion_info (tuple[set[int], set[int]] | None): Optional pre/post placement
+            hints (inpre, inpost) for chain endpoints.
+
+    Returns:
+        list[frozenset[int]]: Updated partition groups with single-qubit chains merged.
+    """
     L = [set(x) for x in L]
     gate_to_part = {x: part for part in L for x in part}
     if fusion_info is not None: inpre, inpost = fusion_info
@@ -295,6 +369,16 @@ def scc_tarjan_iterative(succ):
                 # else: edge to a vertex already assigned to an SCC — ignore
     return comp_id, comps
 def get_part_cycle_graph(g, gate_to_parts):
+    """
+    Build a partition-level interaction DAG and prune intra-overlap edges.
+
+    Args:
+        g (dict[int, set[int]]): Gate DAG (u -> successors v).
+        gate_to_parts (dict[int, Iterable[int]]): Gate -> indices of parts containing it.
+
+    Returns:
+        dict[int, set[int]]: Pruned successor map among parts (DAG over part indices).
+    """
     overlaps = {}
     for v, idxs in gate_to_parts.items():
         for i in idxs:
@@ -315,6 +399,16 @@ def get_part_cycle_graph(g, gate_to_parts):
             if scc_id[i] == scc_id[j]: succ_pruned[i].add(j)
     return succ_pruned
 def all_cycles_from_dag_edges(succ, max_len=5):
+    """
+    Enumerate chordless directed cycles consistent with a given successor map.
+
+    Args:
+        succ (dict[Hashable, set[Hashable]]): Successor adjacency among nodes.
+        max_len (int | None): Optional max cycle length bound; None disables bound.
+
+    Returns:
+        list[list[Hashable]]: List of chordless cycles (each as node list in order).
+    """
     #import networkx as nx
     #G = nx.DiGraph(succ)
     #return list(nx.chordless_cycles(G, max_len))
@@ -398,6 +492,18 @@ def all_cycles_from_dag_edges(succ, max_len=5):
                 stack.append((x, iter(succ[x]), False))
     return cycles
 def two_cycles_from_dag_edges(g, gate_to_parts, allparts):
+    """
+    Detect pairwise 2-cycles between partitions induced by gate-level edges.
+
+    Args:
+        g (dict[int, set[int]]): Gate DAG (u -> successors v).
+        gate_to_parts (dict[int, Iterable[int]]): Gate -> indices of parts containing it.
+        allparts (list[frozenset[int]]): The parts (gate sets) by index.
+
+    Returns:
+        list[tuple[int, int]]: List of (a, b) where a < b and a <-> b two-cycle is found,
+            excluding cases where parts overlap.
+    """
     # edges: iterable of (u, v) over the original DAG
     seen = {}       # (a,b) with a<b -> 1 if a->b seen, 2 if b->a seen, 3 if both
     twocycles = []  # list of (a,b) with 2-cycle detected
@@ -416,7 +522,25 @@ def two_cycles_from_dag_edges(g, gate_to_parts, allparts):
                         twocycles.append((a, b))   # a<->b found
                     seen[(a, b)] = new
     return twocycles
+
 def ilp_global_optimal(allparts, g, weighted_info=None, gurobi_direct=False, use_order=False):
+    """
+    Select an optimal set of non-overlapping parts via ILP/MIP with cycle cuts.
+
+    Args:
+        allparts (list[frozenset[int]]): Candidate parts (gate sets).
+        g (dict[int, set[int]]): Gate DAG (u -> successors v).
+        weighted_info (tuple | None): Optional tuple providing cost modeling:
+            (single_qubit_chains, max_qubits_per_partition, go, rgo, gate_to_qubit, gate_to_tqubit).
+        gurobi_direct (bool): If True, build and solve directly in gurobipy with callbacks.
+        use_order (bool): If True, add an ordering formulation to avoid cycles.
+
+    Returns:
+        tuple: (selected_parts, fusion_info or None)
+            selected_parts (list[frozenset[int]]): Chosen parts minimizing the cost.
+            fusion_info (tuple[set[int], set[int]] | None): (inpre, inpost) sets for
+                chain placements when weighted_info enables fusion costs.
+    """
     if weighted_info is not None:
         single_qubit_chains, max_qubits_per_partition, go, rgo, gate_to_qubit, gate_to_tqubit = weighted_info
         if not single_qubit_chains is None:
@@ -665,6 +789,23 @@ def ilp_global_optimal(allparts, g, weighted_info=None, gurobi_direct=False, use
     return [allparts[i] for i in L], ({i for i in pre if int(pulp.value(pre[i]))}, {i for i in post if int(pulp.value(post[i]))}) if weighted_info is not None and single_qubit_chains is not None else None
 
 def max_partitions(c, max_qubits_per_partition, use_ilp=True, fusion_cost=False, control_aware=False):
+    """
+    Enumerate feasible parts and select a maximum/optimal partitioning of a circuit.
+
+    Args:
+        c: SQUANDER circuit object.
+        max_qubits_per_partition (int): Max allowed qubits per partition.
+        use_ilp (bool): If True, solve selection via ILP; else greedy largest-first.
+        fusion_cost (bool): If True, include FLOP-based cost with fusion/controls.
+        control_aware (bool): If True and fusion_cost, treat single-qubit chains as
+            pre/post relative to targets.
+
+    Returns:
+        tuple: (partitioned_circ, param_order, parts)
+            partitioned_circ: 2-level partitioned circuit (SQUANDER object).
+            param_order (list[tuple[int,int,int]]): (source_idx, dest_idx, param_count).
+            parts (list[frozenset[int]]): Final partition assignment sets.
+    """
     gate_dict, go, rgo, gate_to_qubit, S = build_dependency(c)
     gate_to_tqubit = { i: g.get_Target_Qbit() for i, g in gate_dict.items() }
     topo_order = _get_topo_order(go, rgo)
@@ -738,6 +879,15 @@ def max_partitions(c, max_qubits_per_partition, use_ilp=True, fusion_cost=False,
     return topo_sort_partitions(c, max_qubits_per_partition, L)
 
 def _test_max_qasm():
+    """
+    Quick test harness for partitioning on sample QASM circuits.
+
+    Args:
+        None
+
+    Returns:
+        None
+    """
     K = 3
     #filename = "examples/partitioning/qasm_samples/heisenberg-16-20.qasm"
     #filename = "benchmarks/partitioning/test_circuit/0410184_169.qasm"
