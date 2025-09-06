@@ -608,8 +608,8 @@ def ilp_global_optimal(allparts, g, weighted_info=None, gurobi_direct=False, use
                                 if s in noprepost: prob += post[s] + pre[single_qubit_chains_prepost[s][0]] >= x[i]
                                 else: prob += post[s] >= x[i]
             Nu = len(targets[i]); Nt = Nu+1
-            t[i] = pulp.LpVariable.dicts("t", range(Nt), cat="Binary")
-            u[i] = pulp.LpVariable.dicts("u", list(targets[i]), cat="Binary")
+            t[i] = pulp.LpVariable.dicts(f"t_{i}", range(Nt), cat="Binary")
+            u[i] = pulp.LpVariable.dicts(f"u_{i}", list(targets[i]), cat="Binary")
             for s in u[i]: prob += u[i][s] <= x[i]
             for target in targets[i]:
                 for a in targets[i][target]: prob += u[i][target] >= a
@@ -623,7 +623,7 @@ def ilp_global_optimal(allparts, g, weighted_info=None, gurobi_direct=False, use
                 control_qubits = len(cqubits) - j
                 g_size = 2**(gate_qubits-control_qubits)
                 if is_pure and j==0 and impurities:
-                    t0 = pulp.LpVariable.dicts("t0", range(2), cat="Binary")
+                    t0 = pulp.LpVariable.dicts(f"t0_{i}", range(2), cat="Binary")
                     for z in fortet_inequalities(t[i][j], isimpure, t0[0]): prob += z
                     for z in fortet_inequalities(t[i][j], 1-isimpure, t0[1]): prob += z
                     S.append(t0[0] * (2**max_qubits_per_partition * (g_size * (4 + 2) + 2 * (g_size - 1))))
@@ -662,7 +662,7 @@ def ilp_global_optimal(allparts, g, weighted_info=None, gurobi_direct=False, use
         for badscc in badsccs:
             #print([(allparts[x], [g[y] for y in allparts[x]]) for x in badscc]) #canonical partitions {1, 3} and {2, 4} with edges 1->{3, 4}, 2->{3, 4}
             prob += pulp.lpSum(x[j] for j in badscc) <= len(badscc) - 1 #remove at least one partition from the SCC
-    return [allparts[i] for i in L], None
+    return [allparts[i] for i in L], ({i for i in pre if int(pulp.value(pre[i]))}, {i for i in post if int(pulp.value(post[i]))}) if weighted_info is not None and single_qubit_chains is not None else None
 
 def max_partitions(c, max_qubits_per_partition, use_ilp=True, fusion_cost=False, control_aware=False):
     gate_dict, go, rgo, gate_to_qubit, S = build_dependency(c)
