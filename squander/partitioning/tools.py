@@ -197,6 +197,17 @@ def gate_desc_to_gate_index(circ, preparts, qubit_groups_only=False):
     return parts
 
 def get_qiskit_partitions(filename, max_partition_size):
+    """
+    Partition circuit using Qiskit multi-qubit blocks
+    Args:
+        
+        filename: QASM file path
+        
+        max_partition_size: Max qubits per partition
+    Returns:
+        
+        Parameters, partitioned circuit, parameter order (source_idx, dest_idx, param_count), partitions
+    """
     circ, parameters, qc = utils.qasm_to_squander_circuit(filename, True)
     pm = PassManager([
         CollectMultiQBlocks(max_block_size=max_partition_size),
@@ -253,6 +264,19 @@ def get_qiskit_fusion_partitions(filename, max_partition_size):
 
 
 def get_bqskit_partitions(filename, max_partition_size, partitioner):
+    """
+    Partition circuit using BQSKit partitioners
+    Args:
+        
+        filename: QASM file path
+        
+        max_partition_size: Max qubits per partition
+        
+        partitioner: BQSKit Partitioning strategy
+    Returns:
+        
+        Parameters, partitioned circuit, parameter order (source_idx, dest_idx, param_count), partitions
+    """
     try:
         from bqskit import Circuit
         from bqskit.passes.partitioning.quick import QuickPartitioner
