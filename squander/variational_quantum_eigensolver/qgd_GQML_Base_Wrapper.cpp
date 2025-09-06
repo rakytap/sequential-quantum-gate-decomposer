@@ -159,7 +159,7 @@ qgd_Generative_Quantum_Machine_Learning_Base_Wrapper_init(qgd_Generative_Quantum
     // initiate variables for input arguments
     PyArrayObject *x_bitstring_data_arg = NULL;
     PyArrayObject *p_star_data_arg = NULL;
-    PyArrayObject *cliques_data_arg = NULL;
+    PyObject *cliques_data_arg = NULL;
     double sigma=1.0;
     int  qbit_num = -1; 
     int use_lookup_table;
@@ -218,23 +218,36 @@ qgd_Generative_Quantum_Machine_Learning_Base_Wrapper_init(qgd_Generative_Quantum
     Matrix_real p_stars = Matrix_real(p_star_data, p_star_shape, 1);
 
     if ( cliques_data_arg == NULL ) return -1;
-
-    cliques_data_arg = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)cliques_data_arg, NPY_INT, NPY_ARRAY_IN_ARRAY);
-    int* cliques_data = (int*)PyArray_DATA(cliques_data_arg);
-    int cliques_ndim = PyArray_NDIM(cliques_data_arg);
-    npy_intp* cliques_shape = PyArray_DIMS(cliques_data_arg);
-
-    if ( cliques_ndim != 2 ) {
-        PyErr_SetString(PyExc_ValueError, "cliqes should be a 2D array");
+    if (!PyList_Check(cliques_data_arg)) {
+        PyErr_SetString(PyExc_TypeError, "Expected a list of lists");
         return -1;
     }
 
-    std::vector<int> cliques_continous(cliques_data, cliques_data+(cliques_shape[0]*cliques_shape[1]));
-    std::vector<std::vector<int>> cliques(cliques_shape[0], std::vector<int>(cliques_shape[1]));
-    for (int idx_row=0; idx_row<cliques_shape[0]; idx_row++) {
-        for (int idx_col=0; idx_col<cliques_shape[1]; idx_col++) {
-            cliques[idx_row][idx_col] = cliques_continous[idx_row*cliques_shape[1]+idx_col];
+    Py_ssize_t nrows = PyList_Size(cliques_data_arg);
+    std::vector<std::vector<int>> cliques;
+
+    for (Py_ssize_t i = 0; i < nrows; i++) {
+        PyObject *row = PyList_GetItem(cliques_data_arg, i);  // borrowed ref
+        std::vector<int> clique;
+
+        if (!PyList_Check(row)) {
+            PyErr_SetString(PyExc_TypeError, "Expected a list of lists");
+            return -1;
         }
+
+        Py_ssize_t ncols = PyList_Size(row);
+
+        for (Py_ssize_t j = 0; j < ncols; j++) {
+            PyObject *item = PyList_GetItem(row, j);  // borrowed ref
+
+            if (!PyFloat_Check(item) && !PyLong_Check(item)) {
+                PyErr_SetString(PyExc_TypeError, "List elements must be numbers");
+                return -1;
+            }
+
+            clique.push_back(PyFloat_AsDouble(item));
+        }
+        cliques.push_back(clique);
     }
 
     // integer type config metadata utilized during the optimization

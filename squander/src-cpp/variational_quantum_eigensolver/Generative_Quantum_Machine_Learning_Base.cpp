@@ -121,12 +121,6 @@ Generative_Quantum_Machine_Learning_Base::Generative_Quantum_Machine_Learning_Ba
     
     qbit_num = qbit_num_in;
 	
-
-	
-    std::random_device rd;  
-    
-    gen = std::mt19937(rd());
-    
     alg = BAYES_OPT;
     
     cost_fnc = GQML;
@@ -154,7 +148,6 @@ Generative_Quantum_Machine_Learning_Base::Generative_Quantum_Machine_Learning_Ba
     if (use_lookup) {
         fill_lookup_table();
     }
-
 
     cliques = cliques_in;
 }
@@ -237,9 +230,9 @@ double Generative_Quantum_Machine_Learning_Base::Gaussian_kernel(std::vector<int
 @brief Call to calculate and save the values of the gaussian kernel needed for traing
 */
 void Generative_Quantum_Machine_Learning_Base::fill_lookup_table() {
-    gaussian_lookup_table = std::vector<std::vector<double>>(sample_size, std::vector<double>(sample_size, 0));
-    for (int idx1=0; idx1 < all_bitstrings.size(); idx1++) {
-        for (int idx2=0; idx2 < all_bitstrings.size(); idx2++) {
+    gaussian_lookup_table = std::vector<std::vector<double>>(1<<qbit_num, std::vector<double>(1<<qbit_num, 0));
+    for (int idx1=0; idx1 < 1<<qbit_num; idx1++) {
+        for (int idx2=0; idx2 < 1<<qbit_num; idx2++) {
             gaussian_lookup_table[idx1][idx2] = Gaussian_kernel(all_bitstrings[idx1], all_bitstrings[idx2], 10);
         }
     }

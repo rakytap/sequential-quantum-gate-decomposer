@@ -28,14 +28,15 @@ def generate_MRF_dataset(n_nodes, graph_type, dataset_size, path = None, G=None)
 
     return training_set, mrf.distribution, list(nx.find_cliques(mrf.graph))
 
-n_nodes = 4
-graph_type = "grid"
-dataset_size = 100
+n_nodes = 10
+graph_type = "custom"
+dataset_size = 1000
 
 G = nx.Graph()
 G.add_nodes_from(range(n_nodes))
 edges = [(x, x+1) for x in range(n_nodes-1)]
 edges.append((n_nodes-1, 0))
+edges = [[0, 1], [1, 2], [2, 3], [3, 4], [3, 5], [4, 5], [5, 6], [6, 7], [6, 8], [6, 9], [7, 8], [7, 9], [8, 9], [9, 1]]
 G.add_edges_from(edges)
 training_set, target_distribution, cliques = generate_MRF_dataset(n_nodes, graph_type, dataset_size, G=G)
 print(cliques)
