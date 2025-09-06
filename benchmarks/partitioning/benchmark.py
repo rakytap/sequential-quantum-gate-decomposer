@@ -22,20 +22,62 @@ METHOD_NAMES = [
     # "bqskit-Greedy", 
     # "bqskit-Scan",
     # "bqskit-Cluster", 
-] + (["ilp", "ilp-fusion", "ilp-fusion-ca"] if USE_ILP else [])
+] + (["ilp", "ilp-fusion", "ilp-fusion-ca"]
+      if USE_ILP else [])
 
 from squander.gates import gates_Wrapper as gate
 SUPPORTED_GATES = {x for n in dir(gate) for x in (getattr(gate, n),) if not n.startswith("_") and issubclass(x, gate.Gate) and n != "Gate"}
 SUPPORTED_GATES_NAMES = {n for n in dir(gate) if not n.startswith("_") and issubclass(getattr(gate, n), gate.Gate) and n != "Gate"}
-SUPPORTED_GATES_NAMES.remove("S")
+SUPPORTED_GATES_NAMES.remove("S") #delete this if S gate is properly supported
 
 def purity_analysis():
+    """
+    Run a small symbolic experiment to study “purity” and “sparsity” of control sets.
+
+    This routine builds a set of helper functions and 1q/2q/3q gate factories with SymPy,
+    then:
+      1) Checks which qubit subsets act as pure/sparse controls for some canonical gates
+         (e.g., U3 on 1q, CRY on 2q, CCX on 3q).
+      2) Composes short circuits (e.g., U3 on qubit i followed by CRY(0,1)) and reports
+         which control subsets remain pure/sparse after composition.
+      3) Prints the identified “pure” and “sparsity” control sets for each experiment.
+
+    Notes:
+      - Endianness is governed by the local variable `little_endian` (default: True).
+      - `apply_to` operates on full operators (2^n × 2^n), not statevectors.
+      - Requires SymPy. The helper `apply_to` also uses `itertools.product`.
+
+    Args:
+        None
+
+    Returns:
+        None
+            Results are printed to stdout; the function is intended as a diagnostic/demo.
+    """
     import sympy
     from sympy.combinatorics import Permutation
     theta, phi, lbda = sympy.Symbol("θ"), sympy.Symbol("ϕ"), sympy.Symbol("λ")
     theta2 = sympy.Symbol("θ2")
     little_endian = True
     def find_control_qubits(psi, num_qubits):
+        """
+        Identify control-qubit sets that make a unitary ‘pure-controlled’ or ‘sparse-controlled’.
+
+        A subset S of qubits is:
+          - pure-controlled if, when control pattern S is not fully satisfied in basis index j,
+            row j of the unitary equals the corresponding computational basis row (identity row).
+          - sparse-controlled if, when control pattern S is not fully satisfied in j,
+            row j has zeros everywhere except possibly in columns k that satisfy S.
+
+        Args:
+            psi (sympy.Matrix): 2**num_qubits × 2**num_qubits unitary matrix.
+            num_qubits (int): Total number of qubits.
+
+        Returns:
+            tuple[list[list[int]], list[list[int]]]:
+                pure_controls:  list of control index lists (little-endian by default) making psi pure-controlled.
+                sparsity_controls: list of control index lists making psi sparse-controlled.
+        """
         pure_controls = []
         sparsity_controls = []
         for i in range(1, 1<<num_qubits):
@@ -50,6 +92,22 @@ def purity_analysis():
             if is_sparse: sparsity_controls.append([j if little_endian else num_qubits-1-j for j in range(num_qubits) if i & (1<<j)])
         return pure_controls, sparsity_controls
     def apply_to(psi, num_qubits, gate, gate_qubits):
+        """
+        Left-apply a k-qubit gate to designated positions inside an n-qubit operator.
+
+        Embeds the k-qubit `gate` on `gate_qubits` (indices in [0..n-1]) under the
+        current endianness, and returns (gate ⊗ I_rest) · psi with the correct qubit
+        wiring. Works for psi as a full 2^n×2^n operator (not a statevector).
+
+        Args:
+            psi (sympy.Matrix): 2**num_qubits × 2**num_qubits operator to transform.
+            num_qubits (int): Total number of qubits n.
+            gate (sympy.Matrix): 2**k × 2**k unitary to embed.
+            gate_qubits (Iterable[int]): The k target qubit indices where `gate` acts.
+
+        Returns:
+            sympy.Matrix: New 2**num_qubits × 2**num_qubits matrix after applying `gate`.
+        """
         pos = [(q if little_endian else num_qubits-1-q) for q in gate_qubits]
         k = len(gate_qubits)
         deltas, combo = [1<<p for p in pos], []
@@ -75,11 +133,38 @@ def purity_analysis():
                 output[idx[u],:] = prod[u,:]
         return output
     def compile_gates(num_qubits, gates):
+        """
+        Compose a list of embedded gates into a full n-qubit unitary.
+
+        Args:
+            num_qubits (int): Total number of qubits n.
+            gates (Iterable[tuple[sympy.Matrix, Iterable[int]]]):
+                Sequence of (gate, gate_qubits) pairs. Each `gate` is 2**k×2**k,
+                applied to the provided `gate_qubits`.
+
+        Returns:
+            sympy.Matrix: The resulting 2**n × 2**n unitary product.
+        """
         Umtx = sympy.eye(2**num_qubits)
         for gate in gates: Umtx = apply_to(Umtx, num_qubits, *gate)
         Umtx.simplify()
         return Umtx
     def make_controlled(gate, gate_qubits, gateother=None): #control is first qubit, gate qubits come after
+        """
+        Build a 1-control controlled version of `gate` (control is the first qubit by convention).
+
+        Constructs block-diagonal diag(gateother or I, gate) and applies a permutation so that,
+        under little-endian, the control is the least significant qubit.
+
+        Args:
+            gate (sympy.Matrix): 2**m × 2**m target unitary.
+            gate_qubits (int): Number of target qubits m (excluding the control qubit).
+            gateother (sympy.Matrix | None): Optional block for the control-off subspace.
+                If None, identity of size 2**m is used.
+
+        Returns:
+            sympy.Matrix: A 2**(m+1) × 2**(m+1) controlled-gate matrix.
+        """
         res = sympy.diag(gateother if not gateother is None else sympy.eye(1<<gate_qubits), gate)
         P = sympy.eye(1<<(gate_qubits+1))[:, [2*x+y for y in (0, 1) for x in range(1<<gate_qubits)]]
         return P * res * P.T if little_endian else res
