@@ -11,24 +11,52 @@ from qiskit.transpiler.passes import CollectMultiQBlocks
 
 def get_qubits(gate: Gate) -> Set[int]:
     """
-    Get qubit indices used by a gate
-
+    Retrieves qubit indices used by a SQUANDER gate.
+    
     Args:
+        gate: The SQUANDER gate
         
-        gate: SQUANDER gate
-
     Returns:
-        
-        Set of qubit indices
+        Set of qubit indices used by the gate
     """
     return {gate.get_Target_Qbit()} | ({control} if (control := gate.get_Control_Qbit()) != -1 else set())
 
 def get_float_ops(num_qubit, gate_qubits, control_qubits, is_pure=False):
+    """
+    Compute the number of floating-point operations (FLOPs) required 
+    for simulating a quantum gate acting on a set of qubits.
+
+    Args:
+        num_qubit (int): Total number of qubits in the system.
+        gate_qubits (int): Number of qubits the gate acts on (including controls).
+        control_qubits (int): Number of control qubits for the gate.
+        is_pure (bool, optional): Whether the gate is a "pure" controlled gate 
+            (i.e., all controlled gates share the same target qubit). Defaults to False.
+
+    Returns:
+        int: Estimated number of floating-point operations required.
+    """
     g_size = 2**(gate_qubits-control_qubits)
     # (a + bi) * (c + di) = (ac - bd) + (ad + bc)i => 6 ops for 4m2a
     return 2**(num_qubit-(control_qubits if is_pure else 0)) * (g_size * (4 + 2) + 2 * (g_size - 1))
 
 def parts_to_float_ops(num_qubit, gate_to_qubit, gate_to_tqubit, allparts):
+    """
+    Compute FLOPs for each partition of gates in a quantum circuit.
+
+    Args:
+        num_qubit (int): Total number of qubits in the system.
+        gate_to_qubit (dict): Mapping from gate ID to the set of qubits 
+            it acts on.
+        gate_to_tqubit (dict or None): Mapping from gate ID to its target qubit 
+            (used for distinguishing control vs. target qubits). If None, 
+            control qubits are assumed to be 0.
+        allparts (list[list]): Partitioning of gates, where each part is a 
+            collection (e.g., list or set) of gate IDs.
+
+    Returns:
+        list[int]: FLOP counts for each partition in `allparts`.
+    """
     weights = []
     for part in allparts:
         qubits = set.union(*(gate_to_qubit[x] for x in part))
@@ -39,8 +67,25 @@ def parts_to_float_ops(num_qubit, gate_to_qubit, gate_to_tqubit, allparts):
         else: weights.append(get_float_ops(num_qubit, len(qubits), 0, False))
     return weights
 
-
 def total_float_ops(num_qubit, max_qubits_per_partition, gate_to_qubit, gate_to_tqubit, allparts):
+    """
+    Compute the total FLOPs across all partitions of a quantum circuit,
+    scaled by the number of qubits outside the maximum partition.
+
+    Args:
+        num_qubit (int): Total number of qubits in the system.
+        max_qubits_per_partition (int): Maximum number of qubits any partition 
+            can act on.
+        gate_to_qubit (dict): Mapping from gate ID to the set of qubits 
+            it acts on.
+        gate_to_tqubit (dict or None): Mapping from gate ID to its target qubit. 
+            If None, control qubits are assumed to be 0.
+        allparts (list[list]): Partitioning of gates, where each part is a 
+            collection of gate IDs.
+
+    Returns:
+        int: Total number of floating-point operations across all partitions.
+    """
     weights = parts_to_float_ops(max_qubits_per_partition, gate_to_qubit, gate_to_tqubit, allparts)
     return 2**(num_qubit-max_qubits_per_partition) * sum(weights)
 
@@ -69,15 +114,13 @@ def translate_param_order(params: np.ndarray, param_order: List[Tuple[int,int]])
 
 def build_dependency(c: Circuit) -> Tuple[Dict[int, Gate], Dict[int, Set[int]], Dict[int, Set[int]]]:
     """
-    Build dependency graphs for circuit gates
-
+    Build dependency graphs for circuit gates.
+    
     Args:
+        c: SQUANDER Circuit
         
-        c: SQUANDER Circuit.
-
     Returns:
-        
-        Gate dict, forward graph, reverse graph, qubit mapping, start set.
+        tuple: (gate_dict, forward_graph, reverse_graph)
     """
     gate_dict = {i: gate for i, gate in enumerate(c.get_Gates())}
     gate_to_qubit = { i: get_qubits(g) for i, g in gate_dict.items() }
@@ -94,17 +137,6 @@ def build_dependency(c: Circuit) -> Tuple[Dict[int, Gate], Dict[int, Set[int]], 
 
 
 def qiskit_to_squander_name(qiskit_name):
-    """
-    Convert Qiskit gate name to SQUANDER name
-
-    Args:
-        
-        qiskit_name: Qiskit gate name
-
-    Returns:
-        
-        SQUANDER gate name
-    """
     name = qiskit_name.upper()
     if name == "CX":
         return "CNOT"
@@ -116,19 +148,6 @@ def qiskit_to_squander_name(qiskit_name):
         return name
 
 def gate_desc_to_gate_index(circ, preparts, qubit_groups_only=False):
-    """
-    Map gate descriptions to indices for partitioning
-
-    Args:
-        
-        circ: SQUANDER Circuit
-        
-        preparts: Partition descriptions
-
-    Returns:
-        
-        Partitioned gate indices
-    """
     gate_dict, g, rg, gate_to_qubit, S = build_dependency(circ)
     L = []
     
@@ -178,19 +197,6 @@ def gate_desc_to_gate_index(circ, preparts, qubit_groups_only=False):
     return parts
 
 def get_qiskit_partitions(filename, max_partition_size):
-    """
-    Partition circuit using Qiskit multi-qubit blocks
-
-    Args:
-        
-        filename: QASM file path
-        
-        max_partition_size: Max qubits per partition
-
-    Returns:
-        
-        Parameters, partitioned circuit, parameter order (source_idx, dest_idx, param_count), partitions
-    """
     circ, parameters, qc = utils.qasm_to_squander_circuit(filename, True)
     pm = PassManager([
         CollectMultiQBlocks(max_block_size=max_partition_size),
@@ -208,6 +214,29 @@ def get_qiskit_partitions(filename, max_partition_size):
     return parameters, partitioned_circ, param_order, parts
 
 def get_qiskit_fusion_partitions(filename, max_partition_size):
+    """
+    Generate circuit partitions from a QASM file using Qiskit's fusion 
+    metadata and Squander's partitioning utilities.
+
+    This function:
+      1. Parses the QASM file into a Squander circuit.
+      2. Runs the circuit on Qiskit's AerSimulator with gate fusion enabled.
+      3. Extracts the fusion metadata (grouped qubit operations).
+      4. Uses Squander's Kahn-based partitioning to produce circuit partitions.
+
+    Args:
+        filename (str): Path to the QASM file to be parsed.
+        max_partition_size (int): Maximum number of qubits allowed in each 
+            fusion partition (i.e., `fusion_max_qubit` for Qiskit).
+
+    Returns:
+        tuple:
+            parameters (list): Parameter list extracted from the Squander circuit.
+            partitioned_circ (object): Partitioned Squander circuit object.
+            param_order (list): Order of parameters corresponding to the partitioned circuit.
+            parts (list[list]): Partitioning of the circuit into gate groups, 
+                represented as lists of gate indices.
+    """
     circ, parameters, qc = utils.qasm_to_squander_circuit(filename, True)
     qc.save_statevector()
     from qiskit import transpile
@@ -222,22 +251,8 @@ def get_qiskit_fusion_partitions(filename, max_partition_size):
     partitioned_circ, param_order, parts = kahn_partition_preparts(circ, max_partition_size, gate_desc_to_gate_index(circ, qubits, qubit_groups_only=True))
     return parameters, partitioned_circ, param_order, parts
 
+
 def get_bqskit_partitions(filename, max_partition_size, partitioner):
-    """
-    Partition circuit using BQSKit partitioners
-
-    Args:
-        
-        filename: QASM file path
-        
-        max_partition_size: Max qubits per partition
-        
-        partitioner: BQSKit Partitioning strategy
-
-    Returns:
-        
-        Parameters, partitioned circuit, parameter order (source_idx, dest_idx, param_count), partitions
-    """
     try:
         from bqskit import Circuit
         from bqskit.passes.partitioning.quick import QuickPartitioner
