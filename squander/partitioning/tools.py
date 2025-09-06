@@ -11,13 +11,13 @@ from qiskit.transpiler.passes import CollectMultiQBlocks
 
 def get_qubits(gate: Gate) -> Set[int]:
     """
-    Retrieves qubit indices used by a SQUANDER gate.
-    
+    Get qubit indices used by a gate
     Args:
-        gate: The SQUANDER gate
         
+        gate: SQUANDER gate
     Returns:
-        Set of qubit indices used by the gate
+        
+        Set of qubit indices
     """
     return {gate.get_Target_Qbit()} | ({control} if (control := gate.get_Control_Qbit()) != -1 else set())
 
@@ -114,13 +114,13 @@ def translate_param_order(params: np.ndarray, param_order: List[Tuple[int,int]])
 
 def build_dependency(c: Circuit) -> Tuple[Dict[int, Gate], Dict[int, Set[int]], Dict[int, Set[int]]]:
     """
-    Build dependency graphs for circuit gates.
-    
+    Build dependency graphs for circuit gates
     Args:
-        c: SQUANDER Circuit
         
+        c: SQUANDER Circuit.
     Returns:
-        tuple: (gate_dict, forward_graph, reverse_graph)
+        
+        Gate dict, forward graph, reverse graph, qubit mapping, start set.
     """
     gate_dict = {i: gate for i, gate in enumerate(c.get_Gates())}
     gate_to_qubit = { i: get_qubits(g) for i, g in gate_dict.items() }
@@ -137,6 +137,15 @@ def build_dependency(c: Circuit) -> Tuple[Dict[int, Gate], Dict[int, Set[int]], 
 
 
 def qiskit_to_squander_name(qiskit_name):
+    """
+    Convert Qiskit gate name to SQUANDER name
+    Args:
+        
+        qiskit_name: Qiskit gate name
+    Returns:
+        
+        SQUANDER gate name
+    """
     name = qiskit_name.upper()
     if name == "CX":
         return "CNOT"
@@ -148,6 +157,17 @@ def qiskit_to_squander_name(qiskit_name):
         return name
 
 def gate_desc_to_gate_index(circ, preparts, qubit_groups_only=False):
+    """
+    Map gate descriptions to indices for partitioning
+    Args:
+        
+        circ: SQUANDER Circuit
+        
+        preparts: Partition descriptions
+    Returns:
+        
+        Partitioned gate indices
+    """
     gate_dict, g, rg, gate_to_qubit, S = build_dependency(circ)
     L = []
     
