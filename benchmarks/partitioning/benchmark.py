@@ -22,8 +22,8 @@ METHOD_NAMES = [
     # "bqskit-Greedy", 
     # "bqskit-Scan",
     # "bqskit-Cluster", 
-] + (["ilp", "ilp-fusion", "ilp-fusion-ca"]
-      if USE_ILP else [])
+] + (["ilp", "ilp-fusion", #"ilp-fusion-ca"
+      ] if USE_ILP else [])
 
 from squander.gates import gates_Wrapper as gate
 SUPPORTED_GATES = {x for n in dir(gate) for x in (getattr(gate, n),) if not n.startswith("_") and issubclass(x, gate.Gate) and n != "Gate"}
@@ -54,9 +54,9 @@ def purity_analysis():
         None
             Results are printed to stdout; the function is intended as a diagnostic/demo.
     """
-    import sympy
+    import sympy, functools, operator
     from sympy.combinatorics import Permutation
-    theta, phi, lbda = sympy.Symbol("θ"), sympy.Symbol("ϕ"), sympy.Symbol("λ")
+    theta, phi, lbda, gamma = sympy.Symbol("θ"), sympy.Symbol("ϕ"), sympy.Symbol("λ"), sympy.Symbol("γ")
     theta2 = sympy.Symbol("θ2")
     little_endian = True
     def find_control_qubits(psi, num_qubits):
@@ -168,21 +168,27 @@ def purity_analysis():
         res = sympy.diag(gateother if not gateother is None else sympy.eye(1<<gate_qubits), gate)
         P = sympy.eye(1<<(gate_qubits+1))[:, [2*x+y for y in (0, 1) for x in range(1<<gate_qubits)]]
         return P * res * P.T if little_endian else res
-    def gen_Ry(theta): return sympy.Matrix([[sympy.cos(theta/2.0), -sympy.sin(theta/2.0)], [sympy.sin(theta/2.0), sympy.cos(theta/2.0)]])
-    def gen_Rz(phi): return sympy.Matrix([[sympy.exp(-1j*phi/2.0), 0], [0, sympy.exp(1j*phi/2.0)]])
-    def gen_Rx(lbda): return sympy.Matrix([[sympy.cos(lbda/2.0), -1j*sympy.sin(lbda/2.0)], [-1j*sympy.sin(lbda/2.0), sympy.cos(lbda/2.0)]])
-    def gen_GP(theta): return sympy.exp(theta*1j)
+    def make_inverse(g): return g**-1
+    def make_sqrt(g): return g**(1/2)
+    def gen_I(): return sympy.eye(2)
+    def gen_Rx(theta): return sympy.exp(-sympy.I*theta/2*gen_X()).simplify().nsimplify()
+    def gen_Ry(theta): return sympy.exp(-sympy.I*theta/2*gen_Y()).simplify().nsimplify()
+    def gen_Rz(phi): return sympy.exp(-sympy.I*phi/2*gen_Z()).simplify().nsimplify()
+    def gen_GP(theta): return sympy.exp(theta*sympy.I)
     def gen_H(): return sympy.Matrix([[1, 1], [1, -1]])/sympy.sqrt(2)
     def gen_X(): return sympy.Matrix([[0, 1], [1, 0]])
-    def gen_Y(): return sympy.Matrix([[0, -1j], [1j, 0]])
+    def gen_Y(): return sympy.Matrix([[0, -sympy.I], [sympy.I, 0]])
     def gen_Z(): return sympy.Matrix([[1, 0], [0, -1]])
-    def gen_S(): return sympy.Matrix([[1, 0], [0, 1j]])
-    def gen_Sdg(): return sympy.Matrix([[1, 0], [0, -1j]])
-    def gen_SX(): return sympy.Matrix([[1+1j, 1-1j], [1-1j, 1+1j]])/2
-    def gen_SYC(): return sympy.Matrix([[1, 0, 0, 0], [0, 0, -1j, 0], [0, -1j, 0, 0], [0, 0, 0, sympy.exp(-1j*sympy.pi/6)]])
-    def gen_T(): return sympy.Matrix([[1, 0], [0, sympy.exp(1j*sympy.pi/4)]])
-    def gen_Tdg(): return sympy.Matrix([[1, 0], [0, sympy.exp(-1j*sympy.pi/4)]])
-    def gen_P(theta): return sympy.Matrix([[1, 0], [0, sympy.exp(1j*theta)]])
+    def gen_S(): return sympy.Matrix([[1, 0], [0, sympy.I]])
+    def gen_Sdg(): return sympy.Matrix([[1, 0], [0, -sympy.I]])
+    def gen_SX(): return sympy.nsimplify(make_sqrt(gen_X()), rational=True)
+    def gen_CZPowGate(t): return make_controlled(sympy.Matrix([[1, 0], [0, sympy.exp(sympy.I*sympy.pi*t)]]), 1)
+    def gen_fSim(theta, phi): return gen_iSWAP()**(-2*theta/sympy.pi) * gen_CZPowGate(-phi/sympy.pi)
+    def gen_SYC(): return gen_fSim(sympy.pi/2, sympy.pi/6)
+    def gen_T(): return sympy.Matrix([[1, 0], [0, sympy.exp(sympy.I*sympy.pi/4)]])
+    def gen_Tinv(): return make_inverse(gen_T())
+    def gen_Tdg(): return sympy.Matrix([[1, 0], [0, sympy.exp(-sympy.I*sympy.pi/4)]])
+    def gen_P(theta): return sympy.Matrix([[1, 0], [0, sympy.exp(sympy.I*theta)]])
     def gen_U1(theta): return gen_P(theta)
     def gen_CH(): return sympy.Matrix(make_controlled(gen_H(), 1))
     def gen_CX(): return sympy.Matrix(make_controlled(gen_X(), 1))
@@ -197,6 +203,38 @@ def purity_analysis():
     def gen_CROT(theta, phi): return make_controlled(gen_R(theta, phi), 1, gen_R(-theta, phi))
     def gen_CRY(theta): return make_controlled(gen_Ry(theta), 1)
     def gen_CCX(): return make_controlled(gen_CNOT(), 2)
+    def gen_Toffoli(): return gen_CCX()
+    def gen_CCZ(): return make_controlled(gen_CZ(), 2)
+    def gen_SWAP(): return sympy.nsimplify(functools.reduce(operator.add, (compile_gates(2, [(gen(), [0]), (gen(), [1])]) for gen in (gen_I, gen_X, gen_Y, gen_Z))) / 2, rational=True)
+    def gen_CSWAP(): return make_controlled(gen_SWAP(), 2)
+    def gen_iSWAP(): return gen_Rxy(-sympy.pi)
+    def gen_CP(phi): return make_controlled(gen_P(phi), 1)
+    def gen_CR(phi): return gen_CP(phi)
+    def gen_CS(): return make_controlled(gen_S(), 1)
+    def gen_CU1(theta): return gen_CP(theta)
+    def gen_CU(theta, phi, lbda, gamma): return make_controlled(gen_U(theta, phi, lbda) * gen_GP(gamma), 1)
+    def gen_CU3(theta, phi, lbda): return gen_CU(theta, phi, lbda, 0)
+    def gen_Rxx(theta): return sympy.exp(-sympy.I*theta/2*compile_gates(2, [(gen_X(), [0]), (gen_X(), [1])])).simplify() #compile_gates(2, [(sympy.cos(theta/2)*gen_I(), [0]), (gen_I(), [1])]) - compile_gates(2, [(sympy.I*sympy.sin(theta/2)*gen_X(), [0]), (gen_X(), [1])])
+    def gen_Ryy(theta): return sympy.exp(-sympy.I*theta/2*compile_gates(2, [(gen_Y(), [0]), (gen_Y(), [1])])).simplify() #compile_gates(2, [(sympy.cos(theta/2)*gen_I(), [0]), (gen_I(), [1])]) - compile_gates(2, [(sympy.I*sympy.sin(theta/2)*gen_Y(), [0]), (gen_Y(), [1])])
+    def gen_Rzz(theta): return sympy.exp(-sympy.I*theta/2*compile_gates(2, [(gen_Z(), [0]), (gen_Z(), [1])])).simplify() #compile_gates(2, [(sympy.cos(theta/2)*gen_I(), [0]), (gen_I(), [1])]) - compile_gates(2, [(sympy.I*sympy.sin(theta/2)*gen_Z(), [0]), (gen_Z(), [1])])
+    def gen_Rxy(phi): return sympy.exp(-sympy.I*phi/4*sympy.simplify(compile_gates(2, [(gen_X(), [0]), (gen_X(), [1])]) + compile_gates(2, [(gen_Y(), [0]), (gen_Y(), [1])]))).simplify().nsimplify() 
+    def gen_CCZ_decomp(): return compile_gates(3, [(gen_CNOT(), [1, 2]), (gen_Tinv(), [2]), (gen_CNOT(), [0, 2]), (gen_T(), [2]), (gen_CNOT(), [1, 2]), (gen_Tinv(), [2]), (gen_CNOT(), [0, 2]), (gen_T(), [1]), (gen_T(), [2]), (gen_CNOT(), [0, 1]), (gen_T(), [0]), (gen_Tinv(), [1]), (gen_CNOT(), [0, 1])])
+    def gen_CCX_decomp(): return compile_gates(3, [(gen_H(), [2]), (gen_CNOT(), [1, 2]), (gen_Tinv(), [2]), (gen_CNOT(), [0, 2]), (gen_T(), [2]), (gen_CNOT(), [1, 2]), (gen_Tinv(), [2]), (gen_CNOT(), [0, 2]), (gen_T(), [1]), (gen_T(), [2]), (gen_H(), [2]), (gen_CNOT(), [0, 1]), (gen_T(), [0]), (gen_Tinv(), [1]), (gen_CNOT(), [0, 1])])
+    def gen_SWAP_decomp(): return compile_gates(2, [(gen_CNOT(), [0, 1]), (gen_CNOT(), [1, 0]), (gen_CNOT(), [0, 1])])
+    def gen_CSWAP_decomp(): return compile_gates(3, [(gen_CNOT(), [2, 1]), (gen_H(), [2]), (gen_CNOT(), [1, 2]), (gen_Tinv(), [2]), (gen_CNOT(), [0, 2]), (gen_T(), [2]), (gen_CNOT(), [1, 2]), (gen_Tinv(), [2]), (gen_CNOT(), [0, 2]), (gen_T(), [1]), (gen_T(), [2]), (gen_H(), [2]), (gen_CNOT(), [0, 1]), (gen_T(), [0]), (gen_Tinv(), [1]), (gen_CNOT(), [0, 1]), (gen_CNOT(), [2, 1])])
+    def gen_iSWAP_decomp(): return sympy.nsimplify(compile_gates(2, [(gen_S(), [0]), (gen_S(), [1]), (gen_H(), [0]), (gen_CNOT(), [0, 1]), (gen_CNOT(), [1, 0]), (gen_H(), [1])]), rational=True)
+    def gen_SX_test(): return sympy.nsimplify(sympy.Matrix([[1+sympy.I, 1-sympy.I], [1-sympy.I, 1+sympy.I]])/2, rational=True)
+    def gen_Rx_test(theta): return sympy.nsimplify(sympy.Matrix([[sympy.cos(theta/2), -sympy.I*sympy.sin(theta/2)], [-sympy.I*sympy.sin(theta/2), sympy.cos(theta/2)]], rational=True))
+    def gen_SYC_test(): return sympy.Matrix([[1, 0, 0, 0], [0, 0, -sympy.I, 0], [0, -sympy.I, 0, 0], [0, 0, 0, sympy.exp(-sympy.I*sympy.pi/6)]])
+    #print(compile_gates(3, [(gen_H(), [2]), (gen_CNOT(), [1, 2]), (gen_Tinv(), [2]), (gen_CNOT(), [0, 2]), (gen_T(), [2]), (gen_CNOT(), [1, 2]), (gen_Tinv(), [2]), (gen_CNOT(), [0, 2]), (gen_T(), [1]), (gen_T(), [2]), (gen_H(), [2])]))
+    assert gen_Rx(theta) == gen_Rx_test(theta)
+    assert gen_SX() == gen_SX_test()
+    assert gen_SYC() == gen_SYC_test()
+    assert gen_CCZ() == gen_CCZ_decomp()
+    assert gen_CCX() == gen_CCX_decomp()
+    assert gen_SWAP() == gen_SWAP_decomp()
+    assert gen_CSWAP() == gen_CSWAP_decomp()
+    assert gen_iSWAP() == gen_iSWAP_decomp()
     print(find_control_qubits(gen_U3(theta, phi, lbda), 1), find_control_qubits(gen_CRY(theta), 2), find_control_qubits(gen_CCX(), 3))
     for i in range(3): #this proves any single qubit chain removes all purity, and converts aligning control to target
         print(f"U3({i})@CRY(0, 1) pure, sparse control:", find_control_qubits(compile_gates(3, [(gen_U3(theta, phi, lbda), [i]), (gen_CRY(theta2), (0, 1))]), 3))
