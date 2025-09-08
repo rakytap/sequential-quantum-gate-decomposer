@@ -376,7 +376,14 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
     def get_Qbits(self):
     
         return super().get_Qbits()
-        
+
+
+#@brief Call to set hte min fusion in the circuit
+#@param Input arguments: min_fusion
+    def set_min_fusion( self, min_fusion):
+
+        super().set_min_fusion(min_fusion)
+
         
 ##
 # @brief Call to get the list of gates (or subcircuits) in the circuit

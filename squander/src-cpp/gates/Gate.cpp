@@ -363,17 +363,16 @@ void Gate::reorder_qubits( std::vector<int> qbit_list ) {
         throw err;
     }
 
-
     int control_qbit_new = control_qbit;
     int target_qbit_new = target_qbit;
 
     // setting the new value for the target qubit
     for (int idx=0; idx<qbit_num; idx++) {
         if (target_qbit == qbit_list[idx]) {
-            target_qbit_new = qbit_num-1-idx;
+            target_qbit_new = idx;
         }
         if (control_qbit == qbit_list[idx]) {
-            control_qbit_new = qbit_num-1-idx;
+            control_qbit_new = idx;
         }
     }
 
@@ -402,7 +401,7 @@ int Gate::get_control_qbit()  {
 @brief Call to get the qubits involved in the gate operation.
 @return Return with a list of the involved qubits
 */
-std::vector<int> Gate::get_involved_qubits() {
+std::vector<int> Gate::get_involved_qubits(bool only_target) {
 
     std::vector<int> involved_qbits;
     
@@ -410,10 +409,11 @@ std::vector<int> Gate::get_involved_qubits() {
         involved_qbits.push_back( target_qbit );
     }
     
-    if( control_qbit != -1 ) {
-        involved_qbits.push_back( control_qbit );
-    }    
-    
+    if (!only_target){
+        if( control_qbit != -1 ) {
+            involved_qbits.push_back( control_qbit );
+        }    
+    }
     
     return involved_qbits;
     
