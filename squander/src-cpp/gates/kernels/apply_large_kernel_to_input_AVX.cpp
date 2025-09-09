@@ -75,26 +75,35 @@ void apply_large_kernel_to_input_AVX(Matrix& unitary, Matrix& input, std::vector
   }
 }
 
-inline void get_block_indices(
-    int N, const std::vector<int> &target_qubits, const std::vector<int> &non_targets,
-    int iter_idx, std::vector<int> &indices
-) {
-    const int n = (int)target_qubits.size();
-    const int block_size = 1 << n;
-
-    // base: put iter_idx bits into non-target positions (little-endian)
-    int base = 0;
-    for (std::size_t i = 0; i < non_targets.size(); ++i) {
-        if (iter_idx & (1 << i)) base |= (1 << non_targets[i]);
-    }
-
-    // enumerate local states k in 0..2^n-1 using the GIVEN target order
+void precompute_index_mapping(const std::vector<int>& target_qubits,
+                              const std::vector<int>& non_targets,
+                              std::vector<int>& block_pattern) {
+    int block_size = 1 << target_qubits.size();
+    
     for (int k = 0; k < block_size; ++k) {
-        int idx = base;
-        for (int bit = 0; bit < n; ++bit) {
-            if (k & (1 << bit)) idx |= (1 << target_qubits[bit]); // crucial: bit->target_qubits[bit]
+        int idx = 0;
+        for (int bit = 0; bit < target_qubits.size(); ++bit) {
+            if (k & (1 << bit)) {
+                idx |= (1 << target_qubits[bit]);
+            }
         }
-        indices[k] = idx;
+        block_pattern[k] = idx;
+    }
+}
+
+inline void get_block_indices_fast(int iter_idx,
+                                   const std::vector<int>& target_qubits,
+                                   const std::vector<int>& non_targets,
+                                   const std::vector<int>& block_pattern,
+                                   std::vector<int>& indices) {
+    int base = 0;
+    for (int i = 0; i < non_targets.size(); ++i) {
+        if (iter_idx & (1 << i)) {
+            base |= (1 << non_targets[i]);
+        }
+    }
+    for (int k = 0; k < block_pattern.size(); ++k) {
+        indices[k] = base | block_pattern[k];  
     }
 }
 
@@ -183,15 +192,16 @@ void apply_nqbit_unitary_AVX( Matrix& gate_kernel_unitary, Matrix& input, std::v
     non_targets.reserve(qubit_num - n);
     for (int q = 0; q < qubit_num; ++q)
     if (!is_target[q]) non_targets.push_back(q);
+    std::vector<int> block_pattern(block_size);
 
-
+    precompute_index_mapping(involved_qbits, non_targets, block_pattern);
     __m256d* mv_xy = construct_mv_xy_vectors(gate_kernel_unitary, gate_kernel_unitary.rows);
-    std::vector<int> indices(block_size);
     std::vector<double> new_block_real(block_size,0.0);
     std::vector<double> new_block_imag(block_size,0.0);
-    
+    std::vector<int> indices(block_size);
+
     for (int iter_idx = 0; iter_idx < num_blocks; iter_idx++) {
-        get_block_indices(qubit_num, involved_qbits, non_targets, iter_idx, indices);
+        get_block_indices_fast(iter_idx, involved_qbits, non_targets, block_pattern, indices);
         std::fill(new_block_real.begin(), new_block_real.end(), 0.0);
         std::fill(new_block_imag.begin(), new_block_imag.end(), 0.0);
             
