@@ -163,22 +163,23 @@ void testNQubit_Gate_speed() {
     Matrix test_state2 = state.copy();
     for (int n=2; n<5; n++){
         std::vector<int> qubits;
-        for (int qubit=3;qubit<3+n;qubit++){
+        for (int qubit=0;qubit<n;qubit++){
             qubits.push_back(qubit);
         }
         Matrix Umtx = create_identity(1<<qubits.size());
 
         int samples = 500;
-        double nqbit_kernel_time = 0.0;
-        tbb::tick_count nqbit_kernel_start = tbb::tick_count::now();
+
+        double dedicated_kernel_time = 0.0;
+        tbb::tick_count dedicated_kernel_start = tbb::tick_count::now();
         for (int idx=0; idx<samples;idx++){
-            apply_nqbit_unitary_AVX(Umtx, test_state, qubits, 1 << num_qubits);
+            apply_large_kernel_to_input_AVX(Umtx, test_state, qubits, 1 << num_qubits);
         }
-        tbb::tick_count nqbit_kernel_end = tbb::tick_count::now();
+        tbb::tick_count dedicated_kernel_end = tbb::tick_count::now();
 
-        nqbit_kernel_time  = (nqbit_kernel_time + (nqbit_kernel_end-nqbit_kernel_start).seconds())/samples;
+        dedicated_kernel_time  = (dedicated_kernel_time + (dedicated_kernel_end-dedicated_kernel_start).seconds())/samples;
 
-        std::cout << qubits.size()<<" qubit kernel simulation time: " << nqbit_kernel_time<< std::endl;
+        std::cout << qubits.size()<<" qubit dedicated kernel time "<< dedicated_kernel_time << std::endl;
     }
 }
 
