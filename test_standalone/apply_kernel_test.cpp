@@ -177,17 +177,28 @@ void testNQubit_Gate_speed() {
         Matrix Umtx = create_identity(1<<qubits.size());
 
         int samples = 500;
-
         double dedicated_kernel_time = 0.0;
         tbb::tick_count dedicated_kernel_start = tbb::tick_count::now();
         for (int idx=0; idx<samples;idx++){
-            apply_large_kernel_to_input_AVX(Umtx, test_state, qubits, 1 << num_qubits);
+            apply_large_kernel_to_input(Umtx, test_state, qubits, 1 << num_qubits);
         }
         tbb::tick_count dedicated_kernel_end = tbb::tick_count::now();
-
-        dedicated_kernel_time  = (dedicated_kernel_time + (dedicated_kernel_end-dedicated_kernel_start).seconds())/samples;
-
+        dedicated_kernel_time  = (dedicated_kernel_end-dedicated_kernel_start).seconds()/samples;
         std::cout << qubits.size()<<" qubit dedicated kernel time "<< dedicated_kernel_time << std::endl;
+
+
+        #ifdef USE_AVX
+        double dedicated_kernel_AVX_time = 0.0;
+        tbb::tick_count dedicated_kernel_AVX_start = tbb::tick_count::now();
+        for (int idx=0; idx<samples;idx++){
+            apply_large_kernel_to_input_AVX(Umtx, test_state, qubits, 1 << num_qubits);
+        }
+        tbb::tick_count dedicated_kernel_AVX_end = tbb::tick_count::now();
+
+        dedicated_kernel_AVX_time  = (dedicated_kernel_AVX_time + (dedicated_kernel_AVX_end-dedicated_kernel_AVX_start).seconds())/samples;
+
+        std::cout << qubits.size()<<" qubit dedicated AVX kernel time "<< dedicated_kernel_AVX_time << std::endl;
+        #endif
     }
 }
 
