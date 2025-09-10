@@ -48,7 +48,7 @@ void test2QubitGate() {
     Matrix identity = create_identity(4);
     Matrix test_state = state.copy();
 
-    apply_2qbit_kernel_to_state_vector_input(identity, test_state, 0, 1, 1 << num_qubits);
+    apply_2qbit_kernel_to_state_vector_input(identity, test_state, 1, 2, 1 << num_qubits);
 
     double fid = fidelity(state, test_state);
     std::cout << "2-qubit identity gate fidelity: " << fid << std::endl;
@@ -56,9 +56,9 @@ void test2QubitGate() {
 
     #ifdef USE_AVX 
     Matrix test_state_avx = state.copy();
-    std::vector<int> qubits = {0,1};
+    std::vector<int> qubits = {1,2};
 
-    apply_large_kernel_to_input_AVX(identity, test_state_avx, qubits, 1 << num_qubits);
+    apply_2qbit_kernel_to_state_vector_input_AVX(identity, test_state_avx, qubits, 1 << num_qubits);
 
     double fid_avx = fidelity(state, test_state_avx);
     std::cout << "2-qubit identity gate fidelity AVX: " << fid_avx << std::endl;
@@ -70,7 +70,7 @@ void test3QubitGate() {
     Matrix state = generateRandomState(num_qubits);
     Matrix identity = create_identity(8);
     Matrix test_state = state.copy();
-    std::vector<int> qubits = {0,1,2};
+    std::vector<int> qubits = {0,2,3};
 
     apply_3qbit_kernel_to_state_vector_input(identity, test_state, qubits, 1 << num_qubits);
 
@@ -123,6 +123,13 @@ void test5QubitGate() {
     double fid = fidelity(state, test_state);
     std::cout << "5-qubit identity gate fidelity: " << fid << std::endl;
     assert(std::abs(fid - 1.0) < 1e-10);
+    #ifdef USE_AVX 
+    Matrix test_state_avx = state.copy();
+    apply_large_kernel_to_input_AVX(identity, test_state_avx, qubits, 1 << num_qubits);
+    double fid_avx = fidelity(state, test_state_avx);
+    std::cout << "5-qubit identity gate fidelity AVX: " << fid_avx << std::endl;
+    #endif 
+
 }
 
 void testNQubitGate_Parallel_GHZ() {
@@ -149,7 +156,7 @@ void testNQubitGate_Parallel_GHZ() {
     GHZ_circ_mini.add_cnot(3,0);
 
     GHZ_circ_mini.apply_to(params,Umtx);
-    apply_nqbit_unitary_AVX(Umtx, test_state, qubits, 1 << num_qubits);
+    apply_nqbit_unitary_parallel_AVX(Umtx, test_state, qubits, 1 << num_qubits);
     double fid = fidelity(state, test_state);
     std::cout << num_qubits <<"-qubit GHZ gate fidelity: " << fid << std::endl;
     assert(std::abs(fid - 1.0) < 1e-10);
@@ -161,9 +168,10 @@ void testNQubit_Gate_speed() {
     Matrix state = generateRandomState(num_qubits);
     Matrix test_state = state.copy();
     Matrix test_state2 = state.copy();
-    for (int n=2; n<5; n++){
+    int offset = 4;
+    for (int n=2; n<6; n++){
         std::vector<int> qubits;
-        for (int qubit=0;qubit<n;qubit++){
+        for (int qubit=offset;qubit<offset+n;qubit++){
             qubits.push_back(qubit);
         }
         Matrix Umtx = create_identity(1<<qubits.size());
@@ -192,7 +200,9 @@ int main() {
     suite.test3QubitGate();
     suite.test4QubitGate();
     suite.test5QubitGate();
+    #ifdef USE_AVX
     suite.testNQubitGate_Parallel_GHZ();
     suite.testNQubit_Gate_speed();
+    #endif
     return 0;
 }
