@@ -6,18 +6,21 @@ from squander.gates.qgd_Circuit import qgd_Circuit as Circuit
 from squander import utils
 
 from squander.partitioning.kahn import kahn_partition
-from squander.partitioning.ilp import ilp_max_partitions
+from squander.partitioning.ilp import max_partitions
 from squander.partitioning.tdag import tdag_max_partitions
-from squander.partitioning.tools import translate_param_order, get_qiskit_partitions, get_bqskit_partitions
+from squander.partitioning.tools import translate_param_order, get_qiskit_partitions, get_qiskit_fusion_partitions, get_bqskit_partitions
 
-PartitionStrategy = Literal["kahn", "ilp", "tdag", "qiskit", "bqskit-Quick", "bqskit-Scan", "bqskit-Greedy", "bqskit-Cluster"]
+PartitionStrategy = Literal["kahn", "ilp", "ilp-fusion", "ilp-fusion-ca", "tdag", "qiskit", "qiskit-fusion", "bqskit-Quick", "bqskit-Scan", "bqskit-Greedy", "bqskit-Cluster"]
 
 PARTITION_FUNCTIONS = {
     "kahn": kahn_partition,
-    "ilp": ilp_max_partitions, 
+    "ilp": max_partitions,
+    "ilp-fusion": functools.partial(max_partitions, fusion_cost=True),
+    "ilp-fusion-ca": functools.partial(max_partitions, fusion_cost=True, control_aware=True),
     "tdag": tdag_max_partitions,
     "gtqcp": functools.partial(tdag_max_partitions, use_gtqcp = True),
     "qiskit": get_qiskit_partitions,
+    "qiskit-fusion": get_qiskit_fusion_partitions,
     "bqskit-Quick": functools.partial(get_bqskit_partitions, partitioner = "Quick"),
     "bqskit-Scan":  functools.partial(get_bqskit_partitions, partitioner = "Scan"), 
     "bqskit-Greedy": functools.partial(get_bqskit_partitions, partitioner = "Greedy"),
@@ -45,13 +48,13 @@ def PartitionCircuit( circ: Circuit, parameters: np.ndarray, max_partition_size:
     """  
        
     func = PARTITION_FUNCTIONS.get(strategy, kahn_partition)
-    if strategy in ["qiskit", "bqskit-Quick", "bqskit-Scan", "bqskit-Greedy", "bqskit-Cluster"]:
-        parameters, partitioned_circ, param_order, _ = func(filename, max_partition_size)
+    if strategy in ["qiskit", "qiskit-fusion", "bqskit-Quick", "bqskit-Scan", "bqskit-Greedy", "bqskit-Cluster"]:
+        parameters, partitioned_circ, param_order, L = func(filename, max_partition_size)
     else:
-        partitioned_circ, param_order, _ = func(circ, max_partition_size)
+        partitioned_circ, param_order, L = func(circ, max_partition_size)
     
     param_reordered = translate_param_order(parameters, param_order)
-    return partitioned_circ, param_reordered
+    return partitioned_circ, param_reordered, L
 
 
 
