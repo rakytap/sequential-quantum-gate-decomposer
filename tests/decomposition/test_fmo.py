@@ -249,7 +249,8 @@ class Test_Decomposition:
                 'max_inner_iterations' : 500,	
                 'optimization_tolerance': 1e-8,
                 'agent_num': 20}
-
+        
+  
 
 
         # creating an instance of the C++ class
@@ -257,6 +258,13 @@ class Test_Decomposition:
 
         # adding custom gate structure to the decomposition
         decomp.set_Gate_Structure( gate_structure )
+
+        # set initial parameters
+        rng = np.random.default_rng( 42 )
+        num_of_parameters = decomp.get_Parameter_Num()
+        parameters = rng.random(num_of_parameters)*2*np.pi
+        
+        decomp.set_Optimized_Parameters( parameters )        
 
 
         # setting the tolerance of the optimization process. The final error of the decomposition would scale with the square root of this value.
