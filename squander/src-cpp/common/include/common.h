@@ -76,6 +76,16 @@ double activation_function( double Phi, int limit );
 
 
 /**
+@brief Wrapper function aound fread with error handling
+@param buffer: It refers to the pointer to the buffer memory block where the data read will be stored.
+@param size: It refers to the size of each element in bytes.
+@param count: It refers to the count of elements to be read.
+@param stream: It refers to the pointer to the file stream.
+*/
+void fread_wrapper( void * buffer, size_t size, size_t count, FILE * stream);
+
+
+/**
 @brief custom defined memory allocation function.  Memory allocated with aligned realloc *MUST* be freed using qgd_free
 @param element_num The number of elements in the array to be allocated.
 @param size A size of one element (such as sizeof(double) )

@@ -453,7 +453,7 @@ N_Qubit_Decomposition_Tabu_Search::draw_gate_structure_from_list( std::vector<Gr
     
     int fact = 4;
 
-    for( int gcode_idx=0; gcode_idx<gcodes.size(); gcode_idx++ ) {
+    for( size_t gcode_idx=0; gcode_idx<gcodes.size(); gcode_idx++ ) {
 
         gcode = gcodes[ gcode_idx ];
         weights[ gcode_idx ] = fact*(levels);

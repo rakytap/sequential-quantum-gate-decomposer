@@ -120,12 +120,17 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
         }
 
 
-        long long max_inner_iterations_loc;
+        
+        unsigned long long max_inner_iterations_loc;
         if ( config.count("max_inner_iterations_cosine") > 0 ) {
-             config["max_inner_iterations_cosine"].get_property( max_inner_iterations_loc );  
+            long long max_inner_iterations_loc_tmp;
+            config["max_inner_iterations_cosine"].get_property( max_inner_iterations_loc_tmp );  
+            max_inner_iterations_loc = ( unsigned long long)max_inner_iterations_loc_tmp;
         }
         else if ( config.count("max_inner_iterations") > 0 ) {
-             config["max_inner_iterations"].get_property( max_inner_iterations_loc );  
+            long long max_inner_iterations_loc_tmp;
+            config["max_inner_iterations"].get_property( max_inner_iterations_loc_tmp );  
+            max_inner_iterations_loc = ( unsigned long long)max_inner_iterations_loc_tmp;
         }
         else {
             max_inner_iterations_loc = max_inner_iterations;
@@ -149,7 +154,6 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
              config["optimization_tolerance_cosine"].get_property( optimization_tolerance_loc );  
         }
         else if ( config.count("optimization_tolerance") > 0 ) {
-             double value;
              config["optimization_tolerance"].get_property( optimization_tolerance_loc );
         }
         else {

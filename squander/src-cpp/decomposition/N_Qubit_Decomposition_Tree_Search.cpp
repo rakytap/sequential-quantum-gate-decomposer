@@ -250,16 +250,9 @@ N_Qubit_Decomposition_Tree_Search::start_decomposition() {
     num_threads = openblas_get_num_threads();
     openblas_set_num_threads(1);
 #endif
-    //measure the time for the decompositin
-    tbb::tick_count start_time = tbb::tick_count::now();
-
-
 
     Gates_block* gate_structure_loc = determine_gate_structure(optimized_parameters_mtx);
     
-
-
-
 
 
     long long export_circuit_2_binary_loc;
@@ -334,10 +327,8 @@ N_Qubit_Decomposition_Tree_Search::determine_gate_structure(Matrix_real& optimiz
      level_limit = (int)level_max;
      
     if (level_limit == 0 ) {
-        std::stringstream sstream;
-        sstream << "please increase level limit" << std::endl;
-        print(sstream, 0);	
-        return;
+        std::string error( "please increase level limit");	        
+        throw error;      
     }
 
     GrayCode gcode_best_solution;
@@ -737,12 +728,9 @@ N_Qubit_Decomposition_Tree_Search::add_finalyzing_layer( Gates_block* gate_struc
     block->add_ry(qbit_num-1);
 */
     for (int idx=0; idx<qbit_num; idx++) {
-            bool Theta = true;
-            bool Phi = true;
-            bool Lambda = true;
-block->add_rz(idx);
-block->add_ry(idx);
-block->add_rz(idx); 
+        block->add_rz(idx);
+        block->add_ry(idx);
+        block->add_rz(idx); 
 
              //block->add_u3(idx, Theta, Phi, Lambda);
 //        block->add_ry(idx);

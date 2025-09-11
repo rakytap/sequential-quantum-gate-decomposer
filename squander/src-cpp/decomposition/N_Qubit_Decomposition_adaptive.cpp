@@ -222,8 +222,6 @@ void N_Qubit_Decomposition_adaptive::get_initial_circuit() {
     num_threads = openblas_get_num_threads();
     openblas_set_num_threads(1);
 #endif
-    //measure the time for the decompositin
-    tbb::tick_count start_time = tbb::tick_count::now();
 
     if (level_limit == 0 ) {
         std::stringstream sstream;
@@ -1675,7 +1673,6 @@ N_Qubit_Decomposition_adaptive::create_reduced_parameters( Gates_block* gate_str
 
 
     // determine the index of the parameter that is about to delete
-    int gates_num = gate_structure->get_gate_num();
     int parameter_idx = 0;
     for ( int idx=0; idx<layer_idx; idx++) {    
     //for ( int idx=gates_num-1; idx>layer_idx; idx--) {

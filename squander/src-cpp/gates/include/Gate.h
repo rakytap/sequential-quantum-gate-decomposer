@@ -209,7 +209,7 @@ virtual void apply_from_right( Matrix& input );
 @param parameter_mtx An array of the input parameters.
 @param input The input array on which the gate is applied
 */
-void Gate::apply_from_right( Matrix_real& parameter_mtx, Matrix& input );
+void apply_from_right( Matrix_real& parameter_mtx, Matrix& input );
 
 /**
 @brief Call to set the stored matrix in the operation.
