@@ -397,7 +397,16 @@ qgd_N_Qubit_Decomposition_custom_Wrapper_get_Optimized_Parameters( qgd_N_Qubit_D
 
 
 
+/**
+@brief Get the number of free parameters in the gate structure used for the decomposition
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_custom_Wrapper_get_Parameter_Num( qgd_N_Qubit_Decomposition_custom_Wrapper *self ) {
 
+    int parameter_num = self->decomp->get_parameter_num();
+
+    return Py_BuildValue("i", parameter_num);
+}
 
 /**
 @brief Extract the optimized parameters
@@ -1184,6 +1193,9 @@ static PyMethodDef qgd_N_Qubit_Decomposition_custom_Wrapper_methods[] = {
     },
     {"Optimization_Problem_Combined", (PyCFunction) qgd_N_Qubit_Decomposition_custom_Wrapper_Optimization_Problem_Combined, METH_VARARGS,
      "Wrapper function to evaluate the cost function and the gradient components."
+    },
+    {"get_Parameter_Num", (PyCFunction) qgd_N_Qubit_Decomposition_custom_Wrapper_get_Parameter_Num, METH_NOARGS,
+     "Call to get the number of free parameters in the gate structure used for the decomposition"
     },
     {NULL}  /* Sentinel */
 };

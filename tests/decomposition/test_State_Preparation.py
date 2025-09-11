@@ -96,16 +96,16 @@ class Test_State_Preparation:
        
 
         config = { 'max_outer_iterations': 1, 
-		'max_inner_iterations': 10000, 
-		'max_inner_iterations_compression': 10000, 
-		'max_inner_iterations_final': 1000, 
-		'randomization_threshold': int(1e4),  			
-		'Randomized_Radius': 0.3, 
-	    'randomized_adaptive_layers': 1,
-		'optimization_tolerance_agent': 1e-4,
-		'optimization_tolerance': 1e-4,
-		'compression_enabled': compression_enabled,
-		'number_of_agents': 4}
+		        'max_inner_iterations': 10000, 
+		        'max_inner_iterations_compression': 10000, 
+		        'max_inner_iterations_final': 1000, 
+		        'randomization_threshold': int(1e4),  			
+		        'Randomized_Radius': 0.3, 
+	            'randomized_adaptive_layers': 1,
+		        'optimization_tolerance_agent': 1e-4,
+		        'optimization_tolerance': 1e-4,
+		        'compression_enabled': compression_enabled,
+		        'number_of_agents': 4}
 
 
         # creating a class to decompose the unitary
@@ -124,6 +124,13 @@ class Test_State_Preparation:
         #set Optimizer
         
         cDecompose.set_Optimizer(optimizer)
+
+        # set initial parameters
+        rng = np.random.default_rng( 42 )
+        num_of_parameters = cDecompose.get_Parameter_Num()
+        parameters = rng.random(num_of_parameters)*2*np.pi
+        
+        cDecompose.set_Optimized_Parameters( parameters )
         
         # starting the decomposition
 

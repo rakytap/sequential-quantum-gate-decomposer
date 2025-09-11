@@ -87,10 +87,7 @@ void Optimization_Interface::solve_layer_optimization_problem_AGENTS( int num_of
             memcpy(optimized_parameters_mtx.get_data(), solution_guess.get_data(), num_of_parameters*sizeof(double) );
         }
 
-
-        long long sub_iter_idx = 0;
-        double current_minimum_hold = current_minimum;
-    
+  
 
         tbb::tick_count optimization_start = tbb::tick_count::now();
         double optimization_time = 0.0;

@@ -334,8 +334,8 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
         int pre_gate_parameter_num = 0;
 
         // defining temporary variables for iteration cycles
-        int block_idx_end;
-        int block_idx_start = 0;//gates.size();
+        size_t block_idx_end;
+        size_t block_idx_start = 0;//gates.size();
         gates.clear();
         int block_parameter_num;
         Gate* fixed_gate_post = new Gate( qbit_num );
@@ -376,7 +376,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
                  
             // determine the number of free parameters to be optimized
             block_parameter_num = 0;
-            for ( int block_idx=block_idx_start; block_idx < block_idx_end; block_idx++) {
+            for ( size_t block_idx=block_idx_start; block_idx < block_idx_end; block_idx++) {
                 block_parameter_num = block_parameter_num + gates_loc[block_idx]->get_parameter_num();
             }
 
@@ -411,7 +411,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
 
 
             // create a list of gates for the optimization process
-            for ( int idx=block_idx_start; idx<block_idx_end; idx++ ) {
+            for ( size_t idx=block_idx_start; idx<block_idx_end; idx++ ) {
                 gates.push_back( gates_loc[idx] );
             }
             
@@ -419,7 +419,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
             if (block_idx_end < gates_loc.size()) {
                 
                 int parameter_idx = 0;
-                for (int gate_idx=0; gate_idx<block_idx_end; gate_idx++) {
+                for (size_t gate_idx=0; gate_idx<block_idx_end; gate_idx++) {
                     Gate* gate = gates_loc[gate_idx];
                     parameter_idx = parameter_idx +  gate->get_parameter_num();   
                 }
@@ -987,16 +987,14 @@ Matrix Decomposition_Base::import_unitary_from_binary(std::string& filename){
             exit (1);
         }
 
-	size_t fread_status;
-        fread_status = fread(&rows, sizeof(int), 1, pFile);
-	fread_status = fread(&cols, sizeof(int), 1, pFile);
+    fread_wrapper(&rows, sizeof(int), 1, pFile);
+	fread_wrapper(&cols, sizeof(int), 1, pFile);
 
-        //TODO error handling for fread_status
 
 	Matrix Umtx_ = Matrix(rows, cols);
 
-	fread_status = fread(Umtx_.get_data(), sizeof(QGD_Complex16), rows*cols, pFile);
-    	fclose(pFile);
+	fread_wrapper(Umtx_.get_data(), sizeof(QGD_Complex16), rows*cols, pFile);
+    fclose(pFile);
 	return Umtx_;
 }
 

@@ -64,6 +64,24 @@ double activation_function( double Phi, int limit ) {
 */
 }
 
+/**
+@brief Wrapper function aound fread with error handling
+@param buffer: It refers to the pointer to the buffer memory block where the data read will be stored.
+@param size: It refers to the size of each element in bytes.
+@param count: It refers to the count of elements to be read.
+@param stream: It refers to the pointer to the file stream.
+*/
+void fread_wrapper( void * buffer, size_t size, size_t count, FILE * stream) {
+
+    size_t fread_status = fread(buffer, size, count, stream);
+
+    if ( fread_status < count ) {
+        std::string err("Reached the end of the file before finishing reading"); 
+        throw err;
+    }
+
+}
+
 
 /**
 @brief custom defined memory allocation function.  Memory allocated with aligned realloc *MUST* be freed using qgd_free.

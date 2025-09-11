@@ -72,6 +72,8 @@ real=False
 # @param num_of_parameters The number of parameters
 def create_randomized_parameters( num_of_parameters, real=False ):
 
+    # set initial parameters
+    rng = np.random.default_rng( 42 )
 
     parameters = np.zeros(num_of_parameters)
 
@@ -81,10 +83,10 @@ def create_randomized_parameters( num_of_parameters, real=False ):
     if (real):
         
         for idx in range(qbit_num):
-            parameters[idx*3] = np.random.rand(1)*2*np.pi
+            parameters[idx*3] = rng.random(1)*2*np.pi
 
     else:
-        parameters[0:3*qbit_num] = np.random.rand(3*qbit_num)*np.pi
+        parameters[0:3*qbit_num] = rng.random(3*qbit_num)*np.pi
         pass
 
     
@@ -92,7 +94,7 @@ def create_randomized_parameters( num_of_parameters, real=False ):
     
     for layer_idx in range(num_of_adaptive_layers) :
 
-        nontrivial_adaptive_layer = random.randint(0,1)
+        nontrivial_adaptive_layer = rng.integers(0,1)
         nontrivial_adaptive_layers[layer_idx] = nontrivial_adaptive_layer
 
         if (nontrivial_adaptive_layer) :
@@ -101,12 +103,12 @@ def create_randomized_parameters( num_of_parameters, real=False ):
             start_idx = qbit_num*3 + layer_idx*7
             
             if (real):
-                parameters[start_idx]   = np.random.rand(1)*2*np.pi
-                parameters[start_idx+1] = np.random.rand(1)*2*np.pi
-                parameters[start_idx+4] = np.random.rand(1)*2*np.pi
+                parameters[start_idx]   = rng.random(1)*2*np.pi
+                parameters[start_idx+1] = rng.random(1)*2*np.pi
+                parameters[start_idx+4] = rng.random(1)*2*np.pi
             else:
                 end_idx = start_idx + 7
-                parameters[start_idx:end_idx] = np.random.rand(7)*2*np.pi
+                parameters[start_idx:end_idx] = rng.random(7)*2*np.pi
          
         
     

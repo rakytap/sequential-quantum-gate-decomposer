@@ -39,6 +39,7 @@ except ModuleNotFoundError:
 
 
 
+
 class Test_Decomposition:
     """This is a test class of the python iterface to the decompsition classes of the QGD package"""
 
@@ -59,12 +60,12 @@ class Test_Decomposition:
 
         # generate config structure
         config = { 'max_outer_iterations': 10, 
-		'max_inner_iterations': 300000, 	
-		'max_inner_iterations_compression': 10000, 
-		'max_inner_iterations_final': 1000, 	
-	        'randomized_adaptive_layers': 1,
-	        'export_circuit_2_binary': 1,
-		'optimization_tolerance': 1e-8 }
+		            'max_inner_iterations': 300000, 	
+		            'max_inner_iterations_compression': 10000, 
+		            'max_inner_iterations_final': 1000, 	
+	                'randomized_adaptive_layers': 1,
+	                'export_circuit_2_binary': 1,
+		            'optimization_tolerance': 1e-8 }
 
         
         
@@ -76,13 +77,19 @@ class Test_Decomposition:
         # setting the verbosity of the decomposition
         cDecompose.set_Verbose( 3 )
 
-	# adding decomposing layers to the gate structure
+	    # adding decomposing layers to the gate structure
         levels = 2
         for idx in range(levels):
             cDecompose.add_Adaptive_Layers()
 
         cDecompose.add_Finalyzing_Layer_To_Gate_Structure()
-	
+
+        # set initial parameters
+        rng = np.random.default_rng( 42 )
+        num_of_parameters = cDecompose.get_Parameter_Num()
+        parameters = rng.random(num_of_parameters)*2*np.pi
+        
+        cDecompose.set_Optimized_Parameters( parameters )
 
 
         # starting the decomposition
@@ -137,12 +144,12 @@ class Test_Decomposition:
         
         # generate config structure
         config = { 'max_outer_iterations': 10, 
-		'max_inner_iterations': 300000, 	
-		'max_inner_iterations_compression': 10000, 
-		'max_inner_iterations_final': 1000, 	
-	        'randomized_adaptive_layers': 1,
-	        'export_circuit_2_binary': 1,
-		'optimization_tolerance': 1e-8 }
+		        'max_inner_iterations': 300000, 	
+		        'max_inner_iterations_compression': 10000, 
+		        'max_inner_iterations_final': 1000, 	
+	            'randomized_adaptive_layers': 1,
+	            'export_circuit_2_binary': 1,
+		        'optimization_tolerance': 1e-8 }
 
 
         # creating a class to decompose the unitary
@@ -160,6 +167,13 @@ class Test_Decomposition:
 
         cDecompose.add_Finalyzing_Layer_To_Gate_Structure()
 
+
+        # set initial parameters
+        rng = np.random.default_rng( 42 )
+        num_of_parameters = cDecompose.get_Parameter_Num()
+        parameters = rng.random(num_of_parameters)*2*np.pi
+        
+        cDecompose.set_Optimized_Parameters( parameters )
 
         # starting the decomposition
         cDecompose.get_Initial_Circuit()
@@ -211,12 +225,12 @@ class Test_Decomposition:
 
         # generate config structure
         config = { 'max_outer_iterations': 10, 
-		'max_inner_iterations': 300000, 	
-		'max_inner_iterations_compression': 10000, 
-		'max_inner_iterations_final': 1000, 	
-	        'randomized_adaptive_layers': 1,
-	        'export_circuit_2_binary': 1,
-		'optimization_tolerance': 1e-8 }
+		        'max_inner_iterations': 300000, 	
+		        'max_inner_iterations_compression': 10000, 
+		        'max_inner_iterations_final': 1000, 	
+	            'randomized_adaptive_layers': 1,
+	            'export_circuit_2_binary': 1,
+		        'optimization_tolerance': 1e-8 }
         
 
         # creating a class to decompose the unitary
@@ -278,15 +292,14 @@ class Test_Decomposition:
         # The unitary to be decomposed  
         Umtx = data['Umtx']
         config = { 'max_outer_iterations': 1, 
-		'max_inner_iterations_agent': 25000, 
-		'max_inner_iterations_compression': 10000,
-		'max_inner_iterations' : 500,
-		'max_inner_iterations_final': 5000, 		
-		'Randomized_Radius': 0.3, 
+		        'max_inner_iterations_agent': 25000, 
+		        'max_inner_iterations_compression': 10000,
+		        'max_inner_iterations' : 500,
+		        'max_inner_iterations_final': 5000, 		
+		        'Randomized_Radius': 0.3, 
                 'randomized_adaptive_layers': 1,
-		'optimization_tolerance_agent': 1e-4,
-		'optimization_tolerance': 1e-5,
-
+		        'optimization_tolerance_agent': 1e-4,
+		        'optimization_tolerance': 1e-5,
                 'agent_num': 10}
 
         # creating a class to decompose the unitary
@@ -297,7 +310,7 @@ class Test_Decomposition:
         cDecompose.set_Verbose( 3 )
 
 
-	# adding decomposing layers to the gate structure
+	    # adding decomposing layers to the gate structure
         levels = 2
         for idx in range(levels):
             cDecompose.add_Adaptive_Layers()
@@ -306,9 +319,11 @@ class Test_Decomposition:
         
 
 
-        # setting intial parameter set
-        parameter_num = cDecompose.get_Parameter_Num()
-        parameters = np.zeros( (parameter_num,1), dtype=np.float64 )
+        # set initial parameters
+        rng = np.random.default_rng( 42 )
+        num_of_parameters = cDecompose.get_Parameter_Num()
+        parameters = rng.random(num_of_parameters)*2*np.pi
+        
         cDecompose.set_Optimized_Parameters( parameters )
 
         # setting optimizer

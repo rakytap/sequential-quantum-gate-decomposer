@@ -2183,7 +2183,7 @@ qgd_Circuit_Wrapper_get_parents( qgd_Circuit_Wrapper *self, PyObject *args ) {
 
 
     // find the indices of the parents
-    for(int idx=0; idx<parents.size(); idx++) {
+    for(size_t idx=0; idx<parents.size(); idx++) {
 
         Gate* parent_gate = parents[idx];
 
