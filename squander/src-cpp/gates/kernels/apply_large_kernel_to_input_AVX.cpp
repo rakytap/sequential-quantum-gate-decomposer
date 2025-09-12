@@ -582,21 +582,17 @@ void apply_2qbit_kernel_to_state_vector_input_parallel_AVX(Matrix& two_qbit_unit
 
 // Macro for 3-qubit row computation when inner_qbit == 0
 #define COMPUTE_3QBIT_ROW_CONSECUTIVE(row_letter, mv00, mv20, mv40, mv60) \
-    __m256d data_##row_letter##0 = _mm256_mul_pd(element_000_vec, mv##mv00##0); \
-    __m256d data_##row_letter##1 = _mm256_mul_pd(element_000_vec, mv##mv00##1); \
-    __m256d data_##row_letter##2 = _mm256_mul_pd(element_010_vec, mv##mv20##0); \
-    __m256d data_##row_letter##3 = _mm256_mul_pd(element_010_vec, mv##mv20##1); \
-    __m256d data_##row_letter##4 = _mm256_mul_pd(element_100_vec, mv##mv40##0); \
-    __m256d data_##row_letter##5 = _mm256_mul_pd(element_100_vec, mv##mv40##1); \
-    __m256d data_##row_letter##6 = _mm256_mul_pd(element_110_vec, mv##mv60##0); \
-    __m256d data_##row_letter##7 = _mm256_mul_pd(element_110_vec, mv##mv60##1); \
-    __m256d data_##row_letter##8 = _mm256_add_pd(data_##row_letter##0, data_##row_letter##2); \
-    __m256d data_##row_letter##9 = _mm256_add_pd(data_##row_letter##1, data_##row_letter##3); \
-    __m256d data_##row_letter##10 = _mm256_add_pd(data_##row_letter##4, data_##row_letter##6); \
-    __m256d data_##row_letter##11 = _mm256_add_pd(data_##row_letter##5, data_##row_letter##7); \
-    __m256d data_##row_letter##12 = _mm256_add_pd(data_##row_letter##8, data_##row_letter##10); \
-    __m256d data_##row_letter##13 = _mm256_add_pd(data_##row_letter##9, data_##row_letter##11); \
-    __m256d data_##row_letter = _mm256_hadd_pd(data_##row_letter##12, data_##row_letter##13); \
+    __m256d data_real_##row_letter = _mm256_setzero_pd(); \
+    __m256d data_imag_##row_letter = _mm256_setzero_pd(); \
+    data_real_##row_letter = _mm256_fmadd_pd(element_000_vec, mv##mv00##0, data_real_##row_letter); \
+    data_real_##row_letter = _mm256_fmadd_pd(element_010_vec, mv##mv20##0, data_real_##row_letter); \
+    data_real_##row_letter = _mm256_fmadd_pd(element_100_vec, mv##mv40##0, data_real_##row_letter); \
+    data_real_##row_letter = _mm256_fmadd_pd(element_110_vec, mv##mv60##0, data_real_##row_letter); \
+    data_imag_##row_letter = _mm256_fmadd_pd(element_000_vec, mv##mv00##1, data_imag_##row_letter); \
+    data_imag_##row_letter = _mm256_fmadd_pd(element_010_vec, mv##mv20##1, data_imag_##row_letter); \
+    data_imag_##row_letter = _mm256_fmadd_pd(element_100_vec, mv##mv40##1, data_imag_##row_letter); \
+    data_imag_##row_letter = _mm256_fmadd_pd(element_110_vec, mv##mv60##1, data_imag_##row_letter); \
+    __m256d data_##row_letter = _mm256_hadd_pd(data_real_##row_letter, data_imag_##row_letter ); \
     data_##row_letter = _mm256_permute4x64_pd(data_##row_letter, 0b11011000); \
     data_##row_letter = _mm256_hadd_pd(data_##row_letter, data_##row_letter); \
     __m128d low128##row_letter = _mm256_castpd256_pd128(data_##row_letter); \
@@ -881,16 +877,6 @@ void apply_4qbit_kernel_to_state_vector_input_AVX(Matrix& unitary, Matrix& input
         __m256d element_1100_vec_real = _mm256_setzero_pd();
         __m256d element_1110_vec_real = _mm256_setzero_pd();
 
-
-        __m256d element_0000_vec_imag = _mm256_setzero_pd();
-        __m256d element_0010_vec_imag = _mm256_setzero_pd();
-        __m256d element_0100_vec_imag = _mm256_setzero_pd();
-        __m256d element_0110_vec_imag = _mm256_setzero_pd();
-        __m256d element_1000_vec_imag = _mm256_setzero_pd();
-        __m256d element_1010_vec_imag = _mm256_setzero_pd();
-        __m256d element_1100_vec_imag = _mm256_setzero_pd();
-        __m256d element_1110_vec_imag = _mm256_setzero_pd();
-
         int base = 0;
         int shift = 0;
         
@@ -933,26 +919,6 @@ void apply_4qbit_kernel_to_state_vector_input_AVX(Matrix& unitary, Matrix& input
             element_1010_vec_real = _mm256_loadu_pd((double*)input.get_data() + 2 * current_idx_middle1_pair_loc);
             element_1100_vec_real = _mm256_loadu_pd((double*)input.get_data() + 2 * current_idx_middle2_pair_loc);
             element_1110_vec_real = _mm256_loadu_pd((double*)input.get_data() + 2 * current_idx_middle12_pair_loc);
-
-
-            element_0000_vec_imag = _mm256_permute4x64_pd(element_0000_vec_real, 0b10110001);
-            element_0010_vec_imag = _mm256_permute4x64_pd(element_0010_vec_real, 0b10110001);
-            element_0100_vec_imag = _mm256_permute4x64_pd(element_0100_vec_real, 0b10110001);
-            element_0110_vec_imag = _mm256_permute4x64_pd(element_0110_vec_real, 0b10110001);
-            element_1000_vec_imag = _mm256_permute4x64_pd(element_1000_vec_real, 0b10110001);
-            element_1010_vec_imag = _mm256_permute4x64_pd(element_1010_vec_real, 0b10110001);
-            element_1100_vec_imag = _mm256_permute4x64_pd(element_1100_vec_real, 0b10110001);
-            element_1110_vec_imag = _mm256_permute4x64_pd(element_1110_vec_real, 0b10110001); 
-
-            element_0000_vec_real = _mm256_mul_pd(element_0000_vec_real,neg);
-            element_0010_vec_real = _mm256_mul_pd(element_0010_vec_real,neg);
-            element_0100_vec_real = _mm256_mul_pd(element_0100_vec_real,neg);
-            element_0110_vec_real = _mm256_mul_pd(element_0110_vec_real,neg);
-            element_1000_vec_real = _mm256_mul_pd(element_1000_vec_real,neg);
-            element_1010_vec_real = _mm256_mul_pd(element_1010_vec_real,neg);
-            element_1100_vec_real = _mm256_mul_pd(element_1100_vec_real,neg);
-            element_1110_vec_real = _mm256_mul_pd(element_1110_vec_real,neg);
-
         }
         else{
 
@@ -988,25 +954,26 @@ void apply_4qbit_kernel_to_state_vector_input_AVX(Matrix& unitary, Matrix& input
         element_1010_vec_real     = get_AVX_vector(element_middle1_pair, element_middle1_inner_pair);
         element_1100_vec_real     = get_AVX_vector(element_middle2_pair, element_middle2_inner_pair);
         element_1110_vec_real     = get_AVX_vector(element_middle12_pair, element_middle12_inner_pair);
-
-        element_0000_vec_imag = _mm256_permute4x64_pd(element_0000_vec_real, 0b10110001);
-        element_0010_vec_imag = _mm256_permute4x64_pd(element_0010_vec_real, 0b10110001);
-        element_0100_vec_imag = _mm256_permute4x64_pd(element_0100_vec_real, 0b10110001);
-        element_0110_vec_imag = _mm256_permute4x64_pd(element_0110_vec_real, 0b10110001);
-        element_1000_vec_imag = _mm256_permute4x64_pd(element_1000_vec_real, 0b10110001);
-        element_1010_vec_imag = _mm256_permute4x64_pd(element_1010_vec_real, 0b10110001);
-        element_1100_vec_imag = _mm256_permute4x64_pd(element_1100_vec_real, 0b10110001);
-        element_1110_vec_imag = _mm256_permute4x64_pd(element_1110_vec_real, 0b10110001);
-
-        element_0000_vec_real = _mm256_mul_pd(element_0000_vec_real,neg);
-        element_0010_vec_real = _mm256_mul_pd(element_0010_vec_real,neg);
-        element_0100_vec_real = _mm256_mul_pd(element_0100_vec_real,neg);
-        element_0110_vec_real = _mm256_mul_pd(element_0110_vec_real,neg);
-        element_1000_vec_real = _mm256_mul_pd(element_1000_vec_real,neg);
-        element_1010_vec_real = _mm256_mul_pd(element_1010_vec_real,neg);
-        element_1100_vec_real = _mm256_mul_pd(element_1100_vec_real,neg);
-        element_1110_vec_real = _mm256_mul_pd(element_1110_vec_real,neg);
     }
+
+            __m256d element_0000_vec_imag = _mm256_permute4x64_pd(element_0000_vec_real, 0b10110001);
+            __m256d element_0010_vec_imag = _mm256_permute4x64_pd(element_0010_vec_real, 0b10110001);
+            __m256d element_0100_vec_imag = _mm256_permute4x64_pd(element_0100_vec_real, 0b10110001);
+            __m256d element_0110_vec_imag = _mm256_permute4x64_pd(element_0110_vec_real, 0b10110001);
+            __m256d element_1000_vec_imag = _mm256_permute4x64_pd(element_1000_vec_real, 0b10110001);
+            __m256d element_1010_vec_imag = _mm256_permute4x64_pd(element_1010_vec_real, 0b10110001);
+            __m256d element_1100_vec_imag = _mm256_permute4x64_pd(element_1100_vec_real, 0b10110001);
+            __m256d element_1110_vec_imag = _mm256_permute4x64_pd(element_1110_vec_real, 0b10110001); 
+
+            element_0000_vec_real = _mm256_mul_pd(element_0000_vec_real,neg);
+            element_0010_vec_real = _mm256_mul_pd(element_0010_vec_real,neg);
+            element_0100_vec_real = _mm256_mul_pd(element_0100_vec_real,neg);
+            element_0110_vec_real = _mm256_mul_pd(element_0110_vec_real,neg);
+            element_1000_vec_real = _mm256_mul_pd(element_1000_vec_real,neg);
+            element_1010_vec_real = _mm256_mul_pd(element_1010_vec_real,neg);
+            element_1100_vec_real = _mm256_mul_pd(element_1100_vec_real,neg);
+            element_1110_vec_real = _mm256_mul_pd(element_1110_vec_real,neg);
+
                 QGD_Complex16 results[16];
             for (int mult_idx = 0; mult_idx < 16; mult_idx++) {
                 double* unitary_row_1 = (double*)unitary.get_data() + 32*mult_idx;
@@ -1027,39 +994,27 @@ void apply_4qbit_kernel_to_state_vector_input_AVX(Matrix& unitary, Matrix& input
                 __m256d row7_vec = _mm256_loadu_pd(unitary_row_7);
                 __m256d row8_vec = _mm256_loadu_pd(unitary_row_8);
 
-                __m256d data_u1 = _mm256_mul_pd(element_0000_vec_real, row1_vec);
-                __m256d data_u2 = _mm256_mul_pd(element_0000_vec_imag, row1_vec);
-                __m256d data_u3 = _mm256_mul_pd(element_0010_vec_real, row2_vec);
-                __m256d data_u4 = _mm256_mul_pd(element_0010_vec_imag, row2_vec);
-                __m256d data_u5 = _mm256_mul_pd(element_0100_vec_real, row3_vec);
-                __m256d data_u6 = _mm256_mul_pd(element_0100_vec_imag, row3_vec);
-                __m256d data_u7 = _mm256_mul_pd(element_0110_vec_real, row4_vec);
-                __m256d data_u8 = _mm256_mul_pd(element_0110_vec_imag, row4_vec);
-                __m256d data_u9 = _mm256_mul_pd(element_1000_vec_real, row5_vec);
-                __m256d data_u10 = _mm256_mul_pd(element_1000_vec_imag, row5_vec);
-                __m256d data_u11 = _mm256_mul_pd(element_1010_vec_real, row6_vec);
-                __m256d data_u12 = _mm256_mul_pd(element_1010_vec_imag, row6_vec);
-                __m256d data_u13 = _mm256_mul_pd(element_1100_vec_real, row7_vec);
-                __m256d data_u14 = _mm256_mul_pd(element_1100_vec_imag, row7_vec);
-                __m256d data_u15 = _mm256_mul_pd(element_1110_vec_real, row8_vec);
-                __m256d data_u16 = _mm256_mul_pd(element_1110_vec_imag, row8_vec);
+                __m256d data_real = _mm256_setzero_pd();
+                __m256d data_imag = _mm256_setzero_pd();
 
-                __m256d sum1 = _mm256_add_pd(data_u1, data_u3);
-                __m256d sum2 = _mm256_add_pd(data_u2, data_u4);
-                __m256d sum3 = _mm256_add_pd(data_u5, data_u7);
-                __m256d sum4 = _mm256_add_pd(data_u6, data_u8);
-                __m256d sum5 = _mm256_add_pd(data_u9, data_u11);
-                __m256d sum6 = _mm256_add_pd(data_u10, data_u12);
-                __m256d sum7 = _mm256_add_pd(data_u13, data_u15);
-                __m256d sum8 = _mm256_add_pd(data_u14, data_u16);
-                __m256d sum9 = _mm256_add_pd(sum1, sum3);
-                __m256d sum10 = _mm256_add_pd(sum2, sum4);
-                __m256d sum11 = _mm256_add_pd(sum5, sum7);
-                __m256d sum12 = _mm256_add_pd(sum6, sum8);
-                __m256d final_sum1 = _mm256_add_pd(sum9, sum11);
-                __m256d final_sum2 = _mm256_add_pd(sum10, sum12);
+                data_real = _mm256_fmadd_pd(element_0000_vec_real, row1_vec, data_real);
+                data_imag = _mm256_fmadd_pd(element_0000_vec_imag, row1_vec, data_imag);
+                data_real = _mm256_fmadd_pd(element_0010_vec_real, row2_vec, data_real);
+                data_imag = _mm256_fmadd_pd(element_0010_vec_imag, row2_vec, data_imag);
+                data_real = _mm256_fmadd_pd(element_0100_vec_real, row3_vec, data_real);
+                data_imag = _mm256_fmadd_pd(element_0100_vec_imag, row3_vec, data_imag);
+                data_real = _mm256_fmadd_pd(element_0110_vec_real, row4_vec, data_real);
+                data_imag = _mm256_fmadd_pd(element_0110_vec_imag, row4_vec, data_imag);
+                data_real = _mm256_fmadd_pd(element_1000_vec_real, row5_vec, data_real);
+                data_imag = _mm256_fmadd_pd(element_1000_vec_imag, row5_vec, data_imag);
+                data_real = _mm256_fmadd_pd(element_1010_vec_real, row6_vec, data_real);
+                data_imag = _mm256_fmadd_pd(element_1010_vec_imag, row6_vec, data_imag);
+                data_real = _mm256_fmadd_pd(element_1100_vec_real, row7_vec, data_real);
+                data_imag = _mm256_fmadd_pd(element_1100_vec_imag, row7_vec, data_imag);
+                data_real = _mm256_fmadd_pd(element_1110_vec_real, row8_vec, data_real);
+                data_imag = _mm256_fmadd_pd(element_1110_vec_imag, row8_vec, data_imag);
 
-                __m256d final_vec = _mm256_hadd_pd(final_sum1, final_sum2);
+                __m256d final_vec = _mm256_hadd_pd(data_real, data_imag);
                 final_vec = _mm256_permute4x64_pd(final_vec, 0b11011000);
                 final_vec = _mm256_hadd_pd(final_vec, final_vec);
                 __m128d low128 = _mm256_castpd256_pd128(final_vec);
@@ -1345,70 +1300,43 @@ void apply_5qbit_kernel_to_state_vector_input_AVX(Matrix& unitary, Matrix& input
                 __m256d row15_vec = _mm256_loadu_pd(unitary_row_15);
                 __m256d row16_vec = _mm256_loadu_pd(unitary_row_16);
 
-                __m256d data_u1 = _mm256_mul_pd(element_00000_vec_real, row1_vec);
-                __m256d data_u2 = _mm256_mul_pd(element_00000_vec_imag, row1_vec);
-                __m256d data_u3 = _mm256_mul_pd(element_00010_vec_real, row2_vec);
-                __m256d data_u4 = _mm256_mul_pd(element_00010_vec_imag, row2_vec);
-                __m256d data_u5 = _mm256_mul_pd(element_00100_vec_real, row3_vec);
-                __m256d data_u6 = _mm256_mul_pd(element_00100_vec_imag, row3_vec);
-                __m256d data_u7 = _mm256_mul_pd(element_00110_vec_real, row4_vec);
-                __m256d data_u8 = _mm256_mul_pd(element_00110_vec_imag, row4_vec);
-                __m256d data_u9 = _mm256_mul_pd(element_01000_vec_real, row5_vec);
-                __m256d data_u10 = _mm256_mul_pd(element_01000_vec_imag, row5_vec);
-                __m256d data_u11 = _mm256_mul_pd(element_01010_vec_real, row6_vec);
-                __m256d data_u12 = _mm256_mul_pd(element_01010_vec_imag, row6_vec);
-                __m256d data_u13 = _mm256_mul_pd(element_01100_vec_real, row7_vec);
-                __m256d data_u14 = _mm256_mul_pd(element_01100_vec_imag, row7_vec);
-                __m256d data_u15 = _mm256_mul_pd(element_01110_vec_real, row8_vec);
-                __m256d data_u16 = _mm256_mul_pd(element_01110_vec_imag, row8_vec); 
-                __m256d data_u17 = _mm256_mul_pd(element_10000_vec_real, row9_vec);
-                __m256d data_u18 = _mm256_mul_pd(element_10000_vec_imag, row9_vec);
-                __m256d data_u19 = _mm256_mul_pd(element_10010_vec_real, row10_vec);
-                __m256d data_u20 = _mm256_mul_pd(element_10010_vec_imag, row10_vec);
-                __m256d data_u21 = _mm256_mul_pd(element_10100_vec_real, row11_vec);
-                __m256d data_u22 = _mm256_mul_pd(element_10100_vec_imag, row11_vec);
-                __m256d data_u23 = _mm256_mul_pd(element_10110_vec_real, row12_vec);
-                __m256d data_u24 = _mm256_mul_pd(element_10110_vec_imag, row12_vec);
-                __m256d data_u25 = _mm256_mul_pd(element_11000_vec_real, row13_vec);
-                __m256d data_u26 = _mm256_mul_pd(element_11000_vec_imag, row13_vec);
-                __m256d data_u27 = _mm256_mul_pd(element_11010_vec_real, row14_vec);
-                __m256d data_u28 = _mm256_mul_pd(element_11010_vec_imag, row14_vec);
-                __m256d data_u29 = _mm256_mul_pd(element_11100_vec_real, row15_vec);
-                __m256d data_u30 = _mm256_mul_pd(element_11100_vec_imag, row15_vec);
-                __m256d data_u31 = _mm256_mul_pd(element_11110_vec_real, row16_vec);
-                __m256d data_u32 = _mm256_mul_pd(element_11110_vec_imag, row16_vec);
+                __m256d data_real = _mm256_setzero_pd();
+                __m256d data_imag = _mm256_setzero_pd();
 
-                __m256d sum1 = _mm256_add_pd(data_u1, data_u3);
-                __m256d sum2 = _mm256_add_pd(data_u2, data_u4);
-                __m256d sum3 = _mm256_add_pd(data_u5, data_u7);
-                __m256d sum4 = _mm256_add_pd(data_u6, data_u8);
-                __m256d sum5 = _mm256_add_pd(data_u9, data_u11);
-                __m256d sum6 = _mm256_add_pd(data_u10, data_u12);
-                __m256d sum7 = _mm256_add_pd(data_u13, data_u15);
-                __m256d sum8 = _mm256_add_pd(data_u14, data_u16);
-                __m256d sum9 = _mm256_add_pd(data_u17, data_u19);
-                __m256d sum10 = _mm256_add_pd(data_u18, data_u20);
-                __m256d sum11 = _mm256_add_pd(data_u21, data_u23);
-                __m256d sum12 = _mm256_add_pd(data_u22, data_u24);
-                __m256d sum13 = _mm256_add_pd(data_u25, data_u27);
-                __m256d sum14 = _mm256_add_pd(data_u26, data_u28);
-                __m256d sum15 = _mm256_add_pd(data_u29, data_u31);
-                __m256d sum16 = _mm256_add_pd(data_u30, data_u32);
-                __m256d sum17 = _mm256_add_pd(sum1, sum3);
-                __m256d sum18 = _mm256_add_pd(sum2, sum4);
-                __m256d sum19 = _mm256_add_pd(sum5, sum7);
-                __m256d sum20 = _mm256_add_pd(sum6, sum8);
-                __m256d sum21 = _mm256_add_pd(sum9, sum11);
-                __m256d sum22 = _mm256_add_pd(sum10, sum12);
-                __m256d sum23 = _mm256_add_pd(sum13, sum15);
-                __m256d sum24 = _mm256_add_pd(sum14, sum16);
-                __m256d sum25 = _mm256_add_pd(sum17, sum19);
-                __m256d sum26 = _mm256_add_pd(sum18, sum20);
-                __m256d sum27 = _mm256_add_pd(sum21, sum23);
-                __m256d sum28 = _mm256_add_pd(sum22, sum24);
-                __m256d final_sum1 = _mm256_add_pd(sum25, sum27);
-                __m256d final_sum2 = _mm256_add_pd(sum26, sum28);
-                __m256d final_vec = _mm256_hadd_pd(final_sum1, final_sum2);
+                data_real = _mm256_fmadd_pd(element_00000_vec_real, row1_vec, data_real);
+                data_imag = _mm256_fmadd_pd(element_00000_vec_imag, row1_vec, data_imag);
+                data_real = _mm256_fmadd_pd(element_00010_vec_real, row2_vec, data_real);
+                data_imag = _mm256_fmadd_pd(element_00010_vec_imag, row2_vec, data_imag);
+                data_real = _mm256_fmadd_pd(element_00100_vec_real, row3_vec, data_real);
+                data_imag = _mm256_fmadd_pd(element_00100_vec_imag, row3_vec, data_imag);
+                data_real = _mm256_fmadd_pd(element_00110_vec_real, row4_vec, data_real);
+                data_imag = _mm256_fmadd_pd(element_00110_vec_imag, row4_vec, data_imag);
+                data_real = _mm256_fmadd_pd(element_01000_vec_real, row5_vec, data_real);
+                data_imag = _mm256_fmadd_pd(element_01000_vec_imag, row5_vec, data_imag);
+                data_real = _mm256_fmadd_pd(element_01010_vec_real, row6_vec, data_real);
+                data_imag = _mm256_fmadd_pd(element_01010_vec_imag, row6_vec, data_imag);
+                data_real = _mm256_fmadd_pd(element_01100_vec_real, row7_vec, data_real);
+                data_imag = _mm256_fmadd_pd(element_01100_vec_imag, row7_vec, data_imag);
+                data_real = _mm256_fmadd_pd(element_01110_vec_real, row8_vec, data_real);
+                data_imag = _mm256_fmadd_pd(element_01110_vec_imag, row8_vec, data_imag);
+                data_real = _mm256_fmadd_pd(element_10000_vec_real, row9_vec, data_real);
+                data_imag = _mm256_fmadd_pd(element_10000_vec_imag, row9_vec, data_imag);
+                data_real = _mm256_fmadd_pd(element_10010_vec_real, row10_vec, data_real);
+                data_imag = _mm256_fmadd_pd(element_10010_vec_imag, row10_vec, data_imag);
+                data_real = _mm256_fmadd_pd(element_10100_vec_real, row11_vec, data_real);
+                data_imag = _mm256_fmadd_pd(element_10100_vec_imag, row11_vec, data_imag);
+                data_real = _mm256_fmadd_pd(element_10110_vec_real, row12_vec, data_real);
+                data_imag = _mm256_fmadd_pd(element_10110_vec_imag, row12_vec, data_imag);
+                data_real = _mm256_fmadd_pd(element_11000_vec_real, row13_vec, data_real);
+                data_imag = _mm256_fmadd_pd(element_11000_vec_imag, row13_vec, data_imag);
+                data_real = _mm256_fmadd_pd(element_11010_vec_real, row14_vec, data_real);
+                data_imag = _mm256_fmadd_pd(element_11010_vec_imag, row14_vec, data_imag);
+                data_real = _mm256_fmadd_pd(element_11100_vec_real, row15_vec, data_real);
+                data_imag = _mm256_fmadd_pd(element_11100_vec_imag, row15_vec, data_imag);
+                data_real = _mm256_fmadd_pd(element_11110_vec_real, row16_vec, data_real);
+                data_imag = _mm256_fmadd_pd(element_11110_vec_imag, row16_vec, data_imag);
+
+                __m256d final_vec = _mm256_hadd_pd(data_real, data_imag);
                 final_vec = _mm256_permute4x64_pd(final_vec, 0b11011000);
                 final_vec = _mm256_hadd_pd(final_vec, final_vec);
                 __m128d low128 = _mm256_castpd256_pd128(final_vec);
