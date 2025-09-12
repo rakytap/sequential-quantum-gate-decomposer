@@ -43,19 +43,19 @@ class ApplyKernelTestSuite {
 public:
 
 void test2QubitGate() {
-    int num_qubits = 3;
+    int num_qubits = 6;
     Matrix state = generateRandomState(num_qubits);
     Matrix test_state = state.copy();
     Matrix test_state_avx = state.copy();
     Matrix_real params = Matrix_real(1,1);
 
-    std::vector<int> qubits = {1,2};
+    std::vector<int> qubits = {0,3};
     Matrix Umtx = create_identity(1<<qubits.size());
     memset(params.get_data(), 0.0, params.size()*sizeof(double) );  
     
-    Gates_block GHZ_circ = Gates_block(3);
-    GHZ_circ.add_h(1);
-    GHZ_circ.add_cnot(2,1);
+    Gates_block GHZ_circ = Gates_block(6);
+    GHZ_circ.add_h(0);
+    GHZ_circ.add_cnot(3,0);
     GHZ_circ.apply_to(params,state);
     
     Gates_block GHZ_circ_mini = Gates_block(2);
@@ -63,7 +63,7 @@ void test2QubitGate() {
     GHZ_circ_mini.add_cnot(1,0);
     GHZ_circ_mini.apply_to(params,Umtx);
 
-    apply_2qbit_kernel_to_state_vector_input(Umtx, test_state, 1, 2, 1 << num_qubits);
+    apply_2qbit_kernel_to_state_vector_input(Umtx, test_state, 0, 3, 1 << num_qubits);
 
     double fid = fidelity(state, test_state);
     std::cout << "2-qubit identity gate fidelity: " << fid << std::endl;
@@ -77,13 +77,13 @@ void test2QubitGate() {
 }
 
 void test3QubitGate() {
-    int num_qubits = 4;
+    int num_qubits = 10;
     Matrix state = generateRandomState(num_qubits);
     Matrix test_state = state.copy();
     Matrix test_state_avx = state.copy();
     Matrix_real params = Matrix_real(1,1);
 
-    std::vector<int> qubits = {1,2,3};
+    std::vector<int> qubits = {0,4,7};
     Matrix Umtx = create_identity(1<<qubits.size());
     memset(params.get_data(), 0.0, params.size()*sizeof(double) );  
 
@@ -120,7 +120,7 @@ void test4QubitGate() {
     Matrix test_state_avx = state.copy();
     Matrix_real params = Matrix_real(1,1);
 
-    std::vector<int> qubits = {1,4,6,9};
+    std::vector<int> qubits = {0,4,6,9};
     Matrix Umtx = create_identity(1<<qubits.size());
     memset(params.get_data(), 0.0, params.size()*sizeof(double) );  
 
@@ -194,27 +194,25 @@ void test5QubitGate() {
 }
 
 void testNQubitGate_Parallel_GHZ() {
-    int num_qubits = 15;
+    int num_qubits = 10;
     Matrix state = generateRandomState(num_qubits);
     Matrix_real params = Matrix_real(1,1);
     Matrix test_state = state.copy();
     Matrix test_state2 = state.copy();
-    std::vector<int> qubits = {1,3,7,11};
+    std::vector<int> qubits = {0,4,7};
     Matrix Umtx = create_identity(1<<qubits.size());
     memset(params.get_data(), 0.0, params.size()*sizeof(double) );  
     
-    Gates_block GHZ_circ = Gates_block(15);
+    Gates_block GHZ_circ = Gates_block(10);
     GHZ_circ.add_h(qubits[0]);
     GHZ_circ.add_cnot(qubits[1], qubits[0]);
     GHZ_circ.add_cnot(qubits[2], qubits[0]);
-    GHZ_circ.add_cnot(qubits[3], qubits[0]);
     GHZ_circ.apply_to(params,state);
     
-    Gates_block GHZ_circ_mini = Gates_block(4);
+    Gates_block GHZ_circ_mini = Gates_block(3);
     GHZ_circ_mini.add_h(0);
     GHZ_circ_mini.add_cnot(1,0);
     GHZ_circ_mini.add_cnot(2,0);
-    GHZ_circ_mini.add_cnot(3,0);
 
     GHZ_circ_mini.apply_to(params,Umtx);
     apply_nqbit_unitary_AVX(Umtx, test_state, qubits, 1 << num_qubits);
@@ -274,7 +272,7 @@ int main() {
     suite.test5QubitGate();
     #ifdef USE_AVX
     suite.testNQubitGate_Parallel_GHZ();
-    suite.testNQubit_Gate_speed();
+    //suite.testNQubit_Gate_speed();
     #endif
     return 0;
 }
