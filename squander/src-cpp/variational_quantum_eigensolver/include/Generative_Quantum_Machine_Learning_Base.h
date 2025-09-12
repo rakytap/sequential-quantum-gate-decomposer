@@ -145,6 +145,12 @@ double Gaussian_kernel(std::vector<int>& x, std::vector<int>& y, double sigma);
 @brief Call to evaluate the expectation value of the square of distribution we want to approximate
 @return The calculated value of the expectation value of the square of the distribution we want to approximate
 */
+double expectation_value_P_star_P_star_approx();
+
+/**
+@brief Call to evaluate the expectation value of the square of distribution we want to approximate
+@return The calculated value of the expectation value of the square of the distribution we want to approximate
+*/
 double expectation_value_P_star_P_star();
 
 /**
@@ -165,8 +171,15 @@ double TV_of_the_distributions(Matrix& State_right);
 @param State_right The state on the right for which the expectation value is evaluated. It is a column vector.
 @return The calculated mmd
 */
-double MMD_of_the_distributions(Matrix& State_left, Matrix& State_right);
+double MMD_of_the_distributions_approx(Matrix& State_left, Matrix& State_right);
 
+/**
+@brief Call to evaluate the maximum mean discrepancy of the given distribution and the one created by our circuit
+@param State_left The state on the let for which the expectation value is evaluated. It is a column vector. In the sandwich product it is transposed and conjugated inside the function.
+@param State_right The state on the right for which the expectation value is evaluated. It is a column vector.
+@return The calculated mmd
+*/
+double MMD_of_the_distributions(Matrix& State_left, Matrix& State_right);
 
 
 /**

@@ -242,7 +242,7 @@ void Generative_Quantum_Machine_Learning_Base::fill_lookup_table() {
 @brief Call to evaluate the expectation value of the square of distribution we want to approximate
 @return The calculated value of the expectation value of the square of the distribution we want to approximate
 */
-double Generative_Quantum_Machine_Learning_Base::expectation_value_P_star_P_star() {
+double Generative_Quantum_Machine_Learning_Base::expectation_value_P_star_P_star_approx() {
     double ev=0.0;
     tbb::combinable<double> priv_partial_ev{[](){return 0.0;}};
     tbb::parallel_for( tbb::blocked_range<int>(0, sample_size, 1024), [&](tbb::blocked_range<int> r) {
@@ -259,6 +259,27 @@ double Generative_Quantum_Machine_Learning_Base::expectation_value_P_star_P_star
         ev += a;
     });
     ev /= sample_size*(sample_size-1);
+    return ev;
+}
+
+/**
+@brief Call to evaluate the expectation value of the square of distribution we want to approximate
+@return The calculated value of the expectation value of the square of the distribution we want to approximate
+*/
+double Generative_Quantum_Machine_Learning_Base::expectation_value_P_star_P_star() {
+    double ev=0.0;
+    tbb::combinable<double> priv_partial_ev{[](){return 0.0;}};
+    tbb::parallel_for( tbb::blocked_range<int>(0, 1<<qbit_num, 1024), [&](tbb::blocked_range<int> r) {
+        double& ev_local = priv_partial_ev.local();
+        for (int idx1=r.begin(); idx1<r.end(); idx1++) {
+            for (int idx2=0; idx2<1<<qbit_num; idx2++) {
+                ev_local += P_star[idx1]*P_star[idx2]*Gaussian_kernel(all_bitstrings[idx1], all_bitstrings[idx2], sigma);
+            }
+        }
+    });
+    priv_partial_ev.combine_each([&ev](double a) {
+        ev += a;
+    });
     return ev;
 }
 
@@ -307,6 +328,72 @@ double Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions( Matri
         }
     });
 
+    // Calculate the expectation values 
+    double ev_P_theta_P_theta   = 0.0;
+    double ev_P_theta_P_star    = 0.0;
+    tbb::combinable<double> priv_partial_ev_P_theta_P_theta{[](){return 0.0;}};
+    tbb::combinable<double> priv_partial_ev_P_theta_P_star{[](){return 0.0;}};
+    tbb::parallel_for( tbb::blocked_range2d<int>(0, 1<<qbit_num, 0, 1<<qbit_num), [&](tbb::blocked_range2d<int> r) {
+        double& ev_P_theta_P_theta_local = priv_partial_ev_P_theta_P_theta.local();
+        double& ev_P_theta_P_star_local = priv_partial_ev_P_theta_P_star.local();
+        for (int idx1=r.rows().begin(); idx1<r.rows().end(); idx1++) {
+            for (int idx2=r.cols().begin(); idx2<r.cols().end(); idx2++) {
+                if (use_lookup) {
+                    ev_P_theta_P_theta_local += P_theta[idx1]*P_theta[idx2]*gaussian_lookup_table[idx1][idx2];
+                    ev_P_theta_P_star_local += P_theta[idx1]*P_star[idx2]*gaussian_lookup_table[idx1][idx2];
+                }
+                else {
+                    ev_P_theta_P_theta_local += P_theta[idx1]*P_theta[idx2]*Gaussian_kernel(all_bitstrings[idx1], all_bitstrings[idx2], sigma);
+                    ev_P_theta_P_star_local += P_theta[idx1]*P_star[idx2]*Gaussian_kernel(all_bitstrings[idx1], all_bitstrings[idx2], sigma);
+                }
+            }
+        }
+    });
+    priv_partial_ev_P_theta_P_theta.combine_each([&ev_P_theta_P_theta](double a) {
+        ev_P_theta_P_theta += a;
+    });
+    priv_partial_ev_P_theta_P_star.combine_each([&ev_P_theta_P_star](double a) {
+        ev_P_theta_P_star += a;
+    });
+
+
+    {
+        tbb::spin_mutex::scoped_lock my_lock{my_mutex};
+
+        number_of_iters++;
+        
+    }
+
+    double result = ev_P_theta_P_theta + ev_P_star_P_star - 2*ev_P_theta_P_star;
+    return result;
+}
+
+
+/**
+@brief Call to evaluate the maximum mean discrepancy of the given distribution and the one created by our circuit
+@param State_left The state on the let for which the expectation value is evaluated. It is a column vector. In the sandwich product it is transposed and conjugated inside the function.
+@param State_right The state on the right for which the expectation value is evaluated. It is a column vector.
+@return The calculated mmd
+*/
+double Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions_approx( Matrix& State_left, Matrix& State_right ) {
+    if ( State_left.rows != State_right.rows) {
+        std::string error("Variational_Quantum_Eigensolver_Base::Expectation_value_of_energy_real: States on the right and left should be of the same dimension as the Hamiltonian");
+        throw error;
+    }
+
+    // If the ev of the P_star hasnt been evaluated we need to evaluate it
+    if (ev_P_star_P_star < 0 ) {
+        ev_P_star_P_star = expectation_value_P_star_P_star();
+    }
+
+    // We calculate the distribution created by our circuit at the given traing data points "we sample our distribution"
+    std::vector<double> P_theta(1<<qbit_num);
+    tbb::parallel_for( tbb::blocked_range<int>(0, 1<<qbit_num, 1024), [&](tbb::blocked_range<int> r) {
+        for (int idx=r.begin(); idx<r.end(); idx++) {
+            P_theta[idx] = State_right[idx].real*State_right[idx].real + State_right[idx].imag*State_right[idx].imag;
+        }
+    });
+
     std::random_device rd;
     std::mt19937 gen(rd());
     std::discrete_distribution<> dist(P_theta.begin(), P_theta.end());
@@ -317,6 +404,7 @@ double Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions( Matri
             theta_sample_indices[sample_idx] = dist(gen);
         }
     });
+
 
     // Calculate the expectation values 
     double ev_P_theta_P_theta   = 0.0;
@@ -362,8 +450,6 @@ double Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions( Matri
     double result = ev_P_theta_P_theta + ev_P_star_P_star - 2*ev_P_theta_P_star;
     return result;
 }
-
-
 
 
 /**
