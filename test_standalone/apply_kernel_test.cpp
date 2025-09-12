@@ -48,11 +48,21 @@ void test2QubitGate() {
     Matrix identity = create_identity(4);
     Matrix test_state = state.copy();
 
-    apply_2qbit_kernel_to_state_vector_input(identity, test_state, 0, 1, 1 << num_qubits);
+    apply_2qbit_kernel_to_state_vector_input(identity, test_state, 1, 2, 1 << num_qubits);
 
     double fid = fidelity(state, test_state);
     std::cout << "2-qubit identity gate fidelity: " << fid << std::endl;
     assert(std::abs(fid - 1.0) < 1e-10);
+
+    #ifdef USE_AVX 
+    Matrix test_state_avx = state.copy();
+    std::vector<int> qubits = {1,2};
+
+    apply_2qbit_kernel_to_state_vector_input_AVX(identity, test_state_avx, qubits, 1 << num_qubits);
+
+    double fid_avx = fidelity(state, test_state_avx);
+    std::cout << "2-qubit identity gate fidelity AVX: " << fid_avx << std::endl;
+    #endif
 }
 
 void test3QubitGate() {
@@ -60,13 +70,22 @@ void test3QubitGate() {
     Matrix state = generateRandomState(num_qubits);
     Matrix identity = create_identity(8);
     Matrix test_state = state.copy();
-    std::vector<int> qubits = {0,1,2};
+    std::vector<int> qubits = {0,2,3};
 
     apply_3qbit_kernel_to_state_vector_input(identity, test_state, qubits, 1 << num_qubits);
 
     double fid = fidelity(state, test_state);
     std::cout << "3-qubit identity gate fidelity: " << fid << std::endl;
+
     assert(std::abs(fid - 1.0) < 1e-10);
+        #ifdef USE_AVX 
+    Matrix test_state_avx = state.copy();
+
+    apply_large_kernel_to_input_AVX(identity, test_state_avx, qubits, 1 << num_qubits);
+
+    double fid_avx = fidelity(state, test_state_avx);
+    std::cout << "3-qubit identity gate fidelity AVX: " << fid_avx << std::endl;
+    #endif
 }
 
 void test4QubitGate() {
@@ -80,6 +99,15 @@ void test4QubitGate() {
 
     double fid = fidelity(state, test_state);
     std::cout << "4-qubit identity gate fidelity: " << fid << std::endl;
+    #ifdef USE_AVX 
+    Matrix test_state_avx = state.copy();
+
+    apply_large_kernel_to_input_AVX(identity, test_state_avx, qubits, 1 << num_qubits);
+
+    double fid_avx = fidelity(state, test_state_avx);
+    std::cout << "4-qubit identity gate fidelity AVX: " << fid_avx << std::endl;
+    #endif
+
     assert(std::abs(fid - 1.0) < 1e-10);
 }
 
@@ -95,9 +123,16 @@ void test5QubitGate() {
     double fid = fidelity(state, test_state);
     std::cout << "5-qubit identity gate fidelity: " << fid << std::endl;
     assert(std::abs(fid - 1.0) < 1e-10);
+    #ifdef USE_AVX 
+    Matrix test_state_avx = state.copy();
+    apply_large_kernel_to_input_AVX(identity, test_state_avx, qubits, 1 << num_qubits);
+    double fid_avx = fidelity(state, test_state_avx);
+    std::cout << "5-qubit identity gate fidelity AVX: " << fid_avx << std::endl;
+    #endif 
+
 }
 
-void test5QubitGate_Parallel_GHZ() {
+void testNQubitGate_Parallel_GHZ() {
     int num_qubits = 20;
     Matrix state = generateRandomState(num_qubits);
     Matrix_real params = Matrix_real(1,1);
@@ -110,13 +145,18 @@ void test5QubitGate_Parallel_GHZ() {
     Gates_block GHZ_circ = Gates_block(20);
     GHZ_circ.add_h(1);
     GHZ_circ.add_cnot(2,1);
+    GHZ_circ.add_cnot(3,1);
+    GHZ_circ.add_cnot(4,1);
     GHZ_circ.apply_to(params,state);
     
     Gates_block GHZ_circ_mini = Gates_block(4);
     GHZ_circ_mini.add_h(0);
     GHZ_circ_mini.add_cnot(1,0);
+    GHZ_circ_mini.add_cnot(2,0);
+    GHZ_circ_mini.add_cnot(3,0);
+
     GHZ_circ_mini.apply_to(params,Umtx);
-    apply_nqbit_unitary_AVX(Umtx, test_state, qubits, 1 << num_qubits);
+    apply_nqbit_unitary_parallel_AVX(Umtx, test_state, qubits, 1 << num_qubits);
     double fid = fidelity(state, test_state);
     std::cout << num_qubits <<"-qubit GHZ gate fidelity: " << fid << std::endl;
     assert(std::abs(fid - 1.0) < 1e-10);
@@ -128,24 +168,37 @@ void testNQubit_Gate_speed() {
     Matrix state = generateRandomState(num_qubits);
     Matrix test_state = state.copy();
     Matrix test_state2 = state.copy();
-    for (int n=2; n<5; n++){
+    int offset = 4;
+    for (int n=2; n<6; n++){
         std::vector<int> qubits;
-        for (int qubit=3;qubit<3+n;qubit++){
+        for (int qubit=offset;qubit<offset+n;qubit++){
             qubits.push_back(qubit);
         }
         Matrix Umtx = create_identity(1<<qubits.size());
 
         int samples = 500;
-        double nqbit_kernel_time = 0.0;
-        tbb::tick_count nqbit_kernel_start = tbb::tick_count::now();
+        double dedicated_kernel_time = 0.0;
+        tbb::tick_count dedicated_kernel_start = tbb::tick_count::now();
         for (int idx=0; idx<samples;idx++){
-            apply_nqbit_unitary_AVX(Umtx, test_state, qubits, 1 << num_qubits);
+            apply_large_kernel_to_input(Umtx, test_state, qubits, 1 << num_qubits);
         }
-        tbb::tick_count nqbit_kernel_end = tbb::tick_count::now();
+        tbb::tick_count dedicated_kernel_end = tbb::tick_count::now();
+        dedicated_kernel_time  = (dedicated_kernel_end-dedicated_kernel_start).seconds()/samples;
+        std::cout << qubits.size()<<" qubit dedicated kernel time "<< dedicated_kernel_time << std::endl;
 
-        nqbit_kernel_time  = (nqbit_kernel_time + (nqbit_kernel_end-nqbit_kernel_start).seconds())/samples;
 
-        std::cout << qubits.size()<<" qubit kernel simulation time: " << nqbit_kernel_time<< std::endl;
+        #ifdef USE_AVX
+        double dedicated_kernel_AVX_time = 0.0;
+        tbb::tick_count dedicated_kernel_AVX_start = tbb::tick_count::now();
+        for (int idx=0; idx<samples;idx++){
+            apply_large_kernel_to_input_AVX(Umtx, test_state, qubits, 1 << num_qubits);
+        }
+        tbb::tick_count dedicated_kernel_AVX_end = tbb::tick_count::now();
+
+        dedicated_kernel_AVX_time  = (dedicated_kernel_AVX_time + (dedicated_kernel_AVX_end-dedicated_kernel_AVX_start).seconds())/samples;
+
+        std::cout << qubits.size()<<" qubit dedicated AVX kernel time "<< dedicated_kernel_AVX_time << std::endl;
+        #endif
     }
 }
 
@@ -158,7 +211,9 @@ int main() {
     suite.test3QubitGate();
     suite.test4QubitGate();
     suite.test5QubitGate();
-    suite.test5QubitGate_Parallel_GHZ();
+    #ifdef USE_AVX
+    suite.testNQubitGate_Parallel_GHZ();
     suite.testNQubit_Gate_speed();
+    #endif
     return 0;
 }
