@@ -696,12 +696,10 @@ Gate::apply_kernel_from_right( Matrix& u3_1qbit, Matrix& input ) {
 }
 
 #ifdef _WIN32
-void sincos(double x, double *s, double *c)
+Gate::void sincos(double x, double *s, double *c)
 {
 	*s = sin(x), *c = cos(x);
 }
-#elif defined(__APPLE__)
-#define sincos __sincos
 #endif
 
 /**

@@ -653,6 +653,7 @@ apply_crot_kernel_to_matrix_input(Matrix& u3_1qbit1, Matrix& u3_1qbit2, Matrix& 
 */
 void
 apply_crot_kernel_to_matrix_input_AVX(Matrix& u3_1qbit1, Matrix& u3_1qbit2, Matrix& input, const int& target_qbit, const int& control_qbit, const int& matrix_size) {
+#ifdef USE_AVX
     input.ensure_aligned();
 
     int index_step_target = 1 << target_qbit;
@@ -858,5 +859,5 @@ apply_crot_kernel_to_matrix_input_AVX(Matrix& u3_1qbit1, Matrix& u3_1qbit2, Matr
 
     }
 
-
+#endif
 }
