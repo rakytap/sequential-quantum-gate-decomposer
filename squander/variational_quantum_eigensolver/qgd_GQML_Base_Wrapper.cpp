@@ -66,13 +66,16 @@ typedef struct qgd_Generative_Quantum_Machine_Learning_Base_Wrapper{
 @param P_star The distribution to approximate
 @param sigma Parameter of the gaussian kernels
 @param qbit_num The number of qubits spanning the unitary Umtx
+@param use_lookup Use lookup table for the Gaussian kernels
+@param cliques The cliques in the graph
+@param use_exact Use exact calculation for MMD or just approximation with samples
 @param config A map that can be used to set hyperparameters during the process
 @return Return with a void pointer pointing to an instance of Generative_Quantum_Machine_Learning_Base class.
 */
 Generative_Quantum_Machine_Learning_Base* 
-create_qgd_Generative_Quantum_Machine_Learning_Base( std::vector<int> x_vectors, std::vector<std::vector<int>> x_bitstrings, Matrix_real P_star, double sigma, int qbit_num, bool use_lookup_table, std::vector<std::vector<int>> cliques, std::map<std::string, Config_Element>& config) {
+create_qgd_Generative_Quantum_Machine_Learning_Base( std::vector<int> x_vectors, std::vector<std::vector<int>> x_bitstrings, Matrix_real P_star, Matrix_real sigma, int qbit_num, bool use_lookup_table, std::vector<std::vector<int>> cliques, bool use_exact, std::map<std::string, Config_Element>& config) {
 
-    return new Generative_Quantum_Machine_Learning_Base( x_vectors, x_bitstrings, P_star, sigma, qbit_num, use_lookup_table, cliques, config);
+    return new Generative_Quantum_Machine_Learning_Base( x_vectors, x_bitstrings, P_star, sigma, qbit_num, use_lookup_table, cliques, use_exact, config);
 }
 
 
@@ -147,28 +150,30 @@ qgd_Generative_Quantum_Machine_Learning_Base_Wrapper_new(PyTypeObject *type, PyO
 /**
 @brief Method called when a python instance of the class qgd_Generative_Quantum_Machine_Learning_Base_Wrapper is initialized
 @param self A pointer pointing to an instance of the class qgd_Generative_Quantum_Machine_Learning_Base_Wrapper.
-@param args A tuple of the input arguments: x_bitsring_data (numpy array), p_star_data (numpy array), sigma (double), qbit_num (integer), cliques (numpy array), use_lookup_table (bool)
+@param args A tuple of the input arguments: x_bitsring_data (numpy array), p_star_data (numpy array), sigma (double), qbit_num (integer), cliques (numpy array), use_lookup_table (bool), cliques (list), use_exact (bool)
 @param kwds A tuple of keywords
 */
 static int
 qgd_Generative_Quantum_Machine_Learning_Base_Wrapper_init(qgd_Generative_Quantum_Machine_Learning_Base_Wrapper *self, PyObject *args, PyObject *kwds)
 {
     // The tuple of expected keywords
-    static char *kwlist[] = {(char*)"x_bitstring_data", (char*)"p_star_data", (char*) "sigma", (char*)"qbit_num", (char*)"use_lookup_table", (char*)"cliques", (char*)"config", NULL};
+    static char *kwlist[] = {(char*)"x_bitstring_data", (char*)"p_star_data", (char*) "sigma", (char*)"qbit_num", (char*)"use_lookup_table", (char*)"cliques", (char*)"use_exact", (char*)"config", NULL};
  
     // initiate variables for input arguments
     PyArrayObject *x_bitstring_data_arg = NULL;
     PyArrayObject *p_star_data_arg = NULL;
     PyObject *cliques_data_arg = NULL;
-    double sigma=1.0;
+    PyArrayObject *sigma_data_arg;
     int  qbit_num = -1; 
     int use_lookup_table;
     PyObject *config_arg = NULL;
+    int use_exact;
     
     // parsing input arguments
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OOdipOO", kwlist,
-                                   &x_bitstring_data_arg, &p_star_data_arg, &sigma, &qbit_num, &use_lookup_table, &cliques_data_arg, &config_arg))
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OOOipOpO", kwlist,
+                                   &x_bitstring_data_arg, &p_star_data_arg, &sigma_data_arg, &qbit_num, &use_lookup_table, &cliques_data_arg, &use_exact,&config_arg))
         return -1;
+
     
     int shape = Power_of_2(qbit_num);
     // convert python object array to numpy C API array
@@ -217,9 +222,27 @@ qgd_Generative_Quantum_Machine_Learning_Base_Wrapper_init(qgd_Generative_Quantum
 
     Matrix_real p_stars = Matrix_real(p_star_data, p_star_shape, 1);
 
+    if ( sigma_data_arg == NULL ) return -1;
+    if (!PyList_Check(sigma_data_arg)) {
+        PyErr_SetString(PyExc_TypeError, "sigma expected to be a list");
+        return -1;
+    }
+
+    sigma_data_arg = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)sigma_data_arg, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+    double* sigma_data = (double*)PyArray_DATA(sigma_data_arg);
+    int sigma_ndim = PyArray_NDIM(sigma_data_arg);
+    int sigma_shape = PyArray_DIMS(sigma_data_arg)[0];
+
+    if ( sigma_ndim != 1 || sigma_shape != 3 ) {
+        PyErr_SetString(PyExc_TypeError, "sigma expected to be a 1 by 3 list");
+        return -1;
+    }
+
+    Matrix_real sigma(sigma_data, sigma_shape, 1);
+
     if ( cliques_data_arg == NULL ) return -1;
     if (!PyList_Check(cliques_data_arg)) {
-        PyErr_SetString(PyExc_TypeError, "Expected a list of lists");
+        PyErr_SetString(PyExc_TypeError, "cliques expected to be a list of lists");
         return -1;
     }
 
@@ -231,7 +254,7 @@ qgd_Generative_Quantum_Machine_Learning_Base_Wrapper_init(qgd_Generative_Quantum
         std::vector<int> clique;
 
         if (!PyList_Check(row)) {
-            PyErr_SetString(PyExc_TypeError, "Expected a list of lists");
+            PyErr_SetString(PyExc_TypeError, "cliques Expected a list of lists");
             return -1;
         }
 
@@ -282,14 +305,9 @@ qgd_Generative_Quantum_Machine_Learning_Base_Wrapper_init(qgd_Generative_Quantum
 
     }
 
-    if (sigma < 0) {
-        std::cout << "Sigma should be given as a positive number, " << sigma << "  was given" << std::endl;
-        return -1;
-    }
-
     // create an instance of the class Generative_Quantum_Machine_Learning_Base
     if (qbit_num > 0 ) {
-        self->gqml =  create_qgd_Generative_Quantum_Machine_Learning_Base(x_indices, x_bitstrings, p_stars, sigma, qbit_num, use_lookup_table, cliques, config);
+        self->gqml =  create_qgd_Generative_Quantum_Machine_Learning_Base(x_indices, x_bitstrings, p_stars, sigma, qbit_num, use_lookup_table, cliques, use_exact, config);
     }
     else {
         std::cout << "The number of qubits should be given as a positive integer, " << qbit_num << "  was given" << std::endl;

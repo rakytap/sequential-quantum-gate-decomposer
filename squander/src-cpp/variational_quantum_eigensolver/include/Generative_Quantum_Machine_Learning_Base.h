@@ -25,6 +25,7 @@ limitations under the License.
 #define GENERATIVE_QUANTUM_MACHINE_LEARNING_BASE_H
 
 #include "Optimization_Interface.h"
+#include "matrix_real.h"
 
 /// @brief Type definition of the fifferent types of ansatz
 typedef enum ansatz_type {HEA, HEA_ZYZ, QCMRF} ansatz_type;
@@ -86,8 +87,7 @@ private:
     double ev_P_star_P_star;
 
     /// Parameter of the Gaussian kernel
-    /// TODO: an array of 3 different sigmas
-    double sigma;
+    Matrix_real sigma;
     
     // Lookup table for the gauss kernels
     std::vector<std::vector<double>> gaussian_lookup_table;
@@ -102,6 +102,10 @@ private:
 
     // The cliques in the graph
     std::vector<std::vector<int>> cliques;
+
+    double (Generative_Quantum_Machine_Learning_Base::*MMD_of_the_distributions)(Matrix&);
+
+    bool use_exact;
 
 public:
 
@@ -121,10 +125,12 @@ Generative_Quantum_Machine_Learning_Base();
 @param sigma_in Parameter of the gaussian kernels
 @param qbit_num_in The number of qubits spanning the unitary Umtx
 @param use_lookup_table_in Use lookup table for the gaussian kernel
+@param cliques_in A list of the cliques int the graph
+@param use_exact Use exact calculation of the MMD or approximation with samples
 @param config_in A map that can be used to set hyperparameters during the process
 @return An instance of the class
 */
-Generative_Quantum_Machine_Learning_Base( std::vector<int> sample_indices_in, std::vector<std::vector<int>> sample_bitstrings_in, Matrix_real P_star_in, double sigma_in, int qbit_num_in, bool use_lookup_table_in, std::vector<std::vector<int>> cliques_in, std::map<std::string, Config_Element>& config_in);
+Generative_Quantum_Machine_Learning_Base( std::vector<int> sample_indices_in, std::vector<std::vector<int>> sample_bitstrings_in, Matrix_real P_star_in, Matrix_real sigma_in, int qbit_num_in, bool use_lookup_table_in, std::vector<std::vector<int>> cliques_in, bool use_exact, std::map<std::string, Config_Element>& config_in);
 
 /**
 @brief Destructor of the class
@@ -139,19 +145,19 @@ virtual ~Generative_Quantum_Machine_Learning_Base();
 @param sigma The parameters of the kernel
 @return The calculated value of the kernel function
 */
-double Gaussian_kernel(std::vector<int>& x, std::vector<int>& y, double sigma);
+double Gaussian_kernel(std::vector<int>& x, std::vector<int>& y, Matrix_real& sigma);
 
 /**
-@brief Call to evaluate the expectation value of the square of distribution we want to approximate
-@return The calculated value of the expectation value of the square of the distribution we want to approximate
+@brief Call to evaluate the approximated expectation value of the square of the distribution
+@return The approximated value of the expectation value of the square of the distribution
 */
 double expectation_value_P_star_P_star_approx();
 
 /**
-@brief Call to evaluate the expectation value of the square of distribution we want to approximate
-@return The calculated value of the expectation value of the square of the distribution we want to approximate
+@brief Call to evaluate the expectation value of the square of the distribution
+@return The calculated value of the expectation value of the square of the distribution
 */
-double expectation_value_P_star_P_star();
+double expectation_value_P_star_P_star_exact();
 
 /**
 @brief Call to calculate and save the values of the gaussian kernel needed for traing
@@ -166,20 +172,18 @@ void fill_lookup_table();
 double TV_of_the_distributions(Matrix& State_right);
 
 /**
-@brief Call to evaluate the maximum mean discrepancy of the given distribution and the one created by our circuit
-@param State_left The state on the let for which the expectation value is evaluated. It is a column vector. In the sandwich product it is transposed and conjugated inside the function.
+@brief Call to evaluate the approximated maximum mean discrepancy of the given distribution and the one created by our circuit
 @param State_right The state on the right for which the expectation value is evaluated. It is a column vector.
 @return The calculated mmd
 */
-double MMD_of_the_distributions_approx(Matrix& State_left, Matrix& State_right);
+double MMD_of_the_distributions_approx(Matrix& State_right);
 
 /**
 @brief Call to evaluate the maximum mean discrepancy of the given distribution and the one created by our circuit
-@param State_left The state on the let for which the expectation value is evaluated. It is a column vector. In the sandwich product it is transposed and conjugated inside the function.
 @param State_right The state on the right for which the expectation value is evaluated. It is a column vector.
 @return The calculated mmd
 */
-double MMD_of_the_distributions(Matrix& State_left, Matrix& State_right);
+double MMD_of_the_distributions_exact(Matrix& State_right);
 
 
 /**

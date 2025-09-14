@@ -84,7 +84,7 @@ Generative_Quantum_Machine_Learning_Base::Generative_Quantum_Machine_Learning_Ba
 @param config_in A map that can be used to set hyperparameters during the process
 @return An instance of the class
 */
-Generative_Quantum_Machine_Learning_Base::Generative_Quantum_Machine_Learning_Base(std::vector<int> sample_indices_in, std::vector<std::vector<int>> sample_bitstrings_in, Matrix_real P_star_in, double sigma_in, int qbit_num_in, bool use_lookup_table_in, std::vector<std::vector<int>> cliques_in, std::map<std::string, Config_Element>& config_in) : Optimization_Interface(Matrix(Power_of_2(qbit_num_in),1), qbit_num_in, false, config_in, RANDOM, accelerator_num) {
+Generative_Quantum_Machine_Learning_Base::Generative_Quantum_Machine_Learning_Base(std::vector<int> sample_indices_in, std::vector<std::vector<int>> sample_bitstrings_in, Matrix_real P_star_in, Matrix_real sigma_in, int qbit_num_in, bool use_lookup_table_in, std::vector<std::vector<int>> cliques_in, bool use_exact_in, std::map<std::string, Config_Element>& config_in) : Optimization_Interface(Matrix(Power_of_2(qbit_num_in),1), qbit_num_in, false, config_in, RANDOM, accelerator_num) {
 
 	sample_indices = sample_indices_in;
 
@@ -135,7 +135,8 @@ Generative_Quantum_Machine_Learning_Base::Generative_Quantum_Machine_Learning_Ba
 
     use_lookup = use_lookup_table_in;
 
-    
+    use_exact = use_exact_in;
+
     for (int idx=0; idx<1<<qbit_num; idx++) {
         std::vector<int> bitstring;
         for (int j = qbit_num - 1; j >= 0; --j) {
@@ -144,10 +145,19 @@ Generative_Quantum_Machine_Learning_Base::Generative_Quantum_Machine_Learning_Ba
         all_bitstrings.push_back(bitstring);
     }
 
-    ev_P_star_P_star = expectation_value_P_star_P_star();
     if (use_lookup) {
         fill_lookup_table();
     }
+
+    if (use_exact) {
+        MMD_of_the_distributions = &Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions_exact;
+        ev_P_star_P_star = expectation_value_P_star_P_star_exact();
+    }
+    else {
+        MMD_of_the_distributions = &Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions_approx;
+        ev_P_star_P_star = expectation_value_P_star_P_star_approx();
+    }
+    
 
     cliques = cliques_in;
 }
@@ -199,7 +209,7 @@ void Generative_Quantum_Machine_Learning_Base::start_optimization(){
     solve_layer_optimization_problem(num_of_parameters, solution_guess);
 
     if (ev_P_star_P_star == -1) {
-        ev_P_star_P_star = expectation_value_P_star_P_star();
+        ev_P_star_P_star = expectation_value_P_star_P_star_exact();
     }
     if (use_lookup && gaussian_lookup_table.size() == 0) {
         fill_lookup_table();
@@ -215,14 +225,14 @@ void Generative_Quantum_Machine_Learning_Base::start_optimization(){
 @param sigma The parameters of the kernel
 @return The calculated value of the kernel function
 */
-double Generative_Quantum_Machine_Learning_Base::Gaussian_kernel(std::vector<int>& x, std::vector<int>& y, double sigma) {
+double Generative_Quantum_Machine_Learning_Base::Gaussian_kernel(std::vector<int>& x, std::vector<int>& y, Matrix_real& sigma) {
     // The norm stores the distance between the two data points (the more qbit they differ in the bigger it is)
     double norm=0;
     for (int idx=0; idx<qbit_num; idx++) {
         norm += (x[idx] - y[idx])*(x[idx]-y[idx]);
     }
     double norm_squared = norm*norm;
-    double result = (exp(-norm_squared*0.5*4)+ exp(-norm_squared*0.5*0.1)+ exp(-norm_squared*0.5*0.001))/3;
+    double result = (exp(-norm_squared*0.5/sigma[0])+ exp(-norm_squared*0.5/sigma[1])+ exp(-norm_squared*0.5/sigma[2]))/3;
     return result;
 }
 
@@ -233,14 +243,14 @@ void Generative_Quantum_Machine_Learning_Base::fill_lookup_table() {
     gaussian_lookup_table = std::vector<std::vector<double>>(1<<qbit_num, std::vector<double>(1<<qbit_num, 0));
     for (int idx1=0; idx1 < 1<<qbit_num; idx1++) {
         for (int idx2=0; idx2 < 1<<qbit_num; idx2++) {
-            gaussian_lookup_table[idx1][idx2] = Gaussian_kernel(all_bitstrings[idx1], all_bitstrings[idx2], 10);
+            gaussian_lookup_table[idx1][idx2] = Gaussian_kernel(all_bitstrings[idx1], all_bitstrings[idx2], sigma);
         }
     }
 }
 
 /**
-@brief Call to evaluate the expectation value of the square of distribution we want to approximate
-@return The calculated value of the expectation value of the square of the distribution we want to approximate
+@brief Call to evaluate the approximated expectation value of the square of the distribution
+@return The approximated value of the expectation value of the square of the distribution
 */
 double Generative_Quantum_Machine_Learning_Base::expectation_value_P_star_P_star_approx() {
     double ev=0.0;
@@ -263,10 +273,10 @@ double Generative_Quantum_Machine_Learning_Base::expectation_value_P_star_P_star
 }
 
 /**
-@brief Call to evaluate the expectation value of the square of distribution we want to approximate
-@return The calculated value of the expectation value of the square of the distribution we want to approximate
+@brief Call to evaluate the expectation value of the square of the distribution
+@return The calculated value of the expectation value of the square of the distribution
 */
-double Generative_Quantum_Machine_Learning_Base::expectation_value_P_star_P_star() {
+double Generative_Quantum_Machine_Learning_Base::expectation_value_P_star_P_star_exact() {
     double ev=0.0;
     tbb::combinable<double> priv_partial_ev{[](){return 0.0;}};
     tbb::parallel_for( tbb::blocked_range<int>(0, 1<<qbit_num, 1024), [&](tbb::blocked_range<int> r) {
@@ -305,19 +315,13 @@ double Generative_Quantum_Machine_Learning_Base::TV_of_the_distributions(Matrix&
 
 /**
 @brief Call to evaluate the maximum mean discrepancy of the given distribution and the one created by our circuit
-@param State_left The state on the let for which the expectation value is evaluated. It is a column vector. In the sandwich product it is transposed and conjugated inside the function.
 @param State_right The state on the right for which the expectation value is evaluated. It is a column vector.
 @return The calculated mmd
 */
-double Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions( Matrix& State_left, Matrix& State_right ) {
-    if ( State_left.rows != State_right.rows) {
-        std::string error("Variational_Quantum_Eigensolver_Base::Expectation_value_of_energy_real: States on the right and left should be of the same dimension as the Hamiltonian");
-        throw error;
-    }
-
+double Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions_exact( Matrix& State_right ) {
     // If the ev of the P_star hasnt been evaluated we need to evaluate it
     if (ev_P_star_P_star < 0 ) {
-        ev_P_star_P_star = expectation_value_P_star_P_star();
+        ev_P_star_P_star = expectation_value_P_star_P_star_exact();
     }
 
     // We calculate the distribution created by our circuit at the given traing data points "we sample our distribution"
@@ -370,20 +374,15 @@ double Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions( Matri
 
 
 /**
-@brief Call to evaluate the maximum mean discrepancy of the given distribution and the one created by our circuit
-@param State_left The state on the let for which the expectation value is evaluated. It is a column vector. In the sandwich product it is transposed and conjugated inside the function.
+@brief Call to evaluate the approximated maximum mean discrepancy of the given distribution and the one created by our circuit
 @param State_right The state on the right for which the expectation value is evaluated. It is a column vector.
 @return The calculated mmd
 */
-double Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions_approx( Matrix& State_left, Matrix& State_right ) {
-    if ( State_left.rows != State_right.rows) {
-        std::string error("Variational_Quantum_Eigensolver_Base::Expectation_value_of_energy_real: States on the right and left should be of the same dimension as the Hamiltonian");
-        throw error;
-    }
+double Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions_approx( Matrix& State_right ) {
 
     // If the ev of the P_star hasnt been evaluated we need to evaluate it
     if (ev_P_star_P_star < 0 ) {
-        ev_P_star_P_star = expectation_value_P_star_P_star();
+        ev_P_star_P_star = expectation_value_P_star_P_star_approx();
     }
 
     // We calculate the distribution created by our circuit at the given traing data points "we sample our distribution"
@@ -467,7 +466,7 @@ double Generative_Quantum_Machine_Learning_Base::optimization_problem_non_static
     Matrix State = instance->initial_state.copy();
 
     instance->apply_to(parameters, State);
-    MMD = instance->MMD_of_the_distributions(State, State);
+    MMD = (instance->*MMD_of_the_distributions)(State);
 
     return MMD;
 }
@@ -490,7 +489,7 @@ double Generative_Quantum_Machine_Learning_Base::optimization_problem(Matrix_rea
     apply_to(parameters, State);
 	
 	
-    double MMD = MMD_of_the_distributions(State, State);
+    double MMD = (this->*MMD_of_the_distributions)(State);
 	
     return MMD;
 }
@@ -528,7 +527,7 @@ void Generative_Quantum_Machine_Learning_Base::optimization_problem_combined_non
         [&]{
             State = instance->initial_state.copy();
             instance->apply_to(parameters, State);
-            *f0 = instance->MMD_of_the_distributions(State, State);
+            *f0 = (instance->*MMD_of_the_distributions)(State);
             
         },
         [&]{
@@ -540,7 +539,7 @@ void Generative_Quantum_Machine_Learning_Base::optimization_problem_combined_non
 
     tbb::parallel_for( tbb::blocked_range<int>(0,parameter_num_loc,2), [&](tbb::blocked_range<int> r) {
         for (int idx=r.begin(); idx<r.end(); ++idx) { 
-            grad[idx] = 2*instance->MMD_of_the_distributions(State_deriv[idx], State);
+            grad[idx] = 2*(instance->*MMD_of_the_distributions)(State_deriv[idx]);
         }
     });
     
@@ -857,7 +856,7 @@ void Generative_Quantum_Machine_Learning_Base::generate_circuit( int layers, int
                 generate_clique_circuit(0, cliques[clique_idx], all_subsets, subset);
             }
             for (int qbit_idx=0; qbit_idx < qbit_num; qbit_idx++) {
-                add_h(qbit_idx);
+                add_u3(qbit_idx, true, true, true);
             }
             return;
         }
