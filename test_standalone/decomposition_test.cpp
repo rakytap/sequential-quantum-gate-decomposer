@@ -96,9 +96,17 @@ int main() {
         Umtx_adj[element_idx].imag = -element.imag;
     }
 //! [creating decomp class]
+    // create empty configuration map
+    std::map<std::string, Config_Element> config;
+
     // creating the class for the decomposition. Here Umtx_adj is the complex transposition of unitary Umtx
-    N_Qubit_Decomposition cDecomposition =
-                  N_Qubit_Decomposition( Umtx_adj, qbit_num, /* optimize_layer_num= */ false, /* initial_guess= */ RANDOM );
+    N_Qubit_Decomposition cDecomposition(
+        Umtx_adj,
+        qbit_num,
+        /* optimize_layer_num= */ false,
+        config,
+        /* initial_guess= */ RANDOM
+    );
 //! [creating decomp class]
 
 //! [set parameters]

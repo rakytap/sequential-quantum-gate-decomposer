@@ -31,10 +31,19 @@ limitations under the License.
 
 int get_grain_size(int index_step);
 
-void apply_large_kernel_to_state_vector_input(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size);
+void apply_large_kernel_to_input(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size);
 
 void apply_2qbit_kernel_to_state_vector_input(Matrix& two_qbit_unitary, Matrix& input, const int& inner_qbit, const int& outer_qbit, const int& matrix_size);
 
+void apply_2qbit_kernel_to_matrix_input(Matrix& two_qbit_unitary, Matrix& input, const int& inner_qbit, const int& outer_qbit, const int& matrix_size);
+
 void apply_3qbit_kernel_to_state_vector_input(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size);
 
+void apply_4qbit_kernel_to_state_vector_input(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size);
+
+void apply_5qbit_kernel_to_state_vector_input(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size);
+
+void apply_crot_kernel_to_matrix_input(Matrix& u3_1qbit1, Matrix& u3_qbit2, Matrix& input, const int& target_qbit, const int& control_qbit, const int& matrix_size);
+
+void apply_crot_kernel_to_matrix_input_AVX(Matrix& u3_1qbit1, Matrix& u3_qbit2, Matrix& input, const int& target_qbit, const int& control_qbit, const int& matrix_size);
 #endif

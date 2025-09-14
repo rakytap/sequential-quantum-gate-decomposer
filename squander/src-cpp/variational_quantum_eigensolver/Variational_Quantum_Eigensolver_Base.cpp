@@ -74,7 +74,7 @@ Variational_Quantum_Eigensolver_Base::Variational_Quantum_Eigensolver_Base() {
 @param config_in A map that can be used to set hyperparameters during the process
 @return An instance of the class
 */
-Variational_Quantum_Eigensolver_Base::Variational_Quantum_Eigensolver_Base( Matrix_sparse Hamiltonian_in, int qbit_num_in, std::map<std::string, Config_Element>& config_in) : Optimization_Interface(Matrix(Power_of_2(qbit_num_in),1), qbit_num_in, false, config_in, RANDOM, accelerator_num) {
+Variational_Quantum_Eigensolver_Base::Variational_Quantum_Eigensolver_Base( Matrix_sparse Hamiltonian_in, int qbit_num_in, std::map<std::string, Config_Element>& config_in, int accelerator_num) : Optimization_Interface(Matrix(Power_of_2(qbit_num_in),1), qbit_num_in, false, config_in, RANDOM, accelerator_num) {
 
 	Hamiltonian = Hamiltonian_in;
     // config maps
@@ -303,23 +303,121 @@ double Variational_Quantum_Eigensolver_Base::optimization_problem_non_static(Mat
 }
 
 
+#ifdef __GROQ__
+/**
+@brief The optimization problem of the final optimization implemented to be run on Groq hardware
+@param parameters An array of the free parameters to be optimized.
+@param chosen_device Indicate the device on which the state vector emulation is performed
+@return Returns with the cost function.
+*/
+double Variational_Quantum_Eigensolver_Base::optimization_problem_Groq(Matrix_real& parameters, int chosen_device)  {
+
+
+
+    Matrix State;
+
+
+    //tbb::tick_count t0_DFE = tbb::tick_count::now();
+    std::vector<int> target_qbits;
+    std::vector<int> control_qbits;
+    std::vector<Matrix> u3_qbit;
+    extract_gate_kernels_target_and_control_qubits(u3_qbit, target_qbits, control_qbits, parameters);
+        
+
+    // initialize the initial state on the chip if it was not given
+    if ( initial_state.size() == 0 ) {
+        
+        Matrix State_zero(0,0);  
+        apply_to_groq_sv(accelerator_num, chosen_device, qbit_num, u3_qbit, target_qbits, control_qbits, State_zero, id); 
+            
+        State = State_zero;
+            
+    }
+    else {
+	
+        State = initial_state.copy();
+        // apply state transformation via the Groq chip
+        apply_to_groq_sv(accelerator_num, chosen_device, qbit_num, u3_qbit, target_qbits, control_qbits, State, id);
+
+    }
+        
+        
+/*        
+    //////////////////////////////
+    Matrix State_copy = State.copy();
+
+
+    Decomposition_Base::apply_to(parameters, State_copy );
+
+
+    double diff = 0.0;
+    for( int64_t idx=0; idx<State_copy.size(); idx++ ) {
+
+        QGD_Complex16 element = State[idx];
+        QGD_Complex16 element_copy = State_copy[idx];
+        QGD_Complex16 element_diff;
+        element_diff.real = element.real - element_copy.real;
+        element_diff.imag = element.imag - element_copy.imag;
+ 
+        double diff_increment = element_diff.real*element_diff.real + element_diff.imag*element_diff.imag;
+        diff = diff + diff_increment;
+    }
+       
+    std::cout << "Variational_Quantum_Eigensolver_Base::apply_to checking diff: " << diff << std::endl;
+
+
+    if ( diff > 1e-4 ) {
+        std::string error("Groq and CPU results do not match");
+        throw(error);
+    }
+
+    //////////////////////////////
+*/
+
+
+	
+    double Energy = Expectation_value_of_energy_real(State, State);
+	
+    return Energy;
+
+}
+
+#endif
+
+
 /**
 @brief The optimization problem of the final optimization
-@param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
-@return Returns with the cost function. (zero if the qubits are desintangled.)
+@param parameters An array of the free parameters associated with the circuit. 
+@return Returns with the cost function.
 */
 double Variational_Quantum_Eigensolver_Base::optimization_problem(Matrix_real& parameters)  {
 
-    // initialize the initial state if it was not given
-    if ( initial_state.size() == 0 ) {
-        initialize_zero_state();
+
+    Matrix State;
+
+#ifdef __GROQ__
+    if ( accelerator_num > 0 ) {
+    
+        
+        return optimization_problem_Groq( parameters, 0 );
+            
     }
+    else {
+#endif
+        // initialize the initial state if it was not given
+        if ( initial_state.size() == 0 ) {
+            initialize_zero_state();
+        }
 	
-    Matrix State = initial_state.copy();
-	
-    apply_to(parameters, State);
-	
-    //State.print_matrix();
+        State = initial_state.copy();
+        apply_to(parameters, State);
+
+#ifdef __GROQ__
+    }
+#endif
+
+
+
 	
     double Energy = Expectation_value_of_energy_real(State, State);
 	
@@ -457,12 +555,32 @@ double Variational_Quantum_Eigensolver_Base::optimization_problem( double* param
 */
 void Variational_Quantum_Eigensolver_Base::initialize_zero_state( ) {
 
+    int initialize_state;
+    if ( config.count("initialize_state") > 0 ) { 
+         long long value;                   
+         config["initialize_state"].get_property( value );  
+         initialize_state = (int) value;
+    }
+    else {
+        initialize_state = 1;
+         
+    }
+    
+    if( initialize_state == 0 ) {
+        initial_state = Matrix(0, 0);
+        return;
+    }
+
     initial_state = Matrix( 1 << qbit_num , 1);
 
 
     initial_state[0].real = 1.0;
     initial_state[0].imag = 0.0;
-    memset(initial_state.get_data()+2, 0.0, (initial_state.size()*2-2)*sizeof(double) );      
+    memset(initial_state.get_data()+2, 0.0, (initial_state.size()*2-2)*sizeof(double) );    
+
+    initial_state[1].real = 0.0;
+    initial_state[1].imag = 0.0;  
+
 
     return;
 }
@@ -509,8 +627,8 @@ void Variational_Quantum_Eigensolver_Base::generate_circuit( int layers, int inn
             for (int layer_idx=0; layer_idx<layers ;layer_idx++){
 
                 for( int idx=0; idx<inner_blocks; idx++) {
-                    add_u3(1, true, true, true);                          
-                    add_u3(0, true, true, true);
+                    add_u3(1);                          
+                    add_u3(0);
                     add_cnot(1,0);
                 }
 
@@ -519,8 +637,8 @@ void Variational_Quantum_Eigensolver_Base::generate_circuit( int layers, int inn
                     if (control_qbit+2<qbit_num){
 
                         for( int idx=0; idx<inner_blocks; idx++) {
-                            add_u3(control_qbit+1, true, true, true);
-                            add_u3(control_qbit+2, true, true, true); 
+                            add_u3(control_qbit+1);
+                            add_u3(control_qbit+2); 
                         
                             add_cnot(control_qbit+2,control_qbit+1);
                         }
@@ -528,8 +646,8 @@ void Variational_Quantum_Eigensolver_Base::generate_circuit( int layers, int inn
                     }
 
                     for( int idx=0; idx<inner_blocks; idx++) {
-                        add_u3(control_qbit+1, true, true, true);  
-                        add_u3(control_qbit, true, true, true);  
+                        add_u3(control_qbit+1);  
+                        add_u3(control_qbit);  
 
                         add_cnot(control_qbit+1,control_qbit);
 
@@ -592,6 +710,7 @@ void Variational_Quantum_Eigensolver_Base::generate_circuit( int layers, int inn
                             add_gate( block_2 );                              
 
                             add_cnot(control_qbit+2,control_qbit+1);
+                            
                         }
 
                     }
@@ -616,6 +735,7 @@ void Variational_Quantum_Eigensolver_Base::generate_circuit( int layers, int inn
 
                 }
             }
+
 
             return;
         }        
@@ -648,22 +768,15 @@ Variational_Quantum_Eigensolver_Base::set_gate_structure( std::string filename )
     else {
         combine( gate_structure_tmp );
         optimized_parameters_mtx = optimized_parameters_mtx_tmp;
-        gates_num gates_num = get_gate_nums();
-
-        if ( gates_num.u3>0 )  std::cout << gates_num.u3 << " U3 gates," << std::endl;
-        if ( gates_num.rx>0 )  std::cout << gates_num.rx << " RX gates," << std::endl;
-        if ( gates_num.ry>0 )  std::cout << gates_num.ry << " RY gates," << std::endl;
-        if ( gates_num.rz>0 )  std::cout << gates_num.rz << " RZ gates," << std::endl;
-        if ( gates_num.cnot>0 )  std::cout << gates_num.cnot << " CNOT gates," << std::endl;
-        if ( gates_num.cz>0 )  std::cout << gates_num.cz << " CZ gates," << std::endl;
-        if ( gates_num.ch>0 )  std::cout << gates_num.ch << " CH gates," << std::endl;
-        if ( gates_num.x>0 )  std::cout << gates_num.x << " X gates," << std::endl;
-        if ( gates_num.sx>0 )  std::cout << gates_num.sx << " SX gates," << std::endl; 
-        if ( gates_num.syc>0 )  std::cout << gates_num.syc << " Sycamore gates," << std::endl;   
-        if ( gates_num.un>0 )  std::cout << gates_num.un << " UN gates," << std::endl;
-        if ( gates_num.cry>0 )  std::cout << gates_num.cry << " CRY gates," << std::endl;  
-        if ( gates_num.adap>0 )  std::cout << gates_num.adap << " Adaptive gates," << std::endl;
-        if ( gates_num.cz_nu>0 )  std::cout << gates_num.cz_nu << " CZ_NU gates," << std::endl; 
+            
+        std::stringstream sstream;
+        // get the number of gates used in the decomposition
+        std::map<std::string, int>&& gate_nums = get_gate_nums();
+    	
+        for( auto it=gate_nums.begin(); it != gate_nums.end(); it++ ) {
+            sstream << it->second << " " << it->first << " gates" << std::endl;
+        } 
+        print(sstream, 1);	
     }
 
 }

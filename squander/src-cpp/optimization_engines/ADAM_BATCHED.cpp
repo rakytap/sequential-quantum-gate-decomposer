@@ -151,6 +151,7 @@ void Optimization_Interface::solve_layer_optimization_problem_ADAM_BATCHED( int 
             adaptive_eta_loc = adaptive_eta;
         }
 
+
         double f0 = DBL_MAX;
         std::stringstream sstream;
         sstream << "iter_max: " << max_inner_iterations_loc << ", randomization threshold: " << iteration_threshold_of_randomization_loc << std::endl;

@@ -32,10 +32,6 @@ limitations under the License.
 #include <fstream>
 
 
-#ifdef __DFE__
-#include "common_DFE.h"
-#endif
-
 
 
 
@@ -161,8 +157,10 @@ Optimization_Interface::Optimization_Interface( Matrix Umtx_in, int qbit_num_in,
     // time spent on optimization
     CPU_time = 0.0;
 
-#ifdef __DFE__
-
+#if defined __DFE__
+    // number of utilized accelerators
+    accelerator_num = accelerator_num_in;
+#elif defined __GROQ__
     // number of utilized accelerators
     accelerator_num = accelerator_num_in;
 #else
@@ -212,17 +210,19 @@ void Optimization_Interface::export_current_cost_fnc(double current_minimum, Mat
     FILE* pFile;
     std::string filename("costfuncs_and_entropy.txt");
     
-    if (project_name != ""){filename = project_name + "_" + filename;}
-
-        const char* c_filename = filename.c_str();
-	pFile = fopen(c_filename, "a");
-
-        if (pFile==NULL) {
-            fputs ("File error",stderr); 
-            std::string error("Cannot open file.");
-            throw error;
+    if (project_name != "") {
+        filename = project_name + "_" + filename;
     }
 
+    const char* c_filename = filename.c_str();
+	pFile = fopen(c_filename, "a");
+
+    if (pFile==NULL) {
+        fputs ("File error",stderr); 
+        std::string error("Cannot open file.");
+        throw error;
+    }
+    
     Matrix input_state(Power_of_2(qbit_num),1);
 
     std::uniform_int_distribution<> distrib(0, qbit_num-2); 
@@ -235,10 +235,10 @@ void Optimization_Interface::export_current_cost_fnc(double current_minimum, Mat
     qbit_sublist[1] = 1;//qbit_sublist[0]+1;
 
     double renyi_entropy = get_second_Renyi_entropy(parameters, input_state, qbit_sublist);
-
+    
     fprintf(pFile,"%i\t%f\t%f\n", (int)number_of_iters, current_minimum, renyi_entropy);
     fclose(pFile);
-
+    
     return;
 }
 
@@ -269,13 +269,9 @@ Optimization_Interface::add_finalyzing_layer() {
     // creating block of gates
     Gates_block* block = new Gates_block( qbit_num );
 
-    // adding U3 gate to the block
-    bool Theta = true;
-    bool Phi = false;
-    bool Lambda = true;
-
+    // adding U1 gates for final phase corrections
     for (int qbit=0; qbit<qbit_num; qbit++) {
-        block->add_u3(qbit, Theta, Phi, Lambda);
+        block->add_u1(qbit);
     }
 
     // adding the opeartion block to the gates
@@ -368,6 +364,9 @@ Optimization_Interface::calc_decomposition_error(Matrix& decomposed_matrix ) {
     }
     else if ( cost_fnc == SUM_OF_SQUARES) {
         decomposition_error = get_cost_function_sum_of_squares(decomposed_matrix);
+    }
+    else if (cost_fnc == INFIDELITY){
+        decomposition_error = get_infidelity(decomposed_matrix);
     }
     else {
         std::string err("Optimization_Interface::optimization_problem: Cost function variant not implmented.");
@@ -503,9 +502,9 @@ void Optimization_Interface::randomize_parameters( Matrix_real& input, Matrix_re
 
 
 /**
-@brief The cost function of the optimization
-@param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
-@return Returns with the cost function. (zero if the qubits are desintangled.)
+@brief Evaluate the optimization problem of the optimization
+@param parameters An array of the free parameters to be optimized.
+@return Returns with the cost function.
 */
 double Optimization_Interface::optimization_problem( double* parameters ) {
 
@@ -520,9 +519,9 @@ double Optimization_Interface::optimization_problem( double* parameters ) {
 
 
 /**
-@brief The cost function of the optimization
-@param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
-@return Returns with the cost function. (zero if the qubits are desintangled.)
+@brief Evaluate the optimization problem of the optimization
+@param parameters An array of the free parameters to be optimized.
+@return Returns with the cost function.
 */
 double Optimization_Interface::optimization_problem( Matrix_real& parameters ) {
 
@@ -565,6 +564,9 @@ double Optimization_Interface::optimization_problem( Matrix_real& parameters ) {
     else if ( cost_fnc == SUM_OF_SQUARES) {
         return get_cost_function_sum_of_squares(matrix_new);
     }
+    else if (cost_fnc == INFIDELITY){
+        return get_infidelity(matrix_new);
+    }
     else {
         std::string err("Optimization_Interface::optimization_problem: Cost function variant not implmented.");
         throw err;
@@ -572,152 +574,236 @@ double Optimization_Interface::optimization_problem( Matrix_real& parameters ) {
 
 }
 
-
+#ifdef __DFE__
 /**
-@brief The cost function of the optimization with batched input (implemented only for the Frobenius norm cost function)
-@param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
-@return Returns with the cost function. (zero if the qubits are desintangled.)
+@brief The cost function of the optimization with batched input executed on DFE (implemented only for the Frobenius norm cost function)
+@param parameters An array of the free parameters to be optimized.
+@return Returns with the cost function values.
 */
 Matrix_real 
-Optimization_Interface::optimization_problem_batched( std::vector<Matrix_real>& parameters_vec) {
-
-tbb::tick_count t0_DFE = tbb::tick_count::now();    
-
+Optimization_Interface::optimization_problem_batched_DFE( std::vector<Matrix_real>& parameters_vec) {
 
 
     Matrix_real cost_fnc_mtx(parameters_vec.size(), 1);
 
-    int parallel = get_parallel_configuration();
-             
-#ifdef __DFE__
-    if ( Umtx.cols == Umtx.rows && get_accelerator_num() > 0 ) {
-        int gatesNum, gateSetNum, redundantGateSets;
-        DFEgate_kernel_type* DFEgates = convert_to_batched_DFE_gates( parameters_vec, gatesNum, gateSetNum, redundantGateSets );                        
+    int gatesNum, gateSetNum, redundantGateSets;
+    DFEgate_kernel_type* DFEgates = convert_to_batched_DFE_gates( parameters_vec, gatesNum, gateSetNum, redundantGateSets );                        
             
-        Matrix_real trace_DFE_mtx(gateSetNum, 3);
+    Matrix_real trace_DFE_mtx(gateSetNum, 3);
         
         
         
-        number_of_iters = number_of_iters + parameters_vec.size();  
+    number_of_iters = number_of_iters + parameters_vec.size();  
        
         
    
 #ifdef __MPI__
-        // the number of decomposing layers are divided between the MPI processes
+    // the number of decomposing layers are divided between the MPI processes
 
-        int mpi_gateSetNum = gateSetNum / world_size;
-        int mpi_starting_gateSetIdx = gateSetNum/world_size * current_rank;
+    int mpi_gateSetNum = gateSetNum / world_size;
+    int mpi_starting_gateSetIdx = gateSetNum/world_size * current_rank;
 
-        Matrix_real mpi_trace_DFE_mtx(mpi_gateSetNum, 3);
+    Matrix_real mpi_trace_DFE_mtx(mpi_gateSetNum, 3);
         
 
-        number_of_iters = number_of_iters + mpi_gateSetNum;   
+    number_of_iters = number_of_iters + mpi_gateSetNum;   
         
 
-        lock_lib();
-        calcqgdKernelDFE( Umtx.rows, Umtx.cols, DFEgates+mpi_starting_gateSetIdx*gatesNum, gatesNum, mpi_gateSetNum, trace_offset, mpi_trace_DFE_mtx.get_data() );
-        unlock_lib();
+    lock_lib();
+    calcqgdKernelDFE( Umtx.rows, Umtx.cols, DFEgates+mpi_starting_gateSetIdx*gatesNum, gatesNum, mpi_gateSetNum, trace_offset, mpi_trace_DFE_mtx.get_data() );
+    unlock_lib();
 
-        int bytes = mpi_trace_DFE_mtx.size()*sizeof(double);
-        MPI_Allgather(mpi_trace_DFE_mtx.get_data(), bytes, MPI_BYTE, trace_DFE_mtx.get_data(), bytes, MPI_BYTE, MPI_COMM_WORLD);
+    int bytes = mpi_trace_DFE_mtx.size()*sizeof(double);
+    MPI_Allgather(mpi_trace_DFE_mtx.get_data(), bytes, MPI_BYTE, trace_DFE_mtx.get_data(), bytes, MPI_BYTE, MPI_COMM_WORLD);
 
 #else
-        lock_lib();
-        calcqgdKernelDFE( Umtx.rows, Umtx.cols, DFEgates, gatesNum, gateSetNum, trace_offset, trace_DFE_mtx.get_data() );
-        unlock_lib();    
+    lock_lib();
+    calcqgdKernelDFE( Umtx.rows, Umtx.cols, DFEgates, gatesNum, gateSetNum, trace_offset, trace_DFE_mtx.get_data() );
+    unlock_lib();    
                                                                       
 #endif  // __MPI__
       
 
-        // calculate the cost function
-        if ( cost_fnc == FROBENIUS_NORM ) {
-            for ( int idx=0; idx<parameters_vec.size(); idx++ ) {
-                cost_fnc_mtx[idx] = 1-trace_DFE_mtx[idx*3]/Umtx.cols;
-            }
+    // calculate the cost function
+    if ( cost_fnc == FROBENIUS_NORM ) {
+        for ( int idx=0; idx<parameters_vec.size(); idx++ ) {
+            cost_fnc_mtx[idx] = 1-trace_DFE_mtx[idx*3]/Umtx.cols;
         }
-        else if ( cost_fnc == FROBENIUS_NORM_CORRECTION1 ) {
-            for ( int idx=0; idx<parameters_vec.size(); idx++ ) {
-                cost_fnc_mtx[idx] = 1-(trace_DFE_mtx[idx*3] + std::sqrt(prev_cost_fnv_val)*trace_DFE_mtx[idx*3+1]*correction1_scale)/Umtx.cols;
-            }
+    }
+    else if ( cost_fnc == FROBENIUS_NORM_CORRECTION1 ) {
+        for ( int idx=0; idx<parameters_vec.size(); idx++ ) {
+            cost_fnc_mtx[idx] = 1-(trace_DFE_mtx[idx*3] + std::sqrt(prev_cost_fnv_val)*trace_DFE_mtx[idx*3+1]*correction1_scale)/Umtx.cols;
         }
-        else if ( cost_fnc == FROBENIUS_NORM_CORRECTION2 ) {
-            for ( int idx=0; idx<parameters_vec.size(); idx++ ) {
-                cost_fnc_mtx[idx] = 1-(trace_DFE_mtx[idx*3] + std::sqrt(prev_cost_fnv_val)*(trace_DFE_mtx[idx*3+1]*correction1_scale + trace_DFE_mtx[idx*3+2]*correction2_scale))/Umtx.cols;
-            }
+    }
+    else if ( cost_fnc == FROBENIUS_NORM_CORRECTION2 ) {
+        for ( int idx=0; idx<parameters_vec.size(); idx++ ) {
+            cost_fnc_mtx[idx] = 1-(trace_DFE_mtx[idx*3] + std::sqrt(prev_cost_fnv_val)*(trace_DFE_mtx[idx*3+1]*correction1_scale + trace_DFE_mtx[idx*3+2]*correction2_scale))/Umtx.cols;
         }
-        else {
-            std::string err("Optimization_Interface::optimization_problem_batched: Cost function variant not implmented for DFE.");
-            throw err;
-        }
+    }
+    else {
+        std::string err("Optimization_Interface::optimization_problem_batched: Cost function variant not implmented for DFE.");
+        throw err;
+    }
 
 
        
 
 
-        delete[] DFEgates;
+    delete[] DFEgates;
+    
+    return cost_fnc_mtx;
 
+}
+#endif
+
+
+
+#ifdef __GROQ__
+
+
+/**
+@brief The optimization problem of the final optimization implemented to be run on Groq hardware
+@param parameters An array of the free parameters to be optimized.
+@param chosen_device Indicate the device on which the state vector emulation is performed
+@return Returns with the cost function.
+*/
+double 
+Optimization_Interface::optimization_problem_Groq( Matrix_real& parameters, int chosen_device) {
+
+    throw std::string("Optimization_Interface::optimization_problem_Groq should be implemented in derrived classes.");
+    
+    return 0.0;
+
+}
+
+
+
+/**
+@brief The cost function of the optimization with batched input executed on Groq hardware
+@param parameters An array of the free parameters to be optimized.
+@return Returns with the cost function values.
+*/
+Matrix_real 
+Optimization_Interface::optimization_problem_batched_Groq( std::vector<Matrix_real>& parameters_vec) {
+
+    int task_num = parameters_vec.size();
+    
+    Matrix_real cost_fnc_mtx(task_num, 1);
+    
+    if ( get_initialize_id() != id ) {     
+        init_groq_sv_lib(accelerator_num, id);
     }
-    else{
+    
+    if ( accelerator_num == 1 ) {
+    
+        int chosen_device = 0;
 
-#endif // __DFE__
+        for( int idx=0; idx<task_num; idx++ ) {    
+            cost_fnc_mtx[idx] = optimization_problem_Groq( parameters_vec[idx], chosen_device ); 
+        }
+            
+    }
+    else if ( accelerator_num == 2 ) {
+    
+        for( int idx=0; idx<task_num; idx=idx+2 ) {    
+            tbb::parallel_invoke(
+                [&]() { cost_fnc_mtx[idx] = optimization_problem_Groq( parameters_vec[idx], 0 );  },
+                [&]() { if ( (idx+1) < task_num )  cost_fnc_mtx[idx+1] = optimization_problem_Groq( parameters_vec[idx+1], 1 );  }     
+            );            
+        }
+        
+    }
+    else {
+        throw std::string("Unsupported number of Groq accelerators.");
+    }
+    
+    return cost_fnc_mtx;
 
+
+}
+#endif
+
+/**
+@brief The cost function of the optimization with batched input (implemented only for the Frobenius norm cost function when run with DFE, only state vector simulation if executed on Groq)
+@param parameters An array of the free parameters to be optimized.
+@return Returns with the cost function values.
+*/
+Matrix_real 
+Optimization_Interface::optimization_problem_batched( std::vector<Matrix_real>& parameters_vec) {
+
+
+
+
+             
+#if defined __DFE__
+    if ( Umtx.cols == Umtx.rows && get_accelerator_num() > 0 ) {
+        return optimization_problem_batched_DFE( parameters_vec );
+    }
+#elif defined __GROQ__
+    if ( Umtx.cols == 1 && get_accelerator_num() > 0 ) {
+        return optimization_problem_batched_Groq( parameters_vec );
+    }
+#endif 
+
+
+    Matrix_real cost_fnc_mtx(parameters_vec.size(), 1);
+    int parallel = get_parallel_configuration();
+    
 #ifdef __MPI__
 
 
-        // the number of decomposing layers are divided between the MPI processes
+    // the number of decomposing layers are divided between the MPI processes
 
-        int batch_element_num           = parameters_vec.size();
-        int mpi_batch_element_num       = batch_element_num / world_size;
-        int mpi_batch_element_remainder = batch_element_num % world_size;
+    int batch_element_num           = parameters_vec.size();
+    int mpi_batch_element_num       = batch_element_num / world_size;
+    int mpi_batch_element_remainder = batch_element_num % world_size;
 
-        if ( mpi_batch_element_remainder > 0 ) {
-            std::string err("Optimization_Interface::optimization_problem_batched: The size of the batch should be divisible with the number of processes.");
-            throw err;
-        }
+    if ( mpi_batch_element_remainder > 0 ) {
+        std::string err("Optimization_Interface::optimization_problem_batched: The size of the batch should be divisible with the number of processes.");
+        throw err;
+    }
 
-        int mpi_starting_batchIdx = mpi_batch_element_num * current_rank;
+    int mpi_starting_batchIdx = mpi_batch_element_num * current_rank;
 
 
-        Matrix_real cost_fnc_mtx_loc(mpi_batch_element_num, 1);
+    Matrix_real cost_fnc_mtx_loc(mpi_batch_element_num, 1);
 
-        int work_batch = 1;
-        if( parallel==0) {
-            work_batch = mpi_batch_element_num;
-        }
+    int work_batch = 1;
+    if( parallel==0) {
+        work_batch = mpi_batch_element_num;
+    }
 
-        tbb::parallel_for( 0, mpi_batch_element_num, work_batch, [&]( int idx) {
+    tbb::parallel_for( tbb::blocked_range<int>(0, (int)mpi_batch_element_num, work_batch), [&](tbb::blocked_range<int> r) {
+        for (int idx=r.begin(); idx<r.end(); ++idx) { 
             cost_fnc_mtx_loc[idx] = optimization_problem( parameters_vec[idx + mpi_starting_batchIdx] );
-        });
+        }
+    });
 
-        //number_of_iters = number_of_iters + mpi_batch_element_num; 
+    //number_of_iters = number_of_iters + mpi_batch_element_num; 
 
 
 
-        int bytes = cost_fnc_mtx_loc.size()*sizeof(double);
-        MPI_Allgather(cost_fnc_mtx_loc.get_data(), bytes, MPI_BYTE, cost_fnc_mtx.get_data(), bytes, MPI_BYTE, MPI_COMM_WORLD);
+    int bytes = cost_fnc_mtx_loc.size()*sizeof(double);
+    MPI_Allgather(cost_fnc_mtx_loc.get_data(), bytes, MPI_BYTE, cost_fnc_mtx.get_data(), bytes, MPI_BYTE, MPI_COMM_WORLD);
 
 
 #else
 
-        int work_batch = 1;
-        if( parallel==0) {
-            work_batch = parameters_vec.size();
-        }
+    int work_batch = 1;
+    if( parallel==0) {
+        work_batch = parameters_vec.size();
+    }
 
-        tbb::parallel_for( 0, (int)parameters_vec.size(), work_batch, [&]( int idx) {
+    tbb::parallel_for( tbb::blocked_range<int>(0, (int)parameters_vec.size(), work_batch), [&](tbb::blocked_range<int> r) {
+        for (int idx=r.begin(); idx<r.end(); ++idx) { 
             cost_fnc_mtx[idx] = optimization_problem( parameters_vec[idx] );
-        });
+        }
+    });
 
 
 #endif  // __MPI__
        
-
-
-#ifdef __DFE__  
-    }
-#endif
-
-circuit_simulation_time += (tbb::tick_count::now() - t0_DFE).seconds();       
+     
     return cost_fnc_mtx;
         
 }
@@ -731,7 +817,7 @@ circuit_simulation_time += (tbb::tick_count::now() - t0_DFE).seconds();
 @param parameters Array containing the parameters to be optimized.
 @param void_instance A void pointer pointing to the instance of the current class.
 @param ret_temp A matrix to store trace in for gradient for HS test 
-@return Returns with the cost function. (zero if the qubits are desintangled.)
+@return Returns with the cost function.
 */
 double Optimization_Interface::optimization_problem( Matrix_real parameters, void* void_instance, Matrix ret_temp) {
 
@@ -790,6 +876,13 @@ double Optimization_Interface::optimization_problem( Matrix_real parameters, voi
     }
     else if ( cost_fnc == SUM_OF_SQUARES) {
         return get_cost_function_sum_of_squares(matrix_new);
+    }
+    else if (cost_fnc == INFIDELITY){
+    	QGD_Complex16 trace_temp = get_trace(matrix_new);
+    	ret_temp[0].real = trace_temp.real;
+    	ret_temp[0].imag = trace_temp.imag;
+    	double d = matrix_new.cols;
+        return 1.0-((trace_temp.real*trace_temp.real+trace_temp.imag*trace_temp.imag)/d+1)/(d+1);
     }
     else {
         std::string err("Optimization_Interface::optimization_problem: Cost function variant not implmented.");
@@ -1049,6 +1142,11 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();////////////////////////////////
             }
             else if ( cost_fnc == SUM_OF_SQUARES) {
                 grad_comp = get_cost_function_sum_of_squares(Umtx_deriv[idx]);
+            }
+            else if (cost_fnc == INFIDELITY){
+                double d = Umtx_deriv[idx].cols;
+                QGD_Complex16 deriv_tmp = get_trace(Umtx_deriv[idx]);
+                grad_comp = -2.0/d/(d+1)*trace_tmp[0].real*deriv_tmp.real-2.0/d/(d+1)*trace_tmp[0].imag*deriv_tmp.imag;
             }
             else {
                 std::string err("Optimization_Interface::optimization_problem_combined: Cost function variant not implmented.");
@@ -1431,6 +1529,8 @@ Optimization_Interface::upload_Umtx_to_DFE() {
 }
 
 
+#endif
+
 /**
 @brief Get the number of accelerators to be reserved on DFEs on users demand. 
 */
@@ -1442,5 +1542,6 @@ Optimization_Interface::get_accelerator_num() {
 }
 
 
-#endif
+
+
 

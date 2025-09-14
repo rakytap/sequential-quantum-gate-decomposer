@@ -1445,7 +1445,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_Optimization_Problem_Combined_Unitary
 }
 
 /**
-@brief Wrapper function to evaluate the cost function an dthe gradient components.
+@brief Wrapper function to evaluate the cost function for many input paramaters at once
 @return Unitarty numpy matrix
 */
 static PyObject *
@@ -1508,6 +1508,9 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_Optimization_Problem_Batch( qgd_N_Qub
 
     return result_py;
 }
+
+
+
 
 static PyObject *
 qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Unitary( qgd_N_Qubit_Decomposition_adaptive_Wrapper *self, PyObject *args ) {
@@ -2199,7 +2202,7 @@ static PyMethodDef qgd_N_Qubit_Decomposition_adaptive_Wrapper_methods[] = {
      "Wrapper function to evaluate the cost function and the gradient components."
     },
     {"Optimization_Problem_Batch", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_Optimization_Problem_Batch, METH_VARARGS,
-     "Wrapper function to evaluate the cost function of batch."
+     "Wrapper function to evaluate the cost function for a batch of input parameters."
     },
     {"Upload_Umtx_to_DFE", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_Upload_Umtx_to_DFE, METH_NOARGS,
      "Call to upload the unitary to the DFE. (Has no effect for non-DFE builds)"

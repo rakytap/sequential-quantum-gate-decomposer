@@ -66,7 +66,7 @@ few_CNOT_unitary( int qbit_num, int cnot_num) {
             int target_qbit = rand() % qbit_num;
 
             // creating the U3 gate
-            u3_op = new U3(qbit_num, target_qbit, true, true, true);
+            u3_op = new U3(qbit_num, target_qbit);
 
             // get the matrix of the operation
             

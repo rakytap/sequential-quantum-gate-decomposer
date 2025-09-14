@@ -85,18 +85,6 @@ void apply_from_right( Matrix_real& parameters, Matrix& input );
 virtual std::vector<Matrix> apply_derivate_to( Matrix_real& parameters, Matrix& input, int parallel );
 
 /**
-@brief Call to set the final optimized parameters of the gate.
-@param Phi Real parameter standing for the parameter phi.
-*/
-void set_optimized_parameters( double Phi );
-
-/**
-@brief Call to get the final optimized parameters of the gate.
-@param parameters_in Preallocated pointer to store the parameters Theta, Phi and Lambda of the U3 gate.
-*/
-Matrix_real get_optimized_parameters();
-
-/**
 @brief Calculate the matrix of a U3 gate gate corresponding to the given parameters acting on a single qbit space.
 @param Theta Real parameter standing for the parameter theta.
 @param Phi Real parameter standing for the parameter phi.

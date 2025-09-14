@@ -22,6 +22,7 @@ limitations under the License.
 
 #include "Decomposition_Base.h"
 #include "Sub_Matrix_Decomposition_Cost_Function.h"
+#include <limits>
 
 // default layer numbers
 std::map<int,int> Decomposition_Base::max_layer_num_def;
@@ -33,7 +34,8 @@ std::map<int,int> Decomposition_Base::max_layer_num_def;
 Decomposition_Base::Decomposition_Base() {
 
 	
-
+    // A string labeling the gate operation
+    name = "Decomposition_Interface";
 
     Init_max_layer_num();
 
@@ -45,7 +47,7 @@ Decomposition_Base::Decomposition_Base() {
     type = DECOMPOSITION_BASE_CLASS;
 
     // error of the unitarity of the final decomposition
-    decomposition_error = -1;
+    decomposition_error = DBL_MAX;
 
     // number of finalizing (deterministic) opertaions counted from the top of the array of gates
     finalizing_gates_num = 0;
@@ -54,7 +56,7 @@ Decomposition_Base::Decomposition_Base() {
     finalizing_parameter_num = 0;
 
     // The current minimum of the optimization problem
-    current_minimum = 1e10;
+    current_minimum = std::numeric_limits<double>::max();
 
     // The global minimum of the optimization problem
     global_target_minimum = 0;
@@ -114,6 +116,9 @@ Decomposition_Base::Decomposition_Base() {
 */
 Decomposition_Base::Decomposition_Base( Matrix Umtx_in, int qbit_num_in, std::map<std::string, Config_Element>& config_in, guess_type initial_guess_in= CLOSE_TO_ZERO ) : Gates_block(qbit_num_in) {
 
+    // A string labeling the gate operation
+    name = "Decomposition_Interface";
+
     Init_max_layer_num();
 
    
@@ -127,7 +132,7 @@ Decomposition_Base::Decomposition_Base( Matrix Umtx_in, int qbit_num_in, std::ma
     type = DECOMPOSITION_BASE_CLASS;
 
     // error of the unitarity of the final decomposition
-    decomposition_error = -1;
+    decomposition_error = DBL_MAX;
 
     // number of finalizing (deterministic) opertaions counted from the top of the array of gates
     finalizing_gates_num = 0;
@@ -136,7 +141,7 @@ Decomposition_Base::Decomposition_Base( Matrix Umtx_in, int qbit_num_in, std::ma
     finalizing_parameter_num = 0;
 
     // The current minimum of the optimization problem
-    current_minimum = 1e10;
+    current_minimum = std::numeric_limits<double>::max();
 
     // The global minimum of the optimization problem
     global_target_minimum = 0;
@@ -263,7 +268,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
         }
 
         // setting the initial value for the current minimum
-        current_minimum = 1e8;
+        current_minimum = std::numeric_limits<double>::max();
 
         // store the gates
         std::vector<Gate*> gates_loc = gates;
@@ -329,8 +334,8 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
         int pre_gate_parameter_num = 0;
 
         // defining temporary variables for iteration cycles
-        int block_idx_end;
-        int block_idx_start = 0;//gates.size();
+        size_t block_idx_end;
+        size_t block_idx_start = 0;//gates.size();
         gates.clear();
         int block_parameter_num;
         Gate* fixed_gate_post = new Gate( qbit_num );
@@ -371,7 +376,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
                  
             // determine the number of free parameters to be optimized
             block_parameter_num = 0;
-            for ( int block_idx=block_idx_start; block_idx < block_idx_end; block_idx++) {
+            for ( size_t block_idx=block_idx_start; block_idx < block_idx_end; block_idx++) {
                 block_parameter_num = block_parameter_num + gates_loc[block_idx]->get_parameter_num();
             }
 
@@ -406,7 +411,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
 
 
             // create a list of gates for the optimization process
-            for ( int idx=block_idx_start; idx<block_idx_end; idx++ ) {
+            for ( size_t idx=block_idx_start; idx<block_idx_end; idx++ ) {
                 gates.push_back( gates_loc[idx] );
             }
             
@@ -414,7 +419,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
             if (block_idx_end < gates_loc.size()) {
                 
                 int parameter_idx = 0;
-                for (int gate_idx=0; gate_idx<block_idx_end; gate_idx++) {
+                for (size_t gate_idx=0; gate_idx<block_idx_end; gate_idx++) {
                     Gate* gate = gates_loc[gate_idx];
                     parameter_idx = parameter_idx +  gate->get_parameter_num();   
                 }
@@ -726,7 +731,8 @@ int Decomposition_Base::set_max_layer_num( std::map<int, int> max_layer_num_in )
 */
 void Decomposition_Base::reorder_qubits( std::vector<int>  qbit_list) {
 
-    Gates_block::reorder_qubits( qbit_list );
+
+    Gates_block::reorder_qubits( qbit_list);
 
     // now reorder the unitary to be decomposed
 
@@ -735,32 +741,21 @@ void Decomposition_Base::reorder_qubits( std::vector<int>  qbit_list) {
     perm_indices.reserve(matrix_size);
 
     for (int idx=0; idx<matrix_size; idx++) {
+       
         int row_idx=0;
 
-        // get the binary representation of idx
-        std::vector<int> bin_rep;
-        bin_rep.reserve(qbit_num);
-        for (int i = 1 << (qbit_num-1); i > 0; i = i / 2) {
-            (idx & i) ? bin_rep.push_back(1) : bin_rep.push_back(0);
+        // contruct the index corresponding to the premuted qubits
+        for( int qbit_idx=0; qbit_idx<qbit_num; qbit_idx++ ) {
+
+            // state of qubit qbit_list[qbit_idx] in the index idx
+            int qbit_state = ( idx >> qbit_list[qbit_idx] ) & 1;
+
+            row_idx = row_idx + qbit_state*Power_of_2(qbit_idx);
         }
 
-        // determine the permutation row index
-        for (int jdx=0; jdx<qbit_num; jdx++) {
-            row_idx = row_idx + bin_rep[qbit_num-1-qbit_list[jdx]]*Power_of_2(qbit_num-1-jdx);
-        }
         perm_indices.push_back(row_idx);
-    }
 
-/*
-    for (auto it=qbit_list.begin(); it!=qbit_list.end(); it++) {
-        std::cout << *it;
     }
-    std::cout << std::endl;
-
-    for (auto it=perm_indices.begin(); it!=perm_indices.end(); it++) {
-        std::cout << *it << std::endl;
-    }
-*/
 
     // reordering the matrix elements
     Matrix reordered_mtx = Matrix(matrix_size, matrix_size);
@@ -773,6 +768,7 @@ void Decomposition_Base::reorder_qubits( std::vector<int>  qbit_list) {
     }
 
     Umtx = reordered_mtx;
+
 }
 
 
@@ -991,16 +987,14 @@ Matrix Decomposition_Base::import_unitary_from_binary(std::string& filename){
             exit (1);
         }
 
-	size_t fread_status;
-        fread_status = fread(&rows, sizeof(int), 1, pFile);
-	fread_status = fread(&cols, sizeof(int), 1, pFile);
+    fread_wrapper(&rows, sizeof(int), 1, pFile);
+	fread_wrapper(&cols, sizeof(int), 1, pFile);
 
-        //TODO error handling for fread_status
 
 	Matrix Umtx_ = Matrix(rows, cols);
 
-	fread_status = fread(Umtx_.get_data(), sizeof(QGD_Complex16), rows*cols, pFile);
-    	fclose(pFile);
+	fread_wrapper(Umtx_.get_data(), sizeof(QGD_Complex16), rows*cols, pFile);
+    fclose(pFile);
 	return Umtx_;
 }
 

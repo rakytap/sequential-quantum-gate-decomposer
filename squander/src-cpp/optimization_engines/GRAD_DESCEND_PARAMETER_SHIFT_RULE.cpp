@@ -119,12 +119,16 @@ void Optimization_Interface::solve_layer_optimization_problem_GRAD_DESCEND_PARAM
             throw err;
         }
 
-        long long max_inner_iterations_loc;
-        if ( config.count("max_inner_iterations_grad_descend_shift_rule") > 0 ) {
-             config["max_inner_iterations_grad_descend_shift_rule"].get_property( max_inner_iterations_loc );  
+        unsigned long long max_inner_iterations_loc;
+        if ( config.count("max_inner_iterations_cosine") > 0 ) {
+            long long max_inner_iterations_loc_tmp;
+            config["max_inner_iterations_cosine"].get_property( max_inner_iterations_loc_tmp );  
+            max_inner_iterations_loc = ( unsigned long long)max_inner_iterations_loc_tmp;
         }
         else if ( config.count("max_inner_iterations") > 0 ) {
-             config["max_inner_iterations"].get_property( max_inner_iterations_loc );  
+            long long max_inner_iterations_loc_tmp;
+            config["max_inner_iterations"].get_property( max_inner_iterations_loc_tmp );  
+            max_inner_iterations_loc = ( unsigned long long)max_inner_iterations_loc_tmp;
         }
         else {
             max_inner_iterations_loc = max_inner_iterations;
@@ -199,14 +203,10 @@ void Optimization_Interface::solve_layer_optimization_problem_GRAD_DESCEND_PARAM
              output_periodicity = (int) value;
         }
         else {
-            output_periodicity = 50;
+            output_periodicity = 0;
         }     
 
 
-        if ( output_periodicity == 0 ) {
-            std::string err("Output periodicity should be greater than zero");
-            throw err;
-        }   
 
 
         // vector stroing the lates values of current minimums to identify convergence
@@ -366,7 +366,9 @@ void Optimization_Interface::solve_layer_optimization_problem_GRAD_DESCEND_PARAM
 
                 memcpy( optimized_parameters_mtx.get_data(),  solution_guess_tmp_mtx.get_data(), num_of_parameters*sizeof(double) );
 
-                export_current_cost_fnc(current_minimum);
+                if ( output_periodicity>0 && iter_idx % output_periodicity == 0 ) {
+                    export_current_cost_fnc(current_minimum);
+                }
 
             }
            

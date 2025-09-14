@@ -69,11 +69,8 @@ Gates_block* create_custom_gate_structure( int qbit_num ) {
 		int control_qbit = 1;
 
                 // add U3 gate to the block
-                bool Theta = true;
-                bool Phi = false;
-                bool Lambda = true;
-                layer->add_u3( 0, Theta, Phi, Lambda );
-                layer->add_u3( 1, Theta, Phi, Lambda );
+                layer->add_u3( 0 );
+                layer->add_u3( 1 );
 
                 // add CNOT gate to the block		
                 layer->add_cnot( target_qbit, control_qbit );
@@ -86,11 +83,8 @@ Gates_block* create_custom_gate_structure( int qbit_num ) {
 		int control_qbit = disentangle_qubit;
 
                 // add U3 gate to the block
-                bool Theta = true;
-                bool Phi = false;
-                bool Lambda = true;
-                layer->add_u3( qbit, Theta, Phi, Lambda );
-                layer->add_u3( disentangle_qubit, Theta, Phi, Lambda );
+                layer->add_u3( qbit );
+                layer->add_u3( disentangle_qubit );
 
                 // add CNOT gate to the block
                 layer->add_cnot( target_qbit, control_qbit );
@@ -157,9 +151,17 @@ int main() {
 //! [general random]
 
 //! [creating decomp class]
+    // create empty configuration map
+    std::map<std::string, Config_Element> config;
+    
     // creating the class for the decomposition. Here Umtx_adj is the complex transposition of unitary Umtx
-    N_Qubit_Decomposition cDecomposition =
-                   N_Qubit_Decomposition( Umtx_adj, qbit_num, /* optimize_layer_num= */ false, /* initial_guess= */ RANDOM );
+    N_Qubit_Decomposition cDecomposition(
+        Umtx_adj,
+        qbit_num,
+        /* optimize_layer_num= */ false,
+        config,
+        /* initial_guess= */ RANDOM
+    );
 //! [creating decomp class]
 
 
@@ -186,7 +188,7 @@ int main() {
     
 //! [performing decomposition]
     // starting the decomposition
-    cDecomposition.start_decomposition(/* finalize_decomposition = */ true, /* prepare_export= */ true);
+    cDecomposition.start_decomposition(/* finalize_decomposition = */ true /*, prepare_export? = true*/ );
 
     cDecomposition.list_gates(1);
 //! [performing decomposition]

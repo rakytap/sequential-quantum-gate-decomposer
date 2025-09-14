@@ -1,0 +1,44 @@
+name: ci
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.13'
+        cache: 'pip'
+    
+    - name: Install System Dependencies
+      run: |
+        sudo apt-get update -qq
+        sudo apt-get install -y --no-install-recommends cmake libtbb-dev libopenblas-dev liblapacke-dev
+
+    - name: Install Python Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install -q numpy scipy scikit-build qiskit qiskit-aer pytest
+        python -m pip install -e . -q
+
+    - name: Build
+      env:
+        TBB_LIB_DIR: /usr/lib/x86_64-linux-gnu
+        TBB_INC_DIR: /usr/include
+      run: |
+        python setup.py build_ext -q
+
+    - name: Test
+      run: |
+        pytest tests/ -x -v --tb=line

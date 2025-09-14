@@ -24,7 +24,7 @@ limitations under the License.
 #ifndef matrix_H
 #define matrix_H
 
-#include "matrix_base.h"
+#include "matrix_base.hpp"
 #include <cmath>
 
 

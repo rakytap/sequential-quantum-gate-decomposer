@@ -25,6 +25,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 from squander import Circuit       
 
+from squander.partitioning.partition import PartitionCircuit
 
 import numpy as np
 import random
@@ -37,7 +38,7 @@ np.set_printoptions(linewidth=200)
 
 # number of qubits
 qbit_num_min = 4
-qbit_num_max = 23
+qbit_num_max = 24
 
 # number of levels
 levels = 4
@@ -79,14 +80,14 @@ for qbit_num in range(qbit_num_min, qbit_num_max+1, 1):
 		for control_qbit in range(qbit_num-1):
 			for target_qbit in range(control_qbit+1, qbit_num):
 
-				circuit_squander.add_U3(target_qbit, True, True, True )
-				circuit_squander.add_U3(control_qbit, True, True, True )
+				circuit_squander.add_U3(target_qbit)
+				circuit_squander.add_U3(control_qbit)
 				#circuit_squander.add_CNOT( target_qbit=target_qbit, control_qbit=control_qbit )
 				circuit_squander.add_CRY( target_qbit=target_qbit, control_qbit=control_qbit )
 				gates_num = gates_num + 3
 
 	for target_qbit in range(qbit_num):
-		circuit_squander.add_U3(target_qbit, True, True, True )
+		circuit_squander.add_U3(target_qbit)
 		gates_num = gates_num + 1
 		break		
 
@@ -98,8 +99,12 @@ for qbit_num in range(qbit_num_min, qbit_num_max+1, 1):
 
 	parameters = np.random.rand(num_of_parameters)*2*np.pi
 
+	partitioned_circuit_squander, parameters_reordered = PartitionCircuit(circuit_squander, parameters, 4, "gtqcp")
+	
+	partitioned_circuit_squander.set_min_fusion(14)
+
 	t0 = time.time()
-	circuit_squander.apply_to( parameters, initial_state )
+	partitioned_circuit_squander.apply_to( parameters_reordered, initial_state )
 	t_SQUANDER = time.time() - t0
 	print( "Time elapsed SQUANDER: ", t_SQUANDER, " seconds at qbit_num = ", qbit_num, ' number of gates: ', gates_num )
 
@@ -125,9 +130,9 @@ qiskit_version = qiskit.version.get_version_info()
 from qiskit import QuantumCircuit
 import qiskit_aer as Aer    
     
-if qiskit_version[0] == '1':
+if qiskit_version[0] == '1' or qiskit_version[0] == '2':
     from qiskit import transpile
-else :
+elif qiskit_version[0] == '0':
     from qiskit import execute
     
     
@@ -177,7 +182,7 @@ for qbit_num in range(qbit_num_min, qbit_num_max+1, 1):
 	t0 = time.time()
 
 	# Execute and get the state vector
-	if qiskit_version[0] == '1':
+	if qiskit_version[0] == '1' or qiskit_version[0] == '2':
 	
 		circuit_qiskit.save_statevector()
 	
