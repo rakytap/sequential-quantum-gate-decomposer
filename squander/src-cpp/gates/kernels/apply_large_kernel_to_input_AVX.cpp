@@ -716,18 +716,6 @@ void apply_3qbit_kernel_to_state_vector_input_AVX(Matrix& unitary, Matrix& input
             COMPUTE_3QBIT_ROW_CONSECUTIVE(i, 48, 50, 52, 54)
             row_idx = 7;
             COMPUTE_3QBIT_ROW_CONSECUTIVE(j, 56, 58, 60, 62)
-
-    // Manually compute what results[0] should be for the first row
-    QGD_Complex16 expected = {0, 0};
-    for (int i = 0; i < 8; i++) {
-        QGD_Complex16 u_elem = unitary[16+i];
-        QGD_Complex16 input_elem = input[indices[i]];
-        expected.real += u_elem.real * input_elem.real - u_elem.imag * input_elem.imag;
-        expected.imag += u_elem.real * input_elem.imag + u_elem.imag * input_elem.real;
-    }
-    printf("%ith  iter second element: computed=(%f,%f), expected=(%f,%f)\n", iter_idx,
-           results[2].real, results[2].imag, expected.real, expected.imag);
-
             
             // Store results at the correct indices
             input[indices[0]] = results[0];
@@ -761,7 +749,7 @@ void apply_3qbit_kernel_to_state_vector_input_AVX(Matrix& unitary, Matrix& input
         
         std::vector<int> indices(block_size);
         
-        for (int iter_idx = 0; iter_idx < num_blocks; iter_idx++) {
+        for (int iter_idx = 0; iter_idx < num_blocks; iter_idx+=2) {
             get_block_indices_fast(iter_idx, involved_qbits, non_targets, block_pattern, indices);
             // Load elements individually
             double* element_outer = (double*)input.get_data() + 2 * indices[0];
@@ -772,15 +760,15 @@ void apply_3qbit_kernel_to_state_vector_input_AVX(Matrix& unitary, Matrix& input
             double* element_inner_pair = (double*)input.get_data() + 2 * indices[5];
             double* element_middle_pair = (double*)input.get_data() + 2 * indices[6];
             double* element_middle_inner_pair = (double*)input.get_data() + 2 * indices[7];
-            
-            __m256d element_outer_vec = _mm256_set_pd(element_outer[1], element_outer[0], element_outer[1], element_outer[0]);
-            __m256d element_inner_vec = _mm256_set_pd(element_inner[1], element_inner[0], element_inner[1], element_inner[0]);
-            __m256d element_middle_vec = _mm256_set_pd(element_middle[1], element_middle[0], element_middle[1], element_middle[0]);
-            __m256d element_middle_inner_vec = _mm256_set_pd(element_middle_inner[1], element_middle_inner[0], element_middle_inner[1], element_middle_inner[0]);
-            __m256d element_outer_pair_vec = _mm256_set_pd(element_outer_pair[1], element_outer_pair[0], element_outer_pair[1], element_outer_pair[0]);
-            __m256d element_inner_pair_vec = _mm256_set_pd(element_inner_pair[1], element_inner_pair[0], element_inner_pair[1], element_inner_pair[0]);
-            __m256d element_middle_pair_vec = _mm256_set_pd(element_middle_pair[1], element_middle_pair[0], element_middle_pair[1], element_middle_pair[0]);
-            __m256d element_middle_inner_pair_vec = _mm256_set_pd(element_middle_inner_pair[1], element_middle_inner_pair[0], element_middle_inner_pair[1], element_middle_inner_pair[0]);
+
+            __m256d element_outer_vec = _mm256_loadu_pd(element_outer);
+            __m256d element_inner_vec = _mm256_loadu_pd(element_inner);
+            __m256d element_middle_vec = _mm256_loadu_pd(element_middle);
+            __m256d element_middle_inner_vec = _mm256_loadu_pd(element_middle_inner);
+            __m256d element_outer_pair_vec = _mm256_loadu_pd(element_outer_pair);
+            __m256d element_inner_pair_vec = _mm256_loadu_pd(element_inner_pair);
+            __m256d element_middle_pair_vec = _mm256_loadu_pd(element_middle_pair);
+            __m256d element_middle_inner_pair_vec = _mm256_loadu_pd(element_middle_inner_pair);
             
             // Compute all 8 rows using macros
             COMPUTE_3QBIT_ROW(u, 0, 1, 2, 3, 4, 5, 6, 7)
