@@ -806,6 +806,17 @@ void apply_4qbit_kernel_to_state_vector_input_AVX(Matrix& unitary, Matrix& input
     // Properly iterate through all blocks
     int num_qubits = (int)std::log2(matrix_size);
     int num_blocks = matrix_size >> 4;  // 2^4 = 16 elements per block
+
+
+    // Identify non-involved qubits
+    std::vector<int> is_target(num_qubits, 0);
+    for (int q : involved_qbits) is_target[q] = 1;
+    
+    std::vector<int> non_targets;
+    non_targets.reserve(num_qubits - 4);
+    for (int q = 0; q < num_qubits; ++q) {
+        if (!is_target[q]) non_targets.push_back(q);
+    }
     
     for (int block_idx = 0; block_idx < num_blocks; block_idx++) {
         __m256d element_0000_vec_real = _mm256_setzero_pd();
@@ -818,20 +829,12 @@ void apply_4qbit_kernel_to_state_vector_input_AVX(Matrix& unitary, Matrix& input
         __m256d element_1110_vec_real = _mm256_setzero_pd();
 
         int base = 0;
-        int shift = 0;
-        
-        for (int bit = 0; bit < num_qubits; bit++) {
-            // Skip if this bit corresponds to an involved qubit
-            if ((bit != involved_qbits[0]) && 
-                (bit != involved_qbits[1]) && 
-                (bit != involved_qbits[2]) && 
-                (bit != involved_qbits[3])) {
-                if ((block_idx >> shift) & 1) {
-                    base |= (1 << bit);
-                }
-                shift++;
+        for (int i = 0; i < non_targets.size(); ++i) {
+            if (block_idx & (1 << i)) {
+                base |= (1 << non_targets[i]);
             }
         }
+
         int current_idx_outer_loc = base;
         int current_idx_inner_loc = base | index_step_inner;
         int current_idx_middle1_loc = base | index_step_middle1;
@@ -997,26 +1000,23 @@ void apply_5qbit_kernel_to_state_vector_input_AVX(Matrix& unitary, Matrix& input
     
     int num_qubits = (int)std::log2(matrix_size);
     int num_blocks = matrix_size >> 5;
+    std::vector<int> is_target(num_qubits, 0);
+    for (int q : involved_qbits) is_target[q] = 1;
+    
+    std::vector<int> non_targets;
+    non_targets.reserve(num_qubits - 5);
+    for (int q = 0; q < num_qubits; ++q) {
+        if (!is_target[q]) non_targets.push_back(q);
+    }
     
     for (int block_idx = 0; block_idx < num_blocks; block_idx++) {
         // Calculate base index properly
         int base = 0;
-        int shift = 0;
-        
-        for (int bit = 0; bit < num_qubits; bit++) {
-            // Skip if this bit corresponds to an involved qubit
-            if ((bit != involved_qbits[0]) && 
-                (bit != involved_qbits[1]) && 
-                (bit != involved_qbits[2]) && 
-                (bit != involved_qbits[3]) &&
-                (bit != involved_qbits[4])) {
-                if ((block_idx >> shift) & 1) {
-                    base |= (1 << bit);
-                }
-                shift++;
+        for (int i = 0; i < non_targets.size(); ++i) {
+            if (block_idx & (1 << i)) {
+                base |= (1 << non_targets[i]);
             }
-        }
-        
+        }        
         // Calculate all 32 indices using OR operations
         int current_idx_outer_loc = base;
         int current_idx_inner_loc = base | index_step_inner;
