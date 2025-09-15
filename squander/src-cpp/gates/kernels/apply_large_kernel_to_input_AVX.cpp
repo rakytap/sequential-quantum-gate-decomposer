@@ -639,28 +639,18 @@ void apply_3qbit_kernel_to_state_vector_input_AVX(Matrix& unitary, Matrix& input
     __m256d neg = _mm256_setr_pd(1.0, -1.0, 1.0, -1.0);
     
     // Use the same approach as n-qubit for all cases
-    int n = 3;
     int qubit_num = (int) std::log2(input.rows);
-    int block_size = 1 << n;  // 8 elements
-    int num_blocks = 1 << (qubit_num - n);
-    
-    // Sort involved qubits for consistency
-    std::sort(involved_qbits.begin(), involved_qbits.end());
-    
+
     // Identify non-involved qubits
     std::vector<int> is_target(qubit_num, 0);
     for (int q : involved_qbits) is_target[q] = 1;
     
     std::vector<int> non_targets;
-    non_targets.reserve(qubit_num - n);
+    non_targets.reserve(qubit_num - 3);
     for (int q = 0; q < qubit_num; ++q) {
         if (!is_target[q]) non_targets.push_back(q);
     }
-    
-    // Precompute block pattern
-    std::vector<int> block_pattern(block_size);
-    precompute_index_mapping(involved_qbits, non_targets, block_pattern);
-    
+        
     if (inner_qbit == 0) {
         // Consecutive case - create packed vectors
         CREATE_MATRIX_VECTOR_CONSECUTIVE(0)     CREATE_MATRIX_VECTOR_CONSECUTIVE(2)
@@ -680,18 +670,19 @@ void apply_3qbit_kernel_to_state_vector_input_AVX(Matrix& unitary, Matrix& input
         CREATE_MATRIX_VECTOR_CONSECUTIVE(56)    CREATE_MATRIX_VECTOR_CONSECUTIVE(58)
         CREATE_MATRIX_VECTOR_CONSECUTIVE(60)    CREATE_MATRIX_VECTOR_CONSECUTIVE(62)
         
-        // Process blocks
-        std::vector<int> indices(block_size);
-        
-        for (int iter_idx = 0; iter_idx < num_blocks; iter_idx++) {
-            get_block_indices_fast(iter_idx, involved_qbits, non_targets, block_pattern, indices);
+                
+        for (int iter_idx = 0; iter_idx < matrix_size>>3; iter_idx++) {
+            int base = 0;
+            for (int i = 0; i < non_targets.size(); ++i) {
+                if (iter_idx & (1 << i)) {
+                    base |= (1 << non_targets[i]);
+                }
+            }
 
-            // For consecutive case, indices come in pairs: 0,1,2,3,4,5,6,7
-            // We load from indices[0], [2], [4], [6] (each loads 2 consecutive complex numbers)
-            double* ptr_000 = (double*)input.get_data() + 2 * indices[0];
-            double* ptr_010 = (double*)input.get_data() + 2 * indices[2];
-            double* ptr_100 = (double*)input.get_data() + 2 * indices[4];
-            double* ptr_110 = (double*)input.get_data() + 2 * indices[6];
+            double* ptr_000 = (double*)input.get_data() + 2 * base;
+            double* ptr_010 = (double*)input.get_data() + 2 * (base | index_step_middle);
+            double* ptr_100 = (double*)input.get_data() + 2 * (base | index_step_outer);
+            double* ptr_110 = (double*)input.get_data() + 2 * (base | index_step_middle | index_step_outer);
             
             __m256d element_000_vec = _mm256_loadu_pd(ptr_000);  // Loads indices[0] and [1]
             __m256d element_010_vec = _mm256_loadu_pd(ptr_010);  // Loads indices[2] and [3]
@@ -718,14 +709,14 @@ void apply_3qbit_kernel_to_state_vector_input_AVX(Matrix& unitary, Matrix& input
             COMPUTE_3QBIT_ROW_CONSECUTIVE(j, 56, 58, 60, 62)
             
             // Store results at the correct indices
-            input[indices[0]] = results[0];
-            input[indices[1]] = results[1];
-            input[indices[2]] = results[2];
-            input[indices[3]] = results[3];
-            input[indices[4]] = results[4];
-            input[indices[5]] = results[5];
-            input[indices[6]] = results[6];
-            input[indices[7]] = results[7];
+            input[base] = results[0];
+            input[base+1] = results[1];
+            input[(base | index_step_middle)] = results[2];
+            input[(base | index_step_middle)+1] = results[3];
+            input[(base | index_step_outer)] = results[4];
+            input[(base | index_step_outer)+1] = results[5];
+            input[(base | index_step_middle | index_step_outer)] = results[6];
+            input[(base | index_step_middle | index_step_outer)+1] = results[7];
         }
     }
     else {
@@ -746,20 +737,24 @@ void apply_3qbit_kernel_to_state_vector_input_AVX(Matrix& unitary, Matrix& input
         CREATE_MATRIX_VECTOR(52)  CREATE_MATRIX_VECTOR(53)  CREATE_MATRIX_VECTOR(54)  CREATE_MATRIX_VECTOR(55)
         CREATE_MATRIX_VECTOR(56)  CREATE_MATRIX_VECTOR(57)  CREATE_MATRIX_VECTOR(58)  CREATE_MATRIX_VECTOR(59)
         CREATE_MATRIX_VECTOR(60)  CREATE_MATRIX_VECTOR(61)  CREATE_MATRIX_VECTOR(62)  CREATE_MATRIX_VECTOR(63)
-        
-        std::vector<int> indices(block_size);
-        
-        for (int iter_idx = 0; iter_idx < num_blocks; iter_idx+=2) {
-            get_block_indices_fast(iter_idx, involved_qbits, non_targets, block_pattern, indices);
-            // Load elements individually
-            double* element_outer = (double*)input.get_data() + 2 * indices[0];
-            double* element_inner = (double*)input.get_data() + 2 * indices[1];
-            double* element_middle = (double*)input.get_data() + 2 * indices[2];
-            double* element_middle_inner = (double*)input.get_data() + 2 * indices[3];
-            double* element_outer_pair = (double*)input.get_data() + 2 * indices[4];
-            double* element_inner_pair = (double*)input.get_data() + 2 * indices[5];
-            double* element_middle_pair = (double*)input.get_data() + 2 * indices[6];
-            double* element_middle_inner_pair = (double*)input.get_data() + 2 * indices[7];
+                
+        for (int iter_idx = 0; iter_idx < matrix_size>>3; iter_idx+=2) {
+
+            int base = 0;
+            for (int i = 0; i < non_targets.size(); ++i) {
+                if (iter_idx & (1 << i)) {
+                    base |= (1 << non_targets[i]);
+                }
+            }
+
+            double* element_outer = (double*)input.get_data() + 2 * base;
+            double* element_inner = (double*)input.get_data() + 2 * (base | index_step_inner);
+            double* element_middle = (double*)input.get_data() + 2 * (base | index_step_middle);
+            double* element_middle_inner = (double*)input.get_data() + 2 * (base | index_step_inner | index_step_middle);
+            double* element_outer_pair = (double*)input.get_data() + 2 * (base | index_step_outer);
+            double* element_inner_pair = (double*)input.get_data() + 2 * (base | index_step_inner | index_step_outer);
+            double* element_middle_pair = (double*)input.get_data() + 2 * (base | index_step_middle | index_step_outer);
+            double* element_middle_inner_pair = (double*)input.get_data() + 2 * (base | index_step_inner | index_step_middle | index_step_outer);
 
             __m256d element_outer_vec = _mm256_loadu_pd(element_outer);
             __m256d element_inner_vec = _mm256_loadu_pd(element_inner);
@@ -781,14 +776,14 @@ void apply_3qbit_kernel_to_state_vector_input_AVX(Matrix& unitary, Matrix& input
             COMPUTE_3QBIT_ROW(j, 56, 57, 58, 59, 60, 61, 62, 63)
             
             // Store results
-            _mm256_storeu_pd((double*)&input[indices[0]], data_u);
-            _mm256_storeu_pd((double*)&input[indices[1]], data_d);
-            _mm256_storeu_pd((double*)&input[indices[2]], data_e);
-            _mm256_storeu_pd((double*)&input[indices[3]], data_f);
-            _mm256_storeu_pd((double*)&input[indices[4]], data_g);
-            _mm256_storeu_pd((double*)&input[indices[5]], data_h);
-            _mm256_storeu_pd((double*)&input[indices[6]], data_i);
-            _mm256_storeu_pd((double*)&input[indices[7]], data_j);
+            _mm256_storeu_pd(element_outer, data_u);
+            _mm256_storeu_pd(element_inner, data_d);
+            _mm256_storeu_pd(element_middle, data_e);
+            _mm256_storeu_pd(element_middle_inner, data_f);
+            _mm256_storeu_pd(element_outer_pair, data_g);
+            _mm256_storeu_pd(element_inner_pair, data_h);
+            _mm256_storeu_pd(element_middle_pair, data_i);
+            _mm256_storeu_pd(element_middle_inner_pair, data_j);
         }
     }
 }
