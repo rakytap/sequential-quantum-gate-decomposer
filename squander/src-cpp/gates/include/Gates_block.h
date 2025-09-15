@@ -24,8 +24,10 @@ limitations under the License.
 #define GATES_BLOCK_H
 
 #include <vector>
+#include <map>
 #include "common.h"
 #include "matrix_real.h"
+#include "CROT.h"
 #include "Gate.h"
 
 #ifdef __DFE__
@@ -52,7 +54,7 @@ protected:
     bool fragmented;
     int fragmentation_type;
     /// maximal number of qubits in partitions
-    int max_fusion;
+    int min_fusion;
     std::vector< std::vector<int>> involved_qbits;
     std::vector<int> block_end;
     std::vector<int> block_type;
@@ -137,8 +139,29 @@ virtual void apply_from_right( Matrix_real& parameters_mtx, Matrix& input );
 */
 virtual std::vector<Matrix> apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input, int parallel );
 
+/**
+@brief Append a U1 gate to the list of gates
+@param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_u1(int target_qbit);
 
+/**
+@brief Add a U1 gate to the front of the list of gates
+@param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_u1_to_front(int target_qbit);
 
+/**
+@brief Append a U2 gate to the list of gates
+@param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_u2(int target_qbit);
+
+/**
+@brief Add a U2 gate to the front of the list of gates
+@param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_u2_to_front(int target_qbit);
 
 /**
 @brief Append a U3 gate to the list of gates
@@ -147,7 +170,7 @@ virtual std::vector<Matrix> apply_derivate_to( Matrix_real& parameters_mtx, Matr
 @param Phi The Phi parameter of the U3 gate
 @param Lambda The Lambda parameter of the U3 gate
 */
-void add_u3(int target_qbit, bool Theta, bool Phi, bool Lambda);
+void add_u3(int target_qbit);
 
 /**
 @brief Add a U3 gate to the front of the list of gates
@@ -156,8 +179,7 @@ void add_u3(int target_qbit, bool Theta, bool Phi, bool Lambda);
 @param Phi The Phi parameter of the U3 gate
 @param Lambda The Lambda parameter of the U3 gate
 */
-void add_u3_to_front(int target_qbit, bool Theta, bool Phi, bool Lambda);
-
+void add_u3_to_front(int target_qbit);
 
 /**
 @brief Append a RX gate to the list of gates
@@ -171,6 +193,17 @@ void add_rx(int target_qbit);
 */
 void add_rx_to_front(int target_qbit);
 
+/**
+@brief Append a R gate to the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_r(int target_qbit);
+
+/**
+@brief Add a R gate to the front of the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_r_to_front(int target_qbit);
 
 /**
 @brief Append a RY gate to the list of gates
@@ -200,6 +233,20 @@ void add_cry(int target_qbit, int control_qbit);
 @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
 */
 void add_cry_to_front(int target_qbit, int control_qbit);
+
+/**
+@brief Append a CR gate to the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_cr(int target_qbit, int control_qbit);
+
+/**
+@brief Add a CR gate to the front of the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_cr_to_front(int target_qbit, int control_qbit);
 
 /**
 @brief Append a CZ_NU gate to the list of gates
@@ -249,6 +296,22 @@ void add_cnot( int target_qbit, int control_qbit);
 */
 void add_cnot_to_front( int target_qbit, int control_qbit );
 
+
+/**
+@brief Append a CROT gate gate to the list of gates
+@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+@param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_crot( int target_qbit, int control_qbit);
+
+
+
+/**
+@brief Add a CROT gate gate to the front of the list of gates
+@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+@param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_crot_to_front( int target_qbit, int control_qbit );
 
 /**
 @brief Append a CZ gate gate to the list of gates
@@ -333,6 +396,59 @@ void add_z(int target_qbit);
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 */
 void add_z_to_front(int target_qbit);
+
+
+/**
+@brief Append a S gate to the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_s(int target_qbit);
+
+/**
+@brief Add a S gate to the front of the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_s_to_front(int target_qbit);
+
+
+/**
+@brief Append a Sdg gate to the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_sdg(int target_qbit);
+
+/**
+@brief Add a Sdg gate to the front of the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_sdg_to_front(int target_qbit);
+
+
+/**
+@brief Append a T gate to the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_t(int target_qbit);
+
+/**
+@brief Add a T gate to the front of the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_t_to_front(int target_qbit);
+
+
+/**
+@brief Append a Tdg gate to the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_tdg(int target_qbit);
+
+/**
+@brief Add a Tdg gate to the front of the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_tdg_to_front(int target_qbit);
+
 
 /**
 @brief Append a SX gate to the list of gates
@@ -448,12 +564,18 @@ void add_gate_to_front( Gate* gate );
 void insert_gate( Gate* gate, int idx );
 
 
+/**
+@brief Call to add the number of the individual gate types in the circuit to the map given in the argument
+@param A map<gate_name, gate_count> describing the number of the individual gate types
+*/
+void add_gate_nums( std::map<std::string, int>& gate_nums );
+
 
 /**
 @brief Call to get the number of the individual gate types in the list of gates
-@return Returns with an instance gates_num describing the number of the individual gate types
+@return Returns with a map<gate_name, gate_count> describing the number of the individual gate types
 */
-gates_num get_gate_nums();
+std::map<std::string, int> get_gate_nums();
 
 
 /**
@@ -480,7 +602,24 @@ void list_gates( const Matrix_real &parameters, int start_index );
 
 
 /**
-@brief Call to reorder the qubits in the matrix of the gates
+@brief Call to create a new circuit with remapped qubits
+@param qbit_map The map to reorder the qbits in a form of map: {int(initial_qbit): int(remapped_qbit)}.
+@return Returns with the remapped circuit
+*/
+Gates_block* create_remapped_circuit( const std::map<int, int>& qbit_map );
+
+
+/**
+@brief Call to create a new circuit with remapped qubits
+@param qbit_map The map to reorder the qbits in a form of map: {int(initial_qbit): int(remapped_qbit)}. . 
+@param qbit_num The number of qubits in the remapped circuit
+@return Returns with the remapped circuit
+*/
+Gates_block* create_remapped_circuit( const std::map<int, int>& qbit_map, const int qbit_num_ );
+
+
+/**
+@brief Call to reorder the qubits in the matrix of the gates (Obsolete function)
 @param qbit_list The reordered list of qubits spanning the matrix
 */
 virtual void reorder_qubits( std::vector<int> qbit_list );
@@ -490,7 +629,7 @@ virtual void reorder_qubits( std::vector<int> qbit_list );
 @brief Call to get the qubits involved in the gates stored in the block of gates.
 @return Return with a list of the involved qubits
 */
-std::vector<int> get_involved_qubits();
+std::vector<int> get_involved_qubits(bool only_target=false);
 
 /**
 @brief Call to get the gates stored in the class.
@@ -511,6 +650,9 @@ Gate* get_gate(int idx);
 */
 void combine(Gates_block* op_block);
 
+
+
+void set_min_fusion( int min_fusion );
 
 /**
 @brief Set the number of qubits spanning the matrix of the gates stored in the block of gates.
@@ -627,7 +769,12 @@ DFEgate_kernel_type* convert_to_DFE_gates( Matrix_real& parameters_mtx, int& gat
 */
 void convert_to_DFE_gates( const Matrix_real& parameters_mtx, DFEgate_kernel_type* DFEgates, int& start_index );
 
-void get_matrices_target_control(std::vector<Matrix> &u3_qbit, std::vector<int> &target_qbit, std::vector<int> &control_qbit, Matrix_real& parameters_mtx);
+#endif
+
+
+#ifdef __GROQ__
+
+void extract_gate_kernels_target_and_control_qubits(std::vector<Matrix> &u3_qbit, std::vector<int> &target_qbit, std::vector<int> &control_qbit, Matrix_real& parameters_mtx);
 
 #endif
 

@@ -11,3 +11,4 @@ __pycache__
 _skbuild/*
 squander.egg-info/*
 costfuncs_and_entropy.txt
+debugfile.txt

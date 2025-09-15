@@ -67,9 +67,9 @@ typedef struct qgd_Variational_Quantum_Eigensolver_Base_Wrapper {
 @return Return with a void pointer pointing to an instance of N_Qubit_Decomposition class.
 */
 Variational_Quantum_Eigensolver_Base* 
-create_qgd_Variational_Quantum_Eigensolver_Base( Matrix_sparse Hamiltonian, int qbit_num, std::map<std::string, Config_Element>& config) {
+create_qgd_Variational_Quantum_Eigensolver_Base( Matrix_sparse Hamiltonian, int qbit_num, std::map<std::string, Config_Element>& config, int accelerator_num) {
 
-    return new Variational_Quantum_Eigensolver_Base( Hamiltonian, qbit_num, config);
+    return new Variational_Quantum_Eigensolver_Base( Hamiltonian, qbit_num, config, accelerator_num);
 }
 
 
@@ -144,7 +144,7 @@ static int
 qgd_Variational_Quantum_Eigensolver_Base_Wrapper_init(qgd_Variational_Quantum_Eigensolver_Base_Wrapper *self, PyObject *args, PyObject *kwds)
 {
     // The tuple of expected keywords
-    static char *kwlist[] = {(char*)"Hamiltonian_data", (char*)"Hamiltonian_indices", (char*)"Hamiltonian_indptr", (char*)"qbit_num", (char*)"config", NULL};
+    static char *kwlist[] = {(char*)"Hamiltonian_data", (char*)"Hamiltonian_indices", (char*)"Hamiltonian_indptr", (char*)"qbit_num", (char*)"config", (char*)"accelerator_num", NULL};
  
     // initiate variables for input arguments
     PyArrayObject *Hamiltonian_data_arg = NULL;
@@ -152,10 +152,11 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_init(qgd_Variational_Quantum_Ei
     PyArrayObject *Hamiltonian_indptr_arg = NULL;
     int  qbit_num = -1; 
     PyObject *config_arg = NULL;
+    int accelerator_num = 0;
     
     // parsing input arguments
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OOOiO", kwlist,
-                                   &Hamiltonian_data_arg, &Hamiltonian_indices_arg, &Hamiltonian_indptr_arg, &qbit_num, &config_arg))
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OOOiOi", kwlist,
+                                   &Hamiltonian_data_arg, &Hamiltonian_indices_arg, &Hamiltonian_indptr_arg, &qbit_num, &config_arg, &accelerator_num))
         return -1;
     
     int shape = Power_of_2(qbit_num);
@@ -213,7 +214,7 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_init(qgd_Variational_Quantum_Ei
 
     // create an instance of the class N_Qubit_Decomposition
     if (qbit_num > 0 ) {
-        self->vqe =  create_qgd_Variational_Quantum_Eigensolver_Base(Hamiltonian_mtx, qbit_num, config);
+        self->vqe =  create_qgd_Variational_Quantum_Eigensolver_Base(Hamiltonian_mtx, qbit_num, config, accelerator_num);
     }
     else {
         std::cout << "The number of qubits should be given as a positive integer, " << qbit_num << "  was given" << std::endl;
@@ -839,6 +840,92 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_Optimization_Problem( qgd_Varia
 }
 
 
+
+
+
+/**
+@brief Wrapper function to evaluate the cost function for many input paramaters at once
+@return Unitarty numpy matrix
+*/
+static PyObject *
+qgd_Variational_Quantum_Eigensolver_Base_Wrapper_Optimization_Problem_Batch( qgd_Variational_Quantum_Eigensolver_Base_Wrapper *self, PyObject *args)
+{
+
+
+    PyObject* parameter_list = NULL;
+
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|O", &parameter_list )) {
+
+        std::string err( "Unsuccessful argument parsing not ");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;      
+
+    } 
+    
+    // check input argument qbit_list
+    if ( parameter_list == NULL || (!PyList_Check( parameter_list )) ) {
+        PyErr_SetString(PyExc_Exception, "Parameters should be given as a list of parameter arrays");
+        return NULL;
+    }
+    
+    int tasks = (int)PyList_Size( parameter_list );
+    Matrix_real result_mtx;
+
+
+    try {
+        std::vector<Matrix_real> parameters_vec;
+        parameters_vec.resize(tasks);
+        
+        for( int idx=0; idx<tasks; idx++ ) {
+            PyArrayObject* parameters_py = (PyArrayObject*)PyList_GET_ITEM( parameter_list, idx );
+            
+            // establish memory contiguous arrays for C calculations
+            if ( PyArray_IS_C_CONTIGUOUS(parameters_py) && PyArray_TYPE(parameters_py) == NPY_FLOAT64 ){
+                Py_INCREF(parameters_py);
+            }
+            else if (PyArray_TYPE(parameters_py) == NPY_FLOAT64 ) {
+                parameters_py = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)parameters_py, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
+            }
+            else {
+                Py_DECREF(parameters_py);
+                std::string err( "Parameters should be should be real (given in float64 format)");
+                PyErr_SetString(PyExc_Exception, err.c_str());
+                return NULL;
+            }
+            
+            Matrix_real parameters_mtx = numpy2matrix_real( parameters_py );
+            parameters_vec[idx] = parameters_mtx;
+            
+            Py_DECREF(parameters_py);
+            
+        }
+        
+
+        result_mtx = self->vqe->optimization_problem_batched( parameters_vec );
+    }
+    catch (std::string err ) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    catch (...) {
+        std::string err( "Invalid pointer to decomposition class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+    // convert to numpy array
+    result_mtx.set_owner(false);
+    PyObject *result_py = matrix_real_to_numpy( result_mtx );
+
+
+    return result_py;
+}
+
+
+
+
 /**
 @brief Get the number of free parameters in the gate structure used for the decomposition
 */
@@ -898,7 +985,66 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_get_circuit( qgd_Variational_Qu
 
 }
 
+/**
+@brief Wrapper function to evaluate the cost function an dthe gradient components.
+@return Unitarty numpy matrix
+*/
+static PyObject *
+qgd_Variational_Quantum_Eigensolver_Base_Wrapper_Optimization_Problem_Grad( qgd_Variational_Quantum_Eigensolver_Base_Wrapper *self, PyObject *args)
+{
 
+
+    PyArrayObject* parameters_arg = NULL;
+
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|O", &parameters_arg )) {
+
+        std::string err( "Unsuccessful argument parsing not ");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;      
+
+    } 
+
+    // establish memory contiguous arrays for C calculations
+    if ( PyArray_IS_C_CONTIGUOUS(parameters_arg) && PyArray_TYPE(parameters_arg) == NPY_FLOAT64 ){
+        Py_INCREF(parameters_arg);
+    }
+    else if (PyArray_TYPE(parameters_arg) == NPY_FLOAT64 ) {
+        parameters_arg = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)parameters_arg, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
+    }
+    else {
+        std::string err( "Parameters should be should be real (given in float64 format)");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+
+    Matrix_real parameters_mtx = numpy2matrix_real( parameters_arg );
+    Matrix_real grad_mtx(parameters_mtx.size(), 1);
+
+    try {
+        self->vqe->optimization_problem_grad(parameters_mtx, self->vqe, grad_mtx );
+    }
+    catch (std::string err ) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    catch (...) {
+        std::string err( "Invalid pointer to decomposition class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+    // convert to numpy array
+    grad_mtx.set_owner(false);
+    PyObject *grad_py = matrix_real_to_numpy( grad_mtx );
+
+    Py_DECREF(parameters_arg);
+
+
+    return grad_py;
+}
 
 
 /**
@@ -1012,6 +1158,9 @@ static PyMethodDef qgd_Variational_Quantum_Eigensolver_Base_Wrapper_methods[] = 
     {"Optimization_Problem", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_Optimization_Problem, METH_VARARGS,
      "Method to get the expected energy of the circuit at parameters."
     },
+    {"Optimization_Problem_Batch", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_Optimization_Problem_Batch, METH_VARARGS,
+     "Wrapper function to evaluate the cost function for a batch of input parameters."
+    },
     {"get_Second_Renyi_Entropy", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_get_Second_Renyi_Entropy, METH_VARARGS,
      "Wrapper function to evaluate the second Rényi entropy of a quantum circuit at a specific parameter set."
     },
@@ -1023,6 +1172,9 @@ static PyMethodDef qgd_Variational_Quantum_Eigensolver_Base_Wrapper_methods[] = 
     },
     {"set_Gate_Structure", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Gate_Structure, METH_VARARGS,
      "Call to set custom gate structure for VQE experiments."
+    },
+    {"Optimization_Problem_Grad", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_Optimization_Problem_Grad, METH_VARARGS,
+     "Method to get the expected energy of the circuit at parameters."
     },
     {NULL}  /* Sentinel */
 };

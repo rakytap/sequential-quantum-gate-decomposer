@@ -20,22 +20,33 @@ limitations under the License.
     \brief Class responsible for grouping gates into subcircuits. (Subcircuits can be nested)
 */
 
+#include <set>
+#include "CU.h"
 #include "CZ.h"
 #include "CH.h"
 #include "CNOT.h"
+#include "U1.h"
+#include "U2.h"
 #include "U3.h"
 #include "RX.h"
 #include "RY.h"
+#include "R.h"
 #include "CRY.h"
+#include "CR.h"
 #include "RZ.h"
 #include "H.h"
 #include "X.h"
 #include "Y.h"
 #include "Z.h"
+#include "S.h"
+#include "SDG.h"
+#include "T.h"
+#include "Tdg.h"
 #include "SX.h"
 #include "SYC.h"
 #include "UN.h"
 #include "ON.h"
+#include "CROT.h"
 #include "Adaptive.h"
 #include "CZ_NU.h"
 #include "Composite.h"
@@ -57,6 +68,9 @@ limitations under the License.
 */
 Gates_block::Gates_block() : Gate() {
 
+    // A string labeling the gate operation
+    name = "Circuit";
+
     // A string describing the type of the operation
     type = BLOCK_OPERATION;
     // number of operation layers
@@ -71,6 +85,9 @@ Gates_block::Gates_block() : Gate() {
 */
 Gates_block::Gates_block(int qbit_num_in) : Gate(qbit_num_in) {
 
+    // A string labeling the gate operation
+    name = "Circuit";
+
     // A string describing the type of the operation
     type = BLOCK_OPERATION;
     // number of operation layers
@@ -78,7 +95,7 @@ Gates_block::Gates_block(int qbit_num_in) : Gate(qbit_num_in) {
     
     fragmented = false;
     fragmentation_type = -1;
-    max_fusion = -1;
+    min_fusion = -1;
     
 }
 
@@ -168,9 +185,8 @@ Gates_block::get_matrix( Matrix_real& parameters, int parallel ) {
 
 #ifdef DEBUG
     if (block_mtx.isnan()) {
-        std::stringstream sstream;
-	sstream << "Gates_block::get_matrix: block_mtx contains NaN." << std::endl;
-        print(sstream, 0);		       
+        std::string err( "Gates_block::get_matrix: block_mtx contains NaN." ) ;
+	    throw( err );       
     }
 #endif
 
@@ -222,109 +238,47 @@ Gates_block::apply_to_list( Matrix_real& parameters_mtx, std::vector<Matrix>& in
 void 
 Gates_block::apply_to( Matrix_real& parameters_mtx_in, Matrix& input, int parallel ) {
 
-
     std::vector<int> involved_qubits = get_involved_qubits();
-       
-    // TODO: GATE fusion has not been adopted to reversed parameter ordering!!!!!!!!!!!!!!!!!!!
-    if(max_fusion !=-1 && ((qbit_num>max_fusion && input.cols == 1) && involved_qubits.size()>1)){
+    
+    if (input.rows != matrix_size ) {
+        std::string err("Gates_block::apply_to: Wrong input size in Gates_block gate apply.");
+        throw err;    
+    }
 
+    int size = involved_qubits.size();
 
-        std::string error("Gates_block::apply_to: GATE fusion has not been adopted to reversed parameter ordering!!!!!!!!!!!!!!!!!!!");
-        throw error; 
+    if (min_fusion != -1 && qbit_num >= min_fusion && size <= (input.cols == 1 ? 5 : 2) && qbit_num != size && gates.size() > 1) {
         
-        double* parameters = parameters_mtx_in.get_data();     
+        Matrix Umtx_mini = create_identity(Power_of_2(size));
 
-        if (fragmented==false){
-            fragment_circuit();
-        };  
-
-        int outer_idx = gates.size()-1;
-        for (int block_idx=0; block_idx<involved_qbits.size(); block_idx++){
-
-            if (block_type[block_idx] != 1){
-
-                Gates_block gates_block_mini = Gates_block(block_type[block_idx]);
-                std::vector<int> qbits = involved_qbits[block_idx];
-#ifdef _WIN32
-				int* indices = (int*)_malloca(qbit_num*sizeof(int));
-#else
-                int indices[qbit_num];
-#endif
-
-                for (int jdx=0; jdx<(int)qbits.size(); jdx++){
-                    indices[qbits[jdx]]=jdx;
-                }
-
-                for (int idx=outer_idx; idx>=block_end[block_idx]; idx--){
-
-                    Gate* gate = gates[idx]->clone();
-                    int trgt_qbit = gate->get_target_qbit();
-                    int ctrl_qbit = gate->get_control_qbit();
-                    int target_qubit_new = indices[trgt_qbit];
-                    gate->set_target_qbit(target_qubit_new);
-
-                    int control_qubit_new = (ctrl_qbit==-1) ? -1:indices[ctrl_qbit];
-                    gate->set_control_qbit(control_qubit_new);
-                    gates_block_mini.add_gate(gate);
-                }
-
-                Matrix Umtx_mini = create_identity(Power_of_2(block_type[block_idx]));
-                parameters       = parameters - gates_block_mini.get_parameter_num();
-
-                Matrix_real parameters_mtx(parameters, 1, gates_block_mini.get_parameter_num());
-                gates_block_mini.apply_to(parameters_mtx, Umtx_mini);
-
-                outer_idx        = block_end[block_idx]-1;
-
-#ifdef USE_AVX
-                apply_large_kernel_to_state_vector_input_AVX(Umtx_mini, input, qbits, input.size() );
-#else
-                apply_large_kernel_to_state_vector_input(Umtx_mini, input, qbits, input.size() );
-#endif                
-       
-
-
-            }
-            else{
-
-                Gates_block gates_block_mini = Gates_block(qbit_num);
-                for (int idx=outer_idx;idx>=0;idx--){
-                    Gate* gate = gates[idx]->clone();
-                    gates_block_mini.add_gate(gate);
-                }
-                parameters = parameters - gates_block_mini.get_parameter_num();
-                Matrix_real parameters_mtx(parameters, 1, gates_block_mini.get_parameter_num());
-                gates_block_mini.apply_to(parameters_mtx, input);
-            }
+        std::vector<int> old_to_new(qbit_num, -2), new_to_old(qbit_num, -2);
+        for (int i = 0; i < size; i++){
+            old_to_new[i] = involved_qubits[i];
+            new_to_old[involved_qubits[i]] = i;
         }
-    }
-    else if  ( involved_qubits.size() == 1 && gates.size() > 1 && qbit_num > 1 ) {
-    // merge successive single qubit gates
-    
-                Gates_block gates_block_mini = Gates_block(1);
-  
-                for (int idx=0; idx<gates.size(); idx++){
 
-                    Gate* gate = gates[idx]->clone();
-                    gate->set_target_qbit(0);
-                    gate->set_qbit_num(1);
+        int old_qbit_num = qbit_num;
+        reorder_qubits(old_to_new);
+        set_qbit_num(size);
+        apply_to(parameters_mtx_in, Umtx_mini, parallel);        
+        set_qbit_num(old_qbit_num);
+        reorder_qubits(new_to_old);
 
-                    gates_block_mini.add_gate(gate);
-                }
-                    // TODO check gates block
-                Matrix Umtx_mini = create_identity(2);
-
-                Matrix_real parameters_mtx_loc(parameters_mtx_in.get_data() + gates[0]->get_parameter_start_idx(), 1, gates_block_mini.get_parameter_num());                
-                gates_block_mini.apply_to(parameters_mtx_loc, Umtx_mini);
-
-                custom_kernel_1qubit_gate merged_gate( qbit_num, involved_qubits[0], Umtx_mini );
-                merged_gate.apply_to( input );
-    }
-    else {
-    
-        // No gate fusion
-        for( int idx=0; idx<gates.size(); idx++) {
-
+        if (size == 1) {
+            custom_kernel_1qubit_gate merged_gate( qbit_num, involved_qubits[0], Umtx_mini );
+            merged_gate.apply_to( input );
+        }
+        else
+        {
+#ifdef USE_AVX
+            if (size <= 4)
+                apply_large_kernel_to_input_AVX(Umtx_mini, input, involved_qubits, input.size() );
+            else
+#endif
+                apply_large_kernel_to_input(Umtx_mini, input, involved_qubits, input.size() );
+        }
+    } else {
+        for( size_t idx=0; idx<gates.size(); idx++) {
             Gate* operation = gates[idx];
             
             Matrix_real parameters_mtx_loc(parameters_mtx_in.get_data() + operation->get_parameter_start_idx(), 1, operation->get_parameter_num());
@@ -336,18 +290,13 @@ Gates_block::apply_to( Matrix_real& parameters_mtx_in, Matrix& input, int parall
                 operation->apply_to( parameters_mtx_loc, input, parallel );
             }
 #ifdef DEBUG
-        if (input.isnan()) {
-            std::stringstream sstream;
-	    sstream << "Gates_block::apply_to: transformed matrix contains NaN." << std::endl;
-            print(sstream, 0);	
-        }
+            if (input.isnan()) {
+                std::string err( "Gates_block::apply_to: transformed matrix contains NaN." );
+                throw( err );
+            }
 #endif
-
-
-       }
-
-   }
-
+        }
+    }
 }
 
 
@@ -383,7 +332,7 @@ void Gates_block::fragment_circuit(){
 
     std::vector<int> qbits;
     int num_of_qbits=0;
-    int max_fusion_temp = (fragmentation_type==-1) ? max_fusion:fragmentation_type;
+    int min_fusion_temp = (fragmentation_type==-1) ? min_fusion:fragmentation_type;
 
     for (int idx = gates.size()-1; idx>=0; idx--){      
       
@@ -400,7 +349,7 @@ void Gates_block::fragment_circuit(){
         bool target_contained  = is_qbit_present(qbits,target_new,num_of_qbits);
         bool control_contained = (control_new==-1) ? true : is_qbit_present(qbits, control_new, num_of_qbits);
 
-        if (num_of_qbits == max_fusion_temp && (target_contained == false || control_contained == false)){
+        if (num_of_qbits == min_fusion_temp && (target_contained == false || control_contained == false)){
             int vidx = 1;
 
             while(vidx<num_of_qbits){
@@ -419,19 +368,19 @@ void Gates_block::fragment_circuit(){
             involved_qbits.push_back(qbits);
             block_end.push_back(idx+1);
             block_type.push_back(num_of_qbits);
-            max_fusion_temp = max_fusion;
+            min_fusion_temp = min_fusion;
             idx++;    
             qbits=std::vector<int>{};
             num_of_qbits=0;
             continue;
         }
 
-        if (num_of_qbits<max_fusion_temp && target_contained==false){
+        if (num_of_qbits<min_fusion_temp && target_contained==false){
             qbits.push_back(target_new);
             num_of_qbits++;
         }
 
-        if (num_of_qbits<max_fusion_temp && control_contained==false){
+        if (num_of_qbits<min_fusion_temp && control_contained==false){
             qbits.push_back(control_new);
             num_of_qbits++;
         }
@@ -442,6 +391,7 @@ void Gates_block::fragment_circuit(){
     if (num_of_qbits == 1){
         involved_qbits.push_back(qbits);
         block_type.push_back(1);
+        block_end.push_back(0);
     }
 
     else{
@@ -465,49 +415,44 @@ void Gates_block::fragment_circuit(){
         block_end.push_back(0);
     }
 
-    block_end.push_back(0);
     fragmented = true;
 
 }
 
 
-
+//TODO: remove this function?
 void Gates_block::get_parameter_max(Matrix_real &range_max) {
     int parameter_idx = 0;
 	double *data = range_max.get_data();
-        for(int op_idx = 0; op_idx<gates.size(); op_idx++) {
+        for(size_t op_idx = 0; op_idx<gates.size(); op_idx++) {
 
             Gate* gate = gates[op_idx];
             switch (gate->get_type()) {
+            case U1_OPERATION: {
+                data[parameter_idx] = 2 * M_PI;     // Lambda (0 to 2pi)
+                parameter_idx = parameter_idx + 1;
+                break;
+            }
+            case U2_OPERATION: {
+                data[parameter_idx] = 2 * M_PI;     // Phi (0 to 2pi)
+                data[parameter_idx+1] = 2 * M_PI;   // Lambda (0 to 2pi)
+                parameter_idx = parameter_idx + 2;
+                break;
+            }
             case U3_OPERATION: {
-                U3* u3_gate = static_cast<U3*>(gate);
-
-                if ((u3_gate->get_parameter_num() == 1) && u3_gate->is_theta_parameter()) {
-		            data[parameter_idx] = 4 * M_PI;
-                    parameter_idx = parameter_idx + 1;
-
-                }
-                else if ((u3_gate->get_parameter_num() == 1) && (u3_gate->is_phi_parameter() || u3_gate->is_lambda_parameter())) {
-                    data[parameter_idx] = 2 * M_PI;
-                    parameter_idx = parameter_idx + 1;
-                }
-                else if ((u3_gate->get_parameter_num() == 2) && u3_gate->is_theta_parameter() && (u3_gate->is_phi_parameter() || u3_gate->is_lambda_parameter())) {
-                    data[parameter_idx] = 4 * M_PI;
-                    data[parameter_idx+1] = 2 * M_PI;
-                    parameter_idx = parameter_idx + 2;
-                }
-                else if ((u3_gate->get_parameter_num() == 2) && u3_gate->is_phi_parameter() && u3_gate->is_lambda_parameter() ) {
-                    data[parameter_idx] = 2 * M_PI;
-                    data[parameter_idx+1] = 2 * M_PI;
-                    parameter_idx = parameter_idx + 2;
-                }
-                else if ((u3_gate->get_parameter_num() == 3)) {
-                    data[parameter_idx] = 4 * M_PI;
-                    data[parameter_idx+1] = 2 * M_PI;
-                    data[parameter_idx+2] = 2 * M_PI;
-                    parameter_idx = parameter_idx + 3;
-                }
-                break; }
+                data[parameter_idx] = 4 * M_PI;     // Theta (0 to 4pi)
+                data[parameter_idx+1] = 2 * M_PI;   // Phi (0 to 2pi)
+                data[parameter_idx+2] = 2 * M_PI;   // Lambda (0 to 2pi)
+                parameter_idx = parameter_idx + 3;
+                break; 
+            }
+            case CROT_OPERATION: 
+            case R_OPERATION:
+            case CR_OPERATION:{
+                data[parameter_idx-1] = 4*M_PI;
+                data[parameter_idx-2] = 2*M_PI;
+                parameter_idx = parameter_idx - 2;
+            break;}
             case RX_OPERATION:
             case RY_OPERATION:
             case CRY_OPERATION:
@@ -551,7 +496,7 @@ Gates_block::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
 
     // determine the number of parameters
     int parameters_num_total = 0;  
-    for (int idx=0; idx<gates.size(); idx++) {
+    for (size_t idx=0; idx<gates.size(); idx++) {
 
         // The current gate
         Gate* gate = gates[idx];
@@ -574,33 +519,21 @@ Gates_block::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
         case CH_OPERATION: case SYC_OPERATION:
         case X_OPERATION: case Y_OPERATION:
         case Z_OPERATION: case SX_OPERATION:
+        case T_OPERATION: case TDG_OPERATION:
+        case S_OPERATION: case SDG_OPERATION:
         case GENERAL_OPERATION: case H_OPERATION:
             operation->apply_from_right(input);
-            break;
-        case U3_OPERATION: {
-            U3* u3_operation = static_cast<U3*>(operation);
-            u3_operation->apply_from_right( parameters_mtx, input );
-            break; 
-        }
-        case RX_OPERATION: {
-            RX* rx_operation = static_cast<RX*>(operation);
-            rx_operation->apply_from_right( parameters_mtx, input );
-            break; 
-        }
-        case RY_OPERATION: {
-            RY* ry_operation = static_cast<RY*>(operation);
-            ry_operation->apply_from_right( parameters_mtx, input );
-            break; 
-        }
-        case CRY_OPERATION: {
-            CRY* cry_operation = static_cast<CRY*>(operation);
-            cry_operation->apply_from_right( parameters_mtx, input );
-            break; 
-        }
-        case RZ_OPERATION: {
-            RZ* rz_operation = static_cast<RZ*>(operation);
-            rz_operation->apply_from_right( parameters_mtx, input );
-            break;         
+            break;  
+                  
+        case U1_OPERATION: case U2_OPERATION:
+        case U3_OPERATION: case CU_OPERATION:
+        case R_OPERATION: case RX_OPERATION:
+        case RY_OPERATION: case RZ_OPERATION:
+        case CRY_OPERATION: case CR_OPERATION:
+        case CZ_NU_OPERATION:
+        case ADAPTIVE_OPERATION:
+        {
+            operation->apply_from_right( parameters_mtx, input );
         }
         case UN_OPERATION: {
             UN* un_operation = static_cast<UN*>(operation);
@@ -616,20 +549,10 @@ Gates_block::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
             Gates_block* block_operation = static_cast<Gates_block*>(operation);
             block_operation->apply_from_right(parameters_mtx, input);
             break;
-        }
-        case CZ_NU_OPERATION: {
-            CZ_NU* cz_nu_operation = static_cast<CZ_NU*>(operation);
-            cz_nu_operation->apply_from_right( parameters_mtx, input );
-            break; 
-        }        
+        }       
         case COMPOSITE_OPERATION: {
             Composite* com_operation = static_cast<Composite*>(operation);
             com_operation->apply_from_right( parameters_mtx, input );
-            break; 
-        }
-        case ADAPTIVE_OPERATION: {
-            Adaptive* ad_operation = static_cast<Adaptive*>(operation);
-            ad_operation->apply_from_right( parameters_mtx, input );
             break; 
         }
         default:
@@ -641,9 +564,8 @@ Gates_block::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
 
 #ifdef DEBUG
         if (input.isnan()) { 
-            std::stringstream sstream;
-	    sstream << "Gates_block::apply_from_right: transformed matrix contains NaN." << std::endl;
-            print(sstream, 0);	            
+            std::string err( "Gates_block::apply_from_right: transformed matrix contains NaN." );
+	        throw( err );            
         }
 #endif
 
@@ -678,8 +600,8 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input, i
 
     // deriv_idx ... the index of the gate block for which the gradient is to be calculated
 
-    tbb::parallel_for( tbb::blocked_range<int>(0,gates.size(),work_batch), [&](tbb::blocked_range<int> r) {
-        for (int deriv_idx=r.begin(); deriv_idx<r.end(); ++deriv_idx) { 
+    tbb::parallel_for( tbb::blocked_range<size_t>(0,gates.size(),work_batch), [&](tbb::blocked_range<size_t> r) {
+        for (size_t deriv_idx=r.begin(); deriv_idx<r.end(); ++deriv_idx) { 
 
         //for (int deriv_idx=0; deriv_idx<gates.size(); ++deriv_idx) { 
 
@@ -699,7 +621,7 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input, i
 
             std::vector<Matrix> grad_loc;
 
-            for( int idx=0; idx<gates.size(); idx++) {            
+            for( size_t idx=0; idx<gates.size(); idx++) {            
 
                 Gate* operation = gates[idx];
                 
@@ -711,9 +633,8 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input, i
                 case ON_OPERATION:
                 case SYC_OPERATION:
                 case COMPOSITE_OPERATION: {
-                        int gate_type = (int)operation->get_type();
-                        std::string err( "Gates_block::apply_derivate_to: Given operation not supported in gardient calculation");
-			throw( err );
+                    std::string err( "Gates_block::apply_derivate_to: Given operation not supported in gardient calculation");
+			        throw( err );
 	                break;
                 }
                 default :
@@ -729,7 +650,7 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input, i
                     
                     }
                     else  {
-                
+                        // Gates such as U1, U2, and U3 fall here.
                         if( idx < deriv_idx ) {
                             operation->apply_to( parameters_mtx, input_loc, parallel );    
                         }
@@ -761,16 +682,65 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input, i
 }
 
 /**
+@brief Append a U1 gate to the list of gates
+@param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void Gates_block::add_u1(int target_qbit) {
+    
+    // create the operation
+    Gate* operation = static_cast<Gate*>(new U1( qbit_num, target_qbit ));
+    
+    // adding the operation to the end of the list of gates
+    add_gate( operation );
+}
+
+/**
+@brief Add a U1 gate to the front of the list of gates
+@param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void Gates_block::add_u1_to_front(int target_qbit ) {
+    
+    // create the operation
+    Gate* gate = static_cast<Gate*>(new U1( qbit_num, target_qbit ));
+    
+    // adding the operation to the front of the list of gates
+    add_gate_to_front( gate );
+}
+
+/**
+@brief Append a U2 gate to the list of gates
+@param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void Gates_block::add_u2(int target_qbit) {
+    
+    // create the operation
+    Gate* operation = static_cast<Gate*>(new U2( qbit_num, target_qbit ));
+    
+    // adding the operation to the end of the list of gates
+    add_gate( operation );
+}
+
+/**
+@brief Add a U2 gate to the front of the list of gates
+@param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void Gates_block::add_u2_to_front(int target_qbit ) {
+    
+    // create the operation
+    Gate* gate = static_cast<Gate*>(new U2( qbit_num, target_qbit ));
+    
+    // adding the operation to the front of the list of gates
+    add_gate_to_front( gate );
+}
+
+/**
 @brief Append a U3 gate to the list of gates
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
-@param Theta The Theta parameter of the U3 operation
-@param Phi The Phi parameter of the U3 operation
-@param Lambda The Lambda parameter of the U3 operation
 */
-void Gates_block::add_u3(int target_qbit, bool Theta, bool Phi, bool Lambda) {
+void Gates_block::add_u3(int target_qbit) {
 
         // create the operation
-        Gate* operation = static_cast<Gate*>(new U3( qbit_num, target_qbit, Theta, Phi, Lambda ));
+        Gate* operation = static_cast<Gate*>(new U3( qbit_num, target_qbit ));
 
         // adding the operation to the end of the list of gates
         add_gate( operation );
@@ -779,21 +749,16 @@ void Gates_block::add_u3(int target_qbit, bool Theta, bool Phi, bool Lambda) {
 /**
 @brief Add a U3 gate to the front of the list of gates
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
-@param Theta The Theta parameter of the U3 operation
-@param Phi The Phi parameter of the U3 operation
-@param Lambda The Lambda parameter of the U3 operation
 */
-void Gates_block::add_u3_to_front(int target_qbit, bool Theta, bool Phi, bool Lambda) {
+void Gates_block::add_u3_to_front(int target_qbit) {
 
         // create the operation
-        Gate* gate = static_cast<Gate*>(new U3( qbit_num, target_qbit, Theta, Phi, Lambda ));
+        Gate* gate = static_cast<Gate*>(new U3( qbit_num, target_qbit ));
 
         // adding the operation to the front of the list of gates
         add_gate_to_front( gate );
 
 }
-
-
 
 /**
 @brief Append a RX gate to the list of gates
@@ -822,6 +787,32 @@ void Gates_block::add_rx_to_front(int target_qbit ) {
 
 }
 
+/**
+@brief Append a R gate to the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void Gates_block::add_r(int target_qbit) {
+
+        // create the operation
+        Gate* operation = static_cast<Gate*>(new R( qbit_num, target_qbit));
+
+        // adding the operation to the end of the list of gates
+        add_gate( operation );
+}
+
+/**
+@brief Add a R gate to the front of the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void Gates_block::add_r_to_front(int target_qbit ) {
+
+        // create the operation
+        Gate* gate = static_cast<Gate*>(new R( qbit_num, target_qbit ));
+
+        // adding the operation to the front of the list of gates
+        add_gate_to_front( gate );
+
+}
 
 
 /**
@@ -886,8 +877,68 @@ void Gates_block::add_cry_to_front(int target_qbit, int control_qbit ) {
 
 }
 
+/**
+@brief Append a CR gate to the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void Gates_block::add_cr(int target_qbit, int control_qbit) {
+
+        // create the operation
+        Gate* operation = static_cast<Gate*>(new CR( qbit_num, target_qbit, control_qbit));
+
+        // adding the operation to the end of the list of gates
+        add_gate( operation );
+}
 
 
+
+/**
+@brief Add a CR gate to the front of the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void Gates_block::add_cr_to_front(int target_qbit, int control_qbit ) {
+
+        // create the operation
+        Gate* gate = static_cast<Gate*>(new CR( qbit_num, target_qbit, control_qbit ));
+
+        // adding the operation to the front of the list of gates
+        add_gate_to_front( gate );
+
+}
+
+
+/**
+@brief Append a CROT gate to the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void Gates_block::add_crot(int target_qbit, int control_qbit) {
+
+        // create the operation
+        Gate* operation = static_cast<Gate*>(new CROT( qbit_num, target_qbit, control_qbit));
+
+        // adding the operation to the end of the list of gates
+        add_gate( operation );
+}
+
+
+
+/**
+@brief Add a CROT gate to the front of the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void Gates_block::add_crot_to_front(int target_qbit, int control_qbit ) {
+
+        // create the operation
+        Gate* gate = static_cast<Gate*>(new CROT( qbit_num, target_qbit, control_qbit ));
+
+        // adding the operation to the front of the list of gates
+        add_gate_to_front( gate );
+
+}
 
 /**
 @brief Append a CZ_NU gate to the list of gates
@@ -1134,6 +1185,127 @@ void Gates_block::add_z_to_front(int target_qbit ) {
         add_gate_to_front( gate );
 
 }
+
+
+
+
+/**
+@brief Append a S gate to the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void Gates_block::add_s(int target_qbit) {
+
+        // create the operation
+        Gate* operation = static_cast<Gate*>(new S( qbit_num, target_qbit));
+
+        // adding the operation to the end of the list of gates
+        add_gate( operation );
+}
+
+/**
+@brief Add a S gate to the front of the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void Gates_block::add_s_to_front(int target_qbit ) {
+
+        // create the operation
+        Gate* gate = static_cast<Gate*>(new S( qbit_num, target_qbit ));
+
+        // adding the operation to the front of the list of gates
+        add_gate_to_front( gate );
+
+}
+
+
+
+/**
+@brief Append a Sdg gate to the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void Gates_block::add_sdg(int target_qbit) {
+
+        // create the operation
+        Gate* operation = static_cast<Gate*>(new SDG( qbit_num, target_qbit));
+
+        // adding the operation to the end of the list of gates
+        add_gate( operation );
+}
+
+/**
+@brief Add a Sdg gate to the front of the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void Gates_block::add_sdg_to_front(int target_qbit ) {
+
+        // create the operation
+        Gate* gate = static_cast<Gate*>(new SDG( qbit_num, target_qbit ));
+
+        // adding the operation to the front of the list of gates
+        add_gate_to_front( gate );
+
+}
+
+
+
+
+/**
+@brief Append a T gate to the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void Gates_block::add_t(int target_qbit) {
+
+        // create the operation
+        Gate* operation = static_cast<Gate*>(new T( qbit_num, target_qbit));
+
+        // adding the operation to the end of the list of gates
+        add_gate( operation );
+}
+
+/**
+@brief Add a T gate to the front of the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void Gates_block::add_t_to_front(int target_qbit ) {
+
+        // create the operation
+        Gate* gate = static_cast<Gate*>(new T( qbit_num, target_qbit ));
+
+        // adding the operation to the front of the list of gates
+        add_gate_to_front( gate );
+
+}
+
+
+
+
+/**
+@brief Append a Tdg gate to the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void Gates_block::add_tdg(int target_qbit) {
+
+        // create the operation
+        Gate* operation = static_cast<Gate*>(new Tdg( qbit_num, target_qbit));
+
+        // adding the operation to the end of the list of gates
+        add_gate( operation );
+}
+
+/**
+@brief Add a Tdg gate to the front of the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void Gates_block::add_tdg_to_front(int target_qbit ) {
+
+        // create the operation
+        Gate* gate = static_cast<Gate*>(new Tdg( qbit_num, target_qbit ));
+
+        // adding the operation to the front of the list of gates
+        add_gate_to_front( gate );
+
+}
+
+
 
 
 
@@ -1403,6 +1575,8 @@ void Gates_block::add_gate( Gate* gate ) {
 
 }
 
+
+
 /**
 @brief Add a gate to the front of the list of gates
 @param gate A pointer to a class Gate describing a gate.
@@ -1464,152 +1638,49 @@ Gates_block::insert_gate( Gate* gate, int idx ) {
 }
 
 
+/**
+@brief Call to add the number of the individual gate types in the circuit to the map given in the argument
+@param A map<gate_name, gate_count> describing the number of the individual gate types
+*/
+void Gates_block::add_gate_nums( std::map<std::string, int>& gate_nums ) {
+
+    for(std::vector<Gate*>::iterator it = gates.begin(); it != gates.end(); ++it) {
+    
+        // get the specific gate in the circuit (might be a gate or another subcircuit)
+        Gate* gate = *it;
+            
+            
+        if (gate->get_type() == BLOCK_OPERATION) {
+            Gates_block* circuit = static_cast<Gates_block*>(gate);
+            circuit->add_gate_nums( gate_nums );
+        }
+        else {
+            std::string gate_name = gate->get_name();
+            
+            if( gate_nums.find(gate_name) == gate_nums.end() ) {
+                gate_nums[ gate_name ] = 1;
+            }
+            else {
+                gate_nums[ gate_name ] = gate_nums[ gate_name ] + 1;
+            }
+        }
+    
+    }
+    
+}
+
 
 /**
 @brief Call to get the number of the individual gate types in the list of gates
-@return Returns with an instance gates_num describing the number of the individual gate types
+@return Returns with a map<gate_name, gate_count> describing the number of the individual gate types
 */
-gates_num Gates_block::get_gate_nums() {
+std::map<std::string, int> Gates_block::get_gate_nums() {
 
-        gates_num gate_nums;
-
-        gate_nums.u3      = 0;
-        gate_nums.rx      = 0;
-        gate_nums.ry      = 0;
-        gate_nums.cry      = 0;
-        gate_nums.rz      = 0;
-        gate_nums.cnot    = 0;
-        gate_nums.cz      = 0;
-        gate_nums.ch      = 0;
-        gate_nums.x       = 0;
-        gate_nums.z       = 0;
-        gate_nums.y       = 0;
-        gate_nums.sx      = 0;
-        gate_nums.syc     = 0;
-        gate_nums.cz_nu   = 0;
-        gate_nums.un     = 0;
-        gate_nums.on     = 0;
-        gate_nums.com     = 0;
-        gate_nums.general = 0;
-        gate_nums.adap = 0;
-        gate_nums.total = 0;
-
-        for(std::vector<Gate*>::iterator it = gates.begin(); it != gates.end(); ++it) {
-            // get the specific gate or block of gates
-            Gate* gate = *it;
-
-            if (gate->get_type() == BLOCK_OPERATION) {
-
-                Gates_block* block_gate = static_cast<Gates_block*>(gate);
-                gates_num gate_nums_loc = block_gate->get_gate_nums();
-                gate_nums.u3   = gate_nums.u3 + gate_nums_loc.u3;
-                gate_nums.rx   = gate_nums.rx + gate_nums_loc.rx;
-                gate_nums.ry   = gate_nums.ry + gate_nums_loc.ry;
-                gate_nums.cry   = gate_nums.cry + gate_nums_loc.cry;
-                gate_nums.rz   = gate_nums.rz + gate_nums_loc.rz;
-                gate_nums.cnot = gate_nums.cnot + gate_nums_loc.cnot;
-                gate_nums.cz = gate_nums.cz + gate_nums_loc.cz;
-                gate_nums.ch = gate_nums.ch + gate_nums_loc.ch;
-                gate_nums.h  = gate_nums.h + gate_nums_loc.h;
-                gate_nums.x  = gate_nums.x + gate_nums_loc.x;
-                gate_nums.sx = gate_nums.sx + gate_nums_loc.sx;
-                gate_nums.syc   = gate_nums.syc + gate_nums_loc.syc;
-                gate_nums.un   = gate_nums.un + gate_nums_loc.un;
-                gate_nums.on   = gate_nums.on + gate_nums_loc.on;
-                gate_nums.com  = gate_nums.com + gate_nums_loc.com;
-                gate_nums.adap = gate_nums.adap + gate_nums_loc.adap;
-                gate_nums.total = gate_nums.total + gate_nums_loc.total;
-
-            }
-            else if (gate->get_type() == U3_OPERATION) {
-                gate_nums.u3   = gate_nums.u3 + 1;
-                gate_nums.total = gate_nums.total + 1;
-            }
-            else if (gate->get_type() == RX_OPERATION) {
-                gate_nums.rx   = gate_nums.rx + 1;
-                gate_nums.total = gate_nums.total + 1;
-            }
-            else if (gate->get_type() == RY_OPERATION) {
-                gate_nums.ry   = gate_nums.ry + 1;
-                gate_nums.total = gate_nums.total + 1;
-            }
-            else if (gate->get_type() == CRY_OPERATION) {
-                gate_nums.cry   = gate_nums.cry + 1;
-                gate_nums.total = gate_nums.total + 1;
-            }
-            else if (gate->get_type() == RZ_OPERATION) {
-                gate_nums.rz   = gate_nums.rz + 1;
-                gate_nums.total = gate_nums.total + 1;
-            }
-            else if (gate->get_type() == CNOT_OPERATION) {
-                gate_nums.cnot   = gate_nums.cnot + 1;
-                gate_nums.total = gate_nums.total + 1;
-            }
-            else if (gate->get_type() == CZ_OPERATION) {
-                gate_nums.cz   = gate_nums.cz + 1;
-                gate_nums.total = gate_nums.total + 1;
-            }
-            else if (gate->get_type() == CH_OPERATION) {
-                gate_nums.ch   = gate_nums.ch + 1;
-                gate_nums.total = gate_nums.total + 1;
-            }
-            else if (gate->get_type() == H_OPERATION) {
-                gate_nums.h   = gate_nums.h + 1;
-                gate_nums.total = gate_nums.total + 1;
-            }
-            else if (gate->get_type() == X_OPERATION) {
-                gate_nums.x   = gate_nums.x + 1;
-                gate_nums.total = gate_nums.total + 1;
-            }
-            else if (gate->get_type() == Y_OPERATION) {
-                gate_nums.y   = gate_nums.y + 1;
-                gate_nums.total = gate_nums.total + 1;
-            }
-            else if (gate->get_type() == Z_OPERATION) {
-                gate_nums.z   = gate_nums.z + 1;
-                gate_nums.total = gate_nums.total + 1;
-            }
-            else if (gate->get_type() == SX_OPERATION) {
-                gate_nums.sx   = gate_nums.sx + 1;
-                gate_nums.total = gate_nums.total + 1;
-            }
-            else if (gate->get_type() == SYC_OPERATION) {
-                gate_nums.syc   = gate_nums.syc + 1;
-                gate_nums.total = gate_nums.total + 1;
-            }
-            else if (gate->get_type() == GENERAL_OPERATION) {
-                gate_nums.general   = gate_nums.general + 1;
-                gate_nums.total = gate_nums.total + 1;
-            }
-            else if (gate->get_type() == UN_OPERATION) {
-                gate_nums.un   = gate_nums.un + 1;
-                gate_nums.total = gate_nums.total + 1;
-            }
-            else if (gate->get_type() == ON_OPERATION) {
-                gate_nums.on   = gate_nums.on + 1;
-                gate_nums.total = gate_nums.total + 1;
-            }
-            else if (gate->get_type() == COMPOSITE_OPERATION) {
-                gate_nums.com   = gate_nums.com + 1;
-                gate_nums.total = gate_nums.total + 1;
-            }
-            else if (gate->get_type() == CZ_NU_OPERATION) {
-                gate_nums.cz_nu   = gate_nums.cz_nu + 1;
-                gate_nums.total = gate_nums.total + 1;
-            }            
-            else if (gate->get_type() == ADAPTIVE_OPERATION) {
-                gate_nums.adap   = gate_nums.adap + 1;
-                gate_nums.total = gate_nums.total + 1;
-            }
-            else {
-                std::string err("Gates_block::get_gate_nums: unimplemented gate"); 
-                throw err;
-            }
-
-        }
-
-
-        return gate_nums;
+    std::map<std::string, int> gate_nums;
+    
+    add_gate_nums( gate_nums );
+    
+    return gate_nums;
 
 }
 
@@ -1640,117 +1711,107 @@ int Gates_block::get_gate_num() {
 @param start_index The ordinal number of the first gate.
 */
 void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
-
+//TODO: rewrite the function with switch statement
 
 	//The stringstream input to store the output messages.
 	std::stringstream sstream;
 	sstream << std::endl << "The gates in the list of gates:" << std::endl;
 	print(sstream, 1);	    	
 		
-        int gate_idx = start_index;
-        int parameter_idx = 0;
+    int gate_idx = start_index;
+    int parameter_idx = 0;
 	double *parameters_data = parameters.get_data();
 	//const_cast <Matrix_real&>(parameters);
 
 
-        for(int op_idx = 0; op_idx<gates.size(); op_idx++) {
+    for(size_t op_idx = 0; op_idx<gates.size(); op_idx++) {
 
-            Gate* gate = gates[op_idx];
+        Gate* gate = gates[op_idx];
 
-            if (gate->get_type() == CNOT_OPERATION) {
-                CNOT* cnot_gate = static_cast<CNOT*>(gate);
-                std::stringstream sstream;
-		sstream << gate_idx << "th gate: CNOT with control qubit: " << cnot_gate->get_control_qbit() << " and target qubit: " << cnot_gate->get_target_qbit() << std::endl;
-		print(sstream, 1);   		
-                gate_idx = gate_idx + 1;
-            }
-            else if (gate->get_type() == CZ_OPERATION) {
-                CZ* cz_gate = static_cast<CZ*>(gate);
-		std::stringstream sstream;
-		sstream << gate_idx << "th gate: CZ with control qubit: " << cz_gate->get_control_qbit() << " and target qubit: " << cz_gate->get_target_qbit() << std::endl;
-		print(sstream, 1);	    	             
-                gate_idx = gate_idx + 1;
-            }
-            else if (gate->get_type() == CH_OPERATION) {
-                CH* ch_gate = static_cast<CH*>(gate);
-		std::stringstream sstream;
-		sstream << gate_idx << "th gate: CH with control qubit: " << ch_gate->get_control_qbit() << " and target qubit: " << ch_gate->get_target_qbit() << std::endl;
-		print(sstream, 1);	    	
-                gate_idx = gate_idx + 1;
-            }
-            else if (gate->get_type() == SYC_OPERATION) {
-                SYC* syc_gate = static_cast<SYC*>(gate);
-		std::stringstream sstream;
-		sstream << gate_idx << "th gate: Sycamore gate with control qubit: " << syc_gate->get_control_qbit() << " and target qubit: " << syc_gate->get_target_qbit() << std::endl;
-		print(sstream, 1);	    	
-                gate_idx = gate_idx + 1;
-            }
-            else if (gate->get_type() == U3_OPERATION) {
+        if (gate->get_type() == CNOT_OPERATION) {
+            CNOT* cnot_gate = static_cast<CNOT*>(gate);
+            std::stringstream sstream;
+	    	sstream << gate_idx << "th gate: CNOT with control qubit: " << cnot_gate->get_control_qbit() << " and target qubit: " << cnot_gate->get_target_qbit() << std::endl;
+		    print(sstream, 1);   		
+            gate_idx = gate_idx + 1;
+        }
+        else if (gate->get_type() == CROT_OPERATION) {
+            CROT* crot_gate = static_cast<CROT*>(gate);
+            std::stringstream sstream;
+            double theta0,phi0;
+            theta0 = std::fmod( 2*parameters_data[parameter_idx], 4*M_PI);
+            phi0 = std::fmod( parameters_data[parameter_idx+1], 2*M_PI);
+            parameter_idx = parameter_idx + 2;
+            sstream << gate_idx << "th gate: CROT with control qubit: " << crot_gate->get_control_qbit() << " and target qubit: " << crot_gate->get_target_qbit()<< " and parameters theta=" << theta0 <<" and phi="<< phi0 << std::endl;
+		    print(sstream, 1);
+            gate_idx = gate_idx + 1;
+        }
+        else if (gate->get_type() == CZ_OPERATION) {
+            CZ* cz_gate = static_cast<CZ*>(gate);
+		    std::stringstream sstream;
+		    sstream << gate_idx << "th gate: CZ with control qubit: " << cz_gate->get_control_qbit() << " and target qubit: " << cz_gate->get_target_qbit() << std::endl;
+		    print(sstream, 1);	    	             
+            gate_idx = gate_idx + 1;
+        }
+        else if (gate->get_type() == CH_OPERATION) {
+            CH* ch_gate = static_cast<CH*>(gate);
+		    std::stringstream sstream;
+		    sstream << gate_idx << "th gate: CH with control qubit: " << ch_gate->get_control_qbit() << " and target qubit: " << ch_gate->get_target_qbit() << std::endl;
+		    print(sstream, 1);	    	
+            gate_idx = gate_idx + 1;
+        }
+        else if (gate->get_type() == SYC_OPERATION) {
+            SYC* syc_gate = static_cast<SYC*>(gate);
+		    std::stringstream sstream;
+		    sstream << gate_idx << "th gate: Sycamore gate with control qubit: " << syc_gate->get_control_qbit() << " and target qubit: " << syc_gate->get_target_qbit() << std::endl;
+		    print(sstream, 1);	    	
+            gate_idx = gate_idx + 1;
+        }
+        else if (gate->get_type() == U1_OPERATION) {
+            U1* u1_gate = static_cast<U1*>(gate);
+            double lambda = std::fmod(parameters_data[parameter_idx], 2*M_PI);
+            parameter_idx = parameter_idx + 1;
+            std::stringstream sstream;
+            sstream << gate_idx << "th gate: U1 on target qubit: " << u1_gate->get_target_qbit() << " with parameter lambda = " << lambda << std::endl;
+            print(sstream, 1);
+            gate_idx = gate_idx + 1;
+        }
+        else if (gate->get_type() == U2_OPERATION) {
+            U2* u2_gate = static_cast<U2*>(gate);
+            double phi = std::fmod(parameters_data[parameter_idx], 2*M_PI);
+            double lambda = std::fmod(parameters_data[parameter_idx+1], 2*M_PI);
+            parameter_idx = parameter_idx + 2;
+            std::stringstream sstream;
+            sstream << gate_idx << "th gate: U2 on target qubit: " << u2_gate->get_target_qbit() << " with parameters phi = " << phi << " and lambda = " << lambda << std::endl;
+            print(sstream, 1);
+            gate_idx = gate_idx + 1;
+        }
+        else if (gate->get_type() == U3_OPERATION) {
+            U3* u3_gate = static_cast<U3*>(gate);
+            double theta = std::fmod(parameters_data[parameter_idx], 4*M_PI);
+            double phi = std::fmod(parameters_data[parameter_idx+1], 2*M_PI);
+            double lambda = std::fmod(parameters_data[parameter_idx+2], 2*M_PI);
+            parameter_idx = parameter_idx + 3;
+            std::stringstream sstream;
+            sstream << gate_idx << "th gate: U3 on target qubit: " << u3_gate->get_target_qbit() << " with parameters theta = " << theta << ", phi = " << phi << " and lambda = " << lambda << std::endl;
+            print(sstream, 1);
+            gate_idx = gate_idx + 1;
+        }
+        else if (gate->get_type() == R_OPERATION) {
+	        // definig the rotation parameter
+            double vartheta,varphi;
+            // get the inverse parameters of the U3 rotation
+            R* r_gate = static_cast<R*>(gate);		
+            vartheta = std::fmod( 2*parameters_data[parameter_idx], 4*M_PI);
+            varphi = std::fmod( parameters_data[parameter_idx+1], 2*M_PI);
+            parameter_idx = parameter_idx + 2;
 
-                // definig the U3 parameters
-                double vartheta;
-                double varphi;
-                double varlambda;
-		
-                // get the inverse parameters of the U3 rotation
-
-                U3* u3_gate = static_cast<U3*>(gate);
-
-                if ((u3_gate->get_parameter_num() == 1) && u3_gate->is_theta_parameter()) {
-		   
-                    vartheta = std::fmod( 2*parameters_data[parameter_idx], 4*M_PI);
-                    varphi = 0;
-                    varlambda =0;
-                    parameter_idx = parameter_idx + 1;
-
-                }
-                else if ((u3_gate->get_parameter_num() == 1) && u3_gate->is_phi_parameter()) {
-                    vartheta = 0;
-                    varphi = std::fmod( parameters_data[parameter_idx], 2*M_PI);
-                    varlambda =0;
-                    parameter_idx = parameter_idx + 1;
-                }
-                else if ((u3_gate->get_parameter_num() == 1) && u3_gate->is_lambda_parameter()) {
-                    vartheta = 0;
-                    varphi =  0;
-                    varlambda = std::fmod( parameters_data[parameter_idx], 2*M_PI);
-                    parameter_idx = parameter_idx + 1;
-                }
-                else if ((u3_gate->get_parameter_num() == 2) && u3_gate->is_theta_parameter() && u3_gate->is_phi_parameter() ) {
-                    vartheta = std::fmod( 2*parameters_data[parameter_idx], 4*M_PI);
-                    varphi = std::fmod( parameters_data[parameter_idx+1], 2*M_PI);
-                    varlambda = 0;
-                    parameter_idx = parameter_idx + 2;
-                }
-                else if ((u3_gate->get_parameter_num() == 2) && u3_gate->is_theta_parameter() && u3_gate->is_lambda_parameter() ) {
-                    vartheta = std::fmod( 2*parameters_data[parameter_idx], 4*M_PI);
-                    varphi = 0;
-                    varlambda = std::fmod( parameters_data[parameter_idx+1], 2*M_PI);
-                    parameter_idx = parameter_idx + 2;
-                }
-                else if ((u3_gate->get_parameter_num() == 2) && u3_gate->is_phi_parameter() && u3_gate->is_lambda_parameter() ) {
-                    vartheta = 0;
-                    varphi = std::fmod( parameters_data[parameter_idx], 2*M_PI);
-                    varlambda = std::fmod( parameters_data[parameter_idx+1], 2*M_PI);
-                    parameter_idx = parameter_idx + 2;
-                }
-                else if ((u3_gate->get_parameter_num() == 3)) {
-                    vartheta = std::fmod( 2*parameters_data[parameter_idx], 4*M_PI);
-                    varphi = std::fmod( parameters_data[parameter_idx+1], 2*M_PI);
-                    varlambda = std::fmod( parameters_data[parameter_idx+2], 2*M_PI);
-                    parameter_idx = parameter_idx + 3;
-                }
-
-//                message = message + "U3 on target qubit %d with parameters theta = %f, phi = %f and lambda = %f";
-
-		std::stringstream sstream;
-		sstream << gate_idx << "th gate: U3 on target qubit: " << u3_gate->get_target_qbit() << " and with parameters theta = " << vartheta << ", phi = " << varphi << " and lambda = " << varlambda << std::endl;
-		print(sstream, 1);	    	
-		                
-                gate_idx = gate_idx + 1;
-
-            }
-            else if (gate->get_type() == RX_OPERATION) {
+		    std::stringstream sstream;
+		    sstream << gate_idx << "th gate: R on target qubit: " << r_gate->get_target_qbit() << " and with parameters theta = " << vartheta << " and phi:" << varphi << std::endl;
+		    print(sstream, 1);	    	
+            gate_idx = gate_idx + 1;
+        }
+        else if (gate->get_type() == RX_OPERATION) {
 	        // definig the rotation parameter
                 double vartheta;
                 // get the inverse parameters of the U3 rotation
@@ -1786,6 +1847,20 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
 
 		std::stringstream sstream;
 		sstream << gate_idx << "th gate: CRY on target qubit: " << cry_gate->get_target_qbit() << ", control qubit" << cry_gate->get_control_qbit() << " and with parameters theta = " << vartheta << std::endl;
+		print(sstream, 1);	    		                    
+                gate_idx = gate_idx + 1;
+            }
+            else if (gate->get_type() == CR_OPERATION) {
+                // definig the rotation parameter
+                double vartheta,varphi;
+                // get the inverse parameters of the U3 rotation
+                CR* cr_gate = static_cast<CR*>(gate);
+                vartheta = std::fmod( 2*parameters_data[parameter_idx], 4*M_PI);
+                varphi = std::fmod(parameters_data[parameter_idx+1],2*M_PI);
+                parameter_idx = parameter_idx + 2;
+
+		std::stringstream sstream;
+		sstream << gate_idx << "th gate: CR on target qubit: " << cr_gate->get_target_qbit() << ", control qubit" << cr_gate->get_control_qbit() << " and with parameters theta and phi = " << vartheta << " , " << varphi << std::endl;
 		print(sstream, 1);	    		                    
                 gate_idx = gate_idx + 1;
             }
@@ -1831,6 +1906,22 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
                 Z* z_gate = static_cast<Z*>(gate);
 		std::stringstream sstream;
 		sstream << gate_idx << "th gate: Z on target qubit: " << z_gate->get_target_qbit() << std::endl;
+		print(sstream, 1);	    	
+                gate_idx = gate_idx + 1;
+            }
+            else if (gate->get_type() == S_OPERATION) {
+                // get the inverse parameters of the U3 rotation
+                S* s_gate = static_cast<S*>(gate);
+		std::stringstream sstream;
+		sstream << gate_idx << "th gate: S on target qubit: " << s_gate->get_target_qbit() << std::endl;
+		print(sstream, 1);	    	
+                gate_idx = gate_idx + 1;
+            }
+            else if (gate->get_type() == SDG_OPERATION) {
+                // get the inverse parameters of the U3 rotation
+                SDG* sdg_gate = static_cast<SDG*>(gate);
+		std::stringstream sstream;
+		sstream << gate_idx << "th gate: Sdg on target qubit: " << sdg_gate->get_target_qbit() << std::endl;
 		print(sstream, 1);	    	
                 gate_idx = gate_idx + 1;
             }
@@ -1911,132 +2002,148 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
 
 
 /**
-@brief Call to reorder the qubits in the matrix of the gate
+@brief Call to create a new circuit with remapped qubits
+@param qbit_map The map to reorder the qbits in a form of map: {int(initial_qbit): int(remapped_qbit)}.
+@return Returns with the remapped circuit
+*/
+Gates_block* 
+Gates_block::create_remapped_circuit( const std::map<int, int>& qbit_map ) {
+
+    return create_remapped_circuit( qbit_map, qbit_num );
+
+}
+
+
+/**
+@brief Call to create a new circuit with remapped qubits
+@param qbit_map The map to reorder the qbits in a form of map: {int(initial_qbit): int(remapped_qbit)}. . 
+@param qbit_num The number of qubits in the remapped circuit
+@return Returns with the remapped circuit
+*/
+Gates_block* 
+Gates_block::create_remapped_circuit( const std::map<int, int>& qbit_map, const int qbit_num_ ) {
+
+
+    Gates_block* ret = new Gates_block( qbit_num_ );
+    for(std::vector<Gate*>::iterator it = gates.begin(); it != gates.end(); ++it) {
+
+        Gate* op = *it;
+        switch (op->get_type()) {
+        case CNOT_OPERATION: case CZ_OPERATION:
+        case CH_OPERATION: case SYC_OPERATION:
+        case U1_OPERATION: case U2_OPERATION: case U3_OPERATION:
+        case RY_OPERATION: case CRY_OPERATION: case RX_OPERATION:
+        case RZ_OPERATION: case X_OPERATION:
+        case Y_OPERATION: case Z_OPERATION:
+        case SX_OPERATION: case BLOCK_OPERATION:
+        case GENERAL_OPERATION: case UN_OPERATION:
+        case ON_OPERATION: case COMPOSITE_OPERATION:
+        case ADAPTIVE_OPERATION: case H_OPERATION: 
+        case S_OPERATION: case SDG_OPERATION:
+        case T_OPERATION: case TDG_OPERATION:
+        case CZ_NU_OPERATION: case CU_OPERATION:
+        {
+            Gate* cloned_op = op->clone();
+
+            int target_qbit = cloned_op->get_target_qbit();
+            int control_qbit = cloned_op->get_control_qbit();
+
+            if ( qbit_num_ > qbit_num ) {
+                // qbit num needs to be set in prior to avoid conflict
+                cloned_op->set_qbit_num( qbit_num_ );
+            }
+
+            if (qbit_map.find( target_qbit ) != qbit_map.end()) {
+                cloned_op->set_target_qbit( qbit_map.at(target_qbit) );
+            } else {
+                std::string err("Gates_block::create_remapped_circuit: Missing target qubit from the qbit map."); 
+                throw err;
+            }
+
+
+            if ( control_qbit != -1 ) {
+                if ( qbit_map.find( control_qbit ) != qbit_map.end() ) {
+                    cloned_op->set_control_qbit( qbit_map.at(control_qbit) );
+                } else {
+                    std::string err("Gates_block::create_remapped_circuit: Missing control qubit from the qbit map."); 
+                    throw err;
+                }
+            }
+
+            if ( qbit_num_ < qbit_num ) {
+                // qbit num needs to be set post to avoid conflict
+                cloned_op->set_qbit_num( qbit_num_ );
+            }
+
+            ret->add_gate( cloned_op );
+
+            break;
+        }
+        default:
+            std::string err("Gates_block::create_remapped_circuit: unimplemented gate"); 
+            throw err;
+        }
+
+    }
+
+    return ret;
+}
+
+
+/**
+@brief Call to reorder the qubits in the matrix of the gate (OBSOLETE function)
 @param qbit_list The reordered list of qubits spanning the matrix
 */
-void Gates_block::reorder_qubits( std::vector<int>  qbit_list) {
+void Gates_block::reorder_qubits( std::vector<int>  qbit_list ) {
 
     for(std::vector<Gate*>::iterator it = gates.begin(); it != gates.end(); ++it) {
 
         Gate* gate = *it;
 
-        if (gate->get_type() == CNOT_OPERATION) {
-            CNOT* cnot_gate = static_cast<CNOT*>(gate);
-            cnot_gate->reorder_qubits( qbit_list );
-         }
-         else if (gate->get_type() == CZ_OPERATION) {
-            CZ* cz_gate = static_cast<CZ*>(gate);
-            cz_gate->reorder_qubits( qbit_list );
-         }
-         else if (gate->get_type() == CH_OPERATION) {
-            CH* ch_gate = static_cast<CH*>(gate);
-            ch_gate->reorder_qubits( qbit_list );
-         }
-         else if (gate->get_type() == SYC_OPERATION) {
-            SYC* syc_gate = static_cast<SYC*>(gate);
-            syc_gate->reorder_qubits( qbit_list );
-         }
-         else if (gate->get_type() == U3_OPERATION) {
-             U3* u3_gate = static_cast<U3*>(gate);
-             u3_gate->reorder_qubits( qbit_list );
-         }
-         else if (gate->get_type() == RX_OPERATION) {
-             RX* rx_gate = static_cast<RX*>(gate);
-             rx_gate->reorder_qubits( qbit_list );
-         }
-         else if (gate->get_type() == RY_OPERATION) {
-             RY* ry_gate = static_cast<RY*>(gate);
-             ry_gate->reorder_qubits( qbit_list );
-         }
-         else if (gate->get_type() == CRY_OPERATION) {
-             CRY* cry_gate = static_cast<CRY*>(gate);
-             cry_gate->reorder_qubits( qbit_list );
-         }
-         else if (gate->get_type() == RZ_OPERATION) {
-             RZ* rz_gate = static_cast<RZ*>(gate);
-             rz_gate->reorder_qubits( qbit_list );
-         }
-         else if (gate->get_type() == H_OPERATION) {
-             H* h_gate = static_cast<H*>(gate);
-             h_gate->reorder_qubits( qbit_list );
-         }
-         else if (gate->get_type() == X_OPERATION) {
-             X* x_gate = static_cast<X*>(gate);
-             x_gate->reorder_qubits( qbit_list );
-         }
-         else if (gate->get_type() == Y_OPERATION) {
-             Y* y_gate = static_cast<Y*>(gate);
-             y_gate->reorder_qubits( qbit_list );
-         }
-         else if (gate->get_type() == Z_OPERATION) {
-             Z* z_gate = static_cast<Z*>(gate);
-             z_gate->reorder_qubits( qbit_list );
-         }
-         else if (gate->get_type() == SX_OPERATION) {
-             SX* sx_gate = static_cast<SX*>(gate);
-             sx_gate->reorder_qubits( qbit_list );
-         }
-         else if (gate->get_type() == BLOCK_OPERATION) {
-             Gates_block* block_gate = static_cast<Gates_block*>(gate);
-             block_gate->reorder_qubits( qbit_list );
-         }
-         else if (gate->get_type() == UN_OPERATION) {
-             UN* un_gate = static_cast<UN*>(gate);
-             un_gate->reorder_qubits( qbit_list );
-         }
-         else if (gate->get_type() == ON_OPERATION) {
-             ON* on_gate = static_cast<ON*>(gate);
-             on_gate->reorder_qubits( qbit_list );
-         }
-         else if (gate->get_type() == COMPOSITE_OPERATION) {
-             Composite* com_gate = static_cast<Composite*>(gate);
-             com_gate->reorder_qubits( qbit_list );
-         }
-         else if (gate->get_type() == ADAPTIVE_OPERATION) {
-             Adaptive* ad_gate = static_cast<Adaptive*>(gate);
-             ad_gate->reorder_qubits( qbit_list );
-         }
-         else {
-             std::string err("Gates_block::reorder_qubits: unimplemented gate"); 
-             throw err;
-         }
+        gate->reorder_qubits( qbit_list );
 
 
     }
 
 }
 
-
-
 /**
 @brief Call to get the qubits involved in the gates stored in the block of gates.
 @return Return with a list of the invovled qubits
 */
-std::vector<int> Gates_block::get_involved_qubits() {
+std::vector<int> Gates_block::get_involved_qubits(bool only_target) {
 
-    std::vector<int> involved_qbits;
+    std::set<int> involved_qbits;
 
     int qbit;
-
 
     for(std::vector<Gate*>::iterator it = gates.begin(); it != gates.end(); ++it) {
 
         Gate* gate = *it;
 
-        qbit = gate->get_target_qbit();
-        if (qbit != -1) {
-            add_unique_elelement( involved_qbits, qbit );
+        if (gate->get_type() == BLOCK_OPERATION) {
+            std::vector<int> inner_qbits = gate->get_involved_qubits();    
+            for (std::vector<int>::iterator in_it = inner_qbits.begin(); in_it != inner_qbits.end(); ++in_it){
+                involved_qbits.insert(*in_it);
+            }
+            continue;
         }
 
-
-        qbit = gate->get_control_qbit();
+        qbit = gate->get_target_qbit();
         if (qbit != -1) {
-            add_unique_elelement( involved_qbits, qbit );
+            involved_qbits.insert(qbit);
+        }
+
+        if (!only_target) {
+            qbit = gate->get_control_qbit();
+            if (qbit != -1) {
+                involved_qbits.insert(qbit);
+            }
         }
 
     }
 
-    return involved_qbits;
+    return std::vector<int>(involved_qbits.begin(), involved_qbits.end());
 }
 
 
@@ -2050,8 +2157,8 @@ std::vector<Gate*> Gates_block::get_gates() {
 
 
 /**
-@brief Call to get the gates stored in the class.
-@return Return with a list of the gates.
+@brief Call to get a gate stored in the class.
+@return Return with a pointer to the gate. (Borrowed reference, dont free the memory)
 */
 Gate* Gates_block::get_gate(int idx) {
 
@@ -2086,6 +2193,14 @@ void Gates_block::combine(Gates_block* op_block) {
 
 }
 
+void Gates_block::set_min_fusion( int min_fusion ) {
+    this->min_fusion = min_fusion;
+    for (size_t i = 0; i < gates.size(); i++){
+        if ( gates[i]->get_type() == BLOCK_OPERATION ) {
+            ((Gates_block*)gates[i])->set_min_fusion( min_fusion );
+        }
+    }
+}
 
 /**
 @brief Set the number of qubits spanning the matrix of the gates stored in the block of gates.
@@ -2107,16 +2222,20 @@ void Gates_block::set_qbit_num( int qbit_num_in ) {
         switch (op->get_type()) {
         case CNOT_OPERATION: case CZ_OPERATION:
         case CH_OPERATION: case SYC_OPERATION:
-        case U3_OPERATION: case RY_OPERATION:
-        case CRY_OPERATION: case RX_OPERATION:
+        case U1_OPERATION: case U2_OPERATION: 
+        case U3_OPERATION:
+        case RY_OPERATION: case CRY_OPERATION: 
+        case RX_OPERATION: case CR_OPERATION:
         case RZ_OPERATION: case X_OPERATION:
         case Y_OPERATION: case Z_OPERATION:
         case SX_OPERATION: case BLOCK_OPERATION:
         case GENERAL_OPERATION: case UN_OPERATION:
         case ON_OPERATION: case COMPOSITE_OPERATION:
-        case ADAPTIVE_OPERATION:
-        case H_OPERATION:
-        case CZ_NU_OPERATION:
+        case ADAPTIVE_OPERATION: case CROT_OPERATION:
+        case H_OPERATION: case R_OPERATION:
+        case CZ_NU_OPERATION: case CU_OPERATION:
+        case S_OPERATION: case SDG_OPERATION:
+        case T_OPERATION: case TDG_OPERATION:
             op->set_qbit_num( qbit_num_in );
             break;
         default:
@@ -2165,16 +2284,20 @@ int Gates_block::extract_gates( Gates_block* op_block ) {
         switch (op->get_type()) {
         case CNOT_OPERATION: case CZ_OPERATION:
         case CH_OPERATION: case SYC_OPERATION:
-        case U3_OPERATION: case RY_OPERATION:
-        case CRY_OPERATION: case RX_OPERATION:
+        case U1_OPERATION: case U2_OPERATION: 
+        case U3_OPERATION:
+        case RY_OPERATION: case CRY_OPERATION: 
+        case RX_OPERATION: case CR_OPERATION:
         case RZ_OPERATION: case X_OPERATION:
         case Y_OPERATION: case Z_OPERATION:
         case SX_OPERATION: case BLOCK_OPERATION:
         case GENERAL_OPERATION: case UN_OPERATION:
         case ON_OPERATION: case COMPOSITE_OPERATION:
-        case ADAPTIVE_OPERATION: 
-        case H_OPERATION: 
-        case CZ_NU_OPERATION:
+        case ADAPTIVE_OPERATION: case CROT_OPERATION:
+        case H_OPERATION:  case R_OPERATION:
+        case CZ_NU_OPERATION: case CU_OPERATION:
+        case S_OPERATION: case SDG_OPERATION:
+        case T_OPERATION: case TDG_OPERATION:
         {
             Gate* op_cloned = op->clone();
             op_block->add_gate( op_cloned );
@@ -2409,8 +2532,9 @@ Gates_block::get_reduced_density_matrix( Matrix_real& parameters_mtx, Matrix& in
     }
 
     if ( abs( trace-1.0 ) > 1e-6 ) {
-        std::string error("Gates_block::get_reduced_density_matrix: The trace of the reduced density matrix is not unity");
-        throw error;
+        std::stringstream sstream;
+     	sstream << "Warning: Gates_block::get_reduced_density_matrix: The error of the trace of the reduced density matrix is " << abs( trace-1.0 ) << std::endl;
+	    print(sstream, 1);	 
     }
 
     return rho;
@@ -2548,7 +2672,7 @@ Gates_block::determine_children( Gate* gate ) {
     std::vector<int>&& involved_qubits = gate->get_involved_qubits();
     
     // iterate over gates in the circuit
-    for( int idx=0; idx<gates.size(); idx++ ) {
+    for( size_t idx=0; idx<gates.size(); idx++ ) {
         Gate* gate_loc = gates[idx];
         std::vector<int>&& involved_qubits_loc = gate_loc->get_involved_qubits();
         
@@ -2698,8 +2822,12 @@ DFEgate_kernel_type* Gates_block::convert_to_DFE_gates_with_derivates( Matrix_re
         throw error;
     }
 
-    gates_num gate_nums   = get_gate_nums();
-    int gates_total_num   = gate_nums.total; 
+    std::map<std::string, int> gate_nums  = get_gate_nums();
+    int gates_total_num = 0;
+    for( auto it=gate_nums.begin(); it != gate_nums.end(); it++ ) {
+        gates_total_num = gates_total_num + it->second;
+    }
+
     int chained_gates_num = get_chained_gates_num();
     int gate_padding      = gates_total_num % chained_gates_num == 0 ? 0 : chained_gates_num - (gates_total_num % chained_gates_num);
     gatesNum              = gates_total_num+gate_padding;
@@ -2822,112 +2950,53 @@ void Gates_block::adjust_parameters_for_derivation( DFEgate_kernel_type* DFEgate
                 std::string error("Gates_block::convert_to_DFE_gates: SYC_gate not implemented");
                 throw error;
             }
-            else if (gate->get_type() == U3_OPERATION) {
-
-                // definig the U3 parameters
-                double varthetaOver2;
-                double varphi;
-                double varlambda;
-		
-                // get the inverse parameters of the U3 rotation
-
-                U3* u3_gate = static_cast<U3*>(gate);
-
-                if ((u3_gate->get_parameter_num() == 1) && u3_gate->is_theta_parameter()) {		   
-                    DFEgate_kernel_type& DFEGate = DFEgates[gate_set_index*gatesNum + gate_idx];
-                    DFEGate.ThetaOver2           = DFEGate.ThetaOver2 + parameter_shift;
-                    DFEGate.metadata             = (1<<7); // the leading bit indicates that derivate is processed
-                    gate_set_index               = gate_set_index - 1;
-
-                    parameter_idx                = parameter_idx - 1;
-
-                }
-                else if ((u3_gate->get_parameter_num() == 1) && u3_gate->is_phi_parameter()) { // not checked
-                    DFEgate_kernel_type& DFEGate = DFEgates[gate_set_index*gatesNum + gate_idx];
-                    DFEGate.Phi                  = DFEGate.Phi + parameter_shift;
-                    DFEGate.metadata             = 3 + (1<<7); // The 0th and 1st element in kernel matrix should be zero for derivates and 3 = 0011, plus the leading bit indicates that derivate is processed
-                    gate_set_index               = gate_set_index - 1;
-
-                    parameter_idx                = parameter_idx - 1;
-                }
-                else if ((u3_gate->get_parameter_num() == 1) && u3_gate->is_lambda_parameter()) { // not checked
-                    DFEgate_kernel_type& DFEGate = DFEgates[gate_set_index*gatesNum + gate_idx];
-                    DFEGate.Lambda               = DFEGate.Lambda + parameter_shift;
-                    DFEGate.metadata             = 5 + (1<<7); // The 0st and 3nd element in kernel matrix should be zero for derivates and 5 = 0101, plus the leading bit indicates that derivate is processed
-                    gate_set_index               = gate_set_index - 1;
-
-                    parameter_idx                = parameter_idx - 1;
-                }
-                else if ((u3_gate->get_parameter_num() == 2) && u3_gate->is_theta_parameter() && u3_gate->is_phi_parameter() ) { //not checked
-
-                    DFEgate_kernel_type& DFEGate2= DFEgates[gate_set_index*gatesNum + gate_idx];
-                    DFEGate2.Phi                 = DFEGate2.Phi + parameter_shift;
-                    DFEGate2.metadata            = 3 + (1<<7); // The 0th and 1st element in kernel matrix should be zero for derivates and 3 = 0011, plus the leading bit indicates that derivate is processed
-                    gate_set_index               = gate_set_index - 1;
-
-                    DFEgate_kernel_type& DFEGate = DFEgates[gate_set_index*gatesNum + gate_idx];
-                    DFEGate.ThetaOver2           = DFEGate.ThetaOver2 + parameter_shift;
-                    DFEGate.metadata             = (1<<7); // the leading bit indicates that derivate is processed
-                    gate_set_index               = gate_set_index - 1;
-
-
-
-                    parameter_idx = parameter_idx - 2;
-                }
-                else if ((u3_gate->get_parameter_num() == 2) && u3_gate->is_theta_parameter() && u3_gate->is_lambda_parameter() ) {
-//////////////////////////////////////////////////////
-                    DFEgate_kernel_type& DFEGate2= DFEgates[gate_set_index*gatesNum + gate_idx];
-                    DFEGate2.Lambda              = DFEGate2.Lambda + parameter_shift;
-                    DFEGate2.metadata            = 5 + (1<<7); // The 0st and 3nd element in kernel matrix should be zero for derivates and 5 = 0101, plus the leading bit indicates that derivate is processed
-                    gate_set_index               = gate_set_index - 1;
-
-                    DFEgate_kernel_type& DFEGate = DFEgates[gate_set_index*gatesNum + gate_idx];
-                    DFEGate.ThetaOver2           = DFEGate.ThetaOver2 + parameter_shift;
-                    DFEGate.metadata             = (1<<7); // the leading bit indicates that derivate is processed
-                    gate_set_index               = gate_set_index - 1;
-
-
-
-                    parameter_idx = parameter_idx - 2;
-                }
-                else if ((u3_gate->get_parameter_num() == 2) && u3_gate->is_phi_parameter() && u3_gate->is_lambda_parameter() ) { // not checked
-
-                    DFEgate_kernel_type& DFEGate2= DFEgates[gate_set_index*gatesNum + gate_idx];
-                    DFEGate2.Lambda              = DFEGate2.Lambda + parameter_shift;
-                    DFEGate2.metadata            = 5 + (1<<7); // The 0st and 3nd element in kernel matrix should be zero for derivates and 5 = 0101, plus the leading bit indicates that derivate is processed
-                    gate_set_index               = gate_set_index - 1;
-
-                    DFEgate_kernel_type& DFEGate = DFEgates[gate_set_index*gatesNum + gate_idx];
-                    DFEGate.Phi                  = DFEGate.Phi + parameter_shift;
-                    DFEGate.metadata             = 3 + (1<<7); // The 0th and 1st element in kernel matrix should be zero for derivates and 3 = 0011, plus the leading bit indicates that derivate is processed
-                    gate_set_index               = gate_set_index - 1;
-
-
-                    parameter_idx = parameter_idx - 2;
-                }
-                else if ((u3_gate->get_parameter_num() == 3)) {
-
-                    DFEgate_kernel_type& DFEGate3= DFEgates[gate_set_index*gatesNum + gate_idx];
-                    DFEGate3.Lambda              = DFEGate3.Lambda + parameter_shift;
-                    DFEGate3.metadata            = 5 + (1<<7); // The 0st and 3nd element in kernel matrix should be zero for derivates and 5 = 0101, plus the leading bit indicates that derivate is processed
-                    gate_set_index               = gate_set_index - 1;
-
-                    DFEgate_kernel_type& DFEGate2= DFEgates[gate_set_index*gatesNum + gate_idx];
-                    DFEGate2.Phi                 = DFEGate2.Phi + parameter_shift;
-                    DFEGate2.metadata            = 3 + (1<<7); // The 0th and 1st element in kernel matrix should be zero for derivates and 3 = 0011, plus the leading bit indicates that derivate is processed
-                    gate_set_index               = gate_set_index - 1;
-
-
-                    DFEgate_kernel_type& DFEGate = DFEgates[gate_set_index*gatesNum + gate_idx];
-                    DFEGate.ThetaOver2           = DFEGate.ThetaOver2 + parameter_shift;
-                    DFEGate.metadata             = (1<<7); // the leading bit indicates that derivate is processed
-                    gate_set_index               = gate_set_index - 1;
-
-                    parameter_idx = parameter_idx - 3;
-                }
-
+            else if (gate->get_type() == U1_OPERATION) {
+                // Lambda parameter derivative
+                DFEgate_kernel_type& DFEGate = DFEgates[gate_set_index*gatesNum + gate_idx];
+                DFEGate.Lambda = DFEGate.Lambda + parameter_shift;
+                DFEGate.metadata = 5 + (1<<7); // Lambda parameter derivative// The 0st and 3nd element in kernel matrix should be zero for derivates and 5 = 0101, plus the leading bit indicates that derivate is processed
+                gate_set_index = gate_set_index - 1;
+                
+                parameter_idx = parameter_idx - 1;
                 gate_idx = gate_idx + 1;
+            }
+            else if (gate->get_type() == U2_OPERATION) {
+                // Lambda parameter derivative
+                DFEgate_kernel_type& DFEGate2 = DFEgates[gate_set_index*gatesNum + gate_idx];
+                DFEGate2.Lambda = DFEGate2.Lambda + parameter_shift;
+                DFEGate2.metadata = 5 + (1<<7); // The 0st and 3nd element in kernel matrix should be zero for derivates and 5 = 0101, plus the leading bit indicates that derivate is processed
+                gate_set_index = gate_set_index - 1;
 
+                // Phi parameter derivative
+                DFEgate_kernel_type& DFEGate = DFEgates[gate_set_index*gatesNum + gate_idx];
+                DFEGate.Phi = DFEGate.Phi + parameter_shift;
+                DFEGate.metadata = 3 + (1<<7); // The 0st and 3nd element in kernel matrix should be zero for derivates and 5 = 0101, plus the leading bit indicates that derivate is processed
+                gate_set_index = gate_set_index - 1;
+
+                parameter_idx = parameter_idx - 2;
+                gate_idx = gate_idx + 1;
+            }
+            else if (gate->get_type() == U3_OPERATION) {
+                // Lambda parameter derivative
+                DFEgate_kernel_type& DFEGate3 = DFEgates[gate_set_index*gatesNum + gate_idx];
+                DFEGate3.Lambda = DFEGate3.Lambda + parameter_shift;
+                DFEGate3.metadata = 5 + (1<<7); // The 0st and 3nd element in kernel matrix should be zero for derivates and 5 = 0101, plus the leading bit indicates that derivate is processed
+                gate_set_index = gate_set_index - 1;
+
+                // Phi parameter derivative
+                DFEgate_kernel_type& DFEGate2 = DFEgates[gate_set_index*gatesNum + gate_idx];
+                DFEGate2.Phi = DFEGate2.Phi + parameter_shift;
+                DFEGate2.metadata = 3 + (1<<7); // The 0st and 3nd element in kernel matrix should be zero for derivates and 5 = 0101, plus the leading bit indicates that derivate is processed
+                gate_set_index = gate_set_index - 1;
+
+                // Theta parameter derivative
+                DFEgate_kernel_type& DFEGate = DFEgates[gate_set_index*gatesNum + gate_idx];
+                DFEGate.ThetaOver2 = DFEGate.ThetaOver2 + parameter_shift;
+                DFEGate.metadata = (1<<7); // the leading bit indicates that derivate is processed
+                gate_set_index = gate_set_index - 1;
+
+                parameter_idx = parameter_idx - 3;
+                gate_idx = gate_idx + 1;
             }
             else if (gate->get_type() == RX_OPERATION) { // Did not cehcked
 
@@ -2979,17 +3048,49 @@ void Gates_block::adjust_parameters_for_derivation( DFEgate_kernel_type* DFEgate
 	    	
                 gate_idx = gate_idx + 1;
             }
+            else if (gate->get_type() == CU_OPERATION) {
+                std::string error("Gates_block::convert_to_DFE_gates: CU_gate not implemented");
+                throw error;	 
+
+            }
+            else if (gate->get_type() == S_OPERATION) {
+                std::string error("Gates_block::convert_to_DFE_gates: S_gate not implemented");
+                throw error;	 
+
+            }
+            else if (gate->get_type() == SDG_OPERATION) {
+                std::string error("Gates_block::convert_to_DFE_gates: Sdg_gate not implemented");
+                throw error;	 
+
+            }
             else if (gate->get_type() == H_OPERATION) {
+                std::string error("Gates_block::convert_to_DFE_gates: H_gate not implemented");
+                throw error;	 
 
             }
             else if (gate->get_type() == X_OPERATION) {
+                std::string error("Gates_block::convert_to_DFE_gates: X_gate not implemented");
+                throw error;	 
 
             }
             else if (gate->get_type() == Y_OPERATION) {
+                std::string error("Gates_block::convert_to_DFE_gates: Y_gate not implemented");
+                throw error;	 
 
             }
             else if (gate->get_type() == Z_OPERATION) {
+                std::string error("Gates_block::convert_to_DFE_gates: Z_gate not implemented");
+                throw error;	 
 
+            }
+            else if (gate->get_type() == T_OPERATION) {
+                std::string error("Gates_block::convert_to_DFE_gates: T_gate not implemented");
+                throw error;	 
+
+            }
+            else if (gate->get_type() == TDG_OPERATION) {
+                std::string error("Gates_block::convert_to_DFE_gates: Tdg_gate not implemented");
+                throw error;	 
             }
             else if (gate->get_type() == SX_OPERATION) {
                 std::string error("Gates_block::convert_to_DFE_gates: SX_gate not implemented");
@@ -3051,8 +3152,12 @@ DFEgate_kernel_type*
 Gates_block::convert_to_batched_DFE_gates( std::vector<Matrix_real>& parameters_mtx_vec, int& gatesNum, int& gateSetNum, int& redundantGateSets ) {
 
 
-    gates_num gate_nums   = get_gate_nums();
-    int gates_total_num   = gate_nums.total; 
+    std::map<std::string, int> gate_nums  = get_gate_nums();
+    int gates_total_num = 0;
+    for( auto it=gate_nums.begin(); it != gate_nums.end(); it++ ) {
+        gates_total_num = gates_total_num + it->second;
+    }
+
     int chained_gates_num = get_chained_gates_num();
     int gate_padding      = gates_total_num % chained_gates_num == 0 ? 0 : chained_gates_num - (gates_total_num % chained_gates_num);
     gatesNum              = gates_total_num+gate_padding;
@@ -3134,8 +3239,12 @@ DFEgate_kernel_type* Gates_block::convert_to_DFE_gates( Matrix_real& parameters_
     }
 
 
-    gates_num gate_nums   = get_gate_nums();
-    int gates_total_num   = gate_nums.total; 
+    std::map<std::string, int> gate_nums  = get_gate_nums();
+    int gates_total_num = 0;
+    for( auto it=gate_nums.begin(); it != gate_nums.end(); it++ ) {
+        gates_total_num = gates_total_num + it->second;
+    }
+
     int chained_gates_num = get_chained_gates_num();
     int gate_padding      = chained_gates_num - (gates_total_num % chained_gates_num);
     gatesNum              = gates_total_num+gate_padding;
@@ -3232,71 +3341,47 @@ void Gates_block::convert_to_DFE_gates( const Matrix_real& parameters_mtx, DFEga
                 std::string error("Gates_block::convert_to_DFE_gates: SYC_gate not implemented");
                 throw error;
             }
-            else if (gate->get_type() == U3_OPERATION) {
+            else if (gate->get_type() == U1_OPERATION) {
+                double lambda = std::fmod(parameters_data[parameter_idx-1], 2*M_PI);
+                parameter_idx = parameter_idx - 1;
 
-                // definig the U3 parameters
-                double varthetaOver2;
-                double varphi;
-                double varlambda;
-		
-                // get the inverse parameters of the U3 rotation
-
-                U3* u3_gate = static_cast<U3*>(gate);
-
-                if ((u3_gate->get_parameter_num() == 1) && u3_gate->is_theta_parameter()) {
-		   
-                    varthetaOver2 = std::fmod( parameters_data[parameter_idx-1], 2*M_PI);
-                    varphi = 0;
-                    varlambda =0;
-                    parameter_idx = parameter_idx - 1;
-
-                }
-                else if ((u3_gate->get_parameter_num() == 1) && u3_gate->is_phi_parameter()) {
-                    varthetaOver2 = 0;
-                    varphi = std::fmod( parameters_data[parameter_idx-1], 2*M_PI);
-                    varlambda =0;
-                    parameter_idx = parameter_idx - 1;
-                }
-                else if ((u3_gate->get_parameter_num() == 1) && u3_gate->is_lambda_parameter()) {
-                    varthetaOver2 = 0;
-                    varphi =  0;
-                    varlambda = std::fmod( parameters_data[parameter_idx-1], 2*M_PI);
-                    parameter_idx = parameter_idx - 1;
-                }
-                else if ((u3_gate->get_parameter_num() == 2) && u3_gate->is_theta_parameter() && u3_gate->is_phi_parameter() ) {
-                    varthetaOver2 = std::fmod( parameters_data[parameter_idx-2], 2*M_PI);
-                    varphi = std::fmod( parameters_data[parameter_idx-1], 2*M_PI);
-                    varlambda = 0;
-                    parameter_idx = parameter_idx - 2;
-                }
-                else if ((u3_gate->get_parameter_num() == 2) && u3_gate->is_theta_parameter() && u3_gate->is_lambda_parameter() ) {
-                    varthetaOver2 = std::fmod( parameters_data[parameter_idx-2], 2*M_PI);
-                    varphi = 0;
-                    varlambda = std::fmod( parameters_data[parameter_idx-1], 2*M_PI);
-                    parameter_idx = parameter_idx - 2;
-                }
-                else if ((u3_gate->get_parameter_num() == 2) && u3_gate->is_phi_parameter() && u3_gate->is_lambda_parameter() ) {
-                    varthetaOver2 = 0;
-                    varphi = std::fmod( parameters_data[parameter_idx-2], 2*M_PI);
-                    varlambda = std::fmod( parameters_data[parameter_idx-1], 2*M_PI);
-                    parameter_idx = parameter_idx - 2;
-                }
-                else if ((u3_gate->get_parameter_num() == 3)) {
-                    varthetaOver2 = std::fmod( parameters_data[parameter_idx-3], 2*M_PI);
-                    varphi = std::fmod( parameters_data[parameter_idx-2], 2*M_PI);
-                    varlambda = std::fmod( parameters_data[parameter_idx-1], 2*M_PI);
-                    parameter_idx = parameter_idx - 3;
-                }
-
-                DFEGate.target_qbit = u3_gate->get_target_qbit();
+                DFEGate.target_qbit = gate->get_target_qbit();
                 DFEGate.control_qbit = -1;
-                DFEGate.gate_type = U3_OPERATION;
-                DFEGate.ThetaOver2 = (int32_t)(varthetaOver2*(1<<25)); 
-                DFEGate.Phi = (int32_t)(varphi*(1<<25)); 
-                DFEGate.Lambda = (int32_t)(varlambda*(1<<25));	
+                DFEGate.gate_type = U1_OPERATION;
+                DFEGate.ThetaOver2 = (int32_t)(0);
+                DFEGate.Phi = (int32_t)(0);
+                DFEGate.Lambda = (int32_t)(lambda*(1<<25));
                 DFEGate.metadata = 0;
                 gate_idx = gate_idx + 1;
+            }
+            else if (gate->get_type() == U2_OPERATION) {
+                double phi = std::fmod(parameters_data[parameter_idx-2], 2*M_PI);
+                double lambda = std::fmod(parameters_data[parameter_idx-1], 2*M_PI);
+                parameter_idx = parameter_idx - 2;
 
+                DFEGate.target_qbit = gate->get_target_qbit();
+                DFEGate.control_qbit = -1;
+                DFEGate.gate_type = U2_OPERATION;
+                DFEGate.ThetaOver2 = (int32_t)(M_PI/4*(1<<25)); // theta/2 = pi/4 for U2
+                DFEGate.Phi = (int32_t)(phi*(1<<25));
+                DFEGate.Lambda = (int32_t)(lambda*(1<<25));
+                DFEGate.metadata = 0;
+                gate_idx = gate_idx + 1;
+            }
+            else if (gate->get_type() == U3_OPERATION) {
+                double theta = std::fmod(parameters_data[parameter_idx-3], 4*M_PI);
+                double phi = std::fmod(parameters_data[parameter_idx-2], 2*M_PI);
+                double lambda = std::fmod(parameters_data[parameter_idx-1], 2*M_PI);
+                parameter_idx = parameter_idx - 3;
+
+                DFEGate.target_qbit = gate->get_target_qbit();
+                DFEGate.control_qbit = -1;
+                DFEGate.gate_type = U3_OPERATION;
+                DFEGate.ThetaOver2 = (int32_t)(theta/2.0*(1<<25)); // theta/2
+                DFEGate.Phi = (int32_t)(phi*(1<<25));
+                DFEGate.Lambda = (int32_t)(lambda*(1<<25));
+                DFEGate.metadata = 0;
+                gate_idx = gate_idx + 1;
             }
             else if (gate->get_type() == RX_OPERATION) {
 	        // definig the rotation parameter
@@ -3427,6 +3512,24 @@ void Gates_block::convert_to_DFE_gates( const Matrix_real& parameters_mtx, DFEga
 	    	
                 gate_idx = gate_idx + 1;
             }
+            else if (gate->get_type() == CU_OPERATION) {
+                // get the inverse parameters of the U3 rotation
+                CU* s_gate = static_cast<CU*>(gate);
+                std::string error("Gates_block::convert_to_DFE_gates: CU_gate not implemented");
+                throw error;	    	
+            }
+            else if (gate->get_type() == S_OPERATION) {
+                // get the inverse parameters of the U3 rotation
+                S* s_gate = static_cast<S*>(gate);
+                std::string error("Gates_block::convert_to_DFE_gates: S_gate not implemented");
+                throw error;	    	
+            }
+            else if (gate->get_type() == SDG_OPERATION) {
+                // get the inverse parameters of the U3 rotation
+                SDG* s_gate = static_cast<SDG*>(gate);
+                std::string error("Gates_block::convert_to_DFE_gates: Sdg_gate not implemented");
+                throw error;	    	
+            }
             else if (gate->get_type() == SX_OPERATION) {
                 // get the inverse parameters of the U3 rotation
                 SX* sx_gate = static_cast<SX*>(gate);
@@ -3486,15 +3589,48 @@ void Gates_block::convert_to_DFE_gates( const Matrix_real& parameters_mtx, DFEga
 
 }
 
-void Gates_block::get_matrices_target_control(std::vector<Matrix> &u3_qbit, std::vector<int> &target_qbit, std::vector<int> &control_qbit, Matrix_real& parameters_mtx)
-{   u3_qbit.reserve(u3_qbit.capacity() + gates.size());
+
+#endif
+
+
+#ifdef __GROQ__
+
+/**
+@brief Use to exptract gate kernels to perform the gate operation on the Groq card
+@param u3_qbit Container of single qubit kernels
+@param target_qbit Container of target_qbits
+@param control_qbit Container of control_qbits
+@param parameters_mtx Parameter array
+*/
+void 
+Gates_block::extract_gate_kernels_target_and_control_qubits(std::vector<Matrix> &u3_qbit, std::vector<int> &target_qbit, std::vector<int> &control_qbit, Matrix_real& parameters_mtx)
+{   
+
+    if ( u3_qbit.size() == 0 ) {
+        std::map<std::string, int> gate_nums  = get_gate_nums();
+        int gates_total_num = 0;
+        for( auto it=gate_nums.begin(); it != gate_nums.end(); it++ ) {
+            gates_total_num = gates_total_num + it->second;
+        }
+
+        u3_qbit.reserve( gates_total_num );
+        target_qbit.reserve( gates_total_num );
+        control_qbit.reserve( gates_total_num );
+    }
+/*
+    u3_qbit.reserve(u3_qbit.capacity() + gates.size());
     target_qbit.reserve(target_qbit.capacity() + gates.size());
     control_qbit.reserve(control_qbit.capacity() + gates.size());
+*/
     double* parameters = parameters_mtx.get_data();
+
+
     for( int idx=0; idx<gates.size(); idx++) {
         Gate* operation = gates[idx];
-        parameters = parameters + operation->get_parameter_num();
-        Matrix_real params_mtx(parameters, 1, operation->get_parameter_num());
+        //parameters = parameters + operation->get_parameter_num();
+
+        Matrix_real params_mtx(parameters + operation->get_parameter_start_idx(), 1, operation->get_parameter_num());
+
         switch (operation->get_type()) {
         case CNOT_OPERATION: case CZ_OPERATION:
         case CH_OPERATION: {
@@ -3522,9 +3658,39 @@ void Gates_block::get_matrices_target_control(std::vector<Matrix> &u3_qbit, std:
             u3_qbit.push_back(z_operation->calc_one_qubit_u3());
             break;
         }
+        case T_OPERATION: {
+            T* t_operation = static_cast<T*>(operation);
+            u3_qbit.push_back(t_operation->calc_one_qubit_u3());
+            break;
+        }
+        case S_OPERATION: {
+            S* s_operation = static_cast<S*>(operation);
+            u3_qbit.push_back(s_operation->calc_one_qubit_u3());
+            break;
+        }
+        case SDG_OPERATION: {
+            SDG* sdg_operation = static_cast<SDG*>(operation);
+            u3_qbit.push_back(sdg_operation->calc_one_qubit_u3());
+            break;
+        }
+        case TDG_OPERATION: {
+            Tdg* tdg_operation = static_cast<Tdg*>(operation);
+            u3_qbit.push_back(tdg_operation->calc_one_qubit_u3());
+            break;
+        }
         case SX_OPERATION: {
             SX* sx_operation = static_cast<SX*>(operation);
             u3_qbit.push_back(sx_operation->calc_one_qubit_u3());
+            break;
+        }
+        case U1_OPERATION: {
+            U1* u1_operation = static_cast<U1*>(operation);
+            u3_qbit.push_back(u1_operation->calc_one_qubit_u3(params_mtx[0]));
+            break;
+        }
+        case U2_OPERATION: {
+            U2* u2_operation = static_cast<U2*>(operation);
+            u3_qbit.push_back(u2_operation->calc_one_qubit_u3(params_mtx[0], params_mtx[1]));
             break;
         }
         case U3_OPERATION: {
@@ -3534,16 +3700,19 @@ void Gates_block::get_matrices_target_control(std::vector<Matrix> &u3_qbit, std:
         }
         case RX_OPERATION: {
             RX* rx_operation = static_cast<RX*>(operation);
-            double ThetaOver2, Phi, Lambda;
-            ThetaOver2 = params_mtx[0];
+            // set static values for the angles
+            double ThetaOver2 = params_mtx[0];
+            double Phi    = -M_PI/2;
+            double Lambda = M_PI/2;
             rx_operation->parameters_for_calc_one_qubit(ThetaOver2, Phi, Lambda);
             u3_qbit.push_back(rx_operation->calc_one_qubit_u3(ThetaOver2, Phi, Lambda));
             break;
         }
         case RY_OPERATION: {
             RY* ry_operation = static_cast<RY*>(operation);
-            double ThetaOver2, Phi, Lambda;
-            ThetaOver2 = params_mtx[0];
+            double ThetaOver2 = params_mtx[0];
+            double Phi    = 0.0;
+            double Lambda = 0.0;
             ry_operation->parameters_for_calc_one_qubit(ThetaOver2, Phi, Lambda);
             u3_qbit.push_back(ry_operation->calc_one_qubit_u3(ThetaOver2, Phi, Lambda));
             break;
@@ -3561,6 +3730,7 @@ void Gates_block::get_matrices_target_control(std::vector<Matrix> &u3_qbit, std:
             u3_qbit.push_back(rz_operation->calc_one_qubit_u3(params_mtx[0]));
             break;
         }
+/*
         case RZ_P_OPERATION: {
             RZ_P* rz_p_operation = static_cast<RZ_P*>(operation);
             double ThetaOver2, Phi, Lambda;
@@ -3569,9 +3739,39 @@ void Gates_block::get_matrices_target_control(std::vector<Matrix> &u3_qbit, std:
             u3_qbit.push_back(rz_p_operation->calc_one_qubit_u3(ThetaOver2, Phi, Lambda));
             break;
         }
+*/
         case BLOCK_OPERATION: {
+        
             Gates_block* block_operation = static_cast<Gates_block*>(operation);
-            block_operation->get_matrices_target_control(u3_qbit, target_qbit, control_qbit, params_mtx);
+            //std::vector<Gate*> involved_gates = block_operation->get_gates();
+
+            std::vector<int>&& involved_qubits = block_operation->get_involved_qubits();
+            
+            if  ( involved_qubits.size() == 1 && block_operation->gates.size() > 1 && block_operation->get_qbit_num() > 1 ) {           
+                // possibly merge successive single qubit gates        
+    
+                Gates_block gates_block_mini = Gates_block(1);
+  
+                for (int idx=0; idx<block_operation->gates.size(); idx++){
+                    Gate* gate = block_operation->gates[idx]->clone();
+                    gate->set_target_qbit(0);
+                    gate->set_qbit_num(1);
+
+                    gates_block_mini.add_gate(gate);
+                }
+                
+                Matrix merged_kernel = create_identity(2);
+             
+                gates_block_mini.apply_to(params_mtx, merged_kernel);
+                
+                u3_qbit.push_back( merged_kernel );
+                target_qbit.push_back( involved_qubits[0] );
+                control_qbit.push_back( -1 );
+
+            }
+            else {                
+                block_operation->extract_gate_kernels_target_and_control_qubits(u3_qbit, target_qbit, control_qbit, params_mtx);
+            }
             continue;
         }
         //case ADAPTIVE_OPERATION:
@@ -3584,17 +3784,24 @@ void Gates_block::get_matrices_target_control(std::vector<Matrix> &u3_qbit, std:
             std::string err("Optimization_Interface::apply_to: unimplemented gate (" + std::to_string(operation->get_type()) + ")"); 
             throw err;
         }
+
         target_qbit.push_back(operation->get_target_qbit());
         control_qbit.push_back(operation->get_control_qbit());
     }    
+
+
+
 }
 #endif
 
 
 
 /**
-@brief ?????????
-@return Return with ?????????
+@brief Use to export a quantum circuit into binary format.
+@param parameters Parameters of corresponding to the circuit
+@param gates_block The Squander circuit.
+@param filename Filename into which export the circuit
+@param verbosity The verbosity parameter
 */
 void 
 export_gate_list_to_binary(Matrix_real& parameters, Gates_block* gates_block, const std::string& filename, int verbosity) {
@@ -3621,8 +3828,11 @@ export_gate_list_to_binary(Matrix_real& parameters, Gates_block* gates_block, co
 
 
 /**
-@brief ?????????
-@return Return with ?????????
+@brief Use to export a quantum circuit into binary format.
+@param parameters Parameters of corresponding to the circuit
+@param gates_block The Squander circuit.
+@param pFile Pointer to the opened file.
+@param verbosity The verbosity parameter
 */
 void 
 export_gate_list_to_binary(Matrix_real& parameters, Gates_block* gates_block, FILE* pFile, int verbosity) {
@@ -3657,24 +3867,10 @@ export_gate_list_to_binary(Matrix_real& parameters, Gates_block* gates_block, FI
             fwrite(&target_qbit, sizeof(int), 1, pFile);
             fwrite(&control_qbit, sizeof(int), 1, pFile);
         }
-        else if (gt_type == U3_OPERATION) {
+        else if (gt_type == U1_OPERATION || gt_type == U2_OPERATION || gt_type == U3_OPERATION ) {
             int target_qbit = op->get_target_qbit();
             fwrite(&target_qbit, sizeof(int), 1, pFile);
-
-            U3* u3_op = static_cast<U3*>( op );
-
-            int theta_bool  = u3_op->is_theta_parameter();
-            int phi_bool    = u3_op->is_phi_parameter();
-            int lambda_bool = u3_op->is_lambda_parameter();
-
-            fwrite(&theta_bool, sizeof(int), 1, pFile);
-            fwrite(&phi_bool, sizeof(int), 1, pFile);
-            fwrite(&lambda_bool, sizeof(int), 1, pFile);
-
-
             fwrite(parameters_data, sizeof(double), parameter_num, pFile);
-
-            
         }
         else if (gt_type == RX_OPERATION || gt_type == RY_OPERATION || gt_type == RZ_OPERATION ) {
             int target_qbit = op->get_target_qbit();
@@ -3691,7 +3887,7 @@ export_gate_list_to_binary(Matrix_real& parameters, Gates_block* gates_block, FI
             fwrite(parameters_data, sizeof(double), parameter_num, pFile);
         }
         
-        else if (gt_type == X_OPERATION || gt_type == Y_OPERATION || gt_type == Z_OPERATION || gt_type == SX_OPERATION || gt_type == H_OPERATION) {
+        else if (gt_type == X_OPERATION || gt_type == Y_OPERATION || gt_type == Z_OPERATION || gt_type == S_OPERATION || gt_type == SDG_OPERATION || gt_type == SX_OPERATION || gt_type == H_OPERATION) {
             int target_qbit = op->get_target_qbit();
             fwrite(&target_qbit, sizeof(int), 1, pFile);
         }
@@ -3723,8 +3919,10 @@ export_gate_list_to_binary(Matrix_real& parameters, Gates_block* gates_block, FI
 
 
 /**
-@brief ?????????
-@return Return with ?????????
+@brief Use to import a quantum circuit from a binary format.
+@param parameters Parameters of corresponding to the circuit (the loaded parameters are returned via this argument)
+@param filename The file containing the binary file.
+@param verbosity The verbosity parameter
 */
 Gates_block* import_gate_list_from_binary(Matrix_real& parameters, const std::string& filename, int verbosity) {
 
@@ -3746,29 +3944,33 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, const std::st
     return ret;
 }
 
+
+
+
 /**
-@brief ?????????
-@return Return with ?????????
+@brief Use to import a quantum circuit from a binary format.
+@param parameters Parameters of corresponding to the circuit (the loaded parameters are returned via this argument)
+@param pFile Pointer to the binary file.
+@param verbosity The verbosity parameter
 */
 Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, int verbosity) {
 
     std::stringstream sstream;
 
     int qbit_num;
-    size_t fread_status;
 
-    fread_status = fread(&qbit_num, sizeof(int), 1, pFile);
+    fread_wrapper(&qbit_num, sizeof(int), 1, pFile);
     sstream << "qbit_num: " << qbit_num << std::endl;
     Gates_block* gate_block = new Gates_block(qbit_num);
 
     int parameter_num;
-    fread_status = fread(&parameter_num, sizeof(int), 1, pFile);
+    fread_wrapper(&parameter_num, sizeof(int), 1, pFile);
     sstream << "parameter_num: " << parameter_num << std::endl;
     parameters = Matrix_real(1, parameter_num);
     double* parameters_data = parameters.get_data();
 
     int gates_num;
-    fread_status = fread(&gates_num, sizeof(int), 1, pFile);
+    fread_wrapper(&gates_num, sizeof(int), 1, pFile);
     sstream << "gates_num: " << gates_num << std::endl;
 
     std::vector<int> gate_block_level_gates_num;
@@ -3784,7 +3986,7 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
     while ( gate_block_level_gates_num[0] > 0 && iter < iter_max) {
 
         gate_type gt_type;
-        fread_status = fread(&gt_type, sizeof(gate_type), 1, pFile);
+        fread_wrapper(&gt_type, sizeof(gate_type), 1, pFile);
 
         //std::cout << "gate type: " << gt_type << std::endl;
 
@@ -3792,11 +3994,11 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
             sstream << "importing CNOT gate" << std::endl;
 
             int target_qbit;
-            fread_status = fread(&target_qbit, sizeof(int), 1, pFile);
+            fread_wrapper(&target_qbit, sizeof(int), 1, pFile);
             sstream << "target_qbit: " << target_qbit << std::endl;
 
             int control_qbit;
-            fread_status = fread(&control_qbit, sizeof(int), 1, pFile);
+            fread_wrapper(&control_qbit, sizeof(int), 1, pFile);
             sstream << "control_qbit: " << control_qbit << std::endl;
 
             gate_block_levels[current_level]->add_cnot(target_qbit, control_qbit);
@@ -3806,11 +4008,11 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
             sstream << "importing CZ gate" << std::endl;
 
             int target_qbit;
-            fread_status = fread(&target_qbit, sizeof(int), 1, pFile);
+            fread_wrapper(&target_qbit, sizeof(int), 1, pFile);
             sstream << "target_qbit: " << target_qbit << std::endl;
 
             int control_qbit;
-            fread_status = fread(&control_qbit, sizeof(int), 1, pFile);
+            fread_wrapper(&control_qbit, sizeof(int), 1, pFile);
             sstream << "control_qbit: " << control_qbit << std::endl;
 
             gate_block_levels[current_level]->add_cz(target_qbit, control_qbit);
@@ -3820,11 +4022,11 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
             sstream << "importing CH gate" << std::endl;
 
             int target_qbit;
-            fread_status = fread(&target_qbit, sizeof(int), 1, pFile);
+            fread_wrapper(&target_qbit, sizeof(int), 1, pFile);
             sstream << "target_qbit: " << target_qbit << std::endl;
 
             int control_qbit;
-            fread_status = fread(&control_qbit, sizeof(int), 1, pFile);
+            fread_wrapper(&control_qbit, sizeof(int), 1, pFile);
             sstream << "control_qbit: " << control_qbit << std::endl;
 
             gate_block_levels[current_level]->add_ch(target_qbit, control_qbit);
@@ -3834,48 +4036,64 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
             sstream << "importing SYCAMORE gate" << std::endl;
 
             int target_qbit;
-            fread_status = fread(&target_qbit, sizeof(int), 1, pFile);
+            fread_wrapper(&target_qbit, sizeof(int), 1, pFile);
             sstream << "target_qbit: " << target_qbit << std::endl;
 
             int control_qbit;
-            fread_status = fread(&control_qbit, sizeof(int), 1, pFile);
+            fread_wrapper(&control_qbit, sizeof(int), 1, pFile);
             sstream << "control_qbit: " << control_qbit << std::endl;
 
             gate_block_levels[current_level]->add_syc(target_qbit, control_qbit);
+            gate_block_level_gates_num[current_level]--;
+        }
+        else if (gt_type == U1_OPERATION) {
+            sstream << "importing U1 gate" << std::endl;
+            
+            int target_qbit;
+            fread_wrapper(&target_qbit, sizeof(int), 1, pFile);
+            sstream << "target_qbit: " << target_qbit << std::endl;
+
+            fread_wrapper(parameters_data, sizeof(double), 1, pFile);
+            
+            parameters_data++;
+            gate_block_levels[current_level]->add_u1(target_qbit);
+            gate_block_level_gates_num[current_level]--;
+        }
+        else if (gt_type == U2_OPERATION) {
+        sstream << "importing U2 gate" << std::endl;
+            
+            int target_qbit;
+            fread_wrapper(&target_qbit, sizeof(int), 1, pFile);
+            sstream << "target_qbit: " << target_qbit << std::endl;
+
+            fread_wrapper(parameters_data, sizeof(double), 2, pFile);
+            
+            parameters_data+=2;
+            gate_block_levels[current_level]->add_u2(target_qbit);
             gate_block_level_gates_num[current_level]--;
         }
         else if (gt_type == U3_OPERATION) {
             sstream << "importing U3 gate" << std::endl;
 
             int target_qbit;
-            fread_status = fread(&target_qbit, sizeof(int), 1, pFile);
+            fread_wrapper(&target_qbit, sizeof(int), 1, pFile);
             sstream << "target_qbit: " << target_qbit << std::endl;
 
-            int Theta;
-            int Phi;
-            int Lambda;
-
-            fread_status = fread(&Theta, sizeof(int), 1, pFile);
-            fread_status = fread(&Phi, sizeof(int), 1, pFile);
-            fread_status = fread(&Lambda, sizeof(int), 1, pFile);
-
-            int parameter_num = Theta + Phi + Lambda;
-            fread_status = fread(parameters_data, sizeof(double), parameter_num, pFile);
-            parameters_data = parameters_data + parameter_num;
-
-            gate_block_levels[current_level]->add_u3(target_qbit, Theta, Phi, Lambda);
-            gate_block_level_gates_num[current_level]--;
+            fread_wrapper(parameters_data, sizeof(double), 3, pFile);
             
+            parameters_data += 3;
+            gate_block_levels[current_level]->add_u3(target_qbit);
+            gate_block_level_gates_num[current_level]--;
         }
         else if (gt_type == RX_OPERATION) {
 
             sstream << "importing RX gate" << std::endl;
 
             int target_qbit;
-            fread_status = fread(&target_qbit, sizeof(int), 1, pFile);
+            fread_wrapper(&target_qbit, sizeof(int), 1, pFile);
             sstream << "target_qbit: " << target_qbit << std::endl;
 
-            fread_status = fread(parameters_data, sizeof(double), 1, pFile);
+            fread_wrapper(parameters_data, sizeof(double), 1, pFile);
             parameters_data++;
 
             gate_block_levels[current_level]->add_rx(target_qbit);
@@ -3887,10 +4105,10 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
             sstream << "importing RY gate" << std::endl;
 
             int target_qbit;
-            fread_status = fread(&target_qbit, sizeof(int), 1, pFile);
+            fread_wrapper(&target_qbit, sizeof(int), 1, pFile);
             sstream << "target_qbit: " << target_qbit << std::endl;
 
-            fread_status = fread(parameters_data, sizeof(double), 1, pFile);
+            fread_wrapper(parameters_data, sizeof(double), 1, pFile);
             parameters_data++;
 
             gate_block_levels[current_level]->add_ry(target_qbit);
@@ -3902,14 +4120,14 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
             sstream << "importing CRY gate" << std::endl;
 
             int target_qbit;
-            fread_status = fread(&target_qbit, sizeof(int), 1, pFile);
+            fread_wrapper(&target_qbit, sizeof(int), 1, pFile);
             sstream << "target_qbit: " << target_qbit << std::endl;
 
             int control_qbit;
-            fread_status = fread(&control_qbit, sizeof(int), 1, pFile);
+            fread_wrapper(&control_qbit, sizeof(int), 1, pFile);
             sstream << "control_qbit: " << control_qbit << std::endl;
 
-            fread_status = fread(parameters_data, sizeof(double), 1, pFile);
+            fread_wrapper(parameters_data, sizeof(double), 1, pFile);
             parameters_data++;
 
             gate_block_levels[current_level]->add_cry(target_qbit, control_qbit);
@@ -3921,10 +4139,10 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
             sstream << "importing RZ gate" << std::endl;
 
             int target_qbit;
-            fread_status = fread(&target_qbit, sizeof(int), 1, pFile);
+            fread_wrapper(&target_qbit, sizeof(int), 1, pFile);
             sstream << "target_qbit: " << target_qbit << std::endl;
 
-            fread_status = fread(parameters_data, sizeof(double), 1, pFile);
+            fread_wrapper(parameters_data, sizeof(double), 1, pFile);
             parameters_data++;
 
             gate_block_levels[current_level]->add_rz(target_qbit);
@@ -3936,7 +4154,7 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
             sstream << "importing Hadamard gate" << std::endl;
 
             int target_qbit;
-            fread_status = fread(&target_qbit, sizeof(int), 1, pFile);
+            fread_wrapper(&target_qbit, sizeof(int), 1, pFile);
             sstream << "target_qbit: " << target_qbit << std::endl;
 
             gate_block_levels[current_level]->add_h(target_qbit);
@@ -3948,7 +4166,7 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
             sstream << "importing X gate" << std::endl;
 
             int target_qbit;
-            fread_status = fread(&target_qbit, sizeof(int), 1, pFile);
+            fread_wrapper(&target_qbit, sizeof(int), 1, pFile);
             sstream << "target_qbit: " << target_qbit << std::endl;
 
             gate_block_levels[current_level]->add_x(target_qbit);
@@ -3979,12 +4197,60 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
             gate_block_level_gates_num[current_level]--;
 
         }
+        else if (gt_type == S_OPERATION) {
+
+            sstream << "importing S gate" << std::endl;
+
+            int target_qbit;
+            fread(&target_qbit, sizeof(int), 1, pFile);
+            sstream << "target_qbit: " << target_qbit << std::endl;
+
+            gate_block_levels[current_level]->add_s(target_qbit);
+            gate_block_level_gates_num[current_level]--;
+
+        }
+        else if (gt_type == SDG_OPERATION) {
+
+            sstream << "importing Sdg gate" << std::endl;
+
+            int target_qbit;
+            fread(&target_qbit, sizeof(int), 1, pFile);
+            sstream << "target_qbit: " << target_qbit << std::endl;
+
+            gate_block_levels[current_level]->add_sdg(target_qbit);
+            gate_block_level_gates_num[current_level]--;
+
+        }
+        else if (gt_type == T_OPERATION) {
+
+            sstream << "importing T gate" << std::endl;
+
+            int target_qbit;
+            fread(&target_qbit, sizeof(int), 1, pFile);
+            sstream << "target_qbit: " << target_qbit << std::endl;
+
+            gate_block_levels[current_level]->add_t(target_qbit);
+            gate_block_level_gates_num[current_level]--;
+
+        }
+        else if (gt_type == TDG_OPERATION) {
+
+            sstream << "importing Tdg gate" << std::endl;
+
+            int target_qbit;
+            fread(&target_qbit, sizeof(int), 1, pFile);
+            sstream << "target_qbit: " << target_qbit << std::endl;
+
+            gate_block_levels[current_level]->add_t(target_qbit);
+            gate_block_level_gates_num[current_level]--;
+
+        }
         else if (gt_type == SX_OPERATION) {
 
             sstream << "importing SX gate" << std::endl;
 
             int target_qbit;
-            fread_status = fread(&target_qbit, sizeof(int), 1, pFile);
+            fread_wrapper(&target_qbit, sizeof(int), 1, pFile);
             sstream << "target_qbit: " << target_qbit << std::endl;
 
             gate_block_levels[current_level]->add_sx(target_qbit);
@@ -3997,17 +4263,17 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
             sstream << "******* importing gates block ********" << std::endl;
 
             int qbit_num_loc;
-            fread_status = fread(&qbit_num_loc, sizeof(int), 1, pFile);
+            fread_wrapper(&qbit_num_loc, sizeof(int), 1, pFile);
             //std::cout << "qbit_num_loc: " << qbit_num_loc << std::endl;
             Gates_block* gate_block_inner = new Gates_block(qbit_num_loc);
 
             int parameter_num_loc;
-            fread_status = fread(&parameter_num_loc, sizeof(int), 1, pFile);
+            fread_wrapper(&parameter_num_loc, sizeof(int), 1, pFile);
             //std::cout << "parameter_num_loc: " << parameter_num_loc << std::endl;
         
 
             int gates_num_loc;
-            fread_status = fread(&gates_num_loc, sizeof(int), 1, pFile);
+            fread_wrapper(&gates_num_loc, sizeof(int), 1, pFile);
             //std::cout << "gates_num_loc: " << gates_num_loc << std::endl;
                         
             gate_block_levels.push_back( gate_block_inner );
@@ -4019,14 +4285,14 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
             sstream << "importing adaptive gate" << std::endl;
 
             int target_qbit;
-            fread_status = fread(&target_qbit, sizeof(int), 1, pFile);
+            fread_wrapper(&target_qbit, sizeof(int), 1, pFile);
             sstream << "target_qbit: " << target_qbit << std::endl;
 
             int control_qbit;
-            fread_status = fread(&control_qbit, sizeof(int), 1, pFile);
+            fread_wrapper(&control_qbit, sizeof(int), 1, pFile);
             sstream << "control_qbit: " << control_qbit << std::endl;
 
-            fread_status = fread(parameters_data, sizeof(double), 1, pFile);
+            fread_wrapper(parameters_data, sizeof(double), 1, pFile);
             parameters_data++;
 
             gate_block_levels[current_level]->add_adaptive(target_qbit, control_qbit);
@@ -4119,11 +4385,11 @@ Matrix_real reverse_parameters( const Matrix_real& parameters_in, std::vector<Ga
            
         else if (gate->get_type() == BLOCK_OPERATION ) {
         
-	        //std::cout << "block: " << parameter_num_gate << " " << parameters_num_total << std::endl;
+	    //std::cout << "block: " << parameter_num_gate << " " << parameters_num_total << std::endl;
        	    parameters_num_total = parameters_num_total - gate->get_parameter_num();
 	                
-        	Matrix_real parameters_of_block( parameters_in.get_data()+parameters_num_total, 1, parameter_num_gate );
-        	//parameters_of_block.print_matrix();
+            Matrix_real parameters_of_block( parameters_in.get_data()+parameters_num_total, 1, parameter_num_gate );
+            //parameters_of_block.print_matrix();
         	
             Gates_block* block_gate = static_cast<Gates_block*>( gate );
             
@@ -4133,10 +4399,10 @@ Matrix_real reverse_parameters( const Matrix_real& parameters_in, std::vector<Ga
             
             //parameters_of_block_reversed.print_matrix();
             
-			memcpy( parameters_ret.get_data()+parameter_num_copied, parameters_of_block_reversed.get_data(), parameters_of_block_reversed.size()*sizeof(double) );
-			parameter_num_copied = parameter_num_copied + parameters_of_block_reversed.size();
+            memcpy( parameters_ret.get_data()+parameter_num_copied, parameters_of_block_reversed.get_data(), parameters_of_block_reversed.size()*sizeof(double) );
+            parameter_num_copied = parameter_num_copied + parameters_of_block_reversed.size();
 			
-			//parameters_ret.print_matrix();
+            //parameters_ret.print_matrix();
 			
         }
         
@@ -4145,10 +4411,10 @@ Matrix_real reverse_parameters( const Matrix_real& parameters_in, std::vector<Ga
 	        //std::cout << parameter_num_gate << std::endl;
         
     	    parameters_num_total = parameters_num_total - gate->get_parameter_num();
-			memcpy( parameters_ret.get_data()+parameter_num_copied, parameters_in.get_data()+parameters_num_total, gate->get_parameter_num()*sizeof(double) );
-			parameter_num_copied = parameter_num_copied + gate->get_parameter_num();
+            memcpy( parameters_ret.get_data()+parameter_num_copied, parameters_in.get_data()+parameters_num_total, gate->get_parameter_num()*sizeof(double) );
+            parameter_num_copied = parameter_num_copied + gate->get_parameter_num();
 			
-		}
+       }
 
 
     }
@@ -4216,11 +4482,11 @@ Matrix_real inverse_reverse_parameters( const Matrix_real& parameters_in, std::v
          
         else if (gate->get_type() == BLOCK_OPERATION ) {
         
-	        //std::cout << "block: " << parameter_num_gate << " " << parameters_num_total << std::endl;
+            //std::cout << "block: " << parameter_num_gate << " " << parameters_num_total << std::endl;
        	    parameters_num_total = parameters_num_total - gate->get_parameter_num();
 	                
-        	Matrix_real parameters_of_block( parameters_in.get_data()+parameters_num_total, 1, parameter_num_gate );
-        	//parameters_of_block.print_matrix();
+            Matrix_real parameters_of_block( parameters_in.get_data()+parameters_num_total, 1, parameter_num_gate );
+            //parameters_of_block.print_matrix();
         	
             Gates_block* block_gate = static_cast<Gates_block*>( gate );
             
@@ -4230,10 +4496,10 @@ Matrix_real inverse_reverse_parameters( const Matrix_real& parameters_in, std::v
             
             //parameters_of_block_reversed.print_matrix();
             
-			memcpy( parameters_ret.get_data()+parameter_num_copied, parameters_of_block_reversed.get_data(), parameters_of_block_reversed.size()*sizeof(double) );
-			parameter_num_copied = parameter_num_copied + parameters_of_block_reversed.size();
+            memcpy( parameters_ret.get_data()+parameter_num_copied, parameters_of_block_reversed.get_data(), parameters_of_block_reversed.size()*sizeof(double) );
+            parameter_num_copied = parameter_num_copied + parameters_of_block_reversed.size();
 			
-			//parameters_ret.print_matrix();
+           //parameters_ret.print_matrix();
 			
         }
         

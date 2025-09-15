@@ -28,6 +28,8 @@ limitations under the License.
 #include "CZ.h"
 #include "CH.h"
 #include "CNOT.h"
+#include "CROT.h"
+#include "R.h"
 #include "U3.h"
 #include "RX.h"
 #include "H.h"

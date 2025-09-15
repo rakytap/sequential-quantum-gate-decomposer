@@ -42,51 +42,7 @@ struct QGD_Complex16 {
   double imag;
 };
 
-/// @brief Structure type conatining numbers of gates.
-struct gates_num {
-  /// The number of U3 gates
-  int u3;
-  /// The number of RX gates
-  int rx;
-  /// The number of RY gates
-  int ry;
-  /// The number of CRY gates
-  int cry;
-  /// The number of RZ gates
-  int rz;
-  /// The number of CNOT gates
-  int cnot;
-  /// The number of CZ gates
-  int cz;
-  /// The number of CH (i.e. controlled Hadamard) gates
-  int ch;
-  /// The number of Hadamard gates
-  int h;
-  /// The number of X gates
-  int x;
-  /// The number of Y gates
-  int y;
-  /// The number of Z gates
-  int z;
-  /// The number of SX gates
-  int sx;
-  /// The number of Sycamore gates
-  int syc;
-  /// The number of CZ_NU gates
-  int cz_nu;  
-  /// The number of general gates
-  int general;
-  /// The number of general UN gates
-  int un;
-  /// The number of general ON gates
-  int on;
-  /// The number of composite gates
-  int com;
-  /// The number of adaptive gates
-  int adap;
-  /// The total number of gates
-  int total;
-};
+
 
 
 

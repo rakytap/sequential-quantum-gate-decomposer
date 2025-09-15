@@ -17,7 +17,7 @@ limitations under the License.
 @author: Peter Rakyta, Ph.D.
 */
 /*! \file RY.cpp
-    \brief Class representing a U3 gate.
+    \brief Class representing a RY gate.
 */
 
 #include "RY.h"
@@ -31,32 +31,22 @@ limitations under the License.
 */
 RY::RY() {
 
-        // number of qubits spanning the matrix of the gate
-        qbit_num = -1;
-        // the size of the matrix
-        matrix_size = -1;
-        // A string describing the type of the gate
-        type = RY_OPERATION;
+    // A string labeling the gate operation
+    name = "RY";
 
-        // The index of the qubit on which the gate acts (target_qbit >= 0)
-        target_qbit = -1;
-        // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gates
-        control_qbit = -1;
+    // number of qubits spanning the matrix of the gate
+    qbit_num = -1;
+    // the size of the matrix
+    matrix_size = -1;
+    // A string describing the type of the gate
+    type = RY_OPERATION;
 
-        // logical value indicating whether the matrix creation takes an argument theta
-        theta = false;
-        // logical value indicating whether the matrix creation takes an argument phi
-        phi = false;
-        // logical value indicating whether the matrix creation takes an argument lambda
-        lambda = false;
+    // The index of the qubit on which the gate acts (target_qbit >= 0)
+    target_qbit = -1;
+    // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gates
+    control_qbit = -1;
 
-        // set static values for the angles
-        phi0 = 0.0;
-        lambda0 = 0.0;
-
-        parameter_num = 0;
-
-
+    parameter_num = 0;
 
 }
 
@@ -72,41 +62,29 @@ RY::RY() {
 */
 RY::RY(int qbit_num_in, int target_qbit_in) {
 
-        // number of qubits spanning the matrix of the gate
-        qbit_num = qbit_num_in;
-        // the size of the matrix
-        matrix_size = Power_of_2(qbit_num);
-        // A string describing the type of the gate
-        type = RY_OPERATION;
+    // A string labeling the gate operation
+    name = "RY";
+    // number of qubits spanning the matrix of the gate
+    qbit_num = qbit_num_in;
+    // the size of the matrix
+    matrix_size = Power_of_2(qbit_num);
+    // A string describing the type of the gate
+    type = RY_OPERATION;
 
 
-        if (target_qbit_in >= qbit_num) {
-            std::stringstream sstream;
-	    sstream << "The index of the target qubit is larger than the number of qubits" << std::endl;
-	    print(sstream, 0);	             
-	    throw "The index of the target qubit is larger than the number of qubits";
-        }
+    if (target_qbit_in >= qbit_num) {
+        std::stringstream sstream;
+        sstream << "The index of the target qubit is larger than the number of qubits" << std::endl;
+	print(sstream, 0);	             
+	throw "The index of the target qubit is larger than the number of qubits";
+    }
 	
-        // The index of the qubit on which the gate acts (target_qbit >= 0)
-        target_qbit = target_qbit_in;
-        // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gates
-        control_qbit = -1;
+    // The index of the qubit on which the gate acts (target_qbit >= 0)
+    target_qbit = target_qbit_in;
+    // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gates
+    control_qbit = -1;
 
-        // logical value indicating whether the matrix creation takes an argument theta
-        theta = true;
-        // logical value indicating whether the matrix creation takes an argument phi
-        phi = false;
-        // logical value indicating whether the matrix creation takes an argument lambda
-        lambda = false;
-
-        // set static values for the angles
-        phi0 = 0.0;
-        lambda0 = 0.0;
-
-        parameter_num = 1;
-
-        // Parameters theta, phi, lambda of the U3 gate after the decomposition of the unitary is done
-        parameters = Matrix_real(1, parameter_num);
+    parameter_num = 1;
 
 }
 
@@ -133,10 +111,8 @@ RY::apply_to( Matrix_real& parameters, Matrix& input, int parallel  ) {
 
 
     if (input.rows != matrix_size ) {
-        std::stringstream sstream;
-	sstream << "Wrong matrix size in U3 gate apply" << std::endl;
-        print(sstream, 0);	
-        exit(-1);
+        std::string err("apply_to: Wrong matrix size in  gate apply.");
+        throw err;    
     }
 
 
@@ -144,12 +120,14 @@ RY::apply_to( Matrix_real& parameters, Matrix& input, int parallel  ) {
 
     ThetaOver2 = parameters[0];
     parameters_for_calc_one_qubit(ThetaOver2, Phi, Lambda);
-    
+
+
     // get the U3 gate of one qubit
     Matrix u3_1qbit = calc_one_qubit_u3(ThetaOver2, Phi, Lambda );
 
 
-    apply_kernel_to( u3_1qbit, input, false, parallel );
+    // apply the computing kernel on the matrix
+    apply_kernel_to(u3_1qbit, input, false, parallel);
 
 
 }
@@ -165,20 +143,22 @@ void
 RY::apply_from_right( Matrix_real& parameters, Matrix& input ) {
 
     if (input.cols != matrix_size ) {
-        std::stringstream sstream;
-	sstream << "Wrong matrix size in U3 apply_from_right" << std::endl;
+	    std::stringstream sstream;
+	    sstream << "Wrong matrix size in apply_from_right" << std::endl;
         print(sstream, 0);	
-        exit(-1);
+        throw sstream.str();
     }
 
     double ThetaOver2, Phi, Lambda;
 
     ThetaOver2 = parameters[0];
-  
+    parameters_for_calc_one_qubit(ThetaOver2, Phi, Lambda);
+
+
     // get the U3 gate of one qubit
     Matrix u3_1qbit = calc_one_qubit_u3(ThetaOver2, Phi, Lambda );
 
-
+    // apply the computing kernel on the matrix
     apply_kernel_from_right(u3_1qbit, input);
 
 
@@ -196,55 +176,35 @@ RY::apply_from_right( Matrix_real& parameters, Matrix& input ) {
 std::vector<Matrix> 
 RY::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input, int parallel ) {
 
-    if (input.rows != matrix_size ) {
-        std::stringstream sstream;
-	sstream << "Wrong matrix size in RY apply_derivate_to" << std::endl;
-        print(sstream, 0);	
-        exit(-1);
-    }
-
     std::vector<Matrix> ret;
 
-    Matrix_real parameters_tmp(1,1);
+    double ThetaOver2, Phi, Lambda;
 
-    parameters_tmp[0] = parameters_mtx[0] + M_PI/2;
-    Matrix res_mtx = input.copy();
-    apply_to(parameters_tmp, res_mtx, parallel);
+    ThetaOver2 = parameters_mtx[0]+M_PI/2;
+    parameters_for_calc_one_qubit(ThetaOver2, Phi, Lambda);
+
+    // the resulting matrix
+    Matrix res_mtx = input.copy();   
+
+
+    // get the U3 gate of one qubit
+    Matrix u3_1qbit = calc_one_qubit_u3(ThetaOver2, Phi, Lambda );
+
+
+    // apply the computing kernel on the matrix
+    bool deriv = true;
+    apply_kernel_to(u3_1qbit, res_mtx, deriv, parallel);
+
     ret.push_back(res_mtx);
-
-
-   
     return ret;
 
 
-}
 
+    
 
-
-/**
-@brief Call to set the final optimized parameters of the gate.
-@param ThetaOver2 Real parameter standing for the parameter theta.
-@param Phi Real parameter standing for the parameter phi.
-@param Lambda Real parameter standing for the parameter lambda.
-*/
-void RY::set_optimized_parameters(double ThetaOver2 ) {
-
-    parameters = Matrix_real(1, parameter_num);
-
-    parameters[0] = ThetaOver2;
 
 }
 
-
-/**
-@brief Call to get the final optimized parameters of the gate.
-@param parameters_in Preallocated pointer to store the parameters ThetaOver2, Phi and Lambda of the U3 gate.
-*/
-Matrix_real RY::get_optimized_parameters() {
-
-    return parameters.copy();
-
-}
 
 /**
 @brief Calculate the matrix of a U3 gate gate corresponding to the given parameters acting on a single qbit space.
@@ -268,14 +228,9 @@ RY* RY::clone() {
 
     RY* ret = new RY(qbit_num, target_qbit);
 
-    if ( parameters.size() > 0 ) {
-        ret->set_optimized_parameters(parameters[0]);
-    }
-    
     ret->set_parameter_start_idx( get_parameter_start_idx() );
     ret->set_parents( parents );
     ret->set_children( children );
-
 
     return ret;
 

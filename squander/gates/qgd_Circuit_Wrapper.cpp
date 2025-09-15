@@ -32,10 +32,15 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "CZ.h"
 #include "CH.h"
 #include "CNOT.h"
+#include "U1.h"
+#include "U2.h"
 #include "U3.h"
 #include "RX.h"
+#include "R.h"
 #include "RY.h"
 #include "CRY.h"
+#include "CROT.h"
+#include "CR.h"
 #include "RZ.h"
 #include "H.h"
 #include "X.h"
@@ -55,149 +60,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "numpy_interface.h"
 #endif
 
-
 /**
-@brief Type definition of the qgd_U3_Wrapper Python class of the qgd_U3_Wrapper module
-*/
-typedef struct {
-    PyObject_HEAD
-    /// Pointer to the C++ class of the U3 gate
-    U3* gate;
-} qgd_U3_Wrapper;
-
-/**
-@brief Type definition of the qgd_RX_Wrapper Python class of the qgd_RX_Wrapper module
-*/
-typedef struct {
-    PyObject_HEAD
-    /// Pointer to the C++ class of the RX gate
-    RX* gate;
-} qgd_RX_Wrapper;
-
-/**
-@brief Type definition of the qgd_RY_Wrapper Python class of the qgd_RX_Wrapper module
-*/
-typedef struct {
-    PyObject_HEAD
-    /// Pointer to the C++ class of the RX gate
-    RY* gate;
-} qgd_RY_Wrapper;
-
-
-/**
-@brief Type definition of the qgd_CRY_Wrapper Python class of the qgd_CRY_Wrapper module
-*/
-typedef struct {
-    PyObject_HEAD
-    /// Pointer to the C++ class of the CRY gate
-    CRY* gate;
-} qgd_CRY_Wrapper;
-
-
-/**
-@brief Type definition of the qgd_RX_Wrapper Python class of the qgd_RX_Wrapper module
-*/
-typedef struct {
-    PyObject_HEAD
-    /// Pointer to the C++ class of the RX gate
-    RZ* gate;
-} qgd_RZ_Wrapper;
-
-
-
-/**
-@brief Type definition of the qgd_H_Wrapper Python class of the qgd_H_Wrapper module
-*/
-typedef struct {
-    PyObject_HEAD
-    /// Pointer to the C++ class of the X gate
-    X* gate;
-} qgd_X_Wrapper;
-
-
-/**
-@brief Type definition of the qgd_RX_Wrapper Python class of the qgd_RX_Wrapper module
-*/
-typedef struct {
-    PyObject_HEAD
-    /// Pointer to the C++ class of the RX gate
-    Y* gate;
-} qgd_Y_Wrapper;
-
-
-
-/**
-@brief Type definition of the qgd_RX_Wrapper Python class of the qgd_RX_Wrapper module
-*/
-typedef struct {
-    PyObject_HEAD
-    /// Pointer to the C++ class of the RX gate
-    Z* gate;
-} qgd_Z_Wrapper;
-
-
-
-
-/**
-@brief Type definition of the qgd_H_Wrapper Python class of the qgd_H_Wrapper module
-*/
-typedef struct {
-    PyObject_HEAD
-    /// Pointer to the C++ class of the X gate
-    H* gate;
-} qgd_H_Wrapper;
-
-
-/**
-@brief Type definition of the qgd_RX_Wrapper Python class of the qgd_RX_Wrapper module
-*/
-typedef struct {
-    PyObject_HEAD
-    /// Pointer to the C++ class of the RX gate
-    SX* gate;
-} qgd_SX_Wrapper;
-
-
-/**
-@brief Type definition of the  qgd_CNOT_Wrapper Python class of the  qgd_CNOT_Wrapper module
-*/
-typedef struct {
-    PyObject_HEAD
-    /// Pointer to the C++ class of the CNOT gate
-    CNOT* gate;
-} qgd_CNOT_Wrapper;
-
-
-/**
-@brief Type definition of the  qgd_CZ_Wrapper Python class of the  qgd_CZ_Wrapper module
-*/
-typedef struct {
-    PyObject_HEAD
-    /// Pointer to the C++ class of the CZ gate
-    CZ* gate;
-} qgd_CZ_Wrapper;
-
-/**
-@brief Type definition of the  qgd_CH_Wrapper Python class of the  qgd_CH_Wrapper module
-*/
-typedef struct {
-    PyObject_HEAD
-    /// Pointer to the C++ class of the CH gate
-    CH* gate;
-} qgd_CH_Wrapper;
-
-/**
-@brief Type definition of the  qgd_SYC Python class of the  qgd_SYC module
-*/
-typedef struct {
-    PyObject_HEAD
-    /// Pointer to the C++ class of the SYC gate
-    SYC* gate;
-} qgd_SYC;
-
-
-/**
-@brief Type definition of the  qgd_Gate Python class of the  qgd_Gate module
+@brief Type definition of the qgd_Gate Python class of the qgd_Gate module
 */
 typedef struct {
     PyObject_HEAD
@@ -205,15 +69,14 @@ typedef struct {
     Gate* gate;
 } qgd_Gate;
 
-
 /**
 @brief Type definition of the qgd_Operation_Block Python class of the qgd_Operation_Block module
 */
 typedef struct qgd_Circuit_Wrapper {
     PyObject_HEAD
+    /// Pointer to the C++ class of the base Gate_block module
     Gates_block* circuit;
 } qgd_Circuit_Wrapper;
-
 
 /**
 @brief Creates an instance of class N_Qubit_Decomposition and return with a pointer pointing to the class instance (C++ linking is needed)
@@ -222,7 +85,6 @@ typedef struct qgd_Circuit_Wrapper {
 */
 Gates_block* 
 create_Circuit( int qbit_num ) {
-
     return new Gates_block(qbit_num);
 }
 
@@ -264,9 +126,27 @@ qgd_Circuit_Wrapper_dealloc(qgd_Circuit_Wrapper *self)
 static PyObject *
 qgd_Circuit_Wrapper_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
+
+    // The tuple of expected keywords
+    static char *kwlist[] = {(char*)"qbit_num", NULL};
+
+    // initiate variables for input arguments
+    int  qbit_num = 0; 
+
+    // parsing input arguments
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i", kwlist, &qbit_num)) {
+        std::string err( "Unable to parse arguments");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;   
+    }
+
     qgd_Circuit_Wrapper *self;
     self = (qgd_Circuit_Wrapper *) type->tp_alloc(type, 0);
-    if (self != NULL) {}
+
+    if (self != NULL) {
+        self->circuit = create_Circuit( qbit_num );
+    }
+
     return (PyObject *) self;
 }
 
@@ -281,21 +161,6 @@ qbit_num: the number of qubits spanning the operations
 static int
 qgd_Circuit_Wrapper_init(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *kwds)
 {
-    // The tuple of expected keywords
-    static char *kwlist[] = {(char*)"qbit_num", NULL};
-
-    // initiate variables for input arguments
-    int  qbit_num = -1; 
-
-    // parsing input arguments
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i", kwlist,
-                                     &qbit_num))
-        return -1;
-
-    // create instance of class Circuit
-    if (qbit_num > 0 ) {
-        self->circuit = create_Circuit( qbit_num );
-    }
     return 0;
 }
 
@@ -310,9 +175,69 @@ static PyMemberDef qgd_Circuit_Wrapper_Members[] = {
 
 
 /**
+@brief Wrapper function to add a U1 gate to the front of the gate structure.
+@param self A pointer pointing to an instance of the class qgd_Circuit.
+@param args A tuple of the input arguments: target_qbit (int)
+@param kwds A tuple of keywords
+*/
+static PyObject *
+qgd_Circuit_Wrapper_add_U1(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *kwds)
+{
+    // The tuple of expected keywords
+    static char *kwlist[] = {(char*)"target_qbit", NULL};
+
+    // initiate variables for input arguments
+    int target_qbit = -1; 
+
+    // parsing input arguments
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i", kwlist,
+                                     &target_qbit))
+        return Py_BuildValue("i", -1);
+
+    // adding U1 gate to the end of the gate structure
+    if (target_qbit != -1 ) {
+        self->circuit->add_u1(target_qbit);
+    }
+
+    return Py_BuildValue("i", 0);
+}
+
+
+
+/**
+@brief Wrapper function to add a U2 gate to the front of the gate structure.
+@param self A pointer pointing to an instance of the class qgd_Circuit.
+@param args A tuple of the input arguments: target_qbit (int)
+@param kwds A tuple of keywords
+*/
+static PyObject *
+qgd_Circuit_Wrapper_add_U2(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *kwds)
+{
+    // The tuple of expected keywords
+    static char *kwlist[] = {(char*)"target_qbit", NULL};
+
+    // initiate variables for input arguments
+    int target_qbit = -1; 
+
+    // parsing input arguments
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i", kwlist,
+                                     &target_qbit))
+        return Py_BuildValue("i", -1);
+
+    // adding U2 gate to the end of the gate structure
+    if (target_qbit != -1 ) {
+        self->circuit->add_u2(target_qbit);
+    }
+
+    return Py_BuildValue("i", 0);
+}
+
+
+
+/**
 @brief Wrapper function to add a U3 gate to the front of the gate structure.
 @param self A pointer pointing to an instance of the class qgd_Circuit.
-@param args A tuple of the input arguments: target_qbit (int), Theta (bool), Phi (bool), Lambda (bool)
+@param args A tuple of the input arguments: target_qbit (int)
 @param kwds A tuple of keywords
 */
 static PyObject *
@@ -320,26 +245,22 @@ qgd_Circuit_Wrapper_add_U3(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *
 {
 
     // The tuple of expected keywords
-    static char *kwlist[] = {(char*)"target_qbit", (char*)"Theta", (char*)"Phi", (char*)"Lambda", NULL};
+    static char *kwlist[] = {(char*)"target_qbit", NULL};
 
     // initiate variables for input arguments
-    int  target_qbit = -1; 
-    bool Theta = true;
-    bool Phi = true;
-    bool Lambda = true;
+    int target_qbit = -1; 
 
     // parsing input arguments
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|ibbb", kwlist,
-                                     &target_qbit, &Theta, &Phi, &Lambda))
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i", kwlist,
+                                     &target_qbit))
         return Py_BuildValue("i", -1);
 
     // adding U3 gate to the end of the gate structure
     if (target_qbit != -1 ) {
-        self->circuit->add_u3(target_qbit, Theta, Phi, Lambda);
+        self->circuit->add_u3(target_qbit);
     }
 
     return Py_BuildValue("i", 0);
-
 }
 
 
@@ -376,6 +297,37 @@ qgd_Circuit_Wrapper_add_RX(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *
 
 
 
+/**
+@brief Wrapper function to add a R gate to the front of the gate structure.
+@param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper.
+@param args A tuple of the input arguments: target_qbit (int)
+@param kwds A tuple of keywords
+*/
+static PyObject *
+qgd_Circuit_Wrapper_add_R(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *kwds)
+{
+
+    // The tuple of expected keywords
+    static char *kwlist[] = {(char*)"target_qbit", NULL};
+
+    // initiate variables for input arguments
+    int  target_qbit = -1; 
+
+    // parsing input arguments
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i", kwlist,
+                                     &target_qbit))
+        return Py_BuildValue("i", -1);
+
+    // adding U3 gate to the end of the gate structure
+    if (target_qbit != -1 ) {
+        self->circuit->add_r(target_qbit);
+    }
+
+    return Py_BuildValue("i", 0);
+
+}
+
+
 
 /**
 @brief Wrapper function to add a RY gate to the front of the gate structure.
@@ -409,7 +361,6 @@ qgd_Circuit_Wrapper_add_RY(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *
 
 
 
-
 /**
 @brief Wrapper function to add a RZ gate to the front of the gate structure.
 @param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper.
@@ -439,6 +390,7 @@ qgd_Circuit_Wrapper_add_RZ(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *
     return Py_BuildValue("i", 0);
 
 }
+
 
 
 /**
@@ -509,7 +461,6 @@ qgd_Circuit_Wrapper_add_CZ(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *
 
 
 
-
 /**
 @brief Wrapper function to add a CH gate to the front of the gate structure.
 @param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper.
@@ -541,8 +492,6 @@ qgd_Circuit_Wrapper_add_CH(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *
     return Py_BuildValue("i", 0);
 
 }
-
-
 
 
 
@@ -578,6 +527,8 @@ qgd_Circuit_Wrapper_add_SYC(qgd_Circuit_Wrapper *self, PyObject *args, PyObject 
 
 }
 
+
+
 /**
 @brief Wrapper function to add a Hadamard gate to the front of the gate structure.
 @param self A pointer pointing to an instance of the class Circuit.
@@ -608,6 +559,8 @@ qgd_Circuit_Wrapper_add_H(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *k
     return Py_BuildValue("i", 0);
 
 }
+
+
 
 /**
 @brief Wrapper function to add a X gate to the front of the gate structure.
@@ -641,6 +594,7 @@ qgd_Circuit_Wrapper_add_X(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *k
 }
 
 
+
 /**
 @brief Wrapper function to add a X gate to the front of the gate structure.
 @param self A pointer pointing to an instance of the class Circuit.
@@ -671,6 +625,7 @@ qgd_Circuit_Wrapper_add_Y(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *k
     return Py_BuildValue("i", 0);
 
 }
+
 
 
 /**
@@ -738,6 +693,73 @@ qgd_Circuit_Wrapper_add_SX(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *
 }
 
 
+
+/**
+@brief Wrapper function to add a T gate to the front of the gate structure.
+@param self A pointer pointing to an instance of the class Circuit.
+@param args A tuple of the input arguments: target_qbit (int)
+@param kwds A tuple of keywords
+*/
+static PyObject *
+qgd_Circuit_Wrapper_add_T(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *kwds)
+{
+
+    // The tuple of expected keywords
+    static char *kwlist[] = {(char*)"target_qbit",  NULL};
+
+    // initiate variables for input arguments
+    int  target_qbit = -1; 
+
+    // parsing input arguments
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i", kwlist,
+                                     &target_qbit))
+        return Py_BuildValue("i", -1);
+
+
+    // adding T gate to the end of the gate structure
+    if (target_qbit != -1 ) {
+        self->circuit->add_t(target_qbit);
+    }
+
+    return Py_BuildValue("i", 0);
+
+}
+
+
+
+/**
+@brief Wrapper function to add a Tdg gate to the front of the gate structure.
+@param self A pointer pointing to an instance of the class Circuit.
+@param args A tuple of the input arguments: target_qbit (int)
+@param kwds A tuple of keywords
+*/
+static PyObject *
+qgd_Circuit_Wrapper_add_Tdg(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *kwds)
+{
+
+    // The tuple of expected keywords
+    static char *kwlist[] = {(char*)"target_qbit",  NULL};
+
+    // initiate variables for input arguments
+    int  target_qbit = -1; 
+
+    // parsing input arguments
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i", kwlist,
+                                     &target_qbit))
+        return Py_BuildValue("i", -1);
+
+
+    // adding Tdg gate to the end of the gate structure
+    if (target_qbit != -1 ) {
+        self->circuit->add_tdg(target_qbit);
+    }
+
+    return Py_BuildValue("i", 0);
+
+}
+
+
+
 /**
 @brief Wrapper function to add an adaptive gate to the front of the gate structure.
 @param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper.
@@ -777,6 +799,69 @@ qgd_Circuit_Wrapper_add_CRY(qgd_Circuit_Wrapper *self, PyObject *args, PyObject 
 @param kwds A tuple of keywords
 */
 static PyObject *
+qgd_Circuit_Wrapper_add_CR(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *kwds)
+{
+
+    // The tuple of expected keywords
+    static char *kwlist[] = {(char*)"target_qbit", (char*)"control_qbit", NULL};
+
+    // initiate variables for input arguments
+    int  target_qbit = -1; 
+    int  control_qbit = -1; 
+
+    // parsing input arguments
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|ii", kwlist,
+                                     &target_qbit, &control_qbit))
+        return Py_BuildValue("i", -1);
+
+    // adding U3 gate to the end of the gate structure
+    if (target_qbit != -1 ) {
+        self->circuit->add_cr(target_qbit, control_qbit);
+    }
+
+    return Py_BuildValue("i", 0);
+
+}
+
+/**
+@brief Wrapper function to add an adaptive gate to the front of the gate structure.
+@param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper.
+@param args A tuple of the input arguments: target_qbit (int)
+@param kwds A tuple of keywords
+*/
+static PyObject *
+qgd_Circuit_Wrapper_add_CROT(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *kwds)
+{
+
+    // The tuple of expected keywords
+    static char *kwlist[] = {(char*)"target_qbit", (char*)"control_qbit", NULL};
+
+    // initiate variables for input arguments
+    int  target_qbit = -1; 
+    int  control_qbit = -1; 
+
+    // parsing input arguments
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|ii", kwlist,
+                                     &target_qbit, &control_qbit))
+        return Py_BuildValue("i", -1);
+    // adding U3 gate to the end of the gate structure
+    if (target_qbit != -1 ) {
+        self->circuit->add_crot(target_qbit, control_qbit);
+    }
+
+    return Py_BuildValue("i", 0);
+
+}
+
+
+
+/**
+@brief Wrapper function to add an adaptive gate to the front of the gate structure.
+@param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper.
+@param args A tuple of the input arguments: target_qbit (int)
+@param kwds A tuple of keywords
+*/
+static PyObject *
 qgd_Circuit_Wrapper_add_adaptive(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *kwds)
 {
 
@@ -800,6 +885,7 @@ qgd_Circuit_Wrapper_add_adaptive(qgd_Circuit_Wrapper *self, PyObject *args, PyOb
     return Py_BuildValue("i", 0);
 
 }
+
 
 
 /**
@@ -869,13 +955,17 @@ static PyObject *
 qgd_Circuit_Wrapper_convert_to_DFE_gates_with_derivates(qgd_Circuit_Wrapper *self, PyObject *args)
 {
     bool only_derivates = false;
-    PyObject* parameters_mtx_np = NULL;
+    PyArrayObject* parameters_mtx_np = NULL;
+
     if (!PyArg_ParseTuple(args, "|Ob",
                                      &parameters_mtx_np, &only_derivates))
         return Py_BuildValue("");
 
-    if ( parameters_mtx_np == NULL ) return Py_BuildValue("");
-    PyObject* parameters_mtx = PyArray_FROM_OTF(parameters_mtx_np, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
+    if ( parameters_mtx_np == NULL ) {
+        return Py_BuildValue("");
+    }
+
+    PyArrayObject* parameters_mtx = (PyArrayObject*)PyArray_FROM_OTF((PyObject*)parameters_mtx_np, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
 
     // test C-style contiguous memory allocation of the array
     if ( !PyArray_IS_C_CONTIGUOUS(parameters_mtx) ) {
@@ -932,13 +1022,19 @@ static PyObject *
 qgd_Circuit_Wrapper_convert_to_DFE_gates(qgd_Circuit_Wrapper *self, PyObject *args)
 {
     int start_index = -1;
-    PyObject* parameters_mtx_np = NULL, *dfegates = NULL;
+    PyArrayObject* parameters_mtx_np = NULL;
+    PyObject* dfegates = NULL;
+
     if (!PyArg_ParseTuple(args, "|OOi",
                                      &parameters_mtx_np, &dfegates, &start_index))
         return Py_BuildValue("");
 
-    if ( parameters_mtx_np == NULL ) return Py_BuildValue("");
-    PyObject* parameters_mtx = PyArray_FROM_OTF(parameters_mtx_np, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
+
+    if ( parameters_mtx_np == NULL ) {
+        return Py_BuildValue("");
+    }
+
+    PyArrayObject* parameters_mtx = (PyArrayObject*)PyArray_FROM_OTF((PyObject*)parameters_mtx_np, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
 
     // test C-style contiguous memory allocation of the array
     if ( !PyArray_IS_C_CONTIGUOUS(parameters_mtx) ) {
@@ -948,8 +1044,11 @@ qgd_Circuit_Wrapper_convert_to_DFE_gates(qgd_Circuit_Wrapper *self, PyObject *ar
     // create QGD version of the parameters_mtx
     Matrix_real parameters_mtx_mtx = numpy2matrix_real(parameters_mtx);
     DFEgate_kernel_type* dfegates_qgd = DFEgatePython_to_QGD(dfegates);
+
     Py_ssize_t gatesNum = PyList_Size(dfegates);
+
     self->circuit->convert_to_DFE_gates(parameters_mtx_mtx, dfegates_qgd, start_index);
+
     return DFEgateQGD_to_Python(dfegates_qgd, gatesNum);
 }
 
@@ -1013,15 +1112,47 @@ qgd_Circuit_Wrapper_get_Parameter_Num( qgd_Circuit_Wrapper *self ) {
 @brief Call to apply the gate operation on the inut matrix
 */
 static PyObject *
-qgd_Circuit_Wrapper_apply_to( qgd_Circuit_Wrapper *self, PyObject *args ) {
+qgd_Circuit_Wrapper_apply_to( qgd_Circuit_Wrapper *self, PyObject *args, PyObject *kwds ) {
 
     PyArrayObject * parameters_arr = NULL;
     PyArrayObject * unitary_arg = NULL;
+    
+    int parallel = 1;
+    
+    static char *kwlist[] = {(char*)"", (char*)"", (char*)"parallel", NULL};
 
 
     // parsing input arguments
-    if (!PyArg_ParseTuple(args, "|OO", &parameters_arr, &unitary_arg )) 
-        return Py_BuildValue("i", -1);
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "OO|i", kwlist, &parameters_arr, &unitary_arg, &parallel )) {
+        PyErr_SetString(PyExc_Exception, "Unable to parse input");
+        return NULL;
+    } 
+        
+        
+
+    if ( unitary_arg == NULL ) {
+        PyErr_SetString(PyExc_Exception, "Input matrix was not given");
+        return NULL;
+    }
+
+
+    if ( parameters_arr == NULL ) {
+        PyErr_SetString(PyExc_Exception, "Parameters were not given");
+        return NULL;
+    }
+
+
+
+    if ( PyArray_TYPE(parameters_arr) != NPY_DOUBLE ) {
+        PyErr_SetString(PyExc_Exception, "Parameter vector should be real typed");
+        return NULL;
+    }
+    
+    
+    if ( PyArray_TYPE(unitary_arg) != NPY_COMPLEX128 ) {
+        PyErr_SetString(PyExc_Exception, "input matrix or state should be complex typed");
+        return NULL;
+    }    
 
     
     if ( PyArray_IS_C_CONTIGUOUS(parameters_arr) ) {
@@ -1035,11 +1166,6 @@ qgd_Circuit_Wrapper_apply_to( qgd_Circuit_Wrapper *self, PyObject *args ) {
     Matrix_real&& parameters_mtx = numpy2matrix_real( parameters_arr );
 
 
-    // convert python object array to numpy C API array
-    if ( unitary_arg == NULL ) {
-        PyErr_SetString(PyExc_Exception, "Input matrix was not given");
-        return NULL;
-    }
 
     PyArrayObject* unitary = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)unitary_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
 
@@ -1053,8 +1179,26 @@ qgd_Circuit_Wrapper_apply_to( qgd_Circuit_Wrapper *self, PyObject *args ) {
     // create QGD version of the input matrix
     Matrix unitary_mtx = numpy2matrix(unitary);
 
-    int parallel = 1;
-    self->circuit->apply_to( parameters_mtx, unitary_mtx, parallel );
+    try {
+        self->circuit->apply_to( parameters_mtx, unitary_mtx, parallel );
+    }
+    catch (std::string err) {
+    
+        Py_DECREF(parameters_arr);
+        Py_DECREF(unitary);
+    
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    catch(...) {
+    
+        Py_DECREF(parameters_arr);
+        Py_DECREF(unitary);
+    
+        std::string err( "Invalid pointer to circuit class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
     
     if (unitary_mtx.data != PyArray_DATA(unitary)) {
         memcpy(PyArray_DATA(unitary), unitary_mtx.data, unitary_mtx.size() * sizeof(QGD_Complex16));
@@ -1181,13 +1325,216 @@ qgd_Circuit_Wrapper_get_Qbit_Num( qgd_Circuit_Wrapper *self ) {
         return NULL;
     }
     catch(...) {
-        std::string err( "Invalid pointer to decomposition class");
+        std::string err( "Invalid pointer to circuit class");
         PyErr_SetString(PyExc_Exception, err.c_str());
         return NULL;
     }
 
 
     return Py_BuildValue("i", qbit_num );
+    
+}
+
+
+
+
+/**
+@brief Call to set the number of qubits in the circuit
+*/
+static PyObject *
+qgd_Circuit_Wrapper_set_Qbit_Num( qgd_Circuit_Wrapper *self,  PyObject *args ) {
+
+    int qbit_num = 0;
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|i", &qbit_num )) {
+        std::string err( "Unable to parse arguments");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+
+    try {
+        self->circuit->set_qbit_num( qbit_num );
+    }
+    catch (std::string err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        std::cout << err << std::endl;
+        return NULL;
+    }
+    catch(...) {
+        std::string err( "Invalid pointer to circuit class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+
+    return Py_None;
+    
+}
+
+
+
+/**
+@brief Call to retrieve the list of qubits involved in the circuit
+*/
+static PyObject *
+qgd_Circuit_Wrapper_get_Qbits( qgd_Circuit_Wrapper *self ) {
+
+    PyObject* ret = PyList_New(0);
+
+    try {
+        std::vector<int>&& qbits =  self->circuit->get_involved_qubits();
+        for (int idx = 0; idx < qbits.size(); idx++) {
+            PyList_Append(ret, Py_BuildValue("i", qbits[idx] ) );
+        }
+
+    }
+    catch (std::string err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        std::cout << err << std::endl;
+        return NULL;
+    }
+    catch(...) {
+        std::string err( "Invalid pointer to circuit class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+
+    return Py_BuildValue("O", ret );
+    
+}
+
+
+static PyObject *
+qgd_Circuit_Wrapper_set_Min_Fusion( qgd_Circuit_Wrapper *self,  PyObject *args ) {
+
+    int min_fusion = -1;
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|i", &min_fusion )) {
+        std::string err( "Unable to parse arguments");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+
+    try {
+        self->circuit->set_min_fusion( min_fusion );
+    }
+    catch (std::string err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        std::cout << err << std::endl;
+        return NULL;
+    }
+    catch(...) {
+        std::string err( "Invalid pointer to circuit class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+
+    return Py_None;
+    
+}
+
+
+/**
+@brief Call to remap the qubits in the circuit.
+*/
+static PyObject *
+qgd_Circuit_Wrapper_Remap_Qbits( qgd_Circuit_Wrapper *self, PyObject *args ) {
+
+
+    PyObject* qbit_map_arg = NULL;
+    int qbit_num = 0;
+
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|Oi", &qbit_map_arg, &qbit_num )) 
+        return Py_BuildValue("i", -1);
+
+
+    // parse qbit map and create C++ version of the map
+
+    bool is_dict = PyDict_Check( qbit_map_arg );
+    if (!is_dict) {
+        printf("Qubit map object must be a python dictionary!\n");
+        return Py_BuildValue("i", -1);
+    }
+
+    // integer type config metadata utilized during the optimization
+    std::map<int, int> qbit_map;
+
+
+    // keys and values of the config dict (borrowed references)
+    PyObject *key, *value;
+    Py_ssize_t pos = 0;
+
+    while (PyDict_Next(qbit_map_arg, &pos, &key, &value)) {
+       
+
+        if ( PyLong_Check( value ) && PyLong_Check( key ) ) { 
+            int key_Cpp = (int)PyLong_AsLongLong( key );
+            qbit_map[ key_Cpp ] = (int)PyLong_AsLongLong( value );
+        }
+        else {
+            std::string err( "Key and value in the qbit_map should be integers");
+            PyErr_SetString(PyExc_Exception, err.c_str());
+            return NULL;
+        }
+
+    }
+
+
+    Gates_block* remapped_circuit = NULL;
+
+    try {
+        remapped_circuit = self->circuit->create_remapped_circuit( qbit_map, qbit_num);
+
+    }
+    catch (std::string err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        std::cout << err << std::endl;
+        return NULL;
+    }
+    catch(...) {
+        std::string err( "Invalid pointer to circuit class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+
+
+        // import gate operation modules
+        PyObject* qgd_circuit  = PyImport_ImportModule("squander.gates.qgd_Circuit");
+
+        if ( qgd_circuit == NULL ) {
+            PyErr_SetString(PyExc_Exception, "Module import error: squander.gates.qgd_Circuit" );
+            return NULL;
+        }
+
+        PyObject* qgd_circuit_Dict  = PyModule_GetDict( qgd_circuit );    
+
+        // PyDict_GetItemString creates a borrowed reference to the item in the dict. Reference counting is not increased on this element, dont need to decrease the reference counting at the end
+        PyObject* py_circuit_class = PyDict_GetItemString( qgd_circuit_Dict, "qgd_Circuit");
+
+        PyObject* circuit_input = Py_BuildValue("(O)", Py_BuildValue("i", qbit_num) );
+        PyObject* py_circuit    = PyObject_CallObject(py_circuit_class, circuit_input);
+
+
+        // replace dummy data with real gate data
+        qgd_Circuit_Wrapper* py_circuit_C = reinterpret_cast<qgd_Circuit_Wrapper*>( py_circuit );
+
+        delete( py_circuit_C->circuit );
+        py_circuit_C->circuit = remapped_circuit;
+
+        Py_DECREF( qgd_circuit );            
+        Py_DECREF( circuit_input );
+
+
+    return py_circuit;
     
 }
 
@@ -1214,27 +1561,28 @@ get_gate( Gates_block* circuit, int &idx ) {
     // The python instance of the gate
     PyObject* py_gate = NULL;
 
+    // import gate operation modules
+    PyObject* qgd_gate  = PyImport_ImportModule("squander.gates.gates_Wrapper");
+
+    if ( qgd_gate == NULL ) {
+        PyErr_SetString(PyExc_Exception, "Module import error: squander.gates.gates_Wrapper" );
+        return NULL;
+    }
+
     if (gate->get_type() == CNOT_OPERATION) {
 
-        // import gate operation modules
-        PyObject* qgd_gate  = PyImport_ImportModule("squander.gates.qgd_CNOT");
-
-        if ( qgd_gate == NULL ) {
-            PyErr_SetString(PyExc_Exception, "Module import error: squander.gates.qgd_CNOT" );
-            return NULL;
-        }
 
         PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
         // PyDict_GetItemString creates a borrowed reference to the item in the dict. Reference counting is not increased on this element, dont need to decrease the reference counting at the end
-        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "qgd_CNOT"); 
+        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "CNOT"); 
 
         PyObject* gate_input = Py_BuildValue("(OOO)", qbit_num, target_qbit, control_qbit);
         py_gate              = PyObject_CallObject(py_gate_class, gate_input);
 
         // replace dummy data with real gate data
-        qgd_CNOT_Wrapper* py_gate_C = reinterpret_cast<qgd_CNOT_Wrapper*>( py_gate );
+        qgd_Gate* py_gate_C = reinterpret_cast<qgd_Gate*>( py_gate );
         delete( py_gate_C->gate );
-        py_gate_C->gate = static_cast<CNOT*>( gate->clone() );
+        py_gate_C->gate = static_cast<Gate*>( gate->clone() );
 
         Py_DECREF( qgd_gate );        
         Py_DECREF( gate_input );
@@ -1243,25 +1591,18 @@ get_gate( Gates_block* circuit, int &idx ) {
     }
     else if (gate->get_type() == CZ_OPERATION) {
 
-        // import gate operation modules
-        PyObject* qgd_gate  = PyImport_ImportModule("squander.gates.qgd_CZ");
-
-        if ( qgd_gate == NULL ) {
-            PyErr_SetString(PyExc_Exception, "Module import error: squander.gates.qgd_CZ" );
-            return NULL;
-        }
 
         PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
         // PyDict_GetItemString creates a borrowed reference to the item in the dict. Reference counting is not increased on this element, dont need to decrease the reference counting at the end
-        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "qgd_CZ");
+        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "CZ");
 
         PyObject* gate_input = Py_BuildValue("(OOO)", qbit_num, target_qbit, control_qbit);
         py_gate              = PyObject_CallObject(py_gate_class, gate_input);
 
         // replace dummy data with real gate data
-        qgd_CZ_Wrapper* py_gate_C = reinterpret_cast<qgd_CZ_Wrapper*>( py_gate );
+        qgd_Gate* py_gate_C = reinterpret_cast<qgd_Gate*>( py_gate );
         delete( py_gate_C->gate );
-        py_gate_C->gate = static_cast<CZ*>( gate->clone() );
+        py_gate_C->gate = static_cast<Gate*>( gate->clone() );
 
 
         Py_DECREF( qgd_gate );                
@@ -1271,25 +1612,18 @@ get_gate( Gates_block* circuit, int &idx ) {
     }
     else if (gate->get_type() == CH_OPERATION) {
 
-        // import gate operation modules
-        PyObject* qgd_gate  = PyImport_ImportModule("squander.gates.qgd_CH");
-
-        if ( qgd_gate == NULL ) {
-            PyErr_SetString(PyExc_Exception, "Module import error: squander.gates.qgd_CH" );
-            return NULL;
-        }
-
+        
         PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
         // PyDict_GetItemString creates a borrowed reference to the item in the dict. Reference counting is not increased on this element, dont need to decrease the reference counting at the end
-        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "qgd_CH");
+        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "CH");
 
         PyObject* gate_input = Py_BuildValue("(OOO)", qbit_num, target_qbit, control_qbit);
         py_gate              = PyObject_CallObject(py_gate_class, gate_input);
 
         // replace dummy data with real gate data
-        qgd_CH_Wrapper* py_gate_C = reinterpret_cast<qgd_CH_Wrapper*>( py_gate );
+        qgd_Gate* py_gate_C = reinterpret_cast<qgd_Gate*>( py_gate );
         delete( py_gate_C->gate );
-        py_gate_C->gate = static_cast<CH*>( gate->clone() );
+        py_gate_C->gate = static_cast<Gate*>( gate->clone() );
 
         Py_DECREF( qgd_gate );                
         Py_DECREF( gate_input );
@@ -1297,80 +1631,111 @@ get_gate( Gates_block* circuit, int &idx ) {
     }
     else if (gate->get_type() == SYC_OPERATION) {
 
-        // import gate operation modules
-        PyObject* qgd_gate  = PyImport_ImportModule("squander.gates.qgd_SYC");
-
-        if ( qgd_gate == NULL ) {
-            PyErr_SetString(PyExc_Exception, "Module import error: squander.gates.qgd_SYC" );
-            return NULL;
-        }
 
         PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
         // PyDict_GetItemString creates a borrowed reference to the item in the dict. Reference counting is not increased on this element, dont need to decrease the reference counting at the end
-        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "qgd_SYC");
+        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "SYC");
 
         PyObject* gate_input = Py_BuildValue("(OOO)", qbit_num, target_qbit, control_qbit);
         py_gate              = PyObject_CallObject(py_gate_class, gate_input);
 
         // replace dummy data with real gate data
-        qgd_SYC* py_gate_C = reinterpret_cast<qgd_SYC*>( py_gate );
+        qgd_Gate* py_gate_C = reinterpret_cast<qgd_Gate*>( py_gate );
         delete( py_gate_C->gate );
-        py_gate_C->gate = static_cast<SYC*>( gate->clone() );
+        py_gate_C->gate = static_cast<Gate*>( gate->clone() );
 
         Py_DECREF( qgd_gate );                
         Py_DECREF( gate_input );
 
 
     }
-    else if (gate->get_type() == U3_OPERATION) {
-
-        // import gate operation modules
-        PyObject* qgd_gate  = PyImport_ImportModule("squander.gates.qgd_U3");
-
-        if ( qgd_gate == NULL ) {
-            PyErr_SetString(PyExc_Exception, "Module import error: squander.gates.qgd_U3" );
-            return NULL;
-        }
+    else if (gate->get_type() == U1_OPERATION) {
 
         PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
         // PyDict_GetItemString creates a borrowed reference to the item in the dict. Reference counting is not increased on this element, dont need to decrease the reference counting at the end
-        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "qgd_U3");
-
-        PyObject* gate_input = Py_BuildValue("(OO)", qbit_num, target_qbit );
-        py_gate              = PyObject_CallObject(py_gate_class, gate_input);
-
-        // replace dummy data with real gate data
-        qgd_U3_Wrapper* py_gate_C = reinterpret_cast<qgd_U3_Wrapper*>( py_gate );
-        delete( py_gate_C->gate );
-        py_gate_C->gate = static_cast<U3*>( gate->clone() );
-
-
-        Py_DECREF( qgd_gate );                
-        Py_DECREF( gate_input );
-
-
-    }
-    else if (gate->get_type() == RX_OPERATION) {
-
-        // import gate operation modules
-        PyObject* qgd_gate  = PyImport_ImportModule("squander.gates.qgd_RX");
-
-        if ( qgd_gate == NULL ) {
-            PyErr_SetString(PyExc_Exception, "Module import error: squander.gates.qgd_RX" );
-            return NULL;
-        }
-
-        PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
-        // PyDict_GetItemString creates a borrowed reference to the item in the dict. Reference counting is not increased on this element, dont need to decrease the reference counting at the end
-        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "qgd_RX");
+        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "U1");
 
         PyObject* gate_input = Py_BuildValue("(OO)", qbit_num, target_qbit);
         py_gate              = PyObject_CallObject(py_gate_class, gate_input);
 
         // replace dummy data with real gate data
-        qgd_RX_Wrapper* py_gate_C = reinterpret_cast<qgd_RX_Wrapper*>( py_gate );
+        qgd_Gate* py_gate_C = reinterpret_cast<qgd_Gate*>( py_gate );
         delete( py_gate_C->gate );
-        py_gate_C->gate = static_cast<RX*>( gate->clone() );
+        py_gate_C->gate = static_cast<Gate*>( gate->clone() );
+
+        Py_DECREF( qgd_gate );                
+        Py_DECREF( gate_input );
+
+    }
+    else if (gate->get_type() == U2_OPERATION) {
+
+        PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
+        // PyDict_GetItemString creates a borrowed reference to the item in the dict. Reference counting is not increased on this element, dont need to decrease the reference counting at the end
+        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "U2");
+
+        PyObject* gate_input = Py_BuildValue("(OO)", qbit_num, target_qbit);
+        py_gate              = PyObject_CallObject(py_gate_class, gate_input);
+
+        // replace dummy data with real gate data
+        qgd_Gate* py_gate_C = reinterpret_cast<qgd_Gate*>( py_gate );
+        delete( py_gate_C->gate );
+        py_gate_C->gate = static_cast<Gate*>( gate->clone() );
+
+        Py_DECREF( qgd_gate );                
+        Py_DECREF( gate_input );
+
+    }
+    else if (gate->get_type() == U3_OPERATION) {
+
+        PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
+        // PyDict_GetItemString creates a borrowed reference to the item in the dict. Reference counting is not increased on this element, dont need to decrease the reference counting at the end
+        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "U3");
+
+        PyObject* gate_input = Py_BuildValue("(OO)", qbit_num, target_qbit);
+        py_gate              = PyObject_CallObject(py_gate_class, gate_input);
+
+        // replace dummy data with real gate data
+        qgd_Gate* py_gate_C = reinterpret_cast<qgd_Gate*>( py_gate );
+        delete( py_gate_C->gate );
+        py_gate_C->gate = static_cast<Gate*>( gate->clone() );
+
+        Py_DECREF( qgd_gate );                
+        Py_DECREF( gate_input );
+
+    }
+    else if (gate->get_type() == RX_OPERATION) {
+
+
+        PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
+        // PyDict_GetItemString creates a borrowed reference to the item in the dict. Reference counting is not increased on this element, dont need to decrease the reference counting at the end
+        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "RX");
+
+        PyObject* gate_input = Py_BuildValue("(OO)", qbit_num, target_qbit);
+        py_gate              = PyObject_CallObject(py_gate_class, gate_input);
+
+        // replace dummy data with real gate data
+        qgd_Gate* py_gate_C = reinterpret_cast<qgd_Gate*>( py_gate );
+        delete( py_gate_C->gate );
+        py_gate_C->gate = static_cast<Gate*>( gate->clone() );
+
+        Py_DECREF( qgd_gate );                
+        Py_DECREF( gate_input );
+
+    }
+    else if (gate->get_type() == R_OPERATION) {
+
+
+        PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
+        // PyDict_GetItemString creates a borrowed reference to the item in the dict. Reference counting is not increased on this element, dont need to decrease the reference counting at the end
+        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "R");
+
+        PyObject* gate_input = Py_BuildValue("(OO)", qbit_num, target_qbit);
+        py_gate              = PyObject_CallObject(py_gate_class, gate_input);
+
+        // replace dummy data with real gate data
+        qgd_Gate* py_gate_C = reinterpret_cast<qgd_Gate*>( py_gate );
+        delete( py_gate_C->gate );
+        py_gate_C->gate = static_cast<Gate*>( gate->clone() );
 
         Py_DECREF( qgd_gate );                
         Py_DECREF( gate_input );
@@ -1378,25 +1743,18 @@ get_gate( Gates_block* circuit, int &idx ) {
     }
     else if (gate->get_type() == RY_OPERATION) {
 
-        // import gate operation modules
-        PyObject* qgd_gate  = PyImport_ImportModule("squander.gates.qgd_RY");
-
-        if ( qgd_gate == NULL ) {
-            PyErr_SetString(PyExc_Exception, "Module import error: squander.gates.qgd_RY" );
-            return NULL;
-        }
 
         PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
         // PyDict_GetItemString creates a borrowed reference to the item in the dict. Reference counting is not increased on this element, dont need to decrease the reference counting at the end
-        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "qgd_RY");
+        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "RY");
 
         PyObject* gate_input = Py_BuildValue("(OO)", qbit_num, target_qbit);
         py_gate              = PyObject_CallObject(py_gate_class, gate_input);
 
         // replace dummy data with real gate data
-        qgd_RY_Wrapper* py_gate_C = reinterpret_cast<qgd_RY_Wrapper*>( py_gate );
+        qgd_Gate* py_gate_C = reinterpret_cast<qgd_Gate*>( py_gate );
         delete( py_gate_C->gate );
-        py_gate_C->gate = static_cast<RY*>( gate->clone() );
+        py_gate_C->gate = static_cast<Gate*>( gate->clone() );
 
         Py_DECREF( qgd_gate );               
         Py_DECREF( gate_input );
@@ -1404,25 +1762,18 @@ get_gate( Gates_block* circuit, int &idx ) {
     }
     else if (gate->get_type() == CRY_OPERATION) {
 
-        // import gate operation modules
-        PyObject* qgd_gate  = PyImport_ImportModule("squander.gates.qgd_CRY");
-
-        if ( qgd_gate == NULL ) {
-            PyErr_SetString(PyExc_Exception, "Module import error: squander.gates.qgd_CRY" );
-            return NULL;
-        }
 
         PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
         // PyDict_GetItemString creates a borrowed reference to the item in the dict. Reference counting is not increased on this element, dont need to decrease the reference counting at the end
-        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "qgd_CRY");
+        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "CRY");
 
         PyObject* gate_input = Py_BuildValue("(OOO)", qbit_num, target_qbit, control_qbit);
         py_gate              = PyObject_CallObject(py_gate_class, gate_input);
 
         // replace dummy data with real gate data
-        qgd_CH_Wrapper* py_gate_C = reinterpret_cast<qgd_CH_Wrapper*>( py_gate );
+        qgd_Gate* py_gate_C = reinterpret_cast<qgd_Gate*>( py_gate );
         delete( py_gate_C->gate );
-        py_gate_C->gate = static_cast<CH*>( gate->clone() );
+        py_gate_C->gate = static_cast<Gate*>( gate->clone() );
 
         Py_DECREF( qgd_gate );                
         Py_DECREF( gate_input );
@@ -1453,27 +1804,60 @@ get_gate( Gates_block* circuit, int &idx ) {
         Py_DECREF( gate_input );
 */
     }
-    else if (gate->get_type() == RZ_OPERATION) {
+    else if (gate->get_type() == CROT_OPERATION) {
 
         // import gate operation modules
-        PyObject* qgd_gate  = PyImport_ImportModule("squander.gates.qgd_RZ");
-
-        if ( qgd_gate == NULL ) {
-            PyErr_SetString(PyExc_Exception, "Module import error: squander.gates.qgd_RZ" );
-            return NULL;
-        }
 
         PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
         // PyDict_GetItemString creates a borrowed reference to the item in the dict. Reference counting is not increased on this element, dont need to decrease the reference counting at the end
-        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "qgd_RZ");
+        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "CROT");
+
+        PyObject* gate_input = Py_BuildValue("(OOO)", qbit_num, target_qbit, control_qbit);
+        py_gate              = PyObject_CallObject(py_gate_class, gate_input);
+
+        // replace dummy data with real gate data
+        qgd_Gate* py_gate_C = reinterpret_cast<qgd_Gate*>( py_gate );
+        delete( py_gate_C->gate );
+        py_gate_C->gate = static_cast<Gate*>( gate->clone() );
+
+        Py_DECREF( qgd_gate );                
+        Py_DECREF( gate_input );
+
+    }
+    else if (gate->get_type() == CR_OPERATION) {
+
+        // import gate operation modules
+
+        PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
+        // PyDict_GetItemString creates a borrowed reference to the item in the dict. Reference counting is not increased on this element, dont need to decrease the reference counting at the end
+        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "CR");
+
+        PyObject* gate_input = Py_BuildValue("(OOO)", qbit_num, target_qbit, control_qbit);
+        py_gate              = PyObject_CallObject(py_gate_class, gate_input);
+
+        // replace dummy data with real gate data
+        qgd_Gate* py_gate_C = reinterpret_cast<qgd_Gate*>( py_gate );
+        delete( py_gate_C->gate );
+        py_gate_C->gate = static_cast<Gate*>( gate->clone() );
+
+        Py_DECREF( qgd_gate );                
+        Py_DECREF( gate_input );
+
+    }
+    else if (gate->get_type() == RZ_OPERATION) {
+
+
+        PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
+        // PyDict_GetItemString creates a borrowed reference to the item in the dict. Reference counting is not increased on this element, dont need to decrease the reference counting at the end
+        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "RZ");
 
         PyObject* gate_input = Py_BuildValue("(OO)", qbit_num, target_qbit);
         py_gate              = PyObject_CallObject(py_gate_class, gate_input);
 
         // replace dummy data with real gate data
-        qgd_RZ_Wrapper* py_gate_C = reinterpret_cast<qgd_RZ_Wrapper*>( py_gate );
+        qgd_Gate* py_gate_C = reinterpret_cast<qgd_Gate*>( py_gate );
         delete( py_gate_C->gate );
-        py_gate_C->gate = static_cast<RZ*>( gate->clone() );
+        py_gate_C->gate = static_cast<Gate*>( gate->clone() );
 
         Py_DECREF( qgd_gate );        
         Py_DECREF( gate_input );
@@ -1481,25 +1865,18 @@ get_gate( Gates_block* circuit, int &idx ) {
     }
     else if (gate->get_type() == H_OPERATION) {
 
-        // import gate operation modules
-        PyObject* qgd_gate  = PyImport_ImportModule("squander.gates.qgd_H");
-
-        if ( qgd_gate == NULL ) {
-            PyErr_SetString(PyExc_Exception, "Module import error: squander.gates.qgd_H" );
-            return NULL;
-        }
 
         PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
         // PyDict_GetItemString creates a borrowed reference to the item in the dict. Reference counting is not increased on this element, dont need to decrease the reference counting at the end
-        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "qgd_H");
+        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "H");
 
         PyObject* gate_input = Py_BuildValue("(OO)", qbit_num, target_qbit);
         py_gate              = PyObject_CallObject(py_gate_class, gate_input);
 
         // replace dummy data with real gate data
-        qgd_H_Wrapper* py_gate_C = reinterpret_cast<qgd_H_Wrapper*>( py_gate );
+        qgd_Gate* py_gate_C = reinterpret_cast<qgd_Gate*>( py_gate );
         delete( py_gate_C->gate );
-        py_gate_C->gate = static_cast<H*>( gate->clone() );
+        py_gate_C->gate = static_cast<Gate*>( gate->clone() );
 
         Py_DECREF( qgd_gate );        
         Py_DECREF( gate_input );
@@ -1508,25 +1885,58 @@ get_gate( Gates_block* circuit, int &idx ) {
     }    
     else if (gate->get_type() == X_OPERATION) {
 
-        // import gate operation modules
-        PyObject* qgd_gate  = PyImport_ImportModule("squander.gates.qgd_X");
-
-        if ( qgd_gate == NULL ) {
-            PyErr_SetString(PyExc_Exception, "Module import error: squander.gates.qgd_X" );
-            return NULL;
-        }
 
         PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
         // PyDict_GetItemString creates a borrowed reference to the item in the dict. Reference counting is not increased on this element, dont need to decrease the reference counting at the end
-        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "qgd_X");
+        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "X");
 
         PyObject* gate_input = Py_BuildValue("(OO)", qbit_num, target_qbit);
         py_gate              = PyObject_CallObject(py_gate_class, gate_input);
 
         // replace dummy data with real gate data
-        qgd_X_Wrapper* py_gate_C = reinterpret_cast<qgd_X_Wrapper*>( py_gate );
+        qgd_Gate* py_gate_C = reinterpret_cast<qgd_Gate*>( py_gate );
         delete( py_gate_C->gate );
-        py_gate_C->gate = static_cast<X*>( gate->clone() );
+        py_gate_C->gate = static_cast<Gate*>( gate->clone() );
+
+        Py_DECREF( qgd_gate );                
+        Py_DECREF( gate_input );
+
+
+    }
+        else if (gate->get_type() == Y_OPERATION) {
+
+
+        PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
+        // PyDict_GetItemString creates a borrowed reference to the item in the dict. Reference counting is not increased on this element, dont need to decrease the reference counting at the end
+        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "Y");
+
+        PyObject* gate_input = Py_BuildValue("(OO)", qbit_num, target_qbit);
+        py_gate              = PyObject_CallObject(py_gate_class, gate_input);
+
+        // replace dummy data with real gate data
+        qgd_Gate* py_gate_C = reinterpret_cast<qgd_Gate*>( py_gate );
+        delete( py_gate_C->gate );
+        py_gate_C->gate = static_cast<Gate*>( gate->clone() );
+
+        Py_DECREF( qgd_gate );                
+        Py_DECREF( gate_input );
+
+
+    }
+    else if (gate->get_type() == Z_OPERATION) {
+
+
+        PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
+        // PyDict_GetItemString creates a borrowed reference to the item in the dict. Reference counting is not increased on this element, dont need to decrease the reference counting at the end
+        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "Z");
+
+        PyObject* gate_input = Py_BuildValue("(OO)", qbit_num, target_qbit);
+        py_gate              = PyObject_CallObject(py_gate_class, gate_input);
+
+        // replace dummy data with real gate data
+        qgd_Gate* py_gate_C = reinterpret_cast<qgd_Gate*>( py_gate );
+        delete( py_gate_C->gate );
+        py_gate_C->gate = static_cast<Gate*>( gate->clone() );
 
         Py_DECREF( qgd_gate );                
         Py_DECREF( gate_input );
@@ -1535,25 +1945,58 @@ get_gate( Gates_block* circuit, int &idx ) {
     }
     else if (gate->get_type() == SX_OPERATION) {
 
-        // import gate operation modules
-        PyObject* qgd_gate  = PyImport_ImportModule("squander.gates.qgd_SX");
-
-        if ( qgd_gate == NULL ) {
-            PyErr_SetString(PyExc_Exception, "Module import error: squander.gates.qgd_SX" );
-            return NULL;
-        }
 
         PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
         // PyDict_GetItemString creates a borrowed reference to the item in the dict. Reference counting is not increased on this element, dont need to decrease the reference counting at the end
-        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "qgd_SX");
+        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "SX");
 
         PyObject* gate_input = Py_BuildValue("(OO)", qbit_num, target_qbit);
         py_gate              = PyObject_CallObject(py_gate_class, gate_input);
 
         // replace dummy data with real gate data
-        qgd_SX_Wrapper* py_gate_C = reinterpret_cast<qgd_SX_Wrapper*>( py_gate );
+        qgd_Gate* py_gate_C = reinterpret_cast<qgd_Gate*>( py_gate );
         delete( py_gate_C->gate );
-        py_gate_C->gate = static_cast<SX*>( gate->clone() );
+        py_gate_C->gate = static_cast<Gate*>( gate->clone() );
+
+        Py_DECREF( qgd_gate );               
+        Py_DECREF( gate_input );
+
+
+    }
+    else if (gate->get_type() == T_OPERATION) {
+
+
+        PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
+        // PyDict_GetItemString creates a borrowed reference to the item in the dict. Reference counting is not increased on this element, dont need to decrease the reference counting at the end
+        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "T");
+
+        PyObject* gate_input = Py_BuildValue("(OO)", qbit_num, target_qbit);
+        py_gate              = PyObject_CallObject(py_gate_class, gate_input);
+
+        // replace dummy data with real gate data
+        qgd_Gate* py_gate_C = reinterpret_cast<qgd_Gate*>( py_gate );
+        delete( py_gate_C->gate );
+        py_gate_C->gate = static_cast<Gate*>( gate->clone() );
+
+        Py_DECREF( qgd_gate );               
+        Py_DECREF( gate_input );
+
+
+    }
+    else if (gate->get_type() == TDG_OPERATION){
+
+
+        PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
+        // PyDict_GetItemString creates a borrowed reference to the item in the dict. Reference counting is not increased on this element, dont need to decrease the reference counting at the end
+        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "Tdg");
+
+        PyObject* gate_input = Py_BuildValue("(OO)", qbit_num, target_qbit);
+        py_gate              = PyObject_CallObject(py_gate_class, gate_input);
+
+        // replace dummy data with real gate data
+        qgd_Gate* py_gate_C = reinterpret_cast<qgd_Gate*>( py_gate );
+        delete( py_gate_C->gate );
+        py_gate_C->gate = static_cast<Gate*>( gate->clone() );
 
         Py_DECREF( qgd_gate );               
         Py_DECREF( gate_input );
@@ -1582,13 +2025,19 @@ get_gate( Gates_block* circuit, int &idx ) {
         qgd_Circuit_Wrapper* py_gate_C = reinterpret_cast<qgd_Circuit_Wrapper*>( py_gate );
 
         Gates_block* circuit = reinterpret_cast<Gates_block*>( gate );
-        py_gate_C->circuit->combine( circuit );
+        delete( py_gate_C->circuit );
+        py_gate_C->circuit = circuit->clone();
 
         Py_DECREF( qgd_circuit );            
         Py_DECREF( circuit_input );
 
     }
     else {
+
+            Py_DECREF( qgd_gate );    
+            Py_XDECREF(qbit_num);
+            Py_XDECREF(target_qbit);
+            Py_XDECREF(control_qbit);
             PyErr_SetString(PyExc_Exception, "qgd_Circuit_Wrapper::get_gate: unimplemented gate type" );
             return NULL;
     }
@@ -1625,7 +2074,46 @@ qgd_Circuit_Wrapper_get_gate( qgd_Circuit_Wrapper *self, PyObject *args ) {
 }
 
 
+/**
+@brief Call to get the counts on the individual gates in the circuit
+*/
+static PyObject *
+qgd_Circuit_Wrapper_get_Gate_Nums( qgd_Circuit_Wrapper *self ) {
 
+    std::map< std::string, int > gate_nums;
+    
+    try {
+        gate_nums = self->circuit->get_gate_nums();
+    }
+    catch (std::string err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    catch(...) {
+        std::string err( "Invalid pointer to circuit class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+
+    PyObject* gate_nums_py = PyDict_New();
+    if( gate_nums_py == NULL ) {
+        std::string err( "Failed to create dictionary");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;    
+    }
+    
+    for( auto it = gate_nums.begin(); it != gate_nums.end(); it++ ) {
+    
+        PyObject* key = Py_BuildValue( "s", it->first.c_str() );
+        PyObject* val = Py_BuildValue("i", it->second );
+    
+        PyDict_SetItem(gate_nums_py, key, val);
+    }
+    
+    return gate_nums_py;
+
+}
 
 
 
@@ -1695,7 +2183,7 @@ qgd_Circuit_Wrapper_get_parents( qgd_Circuit_Wrapper *self, PyObject *args ) {
 
 
     // find the indices of the parents
-    for(int idx=0; idx<parents.size(); idx++) {
+    for(size_t idx=0; idx<parents.size(); idx++) {
 
         Gate* parent_gate = parents[idx];
 
@@ -1890,7 +2378,224 @@ qgd_Circuit_Wrapper_get_Flat_Circuit( qgd_Circuit_Wrapper *self ) {
 }
 
 
- 
+
+
+/**
+@brief Method to extract the stored quantum circuit in a human-readable data serialized and pickle-able format
+*/
+static PyObject *
+qgd_Circuit_Wrapper_getstate( qgd_Circuit_Wrapper *self ) {
+
+
+    // get the number of gates
+    int op_num = self->circuit->get_gate_num();
+
+    // preallocate Python tuple for the output
+    PyObject* ret = PyTuple_New( (Py_ssize_t) op_num+1 );
+
+
+
+
+    // add qbit num value to the return tuple
+    PyObject* qbit_num_dict = PyDict_New();
+
+    if( qbit_num_dict == NULL ) {
+        std::string err( "Failed to create dictionary");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;    
+    }
+    
+    int qbit_num = self->circuit->get_qbit_num();
+    PyObject* qbit_num_key = Py_BuildValue( "s", "qbit_num" );
+    PyObject* qbit_num_val = Py_BuildValue("i", qbit_num );    
+
+    PyDict_SetItem(qbit_num_dict, qbit_num_key, qbit_num_val);
+
+    PyTuple_SetItem( ret, 0, qbit_num_dict );
+
+    Py_DECREF( qbit_num_key );
+    Py_DECREF( qbit_num_val );
+    //Py_DECREF( qbit_num_dict );
+
+
+    PyObject* method_name = Py_BuildValue("s", "__getstate__");
+
+    // iterate over the gates to get the gate list
+    for (int idx = 0; idx < op_num; idx++ ) {
+
+        // get metadata about the idx-th gate
+        PyObject* gate = get_gate( self->circuit, idx );
+
+        PyObject* gate_state  = PyObject_CallMethodObjArgs( gate, method_name, NULL );   
+
+
+        // remove the field qbit_num from gate dict sice this will be redundant information
+        if ( PyDict_Contains(gate_state, qbit_num_key) == 1 ) {
+
+            if ( PyDict_DelItem(gate_state, qbit_num_key) != 0 ) {
+                std::string err( "Failed to delete item qbit_num from gate state");
+                PyErr_SetString(PyExc_Exception, err.c_str());
+                return NULL;    
+            }
+
+        }
+
+
+        // adding gate information to the tuple
+        PyTuple_SetItem( ret, (Py_ssize_t) idx+1, gate_state );
+
+
+        
+        Py_DECREF( gate );
+        //Py_DECREF( gate_state );
+
+    }
+
+    Py_DECREF( method_name );
+    
+    return ret;
+}
+
+
+
+/**
+@brief Call to set the state of a quantum circuit from a human-readable data serialized and pickle-able format
+*/
+static PyObject *
+qgd_Circuit_Wrapper_setstate( qgd_Circuit_Wrapper *self, PyObject *args ) {
+
+    PyObject* state = NULL;
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|O", &state )) {
+        std::string err( "Unable to parse state argument");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;    
+    }
+
+    if ( PyTuple_Size(state) == 0 ) {
+        std::string err( "State should contain at least one element");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+
+        Py_DECREF( state );
+        return NULL;
+    }
+
+    PyObject* qbit_num_dict = PyTuple_GetItem( state, 0); // borrowed reference
+
+    
+    PyObject* qbit_num_key = Py_BuildValue( "s", "qbit_num" );
+
+    if ( PyDict_Contains(qbit_num_dict, qbit_num_key) == 0 ) {
+        std::string err( "The first entry of the circuit state should be the number of qubits");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+
+        Py_DECREF( qbit_num_key );
+        Py_DECREF( state );
+        return NULL;
+    }
+
+    PyObject* qbit_num_py = PyDict_GetItem(qbit_num_dict, qbit_num_key); // borrowed reference
+
+    if( !PyLong_Check(qbit_num_py) ) {
+        std::string err( "The number of qubits should be an integer value");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+
+        Py_DECREF( qbit_num_key );
+        Py_DECREF( state );
+        return NULL;
+    } 
+
+
+    int qbit_num = (int)PyLong_AsLong( qbit_num_py );
+
+
+    // import gate operation modules
+    PyObject* qgd_gate  = PyImport_ImportModule("squander.gates.gates_Wrapper");
+    
+    if ( qgd_gate == NULL ) {
+        PyErr_SetString(PyExc_Exception, "Module import error: squander.gates.gates_Wrapper" );
+        Py_DECREF( qbit_num_key );
+        Py_DECREF( state );
+        return NULL;
+    }
+
+    PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate ); // borrowed reference ???
+    PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "Gate");  // borrowed reference 
+    PyObject* setstate_name = Py_BuildValue( "s", "__setstate__" );
+    PyObject* dummy_target_qbit = Py_BuildValue( "i", 0 );
+
+    // now build up the quantum circuit
+    try {
+
+        self->circuit->release_gates();
+        self->circuit->set_qbit_num( qbit_num );
+
+        int gates_idx_max = (int) PyTuple_Size(state);
+
+        for( int gate_idx=1; gate_idx < gates_idx_max; gate_idx++ ) {
+
+
+            // get gate state as python dictionary
+            PyObject* gate_state_dict = PyTuple_GetItem( state, gate_idx); // borrowed reference 
+
+            if( !PyDict_Check( gate_state_dict ) ) {
+                std::string err( "Gate state should be given by a dictionary");
+                PyErr_SetString(PyExc_Exception, err.c_str());
+
+                Py_DECREF( qgd_gate );
+                Py_DECREF( qgd_gate_Dict );
+                Py_DECREF( qbit_num_key );
+                Py_DECREF( state );
+                Py_DECREF( setstate_name );
+                Py_DECREF( dummy_target_qbit );
+                return NULL;
+            }   
+
+            PyDict_SetItem(gate_state_dict, qbit_num_key, qbit_num_py);  
+
+            PyObject* gate_input = Py_BuildValue( "(O)", qbit_num_py );
+            PyObject* py_gate    = PyObject_CallObject(py_gate_class, gate_input);
+
+            // turn the generic gate into a specific gate
+            PyObject_CallMethodObjArgs( py_gate, setstate_name, gate_state_dict, NULL );
+            
+            Gate* gate_loc = static_cast<Gate*>( ((qgd_Gate*)py_gate)->gate->clone() );
+            self->circuit->add_gate( gate_loc );
+            
+            
+            Py_DECREF( gate_input );
+            Py_DECREF( py_gate );
+
+
+
+        }
+
+
+    }
+    catch (std::string err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    catch(...) {
+        std::string err( "Invalid pointer to circuit class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+
+
+
+    Py_DECREF( qgd_gate );    
+    //Py_DECREF( qgd_gate_Dict );
+    Py_DECREF( qbit_num_key );
+    Py_DECREF( setstate_name );
+    Py_DECREF( dummy_target_qbit );
+    
+
+    return Py_None;
+}
+
 
 
 /**
@@ -1910,11 +2615,20 @@ qgd_Circuit_Wrapper_get_Parameter_Start_Index( qgd_Circuit_Wrapper *self ) {
 
 
 static PyMethodDef qgd_Circuit_Wrapper_Methods[] = {
+    {"add_U1", (PyCFunction) qgd_Circuit_Wrapper_add_U1, METH_VARARGS | METH_KEYWORDS,
+     "Call to add a U1 gate to the front of the gate structure"
+    },
+    {"add_U2", (PyCFunction) qgd_Circuit_Wrapper_add_U2, METH_VARARGS | METH_KEYWORDS,
+     "Call to add a U2 gate to the front of the gate structure"
+    },
     {"add_U3", (PyCFunction) qgd_Circuit_Wrapper_add_U3, METH_VARARGS | METH_KEYWORDS,
      "Call to add a U3 gate to the front of the gate structure"
     },
     {"add_RX", (PyCFunction) qgd_Circuit_Wrapper_add_RX, METH_VARARGS | METH_KEYWORDS,
      "Call to add a RX gate to the front of the gate structure"
+    },
+    {"add_R", (PyCFunction) qgd_Circuit_Wrapper_add_R, METH_VARARGS | METH_KEYWORDS,
+     "Call to add a R gate to the front of the gate structure"
     },
     {"add_RY", (PyCFunction) qgd_Circuit_Wrapper_add_RY, METH_VARARGS | METH_KEYWORDS,
      "Call to add a RY gate to the front of the gate structure"
@@ -1949,8 +2663,20 @@ static PyMethodDef qgd_Circuit_Wrapper_Methods[] = {
     {"add_SX", (PyCFunction) qgd_Circuit_Wrapper_add_SX, METH_VARARGS | METH_KEYWORDS,
      "Call to add a SX gate to the front of the gate structure"
     },
+    {"add_T", (PyCFunction) qgd_Circuit_Wrapper_add_T, METH_VARARGS | METH_KEYWORDS,
+     "Call to add a T gate to the front of the gate structure"
+    },
+    {"add_Tdg", (PyCFunction) qgd_Circuit_Wrapper_add_Tdg, METH_VARARGS | METH_KEYWORDS,
+     "Call to add a Tdg gate to the front of the gate structure"
+    },
     {"add_CRY", (PyCFunction) qgd_Circuit_Wrapper_add_CRY, METH_VARARGS | METH_KEYWORDS,
      "Call to add a CRY gate to the front of the gate structure"
+    },
+    {"add_CROT", (PyCFunction) qgd_Circuit_Wrapper_add_CROT, METH_VARARGS | METH_KEYWORDS,
+     "Call to add a CROT gate to the front of the gate structure"
+    },
+    {"add_CR", (PyCFunction) qgd_Circuit_Wrapper_add_CR, METH_VARARGS | METH_KEYWORDS,
+     "Call to add a CR gate to the front of the gate structure"
     },
     {"add_adaptive", (PyCFunction) qgd_Circuit_Wrapper_add_adaptive, METH_VARARGS | METH_KEYWORDS,
      "Call to add an adaptive gate to the front of the gate structure"
@@ -1978,8 +2704,8 @@ static PyMethodDef qgd_Circuit_Wrapper_Methods[] = {
     {"get_Parameter_Num", (PyCFunction) qgd_Circuit_Wrapper_get_Parameter_Num, METH_NOARGS,
      "Call to get the number of free parameters in the circuit"
     },
-    {"apply_to", (PyCFunction) qgd_Circuit_Wrapper_apply_to, METH_VARARGS,
-     "Call to apply the gate on the input matrix."
+    {"apply_to", (PyCFunction) qgd_Circuit_Wrapper_apply_to, METH_VARARGS | METH_KEYWORDS,
+     "Call to apply the gate on the input matrix (or state)."
     },
     {"get_Second_Renyi_Entropy", (PyCFunction) qgd_Circuit_Wrapper_get_Second_Renyi_Entropy, METH_VARARGS,
      "Wrapper function to evaluate the second Rényi entropy of a quantum circuit at a specific parameter set."
@@ -1987,12 +2713,27 @@ static PyMethodDef qgd_Circuit_Wrapper_Methods[] = {
     {"get_Qbit_Num", (PyCFunction) qgd_Circuit_Wrapper_get_Qbit_Num, METH_NOARGS,
      "Call to get the number of qubits in the circuit"
     },
+    {"set_Qbit_Num", (PyCFunction) qgd_Circuit_Wrapper_set_Qbit_Num, METH_VARARGS,
+     "Call to set the number of qubits in the circuit"
+    },
+    {"get_Qbits", (PyCFunction) qgd_Circuit_Wrapper_get_Qbits, METH_NOARGS,
+     "Call to get the list of qubits involved in the circuit"
+    },
+    {"set_min_fusion", (PyCFunction) qgd_Circuit_Wrapper_set_Min_Fusion, METH_VARARGS,
+     "Call to set the min fusion in the circuit"
+    },
+    {"Remap_Qbits", (PyCFunction) qgd_Circuit_Wrapper_Remap_Qbits, METH_VARARGS,
+     "Call to remap the qubits in the circuit."
+    },
     {"get_Gate", (PyCFunction) qgd_Circuit_Wrapper_get_gate, METH_VARARGS,
      "Method to get the i-th decomposing gates."
     },
     {"get_Gates", (PyCFunction) qgd_Circuit_Wrapper_get_gates, METH_NOARGS,
      "Method to get the tuple of decomposing gates."
     },
+    {"get_Gate_Nums", (PyCFunction) qgd_Circuit_Wrapper_get_Gate_Nums, METH_NOARGS,
+     "Method to get statisctics on the gate counts in the circuit."
+    },   
     {"get_Parameter_Start_Index", (PyCFunction) qgd_Circuit_Wrapper_get_Parameter_Start_Index, METH_NOARGS,
      "Call to get the starting index of the parameters in the parameter array corresponding to the circuit in which the current gate is incorporated."
     },
@@ -2008,6 +2749,14 @@ static PyMethodDef qgd_Circuit_Wrapper_Methods[] = {
     {"get_Children", (PyCFunction) qgd_Circuit_Wrapper_get_children, METH_VARARGS,
      "Method to get the list of child gate indices. Then the children gates can be obtained from the list of gates involved in the circuit."
     },
+    {"__getstate__", (PyCFunction) qgd_Circuit_Wrapper_getstate, METH_NOARGS,
+     "Method to extract the stored quantum circuit in a human-readable data serialized and pickle-able format."
+    },
+    {"__setstate__", (PyCFunction) qgd_Circuit_Wrapper_setstate, METH_VARARGS,
+     "Call to set the state of a quantum circuit from a human-readable data serialized and pickle-able format."
+    },
+
+
     {NULL}  /* Sentinel */
 };
 

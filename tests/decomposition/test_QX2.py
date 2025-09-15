@@ -68,13 +68,13 @@ class Test_Decomposition:
         # creating an instance of the C++ class
         decomp = N_Qubit_Decomposition( Umtx.conj().T )
 
-        # list of reordered qubits (original: (3,2,1,0) )
-        reordered_qbits = (0,1,3,2)
+        # list of reordered qubits (original: (0,1,2,3) )
+        reordered_qbits = (2,3,1,0)
 
         # adding custom gate structure to the decomposition
         decomp.Reorder_Qubits( reordered_qbits )
 
-
+       
         # create custom gate structure
         gate_structure = { 4: self.create_custom_gate_structure_QX2(4), 3: self.create_custom_gate_structure_QX2(3)}        
 
@@ -93,7 +93,7 @@ class Test_Decomposition:
         decomp.Start_Decomposition()
 
         # list of reordered qubits to revert the initial order
-        revert_qbits = (1,0,2,3)             
+        revert_qbits = (3,2,0,1)            
 
         # adding custom gate structure to the decomposition
         decomp.Reorder_Qubits( revert_qbits )
@@ -145,24 +145,18 @@ class Test_Decomposition:
 
             if qbit == 0:
 
-                # add U3 fate to the block
-                Theta = True
-                Phi = False
-                Lambda = True      
-                Layer.add_U3( 0, Theta, Phi, Lambda )                 
-                Layer.add_U3( disentangle_qbit, Theta, Phi, Lambda ) 
+                # add U3 fate to the block  
+                Layer.add_U3( 0 )                 
+                Layer.add_U3( disentangle_qbit ) 
 
                 # add CNOT gate to the block
                 Layer.add_CNOT( 0, disentangle_qbit)
 
             elif qbit == 1:
 
-                # add U3 fate to the block
-                Theta = True
-                Phi = False
-                Lambda = True      
-                Layer.add_U3( 0, Theta, Phi, Lambda )                 
-                Layer.add_U3( 1, Theta, Phi, Lambda ) 
+                # add U3 fate to the block     
+                Layer.add_U3( 0 )                 
+                Layer.add_U3( 1 ) 
 
                 # add CNOT gate to the block
                 Layer.add_CNOT( 0, 1)
@@ -171,12 +165,9 @@ class Test_Decomposition:
 
             elif qbit == 2:
 
-                # add U3 fate to the block
-                Theta = True
-                Phi = False
-                Lambda = True      
-                Layer.add_U3( 2, Theta, Phi, Lambda )                 
-                Layer.add_U3( disentangle_qbit, Theta, Phi, Lambda ) 
+                # add U3 fate to the block    
+                Layer.add_U3( 2 )                 
+                Layer.add_U3( disentangle_qbit ) 
 
                 # add CNOT gate to the block
                 Layer.add_CNOT( 2, disentangle_qbit )

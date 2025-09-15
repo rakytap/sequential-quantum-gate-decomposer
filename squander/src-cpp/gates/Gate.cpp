@@ -38,6 +38,8 @@ limitations under the License.
 */
 Gate::Gate() {
 
+    // A string labeling the gate operation
+    name = "Gate";
     // number of qubits spanning the matrix of the operation
     qbit_num = -1;
     // The size N of the NxN matrix associated with the operations.
@@ -68,6 +70,8 @@ Gate::Gate(int qbit_num_in) {
         throw err;        
     }
 
+    // A string labeling the gate operation
+    name = "Gate";
     // number of qubits spanning the matrix of the operation
     qbit_num = qbit_num_in;
     // the size of the matrix
@@ -102,6 +106,11 @@ void Gate::set_qbit_num( int qbit_num_in ) {
         throw err;        
     }
 
+    if ( qbit_num_in <= target_qbit || qbit_num_in <= control_qbit ) {
+        std::string err("Gate::set_qbit_num: The number of qbits is too small, conflicting with either target_qbit os control_qbit"); 
+        throw err;   
+    }
+
 
     // setting the number of qubits
     qbit_num = qbit_num_in;
@@ -121,6 +130,53 @@ Gate::get_matrix() {
 
     return matrix_alloc;
 }
+
+
+/**
+@brief Call to retrieve the operation matrix
+@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
+@return Returns with the matrix of the operation
+*/
+Matrix
+Gate::get_matrix(int parallel) {
+
+    std::string err("Gate::get_matrix: Unimplemented function");
+    throw err;     
+
+}
+
+
+/**
+@brief Call to retrieve the gate matrix
+@param parameters An array of parameters to calculate the matrix of the U3 gate.
+@return Returns with a matrix of the gate
+*/
+Matrix
+Gate::get_matrix(Matrix_real& parameters ) {
+
+    std::string err("Gate::get_matrix: Unimplemented function");
+    throw err;  
+   
+}
+
+
+
+/**
+@brief Call to retrieve the gate matrix
+@param parameters An array of parameters to calculate the matrix of the U3 gate.
+@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
+@return Returns with a matrix of the gate
+*/
+Matrix
+Gate::get_matrix( Matrix_real& parameters, int parallel ) {
+
+    std::string err("Gate::get_matrix: Unimplemented function");
+    throw err;     
+
+}
+
+
+
 
 /**
 @brief Call to apply the gate on a list of inputs
@@ -180,6 +236,11 @@ Gate::apply_to_list( Matrix_real& parameters_mtx, std::vector<Matrix>& inputs, i
 void 
 Gate::apply_to( Matrix& input, int parallel ) {
 
+   if (input.rows != matrix_size ) {
+        std::string err("Gate::apply_to: Wrong matrix size in Gate gate apply.");
+        throw err;    
+    }
+
     Matrix ret = dot(matrix_alloc, input);
     memcpy( input.get_data(), ret.get_data(), ret.size()*sizeof(QGD_Complex16) );
     //input = ret;
@@ -194,6 +255,9 @@ Gate::apply_to( Matrix& input, int parallel ) {
 */
 void 
 Gate::apply_to( Matrix_real& parameter_mtx, Matrix& input, int parallel ) {
+
+    std::string err("Unimplemented abstract function apply_to");
+    throw( err );
 
     return;
 }
@@ -230,6 +294,22 @@ Gate::apply_from_right( Matrix& input ) {
 
 
 /**
+@brief Call to apply the gate on the input array/matrix by input*Gate
+@param parameter_mtx An array of the input parameters.
+@param input The input array on which the gate is applied
+*/
+void 
+Gate::apply_from_right( Matrix_real& parameter_mtx, Matrix& input ) {
+
+    std::string err("Unimplemented abstract function apply_from_right");
+    throw( err );
+    
+    return;
+
+}
+
+
+/**
 @brief Call to set the stored matrix in the operation.
 @param input The operation matrix to be stored. The matrix is stored by attribute matrix_alloc.
 @return Returns with 0 on success.
@@ -245,6 +325,13 @@ Gate::set_matrix( Matrix input ) {
 @param control_qbit_in The control qubit. Should be: 0 <= control_qbit_in < qbit_num
 */
 void Gate::set_control_qbit(int control_qbit_in){
+
+    if ( control_qbit_in >= qbit_num ) {
+        std::string err("Gate::set_target_qbit: Wrong value of the control qbit: of out of the range given by qbit_num"); 
+        throw err;   
+    }
+
+
     control_qbit = control_qbit_in;
 }
 
@@ -254,6 +341,13 @@ void Gate::set_control_qbit(int control_qbit_in){
 @param target_qbit_in The target qubit on which the gate is applied. Should be: 0 <= target_qbit_in < qbit_num
 */
 void Gate::set_target_qbit(int target_qbit_in){
+
+    if ( target_qbit_in >= qbit_num  ) {
+        std::string err("Gate::set_target_qbit: Wrong value of the target qbit: out of the range given by qbit_num"); 
+        throw err;   
+    }
+
+
     target_qbit = target_qbit_in;
 }
 
@@ -269,17 +363,16 @@ void Gate::reorder_qubits( std::vector<int> qbit_list ) {
         throw err;
     }
 
-
     int control_qbit_new = control_qbit;
     int target_qbit_new = target_qbit;
 
     // setting the new value for the target qubit
     for (int idx=0; idx<qbit_num; idx++) {
         if (target_qbit == qbit_list[idx]) {
-            target_qbit_new = qbit_num-1-idx;
+            target_qbit_new = idx;
         }
         if (control_qbit == qbit_list[idx]) {
-            control_qbit_new = qbit_num-1-idx;
+            control_qbit_new = idx;
         }
     }
 
@@ -308,7 +401,7 @@ int Gate::get_control_qbit()  {
 @brief Call to get the qubits involved in the gate operation.
 @return Return with a list of the involved qubits
 */
-std::vector<int> Gate::get_involved_qubits() {
+std::vector<int> Gate::get_involved_qubits(bool only_target) {
 
     std::vector<int> involved_qbits;
     
@@ -316,10 +409,11 @@ std::vector<int> Gate::get_involved_qubits() {
         involved_qbits.push_back( target_qbit );
     }
     
-    if( control_qbit != -1 ) {
-        involved_qbits.push_back( control_qbit );
-    }    
-    
+    if (!only_target){
+        if( control_qbit != -1 ) {
+            involved_qbits.push_back( control_qbit );
+        }    
+    }
     
     return involved_qbits;
     
@@ -606,8 +700,6 @@ void sincos(double x, double *s, double *c)
 {
 	*s = sin(x), *c = cos(x);
 }
-#elif defined(__APPLE__)
-#define sincos __sincos
 #endif
 
 /**
@@ -674,8 +766,11 @@ Matrix Gate::calc_one_qubit_u3(double ThetaOver2, double Phi, double Lambda ) {
 */
 Matrix Gate::calc_one_qubit_u3( ) {
 
-  Matrix u3_1qbit = Matrix(2,2); 
-  return u3_1qbit;
+    std::string err("Gate::calc_one_qubit_u3: Unimplemented abstract function"); 
+    throw err;   
+
+    Matrix u3_1qbit = Matrix(2,2); 
+    return u3_1qbit;
 
 }
 
@@ -749,6 +844,18 @@ Matrix_real
 Gate::extract_parameters( Matrix_real& parameters ) {
 
     return Matrix_real(0,0);
+
+}
+
+
+/**
+@brief Call to get the name label of the gate
+@return Returns with the name label of the gate
+*/
+std::string 
+Gate::get_name() {
+
+    return name;
 
 }
 

@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.10.2)
 # CMAKE to create the shared library of the quantum gate decomposition project
 
 # set the project name and version
-project(CQGD VERSION 1.9.0)
+project(CQGD VERSION 1.9.3)
 
 # reuse compilation time linking for use runtime linking 
 SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
@@ -330,6 +330,7 @@ list(APPEND qgd_files
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/optimization_engines/COSINE.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/optimization_engines/GRAD_DESCEND.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/optimization_engines/GRAD_DESCEND_PARAMETER_SHIFT_RULE.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/CU.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/CNOT.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/SYC.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/CZ.cpp
@@ -337,16 +338,25 @@ list(APPEND qgd_files
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/Gate.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/UN.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/ON.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/CROT.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/Gates_block.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/H.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/X.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/Y.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/Z.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/S.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/SDG.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/T.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/Tdg.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/SX.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/U1.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/U2.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/U3.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/RY.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/CRY.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/CR.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/Adaptive.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/R.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/RX.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/RZ.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/RZ_P.cpp
@@ -365,7 +375,8 @@ list(APPEND qgd_files
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/decomposition/N_Qubit_Decomposition_Cost_Function.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/decomposition/Sub_Matrix_Decomposition_Cost_Function.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/decomposition/Sub_Matrix_Decomposition.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/decomposition/N_Qubit_Decomposition_non_unitary_adaptive.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/decomposition/N_Qubit_Decomposition_Tree_Search.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/decomposition/N_Qubit_Decomposition_Tabu_Search.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/variational_quantum_eigensolver/Variational_Quantum_Eigensolver_Base.cpp  
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/variational_quantum_eigensolver/Generative_Quantum_Machine_Learning_Base.cpp  
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/random_unitary/Random_Unitary.cpp
@@ -411,6 +422,19 @@ if (DEFINED ENV{QGD_DFE})
 
   list(APPEND CXX_FLAGS_DEBUG "-D__DFE__=1")
   list(APPEND CXX_FLAGS_RELEASE "-D__DFE__=1")
+
+
+endif()
+
+
+
+if (DEFINED ENV{QGD_GROQ})
+  list(APPEND qgd_files 
+      ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/common_GROQ.cpp
+  )
+
+  list(APPEND CXX_FLAGS_DEBUG "-D__GROQ__=1")
+  list(APPEND CXX_FLAGS_RELEASE "-D__GROQ__=1")
 
 
 endif()

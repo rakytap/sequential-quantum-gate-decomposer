@@ -30,19 +30,22 @@ limitations under the License.
 */
 custom_kernel_1qubit_gate::custom_kernel_1qubit_gate() {
 
-        // number of qubits spanning the matrix of the gate
-        qbit_num = -1;
-        // the size of the matrix
-        matrix_size = -1;
-        // A string describing the type of the gate
-        type = CUSTOM_KERNEL_1QUBIT_GATE_OPERATION;
+    // A string labeling the gate operation
+    name = "custom_kernel";
 
-        // The index of the qubit on which the gate acts (target_qbit >= 0)
-        target_qbit = -1;
-        // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gates
-        control_qbit = -1;
+    // number of qubits spanning the matrix of the gate
+    qbit_num = -1;
+    // the size of the matrix
+    matrix_size = -1;
+    // A string describing the type of the gate
+    type = CUSTOM_KERNEL_1QUBIT_GATE_OPERATION;
 
-        parameter_num = 0;
+    // The index of the qubit on which the gate acts (target_qbit >= 0)
+    target_qbit = -1;
+    // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gates
+    control_qbit = -1;
+
+    parameter_num = 0;
 
 
 
@@ -58,36 +61,35 @@ custom_kernel_1qubit_gate::custom_kernel_1qubit_gate() {
 */
 custom_kernel_1qubit_gate::custom_kernel_1qubit_gate(int qbit_num_in, int target_qbit_in, Matrix& kernel_in) {
 
-	//The stringstream input to store the output messages.
-	std::stringstream sstream;
-
-	//Integer value to set the verbosity level of the output messages.
-	int verbose_level;
-
-        // number of qubits spanning the matrix of the gate
-        qbit_num = qbit_num_in;
-        // the size of the matrix
-        matrix_size = Power_of_2(qbit_num);
-        // A string describing the type of the gate
-        type = CUSTOM_KERNEL_1QUBIT_GATE_OPERATION;
-
-        kernel = kernel_in;
+    // A string labeling the gate operation
+    name = "custom_kernel";
+    //The stringstream input to store the output messages.
+    std::stringstream sstream;
 
 
-        if (target_qbit_in >= qbit_num) {
-	   verbose_level=1;
-	   sstream << "The index of the target qubit is larger than the number of qubits" << std::endl;
-	   print(sstream,verbose_level);	    	
+    // number of qubits spanning the matrix of the gate
+    qbit_num = qbit_num_in;
+    // the size of the matrix
+    matrix_size = Power_of_2(qbit_num);
+    // A string describing the type of the gate
+    type = CUSTOM_KERNEL_1QUBIT_GATE_OPERATION;
+
+    kernel = kernel_in;
+
+
+    if (target_qbit_in >= qbit_num) {
+       sstream << "The index of the target qubit is larger than the number of qubits" << std::endl;
+       print(sstream, 1);	    	
 	            
-	   throw "The index of the target qubit is larger than the number of qubits";
-        }
+       throw "The index of the target qubit is larger than the number of qubits";
+    }
 	
-        // The index of the qubit on which the gate acts (target_qbit >= 0)
-        target_qbit = target_qbit_in;
-        // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gates
-        control_qbit = -1;
+    // The index of the qubit on which the gate acts (target_qbit >= 0)
+    target_qbit = target_qbit_in;
+    // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gates
+    control_qbit = -1;
 
-        parameter_num = 0;
+    parameter_num = 0;
 
 
 }

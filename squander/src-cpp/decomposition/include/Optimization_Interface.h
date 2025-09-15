@@ -28,14 +28,19 @@ limitations under the License.
 #include "Bayes_Opt.h"
 #include "Powells_method.h"
 
-#ifdef __DFE__
-#include "common_DFE.h"
+
+#if defined __DFE__
+    #include "common_DFE.h"
+#elif defined __GROQ__
+    #include "common_GROQ.h"
 #endif
+
+
 
 /// @brief Type definition of the fifferent types of the cost function
 typedef enum cost_function_type {FROBENIUS_NORM, FROBENIUS_NORM_CORRECTION1, FROBENIUS_NORM_CORRECTION2,
     HILBERT_SCHMIDT_TEST, HILBERT_SCHMIDT_TEST_CORRECTION1, HILBERT_SCHMIDT_TEST_CORRECTION2,
-    SUM_OF_SQUARES, VQE, GQML} cost_function_type;
+    SUM_OF_SQUARES, VQE, GQML, INFIDELITY} cost_function_type;
 
 
 
@@ -308,26 +313,57 @@ void solve_layer_optimization_problem_ADAM( int num_of_parameters, Matrix_real& 
 */
 void randomize_parameters( Matrix_real& input, Matrix_real& output, const double& f0 );
 
+
 /**
-@brief The optimization problem of the final optimization
-@param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
-@return Returns with the cost function. (zero if the qubits are desintangled.)
+@brief Evaluate the optimization problem of the optimization
+@param parameters An array of the free parameters to be optimized.
+@return Returns with the cost function.
 */
 double optimization_problem( double* parameters);
 
 
 /**
 @brief The optimization problem of the final optimization
-@param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
-@return Returns with the cost function. (zero if the qubits are desintangled.)
+@param parameters An array of the free parameters to be optimized.
+@return Returns with the cost function.
 */
 virtual double optimization_problem( Matrix_real& parameters);
 
 
+
+#ifdef __DFE__
 /**
-@brief The optimization problem of the final optimization with batched input (implemented only for the Frobenius norm cost function)
-@param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
-@return Returns with the cost function. (zero if the qubits are desintangled.)
+@brief The cost function of the optimization with batched input executed on DFE (implemented only for the Frobenius norm cost function)
+@param parameters An array of the free parameters to be optimized.
+@return Returns with the cost function values.
+*/
+Matrix_real optimization_problem_batched_DFE( std::vector<Matrix_real>& parameters_vec);
+#endif
+
+#ifdef __GROQ__
+
+/**
+@brief The optimization problem of the final optimization implemented to be run on Groq hardware
+@param parameters An array of the free parameters to be optimized.
+@param chosen_device Indicate the device on which the state vector emulation is performed
+@return Returns with the cost function.
+*/
+virtual double optimization_problem_Groq( Matrix_real& parameters, int chosen_device);
+
+
+/**
+@brief The cost function of the optimization with batched input executed on Groq hardware
+@param parameters An array of the free parameters to be optimized.
+@return Returns with the cost function values.
+*/
+Matrix_real optimization_problem_batched_Groq( std::vector<Matrix_real>& parameters_vec);
+#endif
+
+
+/**
+@brief The cost function of the optimization with batched input (implemented only for the Frobenius norm cost function when run with DFE)
+@param parameters An array of the free parameters to be optimized.
+@return Returns with the cost function values.
 */
 Matrix_real optimization_problem_batched( std::vector<Matrix_real>& parameters_vec);
 
@@ -520,28 +556,16 @@ void set_custom_gate_structure( Gates_block* gate_structure_in );
 void upload_Umtx_to_DFE();
 
 
+#endif
+
+
 /**
 @brief Get the number of accelerators to be reserved on DFEs on users demand.
 */
 int get_accelerator_num();
 
-#ifdef __DFE__
-virtual void apply_to( Matrix_real& parameters_mtx, Matrix& input, int parallel=0 )
-{
-    if (ctz(input.rows) == 17) {
-        std::vector<int> target_qbit;
-        std::vector<int> control_qbit;
-        std::vector<Matrix> u3_qbit;
-        get_matrices_target_control(u3_qbit, target_qbit, control_qbit, parameters_mtx);
-        const int device_num = 0;
-        apply_to_groq_sv(device_num, u3_qbit, input, target_qbit, control_qbit);
-        return;
-    }
-    Decomposition_Base::apply_to(parameters_mtx, input, parallel);
-}
-#endif
 
-#endif
+
 
 };
 

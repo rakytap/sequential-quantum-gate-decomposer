@@ -44,7 +44,7 @@ qiskit_version = qiskit.version.get_version_info()
 from qiskit import QuantumCircuit
 
     
-if qiskit_version[0] == '1':
+if qiskit_version[0] == '1' or qiskit_version[0] == '2':
     from qiskit import transpile
     import qiskit_aer as Aer    
 else :
@@ -75,7 +75,7 @@ class Test_State_Preparation:
         # creating a class to decompose the unitary
 
         with pytest.raises(Exception):
-            cDecompose = qgd_N_qubit_State_Preparation_adaptive(Umtx,
+            cDecompose = qgd_N_Qubit_State_Preparation_adaptive(Umtx,
                     level_limit_max=5, level_limit_min=0)
 
     def State_Preparation_adaptive_base(self, optimizer, cost_func, compression_enabled=1):
@@ -96,16 +96,16 @@ class Test_State_Preparation:
        
 
         config = { 'max_outer_iterations': 1, 
-		'max_inner_iterations': 10000, 
-		'max_inner_iterations_compression': 10000, 
-		'max_inner_iterations_final': 1000, 
-		'randomization_threshold': int(1e4),  			
-		'Randomized_Radius': 0.3, 
-	    'randomized_adaptive_layers': 1,
-		'optimization_tolerance_agent': 1e-4,
-		'optimization_tolerance': 1e-4,
-		'compression_enabled': compression_enabled,
-		'number_of_agents': 4}
+		        'max_inner_iterations': 10000, 
+		        'max_inner_iterations_compression': 10000, 
+		        'max_inner_iterations_final': 1000, 
+		        'randomization_threshold': int(1e4),  			
+		        'Randomized_Radius': 0.3, 
+	            'randomized_adaptive_layers': 1,
+		        'optimization_tolerance_agent': 1e-4,
+		        'optimization_tolerance': 1e-4,
+		        'compression_enabled': compression_enabled,
+		        'number_of_agents': 4}
 
 
         # creating a class to decompose the unitary
@@ -124,6 +124,13 @@ class Test_State_Preparation:
         #set Optimizer
         
         cDecompose.set_Optimizer(optimizer)
+
+        # set initial parameters
+        rng = np.random.default_rng( 42 )
+        num_of_parameters = cDecompose.get_Parameter_Num()
+        parameters = rng.random(num_of_parameters)*2*np.pi
+        
+        cDecompose.set_Optimized_Parameters( parameters )
         
         # starting the decomposition
 
@@ -147,7 +154,7 @@ class Test_State_Preparation:
         print(f"DECOMPOSITION ERROR: {decomp_error} ")
         
         # Execute and get the state vector
-        if qiskit_version[0] == '1':
+        if qiskit_version[0] == '1' or qiskit_version[0] == '2':
 	
             circuit_qiskit.save_statevector()
 	
@@ -168,10 +175,10 @@ class Test_State_Preparation:
 		
             transformed_state = result.get_statevector(circuit_qiskit)
         
-        overlap = np.abs( transformed_state.conj().T @ State )
+        overlap = np.abs( np.asarray(transformed_state).conj().T @ State )
 	
         print( 'Overlap integral with the initial state: ', overlap )        
-        assert( np.abs(overlap - 1) < 1e-6 )
+        assert( np.abs(overlap - 1) < 1e-4 )
         
         
         

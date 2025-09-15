@@ -17,7 +17,7 @@
 #ifndef n_aryGrayCodeCounter_H
 #define n_aryGrayCodeCounter_H
 
-#include "matrix_base.h"
+#include "GrayCode.h"
 
 
 /**
@@ -29,7 +29,7 @@ class n_aryGrayCodeCounter {
 protected:
 
     /// the current gray code associated to the offset value
-    matrix_base<int> gray_code;
+    GrayCode gray_code;
     /// The maximal value of the individual gray code elements
     matrix_base<int> n_ary_limits;
     /// The incremental counter chain associated to the gray code
@@ -81,7 +81,7 @@ void initialize( int64_t initial_offset );
 @brief Get the current gray code counter value
 @return Returns with the current gray code associated with the current offset.
 */
-matrix_base<int> get();
+GrayCode get();
 
 
 /**

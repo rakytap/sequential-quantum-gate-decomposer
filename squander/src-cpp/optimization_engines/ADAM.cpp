@@ -170,6 +170,24 @@ void Optimization_Interface::solve_layer_optimization_problem_ADAM( int num_of_p
         }
         optimizer.eta = eta_loc;
 
+ 
+
+        // The number if iterations after which the current results are displed/exported
+        int output_periodicity;
+        if ( config.count("output_periodicity_cosine") > 0 ) {
+             long long value = 1;
+             config["output_periodicity_cosine"].get_property( value ); 
+             output_periodicity = (int) value;
+        }
+        if ( config.count("output_periodicity") > 0 ) {
+             long long value = 1;
+             config["output_periodicity"].get_property( value ); 
+             output_periodicity = (int) value;
+        }
+        else {
+            output_periodicity = 0;
+        }        
+
 
         double f0 = DBL_MAX;
         std::stringstream sstream;
@@ -213,7 +231,10 @@ void Optimization_Interface::solve_layer_optimization_problem_ADAM( int num_of_p
                 
                 randomization_successful = 1;
             }
-    	    export_current_cost_fnc(current_minimum);
+
+            if ( output_periodicity>0 && iter_idx % output_periodicity == 0 ) {
+                export_current_cost_fnc(current_minimum);
+            }
 
             if ( iter_idx % 5000 == 0 ) {
                 if (cost_fnc != VQE){

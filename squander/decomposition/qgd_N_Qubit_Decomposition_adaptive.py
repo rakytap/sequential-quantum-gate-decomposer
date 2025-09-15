@@ -259,17 +259,17 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
 
         for gate in qc.data:
 
-            name = gate[0].name
+            name = gate.operation.name
             if name == 'u3':
                 # add u3 gate 
-                qubits = gate[1]
+                qubits = gate.qubits
 
                 qubit = q_register.index( qubits[0] )   # qubits[0].index
-                single_qubit_gates[qubit].append( {'params': gate[0].params, 'type': 'u3'} )
+                single_qubit_gates[qubit].append( {'params': gate.operation.params, 'type': 'u3'} )
 
             elif name == 'cz':
                 # add cz gate 
-                qubits = gate[1]
+                qubits = gate.qubits
 
                 qubit0 = q_register.index( qubits[0] ) #qubits[0].index
                 qubit1 = q_register.index( qubits[1] ) #qubits[1].index
@@ -404,6 +404,14 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
     def set_Unitary( self, Umtx_arr ):  
 
         return super().set_Unitary( Umtx_arr )
+
+
+##
+# @brief Call to set the error tolerance of the decomposition
+# @param tolerance Error tolerance given as a floating point number
+    def set_Optimization_Tolerance( self, tolerance ):  
+
+        return super().set_Optimization_Tolerance( tolerance )
         
 ##
 # @brief Call to get unitary matrix
@@ -668,7 +676,6 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
 
 
         return entropy
-
 
 
 ##

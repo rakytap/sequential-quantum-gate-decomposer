@@ -72,6 +72,13 @@ QGD_Complex16 get_trace(Matrix& matrix);
 */
 double get_hilbert_schmidt_test(Matrix& matrix);
 
+/**
+@brief Call to calculate infidelity
+@param matrix The square shaped complex matrix from which the cost function is calculated.
+@param qbit_num The number of qubits
+@return Returns the cost function
+*/
+double get_infidelity(Matrix& matrix);
 
 /**
 @brief Call co calculate the Hilbert Schmidt testof the optimization process, and the first correction to the cost finction according to https://arxiv.org/pdf/2210.09191.pdf
