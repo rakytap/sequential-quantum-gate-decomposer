@@ -119,7 +119,7 @@ void test2QubitGate() {
         */
         #ifdef USE_AVX
         // Test AVX kernel
-        apply_2qbit_kernel_to_state_vector_input_AVX(Umtx, test_state_avx, qubits, 1 << num_qubits);
+        apply_large_kernel_to_input_AVX(Umtx, test_state_avx, qubits, 1 << num_qubits);
         double fid_avx = fidelity(state, test_state_avx);
         
         if (std::abs(fid_avx - 1.0) < 1e-10) {
