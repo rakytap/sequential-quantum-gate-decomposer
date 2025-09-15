@@ -119,12 +119,16 @@ void Optimization_Interface::solve_layer_optimization_problem_GRAD_DESCEND_PARAM
             throw err;
         }
 
-        long long max_inner_iterations_loc;
-        if ( config.count("max_inner_iterations_grad_descend_shift_rule") > 0 ) {
-             config["max_inner_iterations_grad_descend_shift_rule"].get_property( max_inner_iterations_loc );  
+        unsigned long long max_inner_iterations_loc;
+        if ( config.count("max_inner_iterations_cosine") > 0 ) {
+            long long max_inner_iterations_loc_tmp;
+            config["max_inner_iterations_cosine"].get_property( max_inner_iterations_loc_tmp );  
+            max_inner_iterations_loc = ( unsigned long long)max_inner_iterations_loc_tmp;
         }
         else if ( config.count("max_inner_iterations") > 0 ) {
-             config["max_inner_iterations"].get_property( max_inner_iterations_loc );  
+            long long max_inner_iterations_loc_tmp;
+            config["max_inner_iterations"].get_property( max_inner_iterations_loc_tmp );  
+            max_inner_iterations_loc = ( unsigned long long)max_inner_iterations_loc_tmp;
         }
         else {
             max_inner_iterations_loc = max_inner_iterations;

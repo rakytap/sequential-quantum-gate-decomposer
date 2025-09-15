@@ -151,21 +151,6 @@ void Optimization_Interface::solve_layer_optimization_problem_ADAM_BATCHED( int 
             adaptive_eta_loc = adaptive_eta;
         }
 
-        // The number if iterations after which the current results are displed/exported
-        int output_periodicity;
-        if ( config.count("output_periodicity_cosine") > 0 ) {
-             long long value = 1;
-             config["output_periodicity_cosine"].get_property( value ); 
-             output_periodicity = (int) value;
-        }
-        if ( config.count("output_periodicity") > 0 ) {
-             long long value = 1;
-             config["output_periodicity"].get_property( value ); 
-             output_periodicity = (int) value;
-        }
-        else {
-            output_periodicity = 0;
-        }        
 
         double f0 = DBL_MAX;
         std::stringstream sstream;

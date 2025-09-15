@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <iomanip>
 #include "matrix.h"
+#include "Gates_block.h"
 #include "common.h"
 #include "apply_large_kernel_to_input.h"
 #include "apply_large_kernel_to_input_AVX.h"
@@ -434,6 +435,56 @@ void testNQubitGate_Parallel_GHZ() {
 
 }
 
+void testSmallCircuit() {
+    int num_qubits = 4;
+
+    Matrix state = generateRandomState(num_qubits);
+    Matrix test_state = state.copy();
+
+    Gates_block circuit(num_qubits);
+    Gates_block* circuit_inner = new Gates_block(num_qubits);
+    Gates_block* circuit_inner_2 = new Gates_block(num_qubits);
+    
+    circuit_inner->add_u3(2);
+    circuit_inner->add_u3(0);
+    circuit_inner->add_u3(1);
+
+    circuit_inner->add_cry(0, 1);
+    circuit_inner->add_cry(1, 2);
+    circuit_inner_2->add_cry(2, 3);
+
+    circuit_inner_2->add_u3(3);
+    circuit_inner_2->add_u3(0);
+
+    // circuit.fragment_circuit();
+    circuit.add_gate(circuit_inner);
+    circuit.add_gate(circuit_inner_2);
+
+    int num_params = circuit.get_parameter_num();
+    Matrix_real parameters(num_params, 1);
+    for (int i = 0; i < num_params; i++) {
+        parameters[i] = (i+1) / (M_PI*2);
+    }
+
+    circuit.set_min_fusion(-1);
+    circuit_inner->set_min_fusion(-1);
+    circuit_inner_2->set_min_fusion(-1);
+
+    circuit.apply_to(parameters, state);
+
+    circuit.set_min_fusion(0);
+    circuit_inner->set_min_fusion(0);
+    circuit_inner_2->set_min_fusion(0);
+
+    circuit.apply_to(parameters, test_state);
+
+    double fid = fidelity(state, test_state);
+    std::cout << "Identity circuit fidelity (should be 1.0): " << fid << std::endl;
+    assert(std::abs(fid - 1.0) < 1e-10);
+}
+
+
+
 void testNQubit_Gate_speed() {
     int num_qubits = 20;
     Matrix state = generateRandomState(num_qubits);
@@ -448,21 +499,21 @@ void testNQubit_Gate_speed() {
         Matrix Umtx = create_identity(1<<qubits.size());
 
         int samples = 500;
-        double dedicated_kernel_time = 0.0;
+        /*double dedicated_kernel_time = 0.0;
         tbb::tick_count dedicated_kernel_start = tbb::tick_count::now();
         for (int idx=0; idx<samples;idx++){
             apply_large_kernel_to_input(Umtx, test_state, qubits, 1 << num_qubits);
         }
         tbb::tick_count dedicated_kernel_end = tbb::tick_count::now();
         dedicated_kernel_time  = (dedicated_kernel_end-dedicated_kernel_start).seconds()/samples;
-        std::cout << qubits.size()<<" qubit dedicated kernel time "<< dedicated_kernel_time << std::endl;
+        std::cout << qubits.size()<<" qubit dedicated kernel time "<< dedicated_kernel_time << std::endl;*/
 
 
         #ifdef USE_AVX
         double dedicated_kernel_AVX_time = 0.0;
         tbb::tick_count dedicated_kernel_AVX_start = tbb::tick_count::now();
         for (int idx=0; idx<samples;idx++){
-            apply_large_kernel_to_input_AVX(Umtx, test_state, qubits, 1 << num_qubits);
+            apply_large_kernel_to_input_AVX_TBB(Umtx, test_state, qubits, 1 << num_qubits);
         }
         tbb::tick_count dedicated_kernel_AVX_end = tbb::tick_count::now();
 
@@ -474,7 +525,6 @@ void testNQubit_Gate_speed() {
 }
 
 };
-
 int main() {
     ApplyKernelTestSuite suite;
     suite.test2QubitGate();
@@ -485,5 +535,6 @@ int main() {
     suite.testNQubitGate_Parallel_GHZ();
     suite.testNQubit_Gate_speed();
     #endif
+    suite.testSmallCircuit();
     return 0;
 }

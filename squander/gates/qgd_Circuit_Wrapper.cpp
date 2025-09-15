@@ -1407,6 +1407,38 @@ qgd_Circuit_Wrapper_get_Qbits( qgd_Circuit_Wrapper *self ) {
 }
 
 
+static PyObject *
+qgd_Circuit_Wrapper_set_Min_Fusion( qgd_Circuit_Wrapper *self,  PyObject *args ) {
+
+    int min_fusion = -1;
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|i", &min_fusion )) {
+        std::string err( "Unable to parse arguments");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+
+    try {
+        self->circuit->set_min_fusion( min_fusion );
+    }
+    catch (std::string err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        std::cout << err << std::endl;
+        return NULL;
+    }
+    catch(...) {
+        std::string err( "Invalid pointer to circuit class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+
+    return Py_None;
+    
+}
+
 
 /**
 @brief Call to remap the qubits in the circuit.
@@ -2151,7 +2183,7 @@ qgd_Circuit_Wrapper_get_parents( qgd_Circuit_Wrapper *self, PyObject *args ) {
 
 
     // find the indices of the parents
-    for(int idx=0; idx<parents.size(); idx++) {
+    for(size_t idx=0; idx<parents.size(); idx++) {
 
         Gate* parent_gate = parents[idx];
 
@@ -2686,6 +2718,9 @@ static PyMethodDef qgd_Circuit_Wrapper_Methods[] = {
     },
     {"get_Qbits", (PyCFunction) qgd_Circuit_Wrapper_get_Qbits, METH_NOARGS,
      "Call to get the list of qubits involved in the circuit"
+    },
+    {"set_min_fusion", (PyCFunction) qgd_Circuit_Wrapper_set_Min_Fusion, METH_VARARGS,
+     "Call to set the min fusion in the circuit"
     },
     {"Remap_Qbits", (PyCFunction) qgd_Circuit_Wrapper_Remap_Qbits, METH_VARARGS,
      "Call to remap the qubits in the circuit."

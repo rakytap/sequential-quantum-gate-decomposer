@@ -133,6 +133,13 @@ class Test_Decomposition:
 
         # setting the verbosity of the decomposition
         cDecompose.set_Verbose( 3 )
+        
+        # set initial parameters
+        rng = np.random.default_rng( 42 )
+        num_of_parameters = cDecompose.get_Parameter_Num()
+        parameters = rng.random(num_of_parameters)*2*np.pi
+        
+        cDecompose.set_Optimized_Parameters( parameters )
 
         # starting the decomposition
         cDecompose.Start_Decomposition()
@@ -189,6 +196,13 @@ class Test_Decomposition:
 
         # setting the verbosity of the decomposition
         cDecompose.set_Verbose( 3 )
+
+        # set initial parameters
+        rng = np.random.default_rng( 42 )
+        num_of_parameters = cDecompose.get_Parameter_Num()
+        parameters = rng.random(num_of_parameters)*2*np.pi
+        
+        cDecompose.set_Optimized_Parameters( parameters )
 
         # starting the decomposition
         cDecompose.Start_Decomposition()

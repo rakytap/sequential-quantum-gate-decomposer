@@ -70,6 +70,12 @@ typedef enum gate_type {GENERAL_OPERATION=1,
                         CUSTOM_KERNEL_1QUBIT_GATE_OPERATION=37} gate_type;
 
 
+#ifdef _WIN32
+void sincos(double x, double *s, double *c);
+#elif defined(__APPLE__)
+#define sincos __sincos
+#endif
+
 
 /**
 @brief Base class for the representation of general gate operations.
@@ -209,7 +215,7 @@ virtual void apply_from_right( Matrix& input );
 @param parameter_mtx An array of the input parameters.
 @param input The input array on which the gate is applied
 */
-void Gate::apply_from_right( Matrix_real& parameter_mtx, Matrix& input );
+void apply_from_right( Matrix_real& parameter_mtx, Matrix& input );
 
 /**
 @brief Call to set the stored matrix in the operation.
@@ -261,8 +267,7 @@ int get_control_qbit();
 @brief Call to get the qubits involved in the gate operation.
 @return Return with a list of the involved qubits
 */
-virtual std::vector<int> get_involved_qubits();
-
+virtual std::vector<int> get_involved_qubits(bool only_target=false);
 
 /**
 @brief Call to add a child gate to the current gate 

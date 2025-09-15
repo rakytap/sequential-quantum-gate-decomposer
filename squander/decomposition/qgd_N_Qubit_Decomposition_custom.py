@@ -54,7 +54,7 @@ class qgd_N_Qubit_Decomposition_custom(qgd_N_Qubit_Decomposition_custom_Wrapper)
             return
 
         # call the constructor of the wrapper class
-        super(qgd_N_Qubit_Decomposition_custom, self).__init__(Umtx, self.qbit_num, initial_guess, config=config, accelerator_num=accelerator_num)
+        super().__init__(Umtx, self.qbit_num, initial_guess, config=config, accelerator_num=accelerator_num)
 
 
 
@@ -63,7 +63,7 @@ class qgd_N_Qubit_Decomposition_custom(qgd_N_Qubit_Decomposition_custom_Wrapper)
     def Start_Decomposition(self):
 
 	# call the C wrapper function
-        super(qgd_N_Qubit_Decomposition_custom, self).Start_Decomposition()
+        super().Start_Decomposition()
 
 
 ##
@@ -72,7 +72,7 @@ class qgd_N_Qubit_Decomposition_custom(qgd_N_Qubit_Decomposition_custom_Wrapper)
     def Reorder_Qubits( self, qbit_list ):
 
 	# call the C wrapper function
-        super(qgd_N_Qubit_Decomposition_custom, self).Reorder_Qubits(qbit_list)
+        super().Reorder_Qubits(qbit_list)
 
 
 ##
@@ -80,7 +80,7 @@ class qgd_N_Qubit_Decomposition_custom(qgd_N_Qubit_Decomposition_custom_Wrapper)
     def List_Gates(self):
 
 	# call the C wrapper function
-        super(qgd_N_Qubit_Decomposition_custom, self).List_Gates()
+        super().List_Gates()
 
 
 ##
@@ -124,6 +124,13 @@ class qgd_N_Qubit_Decomposition_custom(qgd_N_Qubit_Decomposition_custom_Wrapper)
 
 
         return cost_function
+    
+
+##
+# @brief Call to get the number of free parameters in the gate structure used for the decomposition
+    def get_Parameter_Num( self ):
+
+        return super().get_Parameter_Num()    
 
 
 
@@ -233,7 +240,7 @@ class qgd_N_Qubit_Decomposition_custom(qgd_N_Qubit_Decomposition_custom_Wrapper)
     def set_Optimizer( self, optimizer="BFGS" ):
 
         # Set the optimizer
-        super(qgd_N_Qubit_Decomposition_custom, self).set_Optimizer(optimizer)  
+        super().set_Optimizer(optimizer)  
 
 
 
@@ -242,7 +249,7 @@ class qgd_N_Qubit_Decomposition_custom(qgd_N_Qubit_Decomposition_custom_Wrapper)
     def Prepare_Gates_To_Export(self):
 
         # Set the optimizer
-        super(qgd_N_Qubit_Decomposition_custom, self).Prepare_Gates_To_Export()  
+        super().Prepare_Gates_To_Export()  
         
         
 ##
@@ -256,7 +263,7 @@ class qgd_N_Qubit_Decomposition_custom(qgd_N_Qubit_Decomposition_custom_Wrapper)
             raise Exception("Input parameter Gate_structure should be a an instance of Gates_Block")
                
                           
-        super(qgd_N_Qubit_Decomposition_custom, self).set_Gate_Structure( Gate_structure )   
+        super().set_Gate_Structure( Gate_structure )   
 
 
 
@@ -266,5 +273,5 @@ class qgd_N_Qubit_Decomposition_custom(qgd_N_Qubit_Decomposition_custom_Wrapper)
     def set_Cost_Function_Variant( self, costfnc=0 ):
 
         # Set the optimizer
-        super(qgd_N_Qubit_Decomposition_custom, self).set_Cost_Function_Variant(costfnc=costfnc)         
+        super().set_Cost_Function_Variant(costfnc=costfnc)         
 

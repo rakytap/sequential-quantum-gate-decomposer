@@ -54,7 +54,7 @@ protected:
     bool fragmented;
     int fragmentation_type;
     /// maximal number of qubits in partitions
-    int max_fusion;
+    int min_fusion;
     std::vector< std::vector<int>> involved_qbits;
     std::vector<int> block_end;
     std::vector<int> block_type;
@@ -629,7 +629,7 @@ virtual void reorder_qubits( std::vector<int> qbit_list );
 @brief Call to get the qubits involved in the gates stored in the block of gates.
 @return Return with a list of the involved qubits
 */
-std::vector<int> get_involved_qubits();
+std::vector<int> get_involved_qubits(bool only_target=false);
 
 /**
 @brief Call to get the gates stored in the class.
@@ -650,6 +650,9 @@ Gate* get_gate(int idx);
 */
 void combine(Gates_block* op_block);
 
+
+
+void set_min_fusion( int min_fusion );
 
 /**
 @brief Set the number of qubits spanning the matrix of the gates stored in the block of gates.
