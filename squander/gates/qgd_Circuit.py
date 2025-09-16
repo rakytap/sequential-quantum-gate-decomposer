@@ -493,9 +493,9 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
         elif isinstance(qgd_gate,CNOT):
             self.add_CNOT(qgd_gate.get_Target_Qbit(),qgd_gate.get_Control_Qbit())
         elif isinstance(qgd_gate,S):
-            self.add_T(qgd_gate.get_Target_Qbit())
+            self.add_S(qgd_gate.get_Target_Qbit())
         elif isinstance(qgd_gate,Sdg):
-            self.add_Tdg(qgd_gate.get_Target_Qbit())
+            self.add_Sdg(qgd_gate.get_Target_Qbit())
         elif isinstance(qgd_gate,T):
             self.add_T(qgd_gate.get_Target_Qbit())
         elif isinstance(qgd_gate,Tdg):
