@@ -282,11 +282,11 @@ def get_Qiskit_Circuit_inverse( Squander_circuit, parameters ):
 
         elif isinstance( gate, S ):
             # S gate
-            circuit.sdg( gate.get_Target_Qbit() )  
+            circuit.s( gate.get_Target_Qbit() )  
 
         elif isinstance( gate, Sdg ):
             # Sdg gate
-            circuit.s( gate.get_Target_Qbit() )  
+            circuit.sdg( gate.get_Target_Qbit() )  
 
         elif isinstance( gate, SX ):
             # SX gate
@@ -294,11 +294,11 @@ def get_Qiskit_Circuit_inverse( Squander_circuit, parameters ):
         
         elif isinstance( gate, T ):
             # T gate (inverse is Tdg)
-            circuit.tdg( gate.get_Target_Qbit() )
+            circuit.t( gate.get_Target_Qbit() )
         
         elif isinstance( gate, Tdg ):
             # Tdg gate (inverse is T)
-            circuit.t( gate.get_Target_Qbit() )
+            circuit.tdg( gate.get_Target_Qbit() )
 
         elif isinstance( gate, Circuit ):
             # Sub-circuit gate
