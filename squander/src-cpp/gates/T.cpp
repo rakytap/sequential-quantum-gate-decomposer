@@ -70,7 +70,7 @@ T::T(int qbit_num_in, int target_qbit_in) {
     // the size of the matrix
     matrix_size = Power_of_2(qbit_num);
     // A string describing the type of the gate
-    type = Z_OPERATION;
+    type = T_OPERATION;
 
 
     if (target_qbit_in >= qbit_num) {
