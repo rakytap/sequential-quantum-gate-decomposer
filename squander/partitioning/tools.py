@@ -316,6 +316,7 @@ def get_bqskit_partitions(filename, max_partition_size, partitioner):
             bqskit.ir.gates.constant.z.ZGate: "Z",
             bqskit.ir.gates.constant.s.SGate: "S",
             bqskit.ir.gates.constant.sdg.SdgGate: "Sdg",
+            bqskit.ir.gates.constant.r.RGate: "R",
             bqskit.ir.gates.constant.sx.SXGate: "SX",
             bqskit.ir.gates.constant.ch.CHGate: "CH",
             bqskit.ir.gates.constant.cz.CZGate: "CZ",
