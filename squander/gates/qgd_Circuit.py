@@ -39,6 +39,8 @@ from squander.gates.gates_Wrapper import (
     X,
     Y,
     Z,
+    S,
+    Sdg,
     T,
     Tdg,
     CH,
@@ -232,6 +234,24 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
 	# call the C wrapper function
         super().add_SX(target_qbit)
 
+#@brief Call to add a S gate to the front of the gate structure.
+#@param self A pointer pointing to an instance of the class qgd_Circuit.
+#@param Input arguments: target_qbit (int).
+
+    def add_S( self, target_qbit):
+
+	# call the C wrapper function
+        super().add_S(target_qbit)
+
+#@brief Call to add a Sdg gate to the front of the gate structure.
+#@param self A pointer pointing to an instance of the class qgd_Circuit.
+#@param Input arguments: target_qbit (int).
+
+    def add_Sdg( self, target_qbit):
+
+	# call the C wrapper function
+        super().add_Sdg(target_qbit)
+
 #@brief Call to add a T gate to the front of the gate structure.
 #@param self A pointer pointing to an instance of the class qgd_Circuit.
 #@param Input arguments: target_qbit (int).
@@ -241,7 +261,7 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
 	# call the C wrapper function
         super().add_T(target_qbit)
 
-#@brief Call to add a T gate to the front of the gate structure.
+#@brief Call to add a Tdg gate to the front of the gate structure.
 #@param self A pointer pointing to an instance of the class qgd_Circuit.
 #@param Input arguments: target_qbit (int).
 
@@ -472,6 +492,10 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
             self.add_CRY(qgd_gate.get_Target_Qbit(),qgd_gate.get_Control_Qbit())
         elif isinstance(qgd_gate,CNOT):
             self.add_CNOT(qgd_gate.get_Target_Qbit(),qgd_gate.get_Control_Qbit())
+        elif isinstance(qgd_gate,S):
+            self.add_T(qgd_gate.get_Target_Qbit())
+        elif isinstance(qgd_gate,Sdg):
+            self.add_Tdg(qgd_gate.get_Target_Qbit())
         elif isinstance(qgd_gate,T):
             self.add_T(qgd_gate.get_Target_Qbit())
         elif isinstance(qgd_gate,Tdg):
