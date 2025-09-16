@@ -29,7 +29,6 @@ METHOD_NAMES = [
 from squander.gates import gates_Wrapper as gate
 SUPPORTED_GATES = {x for n in dir(gate) for x in (getattr(gate, n),) if not n.startswith("_") and issubclass(x, gate.Gate) and n != "Gate"}
 SUPPORTED_GATES_NAMES = {n for n in dir(gate) if not n.startswith("_") and issubclass(getattr(gate, n), gate.Gate) and n != "Gate"}
-SUPPORTED_GATES_NAMES.remove("S") #delete this if S gate is properly supported
 
 def purity_analysis():
     """
@@ -248,7 +247,7 @@ def purity_analysis():
 
 def projectq_import_qasm(filename, eng, initial_state=None):
     import re, math
-    from projectq.ops import H, X, Y, Z, S, T, Rx, Ry, Rz, CNOT, CZ
+    from projectq.ops import H, X, Y, Z, S, SqrtX, Sdag, T, Tdag, R, Rx, Ry, Rz, CNOT, CZ
     def _eval_angle(expr):
         # supports e.g. "pi/2", "3*pi/4", numeric literals
         expr = expr.strip().lower().replace("pi", f"({math.pi})")
@@ -259,7 +258,7 @@ def projectq_import_qasm(filename, eng, initial_state=None):
     _ry = re.compile(r"ry\(([^)]+)\)\s+q\[(\d+)\];", re.I)
     _rz = re.compile(r"rz\(([^)]+)\)\s+q\[(\d+)\];", re.I)
     _u3 = re.compile(r"u3\(([^,]+),([^,]+),([^)]+)\)\s+q\[(\d+)\];", re.I)
-    _one = re.compile(r"(h|x|y|z|s|t)\s+q\[(\d+)\];", re.I)
+    _one = re.compile(r"(h|x|y|z|s|t|sdg|tdg|sx|r)\s+q\[(\d+)\];", re.I)
     _cx  = re.compile(r"cx\s+q\[(\d+)\],\s*q\[(\d+)\];", re.I)
     _cz  = re.compile(r"cz\s+q\[(\d+)\],\s*q\[(\d+)\];", re.I)
     _meas   = re.compile(r"measure\s+q\[(\d+)\]\s*->\s*([A-Za-z_]\w*)\[(\d+)\];", re.I)
@@ -282,7 +281,7 @@ def projectq_import_qasm(filename, eng, initial_state=None):
         m = _one.match(ln)
         if m:
             gate, i = m.group(1).lower(), int(m.group(2))
-            { "h":H, "x":X, "y":Y, "z":Z, "s":S, "t":T }[gate] | qureg[i]
+            { "h":H, "x":X, "y":Y, "z":Z, "s":S, "t":T, "sdg":Sdag, "tdg":Tdag, "sx":SqrtX, "r":R }[gate] | qureg[i]
             continue
         m = _rx.match(ln)
         if m: Rx(_eval_angle(m.group(1))) | qureg[int(m.group(2))]; continue
@@ -358,7 +357,7 @@ def state_vector_equivalence(psi, phi):
   return np.allclose(psi * np.exp(-1j * phase), phi)
 def test_simulation(max_qubits = 4, random_initial_state=True):
     import numpy as np
-    SVSIM_METHOD_NAMES = ["SQUANDER", "Qiskit", "Cirq", "qulacs", "Cirq", "ProjectQ"]
+    SVSIM_METHOD_NAMES = ["SQUANDER", "Qiskit", "qulacs", "Cirq", "ProjectQ"]
     files = glob.glob("benchmarks/partitioning/test_circuit/*.qasm")
     print(f"Total QASM: {len(files)}, max qubits: {max_qubits}")
     for filename in files:
@@ -386,7 +385,7 @@ def test_simulation(max_qubits = 4, random_initial_state=True):
             if method == "SQUANDER":
                 def f():
                     transformed_state = initial_state.copy()
-                    circ, params, _ = PartitionCircuitQasm( filename, max_qubits, strategy="ilp" )
+                    circ, params, _ = PartitionCircuitQasm( filename, max_qubits, strategy="ilp-fusion" )
                     circ.set_min_fusion(0)
                     def run():
                         circ.apply_to(params, transformed_state)
