@@ -275,32 +275,33 @@ def projectq_import_qasm(filename, eng, initial_state=None):
     if not initial_state is None:
         eng.flush()
         eng.backend.set_wavefunction(initial_state.tolist(), qureg)
+    replay = []
     for ln in lines:
         if ln.lower().startswith(("openqasm", "include", "qreg", "creg", "barrier", "measure")):
             continue
         m = _one.match(ln)
         if m:
             gate, i = m.group(1).lower(), int(m.group(2))
-            { "h":H, "x":X, "y":Y, "z":Z, "s":S, "t":T, "sdg":Sdag, "tdg":Tdag, "sx":SqrtX, "r":R }[gate] | qureg[i]
+            replay.append(({ "h":H, "x":X, "y":Y, "z":Z, "s":S, "t":T, "sdg":Sdag, "tdg":Tdag, "sx":SqrtX, "r":R }[gate], qureg[i]))
             continue
         m = _rx.match(ln)
-        if m: Rx(_eval_angle(m.group(1))) | qureg[int(m.group(2))]; continue
+        if m: replay.append((Rx(_eval_angle(m.group(1))), qureg[int(m.group(2))])); continue
         m = _ry.match(ln)
-        if m: Ry(_eval_angle(m.group(1))) | qureg[int(m.group(2))]; continue
+        if m: replay.append((Ry(_eval_angle(m.group(1))), qureg[int(m.group(2))])); continue
         m = _rz.match(ln)
-        if m: Rz(_eval_angle(m.group(1))) | qureg[int(m.group(2))]; continue
+        if m: replay.append((Rz(_eval_angle(m.group(1))), qureg[int(m.group(2))])); continue
         m = _u3.match(ln)
         if m:
             theta, phi, lam, i = (_eval_angle(m.group(1)), _eval_angle(m.group(2)), _eval_angle(m.group(3)), int(m.group(4)))
             # Decompose U3(θ, φ, λ) = Rz(φ) Ry(θ) Rz(λ)
-            Rz(phi) | qureg[i]; Ry(theta) | qureg[i]; Rz(lam) | qureg[i]
+            replay.append((Rz(phi), qureg[i])); replay.append((Ry(theta), qureg[i])); replay.append((Rz(lam), qureg[i]))
             continue
         m = _cx.match(ln)
-        if m: CNOT | (qureg[int(m.group(1))], qureg[int(m.group(2))]); continue
+        if m: replay.append((CNOT, (qureg[int(m.group(1))], qureg[int(m.group(2))]))); continue
         m = _cz.match(ln)
-        if m: CZ   | (qureg[int(m.group(1))], qureg[int(m.group(2))]); continue
+        if m: replay.append((CZ, (qureg[int(m.group(1))], qureg[int(m.group(2))]))); continue
         # Unknown/unsupported line types are silently skipped. Add more patterns as needed.
-    return qureg
+    return qureg, replay
 def preprocess_qasm_angles(qasm: str) -> str:
     import re, ast, math
 
@@ -385,7 +386,7 @@ def test_simulation(max_qubits = 4, random_initial_state=True):
             if method == "SQUANDER":
                 def f():
                     transformed_state = initial_state.copy()
-                    circ, params, _ = PartitionCircuitQasm( filename, max_qubits, strategy="ilp-fusion" )
+                    circ, params, _ = PartitionCircuitQasm( filename, max_qubits, strategy="ilp" )
                     circ.set_min_fusion(0)
                     def run():
                         circ.apply_to(params, transformed_state)
@@ -443,9 +444,10 @@ def test_simulation(max_qubits = 4, random_initial_state=True):
                 from projectq.backends import Simulator
                 from projectq.ops import Measure, All
                 def f():
-                    eng = MainEngine(Simulator(gate_fusion=True), verbose=True)
-                    qureg = projectq_import_qasm(filename, eng, initial_state)
+                    eng = MainEngine(Simulator(gate_fusion=True))
+                    qureg, replay = projectq_import_qasm(filename, eng, initial_state)
                     def run():
+                        for op in replay: op[0] | op[1]
                         eng.flush() #Execute; ProjectQ performs fusion inside the C++ backend
                         _, psi = eng.backend.cheat()
                         transformed_state = np.array(psi, dtype=complex)
@@ -457,8 +459,8 @@ def test_simulation(max_qubits = 4, random_initial_state=True):
             trun = timeit.timeit(output[1], number=1)
             res[method] = (tpart, trun, output[0])
             print(initial_state, res[method][2])
-            #assert state_vector_equivalence(res["SQUANDER"][2], res[method][2]), np.linalg.norm(res["SQUANDER"][2]- res[method][2])
-            assert state_vector_equivalence(res["SQUANDER"][2], res[method][2]), np.linalg.norm(res["SQUANDER"][2] - res[method][2])
+            #assert state_vector_equivalence(res["SQUANDER"][2], res[method][2])
+            assert np.linalg.norm(res["SQUANDER"][2] - res[method][2]) < 1e-3
         print({x: res[x][:2] for x in res})
 
 def test_partitions(max_qubits = 4):
