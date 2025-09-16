@@ -99,7 +99,7 @@ for qbit_num in range(qbit_num_min, qbit_num_max+1, 1):
 
 	parameters = np.random.rand(num_of_parameters)*2*np.pi
 
-	partitioned_circuit_squander, parameters_reordered = PartitionCircuit(circuit_squander, parameters, 4, "gtqcp")
+	partitioned_circuit_squander, parameters_reordered,_ = PartitionCircuit(circuit_squander, parameters, 4, "gtqcp")
 	
 	partitioned_circuit_squander.set_min_fusion(14)
 

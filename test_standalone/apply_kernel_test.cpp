@@ -1,10 +1,16 @@
+#include <vector>
 #include <iostream>
-#include <random>
 #include <cassert>
+#include <cmath>
+#include <algorithm>
+#include <iomanip>
 #include "matrix.h"
 #include "Gates_block.h"
 #include "common.h"
 #include "apply_large_kernel_to_input.h"
+#include "apply_large_kernel_to_input_AVX.h"
+#include "Gates_block.h"
+
 
 class ApplyKernelTestSuite {
     std::mt19937 rng;
@@ -38,49 +44,395 @@ class ApplyKernelTestSuite {
         return std::sqrt(real_sum*real_sum + imag_sum*imag_sum);
     }
 
+std::vector<std::vector<int>> generate_combinations(int n, int k) {
+    std::vector<std::vector<int>> combinations;
+    std::vector<bool> selector(n);
+    std::fill(selector.end() - k, selector.end(), true);
+    
+    do {
+        std::vector<int> combination;
+        for (int i = 0; i < n; ++i) {
+            if (selector[i]) {
+                combination.push_back(i);
+            }
+        }
+        // Ensure combination is sorted (should already be due to iteration order)
+        std::sort(combination.begin(), combination.end());
+        combinations.push_back(combination);
+    } while (std::next_permutation(selector.begin(), selector.end()));
+    
+    // Sort combinations lexicographically for consistent ordering
+    std::sort(combinations.begin(), combinations.end());
+    return combinations;
+}
+
 public:
 
-void testNQubitGate(int num_qubits) {
-
-    Matrix state = generateRandomState(num_qubits);
-    Matrix test_state = state.copy();
-
-    Gates_block circuit(num_qubits);
-
-    circuit.set_min_fusion(-1);
-
-    for (int i = 0; i < num_qubits; i++){
-        circuit.add_u3(i);
-    }
-    for (int i = 0; i < num_qubits; i++){
-        for (int j = i+1; j < num_qubits; j++){
-            circuit.add_cry(i, j);
+void test2QubitGate() {
+    const int num_qubits = 10;
+    const int k = 2;
+    
+    std::cout << "Testing all " << k << "-qubit gates on " << num_qubits << "-qubit system..." << std::endl;
+    
+    auto combinations = generate_combinations(num_qubits, k);
+    std::cout << "Total combinations to test: " << combinations.size() << std::endl;
+    
+    int passed_regular = 0;
+    int failed_regular = 0;
+    int passed_avx = 0;
+    int failed_avx = 0;
+    
+    for (size_t combo_idx = 0; combo_idx < combinations.size(); ++combo_idx) {
+        const auto& qubits = combinations[combo_idx];
+        
+        Matrix state = generateRandomState(num_qubits);
+        Matrix test_state = state.copy();
+        Matrix test_state_avx = state.copy();
+        Matrix_real params = Matrix_real(1, 1);
+        
+        Matrix Umtx = create_identity(1 << k);
+        memset(params.get_data(), 0.0, params.size() * sizeof(double));
+        
+        // Apply GHZ circuit to full system
+        Gates_block GHZ_circ = Gates_block(num_qubits);
+        GHZ_circ.add_h(qubits[0]);
+        GHZ_circ.add_cnot(qubits[1], qubits[0]);
+        GHZ_circ.apply_to(params, state);
+        
+        // Create corresponding unitary matrix
+        Gates_block GHZ_circ_mini = Gates_block(k);
+        GHZ_circ_mini.add_h(0);
+        GHZ_circ_mini.add_cnot(1, 0);
+        GHZ_circ_mini.apply_to(params, Umtx);
+        /*
+        // Test regular kernel
+        apply_2qbit_kernel_to_state_vector_input(Umtx, test_state, qubits[0], qubits[1], 1 << num_qubits);
+        
+        double fid = fidelity(state, test_state);
+        
+        if (std::abs(fid - 1.0) < 1e-10) {
+            passed_regular++;
+        } else {
+            failed_regular++;
+            std::cout << "REGULAR FAILED: Qubits {" << qubits[0] << "," << qubits[1] 
+                      << "} - Fidelity: " << std::fixed << std::setprecision(12) << fid << std::endl;
         }
+        */
+        #ifdef USE_AVX
+        // Test AVX kernel
+        apply_large_kernel_to_input_AVX(Umtx, test_state_avx, qubits, 1 << num_qubits);
+        double fid_avx = fidelity(state, test_state_avx);
+        
+        if (std::abs(fid_avx - 1.0) < 1e-10) {
+            passed_avx++;
+        } else {
+            failed_avx++;
+            std::cout << "AVX FAILED: Qubits {" << qubits[0] << "," << qubits[1] 
+                      << "} - Fidelity: " << std::fixed << std::setprecision(12) << fid_avx << std::endl;
+        }
+        #endif
     }
     
-    int num_params = circuit.get_parameter_num();
-    Matrix_real parameters(num_params, 1);
-    for (int i = 0; i < num_params; i++) {
-        parameters[i] = (i+1) / (M_PI*2);
+    std::cout << "2-qubit gate test results:" << std::endl;
+    //std::cout << "  Regular kernel: " << passed_regular << " passed, " << failed_regular << " failed" << std::endl;
+    #ifdef USE_AVX
+    std::cout << "  AVX kernel:     " << passed_avx << " passed, " << failed_avx << " failed" << std::endl;
+    #endif
+    
+    assert(failed_regular == 0);
+    #ifdef USE_AVX
+    assert(failed_avx == 0);
+    #endif
+}
+
+void test3QubitGate() {
+    const int num_qubits = 10;
+    const int k = 3;
+    
+    std::cout << "Testing all " << k << "-qubit gates on " << num_qubits << "-qubit system..." << std::endl;
+    
+    auto combinations = generate_combinations(num_qubits, k);
+    std::cout << "Total combinations to test: " << combinations.size() << std::endl;
+    
+    int passed_regular = 0;
+    int failed_regular = 0;
+    int passed_avx = 0;
+    int failed_avx = 0;
+    
+    for (size_t combo_idx = 0; combo_idx < combinations.size(); ++combo_idx) {
+        const auto& qubits = combinations[combo_idx];
+        
+        Matrix state = generateRandomState(num_qubits);
+        Matrix test_state = state.copy();
+        Matrix test_state_avx = state.copy();
+        Matrix_real params = Matrix_real(1, 1);
+        
+        Matrix Umtx = create_identity(1 << k);
+        memset(params.get_data(), 0.0, params.size() * sizeof(double));
+        
+        // Apply GHZ circuit to full system
+        Gates_block GHZ_circ = Gates_block(num_qubits);
+        GHZ_circ.add_h(qubits[0]);
+        GHZ_circ.add_cnot(qubits[1], qubits[0]);
+        GHZ_circ.add_cnot(qubits[2], qubits[0]);
+        GHZ_circ.apply_to(params, state);
+        
+        // Create corresponding unitary matrix
+        Gates_block GHZ_circ_mini = Gates_block(k);
+        GHZ_circ_mini.add_h(0);
+        GHZ_circ_mini.add_cnot(1, 0);
+        GHZ_circ_mini.add_cnot(2, 0);
+        GHZ_circ_mini.apply_to(params, Umtx);
+        /*
+        // Test regular kernel
+        apply_3qbit_kernel_to_state_vector_input(Umtx, test_state, qubits, 1 << num_qubits);
+        
+        double fid = fidelity(state, test_state);
+        
+        if (std::abs(fid - 1.0) < 1e-10) {
+            passed_regular++;
+        } else {
+            failed_regular++;
+            std::cout << "REGULAR FAILED: Qubits {" << qubits[0] << "," << qubits[1] << "," << qubits[2]
+                      << "} - Fidelity: " << std::fixed << std::setprecision(12) << fid << std::endl;
+        }
+        */
+        #ifdef USE_AVX
+        // Test AVX kernel
+        apply_large_kernel_to_input_AVX(Umtx, test_state_avx, qubits, 1 << num_qubits);
+        double fid_avx = fidelity(state, test_state_avx);
+        
+        if (std::abs(fid_avx - 1.0) < 1e-10) {
+            passed_avx++;
+        } else {
+            failed_avx++;
+            std::cout << "AVX FAILED: Qubits {" << qubits[0] << "," << qubits[1] << "," << qubits[2]
+                      << "} - Fidelity: " << std::fixed << std::setprecision(12) << fid_avx << std::endl;
+        }
+        #endif
     }
+    
+    std::cout << "3-qubit gate test results:" << std::endl;
+    //std::cout << "  Regular kernel: " << passed_regular << " passed, " << failed_regular << " failed" << std::endl;
+    #ifdef USE_AVX
+    std::cout << "  AVX kernel:     " << passed_avx << " passed, " << failed_avx << " failed" << std::endl;
+    #endif
+    
+    assert(failed_regular == 0);
+    #ifdef USE_AVX
+    assert(failed_avx == 0);
+    #endif
+}
 
-    Matrix identity = create_identity(1 << num_qubits);
-
-    circuit.apply_to(parameters, identity);
-
-    circuit.apply_to(parameters, state);
- 
-    switch (num_qubits) {
-        case 2: apply_2qbit_kernel_to_state_vector_input(identity, test_state, 0, 1, 1 << num_qubits); break;
-        case 3: apply_3qbit_kernel_to_state_vector_input(identity, test_state, {0,1,2}, 1 << num_qubits); break;
-        case 4: apply_4qbit_kernel_to_state_vector_input(identity, test_state, {0,1,2,3}, 1 << num_qubits); break;
-        case 5: apply_5qbit_kernel_to_state_vector_input(identity, test_state, {0,1,2,3,4}, 1 << num_qubits); break;
-        default: throw std::invalid_argument("Unsupported number of qubits for state vector.");
+void test4QubitGate() {
+    const int num_qubits = 10;
+    const int k = 4;
+    
+    std::cout << "Testing all " << k << "-qubit gates on " << num_qubits << "-qubit system..." << std::endl;
+    
+    auto combinations = generate_combinations(num_qubits, k);
+    std::cout << "Total combinations to test: " << combinations.size() << std::endl;
+    
+    int passed_regular = 0;
+    int failed_regular = 0;
+    int passed_avx = 0;
+    int failed_avx = 0;
+    
+    for (size_t combo_idx = 0; combo_idx < combinations.size(); ++combo_idx) {
+        const auto& qubits = combinations[combo_idx];
+        
+        Matrix state = generateRandomState(num_qubits);
+        Matrix test_state = state.copy();
+        Matrix test_state_avx = state.copy();
+        Matrix_real params = Matrix_real(1, 1);
+        
+        Matrix Umtx = create_identity(1 << k);
+        memset(params.get_data(), 0.0, params.size() * sizeof(double));
+        
+        // Apply GHZ circuit to full system
+        Gates_block GHZ_circ = Gates_block(num_qubits);
+        GHZ_circ.add_h(qubits[0]);
+        for (int i = 1; i < k; ++i) {
+            GHZ_circ.add_cnot(qubits[i], qubits[0]);
+        }
+        GHZ_circ.apply_to(params, state);
+        
+        // Create corresponding unitary matrix
+        Gates_block GHZ_circ_mini = Gates_block(k);
+        GHZ_circ_mini.add_h(0);
+        for (int i = 1; i < k; ++i) {
+            GHZ_circ_mini.add_cnot(i, 0);
+        }
+        GHZ_circ_mini.apply_to(params, Umtx);
+        /*
+        // Test regular kernel
+        apply_4qbit_kernel_to_state_vector_input(Umtx, test_state, qubits, 1 << num_qubits);
+        
+        double fid = fidelity(state, test_state);
+        
+        if (std::abs(fid - 1.0) < 1e-10) {
+            passed_regular++;
+        } else {
+            failed_regular++;
+            std::cout << "REGULAR FAILED: Qubits {";
+            for (size_t i = 0; i < qubits.size(); ++i) {
+                std::cout << qubits[i];
+                if (i < qubits.size() - 1) std::cout << ",";
+            }
+            std::cout << "} - Fidelity: " << std::fixed << std::setprecision(12) << fid << std::endl;
+        }*/
+        
+        #ifdef USE_AVX
+        // Test AVX kernel
+        apply_large_kernel_to_input_AVX(Umtx, test_state_avx, qubits, 1 << num_qubits);
+        double fid_avx = fidelity(state, test_state_avx);
+        
+        if (std::abs(fid_avx - 1.0) < 1e-10) {
+            passed_avx++;
+        } else {
+            failed_avx++;
+            std::cout << "AVX FAILED: Qubits {";
+            for (size_t i = 0; i < qubits.size(); ++i) {
+                std::cout << qubits[i];
+                if (i < qubits.size() - 1) std::cout << ",";
+            }
+            std::cout << "} - Fidelity: " << std::fixed << std::setprecision(12) << fid_avx << std::endl;
+        }
+        #endif
+        
     }
+    
+    std::cout << "4-qubit gate test results:" << std::endl;
+    //std::cout << "  Regular kernel: " << passed_regular << " passed, " << failed_regular << " failed" << std::endl;
+    #ifdef USE_AVX
+    std::cout << "  AVX kernel:     " << passed_avx << " passed, " << failed_avx << " failed" << std::endl;
+    #endif
+    
+    assert(failed_regular == 0);
+    #ifdef USE_AVX
+    assert(failed_avx == 0);
+    #endif
+}
 
+void test5QubitGate() {
+    const int num_qubits = 10;
+    const int k = 5;
+    
+    std::cout << "Testing all " << k << "-qubit gates on " << num_qubits << "-qubit system..." << std::endl;
+    
+    auto combinations = generate_combinations(num_qubits, k);
+    std::cout << "Total combinations to test: " << combinations.size() << std::endl;
+    
+    int passed_regular = 0;
+    int failed_regular = 0;
+    int passed_avx = 0;
+    int failed_avx = 0;
+    
+    for (size_t combo_idx = 0; combo_idx < combinations.size(); ++combo_idx) {
+        const auto& qubits = combinations[combo_idx];
+        
+        Matrix state = generateRandomState(num_qubits);
+        Matrix test_state = state.copy();
+        Matrix test_state_avx = state.copy();
+        Matrix_real params = Matrix_real(1, 1);
+        
+        Matrix Umtx = create_identity(1 << k);
+        memset(params.get_data(), 0.0, params.size() * sizeof(double));
+        
+        // Apply GHZ circuit to full system
+        Gates_block GHZ_circ = Gates_block(num_qubits);
+        GHZ_circ.add_h(qubits[0]);
+        for (int i = 1; i < k; ++i) {
+            GHZ_circ.add_cnot(qubits[i], qubits[0]);
+        }
+        GHZ_circ.apply_to(params, state);
+        
+        // Create corresponding unitary matrix
+        Gates_block GHZ_circ_mini = Gates_block(k);
+        GHZ_circ_mini.add_h(0);
+        for (int i = 1; i < k; ++i) {
+            GHZ_circ_mini.add_cnot(i, 0);
+        }
+        GHZ_circ_mini.apply_to(params, Umtx);
+        /*
+        // Test regular kernel
+        apply_5qbit_kernel_to_state_vector_input(Umtx, test_state, qubits, 1 << num_qubits);
+        
+        double fid = fidelity(state, test_state);
+        
+        if (std::abs(fid - 1.0) < 1e-10) {
+            passed_regular++;
+        } else {
+            failed_regular++;
+            std::cout << "REGULAR FAILED: Qubits {";
+            for (size_t i = 0; i < qubits.size(); ++i) {
+                std::cout << qubits[i];
+                if (i < qubits.size() - 1) std::cout << ",";
+            }
+            std::cout << "} - Fidelity: " << std::fixed << std::setprecision(12) << fid << std::endl;
+        }*/
+        
+        #ifdef USE_AVX
+        // Test AVX kernel
+        apply_large_kernel_to_input_AVX(Umtx, test_state_avx, qubits, 1 << num_qubits);
+        double fid_avx = fidelity(state, test_state_avx);
+        
+        if (std::abs(fid_avx - 1.0) < 1e-10) {
+            passed_avx++;
+        } else {
+            failed_avx++;
+            std::cout << "AVX FAILED: Qubits {";
+            for (size_t i = 0; i < qubits.size(); ++i) {
+                std::cout << qubits[i];
+                if (i < qubits.size() - 1) std::cout << ",";
+            }
+            std::cout << "} - Fidelity: " << std::fixed << std::setprecision(12) << fid_avx << std::endl;
+        }
+        #endif
+        
+
+    }
+    
+    std::cout << "5-qubit gate test results:" << std::endl;
+    //std::cout << "  Regular kernel: " << passed_regular << " passed, " << failed_regular << " failed" << std::endl;
+    #ifdef USE_AVX
+    std::cout << "  AVX kernel:     " << passed_avx << " passed, " << failed_avx << " failed" << std::endl;
+    #endif
+    
+    assert(failed_regular == 0);
+    #ifdef USE_AVX
+    assert(failed_avx == 0);
+    #endif
+}
+
+
+void testNQubitGate_Parallel_GHZ() {
+    int num_qubits = 10;
+    Matrix state = generateRandomState(num_qubits);
+    Matrix_real params = Matrix_real(1,1);
+    Matrix test_state = state.copy();
+    Matrix test_state2 = state.copy();
+    std::vector<int> qubits = {0,4,7};
+    Matrix Umtx = create_identity(1<<qubits.size());
+    memset(params.get_data(), 0.0, params.size()*sizeof(double) );  
+    
+    Gates_block GHZ_circ = Gates_block(10);
+    GHZ_circ.add_h(qubits[0]);
+    GHZ_circ.add_cnot(qubits[1], qubits[0]);
+    GHZ_circ.add_cnot(qubits[2], qubits[0]);
+    GHZ_circ.apply_to(params,state);
+    
+    Gates_block GHZ_circ_mini = Gates_block(3);
+    GHZ_circ_mini.add_h(0);
+    GHZ_circ_mini.add_cnot(1,0);
+    GHZ_circ_mini.add_cnot(2,0);
+
+    GHZ_circ_mini.apply_to(params,Umtx);
+    apply_nqbit_unitary_AVX(Umtx, test_state, qubits, 1 << num_qubits);
     double fid = fidelity(state, test_state);
-    std::cout << num_qubits << "-qubit identity gate fidelity: " << fid << std::endl;
+    std::cout << num_qubits <<"-qubit GHZ gate fidelity: " << fid << std::endl;
     assert(std::abs(fid - 1.0) < 1e-10);
+
 }
 
 void testSmallCircuit() {
@@ -132,14 +484,57 @@ void testSmallCircuit() {
 }
 
 
-};
 
+void testNQubit_Gate_speed() {
+    int num_qubits = 20;
+    Matrix state = generateRandomState(num_qubits);
+    Matrix test_state = state.copy();
+    Matrix test_state2 = state.copy();
+    int offset = 4;
+    for (int n=2; n<6; n++){
+        std::vector<int> qubits;
+        for (int qubit=offset;qubit<offset+n;qubit++){
+            qubits.push_back(qubit);
+        }
+        Matrix Umtx = create_identity(1<<qubits.size());
+
+        int samples = 500;
+        /*double dedicated_kernel_time = 0.0;
+        tbb::tick_count dedicated_kernel_start = tbb::tick_count::now();
+        for (int idx=0; idx<samples;idx++){
+            apply_large_kernel_to_input(Umtx, test_state, qubits, 1 << num_qubits);
+        }
+        tbb::tick_count dedicated_kernel_end = tbb::tick_count::now();
+        dedicated_kernel_time  = (dedicated_kernel_end-dedicated_kernel_start).seconds()/samples;
+        std::cout << qubits.size()<<" qubit dedicated kernel time "<< dedicated_kernel_time << std::endl;*/
+
+
+        #ifdef USE_AVX
+        double dedicated_kernel_AVX_time = 0.0;
+        tbb::tick_count dedicated_kernel_AVX_start = tbb::tick_count::now();
+        for (int idx=0; idx<samples;idx++){
+            apply_large_kernel_to_input_AVX_TBB(Umtx, test_state, qubits, 1 << num_qubits);
+        }
+        tbb::tick_count dedicated_kernel_AVX_end = tbb::tick_count::now();
+
+        dedicated_kernel_AVX_time  = (dedicated_kernel_AVX_time + (dedicated_kernel_AVX_end-dedicated_kernel_AVX_start).seconds())/samples;
+
+        std::cout << qubits.size()<<" qubit dedicated AVX kernel time "<< dedicated_kernel_AVX_time << std::endl;
+        #endif
+    }
+}
+
+};
 int main() {
     ApplyKernelTestSuite suite;
+    suite.test2QubitGate();
+    suite.test3QubitGate();
+    suite.test4QubitGate();
+    suite.test5QubitGate();
+    #ifdef USE_AVX
+    suite.testNQubitGate_Parallel_GHZ();
+    suite.testNQubit_Gate_speed();
+    #endif
     suite.testSmallCircuit();
-    suite.testNQubitGate(2);
-    suite.testNQubitGate(3);
-    suite.testNQubitGate(4);
-    suite.testNQubitGate(5);
     return 0;
 }
