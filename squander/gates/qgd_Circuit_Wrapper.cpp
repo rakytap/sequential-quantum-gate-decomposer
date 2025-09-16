@@ -693,6 +693,69 @@ qgd_Circuit_Wrapper_add_SX(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *
 }
 
 
+/**
+@brief Wrapper function to add a S gate to the front of the gate structure.
+@param self A pointer pointing to an instance of the class Circuit.
+@param args A tuple of the input arguments: target_qbit (int)
+@param kwds A tuple of keywords
+*/
+static PyObject *
+qgd_Circuit_Wrapper_add_S(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *kwds)
+{
+
+    // The tuple of expected keywords
+    static char *kwlist[] = {(char*)"target_qbit",  NULL};
+
+    // initiate variables for input arguments
+    int  target_qbit = -1; 
+
+    // parsing input arguments
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i", kwlist,
+                                     &target_qbit))
+        return Py_BuildValue("i", -1);
+
+
+    // adding T gate to the end of the gate structure
+    if (target_qbit != -1 ) {
+        self->circuit->add_s(target_qbit);
+    }
+
+    return Py_BuildValue("i", 0);
+
+}
+
+
+
+/**
+@brief Wrapper function to add a Sdg gate to the front of the gate structure.
+@param self A pointer pointing to an instance of the class Circuit.
+@param args A tuple of the input arguments: target_qbit (int)
+@param kwds A tuple of keywords
+*/
+static PyObject *
+qgd_Circuit_Wrapper_add_Sdg(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *kwds)
+{
+
+    // The tuple of expected keywords
+    static char *kwlist[] = {(char*)"target_qbit",  NULL};
+
+    // initiate variables for input arguments
+    int  target_qbit = -1; 
+
+    // parsing input arguments
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i", kwlist,
+                                     &target_qbit))
+        return Py_BuildValue("i", -1);
+
+
+    // adding Tdg gate to the end of the gate structure
+    if (target_qbit != -1 ) {
+        self->circuit->add_sdg(target_qbit);
+    }
+
+    return Py_BuildValue("i", 0);
+
+}
 
 /**
 @brief Wrapper function to add a T gate to the front of the gate structure.
@@ -1963,6 +2026,46 @@ get_gate( Gates_block* circuit, int &idx ) {
 
 
     }
+    else if (gate->get_type() == S_OPERATION) {
+
+
+        PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
+        // PyDict_GetItemString creates a borrowed reference to the item in the dict. Reference counting is not increased on this element, dont need to decrease the reference counting at the end
+        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "S");
+
+        PyObject* gate_input = Py_BuildValue("(OO)", qbit_num, target_qbit);
+        py_gate              = PyObject_CallObject(py_gate_class, gate_input);
+
+        // replace dummy data with real gate data
+        qgd_Gate* py_gate_C = reinterpret_cast<qgd_Gate*>( py_gate );
+        delete( py_gate_C->gate );
+        py_gate_C->gate = static_cast<Gate*>( gate->clone() );
+
+        Py_DECREF( qgd_gate );               
+        Py_DECREF( gate_input );
+
+
+    }
+    else if (gate->get_type() == SDG_OPERATION){
+
+
+        PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
+        // PyDict_GetItemString creates a borrowed reference to the item in the dict. Reference counting is not increased on this element, dont need to decrease the reference counting at the end
+        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "Sdg");
+
+        PyObject* gate_input = Py_BuildValue("(OO)", qbit_num, target_qbit);
+        py_gate              = PyObject_CallObject(py_gate_class, gate_input);
+
+        // replace dummy data with real gate data
+        qgd_Gate* py_gate_C = reinterpret_cast<qgd_Gate*>( py_gate );
+        delete( py_gate_C->gate );
+        py_gate_C->gate = static_cast<Gate*>( gate->clone() );
+
+        Py_DECREF( qgd_gate );               
+        Py_DECREF( gate_input );
+
+
+    }
     else if (gate->get_type() == T_OPERATION) {
 
 
@@ -2662,6 +2765,12 @@ static PyMethodDef qgd_Circuit_Wrapper_Methods[] = {
     },
     {"add_SX", (PyCFunction) qgd_Circuit_Wrapper_add_SX, METH_VARARGS | METH_KEYWORDS,
      "Call to add a SX gate to the front of the gate structure"
+    },
+    {"add_S", (PyCFunction) qgd_Circuit_Wrapper_add_S, METH_VARARGS | METH_KEYWORDS,
+     "Call to add a S gate to the front of the gate structure"
+    },
+    {"add_Sdg", (PyCFunction) qgd_Circuit_Wrapper_add_Sdg, METH_VARARGS | METH_KEYWORDS,
+     "Call to add a Sdg gate to the front of the gate structure"
     },
     {"add_T", (PyCFunction) qgd_Circuit_Wrapper_add_T, METH_VARARGS | METH_KEYWORDS,
      "Call to add a T gate to the front of the gate structure"
