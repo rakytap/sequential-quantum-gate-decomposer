@@ -14,6 +14,7 @@ from squander.decomposition.qgd_Wide_Circuit_Optimization import qgd_Wide_Circui
 
 # variational quantum solver
 from squander.variational_quantum_eigensolver.qgd_Variational_Quantum_Eigensolver_Base import qgd_Variational_Quantum_Eigensolver_Base as Variational_Quantum_Eigensolver
+from squander.variational_quantum_eigensolver.qgd_Generative_Quantum_Machine_Learning_Base import qgd_Generative_Quantum_Machine_Learning_Base as Generative_Quantum_Machine_Learning
 
 #gates
 from squander.gates.gates_Wrapper import (
