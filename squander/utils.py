@@ -130,7 +130,7 @@ def qasm_to_squander_circuit( filename: str, return_transpiled=False):
     
     qc = qiskit.QuantumCircuit.from_qasm_file(filename)
 
-    allowed_gates = {'u', 'u3', 'cx', 'cry', 'cz', 'ch', 'rx', 'ry', 'rz', 'h', 'x', 'y', 'z', 'sx', "t", "tdg"}
+    allowed_gates = {'u', 'u3', 'cx', 'cry', 'cz', 'ch', 'rx', 'ry', 'rz', 'h', 'x', 'y', 'z', 'sx', "t", "tdg", "s", "sdg"}
 
     if any(gate.operation.name not in allowed_gates for gate in qc.data):
         qc_transpiled = qiskit.transpile(qc, basis_gates=allowed_gates, optimization_level=0)
