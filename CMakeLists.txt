@@ -388,18 +388,22 @@ if (${HAVE_AVX512F_EXTENSIONS})
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/kernels/apply_kernel_to_input_AVX.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/kernels/apply_kernel_to_state_vector_input_AVX.cpp    
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/kernels/apply_large_kernel_to_input_AVX.cpp    
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/kernels/apply_large_kernel_to_matrix_input_AVX.cpp  
+
   )
 elseif (${HAVE_AVX2_EXTENSIONS})
   list(APPEND qgd_files 
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/kernels/apply_kernel_to_input_AVX.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/kernels/apply_kernel_to_state_vector_input_AVX.cpp        
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/kernels/apply_large_kernel_to_input_AVX.cpp        
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/kernels/apply_large_kernel_to_matrix_input_AVX.cpp  
   )
 elseif (${HAVE_AVX_EXTENSIONS})
   list(APPEND qgd_files 
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/kernels/apply_kernel_to_input_AVX.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/kernels/apply_kernel_to_state_vector_input_AVX.cpp        
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/kernels/apply_large_kernel_to_input_AVX.cpp        
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/kernels/apply_large_kernel_to_matrix_input_AVX.cpp       
   )
 endif()
 

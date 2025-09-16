@@ -25,6 +25,7 @@ limitations under the License.
 
 #ifdef USE_AVX
 #include "apply_large_kernel_to_input_AVX.h"
+#include "apply_large_kernel_to_matrix_input_AVX.h"
 #endif
 
 static double M_PIOver2 = M_PI/2;
@@ -195,28 +196,53 @@ CROT::apply_to( Matrix_real& parameters_mtx, Matrix& input, int parallel ) {
 
     // apply the computing kernel on the matrix
     std::vector<int> involved_qbits = {control_qbit,target_qbit};
-    if (parallel){
-#ifdef USE_AVX
+    if (!parallel){
+    #ifdef USE_AVX
       apply_large_kernel_to_input_AVX(U_2qbit,input,involved_qbits,input.size());
-#endif
+    #else
+    apply_large_kernel_to_input(U_2qbit,input,involved_qbits,input.size());
+    #endif
+    }
+    else if(parallel==1){
+    #ifdef USE_AVX
+      apply_large_kernel_to_input_AVX_OpenMP(U_2qbit,input,involved_qbits,input.size());
+    #else
+        apply_large_kernel_to_input(U_2qbit,input,involved_qbits,input.size());
+    #endif
     }
     else{
+    #ifdef USE_AVX
+      apply_large_kernel_to_input_AVX_TBB(U_2qbit,input,involved_qbits,input.size());
+    #else
         apply_large_kernel_to_input(U_2qbit,input,involved_qbits,input.size());
-    }
+    #endif  
     
     }
-
+    }
     else{
     
       Matrix U3_matrix = calc_one_qubit_u3(ThetaOver2, Phi-M_PIOver2, -1*Phi+M_PIOver2 );
       Matrix U3_matrix2 = calc_one_qubit_u3(-1.*ThetaOver2, Phi-M_PIOver2, -1*Phi+M_PIOver2 );
-      if(parallel){
-#ifdef USE_AVX
-        apply_crot_kernel_to_matrix_input_AVX_parallel(U3_matrix2,U3_matrix, input, target_qbit, control_qbit, input.rows);
-#endif
-      }
-      else{
+      if(!parallel){
+        #ifdef USE_AVX
         apply_crot_kernel_to_matrix_input_AVX(U3_matrix2,U3_matrix, input, target_qbit, control_qbit, input.rows);
+        #else
+        apply_crot_kernel_to_matrix_input(U3_matrix2,U3_matrix, input, target_qbit, control_qbit, input.rows);
+        #endif
+      }
+    else if(parallel==1){
+            #ifdef USE_AVX
+            apply_crot_kernel_to_matrix_input_AVX_OpenMP(U3_matrix2,U3_matrix, input, target_qbit, control_qbit, input.rows);
+            #else
+            apply_crot_kernel_to_matrix_input(U3_matrix2,U3_matrix, input, target_qbit, control_qbit, input.rows);
+            #endif
+    }
+      else{
+        #ifdef USE_AVX
+        apply_crot_kernel_to_matrix_input_AVX_TBB(U3_matrix2,U3_matrix, input, target_qbit, control_qbit, input.rows);
+        #else
+        apply_crot_kernel_to_matrix_input(U3_matrix2,U3_matrix, input, target_qbit, control_qbit, input.rows);
+        #endif  
       }
   }
 

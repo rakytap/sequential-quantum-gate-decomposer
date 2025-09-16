@@ -67,8 +67,6 @@ void apply_2qbit_kernel_to_state_vector_input_AVX_OpenMP(Matrix& two_qbit_unitar
 
 void apply_2qbit_kernel_to_state_vector_input_AVX_TBB(Matrix& two_qbit_unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size);
 
-void apply_2qbit_kernel_to_matrix_input_parallel_AVX_OpenMP(Matrix& two_qbit_unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size);
-
 // 3 qubit kernel functions
 void apply_3qbit_kernel_to_state_vector_input_AVX(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size);
 
@@ -90,8 +88,4 @@ void apply_5qbit_kernel_to_state_vector_input_AVX_OpenMP(Matrix& unitary, Matrix
 
 void apply_5qbit_kernel_to_state_vector_input_AVX_TBB(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size);
 
-// CROT Kernels
-void apply_crot_kernel_to_matrix_input_AVX_parallel(Matrix& u3_1qbit1,Matrix& u3_1qbit2,Matrix& input, const int& target_qbit, const int& control_qbit, const int& matrix_size);
-
-void apply_crot_kernel_to_matrix_input_AVX(Matrix& u3_1qbit1, Matrix& u3_qbit2, Matrix& input, const int& target_qbit, const int& control_qbit, const int& matrix_size);
 #endif
