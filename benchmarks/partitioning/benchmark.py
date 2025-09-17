@@ -536,5 +536,5 @@ def test_partitions(max_qubits = 4):
 
 if __name__ == "__main__":
     for max_qubits in range(3, 6):
-        test_simulation(max_qubits)
-        #test_partitions(max_qubits)
+        pass #test_partitions(max_qubits)
+    test_simulation(5)
