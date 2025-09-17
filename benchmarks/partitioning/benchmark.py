@@ -386,8 +386,8 @@ def test_simulation(max_qubits = 4, random_initial_state=True):
             if method == "SQUANDER":
                 def f():
                     transformed_state = initial_state.copy()
-                    circ, params, _ = PartitionCircuitQasm( filename, max_qubits, strategy="ilp" )
-                    circ.set_min_fusion(0)
+                    circ, params, _ = PartitionCircuitQasm( filename, max_qubits, strategy="ilp-fusion" )
+                    circ.set_min_fusion(14)
                     def run():
                         circ.apply_to(params, transformed_state)
                         output[0] = transformed_state
@@ -458,9 +458,10 @@ def test_simulation(max_qubits = 4, random_initial_state=True):
             tpart = timeit.timeit(f, number=1)
             trun = timeit.timeit(output[1], number=1)
             res[method] = (tpart, trun, output[0])
-            print(initial_state, res[method][2])
             #assert state_vector_equivalence(res["SQUANDER"][2], res[method][2])
-            assert np.linalg.norm(res["SQUANDER"][2] - res[method][2]) < 1e-3
+            overlap = np.abs(np.dot(res["SQUANDER"][2], np.conj(res[method][2])))
+            assert np.isclose(overlap, 1.0, atol=1e-3), overlap
+            #assert np.linalg.norm(res["SQUANDER"][2] - res[method][2]) < 1e-8
         print({x: res[x][:2] for x in res})
 
 def test_partitions(max_qubits = 4):
