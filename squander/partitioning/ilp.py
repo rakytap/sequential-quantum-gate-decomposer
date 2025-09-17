@@ -779,7 +779,7 @@ def ilp_global_optimal(allparts, g, weighted_info=None, gurobi_direct=False, use
         #prob.solve(pulp.GUROBI(manageEnv=True, msg=False, envOptions=get_gurobi_options()))
         prob.solve(pulp.GUROBI(manageEnv=True, msg=False, timeLimit=180, Threads=os.cpu_count(), IntegralityFocus=1, LazyConstraints=1), callback=cb)
         #prob.solve(pulp.PULP_CBC_CMD(msg=False))
-        print(f"Status: {pulp.LpStatus[prob.status]}")
+        #print(f"Status: {pulp.LpStatus[prob.status]}")
         L = [i for i in range(N) if int(pulp.value(x[i]))]
         badsccs = sol_to_badsccs(L)
         if not badsccs: break #if all partitions do not have any cycles with more than one element per SCC terminate
