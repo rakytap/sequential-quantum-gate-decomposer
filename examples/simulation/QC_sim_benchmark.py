@@ -37,13 +37,13 @@ np.set_printoptions(linewidth=200)
 
 
 # number of qubits
-qbit_num_min = 4
+qbit_num_min = 17
 qbit_num_max = 24
 
 # number of levels
 levels = 4
 
-random_initial_state = False
+random_initial_state = True
 
 ##########################################################################################################
 ################################ SQUANER #################################################################
@@ -99,8 +99,11 @@ for qbit_num in range(qbit_num_min, qbit_num_max+1, 1):
 
 	parameters = np.random.rand(num_of_parameters)*2*np.pi
 
-	partitioned_circuit_squander, parameters_reordered,_ = PartitionCircuit(circuit_squander, parameters, 4, "gtqcp")
-	
+	partitioned_circuit_squander, parameters_reordered, L = PartitionCircuit(circuit_squander, parameters, 4, "ilp")
+	#gate_dict = {i: gate for i, gate in enumerate(circuit_squander.get_Gates())}
+	#from squander.partitioning.tools import get_qubits, total_float_ops
+	#gate_to_qubit = { i: get_qubits(g) for i, g in gate_dict.items() }
+	#print(total_float_ops(partitioned_circuit_squander.get_Qbit_Num(), 4, gate_to_qubit, None, L))
 	partitioned_circuit_squander.set_min_fusion(14)
 
 	t0 = time.time()
