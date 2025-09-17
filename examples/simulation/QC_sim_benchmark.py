@@ -37,7 +37,7 @@ np.set_printoptions(linewidth=200)
 
 
 # number of qubits
-qbit_num_min = 17
+qbit_num_min = 4
 qbit_num_max = 24
 
 # number of levels
@@ -99,7 +99,7 @@ for qbit_num in range(qbit_num_min, qbit_num_max+1, 1):
 
 	parameters = np.random.rand(num_of_parameters)*2*np.pi
 
-	partitioned_circuit_squander, parameters_reordered, L = PartitionCircuit(circuit_squander, parameters, 4, "ilp")
+	partitioned_circuit_squander, parameters_reordered, L = PartitionCircuit(circuit_squander, parameters, 5, "ilp-fusion")
 	#gate_dict = {i: gate for i, gate in enumerate(circuit_squander.get_Gates())}
 	#from squander.partitioning.tools import get_qubits, total_float_ops
 	#gate_to_qubit = { i: get_qubits(g) for i, g in gate_dict.items() }
@@ -296,4 +296,3 @@ for qbit_num in keys:
 	print( "Squander vs QISKIT: ", np.linalg.norm( state_squander-state_qiskit ) )
 	print( "Squander vs Qulacs: ", np.linalg.norm( state_squander-state_qulacs ) )
 	
-
