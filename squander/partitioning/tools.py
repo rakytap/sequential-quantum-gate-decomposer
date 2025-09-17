@@ -21,7 +21,7 @@ def get_qubits(gate: Gate) -> Set[int]:
     """
     return {gate.get_Target_Qbit()} | ({control} if (control := gate.get_Control_Qbit()) != -1 else set())
 
-def get_float_ops(num_qubit, gate_qubits, control_qubits, is_pure=False):
+def get_float_ops(num_qubit, gate_qubits, control_qubits, is_pure=False, io_penalty=32):
     """
     Compute the number of floating-point operations (FLOPs) required 
     for simulating a quantum gate acting on a set of qubits.
@@ -38,7 +38,7 @@ def get_float_ops(num_qubit, gate_qubits, control_qubits, is_pure=False):
     """
     g_size = 2**(gate_qubits-control_qubits)
     # (a + bi) * (c + di) = (ac - bd) + (ad + bc)i => 6 ops for 4m2a
-    return 2**(num_qubit-(control_qubits if is_pure else 0)) * (g_size * (4 + 2) + 2 * (g_size - 1))
+    return 2**(num_qubit-(control_qubits if is_pure else 0)) * (g_size * (4 + 2) + 2 * (g_size - 1) + io_penalty)
 
 def parts_to_float_ops(num_qubit, gate_to_qubit, gate_to_tqubit, allparts):
     """
