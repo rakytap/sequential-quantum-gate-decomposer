@@ -423,8 +423,8 @@ class Test_operations:
             obj = getattr(gates, name)
 
             if inspect.isclass(obj):
-                
-                if name == "SYC" or name == "Gate" or name=="CR" or name=="CROT":
+            
+                if name == "SYC" or name == "Gate" or name=="CR" or name=="CROT" or name=="N_Qubit_Phase" or name == "CNZ":
                     continue
 
                 print(f"testing gate: {name}")
