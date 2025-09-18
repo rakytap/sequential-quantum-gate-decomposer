@@ -24,7 +24,12 @@ limitations under the License.
 #include "apply_large_kernel_to_input_AVX.h"
 #include "tbb/tbb.h"
 #include "omp.h"
-
+/**
+@brief Helper function to load and prepare AVX vectors with outer and inner elements for complex multiplication 
+@param element_outer Pointer to the outer element (real and imaginary parts)
+@param element_inner Pointer to the inner element (real and imaginary parts)
+@return Prepared AVX vector for complex multiplication
+ */
 inline __m256d get_AVX_vector(double* element_outer, double* element_inner){
 
     __m256d element_outer_vec = _mm256_loadu_pd(element_outer);
@@ -65,6 +70,15 @@ void apply_large_kernel_to_input_AVX(Matrix& unitary, Matrix& input, std::vector
   }
 }
 
+}
+
+/**
+@brief Call to apply kernel to apply multi qubit gate kernel on an input matrix using OpenMP parallelization
+@param unitary The 2^Nx2^N kernel of the gate operation
+@param input The input matrix on which the transformation is applied
+@param involved_qbits The involved qubits in the operation
+@param matrix_size The size of the input
+*/
 void apply_large_kernel_to_input_AVX_OpenMP(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size){
     switch(involved_qbits.size()){
       case 2:{
@@ -86,6 +100,14 @@ void apply_large_kernel_to_input_AVX_OpenMP(Matrix& unitary, Matrix& input, std:
   }
 
 }
+
+/**
+@brief Call to apply kernel to apply multi qubit gate kernel on an input matrix using TBB parallelization
+@param unitary The 2^Nx2^N kernel of the gate operation
+@param input The input matrix on which the transformation is applied
+@param involved_qbits The involved qubits in the operation
+@param matrix_size The size of the input
+*/
 
 void apply_large_kernel_to_input_AVX_TBB(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size){
        switch(involved_qbits.size()){
@@ -109,7 +131,12 @@ void apply_large_kernel_to_input_AVX_TBB(Matrix& unitary, Matrix& input, std::ve
 
 
 }
-
+/** 
+@brief Precompute the index mapping for target and non-target qubits
+@param target_qubits The qubits involved in the gate operation
+@param non_targets The qubits not involved in the gate operation
+@param block_pattern The precomputed index mapping
+*/
 void precompute_index_mapping(const std::vector<int>& target_qubits,
                               const std::vector<int>& non_targets,
                               std::vector<int>& block_pattern) {
@@ -125,6 +152,15 @@ void precompute_index_mapping(const std::vector<int>& target_qubits,
         block_pattern[k] = idx;
     }
 }
+
+/**
+@brief Efficiently compute the indices for a given block using precomputed patterns
+@param iter_idx The current iteration index
+@param target_qubits The qubits involved in the gate operation
+@param non_targets The qubits not involved in the gate operation
+@param block_pattern The precomputed index mapping
+@param indices The computed indices for the current block
+*/
 
 inline void get_block_indices_fast(int iter_idx,
                                    const std::vector<int>& target_qubits,
@@ -142,6 +178,14 @@ inline void get_block_indices_fast(int iter_idx,
     }
 }
 
+/**
+@brief Write the computed block back to the input matrix
+@param input The input matrix to be updated
+@param new_block_real The real parts of the new block
+@param new_block_imag The imaginary parts of the new block
+@param indices The indices where the new block should be written
+*/
+
 inline void write_out_block(Matrix& input, const std::vector<double>& new_block_real,const std::vector<double>& new_block_imag, const std::vector<int>& indices){
 
     const double* real_ptr = new_block_real.data();
@@ -158,6 +202,16 @@ inline void write_out_block(Matrix& input, const std::vector<double>& new_block_
 
 }
 
+
+/**
+@brief Perform complex multiplication and accumulation using AVX for a specific row and column
+@param mv_xy Precomputed AVX vectors for the unitary matrix
+@param rdx The row index of the unitary matrix
+@param cdx The column index of the unitary matrix
+@param indices The indices of the input matrix for the current block
+@param input The input matrix
+@param result The accumulated result of the multiplication
+ */
 inline void complex_prod_AVX(const __m256d* mv_xy, int rdx, int cdx,  const std::vector<int>& indices, const Matrix& input, __m256d& result){
     int block_size = (int)indices.size();
     int current_idx = indices[cdx];
@@ -185,6 +239,12 @@ inline void complex_prod_AVX(const __m256d* mv_xy, int rdx, int cdx,  const std:
         return;
 }
 
+/**
+@brief Precompute AVX vectors for the unitary matrix to optimize complex multiplication
+@param gate_kernel_unitary The unitary matrix of the gate operation
+@param matrix_size The size of the unitary matrix
+@return Pointer to the precomputed AVX vectors
+ */
 inline __m256d* construct_mv_xy_vectors(const Matrix& gate_kernel_unitary, const int& matrix_size)
 {
     // Allocate aligned memory for AVX (32-byte alignment)
@@ -213,6 +273,13 @@ inline __m256d* construct_mv_xy_vectors(const Matrix& gate_kernel_unitary, const
     return mv_xy;
 }
 
+/**
+@brief Apply an n-qubit unitary operation to the input matrix using AVX optimization
+@param gate_kernel_unitary The unitary matrix of the gate operation
+@param input The input matrix to be transformed
+@param involved_qbits The qubits involved in the operation
+@param matrix_size The size of the input matrix
+ */
 void apply_nqbit_unitary_AVX( Matrix& gate_kernel_unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size ) {
 
     int n = involved_qbits.size();
@@ -271,6 +338,13 @@ void apply_nqbit_unitary_AVX( Matrix& gate_kernel_unitary, Matrix& input, std::v
   _mm_free(mv_xy);
 }
 
+/**
+@brief Call to apply kernel to apply multi qubit gate kernel on an input matrix using AVX
+@param gate_kernel_unitary The unitary matrix of the gate operation
+@param input The input matrix on which the transformation is applied
+@param involved_qbits The involved qubits in the operation
+@param matrix_size The size of the input
+*/
 void apply_nqbit_unitary_parallel_AVX( Matrix& gate_kernel_unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size ) {
     /*int n = involved_qbits.size();
     int qubit_num = (int) std::log2(input.rows);
@@ -590,12 +664,11 @@ if (inner_qbit==0){
 }
 
 
-
+// Macros for 3-qubit row computation when inner_qbit == 0
 #define CREATE_MATRIX_VECTOR_CONSECUTIVE(base_idx) \
     __m256d mv##base_idx##0 = _mm256_set_pd(-unitary[base_idx+1].imag, unitary[base_idx+1].real, -unitary[base_idx].imag, unitary[base_idx].real); \
     __m256d mv##base_idx##1 = _mm256_set_pd( unitary[base_idx+1].real, unitary[base_idx+1].imag,  unitary[base_idx].real, unitary[base_idx].imag);
 
-// Macro for 3-qubit row computation when inner_qbit == 0
 #define COMPUTE_3QBIT_ROW_CONSECUTIVE(row_letter, mv00, mv20, mv40, mv60) \
     __m256d data_real_##row_letter = _mm256_setzero_pd(); \
     __m256d data_imag_##row_letter = _mm256_setzero_pd(); \
@@ -615,12 +688,12 @@ if (inner_qbit==0){
     results[row_idx].real = _mm_cvtsd_f64(low128##row_letter); \
     results[row_idx].imag = _mm_cvtsd_f64(high128##row_letter);
 
+// Macros for 3-qubit row computation when inner_qbit != 0
 
 #define CREATE_MATRIX_VECTOR(base_idx) \
     __m256d mv##base_idx##0 = _mm256_set_pd(-unitary[base_idx].imag, unitary[base_idx].real, -unitary[base_idx].imag, unitary[base_idx].real); \
     __m256d mv##base_idx##1 = _mm256_set_pd( unitary[base_idx].real, unitary[base_idx].imag,  unitary[base_idx].real, unitary[base_idx].imag);
 
-// Macro for 3-qubit row computation
 #define COMPUTE_3QBIT_ROW(row_letter, base0, base1, base2, base3, base4, base5, base6, base7) \
     __m256d data_##row_letter##0 = _mm256_mul_pd(element_outer_vec, mv##base0##0); \
     __m256d data_##row_letter##1 = _mm256_mul_pd(element_inner_vec, mv##base1##0); \
@@ -654,6 +727,14 @@ if (inner_qbit==0){
     data_##row_letter = _mm256_add_pd(data_##row_letter, data_##row_letter##22); \
     data_##row_letter = _mm256_add_pd(data_##row_letter, data_##row_letter##23);
 
+/**
+@brief Apply a 3-qubit quantum gate (unitary matrix) to a state vector using AVX intrinsics.
+@param unitary The 8x8 unitary matrix representing the 3-qubit gate.
+@param input The state vector to which the gate is applied.
+@param involved_qbits A vector of three integers indicating the qubit indices the gate acts on.
+@param matrix_size The size of the state vector (should be a power of 2).
+*/
+
 void apply_3qbit_kernel_to_state_vector_input_AVX(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size){
     int inner_qbit = involved_qbits[0];
     int middle_qbit = involved_qbits[1];
@@ -665,10 +746,8 @@ void apply_3qbit_kernel_to_state_vector_input_AVX(Matrix& unitary, Matrix& input
     
     __m256d neg = _mm256_setr_pd(1.0, -1.0, 1.0, -1.0);
     
-    // Use the same approach as n-qubit for all cases
     int qubit_num = (int) std::log2(input.rows);
 
-    // Identify non-involved qubits
     std::vector<int> is_target(qubit_num, 0);
     for (int q : involved_qbits) is_target[q] = 1;
     
@@ -679,7 +758,7 @@ void apply_3qbit_kernel_to_state_vector_input_AVX(Matrix& unitary, Matrix& input
     }
         
     if (inner_qbit == 0) {
-        // Consecutive case - create packed vectors
+
         CREATE_MATRIX_VECTOR_CONSECUTIVE(0)     CREATE_MATRIX_VECTOR_CONSECUTIVE(2)
         CREATE_MATRIX_VECTOR_CONSECUTIVE(4)     CREATE_MATRIX_VECTOR_CONSECUTIVE(6)
         CREATE_MATRIX_VECTOR_CONSECUTIVE(8)     CREATE_MATRIX_VECTOR_CONSECUTIVE(10)
@@ -814,6 +893,7 @@ void apply_3qbit_kernel_to_state_vector_input_AVX(Matrix& unitary, Matrix& input
         }
     }
 }
+
 /** 
 @brief Call to apply kernel to apply four qubit gate kernel on a state vector using AVX and TBB
 @param two_qbit_unitary The 16x16 kernel of the gate operation
@@ -1015,6 +1095,14 @@ void apply_4qbit_kernel_to_state_vector_input_AVX(Matrix& unitary, Matrix& input
     }
 
 }
+
+/**
+@brief Call to apply kernel to apply five qubit gate kernel on a state vector using AVX
+@param two_qbit_unitary The 32x32 kernel of the gate operation
+@param input The input matrix on which the transformation is applied
+@param involved_qbits The qubits affected by the gate in order
+@param matrix_size The size of the input
+ */
 
 void apply_5qbit_kernel_to_state_vector_input_AVX(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size){
     __m256d neg = _mm256_setr_pd(1.0, -1.0, 1.0, -1.0);
@@ -1346,7 +1434,13 @@ void apply_5qbit_kernel_to_state_vector_input_AVX(Matrix& unitary, Matrix& input
     }
 }
 
-
+/**
+@brief Call to apply kernel to apply two qubit gate kernel on a state vector using AVX and OpenMP
+@param two_qbit_unitary The 4x4 kernel of the gate operation
+@param input The input matrix on which the transformation is applied
+@param involved_qbits The qubits affected by the gate in order
+@param matrix_size The size of the input
+*/
 void apply_2qbit_kernel_to_state_vector_input_AVX_OpenMP(Matrix& two_qbit_unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size){
     int inner_qbit = involved_qbits[0];
     int outer_qbit = involved_qbits[1];
@@ -1606,7 +1700,13 @@ if (inner_qbit==0){
     
     
 }
-
+/**
+@brief Call to apply kernel to apply two qubit gate kernel on a state vector using AVX and TBB
+@param two_qbit_unitary The 4x4 kernel of the gate operation
+@param input The input matrix on which the transformation is applied
+@param involved_qbits The qubits affected by the gate in order
+@param matrix_size The size of the input
+*/
 void apply_2qbit_kernel_to_state_vector_input_AVX_TBB(Matrix& two_qbit_unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size){
     int inner_qbit = involved_qbits[0];
     int outer_qbit = involved_qbits[1];
@@ -1872,7 +1972,13 @@ void apply_2qbit_kernel_to_state_vector_input_AVX_TBB(Matrix& two_qbit_unitary, 
         );
     }
 }
-
+/**
+@brief Call to apply kernel to apply three qubit gate kernel on a state vector using AVX and OpenMP
+@param unitary The 8x8 kernel of the gate operation
+@param input The input matrix on which the transformation is applied
+@param involved_qbits The qubits affected by the gate in order
+@param matrix_size The size of the input
+*/
 void apply_3qbit_kernel_to_state_vector_input_AVX_OpenMP(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size){
     int inner_qbit = involved_qbits[0];
     int middle_qbit = involved_qbits[1];
@@ -2033,7 +2139,13 @@ void apply_3qbit_kernel_to_state_vector_input_AVX_OpenMP(Matrix& unitary, Matrix
         }
     }
 }
-
+/**
+@brief Call to apply kernel to apply three qubit gate kernel on a state vector using AVX and TBB
+@param unitary The 8x8 kernel of the gate operation
+@param input The input matrix on which the transformation is applied
+@param involved_qbits The qubits affected by the gate in order
+@param matrix_size The size of the input
+*/
 void apply_3qbit_kernel_to_state_vector_input_AVX_TBB(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size){
     int inner_qbit = involved_qbits[0];
     int middle_qbit = involved_qbits[1];
@@ -2204,7 +2316,13 @@ void apply_3qbit_kernel_to_state_vector_input_AVX_TBB(Matrix& unitary, Matrix& i
         );
     }
 }
-// OpenMP version of 4-qubit gate
+/**
+@brief Call to apply kernel to apply four qubit gate kernel on a state vector using AVX and OpenMP
+@param unitary The 16x16 kernel of the gate operation
+@param input The input matrix on which the transformation is applied
+@param involved_qbits The qubits affected by the gate in order
+@param matrix_size The size of the input
+*/
 void apply_4qbit_kernel_to_state_vector_input_AVX_OpenMP(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size){
     
     __m256d neg = _mm256_setr_pd(1.0, -1.0, 1.0, -1.0);
@@ -2395,7 +2513,13 @@ void apply_4qbit_kernel_to_state_vector_input_AVX_OpenMP(Matrix& unitary, Matrix
         input[current_idx_middle12_inner_pair_loc] = results[15];
     }
 }
-
+/**
+@brief Call to apply kernel to apply four qubit gate kernel on a state vector using AVX and TBB
+@param unitary The 16x16 kernel of the gate operation
+@param input The input matrix on which the transformation is applied
+@param involved_qbits The qubits affected by the gate in order
+@param matrix_size The size of the input
+*/
 void apply_4qbit_kernel_to_state_vector_input_AVX_TBB(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size){
     
     __m256d neg = _mm256_setr_pd(1.0, -1.0, 1.0, -1.0);
@@ -2592,7 +2716,13 @@ void apply_4qbit_kernel_to_state_vector_input_AVX_TBB(Matrix& unitary, Matrix& i
     
 }
 
-
+/**
+@brief Call to apply kernel to apply five qubit gate kernel on a state vector using AVX and OpenMP
+@param unitary The 32x32 kernel of the gate operation
+@param input The input matrix on which the transformation is applied
+@param involved_qbits The qubits affected by the gate in order
+@param matrix_size The size of the input
+*/
 void apply_5qbit_kernel_to_state_vector_input_AVX_OpenMP(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size){
     __m256d neg = _mm256_setr_pd(1.0, -1.0, 1.0, -1.0);
     
@@ -2923,6 +3053,13 @@ void apply_5qbit_kernel_to_state_vector_input_AVX_OpenMP(Matrix& unitary, Matrix
     }
 }
 
+/**
+@brief Call to apply kernel to apply five qubit gate kernel on a state vector using AVX and TBB
+@param unitary The 32x32 kernel of the gate operation
+@param input The input matrix on which the transformation is applied
+@param involved_qbits The qubits affected by the gate in order
+@param matrix_size The size of the input
+*/
 void apply_5qbit_kernel_to_state_vector_input_AVX_TBB(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size){
     __m256d neg = _mm256_setr_pd(1.0, -1.0, 1.0, -1.0);
     

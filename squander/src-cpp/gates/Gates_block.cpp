@@ -271,11 +271,15 @@ Gates_block::apply_to( Matrix_real& parameters_mtx_in, Matrix& input, int parall
         else
         {
 #ifdef USE_AVX
-            if (size <= 4)
+            if (size <= 5 && qbit_num >= 14){
+                apply_large_kernel_to_input_AVX_TBB(Umtx_mini, input, involved_qubits, input.size() );
+            }
+            else{
                 apply_large_kernel_to_input_AVX(Umtx_mini, input, involved_qubits, input.size() );
-            else
-#endif
-                apply_large_kernel_to_input(Umtx_mini, input, involved_qubits, input.size() );
+            }
+#else
+            apply_large_kernel_to_input(Umtx_mini, input, involved_qubits, input.size() );
+#endif  
         }
     } else {
         for( size_t idx=0; idx<gates.size(); idx++) {
