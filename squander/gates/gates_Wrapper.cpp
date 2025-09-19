@@ -35,6 +35,9 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "CNOT.h"
 #include "CZ.h"
 #include "CRY.h"
+#include "CRX.h"
+#include "CRZ.h"
+#include "CP.h"
 #include "H.h"
 #include "RX.h"
 #include "RY.h"
@@ -1153,6 +1156,39 @@ struct CRY_Wrapper_Type : Gate_Wrapper_Type_tmp {
     }
 };
 
+struct CRX_Wrapper_Type : Gate_Wrapper_Type_tmp {
+
+    CRX_Wrapper_Type() {    
+        tp_name      = "CRX";
+        tp_doc       = "Object to represent python binding for a CRX gate of the Squander package.";
+        tp_new      = (newfunc) controlled_gate_Wrapper_new<CRX>;
+        tp_base      = &Gate_Wrapper_Type;
+    }
+};
+
+
+struct CRZ_Wrapper_Type : Gate_Wrapper_Type_tmp {
+
+    CRZ_Wrapper_Type() {    
+        tp_name      = "CRZ";
+        tp_doc       = "Object to represent python binding for a CRZ gate of the Squander package.";
+        tp_new      = (newfunc) controlled_gate_Wrapper_new<CRZ>;
+        tp_base      = &Gate_Wrapper_Type;
+    }
+};
+
+
+struct CP_Wrapper_Type : Gate_Wrapper_Type_tmp {
+
+    CP_Wrapper_Type() {    
+        tp_name      = "CP";
+        tp_doc       = "Object to represent python binding for a CP gate of the Squander package.";
+        tp_new      = (newfunc) controlled_gate_Wrapper_new<CP>;
+        tp_base      = &Gate_Wrapper_Type;
+    }
+};
+
+
 struct H_Wrapper_Type : Gate_Wrapper_Type_tmp {
 
     H_Wrapper_Type() {    
@@ -1363,6 +1399,9 @@ static CH_Wrapper_Type CH_Wrapper_Type_ins;
 static CNOT_Wrapper_Type CNOT_Wrapper_Type_ins;
 static CZ_Wrapper_Type CZ_Wrapper_Type_ins;
 static CRY_Wrapper_Type CRY_Wrapper_Type_ins;
+static CRX_Wrapper_Type CRX_Wrapper_Type_ins;
+static CRZ_Wrapper_Type CRZ_Wrapper_Type_ins;
+static CP_Wrapper_Type CP_Wrapper_Type_ins;
 static H_Wrapper_Type H_Wrapper_Type_ins;
 static RX_Wrapper_Type RX_Wrapper_Type_ins;
 static RY_Wrapper_Type RY_Wrapper_Type_ins;
@@ -1424,6 +1463,9 @@ PyInit_gates_Wrapper(void)
         PyType_Ready(&CNOT_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&CZ_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&CRY_Wrapper_Type_ins) < 0 ||
+        PyType_Ready(&CRX_Wrapper_Type_ins) < 0 ||
+        PyType_Ready(&CRZ_Wrapper_Type_ins) < 0 ||
+        PyType_Ready(&CP_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&H_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&RX_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&RY_Wrapper_Type_ins) < 0 ||
@@ -1484,6 +1526,27 @@ PyInit_gates_Wrapper(void)
     Py_INCREF(&CRY_Wrapper_Type_ins);
     if (PyModule_AddObject(m, "CRY", (PyObject *) & CRY_Wrapper_Type_ins) < 0) {
         Py_DECREF(& CRY_Wrapper_Type_ins);
+        Py_DECREF(m);
+        return NULL;
+    }
+
+    Py_INCREF(&CRZ_Wrapper_Type_ins);
+    if (PyModule_AddObject(m, "CRX", (PyObject *) & CRX_Wrapper_Type_ins) < 0) {
+        Py_DECREF(& CRX_Wrapper_Type_ins);
+        Py_DECREF(m);
+        return NULL;
+    }
+
+    Py_INCREF(&CRZ_Wrapper_Type_ins);
+    if (PyModule_AddObject(m, "CRZ", (PyObject *) & CRZ_Wrapper_Type_ins) < 0) {
+        Py_DECREF(& CRZ_Wrapper_Type_ins);
+        Py_DECREF(m);
+        return NULL;
+    }
+
+    Py_INCREF(&CP_Wrapper_Type_ins);
+    if (PyModule_AddObject(m, "CP", (PyObject *) & CP_Wrapper_Type_ins) < 0) {
+        Py_DECREF(& CP_Wrapper_Type_ins);
         Py_DECREF(m);
         return NULL;
     }

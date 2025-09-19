@@ -13,7 +13,7 @@ You may obtain a copy of the License at
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
+See the License for the specific language governing permissions andP
 limitations under the License.
 
 You should have received a copy of the GNU General Public License
@@ -53,6 +53,9 @@ from squander.gates.gates_Wrapper import (
     SX,
     SYC,
     CRY,
+    CRZ,
+    CRX,
+    CP,
     CR,
     CROT )
 
@@ -296,6 +299,42 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
 
 	# call the C wrapper function
         super(qgd_Circuit, self).add_CR(target_qbit, control_qbit)
+
+#@brief Call to add a CRY gate to the front of the gate structure.
+#@param self A pointer pointing to an instance of the class qgd_Circuit.
+#@param Input arguments: target_qbit (int), control_qbit (int).
+
+    def add_CRY( self, target_qbit, control_qbit):
+
+	# call the C wrapper function
+        super(qgd_Circuit, self).add_CRY(target_qbit, control_qbit)
+
+#@brief Call to add a CRZ gate to the front of the gate structure.
+#@param self A pointer pointing to an instance of the class qgd_Circuit.
+#@param Input arguments: target_qbit (int), control_qbit (int).
+
+    def add_CRZ( self, target_qbit, control_qbit):
+
+	# call the C wrapper function
+        super(qgd_Circuit, self).add_CRZ(target_qbit, control_qbit)
+
+#@brief Call to add a CRX gate to the front of the gate structure.
+#@param self A pointer pointing to an instance of the class qgd_Circuit.
+#@param Input arguments: target_qbit (int), control_qbit (int).
+
+    def add_CRX( self, target_qbit, control_qbit):
+
+	# call the C wrapper function
+        super(qgd_Circuit, self).add_CRX(target_qbit, control_qbit)
+
+#@brief Call to add a CP gate to the front of the gate structure.
+#@param self A pointer pointing to an instance of the class qgd_Circuit.
+#@param Input arguments: target_qbit (int), control_qbit (int).
+
+    def add_CP( self, target_qbit, control_qbit):
+
+	# call the C wrapper function
+        super(qgd_Circuit, self).add_CP(target_qbit, control_qbit)
 
 #@brief Call to add adaptive gate to the front of the gate structure.
 #@param self A pointer pointing to an instance of the class qgd_Circuit.

@@ -31,9 +31,12 @@ limitations under the License.
 #include "RX.h"
 #include "RY.h"
 #include "R.h"
-#include "CRY.h"
-#include "CR.h"
 #include "RZ.h"
+#include "CRY.h"
+#include "CRX.h"
+#include "CRZ.h"
+#include "CP.h"
+#include "CR.h"
 #include "H.h"
 #include "X.h"
 #include "Y.h"
@@ -460,6 +463,7 @@ void Gates_block::get_parameter_max(Matrix_real &range_max) {
             case RX_OPERATION:
             case RY_OPERATION:
             case CRY_OPERATION:
+            case CRX_OPERATION:
             case ADAPTIVE_OPERATION:
                 data[parameter_idx] = 4 * M_PI;
                 parameter_idx = parameter_idx + 1;
@@ -534,7 +538,8 @@ Gates_block::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
         case R_OPERATION: case RX_OPERATION:
         case RY_OPERATION: case RZ_OPERATION:
         case CRY_OPERATION: case CR_OPERATION:
-        case CZ_NU_OPERATION:
+        case CRX_OPERATION: case CRZ_OPERATION:
+        case CZ_NU_OPERATION: case CP_OPERATION:
         case ADAPTIVE_OPERATION:
         {
             operation->apply_from_right( parameters_mtx, input );
@@ -875,6 +880,99 @@ void Gates_block::add_cry_to_front(int target_qbit, int control_qbit ) {
 
         // create the operation
         Gate* gate = static_cast<Gate*>(new CRY( qbit_num, target_qbit, control_qbit ));
+
+        // adding the operation to the front of the list of gates
+        add_gate_to_front( gate );
+
+}
+
+/**
+@brief Append a CRX gate to the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void Gates_block::add_crx(int target_qbit, int control_qbit) {
+
+        // create the operation
+        Gate* operation = static_cast<Gate*>(new CRX( qbit_num, target_qbit, control_qbit));
+
+        // adding the operation to the end of the list of gates
+        add_gate( operation );
+}
+
+
+
+/**
+@brief Add a CRX gate to the front of the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void Gates_block::add_crx_to_front(int target_qbit, int control_qbit ) {
+
+        // create the operation
+        Gate* gate = static_cast<Gate*>(new CRX( qbit_num, target_qbit, control_qbit ));
+
+        // adding the operation to the front of the list of gates
+        add_gate_to_front( gate );
+
+}
+
+/**
+@brief Append a CRX gate to the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void Gates_block::add_crz(int target_qbit, int control_qbit) {
+
+        // create the operation
+        Gate* operation = static_cast<Gate*>(new CRZ( qbit_num, target_qbit, control_qbit));
+
+        // adding the operation to the end of the list of gates
+        add_gate( operation );
+}
+
+
+
+/**
+@brief Add a CRX gate to the front of the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void Gates_block::add_crz_to_front(int target_qbit, int control_qbit ) {
+
+        // create the operation
+        Gate* gate = static_cast<Gate*>(new CRZ( qbit_num, target_qbit, control_qbit ));
+
+        // adding the operation to the front of the list of gates
+        add_gate_to_front( gate );
+
+}
+
+/**
+@brief Append a CRX gate to the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void Gates_block::add_cp(int target_qbit, int control_qbit) {
+
+        // create the operation
+        Gate* operation = static_cast<Gate*>(new CP( qbit_num, target_qbit, control_qbit));
+
+        // adding the operation to the end of the list of gates
+        add_gate( operation );
+}
+
+
+
+/**
+@brief Add a CRX gate to the front of the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void Gates_block::add_cp_to_front(int target_qbit, int control_qbit ) {
+
+        // create the operation
+        Gate* gate = static_cast<Gate*>(new CP( qbit_num, target_qbit, control_qbit ));
 
         // adding the operation to the front of the list of gates
         add_gate_to_front( gate );
@@ -1854,6 +1952,45 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
 		print(sstream, 1);	    		                    
                 gate_idx = gate_idx + 1;
             }
+            else if (gate->get_type() == CRX_OPERATION) {
+                // definig the rotation parameter
+                double vartheta;
+                // get the inverse parameters of the U3 rotation
+                CRX* crx_gate = static_cast<CRX*>(gate);
+                vartheta = std::fmod( 2*parameters_data[parameter_idx], 4*M_PI);
+                parameter_idx = parameter_idx + 1;
+
+		std::stringstream sstream;
+		sstream << gate_idx << "th gate: CRX on target qubit: " << crx_gate->get_target_qbit() << ", control qubit" << crx_gate->get_control_qbit() << " and with parameters theta = " << vartheta << std::endl;
+		print(sstream, 1);	    		                    
+                gate_idx = gate_idx + 1;
+            }
+            else if (gate->get_type() == CRZ_OPERATION) {
+                // definig the rotation parameter
+                double vartheta;
+                // get the inverse parameters of the U3 rotation
+                CRZ* crz_gate = static_cast<CRZ*>(gate);
+                vartheta = std::fmod( 2*parameters_data[parameter_idx], 4*M_PI);
+                parameter_idx = parameter_idx + 1;
+
+		std::stringstream sstream;
+		sstream << gate_idx << "th gate: CRZ on target qubit: " << crz_gate->get_target_qbit() << ", control qubit" << crz_gate->get_control_qbit() << " and with parameters theta = " << vartheta << std::endl;
+		print(sstream, 1);	    		                    
+                gate_idx = gate_idx + 1;
+            }
+            else if (gate->get_type() == CP_OPERATION) {
+                // definig the rotation parameter
+                double lambda;
+                // get the inverse parameters of the U3 rotation
+                CP* cp_gate = static_cast<CP*>(gate);
+                lambda = std::fmod( parameters_data[parameter_idx], 2*M_PI);
+                parameter_idx = parameter_idx + 1;
+
+		std::stringstream sstream;
+		sstream << gate_idx << "th gate: CP on target qubit: " << cp_gate->get_target_qbit() << ", control qubit" << cp_gate->get_control_qbit() << " and with parameters lambda = " << lambda << std::endl;
+		print(sstream, 1);	    		                    
+                gate_idx = gate_idx + 1;
+            }
             else if (gate->get_type() == CR_OPERATION) {
                 // definig the rotation parameter
                 double vartheta,varphi;
@@ -2035,8 +2172,11 @@ Gates_block::create_remapped_circuit( const std::map<int, int>& qbit_map, const 
         switch (op->get_type()) {
         case CNOT_OPERATION: case CZ_OPERATION:
         case CH_OPERATION: case SYC_OPERATION:
-        case U1_OPERATION: case U2_OPERATION: case U3_OPERATION:
-        case RY_OPERATION: case CRY_OPERATION: case RX_OPERATION:
+        case U1_OPERATION: case U2_OPERATION: 
+        case U3_OPERATION: case RY_OPERATION: 
+        case CRY_OPERATION: case RX_OPERATION:
+        case CRX_OPERATION: case CRZ_OPERATION: 
+        case CP_OPERATION:
         case RZ_OPERATION: case X_OPERATION:
         case Y_OPERATION: case Z_OPERATION:
         case SX_OPERATION: case BLOCK_OPERATION:
@@ -2289,8 +2429,9 @@ int Gates_block::extract_gates( Gates_block* op_block ) {
         case CNOT_OPERATION: case CZ_OPERATION:
         case CH_OPERATION: case SYC_OPERATION:
         case U1_OPERATION: case U2_OPERATION: 
-        case U3_OPERATION:
+        case U3_OPERATION: case CP_OPERATION:
         case RY_OPERATION: case CRY_OPERATION: 
+        case CRX_OPERATION: case CRZ_OPERATION:
         case RX_OPERATION: case CR_OPERATION:
         case RZ_OPERATION: case X_OPERATION:
         case Y_OPERATION: case Z_OPERATION:

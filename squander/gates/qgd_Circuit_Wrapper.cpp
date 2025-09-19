@@ -862,6 +862,102 @@ qgd_Circuit_Wrapper_add_CRY(qgd_Circuit_Wrapper *self, PyObject *args, PyObject 
 @param kwds A tuple of keywords
 */
 static PyObject *
+qgd_Circuit_Wrapper_add_CRX(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *kwds)
+{
+
+    // The tuple of expected keywords
+    static char *kwlist[] = {(char*)"target_qbit", (char*)"control_qbit", NULL};
+
+    // initiate variables for input arguments
+    int  target_qbit = -1; 
+    int  control_qbit = -1; 
+
+    // parsing input arguments
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|ii", kwlist,
+                                     &target_qbit, &control_qbit))
+        return Py_BuildValue("i", -1);
+
+    // adding U3 gate to the end of the gate structure
+    if (target_qbit != -1 ) {
+        self->circuit->add_crx(target_qbit, control_qbit);
+    }
+
+    return Py_BuildValue("i", 0);
+
+}
+
+
+/**
+@brief Wrapper function to add an adaptive gate to the front of the gate structure.
+@param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper.
+@param args A tuple of the input arguments: target_qbit (int)
+@param kwds A tuple of keywords
+*/
+static PyObject *
+qgd_Circuit_Wrapper_add_CRZ(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *kwds)
+{
+
+    // The tuple of expected keywords
+    static char *kwlist[] = {(char*)"target_qbit", (char*)"control_qbit", NULL};
+
+    // initiate variables for input arguments
+    int  target_qbit = -1; 
+    int  control_qbit = -1; 
+
+    // parsing input arguments
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|ii", kwlist,
+                                     &target_qbit, &control_qbit))
+        return Py_BuildValue("i", -1);
+
+    // adding U3 gate to the end of the gate structure
+    if (target_qbit != -1 ) {
+        self->circuit->add_crz(target_qbit, control_qbit);
+    }
+
+    return Py_BuildValue("i", 0);
+
+}
+
+
+/**
+@brief Wrapper function to add an adaptive gate to the front of the gate structure.
+@param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper.
+@param args A tuple of the input arguments: target_qbit (int)
+@param kwds A tuple of keywords
+*/
+static PyObject *
+qgd_Circuit_Wrapper_add_CP(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *kwds)
+{
+
+    // The tuple of expected keywords
+    static char *kwlist[] = {(char*)"target_qbit", (char*)"control_qbit", NULL};
+
+    // initiate variables for input arguments
+    int  target_qbit = -1; 
+    int  control_qbit = -1; 
+
+    // parsing input arguments
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|ii", kwlist,
+                                     &target_qbit, &control_qbit))
+        return Py_BuildValue("i", -1);
+
+    // adding U3 gate to the end of the gate structure
+    if (target_qbit != -1 ) {
+        self->circuit->add_cp(target_qbit, control_qbit);
+    }
+
+    return Py_BuildValue("i", 0);
+
+}
+
+
+/**
+@brief Wrapper function to add an adaptive gate to the front of the gate structure.
+@param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper.
+@param args A tuple of the input arguments: target_qbit (int)
+@param kwds A tuple of keywords
+*/
+static PyObject *
 qgd_Circuit_Wrapper_add_CR(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *kwds)
 {
 
@@ -2779,6 +2875,15 @@ static PyMethodDef qgd_Circuit_Wrapper_Methods[] = {
      "Call to add a Tdg gate to the front of the gate structure"
     },
     {"add_CRY", (PyCFunction) qgd_Circuit_Wrapper_add_CRY, METH_VARARGS | METH_KEYWORDS,
+     "Call to add a CRY gate to the front of the gate structure"
+    },
+    {"add_CRX", (PyCFunction) qgd_Circuit_Wrapper_add_CRX, METH_VARARGS | METH_KEYWORDS,
+     "Call to add a CRY gate to the front of the gate structure"
+    },
+    {"add_CRZ", (PyCFunction) qgd_Circuit_Wrapper_add_CRZ, METH_VARARGS | METH_KEYWORDS,
+     "Call to add a CRY gate to the front of the gate structure"
+    },
+    {"add_CP", (PyCFunction) qgd_Circuit_Wrapper_add_CP, METH_VARARGS | METH_KEYWORDS,
      "Call to add a CRY gate to the front of the gate structure"
     },
     {"add_CROT", (PyCFunction) qgd_Circuit_Wrapper_add_CROT, METH_VARARGS | METH_KEYWORDS,

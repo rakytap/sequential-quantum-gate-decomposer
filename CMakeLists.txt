@@ -354,6 +354,11 @@ list(APPEND qgd_files
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/U3.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/RY.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/CRY.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/RX.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/RZ.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/CRX.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/CRZ.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/CP.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/CR.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/Adaptive.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/R.cpp

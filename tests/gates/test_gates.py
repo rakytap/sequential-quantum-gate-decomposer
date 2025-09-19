@@ -229,7 +229,7 @@ class Test_operations:
                 gate_name = "p"
 
             elif gate_name == "CNOT":
-                gate_name = "cx"
+                gate_name = "cx"                
                 
 
             gate_name = gate_name.lower()
@@ -259,7 +259,8 @@ class Test_operations:
                 parameters_QISKIT = list(parameters)
 
                 #Squander uses half of the theta function for numerical performance
-                parameters_QISKIT[0] = parameters_QISKIT[0]*2 
+                if gate_name != "cp":
+                    parameters_QISKIT[0] = parameters_QISKIT[0]*2 
                 gate_adding_fnc( *parameters_QISKIT, control_qbit, target_qbit)
 
 
@@ -375,7 +376,8 @@ class Test_operations:
                 parameters_QISKIT = list(parameters)
 
                 #Squander uses half of the theta function for numerical performance
-                parameters_QISKIT[0] = parameters_QISKIT[0]*2 
+                if gate_name != "cp":
+                    parameters_QISKIT[0] = parameters_QISKIT[0]*2 
                 control_qbit = qbit_num-1
                 gate_adding_fnc( *parameters_QISKIT, control_qbit, target_qbit)
 

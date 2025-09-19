@@ -235,6 +235,49 @@ void add_cry(int target_qbit, int control_qbit);
 void add_cry_to_front(int target_qbit, int control_qbit);
 
 /**
+@brief Append a CRY gate to the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_crx(int target_qbit, int control_qbit);
+
+/**
+@brief Add a CRY gate to the front of the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_crx_to_front(int target_qbit, int control_qbit);
+
+/**
+@brief Append a CRY gate to the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_crz(int target_qbit, int control_qbit);
+
+/**
+@brief Add a CRY gate to the front of the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_crz_to_front(int target_qbit, int control_qbit);
+
+/**
+@brief Append a CRY gate to the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_cp(int target_qbit, int control_qbit);
+
+/**
+@brief Add a CRY gate to the front of the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_cp_to_front(int target_qbit, int control_qbit);
+
+
+/**
 @brief Append a CR gate to the list of gates
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
