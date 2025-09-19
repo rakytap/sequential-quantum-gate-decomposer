@@ -166,13 +166,19 @@ std::vector<Matrix> U1::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& 
     std::vector<Matrix> ret;
     
     Matrix_real parameters_tmp(1,1);
+    double ThetaOver2, Phi, Lambda;
+    Lambda = parameters_mtx[0] + M_PI/2; 
+    parameters_for_calc_one_qubit(ThetaOver2, Phi, Lambda);
 
-    parameters_tmp[0] = parameters_mtx[0] + M_PI/2;
+    // get the U3 gate of one qubit
+    Matrix u3_1qbit = calc_one_qubit_u3(ThetaOver2, Phi, Lambda );
+    // set to zero for derivate
+    u3_1qbit[0].real =0.0;
+    u3_1qbit[0].imag =0.0;
+
     Matrix res_mtx = input.copy();
-    apply_to(parameters_tmp, res_mtx, parallel);
+    apply_kernel_to(u3_1qbit, res_mtx, true ,parallel);
     ret.push_back(res_mtx);
-
-    
     
     return ret;
 
