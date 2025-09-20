@@ -774,7 +774,7 @@ def ilp_global_optimal(allparts, g, weighted_info=None, gurobi_direct=False, use
                     m.cbLazy(gp.quicksum(xg[j] for j in badscc) <= len(badscc) - 1) #remove at least one partition from the SCC
         #from gurobilic import get_gurobi_options
         #prob.solve(pulp.GUROBI(manageEnv=True, msg=False, envOptions=get_gurobi_options()))
-        prob.solve(pulp.GUROBI(manageEnv=True, msg=True, timeLimit=180, Threads=os.cpu_count(), IntegralityFocus=1, LazyConstraints=1), callback=cb)
+        prob.solve(pulp.GUROBI(manageEnv=True, msg=False, timeLimit=180, Threads=os.cpu_count(), IntegralityFocus=1, LazyConstraints=1), callback=cb)
         #prob.solve(pulp.PULP_CBC_CMD(msg=False))
         #print(f"Status: {pulp.LpStatus[prob.status]}")
         L = [i for i in range(N) if int(pulp.value(x[i]))]
@@ -796,7 +796,6 @@ def get_all_partitions(c, max_qubits_per_partition):
         tuple: (allparts, go, rgo, single_qubit_chains, gate_to_qubit, gate_to_tqubit)
             allparts (set[frozenset[int]]): All feasible parts (gate sets).
             g (dict[int, set[int]]): Gate -> successors (original graph).
-            rg (dict[int, set[int]]): Gate -> predecessors (original graph).
             go (dict[int, set[int]]): Gate -> successors.
             rgo (dict[int, set[int]]): Gate -> predecessors.
             single_qubit_chains (set[tuple[int]] | None): Set of single-qubit chains (as tuples).
