@@ -27,7 +27,7 @@ def topo_sort_partitions(c, max_qubits_per_partition, parts):
     L, S = [], {m for m in rg if len(rg[m]) == 0}
     while len(S) != 0:
         n = S.pop()
-        L.append(parts[n])
+        L.append(n)
         assert len(rg[n]) == 0
         for m in set(g[n]):
             g[n].remove(m)
@@ -35,9 +35,7 @@ def topo_sort_partitions(c, max_qubits_per_partition, parts):
             if len(rg[m]) == 0:
                 S.add(m)
     assert len(L) == len(parts), (len(L), len(parts), g, rg, partdict)
-    
-    from squander.partitioning.kahn import kahn_partition_preparts
-    return kahn_partition_preparts(c, max_qubits_per_partition, L)
+    return L
 
 #@brief Partitions a circuit using ILP to maximize gates per partition
 #@param c The SQUANDER circuit to be partitioned
@@ -61,7 +59,9 @@ def ilp_max_partitions(c, max_qubits_per_partition):
     parts = []
     while sum(len(x) for x in parts) != num_gates:
         parts.append(find_next_biggest_partition(c, max_qubits_per_partition, parts))
-    return topo_sort_partitions(c, max_qubits_per_partition, parts)
+    L = topo_sort_partitions(c, max_qubits_per_partition, parts)
+    from squander.partitioning.kahn import kahn_partition_preparts
+    return kahn_partition_preparts(c, max_qubits_per_partition, [parts[i] for i in L])
 
 
 def find_next_biggest_partition(c, max_qubits_per_partition, prevparts=None):
@@ -523,7 +523,22 @@ def two_cycles_from_dag_edges(g, gate_to_parts, allparts):
                     seen[(a, b)] = new
     return twocycles
 
-def ilp_global_optimal(allparts, g, weighted_info=None, gurobi_direct=False, use_order=False):
+def sol_to_badsccs(g, allparts, L):
+    gate_to_part = {}
+    for i in L:
+        for gate in allparts[i]: gate_to_part[gate] = i
+    G_part = {i: set() for i in L}
+    for i in L: #build partition get strongly connected components to block invalid cyclic solutions
+        for u in allparts[i]:
+            for v in g[u]:
+                if not v in gate_to_part: continue
+                j = gate_to_part[v]
+                if i != j:
+                    G_part[i].add(j)        
+    _, scc = scc_tarjan_iterative(G_part)
+    return {frozenset(v) for v in scc if len(v) > 1}
+
+def ilp_global_optimal(allparts, g, weighted_info=None, gurobi_direct=False, use_order=False, weights=None):
     """
     Select an optimal set of non-overlapping parts via ILP/MIP with cycle cuts.
 
@@ -543,30 +558,16 @@ def ilp_global_optimal(allparts, g, weighted_info=None, gurobi_direct=False, use
     """
     if weighted_info is not None:
         single_qubit_chains, max_qubits_per_partition, go, rgo, gate_to_qubit, gate_to_tqubit = weighted_info
-        if not single_qubit_chains is None:
-            ignored_chains = {x for x in single_qubit_chains if False} # Placeholder for ignored chains of identity, barrier, delay, measure
-            single_qubit_chains_pre = {x[0]: x for x in single_qubit_chains if rgo[x[0]] and not x in ignored_chains}
-            single_qubit_chains_post = {x[-1]: x for x in single_qubit_chains if go[x[-1]] and not x in ignored_chains}
-            single_qubit_chains_prepost = {x[0]: x for x in single_qubit_chains if x[0] in single_qubit_chains_pre and x[-1] in single_qubit_chains_post}        
+        ignored_chains = {x for x in single_qubit_chains if False} # Placeholder for ignored chains of identity, barrier, delay, measure
+        single_qubit_chains_pre = {x[0]: x for x in single_qubit_chains if rgo[x[0]] and not x in ignored_chains}
+        single_qubit_chains_post = {x[-1]: x for x in single_qubit_chains if go[x[-1]] and not x in ignored_chains}
+        single_qubit_chains_prepost = {x[0]: x for x in single_qubit_chains if x[0] in single_qubit_chains_pre and x[-1] in single_qubit_chains_post}
     def fortet_inequalities(x, y, z): #-z-x<=0 -z+x+y<=1 z-x<=0 z+x-y<=1
         return [z-x<=0, z-y<=0, x+y-z<=1]
     N = len(allparts)
     gate_to_parts = {x: [] for x in g}
     for i, part in enumerate(allparts):
         for gate in part: gate_to_parts[gate].append(i)
-    def sol_to_badsccs(L):
-        gate_to_part = {}
-        for i in L:
-            for gate in allparts[i]: gate_to_part[gate] = i
-        G_part = {i: set() for i in L}
-        for i in L: #build partition get strongly connected components to block invalid cyclic solutions
-            for u in allparts[i]:
-                for v in g[u]:
-                    j = gate_to_part[v]
-                    if i != j:
-                        G_part[i].add(j)        
-        _, scc = scc_tarjan_iterative(G_part)        
-        return {frozenset(v) for v in scc if len(v) > 1}
     if gurobi_direct:
         from gurobipy import Env, Model, GRB
         import gurobipy as gp
@@ -577,10 +578,8 @@ def ilp_global_optimal(allparts, g, weighted_info=None, gurobi_direct=False, use
                 m.setParam(GRB.Param.LazyConstraints, 1)
                 x = m.addVars(range(N), lb=[0]*N, ub=[1]*N, vtype=[GRB.BINARY]*N, name=["x_" + str(i) for i in range(N)])
                 for i in g: m.addConstr(gp.quicksum(x[j] for j in gate_to_parts[i]) == 1)
-                if weighted_info is None: m.setObjective(gp.quicksum(x[i] for i in range(N)), GRB.MINIMIZE)
-                elif single_qubit_chains is None:
-                    weights = parts_to_float_ops(max_qubits_per_partition, gate_to_qubit, None, allparts)
-                    m.setObjective(gp.quicksum((weights[i]*N+1) * x[i] for i in range(N)), GRB.MINIMIZE)
+                if weights is not None: m.setObjective(gp.quicksum((weights[i]*N+1) * x[i] for i in range(N)), GRB.MINIMIZE)
+                elif weighted_info is None: m.setObjective(gp.quicksum(x[i] for i in range(N)), GRB.MINIMIZE)
                 else:
                     Npre, Npost, Nprepost = len(single_qubit_chains_pre), len(single_qubit_chains_post), len(single_qubit_chains_prepost)
                     pre = m.addVars(list(single_qubit_chains_pre), lb=[0]*Npre, ub=[1]*Npre, vtype=[GRB.BINARY]*Npre, name=["pre_" + str(i) for i in single_qubit_chains_pre])
@@ -663,13 +662,13 @@ def ilp_global_optimal(allparts, g, weighted_info=None, gurobi_direct=False, use
                 def cb(m, where):
                     if where == GRB.Callback.MIPSOL:
                         x_val = m.cbGetSolution([x[i] for i in range(N)])
-                        badsccs = sol_to_badsccs([i for i, xv in enumerate(x_val) if int(round(xv))])
+                        badsccs = sol_to_badsccs(g, allparts, [i for i, xv in enumerate(x_val) if int(round(xv))])
                         for badscc in badsccs:
                             #print([(allparts[x], [g[y] for y in allparts[x]]) for x in badscc]) #canonical partitions {1, 3} and {2, 4} with edges 1->{3, 4}, 2->{3, 4}
                             m.cbLazy(gp.quicksum(x[j] for j in badscc) <= len(badscc) - 1) #remove at least one partition from the SCC
                 m.optimize(cb)
                 if m.status == GRB.OPTIMAL:
-                    return [allparts[i] for i in range(N) if int(round(x[i].getAttr("X")))], ({i for i in pre if int(round(pre[i].getAttr("X")))}, {i for i in post if int(round(post[i].getAttr("X")))}) if weighted_info is not None and single_qubit_chains is not None else None
+                    return [i for i in range(N) if int(round(x[i].getAttr("X")))], ({i for i in pre if int(round(pre[i].getAttr("X")))}, {i for i in post if int(round(post[i].getAttr("X")))}) if weighted_info is not None and single_qubit_chains is not None else None
     import pulp
     prob = pulp.LpProblem("OptimalPartitioning", pulp.LpMinimize)
     x = pulp.LpVariable.dicts("x", (i for i in range(N)), cat="Binary") #is partition i included
@@ -684,10 +683,8 @@ def ilp_global_optimal(allparts, g, weighted_info=None, gurobi_direct=False, use
     #print(all_cycles_from_dag_edges(succ))
     #for u, v in two_cycles_from_dag_edges(g, gate_to_parts, allparts):
     #    prob += x[u] + x[v] <= 1 #constraint that no two cycles are included
-    if weighted_info is None: prob.setObjective(pulp.lpSum(x[i] for i in range(N)))
-    elif single_qubit_chains is None:
-        weights = parts_to_float_ops(max_qubits_per_partition, gate_to_qubit, None, allparts)
-        prob.setObjective(pulp.lpSum((weights[i]*N+1) * x[i] for i in range(N)))
+    if weights is not None: prob.setObjective(pulp.lpSum((weights[i]*N+1) * x[i] for i in range(N)))
+    elif weighted_info is None: prob.setObjective(pulp.lpSum(x[i] for i in range(N)))
     else:
         Npre, Npost, Nprepost = len(single_qubit_chains_pre), len(single_qubit_chains_post), len(single_qubit_chains_prepost)
         pre = pulp.LpVariable.dicts("pre", list(single_qubit_chains_pre), cat="Binary")
@@ -771,40 +768,40 @@ def ilp_global_optimal(allparts, g, weighted_info=None, gurobi_direct=False, use
             if where == GRB.Callback.MIPSOL:
                 xg = [m.getVarByName(x[i].name) for i in range(N)]
                 x_val = m.cbGetSolution([xg[i] for i in range(N)])
-                badsccs = sol_to_badsccs([i for i, xv in enumerate(x_val) if int(round(xv))])
+                badsccs = sol_to_badsccs(g, allparts, [i for i, xv in enumerate(x_val) if int(round(xv))])
                 for badscc in badsccs:
                     #print([(allparts[x], [g[y] for y in allparts[x]]) for x in badscc]) #canonical partitions {1, 3} and {2, 4} with edges 1->{3, 4}, 2->{3, 4}
                     m.cbLazy(gp.quicksum(xg[j] for j in badscc) <= len(badscc) - 1) #remove at least one partition from the SCC
         #from gurobilic import get_gurobi_options
         #prob.solve(pulp.GUROBI(manageEnv=True, msg=False, envOptions=get_gurobi_options()))
-        prob.solve(pulp.GUROBI(manageEnv=True, msg=False, timeLimit=180, Threads=os.cpu_count(), IntegralityFocus=1, LazyConstraints=1), callback=cb)
+        prob.solve(pulp.GUROBI(manageEnv=True, msg=True, timeLimit=180, Threads=os.cpu_count(), IntegralityFocus=1, LazyConstraints=1), callback=cb)
         #prob.solve(pulp.PULP_CBC_CMD(msg=False))
         #print(f"Status: {pulp.LpStatus[prob.status]}")
         L = [i for i in range(N) if int(pulp.value(x[i]))]
-        badsccs = sol_to_badsccs(L)
+        badsccs = sol_to_badsccs(g, allparts, L)
         if not badsccs: break #if all partitions do not have any cycles with more than one element per SCC terminate
         for badscc in badsccs:
             #print([(allparts[x], [g[y] for y in allparts[x]]) for x in badscc]) #canonical partitions {1, 3} and {2, 4} with edges 1->{3, 4}, 2->{3, 4}
             prob += pulp.lpSum(x[j] for j in badscc) <= len(badscc) - 1 #remove at least one partition from the SCC
-    return [allparts[i] for i in L], ({i for i in pre if int(pulp.value(pre[i]))}, {i for i in post if int(pulp.value(post[i]))}) if weighted_info is not None and single_qubit_chains is not None else None
+    return L, ({i for i in pre if int(pulp.value(pre[i]))}, {i for i in post if int(pulp.value(post[i]))}) if weighted_info is not None and single_qubit_chains is not None else None
 
-def max_partitions(c, max_qubits_per_partition, use_ilp=True, fusion_cost=False, control_aware=False):
+def get_all_partitions(c, max_qubits_per_partition):
     """
-    Enumerate feasible parts and select a maximum/optimal partitioning of a circuit.
+    Generate all feasible parts (gate sets) for partitioning a circuit.
 
     Args:
         c: SQUANDER circuit object.
         max_qubits_per_partition (int): Max allowed qubits per partition.
-        use_ilp (bool): If True, solve selection via ILP; else greedy largest-first.
-        fusion_cost (bool): If True, include FLOP-based cost with fusion/controls.
-        control_aware (bool): If True and fusion_cost, treat single-qubit chains as
-            pre/post relative to targets.
-
     Returns:
-        tuple: (partitioned_circ, param_order, parts)
-            partitioned_circ: 2-level partitioned circuit (SQUANDER object).
-            param_order (list[tuple[int,int,int]]): (source_idx, dest_idx, param_count).
-            parts (list[frozenset[int]]): Final partition assignment sets.
+        tuple: (allparts, go, rgo, single_qubit_chains, gate_to_qubit, gate_to_tqubit)
+            allparts (set[frozenset[int]]): All feasible parts (gate sets).
+            g (dict[int, set[int]]): Gate -> successors (original graph).
+            rg (dict[int, set[int]]): Gate -> predecessors (original graph).
+            go (dict[int, set[int]]): Gate -> successors.
+            rgo (dict[int, set[int]]): Gate -> predecessors.
+            single_qubit_chains (set[tuple[int]] | None): Set of single-qubit chains (as tuples).
+            gate_to_qubit (dict[int, set[int]]): Gate -> qubits acted on.
+            gate_to_tqubit (dict[int, int | None]): Gate -> target qubit (or None).
     """
     gate_dict, go, rgo, gate_to_qubit, S = build_dependency(c)
     gate_to_tqubit = { i: g.get_Target_Qbit() for i, g in gate_dict.items() }
@@ -863,20 +860,46 @@ def max_partitions(c, max_qubits_per_partition, use_ilp=True, fusion_cost=False,
                 Ynew -= prune; Anew -= prune
                 prune = Bnew - bfs_reach(Xnew, rg, g, Bnew, newQ)
                 Ynew -= prune; Bnew -= prune
-                stack.append((Xnew, Ynew, Anew, Bnew, list(sorted(Anew, key=topo_index.__getitem__)), list(sorted(Bnew, key=topo_index.__getitem__, reverse=True)), newQ))
+                stack.append((Xnew, Ynew, Anew, Bnew, list(sorted(Anew, key=topo_index.__getitem__)), list(sorted(Bnew, key=topo_index.__getitem__, reverse=True)), newQ))    
+    return list(allparts), g, go, rgo, single_qubit_chains, gate_to_qubit, gate_to_tqubit
+def max_partitions(c, max_qubits_per_partition, use_ilp=True, fusion_cost=False, control_aware=False):
+    """
+    Enumerate feasible parts and select a maximum/optimal partitioning of a circuit.
+
+    Args:
+        c: SQUANDER circuit object.
+        max_qubits_per_partition (int): Max allowed qubits per partition.
+        use_ilp (bool): If True, solve selection via ILP; else greedy largest-first.
+        fusion_cost (bool): If True, include FLOP-based cost with fusion/controls.
+        control_aware (bool): If True and fusion_cost, treat single-qubit chains as
+            pre/post relative to targets.
+
+    Returns:
+        tuple: (partitioned_circ, param_order, parts)
+            partitioned_circ: 2-level partitioned circuit (SQUANDER object).
+            param_order (list[tuple[int,int,int]]): (source_idx, dest_idx, param_count).
+            parts (list[frozenset[int]]): Final partition assignment sets.
+    """
+    allparts, g, go, rgo, single_qubit_chains, gate_to_qubit, gate_to_tqubit = get_all_partitions(c, max_qubits_per_partition)
     if use_ilp:
-        allparts = list(allparts)
-        L, fusion_info = ilp_global_optimal(allparts, g, (single_qubit_chains if control_aware else None, max_qubits_per_partition, go, rgo, gate_to_qubit, gate_to_tqubit) if fusion_cost else None)
+        weights = parts_to_float_ops(max_qubits_per_partition, gate_to_qubit, None, allparts) if fusion_cost and not control_aware else None
+        L, fusion_info = ilp_global_optimal(allparts, g, (single_qubit_chains, max_qubits_per_partition, go, rgo, gate_to_qubit, gate_to_tqubit) if control_aware else None, weights=weights)
     else:
         L, excluded = [], set()
-        for part in sorted(allparts, key=len, reverse=True): #this will not work without making sure part does not induce a cycle
-            if len(part & excluded) != 0: continue
-            excluded |= part
-            L.append(part)
+        weights = parts_to_float_ops(max_qubits_per_partition, gate_to_qubit, None, allparts)
+        for i in sorted(range(len(allparts)), key=lambda i: (len(allparts[i]), -weights[i]), reverse=True):
+            if len(allparts[i] & excluded) != 0: continue
+            if sol_to_badsccs(g, allparts, L + [i]): continue #skip if adding this part creates a cycle
+            excluded |= allparts[i]
+            L.append(i)
+        fusion_info = None
     #assert sum(len(x) for x in L) == len(g), (sum(len(x) for x in L), len(g))
-    L = recombine_single_qubit_chains(go, rgo, single_qubit_chains, gate_to_tqubit, L, fusion_info)
-    #assert sum(len(x) for x in L) == len(go), (sum(len(x) for x in L), len(go))
-    return topo_sort_partitions(c, max_qubits_per_partition, L)
+    parts = recombine_single_qubit_chains(go, rgo, single_qubit_chains, gate_to_tqubit, [allparts[i] for i in L], fusion_info)
+    #assert sum(len(x) for x in parts) == len(go), (sum(len(x) for x in parts), len(go))
+    L = topo_sort_partitions(c, max_qubits_per_partition, parts)
+    from squander.partitioning.kahn import kahn_partition_preparts
+    return kahn_partition_preparts(c, max_qubits_per_partition, [parts[i] for i in L])
+
 
 def _test_max_qasm():
     """
@@ -896,7 +919,7 @@ def _test_max_qasm():
     filename = "benchmarks/partitioning/test_circuit/con1_216_squander.qasm"
     #filename = "benchmarks/partitioning/test_circuit/hwb8_113.qasm"
     #filename = "benchmarks/partitioning/test_circuit/urf1_278.qasm"
-    filename = "benchmarks/partitioning/test_circuit/rd73_140.qasm"
+    #filename = "benchmarks/partitioning/test_circuit/rd73_140.qasm"
     from squander import utils
 
     circ, parameters = utils.qasm_to_squander_circuit(filename)
@@ -904,7 +927,7 @@ def _test_max_qasm():
     gate_to_qubit = { i: get_qubits(g) for i, g in gate_dict.items() }
     gate_to_tqubit = { i: g.get_Target_Qbit() for i, g in gate_dict.items() }
 
-    for partition in (max_partitions(circ, K, True, False), max_partitions(circ, K, True, True), max_partitions(circ, K, True, True, True)):
+    for partition in (max_partitions(circ, K, False, False), max_partitions(circ, K, False, True), max_partitions(circ, K, True, False), max_partitions(circ, K, True, True), max_partitions(circ, K, True, True, True)):
         print(partition[2], len(partition[2]), total_float_ops(circ.get_Qbit_Num(), K, gate_to_qubit, None, partition[2]),
               total_float_ops(circ.get_Qbit_Num(), K, gate_to_qubit, gate_to_tqubit, partition[2]))
 
