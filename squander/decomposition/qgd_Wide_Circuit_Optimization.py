@@ -326,7 +326,7 @@ class qgd_Wide_Circuit_Optimization:
 
 
 
-    def OptimizeWideCircuit( self, circ: Circuit, parameters: np.ndarray, global_min=True ) -> (Circuit, np.ndarray):
+    def OptimizeWideCircuit( self, circ: Circuit, orig_parameters: np.ndarray, global_min=True, prepartitioning=None ) -> (Circuit, np.ndarray):
         """
         Call to optimize a wide circuit (i.e. circuits with many qubits) by
         partitioning the circuit into smaller partitions and redecompose the smaller partitions
@@ -336,7 +336,7 @@ class qgd_Wide_Circuit_Optimization:
 
             circ ( Circuit ) A circuit to be partitioned
 
-            parameters ( np.ndarray ) A parameter array associated with the input circuit
+            orig_parameters ( np.ndarray ) A parameter array associated with the input circuit
 
         Return:
 
@@ -345,7 +345,7 @@ class qgd_Wide_Circuit_Optimization:
         """
 
         if global_min:
-            from squander.partitioning.ilp import get_all_partitions, _get_topo_order, topo_sort_partitions, ilp_global_optimal
+            from squander.partitioning.ilp import get_all_partitions, _get_topo_order, topo_sort_partitions, ilp_global_optimal, recombine_single_qubit_chains
             allparts, g, go, rgo, single_qubit_chains, gate_to_qubit, gate_to_tqubit = get_all_partitions(circ, self.max_partition_size)
             qbit_num_orig_circuit = circ.get_Qbit_Num()
             gate_dict = {i: gate for i, gate in enumerate(circ.get_Gates())}
@@ -362,18 +362,23 @@ class qgd_Wide_Circuit_Optimization:
                 for gate_idx in _get_topo_order({x: go[x] & gates for x in gates}, {x: rgo[x] & gates for x in gates}):
                     c.add_Gate( gate_dict[gate_idx] )
                     start = gate_dict[gate_idx].get_Parameter_Start_Index()
-                    params.append(parameters[start:start + gate_dict[gate_idx].get_Parameter_Num()])
+                    params.append(orig_parameters[start:start + gate_dict[gate_idx].get_Parameter_Num()])
                 partitined_circuit.add_Circuit(c)
             for chain in single_qubit_chains:
                 c = Circuit( qbit_num_orig_circuit )
                 for gate_idx in chain:
                     c.add_Gate( gate_dict[gate_idx] )
                     start = gate_dict[gate_idx].get_Parameter_Start_Index()
-                    params.append(parameters[start:start + gate_dict[gate_idx].get_Parameter_Num()])
+                    params.append(orig_parameters[start:start + gate_dict[gate_idx].get_Parameter_Num()])
                 partitined_circuit.add_Circuit(c)
             parameters = np.concatenate(params, axis=0)
+        elif prepartitioning is not None:
+            from squander.partitioning.kahn import kahn_partition_preparts
+            from squander.partitioning.tools import translate_param_order
+            partitined_circuit, param_order, _ = kahn_partition_preparts(circ, self.max_partition_size, prepartitioning)
+            parameters = translate_param_order(orig_parameters, param_order)
         else:
-            partitined_circuit, parameters, _ = PartitionCircuit( circ, parameters, self.max_partition_size )
+            partitined_circuit, parameters, _ = PartitionCircuit( circ, orig_parameters, self.max_partition_size )
 
 
         qbit_num_orig_circuit = circ.get_Qbit_Num()
@@ -433,9 +438,13 @@ class qgd_Wide_Circuit_Optimization:
         # construct the wide circuit from the optimized suncircuits
         if global_min:
             max_gates = max(len(c.get_Gates()) for c in optimized_subcircuits)
-            def to_cost(d): print(d); return d.get('CNOT', 0)*max_gates + sum(d[x] for x in d if x != 'CNOT')
+            def to_cost(d): return d.get('CNOT', 0)*max_gates + sum(d[x] for x in d if x != 'CNOT')
             weights = [to_cost(circ.get_Gate_Nums()) for circ in optimized_subcircuits[:len(allparts)]]
             L, fusion_info = ilp_global_optimal(allparts, g, weights=weights)
+            parts = recombine_single_qubit_chains(go, rgo, single_qubit_chains, gate_to_tqubit, [allparts[i] for i in L], fusion_info)
+            L = topo_sort_partitions(circ, self.max_partition_size, parts)
+            return self.OptimizeWideCircuit(circ, orig_parameters, global_min=False, prepartitioning=[parts[i] for i in L])
+            """
             Lgate = [set(allparts[i]) for i in L]
             for part in Lgate:
                 surrounded_chains = {t for s in part for t in go[s] if t in single_qubit_chains_prepost and go[single_qubit_chains_prepost[t][-1]] and next(iter(go[single_qubit_chains_prepost[t][-1]])) in part}
@@ -455,6 +464,7 @@ class qgd_Wide_Circuit_Optimization:
                 wide_circuit.add_Circuit(optimized_subcircuits[idx])
                 params.append(optimized_parameter_list[idx])
             wide_parameters = np.concatenate(params, axis=0)
+            """
         else:
             wide_circuit, wide_parameters = self.ConstructCircuitFromPartitions( optimized_subcircuits, optimized_parameter_list )
 
