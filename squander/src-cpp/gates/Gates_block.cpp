@@ -25,6 +25,9 @@ limitations under the License.
 #include "CZ.h"
 #include "CH.h"
 #include "CNOT.h"
+#include "CCX.h"
+#include "SWAP.h"
+#include "CSWAP.h"
 #include "U1.h"
 #include "U2.h"
 #include "U3.h"
@@ -1508,6 +1511,82 @@ void Gates_block::add_ch_to_front(  int target_qbit, int control_qbit) {
         // put the operation to tghe front of the list
         add_gate_to_front(gate);
 
+}
+
+/**
+@brief Append a CCX gate (i.e. Toffoli gate) operation to the list of gates
+@param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
+@param control_qbit The identification number of the first control qubit. (0 <= control_qbit <= qbit_num-1)
+@param control_qbit2 The identification number of the second control qubit. (0 <= control_qbit2 <= qbit_num-1)
+*/
+void Gates_block::add_ccx( int target_qbit, int control_qbit, int control_qbit2) {
+        // new ccx operation
+        Gate* gate = static_cast<Gate*>(new CCX(qbit_num, target_qbit, control_qbit, control_qbit2 ));
+        // append the operation to the list
+        add_gate(gate);
+}
+
+/**
+@brief Add a CCX gate (i.e. Toffoli gate) operation to the front of the list of gates
+@param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
+@param control_qbit The identification number of the first control qubit. (0 <= control_qbit <= qbit_num-1)
+@param control_qbit2 The identification number of the second control qubit. (0 <= control_qbit2 <= qbit_num-1)
+*/
+void Gates_block::add_ccx_to_front( int target_qbit, int control_qbit, int control_qbit2) {
+        // new ccx operation
+        Gate* gate = static_cast<Gate*>(new CCX(qbit_num, target_qbit, control_qbit, control_qbit2 ));
+        // put the operation to the front of the list
+        add_gate_to_front(gate);
+}
+
+/**
+@brief Append a SWAP gate to the list of gates
+@param target_qbit The identification number of the first target qubit. (0 <= target_qbit <= qbit_num-1)
+@param target_qbit2 The identification number of the second target qubit. (0 <= target_qbit2 <= qbit_num-1)
+*/
+void Gates_block::add_swap( int target_qbit, int target_qbit2) {
+        // new swap operation
+        Gate* gate = static_cast<Gate*>(new SWAP(qbit_num, target_qbit, target_qbit2 ));
+        // append the operation to the list
+        add_gate(gate);
+}
+
+/**
+@brief Add a SWAP gate to the front of the list of gates
+@param target_qbit The identification number of the first target qubit. (0 <= target_qbit <= qbit_num-1)
+@param target_qbit2 The identification number of the second target qubit. (0 <= target_qbit2 <= qbit_num-1)
+*/
+void Gates_block::add_swap_to_front( int target_qbit, int target_qbit2) {
+        // new swap operation
+        Gate* gate = static_cast<Gate*>(new SWAP(qbit_num, target_qbit, target_qbit2 ));
+        // put the operation to the front of the list
+        add_gate_to_front(gate);
+}
+
+/**
+@brief Append a CSWAP gate (Controlled SWAP) to the list of gates
+@param target_qbit The identification number of the first target qubit. (0 <= target_qbit <= qbit_num-1)
+@param target_qbit2 The identification number of the second target qubit. (0 <= target_qbit2 <= qbit_num-1)
+@param control_qbit The identification number of the control qubit. (0 <= control_qbit <= qbit_num-1)
+*/
+void Gates_block::add_cswap( int target_qbit, int target_qbit2, int control_qbit) {
+        // new cswap operation
+        Gate* gate = static_cast<Gate*>(new CSWAP(qbit_num, target_qbit, target_qbit2, control_qbit ));
+        // append the operation to the list
+        add_gate(gate);
+}
+
+/**
+@brief Add a CSWAP gate (Controlled SWAP) to the front of the list of gates
+@param target_qbit The identification number of the first target qubit. (0 <= target_qbit <= qbit_num-1)
+@param target_qbit2 The identification number of the second target qubit. (0 <= target_qbit2 <= qbit_num-1)
+@param control_qbit The identification number of the control qubit. (0 <= control_qbit <= qbit_num-1)
+*/
+void Gates_block::add_cswap_to_front( int target_qbit, int target_qbit2, int control_qbit) {
+        // new cswap operation
+        Gate* gate = static_cast<Gate*>(new CSWAP(qbit_num, target_qbit, target_qbit2, control_qbit ));
+        // put the operation to the front of the list
+        add_gate_to_front(gate);
 }
 
 /**

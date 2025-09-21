@@ -57,6 +57,9 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "R.h"
 #include "CR.h"
 #include "CROT.h"
+#include "CCX.h"
+#include "SWAP.h"
+#include "CSWAP.h"
 #include "numpy_interface.h"
 
 
@@ -85,6 +88,14 @@ template<typename GateT>
 Gate* create_controlled_gate( int qbit_num, int target_qbit, int control_qbit ) {
 
     GateT* gate = new GateT( qbit_num, target_qbit, control_qbit );
+    return static_cast<Gate*>( gate );
+        
+}
+
+template<typename GateT>
+Gate* create_3_qubit_gate( int qbit_num, int target_qbit, int control_qbit1, int control_qbit2 ) {
+
+    GateT* gate = new GateT( qbit_num, target_qbit, control_qbit1, control_qbit2 );
     return static_cast<Gate*>( gate );
         
 }
@@ -220,6 +231,48 @@ static PyObject *
     self = (Gate_Wrapper *) type->tp_alloc(type, 0);
     if (self != NULL) {
         self->gate = create_controlled_gate<GateT>( qbit_num, target_qbit, control_qbit );
+    }
+
+    return (PyObject *) self;
+    
+}
+
+/**
+@brief Method called when a python instance of a controlled gate class  is initialized
+@param self A pointer pointing to an instance of the class  Gate_Wrapper.
+@param args A tuple of the input arguments: qbit_num (int), target_qbit (int), control_qbit (int)
+@param kwds A tuple of keywords
+*/
+template<typename GateT>
+static PyObject *
+ three_qubit_gate_Wrapper_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {(char*)"qbit_num", (char*)"target_qbit", (char*)"control_qbit1", (char*)"control_qbit2", NULL};
+    int qbit_num = -1; 
+    int target_qbit = -1;
+    int control_qbit1 = -1;
+    int control_qbit2 = -1;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|iiii", kwlist, &qbit_num, &target_qbit, &control_qbit1, &control_qbit2)) {
+        std::string err( "Unable to parse arguments");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;   
+    }
+
+    if (((qbit_num == -1 || target_qbit == -1) || control_qbit1 == -1) || control_qbit2== -1){
+        PyErr_SetString(PyExc_ValueError, "Qubit_num, target_qubit and control_qubit all must be set!");
+        return NULL;   
+    }
+    
+    if ((qbit_num <= target_qbit || qbit_num <= control_qbit1) || qbit_num <= control_qbit2 ){
+        PyErr_SetString(PyExc_ValueError, "Target_qubit or control_qbit cannot be larger or equal than qubit_num!");
+        return NULL;   
+    }
+
+    Gate_Wrapper *self;
+    self = (Gate_Wrapper *) type->tp_alloc(type, 0);
+    if (self != NULL) {
+        self->gate = create_3_qubit_gate<GateT>( qbit_num, target_qbit, control_qbit1, control_qbit2 );
     }
 
     return (PyObject *) self;
@@ -611,6 +664,31 @@ Gate_Wrapper_get_Control_Qbit( Gate_Wrapper *self ) {
 
 } 
 
+/**
+@brief Call to get the control qbit (returns with -1 if no control qbit is used in the gate)
+@return Returns with the control qbit
+*/
+static PyObject *
+Gate_Wrapper_get_Control_Qbit2( Gate_Wrapper *self ) {
+
+    int control_qbit2;
+
+    try {
+        control_qbit2 = self->gate->get_control_qbit2();
+    }
+    catch (std::string err) {    
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    catch(...) {
+        std::string err( "Invalid pointer to gate class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+    return Py_BuildValue("i", control_qbit2);
+
+} 
 
 
 /**
@@ -657,6 +735,37 @@ Gate_Wrapper_set_Control_Qbit( Gate_Wrapper *self, PyObject *args ) {
         
     try{
         self->gate->set_control_qbit(control_qbit_in);
+    }
+    catch (std::string err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    catch(...) {
+        std::string err( "Invalid pointer to circuit class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+
+
+    return Py_BuildValue("i", 0);
+
+}
+
+/**
+@brief Call to set the target qbit
+*/
+static PyObject *
+Gate_Wrapper_set_Control_Qbit2( Gate_Wrapper *self, PyObject *args ) {
+
+    int control_qbit_in2 = -1;
+    if (!PyArg_ParseTuple(args, "|i", &control_qbit_in2 ))    {
+        std::string err( "Unable to parse arguments");
+        return NULL;
+    }
+        
+    try{
+        self->gate->set_control_qbit2(control_qbit_in2);
     }
     catch (std::string err) {
         PyErr_SetString(PyExc_Exception, err.c_str());
@@ -979,10 +1088,22 @@ Gate_Wrapper_setstate( Gate_Wrapper *self, PyObject *args ) {
         gate = create_gate<RY>( qbit_num, target_qbit );
         break;
     }    
+    case CRX_OPERATION: {
+        gate = create_controlled_gate<CRX>( qbit_num, target_qbit, control_qbit );
+        break;
+    }
+    case CRZ_OPERATION: {
+        gate = create_controlled_gate<CRZ>( qbit_num, target_qbit, control_qbit );
+        break;
+    }  
+    case CP_OPERATION: {
+        gate = create_controlled_gate<CP>( qbit_num, target_qbit, control_qbit );
+        break;
+    }   
     case CRY_OPERATION: {
         gate = create_controlled_gate<CRY>( qbit_num, target_qbit, control_qbit );
         break;
-    }    
+    }       
     case CROT_OPERATION: {
         gate = create_controlled_gate<CROT>( qbit_num, target_qbit, control_qbit );
         break;
@@ -991,7 +1112,10 @@ Gate_Wrapper_setstate( Gate_Wrapper *self, PyObject *args ) {
         gate = create_controlled_gate<CR>( qbit_num, target_qbit, control_qbit );
         break;
     }    
-    
+    case SWAP_OPERATION: {
+        gate = create_controlled_gate<SWAP>( qbit_num, target_qbit, control_qbit );
+        break;
+    }    
     case RZ_OPERATION: {
         gate = create_gate<RZ>( qbit_num, target_qbit );
         break;
@@ -1006,9 +1130,174 @@ Gate_Wrapper_setstate( Gate_Wrapper *self, PyObject *args ) {
         PyErr_SetString(PyExc_Exception, err.c_str());
         return NULL;  
     }
+    try {
+        delete( self->gate );
+        self->gate = gate;
+    }
+    catch (std::string err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    catch(...) {
+        std::string err( "Invalid pointer to circuit class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+    
+    return Py_None;
+
+}
+
+/**
+@brief Method to extract the stored quantum gate in a human-readable data serialized and pickle-able format
+*/
+static PyObject * 
+Gate_Wrapper_getstate_3qbit( Gate_Wrapper *self ) {
+
+    PyObject* gate_state = PyDict_New();
+
+    if( gate_state == NULL ) {
+        std::string err( "Failed to create dictionary");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;    
+    }
+    
+
+    PyObject* key = Py_BuildValue( "s", "type" );
+    PyObject* val = Py_BuildValue("i", self->gate->get_type() );    
+    PyDict_SetItem(gate_state, key, val);
+
+    key = Py_BuildValue( "s", "qbit_num" );
+    val = Py_BuildValue("i", self->gate->get_qbit_num() );    
+    PyDict_SetItem(gate_state, key, val);
+
+    key = Py_BuildValue( "s", "target_qbit" );
+    val = Py_BuildValue("i", self->gate->get_target_qbit() );    
+    PyDict_SetItem(gate_state, key, val);
+
+    key = Py_BuildValue( "s", "control_qbit1" );
+    val = Py_BuildValue("i", self->gate->get_control_qbit() );    
+    PyDict_SetItem(gate_state, key, val);
+
+    key = Py_BuildValue( "s", "control_qbit2" );
+    val = Py_BuildValue("i", self->gate->get_control_qbit2() );    
+    PyDict_SetItem(gate_state, key, val);
+
+    return gate_state;
+
+}
 
 
 
+
+
+/**
+@brief Call to set the state of quantum gate from a human-readable data serialized and pickle-able format
+*/
+static PyObject * 
+Gate_Wrapper_setstate_3qbit( Gate_Wrapper *self, PyObject *args ) {
+
+
+    PyObject* gate_state = NULL;
+
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "O", &gate_state )) {
+        PyErr_SetString(PyExc_ValueError, "Unable to parse arguments");
+        return NULL;
+    }
+    
+    if( !PyDict_Check( gate_state ) ) {
+        std::string err( "Gate state should be given by a dictionary");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }   
+    
+    PyObject* qbit_num_key = Py_BuildValue( "s", "qbit_num" );    
+    if ( PyDict_Contains(gate_state, qbit_num_key) == 0 ) {
+        std::string err( "Gate state should contain the number of qubits");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+
+        Py_DECREF( qbit_num_key );
+        return NULL;
+    }    
+    PyObject* qbit_num_py = PyDict_GetItem(gate_state, qbit_num_key); // borrowed reference
+    Py_DECREF( qbit_num_key );
+    
+    
+    PyObject* target_qbit_key = Py_BuildValue( "s", "target_qbit" );
+    if ( PyDict_Contains(gate_state, target_qbit_key) == 0 ) {
+        std::string err( "Gate state should contain a target qubit");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+
+        Py_DECREF( target_qbit_key );
+        return NULL;
+    }    
+    PyObject* target_qbit_py = PyDict_GetItem(gate_state, target_qbit_key); // borrowed reference
+    Py_DECREF( target_qbit_key );
+    
+    
+    PyObject* control_qbit_key = Py_BuildValue( "s", "control_qbit" );
+    if ( PyDict_Contains(gate_state, control_qbit_key) == 0 ) {
+        std::string err( "Gate state should contain a control qubit (-1 for gates with no control qubits)");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+
+        Py_DECREF( control_qbit_key );
+        return NULL;
+    }    
+    PyObject* control_qbit_py = PyDict_GetItem(gate_state, control_qbit_key); // borrowed reference
+    Py_DECREF( control_qbit_key );
+
+    PyObject* control_qbit_key2 = Py_BuildValue( "s", "control_qbit2" );
+    if ( PyDict_Contains(gate_state, control_qbit_key2) == 0 ) {
+        std::string err( "Gate state should contain a control qubit2 (-1 for gates with no control qubits2)");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+
+        Py_DECREF( control_qbit_key2 );
+        return NULL;
+    }    
+    PyObject* control_qbit_py2 = PyDict_GetItem(gate_state, control_qbit_key2); // borrowed reference
+    Py_DECREF( control_qbit_key2 );
+
+
+
+    PyObject* type_key = Py_BuildValue( "s", "type" );
+    if ( PyDict_Contains(gate_state, type_key) == 0 ) {
+        std::string err( "Gate state should contain a type ID (see gate.h for the gate type IDs)");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+
+        Py_DECREF( type_key );
+        return NULL;
+    }    
+    PyObject* type_py = PyDict_GetItem(gate_state, type_key); // borrowed reference
+    Py_DECREF( type_key );
+
+
+
+    int qbit_num = (int)PyLong_AsLong( qbit_num_py );
+    int target_qbit = (int)PyLong_AsLong( target_qbit_py );
+    int control_qbit = (int)PyLong_AsLong( control_qbit_py );    
+    int control_qbit2 = (int)PyLong_AsLong( control_qbit_py2 );    
+    int gate_type = (int)PyLong_AsLong( type_py );    
+    
+
+    Gate* gate = NULL;
+    
+    switch (gate_type) {
+    case CCX_OPERATION: {
+        gate = create_3_qubit_gate<CCX>( qbit_num, target_qbit, control_qbit,control_qbit2 );
+        break;
+    } 
+    case CSWAP_OPERATION: {
+        gate = create_3_qubit_gate<CSWAP>( qbit_num, target_qbit, control_qbit,control_qbit2 );
+        break;
+    } 
+    default:
+        std::string err( "Unsupported gate type");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;  
+    }
     try {
         delete( self->gate );
         self->gate = gate;
@@ -1031,52 +1320,73 @@ Gate_Wrapper_setstate( Gate_Wrapper *self, PyObject *args ) {
 
 
 
-
 extern "C"
 {
 
 /**
 @brief Structure containing metadata about the methods of class qgd_U3.
 */
+#define GATE_WRAPPER_BASE_METHODS \
+    {"get_Matrix", (PyCFunction) Gate_Wrapper_get_Matrix, METH_VARARGS | METH_KEYWORDS, \
+     "Method to get the matrix representation of the gate." \
+    }, \
+    {"apply_to", (PyCFunction) Gate_Wrapper_Wrapper_apply_to, METH_VARARGS | METH_KEYWORDS, \
+     "Call to apply the gate on an input state/matrix." \
+    }, \
+    {"get_Gate_Kernel", (PyCFunction) Gate_Wrapper_get_Gate_Kernel, METH_VARARGS | METH_KEYWORDS, \
+     "Call to calculate the gate matrix acting on a single qbit space." \
+    }, \
+    {"get_Parameter_Num", (PyCFunction) Gate_Wrapper_get_Parameter_Num, METH_NOARGS, \
+     "Call to get the number of free parameters in the gate." \
+    }, \
+    {"get_Parameter_Start_Index", (PyCFunction) Gate_Wrapper_get_Parameter_Start_Index, METH_NOARGS, \
+     "Call to get the starting index of the parameters in the parameter array corresponding to the circuit in which the current gate is incorporated." \
+    }, \
+    {"get_Target_Qbit", (PyCFunction) Gate_Wrapper_get_Target_Qbit, METH_NOARGS, \
+     "Call to get the target qbit." \
+    }, \
+    {"get_Control_Qbit", (PyCFunction) Gate_Wrapper_get_Control_Qbit, METH_NOARGS, \
+     "Call to get the control qbit (returns with -1 if no control qbit is used in the gate)." \
+    }, \
+    {"set_Target_Qbit", (PyCFunction) Gate_Wrapper_set_Target_Qbit, METH_VARARGS, \
+     "Call to set the target qbit." \
+    }, \
+    {"set_Control_Qbit", (PyCFunction) Gate_Wrapper_set_Control_Qbit, METH_VARARGS, \
+     "Call to set the control qbit." \
+    }, \
+    {"Extract_Parameters", (PyCFunction) Gate_Wrapper_Extract_Parameters, METH_VARARGS, \
+     "Call to extract the paramaters corresponding to the gate, from a parameter array associated to the circuit in which the gate is embedded." \
+    }, \
+    {"get_Name", (PyCFunction) Gate_Wrapper_get_Name, METH_NOARGS, \
+     "Method to get the name label of the gate" \
+    }
+
 static PyMethodDef Gate_Wrapper_methods[] = {
-    {"get_Matrix", (PyCFunction) Gate_Wrapper_get_Matrix, METH_VARARGS | METH_KEYWORDS,
-     "Method to get the matrix representation of the gate."
+    GATE_WRAPPER_BASE_METHODS
+    ,
+    {"__getstate__", (PyCFunction) Gate_Wrapper_getstate, METH_NOARGS, 
+     "Method to extract the stored quantum gate in a human-readable data serialized and pickle-able format" 
+    }, 
+    {"__setstate__", (PyCFunction) Gate_Wrapper_setstate, METH_VARARGS, 
+     "Call to set the state of quantum gate from a human-readable data serialized and pickle-able format" 
     },
-    {"apply_to", (PyCFunction) Gate_Wrapper_Wrapper_apply_to, METH_VARARGS | METH_KEYWORDS,
-     "Call to apply the gate on an input state/matrix."
-    },
-    {"get_Gate_Kernel", (PyCFunction) Gate_Wrapper_get_Gate_Kernel, METH_VARARGS | METH_KEYWORDS,
-     "Call to calculate the gate matrix acting on a single qbit space."
-    },
-    {"get_Parameter_Num", (PyCFunction) Gate_Wrapper_get_Parameter_Num, METH_NOARGS,
-     "Call to get the number of free parameters in the gate."
-    },
-    {"get_Parameter_Start_Index", (PyCFunction) Gate_Wrapper_get_Parameter_Start_Index, METH_NOARGS,
-     "Call to get the starting index of the parameters in the parameter array corresponding to the circuit in which the current gate is incorporated."
-    },
-    {"get_Target_Qbit", (PyCFunction) Gate_Wrapper_get_Target_Qbit, METH_NOARGS,
-     "Call to get the target qbit."
-    },
-    {"get_Control_Qbit", (PyCFunction) Gate_Wrapper_get_Control_Qbit, METH_NOARGS,
-     "Call to get the control qbit (returns with -1 if no control qbit is used in the gate)."
-    },
-    {"set_Target_Qbit", (PyCFunction) Gate_Wrapper_set_Target_Qbit, METH_VARARGS,
-     "Call to set the target qbit."
-    },
-    {"set_Control_Qbit", (PyCFunction) Gate_Wrapper_set_Control_Qbit, METH_VARARGS,
-     "Call to set the control qbit."
-    },
-    {"Extract_Parameters", (PyCFunction) Gate_Wrapper_Extract_Parameters, METH_VARARGS,
-     "Call to extract the paramaters corresponding to the gate, from a parameter array associated to the circuit in which the gate is embedded."
-    },
-    {"get_Name", (PyCFunction) Gate_Wrapper_get_Name, METH_NOARGS,
-     "Method to get the name label of the gate"
-    },
-    {"__getstate__", (PyCFunction) Gate_Wrapper_getstate, METH_NOARGS,
-     "Method to extract the stored quantum gate in a human-readable data serialized and pickle-able format"
-    },
-    {"__setstate__", (PyCFunction) Gate_Wrapper_setstate, METH_VARARGS,
-     "Call to set the state of quantum gate from a human-readable data serialized and pickle-able format"
+    {NULL}  /* Sentinel */
+};
+
+// Extended methods array with additional functions
+static PyMethodDef Three_Qubit_Gate_Wrapper_methods[] = {
+    GATE_WRAPPER_BASE_METHODS,
+    {"set_Control_Qbit2", (PyCFunction) Gate_Wrapper_set_Control_Qbit2, METH_VARARGS, 
+     "Call to set the control qbit2." 
+    }, 
+    {"get_Control_Qbit2", (PyCFunction) Gate_Wrapper_get_Control_Qbit2, METH_VARARGS, 
+     "Call to get the control qbit2." 
+    }, 
+    {"__getstate__", (PyCFunction) Gate_Wrapper_getstate_3qbit, METH_NOARGS, 
+     "Method to extract the stored quantum gate in a human-readable data serialized and pickle-able format" 
+    }, 
+    {"__setstate__", (PyCFunction) Gate_Wrapper_setstate_3qbit, METH_VARARGS, 
+     "Call to set the state of quantum gate from a human-readable data serialized and pickle-able format" 
     },
     {NULL}  /* Sentinel */
 };
@@ -1112,9 +1422,54 @@ struct Gate_Wrapper_Type_tmp : PyTypeObject {
 
 };
 
+struct Three_Qubit_Gate_Wrapper_Type_tmp : PyTypeObject {
+
+
+    Three_Qubit_Gate_Wrapper_Type_tmp() {
+    
+        //PyVarObject tt = { PyVarObject_HEAD_INIT(NULL, 0) };
+    
+        ob_base.ob_size = 0;
+        tp_name      = "Gate";
+        tp_basicsize = sizeof(Gate_Wrapper);
+        tp_dealloc   = (destructor)  Gate_Wrapper_dealloc;
+        tp_flags     = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE;
+        tp_doc       = "Object to represent python binding for a generic base gate of the Squander package.";
+        tp_methods   = Three_Qubit_Gate_Wrapper_methods;
+        tp_members   = Gate_Wrapper_members;
+        tp_init      = (initproc)  Gate_Wrapper_init;
+        tp_new       = generic_Gate_Wrapper_new;
+    }
+    
+
+};
+
+
 
 static Gate_Wrapper_Type_tmp Gate_Wrapper_Type;
 
+static Three_Qubit_Gate_Wrapper_Type_tmp Three_Qubit_Gate_Wrapper_Type;
+
+
+struct CCX_Wrapper_Type: Three_Qubit_Gate_Wrapper_Type_tmp{
+    CCX_Wrapper_Type(){
+        tp_name      = "CCX";
+        tp_doc       = "Object to represent python binding for a CCX gate of the Squander package.";
+        tp_new      = (newfunc) three_qubit_gate_Wrapper_new<CCX>;
+        tp_base      = &Three_Qubit_Gate_Wrapper_Type;
+    }
+
+};
+
+struct CSWAP_Wrapper_Type: Three_Qubit_Gate_Wrapper_Type_tmp{
+    CSWAP_Wrapper_Type(){
+        tp_name      = "CSWAP";
+        tp_doc       = "Object to represent python binding for a CCX gate of the Squander package.";
+        tp_new      = (newfunc) three_qubit_gate_Wrapper_new<CCX>;
+        tp_base      = &Three_Qubit_Gate_Wrapper_Type;
+    }
+
+};
 
 struct CH_Wrapper_Type : Gate_Wrapper_Type_tmp {
 
@@ -1142,6 +1497,16 @@ struct CZ_Wrapper_Type : Gate_Wrapper_Type_tmp {
         tp_name      = "CZ";
         tp_doc       = "Object to represent python binding for a CZ gate of the Squander package.";
         tp_new      = (newfunc) controlled_gate_Wrapper_new<CZ>;
+        tp_base      = &Gate_Wrapper_Type;
+    }
+};
+
+struct SWAP_Wrapper_Type : Gate_Wrapper_Type_tmp {
+
+    SWAP_Wrapper_Type() {    
+        tp_name      = "SWAP";
+        tp_doc       = "Object to represent python binding for a SWAP gate of the Squander package.";
+        tp_new      = (newfunc) controlled_gate_Wrapper_new<SWAP>;
         tp_base      = &Gate_Wrapper_Type;
     }
 };
@@ -1422,6 +1787,9 @@ static Tdg_Wrapper_Type Tdg_Wrapper_Type_ins;
 static R_Wrapper_Type R_Wrapper_Type_ins;
 static CR_Wrapper_Type CR_Wrapper_Type_ins;
 static CROT_Wrapper_Type CROT_Wrapper_Type_ins;
+static CCX_Wrapper_Type CCX_Wrapper_Type_ins;
+static SWAP_Wrapper_Type SWAP_Wrapper_Type_ins;
+static CSWAP_Wrapper_Type CSWAP_Wrapper_Type_ins;
 
 
 
@@ -1485,6 +1853,9 @@ PyInit_gates_Wrapper(void)
         PyType_Ready(&Tdg_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&CR_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&CROT_Wrapper_Type_ins) < 0 ||
+        PyType_Ready(&CCX_Wrapper_Type_ins) < 0 ||
+        PyType_Ready(&SWAP_Wrapper_Type_ins) < 0 ||
+        PyType_Ready(&CSWAP_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&R_Wrapper_Type_ins) < 0 ) {
 
         Py_DECREF(m);
@@ -1693,6 +2064,29 @@ PyInit_gates_Wrapper(void)
         Py_DECREF(m);
         return NULL;
     }
+
+    Py_INCREF(&CCX_Wrapper_Type_ins);
+    if (PyModule_AddObject(m, "CCX", (PyObject *) & CCX_Wrapper_Type_ins) < 0) {
+        Py_DECREF(&CCX_Wrapper_Type_ins);
+        Py_DECREF(m);
+        return NULL;
+    }
+
+    Py_INCREF(&CCX_Wrapper_Type_ins);
+    if (PyModule_AddObject(m, "SWAP", (PyObject *) & SWAP_Wrapper_Type_ins) < 0) {
+        Py_DECREF(&SWAP_Wrapper_Type_ins);
+        Py_DECREF(m);
+        return NULL;
+    }
+
+    Py_INCREF(&CSWAP_Wrapper_Type_ins);
+    if (PyModule_AddObject(m, "CSWAP", (PyObject *) & CSWAP_Wrapper_Type_ins) < 0) {
+        Py_DECREF(&CSWAP_Wrapper_Type_ins);
+        Py_DECREF(m);
+        return NULL;
+    }
+
+
 
     return m;
 }

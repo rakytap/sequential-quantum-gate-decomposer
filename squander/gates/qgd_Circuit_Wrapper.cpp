@@ -39,6 +39,12 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "R.h"
 #include "RY.h"
 #include "CRY.h"
+#include "CRX.h"
+#include "CRZ.h"
+#include "CP.h"
+#include "CCX.h"
+#include "SWAP.h"
+#include "CSWAP.h"
 #include "CROT.h"
 #include "CR.h"
 #include "RZ.h"
@@ -880,6 +886,104 @@ qgd_Circuit_Wrapper_add_CRX(qgd_Circuit_Wrapper *self, PyObject *args, PyObject 
     // adding U3 gate to the end of the gate structure
     if (target_qbit != -1 ) {
         self->circuit->add_crx(target_qbit, control_qbit);
+    }
+
+    return Py_BuildValue("i", 0);
+
+}
+
+
+/**
+@brief Wrapper function to add an adaptive gate to the front of the gate structure.
+@param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper.
+@param args A tuple of the input arguments: target_qbit (int)
+@param kwds A tuple of keywords
+*/
+static PyObject *
+qgd_Circuit_Wrapper_add_CCX(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *kwds)
+{
+
+    // The tuple of expected keywords
+    static char *kwlist[] = {(char*)"target_qbit", (char*)"control_qbit",(char*)"control_qbit2", NULL};
+
+    // initiate variables for input arguments
+    int  target_qbit = -1; 
+    int  control_qbit = -1; 
+    int control_qbit2 = -1;
+
+    // parsing input arguments
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|iii", kwlist,
+                                     &target_qbit, &control_qbit, &control_qbit2))
+        return Py_BuildValue("i", -1);
+
+    // adding U3 gate to the end of the gate structure
+    if (target_qbit != -1 ) {
+        self->circuit->add_ccx(target_qbit, control_qbit, control_qbit2);
+    }
+
+    return Py_BuildValue("i", 0);
+
+}
+
+
+/**
+@brief Wrapper function to add a SWAP gate to the front of the gate structure.
+@param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper.
+@param args A tuple of the input arguments: target_qbit (int), target_qbit2 (int)
+@param kwds A tuple of keywords
+*/
+static PyObject *
+qgd_Circuit_Wrapper_add_SWAP(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *kwds)
+{
+
+    // The tuple of expected keywords
+    static char *kwlist[] = {(char*)"target_qbit", (char*)"target_qbit2", NULL};
+
+    // initiate variables for input arguments
+    int  target_qbit = -1;
+    int  target_qbit2 = -1;
+
+    // parsing input arguments
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|ii", kwlist,
+                                     &target_qbit, &target_qbit2))
+        return Py_BuildValue("i", -1);
+
+    // adding SWAP gate to the end of the gate structure
+    if (target_qbit != -1 ) {
+        self->circuit->add_swap(target_qbit, target_qbit2);
+    }
+
+    return Py_BuildValue("i", 0);
+
+}
+
+
+/**
+@brief Wrapper function to add a CSWAP gate to the front of the gate structure.
+@param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper.
+@param args A tuple of the input arguments: target_qbit (int), target_qbit2 (int), control_qbit (int)
+@param kwds A tuple of keywords
+*/
+static PyObject *
+qgd_Circuit_Wrapper_add_CSWAP(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *kwds)
+{
+
+    // The tuple of expected keywords
+    static char *kwlist[] = {(char*)"target_qbit", (char*)"target_qbit2", (char*)"control_qbit", NULL};
+
+    // initiate variables for input arguments
+    int  target_qbit = -1;
+    int  target_qbit2 = -1;
+    int  control_qbit = -1;
+
+    // parsing input arguments
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|iii", kwlist,
+                                     &target_qbit, &target_qbit2, &control_qbit))
+        return Py_BuildValue("i", -1);
+
+    // adding CSWAP gate to the end of the gate structure
+    if (target_qbit != -1 ) {
+        self->circuit->add_cswap(target_qbit, target_qbit2, control_qbit);
     }
 
     return Py_BuildValue("i", 0);
@@ -2885,6 +2989,15 @@ static PyMethodDef qgd_Circuit_Wrapper_Methods[] = {
     },
     {"add_CP", (PyCFunction) qgd_Circuit_Wrapper_add_CP, METH_VARARGS | METH_KEYWORDS,
      "Call to add a CRY gate to the front of the gate structure"
+    },
+    {"add_CCX", (PyCFunction) qgd_Circuit_Wrapper_add_CCX, METH_VARARGS | METH_KEYWORDS,
+     "Call to add a CCX gate to the front of the gate structure"
+    },
+    {"add_SWAP", (PyCFunction) qgd_Circuit_Wrapper_add_SWAP, METH_VARARGS | METH_KEYWORDS,
+     "Call to add a SWAP gate to the front of the gate structure"
+    },
+    {"add_CSWAP", (PyCFunction) qgd_Circuit_Wrapper_add_CSWAP, METH_VARARGS | METH_KEYWORDS,
+     "Call to add a CSWAP gate to the front of the gate structure"
     },
     {"add_CROT", (PyCFunction) qgd_Circuit_Wrapper_add_CROT, METH_VARARGS | METH_KEYWORDS,
      "Call to add a CROT gate to the front of the gate structure"

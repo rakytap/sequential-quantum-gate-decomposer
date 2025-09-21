@@ -181,21 +181,26 @@ class Test_operations:
 
         """
 
-        is_controlled_gate = (len(gate_obj.__name__) > 1) and (gate_obj.__name__[0] == 'C')
-
-        for qbit_num in range(2,7):
+        is_controlled_gate = (len(gate_obj.__name__) > 1) and ((gate_obj.__name__[0] == 'C') or gate_obj.__name__[-4:] == "SWAP")
+        is_3qbit_gate = (gate_obj.__name__[:3] == 'CCX' or gate_obj.__name__[:5] == 'CSWAP')
+        for qbit_num in range(3,7):
 
             # target qbit
-            target_qbit = qbit_num-2
+            target_qbit = qbit_num-3
 
             # creating an instance of the C++ class
             if not is_controlled_gate:
                 # single qbit gate
                 squander_gate = gate_obj( qbit_num, target_qbit )
-            elif is_controlled_gate:
+            elif is_controlled_gate and not is_3qbit_gate:
                 # gate with control qbit
                 control_qbit = qbit_num-1
                 squander_gate = gate_obj( qbit_num, target_qbit, control_qbit )
+            elif is_3qbit_gate:
+                control_qbit = qbit_num-2
+                control_qbit2 = qbit_num-1
+                squander_gate = gate_obj(qbit_num, target_qbit, control_qbit, control_qbit2)
+            
 
             
             
@@ -251,8 +256,13 @@ class Test_operations:
 
             elif is_controlled_gate and parameter_num == 0:
                 # add parameter-free two-qbit controlled gate to Qiskit circuit
-                control_qbit = qbit_num-1
-                gate_adding_fnc(control_qbit, target_qbit)
+                if gate_name != "ccx" and gate_name != "cswap":
+                    control_qbit = qbit_num-1
+                    gate_adding_fnc(control_qbit, target_qbit)
+                else:
+                    control_qbit = qbit_num-2
+                    control_qbit2 = qbit_num-1
+                    gate_adding_fnc(control_qbit2, control_qbit, target_qbit)
 
             elif is_controlled_gate and parameter_num > 0:
                 # add parameter-free two-qbit controlled gate to Qiskit circuit
@@ -264,13 +274,27 @@ class Test_operations:
                 gate_adding_fnc( *parameters_QISKIT, control_qbit, target_qbit)
 
 
-
             # the unitary matrix from the result object
             gate_matrix_qiskit = get_unitary_from_qiskit_circuit( circuit )
             gate_matrix_qiskit = np.asarray(gate_matrix_qiskit)
-        
-            #the difference between the SQUANDER and the qiskit result        
+
+            #the difference between the SQUANDER and the qiskit result
             delta_matrix=gate_matrix_squander-gate_matrix_qiskit
+
+            if gate_obj.__name__ == 'SWAP' or gate_obj.__name__ == 'CSWAP':
+                print(f"\n=== {gate_obj.__name__} Matrix (qbit_num={qbit_num}) ===")
+                print(f"Parameters: target_qbit={target_qbit}", end="")
+                if 'control_qbit' in locals():
+                    print(f", control_qbit={control_qbit}", end="")
+                if 'control_qbit2' in locals():
+                    print(f", control_qbit2={control_qbit2}", end="")
+                print()
+                print("SQUANDER:")
+                print(gate_matrix_squander)
+                print("QISKIT:")
+                print(gate_matrix_qiskit)
+                print("DIFFERENCE:")
+                print(delta_matrix)
 
             # compute norm of matrix
             error=np.linalg.norm(delta_matrix)
@@ -287,21 +311,26 @@ class Test_operations:
 
         """
 
-        is_controlled_gate = (len(gate_obj.__name__) > 1) and (gate_obj.__name__[0] == 'C')
 
-        for qbit_num in range(2,7):
+        is_controlled_gate = (len(gate_obj.__name__) > 1) and  ((gate_obj.__name__[0] == 'C') or gate_obj.__name__[-4:] == "SWAP")
+        is_3qbit_gate = (gate_obj.__name__[:3] == 'CCX' or gate_obj.__name__[:5] == 'CSWAP')
+        for qbit_num in range(3,7):
 
             # target qbit
-            target_qbit = qbit_num-2
+            target_qbit = qbit_num-3
 
             # creating an instance of the C++ class
             if not is_controlled_gate:
                 # single qbit gate
                 squander_gate = gate_obj( qbit_num, target_qbit )
-            elif is_controlled_gate:
+            elif is_controlled_gate and not is_3qbit_gate:
                 # gate with control qbit
                 control_qbit = qbit_num-1
                 squander_gate = gate_obj( qbit_num, target_qbit, control_qbit )
+            elif is_3qbit_gate:
+                control_qbit = qbit_num-2
+                control_qbit2 = qbit_num-1
+                squander_gate = gate_obj(qbit_num, target_qbit, control_qbit, control_qbit2)
 
             
             # matrix size of the unitary
@@ -368,8 +397,15 @@ class Test_operations:
 
             elif is_controlled_gate and parameter_num == 0:
                 # add parameter-free two-qbit controlled gate to Qiskit circuit
-                control_qbit = qbit_num-1
-                gate_adding_fnc(control_qbit, target_qbit)
+                if gate_name != "ccx" and gate_name != "cswap":
+                    control_qbit = qbit_num-1
+                    gate_adding_fnc(control_qbit, target_qbit)
+                else:
+                    control_qbit = qbit_num-2
+                    control_qbit2 = qbit_num-1
+                    gate_adding_fnc(control_qbit2, control_qbit, target_qbit)
+                    
+
 
             elif is_controlled_gate and parameter_num > 0:
                 # add parameter-free two-qbit controlled gate to Qiskit circuit
