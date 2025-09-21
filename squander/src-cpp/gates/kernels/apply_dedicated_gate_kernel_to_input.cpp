@@ -24,6 +24,7 @@ limitations under the License.
 #include "apply_dedicated_gate_kernel_to_input.h"
 //#include <immintrin.h>
 #include "tbb/tbb.h"
+#include <omp.h>
 
 
 
@@ -58,7 +59,6 @@ void apply_X_kernel_to_input(Matrix& input, const int& target_qbit,
             // FIXED: Check each control qubit separately
             bool control1_active = (control_qbit1 < 0) || ((current_idx_loc >> control_qbit1) & 1);
             bool control2_active = (control_qbit2 < 0) || ((current_idx_loc >> control_qbit2) & 1);
-
 
             // Apply X gate only when BOTH controls are active
             if (control1_active && control2_active) {
@@ -273,13 +273,496 @@ void apply_SWAP_kernel_to_input(Matrix& input, const int& target_qbit1, const in
         int swap_idx = base|(1<<target_qbit1);
         int swap_idx_pair = base|(1<<target_qbit2);
 
-        // Debug output for CSWAP
-        if (control_qbit >= 0) {
-            std::cout << "SWAP kernel: block_idx=" << block_idx
-                      << ", base=" << base
-                      << ", swap_idx=" << swap_idx
-                      << ", swap_idx_pair=" << swap_idx_pair << std::endl;
+        std::swap_ranges(
+            input.get_data() + swap_idx*input.stride,
+            input.get_data() + swap_idx*input.stride + input.cols,
+            input.get_data() + swap_idx_pair*input.stride
+        );
+    }
+}
+
+// TBB Parallelized versions
+
+void apply_X_kernel_to_input_tbb(Matrix& input, const int& target_qbit,
+                                const int& control_qbit1, const int& control_qbit2,
+                                const int& matrix_size) {
+    int index_step_target = 1 << target_qbit;
+
+    tbb::parallel_for(tbb::blocked_range<int>(0, matrix_size >> 1, 1024),
+        [&](const tbb::blocked_range<int>& range) {
+            for (int block_idx = range.begin(); block_idx != range.end(); ++block_idx) {
+                int current_idx = block_idx * (index_step_target << 1);
+                int current_idx_pair = current_idx + index_step_target;
+
+                if (current_idx_pair >= matrix_size) continue;
+
+                for(int idx = 0; idx < index_step_target; idx++) {
+                    int current_idx_loc = current_idx + idx;
+                    int current_idx_pair_loc = current_idx_pair + idx;
+
+                    bool control1_active = (control_qbit1 < 0) || ((current_idx_loc >> control_qbit1) & 1);
+                    bool control2_active = (control_qbit2 < 0) || ((current_idx_loc >> control_qbit2) & 1);
+
+                    if (control1_active && control2_active) {
+                        int row_offset = current_idx_loc * input.stride;
+                        int row_offset_pair = current_idx_pair_loc * input.stride;
+
+                        std::swap_ranges(
+                            input.get_data() + row_offset,
+                            input.get_data() + row_offset + input.cols,
+                            input.get_data() + row_offset_pair
+                        );
+                    }
+                }
+            }
         }
+    );
+}
+
+void apply_Y_kernel_to_input_tbb(Matrix& input, const int& target_qbit,
+                                const int& control_qbit,
+                                const int& matrix_size) {
+    int index_step_target = 1 << target_qbit;
+
+    tbb::parallel_for(tbb::blocked_range<int>(0, matrix_size >> 1, 1024),
+        [&](const tbb::blocked_range<int>& range) {
+            for (int block_idx = range.begin(); block_idx != range.end(); ++block_idx) {
+                int current_idx = block_idx * (index_step_target << 1);
+                int current_idx_pair = current_idx + index_step_target;
+
+                if (current_idx_pair >= matrix_size) continue;
+
+                for(int idx = 0; idx < index_step_target; idx++) {
+                    int current_idx_loc = current_idx + idx;
+                    int current_idx_pair_loc = current_idx_pair + idx;
+
+                    if ((control_qbit < 0) || ((current_idx_loc >> control_qbit) & 1)) {
+                        int row_offset = current_idx_loc * input.stride;
+                        int row_offset_pair = current_idx_pair_loc * input.stride;
+
+                        for (int col_idx = 0; col_idx < input.cols; col_idx++) {
+                            int index = row_offset + col_idx;
+                            int index_pair = row_offset_pair + col_idx;
+
+                            QGD_Complex16 element = input[index];
+                            QGD_Complex16 element_pair = input[index_pair];
+
+                            input[index].real = element_pair.imag;
+                            input[index].imag = -element_pair.real;
+
+                            input[index_pair].real = -element.imag;
+                            input[index_pair].imag = element.real;
+                        }
+                    }
+                }
+            }
+        }
+    );
+}
+
+void apply_Z_kernel_to_input_tbb(Matrix& input, const int& target_qbit,
+                                const int& control_qbit,
+                                const int& matrix_size) {
+    int index_step_target = 1 << target_qbit;
+
+    tbb::parallel_for(tbb::blocked_range<int>(0, matrix_size >> 1, 1024),
+        [&](const tbb::blocked_range<int>& range) {
+            for (int block_idx = range.begin(); block_idx != range.end(); ++block_idx) {
+                int current_idx = block_idx * (index_step_target << 1);
+                int current_idx_pair = current_idx + index_step_target;
+
+                if (current_idx_pair >= matrix_size) continue;
+
+                for(int idx = 0; idx < index_step_target; idx++) {
+                    int current_idx_loc = current_idx + idx;
+                    int current_idx_pair_loc = current_idx_pair + idx;
+
+                    if ((control_qbit < 0) || ((current_idx_loc >> control_qbit) & 1)) {
+                        int row_offset_pair = current_idx_pair_loc * input.stride;
+
+                        for (int col_idx = 0; col_idx < input.cols; col_idx++) {
+                            int index_pair = row_offset_pair + col_idx;
+
+                            input[index_pair].real = -input[index_pair].real;
+                            input[index_pair].imag = -input[index_pair].imag;
+                        }
+                    }
+                }
+            }
+        }
+    );
+}
+
+void apply_H_kernel_to_input_tbb(Matrix& input, const int& target_qbit, const int& control_qbit, const int& matrix_size) {
+    int index_step_target = 1 << target_qbit;
+    const double inv_sqrt2 = 1.0 / std::sqrt(2.0);
+
+    tbb::parallel_for(tbb::blocked_range<int>(0, matrix_size >> 1, 1024),
+        [&](const tbb::blocked_range<int>& range) {
+            for (int block_idx = range.begin(); block_idx != range.end(); ++block_idx) {
+                int current_idx = block_idx * (index_step_target << 1);
+                int current_idx_pair = current_idx + index_step_target;
+
+                if (current_idx_pair >= matrix_size) continue;
+
+                for (int idx = 0; idx < index_step_target; idx++) {
+                    int current_idx_loc = current_idx + idx;
+                    int current_idx_pair_loc = current_idx_pair + idx;
+
+                    if ((control_qbit < 0) || ((current_idx_loc >> control_qbit) & 1)) {
+                        int row_offset = current_idx_loc * input.stride;
+                        int row_offset_pair = current_idx_pair_loc * input.stride;
+
+                        for (int col_idx = 0; col_idx < input.cols; col_idx++) {
+                            int index = row_offset + col_idx;
+                            int index_pair = row_offset_pair + col_idx;
+
+                            QGD_Complex16 element = input[index];
+                            QGD_Complex16 element_pair = input[index_pair];
+
+                            input[index].real = inv_sqrt2 * (element.real + element_pair.real);
+                            input[index].imag = inv_sqrt2 * (element.imag + element_pair.imag);
+
+                            input[index_pair].real = inv_sqrt2 * (element.real - element_pair.real);
+                            input[index_pair].imag = inv_sqrt2 * (element.imag - element_pair.imag);
+                        }
+                    }
+                }
+            }
+        }
+    );
+}
+
+void apply_S_kernel_to_input_tbb(Matrix& input, const int& target_qbit, const int& control_qbit, const int& matrix_size) {
+    int index_step_target = 1 << target_qbit;
+
+    tbb::parallel_for(tbb::blocked_range<int>(0, matrix_size >> 1, 1024),
+        [&](const tbb::blocked_range<int>& range) {
+            for (int block_idx = range.begin(); block_idx != range.end(); ++block_idx) {
+                int current_idx = block_idx * (index_step_target << 1);
+                int current_idx_pair = current_idx + index_step_target;
+
+                if (current_idx_pair >= matrix_size) continue;
+
+                for (int idx = 0; idx < index_step_target; idx++) {
+                    int current_idx_loc = current_idx + idx;
+                    int current_idx_pair_loc = current_idx_pair + idx;
+
+                    if ((control_qbit < 0) || ((current_idx_loc >> control_qbit) & 1)) {
+                        int row_offset_pair = current_idx_pair_loc * input.stride;
+
+                        for (int col_idx = 0; col_idx < input.cols; col_idx++) {
+                            int index_pair = row_offset_pair + col_idx;
+
+                            double real = input[index_pair].real;
+                            double imag = input[index_pair].imag;
+                            input[index_pair].real = -imag;
+                            input[index_pair].imag = real;
+                        }
+                    }
+                }
+            }
+        }
+    );
+}
+
+void apply_T_kernel_to_input_tbb(Matrix& input, const int& target_qbit, const int& control_qbit, const int& matrix_size) {
+    int index_step_target = 1 << target_qbit;
+    const double inv_sqrt2 = 1.0 / std::sqrt(2.0);
+
+    tbb::parallel_for(tbb::blocked_range<int>(0, matrix_size >> 1, 1024),
+        [&](const tbb::blocked_range<int>& range) {
+            for (int block_idx = range.begin(); block_idx != range.end(); ++block_idx) {
+                int current_idx = block_idx * (index_step_target << 1);
+                int current_idx_pair = current_idx + index_step_target;
+
+                if (current_idx_pair >= matrix_size) continue;
+
+                for (int idx = 0; idx < index_step_target; idx++) {
+                    int current_idx_loc = current_idx + idx;
+                    int current_idx_pair_loc = current_idx_pair + idx;
+
+                    if ((control_qbit < 0) || ((current_idx_loc >> control_qbit) & 1)) {
+                        int row_offset_pair = current_idx_pair_loc * input.stride;
+
+                        for (int col_idx = 0; col_idx < input.cols; col_idx++) {
+                            int index_pair = row_offset_pair + col_idx;
+
+                            double real = input[index_pair].real;
+                            double imag = input[index_pair].imag;
+                            input[index_pair].real = inv_sqrt2 * (real - imag);
+                            input[index_pair].imag = inv_sqrt2 * (real + imag);
+                        }
+                    }
+                }
+            }
+        }
+    );
+}
+
+void apply_SWAP_kernel_to_input_tbb(Matrix& input, const int& target_qbit1, const int& target_qbit2, const int& control_qbit, const int& matrix_size) {
+    std::vector<int> non_involved_qbits;
+    int qbit_num = (int)std::log2(matrix_size);
+    for (int idx=0; idx<qbit_num; idx++){
+        if ( (idx != target_qbit1 && idx != target_qbit2) && idx != control_qbit){
+            non_involved_qbits.push_back(idx);
+        }
+    }
+    int is_control_involved = control_qbit == -1 ? 0 : 1<<control_qbit;
+    int total_blocks = matrix_size >> (qbit_num - non_involved_qbits.size());
+
+    tbb::parallel_for(tbb::blocked_range<int>(0, total_blocks, 64),
+        [&](const tbb::blocked_range<int>& range) {
+            for (int block_idx = range.begin(); block_idx != range.end(); ++block_idx) {
+                int base = 0;
+                for (int qdx=0; qdx<non_involved_qbits.size();qdx++){
+                    if ((block_idx >> qdx) & 1) {
+                        base |= (1<<non_involved_qbits[qdx]);
+                    }
+                }
+                base |= is_control_involved;
+                int swap_idx = base|(1<<target_qbit1);
+                int swap_idx_pair = base|(1<<target_qbit2);
+
+                std::swap_ranges(
+                    input.get_data() + swap_idx*input.stride,
+                    input.get_data() + swap_idx*input.stride + input.cols,
+                    input.get_data() + swap_idx_pair*input.stride
+                );
+            }
+        }
+    );
+}
+
+// OpenMP Parallelized versions
+
+void apply_X_kernel_to_input_omp(Matrix& input, const int& target_qbit,
+                                 const int& control_qbit1, const int& control_qbit2,
+                                 const int& matrix_size) {
+    int index_step_target = 1 << target_qbit;
+    int total_blocks = matrix_size >> 1;
+
+    #pragma omp parallel for schedule(static)
+    for (int block_idx = 0; block_idx < total_blocks; block_idx++) {
+        int current_idx = block_idx * (index_step_target << 1);
+        int current_idx_pair = current_idx + index_step_target;
+
+        if (current_idx_pair >= matrix_size) continue;
+
+        for(int idx = 0; idx < index_step_target; idx++) {
+            int current_idx_loc = current_idx + idx;
+            int current_idx_pair_loc = current_idx_pair + idx;
+
+            bool control1_active = (control_qbit1 < 0) || ((current_idx_loc >> control_qbit1) & 1);
+            bool control2_active = (control_qbit2 < 0) || ((current_idx_loc >> control_qbit2) & 1);
+
+            if (control1_active && control2_active) {
+                int row_offset = current_idx_loc * input.stride;
+                int row_offset_pair = current_idx_pair_loc * input.stride;
+
+                std::swap_ranges(
+                    input.get_data() + row_offset,
+                    input.get_data() + row_offset + input.cols,
+                    input.get_data() + row_offset_pair
+                );
+            }
+        }
+    }
+}
+
+void apply_Y_kernel_to_input_omp(Matrix& input, const int& target_qbit,
+                                 const int& control_qbit,
+                                 const int& matrix_size) {
+    int index_step_target = 1 << target_qbit;
+    int total_blocks = matrix_size >> 1;
+
+    #pragma omp parallel for schedule(static)
+    for (int block_idx = 0; block_idx < total_blocks; block_idx++) {
+        int current_idx = block_idx * (index_step_target << 1);
+        int current_idx_pair = current_idx + index_step_target;
+
+        if (current_idx_pair >= matrix_size) continue;
+
+        for(int idx = 0; idx < index_step_target; idx++) {
+            int current_idx_loc = current_idx + idx;
+            int current_idx_pair_loc = current_idx_pair + idx;
+
+            if ((control_qbit < 0) || ((current_idx_loc >> control_qbit) & 1)) {
+                int row_offset = current_idx_loc * input.stride;
+                int row_offset_pair = current_idx_pair_loc * input.stride;
+
+                for (int col_idx = 0; col_idx < input.cols; col_idx++) {
+                    int index = row_offset + col_idx;
+                    int index_pair = row_offset_pair + col_idx;
+
+                    QGD_Complex16 element = input[index];
+                    QGD_Complex16 element_pair = input[index_pair];
+
+                    input[index].real = element_pair.imag;
+                    input[index].imag = -element_pair.real;
+
+                    input[index_pair].real = -element.imag;
+                    input[index_pair].imag = element.real;
+                }
+            }
+        }
+    }
+}
+
+void apply_Z_kernel_to_input_omp(Matrix& input, const int& target_qbit,
+                                 const int& control_qbit,
+                                 const int& matrix_size) {
+    int index_step_target = 1 << target_qbit;
+    int total_blocks = matrix_size >> 1;
+
+    #pragma omp parallel for schedule(static)
+    for (int block_idx = 0; block_idx < total_blocks; block_idx++) {
+        int current_idx = block_idx * (index_step_target << 1);
+        int current_idx_pair = current_idx + index_step_target;
+
+        if (current_idx_pair >= matrix_size) continue;
+
+        for(int idx = 0; idx < index_step_target; idx++) {
+            int current_idx_loc = current_idx + idx;
+            int current_idx_pair_loc = current_idx_pair + idx;
+
+            if ((control_qbit < 0) || ((current_idx_loc >> control_qbit) & 1)) {
+                int row_offset_pair = current_idx_pair_loc * input.stride;
+
+                for (int col_idx = 0; col_idx < input.cols; col_idx++) {
+                    int index_pair = row_offset_pair + col_idx;
+
+                    input[index_pair].real = -input[index_pair].real;
+                    input[index_pair].imag = -input[index_pair].imag;
+                }
+            }
+        }
+    }
+}
+
+void apply_H_kernel_to_input_omp(Matrix& input, const int& target_qbit, const int& control_qbit, const int& matrix_size) {
+    int index_step_target = 1 << target_qbit;
+    const double inv_sqrt2 = 1.0 / std::sqrt(2.0);
+    int total_blocks = matrix_size >> 1;
+
+    #pragma omp parallel for schedule(static)
+    for (int block_idx = 0; block_idx < total_blocks; block_idx++) {
+        int current_idx = block_idx * (index_step_target << 1);
+        int current_idx_pair = current_idx + index_step_target;
+
+        if (current_idx_pair >= matrix_size) continue;
+
+        for (int idx = 0; idx < index_step_target; idx++) {
+            int current_idx_loc = current_idx + idx;
+            int current_idx_pair_loc = current_idx_pair + idx;
+
+            if ((control_qbit < 0) || ((current_idx_loc >> control_qbit) & 1)) {
+                int row_offset = current_idx_loc * input.stride;
+                int row_offset_pair = current_idx_pair_loc * input.stride;
+
+                for (int col_idx = 0; col_idx < input.cols; col_idx++) {
+                    int index = row_offset + col_idx;
+                    int index_pair = row_offset_pair + col_idx;
+
+                    QGD_Complex16 element = input[index];
+                    QGD_Complex16 element_pair = input[index_pair];
+
+                    input[index].real = inv_sqrt2 * (element.real + element_pair.real);
+                    input[index].imag = inv_sqrt2 * (element.imag + element_pair.imag);
+
+                    input[index_pair].real = inv_sqrt2 * (element.real - element_pair.real);
+                    input[index_pair].imag = inv_sqrt2 * (element.imag - element_pair.imag);
+                }
+            }
+        }
+    }
+}
+
+void apply_S_kernel_to_input_omp(Matrix& input, const int& target_qbit, const int& control_qbit, const int& matrix_size) {
+    int index_step_target = 1 << target_qbit;
+    int total_blocks = matrix_size >> 1;
+
+    #pragma omp parallel for schedule(static)
+    for (int block_idx = 0; block_idx < total_blocks; block_idx++) {
+        int current_idx = block_idx * (index_step_target << 1);
+        int current_idx_pair = current_idx + index_step_target;
+
+        if (current_idx_pair >= matrix_size) continue;
+
+        for (int idx = 0; idx < index_step_target; idx++) {
+            int current_idx_loc = current_idx + idx;
+            int current_idx_pair_loc = current_idx_pair + idx;
+
+            if ((control_qbit < 0) || ((current_idx_loc >> control_qbit) & 1)) {
+                int row_offset_pair = current_idx_pair_loc * input.stride;
+
+                for (int col_idx = 0; col_idx < input.cols; col_idx++) {
+                    int index_pair = row_offset_pair + col_idx;
+
+                    double real = input[index_pair].real;
+                    double imag = input[index_pair].imag;
+                    input[index_pair].real = -imag;
+                    input[index_pair].imag = real;
+                }
+            }
+        }
+    }
+}
+
+void apply_T_kernel_to_input_omp(Matrix& input, const int& target_qbit, const int& control_qbit, const int& matrix_size) {
+    int index_step_target = 1 << target_qbit;
+    const double inv_sqrt2 = 1.0 / std::sqrt(2.0);
+    int total_blocks = matrix_size >> 1;
+
+    #pragma omp parallel for schedule(static)
+    for (int block_idx = 0; block_idx < total_blocks; block_idx++) {
+        int current_idx = block_idx * (index_step_target << 1);
+        int current_idx_pair = current_idx + index_step_target;
+
+        if (current_idx_pair >= matrix_size) continue;
+
+        for (int idx = 0; idx < index_step_target; idx++) {
+            int current_idx_loc = current_idx + idx;
+            int current_idx_pair_loc = current_idx_pair + idx;
+
+            if ((control_qbit < 0) || ((current_idx_loc >> control_qbit) & 1)) {
+                int row_offset_pair = current_idx_pair_loc * input.stride;
+
+                for (int col_idx = 0; col_idx < input.cols; col_idx++) {
+                    int index_pair = row_offset_pair + col_idx;
+
+                    double real = input[index_pair].real;
+                    double imag = input[index_pair].imag;
+                    input[index_pair].real = inv_sqrt2 * (real - imag);
+                    input[index_pair].imag = inv_sqrt2 * (real + imag);
+                }
+            }
+        }
+    }
+}
+
+void apply_SWAP_kernel_to_input_omp(Matrix& input, const int& target_qbit1, const int& target_qbit2, const int& control_qbit, const int& matrix_size) {
+    std::vector<int> non_involved_qbits;
+    int qbit_num = (int)std::log2(matrix_size);
+    for (int idx=0; idx<qbit_num; idx++){
+        if ( (idx != target_qbit1 && idx != target_qbit2) && idx != control_qbit){
+            non_involved_qbits.push_back(idx);
+        }
+    }
+    int is_control_involved = control_qbit == -1 ? 0 : 1<<control_qbit;
+    int total_blocks = matrix_size >> (qbit_num - non_involved_qbits.size());
+
+    #pragma omp parallel for schedule(static)
+    for (int block_idx = 0; block_idx < total_blocks; block_idx++) {
+        int base = 0;
+        for (int qdx=0; qdx<non_involved_qbits.size();qdx++){
+            if ((block_idx >> qdx) & 1) {
+                base |= (1<<non_involved_qbits[qdx]);
+            }
+        }
+        base |= is_control_involved;
+        int swap_idx = base|(1<<target_qbit1);
+        int swap_idx_pair = base|(1<<target_qbit2);
 
         std::swap_ranges(
             input.get_data() + swap_idx*input.stride,

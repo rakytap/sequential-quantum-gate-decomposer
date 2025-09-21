@@ -111,16 +111,38 @@ CSWAP::apply_to(Matrix& input, int parallel) {
         std::string err("CSWAP::apply_to: Wrong input size in CSWAP gate apply");
         throw(err);
     }
-
-    // Debug output for CSWAP parameters
-    std::cout << "CSWAP::apply_to: target_qbit=" << target_qbit
-              << ", control_qbit=" << control_qbit
-              << ", control_qbit2=" << control_qbit2 << std::endl;
-
+    switch (parallel){
     // Use the dedicated SWAP kernel with control_qbit2 as the actual control
-    apply_SWAP_kernel_to_input(input, target_qbit, control_qbit, control_qbit2, matrix_size);
+    case 0:
+    apply_SWAP_kernel_to_input(input, target_qbit, control_qbit, control_qbit2, matrix_size); break;
+    case 1: 
+    apply_SWAP_kernel_to_input_omp(input, target_qbit, control_qbit, control_qbit2, matrix_size); break;
+    case 2:
+    apply_SWAP_kernel_to_input_tbb(input, target_qbit, control_qbit, control_qbit2, matrix_size); break;
+    }
 }
 
+/**
+@brief Call to apply the gate operation on the input matrix
+@param input The input matrix on which the transformation is applied
+@param parameters An array of parameters to calculate the matrix elements
+@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with Intel TBB
+*/
+void CSWAP::apply_to(Matrix& input, const Matrix_real& parameters, int parallel) {
+
+    int matrix_size = input.rows;
+
+    // Apply the dedicated X kernel with both control qubits
+    switch (parallel){
+    // Use the dedicated SWAP kernel with control_qbit2 as the actual control
+    case 0:
+    apply_SWAP_kernel_to_input(input, target_qbit, control_qbit, control_qbit2, matrix_size); break;
+    case 1: 
+    apply_SWAP_kernel_to_input_omp(input, target_qbit, control_qbit, control_qbit2, matrix_size); break;
+    case 2:
+    apply_SWAP_kernel_to_input_tbb(input, target_qbit, control_qbit, control_qbit2, matrix_size); break;
+    }
+}
 /**
 @brief Get list of involved qubits
 @param only_target If true, return only target qubits, otherwise include control qubits too

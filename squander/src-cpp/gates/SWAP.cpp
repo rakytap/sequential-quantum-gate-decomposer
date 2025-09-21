@@ -146,7 +146,36 @@ SWAP::apply_to(Matrix& input, int parallel) {
     }
 
     // Use the dedicated SWAP kernel (using control_qbit as target_qbit2)
-    apply_SWAP_kernel_to_input(input, target_qbit, control_qbit, -1, matrix_size);
+    switch (parallel){
+        case 0:
+            apply_SWAP_kernel_to_input(input, target_qbit, control_qbit, -1, matrix_size); break;
+        case 1:
+            apply_SWAP_kernel_to_input_omp(input, target_qbit, control_qbit, -1, matrix_size); break;
+        case 2:
+            apply_SWAP_kernel_to_input_tbb(input, target_qbit, control_qbit, -1, matrix_size); break;
+    }
+}
+
+/**
+@brief Call to apply the gate operation on the input matrix
+@param input The input matrix on which the transformation is applied
+@param parameters An array of parameters to calculate the matrix elements
+@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with Intel TBB
+*/
+void SWAP::apply_to(Matrix& input, const Matrix_real& parameters, int parallel) {
+
+    int matrix_size = input.rows;
+
+    // Apply the dedicated X kernel with both control qubits
+    switch (parallel){
+        case 0:
+            apply_SWAP_kernel_to_input(input, target_qbit, control_qbit, -1, matrix_size); break;
+        case 1:
+            apply_SWAP_kernel_to_input_omp(input, target_qbit, control_qbit, -1, matrix_size); break;
+        case 2:
+            apply_SWAP_kernel_to_input_tbb(input, target_qbit, control_qbit, -1, matrix_size); break;
+    }
+
 }
 
 /**

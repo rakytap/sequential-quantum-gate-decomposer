@@ -1464,8 +1464,8 @@ struct CCX_Wrapper_Type: Three_Qubit_Gate_Wrapper_Type_tmp{
 struct CSWAP_Wrapper_Type: Three_Qubit_Gate_Wrapper_Type_tmp{
     CSWAP_Wrapper_Type(){
         tp_name      = "CSWAP";
-        tp_doc       = "Object to represent python binding for a CCX gate of the Squander package.";
-        tp_new      = (newfunc) three_qubit_gate_Wrapper_new<CCX>;
+        tp_doc       = "Object to represent python binding for a CSWAP gate of the Squander package.";
+        tp_new      = (newfunc) three_qubit_gate_Wrapper_new<CSWAP>;
         tp_base      = &Three_Qubit_Gate_Wrapper_Type;
     }
 

@@ -129,7 +129,14 @@ void CCX::apply_to(Matrix& input, int parallel) {
     int matrix_size = input.rows;
 
     // Apply the dedicated X kernel with both control qubits
-    apply_X_kernel_to_input(input, target_qbit, control_qbit, control_qbit2, matrix_size);
+    switch (parallel){
+        case 0:
+            apply_X_kernel_to_input(input, target_qbit, control_qbit, control_qbit2, matrix_size); break;
+        case 1:
+            apply_X_kernel_to_input_omp(input, target_qbit, control_qbit, control_qbit2, matrix_size); break;
+        case 2:
+            apply_X_kernel_to_input_tbb(input, target_qbit, control_qbit, control_qbit2, matrix_size); break;
+    }
 
 }
 
@@ -144,8 +151,14 @@ void CCX::apply_to(Matrix& input, const Matrix_real& parameters, int parallel) {
     int matrix_size = input.rows;
 
     // Apply the dedicated X kernel with both control qubits
-    apply_X_kernel_to_input(input, target_qbit, control_qbit, control_qbit2, matrix_size);
-
+    switch (parallel){
+        case 0:
+            apply_X_kernel_to_input(input, target_qbit, control_qbit, control_qbit2, matrix_size); break;
+        case 1:
+            apply_X_kernel_to_input_omp(input, target_qbit, control_qbit, control_qbit2, matrix_size); break;
+        case 2:
+            apply_X_kernel_to_input_tbb(input, target_qbit, control_qbit, control_qbit2, matrix_size); break;
+    }
 }
 
 /**

@@ -72,6 +72,8 @@ virtual CSWAP* clone();
 */
 virtual void apply_to(Matrix& input, int parallel = 0);
 
+virtual void apply_to(Matrix& input, const Matrix_real& parameters, int parallel);
+
 /**
 @brief Get list of involved qubits
 @param only_target If true, return only target qubits, otherwise include control qubits too
