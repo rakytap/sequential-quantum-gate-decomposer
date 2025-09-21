@@ -422,7 +422,7 @@ class qgd_Wide_Circuit_Optimization:
             #  code for iterate over async results and retrieve the new subcircuits
             for partition_idx, subcircuit in enumerate( subcircuits ):
     
-                new_subcircuit, new_parameters = async_results[partition_idx].get( timeout = 1800 )
+                new_subcircuit, new_parameters = async_results[partition_idx].get( timeout = None )
 
                 '''
                 if subcircuit != new_subcircuit:
