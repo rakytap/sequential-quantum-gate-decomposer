@@ -4,6 +4,7 @@ Implementation to optimize wide circuits (i.e. circuits with many qubits) by    
 
 from squander.decomposition.qgd_N_Qubit_Decomposition_Tree_Search import qgd_N_Qubit_Decomposition_Tree_Search as N_Qubit_Decomposition_Tree_Search
 from squander.decomposition.qgd_N_Qubit_Decomposition_Tabu_Search import qgd_N_Qubit_Decomposition_Tabu_Search as N_Qubit_Decomposition_Tabu_Search
+from squander import N_Qubit_Decomposition_adaptive
 from squander.gates.qgd_Circuit import qgd_Circuit as Circuit
 from squander.utils import CompareCircuits
 
@@ -74,7 +75,7 @@ class qgd_Wide_Circuit_Optimization:
         
         #testing the fields of config 
         strategy = config[ 'strategy' ]
-        allowed_startegies = ['TreeSearch', 'TabuSearch' ]
+        allowed_startegies = ['TreeSearch', 'TabuSearch', 'Adaptive' ]
         if not strategy in allowed_startegies :
             raise Exception(f"The decomposition startegy should be either of {allowed_startegies}, got {strategy}.")
 
@@ -189,6 +190,8 @@ class qgd_Wide_Circuit_Optimization:
             cDecompose = N_Qubit_Decomposition_Tree_Search( Umtx.conj().T, config=config, accelerator_num=0 )
         elif strategy == "TabuSearch":
             cDecompose = N_Qubit_Decomposition_Tabu_Search( Umtx.conj().T, config=config, accelerator_num=0 )
+        elif strategy == "Adaptive":
+            cDecompose = N_Qubit_Decomposition_adaptive( Umtx.conj().T, level_limit_max=5, level_limit_min=1 )
         else:
             raise Exception(f"Unsupported decomposition type: {strategy}")
 
@@ -301,9 +304,7 @@ class qgd_Wide_Circuit_Optimization:
         decomposed_circuit, decomposed_parameters = qgd_Wide_Circuit_Optimization.DecomposePartition( unitary, config )
 
         if decomposed_circuit is None:
-            decomposed_circuit = subcircuit
-            decomposed_parameters = subcircuit_parameters
-
+            return subcircuit, subcircuit_parameters #remaining code will fail, just return original circuit
 
         # create inverse qbit map:
         inverse_qbit_map = {}
@@ -326,7 +327,7 @@ class qgd_Wide_Circuit_Optimization:
 
 
 
-    def OptimizeWideCircuit( self, circ: Circuit, orig_parameters: np.ndarray, global_min=True, prepartitioning=None ) -> (Circuit, np.ndarray):
+    def OptimizeWideCircuit( self, circ: Circuit, orig_parameters: np.ndarray, global_min=False, prepartitioning=None ) -> (Circuit, np.ndarray):
         """
         Call to optimize a wide circuit (i.e. circuits with many qubits) by
         partitioning the circuit into smaller partitions and redecompose the smaller partitions
@@ -378,7 +379,7 @@ class qgd_Wide_Circuit_Optimization:
             partitined_circuit, param_order, _ = kahn_partition_preparts(circ, self.max_partition_size, prepartitioning)
             parameters = translate_param_order(orig_parameters, param_order)
         else:
-            partitined_circuit, parameters, _ = PartitionCircuit( circ, orig_parameters, self.max_partition_size )
+            partitined_circuit, parameters, _ = PartitionCircuit( circ, orig_parameters, self.max_partition_size, strategy="ilp" )
 
 
         qbit_num_orig_circuit = circ.get_Qbit_Num()
@@ -415,7 +416,8 @@ class qgd_Wide_Circuit_Optimization:
                 callback_fnc = lambda  x : self.CompareAndPickCircuits( [subcircuit, x[0]], [subcircuit_parameters, x[1]] )
 
                 # call a process to decompose a subcircuit
-                async_results[partition_idx]  = pool.apply_async( self.PartitionDecompositionProcess, (subcircuit, subcircuit_parameters, self.config), callback=callback_fnc )
+                config = self.config if not global_min or len(subcircuit.get_Qbits()) < 4 else {**self.config, 'strategy': "Adaptive"}
+                async_results[partition_idx]  = pool.apply_async( self.PartitionDecompositionProcess, (subcircuit, subcircuit_parameters, config), callback=callback_fnc )
 
 
 
