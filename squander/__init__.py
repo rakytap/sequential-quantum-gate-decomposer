@@ -39,7 +39,13 @@ from squander.gates.gates_Wrapper import (
     SYC,
     CRY,
     CR,
-    CROT
+    CROT,
+    CRX,
+    CRZ,
+    CCX,
+    CP,
+    SWAP,
+    CSWAP
 )
 
 

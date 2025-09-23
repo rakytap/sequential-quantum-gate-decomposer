@@ -52,7 +52,12 @@ from squander.gates.gates_Wrapper import (
     SX,
     SYC,
     CRY,
-    CU )
+    CRZ,
+    CRX,
+    CP,
+    CU,
+    SWAP,
+    CSWAP )
 
 
 
@@ -86,7 +91,22 @@ def get_Qiskit_Circuit( Squander_circuit, parameters ):
             # adding CNOT gate to the quantum circuit
             parameters_gate = gate.Extract_Parameters( parameters )
             circuit.cry( parameters_gate[0], gate.get_Control_Qbit(), gate.get_Target_Qbit() )
-            
+
+        elif isinstance( gate, CRZ ):
+            # adding CNOT gate to the quantum circuit
+            parameters_gate = gate.Extract_Parameters( parameters )
+            circuit.crz( parameters_gate[0], gate.get_Control_Qbit(), gate.get_Target_Qbit() )
+
+        elif isinstance( gate, CRX ):
+            # adding CNOT gate to the quantum circuit
+            parameters_gate = gate.Extract_Parameters( parameters )
+            circuit.crx( parameters_gate[0], gate.get_Control_Qbit(), gate.get_Target_Qbit() )
+
+        elif isinstance( gate, CP ):
+            # adding CNOT gate to the quantum circuit
+            parameters_gate = gate.Extract_Parameters( parameters )
+            circuit.cp( parameters_gate[0], gate.get_Control_Qbit(), gate.get_Target_Qbit() )
+
         elif isinstance( gate, CZ ):
             # adding CZ gate to the quantum circuit
             circuit.cz( gate.get_Control_Qbit(), gate.get_Target_Qbit() )
@@ -175,6 +195,18 @@ def get_Qiskit_Circuit( Squander_circuit, parameters ):
             # T gate
             circuit.tdg( gate.get_Target_Qbit() ) 
 
+        elif isinstance(gate, CCX):
+            #CCX gate
+            circuit.ccx(gate.get_Control_Qbit2(), gate.get_Control_Qbit(),gate.get_Target_Qbit())
+
+        elif isinstance(gate, CSWAP):
+            #CCX gate
+            circuit.cswap(gate.get_Control_Qbit2(), gate.get_Control_Qbit(),gate.get_Target_Qbit())
+
+        elif isinstance(gate, SWAP):
+            #CCX gate
+            circuit.swap(gate.get_Control_Qbit(),gate.get_Target_Qbit())
+
         elif isinstance( gate, Circuit ):
             # Sub-circuit gate
             raise ValueError("Qiskit export of circuits with subcircuit is not supported. Use Circuit::get_Flat_Circuit prior of exporting circuit.")  
@@ -212,6 +244,22 @@ def get_Qiskit_Circuit_inverse( Squander_circuit, parameters ):
             # adding CNOT gate to the quantum circuit
             parameters_gate = [scalar(p) for p in gate.Extract_Parameters( parameters )]
             circuit.cry( -parameters_gate[0], gate.get_Control_Qbit(), gate.get_Target_Qbit() )
+
+        elif isinstance( gate, CRZ ):
+            # adding CNOT gate to the quantum circuit
+            parameters_gate = [scalar(p) for p in gate.Extract_Parameters( parameters )]
+            circuit.crz( -parameters_gate[0], gate.get_Control_Qbit(), gate.get_Target_Qbit() )
+        
+        elif isinstance( gate, CRX ):
+            # adding CNOT gate to the quantum circuit
+            parameters_gate = [scalar(p) for p in gate.Extract_Parameters( parameters )]
+            circuit.crx( -parameters_gate[0], gate.get_Control_Qbit(), gate.get_Target_Qbit() )
+        
+        elif isinstance( gate, CP ):
+            # adding CNOT gate to the quantum circuit
+            parameters_gate = [scalar(p) for p in gate.Extract_Parameters( parameters )]
+            circuit.cp( -parameters_gate[0], gate.get_Control_Qbit(), gate.get_Target_Qbit() )
+
         elif isinstance( gate, R ):
             # R gate
             parameters_gate = gate.Extract_Parameters( parameters )
@@ -299,6 +347,18 @@ def get_Qiskit_Circuit_inverse( Squander_circuit, parameters ):
         elif isinstance( gate, Tdg ):
             # Tdg gate (inverse is T)
             circuit.t( gate.get_Target_Qbit() )
+
+        elif isinstance(gate, CCX):
+            #CCX gate
+            circuit.ccx(gate.get_Control_Qbit2(), gate.get_Control_Qbit(),gate.get_Target_Qbit())
+
+        elif isinstance(gate, CSWAP):
+            #CCX gate
+            circuit.cswap(gate.get_Control_Qbit2(), gate.get_Control_Qbit(),gate.get_Target_Qbit())
+
+        elif isinstance(gate, SWAP):
+            #CCX gate
+            circuit.swap(gate.get_Control_Qbit(),gate.get_Target_Qbit())
 
         elif isinstance( gate, Circuit ):
             # Sub-circuit gate
@@ -408,6 +468,49 @@ def convert_Qiskit_to_Squander( qc_in ):
                 parameters = parameters + [float(param)]
 
             Circuit_Squander.add_CRY( qubit1, qubit0 )
+
+        elif name == "crz":
+
+            qubits = gate.qubits
+            qubit0 = q_register.index( qubits[0] )
+            qubit1 = q_register.index( qubits[1] )
+
+            params = gate.operation.params
+            params[0] = params[0]/2 #SQUADER works with theta/2
+
+            for param in params:
+                parameters = parameters + [float(param)]
+
+            Circuit_Squander.add_CRZ( qubit1, qubit0 )
+
+        elif name == "crx":
+
+            qubits = gate.qubits
+            qubit0 = q_register.index( qubits[0] )
+            qubit1 = q_register.index( qubits[1] )
+
+            params = gate.operation.params
+            params[0] = params[0]/2 #SQUADER works with theta/2
+
+            for param in params:
+                parameters = parameters + [float(param)]
+
+            Circuit_Squander.add_CRX( qubit1, qubit0 )
+
+
+        elif name == "cu1":
+
+            qubits = gate.qubits
+            qubit0 = q_register.index( qubits[0] )
+            qubit1 = q_register.index( qubits[1] )
+
+            params = gate.operation.params
+            params[0] = params[0]
+
+            for param in params:
+                parameters = parameters + [float(param)]
+
+            Circuit_Squander.add_CP( qubit1, qubit0 )
 
         elif name == "cz":
             qubits = gate.qubits
@@ -522,6 +625,29 @@ def convert_Qiskit_to_Squander( qc_in ):
                 parameters = parameters + [float(param)]
             
             Circuit_Squander.add_R( qubit )
+
+        elif name == 'ccx':
+            # add cx gate 
+            qubits = gate.qubits
+            qubit0 = q_register.index( qubits[0] )
+            qubit1 = q_register.index( qubits[1] )
+            qubit2 = q_register.index( qubits[2] )
+            Circuit_Squander.add_CCX( qubit2, qubit1, qubit0 )
+
+        elif name == 'cswap':
+            # add cx gate 
+            qubits = gate.qubits
+            qubit0 = q_register.index( qubits[0] )
+            qubit1 = q_register.index( qubits[1] )
+            qubit2 = q_register.index( qubits[2] )
+            Circuit_Squander.add_CSWAP( qubit2, qubit1, qubit0 )
+
+        elif name == 'swap':
+            # add cx gate 
+            qubits = gate.qubits
+            qubit0 = q_register.index( qubits[0] )
+            qubit1 = q_register.index( qubits[1] )
+            Circuit_Squander.add_SWAP( qubit1, qubit0 )
 
         else:
             print(f"convert_Qiskit_to_Squander: Unimplemented gate: {name}")

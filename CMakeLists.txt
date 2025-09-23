@@ -354,11 +354,17 @@ list(APPEND qgd_files
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/U3.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/RY.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/CRY.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/RX.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/RZ.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/CRX.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/CRZ.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/CP.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/CCX.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/SWAP.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/CSWAP.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/CR.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/Adaptive.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/R.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/RX.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/RZ.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/RZ_P.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/CZ_NU.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/custom_kernel_1qubit_gate.cpp
@@ -366,6 +372,7 @@ list(APPEND qgd_files
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/kernels/apply_kernel_to_input.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/kernels/apply_kernel_to_state_vector_input.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/kernels/apply_large_kernel_to_input.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/kernels/apply_dedicated_gate_kernel_to_input.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/nn/NN.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/decomposition/Decomposition_Base.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/decomposition/Optimization_Interface.cpp
