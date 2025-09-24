@@ -364,9 +364,7 @@ class qgd_SABRE:
             else:
                 q1,q2 = gate_idx[0],gate_idx[1]
                 Q1,Q2 = init_pi[q1],init_pi[q2]
-                circuit_mapped.add_CNOT(Q1,Q2)
-                circuit_mapped.add_CNOT(Q2,Q1)
-                circuit_mapped.add_CNOT(Q1,Q2)
+                circuit_mapped.add_SWAP(Q1,Q2)
                 self.update_pi(init_pi,[q1,q2])
                 
         return circuit_mapped,parameters_new
