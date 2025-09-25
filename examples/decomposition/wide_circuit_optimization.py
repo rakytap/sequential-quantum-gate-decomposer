@@ -32,11 +32,15 @@ if __name__ == '__main__':
             'strategy': "TreeSearch", 
             'test_subcircuits': True,
             'test_final_circuit': True,
-            'max_partition_size': 3
+            'max_partition_size': 3,
+            'topology' : [
+    (0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7),
+    (8, 9), (8, 10), (8, 11), (8, 12), (8, 13), (8, 14), (8, 15),
+    (0, 8),
+]
     }
 
-    filename = "examples/partitioning/qasm_samples/heisenberg-16-20.qasm"
-
+    filename = 'examples/partitioning/qasm_samples/heisenberg-16-20.qasm'
     start_time = time.time()
 
     # load the circuit from a file

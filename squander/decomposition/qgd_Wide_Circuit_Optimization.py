@@ -27,7 +27,7 @@ def extract_subtopology(involved_qbits, qbit_map, config ):
     mini_topology = []
     for edge in config["topology"]:
         if edge[0] in involved_qbits and edge[1] in involved_qbits:
-            mini_topology.append(qbit_map[edge[0]],qbit_map[edge[0]])
+            mini_topology.append((qbit_map[edge[0]],qbit_map[edge[1]]))
     return mini_topology
 
 def CNOTGateCount( circ: Circuit ) -> int :
@@ -391,8 +391,7 @@ class qgd_Wide_Circuit_Optimization:
             partitined_circuit, param_order, _ = kahn_partition_preparts(circ, self.max_partition_size, prepartitioning)
             parameters = translate_param_order(orig_parameters, param_order)
         else:
-            partitined_circuit, parameters, _ = PartitionCircuit( circ, orig_parameters, self.max_partition_size, strategy="ilp" )
-
+            partitined_circuit, parameters, _ = PartitionCircuit( circ, orig_parameters, self.max_partition_size, strategy="kahn" )
 
         qbit_num_orig_circuit = circ.get_Qbit_Num()
 
@@ -496,9 +495,7 @@ class qgd_Wide_Circuit_Optimization:
     def route_circuit(self, circ: Circuit, orig_parameters: np.ndarray):
 
         sabre = SABRE(circ, self.config["topology"])
-        print("ROUTING CIRCUIT")
         Squander_remapped_circuit, parameters_remapped_circuit, pi, final_pi, swap_count = sabre.map_circuit(orig_parameters)
-        print("CIRCUIT ROUTED")
         self.config.setdefault("initial_mapping",pi)
         self.config.setdefault("final_mapping",final_pi)
         self.config["routed"] = False
