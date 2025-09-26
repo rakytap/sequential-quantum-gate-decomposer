@@ -859,6 +859,12 @@ Gate::get_name() {
 
 }
 
+int Gate::get_control_qbit2(){
 
+    return -1;
+}
 
+void Gate::set_control_qbit2(int control_qbit2_in){
+    return;
+}
 

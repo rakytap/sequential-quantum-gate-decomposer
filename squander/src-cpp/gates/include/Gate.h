@@ -68,8 +68,14 @@ typedef enum gate_type {GENERAL_OPERATION=1,
                         SDG_OPERATION=35,
                         CU_OPERATION=36,
                         CUSTOM_KERNEL_1QUBIT_GATE_OPERATION=37,
-                        N_QUBIT_PHASE_OPERATION=38,
-                        CNZ_OPERATION=39} gate_type;
+                        CP_OPERATION=38,
+                        CRX_OPERATION=39,
+                        CRZ_OPERATION=40,
+                        CCX_OPERATION=41,
+                        SWAP_OPERATION=42,
+                        CSWAP_OPERATION=43,
+                        N_QUBIT_PHASE_OPERATION=44,
+                        CNZ_OPERATION=45} gate_type;
 
 
 #ifdef _WIN32
@@ -403,7 +409,8 @@ virtual void parameters_for_calc_one_qubit(double& ThetaOver2, double& Phi, doub
 */
 virtual Matrix_real extract_parameters( Matrix_real& parameters );
 
-
+virtual int get_control_qbit2();
+virtual void set_control_qbit2(int control_qbit2_in);
 
 
 protected:

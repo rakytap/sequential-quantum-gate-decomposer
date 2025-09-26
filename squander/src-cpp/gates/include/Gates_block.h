@@ -235,6 +235,49 @@ void add_cry(int target_qbit, int control_qbit);
 void add_cry_to_front(int target_qbit, int control_qbit);
 
 /**
+@brief Append a CRY gate to the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_crx(int target_qbit, int control_qbit);
+
+/**
+@brief Add a CRY gate to the front of the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_crx_to_front(int target_qbit, int control_qbit);
+
+/**
+@brief Append a CRY gate to the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_crz(int target_qbit, int control_qbit);
+
+/**
+@brief Add a CRY gate to the front of the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_crz_to_front(int target_qbit, int control_qbit);
+
+/**
+@brief Append a CRY gate to the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_cp(int target_qbit, int control_qbit);
+
+/**
+@brief Add a CRY gate to the front of the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_cp_to_front(int target_qbit, int control_qbit);
+
+
+/**
 @brief Append a CR gate to the list of gates
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
@@ -345,6 +388,52 @@ void add_ch( int target_qbit, int control_qbit);
 @param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
 */
 void add_ch_to_front( int target_qbit, int control_qbit );
+
+/**
+@brief Append a CCX gate (i.e. Toffoli gate) to the list of gates
+@param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
+@param control_qbit The identification number of the first control qubit. (0 <= control_qbit <= qbit_num-1)
+@param control_qbit2 The identification number of the second control qubit. (0 <= control_qbit2 <= qbit_num-1)
+*/
+void add_ccx( int target_qbit, int control_qbit, int control_qbit2);
+
+/**
+@brief Add a CCX gate (i.e. Toffoli gate) to the front of the list of gates
+@param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
+@param control_qbit The identification number of the first control qubit. (0 <= control_qbit <= qbit_num-1)
+@param control_qbit2 The identification number of the second control qubit. (0 <= control_qbit2 <= qbit_num-1)
+*/
+void add_ccx_to_front( int target_qbit, int control_qbit, int control_qbit2 );
+
+/**
+@brief Append a SWAP gate to the list of gates
+@param target_qbit The identification number of the first target qubit. (0 <= target_qbit <= qbit_num-1)
+@param target_qbit2 The identification number of the second target qubit. (0 <= target_qbit2 <= qbit_num-1)
+*/
+void add_swap( int target_qbit, int target_qbit2);
+
+/**
+@brief Add a SWAP gate to the front of the list of gates
+@param target_qbit The identification number of the first target qubit. (0 <= target_qbit <= qbit_num-1)
+@param target_qbit2 The identification number of the second target qubit. (0 <= target_qbit2 <= qbit_num-1)
+*/
+void add_swap_to_front( int target_qbit, int target_qbit2 );
+
+/**
+@brief Append a CSWAP gate (Controlled SWAP) to the list of gates
+@param target_qbit The identification number of the first target qubit. (0 <= target_qbit <= qbit_num-1)
+@param target_qbit2 The identification number of the second target qubit. (0 <= target_qbit2 <= qbit_num-1)
+@param control_qbit The identification number of the control qubit. (0 <= control_qbit <= qbit_num-1)
+*/
+void add_cswap( int target_qbit, int target_qbit2, int control_qbit);
+
+/**
+@brief Add a CSWAP gate (Controlled SWAP) to the front of the list of gates
+@param target_qbit The identification number of the first target qubit. (0 <= target_qbit <= qbit_num-1)
+@param target_qbit2 The identification number of the second target qubit. (0 <= target_qbit2 <= qbit_num-1)
+@param control_qbit The identification number of the control qubit. (0 <= control_qbit <= qbit_num-1)
+*/
+void add_cswap_to_front( int target_qbit, int target_qbit2, int control_qbit );
 
 /**
 @brief Append a Hadamard gate to the list of gates
