@@ -2255,7 +2255,8 @@ Gates_block::create_remapped_circuit( const std::map<int, int>& qbit_map, const 
         case U3_OPERATION: case RY_OPERATION: 
         case CRY_OPERATION: case RX_OPERATION:
         case CRX_OPERATION: case CRZ_OPERATION: 
-        case CP_OPERATION:
+        case CP_OPERATION: case SWAP_OPERATION:
+        case CSWAP_OPERATION: case CCX_OPERATION:
         case RZ_OPERATION: case X_OPERATION:
         case Y_OPERATION: case Z_OPERATION:
         case SX_OPERATION: case BLOCK_OPERATION:
@@ -2447,6 +2448,8 @@ void Gates_block::set_qbit_num( int qbit_num_in ) {
         case CH_OPERATION: case SYC_OPERATION:
         case U1_OPERATION: case U2_OPERATION: 
         case U3_OPERATION:
+        case CP_OPERATION: case SWAP_OPERATION:
+        case CSWAP_OPERATION: case CCX_OPERATION:
         case RY_OPERATION: case CRY_OPERATION: 
         case RX_OPERATION: case CR_OPERATION:
         case RZ_OPERATION: case X_OPERATION:
@@ -2522,6 +2525,9 @@ int Gates_block::extract_gates( Gates_block* op_block ) {
         case CZ_NU_OPERATION: case CU_OPERATION:
         case S_OPERATION: case SDG_OPERATION:
         case T_OPERATION: case TDG_OPERATION:
+        case SWAP_OPERATION:
+        case CSWAP_OPERATION: case CCX_OPERATION:
+
         {
             Gate* op_cloned = op->clone();
             op_block->add_gate( op_cloned );
@@ -4749,4 +4755,5 @@ Matrix_real inverse_reverse_parameters( const Matrix_real& parameters_in, std::v
 
 
 }
+
 
