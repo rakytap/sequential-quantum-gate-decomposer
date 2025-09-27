@@ -246,7 +246,8 @@ def purity_analysis():
     def gen_CZPowGate_decomp(t): return gen_CP_decomp(sympy.pi*t)
     def gen_iSWAP_pow_decomp(alpha): return compile_gates(2, [(gen_H(), [0]), (gen_H(), [1]), (gen_CNOT(), [0,1]), (gen_Rz(-(alpha*sympy.pi)/2), [1]), (gen_CNOT(), [0,1]), (gen_H(), [0]), (gen_H(), [1]), (gen_Sdg(), [0]), (gen_Sdg(), [1]), (gen_H(), [0]), (gen_H(), [1]), (gen_CNOT(), [0,1]), (gen_Rz(-(alpha*sympy.pi)/2), [1]), (gen_CNOT(), [0,1]), (gen_H(), [0]), (gen_H(), [1]), (gen_S(), [0]), (gen_S(), [1])]).applyfunc(quantsimprw)
     def gen_fSim_decomp(theta, phi): return compile_gates(2, [(gen_iSWAP_pow_decomp(-2*theta/sympy.pi), [0, 1]), (gen_CZPowGate_decomp(-phi/sympy.pi), [0, 1])])
-    def gen_SYC_decomp(): return gen_fSim_decomp(sympy.pi/2, sympy.pi/6) #compile_gates(2, [(gen_Rz(-3*sympy.pi/4), [0]), (gen_Rz(sympy.pi/4), [1]), (gen_SX(), [0]), (gen_SX(), [1]), (gen_Rz(-sympy.pi), [0]), (gen_Rz(sympy.pi), [1]), (gen_SX(), [1]), (gen_Rz(5*sympy.pi/2), [1]), (gen_CNOT(), [0, 1]), (gen_SX(), [0]), (gen_Rz(-3*sympy.pi/4), [1]), (gen_SX(), [1]), (gen_Rz(sympy.pi), [1]), (gen_SX(), [1]), (gen_Rz(9*sympy.pi/4), [1]), (gen_CNOT(), [0, 1]), (gen_Rz(sympy.pi/2), [0]), (gen_SX(), [1]), (gen_SX(), [0]), (gen_Rz(sympy.pi/2), [1]), (gen_Rz(11*sympy.pi/12), [0]), (gen_SX(), [1]), (gen_SX(), [0]), (gen_Rz(sympy.pi/2), [1]), (gen_CNOT(), [0, 1]), (gen_SX(), [0]), (gen_Rz(sympy.pi/2), [1]), (gen_Rz(sympy.pi/6), [0]), (gen_SX(), [1]), (gen_Rz(-sympy.pi/3), [1])])
+    #def gen_SYC_decomp(): return gen_fSim_decomp(sympy.pi/2, sympy.pi/6)
+    def gen_SYC_decomp(): return compile_gates(2, [(gen_Rz(-3*sympy.pi/4), [0]), (gen_Rz(sympy.pi/4), [1]), (gen_SX(), [0]), (gen_SX(), [1]), (gen_Rz(-sympy.pi), [0]), (gen_Rz(sympy.pi), [1]), (gen_SX(), [1]), (gen_Rz(5*sympy.pi/2), [1]), (gen_CNOT(), [0, 1]), (gen_SX(), [0]), (gen_Rz(-3*sympy.pi/4), [1]), (gen_SX(), [1]), (gen_Rz(sympy.pi), [1]), (gen_SX(), [1]), (gen_Rz(9*sympy.pi/4), [1]), (gen_CNOT(), [0, 1]), (gen_Rz(sympy.pi/2), [0]), (gen_SX(), [1]), (gen_SX(), [0]), (gen_Rz(sympy.pi/2), [1]), (gen_Rz(11*sympy.pi/12), [0]), (gen_SX(), [1]), (gen_SX(), [0]), (gen_Rz(sympy.pi/2), [1]), (gen_CNOT(), [0, 1]), (gen_SX(), [0]), (gen_Rz(sympy.pi/2), [1]), (gen_Rz(sympy.pi/6), [0]), (gen_SX(), [1]), (gen_Rz(-sympy.pi/3), [1]), (gen_GP(-7*sympy.pi/24, 2), [0, 1])]).rewrite(quantsimprw)
     def gen_CU_decomp(theta, phi, lbda, gamma): return compile_gates(2, [(gen_Rz((phi-lbda)/2), [1]), (gen_CNOT(), [0, 1]), (gen_Rz(-(phi+lbda)/2), [1]), (gen_Ry(-theta/2), [1]), (gen_CNOT(), [0, 1]), (gen_Ry(theta/2), [1]), (gen_Rz(lbda), [1]), (gen_P((lbda+phi)/2+gamma), [0])])
     def gen_CU3_decomp(theta, phi, lbda): return compile_gates(2, [(gen_Rz((phi-lbda)/2), [1]), (gen_CNOT(), [0, 1]), (gen_Rz(-(phi+lbda)/2), [1]), (gen_Ry(-theta/2), [1]), (gen_CNOT(), [0, 1]), (gen_Ry(theta/2), [1]), (gen_Rz(lbda), [1]), (gen_P((lbda+phi)/2), [0])])
     def gen_CCZ_decomp(): return compile_gates(3, [(gen_CNOT(), [1, 2]), (gen_Tdg(), [2]), (gen_CNOT(), [0, 2]), (gen_T(), [2]), (gen_CNOT(), [1, 2]), (gen_Tdg(), [2]), (gen_CNOT(), [0, 2]), (gen_T(), [1]), (gen_T(), [2]), (gen_CNOT(), [0, 1]), (gen_T(), [0]), (gen_Tdg(), [1]), (gen_CNOT(), [0, 1])])
@@ -258,7 +259,9 @@ def purity_analysis():
     def gen_Rx_test(theta): return sympy.Matrix([[sympy.cos(theta/2), -sympy.I*sympy.sin(theta/2)], [-sympy.I*sympy.sin(theta/2), sympy.cos(theta/2)]])
     def gen_SYC_test(): return sympy.Matrix([[1, 0, 0, 0], [0, 0, -sympy.I, 0], [0, -sympy.I, 0, 0], [0, 0, 0, sympy.exp(-sympy.I*sympy.pi/6)]])
     #print(compile_gates(3, [(gen_H(), [2]), (gen_CNOT(), [1, 2]), (gen_Tdg(), [2]), (gen_CNOT(), [0, 2]), (gen_T(), [2]), (gen_CNOT(), [1, 2]), (gen_Tdg(), [2]), (gen_CNOT(), [0, 2]), (gen_T(), [1]), (gen_T(), [2]), (gen_H(), [2])]))
-    """
+    assert gen_Rxy(phi) == gen_Rxy_decomp(phi), (gen_Rxy(phi), gen_Rxy_decomp(phi))
+    assert gen_iSWAP_pow(alpha) == gen_iSWAP_pow_decomp(alpha), (gen_iSWAP_pow(alpha), gen_iSWAP_pow_decomp(alpha))
+    assert gen_SYC() == gen_SYC_decomp(), (gen_SYC(), gen_SYC_decomp())
     assert gen_Rx(theta) == gen_Rx_test(theta)
     assert gen_SX() == gen_SX_test()
     assert gen_SYC() == gen_SYC_test()
@@ -279,7 +282,6 @@ def purity_analysis():
     assert gen_Rxy(phi) == gen_Rxy_decomp(phi)
     assert gen_CROT(theta, phi) == gen_CROT_decomp(theta, phi)
     assert gen_CZPowGate(alpha) == gen_CZPowGate_decomp(alpha)
-    """
     assert gen_iSWAP_pow(alpha) == gen_iSWAP_pow_decomp(alpha), (gen_iSWAP_pow(alpha), gen_iSWAP_pow_decomp(alpha))
     assert gen_fSim(theta, phi) == gen_fSim_decomp(theta, phi), (gen_fSim(theta, phi), gen_fSim_decomp(theta, phi))
     assert gen_SYC() == gen_SYC_decomp(), (gen_SYC(), gen_SYC_decomp())
@@ -298,7 +300,7 @@ def purity_analysis():
             if i == j : continue
             print(f"CRY({i}, {j})@CRY(0, 1) pure, sparse control:", find_control_qubits(compile_gates(3, [(gen_CRY(theta), [i, j]), (gen_CRY(theta2), (0, 1))]), 3))
 
-purity_analysis(); assert False
+#purity_analysis(); assert False
 
 def projectq_import_qasm(filename, eng, initial_state=None):
     import re, math
