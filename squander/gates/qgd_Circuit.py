@@ -182,6 +182,15 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
 	# call the C wrapper function
         super().add_CH(target_qbit, control_qbit)
 
+#@brief Call to add a CU gate to the front of the gate structure.
+#@param self A pointer pointing to an instance of the class qgd_Circuit.
+#@param Input arguments: target_qbit (int), control_qbit (int).
+
+    def add_CU( self, target_qbit, control_qbit):
+
+	# call the C wrapper function
+        super().add_CU(target_qbit, control_qbit)
+	
 #@brief Call to add a SYC gate to the front of the gate structure.
 #@param self A pointer pointing to an instance of the class qgd_Circuit.
 #@param Input arguments: target_qbit (int), control_qbit (int).

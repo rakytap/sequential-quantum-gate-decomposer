@@ -1514,6 +1514,38 @@ void Gates_block::add_ch_to_front(  int target_qbit, int control_qbit) {
 }
 
 /**
+@brief Append a CU gate (i.e. controlled U gate) operation to the list of gates
+@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+@param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void Gates_block::add_cu(  int target_qbit, int control_qbit) {
+
+        // new cz operation
+        Gate* gate = static_cast<Gate*>(new CU(qbit_num, target_qbit, control_qbit ));
+
+        // append the operation to the list
+        add_gate(gate);
+
+}
+
+
+
+/**
+@brief Add a CU gate (i.e. controlled U gate) operation to the front of the list of gates
+@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+@param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void Gates_block::add_cu_to_front(  int target_qbit, int control_qbit) {
+
+        // new cz operation
+        Gate* gate = static_cast<Gate*>(new CU(qbit_num, target_qbit, control_qbit ));
+
+        // put the operation to tghe front of the list
+        add_gate_to_front(gate);
+
+}
+
+/**
 @brief Append a CCX gate (i.e. Toffoli gate) operation to the list of gates
 @param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
 @param control_qbit The identification number of the first control qubit. (0 <= control_qbit <= qbit_num-1)
