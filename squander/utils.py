@@ -365,4 +365,4 @@ def test_circuit_to_CNOT_basis():
     Umatnew = Umatnew * np.exp(-1j * phase)
     # Check closeness
     assert np.allclose(Umat, Umatnew), (Umat, Umatnew)
-test_circuit_to_CNOT_basis()
+#test_circuit_to_CNOT_basis()
