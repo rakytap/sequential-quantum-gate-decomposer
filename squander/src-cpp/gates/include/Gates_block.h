@@ -623,6 +623,18 @@ void add_cnz(int phase_idx);
 void add_cnz_to_front(int phase_idx);
 
 /**
+@brief Append a CNZ_NU gate to the list of gates
+@param phase_idx The identification number of the phase index. (0 <= phase_idx < 2^qbit_num)
+*/
+void add_cnz_nu();
+
+/**
+@brief Add a CNZ_NU gate to the front of the list of gates
+@param phase_idx The identification number of the phase index. (0 <= phase_idx < 2^qbit_num)
+*/
+void add_cnz_nu_to_front();
+
+/**
 @brief Append a Adaptive gate to the list of gates
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)

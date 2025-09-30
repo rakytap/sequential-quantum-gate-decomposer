@@ -369,6 +369,7 @@ list(APPEND qgd_files
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/CZ_NU.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/N_Qubit_Phase_Gate.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/CNZ.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/CNZ_NU.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/custom_kernel_1qubit_gate.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/Composite.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/kernels/apply_kernel_to_input.cpp

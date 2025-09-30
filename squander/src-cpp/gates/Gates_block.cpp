@@ -57,6 +57,7 @@ limitations under the License.
 #include "CZ_NU.h"
 #include "Composite.h"
 #include "CNZ.h"
+#include "CNZ_NU.h"
 #include "N_Qubit_Phase_Gate.h"
 #include "Gates_block.h"
 
@@ -1753,6 +1754,33 @@ void Gates_block::add_cnz_to_front(int phase_idx)  {
 
         // create the operation
         Gate* gate = static_cast<Gate*>(new CNZ( qbit_num,phase_idx ));
+
+        // adding the operation to the front of the list of gates
+        add_gate_to_front( gate );
+
+}
+
+/**
+@brief Append a CNZ_NU gate to the list of gates
+@param phase_idx The identification number of the phase index. (0 <= phase_idx < 2^qbit_num)
+*/
+void Gates_block::add_cnz_nu() {
+
+        // create the operation
+        Gate* operation = static_cast<Gate*>(new CNZ_NU( qbit_num ));
+
+        // adding the operation to the end of the list of gates
+        add_gate( operation );
+}
+
+/**
+@brief Add a CNZ_NU gate to the front of the list of gates
+@param phase_idx The identification number of the phase index. (0 <= phase_idx < 2^qbit_num)
+*/
+void Gates_block::add_cnz_nu_to_front() {
+
+        // create the operation
+        Gate* gate = static_cast<Gate*>(new CNZ_NU( qbit_num ));
 
         // adding the operation to the front of the list of gates
         add_gate_to_front( gate );

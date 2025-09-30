@@ -75,7 +75,8 @@ typedef enum gate_type {GENERAL_OPERATION=1,
                         SWAP_OPERATION=42,
                         CSWAP_OPERATION=43,
                         N_QUBIT_PHASE_OPERATION=44,
-                        CNZ_OPERATION=45} gate_type;
+                        CNZ_OPERATION=45,
+                        CNZ_NU_OPERATION=46} gate_type;
 
 
 #ifdef _WIN32

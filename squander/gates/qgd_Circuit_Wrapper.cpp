@@ -58,6 +58,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "ON.h"
 #include "Adaptive.h"
 #include "Composite.h"
+#include "CNZ.h"
+#include "N_Qubit_Phase_Gate.h"
 
 #include "numpy_interface.h"
 
@@ -336,7 +338,6 @@ qgd_Circuit_Wrapper_add_CSWAP(qgd_Circuit_Wrapper *self, PyObject *args, PyObjec
 
 }
 
-/**
 static PyObject *
 qgd_Circuit_Wrapper_add_phase_gate(qgd_Circuit_Wrapper *self)
 {
@@ -350,6 +351,17 @@ qgd_Circuit_Wrapper_add_phase_gate(qgd_Circuit_Wrapper *self)
 }
 
 static PyObject *
+qgd_Circuit_Wrapper_add_cnz_nu(qgd_Circuit_Wrapper *self)
+{
+
+
+    self->circuit->add_cnz_nu();
+    
+
+    return Py_BuildValue("i", 0);
+
+}
+static PyObject *
 qgd_Circuit_Wrapper_add_cnz(qgd_Circuit_Wrapper *self,  PyObject *args, PyObject *kwds)
 {
 
@@ -359,21 +371,22 @@ qgd_Circuit_Wrapper_add_cnz(qgd_Circuit_Wrapper *self,  PyObject *args, PyObject
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|O", kwlist, &phase_string)) {
         std::string err( "Unable to parse arguments");
+        PyErr_SetString(PyExc_Exception, err.c_str());
         return NULL;   
+    }
     PyObject* phase_string_py = PyObject_Str(phase_string);
     PyObject* phase_string_py_unicode = PyUnicode_AsEncodedString(phase_string_py, "utf-8", "~E~");
-    }
-        PyErr_SetString(PyExc_Exception, err.c_str());
     const char* phase_string_C = PyBytes_AS_STRING(phase_string_py_unicode);
     std::string phase_string_str = ( phase_string_C );
     int phase_idx = std::stoi(phase_string_str, nullptr, 2); 
     self->circuit->add_cnz(phase_idx);
     
 
+    return Py_BuildValue("i", 0);
 
 
 }
-    return Py_BuildValue("i", 0);
+/*
 @brief Wrapper function to add a block of operations to the front of the gate structure.
 @param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper.
 @param args A tuple of the input arguments: Py_qgd_Circuit_Wrapper (PyObject)
@@ -1916,6 +1929,9 @@ static PyMethodDef qgd_Circuit_Wrapper_Methods[] = {
      "Call to add an adaptive gate to the front of the gate structure"
     },
     {"add_Phase_Gate", (PyCFunction) qgd_Circuit_Wrapper_add_phase_gate, METH_NOARGS,
+     "Call to add an phase gate to the front of the gate structure"
+    },    
+    {"add_CNZ_NU", (PyCFunction) qgd_Circuit_Wrapper_add_cnz_nu, METH_NOARGS,
      "Call to add an phase gate to the front of the gate structure"
     },
     {"add_CNZ", (PyCFunction) qgd_Circuit_Wrapper_add_cnz, METH_VARARGS | METH_KEYWORDS,
