@@ -57,7 +57,10 @@ from squander.gates.gates_Wrapper import (
     CRX,
     CP,
     CR,
-    CROT )
+    CROT,
+    CCX,
+    CSWAP,
+    SWAP)
 
 
 ##
@@ -354,6 +357,15 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
 	# call the C wrapper function
         super(qgd_Circuit, self).add_CSWAP(target_qbit, target_qbit2, control_qbit)
 
+#@brief Call to add a CSWAP gate to the front of the gate structure.
+#@param self A pointer pointing to an instance of the class qgd_Circuit.
+#@param Input arguments: target_qbit (int), target_qbit2 (int), control_qbit (int).
+
+    def add_CCX( self, target_qbit, control_qbit, control_qbit2):
+
+	# call the C wrapper function
+        super(qgd_Circuit, self).add_CCX(target_qbit, control_qbit, control_qbit2)
+
 #@brief Call to add adaptive gate to the front of the gate structure.
 #@param self A pointer pointing to an instance of the class qgd_Circuit.
 #@param Input arguments: target_qbit (int), control_qbit (int).
@@ -563,5 +575,19 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
             self.add_CROT(qgd_gate.get_Target_Qbit(),qgd_gate.get_Control_Qbit())
         elif isinstance(qgd_gate,CR):
             self.add_CR(qgd_gate.get_Target_Qbit(),qgd_gate.get_Control_Qbit())
+        elif isinstance(qgd_gate,SYC):
+            self.add_SYC(qgd_gate.get_Target_Qbit(),qgd_gate.get_Control_Qbit())
+        elif isinstance(qgd_gate,CRZ):
+            self.add_CRZ(qgd_gate.get_Target_Qbit(),qgd_gate.get_Control_Qbit())
+        elif isinstance(qgd_gate,CRX):
+            self.add_CRX(qgd_gate.get_Target_Qbit(),qgd_gate.get_Control_Qbit())
+        elif isinstance(qgd_gate,CP):
+            self.add_CP(qgd_gate.get_Target_Qbit(),qgd_gate.get_Control_Qbit())
+        elif isinstance(qgd_gate,SWAP):
+            self.add_SWAP(qgd_gate.get_Target_Qbit(),qgd_gate.get_Control_Qbit())
+        elif isinstance(qgd_gate,CSWAP):
+            self.add_CSWAP(qgd_gate.get_Target_Qbit(),qgd_gate.get_Control_Qbit(),qgd_gate.get_Control_Qbit2())
+        elif isinstance(qgd_gate,CCX):
+            self.add_CCX(qgd_gate.get_Target_Qbit(),qgd_gate.get_Control_Qbit(),qgd_gate.get_Control_Qbit2())
         else:
             raise Exception("Cannot add gate: unimplemented gate type")
