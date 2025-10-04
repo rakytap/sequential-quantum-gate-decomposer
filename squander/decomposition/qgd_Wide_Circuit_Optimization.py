@@ -52,7 +52,7 @@ def CNOTGateCount( circ: Circuit ) -> int :
 
     gate_counts = circ.get_Gate_Nums()
 
-    return gate_counts.get('CNOT', 0)
+    return gate_counts.get('CNOT', 0) +  3*gate_counts.get('SWAP', 0)
 
 
 
@@ -391,7 +391,7 @@ class qgd_Wide_Circuit_Optimization:
             partitined_circuit, param_order, _ = kahn_partition_preparts(circ, self.max_partition_size, prepartitioning)
             parameters = translate_param_order(orig_parameters, param_order)
         else:
-            partitined_circuit, parameters, _ = PartitionCircuit( circ, orig_parameters, self.max_partition_size, strategy="kahn" )
+            partitined_circuit, parameters, _ = PartitionCircuit( circ, orig_parameters, self.max_partition_size, strategy="ilp" )
 
         qbit_num_orig_circuit = circ.get_Qbit_Num()
 
@@ -424,8 +424,7 @@ class qgd_Wide_Circuit_Optimization:
     
             
                 # callback function done on the master process to compare the new decomposed and the original suncircuit
-                callback_fnc = lambda  x : self.CompareAndPickCircuits( [subcircuit, x[0]], [subcircuit_parameters, x[1]] ) if config["topology"]==None else lambda x : (x[0],x[1])
-
+                callback_fnc = lambda  x : self.CompareAndPickCircuits( [subcircuit, x[0]], [subcircuit_parameters, x[1]] ) 
 
                 # call a process to decompose a subcircuit
                 config = self.config if not global_min or len(subcircuit.get_Qbits()) < 4 else {**self.config, 'strategy': "Adaptive"}

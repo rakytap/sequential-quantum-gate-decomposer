@@ -22,6 +22,7 @@ limitations under the License.
 
 import squander.decomposition.qgd_Wide_Circuit_Optimization as Wide_Circuit_Optimization
 from squander import utils
+from squander import Qiskit_IO
 import time
     
 
@@ -32,12 +33,7 @@ if __name__ == '__main__':
             'strategy': "TreeSearch", 
             'test_subcircuits': True,
             'test_final_circuit': True,
-            'max_partition_size': 4,
-            'topology' : [
-    (0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7),
-    (8, 9), (8, 10), (8, 11), (8, 12), (8, 13), (8, 14), (8, 15),
-    (0, 8),
-]
+            'max_partition_size': 3,
     }
 
     filename = 'examples/partitioning/qasm_samples/heisenberg-16-20.qasm'
@@ -50,6 +46,17 @@ if __name__ == '__main__':
     wide_circuit_optimizer = Wide_Circuit_Optimization.qgd_Wide_Circuit_Optimization( config )
 
     # run circuti optimization
+    circ_flat, parameters = wide_circuit_optimizer.OptimizeWideCircuit( circ, parameters )
+
+    config['topology'] = [
+    (0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7),
+    (8, 9), (8, 10), (8, 11), (8, 12), (8, 13), (8, 14), (8, 15),
+    (0, 8),
+    ]
+    wide_circuit_optimizer = Wide_Circuit_Optimization.qgd_Wide_Circuit_Optimization( config )
+    circo = Qiskit_IO.get_Qiskit_Circuit(circ_flat.get_Flat_Circuit(),parameters)
+    # run circuti optimization
+    circ, parameters = Qiskit_IO.convert_Qiskit_to_Squander(circo)
     wide_circuit_optimizer.OptimizeWideCircuit( circ, parameters )
 
     print("--- %s seconds elapsed during optimization ---" % (time.time() - start_time))
