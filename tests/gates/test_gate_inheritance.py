@@ -39,7 +39,8 @@ class Test_Gate_inheritance:
         "U3",
         "X",
         "Y",
-        "Z"
+        "Z",
+        'CSWAP'
     ])
     def test_gate_inheritance(self, gate_class):
         r"""
@@ -49,7 +50,7 @@ class Test_Gate_inheritance:
         from squander import Gate
         
         control_gates = ["CH","CNOT","CRY","CZ","SYC"]
-        
+        multi_qubit_gates = ["CSWAP"]
         # Test class inheritance
         module = importlib.import_module('squander')
         gate_cls = getattr(module, gate_class)
@@ -59,6 +60,8 @@ class Test_Gate_inheritance:
         # Create an instance
         if gate_class in control_gates:    
             gate_ins = gate_cls(3, 0, 1) # 3 qubits, target 0, control 1
+        elif gate_class in multi_qubit_gates:
+            gate_ins = gate_cls(3,[0,1],[2])
         else:
             gate_ins = gate_cls(3, 0)
 
@@ -79,7 +82,8 @@ class Test_Gate_inheritance:
         "U3",
         "X",
         "Y",
-        "Z"
+        "Z",
+        'CSWAP'
     ])
     def test_gate_methods(self, gate_class):
         r"""
@@ -89,7 +93,8 @@ class Test_Gate_inheritance:
         from squander import Gate
 
         control_gates = ["CH","CNOT","CRY","CZ","SYC"]
-        
+        multi_qubit_gates = ["CSWAP"]
+
         module = importlib.import_module('squander')
         gate_cls = getattr(module, gate_class)
         
@@ -98,11 +103,12 @@ class Test_Gate_inheritance:
         base_methods    = [name for name, obj in inspect.getmembers(base_gate) 
                            if (callable(obj) and not name.startswith('_'))]    
         # Create an instance
-        if gate_class in control_gates:  
+        if gate_class in control_gates:    
             gate_ins = gate_cls(3, 0, 1) # 3 qubits, target 0, control 1
+        elif gate_class in multi_qubit_gates:
+            gate_ins = gate_cls(3,[0,1],[2])
         else:
             gate_ins = gate_cls(3, 0)
-
         # Check that each method from the base class is available in the specific gate
         for method_name in base_methods:
             assert hasattr(gate_ins, method_name), f"{gate_class} is missing method {method_name}"
@@ -111,7 +117,8 @@ class Test_Gate_inheritance:
         assert gate_ins.get_Target_Qbit() == 0
         if gate_class in control_gates:  
             assert gate_ins.get_Control_Qbit() == 1
-        
+        if gate_class in multi_qubit_gates:
+            assert gate_ins.get_Target_Qbits() == [0,1]
         name = gate_ins.get_Name()
         assert isinstance(name, str)
         assert len(name) > 0
