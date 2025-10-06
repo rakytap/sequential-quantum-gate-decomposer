@@ -535,7 +535,9 @@ void testXgateKernel(){
     auto combinations = generate_combinations(num_qubits, 1);
     for (size_t combo_idx = 0; combo_idx < combinations.size(); ++combo_idx) {
         const auto& qubits = combinations[combo_idx];
-        apply_X_kernel_to_input(test_state, qubits[0],-1,-1, 1 << num_qubits);
+        std::vector<int> target_qbits = {qubits[0]};
+        std::vector<int> control_qbits = {};
+        apply_X_kernel_to_input(test_state, target_qbits, control_qbits, 1 << num_qubits);
         Gates_block X_gate = Gates_block(num_qubits);
         X_gate.add_x(qubits[0]);
         Matrix_real params = Matrix_real(1, 1);
@@ -552,7 +554,9 @@ void testXgateKernel(){
     combinations = generate_combinations(num_qubits, 2);
     for (size_t combo_idx = 0; combo_idx < combinations.size(); ++combo_idx) {
         const auto& qubits = combinations[combo_idx];
-        apply_X_kernel_to_input(test_state, qubits[0],qubits[1],-1, 1 << num_qubits);
+        std::vector<int> target_qbits = {qubits[0]};
+        std::vector<int> control_qbits = {qubits[1]};
+        apply_X_kernel_to_input(test_state, target_qbits, control_qbits, 1 << num_qubits);
         Gates_block X_gate = Gates_block(num_qubits);
         X_gate.add_cnot(qubits[0],qubits[1]);
         Matrix_real params = Matrix_real(1, 1);
@@ -565,7 +569,9 @@ void testXgateKernel(){
     }
     for (size_t combo_idx = 0; combo_idx < combinations.size(); ++combo_idx) {
         const auto& qubits = combinations[combo_idx];
-        apply_X_kernel_to_input(test_state, qubits[1],qubits[0],-1, 1 << num_qubits);
+        std::vector<int> target_qbits = {qubits[1]};
+        std::vector<int> control_qbits = {qubits[0]};
+        apply_X_kernel_to_input(test_state, target_qbits, control_qbits, 1 << num_qubits);
         Gates_block X_gate = Gates_block(num_qubits);
         X_gate.add_cnot(qubits[1],qubits[0]);
         Matrix_real params = Matrix_real(1, 1);
@@ -581,7 +587,9 @@ void testXgateKernel(){
     combinations = generate_combinations(num_qubits, 3);
     for (size_t combo_idx = 0; combo_idx < combinations.size(); ++combo_idx) {
         const auto& qubits = combinations[combo_idx];
-        apply_X_kernel_to_input(test_state, qubits[0],qubits[1],qubits[2], 1 << num_qubits);
+        std::vector<int> target_qbits = {qubits[0]};
+        std::vector<int> control_qbits = {qubits[1], qubits[2]};
+        apply_X_kernel_to_input(test_state, target_qbits, control_qbits, 1 << num_qubits);
         Matrix Umtx = create_identity(8);
         Umtx[6*8 + 6].real = 0.0;
         Umtx[7*8 + 7].real = 0.0;
