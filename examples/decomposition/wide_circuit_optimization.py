@@ -34,6 +34,7 @@ if __name__ == '__main__':
             'test_subcircuits': True,
             'test_final_circuit': True,
             'max_partition_size': 3,
+            'partition_strategy':'kahn'
     }
 
     filename = 'examples/partitioning/qasm_samples/heisenberg-16-20.qasm'

@@ -1045,6 +1045,37 @@ Gate_Wrapper_set_Control_Qbits( Gate_Wrapper *self, PyObject *args ) {
 
 }
 
+/**
+@brief Call to get the target qubits vector
+@return Returns with a Python list of target qubits
+*/
+static PyObject *
+Gate_Wrapper_get_Involved_Qbits( Gate_Wrapper *self ) {
+
+    std::vector<int> involved_qbits;
+
+    try {
+        involved_qbits = self->gate->get_involved_qubits();
+    }
+    catch (std::string err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    catch(...) {
+        std::string err( "Invalid pointer to gate class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+    PyObject* involved_qbits_py = PyList_New(involved_qbits.size());
+    for (size_t i = 0; i < involved_qbits.size(); i++) {
+        PyList_SetItem(involved_qbits_py, i, Py_BuildValue("i", involved_qbits[i]));
+    }
+
+    return involved_qbits_py;
+
+}
+
 
 /**
 @brief Call to extract the paramaters corresponding to the gate, from a parameter array associated to the circuit in which the gate is embedded.
@@ -1523,11 +1554,20 @@ extern "C"
     {"get_Control_Qbits", (PyCFunction) Gate_Wrapper_get_Control_Qbits, METH_NOARGS, \
      "Call to get the control qubits as a list." \
     }, \
+    {"set_Target_Qbit", (PyCFunction) Gate_Wrapper_set_Target_Qbit, METH_VARARGS, \
+     "Call to set the target qubits from a list." \
+    }, \
+    {"set_Control_Qbit", (PyCFunction) Gate_Wrapper_set_Control_Qbit, METH_VARARGS, \
+     "Call to set the control qubits from a list." \
+    }, \
     {"set_Target_Qbits", (PyCFunction) Gate_Wrapper_set_Target_Qbits, METH_VARARGS, \
      "Call to set the target qubits from a list." \
     }, \
     {"set_Control_Qbits", (PyCFunction) Gate_Wrapper_set_Control_Qbits, METH_VARARGS, \
      "Call to set the control qubits from a list." \
+    }, \
+    {"get_Involved_Qbits", (PyCFunction) Gate_Wrapper_get_Involved_Qbits, METH_NOARGS, \
+     "Call to get the target qubits as a list." \
     }, \
     {"Extract_Parameters", (PyCFunction) Gate_Wrapper_Extract_Parameters, METH_VARARGS, \
      "Call to extract the paramaters corresponding to the gate, from a parameter array associated to the circuit in which the gate is embedded." \

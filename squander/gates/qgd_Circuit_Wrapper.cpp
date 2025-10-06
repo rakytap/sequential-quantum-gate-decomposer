@@ -276,13 +276,10 @@ qgd_Circuit_Wrapper_add_SWAP(qgd_Circuit_Wrapper *self, PyObject *args, PyObject
         Py_ssize_t list_size = PyList_Size(target_qbits_py);
         for (Py_ssize_t i = 0; i < list_size; i++) {
             PyObject* item = PyList_GetItem(target_qbits_py, i);
-            if (PyLong_Check(item)) {
-                target_qbits.push_back(PyLong_AsLong(item));
-            }
+            target_qbits.push_back(PyLong_AsLong(item));
         }
-        if (target_qbits.size() >= 2) {
-            self->circuit->add_swap(target_qbits);
-        }
+        self->circuit->add_swap(target_qbits);
+        
     }
 
     return Py_BuildValue("i", 0);

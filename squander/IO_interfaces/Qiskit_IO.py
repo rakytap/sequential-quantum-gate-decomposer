@@ -210,7 +210,7 @@ def get_Qiskit_Circuit( Squander_circuit, parameters ):
             #CCX gate
             target_qbits = gate.get_Target_Qbits()
             circuit.swap(target_qbits[0], target_qbits[1])
-
+            
         elif isinstance( gate, Circuit ):
             # Sub-circuit gate
             raise ValueError("Qiskit export of circuits with subcircuit is not supported. Use Circuit::get_Flat_Circuit prior of exporting circuit.")  

@@ -343,13 +343,12 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
 #@param self A pointer pointing to an instance of the class qgd_Circuit.
 #@param Input arguments: target_qbits (list of int) - list of target qubits (at least 2).
 
-    def add_SWAP( self, target_qbits):
+    def add_SWAP( self, target_qbits, target_qbit2=-1):
         # Ensure target_qbits is a list
-        if not isinstance(target_qbits, (list, tuple)):
-            raise TypeError("target_qbits must be a list or tuple")
-
-	# call the C wrapper function
-        super(qgd_Circuit, self).add_SWAP(list(target_qbits))
+        if isinstance(target_qbits, (list, tuple)):
+            super(qgd_Circuit, self).add_SWAP(list(target_qbits))
+        if isinstance(target_qbits,int) and target_qbit2 != -1:
+            super(qgd_Circuit, self).add_SWAP(list(target_qbits))
 
 #@brief Call to add a CSWAP (Fredkin) gate to the front of the gate structure.
 #@param self A pointer pointing to an instance of the class qgd_Circuit.
