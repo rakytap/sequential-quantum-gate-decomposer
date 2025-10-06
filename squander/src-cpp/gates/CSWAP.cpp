@@ -36,23 +36,18 @@ CSWAP::CSWAP() : SWAP() {
     // A string describing the type of the gate
     type = CSWAP_OPERATION;
 
-    target_qbit = -1;
-    // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gates
-    control_qbit = -1;
-
-    // The actual control qubit for CSWAP
-    control_qbit2 = -1;
+    // Clear control qubits for nullary constructor
+    control_qbits.clear();
 }
 
 /**
 @brief Constructor of the class.
 @param qbit_num_in The number of qubits in the unitaries
-@param target_qbit_in The identification number of the first target qubit. (0 <= target_qbit <= qbit_num-1)
-@param target_qbit2_in The identification number of the second target qubit. (0 <= target_qbit2 <= qbit_num-1)
-@param control_qbit_in The identification number of the control qubit. (0 <= control_qbit <= qbit_num-1)
+@param target_qbits_in Vector of target qubit indices (should contain exactly 2 elements)
+@param control_qbits_in Vector of control qubit indices (should contain exactly 1 element)
 */
-CSWAP::CSWAP(int qbit_num_in, int target_qbit_in, int target_qbit2_in, int control_qbit_in)
-    : SWAP(qbit_num_in, target_qbit_in, target_qbit2_in) {
+CSWAP::CSWAP(int qbit_num_in, const std::vector<int>& target_qbits_in, const std::vector<int>& control_qbits_in)
+    : SWAP(qbit_num_in, target_qbits_in) {
 
     // A string labeling the gate operation
     name = "CSWAP";
@@ -60,22 +55,35 @@ CSWAP::CSWAP(int qbit_num_in, int target_qbit_in, int target_qbit2_in, int contr
     // A string describing the type of the gate
     type = CSWAP_OPERATION;
 
-    if (control_qbit_in >= qbit_num) {
+    // Validate that we have exactly 1 control qubit
+    if (control_qbits_in.size() != 1) {
         std::stringstream sstream;
-        sstream << "The index of the control qubit is larger than the number of qubits" << std::endl;
+        sstream << "CSWAP gate requires exactly 1 control qubit, got " << control_qbits_in.size() << std::endl;
         print(sstream, 0);
         throw sstream.str();
     }
 
-    if (control_qbit_in == target_qbit_in || control_qbit_in == target_qbit2_in) {
+    // Validate control qubit index
+    if (control_qbits_in[0] >= qbit_num_in) {
         std::stringstream sstream;
-        sstream << "The control qubit cannot be the same as any target qubit" << std::endl;
+        sstream << "Control qubit index " << control_qbits_in[0] << " is larger than or equal to the number of qubits" << std::endl;
         print(sstream, 0);
         throw sstream.str();
     }
 
-    // The actual control qubit for CSWAP (stored in control_qbit2)
-    control_qbit2 = control_qbit_in;
+    // Check that control qubit doesn't overlap with target qubits
+    for (int tq : target_qbits_in) {
+        if (control_qbits_in[0] == tq) {
+            std::stringstream sstream;
+            sstream << "The control qubit cannot be the same as any target qubit" << std::endl;
+            print(sstream, 0);
+            throw sstream.str();
+        }
+    }
+
+    // Store control qubit
+    control_qbits = control_qbits_in;
+    control_qbit = control_qbits[0];  // For backward compatibility
 }
 
 /**
@@ -90,7 +98,7 @@ CSWAP::~CSWAP() {
 */
 CSWAP* CSWAP::clone() {
 
-    CSWAP* ret = new CSWAP(qbit_num, target_qbit, control_qbit, control_qbit2);
+    CSWAP* ret = new CSWAP(qbit_num, target_qbits, control_qbits);
 
     ret->set_parameter_start_idx(get_parameter_start_idx());
     ret->set_parents(parents);
@@ -111,14 +119,14 @@ CSWAP::apply_to(Matrix& input, int parallel) {
         std::string err("CSWAP::apply_to: Wrong input size in CSWAP gate apply");
         throw(err);
     }
+    // Use the dedicated SWAP kernel with control_qbits vector
     switch (parallel){
-    // Use the dedicated SWAP kernel with control_qbit2 as the actual control
     case 0:
-    apply_SWAP_kernel_to_input(input, target_qbit, control_qbit, control_qbit2, matrix_size); break;
-    case 1: 
-    apply_SWAP_kernel_to_input_omp(input, target_qbit, control_qbit, control_qbit2, matrix_size); break;
+        apply_SWAP_kernel_to_input(input, target_qbits, control_qbits, matrix_size); break;
+    case 1:
+        apply_SWAP_kernel_to_input_omp(input, target_qbits, control_qbits, matrix_size); break;
     case 2:
-    apply_SWAP_kernel_to_input_tbb(input, target_qbit, control_qbit, control_qbit2, matrix_size); break;
+        apply_SWAP_kernel_to_input_tbb(input, target_qbits, control_qbits, matrix_size); break;
     }
 }
 
@@ -132,47 +140,23 @@ void CSWAP::apply_to(Matrix& input, const Matrix_real& parameters, int parallel)
 
     int matrix_size = input.rows;
 
-    // Apply the dedicated X kernel with both control qubits
+    // Use the dedicated SWAP kernel with control_qbits vector
     switch (parallel){
-    // Use the dedicated SWAP kernel with control_qbit2 as the actual control
     case 0:
-    apply_SWAP_kernel_to_input(input, target_qbit, control_qbit, control_qbit2, matrix_size); break;
-    case 1: 
-    apply_SWAP_kernel_to_input_omp(input, target_qbit, control_qbit, control_qbit2, matrix_size); break;
+        apply_SWAP_kernel_to_input(input, target_qbits, control_qbits, matrix_size); break;
+    case 1:
+        apply_SWAP_kernel_to_input_omp(input, target_qbits, control_qbits, matrix_size); break;
     case 2:
-    apply_SWAP_kernel_to_input_tbb(input, target_qbit, control_qbit, control_qbit2, matrix_size); break;
+        apply_SWAP_kernel_to_input_tbb(input, target_qbits, control_qbits, matrix_size); break;
     }
 }
+
 /**
 @brief Get list of involved qubits
 @param only_target If true, return only target qubits, otherwise include control qubits too
 @return Vector of qubit indices
 */
 std::vector<int> CSWAP::get_involved_qubits(bool only_target) {
-    std::vector<int> involved_qubits;
-
-    involved_qubits.push_back(target_qbit);
-    involved_qubits.push_back(control_qbit);
-
-    if (!only_target && control_qbit2 >= 0) {
-        involved_qubits.push_back(control_qbit2);
-    }
-
-    return involved_qubits;
-}
-
-/**
-@brief Get the control qubit
-@return The index of the control qubit
-*/
-int CSWAP::get_control_qbit2() {
-    return control_qbit2;
-}
-
-/**
-@brief Set the control qubit
-@param control_qbit2_in The index of the control qubit
-*/
-void CSWAP::set_control_qbit2(int control_qbit2_in) {
-    control_qbit2 = control_qbit2_in;
+    // Use Gate's implementation which now handles vectors
+    return Gate::get_involved_qubits(only_target);
 }
