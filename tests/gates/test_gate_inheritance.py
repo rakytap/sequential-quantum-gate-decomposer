@@ -106,7 +106,7 @@ class Test_Gate_inheritance:
         if gate_class in control_gates:    
             gate_ins = gate_cls(3, 0, 1) # 3 qubits, target 0, control 1
         elif gate_class in multi_qubit_gates:
-            gate_ins = gate_cls(3,[0,1],[2])
+            gate_ins = gate_cls(3,[1,0],[2])
         else:
             gate_ins = gate_cls(3, 0)
         # Check that each method from the base class is available in the specific gate
@@ -117,7 +117,7 @@ class Test_Gate_inheritance:
         assert gate_ins.get_Target_Qbit() == 0
         if gate_class in control_gates:  
             assert gate_ins.get_Control_Qbit() == 1
-        if gate_class in multi_qubit_gates:
+        elif gate_class in multi_qubit_gates:
             assert gate_ins.get_Target_Qbits() == [0,1]
         name = gate_ins.get_Name()
         assert isinstance(name, str)

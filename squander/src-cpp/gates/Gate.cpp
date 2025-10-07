@@ -145,7 +145,8 @@ Gate::Gate(int qbit_num_in, const std::vector<int>& target_qbits_in, const std::
 
     target_qbits = target_qbits_in;
     control_qbits = control_qbits_in;
-
+    std::sort(target_qbits.begin(), target_qbits.end());
+    std::sort(control_qbits.begin(), control_qbits.end());
     // Set the legacy single-qubit members to first elements for backward compatibility
     target_qbit = target_qbits.empty() ? -1 : target_qbits[0];
     control_qbit = control_qbits.empty() ? -1 : control_qbits[0];
