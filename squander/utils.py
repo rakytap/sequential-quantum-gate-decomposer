@@ -197,6 +197,266 @@ def CompareCircuits( circ1: Circuit, parameters1: np.ndarray, circ2: Circuit, pa
 
     assert( (np.abs(overlap)-1) < tolerance )
 
+
+def circuit_to_CNOT_basis( circ: Circuit, parameters: np.ndarray):
+    """
+    Call to transpile a SQUANDER circuit to CNOT basis
+
+    
+    Args:
+
+        circ ( Circuit ) A circuit
+
+        parameters ( np.ndarray ) A parameter array associated with the input circuit
+
                 
+    Return:
 
+        Returns with the transpiled circuit and the associated parameters
+    """
+    from squander.gates.gates_Wrapper import (
+        CH, CZ, SYC, CRY, CU, CR, CROT, CCX, CSWAP, SWAP, CRX, CRZ, CP)
+    gates = circ.get_Gates()
+    circuit = Circuit( circ.get_Qbit_Num() )
+    params = []
+    for gate in gates:
+        if isinstance(gate, Circuit):
+            subcircuit, subparams = circuit_to_CNOT_basis( gate, parameters[ gate.get_Parameter_Start_Index() : gate.get_Parameter_Start_Index() + gate.get_Parameter_Num() ] )
+            circuit.add_Gate( subcircuit )
+            params.append( subparams )
+        elif isinstance(gate, CH):
+            circuit.add_RZ(gate.get_Target_Qbit())
+            circuit.add_CNOT(gate.get_Target_Qbit(), gate.get_Control_Qbit())
+            circuit.add_RZ(gate.get_Target_Qbit())
+            circuit.add_RY(gate.get_Target_Qbit())
+            circuit.add_CNOT(gate.get_Target_Qbit(), gate.get_Control_Qbit())
+            circuit.add_RY(gate.get_Target_Qbit())
+            circuit.add_RZ(gate.get_Target_Qbit())
+            circuit.add_U1(gate.get_Control_Qbit())
+            params.append([-np.pi/2/2, -np.pi/2/2, np.pi/4/2, -np.pi/4/2, np.pi/2, np.pi/2])
+        elif isinstance(gate, CZ):
+            circuit.add_H(gate.get_Target_Qbit())
+            circuit.add_CNOT(gate.get_Target_Qbit(), gate.get_Control_Qbit())
+            circuit.add_H(gate.get_Target_Qbit())
+            params.append([])
+        elif isinstance(gate, SYC):
+            circuit.add_RZ(gate.get_Target_Qbit())
+            circuit.add_SX(gate.get_Target_Qbit())
+            circuit.add_RZ(gate.get_Control_Qbit())
+            circuit.add_RZ(gate.get_Target_Qbit())
+            circuit.add_SX(gate.get_Control_Qbit())
+            circuit.add_CNOT(gate.get_Target_Qbit(), gate.get_Control_Qbit())
+            circuit.add_RZ(gate.get_Target_Qbit())
+            circuit.add_SX(gate.get_Control_Qbit())
+            circuit.add_SX(gate.get_Target_Qbit())
+            circuit.add_RZ(gate.get_Control_Qbit())
+            circuit.add_RZ(gate.get_Target_Qbit())
+            circuit.add_SX(gate.get_Control_Qbit())
+            circuit.add_SX(gate.get_Target_Qbit())
+            circuit.add_RZ(gate.get_Control_Qbit())
+            circuit.add_CNOT(gate.get_Target_Qbit(), gate.get_Control_Qbit())
+            circuit.add_RZ(gate.get_Target_Qbit())
+            circuit.add_SX(gate.get_Target_Qbit())
+            circuit.add_RZ(gate.get_Target_Qbit())
+            circuit.add_SX(gate.get_Target_Qbit())
+            circuit.add_RZ(gate.get_Target_Qbit())
+            circuit.add_SX(gate.get_Control_Qbit())
+            circuit.add_CNOT(gate.get_Target_Qbit(), gate.get_Control_Qbit())
+            circuit.add_RZ(gate.get_Target_Qbit())
+            circuit.add_SX(gate.get_Target_Qbit())
+            circuit.add_RZ(gate.get_Target_Qbit())
+            circuit.add_RZ(gate.get_Control_Qbit())
+            circuit.add_SX(gate.get_Target_Qbit())
+            circuit.add_SX(gate.get_Control_Qbit())
+            circuit.add_RZ(gate.get_Target_Qbit())
+            circuit.add_RZ(gate.get_Control_Qbit())
+            params.append([-np.pi/3/2, np.pi/6/2, np.pi/2/2, np.pi/2/2, 11*np.pi/12/2, np.pi/2/2, np.pi/2/2, 9*np.pi/4/2, np.pi/2, -3*np.pi/4/2, 5*np.pi/2/2, np.pi/2, -np.pi/2, np.pi/4/2, -3*np.pi/4/2])
+            """
+            #CZPowGate(t)=CP(sympy.pi*t)
+            circuit.add_RZ(gate.get_Target_Qbit())
+            circuit.add_CNOT(gate.get_Target_Qbit(), gate.get_Control_Qbit())
+            circuit.add_RZ(gate.get_Target_Qbit())
+            circuit.add_CNOT(gate.get_Target_Qbit(), gate.get_Control_Qbit())
+            circuit.add_RZ(gate.get_Control_Qbit())
+            #iSWAP-power decomposition
+            circuit.add_S(gate.get_Target_Qbit())
+            circuit.add_S(gate.get_Control_Qbit())
+            circuit.add_H(gate.get_Target_Qbit())
+            circuit.add_H(gate.get_Control_Qbit())
+            circuit.add_CNOT(gate.get_Target_Qbit(), gate.get_Control_Qbit())
+            circuit.add_RZ(gate.get_Target_Qbit())
+            circuit.add_CNOT(gate.get_Target_Qbit(), gate.get_Control_Qbit())
+            circuit.add_H(gate.get_Target_Qbit())
+            circuit.add_H(gate.get_Control_Qbit())
+            circuit.add_Sdg(gate.get_Target_Qbit())
+            circuit.add_Sdg(gate.get_Control_Qbit())
+            circuit.add_H(gate.get_Target_Qbit())
+            circuit.add_H(gate.get_Control_Qbit())
+            circuit.add_CNOT(gate.get_Target_Qbit(), gate.get_Control_Qbit())
+            circuit.add_RZ(gate.get_Target_Qbit())
+            circuit.add_CNOT(gate.get_Target_Qbit(), gate.get_Control_Qbit())
+            circuit.add_H(gate.get_Target_Qbit())
+            circuit.add_H(gate.get_Control_Qbit())
+            #add_GP(np.pi/24) - global phase
+            params.append([-np.pi/12/2, np.pi/12/2, -np.pi/12/2, np.pi/2/2, np.pi/2/2])
+            """
+        elif isinstance(gate, CRY):
+            circuit.add_CNOT(gate.get_Target_Qbit(), gate.get_Control_Qbit())
+            circuit.add_RY(gate.get_Target_Qbit())
+            circuit.add_CNOT(gate.get_Target_Qbit(), gate.get_Control_Qbit())
+            circuit.add_RY(gate.get_Target_Qbit())
+            theta, = parameters[gate.get_Parameter_Start_Index() : gate.get_Parameter_Start_Index() + gate.get_Parameter_Num()]
+            params.append([-theta/2, theta/2])
+        elif isinstance(gate, CU):
+            circuit.add_U1(gate.get_Control_Qbit())
+            circuit.add_RZ(gate.get_Target_Qbit())
+            circuit.add_RY(gate.get_Target_Qbit())
+            circuit.add_CNOT(gate.get_Target_Qbit(), gate.get_Control_Qbit())
+            circuit.add_RY(gate.get_Target_Qbit())
+            circuit.add_RZ(gate.get_Target_Qbit())
+            circuit.add_CNOT(gate.get_Target_Qbit(), gate.get_Control_Qbit())
+            circuit.add_RZ(gate.get_Target_Qbit())
+            theta, phi, lbda, gamma = parameters[ gate.get_Parameter_Start_Index() : gate.get_Parameter_Start_Index() + gate.get_Parameter_Num() ]
+            params.append([(lbda+phi)/2+gamma, lbda/2, theta/2, -theta/2, -(phi+lbda)/2/2, (phi-lbda)/2/2])
+        elif isinstance(gate, CR):
+            circuit.add_RZ(gate.get_Target_Qbit())
+            circuit.add_CNOT(gate.get_Target_Qbit(), gate.get_Control_Qbit())
+            circuit.add_RY(gate.get_Target_Qbit())
+            circuit.add_CNOT(gate.get_Target_Qbit(), gate.get_Control_Qbit())
+            circuit.add_RY(gate.get_Target_Qbit())
+            circuit.add_RZ(gate.get_Target_Qbit())
+            theta, phi = parameters[ gate.get_Parameter_Start_Index() : gate.get_Parameter_Start_Index() + gate.get_Parameter_Num() ]
+            params.append([(-phi+np.pi/2)/2, -theta/2, theta/2, (phi-np.pi/2)/2])
+        elif isinstance(gate, CROT):
+            circuit.add_RZ(gate.get_Target_Qbit())
+            circuit.add_RY(gate.get_Target_Qbit())
+            circuit.add_CNOT(gate.get_Target_Qbit(), gate.get_Control_Qbit())
+            circuit.add_RZ(gate.get_Target_Qbit())
+            circuit.add_CNOT(gate.get_Target_Qbit(), gate.get_Control_Qbit())
+            circuit.add_RY(gate.get_Target_Qbit())
+            circuit.add_RZ(gate.get_Target_Qbit())
+            theta, phi = parameters[ gate.get_Parameter_Start_Index() : gate.get_Parameter_Start_Index() + gate.get_Parameter_Num() ]
+            params.append([-phi/2, np.pi/2/2, -theta, -np.pi/2/2, phi/2])
+        elif isinstance(gate, CRX):
+            circuit.add_H(gate.get_Target_Qbit())
+            circuit.add_CNOT(gate.get_Target_Qbit(), gate.get_Control_Qbit())
+            circuit.add_RZ(gate.get_Target_Qbit())
+            circuit.add_CNOT(gate.get_Target_Qbit(), gate.get_Control_Qbit())
+            circuit.add_RZ(gate.get_Target_Qbit())
+            circuit.add_H(gate.get_Target_Qbit())
+            theta, = parameters[ gate.get_Parameter_Start_Index() : gate.get_Parameter_Start_Index() + gate.get_Parameter_Num() ]
+            params.append([-theta/2, theta/2])
+        elif isinstance(gate, CRZ):
+            circuit.add_CNOT(gate.get_Target_Qbit(), gate.get_Control_Qbit())
+            circuit.add_RZ(gate.get_Target_Qbit())
+            circuit.add_CNOT(gate.get_Target_Qbit(), gate.get_Control_Qbit())
+            circuit.add_RZ(gate.get_Target_Qbit())
+            theta, = parameters[ gate.get_Parameter_Start_Index() : gate.get_Parameter_Start_Index() + gate.get_Parameter_Num() ]
+            params.append([-theta/2, theta/2])
+        elif isinstance(gate, CP):
+            circuit.add_RZ(gate.get_Target_Qbit())
+            circuit.add_CNOT(gate.get_Target_Qbit(), gate.get_Control_Qbit())
+            circuit.add_RZ(gate.get_Target_Qbit())
+            circuit.add_CNOT(gate.get_Target_Qbit(), gate.get_Control_Qbit())
+            circuit.add_RZ(gate.get_Control_Qbit())
+            phi, = parameters[ gate.get_Parameter_Start_Index() : gate.get_Parameter_Start_Index() + gate.get_Parameter_Num() ]
+            params.append([ phi/2/2, -phi/2/2, phi/2/2 ])
+        elif isinstance(gate, CCX):
+            circuit.add_CNOT(gate.get_Control_Qbit(), gate.get_Control_Qbit2())
+            circuit.add_Tdg(gate.get_Control_Qbit())
+            circuit.add_T(gate.get_Control_Qbit2())
+            circuit.add_CNOT(gate.get_Control_Qbit(), gate.get_Control_Qbit2())
+            circuit.add_H(gate.get_Target_Qbit())
+            circuit.add_T(gate.get_Target_Qbit())
+            circuit.add_T(gate.get_Control_Qbit())
+            circuit.add_CNOT(gate.get_Target_Qbit(), gate.get_Control_Qbit2())
+            circuit.add_Tdg(gate.get_Target_Qbit())
+            circuit.add_CNOT(gate.get_Target_Qbit(), gate.get_Control_Qbit())
+            circuit.add_T(gate.get_Target_Qbit())
+            circuit.add_CNOT(gate.get_Target_Qbit(), gate.get_Control_Qbit2())
+            circuit.add_Tdg(gate.get_Target_Qbit())
+            circuit.add_CNOT(gate.get_Target_Qbit(), gate.get_Control_Qbit())
+            circuit.add_H(gate.get_Target_Qbit())
+            params.append([])
+        elif isinstance(gate, CSWAP):
+            circuit.add_CNOT(gate.get_Control_Qbit(), gate.get_Target_Qbit())
+            circuit.add_CNOT(gate.get_Control_Qbit(), gate.get_Control_Qbit2())
+            circuit.add_H(gate.get_Target_Qbit())
+            circuit.add_Tdg(gate.get_Control_Qbit())
+            circuit.add_T(gate.get_Control_Qbit2())
+            circuit.add_T(gate.get_Target_Qbit())
+            circuit.add_CNOT(gate.get_Control_Qbit(), gate.get_Control_Qbit2())
+            circuit.add_CNOT(gate.get_Target_Qbit(), gate.get_Control_Qbit2())
+            circuit.add_Tdg(gate.get_Target_Qbit())
+            circuit.add_T(gate.get_Control_Qbit())
+            circuit.add_CNOT(gate.get_Target_Qbit(), gate.get_Control_Qbit())
+            circuit.add_T(gate.get_Target_Qbit())
+            circuit.add_CNOT(gate.get_Target_Qbit(), gate.get_Control_Qbit2())
+            circuit.add_T(gate.get_Target_Qbit())
+            circuit.add_SX(gate.get_Target_Qbit())
+            circuit.add_Sdg(gate.get_Control_Qbit())
+            circuit.add_CNOT(gate.get_Control_Qbit(), gate.get_Target_Qbit())
+            circuit.add_S(gate.get_Control_Qbit())
+            """
+            circuit.add_CNOT(gate.get_Control_Qbit(), gate.get_Target_Qbit())
+            circuit.add_CNOT(gate.get_Control_Qbit(), gate.get_Control_Qbit2())
+            circuit.add_Tdg(gate.get_Control_Qbit())
+            circuit.add_T(gate.get_Control_Qbit2())
+            circuit.add_CNOT(gate.get_Control_Qbit(), gate.get_Control_Qbit2())
+            circuit.add_H(gate.get_Target_Qbit())
+            circuit.add_T(gate.get_Target_Qbit())
+            circuit.add_T(gate.get_Control_Qbit())
+            circuit.add_CNOT(gate.get_Target_Qbit(), gate.get_Control_Qbit2())
+            circuit.add_Tdg(gate.get_Target_Qbit())
+            circuit.add_CNOT(gate.get_Target_Qbit(), gate.get_Control_Qbit())
+            circuit.add_T(gate.get_Target_Qbit())
+            circuit.add_CNOT(gate.get_Target_Qbit(), gate.get_Control_Qbit2())
+            circuit.add_Tdg(gate.get_Target_Qbit())
+            circuit.add_CNOT(gate.get_Target_Qbit(), gate.get_Control_Qbit())
+            circuit.add_H(gate.get_Target_Qbit())
+            circuit.add_CNOT(gate.get_Control_Qbit(), gate.get_Target_Qbit())
+            """
+            params.append([])
+        elif isinstance(gate, SWAP):
+            circuit.add_CNOT(gate.get_Target_Qbit(), gate.get_Control_Qbit())
+            circuit.add_CNOT(gate.get_Control_Qbit(), gate.get_Target_Qbit())
+            circuit.add_CNOT(gate.get_Target_Qbit(), gate.get_Control_Qbit())
+            params.append([])
+        else:
+            circuit.add_Gate(gate)
+            params.append( parameters[ gate.get_Parameter_Start_Index() : gate.get_Parameter_Start_Index() + gate.get_Parameter_Num() ] )
 
+    return circuit, np.concatenate(params)
+
+def test_circuit_to_CNOT_basis():
+    circ1 = Circuit(2)
+    circ1.add_CH(0, 1)
+    circ1.add_CZ(0, 1)
+    circ1.add_CRY(0, 1)
+    circ1.add_SYC(0, 1)
+    circ1.add_CR(0, 1)
+    circ1.add_CROT(0, 1)
+    circ1.add_CU(0, 1)
+    circ1.add_CP(0, 1)
+    circ1.add_CRX(0, 1)
+    circ1.add_CRZ(0, 1)
+    circ1.add_SWAP(0, 1)
+    paramcount1 = 0 + 0 + 1 + 0 + 2 + 2 + 4 + 1 + 1 + 1 + 0
+    circ2 = Circuit(3)
+    circ2.add_CCX(0, 1, 2)
+    circ2.add_CSWAP(0, 1, 2)
+    paramcount2 = 0 + 0
+    for circ, paramcount in [(circ1, paramcount1), (circ2, paramcount2)]:
+        params = np.random.rand(paramcount)*2*np.pi
+        newcirc, newparams = circuit_to_CNOT_basis(circ, params)
+        Umat = np.eye(1<<circ.get_Qbit_Num(), dtype=np.complex128)
+        Umatnew = np.eye(1<<newcirc.get_Qbit_Num(), dtype=np.complex128)
+        circ.apply_to(params, Umat)
+        newcirc.apply_to(newparams, Umatnew)
+        #phase = np.angle(np.linalg.det(Umat @ np.linalg.inv(Umatnew)))
+        phase = np.angle((Umatnew @ Umat.conj().T)[0,0])
+        # Normalize one matrix
+        Umatnew = Umatnew * np.exp(-1j * phase)
+        # Check closeness
+        assert np.allclose(Umat, Umatnew), (Umat, Umatnew)
+#test_circuit_to_CNOT_basis()

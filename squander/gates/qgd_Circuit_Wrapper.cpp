@@ -253,6 +253,8 @@ qgd_Circuit_Wrapper_add_two_qubit_gate(cz, CZ)
 
 qgd_Circuit_Wrapper_add_two_qubit_gate(ch, CH)
 
+qgd_Circuit_Wrapper_add_two_qubit_gate(cu, CU)
+
 qgd_Circuit_Wrapper_add_two_qubit_gate(syc, SYC)
 
 qgd_Circuit_Wrapper_add_two_qubit_gate(cry, CRY)
@@ -1063,6 +1065,7 @@ get_gate( Gates_block* circuit, int &idx ) {
     }
     get_gate_template_two_qubit(CZ)
     get_gate_template_two_qubit(CH)
+    get_gate_template_two_qubit(CU)
     get_gate_template_two_qubit(SYC)
     get_gate_template_two_qubit(CRY)
     get_gate_template_two_qubit(CRX)
@@ -1133,7 +1136,7 @@ get_gate( Gates_block* circuit, int &idx ) {
         // PyDict_GetItemString creates a borrowed reference to the item in the dict. Reference counting is not increased on this element, dont need to decrease the reference counting at the end
         PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "CCX");
 
-        PyObject* gate_input = Py_BuildValue("(OOOO)", qbit_num, target_qbit,control_qbit2);
+        PyObject* gate_input = Py_BuildValue("(OOOO)", qbit_num, target_qbit, control_qbit, control_qbit2);
         py_gate              = PyObject_CallObject(py_gate_class, gate_input);
 
         // replace dummy data with real gate data
@@ -1159,7 +1162,7 @@ get_gate( Gates_block* circuit, int &idx ) {
         // PyDict_GetItemString creates a borrowed reference to the item in the dict. Reference counting is not increased on this element, dont need to decrease the reference counting at the end
         PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "CSWAP");
 
-        PyObject* gate_input = Py_BuildValue("(OOOO)", qbit_num, target_qbit,control_qbit2);
+        PyObject* gate_input = Py_BuildValue("(OOOO)", qbit_num, target_qbit, control_qbit, control_qbit2);
         py_gate              = PyObject_CallObject(py_gate_class, gate_input);
 
         // replace dummy data with real gate data
@@ -1814,6 +1817,9 @@ static PyMethodDef qgd_Circuit_Wrapper_Methods[] = {
     },
     {"add_CZ", (PyCFunction) qgd_Circuit_Wrapper_add_CZ, METH_VARARGS | METH_KEYWORDS,
      "Call to add a CZ gate to the front of the gate structure"
+    },
+    {"add_CU", (PyCFunction) qgd_Circuit_Wrapper_add_CU, METH_VARARGS | METH_KEYWORDS,
+     "Call to add a CU gate to the front of the gate structure"
     },
     {"add_CH", (PyCFunction) qgd_Circuit_Wrapper_add_CH, METH_VARARGS | METH_KEYWORDS,
      "Call to add a CH gate to the front of the gate structure"
