@@ -101,6 +101,10 @@ protected:
     int target_qbit;
     /// The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled operations
     int control_qbit;
+    /// Vector of target qubit indices (for multi-qubit gates)
+    std::vector<int> target_qbits;
+    /// Vector of control qubit indices (for multi-qubit gates)
+    std::vector<int> control_qbits;
     /// The size N of the NxN matrix associated with the operations.
     int matrix_size;
     /// the number of free parameters of the operation
@@ -137,6 +141,15 @@ virtual ~Gate();
 @return An instance of the class
 */
 Gate(int qbit_num_in);
+
+/**
+@brief Constructor of the class with vector-based qubit specification.
+@param qbit_num_in The number of qubits spanning the unitaries
+@param target_qbits_in Vector of target qubit indices
+@param control_qbits_in Vector of control qubit indices (optional)
+@return An instance of the class
+*/
+Gate(int qbit_num_in, const std::vector<int>& target_qbits_in, const std::vector<int>& control_qbits_in = std::vector<int>());
 
 /**
 @brief Call to retrieve the operation matrix
@@ -244,6 +257,18 @@ void set_control_qbit(int control_qbit_in);
 void set_target_qbit(int target_qbit_in);
 
 /**
+@brief Call to set the control qubits for the gate operation
+@param control_qbits_in Vector of control qubit indices
+*/
+void set_control_qbits(const std::vector<int>& control_qbits_in);
+
+/**
+@brief Call to set the target qubits for the gate operation
+@param target_qbits_in Vector of target qubit indices
+*/
+void set_target_qbits(const std::vector<int>& target_qbits_in);
+
+/**
 @brief Set the number of qubits spanning the matrix of the operation
 @param qbit_num_in The number of qubits spanning the matrix
 */
@@ -268,6 +293,18 @@ int get_target_qbit();
 @return Return with the index of the control qubit (return with -1 if control qubit was not set)
 */
 int get_control_qbit();
+
+/**
+@brief Call to get the vector of target qubits
+@return Returns vector of target qubit indices
+*/
+std::vector<int> get_target_qbits() const;
+
+/**
+@brief Call to get the vector of control qubits
+@return Returns vector of control qubit indices
+*/
+std::vector<int> get_control_qbits() const;
 
 /**
 @brief Call to get the qubits involved in the gate operation.
@@ -406,9 +443,6 @@ virtual void parameters_for_calc_one_qubit(double& ThetaOver2, double& Phi, doub
 @return Returns with the array of the extracted parameters.
 */
 virtual Matrix_real extract_parameters( Matrix_real& parameters );
-
-virtual int get_control_qbit2();
-virtual void set_control_qbit2(int control_qbit2_in);
 
 
 protected:

@@ -72,6 +72,10 @@ def test_PartitionMaxQubitsEqualsTotalQubits(max_qubits):
     c = Circuit(max_qubits)
     c.add_CNOT(0, 1)
     c.add_CNOT(1, 2)
+    c.add_CCX(1, [2,0])
+    c.add_CSWAP([1, 2],[0])
+    c.add_SWAP([1, 2])
+
     top_c, _, _ = kahn_partition(c, max_qubits)
     assert len(top_c.get_Gates()) == 1
     

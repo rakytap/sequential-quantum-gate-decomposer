@@ -19,7 +19,7 @@ def get_qubits(gate: Gate) -> Set[int]:
         
         Set of qubit indices
     """
-    return {gate.get_Target_Qbit()} | ({control} if (control := gate.get_Control_Qbit()) != -1 else set())
+    return set(gate.get_Involved_Qbits())
 
 def get_float_ops(num_qubit, gate_qubits, control_qubits, is_pure=False, io_penalty=32):
     """

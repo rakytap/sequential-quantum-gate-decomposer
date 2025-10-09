@@ -344,22 +344,32 @@ void Gates_block::fragment_circuit(){
     int num_of_qbits=0;
     int min_fusion_temp = (fragmentation_type==-1) ? min_fusion:fragmentation_type;
 
-    for (int idx = gates.size()-1; idx>=0; idx--){      
-      
+    for (int idx = gates.size()-1; idx>=0; idx--){
+
         Gate* gate = gates[idx];
-        int target_new = gate -> get_target_qbit();
-        int control_new = gate->get_control_qbit();
+
+        // Get all involved qubits (both target and control)
+        std::vector<int> gate_qubits = gate->get_involved_qubits();
 
         if (num_of_qbits == 0) {
-            qbits.push_back(target_new);
-            num_of_qbits++;
-
+            // Initialize with the first qubit from the gate
+            if (!gate_qubits.empty()) {
+                qbits.push_back(gate_qubits[0]);
+                num_of_qbits++;
+            }
         }
 
-        bool target_contained  = is_qbit_present(qbits,target_new,num_of_qbits);
-        bool control_contained = (control_new==-1) ? true : is_qbit_present(qbits, control_new, num_of_qbits);
+        // Check which qubits from this gate are not yet in the qbits list
+        std::vector<int> new_qubits;
+        for (int q : gate_qubits) {
+            if (!is_qbit_present(qbits, q, num_of_qbits)) {
+                new_qubits.push_back(q);
+            }
+        }
 
-        if (num_of_qbits == min_fusion_temp && (target_contained == false || control_contained == false)){
+        bool all_contained = new_qubits.empty();
+
+        if (num_of_qbits == min_fusion_temp && !all_contained){
             int vidx = 1;
 
             while(vidx<num_of_qbits){
@@ -379,22 +389,21 @@ void Gates_block::fragment_circuit(){
             block_end.push_back(idx+1);
             block_type.push_back(num_of_qbits);
             min_fusion_temp = min_fusion;
-            idx++;    
+            idx++;
             qbits=std::vector<int>{};
             num_of_qbits=0;
             continue;
         }
 
-        if (num_of_qbits<min_fusion_temp && target_contained==false){
-            qbits.push_back(target_new);
-            num_of_qbits++;
+        // Add new qubits to the list
+        for (int q : new_qubits) {
+            if (num_of_qbits < min_fusion_temp) {
+                qbits.push_back(q);
+                num_of_qbits++;
+            } else {
+                break;
+            }
         }
-
-        if (num_of_qbits<min_fusion_temp && control_contained==false){
-            qbits.push_back(control_new);
-            num_of_qbits++;
-        }
-
 
     }
 
@@ -1548,12 +1557,11 @@ void Gates_block::add_cu_to_front(  int target_qbit, int control_qbit) {
 /**
 @brief Append a CCX gate (i.e. Toffoli gate) operation to the list of gates
 @param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
-@param control_qbit The identification number of the first control qubit. (0 <= control_qbit <= qbit_num-1)
-@param control_qbit2 The identification number of the second control qubit. (0 <= control_qbit2 <= qbit_num-1)
+@param control_qbits Vector of control qubit indices (should contain exactly 2 elements for CCX)
 */
-void Gates_block::add_ccx( int target_qbit, int control_qbit, int control_qbit2) {
+void Gates_block::add_ccx( int target_qbit, const std::vector<int>& control_qbits) {
         // new ccx operation
-        Gate* gate = static_cast<Gate*>(new CCX(qbit_num, target_qbit, control_qbit, control_qbit2 ));
+        Gate* gate = static_cast<Gate*>(new CCX(qbit_num, target_qbit, control_qbits));
         // append the operation to the list
         add_gate(gate);
 }
@@ -1561,62 +1569,57 @@ void Gates_block::add_ccx( int target_qbit, int control_qbit, int control_qbit2)
 /**
 @brief Add a CCX gate (i.e. Toffoli gate) operation to the front of the list of gates
 @param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
-@param control_qbit The identification number of the first control qubit. (0 <= control_qbit <= qbit_num-1)
-@param control_qbit2 The identification number of the second control qubit. (0 <= control_qbit2 <= qbit_num-1)
+@param control_qbits Vector of control qubit indices (should contain exactly 2 elements for CCX)
 */
-void Gates_block::add_ccx_to_front( int target_qbit, int control_qbit, int control_qbit2) {
+void Gates_block::add_ccx_to_front( int target_qbit, const std::vector<int>& control_qbits) {
         // new ccx operation
-        Gate* gate = static_cast<Gate*>(new CCX(qbit_num, target_qbit, control_qbit, control_qbit2 ));
+        Gate* gate = static_cast<Gate*>(new CCX(qbit_num, target_qbit, control_qbits));
         // put the operation to the front of the list
         add_gate_to_front(gate);
 }
 
 /**
 @brief Append a SWAP gate to the list of gates
-@param target_qbit The identification number of the first target qubit. (0 <= target_qbit <= qbit_num-1)
-@param target_qbit2 The identification number of the second target qubit. (0 <= target_qbit2 <= qbit_num-1)
+@param target_qbits Vector of target qubit indices (should contain exactly 2 elements for SWAP)
 */
-void Gates_block::add_swap( int target_qbit, int target_qbit2) {
+void Gates_block::add_swap( const std::vector<int>& target_qbits) {
         // new swap operation
-        Gate* gate = static_cast<Gate*>(new SWAP(qbit_num, target_qbit, target_qbit2 ));
+        Gate* gate = static_cast<Gate*>(new SWAP(qbit_num, target_qbits));
         // append the operation to the list
         add_gate(gate);
 }
 
 /**
 @brief Add a SWAP gate to the front of the list of gates
-@param target_qbit The identification number of the first target qubit. (0 <= target_qbit <= qbit_num-1)
-@param target_qbit2 The identification number of the second target qubit. (0 <= target_qbit2 <= qbit_num-1)
+@param target_qbits Vector of target qubit indices (should contain exactly 2 elements for SWAP)
 */
-void Gates_block::add_swap_to_front( int target_qbit, int target_qbit2) {
+void Gates_block::add_swap_to_front( const std::vector<int>& target_qbits) {
         // new swap operation
-        Gate* gate = static_cast<Gate*>(new SWAP(qbit_num, target_qbit, target_qbit2 ));
+        Gate* gate = static_cast<Gate*>(new SWAP(qbit_num, target_qbits));
         // put the operation to the front of the list
         add_gate_to_front(gate);
 }
 
 /**
 @brief Append a CSWAP gate (Controlled SWAP) to the list of gates
-@param target_qbit The identification number of the first target qubit. (0 <= target_qbit <= qbit_num-1)
-@param target_qbit2 The identification number of the second target qubit. (0 <= target_qbit2 <= qbit_num-1)
-@param control_qbit The identification number of the control qubit. (0 <= control_qbit <= qbit_num-1)
+@param target_qbits Vector of target qubit indices (should contain exactly 2 elements)
+@param control_qbits Vector of control qubit indices (should contain exactly 1 element)
 */
-void Gates_block::add_cswap( int target_qbit, int target_qbit2, int control_qbit) {
+void Gates_block::add_cswap( const std::vector<int>& target_qbits, const std::vector<int>& control_qbits) {
         // new cswap operation
-        Gate* gate = static_cast<Gate*>(new CSWAP(qbit_num, target_qbit, target_qbit2, control_qbit ));
+        Gate* gate = static_cast<Gate*>(new CSWAP(qbit_num, target_qbits, control_qbits));
         // append the operation to the list
         add_gate(gate);
 }
 
 /**
 @brief Add a CSWAP gate (Controlled SWAP) to the front of the list of gates
-@param target_qbit The identification number of the first target qubit. (0 <= target_qbit <= qbit_num-1)
-@param target_qbit2 The identification number of the second target qubit. (0 <= target_qbit2 <= qbit_num-1)
-@param control_qbit The identification number of the control qubit. (0 <= control_qbit <= qbit_num-1)
+@param target_qbits Vector of target qubit indices (should contain exactly 2 elements)
+@param control_qbits Vector of control qubit indices (should contain exactly 1 element)
 */
-void Gates_block::add_cswap_to_front( int target_qbit, int target_qbit2, int control_qbit) {
+void Gates_block::add_cswap_to_front( const std::vector<int>& target_qbits, const std::vector<int>& control_qbits) {
         // new cswap operation
-        Gate* gate = static_cast<Gate*>(new CSWAP(qbit_num, target_qbit, target_qbit2, control_qbit ));
+        Gate* gate = static_cast<Gate*>(new CSWAP(qbit_num, target_qbits, control_qbits));
         // put the operation to the front of the list
         add_gate_to_front(gate);
 }
@@ -2283,10 +2286,10 @@ Gates_block::create_remapped_circuit( const std::map<int, int>& qbit_map, const 
         switch (op->get_type()) {
         case CNOT_OPERATION: case CZ_OPERATION:
         case CH_OPERATION: case SYC_OPERATION:
-        case U1_OPERATION: case U2_OPERATION: 
-        case U3_OPERATION: case RY_OPERATION: 
+        case U1_OPERATION: case U2_OPERATION:
+        case U3_OPERATION: case RY_OPERATION:
         case CRY_OPERATION: case RX_OPERATION:
-        case CRX_OPERATION: case CRZ_OPERATION: 
+        case CRX_OPERATION: case CRZ_OPERATION:
         case CP_OPERATION: case SWAP_OPERATION:
         case CSWAP_OPERATION: case CCX_OPERATION:
         case RZ_OPERATION: case X_OPERATION:
@@ -2294,35 +2297,69 @@ Gates_block::create_remapped_circuit( const std::map<int, int>& qbit_map, const 
         case SX_OPERATION: case BLOCK_OPERATION:
         case GENERAL_OPERATION: case UN_OPERATION:
         case ON_OPERATION: case COMPOSITE_OPERATION:
-        case ADAPTIVE_OPERATION: case H_OPERATION: 
+        case ADAPTIVE_OPERATION: case H_OPERATION:
         case S_OPERATION: case SDG_OPERATION:
         case T_OPERATION: case TDG_OPERATION:
         case CZ_NU_OPERATION: case CU_OPERATION:
         {
             Gate* cloned_op = op->clone();
 
-            int target_qbit = cloned_op->get_target_qbit();
-            int control_qbit = cloned_op->get_control_qbit();
-
             if ( qbit_num_ > qbit_num ) {
                 // qbit num needs to be set in prior to avoid conflict
                 cloned_op->set_qbit_num( qbit_num_ );
             }
 
-            if (qbit_map.find( target_qbit ) != qbit_map.end()) {
-                cloned_op->set_target_qbit( qbit_map.at(target_qbit) );
+            // Handle target qubits (both single and vector-based)
+            std::vector<int> target_qbits = cloned_op->get_target_qbits();
+            if (!target_qbits.empty()) {
+                // Vector-based targets (SWAP, CSWAP, etc.)
+                std::vector<int> remapped_targets;
+                for (int target_qbit : target_qbits) {
+                    if (qbit_map.find(target_qbit) != qbit_map.end()) {
+                        remapped_targets.push_back(qbit_map.at(target_qbit));
+                    } else {
+                        std::string err("Gates_block::create_remapped_circuit: Missing target qubit from the qbit map.");
+                        throw err;
+                    }
+                }
+                cloned_op->set_target_qbits(remapped_targets);
             } else {
-                std::string err("Gates_block::create_remapped_circuit: Missing target qubit from the qbit map."); 
-                throw err;
+                // Legacy single target qubit
+                int target_qbit = cloned_op->get_target_qbit();
+                if (target_qbit != -1) {
+                    if (qbit_map.find(target_qbit) != qbit_map.end()) {
+                        cloned_op->set_target_qbit(qbit_map.at(target_qbit));
+                    } else {
+                        std::string err("Gates_block::create_remapped_circuit: Missing target qubit from the qbit map.");
+                        throw err;
+                    }
+                }
             }
 
-
-            if ( control_qbit != -1 ) {
-                if ( qbit_map.find( control_qbit ) != qbit_map.end() ) {
-                    cloned_op->set_control_qbit( qbit_map.at(control_qbit) );
-                } else {
-                    std::string err("Gates_block::create_remapped_circuit: Missing control qubit from the qbit map."); 
-                    throw err;
+            // Handle control qubits (both single and vector-based)
+            std::vector<int> control_qbits = cloned_op->get_control_qbits();
+            if (!control_qbits.empty()) {
+                // Vector-based controls (CCX, CSWAP, etc.)
+                std::vector<int> remapped_controls;
+                for (int control_qbit : control_qbits) {
+                    if (qbit_map.find(control_qbit) != qbit_map.end()) {
+                        remapped_controls.push_back(qbit_map.at(control_qbit));
+                    } else {
+                        std::string err("Gates_block::create_remapped_circuit: Missing control qubit from the qbit map.");
+                        throw err;
+                    }
+                }
+                cloned_op->set_control_qbits(remapped_controls);
+            } else {
+                // Legacy single control qubit
+                int control_qbit = cloned_op->get_control_qbit();
+                if (control_qbit != -1) {
+                    if (qbit_map.find(control_qbit) != qbit_map.end()) {
+                        cloned_op->set_control_qbit(qbit_map.at(control_qbit));
+                    } else {
+                        std::string err("Gates_block::create_remapped_circuit: Missing control qubit from the qbit map.");
+                        throw err;
+                    }
                 }
             }
 
@@ -2371,30 +2408,15 @@ std::vector<int> Gates_block::get_involved_qubits(bool only_target) {
 
     std::set<int> involved_qbits;
 
-    int qbit;
-
     for(std::vector<Gate*>::iterator it = gates.begin(); it != gates.end(); ++it) {
 
         Gate* gate = *it;
 
-        if (gate->get_type() == BLOCK_OPERATION) {
-            std::vector<int> inner_qbits = gate->get_involved_qubits();    
-            for (std::vector<int>::iterator in_it = inner_qbits.begin(); in_it != inner_qbits.end(); ++in_it){
-                involved_qbits.insert(*in_it);
-            }
-            continue;
-        }
-
-        qbit = gate->get_target_qbit();
-        if (qbit != -1) {
-            involved_qbits.insert(qbit);
-        }
-
-        if (!only_target) {
-            qbit = gate->get_control_qbit();
-            if (qbit != -1) {
-                involved_qbits.insert(qbit);
-            }
+        // Use the gate's get_involved_qubits() method which properly handles
+        // both single and vector-based qubits (SWAP, CSWAP, CCX, etc.)
+        std::vector<int> gate_qbits = gate->get_involved_qubits(only_target);
+        for (std::vector<int>::iterator in_it = gate_qbits.begin(); in_it != gate_qbits.end(); ++in_it){
+            involved_qbits.insert(*in_it);
         }
 
     }

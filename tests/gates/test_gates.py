@@ -192,14 +192,25 @@ class Test_operations:
             if not is_controlled_gate:
                 # single qbit gate
                 squander_gate = gate_obj( qbit_num, target_qbit )
+            elif gate_obj.__name__ == 'SWAP':
+                # SWAP gate uses vector of target qubits
+                # For Qiskit compatibility: swap target_qbit with control_qbit (qbit_num-1)
+                control_qbit = qbit_num-1
+                squander_gate = gate_obj(qbit_num, [target_qbit, control_qbit])
+            elif gate_obj.__name__ == 'CCX':
+                # CCX gate uses target_qbit and vector of control qubits
+                control_qbit = qbit_num-2
+                control_qbit2 = qbit_num-1
+                squander_gate = gate_obj(qbit_num, target_qbit, [control_qbit, control_qbit2])
+            elif gate_obj.__name__ == 'CSWAP':
+                # CSWAP gate uses vectors for both target and control qubits
+                target_qbit2 = qbit_num-2
+                control_qbit = qbit_num-1
+                squander_gate = gate_obj(qbit_num, [target_qbit, target_qbit2], [control_qbit])
             elif is_controlled_gate and not is_3qbit_gate:
                 # gate with control qbit
                 control_qbit = qbit_num-1
                 squander_gate = gate_obj( qbit_num, target_qbit, control_qbit )
-            elif is_3qbit_gate:
-                control_qbit = qbit_num-2
-                control_qbit2 = qbit_num-1
-                squander_gate = gate_obj(qbit_num, target_qbit, control_qbit, control_qbit2)
             
 
             
@@ -285,6 +296,8 @@ class Test_operations:
             error=np.linalg.norm(delta_matrix)
 
             #print("Get_matrix: The difference between the SQUANDER and the qiskit result is: " , np.around(error,2))
+            if error >= 1e-3:
+                print(f"ERROR: {gate_obj.__name__} with qbit_num={qbit_num}, error={error}")
             assert( error < 1e-3 )        
 
 
@@ -308,16 +321,27 @@ class Test_operations:
             if not is_controlled_gate:
                 # single qbit gate
                 squander_gate = gate_obj( qbit_num, target_qbit )
+            elif gate_obj.__name__ == 'SWAP':
+                # SWAP gate uses vector of target qubits
+                # For Qiskit compatibility: swap target_qbit with control_qbit (qbit_num-1)
+                control_qbit = qbit_num-1
+                squander_gate = gate_obj(qbit_num, [target_qbit, control_qbit])
+            elif gate_obj.__name__ == 'CCX':
+                # CCX gate uses target_qbit and vector of control qubits
+                control_qbit = qbit_num-2
+                control_qbit2 = qbit_num-1
+                squander_gate = gate_obj(qbit_num, target_qbit, [control_qbit, control_qbit2])
+            elif gate_obj.__name__ == 'CSWAP':
+                # CSWAP gate uses vectors for both target and control qubits
+                target_qbit2 = qbit_num-2
+                control_qbit = qbit_num-1
+                squander_gate = gate_obj(qbit_num, [target_qbit, target_qbit2], [control_qbit])
             elif is_controlled_gate and not is_3qbit_gate:
                 # gate with control qbit
                 control_qbit = qbit_num-1
                 squander_gate = gate_obj( qbit_num, target_qbit, control_qbit )
-            elif is_3qbit_gate:
-                control_qbit = qbit_num-2
-                control_qbit2 = qbit_num-1
-                squander_gate = gate_obj(qbit_num, target_qbit, control_qbit, control_qbit2)
 
-            
+
             # matrix size of the unitary
             matrix_size = 1 << qbit_num #pow(2, qbit_num )
 

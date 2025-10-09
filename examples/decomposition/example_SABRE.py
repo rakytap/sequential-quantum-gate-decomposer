@@ -17,8 +17,8 @@ parameters = np.array([])
 # The circuit is transformed by SWAP gate insertions and qubit remapping (i.e. reordering)
 
 # path to the circuit to be transpiled
-filename = 'benchmarks/qfast/5q/vqe.qasm'
-N = 5
+filename = 'examples/partitioning/qasm_samples/heisenberg-16-20.qasm'
+N = 16
 # load the qasm file into a QISKIT circuit
 circuit_qiskit = QuantumCircuit.from_qasm_file(filename)
 
@@ -26,16 +26,18 @@ circuit_qiskit = QuantumCircuit.from_qasm_file(filename)
 Squander_initial_circuit, parameters_initial = Qiskit_IO.convert_Qiskit_to_Squander(circuit_qiskit)
 
 # defining the qubit topology/connectivity for Squander
-topology = [(0,1),(0,2),(0,3),(0,4)]
+topology =     [(0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7),
+    (8, 9), (8, 10), (8, 11), (8, 12), (8, 13), (8, 14), (8, 15),
+    (0, 8),]
 
 # transpile the circuit by the Sabre method implemented in Squander
-sabre = SABRE(Squander_initial_circuit, topology)
-Squander_remapped_circuit, parameters_remapped_circuit, pi, final_pi, swap_count = sabre.map_circuit(parameters_initial)
+sabre = SABRE(Squander_initial_circuit, topology,stochastic_selection=True)
+Squander_remapped_circuit, parameters_remapped_circuit, pi, final_pi, swap_count = sabre.map_circuit(parameters_initial,30)
 
 #Umtx = Operator(circuit_qiskit).to_matrix()
 
 print("INITIAL CIRCUIT:")
-print( circuit_qiskit )
+#print( circuit_qiskit )
 print("mapping (q -> Q):", pi)
 print("Final mapping:", final_pi)
 qubits = list(range(N))
@@ -45,25 +47,28 @@ Qiskit_circuit.append(CircuitInstruction( PermutationGate(pi_map),qubits))
 Qiskit_circuit &= Qiskit_IO.get_Qiskit_Circuit( Squander_remapped_circuit, parameters_remapped_circuit )
 Qiskit_circuit.append(CircuitInstruction( PermutationGate(list(final_pi)),qubits))
 print("CIRCUIT MAPPED WITH SABRE:")
-print( Qiskit_circuit )
+#print( Qiskit_circuit )
 print("SABRE SWAP COUNT:", swap_count)
 # defining the qubit topology/connectivity for Squander
-coupling_map = [[0,1],[0,2],[0,3],[0,4]]
-'''
+coupling_map = [
+    [0, 1], [0, 2], [0, 3], [0, 4], [0, 5], [0, 6], [0, 7],
+    [8, 9], [8, 10], [8, 11], [8, 12], [8, 13], [8, 14], [8, 15],
+    [0, 8],
+]
 # transpile the circuit by Qiskit
-Qiskit_circuit_mapped = transpile(circuit_qiskit, basis_gates=['cx','h','cz','swap','u3'], coupling_map=coupling_map)
+Qiskit_circuit_mapped = transpile(circuit_qiskit, coupling_map=coupling_map)
 
 print("CIRCUIT MAPPED WITH QISKIT:")
-print( Qiskit_circuit_mapped )
+#print( Qiskit_circuit_mapped )
 print("QISKIT SWAP COUNT:",  dict(Qiskit_circuit_mapped.count_ops())['swap'])
-'''
 
 # test the generated squander circuits
-matrix_size = 1 << Squander_initial_circuit.get_Qbit_Num()
-unitary_squander_initial = utils.get_unitary_from_qiskit_circuit_operator(circuit_qiskit)
+#matrix_size = 1 << Squander_initial_circuit.get_Qbit_Num()
+#unitary_squander_initial = utils.get_unitary_from_qiskit_circuit_operator(circuit_qiskit)
 
 #unitary_squander_remapped_circuit = np.eye( 1 << Squander_initial_circuit.get_Qbit_Num(), dtype=np.complex128 )
 #Squander_remapped_circuit.apply_to( parameters_remapped_circuit, unitary_squander_remapped_circuit)
+"""
 unitary_squander_remapped_circuit = utils.get_unitary_from_qiskit_circuit_operator(Qiskit_circuit)
 
 
@@ -79,3 +84,4 @@ decomposition_error =  (np.real(np.trace(product_matrix)))/2
        
 print('The error of the decomposition is ' + str(decomposition_error))
 
+"""

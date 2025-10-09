@@ -263,7 +263,29 @@ qgd_Circuit_Wrapper_add_two_qubit_gate(crz, CRZ)
 
 qgd_Circuit_Wrapper_add_two_qubit_gate(crx, CRX)
 
-qgd_Circuit_Wrapper_add_two_qubit_gate(swap, SWAP)
+// SWAP gate now uses vector-based interface
+static PyObject *
+qgd_Circuit_Wrapper_add_SWAP(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {(char*)"target_qbits", NULL};
+    PyObject* target_qbits_py = NULL;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|O", kwlist, &target_qbits_py))
+        return Py_BuildValue("i", -1);
+
+    if (target_qbits_py != NULL && PyList_Check(target_qbits_py)) {
+        std::vector<int> target_qbits;
+        Py_ssize_t list_size = PyList_Size(target_qbits_py);
+        for (Py_ssize_t i = 0; i < list_size; i++) {
+            PyObject* item = PyList_GetItem(target_qbits_py, i);
+            target_qbits.push_back(PyLong_AsLong(item));
+        }
+        self->circuit->add_swap(target_qbits);
+        
+    }
+
+    return Py_BuildValue("i", 0);
+}
 
 qgd_Circuit_Wrapper_add_two_qubit_gate(cp, CP)
 
@@ -274,9 +296,9 @@ qgd_Circuit_Wrapper_add_two_qubit_gate(crot, CROT)
 qgd_Circuit_Wrapper_add_two_qubit_gate(adaptive, adaptive)
 
 /**
-@brief Wrapper function to add an adaptive gate to the front of the gate structure.
+@brief Wrapper function to add a CCX gate to the front of the gate structure.
 @param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper.
-@param args A tuple of the input arguments: target_qbit (int)
+@param args A tuple of the input arguments: target_qbit (int), control_qbits (list of ints)
 @param kwds A tuple of keywords
 */
 static PyObject *
@@ -284,21 +306,30 @@ qgd_Circuit_Wrapper_add_CCX(qgd_Circuit_Wrapper *self, PyObject *args, PyObject 
 {
 
     // The tuple of expected keywords
-    static char *kwlist[] = {(char*)"target_qbit", (char*)"control_qbit",(char*)"control_qbit2", NULL};
+    static char *kwlist[] = {(char*)"target_qbit", (char*)"control_qbits", NULL};
 
     // initiate variables for input arguments
-    int  target_qbit = -1; 
-    int  control_qbit = -1; 
-    int control_qbit2 = -1;
+    int  target_qbit = -1;
+    PyObject* control_qbits_py = NULL;
 
     // parsing input arguments
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|iii", kwlist,
-                                     &target_qbit, &control_qbit, &control_qbit2))
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|iO", kwlist,
+                                     &target_qbit, &control_qbits_py))
         return Py_BuildValue("i", -1);
 
-    // adding U3 gate to the end of the gate structure
-    if (target_qbit != -1 ) {
-        self->circuit->add_ccx(target_qbit, control_qbit, control_qbit2);
+    // adding CCX gate to the end of the gate structure
+    if (target_qbit != -1 && control_qbits_py != NULL && PyList_Check(control_qbits_py)) {
+        std::vector<int> control_qbits;
+        Py_ssize_t list_size = PyList_Size(control_qbits_py);
+        for (Py_ssize_t i = 0; i < list_size; i++) {
+            PyObject* item = PyList_GetItem(control_qbits_py, i);
+            if (PyLong_Check(item)) {
+                control_qbits.push_back(PyLong_AsLong(item));
+            }
+        }
+        if (control_qbits.size() >= 2) {
+            self->circuit->add_ccx(target_qbit, control_qbits);
+        }
     }
 
     return Py_BuildValue("i", 0);
@@ -309,7 +340,7 @@ qgd_Circuit_Wrapper_add_CCX(qgd_Circuit_Wrapper *self, PyObject *args, PyObject 
 /**
 @brief Wrapper function to add a CSWAP gate to the front of the gate structure.
 @param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper.
-@param args A tuple of the input arguments: target_qbit (int), target_qbit2 (int), control_qbit (int)
+@param args A tuple of the input arguments: target_qbits (list of ints), control_qbits (list of ints)
 @param kwds A tuple of keywords
 */
 static PyObject *
@@ -317,21 +348,42 @@ qgd_Circuit_Wrapper_add_CSWAP(qgd_Circuit_Wrapper *self, PyObject *args, PyObjec
 {
 
     // The tuple of expected keywords
-    static char *kwlist[] = {(char*)"target_qbit", (char*)"target_qbit2", (char*)"control_qbit", NULL};
+    static char *kwlist[] = {(char*)"target_qbits", (char*)"control_qbits", NULL};
 
     // initiate variables for input arguments
-    int  target_qbit = -1;
-    int  target_qbit2 = -1;
-    int  control_qbit = -1;
+    PyObject* target_qbits_py = NULL;
+    PyObject* control_qbits_py = NULL;
 
     // parsing input arguments
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|iii", kwlist,
-                                     &target_qbit, &target_qbit2, &control_qbit))
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OO", kwlist,
+                                     &target_qbits_py, &control_qbits_py))
         return Py_BuildValue("i", -1);
 
     // adding CSWAP gate to the end of the gate structure
-    if (target_qbit != -1 ) {
-        self->circuit->add_cswap(target_qbit, target_qbit2, control_qbit);
+    if (target_qbits_py != NULL && PyList_Check(target_qbits_py) &&
+        control_qbits_py != NULL && PyList_Check(control_qbits_py)) {
+
+        std::vector<int> target_qbits;
+        Py_ssize_t target_size = PyList_Size(target_qbits_py);
+        for (Py_ssize_t i = 0; i < target_size; i++) {
+            PyObject* item = PyList_GetItem(target_qbits_py, i);
+            if (PyLong_Check(item)) {
+                target_qbits.push_back(PyLong_AsLong(item));
+            }
+        }
+
+        std::vector<int> control_qbits;
+        Py_ssize_t control_size = PyList_Size(control_qbits_py);
+        for (Py_ssize_t i = 0; i < control_size; i++) {
+            PyObject* item = PyList_GetItem(control_qbits_py, i);
+            if (PyLong_Check(item)) {
+                control_qbits.push_back(PyLong_AsLong(item));
+            }
+        }
+
+        if (target_qbits.size() >= 2 && control_qbits.size() >= 1) {
+            self->circuit->add_cswap(target_qbits, control_qbits);
+        }
     }
 
     return Py_BuildValue("i", 0);
@@ -1070,10 +1122,32 @@ get_gate( Gates_block* circuit, int &idx ) {
     get_gate_template_two_qubit(CRY)
     get_gate_template_two_qubit(CRX)
     get_gate_template_two_qubit(CRZ)
-    get_gate_template_two_qubit(SWAP)
     get_gate_template_two_qubit(CR)
     get_gate_template_two_qubit(CROT)
     get_gate_template_two_qubit(CP)
+    else if (gate->get_type() == SWAP_OPERATION){
+        // SWAP now uses vector-based interface
+        std::vector<int> target_qbits_vec = gate->get_target_qbits();
+        PyObject* target_qbits_list = PyList_New(target_qbits_vec.size());
+        for (size_t i = 0; i < target_qbits_vec.size(); i++) {
+            PyList_SetItem(target_qbits_list, i, Py_BuildValue("i", target_qbits_vec[i]));
+        }
+
+        PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
+        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "SWAP");
+
+        PyObject* gate_input = Py_BuildValue("(OO)", qbit_num, target_qbits_list);
+        py_gate              = PyObject_CallObject(py_gate_class, gate_input);
+
+        // replace dummy data with real gate data
+        qgd_Gate* py_gate_C = reinterpret_cast<qgd_Gate*>( py_gate );
+        delete( py_gate_C->gate );
+        py_gate_C->gate = static_cast<Gate*>( gate->clone() );
+
+        Py_DECREF( qgd_gate );
+        Py_DECREF( gate_input );
+        Py_DECREF( target_qbits_list );
+    }
 
     get_gate_template_one_qubit(U1)
     get_gate_template_one_qubit(U2)
@@ -1130,13 +1204,18 @@ get_gate( Gates_block* circuit, int &idx ) {
 
     }
     else if (gate->get_type() == CCX_OPERATION){
-        PyObject* control_qbit2 = Py_BuildValue("i",  gate->get_control_qbit2() );
+        // CCX now uses vector-based interface
+        std::vector<int> control_qbits_vec = gate->get_control_qbits();
+        PyObject* control_qbits_list = PyList_New(control_qbits_vec.size());
+        for (size_t i = 0; i < control_qbits_vec.size(); i++) {
+            PyList_SetItem(control_qbits_list, i, Py_BuildValue("i", control_qbits_vec[i]));
+        }
 
         PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
         // PyDict_GetItemString creates a borrowed reference to the item in the dict. Reference counting is not increased on this element, dont need to decrease the reference counting at the end
         PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "CCX");
 
-        PyObject* gate_input = Py_BuildValue("(OOOO)", qbit_num, target_qbit, control_qbit, control_qbit2);
+        PyObject* gate_input = Py_BuildValue("(OOO)", qbit_num, target_qbit, control_qbits_list);
         py_gate              = PyObject_CallObject(py_gate_class, gate_input);
 
         // replace dummy data with real gate data
@@ -1144,25 +1223,36 @@ get_gate( Gates_block* circuit, int &idx ) {
         delete( py_gate_C->gate );
         py_gate_C->gate = static_cast<Gate*>( gate->clone() );
 
-        Py_DECREF( qgd_gate );               
+        Py_DECREF( qgd_gate );
         Py_DECREF( gate_input );
+        Py_DECREF( control_qbits_list );
 
         Py_XDECREF(qbit_num);
         Py_XDECREF(target_qbit);
         Py_XDECREF(control_qbit);
-        Py_XDECREF(control_qbit2);
 
         return py_gate;
 
     }
     else if (gate->get_type() == CSWAP_OPERATION){
-        PyObject* control_qbit2 = Py_BuildValue("i",  gate->get_control_qbit2() );
+        // CSWAP now uses vector-based interface
+        std::vector<int> target_qbits_vec = gate->get_target_qbits();
+        PyObject* target_qbits_list = PyList_New(target_qbits_vec.size());
+        for (size_t i = 0; i < target_qbits_vec.size(); i++) {
+            PyList_SetItem(target_qbits_list, i, Py_BuildValue("i", target_qbits_vec[i]));
+        }
+
+        std::vector<int> control_qbits_vec = gate->get_control_qbits();
+        PyObject* control_qbits_list = PyList_New(control_qbits_vec.size());
+        for (size_t i = 0; i < control_qbits_vec.size(); i++) {
+            PyList_SetItem(control_qbits_list, i, Py_BuildValue("i", control_qbits_vec[i]));
+        }
 
         PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
         // PyDict_GetItemString creates a borrowed reference to the item in the dict. Reference counting is not increased on this element, dont need to decrease the reference counting at the end
         PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "CSWAP");
 
-        PyObject* gate_input = Py_BuildValue("(OOOO)", qbit_num, target_qbit, control_qbit, control_qbit2);
+        PyObject* gate_input = Py_BuildValue("(OOO)", qbit_num, target_qbits_list, control_qbits_list);
         py_gate              = PyObject_CallObject(py_gate_class, gate_input);
 
         // replace dummy data with real gate data
@@ -1170,13 +1260,14 @@ get_gate( Gates_block* circuit, int &idx ) {
         delete( py_gate_C->gate );
         py_gate_C->gate = static_cast<Gate*>( gate->clone() );
 
-        Py_DECREF( qgd_gate );               
-        Py_DECREF( gate_input ); 
+        Py_DECREF( qgd_gate );
+        Py_DECREF( gate_input );
+        Py_DECREF( target_qbits_list );
+        Py_DECREF( control_qbits_list );
 
         Py_XDECREF(qbit_num);
         Py_XDECREF(target_qbit);
         Py_XDECREF(control_qbit);
-        Py_XDECREF(control_qbit2);
 
         return py_gate;
 

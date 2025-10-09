@@ -30,7 +30,7 @@ using namespace std;
 /**
 @brief Nullary constructor of the class.
 */
-CCX::CCX() : X(){
+CCX::CCX() : Gate(){
 
     // A string labeling the gate operation
     name = "CCX";
@@ -38,13 +38,8 @@ CCX::CCX() : X(){
     // A string describing the type of the gate
     type = CCX_OPERATION;
 
-    // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gate
-    control_qbit = -1;
-
-    // The index of the second control qubit
-    control_qbit2 = -1;
-
-
+    // Initialize control qubits vector (empty for nullary constructor)
+    control_qbits.clear();
 }
 
 
@@ -52,11 +47,10 @@ CCX::CCX() : X(){
 @brief Constructor of the class.
 @param qbit_num_in The number of qubits in the unitaries
 @param target_qbit_in The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
-@param control_qbit_in The identification number of the first control qubit. (0 <= control_qbit <= qbit_num-1)
-@param control_qbit2_in The identification number of the second control qubit. (0 <= control_qbit2 <= qbit_num-1)
+@param control_qbits_in Vector of control qubit indices (should contain exactly 2 elements for CCX)
 */
-CCX::CCX(int qbit_num_in, int target_qbit_in, int control_qbit_in, int control_qbit2_in) : X(qbit_num_in, target_qbit_in) {
-
+CCX::CCX(int qbit_num_in, int target_qbit_in, const std::vector<int>& control_qbits_in)
+    : Gate(qbit_num_in, std::vector<int>{target_qbit_in}, control_qbits_in) {
 
     // A string labeling the gate operation
     name = "CCX";
@@ -64,35 +58,21 @@ CCX::CCX(int qbit_num_in, int target_qbit_in, int control_qbit_in, int control_q
     // A string describing the type of the gate
     type = CCX_OPERATION;
 
-
-    if (control_qbit_in >= qbit_num) {
+    // Validate that we have exactly 2 control qubits
+    if (control_qbits_in.size() != 2) {
         std::stringstream sstream;
-        sstream << "The index of the first control qubit is larger than the number of qubits" << std::endl;
+        sstream << "CCX gate requires exactly 2 control qubits, got " << control_qbits_in.size() << std::endl;
         print(sstream, 0);
         throw sstream.str();
     }
 
-    if (control_qbit2_in >= qbit_num) {
-        std::stringstream sstream;
-        sstream << "The index of the second control qubit is larger than the number of qubits" << std::endl;
-        print(sstream, 0);
-        throw sstream.str();
-    }
-
-    if (control_qbit_in == control_qbit2_in) {
+    // Check that control qubits are unique
+    if (control_qbits_in[0] == control_qbits_in[1]) {
         std::stringstream sstream;
         sstream << "The two control qubits cannot be the same" << std::endl;
         print(sstream, 0);
         throw sstream.str();
     }
-
-    // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gate
-    control_qbit = control_qbit_in;
-
-    // The index of the second control qubit
-    control_qbit2 = control_qbit2_in;
-
-
 }
 
 /**
@@ -101,7 +81,35 @@ CCX::CCX(int qbit_num_in, int target_qbit_in, int control_qbit_in, int control_q
 CCX::~CCX() {
 }
 
+/**
+@brief Call to retrieve the gate matrix
+@return Returns with a matrix of the gate
+*/
+Matrix
+CCX::get_matrix() {
+    return get_matrix(0);
+}
 
+/**
+@brief Call to retrieve the gate matrix
+@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with Intel TBB (optional)
+@return Returns with a matrix of the gate
+*/
+Matrix
+CCX::get_matrix(int parallel) {
+    Matrix CCX_matrix = create_identity(matrix_size);
+    apply_to(CCX_matrix, parallel);
+
+#ifdef DEBUG
+    if (CCX_matrix.isnan()) {
+        std::stringstream sstream;
+        sstream << "CCX::get_matrix: CCX_matrix contains NaN." << std::endl;
+        print(sstream, 1);
+    }
+#endif
+
+    return CCX_matrix;
+}
 
 /**
 @brief Call to create a clone of the present class
@@ -109,7 +117,7 @@ CCX::~CCX() {
 */
 CCX* CCX::clone() {
 
-    CCX* ret = new CCX( qbit_num, target_qbit, control_qbit, control_qbit2 );
+    CCX* ret = new CCX( qbit_num, target_qbit, control_qbits );
 
     ret->set_parameter_start_idx( get_parameter_start_idx() );
     ret->set_parents( parents );
@@ -128,14 +136,14 @@ void CCX::apply_to(Matrix& input, int parallel) {
 
     int matrix_size = input.rows;
 
-    // Apply the dedicated X kernel with both control qubits
+    // Apply the dedicated X kernel with control qubits vector
     switch (parallel){
         case 0:
-            apply_X_kernel_to_input(input, target_qbit, control_qbit, control_qbit2, matrix_size); break;
+            apply_X_kernel_to_input(input, target_qbits, control_qbits, matrix_size); break;
         case 1:
-            apply_X_kernel_to_input_omp(input, target_qbit, control_qbit, control_qbit2, matrix_size); break;
+            apply_X_kernel_to_input_omp(input, target_qbits, control_qbits, matrix_size); break;
         case 2:
-            apply_X_kernel_to_input_tbb(input, target_qbit, control_qbit, control_qbit2, matrix_size); break;
+            apply_X_kernel_to_input_tbb(input, target_qbits, control_qbits, matrix_size); break;
     }
 
 }
@@ -150,14 +158,14 @@ void CCX::apply_to(Matrix& input, const Matrix_real& parameters, int parallel) {
 
     int matrix_size = input.rows;
 
-    // Apply the dedicated X kernel with both control qubits
+    // Apply the dedicated X kernel with control qubits vector
     switch (parallel){
         case 0:
-            apply_X_kernel_to_input(input, target_qbit, control_qbit, control_qbit2, matrix_size); break;
+            apply_X_kernel_to_input(input, target_qbits, control_qbits, matrix_size); break;
         case 1:
-            apply_X_kernel_to_input_omp(input, target_qbit, control_qbit, control_qbit2, matrix_size); break;
+            apply_X_kernel_to_input_omp(input, target_qbits, control_qbits, matrix_size); break;
         case 2:
-            apply_X_kernel_to_input_tbb(input, target_qbit, control_qbit, control_qbit2, matrix_size); break;
+            apply_X_kernel_to_input_tbb(input, target_qbits, control_qbits, matrix_size); break;
     }
 }
 
@@ -166,34 +174,6 @@ void CCX::apply_to(Matrix& input, const Matrix_real& parameters, int parallel) {
 @return Return with a list of the involved qubits
 */
 std::vector<int> CCX::get_involved_qubits(bool only_target) {
-
-    std::vector<int> involved_qbits;
-    
-    if( target_qbit != -1 ) {
-        involved_qbits.push_back( target_qbit );
-    }
-    
-    if (!only_target){
-        if( control_qbit != -1 ) {
-            involved_qbits.push_back( control_qbit );
-        }
-        if( control_qbit2 != -1 ) {
-            involved_qbits.push_back( control_qbit2 );
-        }    
-    }
-    
-    return involved_qbits;
-    
-
-}
-
-
-int CCX::get_control_qbit2(){
-
-    return control_qbit2;
-}
-
-void CCX::set_control_qbit2(int control_qbit2_in){
-    control_qbit2 = control_qbit2_in;
-    return;
+    // Use Gate's implementation which now handles vectors
+    return Gate::get_involved_qubits(only_target);
 }
