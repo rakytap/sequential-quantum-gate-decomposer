@@ -390,6 +390,22 @@ void add_ch( int target_qbit, int control_qbit);
 void add_ch_to_front( int target_qbit, int control_qbit );
 
 /**
+@brief Append a CU gate (i.e. controlled U gate) gate to the list of gates
+@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+@param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_cu( int target_qbit, int control_qbit);
+
+
+
+/**
+@brief Add a CU gate (i.e. controlled U gate) gate to the front of the list of gates
+@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+@param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_cu_to_front( int target_qbit, int control_qbit );
+
+/**
 @brief Append a CCX gate (i.e. Toffoli gate) to the list of gates
 @param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
 @param control_qbits Vector of control qubit indices (should contain exactly 2 elements for CCX)
