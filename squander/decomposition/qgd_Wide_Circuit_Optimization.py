@@ -20,10 +20,15 @@ import os
 
 from squander.partitioning.partition import PartitionCircuit
 from squander.partitioning.tools import get_qubits
+from squander.synthesis.qgd_SABRE import qgd_SABRE as SABRE
 
 
-
-
+def extract_subtopology(involved_qbits, qbit_map, config ):
+    mini_topology = []
+    for edge in config["topology"]:
+        if edge[0] in involved_qbits and edge[1] in involved_qbits:
+            mini_topology.append((qbit_map[edge[0]],qbit_map[edge[1]]))
+    return mini_topology
 
 def CNOTGateCount( circ: Circuit ) -> int :
     """
@@ -47,7 +52,7 @@ def CNOTGateCount( circ: Circuit ) -> int :
 
     gate_counts = circ.get_Gate_Nums()
 
-    return gate_counts.get('CNOT', 0)
+    return gate_counts.get('CNOT', 0) +  3*gate_counts.get('SWAP', 0)
 
 
 
@@ -72,6 +77,8 @@ class qgd_Wide_Circuit_Optimization:
         config.setdefault('test_subcircuits', False )
         config.setdefault('test_final_circuit', True )
         config.setdefault('max_partition_size', 3 )
+        config.setdefault('topology', None)
+        config.setdefault('routed', False)
         
         #testing the fields of config 
         strategy = config[ 'strategy' ]
@@ -168,7 +175,7 @@ class qgd_Wide_Circuit_Optimization:
 
 
     @staticmethod
-    def DecomposePartition( Umtx: np.ndarray, config: dict ) -> Circuit:
+    def DecomposePartition( Umtx: np.ndarray, config: dict, mini_topology = None ) -> Circuit:
         """
         Call to run the decomposition of a given unitary Umtx, typically associated with the circuit 
         partition to be optimized
@@ -187,11 +194,11 @@ class qgd_Wide_Circuit_Optimization:
         """ 
         strategy = config["strategy"]
         if strategy == "TreeSearch":
-            cDecompose = N_Qubit_Decomposition_Tree_Search( Umtx.conj().T, config=config, accelerator_num=0 )
+            cDecompose = N_Qubit_Decomposition_Tree_Search( Umtx.conj().T, config=config, accelerator_num=0, topology=mini_topology)
         elif strategy == "TabuSearch":
-            cDecompose = N_Qubit_Decomposition_Tabu_Search( Umtx.conj().T, config=config, accelerator_num=0 )
+            cDecompose = N_Qubit_Decomposition_Tabu_Search( Umtx.conj().T, config=config, accelerator_num=0, topology=mini_topology )
         elif strategy == "Adaptive":
-            cDecompose = N_Qubit_Decomposition_adaptive( Umtx.conj().T, level_limit_max=5, level_limit_min=1 )
+            cDecompose = N_Qubit_Decomposition_adaptive( Umtx.conj().T, level_limit_max=5, level_limit_min=1, topology=mini_topology )
         else:
             raise Exception(f"Unsupported decomposition type: {strategy}")
 
@@ -287,13 +294,16 @@ class qgd_Wide_Circuit_Optimization:
 
         qbit_num_orig_circuit = subcircuit.get_Qbit_Num()
         involved_qbits = subcircuit.get_Qbits()
+
         qbit_num = len( involved_qbits )
 
         # create qbit map:
         qbit_map = {}
         for idx in range( len(involved_qbits) ):
             qbit_map[ involved_qbits[idx] ] = idx
-
+        mini_topology = None 
+        if config["topology"] != None:
+            mini_topology = extract_subtopology(involved_qbits, qbit_map, config)
         # remap the subcircuit to a smaller qubit register
         remapped_subcircuit = subcircuit.Remap_Qbits( qbit_map, qbit_num )
 
@@ -301,7 +311,7 @@ class qgd_Wide_Circuit_Optimization:
         unitary = remapped_subcircuit.get_Matrix( subcircuit_parameters )
 
         # decompose a small unitary into a new circuit
-        decomposed_circuit, decomposed_parameters = qgd_Wide_Circuit_Optimization.DecomposePartition( unitary, config )
+        decomposed_circuit, decomposed_parameters = qgd_Wide_Circuit_Optimization.DecomposePartition( unitary, config, mini_topology )
 
         if decomposed_circuit is None:
             return subcircuit, subcircuit_parameters #remaining code will fail, just return original circuit
@@ -344,6 +354,8 @@ class qgd_Wide_Circuit_Optimization:
             Returns with the optimized circuit and the corresponding parameter array
 
         """
+        if self.config["topology"] != None:
+            circ, orig_parameters = self.route_circuit(circ,orig_parameters)
 
         if global_min:
             from squander.partitioning.ilp import get_all_partitions, _get_topo_order, topo_sort_partitions, ilp_global_optimal, recombine_single_qubit_chains
@@ -381,7 +393,6 @@ class qgd_Wide_Circuit_Optimization:
         else:
             partitined_circuit, parameters, _ = PartitionCircuit( circ, orig_parameters, self.max_partition_size, strategy="ilp" )
 
-
         qbit_num_orig_circuit = circ.get_Qbit_Num()
 
 
@@ -413,7 +424,7 @@ class qgd_Wide_Circuit_Optimization:
     
             
                 # callback function done on the master process to compare the new decomposed and the original suncircuit
-                callback_fnc = lambda  x : self.CompareAndPickCircuits( [subcircuit, x[0]], [subcircuit_parameters, x[1]] )
+                callback_fnc = lambda  x : self.CompareAndPickCircuits( [subcircuit, x[0]], [subcircuit_parameters, x[1]] ) 
 
                 # call a process to decompose a subcircuit
                 config = self.config if not global_min or len(subcircuit.get_Qbits()) < 4 else {**self.config, 'strategy': "Adaptive"}
@@ -480,3 +491,11 @@ class qgd_Wide_Circuit_Optimization:
         
         return wide_circuit, wide_parameters
 
+    def route_circuit(self, circ: Circuit, orig_parameters: np.ndarray):
+
+        sabre = SABRE(circ, self.config["topology"])
+        Squander_remapped_circuit, parameters_remapped_circuit, pi, final_pi, swap_count = sabre.map_circuit(orig_parameters)
+        self.config.setdefault("initial_mapping",pi)
+        self.config.setdefault("final_mapping",final_pi)
+        self.config["routed"] = False
+        return Squander_remapped_circuit, parameters_remapped_circuit
