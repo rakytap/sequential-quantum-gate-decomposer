@@ -79,6 +79,7 @@ class qgd_Wide_Circuit_Optimization:
         config.setdefault('max_partition_size', 3 )
         config.setdefault('topology', None)
         config.setdefault('routed', False)
+        config.setdefault('partition_strategy','ilp')
         
         #testing the fields of config 
         strategy = config[ 'strategy' ]
@@ -222,7 +223,7 @@ class qgd_Wide_Circuit_Optimization:
         parameters       = cDecompose.get_Optimized_Parameters()
 
 
-        print( "Decomposition error: ", cDecompose.get_Decomposition_Error() )
+        #print( "Decomposition error: ", cDecompose.get_Decomposition_Error() )
 
         if tolerance < cDecompose.get_Decomposition_Error():
             return None, None
@@ -354,7 +355,7 @@ class qgd_Wide_Circuit_Optimization:
             Returns with the optimized circuit and the corresponding parameter array
 
         """
-        if self.config["topology"] != None:
+        if self.config["topology"] != None and self.config["routed"]==False:
             circ, orig_parameters = self.route_circuit(circ,orig_parameters)
 
         if global_min:
@@ -391,7 +392,7 @@ class qgd_Wide_Circuit_Optimization:
             partitined_circuit, param_order, _ = kahn_partition_preparts(circ, self.max_partition_size, prepartitioning)
             parameters = translate_param_order(orig_parameters, param_order)
         else:
-            partitined_circuit, parameters, _ = PartitionCircuit( circ, orig_parameters, self.max_partition_size, strategy="ilp" )
+            partitined_circuit, parameters, _ = PartitionCircuit( circ, orig_parameters, self.max_partition_size, strategy=self.config['partition_strategy'] )
 
         qbit_num_orig_circuit = circ.get_Qbit_Num()
 
@@ -497,5 +498,5 @@ class qgd_Wide_Circuit_Optimization:
         Squander_remapped_circuit, parameters_remapped_circuit, pi, final_pi, swap_count = sabre.map_circuit(orig_parameters)
         self.config.setdefault("initial_mapping",pi)
         self.config.setdefault("final_mapping",final_pi)
-        self.config["routed"] = False
+        self.config["routed"] = True
         return Squander_remapped_circuit, parameters_remapped_circuit

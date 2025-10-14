@@ -28,22 +28,16 @@ using namespace std;
 /**
 @brief Nullary constructor of the class.
 */
-SWAP::SWAP() {
+SWAP::SWAP() : Gate() {
 
     // A string labeling the gate operation
     name = "SWAP";
 
-    // number of qubits spanning the matrix of the gate
-    qbit_num = -1;
-    // the size of the matrix
-    matrix_size = -1;
     // A string describing the type of the gate
     type = SWAP_OPERATION;
 
-    // The index of the qubit on which the gate acts (target_qbit >= 0)
-    target_qbit = -1;
-    // The index of the qubit which acts as a control qubit (used as second target for SWAP)
-    control_qbit = -1;
+    // Initialize target qubits vector (empty for nullary constructor)
+    target_qbits.clear();
 
     parameter_num = 0;
 }
@@ -51,46 +45,32 @@ SWAP::SWAP() {
 /**
 @brief Constructor of the class.
 @param qbit_num_in The number of qubits in the unitaries
-@param target_qbit_in The identification number of the first target qubit. (0 <= target_qbit <= qbit_num-1)
-@param target_qbit2_in The identification number of the second target qubit. (0 <= target_qbit2 <= qbit_num-1)
+@param target_qbits_in Vector of target qubit indices (should contain exactly 2 elements for SWAP)
 */
-SWAP::SWAP(int qbit_num_in, int target_qbit_in, int target_qbit2_in) {
+SWAP::SWAP(int qbit_num_in, const std::vector<int>& target_qbits_in)
+    : Gate(qbit_num_in, target_qbits_in) {
 
     // A string labeling the gate operation
     name = "SWAP";
 
-    // number of qubits spanning the matrix of the gate
-    qbit_num = qbit_num_in;
-    // the size of the matrix
-    matrix_size = Power_of_2(qbit_num);
     // A string describing the type of the gate
     type = SWAP_OPERATION;
 
-    if (target_qbit_in >= qbit_num) {
+    // Validate that we have exactly 2 target qubits
+    if (target_qbits_in.size() != 2) {
         std::stringstream sstream;
-        sstream << "The index of the first target qubit is larger than the number of qubits" << std::endl;
+        sstream << "SWAP gate requires exactly 2 target qubits, got " << target_qbits_in.size() << std::endl;
         print(sstream, 0);
         throw sstream.str();
     }
 
-    if (target_qbit2_in >= qbit_num) {
-        std::stringstream sstream;
-        sstream << "The index of the second target qubit is larger than the number of qubits" << std::endl;
-        print(sstream, 0);
-        throw sstream.str();
-    }
-
-    if (target_qbit_in == target_qbit2_in) {
+    // Check that target qubits are unique
+    if (target_qbits_in[0] == target_qbits_in[1]) {
         std::stringstream sstream;
         sstream << "The two target qubits cannot be the same" << std::endl;
         print(sstream, 0);
         throw sstream.str();
     }
-
-    // The index of the qubit on which the gate acts (target_qbit >= 0)
-    target_qbit = target_qbit_in;
-    // Store second target qubit in control_qbit for kernel compatibility
-    control_qbit = target_qbit2_in;
 
     parameter_num = 0;
 }
@@ -145,14 +125,15 @@ SWAP::apply_to(Matrix& input, int parallel) {
         throw(err);
     }
 
-    // Use the dedicated SWAP kernel (using control_qbit as target_qbit2)
+    // Use the dedicated SWAP kernel with target_qbits vector (no control qubits)
+    std::vector<int> empty_control_qbits;
     switch (parallel){
         case 0:
-            apply_SWAP_kernel_to_input(input, target_qbit, control_qbit, -1, matrix_size); break;
+            apply_SWAP_kernel_to_input(input, target_qbits, empty_control_qbits, matrix_size); break;
         case 1:
-            apply_SWAP_kernel_to_input_omp(input, target_qbit, control_qbit, -1, matrix_size); break;
+            apply_SWAP_kernel_to_input_omp(input, target_qbits, empty_control_qbits, matrix_size); break;
         case 2:
-            apply_SWAP_kernel_to_input_tbb(input, target_qbit, control_qbit, -1, matrix_size); break;
+            apply_SWAP_kernel_to_input_tbb(input, target_qbits, empty_control_qbits, matrix_size); break;
     }
 }
 
@@ -166,14 +147,15 @@ void SWAP::apply_to(Matrix& input, const Matrix_real& parameters, int parallel) 
 
     int matrix_size = input.rows;
 
-    // Apply the dedicated X kernel with both control qubits
+    // Apply the dedicated SWAP kernel with target_qbits vector (no control qubits)
+    std::vector<int> empty_control_qbits;
     switch (parallel){
         case 0:
-            apply_SWAP_kernel_to_input(input, target_qbit, control_qbit, -1, matrix_size); break;
+            apply_SWAP_kernel_to_input(input, target_qbits, empty_control_qbits, matrix_size); break;
         case 1:
-            apply_SWAP_kernel_to_input_omp(input, target_qbit, control_qbit, -1, matrix_size); break;
+            apply_SWAP_kernel_to_input_omp(input, target_qbits, empty_control_qbits, matrix_size); break;
         case 2:
-            apply_SWAP_kernel_to_input_tbb(input, target_qbit, control_qbit, -1, matrix_size); break;
+            apply_SWAP_kernel_to_input_tbb(input, target_qbits, empty_control_qbits, matrix_size); break;
     }
 
 }
@@ -184,7 +166,7 @@ void SWAP::apply_to(Matrix& input, const Matrix_real& parameters, int parallel) 
 */
 SWAP* SWAP::clone() {
 
-    SWAP* ret = new SWAP(qbit_num, target_qbit, control_qbit);
+    SWAP* ret = new SWAP(qbit_num, target_qbits);
 
     ret->set_parameter_start_idx(get_parameter_start_idx());
     ret->set_parents(parents);
@@ -198,7 +180,7 @@ SWAP* SWAP::clone() {
 @param qbit_list The reordered list of qubits spanning the matrix
 */
 void SWAP::reorder_qubits(std::vector<int> qbit_list) {
-
+    // Use Gate's implementation which now handles vectors
     Gate::reorder_qubits(qbit_list);
 }
 
@@ -211,18 +193,12 @@ void SWAP::set_qbit_num(int qbit_num_in) {
     Gate::set_qbit_num(qbit_num_in);
 }
 
-
-
 /**
 @brief Get list of involved qubits
 @param only_target If true, return only target qubits, otherwise include control qubits too
 @return Vector of qubit indices
 */
 std::vector<int> SWAP::get_involved_qubits(bool only_target) {
-    std::vector<int> involved_qubits;
-
-    involved_qubits.push_back(target_qbit);
-    involved_qubits.push_back(control_qbit);
-
-    return involved_qubits;
+    // Use Gate's implementation which now handles vectors
+    return Gate::get_involved_qubits(only_target);
 }

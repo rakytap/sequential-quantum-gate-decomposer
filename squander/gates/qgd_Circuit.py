@@ -350,30 +350,58 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
 
 #@brief Call to add a SWAP gate to the front of the gate structure.
 #@param self A pointer pointing to an instance of the class qgd_Circuit.
-#@param Input arguments: target_qbit (int), target_qbit2 (int).
+#@param Input arguments: target_qbits (list of int) - list of target qubits (at least 2).
 
-    def add_SWAP( self, target_qbit, target_qbit2):
+    def add_SWAP( self, target_qbits, target_qbit2=-1):
+        # Ensure target_qbits is a list
+        if isinstance(target_qbits, (list, tuple)):
+            super(qgd_Circuit, self).add_SWAP(list(target_qbits))
+        if isinstance(target_qbits,int) and target_qbit2 != -1:
+            super(qgd_Circuit, self).add_SWAP(list(target_qbits))
 
-	# call the C wrapper function
-        super(qgd_Circuit, self).add_SWAP(target_qbit, target_qbit2)
-
-#@brief Call to add a CSWAP gate to the front of the gate structure.
+#@brief Call to add a CSWAP (Fredkin) gate to the front of the gate structure.
 #@param self A pointer pointing to an instance of the class qgd_Circuit.
-#@param Input arguments: target_qbit (int), target_qbit2 (int), control_qbit (int).
+#@param Input arguments: target_qbits (list of int) - target qubits (exactly 2 for standard CSWAP),
+#                        control_qbits (int or list of int) - control qubit (exactly 1 for standard CSWAP).
+#@note Accepts both list and single integer inputs for control_qbits. Examples:
+#      add_CSWAP([0,1], 2) -> control_qbits becomes [2] (standard Fredkin gate)
+#      add_CSWAP([0,1], [2]) -> control_qbits stays [2] (standard Fredkin gate)
+#@note Currently only supports exactly 1 control qubit (standard Fredkin gate).
 
-    def add_CSWAP( self, target_qbit, target_qbit2, control_qbit):
+    def add_CSWAP( self, target_qbits, control_qbits):
+        # Convert target_qbits to list if needed
+        if not isinstance(target_qbits, (list, tuple)):
+            raise TypeError("target_qbits must be a list or tuple")
+        target_qbits = list(target_qbits)
+
+        # Convert control_qbits to list if it's a single integer
+        if isinstance(control_qbits, int):
+            control_qbits = [control_qbits]
+        elif isinstance(control_qbits, (list, tuple)):
+            control_qbits = list(control_qbits)
+        else:
+            raise TypeError("control_qbits must be an int, list, or tuple")
 
 	# call the C wrapper function
-        super(qgd_Circuit, self).add_CSWAP(target_qbit, target_qbit2, control_qbit)
+        super(qgd_Circuit, self).add_CSWAP(target_qbits, control_qbits)
 
-#@brief Call to add a CSWAP gate to the front of the gate structure.
+#@brief Call to add a CCX gate to the front of the gate structure.
 #@param self A pointer pointing to an instance of the class qgd_Circuit.
-#@param Input arguments: target_qbit (int), target_qbit2 (int), control_qbit (int).
+#@param Input arguments: target_qbit (int), control_qbits (list of int or single int) - control qubits (at least 2).
+#@note control_qbits can be a list or tuple. Example:
+#      add_CCX(0, [1,2]) -> standard CCX with 2 controls
 
-    def add_CCX( self, target_qbit, control_qbit, control_qbit2):
+    def add_CCX( self, target_qbit, control_qbits):
+        # Convert control_qbits to list if needed
+        if isinstance(control_qbits, int):
+            raise TypeError("control_qbits must be a list or tuple (CCX requires at least 2 control qubits)")
+        elif isinstance(control_qbits, (list, tuple)):
+            control_qbits = list(control_qbits)
+        else:
+            raise TypeError("control_qbits must be a list or tuple")
 
 	# call the C wrapper function
-        super(qgd_Circuit, self).add_CCX(target_qbit, control_qbit, control_qbit2)
+        super(qgd_Circuit, self).add_CCX(target_qbit, control_qbits)
 
 #@brief Call to add adaptive gate to the front of the gate structure.
 #@param self A pointer pointing to an instance of the class qgd_Circuit.
@@ -593,10 +621,10 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
         elif isinstance(qgd_gate,CP):
             self.add_CP(qgd_gate.get_Target_Qbit(),qgd_gate.get_Control_Qbit())
         elif isinstance(qgd_gate,SWAP):
-            self.add_SWAP(qgd_gate.get_Target_Qbit(),qgd_gate.get_Control_Qbit())
+            self.add_SWAP(qgd_gate.get_Target_Qbits())
         elif isinstance(qgd_gate,CSWAP):
-            self.add_CSWAP(qgd_gate.get_Target_Qbit(),qgd_gate.get_Control_Qbit(),qgd_gate.get_Control_Qbit2())
+            self.add_CSWAP(qgd_gate.get_Target_Qbits(), qgd_gate.get_Control_Qbits())
         elif isinstance(qgd_gate,CCX):
-            self.add_CCX(qgd_gate.get_Target_Qbit(),qgd_gate.get_Control_Qbit(),qgd_gate.get_Control_Qbit2())
+            self.add_CCX(qgd_gate.get_Target_Qbit(), qgd_gate.get_Control_Qbits())
         else:
             raise Exception("Cannot add gate: unimplemented gate type")

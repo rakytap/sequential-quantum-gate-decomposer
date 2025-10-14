@@ -23,6 +23,7 @@ limitations under the License.
 
 #include "Gate.h"
 #include "common.h"
+#include <sstream>
 
 #ifdef USE_AVX 
 #include "apply_kernel_to_input_AVX.h"
@@ -50,6 +51,9 @@ Gate::Gate() {
     target_qbit = -1;
     // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled operations
     control_qbit = -1;
+    // Vector-based qubit storage
+    target_qbits.clear();
+    control_qbits.clear();
     // the number of free parameters of the operation
     parameter_num = 0;
     // the index in the parameter array (corrensponding to the encapsulated circuit) where the gate parameters begin (if gates are placed into a circuit a single parameter array is used to execute the whole circuit)
@@ -66,8 +70,8 @@ Gate::Gate() {
 Gate::Gate(int qbit_num_in) {
 
     if (qbit_num_in > 30) {
-        std::string err("Gate::Gate: Number of qubits supported up to 30"); 
-        throw err;        
+        std::string err("Gate::Gate: Number of qubits supported up to 30");
+        throw err;
     }
 
     // A string labeling the gate operation
@@ -82,10 +86,70 @@ Gate::Gate(int qbit_num_in) {
     target_qbit = -1;
     // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled operations
     control_qbit = -1;
+    // Vector-based qubit storage
+    target_qbits.clear();
+    control_qbits.clear();
     // The number of parameters
     parameter_num = 0;
     // the index in the parameter array (corrensponding to the encapsulated circuit) where the gate parameters begin (if gates are placed into a circuit a single parameter array is used to execute the whole circuit)
     parameter_start_idx = 0;
+}
+
+
+/**
+@brief Constructor of the class with vector-based qubit specification.
+@param qbit_num_in The number of qubits spanning the unitaries
+@param target_qbits_in Vector of target qubit indices
+@param control_qbits_in Vector of control qubit indices
+@return An instance of the class
+*/
+Gate::Gate(int qbit_num_in, const std::vector<int>& target_qbits_in, const std::vector<int>& control_qbits_in) {
+
+    if (qbit_num_in > 30) {
+        std::string err("Gate::Gate: Number of qubits supported up to 30");
+        throw err;
+    }
+
+    // A string labeling the gate operation
+    name = "Gate";
+    // number of qubits spanning the matrix of the operation
+    qbit_num = qbit_num_in;
+    // the size of the matrix
+    matrix_size = Power_of_2(qbit_num);
+    // A string describing the type of the operation
+    type = GENERAL_OPERATION;
+    // The number of parameters
+    parameter_num = 0;
+    // the index in the parameter array (corrensponding to the encapsulated circuit) where the gate parameters begin (if gates are placed into a circuit a single parameter array is used to execute the whole circuit)
+    parameter_start_idx = 0;
+
+    // Validate target qubits
+    for (int tq : target_qbits_in) {
+        if (tq >= qbit_num_in) {
+            std::stringstream sstream;
+            sstream << "Gate: Target qubit index " << tq << " is larger than or equal to the number of qubits " << qbit_num_in << std::endl;
+            print(sstream, 0);
+            throw sstream.str();
+        }
+    }
+
+    // Validate control qubits
+    for (int cq : control_qbits_in) {
+        if (cq >= qbit_num_in) {
+            std::stringstream sstream;
+            sstream << "Gate: Control qubit index " << cq << " is larger than or equal to the number of qubits " << qbit_num_in << std::endl;
+            print(sstream, 0);
+            throw sstream.str();
+        }
+    }
+
+    target_qbits = target_qbits_in;
+    control_qbits = control_qbits_in;
+    std::sort(target_qbits.begin(), target_qbits.end());
+    std::sort(control_qbits.begin(), control_qbits.end());
+    // Set the legacy single-qubit members to first elements for backward compatibility
+    target_qbit = target_qbits.empty() ? -1 : target_qbits[0];
+    control_qbit = control_qbits.empty() ? -1 : control_qbits[0];
 }
 
 
@@ -327,12 +391,18 @@ Gate::set_matrix( Matrix input ) {
 void Gate::set_control_qbit(int control_qbit_in){
 
     if ( control_qbit_in >= qbit_num ) {
-        std::string err("Gate::set_target_qbit: Wrong value of the control qbit: of out of the range given by qbit_num"); 
-        throw err;   
+        std::string err("Gate::set_target_qbit: Wrong value of the control qbit: of out of the range given by qbit_num");
+        throw err;
     }
 
-
     control_qbit = control_qbit_in;
+
+    // Synchronize with vector storage
+    if (control_qbits.empty()) {
+        control_qbits.push_back(control_qbit_in);
+    } else {
+        control_qbits[0] = control_qbit_in;
+    }
 }
 
 
@@ -343,12 +413,72 @@ void Gate::set_control_qbit(int control_qbit_in){
 void Gate::set_target_qbit(int target_qbit_in){
 
     if ( target_qbit_in >= qbit_num  ) {
-        std::string err("Gate::set_target_qbit: Wrong value of the target qbit: out of the range given by qbit_num"); 
-        throw err;   
+        std::string err("Gate::set_target_qbit: Wrong value of the target qbit: out of the range given by qbit_num");
+        throw err;
     }
 
-
     target_qbit = target_qbit_in;
+
+    // Synchronize with vector storage
+    if (target_qbits.empty()) {
+        target_qbits.push_back(target_qbit_in);
+    } else {
+        target_qbits[0] = target_qbit_in;
+    }
+}
+
+/**
+@brief Call to set the control qubits for the gate operation
+@param control_qbits_in Vector of control qubit indices
+*/
+void Gate::set_control_qbits(const std::vector<int>& control_qbits_in) {
+    // Validate control qubits
+    for (int cq : control_qbits_in) {
+        if (cq >= qbit_num) {
+            std::stringstream sstream;
+            sstream << "Gate::set_control_qbits: Control qubit index " << cq << " is out of range" << std::endl;
+            print(sstream, 0);
+            throw sstream.str();
+        }
+    }
+
+    control_qbits = control_qbits_in;
+    control_qbit = control_qbits.empty() ? -1 : control_qbits[0];
+}
+
+/**
+@brief Call to set the target qubits for the gate operation
+@param target_qbits_in Vector of target qubit indices
+*/
+void Gate::set_target_qbits(const std::vector<int>& target_qbits_in) {
+    // Validate target qubits
+    for (int tq : target_qbits_in) {
+        if (tq >= qbit_num) {
+            std::stringstream sstream;
+            sstream << "Gate::set_target_qbits: Target qubit index " << tq << " is out of range" << std::endl;
+            print(sstream, 0);
+            throw sstream.str();
+        }
+    }
+
+    target_qbits = target_qbits_in;
+    target_qbit = target_qbits.empty() ? -1 : target_qbits[0];
+}
+
+/**
+@brief Call to get the vector of control qubits
+@return Returns vector of control qubit indices
+*/
+std::vector<int> Gate::get_control_qbits() const {
+    return control_qbits;
+}
+
+/**
+@brief Call to get the vector of target qubits
+@return Returns vector of target qubit indices
+*/
+std::vector<int> Gate::get_target_qbits() const {
+    return target_qbits;
 }
 
 /**
@@ -378,6 +508,28 @@ void Gate::reorder_qubits( std::vector<int> qbit_list ) {
 
     control_qbit = control_qbit_new;
     target_qbit = target_qbit_new;
+
+    // Reorder control qubits vector
+    for (size_t i = 0; i < control_qbits.size(); i++) {
+        int old_qbit = control_qbits[i];
+        for (int idx = 0; idx < qbit_num; idx++) {
+            if (old_qbit == qbit_list[idx]) {
+                control_qbits[i] = idx;
+                break;
+            }
+        }
+    }
+
+    // Reorder target qubits vector
+    for (size_t i = 0; i < target_qbits.size(); i++) {
+        int old_qbit = target_qbits[i];
+        for (int idx = 0; idx < qbit_num; idx++) {
+            if (old_qbit == qbit_list[idx]) {
+                target_qbits[i] = idx;
+                break;
+            }
+        }
+    }
 }
 
 
@@ -404,19 +556,23 @@ int Gate::get_control_qbit()  {
 std::vector<int> Gate::get_involved_qubits(bool only_target) {
 
     std::vector<int> involved_qbits;
-    
-    if( target_qbit != -1 ) {
-        involved_qbits.push_back( target_qbit );
+
+    // Use vector storage if available, otherwise fall back to single qubits
+    if (!target_qbits.empty()) {
+        involved_qbits.insert(involved_qbits.end(), target_qbits.begin(), target_qbits.end());
+    } else if (target_qbit != -1) {
+        involved_qbits.push_back(target_qbit);
     }
-    
-    if (!only_target){
-        if( control_qbit != -1 ) {
-            involved_qbits.push_back( control_qbit );
-        }    
+
+    if (!only_target) {
+        if (!control_qbits.empty()) {
+            involved_qbits.insert(involved_qbits.end(), control_qbits.begin(), control_qbits.end());
+        } else if (control_qbit != -1) {
+            involved_qbits.push_back(control_qbit);
+        }
     }
-    
+
     return involved_qbits;
-    
 
 }
 
@@ -857,14 +1013,5 @@ Gate::get_name() {
 
     return name;
 
-}
-
-int Gate::get_control_qbit2(){
-
-    return -1;
-}
-
-void Gate::set_control_qbit2(int control_qbit2_in){
-    return;
 }
 

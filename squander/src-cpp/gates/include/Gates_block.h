@@ -408,48 +408,42 @@ void add_cu_to_front( int target_qbit, int control_qbit );
 /**
 @brief Append a CCX gate (i.e. Toffoli gate) to the list of gates
 @param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
-@param control_qbit The identification number of the first control qubit. (0 <= control_qbit <= qbit_num-1)
-@param control_qbit2 The identification number of the second control qubit. (0 <= control_qbit2 <= qbit_num-1)
+@param control_qbits Vector of control qubit indices (should contain exactly 2 elements for CCX)
 */
-void add_ccx( int target_qbit, int control_qbit, int control_qbit2);
+void add_ccx( int target_qbit, const std::vector<int>& control_qbits);
 
 /**
 @brief Add a CCX gate (i.e. Toffoli gate) to the front of the list of gates
 @param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
-@param control_qbit The identification number of the first control qubit. (0 <= control_qbit <= qbit_num-1)
-@param control_qbit2 The identification number of the second control qubit. (0 <= control_qbit2 <= qbit_num-1)
+@param control_qbits Vector of control qubit indices (should contain exactly 2 elements for CCX)
 */
-void add_ccx_to_front( int target_qbit, int control_qbit, int control_qbit2 );
+void add_ccx_to_front( int target_qbit, const std::vector<int>& control_qbits );
 
 /**
 @brief Append a SWAP gate to the list of gates
-@param target_qbit The identification number of the first target qubit. (0 <= target_qbit <= qbit_num-1)
-@param target_qbit2 The identification number of the second target qubit. (0 <= target_qbit2 <= qbit_num-1)
+@param target_qbits Vector of target qubit indices (should contain exactly 2 elements for SWAP)
 */
-void add_swap( int target_qbit, int target_qbit2);
+void add_swap( const std::vector<int>& target_qbits);
 
 /**
 @brief Add a SWAP gate to the front of the list of gates
-@param target_qbit The identification number of the first target qubit. (0 <= target_qbit <= qbit_num-1)
-@param target_qbit2 The identification number of the second target qubit. (0 <= target_qbit2 <= qbit_num-1)
+@param target_qbits Vector of target qubit indices (should contain exactly 2 elements for SWAP)
 */
-void add_swap_to_front( int target_qbit, int target_qbit2 );
+void add_swap_to_front( const std::vector<int>& target_qbits );
 
 /**
 @brief Append a CSWAP gate (Controlled SWAP) to the list of gates
-@param target_qbit The identification number of the first target qubit. (0 <= target_qbit <= qbit_num-1)
-@param target_qbit2 The identification number of the second target qubit. (0 <= target_qbit2 <= qbit_num-1)
-@param control_qbit The identification number of the control qubit. (0 <= control_qbit <= qbit_num-1)
+@param target_qbits Vector of target qubit indices (should contain exactly 2 elements)
+@param control_qbits Vector of control qubit indices (should contain exactly 1 element)
 */
-void add_cswap( int target_qbit, int target_qbit2, int control_qbit);
+void add_cswap( const std::vector<int>& target_qbits, const std::vector<int>& control_qbits);
 
 /**
 @brief Add a CSWAP gate (Controlled SWAP) to the front of the list of gates
-@param target_qbit The identification number of the first target qubit. (0 <= target_qbit <= qbit_num-1)
-@param target_qbit2 The identification number of the second target qubit. (0 <= target_qbit2 <= qbit_num-1)
-@param control_qbit The identification number of the control qubit. (0 <= control_qbit <= qbit_num-1)
+@param target_qbits Vector of target qubit indices (should contain exactly 2 elements)
+@param control_qbits Vector of control qubit indices (should contain exactly 1 element)
 */
-void add_cswap_to_front( int target_qbit, int target_qbit2, int control_qbit );
+void add_cswap_to_front( const std::vector<int>& target_qbits, const std::vector<int>& control_qbits );
 
 /**
 @brief Append a Hadamard gate to the list of gates

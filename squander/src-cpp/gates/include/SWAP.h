@@ -35,7 +35,6 @@ limitations under the License.
 class SWAP: public Gate {
 
 protected:
-    /// The index of the second target qubit
 
 public:
 
@@ -48,10 +47,9 @@ SWAP();
 /**
 @brief Constructor of the class.
 @param qbit_num_in The number of qubits in the unitaries
-@param target_qbit_in The identification number of the first target qubit. (0 <= target_qbit <= qbit_num-1)
-@param target_qbit2_in The identification number of the second target qubit. (0 <= target_qbit2 <= qbit_num-1)
+@param target_qbits_in Vector of target qubit indices (should contain exactly 2 elements for SWAP)
 */
-SWAP(int qbit_num_in, int target_qbit_in, int target_qbit2_in);
+SWAP(int qbit_num_in, const std::vector<int>& target_qbits_in);
 
 /**
 @brief Destructor of the class

@@ -35,8 +35,7 @@ limitations under the License.
 class CSWAP: public SWAP {
 
 protected:
-    /// The index of the control qubit
-    int control_qbit2;
+
 public:
 
 /**
@@ -44,15 +43,13 @@ public:
 */
 CSWAP();
 
-
 /**
 @brief Constructor of the class.
 @param qbit_num_in The number of qubits in the unitaries
-@param target_qbit_in The identification number of the first target qubit. (0 <= target_qbit <= qbit_num-1)
-@param target_qbit2_in The identification number of the second target qubit. (0 <= target_qbit2 <= qbit_num-1)
-@param control_qbit_in The identification number of the control qubit. (0 <= control_qbit <= qbit_num-1)
+@param target_qbits_in Vector of target qubit indices (should contain exactly 2 elements)
+@param control_qbits_in Vector of control qubit indices (should contain exactly 1 element)
 */
-CSWAP(int qbit_num_in, int target_qbit_in, int target_qbit2_in, int control_qbit_in);
+CSWAP(int qbit_num_in, const std::vector<int>& target_qbits_in, const std::vector<int>& control_qbits_in);
 
 /**
 @brief Destructor of the class
@@ -80,18 +77,6 @@ virtual void apply_to(Matrix& input, const Matrix_real& parameters, int parallel
 @return Vector of qubit indices
 */
 std::vector<int> get_involved_qubits(bool only_target = false) override;
-
-/**
-@brief Get the control qubit
-@return The index of the control qubit
-*/
-int get_control_qbit2() override;
-
-/**
-@brief Set the control qubit
-@param control_qbit2_in The index of the control qubit
-*/
-void set_control_qbit2(int control_qbit2_in) override;
 
 };
 
