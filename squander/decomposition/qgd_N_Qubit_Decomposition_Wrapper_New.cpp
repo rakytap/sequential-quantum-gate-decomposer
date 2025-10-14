@@ -8,6 +8,8 @@
 #include <numpy/arrayobject.h>
 #include "structmember.h"
 #include <stdio.h>
+#include <complex>
+#include <cmath>
 
 #include "numpy_interface.h"
 #include "N_Qubit_Decomposition.h"
@@ -487,15 +489,412 @@ qgd_N_Qubit_Decomposition_Wrapper_New_get_Matrix(qgd_N_Qubit_Decomposition_Wrapp
         return NULL;
     }
 
-    Matrix decomposed_matrix = self->decomp->get_decomposed_matrix();
-    return matrix_to_numpy(decomposed_matrix);
+    try {
+        Matrix decomposed_matrix = self->decomp->get_decomposed_matrix();
+        return matrix_to_numpy(decomposed_matrix);
+    } catch (std::exception& e) {
+        PyErr_SetString(PyExc_Exception, e.what());
+        return NULL;
+    }
+}
+
+/**
+@brief Call to get the incorporated circuit
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_Wrapper_New_get_Circuit(qgd_N_Qubit_Decomposition_Wrapper_New *self)
+{
+    if (self->decomp == NULL) {
+        PyErr_SetString(PyExc_RuntimeError, "Decomposition object is NULL");
+        return NULL;
+    }
+
+    try {
+        // The decomposition object itself is a Gates_block
+        // TODO: Implement proper Gates_block to Python conversion
+        // For now returning None as placeholder
+        PyObject* ret = Py_None;
+        Py_INCREF(ret);
+        return ret;
+    } catch (std::exception& e) {
+        PyErr_SetString(PyExc_Exception, e.what());
+        return NULL;
+    }
+}
+
+/**
+@brief Call to list the gates decomposing the unitary
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_Wrapper_New_List_Gates(qgd_N_Qubit_Decomposition_Wrapper_New *self)
+{
+    if (self->decomp == NULL) {
+        PyErr_SetString(PyExc_RuntimeError, "Decomposition object is NULL");
+        return NULL;
+    }
+
+    try {
+        self->decomp->list_gates(0);  // Start from index 0
+        Py_RETURN_NONE;
+    } catch (std::exception& e) {
+        PyErr_SetString(PyExc_Exception, e.what());
+        return NULL;
+    }
+}
+
+// =========================================================================
+// TYPE-SPECIFIC METHODS (available only for certain decomposition types)
+// =========================================================================
+
+/**
+@brief Call to get initial circuit (adaptive-specific)
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_Wrapper_New_get_Initial_Circuit(qgd_N_Qubit_Decomposition_Wrapper_New *self)
+{
+    if (self->decomp == NULL) {
+        PyErr_SetString(PyExc_RuntimeError, "Decomposition object is NULL");
+        return NULL;
+    }
+
+    try {
+        // Try casting to adaptive type
+        N_Qubit_Decomposition_adaptive* adaptive_decomp = dynamic_cast<N_Qubit_Decomposition_adaptive*>(self->decomp);
+        if (adaptive_decomp != NULL) {
+            adaptive_decomp->get_initial_circuit();
+            Py_RETURN_NONE;
+        } else {
+            PyErr_SetString(PyExc_AttributeError, "get_initial_circuit is only available for N_Qubit_Decomposition_adaptive");
+            return NULL;
+        }
+    } catch (std::exception& e) {
+        PyErr_SetString(PyExc_Exception, e.what());
+        return NULL;
+    }
+}
+
+/**
+@brief Call to compress circuit (adaptive-specific)
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_Wrapper_New_Compress_Circuit(qgd_N_Qubit_Decomposition_Wrapper_New *self)
+{
+    if (self->decomp == NULL) {
+        PyErr_SetString(PyExc_RuntimeError, "Decomposition object is NULL");
+        return NULL;
+    }
+
+    try {
+        N_Qubit_Decomposition_adaptive* adaptive_decomp = dynamic_cast<N_Qubit_Decomposition_adaptive*>(self->decomp);
+        if (adaptive_decomp != NULL) {
+            adaptive_decomp->compress_circuit();
+            Py_RETURN_NONE;
+        } else {
+            PyErr_SetString(PyExc_AttributeError, "compress_circuit is only available for N_Qubit_Decomposition_adaptive");
+            return NULL;
+        }
+    } catch (std::exception& e) {
+        PyErr_SetString(PyExc_Exception, e.what());
+        return NULL;
+    }
+}
+
+/**
+@brief Call to finalize circuit (adaptive-specific)
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_Wrapper_New_Finalize_Circuit(qgd_N_Qubit_Decomposition_Wrapper_New *self, PyObject *args, PyObject *kwds)
+{
+    if (self->decomp == NULL) {
+        PyErr_SetString(PyExc_RuntimeError, "Decomposition object is NULL");
+        return NULL;
+    }
+
+    try {
+        N_Qubit_Decomposition_adaptive* adaptive_decomp = dynamic_cast<N_Qubit_Decomposition_adaptive*>(self->decomp);
+        if (adaptive_decomp != NULL) {
+            adaptive_decomp->finalize_circuit();
+            Py_RETURN_NONE;
+        } else {
+            PyErr_SetString(PyExc_AttributeError, "finalize_circuit is only available for N_Qubit_Decomposition_adaptive");
+            return NULL;
+        }
+    } catch (std::exception& e) {
+        PyErr_SetString(PyExc_Exception, e.what());
+        return NULL;
+    }
+}
+
+/**
+@brief Call to add adaptive layers (adaptive-specific)
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_Wrapper_New_add_Adaptive_Layers(qgd_N_Qubit_Decomposition_Wrapper_New *self)
+{
+    if (self->decomp == NULL) {
+        PyErr_SetString(PyExc_RuntimeError, "Decomposition object is NULL");
+        return NULL;
+    }
+
+    try {
+        N_Qubit_Decomposition_adaptive* adaptive_decomp = dynamic_cast<N_Qubit_Decomposition_adaptive*>(self->decomp);
+        if (adaptive_decomp != NULL) {
+            adaptive_decomp->add_adaptive_layers();
+            Py_RETURN_NONE;
+        } else {
+            PyErr_SetString(PyExc_AttributeError, "add_adaptive_layers is only available for N_Qubit_Decomposition_adaptive");
+            return NULL;
+        }
+    } catch (std::exception& e) {
+        PyErr_SetString(PyExc_Exception, e.what());
+        return NULL;
+    }
+}
+
+/**
+@brief Call to set unitary matrix (adaptive/tree-specific)
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_Wrapper_New_set_Unitary(qgd_N_Qubit_Decomposition_Wrapper_New *self, PyObject *args)
+{
+    if (self->decomp == NULL) {
+        PyErr_SetString(PyExc_RuntimeError, "Decomposition object is NULL");
+        return NULL;
+    }
+
+    PyArrayObject *Umtx_arg = NULL;
+    if (!PyArg_ParseTuple(args, "O", &Umtx_arg)) {
+        return NULL;
+    }
+
+    try {
+        // Convert numpy array to Matrix
+        PyArrayObject* Umtx_numpy = (PyArrayObject*)PyArray_FROM_OTF((PyObject*)Umtx_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
+        if (Umtx_numpy == NULL) {
+            PyErr_SetString(PyExc_ValueError, "Failed to convert to numpy array");
+            return NULL;
+        }
+        Matrix Umtx_matrix = numpy2matrix(Umtx_numpy);
+        Py_DECREF(Umtx_numpy);
+
+        // Try adaptive first
+        N_Qubit_Decomposition_adaptive* adaptive_decomp = dynamic_cast<N_Qubit_Decomposition_adaptive*>(self->decomp);
+        if (adaptive_decomp != NULL) {
+            adaptive_decomp->set_unitary(Umtx_matrix);
+            Py_RETURN_NONE;
+        }
+
+        // Try tree search
+        N_Qubit_Decomposition_Tree_Search* tree_decomp = dynamic_cast<N_Qubit_Decomposition_Tree_Search*>(self->decomp);
+        if (tree_decomp != NULL) {
+            tree_decomp->set_unitary(Umtx_matrix);
+            Py_RETURN_NONE;
+        }
+
+        PyErr_SetString(PyExc_AttributeError, "set_unitary is only available for adaptive and tree search decompositions");
+        return NULL;
+    } catch (std::exception& e) {
+        PyErr_SetString(PyExc_Exception, e.what());
+        return NULL;
+    }
+}
+
+/**
+@brief Call to get the unitary matrix (base method from Decomposition_Base)
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_Wrapper_New_get_Unitary(qgd_N_Qubit_Decomposition_Wrapper_New *self)
+{
+    if (self->decomp == NULL) {
+        PyErr_SetString(PyExc_RuntimeError, "Decomposition object is NULL");
+        return NULL;
+    }
+
+    try {
+        Matrix Umtx = self->decomp->get_Umtx();
+        return matrix_to_numpy(Umtx);
+    } catch (std::exception& e) {
+        PyErr_SetString(PyExc_Exception, e.what());
+        return NULL;
+    }
+}
+
+/**
+@brief Call to get the global phase factor
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_Wrapper_New_get_Global_Phase(qgd_N_Qubit_Decomposition_Wrapper_New *self, PyObject *args)
+{
+    if (self->decomp == NULL) {
+        PyErr_SetString(PyExc_RuntimeError, "Decomposition object is NULL");
+        return NULL;
+    }
+
+    try {
+        QGD_Complex16 global_phase = self->decomp->get_global_phase_factor();
+        // Return complex number directly
+        return PyComplex_FromDoubles(global_phase.real, global_phase.imag);
+    } catch (std::exception& e) {
+        PyErr_SetString(PyExc_Exception, e.what());
+        return NULL;
+    }
+}
+
+/**
+@brief Call to set the global phase
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_Wrapper_New_set_Global_Phase(qgd_N_Qubit_Decomposition_Wrapper_New *self, PyObject *args)
+{
+    if (self->decomp == NULL) {
+        PyErr_SetString(PyExc_RuntimeError, "Decomposition object is NULL");
+        return NULL;
+    }
+
+    double phase_angle;
+    if (!PyArg_ParseTuple(args, "d", &phase_angle)) {
+        return NULL;
+    }
+
+    try {
+        // Use set_global_phase method from Decomposition_Base
+        self->decomp->set_global_phase(phase_angle);
+        Py_RETURN_NONE;
+    } catch (std::exception& e) {
+        PyErr_SetString(PyExc_Exception, e.what());
+        return NULL;
+    }
+}
+
+/**
+@brief Call to get the project name
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_Wrapper_New_get_Project_Name(qgd_N_Qubit_Decomposition_Wrapper_New *self)
+{
+    if (self->decomp == NULL) {
+        PyErr_SetString(PyExc_RuntimeError, "Decomposition object is NULL");
+        return NULL;
+    }
+
+    try {
+        std::string project_name = self->decomp->get_project_name();
+        return PyUnicode_FromString(project_name.c_str());
+    } catch (std::exception& e) {
+        PyErr_SetString(PyExc_Exception, e.what());
+        return NULL;
+    }
+}
+
+/**
+@brief Call to set the project name
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_Wrapper_New_set_Project_Name(qgd_N_Qubit_Decomposition_Wrapper_New *self, PyObject *args)
+{
+    if (self->decomp == NULL) {
+        PyErr_SetString(PyExc_RuntimeError, "Decomposition object is NULL");
+        return NULL;
+    }
+
+    const char* project_name;
+    if (!PyArg_ParseTuple(args, "s", &project_name)) {
+        return NULL;
+    }
+
+    try {
+        std::string project_name_str(project_name);
+        self->decomp->set_project_name(project_name_str);
+        Py_RETURN_NONE;
+    } catch (std::exception& e) {
+        PyErr_SetString(PyExc_Exception, e.what());
+        return NULL;
+    }
+}
+
+/**
+@brief Call to set optimization tolerance
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_Wrapper_New_set_Optimization_Tolerance(qgd_N_Qubit_Decomposition_Wrapper_New *self, PyObject *args)
+{
+    if (self->decomp == NULL) {
+        PyErr_SetString(PyExc_RuntimeError, "Decomposition object is NULL");
+        return NULL;
+    }
+
+    double tolerance;
+    if (!PyArg_ParseTuple(args, "d", &tolerance)) {
+        return NULL;
+    }
+
+    try {
+        self->decomp->set_optimization_tolerance(tolerance);
+        Py_RETURN_NONE;
+    } catch (std::exception& e) {
+        PyErr_SetString(PyExc_Exception, e.what());
+        return NULL;
+    }
+}
+
+/**
+@brief Call to set the optimizer
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_Wrapper_New_set_Optimizer(qgd_N_Qubit_Decomposition_Wrapper_New *self, PyObject *args)
+{
+    if (self->decomp == NULL) {
+        PyErr_SetString(PyExc_RuntimeError, "Decomposition object is NULL");
+        return NULL;
+    }
+
+    const char* optimizer_str;
+    if (!PyArg_ParseTuple(args, "s", &optimizer_str)) {
+        return NULL;
+    }
+
+    try {
+        std::string optimizer(optimizer_str);
+        // Convert string to optimization algorithm enum
+        optimization_aglorithms optimizer_type;
+        if (optimizer == "ADAM") {
+            optimizer_type = ADAM;
+        } else if (optimizer == "BFGS") {
+            optimizer_type = BFGS;
+        } else if (optimizer == "BFGS2") {
+            optimizer_type = BFGS2;
+        } else if (optimizer == "ADAM_BATCHED") {
+            optimizer_type = ADAM_BATCHED;
+        } else if (optimizer == "AGENTS") {
+            optimizer_type = AGENTS;
+        } else if (optimizer == "COSINE") {
+            optimizer_type = COSINE;
+        } else if (optimizer == "AGENTS_COMBINED") {
+            optimizer_type = AGENTS_COMBINED;
+        } else {
+            PyErr_SetString(PyExc_ValueError, "Unknown optimizer type");
+            return NULL;
+        }
+
+        self->decomp->set_optimizer(optimizer_type);
+        Py_RETURN_NONE;
+    } catch (std::exception& e) {
+        PyErr_SetString(PyExc_Exception, e.what());
+        return NULL;
+    }
 }
 
 extern "C"
 {
 
 /**
-@brief Structure containing metadata about the methods of all decomposition types
+@brief Base methods shared by all decomposition types
+These methods are available for:
+- N_Qubit_Decomposition (base class)
+- N_Qubit_Decomposition_adaptive
+- N_Qubit_Decomposition_custom  
+- N_Qubit_Decomposition_Tree_Search
+- N_Qubit_Decomposition_Tabu_Search
 */
 #define DECOMPOSITION_WRAPPER_BASE_METHODS \
     {"Start_Decomposition", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_Start_Decomposition, METH_VARARGS | METH_KEYWORDS, \
@@ -507,12 +906,91 @@ extern "C"
     {"get_Parameter_Num", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_get_Parameter_Num, METH_NOARGS, \
      "Get the number of parameters"}, \
     {"get_Matrix", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_get_Matrix, METH_VARARGS | METH_KEYWORDS, \
-     "Get the decomposed matrix"}
+     "Get the decomposed matrix"}, \
+    {"get_Circuit", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_get_Circuit, METH_NOARGS, \
+     "Get the incorporated circuit"}, \
+    {"List_Gates", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_List_Gates, METH_NOARGS, \
+     "List the gates decomposing the unitary"}, \
+    {"get_Unitary", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_get_Unitary, METH_NOARGS, \
+     "Get unitary matrix"}, \
+    {"get_Global_Phase", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_get_Global_Phase, METH_NOARGS, \
+     "Get global phase"}, \
+    {"set_Global_Phase", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_set_Global_Phase, METH_VARARGS, \
+     "Set global phase"}, \
+    {"get_Project_Name", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_get_Project_Name, METH_NOARGS, \
+     "Get project name"}, \
+    {"set_Project_Name", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_set_Project_Name, METH_VARARGS, \
+     "Set project name"}, \
+    {"set_Optimization_Tolerance", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_set_Optimization_Tolerance, METH_VARARGS, \
+     "Set optimization tolerance"}, \
+    {"set_Optimizer", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_set_Optimizer, METH_VARARGS, \
+     "Set optimizer type"}
 
 
-// Single method table for all decomposition types
+/**
+@brief Method table for base N_Qubit_Decomposition 
+Contains: Base methods only (shared functionality)
+*/
 static PyMethodDef qgd_N_Qubit_Decomposition_methods[] = {
     DECOMPOSITION_WRAPPER_BASE_METHODS,
+    {NULL}
+};
+
+/**
+@brief Method table for N_Qubit_Decomposition_adaptive
+Contains: Base methods + Adaptive-specific methods  
+Additional methods: get_Initial_Circuit, Compress_Circuit, Finalize_Circuit, add_Adaptive_Layers
+*/
+static PyMethodDef qgd_N_Qubit_Decomposition_adaptive_methods[] = {
+    DECOMPOSITION_WRAPPER_BASE_METHODS,
+    // Adaptive-specific methods
+    {"get_Initial_Circuit", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_get_Initial_Circuit, METH_NOARGS,
+     "Get initial circuit (adaptive-specific)"},
+    {"Compress_Circuit", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_Compress_Circuit, METH_NOARGS,
+     "Compress circuit (adaptive-specific)"},
+    {"Finalize_Circuit", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_Finalize_Circuit, METH_VARARGS | METH_KEYWORDS,
+     "Finalize circuit construction (adaptive-specific)"},
+    {"add_Adaptive_Layers", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_add_Adaptive_Layers, METH_NOARGS,
+     "Add adaptive layers to gate structure (adaptive-specific)"},
+    {NULL}
+};
+
+/**
+@brief Method table for N_Qubit_Decomposition_custom
+Contains: Base methods + Custom-specific methods
+Additional methods: set_Unitary
+*/
+static PyMethodDef qgd_N_Qubit_Decomposition_custom_methods[] = {
+    DECOMPOSITION_WRAPPER_BASE_METHODS,
+    // Custom-specific methods
+    {"set_Unitary", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_set_Unitary, METH_VARARGS,
+     "Set unitary matrix (custom-specific)"},
+    {NULL}
+};
+
+/**
+@brief Method table for N_Qubit_Decomposition_Tree_Search
+Contains: Base methods + Search-specific methods
+Additional methods: set_Unitary  
+*/
+static PyMethodDef qgd_N_Qubit_Decomposition_Tree_Search_methods[] = {
+    DECOMPOSITION_WRAPPER_BASE_METHODS,
+    // Search-specific methods
+    {"set_Unitary", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_set_Unitary, METH_VARARGS,
+     "Set unitary matrix (search-specific)"},
+    {NULL}
+};
+
+/**
+@brief Method table for N_Qubit_Decomposition_Tabu_Search
+Contains: Base methods + Search-specific methods
+Additional methods: set_Unitary
+*/
+static PyMethodDef qgd_N_Qubit_Decomposition_Tabu_Search_methods[] = {
+    DECOMPOSITION_WRAPPER_BASE_METHODS,
+    // Search-specific methods
+    {"set_Unitary", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_set_Unitary, METH_VARARGS,
+     "Set unitary matrix (search-specific)"},
     {NULL}
 };
 
@@ -525,7 +1003,7 @@ static PyTypeObject qgd_##decomp_class##_Wrapper_Type = { \
     .tp_dealloc = (destructor) qgd_N_Qubit_Decomposition_Wrapper_New_dealloc, \
     .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, \
     .tp_doc = #decomp_class " decomposition wrapper", \
-    .tp_methods = qgd_N_Qubit_Decomposition_methods, \
+    .tp_methods = qgd_##decomp_class##_methods, \
     .tp_init = (initproc) qgd_N_Qubit_Decomposition_Wrapper_New_init, \
     .tp_new = (newfunc) qgd_##decomp_class##_Wrapper_new, \
 };
