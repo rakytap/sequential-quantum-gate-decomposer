@@ -652,7 +652,7 @@ qgd_N_Qubit_Decomposition_Wrapper_New_add_Adaptive_Layers(qgd_N_Qubit_Decomposit
 }
 
 /**
-@brief Call to set unitary matrix (adaptive/tree-specific)
+@brief Call to set unitary matrix (for adaptive, tree search, and tabu search)
 */
 static PyObject *
 qgd_N_Qubit_Decomposition_Wrapper_New_set_Unitary(qgd_N_Qubit_Decomposition_Wrapper_New *self, PyObject *args)
@@ -677,7 +677,7 @@ qgd_N_Qubit_Decomposition_Wrapper_New_set_Unitary(qgd_N_Qubit_Decomposition_Wrap
         Matrix Umtx_matrix = numpy2matrix(Umtx_numpy);
         Py_DECREF(Umtx_numpy);
 
-        // Try adaptive first
+        // Try adaptive
         N_Qubit_Decomposition_adaptive* adaptive_decomp = dynamic_cast<N_Qubit_Decomposition_adaptive*>(self->decomp);
         if (adaptive_decomp != NULL) {
             adaptive_decomp->set_unitary(Umtx_matrix);
@@ -691,7 +691,14 @@ qgd_N_Qubit_Decomposition_Wrapper_New_set_Unitary(qgd_N_Qubit_Decomposition_Wrap
             Py_RETURN_NONE;
         }
 
-        PyErr_SetString(PyExc_AttributeError, "set_unitary is only available for adaptive and tree search decompositions");
+        // Try tabu search
+        N_Qubit_Decomposition_Tabu_Search* tabu_decomp = dynamic_cast<N_Qubit_Decomposition_Tabu_Search*>(self->decomp);
+        if (tabu_decomp != NULL) {
+            tabu_decomp->set_unitary(Umtx_matrix);
+            Py_RETURN_NONE;
+        }
+
+        PyErr_SetString(PyExc_AttributeError, "set_unitary is only available for adaptive, tree search, and tabu search decompositions");
         return NULL;
     } catch (std::exception& e) {
         PyErr_SetString(PyExc_Exception, e.what());
@@ -889,43 +896,35 @@ extern "C"
 
 /**
 @brief Base methods shared by all decomposition types
-These methods are available for:
-- N_Qubit_Decomposition (base class)
-- N_Qubit_Decomposition_adaptive
-- N_Qubit_Decomposition_custom  
-- N_Qubit_Decomposition_Tree_Search
-- N_Qubit_Decomposition_Tabu_Search
+These methods are available for all decomposition classes
 */
 #define DECOMPOSITION_WRAPPER_BASE_METHODS \
     {"Start_Decomposition", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_Start_Decomposition, METH_VARARGS | METH_KEYWORDS, \
-     "Start the decomposition process"}, \
-    {"get_Optimized_Parameters", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_get_Optimized_Parameters, METH_NOARGS, \
-     "Get the optimized parameters"}, \
+     "Method to start the decomposition"}, \
     {"get_Gate_Num", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_get_Gates_Num, METH_NOARGS, \
-     "Get the number of gates"}, \
+     "Method to get the number of decomposing gates"}, \
     {"get_Parameter_Num", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_get_Parameter_Num, METH_NOARGS, \
-     "Get the number of parameters"}, \
-    {"get_Matrix", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_get_Matrix, METH_VARARGS | METH_KEYWORDS, \
-     "Get the decomposed matrix"}, \
+     "Get the number of free parameters in the gate structure used for the decomposition"}, \
+    {"get_Optimized_Parameters", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_get_Optimized_Parameters, METH_NOARGS, \
+     "Method to get the array of optimized parameters"}, \
     {"get_Circuit", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_get_Circuit, METH_NOARGS, \
-     "Get the incorporated circuit"}, \
+     "Method to get the incorporated circuit"}, \
     {"List_Gates", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_List_Gates, METH_NOARGS, \
-     "List the gates decomposing the unitary"}, \
+     "Call to print the decomposing unitaries on standard output"}, \
     {"get_Unitary", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_get_Unitary, METH_NOARGS, \
-     "Get unitary matrix"}, \
+     "Call to get Unitary Matrix"}, \
     {"get_Global_Phase", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_get_Global_Phase, METH_NOARGS, \
-     "Get global phase"}, \
+     "Call to get global phase"}, \
     {"set_Global_Phase", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_set_Global_Phase, METH_VARARGS, \
-     "Set global phase"}, \
+     "Call to set global phase"}, \
     {"get_Project_Name", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_get_Project_Name, METH_NOARGS, \
-     "Get project name"}, \
+     "Call to get the name of SQUANDER project"}, \
     {"set_Project_Name", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_set_Project_Name, METH_VARARGS, \
-     "Set project name"}, \
+     "Call to set the name of SQUANDER project"}, \
     {"set_Optimization_Tolerance", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_set_Optimization_Tolerance, METH_VARARGS, \
-     "Set optimization tolerance"}, \
+     "Wrapper method to set the optimization tolerance of the optimization process during the decomposition"}, \
     {"set_Optimizer", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_set_Optimizer, METH_VARARGS, \
-     "Set optimizer type"}
-
+     "Wrapper method to set the optimizer method for the gate synthesis"}
 
 /**
 @brief Method table for base N_Qubit_Decomposition 
@@ -938,59 +937,59 @@ static PyMethodDef qgd_N_Qubit_Decomposition_methods[] = {
 
 /**
 @brief Method table for N_Qubit_Decomposition_adaptive
-Contains: Base methods + Adaptive-specific methods  
-Additional methods: get_Initial_Circuit, Compress_Circuit, Finalize_Circuit, add_Adaptive_Layers
 */
 static PyMethodDef qgd_N_Qubit_Decomposition_adaptive_methods[] = {
     DECOMPOSITION_WRAPPER_BASE_METHODS,
     // Adaptive-specific methods
     {"get_Initial_Circuit", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_get_Initial_Circuit, METH_NOARGS,
-     "Get initial circuit (adaptive-specific)"},
+     "Method to get initial circuit in decomposition"},
     {"Compress_Circuit", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_Compress_Circuit, METH_NOARGS,
-     "Compress circuit (adaptive-specific)"},
+     "Method to compress gate structure"},
     {"Finalize_Circuit", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_Finalize_Circuit, METH_VARARGS | METH_KEYWORDS,
-     "Finalize circuit construction (adaptive-specific)"},
+     "Method to finalize the decomposition"},
     {"add_Adaptive_Layers", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_add_Adaptive_Layers, METH_NOARGS,
-     "Add adaptive layers to gate structure (adaptive-specific)"},
+     "Call to add adaptive layers to the gate structure stored by the class"},
+    {"set_Unitary", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_set_Unitary, METH_VARARGS,
+     "Call to set unitary matrix to a numpy matrix"},
+    {"get_Matrix", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_get_Matrix, METH_VARARGS,
+     "Method to retrieve the unitary of the circuit"},
     {NULL}
 };
 
 /**
 @brief Method table for N_Qubit_Decomposition_custom
-Contains: Base methods + Custom-specific methods
-Additional methods: set_Unitary
 */
 static PyMethodDef qgd_N_Qubit_Decomposition_custom_methods[] = {
     DECOMPOSITION_WRAPPER_BASE_METHODS,
-    // Custom-specific methods
-    {"set_Unitary", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_set_Unitary, METH_VARARGS,
-     "Set unitary matrix (custom-specific)"},
+    // Custom-specific methods  
+    {"get_Matrix", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_get_Matrix, METH_VARARGS,
+     "Method to retrieve the unitary of the circuit"},
     {NULL}
 };
 
 /**
 @brief Method table for N_Qubit_Decomposition_Tree_Search
-Contains: Base methods + Search-specific methods
-Additional methods: set_Unitary  
 */
 static PyMethodDef qgd_N_Qubit_Decomposition_Tree_Search_methods[] = {
     DECOMPOSITION_WRAPPER_BASE_METHODS,
-    // Search-specific methods
+    // Tree Search-specific methods
     {"set_Unitary", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_set_Unitary, METH_VARARGS,
-     "Set unitary matrix (search-specific)"},
+     "Call to set unitary matrix to a numpy matrix"},
+    {"get_Matrix", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_get_Matrix, METH_VARARGS,
+     "Method to retrieve the unitary of the circuit"},
     {NULL}
 };
 
 /**
 @brief Method table for N_Qubit_Decomposition_Tabu_Search
-Contains: Base methods + Search-specific methods
-Additional methods: set_Unitary
 */
 static PyMethodDef qgd_N_Qubit_Decomposition_Tabu_Search_methods[] = {
     DECOMPOSITION_WRAPPER_BASE_METHODS,
-    // Search-specific methods
+    // Tabu Search-specific methods
     {"set_Unitary", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_set_Unitary, METH_VARARGS,
-     "Set unitary matrix (search-specific)"},
+     "Call to set unitary matrix to a numpy matrix"},
+    {"get_Matrix", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_get_Matrix, METH_VARARGS,
+     "Method to retrieve the unitary of the circuit"},
     {NULL}
 };
 
