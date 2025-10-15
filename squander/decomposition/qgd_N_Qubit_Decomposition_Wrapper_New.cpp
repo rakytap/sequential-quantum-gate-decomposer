@@ -1820,235 +1820,217 @@ qgd_N_Qubit_Decomposition_Wrapper_New_Optimization_Problem_Batch(qgd_N_Qubit_Dec
 
 /**
 @brief Upload unitary matrix to DFE
+@return Py_None on success, NULL on error
+@note applicable to: Decomposition, Adaptive, Custom, Tree Search, Tabu Search (only when compiled with __DFE__)
 */
 static PyObject *
 qgd_N_Qubit_Decomposition_Wrapper_New_Upload_Umtx_to_DFE(qgd_N_Qubit_Decomposition_Wrapper_New *self)
 {
-    if (self->decomp == NULL) {
-        PyErr_SetString(PyExc_RuntimeError, "Decomposition object is NULL");
-        return NULL;
-    }
-
+#ifdef __DFE__
     try {
         self->decomp->upload_Umtx_to_DFE();
         Py_RETURN_NONE;
+    } catch (std::string err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
     } catch (std::exception& e) {
         PyErr_SetString(PyExc_Exception, e.what());
         return NULL;
+    } catch (...) {
+        std::string err("Invalid pointer to decomposition class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
     }
+#else
+    PyErr_SetString(PyExc_NotImplementedError, "upload_Umtx_to_DFE is only available when compiled with DFE support");
+    return NULL;
+#endif
 }
 
 /**
-@brief Get trace offset
+@brief Get trace offset of the compression
+@return Integer value of trace offset
+@note applicable to: Decomposition, Adaptive, Custom, Tree Search, Tabu Search
 */
 static PyObject *
 qgd_N_Qubit_Decomposition_Wrapper_New_get_Trace_Offset(qgd_N_Qubit_Decomposition_Wrapper_New *self)
 {
-    if (self->decomp == NULL) {
-        PyErr_SetString(PyExc_RuntimeError, "Decomposition object is NULL");
-        return NULL;
-    }
-
     try {
-        // Try adaptive
-        N_Qubit_Decomposition_adaptive* adaptive_decomp = dynamic_cast<N_Qubit_Decomposition_adaptive*>(self->decomp);
-        if (adaptive_decomp != NULL) {
-            double offset = adaptive_decomp->get_trace_offset();
-            return PyFloat_FromDouble(offset);
-        }
-
-        // Try tree search
-        N_Qubit_Decomposition_Tree_Search* tree_decomp = dynamic_cast<N_Qubit_Decomposition_Tree_Search*>(self->decomp);
-        if (tree_decomp != NULL) {
-            double offset = tree_decomp->get_trace_offset();
-            return PyFloat_FromDouble(offset);
-        }
-
-        // Try tabu search
-        N_Qubit_Decomposition_Tabu_Search* tabu_decomp = dynamic_cast<N_Qubit_Decomposition_Tabu_Search*>(self->decomp);
-        if (tabu_decomp != NULL) {
-            double offset = tabu_decomp->get_trace_offset();
-            return PyFloat_FromDouble(offset);
-        }
-
-        PyErr_SetString(PyExc_AttributeError, "get_Trace_Offset is only available for adaptive, tree search, and tabu search decompositions");
+        int trace_offset = self->decomp->get_trace_offset();
+        return Py_BuildValue("i", trace_offset);
+    } catch (std::string err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
         return NULL;
     } catch (std::exception& e) {
         PyErr_SetString(PyExc_Exception, e.what());
+        return NULL;
+    } catch (...) {
+        std::string err("Invalid pointer to decomposition class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
         return NULL;
     }
 }
 
 /**
-@brief Set trace offset
+@brief Set trace offset for the compression
+@param args Python tuple of arguments (trace_offset: int)
+@return Py_None on success, NULL on error
+@note applicable to: Decomposition, Adaptive, Custom, Tree Search, Tabu Search
 */
 static PyObject *
-qgd_N_Qubit_Decomposition_Wrapper_New_set_Trace_Offset(qgd_N_Qubit_Decomposition_Wrapper_New *self, PyObject *args)
+qgd_N_Qubit_Decomposition_Wrapper_New_set_Trace_Offset(qgd_N_Qubit_Decomposition_Wrapper_New *self, PyObject *args, PyObject *kwds)
 {
-    if (self->decomp == NULL) {
-        PyErr_SetString(PyExc_RuntimeError, "Decomposition object is NULL");
-        return NULL;
-    }
-
-    double offset;
-    if (!PyArg_ParseTuple(args, "d", &offset)) {
+    static char *kwlist[] = {(char*)"trace_offset", NULL};
+    
+    int trace_offset = 0;
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i", kwlist, &trace_offset)) {
+        std::string err("Invalid arguments: expected (trace_offset: int)");
+        PyErr_SetString(PyExc_Exception, err.c_str());
         return NULL;
     }
 
     try {
-        // Try adaptive
-        N_Qubit_Decomposition_adaptive* adaptive_decomp = dynamic_cast<N_Qubit_Decomposition_adaptive*>(self->decomp);
-        if (adaptive_decomp != NULL) {
-            adaptive_decomp->set_trace_offset(offset);
-            Py_RETURN_NONE;
-        }
-
-        // Try tree search
-        N_Qubit_Decomposition_Tree_Search* tree_decomp = dynamic_cast<N_Qubit_Decomposition_Tree_Search*>(self->decomp);
-        if (tree_decomp != NULL) {
-            tree_decomp->set_trace_offset(offset);
-            Py_RETURN_NONE;
-        }
-
-        // Try tabu search
-        N_Qubit_Decomposition_Tabu_Search* tabu_decomp = dynamic_cast<N_Qubit_Decomposition_Tabu_Search*>(self->decomp);
-        if (tabu_decomp != NULL) {
-            tabu_decomp->set_trace_offset(offset);
-            Py_RETURN_NONE;
-        }
-
-        PyErr_SetString(PyExc_AttributeError, "set_Trace_Offset is only available for adaptive, tree search, and tabu search decompositions");
+        self->decomp->set_trace_offset(trace_offset);
+        Py_RETURN_NONE;
+    } catch (std::string err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
         return NULL;
     } catch (std::exception& e) {
         PyErr_SetString(PyExc_Exception, e.what());
+        return NULL;
+    } catch (...) {
+        std::string err("Invalid pointer to decomposition class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
         return NULL;
     }
 }
 
 /**
-@brief Get decomposition error
+@brief Get the error of the decomposition
+@return Double value of the decomposition error
+@note applicable to: Decomposition, Adaptive, Custom, Tree Search, Tabu Search
 */
 static PyObject *
 qgd_N_Qubit_Decomposition_Wrapper_New_get_Decomposition_Error(qgd_N_Qubit_Decomposition_Wrapper_New *self)
 {
-    if (self->decomp == NULL) {
-        PyErr_SetString(PyExc_RuntimeError, "Decomposition object is NULL");
-        return NULL;
-    }
-
     try {
-        // Try adaptive
-        N_Qubit_Decomposition_adaptive* adaptive_decomp = dynamic_cast<N_Qubit_Decomposition_adaptive*>(self->decomp);
-        if (adaptive_decomp != NULL) {
-            double error = adaptive_decomp->get_decomposition_error();
-            return PyFloat_FromDouble(error);
-        }
-
-        // Try tree search
-        N_Qubit_Decomposition_Tree_Search* tree_decomp = dynamic_cast<N_Qubit_Decomposition_Tree_Search*>(self->decomp);
-        if (tree_decomp != NULL) {
-            double error = tree_decomp->get_decomposition_error();
-            return PyFloat_FromDouble(error);
-        }
-
-        // Try tabu search
-        N_Qubit_Decomposition_Tabu_Search* tabu_decomp = dynamic_cast<N_Qubit_Decomposition_Tabu_Search*>(self->decomp);
-        if (tabu_decomp != NULL) {
-            double error = tabu_decomp->get_decomposition_error();
-            return PyFloat_FromDouble(error);
-        }
-
-        PyErr_SetString(PyExc_AttributeError, "get_Decomposition_Error is only available for adaptive, tree search, and tabu search decompositions");
+        double error = self->decomp->get_decomposition_error();
+        return Py_BuildValue("d", error);
+    } catch (std::string err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
         return NULL;
     } catch (std::exception& e) {
         PyErr_SetString(PyExc_Exception, e.what());
+        return NULL;
+    } catch (...) {
+        std::string err("Invalid pointer to decomposition class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
         return NULL;
     }
 }
 
 /**
 @brief Get second Renyi entropy
+@param args Python tuple of arguments (parameters_arr, input_state_arg, qubit_list_arg)
+@return Double value of the second Renyi entropy
+@note applicable to: Adaptive, Tree Search, Tabu Search
 */
 static PyObject *
 qgd_N_Qubit_Decomposition_Wrapper_New_get_Second_Renyi_Entropy(qgd_N_Qubit_Decomposition_Wrapper_New *self, PyObject *args)
 {
-    if (self->decomp == NULL) {
-        PyErr_SetString(PyExc_RuntimeError, "Decomposition object is NULL");
+    PyArrayObject *parameters_arr = NULL, *input_state_arg = NULL;
+    PyObject *qubit_list_arg = NULL;
+
+    // Parse input arguments
+    if (!PyArg_ParseTuple(args, "|OOO", &parameters_arr, &input_state_arg, &qubit_list_arg)) {
+        return Py_BuildValue("i", -1);
+    }
+
+    // Ensure parameters array is C-contiguous
+    if (PyArray_IS_C_CONTIGUOUS(parameters_arr)) {
+        Py_INCREF(parameters_arr);
+    } else {
+        parameters_arr = (PyArrayObject*)PyArray_FROM_OTF((PyObject*)parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+    }
+
+    // Get C++ wrapper around the parameters data
+    Matrix_real&& parameters_mtx = numpy2matrix_real(parameters_arr);
+
+    // Convert input state array
+    if (input_state_arg == NULL) {
+        PyErr_SetString(PyExc_Exception, "Input matrix was not given");
         return NULL;
     }
 
-    int qubit_num;
-    if (!PyArg_ParseTuple(args, "i", &qubit_num)) {
+    PyArrayObject* input_state = (PyArrayObject*)PyArray_FROM_OTF((PyObject*)input_state_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
+
+    // Test C-style contiguous memory allocation
+    if (!PyArray_IS_C_CONTIGUOUS(input_state)) {
+        PyErr_SetString(PyExc_Exception, "Input matrix is not memory contiguous");
         return NULL;
     }
+
+    // Create QGD version of the input matrix
+    Matrix input_state_mtx = numpy2matrix(input_state);
+
+    // Check qubit list argument
+    if (qubit_list_arg == NULL || !PyList_Check(qubit_list_arg)) {
+        PyErr_SetString(PyExc_Exception, "qubit_list should be a list");
+        return NULL;
+    }
+
+    Py_ssize_t reduced_qbit_num = PyList_Size(qubit_list_arg);
+    matrix_base<int> qbit_list_mtx((int)reduced_qbit_num, 1);
+    
+    for (int idx = 0; idx < reduced_qbit_num; idx++) {
+        PyObject* item = PyList_GET_ITEM(qubit_list_arg, idx);
+        qbit_list_mtx[idx] = (int)PyLong_AsLong(item);
+    }
+
+    double entropy = -1;
 
     try {
-        // Try adaptive
-        N_Qubit_Decomposition_adaptive* adaptive_decomp = dynamic_cast<N_Qubit_Decomposition_adaptive*>(self->decomp);
-        if (adaptive_decomp != NULL) {
-            double entropy = adaptive_decomp->get_second_Renyi_entropy(qubit_num);
-            return PyFloat_FromDouble(entropy);
-        }
-
-        // Try tree search
-        N_Qubit_Decomposition_Tree_Search* tree_decomp = dynamic_cast<N_Qubit_Decomposition_Tree_Search*>(self->decomp);
-        if (tree_decomp != NULL) {
-            double entropy = tree_decomp->get_second_Renyi_entropy(qubit_num);
-            return PyFloat_FromDouble(entropy);
-        }
-
-        // Try tabu search
-        N_Qubit_Decomposition_Tabu_Search* tabu_decomp = dynamic_cast<N_Qubit_Decomposition_Tabu_Search*>(self->decomp);
-        if (tabu_decomp != NULL) {
-            double entropy = tabu_decomp->get_second_Renyi_entropy(qubit_num);
-            return PyFloat_FromDouble(entropy);
-        }
-
-        PyErr_SetString(PyExc_AttributeError, "get_Second_Renyi_Entropy is only available for adaptive, tree search, and tabu search decompositions");
+        entropy = self->decomp->get_second_Renyi_entropy(parameters_mtx, input_state_mtx, qbit_list_mtx);
+    } catch (std::string err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
         return NULL;
     } catch (std::exception& e) {
         PyErr_SetString(PyExc_Exception, e.what());
         return NULL;
+    } catch (...) {
+        std::string err("Invalid pointer to decomposition class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
     }
+
+    // Clean up references
+    Py_DECREF(parameters_arr);
+    Py_DECREF(input_state);
+
+    PyObject* p = Py_BuildValue("d", entropy);
+    return p;
 }
 
 /**
 @brief Get the number of qubits
+@return Integer value of the number of qubits
+@note applicable to: Decomposition, Adaptive, Custom, Tree Search, Tabu Search
 */
 static PyObject *
 qgd_N_Qubit_Decomposition_Wrapper_New_get_Qbit_Num(qgd_N_Qubit_Decomposition_Wrapper_New *self)
 {
-    if (self->decomp == NULL) {
-        PyErr_SetString(PyExc_RuntimeError, "Decomposition object is NULL");
-        return NULL;
-    }
-
     try {
-        // Try adaptive
-        N_Qubit_Decomposition_adaptive* adaptive_decomp = dynamic_cast<N_Qubit_Decomposition_adaptive*>(self->decomp);
-        if (adaptive_decomp != NULL) {
-            int qbit_num = adaptive_decomp->get_qbit_num();
-            return PyLong_FromLong(qbit_num);
-        }
-
-        // Try tree search
-        N_Qubit_Decomposition_Tree_Search* tree_decomp = dynamic_cast<N_Qubit_Decomposition_Tree_Search*>(self->decomp);
-        if (tree_decomp != NULL) {
-            int qbit_num = tree_decomp->get_qbit_num();
-            return PyLong_FromLong(qbit_num);
-        }
-
-        // Try tabu search
-        N_Qubit_Decomposition_Tabu_Search* tabu_decomp = dynamic_cast<N_Qubit_Decomposition_Tabu_Search*>(self->decomp);
-        if (tabu_decomp != NULL) {
-            int qbit_num = tabu_decomp->get_qbit_num();
-            return PyLong_FromLong(qbit_num);
-        }
-
-        PyErr_SetString(PyExc_AttributeError, "get_Qbit_Num is only available for adaptive, tree search, and tabu search decompositions");
+        int qbit_num = self->decomp->get_qbit_num();
+        return Py_BuildValue("i", qbit_num);
+    } catch (std::string err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
         return NULL;
     } catch (std::exception& e) {
         PyErr_SetString(PyExc_Exception, e.what());
+        return NULL;
+    } catch (...) {
+        std::string err("Invalid pointer to decomposition class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
         return NULL;
     }
 }
