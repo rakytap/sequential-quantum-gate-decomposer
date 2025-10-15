@@ -2,8 +2,10 @@
 Implementation to optimize wide circuits (i.e. circuits with many qubits) by    partitioning the circuit into smaller partitions and redecompose the smaller partitions
 """
 
-from squander.decomposition.qgd_N_Qubit_Decomposition_Tree_Search import qgd_N_Qubit_Decomposition_Tree_Search as N_Qubit_Decomposition_Tree_Search
-from squander.decomposition.qgd_N_Qubit_Decomposition_Tabu_Search import qgd_N_Qubit_Decomposition_Tabu_Search as N_Qubit_Decomposition_Tabu_Search
+from squander.decomposition.qgd_N_Qubit_Decomposition_Wrapper_New import (
+    qgd_N_Qubit_Decomposition_Tree_Search as N_Qubit_Decomposition_Tree_Search,
+    qgd_N_Qubit_Decomposition_Tabu_Search as N_Qubit_Decomposition_Tabu_Search,
+)
 from squander import N_Qubit_Decomposition_adaptive
 from squander.gates.qgd_Circuit import qgd_Circuit as Circuit
 from squander.utils import CompareCircuits

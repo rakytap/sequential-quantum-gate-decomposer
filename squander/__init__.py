@@ -1,13 +1,16 @@
 # python exported interfaces of the SQUANDER package
 
+# decomposition classes of narrow circuits (up to 10 qubits)
+from squander.decomposition.qgd_N_Qubit_Decomposition_Wrapper_New import (
+    qgd_N_Qubit_Decomposition as N_Qubit_Decomposition,
+    qgd_N_Qubit_Decomposition_adaptive as N_Qubit_Decomposition_adaptive,
+    qgd_N_Qubit_Decomposition_custom as N_Qubit_Decomposition_custom,
+    qgd_N_Qubit_Decomposition_Tree_Search as N_Qubit_Decomposition_Tree_Search,
+    qgd_N_Qubit_Decomposition_Tabu_Search as N_Qubit_Decomposition_Tabu_Search,
+)
 
-#decomposition classes of narrow circuits (up to 10 qubits)
-from squander.decomposition.qgd_N_Qubit_Decomposition_Tree_Search import qgd_N_Qubit_Decomposition_Tree_Search as N_Qubit_Decomposition_Tree_Search
-from squander.decomposition.qgd_N_Qubit_Decomposition_Tabu_Search import qgd_N_Qubit_Decomposition_Tabu_Search as N_Qubit_Decomposition_Tabu_Search
-from squander.decomposition.qgd_N_Qubit_Decomposition_adaptive import qgd_N_Qubit_Decomposition_adaptive as N_Qubit_Decomposition_adaptive
+# State preparation (depends on adaptive decomposition)
 from squander.decomposition.qgd_N_Qubit_State_Preparation_adaptive import qgd_N_Qubit_State_Preparation_adaptive as N_Qubit_State_Preparation_adaptive
-from squander.decomposition.qgd_N_Qubit_Decomposition_custom import qgd_N_Qubit_Decomposition_custom as N_Qubit_Decomposition_custom
-from squander.decomposition.qgd_N_Qubit_Decomposition import qgd_N_Qubit_Decomposition as N_Qubit_Decomposition
 
 # optimization of wide circuits (optimize wide circuits)
 from squander.decomposition.qgd_Wide_Circuit_Optimization import qgd_Wide_Circuit_Optimization as Wide_Circuit_Optimization

@@ -27,7 +27,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 import numpy as np
 from os import path
-from squander.decomposition.qgd_N_Qubit_Decomposition_adaptive import qgd_N_Qubit_Decomposition_adaptive
+from squander.decomposition.qgd_N_Qubit_Decomposition_Wrapper_New import qgd_N_Qubit_Decomposition_adaptive
 
 ##
 # @brief A QGD Python interface class for the decomposition of N-qubit state into U3 and CNOT gates.

@@ -28,7 +28,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 import numpy as np
 from os import path
-from squander.decomposition.qgd_N_Qubit_Decomposition_adaptive_Wrapper import qgd_N_Qubit_Decomposition_adaptive_Wrapper
+from squander.decomposition.qgd_N_Qubit_Decomposition_Wrapper_New import qgd_N_Qubit_Decomposition_adaptive as qgd_N_Qubit_Decomposition_adaptive_Wrapper
 from squander.gates.qgd_Circuit import qgd_Circuit
 
 
