@@ -132,6 +132,42 @@ void validate_qbit_num(int qbit_num) {
     }
 }
 
+/**
+ * @brief Visitor pattern for decomposition types
+ * This allows unified method implementations without code duplication
+ */
+template<typename Func>
+auto visit_decomposition(Optimization_Interface* decomp, Func&& func) -> decltype(func(std::declval<N_Qubit_Decomposition*>())) {
+    using RetType = decltype(func(std::declval<N_Qubit_Decomposition*>()));
+    if (!decomp) {
+        PyErr_SetString(PyExc_RuntimeError, "Decomposition object is NULL");
+        if constexpr (!std::is_void_v<RetType>) {
+            return RetType();
+        }
+        return;
+    }
+    // Try each derived type in order
+    if (auto* d = dynamic_cast<N_Qubit_Decomposition_adaptive*>(decomp)) {
+        return func(d);
+    }
+    if (auto* d = dynamic_cast<N_Qubit_Decomposition_custom*>(decomp)) {
+        return func(d);
+    }
+    if (auto* d = dynamic_cast<N_Qubit_Decomposition_Tree_Search*>(decomp)) {
+        return func(d);
+    }
+    if (auto* d = dynamic_cast<N_Qubit_Decomposition_Tabu_Search*>(decomp)) {
+        return func(d);
+    }
+    if (auto* d = dynamic_cast<N_Qubit_Decomposition*>(decomp)) {
+        return func(d);
+    }
+    PyErr_SetString(PyExc_TypeError, "Unknown decomposition type");
+    if constexpr (!std::is_void_v<RetType>) {
+        return RetType();
+    }
+}
+
 //////////////////////////////////////////////////////////////////
 
 static int 
@@ -326,166 +362,110 @@ qgd_N_Qubit_Decomposition_Wrapper_New_new(PyTypeObject *type, PyObject *args, Py
     return (PyObject *) self;
 }
 
-////////////////////////////////////////////////////////////////// METHOD IMPLEMENTATIONS
-
-template<typename Func>
-auto visit_decomposition(void* decomp, Func&& func) {
-    if (auto* p = dynamic_cast<N_Qubit_Decomposition_adaptive*>(static_cast<N_Qubit_Decomposition*>(decomp))) {
-        return func(p);
-    }
-    if (auto* p = dynamic_cast<N_Qubit_Decomposition_custom*>(static_cast<N_Qubit_Decomposition*>(decomp))) {
-        return func(p);
-    }
-    if (auto* p = dynamic_cast<N_Qubit_Decomposition_Tree_Search*>(static_cast<N_Qubit_Decomposition*>(decomp))) {
-        return func(p);
-    }
-    if (auto* p = dynamic_cast<N_Qubit_Decomposition_Tabu_Search*>(static_cast<N_Qubit_Decomposition*>(decomp))) {
-        return func(p);
-    }
-    if (auto* p = dynamic_cast<N_Qubit_Decomposition*>(static_cast<N_Qubit_Decomposition*>(decomp))) {
-        return func(p);
-    }
-    PyErr_SetString(PyExc_TypeError, "Unknown decomposition type");
-    using RetType = decltype(func(std::declval<N_Qubit_Decomposition*>()));
-    if constexpr (!std::is_void_v<RetType>) {
-        return RetType();
-    }
-}
+////////////////////////////////////////////////////////////////// UNIFIED METHOD IMPLEMENTATIONS
 
 /**
-@brief Call to start the decomposition process
+@brief Wrapper function to call the start_decomposition method of C++ class N_Qubit_Decomposition
+@param self A pointer pointing to an instance of the class qgd_N_Qubit_Decomposition_custom_custom_Wrapper.
+@param kwds A tuple of keywords
 */
 static PyObject *
 qgd_N_Qubit_Decomposition_Wrapper_New_Start_Decomposition(qgd_N_Qubit_Decomposition_Wrapper_New *self, PyObject *args, PyObject *kwds)
 {
-    static char *kwlist[] = {(char*)"finalize_decomp", NULL};
-    
-    if (self->decomp == NULL) {
-        PyErr_SetString(PyExc_RuntimeError, "Decomposition object is NULL");
-        return NULL;
-    }
+    // The tuple of expected keywords
+    static char *kwlist[] = {NULL};
 
+    // parsing input arguments
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|", kwlist))
+        return Py_BuildValue("i", -1);
+
+    // starting the decomposition
     try {
-        // Check if it's base N_Qubit_Decomposition (supports finalize_decomp parameter)
-        N_Qubit_Decomposition* base_decomp = dynamic_cast<N_Qubit_Decomposition*>(self->decomp);
-        if (base_decomp != NULL) {
-            bool finalize_decomp = true;
-            if (!PyArg_ParseTupleAndKeywords(args, kwds, "|b", kwlist, &finalize_decomp)) {
-                return NULL;
-            }
-            base_decomp->start_decomposition(finalize_decomp);
-            Py_RETURN_NONE;
-        }
-        
-        // For adaptive, custom, tree, and tabu search - no parameters
-        if (!PyArg_ParseTupleAndKeywords(args, kwds, "", kwlist)) {
-            return NULL;
-        }
-        
-        // Cast to appropriate derived class and call start_decomposition
-        N_Qubit_Decomposition_adaptive* adaptive_decomp = dynamic_cast<N_Qubit_Decomposition_adaptive*>(self->decomp);
-        if (adaptive_decomp) {
-            adaptive_decomp->start_decomposition();
-            Py_RETURN_NONE;
-        }
-        
-        N_Qubit_Decomposition_custom* custom_decomp = dynamic_cast<N_Qubit_Decomposition_custom*>(self->decomp);
-        if (custom_decomp) {
-            custom_decomp->start_decomposition();
-            Py_RETURN_NONE;
-        }
-        
-        N_Qubit_Decomposition_Tree_Search* tree_decomp = dynamic_cast<N_Qubit_Decomposition_Tree_Search*>(self->decomp);
-        if (tree_decomp) {
-            tree_decomp->start_decomposition();
-            Py_RETURN_NONE;
-        }
-        
-        N_Qubit_Decomposition_Tabu_Search* tabu_decomp = dynamic_cast<N_Qubit_Decomposition_Tabu_Search*>(self->decomp);
-        if (tabu_decomp) {
-            tabu_decomp->start_decomposition();
-            Py_RETURN_NONE;
-        }
-        
-        N_Qubit_Decomposition* basic_decomp = dynamic_cast<N_Qubit_Decomposition*>(self->decomp);
-        if (basic_decomp) {
-            basic_decomp->start_decomposition();
-            Py_RETURN_NONE;
-        }
-        
-        PyErr_SetString(PyExc_TypeError, "Unknown decomposition type");
-        return NULL;
-        
-    } catch (std::exception& e) {
-        PyErr_SetString(PyExc_Exception, e.what());
+        visit_decomposition(self->decomp, [](auto* decomp) {
+            decomp->start_decomposition();
+        });
+    }
+    catch (std::string err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        std::cout << err << std::endl;
         return NULL;
     }
+    catch(...) {
+        std::string err( "Invalid pointer to decomposition class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    return Py_BuildValue("i", 0);
 }
 
 /**
 @brief Call to get the number of gates
+@return PyLong representing the number of gates
 */
 static PyObject *
 qgd_N_Qubit_Decomposition_Wrapper_New_get_Gate_Num(qgd_N_Qubit_Decomposition_Wrapper_New *self)
 {
-    if (self->decomp == NULL) {
-        PyErr_SetString(PyExc_RuntimeError, "Decomposition object is NULL");
-        return NULL;
-    }
-
-    try {
-        int gates_num = self->decomp->get_gate_num();
-        return PyLong_FromLong(gates_num);
-    } catch (std::exception& e) {
-        PyErr_SetString(PyExc_Exception, e.what());
-        return NULL;
-    }
+    // get the number of gates
+    int ret = self->decomp->get_gate_num();
+    return Py_BuildValue("i", ret);
 }
 
 /**
 @brief Call to get the optimized parameters
+@return Numpy array of optimized parameters
 */
 static PyObject *
 qgd_N_Qubit_Decomposition_Wrapper_New_get_Optimized_Parameters(qgd_N_Qubit_Decomposition_Wrapper_New *self)
 {
-    if (self->decomp == NULL) {
-        PyErr_SetString(PyExc_RuntimeError, "Decomposition object is NULL");
-        return NULL;
-    }
 
-    try {
-        Matrix_real parameters = self->decomp->get_optimized_parameters();
-        return matrix_real_to_numpy(parameters);
-    } catch (std::exception& e) {
-        PyErr_SetString(PyExc_Exception, e.what());
-        return NULL;
-    }
+    int parameter_num = self->decomp->get_parameter_num();
+    Matrix_real parameters_mtx(1, parameter_num);
+    
+    double* parameters = parameters_mtx.get_data();
+    self->decomp->get_optimized_parameters(parameters);
+
+    // convert to numpy array
+    parameters_mtx.set_owner(false);
+    PyObject* parameter_arr = matrix_real_to_numpy( parameters_mtx );
+
+    return parameter_arr;
+
 }
 
 /**
 @brief Call to get the incorporated circuit
+@return Python wrapper object containing the circuit
 */
 static PyObject *
 qgd_N_Qubit_Decomposition_Wrapper_New_get_Circuit(qgd_N_Qubit_Decomposition_Wrapper_New *self)
 {
-    if (self->decomp == NULL) {
-        PyErr_SetString(PyExc_RuntimeError, "Decomposition object is NULL");
+    PyObject* qgd_Circuit  = PyImport_ImportModule("squander.gates.qgd_Circuit");
+    if ( qgd_Circuit == NULL ) {
+        PyErr_SetString(PyExc_Exception, "Module import error: squander.gates.qgd_Circuit" );
         return NULL;
     }
 
-    try {
-        // Import the circuit module to get the wrapper type
-        PyObject* qgd_Circuit = PyImport_ImportModule("squander.gates.qgd_Circuit");
-        if (qgd_Circuit == NULL) {
-            PyErr_SetString(PyExc_Exception, "Module import error: squander.gates.qgd_Circuit");
-            return NULL;
-        }
-        ret->gate = self->decomp;
-        return (PyObject*)ret;
-    } catch (std::exception& e) {
-        PyErr_SetString(PyExc_Exception, e.what());
-        return NULL;
-    }
+    // retrieve the C++ variant of the flat circuit (flat circuit does not conatain any sub-circuits)
+    Gates_block* circuit = self->decomp->get_flat_circuit();
+
+    // construct python interfarce for the circuit
+    PyObject* qgd_circuit_Dict = PyModule_GetDict( qgd_Circuit );
+
+    // PyDict_GetItemString creates a borrowed reference to the item in the dict. Reference counting is not increased on this element, dont need to decrease the reference counting at the end
+    PyObject* py_circuit_class = PyDict_GetItemString( qgd_circuit_Dict, "qgd_Circuit");
+
+    // create gate parameters
+    PyObject* qbit_num = Py_BuildValue("i",  circuit->get_qbit_num() );
+    PyObject* circuit_input = Py_BuildValue("(O)", qbit_num);
+
+    PyObject* py_circuit = PyObject_CallObject(py_circuit_class, circuit_input);
+    qgd_Circuit_Wrapper* py_circuit_C = reinterpret_cast<qgd_Circuit_Wrapper*>( py_circuit );
+    
+    // replace the empty circuit with the extracted one
+    delete( py_circuit_C->gate );
+    py_circuit_C->gate = circuit;
+
+    return py_circuit;
 }
 
 /**
@@ -494,60 +474,53 @@ qgd_N_Qubit_Decomposition_Wrapper_New_get_Circuit(qgd_N_Qubit_Decomposition_Wrap
 static PyObject *
 qgd_N_Qubit_Decomposition_Wrapper_New_List_Gates(qgd_N_Qubit_Decomposition_Wrapper_New *self)
 {
-    if (self->decomp == NULL) {
-        PyErr_SetString(PyExc_RuntimeError, "Decomposition object is NULL");
-        return NULL;
-    }
-
-    try {
-        self->decomp->list_gates(0);
-        Py_RETURN_NONE;
-    } catch (std::exception& e) {
-        PyErr_SetString(PyExc_Exception, e.what());
-        return NULL;
-    }
+    // list gates with start_index = 0
+    self->decomp->list_gates(0);
+    return Py_None;
 }
 
 /**
-@brief Set the maximal number of layers used in the subdecomposition
+@brief Set the maximal number of layers used in the subdecomposition of the qbit-th qubit
+@param args Dictionary {'n': max_layer_num} labeling the maximal number of the gate layers used in the subdecomposition
 */
 static PyObject *
 qgd_N_Qubit_Decomposition_Wrapper_New_set_Max_Layer_Num(qgd_N_Qubit_Decomposition_Wrapper_New *self, PyObject *args)
 {
-    if (self->decomp == NULL) {
-        PyErr_SetString(PyExc_RuntimeError, "Decomposition object is NULL");
+    // initiate variables for input arguments
+    PyObject* max_layer_num;
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "O", &max_layer_num)) {
+        return NULL;
+    }
+    // Check whether input is dictionary
+    if (!PyDict_Check(max_layer_num)) {
+        PyErr_SetString(PyExc_TypeError, "Input must be dictionary");
         return NULL;
     }
 
-    PyObject* max_layer_num_dict;
-    if (!PyArg_ParseTuple(args, "O", &max_layer_num_dict)) {
-        return NULL;
-    }
-
-    if (!PyDict_Check(max_layer_num_dict)) {
-        PyErr_SetString(PyExc_TypeError, "Expected dictionary argument");
-        return NULL;
-    }
+    PyObject *key = NULL, *value = NULL;
+    Py_ssize_t pos = 0;
 
     try {
-        std::map<int, int> max_layer_num_map;
-        
-        PyObject* key;
-        PyObject* value;
-        Py_ssize_t pos = 0;
-        
-        while (PyDict_Next(max_layer_num_dict, &pos, &key, &value)) {
-            if (!PyLong_Check(key) || !PyLong_Check(value)) {
-                PyErr_SetString(PyExc_TypeError, "Dictionary keys and values must be integers");
+        while (PyDict_Next(max_layer_num, &pos, &key, &value)) {
+            // convert value from PyObject to int
+            if (!PyLong_Check(value)) {
+                PyErr_SetString(PyExc_TypeError, "Dictionary values must be integers");
                 return NULL;
             }
-            
-            int qubit_idx = PyLong_AsLong(key);
-            int max_layers = PyLong_AsLong(value);
-            max_layer_num_map[qubit_idx] = max_layers;
+            int value_int = (int)PyLong_AsLong(value);
+
+            // convert key from PyObject to int
+            if (!PyLong_Check(key)) {
+                PyErr_SetString(PyExc_TypeError, "Dictionary keys must be integers");
+                return NULL;
+            }
+            int key_int = (int)PyLong_AsLong(key);
+
+            // set maximal layer nums on the C++ side (base class method)
+            self->decomp->set_max_layer_num(key_int, value_int);
         }
-        
-        self->decomp->set_max_layer_num(max_layer_num_map);
+
         Py_RETURN_NONE;
     } catch (std::exception& e) {
         PyErr_SetString(PyExc_Exception, e.what());
@@ -556,45 +529,45 @@ qgd_N_Qubit_Decomposition_Wrapper_New_set_Max_Layer_Num(qgd_N_Qubit_Decompositio
 }
 
 /**
-@brief Set the number of iteration loops during the subdecomposition
+@brief Set the number of iteration loops during the subdecomposition of the qbit-th qubit
+@param args Dictionary {'n': iteration_loops} labeling the number of successive identical layers used in the subdecomposition at the disentangling of the n-th qubit
 */
 static PyObject *
 qgd_N_Qubit_Decomposition_Wrapper_New_set_Iteration_Loops(qgd_N_Qubit_Decomposition_Wrapper_New *self, PyObject *args)
 {
-    if (self->decomp == NULL) {
-        PyErr_SetString(PyExc_RuntimeError, "Decomposition object is NULL");
+    // initiate variables for input arguments
+    PyObject* iteration_loops;
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "O", &iteration_loops)) {
+        return NULL;
+    }
+    // Check whether input is dictionary
+    if (!PyDict_Check(iteration_loops)) {
+        PyErr_SetString(PyExc_TypeError, "Input must be dictionary");
         return NULL;
     }
 
-    PyObject* iteration_loops_dict;
-    if (!PyArg_ParseTuple(args, "O", &iteration_loops_dict)) {
-        return NULL;
-    }
-
-    if (!PyDict_Check(iteration_loops_dict)) {
-        PyErr_SetString(PyExc_TypeError, "Expected dictionary argument");
-        return NULL;
-    }
+    PyObject *key = NULL, *value = NULL;
+    Py_ssize_t pos = 0;
 
     try {
-        std::map<int, int> iteration_loops_map;
-        
-        PyObject* key;
-        PyObject* value;
-        Py_ssize_t pos = 0;
-        
-        while (PyDict_Next(iteration_loops_dict, &pos, &key, &value)) {
-            if (!PyLong_Check(key) || !PyLong_Check(value)) {
-                PyErr_SetString(PyExc_TypeError, "Dictionary keys and values must be integers");
+        while (PyDict_Next(iteration_loops, &pos, &key, &value)) {
+            // convert value from PyObject to int
+            if (!PyLong_Check(value)) {
+                PyErr_SetString(PyExc_TypeError, "Dictionary values must be integers");
                 return NULL;
             }
-            
-            int qubit_idx = PyLong_AsLong(key);
-            int loops = PyLong_AsLong(value);
-            iteration_loops_map[qubit_idx] = loops;
+            int value_int = (int)PyLong_AsLong(value);
+
+            // convert key from PyObject to int
+            if (!PyLong_Check(key)) {
+                PyErr_SetString(PyExc_TypeError, "Dictionary keys must be integers");
+                return NULL;
+            }
+            int key_int = (int)PyLong_AsLong(key);
+
+            self->decomp->set_iteration_loops(key_int, value_int);
         }
-        
-        self->decomp->set_iteration_loops(iteration_loops_map);
         Py_RETURN_NONE;
     } catch (std::exception& e) {
         PyErr_SetString(PyExc_Exception, e.what());
@@ -604,22 +577,17 @@ qgd_N_Qubit_Decomposition_Wrapper_New_set_Iteration_Loops(qgd_N_Qubit_Decomposit
 
 /**
 @brief Set the verbosity of the decomposition class
+@param args Integer (0=False, non-zero=True)
 */
 static PyObject *
 qgd_N_Qubit_Decomposition_Wrapper_New_set_Verbose(qgd_N_Qubit_Decomposition_Wrapper_New *self, PyObject *args)
 {
-    if (self->decomp == NULL) {
-        PyErr_SetString(PyExc_RuntimeError, "Decomposition object is NULL");
-        return NULL;
-    }
-
     int verbose;
     if (!PyArg_ParseTuple(args, "i", &verbose)) {
         return NULL;
     }
-
     try {
-        self->decomp->set_verbose(verbose != 0);
+        self->decomp->set_verbose(verbose);
         Py_RETURN_NONE;
     } catch (std::exception& e) {
         PyErr_SetString(PyExc_Exception, e.what());
@@ -629,22 +597,27 @@ qgd_N_Qubit_Decomposition_Wrapper_New_set_Verbose(qgd_N_Qubit_Decomposition_Wrap
 
 /**
 @brief Set the debugfile name of the decomposition class
+@param args PyObject string for debug filename
 */
 static PyObject *
 qgd_N_Qubit_Decomposition_Wrapper_New_set_Debugfile(qgd_N_Qubit_Decomposition_Wrapper_New *self, PyObject *args)
 {
-    if (self->decomp == NULL) {
-        PyErr_SetString(PyExc_RuntimeError, "Decomposition object is NULL");
+    PyObject* debugfile = NULL;
+    if (!PyArg_ParseTuple(args, "O", &debugfile)) {
         return NULL;
     }
-
-    const char* debugfile_name;
-    if (!PyArg_ParseTuple(args, "s", &debugfile_name)) {
-        return NULL;
-    }
+    // determine the debugfile name type
+    PyObject* debugfile_string = PyObject_Str(debugfile);
+    PyObject* debugfile_string_unicode = PyUnicode_AsEncodedString(debugfile_string, "utf-8", "~E~");
+    const char* debugfile_C = PyBytes_AS_STRING(debugfile_string_unicode);
+    Py_XDECREF(debugfile_string);
+    Py_XDECREF(debugfile_string_unicode);
+    // determine the length of the filename and initialize C++ variant of the string
+    Py_ssize_t string_length = PyBytes_Size(debugfile_string_unicode);
+    std::string debugfile_Cpp(debugfile_C, string_length);
     try {
-        std::string debugfile_str(debugfile_name);
-        self->decomp->set_debugfile(debugfile_str);
+        // set the name of the debugfile on the C++ side
+        self->decomp->set_debugfile(debugfile_Cpp);
         Py_RETURN_NONE;
     } catch (std::exception& e) {
         PyErr_SetString(PyExc_Exception, e.what());
@@ -654,39 +627,39 @@ qgd_N_Qubit_Decomposition_Wrapper_New_set_Debugfile(qgd_N_Qubit_Decomposition_Wr
 
 /**
 @brief Method to reorder the qubits in the decomposition class
+@param args Tuple or list of integers representing the new qubit ordering
 */
 static PyObject *
 qgd_N_Qubit_Decomposition_Wrapper_New_Reorder_Qubits(qgd_N_Qubit_Decomposition_Wrapper_New *self, PyObject *args)
 {
-    if (self->decomp == NULL) {
-        PyErr_SetString(PyExc_RuntimeError, "Decomposition object is NULL");
+    PyObject* qbit_list;
+    if (!PyArg_ParseTuple(args, "O", &qbit_list)) {
         return NULL;
     }
-
-    PyObject* qubit_list;
-    if (!PyArg_ParseTuple(args, "O", &qubit_list)) {
+    bool is_list = PyList_Check(qbit_list), is_tuple = PyTuple_Check(qbit_list);
+    if (!is_list && !is_tuple) {
+        PyErr_SetString(PyExc_TypeError, "Input must be tuple or list");
         return NULL;
     }
-
-    if (!PyList_Check(qubit_list)) {
-        PyErr_SetString(PyExc_TypeError, "Expected list argument");
-        return NULL;
+    Py_ssize_t element_num;
+    if (is_tuple) {
+        element_num = PyTuple_GET_SIZE(qbit_list);
+    } else {
+        element_num = PyList_GET_SIZE(qbit_list);
     }
-
-    try {
-        std::vector<int> reordering_map;
-        Py_ssize_t list_size = PyList_Size(qubit_list);
-        
-        for (Py_ssize_t i = 0; i < list_size; i++) {
-            PyObject* item = PyList_GetItem(qubit_list, i);
-            if (!PyLong_Check(item)) {
-                PyErr_SetString(PyExc_TypeError, "List items must be integers");
-                return NULL;
-            }
-            reordering_map.push_back(PyLong_AsLong(item));
+    // create C++ variant of the tuple/list
+    std::vector<int> qbit_list_C((int)element_num);
+    for (Py_ssize_t idx = 0; idx < element_num; idx++) {
+        if (is_tuple) {        
+            qbit_list_C[(int) idx] = (int) PyLong_AsLong( PyTuple_GetItem(qbit_list, idx) );
         }
-        
-        self->decomp->reorder_qubits(reordering_map);
+        else {
+            qbit_list_C[(int) idx] = (int) PyLong_AsLong( PyList_GetItem(qbit_list, idx) );
+        }
+    }
+    try {
+        // reorder the qubits in the decomposition class
+        self->decomp->reorder_qubits(qbit_list_C);
         Py_RETURN_NONE;
     } catch (std::exception& e) {
         PyErr_SetString(PyExc_Exception, e.what());
@@ -696,20 +669,15 @@ qgd_N_Qubit_Decomposition_Wrapper_New_Reorder_Qubits(qgd_N_Qubit_Decomposition_W
 
 /**
 @brief Wrapper method to set the optimization tolerance
+@param args Double representing the tolerance value
 */
 static PyObject *
 qgd_N_Qubit_Decomposition_Wrapper_New_set_Optimization_Tolerance(qgd_N_Qubit_Decomposition_Wrapper_New *self, PyObject *args)
 {
-    if (self->decomp == NULL) {
-        PyErr_SetString(PyExc_RuntimeError, "Decomposition object is NULL");
-        return NULL;
-    }
-
     double tolerance;
     if (!PyArg_ParseTuple(args, "d", &tolerance)) {
         return NULL;
     }
-
     try {
         self->decomp->set_optimization_tolerance(tolerance);
         Py_RETURN_NONE;
@@ -721,20 +689,15 @@ qgd_N_Qubit_Decomposition_Wrapper_New_set_Optimization_Tolerance(qgd_N_Qubit_Dec
 
 /**
 @brief Wrapper method to set the threshold of convergence
+@param args Double representing the threshold value
 */
 static PyObject *
 qgd_N_Qubit_Decomposition_Wrapper_New_set_Convergence_Threshold(qgd_N_Qubit_Decomposition_Wrapper_New *self, PyObject *args)
 {
-    if (self->decomp == NULL) {
-        PyErr_SetString(PyExc_RuntimeError, "Decomposition object is NULL");
-        return NULL;
-    }
-
     double threshold;
     if (!PyArg_ParseTuple(args, "d", &threshold)) {
         return NULL;
     }
-
     try {
         self->decomp->set_convergence_threshold(threshold);
         Py_RETURN_NONE;
@@ -746,22 +709,17 @@ qgd_N_Qubit_Decomposition_Wrapper_New_set_Convergence_Threshold(qgd_N_Qubit_Deco
 
 /**
 @brief Wrapper method to set the number of gate blocks to be optimized
+@param args Integer representing the number of optimization blocks
 */
 static PyObject *
 qgd_N_Qubit_Decomposition_Wrapper_New_set_Optimization_Blocks(qgd_N_Qubit_Decomposition_Wrapper_New *self, PyObject *args)
 {
-    if (self->decomp == NULL) {
-        PyErr_SetString(PyExc_RuntimeError, "Decomposition object is NULL");
-        return NULL;
-    }
-
     int optimization_blocks;
     if (!PyArg_ParseTuple(args, "i", &optimization_blocks)) {
         return NULL;
     }
-
     try {
-        DYNAMIC_CAST_AND_CALL(set_optimization_blocks(optimization_blocks), self);
+        self->decomp->set_optimization_blocks(optimization_blocks);
         Py_RETURN_NONE;
     } catch (std::exception& e) {
         PyErr_SetString(PyExc_Exception, e.what());
