@@ -132,37 +132,6 @@ void validate_qbit_num(int qbit_num) {
     }
 }
 
-/**
- * @brief Unified visitor pattern using C++17 fold expressions
- * Tries decomposition types specified in template parameters
- * @tparam DecompTypes The specific decomposition types to check (required)
- * @tparam Func Callable accepting decomposition pointer
- * @return Py_BuildValue("i", 0) on success, NULL on error
- * 
- * Usage: return visit_decomposition<Adaptive, Custom>(decomp, [](auto* d) { d->method(); });
- */
-template<typename... DecompT, typename Func>
-PyObject* visit_decomposition(Optimization_Interface* decomp, Func&& func) {
-    static_assert(sizeof...(DecompT) > 0, "Must specify at least one decomposition type");
-    if (!decomp) {
-        PyErr_SetString(PyExc_RuntimeError, "Decomposition object is NULL");
-        return NULL;
-    }
-    // Fold expression: try on specified types
-    bool success = (... || [&]() -> bool {
-        if (auto* d = dynamic_cast<DecompT*>(decomp)) {
-            func(d);
-            return true;
-        }
-        return false;
-    }());
-    if (!success) {
-        PyErr_SetString(PyExc_TypeError, "Method not available for this decomposition type");
-        return NULL;
-    }
-    return Py_BuildValue("i", 0);
-}
-
 //////////////////////////////////////////////////////////////////
 
 static int 
@@ -374,15 +343,30 @@ qgd_N_Qubit_Decomposition_Wrapper_New_Start_Decomposition(qgd_N_Qubit_Decomposit
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|", kwlist))
         return Py_BuildValue("i", -1);
 
-    return visit_decomposition<
-        N_Qubit_Decomposition_adaptive,
-        N_Qubit_Decomposition_custom,
-        N_Qubit_Decomposition_Tree_Search,
-        N_Qubit_Decomposition_Tabu_Search,
-        N_Qubit_Decomposition
-    >(self->decomp, [](auto* decomp) {
-        decomp->start_decomposition();
-    });
+    // Try each decomposition type and call start_decomposition
+    if (N_Qubit_Decomposition_adaptive* p = dynamic_cast<N_Qubit_Decomposition_adaptive*>(self->decomp)) {
+        p->start_decomposition();
+        return Py_BuildValue("i", 0);
+    }
+    if (N_Qubit_Decomposition_custom* p = dynamic_cast<N_Qubit_Decomposition_custom*>(self->decomp)) {
+        p->start_decomposition();
+        return Py_BuildValue("i", 0);
+    }
+    if (N_Qubit_Decomposition_Tree_Search* p = dynamic_cast<N_Qubit_Decomposition_Tree_Search*>(self->decomp)) {
+        p->start_decomposition();
+        return Py_BuildValue("i", 0);
+    }
+    if (N_Qubit_Decomposition_Tabu_Search* p = dynamic_cast<N_Qubit_Decomposition_Tabu_Search*>(self->decomp)) {
+        p->start_decomposition();
+        return Py_BuildValue("i", 0);
+    }
+    if (N_Qubit_Decomposition* p = dynamic_cast<N_Qubit_Decomposition*>(self->decomp)) {
+        p->start_decomposition();
+        return Py_BuildValue("i", 0);
+    }
+
+    PyErr_SetString(PyExc_TypeError, "Unknown decomposition type");
+    return NULL;
 }
 
 /**
@@ -2046,14 +2030,24 @@ qgd_N_Qubit_Decomposition_Wrapper_New_set_Unitary(qgd_N_Qubit_Decomposition_Wrap
 	}
 
 	// create QGD version of the Umtx
-	Matrix Umtx_mtx = numpy2matrix(self->Umtx);    
-    return visit_decomposition<
-        N_Qubit_Decomposition_adaptive, 
-        N_Qubit_Decomposition_Tree_Search,
-        N_Qubit_Decomposition_Tabu_Search
-    >(self->decomp, [&Umtx_mtx](auto* decomp) {
-        decomp->set_unitary(Umtx_mtx);
-    });
+	Matrix Umtx_mtx = numpy2matrix(self->Umtx);
+    
+    // Try each decomposition type that supports set_unitary
+    if (N_Qubit_Decomposition_adaptive* p = dynamic_cast<N_Qubit_Decomposition_adaptive*>(self->decomp)) {
+        p->set_unitary(Umtx_mtx);
+        return Py_BuildValue("i", 0);
+    }
+    if (N_Qubit_Decomposition_Tree_Search* p = dynamic_cast<N_Qubit_Decomposition_Tree_Search*>(self->decomp)) {
+        p->set_unitary(Umtx_mtx);
+        return Py_BuildValue("i", 0);
+    }
+    if (N_Qubit_Decomposition_Tabu_Search* p = dynamic_cast<N_Qubit_Decomposition_Tabu_Search*>(self->decomp)) {
+        p->set_unitary(Umtx_mtx);
+        return Py_BuildValue("i", 0);
+    }
+
+    PyErr_SetString(PyExc_TypeError, "set_unitary not available for this decomposition type");
+    return NULL;
 }
 
 extern "C"
