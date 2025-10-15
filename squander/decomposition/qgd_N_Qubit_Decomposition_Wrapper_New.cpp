@@ -38,66 +38,7 @@ typedef struct qgd_N_Qubit_Decomposition_Wrapper_New {
     Optimization_Interface* decomp;
 } qgd_N_Qubit_Decomposition_Wrapper_New;
 
-//////////////////////////////////////////////////////////////////
-
-// Helper macro for dynamic casting to all decomposition types
-#define DYNAMIC_CAST_AND_CALL(method_call, self) \
-    do { \
-        N_Qubit_Decomposition_adaptive* adaptive_decomp = dynamic_cast<N_Qubit_Decomposition_adaptive*>(self->decomp); \
-        if (adaptive_decomp) { \
-            adaptive_decomp->method_call; \
-            break; \
-        } \
-        N_Qubit_Decomposition_custom* custom_decomp = dynamic_cast<N_Qubit_Decomposition_custom*>(self->decomp); \
-        if (custom_decomp) { \
-            custom_decomp->method_call; \
-            break; \
-        } \
-        N_Qubit_Decomposition_Tree_Search* tree_decomp = dynamic_cast<N_Qubit_Decomposition_Tree_Search*>(self->decomp); \
-        if (tree_decomp) { \
-            tree_decomp->method_call; \
-            break; \
-        } \
-        N_Qubit_Decomposition_Tabu_Search* tabu_decomp = dynamic_cast<N_Qubit_Decomposition_Tabu_Search*>(self->decomp); \
-        if (tabu_decomp) { \
-            tabu_decomp->method_call; \
-            break; \
-        } \
-        N_Qubit_Decomposition* basic_decomp = dynamic_cast<N_Qubit_Decomposition*>(self->decomp); \
-        if (basic_decomp) { \
-            basic_decomp->method_call; \
-            break; \
-        } \
-        PyErr_SetString(PyExc_TypeError, "Unknown decomposition type"); \
-    } while(0)
-
-#define DYNAMIC_CAST_AND_RETURN(method_call, self, return_type) \
-    do { \
-        N_Qubit_Decomposition_adaptive* adaptive_decomp = dynamic_cast<N_Qubit_Decomposition_adaptive*>(self->decomp); \
-        if (adaptive_decomp) { \
-            return adaptive_decomp->method_call; \
-        } \
-        N_Qubit_Decomposition_custom* custom_decomp = dynamic_cast<N_Qubit_Decomposition_custom*>(self->decomp); \
-        if (custom_decomp) { \
-            return custom_decomp->method_call; \
-        } \
-        N_Qubit_Decomposition_Tree_Search* tree_decomp = dynamic_cast<N_Qubit_Decomposition_Tree_Search*>(self->decomp); \
-        if (tree_decomp) { \
-            return tree_decomp->method_call; \
-        } \
-        N_Qubit_Decomposition_Tabu_Search* tabu_decomp = dynamic_cast<N_Qubit_Decomposition_Tabu_Search*>(self->decomp); \
-        if (tabu_decomp) { \
-            return tabu_decomp->method_call; \
-        } \
-        N_Qubit_Decomposition* basic_decomp = dynamic_cast<N_Qubit_Decomposition*>(self->decomp); \
-        if (basic_decomp) { \
-            return basic_decomp->method_call; \
-        } \
-        PyErr_SetString(PyExc_TypeError, "Unknown decomposition type"); \
-        return return_type(); \
-    } while(0)
-
-//////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////// HELPER FUNCTIONS
 
 /**
  * @brief Extract and validate Matrix from numpy array
@@ -385,11 +326,31 @@ qgd_N_Qubit_Decomposition_Wrapper_New_new(PyTypeObject *type, PyObject *args, Py
     return (PyObject *) self;
 }
 
-//////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////// METHOD IMPLEMENTATIONS
 
-// =========================================================================
-// METHOD IMPLEMENTATIONS - All methods from the method tables
-// =========================================================================
+template<typename Func>
+auto visit_decomposition(void* decomp, Func&& func) {
+    if (auto* p = dynamic_cast<N_Qubit_Decomposition_adaptive*>(static_cast<N_Qubit_Decomposition*>(decomp))) {
+        return func(p);
+    }
+    if (auto* p = dynamic_cast<N_Qubit_Decomposition_custom*>(static_cast<N_Qubit_Decomposition*>(decomp))) {
+        return func(p);
+    }
+    if (auto* p = dynamic_cast<N_Qubit_Decomposition_Tree_Search*>(static_cast<N_Qubit_Decomposition*>(decomp))) {
+        return func(p);
+    }
+    if (auto* p = dynamic_cast<N_Qubit_Decomposition_Tabu_Search*>(static_cast<N_Qubit_Decomposition*>(decomp))) {
+        return func(p);
+    }
+    if (auto* p = dynamic_cast<N_Qubit_Decomposition*>(static_cast<N_Qubit_Decomposition*>(decomp))) {
+        return func(p);
+    }
+    PyErr_SetString(PyExc_TypeError, "Unknown decomposition type");
+    using RetType = decltype(func(std::declval<N_Qubit_Decomposition*>()));
+    if constexpr (!std::is_void_v<RetType>) {
+        return RetType();
+    }
+}
 
 /**
 @brief Call to start the decomposition process
@@ -681,7 +642,6 @@ qgd_N_Qubit_Decomposition_Wrapper_New_set_Debugfile(qgd_N_Qubit_Decomposition_Wr
     if (!PyArg_ParseTuple(args, "s", &debugfile_name)) {
         return NULL;
     }
-
     try {
         std::string debugfile_str(debugfile_name);
         self->decomp->set_debugfile(debugfile_str);
