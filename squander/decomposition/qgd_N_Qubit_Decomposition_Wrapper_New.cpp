@@ -97,66 +97,252 @@ typedef struct qgd_N_Qubit_Decomposition_Wrapper_New {
         return return_type(); \
     } while(0)
 
-// Helper functions
-Matrix extract_matrix_from_args(PyObject* Umtx_arg, PyArrayObject** store_ref) {
-    if (Umtx_arg == NULL) {
-        throw std::runtime_error("Matrix argument is NULL");
+//////////////////////////////////////////////////////////////////
+
+/**
+ * @brief Extract and validate Matrix from numpy array
+ */
+Matrix extract_matrix(PyObject* Umtx_arg, PyArrayObject** store_ref) {
+    if (!Umtx_arg) {
+        throw std::runtime_error("Umtx is NULL");
     }
     *store_ref = (PyArrayObject*)PyArray_FROM_OTF(Umtx_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
-    if (*store_ref == NULL) {
-        throw std::runtime_error("Failed to convert to numpy array");
+    if (!*store_ref) {
+        throw std::runtime_error("Failed to convert Umtx");
     }
     if (!PyArray_IS_C_CONTIGUOUS(*store_ref)) {
-        std::cout << "Umtx is not memory contiguous" << std::endl;
+        std::cout << "Warning: Umtx is not memory contiguous" << std::endl;
     }
     return numpy2matrix(*store_ref);
 }
 
-std::map<std::string, Config_Element> extract_config_from_args(PyObject* config_arg) {
-    // empty config, TODO: implement proper config parsing
+/**
+ * @brief Extract guess_type from Python string/object
+ */
+guess_type extract_guess_type(PyObject* initial_guess) {
+    if (!initial_guess || initial_guess == Py_None) {
+        return ZEROS;
+    }
+    const char* guess_str = PyUnicode_AsUTF8(PyObject_Str(initial_guess));
+    if (strcasecmp("zeros", guess_str) == 0) return ZEROS;
+    if (strcasecmp("random", guess_str) == 0) return RANDOM;
+    if (strcasecmp("close_to_zero", guess_str) == 0) return CLOSE_TO_ZERO;
+    std::cout << "Warning: Unknown guess '" << guess_str << "', using ZEROS" << std::endl;
+    return ZEROS;
+}
+
+/**
+ * @brief Extract topology list from Python
+ */
+std::vector<matrix_base<int>> extract_topology(PyObject* topology) {
+    std::vector<matrix_base<int>> result;
+    if (!topology || topology == Py_None) {
+        return result;
+    }
+    if (!PyList_Check(topology)) {
+        throw std::runtime_error("Topology must be a list");
+    }
+    Py_ssize_t n = PyList_Size(topology);
+    for (Py_ssize_t i = 0; i < n; i++) {
+        PyObject* item = PyList_GetItem(topology, i);
+        if (!PyTuple_Check(item)) {
+            throw std::runtime_error("Topology elements must be tuples");
+        }
+        matrix_base<int> pair(1, 2);
+        pair[0] = PyLong_AsLong(PyTuple_GetItem(item, 0));
+        pair[1] = PyLong_AsLong(PyTuple_GetItem(item, 1));
+        result.push_back(pair);
+    }
+    return result;
+}
+
+/**
+ * @brief Extract config dictionary
+ */
+std::map<std::string, Config_Element> extract_config(PyObject* config_arg) {
     std::map<std::string, Config_Element> config;
+    if (!config_arg || config_arg == Py_None) {
+        return config;
+    }
+    if (!PyDict_Check(config_arg)) {
+        throw std::runtime_error("Config must be a dictionary");
+    }
+    PyObject *key, *value;
+    Py_ssize_t pos = 0;
+    while (PyDict_Next(config_arg, &pos, &key, &value)) {
+        std::string key_str = PyUnicode_AsUTF8(key);
+        Config_Element element;
+        if (PyLong_Check(value)) {
+            element.set_property(key_str, PyLong_AsLongLong(value));
+        } else if (PyFloat_Check(value)) {
+            element.set_property(key_str, PyFloat_AsDouble(value));
+        }
+        config[key_str] = element;
+    }
     return config;
 }
 
-guess_type extract_guess_type_from_args(PyObject* initial_guess_arg) {
-    if (initial_guess_arg == NULL) {
-        return ZEROS;  // Default
+/**
+ * @brief Validate qbit_num
+ */
+void validate_qbit_num(int qbit_num) {
+    if (qbit_num <= 0) {
+        throw std::runtime_error("qbit_num must be positive, got " + std::to_string(qbit_num));
     }
-    
-    // Handle integer input
-    if (PyLong_Check(initial_guess_arg)) {
-        int guess_val = PyLong_AsLong(initial_guess_arg);
-        return static_cast<guess_type>(guess_val);
-    }
-    
-    // Handle string input
-    PyObject* initial_guess_string = PyObject_Str(initial_guess_arg);
-    PyObject* initial_guess_string_unicode = PyUnicode_AsEncodedString(initial_guess_string, "utf-8", "~E~");
-    const char* initial_guess_C = PyBytes_AS_STRING(initial_guess_string_unicode);
-    
-    guess_type qgd_initial_guess;
-    if (strcmp("zeros", initial_guess_C) == 0 || strcmp("ZEROS", initial_guess_C) == 0) {
-        qgd_initial_guess = ZEROS;        
-    }
-    else if (strcmp("random", initial_guess_C) == 0 || strcmp("RANDOM", initial_guess_C) == 0) {
-        qgd_initial_guess = RANDOM;        
-    }
-    else if (strcmp("close_to_zero", initial_guess_C) == 0 || strcmp("CLOSE_TO_ZERO", initial_guess_C) == 0) {
-        qgd_initial_guess = CLOSE_TO_ZERO;        
-    }
-    else {
-        std::cout << "Wrong initial guess format. Using default ZEROS." << std::endl; 
-        qgd_initial_guess = ZEROS;     
-    }
-    
-    Py_XDECREF(initial_guess_string);
-    Py_XDECREF(initial_guess_string_unicode);
-    
-    return qgd_initial_guess;
 }
 
 //////////////////////////////////////////////////////////////////
 
+static int 
+qgd_N_Qubit_Decomposition_Wrapper_init(qgd_N_Qubit_Decomposition_Wrapper_New* self, PyObject* args, PyObject* kwds)
+{
+    static char* kwlist[] = {
+        (char*)"Umtx", (char*)"qbit_num", (char*)"optimize_layer_num", 
+        (char*)"initial_guess", NULL
+    };
+    
+    PyObject *Umtx_arg = NULL, *initial_guess = NULL; 
+    int qbit_num = -1;
+    bool optimize_layer_num = false;
+    
+    if (!PyArg_ParseTupleAndKeywords(
+        args, kwds, "|OibO", kwlist,
+        &Umtx_arg, &qbit_num, &optimize_layer_num, &initial_guess)
+    ) {
+        return -1;
+    }
+
+    try {
+        Matrix Umtx_mtx = extract_matrix(Umtx_arg, &self->Umtx);
+        validate_qbit_num(qbit_num);
+        guess_type guess = extract_guess_type(initial_guess);
+        std::map<std::string, Config_Element> config; // empty for base
+
+        self->decomp = new N_Qubit_Decomposition(Umtx_mtx, qbit_num, optimize_layer_num, config, guess);
+
+        return 0;
+    } catch (const std::exception& e) {
+        PyErr_SetString(PyExc_Exception, e.what());
+        return -1;
+    }
+}
+
+static int 
+qgd_N_Qubit_Decomposition_adaptive_Wrapper_init(qgd_N_Qubit_Decomposition_Wrapper_New* self, PyObject* args, PyObject* kwds)
+{
+    static char* kwlist[] = {
+        (char*)"Umtx", (char*)"qbit_num", (char*)"level_limit", 
+        (char*)"level_limit_min", (char*)"topology", (char*)"config", 
+        (char*)"accelerator_num", NULL
+    };
+    
+    PyObject *Umtx_arg = NULL, *topology = NULL, *config_arg = NULL;
+    int qbit_num = -1, level_limit = 0, level_limit_min = 0, accelerator_num = 0;
+    
+    if (!PyArg_ParseTupleAndKeywords(
+        args, kwds, "|OiiiOOi", kwlist,
+        &Umtx_arg, &qbit_num, &level_limit, &level_limit_min, &topology, &config_arg, &accelerator_num)
+    ) {
+        return -1;
+    }
+
+    try {
+        Matrix Umtx_mtx = extract_matrix(Umtx_arg, &self->Umtx);
+        validate_qbit_num(qbit_num);
+        auto topology_cpp = extract_topology(topology);
+        auto config = extract_config(config_arg);
+        
+        self->decomp = new N_Qubit_Decomposition_adaptive(
+            Umtx_mtx, qbit_num, level_limit, level_limit_min, 
+            topology_cpp, config, accelerator_num
+        );
+        
+        return 0;
+    } catch (const std::exception& e) {
+        PyErr_SetString(PyExc_Exception, e.what());
+        return -1;
+    }
+}
+
+static int 
+qgd_N_Qubit_Decomposition_custom_Wrapper_init(qgd_N_Qubit_Decomposition_Wrapper_New* self, PyObject* args, PyObject* kwds)
+{
+    static char* kwlist[] = {
+        (char*)"Umtx", (char*)"qbit_num", (char*)"initial_guess", 
+        (char*)"config", (char*)"accelerator_num", NULL
+    };
+    
+    PyObject *Umtx_arg = NULL, *initial_guess = NULL, *config_arg = NULL;
+    int qbit_num = -1, accelerator_num = 0;
+    
+    if (!PyArg_ParseTupleAndKeywords(
+        args, kwds, "|OiOOi", kwlist,
+        &Umtx_arg, &qbit_num, &initial_guess, &config_arg, &accelerator_num)
+    ) {
+        return -1;
+    }
+
+    try {
+        Matrix Umtx_mtx = extract_matrix(Umtx_arg, &self->Umtx);
+        validate_qbit_num(qbit_num);
+        guess_type guess = extract_guess_type(initial_guess);
+        auto config = extract_config(config_arg);
+        
+        self->decomp = new N_Qubit_Decomposition_custom(Umtx_mtx, qbit_num, false, guess, config, accelerator_num);
+        
+        return 0;
+    } catch (const std::exception& e) {
+        PyErr_SetString(PyExc_Exception, e.what());
+        return -1;
+    }
+}
+
+template<typename DecompT>
+static int search_wrapper_init(qgd_N_Qubit_Decomposition_Wrapper_New* self, PyObject* args, PyObject* kwds)
+{
+    static char* kwlist[] = {
+        (char*)"Umtx", (char*)"qbit_num", (char*)"topology", 
+        (char*)"config", (char*)"accelerator_num", NULL
+    };
+    
+    PyObject *Umtx_arg = NULL, *topology = NULL, *config_arg = NULL;
+    int qbit_num = -1, accelerator_num = 0;
+    
+    if (!PyArg_ParseTupleAndKeywords(
+        args, kwds, "|OiOOi", kwlist,
+        &Umtx_arg, &qbit_num, &topology, &config_arg, &accelerator_num)
+    ) {
+        return -1;
+    }
+    
+    try {
+        Matrix Umtx_mtx = extract_matrix(Umtx_arg, &self->Umtx);
+        validate_qbit_num(qbit_num);
+        auto topology_cpp = extract_topology(topology);
+        auto config = extract_config(config_arg);
+        
+        self->decomp = new DecompT(Umtx_mtx, qbit_num, topology_cpp, config, accelerator_num);
+        
+        return 0;
+    } catch (const std::exception& e) {
+        PyErr_SetString(PyExc_Exception, e.what());
+        return -1;
+    }
+}
+
+static int 
+qgd_N_Qubit_Decomposition_Tree_Search_Wrapper_init(qgd_N_Qubit_Decomposition_Wrapper_New* self, PyObject* args, PyObject* kwds) {
+    return search_wrapper_init<N_Qubit_Decomposition_Tree_Search>(self, args, kwds);
+}
+
+static int
+qgd_N_Qubit_Decomposition_Tabu_Search_Wrapper_init(qgd_N_Qubit_Decomposition_Wrapper_New* self, PyObject* args, PyObject* kwds) {
+    return search_wrapper_init<N_Qubit_Decomposition_Tabu_Search>(self, args, kwds);
+}
+
+/**
+ * @brief Deallocate decomposition instance
+ */
 template<typename DecompT>
 void release_decomposition(DecompT* instance) {
     if (instance != NULL) {
@@ -165,251 +351,28 @@ void release_decomposition(DecompT* instance) {
 }
 
 /**
-@brief Method called when a python instance is destroyed
-@param self A pointer pointing to an instance of the wrapper.
-*/
+ * @brief Called when Python object is destroyed
+ */
 static void
 qgd_N_Qubit_Decomposition_Wrapper_New_dealloc(qgd_N_Qubit_Decomposition_Wrapper_New *self)
 {
     if (self->decomp != NULL) {
+        // deallocate the instance of class N_Qubit_Decomposition
         release_decomposition(self->decomp);
         self->decomp = NULL;
     }
-
     if (self->Umtx != NULL) {
+        // release the unitary to be decomposed
         Py_DECREF(self->Umtx);
         self->Umtx = NULL;
     }
-
     Py_TYPE(self)->tp_free((PyObject *) self);
 }
 
-/**
-@brief Specialized new function for N_Qubit_Decomposition
-*/
-static PyObject *
-qgd_N_Qubit_Decomposition_Wrapper_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
-{
-    static char *kwlist[] = {(char*)"Umtx", (char*)"optimize_layer_num", (char*)"config", (char*)"initial_guess", NULL};
-    
-    PyObject *Umtx_arg = NULL;
-    bool optimize_layer_num = false;
-    PyObject *config_arg = NULL;
-    int initial_guess_int = 0;
-    
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|bOi", kwlist,
-                                    &Umtx_arg, &optimize_layer_num, &config_arg, &initial_guess_int)) {
-        return NULL;
-    }
-
-    qgd_N_Qubit_Decomposition_Wrapper_New *self;
-    self = (qgd_N_Qubit_Decomposition_Wrapper_New *) type->tp_alloc(type, 0);
-    if (self != NULL) {
-        self->Umtx = NULL;
-        self->decomp = NULL;
-        
-        try {
-            Matrix Umtx_matrix = extract_matrix_from_args(Umtx_arg, &self->Umtx);
-            int qbit_num = (int)round(log2(Umtx_matrix.rows));
-            std::map<std::string, Config_Element> config = extract_config_from_args(config_arg);
-            guess_type initial_guess = extract_guess_type_from_args(initial_guess_int ? PyLong_FromLong(initial_guess_int) : NULL);
-            
-            self->decomp = new N_Qubit_Decomposition(Umtx_matrix, qbit_num, optimize_layer_num, config, initial_guess);
-        } catch (...) {
-            Py_DECREF(self);
-            PyErr_SetString(PyExc_Exception, "Failed to create N_Qubit_Decomposition instance");
-            return NULL;
-        }
-    }
-    
-    return (PyObject *) self;
-}
 
 /**
-@brief Specialized new function for N_Qubit_Decomposition_adaptive
-*/
-static PyObject *
-qgd_N_Qubit_Decomposition_adaptive_Wrapper_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
-{
-    static char *kwlist[] = {(char*)"Umtx", (char*)"level_limit", (char*)"level_limit_min", 
-                             (char*)"topology", (char*)"config", (char*)"accelerator_num", NULL};
-    
-    PyObject *Umtx_arg = NULL;
-    int level_limit = 3;
-    int level_limit_min = 1;
-    PyObject *topology_arg = NULL;
-    PyObject *config_arg = NULL;
-    int accelerator_num = 0;
-    
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|iiOOi", kwlist,
-                                    &Umtx_arg, &level_limit, &level_limit_min, 
-                                    &topology_arg, &config_arg, &accelerator_num)) {
-        return NULL;
-    }
-
-    qgd_N_Qubit_Decomposition_Wrapper_New *self;
-    self = (qgd_N_Qubit_Decomposition_Wrapper_New *) type->tp_alloc(type, 0);
-    if (self != NULL) {
-        self->Umtx = NULL;
-        self->decomp = NULL;
-        
-        try {
-            Matrix Umtx_matrix = extract_matrix_from_args(Umtx_arg, &self->Umtx);
-            int qbit_num = (int)round(log2(Umtx_matrix.rows));
-            std::map<std::string, Config_Element> config = extract_config_from_args(config_arg);
-            
-            // Default topology (empty for now)
-            std::vector<matrix_base<int>> topology_in;
-            // TODO: Parse topology_arg if provided
-            
-            self->decomp = new N_Qubit_Decomposition_adaptive(Umtx_matrix, qbit_num, level_limit, 
-                                                             level_limit_min, topology_in, config, accelerator_num);
-        } catch (...) {
-            Py_DECREF(self);
-            PyErr_SetString(PyExc_Exception, "Failed to create N_Qubit_Decomposition_adaptive instance");
-            return NULL;
-        }
-    }
-    
-    return (PyObject *) self;
-}
-
-/**
-@brief Specialized new function for N_Qubit_Decomposition_custom
-*/
-static PyObject *
-qgd_N_Qubit_Decomposition_custom_Wrapper_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
-{
-    static char *kwlist[] = {(char*)"Umtx", (char*)"optimize_layer_num", (char*)"config", 
-                             (char*)"initial_guess", (char*)"accelerator_num", NULL};
-    
-    PyObject *Umtx_arg = NULL;
-    bool optimize_layer_num = false;
-    PyObject *config_arg = NULL;
-    int initial_guess_int = 0;
-    int accelerator_num = 0;
-    
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|bOii", kwlist,
-                                    &Umtx_arg, &optimize_layer_num, &config_arg, 
-                                    &initial_guess_int, &accelerator_num)) {
-        return NULL;
-    }
-
-    qgd_N_Qubit_Decomposition_Wrapper_New *self;
-    self = (qgd_N_Qubit_Decomposition_Wrapper_New *) type->tp_alloc(type, 0);
-    if (self != NULL) {
-        self->Umtx = NULL;
-        self->decomp = NULL;
-        
-        try {
-            Matrix Umtx_matrix = extract_matrix_from_args(Umtx_arg, &self->Umtx);
-            int qbit_num = (int)round(log2(Umtx_matrix.rows));
-            std::map<std::string, Config_Element> config = extract_config_from_args(config_arg);
-            guess_type initial_guess = extract_guess_type_from_args(initial_guess_int ? PyLong_FromLong(initial_guess_int) : NULL);
-            
-            self->decomp = new N_Qubit_Decomposition_custom(Umtx_matrix, qbit_num, optimize_layer_num, 
-                                                           config, initial_guess, accelerator_num);
-        } catch (...) {
-            Py_DECREF(self);
-            PyErr_SetString(PyExc_Exception, "Failed to create N_Qubit_Decomposition_custom instance");
-            return NULL;
-        }
-    }
-    
-    return (PyObject *) self;
-}
-
-/**
-@brief Specialized new function for N_Qubit_Decomposition_Tree_Search
-*/
-static PyObject *
-qgd_N_Qubit_Decomposition_Tree_Search_Wrapper_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
-{
-    static char *kwlist[] = {(char*)"Umtx", (char*)"topology", (char*)"config", (char*)"accelerator_num", NULL};
-    
-    PyObject *Umtx_arg = NULL;
-    PyObject *topology_arg = NULL;
-    PyObject *config_arg = NULL;
-    int accelerator_num = 0;
-    
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|OOi", kwlist,
-                                    &Umtx_arg, &topology_arg, &config_arg, &accelerator_num)) {
-        return NULL;
-    }
-
-    qgd_N_Qubit_Decomposition_Wrapper_New *self;
-    self = (qgd_N_Qubit_Decomposition_Wrapper_New *) type->tp_alloc(type, 0);
-    if (self != NULL) {
-        self->Umtx = NULL;
-        self->decomp = NULL;
-        
-        try {
-            Matrix Umtx_matrix = extract_matrix_from_args(Umtx_arg, &self->Umtx);
-            int qbit_num = (int)round(log2(Umtx_matrix.rows));
-            std::map<std::string, Config_Element> config = extract_config_from_args(config_arg);
-            
-            // Default topology (empty for now)
-            std::vector<matrix_base<int>> topology_in;
-            // TODO: Parse topology_arg if provided
-            
-            self->decomp = new N_Qubit_Decomposition_Tree_Search(Umtx_matrix, qbit_num, topology_in, config, accelerator_num);
-        } catch (...) {
-            Py_DECREF(self);
-            PyErr_SetString(PyExc_Exception, "Failed to create N_Qubit_Decomposition_Tree_Search instance");
-            return NULL;
-        }
-    }
-    
-    return (PyObject *) self;
-}
-
-/**
-@brief Specialized new function for N_Qubit_Decomposition_Tabu_Search
-*/
-static PyObject *
-qgd_N_Qubit_Decomposition_Tabu_Search_Wrapper_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
-{
-    static char *kwlist[] = {(char*)"Umtx", (char*)"topology", (char*)"config", (char*)"accelerator_num", NULL};
-    
-    PyObject *Umtx_arg = NULL;
-    PyObject *topology_arg = NULL;
-    PyObject *config_arg = NULL;
-    int accelerator_num = 0;
-    
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|OOi", kwlist,
-                                    &Umtx_arg, &topology_arg, &config_arg, &accelerator_num)) {
-        return NULL;
-    }
-
-    qgd_N_Qubit_Decomposition_Wrapper_New *self;
-    self = (qgd_N_Qubit_Decomposition_Wrapper_New *) type->tp_alloc(type, 0);
-    if (self != NULL) {
-        self->Umtx = NULL;
-        self->decomp = NULL;
-        
-        try {
-            Matrix Umtx_matrix = extract_matrix_from_args(Umtx_arg, &self->Umtx);
-            int qbit_num = (int)round(log2(Umtx_matrix.rows));
-            std::map<std::string, Config_Element> config = extract_config_from_args(config_arg);
-            
-            // Default topology (empty for now)
-            std::vector<matrix_base<int>> topology_in;
-            // TODO: Parse topology_arg if provided
-            
-            self->decomp = new N_Qubit_Decomposition_Tabu_Search(Umtx_matrix, qbit_num, topology_in, config, accelerator_num);
-        } catch (...) {
-            Py_DECREF(self);
-            PyErr_SetString(PyExc_Exception, "Failed to create N_Qubit_Decomposition_Tabu_Search instance");
-            return NULL;
-        }
-    }
-    
-    return (PyObject *) self;
-}
-
-/**
-@brief Generic new method that does basic allocation
-*/
+ * @brief Allocate memory for new Python object
+ */
 static PyObject *
 qgd_N_Qubit_Decomposition_Wrapper_New_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
@@ -422,11 +385,7 @@ qgd_N_Qubit_Decomposition_Wrapper_New_new(PyTypeObject *type, PyObject *args, Py
     return (PyObject *) self;
 }
 
-static int
-qgd_N_Qubit_Decomposition_Wrapper_New_init(qgd_N_Qubit_Decomposition_Wrapper_New *self, PyObject *args, PyObject *kwds)
-{
-    return 0;
-}
+//////////////////////////////////////////////////////////////////
 
 // =========================================================================
 // METHOD IMPLEMENTATIONS - All methods from the method tables
@@ -2483,8 +2442,8 @@ static PyTypeObject qgd_##decomp_class##_Wrapper_Type = { \
     .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, \
     .tp_doc = #decomp_class " decomposition wrapper", \
     .tp_methods = qgd_##decomp_class##_methods, \
-    .tp_init = (initproc) qgd_N_Qubit_Decomposition_Wrapper_New_init, \
-    .tp_new = (newfunc) qgd_##decomp_class##_Wrapper_new, \
+    .tp_init = (initproc) qgd_##decomp_class##_Wrapper_init, \
+    .tp_new = (newfunc) qgd_N_Qubit_Decomposition_Wrapper_New_new, \
 };
 
 decomposition_wrapper_type_template(N_Qubit_Decomposition)
