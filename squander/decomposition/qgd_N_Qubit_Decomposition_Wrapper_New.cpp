@@ -1559,6 +1559,7 @@ qgd_N_Qubit_Decomposition_Wrapper_New_Upload_Umtx_to_DFE(qgd_N_Qubit_Decompositi
 static PyObject *
 qgd_N_Qubit_Decomposition_Wrapper_New_get_Trace_Offset(qgd_N_Qubit_Decomposition_Wrapper_New *self)
 {
+#ifdef __DFE__
     try {
         int trace_offset = self->decomp->get_trace_offset();
         return Py_BuildValue("i", trace_offset);
@@ -2131,7 +2132,6 @@ These methods are available for all decomposition classes
     {"get_Global_Phase", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_get_Global_Phase, METH_NOARGS, \
      "Call to get global phase"}, \
     {"set_Global_Phase", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_set_Global_Phase, METH_VARARGS, \
-<<<<<<< HEAD
      "Set global phase"}, \
     {"apply_Global_Phase_Factor", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_apply_Global_Phase_Factor, METH_NOARGS, \
      "Apply global phase factor"}, \
