@@ -1297,98 +1297,15 @@ qgd_N_Qubit_Decomposition_Wrapper_New_set_Global_Phase(qgd_N_Qubit_Decomposition
 }
 
 /**
-@brief Apply global phase factor (adaptive, tree)
+@brief Apply global phase factor to the unitary matrix
+@return Py_None on success, NULL on error
+@note applicable to: Decomposition, Adaptive, Custom, Tree Search, Tabu Search
 */
 static PyObject *
 qgd_N_Qubit_Decomposition_Wrapper_New_apply_Global_Phase_Factor(qgd_N_Qubit_Decomposition_Wrapper_New *self)
 {
-    if (self->decomp == NULL) {
-        PyErr_SetString(PyExc_RuntimeError, "Decomposition object is NULL");
-        return NULL;
-    }
-
     try {
-        // Try adaptive
-        N_Qubit_Decomposition_adaptive* adaptive_decomp = dynamic_cast<N_Qubit_Decomposition_adaptive*>(self->decomp);
-        if (adaptive_decomp != NULL) {
-            adaptive_decomp->apply_global_phase_factor();
-            Py_RETURN_NONE;
-        }
-
-        // Try tree search
-        N_Qubit_Decomposition_Tree_Search* tree_decomp = dynamic_cast<N_Qubit_Decomposition_Tree_Search*>(self->decomp);
-        if (tree_decomp != NULL) {
-            tree_decomp->apply_global_phase_factor();
-            Py_RETURN_NONE;
-        }
-
-        PyErr_SetString(PyExc_AttributeError, "apply_Global_Phase_Factor is only available for adaptive and tree search decompositions");
-        return NULL;
-    } catch (std::exception& e) {
-        PyErr_SetString(PyExc_Exception, e.what());
-        return NULL;
-    }
-}
-
-/**
-@brief Call to get the unitary matrix
-*/
-static PyObject *
-qgd_N_Qubit_Decomposition_Wrapper_New_get_Unitary(qgd_N_Qubit_Decomposition_Wrapper_New *self)
-{
-    if (self->decomp == NULL) {
-        PyErr_SetString(PyExc_RuntimeError, "Decomposition object is NULL");
-        return NULL;
-    }
-
-    try {
-        Matrix Umtx = self->decomp->get_Umtx();
-        return matrix_to_numpy(Umtx);
-    } catch (std::exception& e) {
-        PyErr_SetString(PyExc_Exception, e.what());
-        return NULL;
-    }
-}
-
-/**
-@brief Call to set the optimizer
-*/
-static PyObject *
-qgd_N_Qubit_Decomposition_Wrapper_New_set_Optimizer(qgd_N_Qubit_Decomposition_Wrapper_New *self, PyObject *args)
-{
-    if (self->decomp == NULL) {
-        PyErr_SetString(PyExc_RuntimeError, "Decomposition object is NULL");
-        return NULL;
-    }
-
-    const char* optimizer_str;
-    if (!PyArg_ParseTuple(args, "s", &optimizer_str)) {
-        return NULL;
-    }
-
-    try {
-        std::string optimizer(optimizer_str);
-        optimization_aglorithms optimizer_type;
-        if (optimizer == "ADAM") {
-            optimizer_type = ADAM;
-        } else if (optimizer == "BFGS") {
-            optimizer_type = BFGS;
-        } else if (optimizer == "BFGS2") {
-            optimizer_type = BFGS2;
-        } else if (optimizer == "ADAM_BATCHED") {
-            optimizer_type = ADAM_BATCHED;
-        } else if (optimizer == "AGENTS") {
-            optimizer_type = AGENTS;
-        } else if (optimizer == "COSINE") {
-            optimizer_type = COSINE;
-        } else if (optimizer == "AGENTS_COMBINED") {
-            optimizer_type = AGENTS_COMBINED;
-        } else {
-            PyErr_SetString(PyExc_ValueError, "Unknown optimizer type");
-            return NULL;
-        }
-
-        self->decomp->set_optimizer(optimizer_type);
+        self->decomp->apply_global_phase_factor();
         Py_RETURN_NONE;
     } catch (std::exception& e) {
         PyErr_SetString(PyExc_Exception, e.what());
@@ -1397,45 +1314,132 @@ qgd_N_Qubit_Decomposition_Wrapper_New_set_Optimizer(qgd_N_Qubit_Decomposition_Wr
 }
 
 /**
-@brief Set the number of maximum iterations (adaptive, tree, tabu)
+@brief Call to get the unitary matrix
+@return Numpy array representing the unitary matrix
+@note applicable to: Decomposition, Adaptive, Custom, Tree Search, Tabu Search
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_Wrapper_New_get_Unitary(qgd_N_Qubit_Decomposition_Wrapper_New *self)
+{
+    Matrix Unitary_mtx;
+    try {
+        Unitary_mtx = self->decomp->get_Umtx().copy();
+    }
+    catch (std::string err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    catch (...) {
+        std::string err("Invalid pointer to decomposition class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    // convert to numpy array
+    Unitary_mtx.set_owner(false);
+    PyObject *Unitary_py = matrix_to_numpy(Unitary_mtx);
+    return Unitary_py;
+}
+
+/**
+@brief Call to set the optimizer algorithm
+@param args Positional arguments
+@param kwds Keyword arguments (optimizer: string)
+@return Py_BuildValue("i", 0) on success, NULL on error
+@note applicable to: Decomposition, Adaptive, Custom, Tree Search, Tabu Search
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_Wrapper_New_set_Optimizer(qgd_N_Qubit_Decomposition_Wrapper_New *self, PyObject *args, PyObject *kwds)
+{
+    // The tuple of expected keywords
+    static char *kwlist[] = {(char*)"optimizer", NULL};
+
+    PyObject* optimizer_arg = NULL;
+
+    // parsing input arguments
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|O", kwlist, &optimizer_arg)) {
+        std::string err("Unsuccessful argument parsing");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+    if (optimizer_arg == NULL) {
+        std::string err("optimizer argument not set");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+    PyObject* optimizer_string = PyObject_Str(optimizer_arg);
+    PyObject* optimizer_string_unicode = PyUnicode_AsEncodedString(optimizer_string, "utf-8", "~E~");
+    const char* optimizer_C = PyBytes_AS_STRING(optimizer_string_unicode);
+
+    optimization_aglorithms qgd_optimizer;
+    if (strcmp("bfgs", optimizer_C) == 0 || strcmp("BFGS", optimizer_C) == 0) {
+        qgd_optimizer = BFGS;
+    }
+    else if (strcmp("adam", optimizer_C) == 0 || strcmp("ADAM", optimizer_C) == 0) {
+        qgd_optimizer = ADAM;
+    }
+    else if (strcmp("grad_descend", optimizer_C) == 0 || strcmp("GRAD_DESCEND", optimizer_C) == 0) {
+        qgd_optimizer = GRAD_DESCEND;
+    }
+    else if (strcmp("adam_batched", optimizer_C) == 0 || strcmp("ADAM_BATCHED", optimizer_C) == 0) {
+        qgd_optimizer = ADAM_BATCHED;
+    }
+    else if (strcmp("bfgs2", optimizer_C) == 0 || strcmp("BFGS2", optimizer_C) == 0) {
+        qgd_optimizer = BFGS2;
+    }
+    else if (strcmp("agents", optimizer_C) == 0 || strcmp("AGENTS", optimizer_C) == 0) {
+        qgd_optimizer = AGENTS;
+    }
+    else if (strcmp("cosine", optimizer_C) == 0 || strcmp("COSINE", optimizer_C) == 0) {
+        qgd_optimizer = COSINE;
+    }
+    else if (strcmp("grad_descend_phase_shift_rule", optimizer_C) == 0 || strcmp("GRAD_DESCEND_PARAMETER_SHIFT_RULE", optimizer_C) == 0) {
+        qgd_optimizer = GRAD_DESCEND_PARAMETER_SHIFT_RULE;
+    }
+    else if (strcmp("agents_combined", optimizer_C) == 0 || strcmp("AGENTS_COMBINED", optimizer_C) == 0) {
+        qgd_optimizer = AGENTS_COMBINED;
+    }
+    else if (strcmp("bayes_opt", optimizer_C) == 0 || strcmp("BAYES_OPT", optimizer_C) == 0) {
+        qgd_optimizer = BAYES_OPT;
+    }
+    else {
+        std::cout << "Wrong optimizer: " << optimizer_C << ". Using default: BFGS" << std::endl;
+        qgd_optimizer = BFGS;
+    }
+
+    try {
+        self->decomp->set_optimizer(qgd_optimizer);
+    }
+    catch (std::string err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        std::cout << err << std::endl;
+        return NULL;
+    }
+    catch(...) {
+        std::string err("Invalid pointer to decomposition class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    return Py_BuildValue("i", 0);
+}
+
+/**
+@brief Set the number of maximum iterations for optimization
+@param args Tuple containing max_iterations integer
+@return Py_None on success, NULL on error
+@note applicable to: Decomposition, Adaptive, Custom, Tree Search, Tabu Search
 */
 static PyObject *
 qgd_N_Qubit_Decomposition_Wrapper_New_set_Max_Iterations(qgd_N_Qubit_Decomposition_Wrapper_New *self, PyObject *args)
 {
-    if (self->decomp == NULL) {
-        PyErr_SetString(PyExc_RuntimeError, "Decomposition object is NULL");
-        return NULL;
-    }
-
     int max_iterations;
     if (!PyArg_ParseTuple(args, "i", &max_iterations)) {
-        return NULL;
+        return Py_BuildValue("i", -1);
     }
-
     try {
-        // Try adaptive
-        N_Qubit_Decomposition_adaptive* adaptive_decomp = dynamic_cast<N_Qubit_Decomposition_adaptive*>(self->decomp);
-        if (adaptive_decomp != NULL) {
-            adaptive_decomp->set_max_inner_iterations(max_iterations);
-            Py_RETURN_NONE;
-        }
-
-        // Try tree search
-        N_Qubit_Decomposition_Tree_Search* tree_decomp = dynamic_cast<N_Qubit_Decomposition_Tree_Search*>(self->decomp);
-        if (tree_decomp != NULL) {
-            tree_decomp->set_max_inner_iterations(max_iterations);
-            Py_RETURN_NONE;
-        }
-
-        // Try tabu search  
-        N_Qubit_Decomposition_Tabu_Search* tabu_decomp = dynamic_cast<N_Qubit_Decomposition_Tabu_Search*>(self->decomp);
-        if (tabu_decomp != NULL) {
-            tabu_decomp->set_max_inner_iterations(max_iterations);
-            Py_RETURN_NONE;
-        }
-
-        PyErr_SetString(PyExc_AttributeError, "set_Max_Iterations is only available for adaptive, tree search, and tabu search decompositions");
-        return NULL;
+        self->decomp->set_max_inner_iterations(max_iterations);
+        Py_RETURN_NONE;
     } catch (std::exception& e) {
         PyErr_SetString(PyExc_Exception, e.what());
         return NULL;
@@ -1443,23 +1447,42 @@ qgd_N_Qubit_Decomposition_Wrapper_New_set_Max_Iterations(qgd_N_Qubit_Decompositi
 }
 
 /**
-@brief Call to get the decomposed matrix
+@brief Call to get the matrix representation of the circuit with given parameters
+@param args Tuple containing parameters array (numpy array of doubles)
+@param kwds Optional keyword arguments (currently unused)
+@return Numpy array representing the unitary matrix of the parameterized circuit
+@note applicable to: Decomposition, Adaptive, Custom, Tree Search, Tabu Search
 */
 static PyObject *
 qgd_N_Qubit_Decomposition_Wrapper_New_get_Matrix(qgd_N_Qubit_Decomposition_Wrapper_New *self, PyObject *args, PyObject *kwds)
 {
-    if (self->decomp == NULL) {
-        PyErr_SetString(PyExc_RuntimeError, "Decomposition object is NULL");
-        return NULL;
+    PyArrayObject* parameters_arr = NULL;
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|O", &parameters_arr))
+        return Py_BuildValue("i", -1);
+
+    if (PyArray_IS_C_CONTIGUOUS(parameters_arr)) {
+        Py_INCREF(parameters_arr);
+    }
+    else {
+        parameters_arr = (PyArrayObject*)PyArray_FROM_OTF((PyObject*)parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
     }
 
-    try {
-        Matrix decomposed_matrix = self->decomp->get_decomposed_matrix();
-        return matrix_to_numpy(decomposed_matrix);
-    } catch (std::exception& e) {
-        PyErr_SetString(PyExc_Exception, e.what());
-        return NULL;
-    }
+    // get the C++ wrapper around the data
+    Matrix_real&& parameters_mtx = numpy2matrix_real(parameters_arr);
+
+    Matrix unitary_mtx;
+
+    unitary_mtx = self->decomp->get_matrix(parameters_mtx);
+
+    // convert to numpy array
+    unitary_mtx.set_owner(false);
+    PyObject *unitary_py = matrix_to_numpy(unitary_mtx);
+
+    Py_DECREF(parameters_arr);
+
+    return unitary_py;
 }
 
 // Additional methods for remaining functionality
