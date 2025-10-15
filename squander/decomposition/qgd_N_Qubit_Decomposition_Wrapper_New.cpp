@@ -1485,279 +1485,337 @@ qgd_N_Qubit_Decomposition_Wrapper_New_get_Matrix(qgd_N_Qubit_Decomposition_Wrapp
     return unitary_py;
 }
 
-// Additional methods for remaining functionality
-
 /**
-@brief Set the cost function variant
+@brief Call to set the cost function variant
+@param args Positional arguments
+@param kwds Keyword arguments (costfnc: integer)
+@return Py_BuildValue("i", 0) on success, NULL on error
+@note applicable to: Adaptive, Custom, Tree Search, Tabu Search
 */
 static PyObject *
-qgd_N_Qubit_Decomposition_Wrapper_New_set_Cost_Function_Variant(qgd_N_Qubit_Decomposition_Wrapper_New *self, PyObject *args)
+qgd_N_Qubit_Decomposition_Wrapper_New_set_Cost_Function_Variant(qgd_N_Qubit_Decomposition_Wrapper_New *self, PyObject *args, PyObject *kwds)
 {
-    if (self->decomp == NULL) {
-        PyErr_SetString(PyExc_RuntimeError, "Decomposition object is NULL");
+    // The tuple of expected keywords
+    static char *kwlist[] = {(char*)"costfnc", NULL};
+
+    int costfnc_arg = 0;
+
+    // parsing input arguments
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i", kwlist, &costfnc_arg)) {
+        std::string err("Unsuccessful argument parsing");
+        PyErr_SetString(PyExc_Exception, err.c_str());
         return NULL;
     }
 
-    int cost_function_variant;
-    if (!PyArg_ParseTuple(args, "i", &cost_function_variant)) {
-        return NULL;
-    }
+    cost_function_type qgd_costfnc = (cost_function_type)costfnc_arg;
 
     try {
-        self->decomp->set_cost_function_variant(cost_function_variant);
-        Py_RETURN_NONE;
-    } catch (std::exception& e) {
-        PyErr_SetString(PyExc_Exception, e.what());
+        self->decomp->set_cost_function_variant(qgd_costfnc);
+    }
+    catch (std::string err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        std::cout << err << std::endl;
         return NULL;
     }
+    catch(...) {
+        std::string err("Invalid pointer to decomposition class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    return Py_BuildValue("i", 0);
 }
 
 /**
-@brief Optimization problem method
+@brief Call to evaluate the optimization problem (cost function)
+@param args Tuple containing parameters array (numpy array of doubles)
+@return PyFloat with the cost function value
+@note applicable to: Decomposition, Adaptive, Custom, Tree Search, Tabu Search
 */
 static PyObject *
 qgd_N_Qubit_Decomposition_Wrapper_New_Optimization_Problem(qgd_N_Qubit_Decomposition_Wrapper_New *self, PyObject *args)
 {
-    if (self->decomp == NULL) {
-        PyErr_SetString(PyExc_RuntimeError, "Decomposition object is NULL");
+    PyArrayObject* parameters_arg = NULL;
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|O", &parameters_arg)) {
+        std::string err("Unsuccessful argument parsing not ");
+        PyErr_SetString(PyExc_Exception, err.c_str());
         return NULL;
     }
 
-    PyArrayObject* parameters_arg;
-    if (!PyArg_ParseTuple(args, "O", &parameters_arg)) {
+    // establish memory contiguous arrays for C calculations
+    if (PyArray_IS_C_CONTIGUOUS(parameters_arg) && PyArray_TYPE(parameters_arg) == NPY_FLOAT64) {
+        Py_INCREF(parameters_arg);
+    }
+    else if (PyArray_TYPE(parameters_arg) == NPY_FLOAT64) {
+        parameters_arg = (PyArrayObject*)PyArray_FROM_OTF((PyObject*)parameters_arg, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
+    }
+    else {
+        std::string err("Parameters should be should be real (given in float64 format)");
+        PyErr_SetString(PyExc_Exception, err.c_str());
         return NULL;
     }
+
+    Matrix_real parameters_mtx = numpy2matrix_real(parameters_arg);
+    double f0;
 
     try {
-        PyArrayObject* params_numpy = (PyArrayObject*)PyArray_FROM_OTF((PyObject*)parameters_arg, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
-        if (params_numpy == NULL) {
-            PyErr_SetString(PyExc_ValueError, "Failed to convert to numpy array");
-            return NULL;
-        }
-        
-        Matrix_real parameters = numpy2matrix_real(params_numpy);
-        Py_DECREF(params_numpy);
-        
-        double result = self->decomp->optimization_problem(parameters);
-        return PyFloat_FromDouble(result);
-    } catch (std::exception& e) {
-        PyErr_SetString(PyExc_Exception, e.what());
+        f0 = self->decomp->optimization_problem(parameters_mtx);
+    }
+    catch (std::string err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
         return NULL;
     }
+    catch (...) {
+        std::string err("Invalid pointer to decomposition class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+    Py_DECREF(parameters_arg);
+
+    return Py_BuildValue("d", f0);
 }
 
 /**
-@brief Optimization problem combined unitary method (adaptive, tree, tabu)
+@brief Call to evaluate the optimization problem with unitary and derivatives
+@param args Tuple containing parameters array (numpy array of doubles)
+@return Tuple (unitary matrix, list of unitary derivatives)
+@note applicable to: Decomposition, Adaptive, Custom, Tree Search, Tabu Search
 */
 static PyObject *
 qgd_N_Qubit_Decomposition_Wrapper_New_Optimization_Problem_Combined_Unitary(qgd_N_Qubit_Decomposition_Wrapper_New *self, PyObject *args)
 {
-    if (self->decomp == NULL) {
-        PyErr_SetString(PyExc_RuntimeError, "Decomposition object is NULL");
+    PyArrayObject* parameters_arg = NULL;
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|O", &parameters_arg)) {
+        std::string err("Unsuccessful argument parsing not ");
+        PyErr_SetString(PyExc_Exception, err.c_str());
         return NULL;
     }
 
-    PyArrayObject* parameters_arg;
-    if (!PyArg_ParseTuple(args, "O", &parameters_arg)) {
+    // establish memory contiguous arrays for C calculations
+    if (PyArray_IS_C_CONTIGUOUS(parameters_arg) && PyArray_TYPE(parameters_arg) == NPY_FLOAT64) {
+        Py_INCREF(parameters_arg);
+    }
+    else if (PyArray_TYPE(parameters_arg) == NPY_FLOAT64) {
+        parameters_arg = (PyArrayObject*)PyArray_FROM_OTF((PyObject*)parameters_arg, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
+    }
+    else {
+        std::string err("Parameters should be should be real (given in float64 format)");
+        PyErr_SetString(PyExc_Exception, err.c_str());
         return NULL;
     }
+
+    Matrix_real parameters_mtx = numpy2matrix_real(parameters_arg);
+    Matrix Umtx;
+    std::vector<Matrix> Umtx_deriv;
 
     try {
-        // Try adaptive
-        N_Qubit_Decomposition_adaptive* adaptive_decomp = dynamic_cast<N_Qubit_Decomposition_adaptive*>(self->decomp);
-        if (adaptive_decomp != NULL) {
-            PyArrayObject* params_numpy = (PyArrayObject*)PyArray_FROM_OTF((PyObject*)parameters_arg, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
-            if (params_numpy == NULL) {
-                PyErr_SetString(PyExc_ValueError, "Failed to convert to numpy array");
-                return NULL;
-            }
-            Matrix_real parameters = numpy2matrix_real(params_numpy);
-            Py_DECREF(params_numpy);
-            
-            double result = adaptive_decomp->optimization_problem_combined_unitary(parameters);
-            return PyFloat_FromDouble(result);
-        }
-
-        // Try tree search
-        N_Qubit_Decomposition_Tree_Search* tree_decomp = dynamic_cast<N_Qubit_Decomposition_Tree_Search*>(self->decomp);
-        if (tree_decomp != NULL) {
-            PyArrayObject* params_numpy = (PyArrayObject*)PyArray_FROM_OTF((PyObject*)parameters_arg, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
-            if (params_numpy == NULL) {
-                PyErr_SetString(PyExc_ValueError, "Failed to convert to numpy array");
-                return NULL;
-            }
-            Matrix_real parameters = numpy2matrix_real(params_numpy);
-            Py_DECREF(params_numpy);
-            
-            double result = tree_decomp->optimization_problem_combined_unitary(parameters);
-            return PyFloat_FromDouble(result);
-        }
-
-        // Try tabu search
-        N_Qubit_Decomposition_Tabu_Search* tabu_decomp = dynamic_cast<N_Qubit_Decomposition_Tabu_Search*>(self->decomp);
-        if (tabu_decomp != NULL) {
-            PyArrayObject* params_numpy = (PyArrayObject*)PyArray_FROM_OTF((PyObject*)parameters_arg, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
-            if (params_numpy == NULL) {
-                PyErr_SetString(PyExc_ValueError, "Failed to convert to numpy array");
-                return NULL;
-            }
-            Matrix_real parameters = numpy2matrix_real(params_numpy);
-            Py_DECREF(params_numpy);
-            
-            double result = tabu_decomp->optimization_problem_combined_unitary(parameters);
-            return PyFloat_FromDouble(result);
-        }
-
-        PyErr_SetString(PyExc_AttributeError, "Optimization_Problem_Combined_Unitary is only available for adaptive, tree search, and tabu search decompositions");
-        return NULL;
-    } catch (std::exception& e) {
-        PyErr_SetString(PyExc_Exception, e.what());
+        self->decomp->optimization_problem_combined_unitary(parameters_mtx, Umtx, Umtx_deriv);
+    }
+    catch (std::string err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
         return NULL;
     }
+    catch (...) {
+        std::string err("Invalid pointer to decomposition class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+    // convert to numpy array
+    Umtx.set_owner(false);
+    PyObject *unitary_py = matrix_to_numpy(Umtx);
+    PyObject* graduni_py = PyList_New(Umtx_deriv.size());
+    for (size_t i = 0; i < Umtx_deriv.size(); i++) {
+        Umtx_deriv[i].set_owner(false);
+        PyList_SetItem(graduni_py, i, matrix_to_numpy(Umtx_deriv[i]));
+    }
+
+    Py_DECREF(parameters_arg);
+
+    PyObject* p = Py_BuildValue("(OO)", unitary_py, graduni_py);
+    Py_DECREF(unitary_py);
+    Py_DECREF(graduni_py);
+    return p;
 }
 
 /**
-@brief Optimization problem gradient method
+@brief Call to evaluate the gradient of the optimization problem
+@param args Tuple containing parameters array (numpy array of doubles)
+@return Numpy array representing the gradient
+@note applicable to: Decomposition, Adaptive, Custom, Tree Search, Tabu Search
 */
 static PyObject *
 qgd_N_Qubit_Decomposition_Wrapper_New_Optimization_Problem_Grad(qgd_N_Qubit_Decomposition_Wrapper_New *self, PyObject *args)
 {
-    if (self->decomp == NULL) {
-        PyErr_SetString(PyExc_RuntimeError, "Decomposition object is NULL");
+    PyArrayObject* parameters_arg = NULL;
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|O", &parameters_arg)) {
+        std::string err("Unsuccessful argument parsing not ");
+        PyErr_SetString(PyExc_Exception, err.c_str());
         return NULL;
     }
 
-    PyArrayObject* parameters_arg;
-    if (!PyArg_ParseTuple(args, "O", &parameters_arg)) {
+    // establish memory contiguous arrays for C calculations
+    if (PyArray_IS_C_CONTIGUOUS(parameters_arg) && PyArray_TYPE(parameters_arg) == NPY_FLOAT64) {
+        Py_INCREF(parameters_arg);
+    }
+    else if (PyArray_TYPE(parameters_arg) == NPY_FLOAT64) {
+        parameters_arg = (PyArrayObject*)PyArray_FROM_OTF((PyObject*)parameters_arg, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
+    }
+    else {
+        std::string err("Parameters should be should be real (given in float64 format)");
+        PyErr_SetString(PyExc_Exception, err.c_str());
         return NULL;
     }
+
+    Matrix_real parameters_mtx = numpy2matrix_real(parameters_arg);
+    Matrix_real grad_mtx(parameters_mtx.size(), 1);
 
     try {
-        PyArrayObject* params_numpy = (PyArrayObject*)PyArray_FROM_OTF((PyObject*)parameters_arg, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
-        if (params_numpy == NULL) {
-            PyErr_SetString(PyExc_ValueError, "Failed to convert to numpy array");
-            return NULL;
-        }
-        
-        Matrix_real parameters = numpy2matrix_real(params_numpy);
-        Py_DECREF(params_numpy);
-        
-        Matrix_real grad = self->decomp->optimization_problem_grad(parameters);
-        return matrix_real_to_numpy(grad);
-    } catch (std::exception& e) {
-        PyErr_SetString(PyExc_Exception, e.what());
+        self->decomp->optimization_problem_grad(parameters_mtx, self->decomp, grad_mtx);
+    }
+    catch (std::string err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
         return NULL;
     }
+    catch (...) {
+        std::string err("Invalid pointer to decomposition class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+    // convert to numpy array
+    grad_mtx.set_owner(false);
+    PyObject *grad_py = matrix_real_to_numpy(grad_mtx);
+
+    Py_DECREF(parameters_arg);
+
+    return grad_py;
 }
 
 /**
-@brief Optimization problem combined method
+@brief Call to evaluate the optimization problem with cost and gradient combined
+@param args Tuple containing parameters array (numpy array of doubles)
+@return Tuple (cost value, gradient array)
+@note applicable to: Decomposition, Adaptive, Custom, Tree Search, Tabu Search
 */
 static PyObject *
 qgd_N_Qubit_Decomposition_Wrapper_New_Optimization_Problem_Combined(qgd_N_Qubit_Decomposition_Wrapper_New *self, PyObject *args)
 {
-    if (self->decomp == NULL) {
-        PyErr_SetString(PyExc_RuntimeError, "Decomposition object is NULL");
+    PyArrayObject* parameters_arg = NULL;
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|O", &parameters_arg)) {
+        std::string err("Unsuccessful argument parsing not ");
+        PyErr_SetString(PyExc_Exception, err.c_str());
         return NULL;
     }
 
-    PyArrayObject* parameters_arg;
-    if (!PyArg_ParseTuple(args, "O", &parameters_arg)) {
+    // establish memory contiguous arrays for C calculations
+    if (PyArray_IS_C_CONTIGUOUS(parameters_arg) && PyArray_TYPE(parameters_arg) == NPY_FLOAT64) {
+        Py_INCREF(parameters_arg);
+    }
+    else if (PyArray_TYPE(parameters_arg) == NPY_FLOAT64) {
+        parameters_arg = (PyArrayObject*)PyArray_FROM_OTF((PyObject*)parameters_arg, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
+    }
+    else {
+        std::string err("Parameters should be should be real (given in float64 format)");
+        PyErr_SetString(PyExc_Exception, err.c_str());
         return NULL;
     }
+
+    Matrix_real parameters_mtx = numpy2matrix_real(parameters_arg);
+    Matrix_real grad_mtx(parameters_mtx.size(), 1);
+    double f0;
 
     try {
-        PyArrayObject* params_numpy = (PyArrayObject*)PyArray_FROM_OTF((PyObject*)parameters_arg, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
-        if (params_numpy == NULL) {
-            PyErr_SetString(PyExc_ValueError, "Failed to convert to numpy array");
-            return NULL;
-        }
-        
-        Matrix_real parameters = numpy2matrix_real(params_numpy);
-        Py_DECREF(params_numpy);
-        
-        Matrix_real grad;
-        double cost = self->decomp->optimization_problem_combined(parameters, grad);
-        
-        PyObject* result_tuple = PyTuple_New(2);
-        PyTuple_SetItem(result_tuple, 0, PyFloat_FromDouble(cost));
-        PyTuple_SetItem(result_tuple, 1, matrix_real_to_numpy(grad));
-        
-        return result_tuple;
-    } catch (std::exception& e) {
-        PyErr_SetString(PyExc_Exception, e.what());
+        self->decomp->optimization_problem_combined(parameters_mtx, &f0, grad_mtx);
+    }
+    catch (std::string err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
         return NULL;
     }
+    catch (...) {
+        std::string err("Invalid pointer to decomposition class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+    // convert to numpy array
+    grad_mtx.set_owner(false);
+    PyObject *grad_py = matrix_real_to_numpy(grad_mtx);
+
+    Py_DECREF(parameters_arg);
+
+    PyObject* p = Py_BuildValue("(dO)", f0, grad_py);
+    Py_DECREF(grad_py);
+    return p;
 }
 
 /**
-@brief Optimization problem batch method (adaptive, tree, tabu)
+@brief Call to evaluate the optimization problem for batched parameters
+@param args Tuple containing parameters matrix (numpy array of doubles, each row is a parameter set)
+@return Numpy array of cost function values
+@note applicable to: Decomposition, Adaptive, Custom, Tree Search, Tabu Search
 */
 static PyObject *
 qgd_N_Qubit_Decomposition_Wrapper_New_Optimization_Problem_Batch(qgd_N_Qubit_Decomposition_Wrapper_New *self, PyObject *args)
 {
-    if (self->decomp == NULL) {
-        PyErr_SetString(PyExc_RuntimeError, "Decomposition object is NULL");
+    PyArrayObject* parameters_arg = NULL;
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|O", &parameters_arg)) {
+        std::string err("Unsuccessful argument parsing not ");
+        PyErr_SetString(PyExc_Exception, err.c_str());
         return NULL;
     }
 
-    PyArrayObject* parameters_arg;
-    if (!PyArg_ParseTuple(args, "O", &parameters_arg)) {
+    // establish memory contiguous arrays for C calculations
+    if (PyArray_IS_C_CONTIGUOUS(parameters_arg) && PyArray_TYPE(parameters_arg) == NPY_FLOAT64) {
+        Py_INCREF(parameters_arg);
+    }
+    else if (PyArray_TYPE(parameters_arg) == NPY_FLOAT64) {
+        parameters_arg = (PyArrayObject*)PyArray_FROM_OTF((PyObject*)parameters_arg, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
+    }
+    else {
+        std::string err("Parameters should be should be real (given in float64 format)");
+        PyErr_SetString(PyExc_Exception, err.c_str());
         return NULL;
     }
+
+    Matrix_real parameters_mtx = numpy2matrix_real(parameters_arg);
+    Matrix_real result_mtx;
 
     try {
-        // Try adaptive
-        N_Qubit_Decomposition_adaptive* adaptive_decomp = dynamic_cast<N_Qubit_Decomposition_adaptive*>(self->decomp);
-        if (adaptive_decomp != NULL) {
-            PyArrayObject* params_numpy = (PyArrayObject*)PyArray_FROM_OTF((PyObject*)parameters_arg, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
-            if (params_numpy == NULL) {
-                PyErr_SetString(PyExc_ValueError, "Failed to convert to numpy array");
-                return NULL;
-            }
-            Matrix_real parameters = numpy2matrix_real(params_numpy);
-            Py_DECREF(params_numpy);
-            
-            double result = adaptive_decomp->optimization_problem_batch(parameters);
-            return PyFloat_FromDouble(result);
+        std::vector<Matrix_real> parameters_vec;
+        parameters_vec.resize(parameters_mtx.rows);
+        for (int row_idx = 0; row_idx < parameters_mtx.rows; row_idx++) {
+            parameters_vec[row_idx] = Matrix_real(parameters_mtx.get_data() + row_idx * parameters_mtx.stride, 1, parameters_mtx.cols, parameters_mtx.stride);
         }
-
-        // Try tree search
-        N_Qubit_Decomposition_Tree_Search* tree_decomp = dynamic_cast<N_Qubit_Decomposition_Tree_Search*>(self->decomp);
-        if (tree_decomp != NULL) {
-            PyArrayObject* params_numpy = (PyArrayObject*)PyArray_FROM_OTF((PyObject*)parameters_arg, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
-            if (params_numpy == NULL) {
-                PyErr_SetString(PyExc_ValueError, "Failed to convert to numpy array");
-                return NULL;
-            }
-            Matrix_real parameters = numpy2matrix_real(params_numpy);
-            Py_DECREF(params_numpy);
-            
-            double result = tree_decomp->optimization_problem_batch(parameters);
-            return PyFloat_FromDouble(result);
-        }
-
-        // Try tabu search
-        N_Qubit_Decomposition_Tabu_Search* tabu_decomp = dynamic_cast<N_Qubit_Decomposition_Tabu_Search*>(self->decomp);
-        if (tabu_decomp != NULL) {
-            PyArrayObject* params_numpy = (PyArrayObject*)PyArray_FROM_OTF((PyObject*)parameters_arg, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
-            if (params_numpy == NULL) {
-                PyErr_SetString(PyExc_ValueError, "Failed to convert to numpy array");
-                return NULL;
-            }
-            Matrix_real parameters = numpy2matrix_real(params_numpy);
-            Py_DECREF(params_numpy);
-            
-            double result = tabu_decomp->optimization_problem_batch(parameters);
-            return PyFloat_FromDouble(result);
-        }
-
-        PyErr_SetString(PyExc_AttributeError, "Optimization_Problem_Batch is only available for adaptive, tree search, and tabu search decompositions");
-        return NULL;
-    } catch (std::exception& e) {
-        PyErr_SetString(PyExc_Exception, e.what());
+        result_mtx = self->decomp->optimization_problem_batched(parameters_vec);
+    }
+    catch (std::string err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
         return NULL;
     }
+    catch (...) {
+        std::string err("Invalid pointer to decomposition class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+    // convert to numpy array
+    result_mtx.set_owner(false);
+    PyObject *result_py = matrix_real_to_numpy(result_mtx);
+
+    Py_DECREF(parameters_arg);
+
+    return result_py;
 }
 
 /**
