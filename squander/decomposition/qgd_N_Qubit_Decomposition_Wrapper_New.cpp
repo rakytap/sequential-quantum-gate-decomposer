@@ -1027,50 +1027,77 @@ qgd_N_Qubit_Decomposition_Wrapper_New_apply_Imported_Gate_Structure(qgd_N_Qubit_
 
 /**
 @brief Wrapper function to set custom gate structure for the decomposition.
-@param args PyObject containing either a dictionary {int: Gates_block} (Decomposition) or a single gate structure (Adaptive/Custom)
-@note applicable to: Decomposition, Adaptive, Custom
+@param self A pointer pointing to an instance of the class qgd_N_Qubit_Decomposition_Wrapper_New.
+@param args PyObject containing either a dictionary {int: Gates_block} (Decomposition only) or a single gate structure (all types)
+@return Returns with zero on success.
+@note applicable to: Decomposition (both map and single), Adaptive, Custom, Tree Search, Tabu Search (single only)
 */
 static PyObject *
 qgd_N_Qubit_Decomposition_Wrapper_New_set_Gate_Structure(qgd_N_Qubit_Decomposition_Wrapper_New *self, PyObject *args)
 {
     // initiate variables for input arguments
     PyObject* gate_structure_py; 
+    
     // parsing input arguments
-    if (!PyArg_ParseTuple(args, "|O", &gate_structure_py )) {
+    if (!PyArg_ParseTuple(args, "|O", &gate_structure_py)) {
         return Py_BuildValue("i", -1);
     }
     
-    // Check if input is a dictionary (Decomposiion pattern ONLY)
+    // Check if input is a dictionary (map<int, Gates_block*> version: N_Qubit_Decomposition ONLY)
     if (PyDict_Check(gate_structure_py)) {
         PyObject *key = NULL, *value = NULL;
         Py_ssize_t pos = 0;
         std::map<int, Gates_block*> gate_structure;
+        
         while (PyDict_Next(gate_structure_py, &pos, &key, &value)) {
             // convert key from PyObject to int
-            assert(PyLong_Check(key) == 1);
-            int key_int = (int) PyLong_AsLong(key);
+            if (!PyLong_Check(key)) {
+                PyErr_SetString(PyExc_TypeError, "Dictionary keys must be integers");
+                return NULL;
+            }
+            int key_int = (int)PyLong_AsLong(key);
             // convert value from PyObject to qgd_Circuit_Wrapper
-            qgd_Circuit_Wrapper* qgd_op_block = (qgd_Circuit_Wrapper*) value;
-            gate_structure.insert( std::pair<int, Gates_block*>( key_int, qgd_op_block->gate ));
+            qgd_Circuit_Wrapper* qgd_op_block = (qgd_Circuit_Wrapper*)value;
+            gate_structure.insert(std::pair<int, Gates_block*>(key_int, qgd_op_block->gate));
         }
+        
         // The map version is only available in base N_Qubit_Decomposition class
         N_Qubit_Decomposition* base_decomp = dynamic_cast<N_Qubit_Decomposition*>(self->decomp);
         if (base_decomp != NULL) {
-            base_decomp->set_custom_gate_structure( gate_structure );
-            return Py_BuildValue("i", 0);
+            try {
+                base_decomp->set_custom_gate_structure(gate_structure);
+                return Py_BuildValue("i", 0);
+            } catch (std::string err) {
+                PyErr_SetString(PyExc_Exception, err.c_str());
+                return NULL;
+            } catch (std::exception& e) {
+                PyErr_SetString(PyExc_Exception, e.what());
+                return NULL;
+            } catch (...) {
+                std::string err("Invalid pointer to decomposition class");
+                PyErr_SetString(PyExc_Exception, err.c_str());
+                return NULL;
+            }
         }
         PyErr_SetString(PyExc_AttributeError, "Dictionary-based set_Gate_Structure is only available for N_Qubit_Decomposition");
         return NULL;
     }
-
-    // Adaptive, Custom pattern (single gate structure)
-    qgd_Circuit_Wrapper* qgd_op_block = (qgd_Circuit_Wrapper*) gate_structure_py;
-    return visit_decomposition<N_Qubit_Decomposition_adaptive, N_Qubit_Decomposition_custom>(
-        self->decomp, 
-        [&qgd_op_block](auto* decomp) {
-            decomp->set_custom_gate_structure(qgd_op_block->gate);
-        }
-    );
+    
+    qgd_Circuit_Wrapper* qgd_op_block = (qgd_Circuit_Wrapper*)gate_structure_py;
+    try {
+        self->decomp->set_custom_gate_structure(qgd_op_block->gate);
+        return Py_BuildValue("i", 0);
+    } catch (std::string err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    } catch (std::exception& e) {
+        PyErr_SetString(PyExc_Exception, e.what());
+        return NULL;
+    } catch (...) {
+        std::string err("Invalid pointer to decomposition class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
 }
 
 /**
