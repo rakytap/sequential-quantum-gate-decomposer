@@ -122,15 +122,6 @@ std::map<std::string, Config_Element> extract_config(PyObject* config_arg) {
     return config;
 }
 
-/**
- * @brief Validate qbit_num
- */
-void validate_qbit_num(int qbit_num) {
-    if (qbit_num <= 0) {
-        throw std::runtime_error("qbit_num must be positive, got " + std::to_string(qbit_num));
-    }
-}
-
 //////////////////////////////////////////////////////////////////
 
 static int 
@@ -154,7 +145,6 @@ qgd_N_Qubit_Decomposition_Wrapper_init(qgd_N_Qubit_Decomposition_Wrapper_New* se
 
     try {
         Matrix Umtx_mtx = extract_matrix(Umtx_arg, &self->Umtx);
-        validate_qbit_num(qbit_num);
         guess_type guess = extract_guess_type(initial_guess);
         std::map<std::string, Config_Element> config; // empty for base
 
@@ -171,8 +161,8 @@ static int
 qgd_N_Qubit_Decomposition_adaptive_Wrapper_init(qgd_N_Qubit_Decomposition_Wrapper_New* self, PyObject* args, PyObject* kwds)
 {
     static char* kwlist[] = {
-        (char*)"Umtx", (char*)"qbit_num", (char*)"level_limit", 
-        (char*)"level_limit_min", (char*)"topology", (char*)"config", 
+        (char*)"Umtx", (char*)"qbit_num", (char*)"level_limit_min", 
+        (char*)"method", (char*)"topology", (char*)"config", 
         (char*)"accelerator_num", NULL
     };
     
@@ -188,7 +178,6 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_init(qgd_N_Qubit_Decomposition_Wrappe
 
     try {
         Matrix Umtx_mtx = extract_matrix(Umtx_arg, &self->Umtx);
-        validate_qbit_num(qbit_num);
         auto topology_cpp = extract_topology(topology);
         auto config = extract_config(config_arg);
         
@@ -224,7 +213,6 @@ qgd_N_Qubit_Decomposition_custom_Wrapper_init(qgd_N_Qubit_Decomposition_Wrapper_
 
     try {
         Matrix Umtx_mtx = extract_matrix(Umtx_arg, &self->Umtx);
-        validate_qbit_num(qbit_num);
         guess_type guess = extract_guess_type(initial_guess);
         auto config = extract_config(config_arg);
         
@@ -257,7 +245,6 @@ static int search_wrapper_init(qgd_N_Qubit_Decomposition_Wrapper_New* self, PyOb
     
     try {
         Matrix Umtx_mtx = extract_matrix(Umtx_arg, &self->Umtx);
-        validate_qbit_num(qbit_num);
         auto topology_cpp = extract_topology(topology);
         auto config = extract_config(config_arg);
         
