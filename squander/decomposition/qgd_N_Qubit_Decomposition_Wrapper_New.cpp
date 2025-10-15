@@ -2068,13 +2068,13 @@ These methods are available for all decomposition classes
      "Apply global phase factor"}, \
     {"get_Unitary", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_get_Unitary, METH_NOARGS, \
      "Get Unitary Matrix"}, \
-    {"set_Optimizer", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_set_Optimizer, METH_VARARGS, \
+    {"set_Optimizer", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_set_Optimizer, METH_VARARGS | METH_KEYWORDS, \
      "Set the optimizer method"}, \
-    {"set_Max_Iterations", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_set_Max_Iterations, METH_VARARGS, \
+    {"set_Max_Iterations", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_set_Max_Iterations, METH_VARARGS | METH_KEYWORDS, \
      "Set the number of maximum iterations"}, \
     {"get_Matrix", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_get_Matrix, METH_VARARGS | METH_KEYWORDS, \
      "Method to retrieve the unitary of the circuit"}, \
-    {"set_Cost_Function_Variant", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_set_Cost_Function_Variant, METH_VARARGS, \
+    {"set_Cost_Function_Variant", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_set_Cost_Function_Variant, METH_VARARGS | METH_KEYWORDS, \
      "Set the cost function variant"}, \
     {"Optimization_Problem", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_Optimization_Problem, METH_VARARGS, \
      "Optimization problem method"}, \
@@ -2090,7 +2090,7 @@ These methods are available for all decomposition classes
      "Upload unitary matrix to DFE"}, \
     {"get_Trace_Offset", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_get_Trace_Offset, METH_NOARGS, \
      "Get trace offset"}, \
-    {"set_Trace_Offset", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_set_Trace_Offset, METH_VARARGS, \
+    {"set_Trace_Offset", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_set_Trace_Offset, METH_VARARGS | METH_KEYWORDS, \
      "Set trace offset"}, \
     {"get_Decomposition_Error", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_get_Decomposition_Error, METH_NOARGS, \
      "Get decomposition error"}, \
