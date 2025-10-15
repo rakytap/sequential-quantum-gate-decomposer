@@ -2208,16 +2208,16 @@ decomposition_wrapper_type_template(N_Qubit_Decomposition_Tabu_Search)
 /**
 @brief Structure containing metadata about the module.
 */
-static PyModuleDef qgd_N_Qubit_Decomposition_Wrapper_module = {
+static PyModuleDef qgd_N_Qubit_Decomposition_Wrapper_New_module = {
     PyModuleDef_HEAD_INIT,
-    .m_name = "qgd_N_Qubit_Decomposition_Wrapper",
+    .m_name = "qgd_N_Qubit_Decomposition_Wrapper_New",
     .m_doc = "Python binding for N-Qubit Decomposition wrapper module",
     .m_size = -1,
 };
 
 #define Py_INCREF_template(decomp_name) \
     Py_INCREF(&qgd_##decomp_name##_Wrapper_Type); \
-    if (PyModule_AddObject(m, #decomp_name, (PyObject *) &qgd_##decomp_name##_Wrapper_Type) < 0) { \
+    if (PyModule_AddObject(m, "qgd_" #decomp_name, (PyObject *) &qgd_##decomp_name##_Wrapper_Type) < 0) { \
         Py_DECREF(&qgd_##decomp_name##_Wrapper_Type); \
         Py_DECREF(m); \
         return NULL; \
@@ -2227,7 +2227,7 @@ static PyModuleDef qgd_N_Qubit_Decomposition_Wrapper_module = {
 @brief Method called when the Python module is initialized
 */
 PyMODINIT_FUNC
-PyInit_qgd_N_Qubit_Decomposition_Wrapper(void)
+PyInit_qgd_N_Qubit_Decomposition_Wrapper_New(void)
 {
     PyObject *m;
     
@@ -2242,7 +2242,7 @@ PyInit_qgd_N_Qubit_Decomposition_Wrapper(void)
         return NULL;
     }
 
-    m = PyModule_Create(&qgd_N_Qubit_Decomposition_Wrapper_module);
+    m = PyModule_Create(&qgd_N_Qubit_Decomposition_Wrapper_New_module);
     if (m == NULL)
         return NULL;
 
