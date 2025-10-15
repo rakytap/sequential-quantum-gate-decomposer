@@ -1142,22 +1142,23 @@ qgd_N_Qubit_Decomposition_Wrapper_New_get_Num_of_Iters(qgd_N_Qubit_Decomposition
 static PyObject *
 qgd_N_Qubit_Decomposition_Wrapper_New_set_Unitary(qgd_N_Qubit_Decomposition_Wrapper_New *self, PyObject *args)
 {
+    if ( self->Umtx != NULL ) {
+        // release the unitary to be decomposed
+        Py_DECREF(self->Umtx);    
+        self->Umtx = NULL;
+    }
 
-       if ( self->Umtx != NULL ) {
-           // release the unitary to be decomposed
-           Py_DECREF(self->Umtx);    
-           self->Umtx = NULL;
-       }
-
-       PyArrayObject *Umtx_arg = NULL;
-       //Parse arguments 
-       if (!PyArg_ParseTuple(args, "|O", &Umtx_arg )) return Py_BuildValue("i", -1);
-	   
-       // convert python object array to numpy C API array
-       if ( Umtx_arg == NULL ) {
-           PyErr_SetString(PyExc_Exception, "Umtx argument in empty");
-           return NULL;
-       }
+    PyArrayObject *Umtx_arg = NULL;
+    //Parse arguments 
+    if (!PyArg_ParseTuple(args, "|O", &Umtx_arg )) {
+        return Py_BuildValue("i", -1);
+    }
+    
+    // convert python object array to numpy C API array
+    if ( Umtx_arg == NULL ) {
+        PyErr_SetString(PyExc_Exception, "Umtx argument in empty");
+        return NULL;
+    }
 	
 	self->Umtx = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)Umtx_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
 
@@ -1166,11 +1167,8 @@ qgd_N_Qubit_Decomposition_Wrapper_New_set_Unitary(qgd_N_Qubit_Decomposition_Wrap
 	    std::cout << "Umtx is not memory contiguous" << std::endl;
 	}
 
-
 	// create QGD version of the Umtx
-	Matrix Umtx_mtx = numpy2matrix(self->Umtx);
-    
-    // Use visitor for adaptive, tree, tabu only
+	Matrix Umtx_mtx = numpy2matrix(self->Umtx);    
     return visit_decomposition<
         N_Qubit_Decomposition_adaptive, 
         N_Qubit_Decomposition_Tree_Search,
@@ -1181,47 +1179,22 @@ qgd_N_Qubit_Decomposition_Wrapper_New_set_Unitary(qgd_N_Qubit_Decomposition_Wrap
 }
 
 /**
-@brief Export unitary matrix (adaptive, tree, tabu)
+@brief Export unitary matrix to binary file
+@param args Tuple containing filename string
+@return Py_None on success, NULL on error
+@note applicable to: Decomposition, Adaptive, Custom, Tree Search, Tabu Search
 */
 static PyObject *
 qgd_N_Qubit_Decomposition_Wrapper_New_export_Unitary(qgd_N_Qubit_Decomposition_Wrapper_New *self, PyObject *args)
 {
-    if (self->decomp == NULL) {
-        PyErr_SetString(PyExc_RuntimeError, "Decomposition object is NULL");
-        return NULL;
-    }
-
     const char* filename;
     if (!PyArg_ParseTuple(args, "s", &filename)) {
         return NULL;
     }
-
     try {
         std::string filename_str(filename);
-
-        // Try adaptive
-        N_Qubit_Decomposition_adaptive* adaptive_decomp = dynamic_cast<N_Qubit_Decomposition_adaptive*>(self->decomp);
-        if (adaptive_decomp != NULL) {
-            adaptive_decomp->export_unitary(filename_str);
-            Py_RETURN_NONE;
-        }
-
-        // Try tree search
-        N_Qubit_Decomposition_Tree_Search* tree_decomp = dynamic_cast<N_Qubit_Decomposition_Tree_Search*>(self->decomp);
-        if (tree_decomp != NULL) {
-            tree_decomp->export_unitary(filename_str);
-            Py_RETURN_NONE;
-        }
-
-        // Try tabu search
-        N_Qubit_Decomposition_Tabu_Search* tabu_decomp = dynamic_cast<N_Qubit_Decomposition_Tabu_Search*>(self->decomp);
-        if (tabu_decomp != NULL) {
-            tabu_decomp->export_unitary(filename_str);
-            Py_RETURN_NONE;
-        }
-
-        PyErr_SetString(PyExc_AttributeError, "export_Unitary is only available for adaptive, tree search, and tabu search decompositions");
-        return NULL;
+        self->decomp->export_unitary(filename_str);
+        Py_RETURN_NONE;
     } catch (std::exception& e) {
         PyErr_SetString(PyExc_Exception, e.what());
         return NULL;
@@ -1230,6 +1203,8 @@ qgd_N_Qubit_Decomposition_Wrapper_New_export_Unitary(qgd_N_Qubit_Decomposition_W
 
 /**
 @brief Call to get the project name
+@return PyUnicode string with project name
+@note applicable to: Decomposition, Adaptive, Custom, Tree Search, Tabu Search
 */
 static PyObject *
 qgd_N_Qubit_Decomposition_Wrapper_New_get_Project_Name(qgd_N_Qubit_Decomposition_Wrapper_New *self)
@@ -1238,7 +1213,6 @@ qgd_N_Qubit_Decomposition_Wrapper_New_get_Project_Name(qgd_N_Qubit_Decomposition
         PyErr_SetString(PyExc_RuntimeError, "Decomposition object is NULL");
         return NULL;
     }
-
     try {
         std::string project_name = self->decomp->get_project_name();
         return PyUnicode_FromString(project_name.c_str());
@@ -1250,6 +1224,9 @@ qgd_N_Qubit_Decomposition_Wrapper_New_get_Project_Name(qgd_N_Qubit_Decomposition
 
 /**
 @brief Call to set the project name
+@param args Tuple containing project name string
+@return Py_None on success, NULL on error
+@note applicable to: Decomposition, Adaptive, Custom, Tree Search, Tabu Search
 */
 static PyObject *
 qgd_N_Qubit_Decomposition_Wrapper_New_set_Project_Name(qgd_N_Qubit_Decomposition_Wrapper_New *self, PyObject *args)
@@ -1258,12 +1235,10 @@ qgd_N_Qubit_Decomposition_Wrapper_New_set_Project_Name(qgd_N_Qubit_Decomposition
         PyErr_SetString(PyExc_RuntimeError, "Decomposition object is NULL");
         return NULL;
     }
-
     const char* project_name;
     if (!PyArg_ParseTuple(args, "s", &project_name)) {
         return NULL;
     }
-
     try {
         std::string project_name_str(project_name);
         self->decomp->set_project_name(project_name_str);
@@ -1276,6 +1251,8 @@ qgd_N_Qubit_Decomposition_Wrapper_New_set_Project_Name(qgd_N_Qubit_Decomposition
 
 /**
 @brief Call to get the global phase factor
+@return PyComplex representing the global phase
+@note applicable to: Decomposition, Adaptive, Custom, Tree Search, Tabu Search
 */
 static PyObject *
 qgd_N_Qubit_Decomposition_Wrapper_New_get_Global_Phase(qgd_N_Qubit_Decomposition_Wrapper_New *self)
@@ -1284,7 +1261,6 @@ qgd_N_Qubit_Decomposition_Wrapper_New_get_Global_Phase(qgd_N_Qubit_Decomposition
         PyErr_SetString(PyExc_RuntimeError, "Decomposition object is NULL");
         return NULL;
     }
-
     try {
         QGD_Complex16 global_phase = self->decomp->get_global_phase_factor();
         return PyComplex_FromDoubles(global_phase.real, global_phase.imag);
@@ -1296,6 +1272,9 @@ qgd_N_Qubit_Decomposition_Wrapper_New_get_Global_Phase(qgd_N_Qubit_Decomposition
 
 /**
 @brief Call to set the global phase
+@param args Tuple containing phase angle (double)
+@return Py_None on success, NULL on error
+@note applicable to: Decomposition, Adaptive, Custom, Tree Search, Tabu Search
 */
 static PyObject *
 qgd_N_Qubit_Decomposition_Wrapper_New_set_Global_Phase(qgd_N_Qubit_Decomposition_Wrapper_New *self, PyObject *args)
@@ -1304,12 +1283,10 @@ qgd_N_Qubit_Decomposition_Wrapper_New_set_Global_Phase(qgd_N_Qubit_Decomposition
         PyErr_SetString(PyExc_RuntimeError, "Decomposition object is NULL");
         return NULL;
     }
-
     double phase_angle;
     if (!PyArg_ParseTuple(args, "d", &phase_angle)) {
         return NULL;
     }
-
     try {
         self->decomp->set_global_phase(phase_angle);
         Py_RETURN_NONE;
