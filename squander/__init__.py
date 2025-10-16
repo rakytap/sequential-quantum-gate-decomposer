@@ -1,7 +1,7 @@
 # python exported interfaces of the SQUANDER package
 
 # decomposition classes of narrow circuits (up to 10 qubits)
-from squander.decomposition.qgd_N_Qubit_Decomposition_Wrapper_New import (
+from squander.decomposition.qgd_N_Qubit_Decompositions_Wrapper import (
     qgd_N_Qubit_Decomposition as N_Qubit_Decomposition,
     qgd_N_Qubit_Decomposition_adaptive as N_Qubit_Decomposition_adaptive,
     qgd_N_Qubit_Decomposition_custom as N_Qubit_Decomposition_custom,
