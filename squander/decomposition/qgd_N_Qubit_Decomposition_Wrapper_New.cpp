@@ -61,14 +61,14 @@ Matrix extract_matrix(PyObject* Umtx_arg, PyArrayObject** store_ref) {
  */
 guess_type extract_guess_type(PyObject* initial_guess) {
     if (!initial_guess || initial_guess == Py_None) {
-        return ZEROS;
+        return RANDOM;
     }
     const char* guess_str = PyUnicode_AsUTF8(PyObject_Str(initial_guess));
     if (strcasecmp("zeros", guess_str) == 0) return ZEROS;
     if (strcasecmp("random", guess_str) == 0) return RANDOM;
     if (strcasecmp("close_to_zero", guess_str) == 0) return CLOSE_TO_ZERO;
-    std::cout << "Warning: Unknown guess '" << guess_str << "', using ZEROS" << std::endl;
-    return ZEROS;
+    std::cout << "Warning: Unknown guess '" << guess_str << "', using RANDOM" << std::endl;
+    return RANDOM;
 }
 
 /**
@@ -137,7 +137,7 @@ qgd_N_Qubit_Decomposition_Wrapper_init(qgd_N_Qubit_Decomposition_Wrapper_New* se
     bool optimize_layer_num = false;
     
     if (!PyArg_ParseTupleAndKeywords(
-        args, kwds, "|OibO", kwlist,
+        args, kwds, "O|ibO", kwlist,
         &Umtx_arg, &qbit_num, &optimize_layer_num, &initial_guess)
     ) {
         return -1;
@@ -170,12 +170,11 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_init(qgd_N_Qubit_Decomposition_Wrappe
         (char*)"level_limit_min", (char*)"topology", (char*)"config", 
         (char*)"accelerator_num", NULL
     };
-    
     PyObject *Umtx_arg = NULL, *topology = NULL, *config_arg = NULL;
-    int qbit_num = -1, level_limit = 0, level_limit_min = 0, accelerator_num = 0;
+    int qbit_num = -1, level_limit = 8, level_limit_min = 0, accelerator_num = 0;
     
     if (!PyArg_ParseTupleAndKeywords(
-        args, kwds, "|OiiiOOi", kwlist,
+        args, kwds, "O|iiiOOi", kwlist,
         &Umtx_arg, &qbit_num, &level_limit, &level_limit_min, &topology, &config_arg, &accelerator_num)
     ) {
         return -1;
@@ -226,7 +225,7 @@ qgd_N_Qubit_Decomposition_custom_Wrapper_init(qgd_N_Qubit_Decomposition_Wrapper_
     int qbit_num = -1, accelerator_num = 0;
     
     if (!PyArg_ParseTupleAndKeywords(
-        args, kwds, "|OiOOi", kwlist,
+        args, kwds, "O|iOOi", kwlist,
         &Umtx_arg, &qbit_num, &initial_guess, &config_arg, &accelerator_num)
     ) {
         return -1;
@@ -263,7 +262,7 @@ static int search_wrapper_init(qgd_N_Qubit_Decomposition_Wrapper_New* self, PyOb
     int qbit_num = -1, accelerator_num = 0;
     
     if (!PyArg_ParseTupleAndKeywords(
-        args, kwds, "|OiOOi", kwlist,
+        args, kwds, "O|iOOi", kwlist,
         &Umtx_arg, &qbit_num, &topology, &config_arg, &accelerator_num)
     ) {
         return -1;
