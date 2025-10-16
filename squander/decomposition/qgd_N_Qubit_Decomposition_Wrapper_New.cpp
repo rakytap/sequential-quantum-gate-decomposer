@@ -145,6 +145,11 @@ qgd_N_Qubit_Decomposition_Wrapper_init(qgd_N_Qubit_Decomposition_Wrapper_New* se
 
     try {
         Matrix Umtx_mtx = extract_matrix(Umtx_arg, &self->Umtx);
+        // calculate qbit_num from matrix size if not provided
+        if (qbit_num == -1) {
+            qbit_num = (int)std::round(std::log2(Umtx_mtx.rows));
+        }
+        
         guess_type guess = extract_guess_type(initial_guess);
         std::map<std::string, Config_Element> config; // empty for base
 
@@ -161,8 +166,8 @@ static int
 qgd_N_Qubit_Decomposition_adaptive_Wrapper_init(qgd_N_Qubit_Decomposition_Wrapper_New* self, PyObject* args, PyObject* kwds)
 {
     static char* kwlist[] = {
-        (char*)"Umtx", (char*)"qbit_num", (char*)"level_limit_min", 
-        (char*)"method", (char*)"topology", (char*)"config", 
+        (char*)"Umtx", (char*)"qbit_num", (char*)"level_limit_max", 
+        (char*)"level_limit_min", (char*)"topology", (char*)"config", 
         (char*)"accelerator_num", NULL
     };
     
@@ -178,6 +183,11 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_init(qgd_N_Qubit_Decomposition_Wrappe
 
     try {
         Matrix Umtx_mtx = extract_matrix(Umtx_arg, &self->Umtx);
+        // calculate qbit_num from matrix size if not provided
+        if (qbit_num == -1) {
+            qbit_num = (int)std::round(std::log2(Umtx_mtx.rows));
+        }
+        
         auto topology_cpp = extract_topology(topology);
         auto config = extract_config(config_arg);
         
@@ -213,6 +223,11 @@ qgd_N_Qubit_Decomposition_custom_Wrapper_init(qgd_N_Qubit_Decomposition_Wrapper_
 
     try {
         Matrix Umtx_mtx = extract_matrix(Umtx_arg, &self->Umtx);
+        // calculate qbit_num from matrix size if not provided
+        if (qbit_num == -1) {
+            qbit_num = (int)std::round(std::log2(Umtx_mtx.rows));
+        }
+        
         guess_type guess = extract_guess_type(initial_guess);
         auto config = extract_config(config_arg);
         
@@ -245,6 +260,11 @@ static int search_wrapper_init(qgd_N_Qubit_Decomposition_Wrapper_New* self, PyOb
     
     try {
         Matrix Umtx_mtx = extract_matrix(Umtx_arg, &self->Umtx);
+        // calculate qbit_num from matrix size if not provided
+        if (qbit_num == -1) {
+            qbit_num = (int)std::round(std::log2(Umtx_mtx.rows));
+        }
+        
         auto topology_cpp = extract_topology(topology);
         auto config = extract_config(config_arg);
         
@@ -2014,6 +2034,798 @@ qgd_N_Qubit_Decomposition_Wrapper_New_set_Unitary(qgd_N_Qubit_Decomposition_Wrap
     return NULL;
 }
 
+
+////////////////////////////////////////////////////////////////// EXTRA METHODS
+
+/**
+@brief Method to get gates as a list of dictionaries (with parameters from optimized_parameters array)
+@return Returns with a Python list of gate dictionaries
+*/
+static PyObject*
+qgd_N_Qubit_Decomposition_Wrapper_New_get_Gates(qgd_N_Qubit_Decomposition_Wrapper_New* self)
+{
+    std::vector<Gate*>&& gates = self->decomp->get_gates();
+    Matrix_real&& params = self->decomp->get_optimized_parameters();
+
+    PyObject* gates_list = PyList_New(0);
+    if (!gates_list) return NULL;
+
+    for (size_t idx = 0; idx < gates.size(); idx++) {
+        Gate* gate = gates[idx];
+        if (!gate) continue;
+
+        PyObject* gate_dict = PyDict_New();
+        if (!gate_dict) {
+            Py_DECREF(gates_list);
+            return NULL;
+        }
+
+        // Map gate type to string
+        const char* type_str = nullptr;
+        switch(gate->get_type()) {
+            case CNOT_OPERATION: type_str = "CNOT"; break;
+            case CZ_OPERATION: type_str = "CZ"; break;
+            case CH_OPERATION: type_str = "CH"; break;
+            case SYC_OPERATION: type_str = "SYC"; break;
+            case U3_OPERATION: type_str = "U3"; break;
+            case RX_OPERATION: type_str = "RX"; break;
+            case RY_OPERATION: type_str = "RY"; break;
+            case RZ_OPERATION: type_str = "RZ"; break;
+            case X_OPERATION: type_str = "X"; break;
+            case Y_OPERATION: type_str = "Y"; break;
+            case Z_OPERATION: type_str = "Z"; break;
+            case SX_OPERATION: type_str = "SX"; break;
+            case CRY_OPERATION: type_str = "CRY"; break;
+            default: type_str = "UNKNOWN"; break;
+        }
+        PyDict_SetItemString(gate_dict, "type", PyUnicode_FromString(type_str));
+        
+        PyDict_SetItemString(gate_dict, "target_qbit", PyLong_FromLong(gate->get_target_qbit()));
+
+        int control_qbit = gate->get_control_qbit();
+        if (control_qbit >= 0) {
+            PyDict_SetItemString(gate_dict, "control_qbit", PyLong_FromLong(control_qbit));
+        }
+        
+        // Add parameters
+        int pnum = gate->get_parameter_num();
+        int pstart = gate->get_parameter_start_idx();
+        if (pnum > 0 && pstart >= 0 && (pstart + pnum) <= (int)params.size()) {
+            if (gate->get_type() == U3_OPERATION && pnum >= 3) {
+                PyDict_SetItemString(gate_dict, "Theta", PyFloat_FromDouble(params[pstart]));
+                PyDict_SetItemString(gate_dict, "Phi", PyFloat_FromDouble(params[pstart + 1]));
+                PyDict_SetItemString(gate_dict, "Lambda", PyFloat_FromDouble(params[pstart + 2]));
+            } else if (gate->get_type() == RX_OPERATION || gate->get_type() == RY_OPERATION || gate->get_type() == CRY_OPERATION) {
+                PyDict_SetItemString(gate_dict, "Theta", PyFloat_FromDouble(params[pstart]));
+            } else if (gate->get_type() == RZ_OPERATION) {
+                PyDict_SetItemString(gate_dict, "Phi", PyFloat_FromDouble(params[pstart]));
+            }
+        }
+
+        PyList_Append(gates_list, gate_dict);
+        Py_DECREF(gate_dict);
+    }
+    return gates_list;
+}
+
+/**
+@brief Method to get Qiskit circuit representation
+@return Returns with a Qiskit QuantumCircuit object
+*/
+static PyObject*
+qgd_N_Qubit_Decomposition_Wrapper_New_get_Qiskit_Circuit(qgd_N_Qubit_Decomposition_Wrapper_New* self)
+{
+    // Import Qiskit_IO module
+    PyObject* qiskit_io_module = PyImport_ImportModule("squander.IO_interfaces.Qiskit_IO");
+    if (!qiskit_io_module) {
+        PyErr_SetString(PyExc_ImportError, "Failed to import squander.IO_interfaces.Qiskit_IO");
+        return NULL;
+    }
+    
+    // Get the get_Qiskit_Circuit function
+    PyObject* get_qiskit_func = PyObject_GetAttrString(qiskit_io_module, "get_Qiskit_Circuit");
+    Py_DECREF(qiskit_io_module);
+    if (!get_qiskit_func) {
+        PyErr_SetString(PyExc_AttributeError, "get_Qiskit_Circuit not found in Qiskit_IO");
+        return NULL;
+    }
+
+    // Get circuit and parameters
+    PyObject* circuit = qgd_N_Qubit_Decomposition_Wrapper_New_get_Circuit(self);
+    if (!circuit) {
+        Py_DECREF(get_qiskit_func);
+        return NULL;
+    }
+    PyObject* parameters = qgd_N_Qubit_Decomposition_Wrapper_New_get_Optimized_Parameters(self);
+    if (!parameters) {
+        Py_DECREF(get_qiskit_func);
+        Py_DECREF(circuit);
+        return NULL;
+    }
+
+    // Call get_Qiskit_Circuit(circuit, parameters)
+    PyObject* args = PyTuple_Pack(2, circuit, parameters);
+    PyObject* result = PyObject_CallObject(get_qiskit_func, args);
+    
+    Py_DECREF(args);
+    Py_DECREF(parameters);
+    Py_DECREF(circuit);
+    Py_DECREF(get_qiskit_func);
+
+    return result;
+}
+
+/**
+@brief Method to get Cirq circuit representation
+@return Returns with a Cirq Circuit object
+*/
+
+#define CIRQ_ADD_SINGLE_QUBIT_GATE(name) do { \
+    PyObject* gate_func = PyObject_GetAttrString(cirq_module, #name); \
+    PyObject* gate_args = PyTuple_Pack(1, target_qubit); \
+    PyObject* cirq_gate = PyObject_CallObject(gate_func, gate_args); \
+    Py_DECREF(gate_args); Py_DECREF(gate_func); \
+    if (cirq_gate) { \
+        PyObject* append_args = PyTuple_Pack(1, cirq_gate); \
+        PyObject_CallObject(append_func, append_args); \
+        Py_DECREF(append_args); Py_DECREF(cirq_gate); \
+    } \
+} while(0)
+
+// Helper macros for Cirq gate creation
+#define CIRQ_ADD_TWO_QUBIT_GATE(name) do { \
+    PyObject* control_qbit_obj = PyDict_GetItemString(gate, "control_qbit"); \
+    if (!control_qbit_obj) continue; \
+    long control_idx = qbit_num - 1 - PyLong_AsLong(control_qbit_obj); \
+    PyObject* control_qubit = PyList_GetItem(qubits, control_idx); \
+    PyObject* gate_func = PyObject_GetAttrString(cirq_module, #name); \
+    PyObject* gate_args = PyTuple_Pack(2, control_qubit, target_qubit); \
+    PyObject* cirq_gate = PyObject_CallObject(gate_func, gate_args); \
+    Py_DECREF(gate_args); Py_DECREF(gate_func); \
+    if (cirq_gate) { \
+        PyObject* append_args = PyTuple_Pack(1, cirq_gate); \
+        PyObject_CallObject(append_func, append_args); \
+        Py_DECREF(append_args); Py_DECREF(cirq_gate); \
+    } \
+} while(0)
+
+#define CIRQ_ADD_ROTATION_GATE(name, param) do { \
+    PyObject* param_obj = PyDict_GetItemString(gate, param); \
+    if (!param_obj) continue; \
+    PyObject* gate_func = PyObject_GetAttrString(cirq_module, #name); \
+    PyObject* gate_args = PyTuple_Pack(1, param_obj); \
+    PyObject* cirq_gate = PyObject_CallObject(gate_func, gate_args); \
+    Py_DECREF(gate_args); Py_DECREF(gate_func); \
+    if (cirq_gate) { \
+        PyObject* on_method = PyObject_GetAttrString(cirq_gate, "on"); \
+        PyObject* on_args = PyTuple_Pack(1, target_qubit); \
+        PyObject* gate_op = PyObject_CallObject(on_method, on_args); \
+        Py_DECREF(on_args); Py_DECREF(on_method); Py_DECREF(cirq_gate); \
+        if (gate_op) { \
+            PyObject* append_args = PyTuple_Pack(1, gate_op); \
+            PyObject_CallObject(append_func, append_args); \
+            Py_DECREF(append_args); Py_DECREF(gate_op); \
+        } \
+    } \
+} while(0)
+
+static PyObject*
+qgd_N_Qubit_Decomposition_Wrapper_New_get_Cirq_Circuit(qgd_N_Qubit_Decomposition_Wrapper_New* self)
+{
+    PyObject* cirq_module = PyImport_ImportModule("cirq");
+    if (!cirq_module) {
+        PyErr_SetString(PyExc_ImportError, "Failed to import cirq. Please install cirq package.");
+        return NULL;
+    }
+
+    PyObject* cirq_circuit_class = PyObject_GetAttrString(cirq_module, "Circuit");
+    if (!cirq_circuit_class) { 
+        Py_DECREF(cirq_module); 
+        return NULL; 
+    }
+    
+    PyObject* cirq_circuit_obj = PyObject_CallObject(cirq_circuit_class, NULL);
+    Py_DECREF(cirq_circuit_class);
+    if (!cirq_circuit_obj) { 
+        Py_DECREF(cirq_module); 
+        return NULL; 
+    }
+
+    // Create qubit register
+    PyObject* cirq_line_qubit_class = PyObject_GetAttrString(cirq_module, "LineQubit");
+    if (!cirq_line_qubit_class) { 
+        Py_DECREF(cirq_circuit_obj); 
+        Py_DECREF(cirq_module); 
+        return NULL; 
+    }
+    PyObject* range_func = PyObject_GetAttrString(cirq_line_qubit_class, "range");
+    Py_DECREF(cirq_line_qubit_class);
+    if (!range_func) { 
+        Py_DECREF(cirq_circuit_obj); 
+        Py_DECREF(cirq_module); 
+        return NULL; 
+    }
+
+    int qbit_num = self->decomp->get_qbit_num();
+    PyObject* range_args = PyTuple_Pack(1, PyLong_FromLong(qbit_num));
+    PyObject* qubits = PyObject_CallObject(range_func, range_args);
+    Py_DECREF(range_args); Py_DECREF(range_func);
+    if (!qubits) { 
+        Py_DECREF(cirq_circuit_obj); 
+        Py_DECREF(cirq_module); 
+        return NULL; 
+    }
+
+    PyObject* gates_list = qgd_N_Qubit_Decomposition_Wrapper_New_get_Gates(self);
+    if (!gates_list) { 
+        Py_DECREF(qubits); 
+        Py_DECREF(cirq_circuit_obj); 
+        Py_DECREF(cirq_module); 
+        return NULL; 
+    }
+
+    PyObject* append_func = PyObject_GetAttrString(cirq_circuit_obj, "append");
+    if (!append_func) {
+        Py_DECREF(gates_list); Py_DECREF(qubits); Py_DECREF(cirq_circuit_obj); Py_DECREF(cirq_module);
+        return NULL;
+    }
+
+    PyObject* cirq_google_module = PyObject_GetAttrString(cirq_module, "google");
+
+    // Process gates in reverse order
+    Py_ssize_t num_gates = PyList_Size(gates_list);
+    for (Py_ssize_t idx = num_gates - 1; idx >= 0; idx--) {
+        PyObject* gate = PyList_GetItem(gates_list, idx);
+        if (!gate) continue;
+
+        PyObject* gate_type = PyDict_GetItemString(gate, "type");
+        if (!gate_type) continue;
+        const char* gate_type_str = PyUnicode_AsUTF8(gate_type);
+        if (!gate_type_str) continue;
+
+        PyObject* target_qbit_obj = PyDict_GetItemString(gate, "target_qbit");
+        if (!target_qbit_obj) continue;
+
+        long target_idx = qbit_num - 1 - PyLong_AsLong(target_qbit_obj);
+        PyObject* target_qubit = PyList_GetItem(qubits, target_idx);
+        if (!target_qubit) continue;
+
+        if (strcmp(gate_type_str, "CNOT") == 0) { CIRQ_ADD_TWO_QUBIT_GATE(CNOT); }
+        else if (strcmp(gate_type_str, "CZ") == 0) { CIRQ_ADD_TWO_QUBIT_GATE(CZ); }
+        else if (strcmp(gate_type_str, "CH") == 0) { CIRQ_ADD_TWO_QUBIT_GATE(CH); }
+        else if (strcmp(gate_type_str, "SYC") == 0 && cirq_google_module) {
+            PyObject* control_qbit_obj = PyDict_GetItemString(gate, "control_qbit");
+            if (control_qbit_obj) {
+                long control_idx = qbit_num - 1 - PyLong_AsLong(control_qbit_obj);
+                PyObject* control_qubit = PyList_GetItem(qubits, control_idx);
+                
+                PyObject* syc_func = PyObject_GetAttrString(cirq_google_module, "SYC");
+                PyObject* syc_args = PyTuple_Pack(2, control_qubit, target_qubit);
+                PyObject* cirq_gate = PyObject_CallObject(syc_func, syc_args);
+                Py_DECREF(syc_args); 
+                Py_DECREF(syc_func);
+                if (cirq_gate) {
+                    PyObject* append_args = PyTuple_Pack(1, cirq_gate);
+                    PyObject_CallObject(append_func, append_args);
+                    Py_DECREF(append_args); 
+                    Py_DECREF(cirq_gate);
+                }
+            }
+        }
+        else if (strcmp(gate_type_str, "CRY") == 0) { 
+            printf("CRY gate needs to be implemented\n"); 
+        }
+        else if (strcmp(gate_type_str, "U3") == 0) {
+            printf("Unsupported gate in the Cirq export: U3 gate\n");
+            Py_XDECREF(cirq_google_module); 
+            Py_DECREF(append_func); 
+            Py_DECREF(gates_list);
+            Py_DECREF(qubits); 
+            Py_DECREF(cirq_circuit_obj); 
+            Py_DECREF(cirq_module);
+            Py_RETURN_NONE;
+        }
+        else if (strcmp(gate_type_str, "RX") == 0) { CIRQ_ADD_ROTATION_GATE(rx, "Theta"); }
+        else if (strcmp(gate_type_str, "RY") == 0) { CIRQ_ADD_ROTATION_GATE(ry, "Theta"); }
+        else if (strcmp(gate_type_str, "RZ") == 0) { CIRQ_ADD_ROTATION_GATE(rz, "Phi"); }
+        else if (strcmp(gate_type_str, "X") == 0) { CIRQ_ADD_SINGLE_QUBIT_GATE(x); }
+        else if (strcmp(gate_type_str, "Y") == 0) { CIRQ_ADD_SINGLE_QUBIT_GATE(y); }
+        else if (strcmp(gate_type_str, "Z") == 0) { CIRQ_ADD_SINGLE_QUBIT_GATE(z); }
+        else if (strcmp(gate_type_str, "SX") == 0) { CIRQ_ADD_SINGLE_QUBIT_GATE(sx); }
+    }
+
+    Py_XDECREF(cirq_google_module);
+    Py_DECREF(append_func);
+    Py_DECREF(gates_list);
+    Py_DECREF(qubits);
+    Py_DECREF(cirq_module);
+
+    return cirq_circuit_obj;
+}
+
+#undef CIRQ_ADD_SINGLE_QUBIT_GATE
+#undef CIRQ_ADD_TWO_QUBIT_GATE
+#undef CIRQ_ADD_ROTATION_GATE
+
+/**
+@brief Method to import Qiskit circuit (standard version for non-adaptive decompositions)
+@param qc_in Qiskit QuantumCircuit to import
+@return Returns Py_None on success
+*/
+static PyObject*
+qgd_N_Qubit_Decomposition_Wrapper_New_import_Qiskit_Circuit_standard(qgd_N_Qubit_Decomposition_Wrapper_New* self, PyObject* qc_in)
+{
+    // Import Qiskit_IO module
+    PyObject* qiskit_io_module = PyImport_ImportModule("squander.IO_interfaces.Qiskit_IO");
+    if (!qiskit_io_module) {
+        PyErr_SetString(PyExc_ImportError, "Failed to import squander.IO_interfaces.Qiskit_IO");
+        return NULL;
+    }
+    // Get the convert_Qiskit_to_Squander function
+    PyObject* convert_func = PyObject_GetAttrString(qiskit_io_module, "convert_Qiskit_to_Squander");
+    Py_DECREF(qiskit_io_module);
+    if (!convert_func) {
+        PyErr_SetString(PyExc_AttributeError, "convert_Qiskit_to_Squander not found in Qiskit_IO");
+        return NULL;
+    }
+    // Call convert_Qiskit_to_Squander(qc_in) -> returns (circuit, parameters)
+    PyObject* convert_args = PyTuple_Pack(1, qc_in);
+    PyObject* convert_result = PyObject_CallObject(convert_func, convert_args);
+    Py_DECREF(convert_args);
+    Py_DECREF(convert_func);
+    if (!convert_result || !PyTuple_Check(convert_result) || PyTuple_Size(convert_result) != 2) {
+        Py_XDECREF(convert_result);
+        PyErr_SetString(PyExc_ValueError, "convert_Qiskit_to_Squander should return (circuit, parameters)");
+        return NULL;
+    }
+
+    PyObject *circuit_squander = PyTuple_GetItem(convert_result, 0), *parameters = PyTuple_GetItem(convert_result, 1);
+
+    // Set gate structure
+    PyObject* set_gate_args = PyTuple_Pack(1, circuit_squander);
+    PyObject* set_gate_result = qgd_N_Qubit_Decomposition_Wrapper_New_set_Gate_Structure(self, set_gate_args);
+    Py_DECREF(set_gate_args);
+    if (!set_gate_result) {
+        Py_DECREF(convert_result);
+        return NULL;
+    }
+    Py_DECREF(set_gate_result);
+
+    // Set optimized parameters
+    PyObject* set_params_args = PyTuple_Pack(1, parameters);
+    PyObject* set_params_result = qgd_N_Qubit_Decomposition_Wrapper_New_set_Optimized_Parameters(self, set_params_args);
+    Py_DECREF(set_params_args);
+    Py_DECREF(convert_result);
+    if (!set_params_result) {
+        return NULL;
+    }
+    Py_DECREF(set_params_result);
+
+    Py_RETURN_NONE;
+}
+
+/**
+@brief Method to import Qiskit circuit (adaptive-specific version with custom CZ decomposition)
+@param qc_in Qiskit QuantumCircuit to import
+@return Returns Py_None on success
+*/
+static PyObject*
+qgd_N_Qubit_Decomposition_Wrapper_New_import_Qiskit_Circuit_adaptive(qgd_N_Qubit_Decomposition_Wrapper_New* self, PyObject* qc_in)
+{
+    // Import qiskit module
+    PyObject* qiskit_module = PyImport_ImportModule("qiskit");
+    if (!qiskit_module) {
+        PyErr_SetString(PyExc_ImportError, "Failed to import qiskit");
+        return NULL;
+    }
+    // Get transpile function
+    PyObject* transpile_func = PyObject_GetAttrString(qiskit_module, "transpile");
+    Py_DECREF(qiskit_module);
+    if (!transpile_func) {
+        PyErr_SetString(PyExc_AttributeError, "transpile not found in qiskit");
+        return NULL;
+    }
+
+    // Transpile: transpile(qc_in, optimization_level=0, basis_gates=['cz', 'u3'], layout_method='sabre')
+    PyObject* basis_gates = PyList_New(2);
+    PyList_SetItem(basis_gates, 0, PyUnicode_FromString("cz"));
+    PyList_SetItem(basis_gates, 1, PyUnicode_FromString("u3"));
+    
+    PyObject* kwargs = PyDict_New();
+    PyDict_SetItemString(kwargs, "optimization_level", PyLong_FromLong(0));
+    PyDict_SetItemString(kwargs, "basis_gates", basis_gates);
+    PyDict_SetItemString(kwargs, "layout_method", PyUnicode_FromString("sabre"));
+    
+    PyObject* transpile_args = PyTuple_Pack(1, qc_in);
+    PyObject* qc = PyObject_Call(transpile_func, transpile_args, kwargs);
+    
+    Py_DECREF(transpile_args);
+    Py_DECREF(kwargs);
+    Py_DECREF(basis_gates);
+    Py_DECREF(transpile_func);
+    if (!qc) {
+        return NULL;
+    }
+
+    // Print gate counts
+    PyObject* count_ops_func = PyObject_GetAttrString(qc, "count_ops");
+    if (count_ops_func) {
+        PyObject* count_ops_result = PyObject_CallObject(count_ops_func, NULL);
+        Py_DECREF(count_ops_func);
+        if (count_ops_result) {
+            printf("Gate counts in the imported Qiskit transpiled quantum circuit: ");
+            PyObject_Print(count_ops_result, stdout, 0);
+            printf("\n");
+            Py_DECREF(count_ops_result);
+        }
+    }
+
+    // Get circuit data
+    PyObject* qc_data_attr = PyObject_GetAttrString(qc, "data");
+    PyObject* qc_qubits_attr = PyObject_GetAttrString(qc, "qubits");
+    PyObject* qc_num_qubits_attr = PyObject_GetAttrString(qc, "num_qubits");
+    if (!qc_data_attr || !qc_qubits_attr || !qc_num_qubits_attr) {
+        Py_XDECREF(qc_data_attr);
+        Py_XDECREF(qc_qubits_attr);
+        Py_XDECREF(qc_num_qubits_attr);
+        Py_DECREF(qc);
+        return NULL;
+    }
+
+    int register_size = PyLong_AsLong(qc_num_qubits_attr);
+    Py_DECREF(qc_num_qubits_attr);
+
+    // Import Circuit_Wrapper
+    PyObject* circuit_wrapper_module = PyImport_ImportModule("squander.gates.qgd_Circuit_Wrapper");
+    if (!circuit_wrapper_module) {
+        Py_DECREF(qc_data_attr);
+        Py_DECREF(qc_qubits_attr);
+        Py_DECREF(qc);
+        return NULL;
+    }
+
+    PyObject* circuit_wrapper_class = PyObject_GetAttrString(circuit_wrapper_module, "qgd_Circuit_Wrapper");
+    Py_DECREF(circuit_wrapper_module);
+    if (!circuit_wrapper_class) {
+        Py_DECREF(qc_data_attr);
+        Py_DECREF(qc_qubits_attr);
+        Py_DECREF(qc);
+        return NULL;
+    }
+
+    // Create main circuit: Circuit_ret = qgd_Circuit_Wrapper(register_size)
+    PyObject* circuit_ret_args = PyTuple_Pack(1, PyLong_FromLong(register_size));
+    PyObject* Circuit_ret_result = PyObject_CallObject(circuit_wrapper_class, circuit_ret_args);
+    Py_DECREF(circuit_ret_args);
+    Py_DECREF(circuit_wrapper_class);
+    if (!Circuit_ret_result) {
+        Py_DECREF(qc_data_attr);
+        Py_DECREF(qc_qubits_attr);
+        Py_DECREF(qc);
+        return NULL;
+    }
+
+    // Create dictionary for single qubit gates: single_qubit_gates[qubit] = []
+    PyObject* single_qubit_gates = PyDict_New();
+    for (int idx = 0; idx < register_size; idx++) {
+        PyObject* key = PyLong_FromLong(idx);
+        PyObject* value = PyList_New(0);
+        PyDict_SetItem(single_qubit_gates, key, value);
+        Py_DECREF(key);
+        Py_DECREF(value);
+    }
+
+    PyObject* optimized_parameters = PyList_New(0);
+
+    // Process gates from qc.data
+    Py_ssize_t qc_data_attr_size = PyList_Size(qc_data_attr);
+    for (Py_ssize_t i = 0; i < qc_data_attr_size; i++) {
+        PyObject* gate = PyList_GetItem(qc_data_attr, i);
+        PyObject* gate_operation = PyObject_GetAttrString(gate, "operation");
+        PyObject* gate_qubits = PyObject_GetAttrString(gate, "qubits");
+        if (!gate_operation || !gate_qubits) {
+            Py_XDECREF(gate_operation);
+            Py_XDECREF(gate_qubits);
+            continue;
+        }
+
+        PyObject* gate_operation_name_attr = PyObject_GetAttrString(gate_operation, "name");
+        const char* name = PyUnicode_AsUTF8(gate_operation_name_attr);
+        
+        if (strcmp(name, "u3") == 0) {
+            // Get qubit index
+            PyObject* index_func = PyObject_GetAttrString(qc_qubits_attr, "index");
+
+            PyObject* index_args = PyTuple_Pack(1, PyList_GetItem(gate_qubits, 0));
+            PyObject* index_result = PyObject_CallObject(index_func, index_args);
+            Py_DECREF(index_func);
+            Py_DECREF(index_args);
+            
+            long qubit = PyLong_AsLong(index_result);
+            Py_DECREF(index_result);
+            
+            // Store u3 gate info
+            PyObject* gate_info_dict = PyDict_New();
+            PyObject* gate_operation_params_attr = PyObject_GetAttrString(gate_operation, "params");
+            PyDict_SetItemString(gate_info_dict, "params", gate_operation_params_attr);
+            PyDict_SetItemString(gate_info_dict, "type", PyUnicode_FromString("u3"));
+            Py_DECREF(gate_operation_params_attr);
+            
+            PyObject* qubit_list = PyDict_GetItem(single_qubit_gates, PyLong_FromLong(qubit));
+            PyList_Append(qubit_list, gate_info_dict);
+            Py_DECREF(gate_info_dict);
+        } else if (strcmp(name, "cz") == 0) {
+            // Get qubit indices
+            PyObject* index_func = PyObject_GetAttrString(qc_qubits_attr, "index");
+
+            PyObject* index_args0 = PyTuple_Pack(1, PyList_GetItem(gate_qubits, 0));
+            PyObject* index_args0_result = PyObject_CallObject(index_func, index_args0);
+            Py_DECREF(index_args0);
+            
+            PyObject* index_args1 = PyTuple_Pack(1, PyList_GetItem(gate_qubits, 1));
+            PyObject* index_args1_result = PyObject_CallObject(index_func, index_args1);
+            Py_DECREF(index_args1);
+            Py_DECREF(index_func);
+            
+            long qubit0 = PyLong_AsLong(index_args0_result);
+            long qubit1 = PyLong_AsLong(index_args1_result);
+            Py_DECREF(index_args0_result);
+            Py_DECREF(index_args1_result);
+            
+            // Create layer
+            PyObject* layer_args = PyTuple_Pack(1, PyLong_FromLong(register_size));
+            PyObject* circuit_wrapper_module2 = PyImport_ImportModule("squander.gates.qgd_Circuit_Wrapper");
+            PyObject* circuit_wrapper_class2 = PyObject_GetAttrString(circuit_wrapper_module2, "qgd_Circuit_Wrapper");
+            Py_DECREF(circuit_wrapper_module2);
+            
+            PyObject* Layer = PyObject_CallObject(circuit_wrapper_class2, layer_args);
+            Py_DECREF(layer_args);
+            Py_DECREF(circuit_wrapper_class2);
+            
+            // Add u3 gates for qubit0
+            PyObject* qubit0_list = PyDict_GetItem(single_qubit_gates, PyLong_FromLong(qubit0));
+            if (qubit0_list && PyList_Size(qubit0_list) > 0) {
+                PyObject* gate0 = PyList_GetItem(qubit0_list, 0);
+                PyList_SetSlice(qubit0_list, 0, 1, NULL); // pop first element
+                
+                PyObject* add_u3_func = PyObject_GetAttrString(Layer, "add_U3");
+                PyObject* add_u3_args = Py_BuildValue("(iOOO)", qubit0, Py_True, Py_True, Py_True);
+                PyObject_CallObject(add_u3_func, add_u3_args);
+                Py_DECREF(add_u3_func);
+                Py_DECREF(add_u3_args);
+                
+                // Add parameters (reversed)
+                PyObject* params = PyDict_GetItemString(gate0, "params");
+                PyObject* reversed_params = PyList_New(0);
+                for (Py_ssize_t j = PyList_Size(params) - 1; j >= 0; j--) {
+                    PyList_Append(reversed_params, PyList_GetItem(params, j));
+                }
+                for (Py_ssize_t j = 0; j < PyList_Size(reversed_params); j++) {
+                    PyList_Append(optimized_parameters, PyList_GetItem(reversed_params, j));
+                }
+                Py_DECREF(reversed_params);
+                
+                // Divide last parameter by 2
+                Py_ssize_t last_idx = PyList_Size(optimized_parameters) - 1;
+                PyObject* last_param = PyList_GetItem(optimized_parameters, last_idx);
+                double val = PyFloat_AsDouble(last_param) / 2.0;
+                PyList_SetItem(optimized_parameters, last_idx, PyFloat_FromDouble(val));
+            }
+            
+            // Add u3 gates for qubit1
+            PyObject* qubit1_list = PyDict_GetItem(single_qubit_gates, PyLong_FromLong(qubit1));
+            if (qubit1_list && PyList_Size(qubit1_list) > 0) {
+                PyObject* gate1 = PyList_GetItem(qubit1_list, 0);
+                PyList_SetSlice(qubit1_list, 0, 1, NULL);
+                
+                PyObject* add_u3_func = PyObject_GetAttrString(Layer, "add_U3");
+                PyObject* u3_args = Py_BuildValue("(iOOO)", qubit1, Py_True, Py_True, Py_True);
+                PyObject_CallObject(add_u3_func, u3_args);
+                Py_DECREF(add_u3_func);
+                Py_DECREF(u3_args);
+                
+                PyObject* params = PyDict_GetItemString(gate1, "params");
+                PyObject* reversed_params = PyList_New(0);
+                for (Py_ssize_t j = PyList_Size(params) - 1; j >= 0; j--) {
+                    PyList_Append(reversed_params, PyList_GetItem(params, j));
+                }
+                for (Py_ssize_t j = 0; j < PyList_Size(reversed_params); j++) {
+                    PyList_Append(optimized_parameters, PyList_GetItem(reversed_params, j));
+                }
+                Py_DECREF(reversed_params);
+                
+                Py_ssize_t last_idx = PyList_Size(optimized_parameters) - 1;
+                PyObject* last_param = PyList_GetItem(optimized_parameters, last_idx);
+                double val = PyFloat_AsDouble(last_param) / 2.0;
+                PyList_SetItem(optimized_parameters, last_idx, PyFloat_FromDouble(val));
+            }
+            
+            // Add RX, adaptive, RZ, RX sequence
+            PyObject* qubit0_obj = PyLong_FromLong(qubit0);
+            PyObject* qubit1_obj = PyLong_FromLong(qubit1);
+            
+            PyObject* add_rx_func = PyObject_GetAttrString(Layer, "add_RX");
+            PyObject* add_rx_arg = PyTuple_Pack(1, qubit0_obj);
+            PyObject_CallObject(add_rx_func, add_rx_arg);
+            Py_DECREF(add_rx_func);
+            Py_DECREF(add_rx_arg);
+            
+            PyObject* add_adaptive_func = PyObject_GetAttrString(Layer, "add_adaptive");
+            PyObject* add_adaptive_args = PyTuple_Pack(2, qubit0_obj, qubit1_obj);
+            PyObject_CallObject(add_adaptive_func, add_adaptive_args);
+            Py_DECREF(add_adaptive_func);
+            Py_DECREF(add_adaptive_args);
+            
+            PyObject* add_rz_func = PyObject_GetAttrString(Layer, "add_RZ");
+            PyObject* add_rz_arg = PyTuple_Pack(1, qubit1_obj);
+            PyObject_CallObject(add_rz_func, add_rz_arg);
+            Py_DECREF(add_rz_func);
+            Py_DECREF(add_rz_arg);
+            
+            PyObject* add_rx_func_2 = PyObject_GetAttrString(Layer, "add_RX");
+            PyObject* add_rx_arg_2 = PyTuple_Pack(1, qubit0_obj);
+            PyObject_CallObject(add_rx_func_2, add_rx_arg_2);
+            Py_DECREF(add_rx_func_2);
+            Py_DECREF(add_rx_arg_2);
+            
+            Py_DECREF(qubit0_obj);
+            Py_DECREF(qubit1_obj);
+            
+            // Add hardcoded parameters
+            PyList_Append(optimized_parameters, PyFloat_FromDouble(M_PI / 4.0));
+            PyList_Append(optimized_parameters, PyFloat_FromDouble(M_PI / 2.0));
+            PyList_Append(optimized_parameters, PyFloat_FromDouble(-M_PI / 2.0));
+            PyList_Append(optimized_parameters, PyFloat_FromDouble(-M_PI / 4.0));
+            
+            // Add layer to circuit
+            PyObject* add_circuit_func = PyObject_GetAttrString(Circuit_ret_result, "add_Circuit");
+            PyObject* add_circuit_args = PyTuple_Pack(1, Layer);
+            PyObject_CallObject(add_circuit_func, add_circuit_args);
+            Py_DECREF(add_circuit_func);
+            Py_DECREF(add_circuit_args);
+            Py_DECREF(Layer);
+        }
+        Py_DECREF(gate_operation_name_attr);
+        Py_DECREF(gate_operation);
+        Py_DECREF(gate_qubits);
+    }
+
+    // Add remaining single qubit gates
+    PyObject* circuit_module = PyImport_ImportModule("squander.gates.qgd_Circuit");
+    PyObject* circuit_class = PyObject_GetAttrString(circuit_module, "qgd_Circuit");
+    Py_DECREF(circuit_module);
+    
+    PyObject* final_layer_args = PyTuple_Pack(1, PyLong_FromLong(register_size));
+    PyObject* final_layer_result = PyObject_CallObject(circuit_class, final_layer_args);
+    Py_DECREF(circuit_class);
+    Py_DECREF(final_layer_args);
+    
+    for (int qubit = 0; qubit < register_size; qubit++) {
+        PyObject* gates_list = PyDict_GetItem(single_qubit_gates, PyLong_FromLong(qubit));
+        Py_ssize_t gates_list_size = PyList_Size(gates_list);
+        
+        for (Py_ssize_t j = 0; j < gates_list_size; j++) {
+            PyObject* gate_obj = PyList_GetItem(gates_list, j);
+            PyObject* gate_obj_type = PyDict_GetItemString(gate_obj, "type");
+            const char* gate_obj_type_str = PyUnicode_AsUTF8(gate_obj_type);
+            
+            if (strcmp(gate_obj_type_str, "u3") == 0) {
+                PyObject* add_u3_func = PyObject_GetAttrString(final_layer_result, "add_U3");
+                PyObject* add_u3_args = Py_BuildValue("(iOOO)", qubit, Py_True, Py_True, Py_True);
+                PyObject_CallObject(add_u3_func, add_u3_args);
+                Py_DECREF(add_u3_func);
+                Py_DECREF(add_u3_args);
+                
+                PyObject* gate_obj_params = PyDict_GetItemString(gate_obj, "params");
+                PyObject* reversed_params = PyList_New(0);
+                for (Py_ssize_t k = PyList_Size(gate_obj_params) - 1; k >= 0; k--) {
+                    PyList_Append(reversed_params, PyList_GetItem(gate_obj_params, k));
+                }
+                
+                // Convert parameters to float and append
+                for (Py_ssize_t k = 0; k < PyList_Size(reversed_params); k++) {
+                    PyObject* param = PyList_GetItem(reversed_params, k);
+                    PyObject* param_float = PyFloat_FromDouble(PyFloat_AsDouble(param));
+                    PyList_Append(optimized_parameters, param_float);
+                    Py_DECREF(param_float);
+                }
+                Py_DECREF(reversed_params);
+                
+                // Divide last parameter by 2
+                Py_ssize_t optimized_parameters_last_idx = PyList_Size(optimized_parameters) - 1;
+                PyObject* optimized_parameters_last_param = PyList_GetItem(optimized_parameters, optimized_parameters_last_idx);
+                double val = PyFloat_AsDouble(optimized_parameters_last_param) / 2.0;
+                PyList_SetItem(optimized_parameters, optimized_parameters_last_idx, PyFloat_FromDouble(val));
+            }
+        }
+    }
+    
+    PyObject* add_final_circuit_func = PyObject_GetAttrString(Circuit_ret_result, "add_Circuit");
+    PyObject* add_final_circuit_args = PyTuple_Pack(1, final_layer_result);
+    PyObject_CallObject(add_final_circuit_func, add_final_circuit_args);
+    Py_DECREF(add_final_circuit_func);
+    Py_DECREF(add_final_circuit_args);
+    Py_DECREF(final_layer_result);
+
+    // Convert parameters to numpy array and flip
+    PyObject* numpy_module = PyImport_ImportModule("numpy");
+    PyObject* numpy_asarray_func = PyObject_GetAttrString(numpy_module, "asarray");
+    PyObject* numpy_flip_func = PyObject_GetAttrString(numpy_module, "flip");
+    Py_DECREF(numpy_module);
+    
+    PyObject* dtype_dict = PyDict_New();
+    PyDict_SetItemString(dtype_dict, "dtype", (PyObject*)&PyFloat_Type);
+    PyObject* numpy_asarray_args = PyTuple_Pack(1, optimized_parameters);
+    PyObject* numpy_asarray_result = PyObject_Call(numpy_asarray_func, numpy_asarray_args, dtype_dict);
+    Py_DECREF(numpy_asarray_func);
+    Py_DECREF(numpy_asarray_args);
+    Py_DECREF(dtype_dict);
+    
+    PyObject* numpt_flip_args = PyTuple_Pack(2, numpy_asarray_result, PyLong_FromLong(0));
+    PyObject* numpt_flip_result = PyObject_CallObject(numpy_flip_func, numpt_flip_args);
+    Py_DECREF(numpy_flip_func);
+    Py_DECREF(numpt_flip_args);
+    Py_DECREF(numpy_asarray_result);
+
+    // Set gate structure and parameters
+    PyObject* set_gate_structure_args = PyTuple_Pack(1, Circuit_ret_result);
+    PyObject* set_gate_structure_result = qgd_N_Qubit_Decomposition_Wrapper_New_set_Gate_Structure(self, set_gate_structure_args);
+    Py_DECREF(set_gate_structure_args);
+    Py_DECREF(Circuit_ret_result);
+    if (!set_gate_structure_result) {
+        Py_DECREF(numpt_flip_result);
+        Py_DECREF(optimized_parameters);
+        Py_DECREF(single_qubit_gates);
+        Py_DECREF(qc_data_attr);
+        Py_DECREF(qc_qubits_attr);
+        Py_DECREF(qc);
+        return NULL;
+    }
+    Py_DECREF(set_gate_structure_result);
+
+    PyObject* set_optimized_params_args = PyTuple_Pack(1, numpt_flip_result);
+    PyObject* set_optimized_params_result = qgd_N_Qubit_Decomposition_Wrapper_New_set_Optimized_Parameters(self, set_optimized_params_args);
+    Py_DECREF(set_optimized_params_args);
+    Py_DECREF(numpt_flip_result);
+    Py_DECREF(optimized_parameters);
+    Py_DECREF(single_qubit_gates);
+    Py_DECREF(qc_data_attr);
+    Py_DECREF(qc_qubits_attr);
+    Py_DECREF(qc);
+    if (!set_optimized_params_result) {
+        return NULL;
+    }
+    Py_DECREF(set_optimized_params_result);
+
+    Py_RETURN_NONE;
+}
+
+/**
+@brief Method to import Qiskit circuit
+@param qc_in Qiskit QuantumCircuit to import
+@return Returns Py_None on success
+*/
+static PyObject*
+qgd_N_Qubit_Decomposition_Wrapper_New_import_Qiskit_Circuit(qgd_N_Qubit_Decomposition_Wrapper_New* self, PyObject* args)
+{
+    PyObject* qc_in = NULL;
+    if (!PyArg_ParseTuple(args, "O", &qc_in)) {
+        return NULL;
+    }
+    bool is_adaptive = (dynamic_cast<N_Qubit_Decomposition_adaptive*>(self->decomp) != nullptr);
+    if (is_adaptive) {
+        return qgd_N_Qubit_Decomposition_Wrapper_New_import_Qiskit_Circuit_adaptive(self, qc_in);
+    } else {
+        return qgd_N_Qubit_Decomposition_Wrapper_New_import_Qiskit_Circuit_standard(self, qc_in);
+    }
+}
+
+
+
+
+
+//////////////////////////////////////////////////////////////////
+
 extern "C"
 {
 
@@ -2102,6 +2914,14 @@ These methods are available for all decomposition classes
      "Set custom gate structure for decomposition"}, \
     {"add_Finalyzing_Layer_To_Gate_Structure", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_add_Finalyzing_Layer_To_Gate_Structure, METH_NOARGS, \
      "Add finalizing layer to gate structure"}, \
+    {"get_Gates", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_get_Gates, METH_NOARGS, \
+     "Get gates as a list of dictionaries"}, \
+    {"get_Qiskit_Circuit", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_get_Qiskit_Circuit, METH_NOARGS, \
+     "Export decomposition to Qiskit QuantumCircuit format"}, \
+    {"get_Cirq_Circuit", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_get_Cirq_Circuit, METH_NOARGS, \
+     "Export decomposition to Cirq Circuit format"}, \
+    {"import_Qiskit_Circuit", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_New_import_Qiskit_Circuit, METH_VARARGS, \
+     "Import Qiskit QuantumCircuit"}, \
 
 
 /**
