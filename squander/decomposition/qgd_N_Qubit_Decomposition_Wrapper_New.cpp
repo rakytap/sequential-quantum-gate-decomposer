@@ -183,9 +183,20 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_init(qgd_N_Qubit_Decomposition_Wrappe
 
     try {
         Matrix Umtx_mtx = extract_matrix(Umtx_arg, &self->Umtx);
-        // calculate qbit_num from matrix size if not provided
-        if (qbit_num == -1) {
+        
+        // For state vector input: State Preparation passes (State, level_limit_max, level_limit_min, ...)
+        // without qbit_num, so we calculate qbit_num from state size and interpret the qbit_num 
+        // position as level_limit_max. Example: (State_16x1, 5, 0) -> qbit_num=4, level_limit_max=5
+        if (Umtx_mtx.cols == 1 && qbit_num > 0) {
+            int level_limit_max_in = qbit_num;
             qbit_num = (int)std::round(std::log2(Umtx_mtx.rows));
+            level_limit = level_limit_max_in;
+        }
+        else {
+            // For Unitary decomposition, calculate qbit_num from matrix size if not provided
+            if (qbit_num == -1) {
+                qbit_num = (int)std::round(std::log2(Umtx_mtx.rows));
+            }
         }
         
         auto topology_cpp = extract_topology(topology);
