@@ -23,7 +23,8 @@ limitations under the License.
 import squander.decomposition.qgd_Wide_Circuit_Optimization as Wide_Circuit_Optimization
 from squander import utils
 from squander import Qiskit_IO
-import time
+import time, requests, os, zipfile, tempfile
+from pathlib import Path
     
 
 if __name__ == '__main__':
@@ -36,7 +37,33 @@ if __name__ == '__main__':
             'max_partition_size': 3,
     }
 
-    filename = 'examples/partitioning/qasm_samples/heisenberg-16-20.qasm'
+    zip_url = "https://zenodo.org/records/17293975/files/benchmark_circuit_QMill_IBM.zip?download=1"
+    temp_dir = tempfile.mkdtemp(prefix="repos_")
+    zip_path = os.path.join(temp_dir, "benchmark_circuit_QMill_IBM.zip")
+    qasm_files = []
+    # Download zip
+    r = requests.get(zip_url, stream=True)
+    if r.status_code != 200:
+        raise RuntimeError(f"Failed to download {zip_url}: HTTP {r.status_code}")
+    with open(zip_path, "wb") as f:
+        for chunk in r.iter_content(chunk_size=8192):
+            f.write(chunk)
+
+    # Extract zip
+    extract_path = os.path.join(temp_dir, "benchmark_circuit_QMill_IBM")
+    with zipfile.ZipFile(zip_path, "r") as zf:
+        zf.extractall(extract_path)
+
+    # Find QASM files
+    for path in Path(extract_path).rglob("*.qasm"):
+        qasm_files.append(str(path.resolve()))
+
+    #filename = next(x for x in qasm_files if x.endswith("mod5_4_qmill_ibm.qasm"))
+    #filename = next(x for x in qasm_files if x.endswith("gf2^E8_mult_qmill_ibm.qasm"))
+    filename = next(x for x in qasm_files if x.endswith("csum_mux_9_qmill_ibm.qasm"))    
+
+    #filename = "examples/partitioning/qasm_samples/heisenberg-16-20.qasm"
+    
     start_time = time.time()
 
     # load the circuit from a file
