@@ -145,7 +145,7 @@ virtual ~Generative_Quantum_Machine_Learning_Base();
 @param sigma The parameters of the kernel
 @return The calculated value of the kernel function
 */
-double Gaussian_kernel(std::vector<int>& x, std::vector<int>& y, Matrix_real& sigma);
+double Gaussian_kernel(int x, int y, Matrix_real& sigma);
 
 /**
 @brief Call to evaluate the approximated expectation value of the square of the distribution

@@ -225,14 +225,10 @@ void Generative_Quantum_Machine_Learning_Base::start_optimization(){
 @param sigma The parameters of the kernel
 @return The calculated value of the kernel function
 */
-double Generative_Quantum_Machine_Learning_Base::Gaussian_kernel(std::vector<int>& x, std::vector<int>& y, Matrix_real& sigma) {
+double Generative_Quantum_Machine_Learning_Base::Gaussian_kernel(int x, int y, Matrix_real& sigma) {
     // The norm stores the distance between the two data points (the more qbit they differ in the bigger it is)
-    double norm=0;
-    for (int idx=0; idx<qbit_num; idx++) {
-        norm += (x[idx] - y[idx])*(x[idx]-y[idx]);
-    }
-    double norm_squared = norm*norm;
-    double result = (exp(-norm_squared*0.5/sigma[0])+ exp(-norm_squared*0.5/sigma[1])+ exp(-norm_squared*0.5/sigma[2]))/3;
+    double norm = (x - y)*(x - y);
+    double result = (exp(-norm*0.5/sigma[0])+ exp(-norm*0.5/sigma[1])+ exp(-norm*0.5/sigma[2]))/3;
     return result;
 }
 
@@ -243,7 +239,7 @@ void Generative_Quantum_Machine_Learning_Base::fill_lookup_table() {
     gaussian_lookup_table = std::vector<std::vector<double>>(1<<qbit_num, std::vector<double>(1<<qbit_num, 0));
     for (int idx1=0; idx1 < 1<<qbit_num; idx1++) {
         for (int idx2=0; idx2 < 1<<qbit_num; idx2++) {
-            gaussian_lookup_table[idx1][idx2] = Gaussian_kernel(all_bitstrings[idx1], all_bitstrings[idx2], sigma);
+            gaussian_lookup_table[idx1][idx2] = Gaussian_kernel(idx1, idx2, sigma);
         }
     }
 }
@@ -260,7 +256,7 @@ double Generative_Quantum_Machine_Learning_Base::expectation_value_P_star_P_star
         for (int idx1=r.begin(); idx1<r.end(); idx1++) {
             for (int idx2=0; idx2<sample_size; idx2++) {
                 if (idx1 != idx2) {
-                    ev_local += Gaussian_kernel(sample_bitstrings[idx1], sample_bitstrings[idx2], sigma);
+                    ev_local += Gaussian_kernel(idx1, idx2, sigma);
                 }
             }
         }
@@ -283,7 +279,7 @@ double Generative_Quantum_Machine_Learning_Base::expectation_value_P_star_P_star
         double& ev_local = priv_partial_ev.local();
         for (int idx1=r.begin(); idx1<r.end(); idx1++) {
             for (int idx2=0; idx2<1<<qbit_num; idx2++) {
-                ev_local += P_star[idx1]*P_star[idx2]*Gaussian_kernel(all_bitstrings[idx1], all_bitstrings[idx2], sigma);
+                ev_local += P_star[idx1]*P_star[idx2]*Gaussian_kernel(idx1, idx2, sigma);
             }
         }
     });
@@ -347,8 +343,8 @@ double Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions_exact(
                     ev_P_theta_P_star_local += P_theta[idx1]*P_star[idx2]*gaussian_lookup_table[idx1][idx2];
                 }
                 else {
-                    ev_P_theta_P_theta_local += P_theta[idx1]*P_theta[idx2]*Gaussian_kernel(all_bitstrings[idx1], all_bitstrings[idx2], sigma);
-                    ev_P_theta_P_star_local += P_theta[idx1]*P_star[idx2]*Gaussian_kernel(all_bitstrings[idx1], all_bitstrings[idx2], sigma);
+                    ev_P_theta_P_theta_local += P_theta[idx1]*P_theta[idx2]*Gaussian_kernel(idx1, idx2, sigma);
+                    ev_P_theta_P_star_local += P_theta[idx1]*P_star[idx2]*Gaussian_kernel(idx1, idx2, sigma);
                 }
             }
         }
@@ -423,9 +419,9 @@ double Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions_approx
                 }
                 else {
                     if (idx1 != idx2) {
-                        ev_P_theta_P_theta_local += Gaussian_kernel(all_bitstrings[theta_sample_indices[idx1]], all_bitstrings[theta_sample_indices[idx2]], sigma);
+                        ev_P_theta_P_theta_local += Gaussian_kernel(theta_sample_indices[idx1],theta_sample_indices[idx2], sigma);
                     }
-                    ev_P_theta_P_star_local += Gaussian_kernel(all_bitstrings[theta_sample_indices[idx1]], sample_bitstrings[idx2], sigma);
+                    ev_P_theta_P_star_local += Gaussian_kernel(theta_sample_indices[idx1], sample_indices[idx2], sigma);
                 }
             }
         }
