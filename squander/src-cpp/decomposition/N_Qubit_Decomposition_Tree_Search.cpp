@@ -49,10 +49,10 @@ static inline std::pair<int,int> norm_pair(int i, int j) {
     return (i <= j) ? std::make_pair(i,j) : std::make_pair(j,i);
 }
 
-// Return true iff 'seq' (list of CNOT pairs) equals the canonical
+// Return -1 iff 'seq' (list of CNOT pairs) equals the canonical else first bad index
 // Kahn topological order under the tie-breaker: lexicographic by pair,
 // then by original index (to stabilize identical pairs).
-static int canonical_prefix_ok(const std::vector<std::pair<int,int>>& seq) {
+static int canonical_prefix_first_bad(const std::vector<std::pair<int,int>>& seq) {
     const int m = static_cast<int>(seq.size());
     if (m <= 1) return -1; // always canonical
 
@@ -556,7 +556,7 @@ N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures( int level_n
                     int c = possible_control_qbits[ gcode[k] ];
                     seq.emplace_back(t, c);                  // order irrelevant; helper normalizes
                 }
-                int bad_pos = canonical_prefix_ok(seq);  // -1 if OK, else index in [0..L-1]
+                int bad_pos = canonical_prefix_first_bad(seq);  // -1 if OK, else index in [0..L-1]
                 if (bad_pos != -1) {
                     int64_t skipped = gcode_counter.advance(gcode.size()-1-bad_pos);
                     if (skipped == 0) break; // nothing left to advance to in this chunk
