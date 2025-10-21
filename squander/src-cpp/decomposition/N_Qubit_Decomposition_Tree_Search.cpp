@@ -41,7 +41,69 @@ limitations under the License.
 
 
 
+#include <queue>
+#include <unordered_map>
 
+// normalize unordered CNOT pair: (i,j) == (j,i)
+static inline std::pair<int,int> norm_pair(int i, int j) {
+    return (i <= j) ? std::make_pair(i,j) : std::make_pair(j,i);
+}
+
+// Return true iff 'seq' (list of CNOT pairs) equals the canonical
+// Kahn topological order under the tie-breaker: lexicographic by pair,
+// then by original index (to stabilize identical pairs).
+static bool canonical_prefix_ok(const std::vector<std::pair<int,int>>& seq) {
+    const int m = static_cast<int>(seq.size());
+    if (m <= 1) return true;
+
+    // 1) normalize
+    std::vector<std::pair<int,int>> ops(m);
+    for (int k = 0; k < m; ++k) ops[k] = norm_pair(seq[k].first, seq[k].second);
+
+    // 2) per-qubit serial constraints: edge u->v if ops u,v share a qubit and u < v
+    std::vector<std::vector<int>> succ(m);
+    std::vector<int> indeg(m, 0);
+    std::unordered_map<int,int> last_on; // qubit -> last op index touching it
+    last_on.reserve(m*2);
+
+    for (int k = 0; k < m; ++k) {
+        const auto [a,b] = ops[k];
+        for (int q : {a,b}) {
+            auto it = last_on.find(q);
+            if (it != last_on.end()) {
+                int prev = it->second;
+                succ[prev].push_back(k);
+                ++indeg[k];
+                it->second = k;
+            } else {
+                last_on.emplace(q, k);
+            }
+        }
+    }
+
+    // 3) deterministic Kahn with min-heap by (pair, index)
+    struct Node { std::pair<int,int> p; int idx; };
+    struct Cmp {
+        bool operator()(const Node& a, const Node& b) const {
+            if (a.p != b.p) return a.p > b.p;     // lexicographically smaller first
+            return a.idx > b.idx;                 // then by original index
+        }
+    };
+    std::priority_queue<Node, std::vector<Node>, Cmp> pq;
+    for (int k = 0; k < m; ++k) if (indeg[k] == 0) pq.push(Node{ops[k], k});
+
+    // 4) walk canonical order and require it matches the given prefix exactly
+    for (int pos = 0; pos < m; ++pos) {
+        if (pq.empty()) return false;            // malformed (shouldn’t happen)
+        Node u = pq.top(); pq.pop();
+        if (u.idx != pos) return false;          // deviation: not canonical
+
+        for (int v : succ[u.idx]) {
+            if (--indeg[v] == 0) pq.push(Node{ops[v], v});
+        }
+    }
+    return true;
+}
 
 
 /**
@@ -486,6 +548,21 @@ N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures( int level_n
     
                 GrayCode&& gcode = gcode_counter.get();               
                 
+                // --- prune by canonical Kahn order (cheap, no extra memory) ---
+                {
+                    std::vector<std::pair<int,int>> seq;
+                    seq.reserve(gcode.size());
+                    for (int k = 0; k < gcode.size(); ++k) {
+                        int t = possible_target_qbits[ gcode[k] ];
+                        int c = possible_control_qbits[ gcode[k] ];
+                        seq.emplace_back(t, c);                  // order irrelevant; helper normalizes
+                    }
+                    if (!canonical_prefix_ok(seq)) {
+                        // Not the canonical representative for this DAG ⇒ skip
+                        continue;
+                    }
+                }
+                // ----------------------------------------------------------------
         
                 Gates_block* gate_structure_loc = construct_gate_structure_from_Gray_code( gcode );
              
