@@ -101,7 +101,7 @@ Gates_block::Gates_block(int qbit_num_in) : Gate(qbit_num_in) {
     
     fragmented = false;
     fragmentation_type = -1;
-    min_fusion = -1;
+    min_fusion = 14;
     
 }
 
