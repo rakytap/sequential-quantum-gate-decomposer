@@ -548,21 +548,19 @@ N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures( int level_n
                 GrayCode&& gcode = gcode_counter.get();               
                 
                 // --- prune by canonical Kahn order (cheap, no extra memory) ---
-                {
-                    std::vector<std::pair<int,int>> seq;
-                    seq.reserve(gcode.size());
-                    for (int k = 0; k < gcode.size(); ++k) {
-                        int t = possible_target_qbits[ gcode[k] ];
-                        int c = possible_control_qbits[ gcode[k] ];
-                        seq.emplace_back(t, c);                  // order irrelevant; helper normalizes
-                    }
-                    int bad_pos = canonical_prefix_ok(seq);
-                    if (bad_pos != -1) {
-                        int64_t skipped = gcode_counter.advance(bad_pos);
-                        if (skipped == 0) break; // nothing left to advance to in this chunk
-                        iter_idx += skipped - 1; // -1 compensates for the loop’s ++iter_idx
-                        continue; // proceed with next candidate
-                    }
+                std::vector<std::pair<int,int>> seq;
+                seq.reserve(gcode.size());
+                for (int k = 0; k < gcode.size(); ++k) {
+                    int t = possible_target_qbits[ gcode[k] ];
+                    int c = possible_control_qbits[ gcode[k] ];
+                    seq.emplace_back(t, c);                  // order irrelevant; helper normalizes
+                }
+                int bad_pos = canonical_prefix_ok(seq);
+                if (bad_pos != -1) {
+                    int64_t skipped = gcode_counter.advance(bad_pos);
+                    if (skipped == 0) break; // nothing left to advance to in this chunk
+                    iter_idx += skipped - 1; // -1 compensates for the loop’s ++iter_idx
+                    continue; // proceed with next candidate
                 }
                 // ----------------------------------------------------------------
         
