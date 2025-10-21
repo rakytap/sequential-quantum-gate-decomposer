@@ -17,6 +17,7 @@
 #include "n_aryGrayCodeCounter.h"
 #include <cstring>
 #include <iostream>
+#include <vector>
 
 
 
@@ -235,7 +236,47 @@ n_aryGrayCodeCounter::next( int& changed_index, int& value_prev, int& value) {
 
 }
 
+int64_t n_aryGrayCodeCounter::advance(int counter_pos) {
+    const int L = (int)n_ary_limits.size();
+    if (L == 0) return 0;
+    if (counter_pos < 0) counter_pos = 0;
+    if (counter_pos >= L) counter_pos = L - 1;
 
+    // Try to bump digit at counter_pos; if not possible, carry left
+    int p = counter_pos;
+    if (counter_chain[p] + 1 < n_ary_limits[p]) {
+        counter_chain[p] += 1;
+        std::fill(counter_chain.data + p + 1, counter_chain.data + counter_chain.size(), 0);
+    } else {
+        // carry left: find the rightmost position < p that can be increased
+        int r = p - 1;
+        while (r >= 0 && counter_chain[r] + 1 >= n_ary_limits[r]) --r;
+        if (r >= 0) {
+            counter_chain[r] += 1;
+            std::fill(counter_chain.data + r + 1, counter_chain.data + counter_chain.size(), 0);
+        } else {
+            // no forward state remains in this lex-slab
+            return 0;
+        }
+    }
+
+    // Compute new mixed-radix rank (offset) from digits d
+    int64_t new_offset = 0;
+    int64_t mul = 1;
+    for (int j = L-1; j >= 0; --j) {
+        new_offset += mul * (int64_t)counter_chain[j];
+        mul *= (int64_t)n_ary_limits[j];
+    }
+
+    // If somehow not moving forward, do nothing
+    if (new_offset <= offset || new_offset > offset_max) return 0;
+
+    // Reinitialize counter to the new offset (rebuilds counter_chain & gray_code)
+    initialize(new_offset);
+
+    // Return exact number of states skipped
+    return new_offset - offset; // note: initialize() set offset=new_offset
+}
 
 void  
 n_aryGrayCodeCounter::set_offset_max( const int64_t& value ) {
