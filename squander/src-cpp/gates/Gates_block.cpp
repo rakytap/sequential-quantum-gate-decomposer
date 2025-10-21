@@ -266,9 +266,10 @@ Gates_block::apply_to( Matrix_real& parameters_mtx_in, Matrix& input, int parall
 
             //int old_qbit_num = qbit_num;
             Gates_block* clone_block = clone();
-            fb->reorder_qubits(old_to_new);
-            fb->set_qbit_num(size);
+            clone_block->reorder_qubits(old_to_new);
+            clone_block->set_qbit_num(size);            
             fusion_block.update(clone_block);
+            fb = fusion_block.get();
         }
         fb->apply_to(parameters_mtx_in, Umtx_mini, parallel);
         //set_qbit_num(old_qbit_num);
