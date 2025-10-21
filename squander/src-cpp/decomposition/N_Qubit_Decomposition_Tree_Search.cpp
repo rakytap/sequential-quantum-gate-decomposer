@@ -717,10 +717,11 @@ N_Qubit_Decomposition_Tree_Search::construct_gate_structure_from_Gray_code( cons
 
     for( int gcode_idx=0; gcode_idx<gcode.size(); gcode_idx++ ) {
         //since the counter chain counts has its least significant digit at index 0, to prune the search space we read the Gray code in reverse order
-        int target_qbit = possible_target_qbits[ gcode[gcode_idx] ];
-        int control_qbit = possible_control_qbits[ gcode[gcode_idx] ];
-            
-            
+        int revidx = gcode.size()-1-gcode_idx;
+        int target_qbit = possible_target_qbits[ gcode[revidx] ];
+        int control_qbit = possible_control_qbits[ gcode[revidx] ];
+
+
         target_qbits[gcode_idx] = target_qbit;
         control_qbits[gcode_idx] = control_qbit;  
             
