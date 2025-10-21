@@ -145,58 +145,8 @@ N_Qubit_Decomposition_Tree_Search::N_Qubit_Decomposition_Tree_Search() : Optimiz
 @param accelerator_num The number of DFE accelerators used in the calculations
 @return An instance of the class
 */
-N_Qubit_Decomposition_Tree_Search::N_Qubit_Decomposition_Tree_Search( Matrix Umtx_in, int qbit_num_in, std::map<std::string, Config_Element>& config, int accelerator_num ) : Optimization_Interface(Umtx_in, qbit_num_in, false, config, RANDOM, accelerator_num) {
-
-    level_limit = 0;
-
-    // BFGS is better for smaller problems, while ADAM for larger ones
-    if ( qbit_num <= 5 ) {
-        set_optimizer( BFGS );
-
-        // Maximal number of iteartions in the optimization process
-        max_outer_iterations = 4;
-        
-        max_inner_iterations = 10000;
-
-    }
-    else {
-        set_optimizer( ADAM );
-
-        // Maximal number of iteartions in the optimization process
-        max_outer_iterations = 1;
-
-    }
-
-    if( topology.size() == 0 ) {
-        for( int qbit1=0; qbit1<qbit_num; qbit1++ ) {
-            for( int qbit2=qbit1; qbit2<qbit_num; qbit2++ ) {
-                matrix_base<int> edge(2,1);
-                edge[0] = qbit1;
-                edge[1] = qbit2;
-
-                topology.push_back( edge );
-            }
-        }
-    }
-    
-    // construct the possible CNOT combinations within a single level
-    // the number of possible CNOT connections netween the qubits (including topology constraints)
-    int n_ary_limit_max = topology.size();
-    
-    possible_target_qbits = matrix_base<int>(1, n_ary_limit_max);
-    possible_control_qbits = matrix_base<int>(1, n_ary_limit_max);    
-    for( int element_idx = 0; element_idx<n_ary_limit_max; element_idx++ ) {
-
-       matrix_base<int>& edge = topology[ element_idx ];
-       possible_target_qbits[element_idx] = edge[0];
-       possible_control_qbits[element_idx] = edge[1]; 
- 
-    }   
-
-
-
-
-
+N_Qubit_Decomposition_Tree_Search::N_Qubit_Decomposition_Tree_Search( Matrix Umtx_in, int qbit_num_in, std::map<std::string, Config_Element>& config, int accelerator_num )
+    : N_Qubit_Decomposition_Tree_Search(Umtx_in, qbit_num_in, {}, config, accelerator_num) {    
 }
 
 
@@ -493,13 +443,8 @@ N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures( int level_n
     
     int n_ary_limit_max = topology.size();
     matrix_base<int> n_ary_limits( 1, level_num ); //array containing the limits of the individual Gray code elements    
-    memset( n_ary_limits.get_data(), n_ary_limit_max, n_ary_limits.size()*sizeof(int) );
+    std::fill(n_ary_limits.get_data(), n_ary_limits.get_data() + n_ary_limits.size(), n_ary_limit_max);
     
-    for( int idx=0; idx<n_ary_limits.size(); idx++) {
-        n_ary_limits[idx] = n_ary_limit_max;
-    }
-
-
     int64_t iteration_max = pow( (int64_t)n_ary_limit_max, level_num );
     
     
