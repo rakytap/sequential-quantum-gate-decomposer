@@ -253,22 +253,26 @@ Gates_block::apply_to( Matrix_real& parameters_mtx_in, Matrix& input, int parall
 
     int size = involved_qubits.size();
 
-    if (min_fusion != -1 && qbit_num >= min_fusion && size <= (input.cols == 1 ? 5 : 2) && qbit_num != size && gates.size() > 1) {
-        
+    if (min_fusion != -1 && qbit_num >= min_fusion && size <= (input.cols == 1 ? 5 : 2) && qbit_num != size && gates.size() > 1) {        
+        auto fb = fusion_block.get();
         Matrix Umtx_mini = create_identity(Power_of_2(size));
+        if (fb == nullptr) {
 
-        std::vector<int> old_to_new(qbit_num, -2), new_to_old(qbit_num, -2);
-        for (int i = 0; i < size; i++){
-            old_to_new[i] = involved_qubits[i];
-            new_to_old[involved_qubits[i]] = i;
+            std::vector<int> old_to_new(qbit_num, -2), new_to_old(qbit_num, -2);
+            for (int i = 0; i < size; i++){
+                old_to_new[i] = involved_qubits[i];
+                new_to_old[involved_qubits[i]] = i;
+            }
+
+            //int old_qbit_num = qbit_num;
+            Gates_block* clone_block = clone();
+            fb->reorder_qubits(old_to_new);
+            fb->set_qbit_num(size);
+            fusion_block.update(clone_block);
         }
-
-        int old_qbit_num = qbit_num;
-        reorder_qubits(old_to_new);
-        set_qbit_num(size);
-        apply_to(parameters_mtx_in, Umtx_mini, parallel);        
-        set_qbit_num(old_qbit_num);
-        reorder_qubits(new_to_old);
+        fb->apply_to(parameters_mtx_in, Umtx_mini, parallel);
+        //set_qbit_num(old_qbit_num);
+        //reorder_qubits(new_to_old);
 
         if (size == 1) {
             custom_kernel_1qubit_gate merged_gate( qbit_num, involved_qubits[0], Umtx_mini );
