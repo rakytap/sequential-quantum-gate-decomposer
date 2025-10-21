@@ -267,7 +267,7 @@ int64_t n_aryGrayCodeCounter::advance(int counter_pos) {
         mul *= (int64_t)n_ary_limits[j];
     }
 
-    printf("Advancing from offset %lld to offset %lld max %lld\n", offset, new_offset, offset_max);
+    //printf("Advancing from offset %lld to offset %lld max %lld\n", offset, new_offset, offset_max);
     // If somehow not moving forward, do nothing
     if (new_offset <= offset || new_offset > offset_max) return 0;
 
