@@ -29,48 +29,11 @@ limitations under the License.
 #include "matrix_real.h"
 #include "CROT.h"
 #include "Gate.h"
+#include "utils.hpp"
 
 #ifdef __DFE__
 #include "common_DFE.h"
 #endif
-
-#include <memory>
-
-template<typename T>
-class SmartAtomicPtr
-{
-public:
-    SmartAtomicPtr() = default;
-    SmartAtomicPtr( T* newT )
-    {
-        update( newT );
-    }
-    ~SmartAtomicPtr()
-    {
-        update(nullptr);
-    }
-    SmartAtomicPtr( const SmartAtomicPtr<T>& other) 
-    {
-        T* otherT = other.atomicTptr.load();
-        update( otherT );
-    }
-    SmartAtomicPtr<T>& operator=( const SmartAtomicPtr<T>& other) {
-        update( other.atomicTptr.load() );
-        return *this;
-    }
-    void update( T* newT, std::memory_order ord = std::memory_order_seq_cst ) 
-    {
-        delete atomicTptr.exchange( newT, ord );
-    }
-    std::shared_ptr<T> get(std::memory_order ord = std::memory_order_seq_cst) 
-    { 
-        keepAlive.reset( atomicTptr.load(ord) );
-        return keepAlive;
-    }
-private:
-    std::atomic<T*> atomicTptr{nullptr};
-    std::shared_ptr<T> keepAlive;
-};
 
 /**
 @brief A class responsible for grouping two-qubit (CNOT,CZ,CH) and one-qubit gates into layers
