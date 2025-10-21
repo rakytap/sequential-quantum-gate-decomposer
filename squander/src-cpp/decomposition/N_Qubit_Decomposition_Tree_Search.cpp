@@ -52,7 +52,7 @@ static inline std::pair<int,int> norm_pair(int i, int j) {
 // Return true iff 'seq' (list of CNOT pairs) equals the canonical
 // Kahn topological order under the tie-breaker: lexicographic by pair,
 // then by original index (to stabilize identical pairs).
-static bool canonical_prefix_ok(const std::vector<std::pair<int,int>>& seq) {
+static int canonical_prefix_ok(const std::vector<std::pair<int,int>>& seq) {
     const int m = static_cast<int>(seq.size());
     if (m <= 1) return true;
 
@@ -94,17 +94,16 @@ static bool canonical_prefix_ok(const std::vector<std::pair<int,int>>& seq) {
 
     // 4) walk canonical order and require it matches the given prefix exactly
     for (int pos = 0; pos < m; ++pos) {
-        if (pq.empty()) return false;            // malformed (shouldn’t happen)
+        if (pq.empty()) return pos;            // malformed (shouldn’t happen)
         Node u = pq.top(); pq.pop();
-        if (u.idx != pos) return false;          // deviation: not canonical
+        if (u.idx != pos) return pos;          // deviation: not canonical
 
         for (int v : succ[u.idx]) {
             if (--indeg[v] == 0) pq.push(Node{ops[v], v});
         }
     }
-    return true;
+    return -1;
 }
-
 
 /**
 @brief Nullary constructor of the class.
@@ -557,9 +556,12 @@ N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures( int level_n
                         int c = possible_control_qbits[ gcode[k] ];
                         seq.emplace_back(t, c);                  // order irrelevant; helper normalizes
                     }
-                    if (!canonical_prefix_ok(seq)) {
-                        // Not the canonical representative for this DAG ⇒ skip
-                        continue;
+                    int bad_pos = canonical_prefix_ok(seq);
+                    if (bad_pos != -1) {
+                        int64_t skipped = gcode_counter.advance(bad_pos);
+                        if (skipped == 0) break; // nothing left to advance to in this chunk
+                        iter_idx += skipped - 1; // -1 compensates for the loop’s ++iter_idx
+                        continue; // proceed with next candidate
                     }
                 }
                 // ----------------------------------------------------------------
