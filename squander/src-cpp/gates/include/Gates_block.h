@@ -48,18 +48,9 @@ protected:
     int layer_num;
     
     
-    //////// experimental attributes to partition the circuits into subsegments. Advantageous in simulation of larger circuits ///////////űű
-    
-    /// boolean variable indicating whether the circuit was already partitioned or not
-    bool fragmented;
-    int fragmentation_type;
     /// maximal number of qubits in partitions
     int min_fusion;
     SmartAtomicPtr<Gates_block> fusion_block;
-    std::vector< std::vector<int>> involved_qbits;
-    std::vector<int> block_end;
-    std::vector<int> block_type;
-    //////// experimental attributes to partition the circuits into subsegments. Advantageous in simulation of larger circuits ///////////    
 
 public:
 
