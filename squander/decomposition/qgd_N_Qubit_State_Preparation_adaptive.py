@@ -27,11 +27,12 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 import numpy as np
 from os import path
-from squander.decomposition.qgd_N_Qubit_Decomposition_adaptive import qgd_N_Qubit_Decomposition_adaptive
+from squander.decomposition.qgd_N_Qubit_Decompositions_Wrapper import qgd_N_Qubit_Decomposition_adaptive as qgd_N_Qubit_Decomposition_adaptive_Wrapper
+
 
 ##
 # @brief A QGD Python interface class for the decomposition of N-qubit state into U3 and CNOT gates.
-class qgd_N_Qubit_State_Preparation_adaptive(qgd_N_Qubit_Decomposition_adaptive):
+class qgd_N_Qubit_State_Preparation_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrapper):
 
     def __init__( self, State, level_limit_max=8, level_limit_min=0, topology=None, config={} ):
 

@@ -61,7 +61,7 @@ class Test_State_Preparation:
 
         """
 
-        from squander.decomposition.qgd_N_Qubit_State_Preparation_adaptive import qgd_N_Qubit_State_Preparation_adaptive
+        from squander import N_Qubit_State_Preparation_adaptive
         from scipy.io import loadmat
 
         # load the unitary from file
@@ -75,12 +75,12 @@ class Test_State_Preparation:
         # creating a class to decompose the unitary
 
         with pytest.raises(Exception):
-            cDecompose = qgd_N_Qubit_State_Preparation_adaptive(Umtx,
+            cDecompose = N_Qubit_State_Preparation_adaptive(Umtx,
                     level_limit_max=5, level_limit_min=0)
 
     def State_Preparation_adaptive_base(self, optimizer, cost_func, compression_enabled=1):
 
-        from squander.decomposition.qgd_N_Qubit_State_Preparation_adaptive import qgd_N_Qubit_State_Preparation_adaptive
+        from squander import N_Qubit_State_Preparation_adaptive
         from scipy.io import loadmat
 
         # load the unitary from file
@@ -110,7 +110,7 @@ class Test_State_Preparation:
 
         # creating a class to decompose the unitary
 
-        cDecompose = qgd_N_Qubit_State_Preparation_adaptive(State,
+        cDecompose = N_Qubit_State_Preparation_adaptive(State,
                 level_limit_max=5, level_limit_min=0, config = config)
 
         # setting the verbosity of the decomposition

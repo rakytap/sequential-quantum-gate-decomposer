@@ -87,7 +87,7 @@ class Test_Decomposition:
         """
 
         from squander.nn.qgd_nn import qgd_nn
-        from squander.decomposition.qgd_N_Qubit_Decomposition_adaptive import qgd_N_Qubit_Decomposition_adaptive      
+        from squander import N_Qubit_Decomposition_adaptive
 
         # number of qubits
         qbit_num = 3
