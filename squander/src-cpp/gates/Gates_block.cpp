@@ -256,13 +256,11 @@ Gates_block::apply_to( Matrix_real& parameters_mtx_in, Matrix& input, int parall
         Matrix Umtx_mini = create_identity(Power_of_2(size));
         if (fb == nullptr) {
 
-            std::vector<int> old_to_new(qbit_num, -2), new_to_old(qbit_num, -2);
+            std::vector<int> old_to_new(qbit_num, -2);
             for (int i = 0; i < size; i++){
                 old_to_new[i] = involved_qubits[i];
-                new_to_old[involved_qubits[i]] = i;
             }
 
-            //int old_qbit_num = qbit_num;
             Gates_block* clone_block = clone();
             clone_block->reorder_qubits(old_to_new);
             clone_block->set_qbit_num(size);            
@@ -270,8 +268,6 @@ Gates_block::apply_to( Matrix_real& parameters_mtx_in, Matrix& input, int parall
             fb = fusion_block.get();
         }
         fb->apply_to(parameters_mtx_in, Umtx_mini, parallel);
-        //set_qbit_num(old_qbit_num);
-        //reorder_qubits(new_to_old);
 
         if (size == 1) {
             custom_kernel_1qubit_gate merged_gate( qbit_num, involved_qubits[0], Umtx_mini );
