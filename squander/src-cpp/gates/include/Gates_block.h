@@ -34,6 +34,43 @@ limitations under the License.
 #include "common_DFE.h"
 #endif
 
+#include <memory>
+
+template<typename T>
+class SmartAtomicPtr
+{
+public:
+    SmartAtomicPtr() = default;
+    SmartAtomicPtr( T* newT )
+    {
+        update( newT );
+    }
+    ~SmartAtomicPtr()
+    {
+        update(nullptr);
+    }
+    SmartAtomicPtr( const SmartAtomicPtr<T>& other) 
+    {
+        T* otherT = other.atomicTptr.load();
+        update( otherT );
+    }
+    SmartAtomicPtr<T>& operator=( const SmartAtomicPtr<T>& other) {
+        update( other.atomicTptr.load() );
+        return *this;
+    }
+    void update( T* newT, std::memory_order ord = std::memory_order_seq_cst ) 
+    {
+        delete atomicTptr.exchange( newT, ord );
+    }
+    std::shared_ptr<T> get(std::memory_order ord = std::memory_order_seq_cst) 
+    { 
+        keepAlive.reset( atomicTptr.load(ord) );
+        return keepAlive;
+    }
+private:
+    std::atomic<T*> atomicTptr{nullptr};
+    std::shared_ptr<T> keepAlive;
+};
 
 /**
 @brief A class responsible for grouping two-qubit (CNOT,CZ,CH) and one-qubit gates into layers
@@ -55,6 +92,7 @@ protected:
     int fragmentation_type;
     /// maximal number of qubits in partitions
     int min_fusion;
+    SmartAtomicPtr<Gates_block> fusion_block;
     std::vector< std::vector<int>> involved_qbits;
     std::vector<int> block_end;
     std::vector<int> block_type;
