@@ -17,7 +17,6 @@
 #include "n_aryGrayCodeCounter.h"
 #include <cstring>
 #include <iostream>
-#include <vector>
 
 
 
