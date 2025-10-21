@@ -54,7 +54,7 @@ static inline std::pair<int,int> norm_pair(int i, int j) {
 // then by original index (to stabilize identical pairs).
 static int canonical_prefix_ok(const std::vector<std::pair<int,int>>& seq) {
     const int m = static_cast<int>(seq.size());
-    if (m <= 1) return true;
+    if (m <= 1) return -1; // always canonical
 
     // 1) normalize
     std::vector<std::pair<int,int>> ops(m);
@@ -550,14 +550,15 @@ N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures( int level_n
                 // --- prune by canonical Kahn order (cheap, no extra memory) ---
                 std::vector<std::pair<int,int>> seq;
                 seq.reserve(gcode.size());
-                for (int k = 0; k < gcode.size(); ++k) {
+                // Build sequence with first gate LAST so the fastest-changing digit is seq[0]
+                for (int k = gcode.size()-1; k >= 0; k--) {
                     int t = possible_target_qbits[ gcode[k] ];
                     int c = possible_control_qbits[ gcode[k] ];
                     seq.emplace_back(t, c);                  // order irrelevant; helper normalizes
                 }
-                int bad_pos = canonical_prefix_ok(seq);
+                int bad_pos = canonical_prefix_ok(seq);  // -1 if OK, else index in [0..L-1]
                 if (bad_pos != -1) {
-                    int64_t skipped = gcode_counter.advance(bad_pos);
+                    int64_t skipped = gcode_counter.advance(gcode.size()-1-bad_pos);
                     if (skipped == 0) break; // nothing left to advance to in this chunk
                     iter_idx += skipped - 1; // -1 compensates for the loop’s ++iter_idx
                     continue; // proceed with next candidate
@@ -714,10 +715,9 @@ N_Qubit_Decomposition_Tree_Search::construct_gate_structure_from_Gray_code( cons
     matrix_base<int> target_qbits(1, gcode.size());
     matrix_base<int> control_qbits(1, gcode.size());
 
-        
-    for( int gcode_idx=0; gcode_idx<gcode.size(); gcode_idx++ ) {    
-            
-        int target_qbit = possible_target_qbits[ gcode[gcode_idx] ];            
+    for( int gcode_idx=0; gcode_idx<gcode.size(); gcode_idx++ ) {
+        //since the counter chain counts has its least significant digit at index 0, to prune the search space we read the Gray code in reverse order
+        int target_qbit = possible_target_qbits[ gcode[gcode_idx] ];
         int control_qbit = possible_control_qbits[ gcode[gcode_idx] ];
             
             
@@ -732,9 +732,9 @@ N_Qubit_Decomposition_Tree_Search::construct_gate_structure_from_Gray_code( cons
     //  ----------- contruct the gate structure to be optimized ----------- 
     Gates_block* gate_structure_loc = new Gates_block(qbit_num); 
 
-                            
-    for (int gcode_idx=0; gcode_idx<gcode.size(); gcode_idx++) {      
-            
+
+    for (int gcode_idx=0; gcode_idx<gcode.size(); gcode_idx++) {
+
         // add new 2-qbit block to the circuit
         add_two_qubit_block( gate_structure_loc, target_qbits[gcode_idx], control_qbits[gcode_idx]  );
     }
