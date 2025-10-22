@@ -244,11 +244,18 @@ Gates_block::apply_to_list( Matrix_real& parameters_mtx, std::vector<Matrix>& in
 void 
 Gates_block::apply_to( Matrix_real& parameters_mtx_in, Matrix& input, int parallel ) {
 
+
+
     std::vector<int> involved_qubits = get_involved_qubits();
     
     if (input.rows != matrix_size ) {
         std::string err("Gates_block::apply_to: Wrong input size in Gates_block gate apply.");
         throw err;    
+    }
+
+    if (qbit_num > 30) {
+        std::string err("Gates_block::apply_to: Number of qubits supported up to 30"); 
+        throw err;        
     }
 
     int size = involved_qubits.size();
