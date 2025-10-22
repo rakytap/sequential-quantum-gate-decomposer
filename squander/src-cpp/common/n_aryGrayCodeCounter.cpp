@@ -235,6 +235,19 @@ n_aryGrayCodeCounter::next( int& changed_index, int& value_prev, int& value) {
 
 }
 
+/**
+@brief Advance the n-ary Gray code counter by incrementing the digit at a specified position.
+@param counter_pos The index of the digit to attempt to increment (least-significant digit = 0).
+@return The number of states skipped in the mixed-radix sequence, or 0 if no forward state remains.
+
+This method advances the counter by trying to increment the digit at @p counter_pos.
+If that digit is already at its maximum, a carry is propagated rightward until a higher
+digit can be incremented. When no further forward state exists within the current
+lexicographic slab, the method returns 0.
+
+After a successful advance, the mixed-radix offset is recomputed and the internal
+state (counter chain and Gray code) is reinitialized to match the new offset.
+*/
 int64_t n_aryGrayCodeCounter::advance(int counter_pos) {
     const int L = (int)n_ary_limits.size();
     if (L == 0) return 0;
