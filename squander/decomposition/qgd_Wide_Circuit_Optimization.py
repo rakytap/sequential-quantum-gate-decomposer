@@ -430,7 +430,7 @@ class qgd_Wide_Circuit_Optimization:
                 callback_fnc = lambda  x : self.CompareAndPickCircuits( [subcircuit, x[0]], [subcircuit_parameters, x[1]] ) 
 
                 # call a process to decompose a subcircuit
-                config = self.config if not global_min or len(subcircuit.get_Qbits()) < 4 else {**self.config, 'strategy': "Adaptive"}
+                config = self.config if not global_min or len(subcircuit.get_Qbits()) < 3 else {**self.config, 'tree_level_max': max(0, subcircuit.get_Gate_Nums().get('CNOT', 0)-1) } # 'strategy': "Adaptive"}
                 async_results[partition_idx]  = pool.apply_async( self.PartitionDecompositionProcess, (subcircuit, subcircuit_parameters, config), callback=callback_fnc )
 
 
@@ -447,8 +447,15 @@ class qgd_Wide_Circuit_Optimization:
                     print( "reoptimized subcircuit: ", new_subcircuit.get_Gate_Nums()) 
                 '''
 
-                optimized_subcircuits[ partition_idx ] = new_subcircuit
-                optimized_parameter_list[ partition_idx ] = new_parameters
+                if new_subcircuit.get_Gate_Nums().get('CNOT', 0) < subcircuit.get_Gate_Nums().get('CNOT', 0):
+                    optimized_subcircuits[ partition_idx ] = new_subcircuit
+                    optimized_parameter_list[ partition_idx ] = new_parameters
+                else:
+                    optimized_subcircuits[ partition_idx ] = subcircuit
+                    start_idx = subcircuit.get_Parameter_Start_Index()
+                    end_idx   = subcircuit.get_Parameter_Start_Index() + subcircuit.get_Parameter_Num()
+                    subcircuit_parameters = parameters[ start_idx:end_idx ]
+                    optimized_parameter_list[ partition_idx ] = subcircuit_parameters
 
 
         # construct the wide circuit from the optimized suncircuits
