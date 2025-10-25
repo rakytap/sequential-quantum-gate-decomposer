@@ -465,7 +465,7 @@ void Optimization_Interface::solve_layer_optimization_problem( int num_of_parame
 @param output The randomized parameters are stored within this array
 @param f0 weight in the randomiztaion (output = input + rand()*sqrt(f0) ).
 */
-void Optimization_Interface::randomize_parameters( Matrix_real& input, Matrix_real& output, const double& f0  ) {
+void Optimization_Interface::randomize_parameters( Matrix_real& input, Matrix_real& output, const double f0  ) {
 
     // random generator of real numbers   
     std::uniform_real_distribution<> distrib_prob(0.0, 1.0);
