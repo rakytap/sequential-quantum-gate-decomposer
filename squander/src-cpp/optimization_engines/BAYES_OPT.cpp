@@ -119,7 +119,9 @@ void Optimization_Interface::solve_layer_optimization_problem_BAYES_OPT( int num
             }
 
         }
-        std::cout<<current_minimum<<std::endl;
+        std::stringstream sstream;
+        sstream<<"BAYES OPT current minimum: "<<current_minimum<<std::endl;
+        print(sstream,1);
 
 }
 

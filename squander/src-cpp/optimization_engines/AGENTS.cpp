@@ -901,7 +901,7 @@ CPU_time += (tbb::tick_count::now() - t0_CPU).seconds();
         sstream.str("");
         sstream << "AGENTS time: " << CPU_time << " " << current_minimum << std::endl;
 
-        print(sstream, 0); 
+        print(sstream, 1); 
 }
 
 

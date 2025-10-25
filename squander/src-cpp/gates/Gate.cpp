@@ -69,10 +69,7 @@ Gate::Gate() {
 */
 Gate::Gate(int qbit_num_in) {
 
-    if (qbit_num_in > 30) {
-        std::string err("Gate::Gate: Number of qubits supported up to 30");
-        throw err;
-    }
+
 
     // A string labeling the gate operation
     name = "Gate";
@@ -105,10 +102,7 @@ Gate::Gate(int qbit_num_in) {
 */
 Gate::Gate(int qbit_num_in, const std::vector<int>& target_qbits_in, const std::vector<int>& control_qbits_in) {
 
-    if (qbit_num_in > 30) {
-        std::string err("Gate::Gate: Number of qubits supported up to 30");
-        throw err;
-    }
+
 
     // A string labeling the gate operation
     name = "Gate";
@@ -165,10 +159,7 @@ Gate::~Gate() {
 */
 void Gate::set_qbit_num( int qbit_num_in ) {
 
-    if (qbit_num_in > 30) {
-        std::string err("Gate::set_qbit_num: Number of qubits supported up to 30"); 
-        throw err;        
-    }
+
 
     if ( qbit_num_in <= target_qbit || qbit_num_in <= control_qbit ) {
         std::string err("Gate::set_qbit_num: The number of qbits is too small, conflicting with either target_qbit os control_qbit"); 

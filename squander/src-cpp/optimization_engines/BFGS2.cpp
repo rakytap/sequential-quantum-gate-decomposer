@@ -236,7 +236,9 @@ CPU_time = 0.0;
 
         tbb::tick_count bfgs_end = tbb::tick_count::now();
         CPU_time  = CPU_time + (bfgs_end-bfgs_start).seconds();
-        std::cout << "bfgs2 time: " << CPU_time << " " << current_minimum << std::endl;
+        sstream.str("");
+        sstream << "bfgs2 time: " << CPU_time << " " << current_minimum << std::endl;
+        print(sstream,1);
 
 }
 
