@@ -512,7 +512,9 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
                 iter = iter + 1;
 
                 if ( iter > iter_max) {
-                    std::cout << "line search not  converged: interval length: " << interval_length << " " << interval_coeff << std::endl;
+                    std::stringstream sstream;
+                    sstream << "line search not  converged: interval length: " << interval_length << " " << interval_coeff << std::endl;
+                    print(sstream,1);
                     break;
                 }
             }
@@ -581,7 +583,7 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
                 std::stringstream sstream;
                 sstream << "COSINE: processed iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "\%, current minimum:" << current_minimum;
                 sstream << " " << " circuit simulation time: " << circuit_simulation_time  << std::endl;
-                print(sstream, 0);   
+                print(sstream, 1);   
                 if ( export_circuit_2_binary_loc > 0 ) {
                     std::string filename("initial_circuit_iteration.binary");
                     if (project_name != "") { 
@@ -621,7 +623,7 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
                 std::stringstream sstream;
                 sstream << "COSINE: converged to minimum at iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "\%, current minimum:" << current_minimum;
                 sstream << " circuit simulation time: " << circuit_simulation_time  << std::endl;
-                print(sstream, 0);   
+                print(sstream, 1);   
                 if ( export_circuit_2_binary_loc > 0 ) {
                     std::string filename("initial_circuit_iteration.binary");
                     if (project_name != "") { 
@@ -649,7 +651,7 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
         optimization_time  = optimization_time + (optimization_end-optimization_start).seconds();
         sstream << "COSINE time: " << CPU_time << " seconds, obtained minimum: " << current_minimum << std::endl;
         
-        print(sstream, 0); 
+        print(sstream, 1); 
 
 }
 

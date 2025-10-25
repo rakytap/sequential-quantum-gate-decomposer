@@ -241,12 +241,12 @@ void Optimization_Interface::solve_layer_optimization_problem_ADAM( int num_of_p
                 
                     std::stringstream sstream;
                     sstream << "ADAM: processed iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "\%, current minimum:" << current_minimum << ", current cost function:" << optimization_problem(solution_guess_tmp) << ", sub_iter_idx:" << sub_iter_idx <<std::endl;
-                    print(sstream, 0);   
+                    print(sstream, 1);   
                 }
                 else{
                     std::stringstream sstream;
                     sstream << "ADAM: processed iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "\%, current minimum:" << current_minimum <<", sub_iter_idx:" << sub_iter_idx <<std::endl;
-                    print(sstream, 0);   
+                    print(sstream, 1);   
                 }
                 if ( export_circuit_2_binary_loc > 0 ) {
                     std::string filename("initial_circuit_iteration.binary");
@@ -309,7 +309,7 @@ void Optimization_Interface::solve_layer_optimization_problem_ADAM( int num_of_p
                 else {
                     sstream << "ADAM: leaving local minimum " << f0 << ", gradient norm " << norm << " eta: " << optimizer.eta << std::endl;
                 }
-                print(sstream, 0);   
+                print(sstream, 1);   
                     
                 randomize_parameters(optimized_parameters_mtx, solution_guess_tmp, f0 );
                 randomization_successful = 0;
@@ -338,7 +338,7 @@ void Optimization_Interface::solve_layer_optimization_problem_ADAM( int num_of_p
         CPU_time  = CPU_time + (adam_end-adam_start).seconds();
         sstream << "adam time: " << CPU_time << " " << f0 << std::endl;
 
-        print(sstream, 0); 
+        print(sstream, 1); 
 
 }
 

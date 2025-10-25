@@ -639,7 +639,7 @@ class qgd_Wide_Circuit_Optimization:
                 callback_fnc = lambda  x : self.CompareAndPickCircuits( [subcircuit, x[0]], [subcircuit_parameters, x[1]] ) 
 
                 # call a process to decompose a subcircuit
-                config = self.config if not global_min or len(subcircuit.get_Qbits()) < 3 else {**self.config, 'tree_level_max': max(0, subcircuit.get_Gate_Nums().get('CNOT', 0)-1)} # 'strategy': "Adaptive"}
+                config = self.config if not global_min or len(subcircuit.get_Qbits()) < 3 else {**self.config, 'tree_level_max': max(0, subcircuit.get_Gate_Nums().get('CNOT', 0)-1) } # 'strategy': "Adaptive"}
                 async_results[partition_idx]  = pool.apply_async( self.PartitionDecompositionProcess, (subcircuit, subcircuit_parameters, config), callback=callback_fnc )
 
             #  code for iterate over async results and retrieve the new subcircuits
@@ -653,14 +653,7 @@ class qgd_Wide_Circuit_Optimization:
                     print( "original subcircuit:    ", subcircuit.get_Gate_Nums()) 
                     print( "reoptimized subcircuit: ", new_subcircuit.get_Gate_Nums()) 
                 '''
-                if partition_idx % 100 == 99: print(partition_idx+1, "partitions optimized")
-                #if new_subcircuit.get_Gate_Nums().get('CNOT', 0) < subcircuit.get_Gate_Nums().get('CNOT', 0):
-                #    for gate in subcircuit.get_Gates(): print(gate)
-                #print(partition_idx, new_subcircuit.get_Gate_Nums().get('CNOT', 0), subcircuit.get_Gate_Nums().get('CNOT', 0))
-                #if new_subcircuit.get_Gate_Nums().get('CNOT', 0) == 0 and subcircuit.get_Gate_Nums().get('CNOT', 0) > 0:
-                    #for gate in new_subcircuit.get_Gates(): print(gate, gate.get_Target_Qbit(), gate.get_Control_Qbit())
-                    #print("----")
-                    #for gate in subcircuit.get_Gates(): print(gate, gate.get_Target_Qbit(), gate.get_Control_Qbit())
+
                 if new_subcircuit.get_Gate_Nums().get('CNOT', 0) < subcircuit.get_Gate_Nums().get('CNOT', 0):
                     optimized_subcircuits[ partition_idx ] = new_subcircuit
                     optimized_parameter_list[ partition_idx ] = new_parameters

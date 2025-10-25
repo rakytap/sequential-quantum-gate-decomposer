@@ -354,7 +354,7 @@ void Optimization_Interface::solve_layer_optimization_problem_GRAD_DESCEND_PARAM
                 std::stringstream sstream;
                 sstream << "GRAD_DESCEND_SHIFT_RULE: processed iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "\%, current minimum:" << current_minimum;
                 sstream << " circuit simulation time: " << circuit_simulation_time  << std::endl;
-                print(sstream, 0); 
+                print(sstream, 1); 
         
                 if ( export_circuit_2_binary_loc > 0 ) {
                     std::string filename("initial_circuit_iteration.binary");
@@ -394,7 +394,7 @@ void Optimization_Interface::solve_layer_optimization_problem_GRAD_DESCEND_PARAM
                 std::stringstream sstream;
                 sstream << "GRAD_DESCEND_SHIFT_RULE: converged to minimum at iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "\%, current minimum:" << current_minimum;
                 sstream << " circuit simulation time: " << circuit_simulation_time  << std::endl;
-                print(sstream, 0);   
+                print(sstream, 1);   
                 if ( export_circuit_2_binary_loc > 0 ) {
                     std::string filename("initial_circuit_iteration.binary");
                     if (project_name != "") { 
@@ -424,7 +424,7 @@ void Optimization_Interface::solve_layer_optimization_problem_GRAD_DESCEND_PARAM
         optimization_time  = optimization_time + (optimization_end-optimization_start).seconds();
         sstream << "GRAD_DESCEND_SHIFT_RULE time: " << CPU_time << " seconds, obtained minimum: " << current_minimum << std::endl;
         
-        print(sstream, 0); 
+        print(sstream, 1); 
 
 }
 
