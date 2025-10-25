@@ -99,9 +99,7 @@ Gates_block::Gates_block(int qbit_num_in) : Gate(qbit_num_in) {
     // number of operation layers
     layer_num = 0;
     
-    fragmented = false;
-    fragmentation_type = -1;
-    min_fusion = -1;
+    min_fusion = 14;
     
 }
 
@@ -260,22 +258,23 @@ Gates_block::apply_to( Matrix_real& parameters_mtx_in, Matrix& input, int parall
 
     int size = involved_qubits.size();
 
-    if (min_fusion != -1 && qbit_num >= min_fusion && size <= (input.cols == 1 ? 5 : 2) && qbit_num != size && gates.size() > 1) {
-        
+    if (min_fusion != -1 && qbit_num >= min_fusion && size <= (input.cols == 1 ? 5 : 2) && qbit_num != size && gates.size() > 1) {        
+        auto fb = fusion_block.get();
         Matrix Umtx_mini = create_identity(Power_of_2(size));
+        if (fb == nullptr) {
 
-        std::vector<int> old_to_new(qbit_num, -2), new_to_old(qbit_num, -2);
-        for (int i = 0; i < size; i++){
-            old_to_new[i] = involved_qubits[i];
-            new_to_old[involved_qubits[i]] = i;
+            std::vector<int> old_to_new(qbit_num, -2);
+            for (int i = 0; i < size; i++){
+                old_to_new[i] = involved_qubits[i];
+            }
+
+            Gates_block* clone_block = clone();
+            clone_block->reorder_qubits(old_to_new);
+            clone_block->set_qbit_num(size);            
+            fusion_block.update(clone_block);
+            fb = fusion_block.get();
         }
-
-        int old_qbit_num = qbit_num;
-        reorder_qubits(old_to_new);
-        set_qbit_num(size);
-        apply_to(parameters_mtx_in, Umtx_mini, parallel);        
-        set_qbit_num(old_qbit_num);
-        reorder_qubits(new_to_old);
+        fb->apply_to(parameters_mtx_in, Umtx_mini, parallel);
 
         if (size == 1) {
             custom_kernel_1qubit_gate merged_gate( qbit_num, involved_qubits[0], Umtx_mini );
@@ -340,172 +339,6 @@ bool is_qbit_present(std::vector<int> involved_qubits, int new_qbit, int num_of_
     return contained;
     
 }
-
-
-
-    
-    
-void Gates_block::fragment_circuit(){
-
-    std::vector<int> qbits;
-    int num_of_qbits=0;
-    int min_fusion_temp = (fragmentation_type==-1) ? min_fusion:fragmentation_type;
-
-    for (int idx = gates.size()-1; idx>=0; idx--){
-
-        Gate* gate = gates[idx];
-
-        // Get all involved qubits (both target and control)
-        std::vector<int> gate_qubits = gate->get_involved_qubits();
-
-        if (num_of_qbits == 0) {
-            // Initialize with the first qubit from the gate
-            if (!gate_qubits.empty()) {
-                qbits.push_back(gate_qubits[0]);
-                num_of_qbits++;
-            }
-        }
-
-        // Check which qubits from this gate are not yet in the qbits list
-        std::vector<int> new_qubits;
-        for (int q : gate_qubits) {
-            if (!is_qbit_present(qbits, q, num_of_qbits)) {
-                new_qubits.push_back(q);
-            }
-        }
-
-        bool all_contained = new_qubits.empty();
-
-        if (num_of_qbits == min_fusion_temp && !all_contained){
-            int vidx = 1;
-
-            while(vidx<num_of_qbits){
-                int jdx=vidx;
-
-                while(jdx>0 && qbits[jdx-1]>qbits[jdx]){
-                    int qbit_temp = qbits[jdx];
-                    qbits[jdx]    = qbits[jdx-1];
-                    qbits[jdx-1]  =  qbit_temp;
-                    jdx--;
-                }
-
-                vidx++;
-            }
-
-            involved_qbits.push_back(qbits);
-            block_end.push_back(idx+1);
-            block_type.push_back(num_of_qbits);
-            min_fusion_temp = min_fusion;
-            idx++;
-            qbits=std::vector<int>{};
-            num_of_qbits=0;
-            continue;
-        }
-
-        // Add new qubits to the list
-        for (int q : new_qubits) {
-            if (num_of_qbits < min_fusion_temp) {
-                qbits.push_back(q);
-                num_of_qbits++;
-            } else {
-                break;
-            }
-        }
-
-    }
-
-    if (num_of_qbits == 1){
-        involved_qbits.push_back(qbits);
-        block_type.push_back(1);
-        block_end.push_back(0);
-    }
-
-    else{
-        int vidx = 1;
-
-        while(vidx<num_of_qbits){
-            int jdx=vidx;
-
-            while(jdx>0 && qbits[jdx-1]>qbits[jdx]){
-                int qbit_temp = qbits[jdx];
-                qbits[jdx] = qbits[jdx-1];
-                qbits[jdx-1] =  qbit_temp;
-                jdx--;
-            }
-
-            vidx++;
-        }
-
-        involved_qbits.push_back(qbits);
-        block_type.push_back(num_of_qbits);
-        block_end.push_back(0);
-    }
-
-    fragmented = true;
-
-}
-
-
-//TODO: remove this function?
-void Gates_block::get_parameter_max(Matrix_real &range_max) {
-    int parameter_idx = 0;
-	double *data = range_max.get_data();
-        for(size_t op_idx = 0; op_idx<gates.size(); op_idx++) {
-
-            Gate* gate = gates[op_idx];
-            switch (gate->get_type()) {
-            case U1_OPERATION: {
-                data[parameter_idx] = 2 * M_PI;     // Lambda (0 to 2pi)
-                parameter_idx = parameter_idx + 1;
-                break;
-            }
-            case U2_OPERATION: {
-                data[parameter_idx] = 2 * M_PI;     // Phi (0 to 2pi)
-                data[parameter_idx+1] = 2 * M_PI;   // Lambda (0 to 2pi)
-                parameter_idx = parameter_idx + 2;
-                break;
-            }
-            case U3_OPERATION: {
-                data[parameter_idx] = 4 * M_PI;     // Theta (0 to 4pi)
-                data[parameter_idx+1] = 2 * M_PI;   // Phi (0 to 2pi)
-                data[parameter_idx+2] = 2 * M_PI;   // Lambda (0 to 2pi)
-                parameter_idx = parameter_idx + 3;
-                break; 
-            }
-            case CROT_OPERATION: 
-            case R_OPERATION:
-            case CR_OPERATION:{
-                data[parameter_idx-1] = 4*M_PI;
-                data[parameter_idx-2] = 2*M_PI;
-                parameter_idx = parameter_idx - 2;
-            break;}
-            case RX_OPERATION:
-            case RY_OPERATION:
-            case CRY_OPERATION:
-            case CRX_OPERATION:
-            case ADAPTIVE_OPERATION:
-                data[parameter_idx] = 4 * M_PI;
-                parameter_idx = parameter_idx + 1;
-                break;
-            case CZ_NU_OPERATION:
-                data[parameter_idx] = 2 * M_PI;
-                parameter_idx = parameter_idx + 1;
-                break;
-            case BLOCK_OPERATION: {
-                Gates_block* block_gate = static_cast<Gates_block*>(gate);
-                Matrix_real parameters_layer(range_max.get_data() + parameter_idx + gate->get_parameter_num(), 1, gate->get_parameter_num() );
-                block_gate->get_parameter_max( parameters_layer );
-                parameter_idx = parameter_idx + block_gate->get_parameter_num();
-                break; }
-            default:
-                for (int i = 0; i < gate->get_parameter_num(); i++)
-                    data[parameter_idx+i] = 2 * M_PI;    
-                parameter_idx = parameter_idx + gate->get_parameter_num();
-            }
-        }
-}
-
-//////// experimental attributes to partition the circuits into subsegments. Advantageous in simulation of larger circuits ///////////űű
 
 
 /**
