@@ -311,7 +311,7 @@ void solve_layer_optimization_problem_ADAM( int num_of_parameters, Matrix_real& 
 @param output The randomized parameters are stored within this array
 @param f0 weight in the randomiztaion (output = input + rand()*sqrt(f0) ).
 */
-void randomize_parameters( Matrix_real& input, Matrix_real& output, const double& f0 );
+void randomize_parameters( Matrix_real& input, Matrix_real& output, const double f0 );
 
 
 /**
