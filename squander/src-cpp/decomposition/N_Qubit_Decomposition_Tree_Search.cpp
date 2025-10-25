@@ -677,8 +677,8 @@ N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures( int level_n
     });
 
     std::vector<std::vector<int>> next_q;
-    for ( const auto& item : out_res ) {
-        next_q.push_back( item.first );
+    for ( auto it = out_res.crbegin(); it != out_res.crend(); ++it ) {
+        next_q.push_back( it->first );
     }
     return std::pair<GrayCode, LevelInfo>(best_solution, std::make_tuple(visited, seq_pairs_of, next_q));
 
@@ -852,11 +852,11 @@ N_Qubit_Decomposition_Tree_Search::add_finalyzing_layer( Gates_block* gate_struc
     block->add_ry(qbit_num-1);
 */
     for (int idx=0; idx<qbit_num; idx++) {
-        //block->add_rz(idx);
-        //block->add_ry(idx);
-        //block->add_rz(idx); 
+        block->add_rz(idx);
+        block->add_ry(idx);
+        block->add_rz(idx); 
 
-        block->add_u3(idx);
+             //block->add_u3(idx, Theta, Phi, Lambda);
 //        block->add_ry(idx);
     }
 
