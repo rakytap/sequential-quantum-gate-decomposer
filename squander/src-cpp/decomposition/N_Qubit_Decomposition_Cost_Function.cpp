@@ -584,7 +584,7 @@ static inline size_t rm_idx(int row, int col, int N) {
 // M_{ (a' * dA + a), (b' * dB + b) } = U_{ (a',b'), (a,b) }.
 static void build_osr_matrix(const QGD_Complex16* U, int n,
                              const std::vector<int>& A, // qubits on A
-                             std::vector<QGD_Complex16>& M, int& m_rows, int& m_cols)
+                             std::vector<lapack_complex_double>& M, int& m_rows, int& m_cols)
 {
     std::vector<int> A_sorted = A;
     std::sort(A_sorted.begin(), A_sorted.end());
@@ -599,7 +599,7 @@ static void build_osr_matrix(const QGD_Complex16* U, int n,
 
     m_rows = dA * dA;
     m_cols = dB * dB;
-    M.assign((size_t)m_rows * (size_t)m_cols, QGD_Complex16{0.0, 0.0});
+    M.assign((size_t)m_rows * (size_t)m_cols, lapack_make_complex_double(0.0, 0.0));
 
     // Row-major indexing: U[in + out*N] is element (in, out)
     for (int in = 0; in < N; ++in) {
@@ -610,17 +610,14 @@ static void build_osr_matrix(const QGD_Complex16* U, int n,
             const int bp = extract_bits(out, B);
             const int r = a + ap;   // row in M
             const int c = b + bp;   // col in M
-            M[rm_idx(r, c, m_cols)] = U[(size_t)in + (size_t)out * (size_t)N];
+            const auto& val = U[(size_t)in + (size_t)out * (size_t)N];
+            M[rm_idx(r, c, m_cols)] = lapack_make_complex_double(val.real, val.imag);
         }
     }
 }
 
-static int osr(const std::vector<QGD_Complex16>& M, int m_rows, int m_cols, std::vector<double>& S)
+static int osr(std::vector<lapack_complex_double>& A, int m_rows, int m_cols, std::vector<double>& S)
 {
-    // Copy M because LAPACK overwrites input
-    std::vector<lapack_complex_double> A(M.size());
-    for (size_t i=0;i<M.size();++i) A[i] = lapack_make_complex_double(M[i].real, M[i].imag);
-
     S.resize(std::min(m_rows, m_cols));
     std::vector<double> superb(std::max(1, std::min(m_rows, m_cols) - 1));  // REQUIRED for complex *gesvd
     // We don’t need U/V; job='N' for economy; gesvd is fine too.
@@ -636,7 +633,7 @@ static int osr(const std::vector<QGD_Complex16>& M, int m_rows, int m_cols, std:
 }
 
 // Numerical rank via LAPACKE_zgesdd (SVD)
-static std::pair<int, double> numerical_rank_osr(const std::vector<QGD_Complex16>& M, int m_rows, int m_cols, double tol)
+static std::pair<int, double> numerical_rank_osr(std::vector<lapack_complex_double>& M, int m_rows, int m_cols, double tol)
 {
     std::vector<double> S;
     int info = osr(M, m_rows, m_cols, S);
@@ -653,7 +650,7 @@ std::pair<int, double> operator_schmidt_rank(const QGD_Complex16* U, int n,
                           const std::vector<int>& A_qubits,
                           double tol = 1e-10)
 {
-    std::vector<QGD_Complex16> M;
+    std::vector<lapack_complex_double> M;
     int mr=0, mc=0;
     build_osr_matrix(U, n, A_qubits, M, mr, mc);
     return numerical_rank_osr(M, mr, mc, tol);
@@ -744,8 +741,6 @@ double get_osr_entanglement_test(Matrix& matrix) {
     double hscost = get_hilbert_schmidt_test(matrix);
     int qbit_num = lg_down(matrix.rows);
     const auto& cuts = unique_cuts(qbit_num);
-    std::vector<QGD_Complex16> osr_matrix;
-    int osr_rows, osr_cols;
     int rank_sum = 0;
     for (const auto& cut : cuts) {
         rank_sum += operator_schmidt_rank(matrix.get_data(), qbit_num, cut).first;
