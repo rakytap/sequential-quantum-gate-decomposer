@@ -37,10 +37,10 @@ limitations under the License.
 
 
 
-/// @brief Type definition of the fifferent types of the cost function
+/// @brief Type definition of the different types of the cost function
 typedef enum cost_function_type {FROBENIUS_NORM, FROBENIUS_NORM_CORRECTION1, FROBENIUS_NORM_CORRECTION2,
     HILBERT_SCHMIDT_TEST, HILBERT_SCHMIDT_TEST_CORRECTION1, HILBERT_SCHMIDT_TEST_CORRECTION2,
-    SUM_OF_SQUARES, VQE, GQML, INFIDELITY} cost_function_type;
+    SUM_OF_SQUARES, VQE, GQML, INFIDELITY, OSR_ENTANGLEMENT} cost_function_type;
 
 
 
