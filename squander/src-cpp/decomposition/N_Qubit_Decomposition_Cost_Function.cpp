@@ -553,5 +553,203 @@ void functor_cost_fnc::operator()( tbb::blocked_range<int> r ) const {
 
 
 
+#define LAPACK_ROW_MAJOR               101
+#define LAPACK_COL_MAJOR               102
+#define lapack_int     int
+#define lapack_complex_double   double _Complex
+extern "C" lapack_complex_double lapack_make_complex_double(double re, double im);
+extern "C" lapack_int LAPACKE_zgesvd( int matrix_order, char jobu, char jobvt,
+                            lapack_int m, lapack_int n, lapack_complex_double* a,
+                            lapack_int lda, double* s, lapack_complex_double* u,
+                            lapack_int ldu, lapack_complex_double* vt,
+                            lapack_int ldvt, double* superb );
 
+// Helper: extract bits at positions 'pos' from integer x into a packed integer (LSB order)
+static inline int extract_bits(int x, const std::vector<int>& pos) {
+    int y = 0, k = 0;
+    for (int p : pos) { y |= ((x >> p) & 1) << k; ++k; }
+    return y;
+}
 
+// Index: row-major 2^n x 2^n
+static inline size_t rm_idx(int row, int col, int N) {
+    return (size_t)row * (size_t)N + (size_t)col;
+}
+
+//https://www.sciencedirect.com/science/article/pii/S0024379518303446
+//https://arxiv.org/abs/2007.02490
+//https://journals.aps.org/pra/abstract/10.1103/PhysRevA.105.062430
+//https://arxiv.org/pdf/2111.03132
+// Build the (dA*dA) x (dB*dB) OSR matrix M for cut A|B from U (2^n x 2^n), row-major.
+// M_{ (a' * dA + a), (b' * dB + b) } = U_{ (a',b'), (a,b) }.
+static void build_osr_matrix(const QGD_Complex16* U, int n,
+                             const std::vector<int>& A, // qubits on A
+                             std::vector<QGD_Complex16>& M, int& m_rows, int& m_cols)
+{
+    std::vector<int> A_sorted = A;
+    std::sort(A_sorted.begin(), A_sorted.end());
+    std::vector<int> B;
+    B.reserve(n - (int)A_sorted.size());
+    for (int q = 0; q < n; ++q)
+        if (!std::binary_search(A_sorted.begin(), A_sorted.end(), q)) B.push_back(q);
+
+    const int dA = 1 << (int)A_sorted.size();
+    const int dB = 1 << (n - (int)A_sorted.size());
+    const int N  = 1 << n;
+
+    m_rows = dA * dA;
+    m_cols = dB * dB;
+    M.assign((size_t)m_rows * (size_t)m_cols, QGD_Complex16{0.0, 0.0});
+
+    // Row-major indexing: U[in + out*N] is element (in, out)
+    for (int in = 0; in < N; ++in) {
+        const int a  = extract_bits(in, A_sorted) * dA;
+        const int b  = extract_bits(in, B) * dB;
+        for (int out = 0; out < N; ++out) {
+            const int ap = extract_bits(out, A_sorted);
+            const int bp = extract_bits(out, B);
+            const int r = a + ap;   // row in M
+            const int c = b + bp;   // col in M
+            M[rm_idx(r, c, m_cols)] = U[(size_t)in + (size_t)out * (size_t)N];
+        }
+    }
+}
+
+static int osr(const std::vector<QGD_Complex16>& M, int m_rows, int m_cols, std::vector<double>& S)
+{
+    // Copy M because LAPACK overwrites input
+    std::vector<lapack_complex_double> A(M.size());
+    for (size_t i=0;i<M.size();++i) A[i] = lapack_make_complex_double(M[i].real, M[i].imag);
+
+    S.resize(std::min(m_rows, m_cols));
+    std::vector<double> superb(std::max(1, std::min(m_rows, m_cols) - 1));  // REQUIRED for complex *gesvd
+    // We don’t need U/V; job='N' for economy; gesvd is fine too.
+    int info = LAPACKE_zgesvd(LAPACK_ROW_MAJOR,
+                              'N','N',
+                              m_rows, m_cols,
+                              A.data(), m_cols,
+                              S.data(),
+                              nullptr, 1,
+                              nullptr, 1,
+                              superb.data());
+    return info;
+}
+
+// Numerical rank via LAPACKE_zgesdd (SVD)
+static std::pair<int, double> numerical_rank_osr(const std::vector<QGD_Complex16>& M, int m_rows, int m_cols, double tol)
+{
+    std::vector<double> S;
+    int info = osr(M, m_rows, m_cols, S);
+    if (info != 0) return std::pair<int, double>(0, 0.0); // fall back safely
+
+    //std::copy(S.begin(), S.end(), std::ostream_iterator<double>(std::cout, " ")); std::cout << std::endl;
+    int rnk = 0;
+    for (double s : S) if (s > tol) ++rnk;
+    return std::pair<int, double>(rnk, S[0]);
+}
+
+// Public: operator-Schmidt rank across cut A|B
+std::pair<int, double> operator_schmidt_rank(const QGD_Complex16* U, int n,
+                          const std::vector<int>& A_qubits,
+                          double tol = 1e-10)
+{
+    std::vector<QGD_Complex16> M;
+    int mr=0, mc=0;
+    build_osr_matrix(U, n, A_qubits, M, mr, mc);
+    return numerical_rank_osr(M, mr, mc, tol);
+}
+
+// base-2 logarithm, rounding down
+static inline uint32_t lg_down(uint32_t v) {
+    register unsigned int r; // result of log2(v) will go here
+    register unsigned int shift;
+
+    r =     (v > 0xFFFF) << 4; v >>= r;
+    shift = (v > 0xFF  ) << 3; v >>= shift; r |= shift;
+    shift = (v > 0xF   ) << 2; v >>= shift; r |= shift;
+    shift = (v > 0x3   ) << 1; v >>= shift; r |= shift;
+                                            r |= (v >> 1);
+    return r;
+}
+
+// base-2 logarithm, rounding up
+static inline uint32_t lg_up(uint32_t x) {
+    return lg_down(x - 1) + 1;
+}
+
+// Lower bound on remaining CNOTs: max_A ceil(log2(OSR_A(U)))
+int osr_cnot_lower_bound(const QGD_Complex16* U, int n,
+                         const std::vector<std::vector<int>>& cuts,
+                         double tol = 1e-10)
+{
+    int h = 0;
+    for (const auto& A : cuts) {
+        auto [r, _] = operator_schmidt_rank(U, n, A, tol);
+        if (r > 1) {
+            int hb = lg_up(r);
+            if (hb > h) h = hb;
+        }
+    }
+    return h;
+}
+
+#include <vector>
+#include <algorithm>
+
+// Generate all k-combinations of {0,1,...,n-1} of size r
+static void combinations_recursive(int n, int r, int start,
+                                   std::vector<int>& current,
+                                   std::vector<std::vector<int>>& out)
+{
+    if ((int)current.size() == r) {
+        out.push_back(current);
+        return;
+    }
+    for (int i = start; i < n; ++i) {
+        current.push_back(i);
+        combinations_recursive(n, r, i + 1, current, out);
+        current.pop_back();
+    }
+}
+
+// Return all nontrivial unordered bipartitions (no complements)
+std::vector<std::vector<int>> unique_cuts(int n)
+{
+    std::vector<std::vector<int>> cuts;
+    if (n <= 1) return cuts;
+
+    for (int r = 1; r <= n / 2; ++r) {
+        std::vector<std::vector<int>> combs;
+        std::vector<int> current;
+        combinations_recursive(n, r, 0, current, combs);
+
+        for (auto& S : combs) {
+            if (r < n - r) {
+                cuts.push_back(S);
+            } else { // r == n - r (only for even n)
+                std::vector<int> comp;
+                for (int q = 0; q < n; ++q)
+                    if (std::find(S.begin(), S.end(), q) == S.end())
+                        comp.push_back(q);
+                // lexicographic tie-break: keep only smaller one
+                if (S < comp)
+                    cuts.push_back(S);
+            }
+        }
+    }
+    return cuts;
+}
+
+double get_osr_entanglement_test(Matrix& matrix) {
+    double hscost = get_hilbert_schmidt_test(matrix);
+    int qbit_num = lg_down(matrix.rows);
+    const auto& cuts = unique_cuts(qbit_num);
+    std::vector<QGD_Complex16> osr_matrix;
+    int osr_rows, osr_cols;
+    int rank_sum = 0;
+    for (const auto& cut : cuts) {
+        rank_sum += operator_schmidt_rank(matrix.get_data(), qbit_num, cut).first;
+    }
+    return rank_sum + hscost;
+
+}
