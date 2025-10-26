@@ -99,7 +99,7 @@ static inline LevelResult enumerate_unordered_cnot_BFS_level_step(
 
                 // emit discovery: (depth+1, B, seq_pairs_of[B], seq_dir_of[B])
                 const auto& ref_pairs = new_seq_pairs_of.at(B);
-                out_res.emplace_back(B, ref_pairs);
+                out_res.emplace_back(std::move(B), ref_pairs);
             }
         }
     }
@@ -406,7 +406,7 @@ N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures( int level_n
 
     tbb::spin_mutex tree_search_mutex;
     
-    auto [all_cuts, pair_affects, prefixes] = ci;
+    auto &[all_cuts, pair_affects, prefixes] = ci;
 
     double optimization_tolerance_loc;
     if ( config.count("optimization_tolerance") > 0 ) {
@@ -426,7 +426,7 @@ N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures( int level_n
     for ( const auto& item : out_res ) {
         pairs_reduced.insert( item.second );
     }
-    std::vector<GrayCode> all_pairs = std::vector<GrayCode>(pairs_reduced.begin(), pairs_reduced.end());
+    std::vector<GrayCode> all_pairs(pairs_reduced.begin(), pairs_reduced.end());
     std::vector<std::pair<GrayCode, std::vector<std::pair<int, double>>>> all_osr_results;
     int64_t iteration_max = all_pairs.size();
     all_osr_results.reserve(iteration_max);
@@ -611,7 +611,7 @@ N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures( int level_n
     std::map<GrayCode, std::vector<std::pair<int, double>>> nextprefixes;
     for (long i = 0; i < beam_width; i++) {
         const auto& item = all_osr_results[i];
-        nextprefixes[item.first] = item.second;
+        nextprefixes.emplace(std::move(item.first), std::move(item.second));
     }
     std::vector<std::vector<int>> next_q;
     next_q.reserve(out_res.size());
@@ -621,7 +621,7 @@ N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures( int level_n
         }        
         next_q.push_back( it->first );
     }
-    return std::make_tuple(best_solution, std::make_tuple(visited, seq_pairs_of, next_q), nextprefixes);
+    return std::make_tuple(std::move(best_solution), std::move(std::make_tuple(std::move(visited), std::move(seq_pairs_of), std::move(next_q))), std::move(nextprefixes));
 
 
 }
