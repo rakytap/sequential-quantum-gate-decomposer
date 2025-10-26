@@ -429,6 +429,7 @@ N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures( int level_n
     std::vector<GrayCode> all_pairs = std::vector<GrayCode>(pairs_reduced.begin(), pairs_reduced.end());
     std::vector<std::pair<GrayCode, std::vector<std::pair<int, double>>>> all_osr_results;
     int64_t iteration_max = all_pairs.size();
+    all_osr_results.reserve(iteration_max);
 
 
     // determine the concurrency of the calculation
@@ -472,6 +473,7 @@ N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures( int level_n
 
                 // ----------------------------------------------------------------                                
                 std::vector<std::vector<std::pair<int, double>>> osr_results;
+                osr_results.reserve(2);
                 for (int revpass = 0; revpass < 2; revpass++) {
                     Gates_block* gate_structure_loc;
                     if (revpass == 0) gate_structure_loc = construct_gate_structure_from_Gray_code( solution );
@@ -505,6 +507,7 @@ N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures( int level_n
                     auto params = cDecomp_custom_random.get_optimized_parameters();
                     cDecomp_custom_random.apply_to(params, U);
                     std::vector<std::pair<int, double>> osr_result;
+                    osr_result.reserve(all_cuts.size());
                     for (const auto& cut : all_cuts) {
                         osr_result.emplace_back(operator_schmidt_rank(U.data, qbit_num, cut));
                     }
@@ -531,10 +534,10 @@ N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures( int level_n
                         } 
                     }
                 } // end of revpass loop
-                
-                auto lastprefix = solution.size() != 0 ? prefixes[solution.remove_Digit(solution.size()-1)] : std::vector<std::pair<int, double>>();
+
+                auto lastprefix = solution.size() != 0 ? prefixes.at(solution.remove_Digit(solution.size()-1)) : std::vector<std::pair<int, double>>();
                 std::vector<int> check_cuts;
-                if (solution.size() != 0) check_cuts = pair_affects[std::pair<int, int>(possible_target_qbits[solution[solution.size()-1]], possible_control_qbits[solution[solution.size()-1]])];
+                if (solution.size() != 0) check_cuts = pair_affects.at(std::pair<int, int>(possible_target_qbits[solution[solution.size()-1]], possible_control_qbits[solution[solution.size()-1]]));
                 else {
                     check_cuts.resize(all_cuts.size());
                     std::iota(check_cuts.begin(), check_cuts.end(), 0);
@@ -550,7 +553,9 @@ N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures( int level_n
                         sum_as0 += a[i].second;
                         sum_bs0 += b[i].second;
                     }
-                    return max_ar < max_br || sum_ar < sum_br || sum_as0 < sum_bs0;
+                    if (max_ar != max_br) return max_ar < max_br;
+                    if (sum_ar != sum_br) return sum_ar < sum_br;
+                    return sum_as0 < sum_bs0;
                 });
                 if (solution.size() == 0 || !(std::all_of(check_cuts.begin(), check_cuts.end(), [&lastprefix, &best_osr](int i) {
                     return lastprefix[i].first < best_osr[i].first;
@@ -561,7 +566,7 @@ N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures( int level_n
                 })))
                 {
                     tbb::spin_mutex::scoped_lock tree_search_lock{tree_search_mutex};
-                    all_osr_results.emplace_back(solution.copy(), best_osr);
+                    all_osr_results.emplace_back(std::move(solution.copy()), std::move(best_osr));
                 }
 
                 /*
@@ -594,19 +599,22 @@ N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures( int level_n
             sum_br += rnk;
             sum_bs0 += s0;
         }
-        return max_ar < max_br || sum_ar < sum_br || sum_as0 < sum_bs0;
+        if (max_ar != max_br) return max_ar < max_br;
+        if (sum_ar != sum_br) return sum_ar < sum_br;
+        return sum_as0 < sum_bs0;
     });
-    std::map<GrayCode, std::vector<std::pair<int, double>>> nextprefixes;
     long beam_width = all_osr_results.size();
     if ( config.count("beam") > 0 ) {
         config["beam"].get_property( beam_width );  
     }
     beam_width = std::min<long>(beam_width, all_osr_results.size());
+    std::map<GrayCode, std::vector<std::pair<int, double>>> nextprefixes;
     for (long i = 0; i < beam_width; i++) {
         const auto& item = all_osr_results[i];
         nextprefixes[item.first] = item.second;
     }
     std::vector<std::vector<int>> next_q;
+    next_q.reserve(out_res.size());
     for ( auto it = out_res.crbegin(); it != out_res.crend(); ++it ) {
         if ( nextprefixes.find( it->second ) == nextprefixes.end() ) {
             continue;
