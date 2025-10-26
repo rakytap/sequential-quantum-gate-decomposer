@@ -130,6 +130,12 @@ void operator()( tbb::blocked_range<int> r ) const;
 };
 
 
+std::pair<int, double> operator_schmidt_rank(const QGD_Complex16* U, int n,
+                          const std::vector<int>& A_qubits,
+                          double tol = 1e-10);
+std::vector<std::vector<int>> unique_cuts(int n);
+double get_osr_entanglement_test(Matrix& matrix);
+
 #endif
 
 
