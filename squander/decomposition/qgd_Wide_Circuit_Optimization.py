@@ -2,12 +2,9 @@
 Implementation to optimize wide circuits (i.e. circuits with many qubits) by    partitioning the circuit into smaller partitions and redecompose the smaller partitions
 """
 
-from squander.decomposition.qgd_N_Qubit_Decompositions_Wrapper import (
-    qgd_N_Qubit_Decomposition_adaptive as N_Qubit_Decomposition_adaptive,
-    qgd_N_Qubit_Decomposition_Tree_Search as N_Qubit_Decomposition_Tree_Search,
-    qgd_N_Qubit_Decomposition_Tabu_Search as N_Qubit_Decomposition_Tabu_Search,
-)
-from squander import N_Qubit_Decomposition_custom, N_Qubit_Decomposition
+from squander.decomposition.qgd_N_Qubit_Decomposition_Tree_Search import qgd_N_Qubit_Decomposition_Tree_Search as N_Qubit_Decomposition_Tree_Search
+from squander.decomposition.qgd_N_Qubit_Decomposition_Tabu_Search import qgd_N_Qubit_Decomposition_Tabu_Search as N_Qubit_Decomposition_Tabu_Search
+from squander import N_Qubit_Decomposition_adaptive, N_Qubit_Decomposition_custom, N_Qubit_Decomposition
 from squander.gates.qgd_Circuit import qgd_Circuit as Circuit
 from squander.utils import CompareCircuits
 
@@ -69,20 +66,15 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
         if topology is None:
             topology = [(i, j) for i in range(self.qbit_num) for j in range(i+1, self.qbit_num)]
         self.topology = topology
-    def cnot_left(A, c: int, t: int):
-        if c == t: return A
-        B = list(A)
-        B[t] ^= B[c]
-        return tuple(B)
     def enumerate_unordered_cnot_BFS(n: int, topology=None):
         # Precompute unordered pairs
         topology = [(i, j) for i in range(n) for j in range(i+1, n)] if topology is None else topology
         prior_level_info = None
         while True:
-            visited, seq_pairs_of, seq_dir_of, res = N_Qubit_Decomposition_Guided_Tree.enumerate_unordered_cnot_BFS_level(n, topology, prior_level_info)
+            visited, seq_pairs_of, res = N_Qubit_Decomposition_Guided_Tree.enumerate_unordered_cnot_BFS_level(n, topology, prior_level_info)
             if not res: break
             for item in res: yield item
-            prior_level_info = (visited, seq_pairs_of, seq_dir_of, list((x[1], x[0]) for x in reversed(res)))
+            prior_level_info = (visited, seq_pairs_of, list(x[0] for x in reversed(res)))
 
     def enumerate_unordered_cnot_BFS_level(n: int, topology=None, prior_level_info=None):
         """
@@ -101,57 +93,43 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
             start_key = tuple(1 << i for i in range(n))
 
             # Visited: we only need to mark states once (minimal depth)
-            visited = {start_key: 0}
+            visited = {start_key}
 
             # We also keep *one* representative sequence per state (unordered + directed)
             seq_pairs_of = {start_key: []}
-            seq_dir_of = {start_key: []}
-
-            # BFS frontier stores (A, depth)
-            q = [(start_key, 0)]
 
             # Yield the root
-            return visited, seq_pairs_of, seq_dir_of, [(0, start_key, [], [])]
+            return visited, seq_pairs_of, [(start_key, [], [])]
         else:
-            visited, seq_pairs_of, seq_dir_of, q = prior_level_info
+            visited, seq_pairs_of, q = prior_level_info
         res = []
+        new_seq_pairs_of = {}
 
         while q:
-            A, d = q.pop()
-
-            # structural pruning helper: run-length of last unordered pair
+            A = q.pop()
             last_pairs = seq_pairs_of[A]
-            last_run_pair = last_pairs[-1] if last_pairs else None
-            last_run_len = 0
-            for k in range(len(last_pairs) - 1, -1, -1):
-                if last_pairs[k] == last_run_pair:
-                    last_run_len += 1
-                else:
-                    break
-
             for p in topology:
-                m1, m2 = p, (p[1], p[0])
                 # Try both directions, but record the *same* unordered step 'p'
-                for mv in (m1, m2):
-                    B = N_Qubit_Decomposition_Guided_Tree.cnot_left(A, mv[0], mv[1])
+                for mv in (p, (p[1], p[0])):
+                    #CNOT left
+                    if mv[0] == mv[1]: B = A
+                    else: B = list(A); B[mv[1]] ^= B[mv[0]]; B = tuple(B)
+    
+                    if B in visited: continue  # already discovered at minimal depth
 
-                    kB = B
-                    if kB in visited: continue  # already discovered at minimal depth
-
-                    visited[kB] = d + 1
-                    seq_pairs_of[kB] = last_pairs + [p]
-                    seq_dir_of[kB] = seq_dir_of[A] + [mv]
+                    visited.add(B)
+                    new_seq_pairs_of[B] = last_pairs + [p]
 
                     # Emit as soon as we discover the state (BFS → minimal depth)
-                    res.append((d + 1, B, seq_pairs_of[kB], seq_dir_of[kB]))
-        return visited, seq_pairs_of, seq_dir_of, res
+                    res.append((B, new_seq_pairs_of[B]))
+        return visited, new_seq_pairs_of, res
     def build_sequence():
         #https://oeis.org/A002884
         #1, 1, 4, 88, 9556 4526605 {0: 1, 1: 1, 2: 1, 3: 1} {0: 1, 1: 3, 2: 9, 3: 22, 4: 33, 5: 18, 6: 2} {0: 1, 1: 6, 2: 33, 3: 160, 4: 647, 5: 2005, 6: 3665, 7: 2588, 8: 445, 9: 6}
         #{0: 1, 1: 10, 2: 85, 3: 650, 4: 4475, 5: 27375, 6: 142499, 7: 580482, 8: 1501297, 9: 1738232, 10: 517884, 11: 13591, 12: 24} 
         for i in range(2, 6):
             d = {}
-            for x in set(tuple(x[2]) for x in N_Qubit_Decomposition_Guided_Tree.enumerate_unordered_cnot_BFS(i)):
+            for x in set(tuple(x[1]) for x in N_Qubit_Decomposition_Guided_Tree.enumerate_unordered_cnot_BFS(i)):
                 d[len(x)] = d.get(len(x), 0) + 1
             print({x: d[x] for x in sorted(d)}, sum(d.values()))
     def extract_bits(x, pos):
@@ -188,7 +166,7 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
     def numerical_rank_osr(M, tol=1e-10):
         s = np.linalg.svd(M, compute_uv=False)
         #print(s)
-        return int(np.sum(s > tol)), s[1]/s[0]
+        return int(np.sum(s > tol)), s[0]#/s[0]
     def operator_schmidt_rank(U, n, A, tol=1e-10):
         return N_Qubit_Decomposition_Guided_Tree.numerical_rank_osr(N_Qubit_Decomposition_Guided_Tree.build_osr_matrix(U, n, A), tol)
     def osr_cnot_rank_second_singular(U, n, cuts, tol=1e-10):
@@ -225,7 +203,7 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
             circ.add_RY(qbit)
             circ.add_RZ(qbit)
         self.set_Gate_Structure(circ)
-        for _ in range(self.config.get('restarts', 5 if self.qbit_num==1 else 1)):
+        for _ in range(self.config.get('restarts', 1)):
             self.set_Optimized_Parameters(np.random.rand(self.get_Parameter_Num())*2*np.pi)
             super().Start_Decomposition()
             params = self.get_Optimized_Parameters()
@@ -240,33 +218,40 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
             for pair in self.topology
         }
         #because we have U already conjugate transposed, must use prefix order
-        B = self.config.get('beam', 20)#8*len(self.topology))
+        B = self.config.get('beam', None)#8*len(self.topology))
         #from squander.gates import S, H
         #compact_clifford_gates = [(), (S, ), (H, ), (S, H), (H, S)] #full set is [I, H, SH, SSH, SSSH, HSH] X [I, S, SS, SSS]
         max_depth = self.config.get('tree_level_max', 14)
         prior_level_info = None
         for depth in range(max_depth+1):
             remaining = max_depth - depth
-            visited, seq_pairs_of, seq_dir_of, res = N_Qubit_Decomposition_Guided_Tree.enumerate_unordered_cnot_BFS_level(self.qbit_num, self.topology, prior_level_info)
+            visited, seq_pairs_of, res = N_Qubit_Decomposition_Guided_Tree.enumerate_unordered_cnot_BFS_level(self.qbit_num, self.topology, prior_level_info)
             nextprefixes = []
-            for path in set(tuple(x[2]) for x in res):
+            for path in set(tuple(x[1]) for x in res):
                 #if max(x[0] for x in curh) > remaining + 1: continue
-                curh = None if len(path)==0 else prefixes[path[:-1]]
-                if self.Run_Decomposition(path): return
-                U = self.Umtx.copy()
-                self.get_Circuit().apply_to(self.get_Optimized_Parameters(), U)
-                h = N_Qubit_Decomposition_Guided_Tree.osr_cnot_rank_second_singular(U, self.qbit_num, cuts, tol=1e-10)
+                curh = None if len(path)==0 else prefixes[path[:-1]]                
+                allh = []
+                revpath = tuple(reversed(path))
+                check_cuts = pair_affects[path[-1]] if not curh is None else range(len(cuts))
+                for _ in range(1):                    
+                    for p in (path,) if path==revpath else (path, revpath):
+                        if self.Run_Decomposition(p): return
+                        U = self.Umtx.copy()
+                        self.get_Circuit().apply_to(self.get_Optimized_Parameters(), U)
+                        h = N_Qubit_Decomposition_Guided_Tree.osr_cnot_rank_second_singular(U, self.qbit_num, cuts, tol=1e-10)
+                        allh.append(h)
+                h = min(allh, key=lambda x: (max(x[i][0] for i in check_cuts), sum(x[i][0] for i in check_cuts), sum(x[i][1] for i in check_cuts)))
                 #print(new_prefix, curh, h)
                 if not curh is None:
-                    #print(path, h, curh)
-                    pair = path[-1]
-                    if all(h[i][0] > curh[i][0] for i in pair_affects[pair]): continue
-                    #if all(h[i][1] > curh[i][1] for i in pair_affects[pair]): continue
+                    #print(path, [([x[i] for x in allh], curh[i]) for i in check_cuts])
+                    if all(h[i][0] > curh[i][0] for i in check_cuts): continue
+                    if all(h[i][0] == curh[i][0] for i in check_cuts) and any(h[i][1] > curh[i][1] for i in check_cuts): continue
+                    #if all(h[i][1] > curh[i][1] for i in check_cuts): continue
                     #if sum(h) > sum(curh): continue
                 nextprefixes.append((path, h))
             nextprefixes.sort(key=lambda t: (max(x[0] for x in t[1]), sum(x[0] for x in t[1]), sum(x[1] for x in t[1])))
             prefixes = {x[0]: x[1] for x in nextprefixes[:B]}
-            prior_level_info = (visited, seq_pairs_of, seq_dir_of, list((x[1], x[0]) for x in reversed(res) if tuple(x[2]) in prefixes))
+            prior_level_info = (visited, seq_pairs_of, list(x[0] for x in reversed(res) if tuple(x[1]) in prefixes))
             #print(len(nextprefixes), depth)
     def get_Decomposition_Error(self): return self.err
 #N_Qubit_Decomposition_Guided_Tree.build_sequence(); assert False
@@ -386,7 +371,7 @@ class qgd_Wide_Circuit_Optimization:
 
 
     @staticmethod
-    def DecomposePartition( Umtx: np.ndarray, config: dict, mini_topology = None ) -> Circuit:
+    def DecomposePartition( Umtx: np.ndarray, config: dict, mini_topology = None, structure = None ) -> Circuit:
         """
         Call to run the decomposition of a given unitary Umtx, typically associated with the circuit 
         partition to be optimized
@@ -412,13 +397,25 @@ class qgd_Wide_Circuit_Optimization:
             cDecompose = N_Qubit_Decomposition_adaptive( Umtx.conj().T, level_limit_max=5, level_limit_min=1, topology=mini_topology )
         elif strategy == "TreeGuided":
             cDecompose = N_Qubit_Decomposition_Guided_Tree( Umtx.conj().T, config=config, accelerator_num=0, topology=mini_topology )
+        elif strategy == "Custom":
+            cDecompose = N_Qubit_Decomposition_custom( Umtx.conj().T, config=config, accelerator_num=0 )
+            from squander.gates.qgd_Circuit import CNOT
+            newcirc = Circuit(structure.get_Qbit_Num())
+            for gate in structure.get_Gates():
+                if isinstance(gate, CNOT):
+                    newcirc.add_U3(gate.get_Target_Qbit())
+                    newcirc.add_U3(gate.get_Control_Qbit())
+                    newcirc.add_Gate(gate)
+            for qbit in structure.get_Qbits():
+                newcirc.add_RZ(qbit)
+                newcirc.add_RY(qbit)
+                newcirc.add_RZ(qbit)
+            cDecompose.set_Gate_Structure( newcirc )
         else:
             raise Exception(f"Unsupported decomposition type: {strategy}")
 
 
         tolerance = config["tolerance"]
-            
-            
         cDecompose.set_Verbose( config["verbosity"] )
         cDecompose.set_Cost_Function_Variant( 3 )	
         cDecompose.set_Optimization_Tolerance( tolerance )
@@ -430,14 +427,14 @@ class qgd_Wide_Circuit_Optimization:
         # starting the decomposition
         cDecompose.Start_Decomposition()
             
-
         squander_circuit = cDecompose.get_Circuit()
         parameters       = cDecompose.get_Optimized_Parameters()
 
 
-        #print( "Decomposition error: ", cDecompose.get_Decomposition_Error() )
-
-        if tolerance < cDecompose.get_Decomposition_Error():
+        if strategy == "Custom": err = cDecompose.Optimization_Problem(parameters)
+        else: err = cDecompose.get_Decomposition_Error()
+        #print( "Decomposition error: ", err )
+        if tolerance < err:
             return None, None
 
 
@@ -489,7 +486,7 @@ class qgd_Wide_Circuit_Optimization:
 
 
     @staticmethod
-    def PartitionDecompositionProcess( subcircuit: Circuit, subcircuit_parameters: np.ndarray, config: dict ) -> (Circuit, np.ndarray):
+    def PartitionDecompositionProcess( subcircuit: Circuit, subcircuit_parameters: np.ndarray, config: dict, structure=None ) -> (Circuit, np.ndarray):
         """
         Implements an asynchronous process to decompose a unitary associated with a partition in a large 
         quantum circuit
@@ -519,12 +516,14 @@ class qgd_Wide_Circuit_Optimization:
             mini_topology = extract_subtopology(involved_qbits, qbit_map, config)
         # remap the subcircuit to a smaller qubit register
         remapped_subcircuit = subcircuit.Remap_Qbits( qbit_map, qbit_num )
+        if not structure is None:
+            structure = structure.Remap_Qbits( qbit_map, qbit_num )
 
         # get the unitary representing the circuit
         unitary = remapped_subcircuit.get_Matrix( subcircuit_parameters )
 
         # decompose a small unitary into a new circuit
-        decomposed_circuit, decomposed_parameters = qgd_Wide_Circuit_Optimization.DecomposePartition( unitary, config, mini_topology )
+        decomposed_circuit, decomposed_parameters = qgd_Wide_Circuit_Optimization.DecomposePartition( unitary, config, mini_topology, structure=structure )
 
         if decomposed_circuit is None:
             return subcircuit, subcircuit_parameters #remaining code will fail, just return original circuit
@@ -548,9 +547,7 @@ class qgd_Wide_Circuit_Optimization:
         return new_subcircuit, decomposed_parameters
 
 
-
-
-    def OptimizeWideCircuit( self, circ: Circuit, orig_parameters: np.ndarray, global_min=True, prepartitioning=None ) -> (Circuit, np.ndarray):
+    def OptimizeWideCircuit( self, circ: Circuit, orig_parameters: np.ndarray, global_min=True, prepartitioning=None, structures=None ) -> (Circuit, np.ndarray):
         """
         Call to optimize a wide circuit (i.e. circuits with many qubits) by
         partitioning the circuit into smaller partitions and redecompose the smaller partitions
@@ -642,9 +639,11 @@ class qgd_Wide_Circuit_Optimization:
                 callback_fnc = lambda  x : self.CompareAndPickCircuits( [subcircuit, x[0]], [subcircuit_parameters, x[1]] ) 
 
                 # call a process to decompose a subcircuit
-                config = self.config if not global_min or len(subcircuit.get_Qbits()) < 3 else {**self.config, 'tree_level_max': max(0, subcircuit.get_Gate_Nums().get('CNOT', 0)-1) } # 'strategy': "Adaptive"}
-                async_results[partition_idx]  = pool.apply_async( self.PartitionDecompositionProcess, (subcircuit, subcircuit_parameters, config), callback=callback_fnc )
-
+                config = self.config if not global_min or subcircuit.get_Qbit_Num() < 3 else {**self.config, 'tree_level_max': max(0, subcircuit.get_Gate_Nums().get('CNOT', 0)-1)}
+                config = self.config if structures is None or partition_idx >= len(structures) else {**self.config, 'strategy': 'Custom', 'max_inner_iterations': 10000, 'max_iteration_loops': 4}
+                async_results[partition_idx]  = pool.apply_async( self.PartitionDecompositionProcess, (subcircuit, subcircuit_parameters, config,
+                                                                                                       None if structures is None or partition_idx >= len(structures) else structures[partition_idx]), 
+                                                                 callback=callback_fnc )
             #  code for iterate over async results and retrieve the new subcircuits
             for partition_idx, subcircuit in enumerate( subcircuits ):
     
@@ -656,7 +655,14 @@ class qgd_Wide_Circuit_Optimization:
                     print( "original subcircuit:    ", subcircuit.get_Gate_Nums()) 
                     print( "reoptimized subcircuit: ", new_subcircuit.get_Gate_Nums()) 
                 '''
-
+                if partition_idx % 100 == 99: print(partition_idx+1, "partitions optimized")
+                #if new_subcircuit.get_Gate_Nums().get('CNOT', 0) < subcircuit.get_Gate_Nums().get('CNOT', 0):
+                #    for gate in subcircuit.get_Gates(): print(gate)
+                #print(partition_idx, new_subcircuit.get_Gate_Nums().get('CNOT', 0), subcircuit.get_Gate_Nums().get('CNOT', 0))
+                #if new_subcircuit.get_Gate_Nums().get('CNOT', 0) == 0 and subcircuit.get_Gate_Nums().get('CNOT', 0) > 0:
+                    #for gate in new_subcircuit.get_Gates(): print(gate, gate.get_Target_Qbit(), gate.get_Control_Qbit())
+                    #print("----")
+                    #for gate in subcircuit.get_Gates(): print(gate, gate.get_Target_Qbit(), gate.get_Control_Qbit())
                 if new_subcircuit.get_Gate_Nums().get('CNOT', 0) < subcircuit.get_Gate_Nums().get('CNOT', 0):
                     optimized_subcircuits[ partition_idx ] = new_subcircuit
                     optimized_parameter_list[ partition_idx ] = new_parameters
@@ -674,30 +680,10 @@ class qgd_Wide_Circuit_Optimization:
             def to_cost(d): return d.get('CNOT', 0)*max_gates + sum(d[x] for x in d if x != 'CNOT')
             weights = [to_cost(circ.get_Gate_Nums()) for circ in optimized_subcircuits[:len(allparts)]]
             L, fusion_info = ilp_global_optimal(allparts, g, weights=weights)
+            structures = [optimized_subcircuits[i] for i in L]
             parts = recombine_single_qubit_chains(go, rgo, single_qubit_chains, gate_to_tqubit, [allparts[i] for i in L], fusion_info)
             L = topo_sort_partitions(circ, self.max_partition_size, parts)
-            return self.OptimizeWideCircuit(circ, orig_parameters, global_min=False, prepartitioning=[parts[i] for i in L])
-            """
-            Lgate = [set(allparts[i]) for i in L]
-            for part in Lgate:
-                surrounded_chains = {t for s in part for t in go[s] if t in single_qubit_chains_prepost and go[single_qubit_chains_prepost[t][-1]] and next(iter(go[single_qubit_chains_prepost[t][-1]])) in part}
-                part.update(*(single_qubit_chains_prepost[v] for v in surrounded_chains))
-            gates = set.union(*Lgate)
-            chain_idx = {}
-            for i, chain in enumerate(single_qubit_chains):
-                if chain[0] in gates: continue
-                chain_idx[len(Lgate)] = len(allparts) + i
-                Lgate.append(set(chain))
-            Lidx = topo_sort_partitions(circ, self.max_partition_size, Lgate)
-            wide_circuit = Circuit( qbit_num_orig_circuit )
-            params = []
-            for i in Lidx:
-                c = Circuit( qbit_num_orig_circuit )
-                idx = L[i] if i < len(L) else chain_idx[i]
-                wide_circuit.add_Circuit(optimized_subcircuits[idx])
-                params.append(optimized_parameter_list[idx])
-            wide_parameters = np.concatenate(params, axis=0)
-            """
+            return self.OptimizeWideCircuit(circ, orig_parameters, global_min=False, prepartitioning=[parts[i] for i in L], structures=[structures[i] for i in L])
         else:
             wide_circuit, wide_parameters = self.ConstructCircuitFromPartitions( optimized_subcircuits, optimized_parameter_list )
 
