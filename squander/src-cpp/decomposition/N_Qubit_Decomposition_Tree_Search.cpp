@@ -358,18 +358,18 @@ N_Qubit_Decomposition_Tree_Search::determine_gate_structure(Matrix_real& optimiz
         }
         pair_affects[std::pair<int, int>(pair[0], pair[1])] = std::move(cuts);
     }
-    std::map<GrayCode, std::vector<std::pair<int, double>>> prefixes;
+    CutInfo ci = std::make_tuple(all_cuts, pair_affects, std::map<GrayCode, std::vector<std::pair<int, double>>>());
 
     for ( int level = 0; level <= level_limit; level++ ) { 
 
-        const auto& res = tree_search_over_gate_structures( level, li, std::make_tuple(all_cuts, pair_affects, prefixes) );   
-        li = std::get<1>(res);
-        prefixes = std::get<2>(res);
+        auto [best_at_level, nextli, nextprefixes] = tree_search_over_gate_structures( level, li, ci );   
+        li.swap(nextli);
+        std::get<2>(ci) = std::move(nextprefixes);
 
         if (current_minimum < minimum_best_solution) { 
 
             minimum_best_solution = current_minimum;
-            best_solution   = std::get<0>(res);  
+            best_solution   = best_at_level;
             
         }
 
@@ -402,7 +402,7 @@ N_Qubit_Decomposition_Tree_Search::determine_gate_structure(Matrix_real& optimiz
 @return Returns with the best Gray-code corresponding to the best circuit. (The associated gate structure can be costructed by function construct_gate_structure_from_Gray_code)
 */
 std::tuple<GrayCode, LevelInfo, std::map<GrayCode, std::vector<std::pair<int, double>>>>
-N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures( int level_num, LevelInfo li, CutInfo ci ){
+N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures( int level_num, LevelInfo& li, CutInfo& ci ){
 
     tbb::spin_mutex tree_search_mutex;
     
