@@ -187,14 +187,6 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
                     comp = tuple(q for q in qubits if q not in S)
                     if S < comp:      # lexicographically smaller tuple wins
                         yield S    
-    def apply_cnot_left_inplace(U, qbit_num, control, target):
-        N = 1 << qbit_num
-        for in_ in range(N):
-            if ((in_ >> control) & 1):
-                out = in_ ^ (1 << target)
-                if out < in_: continue
-                U[[in_, out]] = U[[out, in_]]
-        return U
     def Run_Decomposition(self, pairs):
         circ = Circuit(self.qbit_num)
         for pair in pairs:
