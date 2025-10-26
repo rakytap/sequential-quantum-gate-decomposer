@@ -559,11 +559,11 @@ N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures( int level_n
                 });
                 if (solution.size() == 0 || !(std::all_of(check_cuts.begin(), check_cuts.end(), [&lastprefix, &best_osr](int i) {
                     return lastprefix[i].first < best_osr[i].first;
-                }) || std::all_of(check_cuts.begin(), check_cuts.end(), [&lastprefix, &best_osr](int i) {
+                }) || (std::all_of(check_cuts.begin(), check_cuts.end(), [&lastprefix, &best_osr](int i) {
                     return lastprefix[i].first == best_osr[i].first;
                 }) && std::any_of(check_cuts.begin(), check_cuts.end(), [&lastprefix, &best_osr](int i) {
                     return lastprefix[i].second < best_osr[i].second;
-                })))
+                }))))
                 {
                     tbb::spin_mutex::scoped_lock tree_search_lock{tree_search_mutex};
                     all_osr_results.emplace_back(std::move(solution.copy()), std::move(best_osr));
@@ -603,11 +603,11 @@ N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures( int level_n
         if (sum_ar != sum_br) return sum_ar < sum_br;
         return sum_as0 < sum_bs0;
     });
-    long beam_width = all_osr_results.size();
+    long long beam_width = all_osr_results.size();
     if ( config.count("beam") > 0 ) {
         config["beam"].get_property( beam_width );  
     }
-    beam_width = std::min<long>(beam_width, all_osr_results.size());
+    beam_width = std::min<long long>(beam_width, all_osr_results.size());
     std::map<GrayCode, std::vector<std::pair<int, double>>> nextprefixes;
     for (long i = 0; i < beam_width; i++) {
         const auto& item = all_osr_results[i];
