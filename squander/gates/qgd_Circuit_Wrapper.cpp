@@ -413,7 +413,23 @@ qgd_Circuit_Wrapper_add_Permutation(qgd_Circuit_Wrapper *self, PyObject *args, P
             pattern.push_back(PyLong_AsLong(item));
         }
         if (pattern.size() == self->circuit->get_qbit_num()) {
-            self->circuit->add_permutation(pattern);
+            try {
+                self->circuit->add_permutation(pattern);
+            } catch (const std::string& e) {
+                PyErr_SetString(PyExc_ValueError, e.c_str());
+                return Py_BuildValue("i", -1);
+            } catch (const std::exception& e) {
+                PyErr_SetString(PyExc_ValueError, e.what());
+                return Py_BuildValue("i", -1);
+            } catch (...) {
+                PyErr_SetString(PyExc_ValueError, "Unknown error occurred in add_permutation");
+                return Py_BuildValue("i", -1);
+            }
+        } else {
+            std::string err = "Pattern size " + std::to_string(pattern.size()) + 
+                             " does not match circuit qubit number " + std::to_string(self->circuit->get_qbit_num());
+            PyErr_SetString(PyExc_ValueError, err.c_str());
+            return Py_BuildValue("i", -1);
         }
     }   
     return Py_BuildValue("i", 0);
@@ -1328,6 +1344,33 @@ get_gate( Gates_block* circuit, int &idx ) {
         Py_DECREF( qgd_circuit );            
         Py_DECREF( circuit_input );
 
+    }
+    else if (gate->get_type() == PERMUTATION_OPERATION) {
+        // Handle Permutation gate
+        PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
+        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "Permutation");
+        
+        // Get the pattern from the Permutation gate
+        Permutation* perm_gate = static_cast<Permutation*>(gate);
+        std::vector<int> pattern = perm_gate->get_pattern();
+        
+        // Convert pattern to Python list
+        PyObject* pattern_list = PyList_New(pattern.size());
+        for (size_t i = 0; i < pattern.size(); i++) {
+            PyList_SetItem(pattern_list, i, Py_BuildValue("i", pattern[i]));
+        }
+        
+        PyObject* gate_input = Py_BuildValue("(OO)", qbit_num, pattern_list);
+        py_gate = PyObject_CallObject(py_gate_class, gate_input);
+        
+        // replace dummy data with real gate data
+        qgd_Gate* py_gate_C = reinterpret_cast<qgd_Gate*>( py_gate );
+        delete( py_gate_C->gate );
+        py_gate_C->gate = static_cast<Gate*>( gate->clone() );
+        
+        Py_DECREF( qgd_gate );
+        Py_DECREF( gate_input );
+        Py_DECREF( pattern_list );
     }
     else {
 

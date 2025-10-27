@@ -348,6 +348,15 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
 	# call the C wrapper function
         super(qgd_Circuit, self).add_CP(target_qbit, control_qbit)
 
+#@brief Call to add a Permutation gate to the front of the gate structure.
+#@param self A pointer pointing to an instance of the class qgd_Circuit.
+#@param Input arguments: pattern (list of int) - permutation pattern.
+
+    def add_Permutation( self, pattern):
+
+	# call the C wrapper function
+        super(qgd_Circuit, self).add_Permutation(pattern)
+
 #@brief Call to add a SWAP gate to the front of the gate structure.
 #@param self A pointer pointing to an instance of the class qgd_Circuit.
 #@param Input arguments: target_qbits (list of int) - list of target qubits (at least 2).

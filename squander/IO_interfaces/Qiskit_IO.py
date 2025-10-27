@@ -214,7 +214,7 @@ def get_Qiskit_Circuit( Squander_circuit, parameters ):
             #Permutation gate
             from qiskit.circuit.library import PermutationGate
             pattern = gate.get_Pattern()
-            qubits = list(range(gate.get_Qbit_Num()))
+            qubits = list(range(len(pattern)))
             circuit.append( PermutationGate(pattern),qubits)
         
         elif isinstance( gate, Circuit ):
@@ -377,7 +377,7 @@ def get_Qiskit_Circuit_inverse( Squander_circuit, parameters ):
             #Permutation gate
             from qiskit.circuit.library import PermutationGate
             pattern = gate.get_Pattern()
-            qubits = list(range(gate.get_Qbit_Num()))
+            qubits = list(range(len(pattern)))
             circuit.append( PermutationGate(pattern),qubits)
 
         elif isinstance( gate, Circuit ):

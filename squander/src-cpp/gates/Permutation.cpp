@@ -114,7 +114,11 @@ void Permutation::set_pattern(const std::vector<int>& pattern_in){
 }
 
 std::vector<int> Permutation::get_involved_qubits(bool only_target){
-    return get_involved_qubits(only_target);
+    std::vector<int> involved_qubits;
+    for (int i = 0; i < qbit_num; i++) {
+        involved_qubits.push_back(i);
+    }
+    return involved_qubits;
 }
 
 Permutation* Permutation::clone(){

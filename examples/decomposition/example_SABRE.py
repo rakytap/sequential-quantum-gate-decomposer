@@ -1,6 +1,7 @@
 from squander import SABRE
 from squander import Qiskit_IO
 from squander import utils
+from squander import Circuit
 
 from qiskit import transpile
 from qiskit import QuantumCircuit
@@ -41,13 +42,14 @@ print("INITIAL CIRCUIT:")
 print("mapping (q -> Q):", pi)
 print("Final mapping:", final_pi)
 qubits = list(range(N))
-Qiskit_circuit = QuantumCircuit(N)
 pi_map = list(np.array(sabre.get_inverse_pi(pi)))
-Qiskit_circuit.append(CircuitInstruction( PermutationGate(pi_map),qubits))
-Qiskit_circuit &= Qiskit_IO.get_Qiskit_Circuit( Squander_remapped_circuit, parameters_remapped_circuit )
-Qiskit_circuit.append(CircuitInstruction( PermutationGate(list(final_pi)),qubits))
+final_circuit = Circuit(N)
+final_circuit.add_Permutation(list(pi_map))
+final_circuit.add_Circuit(Squander_remapped_circuit)
+final_circuit.add_Permutation(list(final_pi))
+Qiskit_circuit = Qiskit_IO.get_Qiskit_Circuit( final_circuit.get_Flat_Circuit(), parameters_remapped_circuit )
 print("CIRCUIT MAPPED WITH SABRE:")
-#print( Qiskit_circuit )
+print( Qiskit_circuit )
 print("SABRE SWAP COUNT:", swap_count)
 # defining the qubit topology/connectivity for Squander
 coupling_map = [

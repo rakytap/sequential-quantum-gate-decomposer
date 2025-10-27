@@ -633,8 +633,16 @@ void Gates_block::add_u3_to_front(int target_qbit) {
 */
 void Gates_block::add_permutation(const std::vector<int>& pattern) {
     // create the operation
-    Gate* operation = static_cast<Gate*>(new Permutation( qbit_num, pattern ));
-    add_gate( operation );
+    try {
+        Gate* operation = static_cast<Gate*>(new Permutation( qbit_num, pattern ));
+        add_gate( operation );
+    } catch (const std::string& e) {
+        // Re-throw as proper exception
+        throw std::runtime_error(e);
+    } catch (const std::exception& e) {
+        // Re-throw as-is
+        throw;
+    }
 }
 
 
@@ -644,8 +652,16 @@ void Gates_block::add_permutation(const std::vector<int>& pattern) {
 */
 void Gates_block::add_permutation_to_front(const std::vector<int>& pattern) {
     // create the operation
-    Gate* operation = static_cast<Gate*>(new Permutation( qbit_num, pattern ));
-    add_gate_to_front( operation );
+    try {
+        Gate* operation = static_cast<Gate*>(new Permutation( qbit_num, pattern ));
+        add_gate_to_front( operation );
+    } catch (const std::string& e) {
+        // Re-throw as proper exception
+        throw std::runtime_error(e);
+    } catch (const std::exception& e) {
+        // Re-throw as-is
+        throw;
+    }
 }
 
 /**
