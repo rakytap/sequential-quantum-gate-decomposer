@@ -66,6 +66,7 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
         self.qbit_num = Umtx.shape[0].bit_length() -1
         self.config = config
         self.accelerator_num = accelerator_num
+        #self.set_Cost_Function_Variant( 0 )	 #0 is Frobenius, 3 is HS
         if topology is None:
             topology = [(i, j) for i in range(self.qbit_num) for j in range(i+1, self.qbit_num)]
         self.topology = topology
@@ -145,15 +146,6 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
         dB = 1 << len(B)
         m_rows = dA * dA
         m_cols = dB * dB
-        """
-        T = U.reshape([2]* (2*n))
-        i_axes_A = A_sorted
-        o_axes_A = [q + n for q in A_sorted]
-        i_axes_B = B
-        o_axes_B = [q + n for q in B]
-        perm = i_axes_A + o_axes_A + i_axes_B + o_axes_B
-        return T.transpose(perm).reshape((m_rows, m_cols))
-        """
         M = np.zeros((m_rows, m_cols), dtype=U.dtype)
         # Row-major indexing: U[in + out*N] is element (in, out)
         for in_ in range(N):
@@ -169,7 +161,7 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
     def numerical_rank_osr(M, tol=1e-10):
         s = np.linalg.svd(M, compute_uv=False)
         #print(s)
-        return int(np.sum(s > tol)), s[0]#/s[0]
+        return int(np.sum(s > tol)), s[1]/s[0]
     def operator_schmidt_rank(U, n, A, tol=1e-10):
         return N_Qubit_Decomposition_Guided_Tree.numerical_rank_osr(N_Qubit_Decomposition_Guided_Tree.build_osr_matrix(U, n, A), tol)
     def osr_cnot_rank_second_singular(U, n, cuts, tol=1e-10):
@@ -217,13 +209,15 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
         #from squander.gates import S, H
         #compact_clifford_gates = [(), (S, ), (H, ), (S, H), (H, S)] #full set is [I, H, SH, SSH, SSSH, HSH] X [I, S, SS, SSS]
         max_depth = self.config.get('tree_level_max', 14)
+        tol = np.sqrt(self.config.get('tolerance', 1e-8))
+        Fnorm = np.sqrt(1<<self.qbit_num)
         prior_level_info = None
         for depth in range(max_depth+1):
             remaining = max_depth - depth
             visited, seq_pairs_of, res = N_Qubit_Decomposition_Guided_Tree.enumerate_unordered_cnot_BFS_level(self.qbit_num, self.topology, prior_level_info)
             nextprefixes = []
             for path in set(tuple(x[1]) for x in res):
-                #if max(x[0] for x in curh) > remaining + 1: continue
+                #if any(x!=y for x, y in zip(path, ((0, 2), (2, 3), (1, 2), (1, 2), (2, 3), (1, 2), (0, 1)))): continue
                 curh = None if len(path)==0 else prefixes[path[:-1]]                
                 allh = []
                 revpath = tuple(reversed(path))
@@ -233,18 +227,19 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
                         if self.Run_Decomposition(p): return
                         U = self.Umtx.copy()
                         self.get_Circuit().apply_to(self.get_Optimized_Parameters(), U)
-                        h = N_Qubit_Decomposition_Guided_Tree.osr_cnot_rank_second_singular(U, self.qbit_num, cuts, tol=1e-10)
+                        h = N_Qubit_Decomposition_Guided_Tree.osr_cnot_rank_second_singular(U/Fnorm, self.qbit_num, cuts, tol=tol)
                         allh.append(h)
-                h = min(allh, key=lambda x: (max(x[i][0] for i in check_cuts), sum(x[i][0] for i in check_cuts), sum(x[i][1] for i in check_cuts)))
+                h = min(allh, key=lambda x: (max((x[i][0] for i in check_cuts), default=0), sum(x[i][0] for i in check_cuts), sum(x[i][1] for i in check_cuts)))
+                if max((x[0] for x in h), default=0) > remaining: continue
                 #print(new_prefix, curh, h)
                 if not curh is None:
                     #print(path, [([x[i] for x in allh], curh[i]) for i in check_cuts])
-                    if all(h[i][0] > curh[i][0] for i in check_cuts): continue
-                    if all(h[i][0] == curh[i][0] for i in check_cuts) and any(h[i][1] > curh[i][1] for i in check_cuts): continue
+                    if any(h[i][0] > curh[i][0] for i in check_cuts): continue
+                    #if all(h[i][0] == curh[i][0] for i in check_cuts) and any(h[i][1] > curh[i][1] for i in check_cuts): continue
                     #if all(h[i][1] > curh[i][1] for i in check_cuts): continue
                     #if sum(h) > sum(curh): continue
                 nextprefixes.append((path, h))
-            nextprefixes.sort(key=lambda t: (max(x[0] for x in t[1]), sum(x[0] for x in t[1]), sum(x[1] for x in t[1])))
+            nextprefixes.sort(key=lambda t: (max((x[0] for x in t[1]), default=0), sum(x[0] for x in t[1]), sum(x[1] for x in t[1])))
             prefixes = {x[0]: x[1] for x in nextprefixes[:B]}
             prior_level_info = (visited, seq_pairs_of, list(x[0] for x in reversed(res) if tuple(x[1]) in prefixes))
             #print(len(nextprefixes), depth)
@@ -420,8 +415,10 @@ class qgd_Wide_Circuit_Optimization:
         cDecompose.set_Optimizer( "BFGS" )
 
         # starting the decomposition
-        cDecompose.Start_Decomposition()
-            
+        try:
+            cDecompose.Start_Decomposition()
+        except: 
+            return None, None
         squander_circuit = cDecompose.get_Circuit()
         parameters       = cDecompose.get_Optimized_Parameters()
 
@@ -469,7 +466,8 @@ class qgd_Wide_Circuit_Optimization:
         if len(circs) != len(parameter_arrs) :
             raise Exception("The first two arguments should be of the same length")
 
-
+        circs = [x for x in circs if not x is None]
+        parameter_arrs = [x for x in parameter_arrs if not x is None]
         metrics = [metric( circ ) for circ in circs]
 
         metrics = np.array( metrics )
@@ -634,8 +632,8 @@ class qgd_Wide_Circuit_Optimization:
                 callback_fnc = lambda  x : self.CompareAndPickCircuits( [subcircuit, x[0]], [subcircuit_parameters, x[1]] ) 
 
                 # call a process to decompose a subcircuit
-                config = self.config if not global_min or subcircuit.get_Qbit_Num() < 3 else {**self.config, 'tree_level_max': max(0, subcircuit.get_Gate_Nums().get('CNOT', 0)-1)}
-                config = self.config if structures is None or partition_idx >= len(structures) else {**self.config, 'strategy': 'Custom', 'max_inner_iterations': 10000, 'max_iteration_loops': 4}
+                config = {**self.config, 'tree_level_max': max(0, subcircuit.get_Gate_Nums().get('CNOT', 0)-1)}
+                config = config if structures is None or partition_idx >= len(structures) else {**config, 'strategy': 'Custom', 'max_inner_iterations': 10000, 'max_iteration_loops': 4}
                 async_results[partition_idx]  = pool.apply_async( self.PartitionDecompositionProcess, (subcircuit, subcircuit_parameters, config,
                                                                                                        None if structures is None or partition_idx >= len(structures) else structures[partition_idx]), 
                                                                  callback=callback_fnc )
