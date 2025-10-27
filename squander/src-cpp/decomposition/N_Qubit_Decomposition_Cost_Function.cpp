@@ -552,7 +552,6 @@ void functor_cost_fnc::operator()( tbb::blocked_range<int> r ) const {
 
 
 
-
 #define LAPACK_ROW_MAJOR               101
 #define LAPACK_COL_MAJOR               102
 #define lapack_int     int
@@ -642,7 +641,8 @@ static std::pair<int, double> numerical_rank_osr(std::vector<lapack_complex_doub
     //std::copy(S.begin(), S.end(), std::ostream_iterator<double>(std::cout, " ")); std::cout << std::endl;
     int rnk = 0;
     for (double s : S) if (s > tol) ++rnk;
-    return std::pair<int, double>(rnk, S[0]);
+    double s1norm = S[1]/S[0];
+    return std::pair<int, double>(rnk, std::isnan(s1norm) ? INFINITY : s1norm);
 }
 
 // Public: operator-Schmidt rank across cut A|B
