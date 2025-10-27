@@ -430,13 +430,14 @@ N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures( int level_n
     std::vector<std::pair<GrayCode, std::vector<std::pair<int, double>>>> all_osr_results;
     int64_t iteration_max = all_pairs.size();
     all_osr_results.reserve(iteration_max);
+    double Fnorm = std::sqrt(static_cast<double>(1 << qbit_num));
+    double osr_tol = std::sqrt(optimization_tolerance_loc);
 
 
     // determine the concurrency of the calculation
     unsigned int nthreads = std::thread::hardware_concurrency();
     int64_t concurrency = (int64_t)nthreads;
     concurrency = concurrency < iteration_max ? concurrency : iteration_max;  
-
 
     int parallel = get_parallel_configuration();
        
@@ -508,8 +509,14 @@ N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures( int level_n
                     cDecomp_custom_random.apply_to(params, U);
                     std::vector<std::pair<int, double>> osr_result;
                     osr_result.reserve(all_cuts.size());
+                    for (int i = 0; i < U.rows; i++) {
+                        for (int j = 0; j < U.cols; j++) {
+                            U.data[i * U.cols + j].real /= Fnorm;
+                            U.data[i * U.cols + j].imag /= Fnorm;
+                        }
+                    }
                     for (const auto& cut : all_cuts) {
-                        osr_result.emplace_back(operator_schmidt_rank(U.data, qbit_num, cut));
+                        osr_result.emplace_back(operator_schmidt_rank(U.data, qbit_num, cut, osr_tol));
                     }
                     osr_results.emplace_back(std::move(osr_result));
 
@@ -557,24 +564,27 @@ N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures( int level_n
                     if (sum_ar != sum_br) return sum_ar < sum_br;
                     return sum_as0 < sum_bs0;
                 });
-                if (solution.size() == 0 || !(std::all_of(check_cuts.begin(), check_cuts.end(), [&lastprefix, &best_osr](int i) {
+                int qbit_lower_bound = best_osr.size() == 0 ? 0 : std::max_element(best_osr.begin(), best_osr.end(), [](const std::pair<int, double>& a, const std::pair<int, double>& b) {
+                    return a.first < b.first;
+                })->first;
+                if (qbit_lower_bound <= level_limit - level_num && (solution.size() == 0 || !(std::any_of(check_cuts.begin(), check_cuts.end(), [&lastprefix, &best_osr](int i) {
                     return lastprefix[i].first < best_osr[i].first;
-                }) || (std::all_of(check_cuts.begin(), check_cuts.end(), [&lastprefix, &best_osr](int i) {
+                }) /*|| (std::all_of(check_cuts.begin(), check_cuts.end(), [&lastprefix, &best_osr](int i) {
                     return lastprefix[i].first == best_osr[i].first;
                 }) && std::any_of(check_cuts.begin(), check_cuts.end(), [&lastprefix, &best_osr](int i) {
                     return lastprefix[i].second < best_osr[i].second;
-                }))))
+                }))*/)))
                 {
                     tbb::spin_mutex::scoped_lock tree_search_lock{tree_search_mutex};
                     all_osr_results.emplace_back(std::move(solution.copy()), std::move(best_osr));
                 }
 
-                /*
-                for( int gcode_idx=0; gcode_idx<gcode.size(); gcode_idx++ ) {
-                    std::cout << gcode[gcode_idx] << ", ";
+                
+                /*for( int gcode_idx=0; gcode_idx<solution.size(); gcode_idx++ ) {
+                    std::cout << solution[gcode_idx] << ", ";
                 }
-                std::cout << current_minimum_tmp  << std::endl;
-                */
+                std::cout << current_minimum << std::endl;*/
+                
 
         
         
@@ -756,16 +766,16 @@ N_Qubit_Decomposition_Tree_Search::add_two_qubit_block(Gates_block* gate_structu
         }        
 
         Gates_block* layer = new Gates_block( qbit_num );
-        layer->add_rz(target_qbit);
+        /*layer->add_rz(target_qbit);
         layer->add_ry(target_qbit);
         layer->add_rz(target_qbit);     
 
         layer->add_rz(control_qbit);
         layer->add_ry(control_qbit);
-        layer->add_rz(control_qbit);
+        layer->add_rz(control_qbit);*/
 
-        //layer->add_u3(target_qbit);
-        //layer->add_u3(control_qbit);
+        layer->add_u3(target_qbit);
+        layer->add_u3(control_qbit);
         layer->add_cnot(target_qbit, control_qbit); 
         gate_structure->add_gate(layer);
 
@@ -790,10 +800,10 @@ N_Qubit_Decomposition_Tree_Search::add_finalyzing_layer( Gates_block* gate_struc
     block->add_ry(qbit_num-1);
 */
     for (int idx=0; idx<qbit_num; idx++) {
-        //block->add_rz(idx);
-        //block->add_ry(idx);
-        //block->add_rz(idx); 
-        block->add_u3(idx);
+        block->add_rz(idx);
+        block->add_ry(idx);
+        block->add_rz(idx); 
+        //block->add_u3(idx);
              //block->add_u3(idx, Theta, Phi, Lambda);
 //        block->add_ry(idx);
     }
