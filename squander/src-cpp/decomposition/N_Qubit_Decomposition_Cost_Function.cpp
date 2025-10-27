@@ -742,6 +742,13 @@ double get_osr_entanglement_test(Matrix& matrix) {
     int qbit_num = lg_down(matrix.rows);
     const auto& cuts = unique_cuts(qbit_num);
     int rank_sum = 0;
+    double Fnorm = std::sqrt(qbit_num);
+    for (int i = 0; i < matrix.rows; i++) {
+        for (int j = 0; j < matrix.cols; j++) {
+            matrix.data[i * matrix.cols + j].real /= Fnorm;
+            matrix.data[i * matrix.cols + j].imag /= Fnorm;
+        }
+    }
     for (const auto& cut : cuts) {
         rank_sum += operator_schmidt_rank(matrix.get_data(), qbit_num, cut).first;
     }
