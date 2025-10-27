@@ -448,6 +448,10 @@ N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures( int level_n
 
 //std::cout << "levels " << level_num << std::endl;
     tbb::parallel_for( tbb::blocked_range<int64_t>((int64_t)0, concurrency, work_batch), [&](tbb::blocked_range<int64_t> r) {
+        N_Qubit_Decomposition_custom&& cDecomp_custom_random = perform_optimization( nullptr );
+        std::uniform_real_distribution<> distrib_real(0.0, 2*M_PI);
+        std::vector<double> optimized_parameters;
+
         for (int64_t job_idx=r.begin(); job_idx<r.end(); ++job_idx) { 
        
     //for( int64_t job_idx=0; job_idx<concurrency; job_idx++ ) {  
@@ -465,81 +469,85 @@ N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures( int level_n
 
             for (int64_t iter_idx=initial_offset; iter_idx<offset_max+1; iter_idx++ ) {
                 const auto& solution = all_pairs[iter_idx];
-                if( found_optimal_solution ) {
-                    return;
-                }
-        
-
     
+                GrayCode reversed_solution = solution.copy();
+                std::reverse(reversed_solution.data, reversed_solution.data+reversed_solution.size());
 
                 // ----------------------------------------------------------------                                
                 std::vector<std::vector<std::pair<int, double>>> osr_results;
-                osr_results.reserve(2);
-                for (int revpass = 0; revpass < 2; revpass++) {
-                    Gates_block* gate_structure_loc;
-                    if (revpass == 0) gate_structure_loc = construct_gate_structure_from_Gray_code( solution );
+                int totalpass = qbit_num == 1 ? 5 : 2;
+                int totalrevpass = (reversed_solution == solution) ? 1 : 2;
+                osr_results.reserve(totalrevpass*totalpass);
+                for (int revpass = 0; revpass < totalrevpass; revpass++) {
+                    std::unique_ptr<Gates_block> gate_structure_loc;
+                    if (revpass == 0) gate_structure_loc.reset(construct_gate_structure_from_Gray_code( solution ));
                     else {
-                        GrayCode reversed_solution = solution.copy();
-                        std::reverse(reversed_solution.data, reversed_solution.data+reversed_solution.size());
-                        if (reversed_solution == solution) continue; // already optimized in the forward pass
-                        gate_structure_loc = construct_gate_structure_from_Gray_code( reversed_solution );
+                        gate_structure_loc.reset(construct_gate_structure_from_Gray_code( reversed_solution ));
                     }
+                    cDecomp_custom_random.set_custom_gate_structure( gate_structure_loc.get() );
+                    cDecomp_custom_random.set_optimization_blocks( gate_structure_loc->get_gate_num() );
+                    for (int pass = 0; pass < totalpass; pass++) {
+                        if( found_optimal_solution ) {
+                            return;
+                        }
+                    
+
+                        // ----------- start the decomposition ----------- 
+                        std::stringstream sstream;
+                        sstream << "Starting optimization with " << gate_structure_loc->get_gate_num() << " decomposing layers." << std::endl;
+                        print(sstream, 1);
+                        optimized_parameters.resize( cDecomp_custom_random.get_parameter_num() );
+                        for(int idx = 0; idx < optimized_parameters.size(); idx++) {
+                            optimized_parameters[idx] = distrib_real(gen);
+                        }                        
+                        cDecomp_custom_random.set_optimized_parameters( optimized_parameters.data(), optimized_parameters.size() );
+                        cDecomp_custom_random.start_decomposition();
+                        
+
+                        number_of_iters += cDecomp_custom_random.get_num_iters(); // retrive the number of iterations spent on optimization
+
+                        double current_minimum_tmp         = cDecomp_custom_random.get_current_minimum();
+                        sstream.str("");
+                        sstream << "Optimization with " << level_num << " levels converged to " << current_minimum_tmp << std::endl;
+                        print(sstream, 1);
+
+                        auto U = Umtx.copy();
+                        auto params = cDecomp_custom_random.get_optimized_parameters();
+                        cDecomp_custom_random.apply_to(params, U);
+                        std::vector<std::pair<int, double>> osr_result;
+                        osr_result.reserve(all_cuts.size());
+                        for (int i = 0; i < U.rows; i++) {
+                            for (int j = 0; j < U.cols; j++) {
+                                U.data[i * U.cols + j].real /= Fnorm;
+                                U.data[i * U.cols + j].imag /= Fnorm;
+                            }
+                        }
+                        for (const auto& cut : all_cuts) {
+                            osr_result.emplace_back(operator_schmidt_rank(U.data, qbit_num, cut, osr_tol));
+                        }
+                        osr_results.emplace_back(std::move(osr_result));
+
+
+                        //std::cout << "Optimization with " << level_num << " levels converged to " << current_minimum_tmp << std::endl;
                 
-        
+                        {
+                            tbb::spin_mutex::scoped_lock tree_search_lock{tree_search_mutex};
 
-                    // ----------- start the decomposition ----------- 
-                    std::stringstream sstream;
-                    sstream << "Starting optimization with " << gate_structure_loc->get_gate_num() << " decomposing layers." << std::endl;
-                    print(sstream, 1);
-                    
-                    N_Qubit_Decomposition_custom&& cDecomp_custom_random = perform_optimization( gate_structure_loc );
-                    
-                    delete( gate_structure_loc );
-                    gate_structure_loc = NULL;
+                            if( current_minimum_tmp < current_minimum && !found_optimal_solution) {
+                            
+                                current_minimum     = current_minimum_tmp;                        
+                                best_solution = solution;
 
-                    number_of_iters += cDecomp_custom_random.get_num_iters(); // retrive the number of iterations spent on optimization
-
-                    double current_minimum_tmp         = cDecomp_custom_random.get_current_minimum();
-                    sstream.str("");
-                    sstream << "Optimization with " << level_num << " levels converged to " << current_minimum_tmp << std::endl;
-                    print(sstream, 1);
-
-                    auto U = Umtx.copy();
-                    auto params = cDecomp_custom_random.get_optimized_parameters();
-                    cDecomp_custom_random.apply_to(params, U);
-                    std::vector<std::pair<int, double>> osr_result;
-                    osr_result.reserve(all_cuts.size());
-                    for (int i = 0; i < U.rows; i++) {
-                        for (int j = 0; j < U.cols; j++) {
-                            U.data[i * U.cols + j].real /= Fnorm;
-                            U.data[i * U.cols + j].imag /= Fnorm;
-                        }
-                    }
-                    for (const auto& cut : all_cuts) {
-                        osr_result.emplace_back(operator_schmidt_rank(U.data, qbit_num, cut, osr_tol));
-                    }
-                    osr_results.emplace_back(std::move(osr_result));
-
-
-                    //std::cout << "Optimization with " << level_num << " levels converged to " << current_minimum_tmp << std::endl;
+                                optimized_parameters_mtx = cDecomp_custom_random.get_optimized_parameters();
+                            }
+                            
+                            
             
-                    {
-                        tbb::spin_mutex::scoped_lock tree_search_lock{tree_search_mutex};
-
-                        if( current_minimum_tmp < current_minimum && !found_optimal_solution) {
-                        
-                            current_minimum     = current_minimum_tmp;                        
-                            best_solution = solution;
-
-                            optimized_parameters_mtx = cDecomp_custom_random.get_optimized_parameters();
+                            if ( current_minimum < optimization_tolerance_loc && !found_optimal_solution)  {            
+                                found_optimal_solution = true;
+                            } 
                         }
-                        
-                        
-        
-                        if ( current_minimum < optimization_tolerance_loc && !found_optimal_solution)  {            
-                            found_optimal_solution = true;
-                        } 
-                    }
+                    } // end of pass loop
                 } // end of revpass loop
 
                 auto lastprefix = solution.size() != 0 ? prefixes.at(solution.remove_Digit(solution.size()-1)) : std::vector<std::pair<int, double>>();
@@ -569,11 +577,7 @@ N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures( int level_n
                 })->first;
                 if (qbit_lower_bound <= level_limit - level_num && (solution.size() == 0 || !(std::any_of(check_cuts.begin(), check_cuts.end(), [&lastprefix, &best_osr](int i) {
                     return lastprefix[i].first < best_osr[i].first;
-                }) /*|| (std::all_of(check_cuts.begin(), check_cuts.end(), [&lastprefix, &best_osr](int i) {
-                    return lastprefix[i].first == best_osr[i].first;
-                }) && std::any_of(check_cuts.begin(), check_cuts.end(), [&lastprefix, &best_osr](int i) {
-                    return lastprefix[i].second < best_osr[i].second;
-                }))*/)))
+                }))))
                 {
                     tbb::spin_mutex::scoped_lock tree_search_lock{tree_search_mutex};
                     all_osr_results.emplace_back(std::move(solution.copy()), std::move(best_osr));
@@ -660,8 +664,10 @@ N_Qubit_Decomposition_Tree_Search::perform_optimization(Gates_block* gate_struct
 
          
     N_Qubit_Decomposition_custom cDecomp_custom_random = N_Qubit_Decomposition_custom( Umtx.copy(), qbit_num, false, config, RANDOM, accelerator_num);
-    cDecomp_custom_random.set_custom_gate_structure( gate_structure_loc );
-    cDecomp_custom_random.set_optimization_blocks( gate_structure_loc->get_gate_num() );
+    if (gate_structure_loc != nullptr) {
+        cDecomp_custom_random.set_custom_gate_structure( gate_structure_loc );
+        cDecomp_custom_random.set_optimization_blocks( gate_structure_loc->get_gate_num() );
+    }
     cDecomp_custom_random.set_max_iteration( max_outer_iterations );
 #ifndef __DFE__
     cDecomp_custom_random.set_verbose(verbose);
@@ -691,9 +697,9 @@ N_Qubit_Decomposition_Tree_Search::perform_optimization(Gates_block* gate_struct
          int max_inner_iterations_loc = 10000;
          cDecomp_custom_random.set_max_inner_iterations( max_inner_iterations_loc );  
     }
-                
-            
-    cDecomp_custom_random.start_decomposition();
+
+
+    if (gate_structure_loc != nullptr) start_decomposition();
     return cDecomp_custom_random;
 }
 
