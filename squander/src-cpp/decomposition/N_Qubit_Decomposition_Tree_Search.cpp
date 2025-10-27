@@ -536,7 +536,7 @@ N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures( int level_n
                             if( current_minimum_tmp < current_minimum && !found_optimal_solution) {
                             
                                 current_minimum     = current_minimum_tmp;                        
-                                best_solution = solution;
+                                best_solution = revpass == 0 ? solution : reversed_solution;
 
                                 optimized_parameters_mtx = cDecomp_custom_random.get_optimized_parameters();
                             }
@@ -556,7 +556,7 @@ N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures( int level_n
                 else {
                     check_cuts.resize(all_cuts.size());
                     std::iota(check_cuts.begin(), check_cuts.end(), 0);
-                }
+                }                
                 auto best_osr = *std::min_element(osr_results.begin(), osr_results.end(), [&check_cuts](const std::vector<std::pair<int, double>>& a, const std::vector<std::pair<int, double>>& b) {
                     int max_ar = 0, sum_ar = 0, max_br = 0, sum_br = 0;
                     double sum_as0 = 0, sum_bs0 = 0;
@@ -806,10 +806,10 @@ N_Qubit_Decomposition_Tree_Search::add_finalyzing_layer( Gates_block* gate_struc
     block->add_ry(qbit_num-1);
 */
     for (int idx=0; idx<qbit_num; idx++) {
-        block->add_rz(idx);
-        block->add_ry(idx);
-        block->add_rz(idx); 
-        //block->add_u3(idx);
+        //block->add_rz(idx);
+        //block->add_ry(idx);
+        //block->add_rz(idx); 
+        block->add_u3(idx);
              //block->add_u3(idx, Theta, Phi, Lambda);
 //        block->add_ry(idx);
     }
