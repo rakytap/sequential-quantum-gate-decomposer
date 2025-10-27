@@ -699,7 +699,7 @@ N_Qubit_Decomposition_Tree_Search::perform_optimization(Gates_block* gate_struct
     }
 
 
-    if (gate_structure_loc != nullptr) start_decomposition();
+    if (gate_structure_loc != nullptr) cDecomp_custom_random.start_decomposition();
     return cDecomp_custom_random;
 }
 
