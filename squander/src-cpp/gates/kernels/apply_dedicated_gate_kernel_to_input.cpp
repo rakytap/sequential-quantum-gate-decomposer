@@ -25,7 +25,8 @@ limitations under the License.
 //#include <immintrin.h>
 #include "tbb/tbb.h"
 #include <omp.h>
-
+#include <unordered_map>
+#include <unordered_set>
 
 
 
@@ -304,6 +305,50 @@ void apply_SWAP_kernel_to_input(Matrix& input, const std::vector<int>& target_qb
             input.get_data() + swap_idx*input.stride + input.cols,
             input.get_data() + swap_idx_pair*input.stride
         );
+    }
+}
+
+void apply_Permutation_kernel_to_input(Matrix& input, const std::vector<int>& pattern, const int& matrix_size){
+
+    int qbit_num = pattern.size();
+    
+    std::unordered_map<int,int> pattern_map;
+    for (int row_idx=0; row_idx<matrix_size; row_idx++){
+       std::vector<int> old_bits(qbit_num);
+       for (int idx=0; idx<qbit_num; idx++){
+        old_bits[idx] = (row_idx >> pattern[idx]) & 1;
+       }
+       int new_row_idx = 0;
+       for (int idx=0; idx<qbit_num; idx++){
+        new_row_idx |= old_bits[idx] << idx;
+       }
+       pattern_map[row_idx] = new_row_idx;
+    }
+
+    std::unordered_set<int> visited_rows;
+    std::vector<std::vector<int>> row_cycles;
+    for (const auto& [start, _] : pattern_map){
+        if (visited_rows.count(start) ) continue;
+
+        std::vector<int> cycle;
+        int current = start;
+        while (!visited_rows.count(current)){
+            cycle.push_back(current);
+            visited_rows.insert(current);
+            current = pattern_map[current];
+        }
+        if (cycle.size() > 1){
+            row_cycles.push_back(cycle);
+        }
+    }
+    for (const auto& cycle : row_cycles){
+        for (size_t idx=0; idx<cycle.size()-1; idx++){
+            std::swap_ranges(
+                input.get_data() + cycle[idx]*input.stride,
+                input.get_data() + cycle[idx]*input.stride + input.cols,
+                input.get_data() + cycle[idx+1]*input.stride
+            );
+        }
     }
 }
 

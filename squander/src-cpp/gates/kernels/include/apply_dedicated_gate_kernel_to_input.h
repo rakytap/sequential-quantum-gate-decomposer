@@ -74,6 +74,15 @@ void apply_T_kernel_to_input(Matrix& input, const int& target_qbit, const int& c
  */
 void apply_SWAP_kernel_to_input(Matrix& input, const std::vector<int>& target_qbits, const std::vector<int>& control_qbits, const int& matrix_size);
 
+/**
+ * @brief Applies the Permutation gate kernel to the input matrix.
+ *
+ * @param input The input matrix on which the transformation is applied.
+ * @param pattern The pattern of the permutation.
+ * @param matrix_size The size of the input.
+ */
+void apply_Permutation_kernel_to_input(Matrix& input, const std::vector<int>& pattern, const int& matrix_size);
+
 // TBB Parallelized versions
 void apply_X_kernel_to_input_tbb(Matrix& input, const std::vector<int>& target_qbits, const std::vector<int>& control_qbits, const int& matrix_size);
 void apply_Y_kernel_to_input_tbb(Matrix& input, const int& target_qbit, const int& control_qbit, const int& matrix_size);

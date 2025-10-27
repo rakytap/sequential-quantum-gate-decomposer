@@ -209,8 +209,17 @@ void add_ry(int target_qbit);
 */
 void add_ry_to_front(int target_qbit);
 
+/**
+@brief Append a Permutation gate to the list of gates
+@param pattern The pattern of the permutation
+*/
+void add_permutation(const std::vector<int>& pattern);
 
-
+/**
+@brief Add a Permutation gate to the front of the list of gates
+@param pattern The pattern of the permutation
+*/
+void add_permutation_to_front(const std::vector<int>& pattern);
 
 /**
 @brief Append a CRY gate to the list of gates

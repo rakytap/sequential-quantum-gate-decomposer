@@ -58,6 +58,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "ON.h"
 #include "Adaptive.h"
 #include "Composite.h"
+#include "Permutation.h"
 
 #include "numpy_interface.h"
 
@@ -390,6 +391,33 @@ qgd_Circuit_Wrapper_add_CSWAP(qgd_Circuit_Wrapper *self, PyObject *args, PyObjec
 
 }
 
+/**
+@brief Wrapper function to add a Permutation gate to the front of the gate structure.
+@param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper.
+@param args A tuple of the input arguments: pattern (list of ints)
+@param kwds A tuple of keywords
+*/
+static PyObject *
+qgd_Circuit_Wrapper_add_Permutation(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {(char*)"pattern", NULL};
+    PyObject* pattern_py = NULL;
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|O", kwlist, &pattern_py))
+        return Py_BuildValue("i", -1);
+
+    if (pattern_py != NULL && PyList_Check(pattern_py)) {
+        std::vector<int> pattern;
+        Py_ssize_t list_size = PyList_Size(pattern_py);
+        for (Py_ssize_t i = 0; i < list_size; i++) {
+            PyObject* item = PyList_GetItem(pattern_py, i);
+            pattern.push_back(PyLong_AsLong(item));
+        }
+        if (pattern.size() == self->circuit->get_qbit_num()) {
+            self->circuit->add_permutation(pattern);
+        }
+    }   
+    return Py_BuildValue("i", 0);
+}
 /**
 @brief Wrapper function to add a block of operations to the front of the gate structure.
 @param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper.
@@ -1948,14 +1976,17 @@ static PyMethodDef qgd_Circuit_Wrapper_Methods[] = {
     {"add_CRY", (PyCFunction) qgd_Circuit_Wrapper_add_CRY, METH_VARARGS | METH_KEYWORDS,
      "Call to add a CRY gate to the front of the gate structure"
     },
+    {"add_Permutation", (PyCFunction) qgd_Circuit_Wrapper_add_Permutation, METH_VARARGS | METH_KEYWORDS,
+     "Call to add a Permutation gate to the front of the gate structure"
+    },
     {"add_CRX", (PyCFunction) qgd_Circuit_Wrapper_add_CRX, METH_VARARGS | METH_KEYWORDS,
-     "Call to add a CRY gate to the front of the gate structure"
+     "Call to add a CRX gate to the front of the gate structure"
     },
     {"add_CRZ", (PyCFunction) qgd_Circuit_Wrapper_add_CRZ, METH_VARARGS | METH_KEYWORDS,
-     "Call to add a CRY gate to the front of the gate structure"
+     "Call to add a CRZ gate to the front of the gate structure"
     },
     {"add_CP", (PyCFunction) qgd_Circuit_Wrapper_add_CP, METH_VARARGS | METH_KEYWORDS,
-     "Call to add a CRY gate to the front of the gate structure"
+     "Call to add a CP gate to the front of the gate structure"
     },
     {"add_CCX", (PyCFunction) qgd_Circuit_Wrapper_add_CCX, METH_VARARGS | METH_KEYWORDS,
      "Call to add a CCX gate to the front of the gate structure"

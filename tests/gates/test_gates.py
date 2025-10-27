@@ -472,7 +472,7 @@ class Test_operations:
 
             if inspect.isclass(obj):
                 
-                if name == "SYC" or name == "Gate" or name=="CR" or name=="CROT":
+                if name == "SYC" or name == "Gate" or name=="CR" or name=="CROT" or name=="Permutation":
                     continue
 
                 print(f"testing gate: {name}")

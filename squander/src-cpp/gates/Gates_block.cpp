@@ -57,6 +57,7 @@ limitations under the License.
 #include "CZ_NU.h"
 #include "Composite.h"
 #include "Gates_block.h"
+#include "Permutation.h"
 
 #include "custom_kernel_1qubit_gate.h"
 
@@ -416,6 +417,11 @@ Gates_block::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
             com_operation->apply_from_right( parameters_mtx, input );
             break; 
         }
+        case PERMUTATION_OPERATION: {
+            Permutation* perm_operation = static_cast<Permutation*>(operation);
+            perm_operation->apply_to( input );
+            break;
+        }
         default:
             std::string err("Gates_block::apply_from_right: unimplemented gate"); 
             throw err;
@@ -619,6 +625,27 @@ void Gates_block::add_u3_to_front(int target_qbit) {
         // adding the operation to the front of the list of gates
         add_gate_to_front( gate );
 
+}
+
+/**
+@brief Append a Permutation gate to the list of gates
+@param pattern The pattern of the permutation
+*/
+void Gates_block::add_permutation(const std::vector<int>& pattern) {
+    // create the operation
+    Gate* operation = static_cast<Gate*>(new Permutation( qbit_num, pattern ));
+    add_gate( operation );
+}
+
+
+/**
+@brief Add a Permutation gate to the front of the list of gates
+@param pattern The pattern of the permutation
+*/
+void Gates_block::add_permutation_to_front(const std::vector<int>& pattern) {
+    // create the operation
+    Gate* operation = static_cast<Gate*>(new Permutation( qbit_num, pattern ));
+    add_gate_to_front( operation );
 }
 
 /**
@@ -2212,6 +2239,13 @@ Gates_block::create_remapped_circuit( const std::map<int, int>& qbit_map, const 
 
             break;
         }
+        case PERMUTATION_OPERATION:
+        {
+            Gate* cloned_op = op->clone();
+            cloned_op->set_qbit_num( qbit_num_ );
+            ret->add_gate( cloned_op );
+            break;
+        }
         default:
             std::string err("Gates_block::create_remapped_circuit: unimplemented gate"); 
             throw err;
@@ -2406,7 +2440,7 @@ int Gates_block::extract_gates( Gates_block* op_block ) {
         case CH_OPERATION: case SYC_OPERATION:
         case U1_OPERATION: case U2_OPERATION: 
         case U3_OPERATION: case CP_OPERATION:
-        case RY_OPERATION: case CRY_OPERATION: 
+        case RY_OPERATION: case CRY_OPERATION: case PERMUTATION_OPERATION:
         case CRX_OPERATION: case CRZ_OPERATION:
         case RX_OPERATION: case CR_OPERATION:
         case RZ_OPERATION: case X_OPERATION:

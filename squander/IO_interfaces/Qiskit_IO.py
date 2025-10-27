@@ -58,7 +58,8 @@ from squander.gates.gates_Wrapper import (
     CU,
     SWAP,
     CSWAP,
-    CCX )
+    CCX,
+    Permutation )
 
 
 
@@ -75,7 +76,6 @@ def scalar(param):
 def get_Qiskit_Circuit( Squander_circuit, parameters ):
 
     from qiskit import QuantumCircuit
-
     # creating Qiskit quantum circuit  
     circuit = QuantumCircuit(Squander_circuit.get_Qbit_Num() )
     
@@ -210,7 +210,13 @@ def get_Qiskit_Circuit( Squander_circuit, parameters ):
             #CCX gate
             target_qbits = gate.get_Target_Qbits()
             circuit.swap(target_qbits[0], target_qbits[1])
-            
+        elif isinstance(gate, Permutation):
+            #Permutation gate
+            from qiskit.circuit.library import PermutationGate
+            pattern = gate.get_Pattern()
+            qubits = list(range(gate.get_Qbit_Num()))
+            circuit.append( PermutationGate(pattern),qubits)
+        
         elif isinstance( gate, Circuit ):
             # Sub-circuit gate
             raise ValueError("Qiskit export of circuits with subcircuit is not supported. Use Circuit::get_Flat_Circuit prior of exporting circuit.")  
@@ -366,6 +372,13 @@ def get_Qiskit_Circuit_inverse( Squander_circuit, parameters ):
             #CCX gate
             target_qbits = gate.get_Target_Qbits()
             circuit.swap(target_qbits[0], target_qbits[1])
+            
+        elif isinstance(gate, Permutation):
+            #Permutation gate
+            from qiskit.circuit.library import PermutationGate
+            pattern = gate.get_Pattern()
+            qubits = list(range(gate.get_Qbit_Num()))
+            circuit.append( PermutationGate(pattern),qubits)
 
         elif isinstance( gate, Circuit ):
             # Sub-circuit gate
@@ -655,6 +668,11 @@ def convert_Qiskit_to_Squander( qc_in ):
             qubit0 = q_register.index( qubits[0] )
             qubit1 = q_register.index( qubits[1] )
             Circuit_Squander.add_SWAP( [qubit1, qubit0] )
+
+        elif name[:11] == 'permutation':
+            #Permutation gate
+            pattern = gate.operation.pattern
+            Circuit_Squander.add_Permutation( pattern )
 
         else:
             print(f"convert_Qiskit_to_Squander: Unimplemented gate: {name}")
