@@ -186,17 +186,16 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
             circ.add_U3(pair[1])
             circ.add_CNOT(pair[0], pair[1])
         for qbit in range(self.qbit_num):
-            circ.add_RZ(qbit)
-            circ.add_RY(qbit)
-            circ.add_RZ(qbit)
+            circ.add_U3(qbit)
+            #circ.add_RZ(qbit)
+            #circ.add_RY(qbit)
+            #circ.add_RZ(qbit)
         self.set_Gate_Structure(circ)
-        for _ in range(self.config.get('restarts', 1)):
-            self.set_Optimized_Parameters(np.random.rand(self.get_Parameter_Num())*2*np.pi)
-            super().Start_Decomposition()
-            params = self.get_Optimized_Parameters()
-            self.err = self.Optimization_Problem(params)
-            if self.err < self.config.get('tolerance', 1e-8): return True
-        return False
+        self.set_Optimized_Parameters(np.random.rand(self.get_Parameter_Num())*2*np.pi)
+        super().Start_Decomposition()
+        params = self.get_Optimized_Parameters()
+        self.err = self.Optimization_Problem(params)
+        return self.err < self.config.get('tolerance', 1e-8)
     def Start_Decomposition(self):
         self.err = 1.0
         cuts = list(N_Qubit_Decomposition_Guided_Tree.unique_cuts(self.qbit_num))
@@ -222,8 +221,8 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
                 allh = []
                 revpath = tuple(reversed(path))
                 check_cuts = pair_affects[path[-1]] if not curh is None else range(len(cuts))
-                for _ in range(1):                    
-                    for p in (path,) if path==revpath else (path, revpath):
+                for p in (path,) if path==revpath else (path, revpath):
+                    for _ in range(5 if self.qbit_num == 1 else 2):
                         if self.Run_Decomposition(p): return
                         U = self.Umtx.copy()
                         self.get_Circuit().apply_to(self.get_Optimized_Parameters(), U)
@@ -235,9 +234,6 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
                 if not curh is None:
                     #print(path, [([x[i] for x in allh], curh[i]) for i in check_cuts])
                     if any(h[i][0] > curh[i][0] for i in check_cuts): continue
-                    #if all(h[i][0] == curh[i][0] for i in check_cuts) and any(h[i][1] > curh[i][1] for i in check_cuts): continue
-                    #if all(h[i][1] > curh[i][1] for i in check_cuts): continue
-                    #if sum(h) > sum(curh): continue
                 nextprefixes.append((path, h))
             nextprefixes.sort(key=lambda t: (max((x[0] for x in t[1]), default=0), sum(x[0] for x in t[1]), sum(x[1] for x in t[1])))
             prefixes = {x[0]: x[1] for x in nextprefixes[:B]}
@@ -397,9 +393,10 @@ class qgd_Wide_Circuit_Optimization:
                     newcirc.add_U3(gate.get_Control_Qbit())
                     newcirc.add_Gate(gate)
             for qbit in structure.get_Qbits():
-                newcirc.add_RZ(qbit)
-                newcirc.add_RY(qbit)
-                newcirc.add_RZ(qbit)
+                newcirc.add_U3(qbit)
+                #newcirc.add_RZ(qbit)
+                #newcirc.add_RY(qbit)
+                #newcirc.add_RZ(qbit)
             cDecompose.set_Gate_Structure( newcirc )
         else:
             raise Exception(f"Unsupported decomposition type: {strategy}")
