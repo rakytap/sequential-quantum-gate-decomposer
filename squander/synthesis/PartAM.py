@@ -26,6 +26,28 @@ from squander.partitioning.tools import get_qubits
 from squander.synthesis.qgd_SABRE import qgd_SABRE as SABRE
 from itertools import product
 
+def DecomposePartition_and_Perm(Umtx: np.ndarray, config: dict, mini_topology = None) -> Circuit:
+    """
+    Call to decompose a partition
+    """
+    strategy = config["strategy"]
+    if strategy == "TreeSearch":
+        cDecompose = N_Qubit_Decomposition_Tree_Search( Umtx.conj().T, config=config, accelerator_num=0, topology=mini_topology)
+    elif strategy == "TabuSearch":
+        cDecompose = N_Qubit_Decomposition_Tabu_Search( Umtx.conj().T, config=config, accelerator_num=0, topology=mini_topology )
+    elif strategy == "Adaptive":
+        cDecompose = N_Qubit_Decomposition_adaptive( Umtx.conj().T, level_limit_max=5, level_limit_min=1, topology=mini_topology )
+    else:
+        raise Exception(f"Unsupported decomposition type: {strategy}")
+    cDecompose.set_Verbose( config["verbosity"] )
+    cDecompose.set_Cost_Function_Variant( 3 )	
+    cDecompose.set_Optimization_Tolerance( config["tolerance"] )
+    cDecompose.set_Optimizer( config["optimizer"] )
+    cDecompose.Start_Decomposition()
+    squander_circuit = cDecompose.get_Circuit()
+    parameters       = cDecompose.get_Optimized_Parameters()
+    return squander_circuit, parameters
+
 def get_all_subtopologies(edges: List[Tuple[int, int]], k: int) -> List[List[Tuple[int, int]]]:
     """
     Find ALL connected subtopologies with exactly k qubits using DFS.
@@ -287,29 +309,6 @@ class qgd_Partition_Aware_Mapping:
             raise Exception(f"The routed parameter should be a bool.")
         self.partition_strategy = self.config['partition_strategy']
         allowed_partition_strategies = ['ilp', 'tdag', 'kahn', 'qiskit', 'qiskit-fusion', 'bqskit-Quick', 'bqskit-Scan', 'bqskit-Greedy', 'bqskit-Cluster']
-    
-    @staticmethod
-    def DecomposePartition_and_Perm(Umtx: np.ndarray, config: dict, mini_topology = None) -> Circuit:
-        """
-        Call to decompose a partition
-        """
-        strategy = config["strategy"]
-        if strategy == "TreeSearch":
-            cDecompose = N_Qubit_Decomposition_Tree_Search( Umtx.conj().T, config=config, accelerator_num=0, topology=mini_topology)
-        elif strategy == "TabuSearch":
-            cDecompose = N_Qubit_Decomposition_Tabu_Search( Umtx.conj().T, config=config, accelerator_num=0, topology=mini_topology )
-        elif strategy == "Adaptive":
-            cDecompose = N_Qubit_Decomposition_adaptive( Umtx.conj().T, level_limit_max=5, level_limit_min=1, topology=mini_topology )
-        else:
-            raise Exception(f"Unsupported decomposition type: {strategy}")
-        cDecompose.set_Verbose( config["verbosity"] )
-        cDecompose.set_Cost_Function_Variant( 3 )	
-        cDecompose.set_Optimization_Tolerance( config["tolerance"] )
-        cDecompose.set_Optimizer( config["optimizer"] )
-        cDecompose.Start_Decomposition()
-        squander_circuit = cDecompose.get_Circuit()
-        parameters       = cDecompose.get_Optimized_Parameters()
-        return squander_circuit, parameters
 
     @staticmethod
     def DecomposePartition_Sequential(Partition_circuit: Circuit, Partition_parameters: np.ndarray, config: dict, topologies) -> PartitionSynthesisResult:
@@ -317,13 +316,12 @@ class qgd_Partition_Aware_Mapping:
         Call to decompose a partition sequentially
         """
         N = Partition_circuit.get_Qbit_Num()
-        perumations_all = permutations(range(N))
-        N_permutations = len(perumations_all)
+        perumations_all = list(permutations(range(N)))
         result = PartitionSynthesisResult(N, topologies)
         # Sequential permutation search
         for topology_idx in range(len(topologies)):
             mini_topology = topologies[topology_idx]
-            P_o_initial = np.random.choice(perumations_all)
+            P_o_initial = perumations_all[np.random.choice(range(len(perumations_all)))]
             for P_i in perumations_all:
                 Partition_circuit_tmp = Circuit(N)
                 Partition_circuit_tmp.add_Permutation(P_i)
