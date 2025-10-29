@@ -349,7 +349,7 @@ class qgd_Partition_Aware_Mapping:
         single_qubit_chains_pre = {x[0]: x for x in single_qubit_chains if rgo[x[0]]}
         single_qubit_chains_post = {x[-1]: x for x in single_qubit_chains if go[x[-1]]}
         single_qubit_chains_prepost = {x[0]: x for x in single_qubit_chains if x[0] in single_qubit_chains_pre and x[-1] in single_qubit_chains_post}
-        partitined_circuit = Circuit( qbit_num_orig_circuit )
+        partitioned_circuit = Circuit( qbit_num_orig_circuit )
         params = []
         for part in allparts:
             surrounded_chains = {t for s in part for t in go[s] if t in single_qubit_chains_prepost and go[single_qubit_chains_prepost[t][-1]] and next(iter(go[single_qubit_chains_prepost[t][-1]])) in part}
