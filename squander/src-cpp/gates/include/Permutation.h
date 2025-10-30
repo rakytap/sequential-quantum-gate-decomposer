@@ -33,6 +33,13 @@ class Permutation : public Gate {
 
 protected:
     std::vector<int> pattern;
+    // Cached cycles for current pattern and matrix size
+    std::vector<std::vector<int>> cycles_cache;
+    int cycles_cache_matrix_size = 0;
+    bool cycles_cache_valid = false;
+
+    void invalidate_cache();
+    void build_cycles_cache();
 
 public:
     Permutation();

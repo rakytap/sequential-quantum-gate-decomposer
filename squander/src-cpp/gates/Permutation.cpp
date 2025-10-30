@@ -29,6 +29,8 @@ Permutation::Permutation(){
     target_qbits.clear();
     control_qbits.clear();
     parameter_num = 0;
+    cycles_cache_valid = false;
+    cycles_cache_matrix_size = 0;
 }
 
 Permutation::Permutation(int qbit_num_in, const std::vector<int>& pattern_in) : Gate(qbit_num_in) {
@@ -47,6 +49,8 @@ Permutation::Permutation(int qbit_num_in, const std::vector<int>& pattern_in) : 
     for (int idx=0; idx<qbit_num_in; idx++){
         target_qbits[idx] = idx;
     }
+    cycles_cache_valid = false;
+    cycles_cache_matrix_size = 0;
 }
 Permutation::~Permutation(){
     target_qbits.clear();
@@ -64,14 +68,33 @@ Matrix Permutation::get_matrix(int parallel){
 }
 
 void Permutation::apply_to(Matrix& input, int parallel){
-    apply_Permutation_kernel_to_input(input, pattern, matrix_size);
+    if (input.rows != matrix_size) {
+        std::string err("Permutation::apply_to: Wrong input size in Permutation gate apply");
+        throw err;
+    }
+
+    if (!cycles_cache_valid || cycles_cache_matrix_size != matrix_size) {
+        build_cycles_cache();
+    }
+    if (parallel == 2) {
+        apply_Permutation_kernel_to_input_tbb(input, pattern, matrix_size, cycles_cache);
+    }
+    else if (parallel == 1) {
+        apply_Permutation_kernel_to_input_omp(input, pattern, matrix_size, cycles_cache);
+    }
+    else {
+        apply_Permutation_kernel_to_input(input, pattern, matrix_size, cycles_cache);
+    }
 }
 void Permutation::apply_to(Matrix& input){
     if (input.rows != matrix_size) {
         std::string err("Permutation::apply_to: Wrong input size in Permutation gate apply");
         throw err;
     }
-    apply_Permutation_kernel_to_input(input, pattern, matrix_size);
+    if (!cycles_cache_valid || cycles_cache_matrix_size != matrix_size) {
+        build_cycles_cache();
+    }
+    apply_Permutation_kernel_to_input(input, pattern, matrix_size, cycles_cache);
 }
 
 void Permutation::apply_to_list(std::vector<Matrix>& inputs, int parallel){
@@ -111,6 +134,7 @@ std::vector<int> Permutation::get_pattern(){
 
 void Permutation::set_pattern(const std::vector<int>& pattern_in){
     pattern = pattern_in;
+    invalidate_cache();
 }
 
 std::vector<int> Permutation::get_involved_qubits(bool only_target){
@@ -136,4 +160,46 @@ void Permutation::reorder_qubits(std::vector<int> qbit_list){
         new_pattern[idx] = std::find(qbit_list.begin(), qbit_list.end(), pattern[idx]) - qbit_list.begin();
     }
     pattern = new_pattern;
+    invalidate_cache();
+}
+
+void Permutation::invalidate_cache(){
+    cycles_cache_valid = false;
+    cycles_cache.clear();
+    cycles_cache_matrix_size = 0;
+}
+
+void Permutation::build_cycles_cache(){
+    cycles_cache.clear();
+    cycles_cache_matrix_size = matrix_size;
+
+    int qbit_num = pattern.size();
+
+    // Precompute next index for all rows once to avoid repeated bit work in cycle walks
+    std::vector<int> next_index(matrix_size);
+    for (int row_idx = 0; row_idx < matrix_size; ++row_idx) {
+        int new_row_idx = 0;
+        for (int idx = 0; idx < qbit_num; idx++) {
+            int bit = (row_idx >> pattern[idx]) & 1;
+            new_row_idx |= (bit << idx);
+        }
+        next_index[row_idx] = new_row_idx;
+    }
+
+    std::vector<uint8_t> visited(matrix_size, 0);
+    for (int start = 0; start < matrix_size; ++start) {
+        if (visited[start]) continue;
+        std::vector<int> cycle;
+        int current = start;
+        while (!visited[current]) {
+            visited[current] = 1;
+            cycle.push_back(current);
+            current = next_index[current];
+        }
+        if (cycle.size() > 1) {
+            cycles_cache.push_back(std::move(cycle));
+        }
+    }
+
+    cycles_cache_valid = true;
 }
