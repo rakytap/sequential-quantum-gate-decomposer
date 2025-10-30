@@ -19,6 +19,7 @@ import multiprocessing as mp
 from multiprocessing import Process, Pool
 import os
 from typing import List, Set, Tuple, FrozenSet
+from tqdm import tqdm
 
 
 from squander.partitioning.partition import PartitionCircuit
@@ -376,7 +377,7 @@ class qgd_Partition_Aware_Mapping:
         optimized_results = [None] * len(subcircuits)
 
         with Pool(processes=mp.cpu_count()) as pool:
-            for partition_idx, subcircuit in enumerate( subcircuits ):
+            for partition_idx, subcircuit in enumerate( tqdm(subcircuits, desc="Synthesizing partitions") ):
 
                 start_idx = subcircuit.get_Parameter_Start_Index()
                 end_idx   = subcircuit.get_Parameter_Start_Index() + subcircuit.get_Parameter_Num()
@@ -385,11 +386,39 @@ class qgd_Partition_Aware_Mapping:
                 mini_topologies = get_unique_subtopologies(self.topology, k)
                 optimized_results[partition_idx] = pool.apply_async( self.DecomposePartition_Sequential, (subcircuit, subcircuit_parameters, self.config, mini_topologies) )
 
-        for partition_idx, subcircuit in enumerate( subcircuits ):
-            optimized_results[partition_idx].wait()
-            optimized_results[partition_idx] = optimized_results[partition_idx].get()
+            for partition_idx, subcircuit in enumerate( tqdm(subcircuits, desc="Processing partitions") ):
+                optimized_results[partition_idx] = optimized_results[partition_idx].get()
 
         weights = [result.get_partition_synthesis_score() for result in optimized_results[:len(allparts)]]
-        parts = recombine_single_qubit_chains(go, rgo, single_qubit_chains, gate_to_tqubit, [allparts[i] for i in L], fusion_info)
-        L = topo_sort_partitions(circ, self.max_partition_size, parts)
-        print(L)
+        L, fusion_info = ilp_global_optimal(allparts, g, weights=weights)
+        # Create a mapping from partition frozensets to their indices in allparts
+        partition_to_idx = {frozenset(part): i for i, part in enumerate(allparts)}
+
+        # Convert the returned partitions to indices
+        L_indices = [partition_to_idx[frozenset(part)] for part in L_parts]
+
+        # Now directly select the already-optimized subcircuits using the indices
+        selected_optimized_subcircuits = [optimized_subcircuits[i] for i in L_indices]
+
+  max_gates = max(len(c.get_Gates()) for c in optimized_subcircuits)
+  def to_cost(d): return d.get('CNOT', 0)*max_gates + sum(d[x] for x in d if x != 'CNOT')
+  weights = [to_cost(circ.get_Gate_Nums()) for circ in optimized_subcircuits[:len(allparts)]]
+
+  # ilp_global_optimal returns the selected partitions as frozensets
+  L_parts, fusion_info = ilp_global_optimal(allparts, g, weights=weights)
+
+  # Create a mapping from partition frozensets to their indices in allparts
+  partition_to_idx = {frozenset(part): i for i, part in enumerate(allparts)}
+
+  # Convert the returned partitions to indices
+  L_indices = [partition_to_idx[frozenset(part)] for part in L_parts]
+
+  # Now directly select the already-optimized subcircuits using the indices
+  selected_optimized_subcircuits = [optimized_subcircuits[i] for i in L_indices]
+  selected_parameters = [optimized_parameter_list[i] for i in L_indices]
+
+  # Construct the final circuit from the optimized subcircuits
+  wide_circuit, wide_parameters = self.ConstructCircuitFromPartitions(
+      selected_optimized_subcircuits,
+      selected_parameters
+  )
