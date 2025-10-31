@@ -463,22 +463,10 @@ class qgd_Wide_Circuit_Optimization:
             max_gates = max(len(c.get_Gates()) for c in optimized_subcircuits)
             def to_cost(d): return d.get('CNOT', 0)*max_gates + sum(d[x] for x in d if x != 'CNOT')
             weights = [to_cost(circ.get_Gate_Nums()) for circ in optimized_subcircuits[:len(allparts)]]
-            L_parts, fusion_info = ilp_global_optimal(allparts, g, weights=weights)
-            # Create a mapping from partition frozensets to their indices in allparts
-            partition_to_idx = {frozenset(part): i for i, part in enumerate(allparts)}
-
-            # Convert the returned partitions to indices
-            L_indices = [partition_to_idx[frozenset(part)] for part in L_parts]
-
-            # Now directly select the already-optimized subcircuits using the indices
-            selected_optimized_subcircuits = [optimized_subcircuits[i] for i in L_indices]
-            selected_parameters = [optimized_parameter_list[i] for i in L_indices]
-
-            # Construct the final circuit from the optimized subcircuits
-            return self.ConstructCircuitFromPartitions(
-                selected_optimized_subcircuits,
-                selected_parameters
-            )
+            L, fusion_info = ilp_global_optimal(allparts, g, weights=weights)
+            parts = recombine_single_qubit_chains(go, rgo, single_qubit_chains, gate_to_tqubit, [allparts[i] for i in L], fusion_info)
+            L = topo_sort_partitions(circ, self.max_partition_size, parts)
+            return self.OptimizeWideCircuit(circ, orig_parameters, global_min=False, prepartitioning=[parts[i] for i in L])
             """
             Lgate = [set(allparts[i]) for i in L]
             for part in Lgate:
@@ -518,6 +506,6 @@ class qgd_Wide_Circuit_Optimization:
         sabre = SABRE(circ, self.config["topology"])
         Squander_remapped_circuit, parameters_remapped_circuit, pi, final_pi, swap_count = sabre.map_circuit(orig_parameters)
         self.config.setdefault("initial_mapping",pi)
-        self.config.setdefault("final_mapping",final_pi)
+        self.config.setdefault("final_mapping",sabre.get_inverse_pi(final_pi))
         self.config["routed"] = True
         return Squander_remapped_circuit, parameters_remapped_circuit
