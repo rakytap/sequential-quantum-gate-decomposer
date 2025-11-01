@@ -20,7 +20,8 @@ from multiprocessing import Process, Pool
 import os
 from typing import List, Set, Tuple, FrozenSet
 from tqdm import tqdm
-
+from collections import deque, defaultdict
+import numpy as np
 
 from squander.partitioning.partition import PartitionCircuit
 from squander.partitioning.tools import get_qubits
@@ -249,7 +250,7 @@ class SingleQubitPartitionResult:
         return 0
 
 class PartitionSynthesisResult:
-    def __init__(self, N , mini_topologies):
+    def __init__(self, N , mini_topologies, involved_qbits, qubit_map):
         self.mini_topologies = mini_topologies
         self.topology_count = len(mini_topologies)
         self.N = N
@@ -257,7 +258,8 @@ class PartitionSynthesisResult:
         self.synthesised_circuits = [[] for _ in range(len(mini_topologies))]
         self.synthesised_parameters = [[] for _ in range(len(mini_topologies))]
         self.cnot_counts = [[] for _ in range(len(mini_topologies))]
-    
+        self.involved_qbits = involved_qbits
+        self.qubit_map = qubit_map
     def add_result(self, permutations_pair, synthesised_circuit, synthesised_parameters, topology_idx):
         self.permutations_pairs[topology_idx].append(permutations_pair)
         self.synthesised_circuits[topology_idx].append(synthesised_circuit)
@@ -299,14 +301,14 @@ class qgd_Partition_Aware_Mapping:
         if not strategy in allowed_strategies:
             raise Exception(f"The strategy should be either of {allowed_strategies}, got {strategy}.")
     @staticmethod
-    def DecomposePartition_Sequential(Partition_circuit: Circuit, Partition_parameters: np.ndarray, config: dict, topologies) -> PartitionSynthesisResult:
+    def DecomposePartition_Sequential(Partition_circuit: Circuit, Partition_parameters: np.ndarray, config: dict, topologies, involved_qbits, qbit_map) -> PartitionSynthesisResult:
         """
         Call to decompose a partition sequentially
         """
         N = Partition_circuit.get_Qbit_Num()
         if N !=1:
             perumations_all = list(permutations(range(N)))
-            result = PartitionSynthesisResult(N, topologies)
+            result = PartitionSynthesisResult(N, topologies, involved_qbits, qbit_map)
             # Sequential permutation search
             for topology_idx in range(len(topologies)):
                 mini_topology = topologies[topology_idx]
@@ -352,8 +354,9 @@ class qgd_Partition_Aware_Mapping:
         squander_circuit = cDecompose.get_Circuit()
         parameters       = cDecompose.get_Optimized_Parameters()
         return squander_circuit, parameters
+
     def SynthesizeWideCircuit(self, circ, orig_parameters):
-        allparts, g, go, rgo, single_qubit_chains, gate_to_qubit, gate_to_qubit = get_all_partitions(circ, self.config["max_partition_size"])
+        allparts, g, go, rgo, single_qubit_chains, gate_to_qubit, gate_to_tqubit = get_all_partitions(circ, self.config["max_partition_size"])
         qbit_num_orig_circuit = circ.get_Qbit_Num()
         gate_dict = {i: gate for i, gate in enumerate(circ.get_Gates())}
         single_qubit_chains_pre = {x[0]: x for x in single_qubit_chains if rgo[x[0]]}
@@ -389,7 +392,7 @@ class qgd_Partition_Aware_Mapping:
         optimized_results = [None] * len(subcircuits)
 
         with Pool(processes=mp.cpu_count()) as pool:
-            for partition_idx, subcircuit in enumerate( tqdm(subcircuits, desc="Synthesizing partitions") ):
+            for partition_idx, subcircuit in enumerate( subcircuits ):
 
                 start_idx = subcircuit.get_Parameter_Start_Index()
                 end_idx   = subcircuit.get_Parameter_Start_Index() + subcircuit.get_Parameter_Num()
@@ -404,9 +407,191 @@ class qgd_Partition_Aware_Mapping:
                 for idx in range( len(involved_qbits) ):
                     qbit_map[ involved_qbits[idx] ] = idx
                 remapped_subcircuit = subcircuit.Remap_Qbits( qbit_map, qbit_num )
-                optimized_results[partition_idx] = pool.apply_async( self.DecomposePartition_Sequential, (remapped_subcircuit, subcircuit_parameters, self.config, mini_topologies) )
+                optimized_results[partition_idx] = pool.apply_async( self.DecomposePartition_Sequential, (remapped_subcircuit, subcircuit_parameters, self.config, mini_topologies, involved_qbits, qbit_map) )
 
-            for partition_idx, subcircuit in enumerate( tqdm(subcircuits, desc="Processing partitions") ):
+            for partition_idx, subcircuit in enumerate( tqdm(subcircuits, desc="First Synthesis") ):
                 optimized_results[partition_idx] = optimized_results[partition_idx].get()
 
         weights = [result.get_partition_synthesis_score() for result in optimized_results[:len(allparts)]]
+        L_parts, fusion_info = ilp_global_optimal(allparts, g, weights=weights)
+        parts = recombine_single_qubit_chains(go, rgo, single_qubit_chains, gate_to_tqubit, [allparts[i] for i in L_parts], fusion_info)
+        L = topo_sort_partitions(circ, self.max_partition_size, parts)
+        from squander.partitioning.kahn import kahn_partition_preparts
+        from squander.partitioning.tools import translate_param_order
+        partitioned_circuit, param_order, _ = kahn_partition_preparts(circ, self.max_partition_size, [parts[i] for i in L])
+        parameters = translate_param_order(orig_parameters, param_order)
+
+        subcircuits = partitioned_circuit.get_Gates()
+
+        # the list of optimized subcircuits
+        optimized_results = [None] * len(subcircuits)
+
+        with Pool(processes=mp.cpu_count()) as pool:
+            for partition_idx, subcircuit in enumerate( subcircuits ):
+
+                start_idx = subcircuit.get_Parameter_Start_Index()
+                end_idx   = subcircuit.get_Parameter_Start_Index() + subcircuit.get_Parameter_Num()
+                subcircuit_parameters = parameters[ start_idx:end_idx ]
+                k = subcircuit.get_Qbit_Num()
+                qbit_num_orig_circuit = subcircuit.get_Qbit_Num()
+                involved_qbits = subcircuit.get_Qbits()
+
+                qbit_num = len( involved_qbits )
+                mini_topologies = get_unique_subtopologies(self.topology, qbit_num)
+                qbit_map = {}
+                for idx in range( len(involved_qbits) ):
+                    qbit_map[ involved_qbits[idx] ] = idx
+                remapped_subcircuit = subcircuit.Remap_Qbits( qbit_map, qbit_num )
+                optimized_results[partition_idx] = pool.apply_async( self.DecomposePartition_Sequential, (remapped_subcircuit, subcircuit_parameters, self.config, mini_topologies, involved_qbits, qbit_map) )
+
+            for partition_idx, subcircuit in enumerate( tqdm(subcircuits, desc="Second Synthesis") ):
+                optimized_results[partition_idx] = optimized_results[partition_idx].get()
+        return optimized_results
+
+    def Partition_Aware_Mapping(self, circ: Circuit, orig_parameters: np.ndarray):
+        optimized_partitions = self.SynthesizeWideCircuit(circ, orig_parameters)
+        DAG, IDAG = self.construct_DAG_and_IDAG(optimized_partitions)
+        D = self.compute_distances_bfs(circ.get_Qbit_Num())
+        pi = self._compute_smart_initial_layout(circ, circ.get_Qbit_Num(), D)
+        
+            
+    def construct_DAG_and_IDAG(self, optimized_partitions):
+        DAG = []
+        IDAG = []
+        for idx in range(len(optimized_partitions)):
+            if idx != len(optimized_partitions)-1:
+                Involved_qbits_current = optimized_partitions[idx].involved_qbits.copy()
+                for next_idx in range(idx+1, len(optimized_partitions)):
+                    Involved_qbits_next = optimized_partitions[next_idx].involved_qbits
+                    intersection = [i for i in Involved_qbits_current if i in Involved_qbits_next]
+                    if len(intersection) > 0:
+                        DAG.append((idx, next_idx))
+                    for intersection_qbit in intersection:
+                        Involved_qbits_current.remove(intersection_qbit)
+                    if len(Involved_qbits_current) == 0:
+                        break
+            if idx != 0:
+                Involved_qbits_current = optimized_partitions[idx].involved_qbits.copy()
+                for prev_idx in range(idx-1, -1, -1):
+                    Involved_qbits_prev = optimized_partitions[prev_idx].involved_qbits
+                    intersection = [i for i in Involved_qbits_current if i in Involved_qbits_prev]
+                    if len(intersection) > 0:
+                        IDAG.append((prev_idx, idx))
+                    for intersection_qbit in intersection:
+                        Involved_qbits_current.remove(intersection_qbit)
+                    if len(Involved_qbits_current) == 0:
+                        break
+        return DAG, IDAG
+
+    def compute_distances_bfs(self, N):
+        """BFS distance computation - faster than Floyd-Warshall."""
+        D = np.ones((N, N)) * np.inf
+        
+        # Build adjacency list
+        adj = defaultdict(list)
+        for u, v in self.config['topology']:
+            adj[u].append(v)
+            adj[v].append(u)
+        
+        # BFS from each vertex
+        for start in range(N):
+            D[start][start] = 0
+            queue = deque([(start, 0)])
+            visited = {start}
+            
+            while queue:
+                node, dist = queue.popleft()
+                for neighbor in adj[node]:
+                    if neighbor not in visited:
+                        visited.add(neighbor)
+                        D[start][neighbor] = dist + 1
+                        queue.append((neighbor, dist + 1))
+        
+        return D*3 #multiply by 3 to make it CNOT cost instead of SWAP cost
+
+    def _compute_smart_initial_layout(self, circuit, N, D):
+
+        # Count interactions between qubits
+        interaction_count = defaultdict(int)
+        gates = circuit.get_Gates()
+        
+        for gate in gates:
+            if gate.get_Control_Qbit() != -1:
+                q1 = gate.get_Target_Qbit()
+                q2 = gate.get_Control_Qbit()
+                if q1 < N and q2 < N:
+                    key = (min(q1, q2), max(q1, q2))
+                    interaction_count[key] += 1
+        
+        if not interaction_count:
+            # No 2-qubit gates, use trivial mapping
+            return np.arange(N)
+        
+        # Find most interacting qubit pair
+        most_connected = max(interaction_count.items(), key=lambda x: x[1])
+        q1, q2 = most_connected[0]
+        
+        # Find physical qubits that are connected
+        # Start with an arbitrary connected pair
+        for edge in self.config['topology']:
+            p1, p2 = edge
+            break  # Just take first edge
+        
+        # Initialize mapping
+        pi = np.arange(N)
+        
+        # Place most interacting qubits on connected physical qubits
+        pi[q1] = p1
+        pi[q2] = p2
+        
+        # Place other qubits using greedy approach
+        placed_logical = {q1, q2}
+        placed_physical = {p1, p2}
+        
+        # For each remaining logical qubit, find where to place it
+        remaining_logical = [q for q in range(N) if q not in placed_logical]
+        
+        # Sort by how much they interact with already placed qubits
+        def interaction_score(q):
+            score = 0
+            for placed_q in placed_logical:
+                key = (min(q, placed_q), max(q, placed_q))
+                score += interaction_count.get(key, 0)
+            return score
+        
+        remaining_logical.sort(key=interaction_score, reverse=True)
+        
+        # Place them near their interacting partners
+        for logical_q in remaining_logical:
+            # Find best physical location
+            best_physical = None
+            best_score = float('inf')
+            
+            for physical_q in range(N):
+                if physical_q not in placed_physical:
+                    # Calculate average distance to interacting qubits
+                    total_dist = 0
+                    count = 0
+                    for other_q in placed_logical:
+                        key = (min(logical_q, other_q), max(logical_q, other_q))
+                        weight = interaction_count.get(key, 0)
+                        if weight > 0:
+                            other_physical = pi[other_q]
+                            total_dist += D[physical_q][other_physical] * weight
+                            count += weight
+                    
+                    if count > 0:
+                        avg_dist = total_dist / count
+                    else:
+                        avg_dist = 0
+                    
+                    if avg_dist < best_score:
+                        best_score = avg_dist
+                        best_physical = physical_q
+            
+            if best_physical is not None:
+                pi[logical_q] = best_physical
+                placed_logical.add(logical_q)
+                placed_physical.add(best_physical)
+        
+        return pi

@@ -47,7 +47,7 @@ if __name__ == '__main__':
     wide_circuit_optimizer = Wide_Circuit_Optimization.qgd_Wide_Circuit_Optimization( config )
 
     # run circuti optimization
-    circ_flat, parameters = wide_circuit_optimizer.OptimizeWideCircuit( circ, parameters )
+    circ_flat, parameters = wide_circuit_optimizer.OptimizeWideCircuit( circ, parameters, True )
 
     config['topology'] = [
     (0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7),
@@ -58,7 +58,7 @@ if __name__ == '__main__':
     circo = Qiskit_IO.get_Qiskit_Circuit(circ_flat.get_Flat_Circuit(),parameters)
     # run circuti optimization
     circ, parameters = Qiskit_IO.convert_Qiskit_to_Squander(circo)
-    wide_circuit_optimizer.OptimizeWideCircuit( circ, parameters )
+    wide_circuit_optimizer.OptimizeWideCircuit( circ, parameters, True )
 
     print("--- %s seconds elapsed during optimization ---" % (time.time() - start_time))
 
