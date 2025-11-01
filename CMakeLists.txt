@@ -42,12 +42,37 @@ find_package(PythonLibs)
 find_package(NumPy REQUIRED)
 
 
-# contruct library directories
+# Detect Python version for compatibility
 exec_program(${PYTHON_EXECUTABLE}
-             ARGS "-c \"from distutils.sysconfig import get_python_lib; tmp = [s + '/../..' for s in [get_python_lib()]]; ret=';'.join(tmp); print(ret)\""
-             OUTPUT_VARIABLE PYTHON_SYS_PATH
-             RETURN_VALUE SYSPATH_NOT_FOUND
+             ARGS "-c \"import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')\""
+             OUTPUT_VARIABLE PYTHON_VERSION_STRING
+             RETURN_VALUE PYTHON_VERSION_NOT_FOUND
             )
+
+if(PYTHON_VERSION_NOT_FOUND)
+    message(FATAL_ERROR "Python version detection failed")
+endif()
+
+message("Detected Python version: " ${PYTHON_VERSION_STRING})
+
+# contruct library directories
+# Use sysconfig for Python >= 3.10 (distutils deprecated in 3.10, removed in 3.12)
+if(${PYTHON_VERSION_STRING} VERSION_GREATER_EQUAL "3.10")
+    message("Using sysconfig (Python >= 3.10)")
+    exec_program(${PYTHON_EXECUTABLE}
+                 ARGS "-c \"import sysconfig; lib = sysconfig.get_path('purelib'); tmp = [lib + '/../..']; ret=';'.join(tmp); print(ret)\""
+                 OUTPUT_VARIABLE PYTHON_SYS_PATH
+                 RETURN_VALUE SYSPATH_NOT_FOUND
+                )
+else()
+    message("Using distutils.sysconfig (Python < 3.10)")
+    exec_program(${PYTHON_EXECUTABLE}
+                 ARGS "-c \"from distutils.sysconfig import get_python_lib; tmp = [s + '/../..' for s in [get_python_lib()]]; ret=';'.join(tmp); print(ret)\""
+                 OUTPUT_VARIABLE PYTHON_SYS_PATH
+                 RETURN_VALUE SYSPATH_NOT_FOUND
+                )
+endif()
+
 if(SYSPATH_NOT_FOUND)
     message(FATAL_ERROR "Python syspath not found")
 endif()
@@ -58,11 +83,21 @@ message("Python syspaths: " ${PYTHON_SYS_PATH})
 
 
 # contruct include directories
-exec_program(${PYTHON_EXECUTABLE}
-             ARGS "-c \"from distutils.sysconfig import get_python_lib; tmp = [s + '/../../../include' for s in [get_python_lib()]]; ret=';'.join(tmp); print(ret)\""
-             OUTPUT_VARIABLE CMAKE_REQUIRED_INCLUDES
-             RETURN_VALUE SYSPATH_NOT_FOUND
-            )
+# Use sysconfig for Python >= 3.10 (distutils deprecated in 3.10, removed in 3.12)
+if(${PYTHON_VERSION_STRING} VERSION_GREATER_EQUAL "3.10")
+    exec_program(${PYTHON_EXECUTABLE}
+                 ARGS "-c \"import sysconfig; lib = sysconfig.get_path('purelib'); tmp = [lib + '/../../../include']; ret=';'.join(tmp); print(ret)\""
+                 OUTPUT_VARIABLE CMAKE_REQUIRED_INCLUDES
+                 RETURN_VALUE SYSPATH_NOT_FOUND
+                )
+else()
+    exec_program(${PYTHON_EXECUTABLE}
+                 ARGS "-c \"from distutils.sysconfig import get_python_lib; tmp = [s + '/../../../include' for s in [get_python_lib()]]; ret=';'.join(tmp); print(ret)\""
+                 OUTPUT_VARIABLE CMAKE_REQUIRED_INCLUDES
+                 RETURN_VALUE SYSPATH_NOT_FOUND
+                )
+endif()
+
 if(SYSPATH_NOT_FOUND)
     message(FATAL_ERROR "Python include path not found")
 endif()
@@ -499,12 +534,44 @@ set_target_properties(
     )
 
 
+# ===================================================================
+# Modern CMake: INTERFACE library for common dependencies
+# ===================================================================
+
+add_library(squander_common INTERFACE)
+
+target_include_directories(squander_common INTERFACE
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/squander/src-cpp/common/include>
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/include>
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/squander/src-cpp/decomposition/include>
+    $<BUILD_INTERFACE:${NUMPY_INC_DIR}>
+    $<BUILD_INTERFACE:${EXTRA_INCLUDES}>
+    $<INSTALL_INTERFACE:include/squander>
+)
+
+target_link_libraries(squander_common INTERFACE
+    ${BLAS_LIBRARIES}
+    ${LAPACK_LIBRARIES}
+    ${LAPACKE_LIBRARIES}
+    ${TBB_LIB}
+    ${TBBMALLOC_LIB}
+    ${OpenMP_CXX_LIBRARIES}
+)
+
+target_compile_features(squander_common INTERFACE cxx_std_17)
+
 
 # adding CMAKE files for Python extensions
 add_subdirectory (squander/decomposition)
 add_subdirectory (squander/gates)
 add_subdirectory (squander/nn)
 add_subdirectory (squander/variational_quantum_eigensolver)
+
+# ===================================================================
+# Density Matrix Module
+# ===================================================================
+
+add_subdirectory (squander/src-cpp/density_matrix)
 
 if(DEFINED ENV{QGD_CTEST})
     # adding CMAKE files for executables
