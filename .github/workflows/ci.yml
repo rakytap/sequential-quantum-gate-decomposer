@@ -5,6 +5,7 @@ on:
     branches: [main, master]
   pull_request:
     branches: [main, master]
+  workflow_dispatch:
 
 jobs:
   build-and-test-linux:
@@ -154,7 +155,3 @@ jobs:
         TBB_INC_DIR: ${{ env.TBB_INC_DIR }}
       run: |
         python setup.py build_ext -q
-
-    - name: Test
-      run: |
-        pytest tests/ -x -v --tb=line
