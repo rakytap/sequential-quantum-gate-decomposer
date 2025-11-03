@@ -164,11 +164,39 @@ class qgd_Partition_Aware_Mapping:
 
         weights = [result.get_partition_synthesis_score() for result in optimized_results[:len(allparts)]]
         L_parts, fusion_info = ilp_global_optimal(allparts, g, weights=weights)
-        structures = [optimized_results[i] for i in L_parts]
         parts = recombine_single_qubit_chains(go, rgo, single_qubit_chains, gate_to_tqubit, [allparts[i] for i in L_parts], fusion_info)
         L = topo_sort_partitions(circ, self.max_partition_size, parts)
+        from squander.partitioning.kahn import kahn_partition_preparts
+        from squander.partitioning.tools import translate_param_order
+        partitioned_circuit, param_order, _ = kahn_partition_preparts(circ, self.max_partition_size, [parts[i] for i in L])
+        parameters = translate_param_order(orig_parameters, param_order)
 
-        return [structures[i] for i in L], [parts[i] for i in L]
+        subcircuits = partitioned_circuit.get_Gates()
+
+        # the list of optimized subcircuits
+        optimized_results = [None] * len(subcircuits)
+
+        with Pool(processes=mp.cpu_count()) as pool:
+            for partition_idx, subcircuit in enumerate( subcircuits ):
+
+                start_idx = subcircuit.get_Parameter_Start_Index()
+                end_idx   = subcircuit.get_Parameter_Start_Index() + subcircuit.get_Parameter_Num()
+                subcircuit_parameters = parameters[ start_idx:end_idx ]
+                k = subcircuit.get_Qbit_Num()
+                qbit_num_orig_circuit = subcircuit.get_Qbit_Num()
+                involved_qbits = subcircuit.get_Qbits()
+
+                qbit_num = len( involved_qbits )
+                mini_topologies = get_unique_subtopologies(self.topology, qbit_num)
+                qbit_map = {}
+                for idx in range( len(involved_qbits) ):
+                    qbit_map[ involved_qbits[idx] ] = idx
+                remapped_subcircuit = subcircuit.Remap_Qbits( qbit_map, qbit_num )
+                optimized_results[partition_idx] = pool.apply_async( self.DecomposePartition_Sequential, (remapped_subcircuit, subcircuit_parameters, self.config, mini_topologies, involved_qbits, qbit_map) )
+
+            for partition_idx, subcircuit in enumerate( tqdm(subcircuits, desc="Second Synthesis") ):
+                optimized_results[partition_idx] = optimized_results[partition_idx].get()
+        return optimized_results
 
     def Partition_Aware_Mapping(self, circ: Circuit, orig_parameters: np.ndarray):
         optimized_partitions, preparation_parts = self.SynthesizeWideCircuit(circ, orig_parameters)
