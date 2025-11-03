@@ -2,21 +2,7 @@ import numpy as np
 from typing import List, Tuple, Set, FrozenSet
 from itertools import permutations
 
-def get_all_subtopologies(edges: List[Tuple[int, int]], k: int) -> List[List[Tuple[int, int]]]:
-    """
-    Find ALL connected subtopologies with exactly k qubits using DFS.
-    
-    Args:
-        edges: List of edges representing the quantum hardware topology
-        k: Number of qubits in the desired subtopologies
-    
-    Returns:
-        List of all subtopologies, where each subtopology is a list of edges
-    """
-    if k <= 0:
-        return []
-    
-    # Build adjacency list
+def _build_adj_list(edges: List[Tuple[int, int]]) -> dict:
     adj_list = {}
     for u, v in edges:
         if u not in adj_list:
@@ -25,166 +11,100 @@ def get_all_subtopologies(edges: List[Tuple[int, int]], k: int) -> List[List[Tup
             adj_list[v] = set()
         adj_list[u].add(v)
         adj_list[v].add(u)
-    
+    return adj_list
+
+def _get_induced_edges(edges: List[Tuple[int, int]], qubit_subset: Set[int]) -> List[Tuple[int, int]]:
+    return [edge for edge in edges if edge[0] in qubit_subset and edge[1] in qubit_subset]
+
+def _dfs_enumerate(adj_list: dict, k: int, callback: Callable[[Set[int]], None]):
     all_qubits = sorted(adj_list.keys())
-    
-    if k == 1:
-        return [[] for _ in all_qubits]
-    
-    def get_induced_edges(qubit_subset: Set[int]) -> List[Tuple[int, int]]:
-        induced = []
-        for edge in edges:
-            if edge[0] in qubit_subset and edge[1] in qubit_subset:
-                induced.append(edge)
-        return induced
-    
-    subtopologies = []
     seen = set()
-    
     def dfs(current_qubits: Set[int], candidates: Set[int]):
-        """Enumerate connected subgraphs using DFS."""
         if len(current_qubits) == k:
             frozen = frozenset(current_qubits)
             if frozen not in seen:
                 seen.add(frozen)
-                subtopologies.append(get_induced_edges(current_qubits))
+                callback(current_qubits)
             return
-        
-        # Prune if we can't reach k qubits
         if len(current_qubits) + len(candidates) < k:
             return
-        
         for node in sorted(candidates):
-            # Add node and explore
             new_qubits = current_qubits | {node}
-            
-            # New candidates: neighbors of new_qubits not yet included
-            new_candidates = set()
-            for q in new_qubits:
-                for neighbor in adj_list[q]:
-                    if neighbor not in new_qubits and neighbor > node:
-                        new_candidates.add(neighbor)
-            
+            new_candidates = {neighbor for q in new_qubits for neighbor in adj_list[q] 
+                            if neighbor not in new_qubits and neighbor > node}
             dfs(new_qubits, new_candidates)
-    
-    # Start DFS from each qubit
     for start in all_qubits:
-        candidates = {n for n in adj_list[start] if n > start}
-        dfs({start}, candidates)
-    
-    return subtopologies
-
+        dfs({start}, {n for n in adj_list[start] if n > start})
 
 def get_canonical_form(qubit_subset: Set[int], induced_edges: List[Tuple[int, int]]) -> FrozenSet[Tuple[int, int]]:
-    """
-    Convert a subgraph to canonical form for isomorphism checking.
-    Relabels nodes as 0,1,2,...,k-1 and returns the lexicographically smallest edge set.
-    """
     qubits = sorted(qubit_subset)
     n = len(qubits)
-    
-    # Try all permutations and find lexicographically smallest
     best_edges = None
-    
     for perm in permutations(range(n)):
-        # Create mapping: qubits[i] -> perm[i]
         mapping = {qubits[i]: perm[i] for i in range(n)}
-        
-        # Relabel edges
-        relabeled = []
-        for u, v in induced_edges:
-            new_u, new_v = mapping[u], mapping[v]
-            # Normalize edge direction
-            relabeled.append(tuple(sorted([new_u, new_v])))
-        
-        relabeled = tuple(sorted(relabeled))
-        
+        relabeled = tuple(sorted([tuple(sorted([mapping[u], mapping[v]])) for u, v in induced_edges]))
         if best_edges is None or relabeled < best_edges:
             best_edges = relabeled
-    
     return frozenset(best_edges)
 
-
 def get_unique_subtopologies(edges: List[Tuple[int, int]], k: int) -> List[List[Tuple[int, int]]]:
-    """
-    Find all UNIQUE subtopology structures with k qubits using DFS.
-    Returns one example of each non-isomorphic connected subgraph.
-    
-    Args:
-        edges: List of edges representing the quantum hardware topology
-        k: Number of qubits in the desired subtopologies
-    
-    Returns:
-        List of unique subtopologies (one representative per isomorphism class)
-    """
     if k <= 0:
         return []
-    
-    # Build adjacency list
-    adj_list = {}
-    for u, v in edges:
-        if u not in adj_list:
-            adj_list[u] = set()
-        if v not in adj_list:
-            adj_list[v] = set()
-        adj_list[u].add(v)
-        adj_list[v].add(u)
-    
-    all_qubits = sorted(adj_list.keys())
-    
+    adj_list = _build_adj_list(edges)
     if k == 1:
-        return [[]]  # Single qubit has no edges
-    
-    def get_induced_edges(qubit_subset: Set[int]) -> List[Tuple[int, int]]:
-        induced = []
-        for edge in edges:
-            if edge[0] in qubit_subset and edge[1] in qubit_subset:
-                induced.append(edge)
-        return induced
-    
-    # Track unique canonical forms and their examples
+        return [[]]
     canonical_forms = {}
-    seen = set()
-    
-    def dfs(current_qubits: Set[int], candidates: Set[int]):
-        """Enumerate connected subgraphs using DFS."""
-        if len(current_qubits) == k:
-            frozen = frozenset(current_qubits)
-            if frozen not in seen:
-                seen.add(frozen)
-                induced = get_induced_edges(current_qubits)
-                
-                # Get canonical form
-                canonical = get_canonical_form(current_qubits, induced)
-                
-                # Store first example of each canonical form
-                if canonical not in canonical_forms:
-                    canonical_forms[canonical] = induced
-            return
-        
-        # Prune if we can't reach k qubits
-        if len(current_qubits) + len(candidates) < k:
-            return
-        
-        for node in sorted(candidates):
-            # Add node and explore
-            new_qubits = current_qubits | {node}
-            
-            # New candidates: neighbors of new_qubits not yet included
-            new_candidates = set()
-            for q in new_qubits:
-                for neighbor in adj_list[q]:
-                    if neighbor not in new_qubits and neighbor > node:
-                        new_candidates.add(neighbor)
-            
-            dfs(new_qubits, new_candidates)
-    
-    # Start DFS from each qubit
-    for start in all_qubits:
-        candidates = {n for n in adj_list[start] if n > start}
-        dfs({start}, candidates)
-    
+    def process(qubits):
+        induced = _get_induced_edges(edges, qubits)
+        canonical = get_canonical_form(qubits, induced)
+        if canonical not in canonical_forms:
+            canonical_forms[canonical] = induced
+    _dfs_enumerate(adj_list, k, process)
     return list(canonical_forms.values())
+
+def get_subtopologies_of_type(edges: List[Tuple[int, int]], target_topology: List[Tuple[int, int]]) -> List[List[Tuple[int, int]]]:
+    target_qubits = set()
+    for u, v in target_topology:
+        target_qubits.add(u)
+        target_qubits.add(v)
+    k = len(target_qubits) if target_qubits else 1
+    if k <= 0:
+        return []
+    adj_list = _build_adj_list(edges)
+    if k == 1:
+        return [[] for _ in adj_list.keys()]
+    target_canonical = get_canonical_form(target_qubits, target_topology)
+    matches = []
+    def process(qubits):
+        induced = _get_induced_edges(edges, qubits)
+        canonical = get_canonical_form(qubits, induced)
+        if canonical == target_canonical:
+            matches.append(induced)
+    _dfs_enumerate(adj_list, k, process)
+    return matches
+
+def min_cnots_between_permutations(A, B):
+    n = len(A)
+    inv_B = [0] * n
+    for pos, qubit in enumerate(B):
+        inv_B[qubit] = pos
+    
+    P = [inv_B[A[i]] for i in range(n)]
+    visited = [False] * n
+    total_cnots = 0
+    
+    for i in range(n):
+        if not visited[i]:
+            cycle_len = 0
+            j = i
+            while not visited[j]:
+                visited[j] = True
+                j = P[j]
+                cycle_len += 1
+            if cycle_len >= 2:
+                total_cnots += 2 * cycle_len - 3
+    
+    return total_cnots
 
 
 def extract_subtopology(involved_qbits, qbit_map, config ):
@@ -195,13 +115,16 @@ def extract_subtopology(involved_qbits, qbit_map, config ):
     return mini_topology
 
 class SingleQubitPartitionResult:
+    
     def __init__(self,circuit_in,parameters_in):
         self.circuit = circuit_in
         self.parameters = parameters_in
+    
     def get_partition_synthesis_score(self):
         return 0
 
 class PartitionSynthesisResult:
+    
     def __init__(self, N , mini_topologies, involved_qbits, qubit_map):
         self.mini_topologies = mini_topologies
         self.topology_count = len(mini_topologies)
@@ -210,14 +133,25 @@ class PartitionSynthesisResult:
         self.synthesised_circuits = [[] for _ in range(len(mini_topologies))]
         self.synthesised_parameters = [[] for _ in range(len(mini_topologies))]
         self.cnot_counts = [[] for _ in range(len(mini_topologies))]
+        self.circuit_structures = [[] for _ in range(len(mini_topologies))]
         self.involved_qbits = involved_qbits
         self.qubit_map = qubit_map
+    
     def add_result(self, permutations_pair, synthesised_circuit, synthesised_parameters, topology_idx):
         self.permutations_pairs[topology_idx].append(permutations_pair)
         self.synthesised_circuits[topology_idx].append(synthesised_circuit)
         self.synthesised_parameters[topology_idx].append(synthesised_parameters)
         self.cnot_counts[topology_idx].append(synthesised_circuit.get_Gate_Nums().get('CNOT', 0))
+        self.circuit_structures[topology_idx].append(self.extract_circuit_structure(synthesised_circuit))
     
+    def extract_circuit_structure(self, circuit):
+        circuit_structure = []
+        for gate in circuit.get_Gates():
+            gate.get_involved_qubits()
+            if len(involved_qbits) != 1:
+                circuit_structure.append(involved_qbits)
+        return circuit_structure
+
     def get_best_result(self, topology_idx):
         best_index = np.argmin(self.cnot_counts[topology_idx])
         return self.permutations_pairs[topology_idx][best_index], self.synthesised_circuits[topology_idx][best_index], self.synthesised_parameters[topology_idx][best_index]
@@ -231,3 +165,14 @@ class PartitionSynthesisResult:
             else:
                 score += cnot_count_topology*0.7/self.topology_count
         return score 
+
+class PartitionCandidate:
+    
+    def __init__(self, partition_idx, circuit_structure, P_i, P_o, topology, qbit_map, involved_qbits):
+        self.partition_idx = partition_idx
+        self.circuit_structure = circuit_structure
+        self.P_i = P_i
+        self.P_o = P_o
+        self.topology = topology
+        self.qbit_map = qbit_map
+        self.involved_qbits = involved_qbits

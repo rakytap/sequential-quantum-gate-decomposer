@@ -27,7 +27,7 @@ from squander.partitioning.partition import PartitionCircuit
 from squander.partitioning.tools import get_qubits
 from squander.synthesis.qgd_SABRE import qgd_SABRE as SABRE
 from itertools import product
-from squander.synthesis.PartAM_utils import get_all_subtopologies, get_unique_subtopologies, SingleQubitPartitionResult, PartitionSynthesisResult
+from squander.synthesis.PartAM_utils import get_subtopologies_of_type, get_unique_subtopologies, SingleQubitPartitionResult, PartitionSynthesisResult, min_cnots_between_permutations
 
 class qgd_Partition_Aware_Mapping:
 
@@ -165,16 +165,16 @@ class qgd_Partition_Aware_Mapping:
         weights = [result.get_partition_synthesis_score() for result in optimized_results[:len(allparts)]]
         L_parts, fusion_info = ilp_global_optimal(allparts, g, weights=weights)
         parts = recombine_single_qubit_chains(go, rgo, single_qubit_chains, gate_to_tqubit, [allparts[i] for i in L_parts], fusion_info)
-        L = topo_sort_partitions(circ, self.max_partition_size, parts)
+        L = topo_sort_partitions(circ, self.config["max_partition_size"], parts)
         from squander.partitioning.kahn import kahn_partition_preparts
         from squander.partitioning.tools import translate_param_order
-        partitioned_circuit, param_order, _ = kahn_partition_preparts(circ, self.max_partition_size, [parts[i] for i in L])
+        partitioned_circuit, param_order, _ = kahn_partition_preparts(circ, self.config["max_partition_size"], [parts[i] for i in L])
         parameters = translate_param_order(orig_parameters, param_order)
 
         subcircuits = partitioned_circuit.get_Gates()
 
         # the list of optimized subcircuits
-        optimized_results = [None] * len(subcircuits)
+        optimized_partitions = [None] * len(subcircuits)
 
         with Pool(processes=mp.cpu_count()) as pool:
             for partition_idx, subcircuit in enumerate( subcircuits ):
@@ -192,18 +192,43 @@ class qgd_Partition_Aware_Mapping:
                 for idx in range( len(involved_qbits) ):
                     qbit_map[ involved_qbits[idx] ] = idx
                 remapped_subcircuit = subcircuit.Remap_Qbits( qbit_map, qbit_num )
-                optimized_results[partition_idx] = pool.apply_async( self.DecomposePartition_Sequential, (remapped_subcircuit, subcircuit_parameters, self.config, mini_topologies, involved_qbits, qbit_map) )
+                optimized_partitions[partition_idx] = pool.apply_async( self.DecomposePartition_Sequential, (remapped_subcircuit, subcircuit_parameters, self.config, mini_topologies, involved_qbits, qbit_map) )
 
             for partition_idx, subcircuit in enumerate( tqdm(subcircuits, desc="Second Synthesis") ):
-                optimized_results[partition_idx] = optimized_results[partition_idx].get()
-        return optimized_results
+                optimized_partitions[partition_idx] = optimized_partitions[partition_idx].get()
+        return optimized_partitions
 
     def Partition_Aware_Mapping(self, circ: Circuit, orig_parameters: np.ndarray):
         optimized_partitions, preparation_parts = self.SynthesizeWideCircuit(circ, orig_parameters)
-        print(preparation_parts)
         DAG, IDAG = self.construct_DAG_and_IDAG(optimized_partitions)
         D = self.compute_distances_bfs(circ.get_Qbit_Num())
         pi = self._compute_smart_initial_layout(circ, circ.get_Qbit_Num(), D)
+
+    def Heuristic_Search(self, F, pi, DAG, IDAG):
+        resolved_partitions = [False] * len(DAG)
+        partition_order = []
+        execute_partition_list = []
+        E = self.generate_E(F, DAG, IDAG, resolved_partitions)
+        while len(F) != 0:
+        
+        scores = []
+        partition_candidates = self.obtain_partition_candidates(F)
+        if len(partition_candidates) != 0:
+            for partition_candidate in partition_candidates:
+                score = self.score_partition_candidate(partition_candidate, F, E, pi, DAG, IDAG, resolved_partitions)
+                scores.append(score)
+        min_idx = np.argmin(scores)
+        min_partition_candidate = partition_candidates[min_idx]
+
+    def obtain_partition_candidates(self, F, optimized_partitions):
+        partition_candidates = []
+        for partition_idx in F:
+            partition = optimized_partitions[partition_idx]
+            for tdx, mini_topology in partition.mini_topologies:
+                topology_candidates = get_subtopologies_of_type(self.topology,mini_topology)
+                for topology_candidate in topology_candidates:
+                    for pdx, permutation_pair in enumerate(partition.permutation_pairs[tdx]):
+                        partition_candidates.append([PartitionCandidate(partition_idx,partition.circuit_structures[tdx][pdx],permutation_pair[0],permutation_pair[1],)])
 
     def get_initial_layer(self, IDAG, N):
         initial_layer = []
