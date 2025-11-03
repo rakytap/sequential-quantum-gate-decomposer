@@ -27,258 +27,7 @@ from squander.partitioning.partition import PartitionCircuit
 from squander.partitioning.tools import get_qubits
 from squander.synthesis.qgd_SABRE import qgd_SABRE as SABRE
 from itertools import product
-
-def DecomposePartition_and_Perm(Umtx: np.ndarray, config: dict, mini_topology = None) -> Circuit:
-    """
-    Call to decompose a partition
-    """
-    strategy = config["strategy"]
-    if strategy == "TreeSearch":
-        cDecompose = N_Qubit_Decomposition_Tree_Search( Umtx.conj().T, config=config, accelerator_num=0, topology=mini_topology)
-    elif strategy == "TabuSearch":
-        cDecompose = N_Qubit_Decomposition_Tabu_Search( Umtx.conj().T, config=config, accelerator_num=0, topology=mini_topology )
-    elif strategy == "Adaptive":
-        cDecompose = N_Qubit_Decomposition_adaptive( Umtx.conj().T, level_limit_max=5, level_limit_min=1, topology=mini_topology )
-    else:
-        raise Exception(f"Unsupported decomposition type: {strategy}")
-    cDecompose.set_Verbose( config["verbosity"] )
-    cDecompose.set_Cost_Function_Variant( 3 )	
-    cDecompose.set_Optimization_Tolerance( config["tolerance"] )
-    cDecompose.set_Optimizer( config["optimizer"] )
-    cDecompose.Start_Decomposition()
-    squander_circuit = cDecompose.get_Circuit()
-    parameters       = cDecompose.get_Optimized_Parameters()
-    return squander_circuit, parameters
-
-def get_all_subtopologies(edges: List[Tuple[int, int]], k: int) -> List[List[Tuple[int, int]]]:
-    """
-    Find ALL connected subtopologies with exactly k qubits using DFS.
-    
-    Args:
-        edges: List of edges representing the quantum hardware topology
-        k: Number of qubits in the desired subtopologies
-    
-    Returns:
-        List of all subtopologies, where each subtopology is a list of edges
-    """
-    if k <= 0:
-        return []
-    
-    # Build adjacency list
-    adj_list = {}
-    for u, v in edges:
-        if u not in adj_list:
-            adj_list[u] = set()
-        if v not in adj_list:
-            adj_list[v] = set()
-        adj_list[u].add(v)
-        adj_list[v].add(u)
-    
-    all_qubits = sorted(adj_list.keys())
-    
-    if k == 1:
-        return [[] for _ in all_qubits]
-    
-    def get_induced_edges(qubit_subset: Set[int]) -> List[Tuple[int, int]]:
-        induced = []
-        for edge in edges:
-            if edge[0] in qubit_subset and edge[1] in qubit_subset:
-                induced.append(edge)
-        return induced
-    
-    subtopologies = []
-    seen = set()
-    
-    def dfs(current_qubits: Set[int], candidates: Set[int]):
-        """Enumerate connected subgraphs using DFS."""
-        if len(current_qubits) == k:
-            frozen = frozenset(current_qubits)
-            if frozen not in seen:
-                seen.add(frozen)
-                subtopologies.append(get_induced_edges(current_qubits))
-            return
-        
-        # Prune if we can't reach k qubits
-        if len(current_qubits) + len(candidates) < k:
-            return
-        
-        for node in sorted(candidates):
-            # Add node and explore
-            new_qubits = current_qubits | {node}
-            
-            # New candidates: neighbors of new_qubits not yet included
-            new_candidates = set()
-            for q in new_qubits:
-                for neighbor in adj_list[q]:
-                    if neighbor not in new_qubits and neighbor > node:
-                        new_candidates.add(neighbor)
-            
-            dfs(new_qubits, new_candidates)
-    
-    # Start DFS from each qubit
-    for start in all_qubits:
-        candidates = {n for n in adj_list[start] if n > start}
-        dfs({start}, candidates)
-    
-    return subtopologies
-
-
-def get_canonical_form(qubit_subset: Set[int], induced_edges: List[Tuple[int, int]]) -> FrozenSet[Tuple[int, int]]:
-    """
-    Convert a subgraph to canonical form for isomorphism checking.
-    Relabels nodes as 0,1,2,...,k-1 and returns the lexicographically smallest edge set.
-    """
-    qubits = sorted(qubit_subset)
-    n = len(qubits)
-    
-    # Try all permutations and find lexicographically smallest
-    best_edges = None
-    
-    for perm in permutations(range(n)):
-        # Create mapping: qubits[i] -> perm[i]
-        mapping = {qubits[i]: perm[i] for i in range(n)}
-        
-        # Relabel edges
-        relabeled = []
-        for u, v in induced_edges:
-            new_u, new_v = mapping[u], mapping[v]
-            # Normalize edge direction
-            relabeled.append(tuple(sorted([new_u, new_v])))
-        
-        relabeled = tuple(sorted(relabeled))
-        
-        if best_edges is None or relabeled < best_edges:
-            best_edges = relabeled
-    
-    return frozenset(best_edges)
-
-
-def get_unique_subtopologies(edges: List[Tuple[int, int]], k: int) -> List[List[Tuple[int, int]]]:
-    """
-    Find all UNIQUE subtopology structures with k qubits using DFS.
-    Returns one example of each non-isomorphic connected subgraph.
-    
-    Args:
-        edges: List of edges representing the quantum hardware topology
-        k: Number of qubits in the desired subtopologies
-    
-    Returns:
-        List of unique subtopologies (one representative per isomorphism class)
-    """
-    if k <= 0:
-        return []
-    
-    # Build adjacency list
-    adj_list = {}
-    for u, v in edges:
-        if u not in adj_list:
-            adj_list[u] = set()
-        if v not in adj_list:
-            adj_list[v] = set()
-        adj_list[u].add(v)
-        adj_list[v].add(u)
-    
-    all_qubits = sorted(adj_list.keys())
-    
-    if k == 1:
-        return [[]]  # Single qubit has no edges
-    
-    def get_induced_edges(qubit_subset: Set[int]) -> List[Tuple[int, int]]:
-        induced = []
-        for edge in edges:
-            if edge[0] in qubit_subset and edge[1] in qubit_subset:
-                induced.append(edge)
-        return induced
-    
-    # Track unique canonical forms and their examples
-    canonical_forms = {}
-    seen = set()
-    
-    def dfs(current_qubits: Set[int], candidates: Set[int]):
-        """Enumerate connected subgraphs using DFS."""
-        if len(current_qubits) == k:
-            frozen = frozenset(current_qubits)
-            if frozen not in seen:
-                seen.add(frozen)
-                induced = get_induced_edges(current_qubits)
-                
-                # Get canonical form
-                canonical = get_canonical_form(current_qubits, induced)
-                
-                # Store first example of each canonical form
-                if canonical not in canonical_forms:
-                    canonical_forms[canonical] = induced
-            return
-        
-        # Prune if we can't reach k qubits
-        if len(current_qubits) + len(candidates) < k:
-            return
-        
-        for node in sorted(candidates):
-            # Add node and explore
-            new_qubits = current_qubits | {node}
-            
-            # New candidates: neighbors of new_qubits not yet included
-            new_candidates = set()
-            for q in new_qubits:
-                for neighbor in adj_list[q]:
-                    if neighbor not in new_qubits and neighbor > node:
-                        new_candidates.add(neighbor)
-            
-            dfs(new_qubits, new_candidates)
-    
-    # Start DFS from each qubit
-    for start in all_qubits:
-        candidates = {n for n in adj_list[start] if n > start}
-        dfs({start}, candidates)
-    
-    return list(canonical_forms.values())
-
-
-def extract_subtopology(involved_qbits, qbit_map, config ):
-    mini_topology = []
-    for edge in config["topology"]:
-        if edge[0] in involved_qbits and edge[1] in involved_qbits:
-            mini_topology.append((qbit_map[edge[0]],qbit_map[edge[1]]))
-    return mini_topology
-
-class SingleQubitPartitionResult:
-    def __init__(self,circuit_in,parameters_in):
-        self.circuit = circuit_in
-        self.parameters = parameters_in
-    def get_partition_synthesis_score(self):
-        return 0
-
-class PartitionSynthesisResult:
-    def __init__(self, N , mini_topologies, involved_qbits, qubit_map):
-        self.mini_topologies = mini_topologies
-        self.topology_count = len(mini_topologies)
-        self.N = N
-        self.permutations_pairs = [[] for _ in range(len(mini_topologies))]
-        self.synthesised_circuits = [[] for _ in range(len(mini_topologies))]
-        self.synthesised_parameters = [[] for _ in range(len(mini_topologies))]
-        self.cnot_counts = [[] for _ in range(len(mini_topologies))]
-        self.involved_qbits = involved_qbits
-        self.qubit_map = qubit_map
-    def add_result(self, permutations_pair, synthesised_circuit, synthesised_parameters, topology_idx):
-        self.permutations_pairs[topology_idx].append(permutations_pair)
-        self.synthesised_circuits[topology_idx].append(synthesised_circuit)
-        self.synthesised_parameters[topology_idx].append(synthesised_parameters)
-        self.cnot_counts[topology_idx].append(synthesised_circuit.get_Gate_Nums().get('CNOT', 0))
-    
-    def get_best_result(self, topology_idx):
-        best_index = np.argmin(self.cnot_counts[topology_idx])
-        return self.permutations_pairs[topology_idx][best_index], self.synthesised_circuits[topology_idx][best_index], self.synthesised_parameters[topology_idx][best_index]
-    
-    def get_partition_synthesis_score(self):
-        score = 0
-        for topology_idx in range(self.topology_count):
-            cnot_count_topology = np.mean(self.cnot_counts[topology_idx])*0.1 + np.min(self.cnot_counts[topology_idx])*0.9
-            if len(self.mini_topologies[topology_idx]) == self.N*(self.N-1)/2:
-                score += cnot_count_topology*0.3/self.topology_count
-            else:
-                score += cnot_count_topology*0.7/self.topology_count
-        return score 
+from squander.synthesis.PartAM_utils import get_all_subtopologies, get_unique_subtopologies, SingleQubitPartitionResult, PartitionSynthesisResult
 
 class qgd_Partition_Aware_Mapping:
 
@@ -300,6 +49,7 @@ class qgd_Partition_Aware_Mapping:
         allowed_strategies = ['TreeSearch', 'TabuSearch', 'Adaptive']
         if not strategy in allowed_strategies:
             raise Exception(f"The strategy should be either of {allowed_strategies}, got {strategy}.")
+
     @staticmethod
     def DecomposePartition_Sequential(Partition_circuit: Circuit, Partition_parameters: np.ndarray, config: dict, topologies, involved_qbits, qbit_map) -> PartitionSynthesisResult:
         """
@@ -414,73 +164,61 @@ class qgd_Partition_Aware_Mapping:
 
         weights = [result.get_partition_synthesis_score() for result in optimized_results[:len(allparts)]]
         L_parts, fusion_info = ilp_global_optimal(allparts, g, weights=weights)
+        structures = [optimized_results[i] for i in L_parts]
         parts = recombine_single_qubit_chains(go, rgo, single_qubit_chains, gate_to_tqubit, [allparts[i] for i in L_parts], fusion_info)
         L = topo_sort_partitions(circ, self.max_partition_size, parts)
-        from squander.partitioning.kahn import kahn_partition_preparts
-        from squander.partitioning.tools import translate_param_order
-        partitioned_circuit, param_order, _ = kahn_partition_preparts(circ, self.max_partition_size, [parts[i] for i in L])
-        parameters = translate_param_order(orig_parameters, param_order)
 
-        subcircuits = partitioned_circuit.get_Gates()
-
-        # the list of optimized subcircuits
-        optimized_results = [None] * len(subcircuits)
-
-        with Pool(processes=mp.cpu_count()) as pool:
-            for partition_idx, subcircuit in enumerate( subcircuits ):
-
-                start_idx = subcircuit.get_Parameter_Start_Index()
-                end_idx   = subcircuit.get_Parameter_Start_Index() + subcircuit.get_Parameter_Num()
-                subcircuit_parameters = parameters[ start_idx:end_idx ]
-                k = subcircuit.get_Qbit_Num()
-                qbit_num_orig_circuit = subcircuit.get_Qbit_Num()
-                involved_qbits = subcircuit.get_Qbits()
-
-                qbit_num = len( involved_qbits )
-                mini_topologies = get_unique_subtopologies(self.topology, qbit_num)
-                qbit_map = {}
-                for idx in range( len(involved_qbits) ):
-                    qbit_map[ involved_qbits[idx] ] = idx
-                remapped_subcircuit = subcircuit.Remap_Qbits( qbit_map, qbit_num )
-                optimized_results[partition_idx] = pool.apply_async( self.DecomposePartition_Sequential, (remapped_subcircuit, subcircuit_parameters, self.config, mini_topologies, involved_qbits, qbit_map) )
-
-            for partition_idx, subcircuit in enumerate( tqdm(subcircuits, desc="Second Synthesis") ):
-                optimized_results[partition_idx] = optimized_results[partition_idx].get()
-        return optimized_results
+        return [structures[i] for i in L], [parts[i] for i in L]
 
     def Partition_Aware_Mapping(self, circ: Circuit, orig_parameters: np.ndarray):
-        optimized_partitions = self.SynthesizeWideCircuit(circ, orig_parameters)
+        optimized_partitions, preparation_parts = self.SynthesizeWideCircuit(circ, orig_parameters)
+        print(preparation_parts)
         DAG, IDAG = self.construct_DAG_and_IDAG(optimized_partitions)
         D = self.compute_distances_bfs(circ.get_Qbit_Num())
         pi = self._compute_smart_initial_layout(circ, circ.get_Qbit_Num(), D)
-        
+
+    def get_initial_layer(self, IDAG, N):
+        initial_layer = []
+        active_qbits = list(range(N))
+        for idx in range(len(IDAG)):
+            if len(IDAG[idx][1]) == 0:
+                initial_layer.append(idx)
+                for qbit in IDAG[idx][0].involved_qbits:
+                    active_qbits.remove(qbit)
+            if len(active_qbits) == 0:
+                break
+        return initial_layer
             
     def construct_DAG_and_IDAG(self, optimized_partitions):
         DAG = []
         IDAG = []
         for idx in range(len(optimized_partitions)):
+            parents = []
+            children = []
             if idx != len(optimized_partitions)-1:
-                Involved_qbits_current = optimized_partitions[idx].involved_qbits.copy()
+                involved_qbits_current = optimized_partitions[idx].involved_qbits.copy()
                 for next_idx in range(idx+1, len(optimized_partitions)):
-                    Involved_qbits_next = optimized_partitions[next_idx].involved_qbits
-                    intersection = [i for i in Involved_qbits_current if i in Involved_qbits_next]
+                    involved_qbits_next = optimized_partitions[next_idx].involved_qbits
+                    intersection = [i for i in involved_qbits_current if i in involved_qbits_next]
                     if len(intersection) > 0:
-                        DAG.append((idx, next_idx))
+                        children.append(next_idx)
                     for intersection_qbit in intersection:
-                        Involved_qbits_current.remove(intersection_qbit)
-                    if len(Involved_qbits_current) == 0:
+                        involved_qbits_current.remove(intersection_qbit)
+                    if len(involved_qbits_current) == 0:
                         break
             if idx != 0:
-                Involved_qbits_current = optimized_partitions[idx].involved_qbits.copy()
+                involved_qbits_current = optimized_partitions[idx].involved_qbits.copy()
                 for prev_idx in range(idx-1, -1, -1):
-                    Involved_qbits_prev = optimized_partitions[prev_idx].involved_qbits
-                    intersection = [i for i in Involved_qbits_current if i in Involved_qbits_prev]
+                    involved_qbits_prev = optimized_partitions[prev_idx].involved_qbits
+                    intersection = [i for i in involved_qbits_current if i in involved_qbits_prev]
                     if len(intersection) > 0:
-                        IDAG.append((prev_idx, idx))
+                        parents.append(prev_idx)
                     for intersection_qbit in intersection:
-                        Involved_qbits_current.remove(intersection_qbit)
-                    if len(Involved_qbits_current) == 0:
+                        involved_qbits_current.remove(intersection_qbit)
+                    if len(involved_qbits_current) == 0:
                         break
+            DAG.append([idx, children])
+            IDAG.append([idx, parents])
         return DAG, IDAG
 
     def compute_distances_bfs(self, N):
