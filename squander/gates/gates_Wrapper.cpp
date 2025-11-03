@@ -1516,7 +1516,7 @@ Gate_Wrapper_setstate( Gate_Wrapper *self, PyObject *args ) {
     }
 
     
-    return Py_None;
+    return Py_BuildValue("");
 
 }
 
