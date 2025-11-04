@@ -55,6 +55,7 @@ Matrix_real get_cost_function_with_correction(Matrix matrix, int qbit_num, int t
 Matrix_real get_cost_function_with_correction2(Matrix matrix, int qbit_num, int trace_offset=0);
 
 double get_cost_function_sum_of_squares(Matrix& matrix);
+Matrix get_deriv_sum_of_squares(Matrix& matrix);
 
 /**
 @brief Call to calculate the real and imaginary parts of the trace
@@ -130,11 +131,13 @@ void operator()( tbb::blocked_range<int> r ) const;
 };
 
 
-std::pair<int, double> operator_schmidt_rank(const QGD_Complex16* U, int n,
+std::tuple<int, double, double> operator_schmidt_rank(const Matrix& U, int n,
                           const std::vector<int>& A_qubits,
-                          double tol = 1e-10);
+                          double Fnorm, double tol = 1e-10);                          
 std::vector<std::vector<int>> unique_cuts(int n);
 double get_osr_entanglement_test(Matrix& matrix);
+Matrix get_deriv_osr_entanglement(Matrix &matrix);
+double real_trace_conj_dot(Matrix& A, Matrix& B);
 
 #endif
 
