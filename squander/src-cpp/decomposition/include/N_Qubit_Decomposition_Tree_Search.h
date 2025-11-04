@@ -33,7 +33,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "GrayCode.h"
 
 using LevelInfo = std::tuple<std::set<std::vector<int>>, std::map<std::vector<int>, GrayCode>, std::vector<std::vector<int>>>;
-using CutInfo = std::tuple<std::vector<std::vector<int>>, std::map<std::pair<int, int>, std::vector<int>>, std::map<GrayCode, std::vector<std::pair<int, double>>>>;
+using CutInfo = std::tuple<std::vector<std::vector<int>>, std::map<std::pair<int, int>, std::vector<int>>, std::map<GrayCode, std::vector<std::tuple<int, double, double>>>>;
 
 /**
 @brief A base class to determine the decomposition of an N-qubit unitary into a sequence of CNOT and U3 gates.
@@ -135,14 +135,15 @@ void add_two_qubit_block(Gates_block* gate_structure, int target_qbit, int contr
 @return Returns with the generated circuit
 */
 Gates_block* 
-construct_gate_structure_from_Gray_code( const GrayCode& gcode );
+construct_gate_structure_from_Gray_code( const GrayCode& gcode, bool finalize=true );
 
 /**
 @brief Call to perform tree search over possible gate structures
 @param level_mum The number of decomposing levels (i.e. the maximal tree depth)
 @return Returns with the best Gray-code corresponding to the best circuit (The associated gate structure can be costructed by function construct_gate_structure_from_Gray_code)
 */
-std::tuple<GrayCode, LevelInfo, std::map<GrayCode, std::vector<std::pair<int, double>>>> tree_search_over_gate_structures( int level_num, LevelInfo& li, CutInfo& ci);
+GrayCode tree_search_over_gate_structures( int level_num );
+std::tuple<std::vector<GrayCode>, LevelInfo, std::map<GrayCode, std::vector<std::tuple<int, double, double>>>> tree_search_over_gate_structures_gl( int level_num, LevelInfo& li, CutInfo& ci);
 
 /**
 @brief Call to perform the optimization on the given gate structure
