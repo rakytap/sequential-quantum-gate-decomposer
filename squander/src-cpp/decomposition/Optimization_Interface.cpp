@@ -1108,6 +1108,16 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();////////////////////////////////
 
         work_batch = 10;
     }
+    Matrix Upartial;
+    if (cost_fnc == SUM_OF_SQUARES) {
+        Matrix matrix_new = instance->get_Umtx().copy();
+        instance->apply_to( parameters, matrix_new );
+        Upartial = get_deriv_sum_of_squares(matrix_new);
+    } else if (cost_fnc == OSR_ENTANGLEMENT) {
+        Matrix matrix_new = instance->get_Umtx().copy();
+        instance->apply_to( parameters, matrix_new );
+        Upartial = get_deriv_osr_entanglement(matrix_new);
+    }
 
 
     tbb::parallel_for( tbb::blocked_range<int>(0,parameter_num_loc,work_batch), [&](tbb::blocked_range<int> r) {
@@ -1150,7 +1160,8 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();////////////////////////////////
                 break;
             }
             case SUM_OF_SQUARES:
-                grad_comp = get_cost_function_sum_of_squares(Umtx_deriv[idx]);
+            case OSR_ENTANGLEMENT:
+                grad_comp = real_trace_conj_dot(Upartial, Umtx_deriv[idx]);
                 break;
             case INFIDELITY: {
                 double d = Umtx_deriv[idx].cols;
@@ -1158,9 +1169,6 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();////////////////////////////////
                 grad_comp = -2.0/d/(d+1)*trace_tmp[0].real*deriv_tmp.real-2.0/d/(d+1)*trace_tmp[0].imag*deriv_tmp.imag;
                 break;
             }
-            case OSR_ENTANGLEMENT:
-                grad_comp = get_osr_entanglement_test(Umtx_deriv[idx]);
-                break;
             default: {
                 std::string err("Optimization_Interface::optimization_problem_combined: Cost function variant not implmented.");
                 throw err;
