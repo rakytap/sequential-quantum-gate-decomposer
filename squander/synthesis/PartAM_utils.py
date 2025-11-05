@@ -83,6 +83,30 @@ def get_subtopologies_of_type(edges: List[Tuple[int, int]], target_topology: Lis
     _dfs_enumerate(adj_list, k, process)
     return matches
 
+def get_node_mapping(topology1: List[Tuple[int, int]], topology2: List[Tuple[int, int]]) -> dict:
+    qubits1 = set()
+    for u, v in topology1:
+        qubits1.add(u)
+        qubits1.add(v)
+    qubits2 = set()
+    for u, v in topology2:
+        qubits2.add(u)
+        qubits2.add(v)
+    if len(qubits1) != len(qubits2):
+        return {}
+    sorted_qubits1 = sorted(qubits1)
+    sorted_qubits2 = sorted(qubits2)
+    n = len(sorted_qubits1)
+    for perm in permutations(range(n)):
+        mapping = {sorted_qubits1[i]: sorted_qubits2[perm[i]] for i in range(n)}
+        mapped_edges = set()
+        for u, v in topology1:
+            mapped_edges.add(tuple(sorted([mapping[u], mapping[v]])))
+        original_edges = set(tuple(sorted([u, v])) for u, v in topology2)
+        if mapped_edges == original_edges:
+            return mapping
+    return {}
+
 def min_cnots_between_permutations(A, B):
     n = len(A)
     inv_B = [0] * n
@@ -105,6 +129,35 @@ def min_cnots_between_permutations(A, B):
                 total_cnots += 2 * cycle_len - 3
     
     return total_cnots
+
+def find_best_permutation_with_constraints(A, constraints, strategy='greedy'):
+    n = len(A)
+    B = [None] * n
+    used_qubits = set()
+    
+    # Apply constraints
+    for pos, qubit in constraints.items():
+        B[pos] = qubit
+        used_qubits.add(qubit)
+    
+    # Fill unconstrained positions
+    available_qubits = [q for q in range(n) if q not in used_qubits]
+    unconstrained_positions = [i for i in range(n) if B[i] is None]
+
+    for pos in unconstrained_positions:
+        if A[pos] in available_qubits:
+            B[pos] = A[pos]
+            available_qubits.remove(A[pos])
+    
+    # Fill remaining positions with remaining qubits
+    j = 0
+    for pos in unconstrained_positions:
+        if B[pos] is None:
+            B[pos] = available_qubits[j]
+            j += 1
+    
+    
+    return B
 
 
 def extract_subtopology(involved_qbits, qbit_map, config ):
@@ -168,11 +221,24 @@ class PartitionSynthesisResult:
 
 class PartitionCandidate:
     
-    def __init__(self, partition_idx, circuit_structure, P_i, P_o, topology, qbit_map, involved_qbits):
+    def __init__(self, partition_idx, topology_idx, permutation_idx, circuit_structure, P_i, P_o, topology, mini_topology, qbit_map, involved_qbits):
         self.partition_idx = partition_idx
+        self.topology_idx = topology_idx
+        self.permutation_idx = permutation_idx
         self.circuit_structure = circuit_structure
         self.P_i = P_i
         self.P_o = P_o
         self.topology = topology
+        self.mini_topology = mini_topology
         self.qbit_map = qbit_map
         self.involved_qbits = involved_qbits
+        self.node_mapping = get_node_mapping(mini_topology, topology)
+
+    def transform_pi_input(self, pi):
+
+        qbit_map_swapped = {self.node_mapping[self.P_i.index(v)]: k for k, v in self.qbit_map.items()}
+        return find_best_permutation_with_constraints(pi, qbit_map_swapped)
+
+    def transform_pi_output(self, pi):
+        qbit_map_swapped = {self.node_mapping[self.P_o.index(v)]: k for k, v in self.qbit_map.items()}
+        return find_best_permutation_with_constraints(pi, qbit_map_swapped)
