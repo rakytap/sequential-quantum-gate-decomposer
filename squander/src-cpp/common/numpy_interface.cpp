@@ -57,8 +57,10 @@ PyObject* array_from_ptr(void * ptr, int dim, npy_intp* shape, int np_type) {
         PyObject* arr = PyArray_SimpleNewFromData(dim, shape, np_type, ptr);
 
         // set memory keeper for the numpy array
-        PyObject *capsule = PyCapsule_New(ptr, NULL, capsule_cleanup);
-        PyArray_SetBaseObject((PyArrayObject *) arr, capsule);
+        if (ptr != NULL) {
+            PyObject *capsule = PyCapsule_New(ptr, NULL, capsule_cleanup);
+            PyArray_SetBaseObject((PyArrayObject *) arr, capsule);
+        }
 
         return arr;
 
