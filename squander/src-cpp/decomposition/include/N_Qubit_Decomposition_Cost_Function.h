@@ -131,7 +131,7 @@ void operator()( tbb::blocked_range<int> r ) const;
 };
 
 
-std::tuple<int, double, double> operator_schmidt_rank(const Matrix& U, int n,
+std::pair<int, double> operator_schmidt_rank(const Matrix& U, int n,
                           const std::vector<int>& A_qubits,
                           double Fnorm, double tol = 1e-10);                          
 std::vector<std::vector<int>> unique_cuts(int n);
