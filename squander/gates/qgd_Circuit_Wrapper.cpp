@@ -871,7 +871,7 @@ qgd_Circuit_Wrapper_set_Qbit_Num( qgd_Circuit_Wrapper *self,  PyObject *args ) {
     }
 
 
-    return Py_None;
+    return Py_BuildValue("");
     
 }
 
@@ -937,7 +937,7 @@ qgd_Circuit_Wrapper_set_Min_Fusion( qgd_Circuit_Wrapper *self,  PyObject *args )
     }
 
 
-    return Py_None;
+    return Py_BuildValue("");
     
 }
 
@@ -1862,7 +1862,7 @@ qgd_Circuit_Wrapper_setstate( qgd_Circuit_Wrapper *self, PyObject *args ) {
     Py_DECREF( dummy_target_qbit );
     
 
-    return Py_None;
+    return Py_BuildValue("");
 }
 
 

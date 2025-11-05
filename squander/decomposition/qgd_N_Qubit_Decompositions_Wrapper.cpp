@@ -461,7 +461,7 @@ qgd_N_Qubit_Decomposition_Wrapper_List_Gates(qgd_N_Qubit_Decomposition_Wrapper *
 {
     // list gates with start_index = 0
     self->decomp->list_gates(0);
-    return Py_None;
+    return Py_BuildValue("");
 }
 
 /**
