@@ -9,7 +9,6 @@ C++ Unit Tests for Density Matrix Module
 #include "H.h"
 #include "X.h"
 #include "density_circuit.h"
-#include "density_gate.h"
 #include "density_matrix.h"
 #include "noise_channel.h"
 #include <cassert>

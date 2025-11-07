@@ -12,7 +12,6 @@ pybind11 Bindings for Density Matrix Module
 
 #include "Gate.h"
 #include "density_circuit.h"
-#include "density_gate.h"
 #include "density_matrix.h"
 #include "matrix.h"
 #include "matrix_real.h"
