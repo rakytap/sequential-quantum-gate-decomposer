@@ -17,7 +17,6 @@ limitations under the License.
 #pragma once
 
 #include "Gates_block.h" // From existing SQUANDER
-#include "density_gate.h"
 #include "density_matrix.h"
 #include <memory>
 #include <vector>

@@ -42,14 +42,12 @@ message(STATUS "pybind11 version: ${pybind11_VERSION}")
 
 set(DENSITY_MATRIX_SOURCES
     src/density_matrix.cpp
-    src/density_gate.cpp
     src/density_circuit.cpp
     src/noise_channel.cpp
 )
 
 set(DENSITY_MATRIX_HEADERS
     include/density_matrix.h
-    include/density_gate.h
     include/density_circuit.h
     include/noise_channel.h
 )

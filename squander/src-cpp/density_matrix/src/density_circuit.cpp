@@ -155,7 +155,6 @@ int DensityCircuit::get_parameter_num() const {
 }
 
 void DensityCircuit::sync_gates() {
-  // Future: sync density_gates_ with gates_block_ if needed
   // For now, we use gates_block directly via get_Matrix()
 }
 

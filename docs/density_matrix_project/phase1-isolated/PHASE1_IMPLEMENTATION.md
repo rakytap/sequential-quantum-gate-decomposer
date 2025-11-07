@@ -22,9 +22,8 @@ This document provides detailed information about **what was actually implemente
 
 **Core Classes:**
 1. **DensityMatrix** - Quantum density matrix with validation and properties
-2. **DensityGate** - Wrapper for existing gates to apply to density matrices
-3. **DensityCircuit** - Circuit builder for density matrix evolution
-4. **NoiseChannel** - Base class + 3 noise implementations
+2. **DensityCircuit** - Circuit builder for density matrix evolution
+3. **NoiseChannel** - Base class + 3 noise implementations
 
 **Features:**
 - Inherits from `matrix_base<QGD_Complex16>` (reuses memory management)
@@ -74,15 +73,13 @@ squander/
 │
 └── src-cpp/
     └── density_matrix/                      # NEW C++ module
-        ├── include/                         # Headers (5 files)
+        ├── include/                         # Headers (4 files)
         │   ├── density_matrix.h             # Core class
-        │   ├── density_gate.h               # Gate wrapper
         │   ├── density_circuit.h            # Circuit
         │   ├── noise_channel.h              # Noise models
         │   └── density_utils.h              # Utilities
-        ├── src/                             # Implementation (4 files)
+        ├── src/                             # Implementation (3 files)
         │   ├── density_matrix.cpp           
-        │   ├── density_gate.cpp             
         │   ├── density_circuit.cpp          
         │   └── noise_channel.cpp            
         ├── python/

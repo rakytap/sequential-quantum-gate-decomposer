@@ -59,12 +59,10 @@ squander/src-cpp/
 └── density_matrix/                      # NEW module
     ├── include/
     │   ├── density_matrix.h             # Core class
-    │   ├── density_gate.h               # Gate wrapper
     │   ├── density_circuit.h            # Circuit wrapper
     │   └── noise_channel.h              # Noise models
     ├── src/
     │   ├── density_matrix.cpp
-    │   ├── density_gate.cpp
     │   ├── density_circuit.cpp
     │   └── noise_channel.cpp
     ├── python/
@@ -172,14 +170,12 @@ message(STATUS "Found pybind11: ${pybind11_VERSION}")
 
 set(DENSITY_MATRIX_SOURCES
     src/density_matrix.cpp
-    src/density_gate.cpp
     src/density_circuit.cpp
     src/noise_channel.cpp
 )
 
 set(DENSITY_MATRIX_HEADERS
     include/density_matrix.h
-    include/density_gate.h
     include/density_circuit.h
     include/noise_channel.h
 )
@@ -447,7 +443,6 @@ print(f"Purity: {rho.purity()}")  # 1.0 ✅
 
 **C++ Core:**
 - DensityMatrix class with full quantum properties
-- DensityGate wrapper for existing gates
 - DensityCircuit for circuit construction
 - 3 noise channels (Depolarizing, Amplitude Damping, Phase Damping)
 
