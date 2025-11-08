@@ -149,10 +149,10 @@ CPU_time = 0.0;
 
 
         // --- Basin-hopping parameters (SciPy-like defaults) ---
-        double bh_T = 0.5;                     // "temperature" for Metropolis acceptance
-        double bh_stepsize = 0.01;
+        double bh_T = 1.0;                     // "temperature" for Metropolis acceptance
+        double bh_stepsize = 0.5;
         long long bh_interval = 50;                // how often to adapt stepsize
-        double bh_target_accept = 0.1;
+        double bh_target_accept = 0.5;
         double bh_stepwise_factor = 0.9;
         // Allow overrides via config (all optional)
         if (config.count("bh_T") > 0)                             config["bh_T"].get_property(bh_T);
@@ -187,7 +187,7 @@ CPU_time = 0.0;
                 solution_guess[j] = fmod(solution_guess[j] + delta, 2.0 * M_PI);
             }
         
-            double f_trial = cBFGS_Powell.Start_Optimization(solution_guess, max_inner_iterations);
+            f_trial = cBFGS_Powell.Start_Optimization(solution_guess, max_inner_iterations);
 
             // --- Metropolis acceptance (always accept downhill; uphill with prob exp(-(f_new - f_old)/T))
             bool accept = false;
