@@ -8,7 +8,7 @@ import numpy as np
 try:
     from squander.density_matrix import (
         DensityMatrix,
-        DensityCircuit,
+        NoisyCircuit,
         DepolarizingChannel,
         AmplitudeDampingChannel,
         PhaseDampingChannel,
@@ -131,19 +131,19 @@ class TestDensityMatrixBasics:
 
 
 @pytest.mark.skipif(not HAS_MODULE, reason="Density matrix module not built")
-class TestDensityCircuit:
-    """Test density circuit operations."""
+class TestNoisyCircuit:
+    """Test noisy circuit operations."""
 
     def test_circuit_construction(self):
         """Test circuit construction."""
-        circuit = DensityCircuit(qbit_num=2)
+        circuit = NoisyCircuit(qbit_num=2)
 
         assert circuit.qbit_num == 2
         assert circuit.parameter_num == 0  # No parametric gates yet
 
     def test_add_gates(self):
         """Test adding gates to circuit."""
-        circuit = DensityCircuit(2)
+        circuit = NoisyCircuit(2)
 
         circuit.add_H(0)
         circuit.add_X(1)
@@ -153,7 +153,7 @@ class TestDensityCircuit:
 
     def test_hadamard_application(self):
         """Test Hadamard gate application."""
-        circuit = DensityCircuit(2)
+        circuit = NoisyCircuit(2)
         circuit.add_H(0)
 
         # Start with |00⟩
@@ -170,7 +170,7 @@ class TestDensityCircuit:
 
     def test_bell_state_creation(self):
         """Test creation of Bell state |Φ+⟩ = (|00⟩ + |11⟩)/√2."""
-        circuit = DensityCircuit(2)
+        circuit = NoisyCircuit(2)
         circuit.add_H(0)
         circuit.add_CNOT(1, 0)
 
@@ -195,7 +195,7 @@ class TestDensityCircuit:
 
     def test_parametric_gate(self):
         """Test parametric gate (RZ)."""
-        circuit = DensityCircuit(2)
+        circuit = NoisyCircuit(2)
         circuit.add_RZ(0)
 
         rho = DensityMatrix(qbit_num=2)
@@ -293,7 +293,7 @@ class TestIntegration:
     def test_circuit_with_noise(self):
         """Test circuit application followed by noise."""
         # Create GHZ-like circuit
-        circuit = DensityCircuit(3)
+        circuit = NoisyCircuit(3)
         circuit.add_H(0)
         circuit.add_CNOT(1, 0)
         circuit.add_CNOT(2, 1)
@@ -322,7 +322,7 @@ class TestIntegration:
     def test_partial_trace(self):
         """Test partial trace operation."""
         # Create Bell state
-        circuit = DensityCircuit(2)
+        circuit = NoisyCircuit(2)
         circuit.add_H(0)
         circuit.add_CNOT(1, 0)
 
@@ -346,7 +346,7 @@ class TestIntegration:
         sv_circuit.add_H(0)
         sv_circuit.add_CNOT(1, 0)
 
-        dm_circuit = DensityCircuit(2)
+        dm_circuit = NoisyCircuit(2)
         dm_circuit.add_H(0)
         dm_circuit.add_CNOT(1, 0)
 

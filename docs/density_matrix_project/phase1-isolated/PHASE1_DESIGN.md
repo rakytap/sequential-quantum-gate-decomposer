@@ -59,10 +59,10 @@ squander/src-cpp/
 └── density_matrix/                      # NEW module
     ├── include/
     │   ├── density_matrix.h             # Core class
-    │   ├── density_circuit.h            # Circuit wrapper
+    │   ├── noisy_circuit.h            # Circuit wrapper
     │   └── noise_channel.h              # Noise models
     ├── density_matrix.cpp
-    ├── density_circuit.cpp
+    ├── noisy_circuit.cpp
     ├── noise_channel.cpp
     ├── tests/
     │   └── test_basic.cpp
@@ -169,13 +169,13 @@ message(STATUS "Found pybind11: ${pybind11_VERSION}")
 
 set(DENSITY_MATRIX_SOURCES
     density_matrix.cpp
-    density_circuit.cpp
+    noisy_circuit.cpp
     noise_channel.cpp
 )
 
 set(DENSITY_MATRIX_HEADERS
     include/density_matrix.h
-    include/density_circuit.h
+    include/noisy_circuit.h
     include/noise_channel.h
 )
 
@@ -286,7 +286,7 @@ Provides mixed-state quantum simulation with noise modeling.
 Integrated as a subpackage of SQUANDER.
 
 Usage:
-    from squander.density_matrix import DensityMatrix, DensityCircuit
+    from squander.density_matrix import DensityMatrix, NoisyCircuit
     from squander.density_matrix import DepolarizingChannel
 """
 
@@ -295,7 +295,7 @@ __version__ = "1.0.0"
 # Import C++ bindings directly (Phase 1)
 from ._density_matrix_cpp import (
     DensityMatrix,
-    DensityCircuit,
+    NoisyCircuit,
     NoiseChannel,
     DepolarizingChannel,
     AmplitudeDampingChannel,
@@ -305,7 +305,7 @@ from ._density_matrix_cpp import (
 __all__ = [
     # Core classes
     "DensityMatrix",
-    "DensityCircuit",
+    "NoisyCircuit",
     
     # Noise channels
     "NoiseChannel",
@@ -327,7 +327,7 @@ from squander.gates.qgd_Circuit import qgd_Circuit
 from squander.decomposition import N_Qubit_Decomposition
 
 # New density matrix subpackage (Phase 1 - all working ✅)
-from squander.density_matrix import DensityMatrix, DensityCircuit
+from squander.density_matrix import DensityMatrix, NoisyCircuit
 from squander.density_matrix import DepolarizingChannel
 from squander.density_matrix import AmplitudeDampingChannel, PhaseDampingChannel
 ```
@@ -335,14 +335,14 @@ from squander.density_matrix import AmplitudeDampingChannel, PhaseDampingChannel
 ### Basic Usage
 
 ```python
-from squander.density_matrix import DensityMatrix, DensityCircuit
+from squander.density_matrix import DensityMatrix, NoisyCircuit
 import numpy as np
 
 # Create density matrix
 rho = DensityMatrix(qbit_num=2)
 
 # Create circuit
-circuit = DensityCircuit(2)
+circuit = NoisyCircuit(2)
 circuit.add_H(0)
 circuit.add_CNOT(1, 0)
 
@@ -359,14 +359,14 @@ print(f"Entropy: {rho.entropy()}")  # 0.0 ✅
 ```python
 from squander.density_matrix import (
     DensityMatrix,
-    DensityCircuit,
+    NoisyCircuit,
     DepolarizingChannel,
 )
 import numpy as np
 
 # Create and apply circuit
 rho = DensityMatrix(qbit_num=2)
-circuit = DensityCircuit(2)
+circuit = NoisyCircuit(2)
 circuit.add_H(0)
 circuit.add_CNOT(1, 0)
 circuit.apply_to(np.array([]), rho)
@@ -442,7 +442,7 @@ print(f"Purity: {rho.purity()}")  # 1.0 ✅
 
 **C++ Core:**
 - DensityMatrix class with full quantum properties
-- DensityCircuit for circuit construction
+- NoisyCircuit for circuit construction
 - 3 noise channels (Depolarizing, Amplitude Damping, Phase Damping)
 
 **Python Interface:**

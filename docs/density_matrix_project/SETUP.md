@@ -57,11 +57,11 @@ python -m pip install -e .
 
 ```bash
 python << 'EOF'
-from squander.density_matrix import DensityMatrix, DensityCircuit
+from squander.density_matrix import DensityMatrix, NoisyCircuit
 import numpy as np
 
 rho = DensityMatrix(qbit_num=2)
-circuit = DensityCircuit(2)
+circuit = NoisyCircuit(2)
 circuit.add_H(0)
 circuit.add_CNOT(1, 0)
 circuit.apply_to(np.array([]), rho)

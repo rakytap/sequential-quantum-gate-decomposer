@@ -24,7 +24,7 @@ import numpy as np
 from typing import Optional, Union, List
 from ._density_matrix_cpp import (
     DensityMatrix as _DensityMatrix,
-    DensityCircuit as _DensityCircuit,
+    NoisyCircuit as _NoisyCircuit,
 )
 
 
@@ -91,11 +91,11 @@ class DensityMatrix:  # ⚠️ Future enhancement
         return f"DensityMatrix(qubits={self.qbit_num}, purity={self.purity:.4f})"
 
 
-class DensityCircuit:
+class NoisyCircuit:
     """High-level wrapper for density matrix circuit evolution."""
     
     def __init__(self, qbit_num: int):
-        self._cpp_circuit = _DensityCircuit(qbit_num)
+        self._cpp_circuit = _NoisyCircuit(qbit_num)
         self._qbit_num = qbit_num
     
     # Gate methods delegate to C++
@@ -132,7 +132,7 @@ class DensityCircuit:
         return self._qbit_num
     
     def __repr__(self) -> str:
-        return f"DensityCircuit(qubits={self._qbit_num})"
+        return f"NoisyCircuit(qubits={self._qbit_num})"
 
 
 def create_density_matrix(
