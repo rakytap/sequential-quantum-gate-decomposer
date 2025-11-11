@@ -103,7 +103,7 @@ set_target_properties(density_matrix_core PROPERTIES
 # ===================================================================
 
 pybind11_add_module(_density_matrix_cpp MODULE
-    python/bindings.cpp
+    ../../density_matrix/bindings.cpp
 )
 
 # Link against C++ library

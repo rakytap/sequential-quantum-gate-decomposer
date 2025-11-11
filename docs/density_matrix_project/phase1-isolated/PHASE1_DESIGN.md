@@ -64,8 +64,6 @@ squander/src-cpp/
     ├── density_matrix.cpp
     ├── density_circuit.cpp
     ├── noise_channel.cpp
-    ├── python/
-    │   └── bindings.cpp                 # pybind11 bindings
     ├── tests/
     │   └── test_basic.cpp
     └── CMakeLists.txt                   # Module build config
@@ -216,7 +214,7 @@ target_compile_options(density_matrix_core PRIVATE
 # ===================================================================
 
 pybind11_add_module(_density_matrix_cpp MODULE
-    python/bindings.cpp
+    ../../density_matrix/bindings.cpp
 )
 
 target_link_libraries(_density_matrix_cpp PRIVATE
