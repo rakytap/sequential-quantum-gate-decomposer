@@ -41,9 +41,9 @@ message(STATUS "pybind11 version: ${pybind11_VERSION}")
 # ===================================================================
 
 set(DENSITY_MATRIX_SOURCES
-    src/density_matrix.cpp
-    src/density_circuit.cpp
-    src/noise_channel.cpp
+    density_matrix.cpp
+    density_circuit.cpp
+    noise_channel.cpp
 )
 
 set(DENSITY_MATRIX_HEADERS
@@ -66,8 +66,6 @@ target_include_directories(density_matrix_core
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include/squander/density_matrix>
-    PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
 # Link against INTERFACE library and main SQUANDER library

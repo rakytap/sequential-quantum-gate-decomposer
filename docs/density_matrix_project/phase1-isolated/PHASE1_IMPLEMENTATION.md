@@ -73,15 +73,13 @@ squander/
 │
 └── src-cpp/
     └── density_matrix/                      # NEW C++ module
-        ├── include/                         # Headers (4 files)
+        ├── include/                         # Headers (3 files)
         │   ├── density_matrix.h             # Core class
         │   ├── density_circuit.h            # Circuit
-        │   ├── noise_channel.h              # Noise models
-        │   └── density_utils.h              # Utilities
-        ├── src/                             # Implementation (3 files)
-        │   ├── density_matrix.cpp           
-        │   ├── density_circuit.cpp          
-        │   └── noise_channel.cpp            
+        │   └── noise_channel.h              # Noise models
+        ├── density_matrix.cpp               # Implementation
+        ├── density_circuit.cpp              # Implementation
+        ├── noise_channel.cpp                # Implementation
         ├── python/
         │   └── bindings.cpp                 # pybind11 bindings (~350 lines)
         ├── tests/
