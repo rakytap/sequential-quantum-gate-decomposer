@@ -11,7 +11,7 @@ pybind11 Bindings for Density Matrix Module
 #include <pybind11/stl.h>
 
 #include "Gate.h"
-#include "density_circuit.h"
+#include "noisy_circuit.h"
 #include "density_matrix.h"
 #include "matrix.h"
 #include "matrix_real.h"
@@ -230,10 +230,10 @@ PYBIND11_MODULE(_density_matrix_cpp, m) {
       });
 
   // ===============================================================
-  // DensityCircuit class
+  // NoisyCircuit class
   // ===============================================================
 
-  py::class_<DensityCircuit>(m, "DensityCircuit", R"pbdoc(
+  py::class_<NoisyCircuit>(m, "NoisyCircuit", R"pbdoc(
         Circuit for density matrix evolution.
         
         Provides same interface as qgd_Circuit but for density matrices.
@@ -243,53 +243,53 @@ PYBIND11_MODULE(_density_matrix_cpp, m) {
            "Create empty circuit for n qubits")
 
       // Single-qubit gates
-      .def("add_H", &DensityCircuit::add_H, py::arg("target"),
+      .def("add_H", &NoisyCircuit::add_H, py::arg("target"),
            "Add Hadamard gate")
-      .def("add_X", &DensityCircuit::add_X, py::arg("target"),
+      .def("add_X", &NoisyCircuit::add_X, py::arg("target"),
            "Add Pauli-X gate")
-      .def("add_Y", &DensityCircuit::add_Y, py::arg("target"),
+      .def("add_Y", &NoisyCircuit::add_Y, py::arg("target"),
            "Add Pauli-Y gate")
-      .def("add_Z", &DensityCircuit::add_Z, py::arg("target"),
+      .def("add_Z", &NoisyCircuit::add_Z, py::arg("target"),
            "Add Pauli-Z gate")
-      .def("add_S", &DensityCircuit::add_S, py::arg("target"), "Add S gate")
-      .def("add_Sdg", &DensityCircuit::add_Sdg, py::arg("target"),
+      .def("add_S", &NoisyCircuit::add_S, py::arg("target"), "Add S gate")
+      .def("add_Sdg", &NoisyCircuit::add_Sdg, py::arg("target"),
            "Add S† gate")
-      .def("add_T", &DensityCircuit::add_T, py::arg("target"), "Add T gate")
-      .def("add_Tdg", &DensityCircuit::add_Tdg, py::arg("target"),
+      .def("add_T", &NoisyCircuit::add_T, py::arg("target"), "Add T gate")
+      .def("add_Tdg", &NoisyCircuit::add_Tdg, py::arg("target"),
            "Add T† gate")
-      .def("add_SX", &DensityCircuit::add_SX, py::arg("target"), "Add √X gate")
+      .def("add_SX", &NoisyCircuit::add_SX, py::arg("target"), "Add √X gate")
 
       // Rotation gates
-      .def("add_RX", &DensityCircuit::add_RX, py::arg("target"),
+      .def("add_RX", &NoisyCircuit::add_RX, py::arg("target"),
            "Add RX rotation gate")
-      .def("add_RY", &DensityCircuit::add_RY, py::arg("target"),
+      .def("add_RY", &NoisyCircuit::add_RY, py::arg("target"),
            "Add RY rotation gate")
-      .def("add_RZ", &DensityCircuit::add_RZ, py::arg("target"),
+      .def("add_RZ", &NoisyCircuit::add_RZ, py::arg("target"),
            "Add RZ rotation gate")
-      .def("add_U1", &DensityCircuit::add_U1, py::arg("target"), "Add U1 gate")
-      .def("add_U2", &DensityCircuit::add_U2, py::arg("target"), "Add U2 gate")
-      .def("add_U3", &DensityCircuit::add_U3, py::arg("target"), "Add U3 gate")
+      .def("add_U1", &NoisyCircuit::add_U1, py::arg("target"), "Add U1 gate")
+      .def("add_U2", &NoisyCircuit::add_U2, py::arg("target"), "Add U2 gate")
+      .def("add_U3", &NoisyCircuit::add_U3, py::arg("target"), "Add U3 gate")
 
       // Two-qubit gates
-      .def("add_CNOT", &DensityCircuit::add_CNOT, py::arg("target"),
+      .def("add_CNOT", &NoisyCircuit::add_CNOT, py::arg("target"),
            py::arg("control"), "Add CNOT gate")
-      .def("add_CZ", &DensityCircuit::add_CZ, py::arg("target"),
+      .def("add_CZ", &NoisyCircuit::add_CZ, py::arg("target"),
            py::arg("control"), "Add CZ gate")
-      .def("add_CH", &DensityCircuit::add_CH, py::arg("target"),
+      .def("add_CH", &NoisyCircuit::add_CH, py::arg("target"),
            py::arg("control"), "Add CH gate")
-      .def("add_CRY", &DensityCircuit::add_CRY, py::arg("target"),
+      .def("add_CRY", &NoisyCircuit::add_CRY, py::arg("target"),
            py::arg("control"), "Add CRY gate")
-      .def("add_CRZ", &DensityCircuit::add_CRZ, py::arg("target"),
+      .def("add_CRZ", &NoisyCircuit::add_CRZ, py::arg("target"),
            py::arg("control"), "Add CRZ gate")
-      .def("add_CRX", &DensityCircuit::add_CRX, py::arg("target"),
+      .def("add_CRX", &NoisyCircuit::add_CRX, py::arg("target"),
            py::arg("control"), "Add CRX gate")
-      .def("add_CP", &DensityCircuit::add_CP, py::arg("target"),
+      .def("add_CP", &NoisyCircuit::add_CP, py::arg("target"),
            py::arg("control"), "Add CP (controlled-phase) gate")
 
       // Circuit application
       .def(
           "apply_to",
-          [](DensityCircuit &self, py::array_t<double> params,
+          [](NoisyCircuit &self, py::array_t<double> params,
              DensityMatrix &rho) {
             auto buf = params.request();
 
@@ -303,15 +303,15 @@ PYBIND11_MODULE(_density_matrix_cpp, m) {
           "Apply circuit to density matrix")
 
       // Properties
-      .def_property_readonly("qbit_num", &DensityCircuit::get_qbit_num,
+      .def_property_readonly("qbit_num", &NoisyCircuit::get_qbit_num,
                              "Number of qubits")
       .def_property_readonly("parameter_num",
-                             &DensityCircuit::get_parameter_num,
+                             &NoisyCircuit::get_parameter_num,
                              "Number of parameters")
 
       // Representation
-      .def("__repr__", [](const DensityCircuit &self) {
-        return "<DensityCircuit: " + std::to_string(self.get_qbit_num()) +
+      .def("__repr__", [](const NoisyCircuit &self) {
+        return "<NoisyCircuit: " + std::to_string(self.get_qbit_num()) +
                " qubits>";
       });
 

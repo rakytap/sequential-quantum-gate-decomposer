@@ -130,7 +130,7 @@ After 1% depolarizing noise:
 **Status:** Complete and tested ✅
 
 **Delivered:**
-- ✅ Core C++ implementation (DensityMatrix, DensityCircuit, 3 noise channels)
+- ✅ Core C++ implementation (DensityMatrix, NoisyCircuit, 3 noise channels)
 - ✅ Python interface via pybind11
 - ✅ Testing & validation (22 Python + 8 C++ tests)
 - ✅ Integration with existing SQUANDER (zero code changes)

@@ -15,7 +15,7 @@
 **Goal:** Add density matrix support to SQUANDER for mixed-state quantum simulation
 
 **Delivered:**
-- ✅ Core C++ classes (DensityMatrix, DensityCircuit, 3 noise channels)
+- ✅ Core C++ classes (DensityMatrix, NoisyCircuit, 3 noise channels)
 - ✅ Python bindings via pybind11
 - ✅ Complete integration with existing SQUANDER
 - ✅ Comprehensive tests and examples
@@ -40,7 +40,7 @@
 **Create Bell state and verify purity:**
 
 ```python
-from squander.density_matrix import DensityMatrix, DensityCircuit
+from squander.density_matrix import DensityMatrix, NoisyCircuit
 import numpy as np
 
 # Create 2-qubit density matrix (initialized to |00⟩⟨00|)
@@ -48,7 +48,7 @@ rho = DensityMatrix(qbit_num=2)
 print(f"Initial purity: {rho.purity()}")  # 1.0 (pure state)
 
 # Create Bell state: H⊗I • CNOT • |00⟩
-circuit = DensityCircuit(2)
+circuit = NoisyCircuit(2)
 circuit.add_H(0)          # Hadamard on qubit 0
 circuit.add_CNOT(1, 0)    # CNOT with control=0, target=1
 
@@ -72,14 +72,14 @@ Entropy: 0.0
 ```python
 from squander.density_matrix import (
     DensityMatrix,
-    DensityCircuit,
+    NoisyCircuit,
     DepolarizingChannel,
 )
 import numpy as np
 
 # Create Bell state first
 rho = DensityMatrix(qbit_num=2)
-circuit = DensityCircuit(2)
+circuit = NoisyCircuit(2)
 circuit.add_H(0)
 circuit.add_CNOT(1, 0)
 circuit.apply_to(np.array([]), rho)
@@ -139,12 +139,12 @@ Circuit compatible: ✅
 **Check entanglement by tracing out subsystems:**
 
 ```python
-from squander.density_matrix import DensityMatrix, DensityCircuit
+from squander.density_matrix import DensityMatrix, NoisyCircuit
 import numpy as np
 
 # Create Bell state |Φ+⟩ = (|00⟩ + |11⟩)/√2
 rho = DensityMatrix(qbit_num=2)
-circuit = DensityCircuit(2)
+circuit = NoisyCircuit(2)
 circuit.add_H(0)
 circuit.add_CNOT(1, 0)
 circuit.apply_to(np.array([]), rho)

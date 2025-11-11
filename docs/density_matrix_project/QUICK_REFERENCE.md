@@ -34,7 +34,7 @@ python -c "from squander.density_matrix import DensityMatrix; print('✅ Working
 ```python
 from squander.density_matrix import (
     DensityMatrix,           # Core density matrix class
-    DensityCircuit,          # Circuit builder
+    NoisyCircuit,          # Circuit builder
     DepolarizingChannel,     # Uniform noise
     AmplitudeDampingChannel, # T1 relaxation
     PhaseDampingChannel,     # T2 dephasing
@@ -95,7 +95,7 @@ rho2 = rho.clone()
 ## Building Circuits
 
 ```python
-circuit = DensityCircuit(qbit_num=2)
+circuit = NoisyCircuit(qbit_num=2)
 
 # Single-qubit gates
 circuit.add_H(target)    # Hadamard
@@ -153,14 +153,14 @@ noise.apply(rho)
 ```python
 from squander.density_matrix import (
     DensityMatrix, 
-    DensityCircuit,
+    NoisyCircuit,
     DepolarizingChannel,
 )
 import numpy as np
 
 # Create Bell state
 rho = DensityMatrix(qbit_num=2)
-circuit = DensityCircuit(2)
+circuit = NoisyCircuit(2)
 circuit.add_H(0)
 circuit.add_CNOT(1, 0)
 circuit.apply_to(np.array([]), rho)

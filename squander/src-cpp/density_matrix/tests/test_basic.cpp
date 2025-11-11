@@ -8,7 +8,7 @@ C++ Unit Tests for Density Matrix Module
 #include "Gate.h"
 #include "H.h"
 #include "X.h"
-#include "density_circuit.h"
+#include "noisy_circuit.h"
 #include "density_matrix.h"
 #include "noise_channel.h"
 #include <cassert>
@@ -228,7 +228,7 @@ int test_circuit_application() {
   std::cout << "Test 7: Circuit application..." << std::flush;
 
   // Create Bell state circuit: H(0) - CNOT(1,0)
-  DensityCircuit circuit(2);
+  NoisyCircuit circuit(2);
   circuit.add_H(0);
   circuit.add_CNOT(1, 0);
 
@@ -262,7 +262,7 @@ int test_partial_trace() {
   std::cout << "Test 8: Partial trace..." << std::flush;
 
   // Create Bell state |Φ+⟩ = (|00⟩ + |11⟩)/√2
-  DensityCircuit circuit(2);
+  NoisyCircuit circuit(2);
   circuit.add_H(0);
   circuit.add_CNOT(1, 0);
 

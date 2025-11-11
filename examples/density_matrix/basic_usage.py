@@ -15,7 +15,7 @@ import sys
 try:
     from squander.density_matrix import (
         DensityMatrix,
-        DensityCircuit,
+        NoisyCircuit,
         DepolarizingChannel,
         AmplitudeDampingChannel,
     )
@@ -38,7 +38,7 @@ def example_1_pure_state_evolution():
     print(f"  Entropy: {rho.entropy():.4f} bits")
     
     # Create Bell state circuit
-    circuit = DensityCircuit(2)
+    circuit = NoisyCircuit(2)
     circuit.add_H(0)          # Hadamard on qubit 0
     circuit.add_CNOT(1, 0)    # CNOT with control=0, target=1
     
@@ -62,7 +62,7 @@ def example_2_noise_simulation():
     print("="*60)
     
     # Create circuit
-    circuit = DensityCircuit(2)
+    circuit = NoisyCircuit(2)
     circuit.add_H(0)
     circuit.add_CNOT(1, 0)
     
@@ -143,7 +143,7 @@ def example_5_partial_trace():
     print("="*60)
     
     # Create Bell state
-    circuit = DensityCircuit(2)
+    circuit = NoisyCircuit(2)
     circuit.add_H(0)
     circuit.add_CNOT(1, 0)
     

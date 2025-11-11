@@ -22,7 +22,7 @@ This document provides detailed information about **what was actually implemente
 
 **Core Classes:**
 1. **DensityMatrix** - Quantum density matrix with validation and properties
-2. **DensityCircuit** - Circuit builder for density matrix evolution
+2. **NoisyCircuit** - Circuit builder for density matrix evolution
 3. **NoiseChannel** - Base class + 3 noise implementations
 
 **Features:**
@@ -75,10 +75,10 @@ squander/
     └── density_matrix/                      # NEW C++ module
         ├── include/                         # Headers (3 files)
         │   ├── density_matrix.h             # Core class
-        │   ├── density_circuit.h            # Circuit
+        │   ├── noisy_circuit.h            # Circuit
         │   └── noise_channel.h              # Noise models
         ├── density_matrix.cpp               # Implementation
-        ├── density_circuit.cpp              # Implementation
+        ├── noisy_circuit.cpp              # Implementation
         ├── noise_channel.cpp                # Implementation
         ├── tests/
         │   └── test_basic.cpp               # C++ tests 
@@ -160,16 +160,16 @@ print(f"Valid: {rho.is_valid()}")     # True
 
 ---
 
-### DensityCircuit Class
+### NoisyCircuit Class
 
 **Import:**
 ```python
-from squander.density_matrix import DensityCircuit
+from squander.density_matrix import NoisyCircuit
 ```
 
 **Constructor:**
 ```python
-circuit = DensityCircuit(qbit_num=2)
+circuit = NoisyCircuit(qbit_num=2)
 ```
 
 **Gate Methods:**
@@ -194,12 +194,12 @@ circuit.apply_to(parameters, rho)
 
 **Example:**
 ```python
-from squander.density_matrix import DensityMatrix, DensityCircuit
+from squander.density_matrix import DensityMatrix, NoisyCircuit
 import numpy as np
 
 # Create Bell state
 rho = DensityMatrix(qbit_num=2)
-circuit = DensityCircuit(2)
+circuit = NoisyCircuit(2)
 circuit.add_H(0)
 circuit.add_CNOT(1, 0)
 circuit.apply_to(np.array([]), rho)
@@ -313,7 +313,7 @@ from squander.density_matrix import (
 ```python
 # Create Bell state manually (works fine):
 rho = DensityMatrix(qbit_num=2)
-circuit = DensityCircuit(2)
+circuit = NoisyCircuit(2)
 circuit.add_H(0)
 circuit.add_CNOT(1, 0)
 circuit.apply_to(np.array([]), rho)  # ✅
