@@ -80,8 +80,6 @@ squander/
         ├── density_matrix.cpp               # Implementation
         ├── density_circuit.cpp              # Implementation
         ├── noise_channel.cpp                # Implementation
-        ├── python/
-        │   └── bindings.cpp                 # pybind11 bindings (~350 lines)
         ├── tests/
         │   └── test_basic.cpp               # C++ tests 
         └── CMakeLists.txt                   # Modern CMake config
