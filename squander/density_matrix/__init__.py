@@ -5,7 +5,7 @@ Provides mixed-state quantum simulation with noise modeling.
 Integrated as a subpackage of SQUANDER.
 
 Usage:
-    from squander.density_matrix import DensityMatrix, DensityCircuit
+    from squander.density_matrix import DensityMatrix, NoisyCircuit
     from squander.density_matrix import DepolarizingChannel
     
 Example:
@@ -13,7 +13,7 @@ Example:
     rho = DensityMatrix(qbit_num=2)
     
     # Create circuit
-    circuit = DensityCircuit(2)
+    circuit = NoisyCircuit(2)
     circuit.add_H(0)
     circuit.add_CNOT(1, 0)
     
@@ -33,7 +33,7 @@ __version__ = "1.0.0"
 # Import C++ bindings
 from ._density_matrix_cpp import (
     DensityMatrix,
-    DensityCircuit,
+    NoisyCircuit,
     NoiseChannel,
     DepolarizingChannel,
     AmplitudeDampingChannel,
@@ -43,7 +43,7 @@ from ._density_matrix_cpp import (
 __all__ = [
     # Core classes
     "DensityMatrix",
-    "DensityCircuit",
+    "NoisyCircuit",
     
     # Noise channels
     "NoiseChannel",
