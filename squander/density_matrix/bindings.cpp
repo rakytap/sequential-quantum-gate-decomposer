@@ -399,3 +399,4 @@ PYBIND11_MODULE(_density_matrix_cpp, m) {
 
   m.attr("__version__") = "1.0.0";
 }
+
