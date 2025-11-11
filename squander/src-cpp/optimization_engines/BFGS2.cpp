@@ -146,7 +146,7 @@ CPU_time = 0.0;
         sstream << "max_inner_iterations: " << max_inner_iterations_loc  << std::endl;
         print(sstream, 2);
 
-        bool use_basin_hopping = false;
+        bool use_basin_hopping = true;
         if ( config.count("use_basin_hopping") > 0 ) {
             config["use_basin_hopping"].get_property( use_basin_hopping );  
         }
