@@ -61,12 +61,13 @@ squander/src-cpp/
     │   ├── density_matrix.h             # Core class
     │   ├── density_circuit.h            # Circuit wrapper
     │   └── noise_channel.h              # Noise models
-    ├── src/
-    │   ├── density_matrix.cpp
-    │   ├── density_circuit.cpp
-    │   └── noise_channel.cpp
+    ├── density_matrix.cpp
+    ├── density_circuit.cpp
+    ├── noise_channel.cpp
     ├── python/
     │   └── bindings.cpp                 # pybind11 bindings
+    ├── tests/
+    │   └── test_basic.cpp
     └── CMakeLists.txt                   # Module build config
 ```
 
@@ -169,9 +170,9 @@ message(STATUS "Found pybind11: ${pybind11_VERSION}")
 # ===================================================================
 
 set(DENSITY_MATRIX_SOURCES
-    src/density_matrix.cpp
-    src/density_circuit.cpp
-    src/noise_channel.cpp
+    density_matrix.cpp
+    density_circuit.cpp
+    noise_channel.cpp
 )
 
 set(DENSITY_MATRIX_HEADERS
