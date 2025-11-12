@@ -1,12 +1,16 @@
 from squander import Generative_Quantum_Machine_Learning
+import time
+from squander.partitioning.partition import PartitionCircuitQasm
+from squander.partitioning.partition import PartitionCircuit
+import qml_pennylane
+import os
 import numpy as np
-import scipy.linalg
 import matplotlib.pyplot as plt
-from scipy.optimize import curve_fit
-import matplotlib
 import dataset_generator
 import networkx as nx
+from qiskit.qasm2 import dumps
 
+print("works")
 
 def generate_MRF_dataset(n_nodes, graph_type, dataset_size, path = None, G=None):
     if graph_type != "custom":
@@ -28,32 +32,127 @@ def generate_MRF_dataset(n_nodes, graph_type, dataset_size, path = None, G=None)
 
     return training_set, mrf.distribution, list(nx.find_cliques(mrf.graph))
 
-n_nodes = 5
+def plot_distributions(pennylane_dist, original):
+    n_points = len(pennylane_dist)
+    initial_state = np.zeros(n_points, dtype=np.complex128)
+    initial_state[0] = 1.0+0j
+    state_to_transform = initial_state.copy()
+    params = GQML.get_Optimized_Parameters()
+    GQML.apply_to(params, state_to_transform)
+    P = abs(state_to_transform)**2
+    plt.figure()
+    plt.plot(P, alpha=0.5, label="sqander")
+    plt.plot(original, alpha=0.5, label="original")
+    plt.legend()
+    plt.grid()
+    plt.savefig("dist_sq.png")
+    plt.figure()
+    plt.plot(pennylane_dist, alpha=0.5, label="pennylane")
+    plt.plot(original, alpha=0.5, label="original")
+    plt.legend()
+    plt.grid()
+    plt.savefig("dist_pl.png")
+
+def run_squander(n_run):
+    print("MMD", GQML.Optimization_Problem(parameters))
+    iters_sq_best = []
+    mmd_sq_best = []
+    tv_sq_best = []
+    for i in range(n_run):
+        GQML.set_Optimized_Parameters(params0)
+        GQML.set_Project_Name(f"qml_test{i}")
+        try:
+            os.remove(f"qml_test{i}_costfuncs_entropy_and_tv.txt")
+        except:
+            pass
+        t0 = time.time()
+        GQML.Start_Optimization()
+        print("squander time", time.time()-t0)
+        iters_sq, mmd_sq, _, tv_sq = np.loadtxt(f"qml_test{i}_costfuncs_entropy_and_tv.txt").T
+        if len(iters_sq_best) == 0:
+            iters_sq_best = iters_sq[:]
+            mmd_sq_best = mmd_sq[:]
+            tv_sq_best = tv_sq[:]
+        else:
+            if tv_sq[-1] < tv_sq_best[-1]:
+                iters_sq_best = iters_sq[:]
+                mmd_sq_best = mmd_sq[:]
+                tv_sq_best = tv_sq[:]
+    print(tv_sq_best[-1])
+    print()
+    initial_state = np.zeros(1<<qbit_num, dtype=np.complex128)
+    initial_state[0] = 1.0+0j
+    state_to_transform = initial_state.copy()
+    params = GQML.get_Optimized_Parameters()
+    GQML.apply_to(params, state_to_transform)
+    P = abs(state_to_transform)**2
+    print(np.sum(np.abs(P-P_star))/2)
+    return iters_sq_best, mmd_sq_best, tv_sq_best
+
+def run_pennylane(n_run):
+    iters_pl_best = []
+    mmd_pl_best = []
+    P_theta_pl_best = []
+    for i in range(n_run):
+        P_theta_pl, mmd_pl, tv_pl = qml_pennylane.run_pennylane(P_star, qbit_num, 6, iters, cliques, sigma, params0, ansatz_type="QCMRF", circuit_input=circuit) 
+        if len(iters_pl_best) == 0:
+            P_theta_pl_best = P_theta_pl[:]
+            mmd_pl_best = mmd_pl[:]
+            tv_pl_best = tv_pl[:]
+        else:
+            if tv_pl[-1] < tv_pl_best[-1]:
+                P_theta_pl_best = P_theta_pl[:]
+                mmd_pl_best = mmd_pl[:]
+                tv_pl_best = tv_pl[:]
+    return mmd_pl_best, tv_pl_best, P_theta_pl_best
+
+def plot_cost_fnx(iters, sqander_cf, pennylane_cf, cf_name):
+    plt.figure()
+    plt.plot( sqander_cf, label="squander")
+    plt.plot(pennylane_cf, label="pennylane")
+    plt.legend()
+    plt.savefig(f"{cf_name}.png")
+
+n_nodes = 9
 graph_type = "custom"
-dataset_size = 1000
+dataset_size = 1
 
 G = nx.Graph()
 G.add_nodes_from(range(n_nodes))
 edges = [(x, x+1) for x in range(n_nodes-1)]
 edges.append((n_nodes-1, 0))
 # edges = [[0, 1], [1, 2], [2, 3], [3, 4], [3, 5], [4, 5], [5, 6], [6, 7], [6, 8], [6, 9], [7, 8], [7, 9], [8, 9], [9, 1]]
+# edges = [(i, j) for i in range(n_nodes) for j in range(n_nodes)]
 G.add_edges_from(edges)
 training_set, target_distribution, cliques = generate_MRF_dataset(n_nodes, graph_type, dataset_size, G=G)
+p_num = np.sum([2**(len(i)-1) for i in cliques])+3*n_nodes
 
+pos = nx.spring_layout(G, seed=42)  # Layout for nicer visualization
+nx.draw(G, pos, with_labels=True, node_color="skyblue", node_size=700, edge_color="gray", font_weight="bold")
+plt.savefig("graph.png")
+plt.figure()
 
+cliques = sorted([sorted(x) for x in cliques])
+
+iters = 50
+bs = 1
+full_iters = int(iters*(p_num//bs))
+print("iterations", full_iters)
+op = int(full_iters//p_num)
 # generate configuration dictionary for the solver
-config = {"max_inner_iterations":8000, 
-	"batch_size": 3,
-    "check_for_convergence": True,
+config = {"max_inner_iterations": full_iters, 
+	"batch_size": bs,
+    "check_for_convergence": False,
 	"convergence_length": 20,
-    "output_periodicity": 500}
+    "output_periodicity": op}
 qbit_num = n_nodes
+median_dist = 2**n_nodes*(1-1/np.sqrt(2))
 sigma = [0.25, 10, 1000]
-x = np.astype(training_set, np.int32)
+sigma = np.array([x*median_dist for x in sigma])
+x = training_set.astype(np.int32)
 P_star = target_distribution
 use_lookup_table = True
 use_exact  = True
-print(cliques)
 
 GQML = Generative_Quantum_Machine_Learning(x, P_star, sigma, qbit_num, use_lookup_table, cliques, use_exact, config)
 
@@ -63,65 +162,36 @@ GQML.set_Optimizer("COSINE")
 
 # set the ansatz variant (U3 rotations and CNOT gates)
 GQML.set_Ansatz("QCMRF")
+# os.remove("qml_test_costfuncs_entropy_and_tv.txt")
 
-GQML.Generate_Circuit(10, 1)
+GQML.Generate_Circuit(5, 1)
 param_num  = GQML.get_Parameter_Num()
 print(param_num)
 
 
 parameters = np.zeros(param_num)
+params0 = parameters.copy()
 GQML.set_Optimized_Parameters(parameters)
-print(GQML.get_Qiskit_Circuit())
+circuit = GQML.get_Qiskit_Circuit()
 
+# t0 = time.time()
+# print("MMD", GQML.Optimization_Problem(parameters))
+# print("def", time.time()-t0)
+# max_partition_size = 4
+# with open('tmp.qasm', 'w') as file:
+#     qasm_c = dumps(circuit)
+#     qasm_c = qasm_c.replace("u", "u3")
+#     file.write(qasm_c)
+# partitioned_circuit, params_reord, _ = PartitionCircuitQasm("tmp.qasm", max_partition_size, "kahn")
+#
+# GQML.set_Gate_Structure(partitioned_circuit)
+# GQML.set_Optimized_Parameters(params_reord)
+# t0 = time.time()
+# print("MMD", GQML.Optimization_Problem(parameters))
+# print("part", time.time()-t0)
 
-initial_state = np.zeros( (1 << qbit_num), dtype=np.complex128 )
-initial_state[0] = 1.0 + 0j        
-state_to_transform = initial_state.copy()    
-GQML.apply_to( parameters, state_to_transform );   
-P_theta = np.abs(state_to_transform)**2
-print("TV",np.sum(np.abs(P_theta - P_star))/2)
-
-
-tvs_qcmrf = []
-for i in range(1):
-    parameters = np.zeros(param_num)
-    print("MMD", GQML.Optimization_Problem(parameters))
-    GQML.set_Optimized_Parameters(parameters)
-    GQML.Start_Optimization()
-    parameters = GQML.get_Optimized_Parameters()
-    initial_state = np.zeros( (1 << qbit_num), dtype=np.complex128 )
-    initial_state[0] = 1.0 + 0j        
-    state_to_transform = initial_state.copy()    
-    GQML.apply_to( parameters, state_to_transform );   
-    P_theta = np.abs(state_to_transform)**2
-    print("TV", np.sum(np.abs(P_theta - P_star))/2)
-    tvs_qcmrf.append(np.sum(np.abs(P_theta - P_star))/2)
-       
-    plt.plot(P_star)
-    plt.plot(P_theta)
-    plt.show()
-
-tvs_hea = []
-for i in range(0):
-    GQML.set_Ansatz("HEA")
-
-    GQML.Generate_Circuit(1, 1)
-    param_num  = GQML.get_Parameter_Num()
-    parameters = np.zeros(param_num)
-    print(param_num)
-    print(GQML.get_Qiskit_Circuit())
-    print("MMD", GQML.Optimization_Problem(parameters))
-    GQML.set_Optimized_Parameters(parameters)
-    GQML.Start_Optimization()
-    parameters = GQML.get_Optimized_Parameters()
-    initial_state = np.zeros( (1 << qbit_num), dtype=np.complex128 )
-    initial_state[0] = 1.0 + 0j        
-    state_to_transform = initial_state.copy()    
-    GQML.apply_to( parameters, state_to_transform );   
-    P_theta = np.abs(state_to_transform)**2
-    print("TV", np.sum(np.abs(P_theta - P_star))/2)
-    tvs_hea.append(np.sum(np.abs(P_theta - P_star))/2)
-       
-    plt.plot(P_star)
-    plt.plot(P_theta)
-    plt.show()
+sq_iters, sq_mmd, sq_tv = run_squander(1)                                 
+pl_mmd, pl_tv, pl_P = run_pennylane(1)
+plot_cost_fnx(sq_iters, sq_tv, pl_tv, "tv")
+plot_cost_fnx(sq_iters, sq_mmd, pl_mmd, "mmd")
+plot_distributions(pl_P, P_star)

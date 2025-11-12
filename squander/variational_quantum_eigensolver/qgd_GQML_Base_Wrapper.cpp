@@ -73,9 +73,9 @@ typedef struct qgd_Generative_Quantum_Machine_Learning_Base_Wrapper{
 @return Return with a void pointer pointing to an instance of Generative_Quantum_Machine_Learning_Base class.
 */
 Generative_Quantum_Machine_Learning_Base* 
-create_qgd_Generative_Quantum_Machine_Learning_Base( std::vector<int> x_vectors, std::vector<std::vector<int>> x_bitstrings, Matrix_real P_star, Matrix_real sigma, int qbit_num, bool use_lookup_table, std::vector<std::vector<int>> cliques, bool use_exact, std::map<std::string, Config_Element>& config) {
+create_qgd_Generative_Quantum_Machine_Learning_Base( std::vector<int> x_vectors, Matrix_real P_star, Matrix_real sigma, int qbit_num, bool use_lookup_table, std::vector<std::vector<int>> cliques, bool use_exact, std::map<std::string, Config_Element>& config) {
 
-    return new Generative_Quantum_Machine_Learning_Base( x_vectors, x_bitstrings, P_star, sigma, qbit_num, use_lookup_table, cliques, use_exact, config);
+    return new Generative_Quantum_Machine_Learning_Base( x_vectors, P_star, sigma, qbit_num, use_lookup_table, cliques, use_exact, config);
 }
 
 
@@ -163,7 +163,7 @@ qgd_Generative_Quantum_Machine_Learning_Base_Wrapper_init(qgd_Generative_Quantum
     PyArrayObject *x_bitstring_data_arg = NULL;
     PyArrayObject *p_star_data_arg = NULL;
     PyObject *cliques_data_arg = NULL;
-    PyArrayObject *sigma_data_arg;
+    PyArrayObject *sigma_data_arg = NULL;
     int  qbit_num = -1; 
     int use_lookup_table;
     PyObject *config_arg = NULL;
@@ -209,6 +209,7 @@ qgd_Generative_Quantum_Machine_Learning_Base_Wrapper_init(qgd_Generative_Quantum
     std::vector<int> x_bitstrings_continous(x_bitsring_data, x_bitsring_data+(x_bistring_shape[0]*x_bistring_shape[1]));
     std::vector<std::vector<int>> x_bitstrings(x_bistring_shape[0], std::vector<int>(x_bistring_shape[1]));
 
+    std::cout << "started x_indices calculation" << std::endl;
     // Calculate which data corresponds with which element of the state vector
     std::vector<int> x_indices(x_bistring_shape[0], 0);
     for (int idx_data=0; idx_data < x_bistring_shape[0]; idx_data++) {
@@ -219,22 +220,19 @@ qgd_Generative_Quantum_Machine_Learning_Base_Wrapper_init(qgd_Generative_Quantum
             }
         }
     }
+    std::cout << "x_indices calculated" << std::endl;
 
     Matrix_real p_stars = Matrix_real(p_star_data, p_star_shape, 1);
 
     if ( sigma_data_arg == NULL ) return -1;
-    if (!PyList_Check(sigma_data_arg)) {
-        PyErr_SetString(PyExc_TypeError, "sigma expected to be a list");
-        return -1;
-    }
 
     sigma_data_arg = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)sigma_data_arg, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
     double* sigma_data = (double*)PyArray_DATA(sigma_data_arg);
     int sigma_ndim = PyArray_NDIM(sigma_data_arg);
     int sigma_shape = PyArray_DIMS(sigma_data_arg)[0];
 
-    if ( sigma_ndim != 1 || sigma_shape != 3 ) {
-        PyErr_SetString(PyExc_TypeError, "sigma expected to be a 1 by 3 list");
+    if ( sigma_ndim != 1 ) {
+        PyErr_SetString(PyExc_TypeError, "sigma expected to be a 1D list");
         return -1;
     }
 
@@ -307,7 +305,7 @@ qgd_Generative_Quantum_Machine_Learning_Base_Wrapper_init(qgd_Generative_Quantum
 
     // create an instance of the class Generative_Quantum_Machine_Learning_Base
     if (qbit_num > 0 ) {
-        self->gqml =  create_qgd_Generative_Quantum_Machine_Learning_Base(x_indices, x_bitstrings, p_stars, sigma, qbit_num, use_lookup_table, cliques, use_exact, config);
+        self->gqml =  create_qgd_Generative_Quantum_Machine_Learning_Base(x_indices,  p_stars, sigma, qbit_num, use_lookup_table, cliques, use_exact, config);
     }
     else {
         std::cout << "The number of qubits should be given as a positive integer, " << qbit_num << "  was given" << std::endl;

@@ -76,7 +76,6 @@ Generative_Quantum_Machine_Learning_Base::Generative_Quantum_Machine_Learning_Ba
 /**
 @brief Constructor of the class.
 @param sample_indices_in The input data indices
-@param sample_bitstrings_in The input data bitstrings
 @param P_star_in The distribution to approximate
 @param sigma_in Parameter of the gaussian kernels
 @param qbit_num_in The number of qubits spanning the unitary Umtx
@@ -84,7 +83,7 @@ Generative_Quantum_Machine_Learning_Base::Generative_Quantum_Machine_Learning_Ba
 @param config_in A map that can be used to set hyperparameters during the process
 @return An instance of the class
 */
-Generative_Quantum_Machine_Learning_Base::Generative_Quantum_Machine_Learning_Base(std::vector<int> sample_indices_in, std::vector<std::vector<int>> sample_bitstrings_in, Matrix_real P_star_in, Matrix_real sigma_in, int qbit_num_in, bool use_lookup_table_in, std::vector<std::vector<int>> cliques_in, bool use_exact_in, std::map<std::string, Config_Element>& config_in) : Optimization_Interface(Matrix(Power_of_2(qbit_num_in),1), qbit_num_in, false, config_in, RANDOM, accelerator_num) {
+Generative_Quantum_Machine_Learning_Base::Generative_Quantum_Machine_Learning_Base(std::vector<int> sample_indices_in, Matrix_real P_star_in, Matrix_real sigma_in, int qbit_num_in, bool use_lookup_table_in, std::vector<std::vector<int>> cliques_in, bool use_exact_in, std::map<std::string, Config_Element>& config_in) : Optimization_Interface(Matrix(Power_of_2(qbit_num_in),1), qbit_num_in, false, config_in, RANDOM, accelerator_num) {
 
 	sample_indices = sample_indices_in;
 
@@ -113,7 +112,6 @@ Generative_Quantum_Machine_Learning_Base::Generative_Quantum_Machine_Learning_Ba
     optimization_tolerance = -DBL_MAX;
     convergence_threshold  = -DBL_MAX;
     
-   
 
     random_shift_count_max = 100;
     
@@ -131,19 +129,9 @@ Generative_Quantum_Machine_Learning_Base::Generative_Quantum_Machine_Learning_Ba
 
     sigma = sigma_in;
 
-    sample_bitstrings = sample_bitstrings_in;
-
     use_lookup = use_lookup_table_in;
 
     use_exact = use_exact_in;
-
-    for (int idx=0; idx<1<<qbit_num; idx++) {
-        std::vector<int> bitstring;
-        for (int j = qbit_num - 1; j >= 0; --j) {
-            bitstring.push_back(((idx) >> j) & 1);
-        }
-        all_bitstrings.push_back(bitstring);
-    }
 
     if (use_lookup) {
         fill_lookup_table();
@@ -225,10 +213,16 @@ void Generative_Quantum_Machine_Learning_Base::start_optimization(){
 @param sigma The parameters of the kernel
 @return The calculated value of the kernel function
 */
-double Generative_Quantum_Machine_Learning_Base::Gaussian_kernel(int x, int y, Matrix_real& sigma) {
+double Generative_Quantum_Machine_Learning_Base::Gaussian_kernel(int x, int y) {
     // The norm stores the distance between the two data points (the more qbit they differ in the bigger it is)
-    double norm = (x - y)*(x - y);
-    double result = (exp(-norm*0.5/sigma[0])+ exp(-norm*0.5/sigma[1])+ exp(-norm*0.5/sigma[2]))/3;
+    double result=0.0;
+    double exponent;
+
+    for (int i=0; i<sigma.size(); i++) {
+        exponent = -(x - y)*((x - y)/sigma[i])*0.5;
+        result += exp(exponent);
+    }
+    result /= sigma.size();
     return result;
 }
 
@@ -236,11 +230,9 @@ double Generative_Quantum_Machine_Learning_Base::Gaussian_kernel(int x, int y, M
 @brief Call to calculate and save the values of the gaussian kernel needed for traing
 */
 void Generative_Quantum_Machine_Learning_Base::fill_lookup_table() {
-    gaussian_lookup_table = std::vector<std::vector<double>>(1<<qbit_num, std::vector<double>(1<<qbit_num, 0));
+    gaussian_lookup_table = std::vector<double>(1<<qbit_num);
     for (int idx1=0; idx1 < 1<<qbit_num; idx1++) {
-        for (int idx2=0; idx2 < 1<<qbit_num; idx2++) {
-            gaussian_lookup_table[idx1][idx2] = Gaussian_kernel(idx1, idx2, sigma);
-        }
+        gaussian_lookup_table[idx1] = Gaussian_kernel(idx1, 0);
     }
 }
 
@@ -256,7 +248,7 @@ double Generative_Quantum_Machine_Learning_Base::expectation_value_P_star_P_star
         for (int idx1=r.begin(); idx1<r.end(); idx1++) {
             for (int idx2=0; idx2<sample_size; idx2++) {
                 if (idx1 != idx2) {
-                    ev_local += Gaussian_kernel(idx1, idx2, sigma);
+                    ev_local += Gaussian_kernel(idx1, idx2);
                 }
             }
         }
@@ -279,7 +271,7 @@ double Generative_Quantum_Machine_Learning_Base::expectation_value_P_star_P_star
         double& ev_local = priv_partial_ev.local();
         for (int idx1=r.begin(); idx1<r.end(); idx1++) {
             for (int idx2=0; idx2<1<<qbit_num; idx2++) {
-                ev_local += P_star[idx1]*P_star[idx2]*Gaussian_kernel(idx1, idx2, sigma);
+                ev_local += P_star[idx1]*P_star[idx2]*Gaussian_kernel(idx1, idx2);
             }
         }
     });
@@ -295,10 +287,10 @@ double Generative_Quantum_Machine_Learning_Base::expectation_value_P_star_P_star
 @return The calculated total variational distance of the distributions
 */
 double Generative_Quantum_Machine_Learning_Base::TV_of_the_distributions(Matrix& State_right) {
-    std::vector<double> P_theta;
+    std::vector<double> P_theta(1<<qbit_num);
 
     for (size_t x_idx=0; x_idx<State_right.size(); x_idx++){
-        P_theta.push_back(State_right[x_idx].real*State_right[x_idx].real +State_right[x_idx].imag*State_right[x_idx].imag);
+        P_theta[x_idx] = State_right[x_idx].real*State_right[x_idx].real +State_right[x_idx].imag*State_right[x_idx].imag;
     }
 
     double TV = 0.0;
@@ -339,12 +331,12 @@ double Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions_exact(
         for (int idx1=r.rows().begin(); idx1<r.rows().end(); idx1++) {
             for (int idx2=r.cols().begin(); idx2<r.cols().end(); idx2++) {
                 if (use_lookup) {
-                    ev_P_theta_P_theta_local += P_theta[idx1]*P_theta[idx2]*gaussian_lookup_table[idx1][idx2];
-                    ev_P_theta_P_star_local += P_theta[idx1]*P_star[idx2]*gaussian_lookup_table[idx1][idx2];
+                    ev_P_theta_P_theta_local += P_theta[idx1]*P_theta[idx2]*gaussian_lookup_table[abs(idx1-idx2)];
+                    ev_P_theta_P_star_local += P_theta[idx1]*P_star[idx2]*gaussian_lookup_table[abs(idx1-idx2)];
                 }
                 else {
-                    ev_P_theta_P_theta_local += P_theta[idx1]*P_theta[idx2]*Gaussian_kernel(idx1, idx2, sigma);
-                    ev_P_theta_P_star_local += P_theta[idx1]*P_star[idx2]*Gaussian_kernel(idx1, idx2, sigma);
+                    ev_P_theta_P_theta_local += P_theta[idx1]*P_theta[idx2]*Gaussian_kernel(idx1, idx2);
+                    ev_P_theta_P_star_local += P_theta[idx1]*P_star[idx2]*Gaussian_kernel(idx1, idx2);
                 }
             }
         }
@@ -413,15 +405,15 @@ double Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions_approx
             for (int idx2=r.cols().begin(); idx2<r.cols().end(); idx2++) {
                 if (use_lookup) {
                     if (idx1 != idx2) {
-                        ev_P_theta_P_theta_local += gaussian_lookup_table[theta_sample_indices[idx1]][theta_sample_indices[idx2]];
+                        ev_P_theta_P_theta_local += gaussian_lookup_table[abs(theta_sample_indices[idx1]-theta_sample_indices[idx2])];
                     }
-                    ev_P_theta_P_star_local += gaussian_lookup_table[theta_sample_indices[idx1]][sample_indices[idx2]];
+                    ev_P_theta_P_star_local += gaussian_lookup_table[abs(theta_sample_indices[idx1]-sample_indices[idx2])];
                 }
                 else {
                     if (idx1 != idx2) {
-                        ev_P_theta_P_theta_local += Gaussian_kernel(theta_sample_indices[idx1],theta_sample_indices[idx2], sigma);
+                        ev_P_theta_P_theta_local += Gaussian_kernel(theta_sample_indices[idx1],theta_sample_indices[idx2]);
                     }
-                    ev_P_theta_P_star_local += Gaussian_kernel(theta_sample_indices[idx1], sample_indices[idx2], sigma);
+                    ev_P_theta_P_star_local += Gaussian_kernel(theta_sample_indices[idx1], sample_indices[idx2]);
                 }
             }
         }
