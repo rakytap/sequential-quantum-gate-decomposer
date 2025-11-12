@@ -3809,12 +3809,12 @@ Gates_block::extract_gate_kernels_target_and_control_qubits(std::vector<Matrix> 
         }
         case U1_OPERATION: {
             U1* u1_operation = static_cast<U1*>(operation);
-            u3_qbit.push_back(u1_operation->calc_one_qubit_u3(params_mtx[0]));
+            u3_qbit.push_back(u1_operation->calc_one_qubit_u3(params_mtx[0], 0.0, 0.0));
             break;
         }
         case U2_OPERATION: {
             U2* u2_operation = static_cast<U2*>(operation);
-            u3_qbit.push_back(u2_operation->calc_one_qubit_u3(params_mtx[0], params_mtx[1]));
+            u3_qbit.push_back(u2_operation->calc_one_qubit_u3(params_mtx[0], params_mtx[1], 0.0));
             break;
         }
         case U3_OPERATION: {

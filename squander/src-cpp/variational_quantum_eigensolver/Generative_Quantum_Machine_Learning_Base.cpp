@@ -83,7 +83,7 @@ Generative_Quantum_Machine_Learning_Base::Generative_Quantum_Machine_Learning_Ba
 @param config_in A map that can be used to set hyperparameters during the process
 @return An instance of the class
 */
-Generative_Quantum_Machine_Learning_Base::Generative_Quantum_Machine_Learning_Base(std::vector<int> sample_indices_in, Matrix_real P_star_in, Matrix_real sigma_in, int qbit_num_in, bool use_lookup_table_in, std::vector<std::vector<int>> cliques_in, bool use_exact_in, std::map<std::string, Config_Element>& config_in) : Optimization_Interface(Matrix(Power_of_2(qbit_num_in),1), qbit_num_in, false, config_in, RANDOM, accelerator_num) {
+Generative_Quantum_Machine_Learning_Base::Generative_Quantum_Machine_Learning_Base(std::vector<int> sample_indices_in, Matrix_real P_star_in, Matrix_real sigma_in, int qbit_num_in, bool use_lookup_table_in, std::vector<std::vector<int>> cliques_in, bool use_exact_in, std::map<std::string, Config_Element>& config_in, int accelerator_num) : Optimization_Interface(Matrix(Power_of_2(qbit_num_in),1), qbit_num_in, false, config_in, RANDOM, accelerator_num) {
 
 	sample_indices = sample_indices_in;
 
@@ -460,6 +460,88 @@ double Generative_Quantum_Machine_Learning_Base::optimization_problem_non_static
 }
 
 
+#ifdef __GROQ__
+/**
+@brief The optimization problem of the final optimization implemented to be run on Groq hardware
+@param parameters An array of the free parameters to be optimized.
+@param chosen_device Indicate the device on which the state vector emulation is performed
+@return Returns with the cost function.
+*/
+double Generative_Quantum_Machine_Learning_Base::optimization_problem_Groq(Matrix_real& parameters, int chosen_device)  {
+
+
+
+    Matrix State;
+
+
+    //tbb::tick_count t0_DFE = tbb::tick_count::now();
+    std::vector<int> target_qbits;
+    std::vector<int> control_qbits;
+    std::vector<Matrix> u3_qbit;
+    extract_gate_kernels_target_and_control_qubits(u3_qbit, target_qbits, control_qbits, parameters);
+        
+
+    // initialize the initial state on the chip if it was not given
+    if ( initial_state.size() == 0 ) {
+        
+        Matrix State_zero(0,0);  
+        apply_to_groq_sv(accelerator_num, chosen_device, qbit_num, u3_qbit, target_qbits, control_qbits, State_zero, id); 
+            
+        State = State_zero;
+            
+    }
+    else {
+	
+        State = initial_state.copy();
+        // apply state transformation via the Groq chip
+        apply_to_groq_sv(accelerator_num, chosen_device, qbit_num, u3_qbit, target_qbits, control_qbits, State, id);
+
+    }
+        
+        
+/*        
+    //////////////////////////////
+    Matrix State_copy = State.copy();
+
+
+    Decomposition_Base::apply_to(parameters, State_copy );
+
+
+    double diff = 0.0;
+    for( int64_t idx=0; idx<State_copy.size(); idx++ ) {
+
+        QGD_Complex16 element = State[idx];
+        QGD_Complex16 element_copy = State_copy[idx];
+        QGD_Complex16 element_diff;
+        element_diff.real = element.real - element_copy.real;
+        element_diff.imag = element.imag - element_copy.imag;
+ 
+        double diff_increment = element_diff.real*element_diff.real + element_diff.imag*element_diff.imag;
+        diff = diff + diff_increment;
+    }
+       
+    std::cout << "Generative_Quantum_Machine_Learning_Base::apply_to checking diff: " << diff << std::endl;
+
+
+    if ( diff > 1e-4 ) {
+        std::string error("Groq and CPU results do not match");
+        throw(error);
+    }
+
+    //////////////////////////////
+*/
+
+
+	
+    double MMD = (this->*MMD_of_the_distributions)(State);
+	
+    return MMD;
+
+}
+
+#endif
+
+
 /**
 @brief The optimization problem of the final optimization
 @param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
@@ -467,21 +549,33 @@ double Generative_Quantum_Machine_Learning_Base::optimization_problem_non_static
 */
 double Generative_Quantum_Machine_Learning_Base::optimization_problem(Matrix_real& parameters)  {
 
-    // initialize the initial state if it was not given
-    if ( initial_state.size() == 0 ) {
-        initialize_zero_state();
+    Matrix State;
+
+#ifdef __GROQ__
+    if ( accelerator_num > 0 ) {
+    
+        
+        return optimization_problem_Groq( parameters, 0 );
+            
     }
+    else {
+#endif
+        // initialize the initial state if it was not given
+        if ( initial_state.size() == 0 ) {
+            initialize_zero_state();
+        }
 	
-    Matrix State = initial_state.copy();
-	
-    apply_to(parameters, State);
-	
+        State = initial_state.copy();
+        apply_to(parameters, State);
+
+#ifdef __GROQ__
+    }
+#endif
 	
     double MMD = (this->*MMD_of_the_distributions)(State);
 	
     return MMD;
 }
-
 
 
 /**
@@ -551,10 +645,6 @@ void Generative_Quantum_Machine_Learning_Base::optimization_problem_combined_non
 */
     return;
 }
-
-
-
-
 
 
 /**

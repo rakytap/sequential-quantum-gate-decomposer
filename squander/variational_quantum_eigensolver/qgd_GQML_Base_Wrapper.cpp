@@ -73,9 +73,9 @@ typedef struct qgd_Generative_Quantum_Machine_Learning_Base_Wrapper{
 @return Return with a void pointer pointing to an instance of Generative_Quantum_Machine_Learning_Base class.
 */
 Generative_Quantum_Machine_Learning_Base* 
-create_qgd_Generative_Quantum_Machine_Learning_Base( std::vector<int> x_vectors, Matrix_real P_star, Matrix_real sigma, int qbit_num, bool use_lookup_table, std::vector<std::vector<int>> cliques, bool use_exact, std::map<std::string, Config_Element>& config) {
+create_qgd_Generative_Quantum_Machine_Learning_Base( std::vector<int> x_vectors, Matrix_real P_star, Matrix_real sigma, int qbit_num, bool use_lookup_table, std::vector<std::vector<int>> cliques, bool use_exact, std::map<std::string, Config_Element>& config, int accelerator_num) {
 
-    return new Generative_Quantum_Machine_Learning_Base( x_vectors, P_star, sigma, qbit_num, use_lookup_table, cliques, use_exact, config);
+    return new Generative_Quantum_Machine_Learning_Base( x_vectors, P_star, sigma, qbit_num, use_lookup_table, cliques, use_exact, config, accelerator_num);
 }
 
 
@@ -157,7 +157,7 @@ static int
 qgd_Generative_Quantum_Machine_Learning_Base_Wrapper_init(qgd_Generative_Quantum_Machine_Learning_Base_Wrapper *self, PyObject *args, PyObject *kwds)
 {
     // The tuple of expected keywords
-    static char *kwlist[] = {(char*)"x_bitstring_data", (char*)"p_star_data", (char*) "sigma", (char*)"qbit_num", (char*)"use_lookup_table", (char*)"cliques", (char*)"use_exact", (char*)"config", NULL};
+    static char *kwlist[] = {(char*)"x_bitstring_data", (char*)"p_star_data", (char*) "sigma", (char*)"qbit_num", (char*)"use_lookup_table", (char*)"cliques", (char*)"use_exact", (char*)"config", (char*)"accelerator_num", NULL};
  
     // initiate variables for input arguments
     PyArrayObject *x_bitstring_data_arg = NULL;
@@ -167,11 +167,12 @@ qgd_Generative_Quantum_Machine_Learning_Base_Wrapper_init(qgd_Generative_Quantum
     int  qbit_num = -1; 
     int use_lookup_table;
     PyObject *config_arg = NULL;
+    int accelerator_num;
     int use_exact;
     
     // parsing input arguments
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OOOipOpO", kwlist,
-                                   &x_bitstring_data_arg, &p_star_data_arg, &sigma_data_arg, &qbit_num, &use_lookup_table, &cliques_data_arg, &use_exact,&config_arg))
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OOOipOpOi", kwlist,
+                                   &x_bitstring_data_arg, &p_star_data_arg, &sigma_data_arg, &qbit_num, &use_lookup_table, &cliques_data_arg, &use_exact,&config_arg, &accelerator_num))
         return -1;
 
     
@@ -305,7 +306,7 @@ qgd_Generative_Quantum_Machine_Learning_Base_Wrapper_init(qgd_Generative_Quantum
 
     // create an instance of the class Generative_Quantum_Machine_Learning_Base
     if (qbit_num > 0 ) {
-        self->gqml =  create_qgd_Generative_Quantum_Machine_Learning_Base(x_indices,  p_stars, sigma, qbit_num, use_lookup_table, cliques, use_exact, config);
+        self->gqml =  create_qgd_Generative_Quantum_Machine_Learning_Base(x_indices,  p_stars, sigma, qbit_num, use_lookup_table, cliques, use_exact, config, accelerator_num);
     }
     else {
         std::cout << "The number of qubits should be given as a positive integer, " << qbit_num << "  was given" << std::endl;

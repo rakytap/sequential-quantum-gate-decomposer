@@ -124,7 +124,7 @@ Generative_Quantum_Machine_Learning_Base();
 @param config_in A map that can be used to set hyperparameters during the process
 @return An instance of the class
 */
-Generative_Quantum_Machine_Learning_Base( std::vector<int> sample_indices_in, Matrix_real P_star_in, Matrix_real sigma_in, int qbit_num_in, bool use_lookup_table_in, std::vector<std::vector<int>> cliques_in, bool use_exact, std::map<std::string, Config_Element>& config_in);
+Generative_Quantum_Machine_Learning_Base( std::vector<int> sample_indices_in, Matrix_real P_star_in, Matrix_real sigma_in, int qbit_num_in, bool use_lookup_table_in, std::vector<std::vector<int>> cliques_in, bool use_exact, std::map<std::string, Config_Element>& config_in, int accelerator_num);
 
 /**
 @brief Destructor of the class
@@ -195,6 +195,17 @@ virtual double optimization_problem(Matrix_real& parameters) override;
 @return Returns with the cost function. (zero if the qubits are desintangled.)
 */
 virtual double optimization_problem_non_static( Matrix_real parameters, void* void_instance) override;
+
+
+#ifdef __GROQ__
+/**
+@brief The optimization problem of the final optimization implemented to be run on Groq hardware
+@param parameters An array of the free parameters to be optimized.
+@param chosen_device Indicate the device on which the state vector emulation is performed
+@return Returns with the cost function.
+*/
+double optimization_problem_Groq(Matrix_real& parameters, int chosen_device) ;
+#endif
 
 
 /**
