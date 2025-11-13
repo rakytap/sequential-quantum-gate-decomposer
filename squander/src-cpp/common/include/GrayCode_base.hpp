@@ -47,7 +47,7 @@ public:
 @return Returns with the instance of the class.
 */
 GrayCode_base() : matrix_base<intType>() {
-    this->rows = 0;
+    this->rows = 1;
     this->cols = 0;
 
     n_ary_limits = matrix_base<intType>();

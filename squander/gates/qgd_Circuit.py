@@ -357,7 +357,7 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
         if isinstance(target_qbits, (list, tuple)):
             super(qgd_Circuit, self).add_SWAP(list(target_qbits))
         if isinstance(target_qbits,int) and target_qbit2 != -1:
-            super(qgd_Circuit, self).add_SWAP(list(target_qbits))
+            super(qgd_Circuit, self).add_SWAP([target_qbits, target_qbit2])
 
 #@brief Call to add a CSWAP (Fredkin) gate to the front of the gate structure.
 #@param self A pointer pointing to an instance of the class qgd_Circuit.
