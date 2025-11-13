@@ -94,7 +94,8 @@ def run_pennylane(n_run):
     mmd_pl_best = []
     P_theta_pl_best = []
     for i in range(n_run):
-        P_theta_pl, mmd_pl, tv_pl = qml_pennylane.run_pennylane(P_star, qbit_num, 6, iters, cliques, sigma, params0, ansatz_type="QCMRF", circuit_input=circuit) 
+        # P_theta_pl, mmd_pl, tv_pl = qml_pennylane.run_pennylane(P_star, qbit_num, 6, iters, cliques, sigma, params0, ansatz_type="QCMRF", circuit_input=circuit) 
+        P_theta_pl, mmd_pl, tv_pl = qml_pennylane.run_pennylane(P_star, qbit_num, 6, iters, cliques, sigma) 
         if len(iters_pl_best) == 0:
             P_theta_pl_best = P_theta_pl[:]
             mmd_pl_best = mmd_pl[:]
@@ -113,9 +114,9 @@ def plot_cost_fnx(iters, sqander_cf, pennylane_cf, cf_name):
     plt.legend()
     plt.savefig(f"{cf_name}.png")
 
-n_nodes = 9
-graph_type = "custom"
-dataset_size = 1
+n_nodes = 17
+graph_type = "grid"
+dataset_size = 1000
 
 G = nx.Graph()
 G.add_nodes_from(range(n_nodes))
@@ -134,11 +135,12 @@ plt.figure()
 
 cliques = sorted([sorted(x) for x in cliques])
 
-iters = 50
+iters = 100
 bs = 1
 full_iters = int(iters*(p_num//bs))
 print("iterations", full_iters)
-op = int(full_iters//p_num)
+op = int(full_iters//iters)
+print("op",op)
 # generate configuration dictionary for the solver
 config = {"max_inner_iterations": full_iters, 
 	"batch_size": bs,
@@ -146,27 +148,24 @@ config = {"max_inner_iterations": full_iters,
 	"convergence_length": 20,
     "output_periodicity": op}
 qbit_num = n_nodes
-median_dist = 2**n_nodes*(1-1/np.sqrt(2))
-sigma = [0.25, 10, 1000]
+median_dist = int(2**n_nodes*(1-1/np.sqrt(2)))/150
+print("median distance",median_dist)
+sigma = np.array([0.25, 8, 1024])
 sigma = np.array([x*median_dist for x in sigma])
 x = training_set.astype(np.int32)
 P_star = target_distribution
 use_lookup_table = True
 use_exact  = True
 
-GQML = Generative_Quantum_Machine_Learning(x, P_star, sigma, qbit_num, use_lookup_table, cliques, use_exact, config)
-
-
+GQML = Generative_Quantum_Machine_Learning(x, P_star, sigma, qbit_num, use_lookup_table, cliques, use_exact, config, accelerator_num=0)
 # set the optimization engine to agents
 GQML.set_Optimizer("COSINE")
-
 # set the ansatz variant (U3 rotations and CNOT gates)
 GQML.set_Ansatz("QCMRF")
 # os.remove("qml_test_costfuncs_entropy_and_tv.txt")
-
 GQML.Generate_Circuit(5, 1)
 param_num  = GQML.get_Parameter_Num()
-print(param_num)
+print("param num", param_num)
 
 
 parameters = np.zeros(param_num)
@@ -174,24 +173,24 @@ params0 = parameters.copy()
 GQML.set_Optimized_Parameters(parameters)
 circuit = GQML.get_Qiskit_Circuit()
 
-# t0 = time.time()
-# print("MMD", GQML.Optimization_Problem(parameters))
-# print("def", time.time()-t0)
-# max_partition_size = 4
-# with open('tmp.qasm', 'w') as file:
-#     qasm_c = dumps(circuit)
-#     qasm_c = qasm_c.replace("u", "u3")
-#     file.write(qasm_c)
-# partitioned_circuit, params_reord, _ = PartitionCircuitQasm("tmp.qasm", max_partition_size, "kahn")
-#
-# GQML.set_Gate_Structure(partitioned_circuit)
-# GQML.set_Optimized_Parameters(params_reord)
-# t0 = time.time()
-# print("MMD", GQML.Optimization_Problem(parameters))
-# print("part", time.time()-t0)
+t0 = time.time()
+print("MMD", GQML.Optimization_Problem(parameters))
+print("def", time.time()-t0)
+max_partition_size = 4
+with open('tmp.qasm', 'w') as file:
+    qasm_c = dumps(circuit)
+    qasm_c = qasm_c.replace("u(", "u3(")
+    file.write(qasm_c)
+partitioned_circuit, params_reord, _ = PartitionCircuitQasm("tmp.qasm", max_partition_size, "ilp")
 
-sq_iters, sq_mmd, sq_tv = run_squander(1)                                 
-pl_mmd, pl_tv, pl_P = run_pennylane(1)
-plot_cost_fnx(sq_iters, sq_tv, pl_tv, "tv")
-plot_cost_fnx(sq_iters, sq_mmd, pl_mmd, "mmd")
-plot_distributions(pl_P, P_star)
+GQML.set_Gate_Structure(partitioned_circuit)
+GQML.set_Optimized_Parameters(params_reord)
+t0 = time.time()
+print("MMD", GQML.Optimization_Problem(parameters))
+print("part", time.time()-t0)
+
+# pl_mmd, pl_tv, pl_P = run_pennylane(1)
+# sq_iters, sq_mmd, sq_tv = run_squander(1)                                 
+# plot_cost_fnx(sq_iters, sq_tv, pl_tv, "tv")
+# plot_cost_fnx(sq_iters, sq_mmd, pl_mmd, "mmd")
+# plot_distributions(pl_P, P_star)

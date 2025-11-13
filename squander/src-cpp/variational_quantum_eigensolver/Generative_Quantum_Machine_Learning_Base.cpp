@@ -323,22 +323,21 @@ double Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions_exact(
     // Calculate the expectation values 
     double ev_P_theta_P_theta   = 0.0;
     double ev_P_theta_P_star    = 0.0;
+    int N=1<<qbit_num;
     tbb::combinable<double> priv_partial_ev_P_theta_P_theta{[](){return 0.0;}};
     tbb::combinable<double> priv_partial_ev_P_theta_P_star{[](){return 0.0;}};
-    tbb::parallel_for( tbb::blocked_range2d<int>(0, 1<<qbit_num, 0, 1<<qbit_num), [&](tbb::blocked_range2d<int> r) {
+    tbb::parallel_for( tbb::blocked_range<int>(0, N-1, 1024), [&](tbb::blocked_range<int> r) {
         double& ev_P_theta_P_theta_local = priv_partial_ev_P_theta_P_theta.local();
         double& ev_P_theta_P_star_local = priv_partial_ev_P_theta_P_star.local();
-        for (int idx1=r.rows().begin(); idx1<r.rows().end(); idx1++) {
-            for (int idx2=r.cols().begin(); idx2<r.cols().end(); idx2++) {
-                if (use_lookup) {
-                    ev_P_theta_P_theta_local += P_theta[idx1]*P_theta[idx2]*gaussian_lookup_table[abs(idx1-idx2)];
-                    ev_P_theta_P_star_local += P_theta[idx1]*P_star[idx2]*gaussian_lookup_table[abs(idx1-idx2)];
-                }
-                else {
-                    ev_P_theta_P_theta_local += P_theta[idx1]*P_theta[idx2]*Gaussian_kernel(idx1, idx2);
-                    ev_P_theta_P_star_local += P_theta[idx1]*P_star[idx2]*Gaussian_kernel(idx1, idx2);
-                }
+        for (int idx1=r.begin(); idx1<r.end(); idx1++) {
+            double tmp_theta_theta = 0.0;
+            double tmp_theta_star = 0.0;
+            for (int idx2=0; idx2<idx1-1; idx2++) {
+                tmp_theta_theta += 2*P_theta[idx2]*P_theta[N-idx1+idx2-1];
+                tmp_theta_star += P_theta[idx2]*P_star[N-idx1+idx2-1]+P_theta[N-idx1+idx2-1]*P_star[idx2];
             }
+            ev_P_theta_P_theta_local += tmp_theta_theta*gaussian_lookup_table[N-idx1-1];
+            ev_P_theta_P_star_local += tmp_theta_star*gaussian_lookup_table[N-idx1-1];
         }
     });
     priv_partial_ev_P_theta_P_theta.combine_each([&ev_P_theta_P_theta](double a) {
@@ -347,6 +346,10 @@ double Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions_exact(
     priv_partial_ev_P_theta_P_star.combine_each([&ev_P_theta_P_star](double a) {
         ev_P_theta_P_star += a;
     });
+    for (int idx=0; idx<N; idx++) {
+        ev_P_theta_P_theta += P_theta[idx]*P_theta[idx]*gaussian_lookup_table[0];
+        ev_P_theta_P_star += P_theta[idx]*P_star[idx]*gaussian_lookup_table[0];
+    }
 
 
     {
