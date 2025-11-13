@@ -372,7 +372,7 @@ Optimization_Interface::calc_decomposition_error(Matrix& decomposed_matrix ) {
         decomposition_error = get_infidelity(decomposed_matrix);
         break;
     case OSR_ENTANGLEMENT:
-        decomposition_error = get_osr_entanglement_test(decomposed_matrix);
+        decomposition_error = get_osr_entanglement_test(decomposed_matrix, use_cuts);
         break;
     default: {
         std::string err("Optimization_Interface::optimization_problem: Cost function variant not implmented.");
@@ -567,9 +567,8 @@ double Optimization_Interface::optimization_problem( Matrix_real& parameters ) {
     case INFIDELITY:
         return get_infidelity(matrix_new);
     case OSR_ENTANGLEMENT:
-        return get_osr_entanglement_test(matrix_new);
+        return get_osr_entanglement_test(matrix_new, use_cuts);
     default: {
-        printf("%d %d\n", cost_fnc, OSR_ENTANGLEMENT);
         std::string err("Optimization_Interface::optimization_problem: Cost function variant not implmented.");
         throw err;
     } }
@@ -886,7 +885,7 @@ double Optimization_Interface::optimization_problem( Matrix_real parameters, voi
         return 1.0-((trace_temp.real*trace_temp.real+trace_temp.imag*trace_temp.imag)/d+1)/(d+1);
     }
     case OSR_ENTANGLEMENT:
-        return get_osr_entanglement_test(matrix_new);
+        return get_osr_entanglement_test(matrix_new, use_cuts);
     default: {
         std::string err("Optimization_Interface::optimization_problem: Cost function variant not implmented.");
         throw err;
@@ -1116,7 +1115,7 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();////////////////////////////////
     } else if (cost_fnc == OSR_ENTANGLEMENT) {
         Matrix matrix_new = instance->get_Umtx().copy();
         instance->apply_to( parameters, matrix_new );
-        Upartial = get_deriv_osr_entanglement(matrix_new);
+        Upartial = get_deriv_osr_entanglement(matrix_new, use_cuts);
     }
 
 
@@ -1162,6 +1161,16 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();////////////////////////////////
             case SUM_OF_SQUARES:
             case OSR_ENTANGLEMENT:
                 grad_comp = real_trace_conj_dot(Upartial, Umtx_deriv[idx]);
+                /*{
+                    Matrix matrix_new = instance->get_Umtx().copy();
+                    auto paramcopy = parameters.copy();
+                    paramcopy[idx] += 1e-10;
+                    instance->apply_to( paramcopy, matrix_new );
+                    double f1 = instance->get_cost_function_variant() == SUM_OF_SQUARES ? get_cost_function_sum_of_squares(matrix_new) : get_osr_entanglement_test(matrix_new, use_cuts);
+                    double check = (f1 - *f0) / 1e-10;
+                    //printf("%d: %g %g\n", idx, grad_comp, check);
+                    grad_comp = check;
+                }*/
                 break;
             case INFIDELITY: {
                 double d = Umtx_deriv[idx].cols;
