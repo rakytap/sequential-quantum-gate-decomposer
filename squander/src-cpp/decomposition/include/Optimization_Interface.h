@@ -111,6 +111,8 @@ protected:
     double correction1_scale;
     /// prefactor of the double-bitflip errors in the cost function. (see Eq. (21) in arXiv:2210.09191)
     double correction2_scale;    
+    /// cuts used for OSR entanglement cost function
+    std::vector<std::vector<int>> use_cuts;
     
 
     /// number of iterations
