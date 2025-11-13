@@ -371,10 +371,18 @@ N_Qubit_Decomposition_Tree_Search::determine_gate_structure(Matrix_real& optimiz
     for ( int level = 0; level <= level_limit; level++ ) {
         GrayCode gcode;
         if (use_gl) {
-            auto [solutions, nextli, nextprefixes] = tree_search_over_gate_structures_gl( level, li, ci );   
-            all_solutions.insert(all_solutions.end(), solutions.begin(), solutions.end());
-            li.swap(nextli);
-            std::get<2>(ci) = std::move(nextprefixes);
+            if (qbit_num <= 1) {
+                all_solutions.emplace_back();
+                break;
+            } else {
+                auto [solutions, nextli, nextprefixes] = tree_search_over_gate_structures_gl( level, li, ci );   
+                all_solutions.insert(all_solutions.end(), solutions.begin(), solutions.end());
+                li.swap(nextli);
+                std::get<2>(ci) = std::move(nextprefixes);
+            }
+            if (stop_first_solution && all_solutions.size() > 0) {
+                break;
+            }
         } else {
             gcode = std::move(tree_search_over_gate_structures( level ));   
             if (current_minimum < minimum_best_solution) { 
@@ -477,7 +485,7 @@ N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures_gl( int leve
     all_osr_results.reserve(iteration_max);
     std::vector<GrayCode> successful_solutions;
     double Fnorm = std::sqrt(static_cast<double>(1 << qbit_num));
-    double osr_tol = std::sqrt(optimization_tolerance_loc);
+    double osr_tol = 1e-3;
 
 
     // determine the concurrency of the calculation
@@ -569,10 +577,13 @@ N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures_gl( int leve
                 int cnot_lower_bound = osr_result.size() == 0 ? 0 : std::max_element(osr_result.begin(), osr_result.end(), [](const std::pair<int, double>& a, const std::pair<int, double>& b) {
                     return a.first < b.first;
                 })->first;
-                if (cnot_lower_bound <= level_limit - level_num && (solution.size() == 0 || !(std::any_of(check_cuts.begin(), check_cuts.end(), [&lastprefix, &osr_result](int i) {
-                    return lastprefix[i].first < osr_result[i].first;
-                }))))
-                {
+                if (cnot_lower_bound <= level_limit - level_num && (solution.size() == 0 ||
+                    std::max_element(lastprefix.begin(), lastprefix.end(), [](const std::pair<int, double>& a, const std::pair<int, double>& b) {
+                        return a.first < b.first;
+                    })->first >= cnot_lower_bound
+                 /*|| !(std::any_of(check_cuts.begin(), check_cuts.end(), [&lastprefix, &osr_result](int i) {
+                    return lastprefix[i].first < osr_result[i].first; })))*/
+                )) {
                     tbb::spin_mutex::scoped_lock tree_search_lock{tree_search_mutex};
                     all_osr_results.emplace_back(std::move(solution.copy()), std::move(osr_result));
                     if (cnot_lower_bound == 0) {
@@ -598,22 +609,22 @@ N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures_gl( int leve
 
     std::sort(all_osr_results.begin(), all_osr_results.end(), [](const std::pair<GrayCode, std::vector<std::pair<int, double>>>& a, const std::pair<GrayCode, std::vector<std::pair<int, double>>>& b) {
         int max_ar = 0, sum_ar = 0;
-        double sum_as0 = 0;
-        for (const auto& [rnk, s0] : a.second) {
+        double sum_ac = 0;
+        for (const auto& [rnk, cost] : a.second) {
             max_ar = std::max(max_ar, rnk);
             sum_ar += rnk;
-            sum_as0 += 1-s0*s0;
+            sum_ac += cost;
         }
         int max_br = 0, sum_br = 0;
-        double sum_bs0 = 0;
-        for (const auto& [rnk, s0] : b.second) {
+        double sum_bc = 0;
+        for (const auto& [rnk, cost] : b.second) {
             max_br = std::max(max_br, rnk);
             sum_br += rnk;
-            sum_bs0 += 1-s0*s0;
+            sum_bc += cost;
         }
         if (max_ar != max_br) return max_ar < max_br;
         if (sum_ar != sum_br) return sum_ar < sum_br;
-        return sum_as0 < sum_bs0;
+        return sum_ac < sum_bc;
     });
     long long beam_width = all_osr_results.size();
     if ( config.count("beam") > 0 ) {
@@ -872,10 +883,13 @@ N_Qubit_Decomposition_Tree_Search::perform_optimization(Gates_block* gate_struct
     cDecomp_custom_random.set_optimizer( alg );
     cDecomp_custom_random.set_project_name( project_name );
     if ( alg == ADAM || alg == BFGS2 ) {
-         int param_num_loc = gate_structure_loc->get_parameter_num();
-         int max_inner_iterations_loc = (double)param_num_loc/852 * 1e7;
+         int max_inner_iterations_loc = 10000;
+         if (gate_structure_loc != nullptr) {
+               int param_num_loc = gate_structure_loc->get_parameter_num();
+               max_inner_iterations_loc = (double)param_num_loc/852 * 1e7;
+         }
          cDecomp_custom_random.set_max_inner_iterations( max_inner_iterations_loc );  
-         cDecomp_custom_random.set_random_shift_count_max( 10000 ); 
+         cDecomp_custom_random.set_random_shift_count_max( 100 ); 
     }
     else if ( alg==ADAM_BATCHED ) {
          cDecomp_custom_random.set_optimizer( alg );  
