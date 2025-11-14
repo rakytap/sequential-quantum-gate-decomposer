@@ -202,7 +202,7 @@ class qgd_Partition_Aware_Mapping:
         pi = self._compute_smart_initial_layout(circ, circ.get_Qbit_Num(), D)
         F = self.get_initial_layer(IDAG, circ.get_Qbit_Num(),optimized_partitions)
         partition_order, pi_final = self.Heuristic_Search(F,pi.copy(),DAG,optimized_partitions,D)
-        final_circuit, final_parameters = self.Construct_circuit_from_HS(partition_order,optimized_partitions)
+        final_circuit, final_parameters = self.Construct_circuit_from_HS(partition_order,optimized_partitions, circ.get_Qbit_Num())
         return final_circuit, final_parameters, pi, pi_final
 
     def Heuristic_Search(self, F, pi, DAG, optimized_partitions, D):
@@ -267,7 +267,7 @@ class qgd_Partition_Aware_Mapping:
                 for topology_candidate in topology_candidates:
                     for pdx, permutation_pair in enumerate(partition.permutations_pairs[tdx]):
                         new_cand = PartitionCandidate(partition_idx,tdx,pdx,partition.circuit_structures[tdx][pdx],permutation_pair[0],permutation_pair[1],topology_candidate,mini_topology,partition.qubit_map,partition.involved_qbits)
-                        mini_scores.append(min_cnots_between_permutations(output_perm,new_cand.transform_pi_input(min_cnots_between_permutations))+len(new_cand.circuit_structure))
+                        mini_scores.append(min_cnots_between_permutations(output_perm,new_cand.transform_pi_input(output_perm))+len(new_cand.circuit_structure))
             score += min(mini_scores)
 
         return score

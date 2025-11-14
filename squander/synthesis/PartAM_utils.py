@@ -308,10 +308,11 @@ class PartitionCandidate:
         return find_best_permutation_with_constraints(pi, qbit_map_swapped)
 
     def get_final_circuit(self,optimized_partitions,N):
+        print(self.node_mapping,self.qbit_map,self.involved_qbits)
         partition = optimized_partitions[self.partition_idx]
-        part_parameters = partition.synthesized_parameters[self.topology_idx][self.permutation_idx]
-        part_circuit = partition.synthesized_circuits[self.topology_idx][self.permutation_idx]
-        qbit_map_swapped = {k : self.node_mapping[self.P_i.index(v)] for k, v in self.qbit_map.items()}
+        part_parameters = partition.synthesised_parameters[self.topology_idx][self.permutation_idx]
+        part_circuit = partition.synthesised_circuits[self.topology_idx][self.permutation_idx]
+        qbit_map_swapped = {v : self.node_mapping[self.P_i.index(v)] for k, v in self.qbit_map.items()}
         part_circuit.Remap_Qbits(qbit_map_swapped,N)
         return part_circuit, part_parameters
     
