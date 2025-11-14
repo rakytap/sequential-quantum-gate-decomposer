@@ -1,7 +1,7 @@
 import numpy as np
 from typing import List, Tuple, Set, FrozenSet
 from itertools import permutations
-
+from squander.gates.qgd_Circuit import qgd_Circuit as Circuit
 def _build_adj_list(edges: List[Tuple[int, int]]) -> dict:
     adj_list = {}
     for u, v in edges:
@@ -16,7 +16,7 @@ def _build_adj_list(edges: List[Tuple[int, int]]) -> dict:
 def _get_induced_edges(edges: List[Tuple[int, int]], qubit_subset: Set[int]) -> List[Tuple[int, int]]:
     return [edge for edge in edges if edge[0] in qubit_subset and edge[1] in qubit_subset]
 
-def _dfs_enumerate(adj_list: dict, k: int, callback: Callable[[Set[int]], None]):
+def _dfs_enumerate(adj_list: dict, k: int, callback):
     all_qubits = sorted(adj_list.keys())
     seen = set()
     def dfs(current_qubits: Set[int], candidates: Set[int]):
@@ -130,6 +130,38 @@ def min_cnots_between_permutations(A, B):
     
     return total_cnots
 
+def permutation_to_cnot_circuit(A, B):
+    n = len(A)
+    inv_B = {qubit: pos for pos, qubit in enumerate(B)}
+    P = [inv_B[A[i]] for i in range(n)]
+    
+    visited = [False] * n
+    cnot_circuit = Circuit(n)
+    
+    for i in range(n):
+        if not visited[i]:
+            # Extract cycle
+            cycle = []
+            j = i
+            while not visited[j]:
+                visited[j] = True
+                cycle.append(j)
+                j = P[j]
+            
+            # Convert cycle to CNOTs
+            k = len(cycle)
+            if k == 2:
+                cnot_circuit.add_CNOT(cycle[1], cycle[0])
+            elif k >= 3:
+                # Forward pass
+                for idx in range(k - 1):
+                    cnot_circuit.add_CNOT(cycle[idx + 1], cycle[idx])
+                # Backward pass
+                for idx in range(k - 2, 0, -1):
+                    cnot_circuit.add_CNOT(cycle[idx + 1], cycle[idx])
+    
+    return cnot_circuit
+
 def find_best_permutation_with_constraints(A, constraints, strategy='greedy'):
     n = len(A)
     B = [None] * n
@@ -175,21 +207,31 @@ class SingleQubitPartitionResult:
     
     def get_partition_synthesis_score(self):
         return 0
-
+# Virtual qubits q, reduced virtual qubits (the remapped circuit only up to partition_size) q*
+# Physical qubits Q, reduced physical qubits Q* 
 class PartitionSynthesisResult:
     
-    def __init__(self, N , mini_topologies, involved_qbits, qubit_map):
+    def __init__(self, N , mini_topologies, involved_qbits, qubit_map, original_circuit):
+        #The physical mini_topology of the partition q*
         self.mini_topologies = mini_topologies
+        #number of topologies
         self.topology_count = len(mini_topologies)
+        #Qubit num of the partition
         self.N = N
+        # P_o and P_i pairs q*->Q*
         self.permutations_pairs = [[] for _ in range(len(mini_topologies))]
+        # results of synthesis
         self.synthesised_circuits = [[] for _ in range(len(mini_topologies))]
         self.synthesised_parameters = [[] for _ in range(len(mini_topologies))]
         self.cnot_counts = [[] for _ in range(len(mini_topologies))]
         self.circuit_structures = [[] for _ in range(len(mini_topologies))]
+        # Involved q qubits on the circuit
         self.involved_qbits = involved_qbits
+        # q->q*
         self.qubit_map = qubit_map
-    
+        # the original circuit
+        self.original_circuit = original_circuit
+
     def add_result(self, permutations_pair, synthesised_circuit, synthesised_parameters, topology_idx):
         self.permutations_pairs[topology_idx].append(permutations_pair)
         self.synthesised_circuits[topology_idx].append(synthesised_circuit)
@@ -200,7 +242,7 @@ class PartitionSynthesisResult:
     def extract_circuit_structure(self, circuit):
         circuit_structure = []
         for gate in circuit.get_Gates():
-            gate.get_involved_qubits()
+            involved_qbits = gate.get_involved_qubits()
             if len(involved_qbits) != 1:
                 circuit_structure.append(involved_qbits)
         return circuit_structure
@@ -209,6 +251,17 @@ class PartitionSynthesisResult:
         best_index = np.argmin(self.cnot_counts[topology_idx])
         return self.permutations_pairs[topology_idx][best_index], self.synthesised_circuits[topology_idx][best_index], self.synthesised_parameters[topology_idx][best_index]
     
+    #get the circuit structure in q 
+    def get_original_circuit_structure(self):
+        #q*->q
+        qbit_map_inverse = {v:k for k,v in self.qubit_map.items()}
+        circuit_structure = []
+        for gate in self.original_circuit.get_Gates():
+            involved_qbits = gate.get_involved_qubits()
+            if len(involved_qbits) != 1:
+                circuit_structure.append(qbit_map_inverse[involved_qbits[0]],qbit_map_inverse[involved_qbits[1]])
+        return circuit_structure
+        
     def get_partition_synthesis_score(self):
         score = 0
         for topology_idx in range(self.topology_count):
@@ -222,23 +275,43 @@ class PartitionSynthesisResult:
 class PartitionCandidate:
     
     def __init__(self, partition_idx, topology_idx, permutation_idx, circuit_structure, P_i, P_o, topology, mini_topology, qbit_map, involved_qbits):
+        #Which partition does this belong to
         self.partition_idx = partition_idx
+        #the index of the q* topology
         self.topology_idx = topology_idx
+        #the index of the P_i and P_o pair
         self.permutation_idx = permutation_idx
+        # the structure of the circuit in q*
         self.circuit_structure = circuit_structure
+        # permutations in q*->Q*
         self.P_i = P_i
         self.P_o = P_o
+        #The mini_topology in Q
         self.topology = topology
+        #The mini topology in q*
         self.mini_topology = mini_topology
+        # q->q*
         self.qbit_map = qbit_map
+        # q belonging to the original circuit
         self.involved_qbits = involved_qbits
+        # q->Q*
         self.node_mapping = get_node_mapping(mini_topology, topology)
 
     def transform_pi_input(self, pi):
-
+        #Q->q
         qbit_map_swapped = {self.node_mapping[self.P_i.index(v)]: k for k, v in self.qbit_map.items()}
         return find_best_permutation_with_constraints(pi, qbit_map_swapped)
 
     def transform_pi_output(self, pi):
+        #Q->q
         qbit_map_swapped = {self.node_mapping[self.P_o.index(v)]: k for k, v in self.qbit_map.items()}
         return find_best_permutation_with_constraints(pi, qbit_map_swapped)
+
+    def get_final_circuit(self,optimized_partitions,N):
+        partition = optimized_partitions[self.partition_idx]
+        part_parameters = partition.synthesized_parameters[self.topology_idx][self.permutation_idx]
+        part_circuit = partition.synthesized_circuits[self.topology_idx][self.permutation_idx]
+        qbit_map_swapped = {k : self.node_mapping[self.P_i.index(v)] for k, v in self.qbit_map.items()}
+        part_circuit.Remap_Qbits(qbit_map_swapped,N)
+        return part_circuit, part_parameters
+    

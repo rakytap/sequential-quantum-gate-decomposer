@@ -29,7 +29,7 @@ from squander.synthesis.qgd_SABRE import qgd_SABRE as SABRE
 from itertools import product
 from squander.synthesis.PartAM_utils import (get_subtopologies_of_type, get_unique_subtopologies, 
 SingleQubitPartitionResult, PartitionSynthesisResult, min_cnots_between_permutations, 
-PartitionCandidate, get_node_mapping)
+PartitionCandidate, get_node_mapping, permutation_to_cnot_circuit)
 
 class qgd_Partition_Aware_Mapping:
 
@@ -60,7 +60,7 @@ class qgd_Partition_Aware_Mapping:
         N = Partition_circuit.get_Qbit_Num()
         if N !=1:
             perumations_all = list(permutations(range(N)))
-            result = PartitionSynthesisResult(N, topologies, involved_qbits, qbit_map)
+            result = PartitionSynthesisResult(N, topologies, involved_qbits, qbit_map, Partition_circuit)
             # Sequential permutation search
             for topology_idx in range(len(topologies)):
                 mini_topology = topologies[topology_idx]
@@ -183,7 +183,6 @@ class qgd_Partition_Aware_Mapping:
                 start_idx = subcircuit.get_Parameter_Start_Index()
                 end_idx   = subcircuit.get_Parameter_Start_Index() + subcircuit.get_Parameter_Num()
                 subcircuit_parameters = parameters[ start_idx:end_idx ]
-                k = subcircuit.get_Qbit_Num()
                 qbit_num_orig_circuit = subcircuit.get_Qbit_Num()
                 involved_qbits = subcircuit.get_Qbits()
 
@@ -200,25 +199,74 @@ class qgd_Partition_Aware_Mapping:
         return optimized_partitions
 
     def Partition_Aware_Mapping(self, circ: Circuit, orig_parameters: np.ndarray):
-        optimized_partitions, preparation_parts = self.SynthesizeWideCircuit(circ, orig_parameters)
+        optimized_partitions = self.SynthesizeWideCircuit(circ, orig_parameters)
         DAG, IDAG = self.construct_DAG_and_IDAG(optimized_partitions)
         D = self.compute_distances_bfs(circ.get_Qbit_Num())
         pi = self._compute_smart_initial_layout(circ, circ.get_Qbit_Num(), D)
+        F = self.get_initial_layer(IDAG, circ.get_Qbit_Num())
+        partition_order, pi_final = self.Heuristic_Search(F,pi.copy(),DAG,optimized_partitions,D)
+        final_circuit, final_parameters = self.Construct_circuit_from_HS(partition_order,optimized_partitions)
+        return final_circuit, final_parameters, pi, pi_final
 
-    def Heuristic_Search(self, F, pi, DAG, IDAG):
+    def Heuristic_Search(self, F, pi, DAG, optimized_partitions, D):
         resolved_partitions = [False] * len(DAG)
         partition_order = []
-        execute_gate_list = []
-        E = self.generate_E(F, DAG, IDAG, resolved_partitions)
         while len(F) != 0:
             scores = []
-            partition_candidates = self.obtain_partition_candidates(F)
+            partition_candidates = self.obtain_partition_candidates(F,optimized_partitions)
             if len(partition_candidates) != 0:
                 for partition_candidate in partition_candidates:
-                    score = self.score_partition_candidate(partition_candidate, F, E, pi, DAG, IDAG, resolved_partitions)
+                    score = self.score_partition_candidate(partition_candidate, F, pi, D)
                     scores.append(score)
             min_idx = np.argmin(scores)
             min_partition_candidate = partition_candidates[min_idx]
+            F.remove(min_partition_candidate.partition_idx)
+            resolved_partitions[min_partition_candidate.partition_idx] = True
+            partition_order.append(permutation_to_cnot_circuit(pi, min_partition_candidate.transform_pi_input(pi)))
+            pi = min_partition_candidate.transform_pi_input(pi)
+            partition_order.append(min_partition_candidate)
+            pi = min_partition_candidate.transform_pi_output(pi)
+            children = DAG[min_partition_candidate.partition_idx][1]
+            while len(children) != 0:
+                child = children.pop(0)
+                if not resolved_partitions[child] and child not in F:
+                    if isinstance(optimized_partitions[child], SingleQubitPartitionResult):
+                        child_partition = optimized_partitions[child]
+                        qubit = child_partition.circuit.get_Qbits()[0]
+                        child_partition.circuit.map_circuit({qubit: pi[qubit]})
+                        partition_order.append(child_partition.circuit)
+                        children.append(DAG[child][1])
+                    else:
+                        F.append(child)
+        return partition_order, pi
+
+    def Construct_circuit_from_HS(self, partition_order, optimized_partitions,N):
+        final_circuit = Circuit(N)
+        final_parameters = []
+        for part in partition_order:
+            if isinstance(part, Circuit):
+                final_circuit.add_Circuit(part)
+            elif isinstance(part, SingleQubitPartitionResult):
+                final_circuit.add_Circuit(part.circuit)
+                final_parameters.append(part.parameters)
+            else:
+                part_circ, part_parameters = part.get_final_circuit(optimized_partitions,N)
+                final_circuit.add_Circuit(part_circ)
+                final_parameters.append(part_parameters)
+        final_parameters = np.concatenate(final_parameters,axis=0)
+        return final_circuit, final_parameters
+
+    def score_partition_candidate(self, partition_candidate, F,  pi, optimized_partitions):
+        score = 0 
+        input_perm = partition_candidate.transform_pi_input(pi)
+        output_perm = partition_candidate.transform_pi_output(input_perm)
+        score += permutation_to_cnot_circuit(pi,input_perm)
+        score += len(partition_candidate.circuit_structure)
+        for partition_idx in F:
+            partition_structure = optimized_partitions[partition_idx].get_original_circuit_structure()
+            for qbits in partition_structure:
+                score += self.D[output_perm[qbits[0]]][output_perm[qbits[1]]]
+        return score
 
     def obtain_partition_candidates(self, F, optimized_partitions):
         partition_candidates = []
