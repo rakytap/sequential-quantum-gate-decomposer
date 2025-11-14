@@ -213,7 +213,7 @@ class qgd_Partition_Aware_Mapping:
             partition_candidates = self.obtain_partition_candidates(F,optimized_partitions)
             if len(partition_candidates) != 0:
                 for partition_candidate in partition_candidates:
-                    score = self.score_partition_candidate(partition_candidate, F, pi, optimized_partitions, D)
+                    score = self.score_partition_candidate(partition_candidate, F, pi, optimized_partitions)
                     scores.append(score)
             min_idx = np.argmin(scores)
             min_partition_candidate = partition_candidates[min_idx]
@@ -253,16 +253,23 @@ class qgd_Partition_Aware_Mapping:
         final_parameters = np.concatenate(final_parameters,axis=0)
         return final_circuit, final_parameters
 
-    def score_partition_candidate(self, partition_candidate, F,  pi, optimized_partitions, D):
+    def score_partition_candidate(self, partition_candidate, F,  pi, optimized_partitions):
         score = 0 
         input_perm = partition_candidate.transform_pi_input(pi)
         output_perm = partition_candidate.transform_pi_output(input_perm)
         score += min_cnots_between_permutations(pi,input_perm)
         score += len(partition_candidate.circuit_structure)
         for partition_idx in F:
-            partition_structure = optimized_partitions[partition_idx].get_original_circuit_structure()
-            for qbits in partition_structure:
-                score += self.D[output_perm[qbits[0]]][output_perm[qbits[1]]]
+            partition = optimized_partitions[partition_idx]
+            mini_scores = []
+            for tdx, mini_topology in enumerate(partition.mini_topologies):
+                topology_candidates = get_subtopologies_of_type(self.topology,mini_topology)
+                for topology_candidate in topology_candidates:
+                    for pdx, permutation_pair in enumerate(partition.permutations_pairs[tdx]):
+                        new_cand = PartitionCandidate(partition_idx,tdx,pdx,partition.circuit_structures[tdx][pdx],permutation_pair[0],permutation_pair[1],topology_candidate,mini_topology,partition.qubit_map,partition.involved_qbits)
+                        mini_scores.append(min_cnots_between_permutations(output_perm,new_cand.transform_pi_input(min_cnots_between_permutations))+len(new_cand.circuit_structure))
+            score += min(mini_scores)
+
         return score
 
     def obtain_partition_candidates(self, F, optimized_partitions):
