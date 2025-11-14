@@ -242,7 +242,7 @@ class PartitionSynthesisResult:
     def extract_circuit_structure(self, circuit):
         circuit_structure = []
         for gate in circuit.get_Gates():
-            involved_qbits = gate.get_involved_qubits()
+            involved_qbits = gate.get_Involved_Qbits()
             if len(involved_qbits) != 1:
                 circuit_structure.append(involved_qbits)
         return circuit_structure
@@ -257,9 +257,9 @@ class PartitionSynthesisResult:
         qbit_map_inverse = {v:k for k,v in self.qubit_map.items()}
         circuit_structure = []
         for gate in self.original_circuit.get_Gates():
-            involved_qbits = gate.get_involved_qubits()
+            involved_qbits = gate.get_Involved_Qbits()
             if len(involved_qbits) != 1:
-                circuit_structure.append(qbit_map_inverse[involved_qbits[0]],qbit_map_inverse[involved_qbits[1]])
+                circuit_structure.append((qbit_map_inverse[involved_qbits[0]],qbit_map_inverse[involved_qbits[1]]))
         return circuit_structure
         
     def get_partition_synthesis_score(self):

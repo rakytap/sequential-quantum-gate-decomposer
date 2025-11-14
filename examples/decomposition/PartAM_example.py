@@ -35,21 +35,18 @@ if __name__ == '__main__':
             'test_subcircuits': True,
             'test_final_circuit': True,
             'max_partition_size': 3,
-            'minimum_partition_size': 2,  # Minimum qubits per partition (default: 2)
     }
 
-    filename = "benchmarks/qfast/5q/vqe.qasm"
+    filename = "benchmarks/qfast/4q/adder_q4.qasm"
     start_time = time.time()
 
     # load the circuit from a file
     circ, parameters = utils.qasm_to_squander_circuit(filename)
     config['topology'] = [
-    (0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7),
-    (8, 9), (8, 10), (8, 11), (8, 12), (8, 13), (8, 14), (8, 15),
-    (0, 8),
+    (0, 1), (0, 2), (0, 3), 
     ]
     wide_circuit_optimizer = Partition_Aware_Mapping( config )
-    wide_circuit_optimizer.SynthesizeWideCircuit( circ, parameters )
+    wide_circuit_optimizer.Partition_Aware_Mapping( circ, parameters )
 
     print("--- %s seconds elapsed during optimization ---" % (time.time() - start_time))
 
