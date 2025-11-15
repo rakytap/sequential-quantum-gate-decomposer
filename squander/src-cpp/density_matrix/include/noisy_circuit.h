@@ -18,8 +18,6 @@ limitations under the License.
 
 #include "Gates_block.h" // From existing SQUANDER
 #include "density_matrix.h"
-#include <memory>
-#include <vector>
 
 namespace squander {
 namespace density {

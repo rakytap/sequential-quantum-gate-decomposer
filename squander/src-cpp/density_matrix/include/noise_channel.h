@@ -43,11 +43,6 @@ public:
    * @brief Get channel name
    */
   virtual std::string get_name() const = 0;
-
-  /**
-   * @brief Clone the channel
-   */
-  virtual std::unique_ptr<NoiseChannel> clone() const = 0;
 };
 
 /**
@@ -81,7 +76,6 @@ public:
 
   void apply(DensityMatrix &rho) override;
   std::string get_name() const override { return "Depolarizing"; }
-  std::unique_ptr<NoiseChannel> clone() const override;
 
   double get_error_rate() const { return error_rate_; }
   int get_qbit_num() const { return qbit_num_; }
@@ -121,7 +115,6 @@ public:
 
   void apply(DensityMatrix &rho) override;
   std::string get_name() const override { return "AmplitudeDamping"; }
-  std::unique_ptr<NoiseChannel> clone() const override;
 
   double get_gamma() const { return gamma_; }
   int get_target_qbit() const { return target_qbit_; }
@@ -162,7 +155,6 @@ public:
 
   void apply(DensityMatrix &rho) override;
   std::string get_name() const override { return "PhaseDamping"; }
-  std::unique_ptr<NoiseChannel> clone() const override;
 
   double get_lambda() const { return lambda_; }
   int get_target_qbit() const { return target_qbit_; }
