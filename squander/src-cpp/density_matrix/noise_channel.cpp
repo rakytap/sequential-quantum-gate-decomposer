@@ -65,10 +65,6 @@ void DepolarizingChannel::apply(DensityMatrix &rho) {
   }
 }
 
-std::unique_ptr<NoiseChannel> DepolarizingChannel::clone() const {
-  return std::make_unique<DepolarizingChannel>(qbit_num_, error_rate_);
-}
-
 // ================================================================
 // Amplitude Damping Channel
 // ================================================================
@@ -132,10 +128,6 @@ void AmplitudeDampingChannel::apply(DensityMatrix &rho) {
   memcpy(rho.data, rho_new.data, dim * dim * sizeof(QGD_Complex16));
 }
 
-std::unique_ptr<NoiseChannel> AmplitudeDampingChannel::clone() const {
-  return std::make_unique<AmplitudeDampingChannel>(target_qbit_, gamma_);
-}
-
 // ================================================================
 // Phase Damping Channel
 // ================================================================
@@ -176,10 +168,6 @@ void PhaseDampingChannel::apply(DensityMatrix &rho) {
       // Diagonal elements unchanged
     }
   }
-}
-
-std::unique_ptr<NoiseChannel> PhaseDampingChannel::clone() const {
-  return std::make_unique<PhaseDampingChannel>(target_qbit_, lambda_);
 }
 
 } // namespace density

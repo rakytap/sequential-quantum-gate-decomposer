@@ -16,10 +16,7 @@ limitations under the License.
 
 #pragma once
 
-#include "matrix.h"        // For Matrix wrapper
 #include "matrix_base.hpp" // From existing SQUANDER
-#include <memory>
-#include <stdexcept>
 #include <vector>
 
 namespace squander {
