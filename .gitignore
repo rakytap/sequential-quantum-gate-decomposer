@@ -12,3 +12,6 @@ _skbuild/*
 squander.egg-info/*
 costfuncs_and_entropy.txt
 debugfile.txt
+.cache/
+.clangd
+compile_commands.json
