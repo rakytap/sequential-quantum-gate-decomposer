@@ -24,38 +24,27 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 ## \brief Building script for the SQUANDER package
 
 
-
 from skbuild import setup
-from setuptools import find_packages
 
-from skbuild.cmaker import get_cmake_version
 setup(
     name="squander",
-    packages= [ 'squander' ],
-    version='1.9.3',
-    url="https://github.com/rakytap/sequential-quantum-gate-decomposer", 
+    packages=["squander"],
+    version="1.9.4",
+    url="https://github.com/rakytap/sequential-quantum-gate-decomposer",
     maintainer="Peter Rakyta",
     maintainer_email="peter.rakyta@ttk.elte.hu",
     include_package_data=True,
-    package_data = {
-        '': ['README.md', 'MANIFEST.in', 'pyproject.toml']
-    },  
+    package_data={"": ["README.md", "MANIFEST.in", "pyproject.toml"]},
     tests_require=["pytest"],
-    description='C++ library with Python interface to train quantum circuits, quantum gate synthesis and state preparation.',
-    long_description=open("./README.md", 'r').read(),
+    description="C++ library with Python interface to train quantum circuits, quantum gate synthesis and state preparation.",
+    long_description=open("./README.md", "r").read(),
     long_description_content_type="text/markdown",
     keywords="test, cmake, extension",
     classifiers=[
         "Intended Audience :: Developers",
         "Natural Language :: English",
         "Programming Language :: C",
-        "Programming Language :: C++"
+        "Programming Language :: C++",
     ],
-    license='Apache-2.0 license',
+    license="Apache-2.0 license",
 )
-
-
-
-
-
-
