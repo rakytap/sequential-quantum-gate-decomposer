@@ -23,6 +23,7 @@ limitations under the License.
 #include <iostream>
 #include <algorithm>
 #include <random>
+#include <fftw3.h>
 
 static tbb::spin_mutex my_mutex;
 
@@ -191,17 +192,20 @@ void Generative_Quantum_Machine_Learning_Base::start_optimization(){
         throw error;
     }    
 
-
-    // start the GQML process
-    Matrix_real solution_guess = optimized_parameters_mtx.copy();
-    solve_layer_optimization_problem(num_of_parameters, solution_guess);
-
     if (ev_P_star_P_star == -1) {
         ev_P_star_P_star = expectation_value_P_star_P_star_exact();
     }
     if (use_lookup && gaussian_lookup_table.size() == 0) {
         fill_lookup_table();
     }
+    fftw_init_threads();                        // initialize threading support
+    fftw_plan_with_nthreads(std::thread::hardware_concurrency()); // use all CPU cores
+
+    // start the GQML process
+    Matrix_real solution_guess = optimized_parameters_mtx.copy();
+    solve_layer_optimization_problem(num_of_parameters, solution_guess);
+
+    fftw_cleanup_threads();
 
     return;
 }
@@ -265,19 +269,21 @@ double Generative_Quantum_Machine_Learning_Base::expectation_value_P_star_P_star
 @return The calculated value of the expectation value of the square of the distribution
 */
 double Generative_Quantum_Machine_Learning_Base::expectation_value_P_star_P_star_exact() {
+    std::vector<double> correlation_result(1<<qbit_num, 1);
+    correlation_result = correlate_full_real(P_star, P_star);
+
     double ev=0.0;
     tbb::combinable<double> priv_partial_ev{[](){return 0.0;}};
-    tbb::parallel_for( tbb::blocked_range<int>(0, 1<<qbit_num, 1024), [&](tbb::blocked_range<int> r) {
+    tbb::parallel_for( tbb::blocked_range<int>(1, 1<<qbit_num, 1024), [&](tbb::blocked_range<int> r) {
         double& ev_local = priv_partial_ev.local();
-        for (int idx1=r.begin(); idx1<r.end(); idx1++) {
-            for (int idx2=0; idx2<1<<qbit_num; idx2++) {
-                ev_local += P_star[idx1]*P_star[idx2]*Gaussian_kernel(idx1, idx2);
-            }
+        for (int idx=r.begin(); idx<r.end(); idx++) {
+            ev_local += correlation_result[(1<<qbit_num)-1-idx]*gaussian_lookup_table[idx]*2;
         }
     });
     priv_partial_ev.combine_each([&ev](double a) {
         ev += a;
     });
+    ev += correlation_result[(1<<qbit_num)-1]*gaussian_lookup_table[0];
     return ev;
 }
 
@@ -300,6 +306,82 @@ double Generative_Quantum_Machine_Learning_Base::TV_of_the_distributions(Matrix&
     return TV*0.5;
 }
 
+/**
+@brief Call to calculated the correlation with 'full' mode
+@param a first input array
+@param b second input array
+@return Returns with the correlation function.
+*/
+std::vector<double> Generative_Quantum_Machine_Learning_Base::correlate_full_real( Matrix_real& a, Matrix_real& b) {
+    const size_t N = 1<<qbit_num;
+    const size_t M = 2 * N;           // FFT size (power of 2)
+
+    // Allocate real input and output arrays
+    double* A = (double*) fftw_malloc(sizeof(double) * M);
+    double* B = (double*) fftw_malloc(sizeof(double) * M);
+
+    std::fill(A, A + M, 0.0);
+    std::fill(B, B + M, 0.0);
+
+
+    // Copy inputs
+    for (size_t i = 0; i < N; i++) {
+        A[i] = a[i];
+        B[i] = b[N-1-i];
+    }
+
+    // Allocate complex freq arrays (FFTW r2c produces M/2+1 complex bins)
+    fftw_complex* FA = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * (N + 1));
+    fftw_complex* FB = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * (N + 1));
+    double* out_raw = (double*) fftw_malloc(sizeof(double) * M);
+
+    // Plans
+    fftw_plan pa = fftw_plan_dft_r2c_1d(M, A, FA, FFTW_ESTIMATE);
+    fftw_plan pb = fftw_plan_dft_r2c_1d(M, B, FB, FFTW_ESTIMATE);
+    fftw_plan pi = fftw_plan_dft_c2r_1d(M, FA, out_raw, FFTW_ESTIMATE);
+
+
+    // Forward FFTs
+    fftw_execute(pa);
+    fftw_execute(pb);
+
+    // Multiply in frequency domain
+    tbb::parallel_for( tbb::blocked_range<int>(0, N+1, 1024), [&](tbb::blocked_range<int> r) {
+        for (int k = r.begin(); k < r.end(); k++) {
+            double reA = FA[k][0], imA = FA[k][1];
+            double reB = FB[k][0], imB = FB[k][1];
+
+            // (reA + i imA)(reB + i imB)
+            FA[k][0] = reA * reB - imA * imB;
+            FA[k][1] = reA * imB + imA * reB;
+        }
+    });
+
+    // Backward FFT
+    fftw_execute(pi);
+
+    std::vector<double> out(M);
+
+    const double norm_factor = 1.0 / M;
+    tbb::parallel_for(tbb::blocked_range<int>(0, M, 4096), [&](tbb::blocked_range<int> r) {
+        for (int i = r.begin(); i < r.end(); i++) {
+            out[i] = out_raw[i] * norm_factor;
+        }
+    });
+
+    // Cleanup
+    fftw_destroy_plan(pa);
+    fftw_destroy_plan(pb);
+    fftw_destroy_plan(pi);
+    fftw_free(A);
+    fftw_free(B);
+    fftw_free(FA);
+    fftw_free(FB);
+    fftw_free(out_raw);
+
+    return out;
+}
+
 
 /**
 @brief Call to evaluate the maximum mean discrepancy of the given distribution and the one created by our circuit
@@ -313,31 +395,34 @@ double Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions_exact(
     }
 
     // We calculate the distribution created by our circuit at the given traing data points "we sample our distribution"
-    std::vector<double> P_theta(1<<qbit_num);
+    Matrix_real P_theta(1<<qbit_num, 1);
     tbb::parallel_for( tbb::blocked_range<int>(0, 1<<qbit_num, 1024), [&](tbb::blocked_range<int> r) {
         for (int idx=r.begin(); idx<r.end(); idx++) {
             P_theta[idx] = State_right[idx].real*State_right[idx].real + State_right[idx].imag*State_right[idx].imag;
         }
     });
 
-    // Calculate the expectation values 
-    double ev_P_theta_P_theta   = 0.0;
-    double ev_P_theta_P_star    = 0.0;
-    int N=1<<qbit_num;
+    int N = 1<<qbit_num;
+
+    int conv_size = 2*N;
+    std::vector<double> correlation_result_theta_theta(conv_size);
+    correlation_result_theta_theta = correlate_full_real(P_theta, P_theta);
+
+    std::vector<double> correlation_result_theta_star(conv_size);
+    correlation_result_theta_star = correlate_full_real(P_theta, P_star);
+
+    double ev_P_theta_P_theta = 0.0;
+    double ev_P_theta_P_star = 0.0;
+
     tbb::combinable<double> priv_partial_ev_P_theta_P_theta{[](){return 0.0;}};
     tbb::combinable<double> priv_partial_ev_P_theta_P_star{[](){return 0.0;}};
-    tbb::parallel_for( tbb::blocked_range<int>(0, N-1, 1024), [&](tbb::blocked_range<int> r) {
+    tbb::parallel_for( tbb::blocked_range<int>(1, N, 1024), [&](tbb::blocked_range<int> r) {
         double& ev_P_theta_P_theta_local = priv_partial_ev_P_theta_P_theta.local();
         double& ev_P_theta_P_star_local = priv_partial_ev_P_theta_P_star.local();
-        for (int idx1=r.begin(); idx1<r.end(); idx1++) {
-            double tmp_theta_theta = 0.0;
-            double tmp_theta_star = 0.0;
-            for (int idx2=0; idx2<idx1-1; idx2++) {
-                tmp_theta_theta += 2*P_theta[idx2]*P_theta[N-idx1+idx2-1];
-                tmp_theta_star += P_theta[idx2]*P_star[N-idx1+idx2-1]+P_theta[N-idx1+idx2-1]*P_star[idx2];
-            }
-            ev_P_theta_P_theta_local += tmp_theta_theta*gaussian_lookup_table[N-idx1-1];
-            ev_P_theta_P_star_local += tmp_theta_star*gaussian_lookup_table[N-idx1-1];
+        for (int idx=r.begin(); idx < r.end(); idx++) {
+            ev_P_theta_P_theta_local += correlation_result_theta_theta[N-idx-1]*gaussian_lookup_table[idx]*2;
+            ev_P_theta_P_star_local += correlation_result_theta_star[N-idx-1]*gaussian_lookup_table[idx]
+                                    + correlation_result_theta_star[N+idx-1]*gaussian_lookup_table[idx];
         }
     });
     priv_partial_ev_P_theta_P_theta.combine_each([&ev_P_theta_P_theta](double a) {
@@ -346,11 +431,9 @@ double Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions_exact(
     priv_partial_ev_P_theta_P_star.combine_each([&ev_P_theta_P_star](double a) {
         ev_P_theta_P_star += a;
     });
-    for (int idx=0; idx<N; idx++) {
-        ev_P_theta_P_theta += P_theta[idx]*P_theta[idx]*gaussian_lookup_table[0];
-        ev_P_theta_P_star += P_theta[idx]*P_star[idx]*gaussian_lookup_table[0];
-    }
 
+    ev_P_theta_P_theta += correlation_result_theta_theta[N-1]*gaussian_lookup_table[0];
+    ev_P_theta_P_star += correlation_result_theta_star[N-1]*gaussian_lookup_table[0];
 
     {
         tbb::spin_mutex::scoped_lock my_lock{my_mutex};
@@ -582,6 +665,71 @@ double Generative_Quantum_Machine_Learning_Base::optimization_problem(Matrix_rea
 
 
 /**
+@brief Call to evaluate the gradient of the maximum mean discrepancy of the given distribution and the one created by our circuit
+@param State The state for which the expectation value is evaluated. It is a column vector.
+@param State_deriv The derivative of the state for which the expectation value is evaluated. It is a column vector.
+@return The calculated mmd
+*/
+double Generative_Quantum_Machine_Learning_Base::MMD_gradient(Matrix& State, Matrix& State_deriv) {
+    // We calculate the distribution created by our circuit at the given traing data points "we sample our distribution"
+    Matrix_real P_theta(1<<qbit_num, 1);
+    Matrix_real P_theta_deriv(1<<qbit_num, 1);
+    tbb::parallel_for( tbb::blocked_range<int>(0, 1<<qbit_num, 1024), [&](tbb::blocked_range<int> r) {
+        for (int idx=r.begin(); idx<r.end(); idx++) {
+            P_theta[idx] = State[idx].real*State[idx].real + State[idx].imag*State[idx].imag;
+            P_theta_deriv[idx] = 2*(State_deriv[idx].real*State[idx].real - State_deriv[idx].imag*State[idx].imag);
+        }
+    });
+
+    int N = 1<<qbit_num;
+
+    int conv_size = 2*N;
+    std::vector<double> correlation_result_theta_theta_deriv(conv_size);
+    correlation_result_theta_theta_deriv = correlate_full_real(P_theta, P_theta_deriv);
+
+    std::vector<double> correlation_result_theta_deriv_star(conv_size);
+    correlation_result_theta_deriv_star = correlate_full_real(P_theta_deriv, P_star);
+
+    double ev_P_theta_P_theta_deriv = 0.0;
+    double ev_P_theta_deriv_P_star = 0.0;
+
+    tbb::combinable<double> priv_partial_ev_P_theta_P_theta_deriv{[](){return 0.0;}};
+    tbb::combinable<double> priv_partial_ev_P_theta_deriv_P_star{[](){return 0.0;}};
+    tbb::parallel_for( tbb::blocked_range<int>(1, N, 1024), [&](tbb::blocked_range<int> r) {
+        double& ev_P_theta_P_theta_deriv_local = priv_partial_ev_P_theta_P_theta_deriv.local();
+        double& ev_P_theta_deriv_P_star_local = priv_partial_ev_P_theta_deriv_P_star.local();
+        for (int idx=r.begin(); idx < r.end(); idx++) {
+            ev_P_theta_P_theta_deriv_local += correlation_result_theta_theta_deriv[N-idx-1]*gaussian_lookup_table[idx]
+                                    + correlation_result_theta_theta_deriv[N+idx-1]*gaussian_lookup_table[idx];
+            ev_P_theta_deriv_P_star_local += correlation_result_theta_deriv_star[N-idx-1]*gaussian_lookup_table[idx]
+                                    + correlation_result_theta_deriv_star[N+idx-1]*gaussian_lookup_table[idx];
+        }
+    });
+    priv_partial_ev_P_theta_P_theta_deriv.combine_each([&ev_P_theta_P_theta_deriv](double a) {
+        ev_P_theta_P_theta_deriv += a;
+    });
+    priv_partial_ev_P_theta_deriv_P_star.combine_each([&ev_P_theta_deriv_P_star](double a) {
+        ev_P_theta_deriv_P_star += a;
+    });
+
+    ev_P_theta_P_theta_deriv += correlation_result_theta_theta_deriv[N-1]*gaussian_lookup_table[0];
+    ev_P_theta_deriv_P_star += correlation_result_theta_deriv_star[N-1]*gaussian_lookup_table[0];
+
+
+    {
+        tbb::spin_mutex::scoped_lock my_lock{my_mutex};
+
+        number_of_iters++;
+        
+    }
+
+    double result = 2*ev_P_theta_P_theta_deriv - 2*ev_P_theta_deriv_P_star;
+    return result;
+
+}
+
+
+/**
 @brief Call to calculate both the cost function and the its gradient components.
 @param parameters Array containing the free parameters to be optimized.
 @param void_instance A void pointer pointing to the instance of the current class.
@@ -624,7 +772,7 @@ void Generative_Quantum_Machine_Learning_Base::optimization_problem_combined_non
 
     tbb::parallel_for( tbb::blocked_range<int>(0,parameter_num_loc,2), [&](tbb::blocked_range<int> r) {
         for (int idx=r.begin(); idx<r.end(); ++idx) { 
-            grad[idx] = 2*(instance->*MMD_of_the_distributions)(State_deriv[idx]);
+            grad[idx] = instance->MMD_gradient(State, State_deriv[idx]);
         }
     });
     

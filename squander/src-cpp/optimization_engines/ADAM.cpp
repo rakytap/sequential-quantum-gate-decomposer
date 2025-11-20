@@ -236,6 +236,25 @@ void Optimization_Interface::solve_layer_optimization_problem_ADAM( int num_of_p
                 export_current_cost_fnc(current_minimum);
             }
 
+            if ( output_periodicity>0 && iter_idx % output_periodicity == 0 ) {
+                double norm = 0.0;
+                for ( int grad_idx=0; grad_idx<num_of_parameters; grad_idx++ ) {
+                    norm += grad_mtx[grad_idx]*grad_mtx[grad_idx];
+                }
+                norm = std::sqrt(norm);
+                std::stringstream sstream;
+                    sstream << "ADAM: processed iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "\%, current minimum:" << current_minimum << ", current cost function:" << optimization_problem(solution_guess_tmp) << ", sub_iter_idx:" << ", norm" << norm << ", eta" << optimizer.eta << sub_iter_idx <<std::endl;
+
+                print(sstream, 1);   
+                if ( export_circuit_2_binary_loc > 0 ) {
+                    std::string filename("initial_circuit_iteration.binary");
+                    if (project_name != "") { 
+                        filename=project_name+ "_"  +filename;
+                    }
+                    export_gate_list_to_binary(optimized_parameters_mtx, this, filename, verbose);
+                }
+            }
+
             if ( iter_idx % 5000 == 0 ) {
                 if (cost_fnc != VQE){
                 

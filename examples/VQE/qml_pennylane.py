@@ -17,7 +17,7 @@ class MMD:
         self.scales = scales
 
     def k_expval(self, px, py):
-        conv = jnp.convolve(px, py[::-1], "full")
+        conv = jnp.correlate(px, py, "full")
         return jnp.dot(conv, self.K)
 
     def __call__(self, px, py):
@@ -102,7 +102,7 @@ def run_pennylane(target_distribution, n_qubits, n_layers, n_iter, cliques, band
     if params is not None:
         weights = params
     else:
-        weights = np.random.random(whshape)
+        weights = np.random.random(whshape)*2*np.pi
     print(weights.shape)
 
     @qml.qnode(dev)
@@ -120,6 +120,12 @@ def run_pennylane(target_distribution, n_qubits, n_layers, n_iter, cliques, band
     mmd = MMD(bandwith, space)
     qcbm = QCBM(jit_circuit, mmd, target_distribution)
 
+    loss, _ = qcbm.mmd_loss(weights)
+
+    t0 = time.time()
+    loss, _ = qcbm.mmd_loss(weights)
+    print("pennylane mmd", loss)
+    print("pennylane time", time.time()-t0)
     opt = optax.adam(learning_rate=0.1)
 
     opt_state = opt.init(weights)
@@ -137,18 +143,18 @@ def run_pennylane(target_distribution, n_qubits, n_layers, n_iter, cliques, band
         total_div = jnp.sum(jnp.abs(qcbm_probs-qcbm.py))/2
         return params, opt_state, loss_val, total_div, grads
 
-    op = int(n_iterations // 10)
+    op = int(n_iterations // 100)
     t0 = time.time()
     for i in range(n_iterations):
         weights, opt_state, loss_val, kl_div, grads = update_step(weights, opt_state)
 
         if i % op == 0:
             grad_norm = jnp.linalg.norm(grads)
-            print(f"Step: {i} Loss: {loss_val:.4f} TV-dist: {kl_div:.4f} Grad norm: {grad_norm}")
+            # print(f"Step: {i} Loss: {loss_val:.4f} TV-dist: {kl_div:.4f} Grad norm: {grad_norm}")
 
 
-        history.append(loss_val)
-        divs.append(kl_div)
+            history.append(loss_val)
+            divs.append(kl_div)
     print("pennylane time", time.time() - t0)
     qcbm_probs = qcbm.circ(weights)
 

@@ -655,6 +655,9 @@ qgd_Generative_Quantum_Machine_Learning_Base_Wrapper_set_Optimizer( qgd_Generati
     else if ( strcmp("adam", optimizer_C)==0 || strcmp("ADAM", optimizer_C)==0) {
         qgd_optimizer = ADAM;        
     }
+    else if ( strcmp("adam_batched", optimizer_C)==0 || strcmp("ADAM_BATCHED", optimizer_C)==0) {
+        qgd_optimizer = ADAM_BATCHED;        
+    }
     else if ( strcmp("grad_descend", optimizer_C)==0 || strcmp("GRAD_DESCEND", optimizer_C)==0) {
         qgd_optimizer = GRAD_DESCEND;        
     }

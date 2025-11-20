@@ -166,6 +166,14 @@ void fill_lookup_table();
 double TV_of_the_distributions(Matrix& State_right);
 
 /**
+@brief Call to calculated the correlation with 'full' mode
+@param a first input array
+@param b second input array
+@return Returns with the correlation function.
+*/
+std::vector<double> correlate_full_real(Matrix_real& a, Matrix_real& b);
+
+/**
 @brief Call to evaluate the approximated maximum mean discrepancy of the given distribution and the one created by our circuit
 @param State_right The state on the right for which the expectation value is evaluated. It is a column vector.
 @return The calculated mmd
@@ -215,6 +223,13 @@ double optimization_problem_Groq(Matrix_real& parameters, int chosen_device) ;
 */
 double optimization_problem( double* parameters);
 
+/**
+@brief Call to evaluate the gradient of the maximum mean discrepancy of the given distribution and the one created by our circuit
+@param State The state for which the expectation value is evaluated. It is a column vector.
+@param State_deriv The derivative of the state for which the expectation value is evaluated. It is a column vector.
+@return The calculated mmd
+*/
+double MMD_gradient(Matrix& State, Matrix& State_deriv);
 
 /**
 @brief Call to calculate both the cost function and the its gradient components.
