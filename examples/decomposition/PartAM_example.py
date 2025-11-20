@@ -46,8 +46,8 @@ if __name__ == '__main__':
     (0, 1), (0, 2), (0, 3), 
     ]
     wide_circuit_optimizer = Partition_Aware_Mapping( config )
-    wide_circuit_optimizer.Partition_Aware_Mapping( circ, parameters )
-
+    circ, params, _,_ = wide_circuit_optimizer.Partition_Aware_Mapping( circ, parameters )
+    print(Qiskit_IO.get_Qiskit_Circuit(circ.get_Flat_Circuit(),params))
     print("--- %s seconds elapsed during optimization ---" % (time.time() - start_time))
 
 
