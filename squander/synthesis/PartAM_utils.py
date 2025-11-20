@@ -308,7 +308,6 @@ class PartitionCandidate:
         return find_best_permutation_with_constraints(pi, qbit_map_swapped)
 
     def get_final_circuit(self,optimized_partitions,N):
-        print(self.node_mapping,self.qbit_map,self.involved_qbits)
         partition = optimized_partitions[self.partition_idx]
         part_parameters = partition.synthesised_parameters[self.topology_idx][self.permutation_idx]
         part_circuit = partition.synthesised_circuits[self.topology_idx][self.permutation_idx]
@@ -321,10 +320,21 @@ def check_circuit_compatibility(circuit: Circuit, topology):
     gates = circuit.get_Gates()
     for gate in gates:
         qubits = gate.get_Involved_Qbits()
-        if len(qubits) != 1:
+        if len(qubits) == 1:
+            continue
+        elif len(qubits) == 2:
             qubits = tuple(qubits)
             if qubits not in circuit_topology and qubits[::-1] not in circuit_topology:
                 circuit_topology.append(qubits)
+        else:
+            gates_new = gate.get_Gates()
+            for gate_new in gates_new:
+                qubits_new = gate_new.get_Involved_Qbits()
+                if len(qubits_new)==1:
+                    continue
+                qubits_new = tuple(qubits_new)
+                if qubits_new not in circuit_topology and qubits_new[::-1] not in circuit_topology:
+                    circuit_topology.append(qubits_new)
     for qubits in circuit_topology:
         if qubits not in topology and qubits[::-1] not in topology:
             return False
