@@ -314,4 +314,17 @@ class PartitionCandidate:
         qbit_map_swapped = {k : self.node_mapping[self.P_i.index(v)] for k, v in self.qbit_map.items()}
         part_circuit.Remap_Qbits(qbit_map_swapped,N)
         return part_circuit, part_parameters
-    
+
+def check_circuit_compatibility(circuit: Circuit, topology):
+    circuit_topology = []
+    gates = circuit.get_Gates()
+    for gate in gates:
+        qubits = gate.get_Involved_Qbits()
+        if len(qubits) != 1:
+            qubits = tuple(qubits)
+            if qubits not in circuit_topology and qubits[::-1] not in circuit_topology:
+                circuit_topology.append(qubits)
+    for qubits in circuit_topology:
+        if qubits not in topology and qubits[::-1] not in topology:
+            return False
+    return True

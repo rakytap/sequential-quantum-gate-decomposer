@@ -26,7 +26,7 @@ import numpy as np
 from squander.synthesis.qgd_SABRE import qgd_SABRE as SABRE
 from squander.synthesis.PartAM_utils import (get_subtopologies_of_type, get_unique_subtopologies, 
 SingleQubitPartitionResult, PartitionSynthesisResult, 
-PartitionCandidate, permutation_to_cnot_circuit, min_cnots_between_permutations)
+PartitionCandidate, permutation_to_cnot_circuit, min_cnots_between_permutations, check_circuit_compatibility)
 
 class qgd_Partition_Aware_Mapping:
 
@@ -203,6 +203,8 @@ class qgd_Partition_Aware_Mapping:
         F = self.get_initial_layer(IDAG, circ.get_Qbit_Num(),optimized_partitions)
         partition_order, pi_final = self.Heuristic_Search(F,pi.copy(),DAG,optimized_partitions,D)
         final_circuit, final_parameters = self.Construct_circuit_from_HS(partition_order,optimized_partitions)
+        if not check_circuit_compatibility(final_circuit, self.topology):
+            raise Exception("The final circuit is not compatible with the topology.")
         return final_circuit, final_parameters, pi, pi_final
 
     def Heuristic_Search(self, F, pi, DAG, optimized_partitions, D):
@@ -213,7 +215,7 @@ class qgd_Partition_Aware_Mapping:
             partition_candidates = self.obtain_partition_candidates(F,optimized_partitions)
             if len(partition_candidates) != 0:
                 for partition_candidate in partition_candidates:
-                    score = self.score_partition_candidate(partition_candidate, F, pi, optimized_partitions)
+                    score = self.score_partition_candidate(partition_candidate, F, pi, optimized_partitions, DAG)
                     scores.append(score)
             min_idx = np.argmin(scores)
             min_partition_candidate = partition_candidates[min_idx]
@@ -253,12 +255,47 @@ class qgd_Partition_Aware_Mapping:
         final_parameters = np.concatenate(final_parameters,axis=0)
         return final_circuit, final_parameters
 
-    def score_partition_candidate(self, partition_candidate, F,  pi, optimized_partitions):
-        score = 0 
+    def score_partition_candidate(self, partition_candidate, F,  pi, optimized_partitions, DAG):
+        score_F = 0
+        score_E = 0
+        E_visited_partitions = []
         input_perm = partition_candidate.transform_pi_input(pi)
         output_perm = partition_candidate.transform_pi_output(input_perm)
-        score += min_cnots_between_permutations(pi,input_perm)
-        score += len(partition_candidate.circuit_structure)
+        score_F += min_cnots_between_permutations(pi,input_perm)
+        score_F += len(partition_candidate.circuit_structure)
+        for partition_idx in DAG[partition_candidate.partition_idx][1]:
+            if not isinstance(optimized_partitions[partition_idx], SingleQubitPartitionResult):
+                if partition_idx in E_visited_partitions:
+                    continue
+                E_visited_partitions.append(partition_idx)
+                mini_scores = []
+                for tdx, mini_topology in enumerate(optimized_partitions[partition_idx].mini_topologies):
+                    topology_candidates = get_subtopologies_of_type(self.topology,mini_topology)
+                    for topology_candidate in topology_candidates:
+                        for pdx, permutation_pair in enumerate(optimized_partitions[partition_idx].permutations_pairs[tdx]):
+                            new_cand = PartitionCandidate(partition_idx,tdx,pdx,optimized_partitions[partition_idx].circuit_structures[tdx][pdx],permutation_pair[0],permutation_pair[1],topology_candidate,mini_topology,optimized_partitions[partition_idx].qubit_map,optimized_partitions[partition_idx].involved_qbits)
+                            mini_scores.append(min_cnots_between_permutations(output_perm,new_cand.transform_pi_input(min_cnots_between_permutations))+len(new_cand.circuit_structure))
+                score_E += min(mini_scores)
+            else:
+                is_single_qubit = True
+                partition_idx_new = DAG[partition_idx][1]
+                while is_single_qubit and len(partition_idx_new) != 0:
+                    is_single_qubit = isinstance(optimized_partitions[partition_idx_new[0]], SingleQubitPartitionResult)
+                    partition_idx_new = DAG[partition_idx_new[0]][1]
+                if len(partition_idx_new) != 0 and not is_single_qubit:
+                    partition_idx_new = partition_idx_new[0]
+                    if partition_idx_new in E_visited_partitions:
+                        continue
+                    E_visited_partitions.append(partition_idx_new)
+                    mini_scores = []
+                    for tdx, mini_topology in enumerate(optimized_partitions[partition_idx_new].mini_topologies):
+                        topology_candidates = get_subtopologies_of_type(self.topology,mini_topology)
+                        for topology_candidate in topology_candidates:
+                            for pdx, permutation_pair in enumerate(optimized_partitions[partition_idx_new].permutations_pairs[tdx]):
+                                new_cand = PartitionCandidate(partition_idx_new,tdx,pdx,optimized_partitions[partition_idx_new].circuit_structures[tdx][pdx],permutation_pair[0],permutation_pair[1],topology_candidate,mini_topology,optimized_partitions[partition_idx_new].qubit_map,optimized_partitions[partition_idx_new].involved_qbits)
+                                mini_scores.append(min_cnots_between_permutations(output_perm,new_cand.transform_pi_input(min_cnots_between_permutations))+len(new_cand.circuit_structure))
+                    score_E += min(mini_scores)
+                
         for partition_idx in F:
             partition = optimized_partitions[partition_idx]
             mini_scores = []
@@ -268,9 +305,41 @@ class qgd_Partition_Aware_Mapping:
                     for pdx, permutation_pair in enumerate(partition.permutations_pairs[tdx]):
                         new_cand = PartitionCandidate(partition_idx,tdx,pdx,partition.circuit_structures[tdx][pdx],permutation_pair[0],permutation_pair[1],topology_candidate,mini_topology,partition.qubit_map,partition.involved_qbits)
                         mini_scores.append(min_cnots_between_permutations(output_perm,new_cand.transform_pi_input(min_cnots_between_permutations))+len(new_cand.circuit_structure))
-            score += min(mini_scores)
+            score_F += min(mini_scores)
+            for partition_idx_E in DAG[partition_idx][1]:
+                if not isinstance(optimized_partitions[partition_idx_E], SingleQubitPartitionResult):
+                    if partition_idx_E in E_visited_partitions:
+                        continue
+                    E_visited_partitions.append(partition_idx_E)
+                    mini_scores = []
+                    for tdx, mini_topology in enumerate(optimized_partitions[partition_idx_E].mini_topologies):
+                        topology_candidates = get_subtopologies_of_type(self.topology,mini_topology)
+                        for topology_candidate in topology_candidates:
+                            for pdx, permutation_pair in enumerate(optimized_partitions[partition_idx_E].permutations_pairs[tdx]):
+                                new_cand = PartitionCandidate(partition_idx_E,tdx,pdx,optimized_partitions[partition_idx_E].circuit_structures[tdx][pdx],permutation_pair[0],permutation_pair[1],topology_candidate,mini_topology,optimized_partitions[partition_idx_E].qubit_map,optimized_partitions[partition_idx_E].involved_qbits)
+                                mini_scores.append(min_cnots_between_permutations(output_perm,new_cand.transform_pi_input(min_cnots_between_permutations))+len(new_cand.circuit_structure))
+                    score_E += min(mini_scores)
+                else:
+                    is_single_qubit = True
+                    partition_idx_new = DAG[partition_idx_E][1]
+                    while is_single_qubit and len(partition_idx_new) != 0:
+                        is_single_qubit = isinstance(optimized_partitions[partition_idx_new[0]], SingleQubitPartitionResult)
+                        partition_idx_new = DAG[partition_idx_new[0]][1]
+                    if len(partition_idx_new) != 0 and not is_single_qubit:
+                        partition_idx_new = partition_idx_new[0]
+                        if partition_idx_E in E_visited_partitions:
+                            continue
+                        E_visited_partitions.append(partition_idx_E)
+                        mini_scores = []
+                        for tdx, mini_topology in enumerate(optimized_partitions[partition_idx_E].mini_topologies):
+                            topology_candidates = get_subtopologies_of_type(self.topology,mini_topology)
+                            for topology_candidate in topology_candidates:
+                                for pdx, permutation_pair in enumerate(optimized_partitions[partition_idx_E].permutations_pairs[tdx]):
+                                    new_cand = PartitionCandidate(partition_idx_E,tdx,pdx,optimized_partitions[partition_idx_E].circuit_structures[tdx][pdx],permutation_pair[0],permutation_pair[1],topology_candidate,mini_topology,optimized_partitions[partition_idx_E].qubit_map,optimized_partitions[partition_idx_E].involved_qbits)
+                                    mini_scores.append(min_cnots_between_permutations(output_perm,new_cand.transform_pi_input(min_cnots_between_permutations))+len(new_cand.circuit_structure))
+                        score_E += min(mini_scores)
 
-        return score
+        return 0.2*score_E/len(E_visited_partitions) + score_F/len(F)
 
     def obtain_partition_candidates(self, F, optimized_partitions):
         partition_candidates = []
