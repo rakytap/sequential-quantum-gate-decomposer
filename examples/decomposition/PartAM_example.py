@@ -57,12 +57,12 @@ if __name__ == '__main__':
     original_state = initial_state.copy()
     circ_orig.apply_to(parameters_orig,original_state)
     circ_Final = Circuit(circ.get_Qbit_Num() )
-    circ_Final.add_Permutation(input_perm)
-    circ_Final.add_Circuit(circ)
     output_perm_T = [0]* circ.get_Qbit_Num() 
     for i, j in enumerate(output_perm):
         output_perm_T[j] = i
-    circ_Final.add_Permutation(output_perm)
+    circ_Final.add_Permutation(input_perm)
+    circ_Final.add_Circuit(circ)
+    circ_Final.add_Permutation(output_perm_T)
     PartAM_state = initial_state.copy()
     circ_Final.apply_to(params,PartAM_state)
     print(f"Decomposition error on random state: {1-abs(np.vdot(PartAM_state,original_state))}")
