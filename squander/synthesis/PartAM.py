@@ -274,7 +274,7 @@ class qgd_Partition_Aware_Mapping:
                     for topology_candidate in topology_candidates:
                         for pdx, permutation_pair in enumerate(optimized_partitions[partition_idx].permutations_pairs[tdx]):
                             new_cand = PartitionCandidate(partition_idx,tdx,pdx,optimized_partitions[partition_idx].circuit_structures[tdx][pdx],permutation_pair[0],permutation_pair[1],topology_candidate,mini_topology,optimized_partitions[partition_idx].qubit_map,optimized_partitions[partition_idx].involved_qbits)
-                            mini_scores.append(min_cnots_between_permutations(output_perm,new_cand.transform_pi_input(min_cnots_between_permutations))+len(new_cand.circuit_structure))
+                            mini_scores.append(min_cnots_between_permutations(output_perm,new_cand.transform_pi_input(output_perm))+len(new_cand.circuit_structure))
                 score_E += min(mini_scores)
             else:
                 is_single_qubit = True
@@ -293,7 +293,7 @@ class qgd_Partition_Aware_Mapping:
                         for topology_candidate in topology_candidates:
                             for pdx, permutation_pair in enumerate(optimized_partitions[partition_idx_new].permutations_pairs[tdx]):
                                 new_cand = PartitionCandidate(partition_idx_new,tdx,pdx,optimized_partitions[partition_idx_new].circuit_structures[tdx][pdx],permutation_pair[0],permutation_pair[1],topology_candidate,mini_topology,optimized_partitions[partition_idx_new].qubit_map,optimized_partitions[partition_idx_new].involved_qbits)
-                                mini_scores.append(min_cnots_between_permutations(output_perm,new_cand.transform_pi_input(min_cnots_between_permutations))+len(new_cand.circuit_structure))
+                                mini_scores.append(min_cnots_between_permutations(output_perm,new_cand.transform_pi_input(output_perm))+len(new_cand.circuit_structure))
                     score_E += min(mini_scores)
                 
         for partition_idx in F:
@@ -317,7 +317,7 @@ class qgd_Partition_Aware_Mapping:
                         for topology_candidate in topology_candidates:
                             for pdx, permutation_pair in enumerate(optimized_partitions[partition_idx_E].permutations_pairs[tdx]):
                                 new_cand = PartitionCandidate(partition_idx_E,tdx,pdx,optimized_partitions[partition_idx_E].circuit_structures[tdx][pdx],permutation_pair[0],permutation_pair[1],topology_candidate,mini_topology,optimized_partitions[partition_idx_E].qubit_map,optimized_partitions[partition_idx_E].involved_qbits)
-                                mini_scores.append(min_cnots_between_permutations(output_perm,new_cand.transform_pi_input(min_cnots_between_permutations))+len(new_cand.circuit_structure))
+                                mini_scores.append(min_cnots_between_permutations(output_perm,new_cand.transform_pi_input(output_perm))+len(new_cand.circuit_structure))
                     score_E += min(mini_scores)
                 else:
                     is_single_qubit = True
@@ -336,7 +336,7 @@ class qgd_Partition_Aware_Mapping:
                             for topology_candidate in topology_candidates:
                                 for pdx, permutation_pair in enumerate(optimized_partitions[partition_idx_E].permutations_pairs[tdx]):
                                     new_cand = PartitionCandidate(partition_idx_E,tdx,pdx,optimized_partitions[partition_idx_E].circuit_structures[tdx][pdx],permutation_pair[0],permutation_pair[1],topology_candidate,mini_topology,optimized_partitions[partition_idx_E].qubit_map,optimized_partitions[partition_idx_E].involved_qbits)
-                                    mini_scores.append(min_cnots_between_permutations(output_perm,new_cand.transform_pi_input(min_cnots_between_permutations))+len(new_cand.circuit_structure))
+                                    mini_scores.append(min_cnots_between_permutations(output_perm,new_cand.transform_pi_input(output_perm))+len(new_cand.circuit_structure))
                         score_E += min(mini_scores)
 
         return 0.2*score_E/len(E_visited_partitions) + score_F/len(F)
