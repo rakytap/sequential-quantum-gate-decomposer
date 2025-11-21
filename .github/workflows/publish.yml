@@ -9,7 +9,7 @@ on:
         default: patch
 
 permissions:
-  contents: read
+  contents: write
   id-token: write
 
 jobs:
@@ -19,6 +19,9 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -41,6 +44,14 @@ jobs:
           BUMP_SEGMENT: ${{ github.event.inputs.bump-segment || 'patch' }}
         run: python .github/scripts/bump_version.py
 
+      - name: Commit version bump
+        run: |
+          git config --local user.email "peter.rakyta@ttk.elte.hu"
+          git config --local user.name "Peter Rakyta"
+          git add setup.py CMakeLists.txt Doxyfile
+          git commit -m "Bump version to ${{ steps.bump.outputs.version }}"
+          git push
+
       - name: Build source distribution
         run: |
           python -m build --sdist
@@ -48,6 +59,7 @@ jobs:
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
+          password: ${{ secrets.PYPI_API_TOKEN }}
           verbose: true
 
       - name: Upload build artifacts
