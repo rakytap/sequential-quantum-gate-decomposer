@@ -44,10 +44,16 @@ class qgd_Partition_Aware_Mapping:
         self.config.setdefault('routed', False)
         self.config.setdefault('partition_strategy','ilp')
         self.config.setdefault('optimizer', 'BFGS')
+        self.config.setdefault('diagnostics', False)
         strategy = self.config['strategy']
         allowed_strategies = ['TreeSearch', 'TabuSearch', 'Adaptive']
         if not strategy in allowed_strategies:
             raise Exception(f"The strategy should be either of {allowed_strategies}, got {strategy}.")
+    
+    def _diagnostic_print(self, *args, **kwargs):
+        """Print diagnostic information if diagnostics are enabled."""
+        if self.config.get('diagnostics', False):
+            print(*args, **kwargs)
 
     @staticmethod
     def DecomposePartition_Sequential(Partition_circuit: Circuit, Partition_parameters: np.ndarray, config: dict, topologies, involved_qbits, qbit_map) -> PartitionSynthesisResult:
@@ -159,6 +165,19 @@ class qgd_Partition_Aware_Mapping:
 
             for partition_idx, subcircuit in enumerate( tqdm(subcircuits, desc="First Synthesis") ):
                 optimized_results[partition_idx] = optimized_results[partition_idx].get()
+        
+        # Diagnostic: Check first synthesis pass
+        if self.config.get('diagnostics', False):
+            self._diagnostic_print("\n=== Partition Synthesis Diagnostics (First Pass) ===")
+            for idx, opt_part in enumerate(optimized_results):
+                if isinstance(opt_part, SingleQubitPartitionResult):
+                    self._diagnostic_print(f"  Partition {idx}: Single-qubit")
+                else:
+                    self._diagnostic_print(f"  Partition {idx}: Multi-qubit, involved_qubits={opt_part.involved_qbits}")
+                    for tdx in range(opt_part.topology_count):
+                        if opt_part.cnot_counts[tdx]:
+                            min_cnots = min(opt_part.cnot_counts[tdx])
+                            self._diagnostic_print(f"    Topology {tdx}: min_CNOTs={min_cnots}, candidates={len(opt_part.cnot_counts[tdx])}")
 
         weights = [result.get_partition_synthesis_score() for result in optimized_results[:len(allparts)]]
         L_parts, fusion_info = ilp_global_optimal(allparts, g, weights=weights)
@@ -193,23 +212,118 @@ class qgd_Partition_Aware_Mapping:
 
             for partition_idx, subcircuit in enumerate( tqdm(subcircuits, desc="Second Synthesis") ):
                 optimized_partitions[partition_idx] = optimized_partitions[partition_idx].get()
+        
+        # Diagnostic: Check partition synthesis errors
+        if self.config.get('diagnostics', False):
+            self._diagnostic_print("\n=== Partition Synthesis Diagnostics (Second Pass) ===")
+            for idx, opt_part in enumerate(optimized_partitions):
+                if isinstance(opt_part, SingleQubitPartitionResult):
+                    self._diagnostic_print(f"  Partition {idx}: Single-qubit, involved_qubits={opt_part.circuit.get_Qbits()}")
+                else:
+                    self._diagnostic_print(f"  Partition {idx}: Multi-qubit, involved_qubits={opt_part.involved_qbits}, qubit_map={opt_part.qubit_map}")
+                    for tdx in range(opt_part.topology_count):
+                        if opt_part.cnot_counts[tdx]:
+                            min_cnots = min(opt_part.cnot_counts[tdx])
+                            avg_cnots = np.mean(opt_part.cnot_counts[tdx])
+                            self._diagnostic_print(f"    Topology {tdx}: min_CNOTs={min_cnots}, avg_CNOTs={avg_cnots:.2f}, candidates={len(opt_part.cnot_counts[tdx])}")
+        
         return optimized_partitions
 
     def Partition_Aware_Mapping(self, circ: Circuit, orig_parameters: np.ndarray):
+        self._diagnostic_print("\n" + "="*70)
+        self._diagnostic_print("PartAM: Starting Partition Aware Mapping")
+        self._diagnostic_print("="*70)
+        self._diagnostic_print(f"Original circuit: {circ.get_Qbit_Num()} qubits, {len(circ.get_Gates())} gates")
+        
         optimized_partitions = self.SynthesizeWideCircuit(circ, orig_parameters)
+        self._diagnostic_print(f"\nSynthesized {len(optimized_partitions)} partitions")
+        
         DAG, IDAG = self.construct_DAG_and_IDAG(optimized_partitions)
+        if self.config.get('diagnostics', False):
+            self._diagnostic_print("\n=== DAG Construction ===")
+            for idx in range(len(DAG)):
+                self._diagnostic_print(f"  Partition {idx}: parents={IDAG[idx][1]}, children={DAG[idx][1]}")
+        
         D = self.compute_distances_bfs(circ.get_Qbit_Num())
         pi = self._compute_smart_initial_layout(circ, circ.get_Qbit_Num(), D)
+        pi_list = pi.tolist() if hasattr(pi, 'tolist') else list(pi)
+        self._diagnostic_print(f"\nInitial layout (pi): {pi_list}")
+        
         F = self.get_initial_layer(IDAG, circ.get_Qbit_Num(),optimized_partitions)
+        self._diagnostic_print(f"Initial front set (F): {F}")
+        
         partition_order, pi_final = self.Heuristic_Search(F,pi.copy(),DAG,optimized_partitions,D)
+        pi_final_list = pi_final.tolist() if hasattr(pi_final, 'tolist') else list(pi_final)
+        self._diagnostic_print(f"\nFinal permutation (pi_final): {pi_final_list}")
+        self._diagnostic_print(f"Partition order length: {len(partition_order)}")
+        
         final_circuit, final_parameters = self.Construct_circuit_from_HS(partition_order,optimized_partitions, circ.get_Qbit_Num())
+        self._diagnostic_print(f"\nFinal circuit: {len(final_circuit.get_Gates())} gates, {len(final_parameters)} parameters")
+        
         if not check_circuit_compatibility(final_circuit, self.topology):
             raise Exception("The final circuit is not compatible with the topology.")
+        
+        # Matrix-level validation
+        if self.config.get('diagnostics', False):
+            try:
+                original_matrix = circ.get_Matrix(orig_parameters)
+                final_matrix = final_circuit.get_Matrix(final_parameters)
+                matrix_error = np.linalg.norm(original_matrix - final_matrix, 'fro')
+                self._diagnostic_print(f"\n=== Matrix Validation ===")
+                self._diagnostic_print(f"Original circuit matrix: {original_matrix.shape}")
+                self._diagnostic_print(f"Final circuit matrix: {final_matrix.shape}")
+                self._diagnostic_print(f"Matrix Frobenius norm error: {matrix_error:.2e}")
+                
+                # Check if matrices match (accounting for permutation)
+                # The final circuit should match original up to permutation
+                fidelity = abs(np.trace(original_matrix @ final_matrix.conj().T)) / original_matrix.shape[0]
+                self._diagnostic_print(f"Matrix fidelity: {fidelity:.10f}")
+                
+                # Check individual partition matrices
+                self._diagnostic_print(f"\n=== Partition Matrix Validation ===")
+                for idx, opt_part in enumerate(optimized_partitions):
+                    if not isinstance(opt_part, SingleQubitPartitionResult):
+                        # Test the best candidate for each partition
+                        for tdx in range(opt_part.topology_count):
+                            if opt_part.cnot_counts[tdx]:
+                                best_idx = np.argmin(opt_part.cnot_counts[tdx])
+                                test_circuit = opt_part.synthesised_circuits[tdx][best_idx]
+                                test_params = opt_part.synthesised_parameters[tdx][best_idx]
+                                try:
+                                    # Remap original circuit to partition space
+                                    qbit_map = opt_part.qubit_map
+                                    remapped_orig = opt_part.original_circuit.Remap_Qbits(qbit_map, opt_part.N)
+                                    
+                                    # Create test circuit with permutations like in synthesis
+                                    P_i, P_o = opt_part.permutations_pairs[tdx][best_idx]
+                                    test_full = Circuit(opt_part.N)
+                                    test_full.add_Permutation(P_i)
+                                    test_full.add_Circuit(opt_part.original_circuit)
+                                    test_full.add_Permutation(P_o)
+                                    orig_matrix = test_full.get_Matrix(opt_part.synthesised_parameters[tdx][best_idx])
+                                    
+                                    # Compare with synthesized
+                                    synth_matrix = test_circuit.get_Matrix(test_params)
+                                    part_error = np.linalg.norm(orig_matrix - synth_matrix, 'fro')
+                                    if part_error > 1e-6:
+                                        self._diagnostic_print(f"  Partition {idx}, topology {tdx}, candidate {best_idx}: error = {part_error:.2e} (P_i={P_i}, P_o={P_o})")
+                                except Exception as e:
+                                    self._diagnostic_print(f"  Partition {idx}, topology {tdx}: validation error - {e}")
+            except Exception as e:
+                self._diagnostic_print(f"\nMatrix validation failed: {e}")
+                import traceback
+                self._diagnostic_print(traceback.format_exc())
+        
         return final_circuit, final_parameters, pi, pi_final
 
     def Heuristic_Search(self, F, pi, DAG, optimized_partitions, D):
         resolved_partitions = [False] * len(DAG)
         partition_order = []
+        step = 0
+        
+        if self.config.get('diagnostics', False):
+            self._diagnostic_print("\n=== Heuristic Search ===")
+        
         while len(F) != 0:
             scores = []
             partition_candidates = self.obtain_partition_candidates(F,optimized_partitions)
@@ -217,8 +331,25 @@ class qgd_Partition_Aware_Mapping:
                 for partition_candidate in partition_candidates:
                     score = self.score_partition_candidate(partition_candidate, F, pi, optimized_partitions, DAG)
                     scores.append(score)
+            if len(scores) == 0:
+                break
             min_idx = np.argmin(scores)
             min_partition_candidate = partition_candidates[min_idx]
+            
+            if self.config.get('diagnostics', False):
+                self._diagnostic_print(f"\n  Step {step}:")
+                self._diagnostic_print(f"    Selected partition: {min_partition_candidate.partition_idx}")
+                # Convert pi to list if it's a numpy array
+                pi_list = pi.tolist() if hasattr(pi, 'tolist') else list(pi)
+                self._diagnostic_print(f"    Current pi: {pi_list}")
+                pi_input = min_partition_candidate.transform_pi_input(pi)
+                pi_input_list = pi_input if isinstance(pi_input, list) else pi_input.tolist()
+                self._diagnostic_print(f"    Required pi_input: {pi_input_list}")
+                pi_output = min_partition_candidate.transform_pi_output(pi_input)
+                pi_output_list = pi_output if isinstance(pi_output, list) else pi_output.tolist()
+                self._diagnostic_print(f"    Result pi_output: {pi_output_list}")
+                self._diagnostic_print(f"    Best score: {scores[min_idx]:.4f}, candidates evaluated: {len(scores)}")
+            
             F.remove(min_partition_candidate.partition_idx)
             resolved_partitions[min_partition_candidate.partition_idx] = True
             partition_order.append(permutation_to_cnot_circuit(pi, min_partition_candidate.transform_pi_input(pi)))
@@ -226,6 +357,7 @@ class qgd_Partition_Aware_Mapping:
             partition_order.append(min_partition_candidate)
             pi = min_partition_candidate.transform_pi_output(pi)
             children = DAG[min_partition_candidate.partition_idx][1]
+            step += 1
             while len(children) != 0:
                 child = children.pop(0)
                 if not resolved_partitions[child] and child not in F:
@@ -242,17 +374,41 @@ class qgd_Partition_Aware_Mapping:
     def Construct_circuit_from_HS(self, partition_order, optimized_partitions,N):
         final_circuit = Circuit(N)
         final_parameters = []
+        perm_count = 0
+        partition_count = 0
+        
+        if self.config.get('diagnostics', False):
+            self._diagnostic_print("\n=== Circuit Construction ===")
+        
         for part in partition_order:
             if isinstance(part, Circuit):
                 final_circuit.add_Circuit(part)
+                perm_count += 1
+                if self.config.get('diagnostics', False):
+                    self._diagnostic_print(f"  Added permutation circuit ({perm_count} CNOT gates)")
             elif isinstance(part, SingleQubitPartitionResult):
                 final_circuit.add_Circuit(part.circuit)
                 final_parameters.append(part.parameters)
+                partition_count += 1
+                if self.config.get('diagnostics', False):
+                    self._diagnostic_print(f"  Added single-qubit partition {partition_count}, qubit={part.circuit.get_Qbits()}")
             else:
                 part_circ, part_parameters = part.get_final_circuit(optimized_partitions,N)
                 final_circuit.add_Circuit(part_circ)
                 final_parameters.append(part_parameters)
-        final_parameters = np.concatenate(final_parameters,axis=0)
+                partition_count += 1
+                if self.config.get('diagnostics', False):
+                    cnot_count = part_circ.get_Gate_Nums().get('CNOT', 0)
+                    self._diagnostic_print(f"  Added partition {part.partition_idx} (multi-qubit), CNOTs={cnot_count}, qubits={part.involved_qbits}")
+        
+        if final_parameters:
+            final_parameters = np.concatenate(final_parameters,axis=0)
+        else:
+            final_parameters = np.array([])
+        
+        if self.config.get('diagnostics', False):
+            self._diagnostic_print(f"  Total: {perm_count} permutation circuits, {partition_count} partitions")
+        
         return final_circuit, final_parameters
 
     def score_partition_candidate(self, partition_candidate, F,  pi, optimized_partitions, DAG):
@@ -275,7 +431,8 @@ class qgd_Partition_Aware_Mapping:
                         for pdx, permutation_pair in enumerate(optimized_partitions[partition_idx].permutations_pairs[tdx]):
                             new_cand = PartitionCandidate(partition_idx,tdx,pdx,optimized_partitions[partition_idx].circuit_structures[tdx][pdx],permutation_pair[0],permutation_pair[1],topology_candidate,mini_topology,optimized_partitions[partition_idx].qubit_map,optimized_partitions[partition_idx].involved_qbits)
                             mini_scores.append(min_cnots_between_permutations(output_perm,new_cand.transform_pi_input(output_perm))+len(new_cand.circuit_structure))
-                score_E += min(mini_scores)
+                if mini_scores:
+                    score_E += min(mini_scores)
             else:
                 is_single_qubit = True
                 partition_idx_new = DAG[partition_idx][1]
@@ -294,7 +451,8 @@ class qgd_Partition_Aware_Mapping:
                             for pdx, permutation_pair in enumerate(optimized_partitions[partition_idx_new].permutations_pairs[tdx]):
                                 new_cand = PartitionCandidate(partition_idx_new,tdx,pdx,optimized_partitions[partition_idx_new].circuit_structures[tdx][pdx],permutation_pair[0],permutation_pair[1],topology_candidate,mini_topology,optimized_partitions[partition_idx_new].qubit_map,optimized_partitions[partition_idx_new].involved_qbits)
                                 mini_scores.append(min_cnots_between_permutations(output_perm,new_cand.transform_pi_input(output_perm))+len(new_cand.circuit_structure))
-                    score_E += min(mini_scores)
+                    if mini_scores:
+                        score_E += min(mini_scores)
                 
         for partition_idx in F:
             partition = optimized_partitions[partition_idx]
@@ -305,7 +463,8 @@ class qgd_Partition_Aware_Mapping:
                     for pdx, permutation_pair in enumerate(partition.permutations_pairs[tdx]):
                         new_cand = PartitionCandidate(partition_idx,tdx,pdx,partition.circuit_structures[tdx][pdx],permutation_pair[0],permutation_pair[1],topology_candidate,mini_topology,partition.qubit_map,partition.involved_qbits)
                         mini_scores.append(min_cnots_between_permutations(output_perm,new_cand.transform_pi_input(output_perm))+len(new_cand.circuit_structure))
-            score_F += min(mini_scores)
+            if mini_scores:
+                score_F += min(mini_scores)
             for partition_idx_E in DAG[partition_idx][1]:
                 if not isinstance(optimized_partitions[partition_idx_E], SingleQubitPartitionResult):
                     if partition_idx_E in E_visited_partitions:
@@ -318,7 +477,8 @@ class qgd_Partition_Aware_Mapping:
                             for pdx, permutation_pair in enumerate(optimized_partitions[partition_idx_E].permutations_pairs[tdx]):
                                 new_cand = PartitionCandidate(partition_idx_E,tdx,pdx,optimized_partitions[partition_idx_E].circuit_structures[tdx][pdx],permutation_pair[0],permutation_pair[1],topology_candidate,mini_topology,optimized_partitions[partition_idx_E].qubit_map,optimized_partitions[partition_idx_E].involved_qbits)
                                 mini_scores.append(min_cnots_between_permutations(output_perm,new_cand.transform_pi_input(output_perm))+len(new_cand.circuit_structure))
-                    score_E += min(mini_scores)
+                    if mini_scores:
+                        score_E += min(mini_scores)
                 else:
                     is_single_qubit = True
                     partition_idx_new = DAG[partition_idx_E][1]
@@ -327,19 +487,31 @@ class qgd_Partition_Aware_Mapping:
                         partition_idx_new = DAG[partition_idx_new[0]][1]
                     if len(partition_idx_new) != 0 and not is_single_qubit:
                         partition_idx_new = partition_idx_new[0]
-                        if partition_idx_E in E_visited_partitions:
+                        if partition_idx_new in E_visited_partitions:
                             continue
-                        E_visited_partitions.append(partition_idx_E)
+                        E_visited_partitions.append(partition_idx_new)
                         mini_scores = []
-                        for tdx, mini_topology in enumerate(optimized_partitions[partition_idx_E].mini_topologies):
+                        for tdx, mini_topology in enumerate(optimized_partitions[partition_idx_new].mini_topologies):
                             topology_candidates = get_subtopologies_of_type(self.topology,mini_topology)
                             for topology_candidate in topology_candidates:
-                                for pdx, permutation_pair in enumerate(optimized_partitions[partition_idx_E].permutations_pairs[tdx]):
-                                    new_cand = PartitionCandidate(partition_idx_E,tdx,pdx,optimized_partitions[partition_idx_E].circuit_structures[tdx][pdx],permutation_pair[0],permutation_pair[1],topology_candidate,mini_topology,optimized_partitions[partition_idx_E].qubit_map,optimized_partitions[partition_idx_E].involved_qbits)
+                                for pdx, permutation_pair in enumerate(optimized_partitions[partition_idx_new].permutations_pairs[tdx]):
+                                    new_cand = PartitionCandidate(partition_idx_new,tdx,pdx,optimized_partitions[partition_idx_new].circuit_structures[tdx][pdx],permutation_pair[0],permutation_pair[1],topology_candidate,mini_topology,optimized_partitions[partition_idx_new].qubit_map,optimized_partitions[partition_idx_new].involved_qbits)
                                     mini_scores.append(min_cnots_between_permutations(output_perm,new_cand.transform_pi_input(output_perm))+len(new_cand.circuit_structure))
-                        score_E += min(mini_scores)
+                        if mini_scores:
+                            score_E += min(mini_scores)
 
-        return 0.2*score_E/len(E_visited_partitions) + score_F/len(F)
+        # Safety check for division by zero
+        if len(E_visited_partitions) == 0:
+            E_score = 0.0
+        else:
+            E_score = 0.2 * score_E / len(E_visited_partitions)
+        
+        if len(F) == 0:
+            F_score = 0.0
+        else:
+            F_score = score_F / len(F)
+        
+        return E_score + F_score
 
     def obtain_partition_candidates(self, F, optimized_partitions):
         partition_candidates = []

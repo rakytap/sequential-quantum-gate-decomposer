@@ -35,6 +35,7 @@ if __name__ == '__main__':
             'test_subcircuits': True,
             'test_final_circuit': True,
             'max_partition_size': 3,
+            'diagnostics': True,  # Enable diagnostic output
     }
 
     filename = "benchmarks/qfast/4q/adder_q4.qasm"
@@ -60,12 +61,67 @@ if __name__ == '__main__':
     output_perm_T = [0]* circ.get_Qbit_Num() 
     for i, j in enumerate(output_perm):
         output_perm_T[j] = i
+    # Validate permutation inverse calculation
+    if config.get('diagnostics', False):
+        print(f"\n{'='*70}")
+        print(f"Permutation Validation")
+        print(f"{'='*70}")
+        print(f"input_perm (initial pi): {input_perm}")
+        print(f"output_perm (final pi): {output_perm}")
+        
+        # Compute inverse
+        output_perm_T = [0] * circ.get_Qbit_Num()
+        for i, j in enumerate(output_perm):
+            output_perm_T[j] = i
+        print(f"output_perm_T (inverse): {output_perm_T}")
+        
+        # Verify inverse: output_perm_T[output_perm[i]] should equal i
+        test_inverse = [output_perm_T[output_perm[i]] for i in range(len(output_perm))]
+        if test_inverse != list(range(len(output_perm))):
+            print(f"  ERROR: Inverse calculation is WRONG!")
+            print(f"  Expected: {list(range(len(output_perm)))}")
+            print(f"  Got: {test_inverse}")
+        else:
+            print(f"  Inverse verified: OK")
+    
+    if not config.get('diagnostics', False):
+        output_perm_T = [0] * circ.get_Qbit_Num()
+        for i, j in enumerate(output_perm):
+            output_perm_T[j] = i
+    
     circ_Final.add_Permutation(input_perm)
     circ_Final.add_Circuit(circ)
     circ_Final.add_Permutation(output_perm_T)
+    
+    # Additional matrix validation in example
+    if config.get('diagnostics', False):
+        try:
+            print(f"\n{'='*70}")
+            print(f"Final Circuit Matrix Validation")
+            print(f"{'='*70}")
+            orig_matrix = circ_orig.get_Matrix(parameters_orig)
+            final_matrix = circ_Final.get_Matrix(params)
+            matrix_error = np.linalg.norm(orig_matrix - final_matrix, 'fro')
+            print(f"Original vs Final circuit error: {matrix_error:.2e}")
+            
+            # Test without output permutation
+            circ_test = Circuit(circ.get_Qbit_Num())
+            circ_test.add_Permutation(input_perm)
+            circ_test.add_Circuit(circ)
+            test_matrix = circ_test.get_Matrix(params)
+            test_error = np.linalg.norm(orig_matrix - test_matrix, 'fro')
+            print(f"Without output perm error: {test_error:.2e}")
+        except Exception as e:
+            print(f"Matrix validation error: {e}")
+    
     PartAM_state = initial_state.copy()
-    circ_Final.apply_to(params,PartAM_state)
-    print(f"Decomposition error on random state: {1-abs(np.vdot(PartAM_state,original_state))}")
+    circ_Final.apply_to(params, PartAM_state)
+    state_error = 1 - abs(np.vdot(PartAM_state, original_state))
+    print(f"\n{'='*70}")
+    print(f"State Vector Validation")
+    print(f"{'='*70}")
+    print(f"Decomposition error on random state: {state_error:.10f}")
     print("--- %s seconds elapsed during optimization ---" % (time.time() - start_time))
+    print(f"{'='*70}\n")
 
 
