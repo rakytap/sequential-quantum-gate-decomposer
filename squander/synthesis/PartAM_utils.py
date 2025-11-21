@@ -218,7 +218,8 @@ class PartitionSynthesisResult:
         self.topology_count = len(mini_topologies)
         #Qubit num of the partition
         self.N = N
-        # P_o and P_i pairs q*->Q*
+        # P_i in q*->Q* permutation pattern: [q*1 q*0 q*2] where q*1 goes to Q* qubit 0 and etc 
+        # P_o in Q*->q* permutation pattern [Q*1 Q*0 Q*2] This means that the current output of Q*1 is equal to q*0
         self.permutations_pairs = [[] for _ in range(len(mini_topologies))]
         # results of synthesis
         self.synthesised_circuits = [[] for _ in range(len(mini_topologies))]
@@ -227,7 +228,7 @@ class PartitionSynthesisResult:
         self.circuit_structures = [[] for _ in range(len(mini_topologies))]
         # Involved q qubits on the circuit
         self.involved_qbits = involved_qbits
-        # q->q*
+        # {q:q*}
         self.qubit_map = qubit_map
         # the original circuit
         self.original_circuit = original_circuit
@@ -277,24 +278,25 @@ class PartitionCandidate:
     def __init__(self, partition_idx, topology_idx, permutation_idx, circuit_structure, P_i, P_o, topology, mini_topology, qbit_map, involved_qbits):
         #Which partition does this belong to
         self.partition_idx = partition_idx
-        #the index of the q* topology
+        #the index of the Q* topology
         self.topology_idx = topology_idx
         #the index of the P_i and P_o pair
         self.permutation_idx = permutation_idx
-        # the structure of the circuit in q*
+        # the structure of the circuit in Q*
         self.circuit_structure = circuit_structure
-        # permutations in q*->Q*
+        # P_i in q*->Q* permutation pattern: [q*1 q*0 q*2] where q*1 goes to Q* qubit 0 and etc 
         self.P_i = P_i
+        # P_o in Q*->q* permutation pattern [Q*1 Q*0 Q*2] This means that the current output of Q*1 is equal to q*0
         self.P_o = P_o
         #The mini_topology in Q
         self.topology = topology
-        #The mini topology in q*
+        #The mini topology in Q*
         self.mini_topology = mini_topology
-        # q->q*
+        # {q:q*}
         self.qbit_map = qbit_map
         # q belonging to the original circuit
         self.involved_qbits = involved_qbits
-        # q->Q*
+        # {Q*:Q}
         self.node_mapping = get_node_mapping(mini_topology, topology)
 
     def transform_pi_input(self, pi):
@@ -312,7 +314,7 @@ class PartitionCandidate:
         part_parameters = partition.synthesised_parameters[self.topology_idx][self.permutation_idx]
         part_circuit = partition.synthesised_circuits[self.topology_idx][self.permutation_idx]
         qbit_map_swapped = {v : self.node_mapping[self.P_i.index(v)] for k, v in self.qbit_map.items()}
-        part_circuit.Remap_Qbits(qbit_map_swapped,N)
+        part_circuit = part_circuit.Remap_Qbits(qbit_map_swapped,N)
         return part_circuit, part_parameters
 
 def check_circuit_compatibility(circuit: Circuit, topology):

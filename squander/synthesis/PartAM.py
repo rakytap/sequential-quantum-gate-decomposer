@@ -233,8 +233,8 @@ class qgd_Partition_Aware_Mapping:
                         child_partition = optimized_partitions[child]
                         qubit = child_partition.circuit.get_Qbits()[0]
                         child_partition.circuit.map_circuit({qubit: pi[qubit]})
-                        partition_order.append(child_partition.circuit)
-                        children.append(DAG[child][1])
+                        partition_order.append(child_partition)
+                        children.extend(DAG[child][1])
                     else:
                         F.append(child)
         return partition_order, pi
