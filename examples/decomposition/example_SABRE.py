@@ -5,11 +5,6 @@ from squander import Circuit
 
 from qiskit import transpile
 from qiskit import QuantumCircuit
-from qiskit.circuit import CircuitInstruction
-from qiskit.circuit.library import PermutationGate
-from qiskit_aer import AerSimulator
-from qiskit.quantum_info import Operator
-from qiskit import QuantumRegister, ClassicalRegister
 import numpy as np
 parameters = np.array([])
 
@@ -40,16 +35,16 @@ Squander_remapped_circuit, parameters_remapped_circuit, pi, final_pi, swap_count
 print("INITIAL CIRCUIT:")
 #print( circuit_qiskit )
 print("mapping (q -> Q):", pi)
-print("Final mapping:", final_pi)
 qubits = list(range(N))
-pi_map = list(np.array(sabre.get_inverse_pi(pi)))
+pi_map = list(np.array(sabre.get_inverse_pi(final_pi)))
+print("Final mapping:", final_pi)
 final_circuit = Circuit(N)
-final_circuit.add_Permutation(list(pi_map))
+final_circuit.add_Permutation(list(pi)) 
 final_circuit.add_Circuit(Squander_remapped_circuit)
-final_circuit.add_Permutation(list(final_pi))
+final_circuit.add_Permutation(list(pi_map))
 Qiskit_circuit = Qiskit_IO.get_Qiskit_Circuit( final_circuit.get_Flat_Circuit(), parameters_remapped_circuit )
 print("CIRCUIT MAPPED WITH SABRE:")
-print( Qiskit_circuit )
+#print( Qiskit_circuit )
 print("SABRE SWAP COUNT:", swap_count)
 # defining the qubit topology/connectivity for Squander
 coupling_map = [
@@ -63,27 +58,14 @@ Qiskit_circuit_mapped = transpile(circuit_qiskit, coupling_map=coupling_map)
 print("CIRCUIT MAPPED WITH QISKIT:")
 #print( Qiskit_circuit_mapped )
 print("QISKIT SWAP COUNT:",  dict(Qiskit_circuit_mapped.count_ops())['swap'])
-
-# test the generated squander circuits
-#matrix_size = 1 << Squander_initial_circuit.get_Qbit_Num()
-#unitary_squander_initial = utils.get_unitary_from_qiskit_circuit_operator(circuit_qiskit)
-
-#unitary_squander_remapped_circuit = np.eye( 1 << Squander_initial_circuit.get_Qbit_Num(), dtype=np.complex128 )
-#Squander_remapped_circuit.apply_to( parameters_remapped_circuit, unitary_squander_remapped_circuit)
-"""
-unitary_squander_remapped_circuit = utils.get_unitary_from_qiskit_circuit_operator(Qiskit_circuit)
-
-
-product_matrix = np.dot(unitary_squander_initial.conj().T, unitary_squander_remapped_circuit)
-phase = np.angle(product_matrix[0,0])
-product_matrix = product_matrix*np.exp(-1j*phase)
-
-    
-product_matrix = np.eye(matrix_size)*2 - product_matrix - product_matrix.conj().T
-
-# the error of the decomposition
-decomposition_error =  (np.real(np.trace(product_matrix)))/2
-       
-print('The error of the decomposition is ' + str(decomposition_error))
-
-"""
+num_qubits = final_circuit.get_Qbit_Num() 
+matrix_size = 1 << num_qubits 
+initial_state_real = np.random.uniform(-1.0,1.0, (matrix_size,) )
+initial_state_imag = np.random.uniform(-1.0,1.0, (matrix_size,) )
+initial_state = initial_state_real + initial_state_imag*1j
+initial_state = initial_state/np.linalg.norm(initial_state)
+original_state = initial_state.copy()
+Squander_initial_circuit.apply_to(parameters_initial,original_state)
+SABRE_state = initial_state.copy()
+final_circuit.apply_to(parameters_remapped_circuit,SABRE_state)
+print(f"ERROR: {1-abs(np.vdot(SABRE_state,original_state))}")

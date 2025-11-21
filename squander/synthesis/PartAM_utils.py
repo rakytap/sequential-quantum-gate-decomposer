@@ -2,6 +2,8 @@ import numpy as np
 from typing import List, Tuple, Set, FrozenSet
 from itertools import permutations
 from squander.gates.qgd_Circuit import qgd_Circuit as Circuit
+import heapq
+
 def _build_adj_list(edges: List[Tuple[int, int]]) -> dict:
     adj_list = {}
     for u, v in edges:
@@ -107,90 +109,99 @@ def get_node_mapping(topology1: List[Tuple[int, int]], topology2: List[Tuple[int
             return mapping
     return {}
 
-def min_cnots_between_permutations(A, B):
-    n = len(A)
-    inv_B = [0] * n
-    for pos, qubit in enumerate(B):
-        inv_B[qubit] = pos
+def find_constrained_swaps_partial(pi_A, pi_B_dict, dist_matrix):
+    """
+    Find SWAP sequence to route subset of virtual qubits to targets.
     
-    P = [inv_B[A[i]] for i in range(n)]
-    visited = [False] * n
-    total_cnots = 0
+    Args:
+        pi_A: List [Q0, Q1, ...] where pi_A[q] = Q (complete initial mapping)
+        pi_B_dict: Dict {q: Q} specifying only qubits that need routing
+        dist_matrix: Pre-computed distance matrix dist[i][j] between physical qubits
     
+    Returns:
+        swaps: List of (i, j) SWAP operations on adjacent physical qubits
+        final_permutation: List showing final virtual→physical mapping
+    """
+    n = len(pi_A)
+    
+    # Build adjacency list from distance matrix
+    adj = [set() for _ in range(n)]
     for i in range(n):
-        if not visited[i]:
-            cycle_len = 0
-            j = i
-            while not visited[j]:
-                visited[j] = True
-                j = P[j]
-                cycle_len += 1
-            if cycle_len >= 2:
-                total_cnots += 2 * cycle_len - 3
+        for j in range(i+1, n):
+            if dist_matrix[i][j] == 1:  # Adjacent in topology
+                adj[i].add(j)
+                adj[j].add(i)
     
-    return total_cnots
-
-def permutation_to_cnot_circuit(A, B):
-    n = len(A)
-    inv_B = {qubit: pos for pos, qubit in enumerate(B)}
-    P = [inv_B[A[i]] for i in range(n)]
+    # Use physical-to-virtual representation for easier SWAP handling
+    # state[P] = q means physical qubit P contains virtual qubit q
+    def to_phys_to_virt(virt_to_phys):
+        """Convert virtual→physical list to physical→virtual list"""
+        p2v = [0] * n
+        for q in range(n):
+            P = virt_to_phys[q]
+            p2v[P] = q
+        return p2v
     
-    visited = [False] * n
-    cnot_circuit = Circuit(n)
+    def to_virt_to_phys(phys_to_virt):
+        """Convert physical→virtual list to virtual→physical list"""
+        v2p = [0] * n
+        for P in range(n):
+            q = phys_to_virt[P]
+            v2p[q] = P
+        return v2p
     
-    for i in range(n):
-        if not visited[i]:
-            # Extract cycle
-            cycle = []
-            j = i
-            while not visited[j]:
-                visited[j] = True
-                cycle.append(j)
-                j = P[j]
-            
-            # Convert cycle to CNOTs
-            k = len(cycle)
-            if k == 2:
-                cnot_circuit.add_CNOT(cycle[1], cycle[0])
-            elif k >= 3:
-                # Forward pass
-                for idx in range(k - 1):
-                    cnot_circuit.add_CNOT(cycle[idx + 1], cycle[idx])
-                # Backward pass
-                for idx in range(k - 2, 0, -1):
-                    cnot_circuit.add_CNOT(cycle[idx + 1], cycle[idx])
+    start_state = tuple(to_phys_to_virt(pi_A))
     
-    return cnot_circuit
-
-def find_best_permutation_with_constraints(A, constraints, strategy='greedy'):
-    n = len(A)
-    B = [None] * n
-    used_qubits = set()
+    def is_goal(state):
+        """Check if target qubits are in correct physical positions"""
+        for q, target_P in pi_B_dict.items():
+            if state[target_P] != q:  # Physical position target_P should contain virtual q
+                return False
+        return True
     
-    # Apply constraints
-    for pos, qubit in constraints.items():
-        B[pos] = qubit
-        used_qubits.add(qubit)
+    def heuristic(state):
+        """Lower bound: sum of distances for qubits needing routing"""
+        total = 0
+        for q, target_P in pi_B_dict.items():
+            # Find where virtual qubit q currently is
+            current_P = state.index(q)
+            total += dist_matrix[current_P][target_P]
+        return total // 2  # Optimistic: each SWAP helps 2 qubits
     
-    # Fill unconstrained positions
-    available_qubits = [q for q in range(n) if q not in used_qubits]
-    unconstrained_positions = [i for i in range(n) if B[i] is None]
-
-    for pos in unconstrained_positions:
-        if A[pos] in available_qubits:
-            B[pos] = A[pos]
-            available_qubits.remove(A[pos])
+    # A* search
+    heap = [(heuristic(start_state), 0, start_state, [])]
+    visited = {start_state: 0}
     
-    # Fill remaining positions with remaining qubits
-    j = 0
-    for pos in unconstrained_positions:
-        if B[pos] is None:
-            B[pos] = available_qubits[j]
-            j += 1
+    while heap:
+        f, g, current, path = heapq.heappop(heap)
+        
+        if is_goal(current):
+            # Convert final state back to virtual→physical mapping
+            final_permutation = to_virt_to_phys(current)
+            return path, final_permutation
+        
+        if visited.get(current, float('inf')) < g:
+            continue
+        
+        # Try all valid SWAPs on adjacent physical qubits
+        current_list = list(current)
+        for i in range(n):
+            for j in adj[i]:
+                if i < j:  # Avoid duplicate (i,j) and (j,i)
+                    # SWAP physical qubits i and j
+                    new_state = current_list[:]
+                    new_state[i], new_state[j] = new_state[j], new_state[i]
+                    new_state_tuple = tuple(new_state)
+                    
+                    new_g = g + 1
+                    
+                    if visited.get(new_state_tuple, float('inf')) > new_g:
+                        visited[new_state_tuple] = new_g
+                        new_f = new_g + heuristic(new_state_tuple)
+                        new_path = path + [(i, j)]
+                        heapq.heappush(heap, (new_f, new_g, new_state_tuple, new_path))
     
-    
-    return B
-
+    return None, None  # No solution found
 
 def extract_subtopology(involved_qbits, qbit_map, config ):
     mini_topology = []
@@ -266,12 +277,9 @@ class PartitionSynthesisResult:
     def get_partition_synthesis_score(self):
         score = 0
         for topology_idx in range(self.topology_count):
-            cnot_count_topology = np.mean(self.cnot_counts[topology_idx])*0.1 + np.min(self.cnot_counts[topology_idx])*0.9
-            if len(self.mini_topologies[topology_idx]) == self.N*(self.N-1)/2:
-                score += cnot_count_topology*0.3/self.topology_count
-            else:
-                score += cnot_count_topology*0.7/self.topology_count
-        return score 
+            cnot_count_topology = np.mean(self.cnot_counts[topology_idx])*0.5 + np.min(self.cnot_counts[topology_idx])*0.5
+            score += cnot_count_topology/self.topology_count
+        return score
 
 class PartitionCandidate:
     
@@ -299,22 +307,22 @@ class PartitionCandidate:
         # {Q*:Q}
         self.node_mapping = get_node_mapping(mini_topology, topology)
 
-    def transform_pi_input(self, pi):
-        #Q->q
-        qbit_map_swapped = {self.node_mapping[self.P_i.index(v)]: k for k, v in self.qbit_map.items()}
-        return find_best_permutation_with_constraints(pi, qbit_map_swapped)
-
-    def transform_pi_output(self, pi):
-        #Q->q
-        qbit_map_swapped = {self.node_mapping[self.P_o.index(v)]: k for k, v in self.qbit_map.items()}
-        return find_best_permutation_with_constraints(pi, qbit_map_swapped)
-
+    def transform_pi(self, pi, D):
+        qbit_map_input = {k : self.node_mapping[self.P_i[v]] for k,v in self.qbit_map.items()}
+        print(qbit_map_input)
+        swaps, pi_init = find_constrained_swaps_partial(pi, qbit_map_input,D)
+        print(swaps, pi_init)
+        pi_output = pi_init.copy()
+        node_mapping_reversed = {v : k for k,v in self.node_mapping.items()}
+        for v in self.node_mapping.values():
+            pi_output[pi_init.index(v)] = self.node_mapping[self.P_o[node_mapping_reversed[v]]]
+        return swaps, pi_output
+    
     def get_final_circuit(self,optimized_partitions,N):
         partition = optimized_partitions[self.partition_idx]
         part_parameters = partition.synthesised_parameters[self.topology_idx][self.permutation_idx]
         part_circuit = partition.synthesised_circuits[self.topology_idx][self.permutation_idx]
-        qbit_map_swapped = {v : self.node_mapping[self.P_i.index(v)] for k, v in self.qbit_map.items()}
-        part_circuit = part_circuit.Remap_Qbits(qbit_map_swapped,N)
+        part_circuit = part_circuit.Remap_Qbits(self.node_mapping, N)
         return part_circuit, part_parameters
 
 def check_circuit_compatibility(circuit: Circuit, topology):
@@ -341,3 +349,11 @@ def check_circuit_compatibility(circuit: Circuit, topology):
         if qubits not in topology and qubits[::-1] not in topology:
             return False
     return True
+
+def construct_swap_circuit(swap_order, N):
+    swap_circ = Circuit(N)
+    for swap in swap_order:
+        swap_circ.add_CNOT(swap[0],swap[1])
+        swap_circ.add_CNOT(swap[1],swap[0])
+        swap_circ.add_CNOT(swap[0],swap[1])
+    return swap_circ
