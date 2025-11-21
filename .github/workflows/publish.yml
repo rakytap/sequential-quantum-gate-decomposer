@@ -68,3 +68,17 @@ jobs:
           name: dist-${{ steps.bump.outputs.version }}
           path: dist/
 
+      - name: Create GitHub Release
+        run: |
+          gh release create "v${{ steps.bump.outputs.version }}" \
+            --title "Release v${{ steps.bump.outputs.version }}" \
+            --notes "## Release v${{ steps.bump.outputs.version }}
+          
+          This release includes version ${{ steps.bump.outputs.version }} of the squander package.
+          
+          ### Changes
+          - Version bumped to ${{ steps.bump.outputs.version }}
+          - Package published to PyPI"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
