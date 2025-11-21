@@ -25,10 +25,15 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Install System Dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends cmake libtbb-dev libopenblas-dev liblapacke-dev
+
       - name: Install build tooling
         run: |
           python -m pip install --upgrade pip
-          python -m pip install build packaging tomli-w
+          python -m pip install build packaging tomli-w numpy scipy scikit-build
 
       - name: Bump project version
         id: bump
@@ -36,9 +41,9 @@ jobs:
           BUMP_SEGMENT: ${{ github.event.inputs.bump-segment || 'patch' }}
         run: python .github/scripts/bump_version.py
 
-      - name: Build distribution
+      - name: Build source distribution
         run: |
-          python -m build
+          python -m build --sdist
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
