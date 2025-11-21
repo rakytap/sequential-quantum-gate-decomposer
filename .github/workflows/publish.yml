@@ -1,0 +1,54 @@
+name: Publish to PyPI
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump-segment:
+        description: "SemVer segment to bump (major, minor, patch)"
+        required: false
+        default: patch
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install build tooling
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install build packaging tomli-w
+
+      - name: Bump project version
+        id: bump
+        env:
+          BUMP_SEGMENT: ${{ github.event.inputs.bump-segment || 'patch' }}
+        run: python .github/scripts/bump_version.py
+
+      - name: Build distribution
+        run: |
+          python -m build
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}
+          verbose: true
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-${{ steps.bump.outputs.version }}
+          path: dist/
+
