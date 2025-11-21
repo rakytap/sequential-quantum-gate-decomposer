@@ -29,7 +29,7 @@ from skbuild import setup
 setup(
     name="squander",
     packages=["squander"],
-    version="1.9.4",
+    version="1.9.5",
     url="https://github.com/rakytap/sequential-quantum-gate-decomposer",
     maintainer="Peter Rakyta",
     maintainer_email="peter.rakyta@ttk.elte.hu",
