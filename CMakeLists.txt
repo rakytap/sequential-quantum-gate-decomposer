@@ -178,21 +178,26 @@ set(CMAKE_REQUIRED_LIBRARIES "${BLAS_LIBRARIES}" "-lm")
 check_function_exists(MKL_Set_Num_Threads BLAS_IS_MKL)
 check_function_exists(openblas_set_num_threads BLAS_IS_OPENBLAS)
 
+message(STATUS "BLAS_IS_MKL: ${BLAS_IS_MKL}")
+message(STATUS "BLAS_IS_OPENBLAS: ${BLAS_IS_OPENBLAS}")
+
 # check the presence of lapacke library
 check_function_exists(LAPACKE_zggev LAPACKE_FOUND)
 set(CMAKE_REQUIRED_LIBRARIES "")
 
 # If MKL is enabled
 if(${BLAS_IS_MKL})
+  message(STATUS "MKL is enabled")
   list(APPEND CXX_FLAGS_DEBUG "-DBLAS=1")
   list(APPEND CXX_FLAGS_RELEASE "-DBLAS=1")
 
   # If OpenBlas is enabled
 elseif(${BLAS_IS_OPENBLAS})
+  message(STATUS "OpenBLAS is enabled")
   list(APPEND CXX_FLAGS_DEBUG "-DBLAS=2")
   list(APPEND CXX_FLAGS_RELEASE "-DBLAS=2")
 else()
-
+  message(STATUS "OMP is enabled")
   list(APPEND CXX_FLAGS_DEBUG "-DBLAS=0")
   list(APPEND CXX_FLAGS_RELEASE "-DBLAS=0")
 endif()
