@@ -416,9 +416,9 @@ N_Qubit_Decomposition_Tree_Search::determine_gate_structure(Matrix_real& optimiz
     else {
         level_max = 14;
     }
-    long long use_gl = 1;
-    if (config.count("use_gl") > 0) {
-        config["use_gl"].get_property(use_gl);
+    long long use_osr = 1;
+    if (config.count("use_osr") > 0) {
+        config["use_osr"].get_property(use_osr);
     }
     long long stop_first_solution = 1;
     if (config.count("stop_first_solution") > 0) {
@@ -452,7 +452,7 @@ N_Qubit_Decomposition_Tree_Search::determine_gate_structure(Matrix_real& optimiz
 
     for ( int level = 0; level <= level_limit; level++ ) {
         GrayCode gcode;
-        if (use_gl) {
+        if (use_osr) {
             if (qbit_num <= 1) {
                 all_solutions.emplace_back();
                 break;
@@ -481,11 +481,10 @@ N_Qubit_Decomposition_Tree_Search::determine_gate_structure(Matrix_real& optimiz
         }
 
     }    
-    if (use_gl) {
+    if (use_osr) {
         N_Qubit_Decomposition_custom&& cDecomp_custom_random = perform_optimization( nullptr );
         std::uniform_real_distribution<> distrib_real(0.0, 2*M_PI);
         std::vector<double> optimized_parameters;
-        if (all_solutions.size() == 0) optimized_parameters_mtx = Matrix_real(1,1);
         for ( const auto& solution : all_solutions ) {
             std::unique_ptr<Gates_block> gate_structure_loc;
             gate_structure_loc.reset(construct_gate_structure_from_Gray_code( solution ));
