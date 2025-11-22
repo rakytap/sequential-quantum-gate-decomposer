@@ -908,7 +908,7 @@ std::pair<int, double> operator_schmidt_rank(const Matrix& U, int n,
     return std::pair<int, double>(numerical_rank_osr(S, tol), tail_loss(S, lg_up(S.size())));
 }
 
-double get_osr_entanglement_test(Matrix& matrix, std::vector<std::vector<int>> &use_cuts) {
+double get_osr_entanglement_test(Matrix& matrix, std::vector<std::vector<int>> &use_cuts, bool use_softmax) {
     //double hscost = get_hilbert_schmidt_test(matrix);
     int qbit_num = lg_down(matrix.rows);
     const auto& cuts = use_cuts.size() == 0 ? unique_cuts(qbit_num) : use_cuts;
@@ -923,8 +923,7 @@ double get_osr_entanglement_test(Matrix& matrix, std::vector<std::vector<int>> &
         //printf("%f ", S[0]);
     }
 
-    double res = cuts_softmax_tail_cost(allS, 1.0);
-    //double res = avg_tail_loss(allS, 0.9);
+    double res = use_softmax ? cuts_softmax_tail_cost(allS, 1.0) : avg_tail_loss(allS, 0.9);
     //printf("%f\n", res);
     return res;
 }
@@ -971,7 +970,7 @@ static OSRTriplet top_k_triplet_for_cut(
     return OSRTriplet(std::move(S), std::move(Umat), std::move(VTmat));
 }
 
-Matrix get_deriv_osr_entanglement(Matrix &matrix, std::vector<std::vector<int>> &use_cuts) {
+Matrix get_deriv_osr_entanglement(Matrix &matrix, std::vector<std::vector<int>> &use_cuts, bool use_softmax) {
     int qbit_num = lg_down(matrix.rows);
     const auto& cuts = use_cuts.size() == 0 ? unique_cuts(qbit_num) : use_cuts;
     double Fnorm = std::sqrt(matrix.rows);
@@ -988,8 +987,8 @@ Matrix get_deriv_osr_entanglement(Matrix &matrix, std::vector<std::vector<int>> 
         triplets.emplace_back(std::vector<double>(), Umat, VTmat);
         allS.emplace_back(S);
     }
-    allS = cuts_softmax_tail_grad(allS, Fnorm, 1.0);
-    //allS = cuts_avg_tail_grad(allS, Fnorm, 0.9);
+    if (use_softmax) allS = cuts_softmax_tail_grad(allS, Fnorm, 1.0);
+    else allS = cuts_avg_tail_grad(allS, Fnorm, 0.9);
     for (int i = 0; i < (int)cuts.size(); ++i) {
         std::get<0>(triplets[i]) = std::move(allS[i]);
     }
