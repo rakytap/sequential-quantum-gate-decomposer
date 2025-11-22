@@ -95,7 +95,16 @@ Matrix::Matrix(const Matrix &in) : matrix_base<QGD_Complex16>(in)  {
 
 }
 
-
+/**
+@brief Assignment operator of the class.
+@param mtx An instance of class Matrix to be assigned.
+@return Returns with a reference to the instance of the class.
+*/
+Matrix&
+Matrix::operator=(const Matrix &mtx) {
+    matrix_base<QGD_Complex16>::operator=(mtx);
+    return *this;
+}
 
 /**
 @brief Call to create a copy of the matrix

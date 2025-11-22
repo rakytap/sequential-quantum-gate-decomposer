@@ -95,6 +95,12 @@ Matrix( int rows_in, int cols_in, int stride_in);
 */
 Matrix(const Matrix &in);
 
+/**
+@brief Assignment operator of the class.
+@param mtx An instance of class Matrix to be assigned.
+@return Returns with a reference to the instance of the class.
+*/
+Matrix& operator=(const Matrix &mtx);
 
 /**
 @brief Call to create a copy of the matrix
