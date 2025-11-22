@@ -146,10 +146,19 @@ CPU_time = 0.0;
         sstream << "max_inner_iterations: " << max_inner_iterations_loc  << std::endl;
         print(sstream, 2);
 
-        bool use_basin_hopping = true;
+        bool use_basin_hopping = false;
+        bool use_de = false;
+        bool use_dual_annealing = false;
         if ( config.count("use_basin_hopping") > 0 ) {
             config["use_basin_hopping"].get_property( use_basin_hopping );  
+        } else if ( config.count("use_differential_evolution") > 0 ) {
+            config["use_differential_evolution"].get_property( use_de );  
+        } else if ( config.count("use_dual_annealing") > 0 ) {
+            config["use_dual_annealing"].get_property( use_dual_annealing );  
         }
+        if (!use_basin_hopping && !use_de && !use_dual_annealing) {
+            use_dual_annealing = true; //use_basin_hopping = true;
+        } 
 
         if (use_basin_hopping) {
             // --- Basin-hopping parameters (SciPy-like defaults) ---
@@ -270,7 +279,7 @@ CPU_time = 0.0;
 
 
             }
-        } else {
+        } else if (use_de) {
             enum strategy_enum { STRAT_BEST1BIN, STRAT_RAND1BIN };
             enum init_enum { INIT_RANDOM, INIT_LHS };
 
@@ -462,6 +471,178 @@ CPU_time = 0.0;
                 if (f_pol < current_minimum) {
                     current_minimum = f_pol;
                     memcpy(optimized_parameters_mtx.get_data(), params.get_data(), D * sizeof(double));
+                }
+            }            
+        } else if (use_dual_annealing) {
+            // ---------------- Dual annealing hyperparameters (SciPy-like) ----------------
+            double da_initial_temp       = 5230.0;   // initial temperature
+            double da_restart_temp_ratio = 2e-5;     // threshold for restart
+            double da_visit              = 2.62;     // visiting distribution parameter (>1)
+            double da_accept             = -5.0;     // acceptance distribution parameter
+            long long da_maxiter         = iteration_loops_max; // max temperature steps
+            long long da_maxfun          = 10000000; // max function evaluations
+            double da_tol                = 1e-6;     // required improvement threshold
+            long long da_seed            = 0;        // 0 => use existing RNG
+            long long da_no_local_search = 0;        // 0 => do local search (polish), 1 => skip
+            if (config.count("da_initial_temp") > 0)        config["da_initial_temp"].get_property(da_initial_temp);
+            if (config.count("da_restart_temp_ratio") > 0)  config["da_restart_temp_ratio"].get_property(da_restart_temp_ratio);
+            if (config.count("da_visit") > 0)               config["da_visit"].get_property(da_visit);
+            if (config.count("da_accept") > 0)              config["da_accept"].get_property(da_accept);
+            if (config.count("da_maxiter") > 0) {
+                long long v; config["da_maxiter"].get_property(v);
+                da_maxiter = std::max<long long>(1, v);
+            }
+            if (config.count("da_maxfun") > 0) {
+                long long v; config["da_maxfun"].get_property(v);
+                da_maxfun = std::max<long long>(1, v);
+            }
+            if (config.count("da_tol") > 0)                 config["da_tol"].get_property(da_tol);
+            if (config.count("da_seed") > 0) {
+                long long v; config["da_seed"].get_property(v);
+                da_seed = v;
+            }
+            if (config.count("da_no_local_search") > 0) {
+                long long v; config["da_no_local_search"].get_property(v);
+                da_no_local_search = v ? 1 : 0;
+            }
+
+            // Sanity
+            if (da_initial_temp <= 0.0) da_initial_temp = 5230.0;
+            if (da_restart_temp_ratio <= 0.0 || da_restart_temp_ratio >= 1.0) da_restart_temp_ratio = 2e-5;
+            if (da_visit <= 1.0) da_visit = 2.62; // visiting parameter must be >1
+
+            const int D = num_of_parameters;
+
+            // Ensure initial guess is in [0, 2π)
+            for (int j = 0; j < D; ++j) {
+                solution_guess[j] = std::fmod(solution_guess[j], 2.0 * M_PI);
+            }
+
+            // ---------------- Initial evaluation ----------------
+            double f_current = this->optimization_problem(solution_guess);
+            long long nfev = 1;
+
+            Matrix_real x_current = solution_guess;
+            Matrix_real x_best    = solution_guess;
+            double f_best         = f_current;
+
+            memcpy(optimized_parameters_mtx.get_data(), x_best.get_data(), D * sizeof(double));
+            current_minimum = f_best;
+
+            double last_best = f_best;
+            int restart_count = 0;
+
+            // ---------------- Dual annealing loop ----------------
+            for (long long k = 0; k < da_maxiter && nfev < da_maxfun; ++k) {
+
+                // Temperature schedule (simple inverse cooling)
+                double Tk = da_initial_temp / (1.0 + (double)k + (double)restart_count);
+
+                // Restart if temperature too low
+                if (Tk < da_initial_temp * da_restart_temp_ratio) {
+                    ++restart_count;
+                    // re-center around current global best
+                    x_current = x_best;
+                    f_current = f_best;
+                    Tk = da_initial_temp / (1.0 + (double)restart_count);
+                }
+
+                Matrix_real x_trial(D, 1);
+
+                // Generalized visiting distribution (heavy-tailed)
+                // For each dimension j, generate a random step, scale by temperature, wrap to [0, 2π)
+                for (int j = 0; j < D; ++j) {
+                    double u = distrib_real(gen);        // in (0,1)
+                    double sign = (u < 0.5) ? -1.0 : 1.0;
+                    double v = distrib_real(gen);       // second uniform
+                    // Heavy-tail factor controlled by da_visit (>1)
+                    double step_mag = std::pow(1.0 / std::max(1e-12, v), 1.0 / (da_visit - 1.0)) - 1.0;
+                    // Scale by temperature, then map to angle scale
+                    double step = sign * step_mag * Tk / da_initial_temp * (2.0 * M_PI);
+                    x_trial[j] = std::fmod(x_current[j] + step, 2.0 * M_PI);
+                }
+
+                double f_trial = this->optimization_problem(x_trial);
+                ++nfev;
+
+                // Acceptance probability (Metropolis-like, shaped by da_accept)
+                bool accept = false;
+                if (f_trial <= f_current) {
+                    accept = true;
+                } else {
+                    double dE = f_trial - f_current;
+                    // Scale controlled by temperature and da_accept (negative default)
+                    double scale = std::pow(std::max(1e-12, Tk / da_initial_temp), -da_accept);
+                    scale = std::max(scale, 1e-12);
+                    double prob = std::exp(-dE / scale);
+                    if (distrib_real(gen) < prob) {
+                        accept = true;
+                    }
+                }
+
+                if (accept) {
+                    x_current = x_trial;
+                    f_current = f_trial;
+                }
+
+                // Track global best
+                if (f_trial < f_best) {
+                    f_best = f_trial;
+                    x_best = x_trial;
+                    memcpy(optimized_parameters_mtx.get_data(), x_best.get_data(), D * sizeof(double));
+                    current_minimum = f_best;
+                }
+
+                // Progress / export
+                if (k % 50 == 0) {
+                    std::stringstream sstream;
+                    sstream << "Dual annealing: iter " << k << "/" << da_maxiter
+                            << ", best=" << current_minimum
+                            << ", T=" << Tk << std::endl;
+                    print(sstream, 2);
+
+                    if (export_circuit_2_binary_loc > 0) {
+                        std::string filename("initial_circuit_iteration.binary");
+                        if (project_name != "") filename = project_name + "_" + filename;
+                        export_gate_list_to_binary(optimized_parameters_mtx, this, filename, verbose);
+                    }
+                }
+
+                if (output_periodicity > 0 && k % output_periodicity == 0) {
+                    export_current_cost_fnc(current_minimum);
+                }
+
+        #ifdef __MPI__
+                // Optional: keep workers synced to best-so-far
+                MPI_Bcast((void*)optimized_parameters_mtx.get_data(), D, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+        #endif
+
+                // Stopping: absolute target reached
+                if (current_minimum < optimization_tolerance_loc) {
+                    break;
+                }
+
+                // Stopping: improvement below da_tol
+                if (std::abs(last_best - f_best) <= da_tol) {
+                    // one "cooling" step with negligible improvement
+                    // You could require multiple stagnant steps if desired.
+                    break;
+                }
+                last_best = f_best;
+            }
+
+            // ---------------- Optional local polish with BFGS ----------------
+            if (!da_no_local_search) {
+                // Start from the best DA point
+                Matrix_real start_polish = x_best;
+
+                BFGS_Powell cBFGS_Powell(optimization_problem_combined, this);
+                // You can tune max_inner_iterations here if you want
+                double f_pol = cBFGS_Powell.Start_Optimization(start_polish, max_inner_iterations);
+
+                if (f_pol < current_minimum) {
+                    current_minimum = f_pol;
+                    memcpy(optimized_parameters_mtx.get_data(), start_polish.get_data(), D * sizeof(double));
                 }
             }            
         }
