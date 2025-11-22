@@ -3012,15 +3012,54 @@ static PyMethodDef qgd_N_Qubit_Decomposition_Tree_Search_methods[] = {
 #define decomposition_wrapper_type_template(decomp_class) \
 static PyTypeObject qgd_##decomp_class##_Wrapper_Type = { \
     PyVarObject_HEAD_INIT(NULL, 0) \
-    .tp_name = "qgd_N_Qubit_Decomposition_Wrapper." #decomp_class, \
-    .tp_basicsize = sizeof(qgd_N_Qubit_Decomposition_Wrapper), \
-    .tp_itemsize = 0, \
-    .tp_dealloc = (destructor) qgd_N_Qubit_Decomposition_Wrapper_dealloc, \
-    .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, \
-    .tp_doc = #decomp_class " decomposition wrapper", \
-    .tp_methods = qgd_##decomp_class##_methods, \
-    .tp_init = (initproc) qgd_##decomp_class##_Wrapper_init, \
-    .tp_new = (newfunc) qgd_N_Qubit_Decomposition_Wrapper_new, \
+    "qgd_N_Qubit_Decomposition_Wrapper." #decomp_class, /* tp_name */ \
+    sizeof(qgd_N_Qubit_Decomposition_Wrapper), /* tp_basicsize */ \
+    0, /* tp_itemsize */ \
+    (destructor) qgd_N_Qubit_Decomposition_Wrapper_dealloc, /* tp_dealloc */ \
+    0, /* tp_vectorcall_offset */ \
+    0, /* tp_getattr */ \
+    0, /* tp_setattr */ \
+    0, /* tp_as_async */ \
+    0, /* tp_repr */ \
+    0, /* tp_as_number */ \
+    0, /* tp_as_sequence */ \
+    0, /* tp_as_mapping */ \
+    0, /* tp_hash */ \
+    0, /* tp_call */ \
+    0, /* tp_str */ \
+    0, /* tp_getattro */ \
+    0, /* tp_setattro */ \
+    0, /* tp_as_buffer */ \
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /* tp_flags */ \
+    #decomp_class " decomposition wrapper", /* tp_doc */ \
+    0, /* tp_traverse */ \
+    0, /* tp_clear */ \
+    0, /* tp_richcompare */ \
+    0, /* tp_weaklistoffset */ \
+    0, /* tp_iter */ \
+    0, /* tp_iternext */ \
+    qgd_##decomp_class##_methods, /* tp_methods */ \
+    0, /* tp_members */ \
+    0, /* tp_getset */ \
+    0, /* tp_base */ \
+    0, /* tp_dict */ \
+    0, /* tp_descr_get */ \
+    0, /* tp_descr_set */ \
+    0, /* tp_dictoffset */ \
+    (initproc) qgd_##decomp_class##_Wrapper_init, /* tp_init */ \
+    0, /* tp_alloc */ \
+    (newfunc) qgd_N_Qubit_Decomposition_Wrapper_new, /* tp_new */ \
+    0, /* tp_free */ \
+    0, /* tp_is_gc */ \
+    0, /* tp_bases */ \
+    0, /* tp_mro */ \
+    0, /* tp_cache */ \
+    0, /* tp_subclasses */ \
+    0, /* tp_weaklist */ \
+    0, /* tp_del */ \
+    0, /* tp_version_tag */ \
+    0, /* tp_finalize */ \
+    0, /* tp_vectorcall */ \
 };
 
 decomposition_wrapper_type_template(N_Qubit_Decomposition)
@@ -3036,9 +3075,14 @@ decomposition_wrapper_type_template(N_Qubit_Decomposition_Tabu_Search)
 */
 static PyModuleDef qgd_N_Qubit_Decompositions_Wrapper_Module = {
     PyModuleDef_HEAD_INIT,
-    .m_name = "qgd_N_Qubit_Decompositions_Wrapper",
-    .m_doc = "Python binding for N-Qubit Decompositions wrapper module",
-    .m_size = -1,
+    "qgd_N_Qubit_Decompositions_Wrapper", /* m_name */
+    "Python binding for N-Qubit Decompositions wrapper module", /* m_doc */
+    -1, /* m_size */
+    0, /* m_methods */
+    0, /* m_slots */
+    0, /* m_traverse */
+    0, /* m_clear */
+    0, /* m_free */
 };
 
 #define Py_INCREF_template(decomp_name) \
