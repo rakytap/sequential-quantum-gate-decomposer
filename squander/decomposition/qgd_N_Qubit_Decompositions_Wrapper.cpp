@@ -404,11 +404,7 @@ qgd_N_Qubit_Decomposition_Wrapper_get_Gate_Num(qgd_N_Qubit_Decomposition_Wrapper
 static PyObject *
 qgd_N_Qubit_Decomposition_Wrapper_get_Optimized_Parameters(qgd_N_Qubit_Decomposition_Wrapper *self)
 {
-    int parameter_num = self->decomp->get_parameter_num();
-    Matrix_real parameters_mtx(1, parameter_num);
-    
-    double* parameters = parameters_mtx.get_data();
-    self->decomp->get_optimized_parameters(parameters);
+    Matrix_real parameters_mtx = self->decomp->get_optimized_parameters();
 
     // convert to numpy array
     parameters_mtx.set_owner(false);
