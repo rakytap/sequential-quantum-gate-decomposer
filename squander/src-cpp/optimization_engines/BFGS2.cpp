@@ -482,7 +482,6 @@ CPU_time = 0.0;
             long long da_maxiter         = iteration_loops_max; // max temperature steps
             long long da_maxfun          = 10000000; // max function evaluations
             double da_tol                = 1e-6;     // required improvement threshold
-            long long da_seed            = 0;        // 0 => use existing RNG
             long long da_no_local_search = 0;        // 0 => do local search (polish), 1 => skip
             if (config.count("da_initial_temp") > 0)        config["da_initial_temp"].get_property(da_initial_temp);
             if (config.count("da_restart_temp_ratio") > 0)  config["da_restart_temp_ratio"].get_property(da_restart_temp_ratio);
@@ -497,10 +496,6 @@ CPU_time = 0.0;
                 da_maxfun = std::max<long long>(1, v);
             }
             if (config.count("da_tol") > 0)                 config["da_tol"].get_property(da_tol);
-            if (config.count("da_seed") > 0) {
-                long long v; config["da_seed"].get_property(v);
-                da_seed = v;
-            }
             if (config.count("da_no_local_search") > 0) {
                 long long v; config["da_no_local_search"].get_property(v);
                 da_no_local_search = v ? 1 : 0;
@@ -522,8 +517,7 @@ CPU_time = 0.0;
             double f_current = this->optimization_problem(solution_guess);
             long long nfev = 1;
 
-            Matrix_real x_current = solution_guess;
-            Matrix_real x_best    = solution_guess;
+            Matrix_real x_best    = solution_guess.copy();
             double f_best         = f_current;
 
             memcpy(optimized_parameters_mtx.get_data(), x_best.get_data(), D * sizeof(double));
@@ -542,7 +536,7 @@ CPU_time = 0.0;
                 if (Tk < da_initial_temp * da_restart_temp_ratio) {
                     ++restart_count;
                     // re-center around current global best
-                    x_current = x_best;
+                    memcpy(solution_guess.get_data(), x_best.get_data(), D * sizeof(double));
                     f_current = f_best;
                     Tk = da_initial_temp / (1.0 + (double)restart_count);
                 }
@@ -559,7 +553,7 @@ CPU_time = 0.0;
                     double step_mag = std::pow(1.0 / std::max(1e-12, v), 1.0 / (da_visit - 1.0)) - 1.0;
                     // Scale by temperature, then map to angle scale
                     double step = sign * step_mag * Tk / da_initial_temp * (2.0 * M_PI);
-                    x_trial[j] = std::fmod(x_current[j] + step, 2.0 * M_PI);
+                    x_trial[j] = std::fmod(solution_guess[j] + step, 2.0 * M_PI);
                 }
 
                 double f_trial = this->optimization_problem(x_trial);
@@ -581,14 +575,14 @@ CPU_time = 0.0;
                 }
 
                 if (accept) {
-                    x_current = x_trial;
+                    memcpy(solution_guess.get_data(), x_trial.get_data(), D * sizeof(double));
                     f_current = f_trial;
                 }
 
                 // Track global best
                 if (f_trial < f_best) {
                     f_best = f_trial;
-                    x_best = x_trial;
+                    memcpy(x_best.get_data(), x_trial.get_data(), D * sizeof(double));
                     memcpy(optimized_parameters_mtx.get_data(), x_best.get_data(), D * sizeof(double));
                     current_minimum = f_best;
                 }
@@ -634,15 +628,14 @@ CPU_time = 0.0;
             // ---------------- Optional local polish with BFGS ----------------
             if (!da_no_local_search) {
                 // Start from the best DA point
-                Matrix_real start_polish = x_best;
 
                 BFGS_Powell cBFGS_Powell(optimization_problem_combined, this);
                 // You can tune max_inner_iterations here if you want
-                double f_pol = cBFGS_Powell.Start_Optimization(start_polish, max_inner_iterations);
+                double f_pol = cBFGS_Powell.Start_Optimization(x_best, max_inner_iterations);
 
                 if (f_pol < current_minimum) {
                     current_minimum = f_pol;
-                    memcpy(optimized_parameters_mtx.get_data(), start_polish.get_data(), D * sizeof(double));
+                    memcpy(optimized_parameters_mtx.get_data(), x_best.get_data(), D * sizeof(double));
                 }
             }            
         }
