@@ -20,11 +20,21 @@ include(CheckFunctionExists)
 include(cmake/check_AVX.cmake)
 
 # variables for compile and link options
+set(CXX_FLAGS)
 set(CXX_FLAGS_DEBUG)
 set(CXX_FLAGS_RELEASE)
 set(EXTRA_INCLUDES)
 set(BLAS_DIR)
 set(PYTHON_PLAT_LIB)
+
+# Windows-specific settings
+if(WIN32)
+  # Enable long paths support for Windows
+  if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    # Increase object file path limit
+    set(CMAKE_OBJECT_PATH_MAX 4096)
+  endif()
+endif()
 
 
 #enable test target
@@ -318,6 +328,9 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
   # using Visual Studio C++
   message("-- Using Visual Studio C++ compiler")
+
+  # Add /bigobj flag for large object files (needed for Windows compilation)
+  list(APPEND CXX_FLAGS "/bigobj")
 
   if (${HAVE_AVX512F_EXTENSIONS})
     list(APPEND CXX_FLAGS_RELEASE "/arch:AVX512F" "-DUSE_AVX512F")
