@@ -59,12 +59,76 @@ static inline LevelResult enumerate_unordered_cnot_BFS_level_init(int n) {
     return LevelResult{visited, seq_pairs_of, out_res};
 }
 
+#include <queue>
+#include <unordered_map>
+
+// normalize unordered CNOT pair: (i,j) == (j,i)
+static inline std::pair<int,int> norm_pair(int i, int j) {
+    return (i <= j) ? std::make_pair(i,j) : std::make_pair(j,i);
+}
+
+// Return true iff 'seq' (list of CNOT pairs) equals the canonical
+// Kahn topological order under the tie-breaker: lexicographic by pair,
+// then by original index (to stabilize identical pairs).
+static int canonical_prefix_ok(const std::vector<std::pair<int,int>>& seq) {
+    const int m = static_cast<int>(seq.size());
+    if (m <= 1) return -1;
+
+    // 1) normalize
+    std::vector<std::pair<int,int>> ops(m);
+    for (int k = 0; k < m; ++k) ops[k] = norm_pair(seq[k].first, seq[k].second);
+
+    // 2) per-qubit serial constraints: edge u->v if ops u,v share a qubit and u < v
+    std::vector<std::vector<int>> succ(m);
+    std::vector<int> indeg(m, 0);
+    std::unordered_map<int,int> last_on; // qubit -> last op index touching it
+    last_on.reserve(m*2);
+
+    for (int k = 0; k < m; ++k) {
+        const auto [a,b] = ops[k];
+        for (int q : {a,b}) {
+            auto it = last_on.find(q);
+            if (it != last_on.end()) {
+                int prev = it->second;
+                succ[prev].push_back(k);
+                ++indeg[k];
+                it->second = k;
+            } else {
+                last_on.emplace(q, k);
+            }
+        }
+    }
+
+    // 3) deterministic Kahn with min-heap by (pair, index)
+    struct Node { std::pair<int,int> p; int idx; };
+    struct Cmp {
+        bool operator()(const Node& a, const Node& b) const {
+            if (a.p != b.p) return a.p > b.p;     // lexicographically smaller first
+            return a.idx > b.idx;                 // then by original index
+        }
+    };
+    std::priority_queue<Node, std::vector<Node>, Cmp> pq;
+    for (int k = 0; k < m; ++k) if (indeg[k] == 0) pq.push(Node{ops[k], k});
+
+    // 4) walk canonical order and require it matches the given prefix exactly
+    for (int pos = 0; pos < m; ++pos) {
+        if (pq.empty()) return pos;            // malformed (shouldn’t happen)
+        Node u = pq.top(); pq.pop();
+        if (u.idx != pos) return pos;          // deviation: not canonical
+
+        for (int v : succ[u.idx]) {
+            if (--indeg[v] == 0) pq.push(Node{ops[v], v});
+        }
+    }
+    return -1;
+}
+
 // One expansion “level”: pop all items from L.q, try all unordered pairs in topology
 // (both directions internally), record first-time discoveries and emit them immediately
 // (BFS ⇒ minimal depth).
 static inline LevelResult enumerate_unordered_cnot_BFS_level_step(
         LevelInfo& L,
-        const std::vector<matrix_base<int>>& topology)
+        const std::vector<matrix_base<int>>& topology, bool use_gl=true)
 {
     auto& [visited, seq_pairs_of, q] = L;
     std::map<std::vector<int>, GrayCode> new_seq_pairs_of;
@@ -80,14 +144,32 @@ static inline LevelResult enumerate_unordered_cnot_BFS_level_step(
             std::pair<int, int> m1 = {topology[p][0], topology[p][1]};
             std::pair<int, int> m2 = {topology[p][1], topology[p][0]};
 
-            for (auto mv : {m1, m2}) {
-                std::vector<int> B = A;
-                if (mv.first != mv.second) {
-                    B[mv.second] ^= B[mv.first];
+            if (!use_gl) {
+                if (last_pairs.size() >= 3 && std::all_of(last_pairs.data+last_pairs.size()-3, last_pairs.data+last_pairs.size(), [p](const int& x){ return x == p; })) continue; // avoid more than 3 repeated CNOTs
+                std::vector<std::pair<int,int>> seq_pairs_vec;
+                for (size_t idx=0; idx<last_pairs.size(); idx++) {
+                    seq_pairs_vec.push_back( std::pair<int,int>( topology[ last_pairs.data[idx] ][0], topology[ last_pairs.data[idx] ][1] ) );
                 }
+                seq_pairs_vec.push_back(m1);
+                if (canonical_prefix_ok(seq_pairs_vec) >= 0) continue;  // not canonical prefix
+            }
 
-                if (visited.find(B) != visited.end()) {
-                    continue; // discovered already (at minimal or earlier depth)
+            std::vector<std::pair<int,int>> allmv = use_gl ? std::vector<std::pair<int,int>>{m1, m2} : std::vector<std::pair<int,int>>{m1};
+
+            for (auto mv : allmv) {
+                std::vector<int> B;
+                if (use_gl) {
+                    B = A;
+                    if (mv.first != mv.second) {
+                        B[mv.second] ^= B[mv.first];
+                    }
+
+                    if (visited.find(B) != visited.end()) {
+                        continue; // discovered already (at minimal or earlier depth)
+                    }
+                } else {
+                    B = std::vector<int>(last_pairs.data, last_pairs.data + last_pairs.size());
+                    B.push_back(p);
                 }
                 visited.emplace(B);
 
@@ -473,7 +555,7 @@ N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures_gl( int leve
     volatile bool found_optimal_solution = false;
 
 
-    const auto& [visited, seq_pairs_of, out_res] = level_num == 0 ? enumerate_unordered_cnot_BFS_level_init(qbit_num) : enumerate_unordered_cnot_BFS_level_step(li, topology);
+    const auto& [visited, seq_pairs_of, out_res] = level_num == 0 ? enumerate_unordered_cnot_BFS_level_init(qbit_num) : enumerate_unordered_cnot_BFS_level_step(li, topology, false);
 
     std::set<GrayCode> pairs_reduced;
     for ( const auto& item : out_res ) {
