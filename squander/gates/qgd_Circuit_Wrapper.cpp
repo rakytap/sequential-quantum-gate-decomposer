@@ -887,7 +887,7 @@ qgd_Circuit_Wrapper_get_Qbits( qgd_Circuit_Wrapper *self ) {
 
     try {
         std::vector<int>&& qbits =  self->circuit->get_involved_qubits();
-        for (int idx = 0; idx < qbits.size(); idx++) {
+        for (size_t idx = 0; idx < qbits.size(); idx++) {
             PyList_Append(ret, Py_BuildValue("i", qbits[idx] ) );
         }
 
@@ -960,7 +960,7 @@ qgd_Circuit_Wrapper_Remap_Qbits( qgd_Circuit_Wrapper *self, PyObject *args ) {
 
     // parse qbit map and create C++ version of the map
 
-    bool is_dict = PyDict_Check( qbit_map_arg );
+    bool is_dict = (PyDict_Check( qbit_map_arg ) != 0);
     if (!is_dict) {
         printf("Qubit map object must be a python dictionary!\n");
         return Py_BuildValue("i", -1);
@@ -1041,30 +1041,30 @@ qgd_Circuit_Wrapper_Remap_Qbits( qgd_Circuit_Wrapper *self, PyObject *args ) {
 }
 
 
-#define get_gate_template_two_qubit(GATE_NAME)\
-    else if (gate->get_type() == GATE_NAME##_OPERATION) {\
-        PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );\
-        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, #GATE_NAME);\
-        PyObject* gate_input = Py_BuildValue("(OOO)", qbit_num, target_qbit, control_qbit);\
-        py_gate              = PyObject_CallObject(py_gate_class, gate_input);\
-        qgd_Gate* py_gate_C = reinterpret_cast<qgd_Gate*>( py_gate );\
-        delete( py_gate_C->gate );\
-        py_gate_C->gate = static_cast<Gate*>( gate->clone() );\
-        Py_DECREF( qgd_gate );\
-        Py_DECREF( gate_input );\
+#define get_gate_template_two_qubit(GATE_NAME) \
+    else if (gate->get_type() == GATE_NAME##_OPERATION) { \
+        PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate ); \
+        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, #GATE_NAME); \
+        PyObject* gate_input = Py_BuildValue("(OOO)", qbit_num, target_qbit, control_qbit); \
+        py_gate              = PyObject_CallObject(py_gate_class, gate_input); \
+        qgd_Gate* py_gate_C = reinterpret_cast<qgd_Gate*>( py_gate ); \
+        delete( py_gate_C->gate ); \
+        py_gate_C->gate = static_cast<Gate*>( gate->clone() ); \
+        Py_DECREF( qgd_gate ); \
+        Py_DECREF( gate_input ); \
     }
 
-#define get_gate_template_one_qubit(GATE_NAME)\
-    else if (gate->get_type() == GATE_NAME##_OPERATION) {\
-        PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );\
-        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, #GATE_NAME);\
-        PyObject* gate_input = Py_BuildValue("(OO)", qbit_num, target_qbit);\
-        py_gate              = PyObject_CallObject(py_gate_class, gate_input);\
-        qgd_Gate* py_gate_C = reinterpret_cast<qgd_Gate*>( py_gate );\
-        delete( py_gate_C->gate );\
-        py_gate_C->gate = static_cast<Gate*>( gate->clone() );\
-        Py_DECREF( qgd_gate );\                
-        Py_DECREF( gate_input );\
+#define get_gate_template_one_qubit(GATE_NAME) \
+    else if (gate->get_type() == GATE_NAME##_OPERATION) { \
+        PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate ); \
+        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, #GATE_NAME); \
+        PyObject* gate_input = Py_BuildValue("(OO)", qbit_num, target_qbit); \
+        py_gate              = PyObject_CallObject(py_gate_class, gate_input); \
+        qgd_Gate* py_gate_C = reinterpret_cast<qgd_Gate*>( py_gate ); \
+        delete( py_gate_C->gate ); \
+        py_gate_C->gate = static_cast<Gate*>( gate->clone() ); \
+        Py_DECREF( qgd_gate ); \
+        Py_DECREF( gate_input ); \
     }
 
 
@@ -1128,9 +1128,9 @@ get_gate( Gates_block* circuit, int &idx ) {
     else if (gate->get_type() == SWAP_OPERATION){
         // SWAP now uses vector-based interface
         std::vector<int> target_qbits_vec = gate->get_target_qbits();
-        PyObject* target_qbits_list = PyList_New(target_qbits_vec.size());
+        PyObject* target_qbits_list = PyList_New((Py_ssize_t)target_qbits_vec.size());
         for (size_t i = 0; i < target_qbits_vec.size(); i++) {
-            PyList_SetItem(target_qbits_list, i, Py_BuildValue("i", target_qbits_vec[i]));
+            PyList_SetItem(target_qbits_list, (Py_ssize_t)i, Py_BuildValue("i", target_qbits_vec[i]));
         }
 
         PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
@@ -1206,9 +1206,9 @@ get_gate( Gates_block* circuit, int &idx ) {
     else if (gate->get_type() == CCX_OPERATION){
         // CCX now uses vector-based interface
         std::vector<int> control_qbits_vec = gate->get_control_qbits();
-        PyObject* control_qbits_list = PyList_New(control_qbits_vec.size());
+        PyObject* control_qbits_list = PyList_New((Py_ssize_t)control_qbits_vec.size());
         for (size_t i = 0; i < control_qbits_vec.size(); i++) {
-            PyList_SetItem(control_qbits_list, i, Py_BuildValue("i", control_qbits_vec[i]));
+            PyList_SetItem(control_qbits_list, (Py_ssize_t)i, Py_BuildValue("i", control_qbits_vec[i]));
         }
 
         PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
@@ -1237,15 +1237,15 @@ get_gate( Gates_block* circuit, int &idx ) {
     else if (gate->get_type() == CSWAP_OPERATION){
         // CSWAP now uses vector-based interface
         std::vector<int> target_qbits_vec = gate->get_target_qbits();
-        PyObject* target_qbits_list = PyList_New(target_qbits_vec.size());
+        PyObject* target_qbits_list = PyList_New((Py_ssize_t)target_qbits_vec.size());
         for (size_t i = 0; i < target_qbits_vec.size(); i++) {
-            PyList_SetItem(target_qbits_list, i, Py_BuildValue("i", target_qbits_vec[i]));
+            PyList_SetItem(target_qbits_list, (Py_ssize_t)i, Py_BuildValue("i", target_qbits_vec[i]));
         }
 
         std::vector<int> control_qbits_vec = gate->get_control_qbits();
-        PyObject* control_qbits_list = PyList_New(control_qbits_vec.size());
+        PyObject* control_qbits_list = PyList_New((Py_ssize_t)control_qbits_vec.size());
         for (size_t i = 0; i < control_qbits_vec.size(); i++) {
-            PyList_SetItem(control_qbits_list, i, Py_BuildValue("i", control_qbits_vec[i]));
+            PyList_SetItem(control_qbits_list, (Py_ssize_t)i, Py_BuildValue("i", control_qbits_vec[i]));
         }
 
         PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
