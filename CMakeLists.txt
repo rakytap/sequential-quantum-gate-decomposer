@@ -500,7 +500,7 @@ else()
     if(NOT TBB_HEADER)
       message(FATAL_ERROR "TBB header tbb.h not found. Please set TBB_INC_DIR or install TBB.")
     endif()
-  else
+  else()
     list(APPEND EXTRA_INCLUDES "${CMAKE_REQUIRED_INCLUDES}")
     list(APPEND EXTRA_INCLUDES "${TBB_HEADER}")
   endif()
