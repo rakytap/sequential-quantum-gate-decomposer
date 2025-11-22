@@ -336,81 +336,174 @@ endif()
 ############################################################xx
 # checking TBB libraries and headers
 
-# adding TBB library dir if given by environment variable
-if(DEFINED ENV{TBB_LIB_DIR})
-  if (WIN32)
-    find_library(TBB_LIB tbb12
-                 PATHS $ENV{TBB_LIB_DIR}
-                 NO_DEFAULT_PATH
-                 REQUIRED)
-  else()
-    find_library(TBB_LIB tbb
-                 PATHS $ENV{TBB_LIB_DIR}
-                 NO_DEFAULT_PATH
-                 REQUIRED)
+# On Windows, check for conda environment first
+if(WIN32)
+  if(DEFINED ENV{CONDA_PREFIX})
+    set(CONDA_PREFIX "$ENV{CONDA_PREFIX}")
+    set(CONDA_TBB_LIB_DIR "${CONDA_PREFIX}/Library/lib")
+    set(CONDA_TBB_INC_DIR "${CONDA_PREFIX}/Library/include")
+    message(STATUS "Found conda environment: ${CONDA_PREFIX}")
   endif()
-
-  find_library(TBBMALLOC_LIB tbbmalloc
-               PATHS $ENV{TBB_LIB_DIR}
-               NO_DEFAULT_PATH
-               REQUIRED)
-
-  find_library(TBBMALLOC_PROXY_LIB tbbmalloc_proxy
-               PATHS $ENV{TBB_LIB_DIR}
-               NO_DEFAULT_PATH
-               REQUIRED)
-
-else()
-
-  if (WIN32)
-    find_library(TBB_LIB tbb12
-                 PATHS ${PYTHON_SYS_PATH}
-                 NO_DEFAULT_PATH
-                 REQUIRED)
-  else()
-    find_library(TBB_LIB tbb
-                 PATHS ${PYTHON_SYS_PATH}
-                 NO_DEFAULT_PATH
-                 REQUIRED)  
-  endif()
-
-  find_library(TBBMALLOC_LIB tbbmalloc
-               PATHS ${PYTHON_SYS_PATH}
-               NO_DEFAULT_PATH
-               REQUIRED)
-
-  find_library(TBBMALLOC_PROXY_LIB tbbmalloc_proxy
-               PATHS ${PYTHON_SYS_PATH}
-               NO_DEFAULT_PATH
-               REQUIRED)
 endif()
 
+# adding TBB library dir if given by environment variable
+if(DEFINED ENV{TBB_LIB_DIR})
+  set(TBB_LIB_DIR "$ENV{TBB_LIB_DIR}")
+  message(STATUS "Using TBB_LIB_DIR from environment: ${TBB_LIB_DIR}")
+elseif(WIN32 AND DEFINED CONDA_PREFIX)
+  # Windows with conda: use conda's TBB location
+  set(TBB_LIB_DIR "${CONDA_TBB_LIB_DIR}")
+  message(STATUS "Using conda TBB library directory: ${TBB_LIB_DIR}")
+else()
+  # Try to find TBB in Python syspath (fallback)
+  set(TBB_LIB_DIR "${PYTHON_SYS_PATH}")
+  message(STATUS "Using Python syspath for TBB: ${TBB_LIB_DIR}")
+endif()
+
+# Set up search paths
+set(TBB_SEARCH_PATHS)
+if(TBB_LIB_DIR)
+  list(APPEND TBB_SEARCH_PATHS "${TBB_LIB_DIR}")
+endif()
+if(WIN32 AND DEFINED CONDA_PREFIX)
+  list(APPEND TBB_SEARCH_PATHS "${CONDA_TBB_LIB_DIR}")
+  # Also check bin directory for DLLs (Windows)
+  list(APPEND TBB_SEARCH_PATHS "${CONDA_PREFIX}/Library/bin")
+endif()
+list(APPEND TBB_SEARCH_PATHS ${PYTHON_SYS_PATH})
+
+# Find TBB library - try multiple names for Windows
+set(TBB_LIB)
+if(WIN32)
+  # On Windows, try different library names
+  # TBB from conda might be named tbb, tbb12, or version-specific
+  find_library(TBB_LIB
+    NAMES tbb12 tbb tbb12.lib tbb.lib
+    PATHS ${TBB_SEARCH_PATHS}
+    PATH_SUFFIXES lib Library/lib
+    NO_DEFAULT_PATH
+  )
+  
+  # If not found with NO_DEFAULT_PATH, try with default paths
+  if(NOT TBB_LIB)
+    find_library(TBB_LIB
+      NAMES tbb12 tbb tbb12.lib tbb.lib
+      PATHS ${TBB_SEARCH_PATHS}
+      PATH_SUFFIXES lib Library/lib
+    )
+  endif()
+else()
+  # Unix-like systems
+  find_library(TBB_LIB
+    NAMES tbb
+    PATHS ${TBB_SEARCH_PATHS}
+    PATH_SUFFIXES lib
+    NO_DEFAULT_PATH
+  )
+  
+  if(NOT TBB_LIB)
+    find_library(TBB_LIB
+      NAMES tbb
+      PATHS ${TBB_SEARCH_PATHS}
+      PATH_SUFFIXES lib
+    )
+  endif()
+endif()
+
+if(NOT TBB_LIB)
+  message(FATAL_ERROR "Could not find TBB library. Searched in: ${TBB_SEARCH_PATHS}")
+else()
+  message(STATUS "Found TBB library: ${TBB_LIB}")
+endif()
+
+# Find TBBMALLOC library
+find_library(TBBMALLOC_LIB
+  NAMES tbbmalloc tbbmalloc.lib
+  PATHS ${TBB_SEARCH_PATHS}
+  PATH_SUFFIXES lib Library/lib
+  NO_DEFAULT_PATH
+)
+
+if(NOT TBBMALLOC_LIB)
+  find_library(TBBMALLOC_LIB
+    NAMES tbbmalloc tbbmalloc.lib
+    PATHS ${TBB_SEARCH_PATHS}
+    PATH_SUFFIXES lib Library/lib
+  )
+endif()
+
+if(NOT TBBMALLOC_LIB)
+  message(WARNING "Could not find TBBMALLOC library. Continuing without it.")
+else()
+  message(STATUS "Found TBBMALLOC library: ${TBBMALLOC_LIB}")
+endif()
+
+# Find TBBMALLOC_PROXY library
+find_library(TBBMALLOC_PROXY_LIB
+  NAMES tbbmalloc_proxy tbbmalloc_proxy.lib
+  PATHS ${TBB_SEARCH_PATHS}
+  PATH_SUFFIXES lib Library/lib
+  NO_DEFAULT_PATH
+)
+
+if(NOT TBBMALLOC_PROXY_LIB)
+  find_library(TBBMALLOC_PROXY_LIB
+    NAMES tbbmalloc_proxy tbbmalloc_proxy.lib
+    PATHS ${TBB_SEARCH_PATHS}
+    PATH_SUFFIXES lib Library/lib
+  )
+endif()
+
+if(NOT TBBMALLOC_PROXY_LIB)
+  message(WARNING "Could not find TBBMALLOC_PROXY library. Continuing without it.")
+else()
+  message(STATUS "Found TBBMALLOC_PROXY library: ${TBBMALLOC_PROXY_LIB}")
+endif()
 
 # adding TBB include dir
 if(DEFINED ENV{TBB_INC_DIR})
-
-  set(CMAKE_REQUIRED_FLAGS "-c")
-  check_include_file_cxx(tbb/tbb.h TBB_HEADER "-I$ENV{TBB_INC_DIR}")
-
-  if(NOT TBB_HEADER)
-    message(FATAL_ERROR "TBB header tbb.h not found")
-  endif()
-
-  message("-- Adding include directory $ENV{TBB_INC_DIR}")
-  list(APPEND EXTRA_INCLUDES "$ENV{TBB_INC_DIR}")
-
+  set(TBB_INC_DIR "$ENV{TBB_INC_DIR}")
+  message(STATUS "Using TBB_INC_DIR from environment: ${TBB_INC_DIR}")
+elseif(WIN32 AND DEFINED CONDA_PREFIX)
+  set(TBB_INC_DIR "${CONDA_TBB_INC_DIR}")
+  message(STATUS "Using conda TBB include directory: ${TBB_INC_DIR}")
 else()
- 
+  # Try to find in common locations
+  set(TBB_INC_DIR)
+endif()
+
+if(TBB_INC_DIR)
   set(CMAKE_REQUIRED_FLAGS "-c")
-  check_include_file_cxx(tbb/tbb.h TBB_HEADER )
-  list(APPEND EXTRA_INCLUDES "${CMAKE_REQUIRED_INCLUDES}") 
-
+  check_include_file_cxx(tbb/tbb.h TBB_HEADER "-I${TBB_INC_DIR}")
+  
   if(NOT TBB_HEADER)
-    message(FATAL_ERROR "TBB header tbb.h not found")
+    message(FATAL_ERROR "TBB header tbb.h not found in ${TBB_INC_DIR}")
   endif()
-
-  list(APPEND EXTRA_INCLUDES "${TBB_HEADER}")
-
+  
+  message(STATUS "Adding TBB include directory: ${TBB_INC_DIR}")
+  list(APPEND EXTRA_INCLUDES "${TBB_INC_DIR}")
+else()
+  # Try to find TBB header without explicit path
+  set(CMAKE_REQUIRED_FLAGS "-c")
+  check_include_file_cxx(tbb/tbb.h TBB_HEADER)
+  
+  if(NOT TBB_HEADER)
+    # Last resort: try conda include path
+    if(WIN32 AND DEFINED CONDA_PREFIX)
+      check_include_file_cxx(tbb/tbb.h TBB_HEADER "-I${CONDA_TBB_INC_DIR}")
+      if(TBB_HEADER)
+        list(APPEND EXTRA_INCLUDES "${CONDA_TBB_INC_DIR}")
+        message(STATUS "Found TBB header in conda include directory")
+      endif()
+    endif()
+    
+    if(NOT TBB_HEADER)
+      message(FATAL_ERROR "TBB header tbb.h not found. Please set TBB_INC_DIR or install TBB.")
+    endif()
+  else
+    list(APPEND EXTRA_INCLUDES "${CMAKE_REQUIRED_INCLUDES}")
+    list(APPEND EXTRA_INCLUDES "${TBB_HEADER}")
+  endif()
 endif()
 
 

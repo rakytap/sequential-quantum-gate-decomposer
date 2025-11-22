@@ -103,10 +103,18 @@ jobs:
           conda install -c conda-forge cmake tbb-devel openblas lapack -y
           # Set environment variables for TBB and BLAS
           $condaPrefix = conda info --base
-          echo "TBB_LIB_DIR=$condaPrefix\Library\lib" >> $env:GITHUB_ENV
-          echo "TBB_INC_DIR=$condaPrefix\Library\include" >> $env:GITHUB_ENV
-          echo "BLAS_LIB_DIR=$condaPrefix\Library\lib" >> $env:GITHUB_ENV
-          echo "CONDA_PREFIX=$condaPrefix" >> $env:GITHUB_ENV
+          $envPrefix = conda env list | Select-String -Pattern '\*' | ForEach-Object { ($_ -split '\s+')[1] }
+          if (-not $envPrefix) {
+            $envPrefix = $condaPrefix
+          }
+          echo "TBB_LIB_DIR=$envPrefix\Library\lib" >> $env:GITHUB_ENV
+          echo "TBB_INC_DIR=$envPrefix\Library\include" >> $env:GITHUB_ENV
+          echo "BLAS_LIB_DIR=$envPrefix\Library\lib" >> $env:GITHUB_ENV
+          echo "CONDA_PREFIX=$envPrefix" >> $env:GITHUB_ENV
+          # Also set for the current session
+          $env:CONDA_PREFIX = $envPrefix
+          $env:TBB_LIB_DIR = "$envPrefix\Library\lib"
+          $env:TBB_INC_DIR = "$envPrefix\Library\include"
 
       - name: Install build dependencies
         run: |
