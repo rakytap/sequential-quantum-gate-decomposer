@@ -19,9 +19,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 @author: Peter Rakyta, Ph.D.
 */
-/*
-\file qgd_Operation_BLock.cpp
-\brief Python interface for the Gates_block class
+/*! \file qgd_Circuit_Wrapper.cpp
+    \brief Python interface for the Gates_block class (quantum circuit wrapper)
 */
 
 #define PY_SSIZE_T_CLEAN
@@ -85,9 +84,9 @@ typedef struct qgd_Circuit_Wrapper {
 } qgd_Circuit_Wrapper;
 
 /**
-@brief Creates an instance of class N_Qubit_Decomposition and return with a pointer pointing to the class instance (C++ linking is needed)
-@param qbit_num Number of qubits spanning the unitary
-@return Return with a void pointer pointing to an instance of N_Qubit_Decomposition class.
+@brief Creates an instance of class Gates_block (Circuit) and returns a pointer to the class instance
+@param qbit_num Number of qubits spanning the circuit
+@return Returns a pointer to an instance of Gates_block class
 */
 Gates_block* 
 create_Circuit( int qbit_num ) {
@@ -95,8 +94,8 @@ create_Circuit( int qbit_num ) {
 }
 
 /**
-@brief Call to deallocate an instance of N_Qubit_Decomposition class
-@param ptr A pointer pointing to an instance of N_Qubit_Decomposition class.
+@brief Call to deallocate an instance of Gates_block class
+@param ptr A pointer pointing to an instance of Gates_block class
 */
 void
 release_Circuit( Gates_block*  instance ) {
@@ -557,8 +556,10 @@ qgd_Circuit_Wrapper_convert_to_DFE_gates(qgd_Circuit_Wrapper *self, PyObject *ar
 #endif
 
 /**
-@brief Extract the optimized parameters
-@param start_index The index of the first inverse gate
+@brief Extract the optimized parameters and return the matrix representation of the gate circuit
+@param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper
+@param args A tuple of the input arguments: start_index (integer, optional) - the index of the first inverse gate
+@return Returns a numpy array containing the matrix representation of the circuit
 */
 static PyObject *
 qgd_Circuit_Wrapper_get_Matrix( qgd_Circuit_Wrapper *self, PyObject *args ) {
@@ -611,7 +612,11 @@ qgd_Circuit_Wrapper_get_Parameter_Num( qgd_Circuit_Wrapper *self ) {
 
 
 /**
-@brief Call to apply the gate operation on the inut matrix
+@brief Apply the gate circuit operation on the input matrix
+@param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper
+@param args A tuple of the input arguments: parameters_arr (numpy array), unitary_arg (numpy array), parallel (int, optional)
+@param kwds A tuple of keywords
+@return Returns 0 on success
 */
 static PyObject *
 qgd_Circuit_Wrapper_apply_to( qgd_Circuit_Wrapper *self, PyObject *args, PyObject *kwds ) {
@@ -673,7 +678,7 @@ qgd_Circuit_Wrapper_apply_to( qgd_Circuit_Wrapper *self, PyObject *args, PyObjec
 
     // test C-style contiguous memory allocation of the array
     if ( !PyArray_IS_C_CONTIGUOUS(unitary) ) {
-        PyErr_SetString(PyExc_Exception, "input mtrix is not memory contiguous");
+        PyErr_SetString(PyExc_Exception, "input matrix is not memory contiguous");
         return NULL;
     }
 
@@ -715,7 +720,10 @@ qgd_Circuit_Wrapper_apply_to( qgd_Circuit_Wrapper *self, PyObject *args, PyObjec
 
 
 /**
-@brief Wrapper function to evaluate the second Rényi entropy of a quantum circuit at a specific parameter set.
+@brief Wrapper function to evaluate the second Rényi entropy of a quantum circuit at a specific parameter set
+@param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper
+@param args A tuple of the input arguments: parameters_arr (numpy array, optional), input_state_arg (numpy array, optional), qubit_list_arg (list, optional)
+@return Returns the second Rényi entropy value as a double, or -1 on error
 */
 static PyObject *
 qgd_Circuit_Wrapper_get_Second_Renyi_Entropy( qgd_Circuit_Wrapper *self, PyObject *args)
@@ -753,7 +761,7 @@ qgd_Circuit_Wrapper_get_Second_Renyi_Entropy( qgd_Circuit_Wrapper *self, PyObjec
 
     // test C-style contiguous memory allocation of the array
     if ( !PyArray_IS_C_CONTIGUOUS(input_state) ) {
-        PyErr_SetString(PyExc_Exception, "input mtrix is not memory contiguous");
+        PyErr_SetString(PyExc_Exception, "input matrix is not memory contiguous");
         return NULL;
     }
 
@@ -812,6 +820,8 @@ qgd_Circuit_Wrapper_get_Second_Renyi_Entropy( qgd_Circuit_Wrapper *self, PyObjec
 
 /**
 @brief Call to retrieve the number of qubits in the circuit
+@param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper
+@return Returns the number of qubits as an integer
 */
 static PyObject *
 qgd_Circuit_Wrapper_get_Qbit_Num( qgd_Circuit_Wrapper *self ) {
@@ -842,6 +852,9 @@ qgd_Circuit_Wrapper_get_Qbit_Num( qgd_Circuit_Wrapper *self ) {
 
 /**
 @brief Call to set the number of qubits in the circuit
+@param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper
+@param args A tuple of the input arguments: qbit_num (integer, optional)
+@return Returns None on success
 */
 static PyObject *
 qgd_Circuit_Wrapper_set_Qbit_Num( qgd_Circuit_Wrapper *self,  PyObject *args ) {
@@ -879,6 +892,8 @@ qgd_Circuit_Wrapper_set_Qbit_Num( qgd_Circuit_Wrapper *self,  PyObject *args ) {
 
 /**
 @brief Call to retrieve the list of qubits involved in the circuit
+@param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper
+@return Returns a Python list containing the qubit indices involved in the circuit
 */
 static PyObject *
 qgd_Circuit_Wrapper_get_Qbits( qgd_Circuit_Wrapper *self ) {
@@ -943,7 +958,10 @@ qgd_Circuit_Wrapper_set_Min_Fusion( qgd_Circuit_Wrapper *self,  PyObject *args )
 
 
 /**
-@brief Call to remap the qubits in the circuit.
+@brief Call to remap the qubits in the circuit
+@param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper
+@param args A tuple of the input arguments: qbit_map_arg (dictionary)
+@return Returns 0 on success, -1 on error
 */
 static PyObject *
 qgd_Circuit_Wrapper_Remap_Qbits( qgd_Circuit_Wrapper *self, PyObject *args ) {
@@ -1069,10 +1087,10 @@ qgd_Circuit_Wrapper_Remap_Qbits( qgd_Circuit_Wrapper *self, PyObject *args ) {
 
 
 /**
-@brief Call to get the metadata organised into Python dictionary of the idx-th gate
-@param circuit A pointer pointing to an instance of the class Gates_block.
-@param idx Labels the idx-th gate.
-@return Returns with a python dictionary containing the metadata of the idx-th gate
+@brief Call to get the metadata organized into Python dictionary of the idx-th gate
+@param circuit A pointer pointing to an instance of the class Gates_block
+@param idx Labels the idx-th gate (passed by reference, may be modified)
+@return Returns a Python dictionary containing the metadata of the idx-th gate, or NULL on error
 */
 static PyObject *
 get_gate( Gates_block* circuit, int &idx ) {
@@ -1323,9 +1341,9 @@ get_gate( Gates_block* circuit, int &idx ) {
 
 /**
 @brief Wrapper function to get a gate from the circuit
-@param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper.
-@param args A tuple of the input arguments: idx (int)
-idx: labels the idx-th gate.
+@param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper
+@param args A tuple of the input arguments: idx (integer) - the index of the gate to retrieve
+@return Returns a Python dictionary containing the gate metadata, or a gate object
 */
 static PyObject *
 qgd_Circuit_Wrapper_get_gate( qgd_Circuit_Wrapper *self, PyObject *args ) {
@@ -1344,7 +1362,9 @@ qgd_Circuit_Wrapper_get_gate( qgd_Circuit_Wrapper *self, PyObject *args ) {
 
 
 /**
-@brief Call to get the counts on the individual gates in the circuit
+@brief Call to get the counts of individual gates in the circuit
+@param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper
+@return Returns a Python dictionary mapping gate type names to their counts in the circuit
 */
 static PyObject *
 qgd_Circuit_Wrapper_get_Gate_Nums( qgd_Circuit_Wrapper *self ) {
@@ -1388,7 +1408,9 @@ qgd_Circuit_Wrapper_get_Gate_Nums( qgd_Circuit_Wrapper *self ) {
 
 
 /**
-@brief Call to get the incorporated gates in a python list
+@brief Call to get the incorporated gates in a Python list
+@param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper
+@return Returns a Python list containing gate objects representing all gates in the circuit
 */
 static PyObject *
 qgd_Circuit_Wrapper_get_gates( qgd_Circuit_Wrapper *self ) {
@@ -1424,9 +1446,9 @@ qgd_Circuit_Wrapper_get_gates( qgd_Circuit_Wrapper *self ) {
 
 /**
 @brief Wrapper function to get the indices of parent gates
-@param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper.
-@param args A tuple of the input arguments: 
-gate: the gate for which we are retriving the parents
+@param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper
+@param args A tuple of the input arguments: idx (integer) - the index of the gate for which we are retrieving the parents
+@return Returns a Python list containing the indices of parent gates
 */
 static PyObject *
 qgd_Circuit_Wrapper_get_parents( qgd_Circuit_Wrapper *self, PyObject *args ) {
@@ -1492,9 +1514,9 @@ qgd_Circuit_Wrapper_get_parents( qgd_Circuit_Wrapper *self, PyObject *args ) {
 
 /**
 @brief Wrapper function to get the indices of children gates
-@param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper.
-@param args A tuple of the input arguments: 
-gate: the gate for which we are retriving the children
+@param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper
+@param args A tuple of the input arguments: idx (integer) - the index of the gate for which we are retrieving the children
+@return Returns a Python list containing the indices of children gates
 */
 static PyObject *
 qgd_Circuit_Wrapper_get_children( qgd_Circuit_Wrapper *self, PyObject *args ) {
@@ -1558,7 +1580,10 @@ qgd_Circuit_Wrapper_get_children( qgd_Circuit_Wrapper *self, PyObject *args ) {
 
 
 /**
-@brief Call to extract the paramaters corresponding to the gate, from a parameter array associated to the circuit in which the gate is embedded.
+@brief Call to extract the parameters corresponding to the gate from a parameter array associated with the circuit in which the gate is embedded
+@param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper
+@param args A tuple of the input arguments: parameters_arr (numpy array, optional)
+@return Returns a numpy array containing the extracted parameters, or -1 on error
 */
 static PyObject *
 qgd_Circuit_Wrapper_Extract_Parameters( qgd_Circuit_Wrapper *self, PyObject *args ) {
@@ -1610,7 +1635,9 @@ qgd_Circuit_Wrapper_Extract_Parameters( qgd_Circuit_Wrapper *self, PyObject *arg
 
 
 /**
-@brief Method to generate a flat circuit. A flat circuit is a circuit does not containing subcircuits: there are no Gates_block instances (containing subcircuits) in the resulting circuit. If the original circuit contains subcircuits, the gates in the subcircuits are directly incorporated in the resulting flat circuit.
+@brief Method to generate a flat circuit. A flat circuit does not contain subcircuits: there are no Gates_block instances (containing subcircuits) in the resulting circuit. If the original circuit contains subcircuits, the gates in the subcircuits are directly incorporated in the resulting flat circuit
+@param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper
+@return Returns a new qgd_Circuit_Wrapper instance representing the flat circuit
 */
 static PyObject *
 qgd_Circuit_Wrapper_get_Flat_Circuit( qgd_Circuit_Wrapper *self ) {
@@ -1651,6 +1678,8 @@ qgd_Circuit_Wrapper_get_Flat_Circuit( qgd_Circuit_Wrapper *self ) {
 
 /**
 @brief Method to extract the stored quantum circuit in a human-readable data serialized and pickle-able format
+@param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper
+@return Returns a Python dictionary containing the serialized circuit state
 */
 static PyObject *
 qgd_Circuit_Wrapper_getstate( qgd_Circuit_Wrapper *self ) {
@@ -1729,6 +1758,9 @@ qgd_Circuit_Wrapper_getstate( qgd_Circuit_Wrapper *self ) {
 
 /**
 @brief Call to set the state of a quantum circuit from a human-readable data serialized and pickle-able format
+@param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper
+@param args A tuple of the input arguments: state (dictionary) - the serialized circuit state
+@return Returns None on success
 */
 static PyObject *
 qgd_Circuit_Wrapper_setstate( qgd_Circuit_Wrapper *self, PyObject *args ) {
@@ -1869,7 +1901,8 @@ qgd_Circuit_Wrapper_setstate( qgd_Circuit_Wrapper *self, PyObject *args ) {
 
 /**
 @brief Call to get the starting index of the parameters in the parameter array corresponding to the circuit in which the current gate is incorporated
-@return Returns with the starting index
+@param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper
+@return Returns the starting index as an integer
 */
 static PyObject *
 qgd_Circuit_Wrapper_get_Parameter_Start_Index( qgd_Circuit_Wrapper *self ) {
@@ -2026,16 +2059,16 @@ static PyMethodDef qgd_Circuit_Wrapper_Methods[] = {
      "Method to get the tuple of decomposing gates."
     },
     {"get_Gate_Nums", (PyCFunction) qgd_Circuit_Wrapper_get_Gate_Nums, METH_NOARGS,
-     "Method to get statisctics on the gate counts in the circuit."
+     "Method to get statistics on the gate counts in the circuit."
     },   
     {"get_Parameter_Start_Index", (PyCFunction) qgd_Circuit_Wrapper_get_Parameter_Start_Index, METH_NOARGS,
      "Call to get the starting index of the parameters in the parameter array corresponding to the circuit in which the current gate is incorporated."
     },
     {"Extract_Parameters", (PyCFunction) qgd_Circuit_Wrapper_Extract_Parameters, METH_VARARGS,
-     "Call to extract the paramaters corresponding to the gate, from a parameter array associated to the circuit in which the gate is embedded."
+     "Call to extract the parameters corresponding to the gate from a parameter array associated with the circuit in which the gate is embedded."
     },
     {"get_Flat_Circuit", (PyCFunction) qgd_Circuit_Wrapper_get_Flat_Circuit, METH_NOARGS,
-     "Method to generate a flat circuit. A flat circuit is a circuit does not containing subcircuits: there are no Gates_block instances (containing subcircuits) in the resulting circuit. If the original circuit contains subcircuits, the gates in the subcircuits are directly incorporated in the resulting flat circuit."
+     "Method to generate a flat circuit. A flat circuit does not contain subcircuits: there are no Gates_block instances (containing subcircuits) in the resulting circuit. If the original circuit contains subcircuits, the gates in the subcircuits are directly incorporated in the resulting flat circuit."
     },
     {"get_Parents", (PyCFunction) qgd_Circuit_Wrapper_get_parents, METH_VARARGS,
      "Method to get the list of parent gate indices. Then the parent gates can be obtained from the list of gates involved in the circuit."
