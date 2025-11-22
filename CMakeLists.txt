@@ -461,66 +461,107 @@ else()
 endif()
 
 # adding TBB include dir
+set(TBB_INC_DIR)
+set(TBB_HEADER_FOUND FALSE)
+
+# First, try environment variable
 if(DEFINED ENV{TBB_INC_DIR})
   set(TBB_INC_DIR "$ENV{TBB_INC_DIR}")
-  message(STATUS "Using TBB_INC_DIR from environment: ${TBB_INC_DIR}")
-elseif(WIN32 AND DEFINED CONDA_PREFIX)
-  set(TBB_INC_DIR "${CONDA_TBB_INC_DIR}")
-  message(STATUS "Using conda TBB include directory: ${TBB_INC_DIR}")
-else()
-  # Try to find in common locations
-  set(TBB_INC_DIR)
+  message(STATUS "TBB_INC_DIR from environment: ${TBB_INC_DIR}")
 endif()
 
+# Clean up the path if set
 if(TBB_INC_DIR)
-  # Clean up the path - remove any invalid characters
   string(STRIP "${TBB_INC_DIR}" TBB_INC_DIR)
-  # Replace any double spaces or invalid patterns
   string(REGEX REPLACE "\\*" "" TBB_INC_DIR "${TBB_INC_DIR}")
   string(REGEX REPLACE "  +" " " TBB_INC_DIR "${TBB_INC_DIR}")
   string(STRIP "${TBB_INC_DIR}" TBB_INC_DIR)
   
   # Validate the path
-  if("${TBB_INC_DIR}" MATCHES "\\*|  ")
+  if("${TBB_INC_DIR}" MATCHES "\\*|  " OR "${TBB_INC_DIR}" STREQUAL "")
     message(WARNING "Invalid TBB_INC_DIR detected: '${TBB_INC_DIR}'. Clearing it.")
     set(TBB_INC_DIR)
   endif()
 endif()
 
-if(TBB_INC_DIR)
-  set(CMAKE_REQUIRED_FLAGS "-c")
-  # Use file(TO_CMAKE_PATH) to normalize the path
-  file(TO_CMAKE_PATH "${TBB_INC_DIR}" TBB_INC_DIR_NORMALIZED)
-  check_include_file_cxx(tbb/tbb.h TBB_HEADER "-I${TBB_INC_DIR_NORMALIZED}")
-  
-  if(NOT TBB_HEADER)
-    message(FATAL_ERROR "TBB header tbb.h not found in ${TBB_INC_DIR_NORMALIZED}")
+# On Windows, also check CONDA_PREFIX
+if(WIN32)
+  if(DEFINED ENV{CONDA_PREFIX})
+    set(CONDA_PREFIX "$ENV{CONDA_PREFIX}")
+    set(CONDA_TBB_INC_DIR "${CONDA_PREFIX}/Library/include")
+    message(STATUS "CONDA_PREFIX: ${CONDA_PREFIX}")
+    message(STATUS "CONDA_TBB_INC_DIR: ${CONDA_TBB_INC_DIR}")
+    
+    # If TBB_INC_DIR not set or invalid, use conda path
+    if(NOT TBB_INC_DIR OR NOT EXISTS "${TBB_INC_DIR}/tbb/tbb.h")
+      set(TBB_INC_DIR "${CONDA_TBB_INC_DIR}")
+      message(STATUS "Using conda TBB include directory: ${TBB_INC_DIR}")
+    endif()
   endif()
-  
-  message(STATUS "Adding TBB include directory: ${TBB_INC_DIR_NORMALIZED}")
-  list(APPEND EXTRA_INCLUDES "${TBB_INC_DIR_NORMALIZED}")
-else()
-  # Try to find TBB header without explicit path
+endif()
+
+# Try multiple search paths
+set(TBB_SEARCH_PATHS)
+if(TBB_INC_DIR)
+  list(APPEND TBB_SEARCH_PATHS "${TBB_INC_DIR}")
+endif()
+if(WIN32 AND DEFINED CONDA_PREFIX)
+  list(APPEND TBB_SEARCH_PATHS "${CONDA_PREFIX}/Library/include")
+  list(APPEND TBB_SEARCH_PATHS "${CONDA_PREFIX}/include")
+endif()
+# Add common system paths
+if(WIN32)
+  list(APPEND TBB_SEARCH_PATHS "C:/Program Files/Intel/oneAPI/tbb/latest/include")
+  list(APPEND TBB_SEARCH_PATHS "C:/tbb/include")
+endif()
+
+message(STATUS "Searching for TBB header in: ${TBB_SEARCH_PATHS}")
+
+# Try to find TBB header in search paths
+foreach(SEARCH_PATH ${TBB_SEARCH_PATHS})
+  if(EXISTS "${SEARCH_PATH}/tbb/tbb.h")
+    set(TBB_INC_DIR "${SEARCH_PATH}")
+    set(TBB_HEADER_FOUND TRUE)
+    message(STATUS "Found TBB header at: ${TBB_INC_DIR}/tbb/tbb.h")
+    break()
+  endif()
+endforeach()
+
+# If not found by file check, try check_include_file_cxx
+if(NOT TBB_HEADER_FOUND)
+  foreach(SEARCH_PATH ${TBB_SEARCH_PATHS})
+    set(CMAKE_REQUIRED_FLAGS "-c")
+    file(TO_CMAKE_PATH "${SEARCH_PATH}" SEARCH_PATH_NORMALIZED)
+    check_include_file_cxx(tbb/tbb.h TBB_HEADER "-I${SEARCH_PATH_NORMALIZED}")
+    
+    if(TBB_HEADER)
+      set(TBB_INC_DIR "${SEARCH_PATH_NORMALIZED}")
+      set(TBB_HEADER_FOUND TRUE)
+      message(STATUS "Found TBB header via check_include_file_cxx at: ${TBB_INC_DIR}")
+      break()
+    endif()
+  endforeach()
+endif()
+
+# Last resort: try without explicit path
+if(NOT TBB_HEADER_FOUND)
   set(CMAKE_REQUIRED_FLAGS "-c")
   check_include_file_cxx(tbb/tbb.h TBB_HEADER)
   
-  if(NOT TBB_HEADER)
-    # Last resort: try conda include path
-    if(WIN32 AND DEFINED CONDA_PREFIX)
-      check_include_file_cxx(tbb/tbb.h TBB_HEADER "-I${CONDA_TBB_INC_DIR}")
-      if(TBB_HEADER)
-        list(APPEND EXTRA_INCLUDES "${CONDA_TBB_INC_DIR}")
-        message(STATUS "Found TBB header in conda include directory")
-      endif()
-    endif()
-    
-    if(NOT TBB_HEADER)
-      message(FATAL_ERROR "TBB header tbb.h not found. Please set TBB_INC_DIR or install TBB.")
-    endif()
-  else()
+  if(TBB_HEADER)
+    set(TBB_HEADER_FOUND TRUE)
+    message(STATUS "Found TBB header in system paths")
     list(APPEND EXTRA_INCLUDES "${CMAKE_REQUIRED_INCLUDES}")
-    list(APPEND EXTRA_INCLUDES "${TBB_HEADER}")
   endif()
+endif()
+
+# Add the include directory if found
+if(TBB_HEADER_FOUND AND TBB_INC_DIR)
+  file(TO_CMAKE_PATH "${TBB_INC_DIR}" TBB_INC_DIR_NORMALIZED)
+  list(APPEND EXTRA_INCLUDES "${TBB_INC_DIR_NORMALIZED}")
+  message(STATUS "Added TBB include directory: ${TBB_INC_DIR_NORMALIZED}")
+elseif(NOT TBB_HEADER_FOUND)
+  message(FATAL_ERROR "TBB header tbb.h not found. Searched in: ${TBB_SEARCH_PATHS}. Please set TBB_INC_DIR or install TBB.")
 endif()
 
 

@@ -110,6 +110,23 @@ jobs:
           $envPath = $envPath.Replace('\', '/')
           $tbbLib = "$envPath/Library/lib"
           $tbbInc = "$envPath/Library/include"
+          # Verify TBB installation
+          Write-Host "Checking TBB installation..."
+          Write-Host "Environment path: $envPath"
+          Write-Host "TBB include path: $tbbInc"
+          Write-Host "TBB lib path: $tbbLib"
+          if (Test-Path "$tbbInc/tbb/tbb.h") {
+            Write-Host "TBB header found at: $tbbInc/tbb/tbb.h"
+          } else {
+            Write-Host "WARNING: TBB header not found at: $tbbInc/tbb/tbb.h"
+            # Try to find it
+            $foundTbb = Get-ChildItem -Path "$envPath" -Recurse -Filter "tbb.h" -ErrorAction SilentlyContinue | Select-Object -First 1
+            if ($foundTbb) {
+              $actualTbbInc = $foundTbb.DirectoryName.Replace('\', '/')
+              Write-Host "Found TBB header at: $actualTbbInc"
+              $tbbInc = $actualTbbInc
+            }
+          }
           # Write to GITHUB_ENV using Out-File
           "TBB_LIB_DIR=$tbbLib" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
           "TBB_INC_DIR=$tbbInc" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
