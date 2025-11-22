@@ -33,7 +33,6 @@ limitations under the License.
 #endif
 
 
-
 /**
 @brief Call to solve layer by layer the optimization problem via BFGS algorithm. The optimalized parameters are stored in attribute optimized_parameters.
 @param num_of_parameters Number of parameters to be optimized
@@ -74,8 +73,6 @@ void Optimization_Interface::solve_layer_optimization_problem_BFGS2( int num_of_
         }
 
 
-        int random_shift_count = 0;
-        long long sub_iter_idx = 0;
         double current_minimum_hold = current_minimum;
 
 
@@ -87,10 +84,7 @@ CPU_time = 0.0;
 
 
         // random generator of real numbers   
-        std::uniform_real_distribution<> distrib_real(0.0, 2*M_PI);
-
-        // random generator of integers   
-        std::uniform_int_distribution<> distrib_int(0, 5000);  
+        std::uniform_real_distribution<> distrib_real(0.0, 1.0);
 
 
         long long max_inner_iterations_loc;
@@ -150,95 +144,505 @@ CPU_time = 0.0;
 
         std::stringstream sstream;
         sstream << "max_inner_iterations: " << max_inner_iterations_loc  << std::endl;
-        print(sstream, 2); 
+        print(sstream, 2);
 
-        // do the optimization loops
-        double f = DBL_MAX;
-        for (long long iter_idx=0; iter_idx<iteration_loops_max; iter_idx++) {
+        bool use_basin_hopping = false;
+        bool use_de = false;
+        bool use_dual_annealing = false;
+        if ( config.count("use_basin_hopping") > 0 ) {
+            config["use_basin_hopping"].get_property( use_basin_hopping );  
+        } else if ( config.count("use_differential_evolution") > 0 ) {
+            config["use_differential_evolution"].get_property( use_de );  
+        } else if ( config.count("use_dual_annealing") > 0 ) {
+            config["use_dual_annealing"].get_property( use_dual_annealing );  
+        }
+        if (!use_basin_hopping && !use_de && !use_dual_annealing) {
+            use_dual_annealing = true; //use_basin_hopping = true;
+        } 
 
+        if (use_basin_hopping) {
+            // --- Basin-hopping parameters (SciPy-like defaults) ---
+            double bh_T = 1.0;                     // "temperature" for Metropolis acceptance
+            double bh_stepsize = 0.5;
+            long long bh_interval = 50;                // how often to adapt stepsize
+            double bh_target_accept = 0.5;
+            double bh_stepwise_factor = 0.9;
+            // Allow overrides via config (all optional)
+            if (config.count("bh_T") > 0)                             config["bh_T"].get_property(bh_T);
+            if (config.count("bh_stepsize") > 0)                      config["bh_stepsize"].get_property(bh_stepsize);
+            if (config.count("bh_interval") > 0) { long long v; config["bh_interval"].get_property(v); bh_interval = std::max<long long>(1, v); }
+            if (config.count("bh_target_accept_rate") > 0)            config["bh_target_accept_rate"].get_property(bh_target_accept);
+            if (config.count("bh_stepwise_factor") > 0)               config["bh_stepwise_factor"].get_property(bh_stepwise_factor);
+
+            // Clamp a couple of parameters to SciPy’s expected ranges
+            bh_target_accept = std::min(0.999, std::max(0.001, bh_target_accept));
+            if (!(bh_stepwise_factor > 0.0 && bh_stepwise_factor < 1.0)) bh_stepwise_factor = 0.9;
+
+            // ---------------- Basin-hopping driver ----------------
+            long long accept_count_window = 0;
+            long long window_len = 0;
+            long long no_improve_count = 0;
+            double stepsize_now = bh_stepsize;            // adaptive stepsize (SciPy-style)
+
+            BFGS_Powell cBFGS_Powell(optimization_problem_combined, this);
+            double f_trial = cBFGS_Powell.Start_Optimization(solution_guess, max_inner_iterations);
+            if (f_trial < current_minimum) {
+                current_minimum = f_trial;
+                memcpy(optimized_parameters_mtx.get_data(), solution_guess.get_data(), num_of_parameters*sizeof(double));
+            }        
+            Matrix_real x_current = solution_guess.copy();   // current basin representative
+
+
+            for (long long iter_idx=0; iter_idx<iteration_loops_max; iter_idx++) {
+
+                for (int j = 0; j < num_of_parameters; ++j) {
+                    double delta = (distrib_real(gen) * 2.0 - 1.0) * stepsize_now * M_PI;
+                    solution_guess[j] = fmod(solution_guess[j] + delta, 2.0 * M_PI);
+                }
             
-                BFGS_Powell cBFGS_Powell(optimization_problem_combined, this);
-                double f = cBFGS_Powell.Start_Optimization(solution_guess, max_inner_iterations);           
-                
-                if (sub_iter_idx == 1 ) {
-                     current_minimum_hold = f;    
+                f_trial = cBFGS_Powell.Start_Optimization(solution_guess, max_inner_iterations);
+
+                // --- Metropolis acceptance (always accept downhill; uphill with prob exp(-(f_new - f_old)/T))
+                bool accept = false;
+                if (f_trial <= current_minimum_hold) {
+                    accept = true;
+                } else {
+                    double dE = f_trial - current_minimum_hold;
+                    double prob = std::exp(-dE / std::max(1e-300, bh_T));
+                    accept = (distrib_real(gen) < prob);
                 }
 
+                if (accept) {
+                    // move to new basin
+                    memcpy(x_current.get_data(), solution_guess.get_data(), num_of_parameters*sizeof(double));
+                    current_minimum_hold = f_trial;
+                    ++accept_count_window;
+                } else {
+                    memcpy(solution_guess.get_data(), x_current.get_data(), num_of_parameters*sizeof(double));
+                }
 
-                if (current_minimum_hold*0.95 > f || (current_minimum_hold*0.97 > f && f < 1e-3) ||  (current_minimum_hold*0.99 > f && f < 1e-4) ) {
-                     sub_iter_idx = 0;
-                     current_minimum_hold = f;        
+                // --- Track global best
+                //bool improved_global = false;
+                if (f_trial < current_minimum) {
+                    current_minimum = f_trial;  // keep public minimum in sync
+                    memcpy(optimized_parameters_mtx.get_data(), solution_guess.get_data(), num_of_parameters*sizeof(double));
+                    //improved_global = true;
+                    no_improve_count = 0;
+                } else {
+                    ++no_improve_count;
                 }
-    
-    
-                if (current_minimum > f ) {
-                     current_minimum = f;
-                     memcpy( optimized_parameters_mtx.get_data(),  solution_guess.get_data(), num_of_parameters*sizeof(double) );
-                }
-    
 
                 if ( iter_idx % 5000 == 0 ) {
-                     std::stringstream sstream;
-                     sstream << "BFGS2: processed iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "\%, current minimum:" << current_minimum << std::endl;
-                     print(sstream, 2);  
+                        std::stringstream sstream;
+                        sstream << "BFGS2: processed iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "\%, current minimum:" << current_minimum << std::endl;
+                        print(sstream, 2);  
 
-                     if ( export_circuit_2_binary_loc>0) {
-                         std::string filename("initial_circuit_iteration.binary");
-                         if (project_name != "") { 
-                             filename=project_name+ "_"  +filename;
-                         }
-                         export_gate_list_to_binary(optimized_parameters_mtx, this, filename, verbose);
-                     }
+                        if ( export_circuit_2_binary_loc>0) {
+                            std::string filename("initial_circuit_iteration.binary");
+                            if (project_name != "") { 
+                                filename=project_name+ "_"  +filename;
+                            }
+                            export_gate_list_to_binary(optimized_parameters_mtx, this, filename, verbose);
+                        }
+                }
+
+                if ( output_periodicity>0 && iter_idx % output_periodicity == 0 ) {
+                    export_current_cost_fnc(current_minimum);
+                }
+
+    #ifdef __MPI__        
+                MPI_Bcast( (void*)solution_guess.get_data(), num_of_parameters, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    #endif
+                
+                
+                if (current_minimum < optimization_tolerance_loc ) {
+                    break;
+                }
+                if (no_improve_count >= random_shift_count_max) {
+                    break;  // SciPy's niter_success criterion
+                }
+
+                // --- Adaptive stepsize every 'interval' iterations (SciPy behavior)
+                ++window_len;
+                if (bh_interval > 0 && (window_len % bh_interval) == 0) {
+                    double accept_rate = (double)accept_count_window / (double)bh_interval;
+                    // If acceptance is high, enlarge steps; else shrink steps.
+                    if (accept_rate > bh_target_accept) {
+                        stepsize_now /= bh_stepwise_factor;   // increase (since factor<1)
+                    } else {
+                        stepsize_now *= bh_stepwise_factor;   // decrease
+                    }
+                    // reset window counters
+                    accept_count_window = 0;
+                    window_len = 0;
                 }
 
 
-                if (f < optimization_tolerance_loc || random_shift_count > random_shift_count_max ) {
+            }
+        } else if (use_de) {
+            enum strategy_enum { STRAT_BEST1BIN, STRAT_RAND1BIN };
+            enum init_enum { INIT_RANDOM, INIT_LHS };
+
+            // ---------------- DE hyperparameters (SciPy-ish) ----------------
+            long long de_strategy = STRAT_BEST1BIN; // or STRAT_RAND1BIN
+            long long de_popsize = 15; // SciPy default NP ~= 15*D (so popsize is NP/D). We map so NP = de_popsize*num_params.
+            double de_mutation = 0.8;          // F
+            double de_recombination = 0.7;     // CR
+            double de_tol = 1e-6;
+            long long de_init = INIT_RANDOM;    // or INIT_LHS
+            long long de_polish = 1;           // run BFGS after DE?
+
+
+            if (config.count("de_strategy") > 0)                 config["de_strategy"].get_property(de_strategy);
+            if (config.count("de_popsize") > 0)                  config["de_popsize"].get_property(de_popsize);
+            if (config.count("de_mutation") > 0)                 config["de_mutation"].get_property(de_mutation);
+            if (config.count("de_recombination") > 0)            config["de_recombination"].get_property(de_recombination);
+            if (config.count("de_tol") > 0)                      config["de_tol"].get_property(de_tol);
+            if (config.count("de_init") > 0)                     config["de_init"].get_property(de_init);
+            if (config.count("de_polish") > 0) { long long v;    config["de_polish"].get_property(v); de_polish = v ? 1 : 0; }
+
+            // Sanity + derived
+            if (de_mutation <= 0.0) de_mutation = 0.8;
+            if (de_recombination < 0.0) de_recombination = 0.7; else if (de_recombination > 1.0) de_recombination = 1.0;
+            if (de_popsize <= 0) de_popsize = 15;
+
+            const int D = num_of_parameters;
+            int NP = de_popsize * D;
+            NP = std::max(5, NP);
+
+            // ---------------- Population storage ----------------
+            std::vector<Matrix_real> pop(NP, Matrix_real(D, 1));
+            std::vector<double>      fit(NP, DBL_MAX);
+
+            // Initialize population
+            auto init_random = [&]() {
+                for (int i = 0; i < NP; ++i) {
+                    for (int j = 0; j < D; ++j) {
+                        pop[i][j] = distrib_real(gen) * 2.0 * M_PI; // in [0, 2π)
+                    }
+                }
+            };
+
+            auto init_lhs = [&]() {
+                // Simple stratified (Latin hypercube-like) per-dimension on [0, 2π)
+                std::vector<int> idx(NP);
+                for (int i = 0; i < NP; ++i) idx[i] = i;
+
+                for (int j = 0; j < D; ++j) {
+                    std::shuffle(idx.begin(), idx.end(), gen);
+                    for (int i = 0; i < NP; ++i) {
+                        double a = (double)idx[i] / (double)NP;
+                        double b = (double)(idx[i] + 1) / (double)NP;
+                        double r = a + (b - a) * distrib_real(gen);
+                        pop[i][j] = fmod(r * (2.0 * M_PI), 2.0 * M_PI);
+                    }
+                }
+            };
+
+            if (de_init == INIT_LHS) init_lhs(); else init_random();
+
+            // Evaluate initial population
+        #ifdef __MPI__
+            // If you want, you can distribute evaluations here; for simplicity we do sequential eval.
+        #endif
+            double best_f = DBL_MAX;
+            int best_i = 0;
+            for (int i = 0; i < NP; ++i) {
+                fit[i] = this->optimization_problem(pop[i]);
+                if (fit[i] < best_f) { best_f = fit[i]; best_i = i; }
+            }
+            if (best_f < current_minimum) {
+                current_minimum = best_f;
+                memcpy(optimized_parameters_mtx.get_data(), pop[best_i].get_data(), D * sizeof(double));
+            }
+
+            // ---------------- DE loop ----------------
+            std::vector<int> idx_all(NP);
+            for (int i = 0; i < NP; ++i) idx_all[i] = i;
+
+            auto pick_3_distinct = [&](int exclude) {
+                // pick r1, r2, r3 distinct and != exclude
+                int r1, r2, r3;
+                do { r1 = idx_all[std::uniform_int_distribution<int>(0, NP-1)(gen)]; } while (r1 == exclude);
+                do { r2 = idx_all[std::uniform_int_distribution<int>(0, NP-1)(gen)]; } while (r2 == exclude || r2 == r1);
+                do { r3 = idx_all[std::uniform_int_distribution<int>(0, NP-1)(gen)]; } while (r3 == exclude || r3 == r1 || r3 == r2);
+                return std::tuple<int,int,int>(r1, r2, r3);
+            };
+
+            Matrix_real trial(D, 1), mutant(D, 1);
+            long long gen_no_improve = 0;
+            double last_best = best_f;
+
+            for (long long generation = 0; generation < iteration_loops_max; ++generation) {
+
+                for (int i = 0; i < NP; ++i) {
+                    // ----- Mutation -----
+                    if (de_strategy == STRAT_BEST1BIN) {
+                        // mutant = best + F*(r1 - r2)
+                        int r1, r2;
+                        do { r1 = idx_all[std::uniform_int_distribution<int>(0, NP-1)(gen)]; } while (r1 == i || r1 == best_i);
+                        do { r2 = idx_all[std::uniform_int_distribution<int>(0, NP-1)(gen)]; } while (r2 == i || r2 == r1 || r2 == best_i);
+                        for (int j = 0; j < D; ++j) {
+                            mutant[j] = fmod(pop[best_i][j] + de_mutation * (pop[r1][j] - pop[r2][j]), 2.0 * M_PI);
+                        }
+                    } else { // "rand1bin" default
+                        // mutant = r1 + F*(r2 - r3)
+                        int r1, r2, r3;
+                        std::tie(r1, r2, r3) = pick_3_distinct(i);
+                        for (int j = 0; j < D; ++j) {
+                            mutant[j] = fmod(pop[r1][j] + de_mutation * (pop[r2][j] - pop[r3][j]), 2.0 * M_PI);
+                        }
+                    }
+
+                    // ----- Binomial crossover -----
+                    int jrand = std::uniform_int_distribution<int>(0, D - 1)(gen);
+                    for (int j = 0; j < D; ++j) {
+                        if (j == jrand || distrib_real(gen) < de_recombination) {
+                            trial[j] = mutant[j];
+                        } else {
+                            trial[j] = pop[i][j];
+                        }
+                    }
+
+                    // ----- Selection -----
+                    double f_trial = this->optimization_problem(trial);
+                    if (f_trial <= fit[i]) {
+                        memcpy(pop[i].get_data(), trial.get_data(), D * sizeof(double));
+                        fit[i] = f_trial;
+
+                        if (f_trial < best_f) {
+                            best_f = f_trial;
+                            best_i = i;
+                        }
+                    }
+                }
+
+                // Update global best into project-wide state
+                if (best_f < current_minimum) {
+                    current_minimum = best_f;
+                    memcpy(optimized_parameters_mtx.get_data(), pop[best_i].get_data(), D * sizeof(double));
+                }
+
+                // Progress / export
+                if (generation % 50 == 0) {
+                    std::stringstream sstream;
+                    sstream << "DE: generation " << generation << "/" << iteration_loops_max
+                            << ", best=" << current_minimum << std::endl;
+                    print(sstream, 2);
+
+                    if (export_circuit_2_binary_loc > 0) {
+                        std::string filename("initial_circuit_iteration.binary");
+                        if (project_name != "") filename = project_name + "_" + filename;
+                        export_gate_list_to_binary(optimized_parameters_mtx, this, filename, verbose);
+                    }
+                }
+
+                if (output_periodicity > 0 && generation % output_periodicity == 0) {
+                    export_current_cost_fnc(current_minimum);
+                }
+
+        #ifdef __MPI__
+                // Optional sync of best-so-far to workers
+                MPI_Bcast((void*)optimized_parameters_mtx.get_data(), D, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+        #endif
+
+                // Stopping: reached target
+                if (current_minimum < optimization_tolerance_loc) break;
+
+                // Stopping: no improvement by > de_tol in this generation
+                if (std::abs(last_best - best_f) <= de_tol) {
+                    ++gen_no_improve;
+                } else {
+                    gen_no_improve = 0;
+                }
+                last_best = best_f;
+
+                if (gen_no_improve >= 1) {
+                    // one stagnant generation with < de_tol delta (simple, effective)
+                    break;
+                }
+            }
+
+            // ---------------- Polish with BFGS (optional) ----------------
+            if (de_polish) {
+                BFGS_Powell cBFGS_Powell(optimization_problem_combined, this);
+                auto params = optimized_parameters_mtx.copy();
+                double f_pol = cBFGS_Powell.Start_Optimization(params, /*max_inner_iterations*/  std::max<long long>(200, D*50));
+                if (f_pol < current_minimum) {
+                    current_minimum = f_pol;
+                    memcpy(optimized_parameters_mtx.get_data(), params.get_data(), D * sizeof(double));
+                }
+            }            
+        } else if (use_dual_annealing) {
+            // ---------------- Dual annealing hyperparameters (SciPy-like) ----------------
+            double da_initial_temp       = 5230.0;   // initial temperature
+            double da_restart_temp_ratio = 2e-5;     // threshold for restart
+            double da_visit              = 2.62;     // visiting distribution parameter (>1)
+            double da_accept             = -5.0;     // acceptance distribution parameter
+            long long da_maxiter         = iteration_loops_max; // max temperature steps
+            long long da_maxfun          = 10000000; // max function evaluations
+            double da_tol                = 1e-6;     // required improvement threshold
+            long long da_no_local_search = 0;        // 0 => do local search (polish), 1 => skip
+            if (config.count("da_initial_temp") > 0)        config["da_initial_temp"].get_property(da_initial_temp);
+            if (config.count("da_restart_temp_ratio") > 0)  config["da_restart_temp_ratio"].get_property(da_restart_temp_ratio);
+            if (config.count("da_visit") > 0)               config["da_visit"].get_property(da_visit);
+            if (config.count("da_accept") > 0)              config["da_accept"].get_property(da_accept);
+            if (config.count("da_maxiter") > 0) {
+                long long v; config["da_maxiter"].get_property(v);
+                da_maxiter = std::max<long long>(1, v);
+            }
+            if (config.count("da_maxfun") > 0) {
+                long long v; config["da_maxfun"].get_property(v);
+                da_maxfun = std::max<long long>(1, v);
+            }
+            if (config.count("da_tol") > 0)                 config["da_tol"].get_property(da_tol);
+            if (config.count("da_no_local_search") > 0) {
+                long long v; config["da_no_local_search"].get_property(v);
+                da_no_local_search = v ? 1 : 0;
+            }
+
+            // Sanity
+            if (da_initial_temp <= 0.0) da_initial_temp = 5230.0;
+            if (da_restart_temp_ratio <= 0.0 || da_restart_temp_ratio >= 1.0) da_restart_temp_ratio = 2e-5;
+            if (da_visit <= 1.0) da_visit = 2.62; // visiting parameter must be >1
+
+            const int D = num_of_parameters;
+
+            // Ensure initial guess is in [0, 2π)
+            for (int j = 0; j < D; ++j) {
+                solution_guess[j] = std::fmod(solution_guess[j], 2.0 * M_PI);
+            }
+
+            // ---------------- Initial evaluation ----------------
+            double f_current = this->optimization_problem(solution_guess);
+            long long nfev = 1;
+
+            Matrix_real x_best    = solution_guess.copy();
+            double f_best         = f_current;
+
+            memcpy(optimized_parameters_mtx.get_data(), x_best.get_data(), D * sizeof(double));
+            current_minimum = f_best;
+
+            double last_best = f_best;
+            int restart_count = 0;
+
+            // ---------------- Dual annealing loop ----------------
+            for (long long k = 0; k < da_maxiter && nfev < da_maxfun; ++k) {
+
+                // Temperature schedule (simple inverse cooling)
+                double Tk = da_initial_temp / (1.0 + (double)k + (double)restart_count);
+
+                // Restart if temperature too low
+                if (Tk < da_initial_temp * da_restart_temp_ratio) {
+                    ++restart_count;
+                    // re-center around current global best
+                    memcpy(solution_guess.get_data(), x_best.get_data(), D * sizeof(double));
+                    f_current = f_best;
+                    Tk = da_initial_temp / (1.0 + (double)restart_count);
+                }
+
+                Matrix_real x_trial(D, 1);
+
+                // Generalized visiting distribution (heavy-tailed)
+                // For each dimension j, generate a random step, scale by temperature, wrap to [0, 2π)
+                for (int j = 0; j < D; ++j) {
+                    double u = distrib_real(gen);        // in (0,1)
+                    double sign = (u < 0.5) ? -1.0 : 1.0;
+                    double v = distrib_real(gen);       // second uniform
+                    // Heavy-tail factor controlled by da_visit (>1)
+                    double step_mag = std::pow(1.0 / std::max(1e-12, v), 1.0 / (da_visit - 1.0)) - 1.0;
+                    // Scale by temperature, then map to angle scale
+                    double step = sign * step_mag * Tk / da_initial_temp * (2.0 * M_PI);
+                    x_trial[j] = std::fmod(solution_guess[j] + step, 2.0 * M_PI);
+                }
+
+                double f_trial = this->optimization_problem(x_trial);
+                ++nfev;
+
+                // Acceptance probability (Metropolis-like, shaped by da_accept)
+                bool accept = false;
+                if (f_trial <= f_current) {
+                    accept = true;
+                } else {
+                    double dE = f_trial - f_current;
+                    // Scale controlled by temperature and da_accept (negative default)
+                    double scale = std::pow(std::max(1e-12, Tk / da_initial_temp), -da_accept);
+                    scale = std::max(scale, 1e-12);
+                    double prob = std::exp(-dE / scale);
+                    if (distrib_real(gen) < prob) {
+                        accept = true;
+                    }
+                }
+
+                if (accept) {
+                    memcpy(solution_guess.get_data(), x_trial.get_data(), D * sizeof(double));
+                    f_current = f_trial;
+                }
+
+                // Track global best
+                if (f_trial < f_best) {
+                    f_best = f_trial;
+                    memcpy(x_best.get_data(), x_trial.get_data(), D * sizeof(double));
+                    memcpy(optimized_parameters_mtx.get_data(), x_best.get_data(), D * sizeof(double));
+                    current_minimum = f_best;
+                }
+
+                // Progress / export
+                if (k % 50 == 0) {
+                    std::stringstream sstream;
+                    sstream << "Dual annealing: iter " << k << "/" << da_maxiter
+                            << ", best=" << current_minimum
+                            << ", T=" << Tk << std::endl;
+                    print(sstream, 2);
+
+                    if (export_circuit_2_binary_loc > 0) {
+                        std::string filename("initial_circuit_iteration.binary");
+                        if (project_name != "") filename = project_name + "_" + filename;
+                        export_gate_list_to_binary(optimized_parameters_mtx, this, filename, verbose);
+                    }
+                }
+
+                if (output_periodicity > 0 && k % output_periodicity == 0) {
+                    export_current_cost_fnc(current_minimum);
+                }
+
+        #ifdef __MPI__
+                // Optional: keep workers synced to best-so-far
+                MPI_Bcast((void*)optimized_parameters_mtx.get_data(), D, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+        #endif
+
+                // Stopping: absolute target reached
+                if (current_minimum < optimization_tolerance_loc) {
                     break;
                 }
 
-
-                sub_iter_idx++;
-                iter_idx++;
-                
-
-        
-
-            if (current_minimum > f) {
-                current_minimum = f;
-                memcpy( optimized_parameters_mtx.get_data(), solution_guess.get_data(), num_of_parameters*sizeof(double) );                
-
-                for ( int jdx=0; jdx<num_of_parameters; jdx++) {
-                    solution_guess[jdx] = optimized_parameters_mtx[jdx] + distrib_real(gen)*2*M_PI/100;
+                // Stopping: improvement below da_tol
+                if (std::abs(last_best - f_best) <= da_tol) {
+                    // one "cooling" step with negligible improvement
+                    // You could require multiple stagnant steps if desired.
+                    break;
                 }
+                last_best = f_best;
             }
-            else {
-                for ( int jdx=0; jdx<num_of_parameters; jdx++) {
-                    solution_guess[jdx] = optimized_parameters_mtx[jdx] + distrib_real(gen)*2*M_PI;
+
+            // ---------------- Optional local polish with BFGS ----------------
+            if (!da_no_local_search) {
+                // Start from the best DA point
+
+                BFGS_Powell cBFGS_Powell(optimization_problem_combined, this);
+                // You can tune max_inner_iterations here if you want
+                double f_pol = cBFGS_Powell.Start_Optimization(x_best, max_inner_iterations);
+
+                if (f_pol < current_minimum) {
+                    current_minimum = f_pol;
+                    memcpy(optimized_parameters_mtx.get_data(), x_best.get_data(), D * sizeof(double));
                 }
-            }
-
-            if ( output_periodicity>0 && iter_idx % output_periodicity == 0 ) {
-                export_current_cost_fnc(current_minimum);
-            }
-
-#ifdef __MPI__        
-            MPI_Bcast( (void*)solution_guess.get_data(), num_of_parameters, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-#endif
-            
-            
-            if (current_minimum < optimization_tolerance_loc ) {
-                break;
-            }
-
-
-
+            }            
         }
 
         tbb::tick_count bfgs_end = tbb::tick_count::now();
         CPU_time  = CPU_time + (bfgs_end-bfgs_start).seconds();
-        sstream.str("");
-        sstream << "bfgs2 time: " << CPU_time << " " << current_minimum << std::endl;
-        print(sstream,1);
+        //std::cout << "bfgs2 time: " << CPU_time << " " << current_minimum << std::endl;
 
 }
 
