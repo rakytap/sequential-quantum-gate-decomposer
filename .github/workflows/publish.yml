@@ -101,20 +101,20 @@ jobs:
         shell: pwsh
         run: |
           conda install -c conda-forge cmake tbb-devel openblas lapack -y
-          # Set environment variables for TBB and BLAS
-          $condaPrefix = conda info --base
-          $envPrefix = conda env list | Select-String -Pattern '\*' | ForEach-Object { ($_ -split '\s+')[1] }
-          if (-not $envPrefix) {
-            $envPrefix = $condaPrefix
+          # Get active conda environment
+          $envPath = conda env list | Select-String '\*' | ForEach-Object { ($_ -split '\s+', 3)[1] }
+          if (-not $envPath) {
+            $envPath = conda info --base
           }
-          echo "TBB_LIB_DIR=$envPrefix\Library\lib" >> $env:GITHUB_ENV
-          echo "TBB_INC_DIR=$envPrefix\Library\include" >> $env:GITHUB_ENV
-          echo "BLAS_LIB_DIR=$envPrefix\Library\lib" >> $env:GITHUB_ENV
-          echo "CONDA_PREFIX=$envPrefix" >> $env:GITHUB_ENV
-          # Also set for the current session
-          $env:CONDA_PREFIX = $envPrefix
-          $env:TBB_LIB_DIR = "$envPrefix\Library\lib"
-          $env:TBB_INC_DIR = "$envPrefix\Library\include"
+          # Convert to forward slashes for GITHUB_ENV (CMake accepts both)
+          $envPath = $envPath.Replace('\', '/')
+          $tbbLib = "$envPath/Library/lib"
+          $tbbInc = "$envPath/Library/include"
+          # Write to GITHUB_ENV using Out-File
+          "TBB_LIB_DIR=$tbbLib" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          "TBB_INC_DIR=$tbbInc" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          "BLAS_LIB_DIR=$tbbLib" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          "CONDA_PREFIX=$envPath" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
       - name: Install build dependencies
         run: |

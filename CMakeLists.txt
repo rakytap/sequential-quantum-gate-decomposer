@@ -473,15 +473,32 @@ else()
 endif()
 
 if(TBB_INC_DIR)
+  # Clean up the path - remove any invalid characters
+  string(STRIP "${TBB_INC_DIR}" TBB_INC_DIR)
+  # Replace any double spaces or invalid patterns
+  string(REGEX REPLACE "\\*" "" TBB_INC_DIR "${TBB_INC_DIR}")
+  string(REGEX REPLACE "  +" " " TBB_INC_DIR "${TBB_INC_DIR}")
+  string(STRIP "${TBB_INC_DIR}" TBB_INC_DIR)
+  
+  # Validate the path
+  if("${TBB_INC_DIR}" MATCHES "\\*|  ")
+    message(WARNING "Invalid TBB_INC_DIR detected: '${TBB_INC_DIR}'. Clearing it.")
+    set(TBB_INC_DIR)
+  endif()
+endif()
+
+if(TBB_INC_DIR)
   set(CMAKE_REQUIRED_FLAGS "-c")
-  check_include_file_cxx(tbb/tbb.h TBB_HEADER "-I${TBB_INC_DIR}")
+  # Use file(TO_CMAKE_PATH) to normalize the path
+  file(TO_CMAKE_PATH "${TBB_INC_DIR}" TBB_INC_DIR_NORMALIZED)
+  check_include_file_cxx(tbb/tbb.h TBB_HEADER "-I${TBB_INC_DIR_NORMALIZED}")
   
   if(NOT TBB_HEADER)
-    message(FATAL_ERROR "TBB header tbb.h not found in ${TBB_INC_DIR}")
+    message(FATAL_ERROR "TBB header tbb.h not found in ${TBB_INC_DIR_NORMALIZED}")
   endif()
   
-  message(STATUS "Adding TBB include directory: ${TBB_INC_DIR}")
-  list(APPEND EXTRA_INCLUDES "${TBB_INC_DIR}")
+  message(STATUS "Adding TBB include directory: ${TBB_INC_DIR_NORMALIZED}")
+  list(APPEND EXTRA_INCLUDES "${TBB_INC_DIR_NORMALIZED}")
 else()
   # Try to find TBB header without explicit path
   set(CMAKE_REQUIRED_FLAGS "-c")
