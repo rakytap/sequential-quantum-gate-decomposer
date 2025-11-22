@@ -10,6 +10,15 @@
 #include <stdio.h>
 #include <complex>
 #include <cmath>
+#include <cstring>
+#include <cctype>
+
+// Cross-platform case-insensitive string comparison
+#ifdef _WIN32
+    #define strcasecmp _stricmp
+#else
+    #include <strings.h>
+#endif
 
 #include "numpy_interface.h"
 #include "N_Qubit_Decomposition.h"
