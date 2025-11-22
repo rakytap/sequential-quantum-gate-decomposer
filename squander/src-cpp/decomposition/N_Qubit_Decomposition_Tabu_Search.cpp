@@ -178,13 +178,22 @@ N_Qubit_Decomposition_Tabu_Search::tabu_search_over_gate_structures() {
     double inverz_temperature = 1.0;
     std::vector<GrayCode> possible_gate_structures;
 
+    long long use_osr = 1;
+    if (config.count("use_osr") > 0) {
+        config["use_osr"].get_property(use_osr);
+    }
+    if (qbit_num <= 1) use_osr = 0;
+    double Fnorm = std::sqrt(static_cast<double>(1 << qbit_num));
+    double osr_tol = 1e-3;
+    auto all_cuts = unique_cuts(qbit_num);
+
     while( true ) {
   
 
 
 
 
-        Gates_block* gate_structure_loc = construct_gate_structure_from_Gray_code( gcode );
+        Gates_block* gate_structure_loc = construct_gate_structure_from_Gray_code( gcode, !use_osr );
              
 
         // ----------- start the decomposition ----------- 
@@ -193,7 +202,13 @@ N_Qubit_Decomposition_Tabu_Search::tabu_search_over_gate_structures() {
         sstream << "Starting optimization with " << gate_structure_loc->get_gate_num() << " decomposing layers." << std::endl;
         print(sstream, 1);
                 
-        N_Qubit_Decomposition_custom&& cDecomp_custom_random = perform_optimization( gate_structure_loc );
+        N_Qubit_Decomposition_custom&& cDecomp_custom_random = perform_optimization( use_osr ? nullptr : gate_structure_loc );
+        if (use_osr) {
+            cDecomp_custom_random.set_cost_function_variant(OSR_ENTANGLEMENT);
+            cDecomp_custom_random.set_custom_gate_structure( gate_structure_loc );
+            cDecomp_custom_random.set_optimization_blocks( gate_structure_loc->get_gate_num() );
+            cDecomp_custom_random.start_decomposition();
+        }
                 
         delete( gate_structure_loc );
         gate_structure_loc = NULL;
@@ -212,10 +227,43 @@ N_Qubit_Decomposition_Tabu_Search::tabu_search_over_gate_structures() {
 */
 
 
+        if (use_osr) {
+            auto U = Umtx.copy();
+            auto params = cDecomp_custom_random.get_optimized_parameters();
+            cDecomp_custom_random.apply_to(params, U);
+            std::vector<std::pair<int, double>> osr_result;
+            osr_result.reserve(all_cuts.size());
+            for (const auto& cut : all_cuts) {
+                osr_result.emplace_back(operator_schmidt_rank(U, qbit_num, cut, Fnorm, osr_tol));
+            }
+            int cnot_lower_bound = osr_result.size() == 0 ? 0 : std::max_element(osr_result.begin(), osr_result.end(), [](const std::pair<int, double>& a, const std::pair<int, double>& b) {
+                return a.first < b.first;
+            })->first;
+            if (cnot_lower_bound == 0) {
+                double current_inner_min;
+                Gates_block* gate_structure_loc = construct_gate_structure_from_Gray_code(gcode);
+                for (int iter = 0; iter < 5; iter++) {
+                    N_Qubit_Decomposition_custom&& cDecomp_custom_random = perform_optimization(gate_structure_loc );
+                    current_inner_min = cDecomp_custom_random.get_current_minimum();
+                    if ( current_inner_min < optimization_tolerance_loc ) {
+                        current_minimum = current_inner_min;
+                        optimized_parameters_mtx = cDecomp_custom_random.get_optimized_parameters().copy();
+                        gcode_best_solution   = gcode;
+                        break;
+                    }
+                }    
+                delete( gate_structure_loc );
+                gate_structure_loc = NULL;
+                if ( current_inner_min < optimization_tolerance_loc ) {
+                    break;
+                }
+            }
+        }
+
         tested_gate_structures.insert( gcode ); 
         
         
-             
+        
         
 
         if( current_minimum_tmp < current_minimum) {
@@ -284,7 +332,7 @@ N_Qubit_Decomposition_Tabu_Search::tabu_search_over_gate_structures() {
         }
         
         if ( possible_gate_structures.size() == 0 ) {
-            std::cout << "tttttttttttttttttttttttttttttt " << best_solutions.size() <<  std::endl;
+            //std::cout << "tttttttttttttttttttttttttttttt " << best_solutions.size() <<  std::endl;
             break;
         }
         

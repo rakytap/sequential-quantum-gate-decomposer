@@ -432,6 +432,17 @@ scalar& operator[](int idx) const {
     return data[idx];
 }
 
+bool operator<(const matrix_base<scalar>& other) const {
+    if (rows != other.rows) return rows < other.rows;
+    if (cols != other.cols) return cols < other.cols;
+    for (int i = 0; i < rows; ++i) {
+        for (int j = 0; j < cols; ++j) {
+            if (data[i * stride + j] != other.data[i * stride + j])
+                return data[i * stride + j] < other.data[i * stride + j];
+        }
+    }
+    return false; // they are equal
+}
 
 /**
 @brief Call to create a copy of the matrix
