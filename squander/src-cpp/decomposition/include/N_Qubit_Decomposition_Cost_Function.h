@@ -135,8 +135,8 @@ std::pair<int, double> operator_schmidt_rank(const Matrix& U, int n,
                           const std::vector<int>& A_qubits,
                           double Fnorm, double tol = 1e-10);                          
 std::vector<std::vector<int>> unique_cuts(int n);
-double get_osr_entanglement_test(Matrix& matrix, std::vector<std::vector<int>> &use_cuts);
-Matrix get_deriv_osr_entanglement(Matrix &matrix, std::vector<std::vector<int>> &use_cuts);
+double get_osr_entanglement_test(Matrix& matrix, std::vector<std::vector<int>> &use_cuts, bool use_softmax=false);
+Matrix get_deriv_osr_entanglement(Matrix &matrix, std::vector<std::vector<int>> &use_cuts, bool use_softmax=false);
 double real_trace_conj_dot(Matrix& A, Matrix& B);
 
 #endif
