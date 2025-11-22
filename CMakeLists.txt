@@ -178,7 +178,56 @@ if(BLAS_DIR AND NOT "${BLAS_DIR}" STREQUAL "")
   endif()
 endif()
 
-find_package(BLAS REQUIRED)
+# On Windows with conda, try to find BLAS in conda environment
+if(WIN32)
+  # Check if we're in a conda environment
+  if(DEFINED ENV{CONDA_PREFIX})
+    set(CONDA_PREFIX "$ENV{CONDA_PREFIX}")
+    list(APPEND CMAKE_LIBRARY_PATH "${CONDA_PREFIX}/Library/lib")
+    list(APPEND CMAKE_PREFIX_PATH "${CONDA_PREFIX}/Library")
+    message(STATUS "Using conda environment: ${CONDA_PREFIX}")
+  endif()
+endif()
+
+# Set PATH for runtime library finding (Windows)
+if(WIN32)
+  if(BLAS_DIR AND NOT "${BLAS_DIR}" STREQUAL "")
+    set(ENV{PATH} "${BLAS_DIR}/Library/bin;$ENV{PATH}")
+  endif()
+  if(DEFINED ENV{CONDA_PREFIX})
+    set(ENV{PATH} "$ENV{CONDA_PREFIX}/Library/bin;$ENV{PATH}")
+  endif()
+endif()
+
+# Use MODULE mode to avoid config file issues (like nvpl)
+# This forces FindBLAS to use the traditional module instead of looking for config files
+set(BLAS_FOUND FALSE)
+
+# Try to find BLAS libraries directly first (Windows-friendly)
+if(WIN32)
+  # On Windows, look for openblas or blas libraries
+  find_library(BLAS_LIBRARIES
+    NAMES openblas blas
+    PATHS
+      ${CMAKE_LIBRARY_PATH}
+      "${CONDA_PREFIX}/Library/lib"
+      "$ENV{CONDA_PREFIX}/Library/lib"
+    NO_DEFAULT_PATH
+  )
+  
+  if(BLAS_LIBRARIES)
+    set(BLAS_FOUND TRUE)
+    message(STATUS "Found BLAS library: ${BLAS_LIBRARIES}")
+  endif()
+endif()
+
+# If not found via direct search, use find_package with MODULE mode
+if(NOT BLAS_FOUND)
+  # Force module mode to avoid nvpl config file requirement
+  find_package(BLAS MODULE REQUIRED)
+endif()
+
+
 find_package(LAPACK REQUIRED)
 find_package(OpenMP REQUIRED)
 
