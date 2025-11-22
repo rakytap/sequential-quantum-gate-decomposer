@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.10.2)
 # CMAKE to create the shared library of the quantum gate decomposition project
 
 # set the project name and version
-project(CQGD VERSION 1.9.4)
+project(CQGD VERSION 1.9.5)
 
 # reuse compilation time linking for use runtime linking 
 SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
@@ -79,21 +79,65 @@ endif()
 
 # adding BLAS library dir if given by environment variable
 if(DEFINED ENV{BLAS_LIB_DIR})
-
   set(BLAS_DIR "$ENV{BLAS_LIB_DIR}")
-
 else()
-
-# Determine CBLAS library directory behind Numpy
-exec_program(
-  ${PYTHON_EXECUTABLE}
-  ARGS "-c \"import numpy; blas_info=numpy.__config__.get_info('blas_opt_info'); libs = blas_info.get('library_dirs'); print(libs[0])\""
-  OUTPUT_VARIABLE BLAS_DIR
-  RETURN_VALUE NUMPY_BLAS_NOT_FOUND
-)
-
+  # Determine CBLAS library directory behind Numpy
+  # Use newer NumPy API that works with both old and new NumPy versions
+  exec_program(
+    ${PYTHON_EXECUTABLE}
+    ARGS "-c \"
+try:
+    import numpy
+    # Try new API first (NumPy 1.21+)
+    try:
+        from numpy._core._multiarray_umath import __cpu_features__
+        import os
+        # Get numpy installation directory
+        numpy_dir = os.path.dirname(numpy.__file__)
+        # Common locations for BLAS libraries
+        lib_dirs = [
+            os.path.join(numpy_dir, '..', 'lib'),
+            os.path.join(numpy_dir, '..', '..', 'lib'),
+            '/usr/lib',
+            '/usr/local/lib'
+        ]
+        # Try to find a valid directory
+        for d in lib_dirs:
+            abs_d = os.path.abspath(d)
+            if os.path.exists(abs_d):
+                print(abs_d)
+                break
+    except:
+        # Fallback: try old API
+        blas_info = numpy.__config__.get_info('blas_opt_info')
+        libs = blas_info.get('library_dirs', [])
+        if libs:
+            print(libs[0])
+        else:
+            import os
+            print(os.path.dirname(numpy.__file__) + '/../lib')
+except Exception as e:
+    # Last resort: use numpy's directory structure
+    import numpy, os
+    numpy_dir = os.path.dirname(numpy.__file__)
+    print(os.path.abspath(os.path.join(numpy_dir, '..', 'lib')))
+\""
+    OUTPUT_VARIABLE BLAS_DIR
+    RETURN_VALUE NUMPY_BLAS_NOT_FOUND
+  )
+  
+  # If that failed, try a simpler approach
+  if(NUMPY_BLAS_NOT_FOUND OR "${BLAS_DIR}" STREQUAL "")
+    exec_program(
+      ${PYTHON_EXECUTABLE}
+      ARGS "-c \"import numpy, os; print(os.path.abspath(os.path.join(os.path.dirname(numpy.__file__), '..', 'lib')))\""
+      OUTPUT_VARIABLE BLAS_DIR
+      RETURN_VALUE NUMPY_BLAS_NOT_FOUND2
+    )
+  endif()
 endif()
 
+message(STATUS "BLAS_DIR: ${BLAS_DIR}")
 
 
 find_package(PythonExtensions REQUIRED)
@@ -120,7 +164,7 @@ endif()
 
 #################################################################
 # find CBLAS libraries. Hints are given by numpy library directory via variable BLAS_DIR
-
+# Provide hints to FindBLAS
 set(ENV{LD_LIBRARY_PATH} "${BLAS_DIR}:$ENV{LD_LIBRARY_PATH}")
 
 find_package(BLAS REQUIRED)
@@ -513,118 +557,6 @@ endif()
 
 
 install(TARGETS qgd LIBRARY DESTINATION squander)
-
-
-# Automatically copy dependency shared libraries to squander directory
-# This is needed for Windows and macOS where runtime linking requires DLLs/dylibs
-# to be in the same directory or in the PATH
-
-if(WIN32 OR APPLE)
-    # Function to get the actual library file path from a target or library variable
-    function(copy_dependency_lib lib_var dest_dir)
-        if(${lib_var})
-            get_filename_component(lib_path "${${lib_var}}" REALPATH)
-            if(EXISTS "${lib_path}")
-                get_filename_component(lib_name "${lib_path}" NAME)
-                # On Windows, also check for DLLs in the same directory or bin directory
-                if(WIN32)
-                    get_filename_component(lib_dir "${lib_path}" DIRECTORY)
-                    # Check for DLL in lib directory
-                    if(EXISTS "${lib_dir}/${lib_name}")
-                        install(FILES "${lib_dir}/${lib_name}" DESTINATION ${dest_dir})
-                    endif()
-                    # Check for DLL in bin directory (common on Windows)
-                    get_filename_component(lib_parent "${lib_dir}" DIRECTORY)
-                    if(EXISTS "${lib_parent}/bin/${lib_name}")
-                        install(FILES "${lib_parent}/bin/${lib_name}" DESTINATION ${dest_dir})
-                    endif()
-                    # For TBB, try to find DLLs in bin directory
-                    if(lib_name MATCHES "tbb")
-                        # Try to find tbb12.dll, tbbmalloc.dll, tbbmalloc_proxy.dll
-                        if(EXISTS "${lib_parent}/bin/tbb12.dll")
-                            install(FILES "${lib_parent}/bin/tbb12.dll" DESTINATION ${dest_dir})
-                        endif()
-                        if(EXISTS "${lib_parent}/bin/tbbmalloc.dll")
-                            install(FILES "${lib_parent}/bin/tbbmalloc.dll" DESTINATION ${dest_dir})
-                        endif()
-                        if(EXISTS "${lib_parent}/bin/tbbmalloc_proxy.dll")
-                            install(FILES "${lib_parent}/bin/tbbmalloc_proxy.dll" DESTINATION ${dest_dir})
-                        endif()
-                    endif()
-                elseif(APPLE)
-                    # On macOS, copy .dylib files
-                    if(EXISTS "${lib_path}")
-                        install(FILES "${lib_path}" DESTINATION ${dest_dir})
-                    endif()
-                endif()
-            endif()
-        endif()
-    endfunction()
-
-    # Copy TBB libraries
-    if(TBB_LIB)
-        copy_dependency_lib(TBB_LIB squander)
-    endif()
-    if(TBBMALLOC_LIB)
-        copy_dependency_lib(TBBMALLOC_LIB squander)
-    endif()
-    if(TBBMALLOC_PROXY_LIB)
-        copy_dependency_lib(TBBMALLOC_PROXY_LIB squander)
-    endif()
-
-    # For Windows, try to find TBB DLLs in common locations
-    if(WIN32)
-        # Try to find TBB DLLs from environment variable or common paths
-        if(DEFINED ENV{TBB_LOCATION})
-            set(TBB_BIN_DIR "$ENV{TBB_LOCATION}/Library/bin")
-            if(EXISTS "${TBB_BIN_DIR}/tbb12.dll")
-                install(FILES "${TBB_BIN_DIR}/tbb12.dll" DESTINATION squander)
-            endif()
-            if(EXISTS "${TBB_BIN_DIR}/tbbmalloc.dll")
-                install(FILES "${TBB_BIN_DIR}/tbbmalloc.dll" DESTINATION squander)
-            endif()
-            if(EXISTS "${TBB_BIN_DIR}/tbbmalloc_proxy.dll")
-                install(FILES "${TBB_BIN_DIR}/tbbmalloc_proxy.dll" DESTINATION squander)
-            endif()
-        endif()
-        
-        # Also check Python's local packages directory (common for conda/pip packages)
-        if(DEFINED ENV{TBB_LIB_DIR})
-            get_filename_component(TBB_PARENT "$ENV{TBB_LIB_DIR}" DIRECTORY)
-            if(EXISTS "${TBB_PARENT}/bin/tbb12.dll")
-                install(FILES "${TBB_PARENT}/bin/tbb12.dll" DESTINATION squander)
-            endif()
-            if(EXISTS "${TBB_PARENT}/bin/tbbmalloc.dll")
-                install(FILES "${TBB_PARENT}/bin/tbbmalloc.dll" DESTINATION squander)
-            endif()
-            if(EXISTS "${TBB_PARENT}/bin/tbbmalloc_proxy.dll")
-                install(FILES "${TBB_PARENT}/bin/tbbmalloc_proxy.dll" DESTINATION squander)
-            endif()
-        endif()
-    endif()
-
-    # Copy BLAS/LAPACK libraries if they're DLLs/dylibs (not static)
-    # Note: This may need adjustment based on your specific BLAS implementation
-    if(WIN32 AND BLAS_LIBRARIES)
-        foreach(blas_lib ${BLAS_LIBRARIES})
-            get_filename_component(blas_path "${blas_lib}" REALPATH)
-            if(EXISTS "${blas_path}" AND blas_path MATCHES "\\.(dll|lib)$")
-                get_filename_component(blas_dir "${blas_path}" DIRECTORY)
-                get_filename_component(blas_name "${blas_path}" NAME_WE)
-                # Try to find corresponding DLL
-                if(EXISTS "${blas_dir}/${blas_name}.dll")
-                    install(FILES "${blas_dir}/${blas_name}.dll" DESTINATION squander)
-                endif()
-                # Check bin directory
-                get_filename_component(blas_parent "${blas_dir}" DIRECTORY)
-                if(EXISTS "${blas_parent}/bin/${blas_name}.dll")
-                    install(FILES "${blas_parent}/bin/${blas_name}.dll" DESTINATION squander)
-                endif()
-            endif()
-        endforeach()
-    endif()
-endif()
-
 
 
 
