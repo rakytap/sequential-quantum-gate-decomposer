@@ -167,6 +167,17 @@ endif()
 # Provide hints to FindBLAS
 set(ENV{LD_LIBRARY_PATH} "${BLAS_DIR}:$ENV{LD_LIBRARY_PATH}")
 
+# Set up library search paths
+if(BLAS_DIR AND NOT "${BLAS_DIR}" STREQUAL "")
+  list(APPEND CMAKE_PREFIX_PATH "${BLAS_DIR}")
+  list(APPEND CMAKE_LIBRARY_PATH "${BLAS_DIR}")
+  # On Windows, also check Library subdirectory (conda structure)
+  if(WIN32)
+    list(APPEND CMAKE_LIBRARY_PATH "${BLAS_DIR}/Library/lib")
+    list(APPEND CMAKE_PREFIX_PATH "${BLAS_DIR}/Library")
+  endif()
+endif()
+
 find_package(BLAS REQUIRED)
 find_package(LAPACK REQUIRED)
 find_package(OpenMP REQUIRED)
