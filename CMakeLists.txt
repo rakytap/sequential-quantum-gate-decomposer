@@ -32,6 +32,7 @@ if(WIN32)
   if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     # Increase object file path limit
     set(CMAKE_OBJECT_PATH_MAX 4096)
+    
     # Set /bigobj flag directly in CMAKE_CXX_FLAGS to ensure it's applied globally
     # This is needed for large object files on Windows (prevents C1083 errors)
     # The /bigobj flag allows object files with more than 65535 sections
@@ -40,6 +41,35 @@ if(WIN32)
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /bigobj" CACHE STRING "Flags used by the compiler during release builds" FORCE)
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /bigobj" CACHE STRING "Flags used by the compiler during debug builds" FORCE)
     message(STATUS "MSVC: Added /bigobj flag to CMAKE_CXX_FLAGS for Windows compilation")
+    
+    # Fix for C1083 "Cannot open compiler generated file" with empty path
+    # Ensure TMP/TEMP environment variables are valid (check and warn if needed)
+    if(DEFINED ENV{TMP})
+      string(STRIP "$ENV{TMP}" TMP_VAR)
+      if("${TMP_VAR}" MATCHES ";$")
+        message(WARNING "TMP environment variable has trailing semicolon: '$ENV{TMP}'. This may cause C1083 errors.")
+      endif()
+      if("${TMP_VAR}" STREQUAL "")
+        message(WARNING "TMP environment variable is empty. This may cause C1083 errors.")
+      endif()
+    else()
+      message(WARNING "TMP environment variable is not set. This may cause C1083 errors.")
+    endif()
+    if(DEFINED ENV{TEMP})
+      string(STRIP "$ENV{TEMP}" TEMP_VAR)
+      if("${TEMP_VAR}" MATCHES ";$")
+        message(WARNING "TEMP environment variable has trailing semicolon: '$ENV{TEMP}'. This may cause C1083 errors.")
+      endif()
+      if("${TEMP_VAR}" STREQUAL "")
+        message(WARNING "TEMP environment variable is empty. This may cause C1083 errors.")
+      endif()
+    else()
+      message(WARNING "TEMP environment variable is not set. This may cause C1083 errors.")
+    endif()
+    
+    # Set shorter object file directory structure to avoid path length issues
+    # This helps when scikit-build creates deep directory structures
+    set(CMAKE_OBJECT_DIR_MAX_LENGTH 64)
   endif()
 endif()
 
