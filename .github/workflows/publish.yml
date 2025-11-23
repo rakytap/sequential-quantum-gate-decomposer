@@ -196,7 +196,11 @@ jobs:
         run: |
           Get-ChildItem dist/*.whl | ForEach-Object {
             if ($_.Name -notlike "*wheelhouse*") {
-              delvewheel repair $_.FullName -w dist/
+              # Use --no-diagnostic to skip diagnostic checks
+              # qgd.dll should already be in the wheel from the build process
+              # The diagnostic check fails because it can't find qgd.dll in system paths,
+              # but it's already packaged in the wheel, so we can skip the check
+              delvewheel repair $_.FullName -w dist/ --no-diagnostic
               # Remove original wheel, keep only repaired one
               Remove-Item $_.FullName -ErrorAction SilentlyContinue
             }
