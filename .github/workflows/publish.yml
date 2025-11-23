@@ -244,13 +244,6 @@ jobs:
           Write-Host "Repair complete. Wheels in dist/:"
           Get-ChildItem dist/*.whl | ForEach-Object { Write-Host "  $($_.Name)" }
 
-            - name: Upload wheel artifacts
-              uses: actions/upload-artifact@v4
-              with:
-                name: wheels-${{ matrix.os }}-py${{ matrix.python-version }}
-                path: dist/*.whl
-                retention-days: 1
-
       - name: Upload wheel artifacts
         uses: actions/upload-artifact@v4
         with:
