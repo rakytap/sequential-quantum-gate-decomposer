@@ -190,34 +190,66 @@ jobs:
             fi
           done
 
-      # - name: Repair wheel (Windows)
-      #   if: runner.os == 'Windows'
-      #   shell: pwsh
-      #   run: |
-      #     Get-ChildItem dist/*.whl | ForEach-Object {
-      #       if ($_.Name -notlike "*wheelhouse*") {
-      #         # Extract wheel to find the exact data directory name
-      #         $tempDir = New-TemporaryFile | ForEach-Object { Remove-Item $_; New-Item -ItemType Directory -Path $_ }
-      #         Expand-Archive -Path $_.FullName -DestinationPath $tempDir -Force
+      - name: Repair wheel (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $wheel = Get-ChildItem dist/*.whl | Where-Object { $_.Name -notlike "*wheelhouse*" } | Select-Object -First 1
+          
+          if (-not $wheel) {
+            Write-Host "ERROR: No wheel file found in dist/"
+            exit 1
+          }
+          
+          Write-Host "Repairing wheel: $($wheel.Name)"
+          
+          # Extract wheel to inspect structure
+          $tempDir = Join-Path $env:TEMP "wheel_inspect_$(Get-Random)"
+          New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
+          
+          try {
+            Expand-Archive -Path $wheel.FullName -DestinationPath $tempDir -Force
+            
+            # Find qgd.dll
+            $dll = Get-ChildItem -Path $tempDir -Recurse -Filter "qgd.dll" | Select-Object -First 1
+            
+            if ($dll) {
+              # Get the path relative to wheel root (e.g., "squander-1.9.4.data/data/lib/qgd.dll")
+              $relativePath = $dll.FullName.Replace($tempDir, "").TrimStart('\').Replace('\', '/')
+              Write-Host "Found qgd.dll at: $relativePath"
               
-      #         # Find the .data directory (format: package-version.data)
-      #         $dataDir = Get-ChildItem -Path $tempDir -Directory -Filter "*.data" | Select-Object -First 1
-              
-      #         if ($dataDir) {
-      #           # qgd.dll should be in data/lib
-      #           $libPath = "$($dataDir.Name)/data/lib"
-      #           Write-Host "Using --add-path: $libPath"
-      #           delvewheel repair $_.FullName -w dist/ --add-path $libPath --no-diagnostic
-      #         } else {
-      #           Write-Host "Warning: Could not find .data directory, trying default repair"
-      #           delvewheel repair $_.FullName -w dist/ --no-diagnostic
-      #         }
-              
-      #         Remove-Item $tempDir -Recurse -Force
-      #         # Remove original wheel, keep only repaired one
-      #         Remove-Item $_.FullName -ErrorAction SilentlyContinue
-      #       }
-      #     }
+              # Extract the .data directory path (e.g., "squander-1.9.4.data")
+              if ($relativePath -match '([^/]+\.data)') {
+                $dataDirName = $matches[1]
+                Write-Host "Data directory: $dataDirName"
+                
+                # Repair with explicit path to .data directory
+                delvewheel repair $wheel.FullName -w dist/ --add-path "$dataDirName/data" --no-diagnostic
+              } else {
+                # Fallback: just add the DLL directly
+                Write-Host "Using --add-dll option"
+                delvewheel repair $wheel.FullName -w dist/ --add-dll qgd.dll --no-diagnostic
+              }
+            } else {
+              Write-Host "Warning: qgd.dll not found, using default repair"
+              delvewheel repair $wheel.FullName -w dist/ --no-diagnostic
+            }
+          } finally {
+            Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue
+          }
+          
+          # Remove original wheel (delvewheel creates a new one in dist/)
+          Remove-Item $wheel.FullName -ErrorAction SilentlyContinue
+          
+          Write-Host "Repair complete. Wheels in dist/:"
+          Get-ChildItem dist/*.whl | ForEach-Object { Write-Host "  $($_.Name)" }
+
+            - name: Upload wheel artifacts
+              uses: actions/upload-artifact@v4
+              with:
+                name: wheels-${{ matrix.os }}-py${{ matrix.python-version }}
+                path: dist/*.whl
+                retention-days: 1
 
       - name: Upload wheel artifacts
         uses: actions/upload-artifact@v4
