@@ -190,34 +190,34 @@ jobs:
             fi
           done
 
-      - name: Repair wheel (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          Get-ChildItem dist/*.whl | ForEach-Object {
-            if ($_.Name -notlike "*wheelhouse*") {
-              # Extract wheel to find the exact data directory name
-              $tempDir = New-TemporaryFile | ForEach-Object { Remove-Item $_; New-Item -ItemType Directory -Path $_ }
-              Expand-Archive -Path $_.FullName -DestinationPath $tempDir -Force
+      # - name: Repair wheel (Windows)
+      #   if: runner.os == 'Windows'
+      #   shell: pwsh
+      #   run: |
+      #     Get-ChildItem dist/*.whl | ForEach-Object {
+      #       if ($_.Name -notlike "*wheelhouse*") {
+      #         # Extract wheel to find the exact data directory name
+      #         $tempDir = New-TemporaryFile | ForEach-Object { Remove-Item $_; New-Item -ItemType Directory -Path $_ }
+      #         Expand-Archive -Path $_.FullName -DestinationPath $tempDir -Force
               
-              # Find the .data directory (format: package-version.data)
-              $dataDir = Get-ChildItem -Path $tempDir -Directory -Filter "*.data" | Select-Object -First 1
+      #         # Find the .data directory (format: package-version.data)
+      #         $dataDir = Get-ChildItem -Path $tempDir -Directory -Filter "*.data" | Select-Object -First 1
               
-              if ($dataDir) {
-                # qgd.dll should be in data/lib
-                $libPath = "$($dataDir.Name)/data/lib"
-                Write-Host "Using --add-path: $libPath"
-                delvewheel repair $_.FullName -w dist/ --add-path $libPath --no-diagnostic
-              } else {
-                Write-Host "Warning: Could not find .data directory, trying default repair"
-                delvewheel repair $_.FullName -w dist/ --no-diagnostic
-              }
+      #         if ($dataDir) {
+      #           # qgd.dll should be in data/lib
+      #           $libPath = "$($dataDir.Name)/data/lib"
+      #           Write-Host "Using --add-path: $libPath"
+      #           delvewheel repair $_.FullName -w dist/ --add-path $libPath --no-diagnostic
+      #         } else {
+      #           Write-Host "Warning: Could not find .data directory, trying default repair"
+      #           delvewheel repair $_.FullName -w dist/ --no-diagnostic
+      #         }
               
-              Remove-Item $tempDir -Recurse -Force
-              # Remove original wheel, keep only repaired one
-              Remove-Item $_.FullName -ErrorAction SilentlyContinue
-            }
-          }
+      #         Remove-Item $tempDir -Recurse -Force
+      #         # Remove original wheel, keep only repaired one
+      #         Remove-Item $_.FullName -ErrorAction SilentlyContinue
+      #       }
+      #     }
 
       - name: Upload wheel artifacts
         uses: actions/upload-artifact@v4
