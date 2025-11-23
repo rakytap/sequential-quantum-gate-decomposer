@@ -200,6 +200,11 @@ jobs:
             Write-Host "ERROR: No wheel file found in dist/"
             exit 1
           }
+
+          $originalName = $wheel.Name
+          $backupName = $originalName -replace '\.whl$', '.original.whl'
+          Rename-Item $wheel.FullName $backupName -ErrorAction SilentlyContinue
+          Write-Host "Renamed wheel to: $backupName"
           
           Write-Host "Repairing wheel: $($wheel.Name)"
           
@@ -248,7 +253,7 @@ jobs:
           }
           
           # Remove original wheel (delvewheel creates a new one in dist/)
-          Remove-Item $wheel.FullName -ErrorAction SilentlyContinue
+          #Remove-Item $wheel.FullName -ErrorAction SilentlyContinue
           
           Write-Host "Repair complete. Wheels in dist/:"
           Get-ChildItem dist/*.whl | ForEach-Object { Write-Host "  $($_.Name)" }
