@@ -196,11 +196,28 @@ jobs:
         run: |
           Get-ChildItem dist/*.whl | ForEach-Object {
             if ($_.Name -notlike "*wheelhouse*") {
-              # Use --no-diagnostic to skip diagnostic checks
-              # qgd.dll should already be in the wheel from the build process
-              # The diagnostic check fails because it can't find qgd.dll in system paths,
-              # but it's already packaged in the wheel, so we can skip the check
-              delvewheel repair $_.FullName -w dist/ --no-diagnostic
+              # Extract wheel temporarily to find qgd.dll location
+              $tempDir = New-TemporaryFile | ForEach-Object { Remove-Item $_; New-Item -ItemType Directory -Path $_ }
+              Expand-Archive -Path $_.FullName -DestinationPath $tempDir -Force
+              
+              # Find qgd.dll in the extracted wheel
+              $qgdDll = Get-ChildItem -Path $tempDir -Recurse -Filter "qgd.dll" -ErrorAction SilentlyContinue
+              
+              if ($qgdDll) {
+                Write-Host "Found qgd.dll at: $($qgdDll.FullName)"
+                # Calculate relative path from wheel root to qgd.dll directory
+                $relativePath = $qgdDll.DirectoryName.Replace($tempDir.FullName, "").TrimStart("\").Replace("\", "/")
+                Write-Host "Using --lib-sdir: $relativePath"
+                # Use --lib-sdir to tell delvewheel where to find DLLs
+                delvewheel repair $_.FullName -w dist/ --lib-sdir $relativePath --no-diagnostic
+              } else {
+                Write-Host "qgd.dll not found in wheel, trying default repair with --no-mangle-all"
+                # If qgd.dll is not found, try with --no-mangle-all to skip name mangling
+                # This might help if the DLL is referenced differently
+                delvewheel repair $_.FullName -w dist/ --no-mangle-all --no-diagnostic
+              }
+              
+              Remove-Item $tempDir -Recurse -Force
               # Remove original wheel, keep only repaired one
               Remove-Item $_.FullName -ErrorAction SilentlyContinue
             }
