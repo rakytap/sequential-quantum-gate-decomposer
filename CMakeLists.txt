@@ -29,10 +29,17 @@ set(PYTHON_PLAT_LIB)
 
 # Windows-specific settings
 if(WIN32)
-  # Enable long paths support for Windows
   if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     # Increase object file path limit
     set(CMAKE_OBJECT_PATH_MAX 4096)
+    # Set /bigobj flag directly in CMAKE_CXX_FLAGS to ensure it's applied globally
+    # This is needed for large object files on Windows (prevents C1083 errors)
+    # The /bigobj flag allows object files with more than 65535 sections
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj" CACHE STRING "Flags used by the compiler during all build types" FORCE)
+    # Also set for Release and Debug configurations to ensure coverage
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /bigobj" CACHE STRING "Flags used by the compiler during release builds" FORCE)
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /bigobj" CACHE STRING "Flags used by the compiler during debug builds" FORCE)
+    message(STATUS "MSVC: Added /bigobj flag to CMAKE_CXX_FLAGS for Windows compilation")
   endif()
 endif()
 
@@ -330,7 +337,10 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
   message("-- Using Visual Studio C++ compiler")
 
   # Add /bigobj flag for large object files (needed for Windows compilation)
+  # This flag is critical for files that generate large object files (like numpy_interface.cpp)
   list(APPEND CXX_FLAGS "/bigobj")
+  # Also ensure it's in the global CMAKE_CXX_FLAGS (applied to all targets)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj" CACHE STRING "" FORCE)
 
   if (${HAVE_AVX512F_EXTENSIONS})
     list(APPEND CXX_FLAGS_RELEASE "/arch:AVX512F" "-DUSE_AVX512F")
