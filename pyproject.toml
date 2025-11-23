@@ -12,10 +12,8 @@ requires = [
 build-backend = "setuptools.build_meta"
 
 [tool.scikit-build]
-# Install to package directory instead of data directory
-cmake.install.dir = "."
 # Include all installed files in the package
-cmake.install.component = "Unspecified"
+cmake.install.component = "python"
 
 [project]
 name = "squander"

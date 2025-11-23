@@ -807,5 +807,8 @@ endif()
 
 install(TARGETS qgd LIBRARY DESTINATION squander)
 
-
-
+install(TARGETS qgd 
+    LIBRARY 
+    DESTINATION squander
+    COMPONENT python
+)
