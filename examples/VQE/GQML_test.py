@@ -49,7 +49,7 @@ config = {"max_inner_iterations":8000,
     "output_periodicity": 500}
 qbit_num = n_nodes
 sigma = [0.25, 10, 1000]
-x = np.astype(training_set, np.int32)
+x = training_set.astype(np.int32)
 P_star = target_distribution
 use_lookup_table = True
 use_exact  = True

@@ -1,5 +1,5 @@
 
-set(EXT_DIR ${PROJECT_SOURCE_DIR}/squander/variational_quantum_eigensolver)
+set(EXT_DIR ${PROJECT_SOURCE_DIR}/squander/VQA)
 
 
 add_library( qgd_Variational_Quantum_Eigensolver_Base_Wrapper MODULE
@@ -51,7 +51,7 @@ set_target_properties( qgd_Variational_Quantum_Eigensolver_Base_Wrapper PROPERTI
 
 
 install(TARGETS qgd_Variational_Quantum_Eigensolver_Base_Wrapper LIBRARY 
-         DESTINATION squander/variational_quantum_eigensolver)
+         DESTINATION squander/VQA)
 
 add_library( qgd_Generative_Quantum_Machine_Learning_Base_Wrapper MODULE
     ${EXT_DIR}/qgd_GQML_Base_Wrapper.cpp
@@ -102,4 +102,4 @@ set_target_properties( qgd_Generative_Quantum_Machine_Learning_Base_Wrapper PROP
 
 
 install(TARGETS qgd_Generative_Quantum_Machine_Learning_Base_Wrapper LIBRARY 
-         DESTINATION squander/variational_quantum_eigensolver)
+         DESTINATION squander/VQA)

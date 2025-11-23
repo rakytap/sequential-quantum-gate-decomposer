@@ -797,7 +797,7 @@ set_target_properties(
 add_subdirectory (squander/decomposition)
 add_subdirectory (squander/gates)
 add_subdirectory (squander/nn)
-add_subdirectory (squander/variational_quantum_eigensolver)
+add_subdirectory (squander/VQA)
 
 if(DEFINED ENV{QGD_CTEST})
     # adding CMAKE files for executables
