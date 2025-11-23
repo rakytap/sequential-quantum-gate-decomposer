@@ -206,10 +206,10 @@ jobs:
               if ($qgdDll) {
                 Write-Host "Found qgd.dll at: $($qgdDll.FullName)"
                 # Calculate relative path from wheel root to qgd.dll directory
-                $relativePath = $qgdDll.DirectoryName.Replace($tempDir.FullName, "").TrimStart("\").Replace("\", "/")
-                Write-Host "Using --lib-sdir: $relativePath"
-                # Use --lib-sdir to tell delvewheel where to find DLLs
-                delvewheel repair $_.FullName -w dist/ --lib-sdir $relativePath --no-diagnostic
+                $relativePath = $qgdDll.DirectoryName.Replace($tempDir.FullName, "").TrimStart("\")
+                Write-Host "Using --add-path: $relativePath"
+                # Use --add-path to add the directory to DLL search path
+                delvewheel repair $_.FullName -w dist/ --add-path $relativePath --no-diagnostic
               } else {
                 Write-Host "qgd.dll not found in wheel, trying default repair with --no-mangle-all"
                 # If qgd.dll is not found, try with --no-mangle-all to skip name mangling
