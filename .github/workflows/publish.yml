@@ -214,21 +214,30 @@ jobs:
             $dll = Get-ChildItem -Path $tempDir -Recurse -Filter "qgd.dll" | Select-Object -First 1
             
             if ($dll) {
-              # Get the path relative to wheel root (e.g., "squander-1.9.4.data/data/lib/qgd.dll")
+              # Get the path relative to wheel root
               $relativePath = $dll.FullName.Replace($tempDir, "").TrimStart('\').Replace('\', '/')
               Write-Host "Found qgd.dll at: $relativePath"
               
-              # Extract the .data directory path (e.g., "squander-1.9.4.data")
-              if ($relativePath -match '([^/]+\.data)') {
-                $dataDirName = $matches[1]
-                Write-Host "Data directory: $dataDirName"
+              # Extract the directory path (e.g., "squander-1.9.4.data/data/bin")
+              if ($relativePath -match '(.+)/qgd\.dll$') {
+                $dllDir = $matches[1]
+                Write-Host "DLL directory in wheel: $dllDir"
                 
-                # Repair with explicit path to .data directory
-                delvewheel repair $wheel.FullName -w dist/ --add-path "$dataDirName/data" --no-diagnostic
+                # Use both --add-dll and --add-path
+                # --add-dll tells delvewheel to explicitly include this DLL
+                # --add-path tells it where to find DLLs to analyze dependencies
+                Write-Host "Running delvewheel repair with --add-dll and --add-path"
+                delvewheel repair $wheel.FullName -w dist/ --add-dll qgd.dll --add-path "$dllDir" --no-diagnostic
               } else {
-                # Fallback: just add the DLL directly
-                Write-Host "Using --add-dll option"
-                delvewheel repair $wheel.FullName -w dist/ --add-dll qgd.dll --no-diagnostic
+                # Fallback: try with just the data directory
+                if ($relativePath -match '([^/]+\.data)') {
+                  $dataDirName = $matches[1]
+                  Write-Host "Using data directory: $dataDirName/data/bin"
+                  delvewheel repair $wheel.FullName -w dist/ --add-dll qgd.dll --add-path "$dataDirName/data/bin" --no-diagnostic
+                } else {
+                  Write-Host "Using --add-dll only"
+                  delvewheel repair $wheel.FullName -w dist/ --add-dll qgd.dll --no-diagnostic
+                }
               }
             } else {
               Write-Host "Warning: qgd.dll not found, using default repair"
