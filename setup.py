@@ -29,5 +29,8 @@ from skbuild import setup
 setup(
     packages=["squander"],
     include_package_data=True,
-    package_data={"": ["README.md", "MANIFEST.in", "pyproject.toml"]},
+    package_data={
+        "": ["README.md", "MANIFEST.in", "pyproject.toml"],
+        "squander": ["*.dll", "*.so", "*.dylib"],  # Include shared libraries
+    },
 )

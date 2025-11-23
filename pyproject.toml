@@ -11,6 +11,12 @@ requires = [
 ]
 build-backend = "setuptools.build_meta"
 
+[tool.scikit-build]
+# Configure CMake installation to ensure libraries go to package directory
+cmake.install.component = "Unspecified"
+# Ensure libraries are included in the package
+cmake.install.args = ["--component", "Unspecified"]
+
 [project]
 name = "squander"
 version = "1.9.4"
