@@ -32,7 +32,6 @@ if(WIN32)
   if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     # Increase object file path limit
     set(CMAKE_OBJECT_PATH_MAX 4096)
-    
     # Set /bigobj flag directly in CMAKE_CXX_FLAGS to ensure it's applied globally
     # This is needed for large object files on Windows (prevents C1083 errors)
     # The /bigobj flag allows object files with more than 65535 sections
@@ -41,35 +40,6 @@ if(WIN32)
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /bigobj" CACHE STRING "Flags used by the compiler during release builds" FORCE)
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /bigobj" CACHE STRING "Flags used by the compiler during debug builds" FORCE)
     message(STATUS "MSVC: Added /bigobj flag to CMAKE_CXX_FLAGS for Windows compilation")
-    
-    # Fix for C1083 "Cannot open compiler generated file" with empty path
-    # Ensure TMP/TEMP environment variables are valid (check and warn if needed)
-    if(DEFINED ENV{TMP})
-      string(STRIP "$ENV{TMP}" TMP_VAR)
-      if("${TMP_VAR}" MATCHES ";$")
-        message(WARNING "TMP environment variable has trailing semicolon: '$ENV{TMP}'. This may cause C1083 errors.")
-      endif()
-      if("${TMP_VAR}" STREQUAL "")
-        message(WARNING "TMP environment variable is empty. This may cause C1083 errors.")
-      endif()
-    else()
-      message(WARNING "TMP environment variable is not set. This may cause C1083 errors.")
-    endif()
-    if(DEFINED ENV{TEMP})
-      string(STRIP "$ENV{TEMP}" TEMP_VAR)
-      if("${TEMP_VAR}" MATCHES ";$")
-        message(WARNING "TEMP environment variable has trailing semicolon: '$ENV{TEMP}'. This may cause C1083 errors.")
-      endif()
-      if("${TEMP_VAR}" STREQUAL "")
-        message(WARNING "TEMP environment variable is empty. This may cause C1083 errors.")
-      endif()
-    else()
-      message(WARNING "TEMP environment variable is not set. This may cause C1083 errors.")
-    endif()
-    
-    # Set shorter object file directory structure to avoid path length issues
-    # This helps when scikit-build creates deep directory structures
-    set(CMAKE_OBJECT_DIR_MAX_LENGTH 64)
   endif()
 endif()
 
@@ -317,11 +287,6 @@ else()
     find_library(LAPACKE_LIBRARIES lapacke REQUIRED)    
 endif()
 
-# setting basic compile flags
-list(APPEND CXX_FLAGS_DEBUG "-Wall" "-Wpedantic" "-Wextra" "-fexceptions" "-DDEBUG" "-fno-builtin-malloc" "-fno-builtin-calloc" "-fno-builtin-realloc" "-fno-builtin-free" "-fpermissive")
-list(APPEND CXX_FLAGS_RELEASE "-Wall" "-O3" "-m64" "-ggdb" "-DNDEBUG" "-fno-builtin-malloc" "-fno-builtin-calloc" "-fno-builtin-realloc" "-fno-builtin-free" "-fpermissive")
-
-
 # checking for AVX/AVX2 support
 CHECK_FOR_AVX()
 
@@ -329,12 +294,16 @@ CHECK_FOR_AVX()
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   # using Clang
   message("-- Using Clang compiler")
+  # setting basic compile flags for Clang
+  list(APPEND CXX_FLAGS_DEBUG "-Wall" "-Wpedantic" "-Wextra" "-fexceptions" "-DDEBUG" "-fno-builtin-malloc" "-fno-builtin-calloc" "-fno-builtin-realloc" "-fno-builtin-free" "-fpermissive")
+  list(APPEND CXX_FLAGS_RELEASE "-Wall" "-O3" "-m64" "-ggdb" "-DNDEBUG" "-fno-builtin-malloc" "-fno-builtin-calloc" "-fno-builtin-realloc" "-fno-builtin-free" "-fpermissive")
 
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   # using GCC
   message("-- Using GNU compiler")
-  list(APPEND CXX_FLAGS_DEBUG "-g3" "-ggdb")
-  list(APPEND CXX_FLAGS_RELEASE "-ftree-vectorize")
+  # setting basic compile flags for GCC
+  list(APPEND CXX_FLAGS_DEBUG "-Wall" "-Wpedantic" "-Wextra" "-fexceptions" "-DDEBUG" "-fno-builtin-malloc" "-fno-builtin-calloc" "-fno-builtin-realloc" "-fno-builtin-free" "-fpermissive" "-g3" "-ggdb")
+  list(APPEND CXX_FLAGS_RELEASE "-Wall" "-O3" "-m64" "-ggdb" "-DNDEBUG" "-fno-builtin-malloc" "-fno-builtin-calloc" "-fno-builtin-realloc" "-fno-builtin-free" "-fpermissive" "-ftree-vectorize")
 
   if (${HAVE_AVX512F_EXTENSIONS})
     list(APPEND CXX_FLAGS_RELEASE "-mavx512f" "-mfma" "-DUSE_AVX")
@@ -349,6 +318,10 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
   # using Intel C++
   message("-- Using Intel compiler")
+  # setting basic compile flags for Intel (similar to GCC/Clang)
+  list(APPEND CXX_FLAGS_DEBUG "-Wall" "-DDEBUG")
+  list(APPEND CXX_FLAGS_RELEASE "-O3" "-DNDEBUG")
+  
   if (BLAS_IS_MKL)
     list(APPEND CXX_FLAGS_DEBUG "-mkl" "-tbb")
     list(APPEND CXX_FLAGS_RELEASE "-mkl" "-tbb")
@@ -371,6 +344,13 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
   list(APPEND CXX_FLAGS "/bigobj")
   # Also ensure it's in the global CMAKE_CXX_FLAGS (applied to all targets)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj" CACHE STRING "" FORCE)
+
+  # MSVC-specific flags
+  # Note: /O2 (optimization) and /W3 (warnings) are typically set by CMake for Release builds
+  # /DNDEBUG is automatically set by CMake for Release configuration
+  # No need for -fno-builtin-* or -fpermissive (these are GCC-specific)
+  list(APPEND CXX_FLAGS_DEBUG "/W3" "/DDEBUG")
+  list(APPEND CXX_FLAGS_RELEASE "/W3" "/DNDEBUG")
 
   if (${HAVE_AVX512F_EXTENSIONS})
     list(APPEND CXX_FLAGS_RELEASE "/arch:AVX512F" "-DUSE_AVX512F")

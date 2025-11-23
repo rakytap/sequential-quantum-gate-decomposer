@@ -133,42 +133,6 @@ jobs:
           "BLAS_LIB_DIR=$tbbLib" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
           "CONDA_PREFIX=$envPath" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
-      - name: Fix Windows TMP environment
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          # Ensure TMP and TEMP are set and don't have trailing semicolons
-          $tmp = $env:TMP
-          if ($tmp -and $tmp.EndsWith(';')) {
-            $env:TMP = $tmp.TrimEnd(';')
-            Write-Host "Fixed TMP: $env:TMP"
-          }
-          $temp = $env:TEMP
-          if ($temp -and $temp.EndsWith(';')) {
-            $env:TEMP = $temp.TrimEnd(';')
-            Write-Host "Fixed TEMP: $env:TEMP"
-          }
-          # Verify they're set
-          if (-not $env:TMP) {
-            if ($env:TEMP) {
-              $env:TMP = $env:TEMP
-            } else {
-              $env:TMP = "$env:USERPROFILE\AppData\Local\Temp"
-            }
-          }
-          if (-not $env:TEMP) {
-            if ($env:TMP) {
-              $env:TEMP = $env:TMP
-            } else {
-              $env:TEMP = "$env:USERPROFILE\AppData\Local\Temp"
-            }
-          }
-          # Set them in GITHUB_ENV so they persist
-          "TMP=$env:TMP" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
-          "TEMP=$env:TEMP" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
-          Write-Host "TMP: $env:TMP"
-          Write-Host "TEMP: $env:TEMP"
-
       - name: Install build dependencies
         run: |
           python -m pip install --upgrade pip
