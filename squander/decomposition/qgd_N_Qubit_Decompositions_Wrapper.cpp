@@ -72,7 +72,13 @@ guess_type extract_guess_type(PyObject* initial_guess) {
     if (!initial_guess || initial_guess == Py_None) {
         return RANDOM;
     }
-    const char* guess_str = PyUnicode_AsUTF8(PyObject_Str(initial_guess));
+
+    PyObject* guess_str_obj = PyObject_Str(initial_guess);
+    if (!guess_str_obj) {
+        throw std::runtime_error("Failed to convert initial guess to string");
+    }
+    const char* guess_str = PyUnicode_AsUTF8(guess_str_obj);
+    Py_XDECREF(guess_str_obj);
     if (strcasecmp("zeros", guess_str) == 0) return ZEROS;
     if (strcasecmp("random", guess_str) == 0) return RANDOM;
     if (strcasecmp("close_to_zero", guess_str) == 0) return CLOSE_TO_ZERO;
