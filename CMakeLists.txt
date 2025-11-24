@@ -254,11 +254,18 @@ if(NOT LAPACKE_INCLUDE_DIR AND DEFINED ENV{LAPACKE_INCLUDE_DIR})
 endif()
 
 if(NOT LAPACKE_INCLUDE_DIR)
-    set(LAPACKE_HINT_PATHS
-        ${CMAKE_INSTALL_PREFIX}/include
-        ${BLAS_DIR}
-        ${CMAKE_PREFIX_PATH}
-        ${CMAKE_LIBRARY_PATH})
+    # Build list of candidate paths with all variables expanded
+    set(LAPACKE_CANDIDATE_PATHS)
+    
+    # Add standard paths
+    if(CMAKE_INSTALL_PREFIX)
+        list(APPEND LAPACKE_CANDIDATE_PATHS "${CMAKE_INSTALL_PREFIX}/include")
+    endif()
+    if(BLAS_DIR)
+        list(APPEND LAPACKE_CANDIDATE_PATHS "${BLAS_DIR}/include" "${BLAS_DIR}")
+    endif()
+    
+    # Add conda paths with expanded variables
     if(DEFINED ENV{CONDA_PREFIX})
         # Expand environment variable to absolute path
         get_filename_component(CONDA_PREFIX_ABS "$ENV{CONDA_PREFIX}" ABSOLUTE)
@@ -278,9 +285,17 @@ if(NOT LAPACKE_INCLUDE_DIR)
 endif()
 
 # Ensure we have an absolute path and normalize it
+# Ensure we have an absolute path and normalize it, expanding any variables
 if(LAPACKE_INCLUDE_DIR)
-    get_filename_component(LAPACKE_INCLUDE_DIR "${LAPACKE_INCLUDE_DIR}" ABSOLUTE)
+    # First, expand any environment variables that might be in the path
+    string(REPLACE "$ENV{CONDA_PREFIX}" "$ENV{CONDA_PREFIX}" LAPACKE_INCLUDE_DIR "${LAPACKE_INCLUDE_DIR}")
+    # Convert to CMake path format (forward slashes)
     file(TO_CMAKE_PATH "${LAPACKE_INCLUDE_DIR}" LAPACKE_INCLUDE_DIR)
+    # Get absolute path (this will expand any remaining variables)
+    get_filename_component(LAPACKE_INCLUDE_DIR "${LAPACKE_INCLUDE_DIR}" ABSOLUTE)
+    # Normalize again to ensure clean path
+    file(TO_CMAKE_PATH "${LAPACKE_INCLUDE_DIR}" LAPACKE_INCLUDE_DIR)
+    # Cache the final value
     set(LAPACKE_INCLUDE_DIR "${LAPACKE_INCLUDE_DIR}" CACHE PATH "Path to LAPACKE headers" FORCE)
 endif()
 
