@@ -244,12 +244,13 @@ else()
     find_library(LAPACKE_LIBRARIES lapacke REQUIRED)
 endif()
 
-# locate lapacke headers
-#set(LAPACKE_INCLUDE_DIR "${LAPACKE_INCLUDE_DIR}" CACHE PATH "Path to LAPACKE headers")
+
+
+set(LAPACKE_INCLUDE_DIR)
 
 # Allow environment override
 if(NOT LAPACKE_INCLUDE_DIR AND DEFINED ENV{LAPACKE_INCLUDE_DIR})
-    set(LAPACKE_INCLUDE_DIR "$ENV{LAPACKE_INCLUDE_DIR}")
+    get_filename_component(LAPACKE_INCLUDE_DIR "$ENV{LAPACKE_INCLUDE_DIR}" ABSOLUTE)
 endif()
 
 if(NOT LAPACKE_INCLUDE_DIR)
@@ -259,10 +260,12 @@ if(NOT LAPACKE_INCLUDE_DIR)
         ${CMAKE_PREFIX_PATH}
         ${CMAKE_LIBRARY_PATH})
     if(DEFINED ENV{CONDA_PREFIX})
+        # Expand environment variable to absolute path
+        get_filename_component(CONDA_PREFIX_ABS "$ENV{CONDA_PREFIX}" ABSOLUTE)
         list(APPEND LAPACKE_HINT_PATHS
-            "$ENV{CONDA_PREFIX}"
-            "$ENV{CONDA_PREFIX}/Library/include"
-            "$ENV{CONDA_PREFIX}/include")
+            "${CONDA_PREFIX_ABS}"
+            "${CONDA_PREFIX_ABS}/Library/include"
+            "${CONDA_PREFIX_ABS}/include")
     endif()
 
     find_path(LAPACKE_INCLUDE_DIR
@@ -274,11 +277,11 @@ if(NOT LAPACKE_INCLUDE_DIR)
                 include/lapacke64)
 endif()
 
+# Ensure we have an absolute path and normalize it
 if(LAPACKE_INCLUDE_DIR)
-    file(TO_CMAKE_PATH "${LAPACKE_INCLUDE_DIR}" LAPACKE_INCLUDE_DIR_NORMALIZED)
-    if(NOT "${LAPACKE_INCLUDE_DIR}" STREQUAL "${LAPACKE_INCLUDE_DIR_NORMALIZED}")
-        set(LAPACKE_INCLUDE_DIR "${LAPACKE_INCLUDE_DIR_NORMALIZED}" CACHE PATH "Path to LAPACKE headers" FORCE)
-    endif()
+    get_filename_component(LAPACKE_INCLUDE_DIR "${LAPACKE_INCLUDE_DIR}" ABSOLUTE)
+    file(TO_CMAKE_PATH "${LAPACKE_INCLUDE_DIR}" LAPACKE_INCLUDE_DIR)
+    set(LAPACKE_INCLUDE_DIR "${LAPACKE_INCLUDE_DIR}" CACHE PATH "Path to LAPACKE headers" FORCE)
 endif()
 
 message(STATUS "LAPACKE_INCLUDE_DIR: ${LAPACKE_INCLUDE_DIR}")
