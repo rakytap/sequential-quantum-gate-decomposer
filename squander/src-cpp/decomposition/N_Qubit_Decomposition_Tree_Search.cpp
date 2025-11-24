@@ -28,6 +28,7 @@ limitations under the License.
 #include <random>
 #include <queue>
 #include <complex>
+#include <numeric>
 #include <cmath>
 #include <algorithm>
 
@@ -85,7 +86,8 @@ static int canonical_prefix_ok(const std::vector<std::pair<int,int>>& seq) {
     last_on.reserve(m*2);
 
     for (int k = 0; k < m; ++k) {
-        const auto [a,b] = ops[k];
+        const int a = ops[k].first;
+        const int b = ops[k].second;
         for (int q : {a,b}) {
             auto it = last_on.find(q);
             if (it != last_on.end()) {
@@ -130,7 +132,9 @@ static inline LevelResult enumerate_unordered_cnot_BFS_level_step(
         LevelInfo& L,
         const std::vector<matrix_base<int>>& topology, bool use_gl=true)
 {
-    auto& [visited, seq_pairs_of, q] = L;
+    auto& visited = std::get<0>(L);
+    auto& seq_pairs_of = std::get<1>(L);
+    auto& q = std::get<2>(L);
     std::map<std::vector<int>, GrayCode> new_seq_pairs_of;
     Discovery out_res;
     while (!q.empty()) {
@@ -272,7 +276,7 @@ N_Qubit_Decomposition_Tree_Search::N_Qubit_Decomposition_Tree_Search( Matrix Umt
     
     // construct the possible CNOT combinations within a single level
     // the number of possible CNOT connections netween the qubits (including topology constraints)
-    int n_ary_limit_max = topology.size();
+    int n_ary_limit_max = static_cast<int>(topology.size());
     
     possible_target_qbits = matrix_base<int>(1, n_ary_limit_max);
     possible_control_qbits = matrix_base<int>(1, n_ary_limit_max);    
@@ -457,7 +461,10 @@ N_Qubit_Decomposition_Tree_Search::determine_gate_structure(Matrix_real& optimiz
                 all_solutions.emplace_back();
                 break;
             } else {
-                auto [solutions, nextli, nextprefixes] = tree_search_over_gate_structures_gl( level, li, ci );   
+                auto result = tree_search_over_gate_structures_gl( level, li, ci );
+                auto& solutions = std::get<0>(result);
+                auto& nextli = std::get<1>(result);
+                auto& nextprefixes = std::get<2>(result);
                 all_solutions.insert(all_solutions.end(), solutions.begin(), solutions.end());
                 li.swap(nextli);
                 std::get<2>(ci) = std::move(nextprefixes);
@@ -498,7 +505,7 @@ N_Qubit_Decomposition_Tree_Search::determine_gate_structure(Matrix_real& optimiz
                 for(int idx = 0; idx < optimized_parameters.size(); idx++) {
                     optimized_parameters[idx] = distrib_real(gen);
                 }                        
-                cDecomp_custom_random.set_optimized_parameters( optimized_parameters.data(), optimized_parameters.size() );
+                cDecomp_custom_random.set_optimized_parameters( optimized_parameters.data(), static_cast<int>(optimized_parameters.size()) );
                 cDecomp_custom_random.start_decomposition();
                 current_minimum_tmp = cDecomp_custom_random.get_current_minimum();
                 if ( current_minimum_tmp < optimization_tolerance_loc ) {
@@ -540,7 +547,9 @@ N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures_gl( int leve
 
     tbb::spin_mutex tree_search_mutex;
     
-    auto &[all_cuts, pair_affects, prefixes] = ci;
+    auto& all_cuts = std::get<0>(ci);
+    auto& pair_affects = std::get<1>(ci);
+    auto& prefixes = std::get<2>(ci);
 
     double optimization_tolerance_loc;
     if ( config.count("optimization_tolerance") > 0 ) {
@@ -554,7 +563,10 @@ N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures_gl( int leve
     volatile bool found_optimal_solution = false;
 
 
-    const auto& [visited, seq_pairs_of, out_res] = level_num == 0 ? enumerate_unordered_cnot_BFS_level_init(qbit_num) : enumerate_unordered_cnot_BFS_level_step(li, topology, false);
+    auto level_result = level_num == 0 ? enumerate_unordered_cnot_BFS_level_init(qbit_num) : enumerate_unordered_cnot_BFS_level_step(li, topology, false);
+    const auto& visited = std::get<0>(level_result);
+    const auto& seq_pairs_of = std::get<1>(level_result);
+    const auto& out_res = std::get<2>(level_result);
 
     std::set<GrayCode> pairs_reduced;
     for ( const auto& item : out_res ) {
@@ -624,7 +636,7 @@ N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures_gl( int leve
                     for(int idx = 0; idx < optimized_parameters.size(); idx++) {
                         optimized_parameters[idx] = distrib_real(gen);
                     }
-                    cDecomp_custom_random.set_optimized_parameters( optimized_parameters.data(), optimized_parameters.size() );
+                    cDecomp_custom_random.set_optimized_parameters( optimized_parameters.data(), static_cast<int>(optimized_parameters.size()) );
                     cDecomp_custom_random.start_decomposition();
                     number_of_iters += cDecomp_custom_random.get_num_iters(); // retrive the number of iterations spent on optimization
                     best_params.emplace( cDecomp_custom_random.get_current_minimum(), cDecomp_custom_random.get_optimized_parameters().copy() );
@@ -691,14 +703,18 @@ N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures_gl( int leve
     std::sort(all_osr_results.begin(), all_osr_results.end(), [](const std::pair<GrayCode, std::vector<std::pair<int, double>>>& a, const std::pair<GrayCode, std::vector<std::pair<int, double>>>& b) {
         int max_ar = 0, sum_ar = 0;
         double sum_ac = 0;
-        for (const auto& [rnk, cost] : a.second) {
+        for (const auto& item : a.second) {
+            int rnk = item.first;
+            double cost = item.second;
             max_ar = std::max(max_ar, rnk);
             sum_ar += rnk;
             sum_ac += cost;
         }
         int max_br = 0, sum_br = 0;
         double sum_bc = 0;
-        for (const auto& [rnk, cost] : b.second) {
+        for (const auto& item : b.second) {
+            int rnk = item.first;
+            double cost = item.second;
             max_br = std::max(max_br, rnk);
             sum_br += rnk;
             sum_bc += cost;
