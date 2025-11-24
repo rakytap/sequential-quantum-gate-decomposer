@@ -25,6 +25,7 @@ jobs:
       run: |
         sudo apt-get update -qq
         sudo apt-get install -y --no-install-recommends cmake libtbb-dev libopenblas-dev liblapacke-dev
+        echo "LAPACKE_INCLUDE_DIR=/usr/include" >> $GITHUB_ENV
 
     - name: Install Python Dependencies
       run: |
@@ -36,6 +37,7 @@ jobs:
       env:
         TBB_LIB_DIR: /usr/lib/x86_64-linux-gnu
         TBB_INC_DIR: /usr/include
+        LAPACKE_INCLUDE_DIR: /usr/include
       run: |
         python setup.py build_ext -q
 

@@ -110,6 +110,7 @@ jobs:
           $envPath = $envPath.Replace('\', '/')
           $tbbLib = "$envPath/Library/lib"
           $tbbInc = "$envPath/Library/include"
+          $lapackeInc = "$envPath/Library/include"
           # Verify TBB installation
           Write-Host "Checking TBB installation..."
           Write-Host "Environment path: $envPath"
@@ -132,6 +133,7 @@ jobs:
           "TBB_INC_DIR=$tbbInc" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
           "BLAS_LIB_DIR=$tbbLib" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
           "CONDA_PREFIX=$envPath" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          "LAPACKE_INCLUDE_DIR=$lapackeInc" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
       - name: Install build dependencies
         run: |
@@ -158,12 +160,14 @@ jobs:
         run: |
           echo "TBB_LIB_DIR=/usr/lib/x86_64-linux-gnu" >> $GITHUB_ENV
           echo "TBB_INC_DIR=/usr/include" >> $GITHUB_ENV
+          echo "LAPACKE_INCLUDE_DIR=/usr/include" >> $GITHUB_ENV
 
       - name: Set environment variables (macOS)
         if: runner.os == 'macOS'
         run: |
           echo "TBB_LIB_DIR=$(brew --prefix tbb)/lib" >> $GITHUB_ENV
           echo "TBB_INC_DIR=$(brew --prefix tbb)/include" >> $GITHUB_ENV
+          echo "LAPACKE_INCLUDE_DIR=$(brew --prefix lapack)/include" >> $GITHUB_ENV
 
       - name: Build wheel
         env:
