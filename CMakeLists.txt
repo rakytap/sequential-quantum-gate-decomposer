@@ -238,10 +238,42 @@ endif()
 
 
 # if LAPACKE not found try another round
-if(${LAPACKE_FOUND} )
+if(${LAPACKE_FOUND})
     set(LAPACKE_LIBRARIES)
 else()
-    find_library(LAPACKE_LIBRARIES lapacke REQUIRED)    
+    find_library(LAPACKE_LIBRARIES lapacke REQUIRED)
+endif()
+
+# locate lapacke headers
+set(LAPACKE_HINT_PATHS
+    ${CMAKE_INSTALL_PREFIX}/include
+    ${BLAS_DIR}
+    ${CMAKE_PREFIX_PATH}
+    ${CMAKE_LIBRARY_PATH})
+if(DEFINED ENV{CONDA_PREFIX})
+    list(APPEND LAPACKE_HINT_PATHS
+        "$ENV{CONDA_PREFIX}/Library/include"
+        "$ENV{CONDA_PREFIX}/include")
+endif()
+
+find_path(LAPACKE_INCLUDE_DIR
+          NAMES lapacke.h
+          PATHS ${LAPACKE_HINT_PATHS}
+          PATH_SUFFIXES
+            include
+            include/lapacke
+            include/lapacke64
+          NO_DEFAULT_PATH)
+
+if(NOT LAPACKE_INCLUDE_DIR)
+    find_path(LAPACKE_INCLUDE_DIR NAMES lapacke.h)
+endif()
+
+if(NOT LAPACKE_INCLUDE_DIR)
+    message(FATAL_ERROR "Could not locate lapacke.h. Please install LAPACKE development headers or set LAPACKE_INCLUDE_DIR.")
+else()
+    list(APPEND EXTRA_INCLUDES "${LAPACKE_INCLUDE_DIR}")
+    message(STATUS "Found LAPACKE headers in: ${LAPACKE_INCLUDE_DIR}")
 endif()
 
 # checking for AVX/AVX2 support

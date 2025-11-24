@@ -22,6 +22,11 @@ limitations under the License.
 
 #include "N_Qubit_Decomposition_Cost_Function.h"
 //#include <tbb/parallel_for.h>
+#include <lapacke.h>
+
+#include <vector>
+#include <algorithm>
+#include <complex.h>
 
 
 
@@ -569,22 +574,7 @@ void functor_cost_fnc::operator()( tbb::blocked_range<int> r ) const {
 
 
 
-#include <vector>
-#include <algorithm>
-#include <complex.h>
-#define LAPACK_ROW_MAJOR               101
-#define LAPACK_COL_MAJOR               102
-#define lapack_int     int
-#define lapack_complex_double   double _Complex
-extern "C" lapack_complex_double lapack_make_complex_double(double re, double im);
-extern "C" lapack_int LAPACKE_zgesvd( int matrix_order, char jobu, char jobvt,
-                            lapack_int m, lapack_int n, lapack_complex_double* a,
-                            lapack_int lda, double* s, lapack_complex_double* u,
-                            lapack_int ldu, lapack_complex_double* vt,
-                            lapack_int ldvt, double* superb );
-extern "C" lapack_int LAPACKE_zgesdd(int matrix_order, char jobz, lapack_int m, lapack_int n, lapack_complex_double* a,
-                          lapack_int lda, double* s, lapack_complex_double* u, lapack_int ldu,
-                          lapack_complex_double* vt, lapack_int ldvt);
+
 
 // base-2 logarithm, rounding down
 static inline uint32_t lg_down(uint32_t v) {
@@ -658,7 +648,7 @@ static std::vector<lapack_complex_double> build_osr_matrix(const Matrix& U, int 
     return M;
 }
 
-static Matrix accumulate_grad_for_cut(const Matrix& U, const std::vector<double>& G,
+static void accumulate_grad_for_cut(Matrix& accum, const std::vector<double>& G,
                              const std::vector<lapack_complex_double> & Umat,
                              const std::vector<lapack_complex_double> & VTmat,
                              int n, const std::vector<int>& A) // qubits on A
@@ -680,7 +670,7 @@ static Matrix accumulate_grad_for_cut(const Matrix& U, const std::vector<double>
     int k = std::min(m_rows, m_cols);
     int tot_dyadic = G.size();
 
-    // Row-major indexing: U[in + out*N] is element (in, out)
+    // Row-major indexing: accum[in + out*N] is element (in, out)
     for (int in = 0; in < N; ++in) {
         const int a  = extract_bits(in, A_sorted) * dA;
         const int b  = extract_bits(in, B) * dB;
@@ -694,11 +684,10 @@ static Matrix accumulate_grad_for_cut(const Matrix& U, const std::vector<double>
                 int idx = 1<<i; //here we would conjugate again but that cancels out so we do nothing
                 val += G[i] * Umat[(size_t)r * (size_t)k + (size_t)idx] * VTmat[(size_t)idx * (size_t)m_cols + (size_t)c];
             }
-            U[(size_t)in + (size_t)out * (size_t)N].real += creal(val);
-            U[(size_t)in + (size_t)out * (size_t)N].imag += cimag(val);
+            accum[(size_t)in + (size_t)out * (size_t)N].real += creal(val);
+            accum[(size_t)in + (size_t)out * (size_t)N].imag += cimag(val);
         }
     }
-    return U;
 }
 
 static std::vector<double> osr(std::vector<lapack_complex_double>& A, int m_rows, int m_cols, double Fnorm)
