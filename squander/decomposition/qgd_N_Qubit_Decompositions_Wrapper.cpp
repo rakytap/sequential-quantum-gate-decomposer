@@ -81,11 +81,13 @@ guess_type extract_guess_type(PyObject* initial_guess) {
     if (!guess_str) {
         throw std::runtime_error("Failed to convert initial guess to string");
     }
-    Py_XDECREF(guess_str_obj);
+    
     if (strcasecmp("zeros", guess_str) == 0) return ZEROS;
     if (strcasecmp("random", guess_str) == 0) return RANDOM;
     if (strcasecmp("close_to_zero", guess_str) == 0) return CLOSE_TO_ZERO;
     std::cout << "Warning: Unknown guess '" << guess_str << "', using RANDOM" << std::endl;
+
+    Py_XDECREF(guess_str_obj);
     return RANDOM;
 }
 
