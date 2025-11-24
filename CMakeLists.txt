@@ -245,28 +245,32 @@ else()
 endif()
 
 # locate lapacke headers
-set(LAPACKE_HINT_PATHS
-    ${CMAKE_INSTALL_PREFIX}/include
-    ${BLAS_DIR}
-    ${CMAKE_PREFIX_PATH}
-    ${CMAKE_LIBRARY_PATH})
-if(DEFINED ENV{CONDA_PREFIX})
-    list(APPEND LAPACKE_HINT_PATHS
-        "$ENV{CONDA_PREFIX}/Library/include"
-        "$ENV{CONDA_PREFIX}/include")
+set(LAPACKE_INCLUDE_DIR "" CACHE PATH "Path to LAPACKE headers")
+
+# Allow environment override
+if(NOT LAPACKE_INCLUDE_DIR AND DEFINED ENV{LAPACKE_INCLUDE_DIR})
+    set(LAPACKE_INCLUDE_DIR "$ENV{LAPACKE_INCLUDE_DIR}")
 endif()
 
-find_path(LAPACKE_INCLUDE_DIR
-          NAMES lapacke.h
-          PATHS ${LAPACKE_HINT_PATHS}
-          PATH_SUFFIXES
-            include
-            include/lapacke
-            include/lapacke64
-          NO_DEFAULT_PATH)
-
 if(NOT LAPACKE_INCLUDE_DIR)
-    find_path(LAPACKE_INCLUDE_DIR NAMES lapacke.h)
+    set(LAPACKE_HINT_PATHS
+        ${CMAKE_INSTALL_PREFIX}/include
+        ${BLAS_DIR}
+        ${CMAKE_PREFIX_PATH}
+        ${CMAKE_LIBRARY_PATH})
+    if(DEFINED ENV{CONDA_PREFIX})
+        list(APPEND LAPACKE_HINT_PATHS
+            "$ENV{CONDA_PREFIX}/Library/include"
+            "$ENV{CONDA_PREFIX}/include")
+    endif()
+
+    find_path(LAPACKE_INCLUDE_DIR
+            NAMES lapacke.h
+            HINTS ${LAPACKE_HINT_PATHS}
+            PATH_SUFFIXES
+                include
+                include/lapacke
+                include/lapacke64)
 endif()
 
 if(NOT LAPACKE_INCLUDE_DIR)
