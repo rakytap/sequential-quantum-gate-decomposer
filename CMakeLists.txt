@@ -245,7 +245,6 @@ else()
 endif()
 
 # locate lapacke headers
-set(LAPACKE_INCLUDE_DIR "" CACHE PATH "Path to LAPACKE headers")
 
 # Allow environment override
 if(NOT LAPACKE_INCLUDE_DIR AND DEFINED ENV{LAPACKE_INCLUDE_DIR})
@@ -260,6 +259,7 @@ if(NOT LAPACKE_INCLUDE_DIR)
         ${CMAKE_LIBRARY_PATH})
     if(DEFINED ENV{CONDA_PREFIX})
         list(APPEND LAPACKE_HINT_PATHS
+            "$ENV{CONDA_PREFIX}"
             "$ENV{CONDA_PREFIX}/Library/include"
             "$ENV{CONDA_PREFIX}/include")
     endif()
