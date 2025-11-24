@@ -928,7 +928,20 @@ double get_osr_entanglement_test(Matrix& matrix, std::vector<std::vector<int>> &
     return res;
 }
 
-using OSRTriplet = std::tuple<std::vector<double>, std::vector<lapack_complex_double>, std::vector<lapack_complex_double>>;
+struct OSRTriplet {
+    std::vector<double> singulars;
+    std::vector<lapack_complex_double> left_factors;
+    std::vector<lapack_complex_double> right_factors;
+
+    OSRTriplet() = default;
+
+    OSRTriplet(std::vector<double> s,
+               std::vector<lapack_complex_double> u,
+               std::vector<lapack_complex_double> vt)
+        : singulars(std::move(s)),
+          left_factors(std::move(u)),
+          right_factors(std::move(vt)) {}
+};
 
 // Build M with build_osr_matrix, then SVD (econ) and grab top triplet.
 static OSRTriplet top_k_triplet_for_cut(
@@ -983,18 +996,26 @@ Matrix get_deriv_osr_entanglement(Matrix &matrix, std::vector<std::vector<int>> 
     for (const auto& cut : cuts) {
         // 1) top k triplet on the normalized reshape M_c
         int m_rows = 0, m_cols = 0;
-        const auto& [S, Umat, VTmat] = top_k_triplet_for_cut(matrix, qbit_num, cut, Fnorm, m_rows, m_cols);
-        triplets.emplace_back(std::vector<double>(), Umat, VTmat);
-        allS.emplace_back(S);
+        OSRTriplet triplet = top_k_triplet_for_cut(matrix, qbit_num, cut, Fnorm, m_rows, m_cols);
+        allS.emplace_back(std::move(triplet.singulars));
+        OSRTriplet stored;
+        stored.left_factors = std::move(triplet.left_factors);
+        stored.right_factors = std::move(triplet.right_factors);
+        triplets.emplace_back(std::move(stored));
     }
     if (use_softmax) allS = cuts_softmax_tail_grad(allS, Fnorm, 1.0);
     else allS = cuts_avg_tail_grad(allS, Fnorm, 0.9);
     for (int i = 0; i < (int)cuts.size(); ++i) {
-        std::get<0>(triplets[i]) = std::move(allS[i]);
+        triplets[i].singulars = std::move(allS[i]);
     }
     for (int i = 0; i < (int)cuts.size(); ++i) {
-        const auto& [G, Umat, VTmat] = triplets[i];
-        accumulate_grad_for_cut(deriv, G, Umat, VTmat, qbit_num, cuts[i]);
+        const OSRTriplet& triplet = triplets[i];
+        accumulate_grad_for_cut(deriv,
+                                triplet.singulars,
+                                triplet.left_factors,
+                                triplet.right_factors,
+                                qbit_num,
+                                cuts[i]);
     }
     return deriv;
 }
