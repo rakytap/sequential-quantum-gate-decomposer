@@ -200,13 +200,6 @@ jobs:
             Write-Host "ERROR: No wheel file found in dist/"
             exit 1
           }
-
-          $originalName = $wheel.Name
-          $backupName = $originalName -replace '\.whl$', '.original.whl'
-          $backupPath = Join-Path $wheel.DirectoryName $backupName
-
-          Copy-Item $wheel.FullName $backupPath -ErrorAction SilentlyContinue
-          Write-Host "Backed up original wheel to: $backupPath"
           
           Write-Host "Repairing wheel: $($wheel.Name)"
           
