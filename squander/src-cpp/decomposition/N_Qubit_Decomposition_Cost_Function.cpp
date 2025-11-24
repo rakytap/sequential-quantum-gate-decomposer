@@ -329,6 +329,24 @@ double get_cost_function_sum_of_squares(Matrix& matrix)
     return ret;
 }
 
+Matrix get_deriv_sum_of_squares(Matrix& matrix)
+{
+    Matrix ret(matrix.rows, matrix.cols);
+    for (int rowidx = 0; rowidx < matrix.rows; rowidx++) {
+        int baseidx = rowidx*matrix.stride;
+        for (int colidx = 0; colidx < matrix.cols; colidx++) {
+            if (rowidx == colidx) {
+                ret[baseidx+colidx].real = 2 * (matrix[baseidx+colidx].real - 1.0);
+                ret[baseidx+colidx].imag = 2 * matrix[baseidx+colidx].imag;
+            } else {
+                ret[baseidx+colidx].real = 2 * matrix[baseidx+colidx].real;
+                ret[baseidx+colidx].imag = 2 * matrix[baseidx+colidx].imag;
+            }
+        }
+    }
+    return ret;
+}
+
 /**
 @brief Call to calculate the real and imaginary parts of the trace
 @param matrix The square shaped complex matrix from which the trace is calculated.
@@ -551,7 +569,446 @@ void functor_cost_fnc::operator()( tbb::blocked_range<int> r ) const {
 
 
 
+#include <vector>
+#include <algorithm>
+#include <complex.h>
+#define LAPACK_ROW_MAJOR               101
+#define LAPACK_COL_MAJOR               102
+#define lapack_int     int
+#define lapack_complex_double   double _Complex
+extern "C" lapack_complex_double lapack_make_complex_double(double re, double im);
+extern "C" lapack_int LAPACKE_zgesvd( int matrix_order, char jobu, char jobvt,
+                            lapack_int m, lapack_int n, lapack_complex_double* a,
+                            lapack_int lda, double* s, lapack_complex_double* u,
+                            lapack_int ldu, lapack_complex_double* vt,
+                            lapack_int ldvt, double* superb );
+extern "C" lapack_int LAPACKE_zgesdd(int matrix_order, char jobz, lapack_int m, lapack_int n, lapack_complex_double* a,
+                          lapack_int lda, double* s, lapack_complex_double* u, lapack_int ldu,
+                          lapack_complex_double* vt, lapack_int ldvt);
+
+// base-2 logarithm, rounding down
+static inline uint32_t lg_down(uint32_t v) {
+    register unsigned int r; // result of log2(v) will go here
+    register unsigned int shift;
+
+    r =     (v > 0xFFFF) << 4; v >>= r;
+    shift = (v > 0xFF  ) << 3; v >>= shift; r |= shift;
+    shift = (v > 0xF   ) << 2; v >>= shift; r |= shift;
+    shift = (v > 0x3   ) << 1; v >>= shift; r |= shift;
+                                            r |= (v >> 1);
+    return r;
+}
+
+// base-2 logarithm, rounding up
+static inline uint32_t lg_up(uint32_t x) {
+    return x <= 1 ? 0 : lg_down(x - 1) + 1;
+}
+
+// Helper: extract bits at positions 'pos' from integer x into a packed integer (LSB order)
+static inline int extract_bits(int x, const std::vector<int>& pos) {
+    int y = 0, k = 0;
+    for (int p : pos) { y |= ((x >> p) & 1) << k; ++k; }
+    return y;
+}
+
+// Index: row-major 2^n x 2^n
+static inline size_t rm_idx(int row, int col, int N) {
+    return (size_t)row * (size_t)N + (size_t)col;
+}
+
+//https://www.sciencedirect.com/science/article/pii/S0024379518303446
+//https://arxiv.org/abs/2007.02490
+//https://journals.aps.org/pra/abstract/10.1103/PhysRevA.105.062430
+//https://arxiv.org/pdf/2111.03132
+// Build the (dA*dA) x (dB*dB) OSR matrix M for cut A|B from U (2^n x 2^n), row-major.
+// M_{ (a' * dA + a), (b' * dB + b) } = U_{ (a',b'), (a,b) }.
+static std::vector<lapack_complex_double> build_osr_matrix(const Matrix& U, int n,
+                             const std::vector<int>& A, // qubits on A
+                             int& m_rows, int& m_cols)
+{
+    std::vector<int> A_sorted = A;
+    std::sort(A_sorted.begin(), A_sorted.end());
+    std::vector<int> B;
+    B.reserve(n - (int)A_sorted.size());
+    for (int q = 0; q < n; ++q)
+        if (!std::binary_search(A_sorted.begin(), A_sorted.end(), q)) B.push_back(q);
+
+    const int dA = 1 << (int)A_sorted.size();
+    const int dB = 1 << (n - (int)A_sorted.size());
+    const int N  = 1 << n;
+
+    m_rows = dA * dA;
+    m_cols = dB * dB;
+    std::vector<lapack_complex_double> M;
+    M.resize((size_t)m_rows * (size_t)m_cols);
+
+    // Row-major indexing: U[in + out*N] is element (in, out)
+    for (int in = 0; in < N; ++in) {
+        const int a  = extract_bits(in, A_sorted) * dA;
+        const int b  = extract_bits(in, B) * dB;
+        for (int out = 0; out < N; ++out) {
+            const int ap = extract_bits(out, A_sorted);
+            const int bp = extract_bits(out, B);
+            const int r = a + ap;   // row in M
+            const int c = b + bp;   // col in M
+            const auto& val = U[(size_t)in + (size_t)out * (size_t)N];
+            M[rm_idx(r, c, m_cols)] = lapack_make_complex_double(val.real, val.imag);
+        }
+    }
+    return M;
+}
+
+static Matrix accumulate_grad_for_cut(const Matrix& U, const std::vector<double>& G,
+                             const std::vector<lapack_complex_double> & Umat,
+                             const std::vector<lapack_complex_double> & VTmat,
+                             int n, const std::vector<int>& A) // qubits on A
+{
+    std::vector<int> A_sorted = A;
+    std::sort(A_sorted.begin(), A_sorted.end());
+    std::vector<int> B;
+    B.reserve(n - (int)A_sorted.size());
+    for (int q = 0; q < n; ++q)
+        if (!std::binary_search(A_sorted.begin(), A_sorted.end(), q)) B.push_back(q);
+
+    const int dA = 1 << (int)A_sorted.size();
+    const int dB = 1 << (n - (int)A_sorted.size());
+    const int N  = 1 << n;
+
+    int m_rows = dA * dA;
+    int m_cols = dB * dB;
+
+    int k = std::min(m_rows, m_cols);
+    int tot_dyadic = G.size();
+
+    // Row-major indexing: U[in + out*N] is element (in, out)
+    for (int in = 0; in < N; ++in) {
+        const int a  = extract_bits(in, A_sorted) * dA;
+        const int b  = extract_bits(in, B) * dB;
+        for (int out = 0; out < N; ++out) {
+            const int ap = extract_bits(out, A_sorted);
+            const int bp = extract_bits(out, B);
+            const int r = a + ap;   // row in M
+            const int c = b + bp;   // col in M
+            lapack_complex_double val{0.0, 0.0};
+            for (int i = 0; i < tot_dyadic; i++) {
+                int idx = 1<<i; //here we would conjugate again but that cancels out so we do nothing
+                val += G[i] * Umat[(size_t)r * (size_t)k + (size_t)idx] * VTmat[(size_t)idx * (size_t)m_cols + (size_t)c];
+            }
+            U[(size_t)in + (size_t)out * (size_t)N].real += creal(val);
+            U[(size_t)in + (size_t)out * (size_t)N].imag += cimag(val);
+        }
+    }
+    return U;
+}
+
+static std::vector<double> osr(std::vector<lapack_complex_double>& A, int m_rows, int m_cols, double Fnorm)
+{
+    std::vector<double> S;
+    int k = std::min(m_rows, m_cols);
+    S.resize(k);
+    std::vector<double> superb(std::max(1, k - 1));  // REQUIRED for complex *gesvd
+    // We don’t need U/V; job='N' for economy; gesvd is fine too.
+    int info = LAPACKE_zgesvd(LAPACK_ROW_MAJOR,
+                              'N','N',
+                              m_rows, m_cols,
+                              A.data(), m_cols,
+                              S.data(),
+                              nullptr, 1,
+                              nullptr, 1,
+                              superb.data());
+    if (info != 0) {
+        throw std::runtime_error("zgesvd failed, info=" + std::to_string(info));
+    }
+    for (double& s : S) s /= Fnorm; //normalize
+    //std::copy(S.begin(), S.end(), std::ostream_iterator<double>(std::cout, " ")); std::cout << std::endl;
+    return S;
+}
+
+// Numerical rank via LAPACKE_zgesvd (SVD)
+static int numerical_rank_osr(std::vector<double> S, double tol)
+{
+    int rnk = 0;
+    for (double s : S) if (s > S[0]*tol) ++rnk;
+    return lg_up(rnk);
+}
+
+// Generate all k-combinations of {0,1,...,n-1} of size r
+static void combinations_recursive(int n, int r, int start,
+                                   std::vector<int>& current,
+                                   std::vector<std::vector<int>>& out)
+{
+    if ((int)current.size() == r) {
+        out.push_back(current);
+        return;
+    }
+    for (int i = start; i < n; ++i) {
+        current.push_back(i);
+        combinations_recursive(n, r, i + 1, current, out);
+        current.pop_back();
+    }
+}
+
+// Return all nontrivial unordered bipartitions (no complements)
+std::vector<std::vector<int>> unique_cuts(int n)
+{
+    std::vector<std::vector<int>> cuts;
+    if (n <= 1) return cuts;
+
+    for (int r = 1; r <= n / 2; ++r) {
+        std::vector<std::vector<int>> combs;
+        std::vector<int> current;
+        combinations_recursive(n, r, 0, current, combs);
+
+        for (auto& S : combs) {
+            if (r < n - r) {
+                cuts.push_back(S);
+            } else { // r == n - r (only for even n)
+                std::vector<int> comp;
+                for (int q = 0; q < n; ++q)
+                    if (std::find(S.begin(), S.end(), q) == S.end())
+                        comp.push_back(q);
+                // lexicographic tie-break: keep only smaller one
+                if (S < comp)
+                    cuts.push_back(S);
+            }
+        }
+    }
+    return cuts;
+}
+
+inline double logsumexp_smoothmax(const std::vector<double>& Lc, double tau=1e-2){
+    double m = *std::max_element(Lc.begin(), Lc.end());
+    double sum = 0.0;
+    for (double v : Lc) sum += std::exp((v - m)/tau);
+    return tau * std::log(sum) + m;
+}
+
+// Assumes S are nonnegative singular values (ideally sorted desc).
+double tail_loss(const std::vector<double>& S, int max_dyadic, double rho=0.1, double tol=1e-4) {
+    int tot_dyadic = lg_up(S.size());
+    double w = 1.0;
+    double acc = 0.0;
+    for (int k = max_dyadic-1; k >= 0; --k) {
+        if (k < tot_dyadic) {
+            double val = S[1 << k] - S[0] * tol;
+            acc += w * val * val;
+        }
+        w *= rho;  // geometric weight rho^k
+    }
+    return acc;
+}
+
+double avg_tail_loss(const std::vector<std::vector<double>>& cuts_S, double rho=0.1) {
+    double tot = 0.0;
+    int max_dyadic = lg_up(std::max_element(
+        cuts_S.begin(), cuts_S.end(),
+        [](const std::vector<double>& a, const std::vector<double>& b) {
+            return a.size() < b.size();
+        })->size());
+    for (const auto& S : cuts_S)
+        tot += tail_loss(S, max_dyadic, rho);
+    return tot / static_cast<double>(cuts_S.size());
+}
+
+// Aggregated cost over cuts: softmax (log-sum-exp) of per-cut tail losses
+double cuts_softmax_tail_cost(const std::vector<std::vector<double>>& cuts_S,
+                              double rho=0.1, double tau=1e-2)
+{
+    if (tau <= 0.0) throw std::invalid_argument("cuts_softmax_tail_cost: tau must be > 0");
+    std::vector<double> Lc; Lc.reserve(cuts_S.size());
+    int max_dyadic = lg_up(std::max_element(
+        cuts_S.begin(), cuts_S.end(),
+        [](const std::vector<double>& a, const std::vector<double>& b) {
+            return a.size() < b.size();
+        })->size());
+    for (const auto& S : cuts_S)
+        Lc.push_back(tail_loss(S, max_dyadic, rho));
+    return logsumexp_smoothmax(Lc, tau);
+}
+
+// Gradient w.r.t. the singular values (diagonal of dL/dΣ):
+std::vector<double> tail_loss_grad_diag(const std::vector<double>& S, int max_dyadic, double Fnorm, double rho=0.1, double tol=1e-4) {
+    const size_t n = S.size();
+
+    // c_k = rho^k / Mk  for k=1..n-1, then prefix sum C_j = sum_{k=1}^j c_k
+    int tot_dyadic = lg_up(n);
+    std::vector<double> grad(tot_dyadic, 0.0);
+    double w = 1.0;
+    for (int k = max_dyadic-1; k >= 0; --k) {
+        if (k < tot_dyadic) {
+            int idx = 1 << k;
+            grad[k] = 2.0 * w * S[idx] * (1.0-tol) / Fnorm; //1-tol not needed if using stop-grad
+        }
+        w *= rho;                         // w = rho^k
+    }
+    return grad;
+}
+
+std::vector<std::vector<double>> cuts_avg_tail_grad(const std::vector<std::vector<double>>& cuts_S, double Fnorm, double rho=0.1) {
+    const size_t C = cuts_S.size();
+    int max_dyadic = lg_up(std::max_element(
+        cuts_S.begin(), cuts_S.end(),
+        [](const std::vector<double>& a, const std::vector<double>& b) {
+            return a.size() < b.size();
+        })->size());
+    std::vector<std::vector<double>> Lc;
+    Lc.reserve(C);
+    for (int c = 0; c < C; ++c) {
+        Lc.emplace_back(tail_loss_grad_diag(cuts_S[c], max_dyadic, Fnorm * C, rho));
+    }
+    return Lc;
+}
 
 
+// Gradient w.r.t. singular values (same length as S).
+// Only dyadic positions (1,2,4,...) get nonzero entries; others are 0.
+std::vector<std::vector<double>> cuts_softmax_tail_grad(
+    const std::vector<std::vector<double>>& cuts_S, double Fnorm,
+    double rho=0.1, double tau=1e-2)
+{
+    const size_t C = cuts_S.size();
+    if (C == 0) return {};
+    int max_dyadic = lg_up(std::max_element(
+        cuts_S.begin(), cuts_S.end(),
+        [](const std::vector<double>& a, const std::vector<double>& b) {
+            return a.size() < b.size();
+        })->size());
 
+    // 1) per-cut losses
+    std::vector<double> Lc(C, 0.0);
+    for (size_t c = 0; c < C; ++c)
+        Lc[c] = tail_loss(cuts_S[c], max_dyadic, rho);
 
+    // 2) softmax weights w_c = exp((Lc - m)/tau) / Z
+    const double m = *std::max_element(Lc.begin(), Lc.end());
+    std::vector<double> w(C, 0.0);
+    double Z = 0.0;
+    for (size_t c = 0; c < C; ++c) { w[c] = std::exp((Lc[c] - m)/tau); Z += w[c]; }
+    for (size_t c = 0; c < C; ++c) w[c] /= (Z > 0.0 ? Z : 1.0);
+
+    // 3) dL/dS^{(c)} = w_c * dL_c/dS^{(c)}
+    std::vector<std::vector<double>> G; G.reserve(C);
+    for (size_t c = 0; c < C; ++c) {
+        std::vector<double> gc = tail_loss_grad_diag(cuts_S[c], max_dyadic, Fnorm, rho);
+        for (double& v : gc) v *= w[c];
+        G.emplace_back(gc);
+    }
+    return G;
+}
+
+// Public: operator-Schmidt rank across cut A|B
+std::pair<int, double> operator_schmidt_rank(const Matrix& U, int n,
+                          const std::vector<int>& A_qubits,
+                          double Fnorm, double tol = 1e-10)
+{
+    
+    int mr=0, mc=0;
+    std::vector<lapack_complex_double> M = build_osr_matrix(U, n, A_qubits, mr, mc);
+    std::vector<double> S = osr(M, mr, mc, Fnorm);
+    return std::pair<int, double>(numerical_rank_osr(S, tol), tail_loss(S, lg_up(S.size())));
+}
+
+double get_osr_entanglement_test(Matrix& matrix, std::vector<std::vector<int>> &use_cuts, bool use_softmax) {
+    //double hscost = get_hilbert_schmidt_test(matrix);
+    int qbit_num = lg_down(matrix.rows);
+    const auto& cuts = use_cuts.size() == 0 ? unique_cuts(qbit_num) : use_cuts;
+    double Fnorm = std::sqrt(matrix.rows);
+    std::vector<std::vector<double>> allS;
+    allS.reserve(cuts.size());
+    for (const auto& cut : cuts) {
+        int mr=0, mc=0;
+        std::vector<lapack_complex_double> M = build_osr_matrix(matrix, qbit_num, cut, mr, mc);
+        std::vector<double> S = osr(M, mr, mc, Fnorm);
+        allS.emplace_back(S);
+        //printf("%f ", S[0]);
+    }
+
+    double res = use_softmax ? cuts_softmax_tail_cost(allS, 1.0) : avg_tail_loss(allS, 0.9);
+    //printf("%f\n", res);
+    return res;
+}
+
+using OSRTriplet = std::tuple<std::vector<double>, std::vector<lapack_complex_double>, std::vector<lapack_complex_double>>;
+
+// Build M with build_osr_matrix, then SVD (econ) and grab top triplet.
+static OSRTriplet top_k_triplet_for_cut(
+    const Matrix& U, // (N x N), row-major, N = 1<<q
+    int q,                  // number of qubits
+    const std::vector<int>& A,  // qubits on side A
+    double Fnorm,            // e.g., sqrt(N)
+    int &m_rows, int &m_cols
+){
+    // 1) Build M for this cut
+    
+    std::vector<lapack_complex_double> M = build_osr_matrix(U, q, A, m_rows, m_cols);
+
+    const int k = std::min(m_rows, m_cols);
+
+    // 2) Allocate outputs for SVD (econ)
+    std::vector<double> S(k);
+    std::vector<lapack_complex_double> Umat((size_t)m_rows * (size_t)k); // m x k
+    std::vector<lapack_complex_double> VTmat((size_t)k * (size_t)m_cols); // k x n
+    std::vector<double> superb(std::max(1, k - 1));  // REQUIRED for complex *gesvd
+
+    // 3) SVD: M = U * diag(S) * VT  (VT = V^H)
+    // Row-major API handles leading dims as col counts.
+    int info = LAPACKE_zgesvd(
+        LAPACK_ROW_MAJOR,
+        'S', 'S',           // econ U, VT
+        m_rows, m_cols,
+        M.data(), m_cols,   // a, lda (row-major -> lda = n)
+        S.data(),
+        Umat.data(), k,    // U (m x k), ldu = k (row-major)
+        VTmat.data(), m_cols,     // VT (k x n), ldvt = n
+        superb.data()
+    );
+    if (info != 0) {
+        throw std::runtime_error("zgesvd failed, info=" + std::to_string(info));
+    }
+    for (double& s : S) s /= Fnorm; // normalized singular value
+
+    return OSRTriplet(std::move(S), std::move(Umat), std::move(VTmat));
+}
+
+Matrix get_deriv_osr_entanglement(Matrix &matrix, std::vector<std::vector<int>> &use_cuts, bool use_softmax) {
+    int qbit_num = lg_down(matrix.rows);
+    const auto& cuts = use_cuts.size() == 0 ? unique_cuts(qbit_num) : use_cuts;
+    double Fnorm = std::sqrt(matrix.rows);
+    Matrix deriv(matrix.rows, matrix.cols);
+    std::fill(deriv.data, deriv.data+deriv.size(), QGD_Complex16{0.0, 0.0});
+    // Compute the derivative of the OSR entanglement cost function
+    std::vector<OSRTriplet> triplets;
+    std::vector<std::vector<double>> allS;
+    triplets.reserve(cuts.size());
+    for (const auto& cut : cuts) {
+        // 1) top k triplet on the normalized reshape M_c
+        int m_rows = 0, m_cols = 0;
+        const auto& [S, Umat, VTmat] = top_k_triplet_for_cut(matrix, qbit_num, cut, Fnorm, m_rows, m_cols);
+        triplets.emplace_back(std::vector<double>(), Umat, VTmat);
+        allS.emplace_back(S);
+    }
+    if (use_softmax) allS = cuts_softmax_tail_grad(allS, Fnorm, 1.0);
+    else allS = cuts_avg_tail_grad(allS, Fnorm, 0.9);
+    for (int i = 0; i < (int)cuts.size(); ++i) {
+        std::get<0>(triplets[i]) = std::move(allS[i]);
+    }
+    for (int i = 0; i < (int)cuts.size(); ++i) {
+        const auto& [G, Umat, VTmat] = triplets[i];
+        accumulate_grad_for_cut(deriv, G, Umat, VTmat, qbit_num, cuts[i]);
+    }
+    return deriv;
+}
+
+// Compute grad component = Re Tr( A^† B ) for A = dL/dU, B = dU/dθ
+// A and B are (rows x cols) with row-major leading dimension.
+double real_trace_conj_dot(Matrix& A, Matrix& B)
+{
+    double acc = 0.0;
+    for (int r = 0; r < A.rows; ++r) {
+        int offs = r * A.stride;
+        for (int c = 0; c < A.cols; ++c) {
+            acc += A[offs + c].real * B[offs + c].real + A[offs + c].imag * B[offs + c].imag;
+        }
+    }
+    return acc; // Re Tr(A^† B)
+}

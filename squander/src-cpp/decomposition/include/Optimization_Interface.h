@@ -37,10 +37,10 @@ limitations under the License.
 
 
 
-/// @brief Type definition of the fifferent types of the cost function
+/// @brief Type definition of the different types of the cost function
 typedef enum cost_function_type {FROBENIUS_NORM, FROBENIUS_NORM_CORRECTION1, FROBENIUS_NORM_CORRECTION2,
     HILBERT_SCHMIDT_TEST, HILBERT_SCHMIDT_TEST_CORRECTION1, HILBERT_SCHMIDT_TEST_CORRECTION2,
-    SUM_OF_SQUARES, VQE, GQML, INFIDELITY} cost_function_type;
+    SUM_OF_SQUARES, VQE, GQML, INFIDELITY, OSR_ENTANGLEMENT} cost_function_type;
 
 
 
@@ -111,6 +111,8 @@ protected:
     double correction1_scale;
     /// prefactor of the double-bitflip errors in the cost function. (see Eq. (21) in arXiv:2210.09191)
     double correction2_scale;    
+    /// cuts used for OSR entanglement cost function
+    std::vector<std::vector<int>> use_cuts;
     
 
     /// number of iterations
@@ -311,7 +313,7 @@ void solve_layer_optimization_problem_ADAM( int num_of_parameters, Matrix_real& 
 @param output The randomized parameters are stored within this array
 @param f0 weight in the randomiztaion (output = input + rand()*sqrt(f0) ).
 */
-void randomize_parameters( Matrix_real& input, Matrix_real& output, const double& f0 );
+void randomize_parameters( Matrix_real& input, Matrix_real& output, const double f0 );
 
 
 /**
