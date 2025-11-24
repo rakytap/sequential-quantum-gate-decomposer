@@ -769,6 +769,7 @@ target_link_libraries( qgd PRIVATE
 
 
 target_include_directories(qgd PRIVATE
+                            ${EXTRA_INCLUDES}
                             .
                             ./squander/src-cpp/common/include
                             ./squander/src-cpp/gates/include
@@ -778,7 +779,7 @@ target_include_directories(qgd PRIVATE
                             ./squander/src-cpp/nn/include
                             ./squander/src-cpp/gates/kernels/include
                             ./squander/src-cpp/variational_quantum_eigensolver/include
-                            ${EXTRA_INCLUDES})
+                            )
 
 
 
