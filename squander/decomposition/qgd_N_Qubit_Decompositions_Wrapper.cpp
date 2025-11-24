@@ -78,6 +78,9 @@ guess_type extract_guess_type(PyObject* initial_guess) {
         throw std::runtime_error("Failed to convert initial guess to string");
     }
     const char* guess_str = PyUnicode_AsUTF8(guess_str_obj);
+    if (!guess_str) {
+        throw std::runtime_error("Failed to convert initial guess to string");
+    }
     Py_XDECREF(guess_str_obj);
     if (strcasecmp("zeros", guess_str) == 0) return ZEROS;
     if (strcasecmp("random", guess_str) == 0) return RANDOM;
