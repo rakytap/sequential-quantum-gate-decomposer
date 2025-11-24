@@ -245,6 +245,7 @@ else()
 endif()
 
 # locate lapacke headers
+#set(LAPACKE_INCLUDE_DIR "${LAPACKE_INCLUDE_DIR}" CACHE PATH "Path to LAPACKE headers")
 
 # Allow environment override
 if(NOT LAPACKE_INCLUDE_DIR AND DEFINED ENV{LAPACKE_INCLUDE_DIR})
@@ -273,10 +274,20 @@ if(NOT LAPACKE_INCLUDE_DIR)
                 include/lapacke64)
 endif()
 
+if(LAPACKE_INCLUDE_DIR)
+    file(TO_CMAKE_PATH "${LAPACKE_INCLUDE_DIR}" LAPACKE_INCLUDE_DIR_NORMALIZED)
+    if(NOT "${LAPACKE_INCLUDE_DIR}" STREQUAL "${LAPACKE_INCLUDE_DIR_NORMALIZED}")
+        set(LAPACKE_INCLUDE_DIR "${LAPACKE_INCLUDE_DIR_NORMALIZED}" CACHE PATH "Path to LAPACKE headers" FORCE)
+    endif()
+endif()
+
+message(STATUS "LAPACKE_INCLUDE_DIR: ${LAPACKE_INCLUDE_DIR}")
+
 if(NOT LAPACKE_INCLUDE_DIR)
     message(FATAL_ERROR "Could not locate lapacke.h. Please install LAPACKE development headers or set LAPACKE_INCLUDE_DIR.")
 else()
     list(APPEND EXTRA_INCLUDES "${LAPACKE_INCLUDE_DIR}")
+    list(APPEND CMAKE_REQUIRED_INCLUDES "${LAPACKE_INCLUDE_DIR}")
     message(STATUS "Found LAPACKE headers in: ${LAPACKE_INCLUDE_DIR}")
 endif()
 
