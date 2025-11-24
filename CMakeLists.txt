@@ -243,6 +243,7 @@ if(${LAPACKE_FOUND})
 else()
     find_library(LAPACKE_LIBRARIES lapacke REQUIRED)
 endif()
+message(STATUS "LAPACKE_LIBRARIES: ${LAPACKE_LIBRARIES}")
 
 
 # Allow environment override
