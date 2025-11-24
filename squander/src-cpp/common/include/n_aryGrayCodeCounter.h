@@ -105,6 +105,7 @@ int next( int& changed_index);
 */
 int next( int& changed_index, int& value_prev, int& value);
 
+int64_t advance(int counter_pos);
 
 void set_offset_max( const int64_t& value );
 

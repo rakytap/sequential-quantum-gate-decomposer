@@ -138,7 +138,7 @@ protected:
     int finalizing_parameter_num;
 
     /// The current minimum of the optimization problem
-    double current_minimum;
+    volatile double current_minimum;
 
     /// The global target minimum of the optimization problem
     double global_target_minimum;
