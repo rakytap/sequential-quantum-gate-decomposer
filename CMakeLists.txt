@@ -284,6 +284,9 @@ if(NOT LAPACKE_INCLUDE_DIR)
                 include/lapacke64)
 endif()
 
+message(STATUS "LAPACKE_INCLUDE_DIR before normalization: ${LAPACKE_INCLUDE_DIR}")
+
+
 # Ensure we have an absolute path and normalize it
 # Ensure we have an absolute path and normalize it, expanding any variables
 if(LAPACKE_INCLUDE_DIR)
