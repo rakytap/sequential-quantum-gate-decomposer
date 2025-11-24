@@ -203,8 +203,10 @@ jobs:
 
           $originalName = $wheel.Name
           $backupName = $originalName -replace '\.whl$', '.original.whl'
-          Rename-Item $wheel.FullName $backupName -ErrorAction SilentlyContinue
-          Write-Host "Renamed wheel to: $backupName"
+          $backupPath = Join-Path $wheel.DirectoryName $backupName
+
+          Copy-Item $wheel.FullName $backupPath -ErrorAction SilentlyContinue
+          Write-Host "Backed up original wheel to: $backupPath"
           
           Write-Host "Repairing wheel: $($wheel.Name)"
           
