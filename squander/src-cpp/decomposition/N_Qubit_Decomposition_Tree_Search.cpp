@@ -997,7 +997,7 @@ N_Qubit_Decomposition_Tree_Search::perform_optimization(Gates_block* gate_struct
 @return Returns with the generated circuit
 */
 Gates_block* 
-N_Qubit_Decomposition_Tree_Search::construct_gate_structure_from_Gray_code( const GrayCode& gcode, bool finalize=true ) {
+N_Qubit_Decomposition_Tree_Search::construct_gate_structure_from_Gray_code( const GrayCode& gcode, bool finalize ) {
 
 
     // determine the target qubit indices and control qbit indices for the CNOT gates from the Gray code counter
