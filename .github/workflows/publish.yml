@@ -100,7 +100,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          conda install -c conda-forge cmake tbb-devel openblas lapack lapacke -y
+          conda install -c conda-forge cmake tbb-devel openblas lapack -y
           # Get active conda environment
           $envPath = conda env list | Select-String '\*' | ForEach-Object { ($_ -split '\s+', 3)[1] }
           if (-not $envPath) {
