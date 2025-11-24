@@ -250,25 +250,17 @@ set(LAPACKE_INCLUDE_DIR)
 
 # Allow environment override
 if(NOT LAPACKE_INCLUDE_DIR AND DEFINED ENV{LAPACKE_INCLUDE_DIR})
-    get_filename_component(LAPACKE_INCLUDE_DIR "$ENV{LAPACKE_INCLUDE_DIR}" ABSOLUTE)
+  set(LAPACKE_INCLUDE_DIR "$ENV{LAPACKE_INCLUDE_DIR}")
 endif()
 
 if(NOT LAPACKE_INCLUDE_DIR)
-    # Build list of candidate paths with all variables expanded
-    set(LAPACKE_CANDIDATE_PATHS)
-    
-    # Add standard paths
-    if(CMAKE_INSTALL_PREFIX)
-        list(APPEND LAPACKE_CANDIDATE_PATHS "${CMAKE_INSTALL_PREFIX}/include")
-    endif()
-    if(BLAS_DIR)
-        list(APPEND LAPACKE_CANDIDATE_PATHS "${BLAS_DIR}/include" "${BLAS_DIR}")
-    endif()
     
     # Add conda paths with expanded variables
     if(DEFINED ENV{CONDA_PREFIX})
         # Expand environment variable to absolute path
         get_filename_component(CONDA_PREFIX_ABS "$ENV{CONDA_PREFIX}" ABSOLUTE)
+        message(STATUS "CONDA_PREFIX_ABS: ${CONDA_PREFIX_ABS}")
+
         list(APPEND LAPACKE_HINT_PATHS
             "${CONDA_PREFIX_ABS}"
             "${CONDA_PREFIX_ABS}/Library/include"
