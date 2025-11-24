@@ -98,58 +98,21 @@ endif()
 if(DEFINED ENV{BLAS_LIB_DIR})
   set(BLAS_DIR "$ENV{BLAS_LIB_DIR}")
 else()
-  # Determine CBLAS library directory behind Numpy
-  # Use newer NumPy API that works with both old and new NumPy versions
-  exec_program(
-    ${PYTHON_EXECUTABLE}
-    ARGS "-c \"
-try:
-    import numpy
-    # Try new API first (NumPy 1.21+)
-    try:
-        from numpy._core._multiarray_umath import __cpu_features__
-        import os
-        # Get numpy installation directory
-        numpy_dir = os.path.dirname(numpy.__file__)
-        # Common locations for BLAS libraries
-        lib_dirs = [
-            os.path.join(numpy_dir, '..', 'lib'),
-            os.path.join(numpy_dir, '..', '..', 'lib'),
-            '/usr/lib',
-            '/usr/local/lib'
-        ]
-        # Try to find a valid directory
-        for d in lib_dirs:
-            abs_d = os.path.abspath(d)
-            if os.path.exists(abs_d):
-                print(abs_d)
-                break
-    except:
-        # Fallback: try old API
-        blas_info = numpy.__config__.get_info('blas_opt_info')
-        libs = blas_info.get('library_dirs', [])
-        if libs:
-            print(libs[0])
-        else:
-            import os
-            print(os.path.dirname(numpy.__file__) + '/../lib')
-except Exception as e:
-    # Last resort: use numpy's directory structure
-    import numpy, os
-    numpy_dir = os.path.dirname(numpy.__file__)
-    print(os.path.abspath(os.path.join(numpy_dir, '..', 'lib')))
-\""
+  set(FIND_NUMPY_BLAS_SCRIPT "${PROJECT_SOURCE_DIR}/cmake/find_numpy_blas_dir.py")
+  execute_process(
+    COMMAND ${PYTHON_EXECUTABLE} ${FIND_NUMPY_BLAS_SCRIPT}
     OUTPUT_VARIABLE BLAS_DIR
-    RETURN_VALUE NUMPY_BLAS_NOT_FOUND
+    RESULT_VARIABLE NUMPY_BLAS_NOT_FOUND
+    OUTPUT_STRIP_TRAILING_WHITESPACE
   )
-  
+
   # If that failed, try a simpler approach
   if(NUMPY_BLAS_NOT_FOUND OR "${BLAS_DIR}" STREQUAL "")
-    exec_program(
-      ${PYTHON_EXECUTABLE}
-      ARGS "-c \"import numpy, os; print(os.path.abspath(os.path.join(os.path.dirname(numpy.__file__), '..', 'lib')))\""
+    execute_process(
+      COMMAND ${PYTHON_EXECUTABLE} -c "import numpy, os; print(os.path.abspath(os.path.join(os.path.dirname(numpy.__file__), '..', 'lib')))"
       OUTPUT_VARIABLE BLAS_DIR
-      RETURN_VALUE NUMPY_BLAS_NOT_FOUND2
+      RESULT_VARIABLE NUMPY_BLAS_NOT_FOUND2
+      OUTPUT_STRIP_TRAILING_WHITESPACE
     )
   endif()
 endif()
