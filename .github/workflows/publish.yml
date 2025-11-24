@@ -100,7 +100,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          conda install -c conda-forge cmake tbb-devel openblas lapack -y
+          conda install -c conda-forge cmake tbb-devel openblas lapack lapacke -y
           # Get active conda environment
           $envPath = conda env list | Select-String '\*' | ForEach-Object { ($_ -split '\s+', 3)[1] }
           if (-not $envPath) {
@@ -111,6 +111,7 @@ jobs:
           $tbbLib = "$envPath/Library/lib"
           $tbbInc = "$envPath/Library/include"
           $lapackeInc = "$envPath/Library/include"
+          
           # Verify TBB installation
           Write-Host "Checking TBB installation..."
           Write-Host "Environment path: $envPath"
@@ -128,10 +129,40 @@ jobs:
               $tbbInc = $actualTbbInc
             }
           }
+          
+          # Verify LAPACKE installation
+          Write-Host "Checking LAPACKE installation..."
+          Write-Host "LAPACKE include path: $lapackeInc"
+          if (Test-Path "$lapackeInc/lapacke.h") {
+            Write-Host "LAPACKE header found at: $lapackeInc/lapacke.h"
+          } else {
+            Write-Host "WARNING: LAPACKE header not found at: $lapackeInc/lapacke.h"
+            # Try to find it
+            $foundLapacke = Get-ChildItem -Path "$envPath" -Recurse -Filter "lapacke.h" -ErrorAction SilentlyContinue | Select-Object -First 1
+            if ($foundLapacke) {
+              $actualLapackeInc = $foundLapacke.DirectoryName.Replace('\', '/')
+              Write-Host "Found LAPACKE header at: $actualLapackeInc"
+              $lapackeInc = $actualLapackeInc
+            } else {
+              Write-Host "ERROR: LAPACKE header not found. Trying to install lapacke package..."
+              conda install -c conda-forge lapacke -y
+              # Check again
+              if (Test-Path "$lapackeInc/lapacke.h") {
+                Write-Host "LAPACKE header found after installation"
+              } else {
+                $foundLapacke = Get-ChildItem -Path "$envPath" -Recurse -Filter "lapacke.h" -ErrorAction SilentlyContinue | Select-Object -First 1
+                if ($foundLapacke) {
+                  $lapackeInc = $foundLapacke.DirectoryName.Replace('\', '/')
+                }
+              }
+            }
+          }
+          
           # Write to GITHUB_ENV using Out-File
           "TBB_LIB_DIR=$tbbLib" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
           "TBB_INC_DIR=$tbbInc" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
           "BLAS_LIB_DIR=$tbbLib" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          "LAPACKE_INCLUDE_DIR=$lapackeInc" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
           "CONDA_PREFIX=$envPath" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
       - name: Install build dependencies
