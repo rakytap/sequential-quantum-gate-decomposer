@@ -21,12 +21,38 @@ limitations under the License.
 */
 
 #include "N_Qubit_Decomposition_Cost_Function.h"
-//#include <tbb/parallel_for.h>
-#include <lapacke.h>
 
 #include <vector>
 #include <algorithm>
 #include <complex.h>
+
+
+#define LAPACK_ROW_MAJOR               101
+#define LAPACK_COL_MAJOR               102
+
+#define lapack_complex_double double _Complex
+
+#ifdef __cplusplus
+extern "C" 
+{
+#endif
+
+extern "C"  lapack_complex_double lapack_make_complex_double(double re, double im);
+
+extern "C" int LAPACKE_zgesvd( int matrix_order, char jobu, char jobvt,
+                            int m, int n, lapack_complex_double* a,
+                            int lda, double* s, lapack_complex_double* u,
+                            int ldu, lapack_complex_double* vt,
+                            int ldvt, double* superb );
+
+extern "C" int LAPACKE_zgesdd(int matrix_order, char jobz, int m, int n, lapack_complex_double* a,
+                          int lda, double* s, lapack_complex_double* u, int ldu,
+                          lapack_complex_double* vt, int ldvt);
+
+
+#ifdef __cplusplus
+}
+#endif
 
 
 
@@ -888,7 +914,7 @@ std::vector<std::vector<double>> cuts_softmax_tail_grad(
 // Public: operator-Schmidt rank across cut A|B
 std::pair<int, double> operator_schmidt_rank(const Matrix& U, int n,
                           const std::vector<int>& A_qubits,
-                          double Fnorm, double tol = 1e-10)
+                          double Fnorm, double tol)
 {
     
     int mr=0, mc=0;
