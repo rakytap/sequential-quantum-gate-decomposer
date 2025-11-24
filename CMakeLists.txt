@@ -151,11 +151,6 @@ set(ENV{LD_LIBRARY_PATH} "${BLAS_DIR}:$ENV{LD_LIBRARY_PATH}")
 if(BLAS_DIR AND NOT "${BLAS_DIR}" STREQUAL "")
   list(APPEND CMAKE_PREFIX_PATH "${BLAS_DIR}")
   list(APPEND CMAKE_LIBRARY_PATH "${BLAS_DIR}")
-  # On Windows, also check Library subdirectory (conda structure)
-  if(WIN32)
-    list(APPEND CMAKE_LIBRARY_PATH "${BLAS_DIR}/Library/lib")
-    list(APPEND CMAKE_PREFIX_PATH "${BLAS_DIR}/Library")
-  endif()
 endif()
 
 # On Windows with conda, try to find BLAS in conda environment
@@ -190,8 +185,7 @@ if(WIN32)
     NAMES openblas blas
     PATHS
       ${CMAKE_LIBRARY_PATH}
-      "${CONDA_PREFIX}/Library/lib"
-      "$ENV{CONDA_PREFIX}/Library/lib"
+      ENV{PATH}
     NO_DEFAULT_PATH
   )
   
