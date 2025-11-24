@@ -216,7 +216,7 @@ message(STATUS "BLAS_IS_MKL: ${BLAS_IS_MKL}")
 message(STATUS "BLAS_IS_OPENBLAS: ${BLAS_IS_OPENBLAS}")
 
 # check the presence of lapacke library
-check_function_exists(LAPACKE_zggev LAPACKE_FOUND)
+check_function_exists(LAPACKE_zgesvd LAPACKE_FOUND)
 set(CMAKE_REQUIRED_LIBRARIES "")
 
 # If MKL is enabled
@@ -243,66 +243,8 @@ if(${LAPACKE_FOUND})
 else()
     find_library(LAPACKE_LIBRARIES lapacke REQUIRED)
 endif()
-message(STATUS "LAPACKE_LIBRARIES: ${LAPACKE_LIBRARIES}")
 
 
-# Allow environment override
-if(NOT LAPACKE_INCLUDE_DIR AND DEFINED ENV{LAPACKE_INCLUDE_DIR})
-  set(LAPACKE_INCLUDE_DIR "$ENV{LAPACKE_INCLUDE_DIR}")
-else()
-  set(LAPACKE_INCLUDE_DIR)
-endif()
-
-if(NOT LAPACKE_INCLUDE_DIR)
-    
-    # Add conda paths with expanded variables
-    if(DEFINED ENV{CONDA_PREFIX})
-        # Expand environment variable to absolute path
-        get_filename_component(CONDA_PREFIX_ABS "$ENV{CONDA_PREFIX}" ABSOLUTE)
-        message(STATUS "CONDA_PREFIX_ABS: ${CONDA_PREFIX_ABS}")
-
-        list(APPEND LAPACKE_HINT_PATHS
-            "${CONDA_PREFIX_ABS}"
-            "${CONDA_PREFIX_ABS}/Library/include"
-            "${CONDA_PREFIX_ABS}/include")
-    endif()
-
-    find_path(LAPACKE_INCLUDE_DIR
-            NAMES lapacke.h
-            HINTS ${LAPACKE_HINT_PATHS}
-            PATH_SUFFIXES
-                include
-                include/lapacke
-                include/lapacke64)
-endif()
-
-message(STATUS "LAPACKE_INCLUDE_DIR before normalization: ${LAPACKE_INCLUDE_DIR}")
-
-
-# Ensure we have an absolute path and normalize it
-# Ensure we have an absolute path and normalize it, expanding any variables
-if(LAPACKE_INCLUDE_DIR)
-    # First, expand any environment variables that might be in the path
-    string(REPLACE "$ENV{CONDA_PREFIX}" "$ENV{CONDA_PREFIX}" LAPACKE_INCLUDE_DIR "${LAPACKE_INCLUDE_DIR}")
-    # Convert to CMake path format (forward slashes)
-    file(TO_CMAKE_PATH "${LAPACKE_INCLUDE_DIR}" LAPACKE_INCLUDE_DIR)
-    # Get absolute path (this will expand any remaining variables)
-    get_filename_component(LAPACKE_INCLUDE_DIR "${LAPACKE_INCLUDE_DIR}" ABSOLUTE)
-    # Normalize again to ensure clean path
-    file(TO_CMAKE_PATH "${LAPACKE_INCLUDE_DIR}" LAPACKE_INCLUDE_DIR)
-    # Cache the final value
-    set(LAPACKE_INCLUDE_DIR "${LAPACKE_INCLUDE_DIR}" CACHE PATH "Path to LAPACKE headers" FORCE)
-endif()
-
-message(STATUS "LAPACKE_INCLUDE_DIR: ${LAPACKE_INCLUDE_DIR}")
-
-if(NOT LAPACKE_INCLUDE_DIR)
-    message(FATAL_ERROR "Could not locate lapacke.h. Please install LAPACKE development headers or set LAPACKE_INCLUDE_DIR.")
-else()
-    list(APPEND EXTRA_INCLUDES "${LAPACKE_INCLUDE_DIR}")
-    list(APPEND CMAKE_REQUIRED_INCLUDES "${LAPACKE_INCLUDE_DIR}")
-    message(STATUS "Found LAPACKE headers in: ${LAPACKE_INCLUDE_DIR}")
-endif()
 
 # checking for AVX/AVX2 support
 CHECK_FOR_AVX()
