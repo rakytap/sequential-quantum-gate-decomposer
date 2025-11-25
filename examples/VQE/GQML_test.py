@@ -99,24 +99,35 @@ def run_pennylane(n_run):
                 tv_pl_best = tv_pl[:]
     return mmd_pl_best, tv_pl_best, P_theta_pl_best
 
-def plot_cost_fnx(iters, sqander_cf, pennylane_cf, cf_name):
+def plot_cost_fnx(iters, sqander_cf, cosine_cf, pennylane_cf, cf_name):
     plt.figure()
     plt.title(cf_name)
-    plt.plot( sqander_cf, label="squander")
-    plt.plot(pennylane_cf, label="pennylane")
+    plt.plot( sqander_cf, label="squander adam")
+    plt.plot( cosine_cf, label="cosine")
+    plt.plot(pennylane_cf, label="pennylane adam")
     plt.legend()
     plt.savefig(f"{cf_name}.pdf")
 
-n_nodes = 9
+n_nodes = 12
 graph_type = "grid"
 dataset_size = 1000
 
 G = nx.Graph()
 G.add_nodes_from(range(n_nodes))
-edges = [(x, x+1) for x in range(n_nodes-1)]
-edges.append((n_nodes-1, 0))
+# edges = [(x, x+1) for x in range(n_nodes-1)]
+# edges.append((n_nodes-1, 0))
 # edges = [[0, 1], [1, 2], [2, 3], [3, 4], [3, 5], [4, 5], [5, 6], [6, 7], [6, 8], [6, 9], [7, 8], [7, 9], [8, 9], [9, 1]]
-# edges = [(i, j) for i in range(n_nodes) for j in range(n_nodes)]
+edges = [(i, j) for i in range(11) for j in range(11) if i!=j]
+for i in range(11, 17):
+    for j in range(11, 17):
+        if i != j:
+            edges.append((i, j))
+# for i in range(10, 17):
+#     for j in range(10, 17):
+#         if i != j:
+#             edges.append((i, j))
+# edges.append((4, 5))
+edges.append((10, 11))
 G.add_edges_from(edges)
 training_set, target_distribution, cliques = generate_MRF_dataset(n_nodes, graph_type, dataset_size, G=G)
 p_num = np.sum([2**(len(i)-1) for i in cliques])+3*n_nodes
@@ -138,6 +149,7 @@ print("op",op)
 config = {"max_inner_iterations": iters, 
 	"batch_size": bs,
     "eta": .1,
+    # "randomization_threshold":1,
     "check_for_convergence": False,
 	"convergence_length": 20,
     "output_periodicity": int(iters//100)}
@@ -162,8 +174,8 @@ param_num  = GQML.get_Parameter_Num()
 print("param num", param_num)
 
 
-# parameters = np.random.random(param_num)
-parameters = np.zeros(param_num)
+parameters = np.random.random(param_num)
+# parameters = np.zeros(param_num)
 params0 = parameters.copy()
 GQML.set_Optimized_Parameters(parameters)
 circuit = GQML.get_Qiskit_Circuit()
@@ -172,21 +184,24 @@ max_partition_size = 4
 t0 = time.time()
 print("squander mmd", GQML.Optimization_Problem(parameters))
 print("squander time", time.time()-t0)
-# with open('tmp.qasm', 'w') as file:
-#     qasm_c = dumps(circuit)
-#     qasm_c = qasm_c.replace("u(", "u3(")
-#     file.write(qasm_c)
-# partitioned_circuit, params_reord, _ = PartitionCircuitQasm("tmp.qasm", max_partition_size, "ilp")
+with open('tmp.qasm', 'w') as file:
+    qasm_c = dumps(circuit)
+    qasm_c = qasm_c.replace("u(", "u3(")
+    file.write(qasm_c)
+partitioned_circuit, params_reord, _ = PartitionCircuitQasm("tmp.qasm", max_partition_size, "kahn")
+# params0 = params_reord.copy()
+
+GQML.set_Gate_Structure(partitioned_circuit)
+GQML.set_Optimized_Parameters(params_reord)
+t0 = time.time()
+print("MMD", GQML.Optimization_Problem(params_reord))
+print("part", time.time()-t0)
+
+# pl_mmd, pl_tv, pl_P = run_pennylane(1)
+# sq_iters, sq_mmd, sq_tv = run_squander(1)                                 
+# GQML.set_Optimizer("COSINE")
+# sq_iters_cos, sq_mmd_cos, sq_tv_cos = run_squander(1)                                 
 #
-# GQML.set_Gate_Structure(partitioned_circuit)
-# GQML.set_Optimized_Parameters(params_reord)
-# t0 = time.time()
-# print("MMD", GQML.Optimization_Problem(parameters))
-# print("part", time.time()-t0)
-
-pl_mmd, pl_tv, pl_P = run_pennylane(1)
-sq_iters, sq_mmd, sq_tv = run_squander(1)                                 
-
-plot_cost_fnx(sq_iters, sq_tv, pl_tv, "tv")
-plot_cost_fnx(sq_iters, sq_mmd, pl_mmd, "mmd")
-plot_distributions(pl_P, P_star)
+# plot_cost_fnx(sq_iters, sq_tv, sq_tv_cos, pl_tv, "tv")
+# plot_cost_fnx(sq_iters, sq_mmd, sq_mmd_cos, pl_mmd, "mmd")
+# plot_distributions(pl_P, P_star)

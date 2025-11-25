@@ -198,14 +198,11 @@ void Generative_Quantum_Machine_Learning_Base::start_optimization(){
     if (use_lookup && gaussian_lookup_table.size() == 0) {
         fill_lookup_table();
     }
-    fftw_init_threads();                        // initialize threading support
-    fftw_plan_with_nthreads(std::thread::hardware_concurrency()); // use all CPU cores
 
     // start the GQML process
     Matrix_real solution_guess = optimized_parameters_mtx.copy();
     solve_layer_optimization_problem(num_of_parameters, solution_guess);
 
-    fftw_cleanup_threads();
 
     return;
 }
