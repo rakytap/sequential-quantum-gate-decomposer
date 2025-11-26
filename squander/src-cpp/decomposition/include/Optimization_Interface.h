@@ -290,6 +290,9 @@ void solve_layer_optimization_problem_ADAM( int num_of_parameters, Matrix_real& 
 void randomize_parameters( Matrix_real& input, Matrix_real& output, const double f0 );
 
 
+// Bring base class optimization_problem into scope to avoid hiding
+using Decomposition_Base::optimization_problem;
+
 /**
 @brief Evaluate the optimization problem of the optimization
 @param parameters An array of the free parameters to be optimized.
