@@ -4302,7 +4302,7 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
             sstream << "importing Y gate" << std::endl;
 
             int target_qbit;
-            fread(&target_qbit, sizeof(int), 1, pFile);
+            fread_wrapper(&target_qbit, sizeof(int), 1, pFile);
             sstream << "target_qbit: " << target_qbit << std::endl;
 
             gate_block_levels[current_level]->add_y(target_qbit);
@@ -4314,7 +4314,7 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
             sstream << "importing Z gate" << std::endl;
 
             int target_qbit;
-            fread(&target_qbit, sizeof(int), 1, pFile);
+            fread_wrapper(&target_qbit, sizeof(int), 1, pFile);
             sstream << "target_qbit: " << target_qbit << std::endl;
 
             gate_block_levels[current_level]->add_z(target_qbit);
@@ -4326,7 +4326,7 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
             sstream << "importing S gate" << std::endl;
 
             int target_qbit;
-            fread(&target_qbit, sizeof(int), 1, pFile);
+            fread_wrapper(&target_qbit, sizeof(int), 1, pFile);
             sstream << "target_qbit: " << target_qbit << std::endl;
 
             gate_block_levels[current_level]->add_s(target_qbit);
@@ -4338,7 +4338,7 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
             sstream << "importing Sdg gate" << std::endl;
 
             int target_qbit;
-            fread(&target_qbit, sizeof(int), 1, pFile);
+            fread_wrapper(&target_qbit, sizeof(int), 1, pFile);
             sstream << "target_qbit: " << target_qbit << std::endl;
 
             gate_block_levels[current_level]->add_sdg(target_qbit);
@@ -4350,7 +4350,7 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
             sstream << "importing T gate" << std::endl;
 
             int target_qbit;
-            fread(&target_qbit, sizeof(int), 1, pFile);
+            fread_wrapper(&target_qbit, sizeof(int), 1, pFile);
             sstream << "target_qbit: " << target_qbit << std::endl;
 
             gate_block_levels[current_level]->add_t(target_qbit);
@@ -4362,7 +4362,7 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
             sstream << "importing Tdg gate" << std::endl;
 
             int target_qbit;
-            fread(&target_qbit, sizeof(int), 1, pFile);
+            fread_wrapper(&target_qbit, sizeof(int), 1, pFile);
             sstream << "target_qbit: " << target_qbit << std::endl;
 
             gate_block_levels[current_level]->add_t(target_qbit);
