@@ -791,4 +791,7 @@ if(DEFINED ENV{QGD_CTEST})
 endif()
 
 
-install(TARGETS qgd LIBRARY DESTINATION squander)
+install(TARGETS qgd 
+        LIBRARY DESTINATION squander
+        RUNTIME DESTINATION squander  # Add this for Windows
+        COMPONENT python)

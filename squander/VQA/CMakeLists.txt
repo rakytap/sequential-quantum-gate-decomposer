@@ -57,8 +57,10 @@ endif()
 
 
 
-install(TARGETS qgd_Variational_Quantum_Eigensolver_Base_Wrapper LIBRARY 
-         DESTINATION squander/VQA)
+install(TARGETS qgd_Variational_Quantum_Eigensolver_Base_Wrapper 
+        LIBRARY DESTINATION squander/VQA
+        RUNTIME DESTINATION squander/VQA  # Add this for Windows
+        COMPONENT python)
 
 add_library( qgd_Generative_Quantum_Machine_Learning_Base_Wrapper MODULE
     ${EXT_DIR}/qgd_GQML_Base_Wrapper.cpp
@@ -115,5 +117,7 @@ endif()
 
 
 
-install(TARGETS qgd_Generative_Quantum_Machine_Learning_Base_Wrapper LIBRARY 
-         DESTINATION squander/VQA)
+install(TARGETS qgd_Generative_Quantum_Machine_Learning_Base_Wrapper 
+        LIBRARY DESTINATION squander/VQA
+        RUNTIME DESTINATION squander/VQA  # Add this for Windows
+        COMPONENT python)

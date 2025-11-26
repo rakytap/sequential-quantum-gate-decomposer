@@ -53,8 +53,10 @@ if(DEFINED ENV{CONDA_PREFIX})
 endif()
 
 
-install(TARGETS qgd_Circuit_Wrapper LIBRARY 
-         DESTINATION squander/gates)
+install(TARGETS qgd_Circuit_Wrapper 
+        LIBRARY DESTINATION squander/gates
+        RUNTIME DESTINATION squander/gates  # Add this for Windows
+        COMPONENT python)
 
 
 
@@ -111,5 +113,7 @@ if(DEFINED ENV{CONDA_PREFIX})
     )
 endif()
 
-install(TARGETS gates_Wrapper LIBRARY 
-         DESTINATION squander/gates)
+install(TARGETS gates_Wrapper 
+        LIBRARY DESTINATION squander/gates
+        RUNTIME DESTINATION squander/gates  # Add this for Windows
+        COMPONENT python)

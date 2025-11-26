@@ -56,7 +56,9 @@ if(DEFINED ENV{CONDA_PREFIX})
 endif()
 
 
-install(TARGETS qgd_N_Qubit_Decompositions_Wrapper LIBRARY 
-         DESTINATION squander/decomposition)
+install(TARGETS qgd_N_Qubit_Decompositions_Wrapper 
+        LIBRARY DESTINATION squander/decomposition
+        RUNTIME DESTINATION squander/decomposition  # Add this for Windows
+        COMPONENT python)
 
 ###############################################################################

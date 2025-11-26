@@ -57,7 +57,9 @@ endif()
 
 
 
-install(TARGETS qgd_nn_Wrapper LIBRARY 
-         DESTINATION squander/nn)
+install(TARGETS qgd_nn_Wrapper 
+        LIBRARY DESTINATION squander/nn
+        RUNTIME DESTINATION squander/nn  # Add this for Windows
+        COMPONENT python)
 
 
