@@ -21,7 +21,36 @@ limitations under the License.
 */
 
 #include "N_Qubit_Decomposition_Cost_Function.h"
-//#include <tbb/parallel_for.h>
+#include "QGDTypes.h"
+
+#include <vector>
+#include <algorithm>
+
+#define LAPACK_ROW_MAJOR               101
+#define LAPACK_COL_MAJOR               102
+
+
+
+#ifdef __cplusplus
+extern "C" 
+{
+#endif
+
+// LAPACKE function declarations using QGD_Complex16
+extern "C" int LAPACKE_zgesvd( int matrix_order, char jobu, char jobvt,
+                            int m, int n, QGD_Complex16* a,
+                            int lda, double* s, QGD_Complex16* u,
+                            int ldu, QGD_Complex16* vt,
+                            int ldvt, double* superb );
+
+extern "C" int LAPACKE_zgesdd(int matrix_order, char jobz, int m, int n, QGD_Complex16* a,
+                          int lda, double* s, QGD_Complex16* u, int ldu,
+                          QGD_Complex16* vt, int ldvt);
+
+
+#ifdef __cplusplus
+}
+#endif
 
 
 
@@ -569,22 +598,7 @@ void functor_cost_fnc::operator()( tbb::blocked_range<int> r ) const {
 
 
 
-#include <vector>
-#include <algorithm>
-#include <complex.h>
-#define LAPACK_ROW_MAJOR               101
-#define LAPACK_COL_MAJOR               102
-#define lapack_int     int
-#define lapack_complex_double   double _Complex
-extern "C" lapack_complex_double lapack_make_complex_double(double re, double im);
-extern "C" lapack_int LAPACKE_zgesvd( int matrix_order, char jobu, char jobvt,
-                            lapack_int m, lapack_int n, lapack_complex_double* a,
-                            lapack_int lda, double* s, lapack_complex_double* u,
-                            lapack_int ldu, lapack_complex_double* vt,
-                            lapack_int ldvt, double* superb );
-extern "C" lapack_int LAPACKE_zgesdd(int matrix_order, char jobz, lapack_int m, lapack_int n, lapack_complex_double* a,
-                          lapack_int lda, double* s, lapack_complex_double* u, lapack_int ldu,
-                          lapack_complex_double* vt, lapack_int ldvt);
+
 
 // base-2 logarithm, rounding down
 static inline uint32_t lg_down(uint32_t v) {
@@ -622,7 +636,7 @@ static inline size_t rm_idx(int row, int col, int N) {
 //https://arxiv.org/pdf/2111.03132
 // Build the (dA*dA) x (dB*dB) OSR matrix M for cut A|B from U (2^n x 2^n), row-major.
 // M_{ (a' * dA + a), (b' * dB + b) } = U_{ (a',b'), (a,b) }.
-static std::vector<lapack_complex_double> build_osr_matrix(const Matrix& U, int n,
+static std::vector<QGD_Complex16> build_osr_matrix(const Matrix& U, int n,
                              const std::vector<int>& A, // qubits on A
                              int& m_rows, int& m_cols)
 {
@@ -639,7 +653,7 @@ static std::vector<lapack_complex_double> build_osr_matrix(const Matrix& U, int 
 
     m_rows = dA * dA;
     m_cols = dB * dB;
-    std::vector<lapack_complex_double> M;
+    std::vector<QGD_Complex16> M;
     M.resize((size_t)m_rows * (size_t)m_cols);
 
     // Row-major indexing: U[in + out*N] is element (in, out)
@@ -652,15 +666,15 @@ static std::vector<lapack_complex_double> build_osr_matrix(const Matrix& U, int 
             const int r = a + ap;   // row in M
             const int c = b + bp;   // col in M
             const auto& val = U[(size_t)in + (size_t)out * (size_t)N];
-            M[rm_idx(r, c, m_cols)] = lapack_make_complex_double(val.real, val.imag);
+            M[rm_idx(r, c, m_cols)] = val;
         }
     }
     return M;
 }
 
-static Matrix accumulate_grad_for_cut(const Matrix& U, const std::vector<double>& G,
-                             const std::vector<lapack_complex_double> & Umat,
-                             const std::vector<lapack_complex_double> & VTmat,
+static void accumulate_grad_for_cut(Matrix& accum, const std::vector<double>& G,
+                             const std::vector<QGD_Complex16> & Umat,
+                             const std::vector<QGD_Complex16> & VTmat,
                              int n, const std::vector<int>& A) // qubits on A
 {
     std::vector<int> A_sorted = A;
@@ -680,7 +694,7 @@ static Matrix accumulate_grad_for_cut(const Matrix& U, const std::vector<double>
     int k = std::min(m_rows, m_cols);
     int tot_dyadic = G.size();
 
-    // Row-major indexing: U[in + out*N] is element (in, out)
+    // Row-major indexing: accum[in + out*N] is element (in, out)
     for (int in = 0; in < N; ++in) {
         const int a  = extract_bits(in, A_sorted) * dA;
         const int b  = extract_bits(in, B) * dB;
@@ -689,19 +703,29 @@ static Matrix accumulate_grad_for_cut(const Matrix& U, const std::vector<double>
             const int bp = extract_bits(out, B);
             const int r = a + ap;   // row in M
             const int c = b + bp;   // col in M
-            lapack_complex_double val{0.0, 0.0};
+            QGD_Complex16 val{0.0, 0.0};
             for (int i = 0; i < tot_dyadic; i++) {
                 int idx = 1<<i; //here we would conjugate again but that cancels out so we do nothing
-                val += G[i] * Umat[(size_t)r * (size_t)k + (size_t)idx] * VTmat[(size_t)idx * (size_t)m_cols + (size_t)c];
+                QGD_Complex16 u_val = Umat[(size_t)r * (size_t)k + (size_t)idx];
+                QGD_Complex16 vt_val = VTmat[(size_t)idx * (size_t)m_cols + (size_t)c];
+                // Multiply: G[i] * u_val * vt_val
+                // (a+bi) * (c+di) = (ac-bd) + (ad+bc)i
+                double re_prod = u_val.real * vt_val.real - u_val.imag * vt_val.imag;
+                double im_prod = u_val.real * vt_val.imag + u_val.imag * vt_val.real;
+                // Multiply by G[i]
+                re_prod *= G[i];
+                im_prod *= G[i];
+                // Add to val
+                val.real += re_prod;
+                val.imag += im_prod;
             }
-            U[(size_t)in + (size_t)out * (size_t)N].real += creal(val);
-            U[(size_t)in + (size_t)out * (size_t)N].imag += cimag(val);
+            accum[(size_t)in + (size_t)out * (size_t)N].real += val.real;
+            accum[(size_t)in + (size_t)out * (size_t)N].imag += val.imag;
         }
     }
-    return U;
 }
 
-static std::vector<double> osr(std::vector<lapack_complex_double>& A, int m_rows, int m_cols, double Fnorm)
+static std::vector<double> osr(std::vector<QGD_Complex16>& A, int m_rows, int m_cols, double Fnorm)
 {
     std::vector<double> S;
     int k = std::min(m_rows, m_cols);
@@ -899,11 +923,11 @@ std::vector<std::vector<double>> cuts_softmax_tail_grad(
 // Public: operator-Schmidt rank across cut A|B
 std::pair<int, double> operator_schmidt_rank(const Matrix& U, int n,
                           const std::vector<int>& A_qubits,
-                          double Fnorm, double tol = 1e-10)
+                          double Fnorm, double tol)
 {
     
     int mr=0, mc=0;
-    std::vector<lapack_complex_double> M = build_osr_matrix(U, n, A_qubits, mr, mc);
+    std::vector<QGD_Complex16> M = build_osr_matrix(U, n, A_qubits, mr, mc);
     std::vector<double> S = osr(M, mr, mc, Fnorm);
     return std::pair<int, double>(numerical_rank_osr(S, tol), tail_loss(S, lg_up(S.size())));
 }
@@ -917,7 +941,7 @@ double get_osr_entanglement_test(Matrix& matrix, std::vector<std::vector<int>> &
     allS.reserve(cuts.size());
     for (const auto& cut : cuts) {
         int mr=0, mc=0;
-        std::vector<lapack_complex_double> M = build_osr_matrix(matrix, qbit_num, cut, mr, mc);
+        std::vector<QGD_Complex16> M = build_osr_matrix(matrix, qbit_num, cut, mr, mc);
         std::vector<double> S = osr(M, mr, mc, Fnorm);
         allS.emplace_back(S);
         //printf("%f ", S[0]);
@@ -928,7 +952,20 @@ double get_osr_entanglement_test(Matrix& matrix, std::vector<std::vector<int>> &
     return res;
 }
 
-using OSRTriplet = std::tuple<std::vector<double>, std::vector<lapack_complex_double>, std::vector<lapack_complex_double>>;
+struct OSRTriplet {
+    std::vector<double> singulars;
+    std::vector<QGD_Complex16> left_factors;
+    std::vector<QGD_Complex16> right_factors;
+
+    OSRTriplet() = default;
+
+    OSRTriplet(std::vector<double> s,
+               std::vector<QGD_Complex16> u,
+               std::vector<QGD_Complex16> vt)
+        : singulars(std::move(s)),
+          left_factors(std::move(u)),
+          right_factors(std::move(vt)) {}
+};
 
 // Build M with build_osr_matrix, then SVD (econ) and grab top triplet.
 static OSRTriplet top_k_triplet_for_cut(
@@ -940,14 +977,14 @@ static OSRTriplet top_k_triplet_for_cut(
 ){
     // 1) Build M for this cut
     
-    std::vector<lapack_complex_double> M = build_osr_matrix(U, q, A, m_rows, m_cols);
+    std::vector<QGD_Complex16> M = build_osr_matrix(U, q, A, m_rows, m_cols);
 
     const int k = std::min(m_rows, m_cols);
 
     // 2) Allocate outputs for SVD (econ)
     std::vector<double> S(k);
-    std::vector<lapack_complex_double> Umat((size_t)m_rows * (size_t)k); // m x k
-    std::vector<lapack_complex_double> VTmat((size_t)k * (size_t)m_cols); // k x n
+    std::vector<QGD_Complex16> Umat((size_t)m_rows * (size_t)k); // m x k
+    std::vector<QGD_Complex16> VTmat((size_t)k * (size_t)m_cols); // k x n
     std::vector<double> superb(std::max(1, k - 1));  // REQUIRED for complex *gesvd
 
     // 3) SVD: M = U * diag(S) * VT  (VT = V^H)
@@ -983,18 +1020,26 @@ Matrix get_deriv_osr_entanglement(Matrix &matrix, std::vector<std::vector<int>> 
     for (const auto& cut : cuts) {
         // 1) top k triplet on the normalized reshape M_c
         int m_rows = 0, m_cols = 0;
-        const auto& [S, Umat, VTmat] = top_k_triplet_for_cut(matrix, qbit_num, cut, Fnorm, m_rows, m_cols);
-        triplets.emplace_back(std::vector<double>(), Umat, VTmat);
-        allS.emplace_back(S);
+        OSRTriplet triplet = top_k_triplet_for_cut(matrix, qbit_num, cut, Fnorm, m_rows, m_cols);
+        allS.emplace_back(std::move(triplet.singulars));
+        OSRTriplet stored;
+        stored.left_factors = std::move(triplet.left_factors);
+        stored.right_factors = std::move(triplet.right_factors);
+        triplets.emplace_back(std::move(stored));
     }
     if (use_softmax) allS = cuts_softmax_tail_grad(allS, Fnorm, 1.0);
     else allS = cuts_avg_tail_grad(allS, Fnorm, 0.9);
     for (int i = 0; i < (int)cuts.size(); ++i) {
-        std::get<0>(triplets[i]) = std::move(allS[i]);
+        triplets[i].singulars = std::move(allS[i]);
     }
     for (int i = 0; i < (int)cuts.size(); ++i) {
-        const auto& [G, Umat, VTmat] = triplets[i];
-        accumulate_grad_for_cut(deriv, G, Umat, VTmat, qbit_num, cuts[i]);
+        const OSRTriplet& triplet = triplets[i];
+        accumulate_grad_for_cut(deriv,
+                                triplet.singulars,
+                                triplet.left_factors,
+                                triplet.right_factors,
+                                qbit_num,
+                                cuts[i]);
     }
     return deriv;
 }

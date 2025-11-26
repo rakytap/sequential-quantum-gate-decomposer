@@ -209,7 +209,7 @@ The SQUANDER package provides a comprehensive Python interface that exposes all 
 
 * **`squander.decomposition`**: Quantum gate decomposition classes for decomposing unitaries and preparing quantum states
 * **`squander.gates`**: Quantum gate implementations and circuit building blocks (including standard gates like CNOT, H, RX, RY, RZ, and custom gates)
-* **`squander.variational_quantum_eigensolver`**: Classes for VQE and generative quantum machine learning algorithms
+* **`squander.VQA`**: Classes for VQE and generative quantum machine learning algorithms
 * **`squander.synthesis`**: Circuit synthesis tools including SABRE algorithm for qubit routing and mapping
 * **`squander.partitioning`**: Circuit partitioning utilities for breaking down large circuits into manageable sub-circuits
 * **`squander.IO_interfaces`**: Input/output interfaces including Qiskit integration (`Qiskit_IO`)

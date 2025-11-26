@@ -30,7 +30,7 @@ def main() -> None:
         )
 
     version_file_paths = [
-        Path("setup.py"),
+        Path("pyproject.toml"),
         Path("CMakeLists.txt"),
         Path("Doxyfile"),
         Path("Doxyfile"),

@@ -30,6 +30,7 @@ limitations under the License.
 
 #include <time.h>
 #include <stdlib.h>
+#include <numeric>
 
 
 #ifdef __DFE__

@@ -913,9 +913,9 @@ Gate_Wrapper_get_Target_Qbits( Gate_Wrapper *self ) {
         return NULL;
     }
 
-    PyObject* target_qbits_py = PyList_New(target_qbits.size());
+    PyObject* target_qbits_py = PyList_New((Py_ssize_t)target_qbits.size());
     for (size_t i = 0; i < target_qbits.size(); i++) {
-        PyList_SetItem(target_qbits_py, i, Py_BuildValue("i", target_qbits[i]));
+        PyList_SetItem(target_qbits_py, (Py_ssize_t)i, Py_BuildValue("i", target_qbits[i]));
     }
 
     return target_qbits_py;
@@ -944,9 +944,9 @@ Gate_Wrapper_get_Control_Qbits( Gate_Wrapper *self ) {
         return NULL;
     }
 
-    PyObject* control_qbits_py = PyList_New(control_qbits.size());
+    PyObject* control_qbits_py = PyList_New((Py_ssize_t)control_qbits.size());
     for (size_t i = 0; i < control_qbits.size(); i++) {
-        PyList_SetItem(control_qbits_py, i, Py_BuildValue("i", control_qbits[i]));
+        PyList_SetItem(control_qbits_py, (Py_ssize_t)i, Py_BuildValue("i", control_qbits[i]));
     }
 
     return control_qbits_py;
@@ -1067,9 +1067,9 @@ Gate_Wrapper_get_Involved_Qbits( Gate_Wrapper *self ) {
         return NULL;
     }
 
-    PyObject* involved_qbits_py = PyList_New(involved_qbits.size());
+    PyObject* involved_qbits_py = PyList_New((Py_ssize_t)involved_qbits.size());
     for (size_t i = 0; i < involved_qbits.size(); i++) {
-        PyList_SetItem(involved_qbits_py, i, Py_BuildValue("i", involved_qbits[i]));
+        PyList_SetItem(involved_qbits_py, (Py_ssize_t)i, Py_BuildValue("i", involved_qbits[i]));
     }
 
     return involved_qbits_py;
@@ -1136,7 +1136,7 @@ Gate_Wrapper_Extract_Parameters( Gate_Wrapper *self, PyObject *args ) {
     PyObject *extracted_parameters_py = matrix_real_to_numpy( extracted_parameters );
 
     // flatten the extracted array
-    long int param_num = (long int)extracted_parameters.size();
+    npy_intp param_num = (npy_intp)extracted_parameters.size();
     PyArray_Dims new_shape;
     new_shape.ptr = &param_num;
     new_shape.len = 1;
@@ -1209,18 +1209,18 @@ Gate_Wrapper_getstate( Gate_Wrapper *self ) {
 
     // Serialize target_qbits vector
     std::vector<int> target_qbits = self->gate->get_target_qbits();
-    PyObject* target_qbits_py = PyList_New(target_qbits.size());
+    PyObject* target_qbits_py = PyList_New((Py_ssize_t)target_qbits.size());
     for (size_t i = 0; i < target_qbits.size(); i++) {
-        PyList_SetItem(target_qbits_py, i, Py_BuildValue("i", target_qbits[i]));
+        PyList_SetItem(target_qbits_py, (Py_ssize_t)i, Py_BuildValue("i", target_qbits[i]));
     }
     key = Py_BuildValue( "s", "target_qbits" );
     PyDict_SetItem(gate_state, key, target_qbits_py);
 
     // Serialize control_qbits vector
     std::vector<int> control_qbits = self->gate->get_control_qbits();
-    PyObject* control_qbits_py = PyList_New(control_qbits.size());
+    PyObject* control_qbits_py = PyList_New((Py_ssize_t)control_qbits.size());
     for (size_t i = 0; i < control_qbits.size(); i++) {
-        PyList_SetItem(control_qbits_py, i, Py_BuildValue("i", control_qbits[i]));
+        PyList_SetItem(control_qbits_py, (Py_ssize_t)i, Py_BuildValue("i", control_qbits[i]));
     }
     key = Py_BuildValue( "s", "control_qbits" );
     PyDict_SetItem(gate_state, key, control_qbits_py);
@@ -1622,16 +1622,15 @@ struct Gate_Wrapper_Type_tmp : PyTypeObject {
 static Gate_Wrapper_Type_tmp Gate_Wrapper_Type;
 
 
-#define gate_wrapper_type_template(gate_name, wrapper_new) \ 
+#define gate_wrapper_type_template(gate_name, wrapper_new) \
 struct gate_name##_Wrapper_Type : Gate_Wrapper_Type_tmp { \
-\
-    gate_name##_Wrapper_Type() {    \
-        tp_name      = #gate_name;\
-        tp_doc       = "Object to represent python binding for a" #gate_name "gate of the Squander package.";\
-        tp_new      = (newfunc) wrapper_new< gate_name>;\
-        tp_base      = &Gate_Wrapper_Type;\
-    }\
-}; \ 
+    gate_name##_Wrapper_Type() { \
+        tp_name = #gate_name; \
+        tp_doc = "Object to represent python binding for a " #gate_name " gate of the Squander package."; \
+        tp_new = (newfunc) wrapper_new< gate_name>; \
+        tp_base = &Gate_Wrapper_Type; \
+    } \
+}; \
 static gate_name##_Wrapper_Type gate_name##_Wrapper_Type_ins;
 
 
@@ -1741,13 +1740,13 @@ static PyModuleDef  gates_Wrapper_Module = {
     -1,
 };
 
-#define Py_INCREF_template(gate_name) \ 
-    Py_INCREF(&gate_name##_Wrapper_Type_ins);\
-    if (PyModule_AddObject(m, #gate_name, (PyObject *) & gate_name##_Wrapper_Type_ins) < 0) {\
-        Py_DECREF(& gate_name##_Wrapper_Type_ins);\
-        Py_DECREF(m);\
-        return NULL;\
-    }\
+#define Py_INCREF_template(gate_name) \
+    Py_INCREF(&gate_name##_Wrapper_Type_ins); \
+    if (PyModule_AddObject(m, #gate_name, (PyObject *) &gate_name##_Wrapper_Type_ins) < 0) { \
+        Py_DECREF(&gate_name##_Wrapper_Type_ins); \
+        Py_DECREF(m); \
+        return NULL; \
+    }
 
 /**
 @brief Method called when the Python module is initialized

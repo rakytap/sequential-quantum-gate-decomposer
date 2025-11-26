@@ -7,6 +7,13 @@ add_library( qgd_nn_Wrapper MODULE
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/numpy_interface.cpp        
 )
 
+# Windows/MSVC: Apply /bigobj flag directly to numpy_interface.cpp to handle large object files
+if(WIN32 AND CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    set_source_files_properties(
+        ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/numpy_interface.cpp
+        PROPERTIES COMPILE_OPTIONS "/bigobj"
+    )
+endif()
 
 ADD_DEPENDENCIES (qgd_nn_Wrapper qgd)
 
@@ -21,6 +28,7 @@ target_compile_options(qgd_nn_Wrapper PRIVATE
     "$<$<CONFIG:Debug>:${CXX_FLAGS_DEBUG}>"
     "$<$<CONFIG:Release>:${CXX_FLAGS_RELEASE}>"
     "-DCPYTHON"
+    "$<$<AND:$<PLATFORM_ID:Windows>,$<CXX_COMPILER_ID:MSVC>>:/bigobj>"
 )
 
 

@@ -27,24 +27,9 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 from skbuild import setup
 
 setup(
-    name="squander",
     packages=["squander"],
-    version="1.9.5",
-    url="https://github.com/rakytap/sequential-quantum-gate-decomposer",
-    maintainer="Peter Rakyta",
-    maintainer_email="peter.rakyta@ttk.elte.hu",
     include_package_data=True,
-    package_data={"": ["README.md", "MANIFEST.in", "pyproject.toml"]},
-    tests_require=["pytest"],
-    description="C++ library with Python interface to train quantum circuits, quantum gate synthesis and state preparation.",
-    long_description=open("./README.md", "r").read(),
-    long_description_content_type="text/markdown",
-    keywords="test, cmake, extension",
-    classifiers=[
-        "Intended Audience :: Developers",
-        "Natural Language :: English",
-        "Programming Language :: C",
-        "Programming Language :: C++",
-    ],
-    license="Apache-2.0 license",
+    package_data={
+        "": ["README.md", "MANIFEST.in", "pyproject.toml"],
+    },
 )
