@@ -2565,7 +2565,6 @@ void apply_4qbit_kernel_to_state_vector_input_AVX_TBB(Matrix& unitary, Matrix& i
     
     // Properly iterate through all blocks
     int num_qubits = (int)std::log2(matrix_size);
-    int num_blocks = matrix_size >> 4;  // 2^4 = 16 elements per block
 
     // Identify non-involved qubits
     std::vector<int> is_target(num_qubits, 0);
@@ -3104,7 +3103,6 @@ void apply_5qbit_kernel_to_state_vector_input_AVX_TBB(Matrix& unitary, Matrix& i
     int index_step_outer   = 1 << involved_qbits[4];
     
     int num_qubits = (int)std::log2(matrix_size);
-    int num_blocks = matrix_size >> 5;
     std::vector<int> is_target(num_qubits, 0);
     for (int q : involved_qbits) is_target[q] = 1;
     

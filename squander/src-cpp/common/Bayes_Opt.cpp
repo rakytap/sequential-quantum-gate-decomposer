@@ -422,7 +422,12 @@ void Bayes_Opt::expected_improvement_combined(double mu_n, double sigma_n, Matri
     *f = -1.*(deltax_max + sigma_n*pdf_mu - fabs(deltax)*cdf_mu);
     
     for (int idx=0; idx<variable_num; idx++){
+        /*
         double deltax_grad =  grad_mu[idx];
+        double deltax_max_grad = (deltax_grad>0.) ? grad_mu[idx] : 0.0;
+        double grad_rhs = -1.*std::fabs(deltax_grad)*cdf_mu - std::fabs(deltax)*pdf_mu*(grad_mu[idx]*sigma_n-mu_n*grad_sigma[idx])/sigma_n/sigma_n;
+        double grad_lhs = grad_sigma[idx]*pdf_mu + sigma_n*grad_pdf(mu_n,sigma_n,grad_mu[idx],grad_sigma[idx]);
+        */
         grad[idx] = -1.;//*(deltax_max_grad + grad_lhs + grad_rhs);
     }
     return;

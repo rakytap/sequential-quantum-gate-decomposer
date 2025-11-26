@@ -297,7 +297,7 @@ double Generative_Quantum_Machine_Learning_Base::expectation_value_P_star_P_star
 double Generative_Quantum_Machine_Learning_Base::TV_of_the_distributions(Matrix& State_right) {
     std::vector<double> P_theta;
 
-    for (size_t x_idx=0; x_idx<State_right.size(); x_idx++){
+    for (size_t x_idx=0; x_idx<static_cast<size_t>(State_right.size()); x_idx++){
         P_theta.push_back(State_right[x_idx].real*State_right[x_idx].real +State_right[x_idx].imag*State_right[x_idx].imag);
     }
 

@@ -151,7 +151,7 @@ static inline LevelResult enumerate_unordered_cnot_BFS_level_step(
             if (!use_gl) {
                 if (last_pairs.size() >= 3 && std::all_of(last_pairs.data+last_pairs.size()-3, last_pairs.data+last_pairs.size(), [p](const int& x){ return x == p; })) continue; // avoid more than 3 repeated CNOTs
                 std::vector<std::pair<int,int>> seq_pairs_vec;
-                for (size_t idx=0; idx<last_pairs.size(); idx++) {
+                for (size_t idx=0; idx<static_cast<size_t>(last_pairs.size()); idx++) {
                     seq_pairs_vec.push_back( std::pair<int,int>( topology[ last_pairs.data[idx] ][0], topology[ last_pairs.data[idx] ][1] ) );
                 }
                 seq_pairs_vec.push_back(m1);
