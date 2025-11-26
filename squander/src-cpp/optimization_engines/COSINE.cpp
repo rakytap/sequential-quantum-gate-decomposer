@@ -380,7 +380,6 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
 
                     double phi = atan2(f3, f4) - 4*solution_guess_tmp_mtx[param_idx_agents[idx]];
 
-                    double f; 
                     double params[5];
                     params[0] = A;
                     params[1] = phi + 4*solution_guess_tmp_mtx[param_idx_agents[idx]];
@@ -398,7 +397,7 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
                     parameter_shift[0] = std::fmod(parameter_shift[0], M_PI_double);
 
                     BFGS_Powell cBFGS_Powell(HS_partial_optimization_problem_cos_combined,(void*)&params);
-                    f = cBFGS_Powell.Start_Optimization(parameter_shift, 10);
+                    cBFGS_Powell.Start_Optimization(parameter_shift, 10);
 
                     param_update_mtx[ idx ] = parameter_shift[0];
 

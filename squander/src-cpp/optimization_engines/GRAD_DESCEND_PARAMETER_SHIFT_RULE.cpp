@@ -165,7 +165,6 @@ void Optimization_Interface::solve_layer_optimization_problem_GRAD_DESCEND_PARAM
              config["eta_grad_descend_shift_rule"].get_property( eta_loc ); 
         }
         else if ( config.count("eta") > 0 ) {
-             long long tmp;
              config["eta"].get_property( eta_loc );  
         }
         else {

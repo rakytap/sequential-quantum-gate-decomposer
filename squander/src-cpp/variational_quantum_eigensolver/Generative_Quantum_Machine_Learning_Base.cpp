@@ -84,7 +84,7 @@ Generative_Quantum_Machine_Learning_Base::Generative_Quantum_Machine_Learning_Ba
 @param config_in A map that can be used to set hyperparameters during the process
 @return An instance of the class
 */
-Generative_Quantum_Machine_Learning_Base::Generative_Quantum_Machine_Learning_Base(std::vector<int> sample_indices_in, std::vector<std::vector<int>> sample_bitstrings_in, Matrix_real P_star_in, Matrix_real sigma_in, int qbit_num_in, bool use_lookup_table_in, std::vector<std::vector<int>> cliques_in, bool use_exact_in, std::map<std::string, Config_Element>& config_in) : Optimization_Interface(Matrix(Power_of_2(qbit_num_in),1), qbit_num_in, false, config_in, RANDOM, accelerator_num) {
+Generative_Quantum_Machine_Learning_Base::Generative_Quantum_Machine_Learning_Base(std::vector<int> sample_indices_in, std::vector<std::vector<int>> sample_bitstrings_in, Matrix_real P_star_in, Matrix_real sigma_in, int qbit_num_in, bool use_lookup_table_in, std::vector<std::vector<int>> cliques_in, bool use_exact_in, std::map<std::string, Config_Element>& config_in) : Optimization_Interface(Matrix(Power_of_2(qbit_num_in),1), qbit_num_in, false, config_in, RANDOM, 0) {
 
 	sample_indices = sample_indices_in;
 
@@ -302,7 +302,7 @@ double Generative_Quantum_Machine_Learning_Base::TV_of_the_distributions(Matrix&
     }
 
     double TV = 0.0;
-    for (int i=0; i<P_theta.size(); i++) {
+    for (size_t i=0; i<P_theta.size(); i++) {
         TV += abs(P_theta[i]-P_star[i]);
     }
     return TV*0.5;
@@ -847,7 +847,6 @@ void Generative_Quantum_Machine_Learning_Base::generate_circuit( int layers, int
 
             std::vector<std::vector<int>> all_subsets;
             for (int clique_idx = 0; clique_idx < num_cliques; clique_idx++) {
-                int clique_size = cliques[clique_idx].size();
                 std::vector<int> subset;
                 generate_clique_circuit(0, cliques[clique_idx], all_subsets, subset);
             }
@@ -868,7 +867,7 @@ void Generative_Quantum_Machine_Learning_Base::generate_circuit( int layers, int
 @param qbits The qbits the gate operates on. The depth of the generated circuit is 2*number of qbits
 */
 void Generative_Quantum_Machine_Learning_Base::MultyRZ(std::vector<int>& qbits) {
-    for (int idx=0; idx<qbits.size()-1; idx++) {
+    for (size_t idx=0; idx<qbits.size()-1; idx++) {
         add_cnot(qbits[idx+1], qbits[idx]);
     }
     add_rz(qbits[qbits.size()-1]);
@@ -884,7 +883,7 @@ void Generative_Quantum_Machine_Learning_Base::MultyRZ(std::vector<int>& qbits) 
 @param subset Temporary variable for storing subsets.
 */
 void Generative_Quantum_Machine_Learning_Base::generate_clique_circuit(int i, std::vector<int>& arr, std::vector<std::vector<int>>& res, std::vector<int>& subset) {
-    if (i == arr.size()) {
+    if (static_cast<size_t>(i) == arr.size()) {
         if (subset.size() != 0) {
             if (std::find(res.begin(), res.end(), subset) == res.end()) {
                 res.push_back(subset);

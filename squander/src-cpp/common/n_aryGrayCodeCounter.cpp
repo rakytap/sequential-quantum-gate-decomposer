@@ -48,7 +48,7 @@ n_aryGrayCodeCounter::n_aryGrayCodeCounter( matrix_base<int>& n_ary_limits_in) {
     }
 
     offset_max = n_ary_limits[0];
-    for (size_t idx=1; idx<n_ary_limits.size(); idx++) {
+    for (size_t idx=1; idx<static_cast<size_t>(n_ary_limits.size()); idx++) {
         offset_max *= n_ary_limits[idx];
     }
 
@@ -77,7 +77,7 @@ n_aryGrayCodeCounter::n_aryGrayCodeCounter( matrix_base<int>& n_ary_limits_in, i
     }
 
     offset_max = n_ary_limits[0];
-    for (size_t idx=1; idx<n_ary_limits.size(); idx++) {
+    for (size_t idx=1; idx<static_cast<size_t>(n_ary_limits.size()); idx++) {
         offset_max *= n_ary_limits[idx];
     }
 
@@ -118,7 +118,7 @@ n_aryGrayCodeCounter::initialize( int64_t initial_offset ) {
     // generate counter chain
     counter_chain = matrix_base<int>( 1, n_ary_limits.size() );
 
-    for (size_t idx = 0; idx < n_ary_limits.size(); idx++) {
+    for (size_t idx = 0; idx < static_cast<size_t>(n_ary_limits.size()); idx++) {
         counter_chain[idx] = initial_offset % n_ary_limits[idx];
         initial_offset /= n_ary_limits[idx]; 
     }

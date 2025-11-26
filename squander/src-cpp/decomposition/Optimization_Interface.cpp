@@ -82,9 +82,6 @@ Optimization_Interface::Optimization_Interface() {
     // set the trace offset
     trace_offset = 0;
 
-    // unique id indentifying the instance of the class
-    std::uniform_int_distribution<> distrib_int(0, INT_MAX);  
-    int id = distrib_int(gen);
 
 
     // Time spent on circuit simulation/cost function evaluation

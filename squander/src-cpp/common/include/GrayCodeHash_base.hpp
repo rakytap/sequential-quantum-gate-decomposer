@@ -63,7 +63,7 @@ operator()(const GrayCode_base<intType> &key) const {
     matrix_base<intType>&& n_ary_limits = key.get_Limits();
     size_t pow = 1;
 
-    for (size_t idx=0; idx<key.cols; idx++) {
+    for (size_t idx=0; idx<static_cast<size_t>(key.cols); idx++) {
         hash_val = hash_val + data[idx]*pow;
         pow = pow*n_ary_limits[idx];
     }

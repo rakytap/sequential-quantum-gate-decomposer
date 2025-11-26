@@ -124,11 +124,9 @@ void Optimization_Interface::solve_layer_optimization_problem_ADAM_BATCHED( int 
 
         double optimization_tolerance_loc;
         if ( config.count("optimization_tolerance_adam_batched") > 0 ) {
-             double value;
              config["optimization_tolerance_adam_batched"].get_property( optimization_tolerance_loc );
         }
         else if ( config.count("optimization_tolerance") > 0 ) {
-             double value;
              config["optimization_tolerance"].get_property( optimization_tolerance_loc );
         }
         else {

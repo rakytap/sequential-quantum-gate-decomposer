@@ -263,7 +263,6 @@ void NN::get_nn_chanels( const Matrix& Umtx, const int& target_qbit, Matrix_real
         
         row_idx = row_idx + tmp; // the index corresponding to state 0 of the target qbit
         
-        int row_idx_pair = row_idx ^ index_pair_distance;
         //std::cout << idx << " " << row_idx << " " << row_idx_pair << " " << tmp << std::endl;
         
         int stride_kernel = index_pair_distance * Umtx.stride;
@@ -352,8 +351,7 @@ void NN::get_nn_chanels( int qbit_num, const Matrix& Umtx, Matrix_real& chanels)
 
         
                 row_idx = row_idx + tmp_idx; // the index corresponding to state 0 of the target qbit
-        
-                int row_idx_pair = row_idx ^ index_pair_distance;
+                
             //std::cout << idx << " " << row_idx << " " << row_idx_pair << " " << tmp << std::endl;
         
                 int stride_kernel = index_pair_distance * Umtx.stride;
@@ -403,10 +401,6 @@ NN::get_nn_chanels(int qbit_num, int levels, Matrix_real& chanels, matrix_base<i
 
 
 
-
-
-    //matrix size of the unitary
-    int matrix_size = 1 << qbit_num;
 
     // empty config parameters
     std::map<std::string, Config_Element> config_int;

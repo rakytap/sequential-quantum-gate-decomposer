@@ -877,7 +877,7 @@ std::vector<std::vector<double>> cuts_avg_tail_grad(const std::vector<std::vecto
         })->size());
     std::vector<std::vector<double>> Lc;
     Lc.reserve(C);
-    for (int c = 0; c < C; ++c) {
+    for (size_t c = 0; c < C; ++c) {
         Lc.emplace_back(tail_loss_grad_diag(cuts_S[c], max_dyadic, Fnorm * C, rho));
     }
     return Lc;

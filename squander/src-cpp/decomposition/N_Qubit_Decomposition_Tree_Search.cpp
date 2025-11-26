@@ -443,7 +443,7 @@ N_Qubit_Decomposition_Tree_Search::determine_gate_structure(Matrix_real& optimiz
     std::map<std::pair<int, int>, std::vector<int>> pair_affects;
     for (const auto& pair : topology) {
         std::vector<int> cuts;
-        for (int i = 0; i < all_cuts.size(); ++i) {
+        for (size_t i = 0; i < all_cuts.size(); ++i) {
             const auto& A = all_cuts[i];
             if ((std::find(A.begin(), A.end(), pair[0]) != A.end()) ^ (std::find(A.begin(), A.end(), pair[1]) != A.end())) {
                 cuts.push_back(i);
@@ -502,7 +502,7 @@ N_Qubit_Decomposition_Tree_Search::determine_gate_structure(Matrix_real& optimiz
             double current_minimum_tmp;
             for (int iter = 0; iter < 5; iter++) {
                 optimized_parameters.resize( cDecomp_custom_random.get_parameter_num() );
-                for(int idx = 0; idx < optimized_parameters.size(); idx++) {
+                for(size_t idx = 0; idx < optimized_parameters.size(); idx++) {
                     optimized_parameters[idx] = distrib_real(gen);
                 }                        
                 cDecomp_custom_random.set_optimized_parameters( optimized_parameters.data(), static_cast<int>(optimized_parameters.size()) );
@@ -633,7 +633,7 @@ N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures_gl( int leve
                 optimized_parameters.resize( cDecomp_custom_random.get_parameter_num() );
                 std::map<int, Matrix_real> best_params;
                 for (int iters = 0; iters < 1; iters++) {
-                    for(int idx = 0; idx < optimized_parameters.size(); idx++) {
+                    for(size_t idx = 0; idx < optimized_parameters.size(); idx++) {
                         optimized_parameters[idx] = distrib_real(gen);
                     }
                     cDecomp_custom_random.set_optimized_parameters( optimized_parameters.data(), static_cast<int>(optimized_parameters.size()) );

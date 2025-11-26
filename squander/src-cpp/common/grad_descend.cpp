@@ -153,7 +153,6 @@ void  Grad_Descend::line_search(Matrix_real& x, Matrix_real& g, Matrix_real& sea
     double f_best         = f;
     double d__dot__g_abs_best = fabs(d__dot__g0);
 
-    double d__dot__g_lowest = d__dot__g0;
     double d__dot__g_highest = 0.0;
 
     
@@ -198,7 +197,6 @@ void  Grad_Descend::line_search(Matrix_real& x, Matrix_real& g, Matrix_real& sea
 
             step_lowest      = step;
             f_lowest         = f;
-            d__dot__g_lowest = d__dot__g_current;
             
         
         }
