@@ -178,7 +178,7 @@ N_Qubit_Decomposition_Tabu_Search::tabu_search_over_gate_structures() {
     double inverz_temperature = 1.0;
     std::vector<GrayCode> possible_gate_structures;
 
-    long long use_osr = 1;
+    long long use_osr = 0;
     if (config.count("use_osr") > 0) {
         config["use_osr"].get_property(use_osr);
     }

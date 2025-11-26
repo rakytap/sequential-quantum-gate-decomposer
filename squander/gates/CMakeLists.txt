@@ -44,6 +44,13 @@ set_target_properties( qgd_Circuit_Wrapper PROPERTIES
                         INSTALL_RPATH "$ORIGIN/.."
                         LIBRARY_OUTPUT_DIRECTORY ${EXT_DIR}
 )
+# Set BUILD_RPATH to prioritize conda libraries
+if(DEFINED ENV{CONDA_PREFIX})
+    set_target_properties(qgd_Circuit_Wrapper PROPERTIES
+        BUILD_RPATH "${CONDA_PREFIX}/lib"
+        BUILD_RPATH_USE_ORIGIN TRUE
+    )
+endif()
 
 
 install(TARGETS qgd_Circuit_Wrapper LIBRARY 
@@ -96,6 +103,13 @@ set_target_properties( gates_Wrapper PROPERTIES
                         INSTALL_RPATH "$ORIGIN/.."
                         LIBRARY_OUTPUT_DIRECTORY ${EXT_DIR}
 )
+# Set BUILD_RPATH to prioritize conda libraries
+if(DEFINED ENV{CONDA_PREFIX})
+    set_target_properties(gates_Wrapper PROPERTIES
+        BUILD_RPATH "${CONDA_PREFIX}/lib"
+        BUILD_RPATH_USE_ORIGIN TRUE
+    )
+endif()
 
 install(TARGETS gates_Wrapper LIBRARY 
          DESTINATION squander/gates)

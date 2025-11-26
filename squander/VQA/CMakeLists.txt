@@ -46,6 +46,13 @@ set_target_properties( qgd_Variational_Quantum_Eigensolver_Base_Wrapper PROPERTI
                         INSTALL_RPATH "$ORIGIN/.."
                         LIBRARY_OUTPUT_DIRECTORY ${EXT_DIR}
 )
+# Set BUILD_RPATH to prioritize conda libraries
+if(DEFINED ENV{CONDA_PREFIX})
+    set_target_properties(qgd_Variational_Quantum_Eigensolver_Base_Wrapper PROPERTIES
+        BUILD_RPATH "${CONDA_PREFIX}/lib"
+        BUILD_RPATH_USE_ORIGIN TRUE
+    )
+endif()
 
 
 
@@ -97,6 +104,13 @@ set_target_properties( qgd_Generative_Quantum_Machine_Learning_Base_Wrapper PROP
                         INSTALL_RPATH "$ORIGIN/.."
                         LIBRARY_OUTPUT_DIRECTORY ${EXT_DIR}
 )
+# Set BUILD_RPATH to prioritize conda libraries
+if(DEFINED ENV{CONDA_PREFIX})
+    set_target_properties(qgd_Generative_Quantum_Machine_Learning_Base_Wrapper PROPERTIES
+        BUILD_RPATH "${CONDA_PREFIX}/lib"
+        BUILD_RPATH_USE_ORIGIN TRUE
+    )
+endif()
 
 
 

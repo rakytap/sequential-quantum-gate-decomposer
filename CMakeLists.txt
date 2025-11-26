@@ -8,6 +8,22 @@ project(CQGD VERSION 1.9.5)
 # reuse compilation time linking for use runtime linking 
 SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
+# Configure RPATH to prioritize conda libraries and avoid conflicts
+if(DEFINED ENV{CONDA_PREFIX})
+    set(CONDA_PREFIX "$ENV{CONDA_PREFIX}")
+    set(CONDA_LIB_DIR "${CONDA_PREFIX}/lib")
+    # Add conda lib directory to BUILD_RPATH to prioritize conda libraries at runtime
+    set(CMAKE_BUILD_RPATH "${CONDA_LIB_DIR}" ${CMAKE_BUILD_RPATH})
+    set(CMAKE_BUILD_RPATH_USE_ORIGIN TRUE)
+    # Suppress RPATH warnings when conda libraries are prioritized
+    # These warnings occur because system libraries might conflict with conda libraries,
+    # but BUILD_RPATH ensures conda libraries are found first
+    if(POLICY CMP0144)
+        cmake_policy(SET CMP0144 NEW)
+    endif()
+    message(STATUS "Configured BUILD_RPATH to prioritize conda libraries: ${CONDA_LIB_DIR}")
+endif()
+
 # specify the C++ standard
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
@@ -60,11 +76,12 @@ find_package(NumPy REQUIRED)
 
 
 # contruct library directories
-exec_program(${PYTHON_EXECUTABLE}
-             ARGS "-c \"from distutils.sysconfig import get_python_lib; tmp = [s + '/../..' for s in [get_python_lib()]]; ret=';'.join(tmp); print(ret)\""
-             OUTPUT_VARIABLE PYTHON_SYS_PATH
-             RETURN_VALUE SYSPATH_NOT_FOUND
-            )
+execute_process(
+    COMMAND ${PYTHON_EXECUTABLE} -c "from distutils.sysconfig import get_python_lib; tmp = [s + '/../..' for s in [get_python_lib()]]; ret=';'.join(tmp); print(ret)"
+    OUTPUT_VARIABLE PYTHON_SYS_PATH
+    RESULT_VARIABLE SYSPATH_NOT_FOUND
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
 if(SYSPATH_NOT_FOUND)
     message(FATAL_ERROR "Python syspath not found")
 endif()
@@ -75,11 +92,12 @@ message("Python syspaths: " ${PYTHON_SYS_PATH})
 
 
 # contruct include directories
-exec_program(${PYTHON_EXECUTABLE}
-             ARGS "-c \"from distutils.sysconfig import get_python_lib; tmp = [s + '/../../../include' for s in [get_python_lib()]]; ret=';'.join(tmp); print(ret)\""
-             OUTPUT_VARIABLE CMAKE_REQUIRED_INCLUDES
-             RETURN_VALUE SYSPATH_NOT_FOUND
-            )
+execute_process(
+    COMMAND ${PYTHON_EXECUTABLE} -c "from distutils.sysconfig import get_python_lib; tmp = [s + '/../../../include' for s in [get_python_lib()]]; ret=';'.join(tmp); print(ret)"
+    OUTPUT_VARIABLE CMAKE_REQUIRED_INCLUDES
+    RESULT_VARIABLE SYSPATH_NOT_FOUND
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
 if(SYSPATH_NOT_FOUND)
     message(FATAL_ERROR "Python include path not found")
 endif()
@@ -744,6 +762,14 @@ target_include_directories(qgd PRIVATE
 configure_file(${PROJECT_SOURCE_DIR}/squander/src-cpp/common/include/Config.h.in
                ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/include/Config.h)
 
+
+# Set BUILD_RPATH for qgd to prioritize conda libraries
+if(DEFINED ENV{CONDA_PREFIX})
+    set_target_properties(qgd PROPERTIES
+        BUILD_RPATH "${CONDA_PREFIX}/lib"
+        BUILD_RPATH_USE_ORIGIN TRUE
+    )
+endif()
 
 set_target_properties(
     qgd
