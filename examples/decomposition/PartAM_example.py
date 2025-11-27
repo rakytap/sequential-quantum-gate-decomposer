@@ -35,7 +35,7 @@ if __name__ == '__main__':
             'test_subcircuits': True,
             'test_final_circuit': True,
             'max_partition_size': 3,
-            'diagnostics': True,  # Enable diagnostic output
+            'progressbar': True,  # Enable diagnostic output
     }
 
     filename = "benchmarks/qfast/4q/adder_q4.qasm"
@@ -71,9 +71,6 @@ if __name__ == '__main__':
     PartAM_state = initial_state.copy()
     circ_Final.apply_to(params, PartAM_state)
     state_error = 1 - abs(np.vdot(PartAM_state, original_state))
-    print(Qiskit_IO.get_Qiskit_Circuit(circ.get_Flat_Circuit(),params))
-    print(f"PartAM_state probability: {np.abs(PartAM_state)**2}")
-    print(f"original_state probability: {np.abs(original_state)**2}")
     print(f"\n{'='*70}")
     print(f"State Vector Validation")
     print(f"{'='*70}")
