@@ -367,7 +367,7 @@ class qgd_Partition_Aware_Mapping:
         step = 0
         
         # Determine number of processes for parallel scoring
-        num_processes = self.config.get('parallel_scoring_processes', min(mp.cpu_count(), 4))
+        num_processes = self.config.get('parallel_scoring_processes', min(mp.cpu_count(), 64))
         use_parallel = num_processes > 1 and len(F) > 1
         
         # Initialize progress bar
