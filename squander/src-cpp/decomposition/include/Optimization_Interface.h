@@ -37,42 +37,16 @@ limitations under the License.
 
 
 
-/// @brief Type definition of the fifferent types of the cost function
+/// @brief Type definition of the different types of the cost function
 typedef enum cost_function_type {FROBENIUS_NORM, FROBENIUS_NORM_CORRECTION1, FROBENIUS_NORM_CORRECTION2,
     HILBERT_SCHMIDT_TEST, HILBERT_SCHMIDT_TEST_CORRECTION1, HILBERT_SCHMIDT_TEST_CORRECTION2,
-    SUM_OF_SQUARES, VQE, GQML, INFIDELITY} cost_function_type;
+    SUM_OF_SQUARES, VQE, GQML, INFIDELITY, OSR_ENTANGLEMENT} cost_function_type;
 
 
 
 /// implemented optimization strategies
 enum optimization_aglorithms{ ADAM, BFGS, BFGS2, ADAM_BATCHED, AGENTS, COSINE, AGENTS_COMBINED, GRAD_DESCEND, BAYES_OPT, BAYES_AGENTS, GRAD_DESCEND_PARAMETER_SHIFT_RULE};
 
-
-#ifdef __cplusplus
-extern "C" 
-{
-#endif
-
-/// Definition of the zggev function from Lapacke to calculate the eigenvalues of a complex matrix
-int LAPACKE_zggev 	( 	int  	matrix_layout,
-		char  	jobvl,
-		char  	jobvr,
-		int  	n,
-		QGD_Complex16 *  	a,
-		int  	lda,
-		QGD_Complex16 *  	b,
-		int  	ldb,
-		QGD_Complex16 *  	alpha,
-		QGD_Complex16 *  	beta,
-		QGD_Complex16 *  	vl,
-		int  	ldvl,
-		QGD_Complex16 *  	vr,
-		int  	ldvr 
-	); 	
-
-#ifdef __cplusplus
-}
-#endif
 
 
 
@@ -111,6 +85,8 @@ protected:
     double correction1_scale;
     /// prefactor of the double-bitflip errors in the cost function. (see Eq. (21) in arXiv:2210.09191)
     double correction2_scale;    
+    /// cuts used for OSR entanglement cost function
+    std::vector<std::vector<int>> use_cuts;
     
 
     /// number of iterations
@@ -311,7 +287,7 @@ void solve_layer_optimization_problem_ADAM( int num_of_parameters, Matrix_real& 
 @param output The randomized parameters are stored within this array
 @param f0 weight in the randomiztaion (output = input + rand()*sqrt(f0) ).
 */
-void randomize_parameters( Matrix_real& input, Matrix_real& output, const double& f0 );
+void randomize_parameters( Matrix_real& input, Matrix_real& output, const double f0 );
 
 
 /**

@@ -21,62 +21,57 @@ limitations under the License.
 
 """
 
-## \file qgd_N_Qubit_Decomposition.py
-##    \brief A QGD Python interface class for the decomposition of N-qubit unitaries into a set of two-qubit and one-qubit gates.
+## \file qgd_Generative_Quantum_Machine_Learning_Base.py
+##    \brief A QGD Python interface class for solvin generative quantum machine learning problems.
 
 
 import numpy as np
 from os import path
-from squander.variational_quantum_eigensolver.qgd_Variational_Quantum_Eigensolver_Base_Wrapper import qgd_Variational_Quantum_Eigensolver_Base_Wrapper
+from squander.VQA.qgd_Generative_Quantum_Machine_Learning_Base_Wrapper import qgd_Generative_Quantum_Machine_Learning_Base_Wrapper
 from squander.gates.qgd_Circuit import qgd_Circuit
 
 
 
 ##
-# @brief A QGD Python interface class for the decomposition of N-qubit unitaries into U3 and CNOT gates.
-class qgd_Variational_Quantum_Eigensolver_Base(qgd_Variational_Quantum_Eigensolver_Base_Wrapper):
+# @brief A QGD Python interface class for solvin generative quantum machine learning problems.
+class qgd_Generative_Quantum_Machine_Learning_Base(qgd_Generative_Quantum_Machine_Learning_Base_Wrapper):
     
     
 ## 
 # @brief Constructor of the class.
-# @param Umtx The unitary matrix to be decomposed.
-# @param optimize_layer_num Set true to optimize the minimum number of operation layers required in the decomposition, or false when the predefined maximal number of layer gates is used (ideal for general unitaries).
-# @param initial_guess String indicating the method to guess initial values for the optimalization. Possible values: "zeros" ,"random", "close_to_zero".
+# @param x_bitstrings The input data bitstrings
+# @param P_star The distribution to approximate
+# @param sigma Parameter of the gaussian kernels
+# @param qbit_num The number of qubits spanning the unitary Umtx
+# @param use_lookup_table_in Use lookup table for the gaussian kernel (may take up large amount of memory)
 # @return An instance of the class
-    def __init__( self, Hamiltonian, qbit_num, config={}, accelerator_num=0):
+    def __init__( self, x_bitstrings, p_stars, sigma, qbit_num, use_lookup_table, cliques, use_exact, config, accelerator_num):
     
-
-        # config
-        if not( type(config) is dict):
-            print("Input parameter config should be a dictionary describing the following hyperparameters:") #TODO
-            return
-
-
         # call the constructor of the wrapper class
-        super(qgd_Variational_Quantum_Eigensolver_Base, self).__init__(Hamiltonian.data, Hamiltonian.indices, Hamiltonian.indptr, qbit_num, config=config, accelerator_num=accelerator_num)
+        super(qgd_Generative_Quantum_Machine_Learning_Base, self).__init__(x_bitstrings.data, p_stars.data, sigma, qbit_num, use_lookup_table, cliques, use_exact, config, accelerator_num)
         self.qbit_num = qbit_num
 
 
 ## 
-# @brief Call to set the optimizer used in the VQE process
+# @brief Call to set the optimizer used in the GQML process
 # @param optimizer String indicating the optimizer. Possible values: "BFGS" ,"ADAM", "BFGS2", "ADAM_BATCHED", "AGENTS", "COSINE", "AGENTS_COMBINED".
     def set_Optimizer(self, alg):    
 
-        super(qgd_Variational_Quantum_Eigensolver_Base, self).set_Optimizer(alg)
+        super(qgd_Generative_Quantum_Machine_Learning_Base, self).set_Optimizer(alg)
 
 ## 
-# @brief Call to start solving the VQE problem to get the approximation for the ground state   
+# @brief Call to start solving the GQML problem
     def Start_Optimization(self):
 
 	# call the C wrapper function
-        super(qgd_Variational_Quantum_Eigensolver_Base, self).Start_Optimization()
+        super(qgd_Generative_Quantum_Machine_Learning_Base, self).Start_Optimization()
 
 ## 
 # @brief Call to get the optimized parameters set in numpy array
 # @return Returns with the optimized parameters    
     def get_Optimized_Parameters(self):
     
-        return super(qgd_Variational_Quantum_Eigensolver_Base, self).get_Optimized_Parameters()
+        return super(qgd_Generative_Quantum_Machine_Learning_Base, self).get_Optimized_Parameters()
 
 
 ## 
@@ -84,14 +79,14 @@ class qgd_Variational_Quantum_Eigensolver_Base(qgd_Variational_Quantum_Eigensolv
 # @param A numpy array containing the parameters. The number of parameters can be  retrieved with method get_Parameter_Num        
     def set_Optimized_Parameters(self, new_params):
         
-        super(qgd_Variational_Quantum_Eigensolver_Base, self).set_Optimized_Parameters(new_params)
+        super(qgd_Generative_Quantum_Machine_Learning_Base, self).set_Optimized_Parameters(new_params)
 
 
 
 # TODO should be deleted!        
     def set_Optimization_Tolerance(self, tolerance):
     
-        super(qgd_Variational_Quantum_Eigensolver_Base, self).set_Optimization_Tolerance(tolerance)
+        super(qgd_Generative_Quantum_Machine_Learning_Base, self).set_Optimization_Tolerance(tolerance)
 
 
 ##
@@ -99,14 +94,14 @@ class qgd_Variational_Quantum_Eigensolver_Base(qgd_Variational_Quantum_Eigensolv
 # @param project_name_new new project name      
     def set_Project_Name(self, project_name):
     
-        super(qgd_Variational_Quantum_Eigensolver_Base, self).set_Project_Name(project_name)
+        super(qgd_Generative_Quantum_Machine_Learning_Base, self).set_Project_Name(project_name)
 
 ##
 # @brief Call to set custom layers to the gate structure that are intended to be used in the decomposition from a binary file created from SQUANDER
 # @param filename String containing the filename        
     def set_Gate_Structure_from_Binary(self, filename):
     
-        super(qgd_Variational_Quantum_Eigensolver_Base, self).set_Gate_Structure_From_Binary(filename)
+        super(qgd_Generative_Quantum_Machine_Learning_Base, self).set_Gate_Structure_From_Binary(filename)
 
 
 ##
@@ -114,7 +109,7 @@ class qgd_Variational_Quantum_Eigensolver_Base(qgd_Variational_Quantum_Eigensolv
 # @param ansatz_new String of the ansatz . Possible values: "HEA" (hardware efficient ansatz with U3 and CNOT gates).
     def set_Ansatz(self, ansatz_new):
         
-        super(qgd_Variational_Quantum_Eigensolver_Base, self).set_Ansatz(ansatz_new)
+        super(qgd_Generative_Quantum_Machine_Learning_Base, self).set_Ansatz(ansatz_new)
         
 ##
 # @brief Call to generate the circuit ansatz
@@ -122,21 +117,15 @@ class qgd_Variational_Quantum_Eigensolver_Base(qgd_Variational_Quantum_Eigensolv
 # @param inner_blocks The number of U3-CNOT repetition within a single layer
     def Generate_Circuit(self, layers, inner_blocks=1):
     
-        super(qgd_Variational_Quantum_Eigensolver_Base, self).Generate_Circuit( layers, inner_blocks )
+        super(qgd_Generative_Quantum_Machine_Learning_Base, self).Generate_Circuit( layers, inner_blocks )
         
 ## 
-# @brief Call to evaluate the VQE energy.
+# @brief Call to evaluate the MMD between our and the goal distribution.
 # @param parameters A float64 numpy array. The number of parameters can be  retrieved with method get_Parameter_Num 
     def Optimization_Problem(self, parameters):
     
-        return super(qgd_Variational_Quantum_Eigensolver_Base, self).Optimization_Problem(parameters)
+        return super(qgd_Generative_Quantum_Machine_Learning_Base, self).Optimization_Problem(parameters)
 
-## 
-# @brief Call to evaluate the VQE energy.
-# @param parameters A float64 numpy array. The number of parameters can be  retrieved with method get_Parameter_Num 
-    def Optimization_Problem_Grad(self, parameters):
-    
-        return super(qgd_Variational_Quantum_Eigensolver_Base, self).Optimization_Problem_Grad(parameters)
 
 ##
 # @brief Call to get the second Rényi entropy
@@ -176,7 +165,7 @@ class qgd_Variational_Quantum_Eigensolver_Base(qgd_Variational_Quantum_Eigensolv
             input_state[0] = 1
 
         # evaluate the entropy
-        entropy = super(qgd_Variational_Quantum_Eigensolver_Base, self).get_Second_Renyi_Entropy( parameters, input_state, qubit_list_validated)  
+        entropy = super(qgd_Generative_Quantum_Machine_Learning_Base, self).get_Second_Renyi_Entropy( parameters, input_state, qubit_list_validated)  
 
 
         return entropy
@@ -187,14 +176,14 @@ class qgd_Variational_Quantum_Eigensolver_Base(qgd_Variational_Quantum_Eigensolv
 # @return Returns with the number of qubits
     def get_Qbit_Num(self):
     
-        return super(qgd_Variational_Quantum_Eigensolver_Base, self).get_Qbit_Num()
+        return super(qgd_Generative_Quantum_Machine_Learning_Base, self).get_Qbit_Num()
 
 
 ##
 # @brief Call to get the number of free parameters in the gate structure used for the decomposition
     def get_Parameter_Num( self ):
 
-        return super(qgd_Variational_Quantum_Eigensolver_Base, self).get_Parameter_Num()
+        return super(qgd_Generative_Quantum_Machine_Learning_Base, self).get_Parameter_Num()
         
         
 
@@ -234,7 +223,7 @@ class qgd_Variational_Quantum_Eigensolver_Base(qgd_Variational_Quantum_Eigensolv
 # @brief Call to get the number of free parameters in the gate structure used for the decomposition
     def set_Initial_State( self, initial_state ):
 
-        super(qgd_Variational_Quantum_Eigensolver_Base, self).set_Initial_State( initial_state )
+        super(qgd_Generative_Quantum_Machine_Learning_Base, self).set_Initial_State( initial_state )
 
 
 ##

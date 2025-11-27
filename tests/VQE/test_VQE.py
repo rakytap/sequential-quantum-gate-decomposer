@@ -1,6 +1,6 @@
 from scipy.stats import unitary_group
 import numpy as np
-from squander.variational_quantum_eigensolver.qgd_Variational_Quantum_Eigensolver_Base import qgd_Variational_Quantum_Eigensolver_Base as Variational_Quantum_Eigensolver_Base
+from squander.VQA.qgd_Variational_Quantum_Eigensolver_Base import qgd_Variational_Quantum_Eigensolver_Base as Variational_Quantum_Eigensolver_Base
 from squander import utils as utils
 import time
 import sys

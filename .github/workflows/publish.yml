@@ -1,0 +1,300 @@
+name: Publish to PyPI
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump-segment:
+        description: "SemVer segment to bump (major, minor, patch)"
+        required: false
+        default: patch
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  # bump-version:
+  #   runs-on: ubuntu-latest
+  #   outputs:
+  #     version: ${{ steps.bump.outputs.version }}
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v4
+  #       with:
+  #         token: ${{ secrets.GITHUB_TOKEN }}
+  #         fetch-depth: 0
+
+  #     - name: Set up Python
+  #       uses: actions/setup-python@v5
+  #       with:
+  #         python-version: "3.11"
+
+  #     - name: Install dependencies
+  #       run: |
+  #         python -m pip install --upgrade pip
+  #         python -m pip install packaging
+
+  #     - name: Bump project version
+  #       id: bump
+  #       env:
+  #         BUMP_SEGMENT: ${{ github.event.inputs.bump-segment || 'patch' }}
+  #       run: python .github/scripts/bump_version.py
+
+  #     - name: Commit version bump
+  #       run: |
+  #         git config --local user.email "peter.rakyta@ttk.elte.hu"
+  #         git config --local user.name "Peter Rakyta"
+  #         git add setup.py CMakeLists.txt Doxyfile
+  #         git commit -m "Bump version to ${{ steps.bump.outputs.version }}"
+  #         git push
+
+  build-wheels:
+    #needs: bump-version
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ["3.13"]
+        exclude:
+          # Reduce build matrix - adjust as needed
+          - os: windows-latest
+            python-version: "3.10"
+          - os: macos-latest
+            python-version: "3.10"
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Miniconda (Windows)
+        if: runner.os == 'Windows'
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          auto-update-conda: true
+          python-version: ${{ matrix.python-version }}
+          channels: conda-forge
+
+      - name: Set up Python
+        if: runner.os != 'Windows'
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Linux system dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            cmake \
+            libtbb-dev \
+            libopenblas-dev \
+            liblapacke-dev \
+            patchelf
+
+      - name: Install macOS system dependencies
+        if: runner.os == 'macOS'
+        run: |
+          brew install cmake tbb openblas lapack
+
+      - name: Install Windows system dependencies
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          conda install -c conda-forge cmake tbb-devel openblas lapack -y
+          # Get active conda environment
+          $envPath = conda env list | Select-String '\*' | ForEach-Object { ($_ -split '\s+', 3)[1] }
+          if (-not $envPath) {
+            $envPath = conda info --base
+          }
+          # Convert to forward slashes for GITHUB_ENV (CMake accepts both)
+          $envPath = $envPath.Replace('\', '/')
+          $tbbLib = "$envPath/Library/lib"
+          $tbbInc = "$envPath/Library/include"
+          
+          # Verify TBB installation
+          Write-Host "Checking TBB installation..."
+          Write-Host "Environment path: $envPath"
+          Write-Host "TBB include path: $tbbInc"
+          Write-Host "TBB lib path: $tbbLib"
+          if (Test-Path "$tbbInc/tbb/tbb.h") {
+            Write-Host "TBB header found at: $tbbInc/tbb/tbb.h"
+          } else {
+            Write-Host "WARNING: TBB header not found at: $tbbInc/tbb/tbb.h"
+            # Try to find it
+            $foundTbb = Get-ChildItem -Path "$envPath" -Recurse -Filter "tbb.h" -ErrorAction SilentlyContinue | Select-Object -First 1
+            if ($foundTbb) {
+              $actualTbbInc = $foundTbb.DirectoryName.Replace('\', '/')
+              Write-Host "Found TBB header at: $actualTbbInc"
+              $tbbInc = $actualTbbInc
+            }
+          }
+          # Write to GITHUB_ENV using Out-File
+          "TBB_LIB_DIR=$tbbLib" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          "TBB_INC_DIR=$tbbInc" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          "BLAS_LIB_DIR=$tbbLib" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          "CONDA_PREFIX=$envPath" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      - name: Install build dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install build setuptools wheel scikit-build ninja numpy
+
+      - name: Install wheel repair tools (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          python -m pip install auditwheel
+
+      - name: Install wheel repair tools (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          python -m pip install delocate
+
+      - name: Install wheel repair tools (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          python -m pip install delvewheel
+
+      - name: Set environment variables (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          echo "TBB_LIB_DIR=/usr/lib/x86_64-linux-gnu" >> $GITHUB_ENV
+          echo "TBB_INC_DIR=/usr/include" >> $GITHUB_ENV
+
+      - name: Set environment variables (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          echo "TBB_LIB_DIR=$(brew --prefix tbb)/lib" >> $GITHUB_ENV
+          echo "TBB_INC_DIR=$(brew --prefix tbb)/include" >> $GITHUB_ENV
+
+      - name: Build wheel
+        env:
+          TBB_LIB_DIR: ${{ env.TBB_LIB_DIR }}
+          TBB_INC_DIR: ${{ env.TBB_INC_DIR }}
+        run: |
+          python -m build --wheel
+
+      - name: Repair wheel (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          auditwheel repair dist/*.whl -w dist/
+          # Remove original wheel, keep only repaired one
+          rm -f dist/*linux_x86_64.whl
+
+      - name: Repair wheel (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          for wheel in dist/*.whl; do
+            if [[ "$wheel" != *"wheelhouse"* ]]; then
+              delocate-wheel -w dist/ "$wheel"
+              # Remove original wheel, keep only repaired one
+              rm -f "$wheel" || true
+            fi
+          done
+
+      - name: Repair wheel (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $wheel = Get-ChildItem dist/*.whl | Where-Object { $_.Name -notlike "*wheelhouse*" } | Select-Object -First 1
+          
+          if (-not $wheel) {
+            Write-Host "ERROR: No wheel file found in dist/"
+            exit 1
+          }
+          
+          Write-Host "Repairing wheel: $($wheel.Name)"
+          
+          # Extract wheel to inspect structure
+          $tempDir = Join-Path $env:TEMP "wheel_inspect_$(Get-Random)"
+          New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
+          
+          try {
+            Expand-Archive -Path $wheel.FullName -DestinationPath $tempDir -Force
+            
+            # Find qgd.dll
+            $dll = Get-ChildItem -Path $tempDir -Recurse -Filter "qgd.dll" | Select-Object -First 1
+            
+            if ($dll) {
+              # Get the path relative to wheel root
+              $relativePath = $dll.FullName.Replace($tempDir, "").TrimStart('\').Replace('\', '/')
+              Write-Host "Found qgd.dll at: $relativePath"
+              
+              # Extract the directory path (e.g., "squander-1.9.4.data/data/bin")
+              if ($relativePath -match '(.+)/qgd\.dll$') {
+                $dllDir = $matches[1]
+                Write-Host "DLL directory in wheel: $dllDir"
+                
+                # Use both --add-dll and --add-path
+                # --add-dll tells delvewheel to explicitly include this DLL
+                # --add-path tells it where to find DLLs to analyze dependencies
+                Write-Host "Running delvewheel repair with --add-dll and --add-path"
+                delvewheel repair $wheel.FullName -w dist/ --add-dll qgd.dll --add-path "$dllDir" --no-diagnostic
+              } else {
+                # Fallback: try with just the data directory
+                if ($relativePath -match '([^/]+\.data)') {
+                  $dataDirName = $matches[1]
+                  Write-Host "Using data directory: $dataDirName/data/bin"
+                  delvewheel repair $wheel.FullName -w dist/ --add-dll qgd.dll --add-path "$dataDirName/data/bin" --no-diagnostic
+                } else {
+                  Write-Host "Using --add-dll only"
+                  delvewheel repair $wheel.FullName -w dist/ --add-dll qgd.dll --no-diagnostic
+                }
+              }
+            } else {
+              Write-Host "Warning: qgd.dll not found, using default repair"
+              delvewheel repair $wheel.FullName -w dist/ --no-diagnostic
+            }
+          } finally {
+            Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue
+          }
+          
+          # Remove original wheel (delvewheel creates a new one in dist/)
+          #Remove-Item $wheel.FullName -ErrorAction SilentlyContinue
+          
+          Write-Host "Repair complete. Wheels in dist/:"
+          Get-ChildItem dist/*.whl | ForEach-Object { Write-Host "  $($_.Name)" }
+
+      - name: Upload wheel artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheels-${{ matrix.os }}-py${{ matrix.python-version }}
+          path: dist/*.whl
+          retention-days: 1
+
+  # publish:
+  #   needs: [bump-version, build-wheels]
+  #   runs-on: ubuntu-latest
+  #   if: needs.bump-version.outputs.version != ''
+  #   steps:
+  #     - name: Download all wheels
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         pattern: wheels-*
+  #         path: dist/
+  #         merge-multiple: true
+
+  #     - name: Display wheel files
+  #       run: |
+  #         echo "Wheels to be published:"
+  #         ls -lh dist/*.whl || echo "No wheels found"
+
+  #     - name: Publish to PyPI
+  #       uses: pypa/gh-action-pypi-publish@release/v1
+  #       with:
+  #         password: ${{ secrets.PYPI_API_TOKEN }}
+  #         packages-dir: dist/
+  #         verbose: true
+
+  #     - name: Create GitHub Release
+  #       run: |
+  #         gh release create "v${{ needs.bump-version.outputs.version }}" \
+  #           --title "Release v${{ needs.bump-version.outputs.version }}" \
+  #           --notes "## Release v${{ needs.bump-version.outputs.version }}
+          
+  #         This release includes version ${{ needs.bump-version.outputs.version }} of the squander package.
+          
+  #         ### Changes
+  #         - Version bumped to ${{ needs.bump-version.outputs.version }}
+  #         - Package published to PyPI with wheels for Linux, Windows, and macOS"
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -11,8 +11,8 @@ The Sequential Quantum Gate Decomposer (SQUANDER) package introduces innovative 
 
 The SQUANDER library is written in C/C++ providing a Python interface via [C++ extensions](https://docs.python.org/3/library/ctypes.html).
 The present package is supplied with Python building script and CMake tools to ease its deployment.
-The SQUANDER package can be built with both Intel and GNU compilers, and can be link against various CBLAS libraries installed on the system.
-(So far the CLBAS libraries of the GNU Scientific Library, OpenBLAS and the Intel MKL packages were tested.)
+The SQUANDER package can be built with both Intel and GNU compilers, and can be linked against various CBLAS libraries installed on the system.
+(So far the CBLAS libraries of the GNU Scientific Library, OpenBLAS and the Intel MKL packages were tested.)
 In the following we briefly summarize the steps to build, install and use the SQUANDER package. 
 
 
@@ -20,7 +20,7 @@ The project was supported by grant OTKA PD123927 and by the Ministry of Innovati
 Office within the Quantum Information National Laboratory of Hungary.
 
 
-Find the documantation of the SQUANDER package at [CodeDocs[xyz]](https://codedocs.xyz/rakytap/sequential-quantum-gate-decomposer/)
+Find the documentation of the SQUANDER package at [CodeDocs[xyz]](https://codedocs.xyz/rakytap/sequential-quantum-gate-decomposer/)
 
 
 
@@ -45,7 +45,7 @@ The dependencies necessary to compile and build the SQUANDER package are the fol
 * [LAPACKE](https://www.netlib.org/lapack/lapacke.html)
 * [Doxygen](https://www.doxygen.nl/index.html) (optional)
 
-The Python interface of SQUANDER was developed and tested with Python 3.6-3.10.
+The Python interface of SQUANDER was developed and tested with Python 3.6-3.13 (and may support newer versions).
 The SQUANDER Python interface needs the following packages to be installed on the system:
 
 * [Qiskit](https://qiskit.org/documentation/install.html)
@@ -61,13 +61,13 @@ The SQUANDER Python interface needs the following packages to be installed on th
 
 Since version 1.7.1 the SQUANDER package is accessible at Python Package Index (PyPI). The package can be installed on linux systems following the steps outlined below:
 
-$ pip install numpy swig tbb-devel wheel scikit-build ninja qiskit
+$ pip install numpy tbb-devel wheel scikit-build ninja qiskit
 
 $ pip install squander
 
 ### Download the SQUANDER package
 
-The developer version of the Quantum Gate Decomposer package can be downloaded from github repository [https://github.com/rakytap/quantum-gate-decomposer/tree/master](https://github.com/rakytap/quantum-gate-decomposer/tree/master).
+The developer version of the SQUANDER package can be downloaded from github repository [https://github.com/rakytap/sequential-quantum-gate-decomposer](https://github.com/rakytap/sequential-quantum-gate-decomposer).
 After the package is downloaded into the directory **path/to/SQUANDER/package** (which would be the path to the source code of the SQUANDER package), one can proceed to the compilation steps described in the next section.
 
 ### How to build the SQUANDER package on Unix/Linux/MacOS
@@ -76,7 +76,7 @@ The SQUANDER package is equipped with a Python build script and CMake tools to e
 The SQUANDER package is parallelized via Threading Building Block (TBB) libraries. If TBB is not present in the system, it can be easily installed via python package [tbb-devel](https://pypi.org/project/tbb-devel/).
 Alternatively the TBB libraries can be installed via apt or yum utility (sudo apt install libtbb-dev) or it can be downloaded from [https://github.com/oneapi-src/oneTBB](https://github.com/oneapi-src/oneTBB)   and built from source. 
 In this case one should supply the necessary environment variables pointing to the header and library files of the TBB package. For newer
-Intel compilers the TBB package is part of the Intel compiler package, similarly to the MKL package. If the TBB library is located at non-standrad path or the SQUANDER package is compiled with GNU compiler, then setting the
+Intel compilers the TBB package is part of the Intel compiler package, similarly to the MKL package. If the TBB library is located at non-standard path or the SQUANDER package is compiled with GNU compiler, then setting the
 
 $ export TBB_LIB_DIR=path/to/TBB/lib(64)
 
@@ -128,10 +128,10 @@ The binary wheel can be constructed by command
 
 $ python3 setup.py bdist_wheel
 
-in the root directory of the SQUADER package.
+in the root directory of the SQUANDER package.
 The created SQUANDER wheel can be installed on the local machine by issuing the command from the directory **path/to/SQUANDER/package/dist**
 
-$ pip3 install qgd-*.whl
+$ pip3 install squander-*.whl
 
 We notice, that the created wheel is not portable, since it contains hard coded link to external libraries (TBB and CBLAS).
 
@@ -146,7 +146,7 @@ In order to create a source distribution it is not necessary to set the environm
 In order to install the SQUANDER package from source tar ball, see the previous section discussing the initialization of the environment variables.
 The package can be compiled and installed by the command
 
-$ pip3 install qgd-*.tar.gz
+$ pip3 install squander-*.tar.gz
 
 issued from directory **path/to/SQUANDER/package/dist**
 (It is optional to install the ninja package which speeds up the building process by parallel compilation.)
@@ -185,17 +185,48 @@ $ python -m pytest
 
 ### How to use
 
-he Squander package provides high perfromance computational library to
+The SQUANDER package provides a high-performance computational library to:
 
-* decompose unitaries into a quantum circuti composed from single- and two-qubit gates.
-* simulate the evolution of state vectors under the effect of quantum circuits
-* generate quantum circuit for the pusrpose of state preparation 
-* run variational quantum algorithms with the incorporated quantum computer simulator.
+* **Decompose unitaries** into quantum circuits composed of single- and two-qubit gates using multiple decomposition methods:
+  - Standard decomposition (`N_Qubit_Decomposition`)
+  - Adaptive decomposition with circuit compression (`N_Qubit_Decomposition_adaptive`)
+  - Custom topology decomposition (`N_Qubit_Decomposition_custom`)
+  - Tree search decomposition (`N_Qubit_Decomposition_Tree_Search`)
+  - Tabu search decomposition (`N_Qubit_Decomposition_Tabu_Search`)
+* **Optimize wide quantum circuits** using the `Wide_Circuit_Optimization` class
+* **Prepare quantum states** via adaptive state preparation (`N_Qubit_State_Preparation_adaptive`)
+* **Run variational quantum algorithms** including:
+  - Variational Quantum Eigensolver (VQE) (`Variational_Quantum_Eigensolver`)
+  - Generative Quantum Machine Learning (GQML) (`Generative_Quantum_Machine_Learning`)
+* **Simulate quantum circuits** with high-performance state vector evolution
+* **Synthesize quantum circuits** using SABRE algorithm for qubit routing
+* **Partition large circuits** for efficient decomposition and optimization
+* **Interface with Qiskit** through the `Qiskit_IO` module for seamless integration
 
 ## Python Interface
 
-The SQUANDER package contains a Python interface allowing the access of the functionalities of the SQUANDER package from Python. 
-The usage of the SQUANDER Python interface is demonstrated in the example files in the directory **examples** located in the directory **path/to/SQUANDER/package**, or in test files located in sub-directories of **path/to/SQUANDER/package/qgd_python/*/test**. 
+The SQUANDER package provides a comprehensive Python interface that exposes all C++ functionality through Python bindings. The main modules include:
+
+* **`squander.decomposition`**: Quantum gate decomposition classes for decomposing unitaries and preparing quantum states
+* **`squander.gates`**: Quantum gate implementations and circuit building blocks (including standard gates like CNOT, H, RX, RY, RZ, and custom gates)
+* **`squander.VQA`**: Classes for VQE and generative quantum machine learning algorithms
+* **`squander.synthesis`**: Circuit synthesis tools including SABRE algorithm for qubit routing and mapping
+* **`squander.partitioning`**: Circuit partitioning utilities for breaking down large circuits into manageable sub-circuits
+* **`squander.IO_interfaces`**: Input/output interfaces including Qiskit integration (`Qiskit_IO`)
+* **`squander.utils`**: Utility functions for working with quantum circuits and unitaries
+* **`squander.nn`**: Experimental neural network interface for quantum machine learning
+
+### Example Usage
+
+The usage of the SQUANDER Python interface is demonstrated in the example files located in the **examples** directory:
+
+* **`examples/decomposition/`**: Examples of unitary decomposition with various methods
+* **`examples/VQE/`**: Variational quantum eigensolver examples
+* **`examples/state_preparation/`**: Quantum state preparation examples
+* **`examples/simulation/`**: Quantum circuit simulation benchmarks
+* **`examples/partitioning/`**: Circuit partitioning examples
+
+Test files demonstrating additional usage patterns can be found in the **tests** directory. 
 
 
 
@@ -206,7 +237,7 @@ If you have found our work useful for your research project, please cite us by
 [1] Péter Rakyta, Zoltán Zimborás, Approaching the theoretical limit in quantum gate decomposition, Quantum 6, 710 (2022). <br>
 [2] Péter Rakyta, Zoltán Zimborás, Efficient quantum gate decomposition via adaptive circuit compression, arXiv:2203.04426. <br>
 [3] Peter Rakyta, Gregory Morse, Jakab Nádori, Zita Majnay-Takács, Oskar Mencer, Zoltán Zimborás, Highly optimized quantum circuits synthesized via data-flow engines, Journal of Computational Physics 500, 112756 (2024). <br>
-[4] Jakab Nádori, Gregory Morse, Zita Majnay-Takács, Zoltán Zimborás, Péter Rakyta, The promising path of evolutionary optimization to avoid barren plateaus, arXiv:2402.05227.
+[4] Jakab Nádori, Gregory Morse, Barna Fülöp Villám, Zita Majnay-Takács, Zoltán Zimborás, Péter Rakyta, Batched Line Search Strategy for Navigating through Barren Plateaus in Quantum Circuit Training, Quantum 9, 1841 (2025).
 
 
 
