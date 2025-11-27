@@ -799,21 +799,31 @@ install(TARGETS qgd
 
 # Copy required DLLs on Windows
 if(WIN32 AND DEFINED ENV{CONDA_PREFIX})
-set(CONDA_BIN_DIR "$ENV{CONDA_PREFIX}/Library/bin")
-install(FILES
-    "${CONDA_BIN_DIR}/tbb12.dll"
-    "${CONDA_BIN_DIR}/tbbmalloc.dll"
-    "${CONDA_BIN_DIR}/tbbmalloc_proxy.dll"
-    DESTINATION squander
-    COMPONENT python
-    OPTIONAL
-)
-# Copy OpenBLAS and LAPACK DLLs if they exist
-file(GLOB OPENBLAS_DLLS "${CONDA_BIN_DIR}/openblas*.dll")
-file(GLOB LAPACK_DLLS "${CONDA_BIN_DIR}/lapack*.dll")
-install(FILES ${OPENBLAS_DLLS} ${LAPACK_DLLS}
-    DESTINATION squander
-    COMPONENT python
-    OPTIONAL
-)
+    # Convert Windows path to CMake path format (forward slashes)
+    file(TO_CMAKE_PATH "$ENV{CONDA_PREFIX}" CONDA_PREFIX_NORMALIZED)
+    set(CONDA_BIN_DIR "${CONDA_PREFIX_NORMALIZED}/Library/bin")
+    
+    # Verify the directory exists before trying to install files
+    if(EXISTS "${CONDA_BIN_DIR}")
+        install(FILES
+            "${CONDA_BIN_DIR}/tbb12.dll"
+            "${CONDA_BIN_DIR}/tbbmalloc.dll"
+            "${CONDA_BIN_DIR}/tbbmalloc_proxy.dll"
+            DESTINATION squander
+            COMPONENT python
+            OPTIONAL
+        )
+        # Copy OpenBLAS and LAPACK DLLs if they exist
+        file(GLOB OPENBLAS_DLLS "${CONDA_BIN_DIR}/openblas*.dll")
+        file(GLOB LAPACK_DLLS "${CONDA_BIN_DIR}/lapack*.dll")
+        if(OPENBLAS_DLLS OR LAPACK_DLLS)
+            install(FILES ${OPENBLAS_DLLS} ${LAPACK_DLLS}
+                DESTINATION squander
+                COMPONENT python
+                OPTIONAL
+            )
+        endif()
+    else()
+        message(WARNING "CONDA_BIN_DIR not found: ${CONDA_BIN_DIR}. Skipping DLL installation.")
+    endif()
 endif()
