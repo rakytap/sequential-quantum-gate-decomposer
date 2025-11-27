@@ -327,7 +327,14 @@ RL_experience::export_probabilities(){
 std::string filename = "probabilities.bin";
 
     const char* c_filename = filename.c_str();
+#ifdef _WIN32
+    errno_t err = fopen_s(&pFile, c_filename, "wb");
+    if (err != 0) {
+        pFile = NULL;
+    }
+#else
     pFile = fopen(c_filename, "wb");
+#endif
     if (pFile==NULL) {
         fputs ("File error",stderr); 
         std::string error("Cannot open file.");
@@ -366,7 +373,14 @@ RL_experience::import_probabilities(){
 std::string filename = "probabilities.bin";
 
     const char* c_filename = filename.c_str();
+#ifdef _WIN32
+    errno_t err = fopen_s(&pFile, c_filename, "rb");
+    if (err != 0) {
+        pFile = NULL;
+    }
+#else
     pFile = fopen(c_filename, "rb");
+#endif
     if (pFile==NULL) {
         fputs ("File error",stderr); 
         std::string error("Cannot open file.");

@@ -49,7 +49,7 @@ n_aryGrayCodeCounter::n_aryGrayCodeCounter( matrix_base<int>& n_ary_limits_in) {
 
     offset_max = n_ary_limits[0];
     for (size_t idx=1; idx<static_cast<size_t>(n_ary_limits.size()); idx++) {
-        offset_max *= n_ary_limits[idx];
+        offset_max *= static_cast<int64_t>(n_ary_limits[static_cast<int>(idx)]);
     }
 
     offset_max--;
@@ -78,7 +78,7 @@ n_aryGrayCodeCounter::n_aryGrayCodeCounter( matrix_base<int>& n_ary_limits_in, i
 
     offset_max = n_ary_limits[0];
     for (size_t idx=1; idx<static_cast<size_t>(n_ary_limits.size()); idx++) {
-        offset_max *= n_ary_limits[idx];
+        offset_max *= static_cast<int64_t>(n_ary_limits[static_cast<int>(idx)]);
     }
 
     offset_max--;
@@ -119,16 +119,18 @@ n_aryGrayCodeCounter::initialize( int64_t initial_offset ) {
     counter_chain = matrix_base<int>( 1, n_ary_limits.size() );
 
     for (size_t idx = 0; idx < static_cast<size_t>(n_ary_limits.size()); idx++) {
-        counter_chain[idx] = initial_offset % n_ary_limits[idx];
-        initial_offset /= n_ary_limits[idx]; 
+        counter_chain[static_cast<int>(idx)] = static_cast<int>(initial_offset % static_cast<int64_t>(n_ary_limits[static_cast<int>(idx)]));
+        initial_offset /= static_cast<int64_t>(n_ary_limits[static_cast<int>(idx)]); 
     }
 
     // determine the initial gray code corresponding to the given offset
     gray_code = GrayCode( n_ary_limits );
     int parity = 0;
-    for (unsigned long long jdx = n_ary_limits.size()-1; jdx != ~0ULL; jdx--) {
-        gray_code[jdx] = parity ? n_ary_limits[jdx] - 1 - counter_chain[jdx] : counter_chain[jdx];
-        parity = parity ^ (gray_code[jdx] & 1);
+    for (unsigned long long jdx = static_cast<unsigned long long>(n_ary_limits.size()-1); jdx != ~0ULL; jdx--) {
+        size_t jdx_size = static_cast<size_t>(jdx);
+        int jdx_int = static_cast<int>(jdx);
+        gray_code[jdx_size] = parity ? n_ary_limits[jdx_int] - 1 - counter_chain[jdx_int] : counter_chain[jdx_int];
+        parity = parity ^ (gray_code[jdx_size] & 1);
     }
 
 
@@ -216,15 +218,16 @@ n_aryGrayCodeCounter::next( int& changed_index, int& value_prev, int& value) {
 
     // determine the updated gray code
     int parity = 0;
-    for (size_t jdx = n_ary_limits.size()-1; jdx != ~0ULL; jdx--) {
-        int gray_code_new_val = parity ? n_ary_limits[jdx] - 1 - counter_chain[jdx] : counter_chain[jdx];
+    for (size_t jdx = static_cast<size_t>(n_ary_limits.size()-1); jdx != ~0ULL; jdx--) {
+        int jdx_int = static_cast<int>(jdx);
+        int gray_code_new_val = parity ? n_ary_limits[jdx_int] - 1 - counter_chain[jdx_int] : counter_chain[jdx_int];
         parity = parity ^ (gray_code_new_val & 1);
 
         if ( gray_code_new_val != gray_code[jdx] ) {
             value_prev = gray_code[jdx];
             value = gray_code_new_val;
             gray_code[jdx] = gray_code_new_val;
-            changed_index = jdx;
+            changed_index = static_cast<int>(jdx);
             break;
         }
     }

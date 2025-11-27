@@ -122,7 +122,7 @@ void Optimization_Interface::solve_layer_optimization_problem_BFGS( int num_of_p
 	    
 
             BFGS_Powell cBFGS_Powell(optimization_problem_combined, this);
-            double f = cBFGS_Powell.Start_Optimization(solution_guess, max_inner_iterations_loc);
+            double f = cBFGS_Powell.Start_Optimization(solution_guess, static_cast<long>(max_inner_iterations_loc));
 
             if (current_minimum > f) {
                 current_minimum = f;

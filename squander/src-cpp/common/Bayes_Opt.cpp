@@ -268,7 +268,10 @@ void Bayes_Opt::calculate_conditional_distribution(Matrix_real x, Matrix_real co
     }
     
     Matrix_real sigma2_rhs = cov_x.copy();
-    memset(x0.get_data(), M_PI, samples*sizeof(double) );
+    memset(x0.get_data(), 0, samples*sizeof(double) );
+    for (int i = 0; i < samples; i++) {
+        x0[i] = M_PI;
+    }
     conjugate_gradient(covariance,mu_rhs,x0,tol);
     
     for (int idx=0;idx<mu_rhs.cols;idx++){

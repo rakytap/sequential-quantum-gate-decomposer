@@ -114,12 +114,12 @@ double Powells_method::Start_Optimization(Matrix_real& x, long max_iter){
     double tol = 1e-6;
     variable_num = x.size();
     u = Matrix_real(variable_num,variable_num);
-    memset(u.get_data(), 0.0, variable_num*variable_num*sizeof(double) );
+    memset(u.get_data(), 0, variable_num*variable_num*sizeof(double) );
     for (int var_idx=0;var_idx<variable_num;var_idx++){
         u[var_idx*variable_num + var_idx] = 1.0;
     }
     Matrix_real df(1,variable_num);
-    memset(df.get_data(), 0.0, variable_num*sizeof(double) );
+    memset(df.get_data(), 0, variable_num*sizeof(double) );
     double a;
     double b;
     double s;
@@ -150,7 +150,7 @@ double Powells_method::Start_Optimization(Matrix_real& x, long max_iter){
             dot = dot + (x[idx] - xOld[idx])*(x[idx] - xOld[idx]);
         }
         if(std::sqrt(dot)/variable_num<tol){return costfnc(x,meta_data);}
-        int Imax=0.;
+        int Imax=0;
         for (int idx=1;idx<variable_num;idx++){
             Imax = (df[idx]>df[Imax]) ? idx:Imax;
         }

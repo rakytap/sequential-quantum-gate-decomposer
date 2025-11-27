@@ -88,7 +88,7 @@ void Optimization_Interface::solve_layer_optimization_problem_BAYES_OPT( int num
 	    
 
 
-            double f = cBayes_Opt.Start_Optimization(solution_guess, max_inner_iterations_loc);
+            double f = cBayes_Opt.Start_Optimization(solution_guess, static_cast<int>(max_inner_iterations_loc));
 
             if (current_minimum > f) {
                 current_minimum = f;

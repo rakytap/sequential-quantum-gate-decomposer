@@ -237,12 +237,12 @@ void Optimization_Interface::solve_layer_optimization_problem_ADAM( int num_of_p
                 if (cost_fnc != VQE){
                 
                     std::stringstream sstream;
-                    sstream << "ADAM: processed iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "\%, current minimum:" << current_minimum << ", current cost function:" << optimization_problem(solution_guess_tmp) << ", sub_iter_idx:" << sub_iter_idx <<std::endl;
+                    sstream << "ADAM: processed iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "%, current minimum:" << current_minimum << ", current cost function:" << optimization_problem(solution_guess_tmp) << ", sub_iter_idx:" << sub_iter_idx <<std::endl;
                     print(sstream, 1);   
                 }
                 else{
                     std::stringstream sstream;
-                    sstream << "ADAM: processed iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "\%, current minimum:" << current_minimum <<", sub_iter_idx:" << sub_iter_idx <<std::endl;
+                    sstream << "ADAM: processed iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "%, current minimum:" << current_minimum <<", sub_iter_idx:" << sub_iter_idx <<std::endl;
                     print(sstream, 1);   
                 }
                 if ( export_circuit_2_binary_loc > 0 ) {
