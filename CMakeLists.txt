@@ -795,3 +795,25 @@ install(TARGETS qgd
         LIBRARY DESTINATION squander
         RUNTIME DESTINATION squander  # Add this for Windows
         COMPONENT python)
+
+
+# Copy required DLLs on Windows
+if(WIN32 AND DEFINED ENV{CONDA_PREFIX})
+set(CONDA_BIN_DIR "$ENV{CONDA_PREFIX}/Library/bin")
+install(FILES
+    "${CONDA_BIN_DIR}/tbb12.dll"
+    "${CONDA_BIN_DIR}/tbbmalloc.dll"
+    "${CONDA_BIN_DIR}/tbbmalloc_proxy.dll"
+    DESTINATION squander
+    COMPONENT python
+    OPTIONAL
+)
+# Copy OpenBLAS and LAPACK DLLs if they exist
+file(GLOB OPENBLAS_DLLS "${CONDA_BIN_DIR}/openblas*.dll")
+file(GLOB LAPACK_DLLS "${CONDA_BIN_DIR}/lapack*.dll")
+install(FILES ${OPENBLAS_DLLS} ${LAPACK_DLLS}
+    DESTINATION squander
+    COMPONENT python
+    OPTIONAL
+)
+endif()
