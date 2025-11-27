@@ -295,7 +295,7 @@ class qgd_Partition_Aware_Mapping:
                 remapped_subcircuit = subcircuit.Remap_Qbits( qbit_map, qbit_num )
                 optimized_results[partition_idx] = pool.apply_async( self.DecomposePartition_Sequential, (remapped_subcircuit, subcircuit_parameters, self.config, mini_topologies, involved_qbits, qbit_map) )
 
-            for partition_idx, subcircuit in enumerate( tqdm(subcircuits, desc="First Synthesis") ):
+            for partition_idx, subcircuit in enumerate( tqdm(subcircuits, desc="First Synthesis",disable=self.config.get('progressbar', 0) == False) ):
                 optimized_results[partition_idx] = optimized_results[partition_idx].get()
         
         weights = [result.get_partition_synthesis_score() for result in optimized_results[:len(allparts)]]
@@ -329,7 +329,7 @@ class qgd_Partition_Aware_Mapping:
                 remapped_subcircuit = subcircuit.Remap_Qbits( qbit_map, qbit_num )
                 optimized_partitions[partition_idx] = pool.apply_async( self.DecomposePartition_Sequential, (remapped_subcircuit, subcircuit_parameters, self.config, mini_topologies, involved_qbits, qbit_map) )
 
-            for partition_idx, subcircuit in enumerate( tqdm(subcircuits, desc="Second Synthesis") ):
+            for partition_idx, subcircuit in enumerate( tqdm(subcircuits, desc="Second Synthesis",disable=self.config.get('progressbar', 0) == False) ):
                 optimized_partitions[partition_idx] = optimized_partitions[partition_idx].get()
                 
         
