@@ -308,14 +308,27 @@ class PartitionCandidate:
         self.node_mapping = get_node_mapping(mini_topology, topology)
 
     def transform_pi(self, pi, D):
-        qbit_map_input = {k : self.node_mapping[self.P_i[v]] for k,v in self.qbit_map.items()}
-        print(qbit_map_input)
-        swaps, pi_init = find_constrained_swaps_partial(pi, qbit_map_input,D)
-        print(swaps, pi_init)
+        # Fixed: Use P_i^{-1} instead of P_i for input routing
+        # The synthesized circuit S implements: add_Permutation(P_i) -> Original -> add_Permutation(P_o)
+        # For Original to see logical qubit q* at partition position q*, we need:
+        # - After P_i, position q* should have logical qubit q*'s data
+        # - Before P_i (= input to S), position P_i^{-1}[q*] should have logical qubit q*'s data
+        # So we route logical qubit k (with qbit_map[k] = q*) to partition position P_i^{-1}[q*]
+        P_i_inv = [self.P_i.index(i) for i in range(len(self.P_i))]  # Compute inverse
+        qbit_map_input = {k : self.node_mapping[P_i_inv[v]] for k,v in self.qbit_map.items()}
+        # Convert pi to plain Python list of ints (may contain np.int64)
+        pi_list = [int(x) for x in pi]
+        swaps, pi_init = find_constrained_swaps_partial(pi_list, qbit_map_input, D)
+        
         pi_output = pi_init.copy()
-        node_mapping_reversed = {v : k for k,v in self.node_mapping.items()}
-        for v in self.node_mapping.values():
-            pi_output[pi_init.index(v)] = self.node_mapping[self.P_o[node_mapping_reversed[v]]]
+        # Fixed: P_o should be indexed by partition virtual index q*, not physical index Q*
+        # After the circuit, logical qubit k with qbit_map[k] = q* ends up at 
+        # physical position node_mapping[P_o[q*]]
+        qbit_map_inverse = {v: k for k, v in self.qbit_map.items()}
+        for q_star in range(len(self.P_o)):
+            if q_star in qbit_map_inverse:
+                k = qbit_map_inverse[q_star]
+                pi_output[k] = self.node_mapping[self.P_o[q_star]]
         return swaps, pi_output
     
     def get_final_circuit(self,optimized_partitions,N):

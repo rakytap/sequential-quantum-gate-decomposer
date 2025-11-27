@@ -61,14 +61,19 @@ if __name__ == '__main__':
     output_perm_T = [0]* circ.get_Qbit_Num() 
     for i, j in enumerate(output_perm):
         output_perm_T[j] = i        
-    circ_Final.add_Permutation(input_perm)
+    # Convert numpy arrays/ints to plain Python lists for add_Permutation
+    input_perm_list = [int(x) for x in input_perm]
+    circ_Final.add_Permutation(input_perm_list)
     circ_Final.add_Circuit(circ)
     circ_Final.add_Permutation(output_perm_T)
     
-    # Additional matrix validation in example    
+    # Additional matrix validation in example     
     PartAM_state = initial_state.copy()
     circ_Final.apply_to(params, PartAM_state)
     state_error = 1 - abs(np.vdot(PartAM_state, original_state))
+    print(Qiskit_IO.get_Qiskit_Circuit(circ.get_Flat_Circuit(),params))
+    print(f"PartAM_state probability: {np.abs(PartAM_state)**2}")
+    print(f"original_state probability: {np.abs(original_state)**2}")
     print(f"\n{'='*70}")
     print(f"State Vector Validation")
     print(f"{'='*70}")

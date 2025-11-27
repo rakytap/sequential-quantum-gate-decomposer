@@ -70,18 +70,18 @@ class qgd_Partition_Aware_Mapping:
                 P_o_initial = perumations_all[np.random.choice(range(len(perumations_all)))]
                 for P_i in perumations_all:
                     Partition_circuit_tmp = Circuit(N)
-                    Partition_circuit_tmp.add_Permutation(P_i)
+                    Partition_circuit_tmp.add_Permutation(list(P_i))  # Must convert tuple to list
                     Partition_circuit_tmp.add_Circuit(Partition_circuit)
-                    Partition_circuit_tmp.add_Permutation(P_o_initial)
+                    Partition_circuit_tmp.add_Permutation(list(P_o_initial))  # Must convert tuple to list
                     synthesised_circuit, synthesised_parameters = qgd_Partition_Aware_Mapping.DecomposePartition_and_Perm(Partition_circuit_tmp.get_Matrix(Partition_parameters), config, mini_topology)
                     result.add_result((P_i, P_o_initial), synthesised_circuit, synthesised_parameters, topology_idx)
 
                 P_i_best, _ = result.get_best_result(topology_idx)[0]
                 for P_o in perumations_all:
                     Partition_circuit_tmp = Circuit(N)
-                    Partition_circuit_tmp.add_Permutation(P_i_best)
+                    Partition_circuit_tmp.add_Permutation(list(P_i_best))  # Must convert tuple to list
                     Partition_circuit_tmp.add_Circuit(Partition_circuit)
-                    Partition_circuit_tmp.add_Permutation(P_o)
+                    Partition_circuit_tmp.add_Permutation(list(P_o))  # Must convert tuple to list
                     synthesised_circuit, synthesised_parameters = qgd_Partition_Aware_Mapping.DecomposePartition_and_Perm(Partition_circuit_tmp.get_Matrix(Partition_parameters), config, mini_topology)
                     result.add_result((P_i_best, P_o), synthesised_circuit, synthesised_parameters, topology_idx)
         else:
