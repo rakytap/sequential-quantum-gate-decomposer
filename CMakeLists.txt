@@ -813,6 +813,16 @@ if(WIN32 AND DEFINED ENV{CONDA_PREFIX})
             COMPONENT python
             OPTIONAL
         )
+
+        install(FILES
+            "${CONDA_BIN_DIR}/tbb12.dll"
+            "${CONDA_BIN_DIR}/tbbmalloc.dll"
+            "${CONDA_BIN_DIR}/tbbmalloc_proxy.dll"
+            DESTINATION squander/decomposition
+            COMPONENT python
+            OPTIONAL
+        )
+
         # Copy OpenBLAS and LAPACK DLLs if they exist
         file(GLOB OPENBLAS_DLLS "${CONDA_BIN_DIR}/openblas*.dll")
         file(GLOB LAPACK_DLLS "${CONDA_BIN_DIR}/lapack*.dll")
@@ -823,6 +833,18 @@ if(WIN32 AND DEFINED ENV{CONDA_PREFIX})
                 OPTIONAL
             )
         endif()
+
+        # Copy OpenBLAS and LAPACK DLLs if they exist
+        file(GLOB OPENBLAS_DLLS "${CONDA_BIN_DIR}/openblas*.dll")
+        file(GLOB LAPACK_DLLS "${CONDA_BIN_DIR}/lapack*.dll")
+        if(OPENBLAS_DLLS OR LAPACK_DLLS)
+            install(FILES ${OPENBLAS_DLLS} ${LAPACK_DLLS}
+                DESTINATION squander/decomposition
+                COMPONENT python
+                OPTIONAL
+            )
+        endif()
+
     else()
         message(WARNING "CONDA_BIN_DIR not found: ${CONDA_BIN_DIR}. Skipping DLL installation.")
     endif()
