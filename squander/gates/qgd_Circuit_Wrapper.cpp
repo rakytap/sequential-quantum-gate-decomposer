@@ -1485,7 +1485,7 @@ qgd_Circuit_Wrapper_get_parents( qgd_Circuit_Wrapper *self, PyObject *args ) {
             Gate* gate = gates[jdx];
 
             if( parent_gate == gate ) {
-                parent_idx = jdx;
+                parent_idx = static_cast<int>(jdx);
                 break;
             }
 
@@ -1553,7 +1553,7 @@ qgd_Circuit_Wrapper_get_children( qgd_Circuit_Wrapper *self, PyObject *args ) {
             Gate* gate = gates[jdx];
 
             if( child_gate == gate ) {
-                child_idx = jdx;
+                child_idx = static_cast<int>(jdx);
                 break;
             }
 

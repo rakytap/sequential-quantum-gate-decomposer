@@ -64,8 +64,8 @@ operator()(const GrayCode_base<intType> &key) const {
     size_t pow = 1;
 
     for (size_t idx=0; idx<static_cast<size_t>(key.cols); idx++) {
-        hash_val = hash_val + data[idx]*pow;
-        pow = pow*n_ary_limits[idx];
+        hash_val = hash_val + data[static_cast<int>(idx)]*pow;
+        pow = pow*n_ary_limits[static_cast<int>(idx)];
     }
 
     return hash_val;

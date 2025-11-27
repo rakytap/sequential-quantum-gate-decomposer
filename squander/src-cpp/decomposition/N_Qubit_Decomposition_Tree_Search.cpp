@@ -178,7 +178,7 @@ static inline LevelResult enumerate_unordered_cnot_BFS_level_step(
                 visited.emplace(B);
 
                 // build sequences
-                auto seqp = last_pairs.add_Digit(topology.size());
+                auto seqp = last_pairs.add_Digit(static_cast<int>(topology.size()));
                 seqp[seqp.size() - 1] = p;
 
                 new_seq_pairs_of.emplace(B, std::move(seqp));
@@ -446,7 +446,7 @@ N_Qubit_Decomposition_Tree_Search::determine_gate_structure(Matrix_real& optimiz
         for (size_t i = 0; i < all_cuts.size(); ++i) {
             const auto& A = all_cuts[i];
             if ((std::find(A.begin(), A.end(), pair[0]) != A.end()) ^ (std::find(A.begin(), A.end(), pair[1]) != A.end())) {
-                cuts.push_back(i);
+                cuts.push_back(static_cast<int>(i));
             }
         }
         pair_affects[std::pair<int, int>(pair[0], pair[1])] = std::move(cuts);
@@ -639,7 +639,7 @@ N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures_gl( int leve
                     cDecomp_custom_random.set_optimized_parameters( optimized_parameters.data(), static_cast<int>(optimized_parameters.size()) );
                     cDecomp_custom_random.start_decomposition();
                     number_of_iters += cDecomp_custom_random.get_num_iters(); // retrive the number of iterations spent on optimization
-                    best_params.emplace( cDecomp_custom_random.get_current_minimum(), cDecomp_custom_random.get_optimized_parameters().copy() );
+                    best_params.emplace( static_cast<int>(cDecomp_custom_random.get_current_minimum()), cDecomp_custom_random.get_optimized_parameters().copy() );
                     if (best_params.begin()->first < optimization_tolerance_loc ) {
                         break;
                     }
@@ -811,7 +811,7 @@ N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures( int level_n
     
     // set the limits for the N-ary Gray counter
     
-    int n_ary_limit_max = topology.size();
+    int n_ary_limit_max = static_cast<int>(topology.size());
     matrix_base<int> n_ary_limits( 1, level_num ); //array containing the limits of the individual Gray code elements    
     memset( n_ary_limits.get_data(), n_ary_limit_max, n_ary_limits.size()*sizeof(int) );
     
@@ -820,7 +820,7 @@ N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures( int level_n
     }
 
 
-    int64_t iteration_max = pow( (int64_t)n_ary_limit_max, level_num );
+    int64_t iteration_max = static_cast<int64_t>(pow( static_cast<double>(n_ary_limit_max), static_cast<double>(level_num) ));
     
     
     // determine the concurrency of the calculation
@@ -983,7 +983,7 @@ N_Qubit_Decomposition_Tree_Search::perform_optimization(Gates_block* gate_struct
          int max_inner_iterations_loc = 10000;
          if (gate_structure_loc != nullptr) {
                int param_num_loc = gate_structure_loc->get_parameter_num();
-               max_inner_iterations_loc = (double)param_num_loc/852 * 1e7;
+               max_inner_iterations_loc = static_cast<int>((double)param_num_loc/852 * 10000000.0);
          }
          cDecomp_custom_random.set_max_inner_iterations( max_inner_iterations_loc );  
          cDecomp_custom_random.set_random_shift_count_max( 100 ); 

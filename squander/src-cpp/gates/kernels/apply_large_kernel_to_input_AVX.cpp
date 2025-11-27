@@ -314,7 +314,7 @@ inline __m256d* construct_mv_xy_vectors(const Matrix& gate_kernel_unitary, const
  */
 void apply_nqbit_unitary_AVX( Matrix& gate_kernel_unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size ) {
 
-    int n = involved_qbits.size();
+    int n = static_cast<int>(involved_qbits.size());
     int qubit_num = (int) std::log2(input.rows);
     int block_size = 1 << n;
     int num_blocks = 1 << (qubit_num - n);

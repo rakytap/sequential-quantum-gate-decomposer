@@ -29,6 +29,10 @@ limitations under the License.
 
 #include "RL_experience.h"
 
+#ifdef _WIN32
+#include <cstdio>
+#endif
+
 #include <fstream>
 
 
@@ -212,7 +216,14 @@ void Optimization_Interface::export_current_cost_fnc(double current_minimum, Mat
     }
 
     const char* c_filename = filename.c_str();
-	pFile = fopen(c_filename, "a");
+#ifdef _WIN32
+    errno_t err = fopen_s(&pFile, c_filename, "a");
+    if (err != 0) {
+        pFile = NULL;
+    }
+#else
+    pFile = fopen(c_filename, "a");
+#endif
 
     if (pFile==NULL) {
         fputs ("File error",stderr); 
@@ -743,7 +754,7 @@ Optimization_Interface::optimization_problem_batched( std::vector<Matrix_real>& 
 
     int work_batch = 1;
     if( parallel==0) {
-        work_batch = parameters_vec.size();
+        work_batch = static_cast<int>(parameters_vec.size());
     }
 
     tbb::parallel_for( tbb::blocked_range<int>(0, (int)parameters_vec.size(), work_batch), [&](tbb::blocked_range<int> r) {
@@ -1310,13 +1321,13 @@ void Optimization_Interface::set_optimizer( optimization_aglorithms alg_in ) {
 
     switch ( alg ) {
         case ADAM:
-            max_inner_iterations = 1e5; 
+            max_inner_iterations = 100000; 
             random_shift_count_max = 100;
             max_outer_iterations = 1;
             return;
 
         case ADAM_BATCHED:
-            max_inner_iterations = 2.5e3;
+            max_inner_iterations = 2500;
             random_shift_count_max = 3;
             max_outer_iterations = 1;
             return;
@@ -1324,29 +1335,29 @@ void Optimization_Interface::set_optimizer( optimization_aglorithms alg_in ) {
         case GRAD_DESCEND:
             max_inner_iterations = 10000;
             random_shift_count_max = 1;  
-            max_outer_iterations = 1e8; 
+            max_outer_iterations = 100000000; 
             return;
 
         case COSINE:
-            max_inner_iterations = 2.5e3;
+            max_inner_iterations = 2500;
             random_shift_count_max = 3;
             max_outer_iterations = 1;
             return;
             
         case GRAD_DESCEND_PARAMETER_SHIFT_RULE:
-            max_inner_iterations = 2.5e3;
+            max_inner_iterations = 2500;
             random_shift_count_max = 3;
             max_outer_iterations = 1;
             return;                       
 
         case AGENTS:
-            max_inner_iterations = 2.5e3;
+            max_inner_iterations = 2500;
             random_shift_count_max = 3;
             max_outer_iterations = 1;
             return;
 
         case AGENTS_COMBINED:
-            max_inner_iterations = 2.5e3;
+            max_inner_iterations = 2500;
             random_shift_count_max = 3;
             max_outer_iterations = 1;
             return;
@@ -1354,11 +1365,11 @@ void Optimization_Interface::set_optimizer( optimization_aglorithms alg_in ) {
         case BFGS:
             max_inner_iterations = 10000;
             random_shift_count_max = 1;  
-            max_outer_iterations = 1e8; 
+            max_outer_iterations = 100000000; 
             return;
 
         case BFGS2:
-            max_inner_iterations = 1e5;
+            max_inner_iterations = 100000;
             random_shift_count_max = 100;
             max_outer_iterations = 1;
             return;

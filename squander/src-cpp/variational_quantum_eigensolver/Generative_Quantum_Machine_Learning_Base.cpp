@@ -88,7 +88,7 @@ Generative_Quantum_Machine_Learning_Base::Generative_Quantum_Machine_Learning_Ba
 
 	sample_indices = sample_indices_in;
 
-    sample_size = sample_indices.size();
+    sample_size = static_cast<int>(sample_indices.size());
 
     P_star = P_star_in;
     // config maps
@@ -626,7 +626,14 @@ void Generative_Quantum_Machine_Learning_Base::export_current_cost_fnc(double cu
     if (project_name != ""){filename = project_name + "_" + filename;}
 
         const char* c_filename = filename.c_str();
-	pFile = fopen(c_filename, "a");
+#ifdef _WIN32
+    errno_t err = fopen_s(&pFile, c_filename, "a");
+    if (err != 0) {
+        pFile = NULL;
+    }
+#else
+    pFile = fopen(c_filename, "a");
+#endif
 
         if (pFile==NULL) {
             fputs ("File error",stderr); 
@@ -638,7 +645,7 @@ void Generative_Quantum_Machine_Learning_Base::export_current_cost_fnc(double cu
 
     std::uniform_int_distribution<> distrib(0, qbit_num-2); 
 
-    memset(input_state.get_data(), 0.0, (input_state.size()*2)*sizeof(double) ); 
+    memset(input_state.get_data(), 0, (input_state.size()*2)*sizeof(double) ); 
     input_state[0].real = 1.0;
 
     matrix_base<int> qbit_sublist(1,2);
@@ -675,7 +682,7 @@ void Generative_Quantum_Machine_Learning_Base::initialize_zero_state( ) {
 
     initial_state[0].real = 1.0;
     initial_state[0].imag = 0.0;
-    memset(initial_state.get_data()+2, 0.0, (initial_state.size()*2-2)*sizeof(double) );      
+    memset(initial_state.get_data()+2, 0, (initial_state.size()*2-2)*sizeof(double) );      
 
     return;
 }
@@ -835,7 +842,7 @@ void Generative_Quantum_Machine_Learning_Base::generate_circuit( int layers, int
 
         case QCMRF:
         {
-            int num_cliques = cliques.size();
+            int num_cliques = static_cast<int>(cliques.size());
             if (cliques.size() == 0) {
                 std::string error("Variational_Quantum_Eigensolver_Base::generate_initial_circuit: input the cliques for using QCMRF ansatz");
                 throw error;

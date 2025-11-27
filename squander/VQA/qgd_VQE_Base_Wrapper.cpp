@@ -165,7 +165,7 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_init(qgd_Variational_Quantum_Ei
     
     Hamiltonian_data_arg            = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)Hamiltonian_data_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
     QGD_Complex16* Hamiltonian_data = (QGD_Complex16*)PyArray_DATA(Hamiltonian_data_arg);
-    int NNZ                         = PyArray_DIMS(Hamiltonian_data_arg)[0];
+    int NNZ                         = static_cast<int>(PyArray_DIMS(Hamiltonian_data_arg)[0]);
     
     if ( Hamiltonian_indices_arg == NULL ) return -1;
     

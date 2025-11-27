@@ -187,14 +187,14 @@ CZ_NU::apply_to_list( Matrix_real& parameters_mtx, std::vector<Matrix>& inputs, 
 
     int work_batch = 1;
     if ( parallel == 0 ) {
-        work_batch = inputs.size();
+        work_batch = static_cast<int>(inputs.size());
     }
     else {
         work_batch = 1;
     }
 
 
-    tbb::parallel_for( tbb::blocked_range<int>(0,inputs.size(),work_batch), [&](tbb::blocked_range<int> r) {
+    tbb::parallel_for( tbb::blocked_range<int>(0,static_cast<int>(inputs.size()),work_batch), [&](tbb::blocked_range<int> r) {
         for (int idx=r.begin(); idx<r.end(); ++idx) { 
 
             Matrix* input = &inputs[idx];

@@ -83,7 +83,7 @@ NN::create_randomized_parameters( int num_of_parameters, int qbit_num, int level
 
     if ( parameters.size() != num_of_parameters ) {
         parameters = Matrix_real( 1, num_of_parameters );
-        memset( parameters.get_data(), 0.0, parameters.size()*sizeof(double) );
+        memset( parameters.get_data(), 0, parameters.size()*sizeof(double) );
     }
 
 
@@ -120,7 +120,7 @@ NN::create_randomized_parameters( int num_of_parameters, int qbit_num, int level
 
     for( int layer_idx=0; layer_idx<num_of_adaptive_layers; layer_idx++) {
 
-        int8_t nontrivial_adaptive_layer = distrib(gen);
+        int8_t nontrivial_adaptive_layer = static_cast<int8_t>(distrib(gen));
         nontrivial_adaptive_layers[layer_idx] = nontrivial_adaptive_layer;
 
         if (nontrivial_adaptive_layer) {
@@ -492,7 +492,7 @@ NN::get_nn_chanels(int qbit_num, int levels, int samples_num, Matrix_real& chane
     chanels    = Matrix_real(1, samples_num*chanels_1.size());
     //parameters = Matrix_real(samples_num, parameters_1.size());
     nontrivial_adaptive_layers = matrix_base<int8_t>( 1, samples_num*nontrivial_adaptive_layers_1.size() );
-    memset( chanels.get_data(), 0.0, chanels.size()*sizeof(double) );
+    memset( chanels.get_data(), 0, chanels.size()*sizeof(double) );
     memset( nontrivial_adaptive_layers.get_data(), 0, nontrivial_adaptive_layers.size()*sizeof(int8_t) );
 
     // copy the result of the first iteration into the output

@@ -58,7 +58,7 @@ Random_Orthogonal::Construct_Orthogonal_Matrix() {
     
 
     // initialize random seed:
-    srand (time(NULL));
+    srand (static_cast<unsigned int>(time(NULL)));
 
     for (int idx=0; idx<dim*(dim-1)/2; idx++) {
         vargamma[idx] = (2*double(rand())/double(RAND_MAX)-1)*2*M_PI;
@@ -98,7 +98,7 @@ int verbose_level;
 
     // construct vargamma matrix elements
     Matrix_real vargamma_mtx(dim, dim);
-    memset( vargamma_mtx.get_data(), 0.0, vargamma_mtx.size()*sizeof(double) );
+    memset( vargamma_mtx.get_data(), 0, vargamma_mtx.size()*sizeof(double) );
     int gamma_index = 0;
     for (int idx=0; idx<dim; idx++) {
         for (int jdx=idx+1; jdx<dim; jdx++) {
@@ -157,7 +157,7 @@ vargamma_mtx[3*vargamma_mtx.stride + dim-1] = 0.0;
 
         // construct matrix tn from Eq (6) of  https://doi.org/10.1002/qua.560040725
         Matrix_real tn(ndx, ndx);
-        memset( tn.get_data(), 0.0, tn.size()*sizeof(double) );
+        memset( tn.get_data(), 0, tn.size()*sizeof(double) );
         for ( int row_idx=0; row_idx<ndx-1; row_idx++) {
             memcpy( tn.get_data()+row_idx*tn.stride, Tn.get_data() + row_idx*Tn.stride, (ndx-1)*sizeof(double) );
         }

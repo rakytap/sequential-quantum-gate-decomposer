@@ -247,7 +247,7 @@ Matrix RZ::calc_one_qubit_u3(double PhiOver2 ) {
     double cos_phi = cos(PhiOver2);
     double sin_phi = sin(PhiOver2);
     
-    memset( u3_1qbit.get_data(), 0.0, 4*sizeof(QGD_Complex16) );
+    memset( u3_1qbit.get_data(), 0, 4*sizeof(QGD_Complex16) );
     u3_1qbit[0].real = cos_phi;
     u3_1qbit[0].imag = -sin_phi;    
 
