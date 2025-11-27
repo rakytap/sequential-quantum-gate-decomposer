@@ -222,7 +222,7 @@ class SingleQubitPartitionResult:
 # Physical qubits Q, reduced physical qubits Q* 
 class PartitionSynthesisResult:
     
-    def __init__(self, N , mini_topologies, involved_qbits, qubit_map, original_circuit):
+    def __init__(self, N , mini_topologies, involved_qbits, qubit_map, original_circuit, topology=None, topology_cache=None):
         #The physical mini_topology of the partition q*
         self.mini_topologies = mini_topologies
         #number of topologies
@@ -243,6 +243,10 @@ class PartitionSynthesisResult:
         self.qubit_map = qubit_map
         # the original circuit
         self.original_circuit = original_circuit
+        # Pre-computed topology candidates for each mini_topology (lazy initialization)
+        self._topology_candidates = [None] * len(mini_topologies)
+        self._topology = topology  # Full topology for computing candidates
+        self._topology_cache = topology_cache  # Cache to use for lookups
 
     def add_result(self, permutations_pair, synthesised_circuit, synthesised_parameters, topology_idx):
         self.permutations_pairs[topology_idx].append(permutations_pair)
@@ -280,6 +284,40 @@ class PartitionSynthesisResult:
             cnot_count_topology = np.mean(self.cnot_counts[topology_idx])*0.5 + np.min(self.cnot_counts[topology_idx])*0.5
             score += cnot_count_topology/self.topology_count
         return score
+    
+    def get_topology_candidates(self, topology_idx):
+        """
+        Get topology candidates for a given topology index, using cache if available.
+        """
+        if self._topology_candidates[topology_idx] is None:
+            mini_topology = self.mini_topologies[topology_idx]
+            if self._topology_cache is not None:
+                # Use cached version if available
+                target_qubits = set()
+                for u, v in mini_topology:
+                    target_qubits.add(u)
+                    target_qubits.add(v)
+                if target_qubits:
+                    canonical_key = get_canonical_form(target_qubits, mini_topology)
+                    if canonical_key in self._topology_cache:
+                        self._topology_candidates[topology_idx] = self._topology_cache[canonical_key]
+                    else:
+                        # Compute and cache
+                        if self._topology is not None:
+                            candidates = get_subtopologies_of_type(self._topology, mini_topology)
+                            self._topology_cache[canonical_key] = candidates
+                            self._topology_candidates[topology_idx] = candidates
+                        else:
+                            self._topology_candidates[topology_idx] = []
+                else:
+                    self._topology_candidates[topology_idx] = []
+            else:
+                # No cache, compute directly
+                if self._topology is not None:
+                    self._topology_candidates[topology_idx] = get_subtopologies_of_type(self._topology, mini_topology)
+                else:
+                    self._topology_candidates[topology_idx] = []
+        return self._topology_candidates[topology_idx]
 
 class PartitionCandidate:
     
@@ -307,7 +345,7 @@ class PartitionCandidate:
         # {Q*:Q}
         self.node_mapping = get_node_mapping(mini_topology, topology)
 
-    def transform_pi(self, pi, D):
+    def transform_pi(self, pi, D, swap_cache=None):
         # Fixed: Use P_i^{-1} instead of P_i for input routing
         # The synthesized circuit S implements: add_Permutation(P_i) -> Original -> add_Permutation(P_o)
         # For Original to see logical qubit q* at partition position q*, we need:
@@ -318,7 +356,21 @@ class PartitionCandidate:
         qbit_map_input = {k : self.node_mapping[P_i_inv[v]] for k,v in self.qbit_map.items()}
         # Convert pi to plain Python list of ints (may contain np.int64)
         pi_list = [int(x) for x in pi]
-        swaps, pi_init = find_constrained_swaps_partial(pi_list, qbit_map_input, D)
+        
+        # Check cache if provided
+        cache_key = None
+        if swap_cache is not None:
+            # Create cache key: (pi_tuple, frozenset of qbit_map_input items)
+            pi_tuple = tuple(pi_list)
+            qbit_map_frozen = frozenset(qbit_map_input.items())
+            cache_key = (pi_tuple, qbit_map_frozen)
+            if cache_key in swap_cache:
+                swaps, pi_init = swap_cache[cache_key]
+            else:
+                swaps, pi_init = find_constrained_swaps_partial(pi_list, qbit_map_input, D)
+                swap_cache[cache_key] = (swaps, pi_init)
+        else:
+            swaps, pi_init = find_constrained_swaps_partial(pi_list, qbit_map_input, D)
         
         pi_output = pi_init.copy()
         # Fixed: P_o should be indexed by partition virtual index q*, not physical index Q*
