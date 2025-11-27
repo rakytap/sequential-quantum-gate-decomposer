@@ -805,46 +805,39 @@ if(WIN32 AND DEFINED ENV{CONDA_PREFIX})
     
     # Verify the directory exists before trying to install files
     if(EXISTS "${CONDA_BIN_DIR}")
-        install(FILES
-            "${CONDA_BIN_DIR}/tbb12.dll"
-            "${CONDA_BIN_DIR}/tbbmalloc.dll"
-            "${CONDA_BIN_DIR}/tbbmalloc_proxy.dll"
-            DESTINATION squander
-            COMPONENT python
-            OPTIONAL
+        # List of destinations where .pyd files are installed
+        set(DLL_DESTINATIONS 
+            squander
+            squander/decomposition
+            squander/gates
+            squander/nn
+            squander/VQA
         )
-
-        install(FILES
-            "${CONDA_BIN_DIR}/tbb12.dll"
-            "${CONDA_BIN_DIR}/tbbmalloc.dll"
-            "${CONDA_BIN_DIR}/tbbmalloc_proxy.dll"
-            DESTINATION squander/decomposition
-            COMPONENT python
-            OPTIONAL
-        )
-
+        
+        # Install TBB DLLs to all destinations
+        foreach(DEST ${DLL_DESTINATIONS})
+            install(FILES
+                "${CONDA_BIN_DIR}/tbb12.dll"
+                "${CONDA_BIN_DIR}/tbbmalloc.dll"
+                "${CONDA_BIN_DIR}/tbbmalloc_proxy.dll"
+                DESTINATION ${DEST}
+                COMPONENT python
+                OPTIONAL
+            )
+        endforeach()
+        
         # Copy OpenBLAS and LAPACK DLLs if they exist
         file(GLOB OPENBLAS_DLLS "${CONDA_BIN_DIR}/openblas*.dll")
         file(GLOB LAPACK_DLLS "${CONDA_BIN_DIR}/lapack*.dll")
         if(OPENBLAS_DLLS OR LAPACK_DLLS)
-            install(FILES ${OPENBLAS_DLLS} ${LAPACK_DLLS}
-                DESTINATION squander
-                COMPONENT python
-                OPTIONAL
-            )
+            foreach(DEST ${DLL_DESTINATIONS})
+                install(FILES ${OPENBLAS_DLLS} ${LAPACK_DLLS}
+                    DESTINATION ${DEST}
+                    COMPONENT python
+                    OPTIONAL
+                )
+            endforeach()
         endif()
-
-        # Copy OpenBLAS and LAPACK DLLs if they exist
-        file(GLOB OPENBLAS_DLLS "${CONDA_BIN_DIR}/openblas*.dll")
-        file(GLOB LAPACK_DLLS "${CONDA_BIN_DIR}/lapack*.dll")
-        if(OPENBLAS_DLLS OR LAPACK_DLLS)
-            install(FILES ${OPENBLAS_DLLS} ${LAPACK_DLLS}
-                DESTINATION squander/decomposition
-                COMPONENT python
-                OPTIONAL
-            )
-        endif()
-
     else()
         message(WARNING "CONDA_BIN_DIR not found: ${CONDA_BIN_DIR}. Skipping DLL installation.")
     endif()
