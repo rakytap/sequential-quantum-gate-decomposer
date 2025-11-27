@@ -23,7 +23,7 @@ limitations under the License.
 #include <iostream>
 #include <algorithm>
 #include <random>
-#include <fftw3.h>
+#include "pocketfft_hdronly.h"
 
 static tbb::spin_mutex my_mutex;
 
@@ -313,13 +313,16 @@ std::vector<double> Generative_Quantum_Machine_Learning_Base::correlate_full_rea
     const size_t N = 1<<qbit_num;
     const size_t M = 2 * N;           // FFT size (power of 2)
 
+    pocketfft::shape_t shape{M};
+    pocketfft::stride_t strided(shape.size(), sizeof(double));
+    pocketfft::stride_t stridec(shape.size(), sizeof(std::complex<double>));
+
+    pocketfft::shape_t axes;
+    for (size_t i=0; i<shape.size(); ++i)
+      axes.push_back(i);
+
     // Allocate real input and output arrays
-    double* A = (double*) fftw_malloc(sizeof(double) * M);
-    double* B = (double*) fftw_malloc(sizeof(double) * M);
-
-    std::fill(A, A + M, 0.0);
-    std::fill(B, B + M, 0.0);
-
+    std::vector<double> A(M, 0.0), B(M, 0.0);
 
     // Copy inputs
     for (size_t i = 0; i < N; i++) {
@@ -327,54 +330,36 @@ std::vector<double> Generative_Quantum_Machine_Learning_Base::correlate_full_rea
         B[i] = b[N-1-i];
     }
 
-    // Allocate complex freq arrays (FFTW r2c produces M/2+1 complex bins)
-    fftw_complex* FA = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * (N + 1));
-    fftw_complex* FB = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * (N + 1));
-    double* out_raw = (double*) fftw_malloc(sizeof(double) * M);
-
-    // Plans
-    fftw_plan pa = fftw_plan_dft_r2c_1d(M, A, FA, FFTW_ESTIMATE);
-    fftw_plan pb = fftw_plan_dft_r2c_1d(M, B, FB, FFTW_ESTIMATE);
-    fftw_plan pi = fftw_plan_dft_c2r_1d(M, FA, out_raw, FFTW_ESTIMATE);
-
+    // Allocate complex freq arrays (FFTW r2c produces N+1 complex bins)
+    std::vector<std::complex<double>> FA(N+1), FB(N+1);
 
     // Forward FFTs
-    fftw_execute(pa);
-    fftw_execute(pb);
+    pocketfft::r2c(shape, strided, stridec, axes, false, A.data(), FA.data(), 1.);
+    pocketfft::r2c(shape, strided, stridec, axes, false, B.data(), FB.data(), 1.);
 
     // Multiply in frequency domain
     tbb::parallel_for( tbb::blocked_range<int>(0, N+1, 1024), [&](tbb::blocked_range<int> r) {
         for (int k = r.begin(); k < r.end(); k++) {
-            double reA = FA[k][0], imA = FA[k][1];
-            double reB = FB[k][0], imB = FB[k][1];
-
-            // (reA + i imA)(reB + i imB)
-            FA[k][0] = reA * reB - imA * imB;
-            FA[k][1] = reA * imB + imA * reB;
+            // double reA = FA[k][0], imA = FA[k][1];
+            // double reB = FB[k][0], imB = FB[k][1];
+            //
+            // // (reA + i imA)(reB + i imB)
+            // FA[k][0] = reA * reB - imA * imB;
+            // FA[k][1] = reA * imB + imA * reB;
+            FA[k] *= FB[k];
         }
     });
 
     // Backward FFT
-    fftw_execute(pi);
-
     std::vector<double> out(M);
+    pocketfft::c2r(shape, stridec, strided, axes, true, FA.data(), out.data(), 1.);
 
     const double norm_factor = 1.0 / M;
     tbb::parallel_for(tbb::blocked_range<int>(0, M, 4096), [&](tbb::blocked_range<int> r) {
         for (int i = r.begin(); i < r.end(); i++) {
-            out[i] = out_raw[i] * norm_factor;
+            out[i] *= norm_factor;
         }
     });
-
-    // Cleanup
-    fftw_destroy_plan(pa);
-    fftw_destroy_plan(pb);
-    fftw_destroy_plan(pi);
-    fftw_free(A);
-    fftw_free(B);
-    fftw_free(FA);
-    fftw_free(FB);
-    fftw_free(out_raw);
 
     return out;
 }
