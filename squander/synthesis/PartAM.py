@@ -374,7 +374,7 @@ class qgd_Partition_Aware_Mapping:
         total_partitions = len(DAG)
         pbar = tqdm(total=total_partitions, desc="Heuristic Search", 
                    bar_format='{desc}: {percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt} resolved', 
-                   disable=self.config.get('verbosity', 0) < 1)
+                   disable=self.config.get('progressbar', 0) == False)
         
         while len(F) != 0:
             scores = []
