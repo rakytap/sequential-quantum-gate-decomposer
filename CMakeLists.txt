@@ -269,7 +269,7 @@ endif()
 list(APPEND EXTRA_INCLUDES "${OpenMP_CXX_INCLUDE_DIRS}") 
 
 # make difference between MKL and OPENBLAS by checking specific functions
-set(CMAKE_REQUIRED_LIBRARIES "${BLAS_LIBRARIES}" "-lm")
+set(CMAKE_REQUIRED_LIBRARIES "${BLAS_LIBRARIES}" "${LAPACK_LIBRARIES}" "-lm")
 check_function_exists(MKL_Set_Num_Threads BLAS_IS_MKL)
 check_function_exists(openblas_set_num_threads BLAS_IS_OPENBLAS)
 
@@ -303,54 +303,11 @@ if(${LAPACKE_FOUND})
     # LAPACKE functions found in existing libraries, use LAPACK_LIBRARIES
     set(LAPACKE_LIBRARIES ${LAPACK_LIBRARIES})
 else()
-    # On macOS with OpenBLAS, LAPACKE is typically included in OpenBLAS
-    if(APPLE AND BLAS_IS_OPENBLAS)
-        message(STATUS "macOS with OpenBLAS: LAPACKE should be included in OpenBLAS")
-        # Try to find OpenBLAS library which includes LAPACKE
-        find_library(OPENBLAS_LIB
-            NAMES openblas
-            PATHS /opt/homebrew/lib /usr/local/lib
-            NO_DEFAULT_PATH
-        )
-        if(OPENBLAS_LIB)
-            set(LAPACKE_LIBRARIES ${OPENBLAS_LIB})
-            message(STATUS "Found OpenBLAS library with LAPACKE: ${OPENBLAS_LIB}")
-        else()
-            # Fallback to LAPACK_LIBRARIES
-            set(LAPACKE_LIBRARIES ${LAPACK_LIBRARIES})
-        endif()
-    elseif(APPLE)
-        # On macOS, try to find separate LAPACKE library first
-        find_library(LAPACKE_LIB
-            NAMES lapacke
-            PATHS /opt/homebrew/lib /usr/local/lib
-            NO_DEFAULT_PATH
-        )
-        if(LAPACKE_LIB)
-            set(LAPACKE_LIBRARIES ${LAPACKE_LIB})
-            message(STATUS "Found separate LAPACKE library: ${LAPACKE_LIB}")
-        else()
-            # Try OpenBLAS which often includes LAPACKE on macOS
-            find_library(OPENBLAS_LIB
-                NAMES openblas
-                PATHS /opt/homebrew/lib /usr/local/lib
-                NO_DEFAULT_PATH
-            )
-            if(OPENBLAS_LIB)
-                set(LAPACKE_LIBRARIES ${OPENBLAS_LIB})
-                message(STATUS "Using OpenBLAS library for LAPACKE: ${OPENBLAS_LIB}")
-            else()
-                message(STATUS "LAPACKE not found as separate library on macOS, assuming it's in LAPACK/OpenBLAS")
-                # Set to LAPACK_LIBRARIES since LAPACKE is part of it
-                set(LAPACKE_LIBRARIES ${LAPACK_LIBRARIES})
-            endif()
-        endif()
-    else()
-        # Try to find separate LAPACKE library
-        find_library(LAPACKE_LIBRARIES lapacke)
-        if(NOT LAPACKE_LIBRARIES)
-            message(FATAL_ERROR "Could not find LAPACKE library")
-        endif()
+    
+    # Try to find separate LAPACKE library
+    find_library(LAPACKE_LIBRARIES lapacke)
+    if(NOT LAPACKE_LIBRARIES)
+        message(FATAL_ERROR "Could not find LAPACKE library")
     endif()
 endif()
 
