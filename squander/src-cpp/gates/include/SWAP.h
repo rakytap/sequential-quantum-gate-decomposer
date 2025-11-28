@@ -87,20 +87,20 @@ virtual SWAP* clone() override;
 @brief Call to reorder the qubits in the matrix of the gate
 @param qbit_list The reordered list of qubits spanning the matrix
 */
-void reorder_qubits(std::vector<int> qbit_list);
+void reorder_qubits(std::vector<int> qbit_list) override;
 
 /**
 @brief Call to set the number of qubits spanning the matrix of the gate
 @param qbit_num_in The number of qubits
 */
-void set_qbit_num(int qbit_num_in);
+void set_qbit_num(int qbit_num_in) override;
 
 /**
 @brief Get list of involved qubits
 @param only_target If true, return only target qubits, otherwise include control qubits too
 @return Vector of qubit indices
 */
-std::vector<int> get_involved_qubits(bool only_target = false);
+std::vector<int> get_involved_qubits(bool only_target = false) override;
 
 };
 

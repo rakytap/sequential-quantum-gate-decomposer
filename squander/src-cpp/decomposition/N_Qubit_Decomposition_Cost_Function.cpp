@@ -602,8 +602,8 @@ void functor_cost_fnc::operator()( tbb::blocked_range<int> r ) const {
 
 // base-2 logarithm, rounding down
 static inline uint32_t lg_down(uint32_t v) {
-    register unsigned int r; // result of log2(v) will go here
-    register unsigned int shift;
+    unsigned int r; // result of log2(v) will go here
+    unsigned int shift;
 
     r =     (v > 0xFFFF) << 4; v >>= r;
     shift = (v > 0xFF  ) << 3; v >>= shift; r |= shift;

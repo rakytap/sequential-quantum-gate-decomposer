@@ -21,7 +21,7 @@ limitations under the License.
 */
 
 #ifndef N_Qubit_Decomposition_custom_H
-#define N_Qubit_Decomposition_H
+#define N_Qubit_Decomposition_custom_H
 
 #include "Optimization_Interface.h"
 
