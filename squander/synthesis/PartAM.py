@@ -366,9 +366,6 @@ class qgd_Partition_Aware_Mapping:
         partition_order = []
         step = 0
         
-        # Determine number of processes for parallel scoring
-        num_processes = self.config.get('parallel_scoring_processes', min(mp.cpu_count(), 64))
-        use_parallel = num_processes > 1 and len(F) > 1
         
         # Initialize progress bar
         total_partitions = len(DAG)
@@ -379,18 +376,9 @@ class qgd_Partition_Aware_Mapping:
         while len(F) != 0:
             scores = []
             partition_candidates = self.obtain_partition_candidates(F,optimized_partitions)
-            if len(partition_candidates) != 0:
-                if use_parallel and len(partition_candidates) > 1:
-                    # Parallel scoring
-                    with Pool(processes=num_processes) as pool:
-                        score_args = [(cand, F, pi, optimized_partitions, sDAG, D, self._swap_cache, self._topology_cache, self.topology) 
-                                     for cand in partition_candidates]
-                        scores = pool.starmap(_score_partition_candidate_helper, score_args)
-                else:
-                    # Sequential scoring
-                    for partition_candidate in partition_candidates:
-                        score = self.score_partition_candidate(partition_candidate, F, pi, optimized_partitions, sDAG, D)
-                        scores.append(score)
+            for partition_candidate in partition_candidates:
+                    score = self.score_partition_candidate(partition_candidate, F, pi, optimized_partitions, sDAG, D)
+                    scores.append(score)
             if len(scores) == 0:
                 break
             min_idx = np.argmin(scores)
