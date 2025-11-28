@@ -94,7 +94,7 @@ jobs:
       - name: Install macOS system dependencies
         if: runner.os == 'macOS'
         run: |
-          brew install cmake tbb openblas lapack
+          brew install cmake tbb openblas lapack libomp
 
       - name: Install Windows system dependencies
         if: runner.os == 'Windows'
@@ -165,6 +165,14 @@ jobs:
         run: |
           echo "TBB_LIB_DIR=$(brew --prefix tbb)/lib" >> $GITHUB_ENV
           echo "TBB_INC_DIR=$(brew --prefix tbb)/include" >> $GITHUB_ENV
+          echo "OMP_NUM_THREADS=1" >> $GITHUB_ENV
+          # Help CMake find OpenMP on macOS
+          export OMP_PREFIX=$(brew --prefix libomp)
+          echo "OpenMP_C_FLAGS=-Xpreprocessor -fopenmp -I$OMP_PREFIX/include" >> $GITHUB_ENV
+          echo "OpenMP_CXX_FLAGS=-Xpreprocessor -fopenmp -I$OMP_PREFIX/include" >> $GITHUB_ENV
+          echo "OpenMP_C_LIB_NAMES=omp" >> $GITHUB_ENV
+          echo "OpenMP_CXX_LIB_NAMES=omp" >> $GITHUB_ENV
+          echo "OpenMP_omp_LIBRARY=$OMP_PREFIX/lib/libomp.dylib" >> $GITHUB_ENV
 
       - name: Build wheel
         env:
