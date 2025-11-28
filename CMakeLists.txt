@@ -347,20 +347,6 @@ else()
 endif()
 
 
-# if LAPACKE not found try another round
-if(${LAPACKE_FOUND})
-    # LAPACKE functions found in existing libraries, use LAPACK_LIBRARIES
-    set(LAPACKE_LIBRARIES ${LAPACK_LIBRARIES})
-else()
-    
-    # Try to find separate LAPACKE library
-    find_library(LAPACKE_LIBRARIES lapacke)
-    if(NOT LAPACKE_LIBRARIES)
-        message(FATAL_ERROR "Could not find LAPACKE library")
-    endif()
-endif()
-
-
 
 # checking for AVX/AVX2 support
 CHECK_FOR_AVX()
