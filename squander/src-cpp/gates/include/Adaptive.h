@@ -94,7 +94,7 @@ std::vector<Matrix> apply_derivate_to( Matrix_real& parameters, Matrix& input, i
 @param input The input array on which the gate is applied
 @param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
-virtual void apply_to( Matrix_real& parameters, Matrix& input, int parallel );
+virtual void apply_to( Matrix_real& parameters, Matrix& input, int parallel ) override;
 
 
 /**
@@ -121,7 +121,7 @@ int get_limit();
 @brief Call to create a clone of the present class
 @return Return with a pointer pointing to the cloned object
 */
-Adaptive* clone();
+Adaptive* clone() override;
 
 
 /**

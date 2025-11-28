@@ -152,7 +152,7 @@ Matrix calc_one_qubit_u3( double& param);
 @brief Call to create a clone of the present class
 @return Return with a pointer pointing to the cloned object
 */
-virtual CZ_NU* clone();
+virtual CZ_NU* clone() override;
 
 };
 

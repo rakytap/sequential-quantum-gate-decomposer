@@ -73,7 +73,7 @@ virtual ~RY();
 @param input The input array on which the gate is applied
 @param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
-virtual void apply_to( Matrix_real& parameters, Matrix& input, int parallel );
+virtual void apply_to( Matrix_real& parameters, Matrix& input, int parallel ) override;
 
 
 /**
@@ -105,7 +105,7 @@ void parameters_for_calc_one_qubit( double& ThetaOver2, double& Phi, double& Lam
 @brief Call to create a clone of the present class
 @return Return with a pointer pointing to the cloned object
 */
-virtual RY* clone();
+virtual RY* clone() override;
 
 
 

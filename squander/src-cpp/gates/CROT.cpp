@@ -213,10 +213,16 @@ CROT::apply_to( Matrix_real& parameters_mtx, Matrix& input, int parallel ) {
       if(parallel){
 #ifdef USE_AVX
         apply_crot_kernel_to_matrix_input_AVX_parallel(U3_matrix2,U3_matrix, input, target_qbit, control_qbit, input.rows);
+#else
+        apply_crot_kernel_to_matrix_input(U3_matrix2,U3_matrix, input, target_qbit, control_qbit, input.rows);
 #endif
       }
       else{
+#ifdef USE_AVX
         apply_crot_kernel_to_matrix_input_AVX(U3_matrix2,U3_matrix, input, target_qbit, control_qbit, input.rows);
+#else
+        apply_crot_kernel_to_matrix_input(U3_matrix2,U3_matrix, input, target_qbit, control_qbit, input.rows);
+#endif
       }
   }
 

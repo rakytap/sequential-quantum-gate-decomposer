@@ -90,7 +90,7 @@ void apply_to_list( Matrix_real& parameters, std::vector<Matrix>& inputs, int pa
 @param input The input array on which the gate is applied
 @param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
-virtual void apply_to( Matrix_real& parameters, Matrix& input, int parallel );
+virtual void apply_to( Matrix_real& parameters, Matrix& input, int parallel ) override;
 
 /**
 @brief Call to apply the gate on the input array/matrix by input*U3
@@ -121,7 +121,7 @@ virtual void parameters_for_calc_one_qubit( double& ThetaOver2, double& Phi, dou
 @brief Call to create a clone of the present class
 @return Return with a pointer pointing to the cloned object
 */
-virtual U3* clone();
+virtual U3* clone() override;
 
 
 /**
