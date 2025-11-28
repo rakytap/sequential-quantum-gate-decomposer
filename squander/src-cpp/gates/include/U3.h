@@ -63,7 +63,7 @@ virtual ~U3();
 @param parameters An array of parameters to calculate the matrix of the U3 gate.
 @return Returns with a matrix of the gate
 */
-Matrix get_matrix( Matrix_real& parameters  );
+Matrix get_matrix( Matrix_real& parameters  ) override;
 
 
 /**
@@ -72,7 +72,7 @@ Matrix get_matrix( Matrix_real& parameters  );
 @param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 @return Returns with a matrix of the gate
 */
-Matrix get_matrix( Matrix_real& parameters, int parallel  );
+Matrix get_matrix( Matrix_real& parameters, int parallel  ) override;
 
 
 /**
@@ -81,7 +81,7 @@ Matrix get_matrix( Matrix_real& parameters, int parallel  );
 @param input The input array on which the gate is applied
 @param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
-void apply_to_list( Matrix_real& parameters, std::vector<Matrix>& inputs, int parallel );
+void apply_to_list( Matrix_real& parameters, std::vector<Matrix>& inputs, int parallel ) override;
 
 
 /**
@@ -106,7 +106,7 @@ virtual void apply_from_right( Matrix_real& parameters, Matrix& input );
 @param input The input array on which the gate is applied
 @param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
-virtual std::vector<Matrix> apply_derivate_to( Matrix_real& parameters, Matrix& input, int parallel );
+virtual std::vector<Matrix> apply_derivate_to( Matrix_real& parameters, Matrix& input, int parallel ) override;
 
 /**
 @brief Calculate the matrix of a U3 gate gate corresponding to the given parameters acting on a single qbit space.
@@ -115,7 +115,7 @@ virtual std::vector<Matrix> apply_derivate_to( Matrix_real& parameters, Matrix& 
 @param Lambda Real parameter standing for the parameter lambda.
 @return Returns with the matrix of the one-qubit matrix.
 */
-virtual void parameters_for_calc_one_qubit( double& ThetaOver2, double& Phi, double& Lambda);
+virtual void parameters_for_calc_one_qubit( double& ThetaOver2, double& Phi, double& Lambda) override;
 
 /**
 @brief Call to create a clone of the present class
@@ -129,7 +129,7 @@ virtual U3* clone() override;
 @param parameters The parameter array corresponding to the circuit in which the gate is embedded
 @return Returns with the array of the extracted parameters.
 */
-virtual Matrix_real extract_parameters( Matrix_real& parameters );
+virtual Matrix_real extract_parameters( Matrix_real& parameters ) override;
 
 
 };

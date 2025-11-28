@@ -56,21 +56,21 @@ virtual ~CROT();
 
 void apply_to_list( Matrix_real& parameters_mtx, std::vector<Matrix>& input );
 
-void apply_to_list( Matrix_real& parameters_mtx, std::vector<Matrix>& inputs, int parallel );
+void apply_to_list( Matrix_real& parameters_mtx, std::vector<Matrix>& inputs, int parallel ) override;
 
 virtual void apply_to( Matrix_real& parameters_mtx, Matrix& input, int parallel ) override;
 
 virtual void apply_from_right( Matrix_real& parameters, Matrix& input );
 
-virtual std::vector<Matrix> apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input, int parallel );
+virtual std::vector<Matrix> apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input, int parallel ) override;
 
-virtual void set_qbit_num(int qbit_num_in);
+virtual void set_qbit_num(int qbit_num_in) override;
 
-virtual void reorder_qubits( std::vector<int> qbit_list);
+virtual void reorder_qubits( std::vector<int> qbit_list) override;
 
 virtual CROT* clone() override;
 
-virtual Matrix_real extract_parameters( Matrix_real& parameters );
+virtual Matrix_real extract_parameters( Matrix_real& parameters ) override;
 
 
 
