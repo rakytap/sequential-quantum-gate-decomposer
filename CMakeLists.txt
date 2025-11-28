@@ -257,6 +257,15 @@ endif()
 
 find_package(OpenMP REQUIRED)
 
+# Convert OpenMP flags from string to list for proper handling on macOS
+# This is especially important on macOS where flags are set manually as a single string
+if(APPLE AND OpenMP_CXX_FLAGS)
+  separate_arguments(OpenMP_CXX_FLAGS_LIST UNIX_COMMAND "${OpenMP_CXX_FLAGS}")
+else()
+  # On other platforms, use the flags as-is (they should already be a list)
+  set(OpenMP_CXX_FLAGS_LIST ${OpenMP_CXX_FLAGS})
+endif()
+
 list(APPEND EXTRA_INCLUDES "${OpenMP_CXX_INCLUDE_DIRS}") 
 
 # make difference between MKL and OPENBLAS by checking specific functions
@@ -291,7 +300,8 @@ endif()
 
 # if LAPACKE not found try another round
 if(${LAPACKE_FOUND})
-    set(LAPACKE_LIBRARIES)
+    # LAPACKE functions found in existing libraries, use LAPACK_LIBRARIES
+    set(LAPACKE_LIBRARIES ${LAPACK_LIBRARIES})
 else()
     # On macOS with OpenBLAS, LAPACKE is typically included in OpenBLAS
     if(APPLE AND BLAS_IS_OPENBLAS)
@@ -777,7 +787,7 @@ target_compile_options(qgd PUBLIC
     ${CXX_FLAGS}
     "$<$<CONFIG:Debug>:${CXX_FLAGS_DEBUG}>"
     "$<$<CONFIG:Release>:${CXX_FLAGS_RELEASE}>"
-    ${OpenMP_CXX_FLAGS}
+    ${OpenMP_CXX_FLAGS_LIST}
 )
 
 # adding linking options
