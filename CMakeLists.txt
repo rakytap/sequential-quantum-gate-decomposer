@@ -294,7 +294,7 @@ if(${LAPACKE_FOUND})
     set(LAPACKE_LIBRARIES)
 else()
     # On macOS with OpenBLAS, LAPACKE is typically included in OpenBLAS
-    if(APPLE AND ${BLAS_IS_OPENBLAS})
+    if(APPLE AND BLAS_IS_OPENBLAS)
         message(STATUS "macOS with OpenBLAS: LAPACKE should be included in OpenBLAS")
         set(LAPACKE_LIBRARIES)
     else()
