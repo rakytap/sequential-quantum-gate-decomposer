@@ -279,6 +279,12 @@ message(STATUS "BLAS_IS_OPENBLAS: ${BLAS_IS_OPENBLAS}")
 # check the presence of lapacke library
 # First, try to find LAPACKE library paths on macOS
 set(LAPACKE_CHECK_LIBRARIES "${LAPACK_LIBRARIES}")
+set(CMAKE_REQUIRED_LIBRARIES "${LAPACKE_CHECK_LIBRARIES}" "-lm")
+
+# Try to find separate LAPACKE library
+find_library(LAPACKE_LIBRARIES lapacke)
+
+
 if(APPLE)
     # On macOS, try to find LAPACKE in Homebrew's lapack installation
     execute_process(
@@ -317,14 +323,11 @@ if(APPLE)
     endif()
 endif()
 
-# Set required libraries and includes for LAPACKE function check
-set(CMAKE_REQUIRED_LIBRARIES "${LAPACKE_CHECK_LIBRARIES}" "-lm")
-if(LAPACKE_CHECK_INCLUDES)
-    set(CMAKE_REQUIRED_INCLUDES "${LAPACKE_CHECK_INCLUDES}")
+if(NOT LAPACKE_LIBRARIES)
+    message(FATAL_ERROR "Could not find LAPACKE library")
 endif()
-check_function_exists(LAPACKE_zgesvd LAPACKE_FOUND)
-set(CMAKE_REQUIRED_LIBRARIES "")
-set(CMAKE_REQUIRED_INCLUDES "")
+
+
 
 # If MKL is enabled
 if(${BLAS_IS_MKL})
