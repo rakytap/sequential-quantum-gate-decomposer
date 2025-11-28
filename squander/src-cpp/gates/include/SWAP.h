@@ -76,7 +76,7 @@ Matrix get_matrix(int parallel) override;
 */
 virtual void apply_to(Matrix& input, int parallel = 0) override;
 
-virtual void apply_to(Matrix& input, const Matrix_real& parameters, int parallel) override;
+virtual void apply_to(Matrix& input, const Matrix_real& parameters, int parallel);
 /**
 @brief Call to create a clone of the present class
 @return Return with a pointer pointing to the cloned object

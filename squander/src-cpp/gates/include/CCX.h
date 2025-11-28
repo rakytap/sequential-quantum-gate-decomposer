@@ -92,7 +92,7 @@ virtual void apply_to(Matrix& input, int parallel = 0) override;
 @param parameters An array of parameters to calculate the matrix elements
 @param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with Intel TBB
 */
-virtual void apply_to(Matrix& input, const Matrix_real& parameters, int parallel = 0) override;
+virtual void apply_to(Matrix& input, const Matrix_real& parameters, int parallel = 0);
 
 std::vector<int> get_involved_qubits(bool only_target) override;
 
