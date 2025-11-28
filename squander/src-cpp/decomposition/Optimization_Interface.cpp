@@ -235,7 +235,7 @@ void Optimization_Interface::export_current_cost_fnc(double current_minimum, Mat
 
     std::uniform_int_distribution<> distrib(0, qbit_num-2); 
 
-    memset(input_state.get_data(), 0.0, (input_state.size()*2)*sizeof(double) ); 
+    memset(input_state.get_data(), 0, (input_state.size()*2)*sizeof(double) ); 
     input_state[0].real = 1.0;
 
     matrix_base<int> qbit_sublist(1,2);
@@ -709,7 +709,7 @@ Optimization_Interface::optimization_problem_batched( std::vector<Matrix_real>& 
 #endif 
 
 
-    Matrix_real cost_fnc_mtx(parameters_vec.size(), 1);
+    Matrix_real cost_fnc_mtx(static_cast<int>(parameters_vec.size()), 1);
     int parallel = get_parallel_configuration();
     
 #ifdef __MPI__

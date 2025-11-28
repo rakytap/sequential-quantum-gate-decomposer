@@ -576,7 +576,7 @@ void Variational_Quantum_Eigensolver_Base::initialize_zero_state( ) {
 
     initial_state[0].real = 1.0;
     initial_state[0].imag = 0.0;
-    memset(initial_state.get_data()+2, 0.0, (initial_state.size()*2-2)*sizeof(double) );    
+    memset(initial_state.get_data()+2, 0, (initial_state.size()*2-2)*sizeof(double) );    
 
     initial_state[1].real = 0.0;
     initial_state[1].imag = 0.0;  

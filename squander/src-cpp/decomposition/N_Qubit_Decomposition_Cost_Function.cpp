@@ -692,7 +692,7 @@ static void accumulate_grad_for_cut(Matrix& accum, const std::vector<double>& G,
     int m_cols = dB * dB;
 
     int k = std::min(m_rows, m_cols);
-    int tot_dyadic = G.size();
+    int tot_dyadic = static_cast<int>(G.size());
 
     // Row-major indexing: accum[in + out*N] is element (in, out)
     for (int in = 0; in < N; ++in) {
@@ -814,7 +814,7 @@ double tail_loss(const std::vector<double>& S, int max_dyadic, double rho=0.1, d
     double acc = 0.0;
     for (int k = max_dyadic-1; k >= 0; --k) {
         if (k < tot_dyadic) {
-            double val = S[1 << k] - S[0] * tol;
+            double val = S[static_cast<size_t>(1) << k] - S[0] * tol;
             acc += w * val * val;
         }
         w *= rho;  // geometric weight rho^k

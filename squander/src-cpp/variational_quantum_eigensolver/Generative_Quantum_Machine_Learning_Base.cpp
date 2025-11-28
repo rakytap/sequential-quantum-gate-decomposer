@@ -236,7 +236,7 @@ double Generative_Quantum_Machine_Learning_Base::Gaussian_kernel(int x, int y, M
 @brief Call to calculate and save the values of the gaussian kernel needed for traing
 */
 void Generative_Quantum_Machine_Learning_Base::fill_lookup_table() {
-    gaussian_lookup_table = std::vector<std::vector<double>>(1<<qbit_num, std::vector<double>(1<<qbit_num, 0));
+    gaussian_lookup_table = std::vector<std::vector<double>>(static_cast<size_t>(1)<<qbit_num, std::vector<double>(static_cast<size_t>(1)<<qbit_num, 0));
     for (int idx1=0; idx1 < 1<<qbit_num; idx1++) {
         for (int idx2=0; idx2 < 1<<qbit_num; idx2++) {
             gaussian_lookup_table[idx1][idx2] = Gaussian_kernel(idx1, idx2, sigma);
@@ -275,10 +275,10 @@ double Generative_Quantum_Machine_Learning_Base::expectation_value_P_star_P_star
 double Generative_Quantum_Machine_Learning_Base::expectation_value_P_star_P_star_exact() {
     double ev=0.0;
     tbb::combinable<double> priv_partial_ev{[](){return 0.0;}};
-    tbb::parallel_for( tbb::blocked_range<int>(0, 1<<qbit_num, 1024), [&](tbb::blocked_range<int> r) {
+    tbb::parallel_for( tbb::blocked_range<int>(0, static_cast<int>(static_cast<size_t>(1) << qbit_num), 1024), [&](tbb::blocked_range<int> r) {
         double& ev_local = priv_partial_ev.local();
         for (int idx1=r.begin(); idx1<r.end(); idx1++) {
-            for (int idx2=0; idx2<1<<qbit_num; idx2++) {
+            for (int idx2=0; idx2<static_cast<int>(static_cast<size_t>(1) << qbit_num); idx2++) {
                 ev_local += P_star[idx1]*P_star[idx2]*Gaussian_kernel(idx1, idx2, sigma);
             }
         }
@@ -321,8 +321,8 @@ double Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions_exact(
     }
 
     // We calculate the distribution created by our circuit at the given traing data points "we sample our distribution"
-    std::vector<double> P_theta(1<<qbit_num);
-    tbb::parallel_for( tbb::blocked_range<int>(0, 1<<qbit_num, 1024), [&](tbb::blocked_range<int> r) {
+    std::vector<double> P_theta(static_cast<size_t>(1) << qbit_num);
+    tbb::parallel_for( tbb::blocked_range<int>(0, static_cast<int>(static_cast<size_t>(1) << qbit_num), 1024), [&](tbb::blocked_range<int> r) {
         for (int idx=r.begin(); idx<r.end(); idx++) {
             P_theta[idx] = State_right[idx].real*State_right[idx].real + State_right[idx].imag*State_right[idx].imag;
         }
@@ -333,7 +333,7 @@ double Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions_exact(
     double ev_P_theta_P_star    = 0.0;
     tbb::combinable<double> priv_partial_ev_P_theta_P_theta{[](){return 0.0;}};
     tbb::combinable<double> priv_partial_ev_P_theta_P_star{[](){return 0.0;}};
-    tbb::parallel_for( tbb::blocked_range2d<int>(0, 1<<qbit_num, 0, 1<<qbit_num), [&](tbb::blocked_range2d<int> r) {
+    tbb::parallel_for( tbb::blocked_range2d<int>(0, static_cast<int>(static_cast<size_t>(1) << qbit_num), 0, static_cast<int>(static_cast<size_t>(1) << qbit_num)), [&](tbb::blocked_range2d<int> r) {
         double& ev_P_theta_P_theta_local = priv_partial_ev_P_theta_P_theta.local();
         double& ev_P_theta_P_star_local = priv_partial_ev_P_theta_P_star.local();
         for (int idx1=r.rows().begin(); idx1<r.rows().end(); idx1++) {
@@ -382,8 +382,8 @@ double Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions_approx
     }
 
     // We calculate the distribution created by our circuit at the given traing data points "we sample our distribution"
-    std::vector<double> P_theta(1<<qbit_num);
-    tbb::parallel_for( tbb::blocked_range<int>(0, 1<<qbit_num, 1024), [&](tbb::blocked_range<int> r) {
+    std::vector<double> P_theta(static_cast<size_t>(1) << qbit_num);
+    tbb::parallel_for( tbb::blocked_range<int>(0, static_cast<int>(static_cast<size_t>(1) << qbit_num), 1024), [&](tbb::blocked_range<int> r) {
         for (int idx=r.begin(); idx<r.end(); idx++) {
             P_theta[idx] = State_right[idx].real*State_right[idx].real + State_right[idx].imag*State_right[idx].imag;
         }
@@ -509,7 +509,7 @@ void Generative_Quantum_Machine_Learning_Base::optimization_problem_combined_non
     }
 
     // the number of free parameters
-    int parameter_num_loc = parameters.size();
+    int parameter_num_loc = static_cast<int>(parameters.size());
 
     Matrix_real cost_function_terms;
 
@@ -877,8 +877,8 @@ void Generative_Quantum_Machine_Learning_Base::MultyRZ(std::vector<int>& qbits) 
     for (size_t idx=0; idx<qbits.size()-1; idx++) {
         add_cnot(qbits[idx+1], qbits[idx]);
     }
-    add_rz(qbits[qbits.size()-1]);
-    for (int idx=qbits.size()-1; idx>0; idx--) {
+    add_rz(qbits[static_cast<int>(qbits.size())-1]);
+    for (int idx=static_cast<int>(qbits.size())-1; idx>0; idx--) {
         add_cnot(qbits[idx], qbits[idx-1]);
     }
 }
