@@ -23,6 +23,7 @@ limitations under the License.
 #include <iostream>
 #include <algorithm>
 #include <random>
+#include <cmath>
 
 static tbb::spin_mutex my_mutex;
 
@@ -298,12 +299,12 @@ double Generative_Quantum_Machine_Learning_Base::TV_of_the_distributions(Matrix&
     std::vector<double> P_theta;
 
     for (size_t x_idx=0; x_idx<static_cast<size_t>(State_right.size()); x_idx++){
-        P_theta.push_back(State_right[x_idx].real*State_right[x_idx].real +State_right[x_idx].imag*State_right[x_idx].imag);
+        P_theta.push_back(State_right[static_cast<int>(x_idx)].real*State_right[static_cast<int>(x_idx)].real +State_right[static_cast<int>(x_idx)].imag*State_right[static_cast<int>(x_idx)].imag);
     }
 
     double TV = 0.0;
     for (size_t i=0; i<P_theta.size(); i++) {
-        TV += abs(P_theta[i]-P_star[i]);
+        TV += std::abs(P_theta[i]-P_star[i]);
     }
     return TV*0.5;
 }
