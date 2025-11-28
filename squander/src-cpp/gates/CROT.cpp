@@ -132,14 +132,14 @@ CROT::apply_to_list( Matrix_real& parameters_mtx, std::vector<Matrix>& inputs, i
 
     int work_batch = 1;
     if ( parallel == 0 ) {
-        work_batch = inputs.size();
+        work_batch = static_cast<int>(inputs.size());
     }
     else {
         work_batch = 1;
     }
 
 
-    tbb::parallel_for( tbb::blocked_range<int>(0,inputs.size(),work_batch), [&](tbb::blocked_range<int> r) {
+    tbb::parallel_for( tbb::blocked_range<int>(0,static_cast<int>(inputs.size()),work_batch), [&](tbb::blocked_range<int> r) {
         for (int idx=r.begin(); idx<r.end(); ++idx) { 
 
             Matrix* input = &inputs[idx];
@@ -179,7 +179,7 @@ CROT::apply_to( Matrix_real& parameters_mtx, Matrix& input, int parallel ) {
     if (input.cols==1){
 
     Matrix U_2qbit(4,4);
-    memset(U_2qbit.get_data(),0.0,(U_2qbit.size()*2)*sizeof(double));
+    memset(U_2qbit.get_data(),0,(U_2qbit.size()*2)*sizeof(double));
     U_2qbit[0].real = std::cos(ThetaOver2);
     U_2qbit[2].real = std::sin(ThetaOver2)*std::sin(Phi);
     U_2qbit[2].imag = std::sin(ThetaOver2)*std::cos(Phi);
@@ -283,7 +283,7 @@ CROT::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input, int paralle
     //Theta derivative
     Matrix res_mtx = input.copy();   
     Matrix U_2qbit(4,4);
-    memset(U_2qbit.get_data(),0.0,(U_2qbit.size()*2)*sizeof(double));
+    memset(U_2qbit.get_data(),0,(U_2qbit.size()*2)*sizeof(double));
     
     U_2qbit[0].real = std::cos(Theta0Over2_shifted);
     U_2qbit[2].real = std::sin(Theta0Over2_shifted)*std::sin(Phi);
@@ -309,7 +309,7 @@ CROT::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input, int paralle
     
     //Phi derivative
     Matrix res_mtx1 = input.copy();   
-    memset(U_2qbit.get_data(),0.0,(U_2qbit.size()*2)*sizeof(double));
+    memset(U_2qbit.get_data(),0,(U_2qbit.size()*2)*sizeof(double));
 
     U_2qbit[2].real = std::sin(ThetaOver2)*std::sin(Phi0_shifted);
     U_2qbit[2].imag = std::sin(ThetaOver2)*std::cos(Phi0_shifted);

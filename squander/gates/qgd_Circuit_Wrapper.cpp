@@ -1480,16 +1480,16 @@ qgd_Circuit_Wrapper_get_parents( qgd_Circuit_Wrapper *self, PyObject *args ) {
 
         // find the index of the parent_gate
         int parent_idx = -1;
-        for( int jdx=0; jdx<gates.size(); jdx++ ) {
+        for( size_t jdx=0; jdx<gates.size(); jdx++ ) {
 
             Gate* gate = gates[jdx];
 
             if( parent_gate == gate ) {
-                parent_idx = jdx;
+                parent_idx = static_cast<int>(jdx);
                 break;
             }
 
-            if( jdx == gates.size()-1 ) {
+            if( jdx == static_cast<size_t>(gates.size()-1) ) {
                 std::string err( "Parent gate did not found in the circuit. May be the gate is not in the circuit");
                 PyErr_SetString(PyExc_Exception, err.c_str());
                 return NULL;
@@ -1542,22 +1542,22 @@ qgd_Circuit_Wrapper_get_children( qgd_Circuit_Wrapper *self, PyObject *args ) {
 
 
     // find the indices of the children
-    for(int idx=0; idx<children.size(); idx++) {
+    for(size_t idx=0; idx<children.size(); idx++) {
 
         Gate* child_gate = children[idx];
 
         // find the index of the child_gate
         int child_idx = -1;
-        for( int jdx=0; jdx<gates.size(); jdx++ ) {
+        for( size_t jdx=0; jdx<gates.size(); jdx++ ) {
 
             Gate* gate = gates[jdx];
 
             if( child_gate == gate ) {
-                child_idx = jdx;
+                child_idx = static_cast<int>(jdx);
                 break;
             }
 
-            if( jdx == gates.size()-1 ) {
+            if( jdx == static_cast<size_t>(gates.size()-1) ) {
                 std::string err( "Child gate did not found in the circuit. May be the gate is not in the circuit");
                 PyErr_SetString(PyExc_Exception, err.c_str());
                 return NULL;

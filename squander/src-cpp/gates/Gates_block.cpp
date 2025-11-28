@@ -60,6 +60,9 @@ limitations under the License.
 
 #include "custom_kernel_1qubit_gate.h"
 
+#ifdef _WIN32
+#include <cstdio>
+#endif
 
 #include "apply_large_kernel_to_input.h"
 
@@ -211,14 +214,14 @@ Gates_block::apply_to_list( Matrix_real& parameters_mtx, std::vector<Matrix>& in
 
     int work_batch = 1;
     if ( parallel == 0 ) {
-        work_batch = inputs.size();
+        work_batch = static_cast<int>(inputs.size());
     }
     else {
         work_batch = 1;
     }
 
 
-    tbb::parallel_for( tbb::blocked_range<int>(0,inputs.size(),work_batch), [&](tbb::blocked_range<int> r) {
+    tbb::parallel_for( tbb::blocked_range<int>(0,static_cast<int>(inputs.size()),work_batch), [&](tbb::blocked_range<int> r) {
         for (int idx=r.begin(); idx<r.end(); ++idx) { 
 
             Matrix* input = &inputs[idx];
@@ -256,7 +259,7 @@ Gates_block::apply_to( Matrix_real& parameters_mtx_in, Matrix& input, int parall
         throw err;        
     }
 
-    int size = involved_qubits.size();
+    int size = static_cast<int>(involved_qubits.size());
 
     if (min_fusion != -1 && qbit_num >= min_fusion && size <= (input.cols == 1 ? 5 : 2) && qbit_num != size && gates.size() > 1) {        
         auto fb = fusion_block.get();
@@ -453,7 +456,7 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input, i
 
     int work_batch = 1;
     if ( parallel == 0 ) {
-        work_batch = gates.size();
+        work_batch = static_cast<int>(gates.size());
     }
     else {
         work_batch = 1;
@@ -1757,7 +1760,7 @@ int Gates_block::get_parameter_num() {
 @return Return with the number of the gates grouped in the gate block.
 */
 int Gates_block::get_gate_num() {
-    return gates.size();
+    return static_cast<int>(gates.size());
 }
 
 
@@ -2559,7 +2562,7 @@ Gates_block::get_reduced_density_matrix( Matrix_real& parameters_mtx, Matrix& in
     int rho_matrix_size = 1 << subset_qbit_num;
 
     Matrix rho(rho_matrix_size, rho_matrix_size);
-    memset( rho.get_data(), 0.0, rho.size()*sizeof(QGD_Complex16) );
+    memset( rho.get_data(), 0, rho.size()*sizeof(QGD_Complex16) );
 
 
 
@@ -2756,7 +2759,7 @@ Gates_block::determine_parents( Gate* gate ) {
     std::cout << std::endl;
   */  
     // iterate over gates in the circuit
-    for( int idx=gates.size()-1; idx>=0; idx-- ) {
+    for( int idx=static_cast<int>(gates.size()-1); idx>=0; idx-- ) {
         Gate* gate_loc = gates[idx];
         std::vector<int>&& involved_qubits_loc = gate_loc->get_involved_qubits();
         
@@ -3939,7 +3942,14 @@ export_gate_list_to_binary(Matrix_real& parameters, Gates_block* gates_block, co
     FILE* pFile;
     const char* c_filename = filename.c_str();
     
+#ifdef _WIN32
+    errno_t err = fopen_s(&pFile, c_filename, "wb");
+    if (err != 0) {
+        pFile = NULL;
+    }
+#else
     pFile = fopen(c_filename, "wb");
+#endif
     if (pFile==NULL) {fputs ("File error",stderr); exit (1);}
 
     export_gate_list_to_binary( parameters, gates_block, pFile, verbosity );
@@ -4059,7 +4069,14 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, const std::st
     FILE* pFile;
     const char* c_filename = filename.c_str();
     
+#ifdef _WIN32
+    errno_t err = fopen_s(&pFile, c_filename, "rb");
+    if (err != 0) {
+        pFile = NULL;
+    }
+#else
     pFile = fopen(c_filename, "rb");
+#endif
     if (pFile==NULL) {fputs ("File error",stderr); exit (1);}
 
     Gates_block* ret = import_gate_list_from_binary(parameters, pFile, verbosity);
@@ -4105,7 +4122,7 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
 
     
 
-    int iter_max = 1e5;
+    int iter_max = 100000;
     int iter = 0;
     while ( gate_block_level_gates_num[0] > 0 && iter < iter_max) {
 
@@ -4302,7 +4319,7 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
             sstream << "importing Y gate" << std::endl;
 
             int target_qbit;
-            fread(&target_qbit, sizeof(int), 1, pFile);
+            fread_wrapper(&target_qbit, sizeof(int), 1, pFile);
             sstream << "target_qbit: " << target_qbit << std::endl;
 
             gate_block_levels[current_level]->add_y(target_qbit);
@@ -4314,7 +4331,7 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
             sstream << "importing Z gate" << std::endl;
 
             int target_qbit;
-            fread(&target_qbit, sizeof(int), 1, pFile);
+            fread_wrapper(&target_qbit, sizeof(int), 1, pFile);
             sstream << "target_qbit: " << target_qbit << std::endl;
 
             gate_block_levels[current_level]->add_z(target_qbit);
@@ -4326,7 +4343,7 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
             sstream << "importing S gate" << std::endl;
 
             int target_qbit;
-            fread(&target_qbit, sizeof(int), 1, pFile);
+            fread_wrapper(&target_qbit, sizeof(int), 1, pFile);
             sstream << "target_qbit: " << target_qbit << std::endl;
 
             gate_block_levels[current_level]->add_s(target_qbit);
@@ -4338,7 +4355,7 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
             sstream << "importing Sdg gate" << std::endl;
 
             int target_qbit;
-            fread(&target_qbit, sizeof(int), 1, pFile);
+            fread_wrapper(&target_qbit, sizeof(int), 1, pFile);
             sstream << "target_qbit: " << target_qbit << std::endl;
 
             gate_block_levels[current_level]->add_sdg(target_qbit);
@@ -4350,7 +4367,7 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
             sstream << "importing T gate" << std::endl;
 
             int target_qbit;
-            fread(&target_qbit, sizeof(int), 1, pFile);
+            fread_wrapper(&target_qbit, sizeof(int), 1, pFile);
             sstream << "target_qbit: " << target_qbit << std::endl;
 
             gate_block_levels[current_level]->add_t(target_qbit);
@@ -4362,7 +4379,7 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
             sstream << "importing Tdg gate" << std::endl;
 
             int target_qbit;
-            fread(&target_qbit, sizeof(int), 1, pFile);
+            fread_wrapper(&target_qbit, sizeof(int), 1, pFile);
             sstream << "target_qbit: " << target_qbit << std::endl;
 
             gate_block_levels[current_level]->add_t(target_qbit);
@@ -4519,7 +4536,7 @@ Matrix_real reverse_parameters( const Matrix_real& parameters_in, std::vector<Ga
             
             std::vector<Gate*> gates_loc = block_gate->get_gates();
             
-            Matrix_real parameters_of_block_reversed = reverse_parameters( parameters_of_block, gates_loc.begin(), gates_loc.size() );
+            Matrix_real parameters_of_block_reversed = reverse_parameters( parameters_of_block, gates_loc.begin(), static_cast<int>(gates_loc.size()) );
             
             //parameters_of_block_reversed.print_matrix();
             
@@ -4616,7 +4633,7 @@ Matrix_real inverse_reverse_parameters( const Matrix_real& parameters_in, std::v
             
             std::vector<Gate*> gates_loc = block_gate->get_gates();
             
-            Matrix_real parameters_of_block_reversed = reverse_parameters( parameters_of_block, gates_loc.begin(), gates_loc.size() );
+            Matrix_real parameters_of_block_reversed = reverse_parameters( parameters_of_block, gates_loc.begin(), static_cast<int>(gates_loc.size()) );
             
             //parameters_of_block_reversed.print_matrix();
             

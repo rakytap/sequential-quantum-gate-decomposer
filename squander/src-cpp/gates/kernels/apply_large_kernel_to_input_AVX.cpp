@@ -176,7 +176,7 @@ void precompute_index_mapping(const std::vector<int>& target_qubits,
     
     for (int k = 0; k < block_size; ++k) {
         int idx = 0;
-        for (int bit = 0; bit < target_qubits.size(); ++bit) {
+        for (size_t bit = 0; bit < target_qubits.size(); ++bit) {
             if (k & (1 << bit)) {
                 idx |= (1 << target_qubits[bit]);
             }
@@ -205,7 +205,7 @@ inline void get_block_indices_fast(int iter_idx,
             base |= (1 << non_targets[i]);
         }
     }
-    for (int k = 0; k < block_pattern.size(); ++k) {
+    for (size_t k = 0; k < block_pattern.size(); ++k) {
         indices[k] = base | block_pattern[k];  
     }
 }
@@ -314,7 +314,7 @@ inline __m256d* construct_mv_xy_vectors(const Matrix& gate_kernel_unitary, const
  */
 void apply_nqbit_unitary_AVX( Matrix& gate_kernel_unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size ) {
 
-    int n = involved_qbits.size();
+    int n = static_cast<int>(involved_qbits.size());
     int qubit_num = (int) std::log2(input.rows);
     int block_size = 1 << n;
     int num_blocks = 1 << (qubit_num - n);
@@ -436,9 +436,6 @@ void apply_2qbit_kernel_to_state_vector_input_AVX(Matrix& two_qbit_unitary, Matr
     int index_step_outer = 1 << outer_qbit;
     int index_step_inner = 1 << inner_qbit;
     int current_idx = 0;
-    __m256d neg = _mm256_setr_pd(1.0, -1.0, 1.0, -1.0);
-
-
 
 /*
 AVX kernel developed according to https://github.com/qulacs/qulacs/blob/main/src/csim/update_ops_matrix_dense_single.cpp
@@ -774,8 +771,6 @@ void apply_3qbit_kernel_to_state_vector_input_AVX(Matrix& unitary, Matrix& input
     int index_step_inner = 1 << inner_qbit;
     int index_step_middle = 1 << middle_qbit;
     int index_step_outer = 1 << outer_qbit;
-    
-    __m256d neg = _mm256_setr_pd(1.0, -1.0, 1.0, -1.0);
     
     int qubit_num = (int) std::log2(input.rows);
 
@@ -1477,8 +1472,6 @@ void apply_2qbit_kernel_to_state_vector_input_AVX_OpenMP(Matrix& two_qbit_unitar
     int outer_qbit = involved_qbits[1];
     int index_step_outer = 1 << outer_qbit;
     int index_step_inner = 1 << inner_qbit;
-
-    __m256d neg = _mm256_setr_pd(1.0, -1.0, 1.0, -1.0);
     
     int num_qubits = (int)std::log2(matrix_size);
     std::vector<int> is_target(num_qubits, 0);
@@ -1751,8 +1744,6 @@ void apply_2qbit_kernel_to_state_vector_input_AVX_TBB(Matrix& two_qbit_unitary, 
     int outer_qbit = involved_qbits[1];
     int index_step_outer = 1 << outer_qbit;
     int index_step_inner = 1 << inner_qbit;
-
-    __m256d neg = _mm256_setr_pd(1.0, -1.0, 1.0, -1.0);
     
     int num_qubits = (int)std::log2(matrix_size);
     std::vector<int> is_target(num_qubits, 0);
@@ -2027,8 +2018,6 @@ void apply_3qbit_kernel_to_state_vector_input_AVX_OpenMP(Matrix& unitary, Matrix
     int index_step_middle = 1 << middle_qbit;
     int index_step_outer = 1 << outer_qbit;
     
-    __m256d neg = _mm256_setr_pd(1.0, -1.0, 1.0, -1.0);
-    
     // Use the same approach as n-qubit for all cases
     int qubit_num = (int) std::log2(input.rows);
 
@@ -2201,8 +2190,6 @@ void apply_3qbit_kernel_to_state_vector_input_AVX_TBB(Matrix& unitary, Matrix& i
     int index_step_inner = 1 << inner_qbit;
     int index_step_middle = 1 << middle_qbit;
     int index_step_outer = 1 << outer_qbit;
-    
-    __m256d neg = _mm256_setr_pd(1.0, -1.0, 1.0, -1.0);
     
     // Use the same approach as n-qubit for all cases
     int qubit_num = (int) std::log2(input.rows);
@@ -2578,7 +2565,6 @@ void apply_4qbit_kernel_to_state_vector_input_AVX_TBB(Matrix& unitary, Matrix& i
     
     // Properly iterate through all blocks
     int num_qubits = (int)std::log2(matrix_size);
-    int num_blocks = matrix_size >> 4;  // 2^4 = 16 elements per block
 
     // Identify non-involved qubits
     std::vector<int> is_target(num_qubits, 0);
@@ -3117,7 +3103,6 @@ void apply_5qbit_kernel_to_state_vector_input_AVX_TBB(Matrix& unitary, Matrix& i
     int index_step_outer   = 1 << involved_qbits[4];
     
     int num_qubits = (int)std::log2(matrix_size);
-    int num_blocks = matrix_size >> 5;
     std::vector<int> is_target(num_qubits, 0);
     for (int q : involved_qbits) is_target[q] = 1;
     

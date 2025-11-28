@@ -327,7 +327,14 @@ RL_experience::export_probabilities(){
 std::string filename = "probabilities.bin";
 
     const char* c_filename = filename.c_str();
+#ifdef _WIN32
+    errno_t err = fopen_s(&pFile, c_filename, "wb");
+    if (err != 0) {
+        pFile = NULL;
+    }
+#else
     pFile = fopen(c_filename, "wb");
+#endif
     if (pFile==NULL) {
         fputs ("File error",stderr); 
         std::string error("Cannot open file.");
@@ -366,25 +373,63 @@ RL_experience::import_probabilities(){
 std::string filename = "probabilities.bin";
 
     const char* c_filename = filename.c_str();
+#ifdef _WIN32
+    errno_t err = fopen_s(&pFile, c_filename, "rb");
+    if (err != 0) {
+        pFile = NULL;
+    }
+#else
     pFile = fopen(c_filename, "rb");
+#endif
     if (pFile==NULL) {
         fputs ("File error",stderr); 
         std::string error("Cannot open file.");
         throw error;
     }
 
-    fread(&iteration_num, sizeof(unsigned long long), 1, pFile);
-    fread(&parameter_num, sizeof(int), 1, pFile);
+    size_t items_read;
+    items_read = fread(&iteration_num, sizeof(unsigned long long), 1, pFile);
+    if (items_read != 1) {
+        fclose(pFile);
+        std::string error("Failed to read iteration_num from file.");
+        throw error;
+    }
+    items_read = fread(&parameter_num, sizeof(int), 1, pFile);
+    if (items_read != 1) {
+        fclose(pFile);
+        std::string error("Failed to read parameter_num from file.");
+        throw error;
+    }
 
     int element_num;
  
-    fread( &element_num, sizeof(int), 1, pFile);
+    items_read = fread( &element_num, sizeof(int), 1, pFile);
+    if (items_read != 1) {
+        fclose(pFile);
+        std::string error("Failed to read element_num from file.");
+        throw error;
+    }
     parameter_probs = Matrix_real( element_num, 1 );
-    fread(parameter_probs.get_data(), sizeof(double), element_num, pFile);
+    items_read = fread(parameter_probs.get_data(), sizeof(double), element_num, pFile);
+    if (items_read != static_cast<size_t>(element_num)) {
+        fclose(pFile);
+        std::string error("Failed to read parameter_probs from file.");
+        throw error;
+    }
 
-    fread( &element_num, sizeof(int), 1, pFile);
+    items_read = fread( &element_num, sizeof(int), 1, pFile);
+    if (items_read != 1) {
+        fclose(pFile);
+        std::string error("Failed to read element_num from file.");
+        throw error;
+    }
     total_counts_probs = matrix_base<unsigned long long>( element_num, 1 );
-    fread(total_counts_probs.get_data(), sizeof(unsigned long long), element_num, pFile);
+    items_read = fread(total_counts_probs.get_data(), sizeof(unsigned long long), element_num, pFile);
+    if (items_read != static_cast<size_t>(element_num)) {
+        fclose(pFile);
+        std::string error("Failed to read total_counts_probs from file.");
+        throw error;
+    }
 
 
     fclose(pFile);

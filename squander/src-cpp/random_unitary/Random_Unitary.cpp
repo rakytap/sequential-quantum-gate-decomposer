@@ -148,7 +148,7 @@ Random_Unitary::Construct_Unitary_Matrix() {
     double* varkappa = (double*) qgd_calloc( (dim-1),sizeof(double), 64);
 
     // initialize random seed:
-    srand (time(NULL));
+    srand (static_cast<unsigned int>(time(NULL)));
 
     for (int idx=0; idx<dim*(dim-1)/2; idx++) {
         vartheta[idx] = (2*double(rand())/double(RAND_MAX)-1)*2*M_PI;

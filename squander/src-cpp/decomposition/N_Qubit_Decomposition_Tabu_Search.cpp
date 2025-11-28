@@ -178,7 +178,7 @@ N_Qubit_Decomposition_Tabu_Search::tabu_search_over_gate_structures() {
     double inverz_temperature = 1.0;
     std::vector<GrayCode> possible_gate_structures;
 
-    long long use_osr = 1;
+    long long use_osr = 0;
     if (config.count("use_osr") > 0) {
         config["use_osr"].get_property(use_osr);
     }
@@ -412,7 +412,7 @@ N_Qubit_Decomposition_Tabu_Search::determine_mutated_structures( const GrayCode&
 
 
     std::vector<GrayCode> possible_structures_list;
-    int n_ary_limit_max = topology.size();
+    int n_ary_limit_max = static_cast<int>(topology.size());
 /*
     std::cout << "ooooooooooooo " << n_ary_limit_max << std::endl;
     for( int idx=0; idx<topology.size(); idx++ ) {
@@ -497,18 +497,18 @@ N_Qubit_Decomposition_Tabu_Search::draw_gate_structure_from_list( std::vector<Gr
 
     // the probability distribution is weighted by the number of two-qubit gates in the gate structure
     // the probability weights should be smaller if containing more two-qubit gates
-    matrix_base<int> weights( gcodes.size(), 1 );
+    matrix_base<int> weights( static_cast<int>(gcodes.size()), 1 );
     
     int fact = 4;
 
     for( size_t gcode_idx=0; gcode_idx<gcodes.size(); gcode_idx++ ) {
 
         gcode = gcodes[ gcode_idx ];
-        weights[ gcode_idx ] = fact*(levels);
+        weights[ static_cast<int>(gcode_idx) ] = fact*(levels);
 
         for( int gcode_element_idx=0; gcode_element_idx<gcode.size(); gcode_element_idx++ ) {
             if( gcode[gcode_element_idx] > -1 ) {
-                weights[ gcode_idx ] = weights[ gcode_idx ] - fact;
+                weights[ static_cast<int>(gcode_idx) ] = weights[ static_cast<int>(gcode_idx) ] - fact;
             }
         }
     

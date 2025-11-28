@@ -153,7 +153,6 @@ void  Grad_Descend::line_search(Matrix_real& x, Matrix_real& g, Matrix_real& sea
     double f_best         = f;
     double d__dot__g_abs_best = fabs(d__dot__g0);
 
-    double d__dot__g_lowest = d__dot__g0;
     double d__dot__g_highest = 0.0;
 
     
@@ -198,7 +197,6 @@ void  Grad_Descend::line_search(Matrix_real& x, Matrix_real& g, Matrix_real& sea
 
             step_lowest      = step;
             f_lowest         = f;
-            d__dot__g_lowest = d__dot__g_current;
             
         
         }
@@ -463,7 +461,7 @@ void Grad_Descend::get_search_direction(Matrix_real& g, Matrix_real& search_dire
 
 
     // calculate the search direction d by d = -g
-    memset(search_direction.get_data(), 0.0, search_direction.size()*sizeof(double) );
+    memset(search_direction.get_data(), 0, search_direction.size()*sizeof(double) );
 
     for (long row_idx = 0; row_idx < variable_num; row_idx++) {
 	search_direction[row_idx] = -g[row_idx];       

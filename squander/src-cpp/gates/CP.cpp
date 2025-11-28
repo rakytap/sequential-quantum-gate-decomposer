@@ -23,10 +23,6 @@ limitations under the License.
 #include "CP.h"
 
 
-// pi/2
-static double M_PIOver2 = M_PI/2;
-
-
 
 /**
 @brief Nullary constructor of the class.

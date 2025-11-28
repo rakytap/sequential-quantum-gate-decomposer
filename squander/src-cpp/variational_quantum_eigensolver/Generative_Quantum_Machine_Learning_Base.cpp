@@ -23,6 +23,7 @@ limitations under the License.
 #include <iostream>
 #include <algorithm>
 #include <random>
+#include <cmath>
 
 static tbb::spin_mutex my_mutex;
 
@@ -84,11 +85,11 @@ Generative_Quantum_Machine_Learning_Base::Generative_Quantum_Machine_Learning_Ba
 @param config_in A map that can be used to set hyperparameters during the process
 @return An instance of the class
 */
-Generative_Quantum_Machine_Learning_Base::Generative_Quantum_Machine_Learning_Base(std::vector<int> sample_indices_in, std::vector<std::vector<int>> sample_bitstrings_in, Matrix_real P_star_in, Matrix_real sigma_in, int qbit_num_in, bool use_lookup_table_in, std::vector<std::vector<int>> cliques_in, bool use_exact_in, std::map<std::string, Config_Element>& config_in) : Optimization_Interface(Matrix(Power_of_2(qbit_num_in),1), qbit_num_in, false, config_in, RANDOM, accelerator_num) {
+Generative_Quantum_Machine_Learning_Base::Generative_Quantum_Machine_Learning_Base(std::vector<int> sample_indices_in, std::vector<std::vector<int>> sample_bitstrings_in, Matrix_real P_star_in, Matrix_real sigma_in, int qbit_num_in, bool use_lookup_table_in, std::vector<std::vector<int>> cliques_in, bool use_exact_in, std::map<std::string, Config_Element>& config_in) : Optimization_Interface(Matrix(Power_of_2(qbit_num_in),1), qbit_num_in, false, config_in, RANDOM, 0) {
 
 	sample_indices = sample_indices_in;
 
-    sample_size = sample_indices.size();
+    sample_size = static_cast<int>(sample_indices.size());
 
     P_star = P_star_in;
     // config maps
@@ -236,7 +237,7 @@ double Generative_Quantum_Machine_Learning_Base::Gaussian_kernel(int x, int y, M
 @brief Call to calculate and save the values of the gaussian kernel needed for traing
 */
 void Generative_Quantum_Machine_Learning_Base::fill_lookup_table() {
-    gaussian_lookup_table = std::vector<std::vector<double>>(1<<qbit_num, std::vector<double>(1<<qbit_num, 0));
+    gaussian_lookup_table = std::vector<std::vector<double>>(static_cast<size_t>(1)<<qbit_num, std::vector<double>(static_cast<size_t>(1)<<qbit_num, 0));
     for (int idx1=0; idx1 < 1<<qbit_num; idx1++) {
         for (int idx2=0; idx2 < 1<<qbit_num; idx2++) {
             gaussian_lookup_table[idx1][idx2] = Gaussian_kernel(idx1, idx2, sigma);
@@ -275,10 +276,10 @@ double Generative_Quantum_Machine_Learning_Base::expectation_value_P_star_P_star
 double Generative_Quantum_Machine_Learning_Base::expectation_value_P_star_P_star_exact() {
     double ev=0.0;
     tbb::combinable<double> priv_partial_ev{[](){return 0.0;}};
-    tbb::parallel_for( tbb::blocked_range<int>(0, 1<<qbit_num, 1024), [&](tbb::blocked_range<int> r) {
+    tbb::parallel_for( tbb::blocked_range<int>(0, static_cast<int>(static_cast<size_t>(1) << qbit_num), 1024), [&](tbb::blocked_range<int> r) {
         double& ev_local = priv_partial_ev.local();
         for (int idx1=r.begin(); idx1<r.end(); idx1++) {
-            for (int idx2=0; idx2<1<<qbit_num; idx2++) {
+            for (int idx2=0; idx2<static_cast<int>(static_cast<size_t>(1) << qbit_num); idx2++) {
                 ev_local += P_star[idx1]*P_star[idx2]*Gaussian_kernel(idx1, idx2, sigma);
             }
         }
@@ -297,13 +298,13 @@ double Generative_Quantum_Machine_Learning_Base::expectation_value_P_star_P_star
 double Generative_Quantum_Machine_Learning_Base::TV_of_the_distributions(Matrix& State_right) {
     std::vector<double> P_theta;
 
-    for (size_t x_idx=0; x_idx<State_right.size(); x_idx++){
-        P_theta.push_back(State_right[x_idx].real*State_right[x_idx].real +State_right[x_idx].imag*State_right[x_idx].imag);
+    for (size_t x_idx=0; x_idx<static_cast<size_t>(State_right.size()); x_idx++){
+        P_theta.push_back(State_right[static_cast<int>(x_idx)].real*State_right[static_cast<int>(x_idx)].real +State_right[static_cast<int>(x_idx)].imag*State_right[static_cast<int>(x_idx)].imag);
     }
 
     double TV = 0.0;
-    for (int i=0; i<P_theta.size(); i++) {
-        TV += abs(P_theta[i]-P_star[i]);
+    for (size_t i=0; i<P_theta.size(); i++) {
+        TV += std::abs(P_theta[i]-P_star[i]);
     }
     return TV*0.5;
 }
@@ -321,8 +322,8 @@ double Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions_exact(
     }
 
     // We calculate the distribution created by our circuit at the given traing data points "we sample our distribution"
-    std::vector<double> P_theta(1<<qbit_num);
-    tbb::parallel_for( tbb::blocked_range<int>(0, 1<<qbit_num, 1024), [&](tbb::blocked_range<int> r) {
+    std::vector<double> P_theta(static_cast<size_t>(1) << qbit_num);
+    tbb::parallel_for( tbb::blocked_range<int>(0, static_cast<int>(static_cast<size_t>(1) << qbit_num), 1024), [&](tbb::blocked_range<int> r) {
         for (int idx=r.begin(); idx<r.end(); idx++) {
             P_theta[idx] = State_right[idx].real*State_right[idx].real + State_right[idx].imag*State_right[idx].imag;
         }
@@ -333,7 +334,7 @@ double Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions_exact(
     double ev_P_theta_P_star    = 0.0;
     tbb::combinable<double> priv_partial_ev_P_theta_P_theta{[](){return 0.0;}};
     tbb::combinable<double> priv_partial_ev_P_theta_P_star{[](){return 0.0;}};
-    tbb::parallel_for( tbb::blocked_range2d<int>(0, 1<<qbit_num, 0, 1<<qbit_num), [&](tbb::blocked_range2d<int> r) {
+    tbb::parallel_for( tbb::blocked_range2d<int>(0, static_cast<int>(static_cast<size_t>(1) << qbit_num), 0, static_cast<int>(static_cast<size_t>(1) << qbit_num)), [&](tbb::blocked_range2d<int> r) {
         double& ev_P_theta_P_theta_local = priv_partial_ev_P_theta_P_theta.local();
         double& ev_P_theta_P_star_local = priv_partial_ev_P_theta_P_star.local();
         for (int idx1=r.rows().begin(); idx1<r.rows().end(); idx1++) {
@@ -382,8 +383,8 @@ double Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions_approx
     }
 
     // We calculate the distribution created by our circuit at the given traing data points "we sample our distribution"
-    std::vector<double> P_theta(1<<qbit_num);
-    tbb::parallel_for( tbb::blocked_range<int>(0, 1<<qbit_num, 1024), [&](tbb::blocked_range<int> r) {
+    std::vector<double> P_theta(static_cast<size_t>(1) << qbit_num);
+    tbb::parallel_for( tbb::blocked_range<int>(0, static_cast<int>(static_cast<size_t>(1) << qbit_num), 1024), [&](tbb::blocked_range<int> r) {
         for (int idx=r.begin(); idx<r.end(); idx++) {
             P_theta[idx] = State_right[idx].real*State_right[idx].real + State_right[idx].imag*State_right[idx].imag;
         }
@@ -509,7 +510,7 @@ void Generative_Quantum_Machine_Learning_Base::optimization_problem_combined_non
     }
 
     // the number of free parameters
-    int parameter_num_loc = parameters.size();
+    int parameter_num_loc = static_cast<int>(parameters.size());
 
     Matrix_real cost_function_terms;
 
@@ -626,7 +627,14 @@ void Generative_Quantum_Machine_Learning_Base::export_current_cost_fnc(double cu
     if (project_name != ""){filename = project_name + "_" + filename;}
 
         const char* c_filename = filename.c_str();
-	pFile = fopen(c_filename, "a");
+#ifdef _WIN32
+    errno_t err = fopen_s(&pFile, c_filename, "a");
+    if (err != 0) {
+        pFile = NULL;
+    }
+#else
+    pFile = fopen(c_filename, "a");
+#endif
 
         if (pFile==NULL) {
             fputs ("File error",stderr); 
@@ -638,7 +646,7 @@ void Generative_Quantum_Machine_Learning_Base::export_current_cost_fnc(double cu
 
     std::uniform_int_distribution<> distrib(0, qbit_num-2); 
 
-    memset(input_state.get_data(), 0.0, (input_state.size()*2)*sizeof(double) ); 
+    memset(input_state.get_data(), 0, (input_state.size()*2)*sizeof(double) ); 
     input_state[0].real = 1.0;
 
     matrix_base<int> qbit_sublist(1,2);
@@ -675,7 +683,7 @@ void Generative_Quantum_Machine_Learning_Base::initialize_zero_state( ) {
 
     initial_state[0].real = 1.0;
     initial_state[0].imag = 0.0;
-    memset(initial_state.get_data()+2, 0.0, (initial_state.size()*2-2)*sizeof(double) );      
+    memset(initial_state.get_data()+2, 0, (initial_state.size()*2-2)*sizeof(double) );      
 
     return;
 }
@@ -835,7 +843,7 @@ void Generative_Quantum_Machine_Learning_Base::generate_circuit( int layers, int
 
         case QCMRF:
         {
-            int num_cliques = cliques.size();
+            int num_cliques = static_cast<int>(cliques.size());
             if (cliques.size() == 0) {
                 std::string error("Variational_Quantum_Eigensolver_Base::generate_initial_circuit: input the cliques for using QCMRF ansatz");
                 throw error;
@@ -847,7 +855,6 @@ void Generative_Quantum_Machine_Learning_Base::generate_circuit( int layers, int
 
             std::vector<std::vector<int>> all_subsets;
             for (int clique_idx = 0; clique_idx < num_cliques; clique_idx++) {
-                int clique_size = cliques[clique_idx].size();
                 std::vector<int> subset;
                 generate_clique_circuit(0, cliques[clique_idx], all_subsets, subset);
             }
@@ -868,11 +875,11 @@ void Generative_Quantum_Machine_Learning_Base::generate_circuit( int layers, int
 @param qbits The qbits the gate operates on. The depth of the generated circuit is 2*number of qbits
 */
 void Generative_Quantum_Machine_Learning_Base::MultyRZ(std::vector<int>& qbits) {
-    for (int idx=0; idx<qbits.size()-1; idx++) {
+    for (size_t idx=0; idx<qbits.size()-1; idx++) {
         add_cnot(qbits[idx+1], qbits[idx]);
     }
-    add_rz(qbits[qbits.size()-1]);
-    for (int idx=qbits.size()-1; idx>0; idx--) {
+    add_rz(qbits[static_cast<int>(qbits.size())-1]);
+    for (int idx=static_cast<int>(qbits.size())-1; idx>0; idx--) {
         add_cnot(qbits[idx], qbits[idx-1]);
     }
 }
@@ -884,7 +891,7 @@ void Generative_Quantum_Machine_Learning_Base::MultyRZ(std::vector<int>& qbits) 
 @param subset Temporary variable for storing subsets.
 */
 void Generative_Quantum_Machine_Learning_Base::generate_clique_circuit(int i, std::vector<int>& arr, std::vector<std::vector<int>>& res, std::vector<int>& subset) {
-    if (i == arr.size()) {
+    if (static_cast<size_t>(i) == arr.size()) {
         if (subset.size() != 0) {
             if (std::find(res.begin(), res.end(), subset) == res.end()) {
                 res.push_back(subset);

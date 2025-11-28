@@ -93,8 +93,6 @@ void Optimization_Interface::solve_layer_optimization_problem_ADAM( int num_of_p
 
         int ADAM_status = 0;
 
-        int randomization_successful = 0;
-
 
         long long max_inner_iterations_loc;
         if ( config.count("max_inner_iterations_adam") > 0 ) {
@@ -229,7 +227,6 @@ void Optimization_Interface::solve_layer_optimization_problem_ADAM( int num_of_p
                     optimizer.eta = new_eta < 1e-1 ? new_eta : 1e-1;
                 }
                 
-                randomization_successful = 1;
             }
 
             if ( output_periodicity>0 && iter_idx % output_periodicity == 0 ) {
@@ -240,12 +237,12 @@ void Optimization_Interface::solve_layer_optimization_problem_ADAM( int num_of_p
                 if (cost_fnc != VQE){
                 
                     std::stringstream sstream;
-                    sstream << "ADAM: processed iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "\%, current minimum:" << current_minimum << ", current cost function:" << optimization_problem(solution_guess_tmp) << ", sub_iter_idx:" << sub_iter_idx <<std::endl;
+                    sstream << "ADAM: processed iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "%, current minimum:" << current_minimum << ", current cost function:" << optimization_problem(solution_guess_tmp) << ", sub_iter_idx:" << sub_iter_idx <<std::endl;
                     print(sstream, 1);   
                 }
                 else{
                     std::stringstream sstream;
-                    sstream << "ADAM: processed iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "\%, current minimum:" << current_minimum <<", sub_iter_idx:" << sub_iter_idx <<std::endl;
+                    sstream << "ADAM: processed iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "%, current minimum:" << current_minimum <<", sub_iter_idx:" << sub_iter_idx <<std::endl;
                     print(sstream, 1);   
                 }
                 if ( export_circuit_2_binary_loc > 0 ) {
@@ -312,7 +309,6 @@ void Optimization_Interface::solve_layer_optimization_problem_ADAM( int num_of_p
                 print(sstream, 1);   
                     
                 randomize_parameters(optimized_parameters_mtx, solution_guess_tmp, f0 );
-                randomization_successful = 0;
         
                 optimizer.reset();
                 optimizer.initialize_moment_and_variance( num_of_parameters );   

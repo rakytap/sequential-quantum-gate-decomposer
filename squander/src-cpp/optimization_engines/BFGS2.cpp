@@ -234,7 +234,7 @@ CPU_time = 0.0;
 
                 if ( iter_idx % 5000 == 0 ) {
                         std::stringstream sstream;
-                        sstream << "BFGS2: processed iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "\%, current minimum:" << current_minimum << std::endl;
+                        sstream << "BFGS2: processed iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "%, current minimum:" << current_minimum << std::endl;
                         print(sstream, 2);  
 
                         if ( export_circuit_2_binary_loc>0) {
@@ -307,7 +307,7 @@ CPU_time = 0.0;
             if (de_popsize <= 0) de_popsize = 15;
 
             const int D = num_of_parameters;
-            int NP = de_popsize * D;
+            int NP = static_cast<int>(de_popsize * D);
             NP = std::max(5, NP);
 
             // ---------------- Population storage ----------------
@@ -467,7 +467,7 @@ CPU_time = 0.0;
             if (de_polish) {
                 BFGS_Powell cBFGS_Powell(optimization_problem_combined, this);
                 auto params = optimized_parameters_mtx.copy();
-                double f_pol = cBFGS_Powell.Start_Optimization(params, /*max_inner_iterations*/  std::max<long long>(200, D*50));
+                double f_pol = cBFGS_Powell.Start_Optimization(params, /*max_inner_iterations*/  static_cast<long>(std::max<long long>(200, static_cast<long long>(D)*50)));
                 if (f_pol < current_minimum) {
                     current_minimum = f_pol;
                     memcpy(optimized_parameters_mtx.get_data(), params.get_data(), D * sizeof(double));

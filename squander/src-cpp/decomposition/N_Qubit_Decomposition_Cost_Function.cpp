@@ -692,7 +692,7 @@ static void accumulate_grad_for_cut(Matrix& accum, const std::vector<double>& G,
     int m_cols = dB * dB;
 
     int k = std::min(m_rows, m_cols);
-    int tot_dyadic = G.size();
+    int tot_dyadic = static_cast<int>(G.size());
 
     // Row-major indexing: accum[in + out*N] is element (in, out)
     for (int in = 0; in < N; ++in) {
@@ -809,12 +809,12 @@ inline double logsumexp_smoothmax(const std::vector<double>& Lc, double tau=1e-2
 
 // Assumes S are nonnegative singular values (ideally sorted desc).
 double tail_loss(const std::vector<double>& S, int max_dyadic, double rho=0.1, double tol=1e-4) {
-    int tot_dyadic = lg_up(S.size());
+    int tot_dyadic = static_cast<int>(lg_up(static_cast<uint32_t>(S.size())));
     double w = 1.0;
     double acc = 0.0;
     for (int k = max_dyadic-1; k >= 0; --k) {
         if (k < tot_dyadic) {
-            double val = S[1 << k] - S[0] * tol;
+            double val = S[static_cast<size_t>(1) << k] - S[0] * tol;
             acc += w * val * val;
         }
         w *= rho;  // geometric weight rho^k
@@ -824,11 +824,11 @@ double tail_loss(const std::vector<double>& S, int max_dyadic, double rho=0.1, d
 
 double avg_tail_loss(const std::vector<std::vector<double>>& cuts_S, double rho=0.1) {
     double tot = 0.0;
-    int max_dyadic = lg_up(std::max_element(
+    int max_dyadic = static_cast<int>(lg_up(static_cast<uint32_t>(std::max_element(
         cuts_S.begin(), cuts_S.end(),
         [](const std::vector<double>& a, const std::vector<double>& b) {
             return a.size() < b.size();
-        })->size());
+        })->size())));
     for (const auto& S : cuts_S)
         tot += tail_loss(S, max_dyadic, rho);
     return tot / static_cast<double>(cuts_S.size());
@@ -840,11 +840,11 @@ double cuts_softmax_tail_cost(const std::vector<std::vector<double>>& cuts_S,
 {
     if (tau <= 0.0) throw std::invalid_argument("cuts_softmax_tail_cost: tau must be > 0");
     std::vector<double> Lc; Lc.reserve(cuts_S.size());
-    int max_dyadic = lg_up(std::max_element(
+    int max_dyadic = static_cast<int>(lg_up(static_cast<uint32_t>(std::max_element(
         cuts_S.begin(), cuts_S.end(),
         [](const std::vector<double>& a, const std::vector<double>& b) {
             return a.size() < b.size();
-        })->size());
+        })->size())));
     for (const auto& S : cuts_S)
         Lc.push_back(tail_loss(S, max_dyadic, rho));
     return logsumexp_smoothmax(Lc, tau);
@@ -855,7 +855,7 @@ std::vector<double> tail_loss_grad_diag(const std::vector<double>& S, int max_dy
     const size_t n = S.size();
 
     // c_k = rho^k / Mk  for k=1..n-1, then prefix sum C_j = sum_{k=1}^j c_k
-    int tot_dyadic = lg_up(n);
+    int tot_dyadic = static_cast<int>(lg_up(static_cast<uint32_t>(n)));
     std::vector<double> grad(tot_dyadic, 0.0);
     double w = 1.0;
     for (int k = max_dyadic-1; k >= 0; --k) {
@@ -870,14 +870,14 @@ std::vector<double> tail_loss_grad_diag(const std::vector<double>& S, int max_dy
 
 std::vector<std::vector<double>> cuts_avg_tail_grad(const std::vector<std::vector<double>>& cuts_S, double Fnorm, double rho=0.1) {
     const size_t C = cuts_S.size();
-    int max_dyadic = lg_up(std::max_element(
+    int max_dyadic = static_cast<int>(lg_up(static_cast<uint32_t>(std::max_element(
         cuts_S.begin(), cuts_S.end(),
         [](const std::vector<double>& a, const std::vector<double>& b) {
             return a.size() < b.size();
-        })->size());
+        })->size())));
     std::vector<std::vector<double>> Lc;
     Lc.reserve(C);
-    for (int c = 0; c < C; ++c) {
+    for (size_t c = 0; c < C; ++c) {
         Lc.emplace_back(tail_loss_grad_diag(cuts_S[c], max_dyadic, Fnorm * C, rho));
     }
     return Lc;
@@ -892,11 +892,11 @@ std::vector<std::vector<double>> cuts_softmax_tail_grad(
 {
     const size_t C = cuts_S.size();
     if (C == 0) return {};
-    int max_dyadic = lg_up(std::max_element(
+    int max_dyadic = static_cast<int>(lg_up(static_cast<uint32_t>(std::max_element(
         cuts_S.begin(), cuts_S.end(),
         [](const std::vector<double>& a, const std::vector<double>& b) {
             return a.size() < b.size();
-        })->size());
+        })->size())));
 
     // 1) per-cut losses
     std::vector<double> Lc(C, 0.0);
@@ -929,7 +929,7 @@ std::pair<int, double> operator_schmidt_rank(const Matrix& U, int n,
     int mr=0, mc=0;
     std::vector<QGD_Complex16> M = build_osr_matrix(U, n, A_qubits, mr, mc);
     std::vector<double> S = osr(M, mr, mc, Fnorm);
-    return std::pair<int, double>(numerical_rank_osr(S, tol), tail_loss(S, lg_up(S.size())));
+    return std::pair<int, double>(numerical_rank_osr(S, tol), tail_loss(S, static_cast<int>(lg_up(static_cast<uint32_t>(S.size())))));
 }
 
 double get_osr_entanglement_test(Matrix& matrix, std::vector<std::vector<int>> &use_cuts, bool use_softmax) {

@@ -151,7 +151,8 @@ std::tuple<std::vector<GrayCode>, LevelInfo, std::map<GrayCode, std::vector<std:
 */
 N_Qubit_Decomposition_custom perform_optimization(Gates_block* gate_structure_loc);
 
-
+// Bring base class add_finalyzing_layer into scope to avoid hiding
+using Optimization_Interface::add_finalyzing_layer;
 
 /**
 @brief Call to add finalyzing layer (single qubit rotations on all of the qubits) to the gate structure.

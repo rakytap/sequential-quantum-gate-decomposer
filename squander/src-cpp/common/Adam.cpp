@@ -99,7 +99,7 @@ void Adam::reset() {
 
     // vector stroing the lates values of cost function to test local minimum
     f0_vec = Matrix_real(1, 100); 
-    memset( f0_vec.get_data(), 0.0, f0_vec.size()*sizeof(double) );
+    memset( f0_vec.get_data(), 0, f0_vec.size()*sizeof(double) );
     f0_mean = 0.0;
     f0_idx = 0;
     
@@ -125,8 +125,8 @@ void Adam::initialize_moment_and_variance(int parameter_num) {
     mom = Matrix_real(parameter_num,1);
     var = Matrix_real(parameter_num,1);  
 
-    memset( mom.get_data(), 0.0, mom.size()*sizeof(double) );
-    memset( var.get_data(), 0.0, var.size()*sizeof(double) );
+    memset( mom.get_data(), 0, mom.size()*sizeof(double) );
+    memset( var.get_data(), 0, var.size()*sizeof(double) );
 }
 
 

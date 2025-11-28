@@ -15,6 +15,7 @@ limitations under the License.
 
 */
 
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <Python.h>
 #include <numpy/arrayobject.h>
 #include "matrix.h"
@@ -171,11 +172,11 @@ numpy2matrix(PyArrayObject* arr) {
 
     // create PIC version of the input matrices
     if (dim_num == 2) {
-        Matrix mtx = Matrix(data, dims[0], dims[1]);
+        Matrix mtx = Matrix(data, static_cast<int>(dims[0]), static_cast<int>(dims[1]));
         return mtx;
     }
     else if (dim_num == 1) {
-        Matrix mtx = Matrix(data, dims[0], 1);
+        Matrix mtx = Matrix(data, static_cast<int>(dims[0]), 1);
         return mtx;
     }
     else {
@@ -214,11 +215,11 @@ numpy2matrix_real(PyArrayObject* arr) {
 
     // create PIC version of the input matrices
     if (dim_num == 2) {
-        Matrix_real mtx = Matrix_real(data, dims[0], dims[1]);
+        Matrix_real mtx = Matrix_real(data, static_cast<int>(dims[0]), static_cast<int>(dims[1]));
         return mtx;
     }
     else if (dim_num == 1) {
-        Matrix_real mtx = Matrix_real(data, dims[0], 1);
+        Matrix_real mtx = Matrix_real(data, static_cast<int>(dims[0]), 1);
         return mtx;
     }
     else {

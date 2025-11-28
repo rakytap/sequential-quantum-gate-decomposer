@@ -172,7 +172,7 @@ void  Sub_Matrix_Decomposition::disentangle_submatrices() {
             add_gate_layers();
 
             // get the number of blocks
-            layer_num = gates.size();
+            layer_num = static_cast<int>(gates.size());
 
             // Do the optimization
             if (optimize_layer_num || layer_num >= max_layer_num_loc ) {
@@ -373,7 +373,7 @@ void Sub_Matrix_Decomposition::solve_layer_optimization_problem( int num_of_para
         for (long long idx=0; idx<iteration_loops_max; idx++) {
 
             BFGS_Powell cBFGS_Powell(optimization_problem_combined, this);
-            double f = cBFGS_Powell.Start_Optimization(solution_guess, max_inner_iterations);
+            double f = cBFGS_Powell.Start_Optimization(solution_guess, static_cast<long>(max_inner_iterations));
 
 
             if (current_minimum > f) {
