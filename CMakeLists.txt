@@ -221,6 +221,40 @@ endif()
 
 
 find_package(LAPACK REQUIRED)
+
+# macOS-specific OpenMP detection
+# On macOS, OpenMP is typically installed via Homebrew as libomp
+# CMake's FindOpenMP module needs help finding it
+if(APPLE)
+  execute_process(
+    COMMAND brew --prefix libomp
+    OUTPUT_VARIABLE HOMEBREW_LIBOMP_PREFIX
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    ERROR_QUIET
+  )
+  if(HOMEBREW_LIBOMP_PREFIX)
+    set(OpenMP_C_FLAGS "-Xpreprocessor -fopenmp -I${HOMEBREW_LIBOMP_PREFIX}/include" CACHE STRING "C compiler flags for OpenMP" FORCE)
+    set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp -I${HOMEBREW_LIBOMP_PREFIX}/include" CACHE STRING "C++ compiler flags for OpenMP" FORCE)
+    set(OpenMP_C_LIB_NAMES "omp" CACHE STRING "C library names for OpenMP" FORCE)
+    set(OpenMP_CXX_LIB_NAMES "omp" CACHE STRING "C++ library names for OpenMP" FORCE)
+    find_library(OpenMP_omp_LIBRARY
+      NAMES omp
+      PATHS ${HOMEBREW_LIBOMP_PREFIX}/lib
+      NO_DEFAULT_PATH
+    )
+    if(OpenMP_omp_LIBRARY)
+      set(OpenMP_omp_LIBRARY ${OpenMP_omp_LIBRARY} CACHE PATH "Path to OpenMP omp library" FORCE)
+    endif()
+    message(STATUS "Found Homebrew libomp at: ${HOMEBREW_LIBOMP_PREFIX}")
+    message(STATUS "OpenMP_C_FLAGS: ${OpenMP_C_FLAGS}")
+    message(STATUS "OpenMP_CXX_FLAGS: ${OpenMP_CXX_FLAGS}")
+    message(STATUS "OpenMP_omp_LIBRARY: ${OpenMP_omp_LIBRARY}")
+    # Add linker flags to ensure libomp is found during linking
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${HOMEBREW_LIBOMP_PREFIX}/lib -lomp")
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -L${HOMEBREW_LIBOMP_PREFIX}/lib -lomp")
+  endif()
+endif()
+
 find_package(OpenMP REQUIRED)
 
 list(APPEND EXTRA_INCLUDES "${OpenMP_CXX_INCLUDE_DIRS}") 
