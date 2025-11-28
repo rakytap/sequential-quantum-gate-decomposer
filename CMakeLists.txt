@@ -221,39 +221,6 @@ endif()
 
 
 find_package(LAPACK REQUIRED)
-
-# On macOS, help CMake find OpenMP from Homebrew
-if(APPLE)
-  # Try to find libomp via Homebrew
-  execute_process(
-    COMMAND brew --prefix libomp
-    OUTPUT_VARIABLE HOMEBREW_LIBOMP_PREFIX
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-    ERROR_QUIET
-  )
-  if(HOMEBREW_LIBOMP_PREFIX)
-    # Set CMake cache variables that FindOpenMP will use
-    set(OpenMP_C_FLAGS "-Xpreprocessor -fopenmp -I${HOMEBREW_LIBOMP_PREFIX}/include" CACHE STRING "C compiler flags for OpenMP" FORCE)
-    set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp -I${HOMEBREW_LIBOMP_PREFIX}/include" CACHE STRING "C++ compiler flags for OpenMP" FORCE)
-    set(OpenMP_C_LIB_NAMES "omp" CACHE STRING "C library names for OpenMP" FORCE)
-    set(OpenMP_CXX_LIB_NAMES "omp" CACHE STRING "C++ library names for OpenMP" FORCE)
-    find_library(OpenMP_omp_LIBRARY
-      NAMES omp
-      PATHS ${HOMEBREW_LIBOMP_PREFIX}/lib
-      NO_DEFAULT_PATH
-    )
-    if(OpenMP_omp_LIBRARY)
-      set(OpenMP_omp_LIBRARY ${OpenMP_omp_LIBRARY} CACHE PATH "Path to OpenMP omp library" FORCE)
-      set(OpenMP_CXX_LIBRARIES ${OpenMP_omp_LIBRARY} CACHE STRING "C++ OpenMP libraries" FORCE)
-      set(OpenMP_C_LIBRARIES ${OpenMP_omp_LIBRARY} CACHE STRING "C OpenMP libraries" FORCE)
-    endif()
-    message(STATUS "Found Homebrew libomp at: ${HOMEBREW_LIBOMP_PREFIX}")
-    message(STATUS "OpenMP_C_FLAGS: ${OpenMP_C_FLAGS}")
-    message(STATUS "OpenMP_CXX_FLAGS: ${OpenMP_CXX_FLAGS}")
-    message(STATUS "OpenMP_omp_LIBRARY: ${OpenMP_omp_LIBRARY}")
-  endif()
-endif()
-
 find_package(OpenMP REQUIRED)
 
 list(APPEND EXTRA_INCLUDES "${OpenMP_CXX_INCLUDE_DIRS}") 
@@ -292,7 +259,23 @@ endif()
 if(${LAPACKE_FOUND})
     set(LAPACKE_LIBRARIES)
 else()
-    find_library(LAPACKE_LIBRARIES lapacke REQUIRED)
+    # On macOS with OpenBLAS, LAPACKE is typically included in OpenBLAS
+    if(APPLE AND ${BLAS_IS_OPENBLAS})
+        message(STATUS "macOS with OpenBLAS: LAPACKE should be included in OpenBLAS")
+        set(LAPACKE_LIBRARIES)
+    else()
+        # Try to find separate LAPACKE library
+        find_library(LAPACKE_LIBRARIES lapacke)
+        if(NOT LAPACKE_LIBRARIES)
+            # On macOS, LAPACKE might be in Accelerate framework or OpenBLAS
+            if(APPLE)
+                message(STATUS "LAPACKE not found as separate library on macOS, assuming it's in LAPACK/OpenBLAS")
+                set(LAPACKE_LIBRARIES)
+            else()
+                message(FATAL_ERROR "Could not find LAPACKE library")
+            endif()
+        endif()
+    endif()
 endif()
 
 
