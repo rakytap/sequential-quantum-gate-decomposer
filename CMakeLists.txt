@@ -277,6 +277,47 @@ message(STATUS "BLAS_IS_MKL: ${BLAS_IS_MKL}")
 message(STATUS "BLAS_IS_OPENBLAS: ${BLAS_IS_OPENBLAS}")
 
 # check the presence of lapacke library
+# First, try to find LAPACKE library paths on macOS
+set(LAPACKE_CHECK_LIBRARIES "${LAPACK_LIBRARIES}")
+if(APPLE)
+    # On macOS, try to find LAPACKE in Homebrew's lapack installation
+    execute_process(
+        COMMAND brew --prefix lapack
+        OUTPUT_VARIABLE HOMEBREW_LAPACK_PREFIX
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        ERROR_QUIET
+    )
+    if(HOMEBREW_LAPACK_PREFIX)
+        # Try to find liblapacke in Homebrew's lapack lib directory
+        find_library(LAPACKE_CHECK_LIB
+            NAMES lapacke
+            PATHS ${HOMEBREW_LAPACK_PREFIX}/lib
+                  /opt/homebrew/opt/lapack/lib
+                  /usr/local/opt/lapack/lib
+            NO_DEFAULT_PATH
+        )
+        if(LAPACKE_CHECK_LIB)
+            set(LAPACKE_CHECK_LIBRARIES "${LAPACKE_CHECK_LIB}" "${LAPACK_LIBRARIES}")
+            message(STATUS "Found LAPACKE library for function check: ${LAPACKE_CHECK_LIB}")
+        else()
+            # Try OpenBLAS which might include LAPACKE
+            find_library(OPENBLAS_CHECK_LIB
+                NAMES openblas
+                PATHS /opt/homebrew/opt/openblas/lib
+                      /usr/local/opt/openblas/lib
+                      /opt/homebrew/lib
+                      /usr/local/lib
+                NO_DEFAULT_PATH
+            )
+            if(OPENBLAS_CHECK_LIB)
+                set(LAPACKE_CHECK_LIBRARIES "${OPENBLAS_CHECK_LIB}" "${LAPACK_LIBRARIES}")
+                message(STATUS "Using OpenBLAS for LAPACKE function check: ${OPENBLAS_CHECK_LIB}")
+            endif()
+        endif()
+    endif()
+endif()
+
+# check the presence of lapacke library
 check_function_exists(LAPACKE_zgesvd LAPACKE_FOUND)
 set(CMAKE_REQUIRED_LIBRARIES "")
 
