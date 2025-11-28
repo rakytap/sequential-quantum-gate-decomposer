@@ -217,7 +217,7 @@ static void optimization_problem_grad_vqe( Matrix_real parameters, void* void_in
 @param current_minimum The current minimum (to avoid calculating it again
 @param parameters Parameters to be used in the calculations (For Rényi entropy)
 */
-void export_current_cost_fnc(double current_minimum, Matrix_real& parameters);
+void export_current_cost_fnc(double current_minimum, Matrix_real& parameters) override;
 
 /**
 @brief Initialize the state used in the quantun circuit. All qubits are initialized to state 0
