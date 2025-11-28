@@ -317,9 +317,14 @@ if(APPLE)
     endif()
 endif()
 
-# check the presence of lapacke library
+# Set required libraries and includes for LAPACKE function check
+set(CMAKE_REQUIRED_LIBRARIES "${LAPACKE_CHECK_LIBRARIES}" "-lm")
+if(LAPACKE_CHECK_INCLUDES)
+    set(CMAKE_REQUIRED_INCLUDES "${LAPACKE_CHECK_INCLUDES}")
+endif()
 check_function_exists(LAPACKE_zgesvd LAPACKE_FOUND)
 set(CMAKE_REQUIRED_LIBRARIES "")
+set(CMAKE_REQUIRED_INCLUDES "")
 
 # If MKL is enabled
 if(${BLAS_IS_MKL})
