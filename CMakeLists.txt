@@ -296,7 +296,8 @@ else()
     # On macOS with OpenBLAS, LAPACKE is typically included in OpenBLAS
     if(APPLE AND BLAS_IS_OPENBLAS)
         message(STATUS "macOS with OpenBLAS: LAPACKE should be included in OpenBLAS")
-        set(LAPACKE_LIBRARIES)
+        # Set to LAPACK_LIBRARIES since LAPACKE is part of it
+        set(LAPACKE_LIBRARIES ${LAPACK_LIBRARIES})
     else()
         # Try to find separate LAPACKE library
         find_library(LAPACKE_LIBRARIES lapacke)
@@ -304,7 +305,8 @@ else()
             # On macOS, LAPACKE might be in Accelerate framework or OpenBLAS
             if(APPLE)
                 message(STATUS "LAPACKE not found as separate library on macOS, assuming it's in LAPACK/OpenBLAS")
-                set(LAPACKE_LIBRARIES)
+                # Set to LAPACK_LIBRARIES since LAPACKE is part of it
+                set(LAPACKE_LIBRARIES ${LAPACK_LIBRARIES})
             else()
                 message(FATAL_ERROR "Could not find LAPACKE library")
             endif()
