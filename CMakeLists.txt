@@ -312,17 +312,25 @@ elseif(WIN32)
   if(${BLAS_IS_MKL})
     # MKL includes LAPACKE, so we can use MKL libraries
     # LAPACKE functions are in the same MKL libraries
-    set(LAPACKE_LIBRARIES "${BLAS_LIBRARIES}")
+    set(LAPACKE_CHECK_LIBRARIES "${BLAS_LIBRARIES}")
     message(STATUS "Using MKL libraries for LAPACKE: ${LAPACKE_LIBRARIES}")
   # If OpenBLAS is being used, it often includes LAPACKE on Windows
 
   elseif(${BLAS_IS_OPENBLAS})
     # OpenBLAS on Windows often includes LAPACKE
-    set(LAPACKE_LIBRARIES "${BLAS_LIBRARIES}")
+    set(LAPACKE_CHECK_LIBRARIES "${BLAS_LIBRARIES}")
     message(STATUS "Using OpenBLAS libraries for LAPACKE: ${LAPACKE_LIBRARIES}")
 
+  endif()
+
+  set(CMAKE_REQUIRED_LIBRARIES "${LAPACKE_CHECK_LIBRARIES}" "-lm")
+
+  find_library(LAPACKE_LIBRARIES lapacke)
+  if(LAPACKE_LIBRARIES)
+    message(STATUS "Found LAPACKE library for function check: ${LAPACKE_LIBRARIES}")
+
   else()
-  
+
     # Try to find LAPACKE in conda environment
     if(DEFINED ENV{CONDA_PREFIX})
       set(CONDA_PREFIX "$ENV{CONDA_PREFIX}")
@@ -346,7 +354,9 @@ elseif(WIN32)
           ENV{PATH}
       )
     endif()
+
   endif()
+
 else()
   find_library(LAPACKE_LIBRARIES lapacke)
 endif()
