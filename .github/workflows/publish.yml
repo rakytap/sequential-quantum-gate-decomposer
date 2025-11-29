@@ -220,13 +220,15 @@ jobs:
               # Now run delocate-path to handle external dependencies
               delocate-path "$temp_dir"
               
-              # Rebuild wheel
-              (cd "$temp_dir" && zip -q -r "../repaired_$(basename "$wheel")" .)
-              mv "$temp_dir/repaired_$(basename "$wheel")" "dist/repaired_$(basename "$wheel")"
+              # Rebuild wheel - create it directly in dist/ directory
+              wheel_name=$(basename "$wheel")
+              (cd "$temp_dir" && zip -q -r "dist/$wheel_name" .)
               
+              # Clean up
               rm -rf "$temp_dir"
+              
+              # Remove original wheel, keep only repaired one
               rm -f "$wheel"
-              mv "dist/repaired_$(basename "$wheel")" "$wheel"
             fi
           done
           
