@@ -53,7 +53,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest]
         python-version: ["3.13"]
         exclude:
           # Reduce build matrix - adjust as needed
@@ -94,7 +94,7 @@ jobs:
       - name: Install macOS system dependencies
         if: runner.os == 'macOS'
         run: |
-          brew install cmake tbb openblas lapack
+          brew install cmake tbb openblas lapack libomp
 
       - name: Install Windows system dependencies
         if: runner.os == 'Windows'
@@ -165,6 +165,14 @@ jobs:
         run: |
           echo "TBB_LIB_DIR=$(brew --prefix tbb)/lib" >> $GITHUB_ENV
           echo "TBB_INC_DIR=$(brew --prefix tbb)/include" >> $GITHUB_ENV
+          echo "OMP_NUM_THREADS=1" >> $GITHUB_ENV
+          # Help CMake find OpenMP on macOS
+          export OMP_PREFIX=$(brew --prefix libomp)
+          echo "OpenMP_C_FLAGS=-Xpreprocessor -fopenmp -I$OMP_PREFIX/include" >> $GITHUB_ENV
+          echo "OpenMP_CXX_FLAGS=-Xpreprocessor -fopenmp -I$OMP_PREFIX/include" >> $GITHUB_ENV
+          echo "OpenMP_C_LIB_NAMES=omp" >> $GITHUB_ENV
+          echo "OpenMP_CXX_LIB_NAMES=omp" >> $GITHUB_ENV
+          echo "OpenMP_omp_LIBRARY=$OMP_PREFIX/lib/libomp.dylib" >> $GITHUB_ENV
 
       - name: Build wheel
         env:
@@ -185,12 +193,48 @@ jobs:
         run: |
           for wheel in dist/*.whl; do
             if [[ "$wheel" != *"wheelhouse"* ]]; then
-              delocate-wheel -w dist/ "$wheel"
-              # Remove original wheel, keep only repaired one
-              rm -f "$wheel" || true
+              # Extract wheel
+              temp_dir=$(mktemp -d)
+              wheel_name=$(basename "$wheel")
+              unzip -q "$wheel" -d "$temp_dir"
+              
+              # Find libqgd.dylib
+              libqgd_path=$(find "$temp_dir" -name "libqgd.dylib" -type f | head -1)
+              
+              if [ -z "$libqgd_path" ]; then
+                echo "ERROR: libqgd.dylib not found in wheel"
+                rm -rf "$temp_dir"
+                exit 1
+              fi
+              
+              echo "Found libqgd.dylib at: ${libqgd_path#$temp_dir/}"
+              
+              # Fix @rpath references in all Python extension modules
+              # Since INSTALL_RPATH is "$ORIGIN/..", change @rpath to @loader_path/..
+              for ext_module in $(find "$temp_dir" -name "*.so" -type f); do
+                if otool -L "$ext_module" 2>/dev/null | grep -q "@rpath/libqgd.dylib"; then
+                  echo "Fixing @rpath in: ${ext_module#$temp_dir/}"
+                  install_name_tool -change "@rpath/libqgd.dylib" "@loader_path/../libqgd.dylib" "$ext_module"
+                fi
+              done
+              
+              # Now run delocate-path to handle external dependencies
+              delocate-path "$temp_dir"
+              
+              # Rebuild wheel in temp_dir
+              (cd "$temp_dir" && zip -q -r "$wheel_name" .)
+              
+              # Remove original wheel first
+              rm -f "$wheel"
+              
+              # Move repaired wheel to dist/
+              mv "$temp_dir/$wheel_name" "dist/$wheel_name"
+              
+              # Clean up
+              rm -rf "$temp_dir"
             fi
           done
-
+          
       - name: Repair wheel (Windows)
         if: runner.os == 'Windows'
         shell: pwsh

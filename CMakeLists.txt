@@ -221,12 +221,55 @@ endif()
 
 
 find_package(LAPACK REQUIRED)
+
+# macOS-specific OpenMP detection
+# On macOS, OpenMP is typically installed via Homebrew as libomp
+# CMake's FindOpenMP module needs help finding it
+if(APPLE)
+  execute_process(
+    COMMAND brew --prefix libomp
+    OUTPUT_VARIABLE HOMEBREW_LIBOMP_PREFIX
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    ERROR_QUIET
+  )
+  if(HOMEBREW_LIBOMP_PREFIX)
+    set(OpenMP_C_FLAGS "-Xpreprocessor -fopenmp -I${HOMEBREW_LIBOMP_PREFIX}/include" CACHE STRING "C compiler flags for OpenMP" FORCE)
+    set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp -I${HOMEBREW_LIBOMP_PREFIX}/include" CACHE STRING "C++ compiler flags for OpenMP" FORCE)
+    set(OpenMP_C_LIB_NAMES "omp" CACHE STRING "C library names for OpenMP" FORCE)
+    set(OpenMP_CXX_LIB_NAMES "omp" CACHE STRING "C++ library names for OpenMP" FORCE)
+    find_library(OpenMP_omp_LIBRARY
+      NAMES omp
+      PATHS ${HOMEBREW_LIBOMP_PREFIX}/lib
+      NO_DEFAULT_PATH
+    )
+    if(OpenMP_omp_LIBRARY)
+      set(OpenMP_omp_LIBRARY ${OpenMP_omp_LIBRARY} CACHE PATH "Path to OpenMP omp library" FORCE)
+    endif()
+    message(STATUS "Found Homebrew libomp at: ${HOMEBREW_LIBOMP_PREFIX}")
+    message(STATUS "OpenMP_C_FLAGS: ${OpenMP_C_FLAGS}")
+    message(STATUS "OpenMP_CXX_FLAGS: ${OpenMP_CXX_FLAGS}")
+    message(STATUS "OpenMP_omp_LIBRARY: ${OpenMP_omp_LIBRARY}")
+    # Add linker flags to ensure libomp is found during linking
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${HOMEBREW_LIBOMP_PREFIX}/lib -lomp")
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -L${HOMEBREW_LIBOMP_PREFIX}/lib -lomp")
+  endif()
+endif()
+
 find_package(OpenMP REQUIRED)
+
+# Convert OpenMP flags from string to list for proper handling on macOS
+# This is especially important on macOS where flags are set manually as a single string
+if(APPLE AND OpenMP_CXX_FLAGS)
+  separate_arguments(OpenMP_CXX_FLAGS_LIST UNIX_COMMAND "${OpenMP_CXX_FLAGS}")
+else()
+  # On other platforms, use the flags as-is (they should already be a list)
+  set(OpenMP_CXX_FLAGS_LIST ${OpenMP_CXX_FLAGS})
+endif()
 
 list(APPEND EXTRA_INCLUDES "${OpenMP_CXX_INCLUDE_DIRS}") 
 
 # make difference between MKL and OPENBLAS by checking specific functions
-set(CMAKE_REQUIRED_LIBRARIES "${BLAS_LIBRARIES}" "-lm")
+set(CMAKE_REQUIRED_LIBRARIES "${BLAS_LIBRARIES}" "${LAPACK_LIBRARIES}" "-lm")
 check_function_exists(MKL_Set_Num_Threads BLAS_IS_MKL)
 check_function_exists(openblas_set_num_threads BLAS_IS_OPENBLAS)
 
@@ -234,8 +277,97 @@ message(STATUS "BLAS_IS_MKL: ${BLAS_IS_MKL}")
 message(STATUS "BLAS_IS_OPENBLAS: ${BLAS_IS_OPENBLAS}")
 
 # check the presence of lapacke library
-check_function_exists(LAPACKE_zgesvd LAPACKE_FOUND)
-set(CMAKE_REQUIRED_LIBRARIES "")
+# First, try to find LAPACKE library paths on macOS
+set(LAPACKE_CHECK_LIBRARIES "${LAPACK_LIBRARIES}")
+set(CMAKE_REQUIRED_LIBRARIES "${LAPACKE_CHECK_LIBRARIES}" "-lm")
+
+# Try to find LAPACKE library
+if(APPLE)
+    # On macOS, try to find LAPACKE in Homebrew's lapack installation
+    execute_process(
+        COMMAND brew --prefix lapack
+        OUTPUT_VARIABLE HOMEBREW_LAPACK_PREFIX
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        ERROR_QUIET
+    )
+    if(HOMEBREW_LAPACK_PREFIX)
+        # Try to find liblapacke in Homebrew's lapack lib directory
+        find_library(LAPACKE_LIBRARIES
+            NAMES lapacke
+            PATHS ${HOMEBREW_LAPACK_PREFIX}/lib
+                  /opt/homebrew/opt/lapack/lib
+                  /usr/local/opt/lapack/lib
+            NO_DEFAULT_PATH
+        )
+        if(LAPACKE_LIBRARIES)
+            message(STATUS "Found LAPACKE library for function check: ${LAPACKE_LIBRARIES}")
+        endif()
+    endif()
+
+
+elseif(WIN32)
+
+
+  # If MKL is being used, MKL includes LAPACKE
+  if(${BLAS_IS_MKL})
+    # MKL includes LAPACKE, so we can use MKL libraries
+    # LAPACKE functions are in the same MKL libraries
+    set(LAPACKE_CHECK_LIBRARIES "${BLAS_LIBRARIES}")
+    message(STATUS "Using MKL libraries for LAPACKE: ${LAPACKE_LIBRARIES}")
+  # If OpenBLAS is being used, it often includes LAPACKE on Windows
+
+  elseif(${BLAS_IS_OPENBLAS})
+    # OpenBLAS on Windows often includes LAPACKE
+    set(LAPACKE_CHECK_LIBRARIES "${BLAS_LIBRARIES}")
+    message(STATUS "Using OpenBLAS libraries for LAPACKE: ${LAPACKE_LIBRARIES}")
+
+  endif()
+
+  set(CMAKE_REQUIRED_LIBRARIES "${LAPACKE_CHECK_LIBRARIES}" "${LAPACK_LIBRARIES}" "-lm")
+
+  check_function_exists(LAPACKE_dgesv LAPACKE_FOUND)
+
+  if(LAPACKE_FOUND)
+    message(STATUS "Found LAPACKE library for function check: ${LAPACKE_CHECK_LIBRARIES}")
+    set(LAPACKE_LIBRARIES "${LAPACKE_CHECK_LIBRARIES}")
+
+  else()
+
+    # Try to find LAPACKE in conda environment
+    if(DEFINED ENV{CONDA_PREFIX})
+      set(CONDA_PREFIX "$ENV{CONDA_PREFIX}")
+      find_library(LAPACKE_LIBRARIES
+        NAMES lapacke
+        PATHS
+          "${CONDA_PREFIX}/Library/lib"
+          "${BLAS_DIR}/Library/lib"
+          ${CMAKE_LIBRARY_PATH}
+        NO_DEFAULT_PATH
+      )
+    endif()
+    
+    # If still not found, try standard search with paths
+    if(NOT LAPACKE_LIBRARIES)
+      find_library(LAPACKE_LIBRARIES
+        NAMES lapacke
+        PATHS
+          "${BLAS_DIR}/Library/lib"
+          ${CMAKE_LIBRARY_PATH}
+          ENV{PATH}
+      )
+    endif()
+
+  endif()
+
+else()
+  find_library(LAPACKE_LIBRARIES lapacke)
+endif()
+
+if(NOT LAPACKE_LIBRARIES)
+    message(FATAL_ERROR "Could not find LAPACKE library")
+endif()
+
+
 
 # If MKL is enabled
 if(${BLAS_IS_MKL})
@@ -252,14 +384,6 @@ else()
   message(STATUS "OMP is enabled")
   list(APPEND CXX_FLAGS_DEBUG "-DBLAS=0")
   list(APPEND CXX_FLAGS_RELEASE "-DBLAS=0")
-endif()
-
-
-# if LAPACKE not found try another round
-if(${LAPACKE_FOUND})
-    set(LAPACKE_LIBRARIES)
-else()
-    find_library(LAPACKE_LIBRARIES lapacke REQUIRED)
 endif()
 
 
@@ -725,7 +849,7 @@ target_compile_options(qgd PUBLIC
     ${CXX_FLAGS}
     "$<$<CONFIG:Debug>:${CXX_FLAGS_DEBUG}>"
     "$<$<CONFIG:Release>:${CXX_FLAGS_RELEASE}>"
-    ${OpenMP_CXX_FLAGS}
+    ${OpenMP_CXX_FLAGS_LIST}
 )
 
 # adding linking options
@@ -777,6 +901,13 @@ set_target_properties(
         LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/squander
     )
 
+if(WIN32)
+    set_target_properties(
+        qgd
+        PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/squander/decomposition
+    )
+endif()
 
 
 # adding CMAKE files for Python extensions

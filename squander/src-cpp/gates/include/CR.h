@@ -62,7 +62,7 @@ virtual ~CR();
 @brief Call to create a clone of the present class
 @return Return with a pointer pointing to the cloned object
 */
-virtual CR* clone();
+virtual CR* clone() override;
 
 
 
