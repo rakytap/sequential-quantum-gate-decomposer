@@ -300,24 +300,53 @@ if(APPLE)
             NO_DEFAULT_PATH
         )
         if(LAPACKE_LIBRARIES)
-            set(LAPACKE_CHECK_LIBRARIES "${LAPACKE_LIBRARIES}" "${LAPACK_LIBRARIES}")
             message(STATUS "Found LAPACKE library for function check: ${LAPACKE_LIBRARIES}")
-        else()
-            # Try OpenBLAS which might include LAPACKE
-            find_library(OPENBLAS_CHECK_LIB
-                NAMES openblas
-                PATHS /opt/homebrew/opt/openblas/lib
-                      /usr/local/opt/openblas/lib
-                      /opt/homebrew/lib
-                      /usr/local/lib
-                NO_DEFAULT_PATH
-            )
-            if(OPENBLAS_CHECK_LIB)
-                set(LAPACKE_CHECK_LIBRARIES "${OPENBLAS_CHECK_LIB}" "${LAPACK_LIBRARIES}")
-                message(STATUS "Using OpenBLAS for LAPACKE function check: ${OPENBLAS_CHECK_LIB}")
-            endif()
         endif()
     endif()
+
+
+elseif(WIN32)
+
+
+  # If MKL is being used, MKL includes LAPACKE
+  if(${BLAS_IS_MKL})
+    # MKL includes LAPACKE, so we can use MKL libraries
+    # LAPACKE functions are in the same MKL libraries
+    set(LAPACKE_LIBRARIES "${BLAS_LIBRARIES}")
+    message(STATUS "Using MKL libraries for LAPACKE: ${LAPACKE_LIBRARIES}")
+  # If OpenBLAS is being used, it often includes LAPACKE on Windows
+
+  elseif(${BLAS_IS_OPENBLAS})
+    # OpenBLAS on Windows often includes LAPACKE
+    set(LAPACKE_LIBRARIES "${BLAS_LIBRARIES}")
+    message(STATUS "Using OpenBLAS libraries for LAPACKE: ${LAPACKE_LIBRARIES}")
+
+  else()
+  
+    # Try to find LAPACKE in conda environment
+    if(DEFINED ENV{CONDA_PREFIX})
+      set(CONDA_PREFIX "$ENV{CONDA_PREFIX}")
+      find_library(LAPACKE_LIBRARIES
+        NAMES lapacke
+        PATHS
+          "${CONDA_PREFIX}/Library/lib"
+          "${BLAS_DIR}/Library/lib"
+          ${CMAKE_LIBRARY_PATH}
+        NO_DEFAULT_PATH
+      )
+    endif()
+    
+    # If still not found, try standard search with paths
+    if(NOT LAPACKE_LIBRARIES)
+      find_library(LAPACKE_LIBRARIES
+        NAMES lapacke
+        PATHS
+          "${BLAS_DIR}/Library/lib"
+          ${CMAKE_LIBRARY_PATH}
+          ENV{PATH}
+      )
+    endif()
+  endif()
 else()
   find_library(LAPACKE_LIBRARIES lapacke)
 endif()
