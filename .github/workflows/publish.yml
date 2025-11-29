@@ -193,38 +193,43 @@ jobs:
         run: |
           for wheel in dist/*.whl; do
             if [[ "$wheel" != *"wheelhouse"* ]]; then
-              # Extract wheel to find libqgd.dylib location
+              # Extract wheel
               temp_dir=$(mktemp -d)
               unzip -q "$wheel" -d "$temp_dir"
               
-              # Find libqgd.dylib in the extracted wheel
-              libqgd_path=$(find "$temp_dir" -name "libqgd.dylib" | head -1)
+              # Find libqgd.dylib
+              libqgd_path=$(find "$temp_dir" -name "libqgd.dylib" -type f | head -1)
               
-              if [ -n "$libqgd_path" ]; then
-                # Get the directory containing libqgd.dylib relative to wheel root
-                libqgd_dir=$(dirname "${libqgd_path#$temp_dir/}")
-                echo "Found libqgd.dylib in wheel at: $libqgd_dir"
-                
-                # Use delocate-path to fix the wheel, specifying the library search path
-                # This tells delocate where to find libqgd.dylib
-                delocate-path -L "$libqgd_dir" "$temp_dir"
-                
-                # Rebuild the wheel
-                (cd "$temp_dir" && zip -q -r "../$(basename "$wheel")" .)
-                mv "$temp_dir/$(basename "$wheel")" "$wheel"
-              else
-                echo "Warning: libqgd.dylib not found in wheel, using default delocate"
-                delocate-wheel -w dist/ "$wheel"
+              if [ -z "$libqgd_path" ]; then
+                echo "ERROR: libqgd.dylib not found in wheel"
+                rm -rf "$temp_dir"
+                exit 1
               fi
               
-              # Clean up
-              rm -rf "$temp_dir"
+              echo "Found libqgd.dylib at: ${libqgd_path#$temp_dir/}"
               
-              # Remove original wheel, keep only repaired one
-              rm -f "$wheel" || true
+              # Fix @rpath references in all Python extension modules
+              # Since INSTALL_RPATH is "$ORIGIN/..", change @rpath to @loader_path/..
+              for ext_module in $(find "$temp_dir" -name "*.so" -type f); do
+                if otool -L "$ext_module" 2>/dev/null | grep -q "@rpath/libqgd.dylib"; then
+                  echo "Fixing @rpath in: ${ext_module#$temp_dir/}"
+                  install_name_tool -change "@rpath/libqgd.dylib" "@loader_path/../libqgd.dylib" "$ext_module"
+                fi
+              done
+              
+              # Now run delocate-path to handle external dependencies
+              delocate-path "$temp_dir"
+              
+              # Rebuild wheel
+              (cd "$temp_dir" && zip -q -r "../repaired_$(basename "$wheel")" .)
+              mv "$temp_dir/repaired_$(basename "$wheel")" "dist/repaired_$(basename "$wheel")"
+              
+              rm -rf "$temp_dir"
+              rm -f "$wheel"
+              mv "dist/repaired_$(basename "$wheel")" "$wheel"
             fi
           done
-
+          
       - name: Repair wheel (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
