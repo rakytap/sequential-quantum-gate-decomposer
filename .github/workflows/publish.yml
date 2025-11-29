@@ -193,7 +193,33 @@ jobs:
         run: |
           for wheel in dist/*.whl; do
             if [[ "$wheel" != *"wheelhouse"* ]]; then
-              delocate-wheel -w dist/ "$wheel"
+              # Extract wheel to find libqgd.dylib location
+              temp_dir=$(mktemp -d)
+              unzip -q "$wheel" -d "$temp_dir"
+              
+              # Find libqgd.dylib in the extracted wheel
+              libqgd_path=$(find "$temp_dir" -name "libqgd.dylib" | head -1)
+              
+              if [ -n "$libqgd_path" ]; then
+                # Get the directory containing libqgd.dylib relative to wheel root
+                libqgd_dir=$(dirname "${libqgd_path#$temp_dir/}")
+                echo "Found libqgd.dylib in wheel at: $libqgd_dir"
+                
+                # Use delocate-path to fix the wheel, specifying the library search path
+                # This tells delocate where to find libqgd.dylib
+                delocate-path -L "$libqgd_dir" "$temp_dir"
+                
+                # Rebuild the wheel
+                (cd "$temp_dir" && zip -q -r "../$(basename "$wheel")" .)
+                mv "$temp_dir/$(basename "$wheel")" "$wheel"
+              else
+                echo "Warning: libqgd.dylib not found in wheel, using default delocate"
+                delocate-wheel -w dist/ "$wheel"
+              fi
+              
+              # Clean up
+              rm -rf "$temp_dir"
+              
               # Remove original wheel, keep only repaired one
               rm -f "$wheel" || true
             fi
