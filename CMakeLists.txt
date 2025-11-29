@@ -323,11 +323,13 @@ elseif(WIN32)
 
   endif()
 
-  set(CMAKE_REQUIRED_LIBRARIES "${LAPACKE_CHECK_LIBRARIES}" "-lm")
+  set(CMAKE_REQUIRED_LIBRARIES "${LAPACKE_CHECK_LIBRARIES}" "${LAPACK_LIBRARIES}" "-lm")
 
-  find_library(LAPACKE_LIBRARIES lapacke)
-  if(LAPACKE_LIBRARIES)
-    message(STATUS "Found LAPACKE library for function check: ${LAPACKE_LIBRARIES}")
+  check_function_exists(LAPACKE_dgesv LAPACKE_FOUND)
+
+  if(LAPACKE_FOUND)
+    message(STATUS "Found LAPACKE library for function check: ${LAPACKE_CHECK_LIBRARIES}")
+    set(LAPACKE_LIBRARIES "${LAPACKE_CHECK_LIBRARIES}")
 
   else()
 
