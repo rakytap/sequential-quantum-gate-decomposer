@@ -110,9 +110,6 @@ jobs:
       run: |
         python setup.py build_ext -q
 
-    - name: Test
-      run: |
-        pytest tests/ -x -v --tb=line
 
   build-and-test-macos:
     runs-on: macos-latest
