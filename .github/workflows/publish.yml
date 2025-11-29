@@ -195,6 +195,7 @@ jobs:
             if [[ "$wheel" != *"wheelhouse"* ]]; then
               # Extract wheel
               temp_dir=$(mktemp -d)
+              wheel_name=$(basename "$wheel")
               unzip -q "$wheel" -d "$temp_dir"
               
               # Find libqgd.dylib
@@ -220,19 +221,17 @@ jobs:
               # Now run delocate-path to handle external dependencies
               delocate-path "$temp_dir"
               
-              # Rebuild wheel - get absolute path to dist/ and create zip in temp_dir first
-              wheel_name=$(basename "$wheel")
-              dist_abs_path=$(cd dist && pwd)
-              (cd "$temp_dir" && zip -q -r "$temp_dir/$wheel_name" .)
+              # Rebuild wheel in temp_dir
+              (cd "$temp_dir" && zip -q -r "$wheel_name" .)
+              
+              # Remove original wheel first
+              rm -f "$wheel"
               
               # Move repaired wheel to dist/
-              mv "$temp_dir/$wheel_name" "$dist_abs_path/$wheel_name"
+              mv "$temp_dir/$wheel_name" "dist/$wheel_name"
               
               # Clean up
               rm -rf "$temp_dir"
-              
-              # Remove original wheel, keep only repaired one
-              rm -f "$wheel"
             fi
           done
           
