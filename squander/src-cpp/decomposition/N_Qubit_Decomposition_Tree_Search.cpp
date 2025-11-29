@@ -36,11 +36,39 @@ limitations under the License.
 #include <unordered_map>
 
 using Discovery = std::vector<std::pair<std::vector<int>, GrayCode>>;
-using LevelResult = std::tuple<std::set<std::vector<int>>, std::map<std::vector<int>, GrayCode>,
-                               std::vector<std::pair<std::vector<int>, GrayCode>>>;
 
-// Initialize at depth 0 (identity only)
+/**
+@brief Structure containing the result of a BFS level enumeration.
+This structure contains the visited states, sequence pairs, and the output results from enumerating a single BFS level.
+*/
+struct LevelResult {
+    /// Set of visited states (represented as vectors of integers)
+    std::set<std::vector<int>> visited;
+    /// Map from state vectors to their corresponding Gray code sequences
+    std::map<std::vector<int>, GrayCode> seq_pairs_of;
+    /// Vector of output results (discoveries) from the BFS level enumeration
+    std::vector<std::pair<std::vector<int>, GrayCode>> out_res;
+};
+
+/**
+@brief Initialize the breadth-first search (BFS) enumeration at depth 0 (identity state only).
+This function sets up the initial state for BFS enumeration of CNOT gate structures. At depth 0,
+the state represents the identity operation (no CNOT gates applied), where each qubit is in its
+own computational basis state. The function creates the initial state vector I, where each element
+I[i] = 2^i represents the i-th qubit's basis state, marks it as visited, and initializes the
+sequence pairs mapping with an empty Gray code.
+
+@param n The number of qubits in the system
+@return Returns a LevelResult structure containing:
+        - visited: Set containing the initial identity state I
+        - seq_pairs_of: Map from the identity state to an empty Gray code sequence
+        - out_res: Vector containing a single discovery pair (I, empty Gray code)
+@note This function is the starting point for BFS enumeration. The identity state I is represented
+      as a vector where I[i] = 2^i, which corresponds to the i-th qubit being in state |1⟩ while
+      all others are in state |0⟩.
+*/
 static inline LevelResult enumerate_unordered_cnot_BFS_level_init(int n) {
+
     std::vector<int> I(n, 0);
     for (int i = 0; i < n; ++i)
         I[i] = 1 << i;
@@ -51,7 +79,12 @@ static inline LevelResult enumerate_unordered_cnot_BFS_level_init(int n) {
     // emit the root
     Discovery out_res;
     out_res.emplace_back(I, GrayCode{});
-    return LevelResult{visited, seq_pairs_of, out_res};
+
+    LevelResult result;
+    result.visited = std::move(visited);
+    result.seq_pairs_of = std::move(seq_pairs_of);
+    result.out_res = std::move(out_res);
+    return result;
 }
 
 // normalize unordered CNOT pair: (i,j) == (j,i)
@@ -82,7 +115,7 @@ static int canonical_prefix_ok(const std::vector<std::pair<int, int>>& seq) {
         const int a = ops[k].first;
         const int b = ops[k].second;
         for (int q : {a, b}) {
-            auto it = last_on.find(q);
+            std::unordered_map<int, int>::iterator it = last_on.find(q);
             if (it != last_on.end()) {
                 int prev = it->second;
                 succ[prev].push_back(k);
@@ -128,23 +161,48 @@ static int canonical_prefix_ok(const std::vector<std::pair<int, int>>& seq) {
     return -1;
 }
 
-// One expansion “level”: pop all items from L.q, try all unordered pairs in topology
-// (both directions internally), record first-time discoveries and emit them immediately
-// (BFS ⇒ minimal depth).
+/**
+@brief Perform one expansion level of breadth-first search (BFS) enumeration over CNOT gate structures.
+This function processes all states in the current BFS level queue, applies all possible CNOT operations
+from the topology, and discovers new states at the next depth level. It maintains the BFS property that
+states are discovered at their minimal depth, ensuring optimal exploration of the gate structure space.
+
+The function operates in two modes:
+- When use_gl=true (Gray-Lin mode): Applies CNOT operations directly to state vectors using XOR operations,
+  tracking actual quantum states reached by the circuit.
+- When use_gl=false: Builds Gray code sequences representing gate orderings, with additional constraints
+  to avoid repeated CNOTs (max 3 consecutive) and ensure canonical ordering.
+
+@param L LevelInfo reference containing the current BFS state:
+         - visited: Set of states already discovered (modified to include new discoveries)
+         - seq_pairs_of: Map from states to their Gray code sequences (used for lookups)
+         - q: Queue of states to process at the current level (emptied during processing)
+@param topology Vector of CNOT pairs (target, control) representing allowed qubit connections.
+                Each element is a matrix_base<int> with two elements [target, control].
+@param use_gl If true, uses Gray-Lin mode (applies CNOTs directly to states).
+              If false, builds sequence-based representations with canonical ordering constraints.
+@return Returns a LevelResult structure containing:
+        - visited: Updated set of visited states (includes all newly discovered states)
+        - seq_pairs_of: Map from newly discovered states to their extended Gray code sequences
+        - out_res: Vector of discovery pairs (state, Gray code) for all newly found states
+@note The function modifies the input LevelInfo structure L by updating visited states and clearing
+      the queue. New states are discovered by applying CNOT operations: B[target] ^= B[control] in
+      Gray-Lin mode, or by extending Gray code sequences in sequence mode.
+*/
 static inline LevelResult enumerate_unordered_cnot_BFS_level_step(LevelInfo& L,
                                                                   const std::vector<matrix_base<int>>& topology,
                                                                   bool use_gl = true) {
-    auto& visited = L.visited;
-    auto& seq_pairs_of = L.seq_pairs_of;
-    auto& q = L.q;
+    std::set<std::vector<int>>& visited = L.visited;
+    std::map<std::vector<int>, GrayCode>& seq_pairs_of = L.seq_pairs_of;
+    std::vector<std::vector<int>>& q = L.q;
     std::map<std::vector<int>, GrayCode> new_seq_pairs_of;
     Discovery out_res;
     while (!q.empty()) {
 
-        auto A = q.back();
+        std::vector<int> A = q.back();
         q.pop_back();
 
-        const auto& last_pairs = seq_pairs_of.at(A);
+        const GrayCode& last_pairs = seq_pairs_of.at(A);
         for (int p = 0; p < (int)topology.size(); ++p) {
             // try both directions
             // ensure p is unordered i<j; assume caller provides that
@@ -169,7 +227,7 @@ static inline LevelResult enumerate_unordered_cnot_BFS_level_step(LevelInfo& L,
             std::vector<std::pair<int, int>> allmv =
                 use_gl ? std::vector<std::pair<int, int>>{m1, m2} : std::vector<std::pair<int, int>>{m1};
 
-            for (auto mv : allmv) {
+            for (std::pair<int, int> mv : allmv) {
                 std::vector<int> B;
                 if (use_gl) {
                     B = A;
@@ -187,18 +245,22 @@ static inline LevelResult enumerate_unordered_cnot_BFS_level_step(LevelInfo& L,
                 visited.emplace(B);
 
                 // build sequences
-                auto seqp = last_pairs.add_Digit(static_cast<int>(topology.size()));
+                GrayCode seqp = last_pairs.add_Digit(static_cast<int>(topology.size()));
                 seqp[seqp.size() - 1] = p;
 
                 new_seq_pairs_of.emplace(B, std::move(seqp));
 
                 // emit discovery: (depth+1, B, seq_pairs_of[B], seq_dir_of[B])
-                const auto& ref_pairs = new_seq_pairs_of.at(B);
+                const GrayCode& ref_pairs = new_seq_pairs_of.at(B);
                 out_res.emplace_back(std::move(B), ref_pairs);
             }
         }
     }
-    return LevelResult{visited, new_seq_pairs_of, out_res};
+    LevelResult result;
+    result.visited = std::move(visited);
+    result.seq_pairs_of = std::move(new_seq_pairs_of);
+    result.out_res = std::move(out_res);
+    return result;
 }
 
 /**
@@ -413,12 +475,12 @@ Gates_block* N_Qubit_Decomposition_Tree_Search::determine_gate_structure(Matrix_
     GrayCode best_solution;
     double minimum_best_solution = current_minimum;
     LevelInfo li;
-    auto all_cuts = unique_cuts(qbit_num);
+    std::vector<std::vector<int>> all_cuts = unique_cuts(qbit_num);
     std::map<std::pair<int, int>, std::vector<int>> pair_affects;
-    for (const auto& pair : topology) {
+    for (const matrix_base<int>& pair : topology) {
         std::vector<int> cuts;
         for (size_t i = 0; i < all_cuts.size(); ++i) {
-            const auto& A = all_cuts[i];
+            const std::vector<int>& A = all_cuts[i];
             if ((std::find(A.begin(), A.end(), pair[0]) != A.end()) ^
                 (std::find(A.begin(), A.end(), pair[1]) != A.end())) {
                 cuts.push_back(static_cast<int>(i));
@@ -464,7 +526,7 @@ Gates_block* N_Qubit_Decomposition_Tree_Search::determine_gate_structure(Matrix_
         N_Qubit_Decomposition_custom&& cDecomp_custom_random = perform_optimization(nullptr);
         std::uniform_real_distribution<> distrib_real(0.0, 2 * M_PI);
         std::vector<double> optimized_parameters;
-        for (const auto& solution : all_solutions) {
+        for (const GrayCode& solution : all_solutions) {
             std::unique_ptr<Gates_block> gate_structure_loc;
             gate_structure_loc.reset(construct_gate_structure_from_Gray_code(solution));
             cDecomp_custom_random.set_custom_gate_structure(gate_structure_loc.get());
@@ -537,9 +599,9 @@ TreeSearchResult N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_struct
 
     tbb::spin_mutex tree_search_mutex;
 
-    auto& all_cuts = ci.all_cuts;
-    auto& pair_affects = ci.pair_affects;
-    auto& prefixes = ci.prefixes;
+    std::vector<std::vector<int>>& all_cuts = ci.all_cuts;
+    std::map<std::pair<int, int>, std::vector<int>>& pair_affects = ci.pair_affects;
+    std::map<GrayCode, std::vector<std::pair<int, double>>>& prefixes = ci.prefixes;
 
     double optimization_tolerance_loc;
     if (config.count("optimization_tolerance") > 0) {
@@ -551,14 +613,14 @@ TreeSearchResult N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_struct
     GrayCode best_solution;
     volatile bool found_optimal_solution = false;
 
-    auto level_result = level_num == 0 ? enumerate_unordered_cnot_BFS_level_init(qbit_num)
-                                       : enumerate_unordered_cnot_BFS_level_step(li, topology, false);
-    const auto& visited = std::get<0>(level_result);
-    const auto& seq_pairs_of = std::get<1>(level_result);
-    const auto& out_res = std::get<2>(level_result);
+    LevelResult level_result = level_num == 0 ? enumerate_unordered_cnot_BFS_level_init(qbit_num)
+                                              : enumerate_unordered_cnot_BFS_level_step(li, topology, false);
+    const std::set<std::vector<int>>& visited = level_result.visited;
+    const std::map<std::vector<int>, GrayCode>& seq_pairs_of = level_result.seq_pairs_of;
+    const std::vector<std::pair<std::vector<int>, GrayCode>>& out_res = level_result.out_res;
 
     std::set<GrayCode> pairs_reduced;
-    for (const auto& item : out_res) {
+    for (const std::pair<std::vector<int>, GrayCode>& item : out_res) {
         pairs_reduced.insert(item.second);
     }
     std::vector<GrayCode> all_pairs(pairs_reduced.begin(), pairs_reduced.end());
@@ -609,7 +671,7 @@ TreeSearchResult N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_struct
                     if (found_optimal_solution) {
                         break;
                     }
-                    const auto& solution = all_pairs[iter_idx];
+                    const GrayCode& solution = all_pairs[iter_idx];
 
                     // ----------------------------------------------------------------
                     std::unique_ptr<Gates_block> gate_structure_loc(
@@ -647,19 +709,20 @@ TreeSearchResult N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_struct
                             << std::endl;
                     print(sstream, 1);
 
-                    auto U = Umtx.copy();
-                    auto params = best_params.begin()->second;
+                    Matrix U = Umtx.copy();
+                    Matrix_real params = best_params.begin()->second;
                     cDecomp_custom_random.apply_to(params, U);
                     std::vector<std::pair<int, double>> osr_result;
                     osr_result.reserve(all_cuts.size());
-                    for (const auto& cut : all_cuts) {
+                    for (const std::vector<int>& cut : all_cuts) {
                         osr_result.emplace_back(operator_schmidt_rank(U, qbit_num, cut, Fnorm, osr_tol));
                     }
                     // std::cout << "Optimization with " << level_num << " levels converged to " << current_minimum_tmp
                     // << std::endl;
 
-                    auto lastprefix = solution.size() != 0 ? prefixes.at(solution.remove_Digit(solution.size() - 1))
-                                                           : std::vector<std::pair<int, double>>();
+                    std::vector<std::pair<int, double>> lastprefix =
+                        solution.size() != 0 ? prefixes.at(solution.remove_Digit(solution.size() - 1))
+                                             : std::vector<std::pair<int, double>>();
                     std::vector<int> check_cuts;
                     if (solution.size() != 0)
                         check_cuts =
@@ -708,7 +771,7 @@ TreeSearchResult N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_struct
                  const std::pair<GrayCode, std::vector<std::pair<int, double>>>& b) {
                   int max_ar = 0, sum_ar = 0;
                   double sum_ac = 0;
-                  for (const auto& item : a.second) {
+                  for (const std::pair<int, double>& item : a.second) {
                       int rnk = item.first;
                       double cost = item.second;
                       max_ar = std::max(max_ar, rnk);
@@ -717,7 +780,7 @@ TreeSearchResult N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_struct
                   }
                   int max_br = 0, sum_br = 0;
                   double sum_bc = 0;
-                  for (const auto& item : b.second) {
+                  for (const std::pair<int, double>& item : b.second) {
                       int rnk = item.first;
                       double cost = item.second;
                       max_br = std::max(max_br, rnk);
@@ -737,12 +800,13 @@ TreeSearchResult N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_struct
     beam_width = std::min<long long>(beam_width, all_osr_results.size());
     std::map<GrayCode, std::vector<std::pair<int, double>>> nextprefixes;
     for (long i = 0; i < beam_width; i++) {
-        const auto& item = all_osr_results[i];
+        const std::pair<GrayCode, std::vector<std::pair<int, double>>>& item = all_osr_results[i];
         nextprefixes.emplace(std::move(item.first), std::move(item.second));
     }
     std::vector<std::vector<int>> next_q;
     next_q.reserve(out_res.size());
-    for (auto it = out_res.crbegin(); it != out_res.crend(); ++it) {
+    for (std::vector<std::pair<std::vector<int>, GrayCode>>::const_reverse_iterator it = out_res.crbegin();
+         it != out_res.crend(); ++it) {
         if (nextprefixes.find(it->second) == nextprefixes.end()) {
             continue;
         }
