@@ -134,9 +134,9 @@ static int canonical_prefix_ok(const std::vector<std::pair<int, int>>& seq) {
 static inline LevelResult enumerate_unordered_cnot_BFS_level_step(LevelInfo& L,
                                                                   const std::vector<matrix_base<int>>& topology,
                                                                   bool use_gl = true) {
-    auto& visited = std::get<0>(L);
-    auto& seq_pairs_of = std::get<1>(L);
-    auto& q = std::get<2>(L);
+    auto& visited = L.visited;
+    auto& seq_pairs_of = L.seq_pairs_of;
+    auto& q = L.q;
     std::map<std::vector<int>, GrayCode> new_seq_pairs_of;
     Discovery out_res;
     while (!q.empty()) {
@@ -426,7 +426,10 @@ Gates_block* N_Qubit_Decomposition_Tree_Search::determine_gate_structure(Matrix_
         }
         pair_affects[std::pair<int, int>(pair[0], pair[1])] = std::move(cuts);
     }
-    CutInfo ci = std::make_tuple(all_cuts, pair_affects, std::map<GrayCode, std::vector<std::pair<int, double>>>());
+    CutInfo ci;
+    ci.all_cuts = std::move(all_cuts);
+    ci.pair_affects = std::move(pair_affects);
+    ci.prefixes = std::map<GrayCode, std::vector<std::pair<int, double>>>();
     std::vector<GrayCode> all_solutions;
 
     for (int level = 0; level <= level_limit; level++) {
@@ -436,13 +439,10 @@ Gates_block* N_Qubit_Decomposition_Tree_Search::determine_gate_structure(Matrix_
                 all_solutions.emplace_back();
                 break;
             } else {
-                auto result = tree_search_over_gate_structures_gl(level, li, ci);
-                auto& solutions = std::get<0>(result);
-                auto& nextli = std::get<1>(result);
-                auto& nextprefixes = std::get<2>(result);
-                all_solutions.insert(all_solutions.end(), solutions.begin(), solutions.end());
-                li.swap(nextli);
-                std::get<2>(ci) = std::move(nextprefixes);
+                TreeSearchResult result = tree_search_over_gate_structures_gl(level, li, ci);
+                all_solutions.insert(all_solutions.end(), result.solutions.begin(), result.solutions.end());
+                std::swap(li, result.level_info);
+                ci.prefixes = std::move(result.prefixes);
             }
             if (stop_first_solution && all_solutions.size() > 0) {
                 break;
@@ -506,22 +506,40 @@ Gates_block* N_Qubit_Decomposition_Tree_Search::determine_gate_structure(Matrix_
 }
 
 /**
-@brief Call to perform tree search over possible gate structures with a given tree search depth.
-@param level_num The number of decomposing levels (i.e. the maximal tree depth)
-@param li LevelInfo reference containing visited states and sequence pairs
-@param ci CutInfo reference containing cut information and prefixes
-@return Returns a tuple containing: (1) vector of successful Gray-code solutions, (2) updated LevelInfo, (3) map of
-GrayCode to OSR result pairs. The associated gate structure can be constructed by function
-construct_gate_structure_from_Gray_code
+@brief Perform tree search over possible gate structures using Gray code enumeration and Operator Schmidt Rank (OSR)
+optimization.
+
+This function performs a breadth-first search (BFS) over gate structures represented as Gray codes. It enumerates
+CNOT gate combinations at a given level, optimizes each structure using OSR-based cost function, and filters
+candidates based on their operator Schmidt rank across different qubit cuts. The search is performed in parallel
+using Intel TBB for improved performance.
+
+The function uses a beam search approach, keeping only the best candidates (based on beam width configuration)
+for further exploration. It maintains state information about visited gate structures and their corresponding
+Gray code sequences to avoid redundant computations.
+
+@param level_num The number of decomposing levels (i.e. the depth in the search tree). Level 0 corresponds
+                 to the identity (no CNOT gates).
+@param li LevelInfo reference that is updated with visited states and sequence pairs discovered at this level.
+          This is used to track the BFS state across multiple calls.
+@param ci CutInfo reference containing cut information (all possible qubit cuts) and prefixes (OSR results
+          from previous levels). The prefixes map is updated with new OSR results for promising candidates.
+@return Returns a TreeSearchResult structure containing:
+        - solutions: Vector of successful Gray-code solutions that achieved zero operator Schmidt rank
+        - level_info: Updated LevelInfo with visited states and sequence pairs for the next level
+        - prefixes: Map of GrayCode to OSR result pairs for candidates that passed the filtering criteria
+@note The function modifies the input parameters li and ci to maintain state across multiple calls.
+      The associated gate structure can be constructed from a Gray code using the function
+      construct_gate_structure_from_Gray_code.
 */
-std::tuple<std::vector<GrayCode>, LevelInfo, std::map<GrayCode, std::vector<std::pair<int, double>>>>
-N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures_gl(int level_num, LevelInfo& li, CutInfo& ci) {
+TreeSearchResult N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures_gl(int level_num, LevelInfo& li,
+                                                                                        CutInfo& ci) {
 
     tbb::spin_mutex tree_search_mutex;
 
-    auto& all_cuts = std::get<0>(ci);
-    auto& pair_affects = std::get<1>(ci);
-    auto& prefixes = std::get<2>(ci);
+    auto& all_cuts = ci.all_cuts;
+    auto& pair_affects = ci.pair_affects;
+    auto& prefixes = ci.prefixes;
 
     double optimization_tolerance_loc;
     if (config.count("optimization_tolerance") > 0) {
@@ -730,9 +748,13 @@ N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures_gl(int level
         }
         next_q.push_back(it->first);
     }
-    return std::make_tuple(std::move(successful_solutions),
-                           std::make_tuple(std::move(visited), std::move(seq_pairs_of), std::move(next_q)),
-                           std::move(nextprefixes));
+    TreeSearchResult result;
+    result.solutions = std::move(successful_solutions);
+    result.level_info.visited = std::move(visited);
+    result.level_info.seq_pairs_of = std::move(seq_pairs_of);
+    result.level_info.q = std::move(next_q);
+    result.prefixes = std::move(nextprefixes);
+    return result;
 }
 
 /**
