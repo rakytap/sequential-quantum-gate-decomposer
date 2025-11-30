@@ -29,6 +29,9 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON) #for lib not just dll when no exports
 
+# Export compile commands for clang-tidy and other tools
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 # include CMAKE modules
 include(CheckIncludeFile)
 include(CheckIncludeFileCXX)

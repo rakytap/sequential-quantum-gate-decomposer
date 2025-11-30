@@ -25,15 +25,52 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 #ifndef N_Qubit_Decomposition_Tree_Search_H
 #define N_Qubit_Decomposition_Tree_Search_H
-#include <vector>
-#include <set>
-#include <map>
-#include <tuple>
-#include "N_Qubit_Decomposition_custom.h"
 #include "GrayCode.h"
+#include "N_Qubit_Decomposition_custom.h"
 
-using LevelInfo = std::tuple<std::set<std::vector<int>>, std::map<std::vector<int>, GrayCode>, std::vector<std::vector<int>>>;
-using CutInfo = std::tuple<std::vector<std::vector<int>>, std::map<std::pair<int, int>, std::vector<int>>, std::map<GrayCode, std::vector<std::pair<int, double>>>>;
+#include <map>
+#include <set>
+#include <tuple>
+#include <vector>
+
+/**
+@brief Structure containing level information for breadth-first search over gate structures.
+This structure tracks visited states, sequence pairs, and the queue of states to process during BFS enumeration.
+*/
+struct LevelInfo {
+    /// Set of visited states (represented as vectors of integers)
+    std::set<std::vector<int>> visited;
+    /// Map from state vectors to their corresponding Gray code sequences
+    std::map<std::vector<int>, GrayCode> seq_pairs_of;
+    /// Queue of states to be processed in the next BFS level
+    std::vector<std::vector<int>> q;
+};
+
+/**
+@brief Structure containing cut information for operator Schmidt rank (OSR) analysis.
+This structure tracks all possible qubit cuts, which cuts are affected by each CNOT pair,
+and the OSR results (prefixes) for different Gray code sequences.
+*/
+struct CutInfo {
+    /// Vector of all possible qubit cuts, where each cut is represented as a vector of qubit indices
+    std::vector<std::vector<int>> all_cuts;
+    /// Map from CNOT pair (target, control) to the indices of cuts that are affected by this pair
+    std::map<std::pair<int, int>, std::vector<int>> pair_affects;
+    /// Map from Gray code sequences to their OSR result pairs (rank, cost) for different cuts
+    std::map<GrayCode, std::vector<std::pair<int, double>>> prefixes;
+};
+
+/**
+@brief Structure containing the result of tree search over gate structures with Gray code and level information.
+*/
+struct TreeSearchResult {
+    /// Vector of successful Gray-code solutions
+    std::vector<GrayCode> solutions;
+    /// Updated LevelInfo containing visited states and sequence pairs
+    LevelInfo level_info;
+    /// Map of GrayCode to OSR (Operator Schmidt Rank) result pairs
+    std::map<GrayCode, std::vector<std::pair<int, double>>> prefixes;
+};
 
 /**
 @brief A base class to determine the decomposition of an N-qubit unitary into a sequence of CNOT and U3 gates.
@@ -41,148 +78,150 @@ This class contains the non-template implementation of the decomposition class.
 */
 class N_Qubit_Decomposition_Tree_Search : public Optimization_Interface {
 
-
-public:
-
-protected:
-
-
+  public:
+  protected:
     /// The maximal number of adaptive layers used in the decomposition
     int level_limit;
     /// The minimal number of adaptive layers used in the decomposition
     int level_limit_min;
     /// A vector of index pairs encoding the connectivity between the qubits
     std::vector<matrix_base<int>> topology;
-    
+
     /// List of possible target qubits according to the topology -- paired up with possible control qubits
     matrix_base<int> possible_target_qbits;
     /// List of possible control qubits according to the topology -- paired up with possible target qubits
-    matrix_base<int> possible_control_qbits;   
-    
-    
+    matrix_base<int> possible_control_qbits;
 
-public:
+  public:
+    /**
+    @brief Nullary constructor of the class.
+    @return An instance of the class
+    */
+    N_Qubit_Decomposition_Tree_Search();
 
-/**
-@brief Nullary constructor of the class.
-@return An instance of the class
-*/
-N_Qubit_Decomposition_Tree_Search();
+    /**
+    @brief Constructor of the class.
+    @param Umtx_in The unitary matrix to be decomposed
+    @param qbit_num_in The number of qubits spanning the unitary Umtx
+    @param level_limit_in The maximal number of two-qubit gates in the decomposition
+    @param config std::map conatining custom config parameters
+    @param accelerator_num The number of DFE accelerators used in the calculations
+    @return An instance of the class
+    */
+    N_Qubit_Decomposition_Tree_Search(Matrix Umtx_in, int qbit_num_in, std::map<std::string, Config_Element>& config,
+                                      int accelerator_num = 0);
 
+    /**
+    @brief Constructor of the class.
+    @param Umtx_in The unitary matrix to be decomposed
+    @param qbit_num_in The number of qubits spanning the unitary Umtx
+    @param level_limit_in The maximal number of two-qubit gates in the decomposition
+    @param topology_in A list of <target_qubit, control_qubit> pairs describing the connectivity between qubits.
+    @param config std::map conatining custom config parameters
+    @param accelerator_num The number of DFE accelerators used in the calculations
+    @return An instance of the class
+    */
+    N_Qubit_Decomposition_Tree_Search(Matrix Umtx_in, int qbit_num_in, std::vector<matrix_base<int>> topology_in,
+                                      std::map<std::string, Config_Element>& config, int accelerator_num = 0);
 
-/**
-@brief Constructor of the class.
-@param Umtx_in The unitary matrix to be decomposed
-@param qbit_num_in The number of qubits spanning the unitary Umtx
-@param level_limit_in The maximal number of two-qubit gates in the decomposition
-@param config std::map conatining custom config parameters
-@param accelerator_num The number of DFE accelerators used in the calculations
-@return An instance of the class
-*/
-N_Qubit_Decomposition_Tree_Search( Matrix Umtx_in, int qbit_num_in, std::map<std::string, Config_Element>& config, int accelerator_num=0 );
+    /**
+    @brief Destructor of the class
+    */
+    virtual ~N_Qubit_Decomposition_Tree_Search();
 
+    /**
+    @brief Start the disentanglig process of the unitary
+    @param finalize_decomp Optional logical parameter. If true (default), the decoupled qubits are rotated into state
+    |0> when the disentangling of the qubits is done. Set to False to omit this procedure
+    @param prepare_export Logical parameter. Set true to prepare the list of gates to be exported, or false otherwise.
+    */
+    virtual void start_decomposition();
 
-/**
-@brief Constructor of the class.
-@param Umtx_in The unitary matrix to be decomposed
-@param qbit_num_in The number of qubits spanning the unitary Umtx
-@param level_limit_in The maximal number of two-qubit gates in the decomposition
-@param topology_in A list of <target_qubit, control_qubit> pairs describing the connectivity between qubits.
-@param config std::map conatining custom config parameters
-@param accelerator_num The number of DFE accelerators used in the calculations
-@return An instance of the class
-*/
-N_Qubit_Decomposition_Tree_Search( Matrix Umtx_in, int qbit_num_in, std::vector<matrix_base<int>> topology_in, std::map<std::string, Config_Element>& config, int accelerator_num=0 );
+    /**
+    @brief Call determine the gate structrue of the decomposing circuit. (quantum circuit with CRY gates)
+    @param optimized_parameters_mtx_loc A matrix containing the initial parameters
+    */
+    virtual Gates_block* determine_gate_structure(Matrix_real& optimized_parameters_mtx);
 
+    /**
+    @brief Call to add two-qubit building block (two single qubit rotation blocks and one two-qubit gate) to the circuit
+    @param gate_structure Appending the two-qubit building block to this circuit
+    @param target_qbit The target qubit of the two-qubit gate
+    @param control_qbit The control qubit of the two-qubit gate
+    */
+    void add_two_qubit_block(Gates_block* gate_structure, int target_qbit, int control_qbit);
 
+    /**
+    @brief  Call to construct a gate structure corresponding to the configuration of the two-qubit gates described by
+    the Gray code
+    @param gcode The N-ary Gray code describing the configuration of the two-qubit gates.
+    @return Returns with the generated circuit
+    */
+    Gates_block* construct_gate_structure_from_Gray_code(const GrayCode& gcode, bool finalize = true);
 
-/**
-@brief Destructor of the class
-*/
-virtual ~N_Qubit_Decomposition_Tree_Search();
+    /**
+    @brief Call to perform tree search over possible gate structures
+    @param level_mum The number of decomposing levels (i.e. the maximal tree depth)
+    @return Returns with the best Gray-code corresponding to the best circuit (The associated gate structure can be
+    costructed by function construct_gate_structure_from_Gray_code)
+    */
+    GrayCode tree_search_over_gate_structures(int level_num);
 
+    /**
+    @brief Perform tree search over possible gate structures using Gray code enumeration and Operator Schmidt Rank (OSR)
+    optimization.
 
-/**
-@brief Start the disentanglig process of the unitary
-@param finalize_decomp Optional logical parameter. If true (default), the decoupled qubits are rotated into state |0> when the disentangling of the qubits is done. Set to False to omit this procedure
-@param prepare_export Logical parameter. Set true to prepare the list of gates to be exported, or false otherwise.
-*/
-virtual void start_decomposition();
+    This function performs a breadth-first search (BFS) over gate structures represented as Gray codes. It enumerates
+    CNOT gate combinations at a given level, optimizes each structure using OSR-based cost function, and filters
+    candidates based on their operator Schmidt rank across different qubit cuts. The search is performed in parallel
+    using Intel TBB for improved performance.
 
+    The function uses a beam search approach, keeping only the best candidates (based on beam width configuration)
+    for further exploration. It maintains state information about visited gate structures and their corresponding
+    Gray code sequences to avoid redundant computations.
 
+    @param level_num The number of decomposing levels (i.e. the depth in the search tree). Level 0 corresponds
+                     to the identity (no CNOT gates).
+    @param li LevelInfo reference that is updated with visited states and sequence pairs discovered at this level.
+              This is used to track the BFS state across multiple calls.
+    @param ci CutInfo reference containing cut information (all possible qubit cuts) and prefixes (OSR results
+              from previous levels). The prefixes map is updated with new OSR results for promising candidates.
+    @return Returns a TreeSearchResult structure containing:
+            - solutions: Vector of successful Gray-code solutions that achieved zero operator Schmidt rank
+            - level_info: Updated LevelInfo with visited states and sequence pairs for the next level
+            - prefixes: Map of GrayCode to OSR result pairs for candidates that passed the filtering criteria
+    @note The function modifies the input parameters li and ci to maintain state across multiple calls.
+          The associated gate structure can be constructed from a Gray code using the function
+          construct_gate_structure_from_Gray_code.
+    */
+    TreeSearchResult tree_search_over_gate_structures_gl(int level_num, LevelInfo& li, CutInfo& ci);
 
-/**
-@brief Call determine the gate structrue of the decomposing circuit. (quantum circuit with CRY gates)
-@param optimized_parameters_mtx_loc A matrix containing the initial parameters
-*/
-virtual Gates_block* determine_gate_structure(Matrix_real& optimized_parameters_mtx);
+    /**
+    @brief Call to perform the optimization on the given gate structure
+    @param gate_structure_loc The gate structure to be optimized
+    */
+    N_Qubit_Decomposition_custom perform_optimization(Gates_block* gate_structure_loc);
 
+    // Bring base class add_finalyzing_layer into scope to avoid hiding
+    using Optimization_Interface::add_finalyzing_layer;
 
+    /**
+    @brief Call to add finalyzing layer (single qubit rotations on all of the qubits) to the gate structure.
+    */
+    void add_finalyzing_layer(Gates_block* gate_structure);
 
-/**
-@brief Call to add two-qubit building block (two single qubit rotation blocks and one two-qubit gate) to the circuit
-@param gate_structure Appending the two-qubit building block to this circuit
-@param target_qbit The target qubit of the two-qubit gate
-@param control_qbit The control qubit of the two-qubit gate
-*/
-void add_two_qubit_block(Gates_block* gate_structure, int target_qbit, int control_qbit);
+    /**
+    @brief Set unitary matrix
+    @param matrix to set unitary to
+    */
+    void set_unitary(Matrix& Umtx_new);
 
-
-
-/**
-@brief  Call to construct a gate structure corresponding to the configuration of the two-qubit gates described by the Gray code  
-@param gcode The N-ary Gray code describing the configuration of the two-qubit gates.
-@return Returns with the generated circuit
-*/
-Gates_block* 
-construct_gate_structure_from_Gray_code( const GrayCode& gcode, bool finalize=true );
-
-/**
-@brief Call to perform tree search over possible gate structures
-@param level_mum The number of decomposing levels (i.e. the maximal tree depth)
-@return Returns with the best Gray-code corresponding to the best circuit (The associated gate structure can be costructed by function construct_gate_structure_from_Gray_code)
-*/
-GrayCode tree_search_over_gate_structures( int level_num );
-std::tuple<std::vector<GrayCode>, LevelInfo, std::map<GrayCode, std::vector<std::pair<int, double>>>> tree_search_over_gate_structures_gl( int level_num, LevelInfo& li, CutInfo& ci);
-
-/**
-@brief Call to perform the optimization on the given gate structure
-@param gate_structure_loc The gate structure to be optimized
-*/
-N_Qubit_Decomposition_custom perform_optimization(Gates_block* gate_structure_loc);
-
-// Bring base class add_finalyzing_layer into scope to avoid hiding
-using Optimization_Interface::add_finalyzing_layer;
-
-/**
-@brief Call to add finalyzing layer (single qubit rotations on all of the qubits) to the gate structure.
-*/
-void add_finalyzing_layer( Gates_block* gate_structure );
-
-
-
-
-/** 
-@brief Set unitary matrix 
-@param matrix to set unitary to
-*/
-void set_unitary( Matrix& Umtx_new ) ;
-
-
-/** 
-@brief Perform tabu serach over gate structures
-@return Returns with the best Gray-code corresponding to the best circuit (The associated gate structure can be costructed by function construct_gate_structure_from_Gray_code)
-*/
-GrayCode tabu_search_over_gate_structures();
-
-
-
-
+    /**
+    @brief Perform tabu serach over gate structures
+    @return Returns with the best Gray-code corresponding to the best circuit (The associated gate structure can be
+    costructed by function construct_gate_structure_from_Gray_code)
+    */
+    GrayCode tabu_search_over_gate_structures();
 };
-
-
-
-
-
 
 #endif
