@@ -90,9 +90,6 @@ void AmplitudeDampingChannel::apply(DensityMatrix &rho) {
   // K₀ = [[1, 0], [0, √(1-γ)]]
   // K₁ = [[0, √γ], [0, 0]]
 
-  double sqrt_gamma = std::sqrt(gamma_);
-  double sqrt_1_minus_gamma = std::sqrt(1.0 - gamma_);
-
   // Create temporary storage for new density matrix
   DensityMatrix rho_new(qbit_num);
   memset(rho_new.data, 0, dim * dim * sizeof(QGD_Complex16));

@@ -17,7 +17,6 @@ limitations under the License.
 #pragma once
 
 #include "density_matrix.h"
-#include <memory>
 #include <string>
 
 namespace squander {
