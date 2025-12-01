@@ -23,7 +23,7 @@ The **Sequential Quantum Gate Decomposer (SQUANDER)** is a state-of-the-art comp
 
 ### Key Capabilities
 
-SQUANDER excels in decomposing n-qubit unitaries into sequences of one-qubit rotations and two-qubit controlled gates using advanced synthesis methods. The library leverages a high-performance parallel C/C++ framework with vectorized AVX gate kernels, delivering exceptional computational efficiency for quantum circuit simulations.
+SQUANDER excels in decomposing n-qubit unitaries into sequences of one-qubit rotations and two-qubit controlled gates using advanced synthesis methods. The library leverages a high-performance parallel C/C++ framework with gate fusion and vectorized AVX gate kernels, delivering exceptional computational efficiency for quantum circuit simulations.
 
 ### Optimization Techniques
 
@@ -36,13 +36,12 @@ Beyond conventional gradient-based optimizers (gradient descent, ADAM, and BFGS)
 SQUANDER is available as pre-built Python wheels for **Windows**, **Linux**, and **macOS**, making installation straightforward for most users. The package can be installed directly from the Python Package Index (PyPI):
 
 ```bash
-pip install numpy tbb-devel wheel scikit-build ninja qiskit
 pip install squander
 ```
 
 ### System Requirements
 
-- **Python**: 3.8 or higher (tested with Python 3.6-3.13)
+- **Python**: 3.10 or higher (tested with Python 3.10-3.13)
 - **Operating Systems**: Windows, Linux, macOS
 
 ### Python Dependencies
@@ -171,7 +170,6 @@ python setup.py build_ext -DTBB_HEADER=<TBB_Location>\Library\include\
 Copy required DLL files to the package directory:
 
 ```cmd
-copy _skbuild\win-amd64-3.9\cmake-install\bin .\squander\decomposition
 copy "%TBB_LOCATION%\Library\bin\tbb12.dll" .\squander\decomposition
 copy "%TBB_LOCATION%\Library\bin\tbbmalloc.dll" .\squander\decomposition
 ```
