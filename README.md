@@ -5,7 +5,7 @@
 
 <div align="center">
 
-![SQUANDER Logo](Doxygen/images/layers.png)
+![SQUANDER Logo](Doxygen/images/squander_logo_dark.jpeg)
 
 # Sequential Quantum Gate Decomposer (SQUANDER)
 
