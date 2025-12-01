@@ -297,6 +297,7 @@ For questions, support, or collaboration inquiries, please contact:
 
 - **Zoltán Zimborás** (Researcher): zimboras.zoltan@wigner.hu
 - **Peter Rakyta** (Developer): peter.rakyta@ttk.elte.hu
+- **Gregory Morse** (Developer): morse@inf.elte.hu
 
 ---
 
