@@ -1,0 +1,31 @@
+name: qgd
+channels:
+  - conda-forge
+  - defaults
+  - https://repo.anaconda.com/pkgs/main
+  - https://repo.anaconda.com/pkgs/r
+dependencies:
+  - blas
+  - cmake
+  - ninja
+  - openblas
+  - pip
+  - pytest
+  - python=3.13
+  - scikit-build
+  - numpy
+  - scipy
+  - tbb-devel
+  - pip:
+      - gurobipy
+      - matplotlib
+      - networkx
+      - pulp
+      - qiskit
+      - qiskit-aer
+      - qulacs
+      - symengine==0.13.0
+      - sympy==1.13.3
+      - tqdm==4.67.1
+      - typing-extensions==4.12.2
+prefix: /home/rakytap/.conda/envs/qgd

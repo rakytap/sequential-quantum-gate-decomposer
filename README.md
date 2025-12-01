@@ -95,19 +95,13 @@ The **setup.py** script also build the C++ library of the SQUANDER package by ma
 
 We recommend to install the SQUANDER package in the Anaconda environment. In order to install the necessary requirements, follow the steps below:
 
-Creating new python environment: 
+Creating new python environment from the environment file in the root folder of the project: 
 
-$ conda create -n qgd
+$ conda env create -f conda_env_example.yaml
 
 Activate the new anaconda environment
 
 $ conda activate qgd
-
-Install dependencies:
-
-$ conda install numpy scipy pip pytest scikit-build tbb-devel ninja
-
-$ pip install qiskit qiskit-aer matplotlib 
 
 After the basic environment variables are set and the dependencies are installed, the compilation of the package can be started by the Python command:
 
