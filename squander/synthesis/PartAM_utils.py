@@ -3,6 +3,8 @@ from typing import List, Tuple, Set, FrozenSet
 from itertools import permutations
 from squander.gates.qgd_Circuit import qgd_Circuit as Circuit
 import heapq
+import math
+import logging
 
 def _build_adj_list(edges: List[Tuple[int, int]]) -> dict:
     adj_list = {}
@@ -161,12 +163,20 @@ def find_constrained_swaps_partial(pi_A, pi_B_dict, dist_matrix):
     
     def heuristic(state):
         """Lower bound: sum of distances for qubits needing routing"""
-        total = 0
+        total = 0.0
         for q, target_P in pi_B_dict.items():
             # Find where virtual qubit q currently is
             current_P = state.index(q)
-            total += dist_matrix[current_P][target_P]
-        return total // 2  # Optimistic: each SWAP helps 2 qubits
+            distance = dist_matrix[current_P][target_P]
+            if np.isinf(distance):
+                logging.warning(
+                    "Encountered unreachable qubit pair (%s, %s) in routing heuristic; returning inf cost.",
+                    current_P,
+                    target_P,
+                )
+                return math.inf
+            total += float(distance)
+        return math.floor(total / 2)  # Optimistic: each SWAP helps 2 qubits
     
     # A* search
     heap = [(heuristic(start_state), 0, start_state, [])]
