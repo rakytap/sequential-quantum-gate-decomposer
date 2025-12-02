@@ -24,8 +24,8 @@ dependencies:
       - qiskit
       - qiskit-aer
       - qulacs
-      - symengine==0.13.0
-      - sympy==1.13.3
-      - tqdm==4.67.1
-      - typing-extensions==4.12.2
+      - symengine
+      - sympy
+      - tqdm
+      - typing-extensions
 prefix: /home/rakytap/.conda/envs/qgd
