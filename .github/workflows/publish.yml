@@ -306,40 +306,26 @@ jobs:
         image: [manylinux2014_x86_64, manylinux_2_28_x86_64]
         python-version: ["3.10", "3.11", "3.12", "3.13"]
     runs-on: ubuntu-latest
-    container:
-      image: quay.io/pypa/${{ matrix.image }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install system dependencies
-        run: |
-          yum install -y cmake tbb-devel openblas-devel lapack-devel
-
-      - name: Install build dependencies
-        run: |
-          PYTHON_TAG=$(echo "${{ matrix.python-version }}" | tr -d '.')
-          /opt/python/cp${PYTHON_TAG}-cp${PYTHON_TAG}/bin/pip install --upgrade pip
-          /opt/python/cp${PYTHON_TAG}-cp${PYTHON_TAG}/bin/pip install build setuptools wheel scikit-build ninja numpy auditwheel
-
-      - name: Set environment variables
-        run: |
-          echo "TBB_LIB_DIR=/usr/local/lib64" >> $GITHUB_ENV
-          echo "TBB_INC_DIR=/usr/local/include" >> $GITHUB_ENV
-
       - name: Build wheel
-        env:
-          TBB_LIB_DIR: ${{ env.TBB_LIB_DIR }}
-          TBB_INC_DIR: ${{ env.TBB_INC_DIR }}
         run: |
-          PYTHON_TAG=$(echo "${{ matrix.python-version }}" | tr -d '.')
-          /opt/python/cp${PYTHON_TAG}-cp${PYTHON_TAG}/bin/python -m build --wheel
-
-      - name: Repair wheel
-        run: |
-          PYTHON_TAG=$(echo "${{ matrix.python-version }}" | tr -d '.')
-          /opt/python/cp${PYTHON_TAG}-cp${PYTHON_TAG}/bin/auditwheel repair dist/*.whl -w dist/
-          rm -f dist/*linux_x86_64.whl
+          docker run --rm -v ${{ github.workspace }}:/io \
+            -e TBB_LIB_DIR=/usr/local/lib64 \
+            -e TBB_INC_DIR=/usr/local/include \
+            quay.io/pypa/${{ matrix.image }} \
+            /bin/bash -c "
+              yum install -y cmake tbb-devel openblas-devel lapack-devel
+              PYTHON_TAG=$(echo '${{ matrix.python-version }}' | tr -d '.')
+              /opt/python/cp\${PYTHON_TAG}-cp\${PYTHON_TAG}/bin/pip install --upgrade pip
+              /opt/python/cp\${PYTHON_TAG}-cp\${PYTHON_TAG}/bin/pip install build setuptools wheel scikit-build ninja numpy auditwheel
+              cd /io
+              /opt/python/cp\${PYTHON_TAG}-cp\${PYTHON_TAG}/bin/python -m build --wheel
+              /opt/python/cp\${PYTHON_TAG}-cp\${PYTHON_TAG}/bin/auditwheel repair dist/*.whl -w dist/
+              rm -f dist/*linux_x86_64.whl
+            "
 
       - name: Upload wheel artifacts
         uses: actions/upload-artifact@v4
