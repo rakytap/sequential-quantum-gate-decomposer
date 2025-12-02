@@ -270,7 +270,7 @@ class qgd_Partition_Aware_Mapping:
             scores = [None] * len(partition_candidates)
             with Pool(processes=mp.cpu_count()) as pool:
                 for idx, partition_candidate in enumerate(partition_candidates):
-                    scores[idx] = pool.apply_async(self.score_partition_candidate, (partition_candidate, F, pi, optimized_partitions, sDAG, D, self._swap_cache))
+                    scores[idx] = pool.apply_async(qgd_Partition_Aware_Mapping.score_partition_candidate, (partition_candidate, F, pi, optimized_partitions, sDAG, D, self._swap_cache, self.topology))
             for idx, score in enumerate(scores):
                 scores[idx] = scores[idx].get()
             min_idx = np.argmin(scores)
@@ -336,7 +336,7 @@ class qgd_Partition_Aware_Mapping:
         return final_circuit, final_parameters
     
     @staticmethod
-    def score_partition_candidate(partition_candidate, F,  pi, optimized_partitions, sDAG, D, swap_cache):
+    def score_partition_candidate(partition_candidate, F,  pi, optimized_partitions, sDAG, D, swap_cache, topology):
         score_F = 0
         score_E = 0
         E_visited_partitions = set()  # Changed to set for O(1) membership checks
@@ -359,7 +359,7 @@ class qgd_Partition_Aware_Mapping:
                 if hasattr(partition_result, 'get_topology_candidates'):
                     topology_candidates = partition_result.get_topology_candidates(tdx)
                 else:
-                    topology_candidates = get_unique_subtopologies(mini_topology)
+                    topology_candidates = get_subtopologies_of_type(topology, mini_topology)
                 for topology_candidate in topology_candidates:
                     for pdx, permutation_pair in enumerate(partition_result.permutations_pairs[tdx]):
                         # Create cache key for this candidate's transform_pi result
@@ -380,7 +380,7 @@ class qgd_Partition_Aware_Mapping:
                 if hasattr(partition, 'get_topology_candidates'):
                     topology_candidates = partition.get_topology_candidates(tdx)
                 else:
-                    topology_candidates = get_unique_subtopologies(mini_topology)
+                    topology_candidates = get_subtopologies_of_type(topology, mini_topology)
                 for topology_candidate in topology_candidates:
                     for pdx, permutation_pair in enumerate(partition.permutations_pairs[tdx]):
                         # Create cache key for this candidate's transform_pi result
@@ -404,7 +404,7 @@ class qgd_Partition_Aware_Mapping:
                     if hasattr(partition_result_E, 'get_topology_candidates'):
                         topology_candidates = partition_result_E.get_topology_candidates(tdx)
                     else:
-                        topology_candidates = get_unique_subtopologies(mini_topology)
+                        topology_candidates = get_subtopologies_of_type(topology, mini_topology)
                     for topology_candidate in topology_candidates:
                         for pdx, permutation_pair in enumerate(partition_result_E.permutations_pairs[tdx]):
                             # Create cache key for this candidate's transform_pi result
