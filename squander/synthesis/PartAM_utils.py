@@ -281,7 +281,7 @@ class PartitionSynthesisResult:
     def get_partition_synthesis_score(self):
         score = 0
         for topology_idx in range(self.topology_count):
-            cnot_count_topology = np.mean(self.cnot_counts[topology_idx])*0.5 + np.min(self.cnot_counts[topology_idx])*0.5
+            cnot_count_topology = np.min(self.cnot_counts[topology_idx])#np.mean(self.cnot_counts[topology_idx])*0.5 + np.min(self.cnot_counts[topology_idx])*0.5
             score += cnot_count_topology/self.topology_count
         return score
     
