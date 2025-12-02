@@ -4,6 +4,7 @@ requires = [
     "wheel",
     "scikit-build",
     "scipy", 
+    "numpy",
     "tbb-devel; platform_machine == 'x86' or platform_machine == 'x86_64'",
     "cmake>=3.10.2",
     "networkx",
@@ -38,9 +39,6 @@ dependencies = [
     "numpy",
     "scipy",
     "networkx",
-    "qiskit",
-    "qiskit-aer",
-    "matplotlib",
 ]
 
 [project.optional-dependencies]
