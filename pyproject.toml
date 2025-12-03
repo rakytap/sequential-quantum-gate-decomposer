@@ -18,7 +18,7 @@ cmake.install.component = "python"
 
 [project]
 name = "squander"
-version = "1.9.5"
+version = "1.9.6"
 description = "C++ library with Python interface to train quantum circuits, quantum gate synthesis and state preparation."
 readme = "README.md"
 requires-python = ">=3.8"
