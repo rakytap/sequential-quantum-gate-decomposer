@@ -53,14 +53,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: ["3.13"]
-        exclude:
-          # Reduce build matrix - adjust as needed
-          - os: windows-latest
-            python-version: "3.10"
-          - os: macos-latest
-            python-version: "3.10"
+        os: [windows-latest, macos-latest]
+        python-version: ["3.10", "3.11", "3.12",  "3.13"]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout repository
@@ -305,8 +299,79 @@ jobs:
           path: dist/*.whl
           retention-days: 1
 
+  build-manylinux-wheels:
+    strategy:
+      fail-fast: false
+      matrix:
+        image: [manylinux_2_28_x86_64]
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build wheel
+        run: |
+          docker run --rm -v ${{ github.workspace }}:/io \
+            quay.io/pypa/${{ matrix.image }} \
+            /bin/bash -c "
+              yum install -y cmake tbb-devel openblas-devel lapack-devel
+              PYTHON_TAG=$(echo '${{ matrix.python-version }}' | tr -d '.')
+              /opt/python/cp\${PYTHON_TAG}-cp\${PYTHON_TAG}/bin/pip install --upgrade pip
+              /opt/python/cp\${PYTHON_TAG}-cp\${PYTHON_TAG}/bin/pip install build setuptools wheel scikit-build ninja numpy auditwheel
+              
+              # Find TBB library location
+              TBB_LIB_PATH=\$(find /usr -name 'libtbb.so*' 2>/dev/null | head -1 | xargs dirname)
+              TBB_INC_PATH=\$(find /usr -name 'tbb.h' 2>/dev/null | head -1 | xargs dirname)
+              
+              if [ -z \"\${TBB_LIB_PATH}\" ]; then
+                # Try common locations
+                for path in /usr/lib64 /usr/local/lib64 /usr/lib; do
+                  if [ -f \"\${path}/libtbb.so\" ] || [ -f \"\${path}/libtbb.so.12\" ]; then
+                    TBB_LIB_PATH=\${path}
+                    break
+                  fi
+                done
+              fi
+              
+              if [ -z \"\${TBB_INC_PATH}\" ]; then
+                TBB_INC_PATH=/usr/include
+              fi
+              
+              echo \"TBB_LIB_PATH: \${TBB_LIB_PATH}\"
+              echo \"TBB_INC_PATH: \${TBB_INC_PATH}\"
+              
+              # List all TBB libraries found
+              echo \"Searching for TBB libraries:\"
+              find /usr -name 'libtbb*.so*' 2>/dev/null | head -10
+              
+              # Ensure TBB libraries are in a standard location that auditwheel can find
+              if [ -n \"\${TBB_LIB_PATH}\" ] && [ \"\${TBB_LIB_PATH}\" != \"/usr/lib64\" ] && [ \"\${TBB_LIB_PATH}\" != \"/usr/lib\" ]; then
+                echo \"Copying TBB libraries to /usr/lib64 for auditwheel\"
+                cp \${TBB_LIB_PATH}/libtbb*.so* /usr/lib64/ 2>/dev/null || true
+              fi
+              
+              export TBB_LIB_DIR=\${TBB_LIB_PATH}
+              export TBB_INC_DIR=\${TBB_INC_PATH}
+              export LD_LIBRARY_PATH=/usr/lib64:/usr/lib:\${TBB_LIB_PATH}:\${LD_LIBRARY_PATH}
+              
+              cd /io
+              /opt/python/cp\${PYTHON_TAG}-cp\${PYTHON_TAG}/bin/python -m build --wheel
+              
+              # Repair wheel - auditwheel should now find TBB in /usr/lib64
+              /opt/python/cp\${PYTHON_TAG}-cp\${PYTHON_TAG}/bin/auditwheel repair dist/*.whl -w dist/
+              rm -f dist/*linux_x86_64.whl
+            "
+
+      - name: Upload wheel artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheels-manylinux-${{ matrix.image }}-py${{ matrix.python-version }}
+          path: dist/*.whl
+          retention-days: 1
+
   # publish:
-  #   needs: [bump-version, build-wheels]
+  #   needs: [bump-version, build-wheels, build-manylinux-wheels]
   #   runs-on: ubuntu-latest
   #   if: needs.bump-version.outputs.version != ''
   #   steps:
