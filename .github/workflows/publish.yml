@@ -7,6 +7,10 @@ on:
         description: "SemVer segment to bump (major, minor, patch)"
         required: false
         default: patch
+      target:
+        description: "Publish target (pypi or testpypi)"
+        required: true
+        default: pypi
 
 permissions:
   contents: write
@@ -373,7 +377,7 @@ jobs:
   publish:
     needs: [bump-version, build-wheels, build-manylinux-wheels]
     runs-on: ubuntu-latest
-    if: needs.bump-version.outputs.version != ''
+    if: needs.bump-version.outputs.version != '' && github.event.inputs.target == 'pypi'
     steps:
       - name: Download all wheels
         uses: actions/download-artifact@v4
@@ -407,3 +411,28 @@ jobs:
           - Package published to PyPI with wheels for Linux, Windows, and macOS"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  publish-testpypi:
+    needs: [bump-version, build-wheels, build-manylinux-wheels]
+    runs-on: ubuntu-latest
+    if: needs.bump-version.outputs.version != '' && github.event.inputs.target == 'testpypi'
+    steps:
+      - name: Download all wheels
+        uses: actions/download-artifact@v4
+        with:
+          pattern: wheels-*
+          path: dist/
+          merge-multiple: true
+
+      - name: Display wheel files (TestPyPI)
+        run: |
+          echo "Wheels to be published to TestPyPI:"
+          ls -lh dist/*.whl || echo "No wheels found"
+
+      - name: Publish to TestPyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+          repository-url: https://test.pypi.org/legacy/
+          packages-dir: dist/
+          verbose: true
