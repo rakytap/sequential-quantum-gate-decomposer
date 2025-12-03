@@ -48,7 +48,7 @@ jobs:
         run: |
           git config --local user.email "peter.rakyta@ttk.elte.hu"
           git config --local user.name "Peter Rakyta"
-          git add setup.py CMakeLists.txt Doxyfile
+          git add pyproject.toml CMakeLists.txt Doxyfile
           git commit -m "Bump version to ${{ steps.bump.outputs.version }}"
           git push
 
