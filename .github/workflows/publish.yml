@@ -13,43 +13,43 @@ permissions:
   id-token: write
 
 jobs:
-  # bump-version:
-  #   runs-on: ubuntu-latest
-  #   outputs:
-  #     version: ${{ steps.bump.outputs.version }}
-  #   steps:
-  #     - name: Checkout repository
-  #       uses: actions/checkout@v4
-  #       with:
-  #         token: ${{ secrets.GITHUB_TOKEN }}
-  #         fetch-depth: 0
+  bump-version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.bump.outputs.version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
 
-  #     - name: Set up Python
-  #       uses: actions/setup-python@v5
-  #       with:
-  #         python-version: "3.11"
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
 
-  #     - name: Install dependencies
-  #       run: |
-  #         python -m pip install --upgrade pip
-  #         python -m pip install packaging
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install packaging
 
-  #     - name: Bump project version
-  #       id: bump
-  #       env:
-  #         BUMP_SEGMENT: ${{ github.event.inputs.bump-segment || 'patch' }}
-  #       run: python .github/scripts/bump_version.py
+      - name: Bump project version
+        id: bump
+        env:
+          BUMP_SEGMENT: ${{ github.event.inputs.bump-segment || 'patch' }}
+        run: python .github/scripts/bump_version.py
 
-  #     - name: Commit version bump
-  #       run: |
-  #         git config --local user.email "peter.rakyta@ttk.elte.hu"
-  #         git config --local user.name "Peter Rakyta"
-  #         git add setup.py CMakeLists.txt Doxyfile
-  #         git commit -m "Bump version to ${{ steps.bump.outputs.version }}"
-  #         git push
+      - name: Commit version bump
+        run: |
+          git config --local user.email "peter.rakyta@ttk.elte.hu"
+          git config --local user.name "Peter Rakyta"
+          git add setup.py CMakeLists.txt Doxyfile
+          git commit -m "Bump version to ${{ steps.bump.outputs.version }}"
+          git push
 
   build-wheels:
-    #needs: bump-version
+    needs: bump-version
     strategy:
       fail-fast: false
       matrix:
@@ -370,40 +370,40 @@ jobs:
           path: dist/*.whl
           retention-days: 1
 
-  # publish:
-  #   needs: [bump-version, build-wheels, build-manylinux-wheels]
-  #   runs-on: ubuntu-latest
-  #   if: needs.bump-version.outputs.version != ''
-  #   steps:
-  #     - name: Download all wheels
-  #       uses: actions/download-artifact@v4
-  #       with:
-  #         pattern: wheels-*
-  #         path: dist/
-  #         merge-multiple: true
+  publish:
+    needs: [bump-version, build-wheels, build-manylinux-wheels]
+    runs-on: ubuntu-latest
+    if: needs.bump-version.outputs.version != ''
+    steps:
+      - name: Download all wheels
+        uses: actions/download-artifact@v4
+        with:
+          pattern: wheels-*
+          path: dist/
+          merge-multiple: true
 
-  #     - name: Display wheel files
-  #       run: |
-  #         echo "Wheels to be published:"
-  #         ls -lh dist/*.whl || echo "No wheels found"
+      - name: Display wheel files
+        run: |
+          echo "Wheels to be published:"
+          ls -lh dist/*.whl || echo "No wheels found"
 
-  #     - name: Publish to PyPI
-  #       uses: pypa/gh-action-pypi-publish@release/v1
-  #       with:
-  #         password: ${{ secrets.PYPI_API_TOKEN }}
-  #         packages-dir: dist/
-  #         verbose: true
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}
+          packages-dir: dist/
+          verbose: true
 
-  #     - name: Create GitHub Release
-  #       run: |
-  #         gh release create "v${{ needs.bump-version.outputs.version }}" \
-  #           --title "Release v${{ needs.bump-version.outputs.version }}" \
-  #           --notes "## Release v${{ needs.bump-version.outputs.version }}
+      - name: Create GitHub Release
+        run: |
+          gh release create "v${{ needs.bump-version.outputs.version }}" \
+            --title "Release v${{ needs.bump-version.outputs.version }}" \
+            --notes "## Release v${{ needs.bump-version.outputs.version }}
           
-  #         This release includes version ${{ needs.bump-version.outputs.version }} of the squander package.
+          This release includes version ${{ needs.bump-version.outputs.version }} of the squander package.
           
-  #         ### Changes
-  #         - Version bumped to ${{ needs.bump-version.outputs.version }}
-  #         - Package published to PyPI with wheels for Linux, Windows, and macOS"
-  #       env:
-  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ### Changes
+          - Version bumped to ${{ needs.bump-version.outputs.version }}
+          - Package published to PyPI with wheels for Linux, Windows, and macOS"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
