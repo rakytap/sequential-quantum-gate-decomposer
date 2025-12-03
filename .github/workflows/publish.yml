@@ -304,6 +304,7 @@ jobs:
           retention-days: 1
 
   build-manylinux-wheels:
+    needs: bump-version
     strategy:
       fail-fast: false
       matrix:
