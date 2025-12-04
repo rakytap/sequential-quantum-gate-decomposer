@@ -33,16 +33,13 @@ def main() -> None:
         Path("pyproject.toml"),
         Path("CMakeLists.txt"),
         Path("Doxyfile"),
-        Path("Doxyfile"),
     ]
 
     search_patterns = [
-        r'version\s*=\s*["\']([^"\']+)["\']',
-        r"CQGD VERSION\s+(\d+\.\d+\.\d+)",
-        r"PROJECT_NUMBER\s*=\s*v?(\d+\.\d+\.\d+)",
-        r"version=v?(\d+\.\d+\.\d+)",
+        r'version\s*=\s*["\']([^"\']+)["\']',  # For pyproject.toml: version = "1.9.7"
+        r"CQGD VERSION\s+(\d+\.\d+\.\d+)",  # For CMakeLists.txt: CQGD VERSION 1.9.7
+        r"PROJECT_NUMBER\s*=\s*v?(\d+\.\d+\.\d+)",  # For Doxyfile: PROJECT_NUMBER = 1.9.7
     ]
-    print(search_patterns)
 
     for version_file_path, search_pattern in zip(version_file_paths, search_patterns):
 
@@ -55,10 +52,12 @@ def main() -> None:
         match = re.search(search_pattern, text)
         if not match:
             raise SystemExit(
-                f"Could not locate a version declaration inside {version_file_path}"
+                f"Could not locate a version declaration inside {version_file_path} using pattern: {search_pattern}"
             )
 
-        current_version = Version(match.group(1))
+        current_version_str = match.group(1)
+        print(f"Found version in {version_file_path}: {current_version_str}")
+        current_version = Version(current_version_str)
 
         if segment == "major":
             new_version = Version(f"{current_version.major + 1}.0.0")
@@ -73,6 +72,7 @@ def main() -> None:
 
         updated_text = text[: match.start(1)] + str(new_version) + text[match.end(1) :]
         version_file_path.write_text(updated_text, encoding="utf-8")
+        print(f"Updated {version_file_path} from {current_version_str} to {new_version}")
 
     # GitHub Actions: Write the new version to GITHUB_OUTPUT so it can be used in
     # subsequent workflow steps. The GITHUB_OUTPUT environment variable points to
