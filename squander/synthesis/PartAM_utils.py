@@ -213,6 +213,13 @@ def find_constrained_swaps_partial(pi_A, pi_B_dict, dist_matrix):
     
     return None, None  # No solution found
 
+def calculate_dist_small(mini_topology, qbit_map, dist_matrix,pi):
+    dist_placeholder = 0
+    qbit_map_inv = { k:v for v,k in qbit_map.items()}
+    for u,v in mini_topology:
+        dist_placeholder += dist_matrix[pi[qbit_map_inv[u]]][pi[qbit_map_inv[v]]]-3
+    return dist_placeholder
+
 def extract_subtopology(involved_qbits, qbit_map, config ):
     mini_topology = []
     for edge in config["topology"]:

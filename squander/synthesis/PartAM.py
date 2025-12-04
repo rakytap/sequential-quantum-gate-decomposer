@@ -41,6 +41,7 @@ from squander.synthesis.PartAM_utils import (
     PartitionCandidate,
     check_circuit_compatibility,
     construct_swap_circuit,
+    calculate_dist_small
 )
 
 
@@ -224,6 +225,30 @@ class qgd_Partition_Aware_Mapping:
         return result
 
     @staticmethod
+    def DecomposePartition_Full(Partition_circuit: Circuit, Partition_parameters: np.ndarray, config: dict, topologies, involved_qbits, qbit_map) -> PartitionSynthesisResult:
+        """
+        Call to decompose a partition sequentially
+        """
+        N = Partition_circuit.get_Qbit_Num()
+        if N !=1:
+            permutations_all = list(permutations(range(N)))
+            result = PartitionSynthesisResult(N, topologies, involved_qbits, qbit_map, Partition_circuit)
+            # Sequential permutation search
+            for topology_idx in range(len(topologies)):
+                mini_topology = topologies[topology_idx]
+                for P_i in permutations_all:
+                    for P_o in permutations_all:
+                        Partition_circuit_tmp = Circuit(N)
+                        Partition_circuit_tmp.add_Permutation(list(P_i))  # Must convert tuple to list
+                        Partition_circuit_tmp.add_Circuit(Partition_circuit)
+                        Partition_circuit_tmp.add_Permutation(list(P_o))  # Must convert tuple to list
+                        synthesised_circuit, synthesised_parameters = qgd_Partition_Aware_Mapping.DecomposePartition_and_Perm(Partition_circuit_tmp.get_Matrix(Partition_parameters), config, mini_topology)
+                        result.add_result((P_i, P_o), synthesised_circuit, synthesised_parameters, topology_idx)
+        else:
+            result = SingleQubitPartitionResult(Partition_circuit,Partition_parameters)
+        return result
+
+    @staticmethod
     def DecomposePartition_and_Perm(Umtx: np.ndarray, config: dict, mini_topology = None) -> Circuit:
         """
         Call to decompose a partition
@@ -331,7 +356,7 @@ class qgd_Partition_Aware_Mapping:
                 for idx in range( len(involved_qbits) ):
                     qbit_map[ involved_qbits[idx] ] = idx
                 remapped_subcircuit = subcircuit.Remap_Qbits( qbit_map, qbit_num )
-                optimized_partitions[partition_idx] = pool.apply_async( self.DecomposePartition_Sequential, (remapped_subcircuit, subcircuit_parameters, self.config, mini_topologies, involved_qbits, qbit_map) )
+                optimized_partitions[partition_idx] = pool.apply_async( self.DecomposePartition_Full, (remapped_subcircuit, subcircuit_parameters, self.config, mini_topologies, involved_qbits, qbit_map) )
 
             for partition_idx, subcircuit in enumerate( tqdm(subcircuits, desc="Second Synthesis",disable=self.config.get('progressbar', 0) == False) ):
                 optimized_partitions[partition_idx] = optimized_partitions[partition_idx].get()
@@ -348,6 +373,8 @@ class qgd_Partition_Aware_Mapping:
             if isinstance(partition, PartitionSynthesisResult):
                 partition._topology = self.topology
                 partition._topology_cache = self._topology_cache
+
+                print(partition.cnot_counts,partition.involved_qbits)
         
         DAG, IDAG = self.construct_DAG_and_IDAG(optimized_partitions)
         sDAG = self.construct_sDAG(optimized_partitions)
@@ -360,7 +387,6 @@ class qgd_Partition_Aware_Mapping:
         scoring_partitions = self._build_scoring_partitions(optimized_partitions)
         
         partition_order, pi_final = self.Heuristic_Search(F,pi.copy(),DAG,IDAG, optimized_partitions,scoring_partitions,D, sDAG)
-        pi_final_list = pi_final.tolist() if hasattr(pi_final, 'tolist') else list(pi_final)
         
         final_circuit, final_parameters = self.Construct_circuit_from_HS(partition_order,optimized_partitions, circ.get_Qbit_Num())
         
@@ -510,16 +536,10 @@ class qgd_Partition_Aware_Mapping:
                 if partition_result is None:
                     continue
                 for tdx, mini_topology in enumerate(partition_result.mini_topologies):
-                    topology_candidates = partition_result.topology_candidates[tdx]
-                    for topology_candidate in topology_candidates:
-                        for pdx, permutation_pair in enumerate(partition_result.permutations_pairs[tdx]):
-                            # Create cache key for this candidate's transform_pi result
-                            cache_key = (partition_idx, tdx, pdx, tuple(sorted(topology_candidate)), tuple(output_perm))
-                            if cache_key not in transform_cache:
-                                new_cand = PartitionCandidate(partition_idx,tdx,pdx,partition_result.circuit_structures[tdx][pdx],permutation_pair[0],permutation_pair[1],topology_candidate,mini_topology,partition_result.qubit_map,partition_result.involved_qbits)
-                                swap_count = len(new_cand.transform_pi(output_perm,D, swap_cache)[0])
-                                transform_cache[cache_key] = swap_count * 3 + len(new_cand.circuit_structure)
-                            mini_scores.append(transform_cache[cache_key])
+                    dist_placeholder = calculate_dist_small(mini_topology,partition_result.qubit_map,D,output_perm)
+                    circuit_length = min([len(circ) for circ in partition_result.circuit_structures[tdx]])
+                    score = dist_placeholder + circuit_length
+                    mini_scores.append(score)
                 if mini_scores:
                     score_E += min(mini_scores)
 
@@ -553,28 +573,24 @@ class qgd_Partition_Aware_Mapping:
                     if partition_result_E is None:
                         continue
                     for tdx, mini_topology in enumerate(partition_result_E.mini_topologies):
-                        topology_candidates = partition_result_E.topology_candidates[tdx]
-                        for topology_candidate in topology_candidates:
-                            for pdx, permutation_pair in enumerate(partition_result_E.permutations_pairs[tdx]):
-                                # Create cache key for this candidate's transform_pi result
-                                cache_key = (partition_idx_E, tdx, pdx, tuple(sorted(topology_candidate)), tuple(output_perm))
-                                if cache_key not in transform_cache:
-                                    new_cand = PartitionCandidate(partition_idx_E,tdx,pdx,partition_result_E.circuit_structures[tdx][pdx],permutation_pair[0],permutation_pair[1],topology_candidate,mini_topology,partition_result_E.qubit_map,partition_result_E.involved_qbits)
-                                    swap_count = len(new_cand.transform_pi(output_perm,D, swap_cache)[0])
-                                    transform_cache[cache_key] = swap_count * 3 + len(new_cand.circuit_structure)
-                                mini_scores.append(transform_cache[cache_key])
+                        dist_placeholder = calculate_dist_small(mini_topology,partition_result_E.qubit_map,D,output_perm)
+                        circuit_length = min([len(circ) for circ in partition_result_E.circuit_structures[tdx]])
+                        score = dist_placeholder + circuit_length
+                        mini_scores.append(score)
                     if mini_scores:
                         score_E += min(mini_scores)
         # Safety check for division by zero
+        coeff_F = 0.6
         if len(E_visited_partitions) == 0:
             E_score = 0.0
+            coeff_F = 1.
         else:
-            E_score = 0.2 * score_E / len(E_visited_partitions)
+            E_score = (1-coeff_F) * score_E / len(E_visited_partitions)
         
         if len(F) == 0:
             F_score = 0.0
         else:
-            F_score = score_F / len(F)
+            F_score = coeff_F*score_F / len(F)
         
         return E_score + F_score
 
