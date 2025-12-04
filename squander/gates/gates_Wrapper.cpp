@@ -470,32 +470,89 @@ static PyObject *
         return NULL;
     }
 
-    if (!PyList_Check(pattern_py)) {
-        PyErr_SetString(PyExc_TypeError, "pattern must be a list!");
+    // Convert tuple to list if necessary, or check if it's a list
+    PyObject* pattern_list = NULL;
+    bool created_list = false;
+    if (PyTuple_Check(pattern_py)) {
+        pattern_list = PySequence_List(pattern_py);
+        if (pattern_list == NULL) {
+            PyErr_SetString(PyExc_TypeError, "Failed to convert tuple to list");
+            return NULL;
+        }
+        created_list = true;  // We created it, so we need to DECREF
+    } else if (PyList_Check(pattern_py)) {
+        pattern_list = pattern_py;
+        // We're borrowing the reference, no need to INCREF/DECREF
+    } else {
+        PyErr_SetString(PyExc_TypeError, "pattern must be a list or tuple!");
         return NULL;
     }
 
     std::vector<int> pattern;
-    Py_ssize_t pattern_size = PyList_Size(pattern_py);
+    Py_ssize_t pattern_size = PyList_Size(pattern_list);
+
+    // Check pattern size matches qbit_num
+    if (pattern_size != qbit_num) {
+        if (created_list) {
+            Py_DECREF(pattern_list);
+        }
+        std::string err = "Pattern size " + std::to_string(pattern_size) + 
+                         " does not match qubit number " + std::to_string(qbit_num);
+        PyErr_SetString(PyExc_ValueError, err.c_str());
+        return NULL;
+    }
+
+    // Track which values we've seen to validate it's a permutation
+    std::vector<bool> seen(qbit_num, false);
 
     for (Py_ssize_t i = 0; i < pattern_size; i++) {
-        PyObject* item = PyList_GetItem(pattern_py, i);
+        PyObject* item = PyList_GetItem(pattern_list, i);
         if (!PyLong_Check(item)) {
+            if (created_list) {
+                Py_DECREF(pattern_list);
+            }
             PyErr_SetString(PyExc_TypeError, "pattern must contain integers!");
             return NULL;
         }
         int qbit = PyLong_AsLong(item);
-        if (qbit >= qbit_num) {
-            PyErr_SetString(PyExc_ValueError, "Pattern qubit index out of range!");
+        if (qbit < 0 || qbit >= qbit_num) {
+            if (created_list) {
+                Py_DECREF(pattern_list);
+            }
+            std::string err = "Pattern qubit index " + std::to_string(qbit) + 
+                             " out of range [0, " + std::to_string(qbit_num - 1) + "]";
+            PyErr_SetString(PyExc_ValueError, err.c_str());
             return NULL;
         }
+        if (seen[qbit]) {
+            if (created_list) {
+                Py_DECREF(pattern_list);
+            }
+            std::string err = "Pattern contains duplicate value " + std::to_string(qbit);
+            PyErr_SetString(PyExc_ValueError, err.c_str());
+            return NULL;
+        }
+        seen[qbit] = true;
         pattern.push_back(qbit);
+    }
+
+    // Release the pattern_list reference (only if we created it from a tuple)
+    if (created_list) {
+        Py_DECREF(pattern_list);
     }
 
     Gate_Wrapper *self;
     self = (Gate_Wrapper *) type->tp_alloc(type, 0);
     if (self != NULL) {
-        self->gate = create_permutation_gate(qbit_num, pattern);
+        try {
+            self->gate = create_permutation_gate(qbit_num, pattern);
+        } catch (const std::string& e) {
+            PyErr_SetString(PyExc_ValueError, e.c_str());
+            return NULL;
+        } catch (const std::exception& e) {
+            PyErr_SetString(PyExc_ValueError, e.what());
+            return NULL;
+        }
     }
 
     return (PyObject *) self;
@@ -1320,29 +1377,91 @@ static PyObject * Gate_Wrapper_set_Pattern( Gate_Wrapper *self, PyObject *args )
         PyErr_SetString(PyExc_Exception, err.c_str());
         return NULL;
     }
-    if (!PyList_Check(pattern_py)) {
-        std::string err("Pattern must be a list!");
-        PyErr_SetString(PyExc_Exception, err.c_str());
+    // Convert tuple to list if necessary, or check if it's a list
+    PyObject* pattern_list = NULL;
+    bool created_list = false;
+    if (PyTuple_Check(pattern_py)) {
+        pattern_list = PySequence_List(pattern_py);
+        if (pattern_list == NULL) {
+            PyErr_SetString(PyExc_TypeError, "Failed to convert tuple to list");
+            return NULL;
+        }
+        created_list = true;  // We created it, so we need to DECREF
+    } else if (PyList_Check(pattern_py)) {
+        pattern_list = pattern_py;
+        // We're borrowing the reference, no need to INCREF/DECREF
+    } else {
+        std::string err("Pattern must be a list or tuple!");
+        PyErr_SetString(PyExc_TypeError, err.c_str());
         return NULL;
     }
-    std::vector<int> pattern;
-    Py_ssize_t pattern_size = PyList_Size(pattern_py);
-    for (Py_ssize_t i = 0; i < pattern_size; i++) {
-        PyObject* item = PyList_GetItem(pattern_py, i);
-        if (!PyLong_Check(item)) {
-            std::string err("Pattern must contain integers!");
-            PyErr_SetString(PyExc_Exception, err.c_str());
-            return NULL;
+    
+    // Cast to Permutation* to access pattern methods and get qbit_num
+    Permutation* perm_gate = dynamic_cast<Permutation*>(self->gate);
+    if (perm_gate == nullptr) {
+        if (created_list) {
+            Py_DECREF(pattern_list);
         }
-        pattern.push_back(PyLong_AsLong(item));
+        PyErr_SetString(PyExc_TypeError, "Gate is not a Permutation gate");
+        return NULL;
     }
-    try {
-        // Cast to Permutation* to access pattern methods
-        Permutation* perm_gate = dynamic_cast<Permutation*>(self->gate);
-        if (perm_gate == nullptr) {
-            PyErr_SetString(PyExc_TypeError, "Gate is not a Permutation gate");
+    
+    int qbit_num = perm_gate->get_qbit_num();
+    std::vector<int> pattern;
+    Py_ssize_t pattern_size = PyList_Size(pattern_list);
+    
+    // Check pattern size matches qbit_num
+    if (pattern_size != qbit_num) {
+        if (created_list) {
+            Py_DECREF(pattern_list);
+        }
+        std::string err = "Pattern size " + std::to_string(pattern_size) + 
+                         " does not match qubit number " + std::to_string(qbit_num);
+        PyErr_SetString(PyExc_ValueError, err.c_str());
+        return NULL;
+    }
+    
+    // Track which values we've seen to validate it's a permutation
+    std::vector<bool> seen(qbit_num, false);
+    
+    for (Py_ssize_t i = 0; i < pattern_size; i++) {
+        PyObject* item = PyList_GetItem(pattern_list, i);
+        if (!PyLong_Check(item)) {
+            if (created_list) {
+                Py_DECREF(pattern_list);
+            }
+            std::string err("Pattern must contain integers!");
+            PyErr_SetString(PyExc_TypeError, err.c_str());
             return NULL;
         }
+        int qbit = PyLong_AsLong(item);
+        if (qbit < 0 || qbit >= qbit_num) {
+            if (created_list) {
+                Py_DECREF(pattern_list);
+            }
+            std::string err = "Pattern qubit index " + std::to_string(qbit) + 
+                             " out of range [0, " + std::to_string(qbit_num - 1) + "]";
+            PyErr_SetString(PyExc_ValueError, err.c_str());
+            return NULL;
+        }
+        if (seen[qbit]) {
+            if (created_list) {
+                Py_DECREF(pattern_list);
+            }
+            std::string err = "Pattern contains duplicate value " + std::to_string(qbit);
+            PyErr_SetString(PyExc_ValueError, err.c_str());
+            return NULL;
+        }
+        seen[qbit] = true;
+        pattern.push_back(qbit);
+    }
+    
+    // Release the pattern_list reference (only if we created it from a tuple)
+    if (created_list) {
+        Py_DECREF(pattern_list);
+    }
+    
+    try {
         perm_gate->set_pattern(pattern);
     }
     catch (std::string err) {
