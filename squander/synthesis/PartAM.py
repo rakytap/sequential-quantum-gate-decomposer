@@ -523,7 +523,8 @@ class qgd_Partition_Aware_Mapping:
             final_parameters = np.concatenate(final_parameters,axis=0)
         else:
             final_parameters = np.array([])
-        
+        if not check_circuit_compatibility(final_circuit,self.topology):
+            print("ERROR: Final circuit is not compatible with device topology!")
         return final_circuit, final_parameters
     
     @staticmethod

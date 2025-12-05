@@ -1145,7 +1145,21 @@ qgd_N_Qubit_Decomposition_Wrapper_get_Matrix(qgd_N_Qubit_Decomposition_Wrapper *
 
     Matrix unitary_mtx;
 
-    unitary_mtx = self->decomp->get_matrix(parameters_mtx);
+    try {
+        unitary_mtx = self->decomp->get_matrix(parameters_mtx);
+    }
+    catch (std::string err) {
+        Py_DECREF(parameters_arr);
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        std::cout << err << std::endl;
+        return NULL;
+    }
+    catch(...) {
+        Py_DECREF(parameters_arr);
+        std::string err( "Invalid pointer to decomposition class or error in get_matrix");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
 
     // convert to numpy array
     unitary_mtx.set_owner(false);

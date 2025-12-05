@@ -226,6 +226,7 @@ def extract_subtopology(involved_qbits, qbit_map, config ):
         if edge[0] in involved_qbits and edge[1] in involved_qbits:
             mini_topology.append((qbit_map[edge[0]],qbit_map[edge[1]]))
     return mini_topology
+    
 def calculate_swaps_quick(P_i, qbit_map, node_mapping, pi, D, swap_cache=None):
     P_i_inv = [P_i.index(i) for i in range(len(P_i))]  # Compute inverse
     qbit_map_input = {k : node_mapping[P_i_inv[v]] for k,v in qbit_map.items()}

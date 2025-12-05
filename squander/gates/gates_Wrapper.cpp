@@ -610,7 +610,19 @@ Gate_Wrapper_get_Matrix( Gate_Wrapper *self, PyObject *args, PyObject *kwds ) {
         }
 
         int parallel = 1;
-        gate_mtx = gate->get_matrix( parallel );
+        try {
+            gate_mtx = gate->get_matrix( parallel );
+        }
+        catch (std::string err) {
+            PyErr_SetString(PyExc_Exception, err.c_str());
+            std::cout << err << std::endl;
+            return NULL;
+        }
+        catch(...) {
+            std::string err( "Invalid pointer to gate class or error in get_matrix");
+            PyErr_SetString(PyExc_Exception, err.c_str());
+            return NULL;
+        }
 
     }
     else if( gate->get_parameter_num() > 0 ) {
@@ -638,7 +650,21 @@ Gate_Wrapper_get_Matrix( Gate_Wrapper *self, PyObject *args, PyObject *kwds ) {
         Matrix_real&& parameters_mtx = numpy2matrix_real( parameters_arr );
 
         int parallel = 1;
-        gate_mtx = self->gate->get_matrix( parameters_mtx, parallel );
+        try {
+            gate_mtx = self->gate->get_matrix( parameters_mtx, parallel );
+        }
+        catch (std::string err) {
+            Py_DECREF(parameters_arr);
+            PyErr_SetString(PyExc_Exception, err.c_str());
+            std::cout << err << std::endl;
+            return NULL;
+        }
+        catch(...) {
+            Py_DECREF(parameters_arr);
+            std::string err( "Invalid pointer to gate class or error in get_matrix");
+            PyErr_SetString(PyExc_Exception, err.c_str());
+            return NULL;
+        }
 
         Py_DECREF(parameters_arr);
 

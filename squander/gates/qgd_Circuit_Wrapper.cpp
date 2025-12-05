@@ -626,8 +626,22 @@ qgd_Circuit_Wrapper_get_Matrix( qgd_Circuit_Wrapper *self, PyObject *args ) {
     // get the C++ wrapper around the data
     Matrix_real&& parameters_mtx = numpy2matrix_real( parameters_arr );
 
-
-    Matrix mtx = self->circuit->get_matrix( parameters_mtx );
+    Matrix mtx;
+    try {
+        mtx = self->circuit->get_matrix( parameters_mtx );
+    }
+    catch (std::string err) {
+        Py_DECREF(parameters_arr);
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        std::cout << err << std::endl;
+        return NULL;
+    }
+    catch(...) {
+        Py_DECREF(parameters_arr);
+        std::string err( "Invalid pointer to circuit class or error in get_matrix");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
     
     // convert to numpy array
     mtx.set_owner(false);
