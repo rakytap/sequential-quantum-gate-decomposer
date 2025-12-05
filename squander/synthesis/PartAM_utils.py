@@ -226,7 +226,28 @@ def extract_subtopology(involved_qbits, qbit_map, config ):
         if edge[0] in involved_qbits and edge[1] in involved_qbits:
             mini_topology.append((qbit_map[edge[0]],qbit_map[edge[1]]))
     return mini_topology
+def calculate_swaps_quick(P_i, qbit_map, node_mapping, pi, D, swap_cache=None):
+    P_i_inv = [P_i.index(i) for i in range(len(P_i))]  # Compute inverse
+    qbit_map_input = {k : node_mapping[P_i_inv[v]] for k,v in qbit_map.items()}
+    # Convert pi to plain Python list of ints (may contain np.int64)
+    pi_list = [int(x) for x in pi]
 
+    # Check cache if provided
+    cache_key = None
+    if swap_cache is not None:
+        # Create cache key: (pi_tuple, frozenset of qbit_map_input items)
+        pi_tuple = tuple(pi_list)
+        qbit_map_frozen = frozenset(qbit_map_input.items())
+        cache_key = (pi_tuple, qbit_map_frozen)
+        cache_key = (pi_tuple, qbit_map_frozen)
+        if cache_key in swap_cache:
+            swaps, pi_init = swap_cache[cache_key]
+        else:
+            swaps, pi_init = find_constrained_swaps_partial(pi_list, qbit_map_input, D)
+            swap_cache[cache_key] = (swaps, pi_init)
+    else:
+        swaps, pi_init = find_constrained_swaps_partial(pi_list, qbit_map_input, D)
+    return len(swaps)
 class SingleQubitPartitionResult:
     
     def __init__(self,circuit_in,parameters_in):
@@ -336,6 +357,8 @@ class PartitionSynthesisResult:
                     self._topology_candidates[topology_idx] = []
         return self._topology_candidates[topology_idx]
 
+
+
 class PartitionCandidate:
     
     def __init__(self, partition_idx, topology_idx, permutation_idx, circuit_structure, P_i, P_o, topology, mini_topology, qbit_map, involved_qbits):
@@ -431,6 +454,83 @@ def check_circuit_compatibility(circuit: Circuit, topology):
         if qubits not in topology and qubits[::-1] not in topology:
             return False
     return True
+
+def calculate_swap_cost(swaps, current_pi, used_qubits):
+    """
+    Calculate swap cost. Swaps involving unused qubits are costless (0).
+    unused qubits are those not in used_qubits set.
+    """
+    cost = 0
+    temp_pi = list(current_pi)
+    # Build inverse map for O(1) lookup: physical -> logical
+    phys_to_logical = {p: l for l, p in enumerate(temp_pi)}
+
+    for p1, p2 in swaps:
+        l1 = phys_to_logical[p1]
+        l2 = phys_to_logical[p2]
+
+        is_l1_unused = (l1 not in used_qubits)
+        is_l2_unused = (l2 not in used_qubits)
+
+        if is_l1_unused and is_l2_unused:
+            step_cost = 0
+        else:
+            step_cost = 3
+
+        cost += step_cost
+
+        # Update state
+        temp_pi[l1] = p2
+        temp_pi[l2] = p1
+        phys_to_logical[p1] = l2
+        phys_to_logical[p2] = l1
+
+    return cost
+
+def filter_required_swaps(swaps, current_pi, pi_initial, used_qubits):
+    """
+    Filter swaps that are effectively 'costless' (involve unused qubits).
+    Returns filtered swaps and the updated pi_initial.
+    """
+    required_swaps = []
+    temp_pi = list(current_pi)
+    
+    # pi_initial might be numpy array, convert to list for mutation if needed, 
+    # but we'll return a new list/array to be safe.
+    updated_pi_initial = list(pi_initial)
+    
+    # Build inverse map for O(1) lookup: physical -> logical
+    phys_to_logical = {p: l for l, p in enumerate(temp_pi)}
+
+    for p1, p2 in swaps:
+        l1 = phys_to_logical[p1]
+        l2 = phys_to_logical[p2]
+
+        is_l1_unused = (l1 not in used_qubits)
+        is_l2_unused = (l2 not in used_qubits)
+
+        if not (is_l1_unused and is_l2_unused):
+            required_swaps.append((p1, p2))
+        else:
+            # If unused, we update the initial mapping to reflect this swap
+            # effectively retconning that they started in these positions.
+            # pi_initial maps logical -> physical.
+            # We swap the physical locations for these logical qubits.
+            # Note: updated_pi_initial[l1] should track where l1 'started'.
+            # If we swap l1 and l2 physically, and it's costless, 
+            # it means l1 is now 'initially' at p2, and l2 at p1.
+            # But wait, temp_pi[l1] is currently p1. After swap it is p2.
+            # So we update pi_initial to match the new temp_pi.
+            updated_pi_initial[l1] = p2
+            updated_pi_initial[l2] = p1
+
+        # Always update the tracking state
+        temp_pi[l1] = p2
+        temp_pi[l2] = p1
+        phys_to_logical[p1] = l2
+        phys_to_logical[p2] = l1
+
+    return required_swaps, updated_pi_initial
 
 def construct_swap_circuit(swap_order, N):
     swap_circ = Circuit(N)
