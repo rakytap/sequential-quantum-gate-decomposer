@@ -59,7 +59,6 @@ jobs:
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          branch: ${{ steps.branch.outputs.branch_name }}
           base: master
           push-to-origin: true  # This will push the branch
           title: "Bump version to ${{ steps.bump.outputs.version }}"
