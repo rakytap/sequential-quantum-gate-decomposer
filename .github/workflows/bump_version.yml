@@ -61,7 +61,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           branch: ${{ steps.branch.outputs.branch_name }}
           base: master
-          checkout: false  # Don't checkout, branch already exists and is pushed
+          rebase: false  # Don't rebase - branch is already based on master
           title: "Bump version to ${{ steps.bump.outputs.version }}"
           body: |
             ## Version Bump
@@ -78,5 +78,5 @@ jobs:
             - After merging, you can run the "Publish to PyPI" workflow to publish the new version
           labels: |
             version-bump
-          delete-branch: true
+          delete-branch: false  # Don't auto-delete - let it be deleted after merge
 
