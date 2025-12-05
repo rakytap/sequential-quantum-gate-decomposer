@@ -33,12 +33,14 @@ def main() -> None:
         Path("pyproject.toml"),
         Path("CMakeLists.txt"),
         Path("Doxyfile"),
+        Path("Doxyfile"),
     ]
 
     search_patterns = [
-        r'version\s*=\s*["\']([^"\']+)["\']',  # For pyproject.toml: version = "1.9.7"
-        r"CQGD VERSION\s+(\d+\.\d+\.\d+)",  # For CMakeLists.txt: CQGD VERSION 1.9.7
-        r"PROJECT_NUMBER\s*=\s*v?(\d+\.\d+\.\d+)",  # For Doxyfile: PROJECT_NUMBER = 1.9.7
+        r'version\s*=\s*["\']([^"\']+)["\']',
+        r"CQGD VERSION\s+(\d+\.\d+\.\d+)",
+        r"PROJECT_NUMBER\s*=\s*v?(\d+\.\d+\.\d+)",
+        r"version=v?(\d+\.\d+\.\d+)",
     ]
 
     for version_file_path, search_pattern in zip(version_file_paths, search_patterns):
