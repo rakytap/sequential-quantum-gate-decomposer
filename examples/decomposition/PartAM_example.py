@@ -77,5 +77,6 @@ if __name__ == '__main__':
     print(f"Decomposition error on random state: {state_error:.10f}")
     print("--- %s seconds elapsed during optimization ---" % (time.time() - start_time))
     print(f"{'='*70}\n")
+    print(circ_Final.get_Gate_Nums())
 
 

@@ -61,15 +61,51 @@ _WORKER_SCORING_PARTITIONS: Optional[List[Optional[PartitionScoreData]]] = None
 _WORKER_S_DAG: Optional[List[List[int]]] = None
 _WORKER_DISTANCE_MATRIX: Optional[np.ndarray] = None
 _WORKER_SWAP_CACHE: Optional[Dict] = None
+_WORKER_PI_INITIAL: Optional[Tuple[int, ...]] = None
 
 
-def _init_scoring_worker(scoring_partitions, sdag, distance_matrix):
+def _init_scoring_worker(scoring_partitions, sdag, distance_matrix, pi_initial):
     """Initializer for process-based scoring workers."""
-    global _WORKER_SCORING_PARTITIONS, _WORKER_S_DAG, _WORKER_DISTANCE_MATRIX, _WORKER_SWAP_CACHE
+    global _WORKER_SCORING_PARTITIONS, _WORKER_S_DAG, _WORKER_DISTANCE_MATRIX, _WORKER_SWAP_CACHE, _WORKER_PI_INITIAL
     _WORKER_SCORING_PARTITIONS = scoring_partitions
     _WORKER_S_DAG = sdag
     _WORKER_DISTANCE_MATRIX = distance_matrix
     _WORKER_SWAP_CACHE = {}
+    _WORKER_PI_INITIAL = pi_initial
+
+
+def _calculate_swap_cost(swaps, current_pi, pi_initial):
+    """
+    Calculate swap cost with discount for swaps where both qubits are at initial positions.
+    """
+    cost = 0
+    temp_pi = list(current_pi)
+    # Build inverse map for O(1) lookup: physical -> logical
+    phys_to_logical = {p: l for l, p in enumerate(temp_pi)}
+
+    for p1, p2 in swaps:
+        l1 = phys_to_logical[p1]
+        l2 = phys_to_logical[p2]
+
+        # Check if both logical qubits are at their initial positions
+        # Note: pi_initial maps logical -> physical
+        is_l1_initial = (temp_pi[l1] == pi_initial[l1])
+        is_l2_initial = (temp_pi[l2] == pi_initial[l2])
+
+        if is_l1_initial and is_l2_initial:
+            step_cost = 0
+        else:
+            step_cost = 3
+
+        cost += step_cost
+
+        # Update state
+        temp_pi[l1] = p2
+        temp_pi[l2] = p1
+        phys_to_logical[p1] = l2
+        phys_to_logical[p2] = l1
+
+    return cost
 
 
 def _score_candidate_worker(payload):
@@ -81,6 +117,7 @@ def _score_candidate_worker(payload):
         _WORKER_SCORING_PARTITIONS is None
         or _WORKER_S_DAG is None
         or _WORKER_DISTANCE_MATRIX is None
+        or _WORKER_PI_INITIAL is None
     ):
         raise RuntimeError("Scoring worker not initialized with shared data.")
     partition_candidate, F_snapshot, pi_snapshot = payload
@@ -92,6 +129,7 @@ def _score_candidate_worker(payload):
         _WORKER_S_DAG,
         _WORKER_DISTANCE_MATRIX,
         _WORKER_SWAP_CACHE,
+        _WORKER_PI_INITIAL,
     )
 
 class qgd_Partition_Aware_Mapping:
@@ -374,7 +412,6 @@ class qgd_Partition_Aware_Mapping:
                 partition._topology = self.topology
                 partition._topology_cache = self._topology_cache
 
-                print(partition.cnot_counts,partition.involved_qbits)
         
         DAG, IDAG = self.construct_DAG_and_IDAG(optimized_partitions)
         sDAG = self.construct_sDAG(optimized_partitions)
@@ -393,6 +430,7 @@ class qgd_Partition_Aware_Mapping:
         return final_circuit, final_parameters, pi, pi_final
 
     def Heuristic_Search(self, F, pi, DAG, IDAG, optimized_partitions, scoring_partitions, D, sDAG):
+        pi_initial = pi.copy()
         resolved_partitions = [False] * len(DAG)
         partition_order = []
         step = 0
@@ -412,7 +450,7 @@ class qgd_Partition_Aware_Mapping:
                 executor = ProcessPoolExecutor(
                     max_workers=score_workers,
                     initializer=_init_scoring_worker,
-                    initargs=(scoring_partitions, sDAG, D),
+                    initargs=(scoring_partitions, sDAG, D, pi_initial),
                 )
             except Exception as exc:
                 logging.warning(
@@ -444,6 +482,7 @@ class qgd_Partition_Aware_Mapping:
                             sDAG,
                             D,
                             self._swap_cache,
+                            pi_initial,
                         )
                         for partition_candidate in partition_candidates
                     ]
@@ -513,12 +552,12 @@ class qgd_Partition_Aware_Mapping:
         return final_circuit, final_parameters
     
     @staticmethod
-    def score_partition_candidate(partition_candidate, F,  pi, scoring_partitions, sDAG, D, swap_cache):
+    def score_partition_candidate(partition_candidate, F,  pi, scoring_partitions, sDAG, D, swap_cache, pi_initial):
         score_F = 0
         score_E = 0
         E_visited_partitions = set()  # Changed to set for O(1) membership checks
         swaps, output_perm = partition_candidate.transform_pi(pi, D, swap_cache)
-        score_F += len(swaps)*3
+        score_F += _calculate_swap_cost(swaps, pi, pi_initial)
         score_F += len(partition_candidate.circuit_structure)
 
         # Cache for transform_pi results to avoid redundant computation
@@ -545,7 +584,7 @@ class qgd_Partition_Aware_Mapping:
 
         for partition_idx in F:
             partition = scoring_partitions[partition_idx]
-            if partition is None:
+            if partition is None or partition_idx == partition_candidate.partition_idx:
                 continue
             mini_scores = []
             for tdx, mini_topology in enumerate(partition.mini_topologies):
@@ -556,8 +595,9 @@ class qgd_Partition_Aware_Mapping:
                         cache_key = (partition_idx, tdx, pdx, tuple(sorted(topology_candidate)), tuple(output_perm))
                         if cache_key not in transform_cache:
                             new_cand = PartitionCandidate(partition_idx,tdx,pdx,partition.circuit_structures[tdx][pdx],permutation_pair[0],permutation_pair[1],topology_candidate,mini_topology,partition.qubit_map,partition.involved_qbits)
-                            swap_count = len(new_cand.transform_pi(output_perm,D, swap_cache)[0])
-                            transform_cache[cache_key] = swap_count * 3 + len(new_cand.circuit_structure)
+                            swaps_next, transformed_pi = new_cand.transform_pi(output_perm,D, swap_cache)
+                            swap_cost = _calculate_swap_cost(swaps_next, transformed_pi, pi_initial)
+                            transform_cache[cache_key] = swap_cost + len(new_cand.circuit_structure)
                         mini_scores.append(transform_cache[cache_key])
             if mini_scores:
                 score_F += min(mini_scores)
@@ -580,17 +620,13 @@ class qgd_Partition_Aware_Mapping:
                     if mini_scores:
                         score_E += min(mini_scores)
         # Safety check for division by zero
-        coeff_F = 0.6
+        coeff_E = 0.5
         if len(E_visited_partitions) == 0:
             E_score = 0.0
-            coeff_F = 1.
         else:
-            E_score = (1-coeff_F) * score_E / len(E_visited_partitions)
+            E_score = coeff_E * score_E / len(E_visited_partitions)
         
-        if len(F) == 0:
-            F_score = 0.0
-        else:
-            F_score = coeff_F*score_F / len(F)
+        F_score = score_F / len(F)
         
         return E_score + F_score
 

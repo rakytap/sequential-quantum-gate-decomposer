@@ -300,7 +300,7 @@ class PartitionSynthesisResult:
         for topology_idx in range(self.topology_count):
             cnot_count_topology = np.min(self.cnot_counts[topology_idx])#np.mean(self.cnot_counts[topology_idx])*0.5 + np.min(self.cnot_counts[topology_idx])*0.5
             score += cnot_count_topology/self.topology_count
-        return score
+        return score/len(self.involved_qbits)
     
     def get_topology_candidates(self, topology_idx):
         """
