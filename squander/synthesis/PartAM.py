@@ -18,7 +18,6 @@ from squander.partitioning.ilp import (
 )
 
 import numpy as np
-from qiskit import QuantumCircuit
 
 from typing import Callable, Dict, List, Optional, Set, Tuple, FrozenSet
 from dataclasses import dataclass
@@ -31,7 +30,6 @@ from tqdm import tqdm
 from collections import deque, defaultdict
 import numpy as np
 
-from squander.synthesis.qgd_SABRE import qgd_SABRE as SABRE
 from squander.synthesis.PartAM_utils import (
     get_subtopologies_of_type,
     get_unique_subtopologies,
@@ -128,7 +126,6 @@ class qgd_Partition_Aware_Mapping:
         Cached version of get_subtopologies_of_type.
         Uses canonical form of mini_topology as cache key.
         """
-        from squander.synthesis.PartAM_utils import get_canonical_form
         
         # Create canonical form key
         target_qubits = set()
@@ -536,13 +533,6 @@ class qgd_Partition_Aware_Mapping:
         score_F += calculate_swap_cost(swaps, pi, used_qubits)
         score_F += len(partition_candidate.circuit_structure)
 
-        # Cache for transform_pi results to avoid redundant computation
-        # Key: (partition_idx, topology_idx, permutation_idx, topology_candidate_tuple, output_perm_tuple)
-        transform_cache = {}
-        
-        # Qubits used by current partition are now 'used' for lookahead
-        next_used_qubits = used_qubits.union(partition_candidate.involved_qbits)
-
         # Safety check: ensure partition_idx is valid for sDAG
         if partition_candidate.partition_idx < len(sDAG):
             for partition_idx in sDAG[partition_candidate.partition_idx]:
@@ -555,11 +545,11 @@ class qgd_Partition_Aware_Mapping:
                     continue
                 for tdx, mini_topology in enumerate(partition_result.mini_topologies):
                     dist_placeholder = calculate_dist_small(mini_topology,partition_result.qubit_map,D,output_perm)
-                    circuit_length = min([len(circ) for circ in partition_result.circuit_structures[tdx]])
+                    circuit_length = np.mean([len(circ) for circ in partition_result.circuit_structures[tdx]])
                     score = dist_placeholder + circuit_length
                     mini_scores.append(score)
                 if mini_scores:
-                    score_E += min(mini_scores)
+                    score_E += np.mean(mini_scores)
 
         for partition_idx in F:
             partition = scoring_partitions[partition_idx]
@@ -567,19 +557,12 @@ class qgd_Partition_Aware_Mapping:
                 continue
             mini_scores = []
             for tdx, mini_topology in enumerate(partition.mini_topologies):
-                topology_candidates = partition.topology_candidates[tdx]
-                for topology_candidate in topology_candidates:
-                    for pdx, permutation_pair in enumerate(partition.permutations_pairs[tdx]):
-                        # Create cache key for this candidate's transform_pi result
-                        cache_key = (partition_idx, tdx, pdx, tuple(sorted(topology_candidate)), tuple(output_perm))
-                        if cache_key not in transform_cache:
-                            new_cand = PartitionCandidate(partition_idx,tdx,pdx,partition.circuit_structures[tdx][pdx],permutation_pair[0],permutation_pair[1],topology_candidate,mini_topology,partition.qubit_map,partition.involved_qbits)
-                            swaps_next, transformed_pi = new_cand.transform_pi(output_perm,D, swap_cache)
-                            swap_cost = calculate_swap_cost(swaps_next, transformed_pi, next_used_qubits) # Use next_used_qubits
-                            transform_cache[cache_key] = swap_cost + len(new_cand.circuit_structure)
-                        mini_scores.append(transform_cache[cache_key])
+                dist_placeholder = calculate_dist_small(mini_topology,partition.qubit_map,D,output_perm)
+                circuit_length = np.mean([len(circ) for circ in partition.circuit_structures[tdx]])
+                score = dist_placeholder + circuit_length
+                mini_scores.append(score)
             if mini_scores:
-                score_F += min(mini_scores)
+                score_F += np.mean(mini_scores)
 
             # Safety check: ensure partition_idx is valid for sDAG
             if partition_idx < len(sDAG):
@@ -593,11 +576,11 @@ class qgd_Partition_Aware_Mapping:
                         continue
                     for tdx, mini_topology in enumerate(partition_result_E.mini_topologies):
                         dist_placeholder = calculate_dist_small(mini_topology,partition_result_E.qubit_map,D,output_perm)
-                        circuit_length = min([len(circ) for circ in partition_result_E.circuit_structures[tdx]])
+                        circuit_length = np.mean([len(circ) for circ in partition_result_E.circuit_structures[tdx]])
                         score = dist_placeholder + circuit_length
                         mini_scores.append(score)
                     if mini_scores:
-                        score_E += min(mini_scores)
+                        score_E += np.mean(mini_scores)
         # Safety check for division by zero
         coeff_E = 0.5
         if len(E_visited_partitions) == 0:
