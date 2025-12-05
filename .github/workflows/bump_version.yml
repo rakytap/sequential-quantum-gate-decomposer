@@ -53,14 +53,15 @@ jobs:
           git config --local user.name "Peter Rakyta"
           git add pyproject.toml CMakeLists.txt Doxyfile
           git commit -m "Bump version to ${{ steps.bump.outputs.version }}" || exit 1
-          # Remove the manual push - let create-pull-request handle it
+          git push origin "${{ steps.branch.outputs.branch_name }}" || exit 1
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ steps.branch.outputs.branch_name }}
           base: master
-          push-to-origin: true  # This will push the branch
+          checkout: false  # Don't checkout, branch already exists and is pushed
           title: "Bump version to ${{ steps.bump.outputs.version }}"
           body: |
             ## Version Bump
