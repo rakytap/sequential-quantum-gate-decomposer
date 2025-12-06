@@ -5,6 +5,187 @@ from squander.gates.qgd_Circuit import qgd_Circuit as Circuit
 import heapq
 import math
 import logging
+import pulp
+from collections import defaultdict
+
+def solve_min_swaps(perm, edges, T=None, use_gurobi=True):
+    """
+    Compute globally optimal minimum SWAPs to route permutation 'perm'
+    to identity under connectivity 'edges'.
+
+    perm[i] = logical qubit currently at physical node i.
+    edges   = list of undirected edges (u,v).
+    T       = time horizon (number of layers); if None, use n^2.
+    """
+
+    n = len(perm)
+    nodes = list(range(n))
+    tokens = list(range(n))
+
+    # Time horizon
+    if T is None:
+        T = n * n   # safe-ish upper bound for small n
+
+    # Undirected edges => directed arcs for movement variables
+    undirected = {tuple(sorted(e)) for e in edges}
+    neighbors = {u: set() for u in nodes}
+    for u, v in undirected:
+        neighbors[u].add(v)
+        neighbors[v].add(u)
+    directed_arcs = [(u, v) for u, v in undirected for (u, v) in ((u, v), (v, u))]
+
+    # ILP model
+    prob = pulp.LpProblem("TokenSwapping", pulp.LpMinimize)
+
+    # x[t][v][q]: token q at node v at time t
+    x = {
+        (t, v, q): pulp.LpVariable(f"x_t{t}_v{v}_q{q}", cat="Binary")
+        for t in range(T + 1)
+        for v in nodes
+        for q in tokens
+    }
+
+    # m[t][u][v][q]: token q moves from u to v between t and t+1
+    m = {
+        (t, u, v, q): pulp.LpVariable(f"m_t{t}_{u}_{v}_q{q}", cat="Binary")
+        for t in range(T)
+        for (u, v) in directed_arcs
+        for q in tokens
+    }
+
+    # Initial positions: tokens are at positions given by 'perm'
+    # perm[i] = token currently at physical node i
+    for v in nodes:
+        for q in tokens:
+            prob += x[(0, v, q)] == (1 if v == q else 0), f"init_t0_v{v}_q{q}"
+
+    # Final positions: identity mapping (token q at node q)
+    for v in nodes:
+        for q in tokens:
+            prob += x[(T, v, q)] == (1 if perm[v] == q else 0), f"final_tT_v{v}_q{q}"
+
+    # Each token at exactly one node at each time
+    for t in range(T + 1):
+        for q in tokens:
+            prob += (
+                pulp.lpSum(x[(t, v, q)] for v in nodes) == 1,
+                f"one_node_t{t}_q{q}",
+            )
+
+    # Each node holds exactly one token at each time
+    for t in range(T + 1):
+        for v in nodes:
+            prob += (
+                pulp.lpSum(x[(t, v, q)] for q in tokens) == 1,
+                f"one_token_t{t}_v{v}",
+            )
+
+    # Introduce swap decision per time over undirected edges (single swap per time)
+    y = {
+        (t, u, v): pulp.LpVariable(f"y_t{t}_e{u}_{v}", cat="Binary")
+        for t in range(T)
+        for (u, v) in undirected
+    }
+
+    # At most one swap per time step
+    for t in range(T):
+        prob += (
+            pulp.lpSum(y[(t, u, v)] for (u, v) in undirected) <= 1,
+            f"one_swap_per_time_t{t}",
+        )
+
+    # Flow constraints for token movement
+    for t in range(T):
+        for u in nodes:
+            for q in tokens:
+                outbound = pulp.lpSum(
+                    m[(t, u, v, q)] for v in neighbors[u]
+                )
+                inbound = pulp.lpSum(
+                    m[(t, v, u, q)] for v in neighbors[u]
+                )
+                prob += (
+                    x[(t, u, q)] == x[(t + 1, u, q)] + outbound - inbound,
+                    f"flow_t{t}_u{u}_q{q}",
+                )
+
+    # Link moves to selected swap edge and enforce swap semantics
+    for t in range(T):
+        for (u, v) in undirected:
+            # Only allow moves along (u,v) at time t if this edge is selected
+            for q in tokens:
+                prob += m[(t, u, v, q)] <= y[(t, u, v)], f"link_m_y_t{t}_{u}_{v}_q{q}_uv"
+                prob += m[(t, v, u, q)] <= y[(t, u, v)], f"link_m_y_t{t}_{u}_{v}_q{q}_vu"
+
+            # If edge selected, exactly one token moves each direction (a swap)
+            prob += (
+                pulp.lpSum(m[(t, u, v, q)] for q in tokens) == y[(t, u, v)],
+                f"one_token_uv_t{t}_{u}_{v}",
+            )
+            prob += (
+                pulp.lpSum(m[(t, v, u, q)] for q in tokens) == y[(t, u, v)],
+                f"one_token_vu_t{t}_{u}_{v}",
+            )
+
+    # Objective: minimize number of swaps (sum of y)
+    total_swaps = pulp.lpSum(y.values())
+    total_moves = pulp.lpSum(m.values())  # optional, for reporting
+    prob += total_swaps
+
+    # Choose solver
+    if use_gurobi:
+        try:
+            solver = pulp.GUROBI(msg=1)
+        except Exception:
+            # Fallback if GUROBI not properly installed with PuLP wrapper
+            solver = pulp.PULP_CBC_CMD(msg=1)
+    else:
+        solver = pulp.PULP_CBC_CMD(msg=1)
+
+    prob.solve(solver)
+
+    status = pulp.LpStatus[prob.status]
+    if status != "Optimal":
+        raise RuntimeError(f"Solver did not find optimal solution, status = {status}")
+
+    # Extract move/swap counts
+    moves_value = int(pulp.value(total_moves))
+    swap_value = int(pulp.value(total_swaps))
+
+    # Build per-time-step SWAP schedule:
+    # For each t, look at directed moves and turn them into undirected edges.
+    swap_layers = []
+    for t in range(T):
+        layer = []
+        for (u, v) in undirected:
+            if int(pulp.value(y[(t, u, v)])) == 1:
+                layer.append((u, v))
+        # At most one edge per layer by construction
+        if layer: swap_layers.append(layer)
+
+    return {
+        "swap_count": swap_value,
+        "moves": moves_value,
+        "layers": swap_layers,
+        "status": status,
+    }
+
+def apply_swaps(perm, layers):
+    """
+    Apply a sequence of SWAP layers to a permutation.
+
+    perm: initial permutation (list)
+    layers: list of SWAP layers, each layer is a list of edges (u,v)
+
+    Returns the resulting permutation after applying all SWAPs.
+    """
+    current_perm = perm[:]
+    for layer in layers:
+        for (u, v) in layer:
+            # Swap tokens at positions u and v
+            current_perm[u], current_perm[v] = current_perm[v], current_perm[u]
+    return current_perm
+
 
 def _build_adj_list(edges: List[Tuple[int, int]]) -> dict:
     adj_list = {}
@@ -217,7 +398,7 @@ def calculate_dist_small(mini_topology, qbit_map, dist_matrix,pi):
     dist_placeholder = 0
     qbit_map_inv = { k:v for v,k in qbit_map.items()}
     for u,v in mini_topology:
-        dist_placeholder += dist_matrix[pi[qbit_map_inv[u]]][pi[qbit_map_inv[v]]]-3
+        dist_placeholder += (dist_matrix[pi[qbit_map_inv[u]]][pi[qbit_map_inv[v]]]-1)*3
     return dist_placeholder
 
 def extract_subtopology(involved_qbits, qbit_map, config ):
@@ -249,6 +430,7 @@ def calculate_swaps_quick(P_i, qbit_map, node_mapping, pi, D, swap_cache=None):
     else:
         swaps, pi_init = find_constrained_swaps_partial(pi_list, qbit_map_input, D)
     return len(swaps)
+
 class SingleQubitPartitionResult:
     
     def __init__(self,circuit_in,parameters_in):
