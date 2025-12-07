@@ -135,12 +135,12 @@ def solve_min_swaps(perm, edges, T=None, use_gurobi=True):
     # Choose solver
     if use_gurobi:
         try:
-            solver = pulp.GUROBI(msg=1)
+            solver = pulp.GUROBI(msg=0)
         except Exception:
             # Fallback if GUROBI not properly installed with PuLP wrapper
-            solver = pulp.PULP_CBC_CMD(msg=1)
+            solver = pulp.PULP_CBC_CMD(msg=0)
     else:
-        solver = pulp.PULP_CBC_CMD(msg=1)
+        solver = pulp.PULP_CBC_CMD(msg=0)
 
     prob.solve(solver)
 
@@ -186,6 +186,106 @@ def apply_swaps(perm, layers):
             current_perm[u], current_perm[v] = current_perm[v], current_perm[u]
     return current_perm
 
+def find_constrained_swaps_partial(pi_A, pi_B_dict, dist_matrix, use_gurobi=True):
+    """
+    Find SWAP sequence to route subset of virtual qubits to targets using ILP.
+    
+    Args:
+        pi_A: List [P0, P1, ...] where pi_A[q] = P (virtual q at physical P)
+        pi_B_dict: Dict {q: P} specifying only qubits that need routing
+        dist_matrix: Pre-computed distance matrix dist[i][j] between physical qubits
+    
+    Returns:
+        swaps: List of (i, j) SWAP operations on adjacent physical qubits
+        final_permutation: List showing final virtual→physical mapping
+    """
+    n = len(pi_A)
+    
+    # Build edges from distance matrix (adjacent = distance 1)
+    edges = []
+    for i in range(n):
+        for j in range(i + 1, n):
+            if dist_matrix[i][j] == 1:
+                edges.append((i, j))
+    
+    # === Step 1: Complete eta (target permutation) ===
+    # eta[q] = target physical position for virtual qubit q
+    assigned_physical = set(pi_B_dict.values())
+    unassigned_logical = [q for q in range(n) if q not in pi_B_dict]
+    available_physical = set(P for P in range(n) if P not in assigned_physical)
+    
+    eta = dict(pi_B_dict)  # Start with required assignments
+    
+    # Try to keep unassigned qubits in place if their position is available
+    still_unassigned = []
+    for q in unassigned_logical:
+        current_P = pi_A[q]
+        if current_P in available_physical:
+            eta[q] = current_P
+            available_physical.remove(current_P)
+        else:
+            still_unassigned.append(q)
+    
+    # Assign remaining qubits to remaining positions
+    remaining_physical = sorted(available_physical)
+    for q, P in zip(still_unassigned, remaining_physical):
+        eta[q] = P
+    
+    # Convert to list
+    eta_list = [eta[q] for q in range(n)]
+    
+    # === Step 2: Compute inverse permutations ===
+    # pi_A_inv[P] = q means physical P has virtual q
+    pi_A_inv = [0] * n
+    for q in range(n):
+        pi_A_inv[pi_A[q]] = q
+    
+    # eta_inv[P] = q means we want physical P to have virtual q
+    eta_inv = [0] * n
+    for q in range(n):
+        eta_inv[eta_list[q]] = q
+    
+    # === Step 3: Construct perm for solve_min_swaps ===
+    # To route from state A to state B using swaps S where S(identity) = perm:
+    # We need: A[perm[P]] = B[P], so perm[P] = A^{-1}[B[P]]
+    # Here: A = pi_A_inv, B = eta_inv, A^{-1} = pi_A
+    # So: perm[P] = pi_A[eta_inv[P]]
+    perm = [pi_A[eta_inv[P]] for P in range(n)]
+    
+    # Check if already at target (perm is identity)
+    if perm == list(range(n)):
+        return [], eta_list
+    
+    # === Step 4: Solve using ILP ===
+    result = solve_min_swaps(perm, edges, use_gurobi=use_gurobi)
+    
+    if result['status'] != 'Optimal':
+        return None, None
+    
+    # Extract swaps from layers (flatten)
+    swaps = []
+    for layer in result['layers']:
+        for swap in layer:
+            swaps.append(swap)
+    
+    # === Step 5: Compute final permutation ===
+    # Apply swaps to pi_A to get final virtual→physical mapping
+    # Maintain both directions for O(1) swap operations
+    final_perm = list(pi_A)
+    phys_to_virt = list(pi_A_inv)
+    
+    for (i, j) in swaps:
+        # Get virtual qubits at physical positions i and j
+        q_i = phys_to_virt[i]
+        q_j = phys_to_virt[j]
+        
+        # Swap their physical positions
+        final_perm[q_i] = j
+        final_perm[q_j] = i
+        phys_to_virt[i] = q_j
+        phys_to_virt[j] = q_i
+    
+    return swaps, final_perm
 
 def _build_adj_list(edges: List[Tuple[int, int]]) -> dict:
     adj_list = {}
@@ -292,7 +392,7 @@ def get_node_mapping(topology1: List[Tuple[int, int]], topology2: List[Tuple[int
             return mapping
     return {}
 
-def find_constrained_swaps_partial(pi_A, pi_B_dict, dist_matrix):
+def find_constrained_swaps_ouch(pi_A, pi_B_dict, dist_matrix):
     """
     Find SWAP sequence to route subset of virtual qubits to targets.
     
