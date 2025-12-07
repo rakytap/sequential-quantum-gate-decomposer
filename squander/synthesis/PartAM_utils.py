@@ -186,7 +186,7 @@ def apply_swaps(perm, layers):
             current_perm[u], current_perm[v] = current_perm[v], current_perm[u]
     return current_perm
 
-def find_constrained_swaps_partial(pi_A, pi_B_dict, dist_matrix, use_gurobi=True):
+def find_constrained_swaps_ILP(pi_A, pi_B_dict, dist_matrix, use_gurobi=True):
     """
     Find SWAP sequence to route subset of virtual qubits to targets using ILP.
     
@@ -392,7 +392,7 @@ def get_node_mapping(topology1: List[Tuple[int, int]], topology2: List[Tuple[int
             return mapping
     return {}
 
-def find_constrained_swaps_A_star(pi_A, pi_B_dict, dist_matrix):
+def find_constrained_swaps_partial(pi_A, pi_B_dict, dist_matrix):
     """
     Find SWAP sequence to route subset of virtual qubits to targets.
     
@@ -516,7 +516,7 @@ def find_constrained_swaps_A_star(pi_A, pi_B_dict, dist_matrix):
     
     logging.warning(f"SWAP routing did not converge after {iterations} iterations")
     return None, None
-    
+
 def calculate_dist_small(mini_topology, qbit_map, dist_matrix,pi):
     dist_placeholder = 0
     qbit_map_inv = { k:v for v,k in qbit_map.items()}
