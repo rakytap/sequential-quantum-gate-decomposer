@@ -392,7 +392,7 @@ def get_node_mapping(topology1: List[Tuple[int, int]], topology2: List[Tuple[int
             return mapping
     return {}
 
-def find_constrained_swaps_ouch(pi_A, pi_B_dict, dist_matrix):
+def find_constrained_swaps_A_star(pi_A, pi_B_dict, dist_matrix):
     """
     Find SWAP sequence to route subset of virtual qubits to targets.
     
