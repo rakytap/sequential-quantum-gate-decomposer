@@ -567,7 +567,7 @@ class qgd_Partition_Aware_Mapping:
         for partition_idx in E_partitions: 
             if partition_idx < len(sDAG):
                 for partition_idx_E in sDAG[partition_idx]:
-                    if partition_idx_E in E_partitions or partition_idx_e in E_partitions_1:
+                    if partition_idx_E in E_partitions or partition_idx_E in E_partitions_1:
                         continue
                     E_partitions_1.add(partition_idx_E)
         #score all
