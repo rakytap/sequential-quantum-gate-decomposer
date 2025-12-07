@@ -528,7 +528,9 @@ class qgd_Partition_Aware_Mapping:
     def score_partition_candidate(partition_candidate, F,  pi, scoring_partitions, sDAG, D, swap_cache, used_qubits):
         score_F = 0
         score_E = 0
-        E_visited_partitions = set()  # Changed to set for O(1) membership checks
+        E_partitions = set()  # Changed to set for O(1) membership checks
+        E_partitions_1 = set()
+        E_partitions_2 = set()
         swaps, output_perm = partition_candidate.transform_pi(pi, D, swap_cache)
         score_F += calculate_swap_cost(swaps, pi, used_qubits)
         score_F += len(partition_candidate.circuit_structure)
@@ -536,20 +538,10 @@ class qgd_Partition_Aware_Mapping:
         # Safety check: ensure partition_idx is valid for sDAG
         if partition_candidate.partition_idx < len(sDAG):
             for partition_idx in sDAG[partition_candidate.partition_idx]:
-                if partition_idx in E_visited_partitions:
+                if partition_idx in E_partitions:
                     continue
-                E_visited_partitions.add(partition_idx)
-                mini_scores = []
-                partition_result = scoring_partitions[partition_idx]
-                if partition_result is None:
-                    continue
-                for tdx, mini_topology in enumerate(partition_result.mini_topologies):
-                    dist_placeholder = calculate_dist_small(mini_topology,partition_result.qubit_map,D,output_perm)
-                    circuit_length = np.min([len(circ) for circ in partition_result.circuit_structures[tdx]])
-                    score = dist_placeholder + circuit_length
-                    mini_scores.append(score)
-                if mini_scores:
-                    score_E += np.min(mini_scores)
+                E_partitions.add(partition_idx)
+
 
         for partition_idx in F:
             partition = scoring_partitions[partition_idx]
@@ -567,26 +559,36 @@ class qgd_Partition_Aware_Mapping:
             # Safety check: ensure partition_idx is valid for sDAG
             if partition_idx < len(sDAG):
                 for partition_idx_E in sDAG[partition_idx]:
-                    if partition_idx_E in E_visited_partitions:
+                    if partition_idx_E in E_partitions:
                         continue
-                    E_visited_partitions.add(partition_idx_E)
-                    mini_scores = []
-                    partition_result_E = scoring_partitions[partition_idx_E]
-                    if partition_result_E is None:
+                    E_partitions.add(partition_idx_E)
+
+        #check the secondary children            
+        for partition_idx in E_partitions: 
+            if partition_idx < len(sDAG):
+                for partition_idx_E in sDAG[partition_idx]:
+                    if partition_idx_E in E_partitions or partition_idx_e in E_partitions_1:
                         continue
-                    for tdx, mini_topology in enumerate(partition_result_E.mini_topologies):
-                        dist_placeholder = calculate_dist_small(mini_topology,partition_result_E.qubit_map,D,output_perm)
-                        circuit_length = np.min([len(circ) for circ in partition_result_E.circuit_structures[tdx]])
-                        score = dist_placeholder + circuit_length
-                        mini_scores.append(score)
-                    if mini_scores:
-                        score_E += np.min(mini_scores)
-        # Safety check for division by zero
+                    E_partitions_1.add(partition_idx_E)
+        #score all
+        for partition_idx in E_partitions.union(E_partitions_1):
+            mini_scores = []
+            partition_result = scoring_partitions[partition_idx]
+            if partition_result is None:
+                continue
+            for tdx, mini_topology in enumerate(partition_result.mini_topologies):
+                dist_placeholder = calculate_dist_small(mini_topology,partition_result.qubit_map,D,output_perm)
+                circuit_length = np.min([len(circ) for circ in partition_result.circuit_structures[tdx]])
+                score = dist_placeholder + circuit_length
+                mini_scores.append(score)
+            if mini_scores:
+                score_E += np.min(mini_scores)
+
         coeff_E = 0.5
-        if len(E_visited_partitions) == 0:
+        if len(E_partitions.union(E_partitions_1)) == 0:
             E_score = 0.0
         else:
-            E_score = coeff_E * score_E / len(E_visited_partitions)
+            E_score = coeff_E * score_E / len(E_partitions.union(E_partitions_1))
         
         F_score = score_F / len(F)
         
