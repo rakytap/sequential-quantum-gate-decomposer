@@ -135,12 +135,12 @@ def solve_min_swaps(perm, edges, T=None, use_gurobi=True):
     # Choose solver
     if use_gurobi:
         try:
-            solver = pulp.GUROBI(msg=0)
+            solver = pulp.GUROBI(msg=False, manageEnv=True, Threads=1)
         except Exception:
             # Fallback if GUROBI not properly installed with PuLP wrapper
-            solver = pulp.PULP_CBC_CMD(msg=0)
+            solver = pulp.PULP_CBC_CMD(msg=False)
     else:
-        solver = pulp.PULP_CBC_CMD(msg=0)
+        solver = pulp.PULP_CBC_CMD(msg=False)
 
     prob.solve(solver)
 

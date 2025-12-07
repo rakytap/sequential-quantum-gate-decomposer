@@ -545,11 +545,11 @@ class qgd_Partition_Aware_Mapping:
                     continue
                 for tdx, mini_topology in enumerate(partition_result.mini_topologies):
                     dist_placeholder = calculate_dist_small(mini_topology,partition_result.qubit_map,D,output_perm)
-                    circuit_length = np.mean([len(circ) for circ in partition_result.circuit_structures[tdx]])
+                    circuit_length = np.min([len(circ) for circ in partition_result.circuit_structures[tdx]])
                     score = dist_placeholder + circuit_length
                     mini_scores.append(score)
                 if mini_scores:
-                    score_E += np.mean(mini_scores)
+                    score_E += np.min(mini_scores)
 
         for partition_idx in F:
             partition = scoring_partitions[partition_idx]
@@ -558,11 +558,11 @@ class qgd_Partition_Aware_Mapping:
             mini_scores = []
             for tdx, mini_topology in enumerate(partition.mini_topologies):
                 dist_placeholder = calculate_dist_small(mini_topology,partition.qubit_map,D,output_perm)
-                circuit_length = np.mean([len(circ) for circ in partition.circuit_structures[tdx]])
+                circuit_length = np.min([len(circ) for circ in partition.circuit_structures[tdx]])
                 score = dist_placeholder + circuit_length
                 mini_scores.append(score)
             if mini_scores:
-                score_F += np.mean(mini_scores)
+                score_F += np.min(mini_scores)
 
             # Safety check: ensure partition_idx is valid for sDAG
             if partition_idx < len(sDAG):
@@ -576,11 +576,11 @@ class qgd_Partition_Aware_Mapping:
                         continue
                     for tdx, mini_topology in enumerate(partition_result_E.mini_topologies):
                         dist_placeholder = calculate_dist_small(mini_topology,partition_result_E.qubit_map,D,output_perm)
-                        circuit_length = np.mean([len(circ) for circ in partition_result_E.circuit_structures[tdx]])
+                        circuit_length = np.min([len(circ) for circ in partition_result_E.circuit_structures[tdx]])
                         score = dist_placeholder + circuit_length
                         mini_scores.append(score)
                     if mini_scores:
-                        score_E += np.mean(mini_scores)
+                        score_E += np.min(mini_scores)
         # Safety check for division by zero
         coeff_E = 0.5
         if len(E_visited_partitions) == 0:
