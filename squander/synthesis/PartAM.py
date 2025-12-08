@@ -28,7 +28,6 @@ import os
 import logging
 from tqdm import tqdm
 from collections import deque, defaultdict
-import numpy as np
 
 from squander.synthesis.PartAM_utils import (
     get_subtopologies_of_type,
@@ -45,6 +44,10 @@ from squander.synthesis.PartAM_utils import (
 )
 
 
+# ============================================================================
+# Data Classes
+# ============================================================================
+
 @dataclass(frozen=True)
 class PartitionScoreData:
     mini_topologies: Tuple[Tuple[Tuple[int, int], ...], ...]
@@ -56,6 +59,10 @@ class PartitionScoreData:
     qubit_map: Dict[int, int]
     involved_qbits: Tuple[int, ...]
 
+
+# ============================================================================
+# Parallel Processing Setup
+# ============================================================================
 
 _WORKER_SCORING_PARTITIONS: Optional[List[Optional[PartitionScoreData]]] = None
 _WORKER_S_DAG: Optional[List[List[int]]] = None
@@ -95,7 +102,16 @@ def _score_candidate_worker(payload):
         used_qubits,
     )
 
+
+# ============================================================================
+# Main Class: qgd_Partition_Aware_Mapping
+# ============================================================================
+
 class qgd_Partition_Aware_Mapping:
+
+    # ------------------------------------------------------------------------
+    # Initialization & Configuration
+    # ------------------------------------------------------------------------
 
     def __init__(self, config):
         self.topology = config['topology']
@@ -120,6 +136,10 @@ class qgd_Partition_Aware_Mapping:
         # Initialize caches for performance optimization
         self._topology_cache = {}  # {frozenset(edges): [topology_candidates]}
         self._swap_cache = {}     # {(pi_tuple, qbit_map_frozen): (swaps, output_perm)}
+
+    # ------------------------------------------------------------------------
+    # Caching Methods
+    # ------------------------------------------------------------------------
 
     def _get_subtopologies_of_type_cached(self, mini_topology):
         """
@@ -190,6 +210,10 @@ class qgd_Partition_Aware_Mapping:
                 )
             )
         return scoring_partitions
+
+    # ------------------------------------------------------------------------
+    # Partition Decomposition Methods
+    # ------------------------------------------------------------------------
 
     @staticmethod
     def DecomposePartition_Sequential(Partition_circuit: Circuit, Partition_parameters: np.ndarray, config: dict, topologies, involved_qbits, qbit_map) -> PartitionSynthesisResult:
@@ -270,6 +294,10 @@ class qgd_Partition_Aware_Mapping:
         squander_circuit = cDecompose.get_Circuit()
         parameters       = cDecompose.get_Optimized_Parameters()
         return squander_circuit, parameters
+
+    # ------------------------------------------------------------------------
+    # Circuit Synthesis
+    # ------------------------------------------------------------------------
 
     def SynthesizeWideCircuit(self, circ, orig_parameters):
         allparts, g, go, rgo, single_qubit_chains, gate_to_qubit, gate_to_tqubit = get_all_partitions(circ, self.config["max_partition_size"])
@@ -364,6 +392,10 @@ class qgd_Partition_Aware_Mapping:
         
         return optimized_partitions
 
+    # ------------------------------------------------------------------------
+    # Main Public API
+    # ------------------------------------------------------------------------
+
     def Partition_Aware_Mapping(self, circ: Circuit, orig_parameters: np.ndarray):
         
         optimized_partitions = self.SynthesizeWideCircuit(circ, orig_parameters)
@@ -389,6 +421,10 @@ class qgd_Partition_Aware_Mapping:
         final_circuit, final_parameters = self.Construct_circuit_from_HS(partition_order,optimized_partitions, circ.get_Qbit_Num())
         
         return final_circuit, final_parameters, pi_initial, pi
+
+    # ------------------------------------------------------------------------
+    # Heuristic Search
+    # ------------------------------------------------------------------------
 
     def Heuristic_Search(self, F, pi, DAG, IDAG, optimized_partitions, scoring_partitions, D, sDAG):
         pi_initial = pi.copy()
@@ -495,6 +531,10 @@ class qgd_Partition_Aware_Mapping:
         pbar.close()
         return partition_order, pi, pi_initial
 
+    # ------------------------------------------------------------------------
+    # Circuit Construction
+    # ------------------------------------------------------------------------
+
     def Construct_circuit_from_HS(self, partition_order, optimized_partitions,N):
         final_circuit = Circuit(N)
         final_parameters = []
@@ -523,6 +563,10 @@ class qgd_Partition_Aware_Mapping:
             print("ERROR: Final circuit is not compatible with device topology!")
         return final_circuit, final_parameters
     
+    # ------------------------------------------------------------------------
+    # Scoring
+    # ------------------------------------------------------------------------
+
     @staticmethod
     def score_partition_candidate(partition_candidate, F,  pi, scoring_partitions, sDAG, D, swap_cache, used_qubits):
         score_F = 0
@@ -593,6 +637,10 @@ class qgd_Partition_Aware_Mapping:
         
         return E_score + F_score
 
+    # ------------------------------------------------------------------------
+    # Candidate Generation
+    # ------------------------------------------------------------------------
+
     def obtain_partition_candidates(self, F, optimized_partitions):
         partition_candidates = []
         for partition_idx in F:
@@ -607,6 +655,10 @@ class qgd_Partition_Aware_Mapping:
                     for pdx, permutation_pair in enumerate(partition.permutations_pairs[tdx]):
                         partition_candidates.append(PartitionCandidate(partition_idx,tdx,pdx,partition.circuit_structures[tdx][pdx],permutation_pair[0],permutation_pair[1],topology_candidate,mini_topology,partition.qubit_map,partition.involved_qbits))
         return partition_candidates
+
+    # ------------------------------------------------------------------------
+    # Graph Construction
+    # ------------------------------------------------------------------------
         
     def get_initial_layer(self, IDAG, N, optimized_partitions):
         initial_layer = []
@@ -680,6 +732,10 @@ class qgd_Partition_Aware_Mapping:
             sDAG[idx] = children
             
         return sDAG
+
+    # ------------------------------------------------------------------------
+    # Distance & Layout
+    # ------------------------------------------------------------------------
 
     def compute_distances_bfs(self, N):
         """BFS distance computation - faster than Floyd-Warshall."""

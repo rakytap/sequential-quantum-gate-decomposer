@@ -8,6 +8,11 @@ import logging
 import pulp
 from collections import defaultdict
 
+
+# ============================================================================
+# SWAP Routing Algorithms
+# ============================================================================
+
 def solve_min_swaps(perm, edges, T=None, use_gurobi=True):
     """
     Compute globally optimal minimum SWAPs to route permutation 'perm'
@@ -287,6 +292,135 @@ def find_constrained_swaps_ILP(pi_A, pi_B_dict, dist_matrix, use_gurobi=True):
     
     return swaps, final_perm
 
+def find_constrained_swaps_partial(pi_A, pi_B_dict, dist_matrix):
+    """
+    Find SWAP sequence to route subset of virtual qubits to targets.
+    
+    Args:
+        pi_A: List [Q0, Q1, ...] where pi_A[q] = Q (complete initial mapping)
+        pi_B_dict: Dict {q: Q} specifying only qubits that need routing
+        dist_matrix: Pre-computed distance matrix dist[i][j] between physical qubits
+    
+    Returns:
+        swaps: List of (i, j) SWAP operations on adjacent physical qubits
+        final_permutation: List showing final virtual→physical mapping
+    """
+    n = len(pi_A)
+    
+    # Build adjacency list from distance matrix
+    adj = [set() for _ in range(n)]
+    for i in range(n):
+        for j in range(i+1, n):
+            if dist_matrix[i][j] == 1:  # Adjacent in topology
+                adj[i].add(j)
+                adj[j].add(i)
+    
+    # Use physical-to-virtual representation for easier SWAP handling
+    # state[P] = q means physical qubit P contains virtual qubit q
+    def to_phys_to_virt(virt_to_phys):
+        """Convert virtual→physical list to physical→virtual list"""
+        p2v = [0] * n
+        for q in range(n):
+            P = virt_to_phys[q]
+            p2v[P] = q
+        return p2v
+    
+    def to_virt_to_phys(phys_to_virt):
+        """Convert physical→virtual list to virtual→physical list"""
+        v2p = [0] * n
+        for P in range(n):
+            q = phys_to_virt[P]
+            v2p[q] = P
+        return v2p
+    
+    start_state = tuple(to_phys_to_virt(pi_A))
+    
+    def is_goal(state):
+        """Check if target qubits are in correct physical positions"""
+        for q, target_P in pi_B_dict.items():
+            if state[target_P] != q:  # Physical position target_P should contain virtual q
+                return False
+        return True
+    
+    def heuristic(state):
+        """Lower bound: sum of distances for qubits needing routing"""
+        total = 0.0
+        for q, target_P in pi_B_dict.items():
+            # Find where virtual qubit q currently is
+            current_P = state.index(q)
+            distance = dist_matrix[current_P][target_P]
+            if np.isinf(distance):
+                logging.warning(
+                    "Encountered unreachable qubit pair (%s, %s) in routing heuristic; returning inf cost.",
+                    current_P,
+                    target_P,
+                )
+                return math.inf
+            total += float(distance)
+        return math.floor(total / 2)  # Optimistic: each SWAP helps 2 qubits
+    
+    # A* search
+    heap = [(heuristic(start_state), 0, start_state, [])]
+    visited = {start_state: 0}
+    
+    while heap:
+        f, g, current, path = heapq.heappop(heap)
+        
+        if is_goal(current):
+            # Convert final state back to virtual→physical mapping
+            final_permutation = to_virt_to_phys(current)
+            return path, final_permutation
+        
+        if visited.get(current, float('inf')) < g:
+            continue
+        
+        # Try all valid SWAPs on adjacent physical qubits
+        current_list = list(current)
+        for i in range(n):
+            for j in adj[i]:
+                if i < j:  # Avoid duplicate (i,j) and (j,i)
+                    # SWAP physical qubits i and j
+                    new_state = current_list[:]
+                    new_state[i], new_state[j] = new_state[j], new_state[i]
+                    new_state_tuple = tuple(new_state)
+                    
+                    new_g = g + 1
+                    
+                    if visited.get(new_state_tuple, float('inf')) > new_g:
+                        visited[new_state_tuple] = new_g
+                        new_f = new_g + heuristic(new_state_tuple)
+                        new_path = path + [(i, j)]
+                        heapq.heappush(heap, (new_f, new_g, new_state_tuple, new_path))
+    
+    return None, None  # No solution found
+
+def calculate_swaps_quick(P_i, qbit_map, node_mapping, pi, D, swap_cache=None):
+    P_i_inv = [P_i.index(i) for i in range(len(P_i))]  # Compute inverse
+    qbit_map_input = {k : node_mapping[P_i_inv[v]] for k,v in qbit_map.items()}
+    # Convert pi to plain Python list of ints (may contain np.int64)
+    pi_list = [int(x) for x in pi]
+
+    # Check cache if provided
+    cache_key = None
+    if swap_cache is not None:
+        # Create cache key: (pi_tuple, frozenset of qbit_map_input items)
+        pi_tuple = tuple(pi_list)
+        qbit_map_frozen = frozenset(qbit_map_input.items())
+        cache_key = (pi_tuple, qbit_map_frozen)
+        if cache_key in swap_cache:
+            swaps, pi_init = swap_cache[cache_key]
+        else:
+            swaps, pi_init = find_constrained_swaps_partial(pi_list, qbit_map_input, D)
+            swap_cache[cache_key] = (swaps, pi_init)
+    else:
+        swaps, pi_init = find_constrained_swaps_partial(pi_list, qbit_map_input, D)
+    return len(swaps)
+
+
+# ============================================================================
+# Topology Utilities
+# ============================================================================
+
 def _build_adj_list(edges: List[Tuple[int, int]]) -> dict:
     adj_list = {}
     for u, v in edges:
@@ -392,108 +526,17 @@ def get_node_mapping(topology1: List[Tuple[int, int]], topology2: List[Tuple[int
             return mapping
     return {}
 
-def find_constrained_swaps_partial(pi_A, pi_B_dict, dist_matrix):
-    """
-    Find SWAP sequence to route subset of virtual qubits to targets.
-    
-    Args:
-        pi_A: List [Q0, Q1, ...] where pi_A[q] = Q (complete initial mapping)
-        pi_B_dict: Dict {q: Q} specifying only qubits that need routing
-        dist_matrix: Pre-computed distance matrix dist[i][j] between physical qubits
-    
-    Returns:
-        swaps: List of (i, j) SWAP operations on adjacent physical qubits
-        final_permutation: List showing final virtual→physical mapping
-    """
-    n = len(pi_A)
-    
-    # Build adjacency list from distance matrix
-    adj = [set() for _ in range(n)]
-    for i in range(n):
-        for j in range(i+1, n):
-            if dist_matrix[i][j] == 1:  # Adjacent in topology
-                adj[i].add(j)
-                adj[j].add(i)
-    
-    # Use physical-to-virtual representation for easier SWAP handling
-    # state[P] = q means physical qubit P contains virtual qubit q
-    def to_phys_to_virt(virt_to_phys):
-        """Convert virtual→physical list to physical→virtual list"""
-        p2v = [0] * n
-        for q in range(n):
-            P = virt_to_phys[q]
-            p2v[P] = q
-        return p2v
-    
-    def to_virt_to_phys(phys_to_virt):
-        """Convert physical→virtual list to virtual→physical list"""
-        v2p = [0] * n
-        for P in range(n):
-            q = phys_to_virt[P]
-            v2p[q] = P
-        return v2p
-    
-    start_state = tuple(to_phys_to_virt(pi_A))
-    
-    def is_goal(state):
-        """Check if target qubits are in correct physical positions"""
-        for q, target_P in pi_B_dict.items():
-            if state[target_P] != q:  # Physical position target_P should contain virtual q
-                return False
-        return True
-    
-    def heuristic(state):
-        """Lower bound: sum of distances for qubits needing routing"""
-        total = 0.0
-        for q, target_P in pi_B_dict.items():
-            # Find where virtual qubit q currently is
-            current_P = state.index(q)
-            distance = dist_matrix[current_P][target_P]
-            if np.isinf(distance):
-                logging.warning(
-                    "Encountered unreachable qubit pair (%s, %s) in routing heuristic; returning inf cost.",
-                    current_P,
-                    target_P,
-                )
-                return math.inf
-            total += float(distance)
-        return math.floor(total / 2)  # Optimistic: each SWAP helps 2 qubits
-    
-    # A* search
-    heap = [(heuristic(start_state), 0, start_state, [])]
-    visited = {start_state: 0}
-    
-    while heap:
-        f, g, current, path = heapq.heappop(heap)
-        
-        if is_goal(current):
-            # Convert final state back to virtual→physical mapping
-            final_permutation = to_virt_to_phys(current)
-            return path, final_permutation
-        
-        if visited.get(current, float('inf')) < g:
-            continue
-        
-        # Try all valid SWAPs on adjacent physical qubits
-        current_list = list(current)
-        for i in range(n):
-            for j in adj[i]:
-                if i < j:  # Avoid duplicate (i,j) and (j,i)
-                    # SWAP physical qubits i and j
-                    new_state = current_list[:]
-                    new_state[i], new_state[j] = new_state[j], new_state[i]
-                    new_state_tuple = tuple(new_state)
-                    
-                    new_g = g + 1
-                    
-                    if visited.get(new_state_tuple, float('inf')) > new_g:
-                        visited[new_state_tuple] = new_g
-                        new_f = new_g + heuristic(new_state_tuple)
-                        new_path = path + [(i, j)]
-                        heapq.heappush(heap, (new_f, new_g, new_state_tuple, new_path))
-    
-    return None, None  # No solution found
+def extract_subtopology(involved_qbits, qbit_map, config ):
+    mini_topology = []
+    for edge in config["topology"]:
+        if edge[0] in involved_qbits and edge[1] in involved_qbits:
+            mini_topology.append((qbit_map[edge[0]],qbit_map[edge[1]]))
+    return mini_topology
 
+
+# ============================================================================
+# Distance & Cost Calculations
+# ============================================================================
 
 def calculate_dist_small(mini_topology, qbit_map, dist_matrix,pi):
     dist_placeholder = 0
@@ -502,35 +545,87 @@ def calculate_dist_small(mini_topology, qbit_map, dist_matrix,pi):
         dist_placeholder += (dist_matrix[pi[qbit_map_inv[u]]][pi[qbit_map_inv[v]]]-1)*3
     return dist_placeholder
 
-def extract_subtopology(involved_qbits, qbit_map, config ):
-    mini_topology = []
-    for edge in config["topology"]:
-        if edge[0] in involved_qbits and edge[1] in involved_qbits:
-            mini_topology.append((qbit_map[edge[0]],qbit_map[edge[1]]))
-    return mini_topology
-    
-def calculate_swaps_quick(P_i, qbit_map, node_mapping, pi, D, swap_cache=None):
-    P_i_inv = [P_i.index(i) for i in range(len(P_i))]  # Compute inverse
-    qbit_map_input = {k : node_mapping[P_i_inv[v]] for k,v in qbit_map.items()}
-    # Convert pi to plain Python list of ints (may contain np.int64)
-    pi_list = [int(x) for x in pi]
+def calculate_swap_cost(swaps, current_pi, used_qubits):
+    """
+    Calculate swap cost. Swaps involving unused qubits are costless (0).
+    unused qubits are those not in used_qubits set.
+    """
+    cost = 0
+    temp_pi = list(current_pi)
+    # Build inverse map for O(1) lookup: physical -> logical
+    phys_to_logical = {p: l for l, p in enumerate(temp_pi)}
 
-    # Check cache if provided
-    cache_key = None
-    if swap_cache is not None:
-        # Create cache key: (pi_tuple, frozenset of qbit_map_input items)
-        pi_tuple = tuple(pi_list)
-        qbit_map_frozen = frozenset(qbit_map_input.items())
-        cache_key = (pi_tuple, qbit_map_frozen)
-        cache_key = (pi_tuple, qbit_map_frozen)
-        if cache_key in swap_cache:
-            swaps, pi_init = swap_cache[cache_key]
+    for p1, p2 in swaps:
+        l1 = phys_to_logical[p1]
+        l2 = phys_to_logical[p2]
+
+        is_l1_unused = (l1 not in used_qubits)
+        is_l2_unused = (l2 not in used_qubits)
+
+        if is_l1_unused and is_l2_unused:
+            step_cost = 0
         else:
-            swaps, pi_init = find_constrained_swaps_partial(pi_list, qbit_map_input, D)
-            swap_cache[cache_key] = (swaps, pi_init)
-    else:
-        swaps, pi_init = find_constrained_swaps_partial(pi_list, qbit_map_input, D)
-    return len(swaps)
+            step_cost = 3
+
+        cost += step_cost
+
+        # Update state
+        temp_pi[l1] = p2
+        temp_pi[l2] = p1
+        phys_to_logical[p1] = l2
+        phys_to_logical[p2] = l1
+
+    return cost
+
+def filter_required_swaps(swaps, current_pi, pi_initial, used_qubits):
+    """
+    Filter swaps that are effectively 'costless' (involve unused qubits).
+    Returns filtered swaps and the updated pi_initial.
+    """
+    required_swaps = []
+    temp_pi = list(current_pi)
+    
+    # pi_initial might be numpy array, convert to list for mutation if needed, 
+    # but we'll return a new list/array to be safe.
+    updated_pi_initial = list(pi_initial)
+    
+    # Build inverse map for O(1) lookup: physical -> logical
+    phys_to_logical = {p: l for l, p in enumerate(temp_pi)}
+
+    for p1, p2 in swaps:
+        l1 = phys_to_logical[p1]
+        l2 = phys_to_logical[p2]
+
+        is_l1_unused = (l1 not in used_qubits)
+        is_l2_unused = (l2 not in used_qubits)
+
+        if not (is_l1_unused and is_l2_unused):
+            required_swaps.append((p1, p2))
+        else:
+            # If unused, we update the initial mapping to reflect this swap
+            # effectively retconning that they started in these positions.
+            # pi_initial maps logical -> physical.
+            # We swap the physical locations for these logical qubits.
+            # Note: updated_pi_initial[l1] should track where l1 'started'.
+            # If we swap l1 and l2 physically, and it's costless, 
+            # it means l1 is now 'initially' at p2, and l2 at p1.
+            # But wait, temp_pi[l1] is currently p1. After swap it is p2.
+            # So we update pi_initial to match the new temp_pi.
+            updated_pi_initial[l1] = p2
+            updated_pi_initial[l2] = p1
+
+        # Always update the tracking state
+        temp_pi[l1] = p2
+        temp_pi[l2] = p1
+        phys_to_logical[p1] = l2
+        phys_to_logical[p2] = l1
+
+    return required_swaps, updated_pi_initial
+
+
+# ============================================================================
+# Data Classes
+# ============================================================================
 
 class SingleQubitPartitionResult:
     
@@ -540,6 +635,7 @@ class SingleQubitPartitionResult:
     
     def get_partition_synthesis_score(self):
         return 0
+
 # Virtual qubits q, reduced virtual qubits (the remapped circuit only up to partition_size) q*
 # Physical qubits Q, reduced physical qubits Q* 
 class PartitionSynthesisResult:
@@ -714,6 +810,11 @@ class PartitionCandidate:
         part_circuit = part_circuit.Remap_Qbits(self.node_mapping, N)
         return part_circuit, part_parameters
 
+
+# ============================================================================
+# Circuit Utilities
+# ============================================================================
+
 def check_circuit_compatibility(circuit: Circuit, topology):
     circuit_topology = []
     gates = circuit.get_Gates()
@@ -738,83 +839,6 @@ def check_circuit_compatibility(circuit: Circuit, topology):
         if qubits not in topology and qubits[::-1] not in topology:
             return False
     return True
-
-def calculate_swap_cost(swaps, current_pi, used_qubits):
-    """
-    Calculate swap cost. Swaps involving unused qubits are costless (0).
-    unused qubits are those not in used_qubits set.
-    """
-    cost = 0
-    temp_pi = list(current_pi)
-    # Build inverse map for O(1) lookup: physical -> logical
-    phys_to_logical = {p: l for l, p in enumerate(temp_pi)}
-
-    for p1, p2 in swaps:
-        l1 = phys_to_logical[p1]
-        l2 = phys_to_logical[p2]
-
-        is_l1_unused = (l1 not in used_qubits)
-        is_l2_unused = (l2 not in used_qubits)
-
-        if is_l1_unused and is_l2_unused:
-            step_cost = 0
-        else:
-            step_cost = 3
-
-        cost += step_cost
-
-        # Update state
-        temp_pi[l1] = p2
-        temp_pi[l2] = p1
-        phys_to_logical[p1] = l2
-        phys_to_logical[p2] = l1
-
-    return cost
-
-def filter_required_swaps(swaps, current_pi, pi_initial, used_qubits):
-    """
-    Filter swaps that are effectively 'costless' (involve unused qubits).
-    Returns filtered swaps and the updated pi_initial.
-    """
-    required_swaps = []
-    temp_pi = list(current_pi)
-    
-    # pi_initial might be numpy array, convert to list for mutation if needed, 
-    # but we'll return a new list/array to be safe.
-    updated_pi_initial = list(pi_initial)
-    
-    # Build inverse map for O(1) lookup: physical -> logical
-    phys_to_logical = {p: l for l, p in enumerate(temp_pi)}
-
-    for p1, p2 in swaps:
-        l1 = phys_to_logical[p1]
-        l2 = phys_to_logical[p2]
-
-        is_l1_unused = (l1 not in used_qubits)
-        is_l2_unused = (l2 not in used_qubits)
-
-        if not (is_l1_unused and is_l2_unused):
-            required_swaps.append((p1, p2))
-        else:
-            # If unused, we update the initial mapping to reflect this swap
-            # effectively retconning that they started in these positions.
-            # pi_initial maps logical -> physical.
-            # We swap the physical locations for these logical qubits.
-            # Note: updated_pi_initial[l1] should track where l1 'started'.
-            # If we swap l1 and l2 physically, and it's costless, 
-            # it means l1 is now 'initially' at p2, and l2 at p1.
-            # But wait, temp_pi[l1] is currently p1. After swap it is p2.
-            # So we update pi_initial to match the new temp_pi.
-            updated_pi_initial[l1] = p2
-            updated_pi_initial[l2] = p1
-
-        # Always update the tracking state
-        temp_pi[l1] = p2
-        temp_pi[l2] = p1
-        phys_to_logical[p1] = l2
-        phys_to_logical[p2] = l1
-
-    return required_swaps, updated_pi_initial
 
 def construct_swap_circuit(swap_order, N):
     swap_circ = Circuit(N)
