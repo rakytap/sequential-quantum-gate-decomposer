@@ -407,115 +407,93 @@ def find_constrained_swaps_partial(pi_A, pi_B_dict, dist_matrix):
     """
     n = len(pi_A)
     
-    # Build adjacency list if not provided
-    adj_list = [set() for _ in range(n)]
+    # Build adjacency list from distance matrix
+    adj = [set() for _ in range(n)]
     for i in range(n):
         for j in range(i+1, n):
-            if dist_matrix[i][j] == 1:
-                adj_list[i].add(j)
-                adj_list[j].add(i)
+            if dist_matrix[i][j] == 1:  # Adjacent in topology
+                adj[i].add(j)
+                adj[j].add(i)
     
-    # Convert to physical-to-virtual for SWAP handling
-    # Also maintain virtual-to-physical for O(1) lookup
-    def init_state(virt_to_phys):
+    # Use physical-to-virtual representation for easier SWAP handling
+    # state[P] = q means physical qubit P contains virtual qubit q
+    def to_phys_to_virt(virt_to_phys):
+        """Convert virtual→physical list to physical→virtual list"""
         p2v = [0] * n
-        v2p = [0] * n
         for q in range(n):
             P = virt_to_phys[q]
             p2v[P] = q
+        return p2v
+    
+    def to_virt_to_phys(phys_to_virt):
+        """Convert physical→virtual list to virtual→physical list"""
+        v2p = [0] * n
+        for P in range(n):
+            q = phys_to_virt[P]
             v2p[q] = P
-        return tuple(p2v), tuple(v2p)
+        return v2p
     
-    start_p2v, start_v2p = init_state(pi_A)
+    start_state = tuple(to_phys_to_virt(pi_A))
     
-    def is_goal(v2p):
-        """Check if target qubits are at correct positions"""
+    def is_goal(state):
+        """Check if target qubits are in correct physical positions"""
         for q, target_P in pi_B_dict.items():
-            if v2p[q] != target_P:
+            if state[target_P] != q:  # Physical position target_P should contain virtual q
                 return False
         return True
     
-    def heuristic(v2p):
-        """
-        Improved heuristic: sum of distances without over-optimistic division.
-        Each qubit needs at least ceil(dist/1) swaps to move dist positions.
-        But swaps can help at most 2 qubits, so we use a tighter bound.
-        """
-        distances = []
+    def heuristic(state):
+        """Lower bound: sum of distances for qubits needing routing"""
+        total = 0.0
         for q, target_P in pi_B_dict.items():
-            current_P = v2p[q]  # O(1) lookup now!
-            d = dist_matrix[current_P][target_P]
-            if np.isinf(d):
+            # Find where virtual qubit q currently is
+            current_P = state.index(q)
+            distance = dist_matrix[current_P][target_P]
+            if np.isinf(distance):
+                logging.warning(
+                    "Encountered unreachable qubit pair (%s, %s) in routing heuristic; returning inf cost.",
+                    current_P,
+                    target_P,
+                )
                 return math.inf
-            distances.append(int(d))
-        
-        if not distances:
-            return 0
-        
-        # Tighter heuristic: max distance is a lower bound
-        # Also sum/2 but with ceiling, and take max of both
-        total = sum(distances)
-        max_dist = max(distances)
-        
-        # A single SWAP reduces total distance by at most 2
-        # So we need at least ceil(total/2) swaps
-        # But we also need at least max_dist swaps for the furthest qubit
-        return max(max_dist, (total + 1) // 2)
+            total += float(distance)
+        return math.floor(total / 2)  # Optimistic: each SWAP helps 2 qubits
     
-    if is_goal(start_v2p):
-        return [], list(pi_A)
-    
-    # A* search with improved state representation
-    # State: (p2v_tuple, v2p_tuple) - we track both for efficiency
-    start_state = (start_p2v, start_v2p)
-    h0 = heuristic(start_v2p)
-    
-    # heap: (f, g, state, path)
-    heap = [(h0, 0, start_state, [])]
+    # A* search
+    heap = [(heuristic(start_state), 0, start_state, [])]
     visited = {start_state: 0}
     
-    max_iterations = 100000  # Safety limit
-    iterations = 0
-    
-    while heap and iterations < max_iterations:
-        iterations += 1
-        f, g, (p2v, v2p), path = heapq.heappop(heap)
+    while heap:
+        f, g, current, path = heapq.heappop(heap)
         
-        if is_goal(v2p):
-            # Convert back to virtual->physical list
-            return path, list(v2p)
+        if is_goal(current):
+            # Convert final state back to virtual→physical mapping
+            final_permutation = to_virt_to_phys(current)
+            return path, final_permutation
         
-        if visited.get((p2v, v2p), float('inf')) < g:
+        if visited.get(current, float('inf')) < g:
             continue
         
         # Try all valid SWAPs on adjacent physical qubits
+        current_list = list(current)
         for i in range(n):
-            for j in adj_list[i]:
-                if i < j:
+            for j in adj[i]:
+                if i < j:  # Avoid duplicate (i,j) and (j,i)
                     # SWAP physical qubits i and j
-                    # Get virtual qubits at these positions
-                    q_i = p2v[i]
-                    q_j = p2v[j]
+                    new_state = current_list[:]
+                    new_state[i], new_state[j] = new_state[j], new_state[i]
+                    new_state_tuple = tuple(new_state)
                     
-                    # Create new state
-                    new_p2v = list(p2v)
-                    new_v2p = list(v2p)
-                    
-                    new_p2v[i], new_p2v[j] = q_j, q_i
-                    new_v2p[q_i], new_v2p[q_j] = j, i
-                    
-                    new_state = (tuple(new_p2v), tuple(new_v2p))
                     new_g = g + 1
                     
-                    if visited.get(new_state, float('inf')) > new_g:
-                        visited[new_state] = new_g
-                        new_h = heuristic(tuple(new_v2p))
-                        if new_h < math.inf:
-                            new_f = new_g + new_h
-                            heapq.heappush(heap, (new_f, new_g, new_state, path + [(i, j)]))
+                    if visited.get(new_state_tuple, float('inf')) > new_g:
+                        visited[new_state_tuple] = new_g
+                        new_f = new_g + heuristic(new_state_tuple)
+                        new_path = path + [(i, j)]
+                        heapq.heappush(heap, (new_f, new_g, new_state_tuple, new_path))
     
-    logging.warning(f"SWAP routing did not converge after {iterations} iterations")
-    return None, None
+    return None, None  # No solution found
+
 
 def calculate_dist_small(mini_topology, qbit_map, dist_matrix,pi):
     dist_placeholder = 0
@@ -626,7 +604,7 @@ class PartitionSynthesisResult:
         score = 0
         for topology_idx in range(self.topology_count):
             cnot_count_topology = np.min(self.cnot_counts[topology_idx])#np.mean(self.cnot_counts[topology_idx])*0.5 + np.min(self.cnot_counts[topology_idx])*0.5
-            score += cnot_count_topology/self.topology_count
+            score = min(cnot_count_topology,score)
         return score
     
     def get_topology_candidates(self, topology_idx):
