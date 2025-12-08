@@ -380,7 +380,6 @@ class qgd_Partition_Aware_Mapping:
         
         D = self.compute_distances_bfs(circ.get_Qbit_Num())
         pi = self._compute_smart_initial_layout(circ, circ.get_Qbit_Num(), D)
-        pi_list = pi.tolist() if hasattr(pi, 'tolist') else list(pi)
         
         F = self.get_initial_layer(IDAG, circ.get_Qbit_Num(),optimized_partitions)
         scoring_partitions = self._build_scoring_partitions(optimized_partitions)

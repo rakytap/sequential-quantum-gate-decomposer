@@ -601,7 +601,7 @@ class PartitionSynthesisResult:
         return circuit_structure
         
     def get_partition_synthesis_score(self):
-        score = 0
+        score = np.inf
         for topology_idx in range(self.topology_count):
             cnot_count_topology = np.min(self.cnot_counts[topology_idx])#np.mean(self.cnot_counts[topology_idx])*0.5 + np.min(self.cnot_counts[topology_idx])*0.5
             score = min(cnot_count_topology,score)
