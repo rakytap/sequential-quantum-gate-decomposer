@@ -2090,9 +2090,6 @@ qgd_N_Qubit_Decomposition_Wrapper_get_Gates(qgd_N_Qubit_Decomposition_Wrapper* s
         // Map gate type to string
         const char* type_str = nullptr;
         switch(gate->get_type()) {
-
-
-
             case GENERAL_OPERATION: type_str = "GENERAL"; break;
             case UN_OPERATION: type_str = "UN"; break;
             case ON_OPERATION: type_str = "ON"; break;
