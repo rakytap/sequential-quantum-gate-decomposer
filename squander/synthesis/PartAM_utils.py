@@ -292,7 +292,7 @@ def find_constrained_swaps_ILP(pi_A, pi_B_dict, dist_matrix, use_gurobi=True):
     
     return swaps, final_perm
 
-def find_constrained_swaps_partial(pi_A, pi_B_dict, dist_matrix):
+def find_constrained_swaps_A_star(pi_A, pi_B_dict, dist_matrix,lookahead_gates=None):
     """
     Find SWAP sequence to route subset of virtual qubits to targets.
     
@@ -341,7 +341,7 @@ def find_constrained_swaps_partial(pi_A, pi_B_dict, dist_matrix):
             if state[target_P] != q:  # Physical position target_P should contain virtual q
                 return False
         return True
-    
+
     def heuristic(state):
         """Lower bound: sum of distances for qubits needing routing"""
         total = 0.0
@@ -359,8 +359,21 @@ def find_constrained_swaps_partial(pi_A, pi_B_dict, dist_matrix):
             total += float(distance)
         return math.floor(total / 2)  # Optimistic: each SWAP helps 2 qubits
     
-    # A* search
-    heap = [(heuristic(start_state), 0, start_state, [])]
+    def heuristic_with_lookahead(state):
+        base_cost = heuristic(state)
+        
+        if lookahead_gates:
+            # Add penalty for gates that would require swaps
+            for q1, q2 in lookahead_gates[:5]:  # Look at next 5 gates
+                p1 = state[q1]
+                p2 = state[q2]
+                if dist_matrix[p1][p2] > 1:
+                    base_cost += dist_matrix[p1][p2] - 1
+        
+        return base_cost
+    
+    # Use this heuristic in A*
+    heap = [(heuristic_with_lookahead(start_state), 0, start_state, [])]
     visited = {start_state: 0}
     
     while heap:
@@ -393,6 +406,9 @@ def find_constrained_swaps_partial(pi_A, pi_B_dict, dist_matrix):
                         heapq.heappush(heap, (new_f, new_g, new_state_tuple, new_path))
     
     return None, None  # No solution found
+
+def find_constrained_swaps_partial(pi_A, pi_B_dict, dist_matrix,lookahead_gates=None):
+    return find_constrained_swaps_A_star(pi_A,pi_B_dict,dist_matrix,lookahead_gates)
 
 def calculate_swaps_quick(P_i, qbit_map, node_mapping, pi, D, swap_cache=None):
     P_i_inv = [P_i.index(i) for i in range(len(P_i))]  # Compute inverse
@@ -545,84 +561,6 @@ def calculate_dist_small(mini_topology, qbit_map, dist_matrix,pi):
         dist_placeholder += (dist_matrix[pi[qbit_map_inv[u]]][pi[qbit_map_inv[v]]]-1)*3
     return dist_placeholder
 
-def calculate_swap_cost(swaps, current_pi, used_qubits):
-    """
-    Calculate swap cost. Swaps involving unused qubits are costless (0).
-    unused qubits are those not in used_qubits set.
-    """
-    cost = 0
-    temp_pi = list(current_pi)
-    # Build inverse map for O(1) lookup: physical -> logical
-    phys_to_logical = {p: l for l, p in enumerate(temp_pi)}
-
-    for p1, p2 in swaps:
-        l1 = phys_to_logical[p1]
-        l2 = phys_to_logical[p2]
-
-        is_l1_unused = (l1 not in used_qubits)
-        is_l2_unused = (l2 not in used_qubits)
-
-        if is_l1_unused and is_l2_unused:
-            step_cost = 0
-        else:
-            step_cost = 3
-
-        cost += step_cost
-
-        # Update state
-        temp_pi[l1] = p2
-        temp_pi[l2] = p1
-        phys_to_logical[p1] = l2
-        phys_to_logical[p2] = l1
-
-    return cost
-
-def filter_required_swaps(swaps, current_pi, pi_initial, used_qubits):
-    """
-    Filter swaps that are effectively 'costless' (involve unused qubits).
-    Returns filtered swaps and the updated pi_initial.
-    """
-    required_swaps = []
-    temp_pi = list(current_pi)
-    
-    # pi_initial might be numpy array, convert to list for mutation if needed, 
-    # but we'll return a new list/array to be safe.
-    updated_pi_initial = list(pi_initial)
-    
-    # Build inverse map for O(1) lookup: physical -> logical
-    phys_to_logical = {p: l for l, p in enumerate(temp_pi)}
-
-    for p1, p2 in swaps:
-        l1 = phys_to_logical[p1]
-        l2 = phys_to_logical[p2]
-
-        is_l1_unused = (l1 not in used_qubits)
-        is_l2_unused = (l2 not in used_qubits)
-
-        if not (is_l1_unused and is_l2_unused):
-            required_swaps.append((p1, p2))
-        else:
-            # If unused, we update the initial mapping to reflect this swap
-            # effectively retconning that they started in these positions.
-            # pi_initial maps logical -> physical.
-            # We swap the physical locations for these logical qubits.
-            # Note: updated_pi_initial[l1] should track where l1 'started'.
-            # If we swap l1 and l2 physically, and it's costless, 
-            # it means l1 is now 'initially' at p2, and l2 at p1.
-            # But wait, temp_pi[l1] is currently p1. After swap it is p2.
-            # So we update pi_initial to match the new temp_pi.
-            updated_pi_initial[l1] = p2
-            updated_pi_initial[l2] = p1
-
-        # Always update the tracking state
-        temp_pi[l1] = p2
-        temp_pi[l2] = p1
-        phys_to_logical[p1] = l2
-        phys_to_logical[p2] = l1
-
-    return required_swaps, updated_pi_initial
-
-
 # ============================================================================
 # Data Classes
 # ============================================================================
@@ -765,7 +703,7 @@ class PartitionCandidate:
         # {Q*:Q}
         self.node_mapping = get_node_mapping(mini_topology, topology)
 
-    def transform_pi(self, pi, D, swap_cache=None):
+    def transform_pi(self, pi, D, swap_cache=None, lookahead_gates=None):
         # Fixed: Use P_i^{-1} instead of P_i for input routing
         # The synthesized circuit S implements: add_Permutation(P_i) -> Original -> add_Permutation(P_o)
         # For Original to see logical qubit q* at partition position q*, we need:
@@ -787,10 +725,10 @@ class PartitionCandidate:
             if cache_key in swap_cache:
                 swaps, pi_init = swap_cache[cache_key]
             else:
-                swaps, pi_init = find_constrained_swaps_partial(pi_list, qbit_map_input, D)
+                swaps, pi_init = find_constrained_swaps_partial(pi_list, qbit_map_input, D, lookahead_gates)
                 swap_cache[cache_key] = (swaps, pi_init)
         else:
-            swaps, pi_init = find_constrained_swaps_partial(pi_list, qbit_map_input, D)
+            swaps, pi_init = find_constrained_swaps_partial(pi_list, qbit_map_input, D, lookahead_gates)
         
         pi_output = pi_init.copy()
         # Fixed: P_o should be indexed by partition virtual index q*, not physical index Q*

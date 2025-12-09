@@ -39,8 +39,6 @@ from squander.synthesis.PartAM_utils import (
     check_circuit_compatibility,
     construct_swap_circuit,
     calculate_dist_small,
-    calculate_swap_cost,
-    filter_required_swaps
 )
 
 
@@ -82,7 +80,7 @@ def _init_scoring_worker(scoring_partitions, sdag, distance_matrix):
 def _score_candidate_worker(payload):
     """
     Worker wrapper that reconstructs scoring inputs from a lightweight payload.
-    Payload format: (PartitionCandidate, F_snapshot, pi_snapshot, used_qubits)
+    Payload format: (PartitionCandidate, F_snapshot, pi_snapshot)
     """
     if (
         _WORKER_SCORING_PARTITIONS is None
@@ -90,7 +88,7 @@ def _score_candidate_worker(payload):
         or _WORKER_DISTANCE_MATRIX is None
     ):
         raise RuntimeError("Scoring worker not initialized with shared data.")
-    partition_candidate, F_snapshot, pi_snapshot, used_qubits = payload
+    partition_candidate, F_snapshot, pi_snapshot, lookahead_gates = payload
     return qgd_Partition_Aware_Mapping.score_partition_candidate(
         partition_candidate,
         F_snapshot,
@@ -99,7 +97,7 @@ def _score_candidate_worker(payload):
         _WORKER_S_DAG,
         _WORKER_DISTANCE_MATRIX,
         _WORKER_SWAP_CACHE,
-        used_qubits,
+        lookahead_gates
     )
 
 
@@ -254,6 +252,7 @@ class qgd_Partition_Aware_Mapping:
         Call to decompose a partition sequentially
         """
         N = Partition_circuit.get_Qbit_Num()
+        print(N)
         if N !=1:
             permutations_all = list(permutations(range(N)))
             result = PartitionSynthesisResult(N, topologies, involved_qbits, qbit_map, Partition_circuit)
@@ -287,7 +286,7 @@ class qgd_Partition_Aware_Mapping:
         else:
             raise Exception(f"Unsupported decomposition type: {strategy}")
         cDecompose.set_Verbose( config["verbosity"] )
-        cDecompose.set_Cost_Function_Variant( 3 )	
+        cDecompose.set_Cost_Function_Variant( 3 )    
         cDecompose.set_Optimization_Tolerance( config["tolerance"] )
         cDecompose.set_Optimizer( config["optimizer"] )
         cDecompose.Start_Decomposition()
@@ -428,7 +427,7 @@ class qgd_Partition_Aware_Mapping:
 
     def Heuristic_Search(self, F, pi, DAG, IDAG, optimized_partitions, scoring_partitions, D, sDAG):
         pi_initial = pi.copy()
-        used_qubits = set()
+
         resolved_partitions = [False] * len(DAG)
         partition_order = []
         step = 0
@@ -459,6 +458,12 @@ class qgd_Partition_Aware_Mapping:
 
         try:
             while len(F) != 0:
+                lookahead_partitions = list(F)[:5]
+                lookahead_gates = []
+                for idx in lookahead_partitions:
+                    if idx < len(optimized_partitions):
+                        lookahead_gates.extend(optimized_partitions[idx].get_original_circuit_structure())
+                lookahead_gates = None
                 partition_candidates = self.obtain_partition_candidates(F,optimized_partitions)
                 if len(partition_candidates) == 0:
                     break
@@ -466,7 +471,7 @@ class qgd_Partition_Aware_Mapping:
                 if executor is not None:
                     pi_snapshot = tuple(int(x) for x in pi)
                     payloads = [
-                        (partition_candidate, F_snapshot, pi_snapshot, used_qubits)
+                        (partition_candidate, F_snapshot, pi_snapshot, lookahead_gates)
                         for partition_candidate in partition_candidates
                     ]
                     scores = list(executor.map(_score_candidate_worker, payloads))
@@ -480,7 +485,7 @@ class qgd_Partition_Aware_Mapping:
                             sDAG,
                             D,
                             self._swap_cache,
-                            used_qubits,
+                            lookahead_gates
                         )
                         for partition_candidate in partition_candidates
                     ]
@@ -495,11 +500,8 @@ class qgd_Partition_Aware_Mapping:
                 pi_prev = pi # Save previous pi state for filtering
                 swap_order, pi = min_partition_candidate.transform_pi(pi, D, self._swap_cache)
                 if len(swap_order)!=0:
-                    filtered_swap_order, pi_initial = filter_required_swaps(swap_order, pi_prev, pi_initial, used_qubits)
-                    partition_order.append(construct_swap_circuit(filtered_swap_order, len(pi)))
+                    partition_order.append(construct_swap_circuit(swap_order, len(pi)))
                 
-                # Add involved qubits to used set
-                used_qubits.update(min_partition_candidate.involved_qbits)
                 
                 partition_order.append(min_partition_candidate)
                 children = DAG[min_partition_candidate.partition_idx]
@@ -515,8 +517,6 @@ class qgd_Partition_Aware_Mapping:
                             qubit = child_partition.circuit.get_Qbits()[0]
                             child_partition.circuit.map_circuit({qubit: pi[qubit]})
                             partition_order.append(child_partition)
-                            # Update used qubits for single qubit partition
-                            used_qubits.add(qubit) 
                             
                             resolved_partitions[child] = True
                             resolved_count = sum(resolved_partitions)
@@ -568,14 +568,14 @@ class qgd_Partition_Aware_Mapping:
     # ------------------------------------------------------------------------
 
     @staticmethod
-    def score_partition_candidate(partition_candidate, F,  pi, scoring_partitions, sDAG, D, swap_cache, used_qubits):
+    def score_partition_candidate(partition_candidate, F,  pi, scoring_partitions, sDAG, D, swap_cache, lookahead_gates=None):
         score_F = 0
         score_E = 0
         E_partitions = set()  # Changed to set for O(1) membership checks
         E_partitions_1 = set()
         E_partitions_2 = set()
-        swaps, output_perm = partition_candidate.transform_pi(pi, D, swap_cache)
-        score_F += calculate_swap_cost(swaps, pi, used_qubits)
+        swaps, output_perm = partition_candidate.transform_pi(pi, D, swap_cache, lookahead_gates)
+        score_F += len(swaps)*3
         score_F += len(partition_candidate.circuit_structure)
 
         # Safety check: ensure partition_idx is valid for sDAG
@@ -592,7 +592,7 @@ class qgd_Partition_Aware_Mapping:
                 continue
             mini_scores = []
             for tdx, mini_topology in enumerate(partition.mini_topologies):
-                dist_placeholder = calculate_dist_small(mini_topology,partition.qubit_map,D,output_perm)
+                dist_placeholder = 3*calculate_dist_small(mini_topology,partition.qubit_map,D,output_perm)
                 circuit_length = np.min([len(circ) for circ in partition.circuit_structures[tdx]])
                 score = dist_placeholder + circuit_length
                 mini_scores.append(score)
@@ -614,28 +614,28 @@ class qgd_Partition_Aware_Mapping:
                         continue
                     E_partitions_1.add(partition_idx_E)
         #score all
-        for partition_idx in E_partitions.union(E_partitions_1):
+        for partition_idx in E_partitions:
             mini_scores = []
             partition_result = scoring_partitions[partition_idx]
             if partition_result is None:
                 continue
             for tdx, mini_topology in enumerate(partition_result.mini_topologies):
-                dist_placeholder = calculate_dist_small(mini_topology,partition_result.qubit_map,D,output_perm)
+                dist_placeholder = 3*calculate_dist_small(mini_topology,partition_result.qubit_map,D,output_perm)
                 circuit_length = np.min([len(circ) for circ in partition_result.circuit_structures[tdx]])
                 score = dist_placeholder + circuit_length
                 mini_scores.append(score)
             if mini_scores:
                 score_E += np.min(mini_scores)
 
-        coeff_E = 0.5
-        if len(E_partitions.union(E_partitions_1)) == 0:
+        coeff_E = 0.3
+        if len(E_partitions) == 0:
             E_score = 0.0
         else:
-            E_score = coeff_E * score_E / len(E_partitions.union(E_partitions_1))
+            E_score = coeff_E * score_E / len(E_partitions)
         
-        F_score = score_F / len(F)
+        F_score = score_F
         
-        return E_score + F_score
+        return E_score + 0.7*F_score
 
     # ------------------------------------------------------------------------
     # Candidate Generation
@@ -763,89 +763,132 @@ class qgd_Partition_Aware_Mapping:
         
         return D #multiply by 3 to make it CNOT cost instead of SWAP cost
 
-    def _compute_smart_initial_layout(self, circuit, N, D):
 
-        # Count interactions between qubits
-        interaction_count = defaultdict(int)
+    def _compute_smart_initial_layout(self, circuit, N, D):
+        """
+        Compute initial layout using interaction graph + simulated annealing.
+        Much better than the greedy approach.
+        """
+        # Build interaction graph: weight = number of CNOTs between qubits
+        interaction_graph = defaultdict(int)
         gates = circuit.get_Gates()
         
         for gate in gates:
             if gate.get_Control_Qbit() != -1:
-                q1 = gate.get_Target_Qbit()
-                q2 = gate.get_Control_Qbit()
+                q1, q2 = sorted([gate.get_Target_Qbit(), gate.get_Control_Qbit()])
                 if q1 < N and q2 < N:
-                    key = (min(q1, q2), max(q1, q2))
-                    interaction_count[key] += 1
+                    interaction_graph[(q1, q2)] += 1
         
-        if not interaction_count:
-            # No 2-qubit gates, use trivial mapping
+        # If no 2-qubit gates, return identity
+        if not interaction_graph:
             return np.arange(N)
         
-        # Find most interacting qubit pair
-        most_connected = max(interaction_count.items(), key=lambda x: x[1])
-        q1, q2 = most_connected[0]
+        # Start with greedy mapping as baseline
+        pi_greedy = self._greedy_initial_layout(interaction_graph, N, D)
+        best_pi = pi_greedy.copy()
+        best_score = self._evaluate_layout_score(best_pi, interaction_graph, D)
         
-        # Find physical qubits that are connected
-        # Start with an arbitrary connected pair
-        for edge in self.config['topology']:
-            p1, p2 = edge
-            break  # Just take first edge
+        # Simulated annealing to improve
+        current_pi = best_pi.copy()
+        current_score = best_score
         
-        # Initialize mapping
+        # Temperature schedule
+        max_iter = 100 * N
+        for iteration in range(max_iter):
+            temp = 1.0 - (iteration / max_iter)
+            
+            # Propose swap of two physical qubits
+            p1, p2 = np.random.choice(N, 2, replace=False)
+            new_pi = current_pi.copy()
+            new_pi[p1], new_pi[p2] = new_pi[p2], new_pi[p1]  # Swap assignments
+            
+            # Evaluate new layout
+            new_score = self._evaluate_layout_score(new_pi, interaction_graph, D)
+            
+            # Accept if better or with probability
+            delta = new_score - current_score
+            if delta < 0 or np.random.random() < np.exp(-delta / (temp + 1e-6)):
+                current_pi = new_pi
+                current_score = new_score
+                
+                if current_score < best_score:
+                    best_score = current_score
+                    best_pi = current_pi.copy()
+        
+        return best_pi
+    
+    def _greedy_initial_layout(self, interaction_graph, N, D):
+        """Greedy baseline mapping - much simpler and reliable"""
         pi = np.arange(N)
+        placed_logical = set()
+        placed_physical = set()
         
-        # Place most interacting qubits on connected physical qubits
-        pi[q1] = p1
-        pi[q2] = p2
+        # Sort interactions by weight (descending)
+        sorted_interactions = sorted(
+            interaction_graph.items(), 
+            key=lambda x: x[1], 
+            reverse=True
+        )
         
-        # Place other qubits using greedy approach
-        placed_logical = {q1, q2}
-        placed_physical = {p1, p2}
+        # Place highest interaction pair first
+        if sorted_interactions:
+            (q1, q2), _ = sorted_interactions[0]
+            # Find closest physical pair
+            min_dist = float('inf')
+            best_pair = None
+            for p1 in range(N):
+                for p2 in range(p1 + 1, N):
+                    if D[p1][p2] < min_dist:
+                        min_dist = D[p1][p2]
+                        best_pair = (p1, p2)
+            
+            if best_pair:
+                p1, p2 = best_pair
+                pi[q1] = p1
+                pi[q2] = p2
+                placed_logical = {q1, q2}
+                placed_physical = {p1, p2}
         
-        # For each remaining logical qubit, find where to place it
+        # Place remaining qubits
         remaining_logical = [q for q in range(N) if q not in placed_logical]
-        
-        # Sort by how much they interact with already placed qubits
-        def interaction_score(q):
-            score = 0
-            for placed_q in placed_logical:
-                key = (min(q, placed_q), max(q, placed_q))
-                score += interaction_count.get(key, 0)
-            return score
-        
-        remaining_logical.sort(key=interaction_score, reverse=True)
-        
-        # Place them near their interacting partners
-        for logical_q in remaining_logical:
-            # Find best physical location
-            best_physical = None
-            best_score = float('inf')
+        for q in remaining_logical:
+            best_p = None
+            best_cost = float('inf')
             
-            for physical_q in range(N):
-                if physical_q not in placed_physical:
-                    # Calculate average distance to interacting qubits
-                    total_dist = 0
-                    count = 0
-                    for other_q in placed_logical:
-                        key = (min(logical_q, other_q), max(logical_q, other_q))
-                        weight = interaction_count.get(key, 0)
-                        if weight > 0:
-                            other_physical = pi[other_q]
-                            total_dist += D[physical_q][other_physical] * weight
-                            count += weight
-                    
-                    if count > 0:
-                        avg_dist = total_dist / count
-                    else:
-                        avg_dist = 0
-                    
-                    if avg_dist < best_score:
-                        best_score = avg_dist
-                        best_physical = physical_q
+            for p in range(N):
+                if p in placed_physical:
+                    continue
+                
+                # Cost = sum of distances to already placed interacting qubits
+                cost = 0
+                for other_q in placed_logical:
+                    weight = interaction_graph.get(tuple(sorted((q, other_q))), 0)
+                    if weight > 0:
+                        other_p = pi[other_q]
+                        cost += D[p][other_p] * weight
+                
+                if cost < best_cost:
+                    best_cost = cost
+                    best_p = p
             
-            if best_physical is not None:
-                pi[logical_q] = best_physical
-                placed_logical.add(logical_q)
-                placed_physical.add(best_physical)
+            if best_p is not None:
+                pi[q] = best_p
+                placed_logical.add(q)
+                placed_physical.add(best_p)
         
         return pi
+    
+    def _evaluate_layout_score(self, pi, interaction_graph, D):
+        """
+        Evaluate layout quality: lower score is better.
+        Score = sum(distance(physical_q1, physical_q2) * interaction_weight)
+        """
+        score = 0.0
+        for (q1, q2), weight in interaction_graph.items():
+            p1, p2 = pi[q1], pi[q2]
+            distance = D[p1][p2]
+            if np.isinf(distance):
+                return float('inf')  # Invalid layout
+            score += distance * weight
+        
+        return score
