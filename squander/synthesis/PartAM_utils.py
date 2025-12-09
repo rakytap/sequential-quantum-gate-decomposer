@@ -738,7 +738,7 @@ class PartitionCandidate:
         for q_star in range(len(self.P_o)):
             if q_star in qbit_map_inverse:
                 k = qbit_map_inverse[q_star]
-                pi_output[k] = self.node_mapping[self.P_o.index(self.qbit_map[k])] 
+                pi_output[k] = self.node_mapping[self.P_o[q_star]]
         return swaps, pi_output
     
     def get_final_circuit(self,optimized_partitions,N):
