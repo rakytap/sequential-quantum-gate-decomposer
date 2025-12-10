@@ -34,7 +34,8 @@ def extract_subtopology(involved_qbits, qbit_map, config ):
 
 def CNOTGateCount( circ: Circuit ) -> int :
     """
-    Call to get the number of CNOT gates in the circuit
+    Call to get the number of CNOT-equivalent gates in the circuit.
+    Counts all two-qubit gates, converting them to CNOT equivalents.
 
     
     Args:
@@ -44,7 +45,7 @@ def CNOTGateCount( circ: Circuit ) -> int :
 
     Return:
 
-        Returns with the CNOT gate count
+        Returns with the CNOT-equivalent gate count (all two-qubit gates counted)
 
     
     """ 
@@ -54,7 +55,19 @@ def CNOTGateCount( circ: Circuit ) -> int :
 
     gate_counts = circ.get_Gate_Nums()
 
-    return gate_counts.get('CNOT', 0) +  3*gate_counts.get('SWAP', 0)
+    # Count all two-qubit gates
+    # CNOT gates count as 1
+    cnot_count = gate_counts.get('CNOT', 0)
+    
+    # SWAP gates count as 3 CNOTs
+    swap_count = 3 * gate_counts.get('SWAP', 0)
+    
+    # Other two-qubit gates count as 1 CNOT each
+    # CZ, CH, SYC, CRY, CRX, CRZ, CP, CROT, CR, CU are all two-qubit gates
+    two_qubit_gates = ['CZ', 'CH', 'SYC', 'CRY', 'CRX', 'CRZ', 'CP', 'CROT', 'CR', 'CU']
+    other_two_qubit_count = sum(gate_counts.get(gate_name, 0) for gate_name in two_qubit_gates)
+    
+    return cnot_count + swap_count + other_two_qubit_count
 
 
 
@@ -195,43 +208,50 @@ class qgd_Wide_Circuit_Optimization:
 
     
         """ 
-        strategy = config["strategy"]
-        if strategy == "TreeSearch":
-            cDecompose = N_Qubit_Decomposition_Tree_Search( Umtx.conj().T, config=config, accelerator_num=0, topology=mini_topology)
-        elif strategy == "TabuSearch":
-            cDecompose = N_Qubit_Decomposition_Tabu_Search( Umtx.conj().T, config=config, accelerator_num=0, topology=mini_topology )
-        elif strategy == "Adaptive":
-            cDecompose = N_Qubit_Decomposition_adaptive( Umtx.conj().T, level_limit_max=5, level_limit_min=1, topology=mini_topology )
-        else:
-            raise Exception(f"Unsupported decomposition type: {strategy}")
+        try:
+            strategy = config["strategy"]
+            if strategy == "TreeSearch":
+                cDecompose = N_Qubit_Decomposition_Tree_Search( Umtx.conj().T, config=config, accelerator_num=0, topology=mini_topology)
+            elif strategy == "TabuSearch":
+                cDecompose = N_Qubit_Decomposition_Tabu_Search( Umtx.conj().T, config=config, accelerator_num=0, topology=mini_topology )
+            elif strategy == "Adaptive":
+                cDecompose = N_Qubit_Decomposition_adaptive( Umtx.conj().T, level_limit_max=5, level_limit_min=1, topology=mini_topology )
+            else:
+                raise Exception(f"Unsupported decomposition type: {strategy}")
 
 
-        tolerance = config["tolerance"]
-            
-            
-        cDecompose.set_Verbose( config["verbosity"] )
-        cDecompose.set_Cost_Function_Variant( 3 )	
-        cDecompose.set_Optimization_Tolerance( tolerance )
-    
+            tolerance = config["tolerance"]
+                
+                
+            cDecompose.set_Verbose( config["verbosity"] )
+            cDecompose.set_Cost_Function_Variant( 3 )	
+            cDecompose.set_Optimization_Tolerance( tolerance )
+        
 
-        # adding new layer to the decomposition until threshold
-        cDecompose.set_Optimizer( "BFGS" )
+            # adding new layer to the decomposition until threshold
+            cDecompose.set_Optimizer( "BFGS" )
 
-        # starting the decomposition
-        cDecompose.Start_Decomposition()
-            
+            # starting the decomposition
+            cDecompose.Start_Decomposition()
+                
 
-        squander_circuit = cDecompose.get_Circuit()
-        parameters       = cDecompose.get_Optimized_Parameters()
-
-
-        #print( "Decomposition error: ", cDecompose.get_Decomposition_Error() )
-
-        if tolerance < cDecompose.get_Decomposition_Error():
-            return None, None
+            squander_circuit = cDecompose.get_Circuit()
+            parameters       = cDecompose.get_Optimized_Parameters()
 
 
-        return squander_circuit, parameters
+            #print( "Decomposition error: ", cDecompose.get_Decomposition_Error() )
+
+            if tolerance < cDecompose.get_Decomposition_Error():
+                return None, None
+
+
+            return squander_circuit, parameters
+        except Exception as e:
+            # Catch C++ exceptions and other errors during decomposition
+            if config.get("verbosity", 0) > 0:
+                print(f"Warning: Decomposition failed with error: {e}")
+            # Re-raise to be caught by caller
+            raise
 
 
 
@@ -311,10 +331,24 @@ class qgd_Wide_Circuit_Optimization:
         remapped_subcircuit = subcircuit.Remap_Qbits( qbit_map, qbit_num )
 
         # get the unitary representing the circuit
-        unitary = remapped_subcircuit.get_Matrix( subcircuit_parameters )
+        # Wrap in try-except to catch C++ exceptions (e.g., from non-CNOT gates)
+        try:
+            unitary = remapped_subcircuit.get_Matrix( subcircuit_parameters )
+        except Exception as e:
+            # If get_Matrix fails (e.g., due to unsupported gate types), return original circuit
+            if config.get("verbosity", 0) > 0:
+                print(f"Warning: Failed to get matrix for subcircuit: {e}. Using original circuit.")
+            return subcircuit, subcircuit_parameters
 
         # decompose a small unitary into a new circuit
-        decomposed_circuit, decomposed_parameters = qgd_Wide_Circuit_Optimization.DecomposePartition( unitary, config, mini_topology )
+        # Wrap in try-except to catch C++ exceptions during decomposition
+        try:
+            decomposed_circuit, decomposed_parameters = qgd_Wide_Circuit_Optimization.DecomposePartition( unitary, config, mini_topology )
+        except Exception as e:
+            # If decomposition fails, return original circuit
+            if config.get("verbosity", 0) > 0:
+                print(f"Warning: Decomposition failed: {e}. Using original circuit.")
+            return subcircuit, subcircuit_parameters
 
         if decomposed_circuit is None:
             return subcircuit, subcircuit_parameters #remaining code will fail, just return original circuit
@@ -430,7 +464,9 @@ class qgd_Wide_Circuit_Optimization:
                 callback_fnc = lambda  x : self.CompareAndPickCircuits( [subcircuit, x[0]], [subcircuit_parameters, x[1]] ) 
 
                 # call a process to decompose a subcircuit
-                config = self.config if not global_min or len(subcircuit.get_Qbits()) < 3 else {**self.config, 'tree_level_max': max(0, subcircuit.get_Gate_Nums().get('CNOT', 0)-1) } # 'strategy': "Adaptive"}
+                # Use total two-qubit gate count for tree_level_max calculation to handle non-CNOT gates
+                two_qubit_count = CNOTGateCount(subcircuit)
+                config = self.config if not global_min or len(subcircuit.get_Qbits()) < 3 else {**self.config, 'tree_level_max': max(0, two_qubit_count-1) } # 'strategy': "Adaptive"}
                 async_results[partition_idx]  = pool.apply_async( self.PartitionDecompositionProcess, (subcircuit, subcircuit_parameters, config), callback=callback_fnc )
 
 
@@ -447,7 +483,12 @@ class qgd_Wide_Circuit_Optimization:
                     print( "reoptimized subcircuit: ", new_subcircuit.get_Gate_Nums()) 
                 '''
 
-                if new_subcircuit.get_Gate_Nums().get('CNOT', 0) < subcircuit.get_Gate_Nums().get('CNOT', 0):
+                # Compare using total two-qubit gate count instead of just CNOT count
+                # This properly handles circuits with non-CNOT two-qubit gates
+                original_count = CNOTGateCount(subcircuit)
+                new_count = CNOTGateCount(new_subcircuit)
+                
+                if new_count < original_count:
                     optimized_subcircuits[ partition_idx ] = new_subcircuit
                     optimized_parameter_list[ partition_idx ] = new_parameters
                 else:
@@ -461,8 +502,15 @@ class qgd_Wide_Circuit_Optimization:
         # construct the wide circuit from the optimized suncircuits
         if global_min:
             max_gates = max(len(c.get_Gates()) for c in optimized_subcircuits)
-            def to_cost(d): return d.get('CNOT', 0)*max_gates + sum(d[x] for x in d if x != 'CNOT')
-            weights = [to_cost(circ.get_Gate_Nums()) for circ in optimized_subcircuits[:len(allparts)]]
+            # Use CNOTGateCount to properly account for all two-qubit gates
+            def to_cost(circ): 
+                gate_nums = circ.get_Gate_Nums()
+                two_qubit_cost = CNOTGateCount(circ) * max_gates
+                # Add cost for single-qubit gates
+                single_qubit_gates = ['U3', 'U2', 'U1', 'RX', 'RY', 'RZ', 'R', 'H', 'X', 'Y', 'Z', 'SX', 'S', 'Sdg', 'T', 'Tdg']
+                single_qubit_cost = sum(gate_nums.get(gate, 0) for gate in single_qubit_gates)
+                return two_qubit_cost + single_qubit_cost
+            weights = [to_cost(circ) for circ in optimized_subcircuits[:len(allparts)]]
             L, fusion_info = ilp_global_optimal(allparts, g, weights=weights)
             parts = recombine_single_qubit_chains(go, rgo, single_qubit_chains, gate_to_tqubit, [allparts[i] for i in L], fusion_info)
             L = topo_sort_partitions(circ, self.max_partition_size, parts)

@@ -431,7 +431,24 @@ class qgd_Partition_Aware_Mapping:
         resolved_partitions = [False] * len(DAG)
         partition_order = []
         step = 0
-        
+        for partition_idx in F:
+            if isinstance(optimized_partitions[partition_idx], SingleQubitPartitionResult):
+                F.remove(partition_idx)
+                single_qubit_part = optimized_partitions[partition_idx]
+                qubit = single_qubit_part.circuit.get_Qbits()[0]
+                single_qubit_part.circuit.Remap_Qbits({int(qubit): int(pi[qubit])},max(D.shape))
+                partition_order.append(single_qubit_part)
+
+                resolved_partitions[partition_idx] = True
+                children = DAG[partition_idx]
+                while len(children) !=0:
+                    child = children.pop(0)
+                    parents_resolved = True
+                    for parent in IDAG[child]:
+                        parents_resolved *= resolved_partitions[parent]
+                    if parents_resolved:
+                        F.append(child)
+
         
         # Initialize progress bar
         total_partitions = len(DAG)
@@ -458,11 +475,6 @@ class qgd_Partition_Aware_Mapping:
 
         try:
             while len(F) != 0:
-                lookahead_partitions = list(F)[:5]
-                lookahead_gates = []
-                for idx in lookahead_partitions:
-                    if idx < len(optimized_partitions):
-                        lookahead_gates.extend(optimized_partitions[idx].get_original_circuit_structure())
                 lookahead_gates = None
                 partition_candidates = self.obtain_partition_candidates(F,optimized_partitions)
                 if len(partition_candidates) == 0:
@@ -515,9 +527,9 @@ class qgd_Partition_Aware_Mapping:
                         if isinstance(optimized_partitions[child], SingleQubitPartitionResult):
                             child_partition = optimized_partitions[child]
                             qubit = child_partition.circuit.get_Qbits()[0]
-                            child_partition.circuit.map_circuit({qubit: pi[qubit]})
+                            print(int(qubit),int(pi[qubit]))
+                            child_partition.circuit.Remap_Qbits({int(qubit): int(pi[qubit])},max(D.shape))
                             partition_order.append(child_partition)
-                            
                             resolved_partitions[child] = True
                             resolved_count = sum(resolved_partitions)
                             pbar.n = resolved_count

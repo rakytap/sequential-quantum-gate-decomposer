@@ -38,16 +38,22 @@ if __name__ == '__main__':
             'progressbar': True,  # Enable diagnostic output
     }
 
-    filename = "benchmarks/qfast/4q/adder_q4.qasm"
+    filename = "benchmarks/qfast/5q/vqe.qasm"
     start_time = time.time()
 
     # load the circuit from a file
     circ_orig, parameters_orig = utils.qasm_to_squander_circuit(filename)
     config['topology'] = [
-    (0, 1), (0, 2), (0, 3), 
+    (0, 1), (0, 2), (0, 3), (0, 4)
     ]
     wide_circuit_optimizer = Partition_Aware_Mapping( config )
     circ, params, input_perm,output_perm = wide_circuit_optimizer.Partition_Aware_Mapping( circ_orig, parameters_orig )
+    wide_circuit_optimizer = Wide_Circuit_Optimization.qgd_Wide_Circuit_Optimization( config )
+    config['routed'] = True 
+    circo = Qiskit_IO.get_Qiskit_Circuit(circ.get_Flat_Circuit(),params)
+    # run circuti optimization
+    circ, params = Qiskit_IO.convert_Qiskit_to_Squander(circo)
+    circ, params = wide_circuit_optimizer.OptimizeWideCircuit( circ, params, True )
     #print(Qiskit_IO.get_Qiskit_Circuit(circ.get_Flat_Circuit(),params))
     num_qubits = circ.get_Qbit_Num() 
     matrix_size = 1 << num_qubits 
@@ -66,7 +72,6 @@ if __name__ == '__main__':
     circ_Final.add_Permutation(input_perm_list)
     circ_Final.add_Circuit(circ)
     circ_Final.add_Permutation(output_perm_T)
-    
     # Additional matrix validation in example     
     PartAM_state = initial_state.copy()
     circ_Final.apply_to(params, PartAM_state)

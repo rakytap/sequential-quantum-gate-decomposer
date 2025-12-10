@@ -570,6 +570,7 @@ class SingleQubitPartitionResult:
     def __init__(self,circuit_in,parameters_in):
         self.circuit = circuit_in
         self.parameters = parameters_in
+        self.involved_qbits = circuit_in.get_Qbits()
     
     def get_partition_synthesis_score(self):
         return 0
