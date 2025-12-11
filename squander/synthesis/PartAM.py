@@ -585,8 +585,9 @@ class qgd_Partition_Aware_Mapping:
         E_partitions = set()  # Changed to set for O(1) membership checks
         E_partitions_1 = set()
         E_partitions_2 = set()
+        swap_weight = 4
         swaps, output_perm = partition_candidate.transform_pi(pi, D, swap_cache, lookahead_gates)
-        score_F += len(swaps)*3
+        score_F += swap_weight*len(swaps)*3
         score_F += len(partition_candidate.circuit_structure)
 
         # Safety check: ensure partition_idx is valid for sDAG
@@ -603,7 +604,7 @@ class qgd_Partition_Aware_Mapping:
                 continue
             mini_scores = []
             for tdx, mini_topology in enumerate(partition.mini_topologies):
-                dist_placeholder = 3*calculate_dist_small(mini_topology,partition.qubit_map,D,output_perm)
+                dist_placeholder = swap_weight*3*calculate_dist_small(mini_topology,partition.qubit_map,D,output_perm)
                 circuit_length = np.min([len(circ) for circ in partition.circuit_structures[tdx]])
                 score = dist_placeholder + circuit_length
                 mini_scores.append(score)
@@ -642,11 +643,11 @@ class qgd_Partition_Aware_Mapping:
         if len(E_partitions) == 0:
             E_score = 0.0
         else:
-            E_score = coeff_E * score_E / len(E_partitions)
+            E_score = coeff_E * score_E 
         
-        F_score = score_F
+        F_score = 0.7*score_F
         
-        return E_score + 0.7*F_score
+        return E_score + F_score
 
     # ------------------------------------------------------------------------
     # Candidate Generation
