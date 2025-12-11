@@ -252,7 +252,6 @@ class qgd_Partition_Aware_Mapping:
         Call to decompose a partition sequentially
         """
         N = Partition_circuit.get_Qbit_Num()
-        print(N)
         if N !=1:
             permutations_all = list(permutations(range(N)))
             result = PartitionSynthesisResult(N, topologies, involved_qbits, qbit_map, Partition_circuit)
