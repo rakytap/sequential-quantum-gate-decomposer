@@ -526,7 +526,6 @@ class qgd_Partition_Aware_Mapping:
                         if isinstance(optimized_partitions[child], SingleQubitPartitionResult):
                             child_partition = optimized_partitions[child]
                             qubit = child_partition.circuit.get_Qbits()[0]
-                            print(int(qubit),int(pi[qubit]))
                             child_partition.circuit.Remap_Qbits({int(qubit): int(pi[qubit])},max(D.shape))
                             partition_order.append(child_partition)
                             resolved_partitions[child] = True
