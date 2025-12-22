@@ -20,10 +20,12 @@ limitations under the License.
     \brief Class to solve GQML problems
 */
 #include "Generative_Quantum_Machine_Learning_Base.h"
-#include <iostream>
-#include <algorithm>
-#include <random>
+
 #include "pocketfft_hdronly.h"
+
+#include <algorithm>
+#include <iostream>
+#include <random>
 
 static tbb::spin_mutex my_mutex;
 
@@ -36,43 +38,35 @@ Generative_Quantum_Machine_Learning_Base::Generative_Quantum_Machine_Learning_Ba
     // logical value describing whether the decomposition was finalized or not
     decomposition_finalized = false;
 
-
     // error of the unitarity of the final decomposition
     decomposition_error = DBL_MAX;
 
-
     // The current minimum of the optimization problem
     current_minimum = DBL_MAX;
-    
+
     global_target_minimum = -DBL_MAX;
 
     // logical value describing whether the optimization problem was solved or not
     optimization_problem_solved = false;
-
 
     // The maximal allowed error of the optimization problem
     optimization_tolerance = -DBL_MAX;
 
     // The convergence threshold in the optimization process
     convergence_threshold = -DBL_MAX;
-    
+
     alg = AGENTS;
-    
 
     random_shift_count_max = 100;
-    
+
     adaptive_eta = false;
-    
+
     cost_fnc = GQML;
-    
+
     ansatz = HEA;
 
     ev_P_star_P_star = -1.0;
-    
 }
-
-
-
 
 /**
 @brief Constructor of the class.
@@ -84,48 +78,49 @@ Generative_Quantum_Machine_Learning_Base::Generative_Quantum_Machine_Learning_Ba
 @param config_in A map that can be used to set hyperparameters during the process
 @return An instance of the class
 */
-Generative_Quantum_Machine_Learning_Base::Generative_Quantum_Machine_Learning_Base(std::vector<int> sample_indices_in, Matrix_real P_star_in, Matrix_real sigma_in, int qbit_num_in, bool use_lookup_table_in, std::vector<std::vector<int>> cliques_in, bool use_exact_in, std::map<std::string, Config_Element>& config_in, int accelerator_num) : Optimization_Interface(Matrix(Power_of_2(qbit_num_in),1), qbit_num_in, false, config_in, RANDOM, accelerator_num) {
+Generative_Quantum_Machine_Learning_Base::Generative_Quantum_Machine_Learning_Base(
+    std::vector<int> sample_indices_in, Matrix_real P_star_in, Matrix_real sigma_in, int qbit_num_in,
+    bool use_lookup_table_in, std::vector<std::vector<int>> cliques_in, bool use_exact_in,
+    std::map<std::string, Config_Element>& config_in, int accelerator_num)
+    : Optimization_Interface(Matrix(Power_of_2(qbit_num_in), 1), qbit_num_in, false, config_in, RANDOM,
+                             accelerator_num) {
 
-	sample_indices = sample_indices_in;
+    sample_indices = sample_indices_in;
 
     sample_size = sample_indices.size();
 
     P_star = P_star_in;
     // config maps
-    config   = config_in;
+    config = config_in;
     // logical value describing whether the decomposition was finalized or not
     decomposition_finalized = false;
-
 
     // error of the unitarity of the final decomposition
     decomposition_error = DBL_MAX;
 
-
     // The current minimum of the optimization problem
     current_minimum = DBL_MAX;
-
 
     // logical value describing whether the optimization problem was solved or not
     optimization_problem_solved = false;
 
     // override optimization parameters governing the convergence used in gate decomposition applications
-    global_target_minimum  = -DBL_MAX;
+    global_target_minimum = -DBL_MAX;
     optimization_tolerance = -DBL_MAX;
-    convergence_threshold  = -DBL_MAX;
-    
+    convergence_threshold = -DBL_MAX;
 
     random_shift_count_max = 100;
-    
+
     adaptive_eta = false;
-    
+
     qbit_num = qbit_num_in;
-	
+
     alg = BAYES_OPT;
-    
+
     cost_fnc = GQML;
-    
+
     ansatz = HEA;
-    
+
     ev_P_star_P_star = -1.0;
 
     sigma = sigma_in;
@@ -141,56 +136,46 @@ Generative_Quantum_Machine_Learning_Base::Generative_Quantum_Machine_Learning_Ba
     if (use_exact) {
         MMD_of_the_distributions = &Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions_exact;
         ev_P_star_P_star = expectation_value_P_star_P_star_exact();
-    }
-    else {
+    } else {
         MMD_of_the_distributions = &Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions_approx;
         ev_P_star_P_star = expectation_value_P_star_P_star_approx();
     }
-    
 
     cliques = cliques_in;
 }
 
-
-
-
 /**
 @brief Destructor of the class
 */
-Generative_Quantum_Machine_Learning_Base::~Generative_Quantum_Machine_Learning_Base(){
-
-}
-
-
-
+Generative_Quantum_Machine_Learning_Base::~Generative_Quantum_Machine_Learning_Base() {}
 
 /**
 @brief Call to start solving the GQML problem
-*/ 
-void Generative_Quantum_Machine_Learning_Base::start_optimization(){
+*/
+void Generative_Quantum_Machine_Learning_Base::start_optimization() {
 
     // initialize the initial state if it was not given
-    if ( initial_state.size() == 0 ) {
+    if (initial_state.size() == 0) {
         initialize_zero_state();
     }
 
-
-    if (gates.size() == 0 ) {
-        std::string error("Variational_Quantum_Eigensolver_Base::Get_ground_state: for GQML process the circuit needs to be initialized");
+    if (gates.size() == 0) {
+        std::string error("Variational_Quantum_Eigensolver_Base::Get_ground_state: for GQML process the circuit needs "
+                          "to be initialized");
         throw error;
     }
 
-    int num_of_parameters =  optimized_parameters_mtx.size();
-    if ( num_of_parameters == 0 ) {
+    int num_of_parameters = optimized_parameters_mtx.size();
+    if (num_of_parameters == 0) {
         std::string error("Variational_Quantum_Eigensolver_Base::Get_ground_state: No intial parameters were given");
         throw error;
     }
 
-
-    if ( num_of_parameters != get_parameter_num() ) {
-        std::string error("Variational_Quantum_Eigensolver_Base::Get_ground_state: The number of initial parameters does not match with the number of parameters in the circuit");
+    if (num_of_parameters != get_parameter_num()) {
+        std::string error("Variational_Quantum_Eigensolver_Base::Get_ground_state: The number of initial parameters "
+                          "does not match with the number of parameters in the circuit");
         throw error;
-    }    
+    }
 
     if (ev_P_star_P_star == -1) {
         ev_P_star_P_star = expectation_value_P_star_P_star_exact();
@@ -202,7 +187,6 @@ void Generative_Quantum_Machine_Learning_Base::start_optimization(){
     // start the GQML process
     Matrix_real solution_guess = optimized_parameters_mtx.copy();
     solve_layer_optimization_problem(num_of_parameters, solution_guess);
-
 
     return;
 }
@@ -216,13 +200,53 @@ void Generative_Quantum_Machine_Learning_Base::start_optimization(){
 */
 double Generative_Quantum_Machine_Learning_Base::Gaussian_kernel(int x, int y) {
     // The norm stores the distance between the two data points (the more qbit they differ in the bigger it is)
-    double result=0.0;
+    // Treat x and y as binary vectors of size 10, where each of the 10 least significant bits
+    // corresponds to a single vector element. Compute the norm (Hamming distance) of (x-y).
+
+    // Extract the 10 least significant bits and compute Hamming distance
+    int diff = (x ^ y) & 0x3FF; // XOR to find differing bits, mask to keep only 10 LSBs
+    int norm_squared = 0;
+
+// Count the number of set bits (Hamming distance) using efficient bit counting
+// For the 10 least significant bits, we can use __builtin_popcount if available,
+// or count manually for portability
+#ifdef __GNUC__
+    norm_squared = __builtin_popcount(diff);
+#else
+    // Manual bit counting for portability
+    for (int bit = 0; bit < 10; ++bit) {
+        if (diff & (1 << bit)) {
+            norm_squared++;
+        }
+    }
+#endif
+
+    double result = 0.0;
     double exponent;
 
-    for (int i=0; i<sigma.size(); i++) {
-        exponent = -(x - y)*((x - y)/sigma[i])*0.5;
+    for (int i = 0; i < sigma.size(); i++) {
+        exponent = -norm_squared / (sigma[i] * 2.0);
         result += exp(exponent);
     }
+    result /= sigma.size();
+    return result;
+}
+
+/**
+@brief Call to evaluate the value of one gaussian kernel function using Hamming distance
+@param hamming_distance The Hamming distance between two bitstrings
+@return The calculated value of the kernel function
+*/
+double Generative_Quantum_Machine_Learning_Base::Gaussian_kernel(int hamming_distance) {
+    double result = 0.0;
+    double exponent;
+
+    for (int i = 0; i < sigma.size(); i++) {
+        exponent = -static_cast<double>(hamming_distance) / (sigma[i] * 2.0);
+        result += exp(exponent);
+    }
+    std::cout << "result: " << result << " hamming_distance: " << hamming_distance << " sigma: " << sigma[0]
+              << std::endl;
     result /= sigma.size();
     return result;
 }
@@ -231,9 +255,9 @@ double Generative_Quantum_Machine_Learning_Base::Gaussian_kernel(int x, int y) {
 @brief Call to calculate and save the values of the gaussian kernel needed for traing
 */
 void Generative_Quantum_Machine_Learning_Base::fill_lookup_table() {
-    gaussian_lookup_table = std::vector<double>(1<<qbit_num);
-    for (int idx1=0; idx1 < 1<<qbit_num; idx1++) {
-        gaussian_lookup_table[idx1] = Gaussian_kernel(idx1, 0);
+    gaussian_lookup_table = std::vector<double>(qbit_num + 1);
+    for (int idx = 0; idx < qbit_num + 1; idx++) {
+        gaussian_lookup_table[idx] = Gaussian_kernel(idx);
     }
 }
 
@@ -242,22 +266,20 @@ void Generative_Quantum_Machine_Learning_Base::fill_lookup_table() {
 @return The approximated value of the expectation value of the square of the distribution
 */
 double Generative_Quantum_Machine_Learning_Base::expectation_value_P_star_P_star_approx() {
-    double ev=0.0;
-    tbb::combinable<double> priv_partial_ev{[](){return 0.0;}};
-    tbb::parallel_for( tbb::blocked_range<int>(0, sample_size, 1024), [&](tbb::blocked_range<int> r) {
+    double ev = 0.0;
+    tbb::combinable<double> priv_partial_ev{[]() { return 0.0; }};
+    tbb::parallel_for(tbb::blocked_range<int>(0, sample_size, 1024), [&](tbb::blocked_range<int> r) {
         double& ev_local = priv_partial_ev.local();
-        for (int idx1=r.begin(); idx1<r.end(); idx1++) {
-            for (int idx2=0; idx2<sample_size; idx2++) {
+        for (int idx1 = r.begin(); idx1 < r.end(); idx1++) {
+            for (int idx2 = 0; idx2 < sample_size; idx2++) {
                 if (idx1 != idx2) {
                     ev_local += Gaussian_kernel(idx1, idx2);
                 }
             }
         }
     });
-    priv_partial_ev.combine_each([&ev](double a) {
-        ev += a;
-    });
-    ev /= sample_size*(sample_size-1);
+    priv_partial_ev.combine_each([&ev](double a) { ev += a; });
+    ev /= sample_size * (sample_size - 1);
     return ev;
 }
 
@@ -266,21 +288,46 @@ double Generative_Quantum_Machine_Learning_Base::expectation_value_P_star_P_star
 @return The calculated value of the expectation value of the square of the distribution
 */
 double Generative_Quantum_Machine_Learning_Base::expectation_value_P_star_P_star_exact() {
-    std::vector<double> correlation_result(1<<qbit_num, 1);
-    correlation_result = correlate_full_real(P_star, P_star);
 
-    double ev=0.0;
-    tbb::combinable<double> priv_partial_ev{[](){return 0.0;}};
-    tbb::parallel_for( tbb::blocked_range<int>(1, 1<<qbit_num, 1024), [&](tbb::blocked_range<int> r) {
+    const int N = 1 << qbit_num;
+
+    // For each XOR value d, we'll sum P(x) * P(x XOR d) for all x
+    // The Hamming distance is popcount(d)
+    double ev = 0.0;
+    tbb::combinable<double> priv_partial_ev{[]() { return 0.0; }};
+
+    // Iterate over all possible XOR values d (0 to N-1)
+    // For each d, find all pairs (x, y) where x XOR y = d
+    // Since y = x XOR d, we iterate over x and compute y
+    tbb::parallel_for(tbb::blocked_range<int>(0, N, 1024), [&](tbb::blocked_range<int> r) {
         double& ev_local = priv_partial_ev.local();
-        for (int idx=r.begin(); idx<r.end(); idx++) {
-            ev_local += correlation_result[(1<<qbit_num)-1-idx]*gaussian_lookup_table[idx]*2;
+
+        for (int d = r.begin(); d < r.end(); d++) {
+            // Calculate Hamming distance: popcount of XOR value
+            int hamming_dist = __builtin_popcount(d);
+
+            // Get kernel value for this Hamming distance
+            if (hamming_dist >= gaussian_lookup_table.size()) {
+                throw std::runtime_error("Hamming distance is greater than the size of the lookup table");
+            }
+            double kernel_val = gaussian_lookup_table[hamming_dist];
+
+            // Sum over all x: P(x) * P(x XOR d) * K(popcount(d))
+            // This captures all pairs (x, y) where x XOR y = d
+            double sum_pairs = 0.0;
+            for (int x = 0; x < N; x++) {
+                int y = x ^ d; // y such that x XOR y = d
+                if (y < N) {   // Ensure y is within bounds
+                    sum_pairs += P_star[x] * P_star[y];
+                }
+            }
+
+            ev_local += sum_pairs * kernel_val;
         }
     });
-    priv_partial_ev.combine_each([&ev](double a) {
-        ev += a;
-    });
-    ev += correlation_result[(1<<qbit_num)-1]*gaussian_lookup_table[0];
+
+    priv_partial_ev.combine_each([&ev](double a) { ev += a; });
+
     return ev;
 }
 
@@ -290,17 +337,18 @@ double Generative_Quantum_Machine_Learning_Base::expectation_value_P_star_P_star
 @return The calculated total variational distance of the distributions
 */
 double Generative_Quantum_Machine_Learning_Base::TV_of_the_distributions(Matrix& State_right) {
-    std::vector<double> P_theta(1<<qbit_num);
+    std::vector<double> P_theta(1 << qbit_num);
 
-    for (size_t x_idx=0; x_idx<State_right.size(); x_idx++){
-        P_theta[x_idx] = State_right[x_idx].real*State_right[x_idx].real +State_right[x_idx].imag*State_right[x_idx].imag;
+    for (size_t x_idx = 0; x_idx < State_right.size(); x_idx++) {
+        P_theta[x_idx] =
+            State_right[x_idx].real * State_right[x_idx].real + State_right[x_idx].imag * State_right[x_idx].imag;
     }
 
     double TV = 0.0;
-    for (int i=0; i<P_theta.size(); i++) {
-        TV += abs(P_theta[i]-P_star[i]);
+    for (int i = 0; i < P_theta.size(); i++) {
+        TV += abs(P_theta[i] - P_star[i]);
     }
-    return TV*0.5;
+    return TV * 0.5;
 }
 
 /**
@@ -309,17 +357,17 @@ double Generative_Quantum_Machine_Learning_Base::TV_of_the_distributions(Matrix&
 @param b second input array
 @return Returns with the correlation function.
 */
-std::vector<double> Generative_Quantum_Machine_Learning_Base::correlate_full_real( Matrix_real& a, Matrix_real& b) {
-    const size_t N = 1<<qbit_num;
-    const size_t M = 2 * N;           // FFT size (power of 2)
+std::vector<double> Generative_Quantum_Machine_Learning_Base::correlate_full_real(Matrix_real& a, Matrix_real& b) {
+    const size_t N = 1 << qbit_num;
+    const size_t M = 2 * N; // FFT size (power of 2)
 
     pocketfft::shape_t shape{M};
     pocketfft::stride_t strided(shape.size(), sizeof(double));
     pocketfft::stride_t stridec(shape.size(), sizeof(std::complex<double>));
 
     pocketfft::shape_t axes;
-    for (size_t i=0; i<shape.size(); ++i)
-      axes.push_back(i);
+    for (size_t i = 0; i < shape.size(); ++i)
+        axes.push_back(i);
 
     // Allocate real input and output arrays
     std::vector<double> A(M, 0.0), B(M, 0.0);
@@ -327,18 +375,18 @@ std::vector<double> Generative_Quantum_Machine_Learning_Base::correlate_full_rea
     // Copy inputs
     for (size_t i = 0; i < N; i++) {
         A[i] = a[i];
-        B[i] = b[N-1-i];
+        B[i] = b[N - 1 - i];
     }
 
     // Allocate complex freq arrays (FFTW r2c produces N+1 complex bins)
-    std::vector<std::complex<double>> FA(N+1), FB(N+1);
+    std::vector<std::complex<double>> FA(N + 1), FB(N + 1);
 
     // Forward FFTs
     pocketfft::r2c(shape, strided, stridec, axes, false, A.data(), FA.data(), 1.);
     pocketfft::r2c(shape, strided, stridec, axes, false, B.data(), FB.data(), 1.);
 
     // Multiply in frequency domain
-    tbb::parallel_for( tbb::blocked_range<int>(0, N+1, 1024), [&](tbb::blocked_range<int> r) {
+    tbb::parallel_for(tbb::blocked_range<int>(0, N + 1, 1024), [&](tbb::blocked_range<int> r) {
         for (int k = r.begin(); k < r.end(); k++) {
             // double reA = FA[k][0], imA = FA[k][1];
             // double reB = FB[k][0], imB = FB[k][1];
@@ -364,88 +412,102 @@ std::vector<double> Generative_Quantum_Machine_Learning_Base::correlate_full_rea
     return out;
 }
 
-
 /**
 @brief Call to evaluate the maximum mean discrepancy of the given distribution and the one created by our circuit
 @param State_right The state on the right for which the expectation value is evaluated. It is a column vector.
 @return The calculated mmd
 */
-double Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions_exact( Matrix& State_right ) {
+double Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions_exact(Matrix& State_right) {
     // If the ev of the P_star hasnt been evaluated we need to evaluate it
-    if (ev_P_star_P_star < 0 ) {
+    if (ev_P_star_P_star < 0) {
         ev_P_star_P_star = expectation_value_P_star_P_star_exact();
     }
 
     // We calculate the distribution created by our circuit at the given traing data points "we sample our distribution"
-    Matrix_real P_theta(1<<qbit_num, 1);
-    tbb::parallel_for( tbb::blocked_range<int>(0, 1<<qbit_num, 1024), [&](tbb::blocked_range<int> r) {
-        for (int idx=r.begin(); idx<r.end(); idx++) {
-            P_theta[idx] = State_right[idx].real*State_right[idx].real + State_right[idx].imag*State_right[idx].imag;
+    Matrix_real P_theta(1 << qbit_num, 1);
+    tbb::parallel_for(tbb::blocked_range<int>(0, 1 << qbit_num, 1024), [&](tbb::blocked_range<int> r) {
+        for (int idx = r.begin(); idx < r.end(); idx++) {
+            P_theta[idx] =
+                State_right[idx].real * State_right[idx].real + State_right[idx].imag * State_right[idx].imag;
         }
     });
 
-    int N = 1<<qbit_num;
-
-    int conv_size = 2*N;
-    std::vector<double> correlation_result_theta_theta(conv_size);
-    correlation_result_theta_theta = correlate_full_real(P_theta, P_theta);
-
-    std::vector<double> correlation_result_theta_star(conv_size);
-    correlation_result_theta_star = correlate_full_real(P_theta, P_star);
-
-    double ev_P_theta_P_theta = 0.0;
+    const int N = 1 << qbit_num;
     double ev_P_theta_P_star = 0.0;
+    double ev_P_theta_P_theta = 0.0;
 
-    tbb::combinable<double> priv_partial_ev_P_theta_P_theta{[](){return 0.0;}};
-    tbb::combinable<double> priv_partial_ev_P_theta_P_star{[](){return 0.0;}};
-    tbb::parallel_for( tbb::blocked_range<int>(1, N, 1024), [&](tbb::blocked_range<int> r) {
-        double& ev_P_theta_P_theta_local = priv_partial_ev_P_theta_P_theta.local();
+    tbb::combinable<double> priv_partial_ev_P_theta_P_star{[]() { return 0.0; }};
+    tbb::combinable<double> priv_partial_ev_P_theta_P_theta{[]() { return 0.0; }};
+
+    // Iterate over all possible XOR values d
+    tbb::parallel_for(tbb::blocked_range<int>(0, N, 1024), [&](tbb::blocked_range<int> r) {
         double& ev_P_theta_P_star_local = priv_partial_ev_P_theta_P_star.local();
-        for (int idx=r.begin(); idx < r.end(); idx++) {
-            ev_P_theta_P_theta_local += correlation_result_theta_theta[N-idx-1]*gaussian_lookup_table[idx]*2;
-            ev_P_theta_P_star_local += correlation_result_theta_star[N-idx-1]*gaussian_lookup_table[idx]
-                                    + correlation_result_theta_star[N+idx-1]*gaussian_lookup_table[idx];
+        double& ev_P_theta_P_theta_local = priv_partial_ev_P_theta_P_theta.local();
+
+        for (int d = r.begin(); d < r.end(); d++) {
+
+            // Sum P_theta(x) * P_star(x XOR d) for all x
+            double sum_pairs_P_theta_P_star = 0.0;
+            double sum_pairs_P_theta_P_theta = 0.0;
+
+            for (int x = 0; x < N; x++) {
+                int y = x ^ d;
+                if (y < N) {
+                    sum_pairs_P_theta_P_star += P_theta[x] * P_star[y];
+                    sum_pairs_P_theta_P_theta += P_theta[x] * P_theta[y];
+                }
+            }
+
+            int hamming_dist = __builtin_popcount(d);
+
+            if (hamming_dist >= gaussian_lookup_table.size()) {
+                throw std::runtime_error("Hamming distance is greater than the size of the lookup table");
+            }
+
+            double kernel_val = gaussian_lookup_table[hamming_dist];
+            ev_P_theta_P_star_local += sum_pairs_P_theta_P_star * kernel_val;
+            ev_P_theta_P_theta_local += sum_pairs_P_theta_P_theta * kernel_val;
         }
     });
-    priv_partial_ev_P_theta_P_theta.combine_each([&ev_P_theta_P_theta](double a) {
-        ev_P_theta_P_theta += a;
-    });
-    priv_partial_ev_P_theta_P_star.combine_each([&ev_P_theta_P_star](double a) {
-        ev_P_theta_P_star += a;
-    });
 
-    ev_P_theta_P_theta += correlation_result_theta_theta[N-1]*gaussian_lookup_table[0];
-    ev_P_theta_P_star += correlation_result_theta_star[N-1]*gaussian_lookup_table[0];
+    priv_partial_ev_P_theta_P_star.combine_each([&ev_P_theta_P_star](double a) { ev_P_theta_P_star += a; });
+    priv_partial_ev_P_theta_P_theta.combine_each([&ev_P_theta_P_theta](double a) { ev_P_theta_P_theta += a; });
 
     {
         tbb::spin_mutex::scoped_lock my_lock{my_mutex};
 
         number_of_iters++;
-        
     }
 
-    double result = ev_P_theta_P_theta + ev_P_star_P_star - 2*ev_P_theta_P_star;
+    /*
+    std::cout << "ev_P_theta_P_theta: " << ev_P_theta_P_theta << std::endl;
+    std::cout << "ev_P_star_P_star: " << ev_P_star_P_star << std::endl;
+    std::cout << "ev_P_theta_P_star: " << ev_P_theta_P_star << std::endl;
+    */
+    double result = ev_P_theta_P_theta + ev_P_star_P_star - 2.0 * ev_P_theta_P_star;
+
     return result;
 }
 
-
 /**
-@brief Call to evaluate the approximated maximum mean discrepancy of the given distribution and the one created by our circuit
+@brief Call to evaluate the approximated maximum mean discrepancy of the given distribution and the one created by our
+circuit
 @param State_right The state on the right for which the expectation value is evaluated. It is a column vector.
 @return The calculated mmd
 */
-double Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions_approx( Matrix& State_right ) {
+double Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions_approx(Matrix& State_right) {
 
     // If the ev of the P_star hasnt been evaluated we need to evaluate it
-    if (ev_P_star_P_star < 0 ) {
+    if (ev_P_star_P_star < 0) {
         ev_P_star_P_star = expectation_value_P_star_P_star_approx();
     }
 
     // We calculate the distribution created by our circuit at the given traing data points "we sample our distribution"
-    std::vector<double> P_theta(1<<qbit_num);
-    tbb::parallel_for( tbb::blocked_range<int>(0, 1<<qbit_num, 1024), [&](tbb::blocked_range<int> r) {
-        for (int idx=r.begin(); idx<r.end(); idx++) {
-            P_theta[idx] = State_right[idx].real*State_right[idx].real + State_right[idx].imag*State_right[idx].imag;
+    std::vector<double> P_theta(1 << qbit_num);
+    tbb::parallel_for(tbb::blocked_range<int>(0, 1 << qbit_num, 1024), [&](tbb::blocked_range<int> r) {
+        for (int idx = r.begin(); idx < r.end(); idx++) {
+            P_theta[idx] =
+                State_right[idx].real * State_right[idx].real + State_right[idx].imag * State_right[idx].imag;
         }
     });
 
@@ -454,58 +516,53 @@ double Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions_approx
     std::discrete_distribution<> dist(P_theta.begin(), P_theta.end());
 
     std::vector<int> theta_sample_indices(sample_size);
-    tbb::parallel_for( tbb::blocked_range<int>(0, sample_size, 1024), [&](tbb::blocked_range<int> r) {
-        for (int sample_idx=r.begin(); sample_idx < r.end(); sample_idx++) {
+    tbb::parallel_for(tbb::blocked_range<int>(0, sample_size, 1024), [&](tbb::blocked_range<int> r) {
+        for (int sample_idx = r.begin(); sample_idx < r.end(); sample_idx++) {
             theta_sample_indices[sample_idx] = dist(gen);
         }
     });
 
-
-    // Calculate the expectation values 
-    double ev_P_theta_P_theta   = 0.0;
-    double ev_P_theta_P_star    = 0.0;
-    tbb::combinable<double> priv_partial_ev_P_theta_P_theta{[](){return 0.0;}};
-    tbb::combinable<double> priv_partial_ev_P_theta_P_star{[](){return 0.0;}};
-    tbb::parallel_for( tbb::blocked_range2d<int>(0, sample_size, 0, sample_size), [&](tbb::blocked_range2d<int> r) {
+    // Calculate the expectation values
+    double ev_P_theta_P_theta = 0.0;
+    double ev_P_theta_P_star = 0.0;
+    tbb::combinable<double> priv_partial_ev_P_theta_P_theta{[]() { return 0.0; }};
+    tbb::combinable<double> priv_partial_ev_P_theta_P_star{[]() { return 0.0; }};
+    tbb::parallel_for(tbb::blocked_range2d<int>(0, sample_size, 0, sample_size), [&](tbb::blocked_range2d<int> r) {
         double& ev_P_theta_P_theta_local = priv_partial_ev_P_theta_P_theta.local();
         double& ev_P_theta_P_star_local = priv_partial_ev_P_theta_P_star.local();
-        for (int idx1=r.rows().begin(); idx1<r.rows().end(); idx1++) {
-            for (int idx2=r.cols().begin(); idx2<r.cols().end(); idx2++) {
+        for (int idx1 = r.rows().begin(); idx1 < r.rows().end(); idx1++) {
+            for (int idx2 = r.cols().begin(); idx2 < r.cols().end(); idx2++) {
                 if (use_lookup) {
                     if (idx1 != idx2) {
-                        ev_P_theta_P_theta_local += gaussian_lookup_table[abs(theta_sample_indices[idx1]-theta_sample_indices[idx2])];
+                        ev_P_theta_P_theta_local +=
+                            gaussian_lookup_table[abs(theta_sample_indices[idx1] - theta_sample_indices[idx2])];
                     }
-                    ev_P_theta_P_star_local += gaussian_lookup_table[abs(theta_sample_indices[idx1]-sample_indices[idx2])];
-                }
-                else {
+                    ev_P_theta_P_star_local +=
+                        gaussian_lookup_table[abs(theta_sample_indices[idx1] - sample_indices[idx2])];
+                } else {
                     if (idx1 != idx2) {
-                        ev_P_theta_P_theta_local += Gaussian_kernel(theta_sample_indices[idx1],theta_sample_indices[idx2]);
+                        ev_P_theta_P_theta_local +=
+                            Gaussian_kernel(theta_sample_indices[idx1], theta_sample_indices[idx2]);
                     }
                     ev_P_theta_P_star_local += Gaussian_kernel(theta_sample_indices[idx1], sample_indices[idx2]);
                 }
             }
         }
     });
-    priv_partial_ev_P_theta_P_theta.combine_each([&ev_P_theta_P_theta](double a) {
-        ev_P_theta_P_theta += a;
-    });
-    priv_partial_ev_P_theta_P_star.combine_each([&ev_P_theta_P_star](double a) {
-        ev_P_theta_P_star += a;
-    });
+    priv_partial_ev_P_theta_P_theta.combine_each([&ev_P_theta_P_theta](double a) { ev_P_theta_P_theta += a; });
+    priv_partial_ev_P_theta_P_star.combine_each([&ev_P_theta_P_star](double a) { ev_P_theta_P_star += a; });
 
-    ev_P_theta_P_theta /= sample_size*(sample_size-1);
-    ev_P_theta_P_star /= sample_size*sample_size;
+    ev_P_theta_P_theta /= sample_size * (sample_size - 1);
+    ev_P_theta_P_star /= sample_size * sample_size;
 
     {
         tbb::spin_mutex::scoped_lock my_lock{my_mutex};
 
         number_of_iters++;
-        
     }
-    double result = ev_P_theta_P_theta + ev_P_star_P_star - 2*ev_P_theta_P_star;
+    double result = ev_P_theta_P_theta + ev_P_star_P_star - 2 * ev_P_theta_P_star;
     return result;
 }
-
 
 /**
 @brief The optimization problem of the final optimization
@@ -513,11 +570,13 @@ double Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions_approx
 @param void_instance A void pointer pointing to the instance of the current class.
 @return Returns with the cost function. (zero if the qubits are desintangled.)
 */
-double Generative_Quantum_Machine_Learning_Base::optimization_problem_non_static(Matrix_real parameters, void* void_instance){
+double Generative_Quantum_Machine_Learning_Base::optimization_problem_non_static(Matrix_real parameters,
+                                                                                 void* void_instance) {
 
-    double MMD=0.0;
+    double MMD = 0.0;
 
-    Generative_Quantum_Machine_Learning_Base* instance = reinterpret_cast<Generative_Quantum_Machine_Learning_Base*>(void_instance);
+    Generative_Quantum_Machine_Learning_Base* instance =
+        reinterpret_cast<Generative_Quantum_Machine_Learning_Base*>(void_instance);
 
     Matrix State = instance->initial_state.copy();
 
@@ -527,7 +586,6 @@ double Generative_Quantum_Machine_Learning_Base::optimization_problem_non_static
     return MMD;
 }
 
-
 #ifdef __GROQ__
 /**
 @brief The optimization problem of the final optimization implemented to be run on Groq hardware
@@ -535,137 +593,127 @@ double Generative_Quantum_Machine_Learning_Base::optimization_problem_non_static
 @param chosen_device Indicate the device on which the state vector emulation is performed
 @return Returns with the cost function.
 */
-double Generative_Quantum_Machine_Learning_Base::optimization_problem_Groq(Matrix_real& parameters, int chosen_device)  {
-
-
+double Generative_Quantum_Machine_Learning_Base::optimization_problem_Groq(Matrix_real& parameters, int chosen_device) {
 
     Matrix State;
 
-
-    //tbb::tick_count t0_DFE = tbb::tick_count::now();
+    // tbb::tick_count t0_DFE = tbb::tick_count::now();
     std::vector<int> target_qbits;
     std::vector<int> control_qbits;
     std::vector<Matrix> u3_qbit;
     extract_gate_kernels_target_and_control_qubits(u3_qbit, target_qbits, control_qbits, parameters);
-        
 
     // initialize the initial state on the chip if it was not given
-    if ( initial_state.size() == 0 ) {
-        
-        Matrix State_zero(0,0);  
-        apply_to_groq_sv(accelerator_num, chosen_device, qbit_num, u3_qbit, target_qbits, control_qbits, State_zero, id); 
-            
+    if (initial_state.size() == 0) {
+
+        Matrix State_zero(0, 0);
+        apply_to_groq_sv(accelerator_num, chosen_device, qbit_num, u3_qbit, target_qbits, control_qbits, State_zero,
+                         id);
+
         State = State_zero;
-            
-    }
-    else {
-	
+
+    } else {
+
         State = initial_state.copy();
         // apply state transformation via the Groq chip
         apply_to_groq_sv(accelerator_num, chosen_device, qbit_num, u3_qbit, target_qbits, control_qbits, State, id);
-
-    }
-        
-        
-/*        
-    //////////////////////////////
-    Matrix State_copy = State.copy();
-
-
-    Decomposition_Base::apply_to(parameters, State_copy );
-
-
-    double diff = 0.0;
-    for( int64_t idx=0; idx<State_copy.size(); idx++ ) {
-
-        QGD_Complex16 element = State[idx];
-        QGD_Complex16 element_copy = State_copy[idx];
-        QGD_Complex16 element_diff;
-        element_diff.real = element.real - element_copy.real;
-        element_diff.imag = element.imag - element_copy.imag;
- 
-        double diff_increment = element_diff.real*element_diff.real + element_diff.imag*element_diff.imag;
-        diff = diff + diff_increment;
-    }
-       
-    std::cout << "Generative_Quantum_Machine_Learning_Base::apply_to checking diff: " << diff << std::endl;
-
-
-    if ( diff > 1e-4 ) {
-        std::string error("Groq and CPU results do not match");
-        throw(error);
     }
 
-    //////////////////////////////
-*/
+    /*
+        //////////////////////////////
+        Matrix State_copy = State.copy();
 
 
-	
+        Decomposition_Base::apply_to(parameters, State_copy );
+
+
+        double diff = 0.0;
+        for( int64_t idx=0; idx<State_copy.size(); idx++ ) {
+
+            QGD_Complex16 element = State[idx];
+            QGD_Complex16 element_copy = State_copy[idx];
+            QGD_Complex16 element_diff;
+            element_diff.real = element.real - element_copy.real;
+            element_diff.imag = element.imag - element_copy.imag;
+
+            double diff_increment = element_diff.real*element_diff.real + element_diff.imag*element_diff.imag;
+            diff = diff + diff_increment;
+        }
+
+        std::cout << "Generative_Quantum_Machine_Learning_Base::apply_to checking diff: " << diff << std::endl;
+
+
+        if ( diff > 1e-4 ) {
+            std::string error("Groq and CPU results do not match");
+            throw(error);
+        }
+
+        //////////////////////////////
+    */
+
     double MMD = (this->*MMD_of_the_distributions)(State);
-	
-    return MMD;
 
+    return MMD;
 }
 
 #endif
 
-
 /**
 @brief The optimization problem of the final optimization
-@param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
+@param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to
+the number of parameters in one sub-layer)
 @return Returns with the cost function. (zero if the qubits are desintangled.)
 */
-double Generative_Quantum_Machine_Learning_Base::optimization_problem(Matrix_real& parameters)  {
+double Generative_Quantum_Machine_Learning_Base::optimization_problem(Matrix_real& parameters) {
 
     Matrix State;
 
 #ifdef __GROQ__
-    if ( accelerator_num > 0 ) {
-    
-        
-        return optimization_problem_Groq( parameters, 0 );
-            
-    }
-    else {
+    if (accelerator_num > 0) {
+
+        return optimization_problem_Groq(parameters, 0);
+
+    } else {
 #endif
         // initialize the initial state if it was not given
-        if ( initial_state.size() == 0 ) {
+        if (initial_state.size() == 0) {
             initialize_zero_state();
         }
-	
+
         State = initial_state.copy();
         apply_to(parameters, State);
 
 #ifdef __GROQ__
     }
 #endif
-	
+
     double MMD = (this->*MMD_of_the_distributions)(State);
-	
+
     return MMD;
 }
 
-
 /**
-@brief Call to evaluate the gradient of the maximum mean discrepancy of the given distribution and the one created by our circuit
+@brief Call to evaluate the gradient of the maximum mean discrepancy of the given distribution and the one created by
+our circuit
 @param State The state for which the expectation value is evaluated. It is a column vector.
 @param State_deriv The derivative of the state for which the expectation value is evaluated. It is a column vector.
 @return The calculated mmd
 */
 double Generative_Quantum_Machine_Learning_Base::MMD_gradient(Matrix& State, Matrix& State_deriv) {
     // We calculate the distribution created by our circuit at the given traing data points "we sample our distribution"
-    Matrix_real P_theta(1<<qbit_num, 1);
-    Matrix_real P_theta_deriv(1<<qbit_num, 1);
-    tbb::parallel_for( tbb::blocked_range<int>(0, 1<<qbit_num, 1024), [&](tbb::blocked_range<int> r) {
-        for (int idx=r.begin(); idx<r.end(); idx++) {
-            P_theta[idx] = State[idx].real*State[idx].real + State[idx].imag*State[idx].imag;
-            P_theta_deriv[idx] = 2*(State_deriv[idx].real*State[idx].real - State_deriv[idx].imag*State[idx].imag);
+    Matrix_real P_theta(1 << qbit_num, 1);
+    Matrix_real P_theta_deriv(1 << qbit_num, 1);
+    tbb::parallel_for(tbb::blocked_range<int>(0, 1 << qbit_num, 1024), [&](tbb::blocked_range<int> r) {
+        for (int idx = r.begin(); idx < r.end(); idx++) {
+            P_theta[idx] = State[idx].real * State[idx].real + State[idx].imag * State[idx].imag;
+            P_theta_deriv[idx] =
+                2 * (State_deriv[idx].real * State[idx].real - State_deriv[idx].imag * State[idx].imag);
         }
     });
 
-    int N = 1<<qbit_num;
+    int N = 1 << qbit_num;
 
-    int conv_size = 2*N;
+    int conv_size = 2 * N;
     std::vector<double> correlation_result_theta_theta_deriv(conv_size);
     correlation_result_theta_theta_deriv = correlate_full_real(P_theta, P_theta_deriv);
 
@@ -675,41 +723,37 @@ double Generative_Quantum_Machine_Learning_Base::MMD_gradient(Matrix& State, Mat
     double ev_P_theta_P_theta_deriv = 0.0;
     double ev_P_theta_deriv_P_star = 0.0;
 
-    tbb::combinable<double> priv_partial_ev_P_theta_P_theta_deriv{[](){return 0.0;}};
-    tbb::combinable<double> priv_partial_ev_P_theta_deriv_P_star{[](){return 0.0;}};
-    tbb::parallel_for( tbb::blocked_range<int>(1, N, 1024), [&](tbb::blocked_range<int> r) {
+    tbb::combinable<double> priv_partial_ev_P_theta_P_theta_deriv{[]() { return 0.0; }};
+    tbb::combinable<double> priv_partial_ev_P_theta_deriv_P_star{[]() { return 0.0; }};
+    tbb::parallel_for(tbb::blocked_range<int>(1, N, 1024), [&](tbb::blocked_range<int> r) {
         double& ev_P_theta_P_theta_deriv_local = priv_partial_ev_P_theta_P_theta_deriv.local();
         double& ev_P_theta_deriv_P_star_local = priv_partial_ev_P_theta_deriv_P_star.local();
-        for (int idx=r.begin(); idx < r.end(); idx++) {
-            ev_P_theta_P_theta_deriv_local += correlation_result_theta_theta_deriv[N-idx-1]*gaussian_lookup_table[idx]
-                                    + correlation_result_theta_theta_deriv[N+idx-1]*gaussian_lookup_table[idx];
-            ev_P_theta_deriv_P_star_local += correlation_result_theta_deriv_star[N-idx-1]*gaussian_lookup_table[idx]
-                                    + correlation_result_theta_deriv_star[N+idx-1]*gaussian_lookup_table[idx];
+        for (int idx = r.begin(); idx < r.end(); idx++) {
+            ev_P_theta_P_theta_deriv_local +=
+                correlation_result_theta_theta_deriv[N - idx - 1] * gaussian_lookup_table[idx] +
+                correlation_result_theta_theta_deriv[N + idx - 1] * gaussian_lookup_table[idx];
+            ev_P_theta_deriv_P_star_local +=
+                correlation_result_theta_deriv_star[N - idx - 1] * gaussian_lookup_table[idx] +
+                correlation_result_theta_deriv_star[N + idx - 1] * gaussian_lookup_table[idx];
         }
     });
-    priv_partial_ev_P_theta_P_theta_deriv.combine_each([&ev_P_theta_P_theta_deriv](double a) {
-        ev_P_theta_P_theta_deriv += a;
-    });
-    priv_partial_ev_P_theta_deriv_P_star.combine_each([&ev_P_theta_deriv_P_star](double a) {
-        ev_P_theta_deriv_P_star += a;
-    });
+    priv_partial_ev_P_theta_P_theta_deriv.combine_each(
+        [&ev_P_theta_P_theta_deriv](double a) { ev_P_theta_P_theta_deriv += a; });
+    priv_partial_ev_P_theta_deriv_P_star.combine_each(
+        [&ev_P_theta_deriv_P_star](double a) { ev_P_theta_deriv_P_star += a; });
 
-    ev_P_theta_P_theta_deriv += correlation_result_theta_theta_deriv[N-1]*gaussian_lookup_table[0];
-    ev_P_theta_deriv_P_star += correlation_result_theta_deriv_star[N-1]*gaussian_lookup_table[0];
-
+    ev_P_theta_P_theta_deriv += correlation_result_theta_theta_deriv[N - 1] * gaussian_lookup_table[0];
+    ev_P_theta_deriv_P_star += correlation_result_theta_deriv_star[N - 1] * gaussian_lookup_table[0];
 
     {
         tbb::spin_mutex::scoped_lock my_lock{my_mutex};
 
         number_of_iters++;
-        
     }
 
-    double result = 2*ev_P_theta_P_theta_deriv - 2*ev_P_theta_deriv_P_star;
+    double result = 2 * ev_P_theta_P_theta_deriv - 2 * ev_P_theta_deriv_P_star;
     return result;
-
 }
-
 
 /**
 @brief Call to calculate both the cost function and the its gradient components.
@@ -718,12 +762,15 @@ double Generative_Quantum_Machine_Learning_Base::MMD_gradient(Matrix& State, Mat
 @param f0 The value of the cost function at x0.
 @param grad Array containing the calculated gradient components.
 */
-void Generative_Quantum_Machine_Learning_Base::optimization_problem_combined_non_static( Matrix_real parameters, void* void_instance, double* f0, Matrix_real& grad ) {
+void Generative_Quantum_Machine_Learning_Base::optimization_problem_combined_non_static(Matrix_real parameters,
+                                                                                        void* void_instance, double* f0,
+                                                                                        Matrix_real& grad) {
 
-    Generative_Quantum_Machine_Learning_Base* instance = reinterpret_cast<Generative_Quantum_Machine_Learning_Base*>(void_instance);
+    Generative_Quantum_Machine_Learning_Base* instance =
+        reinterpret_cast<Generative_Quantum_Machine_Learning_Base*>(void_instance);
 
     // initialize the initial state if it was not given
-    if ( instance->initial_state.size() == 0 ) {
+    if (instance->initial_state.size() == 0) {
         instance->initialize_zero_state();
     }
 
@@ -739,46 +786,44 @@ void Generative_Quantum_Machine_Learning_Base::optimization_problem_combined_non
     int parallel = get_parallel_configuration();
 
     tbb::parallel_invoke(
-        [&]{
+        [&] {
             State = instance->initial_state.copy();
             instance->apply_to(parameters, State);
             *f0 = (instance->*MMD_of_the_distributions)(State);
-            
         },
-        [&]{
+        [&] {
             Matrix State_loc = instance->initial_state.copy();
 
-            State_deriv = instance->apply_derivate_to( parameters, State_loc, parallel );
+            State_deriv = instance->apply_derivate_to(parameters, State_loc, parallel);
             State_loc.release_data();
-    });
+        });
 
-    tbb::parallel_for( tbb::blocked_range<int>(0,parameter_num_loc,2), [&](tbb::blocked_range<int> r) {
-        for (int idx=r.begin(); idx<r.end(); ++idx) { 
+    tbb::parallel_for(tbb::blocked_range<int>(0, parameter_num_loc, 2), [&](tbb::blocked_range<int> r) {
+        for (int idx = r.begin(); idx < r.end(); ++idx) {
             grad[idx] = instance->MMD_gradient(State, State_deriv[idx]);
         }
     });
-    
+
     /*
     double delta = 0.0000001;
-    
+
     tbb::parallel_for( tbb::blocked_range<int>(0,parameter_num_loc,1), [&](tbb::blocked_range<int> r) {
-        for (int idx=r.begin(); idx<r.end(); ++idx) { 
+        for (int idx=r.begin(); idx<r.end(); ++idx) {
             Matrix_real param_tmp = parameters.copy();
             param_tmp[idx] += delta;
-            
+
             Matrix State = instance->initial_state.copy();
             instance->apply_to(param_tmp, State);
             double f_loc = instance->Expectation_value_of_energy_real(State, State);
-            
-            
+
+
             grad[idx] = (f_loc-*f0)/delta;
         }
-    });    
+    });
 
 */
     return;
 }
-
 
 /**
 @brief Call to calculate both the cost function and the its gradient components.
@@ -786,14 +831,12 @@ void Generative_Quantum_Machine_Learning_Base::optimization_problem_combined_non
 @param f0 The value of the cost function at x0.
 @param grad Array containing the calculated gradient components.
 */
-void Generative_Quantum_Machine_Learning_Base::optimization_problem_combined( Matrix_real parameters, double* f0, Matrix_real grad )  {
+void Generative_Quantum_Machine_Learning_Base::optimization_problem_combined(Matrix_real parameters, double* f0,
+                                                                             Matrix_real grad) {
 
-    optimization_problem_combined_non_static( parameters, this, f0, grad );
+    optimization_problem_combined_non_static(parameters, this, f0, grad);
     return;
 }
-
-
-
 
 /**
 @brief Calculate the derivative of the cost function with respect to the free parameters.
@@ -801,281 +844,262 @@ void Generative_Quantum_Machine_Learning_Base::optimization_problem_combined( Ma
 @param void_instance A void pointer pointing to the instance of the current class.
 @param grad Array containing the calculated gradient components.
 */
-void Generative_Quantum_Machine_Learning_Base::optimization_problem_grad_vqe( Matrix_real parameters, void* void_instance, Matrix_real& grad ) {
+void Generative_Quantum_Machine_Learning_Base::optimization_problem_grad_vqe(Matrix_real parameters,
+                                                                             void* void_instance, Matrix_real& grad) {
 
     double f0;
-    Generative_Quantum_Machine_Learning_Base* instance = reinterpret_cast<Generative_Quantum_Machine_Learning_Base*>(void_instance);
+    Generative_Quantum_Machine_Learning_Base* instance =
+        reinterpret_cast<Generative_Quantum_Machine_Learning_Base*>(void_instance);
     instance->optimization_problem_combined_non_static(parameters, void_instance, &f0, grad);
     return;
-
 }
-
-
-
 
 /**
 @brief The optimization problem of the final optimization
-@param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
+@param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to
+the number of parameters in one sub-layer)
 @return Returns with the cost function. (zero if the qubits are desintangled.)
 */
-double Generative_Quantum_Machine_Learning_Base::optimization_problem( double* parameters ) {
+double Generative_Quantum_Machine_Learning_Base::optimization_problem(double* parameters) {
 
     // get the transformed matrix with the gates in the list
-    Matrix_real parameters_mtx(parameters, 1, parameter_num );
-    
-    return optimization_problem( parameters_mtx );
+    Matrix_real parameters_mtx(parameters, 1, parameter_num);
 
-
+    return optimization_problem(parameters_mtx);
 }
 
 /**
-@brief Call to print out into a file the current cost function and the second Rényi entropy on the subsystem made of qubits 0 and 1, and the TV distance.
+@brief Call to print out into a file the current cost function and the second Rényi entropy on the subsystem made of
+qubits 0 and 1, and the TV distance.
 @param current_minimum The current minimum (to avoid calculating it again
 @param parameters Parameters to be used in the calculations (For Rényi entropy)
 */
-void Generative_Quantum_Machine_Learning_Base::export_current_cost_fnc(double current_minimum, Matrix_real& parameters){
+void Generative_Quantum_Machine_Learning_Base::export_current_cost_fnc(double current_minimum,
+                                                                       Matrix_real& parameters) {
 
     FILE* pFile;
     std::string filename("costfuncs_entropy_and_tv.txt");
-    
-    if (project_name != ""){filename = project_name + "_" + filename;}
 
-        const char* c_filename = filename.c_str();
-	pFile = fopen(c_filename, "a");
-
-        if (pFile==NULL) {
-            fputs ("File error",stderr); 
-            std::string error("Cannot open file.");
-            throw error;
+    if (project_name != "") {
+        filename = project_name + "_" + filename;
     }
 
-    Matrix input_state(Power_of_2(qbit_num),1);
+    const char* c_filename = filename.c_str();
+    pFile = fopen(c_filename, "a");
 
-    std::uniform_int_distribution<> distrib(0, qbit_num-2); 
+    if (pFile == NULL) {
+        fputs("File error", stderr);
+        std::string error("Cannot open file.");
+        throw error;
+    }
 
-    memset(input_state.get_data(), 0.0, (input_state.size()*2)*sizeof(double) ); 
+    Matrix input_state(Power_of_2(qbit_num), 1);
+
+    std::uniform_int_distribution<> distrib(0, qbit_num - 2);
+
+    memset(input_state.get_data(), 0.0, (input_state.size() * 2) * sizeof(double));
     input_state[0].real = 1.0;
 
-    matrix_base<int> qbit_sublist(1,2);
-    qbit_sublist[0] = 0;//distrib(gen);
-    qbit_sublist[1] = 1;//qbit_sublist[0]+1;
+    matrix_base<int> qbit_sublist(1, 2);
+    qbit_sublist[0] = 0; // distrib(gen);
+    qbit_sublist[1] = 1; // qbit_sublist[0]+1;
 
     double renyi_entropy = get_second_Renyi_entropy(parameters, input_state, qbit_sublist);
 
     // initialize the initial state if it was not given
-    if ( initial_state.size() == 0 ) {
+    if (initial_state.size() == 0) {
         initialize_zero_state();
     }
-	
+
     Matrix State = initial_state.copy();
     apply_to(parameters, State);
 
     double tv_distance = TV_of_the_distributions(State);
 
-    fprintf(pFile,"%i\t%f\t%f\t%f\n", (int)number_of_iters, current_minimum, renyi_entropy, tv_distance);
+    fprintf(pFile, "%i\t%f\t%f\t%f\n", (int)number_of_iters, current_minimum, renyi_entropy, tv_distance);
     fclose(pFile);
 
     return;
 }
 
-
-
 /**
 @brief Initialize the state used in the quantun circuit. All qubits are initialized to state 0
 */
-void Generative_Quantum_Machine_Learning_Base::initialize_zero_state( ) {
+void Generative_Quantum_Machine_Learning_Base::initialize_zero_state() {
 
-    initial_state = Matrix( 1 << qbit_num , 1);
-
+    initial_state = Matrix(1 << qbit_num, 1);
 
     initial_state[0].real = 1.0;
     initial_state[0].imag = 0.0;
-    memset(initial_state.get_data()+2, 0.0, (initial_state.size()*2-2)*sizeof(double) );      
+    memset(initial_state.get_data() + 2, 0.0, (initial_state.size() * 2 - 2) * sizeof(double));
 
     return;
 }
-
-
-
-
 
 /**
 @brief Call to set the ansatz type. Currently imp
 @param ansatz_in The ansatz type . Possible values: "HEA" (hardware efficient ansatz with U3 and CNOT gates).
-*/ 
-void Generative_Quantum_Machine_Learning_Base::set_ansatz(ansatz_type ansatz_in){
+*/
+void Generative_Quantum_Machine_Learning_Base::set_ansatz(ansatz_type ansatz_in) {
 
     ansatz = ansatz_in;
-    
+
     return;
 }
-
-
-
-
 
 /**
 @brief Call to generate the circuit ansatz
 @param layers The number of layers. The depth of the generated circuit is 2*layers+1 (U3-CNOT-U3-CNOT...CNOT)
 @param inner_blocks The number of U3-CNOT repetition within a single layer
 */
-void Generative_Quantum_Machine_Learning_Base::generate_circuit( int layers, int inner_blocks ) {
+void Generative_Quantum_Machine_Learning_Base::generate_circuit(int layers, int inner_blocks) {
 
+    switch (ansatz) {
 
-    switch (ansatz){
-    
-        case HEA:
-        {
+    case HEA: {
 
-            release_gates();
+        release_gates();
 
-            if ( qbit_num < 2 ) {
-                std::string error("Variational_Quantum_Eigensolver_Base::generate_initial_circuit: number of qubits should be at least 2");
-                throw error;
-            }
-
-            for (int layer_idx=0; layer_idx<layers ;layer_idx++){
-
-                for( int idx=0; idx<inner_blocks; idx++) {
-                    add_u3(1);                          
-                    add_u3(0);
-                    add_cnot(1,0);
-                }
-
-
-                for (int control_qbit=1; control_qbit<qbit_num-1; control_qbit=control_qbit+2){
-                    if (control_qbit+2<qbit_num){
-
-                        for( int idx=0; idx<inner_blocks; idx++) {
-                            add_u3(control_qbit+1);
-                            add_u3(control_qbit+2); 
-                        
-                            add_cnot(control_qbit+2,control_qbit+1);
-                        }
-
-                    }
-
-                    for( int idx=0; idx<inner_blocks; idx++) {
-                        add_u3(control_qbit+1);  
-                        add_u3(control_qbit);  
-
-                        add_cnot(control_qbit+1,control_qbit);
-
-                    }
-
-                }
-            }
-
-
-            return;
-        }
-        case HEA_ZYZ:
-        {
-
-            release_gates();
-
-            if ( qbit_num < 2 ) {
-                std::string error("Variational_Quantum_Eigensolver_Base::generate_initial_circuit: number of qubits should be at least 2");
-                throw error;
-            }
-
-            for (int layer_idx=0; layer_idx<layers ;layer_idx++){
-
-                for( int idx=0; idx<inner_blocks; idx++) {
-                    Gates_block* block_1 = new Gates_block( qbit_num );
-                    Gates_block* block_2 = new Gates_block( qbit_num );
- 
-                    // single qubit gates in a ablock are then merged into a single gate kernel.
-                    block_1->add_rz(1);
-                    block_1->add_ry(1);
-                    block_1->add_rz(1);     
-
-                    add_gate( block_1 );                           
-
-                    block_2->add_rz(0);
-                    block_2->add_ry(0);
-                    block_2->add_rz(0);         
-
-                    add_gate( block_2 );           
-                
-                    add_cnot(1,0);
-                }
-
-                for (int control_qbit=1; control_qbit<qbit_num-1; control_qbit=control_qbit+2){
-                    if (control_qbit+2<qbit_num){
-
-                        for( int idx=0; idx<inner_blocks; idx++) {
-
-                            Gates_block* block_1 = new Gates_block( qbit_num );
-                            Gates_block* block_2 = new Gates_block( qbit_num );
-
-                            block_1->add_rz(control_qbit+1);
-                            block_1->add_ry(control_qbit+1);
-                            block_1->add_rz(control_qbit+1); 
-                            add_gate( block_1 );                                
-
-                            block_2->add_rz(control_qbit+2);
-                            block_2->add_ry(control_qbit+2);
-                            block_2->add_rz(control_qbit+2);  
-                            add_gate( block_2 );                              
-
-                            add_cnot(control_qbit+2,control_qbit+1);
-                        }
-
-                    }
-
-                    for( int idx=0; idx<inner_blocks; idx++) {
-
-                        Gates_block* block_1 = new Gates_block( qbit_num );
-                        Gates_block* block_2 = new Gates_block( qbit_num );
-
-                        block_1->add_rz(control_qbit+1);
-                        block_1->add_ry(control_qbit+1);
-                        block_1->add_rz(control_qbit+1); 
-                        add_gate( block_1 );                      
-
-                        block_2->add_rz(control_qbit);
-                        block_2->add_ry(control_qbit);
-                        block_2->add_rz(control_qbit);     
-                        add_gate( block_2 );                  
-
-                        add_cnot(control_qbit+1,control_qbit);
-                    }
-
-                }
-            }
-
-            return;
-        }        
-
-        case QCMRF:
-        {
-            int num_cliques = cliques.size();
-            if (cliques.size() == 0) {
-                std::string error("Variational_Quantum_Eigensolver_Base::generate_initial_circuit: input the cliques for using QCMRF ansatz");
-                throw error;
-            }
-            release_gates();
-            for (int qbit_idx=0; qbit_idx < qbit_num; qbit_idx++) {
-                add_h(qbit_idx);
-            }
-
-            std::vector<std::vector<int>> all_subsets;
-            for (int clique_idx = 0; clique_idx < num_cliques; clique_idx++) {
-                int clique_size = cliques[clique_idx].size();
-                std::vector<int> subset;
-                generate_clique_circuit(0, cliques[clique_idx], all_subsets, subset);
-            }
-            for (int qbit_idx=0; qbit_idx < qbit_num; qbit_idx++) {
-                add_u3(qbit_idx);
-            }
-            return;
-        }
-        default:
-            std::string error("Generative_Quantum_Machine_Learning_Base::generate_initial_circuit: ansatz not implemented");
+        if (qbit_num < 2) {
+            std::string error("Variational_Quantum_Eigensolver_Base::generate_initial_circuit: number of qubits should "
+                              "be at least 2");
             throw error;
+        }
+
+        for (int layer_idx = 0; layer_idx < layers; layer_idx++) {
+
+            for (int idx = 0; idx < inner_blocks; idx++) {
+                add_u3(1);
+                add_u3(0);
+                add_cnot(1, 0);
+            }
+
+            for (int control_qbit = 1; control_qbit < qbit_num - 1; control_qbit = control_qbit + 2) {
+                if (control_qbit + 2 < qbit_num) {
+
+                    for (int idx = 0; idx < inner_blocks; idx++) {
+                        add_u3(control_qbit + 1);
+                        add_u3(control_qbit + 2);
+
+                        add_cnot(control_qbit + 2, control_qbit + 1);
+                    }
+                }
+
+                for (int idx = 0; idx < inner_blocks; idx++) {
+                    add_u3(control_qbit + 1);
+                    add_u3(control_qbit);
+
+                    add_cnot(control_qbit + 1, control_qbit);
+                }
+            }
+        }
+
+        return;
+    }
+    case HEA_ZYZ: {
+
+        release_gates();
+
+        if (qbit_num < 2) {
+            std::string error("Variational_Quantum_Eigensolver_Base::generate_initial_circuit: number of qubits should "
+                              "be at least 2");
+            throw error;
+        }
+
+        for (int layer_idx = 0; layer_idx < layers; layer_idx++) {
+
+            for (int idx = 0; idx < inner_blocks; idx++) {
+                Gates_block* block_1 = new Gates_block(qbit_num);
+                Gates_block* block_2 = new Gates_block(qbit_num);
+
+                // single qubit gates in a ablock are then merged into a single gate kernel.
+                block_1->add_rz(1);
+                block_1->add_ry(1);
+                block_1->add_rz(1);
+
+                add_gate(block_1);
+
+                block_2->add_rz(0);
+                block_2->add_ry(0);
+                block_2->add_rz(0);
+
+                add_gate(block_2);
+
+                add_cnot(1, 0);
+            }
+
+            for (int control_qbit = 1; control_qbit < qbit_num - 1; control_qbit = control_qbit + 2) {
+                if (control_qbit + 2 < qbit_num) {
+
+                    for (int idx = 0; idx < inner_blocks; idx++) {
+
+                        Gates_block* block_1 = new Gates_block(qbit_num);
+                        Gates_block* block_2 = new Gates_block(qbit_num);
+
+                        block_1->add_rz(control_qbit + 1);
+                        block_1->add_ry(control_qbit + 1);
+                        block_1->add_rz(control_qbit + 1);
+                        add_gate(block_1);
+
+                        block_2->add_rz(control_qbit + 2);
+                        block_2->add_ry(control_qbit + 2);
+                        block_2->add_rz(control_qbit + 2);
+                        add_gate(block_2);
+
+                        add_cnot(control_qbit + 2, control_qbit + 1);
+                    }
+                }
+
+                for (int idx = 0; idx < inner_blocks; idx++) {
+
+                    Gates_block* block_1 = new Gates_block(qbit_num);
+                    Gates_block* block_2 = new Gates_block(qbit_num);
+
+                    block_1->add_rz(control_qbit + 1);
+                    block_1->add_ry(control_qbit + 1);
+                    block_1->add_rz(control_qbit + 1);
+                    add_gate(block_1);
+
+                    block_2->add_rz(control_qbit);
+                    block_2->add_ry(control_qbit);
+                    block_2->add_rz(control_qbit);
+                    add_gate(block_2);
+
+                    add_cnot(control_qbit + 1, control_qbit);
+                }
+            }
+        }
+
+        return;
     }
 
+    case QCMRF: {
+        int num_cliques = cliques.size();
+        if (cliques.size() == 0) {
+            std::string error("Variational_Quantum_Eigensolver_Base::generate_initial_circuit: input the cliques for "
+                              "using QCMRF ansatz");
+            throw error;
+        }
+        release_gates();
+        for (int qbit_idx = 0; qbit_idx < qbit_num; qbit_idx++) {
+            add_h(qbit_idx);
+        }
+
+        std::vector<std::vector<int>> all_subsets;
+        for (int clique_idx = 0; clique_idx < num_cliques; clique_idx++) {
+            int clique_size = cliques[clique_idx].size();
+            std::vector<int> subset;
+            generate_clique_circuit(0, cliques[clique_idx], all_subsets, subset);
+        }
+        for (int qbit_idx = 0; qbit_idx < qbit_num; qbit_idx++) {
+            add_u3(qbit_idx);
+        }
+        return;
+    }
+    default:
+        std::string error("Generative_Quantum_Machine_Learning_Base::generate_initial_circuit: ansatz not implemented");
+        throw error;
+    }
 }
 
 /**
@@ -1083,12 +1107,12 @@ void Generative_Quantum_Machine_Learning_Base::generate_circuit( int layers, int
 @param qbits The qbits the gate operates on. The depth of the generated circuit is 2*number of qbits
 */
 void Generative_Quantum_Machine_Learning_Base::MultyRZ(std::vector<int>& qbits) {
-    for (int idx=0; idx<qbits.size()-1; idx++) {
-        add_cnot(qbits[idx+1], qbits[idx]);
+    for (int idx = 0; idx < qbits.size() - 1; idx++) {
+        add_cnot(qbits[idx + 1], qbits[idx]);
     }
-    add_rz(qbits[qbits.size()-1]);
-    for (int idx=qbits.size()-1; idx>0; idx--) {
-        add_cnot(qbits[idx], qbits[idx-1]);
+    add_rz(qbits[qbits.size() - 1]);
+    for (int idx = qbits.size() - 1; idx > 0; idx--) {
+        add_cnot(qbits[idx], qbits[idx - 1]);
     }
 }
 
@@ -1098,7 +1122,9 @@ void Generative_Quantum_Machine_Learning_Base::MultyRZ(std::vector<int>& qbits) 
 @param res The qbits for previously generated gates to avoid duplication
 @param subset Temporary variable for storing subsets.
 */
-void Generative_Quantum_Machine_Learning_Base::generate_clique_circuit(int i, std::vector<int>& arr, std::vector<std::vector<int>>& res, std::vector<int>& subset) {
+void Generative_Quantum_Machine_Learning_Base::generate_clique_circuit(int i, std::vector<int>& arr,
+                                                                       std::vector<std::vector<int>>& res,
+                                                                       std::vector<int>& subset) {
     if (i == arr.size()) {
         if (subset.size() != 0) {
             if (std::find(res.begin(), res.end(), subset) == res.end()) {
@@ -1110,69 +1136,59 @@ void Generative_Quantum_Machine_Learning_Base::generate_clique_circuit(int i, st
     }
 
     subset.push_back(arr[i]);
-    generate_clique_circuit(i+1, arr, res, subset);
+    generate_clique_circuit(i + 1, arr, res, subset);
 
     subset.pop_back();
-    generate_clique_circuit(i+1, arr, res, subset);
+    generate_clique_circuit(i + 1, arr, res, subset);
 }
 
-void 
-Generative_Quantum_Machine_Learning_Base::set_gate_structure( std::string filename ) {
+void Generative_Quantum_Machine_Learning_Base::set_gate_structure(std::string filename) {
 
     release_gates();
     Matrix_real optimized_parameters_mtx_tmp;
     Gates_block* gate_structure_tmp = import_gate_list_from_binary(optimized_parameters_mtx_tmp, filename);
 
-    if ( gates.size() > 0 ) {
-        gate_structure_tmp->combine( static_cast<Gates_block*>(this) );
+    if (gates.size() > 0) {
+        gate_structure_tmp->combine(static_cast<Gates_block*>(this));
 
         release_gates();
-        combine( gate_structure_tmp );
+        combine(gate_structure_tmp);
 
-
-        Matrix_real optimized_parameters_mtx_tmp2( 1, optimized_parameters_mtx_tmp.size() + optimized_parameters_mtx.size() );
-        memcpy( optimized_parameters_mtx_tmp2.get_data(), optimized_parameters_mtx_tmp.get_data(), optimized_parameters_mtx_tmp.size()*sizeof(double) );
-        memcpy( optimized_parameters_mtx_tmp2.get_data()+optimized_parameters_mtx_tmp.size(), optimized_parameters_mtx.get_data(), optimized_parameters_mtx.size()*sizeof(double) );
+        Matrix_real optimized_parameters_mtx_tmp2(1, optimized_parameters_mtx_tmp.size() +
+                                                         optimized_parameters_mtx.size());
+        memcpy(optimized_parameters_mtx_tmp2.get_data(), optimized_parameters_mtx_tmp.get_data(),
+               optimized_parameters_mtx_tmp.size() * sizeof(double));
+        memcpy(optimized_parameters_mtx_tmp2.get_data() + optimized_parameters_mtx_tmp.size(),
+               optimized_parameters_mtx.get_data(), optimized_parameters_mtx.size() * sizeof(double));
         optimized_parameters_mtx = optimized_parameters_mtx_tmp2;
-    }
-    else {
-        combine( gate_structure_tmp );
+    } else {
+        combine(gate_structure_tmp);
         optimized_parameters_mtx = optimized_parameters_mtx_tmp;
-            
+
         std::stringstream sstream;
         // get the number of gates used in the decomposition
         std::map<std::string, int>&& gate_nums = get_gate_nums();
-    	
-        for( auto it=gate_nums.begin(); it != gate_nums.end(); it++ ) {
+
+        for (auto it = gate_nums.begin(); it != gate_nums.end(); it++) {
             sstream << it->second << " " << it->first << " gates" << std::endl;
-        } 
-        print(sstream, 1);	
+        }
+        print(sstream, 1);
     }
-
 }
-
-
-
 
 /**
 @brief Call to set the initial quantum state in the GQML iterations
 @param initial_state_in A vector containing the amplitudes of the initial state.
 */
-void Generative_Quantum_Machine_Learning_Base::set_initial_state( Matrix initial_state_in ) {
-
-
+void Generative_Quantum_Machine_Learning_Base::set_initial_state(Matrix initial_state_in) {
 
     // check the size of the input state
-    if ( initial_state_in.size() != 1 << qbit_num ) {
-        std::string error("Variational_Quantum_Eigensolver_Base::set_initial_state: teh number of elements in the input state does not match with the number of qubits.");
-        throw error;   
+    if (initial_state_in.size() != 1 << qbit_num) {
+        std::string error("Variational_Quantum_Eigensolver_Base::set_initial_state: teh number of elements in the "
+                          "input state does not match with the number of qubits.");
+        throw error;
     }
 
-    initial_state = Matrix( 1 << qbit_num, 1 );
-    memcpy( initial_state.get_data(), initial_state_in.get_data(), initial_state_in.size()*sizeof( QGD_Complex16 ) );
-
+    initial_state = Matrix(1 << qbit_num, 1);
+    memcpy(initial_state.get_data(), initial_state_in.get_data(), initial_state_in.size() * sizeof(QGD_Complex16));
 }
-
-
-
-
