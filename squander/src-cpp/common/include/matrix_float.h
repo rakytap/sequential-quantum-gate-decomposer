@@ -20,8 +20,8 @@ limitations under the License.
     \brief Header file of single-precision complex array storage with automatic and thread safe reference counting.
 */
 
-#ifndef ENABLE_FLOAT32_MATRIX
-  #error "matrix_float.h requires ENABLE_FLOAT32_MATRIX. Compile with -DENABLE_FLOAT32_MATRIX"
+#ifndef ENABLE_FLOAT32
+  #error "matrix_float.h requires ENABLE_FLOAT32. Compile with -DENABLE_FLOAT32"
 #endif
 
 #ifndef MATRIX_FLOAT_H

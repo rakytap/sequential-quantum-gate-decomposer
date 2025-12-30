@@ -23,7 +23,7 @@ limitations under the License.
 
 #include "matrix.h"
 
-#ifdef ENABLE_FLOAT32_MATRIX
+#ifdef ENABLE_FLOAT32
 #include "matrix_float.h"
 
 /**

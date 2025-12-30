@@ -82,14 +82,14 @@ void Matrix_T<ComplexType>::print_matrix() const {
 
 // Explicit instantiation
 template class Matrix_T<QGD_Complex16>;
-#ifdef ENABLE_FLOAT32_MATRIX
+#ifdef ENABLE_FLOAT32
 template class Matrix_T<QGD_Complex8>;
 #endif
 
 // Verify size after instantiation
 static_assert(sizeof(Matrix_T<QGD_Complex16>) == CACHELINE,
               "Matrix_T<QGD_Complex16> size must equal exactly one CACHELINE");
-#ifdef ENABLE_FLOAT32_MATRIX
+#ifdef ENABLE_FLOAT32
 static_assert(sizeof(Matrix_T<QGD_Complex8>) == CACHELINE,
               "Matrix_T<QGD_Complex8> size must equal exactly one CACHELINE");
 #endif

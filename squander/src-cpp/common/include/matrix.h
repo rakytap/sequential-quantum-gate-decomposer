@@ -30,7 +30,7 @@ limitations under the License.
 
 extern template class Matrix_T<QGD_Complex16>;
 
-#ifdef ENABLE_FLOAT32_MATRIX
+#ifdef ENABLE_FLOAT32
 class Matrix_float;
 #endif
 
@@ -60,7 +60,7 @@ public:
         return Matrix(Matrix_T<QGD_Complex16>::copy());
     }
 
-    #ifdef ENABLE_FLOAT32_MATRIX
+    #ifdef ENABLE_FLOAT32
     /**
     @brief Convert to single precision
     @return Matrix_float with converted data

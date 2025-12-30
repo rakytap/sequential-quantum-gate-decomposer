@@ -66,7 +66,7 @@ endif()
 #enable test target
 enable_testing()
 
-option(ENABLE_FLOAT32_MATRIX "Enable float32 matrix support (experimental)" ON)
+option(ENABLE_FLOAT32 "Enable float32 matrix support (experimental)" ON)
 
 if(SKBUILD)
     message(STATUS "The project is built using scikit-build")
@@ -391,9 +391,9 @@ else()
 endif()
 
 # Float32 matrix support
-if(ENABLE_FLOAT32_MATRIX)
-  list(APPEND CXX_FLAGS_DEBUG "-DENABLE_FLOAT32_MATRIX")
-  list(APPEND CXX_FLAGS_RELEASE "-DENABLE_FLOAT32_MATRIX")
+if(ENABLE_FLOAT32)
+  list(APPEND CXX_FLAGS_DEBUG "-DENABLE_FLOAT32")
+  list(APPEND CXX_FLAGS_RELEASE "-DENABLE_FLOAT32")
 endif()
 
 # checking for AVX/AVX2 support
@@ -793,7 +793,7 @@ list(APPEND qgd_files
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/random_unitary/Random_Orthogonal.cpp
 )
 
-if(ENABLE_FLOAT32_MATRIX)
+if(ENABLE_FLOAT32)
   list(APPEND qgd_files ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/matrix_float.cpp)
 endif()
 
