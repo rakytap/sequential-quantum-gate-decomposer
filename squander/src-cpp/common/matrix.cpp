@@ -27,6 +27,10 @@ limitations under the License.
 #include "tbb/tbb.h"
 #include <math.h>
 
+#ifdef ENABLE_FLOAT32_MATRIX
+#include "matrix_float.h"
+#endif
+
 
 
 /**
@@ -170,6 +174,23 @@ Matrix::print_matrix() const {
 
 }
 
-
-
+#ifdef ENABLE_FLOAT32_MATRIX
+/**
+@brief Convert to single precision
+@return MatrixFloat with converted data
+*/
+MatrixFloat Matrix::to_float32() const {
+    MatrixFloat ret(rows, cols, stride);
+    for (int row = 0; row < rows; row++) {
+        for (int col = 0; col < cols; col++) {
+            int idx = row * stride + col;
+            ret.data[idx].real = static_cast<float>(data[idx].real);
+            ret.data[idx].imag = static_cast<float>(data[idx].imag);
+        }
+    }
+    if (is_conjugated()) ret.conjugate();
+    if (is_transposed()) ret.transpose();
+    return ret;
+}
+#endif
 

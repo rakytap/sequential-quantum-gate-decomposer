@@ -6,12 +6,20 @@ add_test(decomposition_test decomposition_test ...)
 add_test(custom_gate_structure_test custom_gate_structure_test ...)
 add_test(apply_kernel_test apply_kernel_test ...)
 
+if(ENABLE_FLOAT32_MATRIX)
+  add_test(NAME MatrixFloatTests COMMAND test_matrix_float)
+endif()
+
 
 # Add executable called "decomposition_test" that is built from the source files
 # "decomposition_test.cpp". The extensions are automatically found.
 add_executable (decomposition_test decomposition_test.cpp)
 add_executable (custom_gate_structure_test custom_gate_structure_test.cpp)
 add_executable(apply_kernel_test apply_kernel_test.cpp)
+
+if(ENABLE_FLOAT32_MATRIX)
+  add_executable(test_matrix_float test_matrix_float.cpp)
+endif()
 
 
 target_include_directories(decomposition_test PRIVATE
@@ -62,4 +70,16 @@ target_link_libraries(apply_kernel_test
                         ${TBB_LIB}
                         ${BLAS_LIBRARIES}
                         ${GSL_LIBS})
+
+if(ENABLE_FLOAT32_MATRIX)
+  target_include_directories(test_matrix_float PRIVATE
+                              ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/include
+                              ${EXTRA_INCLUDES})
+
+  target_link_libraries(test_matrix_float
+                          qgd
+                          ${TBBMALLOC_LIB}
+                          ${TBBMALLOC_PROXY_LIB}
+                          ${TBB_LIB})
+endif()
 

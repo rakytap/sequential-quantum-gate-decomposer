@@ -32,6 +32,10 @@ limitations under the License.
     \brief Header file matrix storing complex types.
 */
 
+#ifdef ENABLE_FLOAT32_MATRIX
+class MatrixFloat;  // Forward declaration
+#endif
+
 /**
 @brief Class to store data of complex arrays and its properties. Compatible with the Picasso numpy interface.
 */
@@ -122,6 +126,15 @@ bool isnan();
 */
 void print_matrix() const;
 
+#ifdef ENABLE_FLOAT32_MATRIX
+/**
+@brief Convert to single precision
+@return MatrixFloat with converted data
+@throws std::bad_alloc if memory allocation fails
+@note Values outside [-FLT_MAX, FLT_MAX] saturate to infinity per IEEE 754
+*/
+MatrixFloat to_float32() const;
+#endif
 
 }; //matrix
 
