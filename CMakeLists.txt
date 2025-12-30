@@ -66,7 +66,7 @@ endif()
 #enable test target
 enable_testing()
 
-option(ENABLE_FLOAT32_MATRIX "Enable float32 matrix support (experimental)" OFF)
+option(ENABLE_FLOAT32_MATRIX "Enable float32 matrix support (experimental)" ON)
 
 if(SKBUILD)
     message(STATUS "The project is built using scikit-build")
