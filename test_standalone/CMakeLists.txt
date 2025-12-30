@@ -5,9 +5,10 @@
 add_test(decomposition_test decomposition_test ...)
 add_test(custom_gate_structure_test custom_gate_structure_test ...)
 add_test(apply_kernel_test apply_kernel_test ...)
+add_test(matrix_test matrix_test ...)
 
 if(ENABLE_FLOAT32_MATRIX)
-  add_test(NAME MatrixFloatTests COMMAND test_matrix_float)
+  add_test(matrix_float_test matrix_float_test ...)
 endif()
 
 
@@ -16,9 +17,10 @@ endif()
 add_executable (decomposition_test decomposition_test.cpp)
 add_executable (custom_gate_structure_test custom_gate_structure_test.cpp)
 add_executable(apply_kernel_test apply_kernel_test.cpp)
+add_executable(matrix_test matrix_test.cpp)
 
 if(ENABLE_FLOAT32_MATRIX)
-  add_executable(test_matrix_float test_matrix_float.cpp)
+  add_executable(matrix_float_test matrix_float_test.cpp)
 endif()
 
 
@@ -46,6 +48,10 @@ target_include_directories(apply_kernel_test PRIVATE
                             ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/kernels/include
                             ${EXTRA_INCLUDES})
 
+target_include_directories(matrix_test PRIVATE
+                            ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/include
+                            ${EXTRA_INCLUDES})
+
 # Link the executable to the qgd library. Since the qgd library has
 # public include directories we will use those link directories when building
 # decomposition_test
@@ -71,12 +77,18 @@ target_link_libraries(apply_kernel_test
                         ${BLAS_LIBRARIES}
                         ${GSL_LIBS})
 
+target_link_libraries(matrix_test
+                        qgd
+                        ${TBBMALLOC_LIB}
+                        ${TBBMALLOC_PROXY_LIB}
+                        ${TBB_LIB})
+
 if(ENABLE_FLOAT32_MATRIX)
-  target_include_directories(test_matrix_float PRIVATE
+  target_include_directories(matrix_float_test PRIVATE
                               ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/include
                               ${EXTRA_INCLUDES})
 
-  target_link_libraries(test_matrix_float
+  target_link_libraries(matrix_float_test
                           qgd
                           ${TBBMALLOC_LIB}
                           ${TBBMALLOC_PROXY_LIB}

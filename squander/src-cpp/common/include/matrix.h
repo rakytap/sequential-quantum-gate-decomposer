@@ -25,122 +25,58 @@ limitations under the License.
 #define matrix_H
 
 #include "matrix_base.hpp"
-#include <cmath>
+#include "matrix_template.hpp"
+#include <type_traits>
 
-
-/*! \file matrix.h
-    \brief Header file matrix storing complex types.
-*/
+extern template class Matrix_T<QGD_Complex16>;
 
 #ifdef ENABLE_FLOAT32_MATRIX
-class MatrixFloat;  // Forward declaration
+class Matrix_float;
 #endif
 
 /**
-@brief Class to store data of complex arrays and its properties. Compatible with the Picasso numpy interface.
+@brief Double-precision complex matrix (float64). Class to store data of complex arrays and its properties. Compatible with the Picasso numpy interface.
 */
-class Matrix : public matrix_base<QGD_Complex16> {
-
-    /// padding class object to cache line borders
-    char padding[CACHELINE-48];
-
+class Matrix : public Matrix_T<QGD_Complex16> {
 public:
+    using Matrix_T<QGD_Complex16>::Matrix_T;
 
-/**
-@brief Default constructor of the class.
-@return Returns with the instance of the class.
-*/
-Matrix();
+    explicit Matrix(Matrix_T<QGD_Complex16>&& base) noexcept
+        : Matrix_T<QGD_Complex16>(std::move(base)) {}
 
-/**
-@brief Constructor of the class. By default the created class instance would not be owner of the stored data.
-@param data_in The pointer pointing to the data
-@param rows_in The number of rows in the stored matrix
-@param cols_in The number of columns in the stored matrix
-@return Returns with the instance of the class.
-*/
-Matrix( QGD_Complex16* data_in, int rows_in, int cols_in);
+    Matrix(const Matrix&) = default;
+    Matrix(Matrix&&) noexcept = default;
+    Matrix& operator=(const Matrix&) = default;
+    Matrix& operator=(Matrix&&) noexcept = default;
+    ~Matrix() = default;
 
+    /**
+    @brief Call to create a copy of the matrix
+    @return Returns with the instance of the class.
+    */
+    Matrix copy() const {
+        return Matrix(Matrix_T<QGD_Complex16>::copy());
+    }
 
-/**
-@brief Constructor of the class. By default the created class instance would not be owner of the stored data.
-@param data_in The pointer pointing to the data
-@param rows_in The number of rows in the stored matrix
-@param cols_in The number of columns in the stored matrix
-@param stride_in The column stride of the matrix array (The array elements in one row are a_0, a_1, ... a_{cols-1}, 0, 0, 0, 0. The number of zeros is stride-cols)
-@return Returns with the instance of the class.
-*/
-Matrix( QGD_Complex16* data_in, int rows_in, int cols_in, int stride_in);
+    #ifdef ENABLE_FLOAT32_MATRIX
+    /**
+    @brief Convert to single precision
+    @return Matrix_float with converted data
+    @throws std::bad_alloc if memory allocation fails
+    @note Values outside [-FLT_MAX, FLT_MAX] saturate to infinity per IEEE 754
+    */
+    Matrix_float to_float32() const;
+    #endif
+};
 
+// ABI compatibility check
+static_assert(sizeof(Matrix) == sizeof(Matrix_T<QGD_Complex16>),
+              "ABI: Matrix size mismatch");
 
-/**
-@brief Constructor of the class. Allocates data for matrix rows_in times cols_in. By default the created instance would be the owner of the stored data.
-@param rows_in The number of rows in the stored matrix
-@param cols_in The number of columns in the stored matrix
-@return Returns with the instance of the class.
-*/
-Matrix( int rows_in, int cols_in);
+// Compile-time type checks
+static_assert(sizeof(QGD_Complex16) == 16, "QGD_Complex16 must be 16 bytes");
+static_assert(std::is_standard_layout<QGD_Complex16>::value &&
+              std::is_trivial<QGD_Complex16>::value,
+              "QGD_Complex16 must be standard layout and trivial");
 
-
-/**
-@brief Constructor of the class. Allocates data for matrix rows_in times cols_in. By default the created instance would be the owner of the stored data.
-@param rows_in The number of rows in the stored matrix
-@param cols_in The number of columns in the stored matrix
-@param stride_in The column stride of the matrix array (The array elements in one row are a_0, a_1, ... a_{cols-1}, 0, 0, 0, 0. The number of zeros is stride-cols)
-@return Returns with the instance of the class.
-*/
-Matrix( int rows_in, int cols_in, int stride_in);
-
-
-
-/**
-@brief Copy constructor of the class. The new instance shares the stored memory with the input matrix. (Needed for TBB calls)
-@param An instance of class matrix to be copied.
-*/
-Matrix(const Matrix &in);
-
-/**
-@brief Assignment operator of the class.
-@param mtx An instance of class Matrix to be assigned.
-@return Returns with a reference to the instance of the class.
-*/
-Matrix& operator=(const Matrix &mtx);
-
-/**
-@brief Call to create a copy of the matrix
-@return Returns with the instance of the class.
-*/
-Matrix copy();
-
-
-/**
-@brief Call to check the array for NaN entries.
-@return Returns with true if the array has at least one NaN entry.
-*/
-bool isnan();
-
-
-
-/**
-@brief Call to prints the stored matrix on the standard output
-*/
-void print_matrix() const;
-
-#ifdef ENABLE_FLOAT32_MATRIX
-/**
-@brief Convert to single precision
-@return MatrixFloat with converted data
-@throws std::bad_alloc if memory allocation fails
-@note Values outside [-FLT_MAX, FLT_MAX] saturate to infinity per IEEE 754
-*/
-MatrixFloat to_float32() const;
-#endif
-
-}; //matrix
-
-
-
-
-
-
-#endif
+#endif // MATRIX_H

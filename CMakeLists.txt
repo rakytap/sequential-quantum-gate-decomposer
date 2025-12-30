@@ -712,6 +712,7 @@ list(APPEND qgd_files
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/config_element.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/dot.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/matrix.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/matrix_template.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/matrix_real.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/matrix_sparse.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/logging.cpp
