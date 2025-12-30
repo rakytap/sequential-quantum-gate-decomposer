@@ -41,6 +41,8 @@ class Matrix : public Matrix_T<QGD_Complex16> {
 public:
     using Matrix_T<QGD_Complex16>::Matrix_T;
 
+    Matrix() = default;
+
     explicit Matrix(Matrix_T<QGD_Complex16>&& base) noexcept
         : Matrix_T<QGD_Complex16>(std::move(base)) {}
 

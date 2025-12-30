@@ -46,6 +46,8 @@ class Matrix_float : public Matrix_T<QGD_Complex8> {
 public:
     using Matrix_T<QGD_Complex8>::Matrix_T;
 
+    Matrix_float() = default;
+
     explicit Matrix_float(Matrix_T<QGD_Complex8>&& base) noexcept
         : Matrix_T<QGD_Complex8>(std::move(base)) {}
 
