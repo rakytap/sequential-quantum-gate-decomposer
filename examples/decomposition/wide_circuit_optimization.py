@@ -27,9 +27,21 @@ from squander import Qiskit_IO
 import time
 from squander import Circuit
 import numpy as np
+from qiskit import transpile
+def generate_star_topology(num_qubits):
+    return [(0, i) for i in range(1, num_qubits)]
+def extract_two_qubit_gate_count(gate_nums_dict):
+
+    # List of two-qubit gate names
+    two_qubit_gates = ['CNOT', 'CZ', 'CU', 'CH', 'SYC', 'CRY', 'CRZ', 'CRX', 'CP', 'SWAP', 'CSWAP']
+    
+    total_two_qubit = 0
+    for gate_name in two_qubit_gates:
+        total_two_qubit += gate_nums_dict.get(gate_name, 0)
+    return total_two_qubit
 if __name__ == '__main__':
 
-
+    use_qiskit_sabre = False
     config = {  
             'strategy': "TreeSearch", 
             'test_subcircuits': True,
@@ -37,29 +49,32 @@ if __name__ == '__main__':
             'max_partition_size': 3,
     }
 
-    filename = "examples/partitioning/qasm_samples/heisenberg-16-20.qasm"
+    filename = "benchmarks/qfast/5q/vqe.qasm"
     start_time = time.time()
 
     # load the circuit from a file
-    circ, parameters = utils.qasm_to_squander_circuit(filename)
-
+    circ_orig, parameters_orig = utils.qasm_to_squander_circuit(filename)
+    N = circ_orig.get_Qbit_Num()
     # instantiate the object for optimizing wide circuits
     wide_circuit_optimizer = Wide_Circuit_Optimization.qgd_Wide_Circuit_Optimization( config )
 
     # run circuti optimization
-    circ_flat, parameters = wide_circuit_optimizer.OptimizeWideCircuit( circ, parameters, True )
+    circ_flat, parameters = wide_circuit_optimizer.OptimizeWideCircuit( circ_orig, parameters_orig, True )
 
-    config['topology'] = [
-    (0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7),
-    (8, 9), (8, 10), (8, 11), (8, 12), (8, 13), (8, 14), (8, 15),
-    (0, 8),
-    ]
-    wide_circuit_optimizer = Wide_Circuit_Optimization.qgd_Wide_Circuit_Optimization( config )
+    config['topology'] = generate_star_topology(N)
     circo = Qiskit_IO.get_Qiskit_Circuit(circ_flat.get_Flat_Circuit(),parameters)
-    # run circuti optimization
-    circ, parameters = Qiskit_IO.convert_Qiskit_to_Squander(circo)
-    wide_circuit_optimizer.OptimizeWideCircuit( circ, parameters, True )
-
+    if use_qiskit_sabre:
+        coupling_map = [[i,j] for i,j in config['topology']]
+        circuit_qiskit_sabre = transpile(circo, coupling_map=coupling_map)
+        circ, parameters = Qiskit_IO.convert_Qiskit_to_Squander(circuit_qiskit_sabre)
+        config['routed']= True
+        wide_circuit_optimizer = Wide_Circuit_Optimization.qgd_Wide_Circuit_Optimization( config )
+    else:
+        wide_circuit_optimizer = Wide_Circuit_Optimization.qgd_Wide_Circuit_Optimization( config )
+        # run circuti optimization
+        circ, parameters = Qiskit_IO.convert_Qiskit_to_Squander(circo)
+    circ, parameters = wide_circuit_optimizer.OptimizeWideCircuit( circ, parameters, True )
+    print(f"Two qubit gate count: {extract_two_qubit_gate_count(circ.get_Gate_Nums())}")
     print("--- %s seconds elapsed during optimization ---" % (time.time() - start_time))
 
 
