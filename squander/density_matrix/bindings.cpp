@@ -1,7 +1,7 @@
 /*
 Copyright 2025 SQUANDER Contributors
 
-pybind11 Bindings for Density Matrix Module
+pybind11 Bindings for Density Matrix Module - Approach B Implementation
 */
 
 #include <pybind11/complex.h>
@@ -10,12 +10,14 @@ pybind11 Bindings for Density Matrix Module
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "Gate.h"
-#include "noisy_circuit.h"
 #include "density_matrix.h"
+#include "density_operation.h"
+#include "gate_operation.h"
 #include "matrix.h"
 #include "matrix_real.h"
 #include "noise_channel.h"
+#include "noise_operation.h"
+#include "noisy_circuit.h"
 
 namespace py = pybind11;
 using namespace squander::density;
@@ -24,9 +26,6 @@ using namespace squander::density;
 // NumPy <-> DensityMatrix conversion helpers
 // ===================================================================
 
-/**
- * @brief Convert NumPy array to DensityMatrix
- */
 DensityMatrix numpy_to_density_matrix(py::array_t<std::complex<double>> arr) {
   auto buf = arr.request();
 
@@ -70,19 +69,14 @@ DensityMatrix numpy_to_density_matrix(py::array_t<std::complex<double>> arr) {
   return rho;
 }
 
-/**
- * @brief Convert DensityMatrix to NumPy array
- */
 py::array_t<std::complex<double>>
 density_matrix_to_numpy(const DensityMatrix &rho) {
   int dim = rho.get_dim();
 
-  // Create NumPy array
   py::array_t<std::complex<double>> result({dim, dim});
   auto buf = result.request();
   auto *ptr = static_cast<std::complex<double> *>(buf.ptr);
 
-  // Copy data
   for (int i = 0; i < dim; i++) {
     for (int j = 0; j < dim; j++) {
       QGD_Complex16 val = rho(i, j);
@@ -99,10 +93,12 @@ density_matrix_to_numpy(const DensityMatrix &rho) {
 
 PYBIND11_MODULE(_density_matrix_cpp, m) {
   m.doc() = R"pbdoc(
-        SQUANDER Density Matrix Module - C++ Backend
+        SQUANDER Density Matrix Module - C++ Backend (Approach B)
         
-        Provides high-performance density matrix simulation for mixed quantum states.
-        This is the C++ backend - use the Python wrapper in squander.density_matrix.
+        High-performance density matrix simulation with:
+        - Optimized local kernel application (O(4^N) per gate)
+        - Unified interface for gates and noise channels
+        - Support for parametric noise
     )pbdoc";
 
   // ===============================================================
@@ -112,10 +108,12 @@ PYBIND11_MODULE(_density_matrix_cpp, m) {
   py::class_<DensityMatrix>(m, "DensityMatrix", R"pbdoc(
         Quantum density matrix ρ for mixed-state representation.
         
-        Inherits memory management from matrix_base, adds quantum-specific operations.
+        Features:
+        - Automatic memory management
+        - Optimized local unitary application
+        - Quantum properties (purity, entropy, eigenvalues)
     )pbdoc")
 
-      // Constructors
       .def(py::init<int>(), py::arg("qbit_num"),
            "Create density matrix for n qubits (initialized to |0⟩⟨0|)")
 
@@ -128,7 +126,6 @@ PYBIND11_MODULE(_density_matrix_cpp, m) {
 
              int dim = buf.shape[0];
 
-             // Create Matrix wrapper for state vector
              Matrix state_vec(dim, 1);
              auto *src = static_cast<std::complex<double> *>(buf.ptr);
              for (int i = 0; i < dim; i++) {
@@ -140,13 +137,9 @@ PYBIND11_MODULE(_density_matrix_cpp, m) {
            }),
            py::arg("state_vector"), "Create from state vector: ρ = |ψ⟩⟨ψ|")
 
-      // Properties
-      .def_property_readonly("qbit_num", &DensityMatrix::get_qbit_num,
-                             "Number of qubits")
-      .def_property_readonly("dim", &DensityMatrix::get_dim,
-                             "Matrix dimension (2^qbit_num)")
+      .def_property_readonly("qbit_num", &DensityMatrix::get_qbit_num)
+      .def_property_readonly("dim", &DensityMatrix::get_dim)
 
-      // Methods
       .def(
           "trace",
           [](const DensityMatrix &self) {
@@ -156,13 +149,10 @@ PYBIND11_MODULE(_density_matrix_cpp, m) {
           "Calculate trace: Tr(ρ)")
 
       .def("purity", &DensityMatrix::purity, "Calculate purity: Tr(ρ²)")
-
       .def("entropy", &DensityMatrix::entropy,
            "von Neumann entropy: S(ρ) = -Tr(ρ log₂ ρ)")
-
       .def("is_valid", &DensityMatrix::is_valid, py::arg("tol") = 1e-10,
-           "Check if valid density matrix (Hermitian, Tr=1, positive)")
-
+           "Check if valid density matrix")
       .def("eigenvalues", &DensityMatrix::eigenvalues,
            "Get eigenvalues (sorted descending)")
 
@@ -170,17 +160,11 @@ PYBIND11_MODULE(_density_matrix_cpp, m) {
           "apply_unitary",
           [](DensityMatrix &self, py::array_t<std::complex<double>> U) {
             auto buf = U.request();
-
-            if (buf.ndim != 2) {
-              throw std::runtime_error("Unitary must be 2D array");
-            }
-            if (buf.shape[0] != buf.shape[1]) {
-              throw std::runtime_error("Unitary must be square");
+            if (buf.ndim != 2 || buf.shape[0] != buf.shape[1]) {
+              throw std::runtime_error("Unitary must be square 2D array");
             }
 
             int dim = buf.shape[0];
-
-            // Create Matrix wrapper
             Matrix U_mat(dim, dim);
             auto *src = static_cast<std::complex<double> *>(buf.ptr);
             for (int i = 0; i < dim * dim; i++) {
@@ -192,17 +176,34 @@ PYBIND11_MODULE(_density_matrix_cpp, m) {
           },
           py::arg("U"), "Apply unitary: ρ → UρU†")
 
+      .def(
+          "apply_single_qubit_unitary",
+          [](DensityMatrix &self, py::array_t<std::complex<double>> u,
+             int target) {
+            auto buf = u.request();
+            if (buf.ndim != 2 || buf.shape[0] != 2 || buf.shape[1] != 2) {
+              throw std::runtime_error("Kernel must be 2x2");
+            }
+
+            Matrix u_mat(2, 2);
+            auto *src = static_cast<std::complex<double> *>(buf.ptr);
+            for (int i = 0; i < 4; i++) {
+              u_mat.get_data()[i].real = src[i].real();
+              u_mat.get_data()[i].imag = src[i].imag();
+            }
+
+            self.apply_single_qubit_unitary(u_mat, target);
+          },
+          py::arg("u_2x2"), py::arg("target_qbit"),
+          "Apply single-qubit unitary using optimized local kernel")
+
       .def("partial_trace", &DensityMatrix::partial_trace, py::arg("trace_out"),
            "Partial trace over specified qubits")
-
       .def("clone", &DensityMatrix::clone, "Create a deep copy")
 
-      // Static methods
       .def_static("maximally_mixed", &DensityMatrix::maximally_mixed,
-                  py::arg("qbit_num"),
-                  "Create maximally mixed state: ρ = I/2^n")
+                  py::arg("qbit_num"), "Create maximally mixed state: ρ = I/2^n")
 
-      // NumPy conversion
       .def(
           "to_numpy",
           [](const DensityMatrix &self) {
@@ -217,16 +218,25 @@ PYBIND11_MODULE(_density_matrix_cpp, m) {
           },
           py::arg("array"), "Create from NumPy array")
 
-      // Python special methods
-      .def("__repr__",
-           [](const DensityMatrix &self) {
-             return "<DensityMatrix: " + std::to_string(self.get_qbit_num()) +
-                    " qubits, purity=" + std::to_string(self.purity()) + ">";
-           })
+      .def("__repr__", [](const DensityMatrix &self) {
+        return "<DensityMatrix: " + std::to_string(self.get_qbit_num()) +
+               " qubits, purity=" + std::to_string(self.purity()) + ">";
+      });
 
-      .def("__str__", [](const DensityMatrix &self) {
-        return "DensityMatrix(" + std::to_string(self.get_qbit_num()) +
-               " qubits)";
+  // ===============================================================
+  // OperationInfo struct
+  // ===============================================================
+
+  py::class_<NoisyCircuit::OperationInfo>(m, "OperationInfo",
+                                          "Information about a circuit operation")
+      .def_readonly("name", &NoisyCircuit::OperationInfo::name)
+      .def_readonly("is_unitary", &NoisyCircuit::OperationInfo::is_unitary)
+      .def_readonly("param_count", &NoisyCircuit::OperationInfo::param_count)
+      .def_readonly("param_start", &NoisyCircuit::OperationInfo::param_start)
+      .def("__repr__", [](const NoisyCircuit::OperationInfo &self) {
+        return "<OperationInfo: " + self.name +
+               (self.is_unitary ? " (gate)" : " (noise)") +
+               ", params=" + std::to_string(self.param_count) + ">";
       });
 
   // ===============================================================
@@ -234,70 +244,132 @@ PYBIND11_MODULE(_density_matrix_cpp, m) {
   // ===============================================================
 
   py::class_<NoisyCircuit>(m, "NoisyCircuit", R"pbdoc(
-        Circuit for density matrix evolution.
+        Noisy quantum circuit for density matrix simulation.
         
-        Provides same interface as qgd_Circuit but for density matrices.
+        Supports unitary gates and noise channels with unified interface.
+        Uses optimized local kernel application for O(4^N) per-gate performance.
+        
+        Example:
+            circuit = NoisyCircuit(2)
+            circuit.add_H(0)
+            circuit.add_CNOT(1, 0)
+            circuit.add_depolarizing(2, error_rate=0.01)
+            circuit.add_RZ(0)
+            circuit.add_phase_damping(0)  # Parametric
+            
+            rho = DensityMatrix(2)
+            params = np.array([0.5, 0.02])  # RZ angle, phase damping λ
+            circuit.apply_to(params, rho)
     )pbdoc")
 
       .def(py::init<int>(), py::arg("qbit_num"),
            "Create empty circuit for n qubits")
 
-      // Single-qubit gates
-      .def("add_H", &NoisyCircuit::add_H, py::arg("target"),
-           "Add Hadamard gate")
-      .def("add_X", &NoisyCircuit::add_X, py::arg("target"),
-           "Add Pauli-X gate")
-      .def("add_Y", &NoisyCircuit::add_Y, py::arg("target"),
-           "Add Pauli-Y gate")
-      .def("add_Z", &NoisyCircuit::add_Z, py::arg("target"),
-           "Add Pauli-Z gate")
+      // Single-qubit constant gates
+      .def("add_H", &NoisyCircuit::add_H, py::arg("target"), "Add Hadamard gate")
+      .def("add_X", &NoisyCircuit::add_X, py::arg("target"), "Add Pauli-X gate")
+      .def("add_Y", &NoisyCircuit::add_Y, py::arg("target"), "Add Pauli-Y gate")
+      .def("add_Z", &NoisyCircuit::add_Z, py::arg("target"), "Add Pauli-Z gate")
       .def("add_S", &NoisyCircuit::add_S, py::arg("target"), "Add S gate")
-      .def("add_Sdg", &NoisyCircuit::add_Sdg, py::arg("target"),
-           "Add S† gate")
+      .def("add_Sdg", &NoisyCircuit::add_Sdg, py::arg("target"), "Add S† gate")
       .def("add_T", &NoisyCircuit::add_T, py::arg("target"), "Add T gate")
-      .def("add_Tdg", &NoisyCircuit::add_Tdg, py::arg("target"),
-           "Add T† gate")
+      .def("add_Tdg", &NoisyCircuit::add_Tdg, py::arg("target"), "Add T† gate")
       .def("add_SX", &NoisyCircuit::add_SX, py::arg("target"), "Add √X gate")
 
-      // Rotation gates
+      // Single-qubit parametric gates
       .def("add_RX", &NoisyCircuit::add_RX, py::arg("target"),
-           "Add RX rotation gate")
+           "Add RX rotation (1 param)")
       .def("add_RY", &NoisyCircuit::add_RY, py::arg("target"),
-           "Add RY rotation gate")
+           "Add RY rotation (1 param)")
       .def("add_RZ", &NoisyCircuit::add_RZ, py::arg("target"),
-           "Add RZ rotation gate")
-      .def("add_U1", &NoisyCircuit::add_U1, py::arg("target"), "Add U1 gate")
-      .def("add_U2", &NoisyCircuit::add_U2, py::arg("target"), "Add U2 gate")
-      .def("add_U3", &NoisyCircuit::add_U3, py::arg("target"), "Add U3 gate")
+           "Add RZ rotation (1 param)")
+      .def("add_U1", &NoisyCircuit::add_U1, py::arg("target"),
+           "Add U1 gate (1 param)")
+      .def("add_U2", &NoisyCircuit::add_U2, py::arg("target"),
+           "Add U2 gate (2 params)")
+      .def("add_U3", &NoisyCircuit::add_U3, py::arg("target"),
+           "Add U3 gate (3 params)")
 
-      // Two-qubit gates
+      // Two-qubit constant gates
       .def("add_CNOT", &NoisyCircuit::add_CNOT, py::arg("target"),
            py::arg("control"), "Add CNOT gate")
       .def("add_CZ", &NoisyCircuit::add_CZ, py::arg("target"),
            py::arg("control"), "Add CZ gate")
       .def("add_CH", &NoisyCircuit::add_CH, py::arg("target"),
            py::arg("control"), "Add CH gate")
-      .def("add_CRY", &NoisyCircuit::add_CRY, py::arg("target"),
-           py::arg("control"), "Add CRY gate")
-      .def("add_CRZ", &NoisyCircuit::add_CRZ, py::arg("target"),
-           py::arg("control"), "Add CRZ gate")
-      .def("add_CRX", &NoisyCircuit::add_CRX, py::arg("target"),
-           py::arg("control"), "Add CRX gate")
-      .def("add_CP", &NoisyCircuit::add_CP, py::arg("target"),
-           py::arg("control"), "Add CP (controlled-phase) gate")
 
-      // Circuit application
+      // Two-qubit parametric gates
+      .def("add_CRY", &NoisyCircuit::add_CRY, py::arg("target"),
+           py::arg("control"), "Add CRY gate (1 param)")
+      .def("add_CRZ", &NoisyCircuit::add_CRZ, py::arg("target"),
+           py::arg("control"), "Add CRZ gate (1 param)")
+      .def("add_CRX", &NoisyCircuit::add_CRX, py::arg("target"),
+           py::arg("control"), "Add CRX gate (1 param)")
+      .def("add_CP", &NoisyCircuit::add_CP, py::arg("target"),
+           py::arg("control"), "Add CP gate (1 param)")
+
+      // Noise channels
+      .def(
+          "add_depolarizing",
+          [](NoisyCircuit &self, int qbit_num, py::object p) {
+            if (p.is_none()) {
+              self.add_depolarizing(qbit_num);
+            } else {
+              self.add_depolarizing(qbit_num, p.cast<double>());
+            }
+          },
+          py::arg("qbit_num"), py::arg("error_rate") = py::none(),
+          R"pbdoc(
+            Add depolarizing noise: ρ → (1-p)ρ + p·I/2^n
+            
+            Args:
+                qbit_num: Number of qubits the noise acts on
+                error_rate: Fixed p, or None for parametric (1 param)
+          )pbdoc")
+
+      .def(
+          "add_amplitude_damping",
+          [](NoisyCircuit &self, int target, py::object gamma) {
+            if (gamma.is_none()) {
+              self.add_amplitude_damping(target);
+            } else {
+              self.add_amplitude_damping(target, gamma.cast<double>());
+            }
+          },
+          py::arg("target"), py::arg("gamma") = py::none(),
+          R"pbdoc(
+            Add amplitude damping (T1 relaxation)
+            
+            Args:
+                target: Target qubit index
+                gamma: Fixed γ = 1-exp(-t/T1), or None for parametric (1 param)
+          )pbdoc")
+
+      .def(
+          "add_phase_damping",
+          [](NoisyCircuit &self, int target, py::object lambda_val) {
+            if (lambda_val.is_none()) {
+              self.add_phase_damping(target);
+            } else {
+              self.add_phase_damping(target, lambda_val.cast<double>());
+            }
+          },
+          py::arg("target"), py::arg("lambda_param") = py::none(),
+          R"pbdoc(
+            Add phase damping (T2 dephasing)
+            
+            Args:
+                target: Target qubit index
+                lambda_param: Fixed λ = 1-exp(-t/T2), or None for parametric (1 param)
+          )pbdoc")
+
+      // Execution
       .def(
           "apply_to",
           [](NoisyCircuit &self, py::array_t<double> params,
              DensityMatrix &rho) {
             auto buf = params.request();
-
-            // Create Matrix_real wrapper
-            Matrix_real params_mat(static_cast<double *>(buf.ptr), buf.shape[0],
-                                   1);
-
-            self.apply_to(params_mat, rho);
+            self.apply_to(static_cast<double *>(buf.ptr), buf.size, rho);
           },
           py::arg("parameters"), py::arg("density_matrix"),
           "Apply circuit to density matrix")
@@ -305,98 +377,58 @@ PYBIND11_MODULE(_density_matrix_cpp, m) {
       // Properties
       .def_property_readonly("qbit_num", &NoisyCircuit::get_qbit_num,
                              "Number of qubits")
-      .def_property_readonly("parameter_num",
-                             &NoisyCircuit::get_parameter_num,
-                             "Number of parameters")
+      .def_property_readonly("parameter_num", &NoisyCircuit::get_parameter_num,
+                             "Total number of parameters")
+      .def("__len__", &NoisyCircuit::get_operation_count,
+           "Number of operations")
 
-      // Representation
+      // Inspection
+      .def("get_operation_info", &NoisyCircuit::get_operation_info,
+           "Get list of all operations with their info")
+
       .def("__repr__", [](const NoisyCircuit &self) {
         return "<NoisyCircuit: " + std::to_string(self.get_qbit_num()) +
-               " qubits>";
+               " qubits, " + std::to_string(self.get_operation_count()) +
+               " ops, " + std::to_string(self.get_parameter_num()) + " params>";
       });
 
   // ===============================================================
-  // Noise Channels
+  // Legacy Noise Channels (for backward compatibility)
   // ===============================================================
 
   py::class_<NoiseChannel, std::shared_ptr<NoiseChannel>>(
-      m, "NoiseChannel", "Base class for quantum noise channels")
+      m, "NoiseChannel", "Base class for quantum noise channels (legacy)")
       .def("apply", &NoiseChannel::apply, py::arg("density_matrix"),
            "Apply noise channel to density matrix")
       .def("get_name", &NoiseChannel::get_name, "Get channel name");
 
   py::class_<DepolarizingChannel, NoiseChannel,
-             std::shared_ptr<DepolarizingChannel>>(m, "DepolarizingChannel",
-                                                   R"pbdoc(
-            Depolarizing channel: ρ → (1-p)ρ + p·I/2^n
-            
-            Represents uniform noise that mixes state with maximally mixed state.
-        )pbdoc")
-
-      .def(py::init<int, double>(), py::arg("qbit_num"), py::arg("error_rate"),
-           "Constructor with qubit number and error rate")
-
-      .def_property_readonly("error_rate", &DepolarizingChannel::get_error_rate,
-                             "Error rate p ∈ [0,1]")
-      .def_property_readonly("qbit_num", &DepolarizingChannel::get_qbit_num,
-                             "Number of qubits")
-
-      .def("__repr__", [](const DepolarizingChannel &self) {
-        return "<DepolarizingChannel: " + std::to_string(self.get_qbit_num()) +
-               " qubits, p=" + std::to_string(self.get_error_rate()) + ">";
-      });
+             std::shared_ptr<DepolarizingChannel>>(
+      m, "DepolarizingChannel", "Depolarizing channel (legacy standalone)")
+      .def(py::init<int, double>(), py::arg("qbit_num"), py::arg("error_rate"))
+      .def_property_readonly("error_rate", &DepolarizingChannel::get_error_rate)
+      .def_property_readonly("qbit_num", &DepolarizingChannel::get_qbit_num);
 
   py::class_<AmplitudeDampingChannel, NoiseChannel,
              std::shared_ptr<AmplitudeDampingChannel>>(
       m, "AmplitudeDampingChannel",
-      R"pbdoc(
-            Amplitude damping (T1 relaxation): |1⟩ → |0⟩ decay
-            
-            Models energy relaxation. Parameter: γ = 1 - exp(-t/T1)
-        )pbdoc")
-
-      .def(py::init<int, double>(), py::arg("target_qbit"), py::arg("gamma"),
-           "Constructor with target qubit and damping parameter")
-
-      .def_property_readonly("gamma", &AmplitudeDampingChannel::get_gamma,
-                             "Damping parameter γ = 1 - exp(-t/T1)")
+      "Amplitude damping channel (legacy standalone)")
+      .def(py::init<int, double>(), py::arg("target_qbit"), py::arg("gamma"))
+      .def_property_readonly("gamma", &AmplitudeDampingChannel::get_gamma)
       .def_property_readonly("target_qbit",
-                             &AmplitudeDampingChannel::get_target_qbit,
-                             "Target qubit index")
-
-      .def("__repr__", [](const AmplitudeDampingChannel &self) {
-        return "<AmplitudeDampingChannel: qubit=" +
-               std::to_string(self.get_target_qbit()) +
-               ", γ=" + std::to_string(self.get_gamma()) + ">";
-      });
+                             &AmplitudeDampingChannel::get_target_qbit);
 
   py::class_<PhaseDampingChannel, NoiseChannel,
-             std::shared_ptr<PhaseDampingChannel>>(m, "PhaseDampingChannel",
-                                                   R"pbdoc(
-            Phase damping (T2 dephasing): loss of coherence
-            
-            Models phase randomization. Parameter: λ = 1 - exp(-t/T2)
-        )pbdoc")
-
-      .def(py::init<int, double>(), py::arg("target_qbit"), py::arg("lambda"),
-           "Constructor with target qubit and dephasing parameter")
-
-      .def_property_readonly("lambda_param", &PhaseDampingChannel::get_lambda,
-                             "Dephasing parameter λ = 1 - exp(-t/T2)")
+             std::shared_ptr<PhaseDampingChannel>>(
+      m, "PhaseDampingChannel", "Phase damping channel (legacy standalone)")
+      .def(py::init<int, double>(), py::arg("target_qbit"), py::arg("lambda"))
+      .def_property_readonly("lambda_param", &PhaseDampingChannel::get_lambda)
       .def_property_readonly("target_qbit",
-                             &PhaseDampingChannel::get_target_qbit,
-                             "Target qubit index")
-
-      .def("__repr__", [](const PhaseDampingChannel &self) {
-        return "<PhaseDampingChannel: qubit=" +
-               std::to_string(self.get_target_qbit()) +
-               ", λ=" + std::to_string(self.get_lambda()) + ">";
-      });
+                             &PhaseDampingChannel::get_target_qbit);
 
   // ===============================================================
   // Module metadata
   // ===============================================================
 
-  m.attr("__version__") = "1.0.0";
+  m.attr("__version__") = "2.0.0";
 }
-

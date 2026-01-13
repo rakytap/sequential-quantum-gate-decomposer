@@ -44,12 +44,17 @@ set(DENSITY_MATRIX_SOURCES
     density_matrix.cpp
     noisy_circuit.cpp
     noise_channel.cpp
+    gate_operation.cpp
+    noise_operation.cpp
 )
 
 set(DENSITY_MATRIX_HEADERS
     include/density_matrix.h
     include/noisy_circuit.h
     include/noise_channel.h
+    include/density_operation.h
+    include/gate_operation.h
+    include/noise_operation.h
 )
 
 # ===================================================================
