@@ -83,6 +83,13 @@ EOF
 
 ## 🧪 Running Tests
 
+Always use the conda environment `qgd` to run the python tests and examples (and any other python code).
+
+To activate the conda environment `qgd`, run the following command:
+```bash
+conda activate qgd
+```
+
 ### Python Tests (Comprehensive)
 
 ```bash

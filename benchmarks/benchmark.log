@@ -1,0 +1,61 @@
+======================================================================
+  PERFORMANCE BENCHMARK: SQUANDER vs Qiskit
+======================================================================
+
+Measuring execution time (1 run, 0 warmup for quick results)...
+
+Circuit              Qubits   Ops    SQUANDER(ms)   Qiskit(ms)     Speedup   
+---------------------------------------------------------------------------
+  1q/5ops mixed      1        5           0.042         5.038     120.9x
+  1q/5ops gates      1        5           0.013         0.704      56.2x
+  2q/5ops mixed      2        5           0.017         2.342     134.5x
+  2q/10ops mixed     2        10          0.016         2.834     178.2x
+  3q/10ops mixed     3        10          0.023         6.152     273.4x
+  3q/25ops mixed     3        25          0.036        14.297     393.0x
+  4q/15ops mixed     4        15          0.082       305.371    3746.4x
+  4q/25ops mixed     4        25          0.080       300.107    3765.4x
+  5q/30ops mixed     5        30          0.435     40322.271    92741.6x
+
+======================================================================
+  BENCHMARK SUMMARY
+======================================================================
+
+  Average speedup: 11267.7x faster
+  Best speedup:    92741.6x (5q/30ops mixed)
+  Worst speedup:   56.2x (1q/5ops gates)
+
+======================================================================
+
+
+Detailed benchmark by qubit count:
+
+--- 1-QUBIT CIRCUITS ---
+  1q/5ops mixed        SQUANDER:    0.032ms  Qiskit:      2.888ms  Speedup:     90.5x
+  1q/5ops gates        SQUANDER:    0.020ms  Qiskit:      0.738ms  Speedup:     37.1x
+
+--- 2-QUBIT CIRCUITS ---
+  2q/5ops mixed        SQUANDER:    0.017ms  Qiskit:      2.081ms  Speedup:    121.3x
+  2q/7ops mixed        SQUANDER:    0.015ms  Qiskit:      2.125ms  Speedup:    145.8x
+  2q/10ops mixed       SQUANDER:    0.016ms  Qiskit:      2.666ms  Speedup:    165.7x
+  2q/5ops gates        SQUANDER:    0.012ms  Qiskit:      0.557ms  Speedup:     47.5x
+  2q/7ops gates        SQUANDER:    0.012ms  Qiskit:      0.570ms  Speedup:     46.5x
+  2q/10ops gates       SQUANDER:    0.013ms  Qiskit:      0.624ms  Speedup:     46.4x
+
+--- 3-QUBIT CIRCUITS ---
+  3q/5ops mixed        SQUANDER:    0.019ms  Qiskit:      5.126ms  Speedup:    272.5x
+  3q/10ops mixed       SQUANDER:    0.027ms  Qiskit:      5.631ms  Speedup:    204.8x
+  3q/15ops mixed       SQUANDER:    0.024ms  Qiskit:      9.962ms  Speedup:    408.8x
+  3q/20ops mixed       SQUANDER:    0.030ms  Qiskit:     11.340ms  Speedup:    375.1x
+  3q/25ops mixed       SQUANDER:    0.033ms  Qiskit:     14.455ms  Speedup:    432.9x
+
+--- 4-QUBIT CIRCUITS ---
+  4q/15ops mixed       SQUANDER:    0.104ms  Qiskit:    350.303ms  Speedup:   3371.5x
+  4q/20ops mixed       SQUANDER:    0.067ms  Qiskit:    301.098ms  Speedup:   4527.1x
+  4q/25ops mixed       SQUANDER:    0.082ms  Qiskit:    299.588ms  Speedup:   3666.0x
+
+--- 5-QUBIT CIRCUITS ---
+  5q/30ops mixed       SQUANDER:    0.461ms  Qiskit:  41201.756ms  Speedup:  89428.7x
+
+======================================================================
+  BENCHMARK COMPLETE
+======================================================================

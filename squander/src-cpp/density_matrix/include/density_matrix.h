@@ -215,6 +215,47 @@ public:
   void apply_unitary(const matrix_base<QGD_Complex16> &U);
 
   /**
+   * @brief Apply single-qubit unitary using local kernel (optimized)
+   * @param u_2x2 The 2×2 unitary kernel
+   * @param target_qbit Target qubit index
+   *
+   * Optimized local application that avoids constructing full 2^N × 2^N matrix.
+   * Complexity: O(2^{2N}) instead of O(2^{3N})
+   *
+   * This is the critical optimization for density matrix simulation.
+   * Speedup: ~2^N times faster than apply_unitary() for single-qubit gates.
+   */
+  void apply_single_qubit_unitary(const matrix_base<QGD_Complex16> &u_2x2,
+                                  int target_qbit);
+
+  /**
+   * @brief Apply two-qubit controlled unitary using local kernel (optimized)
+   * @param u_2x2 The 2×2 unitary kernel to apply when control is |1⟩
+   * @param target_qbit Target qubit index
+   * @param control_qbit Control qubit index
+   *
+   * Optimized local application for controlled gates (CNOT, CZ, CRX, etc.)
+   * Complexity: O(2^{2N}) instead of O(2^{3N})
+   *
+   * Speedup: ~2^N times faster than apply_unitary() for two-qubit gates.
+   */
+  void apply_two_qubit_unitary(const matrix_base<QGD_Complex16> &u_2x2,
+                               int target_qbit, int control_qbit);
+
+  /**
+   * @brief Apply k-qubit unitary using local kernel (general case)
+   * @param u_kernel The 2^k × 2^k unitary kernel
+   * @param target_qbits Vector of target qubit indices (size k)
+   *
+   * General optimized local application for arbitrary k-qubit gates.
+   * Complexity: O(2^{2N+k}) instead of O(2^{3N})
+   *
+   * For k << N, this is much faster than full matrix multiplication.
+   */
+  void apply_local_unitary(const matrix_base<QGD_Complex16> &u_kernel,
+                           const std::vector<int> &target_qbits);
+
+  /**
    * @brief Compute partial trace over specified qubits
    * @param trace_out List of qubit indices to trace out
    * @return Reduced density matrix

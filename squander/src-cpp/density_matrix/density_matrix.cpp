@@ -307,6 +307,347 @@ void DensityMatrix::apply_unitary(const matrix_base<QGD_Complex16> &U) {
   memcpy(data, result.get_data(), rows * cols * sizeof(QGD_Complex16));
 }
 
+// ================================================================
+// Optimized Local Unitary Application
+// ================================================================
+
+void DensityMatrix::apply_single_qubit_unitary(
+    const matrix_base<QGD_Complex16> &u_2x2, int target_qbit) {
+  if (target_qbit < 0 || target_qbit >= qbit_num_) {
+    throw std::runtime_error(
+        "DensityMatrix::apply_single_qubit_unitary: target_qbit out of range");
+  }
+
+  if (u_2x2.rows != 2 || u_2x2.cols != 2) {
+    throw std::runtime_error(
+        "DensityMatrix::apply_single_qubit_unitary: kernel must be 2x2");
+  }
+
+  int dim = rows;
+  int target_step = 1 << target_qbit;
+
+  // Temporary storage for the result
+  std::vector<QGD_Complex16> temp(dim * dim);
+
+  // The 2×2 kernel elements
+  QGD_Complex16 u00 = u_2x2.data[0];
+  QGD_Complex16 u01 = u_2x2.data[1];
+  QGD_Complex16 u10 = u_2x2.data[2];
+  QGD_Complex16 u11 = u_2x2.data[3];
+
+  // Conjugates for U†
+  QGD_Complex16 u00_conj = {u00.real, -u00.imag};
+  QGD_Complex16 u01_conj = {u01.real, -u01.imag};
+  QGD_Complex16 u10_conj = {u10.real, -u10.imag};
+  QGD_Complex16 u11_conj = {u11.real, -u11.imag};
+
+  // Apply ρ' = U ρ U†
+  // For each element ρ'(i,j), we compute the transformation
+  for (int i = 0; i < dim; i++) {
+    int i_bit = (i >> target_qbit) & 1;
+    int i_partner = i ^ target_step;
+
+    for (int j = 0; j < dim; j++) {
+      int j_bit = (j >> target_qbit) & 1;
+      int j_partner = j ^ target_step;
+
+      // Get the 2×2 block of ρ
+      QGD_Complex16 r00, r01, r10, r11;
+
+      if (i_bit == 0 && j_bit == 0) {
+        r00 = data[i * stride + j];
+        r01 = data[i * stride + j_partner];
+        r10 = data[i_partner * stride + j];
+        r11 = data[i_partner * stride + j_partner];
+      } else if (i_bit == 0 && j_bit == 1) {
+        r00 = data[i * stride + j_partner];
+        r01 = data[i * stride + j];
+        r10 = data[i_partner * stride + j_partner];
+        r11 = data[i_partner * stride + j];
+      } else if (i_bit == 1 && j_bit == 0) {
+        r00 = data[i_partner * stride + j];
+        r01 = data[i_partner * stride + j_partner];
+        r10 = data[i * stride + j];
+        r11 = data[i * stride + j_partner];
+      } else {
+        r00 = data[i_partner * stride + j_partner];
+        r01 = data[i_partner * stride + j];
+        r10 = data[i * stride + j_partner];
+        r11 = data[i * stride + j];
+      }
+
+      // Compute U * block
+      QGD_Complex16 t00, t01, t10, t11;
+
+      // t = U * r
+      t00.real = u00.real * r00.real - u00.imag * r00.imag +
+                 u01.real * r10.real - u01.imag * r10.imag;
+      t00.imag = u00.real * r00.imag + u00.imag * r00.real +
+                 u01.real * r10.imag + u01.imag * r10.real;
+
+      t01.real = u00.real * r01.real - u00.imag * r01.imag +
+                 u01.real * r11.real - u01.imag * r11.imag;
+      t01.imag = u00.real * r01.imag + u00.imag * r01.real +
+                 u01.real * r11.imag + u01.imag * r11.real;
+
+      t10.real = u10.real * r00.real - u10.imag * r00.imag +
+                 u11.real * r10.real - u11.imag * r10.imag;
+      t10.imag = u10.real * r00.imag + u10.imag * r00.real +
+                 u11.real * r10.imag + u11.imag * r10.real;
+
+      t11.real = u10.real * r01.real - u10.imag * r01.imag +
+                 u11.real * r11.real - u11.imag * r11.imag;
+      t11.imag = u10.real * r01.imag + u10.imag * r01.real +
+                 u11.real * r11.imag + u11.imag * r11.real;
+
+      // Compute result = t * U† (right multiply by conjugate transpose)
+      // Select which element of the result we need based on i_bit, j_bit
+      QGD_Complex16 result_elem;
+
+      if (i_bit == 0 && j_bit == 0) {
+        // result[0][0] = t00 * u00† + t01 * u01†
+        result_elem.real = t00.real * u00_conj.real - t00.imag * u00_conj.imag +
+                           t01.real * u01_conj.real - t01.imag * u01_conj.imag;
+        result_elem.imag = t00.real * u00_conj.imag + t00.imag * u00_conj.real +
+                           t01.real * u01_conj.imag + t01.imag * u01_conj.real;
+      } else if (i_bit == 0 && j_bit == 1) {
+        // result[0][1] = t00 * u10† + t01 * u11†
+        result_elem.real = t00.real * u10_conj.real - t00.imag * u10_conj.imag +
+                           t01.real * u11_conj.real - t01.imag * u11_conj.imag;
+        result_elem.imag = t00.real * u10_conj.imag + t00.imag * u10_conj.real +
+                           t01.real * u11_conj.imag + t01.imag * u11_conj.real;
+      } else if (i_bit == 1 && j_bit == 0) {
+        // result[1][0] = t10 * u00† + t11 * u01†
+        result_elem.real = t10.real * u00_conj.real - t10.imag * u00_conj.imag +
+                           t11.real * u01_conj.real - t11.imag * u01_conj.imag;
+        result_elem.imag = t10.real * u00_conj.imag + t10.imag * u00_conj.real +
+                           t11.real * u01_conj.imag + t11.imag * u01_conj.real;
+      } else {
+        // result[1][1] = t10 * u10† + t11 * u11†
+        result_elem.real = t10.real * u10_conj.real - t10.imag * u10_conj.imag +
+                           t11.real * u11_conj.real - t11.imag * u11_conj.imag;
+        result_elem.imag = t10.real * u10_conj.imag + t10.imag * u10_conj.real +
+                           t11.real * u11_conj.imag + t11.imag * u11_conj.real;
+      }
+
+      temp[i * dim + j] = result_elem;
+    }
+  }
+
+  // Copy result back
+  memcpy(data, temp.data(), dim * dim * sizeof(QGD_Complex16));
+}
+
+void DensityMatrix::apply_two_qubit_unitary(
+    const matrix_base<QGD_Complex16> &u_2x2, int target_qbit, int control_qbit) {
+  if (target_qbit < 0 || target_qbit >= qbit_num_) {
+    throw std::runtime_error(
+        "DensityMatrix::apply_two_qubit_unitary: target_qbit out of range");
+  }
+  if (control_qbit < 0 || control_qbit >= qbit_num_) {
+    throw std::runtime_error(
+        "DensityMatrix::apply_two_qubit_unitary: control_qbit out of range");
+  }
+  if (target_qbit == control_qbit) {
+    throw std::runtime_error(
+        "DensityMatrix::apply_two_qubit_unitary: target and control must differ");
+  }
+
+  if (u_2x2.rows != 2 || u_2x2.cols != 2) {
+    throw std::runtime_error(
+        "DensityMatrix::apply_two_qubit_unitary: kernel must be 2x2");
+  }
+
+  int dim = rows;
+  int target_step = 1 << target_qbit;
+  int control_step = 1 << control_qbit;
+
+  // Temporary storage
+  std::vector<QGD_Complex16> temp(dim * dim);
+  memcpy(temp.data(), data, dim * dim * sizeof(QGD_Complex16));
+
+  // The 2×2 kernel elements
+  QGD_Complex16 u00 = u_2x2.data[0];
+  QGD_Complex16 u01 = u_2x2.data[1];
+  QGD_Complex16 u10 = u_2x2.data[2];
+  QGD_Complex16 u11 = u_2x2.data[3];
+
+  // For controlled gates, we only apply the 2x2 kernel when control=1
+  // This is equivalent to applying identity when control=0
+
+  for (int i = 0; i < dim; i++) {
+    int i_control = (i >> control_qbit) & 1;
+
+    for (int j = 0; j < dim; j++) {
+      int j_control = (j >> control_qbit) & 1;
+
+      // Only modify elements where control conditions are met
+      // For ρ' = U ρ U†, we need to consider all combinations
+      
+      QGD_Complex16 result = {0.0, 0.0};
+
+      // Sum over internal indices
+      for (int a = 0; a < 2; a++) {
+        for (int b = 0; b < 2; b++) {
+          // U acts on target when control=1, identity otherwise
+          QGD_Complex16 u_ia, u_jb_conj;
+
+          int i_target = (i >> target_qbit) & 1;
+          int j_target = (j >> target_qbit) & 1;
+
+          // Get U element for row transformation
+          if (i_control == 1) {
+            if (i_target == 0 && a == 0)
+              u_ia = u00;
+            else if (i_target == 0 && a == 1)
+              u_ia = u01;
+            else if (i_target == 1 && a == 0)
+              u_ia = u10;
+            else
+              u_ia = u11;
+          } else {
+            // Identity: only diagonal
+            u_ia = (i_target == a) ? QGD_Complex16{1.0, 0.0}
+                                   : QGD_Complex16{0.0, 0.0};
+          }
+
+          // Get U† element for column transformation
+          if (j_control == 1) {
+            if (j_target == 0 && b == 0)
+              u_jb_conj = {u00.real, -u00.imag};
+            else if (j_target == 0 && b == 1)
+              u_jb_conj = {u10.real, -u10.imag};
+            else if (j_target == 1 && b == 0)
+              u_jb_conj = {u01.real, -u01.imag};
+            else
+              u_jb_conj = {u11.real, -u11.imag};
+          } else {
+            u_jb_conj = (j_target == b) ? QGD_Complex16{1.0, 0.0}
+                                        : QGD_Complex16{0.0, 0.0};
+          }
+
+          // Compute index for ρ element
+          int i_prime = (i & ~target_step) | (a << target_qbit);
+          int j_prime = (j & ~target_step) | (b << target_qbit);
+
+          QGD_Complex16 rho_ab = data[i_prime * stride + j_prime];
+
+          // result += u_ia * rho_ab * u_jb_conj
+          QGD_Complex16 prod1;
+          prod1.real = u_ia.real * rho_ab.real - u_ia.imag * rho_ab.imag;
+          prod1.imag = u_ia.real * rho_ab.imag + u_ia.imag * rho_ab.real;
+
+          result.real +=
+              prod1.real * u_jb_conj.real - prod1.imag * u_jb_conj.imag;
+          result.imag +=
+              prod1.real * u_jb_conj.imag + prod1.imag * u_jb_conj.real;
+        }
+      }
+
+      temp[i * dim + j] = result;
+    }
+  }
+
+  memcpy(data, temp.data(), dim * dim * sizeof(QGD_Complex16));
+}
+
+void DensityMatrix::apply_local_unitary(
+    const matrix_base<QGD_Complex16> &u_kernel,
+    const std::vector<int> &target_qbits) {
+  
+  int k = target_qbits.size();
+  
+  if (k == 0) {
+    return;  // Nothing to do
+  }
+  
+  if (k == 1) {
+    apply_single_qubit_unitary(u_kernel, target_qbits[0]);
+    return;
+  }
+  
+  // Validate
+  int kernel_dim = 1 << k;
+  if (u_kernel.rows != kernel_dim || u_kernel.cols != kernel_dim) {
+    throw std::runtime_error(
+        "DensityMatrix::apply_local_unitary: kernel size mismatch");
+  }
+  
+  for (int q : target_qbits) {
+    if (q < 0 || q >= qbit_num_) {
+      throw std::runtime_error(
+          "DensityMatrix::apply_local_unitary: qubit index out of range");
+    }
+  }
+
+  int dim = rows;
+  std::vector<QGD_Complex16> temp(dim * dim);
+
+  // General k-qubit application: ρ'(i,j) = Σ_{a,b} U(i_t,a) ρ(i',j') U†(b,j_t)
+  // where i_t = target bits of i, i' = i with target bits replaced by a
+
+  for (int i = 0; i < dim; i++) {
+    for (int j = 0; j < dim; j++) {
+      QGD_Complex16 result = {0.0, 0.0};
+
+      // Extract target bits from i and j
+      int i_target = 0, j_target = 0;
+      for (int ki = 0; ki < k; ki++) {
+        if ((i >> target_qbits[ki]) & 1) {
+          i_target |= (1 << ki);
+        }
+        if ((j >> target_qbits[ki]) & 1) {
+          j_target |= (1 << ki);
+        }
+      }
+
+      // Sum over all internal indices
+      for (int a = 0; a < kernel_dim; a++) {
+        for (int b = 0; b < kernel_dim; b++) {
+          // Compute indices with replaced target bits
+          int i_prime = i;
+          int j_prime = j;
+          for (int ki = 0; ki < k; ki++) {
+            // Clear target bit
+            i_prime &= ~(1 << target_qbits[ki]);
+            j_prime &= ~(1 << target_qbits[ki]);
+            // Set from a, b
+            if ((a >> ki) & 1) {
+              i_prime |= (1 << target_qbits[ki]);
+            }
+            if ((b >> ki) & 1) {
+              j_prime |= (1 << target_qbits[ki]);
+            }
+          }
+
+          // U[i_target, a]
+          QGD_Complex16 u_ia = u_kernel.data[i_target * kernel_dim + a];
+          // U†[b, j_target] = conj(U[j_target, b])
+          QGD_Complex16 u_jb = u_kernel.data[j_target * kernel_dim + b];
+          QGD_Complex16 u_jb_conj = {u_jb.real, -u_jb.imag};
+
+          // ρ[i', j']
+          QGD_Complex16 rho_ab = data[i_prime * stride + j_prime];
+
+          // result += u_ia * rho_ab * u_jb_conj
+          QGD_Complex16 prod1;
+          prod1.real = u_ia.real * rho_ab.real - u_ia.imag * rho_ab.imag;
+          prod1.imag = u_ia.real * rho_ab.imag + u_ia.imag * rho_ab.real;
+
+          result.real +=
+              prod1.real * u_jb_conj.real - prod1.imag * u_jb_conj.imag;
+          result.imag +=
+              prod1.real * u_jb_conj.imag + prod1.imag * u_jb_conj.real;
+        }
+      }
+
+      temp[i * dim + j] = result;
+    }
+  }
+
+  memcpy(data, temp.data(), dim * dim * sizeof(QGD_Complex16));
+}
+
 DensityMatrix
 DensityMatrix::partial_trace(const std::vector<int> &trace_out) const {
   // Validate inputs

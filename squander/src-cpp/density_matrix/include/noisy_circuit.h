@@ -16,54 +16,71 @@ limitations under the License.
 
 #pragma once
 
-#include "Gates_block.h" // From existing SQUANDER
 #include "density_matrix.h"
+#include "density_operation.h"
+#include <memory>
+#include <vector>
+
+// Forward declarations for gate types
+class Gate;
+class Gates_block;
 
 namespace squander {
 namespace density {
 
 /**
- * @brief Circuit for density matrix evolution
+ * @brief Quantum circuit with noise for density matrix simulation.
  *
- * Wraps existing Gates_block but applies operations to density matrices.
- * Provides same gate addition interface as qgd_Circuit.
+ * NoisyCircuit manages a sequence of unitary gates and noise channels,
+ * providing a unified interface to build and execute noisy quantum circuits.
+ *
+ * Key features:
+ * - Unified API for adding gates and noise channels
+ * - Optimized local kernel application (O(4^N) per gate instead of O(8^N))
+ * - Support for both fixed and parametric noise
+ * - Sequential execution (each operation applied in order)
  *
  * Example:
  * @code
- *   using namespace squander::density;
+ *   NoisyCircuit circuit(2);
+ *   circuit.add_H(0);
+ *   circuit.add_CNOT(1, 0);
+ *   circuit.add_depolarizing(2, 0.01);  // Fixed 1% noise
+ *   circuit.add_RZ(0);                   // Parametric gate
+ *   circuit.add_phase_damping(0);        // Parametric noise
  *
- *   NoisyCircuit circuit(2);  // 2-qubit circuit
- *   circuit.add_H(0);           // Hadamard on qubit 0
- *   circuit.add_CNOT(1, 0);     // CNOT
- *
- *   DensityMatrix rho(2);       // |00⟩⟨00|
- *   Matrix_real params;
- *   circuit.apply_to(params, rho);  // Apply circuit
+ *   DensityMatrix rho(2);
+ *   std::vector<double> params = {0.5, 0.02};  // RZ angle, phase damping λ
+ *   circuit.apply_to(params.data(), params.size(), rho);
  * @endcode
  */
 class NoisyCircuit {
 public:
-  /**
-   * @brief Create empty circuit
-   * @param qbit_num Number of qubits
-   */
-  explicit NoisyCircuit(int qbit_num);
+  // ================================================================
+  // Constructors & Destructor
+  // ================================================================
 
   /**
-   * @brief Wrap existing Gates_block
-   * @param circuit Pointer to existing circuit (takes ownership if
-   * owns_circuit=true)
-   * @param owns_circuit Whether to take ownership
+   * @brief Create empty circuit for n qubits
+   * @param qbit_num Number of qubits (must be >= 1)
    */
-  explicit NoisyCircuit(Gates_block *circuit, bool owns_circuit = false);
+  explicit NoisyCircuit(int qbit_num);
 
   /**
    * @brief Destructor
    */
   ~NoisyCircuit();
 
+  // Disable copy (operations own their resources)
+  NoisyCircuit(const NoisyCircuit &) = delete;
+  NoisyCircuit &operator=(const NoisyCircuit &) = delete;
+
+  // Move semantics
+  NoisyCircuit(NoisyCircuit &&other) noexcept;
+  NoisyCircuit &operator=(NoisyCircuit &&other) noexcept;
+
   // ================================================================
-  // Gate Addition (delegates to underlying Gates_block)
+  // Single-Qubit Gates (constant - no parameters)
   // ================================================================
 
   void add_H(int target);
@@ -76,36 +93,100 @@ public:
   void add_Tdg(int target);
   void add_SX(int target);
 
-  void add_RX(int target);
-  void add_RY(int target);
-  void add_RZ(int target);
-  void add_U1(int target);
-  void add_U2(int target);
-  void add_U3(int target);
+  // ================================================================
+  // Single-Qubit Parametric Gates
+  // ================================================================
+
+  void add_RX(int target); ///< 1 parameter
+  void add_RY(int target); ///< 1 parameter
+  void add_RZ(int target); ///< 1 parameter
+  void add_U1(int target); ///< 1 parameter
+  void add_U2(int target); ///< 2 parameters
+  void add_U3(int target); ///< 3 parameters
+
+  // ================================================================
+  // Two-Qubit Gates (constant)
+  // ================================================================
 
   void add_CNOT(int target, int control);
   void add_CZ(int target, int control);
   void add_CH(int target, int control);
-  void add_CRY(int target, int control);
-  void add_CRZ(int target, int control);
-  void add_CRX(int target, int control);
-  void add_CP(int target, int control);
+
+  // ================================================================
+  // Two-Qubit Parametric Gates
+  // ================================================================
+
+  void add_CRY(int target, int control); ///< 1 parameter
+  void add_CRZ(int target, int control); ///< 1 parameter
+  void add_CRX(int target, int control); ///< 1 parameter
+  void add_CP(int target, int control);  ///< 1 parameter
+
+  // ================================================================
+  // Noise Channel Addition
+  // ================================================================
 
   /**
-   * @brief Apply circuit to density matrix
-   * @param params Gate parameters
-   * @param rho Initial density matrix (modified in-place)
+   * @brief Add parametric depolarizing noise channel (1 parameter)
+   * @param qbit_num Number of qubits the noise acts on
+   */
+  void add_depolarizing(int qbit_num);
+
+  /**
+   * @brief Add fixed depolarizing noise channel (0 parameters)
+   * @param qbit_num Number of qubits the noise acts on
+   * @param error_rate Fixed error rate p ∈ [0,1]
+   */
+  void add_depolarizing(int qbit_num, double error_rate);
+
+  /**
+   * @brief Add parametric amplitude damping noise (1 parameter)
+   * @param target Target qubit index
+   */
+  void add_amplitude_damping(int target);
+
+  /**
+   * @brief Add fixed amplitude damping noise (T1 relaxation, 0 parameters)
+   * @param target Target qubit index
+   * @param gamma Fixed damping γ ∈ [0,1]
+   */
+  void add_amplitude_damping(int target, double gamma);
+
+  /**
+   * @brief Add parametric phase damping noise (1 parameter)
+   * @param target Target qubit index
+   */
+  void add_phase_damping(int target);
+
+  /**
+   * @brief Add fixed phase damping noise (T2 dephasing, 0 parameters)
+   * @param target Target qubit index
+   * @param lambda Fixed dephasing λ ∈ [0,1]
+   */
+  void add_phase_damping(int target, double lambda);
+
+  // ================================================================
+  // Circuit Execution
+  // ================================================================
+
+  /**
+   * @brief Apply entire circuit to density matrix
+   * @param params Parameter array (gate params followed by noise params)
+   * @param param_count Total number of parameters
+   * @param rho Density matrix to modify in-place
    *
-   * Applies each gate in sequence: ρ → U₁...U_n ρ U_n†...U₁†
+   * Parameters are consumed in the order operations were added.
+   * Each parametric operation extracts its parameters from the array.
+   */
+  void apply_to(const double *params, int param_count, DensityMatrix &rho);
+
+  /**
+   * @brief Apply circuit using Matrix_real (backward compatibility)
    */
   void apply_to(const matrix_base<double> &params, DensityMatrix &rho);
 
-  /**
-   * @brief Get circuit unitary matrix
-   * @param params Gate parameters
-   * @return Full circuit unitary U = U_n...U₂U₁
-   */
-  Matrix get_unitary(const matrix_base<double> &params);
+  // ================================================================
+  // Properties
+  // ================================================================
 
   /**
    * @brief Get number of qubits
@@ -113,22 +194,45 @@ public:
   int get_qbit_num() const { return qbit_num_; }
 
   /**
-   * @brief Get number of parameters
+   * @brief Get total number of parameters needed
    */
-  int get_parameter_num() const;
+  int get_parameter_num() const { return total_params_; }
 
   /**
-   * @brief Get underlying Gates_block (if wrapped)
-   * @return Pointer to underlying circuit (may be nullptr if not wrapping)
+   * @brief Get number of operations in the circuit
    */
-  Gates_block *get_gates_block() const { return gates_block_; }
+  size_t get_operation_count() const { return operations_.size(); }
+
+  // ================================================================
+  // Inspection
+  // ================================================================
+
+  /**
+   * @brief Information about a circuit operation
+   */
+  struct OperationInfo {
+    std::string name;
+    bool is_unitary;
+    int param_count;
+    int param_start;
+  };
+
+  /**
+   * @brief Get information about all operations
+   */
+  std::vector<OperationInfo> get_operation_info() const;
 
 private:
-  int qbit_num_;             ///< Number of qubits
-  Gates_block *gates_block_; ///< Pointer to existing circuit
-  bool owns_circuit_;        ///< Whether we own the circuit
+  int qbit_num_;
+  std::vector<std::unique_ptr<IDensityOperation>> operations_;
+  std::vector<int> param_starts_;
+  int total_params_ = 0;
 
-  void sync_gates(); ///< Sync with gates_block if needed
+  // Helper to add an operation and update parameter tracking
+  void add_operation(std::unique_ptr<IDensityOperation> op);
+
+  // Helper to add a gate by type
+  void add_gate_internal(Gate *gate);
 };
 
 } // namespace density
