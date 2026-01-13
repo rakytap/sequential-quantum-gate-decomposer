@@ -1,4 +1,4 @@
-# Agent Instructions
+# Project Requirements and Setup
 
 ## Testing and Installation
 
@@ -18,4 +18,3 @@ Always refer to `SETUP.md` rather than relying on potentially outdated instructi
 **C++ Version:** The project uses C++11 standard.
 
 **Python Version:** The project uses Python 3.13.
-
