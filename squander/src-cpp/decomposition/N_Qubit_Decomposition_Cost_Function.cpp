@@ -63,65 +63,6 @@ extern "C" int LAPACKE_zgesdd(int matrix_order, char jobz, int m, int n, QGD_Com
 double get_cost_function(Matrix matrix, int trace_offset) {
 
     int matrix_size = matrix.cols ;
-/*
-    tbb::combinable<double> priv_partial_cost_functions{[](){return 0;}};
-    tbb::parallel_for( tbb::blocked_range<int>(0, matrix_size, 1), functor_cost_fnc( matrix, &priv_partial_cost_functions ));
-*/
-/*
-    //sequential version
-    functor_cost_fnc tmp = functor_cost_fnc( matrix, matrix_size, partial_cost_functions, matrix_size );
-    #pragma omp parallel for
-    for (int idx=0; idx<matrix_size; idx++) {
-        tmp(idx);
-    }
-*/
-/*
-    // calculate the final cost function
-    double cost_function = 0;
-    priv_partial_cost_functions.combine_each([&cost_function](double a) {
-        cost_function = cost_function + a;
-    });
-*/
-
-/*
-#ifdef USE_AVX
-
-
-    __m128d trace_128 = _mm_setr_pd(0.0, 0.0);
-    double* matrix_data = (double*)matrix.get_data();
-    int offset = 2*(matrix.stride+1);
-
-    for (int idx=0; idx<matrix_size; idx++) {
-        
-        // get the diagonal element
-        __m128d element_128 = _mm_load_pd(matrix_data);
-        
-        // add the diagonal elements to the trace
-        trace_128 = _mm_add_pd(trace_128, element_128);
-
-        matrix_data = matrix_data + offset;
-    }
-
-
-    trace_128 = _mm_mul_pd(trace_128, trace_128);    
-    double cost_function = std::sqrt(1.0 - (trace_128[0] + trace_128[1])/(matrix_size*matrix_size));
-
-#else
-
-    QGD_Complex16 trace;
-    memset( &trace, 0.0, 2*sizeof(double) );
-    //trace.real = 0.0;
-    //trace.imag = 0.0;
-
-    for (int idx=0; idx<matrix_size; idx++) {
-        
-        trace.real += matrix[idx*matrix.stride + idx].real;
-        trace.imag += matrix[idx*matrix.stride + idx].imag;
-    }
-
-    double cost_function = std::sqrt(1.0 - (trace.real*trace.real + trace.imag*trace.imag)/(matrix_size*matrix_size));
-#endif
-*/
 
 
     double trace_real = 0.0;

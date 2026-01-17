@@ -14,11 +14,12 @@ from squander.utils import CompareCircuits
 import numpy as np
 from qiskit import QuantumCircuit
 
-from typing import List, Callable
+from typing import Any, List, Callable, Tuple, Union
 
 import multiprocessing as mp
 from multiprocessing import Process, Pool, parent_process
 import os
+import itertools
 
 
 from squander.partitioning.partition import PartitionCircuit
@@ -368,7 +369,6 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
         Yields:
             Tuples of qubit indices representing one side of each unique bipartition
         """
-        import itertools
         qubits = tuple(range(n))
         for r in range(1, n//2 + 1):  # only up to half
             for S in itertools.combinations(qubits, r):
@@ -693,7 +693,6 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
         Returns:
             List of Circuit objects, each representing a different Clifford circuit
         """
-        import itertools
         circuits = []
         all_clifford = [x+y for x, y in itertools.product(((), (True,), (False, True), (False, False, True), (False, False, False, True), (True, False, True)), ((), (False,), (False, False), (False, False)))]
         for clifford_idxs in itertools.product(range(len(all_clifford)), repeat=len(qbits)):
@@ -1049,7 +1048,7 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
             nextprefixes = []
             for path in set(tuple(x[1]) for x in res):
                 curh = None if len(path)==0 else prefixes[path[:-1]]
-                check_cuts = pair_affects[tuple(sorted(path[-1]))] if not curh is None else range(len(cuts))
+                check_cuts = pair_affects[tuple(sorted(path[-1]))] if (not curh is None and len(path) > 0) else range(len(cuts))
                 #samples = [max(x[0] for x in self.OSR_with_local_alignment(path, cuts, Fnorm, tol=tol)) for _ in range(5)]
                 #if len(set(samples)) != 1: print(samples)
                 h = self.OSR_with_local_alignment(path, cuts, Fnorm, tol=tol)
@@ -1105,6 +1104,7 @@ class qgd_Wide_Circuit_Optimization:
         config.setdefault('routed', False)
         config.setdefault('partition_strategy','ilp')
         
+        
         #testing the fields of config 
         strategy = config[ 'strategy' ]
         allowed_startegies = ['TreeSearch', 'TabuSearch', 'Adaptive', 'TreeGuided' ]
@@ -1150,7 +1150,7 @@ class qgd_Wide_Circuit_Optimization:
 
 
 
-    def ConstructCircuitFromPartitions( self, circs: List[Circuit], parameter_arrs: [List[np.ndarray]] ) -> (Circuit, np.ndarray):
+    def ConstructCircuitFromPartitions( self, circs: List[Circuit], parameter_arrs: List[np.ndarray] ) -> Tuple[Circuit, np.ndarray]:
         """
         Call to construct the wide quantum circuit from the partitions.
 
@@ -1200,7 +1200,7 @@ class qgd_Wide_Circuit_Optimization:
 
 
     @staticmethod
-    def DecomposePartition( Umtx: np.ndarray, config: dict, mini_topology = None, structure = None ) -> Circuit:
+    def DecomposePartition( Umtx: np.ndarray, config: dict, mini_topology = None, structure = None ) -> Union[ Tuple[Circuit, np.ndarray],  Any ]:
         """
         Call to run the decomposition of a given unitary Umtx, typically associated with the circuit 
         partition to be optimized
@@ -1268,7 +1268,7 @@ class qgd_Wide_Circuit_Optimization:
 
 
     @staticmethod
-    def CompareAndPickCircuits( circs: List[Circuit], parameter_arrs: [List[np.ndarray]], metric : Callable[ [Circuit], int ] = CNOTGateCount ) -> Circuit:
+    def CompareAndPickCircuits( circs: List[Circuit], parameter_arrs: List[np.ndarray], metric : Callable[ [Circuit], int ] = CNOTGateCount ) -> Tuple[Circuit, np.ndarray]:
         """
         Call to pick the most optimal circuit corresponding a specific metric. Looks for the circuit
         with the minimal metric value.
@@ -1305,7 +1305,7 @@ class qgd_Wide_Circuit_Optimization:
 
         min_idx = np.argmin( metrics )
 
-        return circs[ min_idx ], parameter_arrs[ min_idx ]
+        return (circs[min_idx], parameter_arrs[ min_idx ],)
 
 
 
@@ -1612,6 +1612,7 @@ class qgd_Wide_Circuit_Optimization:
                         print( "original subcircuit:    ", subcircuit.get_Gate_Nums()) 
                         print( "reoptimized subcircuit: ", new_subcircuit.get_Gate_Nums()) 
                     if partition_idx % 100 == 99: print(partition_idx+1, "partitions optimized")
+                    assert isinstance(new_subcircuit, Circuit)
                     optimized_subcircuits[ partition_idx ] = new_subcircuit
                     optimized_parameter_list[ partition_idx ] = new_parameters
 

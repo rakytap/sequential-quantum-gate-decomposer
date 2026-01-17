@@ -148,8 +148,10 @@ U3::apply_to_list( Matrix_real& parameters_mtx, std::vector<Matrix>& inputs, int
     }
 
     //TODO: also implement with OpenMP
-    tbb::parallel_for( tbb::blocked_range<int>(0,static_cast<int>(inputs.size()),work_batch), [&](tbb::blocked_range<int> r) {
-        for (int idx=r.begin(); idx<r.end(); ++idx) { 
+    //tbb::parallel_for( tbb::blocked_range<int>(0,static_cast<int>(inputs.size()),work_batch), [&](tbb::blocked_range<int> r) {
+    //    for (int idx=r.begin(); idx<r.end(); ++idx) {
+            
+            for (int idx=0; idx<inputs.size(); idx++) {
 
             Matrix* input = &inputs[idx];
 
@@ -157,7 +159,7 @@ U3::apply_to_list( Matrix_real& parameters_mtx, std::vector<Matrix>& inputs, int
 
         }
 
-    });
+    //});
 
 }
 
