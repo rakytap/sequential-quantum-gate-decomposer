@@ -27,6 +27,17 @@ from squander.synthesis.qgd_SABRE import qgd_SABRE as SABRE
 
 
 def extract_subtopology(involved_qbits, qbit_map, config ):
+    """
+    Extract a subtopology from the full topology based on involved qubits.
+    
+    Args:
+        involved_qbits: Set or list of qubit indices that are involved in the partition
+        qbit_map: Dictionary mapping original qubit indices to remapped indices
+        config: Configuration dictionary containing the "topology" key with full topology edges
+        
+    Returns:
+        List of tuples representing edges in the subtopology, with qubits remapped according to qbit_map
+    """
     mini_topology = []
     for edge in config["topology"]:
         if edge[0] in involved_qbits and edge[1] in involved_qbits:
@@ -60,7 +71,23 @@ def CNOTGateCount( circ: Circuit ) -> int :
 
 
 class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
+    """
+    Guided tree search decomposition for quantum gate synthesis.
+    
+    This class implements a tree search algorithm for decomposing unitaries into
+    CNOT gates, using operator Schmidt rank (OSR) entanglement as a guiding heuristic.
+    """
     def __init__(self, Umtx, config, accelerator_num, topology):
+        """
+        Initialize the guided tree decomposition.
+        
+        Args:
+            Umtx: Unitary matrix to decompose (already conjugate transposed)
+            config: Configuration dictionary for decomposition parameters
+            accelerator_num: Number of accelerator devices to use
+            topology: List of tuples representing allowed CNOT connections.
+                     If None, creates a fully connected topology.
+        """
         super().__init__(Umtx, config=config, accelerator_num=accelerator_num)
         self.Umtx = Umtx #already conjugate transposed
         self.qbit_num = Umtx.shape[0].bit_length() -1
@@ -70,7 +97,23 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
         if topology is None:
             topology = [(i, j) for i in range(self.qbit_num) for j in range(i+1, self.qbit_num)]
         self.topology = topology
+    @staticmethod
     def enumerate_unordered_cnot_BFS(n: int, topology=None, use_gl=True):
+        """
+        Enumerate all reachable states in GL(n,2) using breadth-first search.
+        
+        This generator yields states in increasing CNOT depth, exploring the space
+        of all possible CNOT gate sequences.
+        
+        Args:
+            n: Number of qubits
+            topology: List of allowed CNOT pairs. If None, uses fully connected topology.
+            use_gl: If True, uses GL(n,2) group structure. If False, uses explicit sequences.
+            
+        Yields:
+            Tuples of (visited states, sequence pairs, directed sequences, results)
+            where results contain (state, unordered_pairs, directed_pairs) for each discovered state.
+        """
         # Precompute unordered pairs
         topology = [(i, j) for i in range(n) for j in range(i+1, n)] if topology is None else topology
         prior_level_info = None
@@ -79,7 +122,21 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
             if not res: break
             yield res
             prior_level_info = (visited, seq_pairs_of, seq_dir_of, list(x[0] for x in reversed(res)))
+    @staticmethod
     def canonical_prefix_ok(seq):
+        """
+        Check if a sequence of CNOT pairs forms a canonical prefix.
+        
+        Uses Kahn's algorithm to verify topological ordering. A canonical prefix
+        means the sequence can be topologically sorted in its natural order.
+        
+        Args:
+            seq: List of unordered CNOT pairs (tuples of qubit indices)
+            
+        Returns:
+            -1 if the sequence is canonical, otherwise returns the position
+            where the canonical ordering is violated.
+        """
         m = len(seq)
         if m <= 1: return -1
         succ = {}
@@ -104,6 +161,7 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
                 indeg[v] -= 1
                 if indeg[v] == 0: heapq.heappush(pq, (seq[v], v))
         return -1
+    @staticmethod
     def enumerate_unordered_cnot_BFS_level(n: int, topology=None, prior_level_info=None, use_gl=True):
         """
         Enumerate GL(n,2) states in increasing CNOT depth.
@@ -139,6 +197,8 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
             A = q.pop()
             last_pairs = seq_pairs_of[A]
             last_dirs = seq_dir_of[A]
+
+            assert topology is not None, "Topology is required at this point"
             for p in topology:
                 if not use_gl:
                     if len(last_pairs) >= 3 and all(p==x for x in last_pairs[-3:]): continue # avoid more than 3 repeated CNOTs
@@ -160,7 +220,19 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
                     # Emit as soon as we discover the state (BFS → minimal depth)
                     res.append((B, new_seq_pairs_of[B], new_seq_dir_of[B]))
         return visited, new_seq_pairs_of, new_seq_dir_of, res
+    @staticmethod
     def build_sequence(stop=5, ordered=True, use_gl=True):
+        """
+        Build and print statistics about CNOT sequences for different qubit counts.
+        
+        This is a utility function for analyzing the number of distinct CNOT sequences
+        at different depths. See OEIS sequence A002884 for reference.
+        
+        Args:
+            stop: Maximum number of qubits to analyze (default: 5)
+            ordered: If True, counts ordered sequences. If False, counts unordered sets.
+            use_gl: If True, uses GL(n,2) group structure. If False, uses explicit sequences.
+        """
         #https://oeis.org/A002884
         #unordered sequence: 1, 1, 4, 88, 9556, 4526605
         #unordered at 5 qubits: {0: 1, 1: 10, 2: 85, 3: 650, 4: 4475, 5: 27375, 6: 142499, 7: 580482, 8: 1501297, 9: 1738232, 10: 517884, 11: 13591, 12: 24} 
@@ -171,16 +243,57 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
                     d[len(x)] = d.get(len(x), 0) + 1
                 if not use_gl and len(d) > 5: break
             print({x: d[x] for x in sorted(d)}, sum(d.values()))
+    @staticmethod
     def extract_bits(x, pos):
+        """
+        Extract specific bit positions from an integer and pack them into a new integer.
+        
+        Args:
+            x: Integer to extract bits from
+            pos: List of bit positions to extract
+            
+        Returns:
+            Integer with extracted bits packed into positions 0, 1, 2, ...
+        """
         return sum(((x >> p) & 1) << i for i, p in enumerate(pos))
+    @staticmethod
     def build_osr_matrix(U, n, A):
+        """
+        Build the operator Schmidt rank (OSR) matrix for a given bipartition.
+        
+        Reshapes the unitary matrix U according to the bipartition A|B to compute
+        the operator Schmidt decomposition.
+        
+        Args:
+            U: Unitary matrix of shape (2^n, 2^n)
+            n: Number of qubits
+            A: List of qubit indices on side A of the bipartition
+            
+        Returns:
+            Reshaped matrix of shape (2^|A| * 2^|A|, 2^|B| * 2^|B|) for OSR analysis
+        """
         A = list(reversed(A))
         B = list(sorted(set(range(n)) - set(A), reverse=True))
         A, B = [n-1-q for q in A], [n-1-q for q in B]
         dA = 1 << len(A)
         dB = 1 << len(B)
         return U.reshape([2]*(2*n)).transpose(tuple(A) + tuple(t+n for t in A) + tuple(B) + tuple(t+n for t in B)).reshape(dA*dA, dB*dB)
-    def accumulate_grad_for_cut(U, G, Umat, VTmat, n, A): # qubits on A
+    @staticmethod
+    def accumulate_grad_for_cut(U, G, Umat, VTmat, n, A):
+        """
+        Accumulate gradient contributions for a specific bipartition cut.
+        
+        Reconstructs the gradient contribution from the dyadic decomposition
+        and accumulates it into the full gradient matrix U.
+        
+        Args:
+            U: Gradient matrix to accumulate into (modified in place)
+            G: Gradient coefficients for dyadic components
+            Umat: Left singular vectors from SVD
+            VTmat: Right singular vectors (conjugate transpose) from SVD
+            n: Number of qubits
+            A: List of qubit indices on side A of the bipartition
+        """
         A = list(reversed(A))
         B = list(sorted(set(range(n)) - set(A), reverse=True))
         A, B = [n-1-q for q in A], [n-1-q for q in B]
@@ -191,19 +304,71 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
             revmap[x] = i
         U += mat.reshape([2]*(2*n)).transpose(tuple(revmap)).reshape(*U.shape)
         return U
+    @staticmethod
     def trace_out_qubits(U, n, A):
+        """
+        Trace out qubits not in set A, returning the reduced unitary.
+        
+        Args:
+            U: Unitary matrix of shape (2^n, 2^n)
+            n: Number of qubits
+            A: List of qubit indices to keep (others are traced out)
+            
+        Returns:
+            Reduced unitary matrix of shape (2^|A|, 2^|A|)
+        """
         M = N_Qubit_Decomposition_Guided_Tree.build_osr_matrix(U, n, A)
         M = np.linalg.svd(M, compute_uv=True, full_matrices=False)[0][:,0].reshape(1<<len(A), 1<<len(A))
         return N_Qubit_Decomposition_Guided_Tree._polar_unitary(M)
+    @staticmethod
     def numerical_rank_osr(M, Fnorm, tol=1e-10):
+        """
+        Compute the numerical rank of an operator Schmidt rank matrix.
+        
+        Args:
+            M: Matrix to analyze
+            Fnorm: Frobenius norm for normalization
+            tol: Tolerance for determining rank (relative to largest singular value)
+            
+        Returns:
+            Tuple of (rank, singular_values) where rank is the number of
+            singular values above the tolerance threshold.
+        """
         s = np.linalg.svd(M, full_matrices=False, compute_uv=False) / Fnorm
         #print(s)
         return int(np.sum(s >= s[0]*tol)), s
+    @staticmethod
     def operator_schmidt_rank(U, n, A, Fnorm, tol=1e-10):
+        """
+        Compute the operator Schmidt rank for a bipartition of a unitary.
+        
+        Args:
+            U: Unitary matrix of shape (2^n, 2^n)
+            n: Number of qubits
+            A: List of qubit indices on side A of the bipartition
+            Fnorm: Frobenius norm for normalization
+            tol: Tolerance for determining rank
+            
+        Returns:
+            Tuple of (rank, singular_values) from the operator Schmidt decomposition
+        """
         return N_Qubit_Decomposition_Guided_Tree.numerical_rank_osr(N_Qubit_Decomposition_Guided_Tree.build_osr_matrix(U, n, A), Fnorm, tol)
+    @staticmethod
     def unique_cuts(n):
+        """
+        Generate all unique nontrivial bipartitions of n qubits.
+        
+        Yields unordered bipartitions, avoiding duplicates where a cut and its
+        complement would be the same. For even n, uses lexicographic ordering
+        to break ties.
+        
+        Args:
+            n: Number of qubits
+            
+        Yields:
+            Tuples of qubit indices representing one side of each unique bipartition
+        """
         import itertools
-        """All nontrivial unordered bipartitions (no complements)."""
         qubits = tuple(range(n))
         for r in range(1, n//2 + 1):  # only up to half
             for S in itertools.combinations(qubits, r):
@@ -214,6 +379,19 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
                     if S < comp:      # lexicographically smaller tuple wins
                         yield S
     def get_circuit_from_pairs(self, pairs, finalizing=True):
+        """
+        Construct a circuit from a sequence of CNOT pairs.
+        
+        Each pair is implemented as U3 gates on both qubits followed by a CNOT.
+        Optionally adds finalizing U3 gates on all qubits.
+        
+        Args:
+            pairs: List of tuples (q1, q2) representing CNOT gates
+            finalizing: If True, adds U3 gates on all qubits at the end
+            
+        Returns:
+            Circuit object representing the gate sequence
+        """
         circ = Circuit(self.qbit_num)
         for pair in pairs:
             circ.add_U3(pair[0])
@@ -223,13 +401,43 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
             for qbit in range(self.qbit_num):
                 circ.add_U3(qbit)
         return circ
+    @staticmethod
     def ceil_log2(x): return 0 if x == 0 else (x-1).bit_length()
+    @staticmethod
     def logsumexp_smoothmax(Lc, tau=1e-2):
+        """
+        Compute a smooth maximum using log-sum-exp with temperature parameter.
+        
+        This is a differentiable approximation to the maximum function.
+        
+        Args:
+            Lc: List of values to take the smooth maximum of
+            tau: Temperature parameter (smaller = sharper, closer to true max)
+            
+        Returns:
+            Smooth maximum value: tau * log(sum(exp((Lc - m)/tau))) + m
+        """
         m = max(Lc)
         sum = 0.0
         for v in Lc: sum += np.exp((v - m)/tau)
         return tau * np.log(sum) + m
+    @staticmethod
     def dyadic_loss(S, max_dyadic, rho=0.9, tol=1e-4):
+        """
+        Compute dyadic loss for singular values, emphasizing lower-rank structure.
+        
+        The loss function penalizes deviations from ideal dyadic (power-of-2) structure
+        in the singular values, with exponentially decreasing weights.
+        
+        Args:
+            S: Array of singular values
+            max_dyadic: Maximum dyadic level to consider
+            rho: Exponential decay factor for weights (default: 0.9)
+            tol: Tolerance threshold for deviations
+            
+        Returns:
+            Scalar loss value
+        """
         tot_dyadic = N_Qubit_Decomposition_Guided_Tree.ceil_log2(len(S))
         w = 1.0
         acc = 0.0
@@ -239,14 +447,39 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
                 acc += w * val * val
             w *= rho
         return acc
+    @staticmethod
     def avg_loss(cuts_S, rho=0.9):
+        """
+        Compute average dyadic loss across multiple cuts.
+        
+        Args:
+            cuts_S: List of singular value arrays, one per cut
+            rho: Exponential decay factor for dyadic loss weights
+            
+        Returns:
+            Average loss across all cuts
+        """
         max_dyadic = N_Qubit_Decomposition_Guided_Tree.ceil_log2(max(len(S) for S in cuts_S))
         total_loss = 0.0
         for S in cuts_S:
             total_loss += N_Qubit_Decomposition_Guided_Tree.dyadic_loss(S, max_dyadic, rho)
         return total_loss / len(cuts_S)
-    # Aggregated cost over cuts: softmax (log-sum-exp) of per-cut dyadic losses
+    @staticmethod
     def cuts_softmax_dyadic_cost(cuts_S, rho=0.1, tau=1e-2):
+        """
+        Compute aggregated cost over cuts using softmax of per-cut dyadic losses.
+        
+        Uses log-sum-exp (smooth maximum) to aggregate losses across cuts,
+        emphasizing the worst-performing cuts.
+        
+        Args:
+            cuts_S: List of singular value arrays, one per cut
+            rho: Exponential decay factor for dyadic loss weights
+            tau: Temperature parameter for softmax (must be > 0)
+            
+        Returns:
+            Aggregated cost value
+        """
         if tau <= 0.0: raise RuntimeError("tau must be > 0")
         Lc = []
         max_dyadic = N_Qubit_Decomposition_Guided_Tree.ceil_log2(max(len(S) for S in cuts_S))
@@ -254,8 +487,23 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
             Lc.append(N_Qubit_Decomposition_Guided_Tree.dyadic_loss(S, max_dyadic, rho))
         return N_Qubit_Decomposition_Guided_Tree.logsumexp_smoothmax(Lc, tau)
 
-    # Gradient w.r.t. the singular values (diagonal of dL/dΣ):
+    @staticmethod
     def dyadic_loss_grad_diag(S, max_dyadic, Fnorm, rho=0.1, tol=1e-4):
+        """
+        Compute gradient of dyadic loss with respect to singular values.
+        
+        Only dyadic positions (1, 2, 4, 8, ...) receive nonzero gradient entries.
+        
+        Args:
+            S: Array of singular values
+            max_dyadic: Maximum dyadic level to consider
+            Fnorm: Frobenius norm for normalization
+            rho: Exponential decay factor for weights
+            tol: Tolerance threshold
+            
+        Returns:
+            List of gradient values (only dyadic positions are nonzero)
+        """
         n = len(S)
         # c_k = rho^k / Mk  for k=1..n-1, then prefix sum C_j = sum_{k=1}^j c_k
         tot_dyadic = N_Qubit_Decomposition_Guided_Tree.ceil_log2(n)
@@ -267,16 +515,42 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
                 grad[k] = 2.0 * w * S[idx] * (1.0-tol) / Fnorm  #1-tol not needed if using stop-grad
             w *= rho                         # w = rho^k
         return grad
+    @staticmethod
     def cuts_avg_dyadic_grad(cuts_S, Fnorm, rho=0.1):
+        """
+        Compute average gradient across cuts for dyadic loss.
+        
+        Args:
+            cuts_S: List of singular value arrays, one per cut
+            Fnorm: Frobenius norm for normalization
+            rho: Exponential decay factor for weights
+            
+        Returns:
+            List of gradient arrays, one per cut
+        """
         C = len(cuts_S)
         max_dyadic = N_Qubit_Decomposition_Guided_Tree.ceil_log2(max(len(S) for S in cuts_S))
         Lc = []
         for c in range(C):
             Lc.append(N_Qubit_Decomposition_Guided_Tree.dyadic_loss_grad_diag(cuts_S[c], max_dyadic, Fnorm * C, rho))
         return Lc
-    # Gradient w.r.t. singular values (same length as S).
-    # Only dyadic positions (1,2,4,...) get nonzero entries; others are 0.
+    @staticmethod
     def cuts_softmax_tail_grad(cuts_S, Fnorm, rho=0.1, tau=1e-2):
+        """
+        Compute gradient with softmax weighting across cuts.
+        
+        Combines per-cut gradients with softmax weights, emphasizing cuts
+        with higher losses. Only dyadic positions receive nonzero gradients.
+        
+        Args:
+            cuts_S: List of singular value arrays, one per cut
+            Fnorm: Frobenius norm for normalization
+            rho: Exponential decay factor for dyadic loss weights
+            tau: Temperature parameter for softmax
+            
+        Returns:
+            List of weighted gradient arrays, one per cut
+        """
         C = len(cuts_S)
         if C == 0: return []
         max_dyadic = N_Qubit_Decomposition_Guided_Tree.ceil_log2(max(len(S) for S in cuts_S))
@@ -292,12 +566,23 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
         # 3) dL/dS^{(c)} = w_c * dL_c/dS^{(c)}
         return [[v * w[c] for v in N_Qubit_Decomposition_Guided_Tree.dyadic_loss_grad_diag(cuts_S[c], max_dyadic, Fnorm, rho)] for c in range(C)]
 
-    # Build M with build_osr_matrix, then SVD (econ) and grab top triplet.
-    def top_k_triplet_for_cut(U, # (N x N), row-major, N = 1<<q
-        q,                  # number of qubits
-        A,  # qubits on side A
-        Fnorm            # e.g., sqrt(N)
-        ):
+    @staticmethod
+    def top_k_triplet_for_cut(U, q, A, Fnorm):
+        """
+        Compute top-k SVD triplet for operator Schmidt rank matrix of a cut.
+        
+        Builds the OSR matrix for bipartition A|B, performs SVD, and returns
+        the normalized singular values and corresponding singular vectors.
+        
+        Args:
+            U: Unitary matrix of shape (2^q, 2^q), row-major
+            q: Number of qubits
+            A: List of qubit indices on side A of the bipartition
+            Fnorm: Frobenius norm for normalization (typically sqrt(2^q))
+            
+        Returns:
+            Tuple of (normalized_singular_values, U_matrix, Vh_matrix) from SVD
+        """
         # 1) Build M for this cut    
         M = N_Qubit_Decomposition_Guided_Tree.build_osr_matrix(U, q, A)
         k = min(M.shape)
@@ -306,7 +591,22 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
         # Row-major API handles leading dims as col counts.
         res = np.linalg.svd(M, full_matrices=False, compute_uv=True)
         return res.S / Fnorm, res.U, res.Vh # normalized singular value
+    @staticmethod
     def get_deriv_osr_entanglement(matrix, use_cuts, use_softmax):
+        """
+        Compute derivative of operator Schmidt rank entanglement cost function.
+        
+        Computes gradients with respect to the unitary matrix by aggregating
+        contributions from all bipartition cuts.
+        
+        Args:
+            matrix: Unitary matrix to compute derivative for
+            use_cuts: List of specific cuts to use. If empty, uses all unique cuts.
+            use_softmax: If True, uses softmax aggregation. If False, uses average.
+            
+        Returns:
+            Gradient matrix of same shape as input matrix
+        """
         qbit_num = len(matrix).bit_length()-1
         cuts = list(N_Qubit_Decomposition_Guided_Tree.unique_cuts(qbit_num)) if len(use_cuts) == 0 else use_cuts
         Fnorm = np.sqrt(len(matrix))
@@ -327,11 +627,38 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
             G, Umat, VTmat = triplets[i]
             N_Qubit_Decomposition_Guided_Tree.accumulate_grad_for_cut(deriv, G, Umat, VTmat, qbit_num, cuts[i])
         return deriv
-    # Compute grad component = Re Tr( A^† B ) for A = dL/dU, B = dU/dθ
-    # A and B are (rows x cols) with row-major leading dimension.
+    @staticmethod
     def real_trace_conj_dot(A, B):
+        """
+        Compute real part of trace of conjugate transpose dot product.
+        
+        Computes Re(Tr(A^† B)) = Re(Tr(A^H B)) for gradient computation.
+        Equivalent to sum of element-wise real parts of A^† * B.
+        
+        Args:
+            A: Matrix A (dL/dU in gradient context)
+            B: Matrix B (dU/dθ in gradient context)
+            
+        Returns:
+            Real scalar value: Re(Tr(A^† B))
+        """
         return np.sum(A.real * B.real + A.imag * B.imag) # Re Tr(A^† B)
+    @staticmethod
     def param_derivs(circ, Umtx, x):
+        """
+        Compute parameter derivatives of a circuit with respect to gate parameters.
+        
+        Uses finite differences: π/2 shifts for rotation angles, symmetric differences
+        for phase parameters.
+        
+        Args:
+            circ: Circuit object
+            Umtx: Base unitary matrix
+            x: Parameter array
+            
+        Returns:
+            List of derivative matrices, one per parameter
+        """
         n = len(x)
         derivs = [None]*n
         for i in range(n):
@@ -351,7 +678,21 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
                 circ.apply_to(xm, Um)
                 derivs[i] = 0.5 * (Up - Um)
         return derivs
+    @staticmethod
     def get_all_clifford(qbit_num, qbits):
+        """
+        Generate all Clifford circuits on specified qubits.
+        
+        Constructs all possible Clifford circuits by combining H and S gates
+        in all possible ways on the specified qubits.
+        
+        Args:
+            qbit_num: Total number of qubits in the circuit
+            qbits: List of qubit indices to apply Clifford gates to
+            
+        Returns:
+            List of Circuit objects, each representing a different Clifford circuit
+        """
         import itertools
         circuits = []
         all_clifford = [x+y for x, y in itertools.product(((), (True,), (False, True), (False, False, True), (False, False, False, True), (True, False, True)), ((), (False,), (False, False), (False, False)))]
@@ -366,12 +707,38 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
             circuits.append(circ)
         return circuits
     
+    @staticmethod
     def _global_phase_fix(U):
+        """
+        Remove global phase from a unitary matrix.
+        
+        Normalizes the matrix so that det(U) = 1 by dividing by the
+        n-th root of the determinant.
+        
+        Args:
+            U: Unitary matrix
+            
+        Returns:
+            Phase-normalized unitary matrix with det = 1
+        """
         return U / (np.linalg.det(U)**(1/len(U)))
+    @staticmethod
     def _polar_unitary(X):
+        """
+        Compute the closest unitary matrix to X using polar decomposition.
+        
+        Uses SVD to find U such that U is unitary and closest to X in Frobenius norm.
+        
+        Args:
+            X: Input matrix
+            
+        Returns:
+            Unitary matrix U from polar decomposition: X = U * P where P is positive semidefinite
+        """
         U,_,Vh = np.linalg.svd(X, full_matrices=False)
         return U @ Vh
 
+    @staticmethod
     def su2_to_u3_zyz(U):
         """
         Decompose a 2x2 unitary (det=1) into Qiskit U3: Rz(phi) @ Ry(theta) @ Rz(lam).
@@ -399,7 +766,22 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
         lam = (np.angle(b)-np.angle(a)-np.pi); lam=(lam+np.pi)%(2*np.pi)-np.pi
         return float(theta),float(phi),float(lam)
 
+    @staticmethod
     def _A_from_c(c1,c2,c3):
+        """
+        Construct a 2-qubit unitary from Weyl chamber coordinates.
+        
+        Builds exp(-i/2 * (c1*XX + c2*YY + c3*ZZ)) where XX, YY, ZZ are
+        tensor products of Pauli matrices.
+        
+        Args:
+            c1: Coefficient for XX term
+            c2: Coefficient for YY term
+            c3: Coefficient for ZZ term
+            
+        Returns:
+            4x4 unitary matrix representing the 2-qubit gate
+        """
         X = np.array([[0,1],[1,0]], complex)
         Y = np.array([[0,-1j],[1j,0]], complex)
         Z = np.array([[1,0],[0,-1]], complex)
@@ -410,14 +792,34 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
         A = EV @ np.diag(np.exp(ew)) @ np.linalg.inv(EV)
         # project back to unitary (remove numeric drift)
         return N_Qubit_Decomposition_Guided_Tree._polar_unitary(A)
-    # Factor K1, K2 → (2x2 ⊗ 2x2)
     def factor_local(K):
+        """
+        Factor a 2-qubit gate into a tensor product of 1-qubit gates.
+        
+        Uses SVD to decompose a 4x4 matrix into K1 ⊗ K2 where K1 and K2
+        are 2x2 matrices (up to global phase).
+        
+        Args:
+            K: 4x4 matrix representing a 2-qubit gate
+            
+        Returns:
+            Tuple of (K1, K2) where each is a 2x2 unitary matrix
+        """
         # reshape to (2,2,2,2), SVD the (a,c ; b,d) unfolding
         M = K.reshape(2,2,2,2).transpose(0,2,1,3).reshape(4,4)
         U,_,Vh = np.linalg.svd(M, full_matrices=False)
         A = U[:,0].reshape(2,2); B = Vh.conj().T[:,0].reshape(2,2)
         return N_Qubit_Decomposition_Guided_Tree._polar_unitary(A), N_Qubit_Decomposition_Guided_Tree._polar_unitary(B)
     def _magic_basis_plusYY():
+        """
+        Return the complex magic basis matrix.
+        
+        This is a specific basis used in 2-qubit gate decomposition that
+        diagonalizes the Weyl chamber representation.
+        
+        Returns:
+            4x4 complex matrix representing the magic basis
+        """
         # Complex magic basis (matches A(c)=exp(-i/2*(c1 XX + c2 YY + c3 ZZ)) below)
         # Columns are (|Φ+>, i|Φ->, i|Ψ+>, |Ψ->) up to harmless phases
         return (1/np.sqrt(2))*np.array([
@@ -428,6 +830,17 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
         ], dtype=complex)
 
     def _project_to_SO4(O):
+        """
+        Project a matrix to the nearest special orthogonal matrix (SO(4)).
+        
+        Finds the closest real orthogonal matrix with determinant +1.
+        
+        Args:
+            O: Input matrix (should be close to orthogonal)
+            
+        Returns:
+            Real orthogonal matrix with det = +1, closest to O in Frobenius norm
+        """
         # nearest real orthogonal with det=+1
         O = np.real_if_close(O, tol=1e5)
         U, _, Vt = np.linalg.svd(O)
@@ -437,6 +850,18 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
         return O
 
     def _clean_col_phases(W):
+        """
+        Remove arbitrary phases from columns of a matrix.
+        
+        Normalizes each column by removing the phase of its largest-magnitude element,
+        making the matrix representation more canonical.
+        
+        Args:
+            W: Input matrix
+            
+        Returns:
+            Matrix with cleaned column phases
+        """
         Wc = W.copy()
         for j in range(Wc.shape[1]):
             col = Wc[:, j]
@@ -446,9 +871,37 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
         return Wc
 
     def closest_local_product(W4):
+        """
+        Find the closest tensor product of 1-qubit gates to a 2-qubit gate.
+        
+        Args:
+            W4: 4x4 matrix representing a 2-qubit gate
+            
+        Returns:
+            Tuple of (A, B) where A ⊗ B is the closest local product to W4
+        """
         A, B = N_Qubit_Decomposition_Guided_Tree.factor_local(W4)
         return N_Qubit_Decomposition_Guided_Tree._global_phase_fix(A), N_Qubit_Decomposition_Guided_Tree._global_phase_fix(B)
     def kak_u3s_around_cx(U, n, c, t, iters=3):
+        """
+        Decompose a 2-qubit gate using KAK decomposition with U3 gates around CNOT.
+        
+        Uses Qiskit's TwoQubitWeylDecomposition to extract Weyl chamber coordinates,
+        then converts to U3 gate parameters.
+        
+        Args:
+            U: 2^n x 2^n unitary matrix
+            n: Total number of qubits
+            c: Control qubit index
+            t: Target qubit index
+            iters: Number of iterations (currently unused)
+            
+        Returns:
+            Dictionary with keys:
+            - "c": (c1, c2, c3) Weyl chamber coordinates
+            - "pre": {"A": (theta, phi, lam), "B": (theta, phi, lam)} pre-CNOT U3 parameters
+            - "post": {"A": (theta, phi, lam), "B": (theta, phi, lam)} post-CNOT U3 parameters
+        """
         U4 = N_Qubit_Decomposition_Guided_Tree.trace_out_qubits(U, n, (c, t))
         U4 = N_Qubit_Decomposition_Guided_Tree._global_phase_fix(U4)
         from qiskit.synthesis import TwoQubitWeylDecomposition
@@ -472,10 +925,38 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
                     "B": (thB_post/2, phB_post, laB_post) }
         }
     def params_to_mat(self, params):
+        """
+        Convert circuit parameters to unitary matrix.
+        
+        Applies the circuit with given parameters to the base unitary matrix.
+        
+        Args:
+            params: Parameter array for the circuit gates
+            
+        Returns:
+            Unitary matrix resulting from applying the circuit with these parameters
+        """
         U = self.Umtx.copy()
         self.get_Circuit().apply_to(params, U)
         return U
     def OSR_with_local_alignment(self, pairs, cuts, Fnorm, tol):
+        """
+        Optimize circuit parameters to minimize operator Schmidt rank entanglement.
+        
+        Uses the OSR cost function (variant 10) to align local gates and minimize
+        entanglement across all specified cuts. Performs optimization using
+        basinhopping algorithm.
+        
+        Args:
+            pairs: List of CNOT pairs defining the gate structure
+            cuts: List of bipartitions to optimize over
+            Fnorm: Frobenius norm for normalization
+            tol: Tolerance for numerical rank computation
+            
+        Returns:
+            List of tuples (rank, singular_values) for each cut, where rank is
+            the ceiling of log2 of the numerical rank
+        """
         def ceil_log2(x): return 0 if x == 0 else (x-1).bit_length()
         if len(pairs) != 0:
             self.set_Cost_Function_Variant( 10 )
@@ -519,6 +1000,19 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
         else: U = self.Umtx
         return [(ceil_log2(rank), s) for cut in cuts for rank, s in (N_Qubit_Decomposition_Guided_Tree.operator_schmidt_rank(U, self.qbit_num, cut, Fnorm, tol),)]
     def Run_Decomposition(self, pairs, finalizing=True):
+        """
+        Run decomposition for a given sequence of CNOT pairs.
+        
+        Constructs the circuit, sets random initial parameters, and runs
+        the decomposition optimization.
+        
+        Args:
+            pairs: List of CNOT pairs (tuples of qubit indices)
+            finalizing: If True, adds finalizing U3 gates on all qubits
+            
+        Returns:
+            True if decomposition error is below tolerance, False otherwise
+        """
         circ = self.get_circuit_from_pairs(pairs, finalizing)
         self.set_Gate_Structure(circ)
         self.set_Optimized_Parameters(np.random.rand(self.get_Parameter_Num())*(2*np.pi))
@@ -528,6 +1022,13 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
             self.err = self.Optimization_Problem(params)
             return self.err < self.config.get('tolerance', 1e-8)
     def Start_Decomposition(self):
+        """
+        Start the guided tree search decomposition algorithm.
+        
+        Performs breadth-first search over CNOT sequences, using operator
+        Schmidt rank as a heuristic to guide the search. Explores sequences
+        in increasing depth, pruning based on remaining depth and entanglement.
+        """
         self.all_solutions = []
         self.err = 1.0
         stop_first_solution = self.config.get("stop_first_solution", True)
@@ -574,7 +1075,14 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
         self.set_Gate_Structure(Circuit(self.qbit_num))
         self.set_Optimized_Parameters(np.array([]))
         #print("No decomposition found within the given CNOT limit.")
-    def get_Decomposition_Error(self): return self.err
+    def get_Decomposition_Error(self):
+        """
+        Get the decomposition error from the last optimization.
+        
+        Returns:
+            Decomposition error (Frobenius norm of difference)
+        """
+        return self.err
 #N_Qubit_Decomposition_Guided_Tree.build_sequence(); assert False
 #print(len(list(N_Qubit_Decomposition_Guided_Tree.enumerate_unordered_cnot_BFS(3, [(0,1),(1,2),])))); assert False
 class qgd_Wide_Circuit_Optimization:
@@ -896,6 +1404,21 @@ class qgd_Wide_Circuit_Optimization:
         return result
 
     def make_all_partition_circuit(circ, orig_parameters, max_partition_size):
+        """
+        Partition a circuit into all possible subcircuits up to max_partition_size.
+        
+        Uses integer linear programming to find optimal partitions and handles
+        single-qubit gate chains separately.
+        
+        Args:
+            circ: Circuit to partition
+            orig_parameters: Original parameter array
+            max_partition_size: Maximum number of qubits per partition
+            
+        Returns:
+            Tuple of (partitioned_circuit, parameters, recombine_info) where
+            recombine_info contains metadata needed for recombination
+        """
         from squander.partitioning.ilp import get_all_partitions, _get_topo_order
         allparts, g, go, rgo, single_qubit_chains, gate_to_qubit, gate_to_tqubit = get_all_partitions(circ, max_partition_size)
         qbit_num_orig_circuit = circ.get_Qbit_Num()
@@ -925,6 +1448,18 @@ class qgd_Wide_Circuit_Optimization:
         parameters = np.concatenate(params, axis=0)
         return partitined_circuit, parameters, (allparts, g, go, rgo, single_qubit_chains, gate_to_qubit, gate_to_tqubit)
     def copy_circuit_structure(structure):
+        """
+        Copy a circuit structure, converting CNOT gates to U3-CNOT-U3 sequences.
+        
+        Creates a new circuit with the same structure but with U3 gates
+        added around each CNOT and finalizing U3 gates on all qubits.
+        
+        Args:
+            structure: Circuit to copy
+            
+        Returns:
+            New circuit with U3 gates added around CNOTs
+        """
         from squander.gates.qgd_Circuit import CNOT
         newcirc = Circuit(structure.get_Qbit_Num())
         for gate in structure.get_Gates():
@@ -935,7 +1470,23 @@ class qgd_Wide_Circuit_Optimization:
         for qbit in structure.get_Qbits():
             newcirc.add_U3(qbit)
         return newcirc
-    def recombine_all_partition_circuit(circ, max_partition_size, optimized_subcircuits, recombine_info ):
+    def recombine_all_partition_circuit(circ, max_partition_size, optimized_subcircuits, recombine_info):
+        """
+        Recombine optimized subcircuits back into a full circuit.
+        
+        Uses ILP to find optimal combination of subcircuits and recombines
+        single-qubit gate chains. Returns the topologically sorted result.
+        
+        Args:
+            circ: Original circuit
+            max_partition_size: Maximum partition size used
+            optimized_subcircuits: List of optimized subcircuits
+            recombine_info: Metadata from make_all_partition_circuit
+            
+        Returns:
+            Tuple of (parts, struct_idxs) where parts are the recombined partitions
+            and struct_idxs are indices into optimized_subcircuits
+        """
         from squander.partitioning.ilp import topo_sort_partitions, ilp_global_optimal, recombine_single_qubit_chains
         allparts, g, go, rgo, single_qubit_chains, gate_to_qubit, gate_to_tqubit = recombine_info
         max_gates = max(sum(y for x, y in c.get_Gate_Nums().items() if x !='CNOT') for c in optimized_subcircuits)
@@ -1085,7 +1636,20 @@ class qgd_Wide_Circuit_Optimization:
         return wide_circuit, wide_parameters
 
     def route_circuit(self, circ: Circuit, orig_parameters: np.ndarray):
-
+        """
+        Route a circuit to match hardware topology using SABRE algorithm.
+        
+        Maps logical qubits to physical qubits and inserts SWAP gates as needed
+        to satisfy connectivity constraints.
+        
+        Args:
+            circ: Circuit to route
+            orig_parameters: Original parameter array
+            
+        Returns:
+            Tuple of (routed_circuit, routed_parameters) with qubits mapped
+            to physical topology
+        """
         sabre = SABRE(circ, self.config["topology"])
         Squander_remapped_circuit, parameters_remapped_circuit, pi, final_pi, swap_count = sabre.map_circuit(orig_parameters)
         self.config.setdefault("initial_mapping",pi)
