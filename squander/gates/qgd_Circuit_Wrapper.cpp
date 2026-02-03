@@ -58,6 +58,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "Adaptive.h"
 #include "Composite.h"
 #include "RXX.h"
+#include "RYY.h"
+#include "RZZ.h"
 
 #include "numpy_interface.h"
 
@@ -304,7 +306,53 @@ qgd_Circuit_Wrapper_add_RXX(qgd_Circuit_Wrapper *self, PyObject *args, PyObject 
             target_qbits.push_back(PyLong_AsLong(item));
         }
         self->circuit->add_rxx(target_qbits);
-        
+
+    }
+
+    return Py_BuildValue("i", 0);
+}
+
+static PyObject *
+qgd_Circuit_Wrapper_add_RYY(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {(char*)"target_qbits", NULL};
+    PyObject* target_qbits_py = NULL;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|O", kwlist, &target_qbits_py))
+        return Py_BuildValue("i", -1);
+
+    if (target_qbits_py != NULL && PyList_Check(target_qbits_py)) {
+        std::vector<int> target_qbits;
+        Py_ssize_t list_size = PyList_Size(target_qbits_py);
+        for (Py_ssize_t i = 0; i < list_size; i++) {
+            PyObject* item = PyList_GetItem(target_qbits_py, i);
+            target_qbits.push_back(PyLong_AsLong(item));
+        }
+        self->circuit->add_ryy(target_qbits);
+
+    }
+
+    return Py_BuildValue("i", 0);
+}
+
+static PyObject *
+qgd_Circuit_Wrapper_add_RZZ(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {(char*)"target_qbits", NULL};
+    PyObject* target_qbits_py = NULL;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|O", kwlist, &target_qbits_py))
+        return Py_BuildValue("i", -1);
+
+    if (target_qbits_py != NULL && PyList_Check(target_qbits_py)) {
+        std::vector<int> target_qbits;
+        Py_ssize_t list_size = PyList_Size(target_qbits_py);
+        for (Py_ssize_t i = 0; i < list_size; i++) {
+            PyObject* item = PyList_GetItem(target_qbits_py, i);
+            target_qbits.push_back(PyLong_AsLong(item));
+        }
+        self->circuit->add_rzz(target_qbits);
+
     }
 
     return Py_BuildValue("i", 0);
@@ -1215,6 +1263,54 @@ get_gate( Gates_block* circuit, int &idx ) {
         Py_DECREF( target_qbits_list );
     }
 
+    else if (gate->get_type() == RYY_OPERATION){
+        // RYY uses vector-based interface
+        std::vector<int> target_qbits_vec = gate->get_target_qbits();
+        PyObject* target_qbits_list = PyList_New((Py_ssize_t)target_qbits_vec.size());
+        for (size_t i = 0; i < target_qbits_vec.size(); i++) {
+            PyList_SetItem(target_qbits_list, (Py_ssize_t)i, Py_BuildValue("i", target_qbits_vec[i]));
+        }
+
+        PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
+        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "RYY");
+
+        PyObject* gate_input = Py_BuildValue("(OO)", qbit_num, target_qbits_list);
+        py_gate              = PyObject_CallObject(py_gate_class, gate_input);
+
+        // replace dummy data with real gate data
+        qgd_Gate* py_gate_C = reinterpret_cast<qgd_Gate*>( py_gate );
+        delete( py_gate_C->gate );
+        py_gate_C->gate = static_cast<Gate*>( gate->clone() );
+
+        Py_DECREF( qgd_gate );
+        Py_DECREF( gate_input );
+        Py_DECREF( target_qbits_list );
+    }
+
+    else if (gate->get_type() == RZZ_OPERATION){
+        // RZZ uses vector-based interface
+        std::vector<int> target_qbits_vec = gate->get_target_qbits();
+        PyObject* target_qbits_list = PyList_New((Py_ssize_t)target_qbits_vec.size());
+        for (size_t i = 0; i < target_qbits_vec.size(); i++) {
+            PyList_SetItem(target_qbits_list, (Py_ssize_t)i, Py_BuildValue("i", target_qbits_vec[i]));
+        }
+
+        PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
+        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "RZZ");
+
+        PyObject* gate_input = Py_BuildValue("(OO)", qbit_num, target_qbits_list);
+        py_gate              = PyObject_CallObject(py_gate_class, gate_input);
+
+        // replace dummy data with real gate data
+        qgd_Gate* py_gate_C = reinterpret_cast<qgd_Gate*>( py_gate );
+        delete( py_gate_C->gate );
+        py_gate_C->gate = static_cast<Gate*>( gate->clone() );
+
+        Py_DECREF( qgd_gate );
+        Py_DECREF( gate_input );
+        Py_DECREF( target_qbits_list );
+    }
+
     get_gate_template_one_qubit(U1)
     get_gate_template_one_qubit(U2)
     get_gate_template_one_qubit(U3)
@@ -1977,6 +2073,12 @@ static PyMethodDef qgd_Circuit_Wrapper_Methods[] = {
     },
     {"add_RXX", (PyCFunction) qgd_Circuit_Wrapper_add_RXX, METH_VARARGS | METH_KEYWORDS,
      "Call to add a RXX gate to the front of the gate structure"
+    },
+    {"add_RYY", (PyCFunction) qgd_Circuit_Wrapper_add_RYY, METH_VARARGS | METH_KEYWORDS,
+     "Call to add a RYY gate to the front of the gate structure"
+    },
+    {"add_RZZ", (PyCFunction) qgd_Circuit_Wrapper_add_RZZ, METH_VARARGS | METH_KEYWORDS,
+     "Call to add a RZZ gate to the front of the gate structure"
     },
     {"add_R", (PyCFunction) qgd_Circuit_Wrapper_add_R, METH_VARARGS | METH_KEYWORDS,
      "Call to add a R gate to the front of the gate structure"

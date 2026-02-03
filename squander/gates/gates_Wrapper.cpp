@@ -62,6 +62,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "CSWAP.h"
 #include "numpy_interface.h"
 #include "RXX.h"
+#include "RYY.h"
+#include "RZZ.h"
 
 //////////////////////////////////////
 
@@ -1464,6 +1466,28 @@ Gate_Wrapper_setstate( Gate_Wrapper *self, PyObject *args ) {
         }
         break;
     }
+    case RYY_OPERATION: {
+        if (!target_qbits.empty()) {
+            // Use vector-based constructor
+            gate = create_multi_target_gate<RYY>( qbit_num, target_qbits );
+        } else {
+            // Legacy: convert old format (target_qbit, control_qbit) to vector format
+            std::vector<int> swap_targets = {target_qbit, control_qbit};
+            gate = create_multi_target_gate<RYY>( qbit_num, swap_targets );
+        }
+        break;
+    }
+    case RZZ_OPERATION: {
+        if (!target_qbits.empty()) {
+            // Use vector-based constructor
+            gate = create_multi_target_gate<RZZ>( qbit_num, target_qbits );
+        } else {
+            // Legacy: convert old format (target_qbit, control_qbit) to vector format
+            std::vector<int> swap_targets = {target_qbit, control_qbit};
+            gate = create_multi_target_gate<RZZ>( qbit_num, swap_targets );
+        }
+        break;
+    }
     case SWAP_OPERATION: {
         if (!target_qbits.empty()) {
             // Use vector-based constructor
@@ -1667,6 +1691,28 @@ struct RXX_Wrapper_Type: Gate_Wrapper_Type_tmp{
 };
 static RXX_Wrapper_Type RXX_Wrapper_Type_ins;
 
+struct RYY_Wrapper_Type: Gate_Wrapper_Type_tmp{
+    RYY_Wrapper_Type(){
+        tp_name      = "RYY";
+        tp_doc       = "Object to represent python binding for a RYY gate of the Squander package.";
+        tp_new      = (newfunc) multi_target_gate_Wrapper_new<RYY>;
+        tp_base      = &Gate_Wrapper_Type;
+    }
+
+};
+static RYY_Wrapper_Type RYY_Wrapper_Type_ins;
+
+struct RZZ_Wrapper_Type: Gate_Wrapper_Type_tmp{
+    RZZ_Wrapper_Type(){
+        tp_name      = "RZZ";
+        tp_doc       = "Object to represent python binding for a RZZ gate of the Squander package.";
+        tp_new      = (newfunc) multi_target_gate_Wrapper_new<RZZ>;
+        tp_base      = &Gate_Wrapper_Type;
+    }
+
+};
+static RZZ_Wrapper_Type RZZ_Wrapper_Type_ins;
+
 
 struct CCX_Wrapper_Type: Gate_Wrapper_Type_tmp{
     CCX_Wrapper_Type(){
@@ -1797,6 +1843,8 @@ PyInit_gates_Wrapper(void)
         PyType_Ready(&H_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&RX_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&RXX_Wrapper_Type_ins) < 0 ||
+        PyType_Ready(&RYY_Wrapper_Type_ins) < 0 ||
+        PyType_Ready(&RZZ_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&RY_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&RZ_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&SX_Wrapper_Type_ins) < 0 ||
@@ -1849,8 +1897,12 @@ PyInit_gates_Wrapper(void)
     Py_INCREF_template(H);
 
     Py_INCREF_template(RX);
-    
+
     Py_INCREF_template(RXX);
+
+    Py_INCREF_template(RYY);
+
+    Py_INCREF_template(RZZ);
 
     Py_INCREF_template(RY);
     

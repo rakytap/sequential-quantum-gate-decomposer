@@ -59,7 +59,9 @@ from squander.gates.gates_Wrapper import (
     SWAP,
     CSWAP,
     CCX,
-    RXX )
+    RXX,
+    RYY,
+    RZZ )
 
 
 
@@ -216,7 +218,19 @@ def get_Qiskit_Circuit( Squander_circuit, parameters ):
             # RXX gate
             parameters_gate = gate.Extract_Parameters( parameters )
             target_qbits = gate.get_Target_Qbits()
-            circuit.rx( parameters_gate[0], target_qbits[0], target_qbits[1] )    
+            circuit.rxx( parameters_gate[0], target_qbits[0], target_qbits[1] )
+
+        elif isinstance( gate, RYY ):
+            # RYY gate
+            parameters_gate = gate.Extract_Parameters( parameters )
+            target_qbits = gate.get_Target_Qbits()
+            circuit.ryy( parameters_gate[0], target_qbits[0], target_qbits[1] )
+
+        elif isinstance( gate, RZZ ):
+            # RZZ gate
+            parameters_gate = gate.Extract_Parameters( parameters )
+            target_qbits = gate.get_Target_Qbits()
+            circuit.rzz( parameters_gate[0], target_qbits[0], target_qbits[1] )
 
         elif isinstance( gate, Circuit ):
             # Sub-circuit gate
@@ -377,7 +391,19 @@ def get_Qiskit_Circuit_inverse( Squander_circuit, parameters ):
             # RXX gate
             parameters_gate = gate.Extract_Parameters( parameters )
             target_qbits = gate.get_Target_Qbits()
-            circuit.rx( -parameters_gate[0], target_qbits[0], target_qbits[1] )    
+            circuit.rxx( -parameters_gate[0], target_qbits[0], target_qbits[1] )
+
+        elif isinstance( gate, RYY ):
+            # RYY gate
+            parameters_gate = gate.Extract_Parameters( parameters )
+            target_qbits = gate.get_Target_Qbits()
+            circuit.ryy( -parameters_gate[0], target_qbits[0], target_qbits[1] )
+
+        elif isinstance( gate, RZZ ):
+            # RZZ gate
+            parameters_gate = gate.Extract_Parameters( parameters )
+            target_qbits = gate.get_Target_Qbits()
+            circuit.rzz( -parameters_gate[0], target_qbits[0], target_qbits[1] )
 
         elif isinstance( gate, Circuit ):
             # Sub-circuit gate
@@ -674,11 +700,37 @@ def convert_Qiskit_to_Squander( qc_in ):
 
             params = gate.operation.params
             params[0] = params[0]/2 #SQUADER works with theta/2
-                    
+
             for param in params:
                 parameters = parameters + [float(param)]
 
-            Circuit_Squander.add_RX(  [qubit0, qubit1] )
+            Circuit_Squander.add_RXX(  [qubit0, qubit1] )
+
+        elif name == "ryy":
+            qubits = gate.qubits
+            qubit0 = q_register.index( qubits[0] )
+            qubit1 = q_register.index( qubits[1] )
+
+            params = gate.operation.params
+            params[0] = params[0]/2 #SQUADER works with theta/2
+
+            for param in params:
+                parameters = parameters + [float(param)]
+
+            Circuit_Squander.add_RYY(  [qubit0, qubit1] )
+
+        elif name == "rzz":
+            qubits = gate.qubits
+            qubit0 = q_register.index( qubits[0] )
+            qubit1 = q_register.index( qubits[1] )
+
+            params = gate.operation.params
+            params[0] = params[0]/2 #SQUADER works with theta/2
+
+            for param in params:
+                parameters = parameters + [float(param)]
+
+            Circuit_Squander.add_RZZ(  [qubit0, qubit1] )
 
         else:
             print(f"convert_Qiskit_to_Squander: Unimplemented gate: {name}")

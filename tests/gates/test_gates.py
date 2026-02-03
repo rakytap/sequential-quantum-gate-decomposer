@@ -181,7 +181,7 @@ class Test_operations:
 
         """
 
-        is_controlled_gate = (len(gate_obj.__name__) > 1) and ((gate_obj.__name__[0] == 'C') or (gate_obj.__name__[-4:] == "SWAP" or gate_obj.__name__[-3:] == "RXX"))
+        is_controlled_gate = (len(gate_obj.__name__) > 1) and ((gate_obj.__name__[0] == 'C') or (gate_obj.__name__[-4:] == "SWAP" or gate_obj.__name__[-3:] == "RXX" or gate_obj.__name__[-3:] == "RYY" or gate_obj.__name__[-3:] == "RZZ"))
         is_3qbit_gate = (gate_obj.__name__[:3] == 'CCX' or gate_obj.__name__[:5] == 'CSWAP')
         for qbit_num in range(3,7):
 
@@ -198,7 +198,17 @@ class Test_operations:
                 control_qbit = qbit_num-1
                 squander_gate = gate_obj(qbit_num, [target_qbit, control_qbit])
             elif gate_obj.__name__ == 'RXX':
-                # SWAP gate uses vector of target qubits
+                # RXX gate uses vector of target qubits
+                # For Qiskit compatibility: swap target_qbit with control_qbit (qbit_num-1)
+                control_qbit = qbit_num-1
+                squander_gate = gate_obj(qbit_num, [target_qbit, control_qbit])
+            elif gate_obj.__name__ == 'RYY':
+                # RYY gate uses vector of target qubits
+                # For Qiskit compatibility: swap target_qbit with control_qbit (qbit_num-1)
+                control_qbit = qbit_num-1
+                squander_gate = gate_obj(qbit_num, [target_qbit, control_qbit])
+            elif gate_obj.__name__ == 'RZZ':
+                # RZZ gate uses vector of target qubits
                 # For Qiskit compatibility: swap target_qbit with control_qbit (qbit_num-1)
                 control_qbit = qbit_num-1
                 squander_gate = gate_obj(qbit_num, [target_qbit, control_qbit])
@@ -315,7 +325,7 @@ class Test_operations:
         """
 
 
-        is_controlled_gate = (len(gate_obj.__name__) > 1) and  ((gate_obj.__name__[0] == 'C') or gate_obj.__name__[-4:] == "SWAP")
+        is_controlled_gate = (len(gate_obj.__name__) > 1) and  ((gate_obj.__name__[0] == 'C') or gate_obj.__name__[-4:] == "SWAP" or gate_obj.__name__[-3:] == "RXX" or gate_obj.__name__[-3:] == "RYY" or gate_obj.__name__[-3:] == "RZZ")
         is_3qbit_gate = (gate_obj.__name__[:3] == 'CCX' or gate_obj.__name__[:5] == 'CSWAP')
         for qbit_num in range(3,7):
 
@@ -332,7 +342,17 @@ class Test_operations:
                 control_qbit = qbit_num-1
                 squander_gate = gate_obj(qbit_num, [target_qbit, control_qbit])
             elif gate_obj.__name__ == 'RXX':
-                # SWAP gate uses vector of target qubits
+                # RXX gate uses vector of target qubits
+                # For Qiskit compatibility: swap target_qbit with control_qbit (qbit_num-1)
+                control_qbit = qbit_num-1
+                squander_gate = gate_obj(qbit_num, [target_qbit, control_qbit])
+            elif gate_obj.__name__ == 'RYY':
+                # RYY gate uses vector of target qubits
+                # For Qiskit compatibility: swap target_qbit with control_qbit (qbit_num-1)
+                control_qbit = qbit_num-1
+                squander_gate = gate_obj(qbit_num, [target_qbit, control_qbit])
+            elif gate_obj.__name__ == 'RZZ':
+                # RZZ gate uses vector of target qubits
                 # For Qiskit compatibility: swap target_qbit with control_qbit (qbit_num-1)
                 control_qbit = qbit_num-1
                 squander_gate = gate_obj(qbit_num, [target_qbit, control_qbit])
@@ -489,7 +509,7 @@ class Test_operations:
                 print(f"testing gate: {name}")
 
                 self.perform_gate_matrix_testing( obj )
-                if name == "SWAP" or name =="RXX":
+                if name == "SWAP" or name == "RXX" or name == "RYY" or name == "RZZ":
                     continue
                 self.perform_gate_apply_to_testing( obj )
 
