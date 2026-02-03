@@ -58,7 +58,8 @@ from squander.gates.gates_Wrapper import (
     CU,
     SWAP,
     CSWAP,
-    CCX )
+    CCX,
+    RXX )
 
 
 
@@ -210,7 +211,13 @@ def get_Qiskit_Circuit( Squander_circuit, parameters ):
             #CCX gate
             target_qbits = gate.get_Target_Qbits()
             circuit.swap(target_qbits[0], target_qbits[1])
-            
+        
+        elif isinstance( gate, RXX ):
+            # RXX gate
+            parameters_gate = gate.Extract_Parameters( parameters )
+            target_qbits = gate.get_Target_Qbits()
+            circuit.rx( parameters_gate[0], target_qbits[0], target_qbits[1] )    
+
         elif isinstance( gate, Circuit ):
             # Sub-circuit gate
             raise ValueError("Qiskit export of circuits with subcircuit is not supported. Use Circuit::get_Flat_Circuit prior of exporting circuit.")  
@@ -366,6 +373,11 @@ def get_Qiskit_Circuit_inverse( Squander_circuit, parameters ):
             #CCX gate
             target_qbits = gate.get_Target_Qbits()
             circuit.swap(target_qbits[0], target_qbits[1])
+        elif isinstance( gate, RXX ):
+            # RXX gate
+            parameters_gate = gate.Extract_Parameters( parameters )
+            target_qbits = gate.get_Target_Qbits()
+            circuit.rx( -parameters_gate[0], target_qbits[0], target_qbits[1] )    
 
         elif isinstance( gate, Circuit ):
             # Sub-circuit gate
@@ -655,6 +667,18 @@ def convert_Qiskit_to_Squander( qc_in ):
             qubit0 = q_register.index( qubits[0] )
             qubit1 = q_register.index( qubits[1] )
             Circuit_Squander.add_SWAP( [qubit1, qubit0] )
+        elif name == "rxx":
+            qubits = gate.qubits
+            qubit0 = q_register.index( qubits[0] )
+            qubit1 = q_register.index( qubits[1] )
+
+            params = gate.operation.params
+            params[0] = params[0]/2 #SQUADER works with theta/2
+                    
+            for param in params:
+                parameters = parameters + [float(param)]
+
+            Circuit_Squander.add_RX(  [qubit0, qubit1] )
 
         else:
             print(f"convert_Qiskit_to_Squander: Unimplemented gate: {name}")

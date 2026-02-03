@@ -61,7 +61,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "SWAP.h"
 #include "CSWAP.h"
 #include "numpy_interface.h"
-
+#include "RXX.h"
 
 //////////////////////////////////////
 
@@ -524,7 +524,6 @@ Gate_Wrapper_get_Matrix( Gate_Wrapper *self, PyObject *args, PyObject *kwds ) {
 
         // get the C++ wrapper around the input data
         Matrix_real&& parameters_mtx = numpy2matrix_real( parameters_arr );
-
         int parallel = 1;
         gate_mtx = self->gate->get_matrix( parameters_mtx, parallel );
 
@@ -1453,7 +1452,18 @@ Gate_Wrapper_setstate( Gate_Wrapper *self, PyObject *args ) {
     case CR_OPERATION: {
         gate = create_controlled_gate<CR>( qbit_num, target_qbit, control_qbit );
         break;
-    }    
+    }
+    case RXX_OPERATION: {
+        if (!target_qbits.empty()) {
+            // Use vector-based constructor
+            gate = create_multi_target_gate<RXX>( qbit_num, target_qbits );
+        } else {
+            // Legacy: convert old format (target_qbit, control_qbit) to vector format
+            std::vector<int> swap_targets = {target_qbit, control_qbit};
+            gate = create_multi_target_gate<RXX>( qbit_num, swap_targets );
+        }
+        break;
+    }
     case SWAP_OPERATION: {
         if (!target_qbits.empty()) {
             // Use vector-based constructor
@@ -1646,6 +1656,18 @@ struct SWAP_Wrapper_Type: Gate_Wrapper_Type_tmp{
 };
 static SWAP_Wrapper_Type SWAP_Wrapper_Type_ins;
 
+struct RXX_Wrapper_Type: Gate_Wrapper_Type_tmp{
+    RXX_Wrapper_Type(){
+        tp_name      = "RXX";
+        tp_doc       = "Object to represent python binding for a RXX gate of the Squander package.";
+        tp_new      = (newfunc) multi_target_gate_Wrapper_new<RXX>;
+        tp_base      = &Gate_Wrapper_Type;
+    }
+
+};
+static RXX_Wrapper_Type RXX_Wrapper_Type_ins;
+
+
 struct CCX_Wrapper_Type: Gate_Wrapper_Type_tmp{
     CCX_Wrapper_Type(){
         tp_name      = "CCX";
@@ -1774,6 +1796,7 @@ PyInit_gates_Wrapper(void)
         PyType_Ready(&CP_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&H_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&RX_Wrapper_Type_ins) < 0 ||
+        PyType_Ready(&RXX_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&RY_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&RZ_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&SX_Wrapper_Type_ins) < 0 ||
@@ -1826,6 +1849,8 @@ PyInit_gates_Wrapper(void)
     Py_INCREF_template(H);
 
     Py_INCREF_template(RX);
+    
+    Py_INCREF_template(RXX);
 
     Py_INCREF_template(RY);
     

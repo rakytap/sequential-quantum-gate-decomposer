@@ -181,7 +181,7 @@ class Test_operations:
 
         """
 
-        is_controlled_gate = (len(gate_obj.__name__) > 1) and ((gate_obj.__name__[0] == 'C') or gate_obj.__name__[-4:] == "SWAP")
+        is_controlled_gate = (len(gate_obj.__name__) > 1) and ((gate_obj.__name__[0] == 'C') or (gate_obj.__name__[-4:] == "SWAP" or gate_obj.__name__[-3:] == "RXX"))
         is_3qbit_gate = (gate_obj.__name__[:3] == 'CCX' or gate_obj.__name__[:5] == 'CSWAP')
         for qbit_num in range(3,7):
 
@@ -193,6 +193,11 @@ class Test_operations:
                 # single qbit gate
                 squander_gate = gate_obj( qbit_num, target_qbit )
             elif gate_obj.__name__ == 'SWAP':
+                # SWAP gate uses vector of target qubits
+                # For Qiskit compatibility: swap target_qbit with control_qbit (qbit_num-1)
+                control_qbit = qbit_num-1
+                squander_gate = gate_obj(qbit_num, [target_qbit, control_qbit])
+            elif gate_obj.__name__ == 'RXX':
                 # SWAP gate uses vector of target qubits
                 # For Qiskit compatibility: swap target_qbit with control_qbit (qbit_num-1)
                 control_qbit = qbit_num-1
@@ -326,6 +331,12 @@ class Test_operations:
                 # For Qiskit compatibility: swap target_qbit with control_qbit (qbit_num-1)
                 control_qbit = qbit_num-1
                 squander_gate = gate_obj(qbit_num, [target_qbit, control_qbit])
+            elif gate_obj.__name__ == 'RXX':
+                # SWAP gate uses vector of target qubits
+                # For Qiskit compatibility: swap target_qbit with control_qbit (qbit_num-1)
+                control_qbit = qbit_num-1
+                squander_gate = gate_obj(qbit_num, [target_qbit, control_qbit])
+
             elif gate_obj.__name__ == 'CCX':
                 # CCX gate uses target_qbit and vector of control qubits
                 control_qbit = qbit_num-2
@@ -478,7 +489,7 @@ class Test_operations:
                 print(f"testing gate: {name}")
 
                 self.perform_gate_matrix_testing( obj )
-                if name == "SWAP":
+                if name == "SWAP" or name =="RXX":
                     continue
                 self.perform_gate_apply_to_testing( obj )
 
