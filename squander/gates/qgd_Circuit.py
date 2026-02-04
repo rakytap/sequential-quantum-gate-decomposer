@@ -59,6 +59,9 @@ from squander.gates.gates_Wrapper import (
     CCX,
     CSWAP,
     SWAP,
+    RXX,
+    RYY,
+    RZZ
 )
 
 
@@ -379,6 +382,45 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
             super(qgd_Circuit, self).add_SWAP(list(target_qbits))
         if isinstance(target_qbits, int) and target_qbit2 != -1:
             super(qgd_Circuit, self).add_SWAP(list([target_qbits, target_qbit2]))
+    
+    def add_RXX(self, target_qbits, target_qbit2=-1):
+        """Add a RXX gate to the front of the gate structure.
+
+        Args:
+            target_qbits: List of target qubits (list of int) - at least 2 qubits required
+            target_qbit2: Optional second qubit if target_qbits is a single int
+        """
+        # Ensure target_qbits is a list
+        if isinstance(target_qbits, (list, tuple)):
+            super(qgd_Circuit, self).add_RXX(list(target_qbits))
+        if isinstance(target_qbits, int) and target_qbit2 != -1:
+            super(qgd_Circuit, self).add_RXX(list([target_qbits, target_qbit2]))
+
+    def add_RYY(self, target_qbits, target_qbit2=-1):
+        """Add a RYY gate to the front of the gate structure.
+
+        Args:
+            target_qbits: List of target qubits (list of int) - at least 2 qubits required
+            target_qbit2: Optional second qubit if target_qbits is a single int
+        """
+        # Ensure target_qbits is a list
+        if isinstance(target_qbits, (list, tuple)):
+            super(qgd_Circuit, self).add_RYY(list(target_qbits))
+        if isinstance(target_qbits, int) and target_qbit2 != -1:
+            super(qgd_Circuit, self).add_RYY(list([target_qbits, target_qbit2]))
+
+    def add_RZZ(self, target_qbits, target_qbit2=-1):
+        """Add a RZZ gate to the front of the gate structure.
+
+        Args:
+            target_qbits: List of target qubits (list of int) - at least 2 qubits required
+            target_qbit2: Optional second qubit if target_qbits is a single int
+        """
+        # Ensure target_qbits is a list
+        if isinstance(target_qbits, (list, tuple)):
+            super(qgd_Circuit, self).add_RZZ(list(target_qbits))
+        if isinstance(target_qbits, int) and target_qbit2 != -1:
+            super(qgd_Circuit, self).add_RZZ(list([target_qbits, target_qbit2]))
 
     def add_CSWAP(self, target_qbits, control_qbits):
         """Add a CSWAP (Fredkin) gate to the front of the gate structure.
@@ -697,6 +739,12 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
             self.add_CP(qgd_gate.get_Target_Qbit(), qgd_gate.get_Control_Qbit())
         elif isinstance(qgd_gate, SWAP):
             self.add_SWAP(qgd_gate.get_Target_Qbits())
+        elif isinstance(qgd_gate, RXX):
+            self.add_RXX(qgd_gate.get_Target_Qbits())
+        elif isinstance(qgd_gate, RYY):
+            self.add_RYY(qgd_gate.get_Target_Qbits())
+        elif isinstance(qgd_gate, RZZ):
+            self.add_RZZ(qgd_gate.get_Target_Qbits())
         elif isinstance(qgd_gate, CSWAP):
             self.add_CSWAP(qgd_gate.get_Target_Qbits(), qgd_gate.get_Control_Qbits())
         elif isinstance(qgd_gate, CCX):

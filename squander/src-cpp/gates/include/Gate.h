@@ -73,7 +73,10 @@ typedef enum gate_type {GENERAL_OPERATION=1,
                         CRZ_OPERATION=40,
                         CCX_OPERATION=41,
                         SWAP_OPERATION=42,
-                        CSWAP_OPERATION=43} gate_type;
+                        CSWAP_OPERATION=43,
+                        RXX_OPERATION=44,
+                        RYY_OPERATION=45,
+                        RZZ_OPERATION=46} gate_type;
 
 
 #ifdef _WIN32
