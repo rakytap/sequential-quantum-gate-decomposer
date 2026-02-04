@@ -137,16 +137,26 @@ void RYY::apply_to(Matrix_real& parameters, Matrix& input, int parallel) {
     U_2qbit[3*4].imag = 1.*std::sin(ThetaOver2);
     int inner_qbit = target_qbits[0]<target_qbits[1] ? target_qbits[0]:target_qbits[1];
     int outer_qbit = target_qbits[0]>target_qbits[1] ? target_qbits[0]:target_qbits[1];
-    if (parallel){
-        #ifdef USE_AVX
-            apply_2qbit_kernel_to_matrix_input_parallel_AVX_OpenMP(U_2qbit,input,target_qbits,input.cols);
-        #else
-            apply_2qbit_kernel_to_matrix_input(U_2qbit,input,inner_qbit,outer_qbit,input.cols);
-        #endif
-
-    }
-    else{
-        apply_2qbit_kernel_to_matrix_input(U_2qbit,input,inner_qbit,outer_qbit,input.cols);
+    switch (parallel){
+        case 0:{
+            apply_large_kernel_to_input(U_2qbit,input,target_qbits,input.rows);
+            break;
+        }
+        case 1:{
+            #ifdef USE_AVX
+                apply_large_kernel_to_input_AVX_OpenMP(U_2qbit,input,target_qbits,input.cols);
+            #else
+                apply_large_kernel_to_input(U_2qbit,input,target_qbits,input.rows);
+            #endif
+            break;
+        }
+        case 2:{
+            #ifdef USE_AVX
+                apply_large_kernel_to_input_AVX_TBB(U_2qbit,input,target_qbits,input.cols);
+            #else
+                apply_large_kernel_to_input(U_2qbit,input,target_qbits,input.rows);
+            #endif
+            break;        }
     }
 
 
