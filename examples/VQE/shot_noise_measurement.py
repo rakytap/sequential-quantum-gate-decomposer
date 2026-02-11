@@ -132,7 +132,7 @@ def main():
     # ----------------------
     #   Simulation config
     # ----------------------
-    n_qubits = 3
+    n_qubits = 2
     h = 0.5
     topology = None  # ring if None
 
@@ -279,7 +279,7 @@ def main():
     # ===================================================
     #   Shot-noise run setup
     # ===================================================
-    shots = 10000
+    shots = 100
     p_readout = 0.0
     seed = 42
 
