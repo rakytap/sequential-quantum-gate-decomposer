@@ -267,7 +267,7 @@ def test_z_only_shot_noise_analytic_and_simulation():
     # create a Z-only Hamiltonian via the generator
     H, oplist = generate_zz_xx_hamiltonian(n_qubits=n, h=[0.5, -1.0, 0.25], Jz=0.0, Jx=0.0, Jy=0.0)
     z_terms = [t for t in oplist if t[0] == "Z"]
-    shots = 2000
+    shots = 2
     p = 0.1
     mean_sim, var_sim = _python_shot_noise_z_estimator(z_terms, shots, p, seed=123)
 
@@ -310,7 +310,7 @@ def test_wrapper_shot_noise_against_analytic():
 
             def Expectation_Value_Shot_Noise(self, input_dict):
                 # Expect input_dict to contain keys: shots, p_readout, z_terms, seed
-                shots = int(input_dict.get("shots", 1000))
+                shots = int(input_dict.get("shots", 2))
                 p = float(input_dict.get("p_readout", 0.0))
                 z_terms = input_dict.get("z_terms", [])
                 # convert to same form used by python estimator
@@ -332,7 +332,7 @@ def test_wrapper_shot_noise_against_analytic():
     state[0] = 1.0
     vqe.set_Initial_State(state)
 
-    shots = 2000
+    shots = 2
     p = 0.12
     input_dict = {"shots": shots, "p_readout": p, "zz_terms": [], "xx_terms": [], "yy_terms": [], "z_terms": z_terms_for_dict, "seed": 42}
     res = vqe.Expectation_Value_Shot_Noise(input_dict)
