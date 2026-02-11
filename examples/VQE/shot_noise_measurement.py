@@ -132,7 +132,7 @@ def main():
     # ----------------------
     #   Simulation config
     # ----------------------
-    n_qubits = 10
+    n_qubits = 3
     h = 0.5
     topology = None  # ring if None
 
@@ -204,7 +204,7 @@ def main():
     VQE = Variational_Quantum_Eigensolver(Hamiltonian, n_qubits, config, accelerator_num=0)
     VQE.set_Optimizer("COSINE")
     VQE.set_Ansatz("HEA_ZYZ")
-    VQE.Generate_Circuit(layers=50, inner_blocks=1)
+    VQE.Generate_Circuit(layers=2, inner_blocks=1)
 
     param_num = VQE.get_Parameter_Num()
     parameters = np.random.randn(param_num) * 2 * np.pi
@@ -279,7 +279,7 @@ def main():
     # ===================================================
     #   Shot-noise run setup
     # ===================================================
-    shots = 10000000
+    shots = 10000
     p_readout = 0.0
     seed = 42
 
