@@ -186,6 +186,41 @@ void add_rx(int target_qbit);
 void add_rx_to_front(int target_qbit);
 
 /**
+@brief Append a RXX gate to the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_rxx(std::vector<int> target_qbits);
+
+/**
+@brief Add a RXX gate to the front of the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_rxx_to_front(std::vector<int> target_qbits);
+
+/**
+@brief Append a RYY gate to the list of gates
+@param target_qbits The identification numbers of the target qubits (should contain exactly 2 elements)
+*/
+void add_ryy(std::vector<int> target_qbits);
+
+/**
+@brief Add a RYY gate to the front of the list of gates
+@param target_qbits The identification numbers of the target qubits (should contain exactly 2 elements)
+*/
+void add_ryy_to_front(std::vector<int> target_qbits);
+
+/**
+@brief Append a RZZ gate to the list of gates
+@param target_qbits The identification numbers of the target qubits (should contain exactly 2 elements)
+*/
+void add_rzz(std::vector<int> target_qbits);
+
+/**
+@brief Add a RZZ gate to the front of the list of gates
+@param target_qbits The identification numbers of the target qubits (should contain exactly 2 elements)
+*/
+void add_rzz_to_front(std::vector<int> target_qbits);
+/**
 @brief Append a R gate to the list of gates
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 */
