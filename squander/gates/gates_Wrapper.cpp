@@ -64,6 +64,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "RXX.h"
 #include "RYY.h"
 #include "RZZ.h"
+#include "SXdg.h"
 
 //////////////////////////////////////
 
@@ -1391,6 +1392,10 @@ Gate_Wrapper_setstate( Gate_Wrapper *self, PyObject *args ) {
         gate = create_gate<SX>( qbit_num, target_qbit );
         break;
     }    
+    case SXDG_OPERATION: {
+        gate = create_gate<SXdg>( qbit_num, target_qbit );
+        break;
+    }    
     case T_OPERATION: {
         gate = create_gate<T>( qbit_num, target_qbit );
         break;
@@ -1784,6 +1789,8 @@ gate_wrapper_type_template(SDG, Gate_Wrapper_new);
 
 gate_wrapper_type_template(SX, Gate_Wrapper_new);
 
+gate_wrapper_type_template(SXdg, Gate_Wrapper_new);
+
 gate_wrapper_type_template(T, Gate_Wrapper_new);
 
 gate_wrapper_type_template(Tdg, Gate_Wrapper_new);
@@ -1848,6 +1855,7 @@ PyInit_gates_Wrapper(void)
         PyType_Ready(&RY_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&RZ_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&SX_Wrapper_Type_ins) < 0 ||
+        PyType_Ready(&SXdg_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&SYC_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&U1_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&U2_Wrapper_Type_ins) < 0 ||
@@ -1931,6 +1939,13 @@ PyInit_gates_Wrapper(void)
     Py_INCREF(&SDG_Wrapper_Type_ins);
     if (PyModule_AddObject(m, "Sdg", (PyObject *) & SDG_Wrapper_Type_ins) < 0) {
         Py_DECREF(& SDG_Wrapper_Type_ins);
+        Py_DECREF(m);
+        return NULL;
+    }
+
+    Py_INCREF(&SXdg_Wrapper_Type_ins);
+    if (PyModule_AddObject(m, "SXdg", (PyObject *) & SXdg_Wrapper_Type_ins) < 0) {
+        Py_DECREF(& SXdg_Wrapper_Type_ins);
         Py_DECREF(m);
         return NULL;
     }
