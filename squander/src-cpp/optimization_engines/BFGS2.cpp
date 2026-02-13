@@ -146,9 +146,9 @@ CPU_time = 0.0;
         sstream << "max_inner_iterations: " << max_inner_iterations_loc  << std::endl;
         print(sstream, 2);
 
-        bool use_basin_hopping = false;
-        bool use_de = false;
-        bool use_dual_annealing = false;
+        long long use_basin_hopping = 0;
+        long long use_de = 0;
+        long long use_dual_annealing = 0;
         if ( config.count("use_basin_hopping") > 0 ) {
             config["use_basin_hopping"].get_property( use_basin_hopping );  
         } else if ( config.count("use_differential_evolution") > 0 ) {
@@ -157,7 +157,7 @@ CPU_time = 0.0;
             config["use_dual_annealing"].get_property( use_dual_annealing );  
         }
         if (!use_basin_hopping && !use_de && !use_dual_annealing) {
-            use_dual_annealing = true; //use_basin_hopping = true;
+            use_dual_annealing = 1; //use_basin_hopping = 1;
         } 
 
         if (use_basin_hopping) {
