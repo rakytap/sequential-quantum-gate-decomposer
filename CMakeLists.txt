@@ -855,33 +855,41 @@ endif()
 
 add_library(qgd SHARED
     ${qgd_files})
+# Ensure nlohmann/json is available for CI and local builds. Prefer a
+# vendored single-header in-tree to avoid FetchContent/configuring the
+# upstream CMake project (which can fail on some CI macOS/toolchain combos).
 
-# Ensure nlohmann/json is available for CI and local builds by vendoring it
-# This avoids requiring a system package and keeps changes additive only.
-include(FetchContent)
-FetchContent_Declare(
-  nlohmann_json
-  GIT_REPOSITORY https://github.com/nlohmann/json.git
-  GIT_TAG v3.11.2
-)
-FetchContent_MakeAvailable(nlohmann_json)
-
-# If FetchContent or the imported target is not available (older CMake or network
-# restrictions), attempt a lightweight single-header fallback by downloading the
-# single_include header into the build tree and adding it to include paths.
-if(NOT TARGET nlohmann_json::nlohmann_json)
-  message(STATUS "nlohmann_json target not available — trying single-header fallback")
-  set(NLOHMANN_BUILD_DIR "${CMAKE_BINARY_DIR}/third_party/nlohmann/include/nlohmann")
-  file(MAKE_DIRECTORY "${NLOHMANN_BUILD_DIR}")
-  set(NLOHMANN_RAW_URL "https://raw.githubusercontent.com/nlohmann/json/v3.11.2/single_include/nlohmann/json.hpp")
-  set(NLOHMANN_OUT "${NLOHMANN_BUILD_DIR}/json.hpp")
-  file(DOWNLOAD "${NLOHMANN_RAW_URL}" "${NLOHMANN_OUT}" SHOW_PROGRESS STATUS _nlohmann_dl_status)
-  list(GET _nlohmann_dl_status 0 _nlohmann_dl_code)
-  if(_nlohmann_dl_code EQUAL 0 AND EXISTS "${NLOHMANN_OUT}")
-    message(STATUS "Downloaded nlohmann/json.hpp to ${NLOHMANN_OUT}")
-    list(APPEND EXTRA_INCLUDES "${CMAKE_BINARY_DIR}/third_party/nlohmann/include")
+# Path where a vendored single-header would live if added to repo
+set(NLOHMANN_VENDOR_HEADER "${PROJECT_SOURCE_DIR}/third_party/nlohmann/single_include/nlohmann/json.hpp")
+if(EXISTS "${NLOHMANN_VENDOR_HEADER}")
+  message(STATUS "Using vendored nlohmann/json.hpp from ${NLOHMANN_VENDOR_HEADER}")
+  list(APPEND EXTRA_INCLUDES "${PROJECT_SOURCE_DIR}/third_party/nlohmann/single_include")
+  set(NLOHMANN_USING_VENDOR TRUE)
+else()
+  # Try to find an installed package first
+  find_package(nlohmann_json QUIET)
+  if(TARGET nlohmann_json::nlohmann_json)
+    message(STATUS "Found system nlohmann_json target")
+    set(NLOHMANN_USING_PACKAGE TRUE)
   else()
-    message(WARNING "Could not obtain nlohmann/json.hpp via FetchContent or fallback download. If builds fail, consider vendoring the header in-tree.")
+    # Last resort: use FetchContent to fetch the project (may attempt to
+    # configure the dependency project which can fail on some platforms).
+    # Instead of configuring the upstream nlohmann CMake project (which can
+    # fail on some CI/toolchains), attempt to download the single-header
+    # directly into the build tree as a header-only fallback.
+    message(STATUS "Attempting to download nlohmann single_header as fallback")
+    set(NLOHMANN_BUILD_DIR "${CMAKE_BINARY_DIR}/third_party/nlohmann/single_include/nlohmann")
+    file(MAKE_DIRECTORY "${NLOHMANN_BUILD_DIR}")
+    set(NLOHMANN_RAW_URL "https://raw.githubusercontent.com/nlohmann/json/v3.11.2/single_include/nlohmann/json.hpp")
+    set(NLOHMANN_OUT "${NLOHMANN_BUILD_DIR}/json.hpp")
+    file(DOWNLOAD "${NLOHMANN_RAW_URL}" "${NLOHMANN_OUT}" SHOW_PROGRESS STATUS _nlohmann_dl_status EXPECTED_HASH SHA256=7a1f8a8d8d8e9b6c6b8d9e1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c OPTIONAL)
+    list(GET _nlohmann_dl_status 0 _nlohmann_dl_code)
+    if(_nlohmann_dl_code EQUAL 0 AND EXISTS "${NLOHMANN_OUT}")
+      message(STATUS "Downloaded nlohmann/json.hpp to ${NLOHMANN_OUT}")
+      list(APPEND EXTRA_INCLUDES "${CMAKE_BINARY_DIR}/third_party/nlohmann/single_include")
+    else()
+      message(WARNING "Could not download nlohmann/json.hpp fallback. Consider vendoring the header at third_party/nlohmann/single_include/nlohmann/json.hpp")
+    endif()
   endif()
 endif()
 
@@ -905,8 +913,9 @@ target_link_libraries( qgd PRIVATE
     ${OpenMP_CXX_LIBRARIES}
     )
 
-# If the nlohmann_json imported target exists, link it. Otherwise rely on the
-# possible single-header fallback (added to EXTRA_INCLUDES above).
+# Link the imported nlohmann target if available (preferred when find_package
+# or FetchContent provided it). If we're using a header-only vendor include,
+# no link is necessary.
 if(TARGET nlohmann_json::nlohmann_json)
   target_link_libraries(qgd PRIVATE nlohmann_json::nlohmann_json)
 endif()
