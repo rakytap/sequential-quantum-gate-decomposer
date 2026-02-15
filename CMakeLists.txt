@@ -856,6 +856,35 @@ endif()
 add_library(qgd SHARED
     ${qgd_files})
 
+# Ensure nlohmann/json is available for CI and local builds by vendoring it
+# This avoids requiring a system package and keeps changes additive only.
+include(FetchContent)
+FetchContent_Declare(
+  nlohmann_json
+  GIT_REPOSITORY https://github.com/nlohmann/json.git
+  GIT_TAG v3.11.2
+)
+FetchContent_MakeAvailable(nlohmann_json)
+
+# If FetchContent or the imported target is not available (older CMake or network
+# restrictions), attempt a lightweight single-header fallback by downloading the
+# single_include header into the build tree and adding it to include paths.
+if(NOT TARGET nlohmann_json::nlohmann_json)
+  message(STATUS "nlohmann_json target not available — trying single-header fallback")
+  set(NLOHMANN_BUILD_DIR "${CMAKE_BINARY_DIR}/third_party/nlohmann/include/nlohmann")
+  file(MAKE_DIRECTORY "${NLOHMANN_BUILD_DIR}")
+  set(NLOHMANN_RAW_URL "https://raw.githubusercontent.com/nlohmann/json/v3.11.2/single_include/nlohmann/json.hpp")
+  set(NLOHMANN_OUT "${NLOHMANN_BUILD_DIR}/json.hpp")
+  file(DOWNLOAD "${NLOHMANN_RAW_URL}" "${NLOHMANN_OUT}" SHOW_PROGRESS STATUS _nlohmann_dl_status)
+  list(GET _nlohmann_dl_status 0 _nlohmann_dl_code)
+  if(_nlohmann_dl_code EQUAL 0 AND EXISTS "${NLOHMANN_OUT}")
+    message(STATUS "Downloaded nlohmann/json.hpp to ${NLOHMANN_OUT}")
+    list(APPEND EXTRA_INCLUDES "${CMAKE_BINARY_DIR}/third_party/nlohmann/include")
+  else()
+    message(WARNING "Could not obtain nlohmann/json.hpp via FetchContent or fallback download. If builds fail, consider vendoring the header in-tree.")
+  endif()
+endif()
+
 # adding compile options
 target_compile_options(qgd PUBLIC
     ${CXX_FLAGS}
@@ -875,6 +904,12 @@ target_link_libraries( qgd PRIVATE
     ${MPI_C_LIBRARIES}
     ${OpenMP_CXX_LIBRARIES}
     )
+
+# If the nlohmann_json imported target exists, link it. Otherwise rely on the
+# possible single-header fallback (added to EXTRA_INCLUDES above).
+if(TARGET nlohmann_json::nlohmann_json)
+  target_link_libraries(qgd PRIVATE nlohmann_json::nlohmann_json)
+endif()
 
 
 target_include_directories(qgd PRIVATE
