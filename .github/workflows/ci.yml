@@ -42,6 +42,13 @@ jobs:
         python setup.py build_ext -q
 
     - name: Test
+      env:
+        OMP_NUM_THREADS: 1
+        OPENBLAS_NUM_THREADS: 1
+        MKL_NUM_THREADS: 1
+        VECLIB_MAXIMUM_THREADS: 1
+        NUMEXPR_NUM_THREADS: 1
+        PYTHONWARNINGS: default
       run: |
         pytest tests/ -x -v --tb=line
 
@@ -156,5 +163,12 @@ jobs:
         python setup.py build_ext -q
 
     - name: Test
+      env:
+        OMP_NUM_THREADS: 1
+        OPENBLAS_NUM_THREADS: 1
+        MKL_NUM_THREADS: 1
+        VECLIB_MAXIMUM_THREADS: 1
+        NUMEXPR_NUM_THREADS: 1
+        PYTHONWARNINGS: default
       run: |
         pytest tests/ -x -v --tb=line
