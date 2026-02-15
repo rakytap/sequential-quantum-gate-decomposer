@@ -32,14 +32,8 @@ np.set_printoptions(linewidth=200)
 #  Generate ZZ Hamiltonian + field terms
 # =======================================
 
-# Import the C++-backed VQE class
-import numpy as np
-import scipy as sp
-from qiskit.quantum_info import SparsePauliOp
-
-from squander.variational_quantum_eigensolver.qgd_Variational_Quantum_Eigensolver_Base import (
-    qgd_Variational_Quantum_Eigensolver_Base as Variational_Quantum_Eigensolver,
-)
+# Import the C++-backed VQE class inside main() to avoid loading the
+# native extension at import time (keeps pytest collection safe).
 
 def generate_zz_xx_hamiltonian(n_qubits, h=0.5, topology=None, Jz=1.0, Jx=1.0, Jy=1.0):
     """Create a Heisenberg-like Hamiltonian and a Pauli-format oplist.
@@ -128,6 +122,10 @@ def main():
     prefer using the unit-tests under ``tests/VQE`` which include
     lightweight fallbacks when the native extension is unavailable.
     """
+
+    from squander.variational_quantum_eigensolver.qgd_Variational_Quantum_Eigensolver_Base import (
+        qgd_Variational_Quantum_Eigensolver_Base as Variational_Quantum_Eigensolver,
+    )
 
     # ----------------------
     #   Simulation config
