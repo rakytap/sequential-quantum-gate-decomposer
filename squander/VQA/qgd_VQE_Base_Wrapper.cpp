@@ -839,6 +839,208 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_Optimization_Problem( qgd_Varia
     return Py_BuildValue("d", f0);
 }
 
+//============================================================================================================================================
+//============================================================================================================================================
+//============================================================================================================================================
+/**
+ * Wrapper function to evaluate the real part of the energy expectation
+ * value ⟨ψ_left | H | ψ_right⟩ and return it as a Python float.
+ *
+ * Python signature:
+ *   Expectation_value_of_energy_real(state_left: np.ndarray, state_right: np.ndarray) -> float
+ *
+ * Behavior:
+ *  - Expects two 1-D complex128 numpy arrays representing the left and
+ *    right state vectors. These arrays are converted to the internal
+ *    `Matrix` representation via `numpy2matrix`.
+ *  - Calls the underlying C++ `Expectation_value_of_energy_real` method and
+ *    returns the resulting double as a Python float.
+ *  - On C++ exceptions (thrown as std::string or other), the wrapper
+ *    translates them into Python exceptions using `PyErr_SetString`.
+ *
+ * Notes:
+ *  - No mutation of the input numpy arrays occurs in this wrapper.
+ *  - This wrapper performs minimal validation and relies on the C++
+ *    implementation for dimension checks and error reporting.
+ */
+static PyObject *
+qgd_Variational_Quantum_Eigensolver_Base_Wrapper_Expectation_value_of_energy_real(
+    qgd_Variational_Quantum_Eigensolver_Base_Wrapper *self, PyObject *args)
+{
+    PyArrayObject *state_left_arg = NULL;
+    PyArrayObject *state_right_arg = NULL;
+
+    // Parse two numpy arrays
+    if (!PyArg_ParseTuple(args, "|OO", &state_left_arg, &state_right_arg)) {
+        PyErr_SetString(PyExc_Exception, "Failed to parse input states");
+        return NULL;
+    }
+
+    if (!state_left_arg || !state_right_arg) {
+        PyErr_SetString(PyExc_Exception, "Two state vectors are required");
+        return NULL;
+    }
+
+    // Convert Python arrays → Matrix
+    Matrix state_left = numpy2matrix(state_left_arg);
+    Matrix state_right = numpy2matrix(state_right_arg);
+
+    double energy = 0.0;
+    try {
+        energy = self->vqe->Expectation_value_of_energy_real(state_left, state_right);
+    } catch (std::string &err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    } catch (...) {
+        PyErr_SetString(PyExc_Exception, "Unexpected error in Expectation_value_of_energy_real");
+        return NULL;
+    }
+
+    return Py_BuildValue("d", energy);
+}
+
+/**
+ * Wrapper to compute an estimated expectation value using Monte–Carlo shot
+ * sampling with optional readout errors.
+ *
+ * Python signature:
+ *   Expectation_Value_Shot_Noise(input_dict: dict) -> dict
+ *
+ * Expected dictionary keys (required):
+ *   - "shots": int
+ *   - "p_readout": float (probability of single-qubit bit-flip during readout)
+ * Optional keys:
+ *   - "seed": int (RNG seed)
+ *   - "zz_terms", "xx_terms", "yy_terms": lists of {"i":int, "j":int, "coeff":float}
+ *   - "z_terms": list of {"i":int, "coeff":float}
+ *
+ * Behavior:
+ *  - Parses and validates the dictionary, converts term lists into the C++
+ *    internal term containers, constructs the current quantum state by
+ *    applying the instance ansatz to the `initial_state`, and calls the
+ *    C++ `Expectation_value_with_shot_noise_real` routine.
+ *  - On success returns a Python dict with keys: "mean", "variance",
+ *    and "std_error" (all floats).
+ *  - Any C++ exceptions are converted to Python exceptions with an
+ *    appropriate error message.
+ *
+ * Notes:
+ *  - The wrapper accepts term lists as Python dicts as shown above.
+ *  - No modification of the supplied dictionary occurs.
+ */
+static PyObject *
+qgd_Variational_Quantum_Eigensolver_Base_Wrapper_Expectation_Value_Shot_Noise(
+    qgd_Variational_Quantum_Eigensolver_Base_Wrapper *self, PyObject *args)
+{
+    PyObject *dict_arg = NULL;
+    if (!PyArg_ParseTuple(args, "|O", &dict_arg)) {
+        PyErr_SetString(PyExc_Exception, "Failed to parse dictionary argument.");
+        return NULL;
+    }
+    if (!PyDict_Check(dict_arg)) {
+        PyErr_SetString(PyExc_Exception, "Expected a Python dictionary as input.");
+        return NULL;
+    }
+
+    // required keys
+    PyObject* shots_obj = PyDict_GetItemString(dict_arg, "shots");
+    PyObject* p_readout_obj = PyDict_GetItemString(dict_arg, "p_readout");
+    if (!shots_obj || !p_readout_obj) {
+        PyErr_SetString(PyExc_Exception, "Missing 'shots' or 'p_readout' in dictionary.");
+        return NULL;
+    }
+    const int shots = (int)PyLong_AsLong(shots_obj);
+    const double p_readout = PyFloat_AsDouble(p_readout_obj);
+
+    // Optional seed
+    uint64_t seed = 0;
+    PyObject *seed_obj = PyDict_GetItemString(dict_arg, "seed");
+    if (seed_obj && PyLong_Check(seed_obj)) {
+        seed = (uint64_t)PyLong_AsUnsignedLongLong(seed_obj);
+    }
+
+    // --- Parse ZZ terms ---
+    PyObject *zz_list = PyDict_GetItemString(dict_arg, "zz_terms");
+    if (!zz_list || !PyList_Check(zz_list)) {
+        PyErr_SetString(PyExc_Exception, "Missing or invalid 'zz_terms' list.");
+        return NULL;
+    }
+    self->vqe->zz_terms.clear();
+    for (Py_ssize_t k = 0; k < PyList_Size(zz_list); ++k) {
+        PyObject *item = PyList_GetItem(zz_list, k);
+        int i_idx = (int)PyLong_AsLong(PyDict_GetItemString(item, "i"));
+        int j_idx = (int)PyLong_AsLong(PyDict_GetItemString(item, "j"));
+        double coeff = PyFloat_AsDouble(PyDict_GetItemString(item, "coeff"));
+        self->vqe->zz_terms.emplace_back(i_idx, j_idx, coeff);
+    }
+
+    // --- Parse Z terms (optional) ---
+    self->vqe->z_terms.clear();
+    PyObject *z_list = PyDict_GetItemString(dict_arg, "z_terms");
+    if (z_list && PyList_Check(z_list)) {
+        for (Py_ssize_t k = 0; k < PyList_Size(z_list); ++k) {
+            PyObject *item = PyList_GetItem(z_list, k);
+            int i_idx = (int)PyLong_AsLong(PyDict_GetItemString(item, "i"));
+            double coeff = PyFloat_AsDouble(PyDict_GetItemString(item, "coeff"));
+            self->vqe->z_terms.emplace_back(i_idx, coeff);
+        }
+    }
+
+    // --- Parse XX terms (new!) ---
+    self->vqe->xx_terms.clear();
+    PyObject *xx_list = PyDict_GetItemString(dict_arg, "xx_terms");
+    if (xx_list && PyList_Check(xx_list)) {
+        for (Py_ssize_t k = 0; k < PyList_Size(xx_list); ++k) {
+            PyObject *item = PyList_GetItem(xx_list, k);
+
+            int i_idx = (int)PyLong_AsLong(PyDict_GetItemString(item, "i"));
+            int j_idx = (int)PyLong_AsLong(PyDict_GetItemString(item, "j"));
+            double coeff = PyFloat_AsDouble(PyDict_GetItemString(item, "coeff"));
+
+            self->vqe->xx_terms.emplace_back(i_idx, j_idx, coeff);
+        }
+    }
+
+    // --- Build evolved quantum state ---
+    Matrix state = self->vqe->get_initial_state().copy();
+
+    // Retrieve current optimized parameters
+    Matrix_real parameters = self->vqe->get_optimized_parameters();
+
+    // Apply ansatz
+    self->vqe->apply_to(parameters, state);
+
+    SimulationResult res;
+    try {
+        res = self->vqe->Expectation_value_with_shot_noise_real(state, shots, seed, p_readout);
+    }
+    catch (const std::string &err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    catch (const char *err) {
+        PyErr_SetString(PyExc_Exception, err);
+        return NULL;
+    }
+    catch (const std::exception &e) {
+        PyErr_SetString(PyExc_Exception, e.what());
+        return NULL;
+    }
+    catch (...) {
+        PyErr_SetString(PyExc_Exception, "Unknown C++ exception in Expectation_Value_Shot_Noise");
+        return NULL;
+    }
+
+    return Py_BuildValue("{s:d, s:d, s:d}",
+                         "mean", res.mean,
+                         "variance", res.variance,
+                         "std_error", res.std_error);
+}
+
+//============================================================================================================================================
+//============================================================================================================================================
+//============================================================================================================================================
+
 
 
 
@@ -1155,6 +1357,14 @@ static PyMethodDef qgd_Variational_Quantum_Eigensolver_Base_Wrapper_methods[] = 
     {"Generate_Circuit", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_Generate_Circuit, METH_VARARGS,
      "Method to set the circuit based on the ansatz type."
     },
+    //=======================================================================================================================================
+    {"Expectation_Value_Shot_Noise", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_Expectation_Value_Shot_Noise, METH_VARARGS,
+     "Estimate ⟨H⟩ via Monte–Carlo shot sampling; input is a dict with 'shots', 'p_readout', term lists, and optional 'seed'. Returns {'mean', 'variance', 'std_error'}."
+    },
+    {"Expectation_value_of_energy_real", (PyCFunction)qgd_Variational_Quantum_Eigensolver_Base_Wrapper_Expectation_value_of_energy_real, METH_VARARGS,
+     "Compute the real part of ⟨ψ_left|H|ψ_right⟩; inputs are two complex state vectors. "},
+
+    //=======================================================================================================================================
     {"Optimization_Problem", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_Optimization_Problem, METH_VARARGS,
      "Method to get the expected energy of the circuit at parameters."
     },

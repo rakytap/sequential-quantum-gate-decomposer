@@ -26,6 +26,35 @@ limitations under the License.
 
 #include "Optimization_Interface.h"
 
+//=====================================================================================================================================================================================
+//=====================================================================================================================================================================================
+//=====================================================================================================================================================================================
+
+// --- SimulationResult struct ---
+/**
+ * @brief Container for statistics returned by shot-noise simulations.
+ *
+ * Fields represent Monte–Carlo estimates produced by
+ * `Expectation_value_with_shot_noise_real`:
+ *  - `mean` : sample mean of the estimated energy ⟨H⟩ over the performed
+ *             measurement shots.
+ *  - `variance` : sample variance of the per-shot energy estimator.
+ *  - `std_error` : estimated standard error of the mean (typically
+ *                  sqrt(variance / shots)).
+ *
+ * This plain-aggregate struct is returned by the wrapper into Python as a
+ * dictionary with the same keys.
+ */
+struct SimulationResult {
+    double mean;
+    double variance;
+    double std_error;
+};
+//=====================================================================================================================================================================================
+//=====================================================================================================================================================================================
+//=====================================================================================================================================================================================
+
+
 /// @brief Type definition of the fifferent types of ansatz
 typedef enum ansatz_type {HEA, HEA_ZYZ} ansatz_type;
     
@@ -38,6 +67,22 @@ This class can be used to approximate the ground state of the input Hamiltonian 
 */
 class Variational_Quantum_Eigensolver_Base : public Optimization_Interface {
 public:
+//================================================================================================================================================================================
+//================================================================================================================================================================================
+//================================================================================================================================================================================
+
+    /**
+     * @brief Return a copy of the stored initial state used for VQE runs.
+     *
+     * Returns a `Matrix` copy to avoid exposing internal storage; callers
+     * may mutate the returned object without affecting the class internals.
+     */
+    Matrix get_initial_state() const { 
+            return initial_state.copy(); 
+        }
+//================================================================================================================================================================================
+//================================================================================================================================================================================
+//================================================================================================================================================================================
 
 
 private:
@@ -53,6 +98,41 @@ private:
 
 public:
 
+//================================================================================================================================================================================
+//================================================================================================================================================================================
+//================================================================================================================================================================================
+
+    /**
+     * @name Hamiltonian term containers
+     *
+     * Public members used by the Python wrapper to pass measured-term
+     * lists into the C++ implementation. Each element is stored in a
+     * compact form and interpreted as follows:
+     *  - `zz_terms`: tuples `(i, j, coeff)` representing `coeff * Z_i Z_j`.
+     *  - `xx_terms`: tuples `(i, j, coeff)` representing `coeff * X_i X_j`.
+     *  - `yy_terms`: tuples `(i, j, coeff)` representing `coeff * Y_i Y_j`.
+     *  - `z_terms` : pairs `(i, coeff)` representing local field `coeff * Z_i`.
+     *
+     * In all tuples, `i` and `j` are qubit indices (0-based) and `coeff` is a
+     * double precision coefficient. The wrapper populates these vectors from
+     * Python dictionaries of the form `{ "i": int, "j": int, "coeff": float }`.
+     */
+    /// Coupling terms of the form coeff * Z_i * Z_j
+    std::vector<std::tuple<int, int, double>> zz_terms;
+
+    /// Local magnetic field terms of the form coeff * Z_i
+    std::vector<std::pair<int, double>> z_terms;
+
+    /// Coupling terms of the form coeff * X_i * X_j
+    std::vector<std::tuple<int, int, double>> xx_terms;
+
+    /// Coupling terms of the form coeff * Y_i * Y_j
+    std::vector<std::tuple<int, int, double>> yy_terms;
+
+
+//================================================================================================================================================================================
+//================================================================================================================================================================================
+//================================================================================================================================================================================
 
 /**
 @brief Nullary constructor of the class.
@@ -92,6 +172,28 @@ QGD_Complex16 Expectation_value_of_energy(Matrix& State_left, Matrix& State_righ
 */
 double Expectation_value_of_energy_real(Matrix& State_left, Matrix& State_right);
 
+
+
+
+
+//=====================================================================================================================================================================================
+//=====================================================================================================================================================================================
+//=====================================================================================================================================================================================
+
+/**
+ * @brief Evaluate the expectation value of the energy with simulated shot noise and readout error.
+ * @param State The quantum state (column vector).
+ * @param shots Number of measurement shots to simulate.
+ * @param seed Random seed for reproducibility.
+ * @param p_readout Probability of bit-flip readout error per qubit.
+ * @return A SimulationResult struct containing mean, variance, and standard error.
+ */
+SimulationResult Expectation_value_with_shot_noise_real(Matrix &State, int shots, uint64_t seed, double p_readout);
+
+
+//=====================================================================================================================================================================================
+//=====================================================================================================================================================================================
+//=====================================================================================================================================================================================
 
 
 /**
