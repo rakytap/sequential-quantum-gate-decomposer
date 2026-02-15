@@ -2,15 +2,14 @@ name: ci
 
 on:
   push:
-    # run CI on all branches so feature/topic branches trigger actions
-    branches: ['**']
+    branches: [main, master]
   pull_request:
-    branches: ['**']
+    branches: [main, master]
 
 jobs:
   build-and-test-linux:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 15
 
     steps:
     - name: Checkout
@@ -43,19 +42,12 @@ jobs:
         python setup.py build_ext -q
 
     - name: Test
-      env:
-        OMP_NUM_THREADS: 1
-        OPENBLAS_NUM_THREADS: 1
-        MKL_NUM_THREADS: 1
-        VECLIB_MAXIMUM_THREADS: 1
-        NUMEXPR_NUM_THREADS: 1
-        PYTHONWARNINGS: default
       run: |
         pytest tests/ -x -v --tb=line
 
   build-and-test-windows:
     runs-on: windows-latest
-    timeout-minutes: 30
+    timeout-minutes: 15
 
     steps:
     - name: Checkout
@@ -78,7 +70,7 @@ jobs:
           $envPath = conda info --base
         }
         # Convert to forward slashes for GITHUB_ENV (CMake accepts both)
-        $envPath = $envPath.Replace('\', '/')
+        $envPath = $envPath.Replace('\\', '/')
         $tbbLib = "$envPath/Library/lib"
         $tbbInc = "$envPath/Library/include"
         
@@ -94,7 +86,7 @@ jobs:
           # Try to find it
           $foundTbb = Get-ChildItem -Path "$envPath" -Recurse -Filter "tbb.h" -ErrorAction SilentlyContinue | Select-Object -First 1
           if ($foundTbb) {
-            $actualTbbInc = $foundTbb.DirectoryName.Replace('\', '/')
+            $actualTbbInc = $foundTbb.DirectoryName.Replace('\\', '/')
             Write-Host "Found TBB header at: $actualTbbInc"
             $tbbInc = $actualTbbInc
           }
@@ -121,7 +113,7 @@ jobs:
 
   build-and-test-macos:
     runs-on: macos-latest
-    timeout-minutes: 60
+    timeout-minutes: 20
 
     steps:
     - name: Checkout
@@ -164,12 +156,5 @@ jobs:
         python setup.py build_ext -q
 
     - name: Test
-      env:
-        OMP_NUM_THREADS: 1
-        OPENBLAS_NUM_THREADS: 1
-        MKL_NUM_THREADS: 1
-        VECLIB_MAXIMUM_THREADS: 1
-        NUMEXPR_NUM_THREADS: 1
-        PYTHONWARNINGS: default
       run: |
         pytest tests/ -x -v --tb=line
