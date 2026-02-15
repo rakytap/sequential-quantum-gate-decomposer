@@ -2,9 +2,10 @@ name: ci
 
 on:
   push:
-    branches: [main, master]
+    # run CI on all branches so feature/topic branches trigger actions
+    branches: ['**']
   pull_request:
-    branches: [main, master]
+    branches: ['**']
 
 jobs:
   build-and-test-linux:
