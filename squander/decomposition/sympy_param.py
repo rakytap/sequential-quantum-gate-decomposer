@@ -942,13 +942,13 @@ def decompose_unitary_search(gate, scale_max, layers=4, basis=('CNOT', 'H', 'S',
         rev_angles = [
             make_angle(ParamIndex(i), AngleScale(scale)) for i in range(-1, len(param_info)) for scale in range(scale_max, -scale_max-1, -1) if scale != 0
         ]
-        all_gates.extend([tuple(((gate, *[x[0] for x in angles], qbit1),) if i==region1 else ((gate, *[x[1] for x in angles], qbit2),) if i==region2 else () for i in range(num_regions))
+        all_gates.extend([tuple(((gate, *angles, qbit1),) if i==region1 else ((gate, *angles, qbit2),) if i==region2 else () for i in range(num_regions))
                         for gate in identity_pairs+identity_clifford_pairs+identity_angle_pairs if gate in basis
                         for region1 in range(num_regions) if regions[region1]
                         #for region2 in (next(iter(region2 for region2 in range(region1+1, num_regions) if regions[region2]), None),) if region2 is not None
                         for region2 in range(region1+1, num_regions) if regions[region2]
                         for qbit1 in range(num_qubits) for qbit2 in range(qbit1+1, num_qubits)
-                        for angles in itertools.product(*[list(zip(all_angles, rev_angles)) for _ in gate_descs[gate][1]])
+                        for angles in itertools.product(*[all_angles for _ in gate_descs[gate][1]])
                 ])
         all_gates.extend([tuple(((gate1, *[x[0] for x in angles], qbit),) if i==region1 else ((gate2, *[x[1] for x in angles], qbit),) if i==region2 else () for i in range(num_regions))
                         for gate1, gate2 in identity_pairs+identity_clifford_pairs+identity_angle_pairs if gate1 in basis and gate2 in basis
