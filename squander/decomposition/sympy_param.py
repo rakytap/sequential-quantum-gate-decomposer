@@ -57,34 +57,34 @@ def find_control_qubits(psi, num_qubits):
         if is_sparse: sparsity_controls.append([j if little_endian else num_qubits-1-j for j in range(num_qubits) if i & (1<<j)])
     return pure_controls, sparsity_controls
 def quantsimp(x):
-    x = sympy.sympify(x)
+    #x = sympy.sympify(x)
     if isinstance(x, sympy.Expr) and x.is_zero:
         return sympy.S.Zero if not x.is_Number else x
-    x = x.rewrite(sympy.exp)
-    x = sympy.expand_power_exp(x)
-    x = sympy.powdenest(x)
+    x = x.rewrite(sympy.exp).rewrite(sympy.sqrt)
+    #x = sympy.expand_power_exp(x)
+    #x = sympy.powdenest(x)
     #x = sympy.sqrtdenest(x)
     #x = sympy.nsimplify(x, rational=True)
-    x = x.replace(lambda e: e.is_Float, lambda e: sympy.nsimplify(e, rational=True))
-    x = x.replace(lambda z: z.is_constant(), lambda z: sympy.simplify(sympy.expand_complex(z)))
-    x = sympy.powsimp(x)
+    #x = x.replace(lambda z: z.is_constant(), lambda z: sympy.simplify(sympy.expand_complex(z)))
+    x = sympy.powsimp(x, combine='exp')
     x = sympy.together(x)
     x = sympy.cancel(x)
-    #x = sympy.powdenest(x)
     x = sympy.expand_mul(x)
     return x.doit()
 def textbook_simp(x):
     x = quantsimp(x)
+    x = x.replace(lambda e: e.is_Float, lambda e: sympy.nsimplify(e, rational=True))
     x = sympy.factor_terms(x, radical=True)
     cs = [(sympy.Wild('c'+str(i), exclude=[z]), sympy.Wild('s'+str(i), exclude=list(x.free_symbols-{z}))) for i, z in enumerate(x.free_symbols)]
     for c, t in cs:
         x = x.replace(c*sympy.exp(sympy.I*t)+c*sympy.exp(-sympy.I*t), 2*c*sympy.cos(t)) #cosine definition
         x = x.replace(c*sympy.exp(sympy.I*t)-c*sympy.exp(-sympy.I*t), 2*c*sympy.I*sympy.sin(t)) #sine definition
     x = sympy.powsimp(x)
-    x = sympy.factor_terms(x, radical=True)
-    t = sympy.Wild('t', properties=[lambda k: k.is_Rational])
-    x = x.replace(-(-1)**t, sympy.exp(sympy.I*sympy.pi*(t+1)))
-    x = x.replace((-1)**t, sympy.exp(sympy.I*sympy.pi*t))
+    for exprsn in (sympy.exp(sympy.I*sympy.pi*z/24) for z in range(-24, 24+1) if z % 12 != 0):
+        if x == exprsn.rewrite(sympy.sqrt): x = exprsn #x = x.replace(exprsn.rewrite(sympy.sqrt), exprsn)
+    #t = sympy.Wild('t', properties=[lambda k: k.is_Rational])
+    #x = x.replace(-(-1)**t, sympy.exp(sympy.I*sympy.pi*(t+1)))
+    #x = x.replace((-1)**t, sympy.exp(sympy.I*sympy.pi*t))
     return x
 
 def apply_to(psi, num_qubits, gate, gate_qubits):
@@ -237,7 +237,7 @@ def gen_SxZ(): return compile_gates(1, [(gen_Sx(), [0]), (gen_Z(), [0])])
 
 def gen_CZPowGate(t): return gen_CP(sympy.pi*t)
 def gen_fSim(theta, phi): return compile_gates(2, [(gen_iSWAP_pow(-2*theta/sympy.pi), [0, 1]), (gen_CZPowGate(-phi/sympy.pi), [0, 1])])
-def gen_SYC(): return gen_fSim(sympy.pi/2, sympy.pi/6)
+def gen_SYC(): return gen_fSim(sympy.pi/2, sympy.pi/6).applyfunc(textbook_simp)
 @functools.lru_cache(None)
 def gen_T(): return sympy.Matrix([[1, 0], [0, sympy.exp(sympy.I*sympy.pi/4)]])
 @functools.lru_cache(None)
@@ -298,6 +298,9 @@ def gen_Ryy_decomp(theta): return compile_gates(2, [(gen_Rx(sympy.pi/2), [0]), (
 def gen_Rzz_decomp(theta): return compile_gates(2, [(gen_CNOT(), [0, 1]), (gen_Rz(theta), [1]), (gen_CNOT(), [0, 1])])
 #def gen_Rxy_decomp(phi): return compile_gates(2, [(gen_Rxx_decomp(phi/2), [0,1]), (gen_Ryy_decomp(phi/2), [0,1])]).applyfunc(textbook_simp)
 def gen_Rxy_decomp(phi): return compile_gates(2, [(gen_Sdg(), [1]), (gen_S(), [0]), (gen_Sx(), [1]), (gen_S(), [1]), (gen_CNOT(), [1, 0]), (gen_Ry(-phi/2), [0]), (gen_Ry(-phi/2), [1]), (gen_CNOT(), [1, 0]), (gen_Sdg(), [0]), (gen_Sdg(), [1]), (gen_Sxdg(), [1]), (gen_S(), [1])]).applyfunc(textbook_simp)
+def gen_Rxmy_decomp(phi): return compile_gates(2, [(gen_Sdg(), [0]), (gen_S(), [1]), (gen_Sx(), [0]), (gen_S(), [0]), (gen_CNOT(), [0, 1]), (gen_Ry(phi/2), [0]), (gen_Ry(-phi/2), [1]), (gen_CNOT(), [0, 1]), (gen_Sdg(), [0]), (gen_Sdg(), [1]), (gen_Sxdg(), [0]), (gen_S(), [0])]).applyfunc(textbook_simp)
+def gen_xx_plus_yy_decomp(phi, beta): return compile_gates(2, [(gen_Rz(beta), [0]), (gen_Sdg(), [1]), (gen_S(), [0]), (gen_Sx(), [1]), (gen_S(), [1]), (gen_CNOT(), [1, 0]), (gen_Ry(-phi/2), [0]), (gen_Ry(-phi/2), [1]), (gen_CNOT(), [1, 0]), (gen_Sdg(), [0]), (gen_Sdg(), [1]), (gen_Sxdg(), [1]), (gen_S(), [1]), (gen_Rz(-beta), [0])]).applyfunc(textbook_simp)
+def gen_xx_minus_yy_decomp(phi, beta): return compile_gates(2, [(gen_Rz(beta), [1]), (gen_Sdg(), [0]), (gen_S(), [1]), (gen_Sx(), [0]), (gen_S(), [0]), (gen_CNOT(), [0, 1]), (gen_Ry(phi/2), [0]), (gen_Ry(-phi/2), [1]), (gen_CNOT(), [0, 1]), (gen_Sdg(), [0]), (gen_Sdg(), [1]), (gen_Sxdg(), [0]), (gen_S(), [0]), (gen_Rz(-beta), [1])]).applyfunc(textbook_simp)
 def gen_CZPowGate_decomp(t): return gen_CP_decomp(sympy.pi*t)
 #def gen_iSWAP_pow_decomp(alpha): return compile_gates(2, [(gen_H(), [0]), (gen_H(), [1]), (gen_CNOT(), [0,1]), (gen_Rz(-(alpha*sympy.pi)/2), [1]), (gen_CNOT(), [0,1]), (gen_H(), [0]), (gen_H(), [1]), (gen_Sdg(), [0]), (gen_Sdg(), [1]), (gen_H(), [0]), (gen_H(), [1]), (gen_CNOT(), [0,1]), (gen_Rz(-(alpha*sympy.pi)/2), [1]), (gen_CNOT(), [0,1]), (gen_H(), [0]), (gen_H(), [1]), (gen_S(), [0]), (gen_S(), [1])]).applyfunc(textbook_simp)
 def gen_iSWAP_pow_decomp(alpha): return gen_Rxy_decomp(-sympy.pi*alpha)
@@ -346,9 +349,6 @@ def test_decomp():
     #print(make_inverse(gen_CRZ(theta)), [0, 1])
     #print(compile_gates(2, [(make_inverse(gen_CRZ(theta)), [0, 1]), (gen_Rz(theta/2), [1]), (gen_CNOT(), [0, 1]), (gen_Rz(-theta/2), [1]), (gen_CNOT(), [0, 1])]))
     #print(compile_gates(3, [(gen_H(), [2]), (gen_CNOT(), [1, 2]), (gen_Tdg(), [2]), (gen_CNOT(), [0, 2]), (gen_T(), [2]), (gen_CNOT(), [1, 2]), (gen_Tdg(), [2]), (gen_CNOT(), [0, 2]), (gen_T(), [1]), (gen_T(), [2]), (gen_H(), [2])]))
-    print(gen_Rxmy(theta))
-    print(gen_xx_plus_yy(theta, beta))
-    print(gen_xx_minus_yy(theta, beta))
     assert gen_U(theta, phi, lbda) == gen_U_test(theta, phi, lbda), (gen_U(theta, phi, lbda), gen_U_test(theta, phi, lbda))
     assert gen_Rx(theta) == gen_Rx_test(theta), (gen_Rx(theta), gen_Rx_test(theta))
     assert gen_Ry(theta) == gen_Ry_test(theta), (gen_Ry(theta), gen_Ry_test(theta))
@@ -383,18 +383,21 @@ def test_decomp():
     assert gen_Rxx(theta) == gen_Rxx_decomp(theta), (gen_Rxx(theta), gen_Rxx_decomp(theta))
     assert gen_Ryy(theta) == gen_Ryy_decomp(theta), (gen_Ryy(theta), gen_Ryy_decomp(theta))
     assert gen_Rzz(theta) == gen_Rzz_decomp(theta), (gen_Rzz(theta), gen_Rzz_decomp(theta))
-    assert gen_Rxy(phi) == gen_Rxy_decomp(phi), (gen_Rxy(phi), gen_Rxy_decomp(phi)) #not correct!!!
+    assert gen_Rxy(phi) == gen_Rxy_decomp(phi), (gen_Rxy(phi), gen_Rxy_decomp(phi))
+    assert gen_Rxmy(phi) == gen_Rxmy_decomp(phi), (gen_Rxmy(phi), gen_Rxmy_decomp(phi))
+    assert gen_xx_plus_yy(theta, beta) == gen_xx_plus_yy_decomp(theta, beta), (gen_xx_plus_yy(theta, beta), gen_xx_plus_yy_decomp(theta, beta))
+    assert gen_xx_minus_yy(theta, beta) == gen_xx_minus_yy_decomp(theta, beta), (gen_xx_minus_yy(theta, beta), gen_xx_minus_yy_decomp(theta, beta))
     assert gen_CROT(theta, phi) == gen_CROT_decomp(theta, phi), (gen_CROT(theta, phi), gen_CROT_decomp(theta, phi))
     assert gen_CZPowGate(alpha) == gen_CZPowGate_decomp(alpha)
-    assert gen_iSWAP_pow(alpha) == gen_iSWAP_pow_decomp(alpha), (gen_iSWAP_pow(alpha), gen_iSWAP_pow_decomp(alpha)) #not correct!!!
-    assert gen_fSim(theta, phi) == gen_fSim_decomp(theta, phi), (gen_fSim(theta, phi), gen_fSim_decomp(theta, phi)) #not correct!!!
+    assert gen_iSWAP_pow(alpha) == gen_iSWAP_pow_decomp(alpha), (gen_iSWAP_pow(alpha), gen_iSWAP_pow_decomp(alpha))
+    assert gen_fSim(theta, phi) == gen_fSim_decomp(theta, phi), (gen_fSim(theta, phi), gen_fSim_decomp(theta, phi))
     assert gen_SSWAP() == gen_SSWAP_decomp(), (gen_SSWAP(), gen_SSWAP_decomp())
     assert gen_SYC() == gen_SYC_decomp(), (gen_SYC(), gen_SYC_decomp())
     assert gen_CU3(theta, phi, lbda) == gen_CU3_decomp(theta, phi, lbda), (gen_CU3(theta, phi, lbda), gen_CU3_decomp(theta, phi, lbda))
     assert gen_CU(theta, phi, lbda, gamma) == gen_CU_decomp(theta, phi, lbda, gamma), (gen_CU(theta, phi, lbda, gamma), gen_CU_decomp(theta, phi, lbda, gamma))
     assert gen_SWAP() == gen_SWAP_decomp()
-    assert gen_CSWAP() == gen_CSWAP_decomp()
-    assert gen_iSWAP() == gen_iSWAP_decomp()
+    assert gen_CSWAP() == gen_CSWAP_decomp(), (gen_CSWAP(), gen_CSWAP_decomp())
+    assert gen_iSWAP() == gen_iSWAP_decomp(), (gen_iSWAP(), gen_iSWAP_decomp())
     #reverse CNOT is H-CNOT-H on both qubits
     assert compile_gates(2, [(gen_CNOT(), [1, 0])]) == compile_gates(2, [(gen_H(), [0]), (gen_H(), [1]), (gen_CNOT(), [0, 1]), (gen_H(), [0]), (gen_H(), [1]),])
     print(find_control_qubits(gen_U3(theta, phi, lbda), 1), find_control_qubits(gen_CRY(theta), 2), find_control_qubits(gen_CCX(), 3))
@@ -1034,8 +1037,8 @@ def decompose_unitary_search(gate, scale_max, layers=4, basis=('CNOT', 'H', 'S',
 #decompose_unitary_search("Ryy", 1)
 #decompose_unitary_search("Rzz", 1)
 #decompose_unitary_search("CS", 1)
-decompose_unitary_search("Rxy", 8)
-#decompose_unitary_search("SSWAP", 8)
+#decompose_unitary_search("Rxy", 8)
+decompose_unitary_search("SSWAP", 8)
 #decompose_unitary_search("CSX", 8)
 #decompose_unitary_search("SiSWAP", 8)
 #decompose_unitary_search("CRX", 2)
