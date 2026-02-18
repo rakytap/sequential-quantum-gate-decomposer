@@ -21,6 +21,18 @@ limitations under the License.
 */
 #include "Variational_Quantum_Eigensolver_Base.h"
 
+#include <nlohmann/json.hpp>
+#include <fstream>
+#include <random>
+#include <cmath>
+#include <vector>
+#include <tuple>
+#include <string>
+#include <tbb/tbb.h>
+#include "../../gates/include/H.h"
+#include "../../gates/include/SDG.h"
+using json = nlohmann::json;
+
 static tbb::spin_mutex my_mutex;
 
 /**
@@ -279,6 +291,345 @@ double Variational_Quantum_Eigensolver_Base::Expectation_value_of_energy_real( M
     return Energy;
 }
 
+
+//----------------------------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------
+/**
+ * Shot-noise estimator for the expectation value of the Hamiltonian
+ * <H> = ⟨ψ|H|ψ⟩ including readout errors and finite-shot sampling.
+ *
+ * Description:
+ *  - Given the input state vector `State` (size N = 2^n_qubits), this
+ *    routine performs Monte–Carlo sampling to estimate the mean and
+ *    variance of the Hamiltonian measurement under a projective measurement
+ *    model with independent per-qubit readout flips.
+ *
+ * Measurement model / supported terms:
+ *  - `zz_terms`: list of (i, j, coeff) representing coeff * Z_i Z_j
+ *  - `z_terms` : list of pairs (i, coeff) representing coeff * Z_i
+ *  - `xx_terms`: list of (i, j, coeff) representing coeff * X_i X_j
+ *               (implemented by rotating the required qubits to the X basis
+ *                with Hadamard gates and measuring in Z)
+ *  - `yy_terms`: list of (i, j, coeff) representing coeff * Y_i Y_j
+ *               (implemented by applying S† then H on required qubits)
+ *
+ * Algorithm summary:
+ *  1. Compute Z-basis probabilities from the supplied state |ψ⟩.
+ *  2. If XX terms are present, build a single global X-basis distribution
+ *     by applying H to every qubit that appears in any XX term and
+ *     computing the rotated probabilities.
+ *  3. If YY terms are present, build a single global Y-basis distribution
+ *     by applying S† then H to every qubit that appears in any YY term.
+ *  4. For each Monte–Carlo shot:
+ *       - sample one Z-outcome (for ZZ and Z contributions), optionally
+ *         flip bits according to `p_readout` (independent per-qubit flips),
+ *         and accumulate the corresponding term contributions.
+ *       - sample one global X-outcome (for all XX terms) and accumulate.
+ *       - sample one global Y-outcome (for all YY terms) and accumulate.
+ *  5. Compute sample mean, variance and standard error (std_error = sqrt(var/shots)).
+ *
+ * Parameters
+ * ----------
+ *  State : Matrix&
+ *    State vector |ψ⟩ as the project's Matrix/QGD_Complex16 representation.
+ *  shots : int
+ *    Number of Monte–Carlo measurement shots to draw.
+ *  seed : uint64_t
+ *    RNG seed; if zero a random device is used to seed the engine.
+ *  p_readout : double
+ *    Probability [0,1] that a given qubit measurement is flipped (bit-flip
+ *    readout error) and applied independently per measured qubit.
+ *
+ * Returns
+ * -------
+ *  SimulationResult
+ *    Struct with fields `{ mean, variance, std_error }` containing the
+ *    estimated expectation value, its sample variance, and the estimated
+ *    standard error of the mean.
+ *
+ * Notes
+ * -----
+ *  - The routine throws a std::string on dimension or index errors.
+ *  - A single global X (and Y) distribution is built and reused for all
+ *    XX (and YY) terms; this is correct because all XX (YY) terms are
+ *    measured in the same rotated basis.
+ *  - The implementation deliberately copies the state for basis rotations
+ *    so the input `State` is not modified.
+ *  - Thread-safety: the function uses a local RNG instance; only the final
+ *    increment of `number_of_iters` is protected by the `my_mutex` spinlock.
+ */
+SimulationResult Variational_Quantum_Eigensolver_Base::Expectation_value_with_shot_noise_real(
+    Matrix &State, int shots, uint64_t seed, double p_readout
+) {
+
+if (State.rows != Hamiltonian.rows) {
+    throw std::string("Expectation_value_with_shot_noise_real: dimension mismatch");
+}
+
+const int N = State.rows;
+const int n_qubits = static_cast<int>(std::round(std::log2(N)));
+if ((1 << n_qubits) != N) {
+    throw std::string("Expectation_value_with_shot_noise_real: State.rows not power of two");
+}
+
+// -------------------------------------------------------
+// 1) Z-basis probabilities from |ψ⟩  (for Z and ZZ terms)
+// -------------------------------------------------------
+std::vector<double> probsZ(N);
+double sum_pZ = 0.0;
+for (int idx = 0; idx < N; ++idx) {
+    double re = State[idx].real;
+    double im = State[idx].imag;
+    double p  = re * re + im * im;
+    probsZ[idx] = p;
+    sum_pZ += p;
+}
+if (std::abs(sum_pZ - 1.0) > 1e-6) {
+    // Slight numerical mismatch is OK; normalize anyway
+    for (auto &v : probsZ) v /= sum_pZ;
+} else {
+    for (auto &v : probsZ) v /= sum_pZ;
+}
+
+std::mt19937_64 rng(seed ? seed : std::random_device{}());
+std::discrete_distribution<int> distZ(probsZ.begin(), probsZ.end());
+std::uniform_real_distribution<double> unif01(0.0, 1.0);
+
+// -------------------------------------------------------
+// 2) Global X-basis distribution for ALL XX terms
+//    We apply H on every qubit that appears in any XX term
+// -------------------------------------------------------
+bool has_xx = !xx_terms.empty();
+std::discrete_distribution<int> distX;  // will be initialized if has_xx == true
+
+if (has_xx) {
+
+    // Which qubits need H for XX measurement?
+    std::vector<bool> need_H(n_qubits, false);
+    for (const auto &t : xx_terms) {
+        int i, j;
+        double coeff;
+        std::tie(i, j, coeff) = t;
+        if (i < 0 || i >= n_qubits || j < 0 || j >= n_qubits) {
+            throw std::string("XX term index out of range in Expectation_value_with_shot_noise_real");
+        }
+        need_H[i] = true;
+        need_H[j] = true;
+    }
+
+    // Rotated state |ψ_X⟩ = (⊗_q∈S H_q) |ψ⟩,
+    // where S is the set of qubits that appear in any XX term.
+    Matrix psi_rot = State;  // copy original state |ψ⟩
+    for (int q = 0; q < n_qubits; ++q) {
+        if (need_H[q]) {
+            H h_gate(n_qubits, q);
+            h_gate.apply_to(psi_rot, 0);
+        }
+    }
+
+    // Build X-basis probabilities
+    std::vector<double> probsX(N);
+    double sum_pX = 0.0;
+    for (int idx = 0; idx < N; ++idx) {
+        double re = psi_rot[idx].real;
+        double im = psi_rot[idx].imag;
+        double p  = re * re + im * im;
+        probsX[idx] = p;
+        sum_pX += p;
+    }
+    if (sum_pX <= 0.0) {
+        throw std::string("X-rotated state has zero norm in Expectation_value_with_shot_noise_real");
+    }
+    for (auto &v : probsX) v /= sum_pX;
+
+    // One global X-basis distribution for all XX terms
+    distX = std::discrete_distribution<int>(probsX.begin(), probsX.end());
+}
+
+// -------------------------------------------------------
+// 2b) Global Y-basis distribution for ALL YY terms
+//    We apply S† (SDG) then H on every qubit that appears in any YY term
+//    This rotates Y eigenstates to Z eigenstates for measurement
+// -------------------------------------------------------
+bool has_yy = !yy_terms.empty();
+std::discrete_distribution<int> distY;  // will be initialized if has_yy == true
+
+if (has_yy) {
+
+    // Which qubits need S†H for YY measurement?
+    std::vector<bool> need_SDG_H(n_qubits, false);
+    for (const auto &t : yy_terms) {
+        int i, j;
+        double coeff;
+        std::tie(i, j, coeff) = t;
+        if (i < 0 || i >= n_qubits || j < 0 || j >= n_qubits) {
+            throw std::string("YY term index out of range in Expectation_value_with_shot_noise_real");
+        }
+        need_SDG_H[i] = true;
+        need_SDG_H[j] = true;
+    }
+
+    // Rotated state |ψ_Y⟩ = (⊗_q∈S H_q S†_q) |ψ⟩,
+    // where S is the set of qubits that appear in any YY term.
+    // S† rotates Y to X, then H rotates X to Z
+    Matrix psi_rot_y = State;  // copy original state |ψ⟩
+    for (int q = 0; q < n_qubits; ++q) {
+        if (need_SDG_H[q]) {
+            // Apply S† (SDG) first to rotate Y to X
+            SDG sdg_gate(n_qubits, q);
+            sdg_gate.apply_to(psi_rot_y, 0);
+            // Then apply H to rotate X to Z
+            H h_gate(n_qubits, q);
+            h_gate.apply_to(psi_rot_y, 0);
+        }
+    }
+
+    // Build Y-basis probabilities (after S†H rotation, Z-eigenvalues encode Y-eigenvalues)
+    std::vector<double> probsY(N);
+    double sum_pY = 0.0;
+    for (int idx = 0; idx < N; ++idx) {
+        double re = psi_rot_y[idx].real;
+        double im = psi_rot_y[idx].imag;
+        double p  = re * re + im * im;
+        probsY[idx] = p;
+        sum_pY += p;
+    }
+    if (sum_pY <= 0.0) {
+        throw std::string("Y-rotated state has zero norm in Expectation_value_with_shot_noise_real");
+    }
+    for (auto &v : probsY) v /= sum_pY;
+
+    // One global Y-basis distribution for all YY terms
+    distY = std::discrete_distribution<int>(probsY.begin(), probsY.end());
+}
+
+// -------------------------------------------------------
+// 3) Monte–Carlo sampling
+//    For each "shot":
+//      - sample one Z-basis outcome for ZZ and Z terms
+//      - sample one X-basis outcome for ALL XX terms
+//      - sample one Y-basis outcome for ALL YY terms
+// -------------------------------------------------------
+double sum     = 0.0;
+double sum_sq  = 0.0;
+
+for (int s = 0; s < shots; ++s) {
+
+    double E = 0.0;
+
+    // --------- Z-basis measurement: ZZ + Z ----------
+    int idx = distZ(rng);
+
+    if (p_readout > 0.0) {
+        int observed = idx;
+        for (int q = 0; q < n_qubits; ++q) {
+            if (unif01(rng) < p_readout) {
+                observed ^= (1 << q);
+            }
+        }
+        idx = observed;
+    }
+
+    // ZZ terms: coeff * Z_i Z_j
+    for (const auto &t : zz_terms) {
+        int i, j;
+        double coeff;
+        std::tie(i, j, coeff) = t;
+
+        const int zi = ((idx >> i) & 1) ? -1 : +1;
+        const int zj = ((idx >> j) & 1) ? -1 : +1;
+        E += coeff * (zi * zj);
+    }
+
+    // Z terms: h_i * Z_i
+    for (const auto &z : z_terms) {
+        const int i = z.first;
+        const double h = z.second;
+        const int zi = ((idx >> i) & 1) ? -1 : +1;
+        E += h * zi;
+    }
+
+    // --------- X-basis measurement: ALL XX terms -----
+    if (has_xx) {
+        int idx_x = distX(rng);
+
+        if (p_readout > 0.0) {
+            int observed = idx_x;
+            for (int q = 0; q < n_qubits; ++q) {
+                if (unif01(rng) < p_readout) {
+                    observed ^= (1 << q);
+                }
+            }
+            idx_x = observed;
+        }
+
+        // After H-rotation, Z-eigenvalues encode X-eigenvalues
+        for (const auto &t : xx_terms) {
+            int i, j;
+            double coeff;
+            std::tie(i, j, coeff) = t;
+
+            const int xi = ((idx_x >> i) & 1) ? -1 : +1;
+            const int xj = ((idx_x >> j) & 1) ? -1 : +1;
+            E += coeff * (xi * xj);
+        }
+    }
+
+    // --------- Y-basis measurement: ALL YY terms -----
+    if (has_yy) {
+        int idx_y = distY(rng);
+
+        if (p_readout > 0.0) {
+            int observed = idx_y;
+            for (int q = 0; q < n_qubits; ++q) {
+                if (unif01(rng) < p_readout) {
+                    observed ^= (1 << q);
+                }
+            }
+            idx_y = observed;
+        }
+
+        // After S†H-rotation, Z-eigenvalues encode Y-eigenvalues
+        for (const auto &t : yy_terms) {
+            int i, j;
+            double coeff;
+            std::tie(i, j, coeff) = t;
+
+            const int yi = ((idx_y >> i) & 1) ? -1 : +1;
+            const int yj = ((idx_y >> j) & 1) ? -1 : +1;
+            E += coeff * (yi * yj);
+        }
+    }
+
+    sum    += E;
+    sum_sq += E * E;
+}
+
+const double mean     = sum / static_cast<double>(shots);
+const double mean_sq  = sum_sq / static_cast<double>(shots);
+double variance       = mean_sq - mean * mean;
+if (variance < 0.0 && variance > -1e-12) {
+    variance = 0.0;
+}
+const double std_error = (variance > 0.0)
+                         ? std::sqrt(variance / static_cast<double>(shots))
+                         : 0.0;
+
+{
+    tbb::spin_mutex::scoped_lock my_lock{my_mutex};
+    number_of_iters++;
+}
+
+return {mean, variance, std_error};
+}
+
+
+//----------------------------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------
 
 
 

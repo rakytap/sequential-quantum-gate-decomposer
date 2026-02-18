@@ -70,7 +70,7 @@ jobs:
           $envPath = conda info --base
         }
         # Convert to forward slashes for GITHUB_ENV (CMake accepts both)
-        $envPath = $envPath.Replace('\', '/')
+        $envPath = $envPath.Replace('\\', '/')
         $tbbLib = "$envPath/Library/lib"
         $tbbInc = "$envPath/Library/include"
         
@@ -86,7 +86,7 @@ jobs:
           # Try to find it
           $foundTbb = Get-ChildItem -Path "$envPath" -Recurse -Filter "tbb.h" -ErrorAction SilentlyContinue | Select-Object -First 1
           if ($foundTbb) {
-            $actualTbbInc = $foundTbb.DirectoryName.Replace('\', '/')
+            $actualTbbInc = $foundTbb.DirectoryName.Replace('\\', '/')
             Write-Host "Found TBB header at: $actualTbbInc"
             $tbbInc = $actualTbbInc
           }
