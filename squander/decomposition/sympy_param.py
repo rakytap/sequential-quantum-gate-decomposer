@@ -10,7 +10,7 @@ from squander.decomposition.qgd_Wide_Circuit_Optimization import N_Qubit_Decompo
 
 def determine_CNOT_structure(Umtx, params):
     allU = [] #2k+1 samples needed per Fourier analysis
-    num_samples = 2*(len(params)+1) + 1
+    num_samples = 4 #this should be an even number to avoid sampling only at pi/2**x
     paramspace = list(itertools.product(*[np.linspace(0, np.pi*2*x[0], num=num_samples) for x in params]))
     for pos in paramspace:
         allU.append(np.array(Umtx.subs({x[1]: y for x, y in zip(params, pos)}).evalf()).astype(np.complex128))
@@ -20,7 +20,7 @@ def determine_CNOT_structure(Umtx, params):
     optim.set_Verbose(0)
     optim.Start_Decomposition()
     cnot_structure = [(gate.get_Target_Qbit(), gate.get_Control_Qbit()) for gate in optim.get_Circuit().get_Gates() if gate.get_Name() == "CNOT"]
-    print("CNOT structure:", cnot_structure)
+    print("CNOT structure:", cnot_structure, "num_samples:", num_samples)
     return cnot_structure
 
 little_endian = True
@@ -250,7 +250,7 @@ def gen_CX(): return sympy.Matrix(make_controlled(gen_X(), 1))
 def gen_CNOT(): return gen_CX()
 def gen_CY(): return sympy.Matrix(make_controlled(gen_Y(), 1))
 def gen_CZ(): return sympy.Matrix(make_controlled(gen_Z(), 1))
-def gen_U(theta, phi, lbda): return compile_gates(1, [(gen_Rz(lbda), [0]), (gen_Ry(theta), [0]), (gen_Rz(phi), [0]), (gen_GP((phi+lbda)/2, 1), [0])]).applyfunc(textbook_simp)
+def gen_U(theta, phi, lbda): return compile_gates(1, [(gen_P(lbda), [0]), (gen_Ry(theta), [0]), (gen_P(phi), [0])]).applyfunc(textbook_simp)
 def gen_U2(phi, lbda): return gen_U(sympy.pi/2, phi, lbda)
 def gen_U3(theta, phi, lbda): return gen_U(theta, phi, lbda)
 def gen_R(theta, phi): return gen_U(theta, phi-sympy.pi/2, -phi+sympy.pi/2).applyfunc(textbook_simp)
@@ -325,6 +325,7 @@ def gen_CSWAP_decomp(): return compile_gates(3, [(gen_S(), [1]), (gen_CNOT(), [2
 #def gen_CSWAP_decomp(): return compile_gates(3, [(gen_CNOT(), [2, 1]), (gen_H(), [2]), (gen_CNOT(), [1, 2]), (gen_Tdg(), [2]), (gen_CNOT(), [0, 2]), (gen_T(), [2]), (gen_CNOT(), [1, 2]), (gen_Tdg(), [2]), (gen_CNOT(), [0, 2]), (gen_T(), [1]), (gen_T(), [2]), (gen_H(), [2]), (gen_CNOT(), [0, 1]), (gen_T(), [0]), (gen_Tdg(), [1]), (gen_CNOT(), [0, 1]), (gen_CNOT(), [2, 1])])
 def gen_iSWAP_decomp(): return compile_gates(2, [(gen_S(), [0]), (gen_S(), [1]), (gen_H(), [0]), (gen_CNOT(), [0, 1]), (gen_CNOT(), [1, 0]), (gen_H(), [1])])
 def gen_SSWAP_decomp(): return compile_gates(2, [(gen_CNOT(), [0, 1]), (gen_Sdg(), [1]), (gen_T(), [1]), (gen_Rx(sympy.pi/4), [0]), (gen_H(), [1]), (gen_CNOT(), [0, 1]), (gen_H(), [1]), (gen_Rx(-sympy.pi/4), [0]), (gen_Sdg(), [0]), (gen_CNOT(), [0, 1]), (gen_S(), [1])]).applyfunc(textbook_simp)
+def gen_SiSWAP_decomp(): return compile_gates(2, [(gen_T(), [1]), (gen_CNOT(), [0, 1]), (gen_Sdg(), [1]), (gen_T(), [1]), (gen_Rx(sympy.pi/4), [0]), (gen_H(), [1]), (gen_CNOT(), [0, 1]), (gen_H(), [1]), (gen_Rx(-sympy.pi/4), [0]), (gen_Sdg(), [0]), (gen_CNOT(), [0, 1]), (gen_S(), [1])]).applyfunc(textbook_simp)
 def gen_Rx_test(theta): return sympy.Matrix([[sympy.cos(theta/2), -sympy.I*sympy.sin(theta/2)], [-sympy.I*sympy.sin(theta/2), sympy.cos(theta/2)]])
 def gen_Ry_test(theta): return sympy.Matrix([[sympy.cos(theta/2), -sympy.sin(theta/2)], [sympy.sin(theta/2), sympy.cos(theta/2)]])
 def gen_Rz_test(theta): return sympy.Matrix([[sympy.exp(-sympy.I*theta/2), 0], [0, sympy.exp(sympy.I*theta/2)]])
@@ -463,6 +464,8 @@ gate_descs = { #(num_qubits, num_params, sympy_generator_function)
     "CS": (2, [], gen_CS, "add_CS"),
     "CH": (2, [], gen_CH, "add_CH"),
     "CP": (2, [(1, phi)], gen_CP, "add_CP"),
+    "CU": (2, [(2, theta), (1, phi), (1, lbda), (1, gamma)], gen_CU, "add_CU"),
+    "CU3": (2, [(2, theta), (1, phi), (1, lbda)], gen_CU3, "add_CU3"),
     "Rxx": (2, [(2, theta)], gen_Rxx, "add_Rxx"),
     "Ryy": (2, [(2, theta)], gen_Ryy, "add_Ryy"),
     "Rzz": (2, [(2, theta)], gen_Rzz, "add_Rzz"),
@@ -475,7 +478,9 @@ gate_descs = { #(num_qubits, num_params, sympy_generator_function)
     "CCZ": (3, [], gen_CCZ, "add_CCZ"),
     "CCX": (3, [], gen_CCX, "add_CCX"),
     "CSWAP": (3, [], gen_CSWAP, "add_CSWAP"),
+    "SWAP": (2, [], gen_SWAP, "add_SWAP"),
     "SSWAP": (2, [], gen_SSWAP, "add_SSWAP"),
+    "iSWAP": (2, [], gen_iSWAP, "add_iSWAP"),
     "SiSWAP": (2, [], gen_SiSWAP, "add_SiSWAP"),
 }
 def sympy_to_gp(gates):
@@ -705,10 +710,9 @@ def gen_ansatz(gate, scale_max, layers, basis, u3_ansatz=False, gp_gate=False):
     assert 'CNOT' in basis
     print(gate, "num_qubits:", num_qubits, "scale_max:", scale_max, "num_params:", len(param_info), "layers:", layers)
     if gate in ("GP"): cnot_structure = []
-    elif gate in ("Rxx", "Ryy", "Rzz"): cnot_structure = [(0, 1), (0, 1)] #falsely shown as needing 0 CNOTs with OSR?
     elif gate in ("CH", "CZ"): cnot_structure = [(0, 1)]
-    elif gate in ("Rxy", "SiSWAP", "CRX", "CRY", "CRZ", "CP", "CS", "CSX"): cnot_structure = [(0, 1), (0, 1)]
-    elif gate in ("SYC", "SSWAP",): cnot_structure = [(0, 1), (0, 1), (0, 1)]
+    elif gate in ("Rxy", "CRX", "CRY", "CRZ", "CP", "CS", "CSX", "CU3", "CU", "Rxx", "Ryy", "Rzz", "iSWAP", "SiSWAP"): cnot_structure = [(0, 1), (0, 1)]
+    elif gate in ("SYC", "SWAP", "SSWAP",): cnot_structure = [(0, 1), (0, 1), (0, 1)]
     elif gate in ("CCZ", "CCX"): cnot_structure = [(1, 2), (0, 2), (1, 2), (0, 2), (0, 1), (0, 1)]
     elif gate in ("CSWAP",): cnot_structure = [(2, 1), (0, 2), (1, 2), (0, 2), (0, 1), (0, 1), (2, 1)]
     elif num_qubits > 1: cnot_structure = determine_CNOT_structure(Umtx, param_info)
@@ -1058,14 +1062,17 @@ def decompose_unitary_search(gate, scale_max, layers=4, basis=('CNOT', 'H', 'S',
 #decompose_unitary_search("Rzz", 1)
 #decompose_unitary_search("CS", 1)
 #decompose_unitary_search("Rxy", 8)
+#decompose_unitary_search("SWAP", 1)
 #decompose_unitary_search("SSWAP", 8)
 #decompose_unitary_search("CSX", 8)
-decompose_unitary_search("SiSWAP", 8)
+#decompose_unitary_search("iSWAP", 8)
+#decompose_unitary_search("SiSWAP", 8)
 #decompose_unitary_search("CRX", 2)
 #decompose_unitary_search("CRY", 2)
 #decompose_unitary_search("CRZ", 2)
 #decompose_unitary_search("SYC", 2)
 #decompose_unitary_search("CSWAP", 2)
-#decompose_unitary_search("U3", 8)
+decompose_unitary_search("CU3", 1)
+#decompose_unitary_search("U3", 1)
 #decompose_unitary_search("GP", 1)
 #decompose_unitary_search("P", 1)
