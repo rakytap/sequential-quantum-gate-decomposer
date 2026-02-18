@@ -349,13 +349,13 @@ def circuit_to_CNOT_basis( circ: Circuit, parameters: np.ndarray):
             theta, = parameters[ gate.get_Parameter_Start_Index() : gate.get_Parameter_Start_Index() + gate.get_Parameter_Num() ]
             params.append([-theta/2, theta/2])
         elif isinstance(gate, CP):
-            circuit.add_RZ(gate.get_Target_Qbit())
+            circuit.add_U1(gate.get_Target_Qbit())
             circuit.add_CNOT(gate.get_Target_Qbit(), gate.get_Control_Qbit())
-            circuit.add_RZ(gate.get_Target_Qbit())
+            circuit.add_U1(gate.get_Target_Qbit())
             circuit.add_CNOT(gate.get_Target_Qbit(), gate.get_Control_Qbit())
-            circuit.add_RZ(gate.get_Control_Qbit())
+            circuit.add_U1(gate.get_Control_Qbit())
             phi, = parameters[ gate.get_Parameter_Start_Index() : gate.get_Parameter_Start_Index() + gate.get_Parameter_Num() ]
-            params.append([ phi/2/2, -phi/2/2, phi/2/2 ])
+            params.append([ phi/2, -phi/2, phi/2 ])
         elif isinstance(gate, CCX):
             c1, c2 = gate.get_Control_Qbits()
             circuit.add_CNOT(c1, c2)
