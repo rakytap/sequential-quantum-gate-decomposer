@@ -225,15 +225,10 @@ def circuit_to_CNOT_basis( circ: Circuit, parameters: np.ndarray):
             circuit.add_Gate( subcircuit )
             params.append( subparams )
         elif isinstance(gate, CH):
-            circuit.add_RZ(gate.get_Target_Qbit())
-            circuit.add_CNOT(gate.get_Target_Qbit(), gate.get_Control_Qbit())
-            circuit.add_RZ(gate.get_Target_Qbit())
             circuit.add_RY(gate.get_Target_Qbit())
             circuit.add_CNOT(gate.get_Target_Qbit(), gate.get_Control_Qbit())
             circuit.add_RY(gate.get_Target_Qbit())
-            circuit.add_RZ(gate.get_Target_Qbit())
-            circuit.add_U1(gate.get_Control_Qbit())
-            params.append([-np.pi/2/2, -np.pi/2/2, np.pi/4/2, -np.pi/4/2, np.pi/2, np.pi/2])
+            params.append([np.pi/4/2, -np.pi/4/2])
         elif isinstance(gate, CZ):
             circuit.add_H(gate.get_Target_Qbit())
             circuit.add_CNOT(gate.get_Target_Qbit(), gate.get_Control_Qbit())
