@@ -52,6 +52,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "Y.h"
 #include "Z.h"
 #include "SX.h"
+#include "SXdg.h"
 #include "SYC.h"
 #include "UN.h"
 #include "ON.h"
@@ -240,6 +241,8 @@ qgd_Circuit_Wrapper_add_one_qubit_gate(y, Y)
 qgd_Circuit_Wrapper_add_one_qubit_gate(z, Z)
 
 qgd_Circuit_Wrapper_add_one_qubit_gate(sx, SX)
+
+qgd_Circuit_Wrapper_add_one_qubit_gate(sxdg, SXdg)
 
 qgd_Circuit_Wrapper_add_one_qubit_gate(s, S)
 
@@ -1345,6 +1348,26 @@ get_gate( Gates_block* circuit, int &idx ) {
 
 
     }
+    else if (gate->get_type() == SXDG_OPERATION){
+
+
+        PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
+        // PyDict_GetItemString creates a borrowed reference to the item in the dict. Reference counting is not increased on this element, dont need to decrease the reference counting at the end
+        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "SXdg");
+
+        PyObject* gate_input = Py_BuildValue("(OO)", qbit_num, target_qbit);
+        py_gate              = PyObject_CallObject(py_gate_class, gate_input);
+
+        // replace dummy data with real gate data
+        qgd_Gate* py_gate_C = reinterpret_cast<qgd_Gate*>( py_gate );
+        delete( py_gate_C->gate );
+        py_gate_C->gate = static_cast<Gate*>( gate->clone() );
+
+        Py_DECREF( qgd_gate );               
+        Py_DECREF( gate_input );
+
+
+    }
     else if (gate->get_type() == TDG_OPERATION){
 
 
@@ -2118,6 +2141,9 @@ static PyMethodDef qgd_Circuit_Wrapper_Methods[] = {
     },
     {"add_SX", (PyCFunction) qgd_Circuit_Wrapper_add_SX, METH_VARARGS | METH_KEYWORDS,
      "Call to add a SX gate to the front of the gate structure"
+    },
+    {"add_SXdg", (PyCFunction) qgd_Circuit_Wrapper_add_SXdg, METH_VARARGS | METH_KEYWORDS,
+     "Call to add a SXdg gate to the front of the gate structure"
     },
     {"add_S", (PyCFunction) qgd_Circuit_Wrapper_add_S, METH_VARARGS | METH_KEYWORDS,
      "Call to add a S gate to the front of the gate structure"

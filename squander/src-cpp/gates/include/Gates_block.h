@@ -589,6 +589,18 @@ void add_sx(int target_qbit);
 void add_sx_to_front(int target_qbit);
 
 /**
+@brief Append a SXdg gate to the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_sxdg(int target_qbit);
+
+/**
+@brief Add a SXdg gate to the front of the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_sxdg_to_front(int target_qbit);
+
+/**
 @brief Append a Sycamore gate (i.e. controlled Hadamard gate) gate to the list of gates
 @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
 @param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
