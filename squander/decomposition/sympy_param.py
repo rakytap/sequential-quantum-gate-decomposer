@@ -24,6 +24,18 @@ def determine_CNOT_structure(Umtx, params):
     return cnot_structure
 
 little_endian = True
+def bit_reverse(i, n):
+    return int(f"{i:0{n}b}"[::-1], 2)
+def endian_swap_matrix(U):
+    dim = U.shape[0]
+    n = dim.bit_length() - 1
+    assert 2**n == dim
+    
+    perm = [bit_reverse(i, n) for i in range(dim)]
+    P = sympy.eye(dim)[perm, :]
+    
+    return P * U * P
+
 def find_control_qubits(psi, num_qubits):
     """
     Identify control-qubit sets that make a unitary ‘pure-controlled’ or ‘sparse-controlled’.
@@ -57,15 +69,10 @@ def find_control_qubits(psi, num_qubits):
         if is_sparse: sparsity_controls.append([j if little_endian else num_qubits-1-j for j in range(num_qubits) if i & (1<<j)])
     return pure_controls, sparsity_controls
 def gateprep(x): #deal with primitive roots of unity
-    for i in (8, 4, 6):
-        z = sympy.exp(sympy.I*sympy.pi*i/24)/2-sympy.exp(-sympy.I*sympy.pi*i/24)/2
-        x = x.replace(sympy.expand_complex(z).simplify(), z)
-        z = -sympy.exp(sympy.I*sympy.pi*i/24)/2+sympy.exp(-sympy.I*sympy.pi*i/24)/2
-        x = x.replace(sympy.expand_complex(z).simplify(), z)
-        z = sympy.exp(sympy.I*sympy.pi*i/24)/2+sympy.exp(-sympy.I*sympy.pi*i/24)/2
-        x = x.replace(sympy.expand_complex(z).simplify(), z)
-        z = -sympy.exp(sympy.I*sympy.pi*i/24)/2-sympy.exp(-sympy.I*sympy.pi*i/24)/2
-        x = x.replace(sympy.expand_complex(z).simplify(), z)
+    for i1, i2 in ((6, 6), (4, 4)): #(0, 12)
+        for sgn0, sgn1 in itertools.product((1, -1), repeat=2):
+            z = sgn0*sympy.exp(sympy.I*sympy.pi*i1/24)/2+sgn1*sympy.exp(-sympy.I*sympy.pi*i2/24)/2
+            if x == sympy.expand_complex(z).simplify(): x = z
     return quantsimp(x)
 def quantsimp(x):
     #x = sympy.sympify(x)
@@ -157,12 +164,12 @@ def compile_gates(num_qubits, gates):
         sympy.Matrix: The resulting 2**n × 2**n unitary product.
     """
     if len(gates) and gates[0][-1] == list(range(num_qubits)): #shortcut for global gates
-        Umtx = make_gate(*gates[0][:-1], prep=False) if isinstance(gates[0][0], str) else gates[0][0]
+        Umtx = make_gate(*gates[0][:-1], prep=True) if isinstance(gates[0][0], str) else gates[0][0]
         gates = gates[1:]
     else:
         Umtx = sympy.eye(2**num_qubits)
     for gate in gates:
-        Umtx = apply_to(Umtx, num_qubits, make_gate(*gate[:-1], prep=False) if isinstance(gate[0], str) else gate[0], gate[-1])
+        Umtx = apply_to(Umtx, num_qubits, make_gate(*gate[:-1], prep=True) if isinstance(gate[0], str) else gate[0], gate[-1])
     return Umtx #.applyfunc(quantsimp)
 def make_controlled(gate, gate_qubits, gateother=None): #control is first qubit, gate qubits come after
     """
@@ -191,15 +198,15 @@ def make_controlled(gate, gate_qubits, gateother=None): #control is first qubit,
 #T = U3(0, 0, π/4)
 #Tdg = U3(0, 0, −π/4)
 @functools.lru_cache(maxsize=None)
-def make_gate(name, *params, textbook=False, prep=False):
-    res = gate_descs[name][3 if textbook else 2](*params)
+def make_gate(name, *params, textbook=True, prep=False):
+    res = gate_descs[name][3 if textbook and len(gate_descs[name]) > 3 else 2](*params)
     return res.applyfunc(gateprep) if prep else res 
 def make_gate_decomp(name, *params): return decomp_dict[name](*params)
 def make_inverse(g): return g**-1
-#def dagger_gate(Utarget):
-#    Umtx = Utarget.conjugate().transpose()
-#    t = sympy.Wild('t')
-#    return Umtx.applyfunc(lambda x: x.replace(sympy.conjugate(sympy.I**t), (-sympy.I)**t).replace(sympy.conjugate((-sympy.I)**t), sympy.I**t))
+def dagger_gate(Utarget):
+    Umtx = Utarget.conjugate().transpose()
+    t = sympy.Wild('t')
+    return Umtx.applyfunc(lambda x: x.replace(sympy.conjugate(sympy.I**t), (-sympy.I)**t).replace(sympy.conjugate((-sympy.I)**t), sympy.I**t))
 def make_sqrt(g): return (g**(1/2)).applyfunc(lambda x: x.rewrite(sympy.exp).replace(lambda e: e.is_Float, lambda e: sympy.nsimplify(e, rational=True)))
 
 theta, phi, lbda, gamma = sympy.Symbol("θ", real=True), sympy.Symbol("ϕ", real=True), sympy.Symbol("λ", real=True), sympy.Symbol("γ", real=True)
@@ -224,26 +231,26 @@ gate_descs = { #(num_qubits, num_params, sympy_generator_function)
     "Y": (1, [], lambda: sympy.Matrix([[0, -sympy.I], [sympy.I, 0]])),
     "Z": (1, [], lambda: sympy.Matrix([[1, 0], [0, -1]])),
 
-    "HX": (1, [], lambda: compile_gates(1, [("H", [0]), ("X", [0])]),
+    "HX": (1, [], lambda: compile_gates(1, [("H", [0]), ("X", [0])]).applyfunc(textbook_simp),
         lambda: sympy.Matrix([[1/sympy.sqrt(2), -1/sympy.sqrt(2)], [1/sympy.sqrt(2), 1/sympy.sqrt(2)]])),
-    "HY": (1, [], lambda: compile_gates(1, [("H", [0]), ("Y", [0])]),
+    "HY": (1, [], lambda: compile_gates(1, [("H", [0]), ("Y", [0])]).applyfunc(textbook_simp),
         lambda: sympy.Matrix([[-sympy.I/sympy.sqrt(2), sympy.I/sympy.sqrt(2)], [sympy.I/sympy.sqrt(2), sympy.I/sympy.sqrt(2)]])),
-    "HZ": (1, [], lambda: compile_gates(1, [("H", [0]), ("Z", [0])]),
+    "HZ": (1, [], lambda: compile_gates(1, [("H", [0]), ("Z", [0])]).applyfunc(textbook_simp),
         lambda: sympy.Matrix([[1/sympy.sqrt(2), 1/sympy.sqrt(2)], [-1/sympy.sqrt(2), 1/sympy.sqrt(2)]])),
     "SX": (1, [], lambda: compile_gates(1, [("S", [0]), ("X", [0])]),
         lambda: sympy.Matrix([[0, sympy.I], [1, 0]])),
     "SY": (1, [], lambda: compile_gates(1, [("S", [0]), ("Y", [0])]),
         lambda: sympy.Matrix([[0, 1], [sympy.I, 0]])),
-    "HS": (1, [], lambda: compile_gates(1, [("H", [0]), ("S", [0])]),
+    "HS": (1, [], lambda: compile_gates(1, [("H", [0]), ("S", [0])]).applyfunc(textbook_simp),
         lambda: sympy.Matrix([[1/sympy.sqrt(2), 1/sympy.sqrt(2)], [sympy.I/sympy.sqrt(2), -sympy.I/sympy.sqrt(2)]])),
     #HSX = SdgSx, HSY = SSxdg, SHX = SxS, SHY = SxSdg, SHZ = SxdgS
     "SdgSx": (1, [], lambda: compile_gates(1, [("Sdg", [0]), ("Sx", [0]), ("GP", sympy.pi/4, 1, [0])]).applyfunc(textbook_simp),
         lambda: sympy.Matrix([[sympy.I/sympy.sqrt(2), -sympy.I/sympy.sqrt(2)], [1/sympy.sqrt(2), 1/sympy.sqrt(2)]])),
     "SSxdg": (1, [], lambda: compile_gates(1, [("S", [0]), ("Sxdg", [0]), ("GP", sympy.pi/4, 1, [0])]).applyfunc(textbook_simp),
         lambda: sympy.Matrix([[1/sympy.sqrt(2), -1/sympy.sqrt(2)], [sympy.I/sympy.sqrt(2), sympy.I/sympy.sqrt(2)]])),
-    "HSdg": (1, [], lambda: compile_gates(1, [("H", [0]), ("Sdg", [0])]),
+    "HSdg": (1, [], lambda: compile_gates(1, [("H", [0]), ("Sdg", [0])]).applyfunc(textbook_simp),
         lambda: sympy.Matrix([[1/sympy.sqrt(2), 1/sympy.sqrt(2)], [-sympy.I/sympy.sqrt(2), sympy.I/sympy.sqrt(2)]])),
-    "SH": (1, [], lambda: compile_gates(1, [("S", [0]), ("H", [0])]),
+    "SH": (1, [], lambda: compile_gates(1, [("S", [0]), ("H", [0])]).applyfunc(textbook_simp),
         lambda: sympy.Matrix([[1/sympy.sqrt(2), sympy.I/sympy.sqrt(2)], [1/sympy.sqrt(2), -sympy.I/sympy.sqrt(2)]])),
     "SxS": (1, [], lambda: compile_gates(1, [("Sx", [0]), ("S", [0]), ("GP", -sympy.pi/4, 1, [0])]).applyfunc(textbook_simp),
         lambda: sympy.Matrix([[1/sympy.sqrt(2), -sympy.I/sympy.sqrt(2)], [1/sympy.sqrt(2), sympy.I/sympy.sqrt(2)]])),
@@ -336,6 +343,10 @@ gate_descs = { #(num_qubits, num_params, sympy_generator_function)
         lambda: sympy.Matrix([[1, 0, 0, 0], [0, 1/sympy.sqrt(2), sympy.I/sympy.sqrt(2), 0], [0, sympy.I/sympy.sqrt(2), 1/sympy.sqrt(2), 0], [0, 0, 0, 1]])),
     "fSim": (2, [(1, theta), (1, phi)], lambda theta, phi: compile_gates(2, [("iSWAP_pow", -2*theta/sympy.pi, [0, 1]), ("CZPowGate", -phi/sympy.pi, [0, 1])])),
     "CZPowGate": (2, [(1, t_)], lambda t: make_gate("CP", sympy.pi*t)),
+    "fFredkin": (3, [], lambda: sympy.Matrix([[1, 0, 0, 0, 0, 0, 0, 0], [0, 1, 0, 0, 0, 0, 0, 0], [0, 0, 1, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 1, 0, 0], [0, 0, 0, 0, 1, 0, 0, 0], [0, 0, 0, 1, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 1, 0], [0, 0, 0, 0, 0, 0, 0, -1]])),
+    "Peres": (3, [], lambda: sympy.Matrix([[1, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 1], [0, 0, 1, 0, 0, 0, 0, 0], [0, 1, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 1, 0, 0, 0], [0, 0, 0, 1, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 1, 0], [0, 0, 0, 0, 0, 1, 0, 0]])),
+    "Margolus": (3, [], lambda: sympy.Matrix([[1, 0, 0, 0, 0, 0, 0, 0], [0, 1, 0, 0, 0, 0, 0, 0], [0, 0, 1, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 1], [0, 0, 0, 0, 1, 0, 0, 0], [0, 0, 0, 0, 0, -1, 0, 0], [0, 0, 0, 0, 0, 0, 1, 0], [0, 0, 0, 1, 0, 0, 0, 0]])),
+    "Deutsch": (3, [(1, theta)], lambda theta: sympy.Matrix([[1, 0, 0, 0, 0, 0, 0, 0], [0, 1, 0, 0, 0, 0, 0, 0], [0, 0, 1, 0, 0, 0, 0, 0], [0, 0, 0, sympy.I*sympy.cos(theta), 0, 0, 0, sympy.sin(theta)], [0, 0, 0, 0, 1, 0, 0, 0], [0, 0, 0, 0, 0, 1, 0, 0], [0, 0, 0, 0, 0, 0, 1, 0], [0, 0, 0, sympy.sin(theta), 0, 0, 0, sympy.I*sympy.cos(theta)]]))
 }
 
 decomp_dict = {
@@ -362,7 +373,7 @@ decomp_dict = {
     'iSWAP_pow': lambda alpha: make_gate_decomp("Rxy", -sympy.pi*alpha), #compile_gates(2, [("H", [0]), ("H", [1]), ("CNOT", [0,1]), ("Rz", -(alpha*sympy.pi)/2, [1]), ("CNOT", [0,1]), ("H", [0]), ("H", [1]), ("Sdg", [0]), ("Sdg", [1]), ("H", [0]), ("H", [1]), ("CNOT", [0,1]), ("Rz", -(alpha*sympy.pi)/2, [1]), ("CNOT", [0,1]), ("H", [0]), ("H", [1]), ("S", [0]), ("S", [1])]).applyfunc(textbook_simp)
     'fSim': lambda theta, phi: compile_gates(2, [(make_gate_decomp("iSWAP_pow", -2*theta/sympy.pi), [0, 1]), (make_gate_decomp("CZPowGate", -phi/sympy.pi), [0, 1])]),
     #3 CNOT SYC: https://epjquantumtechnology.springeropen.com/articles/10.1140/epjqt/s40507-024-00248-8
-    #'SYC': lambda: compile_gates(2, [("Rz", -3*sympy.pi/4, [0]), ("Rz", sympy.pi/4, [1]), ("Sx", [0]), ("Sx", [1]), ("Rz", -sympy.pi, [0]), ("Rz", sympy.pi, [1]), ("Sx", [1]), ("Rz", 5*sympy.pi/2, [1]), ("CNOT", [0, 1]), ("Sx", [0]), ("Rz", -3*sympy.pi/4, [1]), ("Sx", [1]), ("Rz", sympy.pi, [1]), ("Sx", [1]), ("Rz", 9*sympy.pi/4, [1]), ("CNOT", [0, 1]), ("Rz", sympy.pi/2, [0]), ("Sx", [1]), ("Sx", [0]), ("Rz", sympy.pi/2, [1]), ("Rz", 11*sympy.pi/12, [0]), ("Sx", [1]), ("Sx", [0]), ("Rz", sympy.pi/2, [1]), ("CNOT", [0, 1]), ("Sx", [0]), ("Rz", sympy.pi/2, [1]), ("Rz", sympy.pi/6, [0]), ("Sx", [1]), ("Rz", -sympy.pi/3, [1]), ("GP", 17*sympy.pi/24, 2, [0, 1])]).applyfunc(textbook_simp), #gen_fSim_decomp(sympy.pi/2, sympy.pi/6)
+    'SYC': lambda: compile_gates(2, [("Rz", -3*sympy.pi/4, [0]), ("Rz", sympy.pi/4, [1]), ("Sx", [0]), ("Sx", [1]), ("Rz", -sympy.pi, [0]), ("Rz", sympy.pi, [1]), ("Sx", [1]), ("Rz", 5*sympy.pi/2, [1]), ("CNOT", [0, 1]), ("Sx", [0]), ("Rz", -3*sympy.pi/4, [1]), ("Sx", [1]), ("Rz", sympy.pi, [1]), ("Sx", [1]), ("Rz", 9*sympy.pi/4, [1]), ("CNOT", [0, 1]), ("Rz", sympy.pi/2, [0]), ("Sx", [1]), ("Sx", [0]), ("Rz", sympy.pi/2, [1]), ("Rz", 11*sympy.pi/12, [0]), ("Sx", [1]), ("Sx", [0]), ("Rz", sympy.pi/2, [1]), ("CNOT", [0, 1]), ("Sx", [0]), ("Rz", sympy.pi/2, [1]), ("Rz", sympy.pi/6, [0]), ("Sx", [1]), ("Rz", -sympy.pi/3, [1]), ("GP", 17*sympy.pi/24, 2, [0, 1])]).applyfunc(textbook_simp), #gen_fSim_decomp(sympy.pi/2, sympy.pi/6)
     'CU': lambda theta, phi, lbda, gamma: compile_gates(2, [("Rz", (lbda-phi)/2, [1]), ("CNOT", [0, 1]), ("Rz", -(phi+lbda)/2, [1]), ("Ry", -theta/2, [1]), ("CNOT", [0, 1]), ("Ry", theta/2, [1]), ("Rz", phi, [1]), ("P", (lbda+phi)/2+gamma, [0])]).applyfunc(textbook_simp),
     'CU3': lambda theta, phi, lbda: compile_gates(2, [("Rz", (lbda-phi)/2, [1]), ("CNOT", [0, 1]), ("Rz", -(phi+lbda)/2, [1]), ("Ry", -theta/2, [1]), ("CNOT", [0, 1]), ("Ry", theta/2, [1]), ("Rz", phi, [1]), ("P", (lbda+phi)/2, [0])]).applyfunc(textbook_simp),
     'CCZ': lambda: compile_gates(3, [("CNOT", [1, 2]), ("Tdg", [2]), ("CNOT", [0, 2]), ("T", [2]), ("CNOT", [1, 2]), ("Tdg", [2]), ("CNOT", [0, 2]), ("T", [1]), ("T", [2]), ("CNOT", [0, 1]), ("T", [0]), ("Tdg", [1]), ("CNOT", [0, 1])]),
@@ -382,16 +393,17 @@ def test_decomp():
     for gate in gate_descs:
         print(gate)
         #if gate in ("SYC", "SSWAP", "SiSWAP"): continue
+        if gate != "SiSWAP": continue
         params = [param[1] for param in gate_descs[gate][1]]
         if gate == "GP": params.append(1)
-        res = make_gate(gate, *params)
+        textbook = make_gate(gate, *params, textbook=True)
         if len(gate_descs[gate]) == 4:
-            textbook = make_gate(gate, *params, textbook=True)
-            assert res == textbook, (res, textbook)
+            res = make_gate(gate, *params)
+            assert textbook == res, (textbook, res)
         #else: print(res)
         if gate in decomp_dict:
             check = make_gate_decomp(gate, *params)
-            assert res == check, (res, check)
+            assert textbook == check, (textbook, check)
     #reverse CNOT is H-CNOT-H on both qubits
     assert compile_gates(2, [("CNOT", [1, 0])]) == compile_gates(2, [("H", [0]), ("H", [1]), ("CNOT", [0, 1]), ("H", [0]), ("H", [1]),])
     print(find_control_qubits(make_gate("U3", theta, phi, lbda), 1), find_control_qubits(make_gate("CRY", theta), 2), find_control_qubits(make_gate("CCX"), 3))
@@ -453,7 +465,7 @@ class CircuitBuilder:
         gate_ops = []
         for gate in self.gates:
             gate_name, qubits, gate_params = gate
-            nqbits, nparams, gen_func = gate_descs[gate_name][:3]
+            nqbits = gate_descs[gate_name][0]
             if nqbits == 0:
                 gate_ops.append( (gate_name, *[param.to_sympy(params) for param in gate_params], len(qubits), qubits) )
             else: gate_ops.append( (gate_name, *[param.to_sympy(params) for param in gate_params], qubits) )
@@ -463,7 +475,8 @@ class CircuitBuilder:
         params = []
         for gate in self.gates:
             gate_name, qubits, gate_params = gate
-            nqbits, nparams, _, gen_func = gate_descs[gate_name]
+            nqbits, nparams = gate_descs[gate_name][:2]
+            gen_func = "add_" + gate_name.upper()
             getattr(circ, gen_func)(*qubits)
             for param in gate_params:
                 params.append(param.to_sympy(params))
@@ -572,9 +585,9 @@ def eval_symcost(num_qubits, rescirc, allow_global_phase=False):
     if allow_global_phase:
         if all(rescirc[i,j] == (rescirc[0,0] if i==j else 0) for i in range(1<<num_qubits) for j in range(1<<num_qubits)):
             return 0.0
-        diag = sympy.Trace(rescirc).rewrite(sympy.Sum)
-        gamma = diag / sympy.Abs(diag) if diag != 0 else 1 #canonical phase
-        rescirc = (rescirc / gamma).applyfunc(quantsimp)
+        #diag = sympy.Trace(rescirc).rewrite(sympy.Sum)
+        #gamma = diag / sympy.Abs(diag) if diag != 0 else 1 #canonical phase
+        #rescirc = (rescirc / gamma).applyfunc(quantsimp)
     rescirc = rescirc - sympy.eye(1<<num_qubits)
     #rescirc = sympy.simplify(rescirc)
     #print(rescirc)
@@ -586,7 +599,7 @@ def eval_circ(unitary, params, compiled_circuit, symonly=False, allow_global_pha
     if not symonly:
         tr = sympy.Trace(rescirc).rewrite(sympy.Sum)
         cost = 0.0
-        num_samples = 2*(len(params)+1) + 1
+        num_samples = 4
         for pos in itertools.product(*[np.linspace(0, np.pi*2*x[0], num=num_samples) for x in params]):
             #.rewrite(sympy.exp)
             cost += 1.0 - complex(tr.evalf(subs={x: y for x, y in zip(param_syms, pos)})).real / (1<<num_qubits)
@@ -610,7 +623,7 @@ def evaluate(individual, pset, hof, unitary, params, num_qubits, ansatz, cost_fu
             compiled_circuit.add_circuit(cc)
             count += 1
     #print(compiled_circuit)
-    symcost, cost, rescirc = eval_circ(unitary, params, compiled_circuit)
+    symcost, cost, rescirc = eval_circ(unitary, params, compiled_circuit, allow_global_phase=True)
     if cost == 0.0 or symcost == 0:
         hof.clear()
         hof.insert(individual)
@@ -633,8 +646,8 @@ def find_best_orientation(cnot_structure, Umtx, param_info):
 
 def gen_ansatz(gate, scale_max, layers, basis, u3_ansatz=False, gp_gate=False):
     param_info = gate_descs[gate][1]
-    Utarget = gate_descs[gate][2](*[x[1] for x in param_info], *((1,) if gate == "GP" else ()))
-    Umtx = make_inverse(Utarget)
+    Utarget = make_gate(gate, *[x[1] for x in param_info], *((1,) if gate == "GP" else ()))
+    Umtx = make_inverse(Utarget).applyfunc(gateprep)
     print(Utarget, Umtx)
     num_qubits = Umtx.shape[0].bit_length() - 1
     assert 'CNOT' in basis
@@ -670,7 +683,7 @@ def gen_ansatz(gate, scale_max, layers, basis, u3_ansatz=False, gp_gate=False):
         regions.append(False)
     return ansatz, regions, num_qubits, Umtx, param_info
 def decompose_unitary(gate, scale_max, layers=4, basis=('CNOT', 'S', 'Sdg', 'T', 'Tdg', 'Ry', 'Rz', 'H')):
-    ansatz, regions, num_qubits, Umtx, param_info = gen_ansatz(gate, scale_max, layers, basis, u3_ansatz=True)
+    ansatz, regions, num_qubits, Umtx, param_info = gen_ansatz(gate, scale_max, layers, basis, u3_ansatz=False)
 
     pset = gp.PrimitiveSetTyped("MAIN", [ParamIndex for _ in param_info], CircuitBuilder)
     psetangle = gp.PrimitiveSetTyped("MAIN", [ParamIndex for _ in param_info], ANGLE)
@@ -786,10 +799,10 @@ def A_star(starts, isGoal, h, getNeighbors, d):
                 if neighbor not in openSet: openSet.add(neighbor)
     return None
 def key_conv(x):
-    #return x
+    return x
     re, im = x.as_real_imag()
-    #return sympy.Add(*(sympy.Abs(re)+sympy.Abs(im)*sympy.I))
-    return sympy.Abs(sympy.Add(*(re+im)))
+    return sympy.Add(*(sympy.Abs(re)+sympy.Abs(im)*sympy.I))
+    #return sympy.Abs(sympy.Add(*(re+im)))
 def best_first(starts, is_goal, neighbors, eval_E, canonicalize):
     import heapq
     p = multiprocessing.Pool()
@@ -858,31 +871,34 @@ def make_circ(ansatz, node):
 #@lru_cache(None)
 def eval(Umtx, param_info, ansatz, allow_global_phase, node):
     compiled_circuit = make_circ(ansatz, node)
-    symcost, cost, U = eval_circ(Umtx, param_info, compiled_circuit, True, allow_global_phase=allow_global_phase)
+    symcost, cost, U = eval_circ(Umtx, param_info, compiled_circuit, False, allow_global_phase=allow_global_phase)
     #print(compiled_circuit, symcost, cost, U)
-    if symcost == 0.0: print("Found exact solution:", node, cost, symcost)
+    if cost == 0.0 or symcost == 0.0: print("Found exact solution:", node, cost, symcost)
     return (symcost, cost, sum(len(x) for x in node)), sympy.ImmutableDenseMatrix(U)
 def gen_clifford():
-    all_clifford = [x+y for x, y in itertools.product((('I',), ('H',), ('S',), ('H', 'S'), ('S', 'H'), ('SX',)), (('I',), ('X',), ('Y',), ('Z',)))]
+    all_clifford = [x+y for x, y in itertools.product((('I',), ('H',), ('S',), ('H', 'S'), ('S', 'H'), ('Sx',)), (('I',), ('X',), ('Y',), ('Z',)))]
     #all_clifford = [x+y for x, y in itertools.product((('I',), ('H',), ('S',), ('H', 'S'), ('S', 'H'), ('H', 'S', 'H')), (('I',), ('H', 'S', 'S', 'H'), ('H', 'S', 'S', 'H', 'S', 'S'), ('S', 'S')))]
     clifford_gates = {}
+    phases = tuple(sympy.pi*i/4 for i in range(8))
+    print("Phases:", phases)
     for cliff in all_clifford:
         cb = CircuitBuilder()
         for gate in (gen_gate(x, 0) for x in cliff):
             cb.add_circuit(gate)
-        mat = sympy.ImmutableMatrix(compile_gates(1, cb.to_sympy([], 1)))
-        if not any(sympy.expand(mat*phase) in clifford_gates for phase in (1, -1, sympy.I, -sympy.I)):
+        mat = sympy.ImmutableMatrix(compile_gates(1, cb.to_sympy([], 1)).applyfunc(textbook_simp))
+        if not any(sympy.ImmutableMatrix(compile_gates(1, [(mat,[0]), ("GP", phase, 1, [0])])) in clifford_gates for phase in phases):
             clifford_gates[mat] = cliff
     for gate in clifford_gates:
         #print(gate, clifford_gates[gate])
-        for phase in (1, -1, sympy.I, -sympy.I):
-            rev = sympy.expand(make_inverse(gate)*phase)
+        for phase in phases:
+            rev = sympy.ImmutableMatrix(compile_gates(1, [(dagger_gate(gate), [0]), ("GP", phase, 1, [0])]))
             if rev in clifford_gates:
                 print(gate, phase, clifford_gates[gate], clifford_gates[rev])
+#gen_clifford(); assert False
 #not maximally entangling: CS, CT
 #maximally entangling: CNOT, CZ, CY, CH, iSWAP, SiSWAP (partial), XX(pi/4), exp(i pi/4 (X⊗X + Y⊗Y)), SSWAP (partial)
 #maximally entangling only at specific angles: CRX, CRY, CRZ, CP, Rxy, iSWAP_pow
-def decompose_unitary_search(gate, scale_max, layers=4, basis=('CNOT', 'H', 'S', 'Sdg', 'Sx', 'Sxdg', 'X', 'Y', 'Z', "HX", "HY", "HZ", "SX", "SY", "HS", "SdgSx", "SSxdg", "HSdg", "SH", "SxS", "SxSdg", "SxdgS", "SxY", "SxZ", 'T', 'Tdg', 'P', 'Rx', 'Ry', 'Rz'), allow_global_phase=False):
+def decompose_unitary_search(gate, scale_max, layers=4, basis=('CNOT', 'H', 'S', 'Sdg', 'Sx', 'Sxdg', 'X', 'Y', 'Z', "HX", "HY", "HZ", "SX", "SY", "HS", "SdgSx", "SSxdg", "HSdg", "SH", "SxS", "SxSdg", "SxdgS", "SxY", "SxZ", 'T', 'Tdg', 'P', 'Rx', 'Ry', 'Rz'), allow_global_phase=True):
     ansatz, regions, num_qubits, Umtx, param_info = gen_ansatz(gate, scale_max, layers, basis)
     num_regions = len(regions)
     all_angles = [
@@ -950,7 +966,7 @@ def decompose_unitary_search(gate, scale_max, layers=4, basis=('CNOT', 'H', 'S',
         yield from (mat for pauli_dressing in pauli_dressings for preU in preUs for mat in (sympy.ImmutableMatrix(eval_circ(preU, param_info, pauli_dressing, True, allow_global_phase=allow_global_phase)[2]),) if mat != U)
         #yield from (mat for pauli_dressing in pauli_dressings for mat in (sympy.ImmutableMatrix(eval_circ(U, param_info, pauli_dressing, True, allow_global_phase=allow_global_phase)[2]),) if mat != U)
 
-    res = best_first(starts, lambda node, E: E[0] == 0 and len(node[0]) < 3, get_neighbors,
+    res = best_first(starts, lambda node, E: E[0] == 0, get_neighbors,
                      functools.partial(eval, Umtx, param_info, ansatz, allow_global_phase), canonicalize)
     def circ_to_code(circ):
         return ", ".join(f"(gen_{gate}({', '.join(str(x.to_sympy(params)) for x in angles)}), ({', '.join(str(q) for q in qubits)},))" for gate, qubits, angles in circ.gates)
@@ -977,10 +993,10 @@ def decompose_unitary_search(gate, scale_max, layers=4, basis=('CNOT', 'H', 'S',
 
 #decompose_unitary("CS", 16, 2)
 #decompose_unitary("SYC", 48, 2)
-#decompose_unitary("CCZ", 2, 2)
+#decompose_unitary("CCX", 1, 2)
 #decompose_unitary("Rxy", 8, 2)
 #decompose_unitary("SSWAP", 1, 2)
-#decompose_unitary("SiSWAP", 1, 2)
+#decompose_unitary("SiSWAP", 8, 2)
 #decompose_unitary("CRY", 2, 2)
 #decompose_unitary("iSWAP_pow", 8, 2)
 #decompose_unitary("Rxx", 2, 2)
@@ -999,7 +1015,7 @@ def decompose_unitary_search(gate, scale_max, layers=4, basis=('CNOT', 'H', 'S',
 #decompose_unitary_search("SSWAP", 8)
 #decompose_unitary_search("CSX", 8)
 #decompose_unitary_search("iSWAP", 8)
-#decompose_unitary_search("SiSWAP", 8)
+decompose_unitary_search("SiSWAP", 8)
 #decompose_unitary_search("CRX", 2)
 #decompose_unitary_search("CRY", 2)
 #decompose_unitary_search("CRZ", 2)
@@ -1009,4 +1025,7 @@ def decompose_unitary_search(gate, scale_max, layers=4, basis=('CNOT', 'H', 'S',
 #decompose_unitary_search("U3", 1)
 #decompose_unitary_search("GP", 1)
 #decompose_unitary_search("P", 1)
-decompose_unitary_search("SSxdg", 1, basis=('CNOT', 'H', 'S', 'Sdg', 'Sx', 'Sxdg', 'X', 'Y', 'Z', 'T', 'Tdg', 'P', 'Rx', 'Ry', 'Rz'), allow_global_phase=False)
+#decompose_unitary_search("Deutsch", 1)
+#decompose_unitary_search("Peres", 1)
+#decompose_unitary_search("CCX", 1)
+#decompose_unitary_search("SSxdg", 24, basis=('CNOT', 'H', 'S', 'Sdg', 'Sx', 'Sxdg', 'X', 'Y', 'Z', 'T', 'Tdg', 'P', 'Rx', 'Ry', 'Rz'), allow_global_phase=True)
