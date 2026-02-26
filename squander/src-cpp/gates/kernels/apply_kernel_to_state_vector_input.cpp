@@ -34,18 +34,17 @@ limitations under the License.
 @param control_qbit The contron qubit (-1 if the is no control qubit)
 @param matrix_size The size of the input
 */
+template<typename MatrixType>
 void
-apply_kernel_to_state_vector_input(Matrix& u3_1qbit, Matrix& input, const bool& deriv, const int& target_qbit, const int& control_qbit, const int& matrix_size) {
-
+apply_kernel_to_state_vector_input(MatrixType& u3_1qbit, MatrixType& input, const bool& deriv, const int& target_qbit, const int& control_qbit, const int& matrix_size) {
 
     int index_step_target = 1 << target_qbit;
     int current_idx = 0;
 
-
     for ( int current_idx_pair=current_idx + index_step_target; current_idx_pair<matrix_size; current_idx_pair=current_idx_pair+(index_step_target << 1) ) {
 
         for (int idx = 0; idx < index_step_target; idx++) {
-            //tbb::parallel_for(0, index_step_target, 1, [&](int idx) {  
+            //tbb::parallel_for(0, index_step_target, 1, [&](int idx) {
 
             int current_idx_loc = current_idx + idx;
             int current_idx_pair_loc = current_idx_pair + idx;
@@ -55,11 +54,11 @@ apply_kernel_to_state_vector_input(Matrix& u3_1qbit, Matrix& input, const bool& 
 
             if (control_qbit < 0 || ((current_idx_loc >> control_qbit) & 1)) {
 
-                QGD_Complex16 element = input[row_offset];
-                QGD_Complex16 element_pair = input[row_offset_pair];
+                auto element = input[row_offset];
+                auto element_pair = input[row_offset_pair];
 
-                QGD_Complex16 tmp1 = mult(u3_1qbit[0], element);
-                QGD_Complex16 tmp2 = mult(u3_1qbit[1], element_pair);
+                auto tmp1 = mult(u3_1qbit[0], element);
+                auto tmp2 = mult(u3_1qbit[1], element_pair);
 
                 input[row_offset].real = tmp1.real + tmp2.real;
                 input[row_offset].imag = tmp1.imag + tmp2.imag;
@@ -70,39 +69,25 @@ apply_kernel_to_state_vector_input(Matrix& u3_1qbit, Matrix& input, const bool& 
                 input[row_offset_pair].real = tmp1.real + tmp2.real;
                 input[row_offset_pair].imag = tmp1.imag + tmp2.imag;
 
-
-
             }
             else if (deriv) {
                 // when calculating derivatives, the constant element should be zeros
-                memset(input.get_data() + row_offset, 0, input.cols * sizeof(QGD_Complex16));
-                memset(input.get_data() + row_offset_pair, 0, input.cols * sizeof(QGD_Complex16));
+                memset(input.get_data() + row_offset, 0, input.cols * sizeof(decltype(input[0])));
+                memset(input.get_data() + row_offset_pair, 0, input.cols * sizeof(decltype(input[0])));
             }
             else {
                 // leave the state as it is
                 continue;
             }
 
-
-            //std::cout << current_idx_target << " " << current_idx_target_pair << std::endl;
-
-
-                    //});
+        //});
         }
-
 
         current_idx = current_idx + (index_step_target << 1);
 
-
     }
 
-
-
-
 }
-
-
-
 
 
 /**
@@ -114,9 +99,9 @@ apply_kernel_to_state_vector_input(Matrix& u3_1qbit, Matrix& input, const bool& 
 @param control_qbit The contron qubit (-1 if the is no control qubit)
 @param matrix_size The size of the input
 */
+template<typename MatrixType>
 void
-apply_kernel_to_state_vector_input_parallel(Matrix& u3_1qbit, Matrix& input, const bool& deriv, const int& target_qbit, const int& control_qbit, const int& matrix_size) {
-
+apply_kernel_to_state_vector_input_parallel(MatrixType& u3_1qbit, MatrixType& input, const bool& deriv, const int& target_qbit, const int& control_qbit, const int& matrix_size) {
 
     int index_step_target = 1 << target_qbit;
 
@@ -140,18 +125,15 @@ apply_kernel_to_state_vector_input_parallel(Matrix& u3_1qbit, Matrix& input, con
 
     int inner_grain_size = 64;
 
-    tbb::parallel_for( tbb::blocked_range<int>(0, parallel_outer_cycles, outer_grain_size), [&](tbb::blocked_range<int> r) { 
+    tbb::parallel_for( tbb::blocked_range<int>(0, parallel_outer_cycles, outer_grain_size), [&](tbb::blocked_range<int> r) {
 
         int current_idx      = r.begin()*(index_step_target << 1);
         int current_idx_pair = index_step_target + r.begin()*(index_step_target << 1);
 
         for (int rdx=r.begin(); rdx<r.end(); rdx++) {
-            
 
             tbb::parallel_for( tbb::blocked_range<int>(0,index_step_target,inner_grain_size), [&](tbb::blocked_range<int> r) {
 	        for (int idx=r.begin(); idx<r.end(); ++idx) {
-
-
 
                     int current_idx_loc = current_idx + idx;
                     int current_idx_pair_loc = current_idx_pair + idx;
@@ -161,11 +143,11 @@ apply_kernel_to_state_vector_input_parallel(Matrix& u3_1qbit, Matrix& input, con
 
                     if (control_qbit < 0 || ((current_idx_loc >> control_qbit) & 1)) {
 
-                        QGD_Complex16 element = input[row_offset];
-                        QGD_Complex16 element_pair = input[row_offset_pair];
+                        auto element = input[row_offset];
+                        auto element_pair = input[row_offset_pair];
 
-                        QGD_Complex16 tmp1 = mult(u3_1qbit[0], element);
-                        QGD_Complex16 tmp2 = mult(u3_1qbit[1], element_pair);
+                        auto tmp1 = mult(u3_1qbit[0], element);
+                        auto tmp2 = mult(u3_1qbit[1], element_pair);
 
                         input[row_offset].real = tmp1.real + tmp2.real;
                         input[row_offset].imag = tmp1.imag + tmp2.imag;
@@ -176,27 +158,19 @@ apply_kernel_to_state_vector_input_parallel(Matrix& u3_1qbit, Matrix& input, con
                         input[row_offset_pair].real = tmp1.real + tmp2.real;
                         input[row_offset_pair].imag = tmp1.imag + tmp2.imag;
 
-
-
                     }
                     else if (deriv) {
                         // when calculating derivatives, the constant element should be zeros
-                        memset(input.get_data() + row_offset, 0, input.cols * sizeof(QGD_Complex16));
-                        memset(input.get_data() + row_offset_pair, 0, input.cols * sizeof(QGD_Complex16));
+                        memset(input.get_data() + row_offset, 0, input.cols * sizeof(decltype(input[0])));
+                        memset(input.get_data() + row_offset_pair, 0, input.cols * sizeof(decltype(input[0])));
                     }
                     else {
                         // leave the state as it is
                         continue;
                     }
 
-
-            //std::cout << current_idx_target << " " << current_idx_target_pair << std::endl;
-
-
                 }
             });
-            
-
 
             current_idx = current_idx + (index_step_target << 1);
             current_idx_pair = current_idx_pair + (index_step_target << 1);
@@ -204,10 +178,28 @@ apply_kernel_to_state_vector_input_parallel(Matrix& u3_1qbit, Matrix& input, con
         }
     });
 
-
-
-
 }
 
+// Explicit instantiations
+template void apply_kernel_to_state_vector_input<Matrix>(
+    Matrix& u3_1qbit, Matrix& input,
+    const bool& deriv, const int& target_qbit,
+    const int& control_qbit, const int& matrix_size);
 
+template void apply_kernel_to_state_vector_input_parallel<Matrix>(
+    Matrix& u3_1qbit, Matrix& input,
+    const bool& deriv, const int& target_qbit,
+    const int& control_qbit, const int& matrix_size);
 
+#ifdef ENABLE_FLOAT32
+#include "matrix_float.h"
+template void apply_kernel_to_state_vector_input<Matrix_float>(
+    Matrix_float& u3_1qbit, Matrix_float& input,
+    const bool& deriv, const int& target_qbit,
+    const int& control_qbit, const int& matrix_size);
+
+template void apply_kernel_to_state_vector_input_parallel<Matrix_float>(
+    Matrix_float& u3_1qbit, Matrix_float& input,
+    const bool& deriv, const int& target_qbit,
+    const int& control_qbit, const int& matrix_size);
+#endif

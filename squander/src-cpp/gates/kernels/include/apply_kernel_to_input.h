@@ -27,6 +27,9 @@ limitations under the License.
 #include "matrix.h"
 #include "common.h"
 
+#ifdef ENABLE_FLOAT32
+#include "matrix_float.h"
+#endif
 
 /**
 @brief Call to apply kernel to apply single qubit gate kernel on an input matrix
@@ -37,7 +40,16 @@ limitations under the License.
 @param control_qbit The contron qubit (-1 if the is no control qubit)
 @param matrix_size The size of the input
 */
-void
-apply_kernel_to_input(Matrix& u3_1qbit, Matrix& input, const bool& deriv, const int& target_qbit, const int& control_qbit, const int& matrix_size);
+template<typename MatrixType>
+void apply_kernel_to_input(MatrixType& u3_1qbit, MatrixType& input,
+    const bool& deriv, const int& target_qbit,
+    const int& control_qbit, const int& matrix_size);
+
+// original non-template signature as an inline forwarder for backward compat
+inline void apply_kernel_to_input(Matrix& u3_1qbit, Matrix& input,
+    const bool& deriv, const int& target_qbit,
+    const int& control_qbit, const int& matrix_size) {
+    apply_kernel_to_input<Matrix>(u3_1qbit, input, deriv, target_qbit,control_qbit, matrix_size);
+}
 
 #endif
