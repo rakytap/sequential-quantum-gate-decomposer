@@ -41,6 +41,9 @@ void cblas_zgemm(const enum CBLAS_ORDER Order, const enum CBLAS_TRANSPOSE TransA
 void cblas_zgemv(const enum CBLAS_ORDER Order, const enum CBLAS_TRANSPOSE TransA, const int M, const int N, const void *alpha, const void *A, const int lda,
                  const void *X, const int incX, const void *beta, void *Y, const int incY);
 
+/// Definition of the cgemm function from CBLAS (single-precision complex)
+void cblas_cgemm(const enum CBLAS_ORDER Order, const enum CBLAS_TRANSPOSE TransA, const enum CBLAS_TRANSPOSE TransB, const int M, const int N, const int K,
+		 const void *alpha, const void *A, const int lda, const void *B, const int ldb, const void *beta, void *C, const int ldc);
 
 #if BLAS==1 // MKL
 
@@ -83,6 +86,29 @@ bool check_matrices( Matrix &A, Matrix &B );
 @param transpose The returned vale of CBLAS_TRANSPOSE.
 */
 void get_cblas_transpose( Matrix &A, CBLAS_TRANSPOSE &transpose );
+
+
+#ifdef ENABLE_FLOAT32
+#include "matrix_float.h"
+
+
+/**
+@brief Call to calculate the product of two single-precision complex matrices using cblas_cgemm.
+@param A The first matrix.
+@param B The second matrix.
+@return Returns with the result matrix.
+*/
+Matrix_float dot( Matrix_float &A, Matrix_float &B );
+
+
+/**
+@brief Call to get the transpose properties of a float32 matrix for CBLAS calculations
+@param A The matrix of type Matrix_float.
+@param transpose The returned value of CBLAS_TRANSPOSE.
+*/
+void get_cblas_transpose( Matrix_float &A, CBLAS_TRANSPOSE &transpose );
+
+#endif // ENABLE_FLOAT32
 
 // relieve Python extension from TBB functionalities
 #ifndef CPYTHON
