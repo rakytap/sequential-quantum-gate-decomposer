@@ -125,10 +125,16 @@ class qgd_Partition_Aware_Mapping:
         self.config.setdefault('topology', None)
         self.config.setdefault('routed', False)
         self.config.setdefault('partition_strategy','ilp')
-        self.config.setdefault('optimizer', 'BFGS')
+        self.config.setdefault('optimizer', 'BFGS2')
+        self.config.setdefault('use_basin_hopping', 1)
+        self.config.setdefault('bh_T', 1.0)
+        self.config.setdefault('bh_stepsize', 0.5)
+        self.config.setdefault('bh_interval', 50)
+        self.config.setdefault('bh_target_accept_rate', 0.5)
+        self.config.setdefault('bh_stepwise_factor', 0.9)
         self.config.setdefault('hs_score_workers', os.cpu_count() or 1)
         self.config.setdefault('window_size', 0)  # 0 = full circuit (backward compat)
-        self.config.setdefault('use_osr',0)
+        self.config.setdefault('use_osr',1)
         strategy = self.config['strategy']
         allowed_strategies = ['TreeSearch', 'TabuSearch', 'Adaptive']
         if not strategy in allowed_strategies:
@@ -422,24 +428,36 @@ class qgd_Partition_Aware_Mapping:
         return result
 
     @staticmethod
-    def DecomposePartition_and_Perm(Umtx: np.ndarray, config: dict, mini_topology = None) -> Circuit:
+    def DecomposePartition_and_Perm(Umtx: np.ndarray, config: dict, mini_topology = None, max_retries: int = 5) -> Circuit:
         """
-        Call to decompose a partition
+        Call to decompose a partition. Retries up to max_retries times if the
+        decomposition error exceeds the configured tolerance.
         """
+        tolerance = config["tolerance"]
         strategy = config["strategy"]
-        if strategy == "TreeSearch":
-            cDecompose = N_Qubit_Decomposition_Tree_Search( Umtx.conj().T, config=config, accelerator_num=0, topology=mini_topology)
-        elif strategy == "TabuSearch":
-            cDecompose = N_Qubit_Decomposition_Tabu_Search( Umtx.conj().T, config=config, accelerator_num=0, topology=mini_topology )
-        elif strategy == "Adaptive":
-            cDecompose = N_Qubit_Decomposition_adaptive( Umtx.conj().T, level_limit_max=5, level_limit_min=1, topology=mini_topology )
-        else:
-            raise Exception(f"Unsupported decomposition type: {strategy}")
-        cDecompose.set_Verbose( config["verbosity"] )
-        cDecompose.set_Cost_Function_Variant( 3 )    
-        cDecompose.set_Optimization_Tolerance( config["tolerance"] )
-        cDecompose.set_Optimizer( config["optimizer"] )
-        cDecompose.Start_Decomposition()
+
+        for attempt in range(max_retries):
+            if strategy == "TreeSearch":
+                cDecompose = N_Qubit_Decomposition_Tree_Search( Umtx.conj().T, config=config, accelerator_num=0, topology=mini_topology)
+            elif strategy == "TabuSearch":
+                cDecompose = N_Qubit_Decomposition_Tabu_Search( Umtx.conj().T, config=config, accelerator_num=0, topology=mini_topology )
+            elif strategy == "Adaptive":
+                cDecompose = N_Qubit_Decomposition_adaptive( Umtx.conj().T, level_limit_max=5, level_limit_min=1, topology=mini_topology )
+            else:
+                raise Exception(f"Unsupported decomposition type: {strategy}")
+            cDecompose.set_Verbose( config["verbosity"] )
+            cDecompose.set_Cost_Function_Variant( 3 )
+            cDecompose.set_Optimization_Tolerance( tolerance )
+            cDecompose.set_Optimizer( config["optimizer"] )
+            cDecompose.Start_Decomposition()
+
+            err = cDecompose.get_Decomposition_Error()
+            if err <= tolerance:
+                break
+
+            if attempt >= max_retries - 1:
+                break
+
         squander_circuit = cDecompose.get_Circuit()
         parameters       = cDecompose.get_Optimized_Parameters()
         return squander_circuit, parameters
