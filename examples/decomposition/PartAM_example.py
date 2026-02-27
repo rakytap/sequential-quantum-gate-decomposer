@@ -27,61 +27,109 @@ from squander import Qiskit_IO
 import time
 from squander import Circuit
 import numpy as np
-if __name__ == '__main__':
+def validate_result(circ_orig, parameters_orig, circ, params, input_perm, output_perm):
+    """Validate decomposition by applying both circuits to a random state."""
+    num_qubits = circ.get_Qbit_Num()
+    matrix_size = 1 << num_qubits
+    initial_state_real = np.random.uniform(-1.0, 1.0, (matrix_size,))
+    initial_state_imag = np.random.uniform(-1.0, 1.0, (matrix_size,))
+    initial_state = initial_state_real + initial_state_imag * 1j
+    initial_state = initial_state / np.linalg.norm(initial_state)
 
-
-    config = {
-            'strategy': "TreeSearch",
-            'test_subcircuits': True,
-            'test_final_circuit': True,
-            'max_partition_size': 3,
-            'progressbar': True,  # Enable diagnostic output
-    }
-
-    filename = "benchmarks/qfast/5q/vqe.qasm"
-    start_time = time.time()
-
-    # load the circuit from a file
-    circ_orig, parameters_orig = utils.qasm_to_squander_circuit(filename)
-    config['topology'] = [
-    (0, 1), (0, 2), (0, 3), (0, 4)
-    ]
-    wide_circuit_optimizer = Partition_Aware_Mapping( config )
-    circ, params, input_perm,output_perm = wide_circuit_optimizer.Partition_Aware_Mapping( circ_orig, parameters_orig )
-    wide_circuit_optimizer = Wide_Circuit_Optimization.qgd_Wide_Circuit_Optimization( config )
-    config['routed'] = True 
-    circo = Qiskit_IO.get_Qiskit_Circuit(circ.get_Flat_Circuit(),params)
-    # run circuti optimization
-    circ, params = Qiskit_IO.convert_Qiskit_to_Squander(circo)
-    circ, params = wide_circuit_optimizer.OptimizeWideCircuit( circ, params, True )
-    #print(Qiskit_IO.get_Qiskit_Circuit(circ.get_Flat_Circuit(),params))
-    num_qubits = circ.get_Qbit_Num() 
-    matrix_size = 1 << num_qubits 
-    initial_state_real = np.random.uniform(-1.0,1.0, (matrix_size,) )
-    initial_state_imag = np.random.uniform(-1.0,1.0, (matrix_size,) )
-    initial_state = initial_state_real + initial_state_imag*1j
-    initial_state = initial_state/np.linalg.norm(initial_state)
     original_state = initial_state.copy()
-    circ_orig.apply_to(parameters_orig,original_state)
-    circ_Final = Circuit(circ.get_Qbit_Num() )
-    output_perm_T = [0]* circ.get_Qbit_Num() 
+    circ_orig.apply_to(parameters_orig, original_state)
+
+    circ_Final = Circuit(num_qubits)
+    output_perm_T = [0] * num_qubits
     for i, j in enumerate(output_perm):
-        output_perm_T[j] = i        
-    # Convert numpy arrays/ints to plain Python lists for add_Permutation
+        output_perm_T[j] = i
     input_perm_list = [int(x) for x in input_perm]
     circ_Final.add_Permutation(input_perm_list)
     circ_Final.add_Circuit(circ)
     circ_Final.add_Permutation(output_perm_T)
-    # Additional matrix validation in example     
+
     PartAM_state = initial_state.copy()
     circ_Final.apply_to(params, PartAM_state)
     state_error = 1 - abs(np.vdot(PartAM_state, original_state))
+    return state_error, circ_Final
+
+
+if __name__ == '__main__':
+
+    filename = "benchmarks/qfast/5q/vqe.qasm"
+    circ_orig, parameters_orig = utils.qasm_to_squander_circuit(filename)
+    topology = [(0, 1), (0, 2), (0, 3), (0, 4)]
+
+    # ================================================================
+    # Full-circuit mode (default, window_size=0)
+    # ================================================================
     print(f"\n{'='*70}")
-    print(f"State Vector Validation")
+    print("Full-circuit mode (window_size=0)")
     print(f"{'='*70}")
-    print(f"Decomposition error on random state: {state_error:.10f}")
-    print("--- %s seconds elapsed during optimization ---" % (time.time() - start_time))
+
+    config_full = {
+        'strategy': "TreeSearch",
+        'test_subcircuits': True,
+        'test_final_circuit': True,
+        'max_partition_size': 3,
+        'progressbar': True,
+        'topology': topology,
+    }
+
+    start_time = time.time()
+    pam_full = Partition_Aware_Mapping(config_full)
+    circ_full, params_full, input_perm_full, output_perm_full = \
+        pam_full.Partition_Aware_Mapping(circ_orig, parameters_orig)
+    elapsed_full = time.time() - start_time
+
+    error_full, circ_final_full = validate_result(
+        circ_orig, parameters_orig,
+        circ_full, params_full, input_perm_full, output_perm_full
+    )
+    print(f"Decomposition error: {error_full:.10f}")
+    print(f"Gate counts: {circ_final_full.get_Gate_Nums()}")
+    print(f"Time: {elapsed_full:.2f}s")
+
+    # ================================================================
+    # Windowed mode (window_size=3)
+    # ================================================================
+    print(f"\n{'='*70}")
+    print("Windowed mode (window_size=3)")
+    print(f"{'='*70}")
+
+    config_windowed = {
+        'strategy': "TreeSearch",
+        'test_subcircuits': True,
+        'test_final_circuit': True,
+        'max_partition_size': 3,
+        'progressbar': True,
+        'topology': topology,
+        'window_size': 3,
+    }
+
+    start_time = time.time()
+    pam_windowed = Partition_Aware_Mapping(config_windowed)
+    circ_win, params_win, input_perm_win, output_perm_win = \
+        pam_windowed.Partition_Aware_Mapping(circ_orig, parameters_orig)
+    elapsed_win = time.time() - start_time
+
+    error_win, circ_final_win = validate_result(
+        circ_orig, parameters_orig,
+        circ_win, params_win, input_perm_win, output_perm_win
+    )
+    print(f"Decomposition error: {error_win:.10f}")
+    print(f"Gate counts: {circ_final_win.get_Gate_Nums()}")
+    print(f"Time: {elapsed_win:.2f}s")
+
+    # ================================================================
+    # Summary
+    # ================================================================
+    print(f"\n{'='*70}")
+    print("Summary")
+    print(f"{'='*70}")
+    print(f"{'Mode':<20} {'Error':<20} {'Time':<10}")
+    print(f"{'Full circuit':<20} {error_full:<20.10f} {elapsed_full:<10.2f}s")
+    print(f"{'Windowed (K=3)':<20} {error_win:<20.10f} {elapsed_win:<10.2f}s")
     print(f"{'='*70}\n")
-    print(circ_Final.get_Gate_Nums())
 
 

@@ -39,6 +39,7 @@ from squander.synthesis.PartAM_utils import (
     check_circuit_compatibility,
     construct_swap_circuit,
     calculate_dist_small,
+    group_into_two_qubit_blocks,
 )
 
 
@@ -63,18 +64,18 @@ class PartitionScoreData:
 # ============================================================================
 
 _WORKER_SCORING_PARTITIONS: Optional[List[Optional[PartitionScoreData]]] = None
-_WORKER_S_DAG: Optional[List[List[int]]] = None
 _WORKER_DISTANCE_MATRIX: Optional[np.ndarray] = None
 _WORKER_SWAP_CACHE: Optional[Dict] = None
+_WORKER_VIRTUAL_E: Optional[List[Tuple[int, int]]] = None
 
 
-def _init_scoring_worker(scoring_partitions, sdag, distance_matrix):
+def _init_scoring_worker(scoring_partitions, distance_matrix, virtual_E=None):
     """Initializer for process-based scoring workers."""
-    global _WORKER_SCORING_PARTITIONS, _WORKER_S_DAG, _WORKER_DISTANCE_MATRIX, _WORKER_SWAP_CACHE
+    global _WORKER_SCORING_PARTITIONS, _WORKER_DISTANCE_MATRIX, _WORKER_SWAP_CACHE, _WORKER_VIRTUAL_E
     _WORKER_SCORING_PARTITIONS = scoring_partitions
-    _WORKER_S_DAG = sdag
     _WORKER_DISTANCE_MATRIX = distance_matrix
     _WORKER_SWAP_CACHE = {}
+    _WORKER_VIRTUAL_E = virtual_E
 
 
 def _score_candidate_worker(payload):
@@ -84,7 +85,6 @@ def _score_candidate_worker(payload):
     """
     if (
         _WORKER_SCORING_PARTITIONS is None
-        or _WORKER_S_DAG is None
         or _WORKER_DISTANCE_MATRIX is None
     ):
         raise RuntimeError("Scoring worker not initialized with shared data.")
@@ -94,9 +94,9 @@ def _score_candidate_worker(payload):
         F_snapshot,
         pi_snapshot,
         _WORKER_SCORING_PARTITIONS,
-        _WORKER_S_DAG,
         _WORKER_DISTANCE_MATRIX,
         _WORKER_SWAP_CACHE,
+        _WORKER_VIRTUAL_E,
     )
 
 
@@ -125,6 +125,7 @@ class qgd_Partition_Aware_Mapping:
         self.config.setdefault('partition_strategy','ilp')
         self.config.setdefault('optimizer', 'BFGS')
         self.config.setdefault('hs_score_workers', os.cpu_count() or 1)
+        self.config.setdefault('window_size', 0)  # 0 = full circuit (backward compat)
         strategy = self.config['strategy']
         allowed_strategies = ['TreeSearch', 'TabuSearch', 'Adaptive']
         if not strategy in allowed_strategies:
@@ -133,6 +134,53 @@ class qgd_Partition_Aware_Mapping:
         # Initialize caches for performance optimization
         self._topology_cache = {}  # {frozenset(edges): [topology_candidates]}
         self._swap_cache = {}     # {(pi_tuple, qbit_map_frozen): (swaps, output_perm)}
+
+    # ------------------------------------------------------------------------
+    # Scoring Methods
+    # ------------------------------------------------------------------------
+
+    def compute_routing_aware_weight(self, result, pi_init, D, E):
+        """
+        Compute a routing-aware ILP weight for a partition synthesis result.
+
+        Combines three components:
+        1. Base synthesis cost (min CNOT count across topologies)
+        2. Routing cost from pi_init (estimated SWAP overhead)
+        3. Virtual outgoing gate penalty (future routing constraints)
+
+        Args:
+            result: PartitionSynthesisResult or SingleQubitPartitionResult
+            pi_init: Current qubit layout (logical -> physical mapping)
+            D: Distance matrix between physical qubits
+            E: List of (q_a, q_b) tuples for virtual outgoing 2-qubit gates
+
+        Returns:
+            float: Combined weight (lower is better)
+        """
+        if isinstance(result, SingleQubitPartitionResult):
+            return 0
+
+        # 1. Base synthesis cost
+        base_cost = result.get_partition_synthesis_score()
+
+        # 2. Routing cost: best (minimum) across topologies
+        routing_cost = np.inf
+        for mini_topology in result.mini_topologies:
+            dist = calculate_dist_small(mini_topology, result.qubit_map, D, pi_init)
+            routing_cost = min(routing_cost, dist)
+        if np.isinf(routing_cost):
+            routing_cost = 0
+
+        # 3. Virtual outgoing gate penalty
+        involved = set(result.involved_qbits)
+        e_penalty = 0.0
+        for (q_a, q_b) in E:
+            if q_a in involved or q_b in involved:
+                dist = D[pi_init[q_a]][pi_init[q_b]]
+                if not np.isinf(dist):
+                    e_penalty += max(0, (dist - 1)) * 3
+
+        return base_cost + routing_cost + 0.3 * e_penalty
 
     # ------------------------------------------------------------------------
     # Caching Methods
@@ -207,6 +255,56 @@ class qgd_Partition_Aware_Mapping:
                 )
             )
         return scoring_partitions
+
+    @staticmethod
+    def _group_circuit_with_params(circuit, parameters):
+        """
+        Group a flat circuit into 2-qubit blocks and reorder parameters to match.
+        Replicates the gate ordering logic of group_into_two_qubit_blocks to build
+        a parameter array consistent with the grouped circuit's parameter space.
+        """
+        gates = circuit.get_Gates()
+
+        # Track gate indices following group_into_two_qubit_blocks logic
+        pending = defaultdict(list)
+        block_gate_orders = []
+        last_block_for_qubit = {}
+
+        for gate_idx, gate in enumerate(gates):
+            qubits = gate.get_Involved_Qbits()
+            if len(qubits) == 1:
+                pending[qubits[0]].append(gate_idx)
+            else:
+                q0, q1 = qubits[0], qubits[1]
+                block_order = list(pending[q0]) + list(pending[q1]) + [gate_idx]
+                pending[q0].clear()
+                pending[q1].clear()
+                block_idx = len(block_gate_orders)
+                block_gate_orders.append(block_order)
+                last_block_for_qubit[q0] = block_idx
+                last_block_for_qubit[q1] = block_idx
+
+        # Trailing single-qubit gates
+        for q, gate_indices in pending.items():
+            if gate_indices and q in last_block_for_qubit:
+                block_gate_orders[last_block_for_qubit[q]].extend(gate_indices)
+
+        # Build parameter reordering from original gate indices
+        param_indices = []
+        for block_order in block_gate_orders:
+            for g_idx in block_order:
+                gate = gates[g_idx]
+                start = gate.get_Parameter_Start_Index()
+                num = gate.get_Parameter_Num()
+                param_indices.extend(range(start, start + num))
+
+        grouped_circ = group_into_two_qubit_blocks(circuit)
+        if param_indices:
+            grouped_params = parameters[np.array(param_indices)]
+        else:
+            grouped_params = np.array([])
+
+        return grouped_circ, grouped_params
 
     # ------------------------------------------------------------------------
     # Partition Decomposition Methods
@@ -296,10 +394,100 @@ class qgd_Partition_Aware_Mapping:
     # Circuit Synthesis
     # ------------------------------------------------------------------------
 
-    def SynthesizeWideCircuit(self, circ, orig_parameters):
-        allparts, g, go, rgo, single_qubit_chains, gate_to_qubit, gate_to_tqubit = get_all_partitions(circ, self.config["max_partition_size"])
-        qbit_num_orig_circuit = circ.get_Qbit_Num()
-        gate_dict = {i: gate for i, gate in enumerate(circ.get_Gates())}
+    def SynthesizeWideCircuit(self, circ, orig_parameters, pi_init=None, E=None, DAG_start=0, DAG_end=0):
+        """
+        Partition and synthesize a circuit, optionally restricted to a window
+        of K DAG levels.
+
+        Args:
+            circ: The full quantum circuit
+            orig_parameters: Parameters for circ
+            pi_init: Current qubit permutation (logical->physical). When provided,
+                     enables routing-aware ILP scoring.
+            E: Virtual outgoing gates as List[(q_a, q_b)]. Computed automatically
+               when None and a window is active.
+            DAG_start: First DAG level to process (inclusive)
+            DAG_end: Last DAG level to process (exclusive). 0 means all levels.
+
+        Returns:
+            optimized_partitions: List of PartitionSynthesisResult / SingleQubitPartitionResult
+        """
+        # ---- Phase 0: Window extraction ----
+        all_gates = circ.get_Gates()
+        qbit_num = circ.get_Qbit_Num()
+        levels = self.generate_DAG_levels(circ)
+        total_levels = len(levels)
+
+        # Backward compatibility: DAG_start=0, DAG_end=0 means all levels
+        if DAG_start == 0 and DAG_end == 0:
+            effective_end = total_levels
+        else:
+            effective_end = min(DAG_end, total_levels)
+        effective_start = DAG_start
+
+        # Guard: empty window
+        if effective_start >= total_levels or effective_start >= effective_end:
+            self._last_synthesis_metadata = {
+                'E': E if E is not None else [],
+                'levels_processed': (effective_start, effective_end),
+                'total_levels': total_levels,
+            }
+            return []
+
+        # Collect window gate indices in topological order (level by level)
+        window_topo_order = []
+        for level_idx in range(effective_start, effective_end):
+            window_topo_order.extend(levels[level_idx])
+        window_gate_set = set(window_topo_order)
+
+        # Determine if we're processing the full circuit
+        full_circuit_mode = (len(window_gate_set) == len(all_gates))
+
+        if full_circuit_mode:
+            working_circ = circ
+            working_parameters = orig_parameters
+        else:
+            # Build sub-circuit from window gates
+            working_circ = Circuit(qbit_num)
+            working_params_list = []
+            for orig_idx in window_topo_order:
+                gate = all_gates[orig_idx]
+                working_circ.add_Gate(gate)
+                start = gate.get_Parameter_Start_Index()
+                working_params_list.append(
+                    orig_parameters[start:start + gate.get_Parameter_Num()]
+                )
+            if working_params_list:
+                working_parameters = np.concatenate(working_params_list, axis=0)
+            else:
+                working_parameters = np.array([])
+
+        # ---- Phase 0b: Identify virtual outgoing gates (E) ----
+        if E is None and not full_circuit_mode and effective_end < total_levels:
+            E = []
+            for orig_idx in window_topo_order:
+                gate = all_gates[orig_idx]
+                children = circ.get_Children(gate)
+                for child_idx in children:
+                    if child_idx not in window_gate_set:
+                        child_gate = all_gates[child_idx]
+                        child_qubits = child_gate.get_Involved_Qbits()
+                        if len(child_qubits) == 2:
+                            E.append((child_qubits[0], child_qubits[1]))
+            E = list(set(E))
+        elif E is None:
+            E = []
+
+        # ---- Phase 0c: Compute distance matrix if routing-aware ----
+        if pi_init is not None:
+            D = self.compute_distances_bfs(qbit_num)
+        else:
+            D = None
+
+        # ---- Phase 1: Partition enumeration ----
+        allparts, g, go, rgo, single_qubit_chains, gate_to_qubit, gate_to_tqubit = get_all_partitions(working_circ, self.config["max_partition_size"])
+        qbit_num_orig_circuit = working_circ.get_Qbit_Num()
+        gate_dict = {i: gate for i, gate in enumerate(working_circ.get_Gates())}
         single_qubit_chains_pre = {x[0]: x for x in single_qubit_chains if rgo[x[0]]}
         single_qubit_chains_post = {x[-1]: x for x in single_qubit_chains if go[x[-1]]}
         single_qubit_chains_prepost = {x[0]: x for x in single_qubit_chains if x[0] in single_qubit_chains_pre and x[-1] in single_qubit_chains_post}
@@ -313,7 +501,7 @@ class qgd_Partition_Aware_Mapping:
             for gate_idx in _get_topo_order({x: go[x] & gates for x in gates}, {x: rgo[x] & gates for x in gates}):
                 c.add_Gate( gate_dict[gate_idx] )
                 start = gate_dict[gate_idx].get_Parameter_Start_Index()
-                params.append(orig_parameters[start:start + gate_dict[gate_idx].get_Parameter_Num()])
+                params.append(working_parameters[start:start + gate_dict[gate_idx].get_Parameter_Num()])
             partitioned_circuit.add_Circuit(c)
         # Only add single-qubit chains as separate partitions if minimum_partition_size allows it
         for chain in single_qubit_chains:
@@ -321,15 +509,12 @@ class qgd_Partition_Aware_Mapping:
             for gate_idx in chain:
                 c.add_Gate( gate_dict[gate_idx] )
                 start = gate_dict[gate_idx].get_Parameter_Start_Index()
-                params.append(orig_parameters[start:start + gate_dict[gate_idx].get_Parameter_Num()])
+                params.append(working_parameters[start:start + gate_dict[gate_idx].get_Parameter_Num()])
             partitioned_circuit.add_Circuit(c)
         parameters = np.concatenate(params, axis=0)
 
-        qbit_num_orig_circuit = circ.get_Qbit_Num()
-
-
+        # ---- Phase 2: Stage 1 synthesis (Sequential) ----
         subcircuits = partitioned_circuit.get_Gates()
-
         optimized_results = [None] * len(subcircuits)
 
         with Pool(processes=mp.cpu_count()) as pool:
@@ -338,32 +523,38 @@ class qgd_Partition_Aware_Mapping:
                 start_idx = subcircuit.get_Parameter_Start_Index()
                 end_idx   = subcircuit.get_Parameter_Start_Index() + subcircuit.get_Parameter_Num()
                 subcircuit_parameters = parameters[ start_idx:end_idx ]
-                qbit_num_orig_circuit = subcircuit.get_Qbit_Num()
                 involved_qbits = subcircuit.get_Qbits()
 
-                qbit_num = len( involved_qbits )
-                mini_topologies = get_unique_subtopologies(self.topology, qbit_num)
+                qbit_num_sub = len( involved_qbits )
+                mini_topologies = get_unique_subtopologies(self.topology, qbit_num_sub)
                 qbit_map = {}
                 for idx in range( len(involved_qbits) ):
                     qbit_map[ involved_qbits[idx] ] = idx
-                remapped_subcircuit = subcircuit.Remap_Qbits( qbit_map, qbit_num )
+                remapped_subcircuit = subcircuit.Remap_Qbits( qbit_map, qbit_num_sub )
                 optimized_results[partition_idx] = pool.apply_async( self.DecomposePartition_Sequential, (remapped_subcircuit, subcircuit_parameters, self.config, mini_topologies, involved_qbits, qbit_map) )
 
             for partition_idx, subcircuit in enumerate( tqdm(subcircuits, desc="First Synthesis",disable=self.config.get('progressbar', 0) == False) ):
                 optimized_results[partition_idx] = optimized_results[partition_idx].get()
-        
-        weights = [result.get_partition_synthesis_score() for result in optimized_results[:len(allparts)]]
+
+        # ---- Phase 3: ILP partition selection with routing-aware weights ----
+        if pi_init is not None and D is not None:
+            weights = [
+                self.compute_routing_aware_weight(result, pi_init, D, E)
+                for result in optimized_results[:len(allparts)]
+            ]
+        else:
+            weights = [result.get_partition_synthesis_score() for result in optimized_results[:len(allparts)]]
+
         L_parts, fusion_info = ilp_global_optimal(allparts, g, weights=weights)
         parts = recombine_single_qubit_chains(go, rgo, single_qubit_chains, gate_to_tqubit, [allparts[i] for i in L_parts], fusion_info)
-        L = topo_sort_partitions(circ, self.config["max_partition_size"], parts)
+        L = topo_sort_partitions(working_circ, self.config["max_partition_size"], parts)
         from squander.partitioning.kahn import kahn_partition_preparts
         from squander.partitioning.tools import translate_param_order
-        partitioned_circuit, param_order, _ = kahn_partition_preparts(circ, self.config["max_partition_size"], [parts[i] for i in L])
-        parameters = translate_param_order(orig_parameters, param_order)
+        partitioned_circuit, param_order, _ = kahn_partition_preparts(working_circ, self.config["max_partition_size"], [parts[i] for i in L])
+        parameters = translate_param_order(working_parameters, param_order)
 
+        # ---- Phase 4: Stage 2 synthesis (Full) ----
         subcircuits = partitioned_circuit.get_Gates()
-
-        # the list of optimized subcircuits
         optimized_partitions = [None] * len(subcircuits)
 
         with Pool(processes=mp.cpu_count()) as pool:
@@ -372,21 +563,26 @@ class qgd_Partition_Aware_Mapping:
                 start_idx = subcircuit.get_Parameter_Start_Index()
                 end_idx   = subcircuit.get_Parameter_Start_Index() + subcircuit.get_Parameter_Num()
                 subcircuit_parameters = parameters[ start_idx:end_idx ]
-                qbit_num_orig_circuit = subcircuit.get_Qbit_Num()
                 involved_qbits = subcircuit.get_Qbits()
 
-                qbit_num = len( involved_qbits )
-                mini_topologies = get_unique_subtopologies(self.topology, qbit_num)
+                qbit_num_sub = len( involved_qbits )
+                mini_topologies = get_unique_subtopologies(self.topology, qbit_num_sub)
                 qbit_map = {}
                 for idx in range( len(involved_qbits) ):
                     qbit_map[ involved_qbits[idx] ] = idx
-                remapped_subcircuit = subcircuit.Remap_Qbits( qbit_map, qbit_num )
+                remapped_subcircuit = subcircuit.Remap_Qbits( qbit_map, qbit_num_sub )
                 optimized_partitions[partition_idx] = pool.apply_async( self.DecomposePartition_Full, (remapped_subcircuit, subcircuit_parameters, self.config, mini_topologies, involved_qbits, qbit_map) )
 
             for partition_idx, subcircuit in enumerate( tqdm(subcircuits, desc="Second Synthesis",disable=self.config.get('progressbar', 0) == False) ):
                 optimized_partitions[partition_idx] = optimized_partitions[partition_idx].get()
-                
-        
+
+        # ---- Phase 5: Store metadata and return ----
+        self._last_synthesis_metadata = {
+            'E': E,
+            'levels_processed': (effective_start, effective_end),
+            'total_levels': total_levels,
+        }
+
         return optimized_partitions
 
     # ------------------------------------------------------------------------
@@ -394,36 +590,110 @@ class qgd_Partition_Aware_Mapping:
     # ------------------------------------------------------------------------
 
     def Partition_Aware_Mapping(self, circ: Circuit, orig_parameters: np.ndarray):
-        
-        optimized_partitions = self.SynthesizeWideCircuit(circ, orig_parameters)
-        
-        # Initialize topology candidates in PartitionSynthesisResult objects
-        for partition in optimized_partitions:
-            if isinstance(partition, PartitionSynthesisResult):
-                partition._topology = self.topology
-                partition._topology_cache = self._topology_cache
+        N = circ.get_Qbit_Num()
 
-        
-        DAG, IDAG = self.construct_DAG_and_IDAG(optimized_partitions)
-        sDAG = self.construct_sDAG(optimized_partitions)
-        
-        D = self.compute_distances_bfs(circ.get_Qbit_Num())
-        pi = self._compute_smart_initial_layout(circ, circ.get_Qbit_Num(), D)
-        
-        F = self.get_initial_layer(IDAG, circ.get_Qbit_Num(),optimized_partitions)
-        scoring_partitions = self._build_scoring_partitions(optimized_partitions)
-        
-        partition_order, pi, pi_initial = self.Heuristic_Search(F,pi.copy(),DAG,IDAG, optimized_partitions,scoring_partitions,D, sDAG)
-        
-        final_circuit, final_parameters = self.Construct_circuit_from_HS(partition_order,optimized_partitions, circ.get_Qbit_Num())
-        
+        # Pre-process: group into 2-qubit blocks (skip if no 2-qubit gates)
+        has_2q_gates = any(len(g.get_Involved_Qbits()) >= 2 for g in circ.get_Gates())
+        if has_2q_gates:
+            grouped_circ, grouped_params = self._group_circuit_with_params(circ, orig_parameters)
+        else:
+            grouped_circ, grouped_params = circ, orig_parameters
+
+        window_size = self.config.get('window_size', 0)
+        levels = self.generate_DAG_levels(grouped_circ)
+        total_levels = len(levels)
+
+        # ---- Full-circuit path (backward compat) ----
+        if window_size <= 0 or window_size >= total_levels:
+            optimized_partitions = self.SynthesizeWideCircuit(grouped_circ, grouped_params)
+
+            for partition in optimized_partitions:
+                if isinstance(partition, PartitionSynthesisResult):
+                    partition._topology = self.topology
+                    partition._topology_cache = self._topology_cache
+
+            DAG, IDAG = self.construct_DAG_and_IDAG(optimized_partitions)
+
+            D = self.compute_distances_bfs(N)
+            pi = self._compute_smart_initial_layout(circ, N, D)
+
+            F = self.get_initial_layer(IDAG, N, optimized_partitions)
+            scoring_partitions = self._build_scoring_partitions(optimized_partitions)
+
+            partition_order, pi, pi_initial = self.Heuristic_Search(F, pi.copy(), DAG, IDAG, optimized_partitions, scoring_partitions, D)
+
+            final_circuit, final_parameters = self.Construct_circuit_from_HS(partition_order, optimized_partitions, N)
+
+            return final_circuit, final_parameters, pi_initial, pi
+
+        # ---- Windowed mode ----
+        D = self.compute_distances_bfs(N)
+        pi = self._compute_smart_initial_layout(circ, N, D)
+        pi_initial = pi.copy()
+
+        all_window_circuits = []
+        all_window_params = []
+
+        for window_start in range(0, total_levels, window_size):
+            window_end = min(window_start + window_size, total_levels)
+
+            # a. Synthesize this window
+            window_partitions = self.SynthesizeWideCircuit(
+                grouped_circ, grouped_params,
+                pi_init=pi, DAG_start=window_start, DAG_end=window_end
+            )
+
+            # Skip empty windows
+            if not window_partitions:
+                continue
+
+            # Retrieve virtual outgoing gates computed by SynthesizeWideCircuit
+            virtual_E = self._last_synthesis_metadata.get('E', []) or []
+
+            # b. Set topology info on partition results
+            for partition in window_partitions:
+                if isinstance(partition, PartitionSynthesisResult):
+                    partition._topology = self.topology
+                    partition._topology_cache = self._topology_cache
+
+            # c. Build per-window structures
+            DAG, IDAG = self.construct_DAG_and_IDAG(window_partitions)
+            F = self.get_initial_layer(IDAG, N, window_partitions)
+            scoring_partitions = self._build_scoring_partitions(window_partitions)
+
+            # d. Heuristic search for this window (pi carries forward)
+            partition_order, pi, _ = self.Heuristic_Search(
+                F, pi.copy(), DAG, IDAG,
+                window_partitions, scoring_partitions, D,
+                virtual_E=virtual_E if virtual_E else None
+            )
+
+            # e. Construct window circuit
+            window_circuit, window_params = self.Construct_circuit_from_HS(
+                partition_order, window_partitions, N
+            )
+
+            # f. Append results
+            all_window_circuits.append(window_circuit)
+            all_window_params.append(window_params)
+
+        # Concatenate all window circuits and parameters
+        final_circuit = Circuit(N)
+        for wc in all_window_circuits:
+            final_circuit.add_Circuit(wc)
+
+        if all_window_params:
+            final_parameters = np.concatenate(all_window_params, axis=0)
+        else:
+            final_parameters = np.array([])
+
         return final_circuit, final_parameters, pi_initial, pi
 
     # ------------------------------------------------------------------------
     # Heuristic Search
     # ------------------------------------------------------------------------
 
-    def Heuristic_Search(self, F, pi, DAG, IDAG, optimized_partitions, scoring_partitions, D, sDAG):
+    def Heuristic_Search(self, F, pi, DAG, IDAG, optimized_partitions, scoring_partitions, D, virtual_E=None):
         pi_initial = pi.copy()
 
         resolved_partitions = [False] * len(DAG)
@@ -447,13 +717,13 @@ class qgd_Partition_Aware_Mapping:
                     if parents_resolved:
                         F.append(child)
 
-        
+
         # Initialize progress bar
         total_partitions = len(DAG)
-        pbar = tqdm(total=total_partitions, desc="Heuristic Search", 
-                   bar_format='{desc}: {percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt} resolved', 
+        pbar = tqdm(total=total_partitions, desc="Heuristic Search",
+                   bar_format='{desc}: {percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt} resolved',
                    disable=self.config.get('progressbar', 0) == False)
-        
+
         configured_workers = self.config.get('hs_score_workers', os.cpu_count() or 1)
         score_workers = max(1, configured_workers if configured_workers else 1)
         executor: Optional[ProcessPoolExecutor] = None
@@ -462,7 +732,7 @@ class qgd_Partition_Aware_Mapping:
                 executor = ProcessPoolExecutor(
                     max_workers=score_workers,
                     initializer=_init_scoring_worker,
-                    initargs=(scoring_partitions, sDAG, D),
+                    initargs=(scoring_partitions, D, virtual_E),
                 )
             except Exception as exc:
                 logging.warning(
@@ -491,9 +761,9 @@ class qgd_Partition_Aware_Mapping:
                             F_snapshot,
                             pi,
                             scoring_partitions,
-                            sDAG,
                             D,
                             self._swap_cache,
+                            virtual_E,
                         )
                         for partition_candidate in partition_candidates
                     ]
@@ -575,24 +845,12 @@ class qgd_Partition_Aware_Mapping:
     # ------------------------------------------------------------------------
 
     @staticmethod
-    def score_partition_candidate(partition_candidate, F,  pi, scoring_partitions, sDAG, D, swap_cache):
+    def score_partition_candidate(partition_candidate, F, pi, scoring_partitions, D, swap_cache, virtual_E=None):
         score_F = 0
-        score_E = 0
-        E_partitions = set()  # Changed to set for O(1) membership checks
-        E_partitions_1 = set()
-        E_partitions_2 = set()
         swap_weight = 4
         swaps, output_perm = partition_candidate.transform_pi(pi, D, swap_cache)
-        score_F += swap_weight*len(swaps)*3
+        score_F += swap_weight * len(swaps) * 3
         score_F += len(partition_candidate.circuit_structure)
-
-        # Safety check: ensure partition_idx is valid for sDAG
-        if partition_candidate.partition_idx < len(sDAG):
-            for partition_idx in sDAG[partition_candidate.partition_idx]:
-                if partition_idx in E_partitions:
-                    continue
-                E_partitions.add(partition_idx)
-
 
         for partition_idx in F:
             partition = scoring_partitions[partition_idx]
@@ -600,49 +858,23 @@ class qgd_Partition_Aware_Mapping:
                 continue
             mini_scores = []
             for tdx, mini_topology in enumerate(partition.mini_topologies):
-                dist_placeholder = swap_weight*3*calculate_dist_small(mini_topology,partition.qubit_map,D,output_perm)
+                dist_placeholder = swap_weight * 3 * calculate_dist_small(mini_topology, partition.qubit_map, D, output_perm)
                 circuit_length = np.min([len(circ) for circ in partition.circuit_structures[tdx]])
-                score = dist_placeholder + circuit_length
-                mini_scores.append(score)
+                mini_scores.append(dist_placeholder + circuit_length)
             if mini_scores:
                 score_F += np.min(mini_scores)
 
-            # Safety check: ensure partition_idx is valid for sDAG
-            if partition_idx < len(sDAG):
-                for partition_idx_E in sDAG[partition_idx]:
-                    if partition_idx_E in E_partitions:
-                        continue
-                    E_partitions.add(partition_idx_E)
+        # Virtual outgoing gate penalty: cross-window look-ahead
+        virtual_e_score = 0.0
+        if virtual_E:
+            for (q_a, q_b) in virtual_E:
+                dist = D[int(output_perm[q_a])][int(output_perm[q_b])]
+                if not np.isinf(dist):
+                    virtual_e_score += max(0, (dist - 1)) * 3
 
-        #check the secondary children            
-        for partition_idx in E_partitions: 
-            if partition_idx < len(sDAG):
-                for partition_idx_E in sDAG[partition_idx]:
-                    if partition_idx_E in E_partitions or partition_idx_E in E_partitions_1:
-                        continue
-                    E_partitions_1.add(partition_idx_E)
-        #score all
-        for partition_idx in E_partitions:
-            mini_scores = []
-            partition_result = scoring_partitions[partition_idx]
-            if partition_result is None:
-                continue
-            for tdx, mini_topology in enumerate(partition_result.mini_topologies):
-                dist_placeholder = 3*calculate_dist_small(mini_topology,partition_result.qubit_map,D,output_perm)
-                circuit_length = np.min([len(circ) for circ in partition_result.circuit_structures[tdx]])
-                score = dist_placeholder + circuit_length
-                mini_scores.append(score)
-            if mini_scores:
-                score_E += np.min(mini_scores)
+        E_score = 0.3 * virtual_e_score if virtual_e_score > 0.0 else 0.0
+        F_score = 0.7 * score_F
 
-        coeff_E = 0.3
-        if len(E_partitions) == 0:
-            E_score = 0.0
-        else:
-            E_score = coeff_E * score_E 
-        
-        F_score = 0.7*score_F
-        
         return E_score + F_score
 
     # ------------------------------------------------------------------------
@@ -959,4 +1191,37 @@ class qgd_Partition_Aware_Mapping:
             current_level = next_level
         
         return levels
-    
+
+    def get_gate_DAG_level(self, circuit, gate_idx):
+        """
+        Find the DAG level a specific gate belongs to.
+
+        Args:
+            circuit: The quantum circuit to analyze
+            gate_idx: Index of the gate within the circuit's gate list
+
+        Returns:
+            int: The DAG level the gate belongs to (0-indexed), or -1 if not found.
+        """
+        levels = self.generate_DAG_levels(circuit)
+        for level_idx, level_gates in enumerate(levels):
+            if gate_idx in level_gates:
+                return level_idx
+        return -1
+
+    def get_gate_DAG_level_map(self, circuit):
+        """
+        Build a mapping from gate index to its DAG level.
+
+        Args:
+            circuit: The quantum circuit to analyze
+
+        Returns:
+            dict: Mapping {gate_idx: level} for every gate in the circuit.
+        """
+        levels = self.generate_DAG_levels(circuit)
+        gate_to_level = {}
+        for level_idx, level_gates in enumerate(levels):
+            for gate_idx in level_gates:
+                gate_to_level[gate_idx] = level_idx
+        return gate_to_level
