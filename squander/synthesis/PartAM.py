@@ -81,14 +81,15 @@ def _init_scoring_worker(scoring_partitions, distance_matrix, virtual_E=None):
 def _score_candidate_worker(payload):
     """
     Worker wrapper that reconstructs scoring inputs from a lightweight payload.
-    Payload format: (PartitionCandidate, F_snapshot, pi_snapshot)
+    Payload format: (PartitionCandidate, F_snapshot, pi_snapshot[, free_routing])
     """
     if (
         _WORKER_SCORING_PARTITIONS is None
         or _WORKER_DISTANCE_MATRIX is None
     ):
         raise RuntimeError("Scoring worker not initialized with shared data.")
-    partition_candidate, F_snapshot, pi_snapshot = payload
+    partition_candidate, F_snapshot, pi_snapshot = payload[:3]
+    free_routing = payload[3] if len(payload) > 3 else False
     return qgd_Partition_Aware_Mapping.score_partition_candidate(
         partition_candidate,
         F_snapshot,
@@ -97,6 +98,7 @@ def _score_candidate_worker(payload):
         _WORKER_DISTANCE_MATRIX,
         _WORKER_SWAP_CACHE,
         _WORKER_VIRTUAL_E,
+        free_routing=free_routing,
     )
 
 
@@ -140,22 +142,24 @@ class qgd_Partition_Aware_Mapping:
     # Scoring Methods
     # ------------------------------------------------------------------------
 
-    def compute_routing_aware_weight(self, result, pi_init, D, E, dag_position=0.5):
+    def compute_routing_aware_weight(self, result, pi_init, D, E, dag_start=0.0, dag_end=1.0):
         """
         Compute a routing-aware ILP weight for a partition synthesis result.
 
         Evaluates each (topology, permutation) combination together and uses
         DAG-position-dependent weighting:
-        - Early partitions (dag_position~0): routing cost weighted higher
-        - Late partitions (dag_position~1): E penalty weighted higher
+        - Early partitions (dag_start~0): routing cost weighted higher
+        - Late partitions (dag_end~1): E penalty weighted higher
+        - Partitions spanning the full window get both weights high
 
         Args:
             result: PartitionSynthesisResult or SingleQubitPartitionResult
-            pi_init: Current qubit layout (logical -> physical mapping)
+            pi_init: Current qubit layout (logical -> physical mapping).
+                     None when routing is free (first window).
             D: Distance matrix between physical qubits
             E: List of (q_a, q_b) tuples for virtual outgoing 2-qubit gates
-            dag_position: Float in [0, 1] indicating partition's relative
-                depth in the DAG (0 = start, 1 = end)
+            dag_start: Float in [0, 1] — earliest DAG level of the partition
+            dag_end: Float in [0, 1] — latest DAG level of the partition
 
         Returns:
             float: Combined weight (lower is better)
@@ -164,8 +168,8 @@ class qgd_Partition_Aware_Mapping:
             return 0
 
         # Position-dependent weighting
-        routing_weight = 1.0 - dag_position
-        e_weight = dag_position
+        routing_weight = 1.0 - dag_start
+        e_weight = dag_end
 
         # E penalty
         involved = set(result.involved_qbits)
@@ -173,14 +177,21 @@ class qgd_Partition_Aware_Mapping:
         if E:
             for (q_a, q_b) in E:
                 if q_a in involved or q_b in involved:
-                    dist = D[pi_init[q_a]][pi_init[q_b]]
-                    if not np.isinf(dist):
-                        e_penalty += max(0, (dist - 1)) * 3
+                    if pi_init is not None:
+                        dist = D[pi_init[q_a]][pi_init[q_b]]
+                        if not np.isinf(dist):
+                            e_penalty += max(0, (dist - 1)) * 3
+                    else:
+                        # No layout yet — fixed penalty per touching E edge
+                        e_penalty += 3.0
 
         # Evaluate each (topology, permutation) combination together
         best_score = np.inf
         for tdx, mini_topology in enumerate(result.mini_topologies):
-            routing_cost = calculate_dist_small(mini_topology, result.qubit_map, D, pi_init)
+            if pi_init is not None:
+                routing_cost = calculate_dist_small(mini_topology, result.qubit_map, D, pi_init)
+            else:
+                routing_cost = 0
             for pdx in range(len(result.cnot_counts[tdx])):
                 cnot_count = result.cnot_counts[tdx][pdx]
                 score = cnot_count + routing_weight * routing_cost
@@ -216,6 +227,45 @@ class qgd_Partition_Aware_Mapping:
             self._topology_cache[canonical_key] = get_subtopologies_of_type(self.topology, mini_topology)
         
         return self._topology_cache[canonical_key]
+
+    @staticmethod
+    def _compute_ideal_pi_for_candidate(candidate, N):
+        """
+        Compute the ideal pi_initial such that the given candidate needs zero
+        SWAPs for input routing, plus the resulting pi_output after the partition.
+
+        Returns:
+            pi_initial: np.ndarray — layout where partition qubits are already
+                        at their required physical positions.
+            pi_output:  np.ndarray — layout after the partition circuit (P_o applied).
+        """
+        P_i_inv = [candidate.P_i.index(i) for i in range(len(candidate.P_i))]
+
+        # Required physical position for each partition qubit
+        required = {}
+        for k, v in candidate.qbit_map.items():
+            required[k] = candidate.node_mapping[P_i_inv[v]]
+
+        pi_initial = np.zeros(N, dtype=int)
+        used_physical = set(required.values())
+
+        for k, p in required.items():
+            pi_initial[k] = p
+
+        remaining_physical = sorted(p for p in range(N) if p not in used_physical)
+        remaining_logical = sorted(q for q in range(N) if q not in required)
+        for q, p in zip(remaining_logical, remaining_physical):
+            pi_initial[q] = p
+
+        # Apply P_o to get output permutation (mirrors transform_pi logic)
+        pi_output = np.array(pi_initial, dtype=int)
+        qbit_map_inverse = {v: k for k, v in candidate.qbit_map.items()}
+        for q_star in range(len(candidate.P_o)):
+            if q_star in qbit_map_inverse:
+                k = qbit_map_inverse[q_star]
+                pi_output[k] = candidate.node_mapping[candidate.P_o[q_star]]
+
+        return pi_initial, pi_output
 
     def _build_scoring_partitions(self, optimized_partitions) -> List[Optional[PartitionScoreData]]:
         """
@@ -489,11 +539,8 @@ class qgd_Partition_Aware_Mapping:
         elif E is None:
             E = []
 
-        # ---- Phase 0c: Compute distance matrix if routing-aware ----
-        if pi_init is not None:
-            D = self.compute_distances_bfs(qbit_num)
-        else:
-            D = None
+        # ---- Phase 0c: Compute distance matrix ----
+        D = self.compute_distances_bfs(qbit_num)
 
         # ---- Phase 1: Partition enumeration ----
         allparts, g, go, rgo, single_qubit_chains, gate_to_qubit, gate_to_tqubit = get_all_partitions(working_circ, self.config["max_partition_size"])
@@ -548,20 +595,19 @@ class qgd_Partition_Aware_Mapping:
                 optimized_results[partition_idx] = optimized_results[partition_idx].get()
 
         # ---- Phase 3: ILP partition selection with routing-aware weights ----
-        if pi_init is not None and D is not None:
-            gate_to_level = self.get_gate_DAG_level_map(working_circ)
-            max_level = max(gate_to_level.values()) if gate_to_level else 0
+        gate_to_level = self.get_gate_DAG_level_map(working_circ)
+        max_level = max(gate_to_level.values()) if gate_to_level else 0
 
-            weights = []
-            for idx, result in enumerate(optimized_results[:len(allparts)]):
-                partition_gates = allparts[idx]
-                part_depth = max(gate_to_level.get(g, 0) for g in partition_gates)
-                dag_position = part_depth / max_level if max_level > 0 else 0.5
-                weights.append(
-                    self.compute_routing_aware_weight(result, pi_init, D, E, dag_position)
-                )
-        else:
-            weights = [result.get_partition_synthesis_score() for result in optimized_results[:len(allparts)]]
+        weights = []
+        for idx, result in enumerate(optimized_results[:len(allparts)]):
+            partition_gates = allparts[idx]
+            part_start = min(gate_to_level.get(g, 0) for g in partition_gates)
+            part_end = max(gate_to_level.get(g, 0) for g in partition_gates)
+            dag_start = part_start / max_level if max_level > 0 else 0.0
+            dag_end = part_end / max_level if max_level > 0 else 1.0
+            weights.append(
+                self.compute_routing_aware_weight(result, pi_init, D, E, dag_start, dag_end)
+            )
 
         L_parts, fusion_info = ilp_global_optimal(allparts, g, weights=weights)
         parts = recombine_single_qubit_chains(go, rgo, single_qubit_chains, gate_to_tqubit, [allparts[i] for i in L_parts], fusion_info)
@@ -635,12 +681,12 @@ class qgd_Partition_Aware_Mapping:
             DAG, IDAG = self.construct_DAG_and_IDAG(optimized_partitions)
 
             D = self.compute_distances_bfs(N)
-            pi = self._compute_smart_initial_layout(circ, N, D)
+            pi = np.arange(N)  # Dummy — free_initial_routing will derive pi_initial
 
             F = self.get_initial_layer(IDAG, N, optimized_partitions)
             scoring_partitions = self._build_scoring_partitions(optimized_partitions)
 
-            partition_order, pi, pi_initial = self.Heuristic_Search(F, pi.copy(), DAG, IDAG, optimized_partitions, scoring_partitions, D)
+            partition_order, pi, pi_initial = self.Heuristic_Search(F, pi, DAG, IDAG, optimized_partitions, scoring_partitions, D, free_initial_routing=True)
 
             final_circuit, final_parameters = self.Construct_circuit_from_HS(partition_order, optimized_partitions, N)
 
@@ -648,14 +694,15 @@ class qgd_Partition_Aware_Mapping:
 
         # ---- Windowed mode ----
         D = self.compute_distances_bfs(N)
-        pi = self._compute_smart_initial_layout(circ, N, D)
-        pi_initial = pi.copy()
+        pi = np.arange(N)  # Dummy for first window — free_initial_routing derives pi_initial
+        pi_initial = None
 
         all_window_circuits = []
         all_window_params = []
 
         for window_start in range(0, total_levels, window_size):
             window_end = min(window_start + window_size, total_levels)
+            is_first_window = (window_start == 0)
 
             # Expand grouped block indices to flat gate indices
             window_gate_indices = []
@@ -669,7 +716,8 @@ class qgd_Partition_Aware_Mapping:
             # a. Synthesize this window (pass original flat circuit)
             window_partitions = self.SynthesizeWideCircuit(
                 circ, orig_parameters,
-                pi_init=pi, window_gate_indices=window_gate_indices
+                pi_init=pi if not is_first_window else None,
+                window_gate_indices=window_gate_indices
             )
 
             # Skip empty windows
@@ -691,11 +739,15 @@ class qgd_Partition_Aware_Mapping:
             scoring_partitions = self._build_scoring_partitions(window_partitions)
 
             # d. Heuristic search for this window (pi carries forward)
-            partition_order, pi, _ = self.Heuristic_Search(
+            partition_order, pi, window_pi_initial = self.Heuristic_Search(
                 F, pi.copy(), DAG, IDAG,
                 window_partitions, scoring_partitions, D,
-                virtual_E=virtual_E if virtual_E else None
+                virtual_E=virtual_E if virtual_E else None,
+                free_initial_routing=is_first_window,
             )
+
+            if is_first_window:
+                pi_initial = window_pi_initial
 
             # e. Construct window circuit
             window_circuit, window_params = self.Construct_circuit_from_HS(
@@ -716,25 +768,36 @@ class qgd_Partition_Aware_Mapping:
         else:
             final_parameters = np.array([])
 
+        if pi_initial is None:
+            pi_initial = np.arange(N)
+
         return final_circuit, final_parameters, pi_initial, pi
 
     # ------------------------------------------------------------------------
     # Heuristic Search
     # ------------------------------------------------------------------------
 
-    def Heuristic_Search(self, F, pi, DAG, IDAG, optimized_partitions, scoring_partitions, D, virtual_E=None):
+    def Heuristic_Search(self, F, pi, DAG, IDAG, optimized_partitions, scoring_partitions, D, virtual_E=None, free_initial_routing=False):
         pi_initial = pi.copy()
 
         resolved_partitions = [False] * len(DAG)
         partition_order = []
         step = 0
+        first_routing_done = not free_initial_routing
+        buffered_single_qubit = []
+
         for partition_idx in list(F):
             if isinstance(optimized_partitions[partition_idx], SingleQubitPartitionResult):
                 F.remove(partition_idx)
                 single_qubit_part = optimized_partitions[partition_idx]
-                qubit = single_qubit_part.circuit.get_Qbits()[0]
-                single_qubit_part.circuit.Remap_Qbits({int(qubit): int(pi[qubit])},max(D.shape))
-                partition_order.append(single_qubit_part)
+
+                if free_initial_routing and not first_routing_done:
+                    # Buffer — will remap after pi_initial is determined
+                    buffered_single_qubit.append(single_qubit_part)
+                else:
+                    qubit = single_qubit_part.circuit.get_Qbits()[0]
+                    single_qubit_part.circuit.Remap_Qbits({int(qubit): int(pi[qubit])},max(D.shape))
+                    partition_order.append(single_qubit_part)
 
                 resolved_partitions[partition_idx] = True
                 children = list(DAG[partition_idx])
@@ -776,10 +839,11 @@ class qgd_Partition_Aware_Mapping:
                 if len(partition_candidates) == 0:
                     break
                 F_snapshot = tuple(F)
+                use_free_routing = not first_routing_done
                 if executor is not None:
                     pi_snapshot = tuple(int(x) for x in pi)
                     payloads = [
-                        (partition_candidate, F_snapshot, pi_snapshot)
+                        (partition_candidate, F_snapshot, pi_snapshot, use_free_routing)
                         for partition_candidate in partition_candidates
                     ]
                     scores = list(executor.map(_score_candidate_worker, payloads))
@@ -793,23 +857,37 @@ class qgd_Partition_Aware_Mapping:
                             D,
                             self._swap_cache,
                             virtual_E,
+                            free_routing=use_free_routing,
                         )
                         for partition_candidate in partition_candidates
                     ]
                 min_idx = np.argmin(scores)
                 min_partition_candidate = partition_candidates[min_idx]
-                
+
                 F.remove(min_partition_candidate.partition_idx)
                 resolved_partitions[min_partition_candidate.partition_idx] = True
                 resolved_count = sum(resolved_partitions)
                 pbar.n = resolved_count
                 pbar.refresh()
-                pi_prev = pi # Save previous pi state for filtering
-                swap_order, pi = min_partition_candidate.transform_pi(pi, D, self._swap_cache)
-                if len(swap_order)!=0:
-                    partition_order.append(construct_swap_circuit(swap_order, len(pi)))
-                
-                
+
+                if not first_routing_done:
+                    # Derive pi_initial from chosen candidate — no SWAPs needed
+                    pi_initial, pi = self._compute_ideal_pi_for_candidate(
+                        min_partition_candidate, len(pi)
+                    )
+                    first_routing_done = True
+
+                    # Remap and insert buffered single-qubit partitions
+                    for sq_part in buffered_single_qubit:
+                        qubit = sq_part.circuit.get_Qbits()[0]
+                        sq_part.circuit.Remap_Qbits({int(qubit): int(pi_initial[qubit])}, max(D.shape))
+                        partition_order.append(sq_part)
+                    buffered_single_qubit = []
+                else:
+                    swap_order, pi = min_partition_candidate.transform_pi(pi, D, self._swap_cache)
+                    if len(swap_order)!=0:
+                        partition_order.append(construct_swap_circuit(swap_order, len(pi)))
+
                 partition_order.append(min_partition_candidate)
                 children = list(DAG[min_partition_candidate.partition_idx])
                 step += 1
@@ -834,6 +912,14 @@ class qgd_Partition_Aware_Mapping:
         finally:
             if executor is not None:
                 executor.shutdown()
+
+        # If no multi-qubit partition was resolved, flush buffered single-qubit parts
+        if buffered_single_qubit:
+            for sq_part in buffered_single_qubit:
+                qubit = sq_part.circuit.get_Qbits()[0]
+                sq_part.circuit.Remap_Qbits({int(qubit): int(pi[qubit])}, max(D.shape))
+                partition_order.append(sq_part)
+
         pbar.close()
         return partition_order, pi, pi_initial
 
@@ -874,11 +960,12 @@ class qgd_Partition_Aware_Mapping:
     # ------------------------------------------------------------------------
 
     @staticmethod
-    def score_partition_candidate(partition_candidate, F, pi, scoring_partitions, D, swap_cache, virtual_E=None):
+    def score_partition_candidate(partition_candidate, F, pi, scoring_partitions, D, swap_cache, virtual_E=None, free_routing=False):
         score_F = 0
         swap_weight = 4
         swaps, output_perm = partition_candidate.transform_pi(pi, D, swap_cache)
-        score_F += swap_weight * len(swaps) * 3
+        if not free_routing:
+            score_F += swap_weight * len(swaps) * 3
         score_F += len(partition_candidate.circuit_structure)
 
         for partition_idx in F:
@@ -887,13 +974,16 @@ class qgd_Partition_Aware_Mapping:
                 continue
             mini_scores = []
             for tdx, mini_topology in enumerate(partition.mini_topologies):
-                dist_placeholder = swap_weight * 3 * calculate_dist_small(mini_topology, partition.qubit_map, D, output_perm)
+                if not free_routing:
+                    dist_placeholder = swap_weight * 3 * calculate_dist_small(mini_topology, partition.qubit_map, D, output_perm)
+                else:
+                    dist_placeholder = 0
                 circuit_length = np.min([len(circ) for circ in partition.circuit_structures[tdx]])
                 mini_scores.append(dist_placeholder + circuit_length)
             if mini_scores:
                 score_F += np.min(mini_scores)
 
-        # Virtual outgoing gate penalty: cross-window look-ahead
+        # Virtual outgoing gate penalty: cross-window look-ahead (always active)
         virtual_e_score = 0.0
         if virtual_E:
             for (q_a, q_b) in virtual_E:
