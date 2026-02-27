@@ -3,6 +3,7 @@
 \brief Python interface for N-Qubit Decomposition classes
 */
 #define PY_SSIZE_T_CLEAN
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 
 #include <Python.h>
 #include <numpy/arrayobject.h>
@@ -10,6 +11,15 @@
 #include <stdio.h>
 #include <complex>
 #include <cmath>
+#include <cstring>
+#include <cctype>
+
+// Cross-platform case-insensitive string comparison
+#ifdef _WIN32
+    #define strcasecmp _stricmp
+#else
+    #include <strings.h>
+#endif
 
 #include "numpy_interface.h"
 #include "N_Qubit_Decomposition.h"
@@ -63,11 +73,22 @@ guess_type extract_guess_type(PyObject* initial_guess) {
     if (!initial_guess || initial_guess == Py_None) {
         return RANDOM;
     }
-    const char* guess_str = PyUnicode_AsUTF8(PyObject_Str(initial_guess));
+
+    PyObject* guess_str_obj = PyObject_Str(initial_guess);
+    if (!guess_str_obj) {
+        throw std::runtime_error("Failed to convert initial guess to string");
+    }
+    const char* guess_str = PyUnicode_AsUTF8(guess_str_obj);
+    if (!guess_str) {
+        throw std::runtime_error("Failed to convert initial guess to string");
+    }
+    
     if (strcasecmp("zeros", guess_str) == 0) return ZEROS;
     if (strcasecmp("random", guess_str) == 0) return RANDOM;
     if (strcasecmp("close_to_zero", guess_str) == 0) return CLOSE_TO_ZERO;
     std::cout << "Warning: Unknown guess '" << guess_str << "', using RANDOM" << std::endl;
+
+    Py_XDECREF(guess_str_obj);
     return RANDOM;
 }
 
@@ -404,11 +425,7 @@ qgd_N_Qubit_Decomposition_Wrapper_get_Gate_Num(qgd_N_Qubit_Decomposition_Wrapper
 static PyObject *
 qgd_N_Qubit_Decomposition_Wrapper_get_Optimized_Parameters(qgd_N_Qubit_Decomposition_Wrapper *self)
 {
-    int parameter_num = self->decomp->get_parameter_num();
-    Matrix_real parameters_mtx(1, parameter_num);
-    
-    double* parameters = parameters_mtx.get_data();
-    self->decomp->get_optimized_parameters(parameters);
+    Matrix_real parameters_mtx = self->decomp->get_optimized_parameters();
 
     // convert to numpy array
     parameters_mtx.set_owner(false);
@@ -461,7 +478,7 @@ qgd_N_Qubit_Decomposition_Wrapper_List_Gates(qgd_N_Qubit_Decomposition_Wrapper *
 {
     // list gates with start_index = 0
     self->decomp->list_gates(0);
-    return Py_None;
+    return Py_BuildValue("");
 }
 
 /**
@@ -2087,19 +2104,49 @@ qgd_N_Qubit_Decomposition_Wrapper_get_Gates(qgd_N_Qubit_Decomposition_Wrapper* s
         // Map gate type to string
         const char* type_str = nullptr;
         switch(gate->get_type()) {
-            case CNOT_OPERATION: type_str = "CNOT"; break;
+            case GENERAL_OPERATION: type_str = "GENERAL"; break;
+            case UN_OPERATION: type_str = "UN"; break;
+            case ON_OPERATION: type_str = "ON"; break;
             case CZ_OPERATION: type_str = "CZ"; break;
+            case CNOT_OPERATION: type_str = "CNOT"; break;
             case CH_OPERATION: type_str = "CH"; break;
-            case SYC_OPERATION: type_str = "SYC"; break;
             case U3_OPERATION: type_str = "U3"; break;
-            case RX_OPERATION: type_str = "RX"; break;
             case RY_OPERATION: type_str = "RY"; break;
+            case RX_OPERATION: type_str = "RX"; break;
             case RZ_OPERATION: type_str = "RZ"; break;
+            case RZ_P_OPERATION: type_str = "RZ_P"; break;
             case X_OPERATION: type_str = "X"; break;
-            case Y_OPERATION: type_str = "Y"; break;
-            case Z_OPERATION: type_str = "Z"; break;
             case SX_OPERATION: type_str = "SX"; break;
             case CRY_OPERATION: type_str = "CRY"; break;
+            case SYC_OPERATION: type_str = "SYC"; break;
+            case BLOCK_OPERATION: type_str = "BLOCK"; break;
+            case COMPOSITE_OPERATION: type_str = "COMPOSITE"; break;
+            case ADAPTIVE_OPERATION: type_str = "ADAPTIVE"; break;
+            case DECOMPOSITION_BASE_CLASS: type_str = "DECOMPOSITION_BASE_CLASS"; break;
+            case SUB_MATRIX_DECOMPOSITION_CLASS: type_str = "SUB_MATRIX_DECOMPOSITION_CLASS"; break;
+            case N_QUBIT_DECOMPOSITION_CLASS_BASE: type_str = "N_QUBIT_DECOMPOSITION_CLASS_BASE"; break;
+            case N_QUBIT_DECOMPOSITION_CLASS: type_str = "N_QUBIT_DECOMPOSITION_CLASS"; break;
+            case Y_OPERATION: type_str = "Y"; break;
+            case Z_OPERATION: type_str = "Z"; break;
+            case H_OPERATION: type_str = "H"; break;
+            case CZ_NU_OPERATION: type_str = "CZ_NU"; break;
+            case CROT_OPERATION: type_str = "CROT"; break;
+            case R_OPERATION: type_str = "R"; break;
+            case T_OPERATION: type_str = "T"; break;
+            case TDG_OPERATION: type_str = "TDG"; break;
+            case U1_OPERATION: type_str = "U1"; break;
+            case U2_OPERATION: type_str = "U2"; break;
+            case CR_OPERATION: type_str = "CR"; break;
+            case S_OPERATION: type_str = "S"; break;
+            case SDG_OPERATION: type_str = "SDG"; break;
+            case CU_OPERATION: type_str = "CU"; break;
+            case CUSTOM_KERNEL_1QUBIT_GATE_OPERATION: type_str = "CUSTOM_KERNEL_1QUBIT_GATE"; break;
+            case CP_OPERATION: type_str = "CP"; break;
+            case CRX_OPERATION: type_str = "CRX"; break;
+            case CRZ_OPERATION: type_str = "CRZ"; break;
+            case CCX_OPERATION: type_str = "CCX"; break;
+            case SWAP_OPERATION: type_str = "SWAP"; break;
+            case CSWAP_OPERATION: type_str = "CSWAP"; break;
             default: type_str = "UNKNOWN"; break;
         }
         PyDict_SetItemString(gate_dict, "type", PyUnicode_FromString(type_str));
@@ -3017,15 +3064,54 @@ static PyMethodDef qgd_N_Qubit_Decomposition_Tree_Search_methods[] = {
 #define decomposition_wrapper_type_template(decomp_class) \
 static PyTypeObject qgd_##decomp_class##_Wrapper_Type = { \
     PyVarObject_HEAD_INIT(NULL, 0) \
-    .tp_name = "qgd_N_Qubit_Decomposition_Wrapper." #decomp_class, \
-    .tp_basicsize = sizeof(qgd_N_Qubit_Decomposition_Wrapper), \
-    .tp_itemsize = 0, \
-    .tp_dealloc = (destructor) qgd_N_Qubit_Decomposition_Wrapper_dealloc, \
-    .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, \
-    .tp_doc = #decomp_class " decomposition wrapper", \
-    .tp_methods = qgd_##decomp_class##_methods, \
-    .tp_init = (initproc) qgd_##decomp_class##_Wrapper_init, \
-    .tp_new = (newfunc) qgd_N_Qubit_Decomposition_Wrapper_new, \
+    "qgd_N_Qubit_Decomposition_Wrapper." #decomp_class, /* tp_name */ \
+    sizeof(qgd_N_Qubit_Decomposition_Wrapper), /* tp_basicsize */ \
+    0, /* tp_itemsize */ \
+    (destructor) qgd_N_Qubit_Decomposition_Wrapper_dealloc, /* tp_dealloc */ \
+    0, /* tp_vectorcall_offset */ \
+    0, /* tp_getattr */ \
+    0, /* tp_setattr */ \
+    0, /* tp_as_async */ \
+    0, /* tp_repr */ \
+    0, /* tp_as_number */ \
+    0, /* tp_as_sequence */ \
+    0, /* tp_as_mapping */ \
+    0, /* tp_hash */ \
+    0, /* tp_call */ \
+    0, /* tp_str */ \
+    0, /* tp_getattro */ \
+    0, /* tp_setattro */ \
+    0, /* tp_as_buffer */ \
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /* tp_flags */ \
+    #decomp_class " decomposition wrapper", /* tp_doc */ \
+    0, /* tp_traverse */ \
+    0, /* tp_clear */ \
+    0, /* tp_richcompare */ \
+    0, /* tp_weaklistoffset */ \
+    0, /* tp_iter */ \
+    0, /* tp_iternext */ \
+    qgd_##decomp_class##_methods, /* tp_methods */ \
+    0, /* tp_members */ \
+    0, /* tp_getset */ \
+    0, /* tp_base */ \
+    0, /* tp_dict */ \
+    0, /* tp_descr_get */ \
+    0, /* tp_descr_set */ \
+    0, /* tp_dictoffset */ \
+    (initproc) qgd_##decomp_class##_Wrapper_init, /* tp_init */ \
+    0, /* tp_alloc */ \
+    (newfunc) qgd_N_Qubit_Decomposition_Wrapper_new, /* tp_new */ \
+    0, /* tp_free */ \
+    0, /* tp_is_gc */ \
+    0, /* tp_bases */ \
+    0, /* tp_mro */ \
+    0, /* tp_cache */ \
+    0, /* tp_subclasses */ \
+    0, /* tp_weaklist */ \
+    0, /* tp_del */ \
+    0, /* tp_version_tag */ \
+    0, /* tp_finalize */ \
+    0, /* tp_vectorcall */ \
 };
 
 decomposition_wrapper_type_template(N_Qubit_Decomposition)
@@ -3041,9 +3127,14 @@ decomposition_wrapper_type_template(N_Qubit_Decomposition_Tabu_Search)
 */
 static PyModuleDef qgd_N_Qubit_Decompositions_Wrapper_Module = {
     PyModuleDef_HEAD_INIT,
-    .m_name = "qgd_N_Qubit_Decompositions_Wrapper",
-    .m_doc = "Python binding for N-Qubit Decompositions wrapper module",
-    .m_size = -1,
+    "qgd_N_Qubit_Decompositions_Wrapper", /* m_name */
+    "Python binding for N-Qubit Decompositions wrapper module", /* m_doc */
+    -1, /* m_size */
+    0, /* m_methods */
+    0, /* m_slots */
+    0, /* m_traverse */
+    0, /* m_clear */
+    0, /* m_free */
 };
 
 #define Py_INCREF_template(decomp_name) \

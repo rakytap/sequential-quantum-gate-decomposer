@@ -18,6 +18,7 @@ limitations under the License.
 #ifndef NUMPY_INTERFACE_H
 #define NUMPY_INTERFACE_H
 
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <Python.h>
 #include <numpy/arrayobject.h>
 #include "matrix.h"

@@ -44,9 +44,12 @@ if __name__ == '__main__':
     use_qiskit_sabre = False
     config = {  
             'strategy': "TreeSearch", 
-            'test_subcircuits': True,
+            'test_subcircuits': False,
             'test_final_circuit': True,
             'max_partition_size': 3,
+            'beam': 16,
+            "use_gl": True,
+            'tolerance': 1e-10,
     }
 
     filename = "benchmarks/qfast/5q/vqe.qasm"

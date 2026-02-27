@@ -63,7 +63,7 @@ virtual ~CRZ();
 @brief Call to create a clone of the present class
 @return Return with a pointer pointing to the cloned object
 */
-virtual CRZ* clone();
+virtual CRZ* clone() override;
 
 };
 

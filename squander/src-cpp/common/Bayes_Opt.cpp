@@ -181,7 +181,7 @@ double Bayes_Opt::Start_Optimization(Matrix_real& x, int max_iterations_in){
         Matrix_real solution_guess = x_prev[iterations-1];
         
         Powells_method cPowells_method(optimization_problem,this);
-        double f_Powell = cPowells_method.Start_Optimization(solution_guess, 100);
+        cPowells_method.Start_Optimization(solution_guess, 100);
         double f = -1.*costfnc(solution_guess,meta_data);
         
         Matrix_real cov_x(1,(int)x_prev.size());
@@ -230,7 +230,6 @@ double Bayes_Opt::Start_Optimization(Matrix_real& x, int max_iterations_in){
 double Bayes_Opt::optimization_problem(Matrix_real x_Powell, void* void_instance){
     Bayes_Opt* instance = reinterpret_cast<Bayes_Opt*>(void_instance);
     int samples_n = (int)instance->x_prev.size();
-    int parameter_num = instance->variable_num;
     Matrix_real cov_x(1,samples_n);
    for (int idx=0; idx<samples_n; idx++){
         cov_x[idx] = instance->kernel(x_Powell,(Matrix_real)instance->x_prev[idx]);
@@ -269,7 +268,10 @@ void Bayes_Opt::calculate_conditional_distribution(Matrix_real x, Matrix_real co
     }
     
     Matrix_real sigma2_rhs = cov_x.copy();
-    memset(x0.get_data(), M_PI, samples*sizeof(double) );
+    memset(x0.get_data(), 0, samples*sizeof(double) );
+    for (int i = 0; i < samples; i++) {
+        x0[i] = M_PI;
+    }
     conjugate_gradient(covariance,mu_rhs,x0,tol);
     
     for (int idx=0;idx<mu_rhs.cols;idx++){
@@ -423,10 +425,12 @@ void Bayes_Opt::expected_improvement_combined(double mu_n, double sigma_n, Matri
     *f = -1.*(deltax_max + sigma_n*pdf_mu - fabs(deltax)*cdf_mu);
     
     for (int idx=0; idx<variable_num; idx++){
+        /*
         double deltax_grad =  grad_mu[idx];
         double deltax_max_grad = (deltax_grad>0.) ? grad_mu[idx] : 0.0;
         double grad_rhs = -1.*std::fabs(deltax_grad)*cdf_mu - std::fabs(deltax)*pdf_mu*(grad_mu[idx]*sigma_n-mu_n*grad_sigma[idx])/sigma_n/sigma_n;
         double grad_lhs = grad_sigma[idx]*pdf_mu + sigma_n*grad_pdf(mu_n,sigma_n,grad_mu[idx],grad_sigma[idx]);
+        */
         grad[idx] = -1.;//*(deltax_max_grad + grad_lhs + grad_rhs);
     }
     return;

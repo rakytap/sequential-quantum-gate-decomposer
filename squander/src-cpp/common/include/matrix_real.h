@@ -96,6 +96,12 @@ Matrix_real( int rows_in, int cols_in, int stride_in);
 */
 Matrix_real(const Matrix_real &in);
 
+/**
+@brief Assignment operator of the class.
+@param mtx An instance of class Matrix_real to be assigned.
+@return Returns with a reference to the instance of the class.
+*/
+Matrix_real& operator=(const Matrix_real &mtx);
 
 /**
 @brief Call to create a copy of the matrix

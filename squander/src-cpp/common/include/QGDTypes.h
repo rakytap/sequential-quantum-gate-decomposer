@@ -42,12 +42,48 @@ struct QGD_Complex16 {
   double imag;
 };
 
+/// @brief Structure type representing single-precision complex numbers
+struct alignas(8) QGD_Complex8 {
+  float real; ///< real part
+  float imag; ///< imaginary part
+};
 
+// Exact bitwise equality (no epsilon tolerance). use with caution for floats
+inline bool operator==(const QGD_Complex16& a, const QGD_Complex16& b) noexcept {
+  return (a.real == b.real) && (a.imag == b.imag);
+}
+inline bool operator!=(const QGD_Complex16& a, const QGD_Complex16& b) noexcept {
+  return (a.real != b.real) || (a.imag != b.imag);
+}
+inline bool operator==(const QGD_Complex8& a, const QGD_Complex8& b) noexcept {
+  return (a.real == b.real) && (a.imag == b.imag);
+}
+inline bool operator!=(const QGD_Complex8& a, const QGD_Complex8& b) noexcept {
+  return (a.real != b.real) || (a.imag != b.imag);
+}
 
+// Lexicographic ordering for container compatibility (NOT mathematically meaningful)
+// Other comparisons omitted to avoid confusion
+inline bool operator<(const QGD_Complex16& a, const QGD_Complex16& b) noexcept {
+  if (a.real != b.real) return a.real < b.real;
+  return a.imag < b.imag;
+}
+inline bool operator<(const QGD_Complex8& a, const QGD_Complex8& b) noexcept {
+  if (a.real != b.real) return a.real < b.real;
+  return a.imag < b.imag;
+}
 
-
-
-
-
+// Stream output operators for printing
+#ifdef __cplusplus
+#include <ostream>
+inline std::ostream& operator<<(std::ostream& os, const QGD_Complex16& c) {
+  os << "(" << c.real << ", " << c.imag << "*i)";
+  return os;
+}
+inline std::ostream& operator<<(std::ostream& os, const QGD_Complex8& c) {
+  os << "(" << c.real << ", " << c.imag << "*i)";
+  return os;
+}
+#endif
 
 #endif

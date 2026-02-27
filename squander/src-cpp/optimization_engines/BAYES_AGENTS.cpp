@@ -53,14 +53,6 @@ void Optimization_Interface::solve_layer_optimization_problem_BAYES_AGENTS( int 
             memcpy(optimized_parameters_mtx.get_data(), solution_guess.get_data(), num_of_parameters*sizeof(double) );
         }
 
-        // maximal number of iteration loops
-        int iteration_loops_max = 1;
-        /*try {
-            iteration_loops_max = std::max(iteration_loops[qbit_num], 1);
-        }
-        catch (...) {
-            iteration_loops_max = 1;
-        }*/
 
         // random generator of real numbers   
         std::uniform_real_distribution<> distrib_real(0.0, 2*M_PI);

@@ -197,7 +197,7 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
         
         // vector stroing the lates values of current minimums to identify convergence
         Matrix_real f0_vec(1, 100); 
-        memset( f0_vec.get_data(), 0.0, f0_vec.size()*sizeof(double) );
+        memset( f0_vec.get_data(), 0, f0_vec.size()*sizeof(double) );
         double f0_mean = 0.0;
         int f0_idx = 0; 
 
@@ -230,7 +230,7 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
                 parameters_mtx_vec[idx] = solution_guess_tmp_mtx.copy();
 
                 // random generator of integers   
-                std::uniform_int_distribution<> distrib_int(0, indices.size()-1);
+                std::uniform_int_distribution<> distrib_int(0, static_cast<int>(indices.size()-1));
 
                 // The index array of the chosen parameters
                 int chosen_idx = distrib_int(gen);
@@ -380,7 +380,6 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
 
                     double phi = atan2(f3, f4) - 4*solution_guess_tmp_mtx[param_idx_agents[idx]];
 
-                    double f; 
                     double params[5];
                     params[0] = A;
                     params[1] = phi + 4*solution_guess_tmp_mtx[param_idx_agents[idx]];
@@ -398,7 +397,7 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
                     parameter_shift[0] = std::fmod(parameter_shift[0], M_PI_double);
 
                     BFGS_Powell cBFGS_Powell(HS_partial_optimization_problem_cos_combined,(void*)&params);
-                    f = cBFGS_Powell.Start_Optimization(parameter_shift, 10);
+                    cBFGS_Powell.Start_Optimization(parameter_shift, 10);
 
                     param_update_mtx[ idx ] = parameter_shift[0];
 
@@ -581,7 +580,7 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
 
             if ( output_periodicity>0 && iter_idx % output_periodicity == 0 ) {
                 std::stringstream sstream;
-                sstream << "COSINE: processed iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "\%, current minimum:" << current_minimum;
+                sstream << "COSINE: processed iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "%, current minimum:" << current_minimum;
                 sstream << " " << " circuit simulation time: " << circuit_simulation_time  << std::endl;
                 print(sstream, 1);   
                 if ( export_circuit_2_binary_loc > 0 ) {
@@ -621,7 +620,7 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
      
             if ( std::abs( (f0_mean - current_minimum)/f0_mean) < 1e-7  && std::abs(var_f0/f0_mean) < 1e-7 && check_for_convergence > 0 ) {
                 std::stringstream sstream;
-                sstream << "COSINE: converged to minimum at iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "\%, current minimum:" << current_minimum;
+                sstream << "COSINE: converged to minimum at iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "%, current minimum:" << current_minimum;
                 sstream << " circuit simulation time: " << circuit_simulation_time  << std::endl;
                 print(sstream, 1);   
                 if ( export_circuit_2_binary_loc > 0 ) {

@@ -50,7 +50,7 @@ typedef enum gate_type {GENERAL_OPERATION=1,
                         COMPOSITE_OPERATION=17, 
                         ADAPTIVE_OPERATION=18, 
                         DECOMPOSITION_BASE_CLASS=19, 
-                        SUB_MATRIX_DECOMPOSITION_CLASS=10, 
+                        SUB_MATRIX_DECOMPOSITION_CLASS=20, 
                         N_QUBIT_DECOMPOSITION_CLASS_BASE=21, 
                         N_QUBIT_DECOMPOSITION_CLASS=22, 
                         Y_OPERATION=23, 
@@ -74,7 +74,11 @@ typedef enum gate_type {GENERAL_OPERATION=1,
                         CCX_OPERATION=41,
                         SWAP_OPERATION=42,
                         CSWAP_OPERATION=43,
-                        PERMUTATION_OPERATION=44} gate_type;
+                        RXX_OPERATION=44,
+                        RYY_OPERATION=45,
+                        RZZ_OPERATION=46,
+                        SXDG_OPERATION=47,
+                        PERMUTATION_OPERATION=48} gate_type;
 
 
 #ifdef _WIN32

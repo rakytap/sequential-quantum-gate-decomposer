@@ -23,6 +23,9 @@ limitations under the License.
 #include "Decomposition_Base.h"
 #include "Sub_Matrix_Decomposition_Cost_Function.h"
 #include <limits>
+#ifdef _WIN32
+#include <cstdio>
+#endif
 
 // default layer numbers
 std::map<int,int> Decomposition_Base::max_layer_num_def;
@@ -71,7 +74,7 @@ Decomposition_Base::Decomposition_Base() {
     optimization_tolerance = 1e-7;
 
     // Maximal number of iteartions in the optimization process
-    max_outer_iterations = 1e8;
+    max_outer_iterations = 100000000;
 
     // number of operators in one sub-layer of the optimization process
     optimization_block = -1;
@@ -156,7 +159,7 @@ Decomposition_Base::Decomposition_Base( Matrix Umtx_in, int qbit_num_in, std::ma
     optimization_tolerance = 1e-7;
 
     // Maximal number of iteartions in the optimization process
-    max_outer_iterations = 1e8;
+    max_outer_iterations = 100000000;
 
     // number of operators in one sub-layer of the optimization process
     optimization_block = -1;
@@ -285,7 +288,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
         int optimization_block_loc = optimization_block;
         
         if ( optimization_block == -1 ) {
-            optimization_block = gates.size();
+            optimization_block = static_cast<int>(gates.size());
         }
 
         // random generator of real numbers   
@@ -952,7 +955,14 @@ void Decomposition_Base::export_unitary(std::string& filename){
 	if (project_name != ""){filename = project_name + "_" + filename;}
 
 	const char* c_filename = filename.c_str();
-	pFile = fopen(c_filename, "wb");
+#ifdef _WIN32
+    errno_t err = fopen_s(&pFile, c_filename, "wb");
+    if (err != 0) {
+        pFile = NULL;
+    }
+#else
+    pFile = fopen(c_filename, "wb");
+#endif
     	if (pFile==NULL) {
             fputs ("File error",stderr); 
             std::string error("Cannot open file.");
@@ -981,7 +991,14 @@ Matrix Decomposition_Base::import_unitary_from_binary(std::string& filename){
 	const char* c_filename = filename.c_str();
 	int cols;
 	int rows;
-	pFile = fopen(c_filename, "rb");
+#ifdef _WIN32
+    errno_t err = fopen_s(&pFile, c_filename, "rb");
+    if (err != 0) {
+        pFile = NULL;
+    }
+#else
+    pFile = fopen(c_filename, "rb");
+#endif
     	if (pFile==NULL) {
             fputs ("File error",stderr); 
             exit (1);

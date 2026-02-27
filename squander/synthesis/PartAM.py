@@ -915,7 +915,7 @@ class qgd_Partition_Aware_Mapping:
             List of lists, where each inner list contains gate indices at the same DAG level.
             Level 0 contains gates with no parents, level 1 contains gates whose parents
             are all at level 0, etc.
-        """
+        """ 
         gates = circuit.get_Gates()
         num_gates = len(gates)
         

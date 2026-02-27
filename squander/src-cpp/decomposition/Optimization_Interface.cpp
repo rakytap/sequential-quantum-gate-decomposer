@@ -29,6 +29,10 @@ limitations under the License.
 
 #include "RL_experience.h"
 
+#ifdef _WIN32
+#include <cstdio>
+#endif
+
 #include <fstream>
 
 
@@ -82,9 +86,6 @@ Optimization_Interface::Optimization_Interface() {
     // set the trace offset
     trace_offset = 0;
 
-    // unique id indentifying the instance of the class
-    std::uniform_int_distribution<> distrib_int(0, INT_MAX);  
-    int id = distrib_int(gen);
 
 
     // Time spent on circuit simulation/cost function evaluation
@@ -215,7 +216,14 @@ void Optimization_Interface::export_current_cost_fnc(double current_minimum, Mat
     }
 
     const char* c_filename = filename.c_str();
-	pFile = fopen(c_filename, "a");
+#ifdef _WIN32
+    errno_t err = fopen_s(&pFile, c_filename, "a");
+    if (err != 0) {
+        pFile = NULL;
+    }
+#else
+    pFile = fopen(c_filename, "a");
+#endif
 
     if (pFile==NULL) {
         fputs ("File error",stderr); 
@@ -227,7 +235,7 @@ void Optimization_Interface::export_current_cost_fnc(double current_minimum, Mat
 
     std::uniform_int_distribution<> distrib(0, qbit_num-2); 
 
-    memset(input_state.get_data(), 0.0, (input_state.size()*2)*sizeof(double) ); 
+    memset(input_state.get_data(), 0, (input_state.size()*2)*sizeof(double) ); 
     input_state[0].real = 1.0;
 
     matrix_base<int> qbit_sublist(1,2);
@@ -290,88 +298,48 @@ Optimization_Interface::add_finalyzing_layer() {
 void
 Optimization_Interface::calc_decomposition_error(Matrix& decomposed_matrix ) {
 
-	// (U-U_{approx}) (U-U_{approx})^\dagger = 2*I - U*U_{approx}^\dagger - U_{approx}*U^\dagger
-	// U*U_{approx}^\dagger = decomposed_matrix_copy
-	
- 	/*Matrix A(matrix_size, matrix_size);
-	QGD_Complex16* A_data = A.get_data();
-	QGD_Complex16* decomposed_data = decomposed_matrix.get_data();
-	QGD_Complex16 phase;
-	phase.real = decomposed_matrix[0].real/(std::sqrt(decomposed_matrix[0].real*decomposed_matrix[0].real + decomposed_matrix[0].imag*decomposed_matrix[0].imag));
-	phase.imag = -decomposed_matrix[0].imag/(std::sqrt(decomposed_matrix[0].real*decomposed_matrix[0].real + decomposed_matrix[0].imag*decomposed_matrix[0].imag));
-
-	for (int idx=0; idx<matrix_size; idx++ ) {
-		for (int jdx=0; jdx<matrix_size; jdx++ ) {
-			
-			if (idx==jdx) {
-				QGD_Complex16 mtx_val = mult(phase, decomposed_data[idx*matrix_size+jdx]);
-				A_data[idx*matrix_size+jdx].real = 2.0 - 2*mtx_val.real;
-				A_data[idx*matrix_size+jdx].imag = 0;
-			}
-			else {
-				QGD_Complex16 mtx_val_ij = mult(phase, decomposed_data[idx*matrix_size+jdx]);
-				QGD_Complex16 mtx_val_ji = mult(phase, decomposed_data[jdx*matrix_size+idx]);
-				A_data[idx*matrix_size+jdx].real = - mtx_val_ij.real - mtx_val_ji.real;
-				A_data[idx*matrix_size+jdx].imag = - mtx_val_ij.imag + mtx_val_ji.imag;
-			}
-
-		}
-	}
-
-
-	Matrix alpha(matrix_size, 1);
-	Matrix beta(matrix_size, 1);
-	Matrix B = create_identity(matrix_size);
-
-	// solve the generalized eigenvalue problem of I- 1/2
-	LAPACKE_zggev( CblasRowMajor, 'N', 'N',
-                          matrix_size, A.get_data(), matrix_size, B.get_data(),
-                          matrix_size, alpha.get_data(),
-                          beta.get_data(), NULL, matrix_size, NULL,
-                          matrix_size );
-
-	// determine the largest eigenvalue
-	double eigval_max = 0;
-	for (int idx=0; idx<matrix_size; idx++) {
-		double eigval_abs = std::sqrt((alpha[idx].real*alpha[idx].real + alpha[idx].imag*alpha[idx].imag) / (beta[idx].real*beta[idx].real + beta[idx].imag*beta[idx].imag));
-		if ( eigval_max < eigval_abs ) eigval_max = eigval_abs;		
-	}
-    
+   
 	// the norm is the square root of the largest einegvalue.*/
-    if ( cost_fnc == FROBENIUS_NORM ) {
+    switch (cost_fnc) {
+    case FROBENIUS_NORM:
         decomposition_error =  get_cost_function(decomposed_matrix);
-    }
-    else if ( cost_fnc == FROBENIUS_NORM_CORRECTION1 ) {
+        break;
+    case FROBENIUS_NORM_CORRECTION1: {
         Matrix_real&& ret = get_cost_function_with_correction(decomposed_matrix, qbit_num);
         decomposition_error = ret[0] - std::sqrt(prev_cost_fnv_val)*ret[1]*correction1_scale;
-    }
-    else if ( cost_fnc == FROBENIUS_NORM_CORRECTION2 ) {
+        break; }
+    case FROBENIUS_NORM_CORRECTION2: {
         Matrix_real&& ret = get_cost_function_with_correction2(decomposed_matrix, qbit_num);
         decomposition_error = ret[0] - std::sqrt(prev_cost_fnv_val)*(ret[1]*correction1_scale + ret[2]*correction2_scale);
-    }
-    else if ( cost_fnc == HILBERT_SCHMIDT_TEST){
-       decomposition_error = get_hilbert_schmidt_test(decomposed_matrix);
-    }
-    else if ( cost_fnc == HILBERT_SCHMIDT_TEST_CORRECTION1 ){
+        break; }
+    case HILBERT_SCHMIDT_TEST:
+        decomposition_error = get_hilbert_schmidt_test(decomposed_matrix);
+        break;
+    case HILBERT_SCHMIDT_TEST_CORRECTION1: {
         Matrix&& ret = get_trace_with_correction(decomposed_matrix, qbit_num);
         double d = 1.0/decomposed_matrix.cols;
         decomposition_error = 1 - d*d*(ret[0].real*ret[0].real+ret[0].imag*ret[0].imag+std::sqrt(prev_cost_fnv_val)*correction1_scale*(ret[1].real*ret[1].real+ret[1].imag*ret[1].imag));
+        break;
     }
-    else if ( cost_fnc == HILBERT_SCHMIDT_TEST_CORRECTION2 ){
+    case HILBERT_SCHMIDT_TEST_CORRECTION2: {
         Matrix&& ret = get_trace_with_correction2(decomposed_matrix, qbit_num);
         double d = 1.0/decomposed_matrix.cols;
         decomposition_error = 1 - d*d*(ret[0].real*ret[0].real+ret[0].imag*ret[0].imag+std::sqrt(prev_cost_fnv_val)*(correction1_scale*(ret[1].real*ret[1].real+ret[1].imag*ret[1].imag)+correction2_scale*(ret[2].real*ret[2].real+ret[2].imag*ret[2].imag)));
+        break;
     }
-    else if ( cost_fnc == SUM_OF_SQUARES) {
+    case SUM_OF_SQUARES:
         decomposition_error = get_cost_function_sum_of_squares(decomposed_matrix);
-    }
-    else if (cost_fnc == INFIDELITY){
+        break;
+    case INFIDELITY:
         decomposition_error = get_infidelity(decomposed_matrix);
-    }
-    else {
+        break;
+    case OSR_ENTANGLEMENT:
+        decomposition_error = get_osr_entanglement_test(decomposed_matrix, use_cuts);
+        break;
+    default: {
         std::string err("Optimization_Interface::optimization_problem: Cost function variant not implmented.");
         throw err;
-    }
+    } }
 
 }
 
@@ -465,7 +433,7 @@ void Optimization_Interface::solve_layer_optimization_problem( int num_of_parame
 @param output The randomized parameters are stored within this array
 @param f0 weight in the randomiztaion (output = input + rand()*sqrt(f0) ).
 */
-void Optimization_Interface::randomize_parameters( Matrix_real& input, Matrix_real& output, const double& f0  ) {
+void Optimization_Interface::randomize_parameters( Matrix_real& input, Matrix_real& output, const double f0  ) {
 
     // random generator of real numbers   
     std::uniform_real_distribution<> distrib_prob(0.0, 1.0);
@@ -537,40 +505,35 @@ double Optimization_Interface::optimization_problem( Matrix_real& parameters ) {
     Matrix matrix_new = Umtx.copy();
     apply_to( parameters, matrix_new );
 
-    if ( cost_fnc == FROBENIUS_NORM ) {
+    switch (cost_fnc) {
+    case FROBENIUS_NORM:
         return get_cost_function(matrix_new, trace_offset);
-    }
-    else if ( cost_fnc == FROBENIUS_NORM_CORRECTION1 ) {
+    case FROBENIUS_NORM_CORRECTION1: {
         Matrix_real&& ret = get_cost_function_with_correction(matrix_new, qbit_num, trace_offset);
-        return ret[0] - std::sqrt(prev_cost_fnv_val)*ret[1]*correction1_scale;
-    }
-    else if ( cost_fnc == FROBENIUS_NORM_CORRECTION2 ) {
+        return ret[0] - std::sqrt(prev_cost_fnv_val)*ret[1]*correction1_scale; }
+    case FROBENIUS_NORM_CORRECTION2: {
         Matrix_real&& ret = get_cost_function_with_correction2(matrix_new, qbit_num, trace_offset);
-        return ret[0] - std::sqrt(prev_cost_fnv_val)*(ret[1]*correction1_scale + ret[2]*correction2_scale);
-    }
-    else if ( cost_fnc == HILBERT_SCHMIDT_TEST){
+        return ret[0] - std::sqrt(prev_cost_fnv_val)*(ret[1]*correction1_scale + ret[2]*correction2_scale); }
+    case HILBERT_SCHMIDT_TEST:
         return get_hilbert_schmidt_test(matrix_new);
-    }
-    else if ( cost_fnc == HILBERT_SCHMIDT_TEST_CORRECTION1 ){
+    case HILBERT_SCHMIDT_TEST_CORRECTION1: {
         Matrix&& ret = get_trace_with_correction(matrix_new, qbit_num);
         double d = 1.0/matrix_new.cols;
-        return 1 - d*d*(ret[0].real*ret[0].real+ret[0].imag*ret[0].imag+std::sqrt(prev_cost_fnv_val)*correction1_scale*(ret[1].real*ret[1].real+ret[1].imag*ret[1].imag));
-    }
-    else if ( cost_fnc == HILBERT_SCHMIDT_TEST_CORRECTION2 ){
+        return 1 - d*d*(ret[0].real*ret[0].real+ret[0].imag*ret[0].imag+std::sqrt(prev_cost_fnv_val)*correction1_scale*(ret[1].real*ret[1].real+ret[1].imag*ret[1].imag)); }
+    case HILBERT_SCHMIDT_TEST_CORRECTION2: {
         Matrix&& ret = get_trace_with_correction2(matrix_new, qbit_num);
         double d = 1.0/matrix_new.cols;
-        return 1 - d*d*(ret[0].real*ret[0].real+ret[0].imag*ret[0].imag+std::sqrt(prev_cost_fnv_val)*(correction1_scale*(ret[1].real*ret[1].real+ret[1].imag*ret[1].imag)+correction2_scale*(ret[2].real*ret[2].real+ret[2].imag*ret[2].imag)));
-    }
-    else if ( cost_fnc == SUM_OF_SQUARES) {
+        return 1 - d*d*(ret[0].real*ret[0].real+ret[0].imag*ret[0].imag+std::sqrt(prev_cost_fnv_val)*(correction1_scale*(ret[1].real*ret[1].real+ret[1].imag*ret[1].imag)+correction2_scale*(ret[2].real*ret[2].real+ret[2].imag*ret[2].imag))); }
+    case SUM_OF_SQUARES:
         return get_cost_function_sum_of_squares(matrix_new);
-    }
-    else if (cost_fnc == INFIDELITY){
+    case INFIDELITY:
         return get_infidelity(matrix_new);
-    }
-    else {
+    case OSR_ENTANGLEMENT:
+        return get_osr_entanglement_test(matrix_new, use_cuts);
+    default: {
         std::string err("Optimization_Interface::optimization_problem: Cost function variant not implmented.");
         throw err;
-    }
+    } }
 
 }
 
@@ -746,7 +709,7 @@ Optimization_Interface::optimization_problem_batched( std::vector<Matrix_real>& 
 #endif 
 
 
-    Matrix_real cost_fnc_mtx(parameters_vec.size(), 1);
+    Matrix_real cost_fnc_mtx(static_cast<int>(parameters_vec.size()), 1);
     int parallel = get_parallel_configuration();
     
 #ifdef __MPI__
@@ -791,7 +754,7 @@ Optimization_Interface::optimization_problem_batched( std::vector<Matrix_real>& 
 
     int work_batch = 1;
     if( parallel==0) {
-        work_batch = parameters_vec.size();
+        work_batch = static_cast<int>(parameters_vec.size());
     }
 
     tbb::parallel_for( tbb::blocked_range<int>(0, (int)parameters_vec.size(), work_batch), [&](tbb::blocked_range<int> r) {
@@ -838,35 +801,35 @@ double Optimization_Interface::optimization_problem( Matrix_real parameters, voi
    
     cost_function_type cost_fnc = instance->get_cost_function_variant();
 
-    if ( cost_fnc == FROBENIUS_NORM ) {
+    switch (cost_fnc) {
+    case FROBENIUS_NORM:
         return get_cost_function(matrix_new, instance->get_trace_offset());
-    }
-    else if ( cost_fnc == FROBENIUS_NORM_CORRECTION1 ) {
-        double correction1_scale    = instance->get_correction1_scale();
+    case FROBENIUS_NORM_CORRECTION1: {
+        double correction1_scale = instance->get_correction1_scale();
         Matrix_real&& ret = get_cost_function_with_correction(matrix_new, instance->get_qbit_num(), instance->get_trace_offset());
         return ret[0] - 0*std::sqrt(instance->get_previous_cost_function_value())*ret[1]*correction1_scale;
     }
-    else if ( cost_fnc == FROBENIUS_NORM_CORRECTION2 ) {
+    case FROBENIUS_NORM_CORRECTION2: {
         double correction1_scale    = instance->get_correction1_scale();
         double correction2_scale    = instance->get_correction2_scale();            
         Matrix_real&& ret = get_cost_function_with_correction2(matrix_new, instance->get_qbit_num(), instance->get_trace_offset());
         return ret[0] - std::sqrt(instance->get_previous_cost_function_value())*(ret[1]*correction1_scale + ret[2]*correction2_scale);
     }
-    else if ( cost_fnc == HILBERT_SCHMIDT_TEST){
+    case HILBERT_SCHMIDT_TEST: {
     	QGD_Complex16 trace_temp = get_trace(matrix_new);
     	ret_temp[0].real = trace_temp.real;
     	ret_temp[0].imag = trace_temp.imag;
     	double d = 1.0/matrix_new.cols;
         return 1.0-d*d*trace_temp.real*trace_temp.real-d*d*trace_temp.imag*trace_temp.imag;
     }
-    else if ( cost_fnc == HILBERT_SCHMIDT_TEST_CORRECTION1 ){
+    case HILBERT_SCHMIDT_TEST_CORRECTION1: {
         double correction1_scale = instance->get_correction1_scale();
         Matrix&& ret = get_trace_with_correction(matrix_new, instance->get_qbit_num());
         double d = 1.0/matrix_new.cols;
         for (int idx=0; idx<3; idx++){ret_temp[idx].real=ret[idx].real;ret_temp[idx].imag=ret[idx].imag;}
         return 1.0 - d*d*(ret[0].real*ret[0].real+ret[0].imag*ret[0].imag+std::sqrt(instance->get_previous_cost_function_value())*correction1_scale*(ret[1].real*ret[1].real+ret[1].imag*ret[1].imag));
     }
-    else if ( cost_fnc == HILBERT_SCHMIDT_TEST_CORRECTION2 ){
+    case HILBERT_SCHMIDT_TEST_CORRECTION2: {
         double correction1_scale    = instance->get_correction1_scale();
         double correction2_scale    = instance->get_correction2_scale();            
         Matrix&& ret = get_trace_with_correction2(matrix_new, instance->get_qbit_num());
@@ -874,20 +837,21 @@ double Optimization_Interface::optimization_problem( Matrix_real parameters, voi
         for (int idx=0; idx<4; idx++){ret_temp[idx].real=ret[idx].real;ret_temp[idx].imag=ret[idx].imag;}
         return 1.0 - d*d*(ret[0].real*ret[0].real+ret[0].imag*ret[0].imag+std::sqrt(instance->get_previous_cost_function_value())*(correction1_scale*(ret[1].real*ret[1].real+ret[1].imag*ret[1].imag)+correction2_scale*(ret[2].real*ret[2].real+ret[2].imag*ret[2].imag)));
     }
-    else if ( cost_fnc == SUM_OF_SQUARES) {
+    case SUM_OF_SQUARES:
         return get_cost_function_sum_of_squares(matrix_new);
-    }
-    else if (cost_fnc == INFIDELITY){
+    case INFIDELITY: {
     	QGD_Complex16 trace_temp = get_trace(matrix_new);
     	ret_temp[0].real = trace_temp.real;
     	ret_temp[0].imag = trace_temp.imag;
     	double d = matrix_new.cols;
         return 1.0-((trace_temp.real*trace_temp.real+trace_temp.imag*trace_temp.imag)/d+1)/(d+1);
     }
-    else {
+    case OSR_ENTANGLEMENT:
+        return get_osr_entanglement_test(matrix_new, use_cuts);
+    default: {
         std::string err("Optimization_Interface::optimization_problem: Cost function variant not implmented.");
         throw err;
-    }
+    } }
 
 
 }
@@ -1105,6 +1069,16 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();////////////////////////////////
 
         work_batch = 10;
     }
+    Matrix Upartial;
+    if (cost_fnc == SUM_OF_SQUARES) {
+        Matrix matrix_new = instance->get_Umtx().copy();
+        instance->apply_to( parameters, matrix_new );
+        Upartial = get_deriv_sum_of_squares(matrix_new);
+    } else if (cost_fnc == OSR_ENTANGLEMENT) {
+        Matrix matrix_new = instance->get_Umtx().copy();
+        instance->apply_to( parameters, matrix_new );
+        Upartial = get_deriv_osr_entanglement(matrix_new, use_cuts);
+    }
 
 
     tbb::parallel_for( tbb::blocked_range<int>(0,parameter_num_loc,work_batch), [&](tbb::blocked_range<int> r) {
@@ -1114,44 +1088,62 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();////////////////////////////////
         //for( int idx=0; idx<parameter_num_loc; idx++ ) {
 
             double grad_comp;
-            if ( cost_fnc == FROBENIUS_NORM ) {
+            switch (cost_fnc) {
+            case FROBENIUS_NORM:
                 grad_comp = (get_cost_function(Umtx_deriv[idx], trace_offset_loc) - 1.0);
-            }
-            else if ( cost_fnc == FROBENIUS_NORM_CORRECTION1 ) {
+                break;
+            case FROBENIUS_NORM_CORRECTION1: {
                 Matrix_real deriv_tmp = get_cost_function_with_correction( Umtx_deriv[idx], qbit_num, trace_offset_loc );
                 grad_comp = (deriv_tmp[0] - std::sqrt(prev_cost_fnv_val)*deriv_tmp[1]*correction1_scale - 1.0);
+                break;
             }
-            else if ( cost_fnc == FROBENIUS_NORM_CORRECTION2 ) {
+            case FROBENIUS_NORM_CORRECTION2: {
                 Matrix_real deriv_tmp = get_cost_function_with_correction2( Umtx_deriv[idx], qbit_num, trace_offset_loc );
                 grad_comp = (deriv_tmp[0] - std::sqrt(prev_cost_fnv_val)*(deriv_tmp[1]*correction1_scale + deriv_tmp[2]*correction2_scale) - 1.0);
+                break;
             }
-            else if (cost_fnc == HILBERT_SCHMIDT_TEST){
+            case HILBERT_SCHMIDT_TEST: {
                 double d = 1.0/Umtx_deriv[idx].cols;
                 QGD_Complex16 deriv_tmp = get_trace(Umtx_deriv[idx]);
                 grad_comp = -2.0*d*d*trace_tmp[0].real*deriv_tmp.real-2.0*d*d*trace_tmp[0].imag*deriv_tmp.imag;
+                break;
             }
-            else if ( cost_fnc == HILBERT_SCHMIDT_TEST_CORRECTION1 ){
+            case HILBERT_SCHMIDT_TEST_CORRECTION1: {
                 Matrix&&  deriv_tmp = get_trace_with_correction( Umtx_deriv[idx], qbit_num);
                 double d = 1.0/Umtx_deriv[idx].cols;
                 grad_comp = -2.0*d*d* (trace_tmp[0].real*deriv_tmp[0].real+trace_tmp[0].imag*deriv_tmp[0].imag+std::sqrt(prev_cost_fnv_val)*correction1_scale*(trace_tmp[1].real*deriv_tmp[1].real+trace_tmp[1].imag*deriv_tmp[1].imag));
+                break;
             }
-            else if ( cost_fnc == HILBERT_SCHMIDT_TEST_CORRECTION2 ){
+            case HILBERT_SCHMIDT_TEST_CORRECTION2: {
                 Matrix&& deriv_tmp = get_trace_with_correction2( Umtx_deriv[idx], qbit_num);
                 double d = 1.0/Umtx_deriv[idx].cols;
                 grad_comp = -2.0*d*d* (trace_tmp[0].real*deriv_tmp[0].real+trace_tmp[0].imag*deriv_tmp[0].imag+std::sqrt(prev_cost_fnv_val)*(correction1_scale*(trace_tmp[1].real*deriv_tmp[1].real+trace_tmp[1].imag*deriv_tmp[1].imag) + correction2_scale*(trace_tmp[2].real*deriv_tmp[2].real+trace_tmp[2].imag*deriv_tmp[2].imag)));
+                break;
             }
-            else if ( cost_fnc == SUM_OF_SQUARES) {
-                grad_comp = get_cost_function_sum_of_squares(Umtx_deriv[idx]);
-            }
-            else if (cost_fnc == INFIDELITY){
+            case SUM_OF_SQUARES:
+            case OSR_ENTANGLEMENT:
+                grad_comp = real_trace_conj_dot(Upartial, Umtx_deriv[idx]);
+                /*{
+                    Matrix matrix_new = instance->get_Umtx().copy();
+                    auto paramcopy = parameters.copy();
+                    paramcopy[idx] += 1e-10;
+                    instance->apply_to( paramcopy, matrix_new );
+                    double f1 = instance->get_cost_function_variant() == SUM_OF_SQUARES ? get_cost_function_sum_of_squares(matrix_new) : get_osr_entanglement_test(matrix_new, use_cuts);
+                    double check = (f1 - *f0) / 1e-10;
+                    //printf("%d: %g %g\n", idx, grad_comp, check);
+                    grad_comp = check;
+                }*/
+                break;
+            case INFIDELITY: {
                 double d = Umtx_deriv[idx].cols;
                 QGD_Complex16 deriv_tmp = get_trace(Umtx_deriv[idx]);
                 grad_comp = -2.0/d/(d+1)*trace_tmp[0].real*deriv_tmp.real-2.0/d/(d+1)*trace_tmp[0].imag*deriv_tmp.imag;
+                break;
             }
-            else {
+            default: {
                 std::string err("Optimization_Interface::optimization_problem_combined: Cost function variant not implmented.");
                 throw err;
-            }
+            } }
             
             grad[idx] = grad_comp;
 
@@ -1329,13 +1321,13 @@ void Optimization_Interface::set_optimizer( optimization_aglorithms alg_in ) {
 
     switch ( alg ) {
         case ADAM:
-            max_inner_iterations = 1e5; 
+            max_inner_iterations = 100000; 
             random_shift_count_max = 100;
             max_outer_iterations = 1;
             return;
 
         case ADAM_BATCHED:
-            max_inner_iterations = 2.5e3;
+            max_inner_iterations = 2500;
             random_shift_count_max = 3;
             max_outer_iterations = 1;
             return;
@@ -1343,29 +1335,29 @@ void Optimization_Interface::set_optimizer( optimization_aglorithms alg_in ) {
         case GRAD_DESCEND:
             max_inner_iterations = 10000;
             random_shift_count_max = 1;  
-            max_outer_iterations = 1e8; 
+            max_outer_iterations = 100000000; 
             return;
 
         case COSINE:
-            max_inner_iterations = 2.5e3;
+            max_inner_iterations = 2500;
             random_shift_count_max = 3;
             max_outer_iterations = 1;
             return;
             
         case GRAD_DESCEND_PARAMETER_SHIFT_RULE:
-            max_inner_iterations = 2.5e3;
+            max_inner_iterations = 2500;
             random_shift_count_max = 3;
             max_outer_iterations = 1;
             return;                       
 
         case AGENTS:
-            max_inner_iterations = 2.5e3;
+            max_inner_iterations = 2500;
             random_shift_count_max = 3;
             max_outer_iterations = 1;
             return;
 
         case AGENTS_COMBINED:
-            max_inner_iterations = 2.5e3;
+            max_inner_iterations = 2500;
             random_shift_count_max = 3;
             max_outer_iterations = 1;
             return;
@@ -1373,11 +1365,11 @@ void Optimization_Interface::set_optimizer( optimization_aglorithms alg_in ) {
         case BFGS:
             max_inner_iterations = 10000;
             random_shift_count_max = 1;  
-            max_outer_iterations = 1e8; 
+            max_outer_iterations = 100000000; 
             return;
 
         case BFGS2:
-            max_inner_iterations = 1e5;
+            max_inner_iterations = 100000;
             random_shift_count_max = 100;
             max_outer_iterations = 1;
             return;

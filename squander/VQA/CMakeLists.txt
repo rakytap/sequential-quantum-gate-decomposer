@@ -1,5 +1,5 @@
 
-set(EXT_DIR ${PROJECT_SOURCE_DIR}/squander/variational_quantum_eigensolver)
+set(EXT_DIR ${PROJECT_SOURCE_DIR}/squander/VQA)
 
 
 add_library( qgd_Variational_Quantum_Eigensolver_Base_Wrapper MODULE
@@ -7,6 +7,13 @@ add_library( qgd_Variational_Quantum_Eigensolver_Base_Wrapper MODULE
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/numpy_interface.cpp        
 )
 
+# Windows/MSVC: Apply /bigobj flag directly to numpy_interface.cpp to handle large object files
+if(WIN32 AND CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    set_source_files_properties(
+        ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/numpy_interface.cpp
+        PROPERTIES COMPILE_OPTIONS "/bigobj"
+    )
+endif()
 
 ADD_DEPENDENCIES (qgd_Variational_Quantum_Eigensolver_Base_Wrapper qgd)
 
@@ -21,6 +28,7 @@ target_compile_options(qgd_Variational_Quantum_Eigensolver_Base_Wrapper PRIVATE
     "$<$<CONFIG:Debug>:${CXX_FLAGS_DEBUG}>"
     "$<$<CONFIG:Release>:${CXX_FLAGS_RELEASE}>"
     "-DCPYTHON"
+    "$<$<AND:$<PLATFORM_ID:Windows>,$<CXX_COMPILER_ID:MSVC>>:/bigobj>"
 )
 
 
@@ -38,17 +46,34 @@ set_target_properties( qgd_Variational_Quantum_Eigensolver_Base_Wrapper PROPERTI
                         INSTALL_RPATH "$ORIGIN/.."
                         LIBRARY_OUTPUT_DIRECTORY ${EXT_DIR}
 )
+# Set BUILD_RPATH to prioritize conda libraries
+if(DEFINED ENV{CONDA_PREFIX})
+    set_target_properties(qgd_Variational_Quantum_Eigensolver_Base_Wrapper PROPERTIES
+        BUILD_RPATH "${CONDA_PREFIX}/lib"
+        BUILD_RPATH_USE_ORIGIN TRUE
+    )
+endif()
 
 
 
 
-install(TARGETS qgd_Variational_Quantum_Eigensolver_Base_Wrapper LIBRARY 
-         DESTINATION squander/variational_quantum_eigensolver)
+install(TARGETS qgd_Variational_Quantum_Eigensolver_Base_Wrapper 
+        LIBRARY DESTINATION squander/VQA
+        RUNTIME DESTINATION squander/VQA  # Add this for Windows
+        COMPONENT python)
 
 add_library( qgd_Generative_Quantum_Machine_Learning_Base_Wrapper MODULE
     ${EXT_DIR}/qgd_GQML_Base_Wrapper.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/numpy_interface.cpp        
 )
+
+# Windows/MSVC: Apply /bigobj flag directly to numpy_interface.cpp to handle large object files
+if(WIN32 AND CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    set_source_files_properties(
+        ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/numpy_interface.cpp
+        PROPERTIES COMPILE_OPTIONS "/bigobj"
+    )
+endif()
 
 ADD_DEPENDENCIES (qgd_Generative_Quantum_Machine_Learning_Base_Wrapper qgd)
 
@@ -63,6 +88,7 @@ target_compile_options(qgd_Generative_Quantum_Machine_Learning_Base_Wrapper PRIV
     "$<$<CONFIG:Debug>:${CXX_FLAGS_DEBUG}>"
     "$<$<CONFIG:Release>:${CXX_FLAGS_RELEASE}>"
     "-DCPYTHON"
+    "$<$<AND:$<PLATFORM_ID:Windows>,$<CXX_COMPILER_ID:MSVC>>:/bigobj>"
 )
 
 
@@ -80,9 +106,18 @@ set_target_properties( qgd_Generative_Quantum_Machine_Learning_Base_Wrapper PROP
                         INSTALL_RPATH "$ORIGIN/.."
                         LIBRARY_OUTPUT_DIRECTORY ${EXT_DIR}
 )
+# Set BUILD_RPATH to prioritize conda libraries
+if(DEFINED ENV{CONDA_PREFIX})
+    set_target_properties(qgd_Generative_Quantum_Machine_Learning_Base_Wrapper PROPERTIES
+        BUILD_RPATH "${CONDA_PREFIX}/lib"
+        BUILD_RPATH_USE_ORIGIN TRUE
+    )
+endif()
 
 
 
 
-install(TARGETS qgd_Generative_Quantum_Machine_Learning_Base_Wrapper LIBRARY 
-         DESTINATION squander/variational_quantum_eigensolver)
+install(TARGETS qgd_Generative_Quantum_Machine_Learning_Base_Wrapper 
+        LIBRARY DESTINATION squander/VQA
+        RUNTIME DESTINATION squander/VQA  # Add this for Windows
+        COMPONENT python)

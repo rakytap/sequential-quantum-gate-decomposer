@@ -27,7 +27,7 @@ limitations under the License.
 
 import numpy as np
 from os import path
-from squander.variational_quantum_eigensolver.qgd_Generative_Quantum_Machine_Learning_Base_Wrapper import qgd_Generative_Quantum_Machine_Learning_Base_Wrapper
+from squander.VQA.qgd_Generative_Quantum_Machine_Learning_Base_Wrapper import qgd_Generative_Quantum_Machine_Learning_Base_Wrapper
 from squander.gates.qgd_Circuit import qgd_Circuit
 
 

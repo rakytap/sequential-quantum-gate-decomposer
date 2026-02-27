@@ -30,32 +30,6 @@ limitations under the License.
 /// @brief Type definition of the fifferent types of ansatz
 typedef enum ansatz_type {HEA, HEA_ZYZ, QCMRF} ansatz_type;
     
-#ifdef __cplusplus
-extern "C" 
-{
-#endif
-
-/// Definition of the zggev function from Lapacke to calculate the eigenvalues of a complex matrix
-int LAPACKE_zggev 	( 	int  	matrix_layout,
-		char  	jobvl,
-		char  	jobvr,
-		int  	n,
-		QGD_Complex16 *  	a,
-		int  	lda,
-		QGD_Complex16 *  	b,
-		int  	ldb,
-		QGD_Complex16 *  	alpha,
-		QGD_Complex16 *  	beta,
-		QGD_Complex16 *  	vl,
-		int  	ldvl,
-		QGD_Complex16 *  	vr,
-		int  	ldvr 
-	); 	
-
-#ifdef __cplusplus
-}
-#endif
-
 
 
 /**
@@ -243,7 +217,7 @@ static void optimization_problem_grad_vqe( Matrix_real parameters, void* void_in
 @param current_minimum The current minimum (to avoid calculating it again
 @param parameters Parameters to be used in the calculations (For Rényi entropy)
 */
-void export_current_cost_fnc(double current_minimum, Matrix_real& parameters);
+void export_current_cost_fnc(double current_minimum, Matrix_real& parameters) override;
 
 /**
 @brief Initialize the state used in the quantun circuit. All qubits are initialized to state 0

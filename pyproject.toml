@@ -1,15 +1,50 @@
 [build-system]
 requires = [
-        "setuptools>=40.8.0",
+    "setuptools>=40.8.0",
     "wheel",
     "scikit-build",
     "scipy", 
+    "numpy",
     "tbb-devel; platform_machine == 'x86' or platform_machine == 'x86_64'",
     "cmake>=3.10.2",
     "networkx",
     "qiskit"
 ]
 build-backend = "setuptools.build_meta"
+
+[tool.scikit-build]
+# Include all installed files in the package
+cmake.install.component = "python"
+
+[project]
+name = "squander"
+version = "1.9.6"
+description = "C++ library with Python interface to train quantum circuits, quantum gate synthesis and state preparation."
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "Apache-2.0"}
+authors = [
+    {name = "Peter Rakyta", email = "peter.rakyta@ttk.elte.hu"}
+]
+keywords = ["quantum", "circuits", "gate", "synthesis"]
+classifiers = [
+    "Intended Audience :: Developers",
+    "Natural Language :: English",
+    "Programming Language :: C",
+    "Programming Language :: C++",
+    "License :: OSI Approved :: Apache Software License",
+]
+
+dependencies = [
+    "numpy",
+    "scipy",
+    "networkx",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+]
 
 
 

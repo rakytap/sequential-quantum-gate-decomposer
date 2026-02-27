@@ -40,10 +40,6 @@ limitations under the License.
 void
 apply_kernel_to_state_vector_input_AVX(Matrix& u3_1qbit, Matrix& input, const bool& deriv, const int& target_qbit, const int& control_qbit, const int& matrix_size) {
 
-
-    int index_step_target = 1 << target_qbit;
-    int current_idx = 0;
-
     unsigned int bitmask_low = (1 << target_qbit) - 1;
     unsigned int bitmask_high = ~bitmask_low;
 
@@ -82,8 +78,8 @@ apply_kernel_to_state_vector_input_AVX(Matrix& u3_1qbit, Matrix& input, const bo
                 }
                 else if (deriv) {
                     // when calculating derivatives, the constant element should be zeros
-                    memset(input.get_data() + current_idx, 0.0, input.cols * sizeof(QGD_Complex16));
-                    memset(input.get_data() + current_idx_pair, 0.0, input.cols * sizeof(QGD_Complex16));
+                    memset(input.get_data() + current_idx, 0, input.cols * sizeof(QGD_Complex16));
+                    memset(input.get_data() + current_idx_pair, 0, input.cols * sizeof(QGD_Complex16));
                 }
                 else {
                     // leave the state as it is
@@ -148,7 +144,7 @@ copies or substantial portions of the Software.
                 }
                 else if (deriv) {
                     // when calculating derivatives, the constant element should be zeros
-                    memset(input.get_data() + current_idx, 0.0, input.cols * 2 *sizeof(QGD_Complex16));
+                    memset(input.get_data() + current_idx, 0, input.cols * 2 *sizeof(QGD_Complex16));
                 }
                 else {
                     // leave the state as it is
@@ -234,8 +230,8 @@ copies or substantial portions of the Software.
                 }
                 else if (deriv) {
                     // when calculating derivatives, the constant element should be zeros
-                    memset(input.get_data() + current_idx, 0.0, input.cols * sizeof(QGD_Complex16));
-                    memset(input.get_data() + current_idx_pair, 0.0, input.cols * sizeof(QGD_Complex16));
+                    memset(input.get_data() + current_idx, 0, input.cols * sizeof(QGD_Complex16));
+                    memset(input.get_data() + current_idx_pair, 0, input.cols * sizeof(QGD_Complex16));
                 }
                 else {
                     // leave the state as it is
@@ -271,10 +267,6 @@ copies or substantial portions of the Software.
 void
 apply_kernel_to_state_vector_input_parallel_OpenMP_AVX(Matrix& u3_1qbit, Matrix& input, const bool& deriv, const int& target_qbit, const int& control_qbit, const int& matrix_size) {
 
-
-    int index_step_target = 1 << target_qbit;
-    int current_idx = 0;
-
     unsigned int bitmask_low = (1 << target_qbit) - 1;
     unsigned int bitmask_high = ~bitmask_low;
 
@@ -313,8 +305,8 @@ apply_kernel_to_state_vector_input_parallel_OpenMP_AVX(Matrix& u3_1qbit, Matrix&
                 }
                 else if (deriv) {
                     // when calculating derivatives, the constant element should be zeros
-                    memset(input.get_data() + current_idx, 0.0, input.cols * sizeof(QGD_Complex16));
-                    memset(input.get_data() + current_idx_pair, 0.0, input.cols * sizeof(QGD_Complex16));
+                    memset(input.get_data() + current_idx, 0, input.cols * sizeof(QGD_Complex16));
+                    memset(input.get_data() + current_idx_pair, 0, input.cols * sizeof(QGD_Complex16));
                 }
                 else {
                     // leave the state as it is
@@ -380,7 +372,7 @@ copies or substantial portions of the Software.
                 }
                 else if (deriv) {
                     // when calculating derivatives, the constant element should be zeros
-                    memset(input.get_data() + current_idx, 0.0, input.cols * 2 *sizeof(QGD_Complex16));
+                    memset(input.get_data() + current_idx, 0, input.cols * 2 *sizeof(QGD_Complex16));
                 }
                 else {
                     // leave the state as it is
@@ -466,8 +458,8 @@ copies or substantial portions of the Software.
                 }
                 else if (deriv) {
                     // when calculating derivatives, the constant element should be zeros
-                    memset(input.get_data() + current_idx, 0.0, input.cols * sizeof(QGD_Complex16));
-                    memset(input.get_data() + current_idx_pair, 0.0, input.cols * sizeof(QGD_Complex16));
+                    memset(input.get_data() + current_idx, 0, input.cols * sizeof(QGD_Complex16));
+                    memset(input.get_data() + current_idx_pair, 0, input.cols * sizeof(QGD_Complex16));
                 }
                 else {
                     // leave the state as it is
@@ -546,8 +538,8 @@ apply_kernel_to_state_vector_input_parallel_AVX(Matrix& u3_1qbit, Matrix& input,
                 }
                 else if (deriv) {
                     // when calculating derivatives, the constant element should be zeros
-                    memset(input.get_data() + current_idx, 0.0, input.cols * sizeof(QGD_Complex16));
-                    memset(input.get_data() + current_idx_pair, 0.0, input.cols * sizeof(QGD_Complex16));
+                    memset(input.get_data() + current_idx, 0, input.cols * sizeof(QGD_Complex16));
+                    memset(input.get_data() + current_idx_pair, 0, input.cols * sizeof(QGD_Complex16));
                 }
                 else {
                     // leave the state as it is
@@ -619,7 +611,7 @@ copies or substantial portions of the Software.
                 }
                 else if (deriv) {
                     // when calculating derivatives, the constant element should be zeros
-                    memset(input.get_data() + current_idx, 0.0, input.cols * 2 *sizeof(QGD_Complex16));
+                    memset(input.get_data() + current_idx, 0, input.cols * 2 *sizeof(QGD_Complex16));
                 }
                 else {
                     // leave the state as it is
@@ -705,8 +697,8 @@ copies or substantial portions of the Software.
                 }
                 else if (deriv) {
                     // when calculating derivatives, the constant element should be zeros
-                    memset(input.get_data() + current_idx, 0.0, input.cols * sizeof(QGD_Complex16));
-                    memset(input.get_data() + current_idx_pair, 0.0, input.cols * sizeof(QGD_Complex16));
+                    memset(input.get_data() + current_idx, 0, input.cols * sizeof(QGD_Complex16));
+                    memset(input.get_data() + current_idx_pair, 0, input.cols * sizeof(QGD_Complex16));
                 }
                 else {
                     // leave the state as it is

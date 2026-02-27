@@ -249,7 +249,7 @@ void Optimization_Interface::solve_layer_optimization_problem_AGENTS( int num_of
         
         // vector stroing the lates values of current minimums to identify convergence
         Matrix_real current_minimum_vec(1, convergence_length); 
-        memset( current_minimum_vec.get_data(), 0.0, current_minimum_vec.size()*sizeof(double) );
+        memset( current_minimum_vec.get_data(), 0, current_minimum_vec.size()*sizeof(double) );
         double current_minimum_mean = 0.0;
         int current_minimum_idx = 0;   
         
@@ -289,7 +289,7 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();
       
             // initialize random parameters for the agent            
             Matrix_real solution_guess_mtx_agent = Matrix_real( num_of_parameters, 1 );
-            memset( solution_guess_mtx_agent.get_data(), 0.0, solution_guess_mtx_agent.size()*sizeof(double) );              
+            memset( solution_guess_mtx_agent.get_data(), 0, solution_guess_mtx_agent.size()*sizeof(double) );              
 
 #ifdef __MPI__        
             if ( current_rank == 0 ) {
@@ -690,7 +690,7 @@ exit(-1);
 
             // generate random numbers to manage the behavior of the agents
             Matrix_real random_numbers(   agent_num, 2 );
-            memset( random_numbers.get_data(), 0.0, 2*agent_num*sizeof(double) );
+            memset( random_numbers.get_data(), 0, 2*agent_num*sizeof(double) );
             
 #ifdef __MPI__        
             if ( current_rank == 0 ) {
@@ -870,7 +870,7 @@ exit(-1);
 
                 if ( iter_idx % agent_lifetime_loc == 0 && agent_idx == 0) {
                     std::stringstream sstream;
-                    sstream << "AGENTS, agent " << agent_idx << ": processed iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "\%";
+                    sstream << "AGENTS, agent " << agent_idx << ": processed iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "%";
                     sstream << ", current minimum of agent 0: " << current_minimum_agents[ 0 ] << " global current minimum: " << current_minimum  << " CPU time: " << CPU_time;
                     sstream << " circuit simulation time: " << circuit_simulation_time  << std::endl;
                     print(sstream, 3); 

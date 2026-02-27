@@ -64,27 +64,27 @@ virtual ~CCX();
 @brief Call to create a clone of the present class
 @return Return with a pointer pointing to the cloned object
 */
-virtual CCX* clone();
+virtual CCX* clone() override;
 
 /**
 @brief Call to retrieve the gate matrix
 @return Returns with a matrix of the gate
 */
-virtual Matrix get_matrix();
+virtual Matrix get_matrix() override;
 
 /**
 @brief Call to retrieve the gate matrix
 @param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with Intel TBB (optional)
 @return Returns with a matrix of the gate
 */
-virtual Matrix get_matrix(int parallel);
+virtual Matrix get_matrix(int parallel) override;
 
 /**
 @brief Call to apply the gate operation on the input matrix (without parameters)
 @param input The input matrix on which the transformation is applied
 @param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with Intel TBB
 */
-virtual void apply_to(Matrix& input, int parallel = 0);
+virtual void apply_to(Matrix& input, int parallel = 0) override;
 
 /**
 @brief Call to apply the gate operation on the input matrix

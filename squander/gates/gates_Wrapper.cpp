@@ -62,7 +62,10 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "CSWAP.h"
 #include "numpy_interface.h"
 #include "Permutation.h"
-
+#include "RXX.h"
+#include "RYY.h"
+#include "RZZ.h"
+#include "SXdg.h"
 
 //////////////////////////////////////
 
@@ -648,7 +651,6 @@ Gate_Wrapper_get_Matrix( Gate_Wrapper *self, PyObject *args, PyObject *kwds ) {
 
         // get the C++ wrapper around the input data
         Matrix_real&& parameters_mtx = numpy2matrix_real( parameters_arr );
-
         int parallel = 1;
         try {
             gate_mtx = self->gate->get_matrix( parameters_mtx, parallel );
@@ -1051,9 +1053,9 @@ Gate_Wrapper_get_Target_Qbits( Gate_Wrapper *self ) {
         return NULL;
     }
 
-    PyObject* target_qbits_py = PyList_New(target_qbits.size());
+    PyObject* target_qbits_py = PyList_New((Py_ssize_t)target_qbits.size());
     for (size_t i = 0; i < target_qbits.size(); i++) {
-        PyList_SetItem(target_qbits_py, i, Py_BuildValue("i", target_qbits[i]));
+        PyList_SetItem(target_qbits_py, (Py_ssize_t)i, Py_BuildValue("i", target_qbits[i]));
     }
 
     return target_qbits_py;
@@ -1082,9 +1084,9 @@ Gate_Wrapper_get_Control_Qbits( Gate_Wrapper *self ) {
         return NULL;
     }
 
-    PyObject* control_qbits_py = PyList_New(control_qbits.size());
+    PyObject* control_qbits_py = PyList_New((Py_ssize_t)control_qbits.size());
     for (size_t i = 0; i < control_qbits.size(); i++) {
-        PyList_SetItem(control_qbits_py, i, Py_BuildValue("i", control_qbits[i]));
+        PyList_SetItem(control_qbits_py, (Py_ssize_t)i, Py_BuildValue("i", control_qbits[i]));
     }
 
     return control_qbits_py;
@@ -1205,9 +1207,9 @@ Gate_Wrapper_get_Involved_Qbits( Gate_Wrapper *self ) {
         return NULL;
     }
 
-    PyObject* involved_qbits_py = PyList_New(involved_qbits.size());
+    PyObject* involved_qbits_py = PyList_New((Py_ssize_t)involved_qbits.size());
     for (size_t i = 0; i < involved_qbits.size(); i++) {
-        PyList_SetItem(involved_qbits_py, i, Py_BuildValue("i", involved_qbits[i]));
+        PyList_SetItem(involved_qbits_py, (Py_ssize_t)i, Py_BuildValue("i", involved_qbits[i]));
     }
 
     return involved_qbits_py;
@@ -1274,7 +1276,7 @@ Gate_Wrapper_Extract_Parameters( Gate_Wrapper *self, PyObject *args ) {
     PyObject *extracted_parameters_py = matrix_real_to_numpy( extracted_parameters );
 
     // flatten the extracted array
-    long int param_num = (long int)extracted_parameters.size();
+    npy_intp param_num = (npy_intp)extracted_parameters.size();
     PyArray_Dims new_shape;
     new_shape.ptr = &param_num;
     new_shape.len = 1;
@@ -1347,18 +1349,18 @@ Gate_Wrapper_getstate( Gate_Wrapper *self ) {
 
     // Serialize target_qbits vector
     std::vector<int> target_qbits = self->gate->get_target_qbits();
-    PyObject* target_qbits_py = PyList_New(target_qbits.size());
+    PyObject* target_qbits_py = PyList_New((Py_ssize_t)target_qbits.size());
     for (size_t i = 0; i < target_qbits.size(); i++) {
-        PyList_SetItem(target_qbits_py, i, Py_BuildValue("i", target_qbits[i]));
+        PyList_SetItem(target_qbits_py, (Py_ssize_t)i, Py_BuildValue("i", target_qbits[i]));
     }
     key = Py_BuildValue( "s", "target_qbits" );
     PyDict_SetItem(gate_state, key, target_qbits_py);
 
     // Serialize control_qbits vector
     std::vector<int> control_qbits = self->gate->get_control_qbits();
-    PyObject* control_qbits_py = PyList_New(control_qbits.size());
+    PyObject* control_qbits_py = PyList_New((Py_ssize_t)control_qbits.size());
     for (size_t i = 0; i < control_qbits.size(); i++) {
-        PyList_SetItem(control_qbits_py, i, Py_BuildValue("i", control_qbits[i]));
+        PyList_SetItem(control_qbits_py, (Py_ssize_t)i, Py_BuildValue("i", control_qbits[i]));
     }
     key = Py_BuildValue( "s", "control_qbits" );
     PyDict_SetItem(gate_state, key, control_qbits_py);
@@ -1659,6 +1661,10 @@ Gate_Wrapper_setstate( Gate_Wrapper *self, PyObject *args ) {
         gate = create_gate<SX>( qbit_num, target_qbit );
         break;
     }    
+    case SXDG_OPERATION: {
+        gate = create_gate<SXdg>( qbit_num, target_qbit );
+        break;
+    }    
     case T_OPERATION: {
         gate = create_gate<T>( qbit_num, target_qbit );
         break;
@@ -1722,7 +1728,40 @@ Gate_Wrapper_setstate( Gate_Wrapper *self, PyObject *args ) {
     case CR_OPERATION: {
         gate = create_controlled_gate<CR>( qbit_num, target_qbit, control_qbit );
         break;
-    }    
+    }
+    case RXX_OPERATION: {
+        if (!target_qbits.empty()) {
+            // Use vector-based constructor
+            gate = create_multi_target_gate<RXX>( qbit_num, target_qbits );
+        } else {
+            // Legacy: convert old format (target_qbit, control_qbit) to vector format
+            std::vector<int> swap_targets = {target_qbit, control_qbit};
+            gate = create_multi_target_gate<RXX>( qbit_num, swap_targets );
+        }
+        break;
+    }
+    case RYY_OPERATION: {
+        if (!target_qbits.empty()) {
+            // Use vector-based constructor
+            gate = create_multi_target_gate<RYY>( qbit_num, target_qbits );
+        } else {
+            // Legacy: convert old format (target_qbit, control_qbit) to vector format
+            std::vector<int> swap_targets = {target_qbit, control_qbit};
+            gate = create_multi_target_gate<RYY>( qbit_num, swap_targets );
+        }
+        break;
+    }
+    case RZZ_OPERATION: {
+        if (!target_qbits.empty()) {
+            // Use vector-based constructor
+            gate = create_multi_target_gate<RZZ>( qbit_num, target_qbits );
+        } else {
+            // Legacy: convert old format (target_qbit, control_qbit) to vector format
+            std::vector<int> swap_targets = {target_qbit, control_qbit};
+            gate = create_multi_target_gate<RZZ>( qbit_num, swap_targets );
+        }
+        break;
+    }
     case SWAP_OPERATION: {
         if (!target_qbits.empty()) {
             // Use vector-based constructor
@@ -1785,7 +1824,7 @@ Gate_Wrapper_setstate( Gate_Wrapper *self, PyObject *args ) {
     }
 
     
-    return Py_None;
+    return Py_BuildValue("");
 
 }
 
@@ -1899,17 +1938,15 @@ struct Gate_Wrapper_Type_tmp : PyTypeObject {
 static Gate_Wrapper_Type_tmp Gate_Wrapper_Type;
 
 
-
-#define gate_wrapper_type_template(gate_name, wrapper_new) \ 
+#define gate_wrapper_type_template(gate_name, wrapper_new) \
 struct gate_name##_Wrapper_Type : Gate_Wrapper_Type_tmp { \
-\
-    gate_name##_Wrapper_Type() {    \
-        tp_name      = #gate_name;\
-        tp_doc       = "Object to represent python binding for a" #gate_name "gate of the Squander package.";\
-        tp_new      = (newfunc) wrapper_new< gate_name>;\
-        tp_base      = &Gate_Wrapper_Type;\
-    }\
-}; \ 
+    gate_name##_Wrapper_Type() { \
+        tp_name = #gate_name; \
+        tp_doc = "Object to represent python binding for a " #gate_name " gate of the Squander package."; \
+        tp_new = (newfunc) wrapper_new< gate_name>; \
+        tp_base = &Gate_Wrapper_Type; \
+    } \
+}; \
 static gate_name##_Wrapper_Type gate_name##_Wrapper_Type_ins;
 
 
@@ -1924,6 +1961,40 @@ struct SWAP_Wrapper_Type: Gate_Wrapper_Type_tmp{
 
 };
 static SWAP_Wrapper_Type SWAP_Wrapper_Type_ins;
+
+struct RXX_Wrapper_Type: Gate_Wrapper_Type_tmp{
+    RXX_Wrapper_Type(){
+        tp_name      = "RXX";
+        tp_doc       = "Object to represent python binding for a RXX gate of the Squander package.";
+        tp_new      = (newfunc) multi_target_gate_Wrapper_new<RXX>;
+        tp_base      = &Gate_Wrapper_Type;
+    }
+
+};
+static RXX_Wrapper_Type RXX_Wrapper_Type_ins;
+
+struct RYY_Wrapper_Type: Gate_Wrapper_Type_tmp{
+    RYY_Wrapper_Type(){
+        tp_name      = "RYY";
+        tp_doc       = "Object to represent python binding for a RYY gate of the Squander package.";
+        tp_new      = (newfunc) multi_target_gate_Wrapper_new<RYY>;
+        tp_base      = &Gate_Wrapper_Type;
+    }
+
+};
+static RYY_Wrapper_Type RYY_Wrapper_Type_ins;
+
+struct RZZ_Wrapper_Type: Gate_Wrapper_Type_tmp{
+    RZZ_Wrapper_Type(){
+        tp_name      = "RZZ";
+        tp_doc       = "Object to represent python binding for a RZZ gate of the Squander package.";
+        tp_new      = (newfunc) multi_target_gate_Wrapper_new<RZZ>;
+        tp_base      = &Gate_Wrapper_Type;
+    }
+
+};
+static RZZ_Wrapper_Type RZZ_Wrapper_Type_ins;
+
 
 struct CCX_Wrapper_Type: Gate_Wrapper_Type_tmp{
     CCX_Wrapper_Type(){
@@ -1995,6 +2066,8 @@ gate_wrapper_type_template(SDG, Gate_Wrapper_new);
 
 gate_wrapper_type_template(SX, Gate_Wrapper_new);
 
+gate_wrapper_type_template(SXdg, Gate_Wrapper_new);
+
 gate_wrapper_type_template(T, Gate_Wrapper_new);
 
 gate_wrapper_type_template(Tdg, Gate_Wrapper_new);
@@ -2021,13 +2094,13 @@ static PyModuleDef  gates_Wrapper_Module = {
     -1,
 };
 
-#define Py_INCREF_template(gate_name) \ 
-    Py_INCREF(&gate_name##_Wrapper_Type_ins);\
-    if (PyModule_AddObject(m, #gate_name, (PyObject *) & gate_name##_Wrapper_Type_ins) < 0) {\
-        Py_DECREF(& gate_name##_Wrapper_Type_ins);\
-        Py_DECREF(m);\
-        return NULL;\
-    }\
+#define Py_INCREF_template(gate_name) \
+    Py_INCREF(&gate_name##_Wrapper_Type_ins); \
+    if (PyModule_AddObject(m, #gate_name, (PyObject *) &gate_name##_Wrapper_Type_ins) < 0) { \
+        Py_DECREF(&gate_name##_Wrapper_Type_ins); \
+        Py_DECREF(m); \
+        return NULL; \
+    }
 
 /**
 @brief Method called when the Python module is initialized
@@ -2055,9 +2128,13 @@ PyInit_gates_Wrapper(void)
         PyType_Ready(&CP_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&H_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&RX_Wrapper_Type_ins) < 0 ||
+        PyType_Ready(&RXX_Wrapper_Type_ins) < 0 ||
+        PyType_Ready(&RYY_Wrapper_Type_ins) < 0 ||
+        PyType_Ready(&RZZ_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&RY_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&RZ_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&SX_Wrapper_Type_ins) < 0 ||
+        PyType_Ready(&SXdg_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&SYC_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&U1_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&U2_Wrapper_Type_ins) < 0 ||
@@ -2109,6 +2186,12 @@ PyInit_gates_Wrapper(void)
 
     Py_INCREF_template(RX);
 
+    Py_INCREF_template(RXX);
+
+    Py_INCREF_template(RYY);
+
+    Py_INCREF_template(RZZ);
+
     Py_INCREF_template(RY);
     
     Py_INCREF_template(RZ);
@@ -2136,6 +2219,13 @@ PyInit_gates_Wrapper(void)
     Py_INCREF(&SDG_Wrapper_Type_ins);
     if (PyModule_AddObject(m, "Sdg", (PyObject *) & SDG_Wrapper_Type_ins) < 0) {
         Py_DECREF(& SDG_Wrapper_Type_ins);
+        Py_DECREF(m);
+        return NULL;
+    }
+
+    Py_INCREF(&SXdg_Wrapper_Type_ins);
+    if (PyModule_AddObject(m, "SXdg", (PyObject *) & SXdg_Wrapper_Type_ins) < 0) {
+        Py_DECREF(& SXdg_Wrapper_Type_ins);
         Py_DECREF(m);
         return NULL;
     }

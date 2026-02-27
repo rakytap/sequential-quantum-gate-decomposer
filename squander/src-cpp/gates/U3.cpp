@@ -141,14 +141,14 @@ U3::apply_to_list( Matrix_real& parameters_mtx, std::vector<Matrix>& inputs, int
 
     int work_batch = 1;
     if ( parallel == 0 ) {
-        work_batch = inputs.size();
+        work_batch = static_cast<int>(inputs.size());
     }
     else {
         work_batch = 1;
     }
 
     //TODO: also implement with OpenMP
-    tbb::parallel_for( tbb::blocked_range<int>(0,inputs.size(),work_batch), [&](tbb::blocked_range<int> r) {
+    tbb::parallel_for( tbb::blocked_range<int>(0,static_cast<int>(inputs.size()),work_batch), [&](tbb::blocked_range<int> r) {
         for (int idx=r.begin(); idx<r.end(); ++idx) { 
 
             Matrix* input = &inputs[idx];
@@ -253,15 +253,15 @@ U3::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input, int parallel 
 
 
     Matrix u3_1qbit_phi = calc_one_qubit_u3(ThetaOver2, Phi+M_PIOver2, Lambda );
-    memset(u3_1qbit_phi.get_data(), 0.0, 2*sizeof(QGD_Complex16) );
+    memset(u3_1qbit_phi.get_data(), 0, 2*sizeof(QGD_Complex16) );
     Matrix res_mtx_phi = input.copy();
     apply_kernel_to( u3_1qbit_phi, res_mtx_phi, deriv, parallel );
     ret.push_back(res_mtx_phi);
 
 
     Matrix u3_1qbit_lambda = calc_one_qubit_u3(ThetaOver2, Phi, Lambda+M_PIOver2 );
-    memset(u3_1qbit_lambda.get_data(), 0.0, sizeof(QGD_Complex16) );
-    memset(u3_1qbit_lambda.get_data()+2, 0.0, sizeof(QGD_Complex16) );
+    memset(u3_1qbit_lambda.get_data(), 0, sizeof(QGD_Complex16) );
+    memset(u3_1qbit_lambda.get_data()+2, 0, sizeof(QGD_Complex16) );
     Matrix res_mtx_lambda = input.copy();
     apply_kernel_to( u3_1qbit_lambda, res_mtx_lambda, deriv, parallel );
     ret.push_back(res_mtx_lambda);

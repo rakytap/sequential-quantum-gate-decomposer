@@ -427,7 +427,7 @@ void conjugate_gradient(Matrix_real A, Matrix_real b, Matrix_real& x0, double to
         sk = sk + d[rdx]*d[rdx];
     }
 
-    int iter=0.0;
+    int iter=0;
     while (std::sqrt(sk/b.cols) > tol && iter<1000){
     
     double dAd=0.0;

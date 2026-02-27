@@ -261,7 +261,7 @@ matrix_base(const matrix_base<scalar> &in) {
 @brief Call to get whether the matrix should be conjugated in CBLAS functions or not.
 @return Returns with true if the matrix should be conjugated in CBLAS functions or false otherwise.
 */
-bool is_conjugated() {
+bool is_conjugated() const {
   return conjugated;
 }
 
@@ -279,7 +279,7 @@ void conjugate() {
 @brief Call to get whether the matrix should be conjugated in CBLAS functions or not.
 @return Returns with true if the matrix should be conjugated in CBLAS functions or false otherwise.
 */
-bool is_transposed() {
+bool is_transposed() const {
 
   return transposed;
 
@@ -432,6 +432,17 @@ scalar& operator[](int idx) const {
     return data[idx];
 }
 
+bool operator<(const matrix_base<scalar>& other) const {
+    if (rows != other.rows) return rows < other.rows;
+    if (cols != other.cols) return cols < other.cols;
+    for (int i = 0; i < rows; ++i) {
+        for (int j = 0; j < cols; ++j) {
+            if (data[i * stride + j] != other.data[i * stride + j])
+                return data[i * stride + j] < other.data[i * stride + j];
+        }
+    }
+    return false; // they are equal
+}
 
 /**
 @brief Call to create a copy of the matrix

@@ -94,7 +94,16 @@ Matrix_real::Matrix_real(const Matrix_real &in) : matrix_base<double>(in)  {
 
 }
 
-
+/**
+@brief Assignment operator of the class.
+@param mtx An instance of class Matrix_real to be assigned.
+@return Returns with a reference to the instance of the class.
+*/
+Matrix_real&
+Matrix_real::operator=(const Matrix_real &mtx) {
+    matrix_base<double>::operator=(mtx);
+    return *this;
+}
 
 /**
 @brief Call to create a copy of the matrix
