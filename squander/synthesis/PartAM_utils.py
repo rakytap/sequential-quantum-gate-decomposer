@@ -12,287 +12,7 @@ from collections import defaultdict
 # ============================================================================
 # SWAP Routing Algorithms
 # ============================================================================
-
-def solve_min_swaps(perm, edges, T=None, use_gurobi=True):
-    """
-    Compute globally optimal minimum SWAPs to route permutation 'perm'
-    to identity under connectivity 'edges'.
-
-    perm[i] = logical qubit currently at physical node i.
-    edges   = list of undirected edges (u,v).
-    T       = time horizon (number of layers); if None, use n^2.
-    """
-
-    n = len(perm)
-    nodes = list(range(n))
-    tokens = list(range(n))
-
-    # Time horizon
-    if T is None:
-        T = n * n   # safe-ish upper bound for small n
-
-    # Undirected edges => directed arcs for movement variables
-    undirected = {tuple(sorted(e)) for e in edges}
-    neighbors = {u: set() for u in nodes}
-    for u, v in undirected:
-        neighbors[u].add(v)
-        neighbors[v].add(u)
-    directed_arcs = [(u, v) for u, v in undirected for (u, v) in ((u, v), (v, u))]
-
-    # ILP model
-    prob = pulp.LpProblem("TokenSwapping", pulp.LpMinimize)
-
-    # x[t][v][q]: token q at node v at time t
-    x = {
-        (t, v, q): pulp.LpVariable(f"x_t{t}_v{v}_q{q}", cat="Binary")
-        for t in range(T + 1)
-        for v in nodes
-        for q in tokens
-    }
-
-    # m[t][u][v][q]: token q moves from u to v between t and t+1
-    m = {
-        (t, u, v, q): pulp.LpVariable(f"m_t{t}_{u}_{v}_q{q}", cat="Binary")
-        for t in range(T)
-        for (u, v) in directed_arcs
-        for q in tokens
-    }
-
-    # Initial positions: tokens are at positions given by 'perm'
-    # perm[i] = token currently at physical node i
-    for v in nodes:
-        for q in tokens:
-            prob += x[(0, v, q)] == (1 if v == q else 0), f"init_t0_v{v}_q{q}"
-
-    # Final positions: identity mapping (token q at node q)
-    for v in nodes:
-        for q in tokens:
-            prob += x[(T, v, q)] == (1 if perm[v] == q else 0), f"final_tT_v{v}_q{q}"
-
-    # Each token at exactly one node at each time
-    for t in range(T + 1):
-        for q in tokens:
-            prob += (
-                pulp.lpSum(x[(t, v, q)] for v in nodes) == 1,
-                f"one_node_t{t}_q{q}",
-            )
-
-    # Each node holds exactly one token at each time
-    for t in range(T + 1):
-        for v in nodes:
-            prob += (
-                pulp.lpSum(x[(t, v, q)] for q in tokens) == 1,
-                f"one_token_t{t}_v{v}",
-            )
-
-    # Introduce swap decision per time over undirected edges (single swap per time)
-    y = {
-        (t, u, v): pulp.LpVariable(f"y_t{t}_e{u}_{v}", cat="Binary")
-        for t in range(T)
-        for (u, v) in undirected
-    }
-
-    # At most one swap per time step
-    for t in range(T):
-        prob += (
-            pulp.lpSum(y[(t, u, v)] for (u, v) in undirected) <= 1,
-            f"one_swap_per_time_t{t}",
-        )
-
-    # Flow constraints for token movement
-    for t in range(T):
-        for u in nodes:
-            for q in tokens:
-                outbound = pulp.lpSum(
-                    m[(t, u, v, q)] for v in neighbors[u]
-                )
-                inbound = pulp.lpSum(
-                    m[(t, v, u, q)] for v in neighbors[u]
-                )
-                prob += (
-                    x[(t, u, q)] == x[(t + 1, u, q)] + outbound - inbound,
-                    f"flow_t{t}_u{u}_q{q}",
-                )
-
-    # Link moves to selected swap edge and enforce swap semantics
-    for t in range(T):
-        for (u, v) in undirected:
-            # Only allow moves along (u,v) at time t if this edge is selected
-            for q in tokens:
-                prob += m[(t, u, v, q)] <= y[(t, u, v)], f"link_m_y_t{t}_{u}_{v}_q{q}_uv"
-                prob += m[(t, v, u, q)] <= y[(t, u, v)], f"link_m_y_t{t}_{u}_{v}_q{q}_vu"
-
-            # If edge selected, exactly one token moves each direction (a swap)
-            prob += (
-                pulp.lpSum(m[(t, u, v, q)] for q in tokens) == y[(t, u, v)],
-                f"one_token_uv_t{t}_{u}_{v}",
-            )
-            prob += (
-                pulp.lpSum(m[(t, v, u, q)] for q in tokens) == y[(t, u, v)],
-                f"one_token_vu_t{t}_{u}_{v}",
-            )
-
-    # Objective: minimize number of swaps (sum of y)
-    total_swaps = pulp.lpSum(y.values())
-    total_moves = pulp.lpSum(m.values())  # optional, for reporting
-    prob += total_swaps
-
-    # Choose solver
-    if use_gurobi:
-        try:
-            solver = pulp.GUROBI(msg=False, manageEnv=True, Threads=1)
-        except Exception:
-            # Fallback if GUROBI not properly installed with PuLP wrapper
-            solver = pulp.PULP_CBC_CMD(msg=False)
-    else:
-        solver = pulp.PULP_CBC_CMD(msg=False)
-
-    prob.solve(solver)
-
-    status = pulp.LpStatus[prob.status]
-    if status != "Optimal":
-        raise RuntimeError(f"Solver did not find optimal solution, status = {status}")
-
-    # Extract move/swap counts
-    moves_value = int(pulp.value(total_moves))
-    swap_value = int(pulp.value(total_swaps))
-
-    # Build per-time-step SWAP schedule:
-    # For each t, look at directed moves and turn them into undirected edges.
-    swap_layers = []
-    for t in range(T):
-        layer = []
-        for (u, v) in undirected:
-            if int(pulp.value(y[(t, u, v)])) == 1:
-                layer.append((u, v))
-        # At most one edge per layer by construction
-        if layer: swap_layers.append(layer)
-
-    return {
-        "swap_count": swap_value,
-        "moves": moves_value,
-        "layers": swap_layers,
-        "status": status,
-    }
-
-def apply_swaps(perm, layers):
-    """
-    Apply a sequence of SWAP layers to a permutation.
-
-    perm: initial permutation (list)
-    layers: list of SWAP layers, each layer is a list of edges (u,v)
-
-    Returns the resulting permutation after applying all SWAPs.
-    """
-    current_perm = perm[:]
-    for layer in layers:
-        for (u, v) in layer:
-            # Swap tokens at positions u and v
-            current_perm[u], current_perm[v] = current_perm[v], current_perm[u]
-    return current_perm
-
-def find_constrained_swaps_ILP(pi_A, pi_B_dict, dist_matrix, use_gurobi=True):
-    """
-    Find SWAP sequence to route subset of virtual qubits to targets using ILP.
-    
-    Args:
-        pi_A: List [P0, P1, ...] where pi_A[q] = P (virtual q at physical P)
-        pi_B_dict: Dict {q: P} specifying only qubits that need routing
-        dist_matrix: Pre-computed distance matrix dist[i][j] between physical qubits
-    
-    Returns:
-        swaps: List of (i, j) SWAP operations on adjacent physical qubits
-        final_permutation: List showing final virtual→physical mapping
-    """
-    n = len(pi_A)
-    
-    # Build edges from distance matrix (adjacent = distance 1)
-    edges = []
-    for i in range(n):
-        for j in range(i + 1, n):
-            if dist_matrix[i][j] == 1:
-                edges.append((i, j))
-    
-    # === Step 1: Complete eta (target permutation) ===
-    # eta[q] = target physical position for virtual qubit q
-    assigned_physical = set(pi_B_dict.values())
-    unassigned_logical = [q for q in range(n) if q not in pi_B_dict]
-    available_physical = set(P for P in range(n) if P not in assigned_physical)
-    
-    eta = dict(pi_B_dict)  # Start with required assignments
-    
-    # Try to keep unassigned qubits in place if their position is available
-    still_unassigned = []
-    for q in unassigned_logical:
-        current_P = pi_A[q]
-        if current_P in available_physical:
-            eta[q] = current_P
-            available_physical.remove(current_P)
-        else:
-            still_unassigned.append(q)
-    
-    # Assign remaining qubits to remaining positions
-    remaining_physical = sorted(available_physical)
-    for q, P in zip(still_unassigned, remaining_physical):
-        eta[q] = P
-    
-    # Convert to list
-    eta_list = [eta[q] for q in range(n)]
-    
-    # === Step 2: Compute inverse permutations ===
-    # pi_A_inv[P] = q means physical P has virtual q
-    pi_A_inv = [0] * n
-    for q in range(n):
-        pi_A_inv[pi_A[q]] = q
-    
-    # eta_inv[P] = q means we want physical P to have virtual q
-    eta_inv = [0] * n
-    for q in range(n):
-        eta_inv[eta_list[q]] = q
-    
-    # === Step 3: Construct perm for solve_min_swaps ===
-    # To route from state A to state B using swaps S where S(identity) = perm:
-    # We need: A[perm[P]] = B[P], so perm[P] = A^{-1}[B[P]]
-    # Here: A = pi_A_inv, B = eta_inv, A^{-1} = pi_A
-    # So: perm[P] = pi_A[eta_inv[P]]
-    perm = [pi_A[eta_inv[P]] for P in range(n)]
-    
-    # Check if already at target (perm is identity)
-    if perm == list(range(n)):
-        return [], eta_list
-    
-    # === Step 4: Solve using ILP ===
-    result = solve_min_swaps(perm, edges, use_gurobi=use_gurobi)
-    
-    if result['status'] != 'Optimal':
-        return None, None
-    
-    # Extract swaps from layers (flatten)
-    swaps = []
-    for layer in result['layers']:
-        for swap in layer:
-            swaps.append(swap)
-    
-    # === Step 5: Compute final permutation ===
-    # Apply swaps to pi_A to get final virtual→physical mapping
-    # Maintain both directions for O(1) swap operations
-    final_perm = list(pi_A)
-    phys_to_virt = list(pi_A_inv)
-    
-    for (i, j) in swaps:
-        # Get virtual qubits at physical positions i and j
-        q_i = phys_to_virt[i]
-        q_j = phys_to_virt[j]
-        
-        # Swap their physical positions
-        final_perm[q_i] = j
-        final_perm[q_j] = i
-        phys_to_virt[i] = q_j
-        phys_to_virt[j] = q_i
-    
-    return swaps, final_perm
-
-def find_constrained_swaps_A_star(pi_A, pi_B_dict, dist_matrix,lookahead_gates=None):
+def find_constrained_swaps_A_star(pi_A, pi_B_dict, dist_matrix):
     """
     Find SWAP sequence to route subset of virtual qubits to targets.
     
@@ -359,21 +79,7 @@ def find_constrained_swaps_A_star(pi_A, pi_B_dict, dist_matrix,lookahead_gates=N
             total += float(distance)
         return math.floor(total / 2)  # Optimistic: each SWAP helps 2 qubits
     
-    def heuristic_with_lookahead(state):
-        base_cost = heuristic(state)
-        
-        if lookahead_gates:
-            # Add penalty for gates that would require swaps
-            for q1, q2 in lookahead_gates[:5]:  # Look at next 5 gates
-                p1 = state[q1]
-                p2 = state[q2]
-                if dist_matrix[p1][p2] > 1:
-                    base_cost += dist_matrix[p1][p2] - 1
-        
-        return base_cost
-    
-    # Use this heuristic in A*
-    heap = [(heuristic_with_lookahead(start_state), 0, start_state, [])]
+    heap = [(heuristic(start_state), 0, start_state, [])]
     visited = {start_state: 0}
     
     while heap:
@@ -407,8 +113,8 @@ def find_constrained_swaps_A_star(pi_A, pi_B_dict, dist_matrix,lookahead_gates=N
     
     return None, None  # No solution found
 
-def find_constrained_swaps_partial(pi_A, pi_B_dict, dist_matrix,lookahead_gates=None):
-    return find_constrained_swaps_A_star(pi_A,pi_B_dict,dist_matrix,lookahead_gates)
+def find_constrained_swaps_partial(pi_A, pi_B_dict, dist_matrix):
+    return find_constrained_swaps_A_star(pi_A, pi_B_dict, dist_matrix)
 
 def calculate_swaps_quick(P_i, qbit_map, node_mapping, pi, D, swap_cache=None):
     P_i_inv = [P_i.index(i) for i in range(len(P_i))]  # Compute inverse
@@ -704,7 +410,7 @@ class PartitionCandidate:
         # {Q*:Q}
         self.node_mapping = get_node_mapping(mini_topology, topology)
 
-    def transform_pi(self, pi, D, swap_cache=None, lookahead_gates=None):
+    def transform_pi(self, pi, D, swap_cache=None):
         # Fixed: Use P_i^{-1} instead of P_i for input routing
         # The synthesized circuit S implements: add_Permutation(P_i) -> Original -> add_Permutation(P_o)
         # For Original to see logical qubit q* at partition position q*, we need:
@@ -726,10 +432,10 @@ class PartitionCandidate:
             if cache_key in swap_cache:
                 swaps, pi_init = swap_cache[cache_key]
             else:
-                swaps, pi_init = find_constrained_swaps_partial(pi_list, qbit_map_input, D, lookahead_gates)
+                swaps, pi_init = find_constrained_swaps_partial(pi_list, qbit_map_input, D)
                 swap_cache[cache_key] = (swaps, pi_init)
         else:
-            swaps, pi_init = find_constrained_swaps_partial(pi_list, qbit_map_input, D, lookahead_gates)
+            swaps, pi_init = find_constrained_swaps_partial(pi_list, qbit_map_input, D)
         
         pi_output = pi_init.copy()
         # Fixed: P_o should be indexed by partition virtual index q*, not physical index Q*
@@ -786,3 +492,58 @@ def construct_swap_circuit(swap_order, N):
         swap_circ.add_CNOT(swap[1],swap[0])
         swap_circ.add_CNOT(swap[0],swap[1])
     return swap_circ
+
+def group_into_two_qubit_blocks(circuit: Circuit) -> Circuit:
+    """
+    Takes a flat circuit and returns an equivalent circuit whose top-level
+    elements are all 2-qubit Circuit blocks, each containing exactly one
+    2-qubit gate.
+
+    Single-qubit gates are buffered and flushed into the next 2-qubit block
+    on that qubit. Trailing single-qubit gates (after the last 2-qubit gate
+    on a qubit) are appended to the last block that involved that qubit.
+
+    Assumes the circuit contains only 1- and 2-qubit gates.
+
+    Args:
+        circuit: Flat input circuit with individual gates
+
+    Returns:
+        Circuit: Equivalent circuit whose top-level elements are all 2-qubit blocks
+    """
+    N = circuit.get_Qbit_Num()
+
+    pending = defaultdict(list)  # pending[q] = single-qubit gates waiting for next block on q
+    blocks = []                  # accumulated Circuit block objects
+    last_block_for_qubit = {}    # last_block_for_qubit[q] = index into blocks
+
+    for gate in circuit.get_Gates():
+        qubits = gate.get_Involved_Qbits()
+        if len(qubits) == 1:
+            pending[qubits[0]].append(gate)
+        else:  # 2-qubit gate
+            q0, q1 = qubits[0], qubits[1]
+            block = Circuit(N)
+            for g in pending[q0]:
+                block.add_Gate(g)
+            for g in pending[q1]:
+                block.add_Gate(g)
+            pending[q0].clear()
+            pending[q1].clear()
+            block.add_Gate(gate)
+            idx = len(blocks)
+            blocks.append(block)
+            last_block_for_qubit[q0] = idx
+            last_block_for_qubit[q1] = idx
+
+    # Append trailing single-qubit gates to the last block that touched that qubit
+    for q, gates_list in pending.items():
+        if gates_list and q in last_block_for_qubit:
+            block = blocks[last_block_for_qubit[q]]
+            for g in gates_list:
+                block.add_Gate(g)
+
+    result = Circuit(N)
+    for block in blocks:
+        result.add_Circuit(block)
+    return result

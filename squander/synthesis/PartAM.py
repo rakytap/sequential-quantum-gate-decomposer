@@ -88,7 +88,7 @@ def _score_candidate_worker(payload):
         or _WORKER_DISTANCE_MATRIX is None
     ):
         raise RuntimeError("Scoring worker not initialized with shared data.")
-    partition_candidate, F_snapshot, pi_snapshot, lookahead_gates = payload
+    partition_candidate, F_snapshot, pi_snapshot = payload
     return qgd_Partition_Aware_Mapping.score_partition_candidate(
         partition_candidate,
         F_snapshot,
@@ -97,7 +97,6 @@ def _score_candidate_worker(payload):
         _WORKER_S_DAG,
         _WORKER_DISTANCE_MATRIX,
         _WORKER_SWAP_CACHE,
-        lookahead_gates
     )
 
 
@@ -430,7 +429,7 @@ class qgd_Partition_Aware_Mapping:
         resolved_partitions = [False] * len(DAG)
         partition_order = []
         step = 0
-        for partition_idx in F:
+        for partition_idx in list(F):
             if isinstance(optimized_partitions[partition_idx], SingleQubitPartitionResult):
                 F.remove(partition_idx)
                 single_qubit_part = optimized_partitions[partition_idx]
@@ -439,7 +438,7 @@ class qgd_Partition_Aware_Mapping:
                 partition_order.append(single_qubit_part)
 
                 resolved_partitions[partition_idx] = True
-                children = DAG[partition_idx]
+                children = list(DAG[partition_idx])
                 while len(children) !=0:
                     child = children.pop(0)
                     parents_resolved = True
@@ -474,7 +473,6 @@ class qgd_Partition_Aware_Mapping:
 
         try:
             while len(F) != 0:
-                lookahead_gates = None
                 partition_candidates = self.obtain_partition_candidates(F,optimized_partitions)
                 if len(partition_candidates) == 0:
                     break
@@ -482,7 +480,7 @@ class qgd_Partition_Aware_Mapping:
                 if executor is not None:
                     pi_snapshot = tuple(int(x) for x in pi)
                     payloads = [
-                        (partition_candidate, F_snapshot, pi_snapshot, lookahead_gates)
+                        (partition_candidate, F_snapshot, pi_snapshot)
                         for partition_candidate in partition_candidates
                     ]
                     scores = list(executor.map(_score_candidate_worker, payloads))
@@ -496,7 +494,6 @@ class qgd_Partition_Aware_Mapping:
                             sDAG,
                             D,
                             self._swap_cache,
-                            lookahead_gates
                         )
                         for partition_candidate in partition_candidates
                     ]
@@ -515,7 +512,7 @@ class qgd_Partition_Aware_Mapping:
                 
                 
                 partition_order.append(min_partition_candidate)
-                children = DAG[min_partition_candidate.partition_idx]
+                children = list(DAG[min_partition_candidate.partition_idx])
                 step += 1
                 while len(children) != 0:
                     child = children.pop(0)
@@ -578,14 +575,14 @@ class qgd_Partition_Aware_Mapping:
     # ------------------------------------------------------------------------
 
     @staticmethod
-    def score_partition_candidate(partition_candidate, F,  pi, scoring_partitions, sDAG, D, swap_cache, lookahead_gates=None):
+    def score_partition_candidate(partition_candidate, F,  pi, scoring_partitions, sDAG, D, swap_cache):
         score_F = 0
         score_E = 0
         E_partitions = set()  # Changed to set for O(1) membership checks
         E_partitions_1 = set()
         E_partitions_2 = set()
         swap_weight = 4
-        swaps, output_perm = partition_candidate.transform_pi(pi, D, swap_cache, lookahead_gates)
+        swaps, output_perm = partition_candidate.transform_pi(pi, D, swap_cache)
         score_F += swap_weight*len(swaps)*3
         score_F += len(partition_candidate.circuit_structure)
 
