@@ -126,6 +126,7 @@ class qgd_Partition_Aware_Mapping:
         self.config.setdefault('optimizer', 'BFGS')
         self.config.setdefault('hs_score_workers', os.cpu_count() or 1)
         self.config.setdefault('window_size', 0)  # 0 = full circuit (backward compat)
+        self.config.setdefault('use_osr',0)
         strategy = self.config['strategy']
         allowed_strategies = ['TreeSearch', 'TabuSearch', 'Adaptive']
         if not strategy in allowed_strategies:

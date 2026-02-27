@@ -104,7 +104,7 @@ if __name__ == '__main__':
         'max_partition_size': 3,
         'progressbar': True,
         'topology': topology,
-        'window_size': 3,
+        'window_size': 5,
     }
 
     start_time = time.time()
