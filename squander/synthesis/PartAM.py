@@ -257,11 +257,14 @@ class qgd_Partition_Aware_Mapping:
         return scoring_partitions
 
     @staticmethod
-    def _group_circuit_with_params(circuit, parameters):
+    def _group_circuit_for_levels(circuit):
         """
-        Group a flat circuit into 2-qubit blocks and reorder parameters to match.
-        Replicates the gate ordering logic of group_into_two_qubit_blocks to build
-        a parameter array consistent with the grouped circuit's parameter space.
+        Group a flat circuit into 2-qubit blocks for coarser DAG level generation.
+
+        Returns:
+            grouped_circ: Circuit with 2-qubit blocks as top-level elements
+            block_gate_orders: List of lists mapping each block index to the
+                               original flat gate indices it contains
         """
         gates = circuit.get_Gates()
 
@@ -294,22 +297,9 @@ class qgd_Partition_Aware_Mapping:
                 # Qubit only has single-qubit gates — standalone block
                 block_gate_orders.append(list(gate_indices))
 
-        # Build parameter reordering from original gate indices
-        param_indices = []
-        for block_order in block_gate_orders:
-            for g_idx in block_order:
-                gate = gates[g_idx]
-                start = gate.get_Parameter_Start_Index()
-                num = gate.get_Parameter_Num()
-                param_indices.extend(range(start, start + num))
-
         grouped_circ = group_into_two_qubit_blocks(circuit)
-        if param_indices:
-            grouped_params = parameters[np.array(param_indices)]
-        else:
-            grouped_params = np.array([])
 
-        return grouped_circ, grouped_params
+        return grouped_circ, block_gate_orders
 
     # ------------------------------------------------------------------------
     # Partition Decomposition Methods
@@ -399,13 +389,13 @@ class qgd_Partition_Aware_Mapping:
     # Circuit Synthesis
     # ------------------------------------------------------------------------
 
-    def SynthesizeWideCircuit(self, circ, orig_parameters, pi_init=None, E=None, DAG_start=0, DAG_end=0):
+    def SynthesizeWideCircuit(self, circ, orig_parameters, pi_init=None, E=None,
+                              DAG_start=0, DAG_end=0, window_gate_indices=None):
         """
-        Partition and synthesize a circuit, optionally restricted to a window
-        of K DAG levels.
+        Partition and synthesize a circuit, optionally restricted to a window.
 
         Args:
-            circ: The full quantum circuit
+            circ: The full quantum circuit (must be flat — no subcircuit blocks)
             orig_parameters: Parameters for circ
             pi_init: Current qubit permutation (logical->physical). When provided,
                      enables routing-aware ILP scoring.
@@ -413,6 +403,8 @@ class qgd_Partition_Aware_Mapping:
                when None and a window is active.
             DAG_start: First DAG level to process (inclusive)
             DAG_end: Last DAG level to process (exclusive). 0 means all levels.
+            window_gate_indices: Optional list of gate indices (into circ) to
+                process. When provided, overrides DAG_start/DAG_end.
 
         Returns:
             optimized_partitions: List of PartitionSynthesisResult / SingleQubitPartitionResult
@@ -420,33 +412,38 @@ class qgd_Partition_Aware_Mapping:
         # ---- Phase 0: Window extraction ----
         all_gates = circ.get_Gates()
         qbit_num = circ.get_Qbit_Num()
-        levels = self.generate_DAG_levels(circ)
-        total_levels = len(levels)
 
-        # Backward compatibility: DAG_start=0, DAG_end=0 means all levels
-        if DAG_start == 0 and DAG_end == 0:
-            effective_end = total_levels
+        if window_gate_indices is not None:
+            # Window specified by explicit gate indices
+            window_topo_order = list(window_gate_indices)
+            window_gate_set = set(window_topo_order)
+            full_circuit_mode = (len(window_gate_set) == len(all_gates))
+            has_gates_beyond_window = len(window_gate_set) < len(all_gates)
         else:
-            effective_end = min(DAG_end, total_levels)
-        effective_start = DAG_start
+            # Window specified by DAG level range
+            levels = self.generate_DAG_levels(circ)
+            total_levels = len(levels)
 
-        # Guard: empty window
-        if effective_start >= total_levels or effective_start >= effective_end:
-            self._last_synthesis_metadata = {
-                'E': E if E is not None else [],
-                'levels_processed': (effective_start, effective_end),
-                'total_levels': total_levels,
-            }
-            return []
+            if DAG_start == 0 and DAG_end == 0:
+                effective_end = total_levels
+            else:
+                effective_end = min(DAG_end, total_levels)
+            effective_start = DAG_start
 
-        # Collect window gate indices in topological order (level by level)
-        window_topo_order = []
-        for level_idx in range(effective_start, effective_end):
-            window_topo_order.extend(levels[level_idx])
-        window_gate_set = set(window_topo_order)
+            if effective_start >= total_levels or effective_start >= effective_end:
+                self._last_synthesis_metadata = {
+                    'E': E if E is not None else [],
+                    'window_gates': 0,
+                    'total_gates': len(all_gates),
+                }
+                return []
 
-        # Determine if we're processing the full circuit
-        full_circuit_mode = (len(window_gate_set) == len(all_gates))
+            window_topo_order = []
+            for level_idx in range(effective_start, effective_end):
+                window_topo_order.extend(levels[level_idx])
+            window_gate_set = set(window_topo_order)
+            full_circuit_mode = (len(window_gate_set) == len(all_gates))
+            has_gates_beyond_window = effective_end < total_levels
 
         if full_circuit_mode:
             working_circ = circ
@@ -468,7 +465,7 @@ class qgd_Partition_Aware_Mapping:
                 working_parameters = np.array([])
 
         # ---- Phase 0b: Identify virtual outgoing gates (E) ----
-        if E is None and not full_circuit_mode and effective_end < total_levels:
+        if E is None and not full_circuit_mode and has_gates_beyond_window:
             E = []
             for orig_idx in window_topo_order:
                 gate = all_gates[orig_idx]
@@ -490,12 +487,9 @@ class qgd_Partition_Aware_Mapping:
             D = None
 
         # ---- Phase 1: Partition enumeration ----
-        # Flatten the circuit so get_all_partitions sees individual gates
-        # (not Circuit blocks from group_into_two_qubit_blocks)
-        flat_circ = working_circ.get_Flat_Circuit()
-        allparts, g, go, rgo, single_qubit_chains, gate_to_qubit, gate_to_tqubit = get_all_partitions(flat_circ, self.config["max_partition_size"])
-        qbit_num_orig_circuit = flat_circ.get_Qbit_Num()
-        gate_dict = {i: gate for i, gate in enumerate(flat_circ.get_Gates())}
+        allparts, g, go, rgo, single_qubit_chains, gate_to_qubit, gate_to_tqubit = get_all_partitions(working_circ, self.config["max_partition_size"])
+        qbit_num_orig_circuit = working_circ.get_Qbit_Num()
+        gate_dict = {i: gate for i, gate in enumerate(working_circ.get_Gates())}
         single_qubit_chains_pre = {x[0]: x for x in single_qubit_chains if rgo[x[0]]}
         single_qubit_chains_post = {x[-1]: x for x in single_qubit_chains if go[x[-1]]}
         single_qubit_chains_prepost = {x[0]: x for x in single_qubit_chains if x[0] in single_qubit_chains_pre and x[-1] in single_qubit_chains_post}
@@ -555,10 +549,10 @@ class qgd_Partition_Aware_Mapping:
 
         L_parts, fusion_info = ilp_global_optimal(allparts, g, weights=weights)
         parts = recombine_single_qubit_chains(go, rgo, single_qubit_chains, gate_to_tqubit, [allparts[i] for i in L_parts], fusion_info)
-        L = topo_sort_partitions(flat_circ, self.config["max_partition_size"], parts)
+        L = topo_sort_partitions(working_circ, self.config["max_partition_size"], parts)
         from squander.partitioning.kahn import kahn_partition_preparts
         from squander.partitioning.tools import translate_param_order
-        partitioned_circuit, param_order, _ = kahn_partition_preparts(flat_circ, self.config["max_partition_size"], [parts[i] for i in L])
+        partitioned_circuit, param_order, _ = kahn_partition_preparts(working_circ, self.config["max_partition_size"], [parts[i] for i in L])
         parameters = translate_param_order(working_parameters, param_order)
 
         # ---- Phase 4: Stage 2 synthesis (Full) ----
@@ -587,8 +581,8 @@ class qgd_Partition_Aware_Mapping:
         # ---- Phase 5: Store metadata and return ----
         self._last_synthesis_metadata = {
             'E': E,
-            'levels_processed': (effective_start, effective_end),
-            'total_levels': total_levels,
+            'window_gates': len(window_gate_set),
+            'total_gates': len(all_gates),
         }
 
         return optimized_partitions
@@ -600,20 +594,22 @@ class qgd_Partition_Aware_Mapping:
     def Partition_Aware_Mapping(self, circ: Circuit, orig_parameters: np.ndarray):
         N = circ.get_Qbit_Num()
 
-        # Pre-process: group into 2-qubit blocks (skip if no 2-qubit gates)
+        # Pre-process: group circuit for coarser DAG levels (window boundaries)
         has_2q_gates = any(len(g.get_Involved_Qbits()) >= 2 for g in circ.get_Gates())
         if has_2q_gates:
-            grouped_circ, grouped_params = self._group_circuit_with_params(circ, orig_parameters)
+            grouped_circ, block_gate_orders = self._group_circuit_for_levels(circ)
         else:
-            grouped_circ, grouped_params = circ, orig_parameters
+            grouped_circ = circ
+            block_gate_orders = None
 
         window_size = self.config.get('window_size', 0)
-        levels = self.generate_DAG_levels(grouped_circ)
-        total_levels = len(levels)
+        grouped_levels = self.generate_DAG_levels(grouped_circ)
+        total_levels = len(grouped_levels)
 
         # ---- Full-circuit path (backward compat) ----
         if window_size <= 0 or window_size >= total_levels:
-            optimized_partitions = self.SynthesizeWideCircuit(grouped_circ, grouped_params)
+            # Pass the original flat circuit — no grouping needed for full circuit
+            optimized_partitions = self.SynthesizeWideCircuit(circ, orig_parameters)
 
             for partition in optimized_partitions:
                 if isinstance(partition, PartitionSynthesisResult):
@@ -645,10 +641,19 @@ class qgd_Partition_Aware_Mapping:
         for window_start in range(0, total_levels, window_size):
             window_end = min(window_start + window_size, total_levels)
 
-            # a. Synthesize this window
+            # Expand grouped block indices to flat gate indices
+            window_gate_indices = []
+            for level_idx in range(window_start, window_end):
+                for block_idx in grouped_levels[level_idx]:
+                    if block_gate_orders is not None:
+                        window_gate_indices.extend(block_gate_orders[block_idx])
+                    else:
+                        window_gate_indices.append(block_idx)
+
+            # a. Synthesize this window (pass original flat circuit)
             window_partitions = self.SynthesizeWideCircuit(
-                grouped_circ, grouped_params,
-                pi_init=pi, DAG_start=window_start, DAG_end=window_end
+                circ, orig_parameters,
+                pi_init=pi, window_gate_indices=window_gate_indices
             )
 
             # Skip empty windows
