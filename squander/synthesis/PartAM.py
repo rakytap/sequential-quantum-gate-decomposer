@@ -140,20 +140,22 @@ class qgd_Partition_Aware_Mapping:
     # Scoring Methods
     # ------------------------------------------------------------------------
 
-    def compute_routing_aware_weight(self, result, pi_init, D, E):
+    def compute_routing_aware_weight(self, result, pi_init, D, E, dag_position=0.5):
         """
         Compute a routing-aware ILP weight for a partition synthesis result.
 
-        Combines three components:
-        1. Base synthesis cost (min CNOT count across topologies)
-        2. Routing cost from pi_init (estimated SWAP overhead)
-        3. Virtual outgoing gate penalty (future routing constraints)
+        Evaluates each (topology, permutation) combination together and uses
+        DAG-position-dependent weighting:
+        - Early partitions (dag_position~0): routing cost weighted higher
+        - Late partitions (dag_position~1): E penalty weighted higher
 
         Args:
             result: PartitionSynthesisResult or SingleQubitPartitionResult
             pi_init: Current qubit layout (logical -> physical mapping)
             D: Distance matrix between physical qubits
             E: List of (q_a, q_b) tuples for virtual outgoing 2-qubit gates
+            dag_position: Float in [0, 1] indicating partition's relative
+                depth in the DAG (0 = start, 1 = end)
 
         Returns:
             float: Combined weight (lower is better)
@@ -161,27 +163,33 @@ class qgd_Partition_Aware_Mapping:
         if isinstance(result, SingleQubitPartitionResult):
             return 0
 
-        # 1. Base synthesis cost
-        base_cost = result.get_partition_synthesis_score()
+        # Position-dependent weighting
+        routing_weight = 1.0 - dag_position
+        e_weight = dag_position
 
-        # 2. Routing cost: best (minimum) across topologies
-        routing_cost = np.inf
-        for mini_topology in result.mini_topologies:
-            dist = calculate_dist_small(mini_topology, result.qubit_map, D, pi_init)
-            routing_cost = min(routing_cost, dist)
-        if np.isinf(routing_cost):
-            routing_cost = 0
-
-        # 3. Virtual outgoing gate penalty
+        # E penalty
         involved = set(result.involved_qbits)
         e_penalty = 0.0
-        for (q_a, q_b) in E:
-            if q_a in involved or q_b in involved:
-                dist = D[pi_init[q_a]][pi_init[q_b]]
-                if not np.isinf(dist):
-                    e_penalty += max(0, (dist - 1)) * 3
+        if E:
+            for (q_a, q_b) in E:
+                if q_a in involved or q_b in involved:
+                    dist = D[pi_init[q_a]][pi_init[q_b]]
+                    if not np.isinf(dist):
+                        e_penalty += max(0, (dist - 1)) * 3
 
-        return base_cost + routing_cost + 0.3 * e_penalty
+        # Evaluate each (topology, permutation) combination together
+        best_score = np.inf
+        for tdx, mini_topology in enumerate(result.mini_topologies):
+            routing_cost = calculate_dist_small(mini_topology, result.qubit_map, D, pi_init)
+            for pdx in range(len(result.cnot_counts[tdx])):
+                cnot_count = result.cnot_counts[tdx][pdx]
+                score = cnot_count + routing_weight * routing_cost
+                best_score = min(best_score, score)
+
+        if np.isinf(best_score):
+            best_score = 0
+
+        return best_score + e_weight * e_penalty
 
     # ------------------------------------------------------------------------
     # Caching Methods
@@ -541,10 +549,17 @@ class qgd_Partition_Aware_Mapping:
 
         # ---- Phase 3: ILP partition selection with routing-aware weights ----
         if pi_init is not None and D is not None:
-            weights = [
-                self.compute_routing_aware_weight(result, pi_init, D, E)
-                for result in optimized_results[:len(allparts)]
-            ]
+            gate_to_level = self.get_gate_DAG_level_map(working_circ)
+            max_level = max(gate_to_level.values()) if gate_to_level else 0
+
+            weights = []
+            for idx, result in enumerate(optimized_results[:len(allparts)]):
+                partition_gates = allparts[idx]
+                part_depth = max(gate_to_level.get(g, 0) for g in partition_gates)
+                dag_position = part_depth / max_level if max_level > 0 else 0.5
+                weights.append(
+                    self.compute_routing_aware_weight(result, pi_init, D, E, dag_position)
+                )
         else:
             weights = [result.get_partition_synthesis_score() for result in optimized_results[:len(allparts)]]
 
