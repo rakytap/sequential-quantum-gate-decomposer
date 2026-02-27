@@ -966,7 +966,7 @@ class qgd_Partition_Aware_Mapping:
                 partition_count += 1
         
         if final_parameters:
-            final_parameters = np.concatenate(final_parameters,axis=0)
+            final_parameters = np.concatenate([np.atleast_1d(p).ravel() for p in final_parameters], axis=0)
         else:
             final_parameters = np.array([])
         if not check_circuit_compatibility(final_circuit,self.topology):
