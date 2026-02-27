@@ -286,8 +286,13 @@ class qgd_Partition_Aware_Mapping:
 
         # Trailing single-qubit gates
         for q, gate_indices in pending.items():
-            if gate_indices and q in last_block_for_qubit:
+            if not gate_indices:
+                continue
+            if q in last_block_for_qubit:
                 block_gate_orders[last_block_for_qubit[q]].extend(gate_indices)
+            else:
+                # Qubit only has single-qubit gates — standalone block
+                block_gate_orders.append(list(gate_indices))
 
         # Build parameter reordering from original gate indices
         param_indices = []
@@ -485,9 +490,12 @@ class qgd_Partition_Aware_Mapping:
             D = None
 
         # ---- Phase 1: Partition enumeration ----
-        allparts, g, go, rgo, single_qubit_chains, gate_to_qubit, gate_to_tqubit = get_all_partitions(working_circ, self.config["max_partition_size"])
-        qbit_num_orig_circuit = working_circ.get_Qbit_Num()
-        gate_dict = {i: gate for i, gate in enumerate(working_circ.get_Gates())}
+        # Flatten the circuit so get_all_partitions sees individual gates
+        # (not Circuit blocks from group_into_two_qubit_blocks)
+        flat_circ = working_circ.get_Flat_Circuit()
+        allparts, g, go, rgo, single_qubit_chains, gate_to_qubit, gate_to_tqubit = get_all_partitions(flat_circ, self.config["max_partition_size"])
+        qbit_num_orig_circuit = flat_circ.get_Qbit_Num()
+        gate_dict = {i: gate for i, gate in enumerate(flat_circ.get_Gates())}
         single_qubit_chains_pre = {x[0]: x for x in single_qubit_chains if rgo[x[0]]}
         single_qubit_chains_post = {x[-1]: x for x in single_qubit_chains if go[x[-1]]}
         single_qubit_chains_prepost = {x[0]: x for x in single_qubit_chains if x[0] in single_qubit_chains_pre and x[-1] in single_qubit_chains_post}
@@ -547,10 +555,10 @@ class qgd_Partition_Aware_Mapping:
 
         L_parts, fusion_info = ilp_global_optimal(allparts, g, weights=weights)
         parts = recombine_single_qubit_chains(go, rgo, single_qubit_chains, gate_to_tqubit, [allparts[i] for i in L_parts], fusion_info)
-        L = topo_sort_partitions(working_circ, self.config["max_partition_size"], parts)
+        L = topo_sort_partitions(flat_circ, self.config["max_partition_size"], parts)
         from squander.partitioning.kahn import kahn_partition_preparts
         from squander.partitioning.tools import translate_param_order
-        partitioned_circuit, param_order, _ = kahn_partition_preparts(working_circ, self.config["max_partition_size"], [parts[i] for i in L])
+        partitioned_circuit, param_order, _ = kahn_partition_preparts(flat_circ, self.config["max_partition_size"], [parts[i] for i in L])
         parameters = translate_param_order(working_parameters, param_order)
 
         # ---- Phase 4: Stage 2 synthesis (Full) ----

@@ -538,10 +538,18 @@ def group_into_two_qubit_blocks(circuit: Circuit) -> Circuit:
 
     # Append trailing single-qubit gates to the last block that touched that qubit
     for q, gates_list in pending.items():
-        if gates_list and q in last_block_for_qubit:
+        if not gates_list:
+            continue
+        if q in last_block_for_qubit:
             block = blocks[last_block_for_qubit[q]]
             for g in gates_list:
                 block.add_Gate(g)
+        else:
+            # Qubit only has single-qubit gates — create a standalone block
+            block = Circuit(N)
+            for g in gates_list:
+                block.add_Gate(g)
+            blocks.append(block)
 
     result = Circuit(N)
     for block in blocks:
