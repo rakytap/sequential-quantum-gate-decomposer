@@ -78,6 +78,14 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
         # call the constructor of the wrapper class
         super().__init__(qbit_num)
 
+    def copy(self):
+        """
+        Create a deep copy of the circuit.
+        @return A new qgd_Circuit instance with all gates copied.
+        """
+        # Call the C wrapper function that uses the clone() method
+        return super().copy()
+
     def add_U1(self, target_qbit):
         """Add a U1 gate to the front of the gate structure.
 

@@ -1929,6 +1929,62 @@ qgd_Circuit_Wrapper_get_Flat_Circuit( qgd_Circuit_Wrapper *self ) {
 
 
 /**
+@brief Wrapper function to create a deep copy of the circuit.
+@param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper.
+@return Returns a new qgd_Circuit Python object that is a deep copy.
+*/
+static PyObject *
+qgd_Circuit_Wrapper_copy( qgd_Circuit_Wrapper *self ) {
+
+    Gates_block* copied_circuit = NULL;
+
+    try {
+        copied_circuit = self->circuit->clone();
+    }
+    catch (std::string err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        std::cout << err << std::endl;
+        return NULL;
+    }
+    catch(...) {
+        std::string err( "Invalid pointer to circuit class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+    int qbit_num = copied_circuit->get_qbit_num();
+
+    // import gate operation modules
+    PyObject* qgd_circuit  = PyImport_ImportModule("squander.gates.qgd_Circuit");
+
+    if ( qgd_circuit == NULL ) {
+        PyErr_SetString(PyExc_Exception, "Module import error: squander.gates.qgd_Circuit" );
+        delete copied_circuit;
+        return NULL;
+    }
+
+    PyObject* qgd_circuit_Dict  = PyModule_GetDict( qgd_circuit );
+
+    // PyDict_GetItemString creates a borrowed reference to the item in the dict. Reference counting is not increased on this element, dont need to decrease the reference counting at the end
+    PyObject* py_circuit_class = PyDict_GetItemString( qgd_circuit_Dict, "qgd_Circuit");
+
+    PyObject* circuit_input = Py_BuildValue("(O)", Py_BuildValue("i", qbit_num) );
+    PyObject* py_circuit    = PyObject_CallObject(py_circuit_class, circuit_input);
+
+    // replace dummy data with real gate data
+    qgd_Circuit_Wrapper* py_circuit_C = reinterpret_cast<qgd_Circuit_Wrapper*>( py_circuit );
+
+    delete( py_circuit_C->circuit );
+    py_circuit_C->circuit = copied_circuit;
+
+    Py_DECREF( qgd_circuit );
+    Py_DECREF( circuit_input );
+
+    return py_circuit;
+}
+
+
+/**
 @brief Method to extract the stored quantum circuit in a human-readable data serialized and pickle-able format
 @param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper
 @return Returns a Python dictionary containing the serialized circuit state
@@ -2342,6 +2398,9 @@ static PyMethodDef qgd_Circuit_Wrapper_Methods[] = {
     },
     {"get_Children", (PyCFunction) qgd_Circuit_Wrapper_get_children, METH_VARARGS,
      "Method to get the list of child gate indices. Then the children gates can be obtained from the list of gates involved in the circuit."
+    },
+    {"copy", (PyCFunction) qgd_Circuit_Wrapper_copy, METH_NOARGS,
+     "Method to create a deep copy of the circuit."
     },
     {"__getstate__", (PyCFunction) qgd_Circuit_Wrapper_getstate, METH_NOARGS,
      "Method to extract the stored quantum circuit in a human-readable data serialized and pickle-able format."
