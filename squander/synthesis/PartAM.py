@@ -903,3 +903,63 @@ class qgd_Partition_Aware_Mapping:
             score += distance * weight
         
         return score
+    
+    def generate_DAG_levels(self, circuit):
+        """
+        Generate DAG levels - groups gates by their topological level.
+        
+        Args:
+            circuit: The quantum circuit to analyze
+            
+        Returns:
+            List of lists, where each inner list contains gate indices at the same DAG level.
+            Level 0 contains gates with no parents, level 1 contains gates whose parents
+            are all at level 0, etc.
+        """
+        gates = circuit.get_Gates()
+        num_gates = len(gates)
+        
+        # Build parent count for each gate
+        parent_counts = [0] * num_gates
+        children_map = [[] for _ in range(num_gates)]
+        
+        for gate_idx in range(num_gates):
+            gate = gates[gate_idx]
+            parents = circuit.get_Parents(gate)
+            parent_counts[gate_idx] = len(parents)
+            
+            # Build children map
+            children = circuit.get_Children(gate)
+            for child_idx in children:
+                children_map[gate_idx].append(child_idx)
+        
+        # Initialize level 0 with gates that have no parents
+        levels = []
+        current_level = []
+        processed = [False] * num_gates
+        
+        # Find gates with no parents (level 0)
+        for gate_idx in range(num_gates):
+            if parent_counts[gate_idx] == 0:
+                current_level.append(gate_idx)
+                processed[gate_idx] = True
+        
+        # Process levels using BFS
+        while current_level:
+            levels.append(current_level)
+            next_level = []
+            
+            # Process all gates in current level
+            for gate_idx in current_level:
+                # Decrement parent counts for children
+                for child_idx in children_map[gate_idx]:
+                    parent_counts[child_idx] -= 1
+                    # If all parents are processed, add to next level
+                    if parent_counts[child_idx] == 0 and not processed[child_idx]:
+                        next_level.append(child_idx)
+                        processed[child_idx] = True
+            
+            current_level = next_level
+        
+        return levels
+    
