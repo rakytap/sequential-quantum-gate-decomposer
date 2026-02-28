@@ -56,9 +56,9 @@ def validate_result(circ_orig, parameters_orig, circ, params, input_perm, output
 
 if __name__ == '__main__':
 
-    filename = "benchmarks/qfast/5q/vqe.qasm"
+    filename = "bv_n14.qasm"
     circ_orig, parameters_orig = utils.qasm_to_squander_circuit(filename)
-    topology = [(0, 1), (0, 2), (0, 3), (0, 4)]
+    topology = [(0, 1), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6), (6, 7), (7, 8), (8, 9), (9, 10), (10, 11), (11, 12),(12, 13)]
 
     # ================================================================
     # Full-circuit mode (default, window_size=0)
@@ -71,7 +71,7 @@ if __name__ == '__main__':
         'strategy': "TreeSearch",
         'test_subcircuits': True,
         'test_final_circuit': True,
-        'max_partition_size': 3,
+        'max_partition_size': 4,
         'progressbar': True,
         'topology': topology,
     }
@@ -101,10 +101,10 @@ if __name__ == '__main__':
         'strategy': "TreeSearch",
         'test_subcircuits': True,
         'test_final_circuit': True,
-        'max_partition_size': 3,
+        'max_partition_size': 4,
         'progressbar': True,
         'topology': topology,
-        'window_size': 5,
+        'window_size': 7,
     }
 
     start_time = time.time()
@@ -131,5 +131,6 @@ if __name__ == '__main__':
     print(f"{'Full circuit':<20} {error_full:<20.10f} {elapsed_full:<10.2f}s")
     print(f"{'Windowed (K=3)':<20} {error_win:<20.10f} {elapsed_win:<10.2f}s")
     print(f"{'='*70}\n")
+
 
 

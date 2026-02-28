@@ -33,6 +33,7 @@ from squander.synthesis.PartAM_utils import (
     get_subtopologies_of_type,
     get_unique_subtopologies,
     get_canonical_form,
+    get_node_mapping,
     SingleQubitPartitionResult,
     PartitionSynthesisResult,
     PartitionCandidate,
@@ -134,7 +135,7 @@ class qgd_Partition_Aware_Mapping:
         self.config.setdefault('bh_stepwise_factor', 0.9)
         self.config.setdefault('hs_score_workers', os.cpu_count() or 1)
         self.config.setdefault('window_size', 0)  # 0 = full circuit (backward compat)
-        self.config.setdefault('use_osr',1)
+        self.config.setdefault('use_osr',0)
         strategy = self.config['strategy']
         allowed_strategies = ['TreeSearch', 'TabuSearch', 'Adaptive']
         if not strategy in allowed_strategies:
@@ -152,11 +153,15 @@ class qgd_Partition_Aware_Mapping:
         """
         Compute a routing-aware ILP weight for a partition synthesis result.
 
-        Evaluates each (topology, permutation) combination together and uses
+        For each (topology, P_I, P_O, node_mapping) combination:
+        - Routing cost is computed using the specific P_I and node_mapping, so the
+          cost reflects where each partition qubit actually needs to go.
+        - E penalty is computed on the output layout after applying P_O, so it
+          correctly penalises layouts that leave future gates far from each other.
+
         DAG-position-dependent weighting:
         - Early partitions (dag_start~0): routing cost weighted higher
         - Late partitions (dag_end~1): E penalty weighted higher
-        - Partitions spanning the full window get both weights high
 
         Args:
             result: PartitionSynthesisResult or SingleQubitPartitionResult
@@ -173,40 +178,161 @@ class qgd_Partition_Aware_Mapping:
         if isinstance(result, SingleQubitPartitionResult):
             return 0
 
-        # Position-dependent weighting
         routing_weight = 1.0 - dag_start
         e_weight = dag_end
 
-        # E penalty
-        involved = set(result.involved_qbits)
-        e_penalty = 0.0
-        if E:
-            for (q_a, q_b) in E:
-                if q_a in involved or q_b in involved:
-                    if pi_init is not None:
-                        dist = D[pi_init[q_a]][pi_init[q_b]]
-                        if not np.isinf(dist):
-                            e_penalty += max(0, (dist - 1)) * 3
-                    else:
-                        # No layout yet — fixed penalty per touching E edge
-                        e_penalty += 3.0
+        N = len(D)
+        k = result.N
+        qbit_map_inv = {v: q for q, v in result.qubit_map.items()}  # q* → circuit qubit q
 
-        # Evaluate each (topology, permutation) combination together
         best_score = np.inf
+
         for tdx, mini_topology in enumerate(result.mini_topologies):
-            if pi_init is not None:
-                routing_cost = calculate_dist_small(mini_topology, result.qubit_map, D, pi_init)
-            else:
-                routing_cost = 0
-            for pdx in range(len(result.cnot_counts[tdx])):
+            topology_candidates = self._get_subtopologies_of_type_cached(mini_topology)
+            if not topology_candidates:
+                continue
+
+            # Precompute node_mappings (Q* → Q) once per topology candidate — independent of pdx
+            node_mappings = [get_node_mapping(mini_topology, tc) for tc in topology_candidates]
+            node_mappings = [nm for nm in node_mappings if nm]
+            if not node_mappings:
+                continue
+
+            for pdx, (P_i, P_o) in enumerate(result.permutations_pairs[tdx]):
                 cnot_count = result.cnot_counts[tdx][pdx]
-                score = cnot_count + routing_weight * routing_cost
-                best_score = min(best_score, score)
+                P_i_list = list(P_i)
+                P_o_list = list(P_o)
+                P_i_inv = [P_i_list.index(i) for i in range(k)]
+
+                for node_mapping in node_mappings:
+                    # --- Routing cost: bring each partition qubit from pi_init to its
+                    # target physical position determined by P_I and node_mapping ---
+                    routing_cost = 0
+                    if pi_init is not None:
+                        for q_star, q in qbit_map_inv.items():
+                            target_Q = node_mapping[P_i_inv[q_star]]
+                            dist = D[int(pi_init[q])][target_Q]
+                            if not np.isinf(dist):
+                                routing_cost += max(0, dist - 1) * 3
+
+                    # --- Output layout: start from pi_init then apply P_O ---
+                    if pi_init is not None:
+                        pi_out = [int(x) for x in pi_init]
+                    else:
+                        pi_out = list(range(N))
+                    for q_star in range(len(P_o_list)):
+                        if q_star in qbit_map_inv:
+                            q = qbit_map_inv[q_star]
+                            pi_out[q] = node_mapping[P_o_list[q_star]]
+
+                    # --- E penalty computed on the output layout after P_O ---
+                    e_penalty = 0.0
+                    if E:
+                        involved = set(result.involved_qbits)
+                        for (q_a, q_b) in E:
+                            if q_a in involved or q_b in involved:
+                                dist = D[pi_out[q_a]][pi_out[q_b]]
+                                if not np.isinf(dist):
+                                    e_penalty += max(0, (dist - 1)) * 3
+                                else:
+                                    e_penalty += 3.0
+
+                    score = cnot_count + routing_weight * routing_cost + e_weight * e_penalty
+                    best_score = min(best_score, score)
 
         if np.isinf(best_score):
             best_score = 0
 
-        return best_score + e_weight * e_penalty
+        return best_score
+
+    def compute_transition_cost(self, result_pred, result_succ, pi_init, D):
+        """
+        Compute the minimum transition cost between two partitions over all
+        (topology, P_o, node_mapping) configs of pred and (topology, P_i, node_mapping)
+        configs of succ.
+
+        The cost measures how far each qubit involved in succ needs to travel
+        from its position after pred's output to where succ's input requires it.
+
+        Args:
+            result_pred: PartitionSynthesisResult for the predecessor partition
+            result_succ: PartitionSynthesisResult for the successor partition
+            pi_init: Current qubit layout (logical -> physical), or None
+            D: Distance matrix between physical qubits
+
+        Returns:
+            float: Minimum transition cost (lower is better)
+        """
+        if isinstance(result_pred, SingleQubitPartitionResult) or isinstance(result_succ, SingleQubitPartitionResult):
+            return 0
+
+        N = len(D)
+        involved_pred = set(result_pred.involved_qbits)
+        involved_succ = set(result_succ.involved_qbits)
+        qmap_pred_inv = {v: k for k, v in result_pred.qubit_map.items()}  # q* -> q
+        qmap_succ_inv = {v: k for k, v in result_succ.qubit_map.items()}  # q* -> q
+        k_succ = result_succ.N
+
+        # Precompute all output positions for pred: list of dicts {q: physical_pos}
+        pred_outputs = []
+        for tdx, mini_topo in enumerate(result_pred.mini_topologies):
+            topo_candidates = self._get_subtopologies_of_type_cached(mini_topo)
+            if not topo_candidates:
+                continue
+            node_mappings = [get_node_mapping(mini_topo, tc) for tc in topo_candidates]
+            node_mappings = [nm for nm in node_mappings if nm]
+            if not node_mappings:
+                continue
+            for pdx, (_, P_o) in enumerate(result_pred.permutations_pairs[tdx]):
+                P_o_list = list(P_o)
+                for nm in node_mappings:
+                    out_pos = {}
+                    for q_star, q in qmap_pred_inv.items():
+                        out_pos[q] = nm[P_o_list[q_star]]
+                    pred_outputs.append(out_pos)
+
+        # Precompute all input target positions for succ: list of dicts {q: physical_pos}
+        succ_inputs = []
+        for tdx, mini_topo in enumerate(result_succ.mini_topologies):
+            topo_candidates = self._get_subtopologies_of_type_cached(mini_topo)
+            if not topo_candidates:
+                continue
+            node_mappings = [get_node_mapping(mini_topo, tc) for tc in topo_candidates]
+            node_mappings = [nm for nm in node_mappings if nm]
+            if not node_mappings:
+                continue
+            for pdx, (P_i, _) in enumerate(result_succ.permutations_pairs[tdx]):
+                P_i_list = list(P_i)
+                P_i_inv = [P_i_list.index(i) for i in range(k_succ)]
+                for nm in node_mappings:
+                    in_pos = {}
+                    for q_star, q in qmap_succ_inv.items():
+                        in_pos[q] = nm[P_i_inv[q_star]]
+                    succ_inputs.append(in_pos)
+
+        if not pred_outputs or not succ_inputs:
+            return 0
+
+        # Find minimum transition cost over all (pred_output, succ_input) pairs
+        best_cost = np.inf
+        for out_pos in pred_outputs:
+            for in_pos in succ_inputs:
+                cost = 0
+                for q, target in in_pos.items():
+                    if q in out_pos:
+                        current = out_pos[q]
+                    elif pi_init is not None:
+                        current = int(pi_init[q])
+                    else:
+                        current = q
+                    dist = D[current][target]
+                    if not np.isinf(dist):
+                        cost += max(0, dist - 1) * 3
+                    if cost >= best_cost:
+                        break
+                best_cost = min(best_cost, cost)
+
+        return best_cost if not np.isinf(best_cost) else 0
 
     # ------------------------------------------------------------------------
     # Caching Methods
@@ -627,7 +753,43 @@ class qgd_Partition_Aware_Mapping:
                 self.compute_routing_aware_weight(result, pi_init, D, E, dag_start, dag_end)
             )
 
-        L_parts, fusion_info = ilp_global_optimal(allparts, g, weights=weights)
+        # ---- Phase 3b: Compute inter-partition transition costs ----
+        transition_weight = self.config.setdefault('transition_weight', 1.0)
+        transition_costs = {}
+        if transition_weight > 0:
+            gate_to_part = {}
+            for idx, part in enumerate(allparts):
+                for gate in part:
+                    gate_to_part.setdefault(gate, []).append(idx)
+
+            # Build directed DAG-neighbor partition pairs (pred -> succ)
+            directed_neighbors = set()
+            for gate_u, successors in g.items():
+                for part_u in gate_to_part.get(gate_u, []):
+                    for gate_v in successors:
+                        for part_v in gate_to_part.get(gate_v, []):
+                            if part_u != part_v:
+                                directed_neighbors.add((part_u, part_v))
+
+            # Compute transition cost for each directed pair, keyed by (min, max)
+            seen_pairs = set()
+            for pred_idx, succ_idx in directed_neighbors:
+                pair_key = (min(pred_idx, succ_idx), max(pred_idx, succ_idx))
+                if pair_key in seen_pairs:
+                    continue
+                seen_pairs.add(pair_key)
+                if allparts[pred_idx] & allparts[succ_idx]:
+                    continue
+                result_pred = optimized_results[pred_idx]
+                result_succ = optimized_results[succ_idx]
+                # Compute both directions and take the minimum
+                cost_fwd = self.compute_transition_cost(result_pred, result_succ, pi_init, D)
+                cost_rev = self.compute_transition_cost(result_succ, result_pred, pi_init, D)
+                cost = min(cost_fwd, cost_rev)
+                if cost > 0:
+                    transition_costs[pair_key] = cost * transition_weight
+
+        L_parts, fusion_info = ilp_global_optimal(allparts, g, weights=weights, transition_costs=transition_costs)
         parts = recombine_single_qubit_chains(go, rgo, single_qubit_chains, gate_to_tqubit, [allparts[i] for i in L_parts], fusion_info)
         L = topo_sort_partitions(working_circ, self.config["max_partition_size"], parts)
         from squander.partitioning.kahn import kahn_partition_preparts
@@ -834,39 +996,13 @@ class qgd_Partition_Aware_Mapping:
                    bar_format='{desc}: {percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt} resolved',
                    disable=self.config.get('progressbar', 0) == False)
 
-        configured_workers = self.config.get('hs_score_workers', os.cpu_count() or 1)
-        score_workers = max(1, configured_workers if configured_workers else 1)
-        executor: Optional[ProcessPoolExecutor] = None
-        if score_workers > 1:
-            try:
-                executor = ProcessPoolExecutor(
-                    max_workers=score_workers,
-                    initializer=_init_scoring_worker,
-                    initargs=(scoring_partitions, D, virtual_E),
-                )
-            except Exception as exc:
-                logging.warning(
-                    "Falling back to sequential heuristic scoring: %s",
-                    exc,
-                )
-                executor = None
-
-        try:
-            while len(F) != 0:
+        while len(F) != 0:
                 partition_candidates = self.obtain_partition_candidates(F,optimized_partitions)
                 if len(partition_candidates) == 0:
                     break
                 F_snapshot = tuple(F)
                 use_free_routing = not first_routing_done
-                if executor is not None:
-                    pi_snapshot = tuple(int(x) for x in pi)
-                    payloads = [
-                        (partition_candidate, F_snapshot, pi_snapshot, use_free_routing)
-                        for partition_candidate in partition_candidates
-                    ]
-                    scores = list(executor.map(_score_candidate_worker, payloads))
-                else:
-                    scores = [
+                scores = [
                         self.score_partition_candidate(
                             partition_candidate,
                             F_snapshot,
@@ -927,9 +1063,6 @@ class qgd_Partition_Aware_Mapping:
                             children.extend(DAG[child])
                         else:
                             F.append(child)
-        finally:
-            if executor is not None:
-                executor.shutdown()
 
         # If no multi-qubit partition was resolved, flush buffered single-qubit parts
         if buffered_single_qubit:
@@ -980,24 +1113,29 @@ class qgd_Partition_Aware_Mapping:
     @staticmethod
     def score_partition_candidate(partition_candidate, F, pi, scoring_partitions, D, swap_cache, virtual_E=None, free_routing=False):
         score_F = 0
-        swap_weight = 4
-        swaps, output_perm = partition_candidate.transform_pi(pi, D, swap_cache)
+        swap_weight = 1
+        swaps, output_perm = partition_candidate.transform_pi(pi, D, swap_cache, free_routing=free_routing)
         if not free_routing:
             score_F += swap_weight * len(swaps) * 3
-        score_F += len(partition_candidate.circuit_structure)
+        score_F += 0.1*len(partition_candidate.circuit_structure)
 
         for partition_idx in F:
             partition = scoring_partitions[partition_idx]
             if partition is None or partition_idx == partition_candidate.partition_idx:
                 continue
+            qbit_map_inv = {v: q for q, v in partition.qubit_map.items()}  # q* → circuit qubit
             mini_scores = []
             for tdx, mini_topology in enumerate(partition.mini_topologies):
-                if not free_routing:
-                    dist_placeholder = swap_weight * 3 * calculate_dist_small(mini_topology, partition.qubit_map, D, output_perm)
-                else:
-                    dist_placeholder = 0
-                circuit_length = np.min([len(circ) for circ in partition.circuit_structures[tdx]])
-                mini_scores.append(dist_placeholder + circuit_length)
+                for pdx, (P_i, P_o) in enumerate(partition.permutations_pairs[tdx]):
+                    cnot_count = len(partition.circuit_structures[tdx][pdx])
+                    if mini_topology:
+                        routing_cost = swap_weight * 3 * sum(
+                            max(0, D[int(output_perm[qbit_map_inv[P_i[u]]])][int(output_perm[qbit_map_inv[P_i[v]]])] - 1)
+                            for u, v in mini_topology
+                        )
+                    else:
+                        routing_cost = 0
+                    mini_scores.append(routing_cost + cnot_count)
             if mini_scores:
                 score_F += np.min(mini_scores)
 
