@@ -3,116 +3,13 @@ from typing import List, Tuple, Set, FrozenSet
 from itertools import permutations, combinations
 from squander.gates.qgd_Circuit import qgd_Circuit as Circuit
 import heapq
-import math
 import logging
-import pulp
 from collections import defaultdict
 
 
 # ============================================================================
 # SWAP Routing Algorithms
 # ============================================================================
-def find_constrained_swaps_A_star(pi_A, pi_B_dict, dist_matrix):
-    """
-    Find SWAP sequence to route subset of virtual qubits to targets.
-    
-    Args:
-        pi_A: List [Q0, Q1, ...] where pi_A[q] = Q (complete initial mapping)
-        pi_B_dict: Dict {q: Q} specifying only qubits that need routing
-        dist_matrix: Pre-computed distance matrix dist[i][j] between physical qubits
-    
-    Returns:
-        swaps: List of (i, j) SWAP operations on adjacent physical qubits
-        final_permutation: List showing final virtual→physical mapping
-    """
-    n = len(pi_A)
-    
-    # Build adjacency list from distance matrix
-    adj = [set() for _ in range(n)]
-    for i in range(n):
-        for j in range(i+1, n):
-            if dist_matrix[i][j] == 1:  # Adjacent in topology
-                adj[i].add(j)
-                adj[j].add(i)
-    
-    # Use physical-to-virtual representation for easier SWAP handling
-    # state[P] = q means physical qubit P contains virtual qubit q
-    def to_phys_to_virt(virt_to_phys):
-        """Convert virtual→physical list to physical→virtual list"""
-        p2v = [0] * n
-        for q in range(n):
-            P = virt_to_phys[q]
-            p2v[P] = q
-        return p2v
-    
-    def to_virt_to_phys(phys_to_virt):
-        """Convert physical→virtual list to virtual→physical list"""
-        v2p = [0] * n
-        for P in range(n):
-            q = phys_to_virt[P]
-            v2p[q] = P
-        return v2p
-    
-    start_state = tuple(to_phys_to_virt(pi_A))
-    
-    def is_goal(state):
-        """Check if target qubits are in correct physical positions"""
-        for q, target_P in pi_B_dict.items():
-            if state[target_P] != q:  # Physical position target_P should contain virtual q
-                return False
-        return True
-
-    def heuristic(state):
-        """Lower bound: sum of distances for qubits needing routing"""
-        total = 0.0
-        for q, target_P in pi_B_dict.items():
-            # Find where virtual qubit q currently is
-            current_P = state.index(q)
-            distance = dist_matrix[current_P][target_P]
-            if np.isinf(distance):
-                logging.warning(
-                    "Encountered unreachable qubit pair (%s, %s) in routing heuristic; returning inf cost.",
-                    current_P,
-                    target_P,
-                )
-                return math.inf
-            total += float(distance)
-        return math.floor(total / 2)  # Optimistic: each SWAP helps 2 qubits
-    
-    heap = [(heuristic(start_state), 0, start_state, [])]
-    visited = {start_state: 0}
-    
-    while heap:
-        f, g, current, path = heapq.heappop(heap)
-        
-        if is_goal(current):
-            # Convert final state back to virtual→physical mapping
-            final_permutation = to_virt_to_phys(current)
-            return path, final_permutation
-        
-        if visited.get(current, float('inf')) < g:
-            continue
-        
-        # Try all valid SWAPs on adjacent physical qubits
-        current_list = list(current)
-        for i in range(n):
-            for j in adj[i]:
-                if i < j:  # Avoid duplicate (i,j) and (j,i)
-                    # SWAP physical qubits i and j
-                    new_state = current_list[:]
-                    new_state[i], new_state[j] = new_state[j], new_state[i]
-                    new_state_tuple = tuple(new_state)
-                    
-                    new_g = g + 1
-                    
-                    if visited.get(new_state_tuple, float('inf')) > new_g:
-                        visited[new_state_tuple] = new_g
-                        new_f = new_g + heuristic(new_state_tuple)
-                        new_path = path + [(i, j)]
-                        heapq.heappush(heap, (new_f, new_g, new_state_tuple, new_path))
-    
-    return None, None  # No solution found
-
 def find_constrained_swaps_partial(pi_A, pi_B_dict, dist_matrix):
     """
     Route partition qubits to their target physical positions using A* over
@@ -229,28 +126,6 @@ def find_constrained_swaps_partial(pi_A, pi_B_dict, dist_matrix):
         initial_positions, target_positions,
     )
     return [], list(pi_A)
-
-def calculate_swaps_quick(P_i, qbit_map, node_mapping, pi, D, swap_cache=None):
-    P_i_inv = [P_i.index(i) for i in range(len(P_i))]  # Compute inverse
-    qbit_map_input = {k : node_mapping[P_i_inv[v]] for k,v in qbit_map.items()}
-    # Convert pi to plain Python list of ints (may contain np.int64)
-    pi_list = [int(x) for x in pi]
-
-    # Check cache if provided
-    cache_key = None
-    if swap_cache is not None:
-        # Create cache key: (pi_tuple, frozenset of qbit_map_input items)
-        pi_tuple = tuple(pi_list)
-        qbit_map_frozen = frozenset(qbit_map_input.items())
-        cache_key = (pi_tuple, qbit_map_frozen)
-        if cache_key in swap_cache:
-            swaps, pi_init = swap_cache[cache_key]
-        else:
-            swaps, pi_init = find_constrained_swaps_partial(pi_list, qbit_map_input, D)
-            swap_cache[cache_key] = (swaps, pi_init)
-    else:
-        swaps, pi_init = find_constrained_swaps_partial(pi_list, qbit_map_input, D)
-    return len(swaps)
 
 
 # ============================================================================
@@ -373,45 +248,10 @@ def get_node_mapping(topology1: List[Tuple[int, int]], topology2: List[Tuple[int
             return mapping
     return {}
 
-def extract_subtopology(involved_qbits, qbit_map, config ):
-    mini_topology = []
-    for edge in config["topology"]:
-        if edge[0] in involved_qbits and edge[1] in involved_qbits:
-            mini_topology.append((qbit_map[edge[0]],qbit_map[edge[1]]))
-    return mini_topology
-
 
 # ============================================================================
 # Distance & Cost Calculations
 # ============================================================================
-
-def calculate_dist_small(mini_topology, qbit_map, dist_matrix, pi):
-    """Estimate the routing cost needed to bring the partition qubits adjacent.
-
-    Minimises over all assignments of circuit qubits to local topology
-    positions so that, e.g., the hub qubit in a 3-qubit star topology is
-    always matched to the physically most central circuit qubit rather than
-    whichever qubit happened to be assigned local label 0 by the ILP.
-
-    Returns sum-of-edge-distances * 3 (three gates per SWAP) for the best
-    qubit-to-position assignment.
-    """
-    if not mini_topology:
-        return 0
-    # Build ordered list: circuit_qubits[j] = circuit qubit at local position j
-    k = len(qbit_map)
-    qbit_map_inv = {local: circ for circ, local in qbit_map.items()}
-    circuit_qubits = [qbit_map_inv[j] for j in range(k)]
-
-    # Try all k! permutations to find the cheapest qubit→position assignment
-    best = float('inf')
-    for perm in permutations(range(k)):
-        cost = 0
-        for u, v in mini_topology:
-            cost += (dist_matrix[pi[circuit_qubits[perm[u]]]][pi[circuit_qubits[perm[v]]]] - 1) * 3
-        if cost < best:
-            best = cost
-    return best
 
 # ============================================================================
 # Data Classes
@@ -668,65 +508,3 @@ def construct_swap_circuit(swap_order, N):
         swap_circ.add_CNOT(swap[0],swap[1])
     return swap_circ
 
-def group_into_two_qubit_blocks(circuit: Circuit) -> Circuit:
-    """
-    Takes a flat circuit and returns an equivalent circuit whose top-level
-    elements are all 2-qubit Circuit blocks, each containing exactly one
-    2-qubit gate.
-
-    Single-qubit gates are buffered and flushed into the next 2-qubit block
-    on that qubit. Trailing single-qubit gates (after the last 2-qubit gate
-    on a qubit) are appended to the last block that involved that qubit.
-
-    Assumes the circuit contains only 1- and 2-qubit gates.
-
-    Args:
-        circuit: Flat input circuit with individual gates
-
-    Returns:
-        Circuit: Equivalent circuit whose top-level elements are all 2-qubit blocks
-    """
-    N = circuit.get_Qbit_Num()
-
-    pending = defaultdict(list)  # pending[q] = single-qubit gates waiting for next block on q
-    blocks = []                  # accumulated Circuit block objects
-    last_block_for_qubit = {}    # last_block_for_qubit[q] = index into blocks
-
-    for gate in circuit.get_Gates():
-        qubits = gate.get_Involved_Qbits()
-        if len(qubits) == 1:
-            pending[qubits[0]].append(gate)
-        else:  # 2-qubit gate
-            q0, q1 = qubits[0], qubits[1]
-            block = Circuit(N)
-            for g in pending[q0]:
-                block.add_Gate(g)
-            for g in pending[q1]:
-                block.add_Gate(g)
-            pending[q0].clear()
-            pending[q1].clear()
-            block.add_Gate(gate)
-            idx = len(blocks)
-            blocks.append(block)
-            last_block_for_qubit[q0] = idx
-            last_block_for_qubit[q1] = idx
-
-    # Append trailing single-qubit gates to the last block that touched that qubit
-    for q, gates_list in pending.items():
-        if not gates_list:
-            continue
-        if q in last_block_for_qubit:
-            block = blocks[last_block_for_qubit[q]]
-            for g in gates_list:
-                block.add_Gate(g)
-        else:
-            # Qubit only has single-qubit gates — create a standalone block
-            block = Circuit(N)
-            for g in gates_list:
-                block.add_Gate(g)
-            blocks.append(block)
-
-    result = Circuit(N)
-    for block in blocks:
-        result.add_Circuit(block)
-    return result
