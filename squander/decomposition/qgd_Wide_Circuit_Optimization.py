@@ -60,12 +60,14 @@ def CNOTGateCount( circ: Circuit ) -> int :
 
 
 class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
-    def __init__(self, Umtx, config, accelerator_num, topology):
-        super().__init__(Umtx, config=config, accelerator_num=accelerator_num)
-        self.Umtx = Umtx #already conjugate transposed
-        self.qbit_num = Umtx.shape[0].bit_length() -1
+    def __init__(self, Umtx, config, accelerator_num, topology, paramspace=None, paramscale=None):
+        super().__init__(Umtx[0] if isinstance(Umtx, list) else Umtx, config=config, accelerator_num=accelerator_num)
+        self.Umtx = Umtx if isinstance(Umtx, list) else [Umtx] #already conjugate transposed
+        self.qbit_num = self.Umtx[0].shape[0].bit_length() -1
         self.config = config
         self.accelerator_num = accelerator_num
+        self.paramspace = paramspace
+        self.paramscale = paramscale
         #self.set_Cost_Function_Variant( 0 )	 #0 is Frobenius, 3 is HS, 10 is OSR
         if topology is None:
             topology = [(i, j) for i in range(self.qbit_num) for j in range(i+1, self.qbit_num)]
@@ -89,7 +91,7 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
             for q in seq[k]:
                 if q in last_on:
                     p = last_on[q]
-                    succ.setdefault(p, set()).add(k)
+                    succ.setdefault(p, []).append(k)
                     indeg[k] = indeg.get(k, 0) + 1
                 last_on[q] = k
         import heapq
@@ -99,7 +101,7 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
             # Kahn's algorithm
             if len(pq) == 0: return pos #malformed (shouldn't happen)
             u = heapq.heappop(pq)
-            if u[1] != pos: return pos #deviation: not canonical
+            if u[1] != pos: return pos  #deviation: not canonical
             for v in succ.get(u[1], ()):
                 indeg[v] -= 1
                 if indeg[v] == 0: heapq.heappush(pq, (seq[v], v))
@@ -354,7 +356,7 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
     def get_all_clifford(qbit_num, qbits):
         import itertools
         circuits = []
-        all_clifford = [x+y for x, y in itertools.product(((), (True,), (False, True), (False, False, True), (False, False, False, True), (True, False, True)), ((), (False,), (False, False), (False, False)))]
+        all_clifford = [x+y for x, y in itertools.product(((), (True,), (False,), (True, False), (False, True), (True, False, True)), ((), (True, False, False, True), (True, False, False, True, False, False), (False, False)))]
         for clifford_idxs in itertools.product(range(len(all_clifford)), repeat=len(qbits)):
             circ = Circuit(qbit_num)
             for clifford_idx, qbit in zip(clifford_idxs, qbits):
@@ -472,52 +474,55 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
                     "B": (thB_post/2, phB_post, laB_post) }
         }
     def params_to_mat(self, params):
-        U = self.Umtx.copy()
-        self.get_Circuit().apply_to(params, U)
-        return U
-    def OSR_with_local_alignment(self, pairs, cuts, Fnorm, tol):
+        allU = []
+        for U, pspace in zip(self.Umtx, [None] if self.paramspace is None else self.paramspace):
+            U = U.copy()
+            scaled_params = np.sum(params.reshape(-1, 1+len(pspace)) * np.array((1.0,) + pspace), axis=1) if pspace is not None else params
+            self.get_Circuit().apply_to(scaled_params if pspace is not None else params, U)
+            allU.append(U)
+        return allU
+    def OSR_with_local_alignment(self, pairs, cuts, Fnorm, tol, use_softmax, method="dual_annealing"):
         def ceil_log2(x): return 0 if x == 0 else (x-1).bit_length()
         if len(pairs) != 0:
             self.set_Cost_Function_Variant( 10 )
             #self.Run_Decomposition(pairs, False)
             self.set_Gate_Structure(self.get_circuit_from_pairs(pairs, False))
             import scipy
-            #def cost(x):
-            #    U = self.Umtx.copy()
-            #    self.get_Circuit().apply_to(x, U)
-            #    S = [(ceil_log2(rank), s) for cut in cuts for rank, s in (N_Qubit_Decomposition_Guided_Tree.operator_schmidt_rank(U, self.qbit_num, cut, Fnorm, tol),)]
-            #    return sum(1-s[0]*s[0] for r,s in S) / len(S)
-            """
-            bestparams = []
-            for cut in cuts:
-                def cost(x):
-                    U = self.Umtx.copy()
-                    self.get_Circuit().apply_to(x, U)
-                    rank, s = N_Qubit_Decomposition_Guided_Tree.operator_schmidt_rank(U, self.qbit_num, cut, Fnorm, tol)
-                    acc, w = 0.0, 1.0
-                    for i in range(len(s).bit_length()-1):
-                    #for i in range(len(s).bit_length()-1-1, -1, -1):
-                        val = s[1<<i] - tol/10 * s[0]
-                        acc += val*val * w
-                        w *= 0.1
-                    return acc
-                #self.set_Optimized_Parameters(np.random.rand(self.get_Parameter_Num())*(2*np.pi))
-                #bestparams.append(scipy.optimize.basinhopping(cost, self.get_Optimized_Parameters(), niter=50, stepsize=2*np.pi/100).x)
-                #bestparams.append(scipy.optimize.dual_annealing(cost, [ (0, 2*np.pi) for _ in range(self.get_Parameter_Num()) ], maxiter=100).x)
-                bestparams.append(scipy.optimize.minimize(cost, self.get_Optimized_Parameters(), method='BFGS', options={'maxiter': 1000, 'disp': False}).x)
-                #print([(ceil_log2(rank), s) for cut in cuts for rank, s in (N_Qubit_Decomposition_Guided_Tree.operator_schmidt_rank(self.params_to_mat(bestparams[-1]), self.qbit_num, cut, Fnorm, tol),)])
-            return [(ceil_log2(rank), s) for cut, params in zip(cuts, bestparams) for rank, s in (N_Qubit_Decomposition_Guided_Tree.operator_schmidt_rank(self.params_to_mat(params), self.qbit_num, cut, Fnorm, tol),)]
-            """
-            #best = scipy.optimize.differential_evolution(self.Optimization_Problem, [ (0, 2*np.pi) for _ in range(self.get_Parameter_Num()) ], maxiter=100, polish=True)
-            #best = scipy.optimize.dual_annealing(self.Optimization_Problem, [ (0, 2*np.pi) for _ in range(self.get_Parameter_Num()) ], maxiter=100)
-            best = scipy.optimize.basinhopping(self.Optimization_Problem, np.random.rand(self.get_Parameter_Num())*(2*np.pi), niter=50, stepsize=2*np.pi/100)
+            param_bound = np.array(([2*np.pi] + [1/x for x in self.paramscale])*self.get_Parameter_Num())
+            def cost(x):
+                allU = self.params_to_mat(x)
+                S = [N_Qubit_Decomposition_Guided_Tree.operator_schmidt_rank(U, self.qbit_num, cut, Fnorm, tol)[1] for U in allU for cut in cuts]
+                if use_softmax: return N_Qubit_Decomposition_Guided_Tree.cuts_softmax_dyadic_cost(S, 1.0)
+                else: return N_Qubit_Decomposition_Guided_Tree.avg_loss(S)
+            def jacobian(x):
+                allU = self.params_to_mat(x)
+                grad = np.zeros(len(x), dtype=float)
+                for Ubase, U, pspace in zip(self.Umtx, allU, [None] if self.paramspace is None else self.paramspace):
+                    dL = N_Qubit_Decomposition_Guided_Tree.get_deriv_osr_entanglement(U, cuts, use_softmax)
+                    basevec = np.array((1.0,) if pspace is None else (1.0,) + pspace)
+                    scaled_params = np.sum(x.reshape(-1, 1+len(pspace)) * basevec, axis=1) if pspace is not None else x                    
+                    derivs = N_Qubit_Decomposition_Guided_Tree.param_derivs(self.get_Circuit(), Ubase, scaled_params)
+                    newgrad = np.array([N_Qubit_Decomposition_Guided_Tree.real_trace_conj_dot(dL, deriv) for deriv in derivs])
+                    if pspace is not None: newgrad = (np.array(newgrad)[:,np.newaxis] * basevec).reshape(-1)
+                    grad += newgrad
+                return grad / len(self.Umtx)
+            if method == "differential_evolution":
+                best = scipy.optimize.differential_evolution(cost, [ (0, x) for x in param_bound ], maxiter=100, polish=False)
+                best = scipy.optimize.minimize(cost, best.x, method='BFGS', jac=jacobian, options={'maxiter': 200})
+            elif method == "dual_annealing":
+                best = None
+                for seed in range(20):
+                    res = scipy.optimize.dual_annealing(cost, [ (0, x) for x in param_bound ], maxiter=100)#, minimizer_kwargs={'jac': jacobian})
+                    if best is None or res.fun < best.fun: best = res
+            elif method == "basinhopping":
+                best = scipy.optimize.basinhopping(cost, np.random.rand(len(param_bound))*param_bound, niter=50, stepsize=np.pi/2, minimizer_kwargs={'jac': jacobian})
+            else:
+                best = min([scipy.optimize.minimize(cost, np.random.rand(len(param_bound))*param_bound, method='BFGS', jac=jacobian, options={'maxiter': 200}) for _ in range(20)], key=lambda r: r.fun)
             #print(best)
             self.set_Cost_Function_Variant( 3 )
-            self.set_Optimized_Parameters(best.x)
-            U = self.Umtx.copy()
-            self.get_Circuit().apply_to(self.get_Optimized_Parameters(), U)
-        else: U = self.Umtx
-        return [(ceil_log2(rank), s) for cut in cuts for rank, s in (N_Qubit_Decomposition_Guided_Tree.operator_schmidt_rank(U, self.qbit_num, cut, Fnorm, tol),)]
+            allU = self.params_to_mat(best.x)
+        else: allU = self.Umtx
+        return [(ceil_log2(rank), s) for U in allU for cut in cuts for rank, s in (N_Qubit_Decomposition_Guided_Tree.operator_schmidt_rank(U, self.qbit_num, cut, Fnorm, tol),)]
     def Run_Decomposition(self, pairs, finalizing=True):
         circ = self.get_circuit_from_pairs(pairs, finalizing)
         self.set_Gate_Structure(circ)
@@ -551,15 +556,15 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
                 check_cuts = pair_affects[tuple(sorted(path[-1]))] if not curh is None else range(len(cuts))
                 #samples = [max(x[0] for x in self.OSR_with_local_alignment(path, cuts, Fnorm, tol=tol)) for _ in range(5)]
                 #if len(set(samples)) != 1: print(samples)
-                h = self.OSR_with_local_alignment(path, cuts, Fnorm, tol=tol)
+                h = self.OSR_with_local_alignment(path, cuts, Fnorm, tol=tol, use_softmax=False, method="dual_annealing")
                 min_cnots = max((x[0] for x in h), default=0)
-                #print(path, h, remaining, min_cnots)
+                print(path, h, N_Qubit_Decomposition_Guided_Tree.avg_loss([x[1] for x in h]), remaining, min_cnots)
                 if min_cnots == 0:
                     #print(path)
                     for i in range(10):
                         if self.Run_Decomposition(path):
                             self.all_solutions.append((self.get_Circuit(), self.get_Optimized_Parameters()))
-                            if stop_first_solution or len(path) <= 1: return
+                            if stop_first_solution: return
                             break
                         #print("Looping", h)
                 if min_cnots > remaining: continue
@@ -568,7 +573,7 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
                     #if any(h[i][0] > curh[i][0] for i in check_cuts): continue
                     if max((x[0] for x in curh), default=0) < min_cnots: continue
                 nextprefixes.append((path, h))
-            nextprefixes.sort(key=lambda t: (max((x[0] for x in t[1]), default=0), sum(x[0] for x in t[1]), sum(1-x[1][0]*x[1][0] for x in t[1])))
+            nextprefixes.sort(key=lambda t: (max((x[0] for x in t[1]), default=0), sum(x[0] for x in t[1]), N_Qubit_Decomposition_Guided_Tree.avg_loss([x[1] for x in t[1]])))
             prefixes = {x[0]: x[1] for x in nextprefixes[:B]}
             prior_level_info = (visited, seq_pairs_of, seq_dir_of, list(x[0] for x in reversed(res) if tuple(x[1]) in prefixes))
         self.set_Gate_Structure(Circuit(self.qbit_num))
@@ -733,7 +738,7 @@ class qgd_Wide_Circuit_Optimization:
     
 
         # adding new layer to the decomposition until threshold
-        cDecompose.set_Optimizer( "BFGS2" )
+        cDecompose.set_Optimizer( "BFGS2" if config.get("use_osr", False) else "BFGS" )
 
         # starting the decomposition
         try:

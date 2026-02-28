@@ -37,7 +37,7 @@ if __name__ == '__main__':
             'test_final_circuit': True,
             'max_partition_size': 3,
             'beam': 16,
-            "use_gl": True,
+            "use_osr": True,
             'tolerance': 1e-10,
     }
     #git clone https://github.com/onestruggler/qasm-quipper
