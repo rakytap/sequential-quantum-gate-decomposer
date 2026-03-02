@@ -914,6 +914,39 @@ identities = ( #(gate1, gate2, result_gate)
     ("Rz", "Rz", "Rz"),
 )
 
+aliases = (
+    ('P', -sympy.pi/4, 'Sdg'),
+    ('P', -sympy.pi/8, 'Tdg'),
+    ('P', 0, 'I'),
+    ('P', sympy.pi/8, 'T'),
+    ('P', sympy.pi/4, 'S'),
+    ('P', sympy.pi/2, 'Z'),
+    ('Rx', -3*sympy.pi/4, 'Sx_q3'),
+    ('Rx', -sympy.pi/2, 'X_q2'),
+    ('Rx', -sympy.pi/4, 'Sxdg_q1'),
+    ('Rx', 0, 'I'),
+    ('Rx', sympy.pi/4, 'Sx_q7'),
+    ('Rx', sympy.pi/2, 'X_q6'),
+    ('Rx', 3*sympy.pi/4, 'Sxdg_q5'),
+    ('Rx', sympy.pi, 'I_q4'),
+    ('Ry', -3*sympy.pi/4, 'HX_q4'),
+    ('Ry', -sympy.pi/2, 'Y_q2'),
+    ('Ry', -sympy.pi/4, 'HZ'),
+    ('Ry', 0, 'I'),
+    ('Ry', sympy.pi/4, 'HX'), 
+    ('Ry', sympy.pi/2, 'Y_q6'),
+    ('Ry', 3*sympy.pi/4, 'HZ_q4'),
+    ('Ry', sympy.pi, 'I_q4'),
+    ('Rz', -3*sympy.pi/4, 'S_q3'),
+    ('Rz', -sympy.pi/2, 'Z_q2'),
+    ('Rz', -sympy.pi/4, 'Sdg_q1'),
+    ('Rz', 0, 'I'),
+    ('Rz', sympy.pi/4, 'S_q7'),
+    ('Rz', sympy.pi/2, 'Z_q6'),
+    ('Rz', 3*sympy.pi/4, 'Sdg_q5'),
+    ('Rz', sympy.pi, 'I_q4'),
+)
+
 gate_inverses_clifford = (
     ('I', 'I'), ('I_q1', 'I_q7'), ('I_q2', 'I_q6'), ('I_q3', 'I_q5'), ('I_q4', 'I_q4'), ('I_q5', 'I_q3'), ('I_q6', 'I_q2'), ('I_q7', 'I_q1'), 
     ('X', 'X'), ('X_q1', 'X_q7'), ('X_q2', 'X_q6'), ('X_q3', 'X_q5'), ('X_q4', 'X_q4'), ('X_q5', 'X_q3'), ('X_q6', 'X_q2'), ('X_q7', 'X_q1'), 
@@ -992,7 +1025,8 @@ decomp_dict = {
     'CCX': lambda: compile_gates(3, [("H", [2]), ("CNOT", [1, 2]), ("Tdg", [2]), ("CNOT", [0, 2]), ("T", [2]), ("CNOT", [1, 2]), ("Tdg", [2]), ("CNOT", [0, 2]), ("T", [1]), ("T", [2]), ("H", [2]), ("CNOT", [0, 1]), ("T", [0]), ("Tdg", [1]), ("CNOT", [0, 1])]),
     'SWAP': lambda: compile_gates(2, [("CNOT", [0, 1]), ("CNOT", [1, 0]), ("CNOT", [0, 1])]),
     #7 CNOT CSWAP: https://arxiv.org/pdf/2305.18128
-    'CSWAP': lambda: compile_gates(3, [("S", [1]), ("CNOT", [2, 1]), ("Sdg", [1]), ("Sx", [2]), ("T", [2]), ("CNOT", [0, 2]), ("T", [2]), ("CNOT", [1, 2]), ("T", [1]), ("Tdg", [2]), ("CNOT", [0, 2]), ("CNOT", [0, 1]), ("T", [2]), ("T", [0]), ("Tdg", [1]), ("H", [2]), ("CNOT", [0, 1]), ("CNOT", [2, 1]), ("GP", -sympy.pi/4, 3, [0, 1, 2])]).applyfunc(textbook_simp), #compile_gates(3, [("CNOT", [2, 1]), ("H", [2]), ("CNOT", [1, 2]), ("Tdg", [2]), ("CNOT", [0, 2]), ("T", [2]), ("CNOT", [1, 2]), ("Tdg", [2]), ("CNOT", [0, 2]), ("T", [1]), ("T", [2]), ("H", [2]), ("CNOT", [0, 1]), ("T", [0]), ("Tdg", [1]), ("CNOT", [0, 1]), ("CNOT", [2, 1])])
+    #'CSWAP': lambda: compile_gates(3, [("S", [1]), ("CNOT", [2, 1]), ("Sdg", [1]), ("Sx", [2]), ("T", [2]), ("CNOT", [0, 2]), ("T", [2]), ("CNOT", [1, 2]), ("T", [1]), ("Tdg", [2]), ("CNOT", [0, 2]), ("CNOT", [0, 1]), ("T", [2]), ("T", [0]), ("Tdg", [1]), ("H", [2]), ("CNOT", [0, 1]), ("CNOT", [2, 1]), ("GP", -sympy.pi/4, 3, [0, 1, 2])]).applyfunc(textbook_simp), #compile_gates(3, [("CNOT", [2, 1]), ("H", [2]), ("CNOT", [1, 2]), ("Tdg", [2]), ("CNOT", [0, 2]), ("T", [2]), ("CNOT", [1, 2]), ("Tdg", [2]), ("CNOT", [0, 2]), ("T", [1]), ("T", [2]), ("H", [2]), ("CNOT", [0, 1]), ("T", [0]), ("Tdg", [1]), ("CNOT", [0, 1]), ("CNOT", [2, 1])])
+    'CSWAP': lambda: compile_gates(3, [('Tdg', (1,)), ('T', (2,)), ('CNOT', [2, 1]), ('T', (1,)), ('Rx', sympy.pi/2, (2,)), ('T', (2,)), ('CNOT', [0, 2]), ('T', (2,)), ('CNOT', [1, 2]), ('Tdg', (2,)), ('CNOT', [0, 2]), ('T', (2,)), ('Rx', -sympy.pi/4, (2,)), ('Ry', -sympy.pi/2, (2,)), ('CNOT', [0, 1]), ('T', (1,)), ('CNOT', [0, 1]), ('CNOT', [2, 1]), ('Tdg', (0,)), ('Tdg', (1,)), ('GP', -sympy.pi/8, 3, [0, 1, 2])]),
     'iSWAP': lambda: compile_gates(2, [("S", [0]), ("S", [1]), ("H", [0]), ("CNOT", [0, 1]), ("CNOT", [1, 0]), ("H", [1])]),
     'SSWAP': lambda: compile_gates(2, [("CNOT", [0, 1]), ("H", [0]), ("T", [0]), ("Tdg", [1]), ("H", [0]), ("H", [1]), ("CNOT", [0, 1]), ("H", [0]), ("H", [1]), ("Tdg", [0]), ("H", [0]), ("CNOT", [0, 1]), ("Sdg", [0]), ("S", [1])]).applyfunc(textbook_simp),
     #'SiSWAP': lambda: compile_gates(2, [("Sx", [0]), ("Rz", sympy.pi/2, [0]), ("CNOT", [0, 1]), ("Sx", [0]), ("Sx", [1]), ("Rz", sympy.pi*7/4, [0]), ("Rz", sympy.pi*7/4, [1]), ("Sx", [0]), ("Rz", sympy.pi/2, [0]), ("CNOT", [0, 1]), ("Sx", [0]), ("Sx", [1])]).applyfunc(textbook_simp),
@@ -1620,28 +1654,44 @@ def gen_clifford():
 #not maximally entangling: CS, CT
 #maximally entangling: CNOT, CZ, CY, CH, iSWAP, SiSWAP (partial), XX(pi/4), exp(i pi/4 (X⊗X + Y⊗Y)), SSWAP (partial)
 #maximally entangling only at specific angles: CRX, CRY, CRZ, CP, Rxy, iSWAP_pow
-def decompose_unitary_search(gate, scale_max, layers=4, basis=('CNOT',)+full_clifford+('T', 'Tdg', 'P', 'Rx', 'Ry', 'Rz'), allow_global_phase=True, find_min=False):
+def decompose_unitary_search(gate, scale_max, layers=4, basis=('CNOT',)+complete_clifford+('T', 'Tdg', 'P', 'Rx', 'Ry', 'Rz'), allow_global_phase=True, find_min=False):
     ansatz, regions, num_qubits, Umtx, param_info = gen_ansatz(gate, scale_max, layers, basis)
+    params = [vardict[x[1]] for x in param_info]
     num_regions = len(regions)*num_qubits #we use a half open interval based on (−π,π].
-    all_angles = [
-        make_angle(ParamIndex(i), AngleScale(scale*(1 if i==-1 else param_info[i][0]), scale_max)) for i in range(-1, len(param_info)) for scale in range(-scale_max//2+1, scale_max//2+1)
-    ]
+    def gen_angles(s, reversed=False):
+        return [make_angle(ParamIndex(i), AngleScale(scale*s, scale_max*(1 if i==-1 else param_info[i][0]))) for i in range(-1, len(param_info)) for scale in (range(scale_max//2-1, -scale_max//2-1, -1) if reversed else range(-scale_max//2+1, scale_max//2+1))]
+    def gen_gate_angles(gate, both_dir=False):
+        if both_dir:
+            return itertools.product(*[list(zip(gen_angles(x[0]), gen_angles(x[0], reversed=True))) for x in gate_descs[gate][1]])
+        return itertools.product(*[gen_angles(x[0]) for x in gate_descs[gate][1]])
     #comp_angles = {make_angle(ParamIndex(i), AngleScale(scale, scale_max)): make_angle(ParamIndex(i), AngleScale(-scale, scale_max)) for i in range(-1, len(param_info)) for scale in range(-scale_max, scale_max+1) if scale != 0}
+    """
+    gatecheck = {}
+    for gate in basis:
+        if gate_descs[gate][0] == 1:
+            for angles in gen_gate_angles(gate):
+                mat = sympy.ImmutableMatrix(compile_gates(1, [(gate, *[x.to_sympy(params) for x in angles], (0,))]).applyfunc(textbook_simp))
+                if mat in gatecheck:
+                    print(f"Duplicate gate mat for {gate} with angles {angles}: {mat} already from {gatecheck[mat]}")
+                    continue
+                gatecheck[mat] = (gate, angles)
+    """
+    def is_unneeded_gate(gate, angles):
+        if gate == 'I': return True
+        if gate in ('P', 'Rx', 'Ry', 'Rz') and angles[0].to_sympy(params) == 0: return True
+        return False
     all_gates = [tuple(((gate, *angles, qbit),) if i==region*num_qubits+qbit else () for i in range(num_regions))
                  for gate in basis if gate_descs[gate][0] == 1
                  for region in range(len(regions)) if regions[region]
                  for qbit in range(num_qubits)
-                 for angles in itertools.product(*[all_angles for _ in gate_descs[gate][1]])
+                 for angles in gen_gate_angles(gate) if not is_unneeded_gate(gate, angles)
              ]
     if num_qubits > 1:
-        rev_angles = [
-            make_angle(ParamIndex(i), AngleScale(scale*(1 if i==-1 else param_info[i][0]), scale_max)) for i in range(-1, len(param_info)) for scale in range(scale_max//2, -scale_max//2, -1)
-        ]
         all_gates.extend([tuple(((gate, *angles, qbit1),) if i==region*num_qubits+qbit1 else ((gate, *angles, qbit2),) if i==region*num_qubits+qbit2 else () for i in range(num_regions))
                         for gate in basis if gate_descs[gate][0] == 1
                         for region in range(len(regions)) if regions[region]
                         for qbit1 in range(num_qubits) for qbit2 in range(qbit1+1, num_qubits)
-                        for angles in itertools.product(*[all_angles for _ in gate_descs[gate][1]])
+                        for angles in gen_gate_angles(gate) if not is_unneeded_gate(gate, angles)
                 ])
         all_gates.extend([tuple(((gate1, *[x[0] for x in angles], qbit),) if i==region1*num_qubits+qbit else ((gate2, *[x[1] for x in angles], qbit),) if i==region2*num_qubits+qbit else () for i in range(num_regions))
                         for gate1, gate2 in gate_inverses if gate1 in basis and gate2 in basis
@@ -1649,12 +1699,12 @@ def decompose_unitary_search(gate, scale_max, layers=4, basis=('CNOT',)+full_cli
                         #for region2 in (next(iter(region2 for region2 in range(region1+1, len(regions)) if regions[region2]), None),) if region2 is not None
                         for region2 in range(region1+1, len(regions)) if regions[region2]
                         for qbit in range(num_qubits)
-                        for angles in itertools.product(*[list(zip(all_angles, rev_angles)) for _ in gate_descs[gate1][1]])
+                        for angles in gen_gate_angles(gate1, both_dir=True) if not is_unneeded_gate(gate1, [x[0] for x in angles]) and not is_unneeded_gate(gate2, [x[1] for x in angles])
                 ])
     #print(all_gates)
 
     #startcost = eval_circ(Umtx, param_info, CircuitBuilder())[0]
-    starts = list(itertools.product(*[(((),) if region else ((x,) for x in all_angles)) for region in regions for qbit in range(num_qubits if region else 1)]))
+    starts = list(itertools.product(*[(((),) if region else ((x,) for x in gen_angles(1))) for region in regions for qbit in range(num_qubits if region else 1)]))
     #print(starts)
     #res = A_star(starts, lambda node: eval(node) == 0, lambda node: eval(node),
     #       lambda node: [tuple(x+((gate[1:],) if gate[0] == i else ()) for i, x in enumerate(node)) for gate in gates],
@@ -1673,7 +1723,6 @@ def decompose_unitary_search(gate, scale_max, layers=4, basis=('CNOT',)+full_cli
             for qubit1 in range(num_qubits) for qubit2 in range(qubit1+1, num_qubits)
         ]
 
-    params = [vardict[x[1]] for x in param_info]
     def canonicalize(node):
         return
         _, _, U = eval(Umtx, param_info, ansatz, allow_global_phase, node)  # populate cache
@@ -1750,7 +1799,7 @@ def decompose_unitary_search(gate, scale_max, layers=4, basis=('CNOT',)+full_cli
 #decompose_unitary_search("CRY", 4)
 #decompose_unitary_search("CRZ", 4)
 #decompose_unitary_search("SYC", 24)
-#decompose_unitary_search("CSWAP", 8)
+decompose_unitary_search("CSWAP", 8)
 #decompose_unitary_search("CU3", 4)
 #decompose_unitary_search("U3", 2, allow_global_phase=False)
 #decompose_unitary_search("GP", 1)
@@ -1760,4 +1809,4 @@ def decompose_unitary_search(gate, scale_max, layers=4, basis=('CNOT',)+full_cli
 #decompose_unitary_search("CCX", 1)
 #decompose_unitary_search("CCZ", 1)
 #decompose_unitary_search((1, [], lambda: compile_gates(1, [("Rx", -3*sympy.pi/2, [0]), ("Rz", -sympy.pi/4, [0]), ("H", [0]), ("X", [0]), ("Rz", -3*sympy.pi/2, [0])])), 8)
-gen_clifford()
+#gen_clifford()
