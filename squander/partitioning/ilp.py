@@ -538,7 +538,7 @@ def sol_to_badsccs(g, allparts, L):
     _, scc = scc_tarjan_iterative(G_part)
     return {frozenset(v) for v in scc if len(v) > 1}
 
-def ilp_global_optimal(allparts, g, weighted_info=None, gurobi_direct=False, use_order=False, weights=None, transition_costs=None):
+def ilp_global_optimal(allparts, g, weighted_info=None, gurobi_direct=False, use_order=False, weights=None):
     """
     Select an optimal set of non-overlapping parts via ILP/MIP with cycle cuts.
 
@@ -578,19 +578,8 @@ def ilp_global_optimal(allparts, g, weighted_info=None, gurobi_direct=False, use
                 m.setParam(GRB.Param.LazyConstraints, 1)
                 x = m.addVars(range(N), lb=[0]*N, ub=[1]*N, vtype=[GRB.BINARY]*N, name=["x_" + str(i) for i in range(N)])
                 for i in g: m.addConstr(gp.quicksum(x[j] for j in gate_to_parts[i]) == 1)
-                transition_obj_gurobi = 0
-                if transition_costs:
-                    y_vars_g = {}
-                    for (i, j), cost in transition_costs.items():
-                        y_var = m.addVar(vtype=GRB.BINARY, name=f"y_{i}_{j}")
-                        m.update()
-                        m.addConstr(y_var >= x[i] + x[j] - 1)
-                        m.addConstr(y_var <= x[i])
-                        m.addConstr(y_var <= x[j])
-                        y_vars_g[(i, j)] = (y_var, cost)
-                    transition_obj_gurobi = gp.quicksum(cost * yv for yv, cost in y_vars_g.values())
-                if weights is not None: m.setObjective(gp.quicksum((weights[i]*N+1) * x[i] for i in range(N)) + transition_obj_gurobi, GRB.MINIMIZE)
-                elif weighted_info is None: m.setObjective(gp.quicksum(x[i] for i in range(N)) + transition_obj_gurobi, GRB.MINIMIZE)
+                if weights is not None: m.setObjective(gp.quicksum((weights[i]*N+1) * x[i] for i in range(N)), GRB.MINIMIZE)
+                elif weighted_info is None: m.setObjective(gp.quicksum(x[i] for i in range(N)), GRB.MINIMIZE)
                 else:
                     Npre, Npost, Nprepost = len(single_qubit_chains_pre), len(single_qubit_chains_post), len(single_qubit_chains_prepost)
                     pre = m.addVars(list(single_qubit_chains_pre), lb=[0]*Npre, ub=[1]*Npre, vtype=[GRB.BINARY]*Npre, name=["pre_" + str(i) for i in single_qubit_chains_pre])
@@ -669,7 +658,7 @@ def ilp_global_optimal(allparts, g, weighted_info=None, gurobi_direct=False, use
                     for s in post:                        
                         if not single_qubit_chains_post[s][0] in noprepost:
                             S.append((1-post[s])*(2**max_qubits_per_partition * (2 * (4 + 2) + 2)))
-                    m.setObjective(gp.quicksum(S)*N+gp.quicksum(x[i] for i in range(N)) + transition_obj_gurobi, GRB.MINIMIZE)
+                    m.setObjective(gp.quicksum(S)*N+gp.quicksum(x[i] for i in range(N)), GRB.MINIMIZE)
                 def cb(m, where):
                     if where == GRB.Callback.MIPSOL:
                         x_val = m.cbGetSolution([x[i] for i in range(N)])
@@ -694,18 +683,8 @@ def ilp_global_optimal(allparts, g, weighted_info=None, gurobi_direct=False, use
     #print(all_cycles_from_dag_edges(succ))
     #for u, v in two_cycles_from_dag_edges(g, gate_to_parts, allparts):
     #    prob += x[u] + x[v] <= 1 #constraint that no two cycles are included
-    transition_obj = 0
-    if transition_costs:
-        y_vars = {}
-        for (i, j), cost in transition_costs.items():
-            y_var = pulp.LpVariable(f"y_{i}_{j}", cat="Binary")
-            prob += y_var >= x[i] + x[j] - 1
-            prob += y_var <= x[i]
-            prob += y_var <= x[j]
-            y_vars[(i, j)] = y_var
-        transition_obj = pulp.lpSum(cost * y_vars[(i, j)] for (i, j), cost in transition_costs.items())
-    if weights is not None: prob.setObjective(pulp.lpSum((weights[i]*N+1) * x[i] for i in range(N)) + transition_obj)
-    elif weighted_info is None: prob.setObjective(pulp.lpSum(x[i] for i in range(N)) + transition_obj)
+    if weights is not None: prob.setObjective(pulp.lpSum((weights[i]*N+1) * x[i] for i in range(N)))
+    elif weighted_info is None: prob.setObjective(pulp.lpSum(x[i] for i in range(N)))
     else:
         Npre, Npost, Nprepost = len(single_qubit_chains_pre), len(single_qubit_chains_post), len(single_qubit_chains_prepost)
         pre = pulp.LpVariable.dicts("pre", list(single_qubit_chains_pre), cat="Binary")
@@ -781,7 +760,7 @@ def ilp_global_optimal(allparts, g, weighted_info=None, gurobi_direct=False, use
         for s in post:                        
             if not single_qubit_chains_post[s][0] in noprepost:
                 S.append((1-post[s])*(2**max_qubits_per_partition * (2 * (4 + 2) + 2)))
-        prob.setObjective(pulp.lpSum(S)*N+pulp.lpSum(x[i] for i in range(N)) + transition_obj)
+        prob.setObjective(pulp.lpSum(S)*N+pulp.lpSum(x[i] for i in range(N)))
     while True:
         from gurobipy import GRB
         import gurobipy as gp

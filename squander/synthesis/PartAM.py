@@ -102,92 +102,6 @@ class qgd_Partition_Aware_Mapping:
     # Scoring Methods
     # ------------------------------------------------------------------------
 
-    def compute_transition_cost(self, result_pred, result_succ, D):
-        """
-        Compute the minimum transition cost between two partitions over all
-        (topology, P_o, node_mapping) configs of pred and (topology, P_i, node_mapping)
-        configs of succ.
-
-        The cost measures how far each qubit involved in succ needs to travel
-        from its position after pred's output to where succ's input requires it.
-
-        Args:
-            result_pred: PartitionSynthesisResult for the predecessor partition
-            result_succ: PartitionSynthesisResult for the successor partition
-            D: Distance matrix between physical qubits
-
-        Returns:
-            float: Minimum transition cost (lower is better)
-        """
-        if isinstance(result_pred, SingleQubitPartitionResult) or isinstance(result_succ, SingleQubitPartitionResult):
-            return 0
-
-        N = len(D)
-        involved_pred = set(result_pred.involved_qbits)
-        involved_succ = set(result_succ.involved_qbits)
-        qmap_pred_inv = {v: k for k, v in result_pred.qubit_map.items()}  # q* -> q
-        qmap_succ_inv = {v: k for k, v in result_succ.qubit_map.items()}  # q* -> q
-        k_succ = result_succ.N
-
-        # Precompute all output positions for pred: list of dicts {q: physical_pos}
-        pred_outputs = []
-        for tdx, mini_topo in enumerate(result_pred.mini_topologies):
-            topo_candidates = self._get_subtopologies_of_type_cached(mini_topo)
-            if not topo_candidates:
-                continue
-            node_mappings = [get_node_mapping(mini_topo, tc) for tc in topo_candidates]
-            node_mappings = [nm for nm in node_mappings if nm]
-            if not node_mappings:
-                continue
-            for pdx, (_, P_o) in enumerate(result_pred.permutations_pairs[tdx]):
-                P_o_list = list(P_o)
-                for nm in node_mappings:
-                    out_pos = {}
-                    for q_star, q in qmap_pred_inv.items():
-                        out_pos[q] = nm[P_o_list[q_star]]
-                    pred_outputs.append(out_pos)
-
-        # Precompute all input target positions for succ: list of dicts {q: physical_pos}
-        succ_inputs = []
-        for tdx, mini_topo in enumerate(result_succ.mini_topologies):
-            topo_candidates = self._get_subtopologies_of_type_cached(mini_topo)
-            if not topo_candidates:
-                continue
-            node_mappings = [get_node_mapping(mini_topo, tc) for tc in topo_candidates]
-            node_mappings = [nm for nm in node_mappings if nm]
-            if not node_mappings:
-                continue
-            for pdx, (P_i, _) in enumerate(result_succ.permutations_pairs[tdx]):
-                P_i_list = list(P_i)
-                P_i_inv = [P_i_list.index(i) for i in range(k_succ)]
-                for nm in node_mappings:
-                    in_pos = {}
-                    for q_star, q in qmap_succ_inv.items():
-                        in_pos[q] = nm[P_i_inv[q_star]]
-                    succ_inputs.append(in_pos)
-
-        if not pred_outputs or not succ_inputs:
-            return 0
-
-        # Find minimum transition cost over all (pred_output, succ_input) pairs
-        best_cost = np.inf
-        for out_pos in pred_outputs:
-            for in_pos in succ_inputs:
-                cost = 0
-                for q, target in in_pos.items():
-                    if q in out_pos:
-                        current = out_pos[q]
-                    else:
-                        current = q
-                    dist = D[current][target]
-                    if not np.isinf(dist):
-                        cost += max(0, dist - 1) * 3
-                    if cost >= best_cost:
-                        break
-                best_cost = min(best_cost, cost)
-
-        return best_cost if not np.isinf(best_cost) else 0
-
     # ------------------------------------------------------------------------
     # Caching Methods
     # ------------------------------------------------------------------------
@@ -479,43 +393,7 @@ class qgd_Partition_Aware_Mapping:
             else:
                 weights.append(result.get_partition_synthesis_score())
 
-        # ---- Phase 3b: Compute inter-partition transition costs ----
-        transition_weight = self.config.setdefault('transition_weight', 1.0)
-        transition_costs = {}
-        if transition_weight > 0:
-            gate_to_part = {}
-            for idx, part in enumerate(allparts):
-                for gate in part:
-                    gate_to_part.setdefault(gate, []).append(idx)
-
-            # Build directed DAG-neighbor partition pairs (pred -> succ)
-            directed_neighbors = set()
-            for gate_u, successors in g.items():
-                for part_u in gate_to_part.get(gate_u, []):
-                    for gate_v in successors:
-                        for part_v in gate_to_part.get(gate_v, []):
-                            if part_u != part_v:
-                                directed_neighbors.add((part_u, part_v))
-
-            # Compute transition cost for each directed pair, keyed by (min, max)
-            seen_pairs = set()
-            for pred_idx, succ_idx in directed_neighbors:
-                pair_key = (min(pred_idx, succ_idx), max(pred_idx, succ_idx))
-                if pair_key in seen_pairs:
-                    continue
-                seen_pairs.add(pair_key)
-                if allparts[pred_idx] & allparts[succ_idx]:
-                    continue
-                result_pred = optimized_results[pred_idx]
-                result_succ = optimized_results[succ_idx]
-                # Compute both directions and take the minimum
-                cost_fwd = self.compute_transition_cost(result_pred, result_succ, D)
-                cost_rev = self.compute_transition_cost(result_succ, result_pred, D)
-                cost = min(cost_fwd, cost_rev)
-                if cost > 0:
-                    transition_costs[pair_key] = cost * transition_weight
-
-        L_parts, fusion_info = ilp_global_optimal(allparts, g, weights=weights, transition_costs=transition_costs)
+        L_parts, fusion_info = ilp_global_optimal(allparts, g, weights=weights)
         parts = recombine_single_qubit_chains(go, rgo, single_qubit_chains, gate_to_tqubit, [allparts[i] for i in L_parts], fusion_info)
         L = topo_sort_partitions(working_circ, self.config["max_partition_size"], parts)
         from squander.partitioning.kahn import kahn_partition_preparts
