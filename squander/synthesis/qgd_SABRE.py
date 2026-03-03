@@ -54,11 +54,11 @@ class qgd_SABRE:
         gates = circuit.get_Gates()
         
         for gate in gates:
-            if gate.get_Control_Qbit() != -1:
-                q1 = gate.get_Target_Qbit()
-                q2 = gate.get_Control_Qbit()
-                if q1 < self.circuit_qbit_num and q2 < self.circuit_qbit_num:
-                    key = (min(q1, q2), max(q1, q2))
+            q_control = gate.get_Control_Qbit()
+            if q_control != -1:
+                q_target = gate.get_Target_Qbit()
+                if q_target < self.circuit_qbit_num and q_control < self.circuit_qbit_num:
+                    key = (min(q_target, q_control), max(q_target, q_control))
                     interaction_count[key] += 1
         
         if not interaction_count:

@@ -396,7 +396,7 @@ class PartitionCandidate:
         # {Q*:Q}
         self.node_mapping = get_node_mapping(mini_topology, topology)
 
-    def transform_pi(self, pi, D, swap_cache=None, free_routing=False):
+    def transform_pi(self, pi, D, swap_cache=None):
         # Fixed: Use P_i^{-1} instead of P_i for input routing
         # The synthesized circuit S implements: add_Permutation(P_i) -> Original -> add_Permutation(P_o)
         # For Original to see logical qubit q* at partition position q*, we need:
@@ -409,32 +409,18 @@ class PartitionCandidate:
         pi_list = [int(x) for x in pi]
         n = len(pi_list)
 
-        if free_routing:
-            # Routing is free: build the ideal pi_init that places partition qubits
-            # at their target physical positions with zero SWAPs, then assign the
-            # remaining virtual qubits to the remaining physical positions.
-            used_physical = set(qbit_map_input.values())
-            pi_init = [0] * n
-            for k, target_P in qbit_map_input.items():
-                pi_init[k] = target_P
-            remaining_physical = sorted(p for p in range(n) if p not in used_physical)
-            remaining_logical  = sorted(q for q in range(n) if q not in qbit_map_input)
-            for q, p in zip(remaining_logical, remaining_physical):
-                pi_init[q] = p
-            swaps = []
-        else:
-            # Check cache if provided
-            if swap_cache is not None:
-                pi_tuple = tuple(pi_list)
-                qbit_map_frozen = frozenset(qbit_map_input.items())
-                cache_key = (pi_tuple, qbit_map_frozen)
-                if cache_key in swap_cache:
-                    swaps, pi_init = swap_cache[cache_key]
-                else:
-                    swaps, pi_init = find_constrained_swaps_partial(pi_list, qbit_map_input, D)
-                    swap_cache[cache_key] = (swaps, pi_init)
+        # Check cache if provided
+        if swap_cache is not None:
+            pi_tuple = tuple(pi_list)
+            qbit_map_frozen = frozenset(qbit_map_input.items())
+            cache_key = (pi_tuple, qbit_map_frozen)
+            if cache_key in swap_cache:
+                swaps, pi_init = swap_cache[cache_key]
             else:
                 swaps, pi_init = find_constrained_swaps_partial(pi_list, qbit_map_input, D)
+                swap_cache[cache_key] = (swaps, pi_init)
+        else:
+            swaps, pi_init = find_constrained_swaps_partial(pi_list, qbit_map_input, D)
 
         pi_output = pi_init.copy()
         # Fixed: P_o should be indexed by partition virtual index q*, not physical index Q*
