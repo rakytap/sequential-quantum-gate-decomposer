@@ -76,7 +76,9 @@ Gate::Gate(int qbit_num_in) {
     // number of qubits spanning the matrix of the operation
     qbit_num = qbit_num_in;
     // the size of the matrix
-    matrix_size = Power_of_2(qbit_num);
+    if (qbit_num<31){
+        matrix_size = Power_of_2(qbit_num);
+    }
     // A string describing the type of the operation
     type = GENERAL_OPERATION;
     // The index of the qubit on which the operation acts (target_qbit >= 0)
@@ -109,7 +111,10 @@ Gate::Gate(int qbit_num_in, const std::vector<int>& target_qbits_in, const std::
     // number of qubits spanning the matrix of the operation
     qbit_num = qbit_num_in;
     // the size of the matrix
-    matrix_size = Power_of_2(qbit_num);
+    if (qbit_num<31){
+        matrix_size = Power_of_2(qbit_num);
+    }
+   
     // A string describing the type of the operation
     type = GENERAL_OPERATION;
     // The number of parameters

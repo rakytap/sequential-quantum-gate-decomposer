@@ -991,7 +991,7 @@ class qgd_Wide_Circuit_Optimization:
 
         #subcircuits = subcircuits[9:10]
 
-        if parent_process() is None: print(len(subcircuits), "partitions found to optimize")
+        if parent_process() is None and self.config["verbosity"] > 0: print(len(subcircuits), "partitions found to optimize")
 
 
         # the list of optimized subcircuits
@@ -1020,12 +1020,11 @@ class qgd_Wide_Circuit_Optimization:
                 config = config if structures is None or partition_idx >= len(structures) else {**config, 'strategy': 'Custom', 'max_inner_iterations': 10000, 'max_iteration_loops': 4}
                 new_subcircuit, new_parameters = callback_fnc(self.PartitionDecompositionProcess( subcircuit, subcircuit_parameters, config,
                                                                                      None if structures is None or partition_idx >= len(structures) else structures[partition_idx] ))
-                if subcircuit != new_subcircuit:
+                if subcircuit != new_subcircuit and self.config["verbosity"] > 0:
+                    print( "original subcircuit:    ", subcircuit.get_Gate_Nums())
+                    print( "reoptimized subcircuit: ", new_subcircuit.get_Gate_Nums())
 
-                    print( "original subcircuit:    ", subcircuit.get_Gate_Nums()) 
-                    print( "reoptimized subcircuit: ", new_subcircuit.get_Gate_Nums()) 
-
-                if partition_idx % 100 == 99: print(partition_idx+1, "partitions optimized")
+                if partition_idx % 100 == 99 and self.config["verbosity"] > 0: print(partition_idx+1, "partitions optimized")
                 optimized_subcircuits[ partition_idx ] = new_subcircuit
                 optimized_parameter_list[ partition_idx ] = new_parameters
         else:
@@ -1057,11 +1056,10 @@ class qgd_Wide_Circuit_Optimization:
                     callback_fnc = lambda  x : self.CompareAndPickCircuits( [subcircuit, *(z[0] for z in x)], [subcircuit_parameters, *(z[1] for z in x)] )
                     new_subcircuit, new_parameters = callback_fnc(async_results[partition_idx].get( timeout = None ))
 
-                    if subcircuit != new_subcircuit:
-
-                        print( "original subcircuit:    ", subcircuit.get_Gate_Nums()) 
-                        print( "reoptimized subcircuit: ", new_subcircuit.get_Gate_Nums()) 
-                    if partition_idx % 100 == 99: print(partition_idx+1, "partitions optimized")
+                    if subcircuit != new_subcircuit and self.config["verbosity"] > 0:
+                        print( "original subcircuit:    ", subcircuit.get_Gate_Nums())
+                        print( "reoptimized subcircuit: ", new_subcircuit.get_Gate_Nums())
+                    if partition_idx % 100 == 99 and self.config["verbosity"] > 0: print(partition_idx+1, "partitions optimized")
                     optimized_subcircuits[ partition_idx ] = new_subcircuit
                     optimized_parameter_list[ partition_idx ] = new_parameters
 
@@ -1074,8 +1072,8 @@ class qgd_Wide_Circuit_Optimization:
         else:
             wide_circuit, wide_parameters = self.ConstructCircuitFromPartitions( optimized_subcircuits, optimized_parameter_list )
 
-        if parent_process() is None:
-            print( "original circuit:    ", circ.get_Gate_Nums()) 
+        if parent_process() is None and self.config["verbosity"] > 0:
+            print( "original circuit:    ", circ.get_Gate_Nums())
             print( "reoptimized circuit: ", wide_circuit.get_Gate_Nums()) 
 
 

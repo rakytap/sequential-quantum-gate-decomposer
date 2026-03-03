@@ -69,7 +69,9 @@ X::X(int qbit_num_in, int target_qbit_in) {
     // number of qubits spanning the matrix of the gate
     qbit_num = qbit_num_in;
     // the size of the matrix
-    matrix_size = Power_of_2(qbit_num);
+    if (qbit_num<31){
+        matrix_size = Power_of_2(qbit_num);
+    }
     // A string describing the type of the gate
     type = X_OPERATION;
 
