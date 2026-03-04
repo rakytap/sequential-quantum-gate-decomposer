@@ -88,15 +88,18 @@ def make_gateprep_dict(): #primitive roots of unity
                 d[sympy.factor_terms(sympy.expand_mul(sympy.expand_complex(z)))] = z
     return d
 gateprep_dict = make_gateprep_dict()
+def has_radical(expr):
+    return len(expr.atoms(sympy.Pow)) > 0
 def gateprep(x):
-    x = sympy.factor_terms(x)
-    if x in gateprep_dict: x = gateprep_dict[x]
+    x = sympy.factor_terms(x)    
+    if x == 0: return x
+    x = sympy.Mul(*[gateprep_dict[z] if z in gateprep_dict else z for z in sympy.separatevars(x).as_independent(*x.free_symbols)])
+    assert not has_radical(x), x
     return quantsimp(x)
 def quantsimp(x):
     #x = sympy.sympify(x)
     #if isinstance(x, sympy.Expr) and x.is_zero:
     #    return sympy.S.Zero if not x.is_Number else x
-    #assert "sqrt" not in str(x), x
     x = x.rewrite(sympy.exp)#.rewrite(sympy.sqrt)
     #x = sympy.expand_power_exp(x)
     #x = sympy.powdenest(x)
@@ -108,6 +111,7 @@ def quantsimp(x):
     x = sympy.cancel(x)
     #x = sympy.powsimp(x, combine="base")
     x = sympy.expand_mul(x)
+    assert not has_radical(x), x
     return x.doit()
 def textbook_simp(x):
     #print(x)
@@ -365,6 +369,7 @@ identity_pairs = ('T', 'Tdg'), ('Tdg', 'T')
 identity_angle_pairs = ('Rx', 'Rx', lambda x: (-x,)), ('Ry', 'Ry', lambda x: (-x,)), ('Rz', 'Rz', lambda x: (-x,)), ('P', 'P', lambda x: (-x,)), ('U2', 'U2', lambda x, y: (-y-sympy.pi, -x+sympy.pi)), ('U3', 'U3', lambda x, y, z: (-x, -z, -y))
 gate_inverses = {x[0]: x[1:] for x in gate_inverses_clifford + identity_pairs + identity_angle_pairs}
 basic_pauli = ('I', 'X', 'Y', 'Z')
+t_gates = ('T', 'Tdg')
 basic_clifford = basic_pauli + ('H', 'S', "Sdg", "Sx", "Sxdg")
 extended_clifford = basic_clifford+("HX", "HY", "HZ", "SX", "SY", "HS", "HSX", "HSY", "HSdg", "SH", "SHX", "SHY", "SHZ", "SxY", "SxZ")
 single_gate_clifford = tuple(x[0] for x in gate_inverses_clifford if x[0] not in clifford_decomps or len(clifford_decomps[x[0]]) == 1)
@@ -374,6 +379,7 @@ full_clifford = tuple(min([z for z in single_gate_clifford if (z == x or z.start
 assert all(gate_inverses[x][0] in full_clifford for x in full_clifford), [x for x in full_clifford if gate_inverses[x][0] not in full_clifford]
 assert len(full_clifford) == 24
 complete_clifford = tuple(x[0] for x in gate_inverses_clifford)
+cnot_full_clifford_t = ('CNOT',) + full_clifford + t_gates
 
 qasm_standard_gate_library = (
     "P", "X", "Y", "Z", "H", "S", "Sdg", "T", "Tdg", "Sx", "Rx", "Ry", "Rz",
@@ -440,7 +446,7 @@ def test_decomp():
         textbook = make_gate(gate, *params)
         for i in range(len(gate_descs[gate][1])):
             print(i, params[i], gate_descs[gate][1][i][0], 2*sympy.pi)
-            testperiod = make_gate(gate, *params[:i], params[i]+gate_descs[gate][1][i][0]*2*sympy.pi, *params[i+1:])
+            testperiod = make_gate(gate, *params[:i], params[i]+gate_descs[gate][1][i][0]*2*sympy.pi, *params[i+1:], prep=True)
             testperiod = testperiod.applyfunc(textbook_simp)
             assert textbook == testperiod, (textbook, testperiod, i)
         if len(gate_descs[gate]) == 4:
@@ -1059,8 +1065,8 @@ def gen_clifford():
 #not maximally entangling: CS, CT
 #maximally entangling: CNOT, CZ, CY, CH, iSWAP, SiSWAP (partial), XX(pi/4), exp(i pi/4 (X⊗X + Y⊗Y)), SSWAP (partial)
 #maximally entangling only at specific angles: CRX, CRY, CRZ, CP, Rxy, iSWAP_pow
-def decompose_unitary_search(gate, scale_max, layers=4, basis=('CNOT',)+single_gate_clifford+('T', 'Tdg', 'P', 'Rx', 'Ry', 'Rz', 'U2'), allow_global_phase=True, find_min=False):
-    ansatz, regions, num_qubits, Umtx, param_info = gen_ansatz(gate, scale_max, layers, basis)
+def decompose_unitary_search(orig_gate, scale_max, layers=4, basis=('CNOT',)+single_gate_clifford+('T', 'Tdg', 'P', 'Rx', 'Ry', 'Rz', 'U2'), allow_global_phase=True, find_min=False):
+    ansatz, regions, num_qubits, Umtx, param_info = gen_ansatz(orig_gate, scale_max, layers, basis)
     params = [vardict[x[1]] for x in param_info]
     num_regions = len(regions)*num_qubits #we use a half open interval based on (−π,π].
     def gen_angles(s, reversed=False):
@@ -1199,7 +1205,7 @@ def decompose_unitary_search(gate, scale_max, layers=4, basis=('CNOT',)+single_g
     fincirc = make_circ(ansatz, res, num_qubits)
     #print(circ_to_code(fincirc))
     compress = circ_to_compile(fincirc)
-    print(compress)
+    print(orig_gate, compress)
     print(circ_to_qiskit(fincirc).draw())
 
     return res, compress
@@ -1229,7 +1235,7 @@ def decompose_unitary_search(gate, scale_max, layers=4, basis=('CNOT',)+single_g
 #decompose_unitary_search("CSX", 8)
 #decompose_unitary_search("iSWAP", 8)
 #decompose_unitary_search("SiSWAP", 8)
-#decompose_unitary_search("CRX", 4)
+decompose_unitary_search("CRX", 4)
 #decompose_unitary_search("CRY", 4)
 #decompose_unitary_search("CRZ", 4)
 #decompose_unitary_search("SYC", 24)
@@ -1239,8 +1245,9 @@ def decompose_unitary_search(gate, scale_max, layers=4, basis=('CNOT',)+single_g
 #decompose_unitary_search("GP", 1)
 #decompose_unitary_search("P", 1)
 #decompose_unitary_search("Deutsch", 1)
-#decompose_unitary_search("Peres", 1)
-#decompose_unitary_search("CCX", 1)
-decompose_unitary_search("CCZ", 8)
+#decompose_unitary_search("fFredkin", basis=cnot_full_clifford_t)
+#decompose_unitary_search("Peres", basis=cnot_full_clifford_t)
+#decompose_unitary_search("CCX", 1, basis=cnot_full_clifford_t)
+#decompose_unitary_search("CCZ", 1)
 #decompose_unitary_search((1, [], lambda: compile_gates(1, [("Rx", -3*sympy.pi/2, [0]), ("Rz", -sympy.pi/4, [0]), ("H", [0]), ("X", [0]), ("Rz", -3*sympy.pi/2, [0])])), 8)
 #gen_clifford()
