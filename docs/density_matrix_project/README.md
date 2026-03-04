@@ -27,7 +27,7 @@ This directory contains comprehensive documentation for adding density matrix su
 | Document | Purpose | Audience |
 |----------|---------|----------|
 | [QUICK_REFERENCE.md](QUICK_REFERENCE.md) | API cheat sheet, common patterns | Experienced users |
-| [DENSITY_MATRIX_PROJECT_README.md](DENSITY_MATRIX_PROJECT_README.md) | Project overview, motivation, 3-phase roadmap | Everyone |
+| [DENSITY_MATRIX_PROJECT.md](DENSITY_MATRIX_PROJECT.md) | Project overview, motivation, 3-phase roadmap | Everyone |
 | [SETUP.md](SETUP.md) | Environment setup, build steps, verification | Users, developers |
 | [phase1-isolated/README.md](phase1-isolated/README.md) | Phase 1 quick start with examples | Users |
 | [phase1-isolated/PHASE1_DESIGN.md](phase1-isolated/PHASE1_DESIGN.md) | Design decisions and rationale | Reviewers, architects |
@@ -65,7 +65,7 @@ Phase 1 delivers **foundation-level density matrix support** with:
 
 ## 📋 Document Contents
 
-### DENSITY_MATRIX_PROJECT_README.md
+### DENSITY_MATRIX_PROJECT.md
 - **What:** Overall project vision and roadmap
 - **Contains:**
   - Why density matrices matter for quantum simulation
@@ -101,7 +101,7 @@ Phase 1 delivers **foundation-level density matrix support** with:
   - Future enhancement considerations
 
 ### phase1-isolated/PHASE1_IMPLEMENTATION.md
-- **What:** What was actually implemented in Phase 1
+- **What:** What was actually implemented in Phase 1 and how
 - **Contains:**
   - Complete feature list
   - API reference for all classes
