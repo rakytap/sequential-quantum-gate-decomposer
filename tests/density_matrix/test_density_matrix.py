@@ -18,6 +18,26 @@ except ImportError:
     HAS_MODULE = False
 
 
+HADAMARD = np.array([[1, 1], [1, -1]], dtype=complex) / np.sqrt(2)
+
+
+def _assert_purity_reduced(rho):
+    assert rho.purity() < 1.0
+    assert rho.is_valid()
+
+
+def _assert_population_transferred(rho):
+    rho_np = rho.to_numpy()
+    assert rho_np[0, 0].real > 0
+    assert rho.is_valid()
+
+
+def _assert_coherence_reduced(rho):
+    rho_np = rho.to_numpy()
+    assert np.abs(rho_np[0, 1]) < 0.5
+    assert rho.is_valid()
+
+
 @pytest.mark.skipif(not HAS_MODULE, reason="Density matrix module not built")
 class TestDensityMatrixBasics:
     """Test basic density matrix operations."""
@@ -112,6 +132,45 @@ class TestDensityMatrixBasics:
         # Should still be pure
         assert np.isclose(rho.purity(), 1.0, atol=1e-10)
 
+    def test_apply_unitary(self):
+        """Test unitary application."""
+        rho = DensityMatrix(qbit_num=1)
+
+        # Apply Hadamard
+        rho.apply_unitary(HADAMARD)
+
+        expected = np.array([[0.5, 0.5], [0.5, 0.5]], dtype=complex)
+        np.testing.assert_allclose(rho.to_numpy(), expected, atol=1e-10)
+
+    def test_apply_single_qubit_unitary(self):
+        """Test optimized single-qubit unitary."""
+        rho = DensityMatrix(qbit_num=2)
+
+        # Apply Hadamard on qubit 0
+        rho.apply_single_qubit_unitary(HADAMARD, 0)
+
+        rho_np = rho.to_numpy()
+
+        # Should create |+0⟩ state
+        # Qubit 0 is most significant bit in this convention
+        # |+0⟩ = (|00⟩ + |01⟩)/√2 corresponds to indices 0 and 1
+        assert np.isclose(rho_np[0, 0], 0.5)
+        assert np.isclose(rho_np[0, 1], 0.5)
+        assert np.isclose(rho_np[1, 0], 0.5)
+        assert np.isclose(rho_np[1, 1], 0.5)
+
+    def test_clone(self):
+        """Test cloning."""
+        rho1 = DensityMatrix(qbit_num=2)
+        rho2 = rho1.clone()
+
+        # Modify rho1
+        rho1.apply_single_qubit_unitary(HADAMARD, 0)
+
+        # rho2 should be unchanged
+        rho2_np = rho2.to_numpy()
+        assert np.isclose(rho2_np[0, 0], 1.0)
+
     def test_eigenvalues(self):
         """Test eigenvalue computation."""
         # Pure state: one eigenvalue = 1, rest = 0
@@ -131,8 +190,8 @@ class TestDensityMatrixBasics:
 
 
 @pytest.mark.skipif(not HAS_MODULE, reason="Density matrix module not built")
-class TestNoisyCircuit:
-    """Test noisy circuit operations."""
+class TestNoisyCircuitUnitary:
+    """Test unitary-only circuit operations."""
 
     def test_circuit_construction(self):
         """Test circuit construction."""
@@ -207,6 +266,141 @@ class TestNoisyCircuit:
         # Should preserve purity (unitary evolution)
         purity = rho.purity()
         assert np.isclose(purity, 1.0, atol=1e-10)
+
+
+@pytest.mark.skipif(not HAS_MODULE, reason="Density matrix module not built")
+class TestNoisyCircuitNoise:
+    """Test noise operations in circuits."""
+
+    @pytest.mark.parametrize(
+        "error_rate, params, expected_param_num",
+        [
+            pytest.param(0.1, np.array([]), 0, id="fixed"),
+            pytest.param(None, np.array([0.2]), 1, id="parametric"),
+        ],
+    )
+    def test_depolarizing(self, error_rate, params, expected_param_num):
+        """Test depolarizing noise in circuit."""
+        circuit = NoisyCircuit(2)
+        circuit.add_H(0)
+        circuit.add_CNOT(1, 0)
+        if error_rate is None:
+            circuit.add_depolarizing(2)
+        else:
+            circuit.add_depolarizing(2, error_rate=error_rate)
+
+        assert circuit.parameter_num == expected_param_num
+
+        rho = DensityMatrix(qbit_num=2)
+        circuit.apply_to(params, rho)
+
+        assert rho.purity() < 1.0
+        assert rho.is_valid()
+
+    def test_amplitude_damping(self):
+        """Test amplitude damping in circuit."""
+        circuit = NoisyCircuit(1)
+        circuit.add_X(0)  # Start in |1⟩
+        circuit.add_amplitude_damping(0, gamma=0.5)
+
+        rho = DensityMatrix(qbit_num=1)
+        circuit.apply_to(np.array([]), rho)
+
+        rho_np = rho.to_numpy()
+        # Should have some population in |0⟩
+        assert rho_np[0, 0].real > 0
+        assert rho_np[1, 1].real < 1
+        assert np.isclose(rho.trace().real, 1.0)
+
+    def test_phase_damping(self):
+        """Test phase damping in circuit."""
+        circuit = NoisyCircuit(1)
+        circuit.add_H(0)  # Create |+⟩ state with coherence
+        circuit.add_phase_damping(0, lambda_param=0.5)
+
+        rho = DensityMatrix(qbit_num=1)
+        circuit.apply_to(np.array([]), rho)
+
+        rho_np = rho.to_numpy()
+        # Off-diagonal elements should be reduced
+        assert np.abs(rho_np[0, 1]) < 0.5
+        # Diagonal should be unchanged
+        assert np.isclose(rho_np[0, 0].real, 0.5)
+        assert np.isclose(rho_np[1, 1].real, 0.5)
+
+
+@pytest.mark.skipif(not HAS_MODULE, reason="Density matrix module not built")
+class TestNoisyCircuitMixed:
+    """Test combined circuit operations."""
+
+    def test_mixed_operations(self):
+        """Test mixed gates and noise in circuit."""
+        circuit = NoisyCircuit(2)
+        circuit.add_H(0)
+        circuit.add_amplitude_damping(0, gamma=0.1)
+        circuit.add_CNOT(1, 0)
+        circuit.add_phase_damping(1, lambda_param=0.05)
+        circuit.add_depolarizing(2, error_rate=0.02)
+
+        assert circuit.parameter_num == 0
+
+        rho = DensityMatrix(qbit_num=2)
+        circuit.apply_to(np.array([]), rho)
+
+        assert rho.is_valid()
+        assert rho.purity() < 1.0
+
+    def test_operation_info(self):
+        """Test operation info from circuit."""
+        circuit = NoisyCircuit(2)
+        circuit.add_H(0)
+        circuit.add_CNOT(1, 0)
+        circuit.add_depolarizing(2, error_rate=0.1)
+        circuit.add_phase_damping(0)  # Parametric
+
+        info = circuit.get_operation_info()
+
+        assert len(info) == 4
+        assert info[0].name == "H"
+        assert info[0].is_unitary is True
+        assert info[0].param_count == 0
+
+        assert info[1].name == "CNOT"
+        assert info[1].is_unitary is True
+
+        assert info[2].name == "Depolarizing"
+        assert info[2].is_unitary is False
+        assert info[2].param_count == 0
+
+        assert info[3].name == "PhaseDamping"
+        assert info[3].is_unitary is False
+        assert info[3].param_count == 1
+
+    def test_all_gates(self):
+        """Test all supported gate types."""
+        circuit = NoisyCircuit(2)
+
+        # Single-qubit constant gates
+        circuit.add_H(0)
+        circuit.add_X(0)
+        circuit.add_Y(0)
+        circuit.add_Z(0)
+        circuit.add_S(0)
+        circuit.add_Sdg(0)
+        circuit.add_T(0)
+        circuit.add_Tdg(0)
+        circuit.add_SX(0)
+
+        # Two-qubit gates
+        circuit.add_CNOT(1, 0)
+        circuit.add_CZ(1, 0)
+        circuit.add_CH(1, 0)
+
+        rho = DensityMatrix(qbit_num=2)
+        circuit.apply_to(np.array([]), rho)
+
+        # Should complete without error and produce valid state
+        assert rho.is_valid()
 
 
 @pytest.mark.skipif(not HAS_MODULE, reason="Density matrix module not built")
@@ -285,6 +479,40 @@ class TestNoiseChannels:
         assert coherence_after < coherence_before, \
             "Phase damping should reduce coherence"
 
+    @pytest.mark.parametrize(
+        "channel_factory, rho_factory, validate",
+        [
+            pytest.param(
+                lambda: DepolarizingChannel(2, 0.5),
+                lambda: DensityMatrix(qbit_num=2),
+                _assert_purity_reduced,
+                id="depolarizing",
+            ),
+            pytest.param(
+                lambda: AmplitudeDampingChannel(0, 0.5),
+                lambda: DensityMatrix(np.array([0, 1], dtype=complex)),
+                _assert_population_transferred,
+                id="amplitude_damping",
+            ),
+            pytest.param(
+                lambda: PhaseDampingChannel(0, 0.5),
+                lambda: DensityMatrix(
+                    np.array([1, 1], dtype=complex) / np.sqrt(2)
+                ),
+                _assert_coherence_reduced,
+                id="phase_damping",
+            ),
+        ],
+    )
+    def test_legacy_channel_signatures(
+        self, channel_factory, rho_factory, validate
+    ):
+        """Test legacy channel constructor signatures."""
+        rho = rho_factory()
+        noise = channel_factory()
+        noise.apply(rho)
+        validate(rho)
+
 
 @pytest.mark.skipif(not HAS_MODULE, reason="Density matrix module not built")
 class TestIntegration:
@@ -337,6 +565,21 @@ class TestIntegration:
         assert np.isclose(purity_reduced, 0.5, atol=1e-10), \
             f"Bell state reduced density matrix should have purity=0.5, got {purity_reduced}"
 
+    def test_partial_trace_from_numpy(self):
+        """Test partial trace from NumPy-constructed density matrix."""
+        # Create Bell state manually
+        bell = np.array([[0.5, 0, 0, 0.5],
+                         [0, 0, 0, 0],
+                         [0, 0, 0, 0],
+                         [0.5, 0, 0, 0.5]], dtype=complex)
+        rho = DensityMatrix.from_numpy(bell)
+
+        # Trace out qubit 1
+        rho_reduced = rho.partial_trace([1])
+
+        expected = np.array([[0.5, 0], [0, 0.5]], dtype=complex)
+        np.testing.assert_allclose(rho_reduced.to_numpy(), expected, atol=1e-10)
+
     def test_comparison_with_state_vector(self):
         """Test that density matrix evolution matches state vector for pure states."""
         from squander.gates.qgd_Circuit import qgd_Circuit
@@ -366,6 +609,45 @@ class TestIntegration:
 
         np.testing.assert_allclose(rho_actual, rho_expected, atol=1e-10)
 
+
+@pytest.mark.skipif(not HAS_MODULE, reason="Density matrix module not built")
+@pytest.mark.slow
+class TestPerformance:
+    """Performance-related tests."""
+
+    def test_large_circuit(self):
+        """Test moderately large circuit."""
+        n_qubits = 4
+        circuit = NoisyCircuit(n_qubits)
+
+        # Add 20 operations
+        for _ in range(5):
+            circuit.add_H(0)
+            circuit.add_CNOT(1, 0)
+            circuit.add_CNOT(2, 1)
+            circuit.add_CNOT(3, 2)
+
+        rho = DensityMatrix(qbit_num=n_qubits)
+        circuit.apply_to(np.array([]), rho)
+
+        assert rho.is_valid()
+
+    def test_repeated_noise(self):
+        """Test repeated noise application."""
+        circuit = NoisyCircuit(2)
+
+        # Interleave gates with noise (10% per step for more noticeable effect)
+        for _ in range(10):
+            circuit.add_H(0)
+            circuit.add_depolarizing(2, error_rate=0.1)
+
+        rho = DensityMatrix(qbit_num=2)
+        circuit.apply_to(np.array([]), rho)
+
+        # Purity should decrease (10 applications of 10% noise)
+        # Not necessarily below 0.5, but significantly reduced
+        assert rho.purity() < 0.9
+        assert rho.is_valid()
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
