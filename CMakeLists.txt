@@ -1026,7 +1026,7 @@ target_link_libraries(squander_common INTERFACE
     ${OpenMP_CXX_LIBRARIES}
 )
 
-target_compile_features(squander_common INTERFACE cxx_std_17)
+target_compile_features(squander_common INTERFACE cxx_std_11)
 
 
 # adding CMAKE files for Python extensions

@@ -38,7 +38,7 @@ namespace density {
  * Example:
  * @code
  *   Gate* h = new H(2, 0);
- *   auto op = std::make_unique<GateOperation>(h, true);
+ *   auto op = std::unique_ptr<GateOperation>(new GateOperation(h, true));
  *   op->apply_to_density(nullptr, 0, rho);  // H on qubit 0
  * @endcode
  */

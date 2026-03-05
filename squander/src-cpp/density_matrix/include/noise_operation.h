@@ -55,10 +55,10 @@ public:
  * Example:
  * @code
  *   // Fixed 1% error rate
- *   auto noise = std::make_unique<DepolarizingOp>(2, 0.01);
+ *   auto noise = std::unique_ptr<DepolarizingOp>(new DepolarizingOp(2, 0.01));
  *
  *   // Parametric (error rate from optimizer)
- *   auto noise = std::make_unique<DepolarizingOp>(2);
+ *   auto noise = std::unique_ptr<DepolarizingOp>(new DepolarizingOp(2));
  * @endcode
  */
 class DepolarizingOp : public NoiseOperation {

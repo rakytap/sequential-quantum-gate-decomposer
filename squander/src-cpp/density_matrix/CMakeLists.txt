@@ -82,7 +82,7 @@ target_link_libraries(density_matrix_core
 )
 
 # Modern compiler requirements
-target_compile_features(density_matrix_core PUBLIC cxx_std_17)
+target_compile_features(density_matrix_core PUBLIC cxx_std_11)
 
 # Compiler warnings and PIC (platform-specific using generator expressions)
 target_compile_options(density_matrix_core PRIVATE

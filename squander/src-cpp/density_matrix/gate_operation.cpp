@@ -175,7 +175,7 @@ std::unique_ptr<IDensityOperation> GateOperation::clone() const {
   if (!gate_) {
     throw std::runtime_error("GateOperation::clone: gate is null");
   }
-  return std::make_unique<GateOperation>(gate_->clone(), true);
+  return std::unique_ptr<GateOperation>(new GateOperation(gate_->clone(), true));
 }
 
 } // namespace density

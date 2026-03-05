@@ -99,9 +99,9 @@ void DepolarizingOp::apply_depolarizing(DensityMatrix &rho, double p) {
 
 std::unique_ptr<IDensityOperation> DepolarizingOp::clone() const {
   if (is_parametric_) {
-    return std::make_unique<DepolarizingOp>(qbit_num_);
+    return std::unique_ptr<DepolarizingOp>(new DepolarizingOp(qbit_num_));
   } else {
-    return std::make_unique<DepolarizingOp>(qbit_num_, fixed_error_rate_);
+    return std::unique_ptr<DepolarizingOp>(new DepolarizingOp(qbit_num_, fixed_error_rate_));
   }
 }
 
@@ -205,9 +205,9 @@ void AmplitudeDampingOp::apply_amplitude_damping(DensityMatrix &rho,
 
 std::unique_ptr<IDensityOperation> AmplitudeDampingOp::clone() const {
   if (is_parametric_) {
-    return std::make_unique<AmplitudeDampingOp>(target_qbit_);
+    return std::unique_ptr<AmplitudeDampingOp>(new AmplitudeDampingOp(target_qbit_));
   } else {
-    return std::make_unique<AmplitudeDampingOp>(target_qbit_, fixed_gamma_);
+    return std::unique_ptr<AmplitudeDampingOp>(new AmplitudeDampingOp(target_qbit_, fixed_gamma_));
   }
 }
 
@@ -285,9 +285,9 @@ void PhaseDampingOp::apply_phase_damping(DensityMatrix &rho, double lambda) {
 
 std::unique_ptr<IDensityOperation> PhaseDampingOp::clone() const {
   if (is_parametric_) {
-    return std::make_unique<PhaseDampingOp>(target_qbit_);
+    return std::unique_ptr<PhaseDampingOp>(new PhaseDampingOp(target_qbit_));
   } else {
-    return std::make_unique<PhaseDampingOp>(target_qbit_, fixed_lambda_);
+    return std::unique_ptr<PhaseDampingOp>(new PhaseDampingOp(target_qbit_, fixed_lambda_));
   }
 }
 

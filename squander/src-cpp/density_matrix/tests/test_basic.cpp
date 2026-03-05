@@ -293,9 +293,9 @@ int test_gate_operation() {
   // Apply via GateOperation
   h_op.apply_to_density(nullptr, 0, rho);
 
-  // Check result
+  // Check result (qubit 0 is least-significant in this path)
   ASSERT_NEAR(rho(0, 0).real, 0.5, 1e-10);
-  ASSERT_NEAR(rho(0, 2).real, 0.5, 1e-10);
+  ASSERT_NEAR(rho(0, 1).real, 0.5, 1e-10);
   ASSERT_NEAR(rho.purity(), 1.0, 1e-10);
 
   std::cout << " PASSED" << std::endl;
@@ -631,20 +631,20 @@ int test_clone_operations() {
 
   // Test GateOperation clone
   Gate *h_gate = new H(2, 0);
-  auto h_op = std::make_unique<GateOperation>(h_gate, true);
+  auto h_op = std::unique_ptr<GateOperation>(new GateOperation(h_gate, true));
   auto h_clone = h_op->clone();
 
   ASSERT_TRUE(h_clone->get_name() == "H");
   ASSERT_TRUE(h_clone->is_unitary());
 
   // Test noise operation clones
-  auto dep_op = std::make_unique<DepolarizingOp>(2, 0.1);
+  auto dep_op = std::unique_ptr<DepolarizingOp>(new DepolarizingOp(2, 0.1));
   auto dep_clone = dep_op->clone();
 
   ASSERT_TRUE(dep_clone->get_name() == "Depolarizing");
   ASSERT_TRUE(!dep_clone->is_unitary());
 
-  auto amp_op = std::make_unique<AmplitudeDampingOp>(0, 0.2);
+  auto amp_op = std::unique_ptr<AmplitudeDampingOp>(new AmplitudeDampingOp(0, 0.2));
   auto amp_clone = amp_op->clone();
 
   ASSERT_TRUE(amp_clone->get_name() == "AmplitudeDamping");
