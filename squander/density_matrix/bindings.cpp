@@ -430,5 +430,5 @@ PYBIND11_MODULE(_density_matrix_cpp, m) {
   // Module metadata
   // ===============================================================
 
-  m.attr("__version__") = "2.0.0";
+  m.attr("__version__") = "1.0.0";
 }

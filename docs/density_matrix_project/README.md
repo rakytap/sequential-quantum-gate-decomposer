@@ -1,130 +1,72 @@
-# Density Matrix Project Documentation
+# Density Matrix Project for SQUANDER
 
-**Phase 1 Release**  
+This directory documents the density-matrix track of SQUANDER.
 
----
+The objective is to move SQUANDER from ideal pure-state simulation to  
+noise-aware mixed-state simulation, then integrate that capability into the VQA  
+training flow.
 
-## 📚 Documentation Guide
+## Why This Project Exists
 
-This directory contains comprehensive documentation for adding density matrix support to SQUANDER. Choose your reading path based on your needs:
+SQUANDER's existing simulation flow is state-vector based. That is efficient for
+ideal circuits but cannot represent mixed states produced by noise channels.
 
-### ⚡ Quick Reference (2 minutes)
+Density matrices are required for:
 
-**Experienced users wanting a cheat sheet:**
-- See [QUICK_REFERENCE.md](QUICK_REFERENCE.md) - API reference card with common patterns
+- realistic noisy emulation (depolarizing, T1, T2, and future channels),
+- trainability studies under noise (gradient collapse, barren plateaus),
+- reproducible noisy VQA experiments.
 
-### 🚀 Quick Start (5 minutes)
+## Current Status
 
-**New users wanting to try Phase 1:**
-1. Start with [SETUP.md](SETUP.md) - Build and test the implementation
-2. Try examples in [phase1-isolated/README.md](phase1-isolated/README.md)
-3. Explore [PHASE1_IMPLEMENTATION.md](phase1-isolated/PHASE1_IMPLEMENTATION.md) for API details
+Phase 1 is complete on `feature/density-matrix-phase1`:
 
-### 📖 Complete Reading Path
+- `DensityMatrix` C++ core with quantum properties and partial trace,
+- `NoisyCircuit` unified gate + noise execution path,
+- three implemented noise channels (depolarizing, amplitude damping, phase damping),
+- Python bindings in `squander.density_matrix`,
+- dedicated tests and Qiskit comparison benchmarks.
 
-**For reviewers and contributors:**
+The remaining work is deeper baseline integration and noisy VQA feature completion.
 
-| Document | Purpose | Audience |
-|----------|---------|----------|
-| [QUICK_REFERENCE.md](QUICK_REFERENCE.md) | API cheat sheet, common patterns | Experienced users |
-| [DENSITY_MATRIX_PROJECT.md](DENSITY_MATRIX_PROJECT.md) | Project overview, motivation, 3-phase roadmap | Everyone |
-| [SETUP.md](SETUP.md) | Environment setup, build steps, verification | Users, developers |
-| [phase1-isolated/README.md](phase1-isolated/README.md) | Phase 1 quick start with examples | Users |
-| [phase1-isolated/PHASE1_DESIGN.md](phase1-isolated/PHASE1_DESIGN.md) | Design decisions and rationale | Reviewers, architects |
-| [phase1-isolated/PHASE1_IMPLEMENTATION.md](phase1-isolated/PHASE1_IMPLEMENTATION.md) | Implementation details, API reference | Developers |
+## 5-Phase Roadmap
 
----
 
-## 🎯 What's in Phase 1?
+| Phase | Goal                                                            | Status   |
+| ----- | --------------------------------------------------------------- | -------- |
+| 1     | Foundation: density matrices + initial noise channels           | Complete |
+| 2     | Deep baseline integration + noise completion + basic VQA hooks  | Planned  |
+| 3     | Full noise stack + density-matrix gradients + AVX optimization  | Planned  |
+| 4     | Full noisy VQA training loop for 16-20 qubits                   | Planned  |
+| 5     | Trainability analysis under noise (BP and expressivity studies) | Planned  |
 
-Phase 1 delivers **foundation-level density matrix support** with:
 
-✅ **Core C++ Implementation**
-- Full density matrix class with quantum properties (trace, purity, entropy)
-- Integration with existing SQUANDER gates via wrapper pattern
-- Circuit builder for density matrix evolution
-- Three noise channel implementations (depolarizing, amplitude damping, phase damping)
+Notes:
 
-✅ **Python Interface**
-- Clean subpackage: `from squander.density_matrix import DensityMatrix`
-- Direct C++ bindings via pybind11
-- Seamless NumPy integration
+- Scope here is density-matrix-specific work.
+- GPU kernel development is tracked separately and can be integrated per phase as
+available.
+- Stochastic trajectory methods are deferred to later project stages.
 
-✅ **Testing & Validation**
-- 22 Python unit tests (all passing)
-- 8 C++ unit tests
-- Validated code examples
-- Integration tests with existing SQUANDER
+## Documentation Map
 
-✅ **Modern Build System**
-- Modern CMake with INTERFACE libraries
-- Zero modifications to existing SQUANDER code
-- Always enabled (no build flags needed)
+- `[CHANGELOG.md](CHANGELOG.md)`: delivered phase outputs and upcoming phase
+targets.
+- `[ARCHITECTURE.md](ARCHITECTURE.md)`: implementation structure and integration
+extension points.
+- `[API_REFERENCE.md](API_REFERENCE.md)`: complete phase-1 Python API surface.
+- `[SETUP.md](SETUP.md)`: environment setup, build, verification, troubleshooting.
 
----
+## Minimal Hello World
 
-## 📋 Document Contents
+```python
+from squander.density_matrix import DensityMatrix, NoisyCircuit
+import numpy as np
 
-### DENSITY_MATRIX_PROJECT.md
-- **What:** Overall project vision and roadmap
-- **Contains:**
-  - Why density matrices matter for quantum simulation
-  - State vectors vs. density matrices (with examples)
-  - 3-phase implementation plan
-  - Performance trade-offs
-  - External resources
+rho = DensityMatrix(qbit_num=2)
+circuit = NoisyCircuit(2)
+circuit.add_H(0)
+circuit.add_CNOT(1, 0)
+circuit.apply_to(np.array([]), rho)
+```
 
-### SETUP.md
-- **What:** How to build and verify Phase 1
-- **Contains:**
-  - Prerequisites and dependencies
-  - Step-by-step build instructions
-  - Quick verification tests
-  - Troubleshooting guide
-  - Platform-specific notes
-
-### phase1-isolated/README.md
-- **What:** Phase 1 user guide with working examples
-- **Contains:**
-  - Quick start examples
-  - Basic usage patterns
-  - Noise simulation examples
-  - Integration with existing SQUANDER
-  - Modern CMake benefits
-
-### phase1-isolated/PHASE1_DESIGN.md
-- **What:** Phase 1 architectural decisions and rationale
-- **Contains:**
-  - Design principles (non-invasive, modern CMake)
-  - Directory structure
-  - CMake modernization approach
-  - Future enhancement considerations
-
-### phase1-isolated/PHASE1_IMPLEMENTATION.md
-- **What:** What was actually implemented in Phase 1 and how
-- **Contains:**
-  - Complete feature list
-  - API reference for all classes
-  - Python usage patterns
-
----
-
-## 🔗 External Resources
-
-**Related Technologies:**
-- pybind11: https://pybind11.readthedocs.io/
-- Modern CMake: https://cliutils.gitlab.io/modern-cmake/
-- NumPy C API: https://numpy.org/doc/stable/reference/c-api/
-
-**Similar Projects (for reference):**
-- Qiskit Aer: https://github.com/Qiskit/qiskit-aer
-- Qulacs: https://github.com/qulacs/qulacs
-- QuEST: https://github.com/QuEST-Kit/QuEST
-
----
-
-## 📄 License
-
-This documentation and implementation follow the same Apache-2.0 license as the main SQUANDER project.
-
-*Last Updated: November 1, 2025*  

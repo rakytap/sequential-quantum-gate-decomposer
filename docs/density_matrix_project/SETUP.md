@@ -1,62 +1,58 @@
-# Phase 1 Density Matrix - Setup & Testing Guide
+# Density Matrix Setup and Verification
 
-**For:** Users wanting to build and test the density matrix module  
-**Branch:** `feature/density-matrix-phase1`  
-**Python:** 3.13 (also compatible with 3.8-3.12)
+This guide covers installation and validation for the density matrix module on
+`feature/density-matrix-phase1`.
 
----
+Primary audience: developers and users who need to build and run the module.
 
-## 📋 Prerequisites
+## Prerequisites
 
-- Anaconda or Miniconda installed
+- Python 3.10+ (3.13 tested on this branch)
 - CMake >= 3.15
-- C++17 compiler (GCC >= 7, Clang >= 5, MSVC 2017+)
+- C++11-capable compiler (for example GCC >= 4.8.1, Intel >= 14.0.1, or MSVC equivalent)
+- Conda (recommended)
 - Git
 
----
-
-## 🚀 Quick Setup (5 Minutes)
-
-### 1. Create Conda Environment
+## 1) Create Environment
 
 ```bash
 conda create -n qgd python=3.13 -c conda-forge -y
 conda activate qgd
 ```
 
-### 2. Install Dependencies
+## 2) Install Dependencies
 
 ```bash
-# Core dependencies (required)
+# Core build/runtime dependencies
 conda install -y numpy scipy pytest scikit-build tbb-devel ninja cmake -c conda-forge
 
-# Additional packages (optional, for integration tests)
+# Optional validation dependencies (Qiskit comparison scripts)
 conda install -y qiskit qiskit-aer matplotlib networkx -c conda-forge
 
-# pybind11 (required for density matrix module)
+# pybind11 is required by the density matrix module build
 pip install pybind11
 ```
 
-### 3. Clone and Build
+## 3) Build and Install
 
 ```bash
 cd /path/to/sequential-quantum-gate-decomposer
 git checkout feature/density-matrix-phase1
 
-# Set TBB paths (required)
+# Required in many conda-based setups
 export TBB_INC_DIR=~/.conda/envs/qgd/include
 export TBB_LIB_DIR=~/.conda/envs/qgd/lib
 
-# Build
+# Clean and build
 rm -rf _skbuild
 python setup.py build_ext
 python -m pip install -e .
 ```
 
-### 4. Verify Installation
+## 4) Quick Verification
 
 ```bash
-python << 'EOF'
+python - << 'EOF'
 from squander.density_matrix import DensityMatrix, NoisyCircuit
 import numpy as np
 
@@ -66,180 +62,108 @@ circuit.add_H(0)
 circuit.add_CNOT(1, 0)
 circuit.apply_to(np.array([]), rho)
 
-print(f"✅ Density Matrix Module Working!")
-print(f"   Purity: {rho.purity():.6f}")
-print(f"   Entropy: {rho.entropy():.6f}")
+print("Density matrix module import and execution: OK")
+print("Purity:", rho.purity())
+print("Entropy:", rho.entropy())
 EOF
 ```
 
-**Expected output:**
-```
-✅ Density Matrix Module Working!
-   Purity: 1.000000
-   Entropy: 0.000000
-```
+Expected:
+- import succeeds,
+- circuit execution succeeds,
+- purity is `1.0` for this unitary-only circuit.
 
----
+## 5) Run Tests
 
-## 🧪 Running Tests
+Always activate the same environment first:
 
-Always use the conda environment `qgd` to run the python tests and examples (and any other python code).
-
-To activate the conda environment `qgd`, run the following command:
 ```bash
 conda activate qgd
 ```
 
-### Python Tests (Comprehensive)
+Python tests:
 
 ```bash
-# All density matrix tests (22 tests, ~1 second)
 pytest tests/density_matrix/ -v
-
-# Expected: 22 passed
 ```
 
-### Example Scripts
+Examples:
 
 ```bash
-# Run comprehensive examples
 python examples/density_matrix/basic_usage.py
-
-# Expected: 5 examples, all pass
 ```
 
-### C++ Tests (Optional)
-
-If you want to run C++ unit tests:
+Optional C++ tests:
 
 ```bash
-# Build with testing enabled
 export QGD_CTEST=1
 export LDFLAGS="-L$CONDA_PREFIX/lib -Wl,-rpath,$CONDA_PREFIX/lib"
 export LIBRARY_PATH="$CONDA_PREFIX/lib:${LIBRARY_PATH:-}"
+
 python setup.py build_ext
-
-# Run C++ tests
 ./test_standalone/test_density_matrix_cpp
+
+unset LDFLAGS LIBRARY_PATH
 ```
 
-> These linker environment variables ensure the build picks up the conda-provided
-> `libstdc++`/TBB libraries. You can unset them afterwards if you do not need
-> them globally (`unset LDFLAGS LIBRARY_PATH`).
+## Troubleshooting
 
----
+### `pybind11` not found
 
-## 🔧 Troubleshooting
+Symptom:
+- CMake reports pybind11 missing and skips the density matrix module.
 
-### Issue: pybind11 not found
+Fix:
 
-**Error:**
-```
-pybind11 not found. Install with: pip install pybind11
-```
-
-**Solution:**
 ```bash
 conda activate qgd
 pip install pybind11
+python setup.py build_ext
 ```
 
-### Issue: TBB headers not found
+### TBB header/library not found
 
-**Error:**
-```
-fatal error: tbb/scalable_allocator.h: No such file or directory
-```
+Symptom:
+- missing `tbb/...` headers or link errors.
 
-**Solution:**
+Fix:
+
 ```bash
-# Install TBB
-conda install tbb-devel -c conda-forge
-
-# Set environment variables
+conda install -y tbb-devel -c conda-forge
 export TBB_INC_DIR=~/.conda/envs/qgd/include
 export TBB_LIB_DIR=~/.conda/envs/qgd/lib
-
-# Rebuild
 rm -rf _skbuild
 python setup.py build_ext
 ```
 
-### Issue: Cannot import density_matrix
+### `ModuleNotFoundError: No module named 'squander.density_matrix'`
 
-**Error:**
-```
-ModuleNotFoundError: No module named 'squander.density_matrix'
-```
+Fix:
 
-**Solution:**
 ```bash
-# Ensure module was built
-ls squander/density_matrix/_density_matrix_cpp*.so
-
-# If not found, rebuild:
 python setup.py build_ext
-
-# Reinstall in editable mode
 python -m pip install -e .
 ```
 
-### Issue: Qiskit installation fails (Python 3.13)
+Then verify that a built extension exists:
 
-**Error:**
-```
-ValueError: `py_limited_api='cp39'` not supported
-```
-
-**Solution:**
 ```bash
-# Install from conda-forge (not pip)
-conda install qiskit qiskit-aer -c conda-forge
+ls squander/density_matrix/_density_matrix_cpp*.so
 ```
 
----
+### Qiskit install issues on Python 3.13
 
-## 📊 Test Results
+Prefer conda-forge packages instead of pip wheels:
 
-After successful setup, you should see:
-
-**Pytest:**
-```
-tests/density_matrix/test_density_matrix.py ... 22 passed in 0.43s
+```bash
+conda install -y qiskit qiskit-aer -c conda-forge
 ```
 
-**Example script:**
-```
-Example 1: Pure State Evolution ✅
-Example 2: Noise Simulation ✅
-Example 3: T1 and T2 Noise ✅
-Example 4: Maximally Mixed State ✅
-Example 5: Partial Trace ✅
+## Next Documents
 
-All examples completed successfully!
-```
+- Project overview and roadmap: [`README.md`](README.md)
+- API details: [`API_REFERENCE.md`](API_REFERENCE.md)
+- Architecture details: [`ARCHITECTURE.md`](ARCHITECTURE.md)
+- External context: [`RESEARCH_ALIGNMENT.md`](RESEARCH_ALIGNMENT.md)
+- Delivered and planned work: [`CHANGELOG.md`](CHANGELOG.md)
 
----
-
-## 🎓 Next Steps
-
-**After successful setup, you can:**
-
-1. **Try examples:** See [phase1-isolated/README.md](phase1-isolated/README.md) for working code examples
-2. **Learn the API:** Check [phase1-isolated/PHASE1_IMPLEMENTATION.md](phase1-isolated/PHASE1_IMPLEMENTATION.md) for complete API reference
-3. **Understand design:** Read [phase1-isolated/PHASE1_DESIGN.md](phase1-isolated/PHASE1_DESIGN.md) for design rationale
-4. **See roadmap:** Review [DENSITY_MATRIX_PROJECT_README.md](DENSITY_MATRIX_PROJECT_README.md) for the full project vision
-
----
-
-## 📦 Package Information
-
-**SQUANDER:** v1.9.3  
-**Density Matrix Module:** v1.0.0 (Phase 1)  
-**Python Compatibility:** 3.8-3.13  
-**Build System:** CMake 3.15+ with scikit-build  
-**Bindings:** pybind11 3.0+
-
----
-
-*Last Updated: November 1, 2025*  
