@@ -20,6 +20,7 @@ limitations under the License.
     \brief Class to solve GQML problems
 */
 #include "Generative_Quantum_Machine_Learning_Base.h"
+#include "matrix_real.h"
 
 #include <algorithm>
 #include <iostream>
@@ -395,6 +396,33 @@ double Generative_Quantum_Machine_Learning_Base::TV_of_the_distributions(Matrix&
     return TV * 0.5;
 }
 
+void Generative_Quantum_Machine_Learning_Base::fast_walsh_hadamard_transform(Matrix_real& a) {
+    int n = a.size();
+    int half_n = n / 2;
+    int shift = 0;
+
+    // The outer loop MUST be sequential (dependencies between stages)
+    for (int len = 1; len < n; len <<= 1, shift++) {
+        int mask = len - 1;
+
+        tbb::parallel_for(tbb::blocked_range<int>(0, half_n, 1024), 
+            [&](const tbb::blocked_range<int>& r) {
+                for (int k = r.begin(); k < r.end(); ++k) {
+                    int i = (k >> shift) << (shift + 1);
+                    int j = k & mask;
+                    
+                    int idx1 = i | j;
+                    int idx2 = idx1 | len;
+
+                    double u = a[idx1];
+                    double v = a[idx2];
+                    a[idx1] = u + v;
+                    a[idx2] = u - v;
+                }
+        });
+    }
+}
+
 /**
 @brief Call to evaluate the maximum mean discrepancy of the given distribution and the one created by our circuit
 @param State_right The state on the right for which the expectation value is evaluated. It is a column vector.
@@ -419,6 +447,25 @@ double Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions_exact(
     double ev_P_theta_P_star = 0.0;
     double ev_P_theta_P_theta = 0.0;
 
+    Matrix_real sum_pairs_precalc_P_star = P_star.copy();
+    Matrix_real sum_pairs_precalc_P_theta = P_theta.copy();
+    fast_walsh_hadamard_transform(sum_pairs_precalc_P_star);
+    fast_walsh_hadamard_transform(sum_pairs_precalc_P_theta);
+
+    Matrix_real sum_pairs_precalc_P_theta_squared(N, 1);
+    Matrix_real sum_pairs_precalc_P_star_squared(N, 1);
+
+
+    tbb::parallel_for(tbb::blocked_range<int>(0, N, 1024), [&](tbb::blocked_range<int> r) {
+        for (int idx = r.begin(); idx < r.end(); idx++) {
+            sum_pairs_precalc_P_theta_squared[idx] = sum_pairs_precalc_P_theta[idx]*sum_pairs_precalc_P_theta[idx];
+            sum_pairs_precalc_P_star_squared[idx] = sum_pairs_precalc_P_theta[idx]*sum_pairs_precalc_P_star[idx];
+        }
+    });
+
+    fast_walsh_hadamard_transform(sum_pairs_precalc_P_theta_squared);
+    fast_walsh_hadamard_transform(sum_pairs_precalc_P_star_squared);
+
     tbb::combinable<double> priv_partial_ev_P_theta_P_star{[]() { return 0.0; }};
     tbb::combinable<double> priv_partial_ev_P_theta_P_theta{[]() { return 0.0; }};
 
@@ -428,23 +475,12 @@ double Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions_exact(
         double& ev_P_theta_P_theta_local = priv_partial_ev_P_theta_P_theta.local();
 
         for (int d = r.begin(); d < r.end(); d++) {
-
-            // Sum P_theta(x) * P_star(x XOR d) for all x
-            double sum_pairs_P_theta_P_star = 0.0;
-            double sum_pairs_P_theta_P_theta = 0.0;
-
-            for (int x = 0; x < N; x++) {
-                int y = x ^ d;
-                sum_pairs_P_theta_P_star += P_theta[x] * P_star[y];
-                sum_pairs_P_theta_P_theta += P_theta[x] * P_theta[y];
-            }
-
             int hamming_dist = __builtin_popcount(d);
 
 
             double kernel_val = gaussian_lookup_table[hamming_dist];
-            ev_P_theta_P_star_local += sum_pairs_P_theta_P_star * kernel_val;
-            ev_P_theta_P_theta_local += sum_pairs_P_theta_P_theta * kernel_val;
+            ev_P_theta_P_star_local += sum_pairs_precalc_P_star_squared[d]/N * kernel_val;
+            ev_P_theta_P_theta_local += sum_pairs_precalc_P_theta_squared[d]/N * kernel_val;
         }
     });
 
@@ -475,13 +511,22 @@ circuit
 */
 double Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions_approx(Matrix& State_right) {
     int N = 1 << qbit_num;
-    std::vector<double> P_theta(N);
+    Matrix_real P_theta(N, 1);
     tbb::parallel_for(tbb::blocked_range<int>(0, N, 1024), [&](tbb::blocked_range<int> r) {
         for (int idx = r.begin(); idx < r.end(); idx++) {
             P_theta[idx] =
                 State_right[idx].real * State_right[idx].real + State_right[idx].imag * State_right[idx].imag;
         }
     });
+
+    Matrix_real sum_pairs_precalc = P_theta.copy();
+    fast_walsh_hadamard_transform(sum_pairs_precalc);
+    tbb::parallel_for(tbb::blocked_range<int>(0, N, 1024), [&](tbb::blocked_range<int> r) {
+         for (int idx = r.begin(); idx < r.end(); idx++) {
+            sum_pairs_precalc[idx] *= sum_pairs_precalc[idx];
+        }
+    });
+    fast_walsh_hadamard_transform(sum_pairs_precalc);
 
     // Calculate the expectation values
     double ev_P_theta_P_theta = 0.0;
@@ -492,14 +537,9 @@ double Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions_approx
         double& ev_P_theta_P_theta_local = priv_partial_ev_P_theta_P_theta.local();
         double& ev_P_theta_P_star_local = priv_partial_ev_P_theta_P_star.local();
         for (int idx1 = r.begin(); idx1 < r.end(); idx1++) {
-            double sum_pairs = 0.0;
             int hamming_dist = __builtin_popcount(idx1);
             double kernel_val = gaussian_lookup_table[hamming_dist];
-            for (int x = 0; x < N; x++) {
-                int y = idx1 ^ x;
-                sum_pairs += P_theta[x] * P_theta[y];
-            }
-            ev_P_theta_P_theta_local += sum_pairs * kernel_val;
+            ev_P_theta_P_theta_local += sum_pairs_precalc[idx1]/N * kernel_val;
 
             for (int idx2 = 0; idx2 < batch_size; idx2++) {
                 int hamming_dist = __builtin_popcount(idx1 ^ current_samples_P_star[idx2]);

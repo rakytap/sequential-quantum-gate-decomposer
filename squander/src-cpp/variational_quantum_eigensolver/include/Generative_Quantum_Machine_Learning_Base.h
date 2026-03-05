@@ -144,6 +144,12 @@ class Generative_Quantum_Machine_Learning_Base : public Optimization_Interface {
     std::vector<int> draw_from_distribution();
 
     /**
+    @brief Call to perform the fast Walsh-Hadamard transform on the given vector
+    @param a The vector on which the fast Walsh-Hadamard transform is performed. It is modified in place.
+    */
+    void fast_walsh_hadamard_transform(Matrix_real& input_vec);
+
+    /**
     @brief Call to evaluate the expectation value of the square of the distribution
     @return The calculated value of the expectation value of the square of the distribution
     */
