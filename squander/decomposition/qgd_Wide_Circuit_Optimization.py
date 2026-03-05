@@ -14,7 +14,7 @@ from squander.utils import CompareCircuits
 import numpy as np
 from qiskit import QuantumCircuit
 
-from typing import List, Callable
+from typing import List, Callable, Tuple
 
 import multiprocessing as mp
 from multiprocessing import Process, Pool, parent_process
@@ -647,7 +647,7 @@ class qgd_Wide_Circuit_Optimization:
 
 
 
-    def ConstructCircuitFromPartitions( self, circs: List[Circuit], parameter_arrs: [List[np.ndarray]] ) -> (Circuit, np.ndarray):
+    def ConstructCircuitFromPartitions( self, circs: List[Circuit], parameter_arrs: List[List[np.ndarray]] ) -> Tuple[Circuit, np.ndarray]:
         """
         Call to construct the wide quantum circuit from the partitions.
 
@@ -765,7 +765,7 @@ class qgd_Wide_Circuit_Optimization:
 
 
     @staticmethod
-    def CompareAndPickCircuits( circs: List[Circuit], parameter_arrs: [List[np.ndarray]], metric : Callable[ [Circuit], int ] = CNOTGateCount ) -> Circuit:
+    def CompareAndPickCircuits( circs: List[Circuit], parameter_arrs: List[List[np.ndarray]], metric : Callable[ [Circuit], int ] = CNOTGateCount ) -> Circuit:
         """
         Call to pick the most optimal circuit corresponding a specific metric. Looks for the circuit
         with the minimal metric value.
@@ -807,7 +807,7 @@ class qgd_Wide_Circuit_Optimization:
 
 
     @staticmethod
-    def PartitionDecompositionProcess( subcircuit: Circuit, subcircuit_parameters: np.ndarray, config: dict, structure=None ) -> (Circuit, np.ndarray):
+    def PartitionDecompositionProcess( subcircuit: Circuit, subcircuit_parameters: np.ndarray, config: dict, structure=None ) -> Tuple[Circuit, np.ndarray]:
         """
         Implements an asynchronous process to decompose a unitary associated with a partition in a large 
         quantum circuit
@@ -861,6 +861,7 @@ class qgd_Wide_Circuit_Optimization:
                 callback_fnc = lambda  x : x + [(innercirc, innercirc_parameters)]
                 all_sol_for_idx.append(callback_fnc(qgd_Wide_Circuit_Optimization.PartitionDecompositionProcess(innercirc, innercirc_parameters, {**config, "stop_first_solution": False, 'tree_level_max': max(0, subcircuit.get_Gate_Nums().get('CNOT', 0))}, structure=None)))
             all_decomposed = []
+            import itertools
             opt = qgd_Wide_Circuit_Optimization({**config, "max_partition_size": 3})
             if np.prod([len(x) for x in all_sol_for_idx]) > 32:
                 import random
@@ -955,7 +956,7 @@ class qgd_Wide_Circuit_Optimization:
         L = topo_sort_partitions(circ, max_partition_size, parts)
         return [parts[i] for i in L], [struct_idxs[i] for i in L]
 
-    def OptimizeWideCircuit( self, circ: Circuit, parameters: np.ndarray, global_min=True, part_size_start=3, part_size_end=5 ) -> (Circuit, np.ndarray):
+    def OptimizeWideCircuit( self, circ: Circuit, parameters: np.ndarray, global_min=True, part_size_start=3, part_size_end=5 ) -> Tuple[Circuit, np.ndarray]:
         count = CNOTGateCount(circ)
         for max_part_size in range(part_size_start, part_size_end + 1):
             # instantiate the object for optimizing wide circuits
@@ -969,7 +970,7 @@ class qgd_Wide_Circuit_Optimization:
                 count = newcount
                 if no_improve: break
         return circ, parameters
-    def _OptimizeWideCircuit( self, circ: Circuit, orig_parameters: np.ndarray, global_min=True, prepartitioning=None, structures=None ) -> (Circuit, np.ndarray):
+    def _OptimizeWideCircuit( self, circ: Circuit, orig_parameters: np.ndarray, global_min=True, prepartitioning=None, structures=None ) -> Tuple[Circuit, np.ndarray]:
         """
         Call to optimize a wide circuit (i.e. circuits with many qubits) by
         partitioning the circuit into smaller partitions and redecompose the smaller partitions
