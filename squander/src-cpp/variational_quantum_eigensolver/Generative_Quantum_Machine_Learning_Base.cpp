@@ -323,11 +323,21 @@ double Generative_Quantum_Machine_Learning_Base::expectation_value_P_star_P_star
     double ev = 0.0;
     tbb::combinable<double> priv_partial_ev{[]() { return 0.0; }};
 
+    Matrix_real sum_pairs_precalc = P_star.copy();
+    fast_walsh_hadamard_transform(sum_pairs_precalc);
+    tbb::parallel_for(tbb::blocked_range<int>(0, N, 1024), [&](tbb::blocked_range<int> r_inner) {
+        for (int idx = r_inner.begin(); idx < r_inner.end(); idx++) {
+            sum_pairs_precalc[idx] *= sum_pairs_precalc[idx];
+        }
+    });
+    fast_walsh_hadamard_transform(sum_pairs_precalc);
+
     // Iterate over all possible XOR values d (0 to N-1)
     // For each d, find all pairs (x, y) where x XOR y = d
     // Since y = x XOR d, we iterate over x and compute y
     tbb::parallel_for(tbb::blocked_range<int>(0, N, 1024), [&](tbb::blocked_range<int> r) {
         double& ev_local = priv_partial_ev.local();
+
 
         for (int d = r.begin(); d < r.end(); d++) {
             // Calculate Hamming distance: popcount of XOR value
@@ -339,15 +349,7 @@ double Generative_Quantum_Machine_Learning_Base::expectation_value_P_star_P_star
             }
             double kernel_val = gaussian_lookup_table[hamming_dist];
 
-            // Sum over all x: P(x) * P(x XOR d) * K(popcount(d))
-            // This captures all pairs (x, y) where x XOR y = d
-            double sum_pairs = 0.0;
-            for (int x = 0; x < N; x++) {
-                int y = x ^ d; // y such that x XOR y = d
-                sum_pairs += P_star[x] * P_star[y];
-            }
-
-            ev_local += sum_pairs * kernel_val;
+            ev_local += sum_pairs_precalc[d]/N * kernel_val;
         }
     });
 
@@ -396,6 +398,10 @@ double Generative_Quantum_Machine_Learning_Base::TV_of_the_distributions(Matrix&
     return TV * 0.5;
 }
 
+/**
+@brief Call to perform the fast Walsh-Hadamard transform on the given vector
+@param a The vector on which the fast Walsh-Hadamard transform is performed. It is modified in place.
+*/
 void Generative_Quantum_Machine_Learning_Base::fast_walsh_hadamard_transform(Matrix_real& a) {
     int n = a.size();
     int half_n = n / 2;
