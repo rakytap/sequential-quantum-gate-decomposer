@@ -962,7 +962,7 @@ class qgd_Wide_Circuit_Optimization:
             wide_circuit_optimizer = qgd_Wide_Circuit_Optimization( {**self.config, 'max_partition_size': max_part_size} )
             while True:
                 # run circuit optimization
-                circ_flat, parameters = wide_circuit_optimizer._OptimizeWideCircuit( circ, parameters )
+                circ_flat, parameters = wide_circuit_optimizer._OptimizeWideCircuit( circ, parameters, global_min=global_min )
                 circ = circ_flat.get_Flat_Circuit()
                 newcount = CNOTGateCount(circ)
                 no_improve = newcount >= count
