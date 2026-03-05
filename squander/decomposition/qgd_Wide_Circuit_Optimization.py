@@ -868,8 +868,8 @@ class qgd_Wide_Circuit_Optimization:
             else: trycombs = itertools.product(*all_sol_for_idx)
             for combination in trycombs:
                 structures = [qgd_Wide_Circuit_Optimization.copy_circuit_structure(x[0]) for x in combination]
-                optcirc, optparams = opt.OptimizeWideCircuit(remapped_subcircuit, subcircuit_parameters, False, parts, structures)
-                reoptcirc, reoptparams = opt.OptimizeWideCircuit(optcirc.get_Flat_Circuit(), optparams)
+                optcirc, optparams = opt._OptimizeWideCircuit(remapped_subcircuit, subcircuit_parameters, False, parts, structures)
+                reoptcirc, reoptparams = opt._OptimizeWideCircuit(optcirc.get_Flat_Circuit(), optparams)
                 all_decomposed.append((reoptcirc.get_Flat_Circuit(), reoptparams))
         else:
             if not structure is None:
@@ -955,7 +955,21 @@ class qgd_Wide_Circuit_Optimization:
         L = topo_sort_partitions(circ, max_partition_size, parts)
         return [parts[i] for i in L], [struct_idxs[i] for i in L]
 
-    def OptimizeWideCircuit( self, circ: Circuit, orig_parameters: np.ndarray, global_min=True, prepartitioning=None, structures=None ) -> (Circuit, np.ndarray):
+    def OptimizeWideCircuit( self, circ: Circuit, parameters: np.ndarray, global_min=True, part_size_start=3, part_size_end=5 ) -> (Circuit, np.ndarray):
+        count = CNOTGateCount(circ)
+        for max_part_size in range(part_size_start, part_size_end + 1):
+            # instantiate the object for optimizing wide circuits
+            wide_circuit_optimizer = qgd_Wide_Circuit_Optimization( {**self.config, 'max_partition_size': max_part_size} )
+            while True:
+                # run circuit optimization
+                circ_flat, parameters = wide_circuit_optimizer._OptimizeWideCircuit( circ, parameters )
+                circ = circ_flat.get_Flat_Circuit()
+                newcount = CNOTGateCount(circ)
+                no_improve = newcount >= count
+                count = newcount
+                if no_improve: break
+        return circ, parameters
+    def _OptimizeWideCircuit( self, circ: Circuit, orig_parameters: np.ndarray, global_min=True, prepartitioning=None, structures=None ) -> (Circuit, np.ndarray):
         """
         Call to optimize a wide circuit (i.e. circuits with many qubits) by
         partitioning the circuit into smaller partitions and redecompose the smaller partitions
@@ -1074,7 +1088,7 @@ class qgd_Wide_Circuit_Optimization:
         if global_min:
              parts, struct_idxs = qgd_Wide_Circuit_Optimization.recombine_all_partition_circuit(circ, self.max_partition_size, optimized_subcircuits, recombine_info)
              structures = [qgd_Wide_Circuit_Optimization.copy_circuit_structure(optimized_subcircuits[x]) for x in struct_idxs]
-             return self.OptimizeWideCircuit(circ, orig_parameters, global_min=False, prepartitioning=parts, structures=structures)
+             return self._OptimizeWideCircuit(circ, orig_parameters, global_min=False, prepartitioning=parts, structures=structures)
         else:
             wide_circuit, wide_parameters = self.ConstructCircuitFromPartitions( optimized_subcircuits, optimized_parameter_list )
 
