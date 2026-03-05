@@ -103,23 +103,14 @@ if __name__ == '__main__':
 
 
     # run circuit optimization
-    for max_part_size in range(3, 6):
-        # instantiate the object for optimizing wide circuits
-        wide_circuit_optimizer = Wide_Circuit_Optimization.qgd_Wide_Circuit_Optimization( {**config, 'max_partition_size': max_part_size} )
-        while True:
-            count = Wide_Circuit_Optimization.CNOTGateCount(circ)
-            circ_flat, parameters = wide_circuit_optimizer.OptimizeWideCircuit( circ, parameters )
+    wide_circuit_optimizer = Wide_Circuit_Optimization.qgd_Wide_Circuit_Optimization( config )
+    circ, parameters = wide_circuit_optimizer.OptimizeWideCircuit( circ, parameters )
 
-            #config['topology'] = [
-            #(0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7),
-            #(8, 9), (8, 10), (8, 11), (8, 12), (8, 13), (8, 14), (8, 15),
-            #(0, 8),
-            #]
-            wide_circuit_optimizer = Wide_Circuit_Optimization.qgd_Wide_Circuit_Optimization( config )
-            circo = Qiskit_IO.get_Qiskit_Circuit(circ_flat.get_Flat_Circuit(),parameters)
-            # run circuit optimization
-            circ, parameters = Qiskit_IO.convert_Qiskit_to_Squander(circo)
-            if Wide_Circuit_Optimization.CNOTGateCount(circ) >= count: break
+    #config['topology'] = [
+    #(0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7),
+    #(8, 9), (8, 10), (8, 11), (8, 12), (8, 13), (8, 14), (8, 15),
+    #(0, 8),
+    #]
 
     print("--- %s seconds elapsed during optimization ---" % (time.time() - start_time))
 
