@@ -1,14 +1,12 @@
 from squander import Generative_Quantum_Machine_Learning
 import time
-from squander.partitioning.partition import PartitionCircuitQasm
-from squander.partitioning.partition import PartitionCircuit
-import qml_pennylane
 import os
 import numpy as np
 import matplotlib.pyplot as plt
 import dataset_generator
 import networkx as nx
-from qiskit.qasm2 import dumps
+import matplotlib
+matplotlib.use('Agg')
 
 print("works")
 
@@ -32,8 +30,8 @@ def generate_MRF_dataset(n_nodes, graph_type, dataset_size, path = None, G=None)
 
     return training_set, mrf.distribution, list(nx.find_cliques(mrf.graph))
 
-def plot_distributions(pennylane_dist, original):
-    n_points = len(pennylane_dist)
+def plot_distributions(original, GQML, pennylane_dist=None, name="dist_sq"):
+    n_points = len(original)
     initial_state = np.zeros(n_points, dtype=np.complex128)
     initial_state[0] = 1.0+0j
     state_to_transform = initial_state.copy()
@@ -45,163 +43,122 @@ def plot_distributions(pennylane_dist, original):
     plt.plot(original, alpha=0.5, label="original")
     plt.legend()
     plt.grid()
-    plt.savefig("dist_sq.pdf")
+    plt.savefig(f"{name}.pdf")
     plt.figure()
-    plt.plot(pennylane_dist, alpha=0.5, label="pennylane")
-    plt.plot(original, alpha=0.5, label="original")
-    plt.legend()
-    plt.grid()
-    plt.savefig("dist_pl.pdf")
+    if pennylane_dist is not None:
+        plt.plot(pennylane_dist, alpha=0.5, label="pennylane")
+        plt.plot(original, alpha=0.5, label="original")
+        plt.legend()
+        plt.grid()
+        plt.savefig("dist_pl.pdf")
 
-def run_squander(n_run):
-    print("MMD", GQML.Optimization_Problem(parameters))
-    iters_sq_best = []
-    mmd_sq_best = []
-    tv_sq_best = []
-    for i in range(n_run):
-        GQML.set_Optimized_Parameters(params0)
-        GQML.set_Project_Name(f"qml_test{i}")
-        try:
-            os.remove(f"qml_test{i}_costfuncs_entropy_and_tv.txt")
-        except:
-            pass
-        t0 = time.time()
-        GQML.Start_Optimization()
-        print("squander time", time.time()-t0)
-        iters_sq, mmd_sq, _, tv_sq = np.loadtxt(f"qml_test{i}_costfuncs_entropy_and_tv.txt").T
-        if len(iters_sq_best) == 0:
-            iters_sq_best = iters_sq[:]
-            mmd_sq_best = mmd_sq[:]
-            tv_sq_best = tv_sq[:]
-        else:
-            if tv_sq[-1] < tv_sq_best[-1]:
-                iters_sq_best = iters_sq[:]
-                mmd_sq_best = mmd_sq[:]
-                tv_sq_best = tv_sq[:]
-    print(tv_sq_best[-1])
-    return iters_sq_best, mmd_sq_best, tv_sq_best
+def run_squander(qbit_num, P_star, cliques, config, optimizer="COSINE", circuit=("HEA_ZYZ", (5, 1)), use_exact=False, project_name="qml_test"):
+    qbit_num = n_nodes
+    median_dist = int(2**n_nodes*(1-1/np.sqrt(2)))/150
+    print("Median distance: ",median_dist)
 
-def run_pennylane(n_run):
-    iters_pl_best = []
-    mmd_pl_best = []
-    P_theta_pl_best = []
-    for i in range(n_run):
-        # P_theta_pl, mmd_pl, tv_pl = qml_pennylane.run_pennylane(P_star, qbit_num, 6, iters, cliques, sigma, params0, ansatz_type="QCMRF", circuit_input=circuit) 
-        P_theta_pl, mmd_pl, tv_pl = qml_pennylane.run_pennylane(P_star, qbit_num, 6, iters, cliques, sigma, params0) 
-        if len(iters_pl_best) == 0:
-            P_theta_pl_best = P_theta_pl[:]
-            mmd_pl_best = mmd_pl[:]
-            tv_pl_best = tv_pl[:]
-        else:
-            if tv_pl[-1] < tv_pl_best[-1]:
-                P_theta_pl_best = P_theta_pl[:]
-                mmd_pl_best = mmd_pl[:]
-                tv_pl_best = tv_pl[:]
-    return mmd_pl_best, tv_pl_best, P_theta_pl_best
+    sigma = np.array([0.25, 8, 1024])
+    sigma = np.array([x*median_dist for x in sigma])
+    print("Sigma: ", sigma)
 
-def plot_cost_fnx(iters, sqander_cf, cosine_cf, pennylane_cf, cf_name):
+    x = training_set.astype(np.int32)
+    P_star = target_distribution
+    use_lookup_table = True
+
+    print("Initializing GQML...")
+    GQML = Generative_Quantum_Machine_Learning(x, P_star, sigma, qbit_num, use_lookup_table, cliques, use_exact, config, accelerator_num=0)
+    GQML.set_Optimizer(optimizer)
+    GQML.set_Ansatz(circuit[0])
+    GQML.Generate_Circuit(circuit[1][0], circuit[1][1])
+    param_num  = GQML.get_Parameter_Num()
+    print("Numbers of parameteris in the circuit: ", param_num)
+
+    parameters = np.zeros(param_num)
+    GQML.set_Optimized_Parameters(parameters)
+
+    print(f"\nInitialized QQML, with {qbit_num} qubits and {param_num} parameters.\n\
+{optimizer} optimizer will be used for optimization.\n\
+Cirucuit type: {circuit[0]} with depth {circuit[1][0]} and repetitions {circuit[1][1]}.\n")
+
+    t0 = time.time()
+    print("Initial MMD", GQML.Optimization_Problem(parameters))
+    print("One MMD time:", time.time()-t0)
+
+    GQML.set_Project_Name(project_name)
+    try:
+        os.remove(f"{project_name}_costfuncs_entropy_and_tv.txt")
+    except:
+        pass
+
+    print("Starting optimization...")
+    t0 = time.time()
+    GQML.Start_Optimization()
+    print("Optimization time: ", opt_time := time.time()-t0)
+    iters_sq, mmd_sq, _, tv_sq = np.loadtxt(f"{project_name}_costfuncs_entropy_and_tv.txt").T
+
+    return iters_sq, mmd_sq, tv_sq, opt_time
+
+def plot_cost_fnx(iters, sqander_cf, cosine_cf,cf_name, pennylane_cf=None, ):
     plt.figure()
     plt.title(cf_name)
-    plt.plot( sqander_cf, label="squander adam")
-    plt.plot( cosine_cf, label="cosine")
-    plt.plot(pennylane_cf, label="pennylane adam")
+    plt.plot( sqander_cf, label="exact")
+    plt.plot( cosine_cf, label="stochastic")
+    if pennylane_cf is not None:
+        plt.plot(pennylane_cf, label="pennylane adam")
     plt.legend()
     plt.savefig(f"{cf_name}.pdf")
 
-n_nodes = 12
-graph_type = "grid"
-dataset_size = 1000
+n_nodes = 10
+graph_type = "custom"
+dataset_size = 100
 
 G = nx.Graph()
 G.add_nodes_from(range(n_nodes))
 # edges = [(x, x+1) for x in range(n_nodes-1)]
 # edges.append((n_nodes-1, 0))
-# edges = [[0, 1], [1, 2], [2, 3], [3, 4], [3, 5], [4, 5], [5, 6], [6, 7], [6, 8], [6, 9], [7, 8], [7, 9], [8, 9], [9, 1]]
-edges = [(i, j) for i in range(11) for j in range(11) if i!=j]
-for i in range(11, 17):
-    for j in range(11, 17):
-        if i != j:
-            edges.append((i, j))
+edges = [[0, 1], [1, 2], [2, 3], [3, 4], [3, 5], [4, 5], [5, 6], [6, 7], [6, 8], [6, 9], [7, 8], [7, 9], [8, 9], [9, 1]]
+# edges = [(i, j) for i in range(11) for j in range(11) if i!=j]
+# for i in range(11, 17):
+#     for j in range(11, 17):
+#         if i != j:
+#             edges.append((i, j))
 # for i in range(10, 17):
 #     for j in range(10, 17):
 #         if i != j:
 #             edges.append((i, j))
 # edges.append((4, 5))
-edges.append((10, 11))
+# edges.append((10, 11))
 G.add_edges_from(edges)
 training_set, target_distribution, cliques = generate_MRF_dataset(n_nodes, graph_type, dataset_size, G=G)
 p_num = np.sum([2**(len(i)-1) for i in cliques])+3*n_nodes
 
-pos = nx.spring_layout(G, seed=42)  # Layout for nicer visualization
-nx.draw(G, pos, with_labels=True, node_color="skyblue", node_size=700, edge_color="gray", font_weight="bold")
-plt.savefig("graph.png")
-plt.figure()
-
 cliques = sorted([sorted(x) for x in cliques])
 
-iters = 100
-bs = 1
-full_iters = int(iters*(p_num//bs))
-print("iterations", full_iters)
-op = int(full_iters//iters)
-print("op",op)
+iters = 1000
+output_num = 5
+bs = 20
+circuit = ("HEA_ZYZ", (100, 1))
 # generate configuration dictionary for the solver
+config = {
+    "max_inner_iterations": iters, 
+    "batch_size": bs,
+    "check_for_convergence": False,
+    "output_periodicity": int(iters//output_num)
+}
+sq_iters, sq_mmd, sq_tv, sq_time = run_squander(qbit_num=n_nodes, P_star=target_distribution, cliques=cliques, config=config, use_exact=True, circuit=circuit)
+
+use_exact = False
 config = {"max_inner_iterations": iters, 
 	"batch_size": bs,
-    "eta": .1,
-    # "randomization_threshold":1,
+    "batch_size_stochastic_gradient": 64,
     "check_for_convergence": False,
-	"convergence_length": 20,
-    "output_periodicity": int(iters//100)}
-qbit_num = n_nodes
-median_dist = int(2**n_nodes*(1-1/np.sqrt(2)))/150
-print("median distance",median_dist)
-sigma = np.array([0.25, 8, 1024])
-sigma = np.array([x*median_dist for x in sigma])
-x = training_set.astype(np.int32)
-P_star = target_distribution
-use_lookup_table = True
-use_exact  = True
+    "sampling_rate": 8,
+    "output_periodicity": int(iters//output_num)}
+sq_iters_stoch, sq_mmd_stoch, sq_tv_stoch, sq_time_stoch = run_squander(qbit_num=n_nodes, P_star=target_distribution, cliques=cliques, config=config, circuit=circuit)
 
-GQML = Generative_Quantum_Machine_Learning(x, P_star, sigma, qbit_num, use_lookup_table, cliques, use_exact, config, accelerator_num=0)
-# set the optimization engine to agents
-GQML.set_Optimizer("ADAM")
-# set the ansatz variant (U3 rotations and CNOT gates)
-GQML.set_Ansatz("QCMRF")
-# os.remove("qml_test_costfuncs_entropy_and_tv.txt")
-GQML.Generate_Circuit(5, 1)
-param_num  = GQML.get_Parameter_Num()
-print("param num", param_num)
+print("\n" + "#"*50)
+print("Exact optimization tv distance: ", sq_tv[-1], ", elapsed time: ", sq_time)
+print("Stochastic optimization tv distance: ", sq_tv_stoch[-1], ", elapsed time: ", sq_time_stoch)
 
-
-parameters = np.random.random(param_num)
-# parameters = np.zeros(param_num)
-params0 = parameters.copy()
-GQML.set_Optimized_Parameters(parameters)
-circuit = GQML.get_Qiskit_Circuit()
-max_partition_size = 4
-
-t0 = time.time()
-print("squander mmd", GQML.Optimization_Problem(parameters))
-print("squander time", time.time()-t0)
-with open('tmp.qasm', 'w') as file:
-    qasm_c = dumps(circuit)
-    qasm_c = qasm_c.replace("u(", "u3(")
-    file.write(qasm_c)
-partitioned_circuit, params_reord, _ = PartitionCircuitQasm("tmp.qasm", max_partition_size, "kahn")
-# params0 = params_reord.copy()
-
-GQML.set_Gate_Structure(partitioned_circuit)
-GQML.set_Optimized_Parameters(params_reord)
-t0 = time.time()
-print("MMD", GQML.Optimization_Problem(params_reord))
-print("part", time.time()-t0)
-
-# pl_mmd, pl_tv, pl_P = run_pennylane(1)
-# sq_iters, sq_mmd, sq_tv = run_squander(1)                                 
-# GQML.set_Optimizer("COSINE")
-# sq_iters_cos, sq_mmd_cos, sq_tv_cos = run_squander(1)                                 
-#
-# plot_cost_fnx(sq_iters, sq_tv, sq_tv_cos, pl_tv, "tv")
-# plot_cost_fnx(sq_iters, sq_mmd, sq_mmd_cos, pl_mmd, "mmd")
-# plot_distributions(pl_P, P_star)
+plot_cost_fnx(sq_iters, sq_tv, sq_tv_stoch,  "tv")
+plot_cost_fnx(sq_iters, sq_mmd, sq_mmd_stoch,  "mmd")

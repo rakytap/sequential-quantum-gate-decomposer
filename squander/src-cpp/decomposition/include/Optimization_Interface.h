@@ -341,7 +341,7 @@ Matrix_real optimization_problem_batched_Groq( std::vector<Matrix_real>& paramet
 @param parameters An array of the free parameters to be optimized.
 @return Returns with the cost function values.
 */
-Matrix_real optimization_problem_batched( std::vector<Matrix_real>& parameters_vec);
+virtual Matrix_real optimization_problem_batched( std::vector<Matrix_real>& parameters_vec);
 
 
 

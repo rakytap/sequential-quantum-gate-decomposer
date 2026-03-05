@@ -25,6 +25,7 @@ limitations under the License.
 
 #include "Optimization_Interface.h"
 #include "matrix_real.h"
+#include <random>
 
 /// @brief Type definition of the fifferent types of ansatz
 typedef enum ansatz_type { HEA, HEA_ZYZ, QCMRF } ansatz_type;
@@ -38,6 +39,9 @@ class Generative_Quantum_Machine_Learning_Base : public Optimization_Interface {
   private:
     /// The state vector's corresponding indices of the training data
     std::vector<int> sample_indices;
+
+    // Number of samples used in approximation of the MMD
+    int batch_size;
 
     /// The distribution we are trying to approximate
     Matrix_real P_star;
@@ -68,7 +72,25 @@ class Generative_Quantum_Machine_Learning_Base : public Optimization_Interface {
 
     double (Generative_Quantum_Machine_Learning_Base::*MMD_of_the_distributions)(Matrix&);
 
+    double (Generative_Quantum_Machine_Learning_Base::*MMD_gradient)(Matrix&, Matrix&);
+
     bool use_exact;
+
+    // Vector to store the indices of the samples used in the approximation of the MMD in each iteration
+    std::vector<int> current_samples_P_star;
+
+    // Random number generator for sampling from the distributions
+    std::mt19937 gen;
+
+    std::discrete_distribution<> dis;
+
+    int sampling_rate;
+
+    int last_sampled_iteration;
+
+    int number_of_iters_per_trhead;
+
+    double P_star_norm;
 
   public:
     /**
@@ -116,16 +138,22 @@ class Generative_Quantum_Machine_Learning_Base : public Optimization_Interface {
     double Gaussian_kernel(int hamming_distance);
 
     /**
-    @brief Call to evaluate the approximated expectation value of the square of the distribution
-    @return The approximated value of the expectation value of the square of the distribution
+    @brief Call to create the indices of the samples used in the approximation of the MMD
+    @return The created indices of the samples used in the approximation of the MMD
     */
-    double expectation_value_P_star_P_star_approx();
+    std::vector<int> draw_from_distribution();
 
     /**
     @brief Call to evaluate the expectation value of the square of the distribution
     @return The calculated value of the expectation value of the square of the distribution
     */
     double expectation_value_P_star_P_star_exact();
+
+    /**
+    @brief Call to evaluate the approximated expectation value of the square of the distribution
+    @return The approximated value of the expectation value of the square of the distribution
+    */
+    double expectation_value_P_star_P_star_approx();
 
     /**
     @brief Call to calculate and save the values of the gaussian kernel needed for traing
@@ -140,12 +168,11 @@ class Generative_Quantum_Machine_Learning_Base : public Optimization_Interface {
     double TV_of_the_distributions(Matrix& State_right);
 
     /**
-    @brief Call to calculated the correlation with 'full' mode
-    @param a first input array
-    @param b second input array
-    @return Returns with the correlation function.
+    @brief Call to evaluate the maximum mean discrepancy of the given distribution and the one created by our circuit
+    @param State_right The state on the right for which the expectation value is evaluated. It is a column vector.
+    @return The calculated mmd
     */
-    std::vector<double> correlate_full_real(Matrix_real& a, Matrix_real& b);
+    double MMD_of_the_distributions_exact(Matrix& State_right);
 
     /**
     @brief Call to evaluate the approximated maximum mean discrepancy of the given distribution and the one created by
@@ -154,13 +181,6 @@ class Generative_Quantum_Machine_Learning_Base : public Optimization_Interface {
     @return The calculated mmd
     */
     double MMD_of_the_distributions_approx(Matrix& State_right);
-
-    /**
-    @brief Call to evaluate the maximum mean discrepancy of the given distribution and the one created by our circuit
-    @param State_right The state on the right for which the expectation value is evaluated. It is a column vector.
-    @return The calculated mmd
-    */
-    double MMD_of_the_distributions_exact(Matrix& State_right);
 
     /**
     @brief The optimization problem of the final optimization
@@ -189,6 +209,13 @@ class Generative_Quantum_Machine_Learning_Base : public Optimization_Interface {
 #endif
 
     /**
+    @brief The cost function of the optimization with batched input (implemented only for the Frobenius norm cost function when run with DFE, only state vector simulation if executed on Groq)
+    @param parameters An array of the free parameters to be optimized.
+    @return Returns with the cost function values.
+    */
+    Matrix_real optimization_problem_batched( std::vector<Matrix_real>& parameters_vec) override;
+
+    /**
     @brief The optimization problem of the final optimization
     @param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be
     equal to the number of parameters in one sub-layer)
@@ -203,7 +230,16 @@ class Generative_Quantum_Machine_Learning_Base : public Optimization_Interface {
     @param State_deriv The derivative of the state for which the expectation value is evaluated. It is a column vector.
     @return The calculated mmd
     */
-    double MMD_gradient(Matrix& State, Matrix& State_deriv);
+    double MMD_gradient_exact(Matrix& State, Matrix& State_deriv);
+
+    /**
+    @brief Call to evaluate the stochastic gradient of the maximum mean discrepancy of the given distribution and the one created
+    by our circuit
+    @param State The state for which the expectation value is evaluated. It is a column vector.
+    @param State_deriv The derivative of the state for which the expectation value is evaluated. It is a column vector.
+    @return The calculated gradient
+    */
+    double MMD_stochastic_gradient(Matrix& State, Matrix& State_deriv);
 
     /**
     @brief Call to calculate both the cost function and the its gradient components.

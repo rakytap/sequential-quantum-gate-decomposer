@@ -21,8 +21,6 @@ limitations under the License.
 */
 #include "Generative_Quantum_Machine_Learning_Base.h"
 
-#include "pocketfft_hdronly.h"
-
 #include <algorithm>
 #include <iostream>
 #include <random>
@@ -92,6 +90,32 @@ Generative_Quantum_Machine_Learning_Base::Generative_Quantum_Machine_Learning_Ba
     P_star = P_star_in;
     // config maps
     config = config_in;
+
+    // set the batch size for stochastic gradient descent. If not given, it is set to 64
+    if ( config.count("batch_size_stochastic_gradient") > 0 ) {
+        long long value = 1;
+        config["batch_size_stochastic_gradient"].get_property( value ); 
+        batch_size = (int) value;
+    }
+    else if ( config.count("batch_size") > 0 ) {
+        long long value = 1;
+        config["batch_size"].get_property( value ); 
+        batch_size = (int) value;
+    }
+    else {
+        batch_size = 64;
+    }        
+
+    // set the batch size for stochastic gradient descent. If not given, it is set to 64
+    if ( config.count("sampling_rate") > 0 ) {
+        long long value = 1;
+        config["sampling_rate"].get_property( value ); 
+        sampling_rate = (int) value;
+    }
+    else {
+        sampling_rate = 1;
+    }        
+
     // logical value describing whether the decomposition was finalized or not
     decomposition_finalized = false;
 
@@ -135,11 +159,19 @@ Generative_Quantum_Machine_Learning_Base::Generative_Quantum_Machine_Learning_Ba
 
     if (use_exact) {
         MMD_of_the_distributions = &Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions_exact;
+        MMD_gradient = &Generative_Quantum_Machine_Learning_Base::MMD_gradient_exact;
         ev_P_star_P_star = expectation_value_P_star_P_star_exact();
     } else {
         MMD_of_the_distributions = &Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions_approx;
+        MMD_gradient = &Generative_Quantum_Machine_Learning_Base::MMD_stochastic_gradient;
+        std::random_device rd;
+        gen = std::mt19937(rd());
+        dis = std::discrete_distribution<>(P_star.data, P_star.data + P_star.size());
+        current_samples_P_star = std::vector<int>(batch_size);
         ev_P_star_P_star = expectation_value_P_star_P_star_approx();
+        last_sampled_iteration = -1;
     }
+    number_of_iters_per_trhead = 0;
 
     cliques = cliques_in;
 }
@@ -177,7 +209,7 @@ void Generative_Quantum_Machine_Learning_Base::start_optimization() {
         throw error;
     }
 
-    if (ev_P_star_P_star == -1) {
+    if (ev_P_star_P_star == -1 && use_exact) {
         ev_P_star_P_star = expectation_value_P_star_P_star_exact();
     }
     if (use_lookup && gaussian_lookup_table.size() == 0) {
@@ -245,42 +277,36 @@ double Generative_Quantum_Machine_Learning_Base::Gaussian_kernel(int hamming_dis
         exponent = -static_cast<double>(hamming_distance) / (sigma[i] * 2.0);
         result += exp(exponent);
     }
-    std::cout << "result: " << result << " hamming_distance: " << hamming_distance << " sigma: " << sigma[0]
-              << std::endl;
     result /= sigma.size();
     return result;
+}
+
+/**
+@brief Call to create the indices of the samples used in the approximation of the MMD
+@return The created indices of the samples used in the approximation of the MMD
+*/
+std::vector<int> Generative_Quantum_Machine_Learning_Base::draw_from_distribution() {
+    // create a vector to store the indices of the samples
+    std::vector<int> sample_indices;
+    sample_indices.reserve(batch_size);
+
+    for (int i=0; i<batch_size; i++) {
+        sample_indices.push_back(dis(gen));
+    }
+
+    return sample_indices;
 }
 
 /**
 @brief Call to calculate and save the values of the gaussian kernel needed for traing
 */
 void Generative_Quantum_Machine_Learning_Base::fill_lookup_table() {
+    std::cout << "Filling the lookup table for the gaussian kernel..." << std::endl;
     gaussian_lookup_table = std::vector<double>(qbit_num + 1);
     for (int idx = 0; idx < qbit_num + 1; idx++) {
         gaussian_lookup_table[idx] = Gaussian_kernel(idx);
     }
-}
-
-/**
-@brief Call to evaluate the approximated expectation value of the square of the distribution
-@return The approximated value of the expectation value of the square of the distribution
-*/
-double Generative_Quantum_Machine_Learning_Base::expectation_value_P_star_P_star_approx() {
-    double ev = 0.0;
-    tbb::combinable<double> priv_partial_ev{[]() { return 0.0; }};
-    tbb::parallel_for(tbb::blocked_range<int>(0, sample_size, 1024), [&](tbb::blocked_range<int> r) {
-        double& ev_local = priv_partial_ev.local();
-        for (int idx1 = r.begin(); idx1 < r.end(); idx1++) {
-            for (int idx2 = 0; idx2 < sample_size; idx2++) {
-                if (idx1 != idx2) {
-                    ev_local += Gaussian_kernel(idx1, idx2);
-                }
-            }
-        }
-    });
-    priv_partial_ev.combine_each([&ev](double a) { ev += a; });
-    ev /= sample_size * (sample_size - 1);
-    return ev;
+    std::cout << "Lookup table filled." << std::endl;
 }
 
 /**
@@ -317,9 +343,7 @@ double Generative_Quantum_Machine_Learning_Base::expectation_value_P_star_P_star
             double sum_pairs = 0.0;
             for (int x = 0; x < N; x++) {
                 int y = x ^ d; // y such that x XOR y = d
-                if (y < N) {   // Ensure y is within bounds
-                    sum_pairs += P_star[x] * P_star[y];
-                }
+                sum_pairs += P_star[x] * P_star[y];
             }
 
             ev_local += sum_pairs * kernel_val;
@@ -328,6 +352,26 @@ double Generative_Quantum_Machine_Learning_Base::expectation_value_P_star_P_star
 
     priv_partial_ev.combine_each([&ev](double a) { ev += a; });
 
+    return ev;
+}
+
+/**
+@brief Call to evaluate the approximated expectation value of the square of the distribution
+@return The approximated value of the expectation value of the square of the distribution
+*/
+double Generative_Quantum_Machine_Learning_Base::expectation_value_P_star_P_star_approx() {
+    current_samples_P_star = draw_from_distribution();
+    double ev = 0.0;
+
+    for (int idx1 = 0; idx1 < batch_size; idx1++) {
+        for (int idx2 = 0; idx2 < batch_size; idx2++) {
+            int sample_idx1 = current_samples_P_star[idx1];
+            int sample_idx2 = current_samples_P_star[idx2];
+            int hamming_dist = __builtin_popcount(sample_idx1 ^ sample_idx2);
+            ev += gaussian_lookup_table[hamming_dist];
+        }
+    }
+    ev /= (batch_size * batch_size);
     return ev;
 }
 
@@ -349,67 +393,6 @@ double Generative_Quantum_Machine_Learning_Base::TV_of_the_distributions(Matrix&
         TV += abs(P_theta[i] - P_star[i]);
     }
     return TV * 0.5;
-}
-
-/**
-@brief Call to calculated the correlation with 'full' mode
-@param a first input array
-@param b second input array
-@return Returns with the correlation function.
-*/
-std::vector<double> Generative_Quantum_Machine_Learning_Base::correlate_full_real(Matrix_real& a, Matrix_real& b) {
-    const size_t N = 1 << qbit_num;
-    const size_t M = 2 * N; // FFT size (power of 2)
-
-    pocketfft::shape_t shape{M};
-    pocketfft::stride_t strided(shape.size(), sizeof(double));
-    pocketfft::stride_t stridec(shape.size(), sizeof(std::complex<double>));
-
-    pocketfft::shape_t axes;
-    for (size_t i = 0; i < shape.size(); ++i)
-        axes.push_back(i);
-
-    // Allocate real input and output arrays
-    std::vector<double> A(M, 0.0), B(M, 0.0);
-
-    // Copy inputs
-    for (size_t i = 0; i < N; i++) {
-        A[i] = a[i];
-        B[i] = b[N - 1 - i];
-    }
-
-    // Allocate complex freq arrays (FFTW r2c produces N+1 complex bins)
-    std::vector<std::complex<double>> FA(N + 1), FB(N + 1);
-
-    // Forward FFTs
-    pocketfft::r2c(shape, strided, stridec, axes, false, A.data(), FA.data(), 1.);
-    pocketfft::r2c(shape, strided, stridec, axes, false, B.data(), FB.data(), 1.);
-
-    // Multiply in frequency domain
-    tbb::parallel_for(tbb::blocked_range<int>(0, N + 1, 1024), [&](tbb::blocked_range<int> r) {
-        for (int k = r.begin(); k < r.end(); k++) {
-            // double reA = FA[k][0], imA = FA[k][1];
-            // double reB = FB[k][0], imB = FB[k][1];
-            //
-            // // (reA + i imA)(reB + i imB)
-            // FA[k][0] = reA * reB - imA * imB;
-            // FA[k][1] = reA * imB + imA * reB;
-            FA[k] *= FB[k];
-        }
-    });
-
-    // Backward FFT
-    std::vector<double> out(M);
-    pocketfft::c2r(shape, stridec, strided, axes, true, FA.data(), out.data(), 1.);
-
-    const double norm_factor = 1.0 / M;
-    tbb::parallel_for(tbb::blocked_range<int>(0, M, 4096), [&](tbb::blocked_range<int> r) {
-        for (int i = r.begin(); i < r.end(); i++) {
-            out[i] *= norm_factor;
-        }
-    });
-
-    return out;
 }
 
 /**
@@ -452,17 +435,12 @@ double Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions_exact(
 
             for (int x = 0; x < N; x++) {
                 int y = x ^ d;
-                if (y < N) {
-                    sum_pairs_P_theta_P_star += P_theta[x] * P_star[y];
-                    sum_pairs_P_theta_P_theta += P_theta[x] * P_theta[y];
-                }
+                sum_pairs_P_theta_P_star += P_theta[x] * P_star[y];
+                sum_pairs_P_theta_P_theta += P_theta[x] * P_theta[y];
             }
 
             int hamming_dist = __builtin_popcount(d);
 
-            if (hamming_dist >= gaussian_lookup_table.size()) {
-                throw std::runtime_error("Hamming distance is greater than the size of the lookup table");
-            }
 
             double kernel_val = gaussian_lookup_table[hamming_dist];
             ev_P_theta_P_star_local += sum_pairs_P_theta_P_star * kernel_val;
@@ -496,29 +474,12 @@ circuit
 @return The calculated mmd
 */
 double Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions_approx(Matrix& State_right) {
-
-    // If the ev of the P_star hasnt been evaluated we need to evaluate it
-    if (ev_P_star_P_star < 0) {
-        ev_P_star_P_star = expectation_value_P_star_P_star_approx();
-    }
-
-    // We calculate the distribution created by our circuit at the given traing data points "we sample our distribution"
-    std::vector<double> P_theta(1 << qbit_num);
-    tbb::parallel_for(tbb::blocked_range<int>(0, 1 << qbit_num, 1024), [&](tbb::blocked_range<int> r) {
+    int N = 1 << qbit_num;
+    std::vector<double> P_theta(N);
+    tbb::parallel_for(tbb::blocked_range<int>(0, N, 1024), [&](tbb::blocked_range<int> r) {
         for (int idx = r.begin(); idx < r.end(); idx++) {
             P_theta[idx] =
                 State_right[idx].real * State_right[idx].real + State_right[idx].imag * State_right[idx].imag;
-        }
-    });
-
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::discrete_distribution<> dist(P_theta.begin(), P_theta.end());
-
-    std::vector<int> theta_sample_indices(sample_size);
-    tbb::parallel_for(tbb::blocked_range<int>(0, sample_size, 1024), [&](tbb::blocked_range<int> r) {
-        for (int sample_idx = r.begin(); sample_idx < r.end(); sample_idx++) {
-            theta_sample_indices[sample_idx] = dist(gen);
         }
     });
 
@@ -527,33 +488,29 @@ double Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions_approx
     double ev_P_theta_P_star = 0.0;
     tbb::combinable<double> priv_partial_ev_P_theta_P_theta{[]() { return 0.0; }};
     tbb::combinable<double> priv_partial_ev_P_theta_P_star{[]() { return 0.0; }};
-    tbb::parallel_for(tbb::blocked_range2d<int>(0, sample_size, 0, sample_size), [&](tbb::blocked_range2d<int> r) {
+    tbb::parallel_for(tbb::blocked_range<int>(0, N, 1024), [&](tbb::blocked_range<int> r) {
         double& ev_P_theta_P_theta_local = priv_partial_ev_P_theta_P_theta.local();
         double& ev_P_theta_P_star_local = priv_partial_ev_P_theta_P_star.local();
-        for (int idx1 = r.rows().begin(); idx1 < r.rows().end(); idx1++) {
-            for (int idx2 = r.cols().begin(); idx2 < r.cols().end(); idx2++) {
-                if (use_lookup) {
-                    if (idx1 != idx2) {
-                        ev_P_theta_P_theta_local +=
-                            gaussian_lookup_table[abs(theta_sample_indices[idx1] - theta_sample_indices[idx2])];
-                    }
-                    ev_P_theta_P_star_local +=
-                        gaussian_lookup_table[abs(theta_sample_indices[idx1] - sample_indices[idx2])];
-                } else {
-                    if (idx1 != idx2) {
-                        ev_P_theta_P_theta_local +=
-                            Gaussian_kernel(theta_sample_indices[idx1], theta_sample_indices[idx2]);
-                    }
-                    ev_P_theta_P_star_local += Gaussian_kernel(theta_sample_indices[idx1], sample_indices[idx2]);
-                }
+        for (int idx1 = r.begin(); idx1 < r.end(); idx1++) {
+            double sum_pairs = 0.0;
+            int hamming_dist = __builtin_popcount(idx1);
+            double kernel_val = gaussian_lookup_table[hamming_dist];
+            for (int x = 0; x < N; x++) {
+                int y = idx1 ^ x;
+                sum_pairs += P_theta[x] * P_theta[y];
+            }
+            ev_P_theta_P_theta_local += sum_pairs * kernel_val;
+
+            for (int idx2 = 0; idx2 < batch_size; idx2++) {
+                int hamming_dist = __builtin_popcount(idx1 ^ current_samples_P_star[idx2]);
+                ev_P_theta_P_star_local += P_theta[idx1]*gaussian_lookup_table[hamming_dist];
             }
         }
     });
     priv_partial_ev_P_theta_P_theta.combine_each([&ev_P_theta_P_theta](double a) { ev_P_theta_P_theta += a; });
     priv_partial_ev_P_theta_P_star.combine_each([&ev_P_theta_P_star](double a) { ev_P_theta_P_star += a; });
 
-    ev_P_theta_P_theta /= sample_size * (sample_size - 1);
-    ev_P_theta_P_star /= sample_size * sample_size;
+    ev_P_theta_P_star /= batch_size;
 
     {
         tbb::spin_mutex::scoped_lock my_lock{my_mutex};
@@ -578,6 +535,13 @@ double Generative_Quantum_Machine_Learning_Base::optimization_problem_non_static
     Generative_Quantum_Machine_Learning_Base* instance =
         reinterpret_cast<Generative_Quantum_Machine_Learning_Base*>(void_instance);
 
+    if (!instance->use_exact && instance->number_of_iters_per_trhead % instance->last_sampled_iteration >= instance->sampling_rate) {
+        tbb::spin_mutex::scoped_lock my_lock{my_mutex};
+        if (instance->number_of_iters_per_trhead - instance->last_sampled_iteration >= instance->sampling_rate) { // double check in case multiple threads are waiting for the lock
+            instance->ev_P_star_P_star = instance->expectation_value_P_star_P_star_approx();
+            instance->last_sampled_iteration = instance->number_of_iters_per_trhead;
+        }
+    }
     Matrix State = instance->initial_state.copy();
 
     instance->apply_to(parameters, State);
@@ -596,6 +560,14 @@ double Generative_Quantum_Machine_Learning_Base::optimization_problem_non_static
 double Generative_Quantum_Machine_Learning_Base::optimization_problem_Groq(Matrix_real& parameters, int chosen_device) {
 
     Matrix State;
+
+    if (!use_exact && number_of_iters_per_trhead - last_sampled_iteration >= sampling_rate) {
+        tbb::spin_mutex::scoped_lock my_lock{my_mutex};
+        if (number_of_iters_per_trhead - last_sampled_iteration >= sampling_rate) { // double check in case multiple threads are waiting for the lock
+            ev_P_star_P_star = expectation_value_P_star_P_star_approx();
+            last_sampled_iteration = number_of_iters_per_trhead;
+        }
+    }
 
     // tbb::tick_count t0_DFE = tbb::tick_count::now();
     std::vector<int> target_qbits;
@@ -659,6 +631,93 @@ double Generative_Quantum_Machine_Learning_Base::optimization_problem_Groq(Matri
 #endif
 
 /**
+@brief The cost function of the optimization with batched input (implemented only for the Frobenius norm cost function when run with DFE, only state vector simulation if executed on Groq)
+@param parameters An array of the free parameters to be optimized.
+@return Returns with the cost function values.
+*/
+Matrix_real 
+Generative_Quantum_Machine_Learning_Base::optimization_problem_batched( std::vector<Matrix_real>& parameters_vec) {
+
+
+
+
+             
+#if defined __DFE__
+    if ( Umtx.cols == Umtx.rows && get_accelerator_num() > 0 ) {
+        return optimization_problem_batched_DFE( parameters_vec );
+    }
+#elif defined __GROQ__
+    if ( Umtx.cols == 1 && get_accelerator_num() > 0 ) {
+        return optimization_problem_batched_Groq( parameters_vec );
+    }
+#endif 
+
+
+    Matrix_real cost_fnc_mtx(parameters_vec.size(), 1);
+    int parallel = get_parallel_configuration();
+    
+#ifdef __MPI__
+
+
+    // the number of decomposing layers are divided between the MPI processes
+
+    int batch_element_num           = parameters_vec.size();
+    int mpi_batch_element_num       = batch_element_num / world_size;
+    int mpi_batch_element_remainder = batch_element_num % world_size;
+
+    if ( mpi_batch_element_remainder > 0 ) {
+        std::string err("Optimization_Interface::optimization_problem_batched: The size of the batch should be divisible with the number of processes.");
+        throw err;
+    }
+
+    int mpi_starting_batchIdx = mpi_batch_element_num * current_rank;
+
+
+    Matrix_real cost_fnc_mtx_loc(mpi_batch_element_num, 1);
+
+    int work_batch = 1;
+    if( parallel==0) {
+        work_batch = mpi_batch_element_num;
+    }
+
+    tbb::parallel_for( tbb::blocked_range<int>(0, (int)mpi_batch_element_num, work_batch), [&](tbb::blocked_range<int> r) {
+        for (int idx=r.begin(); idx<r.end(); ++idx) { 
+            cost_fnc_mtx_loc[idx] = optimization_problem( parameters_vec[idx + mpi_starting_batchIdx] );
+        }
+    });
+
+    //number_of_iters = number_of_iters + mpi_batch_element_num; 
+
+
+
+    int bytes = cost_fnc_mtx_loc.size()*sizeof(double);
+    MPI_Allgather(cost_fnc_mtx_loc.get_data(), bytes, MPI_BYTE, cost_fnc_mtx.get_data(), bytes, MPI_BYTE, MPI_COMM_WORLD);
+
+
+#else
+
+    int work_batch = 1;
+    if( parallel==0) {
+        work_batch = parameters_vec.size();
+    }
+
+
+    tbb::parallel_for( tbb::blocked_range<int>(0, (int)parameters_vec.size(), work_batch), [&](tbb::blocked_range<int> r) {
+        for (int idx=r.begin(); idx<r.end(); ++idx) { 
+            cost_fnc_mtx[idx] = optimization_problem( parameters_vec[idx] );
+        }
+    });
+    number_of_iters_per_trhead += 1;
+
+
+#endif  // __MPI__
+       
+     
+    return cost_fnc_mtx;
+        
+}
+
+/**
 @brief The optimization problem of the final optimization
 @param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to
 the number of parameters in one sub-layer)
@@ -675,6 +734,14 @@ double Generative_Quantum_Machine_Learning_Base::optimization_problem(Matrix_rea
 
     } else {
 #endif
+
+        if (!use_exact && number_of_iters_per_trhead - last_sampled_iteration >= sampling_rate) {
+            tbb::spin_mutex::scoped_lock my_lock{my_mutex};
+            if (number_of_iters_per_trhead - last_sampled_iteration >= sampling_rate) { // double check in case multiple threads are waiting for the lock
+                ev_P_star_P_star = expectation_value_P_star_P_star_approx();
+                last_sampled_iteration = number_of_iters_per_trhead;
+            }
+        }
         // initialize the initial state if it was not given
         if (initial_state.size() == 0) {
             initialize_zero_state();
@@ -699,7 +766,7 @@ our circuit
 @param State_deriv The derivative of the state for which the expectation value is evaluated. It is a column vector.
 @return The calculated mmd
 */
-double Generative_Quantum_Machine_Learning_Base::MMD_gradient(Matrix& State, Matrix& State_deriv) {
+double Generative_Quantum_Machine_Learning_Base::MMD_gradient_exact(Matrix& State, Matrix& State_deriv) {
     // We calculate the distribution created by our circuit at the given traing data points "we sample our distribution"
     Matrix_real P_theta(1 << qbit_num, 1);
     Matrix_real P_theta_deriv(1 << qbit_num, 1);
@@ -713,37 +780,40 @@ double Generative_Quantum_Machine_Learning_Base::MMD_gradient(Matrix& State, Mat
 
     int N = 1 << qbit_num;
 
-    int conv_size = 2 * N;
-    std::vector<double> correlation_result_theta_theta_deriv(conv_size);
-    correlation_result_theta_theta_deriv = correlate_full_real(P_theta, P_theta_deriv);
-
-    std::vector<double> correlation_result_theta_deriv_star(conv_size);
-    correlation_result_theta_deriv_star = correlate_full_real(P_theta_deriv, P_star);
-
     double ev_P_theta_P_theta_deriv = 0.0;
     double ev_P_theta_deriv_P_star = 0.0;
 
     tbb::combinable<double> priv_partial_ev_P_theta_P_theta_deriv{[]() { return 0.0; }};
     tbb::combinable<double> priv_partial_ev_P_theta_deriv_P_star{[]() { return 0.0; }};
+
     tbb::parallel_for(tbb::blocked_range<int>(1, N, 1024), [&](tbb::blocked_range<int> r) {
         double& ev_P_theta_P_theta_deriv_local = priv_partial_ev_P_theta_P_theta_deriv.local();
         double& ev_P_theta_deriv_P_star_local = priv_partial_ev_P_theta_deriv_P_star.local();
-        for (int idx = r.begin(); idx < r.end(); idx++) {
-            ev_P_theta_P_theta_deriv_local +=
-                correlation_result_theta_theta_deriv[N - idx - 1] * gaussian_lookup_table[idx] +
-                correlation_result_theta_theta_deriv[N + idx - 1] * gaussian_lookup_table[idx];
-            ev_P_theta_deriv_P_star_local +=
-                correlation_result_theta_deriv_star[N - idx - 1] * gaussian_lookup_table[idx] +
-                correlation_result_theta_deriv_star[N + idx - 1] * gaussian_lookup_table[idx];
+
+        for (int d = r.begin(); d < r.end(); d++) {
+            double sum_pairs_P_theta_P_theta_deriv = 0.0;
+            double sum_pairs_P_theta_deriv_P_star = 0.0;
+            for (int x = 0; x < N; x++) {
+                int y = x ^ d;
+                if (y < N) {
+                    sum_pairs_P_theta_P_theta_deriv += P_theta[x] * P_theta_deriv[y];
+                    sum_pairs_P_theta_deriv_P_star += P_theta_deriv[x] * P_star[y];
+                }
+            }
+            int hamming_dist = __builtin_popcount(d);
+            if (hamming_dist >= gaussian_lookup_table.size()) {
+                throw std::runtime_error("Hamming distance is greater than the size of the lookup table");
+            }
+            double kernel_val = gaussian_lookup_table[hamming_dist];
+            ev_P_theta_P_theta_deriv_local += sum_pairs_P_theta_P_theta_deriv * kernel_val;
+            ev_P_theta_deriv_P_star_local += sum_pairs_P_theta_deriv_P_star * kernel_val;
         }
     });
+
     priv_partial_ev_P_theta_P_theta_deriv.combine_each(
         [&ev_P_theta_P_theta_deriv](double a) { ev_P_theta_P_theta_deriv += a; });
     priv_partial_ev_P_theta_deriv_P_star.combine_each(
         [&ev_P_theta_deriv_P_star](double a) { ev_P_theta_deriv_P_star += a; });
-
-    ev_P_theta_P_theta_deriv += correlation_result_theta_theta_deriv[N - 1] * gaussian_lookup_table[0];
-    ev_P_theta_deriv_P_star += correlation_result_theta_deriv_star[N - 1] * gaussian_lookup_table[0];
 
     {
         tbb::spin_mutex::scoped_lock my_lock{my_mutex};
@@ -753,6 +823,56 @@ double Generative_Quantum_Machine_Learning_Base::MMD_gradient(Matrix& State, Mat
 
     double result = 2 * ev_P_theta_P_theta_deriv - 2 * ev_P_theta_deriv_P_star;
     return result;
+}
+
+/**
+@brief Call to evaluate the stochastic gradient of the maximum mean discrepancy of the given distribution and the one created
+by our circuit
+@param State The state for which the expectation value is evaluated. It is a column vector.
+@param State_deriv The derivative of the state for which the expectation value is evaluated. It is a column vector.
+@return The calculated gradient
+*/
+double Generative_Quantum_Machine_Learning_Base::MMD_stochastic_gradient(Matrix& State, Matrix& State_deriv) {
+    /*
+    Matrix_real P_theta(batch_size, 1);
+    Matrix_real P_theta_deriv(batch_size, 1);
+
+    tbb::parallel_for(tbb::blocked_range<int>(0, batch_size, 4), [&](tbb::blocked_range<int> r) {
+        for (int idx = r.begin(); idx < r.end(); idx++) {
+            int sample_idx = current_samples_P_theta[idx];
+            P_theta[idx] = State[sample_idx].real * State[sample_idx].real + State[sample_idx].imag * State[sample_idx].imag;
+            P_theta_deriv[idx] =
+                2 * (State_deriv[sample_idx].real * State[sample_idx].real - State_deriv[sample_idx].imag * State[sample_idx].imag);
+        }
+    });
+
+    double ev_P_theta_P_theta_deriv = 0.0;
+    double ev_P_theta_deriv_P_star = 0.0;
+    tbb::combinable<double> priv_partial_ev_P_theta_P_theta_deriv{[]() { return 0.0; }};
+    tbb::combinable<double> priv_partial_ev_P_theta_deriv_P_star{[]() { return 0.0; }};
+    tbb::parallel_for(tbb::blocked_range2d<int>(0, batch_size, 0, batch_size), [&](tbb::blocked_range2d<int> r) {
+        double& ev_P_theta_P_theta_deriv_local = priv_partial_ev_P_theta_P_theta_deriv.local();
+        double& ev_P_theta_deriv_P_star_local = priv_partial_ev_P_theta_deriv_P_star.local();
+        for (int idx1 = r.rows().begin(); idx1 < r.rows().end(); idx1++) {
+            for (int idx2 = r.cols().begin(); idx2 < r.cols().end(); idx2++) {
+                int hamming_dist_P_theta_P_theta = __builtin_popcount(current_samples_P_theta[idx1] ^ current_samples_P_theta[idx2]);
+                ev_P_theta_P_theta_deriv_local += P_theta[idx1] * P_theta_deriv[idx2] *
+                                          gaussian_lookup_table[hamming_dist_P_theta_P_theta];
+
+                int hamming_dist_P_theta_P_star = __builtin_popcount(current_samples_P_theta[idx1] ^ current_samples_P_star[idx2]);
+                ev_P_theta_deriv_P_star_local += P_theta_deriv[idx1] * P_star[current_samples_P_star[idx2]] *
+                                         gaussian_lookup_table[hamming_dist_P_theta_P_star];
+            }
+        }
+    });
+    priv_partial_ev_P_theta_P_theta_deriv.combine_each([&ev_P_theta_P_theta_deriv](double a) { ev_P_theta_P_theta_deriv += a; });
+    priv_partial_ev_P_theta_deriv_P_star.combine_each([&ev_P_theta_deriv_P_star](double a) { ev_P_theta_deriv_P_star += a; });
+
+    double result = 2 * ev_P_theta_P_theta_deriv - 2 * ev_P_theta_deriv_P_star;
+
+    return result;
+    */
+    return 0.0;
 }
 
 /**
@@ -768,6 +888,13 @@ void Generative_Quantum_Machine_Learning_Base::optimization_problem_combined_non
 
     Generative_Quantum_Machine_Learning_Base* instance =
         reinterpret_cast<Generative_Quantum_Machine_Learning_Base*>(void_instance);
+    if (!instance->use_exact && instance->number_of_iters_per_trhead % instance->last_sampled_iteration >= instance->sampling_rate) {
+        tbb::spin_mutex::scoped_lock my_lock{my_mutex};
+        if (instance->number_of_iters_per_trhead - instance->last_sampled_iteration >= instance->sampling_rate) { // double check in case multiple threads are waiting for the lock
+            instance->ev_P_star_P_star = instance->expectation_value_P_star_P_star_approx();
+            instance->last_sampled_iteration = instance->number_of_iters_per_trhead;
+        }
+    }
 
     // initialize the initial state if it was not given
     if (instance->initial_state.size() == 0) {
@@ -800,7 +927,7 @@ void Generative_Quantum_Machine_Learning_Base::optimization_problem_combined_non
 
     tbb::parallel_for(tbb::blocked_range<int>(0, parameter_num_loc, 2), [&](tbb::blocked_range<int> r) {
         for (int idx = r.begin(); idx < r.end(); ++idx) {
-            grad[idx] = instance->MMD_gradient(State, State_deriv[idx]);
+            grad[idx] = (instance->*MMD_gradient)(State, State_deriv[idx]);
         }
     });
 
