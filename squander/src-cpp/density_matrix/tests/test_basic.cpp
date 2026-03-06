@@ -4,21 +4,17 @@ Copyright 2025 SQUANDER Contributors
 C++ Unit Tests for Density Matrix Module - Approach B Implementation
 */
 
-#include "CNOT.h"
 #include "Gate.h"
 #include "H.h"
-#include "RZ.h"
-#include "X.h"
 #include "density_matrix.h"
 #include "gate_operation.h"
+#include "matrix.h"
 #include "noise_channel.h"
 #include "noise_operation.h"
 #include "noisy_circuit.h"
 #include <cassert>
 #include <cmath>
 #include <iostream>
-#include <memory>
-#include <vector>
 
 using namespace squander::density;
 
@@ -101,13 +97,13 @@ int test_state_vector_construction() {
   // Create |+⟩ = (|0⟩ + |1⟩)/√2
   Matrix psi(2, 1);
   double inv_sqrt2 = 1.0 / std::sqrt(2.0);
-  psi.get_data()[0].real = inv_sqrt2;
-  psi.get_data()[0].imag = 0.0;
-  psi.get_data()[1].real = inv_sqrt2;
-  psi.get_data()[1].imag = 0.0;
+  psi[0].real = inv_sqrt2;
+  psi[0].imag = 0.0;
+  psi[1].real = inv_sqrt2;
+  psi[1].imag = 0.0;
 
   // Convert to density matrix
-  DensityMatrix rho(psi);
+  DensityMatrix rho(std::move(psi));
 
   // Check: ρ = |+⟩⟨+| = [[0.5, 0.5], [0.5, 0.5]]
   ASSERT_NEAR(rho(0, 0).real, 0.5, 1e-10);
@@ -160,24 +156,18 @@ int test_unitary_evolution() {
 
   // Start with |0⟩
   Matrix psi(2, 1);
-  psi.get_data()[0].real = 1.0;
-  psi.get_data()[0].imag = 0.0;
-  psi.get_data()[1].real = 0.0;
-  psi.get_data()[1].imag = 0.0;
+  psi[0] = {1.0, 0.0};
+  psi[1] = {0.0, 0.0};
 
   DensityMatrix rho(psi);
 
   // Apply Hadamard: H = [[1, 1], [1, -1]] / √2
   Matrix H_matrix(2, 2);
   double inv_sqrt2 = 1.0 / std::sqrt(2.0);
-  H_matrix.get_data()[0].real = inv_sqrt2;
-  H_matrix.get_data()[0].imag = 0.0;
-  H_matrix.get_data()[1].real = inv_sqrt2;
-  H_matrix.get_data()[1].imag = 0.0;
-  H_matrix.get_data()[2].real = inv_sqrt2;
-  H_matrix.get_data()[2].imag = 0.0;
-  H_matrix.get_data()[3].real = -inv_sqrt2;
-  H_matrix.get_data()[3].imag = 0.0;
+  H_matrix[0] = {inv_sqrt2, 0.0};
+  H_matrix[1] = {inv_sqrt2, 0.0};
+  H_matrix[2] = {inv_sqrt2, 0.0};
+  H_matrix[3] = {-inv_sqrt2, 0.0};
 
   rho.apply_unitary(H_matrix);
 
@@ -207,11 +197,12 @@ int test_single_qubit_local() {
 
   // Create Hadamard 2x2 kernel
   Matrix H_kernel(2, 2);
+  // matrix_base<QGD_Complex16> H_kernel(2, 2);
   double inv_sqrt2 = 1.0 / std::sqrt(2.0);
-  H_kernel.get_data()[0] = {inv_sqrt2, 0.0};
-  H_kernel.get_data()[1] = {inv_sqrt2, 0.0};
-  H_kernel.get_data()[2] = {inv_sqrt2, 0.0};
-  H_kernel.get_data()[3] = {-inv_sqrt2, 0.0};
+  H_kernel[0] = {inv_sqrt2, 0.0};
+  H_kernel[1] = {inv_sqrt2, 0.0};
+  H_kernel[2] = {inv_sqrt2, 0.0};
+  H_kernel[3] = {-inv_sqrt2, 0.0};
 
   // Apply H on qubit 0
   rho.apply_single_qubit_unitary(H_kernel, 0);
@@ -243,19 +234,19 @@ int test_two_qubit_controlled() {
 
   Matrix H_kernel(2, 2);
   double inv_sqrt2 = 1.0 / std::sqrt(2.0);
-  H_kernel.get_data()[0] = {inv_sqrt2, 0.0};
-  H_kernel.get_data()[1] = {inv_sqrt2, 0.0};
-  H_kernel.get_data()[2] = {inv_sqrt2, 0.0};
-  H_kernel.get_data()[3] = {-inv_sqrt2, 0.0};
+  H_kernel[0] = {inv_sqrt2, 0.0};
+  H_kernel[1] = {inv_sqrt2, 0.0};
+  H_kernel[2] = {inv_sqrt2, 0.0};
+  H_kernel[3] = {-inv_sqrt2, 0.0};
 
   rho.apply_single_qubit_unitary(H_kernel, 0);
 
   // Apply X kernel controlled by qubit 0 on qubit 1 (CNOT-like)
   Matrix X_kernel(2, 2);
-  X_kernel.get_data()[0] = {0.0, 0.0};
-  X_kernel.get_data()[1] = {1.0, 0.0};
-  X_kernel.get_data()[2] = {1.0, 0.0};
-  X_kernel.get_data()[3] = {0.0, 0.0};
+  X_kernel[0] = {0.0, 0.0};
+  X_kernel[1] = {1.0, 0.0};
+  X_kernel[2] = {1.0, 0.0};
+  X_kernel[3] = {0.0, 0.0};
 
   rho.apply_two_qubit_unitary(X_kernel, 1, 0);
 
@@ -374,8 +365,8 @@ int test_amplitude_damping() {
 
   // Start with |1⟩ state
   Matrix psi(2, 1);
-  psi.get_data()[0] = {0.0, 0.0};
-  psi.get_data()[1] = {1.0, 0.0};
+  psi[0] = {0.0, 0.0};
+  psi[1] = {1.0, 0.0};
   DensityMatrix rho(psi);
 
   ASSERT_NEAR(rho(1, 1).real, 1.0, 1e-10);
@@ -411,8 +402,8 @@ int test_phase_damping() {
   // Start with |+⟩ state (has off-diagonal coherence)
   Matrix psi(2, 1);
   double inv_sqrt2 = 1.0 / std::sqrt(2.0);
-  psi.get_data()[0] = {inv_sqrt2, 0.0};
-  psi.get_data()[1] = {inv_sqrt2, 0.0};
+  psi[0] = {inv_sqrt2, 0.0};
+  psi[1] = {inv_sqrt2, 0.0};
   DensityMatrix rho(psi);
 
   double initial_coherence = std::abs(rho(0, 1).real);
@@ -644,7 +635,8 @@ int test_clone_operations() {
   ASSERT_TRUE(dep_clone->get_name() == "Depolarizing");
   ASSERT_TRUE(!dep_clone->is_unitary());
 
-  auto amp_op = std::unique_ptr<AmplitudeDampingOp>(new AmplitudeDampingOp(0, 0.2));
+  auto amp_op =
+      std::unique_ptr<AmplitudeDampingOp>(new AmplitudeDampingOp(0, 0.2));
   auto amp_clone = amp_op->clone();
 
   ASSERT_TRUE(amp_clone->get_name() == "AmplitudeDamping");
