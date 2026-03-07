@@ -556,61 +556,62 @@ Gates_block* N_Qubit_Decomposition_Tree_Search::determine_gate_structure(Matrix_
         throw error;
     }
 
-    if (use_graph_search) {
-        return construct_gate_structure_from_Gray_code(tree_search_over_gate_structures_best_first());
-    }
-
     GrayCode best_solution;
-    double minimum_best_solution = current_minimum;
-    LevelInfo li;
-    std::vector<std::vector<int>> all_cuts = unique_cuts(qbit_num);
-    std::map<std::pair<int, int>, std::vector<int>> pair_affects;
-    for (const matrix_base<int>& pair : topology) {
-        std::vector<int> cuts;
-        for (size_t i = 0; i < all_cuts.size(); ++i) {
-            const std::vector<int>& A = all_cuts[i];
-            if ((std::find(A.begin(), A.end(), pair[0]) != A.end()) ^
-                (std::find(A.begin(), A.end(), pair[1]) != A.end())) {
-                cuts.push_back(static_cast<int>(i));
-            }
-        }
-        pair_affects[std::pair<int, int>(pair[0], pair[1])] = std::move(cuts);
-    }
-    CutInfo ci;
-    ci.all_cuts = std::move(all_cuts);
-    ci.pair_affects = std::move(pair_affects);
-    ci.prefixes = std::map<GrayCode, std::vector<std::pair<int, double>>>();
     std::vector<GrayCode> all_solutions;
+    if (use_graph_search) {
+        all_solutions.emplace_back(tree_search_over_gate_structures_best_first());
+    } else {
 
-    for (int level = 0; level <= level_limit; level++) {
-        GrayCode gcode;
-        if (use_osr) {
-            if (qbit_num <= 1) {
-                all_solutions.emplace_back();
-                break;
+        double minimum_best_solution = current_minimum;
+        LevelInfo li;
+        std::vector<std::vector<int>> all_cuts = unique_cuts(qbit_num);
+        std::map<std::pair<int, int>, std::vector<int>> pair_affects;
+        for (const matrix_base<int>& pair : topology) {
+            std::vector<int> cuts;
+            for (size_t i = 0; i < all_cuts.size(); ++i) {
+                const std::vector<int>& A = all_cuts[i];
+                if ((std::find(A.begin(), A.end(), pair[0]) != A.end()) ^
+                    (std::find(A.begin(), A.end(), pair[1]) != A.end())) {
+                    cuts.push_back(static_cast<int>(i));
+                }
+            }
+            pair_affects[std::pair<int, int>(pair[0], pair[1])] = std::move(cuts);
+        }
+        CutInfo ci;
+        ci.all_cuts = std::move(all_cuts);
+        ci.pair_affects = std::move(pair_affects);
+        ci.prefixes = std::map<GrayCode, std::vector<std::pair<int, double>>>();
+
+        for (int level = 0; level <= level_limit; level++) {
+            GrayCode gcode;
+            if (use_osr) {
+                if (qbit_num <= 1) {
+                    all_solutions.emplace_back();
+                    break;
+                } else {
+                    TreeSearchResult result = tree_search_over_gate_structures_osr(level, li, ci);
+                    all_solutions.insert(all_solutions.end(), result.solutions.begin(), result.solutions.end());
+                    std::swap(li, result.level_info);
+                    ci.prefixes = std::move(result.prefixes);
+                }
+                if (stop_first_solution && all_solutions.size() > 0) {
+                    break;
+                }
             } else {
-                TreeSearchResult result = tree_search_over_gate_structures_osr(level, li, ci);
-                all_solutions.insert(all_solutions.end(), result.solutions.begin(), result.solutions.end());
-                std::swap(li, result.level_info);
-                ci.prefixes = std::move(result.prefixes);
-            }
-            if (stop_first_solution && all_solutions.size() > 0) {
-                break;
-            }
-        } else {
-            gcode = std::move(tree_search_over_gate_structures(level));
-            if (current_minimum < minimum_best_solution) {
+                gcode = std::move(tree_search_over_gate_structures(level));
+                if (current_minimum < minimum_best_solution) {
 
-                minimum_best_solution = current_minimum;
-                best_solution = gcode;
-            }
+                    minimum_best_solution = current_minimum;
+                    best_solution = gcode;
+                }
 
-            if (current_minimum < optimization_tolerance_loc) {
-                break;
+                if (current_minimum < optimization_tolerance_loc) {
+                    break;
+                }
             }
         }
     }
-    if (use_osr) {
+    if (use_osr || use_graph_search) {
         N_Qubit_Decomposition_custom&& cDecomp_custom_random = perform_optimization(nullptr);
         std::uniform_real_distribution<> distrib_real(0.0, 2 * M_PI);
         std::vector<double> optimized_parameters;
@@ -697,7 +698,7 @@ GrayCode N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures_bes
             osr_result.emplace_back(operator_schmidt_rank(U, qbit_num, cut, Fnorm, osr_tol, 0));
         }
 
-        ev.min_cnots = std::max_element(osr_result.begin(), osr_result.end(),
+        ev.min_cnots = osr_result.size() == 0 ? 0 : std::max_element(osr_result.begin(), osr_result.end(),
             [](const std::pair<int, double>& a, const std::pair<int, double>& b){
                 return a.first < b.first;
         })->first;
