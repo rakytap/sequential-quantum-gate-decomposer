@@ -279,16 +279,18 @@ void generate_insertions_recursive(
     const int nslots = static_cast<int>(curpath.size()) + 1;
 
     if (depth == num_cnot) {
-        GrayCode out;
+        matrix_base<int> limits = matrix_base<int>(1, curpath.size()+num_cnot);
+        std::fill(limits.data, limits.data + limits.size(), topology_size);
+        GrayCode out(limits);
 
-        int j = 0;
+        int j = 0, k = 0;
         for (int slot = 0; slot < nslots; ++slot) {
             while (j < num_cnot && places[j] == slot) {
-                out = out.add_Digit(pairs[j]);
+                out[k++] = pairs[j];
                 ++j;
             }
             if (slot < static_cast<int>(curpath.size())) {
-                out = out.add_Digit(curpath[slot]);
+                out[k++] = curpath[slot];
             }
         }
 
@@ -308,20 +310,6 @@ void generate_insertions_recursive(
     }
 }
 
-struct SearchNode {
-    int min_cnots = 0;
-    double rankkappa = 0.0;
-    GrayCode path;
-    // Put OSR result / metadata here once you wire it in
-    // std::vector<std::pair<int,double>> h;
-
-    bool operator>(const SearchNode& other) const {
-        if (min_cnots != other.min_cnots) return min_cnots > other.min_cnots;
-        if (rankkappa != other.rankkappa) return rankkappa > other.rankkappa;
-        return path.size() > other.path.size();
-    }
-};
-
 template <class Callback>
 void generate_insertions(
     const GrayCode& curpath,
@@ -336,6 +324,19 @@ void generate_insertions(
         places, pairs, 0, 0,
         std::forward<Callback>(callback));
 }
+
+struct SearchNode {
+    int min_cnots = 0;
+    double rankkappa = 0.0;
+    GrayCode path;
+    // std::vector<std::pair<int,double>> h;
+
+    bool operator>(const SearchNode& other) const {
+        if (min_cnots != other.min_cnots) return min_cnots > other.min_cnots;
+        if (rankkappa != other.rankkappa) return rankkappa > other.rankkappa;
+        return path.size() > other.path.size();
+    }
+};
 
 struct EvalResult {
     int min_cnots = 0;
@@ -721,6 +722,11 @@ GrayCode N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures_bes
         }
 
         EvalResult ev = evaluate_path(path);
+        //printf("Evaluated path with %d CNOTs, rankkappa %.4f, path length %zu limit %d ", ev.min_cnots, ev.rankkappa, path.size(), level_limit);
+        //for (size_t idx = 0; idx < path.size(); idx++) {
+        //    printf("%d ", path[idx]);
+        //}
+        //printf("\n");
 
         if (parent_rankkappa >= 0.0 && ev.rankkappa + 1e-6 >= parent_rankkappa) {
             return false;
@@ -734,18 +740,17 @@ GrayCode N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures_bes
     };
 
     GrayCode startpath;
-    add_to_heap(startpath, -INFINITY);
+    add_to_heap(startpath, std::numeric_limits<double>::lowest());
 
     while (!heap.empty()) {
         SearchNode cur = heap.top();
         heap.pop();
-
-        // ------------------------------------------------------------
-        // Re-evaluate or recover cached full data here if needed
-        // ------------------------------------------------------------
-        EvalResult cur_eval = evaluate_path(cur.path);
-
-        if (cur_eval.min_cnots == 0) {
+        //printf("%d CNOTs, rankkappa %.4f, path length %zu limit %d ", cur.min_cnots, cur.rankkappa, cur.path.size(), level_limit);
+        //for (size_t idx = 0; idx < cur.path.size(); idx++) {
+        //    printf("%d ", cur.path[idx]);
+        //}
+        //printf("\n");
+        if (cur.min_cnots == 0) {
             return cur.path;
         }
 
@@ -773,9 +778,9 @@ GrayCode N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures_bes
         }
 
         // Optional beam trimming:
-        // if beam_width > 0 and heap.size() > beam_width, you can rebuild a trimmed heap here.
+        // if beam_width > 0 and heap.size() > beam_width, can rebuild a trimmed heap here.
     }
-
+    //printf("failed\n");
     return startpath;
 }
 
