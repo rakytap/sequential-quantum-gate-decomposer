@@ -274,7 +274,8 @@ void generate_insertions_recursive(
     std::vector<int>& pairs,
     int depth,
     int min_place,
-    Callback&& callback)
+    Callback&& callback,
+    bool & early_stop)
 {
     const int nslots = static_cast<int>(curpath.size()) + 1;
 
@@ -286,6 +287,9 @@ void generate_insertions_recursive(
         int j = 0, k = 0;
         for (int slot = 0; slot < nslots; ++slot) {
             while (j < num_cnot && places[j] == slot) {
+                if (k > 2 && out[k-1] == pairs[j] && out[k-2] == pairs[j] && out[k-3] == pairs[j]) {
+                    return; // avoid more than 3 repeated CNOTs
+                }
                 out[k++] = pairs[j];
                 ++j;
             }
@@ -293,8 +297,7 @@ void generate_insertions_recursive(
                 out[k++] = curpath[slot];
             }
         }
-
-        callback(out);
+        early_stop |= callback(out);
         return;
     }
 
@@ -305,7 +308,8 @@ void generate_insertions_recursive(
             generate_insertions_recursive(
                 curpath, topology_size, num_cnot,
                 places, pairs, depth + 1, place,
-                callback);
+                callback, early_stop);
+            if (early_stop) return;
         }
     }
 }
@@ -319,28 +323,37 @@ void generate_insertions(
 {
     std::vector<int> places(num_cnot);
     std::vector<int> pairs(num_cnot);
+    bool early_stop = false;
     generate_insertions_recursive(
         curpath, topology_size, num_cnot,
         places, pairs, 0, 0,
-        std::forward<Callback>(callback));
+        std::forward<Callback>(callback), early_stop);
 }
-
-struct SearchNode {
-    int min_cnots = 0;
-    double rankkappa = 0.0;
-    GrayCode path;
-    // std::vector<std::pair<int,double>> h;
-
-    bool operator>(const SearchNode& other) const {
-        if (min_cnots != other.min_cnots) return min_cnots > other.min_cnots;
-        if (rankkappa != other.rankkappa) return rankkappa > other.rankkappa;
-        return path.size() > other.path.size();
-    }
-};
 
 struct EvalResult {
     int min_cnots = 0;
     double rankkappa = 0.0;
+    EvalResult(int min_cnots, double rankkappa) : min_cnots(min_cnots), rankkappa(rankkappa) {}
+    bool operator!=(const EvalResult& other) const {
+        return min_cnots != other.min_cnots || rankkappa != other.rankkappa;
+    }
+    bool operator<(const EvalResult& other) const {
+        if (min_cnots != other.min_cnots) return min_cnots < other.min_cnots;
+        return rankkappa < other.rankkappa;
+    }
+};
+
+struct SearchNode {
+    EvalResult ev;
+    GrayCode path;
+    SearchNode(EvalResult ev, GrayCode path) : ev(ev), path(path) {}
+    bool operator>(const SearchNode& other) const {
+        //size_t tot_cnot = path.size() + ev.min_cnots;
+        //size_t other_tot_cnot = other.path.size() + other.ev.min_cnots;
+        //if (tot_cnot != other_tot_cnot) return tot_cnot > other_tot_cnot;
+        if (other.ev != ev) return other.ev < ev;
+        return path.size() > other.path.size();
+    }
 };
 
 /**
@@ -673,48 +686,62 @@ GrayCode N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures_bes
     cDecomp_custom_random.set_cost_function_variant(OSR_ENTANGLEMENT);
     std::uniform_real_distribution<> distrib_real(0.0, 2 * M_PI);
     std::vector<double> optimized_parameters;
-    cDecomp_custom_random.set_osr_params(all_cuts, 0, false);
     std::function<EvalResult(const GrayCode& path)> evaluate_path = [&](const GrayCode& path) -> EvalResult {
-        EvalResult ev;
-        std::unique_ptr<Gates_block> gate_structure_loc(
-            construct_gate_structure_from_Gray_code(path, false));
-        cDecomp_custom_random.set_custom_gate_structure(gate_structure_loc.get());
-        cDecomp_custom_random.set_optimization_blocks(gate_structure_loc->get_gate_num());
+        std::vector<EvalResult> ev_results;
+        for (int rank = 0; rank < std::min(2, qbit_num - 1); rank++) { //rank 2 and beyond are increasingly selective and thus secondary, tertiary, etc
+            for (bool use_sm = false; ; use_sm = !use_sm) {
+                std::unique_ptr<Gates_block> gate_structure_loc(
+                    construct_gate_structure_from_Gray_code(path, false));
+                cDecomp_custom_random.set_custom_gate_structure(gate_structure_loc.get());
+                cDecomp_custom_random.set_optimization_blocks(gate_structure_loc->get_gate_num());
+                cDecomp_custom_random.set_osr_params(all_cuts, rank, use_sm);
 
-        optimized_parameters.resize(cDecomp_custom_random.get_parameter_num());
-        std::map<int, Matrix_real> best_params;
-        for (size_t idx = 0; idx < optimized_parameters.size(); idx++) {
-            optimized_parameters[idx] = distrib_real(gen);
+                optimized_parameters.resize(cDecomp_custom_random.get_parameter_num());
+                std::map<int, Matrix_real> best_params;
+                for (size_t idx = 0; idx < optimized_parameters.size(); idx++) {
+                    optimized_parameters[idx] = distrib_real(gen);
+                }
+                cDecomp_custom_random.set_optimized_parameters(optimized_parameters.data(),
+                                                                static_cast<int>(optimized_parameters.size()));
+                cDecomp_custom_random.start_decomposition();
+
+                Matrix U = Umtx.copy();
+                Matrix_real params = cDecomp_custom_random.get_optimized_parameters();
+                cDecomp_custom_random.apply_to(params, U);
+                std::vector<std::pair<int, double>> osr_result;
+                osr_result.reserve(all_cuts.size());
+                for (const std::vector<int>& cut : all_cuts) {
+                    osr_result.emplace_back(operator_schmidt_rank(U, qbit_num, cut, Fnorm, osr_tol, 0));
+                }
+
+                int min_cnots = osr_result.size() == 0 ? 0 : std::max_element(osr_result.begin(), osr_result.end(),
+                    [](const std::pair<int, double>& a, const std::pair<int, double>& b){
+                        return a.first < b.first;
+                })->first;
+                double rankkappa = std::accumulate(osr_result.begin(), osr_result.end(), 0.0,
+                                            [](double acc, const std::pair<int, double>& item) {
+                                                return acc + item.first + item.second;
+                                            });
+                ev_results.emplace_back(EvalResult(min_cnots, rankkappa));
+                //if (use_sm) break;
+                break;
+            }
         }
-        cDecomp_custom_random.set_optimized_parameters(optimized_parameters.data(),
-                                                        static_cast<int>(optimized_parameters.size()));
-        cDecomp_custom_random.start_decomposition();
-
-        Matrix U = Umtx.copy();
-        Matrix_real params = cDecomp_custom_random.get_optimized_parameters();
-        cDecomp_custom_random.apply_to(params, U);
-        std::vector<std::pair<int, double>> osr_result;
-        osr_result.reserve(all_cuts.size());
-        for (const std::vector<int>& cut : all_cuts) {
-            osr_result.emplace_back(operator_schmidt_rank(U, qbit_num, cut, Fnorm, osr_tol, 0));
-        }
-
-        ev.min_cnots = osr_result.size() == 0 ? 0 : std::max_element(osr_result.begin(), osr_result.end(),
-            [](const std::pair<int, double>& a, const std::pair<int, double>& b){
-                return a.first < b.first;
-        })->first;
-        ev.rankkappa = std::accumulate(osr_result.begin(), osr_result.end(), 0.0,
-                                    [](double acc, const std::pair<int, double>& item) {
-                                        return acc + item.first + item.second;
-                                    });
-
-        return ev;
+        return *std::min_element(ev_results.begin(), ev_results.end());
     };
 
-    auto add_to_heap = [&](const GrayCode& path, double parent_rankkappa) -> bool {
-        if (static_cast<int>(path.size()) > level_limit) {
-            return false;
+    auto add_to_heap = [&](const GrayCode& path, EvalResult parent_ev) -> bool {
+        //if (static_cast<int>(path.size()) > level_limit) {
+        //    return false;
+        //}
+        std::vector<std::pair<int, int>> seq_pairs_vec;
+        for (size_t idx = 0; idx < static_cast<size_t>(path.size()); idx++) {
+            seq_pairs_vec.push_back(
+                std::pair<int, int>(topology[path.data[idx]][0], topology[path.data[idx]][1]));
         }
+        if (canonical_prefix_ok(seq_pairs_vec) >= 0)
+            return false; // not canonical prefix
+
         bool inserted = visited.insert(path).second;
 
         if (!inserted) {
@@ -728,31 +755,29 @@ GrayCode N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures_bes
         //}
         //printf("\n");
 
-        if (parent_rankkappa >= 0.0 && ev.rankkappa + 1e-6 >= parent_rankkappa) {
+        if (!(ev < parent_ev)) {
             return false;
         }
-        SearchNode sn;
-        sn.min_cnots = ev.min_cnots;
-        sn.rankkappa = ev.rankkappa;
-        sn.path = path;
-        heap.push(sn);
+        heap.push(SearchNode(ev, path));
         return true;
     };
 
     GrayCode startpath;
-    add_to_heap(startpath, std::numeric_limits<double>::lowest());
+    if (qbit_num > 1)
+        add_to_heap(startpath, EvalResult(std::numeric_limits<int>::max(), std::numeric_limits<double>::max()));
 
     while (!heap.empty()) {
         SearchNode cur = heap.top();
         heap.pop();
-        //printf("%d CNOTs, rankkappa %.4f, path length %zu limit %d ", cur.min_cnots, cur.rankkappa, cur.path.size(), level_limit);
-        //for (size_t idx = 0; idx < cur.path.size(); idx++) {
+        // printf("%d CNOTs, rankkappa %.4f, path length %zu limit %d ", cur.ev.min_cnots, cur.ev.rankkappa, cur.path.size(), level_limit);
+        // for (size_t idx = 0; idx < cur.path.size(); idx++) {
         //    printf("%d ", cur.path[idx]);
-        //}
-        //printf("\n");
-        if (cur.min_cnots == 0) {
+        // }
+        // printf("\n");
+        if (cur.ev.min_cnots == 0) {
             return cur.path;
         }
+        EvalResult parent_ev(cur.ev.min_cnots, cur.ev.rankkappa-osr_tol); //to avoid noise that does not indicate progress
 
         int num_cnot = 1;
         while (true) {
@@ -760,9 +785,11 @@ GrayCode N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures_bes
 
             generate_insertions(cur.path, topology_size, num_cnot,
                 [&](const GrayCode& newpath) {
-                    if (add_to_heap(newpath, cur.rankkappa)) {
+                    if (add_to_heap(newpath, parent_ev)) {
                         any_added = true;
+                        return heap.top().ev.min_cnots == 0;
                     }
+                    return false;
                 });
 
             if (any_added) {
@@ -773,7 +800,7 @@ GrayCode N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures_bes
 
             // safety guard
             if (static_cast<int>(cur.path.size()) + num_cnot > level_limit) {
-                break;
+                return startpath;
             }
         }
 
