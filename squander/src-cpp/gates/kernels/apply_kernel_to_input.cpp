@@ -26,9 +26,6 @@ limitations under the License.
 #include "tbb/tbb.h"
 
 
-
-
-
 /**
 @brief Call to apply kernel to apply single qubit gate kernel on an input matrix
 @param u3_1qbit The 2x2 kernel of the gate operation
@@ -38,19 +35,17 @@ limitations under the License.
 @param control_qbit The contron qubit (-1 if the is no control qubit)
 @param matrix_size The size of the input
 */
+template<typename MatrixType>
 void
-apply_kernel_to_input(Matrix& u3_1qbit, Matrix& input, const bool& deriv, const int& target_qbit, const int& control_qbit, const int& matrix_size) {
-
-
+apply_kernel_to_input(MatrixType& u3_1qbit, MatrixType& input, const bool& deriv, const int& target_qbit, const int& control_qbit, const int& matrix_size) {
 
     int index_step_target = 1 << target_qbit;
     int current_idx = 0;
 
-
     for ( int current_idx_pair=current_idx + index_step_target; current_idx_pair<matrix_size; current_idx_pair=current_idx_pair+(index_step_target << 1) ) {
 
-        for(int idx=0; idx<index_step_target; idx++) {  
-        //tbb::parallel_for(0, index_step_target, 1, [&](int idx) {  
+        for(int idx=0; idx<index_step_target; idx++) {
+        //tbb::parallel_for(0, index_step_target, 1, [&](int idx) {
 
             int current_idx_loc = current_idx + idx;
             int current_idx_pair_loc = current_idx_pair + idx;
@@ -61,16 +56,16 @@ apply_kernel_to_input(Matrix& u3_1qbit, Matrix& input, const bool& deriv, const 
            if ( control_qbit<0 || ((current_idx_loc >> control_qbit) & 1) ) {
 
                 for ( int col_idx=0; col_idx<input.cols; col_idx++) {
-   			
+
                     int index      = row_offset+col_idx;
-                    int index_pair = row_offset_pair+col_idx;                
+                    int index_pair = row_offset_pair+col_idx;
 
-                    QGD_Complex16 element      = input[index];
-                    QGD_Complex16 element_pair = input[index_pair];              
+                    auto element      = input[index];
+                    auto element_pair = input[index_pair];
 
-                    QGD_Complex16 tmp1 = mult(u3_1qbit[0], element);
-                    QGD_Complex16 tmp2 = mult(u3_1qbit[1], element_pair);
- 
+                    auto tmp1 = mult(u3_1qbit[0], element);
+                    auto tmp2 = mult(u3_1qbit[1], element_pair);
+
                     input[index].real = tmp1.real + tmp2.real;
                     input[index].imag = tmp1.imag + tmp2.imag;
 
@@ -81,36 +76,36 @@ apply_kernel_to_input(Matrix& u3_1qbit, Matrix& input, const bool& deriv, const 
                     input[index_pair].imag = tmp1.imag + tmp2.imag;
 
                 }
-
-
             }
             else if (deriv) {
                 // when calculating derivatives, the constant element should be zeros
-                memset( input.get_data()+row_offset, 0, input.cols*sizeof(QGD_Complex16));
-                memset( input.get_data()+row_offset_pair, 0, input.cols*sizeof(QGD_Complex16));
+                memset( input.get_data()+row_offset, 0, input.cols*sizeof(decltype(input[0])));
+                memset( input.get_data()+row_offset_pair, 0, input.cols*sizeof(decltype(input[0])));
             }
             else {
                 // leave the state as it is
-                continue; 
+                continue;
             }
 
-
-        
         //});
         }
 
-
         current_idx = current_idx + (index_step_target << 1);
-
 
     }
 
-
-
-
-
-
-
-
-
 }
+
+// Explicit instantiations
+template void apply_kernel_to_input<Matrix>(
+    Matrix& u3_1qbit, Matrix& input,
+    const bool& deriv, const int& target_qbit,
+    const int& control_qbit, const int& matrix_size);
+
+#ifdef ENABLE_FLOAT32
+#include "matrix_float.h"
+template void apply_kernel_to_input<Matrix_float>(
+    Matrix_float& u3_1qbit, Matrix_float& input,
+    const bool& deriv, const int& target_qbit,
+    const int& control_qbit, const int& matrix_size);
+#endif

@@ -463,8 +463,80 @@ void conjugate_gradient(Matrix_real A, Matrix_real b, Matrix_real& x0, double to
     iter++;
     }
     return;
-    
+
 }
 
 
+#ifdef ENABLE_FLOAT32
 
+/**
+@brief Call to calculate the product of two single-precision complex scalars
+@param a The first scalar
+@param b The second scalar
+@return Returns with the calculated product.
+*/
+QGD_Complex8 mult( QGD_Complex8& a, QGD_Complex8& b ) {
+
+    QGD_Complex8 ret;
+    ret.real = a.real*b.real - a.imag*b.imag;
+    ret.imag = a.real*b.imag + a.imag*b.real;
+
+    return ret;
+
+}
+
+/**
+@brief Calculate the product of a real scalar and a single-precision complex scalar
+@param a The real scalar.
+@param b The complex scalar.
+@return Returns with the calculated product.
+*/
+QGD_Complex8 mult( float a, QGD_Complex8 b ) {
+
+    QGD_Complex8 ret;
+    ret.real = a*b.real;
+    ret.imag = a*b.imag;
+
+    return ret;
+
+}
+
+/**
+@brief Multiply the elements of a float32 matrix by a single-precision complex scalar.
+@param a A complex scalar.
+@param b A float32 matrix.
+*/
+void mult( QGD_Complex8 a, Matrix_float& b ) {
+
+    int element_num = b.size();
+
+    for (int idx=0; idx<element_num; idx++) {
+        QGD_Complex8 tmp = b[idx];
+        b[idx].real = a.real*tmp.real - a.imag*tmp.imag;
+        b[idx].imag = a.real*tmp.imag + a.imag*tmp.real;
+    }
+
+    return;
+
+}
+
+/**
+@brief Call to create a float32 identity matrix
+@param matrix_size The number of rows/cols in the resulted identity matrix
+@return Returns with a float32 identity matrix.
+*/
+Matrix_float create_identity_float( int matrix_size ) {
+
+    Matrix_float mtx(matrix_size, matrix_size);
+    memset(mtx.get_data(), 0, mtx.size()*sizeof(QGD_Complex8));
+
+    for (int idx=0; idx<matrix_size; idx++) {
+        int element_index = idx*mtx.stride + idx;
+        mtx[element_index].real = 1.0f;
+    }
+
+    return mtx;
+
+}
+
+#endif // ENABLE_FLOAT32

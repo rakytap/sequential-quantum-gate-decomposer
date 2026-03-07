@@ -76,7 +76,22 @@ Matrix numpy2matrix(PyArrayObject *arr);
 Matrix_real numpy2matrix_real(PyArrayObject *arr);
 
 
+#ifdef ENABLE_FLOAT32
+#include "matrix_float.h"
 
+/**
+@brief Call to make a numpy array from an instance of Matrix_float class.
+@param mtx a matrix instance
+*/
+PyObject* matrix_float_to_numpy( Matrix_float &mtx );
+
+
+/**
+@brief Call to create a PIC Matrix_float representation of a numpy array
+*/
+Matrix_float numpy2matrix_float(PyArrayObject *arr);
+
+#endif // ENABLE_FLOAT32
 
 
 #endif
