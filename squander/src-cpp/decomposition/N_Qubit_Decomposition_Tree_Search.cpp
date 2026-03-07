@@ -694,7 +694,7 @@ GrayCode N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures_bes
         std::vector<std::pair<int, double>> osr_result;
         osr_result.reserve(all_cuts.size());
         for (const std::vector<int>& cut : all_cuts) {
-            osr_result.emplace_back(operator_schmidt_rank(U, qbit_num, cut, Fnorm, osr_tol));
+            osr_result.emplace_back(operator_schmidt_rank(U, qbit_num, cut, Fnorm, osr_tol, 0));
         }
 
         ev.min_cnots = std::max_element(osr_result.begin(), osr_result.end(),
