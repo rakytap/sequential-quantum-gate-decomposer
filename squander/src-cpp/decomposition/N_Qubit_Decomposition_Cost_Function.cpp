@@ -675,7 +675,7 @@ static std::vector<QGD_Complex16> build_osr_matrix(const Matrix& U, int n,
 static void accumulate_grad_for_cut(Matrix& accum, const std::vector<double>& G,
                              const std::vector<QGD_Complex16> & Umat,
                              const std::vector<QGD_Complex16> & VTmat,
-                             int n, const std::vector<int>& A) // qubits on A
+                             int n, const std::vector<int>& A, int rank=-1) // qubits on A
 {
     std::vector<int> A_sorted = A;
     std::sort(A_sorted.begin(), A_sorted.end());
@@ -704,20 +704,34 @@ static void accumulate_grad_for_cut(Matrix& accum, const std::vector<double>& G,
             const int r = a + ap;   // row in M
             const int c = b + bp;   // col in M
             QGD_Complex16 val{0.0, 0.0};
-            for (int i = 0; i < tot_dyadic; i++) {
-                int idx = 1<<i; //here we would conjugate again but that cancels out so we do nothing
-                QGD_Complex16 u_val = Umat[(size_t)r * (size_t)k + (size_t)idx];
-                QGD_Complex16 vt_val = VTmat[(size_t)idx * (size_t)m_cols + (size_t)c];
-                // Multiply: G[i] * u_val * vt_val
-                // (a+bi) * (c+di) = (ac-bd) + (ad+bc)i
-                double re_prod = u_val.real * vt_val.real - u_val.imag * vt_val.imag;
-                double im_prod = u_val.real * vt_val.imag + u_val.imag * vt_val.real;
-                // Multiply by G[i]
-                re_prod *= G[i];
-                im_prod *= G[i];
-                // Add to val
-                val.real += re_prod;
-                val.imag += im_prod;
+            if (rank < 0) {
+                // Old dyadic mode: G[i] applies to singular index 2^i
+                for (int i = 0; i < tot_dyadic; i++) {
+                    int idx = 1<<i; //here we would conjugate again but that cancels out so we do nothing
+                    if (idx >= k) break;  // critical safety check
+                    QGD_Complex16 u_val = Umat[(size_t)r * (size_t)k + (size_t)idx];
+                    QGD_Complex16 vt_val = VTmat[(size_t)idx * (size_t)m_cols + (size_t)c];
+                    // Multiply: G[i] * u_val * vt_val
+                    // (a+bi) * (c+di) = (ac-bd) + (ad+bc)i
+                    double re_prod = u_val.real * vt_val.real - u_val.imag * vt_val.imag;
+                    double im_prod = u_val.real * vt_val.imag + u_val.imag * vt_val.real;
+                    // Multiply by G[i] and add to val
+                    val.real += G[i] * re_prod;
+                    val.imag += G[i] * im_prod;
+                }
+            } else {
+                // New rank-tail mode: G[j] applies directly to singular index j
+                const int diag_len = std::min<int>((int)G.size(), k);
+                for (int j = 0; j < diag_len; ++j) {
+                    const QGD_Complex16 u_val = Umat[(size_t)r * (size_t)k + (size_t)j];
+                    const QGD_Complex16 vt_val = VTmat[(size_t)j * (size_t)m_cols + (size_t)c];
+
+                    const double re_prod = u_val.real * vt_val.real - u_val.imag * vt_val.imag;
+                    const double im_prod = u_val.real * vt_val.imag + u_val.imag * vt_val.real;
+
+                    val.real += G[j] * re_prod;
+                    val.imag += G[j] * im_prod;
+                }
             }
             accum[(size_t)in + (size_t)out * (size_t)N].real += val.real;
             accum[(size_t)in + (size_t)out * (size_t)N].imag += val.imag;
@@ -737,8 +751,8 @@ static std::vector<double> osr(std::vector<QGD_Complex16>& A, int m_rows, int m_
                               m_rows, m_cols,
                               A.data(), m_cols,
                               S.data(),
-                              nullptr, 1,
-                              nullptr, 1,
+                              nullptr, k,
+                              nullptr, m_cols,
                               superb.data());
     if (info != 0) {
         throw std::runtime_error("zgesvd failed, info=" + std::to_string(info));
@@ -1166,7 +1180,7 @@ Matrix get_deriv_osr_entanglement(Matrix &matrix, std::vector<std::vector<int>> 
                                 triplet.left_factors,
                                 triplet.right_factors,
                                 qbit_num,
-                                cuts[i]);
+                                cuts[i], rank);
     }
     return deriv;
 }
