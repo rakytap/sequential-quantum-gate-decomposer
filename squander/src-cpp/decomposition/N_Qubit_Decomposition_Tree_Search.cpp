@@ -264,6 +264,84 @@ static inline LevelResult enumerate_unordered_cnot_BFS_level_step(LevelInfo& L,
     return result;
 }
 
+
+template <class Callback>
+void generate_insertions_recursive(
+    const GrayCode& curpath,
+    int topology_size,
+    int num_cnot,
+    std::vector<int>& places,
+    std::vector<int>& pairs,
+    int depth,
+    int min_place,
+    Callback&& callback)
+{
+    const int nslots = static_cast<int>(curpath.size()) + 1;
+
+    if (depth == num_cnot) {
+        GrayCode out;
+
+        int j = 0;
+        for (int slot = 0; slot < nslots; ++slot) {
+            while (j < num_cnot && places[j] == slot) {
+                out = out.add_Digit(pairs[j]);
+                ++j;
+            }
+            if (slot < static_cast<int>(curpath.size())) {
+                out = out.add_Digit(curpath[slot]);
+            }
+        }
+
+        callback(out);
+        return;
+    }
+
+    for (int place = min_place; place < nslots; ++place) {
+        places[depth] = place;
+        for (int topo_idx = 0; topo_idx < topology_size; ++topo_idx) {
+            pairs[depth] = topo_idx;
+            generate_insertions_recursive(
+                curpath, topology_size, num_cnot,
+                places, pairs, depth + 1, place,
+                callback);
+        }
+    }
+}
+
+struct SearchNode {
+    int min_cnots = 0;
+    double rankkappa = 0.0;
+    GrayCode path;
+    // Put OSR result / metadata here once you wire it in
+    // std::vector<std::pair<int,double>> h;
+
+    bool operator>(const SearchNode& other) const {
+        if (min_cnots != other.min_cnots) return min_cnots > other.min_cnots;
+        if (rankkappa != other.rankkappa) return rankkappa > other.rankkappa;
+        return path.size() > other.path.size();
+    }
+};
+
+template <class Callback>
+void generate_insertions(
+    const GrayCode& curpath,
+    int topology_size,
+    int num_cnot,
+    Callback&& callback)
+{
+    std::vector<int> places(num_cnot);
+    std::vector<int> pairs(num_cnot);
+    generate_insertions_recursive(
+        curpath, topology_size, num_cnot,
+        places, pairs, 0, 0,
+        std::forward<Callback>(callback));
+}
+
+struct EvalResult {
+    int min_cnots = 0;
+    double rankkappa = 0.0;
+};
+
 /**
 @brief Nullary constructor of the class.
 @return An instance of the class
@@ -461,6 +539,11 @@ Gates_block* N_Qubit_Decomposition_Tree_Search::determine_gate_structure(Matrix_
     if (config.count("use_osr") > 0) {
         config["use_osr"].get_property(use_osr);
     }
+    long long use_graph_search = 1;
+    if (config.count("use_graph_search") > 0) {
+        config["use_graph_search"].get_property(use_graph_search);
+    }
+
     long long stop_first_solution = 1;
     if (config.count("stop_first_solution") > 0) {
         config["stop_first_solution"].get_property(stop_first_solution);
@@ -471,6 +554,10 @@ Gates_block* N_Qubit_Decomposition_Tree_Search::determine_gate_structure(Matrix_
     if (level_limit < 0) {
         std::string error("please increase level limit");
         throw error;
+    }
+
+    if (use_graph_search) {
+        return construct_gate_structure_from_Gray_code(tree_search_over_gate_structures_best_first());
     }
 
     GrayCode best_solution;
@@ -502,7 +589,7 @@ Gates_block* N_Qubit_Decomposition_Tree_Search::determine_gate_structure(Matrix_
                 all_solutions.emplace_back();
                 break;
             } else {
-                TreeSearchResult result = tree_search_over_gate_structures_gl(level, li, ci);
+                TreeSearchResult result = tree_search_over_gate_structures_osr(level, li, ci);
                 all_solutions.insert(all_solutions.end(), result.solutions.begin(), result.solutions.end());
                 std::swap(li, result.level_info);
                 ci.prefixes = std::move(result.prefixes);
@@ -570,6 +657,127 @@ Gates_block* N_Qubit_Decomposition_Tree_Search::determine_gate_structure(Matrix_
     return construct_gate_structure_from_Gray_code(best_solution);
 }
 
+GrayCode N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures_best_first() {
+    std::vector<std::vector<int>> all_cuts = unique_cuts(qbit_num);
+    // If topology entries are actual gates, the path stores topology indices.
+    const int topology_size = static_cast<int>(topology.size());
+    double Fnorm = std::sqrt(static_cast<double>(1 << qbit_num));
+    double osr_tol = 1e-3;
+
+    std::priority_queue<SearchNode, std::vector<SearchNode>, std::greater<SearchNode>> heap;
+    std::set<GrayCode> visited;
+
+    N_Qubit_Decomposition_custom&& cDecomp_custom_random = perform_optimization(nullptr);
+    cDecomp_custom_random.set_cost_function_variant(OSR_ENTANGLEMENT);
+    std::uniform_real_distribution<> distrib_real(0.0, 2 * M_PI);
+    std::vector<double> optimized_parameters;
+    cDecomp_custom_random.set_osr_params(all_cuts, 0, false);
+    std::function<EvalResult(const GrayCode& path)> evaluate_path = [&](const GrayCode& path) -> EvalResult {
+        EvalResult ev;
+        std::unique_ptr<Gates_block> gate_structure_loc(
+            construct_gate_structure_from_Gray_code(path, false));
+        cDecomp_custom_random.set_custom_gate_structure(gate_structure_loc.get());
+        cDecomp_custom_random.set_optimization_blocks(gate_structure_loc->get_gate_num());
+
+        optimized_parameters.resize(cDecomp_custom_random.get_parameter_num());
+        std::map<int, Matrix_real> best_params;
+        for (size_t idx = 0; idx < optimized_parameters.size(); idx++) {
+            optimized_parameters[idx] = distrib_real(gen);
+        }
+        cDecomp_custom_random.set_optimized_parameters(optimized_parameters.data(),
+                                                        static_cast<int>(optimized_parameters.size()));
+        cDecomp_custom_random.start_decomposition();
+
+        Matrix U = Umtx.copy();
+        Matrix_real params = cDecomp_custom_random.get_optimized_parameters();
+        cDecomp_custom_random.apply_to(params, U);
+        std::vector<std::pair<int, double>> osr_result;
+        osr_result.reserve(all_cuts.size());
+        for (const std::vector<int>& cut : all_cuts) {
+            osr_result.emplace_back(operator_schmidt_rank(U, qbit_num, cut, Fnorm, osr_tol));
+        }
+
+        ev.min_cnots = std::max_element(osr_result.begin(), osr_result.end(),
+            [](const std::pair<int, double>& a, const std::pair<int, double>& b){
+                return a.first < b.first;
+        })->first;
+        ev.rankkappa = std::accumulate(osr_result.begin(), osr_result.end(), 0.0,
+                                    [](double acc, const std::pair<int, double>& item) {
+                                        return acc + item.first + item.second;
+                                    });
+
+        return ev;
+    };
+
+    auto add_to_heap = [&](const GrayCode& path, double parent_rankkappa) -> bool {
+        if (static_cast<int>(path.size()) > level_limit) {
+            return false;
+        }
+        bool inserted = visited.insert(path).second;
+
+        if (!inserted) {
+            return false;
+        }
+
+        EvalResult ev = evaluate_path(path);
+
+        if (parent_rankkappa >= 0.0 && ev.rankkappa + 1e-6 >= parent_rankkappa) {
+            return false;
+        }
+        SearchNode sn;
+        sn.min_cnots = ev.min_cnots;
+        sn.rankkappa = ev.rankkappa;
+        sn.path = path;
+        heap.push(sn);
+        return true;
+    };
+
+    GrayCode startpath;
+    add_to_heap(startpath, -INFINITY);
+
+    while (!heap.empty()) {
+        SearchNode cur = heap.top();
+        heap.pop();
+
+        // ------------------------------------------------------------
+        // Re-evaluate or recover cached full data here if needed
+        // ------------------------------------------------------------
+        EvalResult cur_eval = evaluate_path(cur.path);
+
+        if (cur_eval.min_cnots == 0) {
+            return cur.path;
+        }
+
+        int num_cnot = 1;
+        while (true) {
+            bool any_added = false;
+
+            generate_insertions(cur.path, topology_size, num_cnot,
+                [&](const GrayCode& newpath) {
+                    if (add_to_heap(newpath, cur.rankkappa)) {
+                        any_added = true;
+                    }
+                });
+
+            if (any_added) {
+                break;
+            }
+
+            ++num_cnot;
+
+            // safety guard
+            if (static_cast<int>(cur.path.size()) + num_cnot > level_limit) {
+                break;
+            }
+        }
+
+        // Optional beam trimming:
+        // if beam_width > 0 and heap.size() > beam_width, you can rebuild a trimmed heap here.
+    }
+
+    return startpath;
+}
+
 /**
 @brief Perform tree search over possible gate structures using Gray code enumeration and Operator Schmidt Rank (OSR)
 optimization.
@@ -597,8 +805,8 @@ Gray code sequences to avoid redundant computations.
       The associated gate structure can be constructed from a Gray code using the function
       construct_gate_structure_from_Gray_code.
 */
-TreeSearchResult N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures_gl(int level_num, LevelInfo& li,
-                                                                                        CutInfo& ci) {
+TreeSearchResult N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures_osr(int level_num, LevelInfo& li,
+                                                                                         CutInfo& ci) {
 
     tbb::spin_mutex tree_search_mutex;
 
