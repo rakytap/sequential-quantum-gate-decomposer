@@ -703,25 +703,26 @@ GrayCode N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures_bes
             construct_gate_structure_from_Gray_code(path, false));
         cDecomp_custom_random.set_custom_gate_structure(gate_structure_loc.get());
         cDecomp_custom_random.set_optimization_blocks(gate_structure_loc->get_gate_num());
-        for (bool use_sm = false; ; use_sm = !use_sm) {
-            optimized_parameters.resize(cDecomp_custom_random.get_parameter_num());
-            for (size_t idx = 0; idx < optimized_parameters.size(); idx++) {
-                optimized_parameters[idx] = distrib_real(gen);
-            }
-            cDecomp_custom_random.set_optimized_parameters(optimized_parameters.data(),
-                                                            static_cast<int>(optimized_parameters.size()));
-            for (int rank = std::min(1, qbit_num - 2); rank > -1; rank--) { //rank 2 and beyond are increasingly selective and thus secondary, tertiary, etc
-                cDecomp_custom_random.set_osr_params(all_cuts, rank, use_sm);
+        optimized_parameters.resize(cDecomp_custom_random.get_parameter_num());
+        for (size_t idx = 0; idx < optimized_parameters.size(); idx++) {
+            optimized_parameters[idx] = distrib_real(gen);
+        }
+        cDecomp_custom_random.set_optimized_parameters(optimized_parameters.data(),
+                                                        static_cast<int>(optimized_parameters.size()));
+        for (const std::vector<int>& cut : all_cuts) {
+            int max_rank = 2*std::min(cut.size(), qbit_num-cut.size());
+            for (int rank = max_rank-1; rank >= 0; rank--) {
+                cDecomp_custom_random.set_osr_params({cut}, rank, false);
                 cDecomp_custom_random.start_decomposition();
                 Matrix U = Umtx.copy();
                 Matrix_real params = cDecomp_custom_random.get_optimized_parameters();
                 cDecomp_custom_random.apply_to(params, U);
                 std::vector<std::pair<int, double>> osr_result;
                 osr_result.reserve(all_cuts.size());
-                for (const std::vector<int>& cut : all_cuts) {
-                    osr_result.emplace_back(operator_schmidt_rank(U, qbit_num, cut, Fnorm, osr_tol, 0));
+                for (const std::vector<int>& eval_cut : all_cuts) {
+                    osr_result.emplace_back(operator_schmidt_rank(U, qbit_num, eval_cut, Fnorm, osr_tol));
+                    if (cut == eval_cut) rank = std::min(rank, osr_result.back().first);
                 }
-
                 int min_cnots = osr_result.size() == 0 ? 0 : std::max_element(osr_result.begin(), osr_result.end(),
                     [](const std::pair<int, double>& a, const std::pair<int, double>& b){
                         return a.first < b.first;
@@ -731,10 +732,9 @@ GrayCode N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures_bes
                                                 return acc + item.first + item.second;
                                             });
                 ev_results.emplace_back(EvalResult(min_cnots, rankkappa));
-                if (rank == 1 && ev_results.back().min_cnots != 1) break; //if zero a solution is found, if >=2 and accurate then rank0 is wasteful computation
+                
             }
-            //if (use_sm) break;
-            break;
+            //if (ev_results.size() == (all_cuts.size()+1)/2) break;
         }
         return *std::min_element(ev_results.begin(), ev_results.end());
     };
