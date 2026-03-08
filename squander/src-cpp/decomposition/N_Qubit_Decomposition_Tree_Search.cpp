@@ -268,7 +268,7 @@ static inline LevelResult enumerate_unordered_cnot_BFS_level_step(LevelInfo& L,
 template <class Callback>
 void generate_insertions_recursive(
     const GrayCode& curpath,
-    int topology_size,
+    const std::vector<matrix_base<int>>& topology,
     int num_cnot,
     std::vector<int>& places,
     std::vector<int>& pairs,
@@ -281,7 +281,7 @@ void generate_insertions_recursive(
 
     if (depth == num_cnot) {
         matrix_base<int> limits = matrix_base<int>(1, curpath.size()+num_cnot);
-        std::fill(limits.data, limits.data + limits.size(), topology_size);
+        std::fill(limits.data, limits.data + limits.size(), topology.size());
         GrayCode out(limits);
 
         int j = 0, k = 0;
@@ -294,19 +294,30 @@ void generate_insertions_recursive(
                 ++j;
             }
             if (slot < static_cast<int>(curpath.size())) {
+                if (k > 2 && out[k-1] == curpath[slot] && out[k-2] == curpath[slot] && out[k-3] == curpath[slot]) {
+                    return; // avoid more than 3 repeated CNOTs
+                }
                 out[k++] = curpath[slot];
             }
         }
         early_stop |= callback(out);
         return;
     }
-
+    uint32_t used_mask;
+    for (int d = 0; d < depth; d++) {
+        used_mask |= (1u<<topology[pairs[d]][0]) | (1u<<topology[pairs[d]][1]);
+    }
     for (int place = min_place; place < nslots; ++place) {
+        if (depth != 0 && places[depth-1]+1 < place) {
+            continue; // avoid insertions more than one place away
+        }
         places[depth] = place;
-        for (int topo_idx = 0; topo_idx < topology_size; ++topo_idx) {
+        for (int topo_idx = 0; topo_idx < (int)topology.size(); ++topo_idx) {
+            uint32_t edge_mask = (1u<<topology[topo_idx][0]) | (1u<<topology[topo_idx][1]);
+            if (depth != 0 && (used_mask & edge_mask) == 0) continue;
             pairs[depth] = topo_idx;
             generate_insertions_recursive(
-                curpath, topology_size, num_cnot,
+                curpath, topology, num_cnot,
                 places, pairs, depth + 1, place,
                 callback, early_stop);
             if (early_stop) return;
@@ -317,7 +328,7 @@ void generate_insertions_recursive(
 template <class Callback>
 void generate_insertions(
     const GrayCode& curpath,
-    int topology_size,
+    const std::vector<matrix_base<int>>& topology,
     int num_cnot,
     Callback&& callback)
 {
@@ -325,7 +336,7 @@ void generate_insertions(
     std::vector<int> pairs(num_cnot);
     bool early_stop = false;
     generate_insertions_recursive(
-        curpath, topology_size, num_cnot,
+        curpath, topology, num_cnot,
         places, pairs, 0, 0,
         std::forward<Callback>(callback), early_stop);
 }
@@ -675,7 +686,6 @@ Gates_block* N_Qubit_Decomposition_Tree_Search::determine_gate_structure(Matrix_
 GrayCode N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures_best_first() {
     std::vector<std::vector<int>> all_cuts = unique_cuts(qbit_num);
     // If topology entries are actual gates, the path stores topology indices.
-    const int topology_size = static_cast<int>(topology.size());
     double Fnorm = std::sqrt(static_cast<double>(1 << qbit_num));
     double osr_tol = 1e-3;
 
@@ -688,21 +698,20 @@ GrayCode N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures_bes
     std::vector<double> optimized_parameters;
     std::function<EvalResult(const GrayCode& path)> evaluate_path = [&](const GrayCode& path) -> EvalResult {
         std::vector<EvalResult> ev_results;
-        for (int rank = std::min(1, qbit_num - 2); rank > -1; rank--) { //rank 2 and beyond are increasingly selective and thus secondary, tertiary, etc
-            for (bool use_sm = false; ; use_sm = !use_sm) {
-                std::unique_ptr<Gates_block> gate_structure_loc(
-                    construct_gate_structure_from_Gray_code(path, false));
-                cDecomp_custom_random.set_custom_gate_structure(gate_structure_loc.get());
-                cDecomp_custom_random.set_optimization_blocks(gate_structure_loc->get_gate_num());
+        std::unique_ptr<Gates_block> gate_structure_loc(
+            construct_gate_structure_from_Gray_code(path, false));
+        cDecomp_custom_random.set_custom_gate_structure(gate_structure_loc.get());
+        cDecomp_custom_random.set_optimization_blocks(gate_structure_loc->get_gate_num());
+        for (bool use_sm = false; ; use_sm = !use_sm) {
+            optimized_parameters.resize(cDecomp_custom_random.get_parameter_num());
+            for (size_t idx = 0; idx < optimized_parameters.size(); idx++) {
+                optimized_parameters[idx] = distrib_real(gen);
+            }
+            cDecomp_custom_random.set_optimized_parameters(optimized_parameters.data(),
+                                                            static_cast<int>(optimized_parameters.size()));
+            for (int rank = std::min(1, qbit_num - 2); rank > -1; rank--) { //rank 2 and beyond are increasingly selective and thus secondary, tertiary, etc
                 cDecomp_custom_random.set_osr_params(all_cuts, rank, use_sm);
 
-                optimized_parameters.resize(cDecomp_custom_random.get_parameter_num());
-                std::map<int, Matrix_real> best_params;
-                for (size_t idx = 0; idx < optimized_parameters.size(); idx++) {
-                    optimized_parameters[idx] = distrib_real(gen);
-                }
-                cDecomp_custom_random.set_optimized_parameters(optimized_parameters.data(),
-                                                                static_cast<int>(optimized_parameters.size()));
                 cDecomp_custom_random.start_decomposition();
 
                 Matrix U = Umtx.copy();
@@ -723,18 +732,15 @@ GrayCode N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures_bes
                                                 return acc + item.first + item.second;
                                             });
                 ev_results.emplace_back(EvalResult(min_cnots, rankkappa));
-                //if (use_sm) break;
-                break;
+                if (rank == 1 && ev_results.back().min_cnots != 1) break; //if zero a solution is found, if >=2 and accurate then rank0 is wasteful computation
             }
-            if (rank == 1 && ev_results.back().min_cnots > 1) break;
+            //if (use_sm) break;
+            break;
         }
         return *std::min_element(ev_results.begin(), ev_results.end());
     };
 
     auto add_to_heap = [&](const GrayCode& path, EvalResult parent_ev) -> bool {
-        //if (static_cast<int>(path.size()) > level_limit) {
-        //    return false;
-        //}
         std::vector<std::pair<int, int>> seq_pairs_vec;
         for (size_t idx = 0; idx < static_cast<size_t>(path.size()); idx++) {
             seq_pairs_vec.push_back(
@@ -755,6 +761,10 @@ GrayCode N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures_bes
         //    printf("%d ", path[idx]);
         //}
         //printf("\n");
+
+        if (static_cast<int>(path.size())+ev.min_cnots > level_limit) {
+           return false;
+        }
 
         if (!(ev < parent_ev)) {
             return false;
@@ -784,7 +794,7 @@ GrayCode N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures_bes
         while (true) {
             bool any_added = false;
 
-            generate_insertions(cur.path, topology_size, num_cnot,
+            generate_insertions(cur.path, topology, num_cnot,
                 [&](const GrayCode& newpath) {
                     if (add_to_heap(newpath, parent_ev)) {
                         any_added = true;
