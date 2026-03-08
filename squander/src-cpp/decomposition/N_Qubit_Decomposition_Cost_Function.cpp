@@ -46,7 +46,8 @@ extern "C" int LAPACKE_zgesvd( int matrix_order, char jobu, char jobvt,
 extern "C" int LAPACKE_zgesdd(int matrix_order, char jobz, int m, int n, QGD_Complex16* a,
                           int lda, double* s, QGD_Complex16* u, int ldu,
                           QGD_Complex16* vt, int ldvt);
-
+#define USE_SDD
+#define USE_COL_MAJ
 
 #ifdef __cplusplus
 }
@@ -626,8 +627,12 @@ static inline int extract_bits(int x, const std::vector<int>& pos) {
 }
 
 // Index: row-major 2^n x 2^n
-static inline size_t rm_idx(int row, int col, int N) {
-    return (size_t)row * (size_t)N + (size_t)col;
+static inline size_t mat_idx(int row, int col, int nrows, int ncols) {
+#ifdef USE_COL_MAJ
+    return (size_t)row + (size_t)col * (size_t)nrows;
+#else
+    return (size_t)row * (size_t)ncols + (size_t)col;
+#endif
 }
 
 //https://www.sciencedirect.com/science/article/pii/S0024379518303446
@@ -666,7 +671,7 @@ static std::vector<QGD_Complex16> build_osr_matrix(const Matrix& U, int n,
             const int r = a + ap;   // row in M
             const int c = b + bp;   // col in M
             const auto& val = U[(size_t)in + (size_t)out * (size_t)N];
-            M[rm_idx(r, c, m_cols)] = val;
+            M[mat_idx(r, c, m_rows, m_cols)] = val;
         }
     }
     return M;
@@ -709,8 +714,8 @@ static void accumulate_grad_for_cut(Matrix& accum, const std::vector<double>& G,
                 for (int i = 0; i < tot_dyadic; i++) {
                     int idx = 1<<i; //here we would conjugate again but that cancels out so we do nothing
                     if (idx >= k) break;  // critical safety check
-                    QGD_Complex16 u_val = Umat[(size_t)r * (size_t)k + (size_t)idx];
-                    QGD_Complex16 vt_val = VTmat[(size_t)idx * (size_t)m_cols + (size_t)c];
+                    QGD_Complex16 u_val = Umat[mat_idx(r, idx, m_rows, k)];
+                    QGD_Complex16 vt_val = VTmat[mat_idx(idx, c, k, m_cols)];
                     // Multiply: G[i] * u_val * vt_val
                     // (a+bi) * (c+di) = (ac-bd) + (ad+bc)i
                     double re_prod = u_val.real * vt_val.real - u_val.imag * vt_val.imag;
@@ -723,8 +728,8 @@ static void accumulate_grad_for_cut(Matrix& accum, const std::vector<double>& G,
                 // New rank-tail mode: G[j] applies directly to singular index j
                 const int diag_len = std::min<int>((int)G.size(), k);
                 for (int j = 0; j < diag_len; ++j) {
-                    const QGD_Complex16 u_val = Umat[(size_t)r * (size_t)k + (size_t)j];
-                    const QGD_Complex16 vt_val = VTmat[(size_t)j * (size_t)m_cols + (size_t)c];
+                    const QGD_Complex16 u_val = Umat[mat_idx(r, j, m_rows, k)];
+                    const QGD_Complex16 vt_val = VTmat[mat_idx(j, c, k, m_cols)];
 
                     const double re_prod = u_val.real * vt_val.real - u_val.imag * vt_val.imag;
                     const double im_prod = u_val.real * vt_val.imag + u_val.imag * vt_val.real;
@@ -744,16 +749,37 @@ static std::vector<double> osr(std::vector<QGD_Complex16>& A, int m_rows, int m_
     std::vector<double> S;
     int k = std::min(m_rows, m_cols);
     S.resize(k);
+#ifdef USE_COL_MAJ
+    constexpr int lapack_layout = LAPACK_COL_MAJOR;
+    const int lda  = m_rows;
+    const int ldu  = m_rows;
+    const int ldvt = k;       // VT is k x m_cols in col-major
+#else
+    constexpr int lapack_layout = LAPACK_ROW_MAJOR;
+    const int lda  = m_cols;
+    const int ldu  = k;       // U is m_rows x k in row-major
+    const int ldvt = m_cols;
+#endif
+#ifdef USE_SDD
+    int info = LAPACKE_zgesdd(lapack_layout,
+                              'N',
+                              m_rows, m_cols,
+                              A.data(), lda,
+                              S.data(),
+                              nullptr, ldu,
+                              nullptr, ldvt);
+#else
     std::vector<double> superb(std::max(1, k - 1));  // REQUIRED for complex *gesvd
     // We don’t need U/V; job='N' for economy; gesvd is fine too.
-    int info = LAPACKE_zgesvd(LAPACK_ROW_MAJOR,
+    int info = LAPACKE_zgesvd(lapack_layout,
                               'N','N',
                               m_rows, m_cols,
-                              A.data(), m_cols,
+                              A.data(), lda,
                               S.data(),
-                              nullptr, k,
-                              nullptr, m_cols,
+                              nullptr, ldu,
+                              nullptr, ldvt,
                               superb.data());
+#endif
     if (info != 0) {
         throw std::runtime_error("zgesvd failed, info=" + std::to_string(info));
     }
@@ -762,7 +788,7 @@ static std::vector<double> osr(std::vector<QGD_Complex16>& A, int m_rows, int m_
     return S;
 }
 
-// Numerical rank via LAPACKE_zgesvd (SVD)
+// Numerical rank via LAPACKE_zgesdd/svd (SVD)
 static int numerical_rank_osr(std::vector<double> S, double tol)
 {
     int rnk = 0;
@@ -1121,20 +1147,43 @@ static OSRTriplet top_k_triplet_for_cut(
     std::vector<double> S(k);
     std::vector<QGD_Complex16> Umat((size_t)m_rows * (size_t)k); // m x k
     std::vector<QGD_Complex16> VTmat((size_t)k * (size_t)m_cols); // k x n
-    std::vector<double> superb(std::max(1, k - 1));  // REQUIRED for complex *gesvd
 
     // 3) SVD: M = U * diag(S) * VT  (VT = V^H)
     // Row-major API handles leading dims as col counts.
+#ifdef USE_COL_MAJ
+    constexpr int lapack_layout = LAPACK_COL_MAJOR;
+    const int lda  = m_rows;
+    const int ldu  = m_rows;
+    const int ldvt = k;       // VT is k x m_cols in col-major
+#else
+    constexpr int lapack_layout = LAPACK_ROW_MAJOR;
+    const int lda  = m_cols;
+    const int ldu  = k;       // U is m_rows x k in row-major
+    const int ldvt = m_cols;
+#endif
+#ifdef USE_SDD
+    int info = LAPACKE_zgesdd(
+        lapack_layout,
+        'S',                    // econ / thin U, VT
+        m_rows, m_cols,
+        M.data(), lda,       // a, lda (row-major => lda = ncols)
+        S.data(),
+        Umat.data(), ldu,         // U is (m_rows x k), row-major => ldu = k
+        VTmat.data(), ldvt    // VT is (k x m_cols), row-major => ldvt = m_cols
+    );
+#else
+    std::vector<double> superb(std::max(1, k - 1));  // REQUIRED for complex *gesvd
     int info = LAPACKE_zgesvd(
-        LAPACK_ROW_MAJOR,
+        lapack_layout,
         'S', 'S',           // econ U, VT
         m_rows, m_cols,
-        M.data(), m_cols,   // a, lda (row-major -> lda = n)
+        M.data(), lda,   // a, lda (row-major -> lda = n)
         S.data(),
-        Umat.data(), k,    // U (m x k), ldu = k (row-major)
-        VTmat.data(), m_cols,     // VT (k x n), ldvt = n
+        Umat.data(), ldu,    // U (m x k), ldu = k (row-major)
+        VTmat.data(), ldvt,     // VT (k x n), ldvt = n
         superb.data()
     );
+#endif
     if (info != 0) {
         throw std::runtime_error("zgesvd failed, info=" + std::to_string(info));
     }
