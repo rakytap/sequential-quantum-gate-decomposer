@@ -688,7 +688,7 @@ GrayCode N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures_bes
     std::vector<double> optimized_parameters;
     std::function<EvalResult(const GrayCode& path)> evaluate_path = [&](const GrayCode& path) -> EvalResult {
         std::vector<EvalResult> ev_results;
-        for (int rank = 0; rank < std::min(2, qbit_num - 1); rank++) { //rank 2 and beyond are increasingly selective and thus secondary, tertiary, etc
+        for (int rank = std::min(1, qbit_num - 2); rank > -1; rank--) { //rank 2 and beyond are increasingly selective and thus secondary, tertiary, etc
             for (bool use_sm = false; ; use_sm = !use_sm) {
                 std::unique_ptr<Gates_block> gate_structure_loc(
                     construct_gate_structure_from_Gray_code(path, false));
@@ -726,6 +726,7 @@ GrayCode N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures_bes
                 //if (use_sm) break;
                 break;
             }
+            if (rank == 1 && ev_results.back().min_cnots > 1) break;
         }
         return *std::min_element(ev_results.begin(), ev_results.end());
     };
