@@ -194,7 +194,8 @@ class N_Qubit_Decomposition_Tree_Search : public Optimization_Interface {
           The associated gate structure can be constructed from a Gray code using the function
           construct_gate_structure_from_Gray_code.
     */
-    TreeSearchResult tree_search_over_gate_structures_gl(int level_num, LevelInfo& li, CutInfo& ci);
+    TreeSearchResult tree_search_over_gate_structures_osr(int level_num, LevelInfo& li, CutInfo& ci);
+    GrayCode tree_search_over_gate_structures_best_first();
 
     /**
     @brief Call to perform the optimization on the given gate structure
