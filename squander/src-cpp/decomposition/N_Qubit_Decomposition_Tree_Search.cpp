@@ -26,6 +26,7 @@ limitations under the License.
 #include "n_aryGrayCodeCounter.h"
 
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <iostream>
 #include <numeric>
@@ -277,7 +278,7 @@ void generate_insertions_recursive(
     Callback&& callback,
     bool & early_stop)
 {
-    const int nslots = static_cast<int>(curpath.size()) + 1;
+    const int nslots = curpath.size() + 1;
 
     if (depth == num_cnot) {
         matrix_base<int> limits = matrix_base<int>(1, curpath.size()+num_cnot);
@@ -293,7 +294,7 @@ void generate_insertions_recursive(
                 out[k++] = pairs[j];
                 ++j;
             }
-            if (slot < static_cast<int>(curpath.size())) {
+            if (slot < curpath.size()) {
                 if (k > 2 && out[k-1] == curpath[slot] && out[k-2] == curpath[slot] && out[k-3] == curpath[slot]) {
                     return; // avoid more than 3 repeated CNOTs
                 }
@@ -303,7 +304,7 @@ void generate_insertions_recursive(
         early_stop |= callback(out);
         return;
     }
-    uint32_t used_mask;
+    uint32_t used_mask = 0u;
     for (int d = 0; d < depth; d++) {
         used_mask |= (1u<<topology[pairs[d]][0]) | (1u<<topology[pairs[d]][1]);
     }
@@ -711,9 +712,7 @@ GrayCode N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures_bes
                                                             static_cast<int>(optimized_parameters.size()));
             for (int rank = std::min(1, qbit_num - 2); rank > -1; rank--) { //rank 2 and beyond are increasingly selective and thus secondary, tertiary, etc
                 cDecomp_custom_random.set_osr_params(all_cuts, rank, use_sm);
-
                 cDecomp_custom_random.start_decomposition();
-
                 Matrix U = Umtx.copy();
                 Matrix_real params = cDecomp_custom_random.get_optimized_parameters();
                 cDecomp_custom_random.apply_to(params, U);
@@ -740,7 +739,7 @@ GrayCode N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures_bes
         return *std::min_element(ev_results.begin(), ev_results.end());
     };
 
-    auto add_to_heap = [&](const GrayCode& path, EvalResult parent_ev) -> bool {
+    auto add_to_heap = [&](const GrayCode& path, const EvalResult& parent_ev) -> bool {
         std::vector<std::pair<int, int>> seq_pairs_vec;
         for (size_t idx = 0; idx < static_cast<size_t>(path.size()); idx++) {
             seq_pairs_vec.push_back(
@@ -754,15 +753,17 @@ GrayCode N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures_bes
         if (!inserted) {
             return false;
         }
-
+        
+        //std::chrono::time_point<std::chrono::high_resolution_clock> start = std::chrono::high_resolution_clock::now();
         EvalResult ev = evaluate_path(path);
-        //printf("Evaluated path with %d CNOTs, rankkappa %.4f, path length %zu limit %d ", ev.min_cnots, ev.rankkappa, path.size(), level_limit);
-        //for (size_t idx = 0; idx < path.size(); idx++) {
-        //    printf("%d ", path[idx]);
-        //}
-        //printf("\n");
+        //printf("%.2fs\n", std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now() - start).count()*1e-9);
+        // printf("Evaluated path with %d CNOTs, rankkappa %.4f, path length %zd limit %d ", ev.min_cnots, ev.rankkappa, path.size(), level_limit);
+        // for (int idx = 0; idx < path.size(); idx++) {
+        //     printf("%d ", path[idx]);
+        // }
+        // printf("\n");
 
-        if (static_cast<int>(path.size())+ev.min_cnots > level_limit) {
+        if (path.size()+ev.min_cnots > level_limit) {
            return false;
         }
 
@@ -780,8 +781,8 @@ GrayCode N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures_bes
     while (!heap.empty()) {
         SearchNode cur = heap.top();
         heap.pop();
-        // printf("%d CNOTs, rankkappa %.4f, path length %zu limit %d ", cur.ev.min_cnots, cur.ev.rankkappa, cur.path.size(), level_limit);
-        // for (size_t idx = 0; idx < cur.path.size(); idx++) {
+        // printf("%d CNOTs, rankkappa %.4f, path length %zd limit %d ", cur.ev.min_cnots, cur.ev.rankkappa, cur.path.size(), level_limit);
+        // for (int idx = 0; idx < cur.path.size(); idx++) {
         //    printf("%d ", cur.path[idx]);
         // }
         // printf("\n");
@@ -810,9 +811,10 @@ GrayCode N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures_bes
             ++num_cnot;
 
             // safety guard
-            if (static_cast<int>(cur.path.size()) + num_cnot > level_limit) {
+            if (cur.path.size() + num_cnot > level_limit) {
                 return startpath;
             }
+            //break;
         }
 
         // Optional beam trimming:
@@ -940,7 +942,7 @@ TreeSearchResult N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_struct
                             << " decomposing layers." << std::endl;
                     print(sstream, 1);
                     optimized_parameters.resize(cDecomp_custom_random.get_parameter_num());
-                    std::map<int, Matrix_real> best_params;
+                    std::map<double, Matrix_real> best_params;
                     for (int iters = 0; iters < 1; iters++) {
                         for (size_t idx = 0; idx < optimized_parameters.size(); idx++) {
                             optimized_parameters[idx] = distrib_real(gen);
@@ -951,7 +953,7 @@ TreeSearchResult N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_struct
                         number_of_iters +=
                             cDecomp_custom_random
                                 .get_num_iters(); // retrieve the number of iterations spent on optimization
-                        best_params.emplace(static_cast<int>(cDecomp_custom_random.get_current_minimum()),
+                        best_params.emplace(cDecomp_custom_random.get_current_minimum(),
                                             cDecomp_custom_random.get_optimized_parameters().copy());
                         if (best_params.begin()->first < optimization_tolerance_loc) {
                             break;
@@ -1283,7 +1285,7 @@ N_Qubit_Decomposition_custom N_Qubit_Decomposition_Tree_Search::perform_optimiza
             max_inner_iterations_loc = static_cast<int>((double)param_num_loc / 852 * 10000000.0);
         }
         cDecomp_custom_random.set_max_inner_iterations(max_inner_iterations_loc);
-        cDecomp_custom_random.set_random_shift_count_max(100);
+        cDecomp_custom_random.set_random_shift_count_max(5);
     } else if (alg == ADAM_BATCHED) {
         cDecomp_custom_random.set_optimizer(alg);
         int max_inner_iterations_loc = 2000;
