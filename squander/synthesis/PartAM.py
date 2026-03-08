@@ -17,7 +17,7 @@ from squander.partitioning.ilp import (
 )
 
 import numpy as np
-
+import time 
 from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass
 
@@ -389,7 +389,7 @@ class qgd_Partition_Aware_Mapping:
                 for idx in range( len(involved_qbits) ):
                     qbit_map[ involved_qbits[idx] ] = idx
                 remapped_subcircuit = subcircuit.Remap_Qbits( qbit_map, qbit_num_sub )
-                optimized_partitions[partition_idx] = pool.apply_async( self.DecomposePartition_Full, (remapped_subcircuit, subcircuit_parameters, self.config, mini_topologies, involved_qbits, qbit_map) )
+                optimized_partitions[partition_idx] = pool.apply_async( self.DecomposePartition_Sequential, (remapped_subcircuit, subcircuit_parameters, self.config, mini_topologies, involved_qbits, qbit_map) )
 
             for partition_idx, subcircuit in enumerate( tqdm(subcircuits, desc="Second Synthesis",disable=self.config.get('progressbar', 0) == False) ):
                 optimized_partitions[partition_idx] = optimized_partitions[partition_idx].get()
@@ -419,7 +419,7 @@ class qgd_Partition_Aware_Mapping:
         n_iterations = self.config.get('sabre_iterations', 1)
         n_trials = self.config.get('n_layout_trials', 1)
         random_seed = self.config.get('random_seed', 42)
-
+        routing_start = time.time()
         if n_iterations == 0:
             # Single forward pass from identity layout
             F = self.get_initial_layer(IDAG, N, optimized_partitions)
@@ -470,7 +470,7 @@ class qgd_Partition_Aware_Mapping:
             )
 
         final_circuit, final_parameters = self.Construct_circuit_from_HS(partition_order, optimized_partitions, N)
-
+        self._routing_time = time.time() - routing_start
         self._cnot_pre_cleanup = final_circuit.get_Gate_Nums().get('CNOT', 0)
 
         # Cleanup phase: re-partition and resynthesize to eliminate
