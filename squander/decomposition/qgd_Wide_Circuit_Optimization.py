@@ -67,7 +67,7 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
         self.config = config
         self.accelerator_num = accelerator_num
         self.paramspace = paramspace
-        self.paramscale = paramscale
+        self.paramscale = () if paramscale is None else paramscale
         #self.set_Cost_Function_Variant( 0 )	 #0 is Frobenius, 3 is HS, 10 is OSR
         if topology is None:
             topology = [(i, j) for i in range(self.qbit_num) for j in range(i+1, self.qbit_num)]
@@ -186,8 +186,7 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
         A = list(reversed(A))
         B = list(sorted(set(range(n)) - set(A), reverse=True))
         A, B = [n-1-q for q in A], [n-1-q for q in B]
-        dyadic_idxs = [1 << k for k in range(len(G))]
-        mat = np.array(G) * Umat[:,dyadic_idxs] @ VTmat[dyadic_idxs,:]  # reconstruct U from its dyadic decomposition
+        mat = np.array(G) * Umat @ VTmat  # reconstruct U from its dyadic decomposition
         revmap = [None]*(2*n)
         for i, x in enumerate(tuple(A) + tuple(t+n for t in A) + tuple(B) + tuple(t+n for t in B)):
             revmap[x] = i
@@ -227,73 +226,91 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
         return circ
     def ceil_log2(x): return 0 if x == 0 else (x-1).bit_length()
     def logsumexp_smoothmax(Lc, tau=1e-2):
+        if not Lc: return 0.0
+        if tau <= 0.0: raise RuntimeError("tau must be > 0")
         m = max(Lc)
-        sum = 0.0
-        for v in Lc: sum += np.exp((v - m)/tau)
-        return tau * np.log(sum) + m
-    def dyadic_loss(S, max_dyadic, rho=0.9, tol=1e-4):
-        tot_dyadic = N_Qubit_Decomposition_Guided_Tree.ceil_log2(len(S))
-        w = 1.0
         acc = 0.0
-        for k in range(max_dyadic-1, -1, -1):
-            if k < tot_dyadic:
-                val = S[1 << k] - S[0] * tol    
-                acc += w * val * val
-            w *= rho
-        return acc
-    def avg_loss(cuts_S, rho=0.9):
-        max_dyadic = N_Qubit_Decomposition_Guided_Tree.ceil_log2(max(len(S) for S in cuts_S))
+        for v in Lc: acc += np.exp((v - m)/tau)
+        return tau * np.log(acc) + m
+    def loss_for_rank(S, rank):
+        start = 1 << rank
+        if start >= len(S): return 0.0
+        return sum(x*x for x in S[start:])
+    def avg_loss(cuts_S, rank):
+        if not cuts_S: return 0.0
         total_loss = 0.0
         for S in cuts_S:
-            total_loss += N_Qubit_Decomposition_Guided_Tree.dyadic_loss(S, max_dyadic, rho)
+            total_loss += N_Qubit_Decomposition_Guided_Tree.loss_for_rank(S, rank)
         return total_loss / len(cuts_S)
     # Aggregated cost over cuts: softmax (log-sum-exp) of per-cut dyadic losses
-    def cuts_softmax_dyadic_cost(cuts_S, rho=0.1, tau=1e-2):
-        if tau <= 0.0: raise RuntimeError("tau must be > 0")
+    def cuts_softmax_rank_cost(cuts_S, rank, tau=1e-2):
         Lc = []
-        max_dyadic = N_Qubit_Decomposition_Guided_Tree.ceil_log2(max(len(S) for S in cuts_S))
         for S in cuts_S:
-            Lc.append(N_Qubit_Decomposition_Guided_Tree.dyadic_loss(S, max_dyadic, rho))
+            Lc.append(N_Qubit_Decomposition_Guided_Tree.loss_for_rank(S, rank))
         return N_Qubit_Decomposition_Guided_Tree.logsumexp_smoothmax(Lc, tau)
 
     # Gradient w.r.t. the singular values (diagonal of dL/dΣ):
-    def dyadic_loss_grad_diag(S, max_dyadic, Fnorm, rho=0.1, tol=1e-4):
+    def loss_for_rank_grad_diag(S, rank, Fnorm):
+        """
+        Gradient of a single-cut tail loss with respect to the RAW singular values,
+        assuming S is already normalized and Fnorm is treated as constant.
+
+        If S = sigma / Fnorm, then d/dsigma_i sum_{j>=r} S_j^2 = 2*S_i/Fnorm on tail.
+        """
         n = len(S)
-        # c_k = rho^k / Mk  for k=1..n-1, then prefix sum C_j = sum_{k=1}^j c_k
-        tot_dyadic = N_Qubit_Decomposition_Guided_Tree.ceil_log2(n)
-        grad = [0.0] * tot_dyadic
-        w = 1.0
-        for k in range(max_dyadic-1, -1, -1):
-            if k < tot_dyadic:
-                idx = 1 << k
-                grad[k] = 2.0 * w * S[idx] * (1.0-tol) / Fnorm  #1-tol not needed if using stop-grad
-            w *= rho                         # w = rho^k
+        start = 1 << rank
+        grad = [0.0] * n
+        if start >= n:
+            return grad
+        invF = 1.0 / Fnorm
+        for i in range(start, n):
+            grad[i] = 2.0 * S[i] * invF
         return grad
-    def cuts_avg_dyadic_grad(cuts_S, Fnorm, rho=0.1):
+    def cuts_avg_rank_grad(cuts_S, rank, Fnorm):
+        """
+        Gradient of average tail loss across cuts.
+        Returns one gradient vector per cut, same length as that cut's S.
+        """
         C = len(cuts_S)
-        max_dyadic = N_Qubit_Decomposition_Guided_Tree.ceil_log2(max(len(S) for S in cuts_S))
-        Lc = []
-        for c in range(C):
-            Lc.append(N_Qubit_Decomposition_Guided_Tree.dyadic_loss_grad_diag(cuts_S[c], max_dyadic, Fnorm * C, rho))
-        return Lc
+        if C == 0:
+            return []
+        scale = 1.0 / C
+        out = []
+        for S in cuts_S:
+            g = N_Qubit_Decomposition_Guided_Tree.loss_for_rank_grad_diag(S, rank, Fnorm)
+            out.append([scale * v for v in g])
+        return out
     # Gradient w.r.t. singular values (same length as S).
-    # Only dyadic positions (1,2,4,...) get nonzero entries; others are 0.
-    def cuts_softmax_tail_grad(cuts_S, Fnorm, rho=0.1, tau=1e-2):
+    def cuts_softmax_rank_grad(cuts_S, rank, Fnorm, tau=1e-2):
+        """
+        Gradient of smooth-max across cuts:
+            L = tau * log(sum_c exp(L_c / tau))
+        so
+            dL = sum_c softmax_c * dL_c
+        """
         C = len(cuts_S)
-        if C == 0: return []
-        max_dyadic = N_Qubit_Decomposition_Guided_Tree.ceil_log2(max(len(S) for S in cuts_S))
-        # 1) per-cut losses
-        Lc = [N_Qubit_Decomposition_Guided_Tree.dyadic_loss(cuts_S[c], max_dyadic, rho) for c in range(C)]
+        if C == 0:
+            return []
+        if tau <= 0.0:
+            raise RuntimeError("tau must be > 0")
 
-        # 2) softmax weights w_c = exp((Lc - m)/tau) / Z
+        Lc = [
+            N_Qubit_Decomposition_Guided_Tree.loss_for_rank(S, rank)
+            for S in cuts_S
+        ]
+
         m = max(Lc)
-        w = [np.exp((Lc[c] - m)/tau) for c in range(C)]
+        w = [np.exp((v - m) / tau) for v in Lc]
         Z = np.sum(w)
-        for c in range(C): w[c] /= (Z if Z > 0.0 else 1.0)
+        if Z <= 0.0:
+            Z = 1.0
+        w = [x / Z for x in w]
 
-        # 3) dL/dS^{(c)} = w_c * dL_c/dS^{(c)}
-        return [[v * w[c] for v in N_Qubit_Decomposition_Guided_Tree.dyadic_loss_grad_diag(cuts_S[c], max_dyadic, Fnorm, rho)] for c in range(C)]
-
+        out = []
+        for c, S in enumerate(cuts_S):
+            g = N_Qubit_Decomposition_Guided_Tree.loss_for_rank_grad_diag(S, rank, Fnorm)
+            out.append([w[c] * v for v in g])
+        return out
     # Build M with build_osr_matrix, then SVD (econ) and grab top triplet.
     def top_k_triplet_for_cut(U, # (N x N), row-major, N = 1<<q
         q,                  # number of qubits
@@ -308,7 +325,7 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
         # Row-major API handles leading dims as col counts.
         res = np.linalg.svd(M, full_matrices=False, compute_uv=True)
         return res.S / Fnorm, res.U, res.Vh # normalized singular value
-    def get_deriv_osr_entanglement(matrix, use_cuts, use_softmax):
+    def get_deriv_osr_entanglement(matrix, use_cuts, rank, use_softmax):
         qbit_num = len(matrix).bit_length()-1
         cuts = list(N_Qubit_Decomposition_Guided_Tree.unique_cuts(qbit_num)) if len(use_cuts) == 0 else use_cuts
         Fnorm = np.sqrt(len(matrix))
@@ -321,8 +338,8 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
             S, Umat, VTmat = N_Qubit_Decomposition_Guided_Tree.top_k_triplet_for_cut(matrix, qbit_num, cut, Fnorm)
             triplets.append(([], Umat, VTmat))
             allS.append(S)
-        if use_softmax: allS = N_Qubit_Decomposition_Guided_Tree.cuts_softmax_tail_grad(allS, Fnorm, 1.0)
-        else: allS = N_Qubit_Decomposition_Guided_Tree.cuts_avg_dyadic_grad(allS, Fnorm, 0.9)
+        if use_softmax: allS = N_Qubit_Decomposition_Guided_Tree.cuts_softmax_rank_grad(allS, rank, Fnorm)
+        else: allS = N_Qubit_Decomposition_Guided_Tree.cuts_avg_rank_grad(allS, rank, Fnorm)
         for i in range(len(cuts)):
             triplets[i] = (allS[i], triplets[i][1], triplets[i][2])
         for i in range(len(cuts)):
@@ -353,20 +370,6 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
                 circ.apply_to(xm, Um)
                 derivs[i] = 0.5 * (Up - Um)
         return derivs
-    def get_all_clifford(qbit_num, qbits):
-        import itertools
-        circuits = []
-        all_clifford = [x+y for x, y in itertools.product(((), (True,), (False,), (True, False), (False, True), (True, False, True)), ((), (True, False, False, True), (True, False, False, True, False, False), (False, False)))]
-        for clifford_idxs in itertools.product(range(len(all_clifford)), repeat=len(qbits)):
-            circ = Circuit(qbit_num)
-            for clifford_idx, qbit in zip(clifford_idxs, qbits):
-                for sh in all_clifford[clifford_idx]:
-                    if sh:
-                        circ.add_H(qbit)
-                    else:
-                        circ.add_S(qbit)
-            circuits.append(circ)
-        return circuits
     
     def _global_phase_fix(U):
         return U / (np.linalg.det(U)**(1/len(U)))
@@ -481,7 +484,7 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
             self.get_Circuit().apply_to(scaled_params if pspace is not None else params, U)
             allU.append(U)
         return allU
-    def OSR_with_local_alignment(self, pairs, cuts, Fnorm, tol, use_softmax, method="dual_annealing"):
+    def OSR_with_local_alignment(self, pairs, cuts, Fnorm, tol, rank, use_softmax, method="dual_annealing"):
         def ceil_log2(x): return 0 if x == 0 else (x-1).bit_length()
         if len(pairs) != 0:
             self.set_Cost_Function_Variant( 10 )
@@ -492,13 +495,13 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
             def cost(x):
                 allU = self.params_to_mat(x)
                 S = [N_Qubit_Decomposition_Guided_Tree.operator_schmidt_rank(U, self.qbit_num, cut, Fnorm, tol)[1] for U in allU for cut in cuts]
-                if use_softmax: return N_Qubit_Decomposition_Guided_Tree.cuts_softmax_dyadic_cost(S, 1.0)
-                else: return N_Qubit_Decomposition_Guided_Tree.avg_loss(S)
+                if use_softmax: return N_Qubit_Decomposition_Guided_Tree.cuts_softmax_rank_cost(S, rank)
+                else: return N_Qubit_Decomposition_Guided_Tree.avg_loss(S, rank)
             def jacobian(x):
                 allU = self.params_to_mat(x)
                 grad = np.zeros(len(x), dtype=float)
                 for Ubase, U, pspace in zip(self.Umtx, allU, [None] if self.paramspace is None else self.paramspace):
-                    dL = N_Qubit_Decomposition_Guided_Tree.get_deriv_osr_entanglement(U, cuts, use_softmax)
+                    dL = N_Qubit_Decomposition_Guided_Tree.get_deriv_osr_entanglement(U, cuts, rank, use_softmax)
                     basevec = np.array((1.0,) if pspace is None else (1.0,) + pspace)
                     scaled_params = np.sum(x.reshape(-1, 1+len(pspace)) * basevec, axis=1) if pspace is not None else x                    
                     derivs = N_Qubit_Decomposition_Guided_Tree.param_derivs(self.get_Circuit(), Ubase, scaled_params)
@@ -532,11 +535,82 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
             params = self.get_Optimized_Parameters()
             self.err = self.Optimization_Problem(params)
             return self.err < self.config.get('tolerance', 1e-8)
+    def generate_insertions(curpath, topology, num_cnot):
+        import itertools
+        n = len(curpath)
+        nslots = n + 1
+        for places in itertools.combinations_with_replacement(range(nslots), num_cnot):
+            for pairs in itertools.product(topology, repeat=num_cnot):
+                out = []
+                j = 0  # index into inserted pairs
+                for slot in range(nslots):
+                    while j < num_cnot and places[j] == slot:
+                        out.append(pairs[j])
+                        j += 1
+                    if slot < n:
+                        out.append(curpath[slot])
+                yield tuple(out)
+    def Start_Decomposition(self):
+        import heapq, itertools
+        self.all_solutions = []
+        self.err = 1.0
+        stop_first_solution = self.config.get("stop_first_solution", True)
+        cuts = list(N_Qubit_Decomposition_Guided_Tree.unique_cuts(self.qbit_num))
+        #because we have U already conjugate transposed, must use prefix order
+        B = self.config.get('beam', None)#8*len(self.topology))
+        max_depth = self.config.get('tree_level_max', 14)
+        tol = 1e-3
+        Fnorm = np.sqrt(1<<self.qbit_num)
+        best = []
+        visited = set()
+        all_ranks = list(range(min(2, self.qbit_num-1)))
+        def get_osr_stats(path, rank, use_softmax):
+            h = self.OSR_with_local_alignment(path, cuts, Fnorm, tol=tol, rank=rank, use_softmax=use_softmax, method="basin_hopping")
+            min_cnots = max((x[0] for x in h), default=0)
+            ranktot = sum(x[0] for x in h)
+            kappa = sum(sum(y*y for y in x[1][1:]) for x in h)
+            return min_cnots, ranktot+kappa, h
+        def add_to_heap(path, parent_stats):
+            if len(path) > max_depth: return False
+            if path in visited: return False
+            visited.add(path)
+            if self.qbit_num > 1:
+                min_cnots, rankkappa = min(get_osr_stats(path, rank, use_sm)[:2] for (rank, use_sm) in itertools.product(all_ranks, (False,))) #(False, True)
+            else: min_cnots, rankkappa = 0, 0.0
+            if parent_stats is not None and (min_cnots, rankkappa) >= parent_stats: return False
+            heapq.heappush(best, (min_cnots, rankkappa, path))
+            return True
+        add_to_heap((), None)
+        while best:
+            #print(best[0])
+            min_cnots, rankkappa, curpath = heapq.heappop(best)
+            if min_cnots == 0:
+                #print(path)
+                for i in range(10):
+                    if self.Run_Decomposition(curpath):
+                        self.all_solutions.append((self.get_Circuit(), self.get_Optimized_Parameters()))
+                        if stop_first_solution: return
+                        break
+                    #print("Looping", h)
+            num_cnot = 1
+            while True:
+                any_added = False
+                for newpath in N_Qubit_Decomposition_Guided_Tree.generate_insertions(curpath, self.topology, num_cnot):
+                    if add_to_heap(newpath, (min_cnots, rankkappa)): any_added = True
+                if any_added: break
+                num_cnot += 1
+                if len(curpath) + num_cnot > max_depth: break
+        self.set_Gate_Structure(Circuit(self.qbit_num))
+        self.set_Optimized_Parameters(np.array([]))
+        #print("No decomposition found within the given CNOT limit.")
+    """
     def Start_Decomposition(self):
         self.all_solutions = []
         self.err = 1.0
         stop_first_solution = self.config.get("stop_first_solution", True)
         cuts = list(N_Qubit_Decomposition_Guided_Tree.unique_cuts(self.qbit_num))
+        if self.topology is None:
+            self.topology = [(i, j) for i in range(self.qbit_num) for j in range(i+1, self.qbit_num)]
         pair_affects = {
             pair: [i for i,A in enumerate(cuts) if (pair[0] in A) ^ (pair[1] in A)]
             for pair in self.topology
@@ -579,6 +653,7 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
         self.set_Gate_Structure(Circuit(self.qbit_num))
         self.set_Optimized_Parameters(np.array([]))
         #print("No decomposition found within the given CNOT limit.")
+    """
     def get_Decomposition_Error(self): return self.err
 #N_Qubit_Decomposition_Guided_Tree.build_sequence(); assert False
 #print(len(list(N_Qubit_Decomposition_Guided_Tree.enumerate_unordered_cnot_BFS(3, [(0,1),(1,2),])))); assert False
@@ -744,6 +819,7 @@ class qgd_Wide_Circuit_Optimization:
         try:
             cDecompose.Start_Decomposition()
         except Exception as e: 
+            print(e)
             raise e
             return []
         if not config.get("stop_first_solution", True): return cDecompose.all_solutions
@@ -1041,7 +1117,7 @@ class qgd_Wide_Circuit_Optimization:
                                                                                      None if structures is None or partition_idx >= len(structures) else structures[partition_idx] ))
                 if subcircuit != new_subcircuit:
 
-                    print( "original subcircuit:    ", subcircuit.get_Gate_Nums()) 
+                    print( "original subcircuit:    ", subcircuit.get_Gate_Nums(), partition_idx) 
                     print( "reoptimized subcircuit: ", new_subcircuit.get_Gate_Nums()) 
 
                 if partition_idx % 100 == 99: print(partition_idx+1, "partitions optimized")
