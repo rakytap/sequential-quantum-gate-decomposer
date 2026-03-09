@@ -107,8 +107,8 @@ RZ::~RZ() {
 
 
 /**
-@brief Call to apply the gate on the input array/matrix by U3*input
-@param parameters An array of parameters to calculate the matrix of the U3 gate.
+@brief Call to apply the gate on the input array/matrix by RZ*input
+@param parameters An array of parameters to calculate the matrix of the RZ gate.
 @param input The input array on which the gate is applied
 @param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
@@ -150,7 +150,7 @@ RZ::apply_from_right( Matrix_real& parameters, Matrix& input ) {
 
 
     if (input.cols != matrix_size ) {
-        std::string err("Wrong matrix size in U3 apply_from_right");
+        std::string err("Wrong matrix size in RZ apply_from_right");
         throw err;    
     }
 
@@ -183,7 +183,7 @@ RZ::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input, int parallel 
 
     if (input.rows != matrix_size ) {
         std::stringstream sstream;
-	sstream << "Wrong matrix size in RX apply_derivate_to" << std::endl;
+	sstream << "Wrong matrix size in RZ apply_derivate_to" << std::endl;
         print(sstream, 0);	      
         exit(-1);
     }
