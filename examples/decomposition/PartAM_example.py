@@ -17,16 +17,16 @@ limitations under the License.
 
 @author: Peter Rakyta, Ph.D.
 """
-## \file wide_circuit_optimization.py
-## \brief Simple example python code demonstrating a wide circuit optimization
+## \file PartAM_example.py
+## \brief Example demonstrating Partition Aware Mapping
 
-import squander.decomposition.qgd_Wide_Circuit_Optimization as Wide_Circuit_Optimization
 from squander import Partition_Aware_Mapping
 from squander import utils
-from squander import Qiskit_IO
-import time
 from squander import Circuit
 import numpy as np
+import time
+
+
 def validate_result(circ_orig, parameters_orig, circ, params, input_perm, output_perm):
     """Validate decomposition by applying both circuits to a random state."""
     num_qubits = circ.get_Qbit_Num()
@@ -54,72 +54,71 @@ def validate_result(circ_orig, parameters_orig, circ, params, input_perm, output
     return state_error, circ_Final
 
 
+def run_and_report(label, config, circ_orig, parameters_orig):
+    """Run PartAM with the given config and print results."""
+    print(f"\n{'='*70}")
+    print(label)
+    print(f"{'='*70}")
+
+    start_time = time.time()
+    pam = Partition_Aware_Mapping(config)
+    circ, params, input_perm, output_perm = pam.Partition_Aware_Mapping(circ_orig, parameters_orig)
+    elapsed = time.time() - start_time
+
+    error, circ_final = validate_result(
+        circ_orig, parameters_orig, circ, params, input_perm, output_perm
+    )
+    print(f"Decomposition error: {error:.10f}")
+    print(f"Gate counts: {circ_final.get_Gate_Nums()}")
+    print(f"Time: {elapsed:.2f}s")
+    return error, elapsed
+
+
 if __name__ == '__main__':
 
     filename = "bv_n14.qasm"
     circ_orig, parameters_orig = utils.qasm_to_squander_circuit(filename)
-    topology = [(0, 1), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6), (6, 7), (7, 8), (8, 9), (9, 10), (10, 11), (11, 12),(12, 13)]
+    topology = [
+        (0, 1), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6),
+        (6, 7), (7, 8), (8, 9), (9, 10), (10, 11), (11, 12), (12, 13),
+    ]
+
+    results = {}
 
     # ================================================================
-    # Full-circuit mode (default, window_size=0)
+    # Default: single forward pass (sabre_iterations=0)
     # ================================================================
-    print(f"\n{'='*70}")
-    print("Full-circuit mode (window_size=0)")
-    print(f"{'='*70}")
-
-    config_full = {
+    results['default'] = run_and_report("Default (single forward pass)", {
         'strategy': "TreeSearch",
-        'test_subcircuits': True,
-        'test_final_circuit': True,
         'max_partition_size': 4,
         'progressbar': True,
         'topology': topology,
-    }
-
-    start_time = time.time()
-    pam_full = Partition_Aware_Mapping(config_full)
-    circ_full, params_full, input_perm_full, output_perm_full = \
-        pam_full.Partition_Aware_Mapping(circ_orig, parameters_orig)
-    elapsed_full = time.time() - start_time
-
-    error_full, circ_final_full = validate_result(
-        circ_orig, parameters_orig,
-        circ_full, params_full, input_perm_full, output_perm_full
-    )
-    print(f"Decomposition error: {error_full:.10f}")
-    print(f"Gate counts: {circ_final_full.get_Gate_Nums()}")
-    print(f"Time: {elapsed_full:.2f}s")
+        'sabre_iterations': 0,
+    }, circ_orig, parameters_orig)
 
     # ================================================================
-    # Windowed mode (window_size=3)
+    # SABRE-style layout refinement (sabre_iterations=3)
     # ================================================================
-    print(f"\n{'='*70}")
-    print("Windowed mode (window_size=3)")
-    print(f"{'='*70}")
-
-    config_windowed = {
+    results['sabre'] = run_and_report("SABRE iterations=3", {
         'strategy': "TreeSearch",
-        'test_subcircuits': True,
-        'test_final_circuit': True,
         'max_partition_size': 4,
         'progressbar': True,
         'topology': topology,
-        'window_size': 7,
-    }
+        'sabre_iterations': 3,
+    }, circ_orig, parameters_orig)
 
-    start_time = time.time()
-    pam_windowed = Partition_Aware_Mapping(config_windowed)
-    circ_win, params_win, input_perm_win, output_perm_win = \
-        pam_windowed.Partition_Aware_Mapping(circ_orig, parameters_orig)
-    elapsed_win = time.time() - start_time
-
-    error_win, circ_final_win = validate_result(
-        circ_orig, parameters_orig,
-        circ_win, params_win, input_perm_win, output_perm_win
-    )
-    print(f"Decomposition error: {error_win:.10f}")
-    print(f"Gate counts: {circ_final_win.get_Gate_Nums()}")
-    print(f"Time: {elapsed_win:.2f}s")
+    # ================================================================
+    # Multiple layout trials with SABRE iterations
+    # ================================================================
+    results['trials'] = run_and_report("SABRE iterations=3, layout trials=5", {
+        'strategy': "TreeSearch",
+        'max_partition_size': 4,
+        'progressbar': True,
+        'topology': topology,
+        'sabre_iterations': 3,
+        'n_layout_trials': 5,
+        'random_seed': 42,
+    }, circ_orig, parameters_orig)
 
     # ================================================================
     # Summary
@@ -127,10 +126,7 @@ if __name__ == '__main__':
     print(f"\n{'='*70}")
     print("Summary")
     print(f"{'='*70}")
-    print(f"{'Mode':<20} {'Error':<20} {'Time':<10}")
-    print(f"{'Full circuit':<20} {error_full:<20.10f} {elapsed_full:<10.2f}s")
-    print(f"{'Windowed (K=3)':<20} {error_win:<20.10f} {elapsed_win:<10.2f}s")
+    print(f"{'Mode':<40} {'Error':<20} {'Time':<10}")
+    for label, (error, elapsed) in results.items():
+        print(f"{label:<40} {error:<20.10f} {elapsed:<10.2f}s")
     print(f"{'='*70}\n")
-
-
-
