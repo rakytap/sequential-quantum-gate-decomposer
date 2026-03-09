@@ -534,7 +534,7 @@ class qgd_Partition_Aware_Mapping:
                 F.remove(partition_idx)
                 single_qubit_part = optimized_partitions[partition_idx]
                 qubit = single_qubit_part.circuit.get_Qbits()[0]
-                single_qubit_part.circuit.Remap_Qbits({int(qubit): int(pi[qubit])},max(D.shape))
+                single_qubit_part.circuit = single_qubit_part.circuit.Remap_Qbits({int(qubit): int(pi[qubit])},max(D.shape))
                 partition_order.append(single_qubit_part)
 
                 resolved_partitions[partition_idx] = True
@@ -607,7 +607,7 @@ class qgd_Partition_Aware_Mapping:
                         if isinstance(optimized_partitions[child], SingleQubitPartitionResult):
                             child_partition = optimized_partitions[child]
                             qubit = child_partition.circuit.get_Qbits()[0]
-                            child_partition.circuit.Remap_Qbits({int(qubit): int(pi[qubit])},max(D.shape))
+                            child_partition.circuit = child_partition.circuit.Remap_Qbits({int(qubit): int(pi[qubit])},max(D.shape))
                             partition_order.append(child_partition)
                             resolved_partitions[child] = True
                             resolved_count = sum(resolved_partitions)
