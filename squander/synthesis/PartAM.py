@@ -442,6 +442,7 @@ class qgd_Partition_Aware_Mapping:
                     pi, _ = self._heuristic_search_layout_only(
                         F_rev, pi, IDAG, DAG, optimized_partitions, scoring_partitions, D,
                         rng=rng,
+                        reverse=True,
                     )
 
                     # Forward layout-only pass (skip on last iteration — real pass follows)
@@ -606,8 +607,12 @@ class qgd_Partition_Aware_Mapping:
         pbar.close()
         return partition_order, pi, pi_initial
 
-    def _heuristic_search_layout_only(self, F, pi, DAG, IDAG, optimized_partitions, scoring_partitions, D, rng=None):
+    def _heuristic_search_layout_only(self, F, pi, DAG, IDAG, optimized_partitions, scoring_partitions, D, rng=None, reverse=False):
         """Run heuristic search but only track layout (pi). No circuit modification.
+
+        Args:
+            reverse: When True, swap P_i/P_o roles in scoring and layout
+                     updates (used for backward passes in SABRE iterations).
 
         Returns:
             (pi, total_swaps): final layout and total number of SWAPs accumulated.
@@ -646,6 +651,7 @@ class qgd_Partition_Aware_Mapping:
                     pc, F_snapshot, pi, scoring_partitions, D,
                     self._swap_cache,
                     E=E, W=E_W, alpha=E_alpha,
+                    reverse=reverse,
                 )
                 for pc in partition_candidates
             ]
@@ -654,7 +660,7 @@ class qgd_Partition_Aware_Mapping:
             F.remove(best.partition_idx)
             resolved_partitions[best.partition_idx] = True
 
-            swaps, pi = best.transform_pi(pi, D, self._swap_cache)
+            swaps, pi = best.transform_pi(pi, D, self._swap_cache, reverse=reverse)
             total_swaps += len(swaps)
 
             # Promote children
@@ -716,10 +722,10 @@ class qgd_Partition_Aware_Mapping:
 
     @staticmethod
     def score_partition_candidate(partition_candidate, F, pi, scoring_partitions, D, swap_cache,
-                                  E=None, W=0.5, alpha=0.9):
+                                  E=None, W=0.5, alpha=0.9, reverse=False):
         score = 0
         swap_weight = 1
-        swaps, output_perm = partition_candidate.transform_pi(pi, D, swap_cache)
+        swaps, output_perm = partition_candidate.transform_pi(pi, D, swap_cache, reverse=reverse)
         score += swap_weight * len(swaps) * 3
         score += 0.1*len(partition_candidate.circuit_structure)
 
@@ -732,9 +738,12 @@ class qgd_Partition_Aware_Mapping:
             for tdx, mini_topology in enumerate(partition.mini_topologies):
                 for pdx, (P_i, P_o) in enumerate(partition.permutations_pairs[tdx]):
                     cnot_count = len(partition.circuit_structures[tdx][pdx])
+                    # In reverse pass, the "entry" side of neighbor partitions
+                    # is their output (P_o), not their input (P_i).
+                    P_route = P_o if reverse else P_i
                     if mini_topology:
                         routing_cost = swap_weight * 3 * sum(
-                            max(0, D[int(output_perm[qbit_map_inv[P_i[u]]])][int(output_perm[qbit_map_inv[P_i[v]]])] - 1)
+                            max(0, D[int(output_perm[qbit_map_inv[P_route[u]]])][int(output_perm[qbit_map_inv[P_route[v]]])] - 1)
                             for u, v in mini_topology
                         )
                     else:
@@ -755,9 +764,10 @@ class qgd_Partition_Aware_Mapping:
                 for tdx, mini_topology in enumerate(partition.mini_topologies):
                     for pdx, (P_i, P_o) in enumerate(partition.permutations_pairs[tdx]):
                         cnot_count = len(partition.circuit_structures[tdx][pdx])
+                        P_route = P_o if reverse else P_i
                         if mini_topology:
                             routing_cost = swap_weight * 3 * sum(
-                                max(0, D[int(output_perm[qbit_map_inv[P_i[u]]])][int(output_perm[qbit_map_inv[P_i[v]]])] - 1)
+                                max(0, D[int(output_perm[qbit_map_inv[P_route[u]]])][int(output_perm[qbit_map_inv[P_route[v]]])] - 1)
                                 for u, v in mini_topology
                             )
                         else:

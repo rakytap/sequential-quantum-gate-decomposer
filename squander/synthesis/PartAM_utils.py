@@ -396,15 +396,24 @@ class PartitionCandidate:
         # {Q*:Q}
         self.node_mapping = get_node_mapping(mini_topology, topology)
 
-    def transform_pi(self, pi, D, swap_cache=None):
-        # Fixed: Use P_i^{-1} instead of P_i for input routing
+    def transform_pi(self, pi, D, swap_cache=None, reverse=False):
         # The synthesized circuit S implements: add_Permutation(P_i) -> Original -> add_Permutation(P_o)
-        # For Original to see logical qubit q* at partition position q*, we need:
-        # - After P_i, position q* should have logical qubit q*'s data
-        # - Before P_i (= input to S), position P_i^{-1}[q*] should have logical qubit q*'s data
-        # So we route logical qubit k (with qbit_map[k] = q*) to partition position P_i^{-1}[q*]
-        P_i_inv = [self.P_i.index(i) for i in range(len(self.P_i))]  # Compute inverse
-        qbit_map_input = {k : self.node_mapping[P_i_inv[v]] for k,v in self.qbit_map.items()}
+        #
+        # Forward (reverse=False):
+        #   Route qubits to input positions derived from P_i_inv, then
+        #   update pi to output positions derived from P_o.
+        #
+        # Reverse (reverse=True):
+        #   We traverse the partition backwards, so the "entry" is the output
+        #   side and the "exit" is the input side.  Swap P_i <-> P_o roles.
+        if not reverse:
+            P_route_inv = [self.P_i.index(i) for i in range(len(self.P_i))]
+            P_exit = self.P_o
+        else:
+            P_route_inv = [self.P_o.index(i) for i in range(len(self.P_o))]
+            P_exit = self.P_i
+
+        qbit_map_input = {k : self.node_mapping[P_route_inv[v]] for k,v in self.qbit_map.items()}
         # Convert pi to plain Python list of ints (may contain np.int64)
         pi_list = [int(x) for x in pi]
         n = len(pi_list)
@@ -423,14 +432,11 @@ class PartitionCandidate:
             swaps, pi_init = find_constrained_swaps_partial(pi_list, qbit_map_input, D)
 
         pi_output = pi_init.copy()
-        # Fixed: P_o should be indexed by partition virtual index q*, not physical index Q*
-        # After the circuit, logical qubit k with qbit_map[k] = q* ends up at 
-        # physical position node_mapping[P_o[q*]]
         qbit_map_inverse = {v: k for k, v in self.qbit_map.items()}
-        for q_star in range(len(self.P_o)):
+        for q_star in range(len(P_exit)):
             if q_star in qbit_map_inverse:
                 k = qbit_map_inverse[q_star]
-                pi_output[k] = self.node_mapping[self.P_o[q_star]]
+                pi_output[k] = self.node_mapping[P_exit[q_star]]
         return swaps, pi_output
     
     def estimate_swap_count(self, pi, D) -> int:
