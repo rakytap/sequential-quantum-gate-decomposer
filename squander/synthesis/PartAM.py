@@ -16,7 +16,6 @@ from squander.partitioning.ilp import (
 )
 
 import numpy as np
-import math
 import time
 from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass
@@ -189,15 +188,24 @@ class qgd_Partition_Aware_Mapping:
     @staticmethod
     def DecomposePartition_Sequential(Partition_circuit: Circuit, Partition_parameters: np.ndarray, config: dict, topologies, involved_qbits, qbit_map) -> PartitionSynthesisResult:
         """
-        Call to decompose a partition sequentially (no automorphism optimization).
+        Call to decompose a partition sequentially.
+        When use_automorphisms is enabled in config, derives equivalent
+        decompositions from topology automorphisms to skip redundant work.
         """
         N = Partition_circuit.get_Qbit_Num()
         if N !=1:
             perumations_all = list(permutations(range(N)))
             result = PartitionSynthesisResult(N, topologies, involved_qbits, qbit_map, Partition_circuit)
-            # Sequential permutation search
+            use_auts = config.get('use_automorphisms', True)
+
             for topology_idx in range(len(topologies)):
                 mini_topology = topologies[topology_idx]
+                if use_auts:
+                    auts = compute_automorphisms(mini_topology)
+                    identity = tuple(range(N))
+                    known_pairs = set()
+
+                # Stage 1: fix P_o, sweep all P_i
                 P_o_initial = perumations_all[np.random.choice(range(len(perumations_all)))]
                 for P_i in perumations_all:
                     Partition_circuit_tmp = Circuit(N)
@@ -206,123 +214,20 @@ class qgd_Partition_Aware_Mapping:
                     Partition_circuit_tmp.add_Permutation(list(P_o_initial))
                     synthesised_circuit, synthesised_parameters = qgd_Partition_Aware_Mapping.DecomposePartition_and_Perm(Partition_circuit_tmp.get_Matrix(Partition_parameters), config, mini_topology)
                     result.add_result((P_i, P_o_initial), synthesised_circuit, synthesised_parameters, topology_idx)
-
-                P_i_best, _ = result.get_best_result(topology_idx)[0]
-                for P_o in perumations_all:
-                    Partition_circuit_tmp = Circuit(N)
-                    Partition_circuit_tmp.add_Permutation(list(P_i_best))
-                    Partition_circuit_tmp.add_Circuit(Partition_circuit)
-                    Partition_circuit_tmp.add_Permutation(list(P_o))
-                    synthesised_circuit, synthesised_parameters = qgd_Partition_Aware_Mapping.DecomposePartition_and_Perm(Partition_circuit_tmp.get_Matrix(Partition_parameters), config, mini_topology)
-                    result.add_result((P_i_best, P_o), synthesised_circuit, synthesised_parameters, topology_idx)
-        else:
-            result = SingleQubitPartitionResult(Partition_circuit,Partition_parameters)
-        return result
-
-    @staticmethod
-    def DecomposePartition_Full(Partition_circuit: Circuit, Partition_parameters: np.ndarray, config: dict, topologies, involved_qbits, qbit_map) -> PartitionSynthesisResult:
-        """
-        Call to decompose a partition exhaustively over all (P_i, P_o) pairs,
-        exploiting topology automorphisms to skip equivalent decompositions.
-        """
-        N = Partition_circuit.get_Qbit_Num()
-        if N !=1:
-            permutations_all = list(permutations(range(N)))
-            result = PartitionSynthesisResult(N, topologies, involved_qbits, qbit_map, Partition_circuit)
-            identity = tuple(range(N))
-            for topology_idx in range(len(topologies)):
-                mini_topology = topologies[topology_idx]
-                auts = compute_automorphisms(mini_topology)
-                known_pairs = set()
-                for P_i in permutations_all:
-                    for P_o in permutations_all:
-                        if (P_i, P_o) in known_pairs:
-                            continue
-                        Partition_circuit_tmp = Circuit(N)
-                        Partition_circuit_tmp.add_Permutation(list(P_i))
-                        Partition_circuit_tmp.add_Circuit(Partition_circuit)
-                        Partition_circuit_tmp.add_Permutation(list(P_o))
-                        synthesised_circuit, synthesised_parameters = qgd_Partition_Aware_Mapping.DecomposePartition_and_Perm(Partition_circuit_tmp.get_Matrix(Partition_parameters), config, mini_topology)
-                        result.add_result((P_i, P_o), synthesised_circuit, synthesised_parameters, topology_idx)
-                        known_pairs.add((P_i, P_o))
+                    if use_auts:
+                        known_pairs.add((P_i, P_o_initial))
                         for sigma in auts:
                             if sigma == identity:
                                 continue
-                            new_P_i, new_P_o, new_circuit, new_params = derive_result_from_automorphism(sigma, P_i, P_o, synthesised_circuit, synthesised_parameters, N)
+                            new_P_i, new_P_o, new_circuit, new_params = derive_result_from_automorphism(sigma, P_i, P_o_initial, synthesised_circuit, synthesised_parameters, N)
                             if (new_P_i, new_P_o) not in known_pairs:
                                 result.add_result((new_P_i, new_P_o), new_circuit, new_params, topology_idx)
                                 known_pairs.add((new_P_i, new_P_o))
-        else:
-            result = SingleQubitPartitionResult(Partition_circuit,Partition_parameters)
-        return result
 
-    @staticmethod
-    def DecomposePartition_Auto(Partition_circuit: Circuit, Partition_parameters: np.ndarray, config: dict, topologies, involved_qbits, qbit_map) -> PartitionSynthesisResult:
-        """
-        Auto-select between Sequential and orbit-reduced Full mode per topology.
-        Uses Full mode when |Aut(T)| > N!/2 (cheaper than Sequential), otherwise
-        uses Sequential with automorphism derivation.
-        """
-        N = Partition_circuit.get_Qbit_Num()
-        if N == 1:
-            return SingleQubitPartitionResult(Partition_circuit, Partition_parameters)
-
-        perumations_all = list(permutations(range(N)))
-        result = PartitionSynthesisResult(N, topologies, involved_qbits, qbit_map, Partition_circuit)
-        identity = tuple(range(N))
-        factorial_N = math.factorial(N)
-
-        for topology_idx in range(len(topologies)):
-            mini_topology = topologies[topology_idx]
-            auts = compute_automorphisms(mini_topology)
-            aut_size = len(auts)
-            known_pairs = set()
-
-            # Choose mode: Full with orbits when |Aut(T)| > N!/2
-            use_full = (aut_size > factorial_N // 2)
-
-            if use_full:
-                # Orbit-reduced Full mode
-                for P_i in perumations_all:
-                    for P_o in perumations_all:
-                        if (P_i, P_o) in known_pairs:
-                            continue
-                        Partition_circuit_tmp = Circuit(N)
-                        Partition_circuit_tmp.add_Permutation(list(P_i))
-                        Partition_circuit_tmp.add_Circuit(Partition_circuit)
-                        Partition_circuit_tmp.add_Permutation(list(P_o))
-                        synthesised_circuit, synthesised_parameters = qgd_Partition_Aware_Mapping.DecomposePartition_and_Perm(Partition_circuit_tmp.get_Matrix(Partition_parameters), config, mini_topology)
-                        result.add_result((P_i, P_o), synthesised_circuit, synthesised_parameters, topology_idx)
-                        known_pairs.add((P_i, P_o))
-                        for sigma in auts:
-                            if sigma == identity:
-                                continue
-                            new_P_i, new_P_o, new_circuit, new_params = derive_result_from_automorphism(sigma, P_i, P_o, synthesised_circuit, synthesised_parameters, N)
-                            if (new_P_i, new_P_o) not in known_pairs:
-                                result.add_result((new_P_i, new_P_o), new_circuit, new_params, topology_idx)
-                                known_pairs.add((new_P_i, new_P_o))
-            else:
-                # Sequential mode with automorphism derivation
-                P_o_initial = perumations_all[np.random.choice(range(len(perumations_all)))]
-                for P_i in perumations_all:
-                    Partition_circuit_tmp = Circuit(N)
-                    Partition_circuit_tmp.add_Permutation(list(P_i))
-                    Partition_circuit_tmp.add_Circuit(Partition_circuit)
-                    Partition_circuit_tmp.add_Permutation(list(P_o_initial))
-                    synthesised_circuit, synthesised_parameters = qgd_Partition_Aware_Mapping.DecomposePartition_and_Perm(Partition_circuit_tmp.get_Matrix(Partition_parameters), config, mini_topology)
-                    result.add_result((P_i, P_o_initial), synthesised_circuit, synthesised_parameters, topology_idx)
-                    known_pairs.add((P_i, P_o_initial))
-                    for sigma in auts:
-                        if sigma == identity:
-                            continue
-                        new_P_i, new_P_o, new_circuit, new_params = derive_result_from_automorphism(sigma, P_i, P_o_initial, synthesised_circuit, synthesised_parameters, N)
-                        if (new_P_i, new_P_o) not in known_pairs:
-                            result.add_result((new_P_i, new_P_o), new_circuit, new_params, topology_idx)
-                            known_pairs.add((new_P_i, new_P_o))
-
+                # Stage 2: fix P_i_best, sweep all P_o
                 P_i_best, _ = result.get_best_result(topology_idx)[0]
                 for P_o in perumations_all:
-                    if (tuple(P_i_best), P_o) in known_pairs:
+                    if use_auts and (tuple(P_i_best), P_o) in known_pairs:
                         continue
                     Partition_circuit_tmp = Circuit(N)
                     Partition_circuit_tmp.add_Permutation(list(P_i_best))
@@ -330,14 +235,18 @@ class qgd_Partition_Aware_Mapping:
                     Partition_circuit_tmp.add_Permutation(list(P_o))
                     synthesised_circuit, synthesised_parameters = qgd_Partition_Aware_Mapping.DecomposePartition_and_Perm(Partition_circuit_tmp.get_Matrix(Partition_parameters), config, mini_topology)
                     result.add_result((P_i_best, P_o), synthesised_circuit, synthesised_parameters, topology_idx)
-                    known_pairs.add((tuple(P_i_best), P_o))
-                    for sigma in auts:
-                        if sigma == identity:
-                            continue
-                        new_P_i, new_P_o, new_circuit, new_params = derive_result_from_automorphism(sigma, P_i_best, P_o, synthesised_circuit, synthesised_parameters, N)
-                        if (new_P_i, new_P_o) not in known_pairs:
-                            result.add_result((new_P_i, new_P_o), new_circuit, new_params, topology_idx)
-                            known_pairs.add((new_P_i, new_P_o))
+                    if use_auts:
+                        known_pairs.add((tuple(P_i_best), P_o))
+                        for sigma in auts:
+                            if sigma == identity:
+                                continue
+                            new_P_i, new_P_o, new_circuit, new_params = derive_result_from_automorphism(sigma, P_i_best, P_o, synthesised_circuit, synthesised_parameters, N)
+                            if (new_P_i, new_P_o) not in known_pairs:
+                                result.add_result((new_P_i, new_P_o), new_circuit, new_params, topology_idx)
+                                known_pairs.add((new_P_i, new_P_o))
+        else:
+            result = SingleQubitPartitionResult(Partition_circuit,Partition_parameters)
+        return result
 
         return result
 
@@ -450,8 +359,7 @@ class qgd_Partition_Aware_Mapping:
                 for idx in range( len(involved_qbits) ):
                     qbit_map[ involved_qbits[idx] ] = idx
                 remapped_subcircuit = subcircuit.Remap_Qbits( qbit_map, qbit_num_sub )
-                decompose_fn = self.DecomposePartition_Auto if self.config.get('use_automorphisms', True) else self.DecomposePartition_Sequential
-                optimized_results[partition_idx] = pool.apply_async( decompose_fn, (remapped_subcircuit, subcircuit_parameters, self.config, mini_topologies, involved_qbits, qbit_map) )
+                optimized_results[partition_idx] = pool.apply_async( self.DecomposePartition_Sequential, (remapped_subcircuit, subcircuit_parameters, self.config, mini_topologies, involved_qbits, qbit_map) )
 
             for partition_idx, subcircuit in enumerate( tqdm(subcircuits, desc="First Synthesis",disable=self.config.get('progressbar', 0) == False) ):
                 optimized_results[partition_idx] = optimized_results[partition_idx].get()
