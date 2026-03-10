@@ -249,6 +249,62 @@ def get_node_mapping(topology1: List[Tuple[int, int]], topology2: List[Tuple[int
     return {}
 
 
+def compute_automorphisms(mini_topology: List[Tuple[int, int]]) -> List[Tuple[int, ...]]:
+    """Compute all automorphisms of a locally-labeled mini_topology (nodes 0..N-1).
+
+    An automorphism is a permutation sigma of {0,...,N-1} that preserves the
+    undirected edge set.  For N<=4 (typical partition size) brute-forcing all
+    N! permutations is at most 24 checks.
+
+    Returns:
+        List of permutation tuples. Always includes the identity as the first
+        element.
+    """
+    nodes = set()
+    for u, v in mini_topology:
+        nodes.add(u)
+        nodes.add(v)
+    if not nodes:
+        return [()]
+    N = max(nodes) + 1
+    edge_set = set()
+    for u, v in mini_topology:
+        edge_set.add((min(u, v), max(u, v)))
+
+    automorphisms = []
+    for perm in permutations(range(N)):
+        mapped = set()
+        for u, v in mini_topology:
+            mapped.add((min(perm[u], perm[v]), max(perm[u], perm[v])))
+        if mapped == edge_set:
+            automorphisms.append(perm)
+    return automorphisms
+
+
+def derive_result_from_automorphism(sigma, P_i, P_o, circuit, parameters, N):
+    """Derive an equivalent decomposition result from a topology automorphism.
+
+    Given that C(theta) approximates P_o . U . P_i on topology T, the circuit
+    sigma(C)(theta) approximates (sigma . P_o) . U . (P_i . sigma^-1) on T
+    (since sigma preserves T).
+
+    Returns:
+        (new_P_i, new_P_o, new_circuit, parameters)
+        Parameters are returned as-is (identical values, different qubit labels).
+    """
+    sigma_inv = [0] * N
+    for i in range(N):
+        sigma_inv[sigma[i]] = i
+
+    new_P_i = tuple(P_i[sigma_inv[j]] for j in range(N))
+    new_P_o = tuple(sigma[P_o[j]] for j in range(N))
+
+    remap = {i: sigma[i] for i in range(N)}
+    new_circuit = circuit.Remap_Qbits(remap, N)
+
+    return new_P_i, new_P_o, new_circuit, parameters
+
+
 # ============================================================================
 # Distance & Cost Calculations
 # ============================================================================

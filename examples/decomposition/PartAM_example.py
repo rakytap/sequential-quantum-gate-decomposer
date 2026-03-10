@@ -90,7 +90,7 @@ if __name__ == '__main__':
     # ================================================================
     results['default'] = run_and_report("Default (single forward pass)", {
         'strategy': "TreeSearch",
-        'max_partition_size': 4,
+        'max_partition_size': 3,
         'progressbar': True,
         'topology': topology,
         'sabre_iterations': 0,
@@ -101,7 +101,7 @@ if __name__ == '__main__':
     # ================================================================
     results['sabre'] = run_and_report("SABRE iterations=3", {
         'strategy': "TreeSearch",
-        'max_partition_size': 4,
+        'max_partition_size': 3,
         'progressbar': True,
         'topology': topology,
         'sabre_iterations': 3,
@@ -112,7 +112,7 @@ if __name__ == '__main__':
     # ================================================================
     results['trials'] = run_and_report("SABRE iterations=3, layout trials=5", {
         'strategy': "TreeSearch",
-        'max_partition_size': 4,
+        'max_partition_size': 3,
         'progressbar': True,
         'topology': topology,
         'sabre_iterations': 3,
