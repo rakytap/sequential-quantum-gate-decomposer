@@ -107,8 +107,8 @@ RZ::~RZ() {
 
 
 /**
-@brief Call to apply the gate on the input array/matrix by U3*input
-@param parameters An array of parameters to calculate the matrix of the U3 gate.
+@brief Call to apply the gate on the input array/matrix by RZ*input
+@param parameters An array of parameters to calculate the matrix of the RZ gate.
 @param input The input array on which the gate is applied
 @param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
@@ -150,7 +150,7 @@ RZ::apply_from_right( Matrix_real& parameters, Matrix& input ) {
 
 
     if (input.cols != matrix_size ) {
-        std::string err("Wrong matrix size in U3 apply_from_right");
+        std::string err("Wrong matrix size in RZ apply_from_right");
         throw err;    
     }
 
@@ -180,21 +180,32 @@ RZ::apply_from_right( Matrix_real& parameters, Matrix& input ) {
 std::vector<Matrix> 
 RZ::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input, int parallel ) {
 
+
     if (input.rows != matrix_size ) {
-        std::string err("Wrong matrix size in RZ apply_derivate_to");
-        throw err;
+        std::stringstream sstream;
+	sstream << "Wrong matrix size in RZ apply_derivate_to" << std::endl;
+        print(sstream, 0);	      
+        exit(-1);
     }
+
 
     std::vector<Matrix> ret;
 
-    Matrix_real parameters_tmp(1,1);
+    double  PhiOver2;
 
-    parameters_tmp[0] = parameters_mtx[0] + M_PI/2;
+    PhiOver2 = parameters_mtx[0] + M_PI/2;
+
+    // the resulting matrix
     Matrix res_mtx = input.copy();
-    apply_to(parameters_tmp, res_mtx, parallel);
-    ret.push_back(res_mtx);
-    
 
+    // get the U3 gate of one qubit
+    Matrix u3_1qbit = calc_one_qubit_u3(PhiOver2);
+
+    // apply the computing kernel on the matrix
+    bool deriv = true;
+    apply_kernel_to(u3_1qbit, res_mtx, deriv, parallel);
+
+    ret.push_back(res_mtx);
 
     return ret;
 
