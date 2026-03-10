@@ -192,4 +192,39 @@ double arg( const QGD_Complex16& a );
 void conjugate_gradient(Matrix_real A, Matrix_real b, Matrix_real& x0, double tol);
 
 
+#ifdef ENABLE_FLOAT32
+#include "matrix_float.h"
+
+/**
+@brief Call to calculate the product of two single-precision complex scalars
+@param a The first scalar
+@param b The second scalar
+@return Returns with the calculated product.
+*/
+QGD_Complex8 mult( QGD_Complex8& a, QGD_Complex8& b );
+
+/**
+@brief Calculate the product of a real scalar and a single-precision complex scalar
+@param a The real scalar.
+@param b The complex scalar.
+@return Returns with the calculated product.
+*/
+QGD_Complex8 mult( float a, QGD_Complex8 b );
+
+/**
+@brief Multiply the elements of a float32 matrix by a single-precision complex scalar.
+@param a A complex scalar.
+@param b A float32 matrix.
+*/
+void mult( QGD_Complex8 a, Matrix_float& b );
+
+/**
+@brief Call to create a float32 identity matrix
+@param matrix_size The number of rows/cols in the resulted identity matrix
+@return Returns with a float32 identity matrix.
+*/
+Matrix_float create_identity_float( int matrix_size );
+#endif // ENABLE_FLOAT32
+
+
 #endif

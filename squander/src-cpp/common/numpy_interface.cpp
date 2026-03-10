@@ -232,6 +232,65 @@ numpy2matrix_real(PyArrayObject* arr) {
 }
 
 
+#ifdef ENABLE_FLOAT32
+#include "matrix_float.h"
+
+/**
+@brief Call to make a numpy array from an instance of Matrix_float class.
+@param mtx a matrix instance
+*/
+PyObject* matrix_float_to_numpy( Matrix_float &mtx ) {
+    // initialize Numpy API
+    import_array();
+
+    npy_intp shape[2];
+    shape[0] = (npy_intp) mtx.rows;
+    shape[1] = (npy_intp) mtx.cols;
+
+    QGD_Complex8* data = mtx.get_data();
+    return array_from_ptr( (void*) data, 2, shape, NPY_COMPLEX64);
+
+}
 
 
+/**
+@brief Call to create a PIC Matrix_float representation of a numpy array
+*/
+Matrix_float
+numpy2matrix_float(PyArrayObject* arr) {
+
+    if ( (PyObject*)arr == Py_None ) {
+        return Matrix_float(0,0);
+    }
+
+#ifdef DEBUG
+    // test C-style contiguous memory allocation of the arrays
+    // in production this case has to be handled outside
+    assert( PyArray_IS_C_CONTIGUOUS(arr) && "array is not memory contiguous" );
+#endif
+
+    // get the pointer to the data stored in the input matrices
+    QGD_Complex8* data = (QGD_Complex8*)PyArray_DATA(arr);
+
+    // get the dimensions of the array self->C
+    int dim_num = PyArray_NDIM( arr );
+    npy_intp* dims = PyArray_DIMS(arr);
+
+    // create PIC version of the input matrices
+    if (dim_num == 2) {
+        Matrix_float mtx = Matrix_float(data, static_cast<int>(dims[0]), static_cast<int>(dims[1]));
+        return mtx;
+    }
+    else if (dim_num == 1) {
+        Matrix_float mtx = Matrix_float(data, static_cast<int>(dims[0]), 1);
+        return mtx;
+    }
+    else {
+        std::string err( "numpy2matrix_float: Wrong matrix dimension was given");
+        throw err;
+    }
+
+}
+
+#endif // ENABLE_FLOAT32
 

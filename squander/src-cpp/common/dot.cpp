@@ -543,3 +543,102 @@ zgemm_Task::execute(tbb::task_group& g) {
 } //execute
 
 
+#ifdef ENABLE_FLOAT32
+
+/**
+@brief Call to get the transpose properties of a float32 matrix for CBLAS calculations
+@param A The matrix of type Matrix_float.
+@param transpose The returned value of CBLAS_TRANSPOSE.
+*/
+void
+get_cblas_transpose( Matrix_float &A, CBLAS_TRANSPOSE &transpose ) {
+
+    //The stringstream input to store the output messages.
+    std::stringstream sstream;
+
+    //Integer value to set the verbosity level of the output messages.
+    int verbose_level;
+
+    //Logging variable.
+    logging output;
+
+    if ( A.is_conjugated() & A.is_transposed() ) {
+        transpose = CblasConjTrans;
+    }
+    else if ( A.is_conjugated() & !A.is_transposed() ) {
+	    sstream << "CblasConjNoTrans NOT IMPLEMENTED in GSL!!!!!!!!!!!!!!!" << std::endl;
+	    verbose_level=1;
+        output.print(sstream,verbose_level);
+	    exit(-1);
+    }
+    else if ( !A.is_conjugated() & A.is_transposed() ) {
+        transpose = CblasTrans;
+    }
+    else {
+        transpose = CblasNoTrans;
+    }
+
+}
+
+
+/**
+@brief Call to calculate the product of two single-precision complex matrices using cblas_cgemm.
+@param A The first matrix.
+@param B The second matrix.
+@return Returns with the result matrix.
+*/
+Matrix_float
+dot( Matrix_float &A, Matrix_float &B ) {
+
+#if BLAS==0 // undefined BLAS
+    int NumThreads = omp_get_max_threads();
+    omp_set_num_threads(1);
+#elif BLAS==1 // MKL
+    int NumThreads = mkl_get_max_threads();
+    MKL_Set_Num_Threads(1);
+#elif BLAS==2 //OpenBLAS
+    int NumThreads = openblas_get_num_threads();
+    openblas_set_num_threads(1);
+#endif
+
+    // check the matrix shapes in DEBUG mode
+    assert( (!A.is_transposed() && !B.is_transposed()) ? (A.cols == B.rows) :
+            ( A.is_transposed() && !B.is_transposed()) ? (A.rows == B.rows) :
+            ( A.is_transposed() &&  B.is_transposed()) ? (A.rows == B.cols) :
+            /* !A.is_transposed() && B.is_transposed() */ (A.cols == B.cols) );
+
+    // Determine output dimensions
+    int M = A.is_transposed() ? A.cols : A.rows;
+    int N = B.is_transposed() ? B.rows : B.cols;
+    int K = A.is_transposed() ? A.rows : A.cols;
+
+    Matrix_float C(M, N);
+
+    // setting CBLAS transpose operations
+    CBLAS_TRANSPOSE transA, transB;
+    get_cblas_transpose( A, transA );
+    get_cblas_transpose( B, transB );
+
+    // parameters alpha and beta for cblas_cgemm (the input matrices are not scaled)
+    QGD_Complex8 alpha;
+    alpha.real = 1.0f;
+    alpha.imag = 0.0f;
+    QGD_Complex8 beta;
+    beta.real = 0.0f;
+    beta.imag = 0.0f;
+
+    cblas_cgemm(CblasRowMajor, transA, transB, M, N, K, (float*)&alpha, (float*)A.get_data(), A.stride, (float*)B.get_data(), B.stride, (float*)&beta, (float*)C.get_data(), C.stride);
+
+#if BLAS==0 // undefined BLAS
+    omp_set_num_threads(NumThreads);
+#elif BLAS==1 //MKL
+    MKL_Set_Num_Threads(NumThreads);
+#elif BLAS==2 //OpenBLAS
+    openblas_set_num_threads(NumThreads);
+#endif
+
+    return C;
+
+}
+
+#endif // ENABLE_FLOAT32
