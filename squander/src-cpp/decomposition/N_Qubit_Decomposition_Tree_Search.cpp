@@ -39,6 +39,109 @@ limitations under the License.
 
 using Discovery = std::vector<std::pair<std::vector<int>, GrayCode>>;
 
+// topology: vector of pairs/qubit-edges, e.g. {(0,1), (0,2), ...}
+// cuts: each cut is a vector<int> listing one side of the bipartition
+// cut_bounds: required cross-cut counts for each cut
+
+class MinCnotBoundSolver {
+public:
+    MinCnotBoundSolver(int num_qubits,
+                       const std::vector<std::vector<int>>& cuts,
+                       const std::vector<matrix_base<int>>& topology)
+        : num_qubits_(num_qubits), cuts_(cuts) {
+        build_cut_to_edges(topology);
+    }
+
+    int solve_min_cnots(const std::vector<std::pair<int, double> >& cut_bounds, int max_total = -1) const {
+        // return std::max_element(cut_bounds.begin(), cut_bounds.end(),
+        //                         [](const std::pair<int, double>& a, const std::pair<int, double>& b) {
+        //                             return a.first < b.first;
+        //                         })->first;
+        if (cut_bounds.size() != cuts_.size()) {
+            throw std::invalid_argument("cut_bounds size must match cuts size");
+        }
+
+        const int m = static_cast<int>(cut_to_edges_.size());
+        std::vector<int> edge_counts(m, 0);
+
+        for (int total = 0;; ++total) {
+            if (max_total >= 0 && total > max_total) {
+                return -1; // not found within bound
+            }
+            if (feasible_for_some_composition(total, edge_counts, cut_bounds, 0, 0)) {
+                return total;
+            }
+        }
+    }
+
+private:
+    int num_qubits_;
+    std::vector<std::vector<int>> cuts_;
+    std::vector<std::vector<int>> cut_to_edges_;
+
+    void build_cut_to_edges(const std::vector<matrix_base<int>>& topology) {
+        cut_to_edges_.clear();
+        cut_to_edges_.reserve(cuts_.size());
+
+        for (const std::vector<int>& cut : cuts_) {
+            std::vector<char> in_cut(num_qubits_, 0);
+            for (int q : cut) {
+                in_cut[q] = 1;
+            }
+
+            std::vector<int> crossing_edges;
+            crossing_edges.reserve(topology.size());
+
+            for (int i = 0; i < static_cast<int>(topology.size()); ++i) {
+                if (in_cut[topology[i][0]] != in_cut[topology[i][1]]) {
+                    crossing_edges.push_back(i);
+                }
+            }
+            cut_to_edges_.push_back(std::move(crossing_edges));
+        }
+    }
+
+    bool composition_satisfies(const std::vector<int>& edge_counts,
+                              const std::vector<std::pair<int, double> >& cut_bounds) const {
+        for (int c = 0; c < static_cast<int>(cut_to_edges_.size()); ++c) {
+            const int bound = cut_bounds[c].first;
+            if (bound <= 0) continue;
+
+            int sum = 0;
+            for (int edge_idx : cut_to_edges_[c]) {
+                sum += edge_counts[edge_idx];
+                if (sum >= bound) break;
+            }
+            if (sum < bound) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    bool feasible_for_some_composition(int total,
+                                       std::vector<int>& edge_counts,
+                                       const std::vector<std::pair<int, double> >& cut_bounds,
+                                       int pos,
+                                       int used_sum) const {
+        const int m = static_cast<int>(edge_counts.size());
+
+        if (pos == m - 1) {
+            edge_counts[pos] = total - used_sum;
+            return composition_satisfies(edge_counts, cut_bounds);
+        }
+
+        const int remaining = total - used_sum;
+        for (int x = 0; x <= remaining; ++x) {
+            edge_counts[pos] = x;
+            if (feasible_for_some_composition(total, edge_counts, cut_bounds, pos + 1, used_sum + x)) {
+                return true;
+            }
+        }
+        return false;
+    }
+};
+
 /**
 @brief Structure containing the result of a BFS level enumeration.
 This structure contains the visited states, sequence pairs, and the output results from enumerating a single BFS level.
@@ -686,9 +789,14 @@ Gates_block* N_Qubit_Decomposition_Tree_Search::determine_gate_structure(Matrix_
 
 GrayCode N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures_best_first() {
     std::vector<std::vector<int>> all_cuts = unique_cuts(qbit_num);
+    std::sort(all_cuts.begin(), all_cuts.end(), [](const std::vector<int>& a, const std::vector<int>& b){
+        if (a.size() != b.size()) return a.size() < b.size();
+        return std::lexicographical_compare(a.begin(), a.end(), b.begin(), b.end());
+    });
     // If topology entries are actual gates, the path stores topology indices.
     double Fnorm = std::sqrt(static_cast<double>(1 << qbit_num));
     double osr_tol = 1e-3;
+    MinCnotBoundSolver osr_bound_solver(qbit_num, all_cuts, topology);
 
     std::priority_queue<SearchNode, std::vector<SearchNode>, std::greater<SearchNode>> heap;
     std::set<GrayCode> visited;
@@ -697,6 +805,7 @@ GrayCode N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures_bes
     cDecomp_custom_random.set_cost_function_variant(OSR_ENTANGLEMENT);
     std::uniform_real_distribution<> distrib_real(0.0, 2 * M_PI);
     std::vector<double> optimized_parameters;
+    std::set<int> fingerprint_db;
     std::function<EvalResult(const GrayCode& path)> evaluate_path = [&](const GrayCode& path) -> EvalResult {
         std::vector<EvalResult> ev_results;
         std::unique_ptr<Gates_block> gate_structure_loc(
@@ -710,7 +819,9 @@ GrayCode N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures_bes
         cDecomp_custom_random.set_optimized_parameters(optimized_parameters.data(),
                                                         static_cast<int>(optimized_parameters.size()));
         for (const std::vector<int>& cut : all_cuts) {
+            if (cut.size() != 1) continue;
             int max_rank = 2*std::min(cut.size(), qbit_num-cut.size());
+            std::vector<EvalResult> rank_results;
             for (int rank = max_rank-1; rank >= 0; rank--) {
                 cDecomp_custom_random.set_osr_params({cut}, rank, false);
                 cDecomp_custom_random.start_decomposition();
@@ -719,23 +830,33 @@ GrayCode N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures_bes
                 cDecomp_custom_random.apply_to(params, U);
                 std::vector<std::pair<int, double>> osr_result;
                 osr_result.reserve(all_cuts.size());
+                int newrank = rank;
                 for (const std::vector<int>& eval_cut : all_cuts) {
                     osr_result.emplace_back(operator_schmidt_rank(U, qbit_num, eval_cut, Fnorm, osr_tol));
-                    if (cut == eval_cut) rank = std::min(rank, osr_result.back().first);
+                    if (cut == eval_cut) newrank = osr_result.back().first;
                 }
-                int min_cnots = osr_result.size() == 0 ? 0 : std::max_element(osr_result.begin(), osr_result.end(),
+                /*int min_cnots = osr_result.size() == 0 ? 0 : std::max_element(osr_result.begin(), osr_result.end(),
                     [](const std::pair<int, double>& a, const std::pair<int, double>& b){
                         return a.first < b.first;
-                })->first;
+                })->first;*/
+                int min_cnots = osr_bound_solver.solve_min_cnots(osr_result);
                 double rankkappa = std::accumulate(osr_result.begin(), osr_result.end(), 0.0,
                                             [](double acc, const std::pair<int, double>& item) {
                                                 return acc + item.first + item.second;
                                             });
-                ev_results.emplace_back(EvalResult(min_cnots, rankkappa));
-                
+                rank_results.emplace_back(EvalResult(min_cnots, rankkappa));
+                if (newrank > rank) break;
+                rank = std::min(rank, newrank);
             }
+            ev_results.emplace_back(*std::min_element(rank_results.begin(), rank_results.end()));
             //if (ev_results.size() == (all_cuts.size()+1)/2) break;
         }
+        /*if (path.size() == 0) {
+            std::sort(all_cuts.begin(), all_cuts.end(), [](const std::vector<int>& a, const std::vector<int>& b){
+                if (a.size() != b.size()) return a.size() < b.size();
+                return std::lexicographical_compare(a.begin(), a.end(), b.begin(), b.end());
+            });
+        }*/
         return *std::min_element(ev_results.begin(), ev_results.end());
     };
 
@@ -763,14 +884,16 @@ GrayCode N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures_bes
         // }
         // printf("\n");
 
-        if (path.size()+ev.min_cnots > level_limit) {
-           return false;
-        }
+        // if (path.size()+ev.min_cnots > level_limit) {
+        //    return false;
+        // }
 
         if (!(ev < parent_ev)) {
             return false;
         }
-        heap.push(SearchNode(ev, path));
+        int fingerprint = rint(ev.rankkappa/osr_tol);
+        if (fingerprint_db.insert(fingerprint).second)
+            heap.push(SearchNode(ev, path));
         return true;
     };
 
@@ -859,6 +982,7 @@ TreeSearchResult N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_struct
     std::vector<std::vector<int>>& all_cuts = ci.all_cuts;
     std::map<std::pair<int, int>, std::vector<int>>& pair_affects = ci.pair_affects;
     std::map<GrayCode, std::vector<std::pair<int, double>>>& prefixes = ci.prefixes;
+    MinCnotBoundSolver osr_bound_solver(qbit_num, all_cuts, topology);
 
     double optimization_tolerance_loc;
     if (config.count("optimization_tolerance") > 0) {
@@ -992,11 +1116,7 @@ TreeSearchResult N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_struct
                     int cnot_lower_bound =
                         osr_result.size() == 0
                             ? 0
-                            : std::max_element(osr_result.begin(), osr_result.end(),
-                                               [](const std::pair<int, double>& a, const std::pair<int, double>& b) {
-                                                   return a.first < b.first;
-                                               })
-                                  ->first;
+                            : osr_bound_solver.solve_min_cnots(osr_result);
                     if (cnot_lower_bound <= level_limit - level_num &&
                         (solution.size() == 0 ||
                          std::max_element(
