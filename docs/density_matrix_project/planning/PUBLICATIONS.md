@@ -119,8 +119,9 @@ training workflow without sacrificing correctness or reproducibility?
 ### Contribution
 
 - backend selection between state-vector and density-matrix execution,
-- expectation-value path `Tr(H*rho)`,
-- bridge from existing circuit / gate sequences into the density-matrix backend,
+- exact real-valued Hermitian energy evaluation via `Re Tr(H*rho)`,
+- generated-`HEA` bridge from the current VQE circuit path into the
+  density-matrix backend, with broader circuit-source support deferred,
 - validation of noisy training workflows on representative circuits.
 
 ### Why It Is Strong
