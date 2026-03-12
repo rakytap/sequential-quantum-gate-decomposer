@@ -31,6 +31,13 @@ document explicitly states that it is tightening the scope for this phase only.
 | P2-ADR-006 | Require publication-grade validation and benchmark evidence from the start | Accepted |
 | P2-ADR-007 | Define success around one or more exact noisy workflows in the documented exact regime | Accepted |
 | P2-ADR-008 | Defer partitioning, fusion, gradients, and approximate scaling to later phases | Deferred |
+| P2-ADR-009 | Make backend selection explicit and fail unsupported combinations early | Accepted |
+| P2-ADR-010 | Limit Phase 2 observables to exact Hermitian energy evaluation in the VQE path | Accepted |
+| P2-ADR-011 | Use a partial HEA-first bridge into `NoisyCircuit` | Accepted |
+| P2-ADR-012 | Freeze a workload-driven Phase 2 support matrix | Accepted |
+| P2-ADR-013 | Anchor Phase 2 on noisy XXZ VQE in the exact regime | Accepted |
+| P2-ADR-014 | Require a minimum Aer-centered benchmark package | Accepted |
+| P2-ADR-015 | Use numeric exactness and workflow-readiness thresholds | Accepted |
 
 ## P2-ADR-001: Use Spec-Driven Phase 2 Documentation As The Implementation Contract
 
@@ -470,17 +477,487 @@ Refines:
 - `ADR-007`
 - `ADR-008`
 
+## P2-ADR-009: Make Backend Selection Explicit And Fail Unsupported Combinations Early
+
+### Status
+
+`Accepted`
+
+### Context
+
+Phase 2 needs backend selection to be concrete enough for implementation and
+benchmark interpretation.
+
+Without a frozen contract, several ambiguities remain:
+
+- whether density execution is opt-in or automatic,
+- whether existing state-vector workflows change behavior by default,
+- and whether unsupported density workflows silently fall back to the
+  state-vector path.
+
+Those ambiguities are especially risky for Paper 1, where a benchmark claim
+must be tied to a clearly selected backend.
+
+### Decision
+
+Backend selection is an explicit workflow-level decision on
+`qgd_Variational_Quantum_Eigensolver_Base` or an equivalent VQE-facing
+configuration entry point.
+
+Phase 2 allows exactly two backend modes:
+
+- `state_vector`,
+- `density_matrix`.
+
+Additional contract details:
+
+- `state_vector` remains the default when no backend is specified,
+- `density_matrix` must be selected explicitly for exact noisy mixed-state
+  workflow claims,
+- no implicit `auto` mode is part of the Phase 2 contract,
+- and unsupported density combinations fail with a hard pre-execution error
+  rather than silently falling back.
+
+### Rationale
+
+- Keeping `state_vector` as the default preserves backward compatibility and
+  limits migration risk.
+- Requiring explicit `density_matrix` selection sacrifices some convenience, but
+  it avoids scientifically ambiguous fallback behavior.
+- Early hard errors are preferable to silently benchmarking the wrong backend.
+
+### Consequences
+
+- Phase 2 implementation must expose a clearly documented backend switch.
+- Benchmarks and validation logs can state unambiguously which backend was used.
+- Unsupported mixed-state requests become explicit scope-boundary outcomes
+  rather than silent surprises.
+
+### Rejected Alternatives
+
+- Introduce an implicit `auto` mode that guesses when to switch backends.
+- Make `density_matrix` the default before the support surface is stable.
+- Silently fall back to `state_vector` when density execution is unsupported.
+
+### Upstream Alignment
+
+Refines:
+
+- `P2-ADR-002`
+- `P2-ADR-007`
+- `RESEARCH_ALIGNMENT.md` Phase 2 acceptance wording
+
+## P2-ADR-010: Limit Phase 2 Observables To Exact Hermitian Energy Evaluation In The VQE Path
+
+### Status
+
+`Accepted`
+
+### Context
+
+Phase 2 must freeze what `Tr(H*rho)` actually means at the workflow level.
+
+The current VQE path already accepts a Hermitian sparse Hamiltonian, but the
+project could still drift toward:
+
+- an underspecified generic observable API,
+- support claims that exceed the first benchmark family,
+- or a mixed exact-plus-shot-measurement story that is too broad for this phase.
+
+### Decision
+
+Phase 2 observable support is limited to exact real-valued Hermitian energy
+evaluation through:
+
+- `E(theta) = Re Tr(H*rho(theta))`,
+- using the existing Hermitian sparse-Hamiltonian input path of
+  `qgd_Variational_Quantum_Eigensolver_Base`,
+- with the canonical benchmark family anchored on XXZ Hamiltonians composed of
+  `XX`, `YY`, `ZZ`, and local `Z` terms.
+
+The following remain outside the core Phase 2 contract:
+
+- arbitrary non-Hermitian observables,
+- general POVMs,
+- batched multi-observable APIs,
+- and shot-noise or readout estimation as the main acceptance path.
+
+### Rationale
+
+- This matches the current VQE interface and keeps the integration target clear.
+- Exact Hermitian energy evaluation is the minimum scientifically meaningful
+  observable contract for noisy VQE in Phase 2.
+- Deferring broader observable APIs keeps the phase focused and the validation
+  story clean.
+
+### Consequences
+
+- Paper 1 claims center on exact noisy energy evaluation, not generic
+  measurement infrastructure.
+- Validation can use a precise reference comparison against Qiskit Aer.
+- Later phases remain free to add richer measurement interfaces without
+  retroactively changing the Phase 2 success definition.
+
+### Rejected Alternatives
+
+- Define a broad generic observable framework as part of the Phase 2 minimum.
+- Restrict Phase 2 to diagonal or `ZZ`-only Hamiltonians.
+- Blend exact observable validation with shot-noise estimation as one
+  inseparable contract.
+
+### Upstream Alignment
+
+Refines:
+
+- `P2-ADR-003`
+- `P2-ADR-006`
+- `PUBLICATIONS.md` Paper 1 observable requirement
+
+## P2-ADR-011: Use A Partial HEA-First Bridge Into `NoisyCircuit`
+
+### Status
+
+`Accepted`
+
+### Context
+
+The density-matrix backend is structurally separate from the main VQE circuit
+path. Phase 2 therefore needs an explicit bridge decision.
+
+The main trade-off is:
+
+- broad circuit compatibility versus
+- a smaller bridge that is guaranteed for the first real workflow.
+
+### Decision
+
+The Phase 2 bridge is partial and HEA-first.
+
+Mandatory bridge contract:
+
+- source representation: the circuit generated by
+  `qgd_Variational_Quantum_Eigensolver_Base.Generate_Circuit()` for the default
+  `HEA` ansatz,
+- target representation: `NoisyCircuit` plus `GateOperation` and ordered
+  `NoiseOperation` insertion,
+- unsupported operations: hard pre-execution error naming the first unsupported
+  operation.
+
+Optional Phase 2 extension:
+
+- user-supplied `qgd_Circuit` or `Gates_block` inputs are allowed only when all
+  operations lower cleanly to the documented required gate families.
+
+Full `qgd_Circuit` parity is not part of the Phase 2 contract.
+
+### Rationale
+
+- The HEA-generated VQE path is the most defensible implementation anchor for
+  Paper 1.
+- A partial bridge keeps the phase bounded around a real workflow instead of an
+  abstract compatibility target.
+- Hard-error behavior is safer than silently dropping or rewriting unsupported
+  operations.
+
+### Consequences
+
+- The bridge can be judged against a concrete workflow instead of an open-ended
+  gate-compatibility list.
+- Broader manual circuit reuse becomes an optional extension, not a blocking
+  requirement.
+- Documentation must clearly separate guaranteed bridge behavior from
+  non-guaranteed future parity.
+
+### Rejected Alternatives
+
+- Require full `qgd_Circuit` parity before Phase 2 can start implementation.
+- Permit silent partial lowering of unsupported circuits.
+- Leave the bridge implicit and let implementation define support ad hoc.
+
+### Upstream Alignment
+
+Refines:
+
+- `P2-ADR-005`
+- `P2-ADR-008`
+- `ARCHITECTURE.md` Phase 2 integration targets
+
+## P2-ADR-012: Freeze A Workload-Driven Phase 2 Support Matrix
+
+### Status
+
+`Accepted`
+
+### Context
+
+The earlier Phase 2 ADRs already favored workload-driven support and realistic
+local noise. What remained open was the exact support surface.
+
+That support surface must balance:
+
+- scientific relevance,
+- implementation feasibility,
+- and protection against scope inflation.
+
+### Decision
+
+Phase 2 freezes the following support matrix.
+
+Required:
+
+- gate families: `U3`, `CNOT`,
+- noise models: local single-qubit depolarizing, local amplitude damping, local
+  phase damping or dephasing.
+
+Optional:
+
+- additional gates already exposed by `NoisyCircuit` when a test or
+  comparison microbenchmark genuinely needs them,
+- whole-register depolarizing as a regression or stress-test baseline,
+- generalized amplitude damping or coherent over-rotation only if a justified
+  benchmark extension requires them.
+
+Deferred:
+
+- full `qgd_Circuit` gate parity,
+- correlated multi-qubit noise,
+- readout noise as a density-backend feature,
+- calibration-aware noise,
+- and non-Markovian noise.
+
+### Rationale
+
+- `U3` plus `CNOT` is enough to support the default HEA workflow cleanly.
+- Mandatory local noise keeps Phase 2 aligned with the realistic-noise research
+  theme.
+- Making whole-register depolarizing optional preserves its value as a baseline
+  while preventing it from becoming the main scientific target.
+
+### Consequences
+
+- Phase 2 implementation must likely extend Phase 1 by adding local
+  single-qubit depolarizing support.
+- Benchmarks and workflow claims must stay inside the frozen support surface.
+- Any expansion beyond this matrix becomes an explicit scope decision rather
+  than accidental feature creep.
+
+### Rejected Alternatives
+
+- Freeze no support matrix and let implementation discover the boundary later.
+- Require immediate full gate parity.
+- Treat whole-register depolarizing as sufficient for the main Paper 1 noise
+  narrative.
+
+### Upstream Alignment
+
+Refines:
+
+- `P2-ADR-004`
+- `P2-ADR-005`
+
+## P2-ADR-013: Anchor Phase 2 On Noisy XXZ VQE In The Exact Regime
+
+### Status
+
+`Accepted`
+
+### Context
+
+Phase 2 already needed at least one representative noisy workflow, but the
+workflow anchor was still too generic.
+
+Without a concrete anchor, the phase could still be evaluated against:
+
+- a workflow that is too synthetic,
+- a workflow that depends on unsupported features,
+- or several half-supported workflows instead of one publishable one.
+
+### Decision
+
+The Phase 2 anchor workflow is noisy VQE ground-state estimation for a 1D XXZ
+spin chain with local `Z` field using:
+
+- `qgd_Variational_Quantum_Eigensolver_Base`,
+- the default `HEA` ansatz,
+- explicit local noise insertion,
+- and exact energy evaluation through `Re Tr(H*rho)`.
+
+Scale contract:
+
+- 4 and 6 qubits must support full end-to-end workflow execution, including at
+  least one reproducible optimization trace,
+- 8 and 10 qubits must support benchmark-ready fixed-parameter evaluation,
+- and 10 qubits is the acceptance anchor for the documented exact regime.
+
+### Rationale
+
+- This workflow is directly aligned with the current VQE interface.
+- XXZ Hamiltonians are rich enough to stress the observable path while still
+  fitting the frozen Phase 2 Hamiltonian family.
+- Requiring full 10-qubit optimization would expand cost and risk without
+  materially improving the Phase 2 scientific claim.
+
+### Consequences
+
+- Phase 2 success is judged against one concrete noisy VQE workflow, not a vague
+  class of possible future workflows.
+- Broader algorithm families remain possible later, but they are not needed to
+  declare Phase 2 complete.
+- The exact-regime claim is anchored honestly rather than being overstated.
+
+### Rejected Alternatives
+
+- Leave the workflow anchor generic.
+- Split attention across several equal-priority workflow anchors.
+- Require the full optimizer study that properly belongs to Phase 4.
+
+### Upstream Alignment
+
+Refines:
+
+- `P2-ADR-007`
+- `PUBLICATIONS.md` Paper 1 workflow requirement
+
+## P2-ADR-014: Require A Minimum Aer-Centered Benchmark Package
+
+### Status
+
+`Accepted`
+
+### Context
+
+The benchmark requirement for Phase 2 was already accepted in principle, but the
+minimum package was still open.
+
+That left uncertainty around:
+
+- which benchmark classes are mandatory,
+- which baselines are required,
+- and what reproducibility material must exist before Paper 1 claims are safe.
+
+### Decision
+
+Phase 2 requires the following minimum benchmark package.
+
+Mandatory:
+
+- Qiskit Aer density-matrix simulation as the primary external baseline,
+- 1 to 3 qubit micro-validation circuits covering each required gate and noise
+  contract,
+- anchor XXZ noisy VQE circuits at 4, 6, 8, and 10 qubits,
+- at least 10 fixed parameter vectors per mandatory workflow size,
+- at least one reproducible 4- or 6-qubit optimization trace,
+- metrics for absolute energy error, density validity, runtime, peak memory, and
+  workflow completion,
+- and a reproducibility bundle containing the Hamiltonian, ansatz, noise
+  schedule, seeds, versions or commit, and raw results.
+
+Optional:
+
+- one additional simulator baseline if it materially strengthens the paper.
+
+### Rationale
+
+- Qiskit Aer is already the strongest required external reference.
+- The micro-validation layer catches local correctness regressions that could be
+  hidden by workflow-only benchmarks.
+- The workflow layer proves that the backend is useful in the intended research
+  setting.
+
+### Consequences
+
+- Paper 1 evidence is defined before implementation rather than assembled after
+  the fact.
+- Phase 2 benchmark work remains bounded and reproducible.
+- Broader simulator bake-offs are clearly optional, not silently expected.
+
+### Rejected Alternatives
+
+- Leave benchmark design to post-implementation paper drafting.
+- Require a large multi-framework comparison before Phase 2 can proceed.
+- Use only one or two favorable workflow cases without a micro-validation layer.
+
+### Upstream Alignment
+
+Refines:
+
+- `P2-ADR-006`
+- `PUBLICATIONS.md` Paper 1 evidence package
+
+## P2-ADR-015: Use Numeric Exactness And Workflow-Readiness Thresholds
+
+### Status
+
+`Accepted`
+
+### Context
+
+Before this ADR, the Phase 2 acceptance language was qualitatively strong but
+not numerically closed.
+
+That was enough for planning, but not enough for:
+
+- a strict implementation gate,
+- a reproducible benchmark pass or fail rule,
+- or a publication-ready claim about exactness.
+
+### Decision
+
+Phase 2 acceptance uses the following numeric thresholds:
+
+- mandatory acceptance coverage at 4, 6, 8, and 10 qubits,
+- maximum absolute energy error `<= 1e-10` on the 1 to 3 qubit microcases,
+- maximum absolute energy error `<= 1e-8` on the mandatory 4, 6, 8, and 10
+  qubit workflow parameter sweeps,
+- `rho.is_valid(tol=1e-10)` pass condition and `|Tr(rho) - 1| <= 1e-10` on
+  recorded validation outputs,
+- `|Im Tr(H*rho)| <= 1e-10` for the exact observable path,
+- `100%` pass rate on the mandatory micro-validation matrix,
+- `100%` pass rate on the mandatory workflow benchmark set,
+- and at least one documented 10-qubit anchor evaluation case plus the full
+  reproducibility bundle.
+
+### Rationale
+
+- Exactness claims should be strict enough to defend scientifically.
+- Different thresholds for microcases and workflow cases reflect the difference
+  between tiny correctness kernels and larger dense mixed-state benchmarks.
+- No runtime speed threshold is added, because Phase 2 is not the acceleration
+  phase.
+
+### Consequences
+
+- Phase 2 completion becomes a measurable gate rather than a qualitative
+  judgment call.
+- Benchmark and paper drafting can refer to the same pass or fail rules.
+- Performance remains characterized, but not treated as the main completion
+  criterion.
+
+### Rejected Alternatives
+
+- Keep Phase 2 acceptance purely qualitative.
+- Add acceleration or runtime pass thresholds to Phase 2.
+- Accept partial benchmark passes as sufficient for the main Phase 2 claim.
+
+### Upstream Alignment
+
+Refines:
+
+- `P2-ADR-006`
+- `P2-ADR-007`
+
 ## Phase 2 Decision Gate Summary
 
 At the end of Phase 2, the following questions must all have a positive answer:
 
-1. Can the density-matrix backend be selected and used in the intended noisy
-   workflow?
-2. Is the `Tr(H*rho)` observable path validated strongly enough for publication?
-3. Does the supported gate and noise scope cover at least one representative
-   exact noisy workflow?
-4. Is the evidence package strong enough to draft Paper 1 honestly and
-   confidently?
+1. Can the density-matrix backend be selected explicitly and used in the anchor
+   noisy VQE workflow without fallback?
+2. Does the `Re Tr(H*rho)` observable path meet the numeric exactness thresholds
+   against Qiskit Aer?
+3. Does the frozen gate and noise support matrix cover the anchor workflow
+   across the documented 4 to 10 qubit exact regime?
+4. Is the benchmark and reproducibility package strong enough to draft Paper 1
+   honestly and confidently?
 
 If the answer to any of these questions is no, then Phase 2 is incomplete even
 if some underlying implementation work exists.

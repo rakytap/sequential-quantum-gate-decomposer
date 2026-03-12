@@ -30,6 +30,33 @@ from os import path
 from squander.VQA.qgd_Variational_Quantum_Eigensolver_Base_Wrapper import qgd_Variational_Quantum_Eigensolver_Base_Wrapper
 from squander.gates.qgd_Circuit import qgd_Circuit
 
+_VQE_BACKEND_NAME_TO_CODE = {
+    "state_vector": 0,
+    "density_matrix": 1,
+}
+_VQE_DEFAULT_BACKEND = "state_vector"
+_VQE_BACKEND_CONFIG_KEY = "backend_mode"
+
+
+def _normalize_vqe_backend_name(backend):
+
+    if backend is None:
+        return _VQE_DEFAULT_BACKEND
+
+    if not isinstance(backend, str):
+        raise TypeError(
+            "backend should be one of 'state_vector', 'density_matrix', or None"
+        )
+
+    normalized_backend = backend.strip()
+    if normalized_backend not in _VQE_BACKEND_NAME_TO_CODE:
+        raise ValueError(
+            "Unsupported backend '{}'. Supported backends are 'state_vector' and "
+            "'density_matrix'.".format(backend)
+        )
+
+    return normalized_backend
+
 
 
 ##
@@ -40,21 +67,34 @@ class qgd_Variational_Quantum_Eigensolver_Base(qgd_Variational_Quantum_Eigensolv
 ## 
 # @brief Constructor of the class.
 # @param Umtx The unitary matrix to be decomposed.
-# @param optimize_layer_num Set true to optimize the minimum number of operation layers required in the decomposition, or false when the predefined maximal number of layer gates is used (ideal for general unitaries).
-# @param initial_guess String indicating the method to guess initial values for the optimalization. Possible values: "zeros" ,"random", "close_to_zero".
+# @param config Dictionary describing optimization hyperparameters.
+# @param accelerator_num Optional accelerator identifier.
+# @param backend Optional backend selector. Supported values are "state_vector"
+#   and "density_matrix". When omitted, the VQE keeps the legacy
+#   state-vector behavior.
 # @return An instance of the class
-    def __init__( self, Hamiltonian, qbit_num, config={}, accelerator_num=0):
+    def __init__( self, Hamiltonian, qbit_num, config=None, accelerator_num=0, *, backend=None):
     
 
+        if config is None:
+            config = {}
+
         # config
-        if not( type(config) is dict):
+        if not isinstance(config, dict):
             print("Input parameter config should be a dictionary describing the following hyperparameters:") #TODO
             return
 
+        normalized_backend = _normalize_vqe_backend_name(backend)
+        config_copy = dict(config)
+        config_copy[_VQE_BACKEND_CONFIG_KEY] = _VQE_BACKEND_NAME_TO_CODE[normalized_backend]
 
         # call the constructor of the wrapper class
-        super(qgd_Variational_Quantum_Eigensolver_Base, self).__init__(Hamiltonian.data, Hamiltonian.indices, Hamiltonian.indptr, qbit_num, config=config, accelerator_num=accelerator_num)
+        super(qgd_Variational_Quantum_Eigensolver_Base, self).__init__(Hamiltonian.data, Hamiltonian.indices, Hamiltonian.indptr, qbit_num, config=config_copy, accelerator_num=accelerator_num)
         self.qbit_num = qbit_num
+        # Story 1 keeps the backend selector visible on the Python object even
+        # though the only active execution path is still the legacy
+        # state-vector implementation.
+        self.backend = normalized_backend
 
 
 ## 

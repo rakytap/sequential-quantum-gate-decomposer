@@ -22,7 +22,6 @@ limitations under the License.
 #include "Variational_Quantum_Eigensolver_Base.h"
 
 #include <nlohmann/json.hpp>
-#include <fstream>
 #include <random>
 #include <cmath>
 #include <vector>
@@ -34,6 +33,32 @@ limitations under the License.
 using json = nlohmann::json;
 
 static tbb::spin_mutex my_mutex;
+
+namespace {
+
+const char* VQE_BACKEND_MODE_CONFIG_KEY = "backend_mode";
+
+vqe_backend_type
+parse_vqe_backend_mode(std::map<std::string, Config_Element>& config) {
+
+    long long backend_mode_value = STATE_VECTOR_BACKEND;
+    if (config.count(VQE_BACKEND_MODE_CONFIG_KEY) > 0) {
+        config[VQE_BACKEND_MODE_CONFIG_KEY].get_property(backend_mode_value);
+    }
+
+    switch (backend_mode_value) {
+        case STATE_VECTOR_BACKEND:
+            return STATE_VECTOR_BACKEND;
+        case DENSITY_MATRIX_BACKEND:
+            return DENSITY_MATRIX_BACKEND;
+        default:
+            throw std::string(
+                "Variational_Quantum_Eigensolver_Base::Variational_Quantum_Eigensolver_Base: unsupported backend_mode value"
+            );
+    }
+}
+
+}
 
 /**
 @brief A base class to solve VQE problems
@@ -74,6 +99,7 @@ Variational_Quantum_Eigensolver_Base::Variational_Quantum_Eigensolver_Base() {
     cost_fnc = VQE;
     
     ansatz = HEA;
+    backend_mode = STATE_VECTOR_BACKEND;
 }
 
 
@@ -91,6 +117,7 @@ Variational_Quantum_Eigensolver_Base::Variational_Quantum_Eigensolver_Base( Matr
 	Hamiltonian = Hamiltonian_in;
     // config maps
     config   = config_in;
+    backend_mode = parse_vqe_backend_mode(config);
     // logical value describing whether the decomposition was finalized or not
     decomposition_finalized = false;
 

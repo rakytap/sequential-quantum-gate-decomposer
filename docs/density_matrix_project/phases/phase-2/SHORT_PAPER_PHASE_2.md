@@ -47,10 +47,11 @@ At the same time, a density-matrix module has recently been added, providing:
 
 This is an important milestone, but it is not yet sufficient for the main PhD
 research agenda. The current density-matrix path is a standalone capability. It
-is not yet integrated into the main variational workflow, does not yet define a
-backend-selection contract, and does not yet provide the observable-evaluation
-path needed for noisy training studies. As a result, the project currently has a
-capable exact noisy simulator but not yet a noisy variational training backend.
+is not yet integrated into the main variational workflow, and the code does not
+yet implement the now-documented Phase 2 backend-selection contract or the
+observable-evaluation path needed for noisy training studies. As a result, the
+project currently has a capable exact noisy simulator and a frozen Phase 2
+contract, but not yet a delivered noisy variational training backend.
 
 This short paper defines the first major integration step needed to close that
 gap. Its purpose is to turn the density-matrix path into a usable backend for
@@ -64,16 +65,17 @@ representation. That already exists. The problem is that the existing exact
 mixed-state backend is not yet part of the research workflow that the broader
 project actually needs.
 
-More concretely, the current gap has four parts:
+More concretely, the current implementation gap has four parts:
 
-1. There is no documented, integrated backend-selection path between
-   state-vector and density-matrix execution in the main variational workflow.
-2. There is no validated expectation-value path based on `Tr(H*rho)` for noisy
-   variational objectives.
-3. There is no documented bridge from the current circuit/gate representations
-   into the density-matrix backend at the workflow level.
-4. The current support surface is not yet framed around training-relevant noise
-   models, validation, and publication evidence.
+1. The documented backend-selection path between state-vector and
+   density-matrix execution is not yet implemented in the main variational
+   workflow.
+2. The documented expectation-value path based on `Tr(H*rho)` is not yet
+   delivered and validated in running code for noisy variational objectives.
+3. The documented bridge from the current circuit and gate representations into
+   the density-matrix backend is not yet implemented at the workflow level.
+4. The frozen support surface, benchmark gate, and publication evidence package
+   are not yet delivered in executable form.
 
 This means that even though exact noisy evolution is available in isolation, the
 project cannot yet claim to support research-grade exact noisy VQA workflows.

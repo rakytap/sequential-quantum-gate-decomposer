@@ -78,6 +78,97 @@ class Test_VQE:
         except Exception as exc:
             pytest.skip(f"VQE wrapper not available: {exc}")
 
+    @staticmethod
+    def _get_identity_config():
+        return {
+            "agent_lifetime": 500,
+            "optimization_tolerance": -7.1,
+            "max_inner_iterations": 10,
+            "max_iterations": 50,
+            "learning_rate": 2e-1,
+            "agent_num": 64,
+            "agent_exploration_rate": 0.3,
+            "max_inner_iterations_adam": 50000,
+        }
+
+    def _build_identity_vqe(self, qbit_num=2, backend=None, Hamiltonian=None):
+        if Hamiltonian is None:
+            Hamiltonian = sp.sparse.eye(2**qbit_num, format="csr")
+        VQE_cls = self._get_vqe_class()
+
+        if backend is None:
+            vqe = VQE_cls(Hamiltonian, qbit_num, self._get_identity_config())
+        else:
+            vqe = VQE_cls(
+                Hamiltonian,
+                qbit_num,
+                self._get_identity_config(),
+                backend=backend,
+            )
+
+        vqe.set_Ansatz("HEA")
+        vqe.Generate_Circuit(1, 1)
+        return vqe
+
+    def test_backend_argument_normalization(self):
+        qbit_num = 2
+        Hamiltonian = sp.sparse.eye(2**qbit_num, format="csr")
+        VQE_cls = self._get_vqe_class()
+
+        legacy_vqe = VQE_cls(Hamiltonian, qbit_num, self._get_identity_config())
+        state_vector_vqe = VQE_cls(
+            Hamiltonian,
+            qbit_num,
+            self._get_identity_config(),
+            backend="state_vector",
+        )
+        density_matrix_vqe = VQE_cls(
+            Hamiltonian,
+            qbit_num,
+            self._get_identity_config(),
+            backend="density_matrix",
+        )
+
+        assert legacy_vqe.backend == "state_vector"
+        assert state_vector_vqe.backend == "state_vector"
+        assert density_matrix_vqe.backend == "density_matrix"
+
+    def test_invalid_backend_rejected(self):
+        qbit_num = 2
+        Hamiltonian = sp.sparse.eye(2**qbit_num, format="csr")
+        VQE_cls = self._get_vqe_class()
+
+        with pytest.raises(ValueError, match="Unsupported backend"):
+            VQE_cls(
+                Hamiltonian,
+                qbit_num,
+                self._get_identity_config(),
+                backend="invalid_backend",
+            )
+
+    def test_explicit_state_vector_matches_legacy_default(self):
+        qbit_num = 2
+        Hamiltonian = generate_hamiltonian([(0, 1)], qbit_num)
+        legacy_vqe = self._build_identity_vqe(qbit_num=qbit_num, Hamiltonian=Hamiltonian)
+        explicit_state_vector_vqe = self._build_identity_vqe(
+            qbit_num=qbit_num,
+            Hamiltonian=Hamiltonian,
+            backend="state_vector",
+        )
+
+        assert legacy_vqe.backend == "state_vector"
+        assert explicit_state_vector_vqe.backend == "state_vector"
+        assert legacy_vqe.get_Parameter_Num() == explicit_state_vector_vqe.get_Parameter_Num()
+
+        param_num = legacy_vqe.get_Parameter_Num()
+        assert param_num > 0
+
+        parameters = np.linspace(0.05, 0.05 * param_num, param_num, dtype=np.float64)
+        legacy_energy = legacy_vqe.Optimization_Problem(parameters)
+        explicit_state_vector_energy = explicit_state_vector_vqe.Optimization_Problem(parameters)
+
+        assert np.isclose(legacy_energy, explicit_state_vector_energy, atol=1e-12)
+
     def test_VQE_Identity(self):
         layers = 1
         blocks = 1
@@ -85,14 +176,7 @@ class Test_VQE:
         qbit_num = 7
         Hamiltonian = sp.sparse.eye(2**qbit_num,format="csr")
 
-        config = {"agent_lifetime":500,
-                  "optimization_tolerance": -7.1,
-                  "max_inner_iterations":10,
-                  "max_iterations":50,
-                  "learning_rate": 2e-1,
-                  "agent_num":64,
-                  "agent_exploration_rate":0.3,
-                  "max_inner_iterations_adam":50000}
+        config = self._get_identity_config()
         
         # initiate the VQE object with the Hamiltonian
         VQE_cls = self._get_vqe_class()

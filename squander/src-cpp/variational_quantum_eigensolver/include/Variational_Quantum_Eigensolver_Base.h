@@ -57,7 +57,12 @@ struct SimulationResult {
 
 /// @brief Type definition of the fifferent types of ansatz
 typedef enum ansatz_type {HEA, HEA_ZYZ} ansatz_type;
-    
+
+/// @brief Supported execution backends for the VQE workflow contract.
+typedef enum vqe_backend_type {
+    STATE_VECTOR_BACKEND = 0,
+    DENSITY_MATRIX_BACKEND = 1
+} vqe_backend_type;
 
 
 
@@ -95,6 +100,9 @@ private:
     
     /// Ansatz type (HEA stands for hardware efficient ansatz)
     ansatz_type ansatz;
+
+    /// Effective execution backend selected for this VQE instance.
+    vqe_backend_type backend_mode;
 
 public:
 

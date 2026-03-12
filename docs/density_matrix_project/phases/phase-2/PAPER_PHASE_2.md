@@ -179,22 +179,25 @@ The delivered mixed-state path includes:
 This is enough to support standalone exact noisy circuit execution and mixed-state
 observables at the module level.
 
-### 3.2 What Does Not Yet Exist
+### 3.2 What Does Not Yet Exist In The Implementation
 
-The workflow-level gaps are still substantial:
+The workflow-level implementation gaps are still substantial even though the
+Phase 2 contract is now documented:
 
-- no documented backend-selection contract for density execution in the main
-  variational path,
-- no validated `Tr(H*rho)` workflow-level observable path,
-- no fully documented bridge from existing circuit representations into the
-  density backend,
-- no Phase 2-defined workflow support matrix,
-- and no Paper 1 evidence package yet attached to these capabilities.
+- no delivered backend-selection implementation for density execution in the
+  main variational path,
+- no delivered workflow-level `Tr(H*rho)` path that satisfies the documented
+  validation contract,
+- no delivered bridge from existing circuit representations into the density
+  backend for the anchor workflow,
+- no running implementation yet matching the frozen Phase 2 support matrix,
+- and no Paper 1 benchmark evidence package yet attached to executed code.
 
 ### 3.3 Why This Gap Matters
 
-Without these pieces, the project has an exact noisy module but not yet an exact
-noisy training workflow. For the PhD theme, that distinction is decisive.
+Without implementation of these documented pieces, the project has an exact
+noisy module and a Phase 2 contract, but not yet a delivered exact noisy
+training workflow. For the PhD theme, that distinction is decisive.
 
 ## 4. Phase 2 Problem Definition
 
