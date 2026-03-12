@@ -155,7 +155,8 @@ class qgd_Variational_Quantum_Eigensolver_Base(qgd_Variational_Quantum_Eigensolv
 #   legacy state-vector behavior.
 # @param density_noise Optional ordered list of fixed local density-noise
 #   insertions. Each entry must define a channel, target qubit,
-#   after_gate_index, and fixed noise value.
+#   after_gate_index, and fixed noise value. Phase 2 only supports this
+#   surface together with `backend="density_matrix"`.
 # @return An instance of the class
     def __init__(
         self,
@@ -375,7 +376,8 @@ class qgd_Variational_Quantum_Eigensolver_Base(qgd_Variational_Quantum_Eigensolv
 ##
 # @brief Configure ordered fixed local-noise insertions for the density backend.
 # @param density_noise A list of dictionaries with channel, target,
-#   after_gate_index, and noise value metadata.
+#   after_gate_index, and noise value metadata. Phase 2 treats this as a
+#   mixed-state-only surface and rejects it on `state_vector` workflows.
     def set_Density_Matrix_Noise(self, density_noise):
 
         normalized_density_noise = _normalize_density_noise_spec(density_noise)

@@ -309,6 +309,15 @@ class TestNoisyCircuitNoise:
         assert rho.purity() < 1.0
         assert rho.is_valid()
 
+    def test_local_depolarizing_invalid_target_raises(self):
+        """Test local single-qubit depolarizing rejects out-of-range targets."""
+        circuit = NoisyCircuit(1)
+        circuit.add_local_depolarizing(1, error_rate=0.2)
+
+        rho = DensityMatrix(qbit_num=1)
+        with pytest.raises(RuntimeError, match="target_qbit out of range"):
+            circuit.apply_to(np.array([]), rho)
+
     def test_amplitude_damping(self):
         """Test amplitude damping in circuit."""
         circuit = NoisyCircuit(1)

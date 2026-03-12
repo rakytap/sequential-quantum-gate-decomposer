@@ -55,6 +55,24 @@ density_noise_type_to_label(density_noise_type noise_type) {
     }
 }
 
+const char*
+vqe_circuit_source_to_label(vqe_circuit_source_type circuit_source) {
+    switch (circuit_source) {
+        case VQE_CIRCUIT_SOURCE_UNSET:
+            return "unset";
+        case VQE_CIRCUIT_SOURCE_GENERATED_HEA:
+            return "generated_hea";
+        case VQE_CIRCUIT_SOURCE_GENERATED_HEA_ZYZ:
+            return "generated_hea_zyz";
+        case VQE_CIRCUIT_SOURCE_BINARY_IMPORT:
+            return "binary_import";
+        case VQE_CIRCUIT_SOURCE_CUSTOM_GATE_STRUCTURE:
+            return "custom_gate_structure";
+        default:
+            return "unknown_circuit_source";
+    }
+}
+
 vqe_backend_type
 parse_vqe_backend_mode(std::map<std::string, Config_Element>& config) {
 
@@ -117,6 +135,7 @@ Variational_Quantum_Eigensolver_Base::Variational_Quantum_Eigensolver_Base() {
     
     ansatz = HEA;
     backend_mode = STATE_VECTOR_BACKEND;
+    circuit_source = VQE_CIRCUIT_SOURCE_UNSET;
     density_noise_specs.clear();
 }
 
@@ -154,16 +173,48 @@ bool Variational_Quantum_Eigensolver_Base::density_optimizer_supported() const {
 }
 
 
-void Variational_Quantum_Eigensolver_Base::validate_density_anchor_support() {
+void Variational_Quantum_Eigensolver_Base::validate_density_anchor_support(
+    bool require_optimizer_support, bool require_gradient_support) {
 
-    if (backend_mode != DENSITY_MATRIX_BACKEND) {
+    if (backend_mode == STATE_VECTOR_BACKEND) {
+        if (!density_noise_specs.empty()) {
+            throw std::string(
+                "Variational_Quantum_Eigensolver_Base::validate_density_anchor_support: state_vector backend does not support density_matrix-only noise configuration"
+            );
+        }
         return;
+    }
+
+    if (require_gradient_support) {
+        throw std::string(
+            "Variational_Quantum_Eigensolver_Base::validate_density_anchor_support: density_matrix backend does not support gradient-based optimization in Story 3"
+        );
     }
 
     if (ansatz != HEA) {
         throw std::string(
             "Variational_Quantum_Eigensolver_Base::validate_density_anchor_support: density_matrix backend currently supports only the HEA ansatz"
         );
+    }
+
+    if (require_optimizer_support && !density_optimizer_supported()) {
+        throw std::string(
+            "Variational_Quantum_Eigensolver_Base::validate_density_anchor_support: density_matrix backend currently supports only BAYES_OPT or COSINE optimization traces"
+        );
+    }
+
+    if (circuit_source == VQE_CIRCUIT_SOURCE_UNSET) {
+        throw std::string(
+            "Variational_Quantum_Eigensolver_Base::validate_density_anchor_support: density_matrix backend requires a generated HEA circuit"
+        );
+    }
+
+    if (circuit_source != VQE_CIRCUIT_SOURCE_GENERATED_HEA) {
+        std::string error(
+            "Variational_Quantum_Eigensolver_Base::validate_density_anchor_support: unsupported circuit source in density backend path: "
+        );
+        error += vqe_circuit_source_to_label(circuit_source);
+        throw error;
     }
 
     int gate_num = get_gate_num();
@@ -181,7 +232,7 @@ void Variational_Quantum_Eigensolver_Base::validate_density_anchor_support() {
                 break;
             default: {
                 std::string error(
-                    "Variational_Quantum_Eigensolver_Base::validate_density_anchor_support: unsupported gate in density backend path: "
+                    "Variational_Quantum_Eigensolver_Base::validate_density_anchor_support: first unsupported gate in density backend path is "
                 );
                 error += gate->get_name();
                 throw error;
@@ -189,11 +240,15 @@ void Variational_Quantum_Eigensolver_Base::validate_density_anchor_support() {
         }
     }
 
-    for (const auto& spec : density_noise_specs) {
+    for (size_t spec_idx = 0; spec_idx < density_noise_specs.size(); ++spec_idx) {
+        const auto& spec = density_noise_specs[spec_idx];
         if (spec.after_gate_index >= gate_num) {
-            throw std::string(
-                "Variational_Quantum_Eigensolver_Base::validate_density_anchor_support: after_gate_index exceeds generated gate count"
+            std::string error(
+                "Variational_Quantum_Eigensolver_Base::validate_density_anchor_support: unsupported density-noise insertion at index "
             );
+            error += std::to_string(spec_idx);
+            error += " because after_gate_index exceeds generated gate count";
+            throw error;
         }
     }
 }
@@ -352,6 +407,7 @@ Variational_Quantum_Eigensolver_Base::Variational_Quantum_Eigensolver_Base( Matr
     cost_fnc = VQE;
     
     ansatz = HEA;
+    circuit_source = VQE_CIRCUIT_SOURCE_UNSET;
     density_noise_specs.clear();
     
 }
@@ -397,14 +453,7 @@ void Variational_Quantum_Eigensolver_Base::start_optimization(){
         throw error;
     }    
 
-    if (backend_mode == DENSITY_MATRIX_BACKEND) {
-        validate_density_anchor_support();
-        if (!density_optimizer_supported()) {
-            throw std::string(
-                "Variational_Quantum_Eigensolver_Base::start_optimization: density_matrix backend currently supports only BAYES_OPT or COSINE optimization traces"
-            );
-        }
-    }
+    validate_density_anchor_support(true, false);
 
 
     // start the VQE process
@@ -876,6 +925,7 @@ double Variational_Quantum_Eigensolver_Base::optimization_problem_non_static(Mat
     double Energy=0.0;
 
     Variational_Quantum_Eigensolver_Base* instance = reinterpret_cast<Variational_Quantum_Eigensolver_Base*>(void_instance);
+    instance->validate_density_anchor_support(false, false);
 
     if (instance->backend_mode == DENSITY_MATRIX_BACKEND) {
         return instance->evaluate_density_matrix_backend(parameters);
@@ -980,6 +1030,8 @@ double Variational_Quantum_Eigensolver_Base::optimization_problem_Groq(Matrix_re
 double Variational_Quantum_Eigensolver_Base::optimization_problem(Matrix_real& parameters)  {
 
 
+    validate_density_anchor_support(false, false);
+
     if (backend_mode == DENSITY_MATRIX_BACKEND) {
         return evaluate_density_matrix_backend(parameters);
     }
@@ -1027,12 +1079,7 @@ double Variational_Quantum_Eigensolver_Base::optimization_problem(Matrix_real& p
 void Variational_Quantum_Eigensolver_Base::optimization_problem_combined_non_static( Matrix_real parameters, void* void_instance, double* f0, Matrix_real& grad ) {
 
     Variational_Quantum_Eigensolver_Base* instance = reinterpret_cast<Variational_Quantum_Eigensolver_Base*>(void_instance);
-
-    if (instance->backend_mode == DENSITY_MATRIX_BACKEND) {
-        throw std::string(
-            "Variational_Quantum_Eigensolver_Base::optimization_problem_combined_non_static: density_matrix backend does not support gradient-based optimization in Story 2"
-        );
-    }
+    instance->validate_density_anchor_support(false, true);
 
     // initialize the initial state if it was not given
     if ( instance->initial_state.size() == 0 ) {
@@ -1254,6 +1301,7 @@ void Variational_Quantum_Eigensolver_Base::generate_circuit( int layers, int inn
             }
 
 
+            circuit_source = VQE_CIRCUIT_SOURCE_GENERATED_HEA;
             return;
         }
         case HEA_ZYZ:
@@ -1334,6 +1382,7 @@ void Variational_Quantum_Eigensolver_Base::generate_circuit( int layers, int inn
             }
 
 
+            circuit_source = VQE_CIRCUIT_SOURCE_GENERATED_HEA_ZYZ;
             return;
         }        
         default:
@@ -1376,6 +1425,15 @@ Variational_Quantum_Eigensolver_Base::set_gate_structure( std::string filename )
         print(sstream, 1);	
     }
 
+    circuit_source = VQE_CIRCUIT_SOURCE_BINARY_IMPORT;
+}
+
+void
+Variational_Quantum_Eigensolver_Base::set_custom_gate_structure(
+    Gates_block* gate_structure_in ) {
+
+    Optimization_Interface::set_custom_gate_structure( gate_structure_in );
+    circuit_source = VQE_CIRCUIT_SOURCE_CUSTOM_GATE_STRUCTURE;
 }
 
 

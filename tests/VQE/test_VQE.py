@@ -158,6 +158,25 @@ class Test_VQE:
         vqe.Generate_Circuit(1, 1)
         return vqe, Hamiltonian
 
+    def _build_story2_state_vector_vqe_with_density_noise(
+        self, qbit_num, *, omit_backend=False
+    ):
+        topology = [(idx, idx + 1) for idx in range(qbit_num - 1)]
+        Hamiltonian = generate_hamiltonian(topology, qbit_num)
+        VQE_cls = self._get_vqe_class()
+        kwargs = {"density_noise": self._get_story2_noise()}
+        if not omit_backend:
+            kwargs["backend"] = "state_vector"
+        vqe = VQE_cls(
+            Hamiltonian,
+            qbit_num,
+            self._get_story2_config(),
+            **kwargs,
+        )
+        vqe.set_Ansatz("HEA")
+        vqe.Generate_Circuit(1, 1)
+        return vqe, Hamiltonian
+
     def test_backend_argument_normalization(self):
         qbit_num = 2
         Hamiltonian = sp.sparse.eye(2**qbit_num, format="csr")
@@ -229,6 +248,125 @@ class Test_VQE:
             },
         ]
 
+    @pytest.mark.parametrize("omit_backend", [False, True])
+    def test_state_vector_rejects_density_noise(self, omit_backend):
+        qbit_num = 4
+        vqe, _ = self._build_story2_state_vector_vqe_with_density_noise(
+            qbit_num, omit_backend=omit_backend
+        )
+
+        parameters = np.linspace(
+            0.05,
+            0.05 * vqe.get_Parameter_Num(),
+            vqe.get_Parameter_Num(),
+            dtype=np.float64,
+        )
+
+        with pytest.raises(
+            Exception,
+            match="state_vector backend does not support density_matrix-only noise configuration",
+        ):
+            vqe.Optimization_Problem(parameters)
+
+    def test_density_backend_rejects_unsupported_ansatz(self):
+        qbit_num = 4
+        topology = [(idx, idx + 1) for idx in range(qbit_num - 1)]
+        Hamiltonian = generate_hamiltonian(topology, qbit_num)
+        VQE_cls = self._get_vqe_class()
+        vqe = VQE_cls(
+            Hamiltonian,
+            qbit_num,
+            self._get_story2_config(),
+            backend="density_matrix",
+            density_noise=self._get_story2_noise(),
+        )
+        vqe.set_Ansatz("HEA_ZYZ")
+        vqe.Generate_Circuit(1, 1)
+
+        parameters = np.linspace(
+            0.05,
+            0.05 * vqe.get_Parameter_Num(),
+            vqe.get_Parameter_Num(),
+            dtype=np.float64,
+        )
+
+        with pytest.raises(Exception, match="only the HEA ansatz"):
+            vqe.Optimization_Problem(parameters)
+
+    def test_density_backend_requires_generated_hea_circuit(self):
+        qbit_num = 4
+        topology = [(idx, idx + 1) for idx in range(qbit_num - 1)]
+        Hamiltonian = generate_hamiltonian(topology, qbit_num)
+        VQE_cls = self._get_vqe_class()
+        vqe = VQE_cls(
+            Hamiltonian,
+            qbit_num,
+            self._get_story2_config(),
+            backend="density_matrix",
+            density_noise=self._get_story2_noise(),
+        )
+
+        with pytest.raises(Exception, match="requires a generated HEA circuit"):
+            vqe.Optimization_Problem(np.array([], dtype=np.float64))
+
+    def test_density_backend_rejects_invalid_after_gate_index(self):
+        qbit_num = 4
+        topology = [(idx, idx + 1) for idx in range(qbit_num - 1)]
+        Hamiltonian = generate_hamiltonian(topology, qbit_num)
+        VQE_cls = self._get_vqe_class()
+        vqe = VQE_cls(
+            Hamiltonian,
+            qbit_num,
+            self._get_story2_config(),
+            backend="density_matrix",
+            density_noise=[
+                {
+                    "channel": "local_depolarizing",
+                    "target": 0,
+                    "after_gate_index": 999,
+                    "error_rate": 0.1,
+                }
+            ],
+        )
+        vqe.set_Ansatz("HEA")
+        vqe.Generate_Circuit(1, 1)
+
+        parameters = np.linspace(
+            0.05,
+            0.05 * vqe.get_Parameter_Num(),
+            vqe.get_Parameter_Num(),
+            dtype=np.float64,
+        )
+
+        with pytest.raises(
+            Exception, match="after_gate_index exceeds generated gate count"
+        ):
+            vqe.Optimization_Problem(parameters)
+
+    def test_density_backend_rejects_gradient_entrypoint(self):
+        vqe, _ = self._build_story2_density_vqe(4)
+        parameters = np.linspace(
+            0.05,
+            0.05 * vqe.get_Parameter_Num(),
+            vqe.get_Parameter_Num(),
+            dtype=np.float64,
+        )
+
+        with pytest.raises(Exception, match="does not support gradient-based optimization"):
+            vqe.Optimization_Problem_Grad(parameters)
+
+    def test_invalid_optimizer_rejected(self):
+        vqe = self._build_identity_vqe()
+
+        with pytest.raises(Exception, match="Unsupported optimizer"):
+            vqe.set_Optimizer("NOT_A_REAL_OPTIMIZER")
+
+    def test_invalid_ansatz_rejected(self):
+        vqe = self._build_identity_vqe()
+
+        with pytest.raises(Exception, match="Unsupported ansatz"):
+            vqe.set_Ansatz("NOT_A_REAL_ANSATZ")
+
     def test_explicit_state_vector_matches_legacy_default(self):
         qbit_num = 2
         Hamiltonian = generate_hamiltonian([(0, 1)], qbit_num)
@@ -291,6 +429,19 @@ class Test_VQE:
         assert np.isfinite(initial_energy)
         assert np.isfinite(final_energy)
         assert final_parameters.shape == parameters.shape
+
+    def test_density_backend_rejects_unsupported_optimizer_on_start(self):
+        density_vqe, _ = self._build_story2_density_vqe(4, optimizer="ADAM")
+
+        param_num = density_vqe.get_Parameter_Num()
+        parameters = np.linspace(0.05, 0.05 * param_num, param_num, dtype=np.float64)
+        density_vqe.set_Optimized_Parameters(parameters)
+
+        with pytest.raises(
+            Exception,
+            match="supports only BAYES_OPT or COSINE optimization traces",
+        ):
+            density_vqe.Start_Optimization()
 
     def test_VQE_Identity(self):
         layers = 1

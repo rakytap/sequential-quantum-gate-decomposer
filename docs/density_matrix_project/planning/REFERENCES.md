@@ -160,36 +160,101 @@ Tag legend:
 
 ## 6. Noisy VQA, Trainability, And Barren Plateaus
 
+### 6.1 SQUANDER Core Papers (VQE Built On This Infrastructure)
+
+- `[Current code]` Peter Rakyta and Zoltan Zimboras, *Approaching the theoretical
+  limit in quantum gate decomposition*, `Quantum 6, 710 (2022)`.
+  The foundational SQUANDER paper. VQE inherits the circuit representation,
+  gate kernels, and optimization infrastructure described here.
+
+- `[Current code]` Peter Rakyta and Zoltan Zimboras, *Efficient quantum gate
+  decomposition via adaptive circuit compression*, `arXiv:2203.04426`.
+  Describes the adaptive decomposition algorithm. VQE shares the
+  Optimization_Interface base class with N_Qubit_Decomposition_adaptive.
+
+- `[Current code]` Peter Rakyta, Gregory Morse, Jakab Nadori, Zita Majnay-Takacs,
+  Oskar Mencer, and Zoltan Zimboras, *Highly optimized quantum circuits
+  synthesized via data-flow engines*, `Journal of Computational Physics 500,
+  112756 (2024)`.
+  Covers hardware acceleration (DFE/Groq). VQE contains `#ifdef __GROQ__`
+  conditional paths for accelerated state-vector simulation
+  (optimization_problem_Groq).
+
+- `[Trainability]` Jakab Nadori, Gregory Morse, Barna Fulop Villam, Zita
+  Majnay-Takacs, Zoltan Zimboras, and Peter Rakyta, *Batched Line Search
+  Strategy for Navigating through Barren Plateaus in Quantum Circuit Training*,
+  `Quantum 9, 1841 (2025)`.
+  Directly describes the AGENTS and COSINE optimizers that VQE uses. The batched
+  line-search technique is the core of the barren-plateau-resilient optimization.
+
+### 6.2 Cost Function and Error Correction
+
+- `[Current code]` arXiv:2210.09191 — Referenced in Optimization_Interface.h for
+  bitflip error corrections in the cost function (Eq. 21). The
+  correction1_scale and correction2_scale parameters in Optimization_Interface
+  implement this paper's error model.
+
+### 6.3 VQE/VQA Theory and Trainability
+
 - `[Trainability]` Daochen Wang, Oscar Higgott, and Stephen Brierley,
   *Accelerated Variational Quantum Eigensolver*, `Physical Review Letters 122,
   140504 (2019)`, DOI `10.1103/PhysRevLett.122.140504`.
-  Relevance: useful reference for efficient VQE workflows and for framing
-  optimizer/runtime trade-offs under limited resources.
+  Accelerated VQE workflow reference, relevant to SQUANDER's optimizer/runtime
+  trade-offs.
 
 - `[Trainability]` Jarrod R. McClean et al., *Barren Plateaus in Quantum Neural
   Network Training*, `Nature Communications 9, 4812 (2018)`, DOI
   `10.1038/s41467-018-07090-4`.
-  Relevance: foundational barren-plateau reference and an important anchor for
-  the trainability-analysis phase.
+  Foundational barren-plateau reference; motivates SQUANDER's gradient-free
+  AGENTS optimizer for VQE.
 
 - `[Trainability]` M. Cerezo et al., *Cost Function Dependent Barren Plateaus in
   Shallow Parametrized Quantum Circuits*, `Nature Communications 12, 1791
   (2021)`, DOI `10.1038/s41467-021-21728-w`.
-  Relevance: essential for understanding locality-dependent trainability and for
-  designing meaningful noisy training experiments.
-
-- `[Trainability]` Stefan H. Sack, Raimel A. Medina, Alexios A. Michailidis,
-  Richard Kueng, and Maksym Serbyn, *Avoiding Barren Plateaus Using Classical
-  Shadows*, `PRX Quantum 3, 020365 (2022)`, DOI `10.1103/PRXQuantum.3.020365`.
-  Relevance: useful mitigation-oriented reference; especially relevant if the
-  project studies entropy-aware or measurement-efficient plateau detection.
+  Explains why locality-preserving cost functions matter; the VQE cost function
+  (local Hamiltonian expectation) is specifically designed to be trainable.
 
 - `[Trainability]` Giacomo De Palma, Milad Marvian, Cambyse Rouze, and Daniel
   Stilck Franca, *Limitations of Variational Quantum Algorithms: A Quantum
   Optimal Transport Approach*, `PRX Quantum 4, 010309 (2023)`, DOI
   `10.1103/PRXQuantum.4.010309`.
-  Relevance: strong theoretical reference for limitations of noisy VQAs and for
-  framing realistic claims about training under noise.
+  Theoretical limitations of noisy VQAs; motivates the density-matrix VQE
+  backend for studying noise effects.
+
+- `[Trainability]` Stefan H. Sack, Raimel A. Medina, Alexios A. Michailidis,
+  Richard Kueng, and Maksym Serbyn, *Avoiding Barren Plateaus Using Classical
+  Shadows*, `PRX Quantum 3, 020365 (2022)`, DOI `10.1103/PRXQuantum.3.020365`.
+  Mitigation reference; relevant to Renyi entropy monitoring in VQE.
+
+### 6.4 Random Unitary and Ansatz Construction
+
+- `[Current code]` arXiv:1303.5904 — Parametrization of random unitary matrices.
+  Referenced in Random_Unitary.cpp for generating initial states and test
+  unitaries.
+
+### 6.5 Density-Matrix Simulation (for Noisy VQE)
+
+- `[Near-term]` Ang Li, Omer Subasi, Xiu Yang, and Sriram Krishnamoorthy,
+  *Density Matrix Quantum Circuit Simulation via the BSP Machine on Modern GPU
+  Clusters*, `SC20`, DOI `10.1109/SC41405.2020.00017`.
+  Reference simulator for the density-matrix backend's performance and
+  correctness benchmarking.
+
+- `[Near-term]` Tyson Jones, Anna Brown, Ian Bush, and Simon C. Benjamin,
+  *QuEST and High Performance Simulation of Quantum Computers*, `Scientific
+  Reports 9, 10736 (2019)`, DOI `10.1038/s41598-019-47174-9`.
+  Reference simulator for the density-matrix backend's performance and
+  correctness benchmarking.
+
+- `[Near-term]` Yasunari Suzuki et al., *Qulacs: a fast and versatile quantum
+  circuit simulator*, `Quantum 5, 559 (2021)`, DOI `10.22331/q-2021-10-06-559`.
+  Reference simulator for the density-matrix backend's performance and
+  correctness benchmarking.
+
+### 6.6 Bayesian Optimization
+
+- `[Current code]` arXiv:1807.02811 — Referenced in Bayes_Opt.h for the Bayesian
+  optimization algorithm used as one of VQE's supported optimizers.
 
 ## 7. Practical Reading Order
 

@@ -1,0 +1,6 @@
+{
+  "case_name": "story3_unsupported_statevector_density_noise",
+  "status": "unsupported",
+  "unsupported_category": "phase2_support_matrix",
+  "unsupported_reason": "Variational_Quantum_Eigensolver_Base::validate_density_anchor_support: state_vector backend does not support density_matrix-only noise configuration"
+}

@@ -662,8 +662,10 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Optimizer( qgd_Variational_
         qgd_optimizer = BAYES_AGENTS;        
     }
     else {
-        std::cout << "Wrong optimizer. Using default: AGENTS" << std::endl; 
-        qgd_optimizer = AGENTS;     
+        std::string err("Unsupported optimizer: ");
+        err += optimizer_C;
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
     }
     
     
@@ -728,8 +730,10 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Ansatz( qgd_Variational_Qua
         qgd_ansatz = HEA_ZYZ;        
     }
     else {
-        std::cout << "Wrong ansatz. Using default: HEA" << std::endl; 
-        qgd_ansatz = HEA;     
+        std::string err("Unsupported ansatz: ");
+        err += ansatz_C;
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
     }
     
     

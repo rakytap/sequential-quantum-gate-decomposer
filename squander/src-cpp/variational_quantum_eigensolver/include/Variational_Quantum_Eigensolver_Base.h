@@ -78,6 +78,15 @@ typedef enum density_noise_type {
     PHASE_DAMPING_NOISE = 2
 } density_noise_type;
 
+/// @brief Provenance of the active VQE circuit used for backend validation.
+typedef enum vqe_circuit_source_type {
+    VQE_CIRCUIT_SOURCE_UNSET = 0,
+    VQE_CIRCUIT_SOURCE_GENERATED_HEA = 1,
+    VQE_CIRCUIT_SOURCE_GENERATED_HEA_ZYZ = 2,
+    VQE_CIRCUIT_SOURCE_BINARY_IMPORT = 3,
+    VQE_CIRCUIT_SOURCE_CUSTOM_GATE_STRUCTURE = 4
+} vqe_circuit_source_type;
+
 /// @brief Ordered fixed-noise insertion metadata for the Story 2 density path.
 struct DensityNoiseSpec {
     density_noise_type type;
@@ -126,10 +135,15 @@ private:
     /// Effective execution backend selected for this VQE instance.
     vqe_backend_type backend_mode;
 
+    /// Provenance of the currently configured circuit.
+    vqe_circuit_source_type circuit_source;
+
     /// Ordered fixed local-noise insertions for the density backend.
     std::vector<DensityNoiseSpec> density_noise_specs;
 
-    void validate_density_anchor_support();
+    void validate_density_anchor_support(
+        bool require_optimizer_support = false,
+        bool require_gradient_support = false);
     void append_density_noise_for_gate_index(
         squander::density::NoisyCircuit& circuit, int gate_index) const;
     void lower_anchor_circuit_to_noisy_circuit(
@@ -336,6 +350,12 @@ void generate_circuit( int layers, int inner_blocks );
 @param filename The path to the binary file
 */
 void set_gate_structure( std::string filename );
+
+/**
+@brief Call to set custom gate structure for VQE experiments.
+@param gate_structure_in Pointer to the gate structure to use.
+*/
+void set_custom_gate_structure( Gates_block* gate_structure_in );
 
 
 /**

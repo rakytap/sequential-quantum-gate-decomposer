@@ -4,6 +4,9 @@
 Runs two kinds of evidence:
 - fixed-parameter 4-qubit and 6-qubit XXZ anchor comparisons against Qiskit Aer,
 - one bounded 4-qubit density-backed optimization trace.
+
+Story 3 extends this script so out-of-scope cases are emitted as structured
+`unsupported` artifacts instead of crashing or silently disappearing.
 """
 
 from __future__ import annotations
@@ -93,6 +96,28 @@ def build_vqe(qbit_num: int, optimizer: str | None = None):
     return vqe, hamiltonian, topology
 
 
+def build_unsupported_statevector_density_noise_vqe(qbit_num: int):
+    topology = build_open_chain_topology(qbit_num)
+    hamiltonian, _ = generate_zz_xx_hamiltonian(
+        n_qubits=qbit_num,
+        h=0.5,
+        topology=topology,
+        Jz=1.0,
+        Jx=1.0,
+        Jy=1.0,
+    )
+    vqe = Variational_Quantum_Eigensolver(
+        hamiltonian,
+        qbit_num,
+        build_story2_config(),
+        backend="state_vector",
+        density_noise=build_story2_noise(),
+    )
+    vqe.set_Ansatz("HEA")
+    vqe.Generate_Circuit(layers=1, inner_blocks=1)
+    return vqe, hamiltonian, topology
+
+
 def insert_story2_noise(base_circuit: QuantumCircuit, density_noise):
     noisy_circuit = QuantumCircuit(base_circuit.num_qubits)
     noise_by_gate = {}
@@ -159,6 +184,7 @@ def run_fixed_parameter_case(qbit_num: int):
     trace_val = np.trace(aer_rho)
     purity = float(np.real(np.trace(aer_rho @ aer_rho)))
     return {
+        "status": "completed",
         "backend": "density_matrix",
         "qbit_num": qbit_num,
         "topology": topology,
@@ -208,6 +234,37 @@ def run_optimization_trace():
     }
 
 
+def run_unsupported_statevector_density_noise_case():
+    vqe, _, topology = build_unsupported_statevector_density_noise_vqe(4)
+    parameters = build_story2_parameters(vqe.get_Parameter_Num())
+    return {
+        "backend": "state_vector",
+        "qbit_num": 4,
+        "topology": topology,
+        "layers": 1,
+        "inner_blocks": 1,
+        "density_noise": build_story2_noise(),
+        "parameter_vector": parameters.tolist(),
+        "energy": float(vqe.Optimization_Problem(parameters)),
+        "status": "completed",
+    }
+
+
+def capture_case(case_name: str, case_callable):
+    try:
+        result = case_callable()
+        result.setdefault("status", "completed")
+        result["case_name"] = case_name
+        return result
+    except Exception as exc:
+        return {
+            "case_name": case_name,
+            "status": "unsupported",
+            "unsupported_category": "phase2_support_matrix",
+            "unsupported_reason": str(exc),
+        }
+
+
 def write_json(output_path: Path, payload):
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
@@ -223,27 +280,57 @@ def main():
     )
     args = parser.parse_args()
 
-    fixed_results = [run_fixed_parameter_case(4), run_fixed_parameter_case(6)]
-    trace_result = run_optimization_trace()
+    fixed_results = [
+        capture_case("story2_fixed_4q", lambda: run_fixed_parameter_case(4)),
+        capture_case("story2_fixed_6q", lambda: run_fixed_parameter_case(6)),
+    ]
+    trace_result = capture_case("story2_trace_4q", run_optimization_trace)
+    unsupported_result = capture_case(
+        "story3_unsupported_statevector_density_noise",
+        run_unsupported_statevector_density_noise_case,
+    )
 
     for result in fixed_results:
+        if result["status"] == "completed":
+            print(
+                "Story 2 fixed case:",
+                result["qbit_num"],
+                "qubits, |E_sq - E_aer| =",
+                f"{result['absolute_energy_error']:.6e}",
+            )
+        else:
+            print(
+                "Story 2 fixed case unsupported:",
+                result["case_name"],
+                result["unsupported_reason"],
+            )
+
+    if trace_result["status"] == "completed":
         print(
-            "Story 2 fixed case:",
-            result["qbit_num"],
-            "qubits, |E_sq - E_aer| =",
-            f"{result['absolute_energy_error']:.6e}",
+            "Story 2 optimization trace:",
+            "initial =", f"{trace_result['initial_energy']:.6e}",
+            "final =", f"{trace_result['final_energy']:.6e}",
+        )
+    else:
+        print(
+            "Story 2 optimization trace unsupported:",
+            trace_result["unsupported_reason"],
         )
 
     print(
-        "Story 2 optimization trace:",
-        "initial =", f"{trace_result['initial_energy']:.6e}",
-        "final =", f"{trace_result['final_energy']:.6e}",
+        "Story 3 unsupported case:",
+        unsupported_result["status"],
+        unsupported_result.get("unsupported_reason", ""),
     )
 
     if args.output_dir is not None:
         write_json(args.output_dir / "story2_fixed_4q.json", fixed_results[0])
         write_json(args.output_dir / "story2_fixed_6q.json", fixed_results[1])
         write_json(args.output_dir / "story2_trace_4q.json", trace_result)
+        write_json(
+            args.output_dir / "story3_unsupported_statevector_density_noise.json",
+            unsupported_result,
+        )
 
 
 if __name__ == "__main__":
