@@ -96,6 +96,11 @@ class DualBuilder:
         self.qk.append(depolarizing_error(p, self.n), list(range(self.n)))
         self.ops.append(f"Depol({p})")
 
+    def local_depolarizing(self, t, p):
+        self.sq.add_local_depolarizing(t, error_rate=p)
+        self.qk.append(depolarizing_error(p, 1), [t])
+        self.ops.append(f"LocalDepol({t},{p})")
+
     def amp_damp(self, t, gamma):
         self.sq.add_amplitude_damping(t, gamma=gamma)
         self.qk.append(amplitude_damping_error(gamma), [t])

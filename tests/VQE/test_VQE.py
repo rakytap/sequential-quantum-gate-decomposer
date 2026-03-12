@@ -91,6 +91,37 @@ class Test_VQE:
             "max_inner_iterations_adam": 50000,
         }
 
+    @staticmethod
+    def _get_story2_config():
+        return {
+            "max_inner_iterations": 4,
+            "max_iterations": 1,
+            "convergence_length": 2,
+        }
+
+    @staticmethod
+    def _get_story2_noise():
+        return [
+            {
+                "channel": "local_depolarizing",
+                "target": 0,
+                "after_gate_index": 0,
+                "error_rate": 0.1,
+            },
+            {
+                "channel": "amplitude_damping",
+                "target": 1,
+                "after_gate_index": 2,
+                "gamma": 0.05,
+            },
+            {
+                "channel": "phase_damping",
+                "target": 0,
+                "after_gate_index": 4,
+                "lambda": 0.07,
+            },
+        ]
+
     def _build_identity_vqe(self, qbit_num=2, backend=None, Hamiltonian=None):
         if Hamiltonian is None:
             Hamiltonian = sp.sparse.eye(2**qbit_num, format="csr")
@@ -109,6 +140,23 @@ class Test_VQE:
         vqe.set_Ansatz("HEA")
         vqe.Generate_Circuit(1, 1)
         return vqe
+
+    def _build_story2_density_vqe(self, qbit_num, optimizer=None):
+        topology = [(idx, idx + 1) for idx in range(qbit_num - 1)]
+        Hamiltonian = generate_hamiltonian(topology, qbit_num)
+        VQE_cls = self._get_vqe_class()
+        vqe = VQE_cls(
+            Hamiltonian,
+            qbit_num,
+            self._get_story2_config(),
+            backend="density_matrix",
+            density_noise=self._get_story2_noise(),
+        )
+        if optimizer is not None:
+            vqe.set_Optimizer(optimizer)
+        vqe.set_Ansatz("HEA")
+        vqe.Generate_Circuit(1, 1)
+        return vqe, Hamiltonian
 
     def test_backend_argument_normalization(self):
         qbit_num = 2
@@ -146,6 +194,41 @@ class Test_VQE:
                 backend="invalid_backend",
             )
 
+    def test_density_noise_normalization(self):
+        qbit_num = 4
+        Hamiltonian = sp.sparse.eye(2**qbit_num, format="csr")
+        VQE_cls = self._get_vqe_class()
+
+        vqe = VQE_cls(
+            Hamiltonian,
+            qbit_num,
+            self._get_story2_config(),
+            backend="density_matrix",
+            density_noise=self._get_story2_noise(),
+        )
+
+        assert vqe.backend == "density_matrix"
+        assert vqe.density_noise == [
+            {
+                "channel": "local_depolarizing",
+                "target": 0,
+                "after_gate_index": 0,
+                "value": 0.1,
+            },
+            {
+                "channel": "amplitude_damping",
+                "target": 1,
+                "after_gate_index": 2,
+                "value": 0.05,
+            },
+            {
+                "channel": "phase_damping",
+                "target": 0,
+                "after_gate_index": 4,
+                "value": 0.07,
+            },
+        ]
+
     def test_explicit_state_vector_matches_legacy_default(self):
         qbit_num = 2
         Hamiltonian = generate_hamiltonian([(0, 1)], qbit_num)
@@ -168,6 +251,46 @@ class Test_VQE:
         explicit_state_vector_energy = explicit_state_vector_vqe.Optimization_Problem(parameters)
 
         assert np.isclose(legacy_energy, explicit_state_vector_energy, atol=1e-12)
+
+    @pytest.mark.parametrize("qbit_num", [4, 6])
+    def test_density_matrix_backend_anchor_fixed_parameter_smoke(self, qbit_num):
+        density_vqe, Hamiltonian = self._build_story2_density_vqe(qbit_num)
+        VQE_cls = self._get_vqe_class()
+        state_vector_vqe = VQE_cls(
+            Hamiltonian,
+            qbit_num,
+            self._get_story2_config(),
+            backend="state_vector",
+        )
+        state_vector_vqe.set_Ansatz("HEA")
+        state_vector_vqe.Generate_Circuit(1, 1)
+
+        param_num = density_vqe.get_Parameter_Num()
+        parameters = np.linspace(0.05, 0.05 * param_num, param_num, dtype=np.float64)
+
+        density_energy = density_vqe.Optimization_Problem(parameters)
+        state_vector_energy = state_vector_vqe.Optimization_Problem(parameters)
+
+        assert density_vqe.backend == "density_matrix"
+        assert np.isfinite(density_energy)
+        assert np.isfinite(state_vector_energy)
+        assert not np.isclose(density_energy, state_vector_energy, atol=1e-8)
+
+    def test_density_matrix_backend_bounded_optimization_trace(self):
+        density_vqe, _ = self._build_story2_density_vqe(4, optimizer="COSINE")
+
+        param_num = density_vqe.get_Parameter_Num()
+        parameters = np.linspace(0.05, 0.05 * param_num, param_num, dtype=np.float64)
+        density_vqe.set_Optimized_Parameters(parameters)
+
+        initial_energy = density_vqe.Optimization_Problem(parameters)
+        density_vqe.Start_Optimization()
+        final_parameters = density_vqe.get_Optimized_Parameters()
+        final_energy = density_vqe.Optimization_Problem(final_parameters)
+
+        assert np.isfinite(initial_energy)
+        assert np.isfinite(final_energy)
+        assert final_parameters.shape == parameters.shape
 
     def test_VQE_Identity(self):
         layers = 1

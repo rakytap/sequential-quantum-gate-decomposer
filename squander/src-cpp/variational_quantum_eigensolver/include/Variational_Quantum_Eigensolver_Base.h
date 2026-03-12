@@ -26,6 +26,13 @@ limitations under the License.
 
 #include "Optimization_Interface.h"
 
+namespace squander {
+namespace density {
+class DensityMatrix;
+class NoisyCircuit;
+}
+}
+
 //=====================================================================================================================================================================================
 //=====================================================================================================================================================================================
 //=====================================================================================================================================================================================
@@ -63,6 +70,21 @@ typedef enum vqe_backend_type {
     STATE_VECTOR_BACKEND = 0,
     DENSITY_MATRIX_BACKEND = 1
 } vqe_backend_type;
+
+/// @brief Fixed local noise channels supported by the Story 2 density path.
+typedef enum density_noise_type {
+    LOCAL_DEPOLARIZING_NOISE = 0,
+    AMPLITUDE_DAMPING_NOISE = 1,
+    PHASE_DAMPING_NOISE = 2
+} density_noise_type;
+
+/// @brief Ordered fixed-noise insertion metadata for the Story 2 density path.
+struct DensityNoiseSpec {
+    density_noise_type type;
+    int target_qbit;
+    int after_gate_index;
+    double value;
+};
 
 
 
@@ -103,6 +125,19 @@ private:
 
     /// Effective execution backend selected for this VQE instance.
     vqe_backend_type backend_mode;
+
+    /// Ordered fixed local-noise insertions for the density backend.
+    std::vector<DensityNoiseSpec> density_noise_specs;
+
+    void validate_density_anchor_support();
+    void append_density_noise_for_gate_index(
+        squander::density::NoisyCircuit& circuit, int gate_index) const;
+    void lower_anchor_circuit_to_noisy_circuit(
+        squander::density::NoisyCircuit& circuit);
+    double evaluate_density_matrix_backend(Matrix_real& parameters);
+    double expectation_value_of_density_energy_real(
+        const squander::density::DensityMatrix& rho) const;
+    bool density_optimizer_supported() const;
 
 public:
 
@@ -308,6 +343,12 @@ void set_gate_structure( std::string filename );
 @param initial_state_in A vector containing the amplitudes of the initial state.
 */
 void set_initial_state( Matrix initial_state_in );
+
+/**
+@brief Configure ordered fixed local-noise insertions for the density backend.
+@param density_noise_specs_in Fixed local-noise specs in insertion order.
+*/
+void set_density_noise_specs( const std::vector<DensityNoiseSpec>& density_noise_specs_in );
 
 
 

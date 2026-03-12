@@ -139,6 +139,19 @@ public:
   void add_depolarizing(int qbit_num, double error_rate);
 
   /**
+   * @brief Add parametric local single-qubit depolarizing noise (1 parameter)
+   * @param target Target qubit index
+   */
+  void add_local_depolarizing(int target);
+
+  /**
+   * @brief Add fixed local single-qubit depolarizing noise (0 parameters)
+   * @param target Target qubit index
+   * @param error_rate Fixed depolarizing strength p in [0,1]
+   */
+  void add_local_depolarizing(int target, double error_rate);
+
+  /**
    * @brief Add parametric amplitude damping noise (1 parameter)
    * @param target Target qubit index
    */

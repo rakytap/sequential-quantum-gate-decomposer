@@ -25,7 +25,6 @@ limitations under the License.
 
 #include <Python.h>
 #include <numpy/arrayobject.h>
-#include "structmember.h"
 #include <stdio.h>
 #include "Variational_Quantum_Eigensolver_Base.h"
 
@@ -393,6 +392,97 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Initial_State( qgd_Variatio
 
 
     Py_DECREF(initial_state_arg);
+
+    return Py_BuildValue("i", 0);
+}
+
+
+/**
+@brief Configure ordered fixed density-noise insertions for the density backend.
+*/
+static PyObject *
+qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Density_Matrix_Noise(
+    qgd_Variational_Quantum_Eigensolver_Base_Wrapper *self, PyObject *args ) {
+
+    PyObject* density_noise_arg = NULL;
+    if (!PyArg_ParseTuple(args, "|O", &density_noise_arg )) {
+        PyErr_SetString(PyExc_Exception, "error occured during density-noise input parsing");
+        return NULL;
+    }
+
+    std::vector<DensityNoiseSpec> density_noise_specs;
+    if (density_noise_arg != NULL && density_noise_arg != Py_None) {
+        if (!PyList_Check(density_noise_arg)) {
+            PyErr_SetString(PyExc_Exception, "density_noise should be given as a list of dictionaries");
+            return NULL;
+        }
+
+        for (Py_ssize_t idx = 0; idx < PyList_Size(density_noise_arg); ++idx) {
+            PyObject* noise_item = PyList_GetItem(density_noise_arg, idx);
+            if (!PyDict_Check(noise_item)) {
+                PyErr_SetString(PyExc_Exception, "Each density_noise item should be a dictionary");
+                return NULL;
+            }
+
+            PyObject* channel_obj = PyDict_GetItemString(noise_item, "channel");
+            PyObject* target_obj = PyDict_GetItemString(noise_item, "target");
+            PyObject* after_gate_index_obj = PyDict_GetItemString(noise_item, "after_gate_index");
+            PyObject* value_obj = PyDict_GetItemString(noise_item, "value");
+            if (!channel_obj || !target_obj || !after_gate_index_obj || !value_obj) {
+                PyErr_SetString(PyExc_Exception, "Each density_noise item should define channel, target, after_gate_index, and value");
+                return NULL;
+            }
+
+            PyObject* channel_unicode = PyUnicode_AsEncodedString(channel_obj, "utf-8", "~E~");
+            if (channel_unicode == NULL) {
+                PyErr_SetString(PyExc_Exception, "density_noise channel should be a UTF-8 string");
+                return NULL;
+            }
+
+            const char* channel_C = PyBytes_AS_STRING(channel_unicode);
+            std::string channel(channel_C);
+            Py_DECREF(channel_unicode);
+
+            DensityNoiseSpec spec;
+            if (channel == "local_depolarizing") {
+                spec.type = LOCAL_DEPOLARIZING_NOISE;
+            }
+            else if (channel == "amplitude_damping") {
+                spec.type = AMPLITUDE_DAMPING_NOISE;
+            }
+            else if (channel == "phase_damping") {
+                spec.type = PHASE_DAMPING_NOISE;
+            }
+            else {
+                std::string err("Unsupported density_noise channel: " + channel);
+                PyErr_SetString(PyExc_Exception, err.c_str());
+                return NULL;
+            }
+
+            spec.target_qbit = (int)PyLong_AsLong(target_obj);
+            spec.after_gate_index = (int)PyLong_AsLong(after_gate_index_obj);
+            spec.value = PyFloat_AsDouble(value_obj);
+            if (PyErr_Occurred()) {
+                PyErr_SetString(PyExc_Exception, "Failed to parse density_noise numeric values");
+                return NULL;
+            }
+
+            density_noise_specs.push_back(spec);
+        }
+    }
+
+    try {
+        self->vqe->set_density_noise_specs( density_noise_specs );
+    }
+    catch (std::string err ) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    catch(...) {
+        std::string err( "Invalid pointer to decomposition class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
 
     return Py_BuildValue("i", 0);
 }
@@ -1379,6 +1469,9 @@ static PyMethodDef qgd_Variational_Quantum_Eigensolver_Base_Wrapper_methods[] = 
     },
     {"set_Initial_State", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Initial_State, METH_VARARGS,
      "Call to set the initial state used in the VQE process."
+    },
+    {"set_Density_Matrix_Noise", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Density_Matrix_Noise, METH_VARARGS,
+     "Configure ordered fixed local-noise insertions for the density-matrix backend."
     },
     {"set_Gate_Structure", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Gate_Structure, METH_VARARGS,
      "Call to set custom gate structure for VQE experiments."

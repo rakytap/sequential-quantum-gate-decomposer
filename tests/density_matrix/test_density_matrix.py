@@ -297,6 +297,18 @@ class TestNoisyCircuitNoise:
         assert rho.purity() < 1.0
         assert rho.is_valid()
 
+    def test_local_depolarizing(self):
+        """Test local single-qubit depolarizing noise in circuit."""
+        circuit = NoisyCircuit(2)
+        circuit.add_H(0)
+        circuit.add_local_depolarizing(0, error_rate=0.2)
+
+        rho = DensityMatrix(qbit_num=2)
+        circuit.apply_to(np.array([]), rho)
+
+        assert rho.purity() < 1.0
+        assert rho.is_valid()
+
     def test_amplitude_damping(self):
         """Test amplitude damping in circuit."""
         circuit = NoisyCircuit(1)
@@ -375,6 +387,33 @@ class TestNoisyCircuitMixed:
         assert info[3].name == "PhaseDamping"
         assert info[3].is_unitary is False
         assert info[3].param_count == 1
+
+    def test_u3_cnot_operation_info(self):
+        """Test HEA-relevant U3/CNOT lowering metadata."""
+        circuit = NoisyCircuit(2)
+        circuit.add_U3(0)
+        circuit.add_CNOT(1, 0)
+        circuit.add_local_depolarizing(0, error_rate=0.05)
+        circuit.add_phase_damping(1, lambda_param=0.02)
+
+        info = circuit.get_operation_info()
+
+        assert len(info) == 4
+        assert info[0].name == "U3"
+        assert info[0].param_count == 3
+        assert info[0].param_start == 0
+
+        assert info[1].name == "CNOT"
+        assert info[1].param_count == 0
+        assert info[1].param_start == 3
+
+        assert info[2].name == "LocalDepolarizing"
+        assert info[2].param_count == 0
+        assert info[2].param_start == 3
+
+        assert info[3].name == "PhaseDamping"
+        assert info[3].param_count == 0
+        assert info[3].param_start == 3
 
     def test_all_gates(self):
         """Test all supported gate types."""
@@ -604,6 +643,33 @@ class TestIntegration:
         dm_circuit.apply_to(np.array([]), rho)
 
         # Density matrix from state vector
+        rho_expected = np.outer(sv_final, sv_final.conj())
+        rho_actual = rho.to_numpy()
+
+        np.testing.assert_allclose(rho_actual, rho_expected, atol=1e-10)
+
+    def test_u3_cnot_comparison_with_state_vector(self):
+        """Test HEA-relevant U3 plus CNOT evolution against state vector."""
+        from squander.gates.qgd_Circuit import qgd_Circuit
+
+        sv_circuit = qgd_Circuit(2)
+        sv_circuit.add_U3(0)
+        sv_circuit.add_CNOT(1, 0)
+
+        dm_circuit = NoisyCircuit(2)
+        dm_circuit.add_U3(0)
+        dm_circuit.add_CNOT(1, 0)
+
+        params = np.array([0.21, -0.13, 0.37], dtype=np.float64)
+
+        sv = np.zeros(4, dtype=complex)
+        sv[0] = 1.0
+        U = sv_circuit.get_Matrix(params)
+        sv_final = U @ sv
+
+        rho = DensityMatrix(qbit_num=2)
+        dm_circuit.apply_to(params, rho)
+
         rho_expected = np.outer(sv_final, sv_final.conj())
         rho_actual = rho.to_numpy()
 

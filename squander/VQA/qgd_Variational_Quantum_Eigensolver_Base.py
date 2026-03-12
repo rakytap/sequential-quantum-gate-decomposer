@@ -36,6 +36,13 @@ _VQE_BACKEND_NAME_TO_CODE = {
 }
 _VQE_DEFAULT_BACKEND = "state_vector"
 _VQE_BACKEND_CONFIG_KEY = "backend_mode"
+_DENSITY_NOISE_CHANNEL_SPECS = {
+    "depolarizing": ("local_depolarizing", "error_rate"),
+    "local_depolarizing": ("local_depolarizing", "error_rate"),
+    "amplitude_damping": ("amplitude_damping", "gamma"),
+    "phase_damping": ("phase_damping", "lambda"),
+    "dephasing": ("phase_damping", "lambda"),
+}
 
 
 def _normalize_vqe_backend_name(backend):
@@ -58,6 +65,80 @@ def _normalize_vqe_backend_name(backend):
     return normalized_backend
 
 
+def _normalize_density_noise_spec(density_noise):
+
+    if density_noise is None:
+        return []
+
+    if not isinstance(density_noise, (list, tuple)):
+        raise TypeError("density_noise should be a list or tuple of dictionaries")
+
+    normalized_density_noise = []
+    for item_idx, noise_item in enumerate(density_noise):
+        if not isinstance(noise_item, dict):
+            raise TypeError(
+                "density_noise[{}] should be a dictionary".format(item_idx)
+            )
+
+        channel = noise_item.get("channel", noise_item.get("type"))
+        if not isinstance(channel, str):
+            raise TypeError(
+                "density_noise[{}] should define a string 'channel'".format(
+                    item_idx
+                )
+            )
+
+        channel_name = channel.strip()
+        if channel_name not in _DENSITY_NOISE_CHANNEL_SPECS:
+            raise ValueError(
+                "Unsupported density-noise channel '{}'. Supported channels are "
+                "'local_depolarizing', 'amplitude_damping', and "
+                "'phase_damping'.".format(channel)
+            )
+
+        canonical_channel, value_key = _DENSITY_NOISE_CHANNEL_SPECS[channel_name]
+        raw_value = noise_item.get("value", noise_item.get(value_key))
+        if canonical_channel == "phase_damping" and raw_value is None:
+            raw_value = noise_item.get("lambda_param")
+
+        if raw_value is None:
+            raise ValueError(
+                "density_noise[{}] is missing the '{}' value".format(
+                    item_idx, value_key
+                )
+            )
+
+        target = noise_item.get("target")
+        after_gate_index = noise_item.get("after_gate_index")
+        if isinstance(target, bool) or not isinstance(target, int):
+            raise TypeError(
+                "density_noise[{}].target should be an integer".format(item_idx)
+            )
+        if isinstance(after_gate_index, bool) or not isinstance(after_gate_index, int):
+            raise TypeError(
+                "density_noise[{}].after_gate_index should be an integer".format(
+                    item_idx
+                )
+            )
+
+        value = float(raw_value)
+        if not np.isfinite(value):
+            raise ValueError(
+                "density_noise[{}] has a non-finite value".format(item_idx)
+            )
+
+        normalized_density_noise.append(
+            {
+                "channel": canonical_channel,
+                "target": int(target),
+                "after_gate_index": int(after_gate_index),
+                "value": value,
+            }
+        )
+
+    return normalized_density_noise
+
+
 
 ##
 # @brief A QGD Python interface class for the decomposition of N-qubit unitaries into U3 and CNOT gates.
@@ -69,11 +150,23 @@ class qgd_Variational_Quantum_Eigensolver_Base(qgd_Variational_Quantum_Eigensolv
 # @param Umtx The unitary matrix to be decomposed.
 # @param config Dictionary describing optimization hyperparameters.
 # @param accelerator_num Optional accelerator identifier.
-# @param backend Optional backend selector. Supported values are "state_vector"
-#   and "density_matrix". When omitted, the VQE keeps the legacy
-#   state-vector behavior.
+# @param backend Optional backend selector. Supported values are
+#   "state_vector" and "density_matrix". When omitted, the VQE keeps the
+#   legacy state-vector behavior.
+# @param density_noise Optional ordered list of fixed local density-noise
+#   insertions. Each entry must define a channel, target qubit,
+#   after_gate_index, and fixed noise value.
 # @return An instance of the class
-    def __init__( self, Hamiltonian, qbit_num, config=None, accelerator_num=0, *, backend=None):
+    def __init__(
+        self,
+        Hamiltonian,
+        qbit_num,
+        config=None,
+        accelerator_num=0,
+        *,
+        backend=None,
+        density_noise=None,
+    ):
     
 
         if config is None:
@@ -95,6 +188,8 @@ class qgd_Variational_Quantum_Eigensolver_Base(qgd_Variational_Quantum_Eigensolv
         # though the only active execution path is still the legacy
         # state-vector implementation.
         self.backend = normalized_backend
+        self.density_noise = []
+        self.set_Density_Matrix_Noise(density_noise)
 
 
 ## 
@@ -275,6 +370,19 @@ class qgd_Variational_Quantum_Eigensolver_Base(qgd_Variational_Quantum_Eigensolv
     def set_Initial_State( self, initial_state ):
 
         super(qgd_Variational_Quantum_Eigensolver_Base, self).set_Initial_State( initial_state )
+
+
+##
+# @brief Configure ordered fixed local-noise insertions for the density backend.
+# @param density_noise A list of dictionaries with channel, target,
+#   after_gate_index, and noise value metadata.
+    def set_Density_Matrix_Noise(self, density_noise):
+
+        normalized_density_noise = _normalize_density_noise_spec(density_noise)
+        super(qgd_Variational_Quantum_Eigensolver_Base, self).set_Density_Matrix_Noise(
+            normalized_density_noise
+        )
+        self.density_noise = [dict(item) for item in normalized_density_noise]
 
 
 ##

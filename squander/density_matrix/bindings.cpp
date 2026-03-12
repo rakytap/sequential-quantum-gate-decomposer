@@ -12,11 +12,8 @@ pybind11 Bindings for Density Matrix Module - Approach B Implementation
 
 #include "density_matrix.h"
 #include "density_operation.h"
-#include "gate_operation.h"
 #include "matrix.h"
-#include "matrix_real.h"
 #include "noise_channel.h"
-#include "noise_operation.h"
 #include "noisy_circuit.h"
 
 namespace py = pybind11;
@@ -324,6 +321,24 @@ PYBIND11_MODULE(_density_matrix_cpp, m) {
             
             Args:
                 qbit_num: Number of qubits the noise acts on
+                error_rate: Fixed p, or None for parametric (1 param)
+          )pbdoc")
+
+      .def(
+          "add_local_depolarizing",
+          [](NoisyCircuit &self, int target, py::object p) {
+            if (p.is_none()) {
+              self.add_local_depolarizing(target);
+            } else {
+              self.add_local_depolarizing(target, p.cast<double>());
+            }
+          },
+          py::arg("target"), py::arg("error_rate") = py::none(),
+          R"pbdoc(
+            Add local single-qubit depolarizing noise on one target qubit.
+            
+            Args:
+                target: Target qubit index
                 error_rate: Fixed p, or None for parametric (1 param)
           )pbdoc")
 
