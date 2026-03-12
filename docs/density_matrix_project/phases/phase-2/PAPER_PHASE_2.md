@@ -43,9 +43,15 @@ SQUANDER already provides a strong foundation for this work. It offers:
   `DensityMatrix`, `NoisyCircuit`, `GateOperation`, and explicit noise channels.
 
 The density-matrix module is already useful in isolation, but it is not yet
-integrated into the main variational workflow of the framework. This means the
-project currently supports exact noisy simulation at the module level without yet
-supporting exact noisy variational workflows at the research-workflow level.
+fully integrated into the main variational workflow of the framework. Stories 1
+to 3 of Phase 2 Task 1 now provide the first narrow workflow-level slice:
+explicit backend selection, a generated-`HEA` density path with ordered fixed
+local noise, exact real-valued Hermitian energy evaluation, 4- and 6-qubit
+fixed-parameter agreement against Qiskit Aer, one bounded 4-qubit optimization
+trace, and explicit hard-error unsupported behavior. This means the project now
+supports a narrow exact noisy variational workflow slice at the
+research-workflow level, but not yet the full Phase 2 evidence and support
+surface.
 
 This paper addresses that integration gap. Its purpose is not to introduce a new
 fusion algorithm or a new approximation method. Instead, it defines and justifies
@@ -72,6 +78,25 @@ The paper proposes the following Phase 2 contribution:
 - a workload-driven Phase 2 support surface for realistic local noise,
 - and a benchmark and validation package strong enough to support a major paper
   rather than only an internal engineering milestone.
+
+Implementation-backed status after Task 1 Stories 1-3:
+
+- already implemented:
+  - explicit backend selection with no silent fallback,
+  - generated-`HEA` bridge into the density path,
+  - fixed ordered local noise insertion,
+  - exact real-valued Hermitian energy evaluation through the sparse-Hamiltonian
+    interface,
+  - 4- and 6-qubit fixed-parameter Aer agreement,
+  - one bounded 4-qubit optimization trace,
+  - structured unsupported-case outcomes,
+  - and backend-explicit machine-readable artifacts for the current completed and
+    unsupported validation slice,
+- not yet complete for the full paper claim:
+  - 8- and 10-qubit workflow evidence,
+  - the full benchmark floor and threshold package,
+  - runtime and peak-memory characterization,
+  - and the complete reproducibility/provenance bundle.
 
 ### 1.2 Why This Contribution Matters
 

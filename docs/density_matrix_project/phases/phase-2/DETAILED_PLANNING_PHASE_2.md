@@ -10,6 +10,34 @@ Primary Phase 2 theme:
 
 This is a specification document, not an implementation log.
 
+## 0.1 Revalidation After Task 1 Stories 1-4
+
+The Phase 2 contract remains valid after the detailed design and implementation
+work carried out so far for Phase 2 Task 1 Stories 1 to 4. However, the current
+implemented slice is intentionally narrower than full Phase 2 closure.
+
+Implementation-backed status at this point:
+
+- explicit backend selection is now implemented on the VQE-facing API, with
+  default `state_vector`, explicit `density_matrix`, and hard-error unsupported
+  behavior,
+- the currently guaranteed density path is generated `HEA` only, not general
+  manual circuit parity,
+- the current exact observable path is real-valued Hermitian energy evaluation
+  through the existing sparse-Hamiltonian interface,
+- the current VQE-facing density-noise surface is ordered fixed local noise
+  insertion, not a general parametric noise-program interface,
+- executed evidence currently includes 4- and 6-qubit fixed-parameter XXZ
+  anchor agreement against Qiskit Aer, one bounded 4-qubit optimization trace,
+  and backend-explicit artifacts for both completed and unsupported current
+  validation cases,
+- and the full 8/10-qubit benchmark floor, runtime and peak-memory reporting,
+  and complete reproducibility bundle remain open Phase 2 work.
+
+This document therefore continues to describe the whole Phase 2 contract, while
+the notes below clarify where the current implemented slice is narrower than the
+full phase exit criteria.
+
 ## 1. Purpose
 
 Phase 2 exists to bridge the current gap between:
@@ -315,6 +343,15 @@ Contract:
   mixed-state behavior, that is also a hard error rather than an automatic
   backend swap.
 
+Current implementation-backed clarification:
+
+- The currently delivered user-facing backend switch is a keyword-only
+  constructor-level `backend` argument on
+  `qgd_Variational_Quantum_Eigensolver_Base`.
+- Requests that keep `state_vector` while also configuring Phase 2-only
+  mixed-state features such as ordered density noise now hard-error before
+  execution rather than silently ignoring those features.
+
 Trade-offs:
 
 - Keeping `state_vector` as the default minimizes migration risk and preserves
@@ -343,6 +380,13 @@ Contract:
 - Out of scope for the core Phase 2 contract are arbitrary non-Hermitian
   observables, general POVMs, batched multi-observable APIs, and shot-noise or
   readout estimation as the main acceptance path.
+
+Current implementation-backed clarification:
+
+- The current exact observable path is implemented through the existing
+  sparse-Hamiltonian interface and evaluated on the density state directly.
+- Executed evidence currently covers fixed-parameter 4- and 6-qubit XXZ anchor
+  cases against Qiskit Aer; the broader threshold package remains open.
 
 Minimum proof of correctness:
 
@@ -380,6 +424,13 @@ Contract:
   traverse this bridge without manual circuit rewriting beyond explicit noise
   specification.
 
+Current implementation-backed clarification:
+
+- The current guaranteed density path is generated `HEA` only.
+- `HEA_ZYZ`, binary-imported gate lists, and custom `qgd_Circuit` /
+  `Gates_block` sources are currently treated as unsupported on the density path
+  rather than partially lowered.
+
 Trade-offs:
 
 - A partial bridge keeps implementation aligned with the real Phase 2 workload
@@ -396,6 +447,14 @@ Phase 2 freezes the following support surface.
 | Gate families | `U3`, `CNOT` | `H`, `X`, `Y`, `Z`, `S`, `Sdg`, `T`, `Tdg`, `SX`, `RX`, `RY`, `RZ`, `U1`, `U2`, `CZ`, `CH`, `CRX`, `CRY`, `CRZ`, `CP` when needed for tests or comparison microbenchmarks | full `qgd_Circuit` parity, multi-controlled gates, arbitrary custom `Gates_block` structures that cannot be lowered cleanly |
 | Noise models | local single-qubit depolarizing, local amplitude damping, local phase damping / dephasing | whole-register depolarizing as a regression or stress-test baseline; generalized amplitude damping or coherent over-rotation only if a benchmark extension proves they are needed | correlated multi-qubit noise, readout noise as a density-backend feature, calibration-aware models, non-Markovian noise |
 | Unsupported-case behavior | pre-execution hard error for mandatory workflows | documented opt-in extensions | silent fallback or silent omission of operations is not allowed |
+
+Current implementation-backed clarification:
+
+- The VQE-facing density-noise surface currently accepts ordered fixed local
+  insertions only.
+- The standalone `NoisyCircuit` module remains broader than the currently
+  guaranteed VQE-backed density path, so planning and evidence should keep those
+  two support surfaces distinct.
 
 Trade-offs:
 
@@ -426,6 +485,13 @@ Contract:
   - fixed-parameter benchmark-ready behavior at 8 and 10 qubits,
   - with 10 qubits treated as the acceptance anchor for the exact regime, not
     as a hard theoretical ceiling.
+
+Current implementation-backed clarification:
+
+- The current executed anchor evidence covers 4- and 6-qubit fixed-parameter
+  cases and one bounded 4-qubit optimization trace.
+- The 8- and 10-qubit “evaluation-ready” part of the contract remains a Phase 2
+  target rather than a completed evidence item at this point.
 
 Minimum evidence:
 
@@ -468,6 +534,14 @@ Mandatory:
   - random seeds,
   - software versions or commit,
   - and raw benchmark outputs.
+
+Current implementation-backed clarification:
+
+- The current Stories 1 to 4 slice now emits backend-explicit machine-readable
+  artifacts for both completed and unsupported validation cases.
+- Those artifacts already cover a useful subset of the future reproducibility
+  package, but they do not yet constitute the full final Phase 2
+  reproducibility bundle or benchmark floor.
 
 Optional:
 

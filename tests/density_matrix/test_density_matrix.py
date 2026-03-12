@@ -424,6 +424,53 @@ class TestNoisyCircuitMixed:
         assert info[3].param_count == 0
         assert info[3].param_start == 3
 
+    def test_story2_density_energy_helper(self):
+        """Test Story 2 exact-energy helper on a deterministic tiny fixture."""
+        pytest.importorskip("qiskit")
+        pytest.importorskip("qiskit_aer")
+
+        from benchmarks.density_matrix.validate_squander_vs_qiskit import density_energy
+
+        hamiltonian = np.array(
+            [[0.6, 0.2 + 0.1j], [0.2 - 0.1j, -0.4]],
+            dtype=complex,
+        )
+        density_matrix = np.array(
+            [[0.7, 0.1 - 0.05j], [0.1 + 0.05j, 0.3]],
+            dtype=complex,
+        )
+
+        energy_real, energy_imag = density_energy(hamiltonian, density_matrix)
+        expected = np.trace(hamiltonian @ density_matrix)
+
+        assert np.isclose(energy_real, np.real(expected), atol=1e-12)
+        assert np.isclose(energy_imag, np.imag(expected), atol=1e-12)
+
+    def test_story2_representative_microcase_passes(self):
+        """Test one mandatory Story 2 microcase end-to-end."""
+        pytest.importorskip("qiskit")
+        pytest.importorskip("qiskit_aer")
+
+        from benchmarks.density_matrix.circuits import STORY2_MANDATORY_MICROCASES
+        from benchmarks.density_matrix.validate_squander_vs_qiskit import (
+            validate_story2_case,
+        )
+
+        case = next(
+            case
+            for case in STORY2_MANDATORY_MICROCASES
+            if case["case_name"] == "story2_2q_u3_cnot_local_depolarizing"
+        )
+        result = validate_story2_case(case, verbose=False)
+
+        assert result["status"] == "pass"
+        assert result["energy_pass"]
+        assert result["density_valid_pass"]
+        assert result["trace_pass"]
+        assert result["observable_pass"]
+        assert result["qbit_num"] == 2
+        assert len(result["parameter_vector"]) == 6
+
     def test_all_gates(self):
         """Test all supported gate types."""
         circuit = NoisyCircuit(2)

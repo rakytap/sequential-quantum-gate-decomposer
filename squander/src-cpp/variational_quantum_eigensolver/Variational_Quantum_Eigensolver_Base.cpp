@@ -185,6 +185,13 @@ void Variational_Quantum_Eigensolver_Base::validate_density_anchor_support(
         return;
     }
 
+    int expected_dimension = Power_of_2(qbit_num);
+    if (Hamiltonian.rows != expected_dimension || Hamiltonian.cols != expected_dimension) {
+        throw std::string(
+            "Variational_Quantum_Eigensolver_Base::validate_density_anchor_support: density_matrix backend requires a square Hamiltonian matching the configured qubit count"
+        );
+    }
+
     if (require_gradient_support) {
         throw std::string(
             "Variational_Quantum_Eigensolver_Base::validate_density_anchor_support: density_matrix backend does not support gradient-based optimization in Story 3"
@@ -333,6 +340,12 @@ double Variational_Quantum_Eigensolver_Base::expectation_value_of_density_energy
 
             energy_real += h_val.real * rho_val.real - h_val.imag * rho_val.imag;
         }
+    }
+
+    if (!std::isfinite(energy_real)) {
+        throw std::string(
+            "Variational_Quantum_Eigensolver_Base::expectation_value_of_density_energy_real: produced a non-finite energy"
+        );
     }
 
     return energy_real;

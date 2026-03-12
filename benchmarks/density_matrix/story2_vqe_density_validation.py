@@ -5,8 +5,22 @@ Runs two kinds of evidence:
 - fixed-parameter 4-qubit and 6-qubit XXZ anchor comparisons against Qiskit Aer,
 - one bounded 4-qubit density-backed optimization trace.
 
+The fixed-parameter 4-qubit and 6-qubit cases are the authoritative Task 2
+Story 1 evidence path. The bounded optimization trace is retained as broader
+task-level evidence but is not required to establish the first positive
+observable slice.
+
 Story 3 extends this script so out-of-scope cases are emitted as structured
 `unsupported` artifacts instead of crashing or silently disappearing.
+
+Artifact schema for all emitted cases:
+- required: `case_name`, `status`, `backend`, `qbit_num`, `topology`, `ansatz`,
+  `layers`, `inner_blocks`, `density_noise`
+- optional per case: `reference_backend`, `hamiltonian`, `optimizer`,
+  `parameter_vector`, `initial_parameters`, `final_parameters`,
+  `squander_energy`, `aer_energy_real`, `aer_energy_imag`,
+  `absolute_energy_error`, `aer_trace_real`, `aer_trace_imag`, `aer_purity`,
+  `unsupported_category`, `unsupported_reason`
 """
 
 from __future__ import annotations
@@ -31,6 +45,25 @@ if str(REPO_ROOT) not in sys.path:
 
 from examples.VQE.shot_noise_measurement import generate_zz_xx_hamiltonian
 from squander import Variational_Quantum_Eigensolver
+
+PRIMARY_BACKEND = "density_matrix"
+REFERENCE_BACKEND = "qiskit_aer_density_matrix"
+DEFAULT_ANSATZ = "HEA"
+DEFAULT_LAYERS = 1
+DEFAULT_INNER_BLOCKS = 1
+FIXED_PARAMETER_QUBITS = (4, 6)
+SUPPORTED_BACKEND_LABELS = {PRIMARY_BACKEND, "state_vector"}
+ARTIFACT_CORE_FIELDS = (
+    "case_name",
+    "status",
+    "backend",
+    "qbit_num",
+    "topology",
+    "ansatz",
+    "layers",
+    "inner_blocks",
+    "density_noise",
+)
 
 
 def build_story2_noise():
@@ -72,6 +105,70 @@ def build_story2_parameters(param_num: int) -> np.ndarray:
     return np.linspace(0.05, 0.05 * param_num, param_num, dtype=np.float64)
 
 
+def build_story2_hamiltonian_metadata():
+    return {
+        "Jx": 1.0,
+        "Jy": 1.0,
+        "Jz": 1.0,
+        "h": 0.5,
+    }
+
+
+def build_case_metadata(
+    *,
+    backend: str,
+    qbit_num: int,
+    topology,
+    density_noise,
+    ansatz: str = DEFAULT_ANSATZ,
+    layers: int = DEFAULT_LAYERS,
+    inner_blocks: int = DEFAULT_INNER_BLOCKS,
+    reference_backend: str | None = None,
+    hamiltonian: dict | None = None,
+    optimizer: str | None = None,
+):
+    metadata = {
+        "backend": backend,
+        "qbit_num": qbit_num,
+        "topology": topology,
+        "ansatz": ansatz,
+        "layers": layers,
+        "inner_blocks": inner_blocks,
+        "density_noise": density_noise,
+    }
+    if reference_backend is not None:
+        metadata["reference_backend"] = reference_backend
+    if hamiltonian is not None:
+        metadata["hamiltonian"] = hamiltonian
+    if optimizer is not None:
+        metadata["optimizer"] = optimizer
+    return metadata
+
+
+def validate_artifact_payload(payload):
+    missing_fields = [field for field in ARTIFACT_CORE_FIELDS if field not in payload]
+    if missing_fields:
+        raise ValueError(
+            "Artifact payload is missing required fields: {}".format(
+                ", ".join(missing_fields)
+            )
+        )
+
+    if payload["backend"] not in SUPPORTED_BACKEND_LABELS:
+        raise ValueError(
+            "Artifact payload has unsupported backend label '{}'".format(
+                payload["backend"]
+            )
+        )
+
+    if payload["status"] not in {"completed", "unsupported"}:
+        raise ValueError(
+            "Artifact payload has unsupported status '{}'".format(
+                payload["status"]
+            )
+        )
+
+
 def build_vqe(qbit_num: int, optimizer: str | None = None):
     topology = build_open_chain_topology(qbit_num)
     hamiltonian, _ = generate_zz_xx_hamiltonian(
@@ -86,17 +183,17 @@ def build_vqe(qbit_num: int, optimizer: str | None = None):
         hamiltonian,
         qbit_num,
         build_story2_config(),
-        backend="density_matrix",
+        backend=PRIMARY_BACKEND,
         density_noise=build_story2_noise(),
     )
     if optimizer is not None:
         vqe.set_Optimizer(optimizer)
-    vqe.set_Ansatz("HEA")
-    vqe.Generate_Circuit(layers=1, inner_blocks=1)
+    vqe.set_Ansatz(DEFAULT_ANSATZ)
+    vqe.Generate_Circuit(layers=DEFAULT_LAYERS, inner_blocks=DEFAULT_INNER_BLOCKS)
     return vqe, hamiltonian, topology
 
 
-def build_unsupported_statevector_density_noise_vqe(qbit_num: int):
+def build_unsupported_state_vector_density_noise_vqe(qbit_num: int):
     topology = build_open_chain_topology(qbit_num)
     hamiltonian, _ = generate_zz_xx_hamiltonian(
         n_qubits=qbit_num,
@@ -113,8 +210,8 @@ def build_unsupported_statevector_density_noise_vqe(qbit_num: int):
         backend="state_vector",
         density_noise=build_story2_noise(),
     )
-    vqe.set_Ansatz("HEA")
-    vqe.Generate_Circuit(layers=1, inner_blocks=1)
+    vqe.set_Ansatz(DEFAULT_ANSATZ)
+    vqe.Generate_Circuit(layers=DEFAULT_LAYERS, inner_blocks=DEFAULT_INNER_BLOCKS)
     return vqe, hamiltonian, topology
 
 
@@ -183,29 +280,28 @@ def run_fixed_parameter_case(qbit_num: int):
 
     trace_val = np.trace(aer_rho)
     purity = float(np.real(np.trace(aer_rho @ aer_rho)))
-    return {
-        "status": "completed",
-        "backend": "density_matrix",
-        "qbit_num": qbit_num,
-        "topology": topology,
-        "hamiltonian": {
-            "Jx": 1.0,
-            "Jy": 1.0,
-            "Jz": 1.0,
-            "h": 0.5,
-        },
-        "layers": 1,
-        "inner_blocks": 1,
-        "density_noise": build_story2_noise(),
-        "parameter_vector": params.tolist(),
-        "squander_energy": squander_energy,
-        "aer_energy_real": aer_energy_real,
-        "aer_energy_imag": aer_energy_imag,
-        "absolute_energy_error": abs(squander_energy - aer_energy_real),
-        "aer_trace_real": float(np.real(trace_val)),
-        "aer_trace_imag": float(np.imag(trace_val)),
-        "aer_purity": purity,
-    }
+    artifact = build_case_metadata(
+        backend=PRIMARY_BACKEND,
+        qbit_num=qbit_num,
+        topology=topology,
+        density_noise=build_story2_noise(),
+        reference_backend=REFERENCE_BACKEND,
+        hamiltonian=build_story2_hamiltonian_metadata(),
+    )
+    artifact.update(
+        {
+            "status": "completed",
+            "parameter_vector": params.tolist(),
+            "squander_energy": squander_energy,
+            "aer_energy_real": aer_energy_real,
+            "aer_energy_imag": aer_energy_imag,
+            "absolute_energy_error": abs(squander_energy - aer_energy_real),
+            "aer_trace_real": float(np.real(trace_val)),
+            "aer_trace_imag": float(np.imag(trace_val)),
+            "aer_purity": purity,
+        }
+    )
+    return artifact
 
 
 def run_optimization_trace():
@@ -218,54 +314,70 @@ def run_optimization_trace():
     final_parameters = np.asarray(vqe.get_Optimized_Parameters(), dtype=np.float64)
     final_energy = float(vqe.Optimization_Problem(final_parameters))
 
-    return {
-        "backend": "density_matrix",
-        "optimizer": "COSINE",
-        "qbit_num": 4,
-        "topology": topology,
-        "layers": 1,
-        "inner_blocks": 1,
-        "density_noise": build_story2_noise(),
-        "initial_parameters": initial_parameters.tolist(),
-        "final_parameters": final_parameters.tolist(),
-        "initial_energy": initial_energy,
-        "final_energy": final_energy,
-        "status": "completed",
-    }
+    artifact = build_case_metadata(
+        backend=PRIMARY_BACKEND,
+        qbit_num=4,
+        topology=topology,
+        density_noise=build_story2_noise(),
+        hamiltonian=build_story2_hamiltonian_metadata(),
+        optimizer="COSINE",
+    )
+    artifact.update(
+        {
+            "initial_parameters": initial_parameters.tolist(),
+            "final_parameters": final_parameters.tolist(),
+            "initial_energy": initial_energy,
+            "final_energy": final_energy,
+            "status": "completed",
+        }
+    )
+    return artifact
 
 
-def run_unsupported_statevector_density_noise_case():
-    vqe, _, topology = build_unsupported_statevector_density_noise_vqe(4)
+def run_unsupported_state_vector_density_noise_case():
+    vqe, _, topology = build_unsupported_state_vector_density_noise_vqe(4)
     parameters = build_story2_parameters(vqe.get_Parameter_Num())
-    return {
-        "backend": "state_vector",
-        "qbit_num": 4,
-        "topology": topology,
-        "layers": 1,
-        "inner_blocks": 1,
-        "density_noise": build_story2_noise(),
-        "parameter_vector": parameters.tolist(),
-        "energy": float(vqe.Optimization_Problem(parameters)),
-        "status": "completed",
-    }
+    artifact = build_case_metadata(
+        backend="state_vector",
+        qbit_num=4,
+        topology=topology,
+        density_noise=build_story2_noise(),
+        hamiltonian=build_story2_hamiltonian_metadata(),
+    )
+    artifact.update(
+        {
+            "parameter_vector": parameters.tolist(),
+            "energy": float(vqe.Optimization_Problem(parameters)),
+            "status": "completed",
+        }
+    )
+    return artifact
 
 
-def capture_case(case_name: str, case_callable):
+def capture_case(case_name: str, case_callable, base_metadata=None):
+    base_metadata = {} if base_metadata is None else dict(base_metadata)
     try:
-        result = case_callable()
+        result = dict(base_metadata)
+        result.update(case_callable())
         result.setdefault("status", "completed")
         result["case_name"] = case_name
-        return result
     except Exception as exc:
-        return {
-            "case_name": case_name,
-            "status": "unsupported",
-            "unsupported_category": "phase2_support_matrix",
-            "unsupported_reason": str(exc),
-        }
+        result = dict(base_metadata)
+        result.update(
+            {
+                "case_name": case_name,
+                "status": "unsupported",
+                "unsupported_category": "phase2_support_matrix",
+                "unsupported_reason": str(exc),
+            }
+        )
+
+    validate_artifact_payload(result)
+    return result
 
 
 def write_json(output_path: Path, payload):
+    validate_artifact_payload(payload)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
 
@@ -281,54 +393,67 @@ def main():
     args = parser.parse_args()
 
     fixed_results = [
-        capture_case("story2_fixed_4q", lambda: run_fixed_parameter_case(4)),
-        capture_case("story2_fixed_6q", lambda: run_fixed_parameter_case(6)),
+        capture_case(
+            f"story2_fixed_{qbit_num}q",
+            lambda qbit_num=qbit_num: run_fixed_parameter_case(qbit_num),
+        )
+        for qbit_num in FIXED_PARAMETER_QUBITS
     ]
     trace_result = capture_case("story2_trace_4q", run_optimization_trace)
+    unsupported_base_metadata = build_case_metadata(
+        backend="state_vector",
+        qbit_num=4,
+        topology=build_open_chain_topology(4),
+        density_noise=build_story2_noise(),
+        hamiltonian=build_story2_hamiltonian_metadata(),
+    )
     unsupported_result = capture_case(
-        "story3_unsupported_statevector_density_noise",
-        run_unsupported_statevector_density_noise_case,
+        "story3_unsupported_state_vector_density_noise",
+        run_unsupported_state_vector_density_noise_case,
+        base_metadata=unsupported_base_metadata,
     )
 
     for result in fixed_results:
         if result["status"] == "completed":
             print(
-                "Story 2 fixed case:",
+                "Story 2 fixed case [{}]:".format(result["backend"]),
                 result["qbit_num"],
                 "qubits, |E_sq - E_aer| =",
                 f"{result['absolute_energy_error']:.6e}",
             )
         else:
             print(
-                "Story 2 fixed case unsupported:",
+                "Story 2 fixed case [{}]:".format(result["backend"]),
+                result["status"],
                 result["case_name"],
                 result["unsupported_reason"],
             )
 
     if trace_result["status"] == "completed":
         print(
-            "Story 2 optimization trace:",
+            "Story 2 optimization trace [{}]:".format(trace_result["backend"]),
             "initial =", f"{trace_result['initial_energy']:.6e}",
             "final =", f"{trace_result['final_energy']:.6e}",
         )
     else:
         print(
-            "Story 2 optimization trace unsupported:",
+            "Story 2 optimization trace [{}]:".format(trace_result["backend"]),
+            trace_result["status"],
             trace_result["unsupported_reason"],
         )
 
     print(
-        "Story 3 unsupported case:",
+        "Story 3 unsupported case [{}]:".format(unsupported_result["backend"]),
         unsupported_result["status"],
         unsupported_result.get("unsupported_reason", ""),
     )
 
     if args.output_dir is not None:
-        write_json(args.output_dir / "story2_fixed_4q.json", fixed_results[0])
-        write_json(args.output_dir / "story2_fixed_6q.json", fixed_results[1])
+        for result in fixed_results:
+            write_json(args.output_dir / f"{result['case_name']}.json", result)
         write_json(args.output_dir / "story2_trace_4q.json", trace_result)
         write_json(
-            args.output_dir / "story3_unsupported_statevector_density_noise.json",
+            args.output_dir / "story3_unsupported_state_vector_density_noise.json",
             unsupported_result,
         )
 

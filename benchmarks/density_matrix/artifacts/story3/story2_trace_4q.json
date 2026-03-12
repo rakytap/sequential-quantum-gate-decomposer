@@ -1,6 +1,5 @@
 {
   "backend": "density_matrix",
-  "optimizer": "COSINE",
   "qbit_num": 4,
   "topology": [
     [
@@ -16,6 +15,7 @@
       3
     ]
   ],
+  "ansatz": "HEA",
   "layers": 1,
   "inner_blocks": 1,
   "density_noise": [
@@ -38,6 +38,13 @@
       "lambda": 0.07
     }
   ],
+  "hamiltonian": {
+    "Jx": 1.0,
+    "Jy": 1.0,
+    "Jz": 1.0,
+    "h": 0.5
+  },
+  "optimizer": "COSINE",
   "initial_parameters": [
     0.05,
     0.1,

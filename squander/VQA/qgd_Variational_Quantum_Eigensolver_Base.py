@@ -152,11 +152,14 @@ class qgd_Variational_Quantum_Eigensolver_Base(qgd_Variational_Quantum_Eigensolv
 # @param accelerator_num Optional accelerator identifier.
 # @param backend Optional backend selector. Supported values are
 #   "state_vector" and "density_matrix". When omitted, the VQE keeps the
-#   legacy state-vector behavior.
+#   legacy state-vector behavior. Explicit `backend="density_matrix"` activates
+#   the supported exact noisy mixed-state energy path for the Phase 2 anchor
+#   workflow.
 # @param density_noise Optional ordered list of fixed local density-noise
 #   insertions. Each entry must define a channel, target qubit,
 #   after_gate_index, and fixed noise value. Phase 2 only supports this
-#   surface together with `backend="density_matrix"`.
+#   surface together with `backend="density_matrix"` on the supported `HEA`
+#   anchor circuit.
 # @return An instance of the class
     def __init__(
         self,
@@ -185,9 +188,9 @@ class qgd_Variational_Quantum_Eigensolver_Base(qgd_Variational_Quantum_Eigensolv
         # call the constructor of the wrapper class
         super(qgd_Variational_Quantum_Eigensolver_Base, self).__init__(Hamiltonian.data, Hamiltonian.indices, Hamiltonian.indptr, qbit_num, config=config_copy, accelerator_num=accelerator_num)
         self.qbit_num = qbit_num
-        # Story 1 keeps the backend selector visible on the Python object even
-        # though the only active execution path is still the legacy
-        # state-vector implementation.
+        # Keep the selected backend visible on the Python object so tests,
+        # validation harnesses, and reproducibility artifacts can attribute
+        # which execution path was requested.
         self.backend = normalized_backend
         self.density_noise = []
         self.set_Density_Matrix_Noise(density_noise)
@@ -377,7 +380,9 @@ class qgd_Variational_Quantum_Eigensolver_Base(qgd_Variational_Quantum_Eigensolv
 # @brief Configure ordered fixed local-noise insertions for the density backend.
 # @param density_noise A list of dictionaries with channel, target,
 #   after_gate_index, and noise value metadata. Phase 2 treats this as a
-#   mixed-state-only surface and rejects it on `state_vector` workflows.
+#   mixed-state-only surface and rejects it on `state_vector` workflows. The
+#   supported positive path is the exact noisy `HEA` anchor workflow on the
+#   `density_matrix` backend.
     def set_Density_Matrix_Noise(self, density_noise):
 
         normalized_density_noise = _normalize_density_noise_spec(density_noise)

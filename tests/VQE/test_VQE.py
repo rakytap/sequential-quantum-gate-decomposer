@@ -177,6 +177,79 @@ class Test_VQE:
         vqe.Generate_Circuit(1, 1)
         return vqe, Hamiltonian
 
+    @staticmethod
+    def _insert_story2_noise(base_circuit, density_noise):
+        pytest.importorskip("qiskit")
+        pytest.importorskip("qiskit_aer")
+
+        from qiskit import QuantumCircuit
+        from qiskit_aer.noise import (
+            amplitude_damping_error,
+            depolarizing_error,
+            phase_damping_error,
+        )
+
+        noisy_circuit = QuantumCircuit(base_circuit.num_qubits)
+        noise_by_gate = {}
+        for noise_spec in density_noise:
+            noise_by_gate.setdefault(noise_spec["after_gate_index"], []).append(
+                noise_spec
+            )
+
+        for gate_index, instruction in enumerate(base_circuit.data):
+            qargs = [
+                noisy_circuit.qubits[base_circuit.find_bit(qubit).index]
+                for qubit in instruction.qubits
+            ]
+            cargs = [
+                noisy_circuit.clbits[base_circuit.find_bit(clbit).index]
+                for clbit in instruction.clbits
+            ]
+            noisy_circuit.append(instruction.operation, qargs, cargs)
+
+            for noise_spec in noise_by_gate.get(gate_index, []):
+                target = noise_spec["target"]
+                channel = noise_spec["channel"]
+                if channel == "local_depolarizing":
+                    noisy_circuit.append(
+                        depolarizing_error(noise_spec["error_rate"], 1),
+                        [noisy_circuit.qubits[target]],
+                    )
+                elif channel == "amplitude_damping":
+                    noisy_circuit.append(
+                        amplitude_damping_error(noise_spec["gamma"]),
+                        [noisy_circuit.qubits[target]],
+                    )
+                elif channel == "phase_damping":
+                    noisy_circuit.append(
+                        phase_damping_error(noise_spec["lambda"]),
+                        [noisy_circuit.qubits[target]],
+                    )
+                else:
+                    raise ValueError(f"Unsupported Story 2 channel: {channel}")
+
+        noisy_circuit.save_density_matrix()
+        return noisy_circuit
+
+    @staticmethod
+    def _density_energy(hamiltonian, density_matrix):
+        energy = np.trace(hamiltonian.dot(density_matrix))
+        return float(np.real(energy)), float(np.imag(energy))
+
+    def _get_story2_aer_reference(self, vqe, Hamiltonian):
+        pytest.importorskip("qiskit_aer")
+
+        from qiskit_aer import AerSimulator
+
+        noisy_qiskit_circuit = self._insert_story2_noise(
+            vqe.get_Qiskit_Circuit(),
+            self._get_story2_noise(),
+        )
+        simulator = AerSimulator(method="density_matrix")
+        result = simulator.run(noisy_qiskit_circuit, shots=1).result()
+        aer_rho = np.asarray(result.data()["density_matrix"])
+        return self._density_energy(Hamiltonian, aer_rho)
+
     def test_backend_argument_normalization(self):
         qbit_num = 2
         Hamiltonian = sp.sparse.eye(2**qbit_num, format="csr")
@@ -413,6 +486,23 @@ class Test_VQE:
         assert np.isfinite(density_energy)
         assert np.isfinite(state_vector_energy)
         assert not np.isclose(density_energy, state_vector_energy, atol=1e-8)
+
+    def test_density_matrix_backend_anchor_fixed_parameter_matches_aer_reference(self):
+        density_vqe, Hamiltonian = self._build_story2_density_vqe(4)
+
+        param_num = density_vqe.get_Parameter_Num()
+        parameters = np.linspace(0.05, 0.05 * param_num, param_num, dtype=np.float64)
+        density_vqe.set_Optimized_Parameters(parameters)
+
+        density_energy = float(density_vqe.Optimization_Problem(parameters))
+        aer_energy_real, aer_energy_imag = self._get_story2_aer_reference(
+            density_vqe, Hamiltonian
+        )
+
+        assert density_vqe.backend == "density_matrix"
+        assert np.isfinite(density_energy)
+        assert np.isclose(density_energy, aer_energy_real, atol=1e-12)
+        assert abs(aer_energy_imag) <= 1e-12
 
     def test_density_matrix_backend_bounded_optimization_trace(self):
         density_vqe, _ = self._build_story2_density_vqe(4, optimizer="COSINE")
