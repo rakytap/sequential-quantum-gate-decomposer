@@ -1,0 +1,103 @@
+{
+  "backend": "density_matrix",
+  "qbit_num": 4,
+  "topology": [
+    [
+      0,
+      1
+    ],
+    [
+      1,
+      2
+    ],
+    [
+      2,
+      3
+    ]
+  ],
+  "ansatz": "HEA",
+  "layers": 1,
+  "inner_blocks": 1,
+  "density_noise": [
+    {
+      "channel": "local_depolarizing",
+      "target": 0,
+      "after_gate_index": 0,
+      "error_rate": 0.1
+    },
+    {
+      "channel": "amplitude_damping",
+      "target": 1,
+      "after_gate_index": 2,
+      "gamma": 0.05
+    },
+    {
+      "channel": "phase_damping",
+      "target": 0,
+      "after_gate_index": 4,
+      "lambda": 0.07
+    }
+  ],
+  "hamiltonian": {
+    "Jx": 1.0,
+    "Jy": 1.0,
+    "Jz": 1.0,
+    "h": 0.5
+  },
+  "optimizer": "COSINE",
+  "initial_parameters": [
+    0.05,
+    0.1,
+    0.15,
+    0.2,
+    0.25,
+    0.3,
+    0.35,
+    0.39999999999999997,
+    0.44999999999999996,
+    0.49999999999999994,
+    0.5499999999999999,
+    0.6,
+    0.65,
+    0.7,
+    0.75,
+    0.7999999999999999,
+    0.85,
+    0.9
+  ],
+  "final_parameters": [
+    0.4247997981089508,
+    0.2980618717479162,
+    -4.379420772675507,
+    0.08629288760498999,
+    0.7036901011252076,
+    -0.923085558760532,
+    0.3384692758751413,
+    0.8719145429344937,
+    -4.079420772675507,
+    1.6753872983319538,
+    -0.6625963503906505,
+    -3.929420772675507,
+    1.5103127307965862,
+    1.8605202679955288,
+    1.2219145429344938,
+    1.2544228993775475,
+    1.870543247638433,
+    1.0674469751095814
+  ],
+  "initial_energy": 0.9355438663723187,
+  "final_energy": -4.25945472568242,
+  "energy_improvement": 5.194998592054739,
+  "optimizer_config": {
+    "max_inner_iterations": 4,
+    "max_iterations": 1,
+    "convergence_length": 2
+  },
+  "parameter_count": 18,
+  "workflow_completed": true,
+  "trace_kind": "bounded_optimization_trace",
+  "total_trace_runtime_ms": 71.31833396852016,
+  "process_peak_rss_kb": 170648,
+  "status": "completed",
+  "case_name": "story2_trace_4q"
+}

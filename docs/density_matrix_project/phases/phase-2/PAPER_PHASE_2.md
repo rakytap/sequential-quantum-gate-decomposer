@@ -39,19 +39,20 @@ SQUANDER already provides a strong foundation for this work. It offers:
 
 - a mature state-vector-oriented variational and decomposition framework,
 - high-performance state-vector execution with partitioning and fusion support,
-- and a recently introduced standalone density-matrix module based on
-  `DensityMatrix`, `NoisyCircuit`, `GateOperation`, and explicit noise channels.
+- and a recently introduced standalone density-matrix module based on exact
+  mixed-state representation, a unified noisy-circuit execution layer, and
+  explicit noise channels.
 
-The density-matrix module is already useful in isolation, but it is not yet
-fully integrated into the main variational workflow of the framework. Stories 1
-to 3 of Phase 2 Task 1 now provide the first narrow workflow-level slice:
-explicit backend selection, a generated-`HEA` density path with ordered fixed
-local noise, exact real-valued Hermitian energy evaluation, 4- and 6-qubit
-fixed-parameter agreement against Qiskit Aer, one bounded 4-qubit optimization
-trace, and explicit hard-error unsupported behavior. This means the project now
-supports a narrow exact noisy variational workflow slice at the
-research-workflow level, but not yet the full Phase 2 evidence and support
-surface.
+The density-matrix module is already useful in isolation, and the current
+implementation now closes the core integration slice needed for exact noisy
+variational studies. The delivered result provides explicit backend selection, a
+generated hardware-efficient-ansatz density path with ordered fixed local
+noise, exact real-valued Hermitian energy evaluation, a mandatory 1 to 3 qubit
+micro-validation matrix, a mandatory 4/6/8/10-qubit workflow-scale exact-regime
+matrix with 10 fixed parameter vectors per required size, one bounded 4-qubit
+optimization trace, and explicit hard-error unsupported behavior. This means
+the project now supports a research-grade exact noisy variational workflow slice
+at the research-workflow level for the frozen integrated-backend scope.
 
 This paper addresses that integration gap. Its purpose is not to introduce a new
 fusion algorithm or a new approximation method. Instead, it defines and justifies
@@ -79,24 +80,23 @@ The paper proposes the following Phase 2 contribution:
 - and a benchmark and validation package strong enough to support a major paper
   rather than only an internal engineering milestone.
 
-Implementation-backed status after Task 1 Stories 1-3:
+Implementation-backed status for the completed integrated-backend slice:
 
-- already implemented:
+- implemented and validated:
   - explicit backend selection with no silent fallback,
-  - generated-`HEA` bridge into the density path,
+  - a generated hardware-efficient-ansatz bridge into the density path,
   - fixed ordered local noise insertion,
   - exact real-valued Hermitian energy evaluation through the sparse-Hamiltonian
     interface,
-  - 4- and 6-qubit fixed-parameter Aer agreement,
+  - a mandatory 1 to 3 qubit micro-validation matrix,
+  - a mandatory 4/6/8/10-qubit workflow-scale exact-regime benchmark matrix with
+    10 fixed parameter vectors per required size,
   - one bounded 4-qubit optimization trace,
   - structured unsupported-case outcomes,
-  - and backend-explicit machine-readable artifacts for the current completed and
-    unsupported validation slice,
-- not yet complete for the full paper claim:
-  - 8- and 10-qubit workflow evidence,
-  - the full benchmark floor and threshold package,
-  - runtime and peak-memory characterization,
-  - and the complete reproducibility/provenance bundle.
+  - runtime and peak-memory characterization for workflow-scale cases,
+  - and a backend-explicit reproducibility package archived in
+    `benchmarks/density_matrix/artifacts/phase2_task2/` with
+    `story5_publication_bundle.json` as the top-level manifest.
 
 ### 1.2 Why This Contribution Matters
 
@@ -188,15 +188,15 @@ assumptions.
 
 ## 3. Current SQUANDER Baseline
 
-The baseline for this paper is the current repository state at the end of Phase
-1.
+The baseline for this paper is the exact mixed-state capability available at the
+end of Phase 1.
 
 ### 3.1 What Exists Today
 
 The delivered mixed-state path includes:
 
-- `DensityMatrix` as the exact dense mixed-state container,
-- `NoisyCircuit` as the unified gate-plus-noise execution path,
+- exact dense mixed-state representation,
+- a unified gate-plus-noise execution path,
 - initial channels including depolarizing, amplitude damping, and phase damping,
 - Python bindings and examples,
 - and baseline validation against Qiskit Aer.
@@ -204,25 +204,26 @@ The delivered mixed-state path includes:
 This is enough to support standalone exact noisy circuit execution and mixed-state
 observables at the module level.
 
-### 3.2 What Does Not Yet Exist In The Implementation
+### 3.2 What Remains Intentionally Outside The Implemented Scope
 
-The workflow-level implementation gaps are still substantial even though the
-Phase 2 contract is now documented:
+The current integrated-backend implementation closes the frozen backend-integration and
+validation package. What remains outside the implemented scope is therefore a
+matter of deliberate scientific boundary-setting rather than missing foundation:
 
-- no delivered backend-selection implementation for density execution in the
-  main variational path,
-- no delivered workflow-level `Tr(H*rho)` path that satisfies the documented
-  validation contract,
-- no delivered bridge from existing circuit representations into the density
-  backend for the anchor workflow,
-- no running implementation yet matching the frozen Phase 2 support matrix,
-- and no Paper 1 benchmark evidence package yet attached to executed code.
+- broader circuit-source support beyond the generated hardware-efficient-ansatz
+  path,
+- broader observable support beyond exact Hermitian energy evaluation,
+- later-phase density-aware acceleration, fusion, and partitioning methods,
+- later-phase optimizer and trainability studies,
+- and broader multi-framework comparison beyond the mandatory Aer-centered
+  evidence package.
 
 ### 3.3 Why This Gap Matters
 
-Without implementation of these documented pieces, the project has an exact
-noisy module and a Phase 2 contract, but not yet a delivered exact noisy
-training workflow. For the PhD theme, that distinction is decisive.
+With implementation of these documented pieces, the project now has both an
+exact noisy module and a delivered exact noisy training workflow slice with a
+complete integrated-backend evidence package. For the PhD theme, that closes the main
+integration gap and turns the backend into a usable scientific instrument.
 
 ## 4. Phase 2 Problem Definition
 

@@ -44,23 +44,25 @@ SQUANDER is already strong on the state-vector side. It contains:
 At the same time, a density-matrix module has recently been added, providing:
 
 - exact mixed-state representation,
-- unified gate and noise execution through `NoisyCircuit`,
+- a unified gate-and-noise execution layer,
 - and reference validation against Qiskit Aer.
 
-This is an important milestone, but it is not yet sufficient for the main PhD
-research agenda. Stories 1 to 3 of Phase 2 Task 1 now implement a narrow
-workflow-level slice: explicit backend selection, a generated-`HEA`
-density-execution bridge with ordered fixed local noise, exact real-valued
-Hermitian energy evaluation, 4- and 6-qubit fixed-parameter agreement against
-Qiskit Aer, one bounded 4-qubit optimization trace, and explicit hard-error
-unsupported behavior. As a result, the project now has a delivered narrow noisy
-variational backend slice, but not yet the full benchmark-grade evidence package
-or broader support surface needed for the final Phase 2 paper claim.
+This is an important milestone, and the current implementation now closes the
+core integration slice needed for exact noisy variational studies. The delivered
+result provides explicit backend selection, a generated hardware-efficient
+ansatz bridge with ordered fixed local noise, exact real-valued Hermitian energy
+evaluation, a mandatory 1 to 3 qubit micro-validation matrix, a mandatory
+4/6/8/10-qubit workflow-scale exact-regime matrix with 10 fixed parameter
+vectors per required size, one bounded 4-qubit optimization trace, and explicit
+hard-error unsupported behavior. As a result, the project now has a delivered
+research-grade exact noisy backend slice for the frozen integrated-backend scope.
 
-Stories 1 to 4 also now provide backend-explicit machine-readable artifacts for
-the current completed and unsupported validation slice. This materially improves
-reviewability and reproducibility, but it should still be read as an interim
-artifact layer rather than the final full Phase 2 reproducibility bundle.
+That slice is backed by a complete backend-explicit reproducibility package
+archived in `benchmarks/density_matrix/artifacts/phase2_task2/`, with
+`story5_publication_bundle.json` as the top-level manifest. The bundle links the
+micro-validation results, workflow-scale benchmark bundle, bounded optimization
+trace, and representative unsupported-case evidence in one machine-readable
+artifact surface.
 
 This short paper defines the first major integration step needed to close that
 gap. Its purpose is to turn the density-matrix path into a usable backend for
@@ -74,33 +76,34 @@ representation. That already exists. The problem is that the existing exact
 mixed-state backend is not yet part of the research workflow that the broader
 project actually needs.
 
-More concretely, the remaining implementation and evidence gap now has four
-parts:
+More concretely, the deliberately bounded scientific scope has four defining
+features:
 
-1. The delivered density path is still generated-`HEA`-only rather than a broad
-   circuit-source bridge.
-2. The current observable path is implemented for the narrow exact Hermitian
-   energy contract, but the broader benchmark and threshold package is still not
-   complete.
-3. The executed evidence currently covers 4- and 6-qubit fixed-parameter anchor
-   cases plus one bounded 4-qubit optimization trace, not yet the full 4/6/8/10
-   benchmark floor.
-4. The publication-ready reproducibility, runtime, peak-memory, and artifact
-   package is still incomplete.
+1. The delivered density path is generated-hardware-efficient-ansatz-only rather
+   than a broad circuit-source bridge.
+2. The observable path is intentionally limited to exact Hermitian energy
+   evaluation rather than a broad measurement framework.
+3. The executed evidence now covers the mandatory micro-validation matrix, the
+   mandatory 4/6/8/10 workflow-scale benchmark floor, and one bounded 4-qubit
+   optimization trace.
+4. The publication-ready reproducibility package is complete for the current
+   integrated-backend slice, while broader later-phase application and acceleration
+   studies remain outside this paper's claim.
 
-This means that Phase 2 is no longer blocked by the absence of any workflow
-integration, but it still cannot yet claim complete research-grade exact noisy
-VQA support across the whole planned evidence surface.
+This means that Phase 2 is no longer blocked by workflow integration, local
+correctness evidence, workflow-scale exactness evidence, or reproducibility of
+the integrated backend slice. The remaining boundaries are deliberate scientific
+scope boundaries rather than missing foundations.
 
 ## 3. Current Baseline and Research Gap
 
 The current density-matrix baseline is already meaningful. It includes:
 
-- `DensityMatrix` as a mixed-state container,
-- `NoisyCircuit` as a unified gate-plus-noise execution path,
+- exact dense mixed-state representation,
+- a unified gate-plus-noise execution path,
 - baseline noise channels such as depolarizing, amplitude damping, and phase
   damping,
-- Python bindings,
+- Python-facing workflow access,
 - and test and benchmark scaffolding.
 
 This is enough to support standalone exact noisy simulations and reference

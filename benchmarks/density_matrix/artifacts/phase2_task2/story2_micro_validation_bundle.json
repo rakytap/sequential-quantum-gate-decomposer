@@ -1,0 +1,476 @@
+{
+  "suite_name": "story2_mandatory_micro_validation",
+  "status": "pass",
+  "backend": "density_matrix",
+  "reference_backend": "qiskit_aer_density_matrix",
+  "thresholds": {
+    "absolute_energy_error": 1e-10,
+    "rho_is_valid_tol": 1e-10,
+    "trace_deviation": 1e-10,
+    "observable_imag_abs": 1e-10,
+    "required_pass_rate": 1.0
+  },
+  "software": {
+    "python": "3.13.9",
+    "numpy": "2.3.5",
+    "qiskit": "2.2.3",
+    "qiskit_aer": "0.17.2"
+  },
+  "summary": {
+    "total_cases": 7,
+    "passed_cases": 7,
+    "failed_cases": 0,
+    "pass_rate": 1.0
+  },
+  "cases": [
+    {
+      "case_name": "story2_1q_u3_local_depolarizing",
+      "status": "pass",
+      "backend": "density_matrix",
+      "reference_backend": "qiskit_aer_density_matrix",
+      "qbit_num": 1,
+      "case_kind": "individual_noise",
+      "purpose": "Validate U3 plus local single-qubit depolarizing on the 1-qubit microcase floor.",
+      "required_gate_family": [
+        "U3"
+      ],
+      "required_noise_models": [
+        "local_depolarizing"
+      ],
+      "hamiltonian": {
+        "terms": [
+          {
+            "coeff": 0.6,
+            "pauli_string": "Z"
+          },
+          {
+            "coeff": -0.35,
+            "pauli_string": "X"
+          }
+        ]
+      },
+      "parameter_vector": [
+        0.73,
+        -0.41,
+        0.19
+      ],
+      "operations": [
+        "U3(0,0.73,-0.41,0.19)",
+        "LocalDepol(0,0.08)"
+      ],
+      "state_fidelity": 1.0000000000000009,
+      "trace_distance": 1.2573400410214748e-18,
+      "max_diff": 2.4140928787612317e-18,
+      "state_comparison_status": "pass",
+      "squander_purity": 0.9232000000000001,
+      "reference_purity": 0.9232000000000001,
+      "squander_trace_real": 1.0,
+      "squander_trace_imag": 2.5146800820429496e-18,
+      "trace_deviation": 2.5146800820429496e-18,
+      "rho_is_valid": true,
+      "rho_is_valid_tol": 1e-10,
+      "squander_energy_real": -0.23246763507328233,
+      "squander_energy_imag": 0.0,
+      "reference_energy_real": -0.23246763507328233,
+      "reference_energy_imag": 0.0,
+      "absolute_energy_error": 0.0,
+      "energy_pass": true,
+      "density_valid_pass": true,
+      "trace_pass": true,
+      "observable_pass": true
+    },
+    {
+      "case_name": "story2_1q_u3_amplitude_damping",
+      "status": "pass",
+      "backend": "density_matrix",
+      "reference_backend": "qiskit_aer_density_matrix",
+      "qbit_num": 1,
+      "case_kind": "individual_noise",
+      "purpose": "Validate U3 plus local amplitude damping on the 1-qubit microcase floor.",
+      "required_gate_family": [
+        "U3"
+      ],
+      "required_noise_models": [
+        "amplitude_damping"
+      ],
+      "hamiltonian": {
+        "terms": [
+          {
+            "coeff": 0.45,
+            "pauli_string": "Z"
+          },
+          {
+            "coeff": 0.3,
+            "pauli_string": "X"
+          }
+        ]
+      },
+      "parameter_vector": [
+        1.11,
+        0.37,
+        -0.52
+      ],
+      "operations": [
+        "U3(0,1.11,0.37,-0.52)",
+        "AD(0,0.14)"
+      ],
+      "state_fidelity": 0.9999999999999998,
+      "trace_distance": 5.592134936218538e-17,
+      "max_diff": 1.1111280201741193e-16,
+      "state_comparison_status": "pass",
+      "squander_purity": 0.8450098029684587,
+      "reference_purity": 0.8450098029684586,
+      "squander_trace_real": 1.0,
+      "squander_trace_imag": 5.213547906848829e-18,
+      "trace_deviation": 5.213547906848829e-18,
+      "rho_is_valid": true,
+      "rho_is_valid_tol": 1e-10,
+      "squander_energy_real": 0.03565257311714301,
+      "squander_energy_imag": 0.0,
+      "reference_energy_real": 0.035652573117143066,
+      "reference_energy_imag": 0.0,
+      "absolute_energy_error": 5.551115123125783e-17,
+      "energy_pass": true,
+      "density_valid_pass": true,
+      "trace_pass": true,
+      "observable_pass": true
+    },
+    {
+      "case_name": "story2_1q_u3_phase_damping",
+      "status": "pass",
+      "backend": "density_matrix",
+      "reference_backend": "qiskit_aer_density_matrix",
+      "qbit_num": 1,
+      "case_kind": "individual_noise",
+      "purpose": "Validate U3 plus local phase damping on the 1-qubit microcase floor.",
+      "required_gate_family": [
+        "U3"
+      ],
+      "required_noise_models": [
+        "phase_damping"
+      ],
+      "hamiltonian": {
+        "terms": [
+          {
+            "coeff": -0.4,
+            "pauli_string": "Z"
+          },
+          {
+            "coeff": 0.25,
+            "pauli_string": "Y"
+          }
+        ]
+      },
+      "parameter_vector": [
+        0.92,
+        -0.63,
+        0.28
+      ],
+      "operations": [
+        "U3(0,0.92,-0.63,0.28)",
+        "PD(0,0.12)"
+      ],
+      "state_fidelity": 1.0000000000000013,
+      "trace_distance": 4.443817557797985e-16,
+      "max_diff": 5.552829484298129e-16,
+      "state_comparison_status": "pass",
+      "squander_purity": 0.9442442069877367,
+      "reference_purity": 0.9442442069877385,
+      "squander_trace_real": 0.9999999999999999,
+      "squander_trace_imag": 1.3797163293535045e-17,
+      "trace_deviation": 1.1187633064695489e-16,
+      "rho_is_valid": true,
+      "rho_is_valid_tol": 1e-10,
+      "squander_energy_real": -0.026804792321068943,
+      "squander_energy_imag": 0.0,
+      "reference_energy_real": -0.026804792321068943,
+      "reference_energy_imag": 0.0,
+      "absolute_energy_error": 0.0,
+      "energy_pass": true,
+      "density_valid_pass": true,
+      "trace_pass": true,
+      "observable_pass": true
+    },
+    {
+      "case_name": "story2_2q_u3_cnot_local_depolarizing",
+      "status": "pass",
+      "backend": "density_matrix",
+      "reference_backend": "qiskit_aer_density_matrix",
+      "qbit_num": 2,
+      "case_kind": "individual_noise",
+      "purpose": "Validate the required U3/CNOT bridge with local single-qubit depolarizing.",
+      "required_gate_family": [
+        "U3",
+        "CNOT"
+      ],
+      "required_noise_models": [
+        "local_depolarizing"
+      ],
+      "hamiltonian": {
+        "terms": [
+          {
+            "coeff": 0.55,
+            "pauli_string": "ZI"
+          },
+          {
+            "coeff": -0.2,
+            "pauli_string": "IZ"
+          },
+          {
+            "coeff": 0.18,
+            "pauli_string": "XX"
+          }
+        ]
+      },
+      "parameter_vector": [
+        0.61,
+        -0.22,
+        0.47,
+        0.35,
+        0.18,
+        -0.41
+      ],
+      "operations": [
+        "U3(0,0.61,-0.22,0.47)",
+        "U3(1,0.35,0.18,-0.41)",
+        "CNOT(0->1)",
+        "LocalDepol(0,0.07)"
+      ],
+      "state_fidelity": 0.9999999999999993,
+      "trace_distance": 7.57677828457724e-17,
+      "max_diff": 5.721958498152797e-17,
+      "state_comparison_status": "pass",
+      "squander_purity": 0.9146292110864271,
+      "reference_purity": 0.9146292110864274,
+      "squander_trace_real": 0.9999999999999999,
+      "squander_trace_imag": 5.527388312956559e-18,
+      "trace_deviation": 1.111598113782158e-16,
+      "rho_is_valid": true,
+      "rho_is_valid_tol": 1e-10,
+      "squander_energy_real": 0.234057196702137,
+      "squander_energy_imag": 0.0,
+      "reference_energy_real": 0.23405719670213698,
+      "reference_energy_imag": 0.0,
+      "absolute_energy_error": 2.7755575615628914e-17,
+      "energy_pass": true,
+      "density_valid_pass": true,
+      "trace_pass": true,
+      "observable_pass": true
+    },
+    {
+      "case_name": "story2_2q_u3_cnot_amplitude_damping",
+      "status": "pass",
+      "backend": "density_matrix",
+      "reference_backend": "qiskit_aer_density_matrix",
+      "qbit_num": 2,
+      "case_kind": "individual_noise",
+      "purpose": "Validate the required U3/CNOT bridge with local amplitude damping.",
+      "required_gate_family": [
+        "U3",
+        "CNOT"
+      ],
+      "required_noise_models": [
+        "amplitude_damping"
+      ],
+      "hamiltonian": {
+        "terms": [
+          {
+            "coeff": 0.35,
+            "pauli_string": "ZI"
+          },
+          {
+            "coeff": 0.22,
+            "pauli_string": "IX"
+          },
+          {
+            "coeff": -0.16,
+            "pauli_string": "YY"
+          }
+        ]
+      },
+      "parameter_vector": [
+        0.84,
+        0.12,
+        -0.33,
+        0.56,
+        -0.48,
+        0.25
+      ],
+      "operations": [
+        "U3(0,0.84,0.12,-0.33)",
+        "U3(1,0.56,-0.48,0.25)",
+        "CNOT(1->0)",
+        "AD(1,0.1)"
+      ],
+      "state_fidelity": 1.0000000000000009,
+      "trace_distance": 2.360137596393237e-16,
+      "max_diff": 2.2204513922531484e-16,
+      "state_comparison_status": "pass",
+      "squander_purity": 0.9846147456115173,
+      "reference_purity": 0.9846147456115181,
+      "squander_trace_real": 0.9999999999999999,
+      "squander_trace_imag": 3.192996077861516e-18,
+      "trace_deviation": 1.110682081787203e-16,
+      "rho_is_valid": true,
+      "rho_is_valid_tol": 1e-10,
+      "squander_energy_real": 0.3761491034105162,
+      "squander_energy_imag": 4.336808689942018e-18,
+      "reference_energy_real": 0.3761491034105164,
+      "reference_energy_imag": 0.0,
+      "absolute_energy_error": 1.6653345369377348e-16,
+      "energy_pass": true,
+      "density_valid_pass": true,
+      "trace_pass": true,
+      "observable_pass": true
+    },
+    {
+      "case_name": "story2_2q_u3_cnot_phase_damping",
+      "status": "pass",
+      "backend": "density_matrix",
+      "reference_backend": "qiskit_aer_density_matrix",
+      "qbit_num": 2,
+      "case_kind": "individual_noise",
+      "purpose": "Validate the required U3/CNOT bridge with local phase damping.",
+      "required_gate_family": [
+        "U3",
+        "CNOT"
+      ],
+      "required_noise_models": [
+        "phase_damping"
+      ],
+      "hamiltonian": {
+        "terms": [
+          {
+            "coeff": -0.48,
+            "pauli_string": "ZZ"
+          },
+          {
+            "coeff": 0.17,
+            "pauli_string": "XI"
+          },
+          {
+            "coeff": 0.14,
+            "pauli_string": "IY"
+          }
+        ]
+      },
+      "parameter_vector": [
+        0.49,
+        -0.31,
+        0.67,
+        0.71,
+        0.42,
+        -0.28
+      ],
+      "operations": [
+        "U3(0,0.49,-0.31,0.67)",
+        "U3(1,0.71,0.42,-0.28)",
+        "CNOT(0->1)",
+        "PD(0,0.09)"
+      ],
+      "state_fidelity": 1.0000000000000018,
+      "trace_distance": 3.477451943091012e-16,
+      "max_diff": 3.3306690738754696e-16,
+      "state_comparison_status": "pass",
+      "squander_purity": 0.9689623352922663,
+      "reference_purity": 0.9689623352922672,
+      "squander_trace_real": 1.0,
+      "squander_trace_imag": -2.1221729323237304e-17,
+      "trace_deviation": 2.1221729323237304e-17,
+      "rho_is_valid": true,
+      "rho_is_valid_tol": 1e-10,
+      "squander_energy_real": 0.05081130411345296,
+      "squander_energy_imag": -3.469446951953614e-18,
+      "reference_energy_real": 0.05081130411345301,
+      "reference_energy_imag": -3.469446951953614e-18,
+      "absolute_energy_error": 5.551115123125783e-17,
+      "energy_pass": true,
+      "density_valid_pass": true,
+      "trace_pass": true,
+      "observable_pass": true
+    },
+    {
+      "case_name": "story2_3q_u3_cnot_mixed_local_noise",
+      "status": "pass",
+      "backend": "density_matrix",
+      "reference_backend": "qiskit_aer_density_matrix",
+      "qbit_num": 3,
+      "case_kind": "mixed_sequence",
+      "purpose": "Validate the mixed-sequence Story 2 path with all required local noise models in one 3-qubit case.",
+      "required_gate_family": [
+        "U3",
+        "CNOT"
+      ],
+      "required_noise_models": [
+        "local_depolarizing",
+        "amplitude_damping",
+        "phase_damping"
+      ],
+      "hamiltonian": {
+        "terms": [
+          {
+            "coeff": -0.3,
+            "pauli_string": "ZII"
+          },
+          {
+            "coeff": 0.24,
+            "pauli_string": "IZI"
+          },
+          {
+            "coeff": 0.16,
+            "pauli_string": "IIX"
+          },
+          {
+            "coeff": 0.18,
+            "pauli_string": "XXI"
+          },
+          {
+            "coeff": -0.12,
+            "pauli_string": "IYY"
+          }
+        ]
+      },
+      "parameter_vector": [
+        0.58,
+        -0.27,
+        0.44,
+        0.93,
+        0.21,
+        -0.36,
+        0.67,
+        -0.39,
+        0.16
+      ],
+      "operations": [
+        "U3(0,0.58,-0.27,0.44)",
+        "U3(1,0.93,0.21,-0.36)",
+        "CNOT(0->1)",
+        "LocalDepol(0,0.05)",
+        "U3(2,0.67,-0.39,0.16)",
+        "CNOT(1->2)",
+        "AD(1,0.08)",
+        "PD(2,0.06)"
+      ],
+      "state_fidelity": 0.9999999999999996,
+      "trace_distance": 7.763899179176285e-16,
+      "max_diff": 2.852763173004607e-16,
+      "state_comparison_status": "pass",
+      "squander_purity": 0.8687283439141693,
+      "reference_purity": 0.8687283439141672,
+      "squander_trace_real": 1.0,
+      "squander_trace_imag": 6.170250449212783e-18,
+      "trace_deviation": 6.170250449212783e-18,
+      "rho_is_valid": true,
+      "rho_is_valid_tol": 1e-10,
+      "squander_energy_real": 0.2598742396548487,
+      "squander_energy_imag": -6.071532165918825e-18,
+      "reference_energy_real": 0.2598742396548484,
+      "reference_energy_imag": -3.469446951953614e-18,
+      "absolute_energy_error": 2.7755575615628914e-16,
+      "energy_pass": true,
+      "density_valid_pass": true,
+      "trace_pass": true,
+      "observable_pass": true
+    }
+  ]
+}

@@ -1,0 +1,128 @@
+{
+  "suite_name": "story5_publication_evidence",
+  "status": "pass",
+  "backend": "density_matrix",
+  "reference_backend": "qiskit_aer_density_matrix",
+  "software": {
+    "python": "3.13.9",
+    "numpy": "2.3.5",
+    "qiskit": "2.2.3",
+    "qiskit_aer": "0.17.2"
+  },
+  "provenance": {
+    "generation_command": "python benchmarks/density_matrix/story2_vqe_density_validation.py --story5 --output-dir /home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/phase2_task2",
+    "working_directory": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer",
+    "git_revision": "fe000124dc852b4d4f059f5c757e4f388af2886e"
+  },
+  "summary": {
+    "mandatory_artifact_count": 6,
+    "present_artifact_count": 6,
+    "status_match_count": 6,
+    "missing_artifact_count": 0,
+    "mismatched_status_count": 0
+  },
+  "artifacts": [
+    {
+      "artifact_id": "story2_micro_validation_bundle",
+      "artifact_class": "micro_validation_bundle",
+      "mandatory": true,
+      "path": "story2_micro_validation_bundle.json",
+      "status": "pass",
+      "expected_statuses": [
+        "pass"
+      ],
+      "purpose": "Local exactness and density-validity gate for mandatory 1 to 3 qubit microcases.",
+      "generation_command": "python benchmarks/density_matrix/validate_squander_vs_qiskit.py --output-dir /home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/phase2_task2",
+      "summary": {
+        "total_cases": 7,
+        "passed_cases": 7,
+        "pass_rate": 1.0
+      }
+    },
+    {
+      "artifact_id": "story4_workflow_bundle",
+      "artifact_class": "workflow_exact_regime_bundle",
+      "mandatory": true,
+      "path": "story4_workflow_bundle.json",
+      "status": "pass",
+      "expected_statuses": [
+        "pass"
+      ],
+      "purpose": "Workflow-scale exactness evidence across the mandatory 4/6/8/10 exact regime.",
+      "generation_command": "python benchmarks/density_matrix/story2_vqe_density_validation.py --story4 --output-dir /home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/phase2_task2",
+      "summary": {
+        "total_cases": 40,
+        "passed_cases": 40,
+        "pass_rate": 1.0,
+        "documented_10q_anchor_present": true
+      }
+    },
+    {
+      "artifact_id": "story2_fixed_4q",
+      "artifact_class": "fixed_parameter_case",
+      "mandatory": true,
+      "path": "story2_fixed_4q.json",
+      "status": "completed",
+      "expected_statuses": [
+        "completed"
+      ],
+      "purpose": "Supported fixed-parameter 4-qubit anchor exactness evidence.",
+      "generation_command": "python benchmarks/density_matrix/story2_vqe_density_validation.py --output-dir /home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/phase2_task2",
+      "summary": {
+        "qbit_num": 4,
+        "absolute_energy_error": 2.1094237467877974e-15
+      }
+    },
+    {
+      "artifact_id": "story2_fixed_6q",
+      "artifact_class": "fixed_parameter_case",
+      "mandatory": true,
+      "path": "story2_fixed_6q.json",
+      "status": "completed",
+      "expected_statuses": [
+        "completed"
+      ],
+      "purpose": "Supported fixed-parameter 6-qubit anchor exactness evidence.",
+      "generation_command": "python benchmarks/density_matrix/story2_vqe_density_validation.py --output-dir /home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/phase2_task2",
+      "summary": {
+        "qbit_num": 6,
+        "absolute_energy_error": 2.7755575615628914e-16
+      }
+    },
+    {
+      "artifact_id": "story2_trace_4q",
+      "artifact_class": "optimization_trace",
+      "mandatory": true,
+      "path": "story2_trace_4q.json",
+      "status": "completed",
+      "expected_statuses": [
+        "completed"
+      ],
+      "purpose": "Reproducible bounded 4-qubit optimization trace for the exact noisy anchor workflow.",
+      "generation_command": "python benchmarks/density_matrix/story2_vqe_density_validation.py --output-dir /home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/phase2_task2",
+      "summary": {
+        "optimizer": "COSINE",
+        "parameter_count": 18,
+        "workflow_completed": true,
+        "initial_energy": 0.9355438663723187,
+        "final_energy": -4.25945472568242
+      }
+    },
+    {
+      "artifact_id": "story3_unsupported_state_vector_density_noise",
+      "artifact_class": "unsupported_case",
+      "mandatory": true,
+      "path": "story3_unsupported_state_vector_density_noise.json",
+      "status": "unsupported",
+      "expected_statuses": [
+        "unsupported"
+      ],
+      "purpose": "Structured negative evidence for backend-mismatch and mixed-state-only unsupported behavior.",
+      "generation_command": "python benchmarks/density_matrix/story2_vqe_density_validation.py --output-dir /home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/phase2_task2",
+      "summary": {
+        "unsupported_category": "phase2_support_matrix",
+        "unsupported_reason": "Variational_Quantum_Eigensolver_Base::validate_density_anchor_support: state_vector backend does not support density_matrix-only noise configuration"
+      }
+    }
+  ]
+}

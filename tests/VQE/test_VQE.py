@@ -463,7 +463,7 @@ class Test_VQE:
 
         assert np.isclose(legacy_energy, explicit_state_vector_energy, atol=1e-12)
 
-    @pytest.mark.parametrize("qbit_num", [4, 6])
+    @pytest.mark.parametrize("qbit_num", [4, 6, 8, 10])
     def test_density_matrix_backend_anchor_fixed_parameter_smoke(self, qbit_num):
         density_vqe, Hamiltonian = self._build_story2_density_vqe(qbit_num)
         VQE_cls = self._get_vqe_class()
@@ -486,6 +486,150 @@ class Test_VQE:
         assert np.isfinite(density_energy)
         assert np.isfinite(state_vector_energy)
         assert not np.isclose(density_energy, state_vector_energy, atol=1e-8)
+
+    def test_story4_workflow_bundle_schema(self):
+        pytest.importorskip("qiskit")
+        pytest.importorskip("qiskit_aer")
+
+        from benchmarks.density_matrix.story2_vqe_density_validation import (
+            build_story4_parameter_sets,
+            build_story4_workflow_bundle,
+            run_story4_workflow_case,
+        )
+
+        density_vqe, _ = self._build_story2_density_vqe(4)
+        parameter_set = build_story4_parameter_sets(
+            density_vqe.get_Parameter_Num(),
+            count=1,
+        )[0]
+        result = run_story4_workflow_case(
+            4,
+            parameter_set["parameter_set_id"],
+            parameter_set["parameter_vector"],
+        )
+        bundle = build_story4_workflow_bundle(
+            [result],
+            qubit_sizes=(4,),
+            parameter_set_count=1,
+        )
+
+        assert result["status"] == "pass"
+        assert result["workflow_completed"]
+        assert result["energy_pass"]
+        assert result["density_valid_pass"]
+        assert result["trace_pass"]
+        assert result["observable_pass"]
+        assert result["qbit_num"] == 4
+        assert bundle["status"] == "pass"
+        assert bundle["summary"]["total_cases"] == 1
+        assert bundle["summary"]["passed_cases"] == 1
+        assert bundle["summary"]["documented_10q_anchor_present"] is False
+        assert bundle["thresholds"]["absolute_energy_error"] == 1e-8
+
+    def test_story5_trace_artifact_schema(self):
+        pytest.importorskip("qiskit")
+        pytest.importorskip("qiskit_aer")
+
+        from benchmarks.density_matrix.story2_vqe_density_validation import (
+            run_optimization_trace,
+        )
+
+        artifact = run_optimization_trace()
+
+        assert artifact["status"] == "completed"
+        assert artifact["workflow_completed"] is True
+        assert artifact["trace_kind"] == "bounded_optimization_trace"
+        assert artifact["optimizer"] == "COSINE"
+        assert artifact["parameter_count"] == len(artifact["initial_parameters"])
+        assert artifact["total_trace_runtime_ms"] >= 0.0
+        assert artifact["process_peak_rss_kb"] > 0
+        assert artifact["energy_improvement"] == (
+            artifact["initial_energy"] - artifact["final_energy"]
+        )
+        assert artifact["optimizer_config"]["max_iterations"] == 1
+
+    def test_story5_bundle_manifest_schema(self, tmp_path):
+        pytest.importorskip("qiskit")
+        pytest.importorskip("qiskit_aer")
+
+        from benchmarks.density_matrix.story2_vqe_density_validation import (
+            STORY2_MICRO_BUNDLE_FILENAME,
+            STORY4_WORKFLOW_BUNDLE_FILENAME,
+            build_story5_bundle,
+        )
+
+        (tmp_path / STORY2_MICRO_BUNDLE_FILENAME).write_text("{}\n", encoding="utf-8")
+        (tmp_path / STORY4_WORKFLOW_BUNDLE_FILENAME).write_text(
+            "{}\n", encoding="utf-8"
+        )
+        (tmp_path / "story2_fixed_4q.json").write_text("{}\n", encoding="utf-8")
+        (tmp_path / "story2_fixed_6q.json").write_text("{}\n", encoding="utf-8")
+        (tmp_path / "story2_trace_4q.json").write_text("{}\n", encoding="utf-8")
+        (tmp_path / "story3_unsupported_state_vector_density_noise.json").write_text(
+            "{}\n", encoding="utf-8"
+        )
+
+        micro_bundle = {
+            "status": "pass",
+            "summary": {"total_cases": 7, "passed_cases": 7, "pass_rate": 1.0},
+        }
+        workflow_bundle = {
+            "status": "pass",
+            "summary": {
+                "total_cases": 40,
+                "passed_cases": 40,
+                "pass_rate": 1.0,
+                "documented_10q_anchor_present": True,
+            },
+        }
+        fixed_results = [
+            {
+                "status": "completed",
+                "qbit_num": 4,
+                "absolute_energy_error": 1e-12,
+            },
+            {
+                "status": "completed",
+                "qbit_num": 6,
+                "absolute_energy_error": 1e-12,
+            },
+        ]
+        trace_result = {
+            "status": "completed",
+            "optimizer": "COSINE",
+            "parameter_count": 18,
+            "workflow_completed": True,
+            "initial_energy": 1.0,
+            "final_energy": -1.0,
+        }
+        unsupported_result = {
+            "status": "unsupported",
+            "unsupported_category": "phase2_support_matrix",
+            "unsupported_reason": "example",
+        }
+
+        bundle = build_story5_bundle(
+            tmp_path,
+            fixed_results=fixed_results,
+            trace_result=trace_result,
+            unsupported_result=unsupported_result,
+            micro_bundle=micro_bundle,
+            workflow_bundle=workflow_bundle,
+        )
+
+        assert bundle["status"] == "pass"
+        assert bundle["summary"]["mandatory_artifact_count"] == 6
+        assert bundle["summary"]["present_artifact_count"] == 6
+        assert bundle["summary"]["status_match_count"] == 6
+        assert bundle["provenance"]["git_revision"]
+        assert {artifact["artifact_id"] for artifact in bundle["artifacts"]} == {
+            "story2_micro_validation_bundle",
+            "story4_workflow_bundle",
+            "story2_fixed_4q",
+            "story2_fixed_6q",
+            "story2_trace_4q",
+            "story3_unsupported_state_vector_density_noise",
+        }
 
     def test_density_matrix_backend_anchor_fixed_parameter_matches_aer_reference(self):
         density_vqe, Hamiltonian = self._build_story2_density_vqe(4)

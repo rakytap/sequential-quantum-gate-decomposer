@@ -22,18 +22,21 @@ methods are explicitly deferred to later phases in order to keep the scientific
 claim clear and defensible.
 
 The evaluation remains evidence-driven and publication-oriented from the start.
-Current implementation-backed evidence already includes exact agreement with
-Qiskit Aer on 4- and 6-qubit fixed-parameter XXZ anchor cases plus one bounded
-4-qubit optimization trace. Benchmarking continues to emphasize training-
-relevant circuits and realistic local noise models, including local
-depolarizing, phase damping, and amplitude damping, rather than relying mainly
-on whole-register toy noise. The remaining Phase 2 work is now the broader
-benchmark floor, 8/10-qubit evidence, runtime and peak-memory characterization,
-and the full reproducibility/provenance bundle.
+The current implementation-backed evidence now includes exact agreement with
+Qiskit Aer on the mandatory 1 to 3 qubit micro-validation matrix, the mandatory
+4/6/8/10-qubit workflow-scale exact-regime matrix with 10 fixed parameter
+vectors per required size, one bounded 4-qubit optimization trace, and explicit
+unsupported-case evidence. Benchmarking continues to emphasize training-relevant
+circuits and realistic local noise models, including local depolarizing, phase
+damping, and amplitude damping, rather than relying mainly on whole-register toy
+noise.
 
-Backend-explicit machine-readable artifacts now exist for the current completed
-and unsupported validation slice, but this still represents only the first
-reproducibility/provenance layer rather than the full final Phase 2 package.
+The complete integrated-backend evidence bundle is now archived in
+`benchmarks/density_matrix/artifacts/phase2_task2/`, with
+`story5_publication_bundle.json` as the top-level manifest. That bundle links
+the micro-validation results, workflow-scale exactness results, bounded
+optimization trace, and representative unsupported-case artifacts in one
+backend-explicit reproducibility package.
 
 The expected contribution of Phase 2 is a research-grade exact noisy backend for
 SQUANDER that enables reproducible noisy variational experiments and forms the
