@@ -51,6 +51,13 @@ Out of scope for this story:
   bundle should preserve for that artifact class:
   `expected_bridge_operations`, `source_pass`, `gate_pass`, `noise_pass`,
   `operation_match_pass`, and `execution_ready`.
+- Story 3 added a dedicated unsupported bridge suite,
+  `benchmarks/density_matrix/task3_story3_unsupported_bridge_validation.py`, and
+  the `task3_story3_unsupported_bridge_bundle.json` artifact bundle.
+- Story 3 also fixed the representative negative taxonomy and fields the final
+  bundle should preserve for unsupported bridge evidence:
+  `unsupported_category`, `first_unsupported_condition`,
+  `unsupported_reason`, and `error_match_pass`.
 - The frozen publication expectations remain `PUBLICATIONS.md`,
   `DETAILED_PLANNING_PHASE_2.md`, `TASK_3_MINI_SPEC.md`, and the Paper 1 claims
   bounded by `P2-ADR-011`, `P2-ADR-012`, and `P2-ADR-013`.
@@ -85,6 +92,9 @@ Out of scope for this story:
 - [ ] Treat `task3_story2_bridge_micro_validation_bundle.json` as the canonical
       local bridge-support artifact class rather than folding that evidence into
       a generic task-2-style micro bundle.
+- [ ] Treat `task3_story3_unsupported_bridge_bundle.json` as the canonical
+      bridge-negative artifact class rather than reconstructing unsupported
+      evidence indirectly from ad hoc workflow failures.
 - [ ] Create a stable manifest shape that records artifact identity, purpose,
       generation command, and status.
 - [ ] Distinguish mandatory bundle items from optional supporting artifacts.
@@ -129,6 +139,10 @@ Out of scope for this story:
       `source_pass`, `gate_pass`, `noise_pass`, `operation_match_pass`, and
       `execution_ready`) for the micro-validation artifact class rather than
       flattening them away in the final bundle.
+- [ ] Preserve the Story 3 unsupported fields (`unsupported_category`,
+      `first_unsupported_condition`, `unsupported_reason`, and
+      `error_match_pass`) for the negative artifact class rather than collapsing
+      them into a generic error blob.
 - [ ] Avoid introducing bundle fields that imply broader bridge support than the
       frozen contract.
 - [ ] Validate schema changes with one narrow compatibility check before
@@ -171,6 +185,9 @@ Out of scope for this story:
       available on the Story 2 micro-validation artifact class, because Story 2
       closed the local bridge gate by direct shape comparison rather than by
       summary-only evidence.
+- [ ] Keep the Story 3 representative unsupported bundle in its native negative
+      form rather than trying to infer unsupported provenance only from
+      supported-workflow bundle omissions.
 - [ ] Keep provenance capture consistent enough that a reviewer can trace from a
       workflow result back to the bridge output that produced it.
 - [ ] Avoid storing provenance only in prose notes or console logs.
@@ -204,12 +221,15 @@ Out of scope for this story:
 **Execution checklist**
 - [ ] Reuse the structured unsupported artifact pattern from Story 3 in the
       Story 5 bundle manifest.
-- [ ] Record unsupported category, first failing condition, backend, and source
-      context for each included negative artifact.
+- [ ] Record unsupported category, first failing condition, backend, source
+      context, and `error_match_pass` status for each included negative artifact.
 - [ ] Keep unsupported artifacts visibly unsupported rather than mixing them into
       supported pass summaries.
 - [ ] Make clear which unsupported artifacts are mandatory representatives versus
       optional extras.
+- [ ] Prefer linking the dedicated Story 3 unsupported bundle directly rather
+      than scattering individual unsupported JSONs unless a paper-facing summary
+      explicitly needs a per-case extract.
 
 **Evidence produced**
 - Story 5 manifest entries linking representative unsupported bridge artifacts.
@@ -249,6 +269,9 @@ Out of scope for this story:
 - [ ] Require the Story 2 bridge-local bundle fields and summary (`requirements`,
       local bridge pass rate, and per-case bridge-pass flags) on the mandatory
       local validation artifact class.
+- [ ] Require the Story 3 unsupported-bundle fields and summary
+      (`required_categories`, unsupported-case counts, and per-case
+      `error_match_pass`) on the mandatory negative artifact class.
 - [ ] Keep completeness output human-readable and machine-checkable.
 - [ ] Make missing mandatory provenance fields fail specifically rather than as
       generic parse errors.
@@ -398,6 +421,10 @@ Story 5 is complete only when all of the following are true:
 - `benchmarks/density_matrix/task3_story2_bridge_validation.py` is now the
   canonical local bridge-support artifact surface and should enter the final
   bundle as its own first-class artifact, not as an informal appendix.
+- `benchmarks/density_matrix/task3_story3_unsupported_bridge_validation.py` is
+  now the canonical bridge-negative artifact surface and should enter the final
+  bundle as its own first-class artifact, not as a loose set of incidental
+  workflow failures.
 - `PUBLICATIONS.md` makes reproducible benchmark definitions and configuration
   logging central to Paper 1 credibility, so Story 5 should prioritize audit
   clarity over feature breadth.
@@ -409,6 +436,10 @@ Story 5 is complete only when all of the following are true:
   should retain both expected and actual bridge sequences, while larger workflow
   artifacts may summarize bridge structure once the small-case gate has already
   closed.
+- Story 3 refined the negative side of that split: unsupported bridge evidence
+  should preserve explicit category and first-failure fields, not just free-form
+  exception text, because that taxonomy is now part of the reproducibility
+  contract.
 - Story 5 is about evidence integrity and publication readiness for the bridge
   contract, not about widening the supported backend surface or making new
   scientific claims.

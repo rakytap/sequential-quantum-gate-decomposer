@@ -485,6 +485,51 @@ class Test_VQE:
         ):
             vqe.Optimization_Problem(parameters)
 
+    def test_density_backend_rejects_custom_gate_structure_source(self):
+        from squander.gates.qgd_Circuit import qgd_Circuit
+
+        qbit_num = 2
+        topology = [(idx, idx + 1) for idx in range(qbit_num - 1)]
+        Hamiltonian = generate_hamiltonian(topology, qbit_num)
+        VQE_cls = self._get_vqe_class()
+        vqe = VQE_cls(
+            Hamiltonian,
+            qbit_num,
+            self._get_story2_config(),
+            backend="density_matrix",
+        )
+        custom_circuit = qgd_Circuit(qbit_num)
+        custom_circuit.add_H(0)
+        custom_circuit.add_CNOT(1, 0)
+        vqe.set_Gate_Structure(custom_circuit)
+
+        with pytest.raises(
+            Exception,
+            match="unsupported circuit source in density backend path: custom_gate_structure",
+        ):
+            vqe.describe_density_bridge()
+
+    def test_density_backend_rejects_unsupported_density_noise_channel(self):
+        qbit_num = 1
+        Hamiltonian = generate_hamiltonian([], qbit_num)
+        VQE_cls = self._get_vqe_class()
+
+        with pytest.raises(ValueError, match="Unsupported density-noise channel"):
+            VQE_cls(
+                Hamiltonian,
+                qbit_num,
+                self._get_story2_config(),
+                backend="density_matrix",
+                density_noise=[
+                    {
+                        "channel": "readout_noise",
+                        "target": 0,
+                        "after_gate_index": 0,
+                        "value": 0.1,
+                    }
+                ],
+            )
+
     def test_density_backend_rejects_gradient_entrypoint(self):
         vqe, _ = self._build_story2_density_vqe(4)
         parameters = np.linspace(
@@ -670,6 +715,34 @@ class Test_VQE:
         assert {case["qbit_num"] for case in bundle["cases"]} == {1, 2, 3}
         assert all(case["status"] == "pass" for case in bundle["cases"])
         assert all("bridge_operations" in case for case in bundle["cases"])
+
+    def test_task3_story3_unsupported_bridge_bundle_schema(self):
+        from benchmarks.density_matrix.task3_story3_unsupported_bridge_validation import (
+            UNSUPPORTED_CASE_BUILDERS,
+            build_artifact_bundle,
+            run_validation,
+        )
+
+        results = run_validation(verbose=False)
+        bundle = build_artifact_bundle(results)
+
+        assert bundle["status"] == "pass"
+        assert bundle["backend"] == "density_matrix"
+        assert bundle["summary"]["total_cases"] == len(UNSUPPORTED_CASE_BUILDERS)
+        assert bundle["summary"]["unsupported_cases"] == len(
+            UNSUPPORTED_CASE_BUILDERS
+        )
+        assert bundle["summary"]["error_match_count"] == len(
+            UNSUPPORTED_CASE_BUILDERS
+        )
+        assert {case["unsupported_category"] for case in bundle["cases"]} == {
+            "circuit_source",
+            "lowering_path",
+            "noise_insertion",
+            "noise_type",
+        }
+        assert all(case["status"] == "unsupported" for case in bundle["cases"])
+        assert all(case["error_match_pass"] for case in bundle["cases"])
 
     def test_story4_workflow_bundle_schema(self):
         pytest.importorskip("qiskit")

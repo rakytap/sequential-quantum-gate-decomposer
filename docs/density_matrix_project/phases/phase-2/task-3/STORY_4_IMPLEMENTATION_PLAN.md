@@ -47,6 +47,11 @@ Out of scope for this story:
   `task3_story2_bridge_micro_validation_bundle.json` bundle and per-case bridge
   gate fields such as `source_pass`, `gate_pass`, `noise_pass`,
   `operation_match_pass`, and `execution_ready`.
+- Story 3 now provides a dedicated bridge-local unsupported surface in
+  `benchmarks/density_matrix/task3_story3_unsupported_bridge_validation.py`
+  with the `task3_story3_unsupported_bridge_bundle.json` bundle and a fixed
+  representative taxonomy: `circuit_source`, `lowering_path`,
+  `noise_insertion`, and `noise_type`.
 - `validate_density_anchor_support()` already enforces several workflow-level
   bridge assumptions, including generated `HEA` source requirements and current
   optimizer boundaries for density traces.
@@ -200,6 +205,10 @@ Out of scope for this story:
       case.
 - [ ] Ensure unsupported outcomes from Story 3 remain visibly unsupported and
       are excluded from supported workflow completion rates.
+- [ ] Reuse the Story 3 unsupported taxonomy
+      (`circuit_source`, `lowering_path`, `noise_insertion`, `noise_type`) if a
+      workflow-scale case exits the supported surface, rather than inventing a
+      second workflow-only unsupported classification set.
 - [ ] Add focused checks that confirm the larger workflow cases do not rely on
       undocumented bridge exceptions.
 - [ ] Keep no-manual-rewrite and no-hidden-reroute behavior explicit in
@@ -278,6 +287,11 @@ Out of scope for this story:
 - [ ] Preserve compatibility with the Story 2 bridge bundle fields so the local
       bridge gate and workflow-scale bridge gate can be assembled together later
       without a bespoke schema translation layer.
+- [ ] Preserve compatibility with Story 3's unsupported fields
+      (`unsupported_category`, `first_unsupported_condition`,
+      `unsupported_reason`, `error_match_pass`) so supported and unsupported
+      workflow-scale outcomes can be compared or bundled together later without a
+      translation shim.
 - [ ] Distinguish completed, failed, degraded, and unsupported results clearly.
 - [ ] Use stable file naming and case naming so later docs and papers can cite
       the workflow bundle directly.
@@ -389,6 +403,10 @@ Story 4 is complete only when all of the following are true:
   authoritative local bridge gate. Story 4 should align its pass/fail vocabulary
   and artifact shape with that bundle where practical, while still keeping the
   workflow-scale outputs distinct.
+- `benchmarks/density_matrix/task3_story3_unsupported_bridge_validation.py` is
+  now the authoritative bridge-local unsupported surface. Story 4 should reuse
+  its unsupported taxonomy and representative negative expectations instead of
+  inventing a workflow-specific unsupported language.
 - Story 4 should reuse the Story 1 inspection vocabulary and the Story 3
   unsupported status vocabulary where helpful, but keep the workflow bundle
   clearly distinct from the Story 2 micro-validation bundle.
@@ -396,6 +414,10 @@ Story 4 is complete only when all of the following are true:
   constraints, including generated `HEA` source requirements and supported
   optimizer choices for density traces; Story 4 should build on that substrate
   rather than duplicate it.
+- Story 3 also showed that the existing validator and Python normalization paths
+  already provide the primary unsupported signals for bridge failures. Story 4
+  should treat unsupported workflow exits as classification/reporting work, not
+  as a reason to widen the native bridge implementation.
 - Story 2 also made the 1-qubit generated-`HEA` U3-only slice explicitly
   supported. That should remain a local validation fact only and should not
   widen the workflow anchor beyond the frozen 4/6/8/10 regime.
