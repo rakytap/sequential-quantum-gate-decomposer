@@ -471,6 +471,71 @@ class TestNoisyCircuitMixed:
         assert result["qbit_num"] == 2
         assert len(result["parameter_vector"]) == 6
 
+    def test_story2_mixed_required_noise_case_passes(self):
+        """Test the mandatory mixed required-noise Story 2 microcase."""
+        pytest.importorskip("qiskit")
+        pytest.importorskip("qiskit_aer")
+
+        from benchmarks.density_matrix.circuits import STORY2_MANDATORY_MICROCASES
+        from benchmarks.density_matrix.validate_squander_vs_qiskit import (
+            validate_story2_case,
+        )
+
+        case = next(
+            case
+            for case in STORY2_MANDATORY_MICROCASES
+            if case["case_name"] == "story2_3q_u3_cnot_mixed_local_noise"
+        )
+        result = validate_story2_case(case, verbose=False)
+
+        assert result["status"] == "pass"
+        assert result["energy_pass"]
+        assert result["density_valid_pass"]
+        assert result["trace_pass"]
+        assert result["observable_pass"]
+        assert result["required_gate_coverage_pass"]
+        assert result["required_noise_model_coverage_pass"]
+        assert result["noise_sequence_match_pass"]
+        assert result["mixed_sequence_order_pass"]
+        assert result["operation_audit_pass"]
+        assert result["noise_operation_sequence"] == [
+            "local_depolarizing",
+            "amplitude_damping",
+            "phase_damping",
+        ]
+        assert result["noise_operation_targets"] == [0, 1, 2]
+
+    def test_task4_story2_required_local_noise_bundle_schema(self):
+        """Test the Task 4 Story 2 exact micro-validation bundle schema."""
+        pytest.importorskip("qiskit")
+        pytest.importorskip("qiskit_aer")
+
+        from benchmarks.density_matrix.task4_story2_required_local_noise_micro_validation import (
+            REQUIRED_LOCAL_NOISE_MODELS,
+            build_artifact_bundle,
+            run_story2_validation,
+        )
+
+        results = run_story2_validation(verbose=False)
+        bundle = build_artifact_bundle(results)
+
+        assert bundle["status"] == "pass"
+        assert bundle["backend"] == "density_matrix"
+        assert bundle["summary"]["total_cases"] == 7
+        assert bundle["summary"]["passed_cases"] == 7
+        assert bundle["summary"]["pass_rate"] == 1.0
+        assert bundle["summary"]["exact_threshold_passed_cases"] == 7
+        assert bundle["summary"]["operation_audit_passed_cases"] == 7
+        assert bundle["summary"]["mixed_sequence_case_count"] == 1
+        assert bundle["summary"]["mixed_sequence_passed_cases"] == 1
+        assert set(bundle["requirements"]["required_local_noise_models"]) == set(
+            REQUIRED_LOCAL_NOISE_MODELS
+        )
+        assert set(bundle["summary"]["required_noise_models_covered"]) == set(
+            REQUIRED_LOCAL_NOISE_MODELS
+        )
+        assert all(case["task4_story2_case_pass"] for case in bundle["cases"])
+
     def test_all_gates(self):
         """Test all supported gate types."""
         circuit = NoisyCircuit(2)

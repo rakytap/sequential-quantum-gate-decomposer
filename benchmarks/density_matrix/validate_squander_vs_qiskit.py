@@ -48,6 +48,146 @@ ARTIFACT_CORE_FIELDS = (
 )
 
 
+def parse_story2_operation(operation: str):
+    """Return machine-readable metadata for one Story 2 builder operation."""
+    if operation.startswith("U3("):
+        payload = operation[len("U3(") : -1].split(",")
+        return {
+            "kind": "gate",
+            "name": "U3",
+            "target_qbit": int(payload[0]),
+            "control_qbit": None,
+            "value": None,
+            "raw_operation": operation,
+        }
+
+    if operation.startswith("CNOT("):
+        control, target = operation[len("CNOT(") : -1].split("->")
+        return {
+            "kind": "gate",
+            "name": "CNOT",
+            "target_qbit": int(target),
+            "control_qbit": int(control),
+            "value": None,
+            "raw_operation": operation,
+        }
+
+    if operation.startswith("LocalDepol("):
+        target, value = operation[len("LocalDepol(") : -1].split(",")
+        return {
+            "kind": "noise",
+            "name": "local_depolarizing",
+            "target_qbit": int(target),
+            "control_qbit": None,
+            "value": float(value),
+            "raw_operation": operation,
+        }
+
+    if operation.startswith("AD("):
+        target, value = operation[len("AD(") : -1].split(",")
+        return {
+            "kind": "noise",
+            "name": "amplitude_damping",
+            "target_qbit": int(target),
+            "control_qbit": None,
+            "value": float(value),
+            "raw_operation": operation,
+        }
+
+    if operation.startswith("PD("):
+        target, value = operation[len("PD(") : -1].split(",")
+        return {
+            "kind": "noise",
+            "name": "phase_damping",
+            "target_qbit": int(target),
+            "control_qbit": None,
+            "value": float(value),
+            "raw_operation": operation,
+        }
+
+    if operation.startswith("Depol("):
+        value = operation[len("Depol(") : -1]
+        return {
+            "kind": "noise",
+            "name": "depolarizing",
+            "target_qbit": None,
+            "control_qbit": None,
+            "value": float(value),
+            "raw_operation": operation,
+        }
+
+    for gate_name in ("H", "X", "Y", "Z", "S", "T", "Sdg", "Tdg", "SX"):
+        prefix = f"{gate_name}("
+        if operation.startswith(prefix):
+            target = operation[len(prefix) : -1]
+            return {
+                "kind": "gate",
+                "name": gate_name,
+                "target_qbit": int(target),
+                "control_qbit": None,
+                "value": None,
+                "raw_operation": operation,
+            }
+
+    if operation.startswith("CZ("):
+        control, target = operation[len("CZ(") : -1].split(",")
+        return {
+            "kind": "gate",
+            "name": "CZ",
+            "target_qbit": int(target),
+            "control_qbit": int(control),
+            "value": None,
+            "raw_operation": operation,
+        }
+
+    raise ValueError(f"Unsupported Story 2 operation format: {operation}")
+
+
+def build_story2_operation_audit(case, operations):
+    """Summarize required gate/noise coverage and mixed-sequence order."""
+    operation_metadata = [parse_story2_operation(operation) for operation in operations]
+    gate_operations = [
+        operation for operation in operation_metadata if operation["kind"] == "gate"
+    ]
+    noise_operations = [
+        operation for operation in operation_metadata if operation["kind"] == "noise"
+    ]
+    gate_sequence = [operation["name"] for operation in gate_operations]
+    noise_sequence = [operation["name"] for operation in noise_operations]
+    noise_targets = [operation["target_qbit"] for operation in noise_operations]
+    noise_values = [operation["value"] for operation in noise_operations]
+
+    required_gate_coverage_pass = set(case["required_gate_family"]).issubset(
+        set(gate_sequence)
+    )
+    required_noise_model_coverage_pass = set(case["required_noise_models"]).issubset(
+        set(noise_sequence)
+    )
+    noise_sequence_match_pass = noise_sequence == case["required_noise_models"]
+    mixed_sequence_order_pass = (
+        noise_sequence_match_pass if case["case_kind"] == "mixed_sequence" else None
+    )
+    operation_audit_pass = (
+        required_gate_coverage_pass
+        and required_noise_model_coverage_pass
+        and noise_sequence_match_pass
+    )
+
+    return {
+        "operation_metadata": operation_metadata,
+        "operation_count": len(operation_metadata),
+        "gate_operation_sequence": gate_sequence,
+        "noise_operation_sequence": noise_sequence,
+        "noise_operation_targets": noise_targets,
+        "noise_operation_values": noise_values,
+        "required_gate_coverage_pass": required_gate_coverage_pass,
+        "required_noise_model_coverage_pass": required_noise_model_coverage_pass,
+        "noise_sequence_match_pass": noise_sequence_match_pass,
+        "mixed_sequence_order_pass": mixed_sequence_order_pass,
+        "operation_audit_pass": operation_audit_pass,
+    }
+
+
 def trace_distance(rho1: np.ndarray, rho2: np.ndarray) -> float:
     """Compute trace distance: D(ρ,σ) = (1/2)||ρ - σ||_1."""
     diff = rho1 - rho2
@@ -100,6 +240,8 @@ def validate_story2_case(case, verbose=True):
     builder = case["builder_fn"]()
     squander_rho = builder.run_squander()
     qiskit_rho = builder.run_qiskit()
+    operations = list(builder.ops)
+    operation_audit = build_story2_operation_audit(case, operations)
 
     squander_arr = np.asarray(squander_rho.to_numpy())
     qiskit_arr = np.asarray(qiskit_rho)
@@ -132,14 +274,20 @@ def validate_story2_case(case, verbose=True):
     state_comparison_status = (
         "pass" if fidelity > 0.99999 else ("warn" if fidelity > 0.999 else "fail")
     )
-    case_pass = energy_pass and density_valid_pass and trace_pass and observable_pass
+    case_pass = (
+        energy_pass
+        and density_valid_pass
+        and trace_pass
+        and observable_pass
+        and operation_audit["operation_audit_pass"]
+    )
 
     result = _story2_case_base(case)
     result.update(
         {
             "status": "pass" if case_pass else "fail",
             "parameter_vector": builder.get_parameter_vector().tolist(),
-            "operations": list(builder.ops),
+            "operations": operations,
             "state_fidelity": fidelity,
             "trace_distance": state_distance,
             "max_diff": max_diff,
@@ -160,6 +308,7 @@ def validate_story2_case(case, verbose=True):
             "density_valid_pass": density_valid_pass,
             "trace_pass": trace_pass,
             "observable_pass": observable_pass,
+            **operation_audit,
         }
     )
 
@@ -209,21 +358,23 @@ def capture_story2_case(case, verbose=True):
         return result
 
 
-def run_validation():
+def run_validation(verbose=True):
     """Run the mandatory Story 2 micro-validation matrix."""
-    print("=" * 78)
-    print(
-        "  Story 2 Micro-Validation [{} vs {}]".format(
-            PRIMARY_BACKEND, REFERENCE_BACKEND
+    if verbose:
+        print("=" * 78)
+        print(
+            "  Story 2 Micro-Validation [{} vs {}]".format(
+                PRIMARY_BACKEND, REFERENCE_BACKEND
+            )
         )
-    )
-    print("=" * 78)
+        print("=" * 78)
 
     results = []
     for qbit_num in sorted(STORY2_MANDATORY_MICROCASES_BY_QUBITS.keys()):
-        print(f"\n--- {qbit_num}-QUBIT MANDATORY MICROCASES ---", flush=True)
+        if verbose:
+            print(f"\n--- {qbit_num}-QUBIT MANDATORY MICROCASES ---", flush=True)
         for case in STORY2_MANDATORY_MICROCASES_BY_QUBITS[qbit_num]:
-            results.append(capture_story2_case(case))
+            results.append(capture_story2_case(case, verbose=verbose))
     return results
 
 

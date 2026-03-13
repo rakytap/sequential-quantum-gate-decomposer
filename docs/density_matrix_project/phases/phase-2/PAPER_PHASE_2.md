@@ -40,8 +40,8 @@ SQUANDER already provides a strong foundation for this work. It offers:
 - a mature state-vector-oriented variational and decomposition framework,
 - high-performance state-vector execution with partitioning and fusion support,
 - and a recently introduced standalone density-matrix module based on exact
-  mixed-state representation, a unified noisy-circuit execution layer, and
-  explicit noise channels.
+mixed-state representation, a unified noisy-circuit execution layer, and
+explicit noise channels.
 
 The density-matrix module is already useful in isolation, and the current
 implementation now closes the core integration slice needed for exact noisy
@@ -75,10 +75,10 @@ The paper proposes the following Phase 2 contribution:
 - a selectable density-matrix backend path for SQUANDER's variational workflow,
 - a validated exact observable-evaluation contract based on `Tr(H*rho)`,
 - a documented bridge from current circuit and gate representations into the
-  density-matrix execution path,
+density-matrix execution path,
 - a workload-driven Phase 2 support surface for realistic local noise,
 - and a benchmark and validation package strong enough to support a major paper
-  rather than only an internal engineering milestone.
+rather than only an internal engineering milestone.
 
 Implementation-backed status for the completed integrated-backend slice:
 
@@ -87,16 +87,16 @@ Implementation-backed status for the completed integrated-backend slice:
   - a generated hardware-efficient-ansatz bridge into the density path,
   - fixed ordered local noise insertion,
   - exact real-valued Hermitian energy evaluation through the sparse-Hamiltonian
-    interface,
+  interface,
   - a mandatory 1 to 3 qubit micro-validation matrix,
   - a mandatory 4/6/8/10-qubit workflow-scale exact-regime benchmark matrix with
-    10 fixed parameter vectors per required size,
+  10 fixed parameter vectors per required size,
   - one bounded 4-qubit optimization trace,
   - structured unsupported-case outcomes,
   - runtime and peak-memory characterization for workflow-scale cases,
   - and a backend-explicit reproducibility package archived in
-    `benchmarks/density_matrix/artifacts/phase2_task2/` with
-    `story5_publication_bundle.json` as the top-level manifest.
+  `benchmarks/density_matrix/artifacts/phase2_task2/` with
+  `story5_publication_bundle.json` as the top-level manifest.
 
 ### 1.2 Why This Contribution Matters
 
@@ -110,7 +110,7 @@ workflow.
 Second, it is scientifically valuable on its own. Many projects possess either:
 
 - a density-matrix simulator disconnected from broader workflow infrastructure,
-  or
+or
 - a training framework that remains effectively state-vector-first.
 
 Bridging that gap in a well-validated and workflow-oriented way is a meaningful
@@ -211,12 +211,12 @@ validation package. What remains outside the implemented scope is therefore a
 matter of deliberate scientific boundary-setting rather than missing foundation:
 
 - broader circuit-source support beyond the generated hardware-efficient-ansatz
-  path,
+path,
 - broader observable support beyond exact Hermitian energy evaluation,
 - later-phase density-aware acceleration, fusion, and partitioning methods,
 - later-phase optimizer and trainability studies,
 - and broader multi-framework comparison beyond the mandatory Aer-centered
-  evidence package.
+evidence package.
 
 ### 3.3 Why This Gap Matters
 
@@ -406,13 +406,13 @@ quality evidence.
 The main publication claims should be:
 
 - SQUANDER now supports a validated exact noisy backend path for variational
-  workflows.
+workflows.
 - That backend supports exact mixed-state observable evaluation through
-  `Tr(H*rho)`.
+`Tr(H*rho)`.
 - The support surface is explicitly documented and tied to realistic local-noise
-  use cases.
+use cases.
 - The resulting workflow is reproducible and sufficient to support the next
-  phases of noisy optimizer and trainability research.
+phases of noisy optimizer and trainability research.
 
 The paper may include runtime and memory characterization, but those results
 should support the usability claim, not replace it.
@@ -490,27 +490,28 @@ performance and trainability phases of the PhD.
 Suggested core references for the full-paper version:
 
 1. Peter Rakyta and Zoltan Zimboras, *Approaching the theoretical limit in
-   quantum gate decomposition*, `Quantum 6, 710 (2022)`.
+  quantum gate decomposition*, `Quantum 6, 710 (2022)`.
 2. Peter Rakyta et al., *Highly optimized quantum circuits synthesized via
-   data-flow engines*, `Journal of Computational Physics 500, 112756 (2024)`.
+  data-flow engines*, `Journal of Computational Physics 500, 112756 (2024)`.
 3. Joseph Clark, Travis S. Humble, and Himanshu Thapliyal, *TDAG: Tree-based
-   Directed Acyclic Graph Partitioning for Quantum Circuits*, ACM GLSVLSI 2023.
+  Directed Acyclic Graph Partitioning for Quantum Circuits*, ACM GLSVLSI 2023.
 4. Xin-Chuan Wu, Marc Grau Davis, Frederic T. Chong, and Costin Iancu, *QGo:
-   Scalable Quantum Circuit Optimization Using Automated Synthesis*,
+  Scalable Quantum Circuit Optimization Using Automated Synthesis*,
    `arXiv:2012.09835`.
 5. Ang Li, Omer Subasi, Xiu Yang, and Sriram Krishnamoorthy, *Density Matrix
-   Quantum Circuit Simulation via the BSP Machine on Modern GPU Clusters*, SC20.
+  Quantum Circuit Simulation via the BSP Machine on Modern GPU Clusters*, SC20.
 6. J. R. Johansson, P. D. Nation, and Franco Nori, *QuTiP: An open-source
-   Python framework for the dynamics of open quantum systems*, Computer Physics
+  Python framework for the dynamics of open quantum systems*, Computer Physics
    Communications 2012.
 7. Tyson Jones, Anna Brown, Ian Bush, and Simon C. Benjamin, *QuEST and High
-   Performance Simulation of Quantum Computers*, Scientific Reports 2019.
+  Performance Simulation of Quantum Computers*, Scientific Reports 2019.
 8. Yasunari Suzuki et al., *Qulacs: a fast and versatile quantum circuit
-   simulator for research purpose*, `Quantum 5, 559 (2021)`.
+  simulator for research purpose*, `Quantum 5, 559 (2021)`.
 9. M. Cerezo et al., *Cost Function Dependent Barren Plateaus in Shallow
-   Parametrized Quantum Circuits*, Nature Communications 2021.
+  Parametrized Quantum Circuits*, Nature Communications 2021.
 10. Giacomo De Palma, Milad Marvian, Cambyse Rouze, and Daniel Stilck Franca,
-    *Limitations of Variational Quantum Algorithms: A Quantum Optimal Transport
+  *Limitations of Variational Quantum Algorithms: A Quantum Optimal Transport
     Approach*, PRX Quantum 2023.
 11. Jakab Nadori et al., *Batched Line Search Strategy for Navigating through
-    Barren Plateaus in Quantum Circuit Training*, `Quantum 9, 1841 (2025)`.
+  Barren Plateaus in Quantum Circuit Training*, `Quantum 9, 1841 (2025)`.
+
