@@ -42,12 +42,20 @@ Out of scope for this story:
   artifacts: `bridge_source_type`, `bridge_parameter_count`,
   `bridge_operation_count`, `bridge_gate_count`, `bridge_noise_count`, and
   `bridge_operations`.
+- Story 2 now provides a dedicated local bridge-validation surface in
+  `benchmarks/density_matrix/task3_story2_bridge_validation.py` with a stable
+  `task3_story2_bridge_micro_validation_bundle.json` bundle and per-case bridge
+  gate fields such as `source_pass`, `gate_pass`, `noise_pass`,
+  `operation_match_pass`, and `execution_ready`.
 - `validate_density_anchor_support()` already enforces several workflow-level
   bridge assumptions, including generated `HEA` source requirements and current
   optimizer boundaries for density traces.
 - Current implementation-backed constraint from Story 1: any workflow helper that
   depends on `get_Qiskit_Circuit()` should first freeze a deterministic
   optimized parameter vector on the VQE instance.
+- Current implementation-backed clarification from Story 2: generated `HEA`
+  support now includes the 1-qubit U3-only bridge slice, but Story 4 remains
+  anchored strictly on the 4/6/8/10 qubit workflow regime.
 - The frozen workload-anchor decisions remain `P2-ADR-013`,
   `DETAILED_PLANNING_PHASE_2.md`, and `TASK_3_MINI_SPEC.md`.
 - Story 4 should close workflow-scale bridge usability without broadening the
@@ -151,6 +159,9 @@ Out of scope for this story:
       `bridge_parameter_count`, `bridge_operation_count`, `bridge_gate_count`,
       `bridge_noise_count`, and `bridge_operations` as the canonical starting
       schema for supported workflow artifacts.
+- [ ] Reuse Story 2's bridge-pass vocabulary (`source_pass`, `gate_pass`,
+      `noise_pass`, `execution_ready`) where that improves consistency between
+      the local bridge gate and the workflow-scale bridge gate.
 - [ ] Record source type, ansatz, operation counts, and ordered bridge metadata
       or summaries for mandatory workflow cases in that same vocabulary.
 - [ ] Keep the workflow bridge summary compact enough for large cases while still
@@ -264,6 +275,9 @@ Out of scope for this story:
       bridge outputs.
 - [ ] Keep bundle structure compatible with the current workflow-level artifact
       surface while extending it to the mandatory 4/6/8/10 bridge regime.
+- [ ] Preserve compatibility with the Story 2 bridge bundle fields so the local
+      bridge gate and workflow-scale bridge gate can be assembled together later
+      without a bespoke schema translation layer.
 - [ ] Distinguish completed, failed, degraded, and unsupported results clearly.
 - [ ] Use stable file naming and case naming so later docs and papers can cite
       the workflow bundle directly.
@@ -371,6 +385,10 @@ Story 4 is complete only when all of the following are true:
 - The current `run_fixed_parameter_case()` / `build_story1_bridge_metadata()`
   surface already defines the canonical supported-bridge fields. Story 4 should
   extend that schema rather than create a second workflow-only bridge format.
+- `benchmarks/density_matrix/task3_story2_bridge_validation.py` is now the
+  authoritative local bridge gate. Story 4 should align its pass/fail vocabulary
+  and artifact shape with that bundle where practical, while still keeping the
+  workflow-scale outputs distinct.
 - Story 4 should reuse the Story 1 inspection vocabulary and the Story 3
   unsupported status vocabulary where helpful, but keep the workflow bundle
   clearly distinct from the Story 2 micro-validation bundle.
@@ -378,6 +396,9 @@ Story 4 is complete only when all of the following are true:
   constraints, including generated `HEA` source requirements and supported
   optimizer choices for density traces; Story 4 should build on that substrate
   rather than duplicate it.
+- Story 2 also made the 1-qubit generated-`HEA` U3-only slice explicitly
+  supported. That should remain a local validation fact only and should not
+  widen the workflow anchor beyond the frozen 4/6/8/10 regime.
 - Story 1 also surfaced a practical harness rule: freeze deterministic optimized
   parameters before any workflow helper depends on `get_Qiskit_Circuit()` for
   comparison or artifact generation.

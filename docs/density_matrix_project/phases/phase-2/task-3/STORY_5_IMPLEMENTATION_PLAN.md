@@ -44,6 +44,13 @@ Out of scope for this story:
   fixed-parameter artifacts:
   `bridge_source_type`, `bridge_parameter_count`, `bridge_operation_count`,
   `bridge_gate_count`, `bridge_noise_count`, and `bridge_operations`.
+- Story 2 added a dedicated bridge-local validation suite,
+  `benchmarks/density_matrix/task3_story2_bridge_validation.py`, and the
+  `task3_story2_bridge_micro_validation_bundle.json` artifact bundle.
+- Story 2 also introduced canonical local bridge-gate fields that the final
+  bundle should preserve for that artifact class:
+  `expected_bridge_operations`, `source_pass`, `gate_pass`, `noise_pass`,
+  `operation_match_pass`, and `execution_ready`.
 - The frozen publication expectations remain `PUBLICATIONS.md`,
   `DETAILED_PLANNING_PHASE_2.md`, `TASK_3_MINI_SPEC.md`, and the Paper 1 claims
   bounded by `P2-ADR-011`, `P2-ADR-012`, and `P2-ADR-013`.
@@ -75,6 +82,9 @@ Out of scope for this story:
 - [ ] Treat the existing Story 1 fixed-parameter artifacts as the canonical
       supported positive bridge artifact class rather than inventing a second
       “bridge positive” format.
+- [ ] Treat `task3_story2_bridge_micro_validation_bundle.json` as the canonical
+      local bridge-support artifact class rather than folding that evidence into
+      a generic task-2-style micro bundle.
 - [ ] Create a stable manifest shape that records artifact identity, purpose,
       generation command, and status.
 - [ ] Distinguish mandatory bundle items from optional supporting artifacts.
@@ -115,6 +125,10 @@ Out of scope for this story:
       `bridge_operations`) as the canonical base schema across supported fixed-
       parameter, micro, workflow, and optimization-trace artifacts where
       possible.
+- [ ] Preserve the Story 2 local-gate fields (`expected_bridge_operations`,
+      `source_pass`, `gate_pass`, `noise_pass`, `operation_match_pass`, and
+      `execution_ready`) for the micro-validation artifact class rather than
+      flattening them away in the final bundle.
 - [ ] Avoid introducing bundle fields that imply broader bridge support than the
       frozen contract.
 - [ ] Validate schema changes with one narrow compatibility check before
@@ -153,6 +167,10 @@ Out of scope for this story:
 - [ ] Keep raw `bridge_operations` mandatory for the small Story 1 fixed-
       parameter artifacts; allow summarized bridge metadata only where workflow
       scale makes the raw form impractical.
+- [ ] Keep both `expected_bridge_operations` and actual `bridge_operations`
+      available on the Story 2 micro-validation artifact class, because Story 2
+      closed the local bridge gate by direct shape comparison rather than by
+      summary-only evidence.
 - [ ] Keep provenance capture consistent enough that a reviewer can trace from a
       workflow result back to the bridge output that produced it.
 - [ ] Avoid storing provenance only in prose notes or console logs.
@@ -228,6 +246,9 @@ Out of scope for this story:
 - [ ] Require the canonical Story 1 bridge fields on mandatory supported
       positive artifacts and the corresponding summary fields on larger derived
       artifacts.
+- [ ] Require the Story 2 bridge-local bundle fields and summary (`requirements`,
+      local bridge pass rate, and per-case bridge-pass flags) on the mandatory
+      local validation artifact class.
 - [ ] Keep completeness output human-readable and machine-checkable.
 - [ ] Make missing mandatory provenance fields fail specifically rather than as
       generic parse errors.
@@ -374,6 +395,9 @@ Story 5 is complete only when all of the following are true:
 - Story 5 should reuse artifact vocabulary from Stories 1 to 4, with the
   Story 1 fixed-parameter bridge fields and `build_story1_bridge_metadata()` as
   the canonical starting point for supported-bridge provenance.
+- `benchmarks/density_matrix/task3_story2_bridge_validation.py` is now the
+  canonical local bridge-support artifact surface and should enter the final
+  bundle as its own first-class artifact, not as an informal appendix.
 - `PUBLICATIONS.md` makes reproducible benchmark definitions and configuration
   logging central to Paper 1 credibility, so Story 5 should prioritize audit
   clarity over feature breadth.
@@ -381,6 +405,10 @@ Story 5 is complete only when all of the following are true:
   small fixed-parameter artifacts can retain full `bridge_operations`, while
   larger workflow artifacts may need summarized bridge metadata so long as the
   linkage remains auditable.
+- Story 2 refined that split further: local bridge micro-validation artifacts
+  should retain both expected and actual bridge sequences, while larger workflow
+  artifacts may summarize bridge structure once the small-case gate has already
+  closed.
 - Story 5 is about evidence integrity and publication readiness for the bridge
   contract, not about widening the supported backend surface or making new
   scientific claims.

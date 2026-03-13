@@ -37,7 +37,9 @@ Out of scope for this story:
   VQE path and now exposes stable bridge metadata through
   `describe_density_bridge()` plus the Story 1 `bridge_*` artifact vocabulary.
 - Story 2 is already in place: the mandatory supported bridge surface is defined
-  and locally validated.
+  and locally validated through the dedicated
+  `benchmarks/density_matrix/task3_story2_bridge_validation.py` suite and the
+  `task3_story2_bridge_micro_validation_bundle.json` artifact bundle.
 - The current implementation already contains several relevant unsupported-case
   hooks in `validate_density_anchor_support()`,
   `lower_anchor_circuit_to_noisy_circuit()`, and
@@ -45,6 +47,13 @@ Out of scope for this story:
 - `benchmarks/density_matrix/story2_vqe_density_validation.py` already emits at
   least one structured unsupported artifact and therefore provides the natural
   pattern for Story 3 negative evidence.
+- Story 2 introduced canonical per-case bridge-validation fields that Story 3
+  should preserve where possible: `source_pass`, `gate_pass`, `noise_pass`,
+  `operation_match_pass`, `execution_ready`, `bridge_operations`, and stable
+  case identity.
+- Current implementation-backed clarification from Story 2: generated `HEA`
+  support now includes the 1-qubit U3-only bridge slice, so Story 3 must not
+  regress that path by classifying it as unsupported.
 - Current implementation-backed constraint from Story 1: unsupported bridge
   classification should prefer validator-driven failures before any
   parameter-sensitive `get_Qiskit_Circuit()` export path is needed.
@@ -103,6 +112,8 @@ Out of scope for this story:
 - Unsupported circuit sources fail explicitly before bridge execution.
 - The guaranteed source remains the generated default `HEA` circuit, with any
   optional extension cases kept clearly outside the mandatory support claim.
+- The supported 1-qubit generated-`HEA` U3-only path remains on the supported
+  side of the bridge boundary.
 - Unsupported source failures are specific enough to tell the caller why the
   bridge request is out of scope.
 
@@ -112,6 +123,8 @@ Out of scope for this story:
       paths where relevant.
 - [ ] Preserve the distinction between guaranteed generated-`HEA` behavior and
       any optional future extension boundary.
+- [ ] Confirm the validator still accepts the newly supported 1-qubit
+      generated-`HEA` U3-only path introduced during Story 2 implementation.
 - [ ] Add focused negative tests that assert unsupported source failures occur
       before lowering begins.
 
@@ -243,6 +256,10 @@ Out of scope for this story:
   provenance bundles.
 
 **Execution checklist**
+- [ ] Decide whether bridge-local unsupported evidence should extend the
+      dedicated `task3_story2_bridge_validation.py` surface, the broader
+      `story2_vqe_density_validation.py` workflow surface, or both, and keep the
+      distinction explicit.
 - [ ] Extend the unsupported artifact pattern in
       `benchmarks/density_matrix/story2_vqe_density_validation.py` for bridge
       boundary cases.
@@ -250,7 +267,8 @@ Out of scope for this story:
       source type, backend, and case identity.
 - [ ] Keep the negative artifact vocabulary compatible with the Story 1
       supported fields where that makes comparison easier, especially
-      `bridge_source_type` and stable case identity fields.
+      `bridge_source_type`, stable case identity fields, and Story 2's
+      supported/failed bridge-pass vocabulary where meaningful.
 - [ ] Keep unsupported bridge outcomes explicit rather than disappearing into
       generic script failures or silent skips.
 
@@ -289,8 +307,9 @@ Out of scope for this story:
 - [ ] Keep validation outputs and test expectations aligned with the same
       taxonomy rather than ad hoc strings.
 - [ ] Reuse the Story 1 bridge metadata vocabulary in test helpers and artifacts
-      so supported and unsupported evidence can be compared without a schema
-      translation step.
+      plus the Story 2 per-case bridge-validation fields where that helps
+      supported and unsupported evidence compare without a schema translation
+      step.
 - [ ] Avoid implying broader source or gate support in the developer-facing
       notes.
 
@@ -363,10 +382,17 @@ Story 3 is complete only when all of the following are true:
 - Story 1 already proved that supported bridge cases can be described through a
   stable VQE-side metadata surface. Story 3 should extend the same vocabulary to
   negative artifacts rather than inventing a separate unsupported-only schema.
+- Story 2 added a dedicated bridge-local validation surface and bundle. Story 3
+  should decide explicitly whether negative bridge evidence belongs beside that
+  local bundle, the workflow-level bundle, or both, instead of drifting between
+  the two without a contract.
 - `benchmarks/density_matrix/story2_vqe_density_validation.py` already emits
   structured unsupported artifacts for at least one density-backend mismatch
   case. Story 3 should extend that pattern where it adds Task 3 negative
   evidence.
+- Story 2 also widened the guaranteed generated-`HEA` surface to include the
+  1-qubit U3-only case. Story 3 should treat that as a regression guard for
+  supported-source validation.
 - Story 1 also showed that parameter-sensitive export paths are a poor primary
   mechanism for unsupported classification. Story 3 should prefer validator- and
   lowering-path failures that happen before Qiskit export is needed.

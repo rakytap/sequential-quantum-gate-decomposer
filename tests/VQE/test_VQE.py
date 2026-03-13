@@ -619,6 +619,58 @@ class Test_VQE:
             for op in artifact["bridge_operations"]
         )
 
+    def test_task3_story2_mixed_bridge_case_passes(self):
+        pytest.importorskip("qiskit")
+        pytest.importorskip("qiskit_aer")
+
+        from benchmarks.density_matrix.task3_story2_bridge_validation import (
+            MANDATORY_BRIDGE_MICROCASES,
+            validate_bridge_microcase,
+        )
+
+        case = next(
+            case
+            for case in MANDATORY_BRIDGE_MICROCASES
+            if case["case_name"] == "task3_story2_3q_mixed_local_noise_sequence"
+        )
+        result = validate_bridge_microcase(case, verbose=False)
+
+        assert result["status"] == "pass"
+        assert result["source_pass"]
+        assert result["gate_pass"]
+        assert result["noise_pass"]
+        assert result["operation_match_pass"]
+        assert result["execution_ready"]
+        assert result["bridge_source_type"] == "generated_hea"
+        assert result["bridge_noise_count"] == 3
+        assert any(
+            op["name"] == "CNOT" and op["operation_class"] == "GateOperation"
+            for op in result["bridge_operations"]
+        )
+
+    def test_task3_story2_bridge_bundle_schema(self):
+        pytest.importorskip("qiskit")
+        pytest.importorskip("qiskit_aer")
+
+        from benchmarks.density_matrix.task3_story2_bridge_validation import (
+            MANDATORY_BRIDGE_MICROCASES,
+            build_artifact_bundle,
+            run_validation,
+        )
+
+        results = run_validation(verbose=False)
+        bundle = build_artifact_bundle(results)
+
+        assert bundle["status"] == "pass"
+        assert bundle["backend"] == "density_matrix"
+        assert bundle["requirements"]["source_type"] == "generated_hea"
+        assert bundle["summary"]["total_cases"] == len(MANDATORY_BRIDGE_MICROCASES)
+        assert bundle["summary"]["passed_cases"] == len(MANDATORY_BRIDGE_MICROCASES)
+        assert bundle["summary"]["pass_rate"] == 1.0
+        assert {case["qbit_num"] for case in bundle["cases"]} == {1, 2, 3}
+        assert all(case["status"] == "pass" for case in bundle["cases"])
+        assert all("bridge_operations" in case for case in bundle["cases"])
+
     def test_story4_workflow_bundle_schema(self):
         pytest.importorskip("qiskit")
         pytest.importorskip("qiskit_aer")

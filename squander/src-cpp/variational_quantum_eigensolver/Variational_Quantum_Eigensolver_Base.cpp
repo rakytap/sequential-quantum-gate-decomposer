@@ -1333,9 +1333,20 @@ void Variational_Quantum_Eigensolver_Base::generate_circuit( int layers, int inn
 
             release_gates();
 
-            if ( qbit_num < 2 ) {
-                std::string error("Variational_Quantum_Eigensolver_Base::generate_initial_circuit: number of qubits should be at least 2");
+            if ( qbit_num < 1 ) {
+                std::string error("Variational_Quantum_Eigensolver_Base::generate_initial_circuit: number of qubits should be at least 1");
                 throw error;
+            }
+
+            if ( qbit_num == 1 ) {
+                for (int layer_idx=0; layer_idx<layers ;layer_idx++){
+                    for( int idx=0; idx<inner_blocks; idx++) {
+                        add_u3(0);
+                    }
+                }
+
+                circuit_source = VQE_CIRCUIT_SOURCE_GENERATED_HEA;
+                return;
             }
 
             for (int layer_idx=0; layer_idx<layers ;layer_idx++){
