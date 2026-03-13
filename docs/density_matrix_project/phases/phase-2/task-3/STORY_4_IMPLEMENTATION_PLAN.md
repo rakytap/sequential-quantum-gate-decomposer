@@ -52,6 +52,9 @@ Out of scope for this story:
   with the `task3_story3_unsupported_bridge_bundle.json` bundle and a fixed
   representative taxonomy: `circuit_source`, `lowering_path`,
   `noise_insertion`, and `noise_type`.
+- Story 3 also established that this representative negative evidence can be
+  closed through the current validator plus Python/test/validation surfaces
+  without requiring new native bridge machinery.
 - `validate_density_anchor_support()` already enforces several workflow-level
   bridge assumptions, including generated `HEA` source requirements and current
   optimizer boundaries for density traces.

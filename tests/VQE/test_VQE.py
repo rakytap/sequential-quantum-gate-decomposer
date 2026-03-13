@@ -744,13 +744,12 @@ class Test_VQE:
         assert all(case["status"] == "unsupported" for case in bundle["cases"])
         assert all(case["error_match_pass"] for case in bundle["cases"])
 
-    def test_story4_workflow_bundle_schema(self):
+    def test_story4_workflow_case_includes_bridge_metadata(self):
         pytest.importorskip("qiskit")
         pytest.importorskip("qiskit_aer")
 
         from benchmarks.density_matrix.story2_vqe_density_validation import (
             build_story4_parameter_sets,
-            build_story4_workflow_bundle,
             run_story4_workflow_case,
         )
 
@@ -764,10 +763,51 @@ class Test_VQE:
             parameter_set["parameter_set_id"],
             parameter_set["parameter_vector"],
         )
+
+        assert result["status"] == "pass"
+        assert result["bridge_source_type"] == "generated_hea"
+        assert result["source_pass"]
+        assert result["gate_pass"]
+        assert result["noise_pass"]
+        assert result["execution_ready"]
+        assert result["bridge_supported_pass"]
+        assert result["bridge_gate_count"] > 0
+        assert result["bridge_noise_count"] == len(result["density_noise"])
+        assert "U3" in result["bridge_gate_sequence"]
+        assert "CNOT" in result["bridge_gate_sequence"]
+        assert set(result["bridge_noise_sequence"]) == {
+            "local_depolarizing",
+            "amplitude_damping",
+            "phase_damping",
+        }
+
+    def test_story4_workflow_bundle_schema(self):
+        pytest.importorskip("qiskit")
+        pytest.importorskip("qiskit_aer")
+
+        from benchmarks.density_matrix.story2_vqe_density_validation import (
+            build_story4_parameter_sets,
+            build_story4_workflow_bundle,
+            run_optimization_trace,
+            run_story4_workflow_case,
+        )
+
+        density_vqe, _ = self._build_story2_density_vqe(4)
+        parameter_set = build_story4_parameter_sets(
+            density_vqe.get_Parameter_Num(),
+            count=1,
+        )[0]
+        result = run_story4_workflow_case(
+            4,
+            parameter_set["parameter_set_id"],
+            parameter_set["parameter_vector"],
+        )
+        trace_result = run_optimization_trace()
         bundle = build_story4_workflow_bundle(
             [result],
             qubit_sizes=(4,),
             parameter_set_count=1,
+            trace_result=trace_result,
         )
 
         assert result["status"] == "pass"
@@ -780,8 +820,34 @@ class Test_VQE:
         assert bundle["status"] == "pass"
         assert bundle["summary"]["total_cases"] == 1
         assert bundle["summary"]["passed_cases"] == 1
+        assert bundle["summary"]["unsupported_cases"] == 0
+        assert bundle["summary"]["bridge_supported_cases"] == 1
         assert bundle["summary"]["documented_10q_anchor_present"] is False
+        assert bundle["summary"]["supported_trace_completed"] is True
+        assert bundle["summary"]["supported_trace_case_name"] == trace_result.get(
+            "case_name", "story2_trace_4q"
+        )
         assert bundle["thresholds"]["absolute_energy_error"] == 1e-8
+
+    def test_story4_trace_artifact_includes_bridge_metadata(self):
+        pytest.importorskip("qiskit")
+        pytest.importorskip("qiskit_aer")
+
+        from benchmarks.density_matrix.story2_vqe_density_validation import (
+            run_optimization_trace,
+        )
+
+        artifact = run_optimization_trace()
+
+        assert artifact["status"] == "completed"
+        assert artifact["bridge_source_type"] == "generated_hea"
+        assert artifact["source_pass"]
+        assert artifact["gate_pass"]
+        assert artifact["noise_pass"]
+        assert artifact["execution_ready"]
+        assert artifact["bridge_supported_pass"]
+        assert artifact["bridge_gate_count"] > 0
+        assert artifact["bridge_noise_count"] == len(artifact["density_noise"])
 
     def test_story5_trace_artifact_schema(self):
         pytest.importorskip("qiskit")
@@ -887,6 +953,117 @@ class Test_VQE:
             "story2_trace_4q",
             "story3_unsupported_state_vector_density_noise",
         }
+
+    def test_task3_story5_bundle_manifest_schema(self, tmp_path):
+        from benchmarks.density_matrix.task3_story5_bridge_publication_bundle import (
+            TASK3_STORY2_BUNDLE_FILENAME,
+            TASK3_STORY3_BUNDLE_FILENAME,
+            TASK3_STORY5_BUNDLE_FILENAME,
+            build_task3_story5_bundle,
+        )
+        from benchmarks.density_matrix.story2_vqe_density_validation import (
+            STORY4_TRACE_ARTIFACT_FILENAME,
+            STORY4_WORKFLOW_BUNDLE_FILENAME,
+        )
+
+        (tmp_path / "story2_fixed_4q.json").write_text("{}\n", encoding="utf-8")
+        (tmp_path / "story2_fixed_6q.json").write_text("{}\n", encoding="utf-8")
+        (tmp_path / STORY4_TRACE_ARTIFACT_FILENAME).write_text(
+            "{}\n", encoding="utf-8"
+        )
+        (tmp_path / STORY4_WORKFLOW_BUNDLE_FILENAME).write_text(
+            "{}\n", encoding="utf-8"
+        )
+        (tmp_path / TASK3_STORY2_BUNDLE_FILENAME).write_text("{}\n", encoding="utf-8")
+        (tmp_path / TASK3_STORY3_BUNDLE_FILENAME).write_text("{}\n", encoding="utf-8")
+
+        fixed_results = [
+            {
+                "status": "completed",
+                "qbit_num": 4,
+                "absolute_energy_error": 1e-12,
+                "bridge_source_type": "generated_hea",
+                "bridge_operation_count": 12,
+                "bridge_noise_count": 3,
+            },
+            {
+                "status": "completed",
+                "qbit_num": 6,
+                "absolute_energy_error": 1e-12,
+                "bridge_source_type": "generated_hea",
+                "bridge_operation_count": 18,
+                "bridge_noise_count": 3,
+            },
+        ]
+        trace_result = {
+            "status": "completed",
+            "case_name": "story2_trace_4q",
+            "optimizer": "COSINE",
+            "parameter_count": 18,
+            "workflow_completed": True,
+            "bridge_supported_pass": True,
+            "initial_energy": 1.0,
+            "final_energy": -1.0,
+        }
+        task3_story2_bundle = {
+            "status": "pass",
+            "requirements": {"microcase_qubits": [1, 2, 3]},
+            "summary": {"total_cases": 5, "passed_cases": 5, "pass_rate": 1.0},
+        }
+        task3_story3_bundle = {
+            "status": "pass",
+            "requirements": {
+                "required_categories": [
+                    "circuit_source",
+                    "lowering_path",
+                    "noise_insertion",
+                    "noise_type",
+                ]
+            },
+            "summary": {
+                "total_cases": 4,
+                "unsupported_cases": 4,
+                "error_match_count": 4,
+                "required_case_count": 4,
+            },
+        }
+        workflow_bundle = {
+            "status": "pass",
+            "summary": {
+                "total_cases": 40,
+                "passed_cases": 40,
+                "pass_rate": 1.0,
+                "unsupported_cases": 0,
+                "bridge_supported_cases": 40,
+                "documented_10q_anchor_present": True,
+                "supported_trace_completed": True,
+                "supported_trace_case_name": "story2_trace_4q",
+            },
+        }
+
+        bundle = build_task3_story5_bundle(
+            tmp_path,
+            fixed_results=fixed_results,
+            trace_result=trace_result,
+            task3_story2_bundle=task3_story2_bundle,
+            task3_story3_bundle=task3_story3_bundle,
+            workflow_bundle=workflow_bundle,
+        )
+
+        assert bundle["status"] == "pass"
+        assert bundle["summary"]["mandatory_artifact_count"] == 6
+        assert bundle["summary"]["present_artifact_count"] == 6
+        assert bundle["summary"]["status_match_count"] == 6
+        assert bundle["provenance"]["git_revision"]
+        assert {artifact["artifact_id"] for artifact in bundle["artifacts"]} == {
+            "task3_story1_fixed_4q",
+            "task3_story1_fixed_6q",
+            "task3_story2_bridge_micro_validation_bundle",
+            "task3_story4_workflow_bundle",
+            "task3_story4_trace_4q",
+            "task3_story3_unsupported_bridge_bundle",
+        }
+        assert (tmp_path / TASK3_STORY5_BUNDLE_FILENAME).name == TASK3_STORY5_BUNDLE_FILENAME
 
     def test_density_matrix_backend_anchor_fixed_parameter_matches_aer_reference(self):
         density_vqe, Hamiltonian = self._build_story2_density_vqe(4)

@@ -75,6 +75,7 @@ STORY4_VALIDITY_TOL = 1e-10
 STORY4_TRACE_TOL = 1e-10
 STORY4_OBSERVABLE_IMAG_TOL = 1e-10
 STORY4_WORKFLOW_BUNDLE_FILENAME = "story4_workflow_bundle.json"
+STORY4_TRACE_ARTIFACT_FILENAME = "story2_trace_4q.json"
 STORY4_WORKFLOW_BUNDLE_FIELDS = (
     "suite_name",
     "status",
@@ -97,6 +98,12 @@ STORY5_BUNDLE_FIELDS = (
     "artifacts",
 )
 SUPPORTED_BACKEND_LABELS = {PRIMARY_BACKEND, "state_vector"}
+REQUIRED_BRIDGE_GATE_NAMES = {"U3", "CNOT"}
+REQUIRED_BRIDGE_NOISE_NAMES = {
+    "local_depolarizing",
+    "amplitude_damping",
+    "phase_damping",
+}
 ARTIFACT_CORE_FIELDS = (
     "case_name",
     "status",
@@ -303,6 +310,102 @@ def build_story1_bridge_metadata(vqe):
     }
 
 
+def classify_bridge_unsupported_reason(reason: str):
+    if "unsupported circuit source" in reason or "requires a generated HEA circuit" in reason:
+        category = "circuit_source"
+        if "custom_gate_structure" in reason:
+            first_condition = "custom_gate_structure"
+            bridge_source_type = "custom_gate_structure"
+        elif "binary_import" in reason:
+            first_condition = "binary_import"
+            bridge_source_type = "binary_import"
+        elif "generated HEA circuit" in reason:
+            first_condition = "generated_hea_required"
+            bridge_source_type = "unset"
+        else:
+            first_condition = "circuit_source"
+            bridge_source_type = "unset"
+    elif (
+        "only the HEA ansatz" in reason
+        or "first unsupported gate in density backend path" in reason
+        or "unsupported gate in density backend path" in reason
+    ):
+        category = "lowering_path"
+        if "only the HEA ansatz" in reason:
+            first_condition = "generated_hea_zyz"
+            bridge_source_type = "generated_hea_zyz"
+        elif "first unsupported gate in density backend path is " in reason:
+            first_condition = reason.split(
+                "first unsupported gate in density backend path is ", 1
+            )[1]
+            bridge_source_type = "generated_hea"
+        elif "unsupported gate in density backend path: " in reason:
+            first_condition = reason.split(
+                "unsupported gate in density backend path: ", 1
+            )[1]
+            bridge_source_type = "generated_hea"
+        else:
+            first_condition = "lowering_path"
+            bridge_source_type = "generated_hea"
+    elif "unsupported density-noise insertion" in reason or "after_gate_index" in reason:
+        category = "noise_insertion"
+        first_condition = "after_gate_index"
+        bridge_source_type = "generated_hea"
+    elif "Unsupported density-noise channel" in reason or "unsupported density-noise type" in reason:
+        category = "noise_type"
+        first_condition = "unsupported_density_noise_channel"
+        bridge_source_type = "unset"
+    else:
+        category = "workflow_execution"
+        first_condition = "workflow_execution"
+        bridge_source_type = "unknown"
+
+    return {
+        "unsupported_category": category,
+        "first_unsupported_condition": first_condition,
+        "bridge_source_type": bridge_source_type,
+        "error_match_pass": category != "workflow_execution",
+    }
+
+
+def build_story4_bridge_metadata(vqe, *, execution_ready: bool):
+    bridge = vqe.describe_density_bridge()
+    gate_sequence = [
+        op["name"] for op in bridge["operations"] if op["operation_class"] == "GateOperation"
+    ]
+    noise_sequence = [
+        op["name"] for op in bridge["operations"] if op["operation_class"] == "NoiseOperation"
+    ]
+
+    source_pass = bridge["source_type"] == "generated_hea"
+    gate_pass = (
+        bool(gate_sequence)
+        and set(gate_sequence).issubset(REQUIRED_BRIDGE_GATE_NAMES)
+        and "U3" in gate_sequence
+        and (vqe.get_Qbit_Num() == 1 or "CNOT" in gate_sequence)
+    )
+    noise_pass = REQUIRED_BRIDGE_NOISE_NAMES.issubset(set(noise_sequence))
+    execution_ready = bool(execution_ready)
+
+    return {
+        "bridge_source_type": bridge["source_type"],
+        "bridge_parameter_count": bridge["parameter_count"],
+        "bridge_operation_count": bridge["operation_count"],
+        "bridge_gate_count": bridge["gate_count"],
+        "bridge_noise_count": bridge["noise_count"],
+        "bridge_gate_sequence": gate_sequence,
+        "bridge_noise_sequence": noise_sequence,
+        "source_pass": source_pass,
+        "gate_pass": gate_pass,
+        "noise_pass": noise_pass,
+        "execution_ready": execution_ready,
+        "bridge_supported_pass": source_pass
+        and gate_pass
+        and noise_pass
+        and execution_ready,
+    }
+
+
 def build_unsupported_state_vector_density_noise_vqe(qbit_num: int):
     topology = build_open_chain_topology(qbit_num)
     hamiltonian, _ = generate_zz_xx_hamiltonian(
@@ -431,6 +534,7 @@ def run_story4_workflow_case(
     density_noise = build_story2_noise()
     vqe, hamiltonian, topology = build_vqe(qbit_num)
     vqe.set_Optimized_Parameters(parameter_vector)
+    bridge_metadata = build_story4_bridge_metadata(vqe, execution_ready=True)
 
     case_start = time.perf_counter()
     squander_start = time.perf_counter()
@@ -476,7 +580,12 @@ def run_story4_workflow_case(
     workflow_completed = True
     status = (
         "pass"
-        if workflow_completed and energy_pass and density_valid_pass and trace_pass and observable_pass
+        if workflow_completed
+        and energy_pass
+        and density_valid_pass
+        and trace_pass
+        and observable_pass
+        and bridge_metadata["bridge_supported_pass"]
         else "fail"
     )
 
@@ -523,6 +632,7 @@ def run_story4_workflow_case(
             "process_peak_rss_kb": int(
                 resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
             ),
+            **bridge_metadata,
         }
     )
     return artifact
@@ -534,6 +644,7 @@ def capture_story4_workflow_case(qbit_num: int, parameter_set: dict):
     try:
         return run_story4_workflow_case(qbit_num, parameter_set_id, parameter_vector)
     except Exception as exc:
+        unsupported_metadata = classify_bridge_unsupported_reason(str(exc))
         return {
             "case_name": f"story4_{qbit_num}q_{parameter_set_id}",
             "status": "unsupported",
@@ -543,8 +654,13 @@ def capture_story4_workflow_case(qbit_num: int, parameter_set: dict):
             "workflow_completed": False,
             "parameter_set_id": parameter_set_id,
             "parameter_vector": parameter_vector.tolist(),
-            "unsupported_category": "workflow_execution",
+            **unsupported_metadata,
             "unsupported_reason": str(exc),
+            "source_pass": False,
+            "gate_pass": False,
+            "noise_pass": False,
+            "execution_ready": False,
+            "bridge_supported_pass": False,
             "energy_pass": False,
             "density_valid_pass": False,
             "trace_pass": False,
@@ -571,18 +687,28 @@ def build_story4_workflow_bundle(
     results,
     qubit_sizes=STORY4_WORKFLOW_QUBITS,
     parameter_set_count: int = STORY4_PARAMETER_SET_COUNT,
+    trace_result=None,
 ):
     cases_per_qbit = {
         str(qbit_num): sum(1 for result in results if result["qbit_num"] == qbit_num)
         for qbit_num in qubit_sizes
     }
     passed = sum(1 for result in results if result["status"] == "pass")
+    unsupported = sum(1 for result in results if result["status"] == "unsupported")
     total = len(results)
     pass_rate = 0.0 if total == 0 else passed / total
     documented_10q_anchor_present = any(result["qbit_num"] == 10 for result in results)
     documented_10q_anchor_required = 10 in qubit_sizes
     required_counts_present = all(
         cases_per_qbit[str(qbit_num)] >= parameter_set_count for qbit_num in qubit_sizes
+    )
+    supported_trace_completed = bool(
+        trace_result
+        and trace_result.get("workflow_completed", False)
+        and trace_result.get("bridge_supported_pass", False)
+    )
+    bridge_supported_cases = sum(
+        1 for result in results if result.get("bridge_supported_pass", False)
     )
     bundle_status = (
         "pass"
@@ -591,6 +717,7 @@ def build_story4_workflow_bundle(
         and (
             not documented_10q_anchor_required or documented_10q_anchor_present
         )
+        and (trace_result is None or supported_trace_completed)
         else "fail"
     )
 
@@ -608,12 +735,20 @@ def build_story4_workflow_bundle(
             "total_cases": total,
             "passed_cases": passed,
             "failed_cases": total - passed,
+            "unsupported_cases": unsupported,
+            "bridge_supported_cases": bridge_supported_cases,
             "pass_rate": pass_rate,
             "required_workflow_qubits": list(qubit_sizes),
             "fixed_parameter_sets_per_size": parameter_set_count,
             "cases_per_qbit": cases_per_qbit,
             "documented_10q_anchor_present": documented_10q_anchor_present,
             "documented_10q_anchor_required": documented_10q_anchor_required,
+            "supported_trace_completed": supported_trace_completed,
+            "supported_trace_case_name": (
+                trace_result.get("case_name", "story2_trace_4q")
+                if trace_result
+                else None
+            ),
         },
         "cases": results,
     }
@@ -1026,6 +1161,7 @@ def run_optimization_trace():
     vqe, _, topology = build_vqe(4, optimizer="COSINE")
     initial_parameters = build_story2_parameters(vqe.get_Parameter_Num())
     vqe.set_Optimized_Parameters(initial_parameters)
+    bridge_metadata = build_story4_bridge_metadata(vqe, execution_ready=True)
 
     trace_start = time.perf_counter()
     initial_energy = float(vqe.Optimization_Problem(initial_parameters))
@@ -1057,6 +1193,7 @@ def run_optimization_trace():
                 resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
             ),
             "status": "completed",
+            **bridge_metadata,
         }
     )
     return artifact
@@ -1141,14 +1278,25 @@ def main():
 
     if args.story4:
         workflow_results = run_story4_workflow_matrix()
-        workflow_bundle = build_story4_workflow_bundle(workflow_results)
+        trace_result = capture_case("story2_trace_4q", run_optimization_trace)
+        workflow_bundle = build_story4_workflow_bundle(
+            workflow_results, trace_result=trace_result
+        )
         print_story4_workflow_summary(workflow_bundle)
+        if trace_result["status"] == "completed":
+            print(
+                "  Story 4 supported trace [{}]:".format(trace_result["backend"]),
+                trace_result["trace_kind"],
+                "bridge_pass =",
+                trace_result["bridge_supported_pass"],
+            )
 
         if args.output_dir is not None:
             write_story4_workflow_bundle(
                 args.output_dir / STORY4_WORKFLOW_BUNDLE_FILENAME,
                 workflow_bundle,
             )
+            write_json(args.output_dir / STORY4_TRACE_ARTIFACT_FILENAME, trace_result)
 
         if workflow_bundle["status"] != "pass":
             raise SystemExit(1)

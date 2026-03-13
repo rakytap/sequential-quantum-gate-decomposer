@@ -58,6 +58,21 @@ Out of scope for this story:
   bundle should preserve for unsupported bridge evidence:
   `unsupported_category`, `first_unsupported_condition`,
   `unsupported_reason`, and `error_match_pass`.
+- Story 3 additionally fixed the canonical negative-bundle summary surface the
+  final package should preserve: `required_categories`, `unsupported_cases`,
+  `error_match_count`, and `required_case_count`.
+- Story 3 also showed that representative negative bridge evidence can be
+  assembled in the Python/test/validation layer because the current validator
+  and normalization paths already emit the required first-failure signals.
+- Story 4 now delivers the workflow-scale bridge evidence through
+  `benchmarks/density_matrix/story2_vqe_density_validation.py --story4`, which
+  emits both `story4_workflow_bundle.json` and the supported trace artifact
+  `story2_trace_4q.json`.
+- Story 4 also fixed the canonical workflow/trace bridge fields and summary
+  surface the final package should preserve:
+  `bridge_gate_sequence`, `bridge_noise_sequence`, `bridge_supported_pass`,
+  `unsupported_cases`, `bridge_supported_cases`,
+  `supported_trace_completed`, and `supported_trace_case_name`.
 - The frozen publication expectations remain `PUBLICATIONS.md`,
   `DETAILED_PLANNING_PHASE_2.md`, `TASK_3_MINI_SPEC.md`, and the Paper 1 claims
   bounded by `P2-ADR-011`, `P2-ADR-012`, and `P2-ADR-013`.
@@ -95,6 +110,12 @@ Out of scope for this story:
 - [ ] Treat `task3_story3_unsupported_bridge_bundle.json` as the canonical
       bridge-negative artifact class rather than reconstructing unsupported
       evidence indirectly from ad hoc workflow failures.
+- [ ] Treat `story4_workflow_bundle.json` plus `story2_trace_4q.json` as the
+      canonical workflow-scale artifact pair coming from one shared Story 4
+      generation surface.
+- [ ] Prefer reusing already-generated canonical Story 1 to 4 artifacts when
+      they are present in the bundle output directory, instead of replaying the
+      full expensive workflow sweep unnecessarily.
 - [ ] Create a stable manifest shape that records artifact identity, purpose,
       generation command, and status.
 - [ ] Distinguish mandatory bundle items from optional supporting artifacts.
@@ -143,6 +164,13 @@ Out of scope for this story:
       `first_unsupported_condition`, `unsupported_reason`, and
       `error_match_pass`) for the negative artifact class rather than collapsing
       them into a generic error blob.
+- [ ] Preserve the Story 4 workflow/trace fields
+      (`bridge_gate_sequence`, `bridge_noise_sequence`,
+      `bridge_supported_pass`) and workflow summary fields
+      (`unsupported_cases`, `bridge_supported_cases`,
+      `supported_trace_completed`, `supported_trace_case_name`) for the
+      workflow-scale artifact classes rather than flattening them into generic
+      runtime summaries.
 - [ ] Avoid introducing bundle fields that imply broader bridge support than the
       frozen contract.
 - [ ] Validate schema changes with one narrow compatibility check before
@@ -188,6 +216,10 @@ Out of scope for this story:
 - [ ] Keep the Story 3 representative unsupported bundle in its native negative
       form rather than trying to infer unsupported provenance only from
       supported-workflow bundle omissions.
+- [ ] Reuse the delivered Story 4 workflow/trace bridge summaries
+      (`bridge_gate_sequence`, `bridge_noise_sequence`, and
+      `bridge_supported_pass`) instead of re-expanding workflow-scale artifacts
+      back into raw `bridge_operations` unless a concrete audit gap requires it.
 - [ ] Keep provenance capture consistent enough that a reviewer can trace from a
       workflow result back to the bridge output that produced it.
 - [ ] Avoid storing provenance only in prose notes or console logs.
@@ -223,6 +255,10 @@ Out of scope for this story:
       Story 5 bundle manifest.
 - [ ] Record unsupported category, first failing condition, backend, source
       context, and `error_match_pass` status for each included negative artifact.
+- [ ] Preserve the Story 3 negative-bundle summary fields
+      (`required_categories`, `unsupported_cases`, `error_match_count`, and
+      `required_case_count`) so the final package keeps the same audit surface as
+      the delivered unsupported suite.
 - [ ] Keep unsupported artifacts visibly unsupported rather than mixing them into
       supported pass summaries.
 - [ ] Make clear which unsupported artifacts are mandatory representatives versus
@@ -272,6 +308,14 @@ Out of scope for this story:
 - [ ] Require the Story 3 unsupported-bundle fields and summary
       (`required_categories`, unsupported-case counts, and per-case
       `error_match_pass`) on the mandatory negative artifact class.
+- [ ] Require the Story 4 workflow-bundle summary fields
+      (`unsupported_cases`, `bridge_supported_cases`,
+      `supported_trace_completed`, and `supported_trace_case_name`) plus the
+      supported trace `bridge_supported_pass` field on the mandatory
+      workflow-scale artifact classes.
+- [ ] Keep the checker aligned with the delivered Story 3 validation-layer
+      bundle rather than assuming unsupported evidence must be regenerated from a
+      separate native-only mechanism.
 - [ ] Keep completeness output human-readable and machine-checkable.
 - [ ] Make missing mandatory provenance fields fail specifically rather than as
       generic parse errors.
@@ -425,6 +469,16 @@ Story 5 is complete only when all of the following are true:
   now the canonical bridge-negative artifact surface and should enter the final
   bundle as its own first-class artifact, not as a loose set of incidental
   workflow failures.
+- `benchmarks/density_matrix/story2_vqe_density_validation.py --story4` is now
+  the canonical workflow-scale bridge evidence surface and should be treated as
+  producing both the workflow bundle and the supported trace artifact together.
+- Story 5 implementation can assemble from already-generated canonical artifact
+  files when they are present, which keeps repeated publication-bundle runs
+  practical without weakening the evidence contract.
+- Story 3 also showed that representative unsupported bridge evidence does not
+  currently require new native bridge code. Story 5 should treat that
+  validation-layer artifact as the canonical negative source of truth unless a
+  later story exposes a genuine native-only gap.
 - `PUBLICATIONS.md` makes reproducible benchmark definitions and configuration
   logging central to Paper 1 credibility, so Story 5 should prioritize audit
   clarity over feature breadth.
@@ -440,6 +494,10 @@ Story 5 is complete only when all of the following are true:
   should preserve explicit category and first-failure fields, not just free-form
   exception text, because that taxonomy is now part of the reproducibility
   contract.
+- Story 4 refined the supported large-case side of that split: workflow-scale
+  artifacts can rely on stable bridge summaries and bundle-level trace linkage
+  rather than carrying full raw `bridge_operations`, so long as the small-case
+  and fixed-parameter artifacts still preserve the detailed bridge shape.
 - Story 5 is about evidence integrity and publication readiness for the bridge
   contract, not about widening the supported backend surface or making new
   scientific claims.
