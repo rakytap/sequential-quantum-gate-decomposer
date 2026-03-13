@@ -250,6 +250,75 @@ class Test_VQE:
         aer_rho = np.asarray(result.data()["density_matrix"])
         return self._density_energy(Hamiltonian, aer_rho)
 
+    @staticmethod
+    def _expected_story1_bridge_operations(vqe):
+        pytest.importorskip("qiskit")
+
+        base_circuit = vqe.get_Qiskit_Circuit()
+        noise_by_gate = {}
+        for noise_spec in vqe.density_noise:
+            noise_by_gate.setdefault(noise_spec["after_gate_index"], []).append(noise_spec)
+
+        expected = []
+        param_start = 0
+        for gate_index, instruction in enumerate(base_circuit.data):
+            qubit_indices = [
+                base_circuit.find_bit(qubit).index for qubit in instruction.qubits
+            ]
+            gate_name = instruction.operation.name
+
+            if gate_name == "u":
+                expected.append(
+                    {
+                        "operation_class": "GateOperation",
+                        "kind": "gate",
+                        "name": "U3",
+                        "is_unitary": True,
+                        "source_gate_index": gate_index,
+                        "target_qbit": qubit_indices[0],
+                        "control_qbit": None,
+                        "param_count": 3,
+                        "param_start": param_start,
+                        "fixed_value": None,
+                    }
+                )
+                param_start += 3
+            elif gate_name in {"cx", "cnot"}:
+                expected.append(
+                    {
+                        "operation_class": "GateOperation",
+                        "kind": "gate",
+                        "name": "CNOT",
+                        "is_unitary": True,
+                        "source_gate_index": gate_index,
+                        "target_qbit": qubit_indices[1],
+                        "control_qbit": qubit_indices[0],
+                        "param_count": 0,
+                        "param_start": param_start,
+                        "fixed_value": None,
+                    }
+                )
+            else:
+                raise ValueError(f"Unsupported Story 1 gate in expected bridge: {gate_name}")
+
+            for noise_spec in noise_by_gate.get(gate_index, []):
+                expected.append(
+                    {
+                        "operation_class": "NoiseOperation",
+                        "kind": "noise",
+                        "name": noise_spec["channel"],
+                        "is_unitary": False,
+                        "source_gate_index": gate_index,
+                        "target_qbit": noise_spec["target"],
+                        "control_qbit": None,
+                        "param_count": 0,
+                        "param_start": param_start,
+                        "fixed_value": noise_spec["value"],
+                    }
+                )
+
+        return expected
+
     def test_backend_argument_normalization(self):
         qbit_num = 2
         Hamiltonian = sp.sparse.eye(2**qbit_num, format="csr")
@@ -486,6 +555,69 @@ class Test_VQE:
         assert np.isfinite(density_energy)
         assert np.isfinite(state_vector_energy)
         assert not np.isclose(density_energy, state_vector_energy, atol=1e-8)
+
+    @pytest.mark.parametrize("qbit_num", [4, 6])
+    def test_density_matrix_bridge_metadata_matches_generated_anchor_circuit(
+        self, qbit_num
+    ):
+        pytest.importorskip("qiskit")
+
+        density_vqe, _ = self._build_story2_density_vqe(qbit_num)
+        parameters = np.linspace(
+            0.05,
+            0.05 * density_vqe.get_Parameter_Num(),
+            density_vqe.get_Parameter_Num(),
+            dtype=np.float64,
+        )
+        density_vqe.set_Optimized_Parameters(parameters)
+        bridge = density_vqe.describe_density_bridge()
+        expected_operations = self._expected_story1_bridge_operations(density_vqe)
+
+        assert bridge["backend"] == "density_matrix"
+        assert bridge["source_type"] == "generated_hea"
+        assert bridge["qbit_num"] == qbit_num
+        assert bridge["parameter_count"] == density_vqe.get_Parameter_Num()
+        assert bridge["gate_count"] == density_vqe.get_Qiskit_Circuit().size()
+        assert bridge["noise_count"] == len(density_vqe.density_noise)
+        assert bridge["operation_count"] == len(expected_operations)
+        assert len(bridge["operations"]) == len(expected_operations)
+
+        for actual, expected in zip(bridge["operations"], expected_operations):
+            assert actual["operation_class"] == expected["operation_class"]
+            assert actual["kind"] == expected["kind"]
+            assert actual["name"] == expected["name"]
+            assert actual["is_unitary"] == expected["is_unitary"]
+            assert actual["source_gate_index"] == expected["source_gate_index"]
+            assert actual["target_qbit"] == expected["target_qbit"]
+            assert actual["control_qbit"] == expected["control_qbit"]
+            assert actual["param_count"] == expected["param_count"]
+            assert actual["param_start"] == expected["param_start"]
+            if expected["fixed_value"] is None:
+                assert actual["fixed_value"] is None
+            else:
+                assert actual["fixed_value"] == pytest.approx(expected["fixed_value"])
+
+    def test_fixed_parameter_artifact_includes_bridge_metadata(self):
+        pytest.importorskip("qiskit")
+        pytest.importorskip("qiskit_aer")
+
+        from benchmarks.density_matrix.story2_vqe_density_validation import (
+            run_fixed_parameter_case,
+        )
+
+        artifact = run_fixed_parameter_case(4)
+
+        assert artifact["status"] == "completed"
+        assert artifact["bridge_source_type"] == "generated_hea"
+        assert artifact["bridge_operation_count"] == len(artifact["bridge_operations"])
+        assert artifact["bridge_gate_count"] + artifact["bridge_noise_count"] == artifact["bridge_operation_count"]
+        assert artifact["bridge_noise_count"] == len(artifact["density_noise"])
+        assert artifact["bridge_parameter_count"] > 0
+        assert artifact["bridge_operations"][0]["operation_class"] == "GateOperation"
+        assert any(
+            op["operation_class"] == "NoiseOperation"
+            for op in artifact["bridge_operations"]
+        )
 
     def test_story4_workflow_bundle_schema(self):
         pytest.importorskip("qiskit")

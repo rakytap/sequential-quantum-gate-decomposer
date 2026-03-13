@@ -489,6 +489,166 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Density_Matrix_Noise(
 
 
 /**
+@brief Return a machine-readable description of the supported density bridge.
+*/
+static PyObject *
+qgd_Variational_Quantum_Eigensolver_Base_Wrapper_get_Density_Matrix_Bridge_Metadata(
+    qgd_Variational_Quantum_Eigensolver_Base_Wrapper *self ) {
+
+    auto set_dict_item = [](PyObject* dict, const char* key, PyObject* value) -> int {
+        if (value == NULL) {
+            return -1;
+        }
+
+        int status = PyDict_SetItemString(dict, key, value);
+        Py_DECREF(value);
+        return status;
+    };
+    auto new_none = []() -> PyObject* {
+        Py_INCREF(Py_None);
+        return Py_None;
+    };
+
+    PyObject* result = NULL;
+    PyObject* operations_list = NULL;
+
+    try {
+        std::vector<DensityBridgeOperationInfo> operations =
+            self->vqe->inspect_density_bridge();
+
+        int gate_count = 0;
+        int noise_count = 0;
+
+        result = PyDict_New();
+        if (result == NULL) {
+            return NULL;
+        }
+
+        operations_list = PyList_New((Py_ssize_t)operations.size());
+        if (operations_list == NULL) {
+            Py_DECREF(result);
+            return NULL;
+        }
+
+        for (size_t idx = 0; idx < operations.size(); ++idx) {
+            const auto& operation = operations[idx];
+            if (operation.is_unitary) {
+                gate_count++;
+            }
+            else {
+                noise_count++;
+            }
+
+            PyObject* op_dict = PyDict_New();
+            if (op_dict == NULL) {
+                Py_DECREF(operations_list);
+                Py_DECREF(result);
+                return NULL;
+            }
+
+            if (set_dict_item(op_dict, "index", PyLong_FromLong((long)idx)) != 0 ||
+                set_dict_item(
+                    op_dict,
+                    "operation_class",
+                    PyUnicode_FromString(
+                        operation.is_unitary ? "GateOperation" : "NoiseOperation"
+                    )
+                ) != 0 ||
+                set_dict_item(
+                    op_dict,
+                    "kind",
+                    PyUnicode_FromString(operation.is_unitary ? "gate" : "noise")
+                ) != 0 ||
+                set_dict_item(
+                    op_dict, "name", PyUnicode_FromString(operation.name.c_str())
+                ) != 0 ||
+                set_dict_item(op_dict, "is_unitary", PyBool_FromLong(operation.is_unitary ? 1 : 0)) != 0 ||
+                set_dict_item(
+                    op_dict,
+                    "source_gate_index",
+                    PyLong_FromLong(operation.source_gate_index)
+                ) != 0 ||
+                set_dict_item(
+                    op_dict, "target_qbit", PyLong_FromLong(operation.target_qbit)
+                ) != 0 ||
+                set_dict_item(
+                    op_dict,
+                    "control_qbit",
+                    operation.control_qbit >= 0
+                        ? PyLong_FromLong(operation.control_qbit)
+                        : new_none()
+                ) != 0 ||
+                set_dict_item(
+                    op_dict, "param_count", PyLong_FromLong(operation.param_count)
+                ) != 0 ||
+                set_dict_item(
+                    op_dict, "param_start", PyLong_FromLong(operation.param_start)
+                ) != 0 ||
+                set_dict_item(
+                    op_dict,
+                    "fixed_value",
+                    operation.has_fixed_value
+                        ? PyFloat_FromDouble(operation.fixed_value)
+                        : new_none()
+                ) != 0) {
+                Py_DECREF(op_dict);
+                Py_DECREF(operations_list);
+                Py_DECREF(result);
+                return NULL;
+            }
+
+            PyList_SET_ITEM(operations_list, (Py_ssize_t)idx, op_dict);
+        }
+
+        if (set_dict_item(result, "backend", PyUnicode_FromString("density_matrix")) != 0 ||
+            set_dict_item(
+                result,
+                "source_type",
+                PyUnicode_FromString(
+                    self->vqe->get_density_bridge_source_label().c_str()
+                )
+            ) != 0 ||
+            set_dict_item(
+                result, "qbit_num", PyLong_FromLong(self->vqe->get_qbit_num())
+            ) != 0 ||
+            set_dict_item(
+                result,
+                "parameter_count",
+                PyLong_FromLong(self->vqe->get_parameter_num())
+            ) != 0 ||
+            set_dict_item(
+                result,
+                "operation_count",
+                PyLong_FromLong((long)operations.size())
+            ) != 0 ||
+            set_dict_item(result, "gate_count", PyLong_FromLong(gate_count)) != 0 ||
+            set_dict_item(result, "noise_count", PyLong_FromLong(noise_count)) != 0 ||
+            PyDict_SetItemString(result, "operations", operations_list) != 0) {
+            Py_DECREF(operations_list);
+            Py_DECREF(result);
+            return NULL;
+        }
+
+        Py_DECREF(operations_list);
+        return result;
+    }
+    catch (std::string err) {
+        Py_XDECREF(operations_list);
+        Py_XDECREF(result);
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    catch (...) {
+        Py_XDECREF(operations_list);
+        Py_XDECREF(result);
+        std::string err("Invalid pointer to decomposition class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+}
+
+
+/**
 @brief Wrapper function to set custom layers to the gate structure that are intended to be used in the decomposition.
 */
 static PyObject *
@@ -1476,6 +1636,9 @@ static PyMethodDef qgd_Variational_Quantum_Eigensolver_Base_Wrapper_methods[] = 
     },
     {"set_Density_Matrix_Noise", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Density_Matrix_Noise, METH_VARARGS,
      "Configure ordered fixed local-noise insertions for the density-matrix backend."
+    },
+    {"get_Density_Matrix_Bridge_Metadata", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_get_Density_Matrix_Bridge_Metadata, METH_NOARGS,
+     "Return machine-readable metadata describing the currently supported density-matrix bridge path."
     },
     {"set_Gate_Structure", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Gate_Structure, METH_VARARGS,
      "Call to set custom gate structure for VQE experiments."

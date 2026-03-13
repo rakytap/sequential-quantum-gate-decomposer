@@ -173,6 +173,63 @@ bool Variational_Quantum_Eigensolver_Base::density_optimizer_supported() const {
 }
 
 
+std::string
+Variational_Quantum_Eigensolver_Base::get_density_bridge_source_label() const {
+
+    return vqe_circuit_source_to_label(circuit_source);
+}
+
+
+std::vector<DensityBridgeOperationInfo>
+Variational_Quantum_Eigensolver_Base::inspect_density_bridge() {
+
+    validate_density_anchor_support();
+
+    std::vector<DensityBridgeOperationInfo> info;
+    info.reserve(get_gate_num() + density_noise_specs.size());
+
+    int param_start = 0;
+    int gate_num = get_gate_num();
+    for (int gate_idx = 0; gate_idx < gate_num; ++gate_idx) {
+        Gate* gate = get_gate(gate_idx);
+
+        DensityBridgeOperationInfo gate_info;
+        gate_info.name = gate->get_name();
+        gate_info.is_unitary = true;
+        gate_info.source_gate_index = gate_idx;
+        gate_info.target_qbit = gate->get_target_qbit();
+        gate_info.control_qbit = gate->get_control_qbit();
+        gate_info.param_count = gate->get_parameter_num();
+        gate_info.param_start = param_start;
+        gate_info.has_fixed_value = false;
+        gate_info.fixed_value = 0.0;
+        info.push_back(gate_info);
+
+        param_start += gate_info.param_count;
+
+        for (const auto& spec : density_noise_specs) {
+            if (spec.after_gate_index != gate_idx) {
+                continue;
+            }
+
+            DensityBridgeOperationInfo noise_info;
+            noise_info.name = density_noise_type_to_label(spec.type);
+            noise_info.is_unitary = false;
+            noise_info.source_gate_index = gate_idx;
+            noise_info.target_qbit = spec.target_qbit;
+            noise_info.control_qbit = -1;
+            noise_info.param_count = 0;
+            noise_info.param_start = param_start;
+            noise_info.has_fixed_value = true;
+            noise_info.fixed_value = spec.value;
+            info.push_back(noise_info);
+        }
+    }
+
+    return info;
+}
+
+
 void Variational_Quantum_Eigensolver_Base::validate_density_anchor_support(
     bool require_optimizer_support, bool require_gradient_support) {
 

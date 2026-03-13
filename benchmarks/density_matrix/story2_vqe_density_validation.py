@@ -20,6 +20,8 @@ Artifact schema for all emitted cases:
   `parameter_vector`, `initial_parameters`, `final_parameters`,
   `squander_energy`, `aer_energy_real`, `aer_energy_imag`,
   `absolute_energy_error`, `aer_trace_real`, `aer_trace_imag`, `aer_purity`,
+  `bridge_source_type`, `bridge_parameter_count`, `bridge_operation_count`,
+  `bridge_gate_count`, `bridge_noise_count`, `bridge_operations`,
   `unsupported_category`, `unsupported_reason`
 """
 
@@ -287,6 +289,18 @@ def build_vqe(qbit_num: int, optimizer: str | None = None):
     vqe.set_Ansatz(DEFAULT_ANSATZ)
     vqe.Generate_Circuit(layers=DEFAULT_LAYERS, inner_blocks=DEFAULT_INNER_BLOCKS)
     return vqe, hamiltonian, topology
+
+
+def build_story1_bridge_metadata(vqe):
+    bridge = vqe.describe_density_bridge()
+    return {
+        "bridge_source_type": bridge["source_type"],
+        "bridge_parameter_count": bridge["parameter_count"],
+        "bridge_operation_count": bridge["operation_count"],
+        "bridge_gate_count": bridge["gate_count"],
+        "bridge_noise_count": bridge["noise_count"],
+        "bridge_operations": bridge["operations"],
+    }
 
 
 def build_unsupported_state_vector_density_noise_vqe(qbit_num: int):
@@ -968,6 +982,7 @@ def run_fixed_parameter_case(qbit_num: int):
     vqe, hamiltonian, topology = build_vqe(qbit_num)
     params = build_story2_parameters(vqe.get_Parameter_Num())
     vqe.set_Optimized_Parameters(params)
+    bridge_metadata = build_story1_bridge_metadata(vqe)
 
     squander_energy = float(vqe.Optimization_Problem(params))
 
@@ -1001,6 +1016,7 @@ def run_fixed_parameter_case(qbit_num: int):
             "aer_trace_real": float(np.real(trace_val)),
             "aer_trace_imag": float(np.imag(trace_val)),
             "aer_purity": purity,
+            **bridge_metadata,
         }
     )
     return artifact

@@ -95,6 +95,19 @@ struct DensityNoiseSpec {
     double value;
 };
 
+/// @brief Reviewable metadata describing one lowered density-bridge operation.
+struct DensityBridgeOperationInfo {
+    std::string name;
+    bool is_unitary;
+    int source_gate_index;
+    int target_qbit;
+    int control_qbit;
+    int param_count;
+    int param_start;
+    bool has_fixed_value;
+    double fixed_value;
+};
+
 
 
 /**
@@ -116,6 +129,18 @@ public:
     Matrix get_initial_state() const { 
             return initial_state.copy(); 
         }
+
+    /// @brief Return the current circuit-source label used by bridge inspection.
+    std::string get_density_bridge_source_label() const;
+
+    /**
+     * @brief Describe the supported density bridge for the current VQE instance.
+     *
+     * The returned operation list follows the exact lowering order used by the
+     * supported density path: generated source gates first, then ordered fixed
+     * noise insertions after each source gate.
+     */
+    std::vector<DensityBridgeOperationInfo> inspect_density_bridge();
 //================================================================================================================================================================================
 //================================================================================================================================================================================
 //================================================================================================================================================================================

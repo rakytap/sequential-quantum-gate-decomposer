@@ -393,6 +393,19 @@ class qgd_Variational_Quantum_Eigensolver_Base(qgd_Variational_Quantum_Eigensolv
 
 
 ##
+# @brief Return reviewable metadata for the currently supported density bridge.
+# @return A dictionary describing the generated source, ordered bridge
+#   operations, and fixed local-noise insertions used by the density path.
+    def describe_density_bridge(self):
+
+        bridge_metadata = super(
+            qgd_Variational_Quantum_Eigensolver_Base, self
+        ).get_Density_Matrix_Bridge_Metadata()
+        bridge_metadata["density_noise"] = [dict(item) for item in self.density_noise]
+        return bridge_metadata
+
+
+##
 # @brief Call to set custom gate structure to used in the decomposition
 # @param Gate_structure An instance of SQUANDER Circuit
     def set_Gate_Structure( self, Gate_structure ):  
