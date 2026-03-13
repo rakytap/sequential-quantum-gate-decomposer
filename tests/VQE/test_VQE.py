@@ -122,6 +122,59 @@ class Test_VQE:
             },
         ]
 
+    @staticmethod
+    def _get_task4_story1_required_noise_cases():
+        return (
+            {
+                "case_name": "task4_story1_4q_local_depolarizing_positive",
+                "qbit_num": 4,
+                "requested_noise_channel": "local_depolarizing",
+                "expected_target": 0,
+                "expected_after_gate_index": 0,
+                "expected_value": 0.1,
+                "density_noise": [
+                    {
+                        "channel": "local_depolarizing",
+                        "target": 0,
+                        "after_gate_index": 0,
+                        "error_rate": 0.1,
+                    }
+                ],
+            },
+            {
+                "case_name": "task4_story1_4q_amplitude_damping_positive",
+                "qbit_num": 4,
+                "requested_noise_channel": "amplitude_damping",
+                "expected_target": 1,
+                "expected_after_gate_index": 2,
+                "expected_value": 0.05,
+                "density_noise": [
+                    {
+                        "channel": "amplitude_damping",
+                        "target": 1,
+                        "after_gate_index": 2,
+                        "gamma": 0.05,
+                    }
+                ],
+            },
+            {
+                "case_name": "task4_story1_4q_phase_damping_positive",
+                "qbit_num": 4,
+                "requested_noise_channel": "phase_damping",
+                "expected_target": 0,
+                "expected_after_gate_index": 4,
+                "expected_value": 0.07,
+                "density_noise": [
+                    {
+                        "channel": "phase_damping",
+                        "target": 0,
+                        "after_gate_index": 4,
+                        "lambda": 0.07,
+                    }
+                ],
+            },
+        )
+
     def _build_identity_vqe(self, qbit_num=2, backend=None, Hamiltonian=None):
         if Hamiltonian is None:
             Hamiltonian = sp.sparse.eye(2**qbit_num, format="csr")
@@ -141,16 +194,18 @@ class Test_VQE:
         vqe.Generate_Circuit(1, 1)
         return vqe
 
-    def _build_story2_density_vqe(self, qbit_num, optimizer=None):
+    def _build_story2_density_vqe(self, qbit_num, optimizer=None, density_noise=None):
         topology = [(idx, idx + 1) for idx in range(qbit_num - 1)]
         Hamiltonian = generate_hamiltonian(topology, qbit_num)
         VQE_cls = self._get_vqe_class()
+        if density_noise is None:
+            density_noise = self._get_story2_noise()
         vqe = VQE_cls(
             Hamiltonian,
             qbit_num,
             self._get_story2_config(),
             backend="density_matrix",
-            density_noise=self._get_story2_noise(),
+            density_noise=density_noise,
         )
         if optimizer is not None:
             vqe.set_Optimizer(optimizer)
@@ -662,6 +717,76 @@ class Test_VQE:
         assert any(
             op["operation_class"] == "NoiseOperation"
             for op in artifact["bridge_operations"]
+        )
+
+    def test_task4_story1_required_local_noise_models_execute_on_supported_path(self):
+        for case in self._get_task4_story1_required_noise_cases():
+            density_vqe, _ = self._build_story2_density_vqe(
+                case["qbit_num"],
+                density_noise=case["density_noise"],
+            )
+            parameters = np.linspace(
+                0.05,
+                0.05 * density_vqe.get_Parameter_Num(),
+                density_vqe.get_Parameter_Num(),
+                dtype=np.float64,
+            )
+
+            density_vqe.set_Optimized_Parameters(parameters)
+            density_energy = density_vqe.Optimization_Problem(parameters)
+            bridge = density_vqe.describe_density_bridge()
+            noise_ops = [
+                op
+                for op in bridge["operations"]
+                if op["operation_class"] == "NoiseOperation"
+            ]
+
+            assert density_vqe.backend == "density_matrix"
+            assert np.isfinite(density_energy)
+            assert bridge["source_type"] == "generated_hea"
+            assert bridge["noise_count"] == 1
+            assert len(noise_ops) == 1
+            assert [op["name"] for op in noise_ops] == [case["requested_noise_channel"]]
+            assert all(op["name"] != "depolarizing" for op in noise_ops)
+            assert [op["target_qbit"] for op in noise_ops] == [case["expected_target"]]
+            assert [op["source_gate_index"] for op in noise_ops] == [
+                case["expected_after_gate_index"]
+            ]
+            assert [op["fixed_value"] for op in noise_ops] == pytest.approx(
+                [case["expected_value"]]
+            )
+
+    def test_task4_story1_required_local_noise_bundle_schema(self):
+        pytest.importorskip("qiskit")
+        pytest.importorskip("qiskit_aer")
+
+        from benchmarks.density_matrix.task4_story1_required_local_noise_validation import (
+            REQUIRED_LOCAL_NOISE_CASES,
+            REQUIRED_LOCAL_NOISE_MODELS,
+            build_artifact_bundle,
+            run_validation,
+        )
+
+        results = run_validation(verbose=False)
+        bundle = build_artifact_bundle(results)
+
+        assert bundle["status"] == "pass"
+        assert bundle["backend"] == "density_matrix"
+        assert bundle["summary"]["total_cases"] == len(REQUIRED_LOCAL_NOISE_CASES)
+        assert bundle["summary"]["passed_cases"] == len(REQUIRED_LOCAL_NOISE_CASES)
+        assert bundle["summary"]["pass_rate"] == 1.0
+        assert bundle["summary"]["whole_register_substitute_failures"] == 0
+        assert set(bundle["requirements"]["required_local_noise_models"]) == set(
+            REQUIRED_LOCAL_NOISE_MODELS
+        )
+        assert {case["requested_noise_channel"] for case in bundle["cases"]} == set(
+            REQUIRED_LOCAL_NOISE_MODELS
+        )
+        assert all(case["status"] == "pass" for case in bundle["cases"])
+        assert all(case["positive_slice_pass"] for case in bundle["cases"])
+        assert all(
+            case["bridge_noise_sequence"] == [case["requested_noise_channel"]]
+            for case in bundle["cases"]
         )
 
     def test_task3_story2_mixed_bridge_case_passes(self):

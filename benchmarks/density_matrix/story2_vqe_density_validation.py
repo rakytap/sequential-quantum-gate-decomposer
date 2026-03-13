@@ -274,7 +274,11 @@ def validate_artifact_payload(payload):
         )
 
 
-def build_vqe(qbit_num: int, optimizer: str | None = None):
+def build_vqe(
+    qbit_num: int,
+    optimizer: str | None = None,
+    density_noise=None,
+):
     topology = build_open_chain_topology(qbit_num)
     hamiltonian, _ = generate_zz_xx_hamiltonian(
         n_qubits=qbit_num,
@@ -284,12 +288,15 @@ def build_vqe(qbit_num: int, optimizer: str | None = None):
         Jx=1.0,
         Jy=1.0,
     )
+    requested_density_noise = (
+        build_story2_noise() if density_noise is None else [dict(item) for item in density_noise]
+    )
     vqe = Variational_Quantum_Eigensolver(
         hamiltonian,
         qbit_num,
         build_story2_config(),
         backend=PRIMARY_BACKEND,
-        density_noise=build_story2_noise(),
+        density_noise=requested_density_noise,
     )
     if optimizer is not None:
         vqe.set_Optimizer(optimizer)
@@ -300,6 +307,9 @@ def build_vqe(qbit_num: int, optimizer: str | None = None):
 
 def build_story1_bridge_metadata(vqe):
     bridge = vqe.describe_density_bridge()
+    noise_operations = [
+        op for op in bridge["operations"] if op["operation_class"] == "NoiseOperation"
+    ]
     return {
         "bridge_source_type": bridge["source_type"],
         "bridge_parameter_count": bridge["parameter_count"],
@@ -307,6 +317,12 @@ def build_story1_bridge_metadata(vqe):
         "bridge_gate_count": bridge["gate_count"],
         "bridge_noise_count": bridge["noise_count"],
         "bridge_operations": bridge["operations"],
+        "bridge_noise_sequence": [op["name"] for op in noise_operations],
+        "bridge_noise_targets": [op["target_qbit"] for op in noise_operations],
+        "bridge_noise_after_gate_indices": [
+            op["source_gate_index"] for op in noise_operations
+        ],
+        "bridge_noise_fixed_values": [op["fixed_value"] for op in noise_operations],
     }
 
 
