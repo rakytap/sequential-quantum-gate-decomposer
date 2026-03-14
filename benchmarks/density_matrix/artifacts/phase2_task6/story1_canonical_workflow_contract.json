@@ -153,10 +153,26 @@
       ],
       "topology_family": "open_chain"
     },
+    "seed_policy": {
+      "bounded_optimization_trace": {
+        "generator": "build_story2_parameters",
+        "initial_parameter_source": "deterministic_linspace_schedule",
+        "random_seed_required": false
+      },
+      "fixed_parameter_matrix": {
+        "generator": "build_story4_parameter_sets",
+        "random_seed_required": false,
+        "source": "deterministic_parameter_set_schedule"
+      }
+    },
     "workflow_family": "noisy_vqe_ground_state_estimation",
     "workflow_id": "phase2_xxz_hea_density_matrix_anchor_workflow"
   },
   "output_contract": {
+    "aggregate_status_semantics": {
+      "fail": "At least one required contract section, threshold, boundary class, or reference artifact is missing or inconsistent.",
+      "pass": "All required contract sections, thresholds, boundary classes, and reference artifacts are present."
+    },
     "bundle_status_vocabulary": [
       "pass",
       "fail"
@@ -172,9 +188,18 @@
     "required_bundle_fields": [
       "suite_name",
       "status",
+      "workflow_id",
+      "contract_version",
+      "backend",
+      "reference_backend",
       "requirements",
       "thresholds",
+      "input_contract",
+      "output_contract",
+      "boundary_classification",
+      "reference_artifacts",
       "software",
+      "provenance",
       "summary"
     ],
     "required_case_fields": [
@@ -209,6 +234,21 @@
       "total_trace_runtime_ms",
       "process_peak_rss_kb"
     ],
+    "required_unsupported_case_fields": [
+      "case_name",
+      "status",
+      "backend",
+      "support_tier",
+      "case_purpose",
+      "counts_toward_mandatory_baseline",
+      "unsupported_category",
+      "unsupported_reason",
+      "first_unsupported_condition",
+      "task4_boundary_class",
+      "failure_stage",
+      "workflow_id",
+      "contract_version"
+    ],
     "stability_metrics": [
       "workflow_completed",
       "total_case_runtime_ms",
@@ -218,7 +258,7 @@
   },
   "provenance": {
     "generation_command": "python benchmarks/density_matrix/task6_story1_workflow_contract_validation.py",
-    "git_revision": "c1f54495f7c742e9f4ac56caf8d465858c3e42cb",
+    "git_revision": "8532d0753baba0abc71b862da04702eea877bb07",
     "reference_task5_bundle_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/phase2_task5/task5_story6_publication_bundle.json",
     "working_directory": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer"
   },
@@ -326,14 +366,17 @@
       "ansatz",
       "backend_selection",
       "noise_schedule_policy",
-      "execution_modes"
+      "execution_modes",
+      "seed_policy"
     ],
     "required_output_fields": [
       "real_energy_semantics",
       "case_status_vocabulary",
       "bundle_status_vocabulary",
+      "aggregate_status_semantics",
       "required_case_fields",
       "required_trace_fields",
+      "required_unsupported_case_fields",
       "required_bundle_fields",
       "stability_metrics"
     ],
@@ -347,6 +390,17 @@
     ],
     "required_reference_bundle_sources": [
       "task5_story6_publication_evidence"
+    ],
+    "required_threshold_fields": [
+      "absolute_energy_error",
+      "rho_is_valid_tol",
+      "trace_deviation",
+      "observable_imag_abs",
+      "required_pass_rate",
+      "required_end_to_end_qubits",
+      "required_workflow_qubits",
+      "fixed_parameter_sets_per_size",
+      "documented_anchor_qubit"
     ],
     "status_vocabulary": [
       "pass",
@@ -376,8 +430,29 @@
     "contract_sections_complete": true,
     "mandatory_reference_artifact_count": 6,
     "reference_artifact_count": 6,
-    "required_input_field_count": 9,
-    "required_output_field_count": 7
+    "required_bundle_field_count": 15,
+    "required_input_field_count": 10,
+    "required_output_field_count": 9,
+    "required_threshold_field_count": 9
+  },
+  "thresholds": {
+    "absolute_energy_error": 1e-08,
+    "documented_anchor_qubit": 10,
+    "fixed_parameter_sets_per_size": 10,
+    "observable_imag_abs": 1e-10,
+    "required_end_to_end_qubits": [
+      4,
+      6
+    ],
+    "required_pass_rate": 1.0,
+    "required_workflow_qubits": [
+      4,
+      6,
+      8,
+      10
+    ],
+    "rho_is_valid_tol": 1e-10,
+    "trace_deviation": 1e-10
   },
   "workflow_id": "phase2_xxz_hea_density_matrix_anchor_workflow"
 }

@@ -14,7 +14,7 @@
   "provenance": {
     "generation_command": "python benchmarks/density_matrix/task6_story6_publication_bundle.py --output-dir benchmarks/density_matrix/artifacts/phase2_task6",
     "working_directory": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer",
-    "git_revision": "c1f54495f7c742e9f4ac56caf8d465858c3e42cb",
+    "git_revision": "8532d0753baba0abc71b862da04702eea877bb07",
     "story1_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/phase2_task6/story1_canonical_workflow_contract.json",
     "story2_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/phase2_task6/story2_end_to_end_trace_bundle.json",
     "story3_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/phase2_task6/story3_matrix_baseline_bundle.json",
@@ -26,9 +26,11 @@
     "present_artifact_count": 5,
     "status_match_count": 5,
     "workflow_identity_match_count": 5,
+    "semantic_match_count": 5,
     "missing_artifact_count": 0,
     "mismatched_status_count": 0,
-    "mismatched_identity_count": 0
+    "mismatched_identity_count": 0,
+    "mismatched_semantic_count": 0
   },
   "artifacts": [
     {
@@ -45,7 +47,14 @@
       "summary": {
         "workflow_id": "phase2_xxz_hea_density_matrix_anchor_workflow",
         "contract_version": "v1",
-        "contract_sections_complete": true
+        "contract_sections_complete": true,
+        "absolute_energy_error": 1e-08,
+        "required_workflow_qubits": [
+          4,
+          6,
+          8,
+          10
+        ]
       }
     },
     {
@@ -63,6 +72,10 @@
         "total_end_to_end_cases": 2,
         "passed_end_to_end_cases": 2,
         "required_trace_completed": true,
+        "end_to_end_gate_completed": true,
+        "end_to_end_qubits_match_contract": true,
+        "trace_case_name_matches_contract": true,
+        "workflow_thresholds_match_contract": true,
         "workflow_id": "phase2_xxz_hea_density_matrix_anchor_workflow",
         "contract_version": "v1"
       }
@@ -82,6 +95,9 @@
         "required_cases": 40,
         "required_passed_cases": 40,
         "documented_10q_anchor_present": true,
+        "matrix_gate_completed": true,
+        "workflow_inventory_matches_contract": true,
+        "workflow_thresholds_match_contract": true,
         "workflow_id": "phase2_xxz_hea_density_matrix_anchor_workflow",
         "contract_version": "v1"
       }
@@ -100,6 +116,7 @@
       "summary": {
         "unsupported_status_cases": 9,
         "backend_incompatible_case_present": true,
+        "unsupported_gate_completed": true,
         "workflow_id": "phase2_xxz_hea_density_matrix_anchor_workflow",
         "contract_version": "v1"
       }
@@ -119,6 +136,7 @@
         "mandatory_artifacts_complete": true,
         "optional_evidence_supplemental": true,
         "unsupported_evidence_negative_only": true,
+        "story4_case_field_alignment": true,
         "main_task6_claim_completed": true,
         "workflow_id": "phase2_xxz_hea_density_matrix_anchor_workflow",
         "contract_version": "v1"

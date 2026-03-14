@@ -128,10 +128,10 @@ def _load_story4_bundle(path: Path = STORY4_BUNDLE_PATH):
     return artifact
 
 
-def build_requirement_metadata():
+def build_requirement_metadata(story1_contract):
     return {
-        "workflow_id": WORKFLOW_ID,
-        "contract_version": CONTRACT_VERSION,
+        "workflow_id": story1_contract["workflow_id"],
+        "contract_version": story1_contract["contract_version"],
         "main_claim_rule": (
             "Only mandatory, complete, supported evidence may close the main "
             "Task 6 completion claim."
@@ -170,7 +170,29 @@ def build_artifact_bundle(
         if artifact["status"] != "pass":
             incomplete_mandatory_artifacts.append(artifact_id)
 
-    mandatory_artifacts_complete = not incomplete_mandatory_artifacts
+    story1_contract_complete = bool(
+        story1_contract["summary"].get("contract_sections_complete", False)
+    )
+    story2_gate_complete = bool(
+        story2_bundle["summary"].get("end_to_end_gate_completed", False)
+    )
+    story3_gate_complete = bool(
+        story3_bundle["summary"].get("matrix_gate_completed", False)
+    )
+    story4_gate_complete = bool(
+        story4_bundle["summary"].get("unsupported_gate_completed", False)
+    )
+    story4_case_field_alignment = (
+        story4_bundle["requirements"]["required_case_fields"]
+        == story1_contract["output_contract"]["required_unsupported_case_fields"]
+    )
+    mandatory_artifacts_complete = bool(
+        not incomplete_mandatory_artifacts
+        and story1_contract_complete
+        and story2_gate_complete
+        and story3_gate_complete
+        and story4_gate_complete
+    )
     optional_evidence_supplemental = bool(
         optional_bundle["status"] == "pass"
         and optional_bundle["summary"]["optional_cases_count_toward_mandatory_baseline"]
@@ -181,6 +203,7 @@ def build_artifact_bundle(
         and story4_bundle["summary"]["unsupported_status_cases"]
         == story4_bundle["summary"]["total_cases"]
         and story4_bundle["summary"]["mandatory_baseline_case_count"] == 0
+        and story4_case_field_alignment
     )
     main_task6_claim_completed = bool(
         mandatory_artifacts_complete
@@ -195,7 +218,7 @@ def build_artifact_bundle(
         "contract_version": story1_contract["contract_version"],
         "backend": story1_contract["backend"],
         "reference_backend": story1_contract["reference_backend"],
-        "requirements": build_requirement_metadata(),
+        "requirements": build_requirement_metadata(story1_contract),
         "thresholds": {
             "mandatory_completion_rule": "all_mandatory_artifacts_pass",
             "optional_cases_count_toward_mandatory_baseline": 0,
@@ -218,6 +241,11 @@ def build_artifact_bundle(
         "summary": {
             "mandatory_artifacts": list(mandatory_artifacts.keys()),
             "incomplete_mandatory_artifacts": incomplete_mandatory_artifacts,
+            "story1_contract_complete": story1_contract_complete,
+            "story2_gate_complete": story2_gate_complete,
+            "story3_gate_complete": story3_gate_complete,
+            "story4_gate_complete": story4_gate_complete,
+            "story4_case_field_alignment": story4_case_field_alignment,
             "mandatory_artifacts_complete": mandatory_artifacts_complete,
             "optional_cases": optional_bundle["summary"]["optional_cases"],
             "optional_passed_cases": optional_bundle["summary"]["optional_passed_cases"],

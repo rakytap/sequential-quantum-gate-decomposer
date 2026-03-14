@@ -38,6 +38,11 @@ DEFAULT_INNER_BLOCKS = 1
 FIXED_PARAMETER_QUBITS = (4, 6)
 STORY4_WORKFLOW_QUBITS = (4, 6, 8, 10)
 STORY4_PARAMETER_SET_COUNT = 10
+WORKFLOW_ERROR_TOL = 1e-8
+VALIDITY_TOL = 1e-10
+TRACE_TOL = 1e-10
+OBSERVABLE_IMAG_TOL = 1e-10
+REQUIRED_PASS_RATE = 1.0
 
 SUITE_NAME = "task6_story1_canonical_workflow_contract"
 ARTIFACT_FILENAME = "story1_canonical_workflow_contract.json"
@@ -64,6 +69,7 @@ ARTIFACT_CORE_FIELDS = (
     "backend",
     "reference_backend",
     "requirements",
+    "thresholds",
     "input_contract",
     "output_contract",
     "boundary_classification",
@@ -71,6 +77,17 @@ ARTIFACT_CORE_FIELDS = (
     "software",
     "provenance",
     "summary",
+)
+THRESHOLD_CORE_FIELDS = (
+    "absolute_energy_error",
+    "rho_is_valid_tol",
+    "trace_deviation",
+    "observable_imag_abs",
+    "required_pass_rate",
+    "required_end_to_end_qubits",
+    "required_workflow_qubits",
+    "fixed_parameter_sets_per_size",
+    "documented_anchor_qubit",
 )
 
 
@@ -186,21 +203,39 @@ def build_requirement_metadata(reference_bundle):
             "backend_selection",
             "noise_schedule_policy",
             "execution_modes",
+            "seed_policy",
         ],
         "required_output_fields": [
             "real_energy_semantics",
             "case_status_vocabulary",
             "bundle_status_vocabulary",
+            "aggregate_status_semantics",
             "required_case_fields",
             "required_trace_fields",
+            "required_unsupported_case_fields",
             "required_bundle_fields",
             "stability_metrics",
         ],
+        "required_threshold_fields": list(THRESHOLD_CORE_FIELDS),
         "required_boundary_classes": list(BOUNDARY_CLASS_NAMES),
         "required_reference_artifact_ids": mandatory_reference_artifact_ids,
         "required_reference_bundle_sources": [
             "task5_story6_publication_evidence",
         ],
+    }
+
+
+def build_threshold_metadata():
+    return {
+        "absolute_energy_error": WORKFLOW_ERROR_TOL,
+        "rho_is_valid_tol": VALIDITY_TOL,
+        "trace_deviation": TRACE_TOL,
+        "observable_imag_abs": OBSERVABLE_IMAG_TOL,
+        "required_pass_rate": REQUIRED_PASS_RATE,
+        "required_end_to_end_qubits": list(FIXED_PARAMETER_QUBITS),
+        "required_workflow_qubits": list(STORY4_WORKFLOW_QUBITS),
+        "fixed_parameter_sets_per_size": STORY4_PARAMETER_SET_COUNT,
+        "documented_anchor_qubit": 10,
     }
 
 
@@ -251,6 +286,18 @@ def build_input_contract():
                 "optimizer_config": build_story2_config(),
             },
         },
+        "seed_policy": {
+            "fixed_parameter_matrix": {
+                "source": "deterministic_parameter_set_schedule",
+                "generator": "build_story4_parameter_sets",
+                "random_seed_required": False,
+            },
+            "bounded_optimization_trace": {
+                "initial_parameter_source": "deterministic_linspace_schedule",
+                "generator": "build_story2_parameters",
+                "random_seed_required": False,
+            },
+        },
     }
 
 
@@ -259,6 +306,10 @@ def build_output_contract():
         "real_energy_semantics": "Return exact Hermitian energy through Re Tr(H*rho).",
         "case_status_vocabulary": list(STATUS_VOCABULARY),
         "bundle_status_vocabulary": ["pass", "fail"],
+        "aggregate_status_semantics": {
+            "pass": "All required contract sections, thresholds, boundary classes, and reference artifacts are present.",
+            "fail": "At least one required contract section, threshold, boundary class, or reference artifact is missing or inconsistent.",
+        },
         "required_case_fields": [
             "case_name",
             "status",
@@ -291,14 +342,22 @@ def build_output_contract():
             "total_trace_runtime_ms",
             "process_peak_rss_kb",
         ],
-        "required_bundle_fields": [
-            "suite_name",
+        "required_unsupported_case_fields": [
+            "case_name",
             "status",
-            "requirements",
-            "thresholds",
-            "software",
-            "summary",
+            "backend",
+            "support_tier",
+            "case_purpose",
+            "counts_toward_mandatory_baseline",
+            "unsupported_category",
+            "unsupported_reason",
+            "first_unsupported_condition",
+            "task4_boundary_class",
+            "failure_stage",
+            "workflow_id",
+            "contract_version",
         ],
+        "required_bundle_fields": list(ARTIFACT_CORE_FIELDS),
         "stability_metrics": [
             "workflow_completed",
             "total_case_runtime_ms",
@@ -386,12 +445,16 @@ def build_reference_artifacts(reference_bundle):
 def _contract_sections_complete(artifact):
     required_input_fields = artifact["requirements"]["required_input_fields"]
     required_output_fields = artifact["requirements"]["required_output_fields"]
+    required_bundle_fields = artifact["output_contract"]["required_bundle_fields"]
+    required_threshold_fields = artifact["requirements"]["required_threshold_fields"]
     required_boundary_classes = set(artifact["requirements"]["required_boundary_classes"])
     return bool(
         artifact["workflow_id"]
         and artifact["contract_version"]
         and all(field in artifact["input_contract"] for field in required_input_fields)
         and all(field in artifact["output_contract"] for field in required_output_fields)
+        and all(field in artifact for field in required_bundle_fields)
+        and all(field in artifact["thresholds"] for field in required_threshold_fields)
         and required_boundary_classes == set(artifact["boundary_classification"].keys())
         and artifact["reference_artifacts"]
     )
@@ -406,6 +469,7 @@ def build_artifact_bundle(reference_bundle):
         "backend": PRIMARY_BACKEND,
         "reference_backend": REFERENCE_BACKEND,
         "requirements": build_requirement_metadata(reference_bundle),
+        "thresholds": build_threshold_metadata(),
         "input_contract": build_input_contract(),
         "output_contract": build_output_contract(),
         "boundary_classification": build_boundary_classification(),
@@ -428,6 +492,12 @@ def build_artifact_bundle(reference_bundle):
         ),
         "required_output_field_count": len(
             artifact["requirements"]["required_output_fields"]
+        ),
+        "required_threshold_field_count": len(
+            artifact["requirements"]["required_threshold_fields"]
+        ),
+        "required_bundle_field_count": len(
+            artifact["output_contract"]["required_bundle_fields"]
         ),
         "boundary_class_count": len(artifact["boundary_classification"]),
         "mandatory_reference_artifact_count": sum(
@@ -486,6 +556,28 @@ def validate_artifact_bundle(artifact):
                     field
                 )
             )
+
+    for field in artifact["output_contract"]["required_bundle_fields"]:
+        if field not in artifact:
+            raise ValueError(
+                "Task 6 Story 1 artifact bundle is missing required bundle field '{}'".format(
+                    field
+                )
+            )
+
+    for field in artifact["requirements"]["required_threshold_fields"]:
+        if field not in artifact["thresholds"]:
+            raise ValueError(
+                "Task 6 Story 1 thresholds are missing required field '{}'".format(
+                    field
+                )
+            )
+
+    aggregate_status_semantics = artifact["output_contract"]["aggregate_status_semantics"]
+    if set(aggregate_status_semantics.keys()) != {"pass", "fail"}:
+        raise ValueError(
+            "Task 6 Story 1 aggregate_status_semantics must define exactly 'pass' and 'fail'"
+        )
 
     if not artifact["reference_artifacts"]:
         raise ValueError("Task 6 Story 1 requires at least one reference artifact")

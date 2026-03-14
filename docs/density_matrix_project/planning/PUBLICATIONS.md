@@ -145,10 +145,10 @@ training workflow without sacrificing correctness or reproducibility?
 - structured support-surface evidence that distinguishes required, optional,
   deferred, and unsupported cases,
 - machine-checkable reproducibility manifests linking every required artifact and
-  status, including the canonical workflow contract, end-to-end trace bundle,
-  workflow matrix bundle, unsupported-boundary bundle, and interpretation-
-  guardrail bundle, while preserving traceability to the underlying Task 5
-  validation layers,
+  status, semantic-closure rules, and canonical workflow identity, including the
+  canonical workflow contract, end-to-end trace bundle, workflow matrix bundle,
+  unsupported-boundary bundle, and interpretation-guardrail bundle, while
+  preserving traceability to the underlying Task 5 validation layers,
 - only mandatory, complete, supported evidence may close the main Phase 2
   publication claim,
 - and a clear statement of supported gate/noise scope plus explicit deferred
@@ -159,8 +159,9 @@ training workflow without sacrificing correctness or reproducibility?
 - implemented artifacts now include a complete top-level canonical-workflow
   manifest at
   `benchmarks/density_matrix/artifacts/phase2_task6/task6_story6_publication_bundle.json`,
-- mandatory artifact presence, expected-status checks, and workflow-identity
-  checks currently pass across all five required Task 6 publication artifacts:
+- mandatory artifact presence, expected-status checks, workflow-identity checks,
+  and lower-story semantic-closure checks now pass across all five required Task
+  6 publication artifacts:
   `story1_canonical_workflow_contract.json`,
   `story2_end_to_end_trace_bundle.json`,
   `story3_matrix_baseline_bundle.json`,
@@ -173,6 +174,10 @@ training workflow without sacrificing correctness or reproducibility?
 - the Task 6 contract and publication bundle reuse the Task 5 local-correctness,
   workflow-baseline, trace-and-anchor, metric-completeness, and interpretation
   layers as referenced underlying validation evidence rather than replacing them,
+- the canonical workflow contract now carries explicit threshold metadata,
+  deterministic parameter/trace policy metadata, and required unsupported-case
+  field inventory that downstream Task 6 layers consume directly instead of
+  re-declaring independently,
 - required-local-noise mandatory baseline cases currently pass at `100%` for the
   frozen integrated-backend scope,
 - documented 10-qubit anchor evidence remains present and is now incorporated

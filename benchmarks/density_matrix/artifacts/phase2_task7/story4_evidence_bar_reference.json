@@ -1,0 +1,230 @@
+{
+  "entry_point": {
+    "path": "docs/density_matrix_project/phases/phase-2/PHASE_2_DOCUMENTATION_INDEX.md",
+    "section_heading": "## Mandatory Evidence Bar",
+    "section_heading_present": true
+  },
+  "evidence_inventory": [
+    {
+      "entry_point_phrases": [
+        "mandatory 1 to 3 qubit micro-validation matrix"
+      ],
+      "entry_point_present": true,
+      "evidence_id": "micro_validation_matrix",
+      "label": "Micro-validation matrix",
+      "primary_doc_id": "task5_mini_spec",
+      "primary_path": "docs/density_matrix_project/phases/phase-2/task-5/TASK_5_MINI_SPEC.md",
+      "primary_source_phrases": [
+        "The mandatory micro-validation layer covers 1 to 3 qubit circuits"
+      ],
+      "primary_source_present": true
+    },
+    {
+      "entry_point_phrases": [
+        "mandatory 4 / 6 / 8 / 10 qubit fixed-parameter workflow matrix with 10",
+        "parameter vectors per required size"
+      ],
+      "entry_point_present": true,
+      "evidence_id": "workflow_matrix",
+      "label": "Workflow matrix",
+      "primary_doc_id": "task5_mini_spec",
+      "primary_path": "docs/density_matrix_project/phases/phase-2/task-5/TASK_5_MINI_SPEC.md",
+      "primary_source_phrases": [
+        "mandatory 4 / 6 / 8 / 10",
+        "at least 10 fixed",
+        "parameter vectors per mandatory workflow size"
+      ],
+      "primary_source_present": true
+    },
+    {
+      "entry_point_phrases": [
+        "at least one reproducible 4- or 6-qubit optimization trace"
+      ],
+      "entry_point_present": true,
+      "evidence_id": "optimization_trace",
+      "label": "Optimization trace",
+      "primary_doc_id": "task6_mini_spec",
+      "primary_path": "docs/density_matrix_project/phases/phase-2/task-6/TASK_6_MINI_SPEC.md",
+      "primary_source_phrases": [
+        "At least one reproducible 4- or 6-qubit optimization trace"
+      ],
+      "primary_source_present": true
+    },
+    {
+      "entry_point_phrases": [
+        "one documented 10-qubit anchor case"
+      ],
+      "entry_point_present": true,
+      "evidence_id": "anchor_case",
+      "label": "10-qubit anchor case",
+      "primary_doc_id": "task6_mini_spec",
+      "primary_path": "docs/density_matrix_project/phases/phase-2/task-6/TASK_6_MINI_SPEC.md",
+      "primary_source_phrases": [
+        "At least one documented 10-qubit anchor evaluation case"
+      ],
+      "primary_source_present": true
+    },
+    {
+      "entry_point_phrases": [
+        "runtime and peak-memory recording for mandatory workflow evidence"
+      ],
+      "entry_point_present": true,
+      "evidence_id": "runtime_peak_memory",
+      "label": "Runtime and peak memory",
+      "primary_doc_id": "task5_mini_spec",
+      "primary_path": "docs/density_matrix_project/phases/phase-2/task-5/TASK_5_MINI_SPEC.md",
+      "primary_source_phrases": [
+        "The validation package must record workflow completion, runtime, and peak",
+        "memory"
+      ],
+      "primary_source_present": true
+    },
+    {
+      "entry_point_phrases": [
+        "the backend-explicit reproducibility bundle rooted in",
+        "task6_story6_publication_bundle.json"
+      ],
+      "entry_point_present": true,
+      "evidence_id": "reproducibility_bundle",
+      "label": "Reproducibility bundle",
+      "primary_doc_id": "phase2_detailed_planning",
+      "primary_path": "docs/density_matrix_project/phases/phase-2/DETAILED_PLANNING_PHASE_2.md",
+      "primary_source_phrases": [
+        "complete workflow-facing publication bundle is archived at",
+        "task6_story6_publication_bundle.json"
+      ],
+      "primary_source_present": true
+    },
+    {
+      "entry_point_phrases": [
+        "mandatory micro-validation accuracy: `<= 1e-10`"
+      ],
+      "entry_point_present": true,
+      "evidence_id": "micro_threshold",
+      "label": "Micro-validation threshold",
+      "primary_doc_id": "task5_mini_spec",
+      "primary_path": "docs/density_matrix_project/phases/phase-2/task-5/TASK_5_MINI_SPEC.md",
+      "primary_source_phrases": [
+        "`<= 1e-10` maximum absolute energy error on the mandatory 1 to 3 qubit"
+      ],
+      "primary_source_present": true
+    },
+    {
+      "entry_point_phrases": [
+        "mandatory workflow-matrix accuracy: `<= 1e-8`"
+      ],
+      "entry_point_present": true,
+      "evidence_id": "workflow_threshold",
+      "label": "Workflow threshold",
+      "primary_doc_id": "task5_mini_spec",
+      "primary_path": "docs/density_matrix_project/phases/phase-2/task-5/TASK_5_MINI_SPEC.md",
+      "primary_source_phrases": [
+        "`<= 1e-8` maximum absolute energy error on the mandatory 4 / 6 / 8 / 10"
+      ],
+      "primary_source_present": true
+    },
+    {
+      "entry_point_phrases": [
+        "`100%` pass rate on the mandatory evidence package"
+      ],
+      "entry_point_present": true,
+      "evidence_id": "mandatory_pass_rate",
+      "label": "Mandatory pass rate",
+      "primary_doc_id": "task5_mini_spec",
+      "primary_path": "docs/density_matrix_project/phases/phase-2/task-5/TASK_5_MINI_SPEC.md",
+      "primary_source_phrases": [
+        "`100%` pass rate on the mandatory"
+      ],
+      "primary_source_present": true
+    },
+    {
+      "entry_point_phrases": [
+        "only mandatory, complete, supported evidence closes the core Phase 2 claim"
+      ],
+      "entry_point_present": true,
+      "evidence_id": "main_claim_rule",
+      "label": "Main claim closure rule",
+      "primary_doc_id": "phase2_detailed_planning",
+      "primary_path": "docs/density_matrix_project/phases/phase-2/DETAILED_PLANNING_PHASE_2.md",
+      "primary_source_phrases": [
+        "only mandatory, complete, supported evidence may close the main Phase 2"
+      ],
+      "primary_source_present": true
+    },
+    {
+      "entry_point_phrases": [
+        "optional whole-register depolarizing remains supplemental"
+      ],
+      "entry_point_present": true,
+      "evidence_id": "optional_supplemental",
+      "label": "Optional evidence stays supplemental",
+      "primary_doc_id": "planning_publications",
+      "primary_path": "docs/density_matrix_project/planning/PUBLICATIONS.md",
+      "primary_source_phrases": [
+        "optional whole-register depolarizing remains supplemental"
+      ],
+      "primary_source_present": true
+    },
+    {
+      "entry_point_phrases": [
+        "unsupported, deferred, or incomplete evidence remains excluded from the core claim"
+      ],
+      "entry_point_present": true,
+      "evidence_id": "unsupported_excluded",
+      "label": "Unsupported and incomplete evidence excluded",
+      "primary_doc_id": "phase2_detailed_planning",
+      "primary_path": "docs/density_matrix_project/phases/phase-2/DETAILED_PLANNING_PHASE_2.md",
+      "primary_source_phrases": [
+        "optional evidence remains supplemental and deferred or",
+        "unsupported evidence remains boundary-only"
+      ],
+      "primary_source_present": true
+    }
+  ],
+  "provenance": {
+    "entry_point_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/docs/density_matrix_project/phases/phase-2/PHASE_2_DOCUMENTATION_INDEX.md",
+    "generation_command": "python benchmarks/density_matrix/task7_story4_evidence_bar_validation.py",
+    "git_revision": "8532d0753baba0abc71b862da04702eea877bb07",
+    "story3_support_surface_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/phase2_task7/story3_support_surface_reference.json",
+    "working_directory": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer"
+  },
+  "requirements": {
+    "required_evidence_ids": [
+      "micro_validation_matrix",
+      "workflow_matrix",
+      "optimization_trace",
+      "anchor_case",
+      "runtime_peak_memory",
+      "reproducibility_bundle",
+      "micro_threshold",
+      "workflow_threshold",
+      "mandatory_pass_rate",
+      "main_claim_rule",
+      "optional_supplemental",
+      "unsupported_excluded"
+    ]
+  },
+  "software": {
+    "python": "3.12.7"
+  },
+  "status": "pass",
+  "story3_support_surface": {
+    "status": "pass",
+    "suite_name": "task7_story3_support_surface_reference",
+    "summary": {
+      "all_boundary_examples_present": true,
+      "all_support_items_present": true,
+      "boundary_example_count": 3,
+      "required_support_count": 8,
+      "section_heading_present": true,
+      "support_surface_reference_completed": true
+    }
+  },
+  "suite_name": "task7_story4_evidence_bar_reference",
+  "summary": {
+    "all_evidence_items_present": true,
+    "evidence_bar_reference_completed": true,
+    "required_evidence_count": 12,
+    "section_heading_present": true
+  }
+}

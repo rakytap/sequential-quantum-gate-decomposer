@@ -6805,7 +6805,7 @@
   "contract_version": "v1",
   "provenance": {
     "generation_command": "python benchmarks/density_matrix/task6_story3_matrix_baseline_validation.py",
-    "git_revision": "c1f54495f7c742e9f4ac56caf8d465858c3e42cb",
+    "git_revision": "8532d0753baba0abc71b862da04702eea877bb07",
     "story1_contract_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/phase2_task6/story1_canonical_workflow_contract.json",
     "story2_bundle_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/phase2_task6/story2_end_to_end_trace_bundle.json",
     "task5_workflow_bundle_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/phase2_task5/story2_workflow_baseline_bundle.json",
@@ -6822,8 +6822,29 @@
         "contract_sections_complete": true,
         "mandatory_reference_artifact_count": 6,
         "reference_artifact_count": 6,
-        "required_input_field_count": 9,
-        "required_output_field_count": 7
+        "required_bundle_field_count": 15,
+        "required_input_field_count": 10,
+        "required_output_field_count": 9,
+        "required_threshold_field_count": 9
+      },
+      "thresholds": {
+        "absolute_energy_error": 1e-08,
+        "documented_anchor_qubit": 10,
+        "fixed_parameter_sets_per_size": 10,
+        "observable_imag_abs": 1e-10,
+        "required_end_to_end_qubits": [
+          4,
+          6
+        ],
+        "required_pass_rate": 1.0,
+        "required_workflow_qubits": [
+          4,
+          6,
+          8,
+          10
+        ],
+        "rho_is_valid_tol": 1e-10,
+        "trace_deviation": 1e-10
       },
       "workflow_id": "phase2_xxz_hea_density_matrix_anchor_workflow"
     },
@@ -6836,11 +6857,17 @@
         "all_cases_required": true,
         "duplicate_case_names": [],
         "end_to_end_gate_completed": true,
+        "end_to_end_qubits_match_contract": true,
         "failed_end_to_end_cases": 0,
         "missing_mandatory_case_names": [],
+        "missing_mandatory_qubits": [],
         "observed_case_names": [
           "story4_4q_set_00",
           "story4_6q_set_00"
+        ],
+        "observed_qubits": [
+          4,
+          6
         ],
         "passed_end_to_end_cases": 2,
         "required_trace_bridge_supported": true,
@@ -6849,9 +6876,12 @@
         "required_trace_present": true,
         "stable_case_ids_present": true,
         "total_end_to_end_cases": 2,
+        "trace_case_name_matches_contract": true,
         "trace_matches_contract": true,
         "unexpected_case_names": [],
-        "unsupported_end_to_end_cases": 0
+        "unexpected_mandatory_qubits": [],
+        "unsupported_end_to_end_cases": 0,
+        "workflow_thresholds_match_contract": true
       }
     },
     "task5_story2_workflow_baseline": {
@@ -6953,6 +6983,7 @@
   },
   "requirements": {
     "contract_version": "v1",
+    "documented_anchor_qubit": 10,
     "fixed_parameter_sets_per_size": 10,
     "mandatory_parameter_set_ids": [
       "set_00",
@@ -7107,10 +7138,13 @@
     "stable_parameter_set_ids_present": true,
     "total_cases": 40,
     "unexpected_case_names": [],
-    "unsupported_cases": 0
+    "unsupported_cases": 0,
+    "workflow_inventory_matches_contract": true,
+    "workflow_thresholds_match_contract": true
   },
   "thresholds": {
     "absolute_energy_error": 1e-08,
+    "documented_anchor_qubit": 10,
     "fixed_parameter_sets_per_size": 10,
     "observable_imag_abs": 1e-10,
     "required_pass_rate": 1.0,

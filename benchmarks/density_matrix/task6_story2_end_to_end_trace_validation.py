@@ -65,6 +65,7 @@ TASK5_TRACE_ARTIFACT_PATH = (
 MANDATORY_END_TO_END_CASE_NAMES = ("story4_4q_set_00", "story4_6q_set_00")
 MANDATORY_END_TO_END_QUBITS = (4, 6)
 TRACE_CASE_NAME = "story2_trace_4q"
+CANONICAL_END_TO_END_PARAMETER_SET_ID = "set_00"
 ARTIFACT_CORE_FIELDS = (
     "suite_name",
     "status",
@@ -96,13 +97,33 @@ def _load_story1_contract(path: Path = STORY1_CONTRACT_PATH):
     return artifact
 
 
+def get_required_end_to_end_qubits(story1_contract):
+    return tuple(story1_contract["thresholds"]["required_end_to_end_qubits"])
+
+
+def get_required_trace_case_name(story1_contract):
+    return story1_contract["input_contract"]["execution_modes"][
+        "bounded_optimization_trace"
+    ]["canonical_trace_case_name"]
+
+
+def build_mandatory_end_to_end_case_names(story1_contract):
+    return tuple(
+        f"story4_{qbit_num}q_{CANONICAL_END_TO_END_PARAMETER_SET_ID}"
+        for qbit_num in get_required_end_to_end_qubits(story1_contract)
+    )
+
+
 def build_requirement_metadata(story1_contract):
+    mandatory_end_to_end_qubits = get_required_end_to_end_qubits(story1_contract)
+    mandatory_case_names = build_mandatory_end_to_end_case_names(story1_contract)
+    required_trace_case_name = get_required_trace_case_name(story1_contract)
     return {
         "workflow_id": story1_contract["workflow_id"],
         "contract_version": story1_contract["contract_version"],
-        "mandatory_end_to_end_case_names": list(MANDATORY_END_TO_END_CASE_NAMES),
-        "mandatory_end_to_end_qubits": list(MANDATORY_END_TO_END_QUBITS),
-        "required_trace_case_name": TRACE_CASE_NAME,
+        "mandatory_end_to_end_case_names": list(mandatory_case_names),
+        "mandatory_end_to_end_qubits": list(mandatory_end_to_end_qubits),
+        "required_trace_case_name": required_trace_case_name,
         "status_vocabulary": list(STATUS_VOCABULARY),
         "required_bundle_sources": [
             story1_contract["suite_name"],
@@ -112,16 +133,29 @@ def build_requirement_metadata(story1_contract):
     }
 
 
-def build_threshold_metadata(workflow_bundle):
+def build_threshold_metadata(story1_contract, workflow_bundle):
     workflow_thresholds = workflow_bundle["thresholds"]
+    contract_thresholds = story1_contract["thresholds"]
     return {
-        "absolute_energy_error": workflow_thresholds["absolute_energy_error"],
-        "rho_is_valid_tol": workflow_thresholds["rho_is_valid_tol"],
-        "trace_deviation": workflow_thresholds["trace_deviation"],
-        "observable_imag_abs": workflow_thresholds["observable_imag_abs"],
-        "required_pass_rate": 1.0,
-        "required_end_to_end_qubits": list(MANDATORY_END_TO_END_QUBITS),
-        "required_trace_case_name": TRACE_CASE_NAME,
+        "absolute_energy_error": contract_thresholds["absolute_energy_error"],
+        "rho_is_valid_tol": contract_thresholds["rho_is_valid_tol"],
+        "trace_deviation": contract_thresholds["trace_deviation"],
+        "observable_imag_abs": contract_thresholds["observable_imag_abs"],
+        "required_pass_rate": contract_thresholds["required_pass_rate"],
+        "required_end_to_end_qubits": list(
+            contract_thresholds["required_end_to_end_qubits"]
+        ),
+        "required_trace_case_name": get_required_trace_case_name(story1_contract),
+        "workflow_thresholds_match_contract": all(
+            workflow_thresholds[field] == contract_thresholds[field]
+            for field in (
+                "absolute_energy_error",
+                "rho_is_valid_tol",
+                "trace_deviation",
+                "observable_imag_abs",
+                "required_pass_rate",
+            )
+        ),
     }
 
 
@@ -188,29 +222,39 @@ def validate_trace_artifact(trace_artifact):
         )
 
 
-def build_case_identity_summary(cases):
+def build_case_identity_summary(cases, mandatory_case_names, mandatory_qubits):
     case_names = [case["case_name"] for case in cases]
     counts = Counter(case_names)
     duplicate_case_names = sorted(
         case_name for case_name, count in counts.items() if count > 1
     )
     missing_mandatory_case_names = sorted(
-        set(MANDATORY_END_TO_END_CASE_NAMES) - set(case_names)
+        set(mandatory_case_names) - set(case_names)
     )
     unexpected_case_names = sorted(
-        set(case_names) - set(MANDATORY_END_TO_END_CASE_NAMES)
+        set(case_names) - set(mandatory_case_names)
+    )
+    observed_qubits = sorted(case["qbit_num"] for case in cases)
+    missing_mandatory_qubits = sorted(set(mandatory_qubits) - set(observed_qubits))
+    unexpected_mandatory_qubits = sorted(
+        set(observed_qubits) - set(mandatory_qubits)
     )
     stable_case_ids_present = (
         not duplicate_case_names
         and not missing_mandatory_case_names
         and not unexpected_case_names
-        and len(case_names) == len(MANDATORY_END_TO_END_CASE_NAMES)
+        and not missing_mandatory_qubits
+        and not unexpected_mandatory_qubits
+        and len(case_names) == len(mandatory_case_names)
     )
     return {
         "observed_case_names": case_names,
+        "observed_qubits": observed_qubits,
         "missing_mandatory_case_names": missing_mandatory_case_names,
+        "missing_mandatory_qubits": missing_mandatory_qubits,
         "duplicate_case_names": duplicate_case_names,
         "unexpected_case_names": unexpected_case_names,
+        "unexpected_mandatory_qubits": unexpected_mandatory_qubits,
         "stable_case_ids_present": stable_case_ids_present,
     }
 
@@ -235,7 +279,7 @@ def _enrich_trace_artifact(trace_artifact, story1_contract):
 
 def _extract_mandatory_cases(workflow_bundle, story1_contract):
     selected_cases = []
-    for case_name in MANDATORY_END_TO_END_CASE_NAMES:
+    for case_name in build_mandatory_end_to_end_case_names(story1_contract):
         matching_cases = [
             case for case in workflow_bundle["cases"] if case["case_name"] == case_name
         ]
@@ -245,6 +289,9 @@ def _extract_mandatory_cases(workflow_bundle, story1_contract):
 
 
 def build_artifact_bundle(story1_contract, workflow_bundle, trace_artifact):
+    mandatory_case_names = build_mandatory_end_to_end_case_names(story1_contract)
+    mandatory_end_to_end_qubits = get_required_end_to_end_qubits(story1_contract)
+    required_trace_case_name = get_required_trace_case_name(story1_contract)
     cases = _extract_mandatory_cases(workflow_bundle, story1_contract)
     for case in cases:
         validate_end_to_end_case_payload(case)
@@ -252,7 +299,10 @@ def build_artifact_bundle(story1_contract, workflow_bundle, trace_artifact):
     trace_artifact = _enrich_trace_artifact(trace_artifact, story1_contract)
     validate_trace_artifact(trace_artifact)
 
-    case_identity = build_case_identity_summary(cases)
+    case_identity = build_case_identity_summary(
+        cases, mandatory_case_names, mandatory_end_to_end_qubits
+    )
+    threshold_metadata = build_threshold_metadata(story1_contract, workflow_bundle)
     total_cases = len(cases)
     passed_end_to_end_cases = sum(
         bool(
@@ -272,7 +322,10 @@ def build_artifact_bundle(story1_contract, workflow_bundle, trace_artifact):
         and case["contract_version"] == story1_contract["contract_version"]
         for case in cases
     )
-    required_trace_present = trace_artifact["case_name"] == TRACE_CASE_NAME and bool(
+    end_to_end_qubits_match_contract = sorted(
+        case["qbit_num"] for case in cases
+    ) == sorted(mandatory_end_to_end_qubits)
+    required_trace_present = trace_artifact["case_name"] == required_trace_case_name and bool(
         trace_artifact["required_story6_trace"]
     )
     required_trace_completed = bool(
@@ -282,6 +335,9 @@ def build_artifact_bundle(story1_contract, workflow_bundle, trace_artifact):
     required_trace_bridge_supported = bool(
         trace_artifact["bridge_supported_pass"]
     )
+    trace_case_name_matches_contract = (
+        trace_artifact["case_name"] == required_trace_case_name
+    )
     trace_matches_contract = bool(
         trace_artifact["workflow_id"] == story1_contract["workflow_id"]
         and trace_artifact["contract_version"] == story1_contract["contract_version"]
@@ -289,15 +345,18 @@ def build_artifact_bundle(story1_contract, workflow_bundle, trace_artifact):
     end_to_end_gate_completed = bool(
         story1_contract["status"] == "pass"
         and case_identity["stable_case_ids_present"]
-        and passed_end_to_end_cases == len(MANDATORY_END_TO_END_CASE_NAMES)
+        and passed_end_to_end_cases == len(mandatory_case_names)
         and unsupported_cases == 0
         and all_cases_required
         and all_cases_mandatory
         and all_cases_match_contract
+        and end_to_end_qubits_match_contract
         and required_trace_present
         and required_trace_completed
         and required_trace_bridge_supported
+        and trace_case_name_matches_contract
         and trace_matches_contract
+        and threshold_metadata["workflow_thresholds_match_contract"]
     )
 
     bundle = {
@@ -308,7 +367,7 @@ def build_artifact_bundle(story1_contract, workflow_bundle, trace_artifact):
         "backend": story1_contract["backend"],
         "reference_backend": story1_contract["reference_backend"],
         "requirements": build_requirement_metadata(story1_contract),
-        "thresholds": build_threshold_metadata(workflow_bundle),
+        "thresholds": threshold_metadata,
         "software": build_software_metadata(),
         "provenance": {
             "generation_command": (
@@ -330,11 +389,16 @@ def build_artifact_bundle(story1_contract, workflow_bundle, trace_artifact):
             "all_cases_required": all_cases_required,
             "all_cases_count_toward_mandatory_baseline": all_cases_mandatory,
             "all_cases_match_contract": all_cases_match_contract,
+            "end_to_end_qubits_match_contract": end_to_end_qubits_match_contract,
             "required_trace_case_name": trace_artifact["case_name"],
             "required_trace_present": required_trace_present,
             "required_trace_completed": required_trace_completed,
             "required_trace_bridge_supported": required_trace_bridge_supported,
+            "trace_case_name_matches_contract": trace_case_name_matches_contract,
             "trace_matches_contract": trace_matches_contract,
+            "workflow_thresholds_match_contract": threshold_metadata[
+                "workflow_thresholds_match_contract"
+            ],
             "end_to_end_gate_completed": end_to_end_gate_completed,
         },
         "required_artifacts": {
@@ -343,6 +407,7 @@ def build_artifact_bundle(story1_contract, workflow_bundle, trace_artifact):
                 "status": story1_contract["status"],
                 "workflow_id": story1_contract["workflow_id"],
                 "contract_version": story1_contract["contract_version"],
+                "thresholds": story1_contract["thresholds"],
                 "summary": story1_contract["summary"],
             },
             "task5_story2_workflow_baseline": {
@@ -384,8 +449,43 @@ def validate_artifact_bundle(bundle):
                 bundle["contract_version"]
             )
         )
+    if (
+        bundle["requirements"]["mandatory_end_to_end_qubits"]
+        != bundle["thresholds"]["required_end_to_end_qubits"]
+    ):
+        raise ValueError(
+            "Task 6 Story 2 bundle has inconsistent end-to-end qubit requirements"
+        )
+    if (
+        bundle["requirements"]["required_trace_case_name"]
+        != bundle["thresholds"]["required_trace_case_name"]
+    ):
+        raise ValueError(
+            "Task 6 Story 2 bundle has inconsistent trace-case requirements"
+        )
     if bundle["summary"]["stable_case_ids_present"] is False and bundle["status"] == "pass":
         raise ValueError("Task 6 Story 2 cannot pass without stable mandatory case IDs")
+    if (
+        bundle["summary"]["end_to_end_qubits_match_contract"] is False
+        and bundle["status"] == "pass"
+    ):
+        raise ValueError(
+            "Task 6 Story 2 cannot pass without matching Story 1 end-to-end qubit requirements"
+        )
+    if (
+        bundle["summary"]["trace_case_name_matches_contract"] is False
+        and bundle["status"] == "pass"
+    ):
+        raise ValueError(
+            "Task 6 Story 2 cannot pass without matching Story 1 trace-case requirements"
+        )
+    if (
+        bundle["summary"]["workflow_thresholds_match_contract"] is False
+        and bundle["status"] == "pass"
+    ):
+        raise ValueError(
+            "Task 6 Story 2 cannot pass when workflow thresholds drift from Story 1 contract metadata"
+        )
     if bundle["summary"]["end_to_end_gate_completed"] != (bundle["status"] == "pass"):
         raise ValueError(
             "Task 6 Story 2 end_to_end_gate_completed summary is inconsistent"

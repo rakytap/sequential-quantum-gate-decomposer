@@ -41,7 +41,10 @@ Out of scope for this story:
   writing
   `benchmarks/density_matrix/artifacts/phase2_task6/story1_canonical_workflow_contract.json`.
   Story 3 matrix evidence must reference that emitted `workflow_id` and
-  `contract_version` directly.
+  `contract_version` directly, and should now also reuse Story 1's emitted
+  `thresholds.required_workflow_qubits`,
+  `thresholds.fixed_parameter_sets_per_size`, and
+  `thresholds.documented_anchor_qubit` where practical.
 - Story 2 now emits
   `benchmarks/density_matrix/task6_story2_end_to_end_trace_validation.py`,
   writing
@@ -83,7 +86,8 @@ Out of scope for this story:
 - [ ] Freeze deterministic case naming that combines qubit size and
       parameter-set ID.
 - [ ] Keep every Story 3 case explicitly tied to the emitted Story 1 workflow
-      identity rather than to implicit matrix-only naming.
+      identity and threshold inventory rather than to implicit matrix-only
+      naming.
 - [ ] Keep optional exploratory matrix variants outside Story 3 mandatory
       closure.
 
@@ -349,8 +353,9 @@ Story 3 is complete only when all of the following are true:
   when it preserves all required matrix metadata, instead of forcing a live
   rerun path to be the only source of Story 3 evidence.
 - Consume the emitted Story 1 contract artifact directly for canonical workflow
-  identity and contract-version fields instead of duplicating those values in
-  Story 3 code.
+  identity, contract-version, required workflow qubit list, required
+  parameter-set count, and documented anchor qubit instead of duplicating those
+  values in Story 3 code.
 - Keep trace semantics in Story 2 and do not reintroduce trace dependency as a
   Story 3 closure gate.
 - Preserve existing case/status vocabulary where possible (`required_cases`,

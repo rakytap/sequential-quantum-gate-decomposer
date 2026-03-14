@@ -127,7 +127,11 @@ def _load_story3_bundle(path: Path = STORY3_BUNDLE_PATH):
     return artifact
 
 
-def build_requirement_metadata(task4_unsupported_bundle):
+def get_required_unsupported_case_fields(story1_contract):
+    return tuple(story1_contract["output_contract"]["required_unsupported_case_fields"])
+
+
+def build_requirement_metadata(task4_unsupported_bundle, story1_contract):
     categories = sorted(
         set(case["unsupported_category"] for case in task4_unsupported_bundle["cases"])
         | {"backend_incompatible_request"}
@@ -147,6 +151,9 @@ def build_requirement_metadata(task4_unsupported_bundle):
             SUPPORT_TIER_DEFERRED,
             SUPPORT_TIER_UNSUPPORTED,
         ],
+        "required_case_fields": list(
+            get_required_unsupported_case_fields(story1_contract)
+        ),
         "required_categories": categories,
         "required_boundary_classes": boundary_classes,
         "required_bundle_sources": [
@@ -191,24 +198,7 @@ def _enrich_case(case):
     return case
 
 
-def validate_case_payload(case):
-    required_fields = (
-        "case_name",
-        "status",
-        "backend",
-        "support_tier",
-        "case_purpose",
-        "counts_toward_mandatory_baseline",
-        "unsupported_category",
-        "unsupported_reason",
-        "first_unsupported_condition",
-        "task4_boundary_class",
-        "failure_stage",
-        "workflow_id",
-        "contract_version",
-        "story6_case_role",
-        "required_story6_unsupported_case",
-    )
+def validate_case_payload(case, required_fields):
     missing_fields = [field for field in required_fields if field not in case]
     if missing_fields:
         raise ValueError(
@@ -225,12 +215,12 @@ def build_artifact_bundle(
     task4_unsupported_bundle,
     backend_mismatch_case,
 ):
+    requirements = build_requirement_metadata(task4_unsupported_bundle, story1_contract)
     cases = [_enrich_case(case) for case in task4_unsupported_bundle["cases"]]
     cases.append(_enrich_case(_augment_backend_mismatch_case(backend_mismatch_case)))
     for case in cases:
-        validate_case_payload(case)
+        validate_case_payload(case, requirements["required_case_fields"])
 
-    requirements = build_requirement_metadata(task4_unsupported_bundle)
     expected_case_names = set(requirements["required_case_names"])
     observed_case_names = [case["case_name"] for case in cases]
     case_counts = Counter(observed_case_names)
@@ -300,7 +290,9 @@ def build_artifact_bundle(
         "requirements": requirements,
         "thresholds": {
             "expected_status": "unsupported",
-            "silent_fallback_allowed": False,
+            "silent_fallback_allowed": story1_contract["input_contract"][
+                "backend_selection"
+            ]["silent_fallback_allowed"],
             "silent_substitution_allowed": False,
             "mandatory_baseline_case_count": 0,
         },
@@ -341,6 +333,9 @@ def build_artifact_bundle(
             "story1_contract": {
                 "suite_name": story1_contract["suite_name"],
                 "status": story1_contract["status"],
+                "required_unsupported_case_fields": story1_contract["output_contract"][
+                    "required_unsupported_case_fields"
+                ],
                 "summary": story1_contract["summary"],
             },
             "story2_end_to_end_trace": {
@@ -387,7 +382,7 @@ def validate_artifact_bundle(bundle):
             )
         )
     for case in bundle["cases"]:
-        validate_case_payload(case)
+        validate_case_payload(case, bundle["requirements"]["required_case_fields"])
         if case["workflow_id"] != bundle["workflow_id"]:
             raise ValueError(
                 "Task 6 Story 4 case '{}' does not match bundle workflow_id".format(

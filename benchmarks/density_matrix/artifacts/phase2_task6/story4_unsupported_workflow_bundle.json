@@ -515,7 +515,7 @@
   "provenance": {
     "backend_mismatch_case_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/phase2_task2/story3_unsupported_state_vector_density_noise.json",
     "generation_command": "python benchmarks/density_matrix/task6_story4_unsupported_workflow_validation.py",
-    "git_revision": "c1f54495f7c742e9f4ac56caf8d465858c3e42cb",
+    "git_revision": "8532d0753baba0abc71b862da04702eea877bb07",
     "story1_contract_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/phase2_task6/story1_canonical_workflow_contract.json",
     "story2_bundle_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/phase2_task6/story2_end_to_end_trace_bundle.json",
     "story3_bundle_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/phase2_task6/story3_matrix_baseline_bundle.json",
@@ -525,6 +525,21 @@
   "reference_backend": "qiskit_aer_density_matrix",
   "required_artifacts": {
     "story1_contract": {
+      "required_unsupported_case_fields": [
+        "case_name",
+        "status",
+        "backend",
+        "support_tier",
+        "case_purpose",
+        "counts_toward_mandatory_baseline",
+        "unsupported_category",
+        "unsupported_reason",
+        "first_unsupported_condition",
+        "task4_boundary_class",
+        "failure_stage",
+        "workflow_id",
+        "contract_version"
+      ],
       "status": "pass",
       "suite_name": "task6_story1_canonical_workflow_contract",
       "summary": {
@@ -532,8 +547,10 @@
         "contract_sections_complete": true,
         "mandatory_reference_artifact_count": 6,
         "reference_artifact_count": 6,
-        "required_input_field_count": 9,
-        "required_output_field_count": 7
+        "required_bundle_field_count": 15,
+        "required_input_field_count": 10,
+        "required_output_field_count": 9,
+        "required_threshold_field_count": 9
       }
     },
     "story2_end_to_end_trace": {
@@ -545,11 +562,17 @@
         "all_cases_required": true,
         "duplicate_case_names": [],
         "end_to_end_gate_completed": true,
+        "end_to_end_qubits_match_contract": true,
         "failed_end_to_end_cases": 0,
         "missing_mandatory_case_names": [],
+        "missing_mandatory_qubits": [],
         "observed_case_names": [
           "story4_4q_set_00",
           "story4_6q_set_00"
+        ],
+        "observed_qubits": [
+          4,
+          6
         ],
         "passed_end_to_end_cases": 2,
         "required_trace_bridge_supported": true,
@@ -558,9 +581,12 @@
         "required_trace_present": true,
         "stable_case_ids_present": true,
         "total_end_to_end_cases": 2,
+        "trace_case_name_matches_contract": true,
         "trace_matches_contract": true,
         "unexpected_case_names": [],
-        "unsupported_end_to_end_cases": 0
+        "unexpected_mandatory_qubits": [],
+        "unsupported_end_to_end_cases": 0,
+        "workflow_thresholds_match_contract": true
       }
     },
     "story3_matrix_baseline": {
@@ -644,7 +670,9 @@
         "stable_parameter_set_ids_present": true,
         "total_cases": 40,
         "unexpected_case_names": [],
-        "unsupported_cases": 0
+        "unsupported_cases": 0,
+        "workflow_inventory_matches_contract": true,
+        "workflow_thresholds_match_contract": true
       }
     },
     "task4_unsupported_noise_bundle": {
@@ -718,6 +746,21 @@
       "task6_story3_matrix_baseline",
       "task4_story4_unsupported_noise_boundary",
       "phase2_task2_backend_mismatch_case"
+    ],
+    "required_case_fields": [
+      "case_name",
+      "status",
+      "backend",
+      "support_tier",
+      "case_purpose",
+      "counts_toward_mandatory_baseline",
+      "unsupported_category",
+      "unsupported_reason",
+      "first_unsupported_condition",
+      "task4_boundary_class",
+      "failure_stage",
+      "workflow_id",
+      "contract_version"
     ],
     "required_case_names": [
       "task4_story4_deferred_readout_noise",

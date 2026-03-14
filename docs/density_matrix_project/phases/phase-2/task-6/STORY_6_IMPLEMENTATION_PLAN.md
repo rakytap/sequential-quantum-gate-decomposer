@@ -38,9 +38,10 @@ Out of scope for this story:
   boundaries, and interpretation guardrails.
 - Story 1's emitted artifact
   `benchmarks/density_matrix/artifacts/phase2_task6/story1_canonical_workflow_contract.json`
-  is the canonical source of Task 6 workflow identity and contract-version
-  fields. Story 6 should package and validate that artifact as the root identity
-  surface for the full Task 6 bundle.
+  is the canonical source of Task 6 workflow identity, contract-version,
+  threshold metadata, and bundle-level contract semantics. Story 6 should
+  package and validate that artifact as the root identity surface for the full
+  Task 6 bundle.
 - Story 2's emitted artifact
   `benchmarks/density_matrix/artifacts/phase2_task6/story2_end_to_end_trace_bundle.json`
   is now the canonical source of Task 6 4q/6q end-to-end plus required-trace
@@ -73,7 +74,8 @@ Out of scope for this story:
   `artifact_id`, `artifact_class`, `mandatory`, `path`, `status`,
   `expected_statuses`, `purpose`, `generation_command`, and `summary`.
 - Task 6 Story 6 must preserve and expose canonical workflow identity fields from
-  Story 1 and case identity fields from Stories 2 and 3.
+  Story 1, including threshold and contract-semantics metadata, plus case
+  identity fields from Stories 2 and 3.
 - Frozen publication alignment remains unchanged:
   `P2-ADR-007`, `P2-ADR-013`, `P2-ADR-014`, `P2-ADR-015`,
   `DETAILED_PLANNING_PHASE_2.md`, and `PAPER_PHASE_2.md`.

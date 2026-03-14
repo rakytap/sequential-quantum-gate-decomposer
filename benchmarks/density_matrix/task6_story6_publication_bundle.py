@@ -73,6 +73,31 @@ BUNDLE_FIELDS = (
     "summary",
     "artifacts",
 )
+REQUIRED_SEMANTIC_FLAGS = {
+    "task6_story1_contract_bundle": ("contract_sections_complete",),
+    "task6_story2_end_to_end_trace_bundle": (
+        "end_to_end_gate_completed",
+        "end_to_end_qubits_match_contract",
+        "trace_case_name_matches_contract",
+        "workflow_thresholds_match_contract",
+    ),
+    "task6_story3_matrix_baseline_bundle": (
+        "matrix_gate_completed",
+        "workflow_inventory_matches_contract",
+        "workflow_thresholds_match_contract",
+        "documented_10q_anchor_present",
+    ),
+    "task6_story4_unsupported_workflow_bundle": (
+        "unsupported_gate_completed",
+        "backend_incompatible_case_present",
+    ),
+    "task6_story5_interpretation_bundle": (
+        "mandatory_artifacts_complete",
+        "unsupported_evidence_negative_only",
+        "story4_case_field_alignment",
+        "main_task6_claim_completed",
+    ),
+}
 
 
 def _load_json(path: Path):
@@ -149,6 +174,11 @@ def _build_artifact_entry(
     }
 
 
+def _artifact_semantics_complete(artifact):
+    required_flags = REQUIRED_SEMANTIC_FLAGS.get(artifact["artifact_id"], ())
+    return all(artifact["summary"].get(flag, False) for flag in required_flags)
+
+
 def build_task6_story6_bundle(
     output_dir: Path,
     *,
@@ -197,8 +227,12 @@ def build_task6_story6_bundle(
             summary={
                 "workflow_id": story1_bundle["workflow_id"],
                 "contract_version": story1_bundle["contract_version"],
-                "contract_sections_complete": story1_bundle["summary"][
-                    "contract_sections_complete"
+                "contract_sections_complete": story1_bundle["summary"]["contract_sections_complete"],
+                "absolute_energy_error": story1_bundle["thresholds"][
+                    "absolute_energy_error"
+                ],
+                "required_workflow_qubits": story1_bundle["thresholds"][
+                    "required_workflow_qubits"
                 ],
             },
         ),
@@ -221,6 +255,18 @@ def build_task6_story6_bundle(
                 "required_trace_completed": story2_bundle["summary"][
                     "required_trace_completed"
                 ],
+                "end_to_end_gate_completed": story2_bundle["summary"][
+                    "end_to_end_gate_completed"
+                ],
+                "end_to_end_qubits_match_contract": story2_bundle["summary"][
+                    "end_to_end_qubits_match_contract"
+                ],
+                "trace_case_name_matches_contract": story2_bundle["summary"][
+                    "trace_case_name_matches_contract"
+                ],
+                "workflow_thresholds_match_contract": story2_bundle["summary"][
+                    "workflow_thresholds_match_contract"
+                ],
                 "workflow_id": story2_bundle["workflow_id"],
                 "contract_version": story2_bundle["contract_version"],
             },
@@ -242,6 +288,15 @@ def build_task6_story6_bundle(
                 "documented_10q_anchor_present": story3_bundle["summary"][
                     "documented_10q_anchor_present"
                 ],
+                "matrix_gate_completed": story3_bundle["summary"][
+                    "matrix_gate_completed"
+                ],
+                "workflow_inventory_matches_contract": story3_bundle["summary"][
+                    "workflow_inventory_matches_contract"
+                ],
+                "workflow_thresholds_match_contract": story3_bundle["summary"][
+                    "workflow_thresholds_match_contract"
+                ],
                 "workflow_id": story3_bundle["workflow_id"],
                 "contract_version": story3_bundle["contract_version"],
             },
@@ -261,6 +316,9 @@ def build_task6_story6_bundle(
                 ],
                 "backend_incompatible_case_present": story4_bundle["summary"][
                     "backend_incompatible_case_present"
+                ],
+                "unsupported_gate_completed": story4_bundle["summary"][
+                    "unsupported_gate_completed"
                 ],
                 "workflow_id": story4_bundle["workflow_id"],
                 "contract_version": story4_bundle["contract_version"],
@@ -285,6 +343,9 @@ def build_task6_story6_bundle(
                 "unsupported_evidence_negative_only": story5_bundle["summary"][
                     "unsupported_evidence_negative_only"
                 ],
+                "story4_case_field_alignment": story5_bundle["summary"][
+                    "story4_case_field_alignment"
+                ],
                 "main_task6_claim_completed": story5_bundle["summary"][
                     "main_task6_claim_completed"
                 ],
@@ -298,6 +359,7 @@ def build_task6_story6_bundle(
     present_count = 0
     status_match_count = 0
     identity_match_count = 0
+    semantic_match_count = 0
     for artifact in mandatory_artifacts:
         if (output_dir / artifact["path"]).exists():
             present_count += 1
@@ -307,12 +369,15 @@ def build_task6_story6_bundle(
             "summary"
         ].get("contract_version", CONTRACT_VERSION) == CONTRACT_VERSION:
             identity_match_count += 1
+        if _artifact_semantics_complete(artifact):
+            semantic_match_count += 1
 
     bundle_status = (
         "pass"
         if present_count == len(mandatory_artifacts)
         and status_match_count == len(mandatory_artifacts)
         and identity_match_count == len(mandatory_artifacts)
+        and semantic_match_count == len(mandatory_artifacts)
         else "fail"
     )
 
@@ -339,9 +404,12 @@ def build_task6_story6_bundle(
             "present_artifact_count": present_count,
             "status_match_count": status_match_count,
             "workflow_identity_match_count": identity_match_count,
+            "semantic_match_count": semantic_match_count,
             "missing_artifact_count": len(mandatory_artifacts) - present_count,
             "mismatched_status_count": len(mandatory_artifacts) - status_match_count,
             "mismatched_identity_count": len(mandatory_artifacts) - identity_match_count,
+            "mismatched_semantic_count": len(mandatory_artifacts)
+            - semantic_match_count,
         },
         "artifacts": artifacts,
     }
@@ -411,6 +479,12 @@ def validate_task6_story6_bundle(bundle, bundle_dir: Path):
         ) != bundle["contract_version"]:
             raise ValueError(
                 "Task 6 Story 6 artifact {} has mismatched contract_version".format(
+                    artifact["artifact_id"]
+                )
+            )
+        if not _artifact_semantics_complete(artifact):
+            raise ValueError(
+                "Task 6 Story 6 artifact {} is missing required semantic closure flags".format(
                     artifact["artifact_id"]
                 )
             )

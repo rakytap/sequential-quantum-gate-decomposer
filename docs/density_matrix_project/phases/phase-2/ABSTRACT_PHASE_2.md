@@ -24,10 +24,11 @@ The current implementation-backed evidence now includes exact agreement with
 Qiskit Aer on the mandatory 1 to 3 qubit micro-validation matrix, required
 end-to-end workflow cases at 4 and 6 qubits, the mandatory 4/6/8/10-qubit
 workflow-scale exact-regime matrix with 10 fixed parameter vectors per required
-size, one bounded 4-qubit optimization trace, and explicit unsupported-case
-evidence. Benchmarking continues to emphasize training-relevant circuits and
-realistic local noise models, including local depolarizing, phase damping, and
-amplitude damping, rather than relying mainly on whole-register toy noise.
+size, one bounded 4-qubit optimization trace driven by a deterministic
+parameter policy, and explicit unsupported-case evidence. Benchmarking
+continues to emphasize training-relevant circuits and realistic local noise
+models, including local depolarizing, phase damping, and amplitude damping,
+rather than relying mainly on whole-register toy noise.
 
 The complete workflow-facing publication bundle is now archived in
 `benchmarks/density_matrix/artifacts/phase2_task6/`, with
@@ -44,7 +45,10 @@ claims is explicit support-tier classification (`required`, `optional`,
 `deferred`, `unsupported`) together with hard-error boundary handling,
 metric-completeness checks, and interpretation guardrails that prevent partial,
 optional, deferred, or unsupported evidence from inflating the main claim. Only
-mandatory, complete, supported evidence closes the main Phase 2 result.
+mandatory, complete, supported evidence closes the main Phase 2 result, and the
+top-level publication bundle now verifies semantic closure across those lower
+evidence layers rather than only artifact presence and shared workflow
+identity.
 
 The Phase 2 contribution is a research-grade exact noisy backend slice for
 SQUANDER that enables one reproducible canonical noisy XXZ VQE workflow and

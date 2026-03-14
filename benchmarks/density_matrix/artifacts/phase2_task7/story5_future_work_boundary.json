@@ -1,0 +1,170 @@
+{
+  "entry_point": {
+    "path": "docs/density_matrix_project/phases/phase-2/PHASE_2_DOCUMENTATION_INDEX.md",
+    "section_heading": "## Future Work And Non-Goals",
+    "section_heading_present": true
+  },
+  "future_work_inventory": [
+    {
+      "entry_point_phrases": [
+        "Phase 2 remains the exact noisy backend integration milestone"
+      ],
+      "entry_point_present": true,
+      "label": "Phase 2 exact integration milestone",
+      "source_doc_ids": [
+        "planning_planning",
+        "phase2_detailed_planning"
+      ],
+      "source_paths": [
+        "docs/density_matrix_project/planning/PLANNING.md",
+        "docs/density_matrix_project/phases/phase-2/DETAILED_PLANNING_PHASE_2.md"
+      ],
+      "source_phrases": [
+        "Phase 2: Exact Noisy Training Backend Integration",
+        "Phase 2 establishes the exact noisy backend as a usable scientific workflow"
+      ],
+      "source_present": true,
+      "topic_id": "phase2_exact_integration"
+    },
+    {
+      "entry_point_phrases": [
+        "Density-aware partitioning, fusion, and acceleration are future work for Phase 3"
+      ],
+      "entry_point_present": true,
+      "label": "Phase 3 partitioning and fusion",
+      "source_doc_ids": [
+        "planning_planning",
+        "research_alignment"
+      ],
+      "source_paths": [
+        "docs/density_matrix_project/planning/PLANNING.md",
+        "docs/density_matrix_project/RESEARCH_ALIGNMENT.md"
+      ],
+      "source_phrases": [
+        "Phase 3: Density-Aware Partitioning, Fusion, And Acceleration",
+        "Phase 3 | Full noise module and validation"
+      ],
+      "source_present": true,
+      "topic_id": "phase3_partitioning_fusion"
+    },
+    {
+      "entry_point_phrases": [
+        "Gradient support and approximate scaling methods remain future work beyond the core Phase 2 milestone"
+      ],
+      "entry_point_present": true,
+      "label": "Gradients and approximate scaling",
+      "source_doc_ids": [
+        "planning_planning",
+        "phase2_detailed_planning"
+      ],
+      "source_paths": [
+        "docs/density_matrix_project/planning/PLANNING.md",
+        "docs/density_matrix_project/phases/phase-2/DETAILED_PLANNING_PHASE_2.md"
+      ],
+      "source_phrases": [
+        "gradient-path completion for density-matrix optimization",
+        "stochastic trajectories or MPDO-based approximation paths"
+      ],
+      "source_present": true,
+      "topic_id": "gradient_and_approximate_scaling"
+    },
+    {
+      "entry_point_phrases": [
+        "Broader noisy-VQA integration and optimizer comparisons are future work for Phase 4"
+      ],
+      "entry_point_present": true,
+      "label": "Phase 4 optimizer studies",
+      "source_doc_ids": [
+        "planning_planning",
+        "research_alignment"
+      ],
+      "source_paths": [
+        "docs/density_matrix_project/planning/PLANNING.md",
+        "docs/density_matrix_project/RESEARCH_ALIGNMENT.md"
+      ],
+      "source_phrases": [
+        "Phase 4: Noisy VQA Workflows And Optimizer Studies",
+        "Phase 4 | Noisy VQA integration and optimizer comparisons"
+      ],
+      "source_present": true,
+      "topic_id": "phase4_optimizer_work"
+    },
+    {
+      "entry_point_phrases": [
+        "Trainability analysis is future work for Phase 5"
+      ],
+      "entry_point_present": true,
+      "label": "Phase 5 trainability analysis",
+      "source_doc_ids": [
+        "planning_planning",
+        "research_alignment"
+      ],
+      "source_paths": [
+        "docs/density_matrix_project/planning/PLANNING.md",
+        "docs/density_matrix_project/RESEARCH_ALIGNMENT.md"
+      ],
+      "source_phrases": [
+        "Phase 5: Trainability Analysis Under Realistic Noise",
+        "Phase 5 | Trainability analysis under noise"
+      ],
+      "source_present": true,
+      "topic_id": "phase5_trainability"
+    },
+    {
+      "entry_point_phrases": [
+        "These topics are not current Phase 2 commitments."
+      ],
+      "entry_point_present": true,
+      "label": "Not current Phase 2 commitments",
+      "source_doc_ids": [
+        "phase2_detailed_planning"
+      ],
+      "source_paths": [
+        "docs/density_matrix_project/phases/phase-2/DETAILED_PLANNING_PHASE_2.md"
+      ],
+      "source_phrases": [
+        "must not be presented as Phase 2 commitments"
+      ],
+      "source_present": true,
+      "topic_id": "non_goal_boundary"
+    }
+  ],
+  "provenance": {
+    "entry_point_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/docs/density_matrix_project/phases/phase-2/PHASE_2_DOCUMENTATION_INDEX.md",
+    "generation_command": "python benchmarks/density_matrix/task7_story5_future_work_boundary_validation.py",
+    "git_revision": "8532d0753baba0abc71b862da04702eea877bb07",
+    "story4_evidence_bar_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/phase2_task7/story4_evidence_bar_reference.json",
+    "working_directory": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer"
+  },
+  "requirements": {
+    "required_topic_ids": [
+      "phase2_exact_integration",
+      "phase3_partitioning_fusion",
+      "gradient_and_approximate_scaling",
+      "phase4_optimizer_work",
+      "phase5_trainability",
+      "non_goal_boundary"
+    ]
+  },
+  "software": {
+    "python": "3.12.7"
+  },
+  "status": "pass",
+  "story4_evidence_bar": {
+    "status": "pass",
+    "suite_name": "task7_story4_evidence_bar_reference",
+    "summary": {
+      "all_evidence_items_present": true,
+      "evidence_bar_reference_completed": true,
+      "required_evidence_count": 12,
+      "section_heading_present": true
+    }
+  },
+  "suite_name": "task7_story5_future_work_boundary",
+  "summary": {
+    "all_future_work_items_present": true,
+    "future_work_boundary_completed": true,
+    "required_topic_count": 6,
+    "section_heading_present": true
+  }
+}

@@ -93,8 +93,8 @@ Implementation-backed status for the completed integrated-backend slice:
   - exact real-valued Hermitian energy evaluation through the sparse-Hamiltonian
   interface,
   - a stable canonical workflow contract with explicit workflow ID, input/output
-    contract fields, and supported/optional/deferred/unsupported boundary
-    classes,
+    contract fields, threshold metadata, deterministic parameter / trace policy
+    metadata, and supported/optional/deferred/unsupported boundary classes,
   - a mandatory 1 to 3 qubit micro-validation matrix,
   - required end-to-end 4- and 6-qubit workflow execution cases,
   - a mandatory 4/6/8/10-qubit workflow-scale exact-regime benchmark matrix with
@@ -153,9 +153,10 @@ claim quality:
 - metric-completeness and interpretation guardrails should be preserved as
   first-class machine-checkable evidence layers rather than left implicit in raw
   benchmark payloads,
-- machine-checkable manifests that verify artifact presence, expected status
-  alignment, and workflow identity are required for reproducible publication
-  evidence.
+- machine-checkable manifests must verify not only artifact presence, expected
+  status alignment, and workflow identity, but also lower-story semantic
+  closure flags such as contract completeness, contract-aligned workflow gates,
+  unsupported-boundary integrity, and interpretation guardrails.
 
 ## 2. Background and Related Work
 

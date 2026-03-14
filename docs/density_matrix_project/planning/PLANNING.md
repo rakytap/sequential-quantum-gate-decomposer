@@ -35,7 +35,10 @@ What is already true:
   workflow contract, and a layered machine-checkable publication bundle
   covering the workflow contract, end-to-end 4/6 qubit evidence, 4/6/8/10
   exact-regime matrix evidence, deterministic unsupported-boundary evidence,
-  and interpretation guardrails,
+  and interpretation guardrails, with top-level semantic-closure checks that
+  validate contract completeness, workflow-gate completeness, unsupported-case
+  boundary integrity, and claim-closure rules rather than only artifact
+  presence,
 - the partitioning stack is mature for state-vector simulation and wide-circuit
   unitary optimization.
 

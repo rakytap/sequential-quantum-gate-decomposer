@@ -68,7 +68,9 @@ Out of scope for this story:
   `benchmarks/density_matrix/task4_support_tiers.py` should remain the canonical
   classification vocabulary.
 - Story 4 outputs should already include explicit unsupported status and boundary
-  diagnostics required for Story 5 interpretation.
+  diagnostics required for Story 5 interpretation, and should now also satisfy
+  the Story 1-emitted `required_unsupported_case_fields` inventory so Story 5
+  can rely on one canonical unsupported-case shape.
 - Frozen interpretation expectations remain unchanged:
   `P2-ADR-007`, `P2-ADR-014`, and `P2-ADR-015`.
 - Story 5 should compute and expose Task 6 interpretation guardrails, not

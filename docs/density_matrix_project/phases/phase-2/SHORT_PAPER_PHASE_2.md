@@ -50,10 +50,10 @@ hardware-efficient-ansatz bridge with ordered fixed local noise, exact
 real-valued Hermitian energy evaluation, a mandatory 1 to 3 qubit
 micro-validation matrix, required end-to-end 4- and 6-qubit workflow cases, a
 mandatory 4/6/8/10-qubit workflow-scale exact-regime matrix with 10 fixed
-parameter vectors per required size, one bounded 4-qubit optimization trace,
-and explicit hard-error unsupported behavior. As a result, the project now has
-a delivered research-grade exact noisy backend slice for the frozen canonical
-workflow scope.
+parameter vectors per required size, one bounded 4-qubit optimization trace
+driven by a deterministic parameter policy, and explicit hard-error unsupported
+behavior. As a result, the project now has a delivered research-grade exact
+noisy backend slice for the frozen canonical workflow scope.
 
 That slice is now backed by a complete workflow-facing publication package
 archived in `benchmarks/density_matrix/artifacts/phase2_task6/`, with
@@ -65,7 +65,10 @@ Task 6 manifest links the canonical workflow contract
 `story4_unsupported_workflow_bundle.json`, and the interpretation-guardrail
 bundle `story5_interpretation_bundle.json` in one machine-readable evidence
 surface while preserving traceability to the underlying Task 5 validation
-layers.
+layers. The publication bundle now checks semantic closure across those layers,
+including contract completeness, contract-aligned workflow gates, unsupported-
+boundary integrity, and interpretation guardrails, rather than only artifact
+presence and shared workflow identity.
 
 This short paper documents the first major integration step that closes that
 gap. Its purpose is to present the density-matrix path as a usable backend for

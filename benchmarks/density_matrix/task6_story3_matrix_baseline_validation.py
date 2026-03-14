@@ -100,21 +100,58 @@ def _load_story2_bundle(path: Path = STORY2_BUNDLE_PATH):
     return artifact
 
 
+def get_required_workflow_qubits(story1_contract):
+    return tuple(story1_contract["thresholds"]["required_workflow_qubits"])
+
+
+def get_required_parameter_set_count(story1_contract):
+    return int(story1_contract["thresholds"]["fixed_parameter_sets_per_size"])
+
+
+def get_documented_anchor_qubit(story1_contract):
+    return int(story1_contract["thresholds"]["documented_anchor_qubit"])
+
+
 def build_requirement_metadata(task5_workflow_bundle, story1_contract):
     requirements = task5_workflow_bundle["requirements"]
     return {
         "workflow_id": story1_contract["workflow_id"],
         "contract_version": story1_contract["contract_version"],
-        "mandatory_workflow_qubits": list(requirements["mandatory_workflow_qubits"]),
-        "fixed_parameter_sets_per_size": requirements["fixed_parameter_sets_per_size"],
+        "mandatory_workflow_qubits": list(get_required_workflow_qubits(story1_contract)),
+        "fixed_parameter_sets_per_size": get_required_parameter_set_count(
+            story1_contract
+        ),
         "mandatory_parameter_set_ids": list(requirements["mandatory_parameter_set_ids"]),
         "required_case_names": list(requirements["mandatory_case_names"]),
+        "documented_anchor_qubit": get_documented_anchor_qubit(story1_contract),
         "required_bundle_sources": [
             story1_contract["suite_name"],
             "task6_story2_end_to_end_trace",
             "task5_story2_exact_regime_workflow",
         ],
     }
+
+
+def build_threshold_metadata(story1_contract, task5_workflow_bundle):
+    contract_thresholds = story1_contract["thresholds"]
+    workflow_thresholds = task5_workflow_bundle["thresholds"]
+    threshold_fields = (
+        "absolute_energy_error",
+        "rho_is_valid_tol",
+        "trace_deviation",
+        "observable_imag_abs",
+        "required_pass_rate",
+        "required_workflow_qubits",
+        "fixed_parameter_sets_per_size",
+        "documented_anchor_qubit",
+    )
+    return {
+        field: contract_thresholds[field] for field in threshold_fields
+    }, all(
+        workflow_thresholds[field] == contract_thresholds[field]
+        for field in threshold_fields
+        if field in workflow_thresholds
+    )
 
 
 def validate_case_payload(case):
@@ -217,6 +254,9 @@ def _enrich_case(case, story1_contract):
 
 def build_artifact_bundle(story1_contract, story2_bundle, task5_workflow_bundle):
     requirements = build_requirement_metadata(task5_workflow_bundle, story1_contract)
+    threshold_metadata, workflow_thresholds_match_contract = build_threshold_metadata(
+        story1_contract, task5_workflow_bundle
+    )
     cases = [_enrich_case(case, story1_contract) for case in task5_workflow_bundle["cases"]]
     for case in cases:
         validate_case_payload(case)
@@ -237,7 +277,15 @@ def build_artifact_bundle(story1_contract, story2_bundle, task5_workflow_bundle)
         and case["contract_version"] == story1_contract["contract_version"]
         for case in cases
     )
-    documented_10q_anchor_present = any(case["qbit_num"] == 10 for case in cases)
+    workflow_inventory_matches_contract = bool(
+        task5_workflow_bundle["requirements"]["mandatory_workflow_qubits"]
+        == requirements["mandatory_workflow_qubits"]
+        and task5_workflow_bundle["requirements"]["fixed_parameter_sets_per_size"]
+        == requirements["fixed_parameter_sets_per_size"]
+    )
+    documented_10q_anchor_present = any(
+        case["qbit_num"] == requirements["documented_anchor_qubit"] for case in cases
+    )
     matrix_gate_completed = bool(
         story1_contract["status"] == "pass"
         and story2_bundle["status"] == "pass"
@@ -250,6 +298,8 @@ def build_artifact_bundle(story1_contract, story2_bundle, task5_workflow_bundle)
         and all_cases_required
         and all_cases_mandatory
         and all_cases_match_contract
+        and workflow_inventory_matches_contract
+        and workflow_thresholds_match_contract
         and documented_10q_anchor_present
     )
 
@@ -261,7 +311,7 @@ def build_artifact_bundle(story1_contract, story2_bundle, task5_workflow_bundle)
         "backend": story1_contract["backend"],
         "reference_backend": story1_contract["reference_backend"],
         "requirements": requirements,
-        "thresholds": dict(task5_workflow_bundle["thresholds"]),
+        "thresholds": threshold_metadata,
         "software": build_software_metadata(),
         "provenance": {
             "generation_command": (
@@ -284,6 +334,8 @@ def build_artifact_bundle(story1_contract, story2_bundle, task5_workflow_bundle)
             "required_passed_cases": passed_cases,
             "required_pass_rate": (passed_cases / total_cases) if total_cases else 0.0,
             "documented_10q_anchor_present": documented_10q_anchor_present,
+            "workflow_inventory_matches_contract": workflow_inventory_matches_contract,
+            "workflow_thresholds_match_contract": workflow_thresholds_match_contract,
             "all_cases_required": all_cases_required,
             "all_cases_count_toward_mandatory_baseline": all_cases_mandatory,
             "all_cases_match_contract": all_cases_match_contract,
@@ -296,6 +348,7 @@ def build_artifact_bundle(story1_contract, story2_bundle, task5_workflow_bundle)
                 "status": story1_contract["status"],
                 "workflow_id": story1_contract["workflow_id"],
                 "contract_version": story1_contract["contract_version"],
+                "thresholds": story1_contract["thresholds"],
                 "summary": story1_contract["summary"],
             },
             "story2_end_to_end_trace": {
@@ -336,6 +389,27 @@ def validate_artifact_bundle(bundle):
                 bundle["contract_version"]
             )
         )
+    if (
+        bundle["requirements"]["mandatory_workflow_qubits"]
+        != bundle["thresholds"]["required_workflow_qubits"]
+    ):
+        raise ValueError(
+            "Task 6 Story 3 bundle has inconsistent workflow-qubit requirements"
+        )
+    if (
+        bundle["requirements"]["fixed_parameter_sets_per_size"]
+        != bundle["thresholds"]["fixed_parameter_sets_per_size"]
+    ):
+        raise ValueError(
+            "Task 6 Story 3 bundle has inconsistent parameter-set-count requirements"
+        )
+    if (
+        bundle["requirements"]["documented_anchor_qubit"]
+        != bundle["thresholds"]["documented_anchor_qubit"]
+    ):
+        raise ValueError(
+            "Task 6 Story 3 bundle has inconsistent documented-anchor requirements"
+        )
     if bundle["summary"]["matrix_gate_completed"] != (bundle["status"] == "pass"):
         raise ValueError(
             "Task 6 Story 3 matrix_gate_completed summary is inconsistent"
@@ -357,6 +431,20 @@ def validate_artifact_bundle(bundle):
     if not bundle["summary"]["all_cases_match_contract"] and bundle["status"] == "pass":
         raise ValueError(
             "Task 6 Story 3 cannot pass when matrix cases do not match the canonical contract"
+        )
+    if (
+        bundle["summary"]["workflow_inventory_matches_contract"] is False
+        and bundle["status"] == "pass"
+    ):
+        raise ValueError(
+            "Task 6 Story 3 cannot pass when matrix inventory drifts from Story 1 contract metadata"
+        )
+    if (
+        bundle["summary"]["workflow_thresholds_match_contract"] is False
+        and bundle["status"] == "pass"
+    ):
+        raise ValueError(
+            "Task 6 Story 3 cannot pass when matrix thresholds drift from Story 1 contract metadata"
         )
 
 

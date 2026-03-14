@@ -37,7 +37,10 @@ Out of scope for this story:
   writing
   `benchmarks/density_matrix/artifacts/phase2_task6/story1_canonical_workflow_contract.json`.
   Story 4 should use that emitted workflow identity as the positive-path anchor
-  when distinguishing supported from unsupported variants.
+  when distinguishing supported from unsupported variants. Story 1 now also
+  defines explicit `required_unsupported_case_fields`; Story 4 should satisfy
+  that emitted field inventory rather than inventing a looser unsupported-case
+  schema.
 - Story 2 now emits
   `benchmarks/density_matrix/task6_story2_end_to_end_trace_validation.py`,
   writing
@@ -98,7 +101,8 @@ Out of scope for this story:
 - [ ] Freeze stable boundary case IDs and one canonical unsupported status
       vocabulary for Story 4.
 - [ ] Map each boundary case to the expected `unsupported_category` and first
-      unsupported condition semantics.
+      unsupported condition semantics, plus the emitted Story 1 required
+      unsupported-case field inventory.
 - [ ] Keep exploratory boundary cases outside Story 4 mandatory closure.
 
 **Evidence produced**
@@ -367,8 +371,9 @@ Story 4 is complete only when all of the following are true:
   `task4_story4_unsupported_noise_validation.py`, and
   `story2_vqe_density_validation.py`.
 - Use the emitted Story 1 contract artifact as the canonical source for
-  workflow-identity fields so Story 4 negative evidence names the same workflow
-  contract that Stories 2 and 3 positively exercise.
+  workflow-identity fields and required unsupported-case field inventory so
+  Story 4 negative evidence names the same workflow contract that Stories 2 and
+  3 positively exercise.
 - Preserve field vocabulary where practical (`unsupported_category`,
   `first_unsupported_condition`, `unsupported_reason`, `failure_stage`,
   `task4_boundary_class`, support-path pass flags).

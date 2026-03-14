@@ -32,7 +32,8 @@ Implementation-backed status at this point:
 - mandatory validation evidence now includes:
   - 1 to 3 qubit required micro-validation matrix,
   - one canonical workflow contract with stable workflow identity and explicit
-    input/output fields,
+    input/output fields, threshold metadata, deterministic parameter/trace
+    policy metadata, and required unsupported-case field inventory,
   - required end-to-end 4 and 6 qubit workflow cases plus one bounded 4-qubit
     optimization trace with recorded runtime and peak memory,
   - 4 / 6 / 8 / 10 qubit required workflow matrix with 10 fixed parameter
@@ -43,7 +44,9 @@ Implementation-backed status at this point:
   `task6_story6_publication_bundle.json` as the top-level manifest, linking the
   canonical workflow contract, end-to-end trace bundle, matrix baseline bundle,
   unsupported-workflow bundle, and interpretation bundle while preserving
-  traceability to the underlying Task 5 validation layers.
+  traceability to the underlying Task 5 validation layers and now validating
+  lower-story semantic closure in addition to artifact presence, expected
+  status, and cross-artifact workflow identity.
 
 This document therefore continues to describe the full Phase 2 contract, while
 the notes below clarify the intentional scientific boundaries that remain in
@@ -64,6 +67,9 @@ now part of the validation posture:
   packaged as a separate evidence layer,
 - machine-readable artifact manifests with stable case IDs and status checks are
   required for publication-facing reproducibility,
+- lower evidence layers should consume canonical workflow-contract metadata such
+  as thresholds, required qubit inventories, canonical trace identity, and
+  unsupported-case field requirements instead of re-declaring them independently,
 - phase-level metric-completeness and interpretation-guardrail bundles are
   required to prevent partial, optional, unsupported, or malformed evidence from
   inflating the main claim,
@@ -578,7 +584,8 @@ Mandatory:
   - Hamiltonian specification,
   - ansatz type and depth,
   - noise insertion schedule and parameters,
-  - random seeds,
+  - random seeds or an explicit deterministic parameter-generation / trace
+    policy when no randomness is required,
   - software versions or commit,
   - and raw benchmark outputs.
 
@@ -590,8 +597,9 @@ Current implementation-backed clarification:
   unsupported-workflow boundaries, and interpretation guardrails.
 - The top-level completeness, status, and workflow-identity checks are encoded
   in `task6_story6_publication_bundle.json`, which verifies mandatory artifact
-  presence, expected status alignment, and cross-artifact workflow identity
-  across the final Task 6 publication-facing evidence layers.
+  presence, expected status alignment, cross-artifact workflow identity, and
+  lower-story semantic closure flags across the final Task 6 publication-facing
+  evidence layers.
 
 Optional:
 

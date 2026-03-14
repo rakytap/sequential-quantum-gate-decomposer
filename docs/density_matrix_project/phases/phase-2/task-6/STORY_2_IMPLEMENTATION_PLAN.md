@@ -40,8 +40,11 @@ Out of scope for this story:
   `benchmarks/density_matrix/task6_story1_workflow_contract_validation.py`,
   writing
   `benchmarks/density_matrix/artifacts/phase2_task6/story1_canonical_workflow_contract.json`.
-  Story 2 must execute that same `workflow_id` and `contract_version` rather
-  than introducing another workflow identity.
+  Story 2 must execute that same `workflow_id` and `contract_version`, and
+  should now also reuse Story 1's emitted
+  `thresholds.required_end_to_end_qubits` plus
+  `input_contract.execution_modes.bounded_optimization_trace.canonical_trace_case_name`
+  rather than duplicating those contract values in a second place.
 - `benchmarks/density_matrix/story2_vqe_density_validation.py` already provides
   canonical execution surfaces for this story:
   - fixed-parameter workflow execution through `run_story4_workflow_case()`,
@@ -85,8 +88,9 @@ Out of scope for this story:
 - [ ] Freeze one canonical required trace case identity (4q or 6q) and mark it
       explicitly as mandatory Story 2 evidence.
 - [ ] Record a stable mapping from Story 2 case IDs to the Story 1
-      `phase2_xxz_hea_density_matrix_anchor_workflow` identity and `v1`
-      contract version emitted by Story 1.
+      `phase2_xxz_hea_density_matrix_anchor_workflow` identity, `v1`
+      contract version, required end-to-end qubit list, and canonical trace
+      case name emitted by Story 1.
 - [ ] Keep optional extra traces or exploratory end-to-end runs outside Story 2
       mandatory closure.
 
@@ -354,8 +358,9 @@ Story 2 is complete only when all of the following are true:
   `benchmarks/density_matrix/story2_vqe_density_validation.py`:
   `run_story4_workflow_case()`, `capture_case()`, and `run_optimization_trace()`.
 - Consume the emitted Story 1 contract artifact directly for canonical workflow
-  identity and contract-version fields instead of restating those values in a
-  second Task 6-only source.
+  identity, contract-version, required end-to-end qubit list, and canonical
+  trace case name instead of restating those values in a second Task 6-only
+  source.
 - Reuse status and bundle semantics from Task 5 Story 2 and Story 3 outputs
   (`story2_workflow_baseline_bundle.json`,
   `story3_trace_anchor_bundle.json`, and `story2_trace_4q.json`) where practical.
