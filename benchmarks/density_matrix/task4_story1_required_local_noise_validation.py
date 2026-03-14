@@ -10,6 +10,7 @@ workflow validation package:
 - it proves each required local model executes on the supported generated-HEA
   density path,
 - it records model identity, placement, and fixed value metadata,
+- it marks every emitted case as part of the mandatory Task 4 baseline,
 - and it rejects whole-register depolarizing as a stand-in for the required
   local-noise baseline.
 
@@ -47,6 +48,11 @@ from benchmarks.density_matrix.story2_vqe_density_validation import (
     build_vqe,
     density_energy,
     insert_story2_noise,
+)
+from benchmarks.density_matrix.task4_support_tiers import (
+    SUPPORT_TIER_VOCABULARY,
+    build_required_case_classification,
+    build_task4_support_tier_summary,
 )
 
 SUITE_NAME = "task4_story1_required_local_noise"
@@ -113,6 +119,7 @@ def build_requirement_metadata():
     return {
         "source_type": "generated_hea",
         "required_local_noise_models": list(REQUIRED_LOCAL_NOISE_MODELS),
+        "support_tier_vocabulary": list(SUPPORT_TIER_VOCABULARY),
         "case_names": [case["case_name"] for case in REQUIRED_LOCAL_NOISE_CASES],
         "workflow_qubits": sorted({case["qbit_num"] for case in REQUIRED_LOCAL_NOISE_CASES}),
         "required_bridge_fields": [
@@ -145,6 +152,9 @@ def validate_case_artifact(case):
         "bridge_noise_after_gate_indices",
         "bridge_noise_fixed_values",
         "positive_slice_pass",
+        "support_tier",
+        "case_purpose",
+        "counts_toward_mandatory_baseline",
     )
     missing_fields = [field for field in required_fields if field not in case]
     if missing_fields:
@@ -256,6 +266,7 @@ def run_required_local_noise_case(case):
             "energy_is_finite": energy_is_finite,
             "positive_slice_pass": positive_slice_pass,
             **bridge_metadata,
+            **build_required_case_classification(),
         }
     )
     validate_case_artifact(artifact)
@@ -284,10 +295,15 @@ def build_artifact_bundle(results):
     passed_cases = sum(case["status"] == "pass" for case in results)
     total_cases = len(results)
     pass_rate = (passed_cases / total_cases) if total_cases else 0.0
+    support_tier_summary = build_task4_support_tier_summary(results)
 
     bundle = {
         "suite_name": SUITE_NAME,
-        "status": "pass" if passed_cases == total_cases and total_cases else "fail",
+        "status": "pass"
+        if support_tier_summary["mandatory_baseline_completed"]
+        and passed_cases == total_cases
+        and total_cases
+        else "fail",
         "backend": PRIMARY_BACKEND,
         "reference_backend": REFERENCE_BACKEND,
         "requirements": build_requirement_metadata(),
@@ -297,6 +313,7 @@ def build_artifact_bundle(results):
             "passed_cases": passed_cases,
             "failed_cases": total_cases - passed_cases,
             "pass_rate": pass_rate,
+            **support_tier_summary,
             "whole_register_substitute_failures": sum(
                 not case["no_whole_register_substitute_pass"] for case in results
             ),

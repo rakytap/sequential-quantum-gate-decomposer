@@ -5,6 +5,7 @@ Reuses the canonical Story 2 exactness harness and adds Task 4-specific
 traceability for:
 - required local-noise coverage,
 - mixed required-noise sequence order,
+- mandatory-baseline classification that keeps these cases milestone-defining,
 - and one stable task-level artifact bundle for the mandatory 1 to 3 qubit
   exact micro-validation matrix.
 
@@ -30,6 +31,11 @@ from benchmarks.density_matrix.validate_squander_vs_qiskit import (
     build_software_metadata,
     build_threshold_metadata,
     run_validation as run_story2_validation,
+)
+from benchmarks.density_matrix.task4_support_tiers import (
+    SUPPORT_TIER_VOCABULARY,
+    build_required_case_classification,
+    build_task4_support_tier_summary,
 )
 
 SUITE_NAME = "task4_story2_required_local_noise_micro_validation"
@@ -69,6 +75,7 @@ def build_requirement_metadata():
     return {
         "required_local_noise_models": list(REQUIRED_LOCAL_NOISE_MODELS),
         "required_gate_families": ["U3", "CNOT"],
+        "support_tier_vocabulary": list(SUPPORT_TIER_VOCABULARY),
         "mandatory_case_names": [case["case_name"] for case in STORY2_MANDATORY_MICROCASES],
         "individual_noise_case_names": individual_noise_cases,
         "mixed_sequence_case_names": mixed_sequence_cases,
@@ -93,6 +100,9 @@ def validate_case_payload(case):
         "operation_audit_pass",
         "noise_operation_sequence",
         "task4_story2_case_pass",
+        "support_tier",
+        "case_purpose",
+        "counts_toward_mandatory_baseline",
     )
     missing_fields = [field for field in required_fields if field not in case]
     if missing_fields:
@@ -107,6 +117,7 @@ def build_artifact_bundle(results):
     cases = []
     for result in results:
         case = dict(result)
+        case.update(build_required_case_classification())
         case["task4_story2_case_pass"] = bool(
             case["status"] == "pass"
             and case["energy_pass"]
@@ -144,10 +155,15 @@ def build_artifact_bundle(results):
         }
     )
     pass_rate = 0.0 if total_cases == 0 else passed_cases / total_cases
+    support_tier_summary = build_task4_support_tier_summary(cases)
 
     bundle = {
         "suite_name": SUITE_NAME,
-        "status": "pass" if passed_cases == total_cases and total_cases else "fail",
+        "status": "pass"
+        if support_tier_summary["mandatory_baseline_completed"]
+        and passed_cases == total_cases
+        and total_cases
+        else "fail",
         "backend": PRIMARY_BACKEND,
         "reference_backend": REFERENCE_BACKEND,
         "requirements": build_requirement_metadata(),
@@ -158,6 +174,7 @@ def build_artifact_bundle(results):
             "passed_cases": passed_cases,
             "failed_cases": total_cases - passed_cases,
             "pass_rate": pass_rate,
+            **support_tier_summary,
             "exact_threshold_passed_cases": exact_threshold_passed_cases,
             "operation_audit_passed_cases": operation_audit_passed_cases,
             "mixed_sequence_case_count": mixed_sequence_case_count,

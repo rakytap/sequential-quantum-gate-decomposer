@@ -524,6 +524,12 @@ class TestNoisyCircuitMixed:
         assert bundle["summary"]["total_cases"] == 7
         assert bundle["summary"]["passed_cases"] == 7
         assert bundle["summary"]["pass_rate"] == 1.0
+        assert bundle["summary"]["required_cases"] == 7
+        assert bundle["summary"]["required_passed_cases"] == 7
+        assert bundle["summary"]["required_pass_rate"] == 1.0
+        assert bundle["summary"]["optional_cases"] == 0
+        assert bundle["summary"]["optional_cases_count_toward_mandatory_baseline"] == 0
+        assert bundle["summary"]["mandatory_baseline_completed"]
         assert bundle["summary"]["exact_threshold_passed_cases"] == 7
         assert bundle["summary"]["operation_audit_passed_cases"] == 7
         assert bundle["summary"]["mixed_sequence_case_count"] == 1
@@ -531,10 +537,48 @@ class TestNoisyCircuitMixed:
         assert set(bundle["requirements"]["required_local_noise_models"]) == set(
             REQUIRED_LOCAL_NOISE_MODELS
         )
+        assert "required" in bundle["requirements"]["support_tier_vocabulary"]
         assert set(bundle["summary"]["required_noise_models_covered"]) == set(
             REQUIRED_LOCAL_NOISE_MODELS
         )
         assert all(case["task4_story2_case_pass"] for case in bundle["cases"])
+        assert all(case["support_tier"] == "required" for case in bundle["cases"])
+        assert all(case["case_purpose"] == "mandatory_baseline" for case in bundle["cases"])
+        assert all(case["counts_toward_mandatory_baseline"] for case in bundle["cases"])
+
+    def test_task4_story3_optional_noise_classification_bundle_schema(self):
+        """Test the Task 4 Story 3 optional classification bundle schema."""
+        pytest.importorskip("qiskit")
+        pytest.importorskip("qiskit_aer")
+
+        from benchmarks.density_matrix.task4_story3_optional_noise_classification_validation import (
+            OPTIONAL_WHOLE_REGISTER_CASES,
+            build_artifact_bundle,
+            run_validation,
+        )
+
+        story1_bundle, story2_bundle, optional_results = run_validation(verbose=False)
+        bundle = build_artifact_bundle(story1_bundle, story2_bundle, optional_results)
+
+        assert bundle["status"] == "pass"
+        assert bundle["backend"] == "density_matrix"
+        assert bundle["summary"]["required_cases"] == 10
+        assert bundle["summary"]["required_passed_cases"] == 10
+        assert bundle["summary"]["required_pass_rate"] == 1.0
+        assert bundle["summary"]["optional_cases"] == len(OPTIONAL_WHOLE_REGISTER_CASES)
+        assert bundle["summary"]["optional_passed_cases"] == len(OPTIONAL_WHOLE_REGISTER_CASES)
+        assert bundle["summary"]["optional_pass_rate"] == 1.0
+        assert bundle["summary"]["optional_cases_count_toward_mandatory_baseline"] == 0
+        assert bundle["summary"]["mandatory_baseline_completed"]
+        assert set(bundle["summary"]["support_tiers_present"]) == {"optional", "required"}
+        assert bundle["required_artifacts"]["story1"]["status"] == "pass"
+        assert bundle["required_artifacts"]["story2"]["status"] == "pass"
+        assert "optional" in bundle["requirements"]["support_tier_vocabulary"]
+        assert all(case["support_tier"] == "optional" for case in bundle["cases"])
+        assert all(not case["counts_toward_mandatory_baseline"] for case in bundle["cases"])
+        assert all(case["whole_register_baseline_classification_pass"] for case in bundle["cases"])
+        assert all(case["task4_story3_case_pass"] for case in bundle["cases"])
+        assert all(case["noise_operation_sequence"] == ["depolarizing"] for case in bundle["cases"])
 
     def test_all_gates(self):
         """Test all supported gate types."""

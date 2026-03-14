@@ -775,15 +775,25 @@ class Test_VQE:
         assert bundle["summary"]["total_cases"] == len(REQUIRED_LOCAL_NOISE_CASES)
         assert bundle["summary"]["passed_cases"] == len(REQUIRED_LOCAL_NOISE_CASES)
         assert bundle["summary"]["pass_rate"] == 1.0
+        assert bundle["summary"]["required_cases"] == len(REQUIRED_LOCAL_NOISE_CASES)
+        assert bundle["summary"]["required_passed_cases"] == len(REQUIRED_LOCAL_NOISE_CASES)
+        assert bundle["summary"]["required_pass_rate"] == 1.0
+        assert bundle["summary"]["optional_cases"] == 0
+        assert bundle["summary"]["optional_cases_count_toward_mandatory_baseline"] == 0
+        assert bundle["summary"]["mandatory_baseline_completed"]
         assert bundle["summary"]["whole_register_substitute_failures"] == 0
         assert set(bundle["requirements"]["required_local_noise_models"]) == set(
             REQUIRED_LOCAL_NOISE_MODELS
         )
+        assert "required" in bundle["requirements"]["support_tier_vocabulary"]
         assert {case["requested_noise_channel"] for case in bundle["cases"]} == set(
             REQUIRED_LOCAL_NOISE_MODELS
         )
         assert all(case["status"] == "pass" for case in bundle["cases"])
         assert all(case["positive_slice_pass"] for case in bundle["cases"])
+        assert all(case["support_tier"] == "required" for case in bundle["cases"])
+        assert all(case["case_purpose"] == "mandatory_baseline" for case in bundle["cases"])
+        assert all(case["counts_toward_mandatory_baseline"] for case in bundle["cases"])
         assert all(
             case["bridge_noise_sequence"] == [case["requested_noise_channel"]]
             for case in bundle["cases"]
