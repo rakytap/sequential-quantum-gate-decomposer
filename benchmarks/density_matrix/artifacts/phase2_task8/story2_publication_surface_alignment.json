@@ -1,0 +1,172 @@
+{
+  "provenance": {
+    "generation_command": "python benchmarks/density_matrix/task8_story2_publication_surface_alignment.py",
+    "git_revision": "474c9b277ea8ae604d258347356b65583c76612e",
+    "story1_claim_package_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/phase2_task8/story1_claim_package.json",
+    "surface_paths": {
+      "abstract": "docs/density_matrix_project/phases/phase-2/ABSTRACT_PHASE_2.md",
+      "paper": "docs/density_matrix_project/phases/phase-2/PAPER_PHASE_2.md",
+      "short_paper": "docs/density_matrix_project/phases/phase-2/SHORT_PAPER_PHASE_2.md",
+      "short_paper_narrative": "docs/density_matrix_project/phases/phase-2/SHORT_PAPER_NARRATIVE.md"
+    },
+    "working_directory": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer"
+  },
+  "software": {
+    "python": "3.12.7"
+  },
+  "status": "pass",
+  "story1_claim_package": {
+    "path": "benchmarks/density_matrix/artifacts/phase2_task8/story1_claim_package.json",
+    "status": "pass",
+    "suite_name": "task8_story1_claim_package",
+    "summary": {
+      "all_non_claims_present": true,
+      "all_source_phrases_present": true,
+      "all_supporting_claims_present": true,
+      "claim_package_completed": true,
+      "evidence_closure_rule_present": true,
+      "main_claim_present_in_primary_surface": true,
+      "non_claim_count": 5,
+      "primary_surface_has_claim_heading": true,
+      "primary_surface_has_role_heading": true,
+      "primary_surface_has_role_phrase": true,
+      "supporting_claim_count": 5
+    }
+  },
+  "suite_name": "task8_story2_publication_surface_alignment",
+  "summary": {
+    "all_claim_headings_present": true,
+    "all_evidence_rules_present": true,
+    "all_main_claims_present": true,
+    "all_non_claims_present": true,
+    "all_surface_roles_present": true,
+    "surface_alignment_completed": true,
+    "surface_count": 4
+  },
+  "surface_inventory": [
+    {
+      "all_non_claims_present": true,
+      "doc_id": "phase2_abstract",
+      "evidence_closure_rule_present": true,
+      "exists": true,
+      "forbidden_phrases": [],
+      "label": "Phase 2 abstract surface",
+      "main_claim_present": true,
+      "missing_headings": [],
+      "missing_required_phrases": [],
+      "path": "docs/density_matrix_project/phases/phase-2/ABSTRACT_PHASE_2.md",
+      "present_forbidden_phrases": [],
+      "required_headings": [
+        "## Publication Surface Role",
+        "## Paper 1 Claim Boundary"
+      ],
+      "required_phrases": [
+        "SQUANDER's exact density-matrix backend is integrated into one canonical noisy XXZ VQE workflow through explicit backend selection, exact Hermitian-energy evaluation via `Re Tr(H*rho)`, a generated-`HEA` bridge, realistic local-noise support, and a publication-grade validation package.",
+        "Only mandatory, complete, supported evidence closes the main Paper 1 claim.",
+        "density-aware partitioning and fusion are future work for Phase 3, not current Paper 1 results",
+        "density-matrix gradients and approximate scaling are future work beyond the current Paper 1 claim",
+        "broad noisy-VQA workflow generality beyond the canonical supported path is not a current Paper 1 claim",
+        "broad manual circuit parity or full `qgd_Circuit` parity is not a current Paper 1 claim",
+        "optimizer-comparison studies and trainability analysis belong to later phases rather than to the delivered Phase 2 result",
+        "This document is the compact conference-abstract surface for the Phase 2 Paper 1 package."
+      ],
+      "role_phrase": "This document is the compact conference-abstract surface for the Phase 2 Paper 1 package.",
+      "role_present": true,
+      "status": "pass",
+      "surface_id": "abstract"
+    },
+    {
+      "all_non_claims_present": true,
+      "doc_id": "phase2_short_paper",
+      "evidence_closure_rule_present": true,
+      "exists": true,
+      "forbidden_phrases": [],
+      "label": "implementation-backed compact short-paper surface",
+      "main_claim_present": true,
+      "missing_headings": [],
+      "missing_required_phrases": [],
+      "path": "docs/density_matrix_project/phases/phase-2/SHORT_PAPER_PHASE_2.md",
+      "present_forbidden_phrases": [],
+      "required_headings": [
+        "## Publication Surface Role",
+        "## Paper 1 Claim Boundary"
+      ],
+      "required_phrases": [
+        "SQUANDER's exact density-matrix backend is integrated into one canonical noisy XXZ VQE workflow through explicit backend selection, exact Hermitian-energy evaluation via `Re Tr(H*rho)`, a generated-`HEA` bridge, realistic local-noise support, and a publication-grade validation package.",
+        "Only mandatory, complete, supported evidence closes the main Paper 1 claim.",
+        "density-aware partitioning and fusion are future work for Phase 3, not current Paper 1 results",
+        "density-matrix gradients and approximate scaling are future work beyond the current Paper 1 claim",
+        "broad noisy-VQA workflow generality beyond the canonical supported path is not a current Paper 1 claim",
+        "broad manual circuit parity or full `qgd_Circuit` parity is not a current Paper 1 claim",
+        "optimizer-comparison studies and trainability analysis belong to later phases rather than to the delivered Phase 2 result",
+        "This document is the implementation-backed compact short-paper surface for the Phase 2 Paper 1 package."
+      ],
+      "role_phrase": "This document is the implementation-backed compact short-paper surface for the Phase 2 Paper 1 package.",
+      "role_present": true,
+      "status": "pass",
+      "surface_id": "short_paper"
+    },
+    {
+      "all_non_claims_present": true,
+      "doc_id": "phase2_short_paper_narrative",
+      "evidence_closure_rule_present": true,
+      "exists": true,
+      "forbidden_phrases": [],
+      "label": "narrative general-conference short-paper surface",
+      "main_claim_present": true,
+      "missing_headings": [],
+      "missing_required_phrases": [],
+      "path": "docs/density_matrix_project/phases/phase-2/SHORT_PAPER_NARRATIVE.md",
+      "present_forbidden_phrases": [],
+      "required_headings": [
+        "## Publication Surface Role",
+        "## Paper 1 Claim Boundary"
+      ],
+      "required_phrases": [
+        "SQUANDER's exact density-matrix backend is integrated into one canonical noisy XXZ VQE workflow through explicit backend selection, exact Hermitian-energy evaluation via `Re Tr(H*rho)`, a generated-`HEA` bridge, realistic local-noise support, and a publication-grade validation package.",
+        "Only mandatory, complete, supported evidence closes the main Paper 1 claim.",
+        "density-aware partitioning and fusion are future work for Phase 3, not current Paper 1 results",
+        "density-matrix gradients and approximate scaling are future work beyond the current Paper 1 claim",
+        "broad noisy-VQA workflow generality beyond the canonical supported path is not a current Paper 1 claim",
+        "broad manual circuit parity or full `qgd_Circuit` parity is not a current Paper 1 claim",
+        "optimizer-comparison studies and trainability analysis belong to later phases rather than to the delivered Phase 2 result",
+        "This document is the narrative short-paper surface for a general PhD-conference audience within the Phase 2 Paper 1 package."
+      ],
+      "role_phrase": "This document is the narrative short-paper surface for a general PhD-conference audience within the Phase 2 Paper 1 package.",
+      "role_present": true,
+      "status": "pass",
+      "surface_id": "short_paper_narrative"
+    },
+    {
+      "all_non_claims_present": true,
+      "doc_id": "phase2_paper",
+      "evidence_closure_rule_present": true,
+      "exists": true,
+      "forbidden_phrases": [],
+      "label": "implementation-backed full-paper draft surface",
+      "main_claim_present": true,
+      "missing_headings": [],
+      "missing_required_phrases": [],
+      "path": "docs/density_matrix_project/phases/phase-2/PAPER_PHASE_2.md",
+      "present_forbidden_phrases": [],
+      "required_headings": [
+        "## Publication Surface Role",
+        "## Paper 1 Claim Boundary"
+      ],
+      "required_phrases": [
+        "SQUANDER's exact density-matrix backend is integrated into one canonical noisy XXZ VQE workflow through explicit backend selection, exact Hermitian-energy evaluation via `Re Tr(H*rho)`, a generated-`HEA` bridge, realistic local-noise support, and a publication-grade validation package.",
+        "Only mandatory, complete, supported evidence closes the main Paper 1 claim.",
+        "density-aware partitioning and fusion are future work for Phase 3, not current Paper 1 results",
+        "density-matrix gradients and approximate scaling are future work beyond the current Paper 1 claim",
+        "broad noisy-VQA workflow generality beyond the canonical supported path is not a current Paper 1 claim",
+        "broad manual circuit parity or full `qgd_Circuit` parity is not a current Paper 1 claim",
+        "optimizer-comparison studies and trainability analysis belong to later phases rather than to the delivered Phase 2 result",
+        "This document is the implementation-backed full-paper draft surface for the Phase 2 Paper 1 package."
+      ],
+      "role_phrase": "This document is the implementation-backed full-paper draft surface for the Phase 2 Paper 1 package.",
+      "role_present": true,
+      "status": "pass",
+      "surface_id": "paper"
+    }
+  ]
+}

@@ -57,3 +57,49 @@ providing a validated mixed-state workflow inside an established quantum
 training framework, this phase establishes the foundation for later work on
 density-aware acceleration, optimizer studies under noise, and trainability
 analysis of noisy quantum circuits.
+
+## Publication Surface Role
+
+This document is the compact conference-abstract surface for the Phase 2 Paper 1
+package.
+
+## Paper 1 Claim Boundary
+
+Main claim:
+SQUANDER's exact density-matrix backend is integrated into one canonical noisy
+XXZ VQE workflow through explicit backend selection, exact Hermitian-energy
+evaluation via `Re Tr(H*rho)`, a generated-`HEA` bridge, realistic local-noise
+support, and a publication-grade validation package.
+
+Explicit non-claims:
+- density-aware partitioning and fusion are future work for Phase 3, not current
+  Paper 1 results
+- density-matrix gradients and approximate scaling are future work beyond the
+  current Paper 1 claim
+- broad noisy-VQA workflow generality beyond the canonical supported path is not
+  a current Paper 1 claim
+- broad manual circuit parity or full `qgd_Circuit` parity is not a current
+  Paper 1 claim
+- optimizer-comparison studies and trainability analysis belong to later phases
+  rather than to the delivered Phase 2 result
+
+Supported-path boundary:
+The guaranteed Paper 1 path is the generated-`HEA` VQE-facing density route
+rather than broad standalone `NoisyCircuit` capability or full `qgd_Circuit`
+parity.
+
+No-fallback rule:
+No implicit `auto` mode or silent fallback is part of the Phase 2 contract.
+
+Exact-regime boundary:
+Full end-to-end workflow execution is required at 4 and 6 qubits,
+benchmark-ready fixed-parameter evaluation is required at 8 and 10 qubits, and
+the documented 10-qubit case is the acceptance anchor for the current exact
+regime.
+
+Evidence-closure rule:
+Only mandatory, complete, supported evidence closes the main Paper 1 claim.
+
+Phase positioning:
+Paper 1 is the Phase 2 exact noisy backend integration milestone in the
+density-matrix publication ladder.

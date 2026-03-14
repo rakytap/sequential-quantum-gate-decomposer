@@ -17,9 +17,9 @@ sources.
 | Phase contract | `docs/density_matrix_project/phases/phase-2/DETAILED_PLANNING_PHASE_2.md` | Defines the full Phase 2 scope, frozen implementation contract, acceptance criteria, risks, and expected outcome |
 | Phase decisions | `docs/density_matrix_project/phases/phase-2/ADRs_PHASE_2.md` | Records the accepted Phase 2 decisions, rationale, consequences, and rejected alternatives |
 | Readiness and closure | `docs/density_matrix_project/phases/phase-2/PRE_IMPLEMENTATION_COMPLETION_CHECKLIST.md` | Records how the open pre-implementation contract items were closed and what implementation-ready means |
-| Task contracts | `docs/density_matrix_project/phases/phase-2/task-1/TASK_1_MINI_SPEC.md` through `docs/density_matrix_project/phases/phase-2/task-7/TASK_7_MINI_SPEC.md` | Define required behavior, unsupported behavior, acceptance evidence, affected interfaces, and publication relevance per Phase 2 task |
+| Task contracts | `docs/density_matrix_project/phases/phase-2/task-1/TASK_1_MINI_SPEC.md` through `docs/density_matrix_project/phases/phase-2/task-8/TASK_8_MINI_SPEC.md` | Define required behavior, unsupported behavior, acceptance evidence, affected interfaces, and publication relevance per Phase 2 task |
 | Workflow evidence surface | `benchmarks/density_matrix/artifacts/phase2_task6/task6_story6_publication_bundle.json` | Canonical machine-readable evidence package for the delivered Phase 2 workflow-backed claim |
-| Paper-facing summaries | `docs/density_matrix_project/phases/phase-2/ABSTRACT_PHASE_2.md`, `docs/density_matrix_project/phases/phase-2/SHORT_PAPER_PHASE_2.md`, `docs/density_matrix_project/phases/phase-2/PAPER_PHASE_2.md` | Publication-facing framing of the delivered Phase 2 claim and evidence |
+| Paper-facing summaries | `docs/density_matrix_project/phases/phase-2/ABSTRACT_PHASE_2.md`, `docs/density_matrix_project/phases/phase-2/SHORT_PAPER_PHASE_2.md`, `docs/density_matrix_project/phases/phase-2/SHORT_PAPER_NARRATIVE.md`, `docs/density_matrix_project/phases/phase-2/PAPER_PHASE_2.md` | Publication-facing framing of the delivered Phase 2 claim and evidence |
 | Roadmap context | `docs/density_matrix_project/planning/PLANNING.md`, `docs/density_matrix_project/planning/PUBLICATIONS.md`, `docs/density_matrix_project/RESEARCH_ALIGNMENT.md`, `docs/density_matrix_project/CHANGELOG.md` | Broader roadmap, publication ladder, milestone wording, and future-phase context |
 
 ## Topic Map
@@ -34,7 +34,8 @@ sources.
 | Benchmark minimum | `docs/density_matrix_project/phases/phase-2/DETAILED_PLANNING_PHASE_2.md` | `docs/density_matrix_project/phases/phase-2/ADRs_PHASE_2.md`, `docs/density_matrix_project/phases/phase-2/task-5/TASK_5_MINI_SPEC.md`, `benchmarks/density_matrix/artifacts/phase2_task6/task6_story6_publication_bundle.json` | phase contract + evidence surface |
 | Numeric thresholds | `docs/density_matrix_project/phases/phase-2/DETAILED_PLANNING_PHASE_2.md` | `docs/density_matrix_project/phases/phase-2/ADRs_PHASE_2.md`, `docs/density_matrix_project/phases/phase-2/task-5/TASK_5_MINI_SPEC.md`, `docs/density_matrix_project/phases/phase-2/task-6/TASK_6_MINI_SPEC.md` | phase contract + task contract |
 | Non-goals | `docs/density_matrix_project/phases/phase-2/DETAILED_PLANNING_PHASE_2.md` | `docs/density_matrix_project/planning/PLANNING.md`, `docs/density_matrix_project/RESEARCH_ALIGNMENT.md`, `docs/density_matrix_project/CHANGELOG.md` | phase contract + roadmap context |
-| Publication evidence surface | `benchmarks/density_matrix/artifacts/phase2_task6/task6_story6_publication_bundle.json` | `docs/density_matrix_project/planning/PUBLICATIONS.md`, `docs/density_matrix_project/phases/phase-2/ABSTRACT_PHASE_2.md`, `docs/density_matrix_project/phases/phase-2/SHORT_PAPER_PHASE_2.md`, `docs/density_matrix_project/phases/phase-2/PAPER_PHASE_2.md` | evidence surface + publication-facing |
+| Publication evidence surface | `benchmarks/density_matrix/artifacts/phase2_task6/task6_story6_publication_bundle.json` | `docs/density_matrix_project/planning/PUBLICATIONS.md`, `docs/density_matrix_project/phases/phase-2/ABSTRACT_PHASE_2.md`, `docs/density_matrix_project/phases/phase-2/SHORT_PAPER_PHASE_2.md`, `docs/density_matrix_project/phases/phase-2/SHORT_PAPER_NARRATIVE.md`, `docs/density_matrix_project/phases/phase-2/PAPER_PHASE_2.md` | evidence surface + publication-facing |
+| Paper 1 claim package | `docs/density_matrix_project/phases/phase-2/task-8/TASK_8_MINI_SPEC.md` | `docs/density_matrix_project/planning/PUBLICATIONS.md`, `docs/density_matrix_project/phases/phase-2/PHASE_2_DOCUMENTATION_INDEX.md`, `docs/density_matrix_project/phases/phase-2/ABSTRACT_PHASE_2.md`, `docs/density_matrix_project/phases/phase-2/SHORT_PAPER_PHASE_2.md`, `docs/density_matrix_project/phases/phase-2/SHORT_PAPER_NARRATIVE.md`, `docs/density_matrix_project/phases/phase-2/PAPER_PHASE_2.md`, `benchmarks/density_matrix/artifacts/phase2_task6/task6_story6_publication_bundle.json` | task contract + publication-facing + evidence surface |
 
 ## Stable Evidence Entry Point
 
@@ -190,7 +191,8 @@ When a reviewer needs the Phase 2 contract in the fastest correct order, use:
 2. `docs/density_matrix_project/phases/phase-2/DETAILED_PLANNING_PHASE_2.md`
 3. `docs/density_matrix_project/phases/phase-2/ADRs_PHASE_2.md`
 4. `docs/density_matrix_project/phases/phase-2/PRE_IMPLEMENTATION_COMPLETION_CHECKLIST.md`
-5. the relevant task mini-spec, usually `task-1` through `task-6`
+5. the relevant task mini-spec, usually `task-1` through `task-8`
 6. `benchmarks/density_matrix/artifacts/phase2_task6/task6_story6_publication_bundle.json`
 7. the paper-facing document that matches the review level:
-   `ABSTRACT_PHASE_2.md`, `SHORT_PAPER_PHASE_2.md`, or `PAPER_PHASE_2.md`
+   `ABSTRACT_PHASE_2.md`, `SHORT_PAPER_PHASE_2.md`,
+   `SHORT_PAPER_NARRATIVE.md`, or `PAPER_PHASE_2.md`

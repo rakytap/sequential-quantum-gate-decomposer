@@ -1,0 +1,200 @@
+{
+  "claim_package": {
+    "evidence_closure_rule": {
+      "missing_paper_phrases": [],
+      "paper_path": "docs/density_matrix_project/phases/phase-2/PAPER_PHASE_2.md",
+      "text": "Only mandatory, complete, supported evidence closes the main Paper 1 claim."
+    },
+    "explicit_non_claims": [
+      {
+        "claim_id": "phase3_partitioning_and_fusion",
+        "label": "Partitioning and fusion stay out of scope",
+        "missing_paper_phrases": [],
+        "missing_source_phrases": [],
+        "paper_path": "docs/density_matrix_project/phases/phase-2/PAPER_PHASE_2.md",
+        "source_path": "docs/density_matrix_project/phases/phase-2/task-8/TASK_8_MINI_SPEC.md",
+        "source_phrases": [
+          "density-aware partitioning",
+          "fusion",
+          "future work"
+        ],
+        "text": "density-aware partitioning and fusion are future work for Phase 3, not current Paper 1 results"
+      },
+      {
+        "claim_id": "gradients_and_approximate_scaling",
+        "label": "Gradients and approximate scaling stay out of scope",
+        "missing_paper_phrases": [],
+        "missing_source_phrases": [],
+        "paper_path": "docs/density_matrix_project/phases/phase-2/PAPER_PHASE_2.md",
+        "source_path": "docs/density_matrix_project/phases/phase-2/task-8/TASK_8_MINI_SPEC.md",
+        "source_phrases": [
+          "gradient-path completion",
+          "approximate scaling",
+          "future work"
+        ],
+        "text": "density-matrix gradients and approximate scaling are future work beyond the current Paper 1 claim"
+      },
+      {
+        "claim_id": "no_broad_noisy_vqa_generality",
+        "label": "No broad noisy-VQA generality claim",
+        "missing_paper_phrases": [],
+        "missing_source_phrases": [],
+        "paper_path": "docs/density_matrix_project/phases/phase-2/PAPER_PHASE_2.md",
+        "source_path": "docs/density_matrix_project/phases/phase-2/task-8/TASK_8_MINI_SPEC.md",
+        "source_phrases": [
+          "noisy-VQA studies"
+        ],
+        "text": "broad noisy-VQA workflow generality beyond the canonical supported path is not a current Paper 1 claim"
+      },
+      {
+        "claim_id": "no_full_circuit_parity",
+        "label": "No broad circuit-parity claim",
+        "missing_paper_phrases": [],
+        "missing_source_phrases": [],
+        "paper_path": "docs/density_matrix_project/phases/phase-2/PAPER_PHASE_2.md",
+        "source_path": "docs/density_matrix_project/phases/phase-2/task-8/TASK_8_MINI_SPEC.md",
+        "source_phrases": [
+          "full `qgd_Circuit` parity",
+          "broader standalone `NoisyCircuit` capability"
+        ],
+        "text": "broad manual circuit parity or full `qgd_Circuit` parity is not a current Paper 1 claim"
+      },
+      {
+        "claim_id": "no_optimizer_or_trainability_claims",
+        "label": "No optimizer or trainability claim",
+        "missing_paper_phrases": [],
+        "missing_source_phrases": [],
+        "paper_path": "docs/density_matrix_project/phases/phase-2/PAPER_PHASE_2.md",
+        "source_path": "docs/density_matrix_project/phases/phase-2/task-8/TASK_8_MINI_SPEC.md",
+        "source_phrases": [
+          "trainability analysis",
+          "future work"
+        ],
+        "text": "optimizer-comparison studies and trainability analysis belong to later phases rather than to the delivered Phase 2 result"
+      }
+    ],
+    "main_claim": {
+      "missing_paper_phrases": [],
+      "missing_source_phrases": [],
+      "paper_path": "docs/density_matrix_project/phases/phase-2/PAPER_PHASE_2.md",
+      "source_path": "docs/density_matrix_project/phases/phase-2/task-8/TASK_8_MINI_SPEC.md",
+      "text": "SQUANDER's exact density-matrix backend is integrated into one canonical noisy XXZ VQE workflow through explicit backend selection, exact Hermitian-energy evaluation via `Re Tr(H*rho)`, a generated-`HEA` bridge, realistic local-noise support, and a publication-grade validation package."
+    },
+    "supporting_claims": [
+      {
+        "claim_id": "explicit_backend_selection",
+        "label": "Explicit backend selection",
+        "missing_paper_phrases": [],
+        "missing_source_phrases": [],
+        "paper_path": "docs/density_matrix_project/phases/phase-2/PAPER_PHASE_2.md",
+        "source_path": "docs/density_matrix_project/phases/phase-2/task-8/TASK_8_MINI_SPEC.md",
+        "source_phrases": [
+          "explicit backend selection",
+          "no implicit fallback behavior"
+        ],
+        "text": "explicit backend selection with no silent fallback"
+      },
+      {
+        "claim_id": "exact_hermitian_energy",
+        "label": "Exact Hermitian-energy evaluation",
+        "missing_paper_phrases": [],
+        "missing_source_phrases": [],
+        "paper_path": "docs/density_matrix_project/phases/phase-2/PAPER_PHASE_2.md",
+        "source_path": "docs/density_matrix_project/phases/phase-2/task-8/TASK_8_MINI_SPEC.md",
+        "source_phrases": [
+          "exact Hermitian-energy evaluation",
+          "`Re Tr(H*rho)`"
+        ],
+        "text": "exact Hermitian-energy evaluation via `Re Tr(H*rho)`"
+      },
+      {
+        "claim_id": "generated_hea_bridge",
+        "label": "Generated-HEA bridge",
+        "missing_paper_phrases": [],
+        "missing_source_phrases": [],
+        "paper_path": "docs/density_matrix_project/phases/phase-2/PAPER_PHASE_2.md",
+        "source_path": "docs/density_matrix_project/phases/phase-2/task-8/TASK_8_MINI_SPEC.md",
+        "source_phrases": [
+          "generated-`HEA` bridge"
+        ],
+        "text": "a generated-`HEA` bridge for the canonical noisy XXZ VQE workflow"
+      },
+      {
+        "claim_id": "realistic_local_noise_support",
+        "label": "Realistic local-noise support",
+        "missing_paper_phrases": [],
+        "missing_source_phrases": [],
+        "paper_path": "docs/density_matrix_project/phases/phase-2/PAPER_PHASE_2.md",
+        "source_path": "docs/density_matrix_project/phases/phase-2/task-8/TASK_8_MINI_SPEC.md",
+        "source_phrases": [
+          "realistic local-noise support"
+        ],
+        "text": "realistic local-noise support within the documented Phase 2 support surface"
+      },
+      {
+        "claim_id": "publication_grade_validation",
+        "label": "Publication-grade validation",
+        "missing_paper_phrases": [],
+        "missing_source_phrases": [],
+        "paper_path": "docs/density_matrix_project/phases/phase-2/PAPER_PHASE_2.md",
+        "source_path": "docs/density_matrix_project/phases/phase-2/task-8/TASK_8_MINI_SPEC.md",
+        "source_phrases": [
+          "publication-grade validation package",
+          "mandatory complete supported evidence"
+        ],
+        "text": "publication-grade validation and reproducibility evidence"
+      }
+    ]
+  },
+  "primary_surface": {
+    "claim_heading": "## Paper 1 Claim Boundary",
+    "claim_heading_present": true,
+    "path": "docs/density_matrix_project/phases/phase-2/PAPER_PHASE_2.md",
+    "role_heading": "## Publication Surface Role",
+    "role_heading_present": true,
+    "role_phrase": "This document is the implementation-backed full-paper draft surface for the Phase 2 Paper 1 package.",
+    "role_phrase_present": true
+  },
+  "provenance": {
+    "generation_command": "python benchmarks/density_matrix/task8_story1_claim_package_validation.py",
+    "git_revision": "474c9b277ea8ae604d258347356b65583c76612e",
+    "primary_source_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/docs/density_matrix_project/phases/phase-2/task-8/TASK_8_MINI_SPEC.md",
+    "primary_surface_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/docs/density_matrix_project/phases/phase-2/PAPER_PHASE_2.md",
+    "working_directory": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer"
+  },
+  "software": {
+    "python": "3.12.7"
+  },
+  "source_docs": [
+    {
+      "doc_id": "task8_mini_spec",
+      "exists": true,
+      "path": "docs/density_matrix_project/phases/phase-2/task-8/TASK_8_MINI_SPEC.md"
+    },
+    {
+      "doc_id": "planning_publications",
+      "exists": true,
+      "path": "docs/density_matrix_project/planning/PUBLICATIONS.md"
+    },
+    {
+      "doc_id": "phase2_paper",
+      "exists": true,
+      "path": "docs/density_matrix_project/phases/phase-2/PAPER_PHASE_2.md"
+    }
+  ],
+  "status": "pass",
+  "suite_name": "task8_story1_claim_package",
+  "summary": {
+    "all_non_claims_present": true,
+    "all_source_phrases_present": true,
+    "all_supporting_claims_present": true,
+    "claim_package_completed": true,
+    "evidence_closure_rule_present": true,
+    "main_claim_present_in_primary_surface": true,
+    "non_claim_count": 5,
+    "primary_surface_has_claim_heading": true,
+    "primary_surface_has_role_heading": true,
+    "primary_surface_has_role_phrase": true,
+    "supporting_claim_count": 5
+  }
+}
