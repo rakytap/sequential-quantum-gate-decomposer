@@ -44,30 +44,32 @@ At the same time, a density-matrix module has recently been added, providing:
 - and reference validation against Qiskit Aer.
 
 This is an important milestone, and the current implementation now closes the
-core integration slice needed for exact noisy variational studies. The delivered
-result provides explicit backend selection, a generated hardware-efficient
-ansatz bridge with ordered fixed local noise, exact real-valued Hermitian energy
-evaluation, a mandatory 1 to 3 qubit micro-validation matrix, a mandatory
-4/6/8/10-qubit workflow-scale exact-regime matrix with 10 fixed parameter
-vectors per required size, one bounded 4-qubit optimization trace, and explicit
-hard-error unsupported behavior. As a result, the project now has a delivered
-research-grade exact noisy backend slice for the frozen integrated-backend scope.
+core integration slice needed for one canonical exact noisy variational
+workflow. The delivered result provides explicit backend selection, a generated
+hardware-efficient-ansatz bridge with ordered fixed local noise, exact
+real-valued Hermitian energy evaluation, a mandatory 1 to 3 qubit
+micro-validation matrix, required end-to-end 4- and 6-qubit workflow cases, a
+mandatory 4/6/8/10-qubit workflow-scale exact-regime matrix with 10 fixed
+parameter vectors per required size, one bounded 4-qubit optimization trace,
+and explicit hard-error unsupported behavior. As a result, the project now has
+a delivered research-grade exact noisy backend slice for the frozen canonical
+workflow scope.
 
-That slice is backed by a complete backend-explicit validation package archived
-in `benchmarks/density_matrix/artifacts/phase2_task5/`, with
-`task5_story6_publication_bundle.json` as the top-level manifest. The final
-Task 5 manifest links the phase-level local-correctness bundle
-`story1_local_correctness_bundle.json`, the workflow-scale exact-regime bundle
-`story2_workflow_baseline_bundle.json`, the trace-and-anchor bundle
-`story3_trace_anchor_bundle.json` together with the canonical raw trace
-`story2_trace_4q.json`, the metric-completeness bundle
-`story4_metric_completeness_bundle.json`, and the interpretation-guardrail
+That slice is now backed by a complete workflow-facing publication package
+archived in `benchmarks/density_matrix/artifacts/phase2_task6/`, with
+`task6_story6_publication_bundle.json` as the top-level manifest. The final
+Task 6 manifest links the canonical workflow contract
+`story1_canonical_workflow_contract.json`, the end-to-end plus trace bundle
+`story2_end_to_end_trace_bundle.json`, the workflow matrix bundle
+`story3_matrix_baseline_bundle.json`, the unsupported-workflow bundle
+`story4_unsupported_workflow_bundle.json`, and the interpretation-guardrail
 bundle `story5_interpretation_bundle.json` in one machine-readable evidence
-surface.
+surface while preserving traceability to the underlying Task 5 validation
+layers.
 
-This short paper defines the first major integration step needed to close that
-gap. Its purpose is to turn the density-matrix path into a usable backend for
-exact noisy variational workflows while keeping the scientific claim narrow,
+This short paper documents the first major integration step that closes that
+gap. Its purpose is to present the density-matrix path as a usable backend for
+one exact noisy variational workflow while keeping the scientific claim narrow,
 defensible, and clearly separated from later acceleration work.
 
 ## 2. Problem Statement
@@ -111,7 +113,7 @@ comparisons. However, the existing architecture documents already identify the
 next integration targets:
 
 - a density-matrix backend path inside the variational workflow,
-- support for expectation values of the form `Tr(H*rho)`,
+- support for exact real-valued Hermitian energies via `Re Tr(H*rho)`,
 - and routing through the optimization interface.
 
 From a scientific perspective, the gap is equally clear. The central PhD
@@ -127,7 +129,7 @@ possible and trustworthy.
 
 ## 4. Phase 2 Contribution and Scope
 
-The proposed Phase 2 contribution is an exact noisy backend integration for
+The delivered Phase 2 contribution is an exact noisy backend integration for
 SQUANDER's variational workflows. The contribution has five parts.
 
 ### 4.1 Backend Selection
@@ -140,14 +142,16 @@ behavior.
 ### 4.2 Exact Noisy Observable Evaluation
 
 Phase 2 establishes the expectation-value path needed for noisy training. The
-core requirement is support for evaluation of observables through `Tr(H*rho)`.
-This is the minimum scientific contract needed for exact noisy VQA studies.
+core requirement is exact real-valued Hermitian-energy evaluation through
+`Re Tr(H*rho)`. This is the minimum scientific contract needed for the
+canonical exact noisy VQE study delivered in Phase 2.
 
 ### 4.3 Circuit-to-Backend Bridging
 
-Phase 2 defines how the existing circuit and gate structures reach the
-density-matrix backend in a documented and reproducible way. This includes
-supported cases, unsupported cases, and explicit scope boundaries.
+Phase 2 defines how the generated default `HEA` circuit reaches the
+density-matrix backend in a documented and reproducible way. This includes the
+supported canonical workflow path, unsupported cases, and explicit scope
+boundaries rather than broad circuit-source parity.
 
 ### 4.4 Workload-Driven Noise Support
 
@@ -223,7 +227,9 @@ Phase 2 evidence includes:
 - agreement of observables with the reference backend under frozen thresholds,
 - exact noisy workflow completion and bridge-support checks,
 - runtime and peak-memory characterization on mandatory workflow cases,
-- and reproducibility of configuration, provenance, and artifact status.
+- reproducibility of configuration, provenance, and artifact status,
+- and the rule that only mandatory, complete, supported evidence closes the
+  main Phase 2 claim while optional evidence remains supplemental.
 
 ### 6.5 Acceptance Point
 

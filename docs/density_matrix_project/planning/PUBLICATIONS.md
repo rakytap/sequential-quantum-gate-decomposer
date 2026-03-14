@@ -122,7 +122,8 @@ training workflow without sacrificing correctness or reproducibility?
 - exact real-valued Hermitian energy evaluation via `Re Tr(H*rho)`,
 - generated-`HEA` bridge from the current VQE circuit path into the
   density-matrix backend, with broader circuit-source support deferred,
-- validation of noisy training workflows on representative circuits.
+- validation of one canonical noisy XXZ VQE workflow with explicit supported,
+  optional, deferred, and unsupported boundaries.
 
 ### Why It Is Strong
 
@@ -134,42 +135,56 @@ training workflow without sacrificing correctness or reproducibility?
 
 ### Required Evidence
 
-- numerical agreement against Qiskit Aer for energies / observables on both:
+- numerical agreement against Qiskit Aer for exact Hermitian energies on both:
   - the mandatory 1 to 3 qubit micro-validation matrix,
   - and the mandatory 4 / 6 / 8 / 10 qubit workflow matrix with 10 fixed
     parameter vectors per required size,
-- noisy VQE anchor workflow running end-to-end, including at least one bounded
-  optimization trace with runtime and peak-memory capture,
+- canonical noisy XXZ VQE workflow running end-to-end at 4 and 6 qubits,
+  including at least one bounded optimization trace with runtime and peak-memory
+  capture,
 - structured support-surface evidence that distinguishes required, optional,
   deferred, and unsupported cases,
 - machine-checkable reproducibility manifests linking every required artifact and
-  status, including phase-level local-correctness, workflow-baseline,
-  trace-and-anchor, metric-completeness, and interpretation-guardrail layers,
+  status, including the canonical workflow contract, end-to-end trace bundle,
+  workflow matrix bundle, unsupported-boundary bundle, and interpretation-
+  guardrail bundle, while preserving traceability to the underlying Task 5
+  validation layers,
+- only mandatory, complete, supported evidence may close the main Phase 2
+  publication claim,
 - and a clear statement of supported gate/noise scope plus explicit deferred
   boundaries.
 
-### Current Evidence Maturity (After Phase 2 Tasks 1-5)
+### Current Evidence Maturity (After Phase 2 Tasks 1-6)
 
-- implemented artifacts already include a complete top-level manifest at
-  `benchmarks/density_matrix/artifacts/phase2_task5/task5_story6_publication_bundle.json`,
-- mandatory artifact presence and expected-status checks currently pass across
-  all six required Task 5 publication artifacts:
-  `story1_local_correctness_bundle.json`,
-  `story2_workflow_baseline_bundle.json`,
-  `story3_trace_anchor_bundle.json`,
-  `story2_trace_4q.json`,
-  `story4_metric_completeness_bundle.json`, and
+- implemented artifacts now include a complete top-level canonical-workflow
+  manifest at
+  `benchmarks/density_matrix/artifacts/phase2_task6/task6_story6_publication_bundle.json`,
+- mandatory artifact presence, expected-status checks, and workflow-identity
+  checks currently pass across all five required Task 6 publication artifacts:
+  `story1_canonical_workflow_contract.json`,
+  `story2_end_to_end_trace_bundle.json`,
+  `story3_matrix_baseline_bundle.json`,
+  `story4_unsupported_workflow_bundle.json`, and
   `story5_interpretation_bundle.json`,
+- the Task 6 publication bundle packages one stable workflow ID and contract
+  version, two passed end-to-end required cases at 4 and 6 qubits, 40 passed
+  fixed-parameter required cases across 4 / 6 / 8 / 10 qubits, and explicit
+  unsupported-workflow boundary evidence,
+- the Task 6 contract and publication bundle reuse the Task 5 local-correctness,
+  workflow-baseline, trace-and-anchor, metric-completeness, and interpretation
+  layers as referenced underlying validation evidence rather than replacing them,
 - required-local-noise mandatory baseline cases currently pass at `100%` for the
   frozen integrated-backend scope,
-- documented 10-qubit anchor evidence is present in the workflow baseline and
-  trace-and-anchor layers,
-- metric-completeness and interpretation-guardrail bundles now pass as distinct
-  phase-level evidence layers rather than remaining implicit in lower-level raw
-  benchmark payloads,
+- documented 10-qubit anchor evidence remains present and is now incorporated
+  into the Task 6 workflow-level matrix bundle and top-level publication
+  surface,
+- claim-closure semantics are now machine-checkable: only mandatory, complete,
+  supported evidence closes the main claim, optional whole-register
+  depolarizing remains supplemental, and deferred or unsupported evidence
+  remains boundary-only,
 - remaining paper-preparation work is primarily narrative packaging (figures,
   framing, venue shaping), not missing core correctness evidence for the frozen
-  Phase 2 support surface.
+  canonical Phase 2 workflow.
 
 ### Best Venues
 
@@ -375,6 +390,10 @@ project:
 - exact agreement checks where applicable,
 - representative noisy circuit families,
 - realistic local noise models,
+- explicit classification of mandatory, optional, deferred, and unsupported
+  evidence,
+- a rule that only mandatory, complete, supported evidence closes the main
+  paper claim,
 - reproducible run configuration and logging,
 - open-source code or branch availability,
 - and clear statements of supported scale and limitations.

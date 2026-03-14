@@ -10,13 +10,13 @@ Primary Phase 2 theme:
 
 This is a specification document, not an implementation log.
 
-## 0.1 Revalidation After Phase 2 Tasks 1-5
+## 0.1 Revalidation After Phase 2 Tasks 1-6
 
-The Phase 2 contract remains valid after implementation of Tasks 1 to 5. The
-implemented slice now closes the frozen integrated-backend and validation
-baseline for backend selection, observable evaluation, bridge behavior,
-required local-noise validation, and the phase-level correctness and evidence
-interpretation package.
+The Phase 2 contract remains valid after implementation of Tasks 1 to 6. The
+implemented slice now closes the frozen integrated-backend, validation, and
+workflow-demonstration baseline for backend selection, observable evaluation,
+bridge behavior, required local-noise validation, and the phase-level
+publication-facing evidence package.
 
 Implementation-backed status at this point:
 
@@ -31,17 +31,19 @@ Implementation-backed status at this point:
   for required models, not a general parametric noise-program interface,
 - mandatory validation evidence now includes:
   - 1 to 3 qubit required micro-validation matrix,
+  - one canonical workflow contract with stable workflow identity and explicit
+    input/output fields,
+  - required end-to-end 4 and 6 qubit workflow cases plus one bounded 4-qubit
+    optimization trace with recorded runtime and peak memory,
   - 4 / 6 / 8 / 10 qubit required workflow matrix with 10 fixed parameter
     vectors per required size,
-  - one bounded 4-qubit optimization trace with recorded runtime and peak
-    memory,
-  - structured deferred and unsupported boundary evidence,
-- and a complete backend-explicit validation package is archived at
-  `benchmarks/density_matrix/artifacts/phase2_task5/` with
-  `task5_story6_publication_bundle.json` as the top-level manifest, linking the
-  phase-level local-correctness, workflow-baseline, trace-and-anchor,
-  metric-completeness, and interpretation-guardrail bundles plus the canonical
-  raw trace artifact.
+  - structured optional, deferred, and unsupported boundary evidence,
+- and a complete workflow-facing publication bundle is archived at
+  `benchmarks/density_matrix/artifacts/phase2_task6/` with
+  `task6_story6_publication_bundle.json` as the top-level manifest, linking the
+  canonical workflow contract, end-to-end trace bundle, matrix baseline bundle,
+  unsupported-workflow bundle, and interpretation bundle while preserving
+  traceability to the underlying Task 5 validation layers.
 
 This document therefore continues to describe the full Phase 2 contract, while
 the notes below clarify the intentional scientific boundaries that remain in
@@ -65,6 +67,12 @@ now part of the validation posture:
 - phase-level metric-completeness and interpretation-guardrail bundles are
   required to prevent partial, optional, unsupported, or malformed evidence from
   inflating the main claim,
+- only mandatory, complete, supported evidence may close the main Phase 2
+  workflow claim; optional evidence remains supplemental and deferred or
+  unsupported evidence remains boundary-only,
+- whole-register depolarizing remains the only delivered optional workflow-
+  facing noise baseline and must not be treated as equivalent to the required
+  local-noise package,
 - runtime and peak-memory must be recorded for mandatory workflow evidence even
   though they are not Phase 2 pass/fail thresholds.
 
@@ -125,8 +133,8 @@ These sources are informative, but do not override the above:
 | Requirement area | Upstream source | Phase 2 interpretation |
 |---|---|---|
 | Backend selection | `CHANGELOG.md`, `RESEARCH_ALIGNMENT.md`, `PLANNING.md` | Phase 2 must define and validate a selectable density-matrix execution path |
-| `Tr(H*rho)` expectation value | `ARCHITECTURE.md`, `CHANGELOG.md`, `RESEARCH_ALIGNMENT.md`, `PUBLICATIONS.md` | Phase 2 must deliver a validated observable-evaluation path suitable for noisy training workflows |
-| Bridge from existing circuit/gate representations | `ARCHITECTURE.md`, `CHANGELOG.md`, `PLANNING.md` | Phase 2 must specify how current circuit workflows reach the density backend without requiring Phase 3 partitioning/fusion |
+| Exact `Re Tr(H*rho)` Hermitian-energy path | `ARCHITECTURE.md`, `CHANGELOG.md`, `RESEARCH_ALIGNMENT.md`, `PUBLICATIONS.md` | Phase 2 must deliver validated exact real-valued Hermitian energy evaluation for the supported noisy VQE workflow |
+| Bridge from the generated anchor VQE circuit into density execution | `ARCHITECTURE.md`, `CHANGELOG.md`, `PLANNING.md` | Phase 2 must specify how the generated `HEA` anchor workflow reaches the density backend without requiring Phase 3 partitioning/fusion or broad manual-circuit parity |
 | Realistic local noise | `ADRs.md`, `PLANNING.md`, `PUBLICATIONS.md` | Phase 2 prioritizes local noise models required for first noisy training studies |
 | Exact dense density matrices as reference | `ADRs.md`, `PLANNING.md` | Phase 2 remains exact-first and does not substitute approximate methods for the core deliverable |
 | No density-aware partitioning/fusion yet | `PLANNING.md`, `ADRs.md` | Phase 2 explicitly excludes Phase 3 acceleration work from the core commitment |
@@ -157,8 +165,8 @@ Phase 2 delivers an exact noisy backend integration layer for SQUANDER's
 variational workflows, including:
 
 - backend selection,
-- exact noisy expectation-value evaluation,
-- circuit-to-density-backend bridging,
+- exact noisy Hermitian-energy evaluation via `Re Tr(H*rho)`,
+- generated-`HEA` circuit-to-density-backend bridging for the anchor workflow,
 - realistic local noise support needed for initial studies,
 - and validation strong enough to support the first major paper.
 
@@ -178,15 +186,16 @@ The following are in scope for Phase 2.
 
 ### 6.2 Exact Noisy Observable Evaluation
 
-- A documented and validated expectation-value path for `Tr(H*rho)`.
-- Support for observable evaluation sufficient for at least one noisy
-  variational workflow.
+- A documented and validated exact real-valued Hermitian-energy path for
+  `Re Tr(H*rho)`.
+- Support for that observable path sufficient for the canonical noisy XXZ VQE
+  workflow.
 
 ### 6.3 Circuit and Representation Bridging
 
-- A documented partial bridge from existing gate/circuit representations to the
+- A documented partial bridge from the generated default `HEA` circuit into the
   density-matrix execution path.
-- Defined behavior for supported, unsupported, and fallback cases.
+- Defined behavior for supported, unsupported, and no-fallback cases.
 - A guarantee that the Phase 2 anchor VQE workflow can cross that bridge
   without requiring manual circuit rewriting beyond explicit noise insertion.
 
@@ -237,15 +246,16 @@ At the start of Phase 2, the codebase already contains:
 
 - a standalone density-matrix module,
 - a separate state-vector partitioning and fusion subsystem,
-- and named integration targets for backend selection and `Tr(H*rho)` in the
+- and named integration targets for backend selection and exact `Re Tr(H*rho)`
+  Hermitian-energy evaluation in the
   variational workflow.
 
 However, the density-matrix backend is not yet fully integrated into the main
 workflow contract. Before Phase 2 completes, the project still lacks:
 
 - a documented backend-selection path,
-- a validated workflow-level `Tr(H*rho)` contract,
-- a stable bridge from current circuit/gate representations into density-matrix
+- a validated workflow-level `Re Tr(H*rho)` Hermitian-energy contract,
+- a stable bridge from the generated anchor VQE circuit into density-matrix
   execution,
 - and a clearly defined support matrix for noisy variational use cases.
 
@@ -438,12 +448,13 @@ The Phase 2 bridge is intentionally partial and workload-driven.
 
 Contract:
 
-- The mandatory source representation is the circuit generated by
-  `qgd_Variational_Quantum_Eigensolver_Base.Generate_Circuit()` for the default
-  `HEA` ansatz.
-- An optional secondary source representation is a user-supplied `qgd_Circuit`
-  or `Gates_block` input only when every operation can be lowered to the
-  documented required gate families.
+- The mandatory and currently delivered source representation is the circuit
+  generated by `qgd_Variational_Quantum_Eigensolver_Base.Generate_Circuit()`
+  for the default `HEA` ansatz.
+- User-supplied `qgd_Circuit` or `Gates_block` inputs are not part of the
+  current Phase 2 closure claim; any future clean-lowering extension must be
+  documented separately and must not widen the canonical workflow contract
+  implicitly.
 - The mandatory target representation is a density-matrix execution path built
   around `NoisyCircuit`, `GateOperation`, and explicit ordered `NoiseOperation`
   insertions.
@@ -486,6 +497,10 @@ Current implementation-backed clarification:
 - The standalone `NoisyCircuit` module remains broader than the currently
   guaranteed VQE-backed density path, so planning and evidence should keep those
   two support surfaces distinct.
+- The delivered optional workflow-facing noise evidence currently consists only
+  of whole-register depolarizing regression or stress-test cases; generalized
+  amplitude damping and coherent over-rotation remain undelivered extension
+  ideas rather than part of the current publication claim.
 
 Trade-offs:
 
@@ -570,14 +585,13 @@ Mandatory:
 Current implementation-backed clarification:
 
 - The implemented Phase 2 validation stack now emits a complete backend-explicit
-  artifact set covering local correctness, workflow-scale exact-regime
-  validation, trace-and-anchor evidence, optional and unsupported
-  classifications, metric completeness, and phase-level interpretation
-  guardrails.
-- The top-level completeness and status checks are encoded in
-  `task5_story6_publication_bundle.json`, which verifies mandatory artifact
-  presence, expected status alignment, and canonical raw-trace linkage across
-  the final Task 5 evidence layers.
+  artifact set covering local correctness, canonical workflow definition,
+  end-to-end 4/6 workflow evidence, workflow-scale exact-regime validation,
+  unsupported-workflow boundaries, and interpretation guardrails.
+- The top-level completeness, status, and workflow-identity checks are encoded
+  in `task6_story6_publication_bundle.json`, which verifies mandatory artifact
+  presence, expected status alignment, and cross-artifact workflow identity
+  across the final Task 6 publication-facing evidence layers.
 
 Optional:
 
@@ -656,8 +670,9 @@ standalone tool instead of a usable research backend.
 
 #### Goal
 
-Define and validate a `Tr(H*rho)` observable-evaluation path sufficient for
-noisy variational training.
+Define and validate an exact real-valued Hermitian-energy
+`Re Tr(H*rho)` observable-evaluation path sufficient for the canonical noisy
+variational workflow.
 
 #### Why It Exists
 
@@ -666,15 +681,17 @@ backend to participate in VQA or similar training loops.
 
 #### Success Looks Like
 
-- the expectation-value contract is documented,
-- observable evaluation is numerically trustworthy,
-- and at least one training-relevant use case depends on it successfully.
+- the exact Hermitian-energy contract is documented,
+- observable evaluation is numerically trustworthy within the supported XXZ
+  workflow scope,
+- and the canonical noisy VQE workflow depends on it successfully.
 
 #### Evidence Required
 
 - agreement against a trusted reference backend,
-- documented observable-scope assumptions,
-- and benchmark or test evidence showing stable exact noisy evaluation.
+- documented Hermitian-energy scope assumptions,
+- and benchmark or test evidence showing stable exact noisy `Re Tr(H*rho)`
+  evaluation in the canonical workflow.
 
 ### Task 3: Circuit-to-Density Backend Bridge
 
@@ -829,8 +846,8 @@ Phase 2 is complete only if all of the following are true:
   meets the numeric thresholds in Section 10.1,
 - exact noisy emulation is stable across the documented 4 to 10 qubit exact
   regime,
-- the bridge from current circuit and gate representations is documented,
-  partial by design, and usable for the anchor workflow,
+- the bridge from the generated `HEA` anchor circuit into density execution is
+  documented, partial by design, and usable for the anchor workflow,
 - realistic local noise support is sufficient for the documented first noisy
   training studies,
 - at least one end-to-end noisy workflow is specified and supported at 4 to 6
@@ -873,11 +890,10 @@ These criteria are intentionally aligned with:
 - local single-qubit depolarizing,
 - local phase damping / dephasing,
 - local amplitude damping,
-- whole-register depolarizing only as a regression or stress-test baseline,
-- generalized amplitude damping only if required by a justified workflow
-  extension,
-- coherent unitary or over-rotation error only if required by a justified
-  workflow extension,
+- whole-register depolarizing only as the delivered optional regression or
+  stress-test baseline,
+- generalized amplitude damping or coherent unitary / over-rotation error only
+  as future justified extensions beyond the current delivered evidence surface,
 - and readout or shot-noise discussion only as secondary context rather than a
   core density-backend requirement.
 

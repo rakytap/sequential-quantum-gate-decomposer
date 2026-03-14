@@ -29,11 +29,13 @@ What is already true:
 
 - density matrices, basic noisy channels, tests, and benchmark scripts exist,
 - the density backend is usable for standalone exact noisy simulation,
-- Phase 2 Tasks 1 to 5 now provide an integrated VQE-facing density path with
-  explicit backend selection, exact `Re Tr(H*rho)` energy evaluation, required
-  local-noise support, and a layered machine-checkable validation package
-  covering local correctness, workflow-scale exact-regime baselines,
-  trace-and-anchor evidence, metric completeness, and interpretation guardrails,
+- Phase 2 Tasks 1 to 6 now provide an integrated VQE-facing density path with
+  explicit backend selection, exact `Re Tr(H*rho)` Hermitian-energy
+  evaluation, required local-noise support, one canonical noisy XXZ VQE
+  workflow contract, and a layered machine-checkable publication bundle
+  covering the workflow contract, end-to-end 4/6 qubit evidence, 4/6/8/10
+  exact-regime matrix evidence, deterministic unsupported-boundary evidence,
+  and interpretation guardrails,
 - the partitioning stack is mature for state-vector simulation and wide-circuit
   unitary optimization.
 
@@ -142,7 +144,7 @@ strongest standalone full paper.
 
 ### Status
 
-`In Progress (integrated-backend and validation baseline delivered and validated via Tasks 1-5; paper-packaging and follow-on phase handoff remain active)`
+`In Progress (Tasks 1-6 now deliver the canonical workflow contract and publication-facing evidence bundle; paper drafting and follow-on phase handoff remain active)`
 
 ### Main Goal
 
@@ -152,8 +154,9 @@ for noisy variational workflows.
 ### Technical Focus
 
 - backend selection for state-vector versus density-matrix workflows,
-- expectation-value path `Tr(H*rho)`,
-- bridge from current circuit representations into density-matrix execution,
+- exact Hermitian-energy path `Re Tr(H*rho)` for the supported XXZ workflow,
+- generated-`HEA` bridge from `qgd_Variational_Quantum_Eigensolver_Base` into
+  density-matrix execution,
 - additional realistic local noise channels as required by the first training
   studies,
 - stronger validation and benchmark coverage around small and medium noisy
@@ -175,10 +178,11 @@ scientifically reliable and practically usable?
 - a selectable density-matrix backend in the main workflow,
 - exact noisy energy / observable evaluation,
 - benchmark suite for noisy training-relevant circuits,
-- application-ready examples for small-scale noisy VQE or closely related tasks,
+- one canonical noisy XXZ VQE workflow contract with explicit supported,
+  optional, deferred, and unsupported boundaries,
 - and a machine-checkable validation and publication-evidence package with stable
-  case IDs, explicit status checks, metric completeness, and interpretation
-  guardrails.
+  workflow and case IDs, explicit status checks, metric completeness, and
+  interpretation guardrails.
 
 ### Publication Target
 
@@ -191,6 +195,7 @@ First major paper: exact noisy backend integration.
 - noisy emulation stable around the exact target regime,
 - machine-checkable benchmark and validation bundles exist for the delivered
   Phase 2 support surface,
+- only mandatory, complete, supported evidence closes the main Phase 2 claim,
 - and paper-quality benchmark, validation, and evidence-packaging outputs exist.
 
 ### Phase 3: Density-Aware Partitioning, Fusion, And Acceleration
@@ -443,10 +448,12 @@ The following evaluation matrix should be built up progressively across phases.
 
 - local depolarizing,
 - dephasing / phase damping,
-- amplitude damping and generalized amplitude damping,
-- coherent over-rotation,
-- readout / shot-noise models,
-- and optional calibration-aware variants later.
+- amplitude damping,
+- whole-register depolarizing only as an optional regression or stress-test
+  baseline,
+- generalized amplitude damping or coherent over-rotation only when a later
+  justified benchmark extension requires them,
+- and readout / shot-noise plus calibration-aware variants only in later phases.
 
 ### Metrics
 
@@ -478,7 +485,7 @@ roadmap while sharpening the technical priorities:
 | Calendar window | Recommended emphasis |
 |---|---|
 | Fall 2025 | Phase 1 foundation work |
-| Spring 2026 | Phase 2 backend integration and validation baseline delivered (Tasks 1-5) |
+| Spring 2026 | Phase 2 backend integration, canonical workflow contract, and publication bundle delivered (Tasks 1-6) |
 | Fall 2026 | Phase 2 paper packaging and Phase 3 acceleration begins |
 | Spring 2027 | Phase 3 matures into benchmark-driven methods work |
 | 2027 to 2028 | Phase 4 noisy optimization workflows |

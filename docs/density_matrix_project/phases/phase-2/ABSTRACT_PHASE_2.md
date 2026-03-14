@@ -21,34 +21,35 @@ order to keep the scientific claim clear and defensible.
 
 The evaluation remains evidence-driven and publication-oriented from the start.
 The current implementation-backed evidence now includes exact agreement with
-Qiskit Aer on the mandatory 1 to 3 qubit micro-validation matrix, the mandatory
-4/6/8/10-qubit workflow-scale exact-regime matrix with 10 fixed parameter
-vectors per required size, one bounded 4-qubit optimization trace, and explicit
-unsupported-case evidence. Benchmarking continues to emphasize training-relevant
-circuits and realistic local noise models, including local depolarizing, phase
-damping, and amplitude damping, rather than relying mainly on whole-register toy
-noise.
+Qiskit Aer on the mandatory 1 to 3 qubit micro-validation matrix, required
+end-to-end workflow cases at 4 and 6 qubits, the mandatory 4/6/8/10-qubit
+workflow-scale exact-regime matrix with 10 fixed parameter vectors per required
+size, one bounded 4-qubit optimization trace, and explicit unsupported-case
+evidence. Benchmarking continues to emphasize training-relevant circuits and
+realistic local noise models, including local depolarizing, phase damping, and
+amplitude damping, rather than relying mainly on whole-register toy noise.
 
-The complete integrated-backend validation bundle is now archived in
-`benchmarks/density_matrix/artifacts/phase2_task5/`, with
-`task5_story6_publication_bundle.json` as the top-level manifest. That manifest
-links the phase-level local-correctness bundle
-`story1_local_correctness_bundle.json`, the workflow-scale exact-regime bundle
-`story2_workflow_baseline_bundle.json`, the trace-and-anchor bundle
-`story3_trace_anchor_bundle.json` together with the canonical raw trace
-`story2_trace_4q.json`, the metric-completeness bundle
-`story4_metric_completeness_bundle.json`, and the interpretation-guardrail
+The complete workflow-facing publication bundle is now archived in
+`benchmarks/density_matrix/artifacts/phase2_task6/`, with
+`task6_story6_publication_bundle.json` as the top-level manifest. That manifest
+links the canonical workflow contract
+`story1_canonical_workflow_contract.json`, the end-to-end plus trace bundle
+`story2_end_to_end_trace_bundle.json`, the workflow matrix bundle
+`story3_matrix_baseline_bundle.json`, the unsupported-workflow bundle
+`story4_unsupported_workflow_bundle.json`, and the interpretation-guardrail
 bundle `story5_interpretation_bundle.json` in one backend-explicit
-reproducibility package. An implementation learning that now shapes publication
+reproducibility package while preserving traceability to the underlying Task 5
+validation layers. An implementation learning that now shapes publication
 claims is explicit support-tier classification (`required`, `optional`,
 `deferred`, `unsupported`) together with hard-error boundary handling,
 metric-completeness checks, and interpretation guardrails that prevent partial,
-optional, or unsupported evidence from inflating the main claim.
+optional, deferred, or unsupported evidence from inflating the main claim. Only
+mandatory, complete, supported evidence closes the main Phase 2 result.
 
-The Phase 2 contribution is a research-grade exact noisy backend for SQUANDER
-that enables reproducible noisy variational experiments and forms the basis of
-the first major publication in the density-matrix track. By providing a
-validated mixed-state workflow inside an established quantum training framework,
-this phase establishes the foundation for later work on density-aware
-acceleration, optimizer studies under noise, and trainability analysis of noisy
-quantum circuits.
+The Phase 2 contribution is a research-grade exact noisy backend slice for
+SQUANDER that enables one reproducible canonical noisy XXZ VQE workflow and
+forms the basis of the first major publication in the density-matrix track. By
+providing a validated mixed-state workflow inside an established quantum
+training framework, this phase establishes the foundation for later work on
+density-aware acceleration, optimizer studies under noise, and trainability
+analysis of noisy quantum circuits.

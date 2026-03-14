@@ -16,8 +16,9 @@ In one sentence, the paper's claim is:
 
 > SQUANDER's standalone exact density-matrix module can be elevated into a
 > validated noisy variational backend by adding backend selection, exact
-> observable evaluation via `Tr(H*rho)`, and a documented bridge from existing
-> circuit workflows into mixed-state execution.
+> real-valued Hermitian energy evaluation via `Re Tr(H*rho)`, and a documented
+> generated-`HEA` bridge for one canonical noisy XXZ VQE workflow into
+> mixed-state execution.
 
 ## 1. Introduction
 
@@ -45,15 +46,16 @@ mixed-state representation, a unified noisy-circuit execution layer, and
 explicit noise channels.
 
 The density-matrix module is already useful in isolation, and the current
-implementation now closes the core integration slice needed for exact noisy
-variational studies. The delivered result provides explicit backend selection, a
-generated hardware-efficient-ansatz density path with ordered fixed local
-noise, exact real-valued Hermitian energy evaluation, a mandatory 1 to 3 qubit
-micro-validation matrix, a mandatory 4/6/8/10-qubit workflow-scale exact-regime
-matrix with 10 fixed parameter vectors per required size, one bounded 4-qubit
-optimization trace, and explicit hard-error unsupported behavior. This means
-the project now supports a research-grade exact noisy variational workflow slice
-at the research-workflow level for the frozen integrated-backend scope.
+implementation now closes the core integration slice needed for one canonical
+exact noisy variational workflow. The delivered result provides explicit backend
+selection, a generated hardware-efficient-ansatz density path with ordered fixed
+local noise, exact real-valued Hermitian energy evaluation, a mandatory 1 to 3
+qubit micro-validation matrix, required end-to-end 4- and 6-qubit workflow
+cases, a mandatory 4/6/8/10-qubit workflow-scale exact-regime matrix with 10
+fixed parameter vectors per required size, one bounded 4-qubit optimization
+trace, and explicit hard-error unsupported behavior. This means the project now
+supports a research-grade exact noisy variational workflow slice at the
+research-workflow level for the frozen canonical workflow scope.
 
 This paper addresses that integration gap. Its purpose is not to introduce a new
 fusion algorithm or a new approximation method. Instead, it defines and justifies
@@ -74,10 +76,11 @@ backend.
 The paper proposes the following Phase 2 contribution:
 
 - a selectable density-matrix backend path for SQUANDER's variational workflow,
-- a validated exact observable-evaluation contract based on `Tr(H*rho)`,
-- a documented bridge from current circuit and gate representations into the
-density-matrix execution path,
-- a workload-driven Phase 2 support surface for realistic local noise,
+- a validated exact Hermitian-energy contract based on `Re Tr(H*rho)`,
+- a documented generated-`HEA` bridge from the current VQE entry path into the
+  density-matrix execution path,
+- a workload-driven Phase 2 support surface for realistic local noise inside
+  one canonical noisy XXZ VQE workflow,
 - and a benchmark and validation package strong enough to support a major paper
 rather than only an internal engineering milestone.
 
@@ -89,22 +92,26 @@ Implementation-backed status for the completed integrated-backend slice:
   - fixed ordered local noise insertion,
   - exact real-valued Hermitian energy evaluation through the sparse-Hamiltonian
   interface,
+  - a stable canonical workflow contract with explicit workflow ID, input/output
+    contract fields, and supported/optional/deferred/unsupported boundary
+    classes,
   - a mandatory 1 to 3 qubit micro-validation matrix,
+  - required end-to-end 4- and 6-qubit workflow execution cases,
   - a mandatory 4/6/8/10-qubit workflow-scale exact-regime benchmark matrix with
   10 fixed parameter vectors per required size,
   - one bounded 4-qubit optimization trace,
-  - structured unsupported-case outcomes,
+  - structured unsupported-workflow outcomes,
   - runtime and peak-memory characterization for workflow-scale cases,
-  - and a backend-explicit validation package archived in
-  `benchmarks/density_matrix/artifacts/phase2_task5/` with
-  `task5_story6_publication_bundle.json` as the top-level manifest. That
-  manifest links the phase-level Story 1 local-correctness bundle
-  `story1_local_correctness_bundle.json`, the Story 2 workflow baseline bundle
-  `story2_workflow_baseline_bundle.json`, the Story 3 trace-and-anchor bundle
-  `story3_trace_anchor_bundle.json` together with the canonical raw trace
-  `story2_trace_4q.json`, the Story 4 metric-completeness bundle
-  `story4_metric_completeness_bundle.json`, and the Story 5
-  interpretation-guardrail bundle `story5_interpretation_bundle.json`.
+  - and a workflow-facing validation package archived in
+  `benchmarks/density_matrix/artifacts/phase2_task6/` with
+  `task6_story6_publication_bundle.json` as the top-level manifest. That
+  manifest links the canonical workflow contract
+  `story1_canonical_workflow_contract.json`, the Story 2 end-to-end plus trace
+  bundle `story2_end_to_end_trace_bundle.json`, the Story 3 matrix baseline
+  bundle `story3_matrix_baseline_bundle.json`, the Story 4 unsupported-workflow
+  bundle `story4_unsupported_workflow_bundle.json`, and the Story 5
+  interpretation-guardrail bundle `story5_interpretation_bundle.json` while
+  preserving traceability to the underlying Task 5 validation bundles.
 
 ### 1.2 Why This Contribution Matters
 
@@ -125,7 +132,7 @@ Bridging that gap in a well-validated and workflow-oriented way is a meaningful
 methods contribution, especially when the target use case is realistic noisy
 variational research.
 
-### 1.3 Implementation Learnings From Tasks 1-5
+### 1.3 Implementation Learnings From Tasks 1-6
 
 Phase 2 implementation produced several learnings that materially shape Paper 1
 claim quality:
@@ -137,11 +144,18 @@ claim quality:
 - phase-level validation should remain layered: the workflow matrix should close
   independently of the bounded optimization trace, with the trace and documented
   10-qubit anchor packaged as a separate evidence layer,
+- the workflow-facing publication bundle must preserve one stable workflow ID and
+  contract version across the contract, end-to-end, matrix, unsupported, and
+  interpretation artifacts,
+- only mandatory, complete, supported evidence may close the main Phase 2 claim;
+  optional whole-register depolarizing remains supplemental, and deferred or
+  unsupported evidence remains boundary-only,
 - metric-completeness and interpretation guardrails should be preserved as
   first-class machine-checkable evidence layers rather than left implicit in raw
   benchmark payloads,
-- machine-checkable manifests that verify artifact presence and expected status
-  alignment are required for reproducible publication evidence.
+- machine-checkable manifests that verify artifact presence, expected status
+  alignment, and workflow identity are required for reproducible publication
+  evidence.
 
 ## 2. Background and Related Work
 
@@ -288,15 +302,16 @@ backend usable and explicit.
 
 ### 5.2 Goal 2: Exact Observable Evaluation
 
-The backend must support exact noisy observables through `Tr(H*rho)` in a way
-that is suitable for variational optimization.
+The backend must support exact real-valued Hermitian energy evaluation through
+`Re Tr(H*rho)` in a way that is suitable for the supported noisy variational
+workflow.
 
 This goal is central because observable evaluation is the scientific minimum
 needed for noisy VQA studies.
 
 ### 5.3 Goal 3: Circuit-to-Backend Bridge
 
-The framework must define how current circuit and gate representations reach the
+The framework must define how the generated default `HEA` circuit reaches the
 density backend. That bridge must be:
 
 - documented,
@@ -368,8 +383,9 @@ baseline for consistency within SQUANDER.
 Validation demonstrated in the current integrated-backend bundle includes:
 
 - exact noisy observable agreement on the mandatory 1 to 3 qubit micro matrix,
-- support for the intended noisy workflow on the mandatory 4 / 6 / 8 / 10
-  qubit matrix with 10 parameter vectors per required size,
+- required end-to-end support for the canonical noisy workflow at 4 and 6
+  qubits together with mandatory 4 / 6 / 8 / 10 qubit fixed-parameter matrix
+  evidence with 10 parameter vectors per required size,
 - one bounded 4-qubit optimization trace with runtime and peak-memory capture,
 - and reproducible behavior under the required local-noise baseline.
 
@@ -393,7 +409,7 @@ scientific backend, so workflow-level validation is required.
 The delivered benchmark suite includes:
 
 - exact noisy small-to-medium circuits,
-- at least one variational workflow that depends on mixed-state evaluation,
+- one canonical noisy XXZ VQE workflow that depends on mixed-state evaluation,
 - and training-relevant circuits consistent with the documented support matrix.
 
 ### 8.2 Noise Classes
@@ -403,11 +419,13 @@ The delivered benchmark suite prioritizes:
 - local depolarizing noise,
 - local phase damping or dephasing,
 - local amplitude damping,
-- generalized amplitude damping where justified,
-- and coherent local error where justified.
+- whole-register depolarizing only as an optional regression or stress-test
+  baseline.
 
-Whole-register depolarizing noise can be included as a baseline or regression
-case, but should not dominate the evidence.
+Generalized amplitude damping and coherent local error remain possible later
+justified extensions, but they are not part of the delivered evidence cited by
+this paper. Whole-register depolarizing can be included as a baseline or
+regression case, but it does not count toward closure of the main claim.
 
 ### 8.3 Metrics
 
@@ -433,12 +451,15 @@ evidence.
 
 The main publication claims should be:
 
-- SQUANDER now supports a validated exact noisy backend path for variational
-workflows.
-- That backend supports exact mixed-state observable evaluation through
-`Tr(H*rho)`.
+- SQUANDER now supports a validated exact noisy backend path for one canonical
+  generated-`HEA` noisy XXZ VQE workflow.
+- That backend supports exact real-valued Hermitian energy evaluation through
+  `Re Tr(H*rho)`.
 - The support surface is explicitly documented and tied to realistic local-noise
 use cases.
+- Only mandatory, complete, supported evidence closes the main Paper 1 claim;
+  optional whole-register depolarizing remains supplemental, and deferred or
+  unsupported evidence remains boundary-only.
 - The resulting workflow is reproducible and sufficient to support the next
 phases of noisy optimizer and trainability research.
 
