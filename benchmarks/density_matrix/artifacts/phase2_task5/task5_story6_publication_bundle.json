@@ -1,0 +1,138 @@
+{
+  "artifacts": [
+    {
+      "artifact_class": "local_correctness_baseline_bundle",
+      "artifact_id": "task5_story1_local_correctness_bundle",
+      "expected_statuses": [
+        "pass"
+      ],
+      "generation_command": "python benchmarks/density_matrix/task5_story1_local_correctness_validation.py --output-dir /home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/phase2_task5",
+      "mandatory": true,
+      "path": "story1_local_correctness_bundle.json",
+      "purpose": "Phase-level local correctness gate for the mandatory 1 to 3 qubit micro-validation matrix.",
+      "status": "pass",
+      "summary": {
+        "required_cases": 7,
+        "required_pass_rate": 1.0,
+        "required_passed_cases": 7,
+        "stable_case_ids_present": true
+      }
+    },
+    {
+      "artifact_class": "workflow_exact_regime_baseline_bundle",
+      "artifact_id": "task5_story2_workflow_baseline_bundle",
+      "expected_statuses": [
+        "pass"
+      ],
+      "generation_command": "python benchmarks/density_matrix/task5_story2_workflow_baseline_validation.py --output-dir /home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/phase2_task5",
+      "mandatory": true,
+      "path": "story2_workflow_baseline_bundle.json",
+      "purpose": "Phase-level 4/6/8/10 workflow-scale exact-regime baseline.",
+      "status": "pass",
+      "summary": {
+        "documented_10q_anchor_present": true,
+        "required_cases": 40,
+        "required_pass_rate": 1.0,
+        "required_passed_cases": 40,
+        "stable_case_ids_present": true,
+        "stable_parameter_set_ids_present": true
+      }
+    },
+    {
+      "artifact_class": "trace_and_anchor_bundle",
+      "artifact_id": "task5_story3_trace_anchor_bundle",
+      "expected_statuses": [
+        "pass"
+      ],
+      "generation_command": "python benchmarks/density_matrix/task5_story3_trace_anchor_validation.py --output-dir /home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/phase2_task5",
+      "mandatory": true,
+      "path": "story3_trace_anchor_bundle.json",
+      "purpose": "Phase-level bounded trace plus documented 10-qubit anchor package.",
+      "status": "pass",
+      "summary": {
+        "documented_10q_anchor_present": true,
+        "required_trace_bridge_supported": true,
+        "required_trace_case_name": "story2_trace_4q",
+        "required_trace_completed": true,
+        "required_trace_present": true
+      }
+    },
+    {
+      "artifact_class": "raw_trace_artifact",
+      "artifact_id": "task5_story3_trace_artifact",
+      "expected_statuses": [
+        "completed"
+      ],
+      "generation_command": "python benchmarks/density_matrix/task5_story3_trace_anchor_validation.py --output-dir /home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/phase2_task5",
+      "mandatory": true,
+      "path": "story2_trace_4q.json",
+      "purpose": "Canonical raw bounded optimization trace linked from the Task 5 Story 3 bundle.",
+      "status": "completed",
+      "summary": {
+        "bridge_supported_pass": true,
+        "case_name": "story2_trace_4q",
+        "required_story5_trace": true,
+        "workflow_completed": true
+      }
+    },
+    {
+      "artifact_class": "metric_completeness_bundle",
+      "artifact_id": "task5_story4_metric_completeness_bundle",
+      "expected_statuses": [
+        "pass"
+      ],
+      "generation_command": "python benchmarks/density_matrix/task5_story4_metric_completeness_validation.py --output-dir /home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/phase2_task5",
+      "mandatory": true,
+      "path": "story4_metric_completeness_bundle.json",
+      "purpose": "Phase-level metric-completeness gate for mandatory supported evidence.",
+      "status": "pass",
+      "summary": {
+        "metric_completeness_gate_completed": true,
+        "micro_cases_missing_required_metrics": 0,
+        "trace_artifacts_missing_required_metrics": 0,
+        "workflow_cases_missing_required_metrics": 0
+      }
+    },
+    {
+      "artifact_class": "interpretation_guardrail_bundle",
+      "artifact_id": "task5_story5_interpretation_bundle",
+      "expected_statuses": [
+        "pass"
+      ],
+      "generation_command": "python benchmarks/density_matrix/task5_story5_interpretation_validation.py --output-dir /home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/phase2_task5",
+      "mandatory": true,
+      "path": "story5_interpretation_bundle.json",
+      "purpose": "Phase-level interpretation guardrails preventing optional, unsupported, or incomplete evidence from inflating the main claim.",
+      "status": "pass",
+      "summary": {
+        "main_phase2_claim_completed": true,
+        "mandatory_artifacts_complete": true,
+        "optional_evidence_supplemental": true,
+        "unsupported_evidence_negative_only": true
+      }
+    }
+  ],
+  "backend": "density_matrix",
+  "provenance": {
+    "generation_command": "python benchmarks/density_matrix/task5_story6_publication_bundle.py --output-dir /home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/phase2_task5",
+    "git_revision": "66a46fff0820a2868eaa3fda133f7d688c96f515",
+    "working_directory": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer"
+  },
+  "reference_backend": "qiskit_aer_density_matrix",
+  "software": {
+    "numpy": "2.3.5",
+    "python": "3.13.9",
+    "qiskit": "2.2.3",
+    "qiskit_aer": "0.17.2"
+  },
+  "status": "pass",
+  "suite_name": "task5_story6_publication_evidence",
+  "summary": {
+    "mandatory_artifact_count": 6,
+    "mismatched_status_count": 0,
+    "missing_artifact_count": 0,
+    "present_artifact_count": 6,
+    "raw_trace_reference_pass": true,
+    "status_match_count": 6
+  }
+}

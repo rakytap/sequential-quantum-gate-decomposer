@@ -546,6 +546,72 @@ class TestNoisyCircuitMixed:
         assert all(case["case_purpose"] == "mandatory_baseline" for case in bundle["cases"])
         assert all(case["counts_toward_mandatory_baseline"] for case in bundle["cases"])
 
+    def test_task5_story1_local_correctness_bundle_schema(self):
+        """Test the Task 5 Story 1 local correctness bundle schema."""
+        pytest.importorskip("qiskit")
+        pytest.importorskip("qiskit_aer")
+
+        from benchmarks.density_matrix.task5_story1_local_correctness_validation import (
+            MANDATORY_CASE_NAMES,
+            run_validation,
+        )
+
+        story2_bundle, task4_story2_bundle, bundle = run_validation(verbose=False)
+
+        assert story2_bundle["status"] == "pass"
+        assert task4_story2_bundle["status"] == "pass"
+        assert bundle["status"] == "pass"
+        assert bundle["backend"] == "density_matrix"
+        assert bundle["summary"]["total_cases"] == len(MANDATORY_CASE_NAMES)
+        assert bundle["summary"]["passed_cases"] == len(MANDATORY_CASE_NAMES)
+        assert bundle["summary"]["required_cases"] == len(MANDATORY_CASE_NAMES)
+        assert bundle["summary"]["required_passed_cases"] == len(MANDATORY_CASE_NAMES)
+        assert bundle["summary"]["required_pass_rate"] == 1.0
+        assert bundle["summary"]["mandatory_baseline_completed"] is True
+        assert bundle["summary"]["exact_threshold_passed_cases"] == len(
+            MANDATORY_CASE_NAMES
+        )
+        assert bundle["summary"]["operation_audit_passed_cases"] == len(
+            MANDATORY_CASE_NAMES
+        )
+        assert bundle["summary"]["stable_case_ids_present"] is True
+        assert bundle["summary"]["missing_mandatory_case_names"] == []
+        assert bundle["summary"]["duplicate_case_names"] == []
+        assert bundle["summary"]["unexpected_case_names"] == []
+        assert bundle["summary"]["all_cases_required"] is True
+        assert bundle["summary"]["all_cases_count_toward_mandatory_baseline"] is True
+        assert bundle["summary"]["local_correctness_gate_completed"] is True
+        assert set(bundle["requirements"]["mandatory_case_names"]) == set(
+            MANDATORY_CASE_NAMES
+        )
+        assert bundle["required_artifacts"]["story2_canonical"]["status"] == "pass"
+        assert bundle["required_artifacts"]["task4_story2"]["status"] == "pass"
+        assert all(case["support_tier"] == "required" for case in bundle["cases"])
+        assert all(case["counts_toward_mandatory_baseline"] for case in bundle["cases"])
+
+    def test_task5_story1_missing_case_blocks_local_correctness_closure(self):
+        """Test that missing mandatory microcases fail the Task 5 Story 1 gate."""
+        pytest.importorskip("qiskit")
+        pytest.importorskip("qiskit_aer")
+
+        import copy
+
+        from benchmarks.density_matrix.task5_story1_local_correctness_validation import (
+            build_artifact_bundle,
+            run_validation,
+        )
+
+        story2_bundle, task4_story2_bundle, _ = run_validation(verbose=False)
+        broken_task4_story2_bundle = copy.deepcopy(task4_story2_bundle)
+        omitted_case = broken_task4_story2_bundle["cases"].pop()
+
+        bundle = build_artifact_bundle(story2_bundle, broken_task4_story2_bundle)
+
+        assert bundle["status"] == "fail"
+        assert bundle["summary"]["stable_case_ids_present"] is False
+        assert bundle["summary"]["local_correctness_gate_completed"] is False
+        assert omitted_case["case_name"] in bundle["summary"]["missing_mandatory_case_names"]
+
     def test_task4_story3_optional_noise_classification_bundle_schema(self):
         """Test the Task 4 Story 3 optional classification bundle schema."""
         pytest.importorskip("qiskit")

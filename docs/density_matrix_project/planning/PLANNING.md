@@ -29,16 +29,22 @@ What is already true:
 
 - density matrices, basic noisy channels, tests, and benchmark scripts exist,
 - the density backend is usable for standalone exact noisy simulation,
+- Phase 2 Tasks 1 to 5 now provide an integrated VQE-facing density path with
+  explicit backend selection, exact `Re Tr(H*rho)` energy evaluation, required
+  local-noise support, and a layered machine-checkable validation package
+  covering local correctness, workflow-scale exact-regime baselines,
+  trace-and-anchor evidence, metric completeness, and interpretation guardrails,
 - the partitioning stack is mature for state-vector simulation and wide-circuit
   unitary optimization.
 
-What is not yet true:
+What remains intentionally open for later phases:
 
-- density matrices are not yet integrated into the main VQA / decomposition
-  workflows,
+- the integrated density path is currently anchored to generated-`HEA` VQE
+  workflows rather than broad decomposition and custom-circuit parity,
 - partitioning and gate fusion are not yet available in the density-matrix path,
 - the current partitioning cost model is still state-vector-oriented,
-- and the optimizer / gradient / `Tr(H*rho)` path remains future work.
+- and density-backend gradient routing plus broader circuit-source support remain
+  future work.
 
 ## 2. Guiding Principles
 
@@ -134,6 +140,10 @@ strongest standalone full paper.
 
 ### Phase 2: Exact Noisy Training Backend Integration
 
+### Status
+
+`In Progress (integrated-backend and validation baseline delivered and validated via Tasks 1-5; paper-packaging and follow-on phase handoff remain active)`
+
 ### Main Goal
 
 Turn the density-matrix module from a standalone simulator into a usable backend
@@ -165,7 +175,10 @@ scientifically reliable and practically usable?
 - a selectable density-matrix backend in the main workflow,
 - exact noisy energy / observable evaluation,
 - benchmark suite for noisy training-relevant circuits,
-- application-ready examples for small-scale noisy VQE or closely related tasks.
+- application-ready examples for small-scale noisy VQE or closely related tasks,
+- and a machine-checkable validation and publication-evidence package with stable
+  case IDs, explicit status checks, metric completeness, and interpretation
+  guardrails.
 
 ### Publication Target
 
@@ -176,7 +189,9 @@ First major paper: exact noisy backend integration.
 - `Tr(H*rho)` validated,
 - exact noisy training loop runs end-to-end,
 - noisy emulation stable around the exact target regime,
-- paper-quality benchmark and validation plots exist.
+- machine-checkable benchmark and validation bundles exist for the delivered
+  Phase 2 support surface,
+- and paper-quality benchmark, validation, and evidence-packaging outputs exist.
 
 ### Phase 3: Density-Aware Partitioning, Fusion, And Acceleration
 
@@ -463,8 +478,8 @@ roadmap while sharpening the technical priorities:
 | Calendar window | Recommended emphasis |
 |---|---|
 | Fall 2025 | Phase 1 foundation work |
-| Spring 2026 | Phase 2 backend integration begins |
-| Fall 2026 | Phase 2 completes and Phase 3 acceleration begins |
+| Spring 2026 | Phase 2 backend integration and validation baseline delivered (Tasks 1-5) |
+| Fall 2026 | Phase 2 paper packaging and Phase 3 acceleration begins |
 | Spring 2027 | Phase 3 matures into benchmark-driven methods work |
 | 2027 to 2028 | Phase 4 noisy optimization workflows |
 | 2028 onward | Phase 5 trainability and final thesis science |

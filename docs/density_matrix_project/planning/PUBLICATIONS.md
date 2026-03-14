@@ -134,11 +134,42 @@ training workflow without sacrificing correctness or reproducibility?
 
 ### Required Evidence
 
-- numerical agreement against Qiskit Aer for energies / observables,
-- noisy VQE or analogous training workflow running end-to-end,
-- representative qubit counts around the exact regime the backend can support,
-- runtime and memory characterization,
-- and clear statement of supported gate/noise scope.
+- numerical agreement against Qiskit Aer for energies / observables on both:
+  - the mandatory 1 to 3 qubit micro-validation matrix,
+  - and the mandatory 4 / 6 / 8 / 10 qubit workflow matrix with 10 fixed
+    parameter vectors per required size,
+- noisy VQE anchor workflow running end-to-end, including at least one bounded
+  optimization trace with runtime and peak-memory capture,
+- structured support-surface evidence that distinguishes required, optional,
+  deferred, and unsupported cases,
+- machine-checkable reproducibility manifests linking every required artifact and
+  status, including phase-level local-correctness, workflow-baseline,
+  trace-and-anchor, metric-completeness, and interpretation-guardrail layers,
+- and a clear statement of supported gate/noise scope plus explicit deferred
+  boundaries.
+
+### Current Evidence Maturity (After Phase 2 Tasks 1-5)
+
+- implemented artifacts already include a complete top-level manifest at
+  `benchmarks/density_matrix/artifacts/phase2_task5/task5_story6_publication_bundle.json`,
+- mandatory artifact presence and expected-status checks currently pass across
+  all six required Task 5 publication artifacts:
+  `story1_local_correctness_bundle.json`,
+  `story2_workflow_baseline_bundle.json`,
+  `story3_trace_anchor_bundle.json`,
+  `story2_trace_4q.json`,
+  `story4_metric_completeness_bundle.json`, and
+  `story5_interpretation_bundle.json`,
+- required-local-noise mandatory baseline cases currently pass at `100%` for the
+  frozen integrated-backend scope,
+- documented 10-qubit anchor evidence is present in the workflow baseline and
+  trace-and-anchor layers,
+- metric-completeness and interpretation-guardrail bundles now pass as distinct
+  phase-level evidence layers rather than remaining implicit in lower-level raw
+  benchmark payloads,
+- remaining paper-preparation work is primarily narrative packaging (figures,
+  framing, venue shaping), not missing core correctness evidence for the frozen
+  Phase 2 support surface.
 
 ### Best Venues
 

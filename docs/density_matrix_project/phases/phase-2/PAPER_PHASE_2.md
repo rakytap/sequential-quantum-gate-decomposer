@@ -8,8 +8,9 @@
 
 ## Abstract Summary
 
-This document is the full-paper design draft for Phase 2. A compact conference
-abstract version is maintained separately in `ABSTRACT_PHASE_2.md`.
+This document is the implementation-backed full-paper draft for Phase 2. A
+compact conference abstract version is maintained separately in
+`ABSTRACT_PHASE_2.md`.
 
 In one sentence, the paper's claim is:
 
@@ -94,12 +95,16 @@ Implementation-backed status for the completed integrated-backend slice:
   - one bounded 4-qubit optimization trace,
   - structured unsupported-case outcomes,
   - runtime and peak-memory characterization for workflow-scale cases,
-  - and a backend-explicit reproducibility package archived in
-  `benchmarks/density_matrix/artifacts/phase2_task4/` with
-  `task4_story6_publication_bundle.json` as the top-level manifest. That
-  manifest links the Story 1 required-local-noise bundle, Story 2 micro
-  validation bundle, Story 3 optional classification bundle, Story 4
-  unsupported-noise bundle, Story 5 workflow bundle, and Story 5 trace.
+  - and a backend-explicit validation package archived in
+  `benchmarks/density_matrix/artifacts/phase2_task5/` with
+  `task5_story6_publication_bundle.json` as the top-level manifest. That
+  manifest links the phase-level Story 1 local-correctness bundle
+  `story1_local_correctness_bundle.json`, the Story 2 workflow baseline bundle
+  `story2_workflow_baseline_bundle.json`, the Story 3 trace-and-anchor bundle
+  `story3_trace_anchor_bundle.json` together with the canonical raw trace
+  `story2_trace_4q.json`, the Story 4 metric-completeness bundle
+  `story4_metric_completeness_bundle.json`, and the Story 5
+  interpretation-guardrail bundle `story5_interpretation_bundle.json`.
 
 ### 1.2 Why This Contribution Matters
 
@@ -119,6 +124,24 @@ or
 Bridging that gap in a well-validated and workflow-oriented way is a meaningful
 methods contribution, especially when the target use case is realistic noisy
 variational research.
+
+### 1.3 Implementation Learnings From Tasks 1-5
+
+Phase 2 implementation produced several learnings that materially shape Paper 1
+claim quality:
+
+- explicit support-tier classification (`required`, `optional`, `deferred`,
+  `unsupported`) is necessary to avoid over-claiming mandatory baseline support,
+- hard-error boundaries at Python normalization, C++ noise-spec validation, and
+  density-anchor preflight are required to prevent silent fallback behavior,
+- phase-level validation should remain layered: the workflow matrix should close
+  independently of the bounded optimization trace, with the trace and documented
+  10-qubit anchor packaged as a separate evidence layer,
+- metric-completeness and interpretation guardrails should be preserved as
+  first-class machine-checkable evidence layers rather than left implicit in raw
+  benchmark payloads,
+- machine-checkable manifests that verify artifact presence and expected status
+  alignment are required for reproducible publication evidence.
 
 ## 2. Background and Related Work
 
@@ -342,11 +365,13 @@ baseline for consistency within SQUANDER.
 
 ### 7.3 Validation Targets
 
-Validation should demonstrate:
+Validation demonstrated in the current integrated-backend bundle includes:
 
-- exact noisy observable agreement,
-- support for the intended noisy workflow,
-- and reproducible behavior under the chosen local noise models.
+- exact noisy observable agreement on the mandatory 1 to 3 qubit micro matrix,
+- support for the intended noisy workflow on the mandatory 4 / 6 / 8 / 10
+  qubit matrix with 10 parameter vectors per required size,
+- one bounded 4-qubit optimization trace with runtime and peak-memory capture,
+- and reproducible behavior under the required local-noise baseline.
 
 ### 7.4 Acceptance Thresholds
 
@@ -365,7 +390,7 @@ scientific backend, so workflow-level validation is required.
 
 ### 8.1 Workload Classes
 
-The benchmark suite should include:
+The delivered benchmark suite includes:
 
 - exact noisy small-to-medium circuits,
 - at least one variational workflow that depends on mixed-state evaluation,
@@ -373,7 +398,7 @@ The benchmark suite should include:
 
 ### 8.2 Noise Classes
 
-The benchmark suite should prioritize:
+The delivered benchmark suite prioritizes:
 
 - local depolarizing noise,
 - local phase damping or dephasing,
@@ -386,7 +411,7 @@ case, but should not dominate the evidence.
 
 ### 8.3 Metrics
 
-The benchmark suite should collect:
+The delivered benchmark suite collects:
 
 - observable agreement,
 - runtime,
@@ -400,11 +425,11 @@ The currently documented acceptance anchor for Phase 2 is stability around
 roughly 10 qubits. Paper 1 should use this as the exact-regime reference point
 for workflow demonstrations rather than making broader unsupported scale claims.
 
-## 9. Expected Results and Publication Claims
+## 9. Observed Results and Publication Claims
 
-The expected results of Phase 2 are not framed as performance breakthroughs.
-They are framed as backend-enabling scientific infrastructure with publication
-quality evidence.
+Observed Phase 2 results are not framed as performance breakthroughs. They are
+framed as backend-enabling scientific infrastructure with publication-quality
+evidence.
 
 The main publication claims should be:
 

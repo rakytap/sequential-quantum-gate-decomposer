@@ -6,23 +6,19 @@ Variational quantum algorithms are a central paradigm for near-term quantum
 applications, but their realistic study depends on accurate noisy simulation and
 on software frameworks that expose that simulation inside practical training
 workflows. SQUANDER already offers a high-performance state-vector workflow and
-a standalone density-matrix module for exact mixed-state simulation, yet the
-current mixed-state backend is not integrated into the framework's main
-variational pipeline. The current Phase 2 implementation has now delivered the
-first narrow workflow-level integration slice for that gap, and this Phase 2
-paper defines how that slice should grow into a full research-grade result. The
-proposed contribution is an exact noisy
-density-matrix backend path for SQUANDER that supports backend selection,
-observable evaluation via `Tr(H*rho)`, and a bridge from existing circuit/gate
-representations into mixed-state execution. The scope is intentionally narrow:
-the work targets exact noisy backend integration and validation, while
+a standalone density-matrix module for exact mixed-state simulation. Phase 2
+now delivers the integrated-backend slice needed for a research-grade noisy VQE
+anchor workflow: explicit backend selection, exact Hermitian energy evaluation
+via `Re Tr(H*rho)`, generated-`HEA` bridge support, ordered fixed local noise,
+and structured unsupported-boundary handling. The scope remains intentionally
+narrow: exact noisy backend integration and validation are in scope, while
 density-aware partitioning, gate fusion, gradients, and approximate scaling are
-deferred to later phases. The paper outlines the validation methodology,
-benchmark matrix, and acceptance criteria needed to establish the backend as a
-usable scientific instrument for noisy variational studies. This integration is
-expected to enable reproducible exact noisy workflows, support the first major
-publication in the density-matrix track, and provide the foundation for later
-acceleration and trainability research.
+deferred to later phases. The delivered evidence package includes mandatory
+micro-validation, mandatory workflow-scale exact-regime coverage, bounded
+optimization-trace evidence, and a machine-checkable publication manifest. This
+positions Phase 2 as a complete integration milestone for the first major paper
+in the density-matrix track and as the validated baseline for later
+acceleration and trainability phases.
 
 ## 1. Introduction and Motivation
 
@@ -57,12 +53,17 @@ vectors per required size, one bounded 4-qubit optimization trace, and explicit
 hard-error unsupported behavior. As a result, the project now has a delivered
 research-grade exact noisy backend slice for the frozen integrated-backend scope.
 
-That slice is backed by a complete backend-explicit reproducibility package
-archived in `benchmarks/density_matrix/artifacts/phase2_task4/`, with
-`task4_story6_publication_bundle.json` as the top-level manifest. The bundle
-links the required-local-noise positive-path, micro-validation, optional
-classification, unsupported-noise, workflow-scale, and bounded optimization
-trace artifacts in one machine-readable evidence surface.
+That slice is backed by a complete backend-explicit validation package archived
+in `benchmarks/density_matrix/artifacts/phase2_task5/`, with
+`task5_story6_publication_bundle.json` as the top-level manifest. The final
+Task 5 manifest links the phase-level local-correctness bundle
+`story1_local_correctness_bundle.json`, the workflow-scale exact-regime bundle
+`story2_workflow_baseline_bundle.json`, the trace-and-anchor bundle
+`story3_trace_anchor_bundle.json` together with the canonical raw trace
+`story2_trace_4q.json`, the metric-completeness bundle
+`story4_metric_completeness_bundle.json`, and the interpretation-guardrail
+bundle `story5_interpretation_bundle.json` in one machine-readable evidence
+surface.
 
 This short paper defines the first major integration step needed to close that
 gap. Its purpose is to turn the density-matrix path into a usable backend for
@@ -72,9 +73,8 @@ defensible, and clearly separated from later acceleration work.
 ## 2. Problem Statement
 
 The core problem addressed in Phase 2 is not the lack of a mixed-state
-representation. That already exists. The problem is that the existing exact
-mixed-state backend is not yet part of the research workflow that the broader
-project actually needs.
+representation. That already exists. The problem was integrating the exact
+mixed-state backend into the research workflow that the broader project needs.
 
 More concretely, the deliberately bounded scientific scope has four defining
 features:
@@ -187,7 +187,7 @@ These exclusions are not weaknesses in the plan. They are deliberate scope
 controls that protect the scientific clarity of the phase and preserve a clean
 handoff to the later acceleration phase.
 
-## 6. Validation and Benchmark Plan
+## 6. Validation and Benchmark Baseline (Delivered)
 
 Because Phase 2 is exact-first, validation is central to the contribution.
 
@@ -198,39 +198,41 @@ observable and workflow validation.
 
 ### 6.2 Workload Types
 
-The benchmark and validation suite should include:
+The delivered benchmark and validation suite includes:
 
-- small-to-medium exact noisy circuits,
-- at least one variational workflow relevant to the later PhD studies,
-- representative circuits whose gate and noise content match the Phase 2 support
-  surface.
+- mandatory 1 to 3 qubit micro-validation cases for the required local-noise
+  baseline,
+- mandatory 4 / 6 / 8 / 10 qubit anchor-workflow fixed-parameter matrix with 10
+  parameter vectors per required size,
+- one bounded 4-qubit optimization trace for workflow-level completion evidence.
 
 ### 6.3 Noise Types
 
-The baseline evaluation should emphasize realistic local noise classes:
+The delivered baseline emphasizes realistic local noise classes:
 
 - local depolarizing noise,
 - local phase damping or dephasing,
 - local amplitude damping,
-- and selected additional local models if required by the target workflow.
+- whole-register depolarizing retained only as optional classification evidence,
+- deferred and unsupported families captured explicitly as negative evidence.
 
 ### 6.4 Metrics
 
-Phase 2 evidence should include:
+Phase 2 evidence includes:
 
-- agreement of observables with the reference backend,
-- exact noisy workflow stability,
-- runtime and memory characterization,
-- and reproducibility of configuration and results.
+- agreement of observables with the reference backend under frozen thresholds,
+- exact noisy workflow completion and bridge-support checks,
+- runtime and peak-memory characterization on mandatory workflow cases,
+- and reproducibility of configuration, provenance, and artifact status.
 
 ### 6.5 Acceptance Point
 
-The current planning and roadmap documents point to a practical exact regime on
-the order of roughly 10 qubits for the Phase 2 milestone. This should be treated
-as the anchor for workflow validation rather than as a universal claim about the
+The practical exact regime for Phase 2 is anchored at 10 qubits, and the
+delivered mandatory evidence package includes documented 10-qubit anchor cases.
+This remains a workflow-validation anchor, not a universal claim about the
 backend's ultimate limit.
 
-## 7. Expected Scientific Contribution
+## 7. Scientific Contribution
 
 The scientific contribution of Phase 2 is not raw algorithmic novelty at the
 same level as a new fusion or partitioning method. Its value is different and
@@ -247,9 +249,9 @@ This is exactly the kind of contribution that can enable stronger later science.
 Without it, later claims about optimizer behavior or trainability under noise
 would either be impossible or much harder to defend.
 
-## 8. Expected Limitations
+## 8. Current Limitations
 
-The expected limitations of the Phase 2 contribution should be stated openly.
+The current limitations of the Phase 2 contribution are:
 
 First, the phase is not intended to maximize performance. It aims to make exact
 noisy workflows usable and validated, not to solve density-aware acceleration.

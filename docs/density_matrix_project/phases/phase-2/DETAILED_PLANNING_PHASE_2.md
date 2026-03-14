@@ -10,33 +10,63 @@ Primary Phase 2 theme:
 
 This is a specification document, not an implementation log.
 
-## 0.1 Revalidation After Task 1 Stories 1-4
+## 0.1 Revalidation After Phase 2 Tasks 1-5
 
-The Phase 2 contract remains valid after the detailed design and implementation
-work carried out so far for Phase 2 Task 1 Stories 1 to 4. However, the current
-implemented slice is intentionally narrower than full Phase 2 closure.
+The Phase 2 contract remains valid after implementation of Tasks 1 to 5. The
+implemented slice now closes the frozen integrated-backend and validation
+baseline for backend selection, observable evaluation, bridge behavior,
+required local-noise validation, and the phase-level correctness and evidence
+interpretation package.
 
 Implementation-backed status at this point:
 
-- explicit backend selection is now implemented on the VQE-facing API, with
-  default `state_vector`, explicit `density_matrix`, and hard-error unsupported
-  behavior,
-- the currently guaranteed density path is generated `HEA` only, not general
-  manual circuit parity,
-- the current exact observable path is real-valued Hermitian energy evaluation
-  through the existing sparse-Hamiltonian interface,
-- the current VQE-facing density-noise surface is ordered fixed local noise
-  insertion, not a general parametric noise-program interface,
-- executed evidence currently includes 4- and 6-qubit fixed-parameter XXZ
-  anchor agreement against Qiskit Aer, one bounded 4-qubit optimization trace,
-  and backend-explicit artifacts for both completed and unsupported current
-  validation cases,
-- and the full 8/10-qubit benchmark floor, runtime and peak-memory reporting,
-  and complete reproducibility bundle remain open Phase 2 work.
+- explicit backend selection is implemented on the VQE-facing API, with default
+  `state_vector`, explicit `density_matrix`, and deterministic hard-error
+  unsupported behavior,
+- the guaranteed density path is generated `HEA` only, not broad manual circuit
+  parity,
+- the exact observable path is real-valued Hermitian energy evaluation through
+  the existing sparse-Hamiltonian interface,
+- the VQE-facing density-noise surface is ordered fixed local noise insertion
+  for required models, not a general parametric noise-program interface,
+- mandatory validation evidence now includes:
+  - 1 to 3 qubit required micro-validation matrix,
+  - 4 / 6 / 8 / 10 qubit required workflow matrix with 10 fixed parameter
+    vectors per required size,
+  - one bounded 4-qubit optimization trace with recorded runtime and peak
+    memory,
+  - structured deferred and unsupported boundary evidence,
+- and a complete backend-explicit validation package is archived at
+  `benchmarks/density_matrix/artifacts/phase2_task5/` with
+  `task5_story6_publication_bundle.json` as the top-level manifest, linking the
+  phase-level local-correctness, workflow-baseline, trace-and-anchor,
+  metric-completeness, and interpretation-guardrail bundles plus the canonical
+  raw trace artifact.
 
-This document therefore continues to describe the whole Phase 2 contract, while
-the notes below clarify where the current implemented slice is narrower than the
-full phase exit criteria.
+This document therefore continues to describe the full Phase 2 contract, while
+the notes below clarify the intentional scientific boundaries that remain in
+place for later phases.
+
+## 0.2 Learnings From Implemented Tasks
+
+Phase 2 implementation produced several process and contract learnings that are
+now part of the validation posture:
+
+- hard-error boundaries at Python normalization, C++ density-noise
+  specification checks, and density-anchor preflight are required to prevent
+  silent fallback behavior,
+- explicit support-tier vocabulary (`required`, `optional`, `deferred`,
+  `unsupported`) is essential for keeping mandatory-baseline claims auditable,
+- the workflow-scale exact-regime matrix should close independently of the
+  bounded optimization trace, with the trace and documented 10-qubit anchor
+  packaged as a separate evidence layer,
+- machine-readable artifact manifests with stable case IDs and status checks are
+  required for publication-facing reproducibility,
+- phase-level metric-completeness and interpretation-guardrail bundles are
+  required to prevent partial, optional, unsupported, or malformed evidence from
+  inflating the main claim,
+- runtime and peak-memory must be recorded for mandatory workflow evidence even
+  though they are not Phase 2 pass/fail thresholds.
 
 ## 1. Purpose
 
@@ -385,8 +415,9 @@ Current implementation-backed clarification:
 
 - The current exact observable path is implemented through the existing
   sparse-Hamiltonian interface and evaluated on the density state directly.
-- Executed evidence currently covers fixed-parameter 4- and 6-qubit XXZ anchor
-  cases against Qiskit Aer; the broader threshold package remains open.
+- Executed evidence now covers the mandatory 1 to 3 qubit micro-validation
+  matrix and the mandatory 4 / 6 / 8 / 10 qubit workflow-scale matrix against
+  Qiskit Aer using the frozen thresholds.
 
 Minimum proof of correctness:
 
@@ -488,10 +519,11 @@ Contract:
 
 Current implementation-backed clarification:
 
-- The current executed anchor evidence covers 4- and 6-qubit fixed-parameter
-  cases and one bounded 4-qubit optimization trace.
-- The 8- and 10-qubit “evaluation-ready” part of the contract remains a Phase 2
-  target rather than a completed evidence item at this point.
+- The current executed anchor evidence includes mandatory fixed-parameter cases
+  at 4, 6, 8, and 10 qubits (10 parameter vectors per required size), plus one
+  bounded 4-qubit optimization trace.
+- A documented 10-qubit anchor evaluation is present in the required workflow
+  evidence bundle.
 
 Minimum evidence:
 
@@ -537,11 +569,15 @@ Mandatory:
 
 Current implementation-backed clarification:
 
-- The current Stories 1 to 4 slice now emits backend-explicit machine-readable
-  artifacts for both completed and unsupported validation cases.
-- Those artifacts already cover a useful subset of the future reproducibility
-  package, but they do not yet constitute the full final Phase 2
-  reproducibility bundle or benchmark floor.
+- The implemented Phase 2 validation stack now emits a complete backend-explicit
+  artifact set covering local correctness, workflow-scale exact-regime
+  validation, trace-and-anchor evidence, optional and unsupported
+  classifications, metric completeness, and phase-level interpretation
+  guardrails.
+- The top-level completeness and status checks are encoded in
+  `task5_story6_publication_bundle.json`, which verifies mandatory artifact
+  presence, expected status alignment, and canonical raw-trace linkage across
+  the final Task 5 evidence layers.
 
 Optional:
 

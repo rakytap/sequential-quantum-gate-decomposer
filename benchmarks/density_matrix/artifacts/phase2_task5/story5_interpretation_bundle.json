@@ -1,0 +1,170 @@
+{
+  "backend": "density_matrix",
+  "reference_backend": "qiskit_aer_density_matrix",
+  "required_artifacts": {
+    "task4_story3_optional_classification": {
+      "status": "pass",
+      "suite_name": "task4_story3_optional_noise_classification",
+      "summary": {
+        "mandatory_baseline_case_count": 10,
+        "mandatory_baseline_completed": true,
+        "mandatory_baseline_passed_cases": 10,
+        "optional_cases": 2,
+        "optional_cases_count_toward_mandatory_baseline": 0,
+        "optional_pass_rate": 1.0,
+        "optional_passed_cases": 2,
+        "required_cases": 10,
+        "required_pass_rate": 1.0,
+        "required_passed_cases": 10,
+        "support_tiers_present": [
+          "optional",
+          "required"
+        ]
+      }
+    },
+    "task4_story4_unsupported_noise": {
+      "status": "pass",
+      "suite_name": "task4_story4_unsupported_noise_boundary",
+      "summary": {
+        "boundary_classes_present": [
+          "configuration",
+          "model_family",
+          "schedule_element"
+        ],
+        "boundary_passed_cases": 8,
+        "categories_present": [
+          "noise_insertion",
+          "noise_target",
+          "noise_type",
+          "noise_value"
+        ],
+        "deferred_cases": 4,
+        "error_match_count": 8,
+        "failed_cases": 0,
+        "failure_stages_present": [
+          "cxx_noise_spec_validation",
+          "density_anchor_preflight",
+          "python_normalization"
+        ],
+        "first_unsupported_conditions": [
+          "after_gate_index_exceeds_gate_count",
+          "after_gate_index_negative",
+          "calibration_aware_noise",
+          "correlated_multi_qubit_noise",
+          "noise_value_out_of_range",
+          "non_markovian_noise",
+          "readout_noise",
+          "target_qbit_out_of_range"
+        ],
+        "mandatory_baseline_case_count": 0,
+        "mandatory_baseline_completed": false,
+        "mandatory_baseline_passed_cases": 0,
+        "optional_cases": 0,
+        "optional_cases_count_toward_mandatory_baseline": 0,
+        "optional_pass_rate": 0.0,
+        "optional_passed_cases": 0,
+        "pre_execution_failure_count": 8,
+        "required_cases": 0,
+        "required_pass_rate": 0.0,
+        "required_passed_cases": 0,
+        "silent_fallback_failures": 0,
+        "silent_substitution_failures": 0,
+        "support_tiers_present": [
+          "deferred",
+          "unsupported"
+        ],
+        "total_cases": 8,
+        "unsupported_cases": 4,
+        "unsupported_status_cases": 8
+      }
+    },
+    "task5_story4_metric_completeness": {
+      "status": "pass",
+      "suite_name": "task5_story4_metric_completeness",
+      "summary": {
+        "metric_completeness_gate_completed": true,
+        "micro_cases_checked": 7,
+        "micro_cases_missing_required_metrics": 0,
+        "missing_micro_metric_fields_by_case": {},
+        "missing_trace_metric_fields": [],
+        "missing_workflow_metric_fields_by_case": {},
+        "trace_artifacts_checked": 1,
+        "trace_artifacts_missing_required_metrics": 0,
+        "trace_execution_stability_pass": true,
+        "workflow_cases_checked": 40,
+        "workflow_cases_missing_required_metrics": 0,
+        "workflow_cases_with_stable_execution": 40
+      }
+    }
+  },
+  "requirements": {
+    "excluded_evidence_classes": [
+      "optional",
+      "deferred",
+      "unsupported",
+      "incomplete"
+    ],
+    "main_claim_rule": "Only mandatory, complete, supported evidence may close the main Task 5 validation claim.",
+    "required_bundle_sources": [
+      "task5_story4_metric_completeness",
+      "task4_story3_optional_noise_classification",
+      "task4_story4_unsupported_noise_boundary"
+    ],
+    "support_tier_vocabulary": [
+      "required",
+      "optional",
+      "deferred",
+      "unsupported"
+    ]
+  },
+  "software": {
+    "numpy": "2.3.5",
+    "python": "3.13.9",
+    "qiskit": "2.2.3",
+    "qiskit_aer": "0.17.2"
+  },
+  "status": "pass",
+  "suite_name": "task5_story5_interpretation",
+  "summary": {
+    "deferred_cases": 4,
+    "incomplete_mandatory_artifacts": [],
+    "main_phase2_claim_completed": true,
+    "mandatory_artifacts": [
+      "story1_local_correctness",
+      "story2_workflow_baseline",
+      "story3_trace_anchor",
+      "story4_metric_completeness"
+    ],
+    "mandatory_artifacts_complete": true,
+    "optional_cases": 2,
+    "optional_cases_count_toward_mandatory_baseline": 0,
+    "optional_evidence_supplemental": true,
+    "optional_passed_cases": 2,
+    "unsupported_cases": 4,
+    "unsupported_evidence_negative_only": true,
+    "unsupported_status_cases": 8
+  },
+  "thresholds": {
+    "micro": {
+      "absolute_energy_error": 1e-10,
+      "observable_imag_abs": 1e-10,
+      "required_pass_rate": 1.0,
+      "rho_is_valid_tol": 1e-10,
+      "trace_deviation": 1e-10
+    },
+    "workflow": {
+      "absolute_energy_error": 1e-08,
+      "fixed_parameter_sets_per_size": 10,
+      "observable_imag_abs": 1e-10,
+      "required_pass_rate": 1.0,
+      "required_workflow_qubits": [
+        4,
+        6,
+        8,
+        10
+      ],
+      "rho_is_valid_tol": 1e-10,
+      "trace_deviation": 1e-10
+    }
+  }
+}
