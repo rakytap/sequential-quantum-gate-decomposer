@@ -1,0 +1,529 @@
+{
+  "backend": "density_matrix",
+  "cases": [
+    {
+      "ansatz": "HEA",
+      "backend": "density_matrix",
+      "case_kind": "task4_unsupported_noise_boundary_validation",
+      "case_name": "task4_story4_deferred_readout_noise",
+      "case_purpose": "deferred_scope_guard",
+      "counts_toward_mandatory_baseline": false,
+      "deferred_reason": "readout_noise",
+      "density_noise": [
+        {
+          "after_gate_index": 0,
+          "channel": "readout_noise",
+          "target": 0,
+          "value": 0.1
+        }
+      ],
+      "error_match_pass": true,
+      "expected_failure_stage": "python_normalization",
+      "expected_first_unsupported_condition": "readout_noise",
+      "expected_support_tier": "deferred",
+      "expected_task4_boundary_class": "model_family",
+      "expected_unsupported_category": "noise_type",
+      "failure_stage": "python_normalization",
+      "first_unsupported_condition": "readout_noise",
+      "hamiltonian": {
+        "Jx": 1.0,
+        "Jy": 1.0,
+        "Jz": 1.0,
+        "h": 0.5
+      },
+      "inner_blocks": 1,
+      "layers": 1,
+      "pre_execution_failure_pass": true,
+      "purpose": "Verify readout-noise requests fail before execution on the VQE-facing density path.",
+      "qbit_num": 1,
+      "requested_noise_channel": "readout_noise",
+      "silent_fallback_detected": false,
+      "silent_substitution_detected": false,
+      "status": "unsupported",
+      "support_tier": "deferred",
+      "task4_boundary_class": "model_family",
+      "topology": [],
+      "unsupported_boundary_pass": true,
+      "unsupported_category": "noise_type",
+      "unsupported_reason": "Unsupported density-noise channel 'readout_noise'. Supported channels are 'local_depolarizing', 'amplitude_damping', and 'phase_damping'."
+    },
+    {
+      "ansatz": "HEA",
+      "backend": "density_matrix",
+      "case_kind": "task4_unsupported_noise_boundary_validation",
+      "case_name": "task4_story4_deferred_correlated_multi_qubit_noise",
+      "case_purpose": "deferred_scope_guard",
+      "counts_toward_mandatory_baseline": false,
+      "deferred_reason": "correlated_multi_qubit_noise",
+      "density_noise": [
+        {
+          "after_gate_index": 0,
+          "channel": "correlated_multi_qubit_noise",
+          "target": 0,
+          "value": 0.1
+        }
+      ],
+      "error_match_pass": true,
+      "expected_failure_stage": "python_normalization",
+      "expected_first_unsupported_condition": "correlated_multi_qubit_noise",
+      "expected_support_tier": "deferred",
+      "expected_task4_boundary_class": "model_family",
+      "expected_unsupported_category": "noise_type",
+      "failure_stage": "python_normalization",
+      "first_unsupported_condition": "correlated_multi_qubit_noise",
+      "hamiltonian": {
+        "Jx": 1.0,
+        "Jy": 1.0,
+        "Jz": 1.0,
+        "h": 0.5
+      },
+      "inner_blocks": 1,
+      "layers": 1,
+      "pre_execution_failure_pass": true,
+      "purpose": "Verify correlated multi-qubit noise requests remain deferred and fail before execution.",
+      "qbit_num": 2,
+      "requested_noise_channel": "correlated_multi_qubit_noise",
+      "silent_fallback_detected": false,
+      "silent_substitution_detected": false,
+      "status": "unsupported",
+      "support_tier": "deferred",
+      "task4_boundary_class": "model_family",
+      "topology": [
+        [
+          0,
+          1
+        ]
+      ],
+      "unsupported_boundary_pass": true,
+      "unsupported_category": "noise_type",
+      "unsupported_reason": "Unsupported density-noise channel 'correlated_multi_qubit_noise'. Supported channels are 'local_depolarizing', 'amplitude_damping', and 'phase_damping'."
+    },
+    {
+      "ansatz": "HEA",
+      "backend": "density_matrix",
+      "case_kind": "task4_unsupported_noise_boundary_validation",
+      "case_name": "task4_story4_deferred_calibration_aware_noise",
+      "case_purpose": "deferred_scope_guard",
+      "counts_toward_mandatory_baseline": false,
+      "deferred_reason": "calibration_aware_noise",
+      "density_noise": [
+        {
+          "after_gate_index": 0,
+          "channel": "calibration_aware_noise",
+          "target": 0,
+          "value": 0.1
+        }
+      ],
+      "error_match_pass": true,
+      "expected_failure_stage": "python_normalization",
+      "expected_first_unsupported_condition": "calibration_aware_noise",
+      "expected_support_tier": "deferred",
+      "expected_task4_boundary_class": "model_family",
+      "expected_unsupported_category": "noise_type",
+      "failure_stage": "python_normalization",
+      "first_unsupported_condition": "calibration_aware_noise",
+      "hamiltonian": {
+        "Jx": 1.0,
+        "Jy": 1.0,
+        "Jz": 1.0,
+        "h": 0.5
+      },
+      "inner_blocks": 1,
+      "layers": 1,
+      "pre_execution_failure_pass": true,
+      "purpose": "Verify calibration-aware noise requests remain deferred and fail before execution.",
+      "qbit_num": 1,
+      "requested_noise_channel": "calibration_aware_noise",
+      "silent_fallback_detected": false,
+      "silent_substitution_detected": false,
+      "status": "unsupported",
+      "support_tier": "deferred",
+      "task4_boundary_class": "model_family",
+      "topology": [],
+      "unsupported_boundary_pass": true,
+      "unsupported_category": "noise_type",
+      "unsupported_reason": "Unsupported density-noise channel 'calibration_aware_noise'. Supported channels are 'local_depolarizing', 'amplitude_damping', and 'phase_damping'."
+    },
+    {
+      "ansatz": "HEA",
+      "backend": "density_matrix",
+      "case_kind": "task4_unsupported_noise_boundary_validation",
+      "case_name": "task4_story4_deferred_non_markovian_noise",
+      "case_purpose": "deferred_scope_guard",
+      "counts_toward_mandatory_baseline": false,
+      "deferred_reason": "non_markovian_noise",
+      "density_noise": [
+        {
+          "after_gate_index": 0,
+          "channel": "non_markovian_noise",
+          "target": 0,
+          "value": 0.1
+        }
+      ],
+      "error_match_pass": true,
+      "expected_failure_stage": "python_normalization",
+      "expected_first_unsupported_condition": "non_markovian_noise",
+      "expected_support_tier": "deferred",
+      "expected_task4_boundary_class": "model_family",
+      "expected_unsupported_category": "noise_type",
+      "failure_stage": "python_normalization",
+      "first_unsupported_condition": "non_markovian_noise",
+      "hamiltonian": {
+        "Jx": 1.0,
+        "Jy": 1.0,
+        "Jz": 1.0,
+        "h": 0.5
+      },
+      "inner_blocks": 1,
+      "layers": 1,
+      "pre_execution_failure_pass": true,
+      "purpose": "Verify non-Markovian noise requests remain deferred and fail before execution.",
+      "qbit_num": 1,
+      "requested_noise_channel": "non_markovian_noise",
+      "silent_fallback_detected": false,
+      "silent_substitution_detected": false,
+      "status": "unsupported",
+      "support_tier": "deferred",
+      "task4_boundary_class": "model_family",
+      "topology": [],
+      "unsupported_boundary_pass": true,
+      "unsupported_category": "noise_type",
+      "unsupported_reason": "Unsupported density-noise channel 'non_markovian_noise'. Supported channels are 'local_depolarizing', 'amplitude_damping', and 'phase_damping'."
+    },
+    {
+      "ansatz": "HEA",
+      "backend": "density_matrix",
+      "case_kind": "task4_unsupported_noise_boundary_validation",
+      "case_name": "task4_story4_negative_after_gate_index",
+      "case_purpose": "unsupported_scope_guard",
+      "counts_toward_mandatory_baseline": false,
+      "density_noise": [
+        {
+          "after_gate_index": -1,
+          "channel": "local_depolarizing",
+          "error_rate": 0.1,
+          "target": 0
+        }
+      ],
+      "error_match_pass": true,
+      "expected_failure_stage": "cxx_noise_spec_validation",
+      "expected_first_unsupported_condition": "after_gate_index_negative",
+      "expected_support_tier": "unsupported",
+      "expected_task4_boundary_class": "schedule_element",
+      "expected_unsupported_category": "noise_insertion",
+      "failure_stage": "cxx_noise_spec_validation",
+      "first_unsupported_condition": "after_gate_index_negative",
+      "hamiltonian": {
+        "Jx": 1.0,
+        "Jy": 1.0,
+        "Jz": 1.0,
+        "h": 0.5
+      },
+      "inner_blocks": 1,
+      "layers": 1,
+      "pre_execution_failure_pass": true,
+      "purpose": "Verify negative after_gate_index fails during density-noise configuration.",
+      "qbit_num": 4,
+      "requested_noise_channel": "local_depolarizing",
+      "silent_fallback_detected": false,
+      "silent_substitution_detected": false,
+      "status": "unsupported",
+      "support_tier": "unsupported",
+      "task4_boundary_class": "schedule_element",
+      "topology": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ]
+      ],
+      "unsupported_boundary_pass": true,
+      "unsupported_category": "noise_insertion",
+      "unsupported_reason": "Variational_Quantum_Eigensolver_Base::set_density_noise_specs: after_gate_index must be non-negative",
+      "unsupported_scope_reason": "after_gate_index_negative"
+    },
+    {
+      "ansatz": "HEA",
+      "backend": "density_matrix",
+      "case_kind": "task4_unsupported_noise_boundary_validation",
+      "case_name": "task4_story4_after_gate_index_exceeds_gate_count",
+      "case_purpose": "unsupported_scope_guard",
+      "counts_toward_mandatory_baseline": false,
+      "density_noise": [
+        {
+          "after_gate_index": 999,
+          "channel": "local_depolarizing",
+          "error_rate": 0.1,
+          "target": 0
+        }
+      ],
+      "error_match_pass": true,
+      "expected_failure_stage": "density_anchor_preflight",
+      "expected_first_unsupported_condition": "after_gate_index_exceeds_gate_count",
+      "expected_support_tier": "unsupported",
+      "expected_task4_boundary_class": "schedule_element",
+      "expected_unsupported_category": "noise_insertion",
+      "failure_stage": "density_anchor_preflight",
+      "first_unsupported_condition": "after_gate_index_exceeds_gate_count",
+      "hamiltonian": {
+        "Jx": 1.0,
+        "Jy": 1.0,
+        "Jz": 1.0,
+        "h": 0.5
+      },
+      "inner_blocks": 1,
+      "layers": 1,
+      "pre_execution_failure_pass": true,
+      "purpose": "Verify insertion points beyond the generated gate count fail before execution.",
+      "qbit_num": 4,
+      "requested_noise_channel": "local_depolarizing",
+      "silent_fallback_detected": false,
+      "silent_substitution_detected": false,
+      "status": "unsupported",
+      "support_tier": "unsupported",
+      "task4_boundary_class": "schedule_element",
+      "topology": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ]
+      ],
+      "unsupported_boundary_pass": true,
+      "unsupported_category": "noise_insertion",
+      "unsupported_reason": "Variational_Quantum_Eigensolver_Base::validate_density_anchor_support: unsupported density-noise insertion at index 0 because after_gate_index exceeds generated gate count",
+      "unsupported_scope_reason": "after_gate_index_exceeds_gate_count"
+    },
+    {
+      "ansatz": "HEA",
+      "backend": "density_matrix",
+      "case_kind": "task4_unsupported_noise_boundary_validation",
+      "case_name": "task4_story4_target_out_of_range",
+      "case_purpose": "unsupported_scope_guard",
+      "counts_toward_mandatory_baseline": false,
+      "density_noise": [
+        {
+          "after_gate_index": 0,
+          "channel": "phase_damping",
+          "lambda": 0.1,
+          "target": 10
+        }
+      ],
+      "error_match_pass": true,
+      "expected_failure_stage": "cxx_noise_spec_validation",
+      "expected_first_unsupported_condition": "target_qbit_out_of_range",
+      "expected_support_tier": "unsupported",
+      "expected_task4_boundary_class": "configuration",
+      "expected_unsupported_category": "noise_target",
+      "failure_stage": "cxx_noise_spec_validation",
+      "first_unsupported_condition": "target_qbit_out_of_range",
+      "hamiltonian": {
+        "Jx": 1.0,
+        "Jy": 1.0,
+        "Jz": 1.0,
+        "h": 0.5
+      },
+      "inner_blocks": 1,
+      "layers": 1,
+      "pre_execution_failure_pass": true,
+      "purpose": "Verify invalid noise targets fail during density-noise configuration.",
+      "qbit_num": 2,
+      "requested_noise_channel": "phase_damping",
+      "silent_fallback_detected": false,
+      "silent_substitution_detected": false,
+      "status": "unsupported",
+      "support_tier": "unsupported",
+      "task4_boundary_class": "configuration",
+      "topology": [
+        [
+          0,
+          1
+        ]
+      ],
+      "unsupported_boundary_pass": true,
+      "unsupported_category": "noise_target",
+      "unsupported_reason": "Variational_Quantum_Eigensolver_Base::set_density_noise_specs: target_qbit out of range",
+      "unsupported_scope_reason": "target_qbit_out_of_range"
+    },
+    {
+      "ansatz": "HEA",
+      "backend": "density_matrix",
+      "case_kind": "task4_unsupported_noise_boundary_validation",
+      "case_name": "task4_story4_noise_value_out_of_range",
+      "case_purpose": "unsupported_scope_guard",
+      "counts_toward_mandatory_baseline": false,
+      "density_noise": [
+        {
+          "after_gate_index": 0,
+          "channel": "amplitude_damping",
+          "gamma": 1.5,
+          "target": 0
+        }
+      ],
+      "error_match_pass": true,
+      "expected_failure_stage": "cxx_noise_spec_validation",
+      "expected_first_unsupported_condition": "noise_value_out_of_range",
+      "expected_support_tier": "unsupported",
+      "expected_task4_boundary_class": "configuration",
+      "expected_unsupported_category": "noise_value",
+      "failure_stage": "cxx_noise_spec_validation",
+      "first_unsupported_condition": "noise_value_out_of_range",
+      "hamiltonian": {
+        "Jx": 1.0,
+        "Jy": 1.0,
+        "Jz": 1.0,
+        "h": 0.5
+      },
+      "inner_blocks": 1,
+      "layers": 1,
+      "pre_execution_failure_pass": true,
+      "purpose": "Verify out-of-range noise probabilities fail during density-noise configuration.",
+      "qbit_num": 2,
+      "requested_noise_channel": "amplitude_damping",
+      "silent_fallback_detected": false,
+      "silent_substitution_detected": false,
+      "status": "unsupported",
+      "support_tier": "unsupported",
+      "task4_boundary_class": "configuration",
+      "topology": [
+        [
+          0,
+          1
+        ]
+      ],
+      "unsupported_boundary_pass": true,
+      "unsupported_category": "noise_value",
+      "unsupported_reason": "Variational_Quantum_Eigensolver_Base::set_density_noise_specs: noise values must be in [0, 1]",
+      "unsupported_scope_reason": "noise_value_out_of_range"
+    }
+  ],
+  "requirements": {
+    "canonical_negative_fields": [
+      "support_tier",
+      "case_purpose",
+      "counts_toward_mandatory_baseline",
+      "unsupported_category",
+      "first_unsupported_condition",
+      "task4_boundary_class",
+      "failure_stage",
+      "unsupported_reason"
+    ],
+    "case_names": [
+      "task4_story4_deferred_readout_noise",
+      "task4_story4_deferred_correlated_multi_qubit_noise",
+      "task4_story4_deferred_calibration_aware_noise",
+      "task4_story4_deferred_non_markovian_noise",
+      "task4_story4_negative_after_gate_index",
+      "task4_story4_after_gate_index_exceeds_gate_count",
+      "task4_story4_target_out_of_range",
+      "task4_story4_noise_value_out_of_range"
+    ],
+    "deferred_family_reasons": [
+      "correlated_multi_qubit_noise",
+      "readout_noise",
+      "calibration_aware_noise",
+      "non_markovian_noise"
+    ],
+    "expected_status": "unsupported",
+    "required_boundary_classes": [
+      "configuration",
+      "model_family",
+      "schedule_element"
+    ],
+    "required_categories": [
+      "noise_insertion",
+      "noise_target",
+      "noise_type",
+      "noise_value"
+    ],
+    "required_failure_stages": [
+      "cxx_noise_spec_validation",
+      "density_anchor_preflight",
+      "python_normalization"
+    ],
+    "required_support_tiers": [
+      "deferred",
+      "unsupported"
+    ],
+    "support_tier_vocabulary": [
+      "required",
+      "optional",
+      "deferred",
+      "unsupported"
+    ]
+  },
+  "software": {
+    "numpy": "2.3.5",
+    "python": "3.13.9",
+    "qiskit": "2.2.3",
+    "qiskit_aer": "0.17.2"
+  },
+  "status": "pass",
+  "suite_name": "task4_story4_unsupported_noise_boundary",
+  "summary": {
+    "boundary_classes_present": [
+      "configuration",
+      "model_family",
+      "schedule_element"
+    ],
+    "boundary_passed_cases": 8,
+    "categories_present": [
+      "noise_insertion",
+      "noise_target",
+      "noise_type",
+      "noise_value"
+    ],
+    "deferred_cases": 4,
+    "error_match_count": 8,
+    "failed_cases": 0,
+    "failure_stages_present": [
+      "cxx_noise_spec_validation",
+      "density_anchor_preflight",
+      "python_normalization"
+    ],
+    "first_unsupported_conditions": [
+      "after_gate_index_exceeds_gate_count",
+      "after_gate_index_negative",
+      "calibration_aware_noise",
+      "correlated_multi_qubit_noise",
+      "noise_value_out_of_range",
+      "non_markovian_noise",
+      "readout_noise",
+      "target_qbit_out_of_range"
+    ],
+    "mandatory_baseline_case_count": 0,
+    "mandatory_baseline_completed": false,
+    "mandatory_baseline_passed_cases": 0,
+    "optional_cases": 0,
+    "optional_cases_count_toward_mandatory_baseline": 0,
+    "optional_pass_rate": 0.0,
+    "optional_passed_cases": 0,
+    "pre_execution_failure_count": 8,
+    "required_cases": 0,
+    "required_pass_rate": 0.0,
+    "required_passed_cases": 0,
+    "silent_fallback_failures": 0,
+    "silent_substitution_failures": 0,
+    "support_tiers_present": [
+      "deferred",
+      "unsupported"
+    ],
+    "total_cases": 8,
+    "unsupported_cases": 4,
+    "unsupported_status_cases": 8
+  }
+}

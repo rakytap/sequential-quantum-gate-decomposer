@@ -58,11 +58,11 @@ hard-error unsupported behavior. As a result, the project now has a delivered
 research-grade exact noisy backend slice for the frozen integrated-backend scope.
 
 That slice is backed by a complete backend-explicit reproducibility package
-archived in `benchmarks/density_matrix/artifacts/phase2_task2/`, with
-`story5_publication_bundle.json` as the top-level manifest. The bundle links the
-micro-validation results, workflow-scale benchmark bundle, bounded optimization
-trace, and representative unsupported-case evidence in one machine-readable
-artifact surface.
+archived in `benchmarks/density_matrix/artifacts/phase2_task4/`, with
+`task4_story6_publication_bundle.json` as the top-level manifest. The bundle
+links the required-local-noise positive-path, micro-validation, optional
+classification, unsupported-noise, workflow-scale, and bounded optimization
+trace artifacts in one machine-readable evidence surface.
 
 This short paper defines the first major integration step needed to close that
 gap. Its purpose is to turn the density-matrix path into a usable backend for

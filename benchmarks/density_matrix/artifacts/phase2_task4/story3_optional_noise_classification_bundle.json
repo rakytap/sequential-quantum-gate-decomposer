@@ -1,0 +1,349 @@
+{
+  "backend": "density_matrix",
+  "cases": [
+    {
+      "absolute_energy_error": 2.7755575615628914e-17,
+      "backend": "density_matrix",
+      "case_kind": "optional_regression",
+      "case_name": "task4_story3_1q_optional_whole_register_depolarizing_regression",
+      "case_purpose": "optional_regression",
+      "counts_toward_mandatory_baseline": false,
+      "density_valid_pass": true,
+      "energy_pass": true,
+      "gate_operation_sequence": [
+        "U3"
+      ],
+      "hamiltonian": {
+        "terms": [
+          {
+            "coeff": 0.32,
+            "pauli_string": "Z"
+          },
+          {
+            "coeff": -0.18,
+            "pauli_string": "X"
+          }
+        ]
+      },
+      "max_diff": 1.1102230246251565e-16,
+      "mixed_sequence_order_pass": null,
+      "noise_operation_sequence": [
+        "depolarizing"
+      ],
+      "noise_operation_targets": [
+        null
+      ],
+      "noise_operation_values": [
+        0.06
+      ],
+      "noise_sequence_match_pass": true,
+      "observable_pass": true,
+      "operation_audit_pass": true,
+      "operation_count": 2,
+      "operation_metadata": [
+        {
+          "control_qbit": null,
+          "kind": "gate",
+          "name": "U3",
+          "raw_operation": "U3(0,0.61,-0.24,0.39)",
+          "target_qbit": 0,
+          "value": null
+        },
+        {
+          "control_qbit": null,
+          "kind": "noise",
+          "name": "depolarizing",
+          "raw_operation": "Depol(0.06)",
+          "target_qbit": null,
+          "value": 0.06
+        }
+      ],
+      "operations": [
+        "U3(0,0.61,-0.24,0.39)",
+        "Depol(0.06)"
+      ],
+      "optional_reason": "whole_register_depolarizing_baseline",
+      "parameter_vector": [
+        0.61,
+        -0.24,
+        0.39
+      ],
+      "purpose": "Optional regression baseline using whole-register depolarizing on a 1-qubit U3 case.",
+      "qbit_num": 1,
+      "reference_backend": "qiskit_aer_density_matrix",
+      "reference_energy_imag": 0.0,
+      "reference_energy_real": -0.05097270059637893,
+      "reference_purity": 0.9418,
+      "required_gate_coverage_pass": true,
+      "required_gate_family": [
+        "U3"
+      ],
+      "required_noise_model_coverage_pass": true,
+      "required_noise_models": [
+        "depolarizing"
+      ],
+      "rho_is_valid": true,
+      "rho_is_valid_tol": 1e-10,
+      "squander_energy_imag": 0.0,
+      "squander_energy_real": -0.050972700596378956,
+      "squander_purity": 0.9417999999999997,
+      "squander_trace_imag": 1.6034994163920753e-18,
+      "squander_trace_real": 1.0,
+      "state_comparison_status": "pass",
+      "state_fidelity": 0.9999999999999993,
+      "status": "pass",
+      "support_tier": "optional",
+      "task4_story3_case_pass": true,
+      "trace_deviation": 1.6034994163920753e-18,
+      "trace_distance": 5.631290093945387e-17,
+      "trace_pass": true,
+      "whole_register_baseline_classification_pass": true
+    },
+    {
+      "absolute_energy_error": 0.0,
+      "backend": "density_matrix",
+      "case_kind": "optional_stress",
+      "case_name": "task4_story3_2q_optional_whole_register_depolarizing_stress",
+      "case_purpose": "optional_stress",
+      "counts_toward_mandatory_baseline": false,
+      "density_valid_pass": true,
+      "energy_pass": true,
+      "gate_operation_sequence": [
+        "U3",
+        "U3",
+        "CNOT"
+      ],
+      "hamiltonian": {
+        "terms": [
+          {
+            "coeff": 0.41,
+            "pauli_string": "ZI"
+          },
+          {
+            "coeff": -0.23,
+            "pauli_string": "IZ"
+          },
+          {
+            "coeff": 0.17,
+            "pauli_string": "XX"
+          }
+        ]
+      },
+      "max_diff": 1.1102230246251565e-16,
+      "mixed_sequence_order_pass": null,
+      "noise_operation_sequence": [
+        "depolarizing"
+      ],
+      "noise_operation_targets": [
+        null
+      ],
+      "noise_operation_values": [
+        0.04
+      ],
+      "noise_sequence_match_pass": true,
+      "observable_pass": true,
+      "operation_audit_pass": true,
+      "operation_count": 4,
+      "operation_metadata": [
+        {
+          "control_qbit": null,
+          "kind": "gate",
+          "name": "U3",
+          "raw_operation": "U3(0,0.54,-0.19,0.42)",
+          "target_qbit": 0,
+          "value": null
+        },
+        {
+          "control_qbit": null,
+          "kind": "gate",
+          "name": "U3",
+          "raw_operation": "U3(1,0.38,0.27,-0.31)",
+          "target_qbit": 1,
+          "value": null
+        },
+        {
+          "control_qbit": 0,
+          "kind": "gate",
+          "name": "CNOT",
+          "raw_operation": "CNOT(0->1)",
+          "target_qbit": 1,
+          "value": null
+        },
+        {
+          "control_qbit": null,
+          "kind": "noise",
+          "name": "depolarizing",
+          "raw_operation": "Depol(0.04)",
+          "target_qbit": null,
+          "value": 0.04
+        }
+      ],
+      "operations": [
+        "U3(0,0.54,-0.19,0.42)",
+        "U3(1,0.38,0.27,-0.31)",
+        "CNOT(0->1)",
+        "Depol(0.04)"
+      ],
+      "optional_reason": "whole_register_depolarizing_baseline",
+      "parameter_vector": [
+        0.54,
+        -0.19,
+        0.42,
+        0.38,
+        0.27,
+        -0.31
+      ],
+      "purpose": "Optional stress baseline using whole-register depolarizing on a 2-qubit U3/CNOT case.",
+      "qbit_num": 2,
+      "reference_backend": "qiskit_aer_density_matrix",
+      "reference_energy_imag": 0.0,
+      "reference_energy_real": 0.17174382116311498,
+      "reference_purity": 0.9412000000000001,
+      "required_gate_coverage_pass": true,
+      "required_gate_family": [
+        "U3",
+        "CNOT"
+      ],
+      "required_noise_model_coverage_pass": true,
+      "required_noise_models": [
+        "depolarizing"
+      ],
+      "rho_is_valid": true,
+      "rho_is_valid_tol": 1e-10,
+      "squander_energy_imag": 0.0,
+      "squander_energy_real": 0.17174382116311498,
+      "squander_purity": 0.9412,
+      "squander_trace_imag": 5.398910405151599e-18,
+      "squander_trace_real": 1.0,
+      "state_comparison_status": "pass",
+      "state_fidelity": 0.9999999999999984,
+      "status": "pass",
+      "support_tier": "optional",
+      "task4_story3_case_pass": true,
+      "trace_deviation": 5.398910405151599e-18,
+      "trace_distance": 1.4108600292846314e-16,
+      "trace_pass": true,
+      "whole_register_baseline_classification_pass": true
+    }
+  ],
+  "reference_backend": "qiskit_aer_density_matrix",
+  "required_artifacts": {
+    "story1": {
+      "status": "pass",
+      "suite_name": "task4_story1_required_local_noise",
+      "summary": {
+        "deferred_cases": 0,
+        "failed_cases": 0,
+        "mandatory_baseline_case_count": 3,
+        "mandatory_baseline_completed": true,
+        "mandatory_baseline_passed_cases": 3,
+        "optional_cases": 0,
+        "optional_cases_count_toward_mandatory_baseline": 0,
+        "optional_pass_rate": 0.0,
+        "optional_passed_cases": 0,
+        "pass_rate": 1.0,
+        "passed_cases": 3,
+        "required_cases": 3,
+        "required_pass_rate": 1.0,
+        "required_passed_cases": 3,
+        "reviewable_bridge_cases": 3,
+        "support_tiers_present": [
+          "required"
+        ],
+        "total_cases": 3,
+        "unsupported_cases": 0,
+        "whole_register_substitute_failures": 0
+      }
+    },
+    "story2": {
+      "status": "pass",
+      "suite_name": "task4_story2_required_local_noise_micro_validation",
+      "summary": {
+        "deferred_cases": 0,
+        "exact_threshold_passed_cases": 7,
+        "failed_cases": 0,
+        "mandatory_baseline_case_count": 7,
+        "mandatory_baseline_completed": true,
+        "mandatory_baseline_passed_cases": 7,
+        "mixed_sequence_case_count": 1,
+        "mixed_sequence_passed_cases": 1,
+        "operation_audit_passed_cases": 7,
+        "optional_cases": 0,
+        "optional_cases_count_toward_mandatory_baseline": 0,
+        "optional_pass_rate": 0.0,
+        "optional_passed_cases": 0,
+        "pass_rate": 1.0,
+        "passed_cases": 7,
+        "required_cases": 7,
+        "required_noise_models_covered": [
+          "amplitude_damping",
+          "local_depolarizing",
+          "phase_damping"
+        ],
+        "required_pass_rate": 1.0,
+        "required_passed_cases": 7,
+        "support_tiers_present": [
+          "required"
+        ],
+        "total_cases": 7,
+        "unsupported_cases": 0
+      }
+    }
+  },
+  "requirements": {
+    "optional_case_names": [
+      "task4_story3_1q_optional_whole_register_depolarizing_regression",
+      "task4_story3_2q_optional_whole_register_depolarizing_stress"
+    ],
+    "optional_noise_models": [
+      "depolarizing"
+    ],
+    "required_bundle_sources": [
+      "task4_story1_required_local_noise",
+      "task4_story2_required_local_noise_micro_validation"
+    ],
+    "required_local_noise_models": [
+      "local_depolarizing",
+      "amplitude_damping",
+      "phase_damping"
+    ],
+    "required_pass_rate": 1.0,
+    "support_tier_vocabulary": [
+      "required",
+      "optional",
+      "deferred",
+      "unsupported"
+    ]
+  },
+  "software": {
+    "numpy": "2.3.5",
+    "python": "3.13.9",
+    "qiskit": "2.2.3",
+    "qiskit_aer": "0.17.2"
+  },
+  "status": "pass",
+  "suite_name": "task4_story3_optional_noise_classification",
+  "summary": {
+    "mandatory_baseline_case_count": 10,
+    "mandatory_baseline_completed": true,
+    "mandatory_baseline_passed_cases": 10,
+    "optional_cases": 2,
+    "optional_cases_count_toward_mandatory_baseline": 0,
+    "optional_pass_rate": 1.0,
+    "optional_passed_cases": 2,
+    "required_cases": 10,
+    "required_pass_rate": 1.0,
+    "required_passed_cases": 10,
+    "support_tiers_present": [
+      "optional",
+      "required"
+    ]
+  },
+  "thresholds": {
+    "absolute_energy_error": 1e-10,
+    "observable_imag_abs": 1e-10,
+    "required_pass_rate": 1.0,
+    "rho_is_valid_tol": 1e-10,
+    "trace_deviation": 1e-10
+  }
+}

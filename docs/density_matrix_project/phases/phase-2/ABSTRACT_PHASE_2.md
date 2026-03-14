@@ -32,11 +32,11 @@ damping, and amplitude damping, rather than relying mainly on whole-register toy
 noise.
 
 The complete integrated-backend evidence bundle is now archived in
-`benchmarks/density_matrix/artifacts/phase2_task2/`, with
-`story5_publication_bundle.json` as the top-level manifest. That bundle links
-the micro-validation results, workflow-scale exactness results, bounded
-optimization trace, and representative unsupported-case artifacts in one
-backend-explicit reproducibility package.
+`benchmarks/density_matrix/artifacts/phase2_task4/`, with
+`task4_story6_publication_bundle.json` as the top-level manifest. That bundle
+links the required-local-noise positive-path, micro-validation, optional
+classification, unsupported-noise, workflow-scale exactness, and bounded
+optimization-trace artifacts in one backend-explicit reproducibility package.
 
 The expected contribution of Phase 2 is a research-grade exact noisy backend for
 SQUANDER that enables reproducible noisy variational experiments and forms the

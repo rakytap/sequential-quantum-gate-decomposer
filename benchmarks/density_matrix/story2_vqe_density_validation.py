@@ -59,6 +59,11 @@ from benchmarks.density_matrix.validate_squander_vs_qiskit import (
     run_validation as run_story2_micro_validation,
     write_artifact_bundle as write_story2_micro_bundle_file,
 )
+from benchmarks.density_matrix.task4_support_tiers import (
+    build_required_case_classification,
+    build_task4_support_tier_summary,
+    classify_task4_noise_boundary_reason,
+)
 from squander import Variational_Quantum_Eigensolver
 from squander.density_matrix import DensityMatrix, NoisyCircuit
 
@@ -649,6 +654,7 @@ def run_story4_workflow_case(
                 resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
             ),
             **bridge_metadata,
+            **build_required_case_classification(),
         }
     )
     return artifact
@@ -660,7 +666,24 @@ def capture_story4_workflow_case(qbit_num: int, parameter_set: dict):
     try:
         return run_story4_workflow_case(qbit_num, parameter_set_id, parameter_vector)
     except Exception as exc:
-        unsupported_metadata = classify_bridge_unsupported_reason(str(exc))
+        unsupported_reason = str(exc)
+        unsupported_metadata = classify_bridge_unsupported_reason(unsupported_reason)
+        task4_boundary_metadata = classify_task4_noise_boundary_reason(
+            unsupported_reason
+        )
+        if task4_boundary_metadata["unsupported_category"] != "workflow_execution":
+            unsupported_metadata["unsupported_category"] = task4_boundary_metadata[
+                "unsupported_category"
+            ]
+            unsupported_metadata["first_unsupported_condition"] = (
+                task4_boundary_metadata["first_unsupported_condition"]
+            )
+        unsupported_metadata["task4_boundary_class"] = task4_boundary_metadata[
+            "task4_boundary_class"
+        ]
+        unsupported_metadata["failure_stage"] = task4_boundary_metadata[
+            "failure_stage"
+        ]
         return {
             "case_name": f"story4_{qbit_num}q_{parameter_set_id}",
             "status": "unsupported",
@@ -671,7 +694,7 @@ def capture_story4_workflow_case(qbit_num: int, parameter_set: dict):
             "parameter_set_id": parameter_set_id,
             "parameter_vector": parameter_vector.tolist(),
             **unsupported_metadata,
-            "unsupported_reason": str(exc),
+            "unsupported_reason": unsupported_reason,
             "source_pass": False,
             "gate_pass": False,
             "noise_pass": False,
@@ -681,6 +704,7 @@ def capture_story4_workflow_case(qbit_num: int, parameter_set: dict):
             "density_valid_pass": False,
             "trace_pass": False,
             "observable_pass": False,
+            **build_required_case_classification(),
         }
 
 
@@ -705,6 +729,7 @@ def build_story4_workflow_bundle(
     parameter_set_count: int = STORY4_PARAMETER_SET_COUNT,
     trace_result=None,
 ):
+    support_tier_summary = build_task4_support_tier_summary(results)
     cases_per_qbit = {
         str(qbit_num): sum(1 for result in results if result["qbit_num"] == qbit_num)
         for qbit_num in qubit_sizes
@@ -712,7 +737,7 @@ def build_story4_workflow_bundle(
     passed = sum(1 for result in results if result["status"] == "pass")
     unsupported = sum(1 for result in results if result["status"] == "unsupported")
     total = len(results)
-    pass_rate = 0.0 if total == 0 else passed / total
+    required_pass_rate = support_tier_summary["required_pass_rate"]
     documented_10q_anchor_present = any(result["qbit_num"] == 10 for result in results)
     documented_10q_anchor_required = 10 in qubit_sizes
     required_counts_present = all(
@@ -728,7 +753,7 @@ def build_story4_workflow_bundle(
     )
     bundle_status = (
         "pass"
-        if pass_rate == 1.0
+        if support_tier_summary["mandatory_baseline_completed"]
         and required_counts_present
         and (
             not documented_10q_anchor_required or documented_10q_anchor_present
@@ -752,8 +777,9 @@ def build_story4_workflow_bundle(
             "passed_cases": passed,
             "failed_cases": total - passed,
             "unsupported_cases": unsupported,
+            "unsupported_status_cases": unsupported,
             "bridge_supported_cases": bridge_supported_cases,
-            "pass_rate": pass_rate,
+            "pass_rate": required_pass_rate,
             "required_workflow_qubits": list(qubit_sizes),
             "fixed_parameter_sets_per_size": parameter_set_count,
             "cases_per_qbit": cases_per_qbit,
@@ -765,6 +791,22 @@ def build_story4_workflow_bundle(
                 if trace_result
                 else None
             ),
+            "required_cases": support_tier_summary["required_cases"],
+            "required_passed_cases": support_tier_summary["required_passed_cases"],
+            "required_pass_rate": required_pass_rate,
+            "mandatory_baseline_case_count": support_tier_summary[
+                "mandatory_baseline_case_count"
+            ],
+            "mandatory_baseline_passed_cases": support_tier_summary[
+                "mandatory_baseline_passed_cases"
+            ],
+            "mandatory_baseline_completed": support_tier_summary[
+                "mandatory_baseline_completed"
+            ],
+            "support_tiers_present": support_tier_summary["support_tiers_present"],
+            "optional_cases_count_toward_mandatory_baseline": support_tier_summary[
+                "optional_cases_count_toward_mandatory_baseline"
+            ],
         },
         "cases": results,
     }
@@ -1210,6 +1252,9 @@ def run_optimization_trace():
             ),
             "status": "completed",
             **bridge_metadata,
+            **build_required_case_classification(),
+            "counts_toward_mandatory_baseline": False,
+            "required_story5_trace": True,
         }
     )
     return artifact

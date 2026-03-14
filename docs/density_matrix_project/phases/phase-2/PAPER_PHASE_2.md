@@ -95,8 +95,11 @@ Implementation-backed status for the completed integrated-backend slice:
   - structured unsupported-case outcomes,
   - runtime and peak-memory characterization for workflow-scale cases,
   - and a backend-explicit reproducibility package archived in
-  `benchmarks/density_matrix/artifacts/phase2_task2/` with
-  `story5_publication_bundle.json` as the top-level manifest.
+  `benchmarks/density_matrix/artifacts/phase2_task4/` with
+  `task4_story6_publication_bundle.json` as the top-level manifest. That
+  manifest links the Story 1 required-local-noise bundle, Story 2 micro
+  validation bundle, Story 3 optional classification bundle, Story 4
+  unsupported-noise bundle, Story 5 workflow bundle, and Story 5 trace.
 
 ### 1.2 Why This Contribution Matters
 
