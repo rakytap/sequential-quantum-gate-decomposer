@@ -33,7 +33,7 @@ def extract_subtopology(involved_qbits, qbit_map, config ):
             mini_topology.append((qbit_map[edge[0]],qbit_map[edge[1]]))
     return mini_topology
 
-def CNOTGateCount( circ: Circuit ) -> int :
+def CNOTGateCount( circ: Circuit, max_gates: int = 0 ) -> int :
     """
     Call to get the number of CNOT gates in the circuit
 
@@ -54,8 +54,10 @@ def CNOTGateCount( circ: Circuit ) -> int :
         raise Exception("The input parameters should be an instance of Squander Circuit")
 
     gate_counts = circ.get_Gate_Nums()
-
-    return gate_counts.get('CNOT', 0) #+  3*gate_counts.get('SWAP', 0)
+    num_cnots = gate_counts.get('CNOT', 0)
+    
+    if max_gates > 0: return num_cnots*max_gates + sum(y for x, y in gate_counts.items() if x !='CNOT')
+    return num_cnots  #+  3*gate_counts.get('SWAP', 0)
 
 
 
@@ -67,7 +69,7 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
         self.config = config
         self.accelerator_num = accelerator_num
         self.paramspace = paramspace
-        self.paramscale = paramscale
+        self.paramscale = () if paramscale is None else paramscale
         #self.set_Cost_Function_Variant( 0 )	 #0 is Frobenius, 3 is HS, 10 is OSR
         if topology is None:
             topology = [(i, j) for i in range(self.qbit_num) for j in range(i+1, self.qbit_num)]
@@ -186,8 +188,7 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
         A = list(reversed(A))
         B = list(sorted(set(range(n)) - set(A), reverse=True))
         A, B = [n-1-q for q in A], [n-1-q for q in B]
-        dyadic_idxs = [1 << k for k in range(len(G))]
-        mat = np.array(G) * Umat[:,dyadic_idxs] @ VTmat[dyadic_idxs,:]  # reconstruct U from its dyadic decomposition
+        mat = np.array(G) * Umat @ VTmat  # reconstruct U from its dyadic decomposition
         revmap = [None]*(2*n)
         for i, x in enumerate(tuple(A) + tuple(t+n for t in A) + tuple(B) + tuple(t+n for t in B)):
             revmap[x] = i
@@ -227,73 +228,91 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
         return circ
     def ceil_log2(x): return 0 if x == 0 else (x-1).bit_length()
     def logsumexp_smoothmax(Lc, tau=1e-2):
+        if not Lc: return 0.0
+        if tau <= 0.0: raise RuntimeError("tau must be > 0")
         m = max(Lc)
-        sum = 0.0
-        for v in Lc: sum += np.exp((v - m)/tau)
-        return tau * np.log(sum) + m
-    def dyadic_loss(S, max_dyadic, rho=0.9, tol=1e-4):
-        tot_dyadic = N_Qubit_Decomposition_Guided_Tree.ceil_log2(len(S))
-        w = 1.0
         acc = 0.0
-        for k in range(max_dyadic-1, -1, -1):
-            if k < tot_dyadic:
-                val = S[1 << k] - S[0] * tol    
-                acc += w * val * val
-            w *= rho
-        return acc
-    def avg_loss(cuts_S, rho=0.9):
-        max_dyadic = N_Qubit_Decomposition_Guided_Tree.ceil_log2(max(len(S) for S in cuts_S))
+        for v in Lc: acc += np.exp((v - m)/tau)
+        return tau * np.log(acc) + m
+    def loss_for_rank(S, rank):
+        start = 1 << rank
+        if start >= len(S): return 0.0
+        return sum(x*x for x in S[start:])
+    def avg_loss(cuts_S, rank):
+        if not cuts_S: return 0.0
         total_loss = 0.0
         for S in cuts_S:
-            total_loss += N_Qubit_Decomposition_Guided_Tree.dyadic_loss(S, max_dyadic, rho)
+            total_loss += N_Qubit_Decomposition_Guided_Tree.loss_for_rank(S, rank)
         return total_loss / len(cuts_S)
     # Aggregated cost over cuts: softmax (log-sum-exp) of per-cut dyadic losses
-    def cuts_softmax_dyadic_cost(cuts_S, rho=0.1, tau=1e-2):
-        if tau <= 0.0: raise RuntimeError("tau must be > 0")
+    def cuts_softmax_rank_cost(cuts_S, rank, tau=1e-2):
         Lc = []
-        max_dyadic = N_Qubit_Decomposition_Guided_Tree.ceil_log2(max(len(S) for S in cuts_S))
         for S in cuts_S:
-            Lc.append(N_Qubit_Decomposition_Guided_Tree.dyadic_loss(S, max_dyadic, rho))
+            Lc.append(N_Qubit_Decomposition_Guided_Tree.loss_for_rank(S, rank))
         return N_Qubit_Decomposition_Guided_Tree.logsumexp_smoothmax(Lc, tau)
 
     # Gradient w.r.t. the singular values (diagonal of dL/dΣ):
-    def dyadic_loss_grad_diag(S, max_dyadic, Fnorm, rho=0.1, tol=1e-4):
+    def loss_for_rank_grad_diag(S, rank, Fnorm):
+        """
+        Gradient of a single-cut tail loss with respect to the RAW singular values,
+        assuming S is already normalized and Fnorm is treated as constant.
+
+        If S = sigma / Fnorm, then d/dsigma_i sum_{j>=r} S_j^2 = 2*S_i/Fnorm on tail.
+        """
         n = len(S)
-        # c_k = rho^k / Mk  for k=1..n-1, then prefix sum C_j = sum_{k=1}^j c_k
-        tot_dyadic = N_Qubit_Decomposition_Guided_Tree.ceil_log2(n)
-        grad = [0.0] * tot_dyadic
-        w = 1.0
-        for k in range(max_dyadic-1, -1, -1):
-            if k < tot_dyadic:
-                idx = 1 << k
-                grad[k] = 2.0 * w * S[idx] * (1.0-tol) / Fnorm  #1-tol not needed if using stop-grad
-            w *= rho                         # w = rho^k
+        start = 1 << rank
+        grad = [0.0] * n
+        if start >= n:
+            return grad
+        invF = 1.0 / Fnorm
+        for i in range(start, n):
+            grad[i] = 2.0 * S[i] * invF
         return grad
-    def cuts_avg_dyadic_grad(cuts_S, Fnorm, rho=0.1):
+    def cuts_avg_rank_grad(cuts_S, rank, Fnorm):
+        """
+        Gradient of average tail loss across cuts.
+        Returns one gradient vector per cut, same length as that cut's S.
+        """
         C = len(cuts_S)
-        max_dyadic = N_Qubit_Decomposition_Guided_Tree.ceil_log2(max(len(S) for S in cuts_S))
-        Lc = []
-        for c in range(C):
-            Lc.append(N_Qubit_Decomposition_Guided_Tree.dyadic_loss_grad_diag(cuts_S[c], max_dyadic, Fnorm * C, rho))
-        return Lc
+        if C == 0:
+            return []
+        scale = 1.0 / C
+        out = []
+        for S in cuts_S:
+            g = N_Qubit_Decomposition_Guided_Tree.loss_for_rank_grad_diag(S, rank, Fnorm)
+            out.append([scale * v for v in g])
+        return out
     # Gradient w.r.t. singular values (same length as S).
-    # Only dyadic positions (1,2,4,...) get nonzero entries; others are 0.
-    def cuts_softmax_tail_grad(cuts_S, Fnorm, rho=0.1, tau=1e-2):
+    def cuts_softmax_rank_grad(cuts_S, rank, Fnorm, tau=1e-2):
+        """
+        Gradient of smooth-max across cuts:
+            L = tau * log(sum_c exp(L_c / tau))
+        so
+            dL = sum_c softmax_c * dL_c
+        """
         C = len(cuts_S)
-        if C == 0: return []
-        max_dyadic = N_Qubit_Decomposition_Guided_Tree.ceil_log2(max(len(S) for S in cuts_S))
-        # 1) per-cut losses
-        Lc = [N_Qubit_Decomposition_Guided_Tree.dyadic_loss(cuts_S[c], max_dyadic, rho) for c in range(C)]
+        if C == 0:
+            return []
+        if tau <= 0.0:
+            raise RuntimeError("tau must be > 0")
 
-        # 2) softmax weights w_c = exp((Lc - m)/tau) / Z
+        Lc = [
+            N_Qubit_Decomposition_Guided_Tree.loss_for_rank(S, rank)
+            for S in cuts_S
+        ]
+
         m = max(Lc)
-        w = [np.exp((Lc[c] - m)/tau) for c in range(C)]
+        w = [np.exp((v - m) / tau) for v in Lc]
         Z = np.sum(w)
-        for c in range(C): w[c] /= (Z if Z > 0.0 else 1.0)
+        if Z <= 0.0:
+            Z = 1.0
+        w = [x / Z for x in w]
 
-        # 3) dL/dS^{(c)} = w_c * dL_c/dS^{(c)}
-        return [[v * w[c] for v in N_Qubit_Decomposition_Guided_Tree.dyadic_loss_grad_diag(cuts_S[c], max_dyadic, Fnorm, rho)] for c in range(C)]
-
+        out = []
+        for c, S in enumerate(cuts_S):
+            g = N_Qubit_Decomposition_Guided_Tree.loss_for_rank_grad_diag(S, rank, Fnorm)
+            out.append([w[c] * v for v in g])
+        return out
     # Build M with build_osr_matrix, then SVD (econ) and grab top triplet.
     def top_k_triplet_for_cut(U, # (N x N), row-major, N = 1<<q
         q,                  # number of qubits
@@ -308,7 +327,7 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
         # Row-major API handles leading dims as col counts.
         res = np.linalg.svd(M, full_matrices=False, compute_uv=True)
         return res.S / Fnorm, res.U, res.Vh # normalized singular value
-    def get_deriv_osr_entanglement(matrix, use_cuts, use_softmax):
+    def get_deriv_osr_entanglement(matrix, use_cuts, rank, use_softmax):
         qbit_num = len(matrix).bit_length()-1
         cuts = list(N_Qubit_Decomposition_Guided_Tree.unique_cuts(qbit_num)) if len(use_cuts) == 0 else use_cuts
         Fnorm = np.sqrt(len(matrix))
@@ -321,8 +340,8 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
             S, Umat, VTmat = N_Qubit_Decomposition_Guided_Tree.top_k_triplet_for_cut(matrix, qbit_num, cut, Fnorm)
             triplets.append(([], Umat, VTmat))
             allS.append(S)
-        if use_softmax: allS = N_Qubit_Decomposition_Guided_Tree.cuts_softmax_tail_grad(allS, Fnorm, 1.0)
-        else: allS = N_Qubit_Decomposition_Guided_Tree.cuts_avg_dyadic_grad(allS, Fnorm, 0.9)
+        if use_softmax: allS = N_Qubit_Decomposition_Guided_Tree.cuts_softmax_rank_grad(allS, rank, Fnorm)
+        else: allS = N_Qubit_Decomposition_Guided_Tree.cuts_avg_rank_grad(allS, rank, Fnorm)
         for i in range(len(cuts)):
             triplets[i] = (allS[i], triplets[i][1], triplets[i][2])
         for i in range(len(cuts)):
@@ -353,20 +372,6 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
                 circ.apply_to(xm, Um)
                 derivs[i] = 0.5 * (Up - Um)
         return derivs
-    def get_all_clifford(qbit_num, qbits):
-        import itertools
-        circuits = []
-        all_clifford = [x+y for x, y in itertools.product(((), (True,), (False,), (True, False), (False, True), (True, False, True)), ((), (True, False, False, True), (True, False, False, True, False, False), (False, False)))]
-        for clifford_idxs in itertools.product(range(len(all_clifford)), repeat=len(qbits)):
-            circ = Circuit(qbit_num)
-            for clifford_idx, qbit in zip(clifford_idxs, qbits):
-                for sh in all_clifford[clifford_idx]:
-                    if sh:
-                        circ.add_H(qbit)
-                    else:
-                        circ.add_S(qbit)
-            circuits.append(circ)
-        return circuits
     
     def _global_phase_fix(U):
         return U / (np.linalg.det(U)**(1/len(U)))
@@ -481,7 +486,7 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
             self.get_Circuit().apply_to(scaled_params if pspace is not None else params, U)
             allU.append(U)
         return allU
-    def OSR_with_local_alignment(self, pairs, cuts, Fnorm, tol, use_softmax, method="dual_annealing"):
+    def OSR_with_local_alignment(self, pairs, cuts, Fnorm, tol, rank, use_softmax, method="dual_annealing"):
         def ceil_log2(x): return 0 if x == 0 else (x-1).bit_length()
         if len(pairs) != 0:
             self.set_Cost_Function_Variant( 10 )
@@ -492,13 +497,13 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
             def cost(x):
                 allU = self.params_to_mat(x)
                 S = [N_Qubit_Decomposition_Guided_Tree.operator_schmidt_rank(U, self.qbit_num, cut, Fnorm, tol)[1] for U in allU for cut in cuts]
-                if use_softmax: return N_Qubit_Decomposition_Guided_Tree.cuts_softmax_dyadic_cost(S, 1.0)
-                else: return N_Qubit_Decomposition_Guided_Tree.avg_loss(S)
+                if use_softmax: return N_Qubit_Decomposition_Guided_Tree.cuts_softmax_rank_cost(S, rank)
+                else: return N_Qubit_Decomposition_Guided_Tree.avg_loss(S, rank)
             def jacobian(x):
                 allU = self.params_to_mat(x)
                 grad = np.zeros(len(x), dtype=float)
                 for Ubase, U, pspace in zip(self.Umtx, allU, [None] if self.paramspace is None else self.paramspace):
-                    dL = N_Qubit_Decomposition_Guided_Tree.get_deriv_osr_entanglement(U, cuts, use_softmax)
+                    dL = N_Qubit_Decomposition_Guided_Tree.get_deriv_osr_entanglement(U, cuts, rank, use_softmax)
                     basevec = np.array((1.0,) if pspace is None else (1.0,) + pspace)
                     scaled_params = np.sum(x.reshape(-1, 1+len(pspace)) * basevec, axis=1) if pspace is not None else x                    
                     derivs = N_Qubit_Decomposition_Guided_Tree.param_derivs(self.get_Circuit(), Ubase, scaled_params)
@@ -532,11 +537,82 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
             params = self.get_Optimized_Parameters()
             self.err = self.Optimization_Problem(params)
             return self.err < self.config.get('tolerance', 1e-8)
+    def generate_insertions(curpath, topology, num_cnot):
+        import itertools
+        n = len(curpath)
+        nslots = n + 1
+        for places in itertools.combinations_with_replacement(range(nslots), num_cnot):
+            for pairs in itertools.product(topology, repeat=num_cnot):
+                out = []
+                j = 0  # index into inserted pairs
+                for slot in range(nslots):
+                    while j < num_cnot and places[j] == slot:
+                        out.append(pairs[j])
+                        j += 1
+                    if slot < n:
+                        out.append(curpath[slot])
+                yield tuple(out)
+    def Start_Decomposition(self):
+        import heapq, itertools
+        self.all_solutions = []
+        self.err = 1.0
+        stop_first_solution = self.config.get("stop_first_solution", True)
+        cuts = list(N_Qubit_Decomposition_Guided_Tree.unique_cuts(self.qbit_num))
+        #because we have U already conjugate transposed, must use prefix order
+        B = self.config.get('beam', None)#8*len(self.topology))
+        max_depth = self.config.get('tree_level_max', 14)
+        tol = 1e-3
+        Fnorm = np.sqrt(1<<self.qbit_num)
+        best = []
+        visited = set()
+        all_ranks = list(range(min(2, self.qbit_num-1)))
+        def get_osr_stats(path, rank, use_softmax):
+            h = self.OSR_with_local_alignment(path, cuts, Fnorm, tol=tol, rank=rank, use_softmax=use_softmax, method="basin_hopping")
+            min_cnots = max((x[0] for x in h), default=0)
+            ranktot = sum(x[0] for x in h)
+            kappa = sum(sum(y*y for y in x[1][1:]) for x in h)
+            return min_cnots, ranktot+kappa, h
+        def add_to_heap(path, parent_stats):
+            if len(path) > max_depth: return False
+            if path in visited: return False
+            visited.add(path)
+            if self.qbit_num > 1:
+                min_cnots, rankkappa = min(get_osr_stats(path, rank, use_sm)[:2] for (rank, use_sm) in itertools.product(all_ranks, (False,))) #(False, True)
+            else: min_cnots, rankkappa = 0, 0.0
+            if parent_stats is not None and (min_cnots, rankkappa) >= parent_stats: return False
+            heapq.heappush(best, (min_cnots, rankkappa, path))
+            return True
+        add_to_heap((), None)
+        while best:
+            #print(best[0])
+            min_cnots, rankkappa, curpath = heapq.heappop(best)
+            if min_cnots == 0:
+                #print(path)
+                for i in range(10):
+                    if self.Run_Decomposition(curpath):
+                        self.all_solutions.append((self.get_Circuit(), self.get_Optimized_Parameters()))
+                        if stop_first_solution: return
+                        break
+                    #print("Looping", h)
+            num_cnot = 1
+            while True:
+                any_added = False
+                for newpath in N_Qubit_Decomposition_Guided_Tree.generate_insertions(curpath, self.topology, num_cnot):
+                    if add_to_heap(newpath, (min_cnots, rankkappa)): any_added = True
+                if any_added: break
+                num_cnot += 1
+                if len(curpath) + num_cnot > max_depth: break
+        self.set_Gate_Structure(Circuit(self.qbit_num))
+        self.set_Optimized_Parameters(np.array([]))
+        #print("No decomposition found within the given CNOT limit.")
+    """
     def Start_Decomposition(self):
         self.all_solutions = []
         self.err = 1.0
         stop_first_solution = self.config.get("stop_first_solution", True)
         cuts = list(N_Qubit_Decomposition_Guided_Tree.unique_cuts(self.qbit_num))
+        if self.topology is None:
+            self.topology = [(i, j) for i in range(self.qbit_num) for j in range(i+1, self.qbit_num)]
         pair_affects = {
             pair: [i for i,A in enumerate(cuts) if (pair[0] in A) ^ (pair[1] in A)]
             for pair in self.topology
@@ -579,7 +655,36 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
         self.set_Gate_Structure(Circuit(self.qbit_num))
         self.set_Optimized_Parameters(np.array([]))
         #print("No decomposition found within the given CNOT limit.")
+    """
     def get_Decomposition_Error(self): return self.err
+    def compositions(total, parts):
+        """
+        All nonnegative integer tuples of length `parts` summing to `total`.
+        """
+        if parts == 1:
+            yield (total,)
+            return
+        for x in range(total + 1):
+            for rest in N_Qubit_Decomposition_Guided_Tree.compositions(total - x, parts - 1):
+                yield (x,) + rest
+    def solve_min_cnots(num_qubits, cuts, cut_bounds, topology):
+        m = len(topology)
+        cut_to_edges = [[i for i, z in enumerate(topology) if (z[0] in cut) != (z[1] in cut)] for cut in cuts]
+        total = 0
+        while True:
+            for edge_counts in N_Qubit_Decomposition_Guided_Tree.compositions(total, m):
+                if all(sum(edge_counts[j] for j in cut_to_edge)>=cut_bound for cut_to_edge, cut_bound in zip(cut_to_edges, cut_bounds)): return total
+            total += 1
+    def gen_all_min_cnots(num_qbits, topology=None): #OSR tells min CNOTs at most for 3 qubits 3, 4 qubits 6, 5 qubits 7
+        import itertools
+        cuts = list(N_Qubit_Decomposition_Guided_Tree.unique_cuts(num_qbits))
+        min_cnot_bounds = [2*min(cut_size, num_qbits - cut_size) for cut_size in (len(cut) for cut in cuts)]
+        if topology is None:
+            topology = [(i, j) for i in range(num_qbits) for j in range(i+1, num_qbits)]
+        for cnot_bounds in itertools.product(*(range(bound+1) for bound in min_cnot_bounds)):
+            #if tuple(sorted(cnot_bounds)) != cnot_bounds: continue
+            print(cnot_bounds, N_Qubit_Decomposition_Guided_Tree.solve_min_cnots(num_qbits, cuts, cnot_bounds, topology))
+#N_Qubit_Decomposition_Guided_Tree.gen_all_min_cnots(3); assert False
 #N_Qubit_Decomposition_Guided_Tree.build_sequence(); assert False
 #print(len(list(N_Qubit_Decomposition_Guided_Tree.enumerate_unordered_cnot_BFS(3, [(0,1),(1,2),])))); assert False
 class qgd_Wide_Circuit_Optimization:
@@ -738,21 +843,31 @@ class qgd_Wide_Circuit_Optimization:
     
 
         # adding new layer to the decomposition until threshold
-        cDecompose.set_Optimizer( "BFGS2" if config.get("use_osr", False) else "BFGS" )
+        cDecompose.set_Optimizer( "BFGS2" if config.get("use_osr", False) and not config.get("use_graph_search", True) else "BFGS" )
 
         # starting the decomposition
         try:
             cDecompose.Start_Decomposition()
         except Exception as e: 
+            #print(e)
             raise e
-            return []
+            #return []
         if not config.get("stop_first_solution", True): return cDecompose.all_solutions
         squander_circuit = cDecompose.get_Circuit()
         parameters       = cDecompose.get_Optimized_Parameters()
         assert parameters is not None
 
 
-        if strategy == "Custom": err = cDecompose.Optimization_Problem(parameters)
+        if strategy == "Custom":
+            err = cDecompose.Optimization_Problem(parameters)
+            it = 0
+            while err > tolerance and it < 10:
+                cDecompose.set_Optimized_Parameters(np.random.rand(cDecompose.get_Parameter_Num())*(2*np.pi))
+                cDecompose.Start_Decomposition()
+                parameters       = cDecompose.get_Optimized_Parameters()
+                err = cDecompose.Optimization_Problem(parameters)
+                it += 1
+            if err > tolerance or it != 0: print( "Decomposition error: ", err, it )
         else: err = cDecompose.get_Decomposition_Error()
         #print( "Decomposition error: ", err )
         if tolerance < err:
@@ -944,9 +1059,8 @@ class qgd_Wide_Circuit_Optimization:
     def recombine_all_partition_circuit(circ, max_partition_size, optimized_subcircuits, recombine_info ):
         from squander.partitioning.ilp import topo_sort_partitions, ilp_global_optimal, recombine_single_qubit_chains
         allparts, g, go, rgo, single_qubit_chains, gate_to_qubit, gate_to_tqubit = recombine_info
-        max_gates = max(sum(y for x, y in c.get_Gate_Nums().items() if x !='CNOT') for c in optimized_subcircuits)
-        def to_cost(c): return CNOTGateCount(c)*max_gates + sum(y for x, y in c.get_Gate_Nums().items() if x !='CNOT')
-        weights = [to_cost(circ) for circ in optimized_subcircuits[:len(allparts)]]
+        max_gates = sum(sum(y for x, y in c.get_Gate_Nums().items() if x !='CNOT') for c in optimized_subcircuits[:len(allparts)])        
+        weights = [CNOTGateCount(circ, max_gates) for circ in optimized_subcircuits[:len(allparts)]]
         L, fusion_info = ilp_global_optimal(allparts, g, weights=weights)
         struct_idxs = list(L)
         parts = recombine_single_qubit_chains(go, rgo, single_qubit_chains, gate_to_tqubit, [allparts[i] for i in L], fusion_info)
@@ -957,20 +1071,21 @@ class qgd_Wide_Circuit_Optimization:
         return [parts[i] for i in L], [struct_idxs[i] for i in L]
 
     def OptimizeWideCircuit( self, circ: Circuit, parameters: np.ndarray, global_min=True, part_size_start=3, part_size_end=5 ) -> Tuple[Circuit, np.ndarray]:
-        count = CNOTGateCount(circ)
+        count = CNOTGateCount(circ, 0)
+        fingerprint_dict = {}
         for max_part_size in range(part_size_start, part_size_end + 1):
             # instantiate the object for optimizing wide circuits
             wide_circuit_optimizer = qgd_Wide_Circuit_Optimization( {**self.config, 'max_partition_size': max_part_size} )
             while True:
                 # run circuit optimization
-                circ_flat, parameters = wide_circuit_optimizer._OptimizeWideCircuit( circ, parameters, global_min=global_min )
+                circ_flat, parameters = wide_circuit_optimizer._OptimizeWideCircuit( circ, parameters, global_min=global_min, fingerprint_dict=fingerprint_dict )
                 circ = circ_flat.get_Flat_Circuit()
-                newcount = CNOTGateCount(circ)
+                newcount = CNOTGateCount(circ, 0)
                 no_improve = newcount >= count
                 count = newcount
                 if no_improve: break
         return circ, parameters
-    def _OptimizeWideCircuit( self, circ: Circuit, orig_parameters: np.ndarray, global_min=True, prepartitioning=None, structures=None ) -> Tuple[Circuit, np.ndarray]:
+    def _OptimizeWideCircuit( self, circ: Circuit, orig_parameters: np.ndarray, global_min=True, prepartitioning=None, structures=None, fingerprint_dict=None ) -> Tuple[Circuit, np.ndarray]:
         """
         Call to optimize a wide circuit (i.e. circuits with many qubits) by
         partitioning the circuit into smaller partitions and redecompose the smaller partitions
@@ -989,6 +1104,7 @@ class qgd_Wide_Circuit_Optimization:
         """
         from squander.utils import circuit_to_CNOT_basis
         circ, orig_parameters = circuit_to_CNOT_basis(circ, orig_parameters)
+        max_gates = sum(y for x, y in circ.get_Gate_Nums().items() if x !='CNOT')
         if self.config["topology"] != None and self.config["routed"]==False:
             circ, orig_parameters = self.route_circuit(circ,orig_parameters)
 
@@ -1019,6 +1135,9 @@ class qgd_Wide_Circuit_Optimization:
         # the list of parameters associated with the optimized subcircuits
         optimized_parameter_list = [None] * len(subcircuits)
 
+        def get_fingerprint(circ, params):
+            return tuple((gate.get_Name(), tuple(gate.get_Involved_Qbits())) for gate in circ.get_Gates()) + tuple(params)
+
         if parent_process() is not None:
             #  code for iterate over partitions and optimize them
             for partition_idx, subcircuit in enumerate( subcircuits ):
@@ -1028,21 +1147,26 @@ class qgd_Wide_Circuit_Optimization:
                 start_idx = subcircuit.get_Parameter_Start_Index()
                 end_idx   = start_idx + subcircuit.get_Parameter_Num()
                 subcircuit_parameters = parameters[ start_idx:end_idx ]
-    
-        
             
                 # callback function done on the master process to compare the new decomposed and the original suncircuit
-                callback_fnc = lambda  x : self.CompareAndPickCircuits( [subcircuit, *(z[0] for z in x)], [subcircuit_parameters, *(z[1] for z in x)] )
+                callback_fnc = lambda  x : self.CompareAndPickCircuits( [subcircuit, *(z[0] for z in x)], [subcircuit_parameters, *(z[1] for z in x)], lambda c: CNOTGateCount(c, max_gates) )
 
                 # call a process to decompose a subcircuit
-                config = {**self.config, 'tree_level_max': max(0, subcircuit.get_Gate_Nums().get('CNOT', 0)-1)}
-                config = config if structures is None or partition_idx >= len(structures) else {**config, 'strategy': 'Custom', 'max_inner_iterations': 10000, 'max_iteration_loops': 4}
-                new_subcircuit, new_parameters = callback_fnc(self.PartitionDecompositionProcess( subcircuit, subcircuit_parameters, config,
-                                                                                     None if structures is None or partition_idx >= len(structures) else structures[partition_idx] ))
-                if subcircuit != new_subcircuit:
+                fingerprint = None if fingerprint_dict is None else get_fingerprint(subcircuit, subcircuit_parameters)
+                if fingerprint_dict is not None and fingerprint in fingerprint_dict:
+                    new_subcircuit, new_parameters = fingerprint_dict[fingerprint]
+                else:
+                    config = {**self.config, 'tree_level_max': max(0, subcircuit.get_Gate_Nums().get('CNOT', 0)-1)}
+                    config = config if structures is None or partition_idx >= len(structures) else {**config, 'strategy': 'Custom', 'max_inner_iterations': 10000, 'max_iteration_loops': 4}                
+                    new_subcircuit, new_parameters = callback_fnc(self.PartitionDecompositionProcess( subcircuit, subcircuit_parameters, config,
+                                                                                        None if structures is None or partition_idx >= len(structures) else structures[partition_idx] ))
+                    if subcircuit != new_subcircuit:
 
-                    print( "original subcircuit:    ", subcircuit.get_Gate_Nums()) 
-                    print( "reoptimized subcircuit: ", new_subcircuit.get_Gate_Nums()) 
+                        print( "original subcircuit:    ", subcircuit.get_Gate_Nums(), partition_idx) 
+                        print( "reoptimized subcircuit: ", new_subcircuit.get_Gate_Nums())
+                    if fingerprint_dict is not None:
+                        fingerprint_dict[fingerprint] = (new_subcircuit, new_parameters)
+                        fingerprint_dict[get_fingerprint(new_subcircuit, new_parameters)] = (new_subcircuit, new_parameters)
 
                 if partition_idx % 100 == 99: print(partition_idx+1, "partitions optimized")
                 optimized_subcircuits[ partition_idx ] = new_subcircuit
@@ -1062,7 +1186,8 @@ class qgd_Wide_Circuit_Optimization:
                     subcircuit_parameters = parameters[ start_idx:end_idx ]
     
         
-                
+                    fingerprint = None if fingerprint_dict is None else get_fingerprint(subcircuit, subcircuit_parameters)
+                    if fingerprint_dict is not None and fingerprint in fingerprint_dict: continue
                     # call a process to decompose a subcircuit
                     config = {**self.config, 'tree_level_max': max(0, subcircuit.get_Gate_Nums().get('CNOT', 0)-1)}
                     config = config if structures is None or partition_idx >= len(structures) else {**config, 'strategy': 'Custom', 'max_inner_iterations': 10000, 'max_iteration_loops': 4}
@@ -1073,25 +1198,31 @@ class qgd_Wide_Circuit_Optimization:
                     # callback function done on the master process to compare the new decomposed and the original suncircuit
                     start_idx = subcircuit.get_Parameter_Start_Index()
                     subcircuit_parameters = parameters[ start_idx:start_idx + subcircuit.get_Parameter_Num() ]
-                    callback_fnc = lambda  x : self.CompareAndPickCircuits( [subcircuit, *(z[0] for z in x)], [subcircuit_parameters, *(z[1] for z in x)] )
-                    new_subcircuit, new_parameters = callback_fnc(async_results[partition_idx].get( timeout = None ))
+                    fingerprint = None if fingerprint_dict is None else get_fingerprint(subcircuit, subcircuit_parameters)
+                    callback_fnc = lambda  x : self.CompareAndPickCircuits( [subcircuit, *(z[0] for z in x)], [subcircuit_parameters, *(z[1] for z in x)], lambda c: CNOTGateCount(c, max_gates) )
+                    if fingerprint_dict is not None and fingerprint in fingerprint_dict:
+                        new_subcircuit, new_parameters = fingerprint_dict[fingerprint]
+                    else:
+                        new_subcircuit, new_parameters = callback_fnc(async_results[partition_idx].get( timeout = None ))
 
-                    if subcircuit != new_subcircuit:
+                        if subcircuit != new_subcircuit:
 
-                        print( "original subcircuit:    ", subcircuit.get_Gate_Nums()) 
-                        print( "reoptimized subcircuit: ", new_subcircuit.get_Gate_Nums()) 
+                            print( "original subcircuit:    ", subcircuit.get_Gate_Nums(), partition_idx) 
+                            print( "reoptimized subcircuit: ", new_subcircuit.get_Gate_Nums()) 
+                        if fingerprint_dict is not None:
+                            fingerprint_dict[fingerprint] = (new_subcircuit, new_parameters)
+                            fingerprint_dict[get_fingerprint(new_subcircuit, new_parameters)] = (new_subcircuit, new_parameters)
                     if partition_idx % 100 == 99: print(partition_idx+1, "partitions optimized")
                     optimized_subcircuits[ partition_idx ] = new_subcircuit
                     optimized_parameter_list[ partition_idx ] = new_parameters
 
-
         # construct the wide circuit from the optimized suncircuits
         if global_min:
-             parts, struct_idxs = qgd_Wide_Circuit_Optimization.recombine_all_partition_circuit(circ, self.max_partition_size, optimized_subcircuits, recombine_info)
-             structures = [qgd_Wide_Circuit_Optimization.copy_circuit_structure(optimized_subcircuits[x]) for x in struct_idxs]
-             return self._OptimizeWideCircuit(circ, orig_parameters, global_min=False, prepartitioning=parts, structures=structures)
-        else:
-            wide_circuit, wide_parameters = self.ConstructCircuitFromPartitions( optimized_subcircuits, optimized_parameter_list )
+            parts, struct_idxs = qgd_Wide_Circuit_Optimization.recombine_all_partition_circuit(circ, self.max_partition_size, optimized_subcircuits, recombine_info)
+            structures = [qgd_Wide_Circuit_Optimization.copy_circuit_structure(optimized_subcircuits[x]) for x in struct_idxs]
+            return self._OptimizeWideCircuit(circ, orig_parameters, global_min=False, prepartitioning=parts, structures=structures, fingerprint_dict=fingerprint_dict)
+        
+        wide_circuit, wide_parameters = self.ConstructCircuitFromPartitions( optimized_subcircuits, optimized_parameter_list )
 
         if parent_process() is None:
             print( "original circuit:    ", circ.get_Gate_Nums()) 
@@ -1100,6 +1231,7 @@ class qgd_Wide_Circuit_Optimization:
 
         if self.config["test_final_circuit"]:
             CompareCircuits( partitined_circuit, parameters, wide_circuit, wide_parameters )
+            #print("Test final circuit passed")
 
         
         return wide_circuit, wide_parameters

@@ -26,6 +26,7 @@ limitations under the License.
 #include "n_aryGrayCodeCounter.h"
 
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <iostream>
 #include <numeric>
@@ -37,6 +38,222 @@ limitations under the License.
 #include <unordered_map>
 
 using Discovery = std::vector<std::pair<std::vector<int>, GrayCode>>;
+
+// topology: vector of pairs/qubit-edges, e.g. {(0,1), (0,2), ...}
+// cuts: each cut is a vector<int> listing one side of the bipartition
+// cut_bounds: required cross-cut counts for each cut
+
+class MinCnotBoundSolver {
+public:
+    MinCnotBoundSolver(int num_qubits,
+                       const std::vector<std::vector<int>>& cuts,
+                       const std::vector<matrix_base<int>>& topology)
+        : num_qubits_(num_qubits), cuts_(cuts), num_edges_(static_cast<int>(topology.size())) {
+        build_cut_to_edges(topology);
+    }
+
+    int solve_min_cnots(const std::vector<std::pair<int, double> >& cut_bounds, int max_total = -1) const {
+        // return std::max_element(cut_bounds.begin(), cut_bounds.end(),
+        //                         [](const std::pair<int, double>& a, const std::pair<int, double>& b) {
+        //                             return a.first < b.first;
+        //                         })->first;
+        if (cut_bounds.size() != cuts_.size()) {
+            throw std::invalid_argument("cut_bounds size must match cuts size");
+        }
+
+        std::vector<int> edge_counts(num_edges_, 0);
+
+        for (int total = 0;; ++total) {
+            if (max_total >= 0 && total > max_total) {
+                return -1; // not found within bound
+            }
+            if (feasible_for_some_composition(total, edge_counts, cut_bounds, 0, 0)) {
+                return total;
+            }
+        }
+    }
+    int solve_min_cnots(const std::vector<std::pair<int, double> >& cut_bounds, double& best_kappa, std::vector<int>& best_edge_counts, int max_total = -1) const {
+        if (cut_bounds.size() != cuts_.size()) {
+            throw std::invalid_argument("cut_bounds size must match cuts size");
+        }
+        best_edge_counts.clear();
+        best_kappa = std::numeric_limits<double>::infinity();
+
+        std::vector<int> edge_counts(num_edges_, 0);
+
+        for (int total = 0;; ++total) {
+            if (max_total >= 0 && total > max_total) {
+                return -1; // not found within bound
+            }
+            if (best_feasible_for_some_composition(total, edge_counts, cut_bounds, 0, 0, best_kappa, best_edge_counts)) {
+                return total;
+            }
+        }
+    }
+private:
+    int num_qubits_;
+    int num_edges_;
+    std::vector<std::vector<int>> cuts_;
+    std::vector<std::vector<int>> cut_to_edges_;
+
+    void build_cut_to_edges(const std::vector<matrix_base<int>>& topology) {
+        cut_to_edges_.clear();
+        cut_to_edges_.reserve(cuts_.size());
+
+        for (const std::vector<int>& cut : cuts_) {
+            std::vector<char> in_cut(num_qubits_, 0);
+            for (int q : cut) {
+                in_cut[q] = 1;
+            }
+
+            std::vector<int> crossing_edges;
+            crossing_edges.reserve(topology.size());
+
+            for (int i = 0; i < static_cast<int>(topology.size()); ++i) {
+                if (in_cut[topology[i][0]] != in_cut[topology[i][1]]) {
+                    crossing_edges.push_back(i);
+                }
+            }
+            cut_to_edges_.push_back(std::move(crossing_edges));
+        }
+    }
+
+    bool composition_satisfies(const std::vector<int>& edge_counts,
+                              const std::vector<std::pair<int, double> >& cut_bounds) const {
+        for (int c = 0; c < static_cast<int>(cut_to_edges_.size()); ++c) {
+            const int bound = cut_bounds[c].first;
+            if (bound <= 0) continue;
+
+            int sum = 0;
+            for (int edge_idx : cut_to_edges_[c]) {
+                sum += edge_counts[edge_idx];
+                if (sum >= bound) break;
+            }
+            if (sum < bound) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    bool feasible_for_some_composition(int total,
+                                       std::vector<int>& edge_counts,
+                                       const std::vector<std::pair<int, double> >& cut_bounds,
+                                       int pos,
+                                       int used_sum) const {
+        const int m = static_cast<int>(edge_counts.size());
+
+        if (pos == m - 1) {
+            edge_counts[pos] = total - used_sum;
+            return composition_satisfies(edge_counts, cut_bounds);
+        }
+
+        const int remaining = total - used_sum;
+        for (int x = 0; x <= remaining; ++x) {
+            edge_counts[pos] = x;
+            if (feasible_for_some_composition(total, edge_counts, cut_bounds, pos + 1, used_sum + x)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    bool best_feasible_for_some_composition(
+        int total,
+        std::vector<int>& edge_counts,
+        const std::vector<std::pair<int, double>>& cut_bounds,
+        int pos,
+        int used_sum,
+        double& best_kappa,
+        std::vector<int>& best_edge_counts) const
+    {
+        const bool use_surplus = true; // whether to use surplus (coverage - bound) or just coverage for kappa objective
+        const int m = static_cast<int>(edge_counts.size());
+
+        if (pos == m - 1) {
+            edge_counts[pos] = total - used_sum;
+
+            if (!composition_satisfies(edge_counts, cut_bounds)) {
+                return false;
+            }
+
+            // Secondary objective:
+            // minimize sum_c kappa_c * coverage_c
+            double kappa_obj = 0.0;
+            for (int c = 0; c < static_cast<int>(cut_to_edges_.size()); ++c) {
+                int coverage = 0;
+                for (int edge_idx : cut_to_edges_[c]) {
+                    coverage += edge_counts[edge_idx];
+                }
+                if (use_surplus) {
+                    const int surplus = coverage - cut_bounds[c].first;
+                    kappa_obj += cut_bounds[c].second * static_cast<double>(surplus);
+                } else {
+                    kappa_obj += cut_bounds[c].second * static_cast<double>(coverage);
+                }
+            }
+
+            if (kappa_obj < best_kappa) {
+                best_kappa = kappa_obj;
+                best_edge_counts = edge_counts;
+            }
+            return true;
+        }
+
+        bool found = false;
+        const int remaining = total - used_sum;
+        for (int x = 0; x <= remaining; ++x) {
+            edge_counts[pos] = x;
+            if (best_feasible_for_some_composition(
+                    total, edge_counts, cut_bounds, pos + 1, used_sum + x,
+                    best_kappa, best_edge_counts)) {
+                found = true;
+            }
+        }
+        return found;
+    }    
+};
+
+struct ParetoFrontier {
+    using FrontierPoint = std::vector<std::pair<int, double>>; // (rank + kappa)
+    std::vector<FrontierPoint> pts;    
+
+    static bool dominates(const FrontierPoint& a, const FrontierPoint& b) {
+        const double eps = 1e-12;
+        bool strictly_better = false;
+        for (size_t i = 0; i < a.size(); ++i) {
+            double a_rk = a[i].first + a[i].second;
+            double b_rk = b[i].first + b[i].second;
+            if (a_rk > b_rk + eps) return false;
+            if (a_rk + eps < b_rk) strictly_better = true;
+        }
+        return strictly_better;
+    }
+
+    bool is_dominated(FrontierPoint x) {
+        for (const FrontierPoint& p : pts) {
+            if (dominates(p, x)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    bool insert(FrontierPoint x) {
+        if (is_dominated(x)) return false;
+
+        pts.erase(
+            std::remove_if(
+                pts.begin(), pts.end(),
+                [&](const FrontierPoint& p) {
+                    return dominates(x, p);
+                }),
+            pts.end()
+        );
+
+        pts.push_back(std::move(x));
+        return true;
+    }
+};
 
 /**
 @brief Structure containing the result of a BFS level enumeration.
@@ -264,6 +481,142 @@ static inline LevelResult enumerate_unordered_cnot_BFS_level_step(LevelInfo& L,
     return result;
 }
 
+
+template <class Callback>
+void generate_insertions_recursive(
+    const GrayCode& curpath,
+    const std::vector<matrix_base<int>>& topology,
+    const std::vector<int>& topo_filt,
+    int num_cnot,
+    std::vector<int>& places,
+    std::vector<int>& pairs,
+    int depth,
+    int min_place,
+    Callback&& callback,
+    bool & early_stop)
+{
+    const int nslots = curpath.size() + 1;
+
+    if (depth == num_cnot) {
+        matrix_base<int> limits = matrix_base<int>(1, curpath.size()+num_cnot);
+        std::fill(limits.data, limits.data + limits.size(), topology.size());
+        GrayCode out(limits);
+
+        int j = 0, k = 0;
+        for (int slot = 0; slot < nslots; ++slot) {
+            while (j < num_cnot && places[j] == slot) {
+                if (k > 2 && out[k-1] == pairs[j] && out[k-2] == pairs[j] && out[k-3] == pairs[j]) {
+                    return; // avoid more than 3 repeated CNOTs
+                }
+                out[k++] = pairs[j];
+                ++j;
+            }
+            if (slot < curpath.size()) {
+                if (k > 2 && out[k-1] == curpath[slot] && out[k-2] == curpath[slot] && out[k-3] == curpath[slot]) {
+                    return; // avoid more than 3 repeated CNOTs
+                }
+                out[k++] = curpath[slot];
+            }
+        }
+        early_stop |= callback(out);
+        return;
+    }
+    uint32_t used_mask = 0u;
+    for (int d = 0; d < depth; d++) {
+        used_mask |= (1u<<topology[pairs[d]][0]) | (1u<<topology[pairs[d]][1]);
+    }
+    for (int place = min_place; place < nslots; ++place) {
+        if (depth != 0 && places[depth-1]+1 < place) {
+            continue; // avoid insertions more than one place away
+        }
+        places[depth] = place;
+        for (int topo_idx : topo_filt) {
+            uint32_t edge_mask = (1u<<topology[topo_idx][0]) | (1u<<topology[topo_idx][1]);
+            if (depth != 0 && (used_mask & edge_mask) == 0) continue;
+            pairs[depth] = topo_idx;
+            generate_insertions_recursive(
+                curpath, topology, topo_filt, num_cnot,
+                places, pairs, depth + 1, place,
+                callback, early_stop);
+            if (early_stop) return;
+        }
+    }
+}
+
+template <class Callback>
+void generate_insertions(
+    const GrayCode& curpath,
+    const std::vector<matrix_base<int>>& topology,
+    const std::vector<int>& topo_filt,
+    int num_cnot,
+    Callback&& callback)
+{
+    std::vector<int> places(num_cnot);
+    std::vector<int> pairs(num_cnot);
+    bool early_stop = false;
+    generate_insertions_recursive(
+        curpath, topology, topo_filt, num_cnot,
+        places, pairs, 0, 0,
+        std::forward<Callback>(callback), early_stop);
+}
+
+struct SearchNode {
+    std::vector<std::tuple<int, double, std::vector<int>, std::vector<std::pair<int, double>>>> osr_results;
+    GrayCode path;
+    SearchNode(GrayCode path) : path(path) {}
+    int get_min_cnots() const {
+        return std::get<0>(*std::min_element(osr_results.begin(), osr_results.end(),
+                                [](const std::tuple<int, double, std::vector<int>, std::vector<std::pair<int, double>>>& a, const std::tuple<int, double, std::vector<int>, std::vector<std::pair<int, double>>>& b) {
+                                    return std::get<0>(a) < std::get<0>(b);
+                                }));
+    }
+    const std::tuple<int, double, std::vector<int>, std::vector<std::pair<int, double>>>& get_best_osr_result() const {
+        return *std::min_element(osr_results.begin(), osr_results.end(),
+                                [](const std::tuple<int, double, std::vector<int>, std::vector<std::pair<int, double>>>& a, const std::tuple<int, double, std::vector<int>, std::vector<std::pair<int, double>>>& b) {
+                                    if (std::get<0>(a) != std::get<0>(b)) return std::get<0>(a) < std::get<0>(b);
+                                    if (std::get<1>(a) != std::get<1>(b)) return std::get<1>(a) < std::get<1>(b);
+                                    double a_sum = std::accumulate(std::get<3>(a).begin(), std::get<3>(a).end(), 0.0, [&a](double c, const std::pair<int, double>& d){ return c + d.first * std::get<3>(a).size() + d.second; });
+                                    double b_sum = std::accumulate(std::get<3>(b).begin(), std::get<3>(b).end(), 0.0, [&b](double c, const std::pair<int, double>& d){ return c + d.first * std::get<3>(b).size() + d.second; });
+                                    return a_sum < b_sum;
+                                });
+    }
+
+    bool operator>(const SearchNode& other) const {
+        // int min_cnots = get_min_cnots();
+        // int other_min_cnots = other.get_min_cnots();
+        // int tot_cnot = path.size() + min_cnots;
+        // int other_tot_cnot = other.path.size() + other_min_cnots;
+        // if (tot_cnot != other_tot_cnot)
+        //     return tot_cnot > other_tot_cnot;
+        //if (min_cnots != other_min_cnots)
+        //    return min_cnots > other_min_cnots;
+        const std::tuple<int, double, std::vector<int>, std::vector<std::pair<int, double>>>& best_osr = get_best_osr_result();
+        const std::tuple<int, double, std::vector<int>, std::vector<std::pair<int, double>>>& other_best_osr = other.get_best_osr_result();
+        if (std::get<0>(best_osr) != std::get<0>(other_best_osr))
+            return std::get<0>(best_osr) > std::get<0>(other_best_osr);
+        if (std::get<1>(best_osr) != std::get<1>(other_best_osr))
+            return std::get<1>(best_osr) > std::get<1>(other_best_osr);
+        return std::accumulate(std::get<3>(best_osr).begin(), std::get<3>(best_osr).end(), 0.0, [&best_osr](double c, const std::pair<int, double>& d){ return c + d.first * std::get<3>(best_osr).size() + d.second; }) >
+               std::accumulate(std::get<3>(other_best_osr).begin(), std::get<3>(other_best_osr).end(), 0.0, [&other_best_osr](double c, const std::pair<int, double>& d){ return c + d.first * std::get<3>(other_best_osr).size() + d.second; });
+        /*int tot = 0;
+        for (size_t i = 0; i < osr_results.size(); i++) {
+            if (osr_results[i].first < other.osr_results[i].first) { tot -= 1; continue; }
+            if (osr_results[i].first > other.osr_results[i].first) { tot += 1; continue; }
+            if (ParetoFrontier::dominates(osr_results[i].second, other.osr_results[i].second)) { tot -= 1; continue; }
+            if (ParetoFrontier::dominates(other.osr_results[i].second, osr_results[i].second)) { tot += 1; continue; }
+        }
+        if (tot != 0) return tot > 0;
+        return std::accumulate(osr_results.begin(), osr_results.end(), 0.0,
+            [](double a, const std::pair<int, std::vector<std::pair<int, double>>>& b){
+                return a + std::accumulate(b.second.begin(), b.second.end(), 0.0, [](double c, const std::pair<int, double>& d){ return c + d.first + d.second; });
+            }) >
+            std::accumulate(other.osr_results.begin(), other.osr_results.end(), 0.0,
+            [](double a, const std::pair<int, std::vector<std::pair<int, double>>>& b){
+                return a + std::accumulate(b.second.begin(), b.second.end(), 0.0, [](double c, const std::pair<int, double>& d){ return c + d.first + d.second; });
+            });*/
+    }
+};
+
 /**
 @brief Nullary constructor of the class.
 @return An instance of the class
@@ -461,6 +814,11 @@ Gates_block* N_Qubit_Decomposition_Tree_Search::determine_gate_structure(Matrix_
     if (config.count("use_osr") > 0) {
         config["use_osr"].get_property(use_osr);
     }
+    long long use_graph_search = 1;
+    if (config.count("use_graph_search") > 0) {
+        config["use_graph_search"].get_property(use_graph_search);
+    }
+
     long long stop_first_solution = 1;
     if (config.count("stop_first_solution") > 0) {
         config["stop_first_solution"].get_property(stop_first_solution);
@@ -474,56 +832,61 @@ Gates_block* N_Qubit_Decomposition_Tree_Search::determine_gate_structure(Matrix_
     }
 
     GrayCode best_solution;
-    double minimum_best_solution = current_minimum;
-    LevelInfo li;
-    std::vector<std::vector<int>> all_cuts = unique_cuts(qbit_num);
-    std::map<std::pair<int, int>, std::vector<int>> pair_affects;
-    for (const matrix_base<int>& pair : topology) {
-        std::vector<int> cuts;
-        for (size_t i = 0; i < all_cuts.size(); ++i) {
-            const std::vector<int>& A = all_cuts[i];
-            if ((std::find(A.begin(), A.end(), pair[0]) != A.end()) ^
-                (std::find(A.begin(), A.end(), pair[1]) != A.end())) {
-                cuts.push_back(static_cast<int>(i));
-            }
-        }
-        pair_affects[std::pair<int, int>(pair[0], pair[1])] = std::move(cuts);
-    }
-    CutInfo ci;
-    ci.all_cuts = std::move(all_cuts);
-    ci.pair_affects = std::move(pair_affects);
-    ci.prefixes = std::map<GrayCode, std::vector<std::pair<int, double>>>();
     std::vector<GrayCode> all_solutions;
+    if (use_graph_search) {
+        all_solutions.emplace_back(tree_search_over_gate_structures_best_first());
+    } else {
 
-    for (int level = 0; level <= level_limit; level++) {
-        GrayCode gcode;
-        if (use_osr) {
-            if (qbit_num <= 1) {
-                all_solutions.emplace_back();
-                break;
+        double minimum_best_solution = current_minimum;
+        LevelInfo li;
+        std::vector<std::vector<int>> all_cuts = unique_cuts(qbit_num);
+        std::map<std::pair<int, int>, std::vector<int>> pair_affects;
+        for (const matrix_base<int>& pair : topology) {
+            std::vector<int> cuts;
+            for (size_t i = 0; i < all_cuts.size(); ++i) {
+                const std::vector<int>& A = all_cuts[i];
+                if ((std::find(A.begin(), A.end(), pair[0]) != A.end()) ^
+                    (std::find(A.begin(), A.end(), pair[1]) != A.end())) {
+                    cuts.push_back(static_cast<int>(i));
+                }
+            }
+            pair_affects[std::pair<int, int>(pair[0], pair[1])] = std::move(cuts);
+        }
+        CutInfo ci;
+        ci.all_cuts = std::move(all_cuts);
+        ci.pair_affects = std::move(pair_affects);
+        ci.prefixes = std::map<GrayCode, std::vector<std::pair<int, double>>>();
+
+        for (int level = 0; level <= level_limit; level++) {
+            GrayCode gcode;
+            if (use_osr) {
+                if (qbit_num <= 1) {
+                    all_solutions.emplace_back();
+                    break;
+                } else {
+                    TreeSearchResult result = tree_search_over_gate_structures_osr(level, li, ci);
+                    all_solutions.insert(all_solutions.end(), result.solutions.begin(), result.solutions.end());
+                    std::swap(li, result.level_info);
+                    ci.prefixes = std::move(result.prefixes);
+                }
+                if (stop_first_solution && all_solutions.size() > 0) {
+                    break;
+                }
             } else {
-                TreeSearchResult result = tree_search_over_gate_structures_gl(level, li, ci);
-                all_solutions.insert(all_solutions.end(), result.solutions.begin(), result.solutions.end());
-                std::swap(li, result.level_info);
-                ci.prefixes = std::move(result.prefixes);
-            }
-            if (stop_first_solution && all_solutions.size() > 0) {
-                break;
-            }
-        } else {
-            gcode = std::move(tree_search_over_gate_structures(level));
-            if (current_minimum < minimum_best_solution) {
+                gcode = std::move(tree_search_over_gate_structures(level));
+                if (current_minimum < minimum_best_solution) {
 
-                minimum_best_solution = current_minimum;
-                best_solution = gcode;
-            }
+                    minimum_best_solution = current_minimum;
+                    best_solution = gcode;
+                }
 
-            if (current_minimum < optimization_tolerance_loc) {
-                break;
+                if (current_minimum < optimization_tolerance_loc) {
+                    break;
+                }
             }
         }
     }
-    if (use_osr) {
+    if (use_osr || use_graph_search) {
         N_Qubit_Decomposition_custom&& cDecomp_custom_random = perform_optimization(nullptr);
         std::uniform_real_distribution<> distrib_real(0.0, 2 * M_PI);
         std::vector<double> optimized_parameters;
@@ -570,6 +933,141 @@ Gates_block* N_Qubit_Decomposition_Tree_Search::determine_gate_structure(Matrix_
     return construct_gate_structure_from_Gray_code(best_solution);
 }
 
+GrayCode N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures_best_first() {
+    std::vector<std::vector<int>> all_cuts = unique_cuts(qbit_num);
+    std::sort(all_cuts.begin(), all_cuts.end(), [](const std::vector<int>& a, const std::vector<int>& b){
+        if (a.size() != b.size()) return a.size() < b.size();
+        return std::lexicographical_compare(a.begin(), a.end(), b.begin(), b.end());
+    });
+    // If topology entries are actual gates, the path stores topology indices.
+    double Fnorm = std::sqrt(static_cast<double>(1 << qbit_num));
+    double osr_tol = 1e-3;
+    MinCnotBoundSolver osr_bound_solver(qbit_num, all_cuts, topology);
+    std::priority_queue<SearchNode, std::vector<SearchNode>, std::greater<SearchNode>> heap;
+    std::set<GrayCode> visited;
+
+    N_Qubit_Decomposition_custom&& cDecomp_custom_random = perform_optimization(nullptr);
+    cDecomp_custom_random.set_cost_function_variant(OSR_ENTANGLEMENT);
+    std::uniform_real_distribution<> distrib_real(0.0, 2 * M_PI);
+    std::vector<double> optimized_parameters;
+    std::function<SearchNode(const GrayCode& path)> evaluate_path = [&](const GrayCode& path) -> SearchNode {
+        SearchNode ev_results(path);
+        std::unique_ptr<Gates_block> gate_structure_loc(
+            construct_gate_structure_from_Gray_code(path, false));
+        cDecomp_custom_random.set_custom_gate_structure(gate_structure_loc.get());
+        cDecomp_custom_random.set_optimization_blocks(gate_structure_loc->get_gate_num());
+        optimized_parameters.resize(cDecomp_custom_random.get_parameter_num());
+        for (size_t idx = 0; idx < optimized_parameters.size(); idx++) {
+            optimized_parameters[idx] = distrib_real(gen);
+        }
+        cDecomp_custom_random.set_optimized_parameters(optimized_parameters.data(),
+                                                        static_cast<int>(optimized_parameters.size()));
+        for (const std::vector<int>& cut : all_cuts) {
+            //if (cut.size() != 1) continue;
+            int max_rank = 2*std::min(cut.size(), qbit_num-cut.size());
+            std::tuple<int, double, std::vector<int>, std::vector<std::pair<int, double>>> rank_result;
+            for (int rank = max_rank-1; rank >= 0; rank--) {
+                cDecomp_custom_random.set_osr_params({cut}, rank, false);
+                cDecomp_custom_random.start_decomposition();
+                Matrix U = Umtx.copy();
+                Matrix_real params = cDecomp_custom_random.get_optimized_parameters();
+                cDecomp_custom_random.apply_to(params, U);
+                std::vector<std::pair<int, double>> osr_result;
+                osr_result.reserve(all_cuts.size());
+                int newrank = rank;
+                for (const std::vector<int>& eval_cut : all_cuts) {
+                    osr_result.emplace_back(operator_schmidt_rank(U, qbit_num, eval_cut, Fnorm, osr_tol, true));
+                    if (cut == eval_cut) newrank = osr_result.back().first;
+                }
+                double best_kappa = std::numeric_limits<double>::infinity();
+                std::vector<int> best_edge_counts;
+                int min_cnots = osr_bound_solver.solve_min_cnots(osr_result, best_kappa, best_edge_counts);
+                if (newrank <= rank || rank == max_rank-1)
+                    rank_result = std::make_tuple(min_cnots, best_kappa, std::move(best_edge_counts), std::move(osr_result));
+                if (newrank > rank) break;
+                rank = std::min(rank, newrank);
+            }
+            ev_results.osr_results.emplace_back(std::move(rank_result));
+            //if (ev_results.size() == (all_cuts.size()+1)/2) break;
+        }
+        return ev_results;
+    };
+
+    std::function<bool(const GrayCode&)> add_to_heap = [&](const GrayCode& path) -> bool {
+        std::vector<std::pair<int, int>> seq_pairs_vec;
+        for (size_t idx = 0; idx < static_cast<size_t>(path.size()); idx++) {
+            seq_pairs_vec.push_back(
+                std::pair<int, int>(topology[path.data[idx]][0], topology[path.data[idx]][1]));
+        }
+        if (canonical_prefix_ok(seq_pairs_vec) >= 0)
+            return false; // not canonical prefix
+
+        bool inserted = visited.insert(path).second;
+
+        if (!inserted) {
+            return false;
+        }
+        
+        //std::chrono::time_point<std::chrono::high_resolution_clock> start = std::chrono::high_resolution_clock::now();
+        SearchNode sn = evaluate_path(path);
+        //printf("%.2fs\n", std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now() - start).count()*1e-9);
+        if (path.size()+sn.get_min_cnots() > level_limit) {
+           return false;
+        }
+
+        heap.emplace(sn);
+        return true;
+    };
+
+    GrayCode startpath;
+    if (qbit_num > 1)
+        add_to_heap(startpath);
+
+    while (!heap.empty()) {
+        SearchNode cur = heap.top();
+        if (cur.get_min_cnots() == 0) {
+            return cur.path;
+        }
+
+        const std::vector<int>& best_edge_counts = std::get<2>(cur.get_best_osr_result());
+        std::vector<int> topo_filter;
+        for (size_t i = 0; i < best_edge_counts.size(); i++) {
+            for (int j = 0; j < best_edge_counts[i]; j++) {
+                topo_filter.push_back(static_cast<int>(i));
+            }
+        }
+
+        int num_cnot = 1;
+        while (true) {
+            generate_insertions(cur.path, topology, topo_filter, num_cnot,
+                [&](const GrayCode& newpath) {
+                    if (add_to_heap(newpath)) {
+                        //return cur > heap.top();
+                        return heap.top().get_min_cnots() == 0;
+                    }
+                    return false;
+                });
+
+            if (cur > heap.top()) {
+                break;
+            }
+
+            ++num_cnot;
+
+            // safety guard
+            if (cur.path.size() + num_cnot > level_limit) {
+                return startpath;
+            }
+            //break;
+        }
+
+        // Optional beam trimming:
+        // if beam_width > 0 and heap.size() > beam_width, can rebuild a trimmed heap here.
+    }
+    //printf("failed\n");
+    return startpath;
+}
+
 /**
 @brief Perform tree search over possible gate structures using Gray code enumeration and Operator Schmidt Rank (OSR)
 optimization.
@@ -597,14 +1095,15 @@ Gray code sequences to avoid redundant computations.
       The associated gate structure can be constructed from a Gray code using the function
       construct_gate_structure_from_Gray_code.
 */
-TreeSearchResult N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures_gl(int level_num, LevelInfo& li,
-                                                                                        CutInfo& ci) {
+TreeSearchResult N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures_osr(int level_num, LevelInfo& li,
+                                                                                         CutInfo& ci) {
 
     tbb::spin_mutex tree_search_mutex;
 
     std::vector<std::vector<int>>& all_cuts = ci.all_cuts;
     std::map<std::pair<int, int>, std::vector<int>>& pair_affects = ci.pair_affects;
     std::map<GrayCode, std::vector<std::pair<int, double>>>& prefixes = ci.prefixes;
+    MinCnotBoundSolver osr_bound_solver(qbit_num, all_cuts, topology);
 
     double optimization_tolerance_loc;
     if (config.count("optimization_tolerance") > 0) {
@@ -688,7 +1187,7 @@ TreeSearchResult N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_struct
                             << " decomposing layers." << std::endl;
                     print(sstream, 1);
                     optimized_parameters.resize(cDecomp_custom_random.get_parameter_num());
-                    std::map<int, Matrix_real> best_params;
+                    std::map<double, Matrix_real> best_params;
                     for (int iters = 0; iters < 1; iters++) {
                         for (size_t idx = 0; idx < optimized_parameters.size(); idx++) {
                             optimized_parameters[idx] = distrib_real(gen);
@@ -699,7 +1198,7 @@ TreeSearchResult N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_struct
                         number_of_iters +=
                             cDecomp_custom_random
                                 .get_num_iters(); // retrieve the number of iterations spent on optimization
-                        best_params.emplace(static_cast<int>(cDecomp_custom_random.get_current_minimum()),
+                        best_params.emplace(cDecomp_custom_random.get_current_minimum(),
                                             cDecomp_custom_random.get_optimized_parameters().copy());
                         if (best_params.begin()->first < optimization_tolerance_loc) {
                             break;
@@ -738,11 +1237,7 @@ TreeSearchResult N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_struct
                     int cnot_lower_bound =
                         osr_result.size() == 0
                             ? 0
-                            : std::max_element(osr_result.begin(), osr_result.end(),
-                                               [](const std::pair<int, double>& a, const std::pair<int, double>& b) {
-                                                   return a.first < b.first;
-                                               })
-                                  ->first;
+                            : osr_bound_solver.solve_min_cnots(osr_result);
                     if (cnot_lower_bound <= level_limit - level_num &&
                         (solution.size() == 0 ||
                          std::max_element(
@@ -1031,7 +1526,7 @@ N_Qubit_Decomposition_custom N_Qubit_Decomposition_Tree_Search::perform_optimiza
             max_inner_iterations_loc = static_cast<int>((double)param_num_loc / 852 * 10000000.0);
         }
         cDecomp_custom_random.set_max_inner_iterations(max_inner_iterations_loc);
-        cDecomp_custom_random.set_random_shift_count_max(100);
+        cDecomp_custom_random.set_random_shift_count_max(5);
     } else if (alg == ADAM_BATCHED) {
         cDecomp_custom_random.set_optimizer(alg);
         int max_inner_iterations_loc = 2000;
