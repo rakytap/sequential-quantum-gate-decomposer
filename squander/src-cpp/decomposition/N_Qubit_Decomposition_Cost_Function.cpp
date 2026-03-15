@@ -1086,8 +1086,9 @@ std::pair<int, double> operator_schmidt_rank(const Matrix& U, int n,
     int mr=0, mc=0;
     std::vector<QGD_Complex16> M = build_osr_matrix(U, n, A_qubits, mr, mc);
     std::vector<double> S = osr(M, mr, mc, Fnorm);
-    return std::pair<int, double>(numerical_rank_osr(S, tol),
-        rank == -1 ? tail_loss(S, static_cast<int>(lg_up(static_cast<uint32_t>(S.size())))) : loss_for_rank(S, rank));
+    int min_cnot = numerical_rank_osr(S, tol);
+    return std::pair<int, double>(min_cnot,
+        rank ? tail_loss(S, static_cast<int>(lg_up(static_cast<uint32_t>(S.size())))) : loss_for_rank(S, min_cnot));
 }
 
 double get_osr_entanglement_test(Matrix& matrix, std::vector<std::vector<int>> &use_cuts, int rank, bool use_softmax) {
