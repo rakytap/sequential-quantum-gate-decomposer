@@ -33,7 +33,7 @@ def extract_subtopology(involved_qbits, qbit_map, config ):
             mini_topology.append((qbit_map[edge[0]],qbit_map[edge[1]]))
     return mini_topology
 
-def CNOTGateCount( circ: Circuit ) -> int :
+def CNOTGateCount( circ: Circuit, max_gates: int = 0 ) -> int :
     """
     Call to get the number of CNOT gates in the circuit
 
@@ -54,8 +54,10 @@ def CNOTGateCount( circ: Circuit ) -> int :
         raise Exception("The input parameters should be an instance of Squander Circuit")
 
     gate_counts = circ.get_Gate_Nums()
-
-    return gate_counts.get('CNOT', 0) #+  3*gate_counts.get('SWAP', 0)
+    num_cnots = gate_counts.get('CNOT', 0)
+    
+    if max_gates > 0: return num_cnots*max_gates + sum(y for x, y in gate_counts.items() if x !='CNOT')
+    return num_cnots  #+  3*gate_counts.get('SWAP', 0)
 
 
 
@@ -847,16 +849,25 @@ class qgd_Wide_Circuit_Optimization:
         try:
             cDecompose.Start_Decomposition()
         except Exception as e: 
-            print(e)
+            #print(e)
             raise e
-            return []
+            #return []
         if not config.get("stop_first_solution", True): return cDecompose.all_solutions
         squander_circuit = cDecompose.get_Circuit()
         parameters       = cDecompose.get_Optimized_Parameters()
         assert parameters is not None
 
 
-        if strategy == "Custom": err = cDecompose.Optimization_Problem(parameters)
+        if strategy == "Custom":
+            err = cDecompose.Optimization_Problem(parameters)
+            it = 0
+            while err > tolerance and it < 10:
+                cDecompose.set_Optimized_Parameters(np.random.rand(cDecompose.get_Parameter_Num())*(2*np.pi))
+                cDecompose.Start_Decomposition()
+                parameters       = cDecompose.get_Optimized_Parameters()
+                err = cDecompose.Optimization_Problem(parameters)
+                it += 1
+            if err > tolerance or it != 0: print( "Decomposition error: ", err, it )
         else: err = cDecompose.get_Decomposition_Error()
         #print( "Decomposition error: ", err )
         if tolerance < err:
@@ -1048,9 +1059,8 @@ class qgd_Wide_Circuit_Optimization:
     def recombine_all_partition_circuit(circ, max_partition_size, optimized_subcircuits, recombine_info ):
         from squander.partitioning.ilp import topo_sort_partitions, ilp_global_optimal, recombine_single_qubit_chains
         allparts, g, go, rgo, single_qubit_chains, gate_to_qubit, gate_to_tqubit = recombine_info
-        max_gates = sum(sum(y for x, y in c.get_Gate_Nums().items() if x !='CNOT') for c in optimized_subcircuits)
-        def to_cost(c): return CNOTGateCount(c)*max_gates + sum(y for x, y in c.get_Gate_Nums().items() if x !='CNOT')
-        weights = [to_cost(circ) for circ in optimized_subcircuits[:len(allparts)]]
+        max_gates = sum(sum(y for x, y in c.get_Gate_Nums().items() if x !='CNOT') for c in optimized_subcircuits[:len(allparts)])        
+        weights = [CNOTGateCount(circ, max_gates) for circ in optimized_subcircuits[:len(allparts)]]
         L, fusion_info = ilp_global_optimal(allparts, g, weights=weights)
         struct_idxs = list(L)
         parts = recombine_single_qubit_chains(go, rgo, single_qubit_chains, gate_to_tqubit, [allparts[i] for i in L], fusion_info)
@@ -1061,7 +1071,7 @@ class qgd_Wide_Circuit_Optimization:
         return [parts[i] for i in L], [struct_idxs[i] for i in L]
 
     def OptimizeWideCircuit( self, circ: Circuit, parameters: np.ndarray, global_min=True, part_size_start=3, part_size_end=5 ) -> Tuple[Circuit, np.ndarray]:
-        count = CNOTGateCount(circ)
+        count = CNOTGateCount(circ, 0)
         fingerprint_dict = {}
         for max_part_size in range(part_size_start, part_size_end + 1):
             # instantiate the object for optimizing wide circuits
@@ -1070,7 +1080,7 @@ class qgd_Wide_Circuit_Optimization:
                 # run circuit optimization
                 circ_flat, parameters = wide_circuit_optimizer._OptimizeWideCircuit( circ, parameters, global_min=global_min, fingerprint_dict=fingerprint_dict )
                 circ = circ_flat.get_Flat_Circuit()
-                newcount = CNOTGateCount(circ)
+                newcount = CNOTGateCount(circ, 0)
                 no_improve = newcount >= count
                 count = newcount
                 if no_improve: break
@@ -1094,6 +1104,7 @@ class qgd_Wide_Circuit_Optimization:
         """
         from squander.utils import circuit_to_CNOT_basis
         circ, orig_parameters = circuit_to_CNOT_basis(circ, orig_parameters)
+        max_gates = sum(y for x, y in circ.get_Gate_Nums().items() if x !='CNOT')
         if self.config["topology"] != None and self.config["routed"]==False:
             circ, orig_parameters = self.route_circuit(circ,orig_parameters)
 
@@ -1125,7 +1136,7 @@ class qgd_Wide_Circuit_Optimization:
         optimized_parameter_list = [None] * len(subcircuits)
 
         def get_fingerprint(circ, params):
-            return tuple((gate.get_Name(), tuple(gate.get_Involved_Qbits()), *params) for gate in circ.get_Gates())
+            return tuple((gate.get_Name(), tuple(gate.get_Involved_Qbits())) for gate in circ.get_Gates()) + tuple(params)
 
         if parent_process() is not None:
             #  code for iterate over partitions and optimize them
@@ -1138,7 +1149,7 @@ class qgd_Wide_Circuit_Optimization:
                 subcircuit_parameters = parameters[ start_idx:end_idx ]
             
                 # callback function done on the master process to compare the new decomposed and the original suncircuit
-                callback_fnc = lambda  x : self.CompareAndPickCircuits( [subcircuit, *(z[0] for z in x)], [subcircuit_parameters, *(z[1] for z in x)] )
+                callback_fnc = lambda  x : self.CompareAndPickCircuits( [subcircuit, *(z[0] for z in x)], [subcircuit_parameters, *(z[1] for z in x)], lambda c: CNOTGateCount(c, max_gates) )
 
                 # call a process to decompose a subcircuit
                 fingerprint = None if fingerprint_dict is None else get_fingerprint(subcircuit, subcircuit_parameters)
@@ -1188,7 +1199,7 @@ class qgd_Wide_Circuit_Optimization:
                     start_idx = subcircuit.get_Parameter_Start_Index()
                     subcircuit_parameters = parameters[ start_idx:start_idx + subcircuit.get_Parameter_Num() ]
                     fingerprint = None if fingerprint_dict is None else get_fingerprint(subcircuit, subcircuit_parameters)
-                    callback_fnc = lambda  x : self.CompareAndPickCircuits( [subcircuit, *(z[0] for z in x)], [subcircuit_parameters, *(z[1] for z in x)] )
+                    callback_fnc = lambda  x : self.CompareAndPickCircuits( [subcircuit, *(z[0] for z in x)], [subcircuit_parameters, *(z[1] for z in x)], lambda c: CNOTGateCount(c, max_gates) )
                     if fingerprint_dict is not None and fingerprint in fingerprint_dict:
                         new_subcircuit, new_parameters = fingerprint_dict[fingerprint]
                     else:
@@ -1196,7 +1207,7 @@ class qgd_Wide_Circuit_Optimization:
 
                         if subcircuit != new_subcircuit:
 
-                            print( "original subcircuit:    ", subcircuit.get_Gate_Nums()) 
+                            print( "original subcircuit:    ", subcircuit.get_Gate_Nums(), partition_idx) 
                             print( "reoptimized subcircuit: ", new_subcircuit.get_Gate_Nums()) 
                         if fingerprint_dict is not None:
                             fingerprint_dict[fingerprint] = (new_subcircuit, new_parameters)
@@ -1205,14 +1216,13 @@ class qgd_Wide_Circuit_Optimization:
                     optimized_subcircuits[ partition_idx ] = new_subcircuit
                     optimized_parameter_list[ partition_idx ] = new_parameters
 
-
         # construct the wide circuit from the optimized suncircuits
         if global_min:
-             parts, struct_idxs = qgd_Wide_Circuit_Optimization.recombine_all_partition_circuit(circ, self.max_partition_size, optimized_subcircuits, recombine_info)
-             structures = [qgd_Wide_Circuit_Optimization.copy_circuit_structure(optimized_subcircuits[x]) for x in struct_idxs]
-             return self._OptimizeWideCircuit(circ, orig_parameters, global_min=False, prepartitioning=parts, structures=structures)
-        else:
-            wide_circuit, wide_parameters = self.ConstructCircuitFromPartitions( optimized_subcircuits, optimized_parameter_list )
+            parts, struct_idxs = qgd_Wide_Circuit_Optimization.recombine_all_partition_circuit(circ, self.max_partition_size, optimized_subcircuits, recombine_info)
+            structures = [qgd_Wide_Circuit_Optimization.copy_circuit_structure(optimized_subcircuits[x]) for x in struct_idxs]
+            return self._OptimizeWideCircuit(circ, orig_parameters, global_min=False, prepartitioning=parts, structures=structures, fingerprint_dict=fingerprint_dict)
+        
+        wide_circuit, wide_parameters = self.ConstructCircuitFromPartitions( optimized_subcircuits, optimized_parameter_list )
 
         if parent_process() is None:
             print( "original circuit:    ", circ.get_Gate_Nums()) 
@@ -1221,6 +1231,7 @@ class qgd_Wide_Circuit_Optimization:
 
         if self.config["test_final_circuit"]:
             CompareCircuits( partitined_circuit, parameters, wide_circuit, wide_parameters )
+            #print("Test final circuit passed")
 
         
         return wide_circuit, wide_parameters
