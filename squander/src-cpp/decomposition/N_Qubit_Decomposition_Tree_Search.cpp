@@ -48,7 +48,7 @@ public:
     MinCnotBoundSolver(int num_qubits,
                        const std::vector<std::vector<int>>& cuts,
                        const std::vector<matrix_base<int>>& topology)
-        : num_qubits_(num_qubits), cuts_(cuts) {
+        : num_qubits_(num_qubits), cuts_(cuts), num_edges_(static_cast<int>(topology.size())) {
         build_cut_to_edges(topology);
     }
 
@@ -61,8 +61,7 @@ public:
             throw std::invalid_argument("cut_bounds size must match cuts size");
         }
 
-        const int m = static_cast<int>(cut_to_edges_.size());
-        std::vector<int> edge_counts(m, 0);
+        std::vector<int> edge_counts(num_edges_, 0);
 
         for (int total = 0;; ++total) {
             if (max_total >= 0 && total > max_total) {
@@ -73,9 +72,27 @@ public:
             }
         }
     }
+    int solve_min_cnots(const std::vector<std::pair<int, double> >& cut_bounds, double& best_kappa, std::vector<int>& best_edge_counts, int max_total = -1) const {
+        if (cut_bounds.size() != cuts_.size()) {
+            throw std::invalid_argument("cut_bounds size must match cuts size");
+        }
+        best_edge_counts.clear();
+        best_kappa = std::numeric_limits<double>::infinity();
 
+        std::vector<int> edge_counts(num_edges_, 0);
+
+        for (int total = 0;; ++total) {
+            if (max_total >= 0 && total > max_total) {
+                return -1; // not found within bound
+            }
+            if (best_feasible_for_some_composition(total, edge_counts, cut_bounds, 0, 0, best_kappa, best_edge_counts)) {
+                return total;
+            }
+        }
+    }
 private:
     int num_qubits_;
+    int num_edges_;
     std::vector<std::vector<int>> cuts_;
     std::vector<std::vector<int>> cut_to_edges_;
 
@@ -139,6 +156,102 @@ private:
             }
         }
         return false;
+    }
+    bool best_feasible_for_some_composition(
+        int total,
+        std::vector<int>& edge_counts,
+        const std::vector<std::pair<int, double>>& cut_bounds,
+        int pos,
+        int used_sum,
+        double& best_kappa,
+        std::vector<int>& best_edge_counts) const
+    {
+        const bool use_surplus = true; // whether to use surplus (coverage - bound) or just coverage for kappa objective
+        const int m = static_cast<int>(edge_counts.size());
+
+        if (pos == m - 1) {
+            edge_counts[pos] = total - used_sum;
+
+            if (!composition_satisfies(edge_counts, cut_bounds)) {
+                return false;
+            }
+
+            // Secondary objective:
+            // minimize sum_c kappa_c * coverage_c
+            double kappa_obj = 0.0;
+            for (int c = 0; c < static_cast<int>(cut_to_edges_.size()); ++c) {
+                int coverage = 0;
+                for (int edge_idx : cut_to_edges_[c]) {
+                    coverage += edge_counts[edge_idx];
+                }
+                if (use_surplus) {
+                    const int surplus = coverage - cut_bounds[c].first;
+                    kappa_obj += cut_bounds[c].second * static_cast<double>(surplus);
+                } else {
+                    kappa_obj += cut_bounds[c].second * static_cast<double>(coverage);
+                }
+            }
+
+            if (kappa_obj < best_kappa) {
+                best_kappa = kappa_obj;
+                best_edge_counts = edge_counts;
+            }
+            return true;
+        }
+
+        bool found = false;
+        const int remaining = total - used_sum;
+        for (int x = 0; x <= remaining; ++x) {
+            edge_counts[pos] = x;
+            if (best_feasible_for_some_composition(
+                    total, edge_counts, cut_bounds, pos + 1, used_sum + x,
+                    best_kappa, best_edge_counts)) {
+                found = true;
+            }
+        }
+        return found;
+    }    
+};
+
+struct ParetoFrontier {
+    using FrontierPoint = std::vector<std::pair<int, double>>; // (rank + kappa)
+    std::vector<FrontierPoint> pts;    
+
+    static bool dominates(const FrontierPoint& a, const FrontierPoint& b) {
+        const double eps = 1e-12;
+        bool strictly_better = false;
+        for (size_t i = 0; i < a.size(); ++i) {
+            double a_rk = a[i].first + a[i].second;
+            double b_rk = b[i].first + b[i].second;
+            if (a_rk > b_rk + eps) return false;
+            if (a_rk + eps < b_rk) strictly_better = true;
+        }
+        return strictly_better;
+    }
+
+    bool is_dominated(FrontierPoint x) {
+        for (const FrontierPoint& p : pts) {
+            if (dominates(p, x)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    bool insert(FrontierPoint x) {
+        if (is_dominated(x)) return false;
+
+        pts.erase(
+            std::remove_if(
+                pts.begin(), pts.end(),
+                [&](const FrontierPoint& p) {
+                    return dominates(x, p);
+                }),
+            pts.end()
+        );
+
+        pts.push_back(std::move(x));
+        return true;
     }
 };
 
@@ -373,6 +486,7 @@ template <class Callback>
 void generate_insertions_recursive(
     const GrayCode& curpath,
     const std::vector<matrix_base<int>>& topology,
+    const std::vector<int>& topo_filt,
     int num_cnot,
     std::vector<int>& places,
     std::vector<int>& pairs,
@@ -416,12 +530,12 @@ void generate_insertions_recursive(
             continue; // avoid insertions more than one place away
         }
         places[depth] = place;
-        for (int topo_idx = 0; topo_idx < (int)topology.size(); ++topo_idx) {
+        for (int topo_idx : topo_filt) {
             uint32_t edge_mask = (1u<<topology[topo_idx][0]) | (1u<<topology[topo_idx][1]);
             if (depth != 0 && (used_mask & edge_mask) == 0) continue;
             pairs[depth] = topo_idx;
             generate_insertions_recursive(
-                curpath, topology, num_cnot,
+                curpath, topology, topo_filt, num_cnot,
                 places, pairs, depth + 1, place,
                 callback, early_stop);
             if (early_stop) return;
@@ -433,6 +547,7 @@ template <class Callback>
 void generate_insertions(
     const GrayCode& curpath,
     const std::vector<matrix_base<int>>& topology,
+    const std::vector<int>& topo_filt,
     int num_cnot,
     Callback&& callback)
 {
@@ -440,34 +555,65 @@ void generate_insertions(
     std::vector<int> pairs(num_cnot);
     bool early_stop = false;
     generate_insertions_recursive(
-        curpath, topology, num_cnot,
+        curpath, topology, topo_filt, num_cnot,
         places, pairs, 0, 0,
         std::forward<Callback>(callback), early_stop);
 }
 
-struct EvalResult {
-    int min_cnots = 0;
-    double rankkappa = 0.0;
-    EvalResult(int min_cnots, double rankkappa) : min_cnots(min_cnots), rankkappa(rankkappa) {}
-    bool operator!=(const EvalResult& other) const {
-        return min_cnots != other.min_cnots || rankkappa != other.rankkappa;
-    }
-    bool operator<(const EvalResult& other) const {
-        if (min_cnots != other.min_cnots) return min_cnots < other.min_cnots;
-        return rankkappa < other.rankkappa;
-    }
-};
-
 struct SearchNode {
-    EvalResult ev;
+    std::vector<std::tuple<int, double, std::vector<int>, std::vector<std::pair<int, double>>>> osr_results;
     GrayCode path;
-    SearchNode(EvalResult ev, GrayCode path) : ev(ev), path(path) {}
+    SearchNode(GrayCode path) : path(path) {}
+    int get_min_cnots() const {
+        return std::get<0>(*std::min_element(osr_results.begin(), osr_results.end(),
+                                [](const std::tuple<int, double, std::vector<int>, std::vector<std::pair<int, double>>>& a, const std::tuple<int, double, std::vector<int>, std::vector<std::pair<int, double>>>& b) {
+                                    return std::get<0>(a) < std::get<0>(b);
+                                }));
+    }
+    const std::tuple<int, double, std::vector<int>, std::vector<std::pair<int, double>>>& get_best_osr_result() const {
+        return *std::min_element(osr_results.begin(), osr_results.end(),
+                                [](const std::tuple<int, double, std::vector<int>, std::vector<std::pair<int, double>>>& a, const std::tuple<int, double, std::vector<int>, std::vector<std::pair<int, double>>>& b) {
+                                    if (std::get<0>(a) != std::get<0>(b)) return std::get<0>(a) < std::get<0>(b);
+                                    if (std::get<1>(a) != std::get<1>(b)) return std::get<1>(a) < std::get<1>(b);
+                                    double a_sum = std::accumulate(std::get<3>(a).begin(), std::get<3>(a).end(), 0.0, [&a](double c, const std::pair<int, double>& d){ return c + d.first * std::get<3>(a).size() + d.second; });
+                                    double b_sum = std::accumulate(std::get<3>(b).begin(), std::get<3>(b).end(), 0.0, [&b](double c, const std::pair<int, double>& d){ return c + d.first * std::get<3>(b).size() + d.second; });
+                                    return a_sum < b_sum;
+                                });
+    }
+
     bool operator>(const SearchNode& other) const {
-        //size_t tot_cnot = path.size() + ev.min_cnots;
-        //size_t other_tot_cnot = other.path.size() + other.ev.min_cnots;
-        //if (tot_cnot != other_tot_cnot) return tot_cnot > other_tot_cnot;
-        if (other.ev != ev) return other.ev < ev;
-        return path.size() > other.path.size();
+        // int min_cnots = get_min_cnots();
+        // int other_min_cnots = other.get_min_cnots();
+        // int tot_cnot = path.size() + min_cnots;
+        // int other_tot_cnot = other.path.size() + other_min_cnots;
+        // if (tot_cnot != other_tot_cnot)
+        //     return tot_cnot > other_tot_cnot;
+        //if (min_cnots != other_min_cnots)
+        //    return min_cnots > other_min_cnots;
+        const std::tuple<int, double, std::vector<int>, std::vector<std::pair<int, double>>>& best_osr = get_best_osr_result();
+        const std::tuple<int, double, std::vector<int>, std::vector<std::pair<int, double>>>& other_best_osr = other.get_best_osr_result();
+        if (std::get<0>(best_osr) != std::get<0>(other_best_osr))
+            return std::get<0>(best_osr) > std::get<0>(other_best_osr);
+        if (std::get<1>(best_osr) != std::get<1>(other_best_osr))
+            return std::get<1>(best_osr) > std::get<1>(other_best_osr);
+        return std::accumulate(std::get<3>(best_osr).begin(), std::get<3>(best_osr).end(), 0.0, [&best_osr](double c, const std::pair<int, double>& d){ return c + d.first * std::get<3>(best_osr).size() + d.second; }) >
+               std::accumulate(std::get<3>(other_best_osr).begin(), std::get<3>(other_best_osr).end(), 0.0, [&other_best_osr](double c, const std::pair<int, double>& d){ return c + d.first * std::get<3>(other_best_osr).size() + d.second; });
+        /*int tot = 0;
+        for (size_t i = 0; i < osr_results.size(); i++) {
+            if (osr_results[i].first < other.osr_results[i].first) { tot -= 1; continue; }
+            if (osr_results[i].first > other.osr_results[i].first) { tot += 1; continue; }
+            if (ParetoFrontier::dominates(osr_results[i].second, other.osr_results[i].second)) { tot -= 1; continue; }
+            if (ParetoFrontier::dominates(other.osr_results[i].second, osr_results[i].second)) { tot += 1; continue; }
+        }
+        if (tot != 0) return tot > 0;
+        return std::accumulate(osr_results.begin(), osr_results.end(), 0.0,
+            [](double a, const std::pair<int, std::vector<std::pair<int, double>>>& b){
+                return a + std::accumulate(b.second.begin(), b.second.end(), 0.0, [](double c, const std::pair<int, double>& d){ return c + d.first + d.second; });
+            }) >
+            std::accumulate(other.osr_results.begin(), other.osr_results.end(), 0.0,
+            [](double a, const std::pair<int, std::vector<std::pair<int, double>>>& b){
+                return a + std::accumulate(b.second.begin(), b.second.end(), 0.0, [](double c, const std::pair<int, double>& d){ return c + d.first + d.second; });
+            });*/
     }
 };
 
@@ -797,7 +943,6 @@ GrayCode N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures_bes
     double Fnorm = std::sqrt(static_cast<double>(1 << qbit_num));
     double osr_tol = 1e-3;
     MinCnotBoundSolver osr_bound_solver(qbit_num, all_cuts, topology);
-
     std::priority_queue<SearchNode, std::vector<SearchNode>, std::greater<SearchNode>> heap;
     std::set<GrayCode> visited;
 
@@ -805,9 +950,8 @@ GrayCode N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures_bes
     cDecomp_custom_random.set_cost_function_variant(OSR_ENTANGLEMENT);
     std::uniform_real_distribution<> distrib_real(0.0, 2 * M_PI);
     std::vector<double> optimized_parameters;
-    std::set<int> fingerprint_db;
-    std::function<EvalResult(const GrayCode& path)> evaluate_path = [&](const GrayCode& path) -> EvalResult {
-        std::vector<EvalResult> ev_results;
+    std::function<SearchNode(const GrayCode& path)> evaluate_path = [&](const GrayCode& path) -> SearchNode {
+        SearchNode ev_results(path);
         std::unique_ptr<Gates_block> gate_structure_loc(
             construct_gate_structure_from_Gray_code(path, false));
         cDecomp_custom_random.set_custom_gate_structure(gate_structure_loc.get());
@@ -819,9 +963,9 @@ GrayCode N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures_bes
         cDecomp_custom_random.set_optimized_parameters(optimized_parameters.data(),
                                                         static_cast<int>(optimized_parameters.size()));
         for (const std::vector<int>& cut : all_cuts) {
-            if (cut.size() != 1) continue;
+            //if (cut.size() != 1) continue;
             int max_rank = 2*std::min(cut.size(), qbit_num-cut.size());
-            std::vector<EvalResult> rank_results;
+            std::tuple<int, double, std::vector<int>, std::vector<std::pair<int, double>>> rank_result;
             for (int rank = max_rank-1; rank >= 0; rank--) {
                 cDecomp_custom_random.set_osr_params({cut}, rank, false);
                 cDecomp_custom_random.start_decomposition();
@@ -832,35 +976,24 @@ GrayCode N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures_bes
                 osr_result.reserve(all_cuts.size());
                 int newrank = rank;
                 for (const std::vector<int>& eval_cut : all_cuts) {
-                    osr_result.emplace_back(operator_schmidt_rank(U, qbit_num, eval_cut, Fnorm, osr_tol));
+                    osr_result.emplace_back(operator_schmidt_rank(U, qbit_num, eval_cut, Fnorm, osr_tol, true));
                     if (cut == eval_cut) newrank = osr_result.back().first;
                 }
-                /*int min_cnots = osr_result.size() == 0 ? 0 : std::max_element(osr_result.begin(), osr_result.end(),
-                    [](const std::pair<int, double>& a, const std::pair<int, double>& b){
-                        return a.first < b.first;
-                })->first;*/
-                int min_cnots = osr_bound_solver.solve_min_cnots(osr_result);
-                double rankkappa = std::accumulate(osr_result.begin(), osr_result.end(), 0.0,
-                                            [](double acc, const std::pair<int, double>& item) {
-                                                return acc + item.first + item.second;
-                                            });
-                rank_results.emplace_back(EvalResult(min_cnots, rankkappa));
+                double best_kappa = std::numeric_limits<double>::infinity();
+                std::vector<int> best_edge_counts;
+                int min_cnots = osr_bound_solver.solve_min_cnots(osr_result, best_kappa, best_edge_counts);
+                if (newrank <= rank || rank == max_rank-1)
+                    rank_result = std::make_tuple(min_cnots, best_kappa, std::move(best_edge_counts), std::move(osr_result));
                 if (newrank > rank) break;
                 rank = std::min(rank, newrank);
             }
-            ev_results.emplace_back(*std::min_element(rank_results.begin(), rank_results.end()));
+            ev_results.osr_results.emplace_back(std::move(rank_result));
             //if (ev_results.size() == (all_cuts.size()+1)/2) break;
         }
-        /*if (path.size() == 0) {
-            std::sort(all_cuts.begin(), all_cuts.end(), [](const std::vector<int>& a, const std::vector<int>& b){
-                if (a.size() != b.size()) return a.size() < b.size();
-                return std::lexicographical_compare(a.begin(), a.end(), b.begin(), b.end());
-            });
-        }*/
-        return *std::min_element(ev_results.begin(), ev_results.end());
+        return ev_results;
     };
 
-    auto add_to_heap = [&](const GrayCode& path, const EvalResult& parent_ev) -> bool {
+    std::function<bool(const GrayCode&)> add_to_heap = [&](const GrayCode& path) -> bool {
         std::vector<std::pair<int, int>> seq_pairs_vec;
         for (size_t idx = 0; idx < static_cast<size_t>(path.size()); idx++) {
             seq_pairs_vec.push_back(
@@ -876,58 +1009,46 @@ GrayCode N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures_bes
         }
         
         //std::chrono::time_point<std::chrono::high_resolution_clock> start = std::chrono::high_resolution_clock::now();
-        EvalResult ev = evaluate_path(path);
+        SearchNode sn = evaluate_path(path);
         //printf("%.2fs\n", std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now() - start).count()*1e-9);
-        // printf("Evaluated path with %d CNOTs, rankkappa %.4f, path length %zd limit %d ", ev.min_cnots, ev.rankkappa, path.size(), level_limit);
-        // for (int idx = 0; idx < path.size(); idx++) {
-        //     printf("%d ", path[idx]);
-        // }
-        // printf("\n");
-
-        // if (path.size()+ev.min_cnots > level_limit) {
-        //    return false;
-        // }
-
-        if (!(ev < parent_ev)) {
-            return false;
+        if (path.size()+sn.get_min_cnots() > level_limit) {
+           return false;
         }
-        int fingerprint = rint(ev.rankkappa/osr_tol);
-        if (fingerprint_db.insert(fingerprint).second)
-            heap.push(SearchNode(ev, path));
+
+        heap.emplace(sn);
         return true;
     };
 
     GrayCode startpath;
     if (qbit_num > 1)
-        add_to_heap(startpath, EvalResult(std::numeric_limits<int>::max(), std::numeric_limits<double>::max()));
+        add_to_heap(startpath);
 
     while (!heap.empty()) {
         SearchNode cur = heap.top();
-        heap.pop();
-        // printf("%d CNOTs, rankkappa %.4f, path length %zd limit %d ", cur.ev.min_cnots, cur.ev.rankkappa, cur.path.size(), level_limit);
-        // for (int idx = 0; idx < cur.path.size(); idx++) {
-        //    printf("%d ", cur.path[idx]);
-        // }
-        // printf("\n");
-        if (cur.ev.min_cnots == 0) {
+        if (cur.get_min_cnots() == 0) {
             return cur.path;
         }
-        EvalResult parent_ev(cur.ev.min_cnots, cur.ev.rankkappa-osr_tol); //to avoid noise that does not indicate progress
+
+        const std::vector<int>& best_edge_counts = std::get<2>(cur.get_best_osr_result());
+        std::vector<int> topo_filter;
+        for (size_t i = 0; i < best_edge_counts.size(); i++) {
+            for (int j = 0; j < best_edge_counts[i]; j++) {
+                topo_filter.push_back(static_cast<int>(i));
+            }
+        }
 
         int num_cnot = 1;
         while (true) {
-            bool any_added = false;
-
-            generate_insertions(cur.path, topology, num_cnot,
+            generate_insertions(cur.path, topology, topo_filter, num_cnot,
                 [&](const GrayCode& newpath) {
-                    if (add_to_heap(newpath, parent_ev)) {
-                        any_added = true;
-                        return heap.top().ev.min_cnots == 0;
+                    if (add_to_heap(newpath)) {
+                        //return cur > heap.top();
+                        return heap.top().get_min_cnots() == 0;
                     }
                     return false;
                 });
 
-            if (any_added) {
+            if (cur > heap.top()) {
                 break;
             }
 
