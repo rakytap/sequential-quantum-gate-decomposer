@@ -45,7 +45,7 @@ Out of scope for this story:
   - `TASK_6_MINI_SPEC.md`,
   - `TASK_6_STORIES.md`,
   - and the Task 6 publication bundle under
-    `benchmarks/density_matrix/artifacts/phase2_task6/`.
+    `benchmarks/density_matrix/artifacts/workflow_evidence/`.
 - Story 1 and later Task 7 stories should reuse one shared reader-facing entry
   surface in
   `docs/density_matrix_project/phases/phase-2/PHASE_2_DOCUMENTATION_INDEX.md`.
@@ -263,7 +263,7 @@ Out of scope for this story:
       (for example under `benchmarks/density_matrix/`) for evidence-bar summary
       emission.
 - [ ] Emit one stable artifact in a Task 7 artifact directory
-      (for example `benchmarks/density_matrix/artifacts/phase2_task7/`).
+      (for example `benchmarks/density_matrix/artifacts/documentation_contract/`).
 - [ ] Record source references, generation command, and evidence metadata with
       the emitted output.
 - [ ] Keep the output narrow to evidence-bar semantics rather than broader

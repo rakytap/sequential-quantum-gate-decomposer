@@ -37,36 +37,36 @@ Out of scope for this story:
   canonical contract, 4/6 end-to-end plus trace, 4/6/8/10 matrix, unsupported
   boundaries, and interpretation guardrails.
 - Story 1's emitted artifact
-  `benchmarks/density_matrix/artifacts/phase2_task6/story1_canonical_workflow_contract.json`
+  `benchmarks/density_matrix/artifacts/workflow_evidence/workflow_contract_bundle.json`
   is the canonical source of Task 6 workflow identity, contract-version,
   threshold metadata, and bundle-level contract semantics. Story 6 should
   package and validate that artifact as the root identity surface for the full
   Task 6 bundle.
 - Story 2's emitted artifact
-  `benchmarks/density_matrix/artifacts/phase2_task6/story2_end_to_end_trace_bundle.json`
+  `benchmarks/density_matrix/artifacts/workflow_evidence/end_to_end_trace_bundle.json`
   is now the canonical source of Task 6 4q/6q end-to-end plus required-trace
   evidence. Story 6 should package and validate that artifact as a first-class
   mandatory bundle item rather than reconstructing Story 2 semantics from lower
   Task 5 artifacts.
 - Story 3's emitted artifact
-  `benchmarks/density_matrix/artifacts/phase2_task6/story3_matrix_baseline_bundle.json`
+  `benchmarks/density_matrix/artifacts/workflow_evidence/matrix_baseline_bundle.json`
   is now the canonical source of Task 6 4/6/8/10 matrix evidence and explicit
   10-qubit anchor presence. Story 6 should package and validate that artifact as
   a first-class mandatory bundle item rather than reconstructing matrix
   semantics from lower Task 5 artifacts alone.
 - Story 4's emitted artifact
-  `benchmarks/density_matrix/artifacts/phase2_task6/story4_unsupported_workflow_bundle.json`
+  `benchmarks/density_matrix/artifacts/workflow_evidence/unsupported_workflow_bundle.json`
   is the canonical unsupported/deferred negative-evidence layer for Task 6.
   Story 6 should package and validate that artifact as a first-class mandatory
   bundle item.
 - Story 5's emitted artifact
-  `benchmarks/density_matrix/artifacts/phase2_task6/story5_interpretation_bundle.json`
+  `benchmarks/density_matrix/artifacts/workflow_evidence/workflow_interpretation_bundle.json`
   is the canonical interpretation-guardrail layer for Task 6 completion.
   Story 6 should package and validate that artifact as a first-class mandatory
   bundle item rather than recomputing Story 5 semantics inside the publication
   bundle.
 - Task 5 Story 6 implementation in
-  `benchmarks/density_matrix/task5_story6_publication_bundle.py` provides the
+  `benchmarks/density_matrix/validation_evidence/validation_evidence_publication_bundle.py` provides the
   canonical top-level manifest and integrity-check pattern to reuse.
 - Existing manifest field patterns should be preserved where practical:
   `suite_name`, `status`, `backend`, `reference_backend`, `software`,
@@ -356,7 +356,7 @@ Story 6 is complete only when all of the following are true:
 
 ## Implementation Notes
 
-- Use `benchmarks/density_matrix/task5_story6_publication_bundle.py` as the
+- Use `benchmarks/density_matrix/validation_evidence/validation_evidence_publication_bundle.py` as the
   canonical implementation pattern for top-level manifest assembly and integrity
   checks.
 - Treat the emitted Story 1 contract artifact as the root identity surface for

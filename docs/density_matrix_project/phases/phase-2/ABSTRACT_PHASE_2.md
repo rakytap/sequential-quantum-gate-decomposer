@@ -31,14 +31,14 @@ models, including local depolarizing, phase damping, and amplitude damping,
 rather than relying mainly on whole-register toy noise.
 
 The complete workflow-facing publication bundle is now archived in
-`benchmarks/density_matrix/artifacts/phase2_task6/`, with
-`task6_story6_publication_bundle.json` as the top-level manifest. That manifest
+`benchmarks/density_matrix/artifacts/workflow_evidence/`, with
+`workflow_publication_bundle.json` as the top-level manifest. That manifest
 links the canonical workflow contract
-`story1_canonical_workflow_contract.json`, the end-to-end plus trace bundle
-`story2_end_to_end_trace_bundle.json`, the workflow matrix bundle
-`story3_matrix_baseline_bundle.json`, the unsupported-workflow bundle
-`story4_unsupported_workflow_bundle.json`, and the interpretation-guardrail
-bundle `story5_interpretation_bundle.json` in one backend-explicit
+`workflow_contract_bundle.json`, the end-to-end plus trace bundle
+`end_to_end_trace_bundle.json`, the workflow matrix bundle
+`matrix_baseline_bundle.json`, the unsupported-workflow bundle
+`unsupported_workflow_bundle.json`, and the interpretation-guardrail
+bundle `workflow_interpretation_bundle.json` in one backend-explicit
 reproducibility package while preserving traceability to the underlying Task 5
 validation layers. An implementation learning that now shapes publication
 claims is explicit support-tier classification (`required`, `optional`,

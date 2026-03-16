@@ -57,7 +57,7 @@ Out of scope for this story:
   `NoisyCircuit::add_amplitude_damping()`, and
   `NoisyCircuit::add_phase_damping()`.
 - Existing positive fixtures in `tests/VQE/test_VQE.py` and validation scaffolds
-  in `benchmarks/density_matrix/story2_vqe_density_validation.py` are the right
+  in `benchmarks/density_matrix/workflow_evidence/exact_density_vqe_validation.py` are the right
   starting points for Story 1 evidence.
 - Story 1 should harden and expose the required positive local-noise slice; it
   should not reopen the phase-level support split in `P2-ADR-012`, the anchor
@@ -121,7 +121,7 @@ Out of scope for this story:
   commands.
 
 **Execution checklist**
-- [ ] Refine `build_story2_noise()` or add a tightly related per-model fixture
+- [ ] Refine `build_reference_noise()` or add a tightly related per-model fixture
       helper so Story 1 can exercise each required local model separately.
 - [ ] Keep fixtures on the supported anchor VQE path with explicit
       `density_matrix` selection and generated `HEA` circuitry.
@@ -275,7 +275,7 @@ Out of scope for this story:
   rather than replace it.
 
 **Execution checklist**
-- [ ] Extend `benchmarks/density_matrix/story2_vqe_density_validation.py` or a
+- [ ] Extend `benchmarks/density_matrix/workflow_evidence/exact_density_vqe_validation.py` or a
       tightly related successor with Story 1 per-model output.
 - [ ] Record backend, source type, required local-noise identity, ordered bridge
       metadata, and target placement information for each supported case.
@@ -394,8 +394,8 @@ Story 1 is complete only when all of the following are true:
   lowering path for required local-noise models. Story 1 should keep one
   explicit model-to-operation mapping and reuse it.
 - `describe_density_bridge()` and the current `bridge_operations` vocabulary in
-  `benchmarks/density_matrix/story2_vqe_density_validation.py` are the most
+  `benchmarks/density_matrix/workflow_evidence/exact_density_vqe_validation.py` are the most
   natural existing inspection surfaces for Story 1. Extend them minimally.
-- The current mixed required-noise fixture in `build_story2_noise()` is useful
+- The current mixed required-noise fixture in `build_reference_noise()` is useful
   background evidence, but Story 1 should add deterministic per-model fixtures
   so regressions can be localized to one required local-noise model at a time.

@@ -40,26 +40,26 @@ Out of scope for this story:
 
 - Story 1 is already in place: the required local-noise models execute on the
   supported VQE-facing density path and expose machine-readable bridge metadata
-  through `task4_story1_required_local_noise_validation.py`.
+  through `required_local_noise_validation_validation.py`.
 - Story 2 is already in place: the mandatory 1 to 3 qubit exact micro-validation
   gate passes for the required local-noise surface through
   `validate_squander_vs_qiskit.py` and
-  `task4_story2_required_local_noise_micro_validation.py`.
+  `required_local_noise_micro_validation.py`.
 - Story 3 is already in place: optional whole-register depolarizing cases are
   classified explicitly and do not count toward mandatory completion through
-  `task4_story3_optional_noise_classification_validation.py`.
+  `optional_noise_classification_validation.py`.
 - Story 4 is already in place: deferred and unsupported noise requests fail
   before execution and emit structured negative evidence rather than silently
   contaminating workflow-scale results. The current negative authority is
-  `task4_story4_unsupported_noise_validation.py`, which emits
-  `story4_unsupported_noise_bundle.json` and fixes the current negative
+  `benchmarks/density_matrix/noise_support/unsupported_noise_validation.py`, which emits
+  `unsupported_noise_bundle.json` and fixes the current negative
   vocabulary around `support_tier`, `unsupported_category`,
-  `first_unsupported_condition`, `task4_boundary_class`, `failure_stage`, and
+  `first_unsupported_condition`, `noise_boundary_class`, `failure_stage`, and
   `unsupported_status_cases`.
 - The current workflow-level evidence surface already exists in
-  `benchmarks/density_matrix/story2_vqe_density_validation.py`, including:
-  `build_story4_parameter_sets()`, `run_story4_workflow_case()`,
-  `build_story4_workflow_bundle()`, and `run_optimization_trace()`.
+  `benchmarks/density_matrix/workflow_evidence/exact_density_vqe_validation.py`, including:
+  `build_exact_regime_parameter_sets()`, `run_exact_regime_workflow_case()`,
+  `build_exact_regime_workflow_bundle()`, and `run_optimization_trace()`.
 - The frozen workflow and threshold contract remains:
   - `P2-ADR-013`: 4 and 6 qubits must support full end-to-end workflow
     execution, including at least one reproducible optimization trace,
@@ -128,8 +128,8 @@ Out of scope for this story:
 
 **Execution checklist**
 - [ ] Reuse or tighten the current required local-noise schedule in
-      `build_story2_noise()` and the workflow harness that consumes it.
-- [ ] Ensure `run_story4_workflow_case()` and related helpers remain tied to
+      `build_reference_noise()` and the workflow harness that consumes it.
+- [ ] Ensure `run_exact_regime_workflow_case()` and related helpers remain tied to
       `local_depolarizing`, `amplitude_damping`, and `phase_damping`.
 - [ ] Keep optional whole-register depolarizing and any future justified
       extensions out of the mandatory workflow bundle.
@@ -200,7 +200,7 @@ Out of scope for this story:
 
 **Execution checklist**
 - [ ] Reuse `workflow_completed`, `bridge_supported_pass`, and related bundle
-      fields in `build_story4_workflow_bundle()`.
+      fields in `build_exact_regime_workflow_bundle()`.
 - [ ] Add or tighten support-tier and counts-toward-mandatory-baseline semantics
       for workflow-scale Task 4 outputs where needed, using the Story 4 field
       names `support_tier`, `case_purpose`, and
@@ -211,7 +211,7 @@ Out of scope for this story:
       than inventing separate workflow-only semantics.
 - [ ] Preserve Story 4 negative-schema compatibility for any workflow-level
       unsupported result by reusing `unsupported_category`,
-      `first_unsupported_condition`, `task4_boundary_class`, and
+      `first_unsupported_condition`, `noise_boundary_class`, and
       `failure_stage` rather than inventing workflow-only error labels.
 
 **Evidence produced**
@@ -317,7 +317,7 @@ Out of scope for this story:
   the final publication-facing provenance bundle.
 
 **Execution checklist**
-- [ ] Start from the current `build_story4_workflow_bundle()` output rather than
+- [ ] Start from the current `build_exact_regime_workflow_bundle()` output rather than
       inventing a parallel workflow bundle.
 - [ ] Add Task 4 support-tier and mandatory-baseline semantics only where they
       materially improve workflow review.
@@ -392,9 +392,9 @@ Story 5 is complete only when all of the following are true:
 
 ## Implementation Notes
 
-- `story2_vqe_density_validation.py` already contains the natural backbone for
-  Story 5 through `build_story4_parameter_sets()`,
-  `run_story4_workflow_case()`, `build_story4_workflow_bundle()`, and
+- `benchmarks/density_matrix/workflow_evidence/exact_density_vqe_validation.py` already contains the natural backbone for
+  Story 5 through `build_exact_regime_parameter_sets()`,
+  `run_exact_regime_workflow_case()`, `build_exact_regime_workflow_bundle()`, and
   `run_optimization_trace()`. Story 5 should extend this surface rather than
   creating a separate workflow harness.
 - Stories 1 to 4 already established the required-noise vocabulary, exactness
@@ -402,7 +402,7 @@ Story 5 is complete only when all of the following are true:
   those outputs rather than redefining them at workflow scale. In particular,
   Story 4 now fixes the negative vocabulary around `support_tier`,
   `unsupported_category`, `first_unsupported_condition`,
-  `task4_boundary_class`, `failure_stage`, and `unsupported_status_cases`.
+  `noise_boundary_class`, `failure_stage`, and `unsupported_status_cases`.
 - The current workflow bundle already tracks fields such as
   `documented_10q_anchor_present`, `supported_trace_completed`, and
   `bridge_supported_pass`; these are the natural anchors for Story 5 exit logic.

@@ -38,11 +38,11 @@ Out of scope for this story:
 - Stories 1 to 3 are already in place and provide the Paper 1 claim package,
   cross-surface alignment, and claim traceability surfaces.
 - Story 3 is expected to emit
-  `benchmarks/density_matrix/artifacts/phase2_task8/story3_claim_traceability_bundle.json`
+  `benchmarks/density_matrix/artifacts/publication_claim_package/claim_traceability_bundle.json`
   or an equivalent rerunnable checker. Story 4 should build on that traceability
   surface rather than recreate it.
 - The canonical machine-readable evidence surface already exists at
-  `benchmarks/density_matrix/artifacts/phase2_task6/task6_story6_publication_bundle.json`
+  `benchmarks/density_matrix/artifacts/workflow_evidence/workflow_publication_bundle.json`
   and preserves traceability to Task 5 validation layers.
 - The mandatory evidence floor is already frozen by:
   - `TASK_5_MINI_SPEC.md`,
@@ -253,7 +253,7 @@ Out of scope for this story:
       (for example under `benchmarks/density_matrix/`) for evidence-closure
       summary emission.
 - [ ] Emit one stable artifact in a Task 8 artifact directory such as
-      `benchmarks/density_matrix/artifacts/phase2_task8/story4_evidence_closure_bundle.json`.
+      `benchmarks/density_matrix/artifacts/publication_claim_package/evidence_closure_bundle.json`.
 - [ ] Record source references, generation command, and scope notes in the
       output.
 - [ ] Keep the output narrow to evidence-floor and claim-closure semantics

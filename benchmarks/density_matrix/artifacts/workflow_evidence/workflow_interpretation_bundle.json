@@ -1,0 +1,263 @@
+{
+  "suite_name": "workflow_interpretation_validation",
+  "status": "pass",
+  "workflow_id": "phase2_xxz_hea_density_matrix_anchor_workflow",
+  "contract_version": "v1",
+  "backend": "density_matrix",
+  "reference_backend": "qiskit_aer_density_matrix",
+  "requirements": {
+    "workflow_id": "phase2_xxz_hea_density_matrix_anchor_workflow",
+    "contract_version": "v1",
+    "main_claim_rule": "Only mandatory, complete, supported evidence may close the main Task 6 completion claim.",
+    "excluded_evidence_classes": [
+      "optional",
+      "deferred",
+      "unsupported",
+      "incomplete"
+    ],
+    "required_bundle_sources": [
+      "workflow_contract_validation",
+      "end_to_end_trace_validation",
+      "matrix_baseline_validation",
+      "unsupported_workflow_validation",
+      "optional_noise_classification"
+    ]
+  },
+  "thresholds": {
+    "mandatory_completion_rule": "all_mandatory_artifacts_pass",
+    "optional_cases_count_toward_mandatory_baseline": 0,
+    "mandatory_baseline_case_count_for_negative_evidence": 0
+  },
+  "software": {
+    "python": "3.13.9",
+    "numpy": "2.3.5",
+    "qiskit": "2.2.3",
+    "qiskit_aer": "0.17.2"
+  },
+  "provenance": {
+    "generation_command": "python benchmarks/density_matrix/workflow_interpretation_validation_validation.py",
+    "working_directory": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer",
+    "git_revision": "199d588c2230fc62a39934ddc7d79a6e74a8b64e",
+    "story1_contract_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/workflow_evidence/workflow_contract_bundle.json",
+    "story2_bundle_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/workflow_evidence/end_to_end_trace_bundle.json",
+    "story3_bundle_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/workflow_evidence/matrix_baseline_bundle.json",
+    "exact_regime_bundle_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/workflow_evidence/unsupported_workflow_bundle.json",
+    "optional_bundle_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/noise_support/optional_noise_classification_bundle.json"
+  },
+  "summary": {
+    "mandatory_artifacts": [
+      "story1_contract",
+      "end_to_end_trace_reference",
+      "matrix_baseline_reference",
+      "unsupported_workflow_reference"
+    ],
+    "incomplete_mandatory_artifacts": [],
+    "story1_contract_complete": true,
+    "end_to_end_gate_complete": true,
+    "matrix_baseline_gate_complete": true,
+    "unsupported_workflow_gate_complete": true,
+    "unsupported_case_field_alignment": true,
+    "mandatory_artifacts_complete": true,
+    "optional_cases": 2,
+    "optional_passed_cases": 2,
+    "optional_cases_count_toward_mandatory_baseline": 0,
+    "optional_evidence_supplemental": true,
+    "unsupported_status_cases": 9,
+    "unsupported_cases": 5,
+    "deferred_cases": 4,
+    "unsupported_evidence_negative_only": true,
+    "main_workflow_claim_completed": true
+  },
+  "required_artifacts": {
+    "story1_contract": {
+      "suite_name": "workflow_contract_validation",
+      "status": "pass",
+      "summary": {
+        "required_input_field_count": 10,
+        "required_output_field_count": 9,
+        "required_threshold_field_count": 9,
+        "required_bundle_field_count": 15,
+        "boundary_class_count": 4,
+        "mandatory_reference_artifact_count": 6,
+        "reference_artifact_count": 6,
+        "contract_sections_complete": true
+      }
+    },
+    "end_to_end_trace_reference": {
+      "suite_name": "end_to_end_trace_validation",
+      "status": "pass",
+      "summary": {
+        "total_end_to_end_cases": 2,
+        "passed_end_to_end_cases": 2,
+        "failed_end_to_end_cases": 0,
+        "unsupported_end_to_end_cases": 0,
+        "observed_case_names": [
+          "exact_regime_4q_set_00",
+          "exact_regime_6q_set_00"
+        ],
+        "observed_qubits": [
+          4,
+          6
+        ],
+        "missing_mandatory_case_names": [],
+        "missing_mandatory_qubits": [],
+        "duplicate_case_names": [],
+        "unexpected_case_names": [],
+        "unexpected_mandatory_qubits": [],
+        "stable_case_ids_present": true,
+        "all_cases_required": true,
+        "all_cases_count_toward_mandatory_baseline": true,
+        "all_cases_match_contract": true,
+        "end_to_end_qubits_match_contract": true,
+        "required_trace_case_name": "optimization_trace_4q",
+        "required_trace_present": true,
+        "required_trace_completed": true,
+        "required_trace_bridge_supported": true,
+        "trace_case_name_matches_contract": true,
+        "trace_matches_contract": true,
+        "workflow_thresholds_match_contract": true,
+        "end_to_end_gate_completed": true
+      }
+    },
+    "matrix_baseline_reference": {
+      "suite_name": "matrix_baseline_validation",
+      "status": "pass",
+      "summary": {
+        "total_cases": 40,
+        "passed_cases": 40,
+        "failed_cases": 0,
+        "unsupported_cases": 0,
+        "bridge_supported_cases": 40,
+        "required_cases": 40,
+        "required_passed_cases": 40,
+        "required_pass_rate": 1.0,
+        "documented_10q_anchor_present": true,
+        "workflow_inventory_matches_contract": true,
+        "workflow_thresholds_match_contract": true,
+        "all_cases_required": true,
+        "all_cases_count_toward_mandatory_baseline": true,
+        "all_cases_match_contract": true,
+        "observed_case_names": [
+          "exact_regime_4q_set_00",
+          "exact_regime_4q_set_01",
+          "exact_regime_4q_set_02",
+          "exact_regime_4q_set_03",
+          "exact_regime_4q_set_04",
+          "exact_regime_4q_set_05",
+          "exact_regime_4q_set_06",
+          "exact_regime_4q_set_07",
+          "exact_regime_4q_set_08",
+          "exact_regime_4q_set_09",
+          "exact_regime_6q_set_00",
+          "exact_regime_6q_set_01",
+          "exact_regime_6q_set_02",
+          "exact_regime_6q_set_03",
+          "exact_regime_6q_set_04",
+          "exact_regime_6q_set_05",
+          "exact_regime_6q_set_06",
+          "exact_regime_6q_set_07",
+          "exact_regime_6q_set_08",
+          "exact_regime_6q_set_09",
+          "exact_regime_8q_set_00",
+          "exact_regime_8q_set_01",
+          "exact_regime_8q_set_02",
+          "exact_regime_8q_set_03",
+          "exact_regime_8q_set_04",
+          "exact_regime_8q_set_05",
+          "exact_regime_8q_set_06",
+          "exact_regime_8q_set_07",
+          "exact_regime_8q_set_08",
+          "exact_regime_8q_set_09",
+          "exact_regime_10q_set_00",
+          "exact_regime_10q_set_01",
+          "exact_regime_10q_set_02",
+          "exact_regime_10q_set_03",
+          "exact_regime_10q_set_04",
+          "exact_regime_10q_set_05",
+          "exact_regime_10q_set_06",
+          "exact_regime_10q_set_07",
+          "exact_regime_10q_set_08",
+          "exact_regime_10q_set_09"
+        ],
+        "missing_mandatory_case_names": [],
+        "duplicate_case_names": [],
+        "unexpected_case_names": [],
+        "stable_case_ids_present": true,
+        "cases_per_qbit": {
+          "4": 10,
+          "6": 10,
+          "8": 10,
+          "10": 10
+        },
+        "missing_parameter_set_ids_by_qbit": {
+          "4": [],
+          "6": [],
+          "8": [],
+          "10": []
+        },
+        "duplicate_parameter_set_ids_by_qbit": {
+          "4": [],
+          "6": [],
+          "8": [],
+          "10": []
+        },
+        "stable_parameter_set_ids_present": true,
+        "matrix_gate_completed": true
+      }
+    },
+    "unsupported_workflow_reference": {
+      "suite_name": "unsupported_workflow_validation",
+      "status": "pass",
+      "summary": {
+        "total_cases": 9,
+        "unsupported_status_cases": 9,
+        "unsupported_cases": 5,
+        "deferred_cases": 4,
+        "mandatory_baseline_case_count": 0,
+        "duplicate_case_names": [],
+        "missing_case_names": [],
+        "unexpected_case_names": [],
+        "pre_execution_failure_passed_cases": 9,
+        "no_silent_fallback_cases": 9,
+        "no_silent_substitution_cases": 9,
+        "first_condition_present_cases": 9,
+        "categories_present": [
+          "backend_incompatible_request",
+          "noise_insertion",
+          "noise_target",
+          "noise_type",
+          "noise_value"
+        ],
+        "boundary_classes_present": [
+          "backend_mode",
+          "configuration",
+          "model_family",
+          "schedule_element"
+        ],
+        "backend_incompatible_case_present": true,
+        "all_cases_match_contract": true,
+        "unsupported_gate_completed": true
+      }
+    },
+    "task4_story3_optional_classification": {
+      "suite_name": "optional_noise_classification",
+      "status": "pass",
+      "summary": {
+        "mandatory_baseline_case_count": 10,
+        "mandatory_baseline_completed": true,
+        "mandatory_baseline_passed_cases": 10,
+        "optional_cases": 2,
+        "optional_cases_count_toward_mandatory_baseline": 0,
+        "optional_pass_rate": 1.0,
+        "optional_passed_cases": 2,
+        "required_cases": 10,
+        "required_pass_rate": 1.0,
+        "required_passed_cases": 10,
+        "support_tiers_present": [
+          "optional",
+          "required"
+        ]
+      }
+    }
+  }
+}

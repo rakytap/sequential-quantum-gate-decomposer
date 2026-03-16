@@ -51,7 +51,7 @@ Out of scope for this story:
   freeze the claim package they must share rather than let each surface invent
   its own claim set.
 - The canonical machine-readable evidence surface already exists at
-  `benchmarks/density_matrix/artifacts/phase2_task6/task6_story6_publication_bundle.json`.
+  `benchmarks/density_matrix/artifacts/workflow_evidence/workflow_publication_bundle.json`.
   Story 1 should treat that surface as the workflow-backed evidence anchor for
   positive claims rather than replace it.
 - Task 7 already provides a documentation entry path and consistent support
@@ -259,7 +259,7 @@ Out of scope for this story:
       (for example under `benchmarks/density_matrix/`) for claim-package
       summary emission.
 - [ ] Emit one stable artifact in a Task 8 artifact directory such as
-      `benchmarks/density_matrix/artifacts/phase2_task8/story1_claim_package.json`.
+      `benchmarks/density_matrix/artifacts/publication_claim_package/claim_package.json`.
 - [ ] Record source references, generation command, and scope notes in the
       output.
 - [ ] Keep the output narrow to claim-boundary and non-claim semantics rather

@@ -39,7 +39,7 @@ Out of scope for this story:
 - Story 3 is already in place: unsupported combinations fail explicitly rather
   than contaminating workflow-scale results.
 - The current workflow-level evidence surface already exists in
-  `benchmarks/density_matrix/story2_vqe_density_validation.py` and currently
+  `benchmarks/density_matrix/workflow_evidence/exact_density_vqe_validation.py` and currently
   covers a subset of the final Story 4 package.
 - The frozen benchmark and threshold decisions remain:
   `P2-ADR-013`, `P2-ADR-014`, `P2-ADR-015`, and the benchmark-minimum /
@@ -349,7 +349,7 @@ Story 4 is complete only when all of the following are true:
 
 ## Implementation Notes
 
-- `benchmarks/density_matrix/story2_vqe_density_validation.py` already provides
+- `benchmarks/density_matrix/workflow_evidence/exact_density_vqe_validation.py` already provides
   the natural backbone for Story 4 and should be extended rather than replaced.
 - Story 4 should reuse the Story 2 and Story 3 artifact vocabulary where it is
   helpful, but keep the workflow-scale bundle clearly distinct from the 1 to 3

@@ -250,7 +250,7 @@ Out of scope for this story:
       (for example under `benchmarks/density_matrix/`) for future-work audit
       emission.
 - [ ] Emit one stable artifact in a Task 7 artifact directory
-      (for example `benchmarks/density_matrix/artifacts/phase2_task7/`).
+      (for example `benchmarks/density_matrix/artifacts/documentation_contract/`).
 - [ ] Record source references, generation command, and current-versus-future
       metadata with the output.
 - [ ] Keep the output narrow to future-work and non-goal auditing rather than

@@ -37,18 +37,18 @@ Out of scope for this story:
 - Stories 1 and 2 are already in place and provide a stable claim package plus a
   stable publication-surface inventory.
 - Story 1 is expected to emit
-  `benchmarks/density_matrix/artifacts/phase2_task8/story1_claim_package.json`
+  `benchmarks/density_matrix/artifacts/publication_claim_package/claim_package.json`
   or an equivalent rerunnable checker. Story 3 should reuse that output for
   claim identity rather than reconstructing it.
 - Story 2 is expected to emit
-  `benchmarks/density_matrix/artifacts/phase2_task8/story2_publication_surface_alignment.json`
+  `benchmarks/density_matrix/artifacts/publication_claim_package/publication_surface_alignment.json`
   or an equivalent rerunnable checker. Story 3 should assume publication
   surfaces already share one common claim boundary.
 - The authoritative documentation entry path already exists in
   `PHASE_2_DOCUMENTATION_INDEX.md` and should be reused as the reader-facing
   starting point for traceability.
 - The canonical machine-readable evidence surface already exists at
-  `benchmarks/density_matrix/artifacts/phase2_task6/task6_story6_publication_bundle.json`
+  `benchmarks/density_matrix/artifacts/workflow_evidence/workflow_publication_bundle.json`
   and preserves traceability to Task 5 validation layers. Story 3 should build
   on that surface, not replace it.
 - The relevant contract docs already exist and should serve as traceability
@@ -116,7 +116,7 @@ Out of scope for this story:
 **Execution checklist**
 - [ ] Reuse `PHASE_2_DOCUMENTATION_INDEX.md` as the reader-facing contract entry
       surface for Paper 1 traceability.
-- [ ] Reuse `task6_story6_publication_bundle.json` as the canonical
+- [ ] Reuse `workflow_publication_bundle.json` as the canonical
       machine-readable workflow-evidence surface.
 - [ ] Keep paper claims mapped to existing contract docs and bundle outputs
       rather than copying those sources wholesale.
@@ -259,7 +259,7 @@ Out of scope for this story:
       (for example under `benchmarks/density_matrix/`) for claim-traceability
       emission.
 - [ ] Emit one stable artifact in a Task 8 artifact directory such as
-      `benchmarks/density_matrix/artifacts/phase2_task8/story3_claim_traceability_bundle.json`.
+      `benchmarks/density_matrix/artifacts/publication_claim_package/claim_traceability_bundle.json`.
 - [ ] Record source references, generation command, and scope notes in the
       output.
 - [ ] Keep the output narrow to publication traceability rather than

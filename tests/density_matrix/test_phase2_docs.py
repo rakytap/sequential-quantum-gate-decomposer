@@ -3,9 +3,9 @@ import copy
 import pytest
 
 
-def test_task7_story1_contract_reference_map_schema_module_level():
+def test_contract_reference_map_schema_module_level():
     """Test the Task 7 Story 1 contract-reference map schema."""
-    from benchmarks.density_matrix.task7_story1_contract_reference_validation import (
+    from benchmarks.density_matrix.documentation_contract.contract_reference_validation import (
         MANDATORY_TOPICS,
         PHASE2_DOCUMENTATION_INDEX_PATH,
         run_validation,
@@ -28,7 +28,7 @@ def test_task7_story1_contract_reference_map_schema_module_level():
 
 def test_task7_story1_missing_topic_blocks_validation_module_level():
     """Test that missing mandatory topics fail Task 7 Story 1 validation."""
-    from benchmarks.density_matrix.task7_story1_contract_reference_validation import (
+    from benchmarks.density_matrix.documentation_contract.contract_reference_validation import (
         run_validation,
         validate_artifact_bundle,
     )
@@ -43,7 +43,7 @@ def test_task7_story1_missing_topic_blocks_validation_module_level():
 
 def test_task7_story1_missing_entry_point_heading_fails_validation_module_level():
     """Test that missing entry-point headings fail Task 7 Story 1 validation."""
-    from benchmarks.density_matrix.task7_story1_contract_reference_validation import (
+    from benchmarks.density_matrix.documentation_contract.contract_reference_validation import (
         run_validation,
         validate_artifact_bundle,
     )
@@ -59,9 +59,9 @@ def test_task7_story1_missing_entry_point_heading_fails_validation_module_level(
         validate_artifact_bundle(broken_artifact)
 
 
-def test_task7_story2_supported_entry_reference_schema_module_level():
+def test_supported_entry_reference_schema_module_level():
     """Test the Task 7 Story 2 supported-entry reference schema."""
-    from benchmarks.density_matrix.task7_story2_supported_entry_reference_validation import (
+    from benchmarks.density_matrix.documentation_contract.supported_entry_reference_validation import (
         MANDATORY_STATEMENTS,
         STORY2_SECTION_HEADING,
         run_validation,
@@ -80,7 +80,7 @@ def test_task7_story2_supported_entry_reference_schema_module_level():
 
 def test_task7_story2_missing_statement_fails_validation_module_level():
     """Test that missing required statements fail Task 7 Story 2 validation."""
-    from benchmarks.density_matrix.task7_story2_supported_entry_reference_validation import (
+    from benchmarks.density_matrix.documentation_contract.supported_entry_reference_validation import (
         run_validation,
         validate_artifact_bundle,
     )
@@ -99,7 +99,7 @@ def test_task7_story2_missing_statement_fails_validation_module_level():
 
 def test_task7_story2_statement_inventory_mismatch_fails_validation_module_level():
     """Test that statement inventory drift fails Task 7 Story 2 validation."""
-    from benchmarks.density_matrix.task7_story2_supported_entry_reference_validation import (
+    from benchmarks.density_matrix.documentation_contract.supported_entry_reference_validation import (
         run_validation,
         validate_artifact_bundle,
     )
@@ -112,9 +112,9 @@ def test_task7_story2_statement_inventory_mismatch_fails_validation_module_level
         validate_artifact_bundle(broken_artifact)
 
 
-def test_task7_story3_support_surface_reference_schema_module_level():
+def test_support_surface_reference_schema_module_level():
     """Test the Task 7 Story 3 support-surface reference schema."""
-    from benchmarks.density_matrix.task7_story3_support_surface_reference_validation import (
+    from benchmarks.density_matrix.documentation_contract.support_surface_reference_validation import (
         MANDATORY_BOUNDARY_EXAMPLES,
         MANDATORY_SUPPORT_ITEMS,
         STORY3_SECTION_HEADING,
@@ -137,7 +137,7 @@ def test_task7_story3_support_surface_reference_schema_module_level():
 
 def test_task7_story3_missing_support_item_fails_validation_module_level():
     """Test that missing support items fail Task 7 Story 3 validation."""
-    from benchmarks.density_matrix.task7_story3_support_surface_reference_validation import (
+    from benchmarks.density_matrix.documentation_contract.support_surface_reference_validation import (
         run_validation,
         validate_artifact_bundle,
     )
@@ -155,7 +155,7 @@ def test_task7_story3_missing_support_item_fails_validation_module_level():
 
 def test_task7_story3_support_inventory_mismatch_fails_validation_module_level():
     """Test that support inventory drift fails Task 7 Story 3 validation."""
-    from benchmarks.density_matrix.task7_story3_support_surface_reference_validation import (
+    from benchmarks.density_matrix.documentation_contract.support_surface_reference_validation import (
         run_validation,
         validate_artifact_bundle,
     )
@@ -170,9 +170,9 @@ def test_task7_story3_support_inventory_mismatch_fails_validation_module_level()
         validate_artifact_bundle(broken_artifact)
 
 
-def test_task7_story4_evidence_bar_reference_schema_module_level():
+def test_evidence_bar_reference_schema_module_level():
     """Test the Task 7 Story 4 evidence-bar reference schema."""
-    from benchmarks.density_matrix.task7_story4_evidence_bar_validation import (
+    from benchmarks.density_matrix.documentation_contract.evidence_bar_validation import (
         MANDATORY_EVIDENCE_ITEMS,
         STORY4_SECTION_HEADING,
         run_validation,
@@ -190,7 +190,7 @@ def test_task7_story4_evidence_bar_reference_schema_module_level():
 
 def test_task7_story4_missing_evidence_item_fails_validation_module_level():
     """Test that missing evidence items fail Task 7 Story 4 validation."""
-    from benchmarks.density_matrix.task7_story4_evidence_bar_validation import (
+    from benchmarks.density_matrix.documentation_contract.evidence_bar_validation import (
         run_validation,
         validate_artifact_bundle,
     )
@@ -208,7 +208,7 @@ def test_task7_story4_missing_evidence_item_fails_validation_module_level():
 
 def test_task7_story4_evidence_inventory_mismatch_fails_validation_module_level():
     """Test that evidence inventory drift fails Task 7 Story 4 validation."""
-    from benchmarks.density_matrix.task7_story4_evidence_bar_validation import (
+    from benchmarks.density_matrix.documentation_contract.evidence_bar_validation import (
         run_validation,
         validate_artifact_bundle,
     )
@@ -221,9 +221,9 @@ def test_task7_story4_evidence_inventory_mismatch_fails_validation_module_level(
         validate_artifact_bundle(broken_artifact)
 
 
-def test_task7_story5_future_work_boundary_schema_module_level():
+def test_future_work_boundary_schema_module_level():
     """Test the Task 7 Story 5 future-work boundary schema."""
-    from benchmarks.density_matrix.task7_story5_future_work_boundary_validation import (
+    from benchmarks.density_matrix.documentation_contract.future_work_boundary_validation import (
         MANDATORY_FUTURE_TOPICS,
         STORY5_SECTION_HEADING,
         run_validation,
@@ -241,7 +241,7 @@ def test_task7_story5_future_work_boundary_schema_module_level():
 
 def test_task7_story5_missing_future_work_item_fails_validation_module_level():
     """Test that missing future-work labeling fails Task 7 Story 5 validation."""
-    from benchmarks.density_matrix.task7_story5_future_work_boundary_validation import (
+    from benchmarks.density_matrix.documentation_contract.future_work_boundary_validation import (
         run_validation,
         validate_artifact_bundle,
     )
@@ -259,7 +259,7 @@ def test_task7_story5_missing_future_work_item_fails_validation_module_level():
 
 def test_task7_story5_future_work_inventory_mismatch_fails_validation_module_level():
     """Test that future-work inventory drift fails Task 7 Story 5 validation."""
-    from benchmarks.density_matrix.task7_story5_future_work_boundary_validation import (
+    from benchmarks.density_matrix.documentation_contract.future_work_boundary_validation import (
         run_validation,
         validate_artifact_bundle,
     )
@@ -274,9 +274,9 @@ def test_task7_story5_future_work_inventory_mismatch_fails_validation_module_lev
         validate_artifact_bundle(broken_artifact)
 
 
-def test_task7_story6_documentation_bundle_schema_module_level():
+def test_documentation_contract_bundle_schema_module_level():
     """Test the Task 7 Story 6 documentation bundle schema."""
-    from benchmarks.density_matrix.task7_story6_documentation_bundle import (
+    from benchmarks.density_matrix.documentation_contract.documentation_contract_bundle import (
         run_validation,
     )
 
@@ -304,7 +304,7 @@ def test_task7_story6_documentation_bundle_schema_module_level():
 
 def test_task7_story6_missing_artifact_entry_fails_validation_module_level():
     """Test that missing mandatory story artifacts fail Task 7 Story 6 validation."""
-    from benchmarks.density_matrix.task7_story6_documentation_bundle import (
+    from benchmarks.density_matrix.documentation_contract.documentation_contract_bundle import (
         run_validation,
         validate_task7_story6_bundle,
     )
@@ -319,7 +319,7 @@ def test_task7_story6_missing_artifact_entry_fails_validation_module_level():
 
 def test_task7_story6_missing_semantic_flag_fails_validation_module_level():
     """Test that missing lower-story semantic closure fails Task 7 Story 6 validation."""
-    from benchmarks.density_matrix.task7_story6_documentation_bundle import (
+    from benchmarks.density_matrix.documentation_contract.documentation_contract_bundle import (
         run_validation,
         validate_task7_story6_bundle,
     )
@@ -335,7 +335,7 @@ def test_task7_story6_missing_semantic_flag_fails_validation_module_level():
 
 def test_task7_story6_missing_glossary_term_fails_validation_module_level():
     """Test that missing glossary terms fail Task 7 Story 6 validation."""
-    from benchmarks.density_matrix.task7_story6_documentation_bundle import (
+    from benchmarks.density_matrix.documentation_contract.documentation_contract_bundle import (
         run_validation,
         validate_task7_story6_bundle,
     )

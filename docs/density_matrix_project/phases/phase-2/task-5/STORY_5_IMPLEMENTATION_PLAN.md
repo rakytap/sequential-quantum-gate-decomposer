@@ -44,14 +44,14 @@ Out of scope for this story:
   guardrail rather than infer metric completeness again from scattered lower-
   level fields.
 - The current support-tier vocabulary already exists in
-  `benchmarks/density_matrix/task4_support_tiers.py`, including
+  `benchmarks/density_matrix/noise_support/support_tiers.py`, including
   `support_tier`, `case_purpose`, `counts_toward_mandatory_baseline`,
   `optional_reason`, and the boundary-class vocabulary for deferred and
   unsupported cases.
 - Task 4 Story 3 already establishes explicit optional-case semantics, and
   Task 4 Story 4 already establishes explicit unsupported and deferred boundary
   semantics, including `unsupported_category`,
-  `first_unsupported_condition`, `task4_boundary_class`, and `failure_stage`.
+  `first_unsupported_condition`, `noise_boundary_class`, and `failure_stage`.
 - Task 5 Stories 1 to 4 are expected to emit explicit completeness and status
   semantics; Story 5 interprets those semantics at the phase level rather than
   inferring closure from raw file presence alone.
@@ -128,7 +128,7 @@ Out of scope for this story:
       current bundles.
 - [ ] Reuse existing negative-evidence fields such as
       `unsupported_category`, `first_unsupported_condition`,
-      `task4_boundary_class`, and `failure_stage` where unsupported evidence is
+      `noise_boundary_class`, and `failure_stage` where unsupported evidence is
       surfaced in Task 5 summaries.
 - [ ] Preserve current required-case accounting fields such as
       `required_cases`, `required_passed_cases`, `required_pass_rate`, and
@@ -387,7 +387,7 @@ Story 5 is complete only when all of the following are true:
 
 ## Implementation Notes
 
-- `benchmarks/density_matrix/task4_support_tiers.py` already provides the
+- `benchmarks/density_matrix/noise_support/support_tiers.py` already provides the
   canonical support-tier vocabulary and mandatory-baseline accounting semantics.
   Story 5 should build on those helpers rather than invent a parallel taxonomy.
 - Task 4 Story 3 and Story 4 already fix the optional and unsupported boundary

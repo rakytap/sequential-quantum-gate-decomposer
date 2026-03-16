@@ -48,13 +48,13 @@ Out of scope for this story:
   anchor package on top of that workflow gate rather than fold the trace back
   into Story 2 closure semantics.
 - The current optimization-trace and workflow bundle substrate already exists in
-  `benchmarks/density_matrix/story2_vqe_density_validation.py`, especially
+  `benchmarks/density_matrix/workflow_evidence/exact_density_vqe_validation.py`, especially
   `run_optimization_trace()` and the workflow-bundle summary fields
   `documented_10q_anchor_present`, `supported_trace_completed`, and
   `supported_trace_case_name`.
 - Task 4 Story 5 already specializes those workflow surfaces for the required
   local-noise baseline in
-  `benchmarks/density_matrix/task4_story5_required_local_noise_workflow_validation.py`,
+  `benchmarks/density_matrix/noise_support/required_local_noise_workflow_validation.py`,
   including `required_trace_case_name`, `required_trace_present`,
   `required_trace_completed`, and `required_trace_bridge_supported`. Story 3
   should reuse those trace semantics where helpful without inheriting Task 4
@@ -120,7 +120,7 @@ Out of scope for this story:
 
 **Definition of done**
 - Task 5 Story 3 derives its trace and 10-qubit anchor evidence from the
-  canonical `story2_vqe_density_validation.py` and Task 4 Story 5 workflow
+  canonical `benchmarks/density_matrix/workflow_evidence/exact_density_vqe_validation.py` and Task 4 Story 5 workflow
   surfaces rather than from a second optimizer or anchor harness.
 - The phase-level trace and anchor package uses the same supported-path
   vocabulary, workflow identities, and status semantics already accepted lower
@@ -402,10 +402,10 @@ Story 3 is complete only when all of the following are true:
 
 ## Implementation Notes
 
-- `benchmarks/density_matrix/story2_vqe_density_validation.py` already provides
+- `benchmarks/density_matrix/workflow_evidence/exact_density_vqe_validation.py` already provides
   the canonical optimization-trace and workflow-bundle surfaces. Story 3 should
   build on those surfaces rather than duplicate them.
-- `benchmarks/density_matrix/task4_story5_required_local_noise_workflow_validation.py`
+- `benchmarks/density_matrix/noise_support/required_local_noise_workflow_validation.py`
   already adds the trace- and workflow-summary fields most relevant to Story 3,
   especially `required_trace_case_name`, `required_trace_present`,
   `required_trace_completed`, `required_trace_bridge_supported`, and the 10-qubit

@@ -46,12 +46,12 @@ Out of scope for this story:
   mandatory 1 to 3 qubit micro-validation matrix and keeps the workflow claim
   grounded in trusted local evidence.
 - Task 2 Story 4 already provides the canonical workflow-scale exactness harness
-  in `benchmarks/density_matrix/story2_vqe_density_validation.py`, including
-  `build_story4_parameter_sets()`, `run_story4_workflow_case()`, and
-  `build_story4_workflow_bundle()`.
+  in `benchmarks/density_matrix/workflow_evidence/exact_density_vqe_validation.py`, including
+  `build_exact_regime_parameter_sets()`, `run_exact_regime_workflow_case()`, and
+  `build_exact_regime_workflow_bundle()`.
 - Task 4 Story 5 already specializes that workflow harness for the required
   local-noise workflow baseline in
-  `benchmarks/density_matrix/task4_story5_required_local_noise_workflow_validation.py`,
+  `benchmarks/density_matrix/noise_support/required_local_noise_workflow_validation.py`,
   including required-case accounting and trace-related summary fields.
 - The current workflow bundle already exposes the most relevant phase-level
   pass/fail anchors:
@@ -124,7 +124,7 @@ Out of scope for this story:
 
 **Definition of done**
 - Task 5 Story 2 derives its workflow evidence from the canonical
-  `story2_vqe_density_validation.py` workflow path and the Task 4 Story 5
+  `benchmarks/density_matrix/workflow_evidence/exact_density_vqe_validation.py` workflow path and the Task 4 Story 5
   required-noise workflow wrapper rather than from a parallel benchmark
   framework.
 - The Task 5 workflow baseline uses the same frozen metric names, workflow
@@ -412,11 +412,11 @@ Story 2 is complete only when all of the following are true:
 
 ## Implementation Notes
 
-- `benchmarks/density_matrix/story2_vqe_density_validation.py` already provides
+- `benchmarks/density_matrix/workflow_evidence/exact_density_vqe_validation.py` already provides
   the canonical workflow harness, threshold metadata, and machine-readable
   workflow output shape. Story 2 should build on that surface rather than
   duplicate it.
-- `benchmarks/density_matrix/task4_story5_required_local_noise_workflow_validation.py`
+- `benchmarks/density_matrix/noise_support/required_local_noise_workflow_validation.py`
   already adds the required-case accounting and trace-related summary fields most
   relevant to Task 5 Story 2. Story 2 should reuse that wrapper or its bundle
   semantics directly where possible.

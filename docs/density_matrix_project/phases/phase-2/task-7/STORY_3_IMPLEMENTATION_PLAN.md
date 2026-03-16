@@ -257,7 +257,7 @@ Out of scope for this story:
       (for example under `benchmarks/density_matrix/`) for support-surface
       summary emission.
 - [ ] Emit one stable artifact in a Task 7 artifact directory
-      (for example `benchmarks/density_matrix/artifacts/phase2_task7/`).
+      (for example `benchmarks/density_matrix/artifacts/documentation_contract/`).
 - [ ] Record source references, generation command, and classification metadata
       with the emitted output.
 - [ ] Keep the output narrow to support-surface semantics rather than broader

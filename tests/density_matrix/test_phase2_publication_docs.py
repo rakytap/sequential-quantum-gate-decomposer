@@ -3,9 +3,9 @@ import copy
 import pytest
 
 
-def test_task8_story1_claim_package_schema_module_level():
+def test_claim_package_schema_module_level():
     """Test the Task 8 Story 1 claim-package schema."""
-    from benchmarks.density_matrix.task8_story1_claim_package_validation import (
+    from benchmarks.density_matrix.publication_claim_package.claim_package_validation import (
         NON_CLAIM_ITEMS,
         SUPPORTING_CLAIM_ITEMS,
         run_validation,
@@ -27,7 +27,7 @@ def test_task8_story1_claim_package_schema_module_level():
 
 def test_task8_story1_non_claim_inventory_mismatch_fails_validation_module_level():
     """Test that non-claim inventory drift fails Task 8 Story 1 validation."""
-    from benchmarks.density_matrix.task8_story1_claim_package_validation import (
+    from benchmarks.density_matrix.publication_claim_package.claim_package_validation import (
         run_validation,
         validate_artifact_bundle,
     )
@@ -42,9 +42,9 @@ def test_task8_story1_non_claim_inventory_mismatch_fails_validation_module_level
         validate_artifact_bundle(broken_artifact)
 
 
-def test_task8_story2_publication_surface_alignment_schema_module_level():
+def test_publication_surface_alignment_schema_module_level():
     """Test the Task 8 Story 2 publication-surface alignment schema."""
-    from benchmarks.density_matrix.task8_story2_publication_surface_alignment import (
+    from benchmarks.density_matrix.publication_claim_package.publication_surface_alignment import (
         PUBLICATION_SURFACES,
         run_validation,
     )
@@ -63,7 +63,7 @@ def test_task8_story2_publication_surface_alignment_schema_module_level():
 
 def test_task8_story2_surface_inventory_mismatch_fails_validation_module_level():
     """Test that missing publication surfaces fail Task 8 Story 2 validation."""
-    from benchmarks.density_matrix.task8_story2_publication_surface_alignment import (
+    from benchmarks.density_matrix.publication_claim_package.publication_surface_alignment import (
         run_validation,
         validate_artifact_bundle,
     )
@@ -78,7 +78,7 @@ def test_task8_story2_surface_inventory_mismatch_fails_validation_module_level()
 
 def test_task8_story3_claim_traceability_schema_module_level():
     """Test the Task 8 Story 3 claim-traceability schema."""
-    from benchmarks.density_matrix.task8_story3_claim_traceability_bundle import (
+    from benchmarks.density_matrix.publication_claim_package.claim_traceability_bundle import (
         CLAIM_TRACEABILITY_ITEMS,
         SECTION_TRACEABILITY_ITEMS,
         run_validation,
@@ -102,7 +102,7 @@ def test_task8_story3_claim_traceability_schema_module_level():
 
 def test_task8_story4_evidence_closure_schema_module_level():
     """Test the Task 8 Story 4 evidence-closure schema."""
-    from benchmarks.density_matrix.task8_story4_evidence_closure_validation import (
+    from benchmarks.density_matrix.publication_claim_package.evidence_closure_validation import (
         MANDATORY_EVIDENCE_ITEMS,
         run_validation,
     )
@@ -120,7 +120,7 @@ def test_task8_story4_evidence_closure_schema_module_level():
 
 def test_task8_story5_supported_path_scope_schema_module_level():
     """Test the Task 8 Story 5 supported-path scope schema."""
-    from benchmarks.density_matrix.task8_story5_supported_path_scope_validation import (
+    from benchmarks.density_matrix.publication_claim_package.supported_path_scope_validation import (
         PUBLICATION_SURFACES,
         run_validation,
     )
@@ -139,7 +139,7 @@ def test_task8_story5_supported_path_scope_schema_module_level():
 
 def test_task8_story6_future_work_boundary_schema_module_level():
     """Test the Task 8 Story 6 future-work boundary schema."""
-    from benchmarks.density_matrix.task8_story6_future_work_boundary_validation import (
+    from benchmarks.density_matrix.publication_claim_package.future_work_boundary_validation import (
         MANDATORY_FUTURE_TOPICS,
         run_validation,
     )
@@ -153,9 +153,9 @@ def test_task8_story6_future_work_boundary_schema_module_level():
     assert artifact["summary"]["future_work_boundary_completed"] is True
 
 
-def test_task8_story7_publication_bundle_schema_module_level():
+def test_publication_claim_bundle_schema_module_level():
     """Test the Task 8 Story 7 publication bundle schema."""
-    from benchmarks.density_matrix.task8_story7_publication_bundle import run_validation
+    from benchmarks.density_matrix.publication_claim_package.publication_claim_bundle import run_validation
 
     (
         story1_artifact,
@@ -184,7 +184,7 @@ def test_task8_story7_publication_bundle_schema_module_level():
 
 def test_task8_story7_missing_artifact_entry_fails_validation_module_level():
     """Test that missing mandatory story artifacts fail Task 8 Story 7 validation."""
-    from benchmarks.density_matrix.task8_story7_publication_bundle import (
+    from benchmarks.density_matrix.publication_claim_package.publication_claim_bundle import (
         run_validation,
         validate_task8_story7_bundle,
     )

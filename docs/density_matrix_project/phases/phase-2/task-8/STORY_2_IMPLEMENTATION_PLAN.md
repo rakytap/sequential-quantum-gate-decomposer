@@ -40,7 +40,7 @@ Out of scope for this story:
 - Story 1 already provides the canonical Paper 1 claim package. Story 2 should
   reuse that package rather than discover claim scope independently.
 - Story 1 is expected to emit
-  `benchmarks/density_matrix/artifacts/phase2_task8/story1_claim_package.json`
+  `benchmarks/density_matrix/artifacts/publication_claim_package/claim_package.json`
   or an equivalent rerunnable checker. Story 2 should treat that output as the
   claim-boundary authority for cross-surface alignment.
 - Publication-facing surfaces already exist and should be aligned rather than
@@ -56,7 +56,7 @@ Out of scope for this story:
   implementation-backed detail. Story 2 should allow that extra depth while
   requiring the same core contribution boundary.
 - The canonical machine-readable evidence surface remains the Task 6 publication
-  bundle under `benchmarks/density_matrix/artifacts/phase2_task6/`. Story 2
+  bundle under `benchmarks/density_matrix/artifacts/workflow_evidence/`. Story 2
   should align paper surfaces to that evidence rather than let any surface
   overstate it.
 - Story 2 defines cross-surface alignment and depth-specific narrative
@@ -263,7 +263,7 @@ Out of scope for this story:
       (for example under `benchmarks/density_matrix/`) for publication-surface
       alignment summary emission.
 - [ ] Emit one stable artifact in a Task 8 artifact directory such as
-      `benchmarks/density_matrix/artifacts/phase2_task8/story2_publication_surface_alignment.json`.
+      `benchmarks/density_matrix/artifacts/publication_claim_package/publication_surface_alignment.json`.
 - [ ] Record surface roles, source references, generation command, and scope
       notes in the output.
 - [ ] Keep the output narrow to cross-surface alignment rather than full

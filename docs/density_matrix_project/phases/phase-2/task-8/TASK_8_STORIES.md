@@ -122,7 +122,7 @@ Story ordering is intentional:
   `PRE_IMPLEMENTATION_COMPLETION_CHECKLIST.md`, the relevant Task 1 through Task
   7 mini-specs, and `PHASE_2_DOCUMENTATION_INDEX.md`.
 - The workflow-facing publication bundle rooted at
-  `benchmarks/density_matrix/artifacts/phase2_task6/task6_story6_publication_bundle.json`
+  `benchmarks/density_matrix/artifacts/workflow_evidence/workflow_publication_bundle.json`
   is identified as the canonical machine-readable evidence surface for the
   workflow-backed claim.
 - A reviewer can move from a paper-level statement to the underlying contract or

@@ -46,7 +46,7 @@ Out of scope for this story:
   `get_operation_info()`, which can serve as the natural inspection surface for
   ordered bridge output.
 - Existing positive anchor tests in `tests/VQE/test_VQE.py` and workflow-level
-  validation in `benchmarks/density_matrix/story2_vqe_density_validation.py`
+  validation in `benchmarks/density_matrix/workflow_evidence/exact_density_vqe_validation.py`
   are the right starting points for Story 1 evidence.
 - Story 1 should harden the supported positive bridge slice; it should not
   reopen the frozen bridge scope in `P2-ADR-011`, the support matrix in
@@ -244,7 +244,7 @@ Out of scope for this story:
   than replace it.
 
 **Execution checklist**
-- [ ] Extend `benchmarks/density_matrix/story2_vqe_density_validation.py` or a
+- [ ] Extend `benchmarks/density_matrix/workflow_evidence/exact_density_vqe_validation.py` or a
       tightly related successor with Story 1 bridge-inspection output.
 - [ ] Record source type, ansatz, backend, and ordered operation metadata for at
       least one deterministic supported case.
@@ -354,7 +354,7 @@ Story 1 is complete only when all of the following are true:
   surface for auditing ordered gate and noise output. Story 1 should reuse it or
   extend it minimally.
 - `tests/VQE/test_VQE.py` already contains density-backend anchor smoke tests,
-  and `benchmarks/density_matrix/story2_vqe_density_validation.py` already
+  and `benchmarks/density_matrix/workflow_evidence/exact_density_vqe_validation.py` already
   provides the most natural workflow-facing validation entry point.
 - Story 1 should stay tightly bounded to the guaranteed generated-`HEA` bridge
   path and required local-noise contract even though the underlying

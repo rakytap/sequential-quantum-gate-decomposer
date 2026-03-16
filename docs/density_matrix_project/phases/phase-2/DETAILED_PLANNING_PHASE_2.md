@@ -40,11 +40,11 @@ Implementation-backed status at this point:
     vectors per required size,
   - structured optional, deferred, and unsupported boundary evidence,
 - and a complete workflow-facing publication bundle is archived at
-  `benchmarks/density_matrix/artifacts/phase2_task6/` with
-  `task6_story6_publication_bundle.json` as the top-level manifest, linking the
+  `benchmarks/density_matrix/artifacts/workflow_evidence/` with
+  `workflow_publication_bundle.json` as the top-level manifest, linking the
   canonical workflow contract, end-to-end trace bundle, matrix baseline bundle,
   unsupported-workflow bundle, and interpretation bundle while preserving
-  traceability to the underlying Task 5 validation layers and now validating
+  traceability to the underlying validation-evidence layers and now validating
   lower-story semantic closure in addition to artifact presence, expected
   status, and cross-artifact workflow identity.
 
@@ -596,7 +596,7 @@ Current implementation-backed clarification:
   end-to-end 4/6 workflow evidence, workflow-scale exact-regime validation,
   unsupported-workflow boundaries, and interpretation guardrails.
 - The top-level completeness, status, and workflow-identity checks are encoded
-  in `task6_story6_publication_bundle.json`, which verifies mandatory artifact
+  in `workflow_publication_bundle.json`, which verifies mandatory artifact
   presence, expected status alignment, cross-artifact workflow identity, and
   lower-story semantic closure flags across the final Task 6 publication-facing
   evidence layers.

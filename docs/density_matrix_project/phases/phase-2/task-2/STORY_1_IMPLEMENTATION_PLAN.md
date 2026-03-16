@@ -39,7 +39,7 @@ Out of scope for this story:
   `evaluate_density_matrix_backend()`, and
   `expectation_value_of_density_energy_real()`.
 - The current positive anchor fixtures in `tests/VQE/test_VQE.py` and
-  `benchmarks/density_matrix/story2_vqe_density_validation.py` are the correct
+  `benchmarks/density_matrix/workflow_evidence/exact_density_vqe_validation.py` are the correct
   starting point for Story 1 evidence.
 - Story 1 should harden and expose the supported positive observable slice; it
   should not reopen the phase-level observable scope, bridge scope, or threshold
@@ -208,7 +208,7 @@ Out of scope for this story:
   rerun to verify the supported positive path.
 
 **Execution checklist**
-- [ ] Extend `benchmarks/density_matrix/story2_vqe_density_validation.py` or an
+- [ ] Extend `benchmarks/density_matrix/workflow_evidence/exact_density_vqe_validation.py` or an
       equivalent successor so Story 1 fixed-parameter cases emit stable metadata.
 - [ ] Record backend label, Hamiltonian metadata, noise specification, parameter
       vector, and raw energy result for the supported positive cases.
@@ -319,5 +319,5 @@ Story 1 is complete only when all of the following are true:
   supported `HEA`-generated circuit source and required gate/noise surface so
   the story does not silently expand into broader observable support.
 - The existing smoke cases in `tests/VQE/test_VQE.py` and the fixed-parameter
-  validation flow in `benchmarks/density_matrix/story2_vqe_density_validation.py`
+  validation flow in `benchmarks/density_matrix/workflow_evidence/exact_density_vqe_validation.py`
   are the right starting points for deterministic Story 1 evidence.

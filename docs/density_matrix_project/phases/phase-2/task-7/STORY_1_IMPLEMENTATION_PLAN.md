@@ -55,7 +55,7 @@ Out of scope for this story:
   already need a stable citation path for Phase 2 claims and should reuse Story
   1 outputs instead of inventing separate reference wording.
 - The existing Task 6 publication bundle under
-  `benchmarks/density_matrix/artifacts/phase2_task6/` already provides the
+  `benchmarks/density_matrix/artifacts/workflow_evidence/` already provides the
   canonical machine-readable evidence surface for workflow-backed claims. Story
   1 should point to that surface where appropriate instead of replacing it.
 - Story 1 should produce a discoverability and reference map only. It should not
@@ -261,7 +261,7 @@ Out of scope for this story:
       (for example under `benchmarks/density_matrix/`) for reference-map
       emission.
 - [ ] Emit one stable artifact in a Task 7 artifact directory
-      (for example `benchmarks/density_matrix/artifacts/phase2_task7/`).
+      (for example `benchmarks/density_matrix/artifacts/documentation_contract/`).
 - [ ] Record generation command, suite identity, and reference metadata with the
       emitted output.
 - [ ] Keep the emitted output narrow to discoverability and authority mapping

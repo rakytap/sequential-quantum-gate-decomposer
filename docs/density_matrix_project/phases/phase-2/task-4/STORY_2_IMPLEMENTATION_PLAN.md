@@ -39,17 +39,17 @@ Out of scope for this story:
 
 - Story 1 is already in place: the required local-noise models execute on the
   supported VQE-facing density path and expose reviewable bridge metadata through
-  `task4_story1_required_local_noise_validation.py`.
+  `required_local_noise_validation_validation.py`.
 - The current low-level exactness scaffold already exists in
   `benchmarks/density_matrix/circuits.py`,
   `benchmarks/density_matrix/validate_squander_vs_qiskit.py`, and
   `tests/density_matrix/test_density_matrix.py`.
-- `STORY2_MANDATORY_MICROCASES` in
+- `MANDATORY_MICROCASES` in
   `benchmarks/density_matrix/circuits.py` already provides a near-complete
   mandatory matrix for this story:
   1-qubit individual-noise cases, 2-qubit `U3` / `CNOT` individual-noise cases,
   and a 3-qubit mixed required-noise sequence.
-- `story2_vqe_density_validation.py` already imports the micro-validation bundle
+- `benchmarks/density_matrix/workflow_evidence/exact_density_vqe_validation.py` already imports the micro-validation bundle
   into the broader workflow package, so Story 2 output shape should stay stable
   enough for later reuse rather than forking into a wholly separate artifact
   vocabulary.
@@ -85,7 +85,7 @@ Out of scope for this story:
 
 **Execution checklist**
 - [ ] Review and freeze the mandatory Story 2 case inventory in
-      `STORY2_MANDATORY_MICROCASES`.
+      `MANDATORY_MICROCASES`.
 - [ ] Confirm that the matrix covers `local_depolarizing`,
       `amplitude_damping`, and `phase_damping` individually, plus at least one
       mixed required-noise schedule.
@@ -271,7 +271,7 @@ Out of scope for this story:
 
 **Execution checklist**
 - [ ] Start from `validate_squander_vs_qiskit.py` and its current
-      `story2_micro_validation_bundle` output instead of creating a parallel
+      `micro_validation_bundle` output instead of creating a parallel
       exactness harness.
 - [ ] Add Task 4-specific requirement metadata only where it materially improves
       traceability for required local-noise coverage.
@@ -381,7 +381,7 @@ Story 2 is complete only when all of the following are true:
 
 ## Implementation Notes
 
-- `STORY2_MANDATORY_MICROCASES` in
+- `MANDATORY_MICROCASES` in
   `benchmarks/density_matrix/circuits.py` already matches the shape of the
   Story 2 contract closely. Implementation should harden and reuse it rather
   than invent another overlapping mandatory matrix.
@@ -395,10 +395,10 @@ Story 2 is complete only when all of the following are true:
   starting points for fast regression coverage.
 - Story 1 already established canonical required local-noise naming and
   positive-path evidence in
-  `benchmarks/density_matrix/task4_story1_required_local_noise_validation.py`.
+  `benchmarks/density_matrix/noise_support/required_local_noise_validation.py`.
   Story 2 should stay aligned with that vocabulary and avoid introducing
   alternate labels for the same required models.
-- `story2_vqe_density_validation.py` already consumes the micro-validation
+- `benchmarks/density_matrix/workflow_evidence/exact_density_vqe_validation.py` already consumes the micro-validation
   bundle inside the broader workflow package. Story 2 should preserve bundle
   compatibility where possible so later Task 4 stories can reuse the same local
   exactness evidence directly.

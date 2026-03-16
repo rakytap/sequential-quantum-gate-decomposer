@@ -51,7 +51,7 @@ Out of scope for this story:
   `density_valid_pass`, `trace_pass`, `observable_pass`, and case-level status.
 - The canonical workflow harness already records workflow-side execution and
   performance metrics in
-  `benchmarks/density_matrix/story2_vqe_density_validation.py`, including
+  `benchmarks/density_matrix/workflow_evidence/exact_density_vqe_validation.py`, including
   `workflow_completed`, runtime fields, and process peak-memory capture such as
   `total_case_runtime_ms` and `process_peak_rss_kb`.
 - Task 4 Story 2 and Story 5 already preserve required-noise and workflow-scale
@@ -133,7 +133,7 @@ Out of scope for this story:
 - [ ] Reuse the micro-validation metric fields already emitted by
       `validate_squander_vs_qiskit.py`.
 - [ ] Reuse the workflow-completion and performance fields already emitted by
-      `story2_vqe_density_validation.py` and related required-noise workflow
+      `benchmarks/density_matrix/workflow_evidence/exact_density_vqe_validation.py` and related required-noise workflow
       wrappers.
 - [ ] Add the smallest derived summary fields needed for Task 5 Story 4 only
       where current bundle semantics are insufficient.
@@ -406,7 +406,7 @@ Story 4 is complete only when all of the following are true:
 - `benchmarks/density_matrix/validate_squander_vs_qiskit.py` already provides
   the canonical internal-consistency metrics for mandatory micro-validation
   cases. Story 4 should build on those fields rather than duplicate them.
-- `benchmarks/density_matrix/story2_vqe_density_validation.py` already provides
+- `benchmarks/density_matrix/workflow_evidence/exact_density_vqe_validation.py` already provides
   workflow-completion, runtime, and peak-memory capture for workflow-scale cases.
   Story 4 should reuse those fields and add only the smallest derived
   Task 5-level stability summary needed by the planning contract.

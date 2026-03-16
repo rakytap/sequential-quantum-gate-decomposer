@@ -41,7 +41,7 @@ Out of scope for this story:
 - The current implementation already contains partial unsupported-case hooks in
   `validate_density_anchor_support()` and related VQE tests, plus structured
   unsupported artifact capture in
-  `benchmarks/density_matrix/story2_vqe_density_validation.py`.
+  `benchmarks/density_matrix/workflow_evidence/exact_density_vqe_validation.py`.
 - The frozen source-of-truth decisions remain:
   `P2-ADR-009`, `P2-ADR-010`, `P2-ADR-011`, `P2-ADR-012`, and the backend,
   observable, bridge, and support-matrix decisions in
@@ -206,7 +206,7 @@ Out of scope for this story:
 
 **Execution checklist**
 - [ ] Extend the existing unsupported artifact pattern in
-      `benchmarks/density_matrix/story2_vqe_density_validation.py` where useful
+      `benchmarks/density_matrix/workflow_evidence/exact_density_vqe_validation.py` where useful
       for workflow-level negative cases.
 - [ ] Decide whether low-level Story 2 validators should stay supported-only or
       gain a separate unsupported bundle, but keep the mandatory supported gate
@@ -355,7 +355,7 @@ Story 3 is complete only when all of the following are true:
   Story 3 categories, so Story 3 should evolve that path into the full
   support-surface authority rather than introduce a second unsupported-case
   framework.
-- `benchmarks/density_matrix/story2_vqe_density_validation.py` already emits
+- `benchmarks/density_matrix/workflow_evidence/exact_density_vqe_validation.py` already emits
   structured unsupported artifacts for at least one backend-mismatch case.
   Story 3 should reuse and extend that pattern where it adds negative evidence.
 - The Story 2 low-level micro-validation bundle is a supported-only local

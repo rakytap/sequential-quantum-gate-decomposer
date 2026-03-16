@@ -253,7 +253,7 @@ Out of scope for this story:
 - [ ] Keep the validation entry point explicit and documented so Story 2 can be
       rerun independently of the larger workflow package.
 - [ ] Ensure the Story 2 path remains distinct from the workflow-level VQE
-      validation in `story2_vqe_density_validation.py`.
+      validation in `benchmarks/density_matrix/workflow_evidence/exact_density_vqe_validation.py`.
 
 **Evidence produced**
 - One stable validation command for the Story 2 micro-validation matrix.

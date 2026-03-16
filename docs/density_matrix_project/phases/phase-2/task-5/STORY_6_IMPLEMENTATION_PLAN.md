@@ -40,9 +40,9 @@ Out of scope for this story:
   guardrails already define the mandatory Task 5 evidence layers that Story 6
   must package.
 - The current project already has two strong top-level manifest patterns:
-  `build_story5_bundle()` in
-  `benchmarks/density_matrix/story2_vqe_density_validation.py` and
-  `benchmarks/density_matrix/task4_story6_publication_bundle.py`.
+  `build_exact_density_validation_bundle()` in
+  `benchmarks/density_matrix/workflow_evidence/exact_density_vqe_validation.py` and
+  `benchmarks/density_matrix/noise_support/noise_support_publication_bundle.py`.
 - Those existing manifest patterns already stabilize useful top-level fields such
   as `suite_name`, `status`, `backend`, `reference_backend`, `software`,
   `provenance`, `summary`, and `artifacts`, plus per-artifact fields such as
@@ -394,11 +394,11 @@ Story 6 is complete only when all of the following are true:
 
 ## Implementation Notes
 
-- `benchmarks/density_matrix/story2_vqe_density_validation.py` already contains
+- `benchmarks/density_matrix/workflow_evidence/exact_density_vqe_validation.py` already contains
   the project’s strongest initial publication-bundle pattern through
-  `build_story5_bundle()`. Story 6 should adapt that shape for Task 5 rather
+  `build_exact_density_validation_bundle()`. Story 6 should adapt that shape for Task 5 rather
   than invent another manifest style.
-- `benchmarks/density_matrix/task4_story6_publication_bundle.py` already shows
+- `benchmarks/density_matrix/noise_support/noise_support_publication_bundle.py` already shows
   how to validate a richer top-level manifest with required summary fields and
   linked raw artifacts. Story 6 should reuse that validation style where
   practical.

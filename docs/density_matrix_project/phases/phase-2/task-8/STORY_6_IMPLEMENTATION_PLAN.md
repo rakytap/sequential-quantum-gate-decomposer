@@ -38,7 +38,7 @@ Out of scope for this story:
 - Stories 1 to 5 are already in place and provide the Paper 1 claim package,
   surface alignment, traceability, evidence closure, and supported-path wording.
 - Story 5 is expected to emit
-  `benchmarks/density_matrix/artifacts/phase2_task8/story5_supported_path_scope_bundle.json`
+  `benchmarks/density_matrix/artifacts/publication_claim_package/supported_path_scope_bundle.json`
   or an equivalent rerunnable checker. Story 6 should assume supported-path
   honesty is already frozen and focus on roadmap framing.
 - The broader publication ladder is already frozen by:
@@ -248,7 +248,7 @@ Out of scope for this story:
       (for example under `benchmarks/density_matrix/`) for future-work boundary
       audit emission.
 - [ ] Emit one stable artifact in a Task 8 artifact directory such as
-      `benchmarks/density_matrix/artifacts/phase2_task8/story6_future_work_boundary_bundle.json`.
+      `benchmarks/density_matrix/artifacts/publication_claim_package/future_work_boundary_bundle.json`.
 - [ ] Record source references, generation command, and scope notes in the
       output.
 - [ ] Keep the output narrow to roadmap framing and milestone positioning rather

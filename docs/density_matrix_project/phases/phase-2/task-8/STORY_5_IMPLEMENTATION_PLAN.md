@@ -38,7 +38,7 @@ Out of scope for this story:
 - Stories 1 to 4 are already in place and provide the Paper 1 claim package,
   publication-surface alignment, traceability, and evidence-closure rules.
 - Story 4 is expected to emit
-  `benchmarks/density_matrix/artifacts/phase2_task8/story4_evidence_closure_bundle.json`
+  `benchmarks/density_matrix/artifacts/publication_claim_package/evidence_closure_bundle.json`
   or an equivalent rerunnable checker. Story 5 should assume the evidence bar is
   already frozen and focus on supported-path wording.
 - Supported-path semantics are already frozen by:
@@ -50,7 +50,7 @@ Out of scope for this story:
   - `PHASE_2_DOCUMENTATION_INDEX.md`,
   - and `P2-ADR-009` through `P2-ADR-013`.
 - The canonical machine-readable workflow evidence surface remains
-  `task6_story6_publication_bundle.json`, and the documentation entry surface
+  `workflow_publication_bundle.json`, and the documentation entry surface
   remains `PHASE_2_DOCUMENTATION_INDEX.md`.
 - Story 5 should reuse existing supported-path vocabulary rather than inventing
   a new description of the Phase 2 workflow.
@@ -256,7 +256,7 @@ Out of scope for this story:
       (for example under `benchmarks/density_matrix/`) for supported-path scope
       summary emission.
 - [ ] Emit one stable artifact in a Task 8 artifact directory such as
-      `benchmarks/density_matrix/artifacts/phase2_task8/story5_supported_path_scope_bundle.json`.
+      `benchmarks/density_matrix/artifacts/publication_claim_package/supported_path_scope_bundle.json`.
 - [ ] Record source references, generation command, and scope notes in the
       output.
 - [ ] Keep the output narrow to supported-path and exact-regime wording rather

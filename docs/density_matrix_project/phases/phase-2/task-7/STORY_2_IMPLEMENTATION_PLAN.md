@@ -40,9 +40,9 @@ Out of scope for this story:
   relevant contract statements live. Story 2 should reuse that map rather than
   rediscover sources from scratch.
 - Story 1 now emits
-  `benchmarks/density_matrix/task7_story1_contract_reference_validation.py`,
+  `benchmarks/density_matrix/documentation_contract/contract_reference_validation.py`,
   writing
-  `benchmarks/density_matrix/artifacts/phase2_task7/story1_contract_reference_map.json`,
+  `benchmarks/density_matrix/artifacts/documentation_contract/contract_reference_map.json`,
   and establishes
   `docs/density_matrix_project/phases/phase-2/PHASE_2_DOCUMENTATION_INDEX.md`
   as the stable entry point for the Phase 2 document bundle. Story 2 should
@@ -265,7 +265,7 @@ Out of scope for this story:
       (for example under `benchmarks/density_matrix/`) for supported-entry
       summary emission.
 - [ ] Emit one stable artifact in a Task 7 artifact directory
-      (for example `benchmarks/density_matrix/artifacts/phase2_task7/`).
+      (for example `benchmarks/density_matrix/artifacts/documentation_contract/`).
 - [ ] Record source references, generation command, and scope notes in the
       output.
 - [ ] Keep the output narrow to supported-entry and workflow clarity rather than

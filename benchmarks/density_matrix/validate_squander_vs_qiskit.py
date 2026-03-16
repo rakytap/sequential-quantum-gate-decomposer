@@ -1,8 +1,7 @@
-"""
-Validation: Story 2 Micro-Validation Matrix
+"""Mandatory micro-validation matrix for the exact observable path.
 
-Validates SQUANDER's mandatory 1 to 3 qubit Story 2 microcases against Qiskit
-Aer density-matrix simulation using the frozen exact observable contract:
+Validates the required 1- to 3-qubit microcases against Qiskit Aer
+density-matrix simulation using the frozen exact-observable contract:
 `Re Tr(H*rho)`, density validity, trace preservation, and Hermitian-observable
 consistency.
 
@@ -26,16 +25,16 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from benchmarks.density_matrix.circuits import STORY2_MANDATORY_MICROCASES_BY_QUBITS  # noqa: E402
+from benchmarks.density_matrix.circuits import MANDATORY_MICROCASES_BY_QUBITS  # noqa: E402
 
 PRIMARY_BACKEND = "density_matrix"
 REFERENCE_BACKEND = "qiskit_aer_density_matrix"
-SUITE_NAME = "story2_mandatory_micro_validation"
+SUITE_NAME = "mandatory_micro_validation"
 ENERGY_ERROR_TOL = 1e-10
 VALIDITY_TOL = 1e-10
 TRACE_TOL = 1e-10
 OBSERVABLE_IMAG_TOL = 1e-10
-ARTIFACT_FILENAME = "story2_micro_validation_bundle.json"
+ARTIFACT_FILENAME = "micro_validation_bundle.json"
 ARTIFACT_CORE_FIELDS = (
     "suite_name",
     "status",
@@ -48,8 +47,8 @@ ARTIFACT_CORE_FIELDS = (
 )
 
 
-def parse_story2_operation(operation: str):
-    """Return machine-readable metadata for one Story 2 builder operation."""
+def parse_microcase_operation(operation: str):
+    """Return machine-readable metadata for one microcase builder operation."""
     if operation.startswith("U3("):
         payload = operation[len("U3(") : -1].split(",")
         return {
@@ -140,12 +139,12 @@ def parse_story2_operation(operation: str):
             "raw_operation": operation,
         }
 
-    raise ValueError(f"Unsupported Story 2 operation format: {operation}")
+    raise ValueError(f"Unsupported microcase operation format: {operation}")
 
 
-def build_story2_operation_audit(case, operations):
+def build_microcase_operation_audit(case, operations):
     """Summarize required gate/noise coverage and mixed-sequence order."""
-    operation_metadata = [parse_story2_operation(operation) for operation in operations]
+    operation_metadata = [parse_microcase_operation(operation) for operation in operations]
     gate_operations = [
         operation for operation in operation_metadata if operation["kind"] == "gate"
     ]
@@ -220,7 +219,7 @@ def build_software_metadata():
     }
 
 
-def _story2_case_base(case):
+def _microcase_base(case):
     return {
         "case_name": case["case_name"],
         "status": "fail",
@@ -235,13 +234,13 @@ def _story2_case_base(case):
     }
 
 
-def validate_story2_case(case, verbose=True):
-    """Evaluate one mandatory Story 2 microcase."""
+def validate_microcase(case, verbose=True):
+    """Evaluate one mandatory micro-validation microcase."""
     builder = case["builder_fn"]()
     squander_rho = builder.run_squander()
     qiskit_rho = builder.run_qiskit()
     operations = list(builder.ops)
-    operation_audit = build_story2_operation_audit(case, operations)
+    operation_audit = build_microcase_operation_audit(case, operations)
 
     squander_arr = np.asarray(squander_rho.to_numpy())
     qiskit_arr = np.asarray(qiskit_rho)
@@ -282,7 +281,7 @@ def validate_story2_case(case, verbose=True):
         and operation_audit["operation_audit_pass"]
     )
 
-    result = _story2_case_base(case)
+    result = _microcase_base(case)
     result.update(
         {
             "status": "pass" if case_pass else "fail",
@@ -330,12 +329,12 @@ def validate_story2_case(case, verbose=True):
     return result
 
 
-def capture_story2_case(case, verbose=True):
-    """Capture validation output for one mandatory Story 2 microcase."""
+def capture_microcase(case, verbose=True):
+    """Capture validation output for one mandatory micro-validation microcase."""
     try:
-        return validate_story2_case(case, verbose=verbose)
+        return validate_microcase(case, verbose=verbose)
     except Exception as exc:
-        result = _story2_case_base(case)
+        result = _microcase_base(case)
         result.update(
             {
                 "status": "fail",
@@ -359,22 +358,22 @@ def capture_story2_case(case, verbose=True):
 
 
 def run_validation(verbose=True):
-    """Run the mandatory Story 2 micro-validation matrix."""
+    """Run the mandatory micro-validation micro-validation matrix."""
     if verbose:
         print("=" * 78)
         print(
-            "  Story 2 Micro-Validation [{} vs {}]".format(
+            "  micro-validation Micro-Validation [{} vs {}]".format(
                 PRIMARY_BACKEND, REFERENCE_BACKEND
             )
         )
         print("=" * 78)
 
     results = []
-    for qbit_num in sorted(STORY2_MANDATORY_MICROCASES_BY_QUBITS.keys()):
+    for qbit_num in sorted(MANDATORY_MICROCASES_BY_QUBITS.keys()):
         if verbose:
             print(f"\n--- {qbit_num}-QUBIT MANDATORY MICROCASES ---", flush=True)
-        for case in STORY2_MANDATORY_MICROCASES_BY_QUBITS[qbit_num]:
-            results.append(capture_story2_case(case, verbose=verbose))
+        for case in MANDATORY_MICROCASES_BY_QUBITS[qbit_num]:
+            results.append(capture_microcase(case, verbose=verbose))
     return results
 
 
@@ -418,7 +417,7 @@ def write_artifact_bundle(output_path: Path, bundle):
 
 
 def print_summary(results):
-    """Print Story 2 summary."""
+    """Print micro-validation summary."""
     print("\n" + "=" * 78)
     print("  SUMMARY")
     print("=" * 78)
@@ -454,9 +453,9 @@ def print_summary(results):
     print(f"  Total: {passed}/{total} mandatory microcases passed")
 
     if passed == total:
-        print("\n  ALL TESTS PASSED - Story 2 mandatory micro-validation gate is closed.")
+        print("\n  ALL TESTS PASSED - micro-validation mandatory micro-validation gate is closed.")
     else:
-        print("\n  Some mandatory microcases failed - Story 2 is not yet closed.")
+        print("\n  Some mandatory microcases failed - micro-validation is not yet closed.")
 
     print("=" * 78)
 
@@ -467,7 +466,7 @@ def main():
         "--output-dir",
         type=Path,
         default=None,
-        help="Optional directory for the Story 2 JSON artifact bundle.",
+        help="Optional directory for the micro-validation JSON artifact bundle.",
     )
     args = parser.parse_args()
 

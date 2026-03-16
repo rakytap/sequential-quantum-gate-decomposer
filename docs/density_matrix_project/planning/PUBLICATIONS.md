@@ -148,7 +148,7 @@ training workflow without sacrificing correctness or reproducibility?
   status, semantic-closure rules, and canonical workflow identity, including the
   canonical workflow contract, end-to-end trace bundle, workflow matrix bundle,
   unsupported-boundary bundle, and interpretation-guardrail bundle, while
-  preserving traceability to the underlying Task 5 validation layers,
+  preserving traceability to the underlying validation-evidence layers,
 - only mandatory, complete, supported evidence may close the main Phase 2
   publication claim,
 - and a clear statement of supported gate/noise scope plus explicit deferred
@@ -158,15 +158,15 @@ training workflow without sacrificing correctness or reproducibility?
 
 - implemented artifacts now include a complete top-level canonical-workflow
   manifest at
-  `benchmarks/density_matrix/artifacts/phase2_task6/task6_story6_publication_bundle.json`,
+  `benchmarks/density_matrix/artifacts/workflow_evidence/workflow_publication_bundle.json`,
 - mandatory artifact presence, expected-status checks, workflow-identity checks,
   and lower-story semantic-closure checks now pass across all five required Task
   6 publication artifacts:
-  `story1_canonical_workflow_contract.json`,
-  `story2_end_to_end_trace_bundle.json`,
-  `story3_matrix_baseline_bundle.json`,
-  `story4_unsupported_workflow_bundle.json`, and
-  `story5_interpretation_bundle.json`,
+  `workflow_contract_bundle.json`,
+  `end_to_end_trace_bundle.json`,
+  `matrix_baseline_bundle.json`,
+  `unsupported_workflow_bundle.json`, and
+  `workflow_interpretation_bundle.json`,
 - the Task 6 publication bundle packages one stable workflow ID and contract
   version, two passed end-to-end required cases at 4 and 6 qubits, 40 passed
   fixed-parameter required cases across 4 / 6 / 8 / 10 qubits, and explicit

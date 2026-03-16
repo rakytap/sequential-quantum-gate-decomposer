@@ -38,13 +38,13 @@ Out of scope for this story:
   `describe_density_bridge()` plus the Story 1 `bridge_*` artifact vocabulary.
 - Story 2 is already in place: the mandatory supported bridge surface is defined
   and locally validated through the dedicated
-  `benchmarks/density_matrix/task3_story2_bridge_validation.py` suite and the
-  `task3_story2_bridge_micro_validation_bundle.json` artifact bundle.
+  `benchmarks/density_matrix/bridge_scope/bridge_validation.py` suite and the
+  `bridge_micro_validation_bundle.json` artifact bundle.
 - The current implementation already contains several relevant unsupported-case
   hooks in `validate_density_anchor_support()`,
   `lower_anchor_circuit_to_noisy_circuit()`, and
   `append_density_noise_for_gate_index()`.
-- `benchmarks/density_matrix/story2_vqe_density_validation.py` already emits at
+- `benchmarks/density_matrix/workflow_evidence/exact_density_vqe_validation.py` already emits at
   least one structured unsupported artifact and therefore provides the natural
   pattern for Story 3 negative evidence.
 - Story 2 introduced canonical per-case bridge-validation fields that Story 3
@@ -257,11 +257,11 @@ Out of scope for this story:
 
 **Execution checklist**
 - [ ] Decide whether bridge-local unsupported evidence should extend the
-      dedicated `task3_story2_bridge_validation.py` surface, the broader
-      `story2_vqe_density_validation.py` workflow surface, or both, and keep the
+      dedicated `bridge_validation.py` surface, the broader
+      `benchmarks/density_matrix/workflow_evidence/exact_density_vqe_validation.py` workflow surface, or both, and keep the
       distinction explicit.
 - [ ] Extend the unsupported artifact pattern in
-      `benchmarks/density_matrix/story2_vqe_density_validation.py` for bridge
+      `benchmarks/density_matrix/workflow_evidence/exact_density_vqe_validation.py` for bridge
       boundary cases.
 - [ ] Use stable fields for unsupported category, first unsupported condition,
       source type, backend, and case identity.
@@ -386,7 +386,7 @@ Story 3 is complete only when all of the following are true:
   should decide explicitly whether negative bridge evidence belongs beside that
   local bundle, the workflow-level bundle, or both, instead of drifting between
   the two without a contract.
-- `benchmarks/density_matrix/story2_vqe_density_validation.py` already emits
+- `benchmarks/density_matrix/workflow_evidence/exact_density_vqe_validation.py` already emits
   structured unsupported artifacts for at least one density-backend mismatch
   case. Story 3 should extend that pattern where it adds Task 3 negative
   evidence.

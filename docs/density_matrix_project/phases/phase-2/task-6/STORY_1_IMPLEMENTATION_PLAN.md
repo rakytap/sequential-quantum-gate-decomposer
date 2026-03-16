@@ -52,21 +52,21 @@ Out of scope for this story:
 - Task 5 already provides the canonical validation substrate needed to define
   Task 6's canonical workflow contract:
   - local correctness bundle:
-    `benchmarks/density_matrix/task5_story1_local_correctness_validation.py`,
+    `benchmarks/density_matrix/validation_evidence/local_correctness_validation.py`,
   - workflow matrix bundle:
-    `benchmarks/density_matrix/task5_story2_workflow_baseline_validation.py`,
+    `benchmarks/density_matrix/validation_evidence/workflow_baseline_validation.py`,
   - trace and anchor bundle:
-    `benchmarks/density_matrix/task5_story3_trace_anchor_validation.py`,
+    `benchmarks/density_matrix/validation_evidence/trace_anchor_validation.py`,
   - metric completeness bundle:
-    `benchmarks/density_matrix/task5_story4_metric_completeness_validation.py`,
+    `benchmarks/density_matrix/validation_evidence/metric_completeness_validation.py`,
   - interpretation bundle:
-    `benchmarks/density_matrix/task5_story5_interpretation_validation.py`,
+    `benchmarks/density_matrix/validation_evidence/interpretation_validation.py`,
   - top-level publication bundle:
-    `benchmarks/density_matrix/task5_story6_publication_bundle.py`.
-- `benchmarks/density_matrix/artifacts/phase2_task5/task5_story6_publication_bundle.json`
+    `benchmarks/density_matrix/validation_evidence/validation_evidence_publication_bundle.py`.
+- `benchmarks/density_matrix/artifacts/validation_evidence/validation_evidence_publication_bundle.json`
   already contains stable artifact IDs, expected statuses, generation commands,
   and summary fields that can seed Task 6 Story 1 contract vocabulary.
-- `benchmarks/density_matrix/story2_vqe_density_validation.py` remains the
+- `benchmarks/density_matrix/workflow_evidence/exact_density_vqe_validation.py` remains the
   canonical workflow-execution harness and should stay the execution source
   behind Task 6 contract claims.
 - Frozen phase decisions already define the canonical workflow content and
@@ -133,7 +133,7 @@ Out of scope for this story:
 - Story 1 remains a contract-layer assembly and does not fork execution logic.
 
 **Execution checklist**
-- [ ] Use `task5_story6_publication_bundle.json` as the primary inventory
+- [ ] Use `validation_evidence_publication_bundle.json` as the primary inventory
       reference for mandatory artifact IDs, status semantics, and command
       provenance.
 - [ ] Map existing Task 5 summary fields to Task 6 contract sections
@@ -316,7 +316,7 @@ Out of scope for this story:
 - [ ] Add one Story 1 entry command, script, or wrapper
       (for example under `benchmarks/density_matrix/`) for contract emission.
 - [ ] Emit one stable artifact in a Task 6 artifact directory
-      (for example `benchmarks/density_matrix/artifacts/phase2_task6/`).
+      (for example `benchmarks/density_matrix/artifacts/workflow_evidence/`).
 - [ ] Record generation command, suite identity, and provenance metadata with
       the artifact.
 - [ ] Keep Story 1 artifact narrow to canonical contract definition and avoid
@@ -389,13 +389,13 @@ Story 1 is complete only when all of the following are true:
 
 - Reuse existing Task 5 evidence surfaces as the primary source for contract
   vocabulary and provenance:
-  `task5_story1_local_correctness_validation.py`,
-  `task5_story2_workflow_baseline_validation.py`,
-  `task5_story3_trace_anchor_validation.py`,
-  `task5_story4_metric_completeness_validation.py`,
-  `task5_story5_interpretation_validation.py`, and
-  `task5_story6_publication_bundle.py`.
-- `task5_story6_publication_bundle.json` already captures stable artifact IDs,
+  `local_correctness_validation_validation.py`,
+  `task5_workflow_baseline_reference_validation.py`,
+  `trace_anchor_validation_validation.py`,
+  `metric_completeness_validation_validation.py`,
+  `validation_evidence_interpretation_validation.py`, and
+  `validation_evidence_publication_bundle.py`.
+- `validation_evidence_publication_bundle.json` already captures stable artifact IDs,
   expected statuses, generation commands, and summary semantics; Story 1 should
   reuse this pattern instead of creating a parallel status vocabulary.
 - Keep Story 1 focused on contract expression, not execution expansion. Execution

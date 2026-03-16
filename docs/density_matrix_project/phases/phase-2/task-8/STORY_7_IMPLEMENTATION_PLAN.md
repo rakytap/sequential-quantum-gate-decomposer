@@ -39,24 +39,24 @@ Out of scope for this story:
   claim package, multi-surface alignment, claim traceability, evidence closure,
   supported-path honesty, and future-work framing.
 - Story 1 is expected to emit
-  `benchmarks/density_matrix/artifacts/phase2_task8/story1_claim_package.json`.
+  `benchmarks/density_matrix/artifacts/publication_claim_package/claim_package.json`.
 - Story 2 is expected to emit
-  `benchmarks/density_matrix/artifacts/phase2_task8/story2_publication_surface_alignment.json`.
+  `benchmarks/density_matrix/artifacts/publication_claim_package/publication_surface_alignment.json`.
 - Story 3 is expected to emit
-  `benchmarks/density_matrix/artifacts/phase2_task8/story3_claim_traceability_bundle.json`.
+  `benchmarks/density_matrix/artifacts/publication_claim_package/claim_traceability_bundle.json`.
 - Story 4 is expected to emit
-  `benchmarks/density_matrix/artifacts/phase2_task8/story4_evidence_closure_bundle.json`.
+  `benchmarks/density_matrix/artifacts/publication_claim_package/evidence_closure_bundle.json`.
 - Story 5 is expected to emit
-  `benchmarks/density_matrix/artifacts/phase2_task8/story5_supported_path_scope_bundle.json`.
+  `benchmarks/density_matrix/artifacts/publication_claim_package/supported_path_scope_bundle.json`.
 - Story 6 is expected to emit
-  `benchmarks/density_matrix/artifacts/phase2_task8/story6_future_work_boundary_bundle.json`.
+  `benchmarks/density_matrix/artifacts/publication_claim_package/future_work_boundary_bundle.json`.
 - The Phase 2 paper package already spans multiple document classes:
   - `ABSTRACT_PHASE_2.md`,
   - `SHORT_PAPER_PHASE_2.md`,
   - `SHORT_PAPER_NARRATIVE.md`,
   - `PAPER_PHASE_2.md`,
   - `PHASE_2_DOCUMENTATION_INDEX.md`,
-  - and `task6_story6_publication_bundle.json`.
+  - and `workflow_publication_bundle.json`.
 - Story 7 should unify these surfaces without replacing their roles. It is the
   Task 8 package and integrity layer, not a new source of Phase 2 decisions.
 
@@ -156,7 +156,7 @@ Out of scope for this story:
 **Execution checklist**
 - [ ] Preserve `PHASE_2_DOCUMENTATION_INDEX.md` as the stable contract entry
       point for reviewer navigation.
-- [ ] Preserve `task6_story6_publication_bundle.json` as the stable
+- [ ] Preserve `workflow_publication_bundle.json` as the stable
       machine-readable workflow-evidence entry point.
 - [ ] Record how paper-facing surfaces should point reviewers to those anchors.
 - [ ] Add integrity checks that fail if the reviewer path becomes ambiguous or
@@ -372,7 +372,7 @@ Story 7 is complete only when all of the following are true:
 - Prefer a thin manifest plus checker over a large narrative summary. Reviewers
   need consistent terms and stable entry paths more than more prose.
 - Reuse `PHASE_2_DOCUMENTATION_INDEX.md` and
-  `task6_story6_publication_bundle.json` as the default reviewer anchors unless
+  `workflow_publication_bundle.json` as the default reviewer anchors unless
   a later story reveals a strong reason to add another entry surface.
 - Keep the mandatory file set explicit. Story 7 should remain reproducible and
   auditable even when the broader repository keeps evolving.

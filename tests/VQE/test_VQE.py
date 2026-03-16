@@ -126,7 +126,7 @@ class Test_VQE:
     def _get_task4_story1_required_noise_cases():
         return (
             {
-                "case_name": "task4_story1_4q_local_depolarizing_positive",
+                "case_name": "required_local_noise_4q_local_depolarizing_positive",
                 "qbit_num": 4,
                 "requested_noise_channel": "local_depolarizing",
                 "expected_target": 0,
@@ -142,7 +142,7 @@ class Test_VQE:
                 ],
             },
             {
-                "case_name": "task4_story1_4q_amplitude_damping_positive",
+                "case_name": "required_local_noise_4q_amplitude_damping_positive",
                 "qbit_num": 4,
                 "requested_noise_channel": "amplitude_damping",
                 "expected_target": 1,
@@ -158,7 +158,7 @@ class Test_VQE:
                 ],
             },
             {
-                "case_name": "task4_story1_4q_phase_damping_positive",
+                "case_name": "required_local_noise_4q_phase_damping_positive",
                 "qbit_num": 4,
                 "requested_noise_channel": "phase_damping",
                 "expected_target": 0,
@@ -233,7 +233,7 @@ class Test_VQE:
         return vqe, Hamiltonian
 
     @staticmethod
-    def _insert_story2_noise(base_circuit, density_noise):
+    def _insert_reference_noise(base_circuit, density_noise):
         pytest.importorskip("qiskit")
         pytest.importorskip("qiskit_aer")
 
@@ -296,7 +296,7 @@ class Test_VQE:
 
         from qiskit_aer import AerSimulator
 
-        noisy_qiskit_circuit = self._insert_story2_noise(
+        noisy_qiskit_circuit = self._insert_reference_noise(
             vqe.get_Qiskit_Circuit(),
             self._get_story2_noise(),
         )
@@ -830,7 +830,7 @@ class Test_VQE:
         pytest.importorskip("qiskit")
         pytest.importorskip("qiskit_aer")
 
-        from benchmarks.density_matrix.story2_vqe_density_validation import (
+        from benchmarks.density_matrix.workflow_evidence.exact_density_vqe_validation import (
             run_fixed_parameter_case,
         )
 
@@ -848,7 +848,7 @@ class Test_VQE:
             for op in artifact["bridge_operations"]
         )
 
-    def test_task4_story1_required_local_noise_models_execute_on_supported_path(self):
+    def test_required_local_noise_validation_models_execute_on_supported_path(self):
         for case in self._get_task4_story1_required_noise_cases():
             density_vqe, _ = self._build_story2_density_vqe(
                 case["qbit_num"],
@@ -885,11 +885,11 @@ class Test_VQE:
                 [case["expected_value"]]
             )
 
-    def test_task4_story1_required_local_noise_bundle_schema(self):
+    def test_required_local_noise_bundle_schema(self):
         pytest.importorskip("qiskit")
         pytest.importorskip("qiskit_aer")
 
-        from benchmarks.density_matrix.task4_story1_required_local_noise_validation import (
+        from benchmarks.density_matrix.noise_support.required_local_noise_validation import (
             REQUIRED_LOCAL_NOISE_CASES,
             REQUIRED_LOCAL_NOISE_MODELS,
             build_artifact_bundle,
@@ -932,7 +932,7 @@ class Test_VQE:
         pytest.importorskip("qiskit")
         pytest.importorskip("qiskit_aer")
 
-        from benchmarks.density_matrix.task3_story2_bridge_validation import (
+        from benchmarks.density_matrix.bridge_scope.bridge_validation import (
             MANDATORY_BRIDGE_MICROCASES,
             validate_bridge_microcase,
         )
@@ -940,7 +940,7 @@ class Test_VQE:
         case = next(
             case
             for case in MANDATORY_BRIDGE_MICROCASES
-            if case["case_name"] == "task3_story2_3q_mixed_local_noise_sequence"
+            if case["case_name"] == "bridge_3q_mixed_local_noise_sequence"
         )
         result = validate_bridge_microcase(case, verbose=False)
 
@@ -961,7 +961,7 @@ class Test_VQE:
         pytest.importorskip("qiskit")
         pytest.importorskip("qiskit_aer")
 
-        from benchmarks.density_matrix.task3_story2_bridge_validation import (
+        from benchmarks.density_matrix.bridge_scope.bridge_validation import (
             MANDATORY_BRIDGE_MICROCASES,
             build_artifact_bundle,
             run_validation,
@@ -980,8 +980,8 @@ class Test_VQE:
         assert all(case["status"] == "pass" for case in bundle["cases"])
         assert all("bridge_operations" in case for case in bundle["cases"])
 
-    def test_task3_story3_unsupported_bridge_bundle_schema(self):
-        from benchmarks.density_matrix.task3_story3_unsupported_bridge_validation import (
+    def test_unsupported_bridge_bundle_schema(self):
+        from benchmarks.density_matrix.bridge_scope.unsupported_bridge_validation import (
             UNSUPPORTED_CASE_BUILDERS,
             build_artifact_bundle,
             run_validation,
@@ -1008,11 +1008,11 @@ class Test_VQE:
         assert all(case["status"] == "unsupported" for case in bundle["cases"])
         assert all(case["error_match_pass"] for case in bundle["cases"])
 
-    def test_task4_story4_unsupported_noise_bundle_schema(self):
+    def test_unsupported_noise_bundle_schema(self):
         pytest.importorskip("qiskit")
         pytest.importorskip("qiskit_aer")
 
-        from benchmarks.density_matrix.task4_story4_unsupported_noise_validation import (
+        from benchmarks.density_matrix.noise_support.unsupported_noise_validation import (
             TASK4_UNSUPPORTED_CASES,
             build_artifact_bundle,
             run_validation,
@@ -1081,17 +1081,17 @@ class Test_VQE:
         pytest.importorskip("qiskit")
         pytest.importorskip("qiskit_aer")
 
-        from benchmarks.density_matrix.story2_vqe_density_validation import (
-            build_story4_parameter_sets,
-            run_story4_workflow_case,
+        from benchmarks.density_matrix.workflow_evidence.exact_density_vqe_validation import (
+            build_exact_regime_parameter_sets,
+            run_exact_regime_workflow_case,
         )
 
         density_vqe, _ = self._build_story2_density_vqe(4)
-        parameter_set = build_story4_parameter_sets(
+        parameter_set = build_exact_regime_parameter_sets(
             density_vqe.get_Parameter_Num(),
             count=1,
         )[0]
-        result = run_story4_workflow_case(
+        result = run_exact_regime_workflow_case(
             4,
             parameter_set["parameter_set_id"],
             parameter_set["parameter_vector"],
@@ -1117,29 +1117,29 @@ class Test_VQE:
         assert result["case_purpose"] == "mandatory_baseline"
         assert result["counts_toward_mandatory_baseline"] is True
 
-    def test_story4_workflow_bundle_schema(self):
+    def test_exact_regime_workflow_bundle_schema(self):
         pytest.importorskip("qiskit")
         pytest.importorskip("qiskit_aer")
 
-        from benchmarks.density_matrix.story2_vqe_density_validation import (
-            build_story4_parameter_sets,
-            build_story4_workflow_bundle,
+        from benchmarks.density_matrix.workflow_evidence.exact_density_vqe_validation import (
+            build_exact_regime_parameter_sets,
+            build_exact_regime_workflow_bundle,
             run_optimization_trace,
-            run_story4_workflow_case,
+            run_exact_regime_workflow_case,
         )
 
         density_vqe, _ = self._build_story2_density_vqe(4)
-        parameter_set = build_story4_parameter_sets(
+        parameter_set = build_exact_regime_parameter_sets(
             density_vqe.get_Parameter_Num(),
             count=1,
         )[0]
-        result = run_story4_workflow_case(
+        result = run_exact_regime_workflow_case(
             4,
             parameter_set["parameter_set_id"],
             parameter_set["parameter_vector"],
         )
         trace_result = run_optimization_trace()
-        bundle = build_story4_workflow_bundle(
+        bundle = build_exact_regime_workflow_bundle(
             [result],
             qubit_sizes=(4,),
             parameter_set_count=1,
@@ -1162,7 +1162,7 @@ class Test_VQE:
         assert bundle["summary"]["documented_10q_anchor_present"] is False
         assert bundle["summary"]["supported_trace_completed"] is True
         assert bundle["summary"]["supported_trace_case_name"] == trace_result.get(
-            "case_name", "story2_trace_4q"
+            "case_name", "optimization_trace_4q"
         )
         assert bundle["summary"]["required_cases"] == 1
         assert bundle["summary"]["required_passed_cases"] == 1
@@ -1178,7 +1178,7 @@ class Test_VQE:
         pytest.importorskip("qiskit")
         pytest.importorskip("qiskit_aer")
 
-        from benchmarks.density_matrix.story2_vqe_density_validation import (
+        from benchmarks.density_matrix.workflow_evidence.exact_density_vqe_validation import (
             run_optimization_trace,
         )
 
@@ -1196,13 +1196,13 @@ class Test_VQE:
         assert artifact["support_tier"] == "required"
         assert artifact["case_purpose"] == "mandatory_baseline"
         assert artifact["counts_toward_mandatory_baseline"] is False
-        assert artifact["required_story5_trace"] is True
+        assert artifact["required_validation_trace"] is True
 
     def test_story5_trace_artifact_schema(self):
         pytest.importorskip("qiskit")
         pytest.importorskip("qiskit_aer")
 
-        from benchmarks.density_matrix.story2_vqe_density_validation import (
+        from benchmarks.density_matrix.workflow_evidence.exact_density_vqe_validation import (
             run_optimization_trace,
         )
 
@@ -1222,14 +1222,14 @@ class Test_VQE:
         assert artifact["support_tier"] == "required"
         assert artifact["case_purpose"] == "mandatory_baseline"
         assert artifact["counts_toward_mandatory_baseline"] is False
-        assert artifact["required_story5_trace"] is True
+        assert artifact["required_validation_trace"] is True
 
-    def test_task4_story5_required_local_noise_workflow_bundle_schema(self, tmp_path):
+    def test_required_local_noise_workflow_bundle_schema(self, tmp_path):
         pytest.importorskip("qiskit")
         pytest.importorskip("qiskit_aer")
 
-        from benchmarks.density_matrix.story2_vqe_density_validation import write_json
-        from benchmarks.density_matrix.task4_story5_required_local_noise_workflow_validation import (
+        from benchmarks.density_matrix.workflow_evidence.exact_density_vqe_validation import write_json
+        from benchmarks.density_matrix.noise_support.required_local_noise_workflow_validation import (
             TRACE_ARTIFACT_FILENAME,
             TRACE_CASE_NAME,
             WORKFLOW_BUNDLE_FILENAME,
@@ -1257,7 +1257,7 @@ class Test_VQE:
         write_json(tmp_path / TRACE_ARTIFACT_FILENAME, trace_result)
 
         assert bundle["status"] == "pass"
-        assert bundle["suite_name"] == "task4_story5_required_local_noise_workflow"
+        assert bundle["suite_name"] == "required_local_noise_workflow"
         assert bundle["summary"]["required_cases"] == 1
         assert bundle["summary"]["required_passed_cases"] == 1
         assert bundle["summary"]["required_pass_rate"] == 1.0
@@ -1275,11 +1275,11 @@ class Test_VQE:
         assert (tmp_path / WORKFLOW_BUNDLE_FILENAME).exists()
         assert (tmp_path / TRACE_ARTIFACT_FILENAME).exists()
 
-    def test_task5_story2_workflow_baseline_bundle_schema(self):
+    def test_workflow_baseline_bundle_schema(self):
         pytest.importorskip("qiskit")
         pytest.importorskip("qiskit_aer")
 
-        from benchmarks.density_matrix.task5_story2_workflow_baseline_validation import (
+        from benchmarks.density_matrix.validation_evidence.workflow_baseline_validation import (
             run_validation,
         )
 
@@ -1291,7 +1291,7 @@ class Test_VQE:
 
         assert story4_bundle["status"] == "pass"
         assert bundle["status"] == "pass"
-        assert bundle["suite_name"] == "task5_story2_exact_regime_workflow"
+        assert bundle["suite_name"] == "workflow_baseline_validation"
         assert bundle["backend"] == "density_matrix"
         assert bundle["summary"]["total_cases"] == 1
         assert bundle["summary"]["passed_cases"] == 1
@@ -1303,7 +1303,7 @@ class Test_VQE:
         assert bundle["summary"]["stable_parameter_set_ids_present"] is True
         assert bundle["summary"]["workflow_baseline_completed"] is True
         assert bundle["summary"]["documented_10q_anchor_present"] is False
-        assert bundle["required_artifacts"]["story4_canonical"]["status"] == "pass"
+        assert bundle["required_artifacts"]["exact_regime_workflow_reference"]["status"] == "pass"
         assert len(bundle["cases"]) == 1
         assert bundle["cases"][0]["parameter_set_id"] == "set_00"
 
@@ -1313,7 +1313,7 @@ class Test_VQE:
 
         import copy
 
-        from benchmarks.density_matrix.task5_story2_workflow_baseline_validation import (
+        from benchmarks.density_matrix.validation_evidence.workflow_baseline_validation import (
             build_artifact_bundle,
             run_validation,
         )
@@ -1342,11 +1342,11 @@ class Test_VQE:
             in broken_bundle["summary"]["missing_mandatory_case_names"]
         )
 
-    def test_task5_story3_trace_anchor_bundle_schema(self):
+    def test_trace_anchor_bundle_schema(self):
         pytest.importorskip("qiskit")
         pytest.importorskip("qiskit_aer")
 
-        from benchmarks.density_matrix.task5_story3_trace_anchor_validation import (
+        from benchmarks.density_matrix.validation_evidence.trace_anchor_validation import (
             run_validation,
         )
 
@@ -1359,16 +1359,16 @@ class Test_VQE:
         assert story2_bundle["status"] == "pass"
         assert trace_result["status"] == "completed"
         assert bundle["status"] == "pass"
-        assert bundle["suite_name"] == "task5_story3_trace_anchor"
+        assert bundle["suite_name"] == "trace_anchor_validation"
         assert bundle["summary"]["workflow_baseline_completed"] is True
         assert bundle["summary"]["documented_10q_anchor_present"] is True
-        assert bundle["summary"]["required_trace_case_name"] == "story2_trace_4q"
+        assert bundle["summary"]["required_trace_case_name"] == "optimization_trace_4q"
         assert bundle["summary"]["required_trace_present"] is True
         assert bundle["summary"]["required_trace_completed"] is True
         assert bundle["summary"]["required_trace_bridge_supported"] is True
         assert bundle["summary"]["trace_and_anchor_gate_completed"] is True
-        assert bundle["required_artifacts"]["story2_workflow_baseline"]["status"] == "pass"
-        assert bundle["trace_artifact"]["case_name"] == "story2_trace_4q"
+        assert bundle["required_artifacts"]["workflow_baseline_reference"]["status"] == "pass"
+        assert bundle["trace_artifact"]["case_name"] == "optimization_trace_4q"
 
     def test_task5_story3_missing_trace_marker_blocks_trace_anchor_closure(self):
         pytest.importorskip("qiskit")
@@ -1376,7 +1376,7 @@ class Test_VQE:
 
         import copy
 
-        from benchmarks.density_matrix.task5_story3_trace_anchor_validation import (
+        from benchmarks.density_matrix.validation_evidence.trace_anchor_validation import (
             build_artifact_bundle,
             run_validation,
         )
@@ -1387,7 +1387,7 @@ class Test_VQE:
             verbose=False,
         )
         broken_trace_result = copy.deepcopy(trace_result)
-        broken_trace_result["required_story5_trace"] = False
+        broken_trace_result["required_validation_trace"] = False
 
         bundle = build_artifact_bundle(
             story2_bundle,
@@ -1400,11 +1400,11 @@ class Test_VQE:
         assert bundle["summary"]["required_trace_present"] is False
         assert bundle["summary"]["trace_and_anchor_gate_completed"] is False
 
-    def test_task5_story4_metric_completeness_bundle_schema(self):
+    def test_metric_completeness_bundle_schema(self):
         pytest.importorskip("qiskit")
         pytest.importorskip("qiskit_aer")
 
-        from benchmarks.density_matrix.task5_story4_metric_completeness_validation import (
+        from benchmarks.density_matrix.validation_evidence.metric_completeness_validation import (
             run_validation,
         )
 
@@ -1415,7 +1415,7 @@ class Test_VQE:
         )
 
         assert bundle["status"] == "pass"
-        assert bundle["suite_name"] == "task5_story4_metric_completeness"
+        assert bundle["suite_name"] == "metric_completeness_validation"
         assert bundle["summary"]["micro_cases_checked"] == 7
         assert bundle["summary"]["workflow_cases_checked"] == 1
         assert bundle["summary"]["trace_artifacts_checked"] == 1
@@ -1425,9 +1425,9 @@ class Test_VQE:
         assert bundle["summary"]["workflow_cases_with_stable_execution"] == 1
         assert bundle["summary"]["trace_execution_stability_pass"] is True
         assert bundle["summary"]["metric_completeness_gate_completed"] is True
-        assert bundle["required_artifacts"]["story1_local_correctness"]["status"] == "pass"
-        assert bundle["required_artifacts"]["story2_workflow_baseline"]["status"] == "pass"
-        assert bundle["required_artifacts"]["story3_trace_anchor"]["status"] == "pass"
+        assert bundle["required_artifacts"]["local_correctness_reference"]["status"] == "pass"
+        assert bundle["required_artifacts"]["workflow_baseline_reference"]["status"] == "pass"
+        assert bundle["required_artifacts"]["trace_anchor_reference"]["status"] == "pass"
 
     def test_task5_story4_missing_workflow_metric_blocks_metric_completeness(self):
         pytest.importorskip("qiskit")
@@ -1435,7 +1435,7 @@ class Test_VQE:
 
         import copy
 
-        from benchmarks.density_matrix.task5_story4_metric_completeness_validation import (
+        from benchmarks.density_matrix.validation_evidence.metric_completeness_validation import (
             build_artifact_bundle,
             run_validation,
         )
@@ -1462,11 +1462,11 @@ class Test_VQE:
         ]
         assert bundle["summary"]["metric_completeness_gate_completed"] is False
 
-    def test_task5_story5_interpretation_bundle_schema(self):
+    def test_interpretation_bundle_schema(self):
         pytest.importorskip("qiskit")
         pytest.importorskip("qiskit_aer")
 
-        from benchmarks.density_matrix.task5_story5_interpretation_validation import (
+        from benchmarks.density_matrix.validation_evidence.interpretation_validation import (
             run_validation,
         )
 
@@ -1480,13 +1480,13 @@ class Test_VQE:
         assert optional_bundle["status"] == "pass"
         assert unsupported_bundle["status"] == "pass"
         assert bundle["status"] == "pass"
-        assert bundle["suite_name"] == "task5_story5_interpretation"
+        assert bundle["suite_name"] == "validation_evidence_interpretation"
         assert bundle["summary"]["mandatory_artifacts_complete"] is True
         assert bundle["summary"]["optional_evidence_supplemental"] is True
         assert bundle["summary"]["unsupported_evidence_negative_only"] is True
         assert bundle["summary"]["main_phase2_claim_completed"] is True
         assert bundle["summary"]["incomplete_mandatory_artifacts"] == []
-        assert bundle["required_artifacts"]["task5_story4_metric_completeness"]["status"] == "pass"
+        assert bundle["required_artifacts"]["metric_completeness_validation"]["status"] == "pass"
         assert (
             bundle["required_artifacts"]["task4_story3_optional_classification"]["status"]
             == "pass"
@@ -1499,7 +1499,7 @@ class Test_VQE:
 
         import copy
 
-        from benchmarks.density_matrix.task5_story5_interpretation_validation import (
+        from benchmarks.density_matrix.validation_evidence.interpretation_validation import (
             build_artifact_bundle,
             run_validation,
         )
@@ -1510,7 +1510,7 @@ class Test_VQE:
             verbose=False,
         )
         broken_story4_bundle = copy.deepcopy(story4_bundle)
-        broken_story4_bundle["required_artifacts"]["story2_workflow_baseline"][
+        broken_story4_bundle["required_artifacts"]["workflow_baseline_reference"][
             "status"
         ] = "fail"
 
@@ -1521,17 +1521,17 @@ class Test_VQE:
         )
 
         assert bundle["status"] == "fail"
-        assert "story2_workflow_baseline" in bundle["summary"][
+        assert "workflow_baseline_reference" in bundle["summary"][
             "incomplete_mandatory_artifacts"
         ]
         assert bundle["summary"]["mandatory_artifacts_complete"] is False
         assert bundle["summary"]["main_phase2_claim_completed"] is False
 
-    def test_task5_story6_publication_bundle_schema(self, tmp_path):
+    def test_validation_evidence_publication_bundle_schema(self, tmp_path):
         pytest.importorskip("qiskit")
         pytest.importorskip("qiskit_aer")
 
-        from benchmarks.density_matrix.task5_story6_publication_bundle import (
+        from benchmarks.density_matrix.validation_evidence.validation_evidence_publication_bundle import (
             ARTIFACT_FILENAME,
             generate_story6_bundle,
         )
@@ -1544,7 +1544,7 @@ class Test_VQE:
         )
 
         assert bundle["status"] == "pass"
-        assert bundle["suite_name"] == "task5_story6_publication_evidence"
+        assert bundle["suite_name"] == "validation_evidence_publication"
         assert bundle["summary"]["mandatory_artifact_count"] == 6
         assert bundle["summary"]["present_artifact_count"] == 6
         assert bundle["summary"]["status_match_count"] == 6
@@ -1553,12 +1553,12 @@ class Test_VQE:
         assert bundle["summary"]["raw_trace_reference_pass"] is True
         assert bundle["provenance"]["git_revision"]
         assert {artifact["artifact_id"] for artifact in bundle["artifacts"]} == {
-            "task5_story1_local_correctness_bundle",
-            "task5_story2_workflow_baseline_bundle",
-            "task5_story3_trace_anchor_bundle",
-            "task5_story3_trace_artifact",
-            "task5_story4_metric_completeness_bundle",
-            "task5_story5_interpretation_bundle",
+            "local_correctness_bundle",
+            "workflow_baseline_bundle",
+            "trace_anchor_bundle",
+            "optimization_trace_4q",
+            "metric_completeness_bundle",
+            "interpretation_bundle",
         }
         assert (tmp_path / ARTIFACT_FILENAME).exists()
 
@@ -1566,7 +1566,7 @@ class Test_VQE:
         pytest.importorskip("qiskit")
         pytest.importorskip("qiskit_aer")
 
-        from benchmarks.density_matrix.task5_story6_publication_bundle import (
+        from benchmarks.density_matrix.validation_evidence.validation_evidence_publication_bundle import (
             STORY3_TRACE_ARTIFACT_FILENAME,
             generate_story6_bundle,
             validate_task5_story6_bundle,
@@ -1583,11 +1583,11 @@ class Test_VQE:
         with pytest.raises(ValueError, match="missing artifact file"):
             validate_task5_story6_bundle(bundle, tmp_path)
 
-    def test_task4_story6_publication_bundle_schema(self, tmp_path):
+    def test_noise_support_publication_bundle_schema(self, tmp_path):
         pytest.importorskip("qiskit")
         pytest.importorskip("qiskit_aer")
 
-        from benchmarks.density_matrix.task4_story6_publication_bundle import (
+        from benchmarks.density_matrix.noise_support.noise_support_publication_bundle import (
             ARTIFACT_FILENAME,
             generate_story6_bundle,
         )
@@ -1600,7 +1600,7 @@ class Test_VQE:
         )
 
         assert bundle["status"] == "pass"
-        assert bundle["suite_name"] == "task4_story6_publication_evidence"
+        assert bundle["suite_name"] == "noise_support_publication_evidence"
         assert bundle["summary"]["mandatory_artifact_count"] == 6
         assert bundle["summary"]["present_artifact_count"] == 6
         assert bundle["summary"]["status_match_count"] == 6
@@ -1609,33 +1609,33 @@ class Test_VQE:
         assert bundle["summary"]["workflow_trace_reference_pass"] is True
         assert bundle["provenance"]["git_revision"]
         assert {artifact["artifact_id"] for artifact in bundle["artifacts"]} == {
-            "task4_story1_required_local_noise_bundle",
-            "task4_story2_required_local_noise_micro_bundle",
-            "task4_story3_optional_noise_bundle",
-            "task4_story4_unsupported_noise_bundle",
-            "task4_story5_required_local_noise_workflow_bundle",
-            "task4_story5_required_local_noise_trace",
+            "required_local_noise_bundle",
+            "required_local_noise_micro_bundle",
+            "optional_noise_classification_bundle",
+            "unsupported_noise_bundle",
+            "required_local_noise_workflow_bundle",
+            "required_local_noise_trace_4q",
         }
         assert (tmp_path / ARTIFACT_FILENAME).exists()
 
-    def test_story5_bundle_manifest_schema(self, tmp_path):
+    def test_exact_density_validation_bundle_manifest_schema(self, tmp_path):
         pytest.importorskip("qiskit")
         pytest.importorskip("qiskit_aer")
 
-        from benchmarks.density_matrix.story2_vqe_density_validation import (
-            STORY2_MICRO_BUNDLE_FILENAME,
-            STORY4_WORKFLOW_BUNDLE_FILENAME,
-            build_story5_bundle,
+        from benchmarks.density_matrix.workflow_evidence.exact_density_vqe_validation import (
+            MICRO_VALIDATION_BUNDLE_FILENAME,
+            EXACT_REGIME_WORKFLOW_BUNDLE_FILENAME,
+            build_exact_density_validation_bundle,
         )
 
-        (tmp_path / STORY2_MICRO_BUNDLE_FILENAME).write_text("{}\n", encoding="utf-8")
-        (tmp_path / STORY4_WORKFLOW_BUNDLE_FILENAME).write_text(
+        (tmp_path / MICRO_VALIDATION_BUNDLE_FILENAME).write_text("{}\n", encoding="utf-8")
+        (tmp_path / EXACT_REGIME_WORKFLOW_BUNDLE_FILENAME).write_text(
             "{}\n", encoding="utf-8"
         )
-        (tmp_path / "story2_fixed_4q.json").write_text("{}\n", encoding="utf-8")
-        (tmp_path / "story2_fixed_6q.json").write_text("{}\n", encoding="utf-8")
-        (tmp_path / "story2_trace_4q.json").write_text("{}\n", encoding="utf-8")
-        (tmp_path / "story3_unsupported_state_vector_density_noise.json").write_text(
+        (tmp_path / "fixed_parameters_4q.json").write_text("{}\n", encoding="utf-8")
+        (tmp_path / "fixed_parameters_6q.json").write_text("{}\n", encoding="utf-8")
+        (tmp_path / "optimization_trace_4q.json").write_text("{}\n", encoding="utf-8")
+        (tmp_path / "unsupported_state_vector_density_noise.json").write_text(
             "{}\n", encoding="utf-8"
         )
 
@@ -1678,7 +1678,7 @@ class Test_VQE:
             "unsupported_reason": "example",
         }
 
-        bundle = build_story5_bundle(
+        bundle = build_exact_density_validation_bundle(
             tmp_path,
             fixed_results=fixed_results,
             trace_result=trace_result,
@@ -1693,32 +1693,32 @@ class Test_VQE:
         assert bundle["summary"]["status_match_count"] == 6
         assert bundle["provenance"]["git_revision"]
         assert {artifact["artifact_id"] for artifact in bundle["artifacts"]} == {
-            "story2_micro_validation_bundle",
-            "story4_workflow_bundle",
-            "story2_fixed_4q",
-            "story2_fixed_6q",
-            "story2_trace_4q",
-            "story3_unsupported_state_vector_density_noise",
+            "micro_validation_bundle",
+            "exact_regime_workflow_bundle",
+            "fixed_parameters_4q",
+            "fixed_parameters_6q",
+            "optimization_trace_4q",
+            "unsupported_state_vector_density_noise",
         }
 
     def test_task3_story5_bundle_manifest_schema(self, tmp_path):
-        from benchmarks.density_matrix.task3_story5_bridge_publication_bundle import (
+        from benchmarks.density_matrix.bridge_scope.bridge_publication_bundle import (
             TASK3_STORY2_BUNDLE_FILENAME,
             TASK3_STORY3_BUNDLE_FILENAME,
             TASK3_STORY5_BUNDLE_FILENAME,
             build_task3_story5_bundle,
         )
-        from benchmarks.density_matrix.story2_vqe_density_validation import (
-            STORY4_TRACE_ARTIFACT_FILENAME,
-            STORY4_WORKFLOW_BUNDLE_FILENAME,
+        from benchmarks.density_matrix.workflow_evidence.exact_density_vqe_validation import (
+            OPTIMIZATION_TRACE_ARTIFACT_FILENAME,
+            EXACT_REGIME_WORKFLOW_BUNDLE_FILENAME,
         )
 
-        (tmp_path / "story2_fixed_4q.json").write_text("{}\n", encoding="utf-8")
-        (tmp_path / "story2_fixed_6q.json").write_text("{}\n", encoding="utf-8")
-        (tmp_path / STORY4_TRACE_ARTIFACT_FILENAME).write_text(
+        (tmp_path / "fixed_parameters_4q.json").write_text("{}\n", encoding="utf-8")
+        (tmp_path / "fixed_parameters_6q.json").write_text("{}\n", encoding="utf-8")
+        (tmp_path / OPTIMIZATION_TRACE_ARTIFACT_FILENAME).write_text(
             "{}\n", encoding="utf-8"
         )
-        (tmp_path / STORY4_WORKFLOW_BUNDLE_FILENAME).write_text(
+        (tmp_path / EXACT_REGIME_WORKFLOW_BUNDLE_FILENAME).write_text(
             "{}\n", encoding="utf-8"
         )
         (tmp_path / TASK3_STORY2_BUNDLE_FILENAME).write_text("{}\n", encoding="utf-8")
@@ -1744,7 +1744,7 @@ class Test_VQE:
         ]
         trace_result = {
             "status": "completed",
-            "case_name": "story2_trace_4q",
+            "case_name": "optimization_trace_4q",
             "optimizer": "COSINE",
             "parameter_count": 18,
             "workflow_completed": True,
@@ -1784,7 +1784,7 @@ class Test_VQE:
                 "bridge_supported_cases": 40,
                 "documented_10q_anchor_present": True,
                 "supported_trace_completed": True,
-                "supported_trace_case_name": "story2_trace_4q",
+                "supported_trace_case_name": "optimization_trace_4q",
             },
         }
 
@@ -1803,12 +1803,12 @@ class Test_VQE:
         assert bundle["summary"]["status_match_count"] == 6
         assert bundle["provenance"]["git_revision"]
         assert {artifact["artifact_id"] for artifact in bundle["artifacts"]} == {
-            "task3_story1_fixed_4q",
-            "task3_story1_fixed_6q",
-            "task3_story2_bridge_micro_validation_bundle",
-            "task3_story4_workflow_bundle",
-            "task3_story4_trace_4q",
-            "task3_story3_unsupported_bridge_bundle",
+            "bridge_fixed_parameters_4q",
+            "bridge_fixed_parameters_6q",
+            "bridge_micro_validation_bundle",
+            "bridge_exact_regime_workflow_bundle",
+            "bridge_optimization_trace_4q",
+            "unsupported_bridge_bundle",
         }
         assert (tmp_path / TASK3_STORY5_BUNDLE_FILENAME).name == TASK3_STORY5_BUNDLE_FILENAME
 

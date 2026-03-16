@@ -36,24 +36,24 @@ Out of scope for this story:
 - Stories 1 to 4 are already in place: positive bridge behavior, local support
   validation, unsupported-case evidence, and workflow-scale bridge artifacts all
   exist.
-- `benchmarks/density_matrix/story2_vqe_density_validation.py` already contains
+- `benchmarks/density_matrix/workflow_evidence/exact_density_vqe_validation.py` already contains
   several useful artifact helpers, including `build_case_metadata()`,
-  `validate_artifact_payload()`, `build_story1_bridge_metadata()`, and Story 5
+  `validate_artifact_payload()`, `build_anchor_bridge_metadata()`, and Story 5
   bundle-style manifest entries.
 - Story 1 already established the canonical supported-bridge schema for
   fixed-parameter artifacts:
   `bridge_source_type`, `bridge_parameter_count`, `bridge_operation_count`,
   `bridge_gate_count`, `bridge_noise_count`, and `bridge_operations`.
 - Story 2 added a dedicated bridge-local validation suite,
-  `benchmarks/density_matrix/task3_story2_bridge_validation.py`, and the
-  `task3_story2_bridge_micro_validation_bundle.json` artifact bundle.
+  `benchmarks/density_matrix/bridge_scope/bridge_validation.py`, and the
+  `bridge_micro_validation_bundle.json` artifact bundle.
 - Story 2 also introduced canonical local bridge-gate fields that the final
   bundle should preserve for that artifact class:
   `expected_bridge_operations`, `source_pass`, `gate_pass`, `noise_pass`,
   `operation_match_pass`, and `execution_ready`.
 - Story 3 added a dedicated unsupported bridge suite,
-  `benchmarks/density_matrix/task3_story3_unsupported_bridge_validation.py`, and
-  the `task3_story3_unsupported_bridge_bundle.json` artifact bundle.
+  `benchmarks/density_matrix/bridge_scope/unsupported_bridge_validation.py`, and
+  the `unsupported_bridge_bundle.json` artifact bundle.
 - Story 3 also fixed the representative negative taxonomy and fields the final
   bundle should preserve for unsupported bridge evidence:
   `unsupported_category`, `first_unsupported_condition`,
@@ -65,9 +65,9 @@ Out of scope for this story:
   assembled in the Python/test/validation layer because the current validator
   and normalization paths already emit the required first-failure signals.
 - Story 4 now delivers the workflow-scale bridge evidence through
-  `benchmarks/density_matrix/story2_vqe_density_validation.py --story4`, which
-  emits both `story4_workflow_bundle.json` and the supported trace artifact
-  `story2_trace_4q.json`.
+  `benchmarks/density_matrix/workflow_evidence/exact_density_vqe_validation.py --workflow-bundle`, which
+  emits both `exact_regime_workflow_bundle.json` and the supported trace artifact
+  `optimization_trace_4q.json`.
 - Story 4 also fixed the canonical workflow/trace bridge fields and summary
   surface the final package should preserve:
   `bridge_gate_sequence`, `bridge_noise_sequence`, `bridge_supported_pass`,
@@ -104,13 +104,13 @@ Out of scope for this story:
 - [ ] Treat the existing Story 1 fixed-parameter artifacts as the canonical
       supported positive bridge artifact class rather than inventing a second
       “bridge positive” format.
-- [ ] Treat `task3_story2_bridge_micro_validation_bundle.json` as the canonical
+- [ ] Treat `bridge_micro_validation_bundle.json` as the canonical
       local bridge-support artifact class rather than folding that evidence into
       a generic task-2-style micro bundle.
-- [ ] Treat `task3_story3_unsupported_bridge_bundle.json` as the canonical
+- [ ] Treat `unsupported_bridge_bundle.json` as the canonical
       bridge-negative artifact class rather than reconstructing unsupported
       evidence indirectly from ad hoc workflow failures.
-- [ ] Treat `story4_workflow_bundle.json` plus `story2_trace_4q.json` as the
+- [ ] Treat `exact_regime_workflow_bundle.json` plus `optimization_trace_4q.json` as the
       canonical workflow-scale artifact pair coming from one shared Story 4
       generation surface.
 - [ ] Prefer reusing already-generated canonical Story 1 to 4 artifacts when
@@ -456,20 +456,20 @@ Story 5 is complete only when all of the following are true:
 
 ## Implementation Notes
 
-- `benchmarks/density_matrix/story2_vqe_density_validation.py` already contains
+- `benchmarks/density_matrix/workflow_evidence/exact_density_vqe_validation.py` already contains
   the natural starting point for Story 5 manifest and bundle logic and should be
   extended rather than replaced.
 - Story 5 should reuse artifact vocabulary from Stories 1 to 4, with the
-  Story 1 fixed-parameter bridge fields and `build_story1_bridge_metadata()` as
+  Story 1 fixed-parameter bridge fields and `build_anchor_bridge_metadata()` as
   the canonical starting point for supported-bridge provenance.
-- `benchmarks/density_matrix/task3_story2_bridge_validation.py` is now the
+- `benchmarks/density_matrix/bridge_scope/bridge_validation.py` is now the
   canonical local bridge-support artifact surface and should enter the final
   bundle as its own first-class artifact, not as an informal appendix.
-- `benchmarks/density_matrix/task3_story3_unsupported_bridge_validation.py` is
+- `benchmarks/density_matrix/bridge_scope/unsupported_bridge_validation.py` is
   now the canonical bridge-negative artifact surface and should enter the final
   bundle as its own first-class artifact, not as a loose set of incidental
   workflow failures.
-- `benchmarks/density_matrix/story2_vqe_density_validation.py --story4` is now
+- `benchmarks/density_matrix/workflow_evidence/exact_density_vqe_validation.py --workflow-bundle` is now
   the canonical workflow-scale bridge evidence surface and should be treated as
   producing both the workflow bundle and the supported trace artifact together.
 - Story 5 implementation can assemble from already-generated canonical artifact

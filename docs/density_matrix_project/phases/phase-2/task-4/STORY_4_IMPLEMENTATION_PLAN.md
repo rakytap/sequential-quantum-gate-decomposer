@@ -36,14 +36,14 @@ Out of scope for this story:
 
 - Story 1 is already in place: the required local-noise positive path exists and
   exposes reviewable bridge metadata through
-  `task4_story1_required_local_noise_validation.py`.
+  `required_local_noise_validation_validation.py`.
 - Story 2 is already in place: the mandatory 1 to 3 qubit exact micro-validation
   gate passes and produces machine-readable exactness artifacts through
   `validate_squander_vs_qiskit.py` and
-  `task4_story2_required_local_noise_micro_validation.py`.
+  `required_local_noise_micro_validation.py`.
 - Story 3 is already in place: optional whole-register depolarizing evidence is
   explicitly classified as optional through
-  `task4_story3_optional_noise_classification_validation.py`, so Story 4 must
+  `optional_noise_classification_validation.py`, so Story 4 must
   not reclassify that optional baseline as unsupported.
 - The current Python-side boundary already normalizes and rejects unsupported
   channels in `_normalize_density_noise_spec()` inside
@@ -53,8 +53,8 @@ Out of scope for this story:
   `validate_density_anchor_support()` inside
   `squander/src-cpp/variational_quantum_eigensolver/Variational_Quantum_Eigensolver_Base.cpp`.
 - Existing unsupported evidence patterns already exist in
-  `benchmarks/density_matrix/story2_vqe_density_validation.py` and
-  `benchmarks/density_matrix/task3_story3_unsupported_bridge_validation.py`.
+  `benchmarks/density_matrix/workflow_evidence/exact_density_vqe_validation.py` and
+  `benchmarks/density_matrix/bridge_scope/unsupported_bridge_validation.py`.
 - The frozen support surface remains:
   - required: `local_depolarizing`, `amplitude_damping`, `phase_damping`,
   - optional: whole-register depolarizing as regression or stress baseline, and
@@ -265,8 +265,8 @@ Out of scope for this story:
 
 **Execution checklist**
 - [ ] Extend the current unsupported artifact pattern from
-      `story2_vqe_density_validation.py` and/or
-      `task3_story3_unsupported_bridge_validation.py` for Task 4 noise boundary
+      `benchmarks/density_matrix/workflow_evidence/exact_density_vqe_validation.py` and/or
+      `unsupported_bridge_validation.py` for Task 4 noise boundary
       cases.
 - [ ] Use stable fields for unsupported category, first unsupported condition,
       support tier, backend, and case identity.
@@ -387,8 +387,8 @@ Story 4 is complete only when all of the following are true:
   should extend that vocabulary with unsupported outcomes rather than inventing a
   separate incompatible schema.
 - Existing unsupported artifact patterns in
-  `story2_vqe_density_validation.py` and
-  `task3_story3_unsupported_bridge_validation.py` are the right starting points
+  `benchmarks/density_matrix/workflow_evidence/exact_density_vqe_validation.py` and
+  `unsupported_bridge_validation.py` are the right starting points
   for Task 4 negative evidence.
 - Optional whole-register depolarizing must remain optional by explicit request;
   Story 4 should treat any silent substitution toward it as a bug, not as a

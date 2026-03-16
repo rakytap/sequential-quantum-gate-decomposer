@@ -37,26 +37,26 @@ Out of scope for this story:
 ## Dependencies And Assumptions
 
 - Story 1 now emits the canonical workflow-contract artifact through
-  `benchmarks/density_matrix/task6_story1_workflow_contract_validation.py`,
+  `benchmarks/density_matrix/workflow_evidence/workflow_contract_validation.py`,
   writing
-  `benchmarks/density_matrix/artifacts/phase2_task6/story1_canonical_workflow_contract.json`.
+  `benchmarks/density_matrix/artifacts/workflow_evidence/workflow_contract_bundle.json`.
   Story 2 must execute that same `workflow_id` and `contract_version`, and
   should now also reuse Story 1's emitted
   `thresholds.required_end_to_end_qubits` plus
   `input_contract.execution_modes.bounded_optimization_trace.canonical_trace_case_name`
   rather than duplicating those contract values in a second place.
-- `benchmarks/density_matrix/story2_vqe_density_validation.py` already provides
+- `benchmarks/density_matrix/workflow_evidence/exact_density_vqe_validation.py` already provides
   canonical execution surfaces for this story:
-  - fixed-parameter workflow execution through `run_story4_workflow_case()`,
+  - fixed-parameter workflow execution through `run_exact_regime_workflow_case()`,
   - bounded optimization traces through `run_optimization_trace()`,
   - and supported-path metadata via bridge fields.
 - Task 5 already provides stable workflow and trace bundle semantics that Story 2
   should reuse where practical:
-  - `task5_story2_workflow_baseline_validation.py`,
-  - `task5_story3_trace_anchor_validation.py`,
+  - `task5_workflow_baseline_reference_validation.py`,
+  - `trace_anchor_validation_validation.py`,
   - and artifact status language (`pass`, `fail`, `incomplete`, `completed`,
     `unsupported`).
-- Existing Task 5 trace identity (`story2_trace_4q`) provides a practical
+- Existing Task 5 trace identity (`optimization_trace_4q`) provides a practical
   starting point for a canonical Story 2 trace case identity.
 - Frozen phase decisions remain unchanged for this story:
   `P2-ADR-009`, `P2-ADR-010`, `P2-ADR-011`, `P2-ADR-012`, `P2-ADR-013`,
@@ -120,7 +120,7 @@ Out of scope for this story:
   replacement for lower-level execution code.
 
 **Execution checklist**
-- [ ] Reuse `run_story4_workflow_case()` for canonical fixed-parameter end-to-end
+- [ ] Reuse `run_exact_regime_workflow_case()` for canonical fixed-parameter end-to-end
       case execution at 4 and 6 qubits.
 - [ ] Reuse `run_optimization_trace()` plus `capture_case()` for canonical
       bounded training-loop trace execution.
@@ -257,9 +257,9 @@ Out of scope for this story:
 
 **Execution checklist**
 - [ ] Add one Story 2 validation entry point (for example
-      `benchmarks/density_matrix/task6_story2_end_to_end_trace_validation.py`).
+      `benchmarks/density_matrix/workflow_evidence/end_to_end_trace_validation.py`).
 - [ ] Emit one stable Story 2 artifact in a Task 6 artifact directory (for
-      example `benchmarks/density_matrix/artifacts/phase2_task6/`).
+      example `benchmarks/density_matrix/artifacts/workflow_evidence/`).
 - [ ] Record generation command and provenance metadata in the artifact.
 - [ ] Keep Story 2 artifact focused on end-to-end and trace evidence only.
 
@@ -355,15 +355,15 @@ Story 2 is complete only when all of the following are true:
 ## Implementation Notes
 
 - Start from canonical execution surfaces in
-  `benchmarks/density_matrix/story2_vqe_density_validation.py`:
-  `run_story4_workflow_case()`, `capture_case()`, and `run_optimization_trace()`.
+  `benchmarks/density_matrix/workflow_evidence/exact_density_vqe_validation.py`:
+  `run_exact_regime_workflow_case()`, `capture_case()`, and `run_optimization_trace()`.
 - Consume the emitted Story 1 contract artifact directly for canonical workflow
   identity, contract-version, required end-to-end qubit list, and canonical
   trace case name instead of restating those values in a second Task 6-only
   source.
 - Reuse status and bundle semantics from Task 5 Story 2 and Story 3 outputs
-  (`story2_workflow_baseline_bundle.json`,
-  `story3_trace_anchor_bundle.json`, and `story2_trace_4q.json`) where practical.
+  (`workflow_baseline_bundle.json`,
+  `trace_anchor_bundle.json`, and `optimization_trace_4q.json`) where practical.
 - Keep Story 2 as a contract-layer execution gate for 4q/6q plus required trace,
   not a replacement for Story 3 exact-regime matrix closure.
 - Prefer one thin Story 2 bundle that references canonical lower-level fields

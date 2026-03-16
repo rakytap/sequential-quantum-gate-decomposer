@@ -36,7 +36,7 @@ boundary decisions.
   that only mandatory complete supported evidence closes the main claim.
 - Task 6 provides the canonical noisy XXZ VQE workflow contract plus the
   workflow-facing publication bundle rooted at
-  `benchmarks/density_matrix/artifacts/phase2_task6/task6_story6_publication_bundle.json`.
+  `benchmarks/density_matrix/artifacts/workflow_evidence/workflow_publication_bundle.json`.
 - Task 7 provides the citable documentation boundary and terminology discipline
   that Paper 1 must reuse rather than redefine.
 - `docs/density_matrix_project/planning/PUBLICATIONS.md` defines Paper 1 as the
@@ -82,7 +82,7 @@ boundary decisions.
   manual-circuit reuse must not be implied.
 - The publication package must identify the workflow-facing publication bundle
   as the canonical machine-readable evidence surface and preserve traceability
-  to the underlying Task 5 validation layers rather than replacing them with
+  to the underlying validation-evidence layers rather than replacing them with
   narrative summaries alone.
 - Task 8 must define an abstract-level claim set, a short-paper structure, and a
   full-paper structure that each map clearly to delivered evidence and explicit
@@ -142,7 +142,7 @@ boundary decisions.
   canonical noisy XXZ VQE workflow, the exact regime, and the claim-closure rule
   without contradicting Phase 2 contract docs.
 - The top-level workflow-facing evidence bundle at
-  `benchmarks/density_matrix/artifacts/phase2_task6/task6_story6_publication_bundle.json`
+  `benchmarks/density_matrix/artifacts/workflow_evidence/workflow_publication_bundle.json`
   is cited or linked as the canonical machine-readable publication evidence
   surface.
 - Traceability exists from major Paper 1 claims and sections to the underlying
@@ -184,7 +184,7 @@ boundary decisions.
   `PHASE_2_DOCUMENTATION_INDEX.md` that reviewers use to locate the authoritative
   contract and evidence.
 - The workflow-facing publication manifest
-  `benchmarks/density_matrix/artifacts/phase2_task6/task6_story6_publication_bundle.json`
+  `benchmarks/density_matrix/artifacts/workflow_evidence/workflow_publication_bundle.json`
   and the linked Task 6 evidence artifacts it references.
 - Phase-level contract docs and decisions that the paper package must cite
   accurately: `DETAILED_PLANNING_PHASE_2.md`, `ADRs_PHASE_2.md`, and

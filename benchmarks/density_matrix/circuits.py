@@ -614,7 +614,7 @@ def _pauli_string_matrix(pauli_string):
     return matrix
 
 
-def _build_story2_hamiltonian(term_specs):
+def _build_microcase_hamiltonian(term_specs):
     qbit_num = len(term_specs[0][1])
     matrix = np.zeros((2**qbit_num, 2**qbit_num), dtype=complex)
     for coeff, pauli_string in term_specs:
@@ -622,7 +622,7 @@ def _build_story2_hamiltonian(term_specs):
     return matrix
 
 
-def _build_story2_hamiltonian_metadata(term_specs):
+def _build_microcase_hamiltonian_metadata(term_specs):
     return {
         "terms": [
             {"coeff": float(coeff), "pauli_string": pauli_string}
@@ -631,7 +631,7 @@ def _build_story2_hamiltonian_metadata(term_specs):
     }
 
 
-def _make_story2_microcase(
+def _make_microcase(
     *,
     case_name,
     qbit_num,
@@ -650,33 +650,33 @@ def _make_story2_microcase(
         "required_noise_models": list(required_noise_models),
         "case_kind": case_kind,
         "purpose": purpose,
-        "hamiltonian_matrix": _build_story2_hamiltonian(term_specs),
-        "hamiltonian_metadata": _build_story2_hamiltonian_metadata(term_specs),
+        "hamiltonian_matrix": _build_microcase_hamiltonian(term_specs),
+        "hamiltonian_metadata": _build_microcase_hamiltonian_metadata(term_specs),
     }
 
 
-def build_story2_1q_u3_local_depolarizing():
+def build_1q_u3_local_depolarizing_microcase():
     b = DualBuilder(1)
     b.U3(0, 0.73, -0.41, 0.19)
     b.local_depolarizing(0, 0.08)
     return b
 
 
-def build_story2_1q_u3_amplitude_damping():
+def build_1q_u3_amplitude_damping_microcase():
     b = DualBuilder(1)
     b.U3(0, 1.11, 0.37, -0.52)
     b.amp_damp(0, 0.14)
     return b
 
 
-def build_story2_1q_u3_phase_damping():
+def build_1q_u3_phase_damping_microcase():
     b = DualBuilder(1)
     b.U3(0, 0.92, -0.63, 0.28)
     b.phase_damp(0, 0.12)
     return b
 
 
-def build_story2_2q_u3_cnot_local_depolarizing():
+def build_2q_u3_cnot_local_depolarizing_microcase():
     b = DualBuilder(2)
     b.U3(0, 0.61, -0.22, 0.47)
     b.U3(1, 0.35, 0.18, -0.41)
@@ -685,7 +685,7 @@ def build_story2_2q_u3_cnot_local_depolarizing():
     return b
 
 
-def build_story2_2q_u3_cnot_amplitude_damping():
+def build_2q_u3_cnot_amplitude_damping_microcase():
     b = DualBuilder(2)
     b.U3(0, 0.84, 0.12, -0.33)
     b.U3(1, 0.56, -0.48, 0.25)
@@ -694,7 +694,7 @@ def build_story2_2q_u3_cnot_amplitude_damping():
     return b
 
 
-def build_story2_2q_u3_cnot_phase_damping():
+def build_2q_u3_cnot_phase_damping_microcase():
     b = DualBuilder(2)
     b.U3(0, 0.49, -0.31, 0.67)
     b.U3(1, 0.71, 0.42, -0.28)
@@ -703,7 +703,7 @@ def build_story2_2q_u3_cnot_phase_damping():
     return b
 
 
-def build_story2_3q_u3_cnot_mixed_local_noise():
+def build_3q_u3_cnot_mixed_local_noise_microcase():
     b = DualBuilder(3)
     b.U3(0, 0.58, -0.27, 0.44)
     b.U3(1, 0.93, 0.21, -0.36)
@@ -716,71 +716,71 @@ def build_story2_3q_u3_cnot_mixed_local_noise():
     return b
 
 
-STORY2_MANDATORY_MICROCASES = [
-    _make_story2_microcase(
-        case_name="story2_1q_u3_local_depolarizing",
+MANDATORY_MICROCASES = [
+    _make_microcase(
+        case_name="micro_validation_1q_u3_local_depolarizing",
         qbit_num=1,
-        builder_fn=build_story2_1q_u3_local_depolarizing,
+        builder_fn=build_1q_u3_local_depolarizing_microcase,
         required_gate_family=["U3"],
         required_noise_models=["local_depolarizing"],
         case_kind="individual_noise",
         purpose="Validate U3 plus local single-qubit depolarizing on the 1-qubit microcase floor.",
         term_specs=[(0.60, "Z"), (-0.35, "X")],
     ),
-    _make_story2_microcase(
-        case_name="story2_1q_u3_amplitude_damping",
+    _make_microcase(
+        case_name="micro_validation_1q_u3_amplitude_damping",
         qbit_num=1,
-        builder_fn=build_story2_1q_u3_amplitude_damping,
+        builder_fn=build_1q_u3_amplitude_damping_microcase,
         required_gate_family=["U3"],
         required_noise_models=["amplitude_damping"],
         case_kind="individual_noise",
         purpose="Validate U3 plus local amplitude damping on the 1-qubit microcase floor.",
         term_specs=[(0.45, "Z"), (0.30, "X")],
     ),
-    _make_story2_microcase(
-        case_name="story2_1q_u3_phase_damping",
+    _make_microcase(
+        case_name="micro_validation_1q_u3_phase_damping",
         qbit_num=1,
-        builder_fn=build_story2_1q_u3_phase_damping,
+        builder_fn=build_1q_u3_phase_damping_microcase,
         required_gate_family=["U3"],
         required_noise_models=["phase_damping"],
         case_kind="individual_noise",
         purpose="Validate U3 plus local phase damping on the 1-qubit microcase floor.",
         term_specs=[(-0.40, "Z"), (0.25, "Y")],
     ),
-    _make_story2_microcase(
-        case_name="story2_2q_u3_cnot_local_depolarizing",
+    _make_microcase(
+        case_name="micro_validation_2q_u3_cnot_local_depolarizing",
         qbit_num=2,
-        builder_fn=build_story2_2q_u3_cnot_local_depolarizing,
+        builder_fn=build_2q_u3_cnot_local_depolarizing_microcase,
         required_gate_family=["U3", "CNOT"],
         required_noise_models=["local_depolarizing"],
         case_kind="individual_noise",
         purpose="Validate the required U3/CNOT bridge with local single-qubit depolarizing.",
         term_specs=[(0.55, "ZI"), (-0.20, "IZ"), (0.18, "XX")],
     ),
-    _make_story2_microcase(
-        case_name="story2_2q_u3_cnot_amplitude_damping",
+    _make_microcase(
+        case_name="micro_validation_2q_u3_cnot_amplitude_damping",
         qbit_num=2,
-        builder_fn=build_story2_2q_u3_cnot_amplitude_damping,
+        builder_fn=build_2q_u3_cnot_amplitude_damping_microcase,
         required_gate_family=["U3", "CNOT"],
         required_noise_models=["amplitude_damping"],
         case_kind="individual_noise",
         purpose="Validate the required U3/CNOT bridge with local amplitude damping.",
         term_specs=[(0.35, "ZI"), (0.22, "IX"), (-0.16, "YY")],
     ),
-    _make_story2_microcase(
-        case_name="story2_2q_u3_cnot_phase_damping",
+    _make_microcase(
+        case_name="micro_validation_2q_u3_cnot_phase_damping",
         qbit_num=2,
-        builder_fn=build_story2_2q_u3_cnot_phase_damping,
+        builder_fn=build_2q_u3_cnot_phase_damping_microcase,
         required_gate_family=["U3", "CNOT"],
         required_noise_models=["phase_damping"],
         case_kind="individual_noise",
         purpose="Validate the required U3/CNOT bridge with local phase damping.",
         term_specs=[(-0.48, "ZZ"), (0.17, "XI"), (0.14, "IY")],
     ),
-    _make_story2_microcase(
-        case_name="story2_3q_u3_cnot_mixed_local_noise",
+    _make_microcase(
+        case_name="micro_validation_3q_u3_cnot_mixed_local_noise",
         qbit_num=3,
-        builder_fn=build_story2_3q_u3_cnot_mixed_local_noise,
+        builder_fn=build_3q_u3_cnot_mixed_local_noise_microcase,
         required_gate_family=["U3", "CNOT"],
         required_noise_models=[
             "local_depolarizing",
@@ -788,7 +788,7 @@ STORY2_MANDATORY_MICROCASES = [
             "phase_damping",
         ],
         case_kind="mixed_sequence",
-        purpose="Validate the mixed-sequence Story 2 path with all required local noise models in one 3-qubit case.",
+        purpose="Validate the mixed-sequence micro-validation path with all required local noise models in one 3-qubit case.",
         term_specs=[
             (-0.30, "ZII"),
             (0.24, "IZI"),
@@ -800,9 +800,9 @@ STORY2_MANDATORY_MICROCASES = [
 ]
 
 
-STORY2_MANDATORY_MICROCASES_BY_QUBITS = {
+MANDATORY_MICROCASES_BY_QUBITS = {
     qbit_num: [
-        case for case in STORY2_MANDATORY_MICROCASES if case["qbit_num"] == qbit_num
+        case for case in MANDATORY_MICROCASES if case["qbit_num"] == qbit_num
     ]
-    for qbit_num in sorted({case["qbit_num"] for case in STORY2_MANDATORY_MICROCASES})
+    for qbit_num in sorted({case["qbit_num"] for case in MANDATORY_MICROCASES})
 }

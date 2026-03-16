@@ -148,14 +148,14 @@ Implementation-backed status for the completed integrated-backend slice:
   - structured unsupported-workflow outcomes,
   - runtime and peak-memory characterization for workflow-scale cases,
   - and a workflow-facing validation package archived in
-  `benchmarks/density_matrix/artifacts/phase2_task6/` with
-  `task6_story6_publication_bundle.json` as the top-level manifest. That
+  `benchmarks/density_matrix/artifacts/workflow_evidence/` with
+  `workflow_publication_bundle.json` as the top-level manifest. That
   manifest links the canonical workflow contract
-  `story1_canonical_workflow_contract.json`, the Story 2 end-to-end plus trace
-  bundle `story2_end_to_end_trace_bundle.json`, the Story 3 matrix baseline
-  bundle `story3_matrix_baseline_bundle.json`, the Story 4 unsupported-workflow
-  bundle `story4_unsupported_workflow_bundle.json`, and the Story 5
-  interpretation-guardrail bundle `story5_interpretation_bundle.json` while
+  `workflow_contract_bundle.json`, the Story 2 end-to-end plus trace
+  bundle `end_to_end_trace_bundle.json`, the Story 3 matrix baseline
+  bundle `matrix_baseline_bundle.json`, the Story 4 unsupported-workflow
+  bundle `unsupported_workflow_bundle.json`, and the Story 5
+  interpretation-guardrail bundle `workflow_interpretation_bundle.json` while
   preserving traceability to the underlying Task 5 validation bundles.
 
 ### 1.2 Why This Contribution Matters

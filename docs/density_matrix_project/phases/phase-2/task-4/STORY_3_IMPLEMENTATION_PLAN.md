@@ -37,12 +37,12 @@ Out of scope for this story:
 
 - Story 1 is already in place: the required local-noise positive path exists and
   is documented through
-  `benchmarks/density_matrix/task4_story1_required_local_noise_validation.py`.
+  `benchmarks/density_matrix/noise_support/required_local_noise_validation.py`.
 - Story 2 is already in place: the mandatory 1 to 3 qubit exact micro-validation
   gate closes through the canonical
   `benchmarks/density_matrix/validate_squander_vs_qiskit.py` path and the Task 4
   Story 2 wrapper
-  `benchmarks/density_matrix/task4_story2_required_local_noise_micro_validation.py`.
+  `benchmarks/density_matrix/noise_support/required_local_noise_micro_validation.py`.
 - The frozen required baseline remains
   `local_depolarizing`, `amplitude_damping`, and `phase_damping`; Story 3 must
   not dilute that baseline by merging optional cases into the same completion
@@ -362,11 +362,11 @@ Story 3 is complete only when all of the following are true:
   that the low-level density module can express a broader optional
   whole-register baseline than the frozen required VQE-facing contract. Story 3
   should classify that breadth rather than suppress or overclaim it.
-- `task4_story1_required_local_noise_validation.py` and
-  `task4_story2_required_local_noise_micro_validation.py` already provide the
+- `required_local_noise_validation_validation.py` and
+  `required_local_noise_micro_validation.py` already provide the
   required-baseline evidence layers. Story 3 should preserve their semantics and
   add classification on top rather than redesigning them.
-- `validate_squander_vs_qiskit.py` and `story2_vqe_density_validation.py` are the
+- `validate_squander_vs_qiskit.py` and `benchmarks/density_matrix/workflow_evidence/exact_density_vqe_validation.py` are the
   natural places to keep bundle and summary semantics aligned with the broader
   workflow.
 - Optional generalized amplitude damping or coherent over-rotation should remain

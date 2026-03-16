@@ -41,7 +41,7 @@ Out of scope for this story:
   `squander/src-cpp/density_matrix/`, `squander/density_matrix/bindings.cpp`,
   and `tests/density_matrix/test_density_matrix.py`.
 - Story 1 already established a canonical bridge-artifact vocabulary in
-  `benchmarks/density_matrix/story2_vqe_density_validation.py`:
+  `benchmarks/density_matrix/workflow_evidence/exact_density_vqe_validation.py`:
   `bridge_source_type`, `bridge_parameter_count`, `bridge_operation_count`,
   `bridge_gate_count`, `bridge_noise_count`, and `bridge_operations`.
 - Existing density-matrix benchmark scaffolding in

@@ -33,26 +33,26 @@ Out of scope for this story:
 ## Dependencies And Assumptions
 
 - Story 1 is already in place: required local-noise positive-path evidence exists
-  through `task4_story1_required_local_noise_validation.py`.
+  through `required_local_noise_validation_validation.py`.
 - Story 2 is already in place: the mandatory 1 to 3 qubit exact micro-validation
   gate and artifact bundle exist through
   `validate_squander_vs_qiskit.py` and
-  `task4_story2_required_local_noise_micro_validation.py`.
+  `required_local_noise_micro_validation.py`.
 - Story 3 is already in place: optional whole-register depolarizing evidence is
   explicitly classified through
-  `task4_story3_optional_noise_classification_validation.py`.
+  `optional_noise_classification_validation.py`.
 - Story 4 is already in place: unsupported and deferred Task 4 noise requests
   emit structured negative evidence rather than silently degrading through
-  `task4_story4_unsupported_noise_validation.py` and
-  `story4_unsupported_noise_bundle.json`. The stabilized negative schema now
+  `benchmarks/density_matrix/noise_support/unsupported_noise_validation.py` and
+  `unsupported_noise_bundle.json`. The stabilized negative schema now
   includes `support_tier`, `unsupported_category`,
-  `first_unsupported_condition`, `task4_boundary_class`, `failure_stage`, and
+  `first_unsupported_condition`, `noise_boundary_class`, `failure_stage`, and
   `unsupported_status_cases`.
 - Story 5 is already in place: the required local-noise workflow-scale exact
   regime bundle and bounded optimization trace exist through
-  `task4_story5_required_local_noise_workflow_validation.py` as
-  `story5_required_local_noise_workflow_bundle.json` and
-  `story5_required_local_noise_trace_4q.json`. The current workflow bundle now
+  `required_local_noise_workflow_validation.py` as
+  `required_local_noise_workflow_bundle.json` and
+  `required_local_noise_trace_4q.json`. The current workflow bundle now
   fixes the required-baseline summary fields
   `required_cases`, `required_passed_cases`, `required_pass_rate`,
   `mandatory_baseline_completed`, `unsupported_status_cases`,
@@ -63,8 +63,8 @@ Out of scope for this story:
   `DETAILED_PLANNING_PHASE_2.md`, `PUBLICATIONS.md`, and the publication-facing
   expectations already reflected in `PAPER_PHASE_2.md`.
 - The current project already has a strong publication-bundle pattern in
-  `story2_vqe_density_validation.py`, especially
-  `build_story5_bundle()` and the `story5_publication_bundle.json` manifest
+  `benchmarks/density_matrix/workflow_evidence/exact_density_vqe_validation.py`, especially
+  `build_exact_density_validation_bundle()` and the `exact_density_validation_bundle.json` manifest
   shape.
 - Story 6 should assemble and stabilize Task 4 evidence; it should not reopen
   the required/optional/deferred contract, the workflow anchor, or numeric
@@ -98,10 +98,10 @@ Out of scope for this story:
 - [ ] Distinguish mandatory bundle items from optional supporting artifacts.
 - [ ] Keep the manifest narrow enough for Task 4 while still audit-friendly for
       Paper 1 use.
-- [ ] Treat `story4_unsupported_noise_bundle.json` as the current negative bundle
+- [ ] Treat `unsupported_noise_bundle.json` as the current negative bundle
       authority rather than reconstructing unsupported cases from ad hoc logs.
-- [ ] Treat `story5_required_local_noise_workflow_bundle.json` and
-      `story5_required_local_noise_trace_4q.json` as distinct mandatory Story 5
+- [ ] Treat `required_local_noise_workflow_bundle.json` and
+      `required_local_noise_trace_4q.json` as distinct mandatory Story 5
       inventory items rather than re-deriving them from the older Task 2
       workflow outputs.
 
@@ -186,10 +186,10 @@ Out of scope for this story:
 - [ ] Keep the required field set stable enough that Story 6 can validate it.
 - [ ] Keep Story 4 negative metadata fields
       `requested_noise_channel`, `unsupported_category`,
-      `first_unsupported_condition`, `task4_boundary_class`, and
+      `first_unsupported_condition`, `noise_boundary_class`, and
       `failure_stage` available without schema translation.
 - [ ] Keep Story 5 trace metadata fields `support_tier`, `case_purpose`,
-      `counts_toward_mandatory_baseline`, and `required_story5_trace` visible in
+      `counts_toward_mandatory_baseline`, and `required_validation_trace` visible in
       the top-level bundle without repackaging them under different names.
 
 **Evidence produced**
@@ -338,12 +338,12 @@ Out of scope for this story:
       visibly distinct in the notes.
 - [ ] Tie rerun instructions directly to the same scripts and manifest entries
       used by Story 6 bundle generation.
-- [ ] Cite `task4_story4_unsupported_noise_validation.py` and its emitted
-      `story4_unsupported_noise_bundle.json` artifact explicitly in the final
+- [ ] Cite `benchmarks/density_matrix/noise_support/unsupported_noise_validation.py` and its emitted
+      `unsupported_noise_bundle.json` artifact explicitly in the final
       rerun guidance.
-- [ ] Cite `task4_story5_required_local_noise_workflow_validation.py` and the
-      emitted `story5_required_local_noise_workflow_bundle.json` /
-      `story5_required_local_noise_trace_4q.json` pair explicitly in the final
+- [ ] Cite `required_local_noise_workflow_validation.py` and the
+      emitted `required_local_noise_workflow_bundle.json` /
+      `required_local_noise_trace_4q.json` pair explicitly in the final
       rerun guidance.
 
 **Evidence produced**
@@ -409,8 +409,8 @@ Story 6 is complete only when all of the following are true:
 
 ## Implementation Notes
 
-- `story2_vqe_density_validation.py` already contains the project’s strongest
-  publication-bundle pattern through `build_story5_bundle()`. Story 6 should
+- `benchmarks/density_matrix/workflow_evidence/exact_density_vqe_validation.py` already contains the project’s strongest
+  publication-bundle pattern through `build_exact_density_validation_bundle()`. Story 6 should
   adapt that shape for Task 4 rather than invent another manifest style.
 - Stories 1 to 5 already established the required positive-path, exact
   micro-validation, optional classification, unsupported boundary, and
@@ -419,11 +419,11 @@ Story 6 is complete only when all of the following are true:
 - The Task 4 support-tier vocabulary already exists and should remain the common
   language across the top-level bundle. Story 4 now fixes the negative schema
   around `support_tier`, `unsupported_category`,
-  `first_unsupported_condition`, `task4_boundary_class`, `failure_stage`, and
+  `first_unsupported_condition`, `noise_boundary_class`, `failure_stage`, and
   `unsupported_status_cases`; Story 6 should consume those fields directly.
 - Story 5 now fixes the workflow artifact names
-  `story5_required_local_noise_workflow_bundle.json` and
-  `story5_required_local_noise_trace_4q.json` plus the required-workflow summary
+  `required_local_noise_workflow_bundle.json` and
+  `required_local_noise_trace_4q.json` plus the required-workflow summary
   fields `required_cases`, `required_passed_cases`, `required_pass_rate`,
   `mandatory_baseline_completed`, `unsupported_status_cases`,
   `required_trace_case_name`, `required_trace_present`,

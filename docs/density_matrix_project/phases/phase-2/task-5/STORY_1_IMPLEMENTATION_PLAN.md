@@ -48,19 +48,19 @@ Out of scope for this story:
   `benchmarks/density_matrix/validate_squander_vs_qiskit.py`, including
   `Re Tr(H*rho)` comparison against Qiskit Aer, density-validity checks,
   trace-preservation checks, Hermitian-observable consistency checks, and the
-  canonical `story2_micro_validation_bundle.json` output shape.
+  canonical `micro_validation_bundle.json` output shape.
 - Task 4 Story 2 already specializes that canonical harness for the required
   local-noise baseline in
-  `benchmarks/density_matrix/task4_story2_required_local_noise_micro_validation.py`,
+  `benchmarks/density_matrix/noise_support/required_local_noise_micro_validation.py`,
   including required-noise coverage, mixed-sequence-order auditability,
   support-tier semantics, and mandatory-baseline classification.
-- `STORY2_MANDATORY_MICROCASES` in
+- `MANDATORY_MICROCASES` in
   `benchmarks/density_matrix/circuits.py` already provides the natural stable
   inventory for the mandatory 1 to 3 qubit cases.
 - `tests/density_matrix/test_density_matrix.py` already provides useful footholds
   for Story 1 through representative Story 2 microcase tests and the Task 4
   Story 2 bundle-schema test.
-- `benchmarks/density_matrix/story2_vqe_density_validation.py` already consumes
+- `benchmarks/density_matrix/workflow_evidence/exact_density_vqe_validation.py` already consumes
   the canonical micro-validation bundle inside the broader workflow package, so
   Task 5 Story 1 should preserve schema compatibility where possible instead of
   forking into a disconnected artifact vocabulary.
@@ -98,7 +98,7 @@ Out of scope for this story:
   pass/fail set.
 
 **Execution checklist**
-- [ ] Review `STORY2_MANDATORY_MICROCASES` as the canonical case inventory for
+- [ ] Review `MANDATORY_MICROCASES` as the canonical case inventory for
       the Task 5 local-correctness gate.
 - [ ] Confirm the inventory covers the frozen required gate family and each
       required local-noise model individually, plus the mandatory mixed
@@ -421,18 +421,18 @@ Story 1 is complete only when all of the following are true:
   the canonical exactness kernel, threshold metadata, software metadata, and
   machine-readable micro-validation output shape. Story 1 should build on that
   kernel rather than duplicate it.
-- `benchmarks/density_matrix/task4_story2_required_local_noise_micro_validation.py`
+- `benchmarks/density_matrix/noise_support/required_local_noise_micro_validation.py`
   already adds the required-noise coverage, mixed-sequence-order, support-tier,
   and mandatory-baseline semantics most relevant to Task 5 Story 1. Story 1
   should reuse that wrapper or its bundle semantics directly where possible.
-- `STORY2_MANDATORY_MICROCASES` in
+- `MANDATORY_MICROCASES` in
   `benchmarks/density_matrix/circuits.py` already carries the natural mandatory
   case inventory. Story 1 should preserve those case IDs instead of inventing a
   second Task 5-only naming scheme.
 - `tests/density_matrix/test_density_matrix.py` already contains representative
   Story 2 microcase coverage and a Task 4 Story 2 bundle-schema test. Those are
   the most natural footholds for fast Story 1 regression coverage.
-- `benchmarks/density_matrix/story2_vqe_density_validation.py` already consumes
+- `benchmarks/density_matrix/workflow_evidence/exact_density_vqe_validation.py` already consumes
   the canonical micro-validation bundle inside the larger workflow package.
   Story 1 should preserve compatibility where practical so later Task 5 stories
   can reuse the same artifact IDs and status semantics directly.

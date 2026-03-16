@@ -37,26 +37,26 @@ Out of scope for this story:
 ## Dependencies And Assumptions
 
 - Story 1 now emits the canonical workflow-contract artifact through
-  `benchmarks/density_matrix/task6_story1_workflow_contract_validation.py`,
+  `benchmarks/density_matrix/workflow_evidence/workflow_contract_validation.py`,
   writing
-  `benchmarks/density_matrix/artifacts/phase2_task6/story1_canonical_workflow_contract.json`.
+  `benchmarks/density_matrix/artifacts/workflow_evidence/workflow_contract_bundle.json`.
   Story 3 matrix evidence must reference that emitted `workflow_id` and
   `contract_version` directly, and should now also reuse Story 1's emitted
   `thresholds.required_workflow_qubits`,
   `thresholds.fixed_parameter_sets_per_size`, and
   `thresholds.documented_anchor_qubit` where practical.
 - Story 2 now emits
-  `benchmarks/density_matrix/task6_story2_end_to_end_trace_validation.py`,
+  `benchmarks/density_matrix/workflow_evidence/end_to_end_trace_validation.py`,
   writing
-  `benchmarks/density_matrix/artifacts/phase2_task6/story2_end_to_end_trace_bundle.json`.
+  `benchmarks/density_matrix/artifacts/workflow_evidence/end_to_end_trace_bundle.json`.
   Story 3 should treat that bundle as the canonical 4q/6q end-to-end plus trace
   reference and should not re-own trace semantics.
 - Canonical matrix execution surfaces already exist in
-  `benchmarks/density_matrix/story2_vqe_density_validation.py`:
-  `build_story4_parameter_sets()`, `run_story4_workflow_matrix()`, and
-  `build_story4_workflow_bundle()`.
+  `benchmarks/density_matrix/workflow_evidence/exact_density_vqe_validation.py`:
+  `build_exact_regime_parameter_sets()`, `run_exact_regime_workflow_matrix()`, and
+  `build_exact_regime_workflow_bundle()`.
 - Task 5 Story 2 already provides a mature matrix-closure pattern in
-  `benchmarks/density_matrix/task5_story2_workflow_baseline_validation.py`,
+  `benchmarks/density_matrix/validation_evidence/workflow_baseline_validation.py`,
   including stable case IDs, stable parameter-set IDs, required case accounting,
   and mandatory pass-rate semantics.
 - Frozen exact-regime and numeric decisions remain unchanged for this story:
@@ -116,10 +116,10 @@ Out of scope for this story:
 - The Story 3 layer remains a contract-focused matrix gate.
 
 **Execution checklist**
-- [ ] Reuse `run_story4_workflow_matrix()` for matrix case generation and
+- [ ] Reuse `run_exact_regime_workflow_matrix()` for matrix case generation and
       execution.
-- [ ] Reuse `build_story4_parameter_sets()` as the default parameter-set source.
-- [ ] Reuse `build_story4_workflow_bundle()` fields where practical for
+- [ ] Reuse `build_exact_regime_parameter_sets()` as the default parameter-set source.
+- [ ] Reuse `build_exact_regime_workflow_bundle()` fields where practical for
       aggregate matrix interpretation.
 - [ ] Keep Story 3-specific logic focused on canonical workflow identity mapping
       and completeness checks.
@@ -247,7 +247,7 @@ Out of scope for this story:
 
 **Execution checklist**
 - [ ] Add one Story 3 validation entry point (for example
-      `benchmarks/density_matrix/task6_story3_matrix_baseline_validation.py`).
+      `benchmarks/density_matrix/workflow_evidence/matrix_baseline_validation.py`).
 - [ ] Emit one stable Story 3 artifact under a Task 6 artifact directory.
 - [ ] Record generation command, suite identity, thresholds, and provenance
       metadata in artifact output.
@@ -344,12 +344,12 @@ Story 3 is complete only when all of the following are true:
 ## Implementation Notes
 
 - Reuse canonical matrix execution from
-  `benchmarks/density_matrix/story2_vqe_density_validation.py` and matrix
+  `benchmarks/density_matrix/workflow_evidence/exact_density_vqe_validation.py` and matrix
   closure patterns from
-  `benchmarks/density_matrix/task5_story2_workflow_baseline_validation.py`.
+  `benchmarks/density_matrix/validation_evidence/workflow_baseline_validation.py`.
 - In the current Task 6 implementation flow, prefer the committed rich matrix
   surface in
-  `benchmarks/density_matrix/artifacts/phase2_task5/story2_workflow_baseline_bundle.json`
+  `benchmarks/density_matrix/artifacts/validation_evidence/workflow_baseline_bundle.json`
   when it preserves all required matrix metadata, instead of forcing a live
   rerun path to be the only source of Story 3 evidence.
 - Consume the emitted Story 1 contract artifact directly for canonical workflow

@@ -33,43 +33,43 @@ Out of scope for this story:
 ## Dependencies And Assumptions
 
 - Story 1 now emits the canonical workflow-contract artifact through
-  `benchmarks/density_matrix/task6_story1_workflow_contract_validation.py`,
+  `benchmarks/density_matrix/workflow_evidence/workflow_contract_validation.py`,
   writing
-  `benchmarks/density_matrix/artifacts/phase2_task6/story1_canonical_workflow_contract.json`.
+  `benchmarks/density_matrix/artifacts/workflow_evidence/workflow_contract_bundle.json`.
   Story 4 should use that emitted workflow identity as the positive-path anchor
   when distinguishing supported from unsupported variants. Story 1 now also
   defines explicit `required_unsupported_case_fields`; Story 4 should satisfy
   that emitted field inventory rather than inventing a looser unsupported-case
   schema.
 - Story 2 now emits
-  `benchmarks/density_matrix/task6_story2_end_to_end_trace_validation.py`,
+  `benchmarks/density_matrix/workflow_evidence/end_to_end_trace_validation.py`,
   writing
-  `benchmarks/density_matrix/artifacts/phase2_task6/story2_end_to_end_trace_bundle.json`.
+  `benchmarks/density_matrix/artifacts/workflow_evidence/end_to_end_trace_bundle.json`.
   Story 4 should treat that bundle as the concrete supported-path reference for
   4q/6q execution and required-trace identity.
 - Story 3 now emits
-  `benchmarks/density_matrix/task6_story3_matrix_baseline_validation.py`,
+  `benchmarks/density_matrix/workflow_evidence/matrix_baseline_validation.py`,
   writing
-  `benchmarks/density_matrix/artifacts/phase2_task6/story3_matrix_baseline_bundle.json`.
+  `benchmarks/density_matrix/artifacts/workflow_evidence/matrix_baseline_bundle.json`.
   Story 4 should treat that bundle as the canonical matrix-wide positive-path
   reference when distinguishing supported matrix cases from unsupported
   workflow variants.
 - Existing unsupported handling surfaces already exist and should be reused:
   - noise-boundary unsupported classification in
-    `benchmarks/density_matrix/task4_story4_unsupported_noise_validation.py`
+    `benchmarks/density_matrix/noise_support/unsupported_noise_validation.py`
     and the committed artifact
-    `benchmarks/density_matrix/artifacts/phase2_task4/story4_unsupported_noise_bundle.json`,
+    `benchmarks/density_matrix/artifacts/noise_support/unsupported_noise_bundle.json`,
   - backend-mismatch unsupported artifact pattern in
-    `benchmarks/density_matrix/story2_vqe_density_validation.py`
+    `benchmarks/density_matrix/workflow_evidence/exact_density_vqe_validation.py`
     (`run_unsupported_state_vector_density_noise_case()` and `capture_case()`),
     with a committed representative case already present at
-    `benchmarks/density_matrix/artifacts/phase2_task2/story3_unsupported_state_vector_density_noise.json`.
+    `benchmarks/density_matrix/artifacts/exact_density_validation/unsupported_state_vector_density_noise.json`.
 - Bridge-specific unsupported cases remain a useful optional extension, but the
   strongest currently committed Story 4 evidence surfaces are unsupported or
   deferred noise boundaries plus backend-incompatible workflow requests.
 - Existing classification vocabulary in
-  `benchmarks/density_matrix/task4_support_tiers.py` and
-  `story2_vqe_density_validation.py` is preferred to introducing Task 6-only
+  `benchmarks/density_matrix/noise_support/support_tiers.py` and
+  `benchmarks/density_matrix/workflow_evidence/exact_density_vqe_validation.py` is preferred to introducing Task 6-only
   synonyms.
 - Frozen boundary decisions remain unchanged for this story:
   `P2-ADR-009`, `P2-ADR-011`, and `P2-ADR-012`.
@@ -135,7 +135,7 @@ Out of scope for this story:
       canonical benchmark paths.
 - [ ] Reuse existing unsupported fields such as `unsupported_category`,
       `first_unsupported_condition`, `unsupported_reason`, `failure_stage`, and
-      `task4_boundary_class` where applicable.
+      `noise_boundary_class` where applicable.
 - [ ] Avoid introducing Task 6-only synonymous labels when existing fields carry
       the required semantics.
 - [ ] Keep Story 4 layer focused on deterministic boundary closure and artifact
@@ -273,7 +273,7 @@ Out of scope for this story:
 
 **Execution checklist**
 - [ ] Add one Story 4 validation entry point (for example
-      `benchmarks/density_matrix/task6_story4_unsupported_workflow_validation.py`).
+      `benchmarks/density_matrix/workflow_evidence/unsupported_workflow_validation.py`).
 - [ ] Emit one stable Story 4 unsupported bundle under Task 6 artifacts.
 - [ ] Record generation command, suite identity, and provenance metadata.
 - [ ] Keep Story 4 artifact focused on unsupported boundary behavior.
@@ -367,16 +367,16 @@ Story 4 is complete only when all of the following are true:
 ## Implementation Notes
 
 - Reuse unsupported classification and validation surfaces from:
-  `task3_story3_unsupported_bridge_validation.py`,
-  `task4_story4_unsupported_noise_validation.py`, and
-  `story2_vqe_density_validation.py`.
+  `unsupported_bridge_validation.py`,
+  `benchmarks/density_matrix/noise_support/unsupported_noise_validation.py`, and
+  `benchmarks/density_matrix/workflow_evidence/exact_density_vqe_validation.py`.
 - Use the emitted Story 1 contract artifact as the canonical source for
   workflow-identity fields and required unsupported-case field inventory so
   Story 4 negative evidence names the same workflow contract that Stories 2 and
   3 positively exercise.
 - Preserve field vocabulary where practical (`unsupported_category`,
   `first_unsupported_condition`, `unsupported_reason`, `failure_stage`,
-  `task4_boundary_class`, support-path pass flags).
+  `noise_boundary_class`, support-path pass flags).
 - Keep Story 4 focused on deterministic unsupported behavior and negative
   evidence emission; do not fold Story 5 interpretation logic into this layer.
 - Prefer one thin Story 4 unsupported bundle that references canonical fields

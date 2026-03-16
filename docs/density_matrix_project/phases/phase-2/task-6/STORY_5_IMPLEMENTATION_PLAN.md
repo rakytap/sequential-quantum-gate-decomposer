@@ -35,37 +35,37 @@ Out of scope for this story:
 ## Dependencies And Assumptions
 
 - Story 1 now emits the canonical workflow-contract artifact through
-  `benchmarks/density_matrix/task6_story1_workflow_contract_validation.py`,
+  `benchmarks/density_matrix/workflow_evidence/workflow_contract_validation.py`,
   writing
-  `benchmarks/density_matrix/artifacts/phase2_task6/story1_canonical_workflow_contract.json`.
+  `benchmarks/density_matrix/artifacts/workflow_evidence/workflow_contract_bundle.json`.
   Story 5 interpretation should treat that emitted contract as the canonical
   identity anchor for all included and excluded evidence.
 - Story 2 now emits
-  `benchmarks/density_matrix/task6_story2_end_to_end_trace_validation.py`,
+  `benchmarks/density_matrix/workflow_evidence/end_to_end_trace_validation.py`,
   writing
-  `benchmarks/density_matrix/artifacts/phase2_task6/story2_end_to_end_trace_bundle.json`.
+  `benchmarks/density_matrix/artifacts/workflow_evidence/end_to_end_trace_bundle.json`.
   Story 5 should interpret that bundle as the mandatory 4q/6q end-to-end plus
   required-trace evidence layer for Task 6 completion.
 - Story 3 now emits
-  `benchmarks/density_matrix/task6_story3_matrix_baseline_validation.py`,
+  `benchmarks/density_matrix/workflow_evidence/matrix_baseline_validation.py`,
   writing
-  `benchmarks/density_matrix/artifacts/phase2_task6/story3_matrix_baseline_bundle.json`.
+  `benchmarks/density_matrix/artifacts/workflow_evidence/matrix_baseline_bundle.json`.
   Story 5 should interpret that bundle as the mandatory 4/6/8/10 fixed-
   parameter matrix evidence layer for Task 6 completion.
 - Story 4 now emits
-  `benchmarks/density_matrix/task6_story4_unsupported_workflow_validation.py`,
+  `benchmarks/density_matrix/workflow_evidence/unsupported_workflow_validation.py`,
   writing
-  `benchmarks/density_matrix/artifacts/phase2_task6/story4_unsupported_workflow_bundle.json`.
+  `benchmarks/density_matrix/artifacts/workflow_evidence/unsupported_workflow_bundle.json`.
   Story 5 should interpret that bundle as the canonical unsupported/deferred
   negative-evidence layer for exclusion from the main Task 6 claim.
 - The committed optional evidence surface in
-  `benchmarks/density_matrix/artifacts/phase2_task4/story3_optional_noise_classification_bundle.json`
+  `benchmarks/density_matrix/artifacts/noise_support/optional_noise_classification_bundle.json`
   should be reused as the canonical supplemental optional-evidence layer.
 - Task 5 Story 5 interpretation workflow in
-  `benchmarks/density_matrix/task5_story5_interpretation_validation.py` provides
+  `benchmarks/density_matrix/validation_evidence/interpretation_validation.py` provides
   a proven pattern that Story 5 should reuse where practical.
 - Existing support-tier and boundary taxonomy from
-  `benchmarks/density_matrix/task4_support_tiers.py` should remain the canonical
+  `benchmarks/density_matrix/noise_support/support_tiers.py` should remain the canonical
   classification vocabulary.
 - Story 4 outputs should already include explicit unsupported status and boundary
   diagnostics required for Story 5 interpretation, and should now also satisfy
@@ -261,7 +261,7 @@ Out of scope for this story:
 
 **Execution checklist**
 - [ ] Add one Story 5 validation entry point (for example
-      `benchmarks/density_matrix/task6_story5_interpretation_validation.py`).
+      `benchmarks/density_matrix/workflow_evidence/workflow_interpretation_validation.py`).
 - [ ] Emit one stable Story 5 interpretation artifact under Task 6 artifacts.
 - [ ] Record generation command, suite identity, and provenance metadata.
 - [ ] Keep Story 5 artifact focused on interpretation guardrails, not publication
@@ -352,7 +352,7 @@ Story 5 is complete only when all of the following are true:
 ## Implementation Notes
 
 - Use Task 5 Story 5 implementation as the baseline pattern:
-  `benchmarks/density_matrix/task5_story5_interpretation_validation.py`.
+  `benchmarks/density_matrix/validation_evidence/interpretation_validation.py`.
 - Preserve the emitted Story 1 workflow identity and contract version in Story 5
   summaries so closure is computed against one named canonical workflow rather
   than an inferred bundle family.

@@ -36,20 +36,20 @@ Out of scope for this story:
 - Stories 1 to 3 are already in place: the supported bridge path exists, the
   local bridge surface is validated, and unsupported cases are explicit.
 - The existing workflow-level validation surface already exists in
-  `benchmarks/density_matrix/story2_vqe_density_validation.py` and currently
+  `benchmarks/density_matrix/workflow_evidence/exact_density_vqe_validation.py` and currently
   covers part of the eventual workflow package.
 - Story 1 already added canonical supported-bridge fields to the fixed-parameter
   artifacts: `bridge_source_type`, `bridge_parameter_count`,
   `bridge_operation_count`, `bridge_gate_count`, `bridge_noise_count`, and
   `bridge_operations`.
 - Story 2 now provides a dedicated local bridge-validation surface in
-  `benchmarks/density_matrix/task3_story2_bridge_validation.py` with a stable
-  `task3_story2_bridge_micro_validation_bundle.json` bundle and per-case bridge
+  `benchmarks/density_matrix/bridge_scope/bridge_validation.py` with a stable
+  `bridge_micro_validation_bundle.json` bundle and per-case bridge
   gate fields such as `source_pass`, `gate_pass`, `noise_pass`,
   `operation_match_pass`, and `execution_ready`.
 - Story 3 now provides a dedicated bridge-local unsupported surface in
-  `benchmarks/density_matrix/task3_story3_unsupported_bridge_validation.py`
-  with the `task3_story3_unsupported_bridge_bundle.json` bundle and a fixed
+  `benchmarks/density_matrix/bridge_scope/unsupported_bridge_validation.py`
+  with the `unsupported_bridge_bundle.json` bundle and a fixed
   representative taxonomy: `circuit_source`, `lowering_path`,
   `noise_insertion`, and `noise_type`.
 - Story 3 also established that this representative negative evidence can be
@@ -397,16 +397,16 @@ Story 4 is complete only when all of the following are true:
 
 ## Implementation Notes
 
-- `benchmarks/density_matrix/story2_vqe_density_validation.py` already provides
+- `benchmarks/density_matrix/workflow_evidence/exact_density_vqe_validation.py` already provides
   the natural backbone for Story 4 and should be extended rather than replaced.
-- The current `run_fixed_parameter_case()` / `build_story1_bridge_metadata()`
+- The current `run_fixed_parameter_case()` / `build_anchor_bridge_metadata()`
   surface already defines the canonical supported-bridge fields. Story 4 should
   extend that schema rather than create a second workflow-only bridge format.
-- `benchmarks/density_matrix/task3_story2_bridge_validation.py` is now the
+- `benchmarks/density_matrix/bridge_scope/bridge_validation.py` is now the
   authoritative local bridge gate. Story 4 should align its pass/fail vocabulary
   and artifact shape with that bundle where practical, while still keeping the
   workflow-scale outputs distinct.
-- `benchmarks/density_matrix/task3_story3_unsupported_bridge_validation.py` is
+- `benchmarks/density_matrix/bridge_scope/unsupported_bridge_validation.py` is
   now the authoritative bridge-local unsupported surface. Story 4 should reuse
   its unsupported taxonomy and representative negative expectations instead of
   inventing a workflow-specific unsupported language.

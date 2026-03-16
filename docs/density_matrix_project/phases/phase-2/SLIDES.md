@@ -153,7 +153,7 @@ lines 314-439. Header: "Complexity: O(2^{2N}) instead of O(2^{3N})."*
   backend --- prevents scientifically ambiguous results
 
 *Evidence: VQE_Base.cpp, lines 233-318 (10 throw points).
-story4_unsupported_workflow_bundle.json: structured negative evidence with
+unsupported_workflow_bundle.json: structured negative evidence with
 5+ unsupported-case artifacts.*
 
 ---
@@ -179,7 +179,7 @@ Per-evaluation runtime on mandatory workflow-scale cases:
 - **Crossover at 10 qubits** motivates planned kernel-level and
   partitioning-based acceleration (Phase 3)
 
-*Evidence: story3_matrix_baseline_bundle.json, 40 cases with runtime data.
+*Evidence: matrix_baseline_bundle.json, 40 cases with runtime data.
 Do NOT cite the standalone benchmark.log numbers (90,000x) --- those compare
 different levels of the software stack.*
 
@@ -225,9 +225,9 @@ All numbers from stored JSON artifacts with git revision provenance:
   state_vector + density_noise)
 - All fail before execution with named reasons
 
-*Sources: story1_local_correctness_bundle.json,
-story3_matrix_baseline_bundle.json, story2_trace_4q.json,
-story4_unsupported_workflow_bundle.json.*
+*Sources: local_correctness_bundle.json,
+matrix_baseline_bundle.json, optimization_trace_4q.json,
+unsupported_workflow_bundle.json.*
 
 ---
 
@@ -299,10 +299,10 @@ story4_unsupported_workflow_bundle.json.*
 | Ordered noise at gate positions                | Verified  | `after_gate_index` in code; differs from rule-based |
 | Backend dispatch is standard practice          | Verified  | Same in Qiskit, PennyLane, Cirq                    |
 | No silent fallback                             | Verified  | 10 throw points in VQE_Base.cpp; artifact evidence  |
-| 5-70x faster at 4-8q                          | Verified  | story3_matrix_baseline_bundle.json                  |
+| 5-70x faster at 4-8q                          | Verified  | matrix_baseline_bundle.json                  |
 | Qiskit Aer 1.7x faster at 10q                 | Verified  | Same artifact; crossover confirmed                  |
-| Micro-validation error < 2.5e-18               | Verified  | story1_local_correctness_bundle.json                |
-| 40/40 workflow cases pass at 1e-8              | Verified  | story3_matrix_baseline_bundle.json                  |
-| Optimization trace 0.936 -> -4.259             | Verified  | story2_trace_4q.json                                |
+| Micro-validation error < 2.5e-18               | Verified  | local_correctness_bundle.json                |
+| 40/40 workflow cases pass at 1e-8              | Verified  | matrix_baseline_bundle.json                  |
+| Optimization trace 0.936 -> -4.259             | Verified  | optimization_trace_4q.json                                |
 | Density-aware acceleration path unique         | Verified  | No equivalent in other frameworks' plans            |
 | Individual techniques are standard             | Verified  | Acknowledged explicitly                             |
