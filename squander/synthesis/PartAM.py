@@ -22,6 +22,7 @@ from dataclasses import dataclass
 
 import multiprocessing as mp
 from multiprocessing import Pool
+from multiprocessing.pool import AsyncResult
 import os
 import logging
 from tqdm import tqdm
@@ -345,6 +346,10 @@ class qgd_Partition_Aware_Mapping:
         subcircuits = partitioned_circuit.get_Gates()
         optimized_results = [None] * len(subcircuits)
 
+        # Config with parallel=1 for large partitions (use internal C++ parallelism)
+        large_partition_config = dict(self.config)
+        large_partition_config['parallel'] = 1
+
         with Pool(processes=mp.cpu_count()) as pool:
             for partition_idx, subcircuit in enumerate( subcircuits ):
 
@@ -359,10 +364,19 @@ class qgd_Partition_Aware_Mapping:
                 for idx in range( len(involved_qbits) ):
                     qbit_map[ involved_qbits[idx] ] = idx
                 remapped_subcircuit = subcircuit.Remap_Qbits( qbit_map, qbit_num_sub )
-                optimized_results[partition_idx] = pool.apply_async( self.DecomposePartition_Sequential, (remapped_subcircuit, subcircuit_parameters, self.config, mini_topologies, involved_qbits, qbit_map) )
+
+                if qbit_num_sub == 2:
+                    optimized_results[partition_idx] = pool.apply_async( self.DecomposePartition_Sequential, (remapped_subcircuit, subcircuit_parameters, self.config, mini_topologies, involved_qbits, qbit_map) )
+                elif qbit_num_sub >= 3:
+                    optimized_results[partition_idx] = self.DecomposePartition_Sequential(remapped_subcircuit, subcircuit_parameters, large_partition_config, mini_topologies, involved_qbits, qbit_map)
+                else:
+                    optimized_results[partition_idx] = self.DecomposePartition_Sequential(remapped_subcircuit, subcircuit_parameters, self.config, mini_topologies, involved_qbits, qbit_map)
 
             for partition_idx, subcircuit in enumerate( tqdm(subcircuits, desc="First Synthesis",disable=self.config.get('progressbar', 0) == False) ):
-                optimized_results[partition_idx] = optimized_results[partition_idx].get()
+                result = optimized_results[partition_idx]
+                if isinstance(result, AsyncResult):
+                    optimized_results[partition_idx] = result.get()
+                # else: already a resolved result (sequential or single-qubit)
 
         # ---- Phase 3: ILP partition selection with synthesis-cost weights ----
         weights = []
