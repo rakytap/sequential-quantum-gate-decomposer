@@ -89,23 +89,13 @@ static inline LevelResult enumerate_unordered_cnot_BFS_level_init(int n) {
     return result;
 }
 
-// normalize unordered CNOT pair: (i,j) == (j,i)
-static inline std::pair<int, int> norm_pair(int i, int j) {
-    return (i <= j) ? std::make_pair(i, j) : std::make_pair(j, i);
-}
-
 // Return true iff 'seq' (list of CNOT pairs) equals the canonical
 // Kahn topological order under the tie-breaker: lexicographic by pair,
 // then by original index (to stabilize identical pairs).
-static int canonical_prefix_ok(const std::vector<std::pair<int, int>>& seq) {
-    const int m = static_cast<int>(seq.size());
+static int canonical_prefix_ok(const GrayCode& path, const std::vector<matrix_base<int>>& topology) {
+    const int m = static_cast<int>(path.size());
     if (m <= 1)
         return -1;
-
-    // 1) normalize
-    std::vector<std::pair<int, int>> ops(m);
-    for (int k = 0; k < m; ++k)
-        ops[k] = norm_pair(seq[k].first, seq[k].second);
 
     // 2) per-qubit serial constraints: edge u->v if ops u,v share a qubit and u < v
     std::vector<std::vector<int>> succ(m);
@@ -114,8 +104,8 @@ static int canonical_prefix_ok(const std::vector<std::pair<int, int>>& seq) {
     last_on.reserve(m * 2);
 
     for (int k = 0; k < m; ++k) {
-        const int a = ops[k].first;
-        const int b = ops[k].second;
+        const int a = topology[path.data[k]][0];
+        const int b = topology[path.data[k]][1];
         for (int q : {a, b}) {
             std::unordered_map<int, int>::iterator it = last_on.find(q);
             if (it != last_on.end()) {
@@ -144,7 +134,7 @@ static int canonical_prefix_ok(const std::vector<std::pair<int, int>>& seq) {
     std::priority_queue<Node, std::vector<Node>, Cmp> pq;
     for (int k = 0; k < m; ++k)
         if (indeg[k] == 0)
-            pq.push(Node{ops[k], k});
+            pq.push(Node{std::make_pair(topology[path.data[k]][0], topology[path.data[k]][1]), k});
 
     // 4) walk canonical order and require it matches the given prefix exactly
     for (int pos = 0; pos < m; ++pos) {
@@ -157,7 +147,7 @@ static int canonical_prefix_ok(const std::vector<std::pair<int, int>>& seq) {
 
         for (int v : succ[u.idx]) {
             if (--indeg[v] == 0)
-                pq.push(Node{ops[v], v});
+                pq.push(Node{std::make_pair(topology[path.data[v]][0], topology[path.data[v]][1]), v});
         }
     }
     return -1;
@@ -169,12 +159,7 @@ static int is_unique_structure(const GrayCode& path, const std::vector<matrix_ba
             return false; // avoid more than 3 repeated CNOTs
         }
     }
-    std::vector<std::pair<int, int>> seq_pairs_vec;
-    for (size_t idx = 0; idx < static_cast<size_t>(path.size()); idx++) {
-        seq_pairs_vec.push_back(
-            std::pair<int, int>(topology[path.data[idx]][0], topology[path.data[idx]][1]));
-    }
-    return canonical_prefix_ok(seq_pairs_vec) < 0; // not canonical prefix
+    return canonical_prefix_ok(path, topology) < 0; // not canonical prefix
 }
 
 /**
@@ -230,13 +215,9 @@ static inline LevelResult enumerate_unordered_cnot_BFS_level_step(LevelInfo& L,
                     std::all_of(last_pairs.data + last_pairs.size() - 3, last_pairs.data + last_pairs.size(),
                                 [p](const int& x) { return x == p; }))
                     continue; // avoid more than 3 repeated CNOTs
-                std::vector<std::pair<int, int>> seq_pairs_vec;
-                for (size_t idx = 0; idx < static_cast<size_t>(last_pairs.size()); idx++) {
-                    seq_pairs_vec.push_back(
-                        std::pair<int, int>(topology[last_pairs.data[idx]][0], topology[last_pairs.data[idx]][1]));
-                }
-                seq_pairs_vec.push_back(m1);
-                if (canonical_prefix_ok(seq_pairs_vec) >= 0)
+                GrayCode seqp = last_pairs.add_Digit(static_cast<int>(topology.size()));
+                seqp[seqp.size() - 1] = p;
+                if (canonical_prefix_ok(seqp, topology) >= 0)
                     continue; // not canonical prefix
             }
 
@@ -429,6 +410,24 @@ N_Qubit_Decomposition_Tree_Search::N_Qubit_Decomposition_Tree_Search(Matrix Umtx
                 topology.push_back(edge);
             }
         }
+    } else {
+        for (size_t idx = 0; idx < topology.size(); idx++) {
+            if (topology[idx].size() != 2) {
+                std::string error("invalid topology: each element should be a pair of integers");
+                throw error;
+            }
+            if (topology[idx][0] < 0 || topology[idx][0] >= qbit_num || topology[idx][1] < 0 || topology[idx][1] >= qbit_num) {
+                std::string error("invalid topology: qubit indices should be between 0 and qbit_num-1");
+                throw error;
+            }
+            if (topology[idx][0] == topology[idx][1]) {
+                std::string error("invalid topology: target and control qubits should be different");
+                throw error;
+            }
+            if (topology[idx][0] > topology[idx][1]) {
+                std::swap(topology[idx][0], topology[idx][1]);
+            }
+        }
     }
 
     // construct the possible CNOT combinations within a single level
@@ -581,6 +580,10 @@ Gates_block* N_Qubit_Decomposition_Tree_Search::determine_gate_structure(Matrix_
         double minimum_best_solution = current_minimum;
         LevelInfo li;
         std::vector<std::vector<int>> all_cuts = unique_cuts(qbit_num);
+        std::sort(all_cuts.begin(), all_cuts.end(), [](const std::vector<int>& a, const std::vector<int>& b){
+            if (a.size() != b.size()) return a.size() < b.size();
+            return std::lexicographical_compare(a.begin(), a.end(), b.begin(), b.end());
+        });
         std::map<std::pair<int, int>, std::vector<int>> pair_affects;
         for (const matrix_base<int>& pair : topology) {
             std::vector<int> cuts;
@@ -690,9 +693,11 @@ SearchNode N_Qubit_Decomposition_Tree_Search::evaluate_path(
     for (const std::vector<int>& cut : all_cuts) {
         if (cut.size() != 1) continue;
         int max_rank = 2*std::min(cut.size(), qbit_num-cut.size());
+        //int max_rank = 2;
         std::tuple<int, double, std::vector<int>, std::vector<std::pair<int, double>>> rank_result;
         for (int rank = max_rank-1; rank >= 0; rank--) {
             cDecomp_custom_random.set_osr_params({cut}, rank, false);
+            //cDecomp_custom_random.set_osr_params(all_cuts, rank, true);
             cDecomp_custom_random.start_decomposition();
             Matrix U = Umtx.copy();
             Matrix_real params = cDecomp_custom_random.get_optimized_parameters();
@@ -703,6 +708,7 @@ SearchNode N_Qubit_Decomposition_Tree_Search::evaluate_path(
             for (const std::vector<int>& eval_cut : all_cuts) {
                 osr_result.emplace_back(operator_schmidt_rank(U, qbit_num, eval_cut, Fnorm, osr_tol, true));
                 if (cut == eval_cut) newrank = osr_result.back().first;
+                //newrank = std::max(newrank, osr_result.back().first);
             }
             double best_kappa = std::numeric_limits<double>::infinity();
             std::vector<int> best_edge_counts;
@@ -718,23 +724,92 @@ SearchNode N_Qubit_Decomposition_Tree_Search::evaluate_path(
     return ev_results;
 };
 
-bool is_subsequence(const GrayCode& small, const GrayCode& big) {
-    if (small.size() > big.size()) return false;
-    size_t i = 0, j = 0;
-    while (i < small.size() && j < big.size()) {
-        if (small[i] == big[j]) ++i;
-        ++j;
+std::vector<uint32_t> build_pred_mask(const GrayCode& ops,
+    const std::vector<matrix_base<int>>& topology) {
+    const int m = static_cast<int>(ops.size());
+    std::vector<uint32_t> pred_mask(m, 0);
+
+    std::unordered_map<int,int> last_on;
+    last_on.reserve(m * 2);
+
+    for (int k = 0; k < m; ++k) {
+        int a = topology[ops[k]][0];
+        int b = topology[ops[k]][1];
+
+        for (int q : {a, b}) {
+            auto it = last_on.find(q);
+            if (it != last_on.end()) {
+                int prev = it->second;
+                pred_mask[k] |= (1u << prev);
+                it->second = k;
+            } else {
+                last_on.emplace(q, k);
+            }
+        }
     }
-    return i == small.size();
+
+    return pred_mask;
+}
+
+bool contains_topological_subsequence(
+    const GrayCode& small, const GrayCode& big,
+    const std::vector<matrix_base<int>>& topology)
+{
+    std::vector<uint32_t> pred_mask = build_pred_mask(small, topology);
+    const int m = static_cast<int>(small.size());
+    if (m == 0) return true;
+    if (m > 31) {
+        // this should never happen
+        throw std::runtime_error("pattern too large for uint32_t mask");
+    }
+
+    const uint32_t FULL = (1u << m) - 1u;
+
+    // reachable[S] = whether subset S of small nodes can be matched
+    // after scanning some prefix of big
+    std::vector<char> reachable(1u << m, 0), next_reachable(1u << m, 0);
+    reachable[0] = 1;
+
+    for (int i = 0; i < big.size(); i++) {
+        int b = big[i];
+        next_reachable = reachable; // skipping b is always allowed
+
+        for (uint32_t S = 0; S <= FULL; ++S) {
+            if (!reachable[S]) continue;
+
+            // try matching b to any currently available node u
+            for (int u = 0; u < m; ++u) {
+                uint32_t bit = 1u << u;
+                if (S & bit) continue; // already matched
+
+                // all predecessors of u must already be in S
+                if ((pred_mask[u] & ~S) != 0) continue;
+
+                // labels must match
+                if (small[u] != b) continue;
+
+                next_reachable[S | bit] = 1;
+            }
+        }
+
+        reachable.swap(next_reachable);
+
+        if (reachable[FULL]) return true;
+    }
+
+    return reachable[FULL];
 }
 
 struct ForbiddenSubseqSet {
     std::vector<GrayCode> patterns;
+    const std::vector<matrix_base<int>>& topology;
+
+    ForbiddenSubseqSet(const std::vector<matrix_base<int>>& topology) : topology(topology) {}
 
     // Returns true if candidate should be pruned
     bool contains_forbidden_subsequence(const GrayCode& candidate) const {
         for (const auto& pat : patterns) {
-            if (is_subsequence(pat, candidate)) {
+            if (contains_topological_subsequence(pat, candidate, topology)) {
                 return true;
             }
         }
@@ -745,7 +820,7 @@ struct ForbiddenSubseqSet {
     void insert_forbidden(const GrayCode& path) {
         // If already covered by a smaller forbidden pattern, skip
         for (const auto& pat : patterns) {
-            if (is_subsequence(pat, path)) {
+            if (contains_topological_subsequence(pat, path, topology)) {
                 return;
             }
         }
@@ -755,7 +830,7 @@ struct ForbiddenSubseqSet {
             std::remove_if(
                 patterns.begin(), patterns.end(),
                 [&](const GrayCode& pat) {
-                    return is_subsequence(path, pat);
+                    return contains_topological_subsequence(pat, path, topology);
                 }),
             patterns.end()
         );
@@ -776,7 +851,7 @@ GrayCode N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures_bes
     MinCnotBoundSolver osr_bound_solver(qbit_num, all_cuts, topology);
     std::priority_queue<SearchNode, std::vector<SearchNode>, std::greater<SearchNode>> heap;
     std::set<GrayCode> visited;
-    ForbiddenSubseqSet forbidden;
+    ForbiddenSubseqSet forbidden(topology);
 
     N_Qubit_Decomposition_custom&& cDecomp_custom_random = perform_optimization(nullptr);
     cDecomp_custom_random.set_cost_function_variant(OSR_ENTANGLEMENT);
@@ -793,7 +868,12 @@ GrayCode N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures_bes
         }
         if (forbidden.contains_forbidden_subsequence(path)) {
             return false;
-        }        
+        }
+        // for (int i = 0; i < path.size(); i++) {
+        //     if (visited.find(path.remove_Digit(i)) == visited.end()) {
+        //         return false;
+        //     }
+        // }
         
         //std::chrono::time_point<std::chrono::high_resolution_clock> start = std::chrono::high_resolution_clock::now();
         SearchNode sn = evaluate_path(cDecomp_custom_random, osr_bound_solver, all_cuts, Fnorm, osr_tol, distrib_real, gen, path);
