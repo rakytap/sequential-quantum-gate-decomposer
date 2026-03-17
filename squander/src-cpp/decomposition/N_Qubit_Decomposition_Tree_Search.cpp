@@ -692,7 +692,7 @@ SearchNode N_Qubit_Decomposition_Tree_Search::evaluate_path(
                                                     static_cast<int>(optimized_parameters.size()));
     for (const std::vector<int>& cut : all_cuts) {
         if (cut.size() != 1) continue;
-        int max_rank = 2*std::min(cut.size(), qbit_num-cut.size());
+        int max_rank = 2*(int)std::min(cut.size(), qbit_num-cut.size());
         //int max_rank = 2;
         std::tuple<int, double, std::vector<int>, std::vector<std::pair<int, double>>> rank_result;
         for (int rank = max_rank-1; rank >= 0; rank--) {
@@ -737,7 +737,7 @@ std::vector<uint32_t> build_pred_mask(const GrayCode& ops,
         int b = topology[ops[k]][1];
 
         for (int q : {a, b}) {
-            auto it = last_on.find(q);
+            std::unordered_map<int,int>::iterator it = last_on.find(q);
             if (it != last_on.end()) {
                 int prev = it->second;
                 pred_mask[k] |= (1u << prev);
@@ -808,7 +808,7 @@ struct ForbiddenSubseqSet {
 
     // Returns true if candidate should be pruned
     bool contains_forbidden_subsequence(const GrayCode& candidate) const {
-        for (const auto& pat : patterns) {
+        for (const GrayCode& pat : patterns) {
             if (contains_topological_subsequence(pat, candidate, topology)) {
                 return true;
             }
@@ -819,7 +819,7 @@ struct ForbiddenSubseqSet {
     // Insert a newly discovered forbidden path, keeping only minimal patterns
     void insert_forbidden(const GrayCode& path) {
         // If already covered by a smaller forbidden pattern, skip
-        for (const auto& pat : patterns) {
+        for (const GrayCode& pat : patterns) {
             if (contains_topological_subsequence(pat, path, topology)) {
                 return;
             }
