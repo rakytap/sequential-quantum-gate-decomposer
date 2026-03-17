@@ -350,7 +350,13 @@ class qgd_Partition_Aware_Mapping:
         large_partition_config = dict(self.config)
         large_partition_config['parallel'] = 1
 
-        with Pool(processes=mp.cpu_count()) as pool:
+        # Use fewer workers for 3+ qubit partitions to avoid oversubscription
+        # from C++ internal threads (parallel=1) competing with pool workers
+        n_cpus = mp.cpu_count()
+        large_pool_size = max(1, n_cpus // 4)
+
+        with Pool(processes=n_cpus) as pool, \
+             Pool(processes=large_pool_size) as large_pool:
             for partition_idx, subcircuit in enumerate( subcircuits ):
 
                 start_idx = subcircuit.get_Parameter_Start_Index()
@@ -368,7 +374,7 @@ class qgd_Partition_Aware_Mapping:
                 if qbit_num_sub == 2:
                     optimized_results[partition_idx] = pool.apply_async( self.DecomposePartition_Sequential, (remapped_subcircuit, subcircuit_parameters, self.config, mini_topologies, involved_qbits, qbit_map) )
                 elif qbit_num_sub >= 3:
-                    optimized_results[partition_idx] = self.DecomposePartition_Sequential(remapped_subcircuit, subcircuit_parameters, large_partition_config, mini_topologies, involved_qbits, qbit_map)
+                    optimized_results[partition_idx] = large_pool.apply_async( self.DecomposePartition_Sequential, (remapped_subcircuit, subcircuit_parameters, large_partition_config, mini_topologies, involved_qbits, qbit_map) )
                 else:
                     optimized_results[partition_idx] = self.DecomposePartition_Sequential(remapped_subcircuit, subcircuit_parameters, self.config, mini_topologies, involved_qbits, qbit_map)
 

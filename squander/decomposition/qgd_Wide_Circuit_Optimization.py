@@ -1031,7 +1031,10 @@ class qgd_Wide_Circuit_Optimization:
         else:
             # list of AsyncResult objects (for 2-qubit) or direct results (for 1-qubit and 3+ qubit)
             async_results = [None] * len(subcircuits)
-            with Pool(processes=mp.cpu_count()) as pool:
+            n_cpus = mp.cpu_count()
+            large_pool_size = max(1, n_cpus // 4)
+            with Pool(processes=n_cpus) as pool, \
+                 Pool(processes=large_pool_size) as large_pool:
 
                 #  code for iterate over partitions and optimize them
                 for partition_idx, subcircuit in enumerate( subcircuits ):
@@ -1052,10 +1055,12 @@ class qgd_Wide_Circuit_Optimization:
                     if qbit_num_sub == 2:
                         async_results[partition_idx]  = pool.apply_async( self.PartitionDecompositionProcess, (subcircuit, subcircuit_parameters, config,
                                                                                                             None if structures is None or partition_idx >= len(structures) else structures[partition_idx]))
+                    elif qbit_num_sub >= 3:
+                        large_config = {**config, 'parallel': 1}
+                        async_results[partition_idx]  = large_pool.apply_async( self.PartitionDecompositionProcess, (subcircuit, subcircuit_parameters, large_config,
+                                                                                                            None if structures is None or partition_idx >= len(structures) else structures[partition_idx]))
                     else:
-                        # 1-qubit and 3+ qubit: run sequentially; use internal C++ parallelism for large partitions
-                        seq_config = {**config, 'parallel': 1} if qbit_num_sub >= 3 else config
-                        async_results[partition_idx] = self.PartitionDecompositionProcess(subcircuit, subcircuit_parameters, seq_config,
+                        async_results[partition_idx] = self.PartitionDecompositionProcess(subcircuit, subcircuit_parameters, config,
                                                                                          None if structures is None or partition_idx >= len(structures) else structures[partition_idx])
 
                 #  code for iterate over async results and retrieve the new subcircuits
