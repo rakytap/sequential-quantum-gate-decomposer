@@ -36,11 +36,11 @@ if __name__ == '__main__':
             'test_subcircuits': False,
             'test_final_circuit': True,
             'max_partition_size': 3,
-            'beam': 16,
+            'beam': None,
             "use_osr": True,
             "use_graph_search": True,
             'tolerance': 1e-10,
-            **{'use_basin_hopping': 1, 'bh_T': 1.1822334624366124, 'bh_stepsize': 0.9020671823381502, 'bh_interval': 165, 'bh_target_accept_rate': 0.7037812116166546, 'bh_stepwise_factor': 0.8254028860713254}
+            **{'use_basin_hopping': True, 'bh_T': 1.1822334624366124, 'bh_stepsize': 0.9020671823381502, 'bh_interval': 165, 'bh_target_accept_rate': 0.7037812116166546, 'bh_stepwise_factor': 0.8254028860713254}
     }
     #git clone https://github.com/onestruggler/qasm-quipper
     #sudo yum install gmp-devel
