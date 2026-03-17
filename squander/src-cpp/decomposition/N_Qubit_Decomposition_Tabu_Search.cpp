@@ -175,7 +175,6 @@ N_Qubit_Decomposition_Tabu_Search::tabu_search_over_gate_structures() {
     std::uniform_real_distribution<double> unif(0.0,1.0);
     std::default_random_engine re;
     
-    double inverz_temperature = 1.0;
     std::vector<GrayCode> possible_gate_structures;
 
     long long use_osr = 0;
@@ -186,6 +185,9 @@ N_Qubit_Decomposition_Tabu_Search::tabu_search_over_gate_structures() {
     double Fnorm = std::sqrt(static_cast<double>(1 << qbit_num));
     double osr_tol = 1e-3;
     auto all_cuts = unique_cuts(qbit_num);
+    std::uniform_real_distribution<> distrib_real(0.0, 2 * M_PI);
+    MinCnotBoundSolver osr_bound_solver(qbit_num, all_cuts, topology);
+    double inverz_temperature = use_osr ? 3.0 : 1.0;
 
     while( true ) {
   
@@ -203,42 +205,14 @@ N_Qubit_Decomposition_Tabu_Search::tabu_search_over_gate_structures() {
         print(sstream, 1);
                 
         N_Qubit_Decomposition_custom&& cDecomp_custom_random = perform_optimization( use_osr ? nullptr : gate_structure_loc );
+        double current_minimum_tmp         = cDecomp_custom_random.get_current_minimum();
         if (use_osr) {
             cDecomp_custom_random.set_cost_function_variant(OSR_ENTANGLEMENT);
-            cDecomp_custom_random.set_custom_gate_structure( gate_structure_loc );
-            cDecomp_custom_random.set_optimization_blocks( gate_structure_loc->get_gate_num() );
-            cDecomp_custom_random.start_decomposition();
-        }
-                
-        delete( gate_structure_loc );
-        gate_structure_loc = NULL;
-        
-                
-        number_of_iters += cDecomp_custom_random.get_num_iters(); // retrive the number of iterations spent on optimization  
-    
-        double current_minimum_tmp         = cDecomp_custom_random.get_current_minimum();
-        sstream.str("");
-        sstream << "Optimization with " << gcode.size() << " levels converged to " << current_minimum_tmp;
-        print(sstream, 1);
-
-/*
-        std::cout << current_minimum << " " << current_minimum_tmp << std::endl;
-        gcode.print_matrix();
-*/
-
-
-        if (use_osr) {
-            auto U = Umtx.copy();
-            auto params = cDecomp_custom_random.get_optimized_parameters();
-            cDecomp_custom_random.apply_to(params, U);
-            std::vector<std::pair<int, double>> osr_result;
-            osr_result.reserve(all_cuts.size());
-            for (const auto& cut : all_cuts) {
-                osr_result.emplace_back(operator_schmidt_rank(U, qbit_num, cut, Fnorm, osr_tol));
-            }
-            int cnot_lower_bound = osr_result.size() == 0 ? 0 : std::max_element(osr_result.begin(), osr_result.end(), [](const std::pair<int, double>& a, const std::pair<int, double>& b) {
-                return a.first < b.first;
-            })->first;
+            SearchNode sn = evaluate_path(cDecomp_custom_random, osr_bound_solver, all_cuts, Fnorm, osr_tol, distrib_real, gen, gcode);
+            const std::tuple<int, double, std::vector<int>, std::vector<std::pair<int, double>>>& best_osr_result = sn.get_best_osr_result();
+            int cnot_lower_bound = std::get<0>(best_osr_result);
+            current_minimum_tmp = cnot_lower_bound + std::get<1>(best_osr_result) / (qbit_num + (qbit_num >= 4 ? 2 : 0));
+            
             if (cnot_lower_bound == 0) {
                 double current_inner_min;
                 Gates_block* gate_structure_loc = construct_gate_structure_from_Gray_code(gcode);
@@ -259,6 +233,22 @@ N_Qubit_Decomposition_Tabu_Search::tabu_search_over_gate_structures() {
                 }
             }
         }
+                
+        delete( gate_structure_loc );
+        gate_structure_loc = NULL;
+        
+                
+        number_of_iters += cDecomp_custom_random.get_num_iters(); // retrive the number of iterations spent on optimization  
+    
+        sstream.str("");
+        sstream << "Optimization with " << gcode.size() << " levels converged to " << current_minimum_tmp;
+        print(sstream, 1);
+
+/*
+        std::cout << current_minimum << " " << current_minimum_tmp << std::endl;
+        gcode.print_matrix();
+*/
+
 
         tested_gate_structures.insert( gcode ); 
         
