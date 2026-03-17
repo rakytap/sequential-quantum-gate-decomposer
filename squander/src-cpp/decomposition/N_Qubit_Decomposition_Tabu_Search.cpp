@@ -184,7 +184,7 @@ N_Qubit_Decomposition_Tabu_Search::tabu_search_over_gate_structures() {
     if (qbit_num <= 1) use_osr = 0;
     double Fnorm = std::sqrt(static_cast<double>(1 << qbit_num));
     double osr_tol = 1e-3;
-    auto all_cuts = unique_cuts(qbit_num);
+    std::vector<std::vector<int>> all_cuts = unique_cuts(qbit_num);
     std::uniform_real_distribution<> distrib_real(0.0, 2 * M_PI);
     MinCnotBoundSolver osr_bound_solver(qbit_num, all_cuts, topology);
     double inverz_temperature = use_osr ? 3.0 : 1.0;
@@ -305,7 +305,7 @@ N_Qubit_Decomposition_Tabu_Search::tabu_search_over_gate_structures() {
 
             while( best_solutions.size() > 0 ) {
             
-                auto pair = best_solutions[0];
+                std::pair<GrayCode, double> pair = best_solutions[0];
                 best_solutions.erase( best_solutions.begin() );
                 
                 gcode_best_solution = std::get<0>(pair);
@@ -372,7 +372,7 @@ N_Qubit_Decomposition_Tabu_Search::insert_into_best_solution( const GrayCode& gc
         best_solutions.insert( best_solutions.begin(), std::make_pair(gcode_, minimum_) );
     }
 
-    for( auto it=best_solutions.begin(); it!=best_solutions.end(); it++ ) {
+    for( std::vector<std::pair<GrayCode, double>>::iterator it=best_solutions.begin(); it!=best_solutions.end(); it++ ) {
     
         double minimum = std::get<1>( *it );
         
