@@ -752,11 +752,11 @@ std::vector<uint32_t> build_pred_mask(const GrayCode& ops,
 }
 
 bool contains_topological_subsequence(
-    const GrayCode& small, const GrayCode& big,
+    const GrayCode& smallpath, const GrayCode& bigpath,
     const std::vector<matrix_base<int>>& topology)
 {
-    std::vector<uint32_t> pred_mask = build_pred_mask(small, topology);
-    const int m = static_cast<int>(small.size());
+    std::vector<uint32_t> pred_mask = build_pred_mask(smallpath, topology);
+    const int m = static_cast<int>(smallpath.size());
     if (m == 0) return true;
     if (m > 31) {
         // this should never happen
@@ -770,8 +770,8 @@ bool contains_topological_subsequence(
     std::vector<char> reachable(1u << m, 0), next_reachable(1u << m, 0);
     reachable[0] = 1;
 
-    for (int i = 0; i < big.size(); i++) {
-        int b = big[i];
+    for (int i = 0; i < bigpath.size(); i++) {
+        int b = bigpath[i];
         next_reachable = reachable; // skipping b is always allowed
 
         for (uint32_t S = 0; S <= FULL; ++S) {
@@ -786,7 +786,7 @@ bool contains_topological_subsequence(
                 if ((pred_mask[u] & ~S) != 0) continue;
 
                 // labels must match
-                if (small[u] != b) continue;
+                if (smallpath[u] != b) continue;
 
                 next_reachable[S | bit] = 1;
             }
