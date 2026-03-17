@@ -843,7 +843,7 @@ class qgd_Wide_Circuit_Optimization:
     
 
         # adding new layer to the decomposition until threshold
-        cDecompose.set_Optimizer( "BFGS2" if config.get("use_osr", False) and not config.get("use_graph_search", True) else "BFGS" )
+        cDecompose.set_Optimizer( "BFGS" )
 
         # starting the decomposition
         try:
@@ -1070,7 +1070,7 @@ class qgd_Wide_Circuit_Optimization:
         L = topo_sort_partitions(circ, max_partition_size, parts)
         return [parts[i] for i in L], [struct_idxs[i] for i in L]
 
-    def OptimizeWideCircuit( self, circ: Circuit, parameters: np.ndarray, global_min=True, part_size_start=3, part_size_end=5 ) -> Tuple[Circuit, np.ndarray]:
+    def OptimizeWideCircuit( self, circ: Circuit, parameters: np.ndarray, global_min=True, part_size_start=3, part_size_end=4 ) -> Tuple[Circuit, np.ndarray]:
         count = CNOTGateCount(circ, 0)
         fingerprint_dict = {}
         for max_part_size in range(part_size_start, part_size_end + 1):
