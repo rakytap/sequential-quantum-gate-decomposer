@@ -29,6 +29,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "N_Qubit_Decomposition_custom.h"
 
 #include <map>
+#include <numeric>
 #include <set>
 #include <tuple>
 #include <utility>
