@@ -256,7 +256,37 @@ Tag legend:
 - `[Current code]` arXiv:1807.02811 — Referenced in Bayes_Opt.h for the Bayesian
   optimization algorithm used as one of VQE's supported optimizers.
 
-## 7. Practical Reading Order
+## 7. Phase-Specific Shortlists
+
+### 7.1 Phase 3 Methods / Systems Paper
+
+Use this document as the only planning source of truth for Phase 3 literature.
+
+Core citation set for the Phase 3 paper:
+
+- `Section 1` for SQUANDER platform lineage and internal technical grounding.
+- `Section 2` for partitioning and gate-fusion prior art.
+- `Section 4` for exact density-matrix, HPC, and memory-locality context.
+- `Section 5` for software-framework positioning when comparisons to other
+  platforms are needed.
+
+Priority entries for Paper 2:
+
+- `Approaching the theoretical limit in quantum gate decomposition` for the
+  core SQUANDER platform lineage.
+- `TDAG`, `GTQCP`, and `QGo` for the strongest partition-planning lineage.
+- `QMin` and Nguyen et al. for the gate-fusion side of the story.
+- Fang et al. and Burt et al. for hierarchical or multilevel partitioning
+  context.
+- Li et al. and Doi & Horii for exact mixed-state/HPC and memory-locality
+  motivation.
+- `QuEST` and `Qulacs` for practical external simulator baselines.
+- `Atlas` as optional modern hierarchical GPU context when hardware-aware
+  planning becomes relevant.
+- `QuTiP` only when discussing channel-native, superoperator, or Liouville-space
+  follow-on branches rather than the minimum Phase 3 claim.
+
+## 8. Practical Reading Order
 
 For the immediate planning and implementation path, the most useful reading order
 is:
@@ -269,7 +299,7 @@ is:
 6. `Cheng et al.` and other approximate scaling references once exact density
    matrices become the limiting factor.
 
-## 8. How To Use This List
+## 9. How To Use This List
 
 - Use the partitioning/fusion papers to justify the planner/runtime split and the
   density-aware performance work.

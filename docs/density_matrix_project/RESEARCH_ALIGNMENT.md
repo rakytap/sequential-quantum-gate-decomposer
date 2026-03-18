@@ -21,6 +21,8 @@ see the companion engineering docs:
 - GPU kernel development is treated as a parallel track, not a gating item for
 density-matrix phase progression.
 - Stochastic trajectory methods are deferred to later stages.
+- Broader VQE/VQA feature growth beyond the accomplished Phase 2 canonical
+  workflow is deferred to Phase 4 and later.
 
 ## Phase 1 Validation Against PhD Fall 2025 Milestone
 
@@ -40,16 +42,20 @@ Verdict: **Phase 1 is aligned** with the expected Phase 1 research scope.
 Review takeaway:
 
 - Foundation goals are complete.
-- Integration depth is intentionally staged into phases 2-4.
-- Research-facing noisy VQA studies begin after integration milestones.
+- Phase 2 exact noisy backend integration is complete for one canonical
+  workflow.
+- Phase 3 now targets noise-aware partitioning/fusion rather than additional
+  VQE/VQA surface growth.
+- Research-facing noisy VQE/VQA studies broaden in Phase 4 after the
+  partitioning/fusion milestone.
 
 ## PhD Milestone Mapping
 
 | Phase | PhD Milestone |
 |---|---|
-| Phase 2 | Noise models and preliminary noisy emulation (Spring 2026) |
-| Phase 3 | Full noise module and validation (Fall 2026) |
-| Phase 4 | Noisy VQA integration and optimizer comparisons (Spring 2027) |
+| Phase 2 | Exact noisy backend integration for one canonical workflow (Spring 2026) |
+| Phase 3 | Noise-aware partitioning and fusion for mixed-state circuits (Fall 2026) |
+| Phase 4 | Broader noisy VQE/VQA integration, gradients, and optimizer comparisons (Spring 2027) |
 | Phase 5 | Trainability analysis under noise (Fall 2027) |
 
 
@@ -59,9 +65,14 @@ Review takeaway:
 
 - Phase 1:
   - baseline unital and non-unital channels implemented.
-- Phases 2-3:
-  - expand channel set based on experiment demand,
-  - add calibration and fidelity validation workflows.
+- Phase 2:
+  - exact noisy backend integrated for one canonical workflow,
+  - exact observable path and validation bundle established.
+- Phase 3:
+  - extend partitioning/fusion so noise channels and density-matrix semantics are
+    first-class in the circuit model,
+  - add calibration and fidelity validation workflows required by partitioning
+    benchmarks.
 
 ### 2) Trainability analysis under noise
 
@@ -73,7 +84,9 @@ Review takeaway:
 ### 3) Barren plateau mitigation in noisy VQA
 
 - Phase 4:
-  - integrate noisy backend into VQA training loop,
+  - broaden the noisy backend into richer VQE/VQA training loops,
+  - add density-backend gradient and optimizer support for the supported
+    Phase 4 surface,
   - benchmark BLS and baseline optimizers under noise.
 - Phase 5:
   - convert results into robust training guidelines.
@@ -92,12 +105,21 @@ Review takeaway:
 - Phase 2:
   - VQE backend switch can execute density-matrix path,
   - `Tr(H*rho)` expectation value path validated,
-  - noisy emulation stable around 10 qubits.
+  - canonical noisy workflow contract and validation bundle complete.
 - Phase 3:
-  - gradient support for density backend,
-  - expanded noise channels validated against reference simulator.
+  - partitioning/gate fusion accepts noisy mixed-state circuits without reducing
+    noise to partition-boundary-only metadata,
+  - Phase 3 includes an executable partitioned path with at least one real
+    fused execution mode rather than only a planner/runtime representation,
+  - partitioning decisions are noise-aware for density workloads,
+  - partitioned/fused execution matches the sequential density baseline,
+  - channel-native fused noisy blocks are not required for minimum Phase 3
+    closure.
 - Phase 4:
-  - end-to-end noisy VQA training loop functional,
+  - end-to-end noisy VQE/VQA training loop beyond the Phase 2 baseline is
+    functional,
+  - density-backend gradient and optimizer routing support the supported Phase 4
+    surface,
   - reproducible optimizer comparison experiments.
 - Phase 5:
   - complete trainability analysis dataset,
@@ -112,7 +134,9 @@ This project extends SQUANDER's existing strengths in:
 - optimizer implementations for variational workflows.
 
 The density-matrix track adds the missing noisy mixed-state layer required for
-realistic trainability research and noise-aware optimization.
+realistic trainability research and noise-aware optimization, and Phase 3 now
+extends that mixed-state semantics into SQUANDER's partitioning/fusion stack
+before Phase 4 broadens the VQE/VQA surface again.
 
 ## References Used in This Alignment
 

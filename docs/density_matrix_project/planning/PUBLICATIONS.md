@@ -43,9 +43,9 @@ following as possible:
 | Phase | Publication Type | Confidence | Core Scientific Value |
 |---|---|---|---|
 | Phase 1 | Software / validation note, workshop, or methods short paper | Medium | Exact mixed-state backend and reference validation |
-| Phase 2 | Major methods paper | High | Exact noisy training backend integrated into SQUANDER workflows |
-| Phase 3 | Major methods / systems paper | High | Density-aware partitioning, fusion, and performance acceleration |
-| Phase 4 | Applications / optimization paper | High | Optimizer behavior and noisy VQA workflows under exact noise |
+| Phase 2 | Major methods paper | High | Exact noisy backend integrated into one canonical SQUANDER workflow |
+| Phase 3 | Major methods / systems paper | High | Noise-aware partitioning and fusion for mixed-state circuits |
+| Phase 4 | Applications / optimization paper | High | Broader noisy VQE/VQA workflows and optimizer behavior under exact noise |
 | Phase 5 | Main thesis science paper | Very high | Trainability, entropy, and barren plateaus under realistic noise |
 
 ## Recommended Publication Ladder
@@ -206,21 +206,27 @@ Second major paper and the most natural place for the partitioning/fusion work.
 
 ### Tentative Titles
 
-- `Density-Aware Partitioning and Unitary-Island Fusion for Exact Noisy Quantum Circuit Simulation`
-- `Extending Gate Fusion from State Vectors to Density Matrices in SQUANDER`
+- `Noise-Aware Partitioning and Gate Fusion for Exact Mixed-State Quantum Circuit Simulation`
+- `Making Circuit Partitioning Native to Noisy Density-Matrix Workflows in SQUANDER`
 
 ### Core Question
 
-Can partitioning and fusion techniques materially accelerate exact
-density-matrix simulation on training-relevant noisy circuits?
+Can partitioning and fusion techniques be extended so noisy mixed-state circuits
+are first-class objects while still accelerating exact density-matrix
+simulation on training-relevant workloads?
 
 ### Contribution
 
-- density-aware partitioning objective,
-- adapter-based unitary-island fusion with noise barriers,
-- density-matrix-specific kernel and cost-model analysis,
+- noise-aware partitioning representation for mixed-state circuits,
+- fusion/runtime contracts that preserve explicit noise-channel placement and
+  ordering,
+- an executable partitioned runtime with at least one real fused execution path
+  on eligible substructures inside noisy mixed-state circuits,
+- density-matrix-specific kernel and cost-model analysis under noisy workloads,
+- optional AVX-level kernel tuning only when profiler and benchmark evidence
+  show that it materially contributes to the Phase 3 runtime result,
 - benchmark comparison between sequential density execution and partitioned/fused
-  density execution,
+  density execution across noise placements and noise densities,
 - and, ideally, comparison against at least Qiskit Aer plus one additional
   simulator when feasible.
 
@@ -228,17 +234,58 @@ density-matrix simulation on training-relevant noisy circuits?
 
 - This is where the project contributes a truly new methods result beyond the
   existing state-vector partitioning literature.
-- The work directly connects the current `partitioning` subsystem to the new
-  density-matrix backend.
+- The work directly connects the current `partitioning` subsystem to the
+  density-matrix backend at the circuit-model level rather than only at
+  partition boundaries.
 - It creates a clean methods paper without needing to also claim new optimizer
-  science.
+  science, which stays in Phase 4.
 
 ### Required Evidence
 
+- a result stronger than planner-only representation: Paper 2 needs an
+  executable partitioned noisy-circuit runtime plus at least one real fused
+  execution mode on representative workloads,
 - exact agreement with the unfused sequential density baseline,
 - runtime and memory improvements on representative noisy circuits,
-- sensitivity studies over partition size, noise density, and gate locality,
-- and a clear explanation of where the speedups do and do not occur.
+- sensitivity studies over partition size, noise placement/density, and gate
+  locality,
+- a clear explanation of where the speedups do and do not occur, including
+  where the native noisy-circuit partition model still falls short,
+- and an explicit statement that fully channel-native fused noisy blocks are a
+  possible follow-on branch rather than the minimum publishable Phase 3 claim.
+
+### Claim Boundary For Paper 2
+
+Paper 2 should claim more than a noise-aware planner/runtime representation, but
+less than a fully general noisy-block fusion architecture.
+
+Minimum publishable scope:
+
+- noisy mixed-state circuits are first-class partitioning inputs,
+- the runtime executes partitioned noisy circuits end to end,
+- and at least one real fused execution path is benchmarked on eligible
+  substructures.
+
+Not required for the baseline Paper 2 claim:
+
+- fully channel-native fused noisy blocks,
+- arbitrary CPTP or superoperator fusion of mixed gate+noise regions,
+- or proof that every useful noisy partition already maps to a single fused
+  noisy block.
+
+### Prior-Art Pointer For Paper 2
+
+Full literature references are maintained only in `REFERENCES.md`, which is the
+planning single source of truth for citations.
+
+For the Phase 3 paper, use the curated Phase 3 shortlist in
+`REFERENCES.md` together with the detailed entries in:
+
+- `SQUANDER Foundations`,
+- `Quantum Circuit Partitioning And Gate Fusion`,
+- `Density-Matrix And Open-System Simulation On Classical Hardware`,
+- and `Quantum Software Framework References` when software-positioning context
+  is needed.
 
 ### Best Venues
 
@@ -268,6 +315,10 @@ approximate simulation?
 ### Contribution
 
 - optimizer comparisons under exact noisy conditions,
+- broader noisy VQE/VQA workflow support beyond the frozen Phase 2 canonical
+  contract,
+- density-backend gradient and optimizer routing for the supported Phase 4
+  surface,
 - integration of SQUANDER's optimizer strengths, especially BLS-style methods,
 - entropy- and gradient-aware diagnostics during optimization,
 - and reproducible noisy VQA workflows on application-relevant tasks.
@@ -281,7 +332,8 @@ approximate simulation?
 
 ### Required Evidence
 
-- at least one representative VQA application family,
+- at least one representative VQE/VQA application family beyond the frozen
+  Phase 2 canonical workflow,
 - optimizer comparison under matched noise conditions,
 - metrics such as convergence quality, runtime, gradient norms, and entropy,
 - and ideally several noise regimes and ansatz families.
@@ -347,11 +399,11 @@ These are useful, but they should not displace the primary thesis narrative.
 
 Question:
 
-- When does barrier-based unitary-island fusion stop being enough, and when would
-  channel-native fusion become justified?
+- When does the Phase 3 noise-aware partitioning baseline stop being enough, and
+  when would more invasive channel-native fusion become justified?
 
-This is only worth doing after Phase 3 benchmark evidence suggests the barrier
-model is the dominant remaining limitation.
+This is only worth doing after Phase 3 benchmark evidence suggests the native
+noise-aware baseline still leaves the dominant remaining limitation unresolved.
 
 ### Side Paper B: Exact Density Matrix Versus Trajectories / MPDO Cross-Over
 
@@ -424,6 +476,6 @@ The best publication strategy is:
 
 - keep the exact density-matrix backend as the scientific anchor,
 - use Phase 2 for the first major integration paper,
-- use Phase 3 for the major partitioning/fusion methods paper,
-- use Phase 4 for optimizer and workflow studies,
+- use Phase 3 for the major noise-aware partitioning/fusion methods paper,
+- use Phase 4 for broader optimizer and workflow studies,
 - and make Phase 5 the main trainability and thesis-result paper.

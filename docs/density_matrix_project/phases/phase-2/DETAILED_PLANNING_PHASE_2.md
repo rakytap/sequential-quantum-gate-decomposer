@@ -225,7 +225,7 @@ The following are explicitly outside the Phase 2 core deliverable.
 - density-aware partitioning and gate fusion,
 - channel-native fusion or superoperator fusion,
 - gradient-path completion for density-matrix optimization,
-- AVX-focused density-kernel acceleration as a main milestone,
+- AVX-focused density-kernel acceleration as a required or main milestone,
 - stochastic trajectories or MPDO-based approximation paths,
 - full `qgd_Circuit` gate parity,
 - and noisy circuit re-synthesis as a primary result.

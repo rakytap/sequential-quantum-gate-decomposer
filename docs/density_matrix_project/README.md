@@ -2,9 +2,10 @@
 
 This directory documents the density-matrix track of SQUANDER.
 
-The objective is to move SQUANDER from ideal pure-state simulation to  
-noise-aware mixed-state simulation, then integrate that capability into the VQA  
-training flow.
+The objective is to move SQUANDER from ideal pure-state simulation to
+noise-aware mixed-state simulation, then make noise a first-class concern in
+the partitioning and gate-fusion stack, and only after that broaden noisy
+VQE/VQA workflow capabilities.
 
 ## Why This Project Exists
 
@@ -27,7 +28,18 @@ Phase 1 is complete on `feature/density-matrix-phase1`:
 - Python bindings in `squander.density_matrix`,
 - dedicated tests and Qiskit comparison benchmarks.
 
-The remaining work is deeper baseline integration and noisy VQA feature completion.
+Phase 2 is now also complete in branch scope and establishes the current exact
+noisy-workflow baseline:
+
+- backend selection between state-vector and density-matrix execution,
+- exact Hermitian-energy evaluation via `Re Tr(H*rho)`,
+- one canonical noisy XXZ workflow contract with explicit supported and
+  deferred boundaries,
+- and machine-checkable validation/publication bundles for that frozen support
+  surface.
+
+The remaining work is Phase 3 noise-aware partitioning/fusion, followed by
+Phase 4+ broader noisy VQE/VQA feature growth and optimizer studies.
 
 ## 5-Phase Roadmap
 
@@ -35,9 +47,9 @@ The remaining work is deeper baseline integration and noisy VQA feature completi
 | Phase | Goal                                                            | Status   |
 | ----- | --------------------------------------------------------------- | -------- |
 | 1     | Foundation: density matrices + initial noise channels           | Complete |
-| 2     | Deep baseline integration + noise completion + basic VQA hooks  | Planned  |
-| 3     | Full noise stack + density-matrix gradients + AVX optimization  | Planned  |
-| 4     | Full noisy VQA training loop for 16-20 qubits                   | Planned  |
+| 2     | Exact noisy backend integration for one canonical workflow        | Complete |
+| 3     | Noise-aware partitioning and gate fusion for mixed-state circuits | Planned  |
+| 4     | Broader noisy VQE/VQA features, gradients, and optimizer studies | Planned  |
 | 5     | Trainability analysis under noise (BP and expressivity studies) | Planned  |
 
 

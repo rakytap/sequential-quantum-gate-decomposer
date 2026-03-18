@@ -227,12 +227,12 @@ validated workflow-level evidence, not in any single algorithmic novelty.
 This integration establishes the exact baseline for three planned research
 directions:
 
-- **Density-aware acceleration (Phase 3).** SQUANDER's existing
-  state-vector partitioning and gate-fusion subsystem will be extended to
-  density-matrix workloads using barrier-based unitary-island partitioning
-  with noise barriers. This research direction has no equivalent in other
-  frameworks and is expected to close the performance gap observed at 10
-  qubits.
+- **Noise-aware partitioning and fusion (Phase 3).** SQUANDER's existing
+  state-vector partitioning and gate-fusion subsystem will be extended so noisy
+  density-matrix circuits are first-class inputs rather than unitary islands
+  separated by external noise boundaries. This research direction has no
+  equivalent in other frameworks and is expected to close the performance gap
+  observed at 10 qubits.
 
 - **Optimizer studies under noise (Phase 4).** With an exact noisy backend
   in the training loop, systematic comparison of optimizer behavior under

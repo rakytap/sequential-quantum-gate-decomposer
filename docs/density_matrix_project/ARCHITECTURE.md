@@ -1,7 +1,8 @@
 # Density Matrix Architecture
 
 This document explains how the density matrix module is structured today and
-where deep integration work (Phases 2-5) will attach.
+where later-phase deep integration work, especially Phase 3 noise-aware
+partitioning/fusion and Phase 4+ broader noisy VQE/VQA support, will attach.
 
 Primary audience: contributors implementing or reviewing architecture changes.
 
@@ -123,27 +124,52 @@ Module `CMakeLists.txt`:
 - links against `qgd` and `squander_common`,
 - supports optional C++ test executable.
 
-## Deep Integration Extension Points (Phases 2-5)
+## Deep Integration Extension Points (Phases 3-5)
 
-Primary integration targets:
+Primary Phase 3 targets:
+- `squander/partitioning` and related planner utilities
+  - accept noisy mixed-state circuits as first-class planner inputs,
+  - carry noise placement/channel metadata and density-matrix execution
+    semantics into partition decisions.
+- `qgd_Circuit` / `Gates_block` integration boundary
+  - adapt existing fusion/runtime machinery so partitions extracted from noisy
+    circuits do not assume a unitary-only contract,
+  - provide at least one executable fused-block path for eligible
+    substructures inside the noisy-circuit runtime.
+- `NoisyCircuit`, `GateOperation`, and `NoiseOperation`
+  - provide the exact mixed gate+noise execution contract that any partitioned
+    or fused runtime must preserve,
+  - without requiring the minimum Phase 3 result to already implement
+    channel-native fused noisy blocks.
+
+Primary Phase 4+ targets:
 - `squander/src-cpp/decomposition/Variational_Quantum_Eigensolver_Base.cpp`
-  - add density-matrix backend path,
-  - support expectation value `Tr(H*rho)`.
+  - broaden circuit-source support beyond the frozen Phase 2 workflow,
+  - connect later noisy VQE/VQA features to the Phase 3 backend.
 - `squander/VQA/qgd_Variational_Quantum_Eigensolver_Base.py`
-  - expose backend selection and noisy VQA controls.
+  - expose additional noisy VQE/VQA controls after the Phase 3 backend contract
+    stabilizes.
 - `squander/src-cpp/decomposition/Optimization_Interface.cpp`
-  - route gradient and optimizer flows for density backend.
+  - route gradient and optimizer flows for the broader Phase 4 density-backend
+    surface.
 
 Secondary extension targets:
-- `noisy_circuit.cpp` for richer noise insertion and calibration-aware models,
-- `density_matrix.cpp` for AVX-level kernel acceleration in later phases.
+- `noisy_circuit.cpp` for richer noise insertion and partition-runtime hooks,
+- `density_matrix.cpp` for optional, benchmark-driven AVX-level kernel
+  acceleration only if profiling shows that it materially supports the
+  mixed-state partition/fusion path.
 
 ## Architectural Trade-offs
 
 - Current split (`NoiseOperation` + `NoiseChannel`) preserves compatibility but
-  duplicates some channel logic.
+  duplicates some channel logic; Phase 3 must still make the effective noise
+  behavior visible to partition planning rather than leaving it as out-of-band
+  execution detail.
 - Direct pybind11 exposure gives clear performance behavior but keeps API close
   to C++ conventions (less Python sugar).
-- Non-invasive phase 1 reduced migration risk; phase 2+ intentionally increases
-  integration depth to support noisy VQA workflows.
+- Reusing the existing state-vector partitioning assets is attractive, but
+  Phase 3 cannot assume noise only exists at partition boundaries.
+- Non-invasive phase 1 reduced migration risk; Phase 2 completed the minimum
+  noisy-workflow integration, and the next major integration step now moves into
+  partitioning/fusion before broader Phase 4 VQE/VQA growth.
 

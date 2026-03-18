@@ -34,12 +34,14 @@ Primary audience: maintainers tracking delivered scope vs planned milestones.
 
 ---
 
-## Phase 2 (Planned)
+## Phase 2 (Complete)
 
 - Deep integration entry points:
   - backend selection in VQE configuration,
   - expectation value path `Tr(H*rho)`,
-  - bridge from existing gate sequences to density-matrix circuit execution.
+  - bridge from existing gate sequences to density-matrix circuit execution,
+  - canonical noisy XXZ workflow contract and publication-facing validation
+    bundle.
 - Extend noise stack with additional noise channels:
   - generalized amplitude damping,
   - coherent unitary error model.
@@ -54,26 +56,48 @@ Implementation acceptance criteria:
 
 ## Phase 3 (Planned)
 
-- Complete density-matrix noise module features required by experiments.
-- Add gradient path for density-matrix optimization.
-- Add AVX-focused optimization for key density operations.
-- Add calibration and fidelity validation workflows for noise channels.
+- Extend the partitioning and gate-fusion subsystem so noisy mixed-state circuits
+  are first-class inputs, not just unitary regions with noise left outside the
+  partition model.
+- Represent noise channels and density-matrix execution semantics inside the
+  partitioning/fusion contract.
+- Introduce a noise-aware partitioning objective / heuristic and benchmark
+  calibration for mixed-state workloads.
+- Add mixed-state partitioned/fused execution plus any optional,
+  benchmark-driven density-kernel optimizations required by that runtime, such
+  as AVX work when profiling justifies it.
+- Add correctness and performance validation against the sequential density
+  baseline on representative noisy circuit families.
 
 Implementation acceptance criteria:
-- Gradient support is wired for the density backend.
-- Expanded noise channels are validated against Qiskit Aer.
+- Partitioning can represent circuits that contain both gates and noise
+  operations while preserving exact execution order.
+- Partitioning decisions are calibrated on noisy density workloads rather than
+  state-vector-only costs.
+- Phase 3 delivers an executable partitioned path with at least one real fused
+  execution mode; planner-only representation is not sufficient.
+- Partitioned/fused execution matches the unfused density baseline on
+  representative noisy circuits.
+- Fully channel-native fused noisy blocks are optional follow-on work rather
+  than the minimum Phase 3 completion bar.
 
 ---
 
 ## Phase 4 (Planned)
 
-- Full noisy VQA integration through the baseline SQUANDER training loop.
+- Broaden noisy VQE/VQA integration beyond the frozen Phase 2 canonical
+  workflow.
+- Add density-backend gradient and optimizer routing for the supported Phase 4
+  workflow surface.
 - Optimizer evaluations under noise (including BLS workflows).
 - Scaling targets for noisy VQA experiments in the 16-20 qubit range.
 - Experiment runner and reproducible configuration logging.
 
 Implementation acceptance criteria:
-- End-to-end noisy VQA training loop is functional.
+- End-to-end noisy VQE/VQA workflows beyond the Phase 2 baseline are
+  functional.
+- Density-backend gradient and optimizer support exist for the supported Phase 4
+  workflow surface.
 - Optimizer comparison experiments are reproducible.
 
 ---
