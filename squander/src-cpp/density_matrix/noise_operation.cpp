@@ -16,6 +16,7 @@ limitations under the License.
 
 #include "noise_operation.h"
 #include "density_matrix.h"
+#include "matrix.h"
 #include <cmath>
 #include <cstring>
 #include <stdexcept>
@@ -102,6 +103,107 @@ std::unique_ptr<IDensityOperation> DepolarizingOp::clone() const {
     return std::unique_ptr<DepolarizingOp>(new DepolarizingOp(qbit_num_));
   } else {
     return std::unique_ptr<DepolarizingOp>(new DepolarizingOp(qbit_num_, fixed_error_rate_));
+  }
+}
+
+// ================================================================
+// LocalDepolarizingOp
+// ================================================================
+
+LocalDepolarizingOp::LocalDepolarizingOp(int target_qbit, double error_rate)
+    : target_qbit_(target_qbit), fixed_error_rate_(error_rate),
+      is_parametric_(false) {
+  if (target_qbit < 0) {
+    throw std::invalid_argument(
+        "LocalDepolarizingOp: target_qbit must be >= 0");
+  }
+  if (error_rate < 0.0 || error_rate > 1.0) {
+    throw std::invalid_argument(
+        "LocalDepolarizingOp: error_rate must be in [0, 1]");
+  }
+}
+
+LocalDepolarizingOp::LocalDepolarizingOp(int target_qbit)
+    : target_qbit_(target_qbit), fixed_error_rate_(0.0), is_parametric_(true) {
+  if (target_qbit < 0) {
+    throw std::invalid_argument(
+        "LocalDepolarizingOp: target_qbit must be >= 0");
+  }
+}
+
+void LocalDepolarizingOp::apply_to_density(const double *params, int param_count,
+                                           DensityMatrix &rho) {
+  double error_rate;
+  if (is_parametric_) {
+    if (param_count < 1 || params == nullptr) {
+      throw std::runtime_error(
+          "LocalDepolarizingOp: parametric mode requires 1 parameter");
+    }
+    error_rate = params[0];
+    if (error_rate < 0.0)
+      error_rate = 0.0;
+    if (error_rate > 1.0)
+      error_rate = 1.0;
+  } else {
+    error_rate = fixed_error_rate_;
+  }
+
+  apply_local_depolarizing(rho, error_rate);
+}
+
+void LocalDepolarizingOp::apply_local_depolarizing(DensityMatrix &rho,
+                                                   double error_rate) {
+  int qbit_num = rho.get_qbit_num();
+  if (target_qbit_ >= qbit_num) {
+    throw std::runtime_error(
+        "LocalDepolarizingOp: target_qbit out of range for density matrix");
+  }
+
+  Matrix x_kernel(2, 2);
+  Matrix y_kernel(2, 2);
+  Matrix z_kernel(2, 2);
+  memset(x_kernel.get_data(), 0, 4 * sizeof(QGD_Complex16));
+  memset(y_kernel.get_data(), 0, 4 * sizeof(QGD_Complex16));
+  memset(z_kernel.get_data(), 0, 4 * sizeof(QGD_Complex16));
+
+  x_kernel.get_data()[1].real = 1.0;
+  x_kernel.get_data()[2].real = 1.0;
+
+  y_kernel.get_data()[1].imag = -1.0;
+  y_kernel.get_data()[2].imag = 1.0;
+
+  z_kernel.get_data()[0].real = 1.0;
+  z_kernel.get_data()[3].real = -1.0;
+
+  DensityMatrix rho_x = rho.clone();
+  DensityMatrix rho_y = rho.clone();
+  DensityMatrix rho_z = rho.clone();
+  rho_x.apply_single_qubit_unitary(x_kernel, target_qbit_);
+  rho_y.apply_single_qubit_unitary(y_kernel, target_qbit_);
+  rho_z.apply_single_qubit_unitary(z_kernel, target_qbit_);
+
+  const double identity_weight = 1.0 - 0.75 * error_rate;
+  const double pauli_weight = 0.25 * error_rate;
+  int dim = rho.get_dim();
+  for (int i = 0; i < dim * dim; ++i) {
+    rho.data[i].real =
+        identity_weight * rho.data[i].real +
+        pauli_weight *
+            (rho_x.data[i].real + rho_y.data[i].real + rho_z.data[i].real);
+    rho.data[i].imag =
+        identity_weight * rho.data[i].imag +
+        pauli_weight *
+            (rho_x.data[i].imag + rho_y.data[i].imag + rho_z.data[i].imag);
+  }
+}
+
+std::unique_ptr<IDensityOperation> LocalDepolarizingOp::clone() const {
+  if (is_parametric_) {
+    return std::unique_ptr<LocalDepolarizingOp>(
+        new LocalDepolarizingOp(target_qbit_));
+  } else {
+    return std::unique_ptr<LocalDepolarizingOp>(
+        new LocalDepolarizingOp(target_qbit_, fixed_error_rate_));
   }
 }
 

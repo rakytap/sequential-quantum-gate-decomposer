@@ -212,6 +212,16 @@ void NoisyCircuit::add_depolarizing(int qbit_num, double error_rate) {
       new DepolarizingOp(qbit_num, error_rate)));
 }
 
+void NoisyCircuit::add_local_depolarizing(int target) {
+  add_operation(
+      std::unique_ptr<LocalDepolarizingOp>(new LocalDepolarizingOp(target)));
+}
+
+void NoisyCircuit::add_local_depolarizing(int target, double error_rate) {
+  add_operation(std::unique_ptr<LocalDepolarizingOp>(
+      new LocalDepolarizingOp(target, error_rate)));
+}
+
 void NoisyCircuit::add_amplitude_damping(int target) {
   add_operation(
       std::unique_ptr<AmplitudeDampingOp>(new AmplitudeDampingOp(target)));

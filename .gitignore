@@ -13,6 +13,7 @@ squander.egg-info/*
 costfuncs_and_entropy.txt
 debugfile.txt
 .cache/
+tmp/
 .clangd
 compile_commands.json
 .vscode/settings.json

@@ -13,6 +13,9 @@ from circuits import BENCHMARK_CIRCUITS, CIRCUITS_BY_QUBITS
 
 from squander.density_matrix import DensityMatrix
 
+PRIMARY_BACKEND = "density_matrix"
+REFERENCE_BACKEND = "qiskit_aer_density_matrix"
+
 # Benchmark configuration
 NUM_RUNS = 1  # Number of timed runs per circuit
 WARMUP_RUNS = 0  # Number of warmup runs before timing
@@ -65,7 +68,9 @@ def run_benchmark(circuits, num_runs=10, warmup=3):
         speedup = qk_time["mean"] / sq_time["mean"]
         results.append(
             {
-                "name": name,
+                "case_name": name,
+                "backend": PRIMARY_BACKEND,
+                "reference_backend": REFERENCE_BACKEND,
                 "qubits": builder.n,
                 "ops": len(builder.ops),
                 "squander_ms": sq_time["mean"],
@@ -82,13 +87,15 @@ def run_benchmark(circuits, num_runs=10, warmup=3):
 def print_results(results, title="Benchmark Results"):
     """Print benchmark results in a formatted table."""
     print(
-        f"\n{'Circuit':<20} {'Qubits':<8} {'Ops':<6} {'SQUANDER(ms)':<14} {'Qiskit(ms)':<14} {'Speedup':<10}"
+        f"\n{'Circuit':<20} {'Qubits':<8} {'Ops':<6} "
+        f"{'SQUANDER[density_matrix](ms)':<29} "
+        f"{'Qiskit[qiskit_aer_density_matrix](ms)':<36} {'Speedup':<10}"
     )
-    print("-" * 75)
+    print("-" * 125)
 
     for r in results:
         print(
-            f"  {r['name']:<18} {r['qubits']:<8} {r['ops']:<6} "
+            f"  {r['case_name']:<18} {r['qubits']:<8} {r['ops']:<6} "
             f"{r['squander_ms']:>10.3f}    {r['qiskit_ms']:>10.3f}    {r['speedup']:>6.1f}x"
         )
 
@@ -106,13 +113,22 @@ def print_summary(results):
     best = max(results, key=lambda x: x["speedup"])
     worst = min(results, key=lambda x: x["speedup"])
 
-    print(f"  Best speedup:    {best['speedup']:.1f}x ({best['name']})")
-    print(f"  Worst speedup:   {worst['speedup']:.1f}x ({worst['name']})")
+    print(
+        "  Compared backends: {} vs {}".format(
+            PRIMARY_BACKEND, REFERENCE_BACKEND
+        )
+    )
+    print(f"  Best speedup:    {best['speedup']:.1f}x ({best['case_name']})")
+    print(f"  Worst speedup:   {worst['speedup']:.1f}x ({worst['case_name']})")
 
 
 def main():
     print("=" * 70)
-    print("  PERFORMANCE BENCHMARK: SQUANDER vs Qiskit")
+    print(
+        "  PERFORMANCE BENCHMARK: SQUANDER ({}) vs Qiskit ({})".format(
+            PRIMARY_BACKEND, REFERENCE_BACKEND
+        )
+    )
     print("=" * 70)
     print(f"\nMeasuring execution time ({NUM_RUNS} run(s), {WARMUP_RUNS} warmup)...")
 
@@ -135,8 +151,10 @@ def main():
 
         for r in results:
             print(
-                f"  {r['name']:<20} SQUANDER: {r['squander_ms']:>8.3f}ms  "
-                f"Qiskit: {r['qiskit_ms']:>10.3f}ms  Speedup: {r['speedup']:>8.1f}x"
+                f"  {r['case_name']:<20} "
+                f"SQUANDER[{r['backend']}]: {r['squander_ms']:>8.3f}ms  "
+                f"Qiskit[{r['reference_backend']}]: {r['qiskit_ms']:>10.3f}ms  "
+                f"Speedup: {r['speedup']:>8.1f}x"
             )
 
     print("\n" + "=" * 70)

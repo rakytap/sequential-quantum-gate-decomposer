@@ -31,7 +31,7 @@ jobs:
     - name: Install Python Dependencies
       run: |
         python -m pip install --upgrade pip
-        python -m pip install -q numpy scipy scikit-build qiskit qiskit-aer pytest
+        python -m pip install -q numpy scipy scikit-build pybind11 qiskit qiskit-aer pytest
         python -m pip install -e . -q
 
     - name: Build
@@ -65,13 +65,19 @@ jobs:
       shell: pwsh
       run: |
         conda install -c conda-forge cmake tbb-devel openblas lapack -y
-        # Get active conda environment
-        $envPath = conda env list | Select-String '\*' | ForEach-Object { ($_ -split '\s+', 3)[1] }
+
+        # setup-miniconda exposes the activated env via CONDA_PREFIX; fall back to conda info if needed.
+        $envPath = $env:CONDA_PREFIX
         if (-not $envPath) {
-          $envPath = conda info --base
+          $condaInfo = conda info --json | ConvertFrom-Json
+          $envPath = $condaInfo.active_prefix
         }
+        if (-not $envPath) {
+          throw "Could not determine active conda environment path"
+        }
+
         # Convert to forward slashes for GITHUB_ENV (CMake accepts both)
-        $envPath = $envPath.Replace('\\', '/')
+        $envPath = $envPath.Replace('\', '/')
         $tbbLib = "$envPath/Library/lib"
         $tbbInc = "$envPath/Library/include"
         
@@ -87,7 +93,7 @@ jobs:
           # Try to find it
           $foundTbb = Get-ChildItem -Path "$envPath" -Recurse -Filter "tbb.h" -ErrorAction SilentlyContinue | Select-Object -First 1
           if ($foundTbb) {
-            $actualTbbInc = $foundTbb.DirectoryName.Replace('\\', '/')
+            $actualTbbInc = (Split-Path -Parent $foundTbb.DirectoryName).Replace('\', '/')
             Write-Host "Found TBB header at: $actualTbbInc"
             $tbbInc = $actualTbbInc
           }
@@ -97,11 +103,17 @@ jobs:
         "TBB_INC_DIR=$tbbInc" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
         "BLAS_LIB_DIR=$tbbLib" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
         "CONDA_PREFIX=$envPath" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+        $compilerInclude = $tbbInc.Replace('/', '\')
+        if ($env:INCLUDE) {
+          "INCLUDE=$compilerInclude;$env:INCLUDE" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+        } else {
+          "INCLUDE=$compilerInclude" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+        }
 
     - name: Install Python Dependencies
       run: |
         python -m pip install --upgrade pip
-        python -m pip install -q numpy scipy scikit-build qiskit qiskit-aer pytest
+        python -m pip install -q numpy scipy scikit-build pybind11 qiskit qiskit-aer pytest
         python -m pip install -e . -q
 
     - name: Build
@@ -134,6 +146,7 @@ jobs:
       run: |
         echo "TBB_LIB_DIR=$(brew --prefix tbb)/lib" >> $GITHUB_ENV
         echo "TBB_INC_DIR=$(brew --prefix tbb)/include" >> $GITHUB_ENV
+        echo "CPLUS_INCLUDE_PATH=$(brew --prefix tbb)/include${CPLUS_INCLUDE_PATH:+:$CPLUS_INCLUDE_PATH}" >> $GITHUB_ENV
         echo "OMP_NUM_THREADS=1" >> $GITHUB_ENV
         # Help CMake find OpenMP on macOS
         export OMP_PREFIX=$(brew --prefix libomp)
@@ -146,7 +159,7 @@ jobs:
     - name: Install Python Dependencies
       run: |
         python -m pip install --upgrade pip
-        python -m pip install -q numpy scipy scikit-build qiskit qiskit-aer pytest
+        python -m pip install -q numpy scipy scikit-build pybind11 qiskit qiskit-aer pytest
         python -m pip install -e . -q
 
     - name: Build

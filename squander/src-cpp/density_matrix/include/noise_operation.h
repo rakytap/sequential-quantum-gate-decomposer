@@ -98,6 +98,38 @@ private:
 };
 
 /**
+ * @brief Local single-qubit depolarizing channel on one target qubit.
+ *
+ * Matches the Qiskit single-qubit depolarizing parameterization:
+ *   ρ -> (1 - p) ρ + p * I/2
+ * on the target subsystem.
+ */
+class LocalDepolarizingOp : public NoiseOperation {
+public:
+  LocalDepolarizingOp(int target_qbit, double error_rate);
+  explicit LocalDepolarizingOp(int target_qbit);
+
+  void apply_to_density(const double *params, int param_count,
+                        DensityMatrix &rho) override;
+
+  int get_parameter_num() const override { return is_parametric_ ? 1 : 0; }
+  std::string get_name() const override { return "LocalDepolarizing"; }
+
+  std::unique_ptr<IDensityOperation> clone() const override;
+
+  int get_target_qbit() const { return target_qbit_; }
+  double get_error_rate() const { return fixed_error_rate_; }
+  bool is_parametric() const { return is_parametric_; }
+
+private:
+  int target_qbit_;
+  double fixed_error_rate_;
+  bool is_parametric_;
+
+  void apply_local_depolarizing(DensityMatrix &rho, double error_rate);
+};
+
+/**
  * @brief Amplitude damping channel (T1 relaxation): |1⟩ → |0⟩ decay
  *
  * Models energy relaxation from the excited state to the ground state.

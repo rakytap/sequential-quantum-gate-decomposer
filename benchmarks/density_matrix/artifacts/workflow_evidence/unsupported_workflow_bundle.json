@@ -1,0 +1,834 @@
+{
+  "suite_name": "unsupported_workflow_validation",
+  "status": "pass",
+  "workflow_id": "phase2_xxz_hea_density_matrix_anchor_workflow",
+  "contract_version": "v1",
+  "backend": "density_matrix",
+  "reference_backend": "qiskit_aer_density_matrix",
+  "requirements": {
+    "workflow_id": "phase2_xxz_hea_density_matrix_anchor_workflow",
+    "contract_version": "v1",
+    "required_case_names": [
+      "deferred_readout_noise",
+      "deferred_correlated_multi_qubit_noise",
+      "deferred_calibration_aware_noise",
+      "deferred_non_markovian_noise",
+      "invalid_negative_after_gate_index",
+      "invalid_after_gate_index_exceeds_gate_count",
+      "invalid_noise_target_out_of_range",
+      "invalid_noise_value_out_of_range",
+      "unsupported_state_vector_density_noise"
+    ],
+    "required_support_tiers": [
+      "deferred",
+      "unsupported"
+    ],
+    "required_case_fields": [
+      "case_name",
+      "status",
+      "backend",
+      "support_tier",
+      "case_purpose",
+      "counts_toward_mandatory_baseline",
+      "unsupported_category",
+      "unsupported_reason",
+      "first_unsupported_condition",
+      "noise_boundary_class",
+      "failure_stage",
+      "workflow_id",
+      "contract_version"
+    ],
+    "required_categories": [
+      "backend_incompatible_request",
+      "noise_insertion",
+      "noise_target",
+      "noise_type",
+      "noise_value"
+    ],
+    "required_boundary_classes": [
+      "backend_mode",
+      "configuration",
+      "model_family",
+      "schedule_element"
+    ],
+    "required_bundle_sources": [
+      "workflow_contract_validation",
+      "end_to_end_trace_validation",
+      "matrix_baseline_validation",
+      "unsupported_noise_boundary",
+      "exact_density_validation_backend_mismatch_case"
+    ]
+  },
+  "thresholds": {
+    "expected_status": "unsupported",
+    "silent_fallback_allowed": false,
+    "silent_substitution_allowed": false,
+    "mandatory_baseline_case_count": 0
+  },
+  "software": {
+    "python": "3.13.9",
+    "numpy": "2.3.5",
+    "qiskit": "2.2.3",
+    "qiskit_aer": "0.17.2"
+  },
+  "provenance": {
+    "generation_command": "python benchmarks/density_matrix/unsupported_workflow_validation_validation.py",
+    "working_directory": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer",
+    "git_revision": "199d588c2230fc62a39934ddc7d79a6e74a8b64e",
+    "story1_contract_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/workflow_evidence/workflow_contract_bundle.json",
+    "story2_bundle_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/workflow_evidence/end_to_end_trace_bundle.json",
+    "story3_bundle_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/workflow_evidence/matrix_baseline_bundle.json",
+    "task4_unsupported_bundle_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/noise_support/unsupported_noise_bundle.json",
+    "backend_mismatch_case_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/exact_density_validation/unsupported_state_vector_density_noise.json"
+  },
+  "summary": {
+    "total_cases": 9,
+    "unsupported_status_cases": 9,
+    "unsupported_cases": 5,
+    "deferred_cases": 4,
+    "mandatory_baseline_case_count": 0,
+    "duplicate_case_names": [],
+    "missing_case_names": [],
+    "unexpected_case_names": [],
+    "pre_execution_failure_passed_cases": 9,
+    "no_silent_fallback_cases": 9,
+    "no_silent_substitution_cases": 9,
+    "first_condition_present_cases": 9,
+    "categories_present": [
+      "backend_incompatible_request",
+      "noise_insertion",
+      "noise_target",
+      "noise_type",
+      "noise_value"
+    ],
+    "boundary_classes_present": [
+      "backend_mode",
+      "configuration",
+      "model_family",
+      "schedule_element"
+    ],
+    "backend_incompatible_case_present": true,
+    "all_cases_match_contract": true,
+    "unsupported_gate_completed": true
+  },
+  "required_artifacts": {
+    "story1_contract": {
+      "suite_name": "workflow_contract_validation",
+      "status": "pass",
+      "required_unsupported_case_fields": [
+        "case_name",
+        "status",
+        "backend",
+        "support_tier",
+        "case_purpose",
+        "counts_toward_mandatory_baseline",
+        "unsupported_category",
+        "unsupported_reason",
+        "first_unsupported_condition",
+        "noise_boundary_class",
+        "failure_stage",
+        "workflow_id",
+        "contract_version"
+      ],
+      "summary": {
+        "required_input_field_count": 10,
+        "required_output_field_count": 9,
+        "required_threshold_field_count": 9,
+        "required_bundle_field_count": 15,
+        "boundary_class_count": 4,
+        "mandatory_reference_artifact_count": 6,
+        "reference_artifact_count": 6,
+        "contract_sections_complete": true
+      }
+    },
+    "end_to_end_trace_reference": {
+      "suite_name": "end_to_end_trace_validation",
+      "status": "pass",
+      "summary": {
+        "total_end_to_end_cases": 2,
+        "passed_end_to_end_cases": 2,
+        "failed_end_to_end_cases": 0,
+        "unsupported_end_to_end_cases": 0,
+        "observed_case_names": [
+          "exact_regime_4q_set_00",
+          "exact_regime_6q_set_00"
+        ],
+        "observed_qubits": [
+          4,
+          6
+        ],
+        "missing_mandatory_case_names": [],
+        "missing_mandatory_qubits": [],
+        "duplicate_case_names": [],
+        "unexpected_case_names": [],
+        "unexpected_mandatory_qubits": [],
+        "stable_case_ids_present": true,
+        "all_cases_required": true,
+        "all_cases_count_toward_mandatory_baseline": true,
+        "all_cases_match_contract": true,
+        "end_to_end_qubits_match_contract": true,
+        "required_trace_case_name": "optimization_trace_4q",
+        "required_trace_present": true,
+        "required_trace_completed": true,
+        "required_trace_bridge_supported": true,
+        "trace_case_name_matches_contract": true,
+        "trace_matches_contract": true,
+        "workflow_thresholds_match_contract": true,
+        "end_to_end_gate_completed": true
+      }
+    },
+    "matrix_baseline_reference": {
+      "suite_name": "matrix_baseline_validation",
+      "status": "pass",
+      "summary": {
+        "total_cases": 40,
+        "passed_cases": 40,
+        "failed_cases": 0,
+        "unsupported_cases": 0,
+        "bridge_supported_cases": 40,
+        "required_cases": 40,
+        "required_passed_cases": 40,
+        "required_pass_rate": 1.0,
+        "documented_10q_anchor_present": true,
+        "workflow_inventory_matches_contract": true,
+        "workflow_thresholds_match_contract": true,
+        "all_cases_required": true,
+        "all_cases_count_toward_mandatory_baseline": true,
+        "all_cases_match_contract": true,
+        "observed_case_names": [
+          "exact_regime_4q_set_00",
+          "exact_regime_4q_set_01",
+          "exact_regime_4q_set_02",
+          "exact_regime_4q_set_03",
+          "exact_regime_4q_set_04",
+          "exact_regime_4q_set_05",
+          "exact_regime_4q_set_06",
+          "exact_regime_4q_set_07",
+          "exact_regime_4q_set_08",
+          "exact_regime_4q_set_09",
+          "exact_regime_6q_set_00",
+          "exact_regime_6q_set_01",
+          "exact_regime_6q_set_02",
+          "exact_regime_6q_set_03",
+          "exact_regime_6q_set_04",
+          "exact_regime_6q_set_05",
+          "exact_regime_6q_set_06",
+          "exact_regime_6q_set_07",
+          "exact_regime_6q_set_08",
+          "exact_regime_6q_set_09",
+          "exact_regime_8q_set_00",
+          "exact_regime_8q_set_01",
+          "exact_regime_8q_set_02",
+          "exact_regime_8q_set_03",
+          "exact_regime_8q_set_04",
+          "exact_regime_8q_set_05",
+          "exact_regime_8q_set_06",
+          "exact_regime_8q_set_07",
+          "exact_regime_8q_set_08",
+          "exact_regime_8q_set_09",
+          "exact_regime_10q_set_00",
+          "exact_regime_10q_set_01",
+          "exact_regime_10q_set_02",
+          "exact_regime_10q_set_03",
+          "exact_regime_10q_set_04",
+          "exact_regime_10q_set_05",
+          "exact_regime_10q_set_06",
+          "exact_regime_10q_set_07",
+          "exact_regime_10q_set_08",
+          "exact_regime_10q_set_09"
+        ],
+        "missing_mandatory_case_names": [],
+        "duplicate_case_names": [],
+        "unexpected_case_names": [],
+        "stable_case_ids_present": true,
+        "cases_per_qbit": {
+          "4": 10,
+          "6": 10,
+          "8": 10,
+          "10": 10
+        },
+        "missing_parameter_set_ids_by_qbit": {
+          "4": [],
+          "6": [],
+          "8": [],
+          "10": []
+        },
+        "duplicate_parameter_set_ids_by_qbit": {
+          "4": [],
+          "6": [],
+          "8": [],
+          "10": []
+        },
+        "stable_parameter_set_ids_present": true,
+        "matrix_gate_completed": true
+      }
+    },
+    "task4_unsupported_noise_bundle": {
+      "suite_name": "unsupported_noise_boundary",
+      "status": "pass",
+      "summary": {
+        "boundary_classes_present": [
+          "configuration",
+          "model_family",
+          "schedule_element"
+        ],
+        "boundary_passed_cases": 8,
+        "categories_present": [
+          "noise_insertion",
+          "noise_target",
+          "noise_type",
+          "noise_value"
+        ],
+        "deferred_cases": 4,
+        "error_match_count": 8,
+        "failed_cases": 0,
+        "failure_stages_present": [
+          "cxx_noise_spec_validation",
+          "density_anchor_preflight",
+          "python_normalization"
+        ],
+        "first_unsupported_conditions": [
+          "after_gate_index_exceeds_gate_count",
+          "after_gate_index_negative",
+          "calibration_aware_noise",
+          "correlated_multi_qubit_noise",
+          "noise_value_out_of_range",
+          "non_markovian_noise",
+          "readout_noise",
+          "target_qbit_out_of_range"
+        ],
+        "mandatory_baseline_case_count": 0,
+        "mandatory_baseline_completed": false,
+        "mandatory_baseline_passed_cases": 0,
+        "optional_cases": 0,
+        "optional_cases_count_toward_mandatory_baseline": 0,
+        "optional_pass_rate": 0.0,
+        "optional_passed_cases": 0,
+        "pre_execution_failure_count": 8,
+        "required_cases": 0,
+        "required_pass_rate": 0.0,
+        "required_passed_cases": 0,
+        "silent_fallback_failures": 0,
+        "silent_substitution_failures": 0,
+        "support_tiers_present": [
+          "deferred",
+          "unsupported"
+        ],
+        "total_cases": 8,
+        "unsupported_cases": 4,
+        "unsupported_status_cases": 8
+      }
+    }
+  },
+  "cases": [
+    {
+      "ansatz": "HEA",
+      "backend": "density_matrix",
+      "case_kind": "task4_unsupported_noise_boundary_validation",
+      "case_name": "deferred_readout_noise",
+      "case_purpose": "deferred_scope_guard",
+      "counts_toward_mandatory_baseline": false,
+      "deferred_reason": "readout_noise",
+      "density_noise": [
+        {
+          "after_gate_index": 0,
+          "channel": "readout_noise",
+          "target": 0,
+          "value": 0.1
+        }
+      ],
+      "error_match_pass": true,
+      "expected_failure_stage": "python_normalization",
+      "expected_first_unsupported_condition": "readout_noise",
+      "expected_noise_boundary_class": "model_family",
+      "expected_support_tier": "deferred",
+      "expected_unsupported_category": "noise_type",
+      "failure_stage": "python_normalization",
+      "first_unsupported_condition": "readout_noise",
+      "hamiltonian": {
+        "Jx": 1.0,
+        "Jy": 1.0,
+        "Jz": 1.0,
+        "h": 0.5
+      },
+      "inner_blocks": 1,
+      "layers": 1,
+      "noise_boundary_class": "model_family",
+      "pre_execution_failure_pass": true,
+      "purpose": "Verify readout-noise requests fail before execution on the VQE-facing density path.",
+      "qbit_num": 1,
+      "requested_noise_channel": "readout_noise",
+      "silent_fallback_detected": false,
+      "silent_substitution_detected": false,
+      "status": "unsupported",
+      "support_tier": "deferred",
+      "topology": [],
+      "unsupported_boundary_pass": true,
+      "unsupported_category": "noise_type",
+      "unsupported_reason": "Unsupported density-noise channel 'readout_noise'. Supported channels are 'local_depolarizing', 'amplitude_damping', and 'phase_damping'.",
+      "workflow_id": "phase2_xxz_hea_density_matrix_anchor_workflow",
+      "contract_version": "v1",
+      "story6_case_role": "unsupported_boundary",
+      "required_unsupported_case": true
+    },
+    {
+      "ansatz": "HEA",
+      "backend": "density_matrix",
+      "case_kind": "task4_unsupported_noise_boundary_validation",
+      "case_name": "deferred_correlated_multi_qubit_noise",
+      "case_purpose": "deferred_scope_guard",
+      "counts_toward_mandatory_baseline": false,
+      "deferred_reason": "correlated_multi_qubit_noise",
+      "density_noise": [
+        {
+          "after_gate_index": 0,
+          "channel": "correlated_multi_qubit_noise",
+          "target": 0,
+          "value": 0.1
+        }
+      ],
+      "error_match_pass": true,
+      "expected_failure_stage": "python_normalization",
+      "expected_first_unsupported_condition": "correlated_multi_qubit_noise",
+      "expected_noise_boundary_class": "model_family",
+      "expected_support_tier": "deferred",
+      "expected_unsupported_category": "noise_type",
+      "failure_stage": "python_normalization",
+      "first_unsupported_condition": "correlated_multi_qubit_noise",
+      "hamiltonian": {
+        "Jx": 1.0,
+        "Jy": 1.0,
+        "Jz": 1.0,
+        "h": 0.5
+      },
+      "inner_blocks": 1,
+      "layers": 1,
+      "noise_boundary_class": "model_family",
+      "pre_execution_failure_pass": true,
+      "purpose": "Verify correlated multi-qubit noise requests remain deferred and fail before execution.",
+      "qbit_num": 2,
+      "requested_noise_channel": "correlated_multi_qubit_noise",
+      "silent_fallback_detected": false,
+      "silent_substitution_detected": false,
+      "status": "unsupported",
+      "support_tier": "deferred",
+      "topology": [
+        [
+          0,
+          1
+        ]
+      ],
+      "unsupported_boundary_pass": true,
+      "unsupported_category": "noise_type",
+      "unsupported_reason": "Unsupported density-noise channel 'correlated_multi_qubit_noise'. Supported channels are 'local_depolarizing', 'amplitude_damping', and 'phase_damping'.",
+      "workflow_id": "phase2_xxz_hea_density_matrix_anchor_workflow",
+      "contract_version": "v1",
+      "story6_case_role": "unsupported_boundary",
+      "required_unsupported_case": true
+    },
+    {
+      "ansatz": "HEA",
+      "backend": "density_matrix",
+      "case_kind": "task4_unsupported_noise_boundary_validation",
+      "case_name": "deferred_calibration_aware_noise",
+      "case_purpose": "deferred_scope_guard",
+      "counts_toward_mandatory_baseline": false,
+      "deferred_reason": "calibration_aware_noise",
+      "density_noise": [
+        {
+          "after_gate_index": 0,
+          "channel": "calibration_aware_noise",
+          "target": 0,
+          "value": 0.1
+        }
+      ],
+      "error_match_pass": true,
+      "expected_failure_stage": "python_normalization",
+      "expected_first_unsupported_condition": "calibration_aware_noise",
+      "expected_noise_boundary_class": "model_family",
+      "expected_support_tier": "deferred",
+      "expected_unsupported_category": "noise_type",
+      "failure_stage": "python_normalization",
+      "first_unsupported_condition": "calibration_aware_noise",
+      "hamiltonian": {
+        "Jx": 1.0,
+        "Jy": 1.0,
+        "Jz": 1.0,
+        "h": 0.5
+      },
+      "inner_blocks": 1,
+      "layers": 1,
+      "noise_boundary_class": "model_family",
+      "pre_execution_failure_pass": true,
+      "purpose": "Verify calibration-aware noise requests remain deferred and fail before execution.",
+      "qbit_num": 1,
+      "requested_noise_channel": "calibration_aware_noise",
+      "silent_fallback_detected": false,
+      "silent_substitution_detected": false,
+      "status": "unsupported",
+      "support_tier": "deferred",
+      "topology": [],
+      "unsupported_boundary_pass": true,
+      "unsupported_category": "noise_type",
+      "unsupported_reason": "Unsupported density-noise channel 'calibration_aware_noise'. Supported channels are 'local_depolarizing', 'amplitude_damping', and 'phase_damping'.",
+      "workflow_id": "phase2_xxz_hea_density_matrix_anchor_workflow",
+      "contract_version": "v1",
+      "story6_case_role": "unsupported_boundary",
+      "required_unsupported_case": true
+    },
+    {
+      "ansatz": "HEA",
+      "backend": "density_matrix",
+      "case_kind": "task4_unsupported_noise_boundary_validation",
+      "case_name": "deferred_non_markovian_noise",
+      "case_purpose": "deferred_scope_guard",
+      "counts_toward_mandatory_baseline": false,
+      "deferred_reason": "non_markovian_noise",
+      "density_noise": [
+        {
+          "after_gate_index": 0,
+          "channel": "non_markovian_noise",
+          "target": 0,
+          "value": 0.1
+        }
+      ],
+      "error_match_pass": true,
+      "expected_failure_stage": "python_normalization",
+      "expected_first_unsupported_condition": "non_markovian_noise",
+      "expected_noise_boundary_class": "model_family",
+      "expected_support_tier": "deferred",
+      "expected_unsupported_category": "noise_type",
+      "failure_stage": "python_normalization",
+      "first_unsupported_condition": "non_markovian_noise",
+      "hamiltonian": {
+        "Jx": 1.0,
+        "Jy": 1.0,
+        "Jz": 1.0,
+        "h": 0.5
+      },
+      "inner_blocks": 1,
+      "layers": 1,
+      "noise_boundary_class": "model_family",
+      "pre_execution_failure_pass": true,
+      "purpose": "Verify non-Markovian noise requests remain deferred and fail before execution.",
+      "qbit_num": 1,
+      "requested_noise_channel": "non_markovian_noise",
+      "silent_fallback_detected": false,
+      "silent_substitution_detected": false,
+      "status": "unsupported",
+      "support_tier": "deferred",
+      "topology": [],
+      "unsupported_boundary_pass": true,
+      "unsupported_category": "noise_type",
+      "unsupported_reason": "Unsupported density-noise channel 'non_markovian_noise'. Supported channels are 'local_depolarizing', 'amplitude_damping', and 'phase_damping'.",
+      "workflow_id": "phase2_xxz_hea_density_matrix_anchor_workflow",
+      "contract_version": "v1",
+      "story6_case_role": "unsupported_boundary",
+      "required_unsupported_case": true
+    },
+    {
+      "ansatz": "HEA",
+      "backend": "density_matrix",
+      "case_kind": "task4_unsupported_noise_boundary_validation",
+      "case_name": "invalid_negative_after_gate_index",
+      "case_purpose": "unsupported_scope_guard",
+      "counts_toward_mandatory_baseline": false,
+      "density_noise": [
+        {
+          "after_gate_index": -1,
+          "channel": "local_depolarizing",
+          "error_rate": 0.1,
+          "target": 0
+        }
+      ],
+      "error_match_pass": true,
+      "expected_failure_stage": "cxx_noise_spec_validation",
+      "expected_first_unsupported_condition": "after_gate_index_negative",
+      "expected_noise_boundary_class": "schedule_element",
+      "expected_support_tier": "unsupported",
+      "expected_unsupported_category": "noise_insertion",
+      "failure_stage": "cxx_noise_spec_validation",
+      "first_unsupported_condition": "after_gate_index_negative",
+      "hamiltonian": {
+        "Jx": 1.0,
+        "Jy": 1.0,
+        "Jz": 1.0,
+        "h": 0.5
+      },
+      "inner_blocks": 1,
+      "layers": 1,
+      "noise_boundary_class": "schedule_element",
+      "pre_execution_failure_pass": true,
+      "purpose": "Verify negative after_gate_index fails during density-noise configuration.",
+      "qbit_num": 4,
+      "requested_noise_channel": "local_depolarizing",
+      "silent_fallback_detected": false,
+      "silent_substitution_detected": false,
+      "status": "unsupported",
+      "support_tier": "unsupported",
+      "topology": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ]
+      ],
+      "unsupported_boundary_pass": true,
+      "unsupported_category": "noise_insertion",
+      "unsupported_reason": "Variational_Quantum_Eigensolver_Base::set_density_noise_specs: after_gate_index must be non-negative",
+      "unsupported_scope_reason": "after_gate_index_negative",
+      "workflow_id": "phase2_xxz_hea_density_matrix_anchor_workflow",
+      "contract_version": "v1",
+      "story6_case_role": "unsupported_boundary",
+      "required_unsupported_case": true
+    },
+    {
+      "ansatz": "HEA",
+      "backend": "density_matrix",
+      "case_kind": "task4_unsupported_noise_boundary_validation",
+      "case_name": "invalid_after_gate_index_exceeds_gate_count",
+      "case_purpose": "unsupported_scope_guard",
+      "counts_toward_mandatory_baseline": false,
+      "density_noise": [
+        {
+          "after_gate_index": 999,
+          "channel": "local_depolarizing",
+          "error_rate": 0.1,
+          "target": 0
+        }
+      ],
+      "error_match_pass": true,
+      "expected_failure_stage": "density_anchor_preflight",
+      "expected_first_unsupported_condition": "after_gate_index_exceeds_gate_count",
+      "expected_noise_boundary_class": "schedule_element",
+      "expected_support_tier": "unsupported",
+      "expected_unsupported_category": "noise_insertion",
+      "failure_stage": "density_anchor_preflight",
+      "first_unsupported_condition": "after_gate_index_exceeds_gate_count",
+      "hamiltonian": {
+        "Jx": 1.0,
+        "Jy": 1.0,
+        "Jz": 1.0,
+        "h": 0.5
+      },
+      "inner_blocks": 1,
+      "layers": 1,
+      "noise_boundary_class": "schedule_element",
+      "pre_execution_failure_pass": true,
+      "purpose": "Verify insertion points beyond the generated gate count fail before execution.",
+      "qbit_num": 4,
+      "requested_noise_channel": "local_depolarizing",
+      "silent_fallback_detected": false,
+      "silent_substitution_detected": false,
+      "status": "unsupported",
+      "support_tier": "unsupported",
+      "topology": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ]
+      ],
+      "unsupported_boundary_pass": true,
+      "unsupported_category": "noise_insertion",
+      "unsupported_reason": "Variational_Quantum_Eigensolver_Base::validate_density_anchor_support: unsupported density-noise insertion at index 0 because after_gate_index exceeds generated gate count",
+      "unsupported_scope_reason": "after_gate_index_exceeds_gate_count",
+      "workflow_id": "phase2_xxz_hea_density_matrix_anchor_workflow",
+      "contract_version": "v1",
+      "story6_case_role": "unsupported_boundary",
+      "required_unsupported_case": true
+    },
+    {
+      "ansatz": "HEA",
+      "backend": "density_matrix",
+      "case_kind": "task4_unsupported_noise_boundary_validation",
+      "case_name": "invalid_noise_target_out_of_range",
+      "case_purpose": "unsupported_scope_guard",
+      "counts_toward_mandatory_baseline": false,
+      "density_noise": [
+        {
+          "after_gate_index": 0,
+          "channel": "phase_damping",
+          "lambda": 0.1,
+          "target": 10
+        }
+      ],
+      "error_match_pass": true,
+      "expected_failure_stage": "cxx_noise_spec_validation",
+      "expected_first_unsupported_condition": "target_qbit_out_of_range",
+      "expected_noise_boundary_class": "configuration",
+      "expected_support_tier": "unsupported",
+      "expected_unsupported_category": "noise_target",
+      "failure_stage": "cxx_noise_spec_validation",
+      "first_unsupported_condition": "target_qbit_out_of_range",
+      "hamiltonian": {
+        "Jx": 1.0,
+        "Jy": 1.0,
+        "Jz": 1.0,
+        "h": 0.5
+      },
+      "inner_blocks": 1,
+      "layers": 1,
+      "noise_boundary_class": "configuration",
+      "pre_execution_failure_pass": true,
+      "purpose": "Verify invalid noise targets fail during density-noise configuration.",
+      "qbit_num": 2,
+      "requested_noise_channel": "phase_damping",
+      "silent_fallback_detected": false,
+      "silent_substitution_detected": false,
+      "status": "unsupported",
+      "support_tier": "unsupported",
+      "topology": [
+        [
+          0,
+          1
+        ]
+      ],
+      "unsupported_boundary_pass": true,
+      "unsupported_category": "noise_target",
+      "unsupported_reason": "Variational_Quantum_Eigensolver_Base::set_density_noise_specs: target_qbit out of range",
+      "unsupported_scope_reason": "target_qbit_out_of_range",
+      "workflow_id": "phase2_xxz_hea_density_matrix_anchor_workflow",
+      "contract_version": "v1",
+      "story6_case_role": "unsupported_boundary",
+      "required_unsupported_case": true
+    },
+    {
+      "ansatz": "HEA",
+      "backend": "density_matrix",
+      "case_kind": "task4_unsupported_noise_boundary_validation",
+      "case_name": "invalid_noise_value_out_of_range",
+      "case_purpose": "unsupported_scope_guard",
+      "counts_toward_mandatory_baseline": false,
+      "density_noise": [
+        {
+          "after_gate_index": 0,
+          "channel": "amplitude_damping",
+          "gamma": 1.5,
+          "target": 0
+        }
+      ],
+      "error_match_pass": true,
+      "expected_failure_stage": "cxx_noise_spec_validation",
+      "expected_first_unsupported_condition": "noise_value_out_of_range",
+      "expected_noise_boundary_class": "configuration",
+      "expected_support_tier": "unsupported",
+      "expected_unsupported_category": "noise_value",
+      "failure_stage": "cxx_noise_spec_validation",
+      "first_unsupported_condition": "noise_value_out_of_range",
+      "hamiltonian": {
+        "Jx": 1.0,
+        "Jy": 1.0,
+        "Jz": 1.0,
+        "h": 0.5
+      },
+      "inner_blocks": 1,
+      "layers": 1,
+      "noise_boundary_class": "configuration",
+      "pre_execution_failure_pass": true,
+      "purpose": "Verify out-of-range noise probabilities fail during density-noise configuration.",
+      "qbit_num": 2,
+      "requested_noise_channel": "amplitude_damping",
+      "silent_fallback_detected": false,
+      "silent_substitution_detected": false,
+      "status": "unsupported",
+      "support_tier": "unsupported",
+      "topology": [
+        [
+          0,
+          1
+        ]
+      ],
+      "unsupported_boundary_pass": true,
+      "unsupported_category": "noise_value",
+      "unsupported_reason": "Variational_Quantum_Eigensolver_Base::set_density_noise_specs: noise values must be in [0, 1]",
+      "unsupported_scope_reason": "noise_value_out_of_range",
+      "workflow_id": "phase2_xxz_hea_density_matrix_anchor_workflow",
+      "contract_version": "v1",
+      "story6_case_role": "unsupported_boundary",
+      "required_unsupported_case": true
+    },
+    {
+      "backend": "state_vector",
+      "qbit_num": 4,
+      "topology": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ]
+      ],
+      "ansatz": "HEA",
+      "layers": 1,
+      "inner_blocks": 1,
+      "density_noise": [
+        {
+          "channel": "local_depolarizing",
+          "target": 0,
+          "after_gate_index": 0,
+          "error_rate": 0.1
+        },
+        {
+          "channel": "amplitude_damping",
+          "target": 1,
+          "after_gate_index": 2,
+          "gamma": 0.05
+        },
+        {
+          "channel": "phase_damping",
+          "target": 0,
+          "after_gate_index": 4,
+          "lambda": 0.07
+        }
+      ],
+      "hamiltonian": {
+        "Jx": 1.0,
+        "Jy": 1.0,
+        "Jz": 1.0,
+        "h": 0.5
+      },
+      "case_name": "unsupported_state_vector_density_noise",
+      "status": "unsupported",
+      "unsupported_category": "backend_incompatible_request",
+      "unsupported_reason": "Variational_Quantum_Eigensolver_Base::validate_density_anchor_support: state_vector backend does not support density_matrix-only noise configuration",
+      "reference_backend": "qiskit_aer_density_matrix",
+      "support_tier": "unsupported",
+      "case_purpose": "unsupported_scope_guard",
+      "counts_toward_mandatory_baseline": false,
+      "source_unsupported_category": "phase2_support_matrix",
+      "first_unsupported_condition": "state_vector_backend_density_noise",
+      "noise_boundary_class": "backend_mode",
+      "failure_stage": "density_anchor_preflight",
+      "pre_execution_failure_pass": true,
+      "silent_fallback_detected": false,
+      "silent_substitution_detected": false,
+      "unsupported_boundary_pass": true,
+      "workflow_completed": false,
+      "workflow_id": "phase2_xxz_hea_density_matrix_anchor_workflow",
+      "contract_version": "v1",
+      "story6_case_role": "unsupported_boundary",
+      "required_unsupported_case": true
+    }
+  ]
+}

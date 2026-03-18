@@ -54,7 +54,6 @@ available.
 targets.
 - `[ARCHITECTURE.md](ARCHITECTURE.md)`: implementation structure and integration
 extension points.
-- `[API_REFERENCE.md](API_REFERENCE.md)`: complete phase-1 Python API surface.
 - `[SETUP.md](SETUP.md)`: environment setup, build, verification, troubleshooting.
 
 ## Minimal Hello World
