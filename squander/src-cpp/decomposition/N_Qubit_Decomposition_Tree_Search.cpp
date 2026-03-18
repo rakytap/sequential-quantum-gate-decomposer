@@ -639,14 +639,7 @@ TreeSearchResult N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_struct
     int64_t concurrency = (int64_t)nthreads;
     concurrency = concurrency < iteration_max ? concurrency : iteration_max;
 
-    int parallel;
-    if (config.count("parallel_tree_search") > 0) {
-        long long value;
-        config["parallel_tree_search"].get_property(value);
-        parallel = (int)value;
-    } else {
-        parallel = get_parallel_configuration();
-    }
+    int parallel = get_parallel_configuration();
 
     int64_t work_batch = 1;
     if (parallel == 0) {
@@ -900,14 +893,8 @@ GrayCode N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures(int
     int64_t concurrency = (int64_t)nthreads;
     concurrency = concurrency < iteration_max ? concurrency : iteration_max;
 
-    int parallel;
-    if (config.count("parallel_tree_search") > 0) {
-        long long value;
-        config["parallel_tree_search"].get_property(value);
-        parallel = (int)value;
-    } else {
-        parallel = get_parallel_configuration();
-    }
+    int parallel = get_parallel_configuration();
+
 
     int64_t work_batch = 1;
     if (parallel == 0) {

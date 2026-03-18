@@ -1052,16 +1052,8 @@ class qgd_Wide_Circuit_Optimization:
                     config = config if structures is None or partition_idx >= len(structures) else {**config, 'strategy': 'Custom', 'max_inner_iterations': 10000, 'max_iteration_loops': 4}
 
                     qbit_num_sub = len(subcircuit.get_Qbits())
-                    if qbit_num_sub == 2:
-                        async_results[partition_idx]  = pool.apply_async( self.PartitionDecompositionProcess, (subcircuit, subcircuit_parameters, config,
-                                                                                                            None if structures is None or partition_idx >= len(structures) else structures[partition_idx]))
-                    elif qbit_num_sub >= 3:
-                        large_config = {**config, 'parallel': 1}
-                        async_results[partition_idx]  = large_pool.apply_async( self.PartitionDecompositionProcess, (subcircuit, subcircuit_parameters, large_config,
-                                                                                                            None if structures is None or partition_idx >= len(structures) else structures[partition_idx]))
-                    else:
-                        async_results[partition_idx] = self.PartitionDecompositionProcess(subcircuit, subcircuit_parameters, config,
-                                                                                         None if structures is None or partition_idx >= len(structures) else structures[partition_idx])
+                    async_results[partition_idx]  = pool.apply_async( self.PartitionDecompositionProcess, (subcircuit, subcircuit_parameters, config,
+                                                                                                        None if structures is None or partition_idx >= len(structures) else structures[partition_idx]))
 
                 #  code for iterate over async results and retrieve the new subcircuits
                 for partition_idx, subcircuit in enumerate( subcircuits ):
@@ -1069,8 +1061,7 @@ class qgd_Wide_Circuit_Optimization:
                     start_idx = subcircuit.get_Parameter_Start_Index()
                     subcircuit_parameters = parameters[ start_idx:start_idx + subcircuit.get_Parameter_Num() ]
                     callback_fnc = lambda  x : self.CompareAndPickCircuits( [subcircuit, *(z[0] for z in x)], [subcircuit_parameters, *(z[1] for z in x)] )
-                    result = async_results[partition_idx]
-                    new_subcircuit, new_parameters = callback_fnc(result.get( timeout = None ) if isinstance(result, AsyncResult) else result)
+                    new_subcircuit, new_parameters = callback_fnc(async_results[partition_idx].get( timeout = None ))
 
                     if subcircuit != new_subcircuit and self.config["verbosity"] > 0:
                         print( "original subcircuit:    ", subcircuit.get_Gate_Nums())
