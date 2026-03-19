@@ -27,6 +27,21 @@ import logging
 from tqdm import tqdm
 from collections import deque, defaultdict
 
+# Module-level globals for pool workers (set via Pool initializer)
+_worker_config = None
+
+def _init_decompose_worker(config):
+    global _worker_config
+    _worker_config = config
+
+def _decompose_one(Umtx, mini_topology):
+    """Pool worker function. Uses config set once by initializer instead of
+    pickling it per task."""
+    from squander.synthesis.PartAM import qgd_Partition_Aware_Mapping
+    return qgd_Partition_Aware_Mapping.DecomposePartition_and_Perm(
+        Umtx, _worker_config, mini_topology
+    )
+
 from squander.synthesis.PartAM_utils import (
     get_subtopologies_of_type,
     get_unique_subtopologies,
@@ -186,71 +201,6 @@ class qgd_Partition_Aware_Mapping:
     # ------------------------------------------------------------------------
 
     @staticmethod
-    def DecomposePartition_Sequential(Partition_circuit: Circuit, Partition_parameters: np.ndarray, config: dict, topologies, involved_qbits, qbit_map) -> PartitionSynthesisResult:
-        """
-        Call to decompose a partition sequentially.
-        When use_automorphisms is enabled in config, derives equivalent
-        decompositions from topology automorphisms to skip redundant work.
-        """
-        N = Partition_circuit.get_Qbit_Num()
-        if N !=1:
-            perumations_all = list(permutations(range(N)))
-            result = PartitionSynthesisResult(N, topologies, involved_qbits, qbit_map, Partition_circuit)
-            use_auts = config.get('use_automorphisms', True)
-
-            for topology_idx in range(len(topologies)):
-                mini_topology = topologies[topology_idx]
-                if use_auts:
-                    auts = compute_automorphisms(mini_topology)
-                    identity = tuple(range(N))
-                    known_pairs = set()
-
-                # Stage 1: fix P_o, sweep all P_i
-                P_o_initial = perumations_all[np.random.choice(range(len(perumations_all)))]
-                for P_i in perumations_all:
-                    Partition_circuit_tmp = Circuit(N)
-                    Partition_circuit_tmp.add_Permutation(list(P_i))
-                    Partition_circuit_tmp.add_Circuit(Partition_circuit)
-                    Partition_circuit_tmp.add_Permutation(list(P_o_initial))
-                    synthesised_circuit, synthesised_parameters = qgd_Partition_Aware_Mapping.DecomposePartition_and_Perm(Partition_circuit_tmp.get_Matrix(Partition_parameters), config, mini_topology)
-                    result.add_result((P_i, P_o_initial), synthesised_circuit, synthesised_parameters, topology_idx)
-                    if use_auts:
-                        known_pairs.add((P_i, P_o_initial))
-                        for sigma in auts:
-                            if sigma == identity:
-                                continue
-                            new_P_i, new_P_o, new_circuit, new_params = derive_result_from_automorphism(sigma, P_i, P_o_initial, synthesised_circuit, synthesised_parameters, N)
-                            if (new_P_i, new_P_o) not in known_pairs:
-                                result.add_result((new_P_i, new_P_o), new_circuit, new_params, topology_idx)
-                                known_pairs.add((new_P_i, new_P_o))
-
-                # Stage 2: fix P_i_best, sweep all P_o
-                P_i_best, _ = result.get_best_result(topology_idx)[0]
-                for P_o in perumations_all:
-                    if use_auts and (tuple(P_i_best), P_o) in known_pairs:
-                        continue
-                    Partition_circuit_tmp = Circuit(N)
-                    Partition_circuit_tmp.add_Permutation(list(P_i_best))
-                    Partition_circuit_tmp.add_Circuit(Partition_circuit)
-                    Partition_circuit_tmp.add_Permutation(list(P_o))
-                    synthesised_circuit, synthesised_parameters = qgd_Partition_Aware_Mapping.DecomposePartition_and_Perm(Partition_circuit_tmp.get_Matrix(Partition_parameters), config, mini_topology)
-                    result.add_result((P_i_best, P_o), synthesised_circuit, synthesised_parameters, topology_idx)
-                    if use_auts:
-                        known_pairs.add((tuple(P_i_best), P_o))
-                        for sigma in auts:
-                            if sigma == identity:
-                                continue
-                            new_P_i, new_P_o, new_circuit, new_params = derive_result_from_automorphism(sigma, P_i_best, P_o, synthesised_circuit, synthesised_parameters, N)
-                            if (new_P_i, new_P_o) not in known_pairs:
-                                result.add_result((new_P_i, new_P_o), new_circuit, new_params, topology_idx)
-                                known_pairs.add((new_P_i, new_P_o))
-        else:
-            result = SingleQubitPartitionResult(Partition_circuit,Partition_parameters)
-        return result
-
-        return result
-
-    @staticmethod
     def DecomposePartition_and_Perm(Umtx: np.ndarray, config: dict, mini_topology = None, max_retries: int = 5) -> Circuit:
         """
         Call to decompose a partition. Retries up to max_retries times if the
@@ -341,35 +291,222 @@ class qgd_Partition_Aware_Mapping:
             partitioned_circuit.add_Circuit(c)
         parameters = np.concatenate(params, axis=0)
 
-        # ---- Phase 2: Stage 1 synthesis (Sequential) ----
+        # ---- Phase 2: Fine-grained parallel synthesis ----
+        # Instead of 1 coarse task per partition (each doing ~12 sequential
+        # C++ decompositions), submit individual (partition, topology, permutation)
+        # tasks for much better pool load balancing.
         subcircuits = partitioned_circuit.get_Gates()
         optimized_results = [None] * len(subcircuits)
-
-        # Use fewer workers for 3+ qubit partitions to avoid oversubscription
-        # from C++ internal threads (parallel=1) competing with pool workers
         n_cpus = mp.cpu_count()
-        large_pool_size = max(1, n_cpus // 4)
+        use_auts = self.config.get('use_automorphisms', True)
+        disable_pbar = self.config.get('progressbar', 0) == False
 
-        with Pool(processes=n_cpus) as pool, \
-             Pool(processes=large_pool_size) as large_pool:
-            for partition_idx, subcircuit in enumerate( subcircuits ):
+        # Pre-compute partition metadata and base unitaries
+        partition_meta = []
+        for partition_idx, subcircuit in enumerate(subcircuits):
+            start_idx = subcircuit.get_Parameter_Start_Index()
+            end_idx = start_idx + subcircuit.get_Parameter_Num()
+            subcircuit_parameters = parameters[start_idx:end_idx]
+            involved_qbits = subcircuit.get_Qbits()
+            qbit_num_sub = len(involved_qbits)
+            mini_topologies = get_unique_subtopologies(self.topology, qbit_num_sub)
+            qbit_map = {involved_qbits[idx]: idx for idx in range(len(involved_qbits))}
+            remapped_subcircuit = subcircuit.Remap_Qbits(qbit_map, qbit_num_sub)
 
-                start_idx = subcircuit.get_Parameter_Start_Index()
-                end_idx   = subcircuit.get_Parameter_Start_Index() + subcircuit.get_Parameter_Num()
-                subcircuit_parameters = parameters[ start_idx:end_idx ]
-                involved_qbits = subcircuit.get_Qbits()
+            if qbit_num_sub == 1:
+                optimized_results[partition_idx] = SingleQubitPartitionResult(
+                    remapped_subcircuit, subcircuit_parameters
+                )
+                partition_meta.append(None)
+            else:
+                partition_meta.append({
+                    'N': qbit_num_sub,
+                    'circuit': remapped_subcircuit,
+                    'params': subcircuit_parameters,
+                    'mini_topologies': mini_topologies,
+                    'involved_qbits': involved_qbits,
+                    'qbit_map': qbit_map,
+                })
 
-                qbit_num_sub = len( involved_qbits )
-                mini_topologies = get_unique_subtopologies(self.topology, qbit_num_sub)
-                qbit_map = {}
-                for idx in range( len(involved_qbits) ):
-                    qbit_map[ involved_qbits[idx] ] = idx
-                remapped_subcircuit = subcircuit.Remap_Qbits( qbit_map, qbit_num_sub )
+        # Pre-compute automorphisms per unique mini_topology shape
+        aut_cache = {}
+        def _get_auts(mini_topo):
+            key = tuple(sorted(tuple(sorted(e)) for e in mini_topo))
+            if key not in aut_cache:
+                aut_cache[key] = compute_automorphisms(mini_topo)
+            return aut_cache[key]
 
-                optimized_results[partition_idx] = pool.apply_async( self.DecomposePartition_Sequential, (remapped_subcircuit, subcircuit_parameters, self.config, mini_topologies, involved_qbits, qbit_map) )
+        def _build_permuted_unitary(meta, P_i, P_o):
+            N = meta['N']
+            circ_tmp = Circuit(N)
+            circ_tmp.add_Permutation(list(P_i))
+            circ_tmp.add_Circuit(meta['circuit'])
+            circ_tmp.add_Permutation(list(P_o))
+            return circ_tmp.get_Matrix(meta['params'])
 
-            for partition_idx, subcircuit in enumerate( tqdm(subcircuits, desc="First Synthesis",disable=self.config.get('progressbar', 0) == False) ):
-                optimized_results[partition_idx] = optimized_results[partition_idx].get()
+        def _topo_key(mini_topology):
+            return tuple(sorted(tuple(sorted(e)) for e in mini_topology))
+
+        # Cache: (rounded_unitary_bytes, topo_key) -> (circuit, parameters)
+        # Avoids redundant C++ decompositions when different partitions or
+        # permutations produce the same unitary matrix.
+        decomp_cache = {}
+
+        def _cache_key(Umtx, mini_topology):
+            return (np.round(Umtx, decimals=10).tobytes(), _topo_key(mini_topology))
+
+        def _add_result_with_auts(result, perm_pair, synth_circuit, synth_params,
+                                  topology_idx, N, mini_topology, known_pairs, pair_key):
+            """Add a synthesis result and derive automorphism equivalents."""
+            result.add_result(perm_pair, synth_circuit, synth_params, topology_idx)
+            if use_auts:
+                if pair_key not in known_pairs:
+                    known_pairs[pair_key] = set()
+                known_pairs[pair_key].add(perm_pair)
+                P_i, P_o = perm_pair
+                auts = _get_auts(mini_topology)
+                identity = tuple(range(N))
+                for sigma in auts:
+                    if sigma == identity:
+                        continue
+                    new_P_i, new_P_o, new_circ, new_params = derive_result_from_automorphism(
+                        sigma, P_i, P_o, synth_circuit, synth_params, N
+                    )
+                    if (new_P_i, new_P_o) not in known_pairs[pair_key]:
+                        result.add_result((new_P_i, new_P_o), new_circ, new_params, topology_idx)
+                        known_pairs[pair_key].add((new_P_i, new_P_o))
+
+        with Pool(processes=n_cpus, initializer=_init_decompose_worker,
+                  initargs=(self.config,)) as pool:
+            # Initialize PartitionSynthesisResult for each multi-qubit partition
+            results_map = {}
+            for partition_idx, meta in enumerate(partition_meta):
+                if meta is None:
+                    continue
+                results_map[partition_idx] = PartitionSynthesisResult(
+                    meta['N'], meta['mini_topologies'], meta['involved_qbits'],
+                    meta['qbit_map'], meta['circuit']
+                )
+
+            # ---- Stage 1: fix random P_o, sweep all P_i ----
+            stage1_futures = []
+            stage1_cached = []
+            stage1_P_o = {}
+            known_pairs = {}
+
+            for partition_idx, meta in enumerate(partition_meta):
+                if meta is None:
+                    continue
+                N = meta['N']
+                perms_all = list(permutations(range(N)))
+                for topology_idx, mini_topology in enumerate(meta['mini_topologies']):
+                    P_o_initial = perms_all[np.random.choice(len(perms_all))]
+                    stage1_P_o[(partition_idx, topology_idx)] = P_o_initial
+                    for P_i in perms_all:
+                        Umtx = _build_permuted_unitary(meta, P_i, P_o_initial)
+                        ck = _cache_key(Umtx, mini_topology)
+                        if ck in decomp_cache:
+                            stage1_cached.append((partition_idx, topology_idx, P_i, ck))
+                        else:
+                            future = pool.apply_async(
+                                _decompose_one, (Umtx, mini_topology)
+                            )
+                            stage1_futures.append((partition_idx, topology_idx, P_i, ck, future))
+
+            # Process Stage 1 cache hits immediately
+            for partition_idx, topology_idx, P_i, ck in stage1_cached:
+                meta = partition_meta[partition_idx]
+                N = meta['N']
+                P_o_initial = stage1_P_o[(partition_idx, topology_idx)]
+                mini_topology = meta['mini_topologies'][topology_idx]
+                synth_circuit, synth_params = decomp_cache[ck]
+                pair_key = (partition_idx, topology_idx)
+                _add_result_with_auts(
+                    results_map[partition_idx], (P_i, P_o_initial),
+                    synth_circuit, synth_params, topology_idx,
+                    N, mini_topology, known_pairs, pair_key
+                )
+
+            # Collect Stage 1 pool results
+            cache_hits_s1 = len(stage1_cached)
+            for partition_idx, topology_idx, P_i, ck, future in tqdm(
+                stage1_futures, desc=f"Stage 1 Synthesis ({cache_hits_s1} cached)",
+                disable=disable_pbar
+            ):
+                synth_circuit, synth_params = future.get()
+                decomp_cache[ck] = (synth_circuit, synth_params)
+                meta = partition_meta[partition_idx]
+                N = meta['N']
+                P_o_initial = stage1_P_o[(partition_idx, topology_idx)]
+                mini_topology = meta['mini_topologies'][topology_idx]
+                pair_key = (partition_idx, topology_idx)
+                _add_result_with_auts(
+                    results_map[partition_idx], (P_i, P_o_initial),
+                    synth_circuit, synth_params, topology_idx,
+                    N, mini_topology, known_pairs, pair_key
+                )
+
+            # ---- Stage 2: fix best P_i from Stage 1, sweep all P_o ----
+            stage2_futures = []
+            stage2_cached = []
+
+            for partition_idx, meta in enumerate(partition_meta):
+                if meta is None:
+                    continue
+                N = meta['N']
+                perms_all = list(permutations(range(N)))
+                result = results_map[partition_idx]
+                for topology_idx, mini_topology in enumerate(meta['mini_topologies']):
+                    P_i_best, _ = result.get_best_result(topology_idx)[0]
+                    pair_key = (partition_idx, topology_idx)
+                    kp = known_pairs.get(pair_key, set()) if use_auts else set()
+                    for P_o in perms_all:
+                        if use_auts and (tuple(P_i_best), P_o) in kp:
+                            continue
+                        Umtx = _build_permuted_unitary(meta, P_i_best, P_o)
+                        ck = _cache_key(Umtx, mini_topology)
+                        if ck in decomp_cache:
+                            stage2_cached.append((partition_idx, topology_idx, P_i_best, P_o, ck))
+                        else:
+                            future = pool.apply_async(
+                                _decompose_one, (Umtx, mini_topology)
+                            )
+                            stage2_futures.append((partition_idx, topology_idx, P_i_best, P_o, ck, future))
+
+            # Process Stage 2 cache hits
+            for partition_idx, topology_idx, P_i_best, P_o, ck in stage2_cached:
+                meta = partition_meta[partition_idx]
+                N = meta['N']
+                mini_topology = meta['mini_topologies'][topology_idx]
+                synth_circuit, synth_params = decomp_cache[ck]
+                pair_key = (partition_idx, topology_idx)
+                _add_result_with_auts(
+                    results_map[partition_idx], (tuple(P_i_best), P_o),
+                    synth_circuit, synth_params, topology_idx,
+                    N, mini_topology, known_pairs, pair_key
+                )
+
+            # Collect Stage 2 pool results
+            cache_hits_s2 = len(stage2_cached)
+            for partition_idx, topology_idx, P_i_best, P_o, ck, future in tqdm(
+                stage2_futures, desc=f"Stage 2 Synthesis ({cache_hits_s2} cached)",
+                disable=disable_pbar
+            ):
+                synth_circuit, synth_params = future.get()
+                decomp_cache[ck] = (synth_circuit, synth_params)
+                meta = partition_meta[partition_idx]
+                N = meta['N']
+                mini_topology = meta['mini_topologies'][topology_idx]
+                pair_key = (partition_idx, topology_idx)
+                _add_result_with_auts(
+                    results_map[partition_idx], (tuple(P_i_best), P_o),
+                    synth_circuit, synth_params, topology_idx,
+                    N, mini_topology, known_pairs, pair_key
+                )
+
+            # Store assembled results
+            for partition_idx, result in results_map.items():
+                optimized_results[partition_idx] = result
         # ---- Phase 3: ILP partition selection with synthesis-cost weights ----
         weights = []
         for idx, result in enumerate(optimized_results[:len(allparts)]):
