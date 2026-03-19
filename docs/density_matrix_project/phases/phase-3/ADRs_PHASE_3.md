@@ -307,6 +307,15 @@ At the same time, requiring fully channel-native fused noisy blocks immediately
 would push the phase into a far more invasive architecture than the accepted
 critical path requires.
 
+Task 1 and Task 2 have now also made the handoff boundary more concrete than it
+was at initial planning time:
+
+- the planner input is now a real schema-versioned canonical noisy mixed-state
+  surface,
+- and the semantic-preservation layer is now a real schema-versioned partition
+  descriptor contract with explicit order, noise-placement, remapping, and
+  parameter-routing metadata.
+
 ### Decision
 
 Phase 3 minimum closure requires:
@@ -314,6 +323,16 @@ Phase 3 minimum closure requires:
 - an executable partitioned density runtime on the mandatory workload matrix,
 - and at least one real fused execution mode on eligible substructures inside
   that runtime.
+
+Additional contract details:
+
+- the executable runtime must consume the validated schema-versioned partition
+  descriptor contract rather than a second private runtime-only description of
+  the same partitioned case,
+- eligible fused substructures must be defined against that supported
+  descriptor-level contract rather than against opaque planner internals,
+- and unsupported or deferred fusion candidates must remain explicit in the
+  benchmark and publication evidence instead of silently entering a fused path.
 
 This fused mode:
 
@@ -336,6 +355,11 @@ result.
 - Planner-only closure is explicitly disallowed.
 - Benchmark harnesses must exercise the real fused path instead of only the
   partitioned schedule.
+- Runtime implementation now has an explicit contract surface to consume, which
+  reduces ambiguity but also makes private runtime-only reinterpretations of the
+  descriptor semantics out of contract.
+- Fusion eligibility and fusion deferral both become auditable evidence
+  categories rather than informal implementation notes.
 - Channel-native fusion remains an explicit future branch instead of an implicit
   unfinished requirement.
 
@@ -372,6 +396,14 @@ Using it unchanged for Phase 3 would weaken the density-aware claim. However,
 trying to jump directly to a fully calibrated density objective before a working
 runtime exists would also be risky.
 
+Task 1 and Task 2 have now frozen the benchmark side of this decision more
+concretely than the original planning text:
+
+- the mandatory workload inventory now exists as deterministic continuity,
+  microcase, and structured-family evidence surfaces,
+- and the implemented workload matrix already carries stable workload IDs,
+  seed rules, noise-pattern labels, and reusable machine-reviewable bundles.
+
 ### Decision
 
 Phase 3 follows a correctness-first sequencing rule:
@@ -386,6 +418,14 @@ Phase 3 follows a correctness-first sequencing rule:
 Optional kernel tuning is allowed only when profiling shows that it materially
 affects the benchmark outcome.
 
+Additional contract details:
+
+- calibration should be anchored to the frozen mandatory workload inventory and
+  its stable provenance fields rather than to ad hoc exploratory cases,
+- and the calibration package should emit machine-reviewable bundles or
+  rerunnable checkers so later benchmark and paper work can consume the result
+  directly.
+
 ### Rationale
 
 - Correctness-first is the safest scientific strategy.
@@ -399,6 +439,9 @@ affects the benchmark outcome.
   model exists.
 - The first working runtime may use simpler structural heuristics than the final
   benchmark-facing planner.
+- Core heuristic and calibration claims should now be phrased against the
+  already-frozen workload IDs, seed rules, and noise-pattern vocabulary instead
+  of against a moving benchmark target.
 - Kernel work becomes evidence-driven support work rather than a separate phase
   definition.
 
@@ -489,6 +532,16 @@ Relying only on internal comparison would weaken the methods paper. Relying only
 on an external simulator would miss regressions against the exact delivered Phase
 2/3 backend contract.
 
+Task 1 and Task 2 have also shown that validation evidence now exists in
+multiple real layers before runtime numerical checks:
+
+- planner-entry unsupported behavior already has a machine-reviewable evidence
+  surface,
+- descriptor-generation unsupported and lossy behavior already has a separate
+  machine-reviewable evidence surface,
+- and positive supported-path audit bundles already exist at the planner and
+  descriptor layers.
+
 ### Decision
 
 Phase 3 validation uses a two-baseline model:
@@ -499,6 +552,16 @@ Phase 3 validation uses a two-baseline model:
   on the mandatory microcases and a representative small continuity subset,
 - and profiler artifacts are required when profiling materially affects
   architecture decisions or benchmark interpretation.
+
+Additional contract details:
+
+- planner-entry unsupported evidence, descriptor-generation unsupported
+  evidence, and runtime numerical correctness evidence should remain distinct in
+  the artifact package rather than being collapsed into one generic failure
+  bucket,
+- and rolled-up validation or benchmark summaries that drive architecture or
+  publication conclusions must be checked against the underlying per-case
+  records.
 
 ### Rationale
 
@@ -514,6 +577,11 @@ Phase 3 validation uses a two-baseline model:
   sequential baseline.
 - The benchmark package must record both internal and external validation where
   applicable.
+- Validation bundles should preserve the difference between pre-runtime and
+  runtime-only failures, because those categories now correspond to real
+  contract surfaces.
+- Artifact summary consistency is now part of trustworthy validation packaging,
+  not only an optional documentation nicety.
 - Profiling becomes part of the evidence package when it explains the remaining
   bottleneck or motivates follow-on work.
 
@@ -544,6 +612,14 @@ Using only the Phase 2 continuity workflow would make the Phase 3 paper too
 narrow as a methods result. Using only synthetic partitioning circuits would
 weaken the connection to the broader noisy-training agenda.
 
+Task 1 and Task 2 have now frozen the benchmark identity layer more concretely:
+
+- the continuity anchor is a real required case family,
+- the external micro-validation slice is a real deterministic microcase
+  inventory,
+- and the structured methods workloads now exist as real deterministic families
+  with stable seed rules and sparse/periodic/dense local-noise labels.
+
 ### Decision
 
 Paper 2 and the Phase 3 benchmark package will be anchored on both:
@@ -560,6 +636,15 @@ Mandatory benchmark structure:
 - at least 3 seed-fixed instances per mandatory structured family and size,
 - and sensitivity over sparse, periodic, and dense local-noise placement.
 
+Additional contract details:
+
+- the benchmark and publication package should preserve stable case-level
+  provenance for these workload classes instead of reclassifying cases ad hoc in
+  later scripts,
+- and the Paper 2 evidence package should be manifest-driven over emitted
+  supported and unsupported bundles or rerunnable checkers rather than
+  prose-only packaging.
+
 ### Rationale
 
 - The continuity anchor keeps the methods paper connected to the Phase 2 exact
@@ -573,6 +658,11 @@ Mandatory benchmark structure:
 - Paper 2 can make a stronger claim than "the Phase 2 workflow is a little
   faster."
 - Benchmarks remain bounded enough to be reproducible.
+- Publication packaging now has a clear deterministic case-identity layer to
+  build on, which strengthens traceability but also raises the bar for summary
+  correctness and provenance completeness.
+- Negative-evidence surfaces become part of the publishable package where they
+  define the claim boundary, not just appendices.
 - Additional circuit families can still be added later without changing the
   minimum claim.
 

@@ -110,6 +110,47 @@ Boundary to later work:
   fusion remains a benchmark-driven follow-on branch beyond the baseline Phase 3
   closure condition.
 
+## 0.4 Task 1 And Task 2 Learnings That Now Constrain Remaining Work
+
+Task 1 and Task 2 implementation converted several Phase 3 planning assumptions
+into real contract surfaces that later tasks should now treat as fixed unless a
+cross-task phase decision is explicitly reopened.
+
+The main implementation learnings are:
+
+- the planner-side canonical noisy mixed-state surface and the Task 2 partition
+  descriptor contract now both exist as schema-versioned, machine-reviewable
+  handoff surfaces rather than only as planning abstractions,
+- the mandatory workload matrix is no longer hypothetical:
+  - the Phase 2 continuity anchor is implemented as required 4, 6, 8, and 10
+    qubit cases,
+  - the external micro-validation slice is implemented as a deterministic 2 to
+    4 qubit microcase inventory,
+  - and the structured methods slice is implemented with stable family IDs,
+    seed rules, and sparse/periodic/dense local-noise placement vocabulary,
+- unsupported-boundary evidence is already layered:
+  - planner-entry unsupported behavior is now a machine-reviewable evidence
+    surface from Task 1,
+  - descriptor-generation unsupported and lossy behavior is now a separate
+    machine-reviewable evidence surface from Task 2,
+  - so later runtime correctness work should extend those layers rather than
+    collapse them into one generic failure bucket,
+- and machine-reviewable artifact bundles are now part of the real Phase 3
+  contract:
+  - later tasks should emit reusable bundles or rerunnable checkers,
+  - and they should validate summary correctness and provenance completeness,
+    not only bundle presence or schema shape.
+
+Practical implication for Tasks 3 through 8:
+
+- the remaining work should consume the frozen canonical-surface and
+  descriptor-set contracts directly,
+- the benchmark and correctness packages should build on the already-frozen
+  workload IDs, seed rules, and negative-evidence taxonomies,
+- and later planning language should stop referring to planner outputs and
+  benchmark evidence only in generic terms when the actual review surfaces are
+  now known.
+
 ## 1. Purpose
 
 Phase 3 exists to bridge the current gap between:
@@ -737,8 +778,8 @@ parameter routing become ambiguous.
 
 #### Goal
 
-Deliver an end-to-end partitioned density execution path for the mandatory
-workload matrix.
+Deliver an end-to-end partitioned density execution path that consumes the
+frozen Task 2 partition-descriptor contract on the mandatory workload matrix.
 
 #### Why It Exists
 
@@ -746,22 +787,30 @@ Planner-only representation is not enough to support the Phase 3 methods claim.
 
 #### Success Looks Like
 
-- the partitioned path executes required cases end to end,
+- the partitioned path executes required cases end to end from the validated
+  Task 2 descriptor set rather than from hidden planner state or
+  workload-specific ad hoc adapters,
 - explicit partitioned mode selection exists in the harness,
 - and no silent sequential fallback remains.
 
 #### Evidence Required
 
-- required benchmark runs using the partitioned path,
+- required benchmark runs using the partitioned path on the frozen continuity,
+  microcase, and structured-workload matrix,
+- explicit descriptor-to-runtime handoff evidence showing that the runtime
+  consumes the supported Task 2 contract rather than a second private runtime
+  schema,
 - explicit baseline comparison to the sequential runtime,
-- and documented unsupported-case behavior.
+- and documented unsupported-case behavior that remains distinguishable from the
+  already-frozen planner-entry and descriptor-generation negative-evidence
+  layers.
 
 ### Task 4: Real Fused Execution On Eligible Substructures
 
 #### Goal
 
-Provide at least one real fused execution mode inside the noisy partitioned
-runtime.
+Provide at least one real fused execution mode on explicitly defined eligible
+descriptor-level substructures inside the noisy partitioned runtime.
 
 #### Why It Exists
 
@@ -770,22 +819,29 @@ real runtime result.
 
 #### Success Looks Like
 
-- an eligible substructure actually executes through a fused path,
+- an eligible substructure defined against the supported Task 2 descriptor
+  contract actually executes through a fused path,
 - that fused path is benchmarked on representative noisy circuits,
-- and surrounding noise semantics remain exact.
+- surrounding noise semantics remain exact,
+- and unsupported or deferred fusion candidates remain explicit instead of
+  silently entering a fused path.
 
 #### Evidence Required
 
 - benchmarked fused-path cases,
 - semantic-preservation validation,
-- and documentation of what kinds of fusion remain deferred.
+- structured evidence for what classes of fusion are:
+  - supported and actually exercised,
+  - left intentionally unfused but still supported,
+  - or explicitly deferred beyond the minimum Phase 3 claim.
 
 ### Task 5: Noise-Aware Planning Heuristic And Calibration
 
 #### Goal
 
 Define and calibrate a density-aware planning heuristic or objective for the
-required workload matrix.
+required workload matrix and the now-frozen canonical-surface plus
+descriptor-level contract.
 
 #### Why It Exists
 
@@ -793,14 +849,20 @@ Reusing a state-vector cost model would weaken the scientific Phase 3 claim.
 
 #### Success Looks Like
 
-- the planner responds to mixed-state cost and noise placement,
+- the planner responds to mixed-state cost, explicit noise placement, and the
+  frozen workload knobs that the implemented benchmark inventory already makes
+  reproducible,
 - calibration is benchmark-informed rather than purely analytic,
 - and the supported claim boundary is explicit.
 
 #### Evidence Required
 
 - heuristic or objective definition,
-- calibration benchmark data,
+- calibration benchmark data on the frozen continuity, microcase, and
+  structured-workload inventory with stable workload IDs, seed rules, and
+  noise-pattern labels,
+- a machine-reviewable calibration bundle or equivalent rerunnable checker that
+  records planner settings, workload identity, and calibration outputs,
 - and documentation of where the model remains approximate.
 
 ### Task 6: Correctness Validation And Unsupported-Boundary Evidence
@@ -808,7 +870,8 @@ Reusing a state-vector cost model would weaken the scientific Phase 3 claim.
 #### Goal
 
 Define the minimum correctness package required before any acceleration claim is
-treated as valid.
+treated as valid, while keeping planner-entry, descriptor-generation, and
+runtime-only unsupported boundaries explicitly separated.
 
 #### Why It Exists
 
@@ -818,6 +881,9 @@ weaken both the paper and the broader PhD path.
 #### Success Looks Like
 
 - external and internal correctness checks are explicit,
+- planner-entry unsupported cases, descriptor-generation unsupported cases, and
+  runtime-only unsupported or deferred cases remain distinguishable in the
+  evidence package,
 - required pass thresholds are frozen,
 - and unsupported or deferred cases are documented.
 
@@ -825,14 +891,19 @@ weaken both the paper and the broader PhD path.
 
 - Qiskit Aer micro-validation,
 - sequential-versus-partitioned density comparisons,
-- and structured unsupported-boundary artifacts.
+- structured unsupported-boundary artifacts covering:
+  - planner-entry unsupported cases,
+  - descriptor-generation unsupported or lossy cases,
+  - and runtime-only unsupported or deferred behavior where later tasks expose
+    it.
 
 ### Task 7: Performance And Sensitivity Benchmark Package
 
 #### Goal
 
 Produce the representative performance matrix needed to support the Phase 3
-methods paper.
+methods paper, with stable per-case provenance and validated rolled-up
+benchmark summaries.
 
 #### Why It Exists
 
@@ -842,13 +913,18 @@ partitioned runtime exists.
 #### Success Looks Like
 
 - runtime and memory behavior are characterized on representative workloads,
-- sensitivity to partition size and noise placement is recorded,
+- sensitivity to partition size, noise placement, and the frozen workload
+  identity knobs already implemented for the methods matrix is recorded,
+- every benchmark record remains auditable through stable per-case provenance,
 - and the remaining bottlenecks are explicit.
 
 #### Evidence Required
 
-- mandatory runtime and memory matrix,
+- mandatory runtime and memory matrix with per-case provenance, support labels,
+  and raw case records,
 - planning-overhead and fused-coverage metrics,
+- summary-consistency checks that validate rolled-up benchmark counts and
+  classifications against the underlying case records,
 - and profiler artifacts when they materially affect conclusions.
 
 ### Task 8: Paper 2 Evidence And Documentation Bundle
@@ -856,7 +932,7 @@ partitioned runtime exists.
 #### Goal
 
 Define the exact Paper 2 evidence package and supporting documentation for Phase
-3.
+3 as a manifest over the emitted positive and negative evidence bundles.
 
 #### Why It Exists
 
@@ -867,12 +943,20 @@ being retrofitted after implementation.
 
 - Paper 2 has a clear claim boundary,
 - the benchmark package maps directly to that claim,
+- supported and unsupported evidence both appear in the package where they
+  matter to the claim boundary,
+- summary and provenance checks make the rolled-up package auditable,
 - and deferred branches are visible instead of hidden.
 
 #### Evidence Required
 
 - Phase 3 narrative claim set,
-- reproducibility manifest expectations,
+- reproducibility manifest expectations tied to the emitted bundle or checker
+  surfaces rather than to prose-only descriptions,
+- explicit inclusion rules for both positive supported-path evidence and
+  negative unsupported-boundary evidence,
+- summary-consistency and provenance-completeness checks for the publication
+  bundle,
 - and traceability from Phase 3 tasks to publication sections.
 
 ## 12. Full-Phase Acceptance Criteria

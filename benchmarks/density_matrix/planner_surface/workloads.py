@@ -4,10 +4,12 @@ import random
 from typing import Iterable
 
 from squander.partitioning.noisy_planner import (
+    DEFAULT_PARTITION_DESCRIPTOR_MAX_QUBITS,
     PHASE3_ENTRY_ROUTE_MICROCASE,
     PHASE3_ENTRY_ROUTE_STRUCTURED_FAMILY,
     PHASE3_WORKLOAD_FAMILY_MICROCASE,
     PHASE3_WORKLOAD_FAMILY_STRUCTURED,
+    build_partition_descriptor_set,
     build_canonical_planner_surface_from_operation_specs,
 )
 
@@ -129,6 +131,27 @@ def build_story2_microcase_surface(case_name: str):
 def iter_story2_microcase_surfaces():
     for case in mandatory_microcase_definitions():
         yield case, build_story2_microcase_surface(case["case_name"])
+
+
+def build_story2_microcase_descriptor_set(
+    case_name: str,
+    *,
+    max_partition_qubits: int = DEFAULT_PARTITION_DESCRIPTOR_MAX_QUBITS,
+):
+    return build_partition_descriptor_set(
+        build_story2_microcase_surface(case_name),
+        max_partition_qubits=max_partition_qubits,
+    )
+
+
+def iter_story2_microcase_descriptor_sets(
+    *,
+    max_partition_qubits: int = DEFAULT_PARTITION_DESCRIPTOR_MAX_QUBITS,
+):
+    for case in mandatory_microcase_definitions():
+        yield case, build_story2_microcase_descriptor_set(
+            case["case_name"], max_partition_qubits=max_partition_qubits
+        )
 
 
 def _layered_nearest_neighbor_layers(qbit_num: int, layer_count: int) -> list[list[dict]]:
@@ -275,4 +298,49 @@ def iter_story2_structured_surfaces(seed: int = DEFAULT_STRUCTURED_SEED):
                     qbit_num=qbit_num,
                     noise_pattern=noise_pattern,
                     seed=seed,
+                )
+
+
+def build_story2_structured_descriptor_set(
+    family_name: str,
+    *,
+    qbit_num: int,
+    noise_pattern: str,
+    seed: int = DEFAULT_STRUCTURED_SEED,
+    max_partition_qubits: int = DEFAULT_PARTITION_DESCRIPTOR_MAX_QUBITS,
+):
+    return build_partition_descriptor_set(
+        build_story2_structured_surface(
+            family_name,
+            qbit_num=qbit_num,
+            noise_pattern=noise_pattern,
+            seed=seed,
+        ),
+        max_partition_qubits=max_partition_qubits,
+    )
+
+
+def iter_story2_structured_descriptor_sets(
+    *,
+    seed: int = DEFAULT_STRUCTURED_SEED,
+    max_partition_qubits: int = DEFAULT_PARTITION_DESCRIPTOR_MAX_QUBITS,
+):
+    for family_name in STRUCTURED_FAMILY_NAMES:
+        for qbit_num in STRUCTURED_QUBITS:
+            for noise_pattern in MANDATORY_NOISE_PATTERNS:
+                metadata = {
+                    "family_name": family_name,
+                    "qbit_num": qbit_num,
+                    "noise_pattern": noise_pattern,
+                    "seed": seed,
+                    "workload_id": "{}_q{}_{}_seed{}".format(
+                        family_name, qbit_num, noise_pattern, seed
+                    ),
+                }
+                yield metadata, build_story2_structured_descriptor_set(
+                    family_name,
+                    qbit_num=qbit_num,
+                    noise_pattern=noise_pattern,
+                    seed=seed,
+                    max_partition_qubits=max_partition_qubits,
                 )

@@ -48,6 +48,15 @@ Phase 4 workflow-growth decisions.
   partition-local qubit grouping, or parameter-order tuples may be reused as
   scaffolding, but Task 2 must make noisy mixed-state semantics explicit rather
   than inheriting state-vector-only assumptions.
+- Task 1 implementation already froze a concrete planner-entry provenance
+  vocabulary and schema-versioned audit surface. Task 2 should extend that
+  concrete audit vocabulary into descriptor metadata rather than replacing it
+  with a looser descriptor-local naming scheme.
+- Task 1 implementation also established that explicit hard failure is not
+  sufficient on its own for negative evidence. Unsupported descriptor-generation
+  outcomes should use one stable machine-reviewable vocabulary for failure
+  category, first unsupported condition, and failure stage so later validation
+  and publication artifacts remain comparable.
 - Partition-local indexing, auxiliary DAG nodes, or runtime-only schedule
   details may exist internally, but the contract-defining descriptor surface
   must remain auditable back to the canonical operation indices and global
@@ -94,10 +103,26 @@ Phase 4 workflow-growth decisions.
   runtime execution begins, including dropped operations, ambiguous parameter
   routing, incomplete remapping, or reordering across unsupported noise
   boundaries.
+- Unsupported descriptor-generation failures must expose one stable structured
+  diagnostic vocabulary rather than generic exception text alone. At minimum,
+  the emitted failure record must make the unsupported category, first
+  unsupported condition, and failure stage machine-reviewable, and it should
+  remain alignable with the Task 1 planner-entry unsupported vocabulary unless a
+  documented Task 2-specific refinement is required.
 - Supported descriptor artifacts must expose enough provenance to remain
-  reproducible in tests and benchmark outputs, including workload identity,
-  support classification, and the descriptor contract version or equivalent
-  audit label.
+  reproducible in tests and benchmark outputs. At minimum, the case-level
+  provenance must retain a stable tuple equivalent to descriptor schema version,
+  requested mode, source type, entry route, workload family, and workload ID so
+  supported descriptor outputs stay comparable across continuity, microcase,
+  structured-family, and optional exact legacy-lowering paths.
+- Supported descriptor artifacts should reuse the Task 1 planner-entry
+  provenance vocabulary where possible and add descriptor-specific metadata on
+  top of it, rather than redefining provenance separately at the descriptor
+  layer.
+- Task 2 must produce one stable descriptor-audit surface, such as a
+  machine-reviewable artifact bundle or rerunnable checker, that later runtime,
+  validation, and benchmark tasks can cite directly instead of relying on ad
+  hoc debug output.
 - Task 2 completion means descriptor semantics, semantic-preservation rules, and
   negative boundaries are explicit and testable. It does not by itself require
   the full partitioned runtime, real fused execution, or performance claims to
@@ -146,11 +171,18 @@ Phase 4 workflow-growth decisions.
 - Negative tests show that unsupported descriptor requests fail explicitly when
   metadata would be lossy or ambiguous, including dropped noise operations,
   unsupported reorder attempts, incomplete remapping, or ambiguous parameter
-  routing.
-- Reproducibility artifacts for mandatory cases record workload identity,
-  descriptor contract version or equivalent audit label, partition count,
+  routing, and that the emitted failure evidence records one stable unsupported
+  category, first unsupported condition, and failure stage vocabulary rather
+  than only free-form error text.
+- Reproducibility artifacts for mandatory cases record the stable case-level
+  provenance tuple, including descriptor schema version, requested mode, source
+  type, entry route, workload family, and workload ID, plus partition count,
   partition qubit span, and a descriptor-audit summary that makes semantic
   preservation claims inspectable.
+- One stable descriptor-audit artifact bundle or rerunnable checker exists for
+  supported mandatory cases and records descriptor provenance, ordered
+  membership or operation references, partition-span summaries, and
+  descriptor-level semantic-preservation metadata in a machine-reviewable form.
 - Traceability target: satisfy the Phase 3 Task 2 evidence requirements in
   `DETAILED_PLANNING_PHASE_3.md`.
 - Traceability target: support the full-phase acceptance criteria requiring

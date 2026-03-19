@@ -5,7 +5,9 @@ from typing import Any, Iterable, Mapping
 
 
 CANONICAL_PLANNER_SCHEMA_VERSION = "phase3_canonical_noisy_planner_v1"
+PHASE3_DESCRIPTOR_SCHEMA_VERSION = "phase3_noisy_partition_descriptor_v1"
 PARTITIONED_DENSITY_MODE = "partitioned_density"
+DEFAULT_PARTITION_DESCRIPTOR_MAX_QUBITS = 2
 
 PHASE3_ENTRY_ROUTE_PHASE2_CONTINUITY = "phase2_continuity_lowering"
 PHASE3_ENTRY_ROUTE_MICROCASE = "phase3_microcase_generation"
@@ -54,6 +56,41 @@ class NoisyPlannerValidationError(ValueError):
             "failure_stage": self.failure_stage,
             "source_type": self.source_type,
             "requested_mode": self.requested_mode,
+            "reason": self.reason,
+        }
+
+
+class NoisyDescriptorValidationError(ValueError):
+    """Structured descriptor-generation validation error for Phase 3 Task 2."""
+
+    def __init__(
+        self,
+        *,
+        category: str,
+        first_unsupported_condition: str,
+        failure_stage: str,
+        source_type: str,
+        requested_mode: str,
+        workload_id: str,
+        reason: str,
+    ) -> None:
+        super().__init__(reason)
+        self.category = category
+        self.first_unsupported_condition = first_unsupported_condition
+        self.failure_stage = failure_stage
+        self.source_type = source_type
+        self.requested_mode = requested_mode
+        self.workload_id = workload_id
+        self.reason = reason
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "unsupported_category": self.category,
+            "first_unsupported_condition": self.first_unsupported_condition,
+            "failure_stage": self.failure_stage,
+            "source_type": self.source_type,
+            "requested_mode": self.requested_mode,
+            "workload_id": self.workload_id,
             "reason": self.reason,
         }
 
@@ -165,6 +202,181 @@ class CanonicalNoisyPlannerSurface:
             "noise_sequence": list(self.noise_names),
             "max_qubit_span": self.max_qubit_span,
             "operations": [op.to_dict() for op in self.operations],
+        }
+
+
+@dataclass(frozen=True)
+class NoisyPartitionDescriptorMember:
+    partition_member_index: int
+    canonical_operation_index: int
+    operation_class: str
+    kind: str
+    name: str
+    is_unitary: bool
+    source_gate_index: int
+    target_qbit: int | None
+    control_qbit: int | None
+    qubit_support: tuple[int, ...]
+    local_target_qbit: int | None
+    local_control_qbit: int | None
+    local_qubit_support: tuple[int, ...]
+    param_count: int
+    param_start: int
+    local_param_start: int
+    fixed_value: float | None
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "partition_member_index": self.partition_member_index,
+            "canonical_operation_index": self.canonical_operation_index,
+            "operation_class": self.operation_class,
+            "kind": self.kind,
+            "name": self.name,
+            "is_unitary": self.is_unitary,
+            "source_gate_index": self.source_gate_index,
+            "target_qbit": self.target_qbit,
+            "control_qbit": self.control_qbit,
+            "qubit_support": list(self.qubit_support),
+            "local_target_qbit": self.local_target_qbit,
+            "local_control_qbit": self.local_control_qbit,
+            "local_qubit_support": list(self.local_qubit_support),
+            "param_count": self.param_count,
+            "param_start": self.param_start,
+            "local_param_start": self.local_param_start,
+            "fixed_value": self.fixed_value,
+        }
+
+
+@dataclass(frozen=True)
+class NoisyPartitionDescriptor:
+    partition_index: int
+    canonical_operation_indices: tuple[int, ...]
+    local_to_global_qbits: tuple[int, ...]
+    parameter_routing: tuple[tuple[int, int, int], ...]
+    members: tuple[NoisyPartitionDescriptorMember, ...]
+
+    @property
+    def member_count(self) -> int:
+        return len(self.members)
+
+    @property
+    def gate_count(self) -> int:
+        return sum(member.operation_class == "GateOperation" for member in self.members)
+
+    @property
+    def noise_count(self) -> int:
+        return sum(member.operation_class == "NoiseOperation" for member in self.members)
+
+    @property
+    def partition_parameter_count(self) -> int:
+        return sum(member.param_count for member in self.members)
+
+    @property
+    def partition_qubit_span(self) -> tuple[int, ...]:
+        return self.local_to_global_qbits
+
+    @property
+    def requires_remap(self) -> bool:
+        return self.local_to_global_qbits != tuple(range(len(self.local_to_global_qbits)))
+
+    @property
+    def global_to_local_qbits(self) -> tuple[tuple[int, int], ...]:
+        return tuple((global_qbit, local_qbit) for local_qbit, global_qbit in enumerate(self.local_to_global_qbits))
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "partition_index": self.partition_index,
+            "member_count": self.member_count,
+            "gate_count": self.gate_count,
+            "noise_count": self.noise_count,
+            "canonical_operation_indices": list(self.canonical_operation_indices),
+            "partition_qubit_span": list(self.partition_qubit_span),
+            "local_to_global_qbits": list(self.local_to_global_qbits),
+            "global_to_local_qbits": [
+                {"global_qbit": global_qbit, "local_qbit": local_qbit}
+                for global_qbit, local_qbit in self.global_to_local_qbits
+            ],
+            "requires_remap": self.requires_remap,
+            "partition_parameter_count": self.partition_parameter_count,
+            "parameter_routing": [
+                {
+                    "global_param_start": global_param_start,
+                    "local_param_start": local_param_start,
+                    "param_count": param_count,
+                }
+                for global_param_start, local_param_start, param_count in self.parameter_routing
+            ],
+            "members": [member.to_dict() for member in self.members],
+        }
+
+
+@dataclass(frozen=True)
+class NoisyPartitionDescriptorSet:
+    schema_version: str
+    planner_schema_version: str
+    requested_mode: str
+    source_type: str
+    entry_route: str
+    workload_family: str
+    workload_id: str
+    qbit_num: int
+    parameter_count: int
+    max_partition_qubits: int
+    partitions: tuple[NoisyPartitionDescriptor, ...]
+
+    @property
+    def provenance(self) -> dict[str, Any]:
+        return {
+            "source_type": self.source_type,
+            "entry_route": self.entry_route,
+            "workload_family": self.workload_family,
+            "workload_id": self.workload_id,
+        }
+
+    @property
+    def partition_count(self) -> int:
+        return len(self.partitions)
+
+    @property
+    def descriptor_member_count(self) -> int:
+        return sum(partition.member_count for partition in self.partitions)
+
+    @property
+    def gate_count(self) -> int:
+        return sum(partition.gate_count for partition in self.partitions)
+
+    @property
+    def noise_count(self) -> int:
+        return sum(partition.noise_count for partition in self.partitions)
+
+    @property
+    def max_partition_span(self) -> int:
+        return max((len(partition.partition_qubit_span) for partition in self.partitions), default=0)
+
+    @property
+    def partition_member_counts(self) -> tuple[int, ...]:
+        return tuple(partition.member_count for partition in self.partitions)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "schema_version": self.schema_version,
+            "planner_schema_version": self.planner_schema_version,
+            "requested_mode": self.requested_mode,
+            "source_type": self.source_type,
+            "entry_route": self.entry_route,
+            "workload_family": self.workload_family,
+            "workload_id": self.workload_id,
+            "provenance": self.provenance,
+            "qbit_num": self.qbit_num,
+            "parameter_count": self.parameter_count,
+            "max_partition_qubits": self.max_partition_qubits,
+            "partition_count": self.partition_count,
+            "descriptor_member_count": self.descriptor_member_count,
+            "gate_count": self.gate_count,
+            "noise_count": self.noise_count,
+            "max_partition_span": self.max_partition_span,
+            "partition_member_counts": list(self.partition_member_counts),
+            "partitions": [partition.to_dict() for partition in self.partitions],
         }
 
 
@@ -858,4 +1070,578 @@ def build_bridge_overlap_report(
         "compared_operation_count": min(
             len(payload["operations"]), len(bridge_metadata["operations"])
         ),
+    }
+
+
+def _validate_descriptor_request(
+    surface: CanonicalNoisyPlannerSurface, *, max_partition_qubits: int
+) -> None:
+    if max_partition_qubits <= 0:
+        raise NoisyDescriptorValidationError(
+            category="descriptor_request",
+            first_unsupported_condition="max_partition_qubits",
+            failure_stage="descriptor_generation_preflight",
+            source_type=surface.source_type,
+            requested_mode=surface.requested_mode,
+            workload_id=surface.workload_id,
+            reason="Task 2 descriptor generation requires max_partition_qubits > 0",
+        )
+    if surface.max_qubit_span > max_partition_qubits:
+        raise NoisyDescriptorValidationError(
+            category="partition_span",
+            first_unsupported_condition="max_partition_qubits",
+            failure_stage="descriptor_generation_preflight",
+            source_type=surface.source_type,
+            requested_mode=surface.requested_mode,
+            workload_id=surface.workload_id,
+            reason=(
+                "Task 2 descriptor generation requires max_partition_qubits >= "
+                "the canonical max_qubit_span {} for workload '{}'".format(
+                    surface.max_qubit_span, surface.workload_id
+                )
+            ),
+        )
+
+
+def _partition_surface_operations(
+    surface: CanonicalNoisyPlannerSurface, *, max_partition_qubits: int
+) -> tuple[tuple[CanonicalNoisyPlannerOperation, ...], ...]:
+    partitions: list[tuple[CanonicalNoisyPlannerOperation, ...]] = []
+    current_partition: list[CanonicalNoisyPlannerOperation] = []
+    current_support: set[int] = set()
+
+    for operation in surface.operations:
+        operation_support = set(operation.qubit_support)
+        expanded_support = current_support | operation_support
+        if current_partition and len(expanded_support) > max_partition_qubits:
+            partitions.append(tuple(current_partition))
+            current_partition = []
+            current_support = set()
+        current_partition.append(operation)
+        current_support |= operation_support
+
+    if current_partition:
+        partitions.append(tuple(current_partition))
+
+    return tuple(partitions)
+
+
+def _build_descriptor_partition(
+    operations: tuple[CanonicalNoisyPlannerOperation, ...], *, partition_index: int
+) -> NoisyPartitionDescriptor:
+    local_to_global_qbits = tuple(
+        sorted({qbit for operation in operations for qbit in operation.qubit_support})
+    )
+    global_to_local = {
+        global_qbit: local_qbit
+        for local_qbit, global_qbit in enumerate(local_to_global_qbits)
+    }
+
+    members: list[NoisyPartitionDescriptorMember] = []
+    parameter_routing: list[tuple[int, int, int]] = []
+    local_param_start = 0
+
+    for partition_member_index, operation in enumerate(operations):
+        if operation.param_count:
+            parameter_routing.append(
+                (operation.param_start, local_param_start, operation.param_count)
+            )
+        member = NoisyPartitionDescriptorMember(
+            partition_member_index=partition_member_index,
+            canonical_operation_index=operation.index,
+            operation_class=operation.operation_class,
+            kind=operation.kind,
+            name=operation.name,
+            is_unitary=operation.is_unitary,
+            source_gate_index=operation.source_gate_index,
+            target_qbit=operation.target_qbit,
+            control_qbit=operation.control_qbit,
+            qubit_support=operation.qubit_support,
+            local_target_qbit=(
+                None
+                if operation.target_qbit is None
+                else global_to_local[operation.target_qbit]
+            ),
+            local_control_qbit=(
+                None
+                if operation.control_qbit is None
+                else global_to_local[operation.control_qbit]
+            ),
+            local_qubit_support=tuple(
+                global_to_local[qbit] for qbit in operation.qubit_support
+            ),
+            param_count=operation.param_count,
+            param_start=operation.param_start,
+            local_param_start=local_param_start,
+            fixed_value=operation.fixed_value,
+        )
+        members.append(member)
+        local_param_start += operation.param_count
+
+    return NoisyPartitionDescriptor(
+        partition_index=partition_index,
+        canonical_operation_indices=tuple(
+            operation.index for operation in operations
+        ),
+        local_to_global_qbits=local_to_global_qbits,
+        parameter_routing=tuple(parameter_routing),
+        members=tuple(members),
+    )
+
+
+def build_partition_descriptor_set(
+    surface: CanonicalNoisyPlannerSurface,
+    *,
+    max_partition_qubits: int = DEFAULT_PARTITION_DESCRIPTOR_MAX_QUBITS,
+) -> NoisyPartitionDescriptorSet:
+    _validate_descriptor_request(surface, max_partition_qubits=max_partition_qubits)
+    partitions = tuple(
+        _build_descriptor_partition(partition_operations, partition_index=partition_index)
+        for partition_index, partition_operations in enumerate(
+            _partition_surface_operations(
+                surface, max_partition_qubits=max_partition_qubits
+            )
+        )
+    )
+    descriptor_set = NoisyPartitionDescriptorSet(
+        schema_version=PHASE3_DESCRIPTOR_SCHEMA_VERSION,
+        planner_schema_version=surface.schema_version,
+        requested_mode=surface.requested_mode,
+        source_type=surface.source_type,
+        entry_route=surface.entry_route,
+        workload_family=surface.workload_family,
+        workload_id=surface.workload_id,
+        qbit_num=surface.qbit_num,
+        parameter_count=surface.parameter_count,
+        max_partition_qubits=max_partition_qubits,
+        partitions=partitions,
+    )
+    return validate_partition_descriptor_set_against_surface(surface, descriptor_set)
+
+
+def build_phase3_continuity_partition_descriptor_set(
+    vqe,
+    *,
+    workload_id: str | None = None,
+    requested_mode: str = PARTITIONED_DENSITY_MODE,
+    max_partition_qubits: int = DEFAULT_PARTITION_DESCRIPTOR_MAX_QUBITS,
+) -> NoisyPartitionDescriptorSet:
+    surface = build_phase3_continuity_planner_surface(
+        vqe,
+        workload_id=workload_id,
+        requested_mode=requested_mode,
+    )
+    return build_partition_descriptor_set(
+        surface, max_partition_qubits=max_partition_qubits
+    )
+
+
+def preflight_descriptor_request(
+    *,
+    source_type: str,
+    workload_id: str,
+    requested_mode: str = PARTITIONED_DENSITY_MODE,
+    bridge_metadata: Mapping[str, Any] | None = None,
+    operation_specs: Iterable[Mapping[str, Any]] | None = None,
+    qbit_num: int | None = None,
+    entry_route: str | None = None,
+    workload_family: str | None = None,
+    legacy_circuit: Any | None = None,
+    density_noise: Iterable[Mapping[str, Any]] | None = None,
+    strict_phase3_support: bool = True,
+    max_partition_qubits: int = DEFAULT_PARTITION_DESCRIPTOR_MAX_QUBITS,
+) -> NoisyPartitionDescriptorSet:
+    surface = preflight_planner_request(
+        source_type=source_type,
+        workload_id=workload_id,
+        requested_mode=requested_mode,
+        bridge_metadata=bridge_metadata,
+        operation_specs=operation_specs,
+        qbit_num=qbit_num,
+        entry_route=entry_route,
+        workload_family=workload_family,
+        legacy_circuit=legacy_circuit,
+        density_noise=density_noise,
+        strict_phase3_support=strict_phase3_support,
+    )
+    return build_partition_descriptor_set(
+        surface, max_partition_qubits=max_partition_qubits
+    )
+
+
+def _descriptor_error(
+    descriptor_set: NoisyPartitionDescriptorSet,
+    *,
+    category: str,
+    first_unsupported_condition: str,
+    failure_stage: str,
+    reason: str,
+) -> NoisyDescriptorValidationError:
+    return NoisyDescriptorValidationError(
+        category=category,
+        first_unsupported_condition=first_unsupported_condition,
+        failure_stage=failure_stage,
+        source_type=descriptor_set.source_type,
+        requested_mode=descriptor_set.requested_mode,
+        workload_id=descriptor_set.workload_id,
+        reason=reason,
+    )
+
+
+def validate_partition_descriptor_set(
+    descriptor_set: NoisyPartitionDescriptorSet,
+) -> NoisyPartitionDescriptorSet:
+    expected_partition_index = 0
+    expected_canonical_index = 0
+
+    for partition in descriptor_set.partitions:
+        if partition.partition_index != expected_partition_index:
+            raise _descriptor_error(
+                descriptor_set,
+                category="reordering_across_noise_boundaries",
+                first_unsupported_condition="partition_index",
+                failure_stage="descriptor_validation",
+                reason=(
+                    "Task 2 descriptors require contiguous partition indices starting "
+                    "at 0; got partition_index {} while expecting {}".format(
+                        partition.partition_index, expected_partition_index
+                    )
+                ),
+            )
+        if not partition.members:
+            raise _descriptor_error(
+                descriptor_set,
+                category="descriptor_request",
+                first_unsupported_condition="empty_partition",
+                failure_stage="descriptor_validation",
+                reason="Task 2 descriptors do not support empty partitions",
+            )
+
+        if len(set(partition.local_to_global_qbits)) != len(partition.local_to_global_qbits):
+            raise _descriptor_error(
+                descriptor_set,
+                category="incomplete_remapping",
+                first_unsupported_condition="duplicate_global_qbit",
+                failure_stage="descriptor_validation",
+                reason=(
+                    "Task 2 descriptor partition {} contains duplicate entries in "
+                    "local_to_global_qbits".format(partition.partition_index)
+                ),
+            )
+
+        canonical_member_indices = tuple(
+            member.canonical_operation_index for member in partition.members
+        )
+        if partition.canonical_operation_indices != canonical_member_indices:
+            raise _descriptor_error(
+                descriptor_set,
+                category="reordering_across_noise_boundaries",
+                first_unsupported_condition="canonical_operation_indices",
+                failure_stage="descriptor_validation",
+                reason=(
+                    "Task 2 descriptor partition {} must keep canonical_operation_indices "
+                    "aligned with ordered member canonical indices".format(
+                        partition.partition_index
+                    )
+                ),
+            )
+
+        global_to_local = {
+            global_qbit: local_qbit
+            for local_qbit, global_qbit in enumerate(partition.local_to_global_qbits)
+        }
+        expected_parameter_routing: list[tuple[int, int, int]] = []
+        expected_local_param_start = 0
+
+        for member_index, member in enumerate(partition.members):
+            if member.partition_member_index != member_index:
+                raise _descriptor_error(
+                    descriptor_set,
+                    category="reordering_across_noise_boundaries",
+                    first_unsupported_condition="partition_member_index",
+                    failure_stage="descriptor_validation",
+                    reason=(
+                        "Task 2 descriptor partition {} requires contiguous "
+                        "partition_member_index values".format(partition.partition_index)
+                    ),
+                )
+            if member.canonical_operation_index != expected_canonical_index:
+                raise _descriptor_error(
+                    descriptor_set,
+                    category="reordering_across_noise_boundaries",
+                    first_unsupported_condition="canonical_operation_index",
+                    failure_stage="descriptor_validation",
+                    reason=(
+                        "Task 2 descriptors must preserve contiguous canonical "
+                        "operation coverage; partition {} member {} expected canonical "
+                        "index {} but got {}".format(
+                            partition.partition_index,
+                            member_index,
+                            expected_canonical_index,
+                            member.canonical_operation_index,
+                        )
+                    ),
+                )
+            expected_canonical_index += 1
+
+            expected_local_qubit_support = tuple(
+                global_to_local[qbit] for qbit in member.qubit_support
+            )
+            if member.local_qubit_support != expected_local_qubit_support:
+                raise _descriptor_error(
+                    descriptor_set,
+                    category="incomplete_remapping",
+                    first_unsupported_condition="local_qubit_support",
+                    failure_stage="descriptor_validation",
+                    reason=(
+                        "Task 2 descriptor partition {} has inconsistent local_qubit_support "
+                        "for canonical operation {}".format(
+                            partition.partition_index, member.canonical_operation_index
+                        )
+                    ),
+                )
+            expected_local_target = (
+                None
+                if member.target_qbit is None
+                else global_to_local[member.target_qbit]
+            )
+            if member.local_target_qbit != expected_local_target:
+                raise _descriptor_error(
+                    descriptor_set,
+                    category="incomplete_remapping",
+                    first_unsupported_condition="local_target_qbit",
+                    failure_stage="descriptor_validation",
+                    reason=(
+                        "Task 2 descriptor partition {} has inconsistent local_target_qbit "
+                        "for canonical operation {}".format(
+                            partition.partition_index, member.canonical_operation_index
+                        )
+                    ),
+                )
+            expected_local_control = (
+                None
+                if member.control_qbit is None
+                else global_to_local[member.control_qbit]
+            )
+            if member.local_control_qbit != expected_local_control:
+                raise _descriptor_error(
+                    descriptor_set,
+                    category="incomplete_remapping",
+                    first_unsupported_condition="local_control_qbit",
+                    failure_stage="descriptor_validation",
+                    reason=(
+                        "Task 2 descriptor partition {} has inconsistent local_control_qbit "
+                        "for canonical operation {}".format(
+                            partition.partition_index, member.canonical_operation_index
+                        )
+                    ),
+                )
+            if member.local_param_start != expected_local_param_start:
+                raise _descriptor_error(
+                    descriptor_set,
+                    category="ambiguous_parameter_routing",
+                    first_unsupported_condition="local_param_start",
+                    failure_stage="descriptor_validation",
+                    reason=(
+                        "Task 2 descriptor partition {} has non-contiguous local_param_start "
+                        "for canonical operation {}".format(
+                            partition.partition_index, member.canonical_operation_index
+                        )
+                    ),
+                )
+            if member.param_count:
+                expected_parameter_routing.append(
+                    (member.param_start, member.local_param_start, member.param_count)
+                )
+            expected_local_param_start += member.param_count
+
+        if partition.parameter_routing != tuple(expected_parameter_routing):
+            raise _descriptor_error(
+                descriptor_set,
+                category="ambiguous_parameter_routing",
+                first_unsupported_condition="parameter_routing",
+                failure_stage="descriptor_validation",
+                reason=(
+                    "Task 2 descriptor partition {} must keep parameter_routing aligned "
+                    "with ordered member parameter metadata".format(partition.partition_index)
+                ),
+            )
+        expected_partition_index += 1
+
+    if expected_canonical_index != descriptor_set.descriptor_member_count:
+        raise _descriptor_error(
+            descriptor_set,
+            category="dropped_operations",
+            first_unsupported_condition="descriptor_member_count",
+            failure_stage="descriptor_validation",
+            reason=(
+                "Task 2 descriptor coverage ended at canonical index {} but "
+                "descriptor_member_count reports {}".format(
+                    expected_canonical_index, descriptor_set.descriptor_member_count
+                )
+            ),
+        )
+
+    return descriptor_set
+
+
+def validate_partition_descriptor_set_against_surface(
+    surface: CanonicalNoisyPlannerSurface,
+    descriptor_set: NoisyPartitionDescriptorSet,
+) -> NoisyPartitionDescriptorSet:
+    validated = validate_partition_descriptor_set(descriptor_set)
+    if validated.planner_schema_version != surface.schema_version:
+        raise _descriptor_error(
+            validated,
+            category="descriptor_request",
+            first_unsupported_condition="planner_schema_version",
+            failure_stage="descriptor_validation",
+            reason=(
+                "Task 2 descriptor planner_schema_version '{}' does not match the "
+                "canonical planner surface schema '{}'".format(
+                    validated.planner_schema_version, surface.schema_version
+                )
+            ),
+        )
+    if (
+        validated.requested_mode != surface.requested_mode
+        or validated.source_type != surface.source_type
+        or validated.entry_route != surface.entry_route
+        or validated.workload_family != surface.workload_family
+        or validated.workload_id != surface.workload_id
+        or validated.qbit_num != surface.qbit_num
+        or validated.parameter_count != surface.parameter_count
+    ):
+        raise _descriptor_error(
+            validated,
+            category="descriptor_request",
+            first_unsupported_condition="provenance_mismatch",
+            failure_stage="descriptor_validation",
+            reason=(
+                "Task 2 descriptor provenance and size metadata must match the "
+                "canonical planner surface for workload '{}'".format(surface.workload_id)
+            ),
+        )
+    if validated.descriptor_member_count != surface.operation_count:
+        raise _descriptor_error(
+            validated,
+            category="dropped_operations",
+            first_unsupported_condition="operation_count",
+            failure_stage="descriptor_validation",
+            reason=(
+                "Task 2 descriptor workload '{}' records {} descriptor members but "
+                "the canonical surface contains {} operations".format(
+                    surface.workload_id,
+                    validated.descriptor_member_count,
+                    surface.operation_count,
+                )
+            ),
+        )
+    if validated.noise_count != surface.noise_count:
+        raise _descriptor_error(
+            validated,
+            category="hidden_noise_placement",
+            first_unsupported_condition="noise_count",
+            failure_stage="descriptor_validation",
+            reason=(
+                "Task 2 descriptor workload '{}' records {} noise operations but "
+                "the canonical surface contains {}".format(
+                    surface.workload_id,
+                    validated.noise_count,
+                    surface.noise_count,
+                )
+            ),
+        )
+
+    flattened_members = [
+        member
+        for partition in validated.partitions
+        for member in partition.members
+    ]
+    for member in flattened_members:
+        expected = surface.operations[member.canonical_operation_index]
+        for field in (
+            "operation_class",
+            "kind",
+            "name",
+            "is_unitary",
+            "source_gate_index",
+            "target_qbit",
+            "control_qbit",
+            "param_count",
+            "param_start",
+            "fixed_value",
+        ):
+            if getattr(member, field) != getattr(expected, field):
+                category = (
+                    "hidden_noise_placement"
+                    if expected.operation_class == "NoiseOperation"
+                    or member.operation_class == "NoiseOperation"
+                    else "dropped_operations"
+                )
+                raise _descriptor_error(
+                    validated,
+                    category=category,
+                    first_unsupported_condition=field,
+                    failure_stage="descriptor_validation",
+                    reason=(
+                        "Task 2 descriptor canonical operation {} mismatches the "
+                        "planner surface field '{}'".format(
+                            member.canonical_operation_index, field
+                        )
+                    ),
+                )
+        if member.qubit_support != expected.qubit_support:
+            category = (
+                "hidden_noise_placement"
+                if expected.operation_class == "NoiseOperation"
+                or member.operation_class == "NoiseOperation"
+                else "dropped_operations"
+            )
+            raise _descriptor_error(
+                validated,
+                category=category,
+                first_unsupported_condition="qubit_support",
+                failure_stage="descriptor_validation",
+                reason=(
+                    "Task 2 descriptor canonical operation {} mismatches the "
+                    "planner surface qubit_support".format(
+                        member.canonical_operation_index
+                    )
+                ),
+            )
+
+    return validated
+
+
+def build_descriptor_audit_record(
+    descriptor_set: NoisyPartitionDescriptorSet,
+    *,
+    metadata: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
+    payload = validate_partition_descriptor_set(descriptor_set).to_dict()
+    return {
+        "schema_version": payload["schema_version"],
+        "planner_schema_version": payload["planner_schema_version"],
+        "requested_mode": payload["requested_mode"],
+        "provenance": payload["provenance"],
+        "summary": {
+            "qbit_num": payload["qbit_num"],
+            "parameter_count": payload["parameter_count"],
+            "partition_count": payload["partition_count"],
+            "descriptor_member_count": payload["descriptor_member_count"],
+            "gate_count": payload["gate_count"],
+            "noise_count": payload["noise_count"],
+            "max_partition_qubits": payload["max_partition_qubits"],
+            "max_partition_span": payload["max_partition_span"],
+            "partition_member_counts": payload["partition_member_counts"],
+            "remapped_partition_count": sum(
+                partition["requires_remap"] for partition in payload["partitions"]
+            ),
+            "parameter_routing_segment_count": sum(
+                len(partition["parameter_routing"]) for partition in payload["partitions"]
+            ),
+        },
+        "partitions": payload["partitions"],
+        "metadata": dict(metadata) if metadata is not None else {},
     }
