@@ -171,11 +171,29 @@ Quality gate for engineering tasks:
 
 The first step for any phase is creating the initial phase documents. Then validate, then close the checklist. Use the prompts below (substitute `phase-X` and `Phase X` for the target phase, e.g. phase-2, Phase 2).
 
+### Short Paper Surfaces (Two-Paper Model)
+
+Each phase produces two short paper surfaces with distinct roles:
+
+| Document | Purpose | Audience |
+|----------|---------|----------|
+| `SHORT_PAPER_PHASE_X.md` | Technical methods paper — structured sections, detailed validation plan, numerical thresholds, scope boundaries, claim boundary | Venue-ready technical audience |
+| `SHORT_PAPER_NARRATIVE.md` | Narrative positioning companion — scientific motivation, research arc, "why this phase matters", scientific positioning | General PhD-conference audience |
+
+The two surfaces are **not** different lengths of the same content. They serve
+genuinely different purposes:
+
+- **PHASE_X** answers "what is the contribution and how is it validated?"
+- **NARRATIVE** answers "why does this phase matter in the research arc?"
+
+Do **not** create a third `SHORT_PAPER_4PAGE.md`. The two surfaces above replace
+the earlier three-paper pattern (consolidated from phases 2-3 onward).
+
 ### Step 1: Create Initial Phase Documents
 
-Work out a detailed plan per PLANNING.md and all docs in `planning/`, plus findings. Write into `DETAILED_PLANNING_PHASE_X.md`. Do not change code. Apply spec-driven development principles. Prepare the phase paper per PUBLICATIONS.md in 3 steps: (1) ~4-page short paper in `SHORT_PAPER_PHASE_X.md`, (2) abstract in `ABSTRACT_PHASE_X.md` for PhD conference presentation, (3) full paper in `PAPER_PHASE_X.md`. Put all phase-X docs in `phases/phase-X/`. Break down implementation into tasks and acceptance criteria. Tasks are goals, not implementations. No code snippets in phase docs except API-reference ones after implementation. Document all phase-X decisions in `ADRs_PHASE_X.md`.
+Work out a detailed plan per PLANNING.md and all docs in `planning/`, plus findings. Write into `DETAILED_PLANNING_PHASE_X.md`. Do not change code. Apply spec-driven development principles. Prepare the phase paper per PUBLICATIONS.md in 4 steps: (1) technical short paper in `SHORT_PAPER_PHASE_X.md`, (2) narrative positioning short paper in `SHORT_PAPER_NARRATIVE.md`, (3) abstract in `ABSTRACT_PHASE_X.md` for PhD conference presentation, (4) full paper in `PAPER_PHASE_X.md`. Put all phase-X docs in `phases/phase-X/`. Break down implementation into tasks and acceptance criteria. Tasks are goals, not implementations. No code snippets in phase docs except API-reference ones after implementation. Document all phase-X decisions in `ADRs_PHASE_X.md`.
 
-**Example invocation (phase 2):** "Work out a detailed plan for phase 2 according to @docs/density_matrix_project/planning/PLANNING.md and according to all the documentation in @docs/density_matrix_project/planning and according to all the findings. Write it into file DETAILED_PLANNING_PHASE_2.md. Do not change code. Apply spec driven development principles. Prepare Paper 1 according to @docs/density_matrix_project/planning/PUBLICATIONS.md in 3 steps, first one is 4 page-long short paper in SHORT_PAPER_PHASE_2.md and an abstract ABSTRACT_PHASE_2.md for a phd conference presentation and a 'normal' paper in PAPER_PHASE_2.md. All the new phase-2 related documents should be put in directory @phases/phase-2. Break down the phase 2 implementation into tasks and acceptance criteria. Tasks are goals, not implementations. No code snippets in phase files except for the API reference related ones after the implementation. Document all the phase-2 related decisions in detail in ADRs_PHASE_2.md. Work in phase specific subdirectory phase-2."
+**Example invocation (phase 2):** "Work out a detailed plan for phase 2 according to @docs/density_matrix_project/planning/PLANNING.md and according to all the documentation in @docs/density_matrix_project/planning and according to all the findings. Write it into file DETAILED_PLANNING_PHASE_2.md. Do not change code. Apply spec driven development principles. Prepare Paper 1 according to @docs/density_matrix_project/planning/PUBLICATIONS.md in 4 steps: (1) technical short paper in SHORT_PAPER_PHASE_2.md, (2) narrative positioning short paper in SHORT_PAPER_NARRATIVE.md, (3) abstract in ABSTRACT_PHASE_2.md for PhD conference presentation, (4) full paper in PAPER_PHASE_2.md. All the new phase-2 related documents should be put in directory @phases/phase-2. Break down the phase 2 implementation into tasks and acceptance criteria. Tasks are goals, not implementations. No code snippets in phase files except for the API reference related ones after the implementation. Document all the phase-2 related decisions in detail in ADRs_PHASE_2.md. Work in phase specific subdirectory phase-2."
 
 ### Step 2: Validate Completeness and Implementation Readiness
 
@@ -193,7 +211,7 @@ Note: Adjust decision areas per phase — Phase 2 needs all listed; later phases
 
 ### Sequence Summary
 
-1. **Step 1** → Creates DETAILED_PLANNING, ADRs, abstract, short paper, full paper in `phases/phase-X/`.
+1. **Step 1** → Creates DETAILED_PLANNING, ADRs, abstract, two short papers (technical + narrative), full paper in `phases/phase-X/`.
 2. **Step 2** → Creates `PRE_IMPLEMENTATION_COMPLETION_CHECKLIST.md` with initial gap list.
 3. **Step 3** → Closes each gap; updates planning, ADRs, checklist until implementation-ready.
 4. **Implementation** → Create task mini-specs as needed; implement task by task.
@@ -299,4 +317,5 @@ Observed improvements to apply going forward:
 - `docs/density_matrix_project/phases/phase-2/PRE_IMPLEMENTATION_COMPLETION_CHECKLIST.md`
 - `docs/density_matrix_project/phases/phase-2/ABSTRACT_PHASE_2.md`
 - `docs/density_matrix_project/phases/phase-2/SHORT_PAPER_PHASE_2.md`
+- `docs/density_matrix_project/phases/phase-2/SHORT_PAPER_NARRATIVE.md`
 - `docs/density_matrix_project/phases/phase-2/PAPER_PHASE_2.md`
