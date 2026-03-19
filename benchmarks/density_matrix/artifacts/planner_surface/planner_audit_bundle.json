@@ -1,0 +1,1080 @@
+{
+  "cases": [
+    {
+      "bridge_overlap_pass": true,
+      "case_name": "phase2_xxz_hea_q4_continuity",
+      "compared_operation_count": 12,
+      "metadata": {
+        "case_kind": "continuity"
+      },
+      "mismatches": [],
+      "operations": [
+        {
+          "control_qbit": null,
+          "fixed_value": null,
+          "index": 0,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "U3",
+          "operation_class": "GateOperation",
+          "param_count": 3,
+          "param_start": 0,
+          "qubit_support": [
+            1
+          ],
+          "source_gate_index": 0,
+          "target_qbit": 1
+        },
+        {
+          "control_qbit": null,
+          "fixed_value": 0.1,
+          "index": 1,
+          "is_unitary": false,
+          "kind": "noise",
+          "name": "local_depolarizing",
+          "operation_class": "NoiseOperation",
+          "param_count": 0,
+          "param_start": 3,
+          "qubit_support": [
+            0
+          ],
+          "source_gate_index": 0,
+          "target_qbit": 0
+        },
+        {
+          "control_qbit": null,
+          "fixed_value": null,
+          "index": 2,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "U3",
+          "operation_class": "GateOperation",
+          "param_count": 3,
+          "param_start": 3,
+          "qubit_support": [
+            0
+          ],
+          "source_gate_index": 1,
+          "target_qbit": 0
+        },
+        {
+          "control_qbit": 0,
+          "fixed_value": null,
+          "index": 3,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "CNOT",
+          "operation_class": "GateOperation",
+          "param_count": 0,
+          "param_start": 6,
+          "qubit_support": [
+            0,
+            1
+          ],
+          "source_gate_index": 2,
+          "target_qbit": 1
+        },
+        {
+          "control_qbit": null,
+          "fixed_value": 0.05,
+          "index": 4,
+          "is_unitary": false,
+          "kind": "noise",
+          "name": "amplitude_damping",
+          "operation_class": "NoiseOperation",
+          "param_count": 0,
+          "param_start": 6,
+          "qubit_support": [
+            1
+          ],
+          "source_gate_index": 2,
+          "target_qbit": 1
+        },
+        {
+          "control_qbit": null,
+          "fixed_value": null,
+          "index": 5,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "U3",
+          "operation_class": "GateOperation",
+          "param_count": 3,
+          "param_start": 6,
+          "qubit_support": [
+            2
+          ],
+          "source_gate_index": 3,
+          "target_qbit": 2
+        },
+        {
+          "control_qbit": null,
+          "fixed_value": null,
+          "index": 6,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "U3",
+          "operation_class": "GateOperation",
+          "param_count": 3,
+          "param_start": 9,
+          "qubit_support": [
+            3
+          ],
+          "source_gate_index": 4,
+          "target_qbit": 3
+        },
+        {
+          "control_qbit": null,
+          "fixed_value": 0.07,
+          "index": 7,
+          "is_unitary": false,
+          "kind": "noise",
+          "name": "phase_damping",
+          "operation_class": "NoiseOperation",
+          "param_count": 0,
+          "param_start": 12,
+          "qubit_support": [
+            0
+          ],
+          "source_gate_index": 4,
+          "target_qbit": 0
+        },
+        {
+          "control_qbit": 2,
+          "fixed_value": null,
+          "index": 8,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "CNOT",
+          "operation_class": "GateOperation",
+          "param_count": 0,
+          "param_start": 12,
+          "qubit_support": [
+            2,
+            3
+          ],
+          "source_gate_index": 5,
+          "target_qbit": 3
+        },
+        {
+          "control_qbit": null,
+          "fixed_value": null,
+          "index": 9,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "U3",
+          "operation_class": "GateOperation",
+          "param_count": 3,
+          "param_start": 12,
+          "qubit_support": [
+            2
+          ],
+          "source_gate_index": 6,
+          "target_qbit": 2
+        },
+        {
+          "control_qbit": null,
+          "fixed_value": null,
+          "index": 10,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "U3",
+          "operation_class": "GateOperation",
+          "param_count": 3,
+          "param_start": 15,
+          "qubit_support": [
+            1
+          ],
+          "source_gate_index": 7,
+          "target_qbit": 1
+        },
+        {
+          "control_qbit": 1,
+          "fixed_value": null,
+          "index": 11,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "CNOT",
+          "operation_class": "GateOperation",
+          "param_count": 0,
+          "param_start": 18,
+          "qubit_support": [
+            1,
+            2
+          ],
+          "source_gate_index": 8,
+          "target_qbit": 2
+        }
+      ],
+      "provenance": {
+        "entry_route": "phase2_continuity_lowering",
+        "source_type": "generated_hea",
+        "workload_family": "phase2_continuity_workflow",
+        "workload_id": "phase2_xxz_hea_q4_continuity"
+      },
+      "requested_mode": "partitioned_density",
+      "schema_version": "phase3_canonical_noisy_planner_v1",
+      "summary": {
+        "gate_count": 9,
+        "gate_sequence": [
+          "U3",
+          "U3",
+          "CNOT",
+          "U3",
+          "U3",
+          "CNOT",
+          "U3",
+          "U3",
+          "CNOT"
+        ],
+        "max_qubit_span": 2,
+        "noise_count": 3,
+        "noise_sequence": [
+          "local_depolarizing",
+          "amplitude_damping",
+          "phase_damping"
+        ],
+        "operation_count": 12,
+        "parameter_count": 18,
+        "qbit_num": 4
+      }
+    },
+    {
+      "case_name": "microcase_2q_entangler_local_depolarizing",
+      "metadata": {
+        "case_name": "microcase_2q_entangler_local_depolarizing",
+        "noise_pattern": "sparse",
+        "operation_specs": [
+          {
+            "kind": "gate",
+            "name": "U3",
+            "param_count": 3,
+            "target_qbit": 0
+          },
+          {
+            "kind": "gate",
+            "name": "U3",
+            "param_count": 3,
+            "target_qbit": 1
+          },
+          {
+            "control_qbit": 0,
+            "kind": "gate",
+            "name": "CNOT",
+            "param_count": 0,
+            "target_qbit": 1
+          },
+          {
+            "fixed_value": 0.1,
+            "kind": "noise",
+            "name": "local_depolarizing",
+            "param_count": 0,
+            "source_gate_index": 2,
+            "target_qbit": 1
+          },
+          {
+            "kind": "gate",
+            "name": "U3",
+            "param_count": 3,
+            "target_qbit": 0
+          }
+        ],
+        "qbit_num": 2
+      },
+      "operations": [
+        {
+          "control_qbit": null,
+          "fixed_value": null,
+          "index": 0,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "U3",
+          "operation_class": "GateOperation",
+          "param_count": 3,
+          "param_start": 0,
+          "qubit_support": [
+            0
+          ],
+          "source_gate_index": 0,
+          "target_qbit": 0
+        },
+        {
+          "control_qbit": null,
+          "fixed_value": null,
+          "index": 1,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "U3",
+          "operation_class": "GateOperation",
+          "param_count": 3,
+          "param_start": 3,
+          "qubit_support": [
+            1
+          ],
+          "source_gate_index": 1,
+          "target_qbit": 1
+        },
+        {
+          "control_qbit": 0,
+          "fixed_value": null,
+          "index": 2,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "CNOT",
+          "operation_class": "GateOperation",
+          "param_count": 0,
+          "param_start": 6,
+          "qubit_support": [
+            0,
+            1
+          ],
+          "source_gate_index": 2,
+          "target_qbit": 1
+        },
+        {
+          "control_qbit": null,
+          "fixed_value": 0.1,
+          "index": 3,
+          "is_unitary": false,
+          "kind": "noise",
+          "name": "local_depolarizing",
+          "operation_class": "NoiseOperation",
+          "param_count": 0,
+          "param_start": 6,
+          "qubit_support": [
+            1
+          ],
+          "source_gate_index": 2,
+          "target_qbit": 1
+        },
+        {
+          "control_qbit": null,
+          "fixed_value": null,
+          "index": 4,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "U3",
+          "operation_class": "GateOperation",
+          "param_count": 3,
+          "param_start": 6,
+          "qubit_support": [
+            0
+          ],
+          "source_gate_index": 3,
+          "target_qbit": 0
+        }
+      ],
+      "provenance": {
+        "entry_route": "phase3_microcase_generation",
+        "source_type": "microcase_builder",
+        "workload_family": "phase3_micro_validation",
+        "workload_id": "microcase_2q_entangler_local_depolarizing"
+      },
+      "requested_mode": "partitioned_density",
+      "schema_version": "phase3_canonical_noisy_planner_v1",
+      "summary": {
+        "gate_count": 4,
+        "gate_sequence": [
+          "U3",
+          "U3",
+          "CNOT",
+          "U3"
+        ],
+        "max_qubit_span": 2,
+        "noise_count": 1,
+        "noise_sequence": [
+          "local_depolarizing"
+        ],
+        "operation_count": 5,
+        "parameter_count": 9,
+        "qbit_num": 2
+      }
+    },
+    {
+      "case_name": "layered_nearest_neighbor_q8_sparse_seed20260318",
+      "metadata": {
+        "family_name": "layered_nearest_neighbor",
+        "noise_pattern": "sparse",
+        "qbit_num": 8,
+        "seed": 20260318,
+        "workload_id": "layered_nearest_neighbor_q8_sparse_seed20260318"
+      },
+      "operations": [
+        {
+          "control_qbit": null,
+          "fixed_value": null,
+          "index": 0,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "U3",
+          "operation_class": "GateOperation",
+          "param_count": 3,
+          "param_start": 0,
+          "qubit_support": [
+            0
+          ],
+          "source_gate_index": 0,
+          "target_qbit": 0
+        },
+        {
+          "control_qbit": null,
+          "fixed_value": null,
+          "index": 1,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "U3",
+          "operation_class": "GateOperation",
+          "param_count": 3,
+          "param_start": 3,
+          "qubit_support": [
+            1
+          ],
+          "source_gate_index": 1,
+          "target_qbit": 1
+        },
+        {
+          "control_qbit": null,
+          "fixed_value": null,
+          "index": 2,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "U3",
+          "operation_class": "GateOperation",
+          "param_count": 3,
+          "param_start": 6,
+          "qubit_support": [
+            2
+          ],
+          "source_gate_index": 2,
+          "target_qbit": 2
+        },
+        {
+          "control_qbit": null,
+          "fixed_value": null,
+          "index": 3,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "U3",
+          "operation_class": "GateOperation",
+          "param_count": 3,
+          "param_start": 9,
+          "qubit_support": [
+            3
+          ],
+          "source_gate_index": 3,
+          "target_qbit": 3
+        },
+        {
+          "control_qbit": null,
+          "fixed_value": null,
+          "index": 4,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "U3",
+          "operation_class": "GateOperation",
+          "param_count": 3,
+          "param_start": 12,
+          "qubit_support": [
+            4
+          ],
+          "source_gate_index": 4,
+          "target_qbit": 4
+        },
+        {
+          "control_qbit": null,
+          "fixed_value": null,
+          "index": 5,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "U3",
+          "operation_class": "GateOperation",
+          "param_count": 3,
+          "param_start": 15,
+          "qubit_support": [
+            5
+          ],
+          "source_gate_index": 5,
+          "target_qbit": 5
+        },
+        {
+          "control_qbit": null,
+          "fixed_value": null,
+          "index": 6,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "U3",
+          "operation_class": "GateOperation",
+          "param_count": 3,
+          "param_start": 18,
+          "qubit_support": [
+            6
+          ],
+          "source_gate_index": 6,
+          "target_qbit": 6
+        },
+        {
+          "control_qbit": null,
+          "fixed_value": null,
+          "index": 7,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "U3",
+          "operation_class": "GateOperation",
+          "param_count": 3,
+          "param_start": 21,
+          "qubit_support": [
+            7
+          ],
+          "source_gate_index": 7,
+          "target_qbit": 7
+        },
+        {
+          "control_qbit": 0,
+          "fixed_value": null,
+          "index": 8,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "CNOT",
+          "operation_class": "GateOperation",
+          "param_count": 0,
+          "param_start": 24,
+          "qubit_support": [
+            0,
+            1
+          ],
+          "source_gate_index": 8,
+          "target_qbit": 1
+        },
+        {
+          "control_qbit": 2,
+          "fixed_value": null,
+          "index": 9,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "CNOT",
+          "operation_class": "GateOperation",
+          "param_count": 0,
+          "param_start": 24,
+          "qubit_support": [
+            2,
+            3
+          ],
+          "source_gate_index": 9,
+          "target_qbit": 3
+        },
+        {
+          "control_qbit": 4,
+          "fixed_value": null,
+          "index": 10,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "CNOT",
+          "operation_class": "GateOperation",
+          "param_count": 0,
+          "param_start": 24,
+          "qubit_support": [
+            4,
+            5
+          ],
+          "source_gate_index": 10,
+          "target_qbit": 5
+        },
+        {
+          "control_qbit": 6,
+          "fixed_value": null,
+          "index": 11,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "CNOT",
+          "operation_class": "GateOperation",
+          "param_count": 0,
+          "param_start": 24,
+          "qubit_support": [
+            6,
+            7
+          ],
+          "source_gate_index": 11,
+          "target_qbit": 7
+        },
+        {
+          "control_qbit": null,
+          "fixed_value": 0.1,
+          "index": 12,
+          "is_unitary": false,
+          "kind": "noise",
+          "name": "local_depolarizing",
+          "operation_class": "NoiseOperation",
+          "param_count": 0,
+          "param_start": 24,
+          "qubit_support": [
+            1
+          ],
+          "source_gate_index": 8,
+          "target_qbit": 1
+        },
+        {
+          "control_qbit": null,
+          "fixed_value": null,
+          "index": 13,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "U3",
+          "operation_class": "GateOperation",
+          "param_count": 3,
+          "param_start": 24,
+          "qubit_support": [
+            0
+          ],
+          "source_gate_index": 12,
+          "target_qbit": 0
+        },
+        {
+          "control_qbit": null,
+          "fixed_value": null,
+          "index": 14,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "U3",
+          "operation_class": "GateOperation",
+          "param_count": 3,
+          "param_start": 27,
+          "qubit_support": [
+            1
+          ],
+          "source_gate_index": 13,
+          "target_qbit": 1
+        },
+        {
+          "control_qbit": null,
+          "fixed_value": null,
+          "index": 15,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "U3",
+          "operation_class": "GateOperation",
+          "param_count": 3,
+          "param_start": 30,
+          "qubit_support": [
+            2
+          ],
+          "source_gate_index": 14,
+          "target_qbit": 2
+        },
+        {
+          "control_qbit": null,
+          "fixed_value": null,
+          "index": 16,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "U3",
+          "operation_class": "GateOperation",
+          "param_count": 3,
+          "param_start": 33,
+          "qubit_support": [
+            3
+          ],
+          "source_gate_index": 15,
+          "target_qbit": 3
+        },
+        {
+          "control_qbit": null,
+          "fixed_value": null,
+          "index": 17,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "U3",
+          "operation_class": "GateOperation",
+          "param_count": 3,
+          "param_start": 36,
+          "qubit_support": [
+            4
+          ],
+          "source_gate_index": 16,
+          "target_qbit": 4
+        },
+        {
+          "control_qbit": null,
+          "fixed_value": null,
+          "index": 18,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "U3",
+          "operation_class": "GateOperation",
+          "param_count": 3,
+          "param_start": 39,
+          "qubit_support": [
+            5
+          ],
+          "source_gate_index": 17,
+          "target_qbit": 5
+        },
+        {
+          "control_qbit": null,
+          "fixed_value": null,
+          "index": 19,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "U3",
+          "operation_class": "GateOperation",
+          "param_count": 3,
+          "param_start": 42,
+          "qubit_support": [
+            6
+          ],
+          "source_gate_index": 18,
+          "target_qbit": 6
+        },
+        {
+          "control_qbit": null,
+          "fixed_value": null,
+          "index": 20,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "U3",
+          "operation_class": "GateOperation",
+          "param_count": 3,
+          "param_start": 45,
+          "qubit_support": [
+            7
+          ],
+          "source_gate_index": 19,
+          "target_qbit": 7
+        },
+        {
+          "control_qbit": 1,
+          "fixed_value": null,
+          "index": 21,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "CNOT",
+          "operation_class": "GateOperation",
+          "param_count": 0,
+          "param_start": 48,
+          "qubit_support": [
+            1,
+            2
+          ],
+          "source_gate_index": 20,
+          "target_qbit": 2
+        },
+        {
+          "control_qbit": 3,
+          "fixed_value": null,
+          "index": 22,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "CNOT",
+          "operation_class": "GateOperation",
+          "param_count": 0,
+          "param_start": 48,
+          "qubit_support": [
+            3,
+            4
+          ],
+          "source_gate_index": 21,
+          "target_qbit": 4
+        },
+        {
+          "control_qbit": 5,
+          "fixed_value": null,
+          "index": 23,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "CNOT",
+          "operation_class": "GateOperation",
+          "param_count": 0,
+          "param_start": 48,
+          "qubit_support": [
+            5,
+            6
+          ],
+          "source_gate_index": 22,
+          "target_qbit": 6
+        },
+        {
+          "control_qbit": null,
+          "fixed_value": null,
+          "index": 24,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "U3",
+          "operation_class": "GateOperation",
+          "param_count": 3,
+          "param_start": 48,
+          "qubit_support": [
+            0
+          ],
+          "source_gate_index": 23,
+          "target_qbit": 0
+        },
+        {
+          "control_qbit": null,
+          "fixed_value": null,
+          "index": 25,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "U3",
+          "operation_class": "GateOperation",
+          "param_count": 3,
+          "param_start": 51,
+          "qubit_support": [
+            1
+          ],
+          "source_gate_index": 24,
+          "target_qbit": 1
+        },
+        {
+          "control_qbit": null,
+          "fixed_value": null,
+          "index": 26,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "U3",
+          "operation_class": "GateOperation",
+          "param_count": 3,
+          "param_start": 54,
+          "qubit_support": [
+            2
+          ],
+          "source_gate_index": 25,
+          "target_qbit": 2
+        },
+        {
+          "control_qbit": null,
+          "fixed_value": null,
+          "index": 27,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "U3",
+          "operation_class": "GateOperation",
+          "param_count": 3,
+          "param_start": 57,
+          "qubit_support": [
+            3
+          ],
+          "source_gate_index": 26,
+          "target_qbit": 3
+        },
+        {
+          "control_qbit": null,
+          "fixed_value": null,
+          "index": 28,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "U3",
+          "operation_class": "GateOperation",
+          "param_count": 3,
+          "param_start": 60,
+          "qubit_support": [
+            4
+          ],
+          "source_gate_index": 27,
+          "target_qbit": 4
+        },
+        {
+          "control_qbit": null,
+          "fixed_value": null,
+          "index": 29,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "U3",
+          "operation_class": "GateOperation",
+          "param_count": 3,
+          "param_start": 63,
+          "qubit_support": [
+            5
+          ],
+          "source_gate_index": 28,
+          "target_qbit": 5
+        },
+        {
+          "control_qbit": null,
+          "fixed_value": null,
+          "index": 30,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "U3",
+          "operation_class": "GateOperation",
+          "param_count": 3,
+          "param_start": 66,
+          "qubit_support": [
+            6
+          ],
+          "source_gate_index": 29,
+          "target_qbit": 6
+        },
+        {
+          "control_qbit": null,
+          "fixed_value": null,
+          "index": 31,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "U3",
+          "operation_class": "GateOperation",
+          "param_count": 3,
+          "param_start": 69,
+          "qubit_support": [
+            7
+          ],
+          "source_gate_index": 30,
+          "target_qbit": 7
+        },
+        {
+          "control_qbit": 0,
+          "fixed_value": null,
+          "index": 32,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "CNOT",
+          "operation_class": "GateOperation",
+          "param_count": 0,
+          "param_start": 72,
+          "qubit_support": [
+            0,
+            1
+          ],
+          "source_gate_index": 31,
+          "target_qbit": 1
+        },
+        {
+          "control_qbit": 2,
+          "fixed_value": null,
+          "index": 33,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "CNOT",
+          "operation_class": "GateOperation",
+          "param_count": 0,
+          "param_start": 72,
+          "qubit_support": [
+            2,
+            3
+          ],
+          "source_gate_index": 32,
+          "target_qbit": 3
+        },
+        {
+          "control_qbit": 4,
+          "fixed_value": null,
+          "index": 34,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "CNOT",
+          "operation_class": "GateOperation",
+          "param_count": 0,
+          "param_start": 72,
+          "qubit_support": [
+            4,
+            5
+          ],
+          "source_gate_index": 33,
+          "target_qbit": 5
+        },
+        {
+          "control_qbit": 6,
+          "fixed_value": null,
+          "index": 35,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "CNOT",
+          "operation_class": "GateOperation",
+          "param_count": 0,
+          "param_start": 72,
+          "qubit_support": [
+            6,
+            7
+          ],
+          "source_gate_index": 34,
+          "target_qbit": 7
+        },
+        {
+          "control_qbit": null,
+          "fixed_value": 0.07,
+          "index": 36,
+          "is_unitary": false,
+          "kind": "noise",
+          "name": "phase_damping",
+          "operation_class": "NoiseOperation",
+          "param_count": 0,
+          "param_start": 72,
+          "qubit_support": [
+            1
+          ],
+          "source_gate_index": 31,
+          "target_qbit": 1
+        }
+      ],
+      "provenance": {
+        "entry_route": "phase3_structured_family_generation",
+        "source_type": "structured_family_builder",
+        "workload_family": "phase3_structured_family",
+        "workload_id": "layered_nearest_neighbor_q8_sparse_seed20260318"
+      },
+      "requested_mode": "partitioned_density",
+      "schema_version": "phase3_canonical_noisy_planner_v1",
+      "summary": {
+        "gate_count": 35,
+        "gate_sequence": [
+          "U3",
+          "U3",
+          "U3",
+          "U3",
+          "U3",
+          "U3",
+          "U3",
+          "U3",
+          "CNOT",
+          "CNOT",
+          "CNOT",
+          "CNOT",
+          "U3",
+          "U3",
+          "U3",
+          "U3",
+          "U3",
+          "U3",
+          "U3",
+          "U3",
+          "CNOT",
+          "CNOT",
+          "CNOT",
+          "U3",
+          "U3",
+          "U3",
+          "U3",
+          "U3",
+          "U3",
+          "U3",
+          "U3",
+          "CNOT",
+          "CNOT",
+          "CNOT",
+          "CNOT"
+        ],
+        "max_qubit_span": 2,
+        "noise_count": 2,
+        "noise_sequence": [
+          "local_depolarizing",
+          "phase_damping"
+        ],
+        "operation_count": 37,
+        "parameter_count": 72,
+        "qbit_num": 8
+      }
+    }
+  ],
+  "schema_version": "phase3_canonical_noisy_planner_v1",
+  "software": {
+    "numpy": "2.3.5",
+    "python": "3.13.9",
+    "scipy": "1.16.3"
+  },
+  "status": "pass",
+  "suite_name": "phase3_task1_story3_planner_audit",
+  "summary": {
+    "bridge_overlap_passes": 3,
+    "continuity_cases": 1,
+    "methods_cases": 2,
+    "passed_cases": 3,
+    "total_cases": 3
+  }
+}

@@ -1,0 +1,226 @@
+{
+  "cases": [
+    {
+      "case_name": "legacy_manual_u3_cnot",
+      "metadata": {
+        "case_kind": "positive"
+      },
+      "operations": [
+        {
+          "control_qbit": null,
+          "fixed_value": null,
+          "index": 0,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "U3",
+          "operation_class": "GateOperation",
+          "param_count": 3,
+          "param_start": 0,
+          "qubit_support": [
+            0
+          ],
+          "source_gate_index": 0,
+          "target_qbit": 0
+        },
+        {
+          "control_qbit": null,
+          "fixed_value": null,
+          "index": 1,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "U3",
+          "operation_class": "GateOperation",
+          "param_count": 3,
+          "param_start": 3,
+          "qubit_support": [
+            1
+          ],
+          "source_gate_index": 1,
+          "target_qbit": 1
+        },
+        {
+          "control_qbit": 0,
+          "fixed_value": null,
+          "index": 2,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "CNOT",
+          "operation_class": "GateOperation",
+          "param_count": 0,
+          "param_start": 6,
+          "qubit_support": [
+            0,
+            1
+          ],
+          "source_gate_index": 2,
+          "target_qbit": 1
+        },
+        {
+          "control_qbit": null,
+          "fixed_value": null,
+          "index": 3,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "U3",
+          "operation_class": "GateOperation",
+          "param_count": 3,
+          "param_start": 6,
+          "qubit_support": [
+            0
+          ],
+          "source_gate_index": 3,
+          "target_qbit": 0
+        }
+      ],
+      "provenance": {
+        "entry_route": "phase3_legacy_exact_lowering",
+        "source_type": "legacy_qgd_circuit_exact",
+        "workload_family": "phase3_legacy_exact_lowering",
+        "workload_id": "legacy_manual_u3_cnot"
+      },
+      "requested_mode": "partitioned_density",
+      "schema_version": "phase3_canonical_noisy_planner_v1",
+      "status": "pass",
+      "summary": {
+        "gate_count": 4,
+        "gate_sequence": [
+          "U3",
+          "U3",
+          "CNOT",
+          "U3"
+        ],
+        "max_qubit_span": 2,
+        "noise_count": 0,
+        "noise_sequence": [],
+        "operation_count": 4,
+        "parameter_count": 9,
+        "qbit_num": 2
+      }
+    },
+    {
+      "case_name": "legacy_manual_with_noise",
+      "metadata": {
+        "case_kind": "positive",
+        "has_attached_noise": true
+      },
+      "operations": [
+        {
+          "control_qbit": null,
+          "fixed_value": null,
+          "index": 0,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "U3",
+          "operation_class": "GateOperation",
+          "param_count": 3,
+          "param_start": 0,
+          "qubit_support": [
+            0
+          ],
+          "source_gate_index": 0,
+          "target_qbit": 0
+        },
+        {
+          "control_qbit": 0,
+          "fixed_value": null,
+          "index": 1,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "CNOT",
+          "operation_class": "GateOperation",
+          "param_count": 0,
+          "param_start": 3,
+          "qubit_support": [
+            0,
+            1
+          ],
+          "source_gate_index": 1,
+          "target_qbit": 1
+        },
+        {
+          "control_qbit": null,
+          "fixed_value": 0.1,
+          "index": 2,
+          "is_unitary": false,
+          "kind": "noise",
+          "name": "local_depolarizing",
+          "operation_class": "NoiseOperation",
+          "param_count": 0,
+          "param_start": 3,
+          "qubit_support": [
+            1
+          ],
+          "source_gate_index": 1,
+          "target_qbit": 1
+        }
+      ],
+      "provenance": {
+        "entry_route": "phase3_legacy_exact_lowering",
+        "source_type": "legacy_qgd_circuit_exact",
+        "workload_family": "phase3_legacy_exact_lowering",
+        "workload_id": "legacy_manual_with_noise"
+      },
+      "requested_mode": "partitioned_density",
+      "schema_version": "phase3_canonical_noisy_planner_v1",
+      "status": "pass",
+      "summary": {
+        "gate_count": 2,
+        "gate_sequence": [
+          "U3",
+          "CNOT"
+        ],
+        "max_qubit_span": 2,
+        "noise_count": 1,
+        "noise_sequence": [
+          "local_depolarizing"
+        ],
+        "operation_count": 3,
+        "parameter_count": 3,
+        "qbit_num": 2
+      }
+    },
+    {
+      "case_name": "legacy_manual_with_h",
+      "error": {
+        "failure_stage": "planner_entry_preflight",
+        "first_unsupported_condition": "H",
+        "reason": "Unsupported Phase 3 planner gate 'H' in legacy-source lowering",
+        "requested_mode": "partitioned_density",
+        "source_type": "legacy_qgd_circuit_exact",
+        "unsupported_category": "gate_family"
+      },
+      "metadata": {
+        "case_kind": "negative"
+      },
+      "status": "unsupported"
+    },
+    {
+      "case_name": "legacy_manual_bad_noise_index",
+      "error": {
+        "failure_stage": "planner_entry_preflight",
+        "first_unsupported_condition": "after_gate_index",
+        "reason": "Legacy-source planner lowering references unsupported after_gate_index 99",
+        "requested_mode": "partitioned_density",
+        "source_type": "legacy_qgd_circuit_exact",
+        "unsupported_category": "noise_insertion"
+      },
+      "metadata": {
+        "case_kind": "negative"
+      },
+      "status": "unsupported"
+    }
+  ],
+  "schema_version": "phase3_canonical_noisy_planner_v1",
+  "software": {
+    "numpy": "2.3.5",
+    "python": "3.13.9",
+    "scipy": "1.16.3"
+  },
+  "status": "pass",
+  "suite_name": "phase3_task1_story4_legacy_exact_lowering",
+  "summary": {
+    "negative_cases": 2,
+    "positive_cases": 2,
+    "total_cases": 4
+  }
+}
