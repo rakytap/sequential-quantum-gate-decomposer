@@ -195,7 +195,7 @@ def CompareCircuits( circ1: Circuit, parameters1: np.ndarray, circ2: Circuit, pa
     overlap = np.sum( transformed_state_1.conj() * transformed_state_2 )
     #print( "overlap: ", np.abs(overlap) )
 
-    assert( (np.abs(overlap)-1) < tolerance )
+    assert( (1-np.abs(overlap)) < tolerance )
 
 
 def circuit_to_CNOT_basis( circ: Circuit, parameters: np.ndarray):
