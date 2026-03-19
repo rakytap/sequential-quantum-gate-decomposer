@@ -1,0 +1,93 @@
+{
+  "cases": [
+    {
+      "case_name": "wrong_requested_mode",
+      "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
+      "failure_stage": "runtime_preflight",
+      "fallback_used": false,
+      "first_unsupported_condition": "requested_mode",
+      "reason": "Task 3 runtime supports only 'partitioned_density' requests, got 'state_vector'",
+      "requested_mode": "state_vector",
+      "runtime_path": "partitioned_density_descriptor_baseline",
+      "source_type": "generated_hea",
+      "status": "unsupported",
+      "supported_runtime_case_recorded": false,
+      "unsupported_category": "runtime_request",
+      "workload_id": "phase2_xxz_hea_q4_continuity"
+    },
+    {
+      "case_name": "parameter_count_mismatch",
+      "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
+      "failure_stage": "runtime_preflight",
+      "fallback_used": false,
+      "first_unsupported_condition": "parameter_count",
+      "reason": "Task 3 runtime workload 'phase2_xxz_hea_q4_continuity' requires 18 parameters, got 17",
+      "requested_mode": "partitioned_density",
+      "runtime_path": "partitioned_density_descriptor_baseline",
+      "source_type": "generated_hea",
+      "status": "unsupported",
+      "supported_runtime_case_recorded": false,
+      "unsupported_category": "runtime_request",
+      "workload_id": "phase2_xxz_hea_q4_continuity"
+    },
+    {
+      "case_name": "unsupported_gate_name",
+      "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
+      "failure_stage": "runtime_preflight",
+      "fallback_used": false,
+      "first_unsupported_condition": "gate_name",
+      "reason": "Task 3 runtime supports only gate families ['CNOT', 'U3'], got 'CZ'",
+      "requested_mode": "partitioned_density",
+      "runtime_path": "partitioned_density_descriptor_baseline",
+      "source_type": "microcase_builder",
+      "status": "unsupported",
+      "supported_runtime_case_recorded": false,
+      "unsupported_category": "unsupported_runtime_operation",
+      "workload_id": "microcase_4q_partition_boundary_triplet"
+    },
+    {
+      "case_name": "unsupported_noise_name",
+      "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
+      "failure_stage": "runtime_preflight",
+      "fallback_used": false,
+      "first_unsupported_condition": "noise_name",
+      "reason": "Task 3 runtime supports only local-noise families ['amplitude_damping', 'local_depolarizing', 'phase_damping'], got 'depolarizing'",
+      "requested_mode": "partitioned_density",
+      "runtime_path": "partitioned_density_descriptor_baseline",
+      "source_type": "microcase_builder",
+      "status": "unsupported",
+      "supported_runtime_case_recorded": false,
+      "unsupported_category": "unsupported_runtime_operation",
+      "workload_id": "microcase_4q_partition_boundary_triplet"
+    },
+    {
+      "case_name": "gate_fixed_value",
+      "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
+      "failure_stage": "runtime_preflight",
+      "fallback_used": false,
+      "first_unsupported_condition": "fixed_value",
+      "reason": "Task 3 gate members must not carry fixed_value payloads",
+      "requested_mode": "partitioned_density",
+      "runtime_path": "partitioned_density_descriptor_baseline",
+      "source_type": "microcase_builder",
+      "status": "unsupported",
+      "supported_runtime_case_recorded": false,
+      "unsupported_category": "descriptor_to_runtime_mismatch",
+      "workload_id": "microcase_4q_partition_boundary_triplet"
+    }
+  ],
+  "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
+  "software": {
+    "numpy": "2.3.5",
+    "python": "3.13.9",
+    "scipy": "1.16.3"
+  },
+  "status": "pass",
+  "suite_name": "phase3_task3_story7_unsupported_runtime",
+  "summary": {
+    "fallback_count": 0,
+    "total_cases": 5,
+    "unexpected_passes": 0,
+    "unsupported_cases": 5
+  }
+}
