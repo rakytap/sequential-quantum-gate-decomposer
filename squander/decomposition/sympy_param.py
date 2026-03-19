@@ -77,24 +77,33 @@ def find_control_qubits(psi, num_qubits):
     return pure_controls, sparsity_controls
 def make_gateprep_dict(): #primitive roots of unity
     d = {}
-    for i1 in (3, 4, 6, 9, 15, 18, 20, 21): #0
+    for i1 in (3, 4, 6, 8, 9, 15, 16, 18, 20, 21): #0
         for sgn in (1, -1):
             z = sgn*sympy.exp(sympy.I*sympy.pi*i1/24)
             d[sympy.factor_terms(sympy.expand_mul(sympy.expand_complex(z)))] = z
-        for i2 in (i1, (i1+12)%24):
+        for i2 in (i1, (i1+12)%24, 24-i1):
             for sgn0, sgn1 in itertools.product((1, -1), repeat=2):
                 z = sgn0*sympy.exp(sympy.I*sympy.pi*i1/24)/2+sgn1*sympy.exp(-sympy.I*sympy.pi*i2/24)/2
                 #print(i1, i2, sgn0, sgn1, sympy.factor_terms(sympy.expand_mul(sympy.expand_complex(z))))
                 d[sympy.factor_terms(sympy.expand_mul(sympy.expand_complex(z)))] = z
     return d
 gateprep_dict = make_gateprep_dict()
+#print(gateprep_dict); assert False
 def has_radical(expr):
     return len(expr.atoms(sympy.Pow)) > 0
+def separate_exp(expr):
+    expexprs, nonexpexprs = [], []
+    for x in sympy.Mul.make_args(expr):
+        if x.atoms(sympy.exp):
+            expexprs.append(x)
+        else:
+            nonexpexprs.append(x)
+    return sympy.Mul(*expexprs), sympy.Mul(*nonexpexprs)
 def gateprep(x):
-    x = sympy.factor_terms(x)    
+    x = sympy.factor_terms(x)
     if x == 0: return x
-    x = sympy.Mul(*[gateprep_dict[z] if z in gateprep_dict else z for z in sympy.separatevars(x).as_independent(*x.free_symbols)])
-    assert not has_radical(x), x
+    x = sympy.Mul(*[gateprep_dict[z] if z in gateprep_dict else z for y in sympy.separatevars(x).as_independent(*x.free_symbols) for z in separate_exp(y)])
+    assert not has_radical(x), (x, sympy.separatevars(x).as_independent(*x.free_symbols))
     return quantsimp(x)
 def quantsimp(x):
     #x = sympy.sympify(x)
@@ -110,7 +119,10 @@ def quantsimp(x):
     x = sympy.together(x)
     x = sympy.cancel(x)
     #x = sympy.powsimp(x, combine="base")
-    x = sympy.expand_mul(x)
+    x = sympy.expand_mul(x)    
+    #x = sympy.together(x)
+    #x = sympy.cancel(x)
+    #x = sympy.expand_complex(x)
     assert not has_radical(x), x
     return x.doit()
 def textbook_simp(x):
@@ -496,7 +508,7 @@ class ParamIndexSum:
     def to_sympy(self, params):
         return sum([(2*sympy.pi if index.index == -1 else params[index.index]) * scale.num / scale.scale for index, scale in self.params])
     def to_qiskit(self, params):
-        return sum([(2*np.pi if index.index == -1 else params[index.index]) * (scale.num / scale.scale) for index, scale in self.params])
+        return sum([(2*np.pi if index.index == -1 else params[index.index]) * (int(scale.num) / int(scale.scale)) for index, scale in self.params])
     def __hash__(self): return hash(tuple(self.params))
     def __eq__(self, other): return self.params == other.params
     def __lt__(self, other): return len(self.params) < len(other.params)
@@ -684,28 +696,34 @@ def get_eval_circ(unitary, param_syms, compiled_circuit):
     rescirc = compile_gates(num_qubits, [(unitary, list(range(num_qubits)))] + spcirc)
     return num_qubits, rescirc
 def eval_osrcost(num_qubits, rescirc, params, param_syms):
+    if num_qubits == 1: return 0.0
     tol = 1e-3
     Fnorm = np.sqrt(1<<num_qubits)
-    osrcosts = []
     rescircnps = [np.array(rescirc.evalf(subs={x: y for x, y in zip(param_syms, pos)})).astype(np.complex128) for pos in get_param_space(params)]
-    for cut in N_Qubit_Decomposition_Guided_Tree.unique_cuts(num_qubits):
-        #R = build_osr_matrix(rescirc, num_qubits, cut)
-        #p1 = sum(R.multiply_elementwise(R.conjugate()))
-        """
-        g = R * dagger_gate(R)
-        p1 = sympy.Trace(g).rewrite(sympy.Sum)
-        p2 = sum(g.multiply_elementwise(g.conjugate()))
-        kappa = 1.0 - complex((p2 / (p1 * p1)).simplify().evalf()).real
-        osrcosts.append(R.rank()+kappa)
-        """        
-        for rescircnp in rescircnps:
+    all_cuts = list(N_Qubit_Decomposition_Guided_Tree.unique_cuts(num_qubits))
+    topology = [(i, j) for i in range(num_qubits) for j in range(i+1, num_qubits)]
+    osr_results = []    
+    for rescircnp in rescircnps:
+        osr_result = []
+        for cut in all_cuts:
+            #R = build_osr_matrix(rescirc, num_qubits, cut)
+            #p1 = sum(R.multiply_elementwise(R.conjugate()))
+            """
+            g = R * dagger_gate(R)
+            p1 = sympy.Trace(g).rewrite(sympy.Sum)
+            p2 = sum(g.multiply_elementwise(g.conjugate()))
+            kappa = 1.0 - complex((p2 / (p1 * p1)).simplify().evalf()).real
+            osrcosts.append(R.rank()+kappa)
+            """        
             rank, s = N_Qubit_Decomposition_Guided_Tree.operator_schmidt_rank(rescircnp, num_qubits, cut, Fnorm, tol)
+            num_cnot = N_Qubit_Decomposition_Guided_Tree.ceil_log2(rank)
             #s2 = [x*x for x in s]
             #ss2 = sum(s2)
             #kappa = 1.0 - sum(x*x for x in s2)/(ss2*ss2)
             kappa = sum(x*x for i, x in enumerate(s[1:]))
-            osrcosts.append(float(rank + kappa))
-    osrcost = 1.0 if num_qubits==1 else sum(osrcosts)/len(osrcosts) 
+            osr_result.append((num_cnot, kappa))
+        osr_results.append(N_Qubit_Decomposition_Guided_Tree.solve_best_min_cnots(num_qubits, all_cuts, osr_result, topology, use_surplus=False))
+    osrcost = sum(max(osr_results)) #sum(sum(x) for x in osr_results)/len(osr_results)
     return osrcost
 def eval_symcost(num_qubits, rescirc, allow_global_phase=False):
     if allow_global_phase:
@@ -739,8 +757,9 @@ def eval_circ(unitary, params, compiled_circuit, symonly=False, allow_global_pha
     symcost = eval_symcost(num_qubits, rescirc, allow_global_phase=allow_global_phase)
     osrcost = eval_osrcost(num_qubits, rescirc, params, param_syms)
     gatecost = get_gatecost(compiled_circuit, param_syms)
-    if osrcost == 1.0 and (symcost == 0.0 or cost == 0.0):
+    if osrcost == 0.0 and (symcost == 0.0 or cost == 0.0):
         print("Found exact solution:", compiled_circuit, osrcost, symcost, cost, gatecost)
+        print(rescirc)
     return (osrcost, symcost, cost, gatecost), rescirc
 def evaluate(individual, pset, hof, unitary, params, num_qubits, ansatz, cost_func_method):
     #print(individual)
@@ -1070,7 +1089,7 @@ def decompose_unitary_search(orig_gate, scale_max, layers=4, basis=('CNOT',)+sin
     params = [vardict[x[1]] for x in param_info]
     num_regions = len(regions)*num_qubits #we use a half open interval based on (−π,π].
     def gen_angles(s, reversed=False):
-        return [make_angle(ParamIndex(i), AngleScale(scale*s, scale_max*(1 if i==-1 else param_info[i][0]))) for i in range(-1, len(param_info)) for scale in (range(scale_max//2-1, -scale_max//2-1, -1) if reversed else range(-scale_max//2+1, scale_max//2+1))]
+        return [make_angle(ParamIndex(i), AngleScale(scale*s, scale_max*(1 if i==-1 else param_info[i][0]))) for i in range(-1, len(param_info)) for scale in (range(scale_max//2-1, -scale_max//2-1, -1) if reversed else range(-scale_max//2+1, scale_max//2+1)) if scale != 0 or i == 0]
     def sympy_to_paramsum(expr, s):
         res = ParamIndexSum()
         for term in sympy.Add.make_args(expr):
@@ -1084,7 +1103,7 @@ def decompose_unitary_search(orig_gate, scale_max, layers=4, basis=('CNOT',)+sin
                 coeff, rest = term.as_coeff_Mul()
                 paramidx = params.index(rest)
                 num, denom = coeff.as_numer_denom()
-                res = angle_sum(res, make_angle(ParamIndex(paramidx), AngleScale(num*scale_max/denom, scale_max)))
+                res = angle_sum(res, make_angle(ParamIndex(paramidx), AngleScale(num*scale_max*param_info[paramidx][0]/denom, scale_max*param_info[paramidx][0])))
         return res
     @functools.lru_cache(None)
     def reverse_gate(gate, angles):
@@ -1108,11 +1127,11 @@ def decompose_unitary_search(orig_gate, scale_max, layers=4, basis=('CNOT',)+sin
                 gatecheck[mat].append((gate, angles))
     subs = {sympy.I: sympy.Symbol("sympy.I", real=True),
             sympy.pi: sympy.Symbol("sympy.pi", real=True)}
-    for mat in gatecheck:
-        if len(gatecheck[mat]) > 1:
-            primgate = next(iter(x for x in gatecheck[mat] if len(x[1]) == 0), next(iter(gatecheck[mat])))
-            if primgate is not None:
-                print(f'\"{primgate[0] + ("" if len(primgate[1]) == 0 else "_" + "_".join(str(x.to_sympy(params)/sympy.pi*scale_max).replace("-", "m") for x in primgate[1]))}\": ({", ".join(["(" + repr(x[0]) + ", (" + ", ".join([str(z.to_sympy(params).subs(subs)) for z in x[1]]) + ",))" for x in gatecheck[mat] if x!=primgate or len(x[1]) != 0])},),')
+    # for mat in gatecheck:
+    #     if len(gatecheck[mat]) > 1:
+    #         primgate = next(iter(x for x in gatecheck[mat] if len(x[1]) == 0), next(iter(gatecheck[mat])))
+    #         if primgate is not None:
+    #             print(f'\"{primgate[0] + ("" if len(primgate[1]) == 0 else "_" + "_".join(str(x.to_sympy(params)/sympy.pi*scale_max).replace("-", "m") for x in primgate[1]))}\": ({", ".join(["(" + repr(x[0]) + ", (" + ", ".join([str(z.to_sympy(params).subs(subs)) for z in x[1]]) + ",))" for x in gatecheck[mat] if x!=primgate or len(x[1]) != 0])},),')
         
     unique_gates = {min(z, key=lambda x: get_gatecost(gen_gate(x[0], *x[1], 0), params)) for z in gatecheck.values()}
     all_gates = [tuple(((gate, *angles, qbit),) if i==region*num_qubits+qbit else () for i in range(num_regions))
@@ -1170,14 +1189,14 @@ def decompose_unitary_search(orig_gate, scale_max, layers=4, basis=('CNOT',)+sin
         yield from (mat for pauli_dressing in pauli_dressings for preU in preUs for mat in (sympy.ImmutableMatrix(eval_circ(preU, param_info, pauli_dressing, True, allow_global_phase=allow_global_phase)[2]),) if mat != U)
         #yield from (mat for pauli_dressing in pauli_dressings for mat in (sympy.ImmutableMatrix(eval_circ(U, param_info, pauli_dressing, True, allow_global_phase=allow_global_phase)[2]),) if mat != U)
 
-    res = best_first(starts, lambda E: E[0] == 1.0 and (E[1] == 0.0 or E[2] == 0.0), get_neighbors,
+    res = best_first(starts, lambda E: E[0] == 0.0 and (E[1] == 0.0 or E[2] == 0.0), get_neighbors,
                      functools.partial(eval, Umtx, param_info, ansatz, allow_global_phase), canonicalize, find_min=find_min)
     if res is None: return res
     if not find_min:
         basis_no_clifford = tuple(g for g in basis if g not in clifford_descs)
         print(res)
         def remap_qubits(x, qbit): return tuple(z[:-1] + (qbit,) for z in x)
-        res = tuple(remap_qubits(decompose_unitary_search((1, param_info, lambda *args: compile_gates(1, make_circ([None], (remap_qubits(region, 0),), 1).to_sympy(args))), scale_max, layers, basis=basis_no_clifford, find_min=True)[0][0], i % num_qubits)
+        res = tuple(region if len(region) <= 1 else remap_qubits(decompose_unitary_search((1, param_info, lambda *args: compile_gates(1, make_circ([None], (remap_qubits(region, 0),), 1).to_sympy(args))), scale_max, layers, basis=basis_no_clifford, find_min=True)[0][0], i % num_qubits)
                     for i, region in enumerate(res))
         print(res)
     invparams = {vardict[x[1]]: x[1] for x in param_info}
@@ -1235,11 +1254,11 @@ def decompose_unitary_search(orig_gate, scale_max, layers=4, basis=('CNOT',)+sin
 #decompose_unitary_search("CSX", 8)
 #decompose_unitary_search("iSWAP", 8)
 #decompose_unitary_search("SiSWAP", 8)
-decompose_unitary_search("CRX", 4)
+#decompose_unitary_search("CRX", 4)
 #decompose_unitary_search("CRY", 4)
 #decompose_unitary_search("CRZ", 4)
 #decompose_unitary_search("SYC", 24)
-#decompose_unitary_search("CSWAP", 8)
+decompose_unitary_search("CSWAP", 8)
 #decompose_unitary_search("CU3", 4)
 #decompose_unitary_search("U3", 2, allow_global_phase=False)
 #decompose_unitary_search("GP", 1)
