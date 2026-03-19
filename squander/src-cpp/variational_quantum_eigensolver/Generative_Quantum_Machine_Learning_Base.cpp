@@ -341,7 +341,7 @@ double Generative_Quantum_Machine_Learning_Base::expectation_value_P_star_P_star
 
         for (int d = r.begin(); d < r.end(); d++) {
             // Calculate Hamming distance: popcount of XOR value
-            int hamming_dist = __builtin_popcount(d);
+            size_t hamming_dist = __builtin_popcount(d);
 
             // Get kernel value for this Hamming distance
             if (hamming_dist >= gaussian_lookup_table.size()) {
@@ -355,6 +355,7 @@ double Generative_Quantum_Machine_Learning_Base::expectation_value_P_star_P_star
 
     priv_partial_ev.combine_each([&ev](double a) { ev += a; });
 
+    std::cout << "Expectation value of P_star_P_star calculated: " << ev << std::endl;
     return ev;
 }
 
@@ -374,7 +375,8 @@ double Generative_Quantum_Machine_Learning_Base::expectation_value_P_star_P_star
             ev += gaussian_lookup_table[hamming_dist];
         }
     }
-    ev /= (batch_size * batch_size);
+    ev /= (batch_size * (batch_size-1));
+    std::cout << "Expectation value of P_star_P_star calculated: " << ev << std::endl;
     return ev;
 }
 
@@ -384,9 +386,9 @@ double Generative_Quantum_Machine_Learning_Base::expectation_value_P_star_P_star
 @return The calculated total variational distance of the distributions
 */
 double Generative_Quantum_Machine_Learning_Base::TV_of_the_distributions(Matrix& State_right) {
-    std::vector<double> P_theta(1 << qbit_num);
+    Matrix_real P_theta(1 << qbit_num, 1);
 
-    for (size_t x_idx = 0; x_idx < State_right.size(); x_idx++) {
+    for (int x_idx = 0; x_idx < State_right.size(); x_idx++) {
         P_theta[x_idx] =
             State_right[x_idx].real * State_right[x_idx].real + State_right[x_idx].imag * State_right[x_idx].imag;
     }
@@ -556,7 +558,7 @@ double Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions_approx
     priv_partial_ev_P_theta_P_theta.combine_each([&ev_P_theta_P_theta](double a) { ev_P_theta_P_theta += a; });
     priv_partial_ev_P_theta_P_star.combine_each([&ev_P_theta_P_star](double a) { ev_P_theta_P_star += a; });
 
-    ev_P_theta_P_star /= batch_size;
+    ev_P_theta_P_star /= batch_size-1;
 
     {
         tbb::spin_mutex::scoped_lock my_lock{my_mutex};
@@ -581,7 +583,7 @@ double Generative_Quantum_Machine_Learning_Base::optimization_problem_non_static
     Generative_Quantum_Machine_Learning_Base* instance =
         reinterpret_cast<Generative_Quantum_Machine_Learning_Base*>(void_instance);
 
-    if (!instance->use_exact && instance->number_of_iters_per_trhead % instance->last_sampled_iteration >= instance->sampling_rate) {
+    if (!instance->use_exact && instance->number_of_iters_per_trhead - instance->last_sampled_iteration >= instance->sampling_rate) {
         tbb::spin_mutex::scoped_lock my_lock{my_mutex};
         if (instance->number_of_iters_per_trhead - instance->last_sampled_iteration >= instance->sampling_rate) { // double check in case multiple threads are waiting for the lock
             instance->ev_P_star_P_star = instance->expectation_value_P_star_P_star_approx();
@@ -846,7 +848,7 @@ double Generative_Quantum_Machine_Learning_Base::MMD_gradient_exact(Matrix& Stat
                     sum_pairs_P_theta_deriv_P_star += P_theta_deriv[x] * P_star[y];
                 }
             }
-            int hamming_dist = __builtin_popcount(d);
+            size_t hamming_dist = __builtin_popcount(d);
             if (hamming_dist >= gaussian_lookup_table.size()) {
                 throw std::runtime_error("Hamming distance is greater than the size of the lookup table");
             }
@@ -934,7 +936,7 @@ void Generative_Quantum_Machine_Learning_Base::optimization_problem_combined_non
 
     Generative_Quantum_Machine_Learning_Base* instance =
         reinterpret_cast<Generative_Quantum_Machine_Learning_Base*>(void_instance);
-    if (!instance->use_exact && instance->number_of_iters_per_trhead % instance->last_sampled_iteration >= instance->sampling_rate) {
+    if (!instance->use_exact && instance->number_of_iters_per_trhead - instance->last_sampled_iteration >= instance->sampling_rate) {
         tbb::spin_mutex::scoped_lock my_lock{my_mutex};
         if (instance->number_of_iters_per_trhead - instance->last_sampled_iteration >= instance->sampling_rate) { // double check in case multiple threads are waiting for the lock
             instance->ev_P_star_P_star = instance->expectation_value_P_star_P_star_approx();
@@ -1260,7 +1262,6 @@ void Generative_Quantum_Machine_Learning_Base::generate_circuit(int layers, int 
 
         std::vector<std::vector<int>> all_subsets;
         for (int clique_idx = 0; clique_idx < num_cliques; clique_idx++) {
-            int clique_size = cliques[clique_idx].size();
             std::vector<int> subset;
             generate_clique_circuit(0, cliques[clique_idx], all_subsets, subset);
         }
@@ -1280,11 +1281,11 @@ void Generative_Quantum_Machine_Learning_Base::generate_circuit(int layers, int 
 @param qbits The qbits the gate operates on. The depth of the generated circuit is 2*number of qbits
 */
 void Generative_Quantum_Machine_Learning_Base::MultyRZ(std::vector<int>& qbits) {
-    for (int idx = 0; idx < qbits.size() - 1; idx++) {
+    for (size_t idx = 0; idx < qbits.size() - 1; idx++) {
         add_cnot(qbits[idx + 1], qbits[idx]);
     }
     add_rz(qbits[qbits.size() - 1]);
-    for (int idx = qbits.size() - 1; idx > 0; idx--) {
+    for (size_t idx = qbits.size() - 1; idx > 0; idx--) {
         add_cnot(qbits[idx], qbits[idx - 1]);
     }
 }
@@ -1298,7 +1299,7 @@ void Generative_Quantum_Machine_Learning_Base::MultyRZ(std::vector<int>& qbits) 
 void Generative_Quantum_Machine_Learning_Base::generate_clique_circuit(int i, std::vector<int>& arr,
                                                                        std::vector<std::vector<int>>& res,
                                                                        std::vector<int>& subset) {
-    if (i == arr.size()) {
+    if (static_cast<size_t>(i) == arr.size()) {
         if (subset.size() != 0) {
             if (std::find(res.begin(), res.end(), subset) == res.end()) {
                 res.push_back(subset);

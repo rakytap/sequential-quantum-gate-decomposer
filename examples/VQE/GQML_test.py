@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import dataset_generator
 import networkx as nx
 import matplotlib
+import scipy.stats as stats
 matplotlib.use('Agg')
 
 print("works")
@@ -96,7 +97,7 @@ Cirucuit type: {circuit[0]} with depth {circuit[1][0]} and repetitions {circuit[
     print("Optimization time: ", opt_time := time.time()-t0)
     iters_sq, mmd_sq, _, tv_sq = np.loadtxt(f"{project_name}_costfuncs_entropy_and_tv.txt").T
 
-    return iters_sq, mmd_sq, tv_sq, opt_time
+    return iters_sq, mmd_sq, tv_sq, opt_time, GQML
 
 def plot_cost_fnx(iters, sqander_cf, cosine_cf,cf_name, pennylane_cf=None, ):
     plt.figure()
@@ -108,8 +109,8 @@ def plot_cost_fnx(iters, sqander_cf, cosine_cf,cf_name, pennylane_cf=None, ):
     plt.legend()
     plt.savefig(f"{cf_name}.pdf")
 
-n_nodes = 10
-graph_type = "custom"
+n_nodes = 6
+graph_type = "grid"
 dataset_size = 100
 
 G = nx.Graph()
@@ -128,16 +129,19 @@ edges = [[0, 1], [1, 2], [2, 3], [3, 4], [3, 5], [4, 5], [5, 6], [6, 7], [6, 8],
 #             edges.append((i, j))
 # edges.append((4, 5))
 # edges.append((10, 11))
-G.add_edges_from(edges)
+# G.add_edges_from(edges)
 training_set, target_distribution, cliques = generate_MRF_dataset(n_nodes, graph_type, dataset_size, G=G)
 p_num = np.sum([2**(len(i)-1) for i in cliques])+3*n_nodes
 
 cliques = sorted([sorted(x) for x in cliques])
+target_distribution = stats.norm.pdf(range(2**n_nodes), loc=2**(n_nodes-1), scale=2**n_nodes/4)
+target_distribution = target_distribution/np.sum(target_distribution)
+print(np.sum(target_distribution))
 
-iters = 1000
-output_num = 5
-bs = 20
-circuit = ("HEA_ZYZ", (100, 1))
+iters = 10000
+output_num = 10
+bs = 12
+circuit = ("HEA_ZYZ", (135, 1))
 # generate configuration dictionary for the solver
 config = {
     "max_inner_iterations": iters, 
@@ -145,20 +149,30 @@ config = {
     "check_for_convergence": False,
     "output_periodicity": int(iters//output_num)
 }
-sq_iters, sq_mmd, sq_tv, sq_time = run_squander(qbit_num=n_nodes, P_star=target_distribution, cliques=cliques, config=config, use_exact=True, circuit=circuit)
+
+repatitions = 1
+tvs = []
+for i in range(repatitions):
+    sq_iters, sq_mmd, sq_tv, sq_time, GQML = run_squander(qbit_num=n_nodes, P_star=target_distribution, cliques=cliques, config=config, use_exact=True, circuit=circuit)
+    tvs.append(sq_tv)
+plot_distributions(target_distribution, GQML, name="exact_dist")
 
 use_exact = False
 config = {"max_inner_iterations": iters, 
 	"batch_size": bs,
-    "batch_size_stochastic_gradient": 64,
+    "batch_size_stochastic_gradient": 1000,
     "check_for_convergence": False,
-    "sampling_rate": 8,
+    "sampling_rate": 256,
     "output_periodicity": int(iters//output_num)}
-sq_iters_stoch, sq_mmd_stoch, sq_tv_stoch, sq_time_stoch = run_squander(qbit_num=n_nodes, P_star=target_distribution, cliques=cliques, config=config, circuit=circuit)
+
+tvs_stoch = []
+for i in range(0):
+    sq_iters_stoch, sq_mmd_stoch, sq_tv_stoch, sq_time_stoch, GQML = run_squander(qbit_num=n_nodes, P_star=target_distribution, cliques=cliques, config=config, circuit=circuit)
+    tvs_stoch.append(sq_tv_stoch)
 
 print("\n" + "#"*50)
 print("Exact optimization tv distance: ", sq_tv[-1], ", elapsed time: ", sq_time)
-print("Stochastic optimization tv distance: ", sq_tv_stoch[-1], ", elapsed time: ", sq_time_stoch)
+# print("Stochastic optimization tv distance: ", sq_tv_stoch[-1], ", elapsed time: ", sq_time_stoch)
 
-plot_cost_fnx(sq_iters, sq_tv, sq_tv_stoch,  "tv")
-plot_cost_fnx(sq_iters, sq_mmd, sq_mmd_stoch,  "mmd")
+# plot_cost_fnx(sq_iters, sq_tv, sq_tv_stoch,  "tv")
+# plot_cost_fnx(sq_iters, sq_mmd, sq_mmd_stoch,  "mmd")
