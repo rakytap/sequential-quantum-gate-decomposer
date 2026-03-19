@@ -487,7 +487,6 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
             allU.append(U)
         return allU
     def OSR_with_local_alignment(self, pairs, cuts, Fnorm, tol, rank, use_softmax, method="dual_annealing"):
-        def ceil_log2(x): return 0 if x == 0 else (x-1).bit_length()
         if len(pairs) != 0:
             self.set_Cost_Function_Variant( 10 )
             #self.Run_Decomposition(pairs, False)
@@ -527,7 +526,7 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
             self.set_Cost_Function_Variant( 3 )
             allU = self.params_to_mat(best.x)
         else: allU = self.Umtx
-        return [(ceil_log2(rank), s) for U in allU for cut in cuts for rank, s in (N_Qubit_Decomposition_Guided_Tree.operator_schmidt_rank(U, self.qbit_num, cut, Fnorm, tol),)]
+        return [(N_Qubit_Decomposition_Guided_Tree.ceil_log2(rank), s) for U in allU for cut in cuts for rank, s in (N_Qubit_Decomposition_Guided_Tree.operator_schmidt_rank(U, self.qbit_num, cut, Fnorm, tol),)]
     def Run_Decomposition(self, pairs, finalizing=True):
         circ = self.get_circuit_from_pairs(pairs, finalizing)
         self.set_Gate_Structure(circ)
@@ -667,13 +666,32 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
         for x in range(total + 1):
             for rest in N_Qubit_Decomposition_Guided_Tree.compositions(total - x, parts - 1):
                 yield (x,) + rest
+    def solve_best_min_cnots(num_qubits, cuts, rank_kappa, topology, use_surplus=True):
+        m = len(topology)
+        cut_to_edges = [[i for i, z in enumerate(topology) if (z[0] in cut) != (z[1] in cut)] for cut in cuts]
+        total = 0
+        best_kappa = None
+        while True:
+            for edge_counts in N_Qubit_Decomposition_Guided_Tree.compositions(total, m):
+                if all(sum(edge_counts[j] for j in cut_to_edge)>=cut_bound[0] for cut_to_edge, cut_bound in zip(cut_to_edges, rank_kappa)):
+                    new_kappa = 0.0
+                    for cut_to_edge, cut_bound in zip(cut_to_edges, rank_kappa):
+                        coverage = sum(edge_counts[j] for j in cut_to_edge)
+                        if use_surplus:
+                            new_kappa += cut_bound[1] * (coverage - cut_bound[0])
+                        else: new_kappa += cut_bound[1] * coverage
+                    best_kappa = new_kappa if best_kappa is None else max(best_kappa, new_kappa)
+            if best_kappa is not None: break
+            total += 1
+        return total, best_kappa
     def solve_min_cnots(num_qubits, cuts, cut_bounds, topology):
         m = len(topology)
         cut_to_edges = [[i for i, z in enumerate(topology) if (z[0] in cut) != (z[1] in cut)] for cut in cuts]
         total = 0
         while True:
             for edge_counts in N_Qubit_Decomposition_Guided_Tree.compositions(total, m):
-                if all(sum(edge_counts[j] for j in cut_to_edge)>=cut_bound for cut_to_edge, cut_bound in zip(cut_to_edges, cut_bounds)): return total
+                if all(sum(edge_counts[j] for j in cut_to_edge)>=cut_bound for cut_to_edge, cut_bound in zip(cut_to_edges, cut_bounds)):
+                    return total
             total += 1
     def gen_all_min_cnots(num_qbits, topology=None): #OSR tells min CNOTs at most for 3 qubits 3, 4 qubits 6, 5 qubits 7
         import itertools
@@ -1070,7 +1088,11 @@ class qgd_Wide_Circuit_Optimization:
         L = topo_sort_partitions(circ, max_partition_size, parts)
         return [parts[i] for i in L], [struct_idxs[i] for i in L]
 
-    def OptimizeWideCircuit( self, circ: Circuit, parameters: np.ndarray, global_min=True, part_size_start=3, part_size_end=4 ) -> Tuple[Circuit, np.ndarray]:
+    def OptimizeWideCircuit( self, circ: Circuit, parameters: np.ndarray, global_min=True ) -> Tuple[Circuit, np.ndarray]:
+        part_size_start = self.max_partition_size
+        if part_size_end is None:
+            part_size_end = self.max_partition_size
+            if self.config.get("use_osr", False) or self.config.get("use_graph_search", False): part_size_end = 4
         count = CNOTGateCount(circ, 0)
         fingerprint_dict = {}
         for max_part_size in range(part_size_start, part_size_end + 1):
