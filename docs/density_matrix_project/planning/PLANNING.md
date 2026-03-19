@@ -317,6 +317,27 @@ Major methods / systems paper.
   explains where noise-aware partitioning helps and where additional
   architecture is required.
 
+### Current Task 4 Implementation Findings
+
+The current Task 4 implementation has now realized the minimum fused backend in
+one conservative concrete form:
+
+- descriptor-local unitary-island fusion on 1- and 2-qubit spans using the
+  density backend's local-unitary primitive,
+- an additive extension of the shared partitioned runtime and audit surface
+  rather than a second private runtime schema,
+- and real fused coverage plus exact agreement with the sequential density
+  baseline on representative 8- and 10-qubit structured workloads.
+
+The current benchmark outcome closes the Phase 3 performance rule through the
+diagnosis branch rather than the positive-threshold branch. On representative
+layered nearest-neighbor sparse workloads, the current fused baseline remains
+slower at 8 and 10 qubits and shows no peak-memory reduction, primarily because
+supported islands still remain partially unfused and the present Python-level
+fused-kernel path adds overhead. This now argues for benchmark-driven follow-on
+optimization or a more invasive channel-native branch, not for stronger
+acceleration claims in the baseline Phase 3 result.
+
 ### Phase 4: Broader Noisy VQE/VQA Workflows And Optimizer Studies
 
 ### Main Goal
@@ -461,38 +482,79 @@ fed by the exact-backend results rather than replacing them.
 
 To keep the project coherent, use explicit decision gates.
 
+**Scope note:** The labels `DG-1` … here are **program-level** gates for this
+document only. Phase detailed plans (`DETAILED_PLANNING_PHASE_2.md`,
+`DETAILED_PLANNING_PHASE_3.md`, …) define their own numbered gates in context;
+when cross-referencing, use the phase document’s wording as the checklist, and
+treat the questions below as the rollup across phases.
+
 ### DG-1: After Phase 2
 
 Question:
 
 - Is the exact noisy backend integrated enough to support reproducible training
-  experiments?
+  experiments (aligned with Phase 2 exit criteria and the Phase 2 handoff gate:
+  remaining gaps are primarily performance and execution cost, not missing
+  workflow integration)?
+
+If yes:
+
+- proceed with Phase 3 noise-aware partitioning and fusion as the main technical
+  track.
 
 If no:
 
 - do not move major effort into density-aware partitioning yet.
 
-### DG-2: During Phase 3
+### DG-2: At Phase 3 Completion
 
 Question:
 
-- Does the Phase 3 noise-aware partitioning/fusion architecture give enough
-  benefit on target noisy workloads?
+- Does the native noise-aware partitioned runtime plus limited real fused
+  execution satisfy the Phase 3 exit criteria and prove **sufficient for the
+  main Phase 3 scientific path**, as judged by the mandatory benchmark package
+  (not only raw speedup)?
+
+This is the same decision as the Phase 3 **Decision Gate** under §4 Phase 3.
 
 If yes:
 
-- keep the Phase 3 noise-aware architecture as the default.
+- keep the Phase 3 noise-aware architecture as the default main path,
+- and treat channel-native / IR-first fusion as deferred follow-on unless a
+  dedicated branch is opened with benchmark justification (see §5.1 and
+  ADR-007).
 
 If no:
 
-- prototype more invasive channel-native fusion as a separate research branch.
+- use the benchmark and profiling evidence to justify a separate research
+  branch for more invasive channel-native fusion.
 
-### DG-3: Before Large-Scale Phase 5 Experiments
+### DG-3: Phase 3 To Phase 4 Handoff
+
+Question:
+
+- Are remaining limitations primarily broader workflow surface, gradients, and
+  optimizer-facing features, rather than unresolved Phase 3 backend semantics or
+  performance architecture?
+
+If yes:
+
+- proceed to Phase 4 broader noisy VQE/VQA work.
+
+If no:
+
+- close Phase 3 backend debt before expanding workflow scope.
+
+### DG-4: Before Large-Scale Phase 5 Experiments
 
 Question:
 
 - Is exact dense density-matrix simulation still sufficient for the most
   important trainability experiments?
+
+If yes:
+
+- run Phase 5 at the planned scale on the exact backend and evidence bundle.
 
 If no:
 

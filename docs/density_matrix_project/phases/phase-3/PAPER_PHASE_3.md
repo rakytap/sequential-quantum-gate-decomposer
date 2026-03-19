@@ -324,6 +324,13 @@ The fused path may still remain unitary-island-based internally if:
 - the surrounding noisy semantics remain exact,
 - and the fused path is benchmarked on representative noisy workloads.
 
+Current Task 4 implementation findings now make this branch concrete. The
+delivered minimum fused path is descriptor-local unitary-island fusion on 1- and
+2-qubit spans using the density backend's local-unitary primitive. The fused
+runtime extends the shared Task 3 surface additively through an explicit fused
+runtime-path label plus auditable fused, supported-but-unfused, and deferred
+region records rather than through a second private runtime schema.
+
 ### 5.5 Density-Aware Planning Heuristic and Calibration
 
 The current cost model in `squander/partitioning/tools.py` is not sufficient to
@@ -450,6 +457,16 @@ make a stronger methodological promise:
 That second outcome is still scientifically valuable if the diagnosis is
 structured, reproducible, and clearly linked to the follow-on architecture
 decision gate.
+
+The current Task 4 baseline already illustrates that second outcome. On
+representative 8- and 10-qubit layered nearest-neighbor sparse workloads, the
+real fused path preserves exact semantics and exercises substantial fused
+coverage, but the measured median runtime remains slower than the plain
+partitioned baseline and peak memory does not improve. The current benchmarked
+diagnosis points primarily to supported islands that still remain unfused plus
+Python-level fused-kernel overhead in the present baseline implementation. Paper
+2 should therefore frame the current performance result as diagnosis-grounded
+and architecture-informing rather than as a positive acceleration claim.
 
 ## 8. Expected Scientific Claims
 

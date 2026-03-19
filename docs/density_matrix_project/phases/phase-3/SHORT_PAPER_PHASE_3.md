@@ -219,6 +219,16 @@ It requires:
   diagnosis of why the native Phase 3 baseline still leaves a dominant
   bottleneck.
 
+Current Task 4 implementation findings already sharpen that interpretation. The
+implemented fused baseline is now a concrete descriptor-local unitary-island
+path built on the density backend's local-unitary primitive, not only a planned
+future branch. Representative 8- and 10-qubit layered nearest-neighbor sparse
+workloads do exercise that real fused path and remain exact, but they currently
+close the rule through the diagnosis branch rather than the measured-benefit
+branch: the runtime remains slower and peak memory does not improve because many
+supported islands remain unfused and the current Python-level fused-kernel path
+adds overhead.
+
 ## 5. Scientific Contribution
 
 The planned scientific value of Phase 3 is that it moves beyond two weaker

@@ -38,6 +38,13 @@ local-noise placement patterns. Success is defined by exact semantic
 preservation plus either measurable runtime or memory benefit on representative
 cases or a benchmark-grounded diagnosis of the dominant remaining bottleneck.
 
+Current Task 4 findings already make that interpretation more concrete. The
+baseline implementation now exercises a real descriptor-local unitary-island
+fused path on representative 8- and 10-qubit structured workloads and preserves
+exact semantics, but it currently closes the performance rule through the
+diagnosis branch rather than through a positive speedup or memory-reduction
+threshold.
+
 The expected Phase 3 result is a defensible methods milestone between exact
 workflow integration and later noisy optimizer and trainability studies. By
 making noisy mixed-state circuits native objects of partition planning and

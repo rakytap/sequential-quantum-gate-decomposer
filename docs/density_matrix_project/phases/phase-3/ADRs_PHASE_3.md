@@ -363,6 +363,27 @@ result.
 - Channel-native fusion remains an explicit future branch instead of an implicit
   unfinished requirement.
 
+### Implementation Note (Task 4 Findings)
+
+The current Task 4 implementation realizes this decision conservatively through
+descriptor-local unitary-island fusion on 1- and 2-qubit spans using the
+density backend's local-unitary primitive.
+
+It extends the shared Task 3 runtime surface additively rather than replacing
+it:
+
+- fused execution is labeled through an explicit fused runtime path,
+- fused, supported-but-unfused, and deferred regions are recorded as auditable
+  evidence categories,
+- and the runtime schema version remains shared with the Task 3 baseline rather
+  than splitting into a second private fusion-only schema.
+
+Representative 8- and 10-qubit layered nearest-neighbor sparse workloads now
+exercise the real fused path and preserve exact noisy semantics, but the current
+benchmark result closes the performance rule through the diagnosis branch rather
+than the positive-threshold branch because runtime remains slower and peak
+memory does not improve on those representative cases.
+
 ### Rejected Alternatives
 
 - Stop at planner/runtime representation without real fused execution.

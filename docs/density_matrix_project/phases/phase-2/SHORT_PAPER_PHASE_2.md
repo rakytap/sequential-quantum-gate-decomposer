@@ -120,7 +120,11 @@ presence and shared workflow identity.
 This short paper documents the first major integration step that closes that
 gap. Its purpose is to present the density-matrix path as a usable backend for
 one exact noisy variational workflow while keeping the scientific claim narrow,
-defensible, and clearly separated from later acceleration work.
+defensible, and clearly separated from later acceleration work. In particular,
+density-aware partitioning and fusion are future work for Phase 3, not current
+Paper 1 results; density-matrix gradients and approximate scaling are future
+work beyond the current Paper 1 claim; and broad noisy-VQA workflow generality
+beyond the canonical supported path is not a current Paper 1 claim.
 
 ## 2. Problem Statement
 

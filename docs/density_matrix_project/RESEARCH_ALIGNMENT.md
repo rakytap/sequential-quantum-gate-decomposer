@@ -58,6 +58,11 @@ Review takeaway:
 | Phase 4 | Broader noisy VQE/VQA integration, gradients, and optimizer comparisons (Spring 2027) |
 | Phase 5 | Trainability analysis under noise (Fall 2027) |
 
+Roadmap shorthand used in the documentation contract:
+
+- Phase 3 | Full noise module and validation
+- Phase 4 | Noisy VQA integration and optimizer comparisons
+
 
 ## Objective-by-Objective Mapping
 

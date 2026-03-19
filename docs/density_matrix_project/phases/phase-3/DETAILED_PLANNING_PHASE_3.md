@@ -835,6 +835,23 @@ real runtime result.
   - left intentionally unfused but still supported,
   - or explicitly deferred beyond the minimum Phase 3 claim.
 
+#### Current Implementation Findings
+
+- The delivered minimum fused path is descriptor-local unitary-island fusion on
+  1- and 2-qubit spans using the density backend local-unitary primitive rather
+  than a separate private fusion-only runtime.
+- The shared Task 3 runtime contract remained additive: the runtime schema
+  stayed stable while fused-region classifications and an explicit fused runtime
+  path were added on top of the existing audit surface.
+- Representative 8- and 10-qubit layered nearest-neighbor sparse structured
+  workloads now exercise a real fused path and preserve exact noisy semantics
+  against the sequential density baseline within the frozen thresholds.
+- The current Task 4 benchmark result closes the performance-evidence rule via
+  the diagnosis branch rather than the positive-threshold branch. On those
+  representative structured cases, the current fused baseline remains slower and
+  does not reduce peak memory, mainly because supported islands remain partially
+  unfused and the present Python-level fused-kernel path adds overhead.
+
 ### Task 5: Noise-Aware Planning Heuristic And Calibration
 
 #### Goal

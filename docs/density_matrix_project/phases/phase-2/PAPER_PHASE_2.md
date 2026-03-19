@@ -33,13 +33,12 @@ Supporting claims:
 - publication-grade validation and reproducibility evidence
 
 Explicit non-claims:
-- noise-aware partitioning and fusion are future work for Phase 3, where noisy
-  mixed-state circuits become first-class partitioning inputs, not current
+- density-aware partitioning and fusion are future work for Phase 3, not current
   Paper 1 results
-- density-matrix gradients are Phase 4+ work and approximate scaling remains
-  later future work beyond the current Paper 1 claim
-- broad noisy-VQA workflow generality beyond the canonical supported path is
-  Phase 4+ work, not a current Paper 1 claim
+- density-matrix gradients and approximate scaling are future work beyond the
+  current Paper 1 claim
+- broad noisy-VQA workflow generality beyond the canonical supported path is not
+  a current Paper 1 claim
 - broad manual circuit parity or full `qgd_Circuit` parity is not a current
   Paper 1 claim
 - optimizer-comparison studies and trainability analysis belong to later phases

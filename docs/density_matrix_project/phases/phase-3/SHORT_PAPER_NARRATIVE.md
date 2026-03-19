@@ -113,6 +113,16 @@ with at least one real fused execution mode on eligible substructures. This is
 stronger than a planner-only story, but more bounded than a fully channel-native
 fusion architecture.
 
+Current Task 4 implementation findings sharpen that boundary. The baseline fused
+result is now a concrete descriptor-local unitary-island path built on the
+density backend's local-unitary primitive, not an abstract future possibility.
+On representative 8- and 10-qubit structured workloads this path is real and
+semantically exact, but it currently supports the diagnosis branch of the Phase
+3 performance rule rather than a positive speedup claim. That is still a
+meaningful methods result because it exposes where limited exact fusion helps,
+where supported islands remain outside the fused core, and where more invasive
+follow-on work would need benchmark justification.
+
 Fourth, the planned benchmark package studies representative noisy workloads
 rather than only synthetic kernels. The continuity anchor is the frozen Phase 2
 noisy XXZ `HEA` workflow, and the methods stress matrix is built from structured

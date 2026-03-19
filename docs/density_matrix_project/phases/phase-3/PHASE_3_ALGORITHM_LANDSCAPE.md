@@ -352,6 +352,16 @@ The recommended implementation and evaluation ladder is:
 - and local channel fusion considered only where support remains very small and
   exact semantics are easy to validate.
 
+Current Task 4 implementation findings support this choice. The first delivered
+real fused path is exactly this conservative descriptor-local unitary-island
+baseline, realized through the density backend's local-unitary primitive rather
+than through a broader channel-native architecture. The resulting benchmark
+signal currently favors the diagnosis branch of the Phase 3 performance rule:
+representative structured workloads preserve exact semantics with real fused
+coverage, but the current baseline remains slower and does not yet reduce peak
+memory, which strengthens the case for benchmark-driven follow-on optimization
+instead of premature architecture escalation.
+
 ### 5.4 Validation Backbone
 
 - sequential `NoisyCircuit` remains the internal exact oracle,

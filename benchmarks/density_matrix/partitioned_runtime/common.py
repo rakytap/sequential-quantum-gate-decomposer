@@ -18,6 +18,7 @@ from squander.partitioning.noisy_planner import NoisyPartitionDescriptorSet  # n
 from squander.partitioning.noisy_runtime import (  # noqa: E402
     NoisyRuntimeExecutionResult,
     execute_partitioned_density,
+    execute_partitioned_density_fused,
     execute_sequential_density_reference,
 )
 
@@ -56,10 +57,25 @@ def build_density_comparison_metrics(
 def execute_partitioned_with_reference(
     descriptor_set: NoisyPartitionDescriptorSet,
     parameters: np.ndarray,
+    *,
+    allow_fusion: bool = False,
 ) -> tuple[NoisyRuntimeExecutionResult, DensityMatrix, dict[str, Any]]:
-    runtime_result = execute_partitioned_density(descriptor_set, parameters)
+    runtime_result = (
+        execute_partitioned_density_fused(descriptor_set, parameters)
+        if allow_fusion
+        else execute_partitioned_density(descriptor_set, parameters)
+    )
     reference_density = execute_sequential_density_reference(descriptor_set, parameters)
     metrics = build_density_comparison_metrics(
         runtime_result.density_matrix, reference_density
     )
     return runtime_result, reference_density, metrics
+
+
+def execute_fused_with_reference(
+    descriptor_set: NoisyPartitionDescriptorSet,
+    parameters: np.ndarray,
+) -> tuple[NoisyRuntimeExecutionResult, DensityMatrix, dict[str, Any]]:
+    return execute_partitioned_with_reference(
+        descriptor_set, parameters, allow_fusion=True
+    )
