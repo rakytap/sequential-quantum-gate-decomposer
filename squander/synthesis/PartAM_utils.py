@@ -1,10 +1,13 @@
-import numpy as np
-from typing import List, Tuple, Set, FrozenSet
-from itertools import permutations, combinations
-from squander.gates.qgd_Circuit import qgd_Circuit as Circuit
 import heapq
 import logging
 from collections import defaultdict
+from dataclasses import dataclass
+from itertools import combinations, permutations
+from typing import Dict, FrozenSet, List, Set, Tuple
+
+import numpy as np
+
+from squander.gates.qgd_Circuit import qgd_Circuit as Circuit
 
 
 # ============================================================================
@@ -306,10 +309,6 @@ def derive_result_from_automorphism(sigma, P_i, P_o, circuit, parameters, N):
 
 
 # ============================================================================
-# Distance & Cost Calculations
-# ============================================================================
-
-# ============================================================================
 # Data Classes
 # ============================================================================
 
@@ -517,6 +516,18 @@ class PartitionCandidate:
         part_circuit = partition.synthesised_circuits[self.topology_idx][self.permutation_idx]
         part_circuit = part_circuit.Remap_Qbits(self.node_mapping, N)
         return part_circuit, part_parameters
+
+
+@dataclass(frozen=True)
+class PartitionScoreData:
+    mini_topologies: Tuple[Tuple[Tuple[int, int], ...], ...]
+    topology_candidates: Tuple[Tuple[Tuple[int, int], ...], ...]
+    permutations_pairs: Tuple[
+        Tuple[Tuple[Tuple[int, ...], Tuple[int, ...]], ...], ...
+    ]
+    circuit_structures: Tuple[Tuple[Tuple[int, ...], ...], ...]
+    qubit_map: Dict[int, int]
+    involved_qbits: Tuple[int, ...]
 
 
 # ============================================================================
