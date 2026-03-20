@@ -9,10 +9,11 @@
 ## Draft Status
 
 This document began as a planning-facing full-paper draft for Phase 3. It is
-now partially implementation-backed through the delivered Task 4, Task 5, and
-Task 6 evidence surfaces, including the emitted `phase3_task6` correctness
-bundles. Task 7 performance closure and the final publication-facing package
-still require further tightening before submission-ready wording is frozen.
+now implementation-backed through the delivered Task 4, Task 5, Task 6, and
+Task 7 evidence surfaces, including the emitted `phase3_task6` correctness
+bundles and `phase3_task7` benchmark bundles. The final publication-facing
+package still requires further tightening before submission-ready wording is
+frozen.
 
 ## Abstract Summary
 
@@ -43,9 +44,9 @@ Supporting claims:
   execution mode on eligible substructures
 - a benchmark-calibrated density-aware planning policy on a bounded candidate
   surface
-- a machine-reviewable correctness and reproducibility package, with the
-  remaining performance closure still governed by the phase-level
-  threshold-or-diagnosis rule
+- a machine-reviewable correctness, benchmark, and reproducibility package, with
+  the current benchmark closure now occurring through the diagnosis branch of
+  the phase-level threshold-or-diagnosis rule
 
 Explicit non-claims:
 - fully channel-native or superoperator-native fused noisy blocks are outside
@@ -105,9 +106,9 @@ The purpose of Phase 3 is to bridge that gap. The question is no longer whether
 SQUANDER can support an exact noisy workflow at all. The question is whether
 partitioning and limited fusion can be extended so noisy mixed-state circuits
 become native planner objects while exact noisy semantics remain intact. Tasks 4
-through 6 now close that correctness-side backend bridge on the frozen support
-surface; the remaining open work is the performance and publication layer built
-on top of it.
+through 7 now close that correctness-side and benchmark-side backend bridge on
+the frozen support surface; the remaining open work is the final publication
+layer built on top of it.
 
 This paper is therefore not a workflow-surface paper and not an approximate
 scaling paper. It is a methods and systems paper about making noisy
@@ -237,9 +238,9 @@ At the start of Phase 3, the codebase already provides:
 - and a mature state-vector partitioning and gate-fusion subsystem in
   `squander/partitioning` together with `Gates_block`.
 
-### 3.2 What Still Remains Open After Tasks 4-6
+### 3.2 What Still Remains Open After Tasks 4-7
 
-Tasks 4 through 6 now close the native backend correctness side of the Phase 3
+Tasks 4 through 7 now close the native backend and benchmark side of the Phase 3
 problem on the frozen support surface:
 
 - noisy mixed-state circuits are native planner inputs on the required Phase 3
@@ -253,13 +254,15 @@ problem on the frozen support surface:
   `max_partition_qubits` selection rule over a bounded candidate family,
 - and Task 6 now validates that delivered surface on `25` counted supported
   cases, with a bounded Qiskit Aer slice of `4` cases and `17` explicit
-  unsupported-boundary cases kept visible in the emitted bundle family.
+  unsupported-boundary cases kept visible in the emitted bundle family,
+- and Task 7 now records the representative benchmark package on `34` counted
+  supported cases, with `6` representative review cases closing the
+  phase-level threshold-or-diagnosis rule through the diagnosis branch.
 
 What still remains open is therefore narrower and more publication-oriented:
 
-- the representative Task 7 performance and sensitivity package,
 - the final Task 8 publication-facing manifest and section-level evidence
-  packaging,
+  packaging built on top of the emitted Task 7 bundle family,
 - and the explicitly deferred follow-on branches such as fully channel-native
   fused noisy blocks and broader Phase 4 workflow growth.
 
@@ -507,20 +510,22 @@ That second outcome is still scientifically valuable if the diagnosis is
 structured, reproducible, and clearly linked to the follow-on architecture
 decision gate.
 
-The current Task 4 baseline already illustrates that second outcome. On
-representative 8- and 10-qubit layered nearest-neighbor sparse workloads, the
-real fused path preserves exact semantics and exercises substantial fused
-coverage, but the measured median runtime remains slower than the plain
-partitioned baseline and peak memory does not improve. The current benchmarked
-diagnosis points primarily to supported islands that still remain unfused plus
-Python-level fused-kernel overhead in the present baseline implementation. Paper
-2 should therefore frame the current performance result as diagnosis-grounded
-and architecture-informing rather than as a positive acceleration claim.
+The current Task 7 benchmark package now illustrates that second outcome more
+fully. Across the `6` representative review cases, one primary-seed sparse
+structured case for each required family and size, the real fused path
+preserves exact semantics and remains benchmark-visible, but none reaches the
+positive threshold. All `6` review cases close through the diagnosis branch:
+runtime remains slower than the sequential reference, peak memory does not
+improve, and the dominant per-case explanation is that many supported islands
+still remain unfused while the present fused path adds Python-level overhead.
+Paper 2 should therefore frame the current performance result as
+diagnosis-grounded and architecture-informing rather than as a positive
+acceleration claim.
 
 ## 8. Expected Scientific Claims
 
-With the delivered Task 4 through Task 6 package in place, the exactness side
-of the Phase 3 paper can already support the following claims:
+With the delivered Task 4 through Task 7 package in place, the Phase 3 paper can
+already support the following claims:
 
 - noisy mixed-state circuits are first-class partitioning inputs in SQUANDER,
 - the partitioned runtime preserves exact noisy semantics relative to the
@@ -530,9 +535,10 @@ of the Phase 3 paper can already support the following claims:
 - the current correctness package is machine-reviewable rather than prose-only,
   with `25` counted supported cases and `17` explicit unsupported-boundary
   cases,
-- and the remaining performance and memory behavior on representative workloads
-  still needs to be characterized and scientifically interpreted through the
-  Task 7 package,
+- the current Task 7 package characterizes representative performance and
+  sensitivity on `34` counted supported benchmark cases, including `6`
+  representative review cases that close the benchmark rule through the
+  diagnosis branch rather than through a measured speedup claim,
 - and fully channel-native fused noisy blocks remain an explicit follow-on
   branch rather than an unacknowledged missing piece.
 
@@ -600,14 +606,16 @@ serve as a trustworthy comparison point.
 ## 11. Conclusion
 
 Phase 3 is the natural methods follow-on to the exact noisy integration result
-of Phase 2. The planned contribution is not merely to schedule noisy circuits
+of Phase 2. The current contribution is not merely to schedule noisy circuits
 more cleverly, and not to broaden the application surface prematurely. It is to
 make noisy mixed-state circuits native objects of partition planning and runtime
 execution while preserving the exact semantics that define the density backend's
-scientific value. If the planned validation and benchmark package closes
-successfully, Paper 2 will provide the central methods and systems result in the
-density-matrix publication ladder and the backend foundation needed for later
-noisy optimizer and trainability studies.
+scientific value. The delivered validation and benchmark package now closes the
+Phase 3 rule through diagnosis-grounded benchmark evidence rather than through a
+speedup claim. If Task 8 turns that emitted evidence into a final publication-
+facing package cleanly, Paper 2 will provide the central methods and systems
+result in the density-matrix publication ladder and the backend foundation
+needed for later noisy optimizer and trainability studies.
 
 ## References
 

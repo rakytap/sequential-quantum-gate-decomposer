@@ -1006,6 +1006,43 @@ partitioned runtime exists.
   classifications against the underlying case records,
 - and profiler artifacts when they materially affect conclusions.
 
+#### Current Implementation Findings
+
+- Task 7 is now materialized through
+  `benchmarks/density_matrix/performance_evidence/`, with one
+  `task7_validation_pipeline.py` entry point that emits eight
+  machine-reviewable story bundles under
+  `benchmarks/density_matrix/artifacts/phase3_task7/`.
+- The current Task 7 benchmark package remains aligned with the current Task 6
+  correctness package and the currently selected bounded Task 5
+  `span_budget_q2` surface rather than reopening the broader comparison family.
+- The current counted supported benchmark matrix contains `34` positive cases:
+  - `4` continuity-anchor cases at 4, 6, 8, and 10 qubits,
+  - and `30` structured-family cases across the three required families at 8
+    and 10 qubits.
+- The current structured sensitivity surface keeps the frozen methods identity
+  explicit:
+  - one primary-seed sparse / periodic / dense slice for each required family
+    and size,
+  - plus two additional sparse-seed reruns for each family and size to expose
+    rerun sensitivity without turning the matrix into a broad benchmark zoo.
+- The current representative review set contains `6` counted supported
+  structured cases, one primary-seed sparse case for each required family and
+  size.
+- All `6` representative review cases preserve the frozen exactness thresholds,
+  but none satisfies the positive performance threshold. The current Task 7
+  benchmark package therefore closes the performance rule through the diagnosis
+  branch rather than the measured-benefit branch.
+- The current diagnosis surface shows that the benchmarked fused path is real on
+  all review cases, but the dominant bottlenecks remain:
+  - supported islands left unfused,
+  - slower wall-clock runtime than the sequential reference,
+  - and no peak-memory reduction on the representative review set.
+- The current Task 7 summary-consistency bundle closes the benchmark layer
+  through diagnosis-grounded closure with `34` counted supported cases, `6`
+  diagnosis-only cases, `0` positive-threshold pass cases, and carry-forward of
+  the `17` explicit Task 6 boundary cases.
+
 ### Task 8: Paper 2 Evidence And Documentation Bundle
 
 #### Goal

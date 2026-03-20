@@ -19,9 +19,10 @@ Its purpose is:
 
 Phase 3 is implementation-ready for the frozen baseline contract.
 
-The remaining open work is implementation work plus the benchmark-driven branch
-decision described in the planning and ADR docs. That decision gate is a Phase 3
-outcome question, not a blocker to starting the implementation.
+At the time this checklist was closed, the remaining open work was
+implementation work plus the benchmark-driven branch decision described in the
+planning and ADR docs. That decision gate was a Phase 3 outcome question, not a
+blocker to starting the implementation.
 
 Deliberately deferred items still exist, but they are now explicit trade-offs
 rather than hidden specification gaps.

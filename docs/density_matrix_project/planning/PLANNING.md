@@ -317,7 +317,7 @@ Major methods / systems paper.
   explains where noise-aware partitioning helps and where additional
   architecture is required.
 
-### Current Task 4 Implementation Findings
+### Current Task 4 Through Task 7 Implementation Findings
 
 The current Task 4 implementation has now realized the minimum fused backend in
 one conservative concrete form:
@@ -337,6 +337,25 @@ supported islands still remain partially unfused and the present Python-level
 fused-kernel path adds overhead. This now argues for benchmark-driven follow-on
 optimization or a more invasive channel-native branch, not for stronger
 acceleration claims in the baseline Phase 3 result.
+
+Current Task 7 findings now make that diagnosis package concrete at the phase
+level. The emitted `phase3_task7` bundles record:
+
+- `34` counted supported benchmark cases total,
+- `4` continuity-anchor cases,
+- `30` structured benchmark cases across the required families, sizes,
+  noise-placement patterns, and rerun-sensitive seed slices,
+- `6` representative review cases, one primary-seed sparse structured case for
+  each required family and size,
+- `0` positive-threshold pass cases,
+- `6` diagnosis-only representative cases,
+- and carry-forward of the `17` explicit Task 6 boundary cases into the summary
+  layer.
+
+The current benchmark closure is therefore not only a Task 4 fused-runtime
+finding anymore. It is a fully emitted Task 7 performance-and-sensitivity
+package that closes the Phase 3 rule through diagnosis-grounded benchmark
+evidence rather than through a speedup claim.
 
 ### Phase 4: Broader Noisy VQE/VQA Workflows And Optimizer Studies
 

@@ -2,11 +2,11 @@
 
 ## Draft Status
 
-This is now a partially implementation-backed draft abstract for the Phase 3
-Paper 2 package. Task 4 through Task 6 wording should track the delivered
-backend, correctness package, and emitted `phase3_task6` bundles directly.
-Task 7 performance rollups and final Phase 3 publication packaging still
-require further tightening before submission-ready wording is frozen.
+This is now an implementation-backed draft abstract for the Phase 3 Paper 2
+package. Task 4 through Task 7 wording should track the delivered backend,
+correctness package, and emitted `phase3_task6` and `phase3_task7` bundles
+directly. Final Phase 3 publication packaging still requires further tightening
+before submission-ready wording is frozen.
 
 Exact density-matrix simulation is a scientifically strong foundation for noisy
 variational quantum research, but its computational cost quickly limits the
@@ -44,23 +44,28 @@ local-noise placement patterns. Success is defined by exact semantic
 preservation plus either measurable runtime or memory benefit on representative
 cases or a benchmark-grounded diagnosis of the dominant remaining bottleneck.
 
-Current Task 4 and Task 5 findings already make that interpretation more
-concrete. The baseline implementation now exercises a real descriptor-local
+Current Task 4 through Task 7 findings now make that interpretation more
+concrete. The baseline implementation exercises a real descriptor-local
 unitary-island fused path on representative 8- and 10-qubit structured
 workloads and preserves exact semantics, while the planning layer calibrates a
 bounded noisy-planner candidate family against the frozen benchmark inventory.
-The current performance interpretation still closes the Phase 3 rule through the
+The emitted Task 7 benchmark package records `34` counted supported cases total,
+including `4` continuity anchors and `30` structured cases, with a
+representative review set of `6` primary-seed sparse structured cases. The
+current performance interpretation still closes the Phase 3 rule through the
 diagnosis branch rather than through a positive speedup or memory-reduction
-threshold, and the benchmark-grounded selected winner inside the bounded
-candidate family should be treated as an auditable selection outcome rather than
-as a permanently frozen identity claim.
+threshold: all `6` representative review cases remain slower than the
+sequential reference, do not reduce peak memory, and point primarily to
+supported islands left unfused plus Python-level fused-path overhead.
 
-Task 6 now closes the correctness side of that package on the currently selected
-`span_budget_q2` planning surface. The emitted Task 6 bundles record `25`
-counted supported cases, Qiskit Aer agreement on all `3` mandatory microcases
-plus the 4-qubit continuity anchor, and `17` explicit unsupported-boundary
-cases kept visible across planner-entry, descriptor-generation, and runtime-
-stage layers.
+Task 6 now closes the correctness side of that package on the currently
+selected `span_budget_q2` planning surface. The emitted Task 6 bundles record
+`25` counted supported cases, Qiskit Aer agreement on all `3` mandatory
+microcases plus the 4-qubit continuity anchor, and `17` explicit unsupported-
+boundary cases kept visible across planner-entry, descriptor-generation, and
+runtime-stage layers. The Task 7 summary-consistency bundle then carries that
+boundary evidence forward while closing the benchmark layer through
+diagnosis-grounded rather than speedup-grounded completion.
 
 The expected Phase 3 result is a defensible methods milestone between exact
 workflow integration and later noisy optimizer and trainability studies. By

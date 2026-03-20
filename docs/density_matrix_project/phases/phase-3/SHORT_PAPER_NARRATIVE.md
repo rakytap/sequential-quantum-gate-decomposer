@@ -2,10 +2,10 @@
 
 ## Draft Status
 
-This is now a partially implementation-backed narrative short-paper surface for
-the Phase 3 Paper 2 package. Task 4 through Task 6 wording should track the
-delivered backend and correctness package directly, while Task 7 performance
-closure and final publication packaging still remain open.
+This is now an implementation-backed narrative short-paper surface for the
+Phase 3 Paper 2 package. Task 4 through Task 7 wording should track the
+delivered backend, correctness package, and benchmark package directly, while
+final publication packaging remains open.
 
 ## Abstract
 
@@ -100,10 +100,9 @@ has:
 What remained missing at the start of Phase 3 was a backend architecture in
 which noisy mixed-state circuits are partitioned in their own right rather than
 treated as unitary regions interrupted by noise boundaries that the planner did
-not understand. Tasks 1 through 6 now close that native-backend correctness
-side on the frozen support surface. The main open work is now the
-performance-interpretation and publication-packaging layer that sits on top of
-the delivered backend.
+not understand. Tasks 1 through 7 now close that native-backend and benchmark
+layer on the frozen support surface. The main open work is now the final
+publication-packaging layer that sits on top of the delivered backend.
 
 ## 2. Why Phase 3 Matters
 
@@ -123,7 +122,7 @@ That is the central Paper 2 narrative.
 
 ## 3. Planned Contribution
 
-The planned contribution is deliberately bounded.
+The contribution is deliberately bounded.
 
 First, Phase 3 defines a canonical noisy mixed-state planner surface equivalent
 to an ordered `NoisyCircuit` operation stream. This gives the planner direct
@@ -132,7 +131,7 @@ access to gate order, noise placement, qubit support, and parameter structure.
 Second, the phase defines partition descriptors that preserve exact gate/noise
 order rather than reducing noise to boundary-only metadata.
 
-Third, the planned result includes an executable partitioned density runtime
+Third, the delivered result includes an executable partitioned density runtime
 with at least one real fused execution mode on eligible substructures. This is
 stronger than a planner-only story, but more bounded than a fully channel-native
 fusion architecture.
@@ -147,13 +146,23 @@ meaningful methods result because it exposes where limited exact fusion helps,
 where supported islands remain outside the fused core, and where more invasive
 follow-on work would need benchmark justification.
 
-Fourth, the planned benchmark package studies representative noisy workloads
+Fourth, the benchmark package studies representative noisy workloads
 rather than only synthetic kernels. The continuity anchor is the frozen Phase 2
 noisy XXZ `HEA` workflow, and the methods stress matrix is built from structured
 noisy `U3` / `CNOT` families under sparse, periodic, and dense local-noise
-placement. In the current Task 5 implementation, that benchmark package
-calibrates a bounded candidate family on the noisy planner surface and keeps the
-broader algorithm ladder as explicit design-space context.
+placement. In the current delivered Task 7 package, that benchmark layer now
+records `34` counted supported cases:
+
+- `4` continuity-anchor cases,
+- and `30` structured cases across the three required families at 8 and 10
+  qubits.
+
+The representative review set contains `6` primary-seed sparse structured
+cases, one per family and size. All `6` preserve exact semantics and exercise a
+real fused path, but none reaches the positive threshold. The current diagnosis
+therefore points less to an absence of fusion than to the fact that many
+supported islands still remain unfused and the present fused path stays slower
+than the sequential reference with no peak-memory reduction.
 
 ## 4. Validation Story
 
@@ -165,7 +174,7 @@ current 4-qubit continuity slice. The key paper requirement is not just that the
 path runs, but that it preserves the exact semantics of the sequential density
 baseline within strict thresholds.
 
-The final benchmark package should therefore be able to answer three questions:
+The current benchmark package can now answer three questions:
 
 1. Does the partitioned runtime preserve exact noisy mixed-state semantics?
 2. Does the backend provide at least one real fused execution path rather than
@@ -178,10 +187,21 @@ For the currently delivered Task 5 surface, the third question should be read as
 benchmark-grounded selection rule?" rather than as "which broad planner family
 has now been permanently settled as the final winner?"
 
-For the currently delivered Task 6 surface, the exactness side of that story is
-already implementation-backed: one shared correctness package records `25`
+For the currently delivered Task 6 and Task 7 surfaces, that story is now
+implementation-backed end to end: one shared correctness package records `25`
 counted supported cases, `4` required external-reference cases, and explicit
-negative boundary evidence instead of relying on prose-only validation claims.
+negative boundary evidence, while the Task 7 benchmark package records `34`
+counted supported benchmark cases and keeps the `17` carried-forward Task 6
+boundary cases visible instead of relying on prose-only performance claims.
+
+The representative review set is deliberately smaller and more interpretable
+than the full benchmark matrix. It contains `6` primary-seed sparse structured
+cases, one for each required family and size. All `6` remain exact and exercise
+the real fused path, but none reaches the positive threshold. The current
+benchmark layer therefore closes through diagnosis-grounded limitation reporting
+rather than through a speedup claim, which is still scientifically valuable
+because it makes the next architecture question benchmark-rooted instead of
+speculative.
 
 ## 5. Scientific Positioning
 

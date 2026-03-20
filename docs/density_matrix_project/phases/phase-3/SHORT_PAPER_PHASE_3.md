@@ -2,10 +2,10 @@
 
 ## Draft Status
 
-This document is now a partially implementation-backed short-paper draft for
-Phase 3. Task 4 through Task 6 wording should track the delivered backend and
-correctness package directly, while Task 7 performance closure and final
-publication packaging still remain to be tightened.
+This document is now an implementation-backed short-paper draft for Phase 3.
+Task 4 through Task 7 wording should track the delivered backend, correctness
+package, and benchmark package directly, while final publication packaging
+still remains to be tightened.
 
 ## Abstract
 
@@ -95,9 +95,9 @@ This creates a natural Phase 3 methods question. SQUANDER already has:
 What it did not yet have at the start of Phase 3 was a native way to partition
 and partially fuse noisy mixed-state circuits while preserving the exact
 semantics that made the Phase 2 backend scientifically valuable in the first
-place. Tasks 1 through 6 now close that native-backend correctness side on the
-frozen support surface, leaving performance interpretation and final
-publication-facing packaging as the main open work.
+place. Tasks 1 through 7 now close that native-backend and benchmark layer on
+the frozen support surface, leaving the final publication-facing packaging as
+the main open work.
 
 The purpose of Phase 3 is therefore not to broaden noisy VQE/VQA surface or to
 introduce approximate scaling. It is to make partitioning and limited fusion
@@ -120,11 +120,16 @@ At the start of Phase 3 that problem had four parts:
    real fused execution on representative noisy workloads.
 4. The current cost model was state-vector-oriented and noise-blind.
 
-Tasks 1 through 6 now close the first three parts on the frozen support
-surface, and Task 5 narrows the delivered planning result to a benchmark-
-grounded `max_partition_qubits` selection rule over a bounded candidate family.
-The main remaining open work is the representative performance package and final
-publication-facing evidence packaging.
+Tasks 1 through 7 now close those parts on the frozen support surface:
+
+- Tasks 1 through 4 plus Task 6 close the native-backend correctness side,
+- Task 5 narrows the delivered planning result to a benchmark-grounded
+  `max_partition_qubits` selection rule over a bounded candidate family,
+- and Task 7 turns the benchmark layer into one machine-reviewable performance
+  and sensitivity package.
+
+The main remaining open work is the final publication-facing evidence
+packaging.
 
 This means that the main scientific question for Phase 3 is:
 
@@ -253,21 +258,26 @@ It requires:
   diagnosis of why the native Phase 3 baseline still leaves a dominant
   bottleneck.
 
-Current Task 4 implementation findings already sharpen that interpretation. The
-implemented fused baseline is now a concrete descriptor-local unitary-island
-path built on the density backend's local-unitary primitive, not only a planned
-future branch. Representative 8- and 10-qubit layered nearest-neighbor sparse
-workloads do exercise that real fused path and remain exact, but they currently
-close the rule through the diagnosis branch rather than the measured-benefit
-branch: the runtime remains slower and peak memory does not improve because many
-supported islands remain unfused and the current Python-level fused-kernel path
-adds overhead.
+Current Task 7 implementation findings now sharpen that interpretation. The
+shared Task 7 package records `34` counted supported benchmark cases:
 
-Current Task 6 findings close the exactness side of that interpretation. The
-shared correctness package now proves the selected candidate on `25` counted
-supported cases, `4` required external-reference cases, and one explicit
-unsupported-boundary bundle rather than leaving validation as prose-only
-expectation.
+- `4` continuity-anchor cases,
+- and `30` structured cases across the required families, sizes, noise
+  placements, and rerun-sensitive seed slices.
+
+The representative review set contains `6` counted supported structured cases,
+one primary-seed sparse case for each required family and size. All `6`
+representative cases preserve exact semantics and exercise a real fused path,
+but none reaches the measured-benefit threshold. The benchmark layer therefore
+closes the rule through the diagnosis branch: runtime remains slower than the
+sequential reference, peak memory does not improve, and the dominant per-case
+diagnosis points to supported islands left unfused plus Python-level fused-path
+overhead.
+
+Current Task 6 findings still anchor the exactness side of that interpretation.
+The Task 7 summary-consistency bundle carries forward the `17` explicit Task 6
+boundary cases so the benchmark claim stays honest about what remained outside
+the counted supported surface.
 
 ## 5. Scientific Contribution
 

@@ -404,6 +404,29 @@ implemented artifact bundle family under
 `benchmarks/density_matrix/artifacts/phase3_task6/` plus a rerunnable
 `task6_validation_pipeline.py` entry point.
 
+Current Task 7 implementation findings now extend that backbone into the
+benchmark layer. The shared
+`benchmarks/density_matrix/performance_evidence/` pipeline emits one
+machine-reviewable benchmark package over:
+
+- `34` counted supported benchmark cases,
+- `4` continuity-anchor cases,
+- `30` structured benchmark cases across the required families, sizes,
+  noise-placement patterns, and rerun-sensitive seed slices,
+- `6` representative review cases, one primary-seed sparse structured case for
+  each required family and size,
+- `0` positive-threshold pass cases,
+- `6` diagnosis-only representative cases,
+- and carry-forward of the `17` explicit Task 6 boundary cases into the
+  benchmark-summary layer.
+
+This means the benchmark package is no longer only a planning concept either. It
+is now an implemented artifact bundle family under
+`benchmarks/density_matrix/artifacts/phase3_task7/` plus a rerunnable
+`task7_validation_pipeline.py` entry point. The delivered baseline therefore
+supports diagnosis-grounded benchmark closure directly, not only the earlier
+Task 4 fused-runtime observation.
+
 ## 6. Phase Boundary Classification
 
 ### 6.1 Baseline Phase 3 Content
@@ -462,6 +485,16 @@ Current implementation finding:
 - and the supported Task 5 claim should therefore be phrased against the
   auditable selection rule and bounded candidate family rather than against one
   permanently frozen winning planner identity.
+
+Current Task 7 benchmark finding:
+
+- the emitted benchmark package is now aligned with that bounded Task 5 claim
+  surface rather than with the longer-horizon planner ladder,
+- the current diagnosis closure therefore speaks about the delivered
+  `span_budget_q2` baseline plus its measured sensitivity surface,
+- and the broader adapted `kahn` / `tdag` / `gtqcp` / `ilp` / `ilp-fusion` /
+  `ilp-fusion-ca` ladder should still be read as design-space or follow-on
+  context rather than as already-benchmarked noisy-planner implementations.
 
 The best baseline therefore is not to invent an entirely unrelated planner
 family first. It is to:
