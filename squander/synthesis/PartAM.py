@@ -588,6 +588,7 @@ class qgd_Partition_Aware_Mapping:
         n_iterations = self.config.get('sabre_iterations', 1)
         n_trials = self.config.get('n_layout_trials', 1)
         random_seed = self.config.get('random_seed', 42)
+        do_cleanup = self.config.get('cleanup', True)
         routing_start = time.time()
         if n_iterations == 0:
             # Single forward pass from identity layout
@@ -598,64 +599,135 @@ class qgd_Partition_Aware_Mapping:
                 scoring_partitions=scoring_partitions, D=D,
             )
         else:
-            best_pi = None
-            best_cost = float('inf')
+            if do_cleanup:
+                from squander.decomposition.qgd_Wide_Circuit_Optimization import qgd_Wide_Circuit_Optimization
+                cleanup_config = dict(self.config)
+                cleanup_config['topology'] = self.topology
+                cleanup_config['routed'] = True
+                cleanup_config['test_subcircuits'] = False
+                cleanup_config['test_final_circuit'] = False
+                wco = qgd_Wide_Circuit_Optimization(cleanup_config)
 
-            for trial in range(max(1, n_trials)):
-                rng = np.random.RandomState(random_seed + trial) if n_trials > 1 else None
-                pi = np.arange(N)
+                # Save single-qubit partition circuits before trial loop
+                saved_sq_circuits = {i: p.circuit for i, p in enumerate(optimized_partitions)
+                                     if isinstance(p, SingleQubitPartitionResult)}
 
-                for iteration in range(n_iterations):
-                    # Reverse pass: walk DAG backwards (swap DAG↔IDAG)
-                    F_rev = self.get_final_layer(DAG, N, optimized_partitions)
-                    pi, _ = self._heuristic_search_layout_only(
-                        F_rev, pi, IDAG, DAG, optimized_partitions, scoring_partitions, D,
-                        rng=rng,
-                        reverse=True,
-                    )
+                best_circuit = best_params = best_pi_init = best_pi = None
+                best_cost = float('inf')
 
-                    # Forward layout-only pass (skip on last iteration — real pass follows)
-                    if iteration < n_iterations - 1:
-                        F_fwd = self.get_initial_layer(IDAG, N, optimized_partitions)
+                for trial in range(max(1, n_trials)):
+                    rng = np.random.RandomState(random_seed + trial) if n_trials > 1 else None
+                    pi = np.arange(N)
+
+                    for iteration in range(n_iterations):
+                        # Reverse pass: walk DAG backwards (swap DAG↔IDAG)
+                        F_rev = self.get_final_layer(DAG, N, optimized_partitions)
                         pi, _ = self._heuristic_search_layout_only(
-                            F_fwd, pi, DAG, IDAG, optimized_partitions, scoring_partitions, D,
+                            F_rev, pi, IDAG, DAG, optimized_partitions, scoring_partitions, D,
                             rng=rng,
+                            reverse=True,
                         )
 
-                # Score this trial: deterministic forward layout-only pass
-                F_eval = self.get_initial_layer(IDAG, N, optimized_partitions)
-                _, cost = self._heuristic_search_layout_only(
-                    F_eval, pi.copy(), DAG, IDAG, optimized_partitions, scoring_partitions, D,
-                    rng=None,
+                        # Forward layout-only pass (skip on last iteration)
+                        if iteration < n_iterations - 1:
+                            F_fwd = self.get_initial_layer(IDAG, N, optimized_partitions)
+                            pi, _ = self._heuristic_search_layout_only(
+                                F_fwd, pi, DAG, IDAG, optimized_partitions, scoring_partitions, D,
+                                rng=rng,
+                            )
+
+                    # Restore single-qubit partition circuits before full forward pass
+                    for i, orig in saved_sq_circuits.items():
+                        optimized_partitions[i].circuit = orig.copy()
+
+                    # Full forward pass
+                    F_trial = self.get_initial_layer(IDAG, N, optimized_partitions)
+                    partition_order, pi_out, pi_init = self.Heuristic_Search(
+                        F_trial, pi, DAG, IDAG, optimized_partitions, scoring_partitions, D,
+                    )
+
+                    # Build circuit + cleanup
+                    trial_circuit, trial_params = self.Construct_circuit_from_HS(
+                        partition_order, optimized_partitions, N,
+                    )
+                    pre_cleanup_cnots = trial_circuit.get_Gate_Nums().get('CNOT', 0)
+                    trial_circuit, trial_params = wco.OptimizeWideCircuit(
+                        trial_circuit.get_Flat_Circuit(), trial_params,
+                    )
+
+                    cost = trial_circuit.get_Gate_Nums().get('CNOT', 0)
+
+                    if cost < best_cost:
+                        best_cost = cost
+                        best_pre_cleanup = pre_cleanup_cnots
+                        best_circuit, best_params = trial_circuit, trial_params
+                        best_pi_init, best_pi = pi_init, pi_out
+
+                final_circuit, final_parameters = best_circuit, best_params
+                pi_initial, pi = best_pi_init, best_pi
+
+            else:
+                best_pi = None
+                best_cost = float('inf')
+
+                for trial in range(max(1, n_trials)):
+                    rng = np.random.RandomState(random_seed + trial) if n_trials > 1 else None
+                    pi = np.arange(N)
+
+                    for iteration in range(n_iterations):
+                        # Reverse pass: walk DAG backwards (swap DAG↔IDAG)
+                        F_rev = self.get_final_layer(DAG, N, optimized_partitions)
+                        pi, _ = self._heuristic_search_layout_only(
+                            F_rev, pi, IDAG, DAG, optimized_partitions, scoring_partitions, D,
+                            rng=rng,
+                            reverse=True,
+                        )
+
+                        # Forward layout-only pass (skip on last iteration — real pass follows)
+                        if iteration < n_iterations - 1:
+                            F_fwd = self.get_initial_layer(IDAG, N, optimized_partitions)
+                            pi, _ = self._heuristic_search_layout_only(
+                                F_fwd, pi, DAG, IDAG, optimized_partitions, scoring_partitions, D,
+                                rng=rng,
+                            )
+
+                    # Score this trial: deterministic forward layout-only pass
+                    F_eval = self.get_initial_layer(IDAG, N, optimized_partitions)
+                    _, cost = self._heuristic_search_layout_only(
+                        F_eval, pi.copy(), DAG, IDAG, optimized_partitions, scoring_partitions, D,
+                        rng=None,
+                    )
+
+                    if cost < best_cost:
+                        best_cost = cost
+                        best_pi = pi.copy()
+
+                # Final forward pass — builds actual circuits
+                F = self.get_initial_layer(IDAG, N, optimized_partitions)
+                partition_order, pi, pi_initial = self.Heuristic_Search(
+                    F, best_pi, DAG, IDAG, optimized_partitions, scoring_partitions, D,
                 )
 
-                if cost < best_cost:
-                    best_cost = cost
-                    best_pi = pi.copy()
+        if do_cleanup and n_iterations > 0:
+            # Cleanup already done per-trial
+            self._routing_time = time.time() - routing_start
+            self._cnot_pre_cleanup = best_pre_cleanup
+        else:
+            final_circuit, final_parameters = self.Construct_circuit_from_HS(partition_order, optimized_partitions, N)
+            self._routing_time = time.time() - routing_start
+            self._cnot_pre_cleanup = final_circuit.get_Gate_Nums().get('CNOT', 0)
 
-            # Final forward pass — builds actual circuits
-            F = self.get_initial_layer(IDAG, N, optimized_partitions)
-            partition_order, pi, pi_initial = self.Heuristic_Search(
-                F, best_pi, DAG, IDAG, optimized_partitions, scoring_partitions, D,
-            )
-
-        final_circuit, final_parameters = self.Construct_circuit_from_HS(partition_order, optimized_partitions, N)
-        self._routing_time = time.time() - routing_start
-        self._cnot_pre_cleanup = final_circuit.get_Gate_Nums().get('CNOT', 0)
-
-        # Cleanup phase: re-partition and resynthesize to eliminate
-        # redundancies at SWAP-partition boundaries
-        if self.config.get('cleanup', True):
-            from squander.decomposition.qgd_Wide_Circuit_Optimization import qgd_Wide_Circuit_Optimization
-            cleanup_config = dict(self.config)
-            cleanup_config['topology'] = self.topology
-            cleanup_config['routed'] = True
-            cleanup_config['test_subcircuits'] = False
-            cleanup_config['test_final_circuit'] = False
-            wco = qgd_Wide_Circuit_Optimization(cleanup_config)
-            final_circuit, final_parameters = wco.OptimizeWideCircuit(
-                final_circuit.get_Flat_Circuit(), final_parameters
-            )
+            if self.config.get('cleanup', True):
+                from squander.decomposition.qgd_Wide_Circuit_Optimization import qgd_Wide_Circuit_Optimization
+                cleanup_config = dict(self.config)
+                cleanup_config['topology'] = self.topology
+                cleanup_config['routed'] = True
+                cleanup_config['test_subcircuits'] = False
+                cleanup_config['test_final_circuit'] = False
+                wco = qgd_Wide_Circuit_Optimization(cleanup_config)
+                final_circuit, final_parameters = wco.OptimizeWideCircuit(
+                    final_circuit.get_Flat_Circuit(), final_parameters
+                )
 
         return final_circuit, final_parameters, pi_initial, pi
 
