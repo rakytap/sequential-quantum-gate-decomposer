@@ -227,7 +227,14 @@ def get_subtopologies_of_type(edges: List[Tuple[int, int]], target_topology: Lis
             matches.append(induced)  # global labels retained for routing
     return matches
 
+_node_mapping_cache = {}
+
 def get_node_mapping(topology1: List[Tuple[int, int]], topology2: List[Tuple[int, int]]) -> dict:
+    cache_key = (tuple(tuple(e) for e in topology1), tuple(tuple(e) for e in topology2))
+    cached = _node_mapping_cache.get(cache_key)
+    if cached is not None:
+        return cached
+
     qubits1 = set()
     for u, v in topology1:
         qubits1.add(u)
@@ -237,6 +244,7 @@ def get_node_mapping(topology1: List[Tuple[int, int]], topology2: List[Tuple[int
         qubits2.add(u)
         qubits2.add(v)
     if len(qubits1) != len(qubits2):
+        _node_mapping_cache[cache_key] = {}
         return {}
     sorted_qubits1 = sorted(qubits1)
     sorted_qubits2 = sorted(qubits2)
@@ -248,7 +256,9 @@ def get_node_mapping(topology1: List[Tuple[int, int]], topology2: List[Tuple[int
             mapped_edges.add(tuple(sorted([mapping[u], mapping[v]])))
         original_edges = set(tuple(sorted([u, v])) for u, v in topology2)
         if mapped_edges == original_edges:
+            _node_mapping_cache[cache_key] = mapping
             return mapping
+    _node_mapping_cache[cache_key] = {}
     return {}
 
 

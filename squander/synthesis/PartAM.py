@@ -714,6 +714,8 @@ class qgd_Partition_Aware_Mapping:
         E_W = self.config.get('E_weight', 0.5)
         E_alpha = self.config.get('E_alpha', 0.9)
 
+        neighbor_data = self._precompute_neighbor_data(scoring_partitions, reverse=False)
+
         while len(F) != 0:
                 partition_candidates = self.obtain_partition_candidates(F,optimized_partitions)
                 if len(partition_candidates) == 0:
@@ -736,6 +738,7 @@ class qgd_Partition_Aware_Mapping:
                             E=E,
                             W=E_W,
                             alpha=E_alpha,
+                            neighbor_data=neighbor_data,
                         )
                         for partition_candidate in partition_candidates
                     ]
@@ -803,6 +806,8 @@ class qgd_Partition_Aware_Mapping:
         E_W = self.config.get('E_weight', 0.5)
         E_alpha = self.config.get('E_alpha', 0.9)
 
+        neighbor_data = self._precompute_neighbor_data(scoring_partitions, reverse=reverse)
+
         while F:
             partition_candidates = self.obtain_partition_candidates(F, optimized_partitions)
             if not partition_candidates:
@@ -821,6 +826,7 @@ class qgd_Partition_Aware_Mapping:
                     self._swap_cache,
                     E=E, W=E_W, alpha=E_alpha,
                     reverse=reverse,
+                    neighbor_data=neighbor_data,
                 )
                 for pc in partition_candidates
             ]
@@ -890,41 +896,110 @@ class qgd_Partition_Aware_Mapping:
     # ------------------------------------------------------------------------
 
     @staticmethod
+    def _precompute_neighbor_data(scoring_partitions, reverse=False):
+        """Precompute resolved virtual qubit edges for all scoring partitions.
+
+        Returns a dict mapping partition_idx to (cnot_arr, q_u_arr, q_v_arr)
+        where arrays are padded numpy arrays for vectorized scoring.
+        Partitions that are None are skipped.
+        """
+        neighbor_data = {}
+        for idx, partition in enumerate(scoring_partitions):
+            if partition is None:
+                continue
+            qbit_map_inv = {v: q for q, v in partition.qubit_map.items()}
+            cnot_list = []
+            q_u_list = []
+            q_v_list = []
+            edge_counts = []
+
+            for tdx, mini_topology in enumerate(partition.mini_topologies):
+                for pdx, (P_i, P_o) in enumerate(partition.permutations_pairs[tdx]):
+                    cnot_list.append(len(partition.circuit_structures[tdx][pdx]))
+                    P_route = P_o if reverse else P_i
+                    eu = []
+                    ev = []
+                    if mini_topology:
+                        for u, v in mini_topology:
+                            eu.append(qbit_map_inv[P_route[u]])
+                            ev.append(qbit_map_inv[P_route[v]])
+                    q_u_list.append(eu)
+                    q_v_list.append(ev)
+                    edge_counts.append(len(eu))
+
+            if not cnot_list:
+                continue
+
+            n_combos = len(cnot_list)
+            max_edges = max(edge_counts)
+            cnot_arr = np.array(cnot_list, dtype=np.float64)
+
+            if max_edges > 0:
+                # Pad with 0: output_perm[0] maps to some physical qubit p,
+                # D[p][p] = 0, so max(0, 0-1) = 0 — padding contributes nothing.
+                q_u_arr = np.zeros((n_combos, max_edges), dtype=np.intp)
+                q_v_arr = np.zeros((n_combos, max_edges), dtype=np.intp)
+                for i in range(n_combos):
+                    ne = edge_counts[i]
+                    if ne > 0:
+                        q_u_arr[i, :ne] = q_u_list[i]
+                        q_v_arr[i, :ne] = q_v_list[i]
+                neighbor_data[idx] = (cnot_arr, q_u_arr, q_v_arr)
+            else:
+                neighbor_data[idx] = (cnot_arr, None, None)
+
+        return neighbor_data
+
+    @staticmethod
     def score_partition_candidate(partition_candidate, F, pi, scoring_partitions, D, swap_cache,
-                                  E=None, W=0.5, alpha=0.9, reverse=False):
+                                  E=None, W=0.5, alpha=0.9, reverse=False,
+                                  neighbor_data=None):
         score = 0
         swap_weight = 1
         swaps, output_perm = partition_candidate.transform_pi(pi, D, swap_cache, reverse=reverse)
         score += swap_weight * len(swaps) * 3
         score += 0.1*len(partition_candidate.circuit_structure)
 
-        for partition_idx in F:
-            partition = scoring_partitions[partition_idx]
-            if partition is None or partition_idx == partition_candidate.partition_idx:
-                continue
-            qbit_map_inv = {v: q for q, v in partition.qubit_map.items()}
-            mini_scores = []
-            for tdx, mini_topology in enumerate(partition.mini_topologies):
-                for pdx, (P_i, P_o) in enumerate(partition.permutations_pairs[tdx]):
-                    cnot_count = len(partition.circuit_structures[tdx][pdx])
-                    # In reverse pass, the "entry" side of neighbor partitions
-                    # is their output (P_o), not their input (P_i).
-                    P_route = P_o if reverse else P_i
-                    if mini_topology:
-                        routing_cost = swap_weight * 3 * sum(
-                            max(0, D[int(output_perm[qbit_map_inv[P_route[u]]])][int(output_perm[qbit_map_inv[P_route[v]]])] - 1)
-                            for u, v in mini_topology
-                        )
-                    else:
-                        routing_cost = 0
-                    mini_scores.append(routing_cost + cnot_count)
-            if mini_scores:
-                score += np.min(mini_scores)
+        if neighbor_data is not None:
+            output_perm_arr = np.asarray(output_perm, dtype=np.intp)
+            D_arr = np.asarray(D)
 
-        # Extended set look-ahead scoring
-        if E:
-            e_score = 0
-            for partition_idx, depth in E:
+            for partition_idx in F:
+                if partition_idx == partition_candidate.partition_idx:
+                    continue
+                entry = neighbor_data.get(partition_idx)
+                if entry is None:
+                    continue
+                cnot_arr, q_u_arr, q_v_arr = entry
+                if q_u_arr is not None:
+                    phys_u = output_perm_arr[q_u_arr]
+                    phys_v = output_perm_arr[q_v_arr]
+                    routing = 3.0 * np.maximum(0, D_arr[phys_u, phys_v] - 1).sum(axis=1)
+                    score += float((routing + cnot_arr).min())
+                else:
+                    score += float(cnot_arr.min())
+
+            if E:
+                e_score = 0.0
+                for partition_idx, depth in E:
+                    if partition_idx == partition_candidate.partition_idx:
+                        continue
+                    entry = neighbor_data.get(partition_idx)
+                    if entry is None:
+                        continue
+                    cnot_arr, q_u_arr, q_v_arr = entry
+                    if q_u_arr is not None:
+                        phys_u = output_perm_arr[q_u_arr]
+                        phys_v = output_perm_arr[q_v_arr]
+                        routing = 3.0 * np.maximum(0, D_arr[phys_u, phys_v] - 1).sum(axis=1)
+                        e_score += float((routing + cnot_arr).min()) * (alpha ** depth)
+                    else:
+                        e_score += float(cnot_arr.min()) * (alpha ** depth)
+                if len(E) > 0:
+                    score += W * e_score / len(E)
+        else:
+            # Fallback: original Python loop (no precomputed data)
+            for partition_idx in F:
                 partition = scoring_partitions[partition_idx]
                 if partition is None or partition_idx == partition_candidate.partition_idx:
                     continue
@@ -943,9 +1018,32 @@ class qgd_Partition_Aware_Mapping:
                             routing_cost = 0
                         mini_scores.append(routing_cost + cnot_count)
                 if mini_scores:
-                    e_score += np.min(mini_scores) * (alpha ** depth)
-            if len(E) > 0:
-                score += W * e_score / len(E)
+                    score += min(mini_scores)
+
+            if E:
+                e_score = 0
+                for partition_idx, depth in E:
+                    partition = scoring_partitions[partition_idx]
+                    if partition is None or partition_idx == partition_candidate.partition_idx:
+                        continue
+                    qbit_map_inv = {v: q for q, v in partition.qubit_map.items()}
+                    mini_scores = []
+                    for tdx, mini_topology in enumerate(partition.mini_topologies):
+                        for pdx, (P_i, P_o) in enumerate(partition.permutations_pairs[tdx]):
+                            cnot_count = len(partition.circuit_structures[tdx][pdx])
+                            P_route = P_o if reverse else P_i
+                            if mini_topology:
+                                routing_cost = swap_weight * 3 * sum(
+                                    max(0, D[int(output_perm[qbit_map_inv[P_route[u]]])][int(output_perm[qbit_map_inv[P_route[v]]])] - 1)
+                                    for u, v in mini_topology
+                                )
+                            else:
+                                routing_cost = 0
+                            mini_scores.append(routing_cost + cnot_count)
+                    if mini_scores:
+                        e_score += min(mini_scores) * (alpha ** depth)
+                if len(E) > 0:
+                    score += W * e_score / len(E)
 
         return score
 
