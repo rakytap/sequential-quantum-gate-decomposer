@@ -942,6 +942,40 @@ weaken both the paper and the broader PhD path.
   - and runtime-only unsupported or deferred behavior where later tasks expose
     it.
 
+#### Current Implementation Findings
+
+- Task 6 is now materialized through
+  `benchmarks/density_matrix/correctness_evidence/`, with one
+  `task6_validation_pipeline.py` entry point that emits eight
+  machine-reviewable story bundles under
+  `benchmarks/density_matrix/artifacts/phase3_task6/`.
+- The current Task 6 correctness matrix is pinned to the currently selected Task
+  5 supported candidate, `span_budget_q2`, rather than to the full comparison
+  family, while preserving Task 5 claim-selection provenance fields on every
+  Task 6 positive record.
+- The current counted supported matrix contains `25` positive cases:
+  - `4` continuity-anchor cases at 4, 6, 8, and 10 qubits,
+  - `3` mandatory microcases,
+  - and `18` structured-family cases.
+- The current required external slice is narrower than the full continuity
+  matrix: it covers the `3` mandatory microcases plus the 4-qubit continuity
+  anchor, for `4` external-reference cases total. All counted supported cases
+  satisfy the internal exactness rule, and all `4` external-slice cases satisfy
+  the required Qiskit Aer threshold.
+- Runtime-path, fused-region, supported-but-unfused, deferred-region,
+  exact-output, and counted-status fields are now emitted on one shared positive
+  record surface instead of being reconstructed separately by later benchmark or
+  paper consumers.
+- Structured negative evidence is now aggregated across all three pre-
+  performance Task 6 boundary layers in one shared package:
+  - `6` planner-entry unsupported cases,
+  - `6` descriptor-generation unsupported cases,
+  - and `5` runtime-stage unsupported cases.
+- The current Task 6 summary-consistency bundle closes the main correctness
+  claim from counted supported evidence while keeping explicit negative boundary
+  evidence visible, rather than treating unsupported or deferred outcomes as
+  hidden exclusions.
+
 ### Task 7: Performance And Sensitivity Benchmark Package
 
 #### Goal

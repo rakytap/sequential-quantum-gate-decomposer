@@ -580,6 +580,19 @@ multiple real layers before runtime numerical checks:
 - and positive supported-path audit bundles already exist at the planner and
   descriptor layers.
 
+Task 6 now closes these validation layers into one explicit correctness package:
+
+- a shared `benchmarks/density_matrix/correctness_evidence/` pipeline emits one
+  machine-reviewable Task 6 correctness surface instead of leaving validation as
+  disconnected task-local checks,
+- the current Task 6 package records `25` counted supported cases on the
+  selected Task 5 supported candidate surface,
+- it records a bounded external slice of `4` Qiskit Aer cases (`3` microcases
+  plus the 4-qubit continuity anchor),
+- and it keeps `17` explicit negative boundary cases visible across planner-
+  entry, descriptor-generation, and runtime-stage evidence rather than
+  collapsing them into one generic exclusion bucket.
+
 ### Decision
 
 Phase 3 validation uses a two-baseline model:
@@ -587,16 +600,21 @@ Phase 3 validation uses a two-baseline model:
 - sequential `NoisyCircuit` execution is the required internal exact baseline on
   every mandatory Phase 3 case,
 - Qiskit Aer density-matrix simulation is the required external exact reference
-  on the mandatory microcases and a representative small continuity subset,
+  on the mandatory microcases and the current required 4-qubit continuity
+  subset,
 - and profiler artifacts are required when profiling materially affects
   architecture decisions or benchmark interpretation.
 
 Additional contract details:
 
 - planner-entry unsupported evidence, descriptor-generation unsupported
-  evidence, and runtime numerical correctness evidence should remain distinct in
-  the artifact package rather than being collapsed into one generic failure
-  bucket,
+  evidence, runtime-stage unsupported evidence, and runtime numerical
+  correctness evidence should remain distinct in the artifact package rather
+  than being collapsed into one generic failure bucket,
+- the current Task 6 package should preserve one shared positive record surface
+  plus one shared negative-boundary surface so later benchmark and publication
+  consumers do not need to infer counted status or boundary meaning from
+  disconnected outputs,
 - and rolled-up validation or benchmark summaries that drive architecture or
   publication conclusions must be checked against the underlying per-case
   records.

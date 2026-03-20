@@ -2,10 +2,11 @@
 
 ## Draft Status
 
-This is a planning-facing draft abstract for the Phase 3 Paper 2 package. It
-defines the intended publication claim surface and should be promoted to
-submission-ready wording only after the mandatory Phase 3 benchmark and
-validation evidence exists.
+This is now a partially implementation-backed draft abstract for the Phase 3
+Paper 2 package. Task 4 through Task 6 wording should track the delivered
+backend, correctness package, and emitted `phase3_task6` bundles directly.
+Task 7 performance rollups and final Phase 3 publication packaging still
+require further tightening before submission-ready wording is frozen.
 
 Exact density-matrix simulation is a scientifically strong foundation for noisy
 variational quantum research, but its computational cost quickly limits the
@@ -16,8 +17,8 @@ noisy workflow in Phase 2. The Phase 3 objective is to connect these two assets
 without weakening the exact noisy semantics that make the density-matrix path a
 trustworthy reference in the first place.
 
-The planned Phase 3 contribution is a noise-aware partitioning and limited-fusion
-methods layer for exact mixed-state circuits. The target result is not only a
+The current Phase 3 contribution is a noise-aware partitioning and limited-fusion
+methods layer for exact mixed-state circuits. The delivered result is not only a
 planner representation, but a native noisy mixed-state partitioning workflow in
 which ordered gate and noise operations are first-class planner inputs,
 partition descriptors preserve exact gate/noise order and parameter routing, and
@@ -34,7 +35,8 @@ the baseline Paper 2 scope.
 The planned evaluation is centered on two complementary evidence layers. First,
 the partitioned runtime must preserve the sequential `NoisyCircuit` baseline
 within strict exactness thresholds, with Qiskit Aer retained as the required
-external reference on the mandatory 2 to 4 qubit microcases. Second, the
+external reference on the mandatory 2 to 4 qubit microcases plus the current
+4-qubit continuity anchor slice. Second, the
 benchmark package must characterize representative noisy mixed-state workloads,
 including the frozen Phase 2 noisy XXZ `HEA` continuity cases and structured
 noisy `U3` / `CNOT` partitioning families across sparse, periodic, and dense
@@ -52,6 +54,13 @@ diagnosis branch rather than through a positive speedup or memory-reduction
 threshold, and the benchmark-grounded selected winner inside the bounded
 candidate family should be treated as an auditable selection outcome rather than
 as a permanently frozen identity claim.
+
+Task 6 now closes the correctness side of that package on the currently selected
+`span_budget_q2` planning surface. The emitted Task 6 bundles record `25`
+counted supported cases, Qiskit Aer agreement on all `3` mandatory microcases
+plus the 4-qubit continuity anchor, and `17` explicit unsupported-boundary
+cases kept visible across planner-entry, descriptor-generation, and runtime-
+stage layers.
 
 The expected Phase 3 result is a defensible methods milestone between exact
 workflow integration and later noisy optimizer and trainability studies. By

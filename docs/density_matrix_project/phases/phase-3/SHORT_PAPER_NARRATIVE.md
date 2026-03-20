@@ -2,9 +2,10 @@
 
 ## Draft Status
 
-This is a planning-facing narrative short-paper surface for the Phase 3 Paper 2
-package. It is intended for general research-facing discussion before the
-implementation-backed paper wording is available.
+This is now a partially implementation-backed narrative short-paper surface for
+the Phase 3 Paper 2 package. Task 4 through Task 6 wording should track the
+delivered backend and correctness package directly, while Task 7 performance
+closure and final publication packaging still remain open.
 
 ## Abstract
 
@@ -17,11 +18,11 @@ research question is therefore not whether exact noisy workflows are possible,
 but whether their execution can be accelerated without weakening the exact
 mixed-state semantics that make them scientifically valuable. Phase 3 addresses
 that question by making noisy mixed-state circuits first-class objects of
-partition planning and runtime execution. The planned contribution combines a
-canonical noisy planner surface, partition descriptors that preserve explicit
-gate/noise ordering, an executable partitioned density runtime with at least one
-real fused execution mode, and a benchmark package that compares the result
-against both the sequential `NoisyCircuit` baseline and Qiskit Aer. In the
+partition planning and runtime execution. The current delivered contribution
+combines a canonical noisy planner surface, partition descriptors that preserve
+explicit gate/noise ordering, an executable partitioned density runtime with at
+least one real fused execution mode, and a benchmark package that compares the
+result against both the sequential `NoisyCircuit` baseline and Qiskit Aer. In the
 current delivered Task 5 result, the benchmark-facing planning layer is a
 benchmark-calibrated policy over a bounded family of auditable
 `max_partition_qubits` span-budget settings on the existing noisy planner
@@ -47,6 +48,13 @@ the supported planning claim is presently a benchmark-calibrated selection rule
 over a bounded noisy-planner candidate family, with broader adapted planner
 families retained as design-space or comparison references until separately
 implemented.
+
+Current Task 6 refinement:
+the delivered correctness package is now pinned to the currently selected
+`span_budget_q2` surface and emitted through one shared `phase3_task6` bundle
+family. It records `25` counted supported cases, a bounded Qiskit Aer slice of
+`4` cases, and `17` explicit unsupported-boundary cases that remain visible
+instead of being filtered away.
 
 Explicit non-claims:
 - fully channel-native fused noisy blocks are not part of the baseline Paper 2
@@ -83,14 +91,19 @@ already established the first exact noisy workflow result by integrating the
 density backend into one canonical noisy XXZ `HEA` workflow. That solved the
 workflow-integration problem, but it did not solve the execution-cost problem.
 
-The project now sits at a clear transition point. SQUANDER already has:
+The project now sits at a clearer post-Task-6 transition point. SQUANDER now
+has:
 
 - a mature state-vector partitioning and gate-fusion subsystem,
 - and a validated exact noisy mixed-state backend.
 
-What remains missing is a backend architecture in which noisy mixed-state
-circuits are partitioned in their own right rather than treated as unitary
-regions interrupted by noise boundaries that the planner does not understand.
+What remained missing at the start of Phase 3 was a backend architecture in
+which noisy mixed-state circuits are partitioned in their own right rather than
+treated as unitary regions interrupted by noise boundaries that the planner did
+not understand. Tasks 1 through 6 now close that native-backend correctness
+side on the frozen support surface. The main open work is now the
+performance-interpretation and publication-packaging layer that sits on top of
+the delivered backend.
 
 ## 2. Why Phase 3 Matters
 
@@ -147,8 +160,8 @@ broader algorithm ladder as explicit design-space context.
 The paper should stay exact-first.
 
 The internal exact reference is sequential `NoisyCircuit` execution. The
-external exact reference is Qiskit Aer on the mandatory microcases and small
-continuity subset. The key paper requirement is not just that the partitioned
+external exact reference is Qiskit Aer on the mandatory microcases and the
+current 4-qubit continuity slice. The key paper requirement is not just that the partitioned
 path runs, but that it preserves the exact semantics of the sequential density
 baseline within strict thresholds.
 
@@ -164,6 +177,11 @@ For the currently delivered Task 5 surface, the third question should be read as
 "how does the bounded noisy-planner candidate family behave under one
 benchmark-grounded selection rule?" rather than as "which broad planner family
 has now been permanently settled as the final winner?"
+
+For the currently delivered Task 6 surface, the exactness side of that story is
+already implementation-backed: one shared correctness package records `25`
+counted supported cases, `4` required external-reference cases, and explicit
+negative boundary evidence instead of relying on prose-only validation claims.
 
 ## 5. Scientific Positioning
 

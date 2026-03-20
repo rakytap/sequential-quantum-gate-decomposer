@@ -8,11 +8,11 @@
 
 ## Draft Status
 
-This document is a planning-facing full-paper draft for Phase 3. It defines the
-target narrative, evidence structure, and claim boundaries for Paper 2, but it
-is not yet an implementation-backed paper surface. Any results language should
-be converted to implementation-backed wording only after the mandatory Phase 3
-benchmark and validation package exists.
+This document began as a planning-facing full-paper draft for Phase 3. It is
+now partially implementation-backed through the delivered Task 4, Task 5, and
+Task 6 evidence surfaces, including the emitted `phase3_task6` correctness
+bundles. Task 7 performance closure and the final publication-facing package
+still require further tightening before submission-ready wording is frozen.
 
 ## Abstract Summary
 
@@ -41,8 +41,11 @@ Supporting claims:
   and partition execution
 - an executable partitioned density runtime with at least one real fused
   execution mode on eligible substructures
-- a benchmark-calibrated density-aware planning objective or heuristic
-- a publication-grade correctness, performance, and reproducibility package
+- a benchmark-calibrated density-aware planning policy on a bounded candidate
+  surface
+- a machine-reviewable correctness and reproducibility package, with the
+  remaining performance closure still governed by the phase-level
+  threshold-or-diagnosis rule
 
 Explicit non-claims:
 - fully channel-native or superoperator-native fused noisy blocks are outside
@@ -65,8 +68,9 @@ that claims partitioned density behavior.
 
 Exact-regime boundary:
 Mandatory internal correctness coverage spans 4, 6, 8, and 10 qubits, with
-external micro-validation at 2 to 4 qubits and required performance recording
-on representative 8- and 10-qubit structured families.
+external micro-validation at 2 to 4 qubits plus the current 4-qubit continuity
+slice, and required performance recording on representative 8- and 10-qubit
+structured families.
 
 Evidence-closure rule:
 Only mandatory, complete, supported correctness and reproducibility evidence,
@@ -89,9 +93,9 @@ turned the density-matrix module into a usable scientific instrument.
 
 At the same time, Phase 2 also made the next bottleneck impossible to ignore.
 Exact dense mixed-state simulation is expensive, and the current partitioning
-and gate-fusion stack remains structurally tied to a state-vector execution
-model. SQUANDER therefore now contains two strong assets that are not yet
-properly connected:
+and gate-fusion stack remained structurally tied to a state-vector execution
+model at the start of Phase 3. SQUANDER therefore contained two strong assets
+that were not yet properly connected:
 
 - a sequential exact noisy mixed-state runtime centered on `NoisyCircuit`,
 - and a mature partitioning/fusion subsystem centered on `qgd_Circuit`,
@@ -100,7 +104,10 @@ properly connected:
 The purpose of Phase 3 is to bridge that gap. The question is no longer whether
 SQUANDER can support an exact noisy workflow at all. The question is whether
 partitioning and limited fusion can be extended so noisy mixed-state circuits
-become native planner objects while exact noisy semantics remain intact.
+become native planner objects while exact noisy semantics remain intact. Tasks 4
+through 6 now close that correctness-side backend bridge on the frozen support
+surface; the remaining open work is the performance and publication layer built
+on top of it.
 
 This paper is therefore not a workflow-surface paper and not an approximate
 scaling paper. It is a methods and systems paper about making noisy
@@ -230,17 +237,31 @@ At the start of Phase 3, the codebase already provides:
 - and a mature state-vector partitioning and gate-fusion subsystem in
   `squander/partitioning` together with `Gates_block`.
 
-### 3.2 What Does Not Yet Exist
+### 3.2 What Still Remains Open After Tasks 4-6
 
-What remains open is precisely what defines the Phase 3 problem:
+Tasks 4 through 6 now close the native backend correctness side of the Phase 3
+problem on the frozen support surface:
 
-- noisy mixed-state circuits are not yet native planner inputs,
-- partition descriptors do not yet preserve exact noisy semantics as part of the
-  planner/runtime contract,
-- the density backend does not yet have an executable partitioned runtime with a
-  real fused path,
-- and the current planning objective remains state-vector-oriented and
-  noise-blind.
+- noisy mixed-state circuits are native planner inputs on the required Phase 3
+  path,
+- partition descriptors preserve explicit gate/noise order, remapping, and
+  parameter-routing semantics strongly enough to support a machine-reviewable
+  correctness package,
+- the density backend executes partitioned workloads end to end and includes a
+  real descriptor-local fused path,
+- Task 5 narrows the supported planning result to a benchmark-grounded
+  `max_partition_qubits` selection rule over a bounded candidate family,
+- and Task 6 now validates that delivered surface on `25` counted supported
+  cases, with a bounded Qiskit Aer slice of `4` cases and `17` explicit
+  unsupported-boundary cases kept visible in the emitted bundle family.
+
+What still remains open is therefore narrower and more publication-oriented:
+
+- the representative Task 7 performance and sensitivity package,
+- the final Task 8 publication-facing manifest and section-level evidence
+  packaging,
+- and the explicitly deferred follow-on branches such as fully channel-native
+  fused noisy blocks and broader Phase 4 workflow growth.
 
 ### 3.3 Why This Gap Matters
 
@@ -376,8 +397,8 @@ every mandatory Phase 3 case. This preserves continuity with the delivered Phase
 ### 6.2 Primary External Baseline
 
 Qiskit Aer density-matrix simulation remains the required external reference on
-the mandatory 2 to 4 qubit microcases and representative small continuity
-cases. This keeps the exactness story anchored to a strong external baseline
+the mandatory 2 to 4 qubit microcases and the current 4-qubit continuity
+slice. This keeps the exactness story anchored to a strong external baseline
 without turning Paper 2 into a broad simulator bake-off.
 
 ### 6.3 Validation Targets
@@ -390,6 +411,18 @@ The planned validation package has three layers:
   8, and 10 qubits,
 - structured partitioning-family validation on representative 8- and 10-qubit
   noisy `U3` / `CNOT` families.
+
+Current Task 6 implementation findings now materialize this package more
+concretely:
+
+- the delivered correctness matrix contains `25` counted supported cases,
+- the required external slice contains `4` cases (`3` mandatory microcases plus
+  the 4-qubit continuity anchor),
+- the package is pinned to the currently selected `span_budget_q2` planning
+  surface from Task 5,
+- and `17` explicit unsupported-boundary cases remain visible across planner-
+  entry, descriptor-generation, and runtime-stage evidence rather than being
+  hidden inside summary-only exclusions.
 
 ### 6.4 Numeric Acceptance Thresholds
 
@@ -486,16 +519,20 @@ and architecture-informing rather than as a positive acceleration claim.
 
 ## 8. Expected Scientific Claims
 
-If the planned benchmark package closes successfully, the final Phase 3 paper
-should be able to claim:
+With the delivered Task 4 through Task 6 package in place, the exactness side
+of the Phase 3 paper can already support the following claims:
 
 - noisy mixed-state circuits are first-class partitioning inputs in SQUANDER,
 - the partitioned runtime preserves exact noisy semantics relative to the
   sequential density baseline,
 - the system delivers more than planner-only representation by executing
   partitioned noisy circuits end to end with at least one real fused path,
-- performance and memory behavior on representative workloads are characterized
-  and scientifically interpretable,
+- the current correctness package is machine-reviewable rather than prose-only,
+  with `25` counted supported cases and `17` explicit unsupported-boundary
+  cases,
+- and the remaining performance and memory behavior on representative workloads
+  still needs to be characterized and scientifically interpreted through the
+  Task 7 package,
 - and fully channel-native fused noisy blocks remain an explicit follow-on
   branch rather than an unacknowledged missing piece.
 

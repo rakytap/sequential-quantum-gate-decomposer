@@ -384,9 +384,25 @@ instead of premature architecture escalation.
 ### 5.4 Validation Backbone
 
 - sequential `NoisyCircuit` remains the internal exact oracle,
-- Qiskit Aer remains the external exact reference on the required microcases,
+- Qiskit Aer remains the external exact reference on the required microcases and
+  the current 4-qubit continuity slice,
 - and every planner or fusion claim is judged against the frozen noisy semantics
   before performance claims are interpreted.
+
+Current Task 6 implementation findings now make this backbone concrete. The
+shared `benchmarks/density_matrix/correctness_evidence/` pipeline emits one
+machine-reviewable correctness package over:
+
+- `25` counted supported cases,
+- a bounded external slice of `4` Qiskit Aer cases,
+- explicit runtime-path and fused-region classifications on the positive surface,
+- and `17` explicit unsupported-boundary cases across planner-entry,
+  descriptor-generation, and runtime-stage layers.
+
+This means the validation backbone is no longer only conceptual. It is now an
+implemented artifact bundle family under
+`benchmarks/density_matrix/artifacts/phase3_task6/` plus a rerunnable
+`task6_validation_pipeline.py` entry point.
 
 ## 6. Phase Boundary Classification
 

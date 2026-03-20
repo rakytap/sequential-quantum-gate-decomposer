@@ -2,10 +2,10 @@
 
 ## Draft Status
 
-This document is a planning-facing short-paper draft for Phase 3. It should be
-treated as a target publication surface derived from the Phase 3 contract, not
-as an implementation-backed paper. Claims must be tightened to benchmark-backed
-language once the mandatory evidence package exists.
+This document is now a partially implementation-backed short-paper draft for
+Phase 3. Task 4 through Task 6 wording should track the delivered backend and
+correctness package directly, while Task 7 performance closure and final
+publication packaging still remain to be tightened.
 
 ## Abstract
 
@@ -16,14 +16,15 @@ mixed-state backend for one canonical noisy workflow and a separate mature
 state-vector partitioning and gate-fusion subsystem. Phase 3 targets the next
 methods step: extending partitioning and limited fusion so noisy mixed-state
 circuits become first-class planner inputs rather than unitary islands with
-noise treated as external barriers. The planned contribution combines a
+noise treated as external barriers. The current delivered contribution combines a
 canonical noisy mixed-state planner surface, partition descriptors that preserve
 explicit gate/noise ordering and parameter routing, an executable partitioned
 density runtime with at least one real fused execution mode, and a
-benchmark-calibrated density-aware planning objective. The evaluation surface is
-anchored on the frozen Phase 2 noisy XXZ `HEA` workflow together with structured
-noisy `U3` / `CNOT` partitioning families, validated against the sequential
-`NoisyCircuit` baseline and Qiskit Aer. The intended Phase 3 claim is a bounded
+benchmark-calibrated density-aware planning policy over a bounded candidate
+surface. The evaluation surface is anchored on the frozen Phase 2 noisy XXZ
+`HEA` workflow together with structured noisy `U3` / `CNOT` partitioning
+families, validated against the sequential `NoisyCircuit` baseline and Qiskit
+Aer. The intended Phase 3 claim is a bounded
 methods result: exact noisy semantics remain central, fully channel-native fused
 noisy blocks are deferred, and broader noisy VQE/VQA growth remains Phase 4
 work.
@@ -63,8 +64,9 @@ that claims partitioned density behavior.
 
 Exact-regime boundary:
 Mandatory internal correctness coverage spans 4, 6, 8, and 10 qubits, with
-external micro-validation at 2 to 4 qubits and required performance recording
-on representative 8- and 10-qubit structured families.
+external micro-validation at 2 to 4 qubits plus the current 4-qubit continuity
+slice, and required performance recording on representative 8- and 10-qubit
+structured families.
 
 Evidence-closure rule:
 Only mandatory, complete, supported correctness and reproducibility evidence,
@@ -90,9 +92,12 @@ This creates a natural Phase 3 methods question. SQUANDER already has:
 - a sequential exact noisy mixed-state path built around `NoisyCircuit`,
 - and a mature state-vector partitioning and fusion subsystem.
 
-What it does not yet have is a native way to partition and partially fuse noisy
-mixed-state circuits while preserving the exact semantics that made the Phase 2
-backend scientifically valuable in the first place.
+What it did not yet have at the start of Phase 3 was a native way to partition
+and partially fuse noisy mixed-state circuits while preserving the exact
+semantics that made the Phase 2 backend scientifically valuable in the first
+place. Tasks 1 through 6 now close that native-backend correctness side on the
+frozen support surface, leaving performance interpretation and final
+publication-facing packaging as the main open work.
 
 The purpose of Phase 3 is therefore not to broaden noisy VQE/VQA surface or to
 introduce approximate scaling. It is to make partitioning and limited fusion
@@ -100,19 +105,26 @@ native to exact noisy mixed-state workloads.
 
 ## 2. Problem Statement
 
-The current gap is not the absence of exact noisy simulation. That gap was
-closed for one canonical workflow in Phase 2. The current gap is that the
-existing planner and fusion machinery still assumes a circuit model closer to
-state-vector execution than to exact noisy mixed-state execution.
+The original Phase 3 gap was not the absence of exact noisy simulation. That
+gap was already closed for one canonical workflow in Phase 2. The original
+problem was that the existing planner and fusion machinery still assumed a
+circuit model closer to state-vector execution than to exact noisy mixed-state
+execution.
 
-More concretely, the Phase 3 problem has four parts:
+At the start of Phase 3 that problem had four parts:
 
-1. Noisy mixed-state circuits are not yet first-class planner inputs.
-2. Partition descriptors do not yet preserve explicit gate/noise order and
+1. Noisy mixed-state circuits were not yet first-class planner inputs.
+2. Partition descriptors did not yet preserve explicit gate/noise order and
    parameter-routing semantics as part of the contract.
-3. The density backend does not yet have an executable partitioned runtime with
+3. The density backend did not yet have an executable partitioned runtime with
    real fused execution on representative noisy workloads.
-4. The current cost model is state-vector-oriented and noise-blind.
+4. The current cost model was state-vector-oriented and noise-blind.
+
+Tasks 1 through 6 now close the first three parts on the frozen support
+surface, and Task 5 narrows the delivered planning result to a benchmark-
+grounded `max_partition_qubits` selection rule over a bounded candidate family.
+The main remaining open work is the representative performance package and final
+publication-facing evidence packaging.
 
 This means that the main scientific question for Phase 3 is:
 
@@ -179,11 +191,20 @@ Because the contribution is exact-first, validation is central to Paper 2.
 
 ### 4.1 Baselines
 
-The planned validation baseline has two layers:
+The current validation baseline has two layers:
 
 - sequential `NoisyCircuit` execution as the required internal exact reference,
 - Qiskit Aer density-matrix simulation as the required external reference on the
-  mandatory microcases and representative small continuity cases.
+  mandatory microcases and the current 4-qubit continuity slice.
+
+Current Task 6 implementation findings now make that baseline concrete:
+
+- the delivered Task 6 package records `25` counted supported cases on the
+  currently selected `span_budget_q2` surface,
+- it records `4` required external-reference cases (`3` microcases plus the
+  4-qubit continuity anchor),
+- and it keeps `17` explicit unsupported-boundary cases visible instead of
+  turning them into silent omissions.
 
 ### 4.2 Workload Classes
 
@@ -214,7 +235,7 @@ Sensitivity should be recorded across:
 The final paper should report:
 
 - density agreement with the sequential baseline,
-- exactness against Qiskit Aer on the required external microcases,
+- exactness against Qiskit Aer on the required external slice,
 - energy agreement on the continuity anchor,
 - runtime,
 - peak memory,
@@ -241,6 +262,12 @@ close the rule through the diagnosis branch rather than the measured-benefit
 branch: the runtime remains slower and peak memory does not improve because many
 supported islands remain unfused and the current Python-level fused-kernel path
 adds overhead.
+
+Current Task 6 findings close the exactness side of that interpretation. The
+shared correctness package now proves the selected candidate on `25` counted
+supported cases, `4` required external-reference cases, and one explicit
+unsupported-boundary bundle rather than leaving validation as prose-only
+expectation.
 
 ## 5. Scientific Contribution
 
