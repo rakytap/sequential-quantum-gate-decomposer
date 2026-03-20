@@ -21,9 +21,14 @@ partition planning and runtime execution. The planned contribution combines a
 canonical noisy planner surface, partition descriptors that preserve explicit
 gate/noise ordering, an executable partitioned density runtime with at least one
 real fused execution mode, and a benchmark package that compares the result
-against both the sequential `NoisyCircuit` baseline and Qiskit Aer. The scope is
-deliberately bounded: fully channel-native fused noisy blocks, broader noisy
-VQE/VQA growth, and approximate scaling methods remain future work.
+against both the sequential `NoisyCircuit` baseline and Qiskit Aer. In the
+current delivered Task 5 result, the benchmark-facing planning layer is a
+benchmark-calibrated policy over a bounded family of auditable
+`max_partition_qubits` span-budget settings on the existing noisy planner
+surface rather than a broad family of separately implemented noisy planner
+variants. The scope is deliberately bounded: fully channel-native fused noisy
+blocks, broader noisy VQE/VQA growth, and approximate scaling methods remain
+future work.
 
 ## Publication Surface Role
 
@@ -36,6 +41,12 @@ Main claim:
 SQUANDER can extend partitioning and limited fusion to exact noisy mixed-state
 circuits without reducing noise to planner-external metadata, while preserving
 exact semantics and yielding a scientifically useful benchmarked backend.
+
+Current Task 5 refinement:
+the supported planning claim is presently a benchmark-calibrated selection rule
+over a bounded noisy-planner candidate family, with broader adapted planner
+families retained as design-space or comparison references until separately
+implemented.
 
 Explicit non-claims:
 - fully channel-native fused noisy blocks are not part of the baseline Paper 2
@@ -127,7 +138,9 @@ Fourth, the planned benchmark package studies representative noisy workloads
 rather than only synthetic kernels. The continuity anchor is the frozen Phase 2
 noisy XXZ `HEA` workflow, and the methods stress matrix is built from structured
 noisy `U3` / `CNOT` families under sparse, periodic, and dense local-noise
-placement.
+placement. In the current Task 5 implementation, that benchmark package
+calibrates a bounded candidate family on the noisy planner surface and keeps the
+broader algorithm ladder as explicit design-space context.
 
 ## 4. Validation Story
 
@@ -146,6 +159,11 @@ The final benchmark package should therefore be able to answer three questions:
    only a partition schedule?
 3. Where do the resulting partitioning choices help, and where does the native
    baseline still leave a visible bottleneck?
+
+For the currently delivered Task 5 surface, the third question should be read as
+"how does the bounded noisy-planner candidate family behave under one
+benchmark-grounded selection rule?" rather than as "which broad planner family
+has now been permanently settled as the final winner?"
 
 ## 5. Scientific Positioning
 

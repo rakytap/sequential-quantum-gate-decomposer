@@ -556,16 +556,27 @@ Contract:
 - The Phase 3 implementation sequence is:
   1. establish native noisy-circuit correctness and executable partitioned
      runtime,
-  2. implement structural noise-aware planning heuristics,
-  3. calibrate a density-specific benchmark-informed objective or heuristic,
+  2. implement structural noise-aware planning behavior on the supported noisy
+     planner surface,
+  3. calibrate a density-specific benchmark-informed objective, heuristic, or
+     bounded candidate-setting policy,
   4. optionally tune kernels if profiling shows that they materially affect the
      benchmark outcome.
 - The existing state-vector FLOP model in `squander/partitioning/tools.py` may
   be reused as scaffolding or a comparison point, but it does not define the
   Phase 3 claim.
+- In the current delivered Task 5 result, the supported calibration surface is
+  the existing noisy planner with auditable `max_partition_qubits` span-budget
+  settings; broader adapted `kahn` / `tdag` / `gtqcp` / `ilp` /
+  `ilp-fusion-ca` families remain design-space or comparison references until
+  they are separately implemented on the noisy planner path.
 - Phase 3 should avoid "optimal partitioning" language until the density-aware
   heuristic or objective has been benchmark-calibrated on the required workload
   matrix.
+- If the benchmark-grounded rule yields close or rerun-sensitive winners inside
+  the bounded candidate family, the supported claim should be the auditable
+  selection rule plus explicit claim boundary, not one permanently frozen
+  winner identity.
 - Planner-time overhead must be reported as part of the benchmark package.
 
 Trade-offs:
@@ -856,9 +867,9 @@ real runtime result.
 
 #### Goal
 
-Define and calibrate a density-aware planning heuristic or objective for the
-required workload matrix and the now-frozen canonical-surface plus
-descriptor-level contract.
+Define and calibrate a density-aware planning heuristic, objective, or bounded
+candidate-setting policy for the required workload matrix and the now-frozen
+canonical-surface plus descriptor-level contract.
 
 #### Why It Exists
 
@@ -874,13 +885,30 @@ Reusing a state-vector cost model would weaken the scientific Phase 3 claim.
 
 #### Evidence Required
 
-- heuristic or objective definition,
+- heuristic, objective, or bounded candidate-setting definition,
 - calibration benchmark data on the frozen continuity, microcase, and
   structured-workload inventory with stable workload IDs, seed rules, and
   noise-pattern labels,
 - a machine-reviewable calibration bundle or equivalent rerunnable checker that
   records planner settings, workload identity, and calibration outputs,
 - and documentation of where the model remains approximate.
+
+#### Current Implementation Findings
+
+- The delivered minimum Task 5 result is a benchmark-calibrated selection rule
+  over auditable `max_partition_qubits` span-budget candidates on the existing
+  noisy planner surface rather than a broader family of separately implemented
+  noisy `kahn` / `tdag` / `gtqcp` / `ilp` variants.
+- The current calibration package is machine-reviewable and anchored to the
+  frozen continuity, microcase, and structured-workload inventory with stable
+  workload IDs, seed rules, and noise-pattern labels.
+- The external Qiskit Aer slice remains valid on the required microcases and the
+  representative small continuity slice, but the benchmark-grounded selected
+  winner inside the bounded candidate family has proved rerun-sensitive rather
+  than permanently frozen.
+- The current supported Task 5 claim should therefore be phrased around the
+  auditable selection rule, bounded candidate family, and explicit comparison
+  baselines rather than around one invariant winner identity.
 
 ### Task 6: Correctness Validation And Unsupported-Boundary Evidence
 

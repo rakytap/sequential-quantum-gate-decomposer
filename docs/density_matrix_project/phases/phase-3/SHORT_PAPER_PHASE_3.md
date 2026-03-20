@@ -155,7 +155,20 @@ representation. The target runtime must:
 Phase 3 should move beyond a state-vector FLOP model by using:
 
 - structural noise-aware planning heuristics first,
-- followed by a benchmark-calibrated density-aware objective or heuristic.
+- followed by a benchmark-calibrated density-aware objective, heuristic, or
+  bounded candidate-setting policy.
+
+Current Task 5 implementation findings narrow the delivered surface further:
+
+- the current benchmark-facing result calibrates auditable
+  `max_partition_qubits` span-budget settings on the existing noisy planner
+  surface,
+- broader adapted `kahn` / `tdag` / `gtqcp` / `ilp` / `ilp-fusion-ca` families
+  remain design-space or comparison references rather than already-delivered
+  noisy planner variants,
+- and the supported Task 5 claim should be phrased around the auditable
+  selection rule and bounded candidate family rather than around one
+  permanently frozen winner identity.
 
 This keeps the methods claim grounded in measured behavior rather than in a
 premature analytic optimality claim.

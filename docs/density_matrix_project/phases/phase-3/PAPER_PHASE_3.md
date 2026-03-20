@@ -117,8 +117,9 @@ The planned Phase 3 contribution has five parts:
   and parameter-routing semantics,
 - an executable partitioned density runtime with at least one real fused
   execution mode on eligible substructures,
-- a density-aware planning heuristic or objective calibrated on representative
-  noisy workloads,
+- a benchmark-calibrated density-aware planning policy on a bounded noisy
+  planner candidate surface, with broader adapted planner families retained as
+  design-space or comparison references until separately implemented,
 - and a benchmark and validation package strong enough to support a major
   methods paper rather than only an internal architecture note.
 
@@ -339,12 +340,27 @@ approach:
 
 1. establish native noisy-circuit correctness,
 2. deliver the executable partitioned runtime,
-3. apply structural noise-aware planning heuristics,
-4. calibrate a density-aware objective or heuristic on the benchmark matrix.
+3. apply structural noise-aware planning behavior on the supported noisy
+   planner surface,
+4. calibrate a density-aware objective, heuristic, or bounded candidate-setting
+   policy on the benchmark matrix.
 
 This keeps Paper 2 honest. The planner is allowed to begin from structural
 reuse of the state-vector machinery, but the final methods claim must be backed
 by density-aware evidence rather than by a renamed state-vector cost model.
+
+Current Task 5 implementation findings make the delivered surface narrower than
+the broader longer-horizon algorithm family listed in the planning set:
+
+- the current benchmark-facing result calibrates auditable
+  `max_partition_qubits` span-budget settings on the existing noisy planner
+  surface,
+- broader adapted `kahn` / `tdag` / `gtqcp` / `ilp` / `ilp-fusion-ca` families
+  remain valid design-space or comparison references rather than already-
+  delivered noisy planner variants,
+- and the supported Task 5 claim should therefore be phrased around the
+  auditable selection rule, bounded candidate family, and explicit comparison
+  baselines rather than around one permanently frozen winner identity.
 
 ## 6. Validation Methodology
 

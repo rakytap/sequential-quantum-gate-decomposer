@@ -1,0 +1,323 @@
+{
+  "candidate_schema_version": "phase3_task5_planner_candidate_v1",
+  "cases": [
+    {
+      "candidate_id": "span_budget_q2",
+      "candidate_surface_pass": true,
+      "max_partition_qubits": 2,
+      "planner_family": "phase3_span_budget",
+      "planner_settings": {
+        "max_partition_qubits": 2
+      },
+      "planner_variant": "max_partition_qubits_2",
+      "representative_cases": [
+        {
+          "case_kind": "continuity",
+          "descriptor_member_count": 12,
+          "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
+          "entry_route": "phase2_continuity_lowering",
+          "family_name": null,
+          "max_partition_qubits": 2,
+          "max_partition_span": 2,
+          "noise_pattern": null,
+          "partition_count": 5,
+          "partition_member_counts": [
+            5,
+            2,
+            1,
+            2,
+            2
+          ],
+          "qbit_num": 4,
+          "source_type": "generated_hea",
+          "workload_family": "phase2_continuity_workflow",
+          "workload_id": "phase2_xxz_hea_q4_continuity"
+        },
+        {
+          "case_kind": "microcase",
+          "descriptor_member_count": 5,
+          "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
+          "entry_route": "phase3_microcase_generation",
+          "family_name": null,
+          "max_partition_qubits": 2,
+          "max_partition_span": 2,
+          "noise_pattern": "sparse",
+          "partition_count": 1,
+          "partition_member_counts": [
+            5
+          ],
+          "qbit_num": 2,
+          "source_type": "microcase_builder",
+          "workload_family": "phase3_micro_validation",
+          "workload_id": "microcase_2q_entangler_local_depolarizing"
+        },
+        {
+          "case_kind": "structured_family",
+          "descriptor_member_count": 37,
+          "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
+          "entry_route": "phase3_structured_family_generation",
+          "family_name": "layered_nearest_neighbor",
+          "max_partition_qubits": 2,
+          "max_partition_span": 2,
+          "noise_pattern": "sparse",
+          "partition_count": 24,
+          "partition_member_counts": [
+            2,
+            2,
+            2,
+            2,
+            1,
+            1,
+            1,
+            1,
+            3,
+            2,
+            2,
+            2,
+            1,
+            1,
+            1,
+            2,
+            2,
+            2,
+            2,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "qbit_num": 8,
+          "source_type": "structured_family_builder",
+          "workload_family": "phase3_structured_family",
+          "workload_id": "layered_nearest_neighbor_q8_sparse_seed20260318"
+        }
+      ],
+      "representative_workload_ids": [
+        "phase2_xxz_hea_q4_continuity",
+        "microcase_2q_entangler_local_depolarizing",
+        "layered_nearest_neighbor_q8_sparse_seed20260318"
+      ],
+      "schema_version": "phase3_task5_planner_candidate_v1",
+      "supported_case_kinds": [
+        "continuity",
+        "microcase",
+        "structured_family"
+      ]
+    },
+    {
+      "candidate_id": "span_budget_q3",
+      "candidate_surface_pass": true,
+      "max_partition_qubits": 3,
+      "planner_family": "phase3_span_budget",
+      "planner_settings": {
+        "max_partition_qubits": 3
+      },
+      "planner_variant": "max_partition_qubits_3",
+      "representative_cases": [
+        {
+          "case_kind": "continuity",
+          "descriptor_member_count": 12,
+          "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
+          "entry_route": "phase2_continuity_lowering",
+          "family_name": null,
+          "max_partition_qubits": 3,
+          "max_partition_span": 3,
+          "noise_pattern": null,
+          "partition_count": 3,
+          "partition_member_counts": [
+            6,
+            4,
+            2
+          ],
+          "qbit_num": 4,
+          "source_type": "generated_hea",
+          "workload_family": "phase2_continuity_workflow",
+          "workload_id": "phase2_xxz_hea_q4_continuity"
+        },
+        {
+          "case_kind": "microcase",
+          "descriptor_member_count": 5,
+          "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
+          "entry_route": "phase3_microcase_generation",
+          "family_name": null,
+          "max_partition_qubits": 3,
+          "max_partition_span": 2,
+          "noise_pattern": "sparse",
+          "partition_count": 1,
+          "partition_member_counts": [
+            5
+          ],
+          "qbit_num": 2,
+          "source_type": "microcase_builder",
+          "workload_family": "phase3_micro_validation",
+          "workload_id": "microcase_2q_entangler_local_depolarizing"
+        },
+        {
+          "case_kind": "structured_family",
+          "descriptor_member_count": 37,
+          "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
+          "entry_route": "phase3_structured_family_generation",
+          "family_name": "layered_nearest_neighbor",
+          "max_partition_qubits": 3,
+          "max_partition_span": 3,
+          "noise_pattern": "sparse",
+          "partition_count": 19,
+          "partition_member_counts": [
+            3,
+            3,
+            2,
+            1,
+            1,
+            1,
+            2,
+            3,
+            3,
+            2,
+            1,
+            1,
+            2,
+            3,
+            3,
+            2,
+            1,
+            1,
+            2
+          ],
+          "qbit_num": 8,
+          "source_type": "structured_family_builder",
+          "workload_family": "phase3_structured_family",
+          "workload_id": "layered_nearest_neighbor_q8_sparse_seed20260318"
+        }
+      ],
+      "representative_workload_ids": [
+        "phase2_xxz_hea_q4_continuity",
+        "microcase_2q_entangler_local_depolarizing",
+        "layered_nearest_neighbor_q8_sparse_seed20260318"
+      ],
+      "schema_version": "phase3_task5_planner_candidate_v1",
+      "supported_case_kinds": [
+        "continuity",
+        "microcase",
+        "structured_family"
+      ]
+    },
+    {
+      "candidate_id": "span_budget_q4",
+      "candidate_surface_pass": true,
+      "max_partition_qubits": 4,
+      "planner_family": "phase3_span_budget",
+      "planner_settings": {
+        "max_partition_qubits": 4
+      },
+      "planner_variant": "max_partition_qubits_4",
+      "representative_cases": [
+        {
+          "case_kind": "continuity",
+          "descriptor_member_count": 12,
+          "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
+          "entry_route": "phase2_continuity_lowering",
+          "family_name": null,
+          "max_partition_qubits": 4,
+          "max_partition_span": 4,
+          "noise_pattern": null,
+          "partition_count": 1,
+          "partition_member_counts": [
+            12
+          ],
+          "qbit_num": 4,
+          "source_type": "generated_hea",
+          "workload_family": "phase2_continuity_workflow",
+          "workload_id": "phase2_xxz_hea_q4_continuity"
+        },
+        {
+          "case_kind": "microcase",
+          "descriptor_member_count": 5,
+          "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
+          "entry_route": "phase3_microcase_generation",
+          "family_name": null,
+          "max_partition_qubits": 4,
+          "max_partition_span": 2,
+          "noise_pattern": "sparse",
+          "partition_count": 1,
+          "partition_member_counts": [
+            5
+          ],
+          "qbit_num": 2,
+          "source_type": "microcase_builder",
+          "workload_family": "phase3_micro_validation",
+          "workload_id": "microcase_2q_entangler_local_depolarizing"
+        },
+        {
+          "case_kind": "structured_family",
+          "descriptor_member_count": 37,
+          "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
+          "entry_route": "phase3_structured_family_generation",
+          "family_name": "layered_nearest_neighbor",
+          "max_partition_qubits": 4,
+          "max_partition_span": 4,
+          "noise_pattern": "sparse",
+          "partition_count": 12,
+          "partition_member_counts": [
+            4,
+            4,
+            2,
+            2,
+            5,
+            4,
+            2,
+            3,
+            4,
+            3,
+            2,
+            2
+          ],
+          "qbit_num": 8,
+          "source_type": "structured_family_builder",
+          "workload_family": "phase3_structured_family",
+          "workload_id": "layered_nearest_neighbor_q8_sparse_seed20260318"
+        }
+      ],
+      "representative_workload_ids": [
+        "phase2_xxz_hea_q4_continuity",
+        "microcase_2q_entangler_local_depolarizing",
+        "layered_nearest_neighbor_q8_sparse_seed20260318"
+      ],
+      "schema_version": "phase3_task5_planner_candidate_v1",
+      "supported_case_kinds": [
+        "continuity",
+        "microcase",
+        "structured_family"
+      ]
+    }
+  ],
+  "software": {
+    "numpy": "2.3.5",
+    "python": "3.13.9",
+    "scipy": "1.16.3"
+  },
+  "status": "pass",
+  "suite_name": "phase3_task5_story1_planner_candidate_audit",
+  "summary": {
+    "candidate_ids": [
+      "span_budget_q2",
+      "span_budget_q3",
+      "span_budget_q4"
+    ],
+    "candidate_passes": 3,
+    "max_partition_qubits_values": [
+      2,
+      3,
+      4
+    ],
+    "planner_families": [
+      "phase3_span_budget"
+    ],
+    "representative_case_kinds": [
+      "continuity",
+      "microcase",
+      "structured_family"
+    ],
+    "total_candidates": 3
+  }
+}

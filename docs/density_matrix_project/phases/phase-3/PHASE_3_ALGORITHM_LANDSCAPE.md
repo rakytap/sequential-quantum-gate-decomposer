@@ -315,15 +315,24 @@ The following elements do not transfer unchanged:
 
 | Strategy | Transferability to noisy circuits | Main change needed | Phase 3 status |
 |---|---|---|---|
-| `kahn` | high | promote noise operations to first-class nodes and add density-aware evaluation of partitions | baseline heuristic |
-| `tdag` | high | reinterpret dependency groups on a noisy operation DAG and benchmark against noisy workloads | baseline heuristic |
-| `gtqcp` | high | same as `tdag`, with workload calibration rather than state-vector-only intuition | baseline heuristic |
-| `ilp` | high | replace the state-vector objective with a density-aware benchmark-informed objective | baseline optimization method |
-| `ilp-fusion` | medium to high | redefine fusion admissibility and cost for exact noisy mixed-state execution | strong baseline candidate |
-| `ilp-fusion-ca` | high | keep the control-aware idea, but recalibrate it for density-matrix runtime cost | especially strong and novel candidate |
+| `kahn` | high | promote noise operations to first-class nodes and add density-aware evaluation of partitions | design-space heuristic baseline |
+| `tdag` | high | reinterpret dependency groups on a noisy operation DAG and benchmark against noisy workloads | design-space heuristic baseline |
+| `gtqcp` | high | same as `tdag`, with workload calibration rather than state-vector-only intuition | design-space heuristic baseline |
+| `ilp` | high | replace the state-vector objective with a density-aware benchmark-informed objective | design-space optimization baseline |
+| `ilp-fusion` | medium to high | redefine fusion admissibility and cost for exact noisy mixed-state execution | design-space strong candidate |
+| `ilp-fusion-ca` | high | keep the control-aware idea, but recalibrate it for density-matrix runtime cost | design-space especially strong candidate |
 | `qiskit` | medium | use only as an external comparison prepartition strategy | comparison baseline |
 | `qiskit-fusion` | medium | use only as a comparison baseline, not as the main claim surface | comparison baseline |
 | `bqskit-Quick` / `Scan` / `Greedy` / `Cluster` | medium | use as external heuristic comparisons rather than native noisy mixed-state planners | comparison baseline |
+
+This table is the broader Phase 3 planner design space, not a statement that
+every listed strategy is already delivered in the current Task 5 baseline. The
+implemented Task 5 calibration surface is narrower: it currently calibrates a
+bounded family of auditable `max_partition_qubits` span-budget settings on the
+existing noisy planner surface, while the adapted `kahn` / `tdag` / `gtqcp` /
+`ilp` / `ilp-fusion` / `ilp-fusion-ca` families remain valid design-space and
+comparison references until they are separately implemented for the noisy
+planner path.
 
 ## 5. Recommended Phase 3 Baseline Stack
 
@@ -343,6 +352,16 @@ The recommended implementation and evaluation ladder is:
 3. `ilp` and adapted `ilp-fusion` / `ilp-fusion-ca` as the optimization-guided
    baseline,
 4. multilevel or hypergraph extensions only if the simpler baselines plateau.
+
+Current Task 5 implementation finding:
+
+- the delivered benchmark-facing calibration surface is narrower than the full
+  longer-horizon ladder above,
+- the current supported Task 5 result calibrates auditable span-budget
+  candidates on the existing noisy planner surface,
+- and the broader adapted `kahn` / `tdag` / `gtqcp` / `ilp` / `ilp-fusion` /
+  `ilp-fusion-ca` family should currently be read as Phase 3 design-space or
+  comparison context rather than as already-delivered noisy planner variants.
 
 ### 5.3 Required Fused Runtime Baseline
 
@@ -377,7 +396,11 @@ The following should be treated as clear baseline Phase 3 content:
 
 - canonical noisy mixed-state planner inputs,
 - noise-aware DAG partitioning,
-- adapted `kahn`, `tdag`, `gtqcp`, `ilp`, `ilp-fusion`, and `ilp-fusion-ca`,
+- benchmark-calibrated planning on the existing noisy planner surface through a
+  bounded auditable candidate family,
+- with adapted `kahn`, `tdag`, `gtqcp`, `ilp`, `ilp-fusion`, and
+  `ilp-fusion-ca` retained as design-space or comparison references until they
+  are separately implemented on the noisy planner path,
 - unitary-island fusion as the minimum real fused execution path,
 - density-aware benchmark-calibrated planning,
 - and comparison against the sequential density baseline and Qiskit Aer.
@@ -412,6 +435,17 @@ The main planning conclusion is:
 - because the novelty is not just "use TDAG again," but "make noisy mixed-state
   circuits native planner objects with exact semantic-preservation and real
   fused runtime execution."
+
+Current implementation finding:
+
+- the delivered Task 5 surface has not yet closed that entire broader algorithm
+  family as separate noisy planner implementations,
+- instead it currently calibrates a bounded span-budget candidate family on the
+  existing noisy planner surface and keeps the broader ladder as explicit
+  design-space context,
+- and the supported Task 5 claim should therefore be phrased against the
+  auditable selection rule and bounded candidate family rather than against one
+  permanently frozen winning planner identity.
 
 The best baseline therefore is not to invent an entirely unrelated planner
 family first. It is to:

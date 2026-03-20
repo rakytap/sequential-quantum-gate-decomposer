@@ -446,6 +446,17 @@ Additional contract details:
 - and the calibration package should emit machine-reviewable bundles or
   rerunnable checkers so later benchmark and paper work can consume the result
   directly.
+- The first delivered benchmark-facing calibration surface may be narrower than
+  the full longer-horizon planner design space. In the current Task 5 result,
+  the supported calibration surface is the existing noisy planner with
+  auditable `max_partition_qubits` span-budget settings, while broader adapted
+  `kahn` / `tdag` / `gtqcp` / `ilp` / `ilp-fusion-ca` families remain
+  comparison or design-space references until they are separately implemented
+  on the noisy planner path.
+- If the benchmark-grounded selection result remains close or rerun-sensitive
+  inside that bounded candidate family, the supported claim should be phrased
+  against the auditable selection rule and explicit claim boundary rather than
+  against one permanently frozen winner identity.
 
 ### Rationale
 
@@ -463,6 +474,12 @@ Additional contract details:
 - Core heuristic and calibration claims should now be phrased against the
   already-frozen workload IDs, seed rules, and noise-pattern vocabulary instead
   of against a moving benchmark target.
+- The first delivered Task 5 claim may therefore be a benchmark-calibrated rule
+  over a bounded noisy-planner candidate family rather than a broad
+  algorithm-family closure.
+- A rerun-sensitive winner inside that bounded candidate family is still a valid
+  implementation finding, provided the selection rule, comparison baselines,
+  and claim boundary remain explicit.
 - Kernel work becomes evidence-driven support work rather than a separate phase
   definition.
 

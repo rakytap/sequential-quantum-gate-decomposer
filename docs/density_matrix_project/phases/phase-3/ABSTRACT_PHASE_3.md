@@ -22,7 +22,11 @@ planner representation, but a native noisy mixed-state partitioning workflow in
 which ordered gate and noise operations are first-class planner inputs,
 partition descriptors preserve exact gate/noise order and parameter routing, and
 an executable partitioned density runtime includes at least one real fused
-execution mode on eligible substructures. The intended claim remains deliberately
+execution mode on eligible substructures. In the current Task 5 implementation,
+the benchmark-facing planning result is a benchmark-calibrated policy over a
+bounded family of auditable `max_partition_qubits` span-budget settings on the
+existing noisy planner surface rather than a broad family of separately
+implemented noisy planner variants. The intended claim remains deliberately
 bounded: fully channel-native fused noisy blocks, broader Phase 4 workflow
 growth, density-matrix gradients, and approximate scaling methods remain outside
 the baseline Paper 2 scope.
@@ -38,12 +42,16 @@ local-noise placement patterns. Success is defined by exact semantic
 preservation plus either measurable runtime or memory benefit on representative
 cases or a benchmark-grounded diagnosis of the dominant remaining bottleneck.
 
-Current Task 4 findings already make that interpretation more concrete. The
-baseline implementation now exercises a real descriptor-local unitary-island
-fused path on representative 8- and 10-qubit structured workloads and preserves
-exact semantics, but it currently closes the performance rule through the
+Current Task 4 and Task 5 findings already make that interpretation more
+concrete. The baseline implementation now exercises a real descriptor-local
+unitary-island fused path on representative 8- and 10-qubit structured
+workloads and preserves exact semantics, while the planning layer calibrates a
+bounded noisy-planner candidate family against the frozen benchmark inventory.
+The current performance interpretation still closes the Phase 3 rule through the
 diagnosis branch rather than through a positive speedup or memory-reduction
-threshold.
+threshold, and the benchmark-grounded selected winner inside the bounded
+candidate family should be treated as an auditable selection outcome rather than
+as a permanently frozen identity claim.
 
 The expected Phase 3 result is a defensible methods milestone between exact
 workflow integration and later noisy optimizer and trainability studies. By
