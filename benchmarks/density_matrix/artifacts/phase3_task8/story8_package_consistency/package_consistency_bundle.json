@@ -1,0 +1,373 @@
+{
+  "provenance": {
+    "generation_command": "python benchmarks/density_matrix/publication_evidence/package_consistency_validation.py",
+    "git_revision": "2aeedb2f95dd24074b62f2cb5e367917c60d16e8",
+    "story6_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/phase3_task8/story6_publication_manifest/publication_manifest_bundle.json",
+    "story7_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/phase3_task8/story7_future_work_boundary/future_work_boundary_bundle.json",
+    "working_directory": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer"
+  },
+  "reviewer_entry_paths": {
+    "phase3_paper": {
+      "exists": true,
+      "path": "docs/density_matrix_project/phases/phase-3/PAPER_PHASE_3.md"
+    },
+    "phase3_short_paper": {
+      "exists": true,
+      "path": "docs/density_matrix_project/phases/phase-3/SHORT_PAPER_PHASE_3.md"
+    },
+    "phase3_short_paper_narrative": {
+      "exists": true,
+      "path": "docs/density_matrix_project/phases/phase-3/SHORT_PAPER_NARRATIVE.md"
+    },
+    "task6_correctness_package": {
+      "exists": true,
+      "path": "benchmarks/density_matrix/artifacts/phase3_task6/story7_correctness_package/correctness_package_bundle.json"
+    },
+    "task7_benchmark_package": {
+      "exists": true,
+      "path": "benchmarks/density_matrix/artifacts/phase3_task7/story7_benchmark_package/benchmark_package_bundle.json"
+    },
+    "task7_diagnosis_bundle": {
+      "exists": true,
+      "path": "benchmarks/density_matrix/artifacts/phase3_task7/story6_diagnosis_path/diagnosis_bundle.json"
+    }
+  },
+  "software": {
+    "python": "3.12.7"
+  },
+  "status": "pass",
+  "story6_publication_manifest": {
+    "path": "benchmarks/density_matrix/artifacts/phase3_task8/story6_publication_manifest/publication_manifest_bundle.json",
+    "status": "pass",
+    "suite_name": "phase3_task8_story6_publication_manifest",
+    "summary": {
+      "mandatory_story_artifact_count": 5,
+      "publication_manifest_completed": true,
+      "publication_surface_count": 4,
+      "publication_surfaces_complete": true,
+      "required_evidence_ref_count": 8,
+      "required_evidence_refs_complete": true,
+      "reviewer_entry_paths_complete": true,
+      "story_artifacts_complete": true
+    }
+  },
+  "story7_future_work_boundary": {
+    "path": "benchmarks/density_matrix/artifacts/phase3_task8/story7_future_work_boundary/future_work_boundary_bundle.json",
+    "status": "pass",
+    "suite_name": "phase3_task8_story7_future_work_boundary",
+    "summary": {
+      "all_future_work_items_present": true,
+      "benchmark_driven_follow_on_present": true,
+      "future_work_boundary_completed": true,
+      "phase_positioning_present": true,
+      "required_topic_count": 5
+    }
+  },
+  "suite_name": "phase3_task8_story8_package_consistency",
+  "summary": {
+    "count_consistency_complete": true,
+    "glossary_term_count": 8,
+    "limitation_summary_consistency_complete": true,
+    "package_consistency_completed": true,
+    "reviewer_entry_paths_complete": true,
+    "surface_count": 4,
+    "task6_summary_consistency_pass": true,
+    "task7_summary_consistency_pass": true,
+    "terminology_complete": true
+  },
+  "surface_inventory": [
+    {
+      "count_references_present": true,
+      "diagnosis_limitations_present": true,
+      "doc_id": "phase3_abstract",
+      "exists": true,
+      "forbidden_phrase_groups": [],
+      "label": "Phase 3 abstract surface",
+      "missing_headings": [],
+      "missing_required_phrase_groups": [],
+      "path": "docs/density_matrix_project/phases/phase-3/ABSTRACT_PHASE_3.md",
+      "present_forbidden_phrase_groups": [],
+      "required_headings": [],
+      "required_phrase_groups": [
+        {
+          "group_id": "task6_count",
+          "phrases": [
+            "`25` counted supported cases"
+          ]
+        },
+        {
+          "group_id": "task6_boundary_count",
+          "phrases": [
+            "`17` explicit unsupported-boundary cases",
+            "`17` explicit unsupported- boundary cases",
+            "`17` explicit Task 6 boundary cases",
+            "the `17` explicit Task 6 boundary cases",
+            "`17` carried-forward Task 6 boundary cases"
+          ]
+        },
+        {
+          "group_id": "task7_count",
+          "phrases": [
+            "`34` counted supported benchmark cases",
+            "`34` counted supported cases"
+          ]
+        },
+        {
+          "group_id": "task7_review_cases",
+          "phrases": [
+            "`6` representative review cases",
+            "representative review set contains `6`",
+            "representative review set of `6`",
+            "`6` primary-seed sparse structured cases"
+          ]
+        },
+        {
+          "group_id": "diagnosis_closure",
+          "phrases": [
+            "diagnosis-grounded limitation reporting",
+            "diagnosis-grounded benchmark evidence",
+            "diagnosis-grounded closure",
+            "diagnosis branch"
+          ]
+        },
+        {
+          "group_id": "bottleneck_wording",
+          "phrases": [
+            "supported islands left unfused",
+            "supported islands still remain unfused",
+            "Python-level fused-path overhead",
+            "present fused path adds Python-level overhead",
+            "present fused path stays slower",
+            "fused path stays slower than the sequential reference",
+            "peak memory does not improve"
+          ]
+        }
+      ],
+      "status": "pass",
+      "surface_id": "abstract"
+    },
+    {
+      "count_references_present": true,
+      "diagnosis_limitations_present": true,
+      "doc_id": "phase3_short_paper",
+      "exists": true,
+      "forbidden_phrase_groups": [],
+      "label": "Phase 3 technical short-paper surface",
+      "missing_headings": [],
+      "missing_required_phrase_groups": [],
+      "path": "docs/density_matrix_project/phases/phase-3/SHORT_PAPER_PHASE_3.md",
+      "present_forbidden_phrase_groups": [],
+      "required_headings": [],
+      "required_phrase_groups": [
+        {
+          "group_id": "task6_count",
+          "phrases": [
+            "`25` counted supported cases"
+          ]
+        },
+        {
+          "group_id": "task6_boundary_count",
+          "phrases": [
+            "`17` explicit unsupported-boundary cases",
+            "`17` explicit unsupported- boundary cases",
+            "`17` explicit Task 6 boundary cases",
+            "the `17` explicit Task 6 boundary cases",
+            "`17` carried-forward Task 6 boundary cases"
+          ]
+        },
+        {
+          "group_id": "task7_count",
+          "phrases": [
+            "`34` counted supported benchmark cases",
+            "`34` counted supported cases"
+          ]
+        },
+        {
+          "group_id": "task7_review_cases",
+          "phrases": [
+            "`6` representative review cases",
+            "representative review set contains `6`",
+            "representative review set of `6`",
+            "`6` primary-seed sparse structured cases"
+          ]
+        },
+        {
+          "group_id": "diagnosis_closure",
+          "phrases": [
+            "diagnosis-grounded limitation reporting",
+            "diagnosis-grounded benchmark evidence",
+            "diagnosis-grounded closure",
+            "diagnosis branch"
+          ]
+        },
+        {
+          "group_id": "bottleneck_wording",
+          "phrases": [
+            "supported islands left unfused",
+            "supported islands still remain unfused",
+            "Python-level fused-path overhead",
+            "present fused path adds Python-level overhead",
+            "present fused path stays slower",
+            "fused path stays slower than the sequential reference",
+            "peak memory does not improve"
+          ]
+        }
+      ],
+      "status": "pass",
+      "surface_id": "short_paper"
+    },
+    {
+      "count_references_present": true,
+      "diagnosis_limitations_present": true,
+      "doc_id": "phase3_short_paper_narrative",
+      "exists": true,
+      "forbidden_phrase_groups": [],
+      "label": "Phase 3 narrative short-paper surface",
+      "missing_headings": [],
+      "missing_required_phrase_groups": [],
+      "path": "docs/density_matrix_project/phases/phase-3/SHORT_PAPER_NARRATIVE.md",
+      "present_forbidden_phrase_groups": [],
+      "required_headings": [],
+      "required_phrase_groups": [
+        {
+          "group_id": "task6_count",
+          "phrases": [
+            "`25` counted supported cases"
+          ]
+        },
+        {
+          "group_id": "task6_boundary_count",
+          "phrases": [
+            "`17` explicit unsupported-boundary cases",
+            "`17` explicit unsupported- boundary cases",
+            "`17` explicit Task 6 boundary cases",
+            "the `17` explicit Task 6 boundary cases",
+            "`17` carried-forward Task 6 boundary cases"
+          ]
+        },
+        {
+          "group_id": "task7_count",
+          "phrases": [
+            "`34` counted supported benchmark cases",
+            "`34` counted supported cases"
+          ]
+        },
+        {
+          "group_id": "task7_review_cases",
+          "phrases": [
+            "`6` representative review cases",
+            "representative review set contains `6`",
+            "representative review set of `6`",
+            "`6` primary-seed sparse structured cases"
+          ]
+        },
+        {
+          "group_id": "diagnosis_closure",
+          "phrases": [
+            "diagnosis-grounded limitation reporting",
+            "diagnosis-grounded benchmark evidence",
+            "diagnosis-grounded closure",
+            "diagnosis branch"
+          ]
+        },
+        {
+          "group_id": "bottleneck_wording",
+          "phrases": [
+            "supported islands left unfused",
+            "supported islands still remain unfused",
+            "Python-level fused-path overhead",
+            "present fused path adds Python-level overhead",
+            "present fused path stays slower",
+            "fused path stays slower than the sequential reference",
+            "peak memory does not improve"
+          ]
+        }
+      ],
+      "status": "pass",
+      "surface_id": "short_paper_narrative"
+    },
+    {
+      "count_references_present": true,
+      "diagnosis_limitations_present": true,
+      "doc_id": "phase3_paper",
+      "exists": true,
+      "forbidden_phrase_groups": [],
+      "label": "Phase 3 full-paper surface",
+      "missing_headings": [],
+      "missing_required_phrase_groups": [],
+      "path": "docs/density_matrix_project/phases/phase-3/PAPER_PHASE_3.md",
+      "present_forbidden_phrase_groups": [],
+      "required_headings": [],
+      "required_phrase_groups": [
+        {
+          "group_id": "task6_count",
+          "phrases": [
+            "`25` counted supported cases"
+          ]
+        },
+        {
+          "group_id": "task6_boundary_count",
+          "phrases": [
+            "`17` explicit unsupported-boundary cases",
+            "`17` explicit unsupported- boundary cases",
+            "`17` explicit Task 6 boundary cases",
+            "the `17` explicit Task 6 boundary cases",
+            "`17` carried-forward Task 6 boundary cases"
+          ]
+        },
+        {
+          "group_id": "task7_count",
+          "phrases": [
+            "`34` counted supported benchmark cases",
+            "`34` counted supported cases"
+          ]
+        },
+        {
+          "group_id": "task7_review_cases",
+          "phrases": [
+            "`6` representative review cases",
+            "representative review set contains `6`",
+            "representative review set of `6`",
+            "`6` primary-seed sparse structured cases"
+          ]
+        },
+        {
+          "group_id": "diagnosis_closure",
+          "phrases": [
+            "diagnosis-grounded limitation reporting",
+            "diagnosis-grounded benchmark evidence",
+            "diagnosis-grounded closure",
+            "diagnosis branch"
+          ]
+        },
+        {
+          "group_id": "bottleneck_wording",
+          "phrases": [
+            "supported islands left unfused",
+            "supported islands still remain unfused",
+            "Python-level fused-path overhead",
+            "present fused path adds Python-level overhead",
+            "present fused path stays slower",
+            "fused path stays slower than the sequential reference",
+            "peak memory does not improve"
+          ]
+        }
+      ],
+      "status": "pass",
+      "surface_id": "paper"
+    }
+  ],
+  "terminology_inventory": {
+    "missing_glossary_terms": [],
+    "required_glossary_terms": [
+      "exact noisy mixed-state circuits",
+      "canonical noisy mixed-state planner surface",
+      "partitioned density runtime",
+      "real fused path",
+      "counted supported",
+      "diagnosis-grounded",
+      "future work",
+      "Phase 4+ work"
+    ]
+  }
+}

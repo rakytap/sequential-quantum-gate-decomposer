@@ -32,18 +32,18 @@
       "family_name": "layered_nearest_neighbor",
       "frobenius_norm_diff": 1.0193792192773324e-15,
       "fused_gate_count": 24,
-      "fused_median_peak_rss_kb": 409948,
-      "fused_median_runtime_ms": 176.78384605096653,
+      "fused_median_peak_rss_kb": 651096,
+      "fused_median_runtime_ms": 177.9051610501483,
       "fused_peak_rss_kb_samples": [
-        409948,
-        409948,
-        409948
+        651096,
+        651096,
+        651096
       ],
       "fused_region_count": 12,
       "fused_runtime_ms_samples": [
-        176.4431339688599,
-        176.78384605096653,
-        176.889055990614
+        177.9051610501483,
+        177.02244699466974,
+        179.46529696928337
       ],
       "gate_count": 35,
       "internal_reference_pass": true,
@@ -83,15 +83,15 @@
         1,
         1
       ],
-      "peak_rss_kb": 294116,
-      "peak_rss_mb": 287.22265625,
+      "peak_rss_kb": 651096,
+      "peak_rss_mb": 635.8359375,
       "planner_family": "phase3_span_budget",
       "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "planner_settings": {
         "max_partition_qubits": 2
       },
       "planner_variant": "max_partition_qubits_2",
-      "planning_time_ms": 0.709382991772145,
+      "planning_time_ms": 0.7369929808191955,
       "positive_threshold_pass": false,
       "qbit_num": 8,
       "record_schema_version": "phase3_task7_benchmark_record_v1",
@@ -103,28 +103,28 @@
       "review_group_id": "layered_nearest_neighbor_q8",
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
-      "runtime_ms": 179.07970596570522,
+      "runtime_ms": 179.144426016137,
       "runtime_path": "partitioned_density_descriptor_fused_unitary_islands",
       "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
       "seed": 20260318,
-      "sequential_median_peak_rss_kb": 409948,
-      "sequential_median_runtime_ms": 42.70664800424129,
+      "sequential_median_peak_rss_kb": 651096,
+      "sequential_median_runtime_ms": 43.21263002930209,
       "sequential_peak_rss_kb_samples": [
-        409948,
-        409948,
-        409948
+        651096,
+        651096,
+        651096
       ],
-      "sequential_peak_rss_kb_single": 383948,
+      "sequential_peak_rss_kb_single": 651096,
       "sequential_rho_is_valid": true,
       "sequential_runtime_ms_samples": [
-        43.55099197709933,
-        42.664987966418266,
-        42.70664800424129
+        43.21263002930209,
+        43.69375196984038,
+        42.58034797385335
       ],
-      "sequential_runtime_ms_single": 42.652898002415895,
+      "sequential_runtime_ms_single": 44.80360698653385,
       "sequential_trace_deviation": 8.883709084703726e-16,
       "source_type": "structured_family_builder",
-      "speedup": 0.24157551132770932,
+      "speedup": 0.24289700070657994,
       "story1_matrix_pass": true,
       "supported_runtime_case": true,
       "supported_unfused_gate_count": 11,
@@ -170,20 +170,20 @@
       "external_reference_required": false,
       "fallback_used": false,
       "family_name": "layered_nearest_neighbor",
-      "frobenius_norm_diff": 1.5442025865469565e-15,
+      "frobenius_norm_diff": 1.5442025865469579e-15,
       "fused_gate_count": 40,
-      "fused_median_peak_rss_kb": 409948,
-      "fused_median_runtime_ms": 4682.629343005829,
+      "fused_median_peak_rss_kb": 681124,
+      "fused_median_runtime_ms": 4592.810439004097,
       "fused_peak_rss_kb_samples": [
-        409948,
-        409948,
-        409948
+        670268,
+        681124,
+        681124
       ],
       "fused_region_count": 20,
       "fused_runtime_ms_samples": [
-        4672.55751095945,
-        4729.667498962954,
-        4682.629343005829
+        4592.810439004097,
+        4465.174988028593,
+        4727.506860042922
       ],
       "gate_count": 58,
       "internal_reference_pass": true,
@@ -237,15 +237,15 @@
         1,
         1
       ],
-      "peak_rss_kb": 294116,
-      "peak_rss_mb": 287.22265625,
+      "peak_rss_kb": 651096,
+      "peak_rss_mb": 635.8359375,
       "planner_family": "phase3_span_budget",
       "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "planner_settings": {
         "max_partition_qubits": 2
       },
       "planner_variant": "max_partition_qubits_2",
-      "planning_time_ms": 1.2178650358691812,
+      "planning_time_ms": 1.104704977478832,
       "positive_threshold_pass": false,
       "qbit_num": 10,
       "record_schema_version": "phase3_task7_benchmark_record_v1",
@@ -257,28 +257,28 @@
       "review_group_id": "layered_nearest_neighbor_q10",
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
-      "runtime_ms": 4744.319449993782,
+      "runtime_ms": 4713.201840990223,
       "runtime_path": "partitioned_density_descriptor_fused_unitary_islands",
       "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
       "seed": 20260318,
-      "sequential_median_peak_rss_kb": 409948,
-      "sequential_median_runtime_ms": 1184.2959900386631,
+      "sequential_median_peak_rss_kb": 681124,
+      "sequential_median_runtime_ms": 1197.7076460025273,
       "sequential_peak_rss_kb_samples": [
-        409948,
-        409948,
-        409948
+        670268,
+        681124,
+        681124
       ],
-      "sequential_peak_rss_kb_single": 383948,
+      "sequential_peak_rss_kb_single": 670268,
       "sequential_rho_is_valid": true,
       "sequential_runtime_ms_samples": [
-        1184.2959900386631,
-        1184.5054510049522,
-        1182.4600619729608
+        1215.947272023186,
+        1197.7076460025273,
+        1172.275601013098
       ],
-      "sequential_runtime_ms_single": 1191.743390983902,
+      "sequential_runtime_ms_single": 1264.080212044064,
       "sequential_trace_deviation": 1.5543241560447276e-15,
       "source_type": "structured_family_builder",
-      "speedup": 0.2529126059929508,
+      "speedup": 0.2607788111242487,
       "story1_matrix_pass": true,
       "supported_runtime_case": true,
       "supported_unfused_gate_count": 18,
@@ -326,18 +326,18 @@
       "family_name": "seeded_random_layered",
       "frobenius_norm_diff": 9.19406325635087e-16,
       "fused_gate_count": 24,
-      "fused_median_peak_rss_kb": 409948,
-      "fused_median_runtime_ms": 176.77125602494925,
+      "fused_median_peak_rss_kb": 722484,
+      "fused_median_runtime_ms": 169.73737603984773,
       "fused_peak_rss_kb_samples": [
-        409948,
-        409948,
-        409948
+        722484,
+        722484,
+        722484
       ],
       "fused_region_count": 12,
       "fused_runtime_ms_samples": [
-        176.77125602494925,
-        176.50598497129977,
-        176.83509597554803
+        164.05831300653517,
+        169.73737603984773,
+        173.9227439975366
       ],
       "gate_count": 35,
       "internal_reference_pass": true,
@@ -377,15 +377,15 @@
         1,
         1
       ],
-      "peak_rss_kb": 330196,
-      "peak_rss_mb": 322.45703125,
+      "peak_rss_kb": 722484,
+      "peak_rss_mb": 705.55078125,
       "planner_family": "phase3_span_budget",
       "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "planner_settings": {
         "max_partition_qubits": 2
       },
       "planner_variant": "max_partition_qubits_2",
-      "planning_time_ms": 0.7039930205792189,
+      "planning_time_ms": 0.7296029943972826,
       "positive_threshold_pass": false,
       "qbit_num": 8,
       "record_schema_version": "phase3_task7_benchmark_record_v1",
@@ -397,28 +397,28 @@
       "review_group_id": "seeded_random_layered_q8",
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
-      "runtime_ms": 180.44970103073865,
+      "runtime_ms": 177.64731001807377,
       "runtime_path": "partitioned_density_descriptor_fused_unitary_islands",
       "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
       "seed": 20260318,
-      "sequential_median_peak_rss_kb": 409948,
-      "sequential_median_runtime_ms": 42.580788023769855,
+      "sequential_median_peak_rss_kb": 722484,
+      "sequential_median_runtime_ms": 43.31120999995619,
       "sequential_peak_rss_kb_samples": [
-        409948,
-        409948,
-        409948
+        722484,
+        722484,
+        722484
       ],
-      "sequential_peak_rss_kb_single": 405352,
+      "sequential_peak_rss_kb_single": 722484,
       "sequential_rho_is_valid": true,
       "sequential_runtime_ms_samples": [
-        42.580788023769855,
-        42.58097702404484,
-        42.023174988571554
+        43.42481098137796,
+        43.31120999995619,
+        43.13703899970278
       ],
-      "sequential_runtime_ms_single": 44.28468400146812,
+      "sequential_runtime_ms_single": 50.80323095899075,
       "sequential_trace_deviation": 1.1107607107334693e-15,
       "source_type": "structured_family_builder",
-      "speedup": 0.24088072337824007,
+      "speedup": 0.25516601593857796,
       "story1_matrix_pass": true,
       "supported_runtime_case": true,
       "supported_unfused_gate_count": 11,
@@ -464,20 +464,20 @@
       "external_reference_required": false,
       "fallback_used": false,
       "family_name": "seeded_random_layered",
-      "frobenius_norm_diff": 1.7772944584248772e-15,
+      "frobenius_norm_diff": 1.7772944584248788e-15,
       "fused_gate_count": 40,
-      "fused_median_peak_rss_kb": 409948,
-      "fused_median_runtime_ms": 4716.311433003284,
+      "fused_median_peak_rss_kb": 722484,
+      "fused_median_runtime_ms": 4394.335942983162,
       "fused_peak_rss_kb_samples": [
-        409948,
-        409948,
-        409948
+        722484,
+        722484,
+        722484
       ],
       "fused_region_count": 20,
       "fused_runtime_ms_samples": [
-        4709.461294987705,
-        4716.311433003284,
-        4726.53496597195
+        4394.335942983162,
+        4220.214708999265,
+        4407.107656006701
       ],
       "gate_count": 58,
       "internal_reference_pass": true,
@@ -531,15 +531,15 @@
         1,
         1
       ],
-      "peak_rss_kb": 334992,
-      "peak_rss_mb": 327.140625,
+      "peak_rss_kb": 722484,
+      "peak_rss_mb": 705.55078125,
       "planner_family": "phase3_span_budget",
       "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "planner_settings": {
         "max_partition_qubits": 2
       },
       "planner_variant": "max_partition_qubits_2",
-      "planning_time_ms": 1.0760449804365635,
+      "planning_time_ms": 1.1083349818363786,
       "positive_threshold_pass": false,
       "qbit_num": 10,
       "record_schema_version": "phase3_task7_benchmark_record_v1",
@@ -551,28 +551,28 @@
       "review_group_id": "seeded_random_layered_q10",
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
-      "runtime_ms": 4745.85405603284,
+      "runtime_ms": 4213.933632010594,
       "runtime_path": "partitioned_density_descriptor_fused_unitary_islands",
       "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
       "seed": 20260318,
-      "sequential_median_peak_rss_kb": 409948,
-      "sequential_median_runtime_ms": 1184.4777909573168,
+      "sequential_median_peak_rss_kb": 722484,
+      "sequential_median_runtime_ms": 1181.4188479911536,
       "sequential_peak_rss_kb_samples": [
-        409948,
-        409948,
-        409948
+        722484,
+        722484,
+        722484
       ],
-      "sequential_peak_rss_kb_single": 405352,
+      "sequential_peak_rss_kb_single": 722484,
       "sequential_rho_is_valid": true,
       "sequential_runtime_ms_samples": [
-        1184.4777909573168,
-        1170.9057450061664,
-        1194.5048630004749
+        1195.0586249586195,
+        1171.0437149740756,
+        1181.4188479911536
       ],
-      "sequential_runtime_ms_single": 1188.200035947375,
+      "sequential_runtime_ms_single": 1199.2763120215386,
       "sequential_trace_deviation": 1.998734629071901e-15,
       "source_type": "structured_family_builder",
-      "speedup": 0.25114494828918815,
+      "speedup": 0.2688503708683523,
       "story1_matrix_pass": true,
       "supported_runtime_case": true,
       "supported_unfused_gate_count": 18,
@@ -618,20 +618,20 @@
       "external_reference_required": false,
       "fallback_used": false,
       "family_name": "partition_stress_ladder",
-      "frobenius_norm_diff": 1.0206146739511865e-15,
+      "frobenius_norm_diff": 1.0206146739511863e-15,
       "fused_gate_count": 26,
-      "fused_median_peak_rss_kb": 409948,
-      "fused_median_runtime_ms": 188.69599502068013,
+      "fused_median_peak_rss_kb": 722484,
+      "fused_median_runtime_ms": 195.82358497427776,
       "fused_peak_rss_kb_samples": [
-        409948,
-        409948,
-        409948
+        722484,
+        722484,
+        722484
       ],
       "fused_region_count": 12,
       "fused_runtime_ms_samples": [
-        189.22716699307784,
-        188.69599502068013,
-        188.20053403032944
+        184.5930980052799,
+        196.31659699371085,
+        195.82358497427776
       ],
       "gate_count": 45,
       "internal_reference_pass": true,
@@ -679,15 +679,15 @@
         1,
         1
       ],
-      "peak_rss_kb": 382724,
-      "peak_rss_mb": 373.75390625,
+      "peak_rss_kb": 722484,
+      "peak_rss_mb": 705.55078125,
       "planner_family": "phase3_span_budget",
       "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "planner_settings": {
         "max_partition_qubits": 2
       },
       "planner_variant": "max_partition_qubits_2",
-      "planning_time_ms": 0.8718339959159493,
+      "planning_time_ms": 0.8879329543560743,
       "positive_threshold_pass": false,
       "qbit_num": 8,
       "record_schema_version": "phase3_task7_benchmark_record_v1",
@@ -699,28 +699,28 @@
       "review_group_id": "partition_stress_ladder_q8",
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
-      "runtime_ms": 190.11834100820124,
+      "runtime_ms": 212.68886496545747,
       "runtime_path": "partitioned_density_descriptor_fused_unitary_islands",
       "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
       "seed": 20260318,
-      "sequential_median_peak_rss_kb": 409948,
-      "sequential_median_runtime_ms": 56.91596696851775,
+      "sequential_median_peak_rss_kb": 722484,
+      "sequential_median_runtime_ms": 57.67427000682801,
       "sequential_peak_rss_kb_samples": [
-        409948,
-        409948,
-        409948
+        722484,
+        722484,
+        722484
       ],
-      "sequential_peak_rss_kb_single": 405416,
+      "sequential_peak_rss_kb_single": 722484,
       "sequential_rho_is_valid": true,
       "sequential_runtime_ms_samples": [
-        57.848209980875254,
-        56.91596696851775,
-        56.63578602252528
+        61.74338702112436,
+        57.67427000682801,
+        57.18597798841074
       ],
-      "sequential_runtime_ms_single": 58.34008299279958,
+      "sequential_runtime_ms_single": 74.26619000034407,
       "sequential_trace_deviation": 4.442014124316167e-16,
       "source_type": "structured_family_builder",
-      "speedup": 0.3016278483402896,
+      "speedup": 0.2945215716196993,
       "story1_matrix_pass": true,
       "supported_runtime_case": true,
       "supported_unfused_gate_count": 19,
@@ -766,20 +766,20 @@
       "external_reference_required": false,
       "fallback_used": false,
       "family_name": "partition_stress_ladder",
-      "frobenius_norm_diff": 1.8958077021951703e-15,
+      "frobenius_norm_diff": 1.895807702195177e-15,
       "fused_gate_count": 43,
-      "fused_median_peak_rss_kb": 409948,
-      "fused_median_runtime_ms": 5114.228349993937,
+      "fused_median_peak_rss_kb": 722484,
+      "fused_median_runtime_ms": 4665.00137996627,
       "fused_peak_rss_kb_samples": [
-        409948,
-        409948,
-        409948
+        722484,
+        722484,
+        722484
       ],
       "fused_region_count": 20,
       "fused_runtime_ms_samples": [
-        5114.228349993937,
-        5123.159637034405,
-        5112.853544007521
+        4665.00137996627,
+        4660.750021983404,
+        4789.449608011637
       ],
       "gate_count": 76,
       "internal_reference_pass": true,
@@ -848,15 +848,15 @@
         1,
         1
       ],
-      "peak_rss_kb": 382724,
-      "peak_rss_mb": 373.75390625,
+      "peak_rss_kb": 722484,
+      "peak_rss_mb": 705.55078125,
       "planner_family": "phase3_span_budget",
       "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "planner_settings": {
         "max_partition_qubits": 2
       },
       "planner_variant": "max_partition_qubits_2",
-      "planning_time_ms": 1.5277759521268308,
+      "planning_time_ms": 1.4189560315571725,
       "positive_threshold_pass": false,
       "qbit_num": 10,
       "record_schema_version": "phase3_task7_benchmark_record_v1",
@@ -868,28 +868,28 @@
       "review_group_id": "partition_stress_ladder_q10",
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
-      "runtime_ms": 5070.677268027794,
+      "runtime_ms": 4739.843951014336,
       "runtime_path": "partitioned_density_descriptor_fused_unitary_islands",
       "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
       "seed": 20260318,
-      "sequential_median_peak_rss_kb": 409948,
-      "sequential_median_runtime_ms": 1630.3107169806026,
+      "sequential_median_peak_rss_kb": 722484,
+      "sequential_median_runtime_ms": 1645.4204599722289,
       "sequential_peak_rss_kb_samples": [
-        409948,
-        409948,
-        409948
+        722484,
+        722484,
+        722484
       ],
-      "sequential_peak_rss_kb_single": 405416,
+      "sequential_peak_rss_kb_single": 722484,
       "sequential_rho_is_valid": true,
       "sequential_runtime_ms_samples": [
-        1630.3107169806026,
-        1629.713474016171,
-        1631.5041819470935
+        1651.0805829893798,
+        1644.316544989124,
+        1645.4204599722289
       ],
-      "sequential_runtime_ms_single": 1630.4777670302428,
+      "sequential_runtime_ms_single": 1650.277639972046,
       "sequential_trace_deviation": 4.440932257458426e-16,
       "source_type": "structured_family_builder",
-      "speedup": 0.31877941409920335,
+      "speedup": 0.35271596425211044,
       "story1_matrix_pass": true,
       "supported_runtime_case": true,
       "supported_unfused_gate_count": 33,

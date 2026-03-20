@@ -1,0 +1,453 @@
+{
+  "provenance": {
+    "generation_command": "python benchmarks/density_matrix/publication_evidence/surface_alignment_validation.py",
+    "git_revision": "2aeedb2f95dd24074b62f2cb5e367917c60d16e8",
+    "story1_claim_package_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/phase3_task8/story1_claim_package/claim_package_bundle.json",
+    "working_directory": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer"
+  },
+  "software": {
+    "python": "3.12.7"
+  },
+  "status": "pass",
+  "story1_claim_package": {
+    "path": "benchmarks/density_matrix/artifacts/phase3_task8/story1_claim_package/claim_package_bundle.json",
+    "status": "pass",
+    "suite_name": "phase3_task8_story1_claim_package",
+    "summary": {
+      "all_non_claims_present": true,
+      "all_source_phrases_present": true,
+      "all_supporting_claims_present": true,
+      "claim_package_completed": true,
+      "evidence_closure_rule_present": true,
+      "main_claim_present_in_primary_surface": true,
+      "non_claim_count": 5,
+      "primary_surface_has_claim_heading": true,
+      "primary_surface_has_role_heading": true,
+      "primary_surface_has_role_phrase": true,
+      "supporting_claim_count": 5
+    }
+  },
+  "suite_name": "phase3_task8_story2_surface_alignment",
+  "summary": {
+    "all_claim_headings_present": true,
+    "all_evidence_rules_present": true,
+    "all_main_claims_present": true,
+    "all_no_fallback_present": true,
+    "all_non_claims_present": true,
+    "all_phase_positioning_present": true,
+    "all_supported_path_present": true,
+    "all_surface_roles_present": true,
+    "surface_alignment_completed": true,
+    "surface_count": 4
+  },
+  "surface_inventory": [
+    {
+      "core_non_claims_present": true,
+      "doc_id": "phase3_abstract",
+      "evidence_closure_rule_present": true,
+      "exists": true,
+      "forbidden_phrase_groups": [],
+      "label": "Phase 3 abstract surface",
+      "main_claim_present": true,
+      "missing_headings": [],
+      "missing_required_phrase_groups": [],
+      "no_fallback_rule_present": true,
+      "path": "docs/density_matrix_project/phases/phase-3/ABSTRACT_PHASE_3.md",
+      "phase_positioning_present": true,
+      "present_forbidden_phrase_groups": [],
+      "required_headings": [
+        "## Publication Surface Role",
+        "## Paper 2 Claim Boundary"
+      ],
+      "required_phrase_groups": [
+        {
+          "group_id": "role_phrase",
+          "phrases": [
+            "This document is the compact conference-abstract surface for the Phase 3 Paper 2 package."
+          ]
+        },
+        {
+          "group_id": "main_claim",
+          "phrases": [
+            "SQUANDER extends partitioning and limited fusion to exact noisy mixed-state circuits by making noisy operations first-class planner inputs, preserving exact gate/noise semantics across partition descriptors and runtime execution, and validating the resulting partitioned density path on representative noisy workloads."
+          ]
+        },
+        {
+          "group_id": "supported_path_boundary",
+          "phrases": [
+            "The guaranteed Paper 2 path is the canonical noisy mixed-state planner surface plus the documented exact lowering needed for the frozen Phase 2 continuity workflow and the structured Phase 3 benchmark families.",
+            "The guaranteed Paper 2 path is the canonical noisy mixed-state planner surface plus the exact lowering needed for the frozen Phase 2 continuity workflow and the required Phase 3 structured benchmark families.",
+            "The guaranteed Paper 2 path is the canonical noisy mixed-state planner surface plus exact lowering for the frozen Phase 2 continuity workflow and the required Phase 3 structured benchmark families.",
+            "The guaranteed Paper 2 path is the canonical noisy mixed-state planner surface plus the documented exact lowering required for the frozen Phase 2 continuity workflow and the required Phase 3 structured benchmark families."
+          ]
+        },
+        {
+          "group_id": "no_fallback_rule",
+          "phrases": [
+            "No silent sequential fallback is part of the Phase 3 contract for any benchmark that claims partitioned density behavior.",
+            "No silent sequential fallback is part of the Phase 3 contract for benchmarks that claim partitioned density behavior.",
+            "No silent substitution of sequential execution is part of the Phase 3 contract for a benchmark that claims `partitioned_density` behavior."
+          ]
+        },
+        {
+          "group_id": "evidence_closure_rule",
+          "phrases": [
+            "Only mandatory, complete, supported correctness and reproducibility evidence, plus either measured benefit or benchmark-grounded limitation reporting, closes the main Paper 2 claim.",
+            "Only mandatory, complete, supported correctness and reproducibility evidence, plus either measurable benefit or benchmark-grounded limitation reporting, closes the main Paper 2 claim."
+          ]
+        },
+        {
+          "group_id": "phase_positioning",
+          "phrases": [
+            "Paper 2 is the Phase 3 methods and systems milestone in the density-matrix publication ladder.",
+            "Paper 2 is the Phase 3 methods milestone between exact noisy integration and broader noisy workflow science.",
+            "Paper 2 is the Phase 3 noise-aware partitioning and fusion milestone in the density-matrix publication ladder."
+          ]
+        },
+        {
+          "group_id": "channel_native_non_claim",
+          "phrases": [
+            "fully channel-native or superoperator-native fused noisy blocks are follow-on work beyond the baseline Paper 2 claim",
+            "fully channel-native fused noisy blocks are future work beyond the baseline Paper 2 claim",
+            "fully channel-native fused noisy blocks are not part of the baseline Paper 2 claim",
+            "fully channel-native or superoperator-native fused noisy blocks are outside the baseline Paper 2 claim"
+          ]
+        },
+        {
+          "group_id": "workflow_growth_non_claim",
+          "phrases": [
+            "broader noisy VQE/VQA workflow growth, density-backend gradients, and optimizer-comparison studies remain Phase 4+ work",
+            "broader noisy VQE/VQA workflow growth, density-backend gradients, and optimizer studies remain Phase 4+ work",
+            "broader noisy VQE/VQA feature growth and density-backend gradients are Phase 4+ work",
+            "density-backend gradients, optimizer-comparison studies, and broader noisy VQE/VQA workflow growth are Phase 4+ work"
+          ]
+        },
+        {
+          "group_id": "approximate_scaling_non_claim",
+          "phrases": [
+            "approximate scaling methods such as trajectories or MPDO-style approaches are outside the current Paper 2 claim",
+            "approximate scaling methods remain later work beyond the current Paper 2 claim",
+            "approximate scaling methods remain future branches rather than current Paper 2 results"
+          ]
+        },
+        {
+          "group_id": "circuit_parity_non_claim",
+          "phrases": [
+            "full `qgd_Circuit` parity is not part of the baseline Paper 2 claim",
+            "full direct `qgd_Circuit` parity is not a current Paper 2 claim"
+          ]
+        }
+      ],
+      "role_present": true,
+      "status": "pass",
+      "supported_path_boundary_present": true,
+      "surface_id": "abstract"
+    },
+    {
+      "core_non_claims_present": true,
+      "doc_id": "phase3_short_paper",
+      "evidence_closure_rule_present": true,
+      "exists": true,
+      "forbidden_phrase_groups": [],
+      "label": "Phase 3 technical short-paper surface",
+      "main_claim_present": true,
+      "missing_headings": [],
+      "missing_required_phrase_groups": [],
+      "no_fallback_rule_present": true,
+      "path": "docs/density_matrix_project/phases/phase-3/SHORT_PAPER_PHASE_3.md",
+      "phase_positioning_present": true,
+      "present_forbidden_phrase_groups": [],
+      "required_headings": [
+        "## Publication Surface Role",
+        "## Paper 2 Claim Boundary"
+      ],
+      "required_phrase_groups": [
+        {
+          "group_id": "role_phrase",
+          "phrases": [
+            "This document is the compact short-paper surface for the Phase 3 Paper 2 package."
+          ]
+        },
+        {
+          "group_id": "main_claim",
+          "phrases": [
+            "SQUANDER extends partitioning and limited fusion to exact noisy mixed-state circuits by making noisy operations first-class planner inputs, preserving exact gate/noise semantics across partition descriptors and runtime execution, and validating the resulting partitioned density path on representative noisy workloads."
+          ]
+        },
+        {
+          "group_id": "supported_path_boundary",
+          "phrases": [
+            "The guaranteed Paper 2 path is the canonical noisy mixed-state planner surface plus the documented exact lowering needed for the frozen Phase 2 continuity workflow and the structured Phase 3 benchmark families.",
+            "The guaranteed Paper 2 path is the canonical noisy mixed-state planner surface plus the exact lowering needed for the frozen Phase 2 continuity workflow and the required Phase 3 structured benchmark families.",
+            "The guaranteed Paper 2 path is the canonical noisy mixed-state planner surface plus exact lowering for the frozen Phase 2 continuity workflow and the required Phase 3 structured benchmark families.",
+            "The guaranteed Paper 2 path is the canonical noisy mixed-state planner surface plus the documented exact lowering required for the frozen Phase 2 continuity workflow and the required Phase 3 structured benchmark families."
+          ]
+        },
+        {
+          "group_id": "no_fallback_rule",
+          "phrases": [
+            "No silent sequential fallback is part of the Phase 3 contract for any benchmark that claims partitioned density behavior.",
+            "No silent sequential fallback is part of the Phase 3 contract for benchmarks that claim partitioned density behavior.",
+            "No silent substitution of sequential execution is part of the Phase 3 contract for a benchmark that claims `partitioned_density` behavior."
+          ]
+        },
+        {
+          "group_id": "evidence_closure_rule",
+          "phrases": [
+            "Only mandatory, complete, supported correctness and reproducibility evidence, plus either measured benefit or benchmark-grounded limitation reporting, closes the main Paper 2 claim.",
+            "Only mandatory, complete, supported correctness and reproducibility evidence, plus either measurable benefit or benchmark-grounded limitation reporting, closes the main Paper 2 claim."
+          ]
+        },
+        {
+          "group_id": "phase_positioning",
+          "phrases": [
+            "Paper 2 is the Phase 3 methods and systems milestone in the density-matrix publication ladder.",
+            "Paper 2 is the Phase 3 methods milestone between exact noisy integration and broader noisy workflow science.",
+            "Paper 2 is the Phase 3 noise-aware partitioning and fusion milestone in the density-matrix publication ladder."
+          ]
+        },
+        {
+          "group_id": "channel_native_non_claim",
+          "phrases": [
+            "fully channel-native or superoperator-native fused noisy blocks are follow-on work beyond the baseline Paper 2 claim",
+            "fully channel-native fused noisy blocks are future work beyond the baseline Paper 2 claim",
+            "fully channel-native fused noisy blocks are not part of the baseline Paper 2 claim",
+            "fully channel-native or superoperator-native fused noisy blocks are outside the baseline Paper 2 claim"
+          ]
+        },
+        {
+          "group_id": "workflow_growth_non_claim",
+          "phrases": [
+            "broader noisy VQE/VQA workflow growth, density-backend gradients, and optimizer-comparison studies remain Phase 4+ work",
+            "broader noisy VQE/VQA workflow growth, density-backend gradients, and optimizer studies remain Phase 4+ work",
+            "broader noisy VQE/VQA feature growth and density-backend gradients are Phase 4+ work",
+            "density-backend gradients, optimizer-comparison studies, and broader noisy VQE/VQA workflow growth are Phase 4+ work"
+          ]
+        },
+        {
+          "group_id": "approximate_scaling_non_claim",
+          "phrases": [
+            "approximate scaling methods such as trajectories or MPDO-style approaches are outside the current Paper 2 claim",
+            "approximate scaling methods remain later work beyond the current Paper 2 claim",
+            "approximate scaling methods remain future branches rather than current Paper 2 results"
+          ]
+        },
+        {
+          "group_id": "circuit_parity_non_claim",
+          "phrases": [
+            "full `qgd_Circuit` parity is not part of the baseline Paper 2 claim",
+            "full direct `qgd_Circuit` parity is not a current Paper 2 claim"
+          ]
+        }
+      ],
+      "role_present": true,
+      "status": "pass",
+      "supported_path_boundary_present": true,
+      "surface_id": "short_paper"
+    },
+    {
+      "core_non_claims_present": true,
+      "doc_id": "phase3_short_paper_narrative",
+      "evidence_closure_rule_present": true,
+      "exists": true,
+      "forbidden_phrase_groups": [],
+      "label": "Phase 3 narrative short-paper surface",
+      "main_claim_present": true,
+      "missing_headings": [],
+      "missing_required_phrase_groups": [],
+      "no_fallback_rule_present": true,
+      "path": "docs/density_matrix_project/phases/phase-3/SHORT_PAPER_NARRATIVE.md",
+      "phase_positioning_present": true,
+      "present_forbidden_phrase_groups": [],
+      "required_headings": [
+        "## Publication Surface Role",
+        "## Paper 2 Claim Boundary"
+      ],
+      "required_phrase_groups": [
+        {
+          "group_id": "role_phrase",
+          "phrases": [
+            "This document is the narrative short-paper surface for a general PhD-conference audience within the Phase 3 Paper 2 package."
+          ]
+        },
+        {
+          "group_id": "main_claim",
+          "phrases": [
+            "SQUANDER can extend partitioning and limited fusion to exact noisy mixed-state circuits without reducing noise to planner-external metadata, while preserving exact semantics and yielding a scientifically useful benchmarked backend."
+          ]
+        },
+        {
+          "group_id": "supported_path_boundary",
+          "phrases": [
+            "The guaranteed Paper 2 path is the canonical noisy mixed-state planner surface plus the documented exact lowering needed for the frozen Phase 2 continuity workflow and the structured Phase 3 benchmark families.",
+            "The guaranteed Paper 2 path is the canonical noisy mixed-state planner surface plus the exact lowering needed for the frozen Phase 2 continuity workflow and the required Phase 3 structured benchmark families.",
+            "The guaranteed Paper 2 path is the canonical noisy mixed-state planner surface plus exact lowering for the frozen Phase 2 continuity workflow and the required Phase 3 structured benchmark families.",
+            "The guaranteed Paper 2 path is the canonical noisy mixed-state planner surface plus the documented exact lowering required for the frozen Phase 2 continuity workflow and the required Phase 3 structured benchmark families."
+          ]
+        },
+        {
+          "group_id": "no_fallback_rule",
+          "phrases": [
+            "No silent sequential fallback is part of the Phase 3 contract for any benchmark that claims partitioned density behavior.",
+            "No silent sequential fallback is part of the Phase 3 contract for benchmarks that claim partitioned density behavior.",
+            "No silent substitution of sequential execution is part of the Phase 3 contract for a benchmark that claims `partitioned_density` behavior."
+          ]
+        },
+        {
+          "group_id": "evidence_closure_rule",
+          "phrases": [
+            "Only mandatory, complete, supported correctness and reproducibility evidence, plus either measured benefit or benchmark-grounded limitation reporting, closes the main Paper 2 claim.",
+            "Only mandatory, complete, supported correctness and reproducibility evidence, plus either measurable benefit or benchmark-grounded limitation reporting, closes the main Paper 2 claim."
+          ]
+        },
+        {
+          "group_id": "phase_positioning",
+          "phrases": [
+            "Paper 2 is the Phase 3 methods and systems milestone in the density-matrix publication ladder.",
+            "Paper 2 is the Phase 3 methods milestone between exact noisy integration and broader noisy workflow science.",
+            "Paper 2 is the Phase 3 noise-aware partitioning and fusion milestone in the density-matrix publication ladder."
+          ]
+        },
+        {
+          "group_id": "channel_native_non_claim",
+          "phrases": [
+            "fully channel-native or superoperator-native fused noisy blocks are follow-on work beyond the baseline Paper 2 claim",
+            "fully channel-native fused noisy blocks are future work beyond the baseline Paper 2 claim",
+            "fully channel-native fused noisy blocks are not part of the baseline Paper 2 claim",
+            "fully channel-native or superoperator-native fused noisy blocks are outside the baseline Paper 2 claim"
+          ]
+        },
+        {
+          "group_id": "workflow_growth_non_claim",
+          "phrases": [
+            "broader noisy VQE/VQA workflow growth, density-backend gradients, and optimizer-comparison studies remain Phase 4+ work",
+            "broader noisy VQE/VQA workflow growth, density-backend gradients, and optimizer studies remain Phase 4+ work",
+            "broader noisy VQE/VQA feature growth and density-backend gradients are Phase 4+ work",
+            "density-backend gradients, optimizer-comparison studies, and broader noisy VQE/VQA workflow growth are Phase 4+ work"
+          ]
+        },
+        {
+          "group_id": "approximate_scaling_non_claim",
+          "phrases": [
+            "approximate scaling methods such as trajectories or MPDO-style approaches are outside the current Paper 2 claim",
+            "approximate scaling methods remain later work beyond the current Paper 2 claim",
+            "approximate scaling methods remain future branches rather than current Paper 2 results"
+          ]
+        },
+        {
+          "group_id": "circuit_parity_non_claim",
+          "phrases": [
+            "full `qgd_Circuit` parity is not part of the baseline Paper 2 claim",
+            "full direct `qgd_Circuit` parity is not a current Paper 2 claim"
+          ]
+        }
+      ],
+      "role_present": true,
+      "status": "pass",
+      "supported_path_boundary_present": true,
+      "surface_id": "short_paper_narrative"
+    },
+    {
+      "core_non_claims_present": true,
+      "doc_id": "phase3_paper",
+      "evidence_closure_rule_present": true,
+      "exists": true,
+      "forbidden_phrase_groups": [],
+      "label": "Phase 3 full-paper surface",
+      "main_claim_present": true,
+      "missing_headings": [],
+      "missing_required_phrase_groups": [],
+      "no_fallback_rule_present": true,
+      "path": "docs/density_matrix_project/phases/phase-3/PAPER_PHASE_3.md",
+      "phase_positioning_present": true,
+      "present_forbidden_phrase_groups": [],
+      "required_headings": [
+        "## Publication Surface Role",
+        "## Paper 2 Claim Boundary"
+      ],
+      "required_phrase_groups": [
+        {
+          "group_id": "role_phrase",
+          "phrases": [
+            "This document is the planning-facing full-paper draft surface for the Phase 3 Paper 2 package."
+          ]
+        },
+        {
+          "group_id": "main_claim",
+          "phrases": [
+            "SQUANDER extends partitioning and limited fusion to exact noisy mixed-state circuits by making noisy operations first-class planner inputs, preserving exact gate/noise semantics across partition descriptors and runtime execution, and validating the resulting partitioned density path on representative noisy workloads."
+          ]
+        },
+        {
+          "group_id": "supported_path_boundary",
+          "phrases": [
+            "The guaranteed Paper 2 path is the canonical noisy mixed-state planner surface plus the documented exact lowering needed for the frozen Phase 2 continuity workflow and the structured Phase 3 benchmark families.",
+            "The guaranteed Paper 2 path is the canonical noisy mixed-state planner surface plus the exact lowering needed for the frozen Phase 2 continuity workflow and the required Phase 3 structured benchmark families.",
+            "The guaranteed Paper 2 path is the canonical noisy mixed-state planner surface plus exact lowering for the frozen Phase 2 continuity workflow and the required Phase 3 structured benchmark families.",
+            "The guaranteed Paper 2 path is the canonical noisy mixed-state planner surface plus the documented exact lowering required for the frozen Phase 2 continuity workflow and the required Phase 3 structured benchmark families."
+          ]
+        },
+        {
+          "group_id": "no_fallback_rule",
+          "phrases": [
+            "No silent sequential fallback is part of the Phase 3 contract for any benchmark that claims partitioned density behavior.",
+            "No silent sequential fallback is part of the Phase 3 contract for benchmarks that claim partitioned density behavior.",
+            "No silent substitution of sequential execution is part of the Phase 3 contract for a benchmark that claims `partitioned_density` behavior."
+          ]
+        },
+        {
+          "group_id": "evidence_closure_rule",
+          "phrases": [
+            "Only mandatory, complete, supported correctness and reproducibility evidence, plus either measured benefit or benchmark-grounded limitation reporting, closes the main Paper 2 claim.",
+            "Only mandatory, complete, supported correctness and reproducibility evidence, plus either measurable benefit or benchmark-grounded limitation reporting, closes the main Paper 2 claim."
+          ]
+        },
+        {
+          "group_id": "phase_positioning",
+          "phrases": [
+            "Paper 2 is the Phase 3 methods and systems milestone in the density-matrix publication ladder.",
+            "Paper 2 is the Phase 3 methods milestone between exact noisy integration and broader noisy workflow science.",
+            "Paper 2 is the Phase 3 noise-aware partitioning and fusion milestone in the density-matrix publication ladder."
+          ]
+        },
+        {
+          "group_id": "channel_native_non_claim",
+          "phrases": [
+            "fully channel-native or superoperator-native fused noisy blocks are follow-on work beyond the baseline Paper 2 claim",
+            "fully channel-native fused noisy blocks are future work beyond the baseline Paper 2 claim",
+            "fully channel-native fused noisy blocks are not part of the baseline Paper 2 claim",
+            "fully channel-native or superoperator-native fused noisy blocks are outside the baseline Paper 2 claim"
+          ]
+        },
+        {
+          "group_id": "workflow_growth_non_claim",
+          "phrases": [
+            "broader noisy VQE/VQA workflow growth, density-backend gradients, and optimizer-comparison studies remain Phase 4+ work",
+            "broader noisy VQE/VQA workflow growth, density-backend gradients, and optimizer studies remain Phase 4+ work",
+            "broader noisy VQE/VQA feature growth and density-backend gradients are Phase 4+ work",
+            "density-backend gradients, optimizer-comparison studies, and broader noisy VQE/VQA workflow growth are Phase 4+ work"
+          ]
+        },
+        {
+          "group_id": "approximate_scaling_non_claim",
+          "phrases": [
+            "approximate scaling methods such as trajectories or MPDO-style approaches are outside the current Paper 2 claim",
+            "approximate scaling methods remain later work beyond the current Paper 2 claim",
+            "approximate scaling methods remain future branches rather than current Paper 2 results"
+          ]
+        },
+        {
+          "group_id": "circuit_parity_non_claim",
+          "phrases": [
+            "full `qgd_Circuit` parity is not part of the baseline Paper 2 claim",
+            "full direct `qgd_Circuit` parity is not a current Paper 2 claim"
+          ]
+        }
+      ],
+      "role_present": true,
+      "status": "pass",
+      "supported_path_boundary_present": true,
+      "surface_id": "paper"
+    }
+  ]
+}
