@@ -58,9 +58,9 @@ Out of scope for this story:
   - and `build_runtime_audit_record()`.
 - The existing Task 3 runtime artifacts already provide the shared positive audit
   surface Story 1 should align with:
-  - `benchmarks/density_matrix/artifacts/phase3_task3/story3_handoff/`,
-  - `benchmarks/density_matrix/artifacts/phase3_task3/story4_semantics/`,
-  - and `benchmarks/density_matrix/artifacts/phase3_task3/story6_audit/`.
+  - `benchmarks/density_matrix/artifacts/partitioned_runtime/story3_handoff/`,
+  - `benchmarks/density_matrix/artifacts/partitioned_runtime/story4_semantics/`,
+  - and `benchmarks/density_matrix/artifacts/partitioned_runtime/story6_audit/`.
 - The required workload builders Story 1 should use for representative eligibility
   inspection already exist in:
   - `build_phase3_continuity_partition_descriptor_set()` in
@@ -238,7 +238,7 @@ Out of scope for this story:
 
 **Execution checklist**
 - [ ] Add a dedicated Task 4 regression surface in
-      `tests/partitioning/test_phase3_task4.py`.
+      `tests/partitioning/test_partitioned_runtime.py`.
 - [ ] Assert that representative cases produce stable eligible-span summaries and
       stable ineligibility reasons.
 - [ ] Assert that explicit noise boundaries split or block fused spans when the
@@ -274,7 +274,7 @@ Out of scope for this story:
       `benchmarks/density_matrix/partitioned_runtime/`, with
       `fused_eligibility_validation.py` as the primary checker.
 - [ ] Add a dedicated Story 1 artifact location
-      (for example `benchmarks/density_matrix/artifacts/phase3_task4/story1_eligibility/`).
+      (for example `benchmarks/density_matrix/artifacts/partitioned_runtime/fused_eligibility/`).
 - [ ] Emit case-level provenance, partition summaries, eligible-span summaries,
       and ineligibility reasons for representative workloads.
 - [ ] Record rerun commands and software metadata with the emitted bundle.

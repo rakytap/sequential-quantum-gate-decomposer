@@ -56,8 +56,8 @@ Out of scope for this story:
   - `execute_partitioned_with_reference()` and `execute_fused_with_reference()`
     in `benchmarks/density_matrix/partitioned_runtime/common.py`,
   - and the existing fused and unfused performance bundles under
-    `benchmarks/density_matrix/artifacts/phase3_task3/` and
-    `benchmarks/density_matrix/artifacts/phase3_task4/`.
+    `benchmarks/density_matrix/artifacts/partitioned_runtime/` and
+    `benchmarks/density_matrix/artifacts/partitioned_runtime/`.
 - Story 3 should treat explicit noise placement, support size, partition count
   or span, planning time, runtime, peak memory, and where relevant fused-path
   coverage as legitimate calibration signals when they are recorded through one
@@ -261,7 +261,7 @@ Out of scope for this story:
 
 **Execution checklist**
 - [ ] Add focused Task 5 regression coverage in
-      `tests/partitioning/test_phase3_task5.py`.
+      `tests/partitioning/test_planner_calibration.py`.
 - [ ] Assert that representative contrast cases produce different signal or score
       outputs when explicit noise placement or support-cost pressure changes.
 - [ ] Assert that the baseline-comparison fields remain present and reviewable.
@@ -297,7 +297,7 @@ Out of scope for this story:
       `density_signal_validation.py` as the primary checker.
 - [ ] Add a dedicated Story 3 artifact location
       (for example
-      `benchmarks/density_matrix/artifacts/phase3_task5/story3_density_signal/`).
+      `benchmarks/density_matrix/artifacts/planner_calibration/density_signal/`).
 - [ ] Emit representative signal summaries, baseline-comparison outputs, and
       score or ranking summaries for the supported contrast matrix.
 - [ ] Record rerun commands and software metadata with the emitted bundle.

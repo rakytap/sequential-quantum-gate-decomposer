@@ -49,7 +49,7 @@ ARTIFACT_FILENAME = "workflow_contract_bundle.json"
 DEFAULT_OUTPUT_DIR = (
     REPO_ROOT / "benchmarks" / "density_matrix" / "artifacts" / "workflow_evidence"
 )
-TASK5_REFERENCE_BUNDLE_PATH = (
+PLANNER_CALIBRATION_REFERENCE_BUNDLE_PATH = (
     REPO_ROOT
     / "benchmarks"
     / "density_matrix"
@@ -165,7 +165,7 @@ def get_git_revision():
         return "unknown"
 
 
-def _load_reference_task5_bundle(reference_path: Path = TASK5_REFERENCE_BUNDLE_PATH):
+def _load_reference_planner_calibration_bundle(reference_path: Path = PLANNER_CALIBRATION_REFERENCE_BUNDLE_PATH):
     payload = json.loads(reference_path.read_text(encoding="utf-8"))
     required_fields = ("suite_name", "status", "artifacts", "software", "provenance")
     missing_fields = [field for field in required_fields if field not in payload]
@@ -482,7 +482,7 @@ def build_artifact_bundle(reference_bundle):
             ),
             "working_directory": str(REPO_ROOT),
             "git_revision": get_git_revision(),
-            "reference_task5_bundle_path": str(TASK5_REFERENCE_BUNDLE_PATH),
+            "reference_planner_calibration_bundle_path": str(PLANNER_CALIBRATION_REFERENCE_BUNDLE_PATH),
         },
         "summary": {},
     }
@@ -618,8 +618,8 @@ def write_artifact_bundle(output_path: Path, artifact):
     )
 
 
-def run_validation(*, verbose=False, reference_bundle_path: Path = TASK5_REFERENCE_BUNDLE_PATH):
-    reference_bundle = _load_reference_task5_bundle(reference_bundle_path)
+def run_validation(*, verbose=False, reference_bundle_path: Path = PLANNER_CALIBRATION_REFERENCE_BUNDLE_PATH):
+    reference_bundle = _load_reference_planner_calibration_bundle(reference_bundle_path)
     artifact = build_artifact_bundle(reference_bundle)
     if verbose:
         print(
@@ -644,7 +644,7 @@ def parse_args():
     parser.add_argument(
         "--reference-bundle-path",
         type=Path,
-        default=TASK5_REFERENCE_BUNDLE_PATH,
+        default=PLANNER_CALIBRATION_REFERENCE_BUNDLE_PATH,
         help="Path to the Task 5 publication bundle used as the reference inventory.",
     )
     parser.add_argument(

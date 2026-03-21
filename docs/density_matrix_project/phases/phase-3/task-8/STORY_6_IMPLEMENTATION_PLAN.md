@@ -43,8 +43,8 @@ Out of scope for this story:
   supported-path wording. Story 6 should package those surfaces rather than
   redefine them.
 - The current emitted Phase 3 bundle surfaces already exist under:
-  - `benchmarks/density_matrix/artifacts/phase3_task6/`,
-  - and `benchmarks/density_matrix/artifacts/phase3_task7/`.
+  - `benchmarks/density_matrix/artifacts/correctness_evidence/`,
+  - and `benchmarks/density_matrix/artifacts/performance_evidence/`.
 - Story 6 should treat those emitted bundles as first-class inputs, especially:
   - Task 6 correctness-package, unsupported-boundary, and summary-consistency,
   - Task 7 benchmark-package, diagnosis, sensitivity-matrix, and
@@ -58,7 +58,7 @@ Out of scope for this story:
 - The natural implementation home for Task 8 top-level reviewer packaging is the
   same `benchmarks/density_matrix/publication_evidence/` package, with
   `publication_manifest_validation.py` as the Story 6 validation surface and
-  emitted artifacts rooted in `benchmarks/density_matrix/artifacts/phase3_task8/`.
+  emitted artifacts rooted in `benchmarks/density_matrix/artifacts/publication_evidence/`.
 - Story 6 should produce one manifest-driven review package and completeness
   checker only. It should not become a second evidence source or a replacement
   for the lower-story outputs it packages.
@@ -254,7 +254,7 @@ Out of scope for this story:
 - Regression coverage remains narrow and publication-package focused.
 
 **Execution checklist**
-- [ ] Add focused checks in `tests/partitioning/test_phase3_task8.py` or a
+- [ ] Add focused checks in `tests/partitioning/test_publication_evidence.py` or a
       tightly related successor for Story 6 manifest completeness.
 - [ ] Add negative checks for missing lower-story outputs.
 - [ ] Add negative checks for missing or hidden Task 6 boundary evidence.
@@ -290,7 +290,7 @@ Out of scope for this story:
 
 **Execution checklist**
 - [ ] Add one stable Story 6 output location under
-      `benchmarks/density_matrix/artifacts/phase3_task8/story6_publication_manifest/`.
+      `benchmarks/density_matrix/artifacts/publication_evidence/manifest/`.
 - [ ] Emit one artifact such as `publication_manifest_bundle.json`.
 - [ ] Record generation command, software metadata, and manifest completeness
       summary in the output.

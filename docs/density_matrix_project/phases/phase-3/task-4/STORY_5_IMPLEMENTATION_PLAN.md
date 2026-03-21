@@ -41,10 +41,10 @@ Out of scope for this story:
   `P3-ADR-010`.
 - Task 3 already provides the structured runtime negative surface Story 5 should
   align with through `NoisyRuntimeValidationError` and the emitted bundle under
-  `benchmarks/density_matrix/artifacts/phase3_task3/story7_unsupported/`.
+  `benchmarks/density_matrix/artifacts/partitioned_runtime/story7_unsupported/`.
 - Task 3 also already provides the positive runtime-audit surface Story 5 should
   align with through `build_runtime_audit_record()` and the emitted bundle under
-  `benchmarks/density_matrix/artifacts/phase3_task3/story6_audit/`.
+  `benchmarks/density_matrix/artifacts/partitioned_runtime/story6_audit/`.
 - Story 5 should prefer extending the shared Task 3 runtime result and audit
   vocabulary over inventing a disconnected fusion-only reporting format.
 - The minimum Phase 3 contract explicitly requires three reviewable categories:
@@ -247,7 +247,7 @@ Out of scope for this story:
       `benchmarks/density_matrix/partitioned_runtime/`, with
       `fused_classification_validation.py` as the primary checker.
 - [ ] Add a dedicated Story 5 artifact location
-      (for example `benchmarks/density_matrix/artifacts/phase3_task4/story5_classification/`).
+      (for example `benchmarks/density_matrix/artifacts/partitioned_runtime/fused_classification/`).
 - [ ] Emit representative cases through one stable schema with explicit
       classification and reason fields.
 - [ ] Record rerun commands and software metadata with the emitted bundle.

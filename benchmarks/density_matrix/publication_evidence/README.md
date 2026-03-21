@@ -11,10 +11,10 @@ The package is intentionally validation-first:
 - it reads the authoritative Phase 3 paper surfaces in
   `docs/density_matrix_project/phases/phase-3/`,
 - it reads the emitted Task 6 and Task 7 artifact bundles under
-  `benchmarks/density_matrix/artifacts/phase3_task6/` and
-  `benchmarks/density_matrix/artifacts/phase3_task7/`,
+  `benchmarks/density_matrix/artifacts/correctness_evidence/` and
+  `benchmarks/density_matrix/artifacts/performance_evidence/`,
 - it emits Task 8 story bundles under
-  `benchmarks/density_matrix/artifacts/phase3_task8/`,
+  `benchmarks/density_matrix/artifacts/publication_evidence/`,
 - and it provides a single pipeline plus focused regression tests.
 
 ## Story Map
@@ -54,7 +54,7 @@ bounded.
 : Story 8. Final coherence guardrail for terminology, reviewer entry, count
 stability, and diagnosis-grounded limitation summaries.
 
-`task8_validation_pipeline.py`
+`publication_evidence_validation_pipeline.py`
 : Runs Stories 1 through 8 in order and writes all emitted Task 8 bundles.
 
 `common.py`
@@ -65,18 +65,18 @@ directories, and small convenience utilities used by all story validators.
 
 Running the pipeline writes artifacts under:
 
-`benchmarks/density_matrix/artifacts/phase3_task8/`
+`benchmarks/density_matrix/artifacts/publication_evidence/`
 
 Current story output directories are:
 
-- `story1_claim_package/`
-- `story2_surface_alignment/`
-- `story3_claim_traceability/`
-- `story4_evidence_closure/`
-- `story5_supported_path_scope/`
-- `story6_publication_manifest/`
-- `story7_future_work_boundary/`
-- `story8_package_consistency/`
+- `claim_package/`
+- `surface_alignment/`
+- `claim_traceability/`
+- `evidence_closure/`
+- `supported_path/`
+- `manifest/`
+- `future_work/`
+- `package_consistency/`
 
 Each story emits one JSON bundle that later stories can reuse directly.
 
@@ -85,7 +85,7 @@ Each story emits one JSON bundle that later stories can reuse directly.
 Run the full Task 8 pipeline:
 
 ```bash
-python benchmarks/density_matrix/publication_evidence/task8_validation_pipeline.py
+python benchmarks/density_matrix/publication_evidence/validation_pipeline.py
 ```
 
 Run a single story validator:
@@ -98,7 +98,7 @@ python benchmarks/density_matrix/publication_evidence/package_consistency_valida
 Run the focused Task 8 regression tests:
 
 ```bash
-pytest tests/partitioning/test_phase3_task8.py -q
+pytest tests/partitioning/test_publication_evidence.py -q
 ```
 
 ## What This Package Depends On

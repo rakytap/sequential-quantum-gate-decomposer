@@ -260,7 +260,7 @@ Out of scope for this story:
 **Execution checklist**
 - [ ] Add a dedicated Story 3 artifact location
       (for example
-      `benchmarks/density_matrix/artifacts/phase3_task6/story3_external_slice/`).
+      `benchmarks/density_matrix/artifacts/correctness_evidence/external_correctness/`).
 - [ ] Emit required external cases, case identity, exact-output references,
       external metrics, and verdicts through one stable schema.
 - [ ] Record rerun commands and software metadata with the emitted bundle.

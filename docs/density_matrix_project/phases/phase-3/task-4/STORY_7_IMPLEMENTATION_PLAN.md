@@ -57,7 +57,7 @@ Out of scope for this story:
   `iter_story2_structured_descriptor_sets()`, `STRUCTURED_FAMILY_NAMES`,
   `STRUCTURED_QUBITS`, and `MANDATORY_NOISE_PATTERNS`.
 - Story 7 should treat the existing Task 3 mandatory-workload bundle under
-  `benchmarks/density_matrix/artifacts/phase3_task3/story2_workloads/` as the
+  `benchmarks/density_matrix/artifacts/partitioned_runtime/story2_workloads/` as the
   plain partitioned baseline evidence surface it must extend rather than
   replace.
 - Profiling artifacts are required only when they materially support the
@@ -258,7 +258,7 @@ Out of scope for this story:
 
 **Execution checklist**
 - [ ] Add a dedicated Story 7 artifact location
-      (for example `benchmarks/density_matrix/artifacts/phase3_task4/story7_performance/`).
+      (for example `benchmarks/density_matrix/artifacts/partitioned_runtime/fused_performance/`).
 - [ ] Emit representative structured benchmark cases through one stable schema.
 - [ ] Record the threshold-or-diagnosis verdict explicitly in the bundle summary.
 - [ ] Record rerun commands, software metadata, and any referenced profiling

@@ -34,7 +34,7 @@ if str(REPO_ROOT) not in sys.path:
 from benchmarks.density_matrix.workflow_evidence.workflow_contract_validation import (
     ARTIFACT_FILENAME as STORY1_ARTIFACT_FILENAME,
     CONTRACT_VERSION,
-    DEFAULT_OUTPUT_DIR as TASK6_DEFAULT_OUTPUT_DIR,
+    DEFAULT_OUTPUT_DIR as CORRECTNESS_EVIDENCE_DEFAULT_OUTPUT_DIR,
     WORKFLOW_ID,
     build_software_metadata,
     get_git_revision,
@@ -59,7 +59,7 @@ from benchmarks.density_matrix.workflow_evidence.unsupported_workflow_validation
 
 SUITE_NAME = "workflow_interpretation_validation"
 ARTIFACT_FILENAME = "workflow_interpretation_bundle.json"
-DEFAULT_OUTPUT_DIR = TASK6_DEFAULT_OUTPUT_DIR
+DEFAULT_OUTPUT_DIR = CORRECTNESS_EVIDENCE_DEFAULT_OUTPUT_DIR
 STORY1_CONTRACT_PATH = DEFAULT_OUTPUT_DIR / STORY1_ARTIFACT_FILENAME
 STORY2_BUNDLE_PATH = DEFAULT_OUTPUT_DIR / STORY2_ARTIFACT_FILENAME
 STORY3_BUNDLE_PATH = DEFAULT_OUTPUT_DIR / STORY3_ARTIFACT_FILENAME

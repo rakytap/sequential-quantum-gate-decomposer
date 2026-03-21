@@ -53,8 +53,8 @@ Out of scope for this story:
   especially `task4_case_selection.py`.
 - Task 3 and Task 4 already established stable workload-facing validation and
   artifact patterns Story 2 should align with through the bundles under
-  `benchmarks/density_matrix/artifacts/phase3_task3/` and
-  `benchmarks/density_matrix/artifacts/phase3_task4/`.
+  `benchmarks/density_matrix/artifacts/partitioned_runtime/` and
+  `benchmarks/density_matrix/artifacts/partitioned_runtime/`.
 - Story 2 should preserve the frozen Phase 3 workload identity layer rather than
   renaming workloads per planner candidate or calibration run.
 - The mandatory calibration surface must remain bounded to:
@@ -260,7 +260,7 @@ Out of scope for this story:
       `calibration_workload_matrix_validation.py` as the primary checker.
 - [ ] Add a dedicated Story 2 artifact location
       (for example
-      `benchmarks/density_matrix/artifacts/phase3_task5/story2_workload_matrix/`).
+      `benchmarks/density_matrix/artifacts/planner_calibration/calibration_workload_matrix/`).
 - [ ] Emit workload identity, workload-family metadata, seed rules,
       noise-pattern labels, and support labels for the representative matrix.
 - [ ] Record rerun commands and software metadata with the emitted bundle.

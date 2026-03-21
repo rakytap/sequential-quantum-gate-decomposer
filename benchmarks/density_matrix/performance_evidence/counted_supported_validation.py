@@ -20,20 +20,20 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from benchmarks.density_matrix.performance_evidence.common import (
-    TASK7_CASE_SCHEMA_VERSION,
-    build_task7_selected_candidate,
-    build_task7_software_metadata,
-    task7_story_output_dir,
+    PERFORMANCE_EVIDENCE_CASE_SCHEMA_VERSION,
+    build_performance_evidence_selected_candidate,
+    build_performance_evidence_software_metadata,
+    performance_evidence_output_dir,
     write_artifact_bundle,
 )
 from benchmarks.density_matrix.performance_evidence.records import (
-    build_task7_core_benchmark_records,
-    task7_counted_supported_case,
+    build_performance_evidence_core_benchmark_records,
+    performance_evidence_counted_supported_case,
 )
 
-SUITE_NAME = "phase3_task7_story2_counted_supported"
+SUITE_NAME = "phase3_performance_evidence_counted_supported"
 ARTIFACT_FILENAME = "counted_supported_bundle.json"
-DEFAULT_OUTPUT_DIR = task7_story_output_dir("story2_counted_supported")
+DEFAULT_OUTPUT_DIR = performance_evidence_output_dir("counted_supported")
 ARTIFACT_CORE_FIELDS = (
     "suite_name",
     "status",
@@ -46,29 +46,29 @@ ARTIFACT_CORE_FIELDS = (
 
 
 def build_cases() -> list[dict]:
-    return build_task7_core_benchmark_records()
+    return build_performance_evidence_core_benchmark_records()
 
 
 def build_artifact_bundle(cases: list[dict]) -> dict:
-    counted_supported_cases = [case for case in cases if task7_counted_supported_case(case)]
+    counted_supported_cases = [case for case in cases if performance_evidence_counted_supported_case(case)]
     bundle = {
         "suite_name": SUITE_NAME,
         "status": "pass"
         if len(counted_supported_cases) == len(cases)
         and all(case["benchmark_status"] != "excluded" for case in counted_supported_cases)
         else "fail",
-        "record_schema_version": TASK7_CASE_SCHEMA_VERSION,
-        "software": build_task7_software_metadata(),
-        "selected_candidate": build_task7_selected_candidate(),
+        "record_schema_version": PERFORMANCE_EVIDENCE_CASE_SCHEMA_VERSION,
+        "software": build_performance_evidence_software_metadata(),
+        "selected_candidate": build_performance_evidence_selected_candidate(),
         "summary": {
             "total_cases": len(cases),
             "counted_supported_cases": len(counted_supported_cases),
             "excluded_cases": len(cases) - len(counted_supported_cases),
-            "task6_reference_available": sum(
-                case["task6_reference_available"] for case in cases
+            "correctness_evidence_reference_available": sum(
+                case["correctness_evidence_reference_available"] for case in cases
             ),
-            "task6_counted_reference_available": sum(
-                case["task6_counted_reference_available"] for case in cases
+            "correctness_evidence_counted_reference_available": sum(
+                case["correctness_evidence_counted_reference_available"] for case in cases
             ),
             "supported_runtime_cases": sum(case["supported_runtime_case"] for case in cases),
         },

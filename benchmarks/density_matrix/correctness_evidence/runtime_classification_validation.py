@@ -15,20 +15,20 @@ import argparse
 from pathlib import Path
 
 from benchmarks.density_matrix.correctness_evidence.common import (
-    TASK6_CASE_SCHEMA_VERSION,
-    TASK6_RUNTIME_CLASS_BASELINE,
-    build_task6_selected_candidate,
-    build_task6_software_metadata,
-    task6_story_output_dir,
+    CORRECTNESS_EVIDENCE_CASE_SCHEMA_VERSION,
+    CORRECTNESS_EVIDENCE_RUNTIME_CLASS_BASELINE,
+    build_correctness_evidence_selected_candidate,
+    build_correctness_evidence_software_metadata,
+    correctness_evidence_output_dir,
     write_artifact_bundle,
 )
 from benchmarks.density_matrix.correctness_evidence.records import (
-    build_task6_positive_records,
+    build_correctness_evidence_positive_records,
 )
 
-SUITE_NAME = "phase3_task6_story5_runtime_classification"
+SUITE_NAME = "phase3_correctness_evidence_runtime_classification"
 ARTIFACT_FILENAME = "runtime_classification_bundle.json"
-DEFAULT_OUTPUT_DIR = task6_story_output_dir("story5_runtime_classification")
+DEFAULT_OUTPUT_DIR = correctness_evidence_output_dir("runtime_classification")
 ARTIFACT_CORE_FIELDS = (
     "suite_name",
     "status",
@@ -41,7 +41,7 @@ ARTIFACT_CORE_FIELDS = (
 
 
 def build_cases() -> list[dict]:
-    return build_task6_positive_records()
+    return build_correctness_evidence_positive_records()
 
 
 def build_artifact_bundle(cases: list[dict]) -> dict:
@@ -57,8 +57,8 @@ def build_artifact_bundle(cases: list[dict]) -> dict:
             case["runtime_path_classification"] == "deferred_or_unsupported_candidate"
             for case in cases
         ),
-        TASK6_RUNTIME_CLASS_BASELINE: sum(
-            case["runtime_path_classification"] == TASK6_RUNTIME_CLASS_BASELINE
+        CORRECTNESS_EVIDENCE_RUNTIME_CLASS_BASELINE: sum(
+            case["runtime_path_classification"] == CORRECTNESS_EVIDENCE_RUNTIME_CLASS_BASELINE
             for case in cases
         ),
     }
@@ -68,9 +68,9 @@ def build_artifact_bundle(cases: list[dict]) -> dict:
         if sum(classification_counts.values()) == len(cases)
         and all(case["supported_runtime_case"] for case in cases)
         else "fail",
-        "record_schema_version": TASK6_CASE_SCHEMA_VERSION,
-        "software": build_task6_software_metadata(),
-        "selected_candidate": build_task6_selected_candidate(),
+        "record_schema_version": CORRECTNESS_EVIDENCE_CASE_SCHEMA_VERSION,
+        "software": build_correctness_evidence_software_metadata(),
+        "selected_candidate": build_correctness_evidence_selected_candidate(),
         "summary": {
             "total_cases": len(cases),
             **classification_counts,

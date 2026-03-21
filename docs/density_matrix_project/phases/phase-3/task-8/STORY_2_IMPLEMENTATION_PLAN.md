@@ -58,7 +58,7 @@ Out of scope for this story:
 - The natural implementation home for Task 8 surface-alignment validation is the
   same `benchmarks/density_matrix/publication_evidence/` package, with
   `surface_alignment_validation.py` as the Story 2 validation surface and
-  emitted artifacts rooted in `benchmarks/density_matrix/artifacts/phase3_task8/`.
+  emitted artifacts rooted in `benchmarks/density_matrix/artifacts/publication_evidence/`.
 - Story 2 should validate alignment and controlled compression only. It should
   not become a general prose linter or a venue-formatting tool.
 
@@ -216,7 +216,7 @@ Out of scope for this story:
 - Regression coverage remains narrow and publication-package focused.
 
 **Execution checklist**
-- [ ] Add focused checks in `tests/partitioning/test_phase3_task8.py` or a
+- [ ] Add focused checks in `tests/partitioning/test_publication_evidence.py` or a
       tightly related successor for Story 2 surface alignment.
 - [ ] Add negative checks for one surface making a stronger technical claim than
       the others.
@@ -251,7 +251,7 @@ Out of scope for this story:
 
 **Execution checklist**
 - [ ] Add one stable Story 2 output location under
-      `benchmarks/density_matrix/artifacts/phase3_task8/story2_surface_alignment/`.
+      `benchmarks/density_matrix/artifacts/publication_evidence/surface_alignment/`.
 - [ ] Emit one artifact such as `publication_surface_alignment_bundle.json`.
 - [ ] Record generation command, software metadata, checked file set, and
       alignment summary in the output.

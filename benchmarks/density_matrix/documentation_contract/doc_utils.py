@@ -29,14 +29,14 @@ MANDATORY_PHASE2_DOCS = {
     "task2_mini_spec": PHASE2_ROOT / "task-2" / "TASK_2_MINI_SPEC.md",
     "task3_mini_spec": PHASE2_ROOT / "task-3" / "TASK_3_MINI_SPEC.md",
     "task4_mini_spec": PHASE2_ROOT / "task-4" / "TASK_4_MINI_SPEC.md",
-    "task5_mini_spec": PHASE2_ROOT / "task-5" / "TASK_5_MINI_SPEC.md",
-    "task6_mini_spec": PHASE2_ROOT / "task-6" / "TASK_6_MINI_SPEC.md",
-    "task7_mini_spec": PHASE2_ROOT / "task-7" / "TASK_7_MINI_SPEC.md",
+    "planner_calibration_mini_spec": PHASE2_ROOT / "task-5" / "TASK_5_MINI_SPEC.md",
+    "correctness_evidence_mini_spec": PHASE2_ROOT / "task-6" / "TASK_6_MINI_SPEC.md",
+    "performance_evidence_mini_spec": PHASE2_ROOT / "task-7" / "TASK_7_MINI_SPEC.md",
     "planning_planning": DOCS_ROOT / "planning" / "PLANNING.md",
     "planning_publications": DOCS_ROOT / "planning" / "PUBLICATIONS.md",
     "research_alignment": DOCS_ROOT / "RESEARCH_ALIGNMENT.md",
     "changelog": DOCS_ROOT / "CHANGELOG.md",
-    "task6_publication_bundle": REPO_ROOT
+    "correctness_evidence_publication_bundle": REPO_ROOT
     / "benchmarks"
     / "density_matrix"
     / "artifacts"

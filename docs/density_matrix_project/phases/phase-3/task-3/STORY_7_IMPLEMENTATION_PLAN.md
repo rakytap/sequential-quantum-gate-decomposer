@@ -279,7 +279,7 @@ Out of scope for this story:
       attempts.
 - [ ] Reuse or extend Task 1 and Task 2 unsupported-case patterns where they
       provide a good model for structured diagnostics.
-- [ ] Add a fast regression slice in `tests/partitioning/test_phase3_task3.py`
+- [ ] Add a fast regression slice in `tests/partitioning/test_partitioned_runtime.py`
       that asserts failure occurs at runtime and not earlier.
 - [ ] Keep the matrix representative and contract-driven rather than exhaustive
       over every impossible runtime combination.
@@ -313,7 +313,7 @@ Out of scope for this story:
 
 **Execution checklist**
 - [ ] Add a dedicated Story 7 artifact location
-      (for example `benchmarks/density_matrix/artifacts/phase3_task3/story7_unsupported/`).
+      (for example `benchmarks/density_matrix/artifacts/partitioned_runtime/unsupported_runtime/`).
 - [ ] Emit representative unsupported runtime cases through one stable schema.
 - [ ] Record rerun commands, software metadata, and the no-mislabeling
       interpretation with the emitted bundle.

@@ -12,25 +12,25 @@ from benchmarks.density_matrix.partitioned_runtime.common import (
     execute_fused_with_reference,
 )
 from benchmarks.density_matrix.performance_evidence.common import (
-    TASK7_CASE_SCHEMA_VERSION,
-    TASK7_REFERENCE_BACKEND_EXTERNAL,
-    TASK7_REFERENCE_BACKEND_INTERNAL,
-    TASK7_REPETITIONS,
-    TASK7_STATUS_COUNTED,
-    TASK7_STATUS_DIAGNOSIS_ONLY,
-    TASK7_STATUS_EXCLUDED,
-    build_task7_selected_candidate,
-    build_task7_task6_reference_index,
+    PERFORMANCE_EVIDENCE_CASE_SCHEMA_VERSION,
+    PERFORMANCE_EVIDENCE_REFERENCE_BACKEND_EXTERNAL,
+    PERFORMANCE_EVIDENCE_REFERENCE_BACKEND_INTERNAL,
+    PERFORMANCE_EVIDENCE_REPETITIONS,
+    PERFORMANCE_EVIDENCE_STATUS_COUNTED,
+    PERFORMANCE_EVIDENCE_STATUS_DIAGNOSIS_ONLY,
+    PERFORMANCE_EVIDENCE_STATUS_EXCLUDED,
+    build_correctness_reference_index,
+    build_selected_candidate,
     measure_sequential_density_reference,
 )
-from benchmarks.density_matrix.performance_evidence.task7_case_selection import (
-    build_task7_case_contexts,
+from benchmarks.density_matrix.performance_evidence.case_selection import (
+    build_case_contexts,
 )
 from benchmarks.density_matrix.planner_calibration.calibration_records import (
     execute_qiskit_density_reference,
 )
 from benchmarks.density_matrix.correctness_evidence.records import (
-    task6_counted_supported_case,
+    counted_supported_case,
 )
 from squander.partitioning.noisy_runtime import execute_partitioned_density_fused
 
@@ -38,20 +38,20 @@ from squander.partitioning.noisy_runtime import execute_partitioned_density_fuse
 def _base_record(case_context) -> dict:
     metadata = case_context.metadata
     descriptor_set = case_context.descriptor_set
-    selected_candidate = build_task7_selected_candidate()
+    selected_candidate = build_selected_candidate()
     return {
-        "record_schema_version": TASK7_CASE_SCHEMA_VERSION,
+        "record_schema_version": PERFORMANCE_EVIDENCE_CASE_SCHEMA_VERSION,
         "candidate_schema_version": selected_candidate["candidate_schema_version"],
         "candidate_id": selected_candidate["candidate_id"],
         "planner_family": selected_candidate["planner_family"],
         "planner_variant": selected_candidate["planner_variant"],
         "planner_settings": dict(selected_candidate["planner_settings"]),
         "max_partition_qubits": selected_candidate["max_partition_qubits"],
-        "task5_selected_candidate_id": selected_candidate["selected_candidate_id"],
-        "task5_claim_selection_schema_version": selected_candidate[
+        "planner_calibration_selected_candidate_id": selected_candidate["selected_candidate_id"],
+        "planner_calibration_claim_selection_schema_version": selected_candidate[
             "claim_selection_schema_version"
         ],
-        "task5_claim_selection_rule": selected_candidate["claim_selection_rule"],
+        "planner_calibration_claim_selection_rule": selected_candidate["claim_selection_rule"],
         "case_name": metadata["case_name"],
         "case_kind": metadata["case_kind"],
         "benchmark_slice": metadata["benchmark_slice"],
@@ -70,13 +70,13 @@ def _base_record(case_context) -> dict:
         "topology": metadata["topology"],
         "planning_time_ms": metadata["planning_time_ms"],
         "external_reference_required": bool(metadata["external_reference_required"]),
-        "reference_backend_internal": TASK7_REFERENCE_BACKEND_INTERNAL,
+        "reference_backend_internal": PERFORMANCE_EVIDENCE_REFERENCE_BACKEND_INTERNAL,
         "reference_backend_external": (
-            TASK7_REFERENCE_BACKEND_EXTERNAL
+            PERFORMANCE_EVIDENCE_REFERENCE_BACKEND_EXTERNAL
             if metadata["external_reference_required"]
             else None
         ),
-        "story1_matrix_pass": True,
+        "benchmark_matrix_pass": True,
     }
 
 
@@ -89,7 +89,7 @@ def _measure_review_timings(case_context) -> dict:
     sequential_peak_rss_kb_samples: list[int] = []
     fused_peak_rss_kb_samples: list[int] = []
 
-    for _ in range(TASK7_REPETITIONS):
+    for _ in range(PERFORMANCE_EVIDENCE_REPETITIONS):
         sequential_measurement = measure_sequential_density_reference(
             descriptor_set, parameters
         )
@@ -152,8 +152,8 @@ def _diagnosis_reasons(record: dict) -> list[str]:
     return reasons
 
 
-def _apply_task6_reference_fields(
-    record: dict, task6_reference: dict
+def _apply_correctness_evidence_reference_fields(
+    record: dict, correctness_evidence_reference: dict
 ) -> None:
     for field in (
         "runtime_schema_version",
@@ -194,10 +194,10 @@ def _apply_task6_reference_fields(
         "external_max_abs_diff",
         "external_reference_pass",
     ):
-        record[field] = task6_reference[field]
+        record[field] = correctness_evidence_reference[field]
 
 
-def task7_counted_supported_case(record: dict) -> bool:
+def performance_evidence_counted_supported_case(record: dict) -> bool:
     if not record["supported_runtime_case"]:
         return False
     if not record["internal_reference_pass"]:
@@ -211,14 +211,16 @@ def task7_counted_supported_case(record: dict) -> bool:
     return True
 
 
-def build_task7_core_benchmark_record(case_context) -> dict:
+def build_performance_evidence_core_benchmark_record(case_context) -> dict:
     record = _base_record(case_context)
-    task6_reference = build_task7_task6_reference_index().get(record["workload_id"])
+    correctness_evidence_reference = build_correctness_reference_index().get(
+        record["workload_id"]
+    )
     sequential_measurement = measure_sequential_density_reference(
         case_context.descriptor_set, case_context.parameters
     )
-    if task6_reference is not None:
-        _apply_task6_reference_fields(record, task6_reference)
+    if correctness_evidence_reference is not None:
+        _apply_correctness_evidence_reference_fields(record, correctness_evidence_reference)
     else:
         fused_result, reference_density, density_metrics = execute_fused_with_reference(
             case_context.descriptor_set, case_context.parameters
@@ -336,21 +338,21 @@ def build_task7_core_benchmark_record(case_context) -> dict:
             "sequential_peak_rss_kb_single": sequential_measurement.peak_rss_kb,
             "sequential_trace_deviation": sequential_measurement.trace_deviation,
             "sequential_rho_is_valid": sequential_measurement.rho_is_valid,
-            "task6_reference_available": task6_reference is not None,
-            "task6_counted_reference_available": (
+            "correctness_evidence_reference_available": correctness_evidence_reference is not None,
+            "correctness_evidence_counted_reference_available": (
                 False
-                if task6_reference is None
-                else task6_counted_supported_case(task6_reference)
+                if correctness_evidence_reference is None
+                else counted_supported_case(correctness_evidence_reference)
             ),
         }
     )
 
-    counted_supported = task7_counted_supported_case(record)
+    counted_supported = performance_evidence_counted_supported_case(record)
     record["counted_supported_benchmark_case"] = counted_supported
 
-    benchmark_status = TASK7_STATUS_COUNTED
+    benchmark_status = PERFORMANCE_EVIDENCE_STATUS_COUNTED
     if not counted_supported:
-        benchmark_status = TASK7_STATUS_EXCLUDED
+        benchmark_status = PERFORMANCE_EVIDENCE_STATUS_EXCLUDED
 
     record.update(
         {
@@ -371,8 +373,8 @@ def build_task7_core_benchmark_record(case_context) -> dict:
             "benchmark_status": benchmark_status,
             "exclusion_reason": (
                 None
-                if benchmark_status != TASK7_STATUS_EXCLUDED
-                else "task7_counted_supported_gate_failed"
+                if benchmark_status != PERFORMANCE_EVIDENCE_STATUS_EXCLUDED
+                else "performance_evidence_counted_supported_gate_failed"
             ),
         }
     )
@@ -380,15 +382,15 @@ def build_task7_core_benchmark_record(case_context) -> dict:
 
 
 @lru_cache(maxsize=1)
-def _build_task7_core_benchmark_records_cached() -> tuple[dict, ...]:
+def _build_performance_evidence_core_benchmark_records_cached() -> tuple[dict, ...]:
     return tuple(
-        build_task7_core_benchmark_record(case_context)
-        for case_context in build_task7_case_contexts()
+        build_performance_evidence_core_benchmark_record(case_context)
+        for case_context in build_case_contexts()
     )
 
 
-def build_task7_core_benchmark_records() -> list[dict]:
-    return deepcopy(list(_build_task7_core_benchmark_records_cached()))
+def build_performance_evidence_core_benchmark_records() -> list[dict]:
+    return deepcopy(list(_build_performance_evidence_core_benchmark_records_cached()))
 
 
 def _augment_review_fields(case_context, core_record: dict) -> dict:
@@ -415,43 +417,43 @@ def _augment_review_fields(case_context, core_record: dict) -> dict:
     )
     benchmark_status = record["benchmark_status"]
     if (
-        benchmark_status != TASK7_STATUS_EXCLUDED
+        benchmark_status != PERFORMANCE_EVIDENCE_STATUS_EXCLUDED
         and not positive_threshold_pass
         and diagnosis_reasons
     ):
-        benchmark_status = TASK7_STATUS_DIAGNOSIS_ONLY
+        benchmark_status = PERFORMANCE_EVIDENCE_STATUS_DIAGNOSIS_ONLY
 
     record.update(
         {
             "positive_threshold_pass": positive_threshold_pass,
             "diagnosis_reasons": diagnosis_reasons,
-            "diagnosis_only_case": benchmark_status == TASK7_STATUS_DIAGNOSIS_ONLY,
+            "diagnosis_only_case": benchmark_status == PERFORMANCE_EVIDENCE_STATUS_DIAGNOSIS_ONLY,
             "benchmark_status": benchmark_status,
         }
     )
     return record
 
 
-def build_task7_benchmark_record(case_context) -> dict:
+def build_performance_evidence_benchmark_record(case_context) -> dict:
     return _augment_review_fields(
-        case_context, build_task7_core_benchmark_record(case_context)
+        case_context, build_performance_evidence_core_benchmark_record(case_context)
     )
 
 
 @lru_cache(maxsize=1)
-def _build_task7_benchmark_records_cached() -> tuple[dict, ...]:
+def _build_performance_evidence_benchmark_records_cached() -> tuple[dict, ...]:
     contexts_by_workload_id = {
         case_context.metadata["workload_id"]: case_context
-        for case_context in build_task7_case_contexts()
+        for case_context in build_case_contexts()
     }
     return tuple(
         _augment_review_fields(
             contexts_by_workload_id[core_record["workload_id"]],
             dict(core_record),
         )
-        for core_record in _build_task7_core_benchmark_records_cached()
+        for core_record in _build_performance_evidence_core_benchmark_records_cached()
     )
 
 
-def build_task7_benchmark_records() -> list[dict]:
-    return deepcopy(list(_build_task7_benchmark_records_cached()))
+def build_performance_evidence_benchmark_records() -> list[dict]:
+    return deepcopy(list(_build_performance_evidence_benchmark_records_cached()))

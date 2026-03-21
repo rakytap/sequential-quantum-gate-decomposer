@@ -117,7 +117,7 @@ Story ordering is intentional:
 
 **Given / When / Then**
 - Given the frozen Phase 3 contract docs, the stable task mini-specs, and the
-  emitted `phase3_task6` and `phase3_task7` bundle families.
+  emitted `correctness_evidence` and `performance_evidence` bundle families.
 - When a reviewer asks which artifact or contract source supports a major Paper
   2 claim, section, or limitation statement.
 - Then the publication package provides a stable traceability path from the
@@ -136,8 +136,8 @@ Story ordering is intentional:
   `PRE_IMPLEMENTATION_COMPLETION_CHECKLIST.md`, and the relevant Task 1 through
   Task 7 mini-specs.
 - The publication package identifies concrete machine-reviewable evidence entry
-  points under `benchmarks/density_matrix/artifacts/phase3_task6/` and
-  `benchmarks/density_matrix/artifacts/phase3_task7/`, including the current
+  points under `benchmarks/density_matrix/artifacts/correctness_evidence/` and
+  `benchmarks/density_matrix/artifacts/performance_evidence/`, including the current
   correctness-package, unsupported-boundary, benchmark-package, diagnosis, and
   summary-consistency bundles.
 - A reviewer can move from a paper-level statement to the underlying contract or
@@ -260,8 +260,8 @@ Story ordering is intentional:
 
 **Acceptance signals**
 - One stable reviewer-entry surface references the current emitted bundle entry
-  points under `benchmarks/density_matrix/artifacts/phase3_task6/` and
-  `benchmarks/density_matrix/artifacts/phase3_task7/`, including the current
+  points under `benchmarks/density_matrix/artifacts/correctness_evidence/` and
+  `benchmarks/density_matrix/artifacts/performance_evidence/`, including the current
   correctness-package, unsupported-boundary, diagnosis, sensitivity-matrix, and
   summary-consistency surfaces.
 - Positive supported evidence, explicit boundary evidence, and the current

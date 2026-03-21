@@ -27,25 +27,25 @@ from benchmarks.density_matrix.partitioned_runtime.common import (
     execute_partitioned_with_reference,
 )
 from benchmarks.density_matrix.planner_surface.common import (
-    build_phase3_story1_continuity_vqe,
+    build_phase2_continuity_vqe,
     build_software_metadata,
 )
 from benchmarks.density_matrix.planner_surface.workloads import (
-    build_story2_microcase_descriptor_set,
-    iter_story2_structured_descriptor_sets,
+    build_microcase_descriptor_set,
+    iter_structured_descriptor_sets,
 )
 from squander.partitioning.noisy_planner import build_phase3_continuity_partition_descriptor_set
 from squander.partitioning.noisy_runtime import PHASE3_RUNTIME_SCHEMA_VERSION
 
-SUITE_NAME = "phase3_task3_story4_runtime_semantics"
+SUITE_NAME = "phase3_partitioned_runtime_runtime_semantics"
 ARTIFACT_FILENAME = "runtime_semantics_bundle.json"
 DEFAULT_OUTPUT_DIR = (
     REPO_ROOT
     / "benchmarks"
     / "density_matrix"
     / "artifacts"
-    / "phase3_task3"
-    / "story4_semantics"
+    / "partitioned_runtime"
+    / "runtime_semantics"
 )
 ARTIFACT_CORE_FIELDS = (
     "suite_name",
@@ -98,7 +98,7 @@ def _semantic_case(*, case_name: str, case_kind: str, descriptor_set, metadata: 
 
 
 def build_cases() -> list[dict]:
-    continuity_vqe, _, _ = build_phase3_story1_continuity_vqe(4)
+    continuity_vqe, _, _ = build_phase2_continuity_vqe(4)
     continuity_case = _semantic_case(
         case_name="phase2_xxz_hea_q4_continuity",
         case_kind="continuity",
@@ -107,12 +107,12 @@ def build_cases() -> list[dict]:
     boundary_microcase = _semantic_case(
         case_name="microcase_4q_partition_boundary_triplet",
         case_kind="microcase",
-        descriptor_set=build_story2_microcase_descriptor_set(
+        descriptor_set=build_microcase_descriptor_set(
             "microcase_4q_partition_boundary_triplet"
         ),
     )
     structured_metadata, structured_descriptor_set = next(
-        iter(iter_story2_structured_descriptor_sets())
+        iter(iter_structured_descriptor_sets())
     )
     structured_case = _semantic_case(
         case_name=structured_metadata["workload_id"],

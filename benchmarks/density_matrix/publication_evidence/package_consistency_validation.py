@@ -14,10 +14,10 @@ if str(REPO_ROOT) not in sys.path:
 from benchmarks.density_matrix.publication_evidence.common import (
     BOTTLENECK_PHRASE_ALTERNATIVES,
     CURRENT_DIAGNOSIS_PHRASE_ALTERNATIVES,
-    MANDATORY_TASK8_DOCS,
+    MANDATORY_PUBLICATION_EVIDENCE_DOCS,
     PUBLICATION_SURFACES,
-    TASK6_SUMMARY_CONSISTENCY_PATH,
-    TASK7_SUMMARY_CONSISTENCY_PATH,
+    CORRECTNESS_EVIDENCE_SUMMARY_CONSISTENCY_PATH,
+    PERFORMANCE_EVIDENCE_SUMMARY_CONSISTENCY_PATH,
     build_software_metadata,
     build_surface_presence,
     get_git_revision,
@@ -26,11 +26,11 @@ from benchmarks.density_matrix.publication_evidence.common import (
     load_text,
     normalize_text,
     relative_to_repo,
-    task6_boundary_phrase_options,
-    task6_count_phrase_options,
-    task7_count_phrase_options,
-    task7_review_phrase_options,
-    task8_story_output_dir,
+    correctness_evidence_boundary_phrase_options,
+    correctness_evidence_count_phrase_options,
+    performance_evidence_count_phrase_options,
+    performance_evidence_review_phrase_options,
+    publication_evidence_output_dir,
     write_json,
 )
 from benchmarks.density_matrix.publication_evidence.future_work_boundary_validation import (
@@ -45,22 +45,22 @@ from benchmarks.density_matrix.publication_evidence.publication_manifest_validat
 )
 
 
-SUITE_NAME = "phase3_task8_story8_package_consistency"
+SUITE_NAME = "phase3_publication_evidence_package_consistency"
 ARTIFACT_FILENAME = "package_consistency_bundle.json"
-DEFAULT_OUTPUT_DIR = task8_story_output_dir("story8_package_consistency")
+DEFAULT_OUTPUT_DIR = publication_evidence_output_dir("package_consistency")
 STORY6_PATH = (
-    task8_story_output_dir("story6_publication_manifest")
+    publication_evidence_output_dir("manifest")
     / STORY6_ARTIFACT_FILENAME
 )
 STORY7_PATH = (
-    task8_story_output_dir("story7_future_work_boundary")
+    publication_evidence_output_dir("future_work")
     / STORY7_ARTIFACT_FILENAME
 )
 ARTIFACT_FIELDS = (
     "suite_name",
     "status",
-    "story6_publication_manifest",
-    "story7_future_work_boundary",
+    "manifest",
+    "future_work",
     "reviewer_entry_paths",
     "terminology_inventory",
     "surface_inventory",
@@ -100,20 +100,20 @@ def _story7():
 def _required_groups():
     return [
         {
-            "group_id": "task6_count",
-            "phrases": list(task6_count_phrase_options()),
+            "group_id": "correctness_evidence_count",
+            "phrases": list(correctness_evidence_count_phrase_options()),
         },
         {
-            "group_id": "task6_boundary_count",
-            "phrases": list(task6_boundary_phrase_options()),
+            "group_id": "correctness_evidence_boundary_count",
+            "phrases": list(correctness_evidence_boundary_phrase_options()),
         },
         {
-            "group_id": "task7_count",
-            "phrases": list(task7_count_phrase_options()),
+            "group_id": "performance_evidence_count",
+            "phrases": list(performance_evidence_count_phrase_options()),
         },
         {
-            "group_id": "task7_review_cases",
-            "phrases": list(task7_review_phrase_options()),
+            "group_id": "performance_evidence_review_cases",
+            "phrases": list(performance_evidence_review_phrase_options()),
         },
         {
             "group_id": "diagnosis_closure",
@@ -128,10 +128,10 @@ def _required_groups():
 
 def build_terminology_inventory():
     combined_text = "\n".join(
-        load_text(MANDATORY_TASK8_DOCS[surface["doc_id"]])
+        load_text(MANDATORY_PUBLICATION_EVIDENCE_DOCS[surface["doc_id"]])
         for surface in PUBLICATION_SURFACES.values()
     )
-    combined_text += "\n" + load_text(MANDATORY_TASK8_DOCS["task8_mini_spec"])
+    combined_text += "\n" + load_text(MANDATORY_PUBLICATION_EVIDENCE_DOCS["publication_evidence_mini_spec"])
     normalized = normalize_text(combined_text)
     return {
         "required_glossary_terms": list(REQUIRED_GLOSSARY_TERMS),
@@ -156,10 +156,10 @@ def build_surface_inventory():
         entry["count_references_present"] = all(
             group_id not in missing_ids
             for group_id in (
-                "task6_count",
-                "task6_boundary_count",
-                "task7_count",
-                "task7_review_cases",
+                "correctness_evidence_count",
+                "correctness_evidence_boundary_count",
+                "performance_evidence_count",
+                "performance_evidence_review_cases",
             )
         )
         entry["diagnosis_limitations_present"] = all(
@@ -190,8 +190,8 @@ def build_artifact_bundle():
     limitation_summary_consistency_complete = all(
         entry["diagnosis_limitations_present"] for entry in surface_inventory
     )
-    task6_summary = load_json(TASK6_SUMMARY_CONSISTENCY_PATH)
-    task7_summary = load_json(TASK7_SUMMARY_CONSISTENCY_PATH)
+    correctness_evidence_summary = load_json(CORRECTNESS_EVIDENCE_SUMMARY_CONSISTENCY_PATH)
+    performance_evidence_summary = load_json(PERFORMANCE_EVIDENCE_SUMMARY_CONSISTENCY_PATH)
     package_consistency_completed = all(
         [
             story6_artifact["status"] == "pass",
@@ -200,21 +200,21 @@ def build_artifact_bundle():
             terminology_complete,
             count_consistency_complete,
             limitation_summary_consistency_complete,
-            task6_summary["summary"]["summary_consistency_pass"],
-            task7_summary["summary"]["summary_consistency_pass"],
+            correctness_evidence_summary["summary"]["summary_consistency_pass"],
+            performance_evidence_summary["summary"]["summary_consistency_pass"],
         ]
     )
 
     artifact = {
         "suite_name": SUITE_NAME,
         "status": "pass" if package_consistency_completed else "fail",
-        "story6_publication_manifest": {
+        "manifest": {
             "suite_name": story6_artifact["suite_name"],
             "status": story6_artifact["status"],
             "path": relative_to_repo(STORY6_PATH),
             "summary": dict(story6_artifact["summary"]),
         },
-        "story7_future_work_boundary": {
+        "future_work": {
             "suite_name": story7_artifact["suite_name"],
             "status": story7_artifact["status"],
             "path": relative_to_repo(STORY7_PATH),
@@ -243,11 +243,11 @@ def build_artifact_bundle():
             "limitation_summary_consistency_complete": (
                 limitation_summary_consistency_complete
             ),
-            "task6_summary_consistency_pass": bool(
-                task6_summary["summary"]["summary_consistency_pass"]
+            "correctness_evidence_summary_consistency_pass": bool(
+                correctness_evidence_summary["summary"]["summary_consistency_pass"]
             ),
-            "task7_summary_consistency_pass": bool(
-                task7_summary["summary"]["summary_consistency_pass"]
+            "performance_evidence_summary_consistency_pass": bool(
+                performance_evidence_summary["summary"]["summary_consistency_pass"]
             ),
             "package_consistency_completed": package_consistency_completed,
         },
@@ -291,14 +291,14 @@ def validate_artifact_bundle(artifact):
 
     expected_completed = all(
         [
-            artifact["story6_publication_manifest"]["status"] == "pass",
-            artifact["story7_future_work_boundary"]["status"] == "pass",
+            artifact["manifest"]["status"] == "pass",
+            artifact["future_work"]["status"] == "pass",
             artifact["summary"]["reviewer_entry_paths_complete"],
             artifact["summary"]["terminology_complete"],
             artifact["summary"]["count_consistency_complete"],
             artifact["summary"]["limitation_summary_consistency_complete"],
-            artifact["summary"]["task6_summary_consistency_pass"],
-            artifact["summary"]["task7_summary_consistency_pass"],
+            artifact["summary"]["correctness_evidence_summary_consistency_pass"],
+            artifact["summary"]["performance_evidence_summary_consistency_pass"],
         ]
     )
     if artifact["summary"]["package_consistency_completed"] != expected_completed:

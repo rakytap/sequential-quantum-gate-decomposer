@@ -21,30 +21,30 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from benchmarks.density_matrix.planner_surface.common import (
-    build_phase3_story1_continuity_vqe,
+    build_phase2_continuity_vqe,
     build_software_metadata,
 )
 from benchmarks.density_matrix.planner_surface.workloads import (
     MANDATORY_NOISE_PATTERNS,
     STRUCTURED_FAMILY_NAMES,
     STRUCTURED_QUBITS,
-    iter_story2_microcase_descriptor_sets,
-    iter_story2_structured_descriptor_sets,
+    iter_microcase_descriptor_sets,
+    iter_structured_descriptor_sets,
 )
 from squander.partitioning.noisy_planner import (
     PHASE3_DESCRIPTOR_SCHEMA_VERSION,
     build_phase3_continuity_partition_descriptor_set,
 )
 
-SUITE_NAME = "phase3_task2_story2_mandatory_workload_descriptors"
+SUITE_NAME = "phase3_planner_surface_workload_descriptors"
 ARTIFACT_FILENAME = "mandatory_workload_descriptor_bundle.json"
 DEFAULT_OUTPUT_DIR = (
     REPO_ROOT
     / "benchmarks"
     / "density_matrix"
     / "artifacts"
-    / "phase3_task2"
-    / "story2_workloads"
+    / "planner_surface"
+    / "mandatory_workload"
 )
 ARTIFACT_CORE_FIELDS = (
     "suite_name",
@@ -86,7 +86,7 @@ def _descriptor_case(case_kind: str, metadata: dict, descriptor_set) -> dict:
 def run_validation(verbose: bool = True) -> list[dict]:
     cases: list[dict] = []
 
-    continuity_vqe, _, _ = build_phase3_story1_continuity_vqe(4)
+    continuity_vqe, _, _ = build_phase2_continuity_vqe(4)
     continuity_descriptor_set = build_phase3_continuity_partition_descriptor_set(
         continuity_vqe
     )
@@ -98,9 +98,9 @@ def run_validation(verbose: bool = True) -> list[dict]:
         )
     )
 
-    for metadata, descriptor_set in iter_story2_microcase_descriptor_sets():
+    for metadata, descriptor_set in iter_microcase_descriptor_sets():
         cases.append(_descriptor_case("microcase", metadata, descriptor_set))
-    for metadata, descriptor_set in iter_story2_structured_descriptor_sets():
+    for metadata, descriptor_set in iter_structured_descriptor_sets():
         cases.append(_descriptor_case("structured_family", metadata, descriptor_set))
 
     if verbose:

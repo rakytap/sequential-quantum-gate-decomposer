@@ -44,10 +44,10 @@ Out of scope for this story:
   `build_phase3_continuity_partition_descriptor_set()`.
 - Story 1 now also established the first rerunnable Task 2 validation surfaces
   in:
-  - `tests/partitioning/test_phase3_task2.py`,
+  - `tests/partitioning/test_planner_surface_descriptors.py`,
   - `benchmarks/density_matrix/planner_surface/continuity_descriptor_validation.py`,
   - and the emitted bundle under
-    `benchmarks/density_matrix/artifacts/phase3_task2/story1_continuity_descriptors/`.
+    `benchmarks/density_matrix/artifacts/planner_surface/continuity_descriptor/`.
 - The frozen workload requirements come from the Phase 3 support-matrix,
   workflow-anchor, and benchmark-minimum decisions in
   `DETAILED_PLANNING_PHASE_3.md`.
@@ -228,7 +228,7 @@ Out of scope for this story:
   validation.
 
 **Execution checklist**
-- [ ] Extend `tests/partitioning/test_phase3_task2.py` with the Story 2
+- [ ] Extend `tests/partitioning/test_planner_surface_descriptors.py` with the Story 2
       mandatory-workload coverage matrix.
 - [ ] Cover mandatory microcases and at least one deterministic instance of each
       required structured family.
@@ -264,7 +264,7 @@ Out of scope for this story:
 
 **Execution checklist**
 - [ ] Add a dedicated Story 2 artifact location
-      (for example `benchmarks/density_matrix/artifacts/phase3_task2/story2_workloads/`).
+      (for example `benchmarks/density_matrix/artifacts/planner_surface/mandatory_workload/`).
 - [ ] Emit machine-reviewable metadata for each required workload class and
       size.
 - [ ] Record whether the case came from continuity lowering, direct microcase

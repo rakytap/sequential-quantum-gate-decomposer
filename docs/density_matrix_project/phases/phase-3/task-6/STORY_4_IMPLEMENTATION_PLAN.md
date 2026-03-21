@@ -265,7 +265,7 @@ Out of scope for this story:
 **Execution checklist**
 - [ ] Add a dedicated Story 4 artifact location
       (for example
-      `benchmarks/density_matrix/artifacts/phase3_task6/story4_output_integrity/`).
+      `benchmarks/density_matrix/artifacts/correctness_evidence/output_integrity/`).
 - [ ] Emit shared case identity, validity metrics, energy metrics where
       required, and verdict fields through one stable schema.
 - [ ] Record rerun commands and software metadata with the emitted bundle.

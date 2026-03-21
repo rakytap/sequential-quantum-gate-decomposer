@@ -33,19 +33,19 @@ from benchmarks.density_matrix.publication_evidence.common import (
     get_git_revision,
     load_or_build_artifact,
     relative_to_repo,
-    task8_story_output_dir,
+    publication_evidence_output_dir,
     write_json,
 )
 
 
-SUITE_NAME = "phase3_task8_story2_surface_alignment"
+SUITE_NAME = "phase3_publication_evidence_surface_alignment"
 ARTIFACT_FILENAME = "publication_surface_alignment_bundle.json"
-DEFAULT_OUTPUT_DIR = task8_story_output_dir("story2_surface_alignment")
-STORY1_ARTIFACT_PATH = task8_story_output_dir("story1_claim_package") / STORY1_ARTIFACT_FILENAME
+DEFAULT_OUTPUT_DIR = publication_evidence_output_dir("surface_alignment")
+STORY1_ARTIFACT_PATH = publication_evidence_output_dir("claim_package") / STORY1_ARTIFACT_FILENAME
 ARTIFACT_FIELDS = (
     "suite_name",
     "status",
-    "story1_claim_package",
+    "claim_package",
     "surface_inventory",
     "software",
     "provenance",
@@ -212,7 +212,7 @@ def build_artifact_bundle():
     artifact = {
         "suite_name": SUITE_NAME,
         "status": "pass" if surface_alignment_completed else "fail",
-        "story1_claim_package": {
+        "claim_package": {
             "suite_name": story1_artifact["suite_name"],
             "status": story1_artifact["status"],
             "path": relative_to_repo(STORY1_ARTIFACT_PATH),
@@ -227,7 +227,7 @@ def build_artifact_bundle():
             ),
             "working_directory": str(REPO_ROOT),
             "git_revision": get_git_revision(),
-            "story1_claim_package_path": str(STORY1_ARTIFACT_PATH),
+            "claim_package_path": str(STORY1_ARTIFACT_PATH),
         },
         "summary": {
             "surface_count": len(surface_inventory),
@@ -294,7 +294,7 @@ def validate_artifact_bundle(artifact):
 
     expected_completed = all(
         [
-            artifact["story1_claim_package"]["status"] == "pass",
+            artifact["claim_package"]["status"] == "pass",
             artifact["summary"]["all_surface_roles_present"],
             artifact["summary"]["all_claim_headings_present"],
             artifact["summary"]["all_main_claims_present"],

@@ -3,13 +3,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Iterable
 
-TASK5_CANDIDATE_SCHEMA_VERSION = "phase3_task5_planner_candidate_v1"
-TASK5_PLANNER_FAMILY_SPAN_BUDGET = "phase3_span_budget"
-TASK5_SUPPORTED_CANDIDATE_PARTITION_QUBITS = (2, 3, 4)
+PLANNER_CANDIDATE_SCHEMA_VERSION = "phase3_planner_calibration_candidate_v1"
+PLANNER_FAMILY_SPAN_BUDGET = "phase3_span_budget"
+SUPPORTED_CANDIDATE_PARTITION_QUBITS = (2, 3, 4)
 
 
 @dataclass(frozen=True)
-class Task5PlannerCandidate:
+class PlannerCandidate:
     schema_version: str
     candidate_id: str
     planner_family: str
@@ -31,25 +31,39 @@ class Task5PlannerCandidate:
         }
 
 
-def build_task5_planner_candidates(
+def build_planner_candidates(
     *,
-    max_partition_qubits_values: Iterable[int] = TASK5_SUPPORTED_CANDIDATE_PARTITION_QUBITS,
-) -> tuple[Task5PlannerCandidate, ...]:
+    max_partition_qubits_values: Iterable[int] = SUPPORTED_CANDIDATE_PARTITION_QUBITS,
+) -> tuple[PlannerCandidate, ...]:
     normalized_values = tuple(sorted({int(value) for value in max_partition_qubits_values}))
     if not normalized_values:
-        raise ValueError("Task 5 candidate surface requires at least one candidate")
+        raise ValueError("Planner-candidate surface requires at least one candidate")
     if normalized_values[0] <= 0:
         raise ValueError(
-            "Task 5 candidate surface requires max_partition_qubits > 0 for every candidate"
+            "Planner-candidate surface requires max_partition_qubits > 0 for every candidate"
         )
 
     return tuple(
-        Task5PlannerCandidate(
-            schema_version=TASK5_CANDIDATE_SCHEMA_VERSION,
+        PlannerCandidate(
+            schema_version=PLANNER_CANDIDATE_SCHEMA_VERSION,
             candidate_id=f"span_budget_q{max_partition_qubits}",
-            planner_family=TASK5_PLANNER_FAMILY_SPAN_BUDGET,
+            planner_family=PLANNER_FAMILY_SPAN_BUDGET,
             planner_variant=f"max_partition_qubits_{max_partition_qubits}",
             max_partition_qubits=max_partition_qubits,
         )
         for max_partition_qubits in normalized_values
     )
+
+
+# Compatibility aliases for existing semantic imports.
+PLANNER_CALIBRATION_CANDIDATE_SCHEMA_VERSION = PLANNER_CANDIDATE_SCHEMA_VERSION
+PLANNER_CALIBRATION_PLANNER_FAMILY_SPAN_BUDGET = PLANNER_FAMILY_SPAN_BUDGET
+PLANNER_CALIBRATION_SUPPORTED_CANDIDATE_PARTITION_QUBITS = SUPPORTED_CANDIDATE_PARTITION_QUBITS
+PlannerCalibrationPlannerCandidate = PlannerCandidate
+
+
+def build_planner_calibration_planner_candidates(
+    *,
+    max_partition_qubits_values: Iterable[int] = SUPPORTED_CANDIDATE_PARTITION_QUBITS,
+) -> tuple[PlannerCandidate, ...]:
+    return build_planner_candidates(max_partition_qubits_values=max_partition_qubits_values)

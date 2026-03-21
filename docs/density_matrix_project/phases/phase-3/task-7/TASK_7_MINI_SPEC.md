@@ -50,7 +50,7 @@ planner claim, or the deferred channel-native / broader Phase 4 branches.
   behavior over that supported calibration surface rather than inventing a new
   planner claim.
 - Task 6 provides the machine-reviewable correctness and unsupported-boundary
-  package under `benchmarks/density_matrix/artifacts/phase3_task6/`. Task 7
+  package under `benchmarks/density_matrix/artifacts/correctness_evidence/`. Task 7
   depends on that package for counted-status rules, correctness thresholds, the
   required external slice, and explicit negative-boundary visibility.
 - Task 8 depends on Task 7 by turning the representative benchmark package into
@@ -317,10 +317,10 @@ planner claim, or the deferred channel-native / broader Phase 4 branches.
   including representative structured fused-performance validation surfaces and
   any successor Task 7 package builders.
 - Task 5 calibration bundles or rerunnable checkers under
-  `benchmarks/density_matrix/artifacts/phase3_task5/` that define the bounded
+  `benchmarks/density_matrix/artifacts/planner_calibration/` that define the bounded
   supported planner-setting surface Task 7 interprets.
 - Task 6 correctness, unsupported-boundary, and summary-consistency bundles
-  under `benchmarks/density_matrix/artifacts/phase3_task6/` that define counted
+  under `benchmarks/density_matrix/artifacts/correctness_evidence/` that define counted
   status and correctness-gate reuse for Task 7.
 - Summary-consistency, sensitivity-rollup, and reproducibility tooling that must
   preserve stable case identities and benchmark interpretations in

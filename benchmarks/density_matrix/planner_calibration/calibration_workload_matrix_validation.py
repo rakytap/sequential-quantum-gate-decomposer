@@ -21,15 +21,15 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from benchmarks.density_matrix.planner_calibration.common import (
-    TASK5_CANDIDATE_SCHEMA_VERSION,
-    TASK5_SUPPORTED_CANDIDATE_PARTITION_QUBITS,
+    PLANNER_CALIBRATION_CANDIDATE_SCHEMA_VERSION,
+    PLANNER_CALIBRATION_SUPPORTED_CANDIDATE_PARTITION_QUBITS,
 )
-from benchmarks.density_matrix.planner_calibration.task5_case_selection import (
-    TASK5_CASE_KIND_CONTINUITY,
-    TASK5_CASE_KIND_MICROCASE,
-    TASK5_CASE_KIND_STRUCTURED,
-    TASK5_CONTINUITY_QUBITS,
-    iter_task5_candidate_cases,
+from benchmarks.density_matrix.planner_calibration.case_selection import (
+    PLANNER_CALIBRATION_CASE_KIND_CONTINUITY,
+    PLANNER_CALIBRATION_CASE_KIND_MICROCASE,
+    PLANNER_CALIBRATION_CASE_KIND_STRUCTURED,
+    PLANNER_CALIBRATION_CONTINUITY_QUBITS,
+    iter_planner_calibration_candidate_cases,
 )
 from benchmarks.density_matrix.planner_surface.common import build_software_metadata
 from benchmarks.density_matrix.planner_surface.workloads import (
@@ -39,15 +39,15 @@ from benchmarks.density_matrix.planner_surface.workloads import (
     mandatory_microcase_definitions,
 )
 
-SUITE_NAME = "phase3_task5_story2_workload_matrix"
+SUITE_NAME = "phase3_planner_calibration_workload_matrix"
 ARTIFACT_FILENAME = "calibration_workload_matrix_bundle.json"
 DEFAULT_OUTPUT_DIR = (
     REPO_ROOT
     / "benchmarks"
     / "density_matrix"
     / "artifacts"
-    / "phase3_task5"
-    / "story2_workload_matrix"
+    / "planner_calibration"
+    / "calibration_workload_matrix"
 )
 ARTIFACT_CORE_FIELDS = (
     "suite_name",
@@ -81,7 +81,7 @@ def _case_from_descriptor(metadata: dict, descriptor_set) -> dict:
         "max_partition_span": payload["max_partition_span"],
         "partition_member_counts": payload["partition_member_counts"],
         "workload_matrix_pass": (
-            metadata["max_partition_qubits"] in TASK5_SUPPORTED_CANDIDATE_PARTITION_QUBITS
+            metadata["max_partition_qubits"] in PLANNER_CALIBRATION_SUPPORTED_CANDIDATE_PARTITION_QUBITS
             and payload["partition_count"] > 0
             and payload["workload_id"] == metadata["workload_id"]
         ),
@@ -91,18 +91,18 @@ def _case_from_descriptor(metadata: dict, descriptor_set) -> dict:
 def build_cases() -> list[dict]:
     return [
         _case_from_descriptor(metadata, descriptor_set)
-        for metadata, descriptor_set, _, _ in iter_task5_candidate_cases()
+        for metadata, descriptor_set, _, _ in iter_planner_calibration_candidate_cases()
     ]
 
 
 def build_artifact_bundle(cases: list[dict]) -> dict:
     candidate_ids = sorted({case["candidate_id"] for case in cases})
     continuity_cases = [
-        case for case in cases if case["case_kind"] == TASK5_CASE_KIND_CONTINUITY
+        case for case in cases if case["case_kind"] == PLANNER_CALIBRATION_CASE_KIND_CONTINUITY
     ]
-    microcase_cases = [case for case in cases if case["case_kind"] == TASK5_CASE_KIND_MICROCASE]
+    microcase_cases = [case for case in cases if case["case_kind"] == PLANNER_CALIBRATION_CASE_KIND_MICROCASE]
     structured_cases = [
-        case for case in cases if case["case_kind"] == TASK5_CASE_KIND_STRUCTURED
+        case for case in cases if case["case_kind"] == PLANNER_CALIBRATION_CASE_KIND_STRUCTURED
     ]
     microcase_workload_ids = {
         definition["case_name"] for definition in mandatory_microcase_definitions()
@@ -122,11 +122,11 @@ def build_artifact_bundle(cases: list[dict]) -> dict:
         "suite_name": SUITE_NAME,
         "status": "pass"
         if workload_matrix_passes == len(cases)
-        and {case["qbit_num"] for case in continuity_cases} == set(TASK5_CONTINUITY_QUBITS)
+        and {case["qbit_num"] for case in continuity_cases} == set(PLANNER_CALIBRATION_CONTINUITY_QUBITS)
         and {case["workload_id"] for case in microcase_cases} == microcase_workload_ids
         and observed_structured_combinations == expected_structured_combinations
         else "fail",
-        "candidate_schema_version": TASK5_CANDIDATE_SCHEMA_VERSION,
+        "candidate_schema_version": PLANNER_CALIBRATION_CANDIDATE_SCHEMA_VERSION,
         "software": build_software_metadata(),
         "summary": {
             "total_cases": len(cases),

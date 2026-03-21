@@ -20,20 +20,20 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from benchmarks.density_matrix.performance_evidence.common import (
-    TASK7_CASE_SCHEMA_VERSION,
-    build_task7_boundary_evidence,
-    build_task7_selected_candidate,
-    build_task7_software_metadata,
-    task7_story_output_dir,
+    PERFORMANCE_EVIDENCE_CASE_SCHEMA_VERSION,
+    build_performance_evidence_boundary_evidence,
+    build_performance_evidence_selected_candidate,
+    build_performance_evidence_software_metadata,
+    performance_evidence_output_dir,
     write_artifact_bundle,
 )
 from benchmarks.density_matrix.performance_evidence.records import (
-    build_task7_benchmark_records,
+    build_performance_evidence_benchmark_records,
 )
 
-SUITE_NAME = "phase3_task7_story6_diagnosis_path"
+SUITE_NAME = "phase3_performance_evidence_diagnosis"
 ARTIFACT_FILENAME = "diagnosis_bundle.json"
-DEFAULT_OUTPUT_DIR = task7_story_output_dir("story6_diagnosis_path")
+DEFAULT_OUTPUT_DIR = performance_evidence_output_dir("diagnosis")
 ARTIFACT_CORE_FIELDS = (
     "suite_name",
     "status",
@@ -48,7 +48,7 @@ ARTIFACT_CORE_FIELDS = (
 def build_cases() -> list[dict]:
     return [
         case
-        for case in build_task7_benchmark_records()
+        for case in build_performance_evidence_benchmark_records()
         if case["diagnosis_only_case"]
     ]
 
@@ -58,12 +58,12 @@ def build_artifact_bundle(cases: list[dict]) -> dict:
     bundle = {
         "suite_name": SUITE_NAME,
         "status": "pass" if diagnosis_surface_pass else "fail",
-        "record_schema_version": TASK7_CASE_SCHEMA_VERSION,
-        "software": build_task7_software_metadata(),
-        "selected_candidate": build_task7_selected_candidate(),
+        "record_schema_version": PERFORMANCE_EVIDENCE_CASE_SCHEMA_VERSION,
+        "software": build_performance_evidence_software_metadata(),
+        "selected_candidate": build_performance_evidence_selected_candidate(),
         "summary": {
             "total_cases": len(cases),
-            "task6_boundary_cases": len(build_task7_boundary_evidence()),
+            "correctness_evidence_boundary_cases": len(build_performance_evidence_boundary_evidence()),
             "no_real_fused_coverage_cases": sum(
                 "no_real_fused_coverage" in case["diagnosis_reasons"] for case in cases
             ),

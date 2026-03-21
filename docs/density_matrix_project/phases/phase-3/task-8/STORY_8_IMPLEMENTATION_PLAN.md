@@ -42,11 +42,11 @@ Out of scope for this story:
   framing. Story 8 should enforce coherence across those surfaces rather than
   redefine them.
 - Story 6 is expected to emit one top-level reviewer manifest under
-  `benchmarks/density_matrix/artifacts/phase3_task8/story6_publication_manifest/`.
+  `benchmarks/density_matrix/artifacts/publication_evidence/manifest/`.
 - The emitted Task 6 and Task 7 bundle families already provide summary-
   consistency precedent:
-  - `benchmarks/density_matrix/artifacts/phase3_task6/story8_summary_consistency/`,
-  - and `benchmarks/density_matrix/artifacts/phase3_task7/story8_summary_consistency/`.
+  - `benchmarks/density_matrix/artifacts/correctness_evidence/summary_consistency/`,
+  - and `benchmarks/density_matrix/artifacts/performance_evidence/summary_consistency/`.
 - Story 8 should reuse that precedent where it strengthens auditability rather
   than inventing a detached publication-only summary logic.
 - Story 8 should treat the current implementation-backed counts as contract-
@@ -59,7 +59,7 @@ Out of scope for this story:
 - The natural implementation home for Task 8 final consistency validation is the
   same `benchmarks/density_matrix/publication_evidence/` package, with
   `package_consistency_validation.py` as the Story 8 validation surface and
-  emitted artifacts rooted in `benchmarks/density_matrix/artifacts/phase3_task8/`.
+  emitted artifacts rooted in `benchmarks/density_matrix/artifacts/publication_evidence/`.
 - Story 8 should enforce coherence and summary consistency only. It should not
   become a general style linter or a substitute for lower-story validation.
 
@@ -261,7 +261,7 @@ Out of scope for this story:
 - Regression coverage remains narrow and publication-package focused.
 
 **Execution checklist**
-- [ ] Add focused checks in `tests/partitioning/test_phase3_task8.py` or a
+- [ ] Add focused checks in `tests/partitioning/test_publication_evidence.py` or a
       tightly related successor for Story 8 final-package consistency.
 - [ ] Add negative checks for conflicting terminology across publication-facing
       surfaces.
@@ -298,7 +298,7 @@ Out of scope for this story:
 
 **Execution checklist**
 - [ ] Add one stable Story 8 output location under
-      `benchmarks/density_matrix/artifacts/phase3_task8/story8_package_consistency/`.
+      `benchmarks/density_matrix/artifacts/publication_evidence/package_consistency/`.
 - [ ] Emit one artifact such as `package_consistency_bundle.json`.
 - [ ] Record generation command, software metadata, and package-consistency
       summary in the output.

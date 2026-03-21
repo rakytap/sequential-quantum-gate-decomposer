@@ -58,7 +58,7 @@ Out of scope for this story:
 - The natural implementation home for Task 8 future-work boundary validation is
   the same `benchmarks/density_matrix/publication_evidence/` package, with
   `future_work_boundary_validation.py` as the Story 7 validation surface and
-  emitted artifacts rooted in `benchmarks/density_matrix/artifacts/phase3_task8/`.
+  emitted artifacts rooted in `benchmarks/density_matrix/artifacts/publication_evidence/`.
 - Story 7 should validate future-work wording and publication-ladder positioning
   only. It should not replace the roadmap docs or produce a new planning
   document.
@@ -254,7 +254,7 @@ Out of scope for this story:
 - Regression coverage remains narrow and publication-package focused.
 
 **Execution checklist**
-- [ ] Add focused checks in `tests/partitioning/test_phase3_task8.py` or a
+- [ ] Add focused checks in `tests/partitioning/test_publication_evidence.py` or a
       tightly related successor for Story 7 future-work validation.
 - [ ] Add negative checks for channel-native fusion being framed as baseline
       delivered behavior.
@@ -291,7 +291,7 @@ Out of scope for this story:
 
 **Execution checklist**
 - [ ] Add one stable Story 7 output location under
-      `benchmarks/density_matrix/artifacts/phase3_task8/story7_future_work_boundary/`.
+      `benchmarks/density_matrix/artifacts/publication_evidence/future_work/`.
 - [ ] Emit one artifact such as `future_work_boundary_bundle.json`.
 - [ ] Record generation command, software metadata, and roadmap-boundary summary
       in the output.

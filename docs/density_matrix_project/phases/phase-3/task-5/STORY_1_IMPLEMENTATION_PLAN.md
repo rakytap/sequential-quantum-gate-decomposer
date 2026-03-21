@@ -54,8 +54,8 @@ Out of scope for this story:
   - `execute_partitioned_with_reference()` and `execute_fused_with_reference()`
     in `benchmarks/density_matrix/partitioned_runtime/common.py`,
   - and the existing fused and non-fused validation bundles under
-    `benchmarks/density_matrix/artifacts/phase3_task3/` and
-    `benchmarks/density_matrix/artifacts/phase3_task4/`.
+    `benchmarks/density_matrix/artifacts/partitioned_runtime/` and
+    `benchmarks/density_matrix/artifacts/partitioned_runtime/`.
 - The existing state-vector planner stack under
   `squander/partitioning/kahn.py`, `squander/partitioning/tdag.py`,
   `squander/partitioning/ilp.py`, and `squander/partitioning/tools.py`
@@ -263,7 +263,7 @@ Out of scope for this story:
 
 **Execution checklist**
 - [ ] Add a dedicated Task 5 regression surface in
-      `tests/partitioning/test_phase3_task5.py`.
+      `tests/partitioning/test_planner_calibration.py`.
 - [ ] Assert stable candidate names, stable setting fields, and stable candidate
       ordering or canonicalization for representative cases.
 - [ ] Assert that unsupported or exploratory candidate labels do not leak into
@@ -300,7 +300,7 @@ Out of scope for this story:
       `planner_candidate_audit_validation.py` as the primary checker.
 - [ ] Add a dedicated Story 1 artifact location
       (for example
-      `benchmarks/density_matrix/artifacts/phase3_task5/story1_candidate_audit/`).
+      `benchmarks/density_matrix/artifacts/planner_calibration/planner_candidate_audit/`).
 - [ ] Emit candidate descriptors, planner settings, and shared provenance fields
       for the representative Task 5 candidate surface.
 - [ ] Record rerun commands and software metadata with the emitted bundle.

@@ -317,9 +317,10 @@ Major methods / systems paper.
   explains where noise-aware partitioning helps and where additional
   architecture is required.
 
-### Current Task 4 Through Task 7 Implementation Findings
+### Current Phase 3 Evidence Findings
 
-The current Task 4 implementation has now realized the minimum fused backend in
+The current fused-runtime implementation has now realized the minimum fused
+backend in
 one conservative concrete form:
 
 - descriptor-local unitary-island fusion on 1- and 2-qubit spans using the
@@ -338,8 +339,9 @@ fused-kernel path adds overhead. This now argues for benchmark-driven follow-on
 optimization or a more invasive channel-native branch, not for stronger
 acceleration claims in the baseline Phase 3 result.
 
-Current Task 7 findings now make that diagnosis package concrete at the phase
-level. The emitted `phase3_task7` bundles record:
+Current performance-evidence findings now make that diagnosis package concrete
+at the phase
+level. The emitted `performance_evidence` bundles record:
 
 - `34` counted supported benchmark cases total,
 - `4` continuity-anchor cases,
@@ -349,13 +351,14 @@ level. The emitted `phase3_task7` bundles record:
   each required family and size,
 - `0` positive-threshold pass cases,
 - `6` diagnosis-only representative cases,
-- and carry-forward of the `17` explicit Task 6 boundary cases into the summary
+- and carry-forward of the `17` explicit correctness-evidence boundary cases
+  into the summary
   layer.
 
-The current benchmark closure is therefore not only a Task 4 fused-runtime
-finding anymore. It is a fully emitted Task 7 performance-and-sensitivity
-package that closes the Phase 3 rule through diagnosis-grounded benchmark
-evidence rather than through a speedup claim.
+The current benchmark closure is therefore not only a fused-runtime finding
+anymore. It is a fully emitted performance-and-sensitivity package that closes
+the Phase 3 rule through diagnosis-grounded benchmark evidence rather than
+through a speedup claim.
 
 ### Phase 4: Broader Noisy VQE/VQA Workflows And Optimizer Studies
 

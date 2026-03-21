@@ -47,7 +47,7 @@ Out of scope for this story:
   - and `build_runtime_audit_record()`.
 - The current Task 3 mandatory-workload runtime evidence already provides the
   baseline structured-workload surface Story 2 must extend rather than bypass in
-  `benchmarks/density_matrix/artifacts/phase3_task3/story2_workloads/`.
+  `benchmarks/density_matrix/artifacts/partitioned_runtime/story2_workloads/`.
 - The structured noisy workload builders Story 2 should reuse already exist in
   `benchmarks/density_matrix/planner_surface/workloads.py`, especially:
   - `STRUCTURED_FAMILY_NAMES`,
@@ -231,7 +231,7 @@ Out of scope for this story:
 
 **Execution checklist**
 - [ ] Add focused Task 4 regression coverage in
-      `tests/partitioning/test_phase3_task4.py`.
+      `tests/partitioning/test_partitioned_runtime.py`.
 - [ ] Add a Story 2 validator under
       `benchmarks/density_matrix/partitioned_runtime/`, with
       `structured_fused_runtime_validation.py` as the primary checker.
@@ -267,7 +267,7 @@ Out of scope for this story:
 
 **Execution checklist**
 - [ ] Add a dedicated Story 2 artifact location
-      (for example `benchmarks/density_matrix/artifacts/phase3_task4/story2_structured_fused_runtime/`).
+      (for example `benchmarks/density_matrix/artifacts/partitioned_runtime/structured_fused_runtime/`).
 - [ ] Record case provenance, fused runtime-path label, partition summaries,
       eligible-span references, fused-span summaries, and exactness metrics for
       Story 2 fixtures.

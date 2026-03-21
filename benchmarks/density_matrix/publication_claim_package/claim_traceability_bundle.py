@@ -24,9 +24,9 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from benchmarks.density_matrix.publication_claim_package.doc_utils import (
-    MANDATORY_TASK8_DOCS,
+    MANDATORY_PUBLICATION_EVIDENCE_DOCS,
     PHASE2_DOCUMENTATION_INDEX_PATH,
-    TASK6_PUBLICATION_BUNDLE_PATH,
+    CORRECTNESS_EVIDENCE_PUBLICATION_BUNDLE_PATH,
     PUBLICATION_CLAIM_OUTPUT_DIR,
     build_software_metadata,
     get_git_revision,
@@ -68,7 +68,7 @@ CLAIM_TRACEABILITY_ITEMS = (
         "claim_id": "paper1_main_claim",
         "label": "Paper 1 main claim",
         "surface_ids": ["abstract", "short_paper", "short_paper_narrative", "paper"],
-        "primary_doc_id": "task8_mini_spec",
+        "primary_doc_id": "publication_evidence_mini_spec",
         "supporting_doc_ids": ["planning_publications", "phase2_paper"],
     },
     {
@@ -76,20 +76,20 @@ CLAIM_TRACEABILITY_ITEMS = (
         "label": "Supported workflow and scope claim",
         "surface_ids": ["short_paper", "short_paper_narrative", "paper"],
         "primary_doc_id": "phase2_documentation_index",
-        "supporting_doc_ids": ["task6_mini_spec", "task6_publication_bundle"],
+        "supporting_doc_ids": ["correctness_evidence_mini_spec", "correctness_evidence_publication_bundle"],
     },
     {
         "claim_id": "evidence_closure_rule",
         "label": "Mandatory evidence closure rule",
         "surface_ids": ["abstract", "short_paper", "short_paper_narrative", "paper"],
-        "primary_doc_id": "task8_mini_spec",
-        "supporting_doc_ids": ["task5_mini_spec", "task6_publication_bundle"],
+        "primary_doc_id": "publication_evidence_mini_spec",
+        "supporting_doc_ids": ["planner_calibration_mini_spec", "correctness_evidence_publication_bundle"],
     },
     {
         "claim_id": "limitations_and_non_claims",
         "label": "Limitations and explicit non-claims",
         "surface_ids": ["short_paper", "short_paper_narrative", "paper"],
-        "primary_doc_id": "task8_mini_spec",
+        "primary_doc_id": "publication_evidence_mini_spec",
         "supporting_doc_ids": ["research_alignment", "phase2_paper"],
     },
     {
@@ -106,32 +106,32 @@ SECTION_TRACEABILITY_ITEMS = (
         "label": "Full-paper abstract summary",
         "doc_id": "phase2_paper",
         "required_heading": "## Abstract Summary",
-        "primary_doc_id": "task8_mini_spec",
-        "supporting_doc_ids": ["planning_publications", "task8_mini_spec"],
+        "primary_doc_id": "publication_evidence_mini_spec",
+        "supporting_doc_ids": ["planning_publications", "publication_evidence_mini_spec"],
     },
     {
         "section_id": "paper_validation_methodology",
         "label": "Full-paper validation methodology section",
         "doc_id": "phase2_paper",
         "required_heading": "## 7. Validation Methodology",
-        "primary_doc_id": "task6_publication_bundle",
-        "supporting_doc_ids": ["task5_mini_spec", "task6_mini_spec"],
+        "primary_doc_id": "correctness_evidence_publication_bundle",
+        "supporting_doc_ids": ["planner_calibration_mini_spec", "correctness_evidence_mini_spec"],
     },
     {
         "section_id": "paper_scope_boundaries",
         "label": "Full-paper scope boundaries section",
         "doc_id": "phase2_paper",
         "required_heading": "## 6. Scope Boundaries",
-        "primary_doc_id": "task8_mini_spec",
-        "supporting_doc_ids": ["task7_documentation_bundle", "research_alignment"],
+        "primary_doc_id": "publication_evidence_mini_spec",
+        "supporting_doc_ids": ["performance_evidence_documentation_bundle", "research_alignment"],
     },
     {
         "section_id": "short_paper_validation_baseline",
         "label": "Compact short-paper validation baseline section",
         "doc_id": "phase2_short_paper",
         "required_heading": "## 6. Validation and Benchmark Baseline (Delivered)",
-        "primary_doc_id": "task6_publication_bundle",
-        "supporting_doc_ids": ["task5_mini_spec", "task6_mini_spec"],
+        "primary_doc_id": "correctness_evidence_publication_bundle",
+        "supporting_doc_ids": ["planner_calibration_mini_spec", "correctness_evidence_mini_spec"],
     },
     {
         "section_id": "short_paper_follow_on_phases",
@@ -163,9 +163,9 @@ def _load_story2(path: Path = STORY2_PATH):
 def build_claim_traceability():
     entries = []
     for item in CLAIM_TRACEABILITY_ITEMS:
-        primary_path = MANDATORY_TASK8_DOCS[item["primary_doc_id"]]
+        primary_path = MANDATORY_PUBLICATION_EVIDENCE_DOCS[item["primary_doc_id"]]
         supporting_paths = [
-            MANDATORY_TASK8_DOCS[doc_id] for doc_id in item["supporting_doc_ids"]
+            MANDATORY_PUBLICATION_EVIDENCE_DOCS[doc_id] for doc_id in item["supporting_doc_ids"]
         ]
         entries.append(
             {
@@ -186,11 +186,11 @@ def build_claim_traceability():
 def build_section_traceability():
     entries = []
     for item in SECTION_TRACEABILITY_ITEMS:
-        section_path = MANDATORY_TASK8_DOCS[item["doc_id"]]
+        section_path = MANDATORY_PUBLICATION_EVIDENCE_DOCS[item["doc_id"]]
         section_text = load_text(section_path)
-        primary_path = MANDATORY_TASK8_DOCS[item["primary_doc_id"]]
+        primary_path = MANDATORY_PUBLICATION_EVIDENCE_DOCS[item["primary_doc_id"]]
         supporting_paths = [
-            MANDATORY_TASK8_DOCS[doc_id] for doc_id in item["supporting_doc_ids"]
+            MANDATORY_PUBLICATION_EVIDENCE_DOCS[doc_id] for doc_id in item["supporting_doc_ids"]
         ]
         entries.append(
             {
@@ -229,7 +229,7 @@ def build_artifact_bundle():
         entry["heading_present"] for entry in section_traceability
     )
     reviewer_entry_paths_complete = (
-        PHASE2_DOCUMENTATION_INDEX_PATH.exists() and TASK6_PUBLICATION_BUNDLE_PATH.exists()
+        PHASE2_DOCUMENTATION_INDEX_PATH.exists() and CORRECTNESS_EVIDENCE_PUBLICATION_BUNDLE_PATH.exists()
     )
     claim_traceability_completed = all(
         [
@@ -264,9 +264,9 @@ def build_artifact_bundle():
                 "path": relative_to_repo(PHASE2_DOCUMENTATION_INDEX_PATH),
                 "exists": PHASE2_DOCUMENTATION_INDEX_PATH.exists(),
             },
-            "task6_publication_bundle": {
-                "path": relative_to_repo(TASK6_PUBLICATION_BUNDLE_PATH),
-                "exists": TASK6_PUBLICATION_BUNDLE_PATH.exists(),
+            "correctness_evidence_publication_bundle": {
+                "path": relative_to_repo(CORRECTNESS_EVIDENCE_PUBLICATION_BUNDLE_PATH),
+                "exists": CORRECTNESS_EVIDENCE_PUBLICATION_BUNDLE_PATH.exists(),
             },
         },
         "claim_traceability": claim_traceability,
@@ -282,7 +282,7 @@ def build_artifact_bundle():
             "story1_path": str(STORY1_PATH),
             "story2_path": str(STORY2_PATH),
             "phase2_documentation_index_path": str(PHASE2_DOCUMENTATION_INDEX_PATH),
-            "task6_publication_bundle_path": str(TASK6_PUBLICATION_BUNDLE_PATH),
+            "correctness_evidence_publication_bundle_path": str(CORRECTNESS_EVIDENCE_PUBLICATION_BUNDLE_PATH),
         },
         "summary": {
             "claim_traceability_count": len(claim_traceability),

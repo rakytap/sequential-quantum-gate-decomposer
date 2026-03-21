@@ -24,7 +24,7 @@ if str(REPO_ROOT) not in sys.path:
 from benchmarks.density_matrix.workflow_evidence.workflow_contract_validation import (
     ARTIFACT_FILENAME as STORY1_ARTIFACT_FILENAME,
     CONTRACT_VERSION,
-    DEFAULT_OUTPUT_DIR as TASK6_DEFAULT_OUTPUT_DIR,
+    DEFAULT_OUTPUT_DIR as CORRECTNESS_EVIDENCE_DEFAULT_OUTPUT_DIR,
     REFERENCE_BACKEND,
     WORKFLOW_ID,
     build_software_metadata,
@@ -55,7 +55,7 @@ from benchmarks.density_matrix.workflow_evidence.workflow_interpretation_validat
 
 SUITE_NAME = "workflow_publication_evidence"
 ARTIFACT_FILENAME = "workflow_publication_bundle.json"
-DEFAULT_OUTPUT_DIR = TASK6_DEFAULT_OUTPUT_DIR
+DEFAULT_OUTPUT_DIR = CORRECTNESS_EVIDENCE_DEFAULT_OUTPUT_DIR
 STORY1_PATH = DEFAULT_OUTPUT_DIR / STORY1_ARTIFACT_FILENAME
 STORY2_PATH = DEFAULT_OUTPUT_DIR / STORY2_ARTIFACT_FILENAME
 STORY3_PATH = DEFAULT_OUTPUT_DIR / STORY3_ARTIFACT_FILENAME
@@ -184,7 +184,7 @@ def _artifact_semantics_complete(artifact):
     return all(artifact["summary"].get(flag, False) for flag in required_flags)
 
 
-def build_task6_story6_bundle(
+def build_correctness_evidence_story6_bundle(
     output_dir: Path,
     *,
     story1_bundle,
@@ -418,11 +418,11 @@ def build_task6_story6_bundle(
         },
         "artifacts": artifacts,
     }
-    validate_task6_story6_bundle(bundle, output_dir)
+    validate_correctness_evidence_story6_bundle(bundle, output_dir)
     return bundle
 
 
-def validate_task6_story6_bundle(bundle, bundle_dir: Path):
+def validate_correctness_evidence_story6_bundle(bundle, bundle_dir: Path):
     missing_fields = [field for field in BUNDLE_FIELDS if field not in bundle]
     if missing_fields:
         raise ValueError(
@@ -495,8 +495,8 @@ def validate_task6_story6_bundle(bundle, bundle_dir: Path):
             )
 
 
-def write_task6_story6_bundle(output_path: Path, bundle):
-    validate_task6_story6_bundle(bundle, output_path.parent)
+def write_correctness_evidence_story6_bundle(output_path: Path, bundle):
+    validate_correctness_evidence_story6_bundle(bundle, output_path.parent)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(json.dumps(bundle, indent=2) + "\n", encoding="utf-8")
 
@@ -523,7 +523,7 @@ def run_validation(
     _write_artifact(output_dir / STORY3_ARTIFACT_FILENAME, story3_bundle)
     _write_artifact(output_dir / STORY4_ARTIFACT_FILENAME, story4_bundle)
     _write_artifact(output_dir / STORY5_ARTIFACT_FILENAME, story5_bundle)
-    bundle = build_task6_story6_bundle(
+    bundle = build_correctness_evidence_story6_bundle(
         output_dir,
         story1_bundle=story1_bundle,
         story2_bundle=story2_bundle,
@@ -605,7 +605,7 @@ def main():
         verbose=not args.quiet,
     )
     output_path = args.output_dir / ARTIFACT_FILENAME
-    write_task6_story6_bundle(output_path, bundle)
+    write_correctness_evidence_story6_bundle(output_path, bundle)
     print(
         "Wrote {} with status {} ({}/{})".format(
             output_path,

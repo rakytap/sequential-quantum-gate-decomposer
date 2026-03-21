@@ -224,7 +224,7 @@ Out of scope for this story:
 
 **Execution checklist**
 - [ ] Add a fast regression surface in a Phase 3-specific planner test file
-      (for example `tests/partitioning/test_phase3_task1.py` or a tightly
+      (for example `tests/partitioning/test_planner_surface_entry.py` or a tightly
       related successor).
 - [ ] Cover mandatory microcases and at least one deterministic instance of each
       required structured family.
@@ -261,7 +261,7 @@ Out of scope for this story:
 
 **Execution checklist**
 - [ ] Add a dedicated Story 2 artifact location
-      (for example `benchmarks/density_matrix/artifacts/phase3_task1/story2_workloads/`).
+      (for example `benchmarks/density_matrix/artifacts/planner_surface/`).
 - [ ] Emit machine-reviewable metadata for each required workload class and size.
 - [ ] Record whether the case came from continuity lowering, direct microcase
       construction, or structured-family generation.

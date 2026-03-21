@@ -84,15 +84,15 @@ DOC_CLASS_ROLES = (
             "task2_mini_spec",
             "task3_mini_spec",
             "task4_mini_spec",
-            "task5_mini_spec",
-            "task6_mini_spec",
-            "task7_mini_spec",
+            "planner_calibration_mini_spec",
+            "correctness_evidence_mini_spec",
+            "performance_evidence_mini_spec",
         ],
         "role": "task-level behavior contracts and acceptance evidence",
     },
     {
         "document_class": "workflow_evidence_surface",
-        "doc_ids": ["task6_publication_bundle"],
+        "doc_ids": ["correctness_evidence_publication_bundle"],
         "role": "machine-readable evidence surface for the delivered workflow claim",
     },
     {
@@ -147,7 +147,7 @@ MANDATORY_TOPICS = {
     "workflow_anchor": {
         "label": "Workflow anchor",
         "primary_doc_id": "phase2_detailed_planning",
-        "supporting_doc_ids": ["phase2_adrs", "task6_mini_spec"],
+        "supporting_doc_ids": ["phase2_adrs", "correctness_evidence_mini_spec"],
         "layer": "phase contract + task contract",
     },
     "benchmark_minimum": {
@@ -155,8 +155,8 @@ MANDATORY_TOPICS = {
         "primary_doc_id": "phase2_detailed_planning",
         "supporting_doc_ids": [
             "phase2_adrs",
-            "task5_mini_spec",
-            "task6_publication_bundle",
+            "planner_calibration_mini_spec",
+            "correctness_evidence_publication_bundle",
         ],
         "layer": "phase contract + evidence surface",
     },
@@ -165,8 +165,8 @@ MANDATORY_TOPICS = {
         "primary_doc_id": "phase2_detailed_planning",
         "supporting_doc_ids": [
             "phase2_adrs",
-            "task5_mini_spec",
-            "task6_mini_spec",
+            "planner_calibration_mini_spec",
+            "correctness_evidence_mini_spec",
         ],
         "layer": "phase contract + task contract",
     },
@@ -182,7 +182,7 @@ MANDATORY_TOPICS = {
     },
     "publication_evidence_surface": {
         "label": "Publication evidence surface",
-        "primary_doc_id": "task6_publication_bundle",
+        "primary_doc_id": "correctness_evidence_publication_bundle",
         "supporting_doc_ids": [
             "planning_publications",
             "phase2_abstract",

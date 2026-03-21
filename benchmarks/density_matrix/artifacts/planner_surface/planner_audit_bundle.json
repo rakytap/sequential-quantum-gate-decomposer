@@ -1069,7 +1069,7 @@
     "scipy": "1.16.3"
   },
   "status": "pass",
-  "suite_name": "phase3_task1_story3_planner_audit",
+  "suite_name": "phase3_planner_surface_planner_audit",
   "summary": {
     "bridge_overlap_passes": 3,
     "continuity_cases": 1,

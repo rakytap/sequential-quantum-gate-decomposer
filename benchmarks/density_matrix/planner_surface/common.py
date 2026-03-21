@@ -72,7 +72,7 @@ def build_xxz_hamiltonian(
     return hamiltonian.tocsr()
 
 
-def build_story1_density_noise() -> list[dict]:
+def build_continuity_density_noise() -> list[dict]:
     return [
         {
             "channel": "local_depolarizing",
@@ -123,13 +123,13 @@ def build_software_metadata() -> dict:
     }
 
 
-def build_phase3_story1_continuity_vqe(
+def build_phase2_continuity_vqe(
     qbit_num: int,
     *,
     density_noise: list[dict] | None = None,
 ):
     requested_density_noise = (
-        build_story1_density_noise()
+        build_continuity_density_noise()
         if density_noise is None
         else [dict(item) for item in density_noise]
     )

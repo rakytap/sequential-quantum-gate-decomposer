@@ -4,42 +4,42 @@ from copy import deepcopy
 from functools import lru_cache
 
 from benchmarks.density_matrix.correctness_evidence.bundle import (
-    build_task6_correctness_package_payload,
+    build_correctness_evidence_correctness_package_payload,
 )
 from benchmarks.density_matrix.performance_evidence.common import (
-    TASK7_BENCHMARK_PACKAGE_SCHEMA_VERSION,
-    build_task7_boundary_evidence,
-    build_task7_selected_candidate,
+    PERFORMANCE_EVIDENCE_BENCHMARK_PACKAGE_SCHEMA_VERSION,
+    build_performance_evidence_boundary_evidence,
+    build_performance_evidence_selected_candidate,
 )
 from benchmarks.density_matrix.performance_evidence.records import (
-    build_task7_benchmark_records,
+    build_performance_evidence_benchmark_records,
 )
 from benchmarks.density_matrix.planner_calibration.bundle import (
-    build_task5_calibration_bundle_payload,
+    build_planner_calibration_calibration_bundle_payload,
 )
 
 
 @lru_cache(maxsize=1)
-def _build_task7_benchmark_package_payload_cached() -> dict:
-    task5_bundle = build_task5_calibration_bundle_payload()
-    task6_bundle = build_task6_correctness_package_payload()
-    cases = build_task7_benchmark_records()
-    negative_cases = list(build_task7_boundary_evidence())
+def _build_performance_evidence_benchmark_package_payload_cached() -> dict:
+    planner_calibration_bundle = build_planner_calibration_calibration_bundle_payload()
+    correctness_evidence_bundle = build_correctness_evidence_correctness_package_payload()
+    cases = build_performance_evidence_benchmark_records()
+    negative_cases = list(build_performance_evidence_boundary_evidence())
     return {
-        "schema_version": TASK7_BENCHMARK_PACKAGE_SCHEMA_VERSION,
-        "selected_candidate": build_task7_selected_candidate(),
+        "schema_version": PERFORMANCE_EVIDENCE_BENCHMARK_PACKAGE_SCHEMA_VERSION,
+        "selected_candidate": build_performance_evidence_selected_candidate(),
         "cases": cases,
         "negative_cases": negative_cases,
         "required_artifacts": [
             {
-                "artifact_id": "task5_calibration_bundle",
-                "schema_version": task5_bundle["schema_version"],
-                "selected_candidate_id": task5_bundle["selected_candidate"]["candidate_id"],
+                "artifact_id": "planner_calibration_calibration_bundle",
+                "schema_version": planner_calibration_bundle["schema_version"],
+                "selected_candidate_id": planner_calibration_bundle["selected_candidate"]["candidate_id"],
             },
             {
-                "artifact_id": "task6_correctness_package",
-                "schema_version": task6_bundle["schema_version"],
-                "counted_supported_cases": task6_bundle["summary"]["counted_supported_cases"],
+                "artifact_id": "correctness_evidence_correctness_package",
+                "schema_version": correctness_evidence_bundle["schema_version"],
+                "counted_supported_cases": correctness_evidence_bundle["summary"]["counted_supported_cases"],
             },
         ],
         "summary": {
@@ -55,13 +55,13 @@ def _build_task7_benchmark_package_payload_cached() -> dict:
             "positive_threshold_pass_cases": sum(
                 case["positive_threshold_pass"] for case in cases
             ),
-            "task6_reference_available": sum(
-                case["task6_reference_available"] for case in cases
+            "correctness_evidence_reference_available": sum(
+                case["correctness_evidence_reference_available"] for case in cases
             ),
-            "task6_boundary_cases": len(negative_cases),
+            "correctness_evidence_boundary_cases": len(negative_cases),
         },
     }
 
 
-def build_task7_benchmark_package_payload() -> dict:
-    return deepcopy(_build_task7_benchmark_package_payload_cached())
+def build_performance_evidence_benchmark_package_payload() -> dict:
+    return deepcopy(_build_performance_evidence_benchmark_package_payload_cached())

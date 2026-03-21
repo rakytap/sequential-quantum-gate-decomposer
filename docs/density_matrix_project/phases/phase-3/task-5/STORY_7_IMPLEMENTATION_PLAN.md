@@ -247,7 +247,7 @@ Out of scope for this story:
       `calibration_boundary_validation.py` as the primary checker.
 - [ ] Add a dedicated Story 7 artifact location
       (for example
-      `benchmarks/density_matrix/artifacts/phase3_task5/story7_claim_boundary/`).
+      `benchmarks/density_matrix/artifacts/planner_calibration/claim_boundary/`).
 - [ ] Emit boundary-category summaries through one stable schema aligned with the
       Story 6 bundle.
 - [ ] Record rerun commands and software metadata with the emitted bundle.

@@ -16,7 +16,7 @@ PUBLICATION_CLAIM_OUTPUT_DIR = (
     REPO_ROOT / "benchmarks" / "density_matrix" / "artifacts" / "publication_claim_package"
 )
 PHASE2_DOCUMENTATION_INDEX_PATH = PHASE2_ROOT / "PHASE_2_DOCUMENTATION_INDEX.md"
-TASK6_PUBLICATION_BUNDLE_PATH = (
+CORRECTNESS_EVIDENCE_PUBLICATION_BUNDLE_PATH = (
     REPO_ROOT
     / "benchmarks"
     / "density_matrix"
@@ -24,7 +24,7 @@ TASK6_PUBLICATION_BUNDLE_PATH = (
     / "workflow_evidence"
     / "workflow_publication_bundle.json"
 )
-TASK7_DOCUMENTATION_BUNDLE_PATH = (
+PERFORMANCE_EVIDENCE_DOCUMENTATION_BUNDLE_PATH = (
     REPO_ROOT
     / "benchmarks"
     / "density_matrix"
@@ -33,7 +33,7 @@ TASK7_DOCUMENTATION_BUNDLE_PATH = (
     / "documentation_contract_bundle.json"
 )
 
-MANDATORY_TASK8_DOCS = {
+MANDATORY_PUBLICATION_EVIDENCE_DOCS = {
     "phase2_documentation_index": PHASE2_DOCUMENTATION_INDEX_PATH,
     "phase2_detailed_planning": PHASE2_ROOT / "DETAILED_PLANNING_PHASE_2.md",
     "phase2_adrs": PHASE2_ROOT / "ADRs_PHASE_2.md",
@@ -46,17 +46,17 @@ MANDATORY_TASK8_DOCS = {
     "task2_mini_spec": PHASE2_ROOT / "task-2" / "TASK_2_MINI_SPEC.md",
     "task3_mini_spec": PHASE2_ROOT / "task-3" / "TASK_3_MINI_SPEC.md",
     "task4_mini_spec": PHASE2_ROOT / "task-4" / "TASK_4_MINI_SPEC.md",
-    "task5_mini_spec": PHASE2_ROOT / "task-5" / "TASK_5_MINI_SPEC.md",
-    "task6_mini_spec": PHASE2_ROOT / "task-6" / "TASK_6_MINI_SPEC.md",
-    "task7_mini_spec": PHASE2_ROOT / "task-7" / "TASK_7_MINI_SPEC.md",
-    "task8_mini_spec": PHASE2_ROOT / "task-8" / "TASK_8_MINI_SPEC.md",
-    "task8_stories": PHASE2_ROOT / "task-8" / "TASK_8_STORIES.md",
+    "planner_calibration_mini_spec": PHASE2_ROOT / "task-5" / "TASK_5_MINI_SPEC.md",
+    "correctness_evidence_mini_spec": PHASE2_ROOT / "task-6" / "TASK_6_MINI_SPEC.md",
+    "performance_evidence_mini_spec": PHASE2_ROOT / "task-7" / "TASK_7_MINI_SPEC.md",
+    "publication_evidence_mini_spec": PHASE2_ROOT / "task-8" / "TASK_8_MINI_SPEC.md",
+    "publication_evidence_stories": PHASE2_ROOT / "task-8" / "TASK_8_STORIES.md",
     "planning_publications": DOCS_ROOT / "planning" / "PUBLICATIONS.md",
     "planning_planning": DOCS_ROOT / "planning" / "PLANNING.md",
     "research_alignment": DOCS_ROOT / "RESEARCH_ALIGNMENT.md",
     "changelog": DOCS_ROOT / "CHANGELOG.md",
-    "task6_publication_bundle": TASK6_PUBLICATION_BUNDLE_PATH,
-    "task7_documentation_bundle": TASK7_DOCUMENTATION_BUNDLE_PATH,
+    "correctness_evidence_publication_bundle": CORRECTNESS_EVIDENCE_PUBLICATION_BUNDLE_PATH,
+    "performance_evidence_documentation_bundle": PERFORMANCE_EVIDENCE_DOCUMENTATION_BUNDLE_PATH,
 }
 
 PUBLICATION_SURFACES = {
@@ -192,7 +192,7 @@ def build_surface_presence(
     required_headings: list[str] | tuple[str, ...] = (),
 ) -> dict:
     surface = PUBLICATION_SURFACES[surface_id]
-    path = MANDATORY_TASK8_DOCS[surface["doc_id"]]
+    path = MANDATORY_PUBLICATION_EVIDENCE_DOCS[surface["doc_id"]]
     text = load_text(path)
     missing_required_phrases = missing_phrases(text, required_phrases)
     present_forbidden_phrases = present_phrases(text, forbidden_phrases)

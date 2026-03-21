@@ -4,20 +4,20 @@ from copy import deepcopy
 from functools import lru_cache
 
 from benchmarks.density_matrix.planner_calibration.claim_selection import (
-    TASK5_CLAIM_STATUS_COMPARISON,
-    TASK5_CLAIM_STATUS_SUPPORTED,
-    build_task5_claim_selection_payload,
+    PLANNER_CALIBRATION_CLAIM_STATUS_COMPARISON,
+    PLANNER_CALIBRATION_CLAIM_STATUS_SUPPORTED,
+    build_planner_calibration_claim_selection_payload,
 )
 
-TASK5_CALIBRATION_BUNDLE_SCHEMA_VERSION = "phase3_task5_calibration_bundle_v1"
+PLANNER_CALIBRATION_CALIBRATION_BUNDLE_SCHEMA_VERSION = "phase3_planner_calibration_bundle_v1"
 
 
 @lru_cache(maxsize=1)
-def _build_task5_calibration_bundle_payload_cached() -> dict:
-    claim_payload = build_task5_claim_selection_payload()
+def _build_planner_calibration_calibration_bundle_payload_cached() -> dict:
+    claim_payload = build_planner_calibration_claim_selection_payload()
     cases = claim_payload["cases"]
     return {
-        "schema_version": TASK5_CALIBRATION_BUNDLE_SCHEMA_VERSION,
+        "schema_version": PLANNER_CALIBRATION_CALIBRATION_BUNDLE_SCHEMA_VERSION,
         "claim_selection_schema_version": claim_payload["schema_version"],
         "claim_selection_rule": claim_payload["claim_selection_rule"],
         "selected_candidate": claim_payload["selected_candidate"],
@@ -31,10 +31,10 @@ def _build_task5_calibration_bundle_payload_cached() -> dict:
         "summary": {
             "total_cases": len(cases),
             "supported_claim_cases": sum(
-                case["claim_status"] == TASK5_CLAIM_STATUS_SUPPORTED for case in cases
+                case["claim_status"] == PLANNER_CALIBRATION_CLAIM_STATUS_SUPPORTED for case in cases
             ),
             "comparison_cases": sum(
-                case["claim_status"] == TASK5_CLAIM_STATUS_COMPARISON for case in cases
+                case["claim_status"] == PLANNER_CALIBRATION_CLAIM_STATUS_COMPARISON for case in cases
             ),
             "counted_calibration_cases": sum(
                 case["counted_calibration_case"] for case in cases
@@ -51,5 +51,5 @@ def _build_task5_calibration_bundle_payload_cached() -> dict:
     }
 
 
-def build_task5_calibration_bundle_payload() -> dict:
-    return deepcopy(_build_task5_calibration_bundle_payload_cached())
+def build_planner_calibration_calibration_bundle_payload() -> dict:
+    return deepcopy(_build_planner_calibration_calibration_bundle_payload_cached())

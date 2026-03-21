@@ -107,7 +107,7 @@ MANDATORY_STATEMENTS = (
         "entry_point_phrases": [
             "Full end-to-end workflow execution is required at 4 and 6 qubits.",
         ],
-        "primary_doc_id": "task6_mini_spec",
+        "primary_doc_id": "correctness_evidence_mini_spec",
         "primary_source_phrases": [
             "End-to-end workflow execution is mandatory at 4 and 6 qubits",
         ],
@@ -119,7 +119,7 @@ MANDATORY_STATEMENTS = (
         "entry_point_phrases": [
             "Benchmark-ready fixed-parameter evaluation is required at 8 and 10 qubits.",
         ],
-        "primary_doc_id": "task6_mini_spec",
+        "primary_doc_id": "correctness_evidence_mini_spec",
         "primary_source_phrases": [
             "Benchmark-ready fixed-parameter evaluation is mandatory at 8 and 10 qubits",
         ],

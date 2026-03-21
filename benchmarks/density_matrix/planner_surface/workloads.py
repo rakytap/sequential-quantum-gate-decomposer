@@ -112,7 +112,7 @@ def mandatory_microcase_definitions() -> tuple[dict, ...]:
     )
 
 
-def build_story2_microcase_surface(case_name: str):
+def build_microcase_surface(case_name: str):
     case = next(
         candidate
         for candidate in mandatory_microcase_definitions()
@@ -128,28 +128,28 @@ def build_story2_microcase_surface(case_name: str):
     )
 
 
-def iter_story2_microcase_surfaces():
+def iter_microcase_surfaces():
     for case in mandatory_microcase_definitions():
-        yield case, build_story2_microcase_surface(case["case_name"])
+        yield case, build_microcase_surface(case["case_name"])
 
 
-def build_story2_microcase_descriptor_set(
+def build_microcase_descriptor_set(
     case_name: str,
     *,
     max_partition_qubits: int = DEFAULT_PARTITION_DESCRIPTOR_MAX_QUBITS,
 ):
     return build_partition_descriptor_set(
-        build_story2_microcase_surface(case_name),
+        build_microcase_surface(case_name),
         max_partition_qubits=max_partition_qubits,
     )
 
 
-def iter_story2_microcase_descriptor_sets(
+def iter_microcase_descriptor_sets(
     *,
     max_partition_qubits: int = DEFAULT_PARTITION_DESCRIPTOR_MAX_QUBITS,
 ):
     for case in mandatory_microcase_definitions():
-        yield case, build_story2_microcase_descriptor_set(
+        yield case, build_microcase_descriptor_set(
             case["case_name"], max_partition_qubits=max_partition_qubits
         )
 
@@ -260,7 +260,7 @@ def _structured_family_layers(
     raise ValueError("Unsupported Story 2 family '{}'".format(family_name))
 
 
-def build_story2_structured_surface(
+def build_structured_surface(
     family_name: str,
     *,
     qbit_num: int,
@@ -280,7 +280,7 @@ def build_story2_structured_surface(
     )
 
 
-def iter_story2_structured_surfaces(seed: int = DEFAULT_STRUCTURED_SEED):
+def iter_structured_surfaces(seed: int = DEFAULT_STRUCTURED_SEED):
     for family_name in STRUCTURED_FAMILY_NAMES:
         for qbit_num in STRUCTURED_QUBITS:
             for noise_pattern in MANDATORY_NOISE_PATTERNS:
@@ -293,7 +293,7 @@ def iter_story2_structured_surfaces(seed: int = DEFAULT_STRUCTURED_SEED):
                         family_name, qbit_num, noise_pattern, seed
                     ),
                 }
-                yield metadata, build_story2_structured_surface(
+                yield metadata, build_structured_surface(
                     family_name,
                     qbit_num=qbit_num,
                     noise_pattern=noise_pattern,
@@ -301,7 +301,7 @@ def iter_story2_structured_surfaces(seed: int = DEFAULT_STRUCTURED_SEED):
                 )
 
 
-def build_story2_structured_descriptor_set(
+def build_structured_descriptor_set(
     family_name: str,
     *,
     qbit_num: int,
@@ -310,7 +310,7 @@ def build_story2_structured_descriptor_set(
     max_partition_qubits: int = DEFAULT_PARTITION_DESCRIPTOR_MAX_QUBITS,
 ):
     return build_partition_descriptor_set(
-        build_story2_structured_surface(
+        build_structured_surface(
             family_name,
             qbit_num=qbit_num,
             noise_pattern=noise_pattern,
@@ -320,7 +320,7 @@ def build_story2_structured_descriptor_set(
     )
 
 
-def iter_story2_structured_descriptor_sets(
+def iter_structured_descriptor_sets(
     *,
     seed: int = DEFAULT_STRUCTURED_SEED,
     max_partition_qubits: int = DEFAULT_PARTITION_DESCRIPTOR_MAX_QUBITS,
@@ -337,7 +337,7 @@ def iter_story2_structured_descriptor_sets(
                         family_name, qbit_num, noise_pattern, seed
                     ),
                 }
-                yield metadata, build_story2_structured_descriptor_set(
+                yield metadata, build_structured_descriptor_set(
                     family_name,
                     qbit_num=qbit_num,
                     noise_pattern=noise_pattern,

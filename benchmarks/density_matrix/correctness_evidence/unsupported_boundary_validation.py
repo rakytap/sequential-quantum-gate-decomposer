@@ -14,19 +14,19 @@ import argparse
 from pathlib import Path
 
 from benchmarks.density_matrix.correctness_evidence.common import (
-    TASK6_NEGATIVE_RECORD_SCHEMA_VERSION,
-    build_task6_selected_candidate,
-    build_task6_software_metadata,
-    task6_story_output_dir,
+    CORRECTNESS_EVIDENCE_NEGATIVE_RECORD_SCHEMA_VERSION,
+    build_correctness_evidence_selected_candidate,
+    build_correctness_evidence_software_metadata,
+    correctness_evidence_output_dir,
     write_artifact_bundle,
 )
 from benchmarks.density_matrix.correctness_evidence.records import (
-    build_task6_negative_records,
+    build_correctness_evidence_negative_records,
 )
 
-SUITE_NAME = "phase3_task6_story6_unsupported_boundary"
+SUITE_NAME = "phase3_correctness_evidence_unsupported_boundary"
 ARTIFACT_FILENAME = "unsupported_boundary_bundle.json"
-DEFAULT_OUTPUT_DIR = task6_story_output_dir("story6_unsupported_boundary")
+DEFAULT_OUTPUT_DIR = correctness_evidence_output_dir("unsupported_boundary")
 ARTIFACT_CORE_FIELDS = (
     "suite_name",
     "status",
@@ -39,7 +39,7 @@ ARTIFACT_CORE_FIELDS = (
 
 
 def build_cases() -> list[dict]:
-    return build_task6_negative_records()
+    return build_correctness_evidence_negative_records()
 
 
 def build_artifact_bundle(cases: list[dict]) -> dict:
@@ -56,9 +56,9 @@ def build_artifact_bundle(cases: list[dict]) -> dict:
         if all(case["status"] == "unsupported" for case in cases)
         and all(not case["fallback_used"] for case in cases)
         else "fail",
-        "negative_record_schema_version": TASK6_NEGATIVE_RECORD_SCHEMA_VERSION,
-        "software": build_task6_software_metadata(),
-        "selected_candidate": build_task6_selected_candidate(),
+        "negative_record_schema_version": CORRECTNESS_EVIDENCE_NEGATIVE_RECORD_SCHEMA_VERSION,
+        "software": build_correctness_evidence_software_metadata(),
+        "selected_candidate": build_correctness_evidence_selected_candidate(),
         "summary": {
             "total_cases": len(cases),
             **stage_counts,

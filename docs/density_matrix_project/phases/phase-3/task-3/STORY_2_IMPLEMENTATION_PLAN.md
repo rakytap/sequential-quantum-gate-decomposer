@@ -46,9 +46,9 @@ Out of scope for this story:
     `iter_story2_structured_descriptor_sets()` in
     `benchmarks/density_matrix/planner_surface/workloads.py`,
   - the emitted bundle under
-    `benchmarks/density_matrix/artifacts/phase3_task2/story2_workloads/`,
+    `benchmarks/density_matrix/artifacts/planner_surface/mandatory_workload/`,
   - and the Task 2 shared schema checks in
-    `tests/partitioning/test_phase3_task2.py`.
+    `tests/partitioning/test_planner_surface_descriptors.py`.
 - The micro-validation inventory in `benchmarks/density_matrix/circuits.py`
   and the Aer comparison helper in
   `benchmarks/density_matrix/validate_squander_vs_qiskit.py` already provide
@@ -199,7 +199,7 @@ Out of scope for this story:
 - Schema drift in the positive runtime surface is caught early.
 
 **Execution checklist**
-- [ ] Add focused checks in `tests/partitioning/test_phase3_task3.py` for shared
+- [ ] Add focused checks in `tests/partitioning/test_partitioned_runtime.py` for shared
       runtime semantics across workload classes.
 - [ ] Compare requested mode, runtime-path labels, partition-count summaries,
       and exact-output presence across continuity, microcase, and structured
@@ -272,7 +272,7 @@ Out of scope for this story:
 
 **Execution checklist**
 - [ ] Add a dedicated Story 2 artifact location
-      (for example `benchmarks/density_matrix/artifacts/phase3_task3/story2_workloads/`).
+      (for example `benchmarks/density_matrix/artifacts/partitioned_runtime/mandatory_workload/`).
 - [ ] Emit at least one supported microcase and one supported structured-family
       case through the shared runtime surface.
 - [ ] Record workload identity, requested mode, runtime-path label, partition

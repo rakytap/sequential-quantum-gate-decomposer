@@ -61,7 +61,7 @@ Out of scope for this story:
 - The natural implementation home for Task 8 claim-boundary validation is a
   dedicated `benchmarks/density_matrix/publication_evidence/` package, with
   `claim_package_validation.py` as the Story 1 validation surface and emitted
-  artifacts rooted in `benchmarks/density_matrix/artifacts/phase3_task8/`.
+  artifacts rooted in `benchmarks/density_matrix/artifacts/publication_evidence/`.
 - Story 1 should produce a claim package and validation gate only. It should not
   become a second planning document, a second publication strategy, or a shadow
   ADR set.
@@ -262,7 +262,7 @@ Out of scope for this story:
 - Regression coverage remains small and publication-package focused.
 
 **Execution checklist**
-- [ ] Add focused checks in `tests/partitioning/test_phase3_task8.py` or a
+- [ ] Add focused checks in `tests/partitioning/test_publication_evidence.py` or a
       tightly related successor for Story 1 claim-package coverage.
 - [ ] Add negative checks for omitted main-claim elements or omitted mandatory
       non-claims.
@@ -299,7 +299,7 @@ Out of scope for this story:
 
 **Execution checklist**
 - [ ] Add one stable Story 1 output location under
-      `benchmarks/density_matrix/artifacts/phase3_task8/story1_claim_package/`.
+      `benchmarks/density_matrix/artifacts/publication_evidence/claim_package/`.
 - [ ] Emit one artifact such as `claim_package_bundle.json`.
 - [ ] Record generation command, software metadata, and scope notes in the
       output.

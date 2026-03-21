@@ -47,7 +47,7 @@ Out of scope for this story:
   fixture matrix in
   `benchmarks/density_matrix/planner_surface/workloads.py` and the emitted
   bundle under
-  `benchmarks/density_matrix/artifacts/phase3_task2/story2_workloads/`; Story
+  `benchmarks/density_matrix/artifacts/planner_surface/mandatory_workload/`; Story
   6 should use those supported cases as the comparison baseline for negative
   evidence.
 - Story 4 now also established the shared positive reconstruction checker
@@ -57,7 +57,7 @@ Out of scope for this story:
   names when defining ambiguous-routing or incomplete-remap failures.
 - Story 5 now also established the shared positive audit helper
   `build_descriptor_audit_record()` and the emitted bundle under
-  `benchmarks/density_matrix/artifacts/phase3_task2/story5_audit/`; Story 6
+  `benchmarks/density_matrix/artifacts/planner_surface/descriptor_audit/`; Story 6
   should keep overlapping provenance and metadata fields aligned with that
   positive audit surface.
 - The likely shared implementation substrate therefore remains the Task 2
@@ -276,7 +276,7 @@ Out of scope for this story:
       undocumented reordering.
 - [ ] Reuse or extend Task 1 unsupported-case patterns where they provide a good
       model for structured diagnostics.
-- [ ] Add a fast regression slice in `tests/partitioning/test_phase3_task2.py`
+- [ ] Add a fast regression slice in `tests/partitioning/test_planner_surface_descriptors.py`
       that asserts failure occurs before runtime.
 - [ ] Keep the matrix representative and contract-driven rather than exhaustive
       over every impossible combination.
@@ -309,7 +309,7 @@ Out of scope for this story:
 
 **Execution checklist**
 - [ ] Add a dedicated Story 6 artifact location
-      (for example `benchmarks/density_matrix/artifacts/phase3_task2/story6_unsupported/`).
+      (for example `benchmarks/density_matrix/artifacts/planner_surface/unsupported_descriptor/`).
 - [ ] Emit representative unsupported cases through one stable schema.
 - [ ] Record rerun commands, software metadata, and the no-mislabeling
       interpretation with the emitted bundle.

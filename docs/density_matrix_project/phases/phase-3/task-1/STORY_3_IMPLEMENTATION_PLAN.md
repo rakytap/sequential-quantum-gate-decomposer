@@ -183,7 +183,7 @@ Out of scope for this story:
   inspection early.
 
 **Execution checklist**
-- [ ] Add focused checks in `tests/partitioning/test_phase3_task1.py` or a
+- [ ] Add focused checks in `tests/partitioning/test_planner_surface_entry.py` or a
       tightly related successor for planner-surface audit semantics.
 - [ ] Add focused checks in `tests/VQE/test_VQE.py` or a tightly related
       successor for overlap with Phase 2 bridge metadata.
@@ -223,7 +223,7 @@ Out of scope for this story:
 
 **Execution checklist**
 - [ ] Add a dedicated Story 3 artifact location
-      (for example `benchmarks/density_matrix/artifacts/phase3_task1/story3_audit/`).
+      (for example `benchmarks/density_matrix/artifacts/planner_surface/`).
 - [ ] Emit at least one continuity case and one methods-oriented case through
       the planner-entry inspection bundle.
 - [ ] Record schema version or equivalent output-shape identity with the bundle.

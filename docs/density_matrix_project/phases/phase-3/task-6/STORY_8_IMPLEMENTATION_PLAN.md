@@ -263,7 +263,7 @@ Out of scope for this story:
 **Execution checklist**
 - [ ] Add a dedicated Story 8 artifact location
       (for example
-      `benchmarks/density_matrix/artifacts/phase3_task6/story8_summary_consistency/`).
+      `benchmarks/density_matrix/artifacts/correctness_evidence/summary_consistency/`).
 - [ ] Emit rollup counts, closure flags, and carry-forward semantics through one
       stable schema.
 - [ ] Record rerun commands and software metadata with the emitted bundle.

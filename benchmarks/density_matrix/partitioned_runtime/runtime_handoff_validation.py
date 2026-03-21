@@ -23,12 +23,12 @@ if str(REPO_ROOT) not in sys.path:
 
 from benchmarks.density_matrix.partitioned_runtime.common import build_initial_parameters
 from benchmarks.density_matrix.planner_surface.common import (
-    build_phase3_story1_continuity_vqe,
+    build_phase2_continuity_vqe,
     build_software_metadata,
 )
 from benchmarks.density_matrix.planner_surface.workloads import (
-    iter_story2_microcase_descriptor_sets,
-    iter_story2_structured_descriptor_sets,
+    iter_microcase_descriptor_sets,
+    iter_structured_descriptor_sets,
 )
 from squander.partitioning.noisy_planner import build_phase3_continuity_partition_descriptor_set
 from squander.partitioning.noisy_runtime import (
@@ -37,15 +37,15 @@ from squander.partitioning.noisy_runtime import (
     execute_partitioned_density,
 )
 
-SUITE_NAME = "phase3_task3_story3_runtime_handoff"
+SUITE_NAME = "phase3_partitioned_runtime_runtime_handoff"
 ARTIFACT_FILENAME = "runtime_handoff_bundle.json"
 DEFAULT_OUTPUT_DIR = (
     REPO_ROOT
     / "benchmarks"
     / "density_matrix"
     / "artifacts"
-    / "phase3_task3"
-    / "story3_handoff"
+    / "partitioned_runtime"
+    / "runtime_handoff"
 )
 ARTIFACT_CORE_FIELDS = (
     "suite_name",
@@ -66,15 +66,15 @@ def _audit_case(descriptor_set, metadata: dict) -> dict:
 
 
 def build_cases() -> list[dict]:
-    continuity_vqe, _, _ = build_phase3_story1_continuity_vqe(4)
+    continuity_vqe, _, _ = build_phase2_continuity_vqe(4)
     continuity_audit = _audit_case(
         build_phase3_continuity_partition_descriptor_set(continuity_vqe),
         {"case_kind": "continuity"},
     )
-    micro_metadata, micro_descriptor_set = next(iter(iter_story2_microcase_descriptor_sets()))
+    micro_metadata, micro_descriptor_set = next(iter(iter_microcase_descriptor_sets()))
     micro_audit = _audit_case(micro_descriptor_set, micro_metadata)
     structured_metadata, structured_descriptor_set = next(
-        iter(iter_story2_structured_descriptor_sets())
+        iter(iter_structured_descriptor_sets())
     )
     structured_audit = _audit_case(structured_descriptor_set, structured_metadata)
     return [continuity_audit, micro_audit, structured_audit]

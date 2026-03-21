@@ -51,11 +51,11 @@ Out of scope for this story:
   `workload_family`, and `workload_id`.
 - Task 5 already emits claim-selection and calibration-side workload identity
   through `benchmarks/density_matrix/planner_calibration/` and
-  `benchmarks/density_matrix/artifacts/phase3_task5/`; Story 1 should preserve
+  `benchmarks/density_matrix/artifacts/planner_calibration/`; Story 1 should preserve
   joinability with that surface rather than redefining workload identity.
 - Task 6 already emits counted supported evidence, excluded negative evidence,
   and summary-consistency precedent under
-  `benchmarks/density_matrix/artifacts/phase3_task6/`; Story 1 should keep
+  `benchmarks/density_matrix/artifacts/correctness_evidence/`; Story 1 should keep
   direct joinability with that package surface.
 - Task 4 already demonstrates a representative structured performance slice
   through `benchmarks/density_matrix/partitioned_runtime/fused_performance_validation.py`;
@@ -276,7 +276,7 @@ Out of scope for this story:
 
 **Execution checklist**
 - [ ] Add a dedicated Task 7 regression surface in
-      `tests/partitioning/test_phase3_task7.py`.
+      `tests/partitioning/test_performance_evidence.py`.
 - [ ] Assert stable case ordering or canonicalization for representative Task 7
       matrix records.
 - [ ] Assert that mandatory fields such as workload ID, benchmark-slice label,
@@ -316,7 +316,7 @@ Out of scope for this story:
       `benchmark_matrix_validation.py` as the primary checker.
 - [ ] Add a dedicated Story 1 artifact location
       (for example
-      `benchmarks/density_matrix/artifacts/phase3_task7/story1_benchmark_matrix/`).
+      `benchmarks/density_matrix/artifacts/performance_evidence/benchmark_matrix/`).
 - [ ] Emit the shared case records, benchmark-slice labels, representative-
       review-set membership, and matrix summary through one stable schema.
 - [ ] Record rerun commands and software metadata with the emitted bundle.

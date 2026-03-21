@@ -20,20 +20,20 @@ from benchmarks.density_matrix.partitioned_runtime.common import (
     execute_partitioned_with_reference,
 )
 from benchmarks.density_matrix.planner_calibration.signals import (
-    TASK5_DENSITY_AWARE_OBJECTIVE_NAME,
+    PLANNER_CALIBRATION_DENSITY_AWARE_OBJECTIVE_NAME,
     apply_density_scores_and_rankings,
     build_density_signal_record,
 )
-from benchmarks.density_matrix.planner_calibration.task5_case_selection import (
-    TASK5_CASE_KIND_CONTINUITY,
-    TASK5_CASE_KIND_MICROCASE,
-    iter_task5_candidate_cases,
+from benchmarks.density_matrix.planner_calibration.case_selection import (
+    PLANNER_CALIBRATION_CASE_KIND_CONTINUITY,
+    PLANNER_CALIBRATION_CASE_KIND_MICROCASE,
+    iter_planner_calibration_candidate_cases,
 )
 from squander.partitioning.noisy_runtime import PHASE3_RUNTIME_PATH_BASELINE
 
-TASK5_CALIBRATION_RECORD_SCHEMA_VERSION = "phase3_task5_calibration_record_v1"
-TASK5_REFERENCE_BACKEND = "qiskit_aer_density_matrix"
-TASK5_EXTERNAL_REFERENCE_CONTINUITY_QUBITS = (4,)
+PLANNER_CALIBRATION_CALIBRATION_RECORD_SCHEMA_VERSION = "phase3_planner_calibration_record_v1"
+PLANNER_CALIBRATION_REFERENCE_BACKEND = "qiskit_aer_density_matrix"
+PLANNER_CALIBRATION_EXTERNAL_REFERENCE_CONTINUITY_QUBITS = (4,)
 
 
 def _flatten_members(descriptor_set):
@@ -94,13 +94,13 @@ def execute_qiskit_density_reference(
 
 
 def _requires_external_reference(metadata: dict) -> bool:
-    return metadata["case_kind"] == TASK5_CASE_KIND_MICROCASE or (
-        metadata["case_kind"] == TASK5_CASE_KIND_CONTINUITY
-        and metadata["qbit_num"] in TASK5_EXTERNAL_REFERENCE_CONTINUITY_QUBITS
+    return metadata["case_kind"] == PLANNER_CALIBRATION_CASE_KIND_MICROCASE or (
+        metadata["case_kind"] == PLANNER_CALIBRATION_CASE_KIND_CONTINUITY
+        and metadata["qbit_num"] in PLANNER_CALIBRATION_EXTERNAL_REFERENCE_CONTINUITY_QUBITS
     )
 
 
-def build_task5_calibration_record(
+def build_planner_calibration_calibration_record(
     metadata: dict,
     descriptor_set,
     parameters: np.ndarray,
@@ -116,8 +116,8 @@ def build_task5_calibration_record(
         runtime_result,
         density_metrics,
     )
-    record["record_schema_version"] = TASK5_CALIBRATION_RECORD_SCHEMA_VERSION
-    record["density_aware_objective_name"] = TASK5_DENSITY_AWARE_OBJECTIVE_NAME
+    record["record_schema_version"] = PLANNER_CALIBRATION_CALIBRATION_RECORD_SCHEMA_VERSION
+    record["density_aware_objective_name"] = PLANNER_CALIBRATION_DENSITY_AWARE_OBJECTIVE_NAME
     record["trace_deviation"] = runtime_result.trace_deviation
     record["rho_is_valid"] = runtime_result.rho_is_valid
     record["rho_is_valid_tol"] = 1e-10
@@ -149,7 +149,7 @@ def build_task5_calibration_record(
     external_reference_required = _requires_external_reference(metadata)
     record["external_reference_required"] = external_reference_required
     record["reference_backend"] = (
-        TASK5_REFERENCE_BACKEND if external_reference_required else None
+        PLANNER_CALIBRATION_REFERENCE_BACKEND if external_reference_required else None
     )
     if external_reference_required:
         aer_density = execute_qiskit_density_reference(descriptor_set, parameters)
@@ -188,18 +188,18 @@ def build_task5_calibration_record(
 
 
 @lru_cache(maxsize=1)
-def _build_task5_calibration_records_cached() -> tuple[dict, ...]:
+def _build_planner_calibration_calibration_records_cached() -> tuple[dict, ...]:
     records = [
-        build_task5_calibration_record(
+        build_planner_calibration_calibration_record(
             metadata,
             descriptor_set,
             parameters,
             hamiltonian=hamiltonian,
         )
-        for metadata, descriptor_set, parameters, hamiltonian in iter_task5_candidate_cases()
+        for metadata, descriptor_set, parameters, hamiltonian in iter_planner_calibration_candidate_cases()
     ]
     return tuple(apply_density_scores_and_rankings(records))
 
 
-def build_task5_calibration_records() -> list[dict]:
-    return deepcopy(list(_build_task5_calibration_records_cached()))
+def build_planner_calibration_calibration_records() -> list[dict]:
+    return deepcopy(list(_build_planner_calibration_calibration_records_cached()))

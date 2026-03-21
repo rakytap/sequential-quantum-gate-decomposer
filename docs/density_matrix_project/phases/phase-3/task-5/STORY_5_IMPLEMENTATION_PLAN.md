@@ -210,7 +210,7 @@ Out of scope for this story:
 
 **Execution checklist**
 - [ ] Add focused Story 5 regression coverage in
-      `tests/partitioning/test_phase3_task5.py`.
+      `tests/partitioning/test_planner_calibration.py`.
 - [ ] Assert stable claim-selection verdicts for representative supported and
       non-supported cases.
 - [ ] Assert stable claim-status labeling for comparison baselines and
@@ -248,7 +248,7 @@ Out of scope for this story:
       `calibrated_claim_selection_validation.py` as the primary checker.
 - [ ] Add a dedicated Story 5 artifact location
       (for example
-      `benchmarks/density_matrix/artifacts/phase3_task5/story5_claim_selection/`).
+      `benchmarks/density_matrix/artifacts/planner_calibration/claim_selection/`).
 - [ ] Emit claim-selection verdicts, claim-status labels, and supporting evidence
       summaries through one stable schema.
 - [ ] Record rerun commands and software metadata with the emitted bundle.

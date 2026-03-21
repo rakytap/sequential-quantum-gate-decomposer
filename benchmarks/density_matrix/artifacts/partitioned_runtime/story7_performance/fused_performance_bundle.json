@@ -1,0 +1,98 @@
+{
+  "cases": [
+    {
+      "actual_fused_execution": true,
+      "baseline_median_peak_rss_kb": 112496,
+      "baseline_median_runtime_ms": 26.98030200554058,
+      "case_kind": "structured_family",
+      "case_name": "layered_nearest_neighbor_q8_sparse_seed20260318",
+      "correctness_pass": true,
+      "deferred_region_count": 0,
+      "diagnosis_reasons": [
+        "supported_islands_left_unfused",
+        "python_fused_kernel_overhead_or_short_unitary_islands",
+        "no_peak_memory_reduction_on_representative_case"
+      ],
+      "family_name": "layered_nearest_neighbor",
+      "frobenius_norm_diff": 1.0193792192773324e-15,
+      "fused_gate_count": 24,
+      "fused_median_peak_rss_kb": 112496,
+      "fused_median_runtime_ms": 93.22785801487043,
+      "fused_region_count": 12,
+      "max_abs_diff": 1.1631705747361534e-16,
+      "memory_reduction": 0.0,
+      "metadata": {
+        "case_kind": "structured_family",
+        "family_name": "layered_nearest_neighbor",
+        "noise_pattern": "sparse",
+        "qbit_num": 8,
+        "seed": 20260318,
+        "workload_id": "layered_nearest_neighbor_q8_sparse_seed20260318"
+      },
+      "noise_pattern": "sparse",
+      "positive_threshold_pass": false,
+      "qbit_num": 8,
+      "runtime_path": "partitioned_density_descriptor_fused_unitary_islands",
+      "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
+      "speedup": 0.2894017151100592,
+      "supported_unfused_region_count": 11,
+      "threshold_or_diagnosis_pass": true
+    },
+    {
+      "actual_fused_execution": true,
+      "baseline_median_peak_rss_kb": 253416,
+      "baseline_median_runtime_ms": 739.4753089756705,
+      "case_kind": "structured_family",
+      "case_name": "layered_nearest_neighbor_q10_sparse_seed20260318",
+      "correctness_pass": true,
+      "deferred_region_count": 0,
+      "diagnosis_reasons": [
+        "supported_islands_left_unfused",
+        "python_fused_kernel_overhead_or_short_unitary_islands",
+        "no_peak_memory_reduction_on_representative_case"
+      ],
+      "family_name": "layered_nearest_neighbor",
+      "frobenius_norm_diff": 1.5442025865469579e-15,
+      "fused_gate_count": 40,
+      "fused_median_peak_rss_kb": 253416,
+      "fused_median_runtime_ms": 2498.759242007509,
+      "fused_region_count": 20,
+      "max_abs_diff": 1.5301652386684786e-16,
+      "memory_reduction": 0.0,
+      "metadata": {
+        "case_kind": "structured_family",
+        "family_name": "layered_nearest_neighbor",
+        "noise_pattern": "sparse",
+        "qbit_num": 10,
+        "seed": 20260318,
+        "workload_id": "layered_nearest_neighbor_q10_sparse_seed20260318"
+      },
+      "noise_pattern": "sparse",
+      "positive_threshold_pass": false,
+      "qbit_num": 10,
+      "runtime_path": "partitioned_density_descriptor_fused_unitary_islands",
+      "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
+      "speedup": 0.29593699806851914,
+      "supported_unfused_region_count": 18,
+      "threshold_or_diagnosis_pass": true
+    }
+  ],
+  "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
+  "software": {
+    "numpy": "2.3.5",
+    "python": "3.13.9",
+    "scipy": "1.16.3"
+  },
+  "status": "pass",
+  "suite_name": "phase3_partitioned_runtime_fused_performance",
+  "summary": {
+    "diagnosis_only_cases": 2,
+    "positive_threshold_pass_cases": 0,
+    "representative_qubits": [
+      8,
+      10
+    ],
+    "threshold_or_diagnosis_passes": 2,
+    "total_cases": 2
+  }
+}

@@ -48,9 +48,9 @@ Out of scope for this story:
   - and `runtime_audit_validation.py`.
 - The existing Task 3 artifact bundles already provide the exact baseline for
   stable field naming and schema shape:
-  - `benchmarks/density_matrix/artifacts/phase3_task3/story5_results/`,
-  - `benchmarks/density_matrix/artifacts/phase3_task3/story6_audit/`,
-  - and `benchmarks/density_matrix/artifacts/phase3_task3/story7_unsupported/`.
+  - `benchmarks/density_matrix/artifacts/partitioned_runtime/story5_results/`,
+  - `benchmarks/density_matrix/artifacts/partitioned_runtime/story6_audit/`,
+  - and `benchmarks/density_matrix/artifacts/partitioned_runtime/story7_unsupported/`.
 - Story 6 should preserve direct compatibility with the sequential density
   comparison path and, where fused microcase coverage is exercised, with the
   later Task 6 Qiskit Aer checks.
@@ -182,7 +182,7 @@ Out of scope for this story:
   benchmark interpretation.
 
 **Execution checklist**
-- [ ] Add focused checks in `tests/partitioning/test_phase3_task4.py` for fused
+- [ ] Add focused checks in `tests/partitioning/test_partitioned_runtime.py` for fused
       output and audit stability across representative supported cases.
 - [ ] Compare top-level provenance, runtime-path classification, exact-output
       shape, fused-coverage summary presence, and summary-field presence across
@@ -255,7 +255,7 @@ Out of scope for this story:
       `benchmarks/density_matrix/partitioned_runtime/`, with
       `fused_runtime_audit_validation.py` as the primary checker.
 - [ ] Add a dedicated Story 6 artifact location
-      (for example `benchmarks/density_matrix/artifacts/phase3_task4/story6_fused_audit/`).
+      (for example `benchmarks/density_matrix/artifacts/partitioned_runtime/fused_runtime_audit/`).
 - [ ] Emit representative structured, continuity, and microcase cases through one
       stable shared schema.
 - [ ] Record rerun commands and software metadata with the emitted bundle.

@@ -21,23 +21,23 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from benchmarks.density_matrix.planner_calibration.claim_selection import (
-    TASK5_CLAIM_SELECTION_SCHEMA_VERSION,
-    TASK5_CLAIM_SELECTION_RULE,
-    TASK5_CLAIM_STATUS_COMPARISON,
-    TASK5_CLAIM_STATUS_SUPPORTED,
-    build_task5_claim_selection_payload,
+    PLANNER_CALIBRATION_CLAIM_SELECTION_SCHEMA_VERSION,
+    PLANNER_CALIBRATION_CLAIM_SELECTION_RULE,
+    PLANNER_CALIBRATION_CLAIM_STATUS_COMPARISON,
+    PLANNER_CALIBRATION_CLAIM_STATUS_SUPPORTED,
+    build_planner_calibration_claim_selection_payload,
 )
 from benchmarks.density_matrix.planner_surface.common import build_software_metadata
 
-SUITE_NAME = "phase3_task5_story5_claim_selection"
+SUITE_NAME = "phase3_planner_calibration_claim_selection"
 ARTIFACT_FILENAME = "claim_selection_bundle.json"
 DEFAULT_OUTPUT_DIR = (
     REPO_ROOT
     / "benchmarks"
     / "density_matrix"
     / "artifacts"
-    / "phase3_task5"
-    / "story5_claim_selection"
+    / "planner_calibration"
+    / "claim_selection"
 )
 ARTIFACT_CORE_FIELDS = (
     "suite_name",
@@ -51,19 +51,19 @@ ARTIFACT_CORE_FIELDS = (
 
 
 def build_cases() -> list[dict]:
-    return build_task5_claim_selection_payload()["cases"]
+    return build_planner_calibration_claim_selection_payload()["cases"]
 
 
 def build_artifact_bundle() -> dict:
-    payload = build_task5_claim_selection_payload()
+    payload = build_planner_calibration_claim_selection_payload()
     cases = payload["cases"]
     candidate_summaries = payload["candidate_summaries"]
     selected_candidate = payload["selected_candidate"]
     supported_claim_cases = sum(
-        case["claim_status"] == TASK5_CLAIM_STATUS_SUPPORTED for case in cases
+        case["claim_status"] == PLANNER_CALIBRATION_CLAIM_STATUS_SUPPORTED for case in cases
     )
     comparison_cases = sum(
-        case["claim_status"] == TASK5_CLAIM_STATUS_COMPARISON for case in cases
+        case["claim_status"] == PLANNER_CALIBRATION_CLAIM_STATUS_COMPARISON for case in cases
     )
     bundle = {
         "suite_name": SUITE_NAME,
@@ -72,14 +72,14 @@ def build_artifact_bundle() -> dict:
         and comparison_cases > 0
         and len(candidate_summaries) == 3
         else "fail",
-        "claim_selection_schema_version": TASK5_CLAIM_SELECTION_SCHEMA_VERSION,
+        "claim_selection_schema_version": PLANNER_CALIBRATION_CLAIM_SELECTION_SCHEMA_VERSION,
         "software": build_software_metadata(),
         "summary": {
             "total_cases": len(cases),
             "supported_claim_cases": supported_claim_cases,
             "comparison_cases": comparison_cases,
             "selected_candidate_id": selected_candidate["candidate_id"],
-            "claim_selection_rule": TASK5_CLAIM_SELECTION_RULE,
+            "claim_selection_rule": PLANNER_CALIBRATION_CLAIM_SELECTION_RULE,
         },
         "selected_candidate": selected_candidate,
         "candidate_summaries": candidate_summaries,

@@ -49,7 +49,7 @@ Out of scope for this story:
   - `benchmarks/density_matrix/partitioned_runtime/fused_classification_validation.py`,
   - `fused_runtime_audit_validation.py`,
   - `fused_semantics_validation.py`,
-  - and `benchmarks/density_matrix/artifacts/phase3_task4/`.
+  - and `benchmarks/density_matrix/artifacts/partitioned_runtime/`.
 - Story 5 should prefer additive extension of the shared Task 3 / Task 4 audit
   vocabulary over inventing a disconnected Task 6 classification language.
 - The current implementation learning is that Story 5 should derive its runtime
@@ -263,7 +263,7 @@ Out of scope for this story:
 **Execution checklist**
 - [ ] Add a dedicated Story 5 artifact location
       (for example
-      `benchmarks/density_matrix/artifacts/phase3_task6/story5_runtime_classification/`).
+      `benchmarks/density_matrix/artifacts/correctness_evidence/runtime_classification/`).
 - [ ] Emit shared case identity, runtime-path labels, fusion classification,
       counted-status fields, and reused verdict fields through one stable schema.
 - [ ] Record rerun commands and software metadata with the emitted bundle.

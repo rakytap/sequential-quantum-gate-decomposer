@@ -222,7 +222,7 @@ Out of scope for this story:
 
 **Execution checklist**
 - [ ] Add a dedicated Phase 3 Task 1 artifact location
-      (for example under `benchmarks/density_matrix/artifacts/phase3_task1/story1_continuity/`).
+      (for example under `benchmarks/density_matrix/artifacts/planner_surface/`).
 - [ ] Record source label, qubit count, operation counts, and ordered operation
       metadata for the supported continuity cases.
 - [ ] Record the rerun command and software metadata with the artifact.

@@ -222,7 +222,7 @@ def build_terminology_inventory():
     }
 
 
-def build_task7_story6_bundle(
+def build_performance_evidence_story6_bundle(
     output_dir: Path,
     *,
     story1_artifact,
@@ -283,11 +283,11 @@ def build_task7_story6_bundle(
             "glossary_complete": glossary_complete,
         },
     }
-    validate_task7_story6_bundle(bundle)
+    validate_performance_evidence_story6_bundle(bundle)
     return bundle
 
 
-def validate_task7_story6_bundle(bundle):
+def validate_performance_evidence_story6_bundle(bundle):
     missing_fields = [field for field in BUNDLE_FIELDS if field not in bundle]
     if missing_fields:
         raise ValueError(
@@ -339,8 +339,8 @@ def validate_task7_story6_bundle(bundle):
         raise ValueError("Task 7 Story 6 bundle status is inconsistent")
 
 
-def write_task7_story6_bundle(output_path: Path, bundle):
-    validate_task7_story6_bundle(bundle)
+def write_performance_evidence_story6_bundle(output_path: Path, bundle):
+    validate_performance_evidence_story6_bundle(bundle)
     write_json(output_path, bundle)
 
 
@@ -366,7 +366,7 @@ def run_validation(
     write_json(output_dir / STORY3_ARTIFACT_FILENAME, story3_artifact)
     write_json(output_dir / STORY4_ARTIFACT_FILENAME, story4_artifact)
     write_json(output_dir / STORY5_ARTIFACT_FILENAME, story5_artifact)
-    bundle = build_task7_story6_bundle(
+    bundle = build_performance_evidence_story6_bundle(
         output_dir,
         story1_artifact=story1_artifact,
         story2_artifact=story2_artifact,
@@ -452,7 +452,7 @@ def main():
         verbose=not args.quiet,
     )
     output_path = args.output_dir / ARTIFACT_FILENAME
-    write_task7_story6_bundle(output_path, bundle)
+    write_performance_evidence_story6_bundle(output_path, bundle)
     print(
         "Wrote {} with status {} ({}/{})".format(
             output_path,

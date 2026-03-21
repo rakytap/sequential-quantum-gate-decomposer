@@ -25,11 +25,11 @@ from benchmarks.density_matrix.planner_surface.workloads import (
     MANDATORY_NOISE_PATTERNS,
     STRUCTURED_FAMILY_NAMES,
     STRUCTURED_QUBITS,
-    iter_story2_microcase_surfaces,
-    iter_story2_structured_surfaces,
+    iter_microcase_surfaces,
+    iter_structured_surfaces,
 )
 
-SUITE_NAME = "phase3_task1_story2_mandatory_workloads"
+SUITE_NAME = "phase3_planner_surface_workload_surface"
 ARTIFACT_FILENAME = "mandatory_workload_surface_bundle.json"
 DEFAULT_OUTPUT_DIR = (
     REPO_ROOT / "benchmarks" / "density_matrix" / "artifacts" / "planner_surface"
@@ -74,9 +74,9 @@ def _surface_case(case_kind: str, metadata: dict, surface) -> dict:
 
 def run_validation(verbose: bool = True) -> list[dict]:
     cases: list[dict] = []
-    for metadata, surface in iter_story2_microcase_surfaces():
+    for metadata, surface in iter_microcase_surfaces():
         cases.append(_surface_case("microcase", metadata, surface))
-    for metadata, surface in iter_story2_structured_surfaces():
+    for metadata, surface in iter_structured_surfaces():
         cases.append(_surface_case("structured_family", metadata, surface))
 
     if verbose:

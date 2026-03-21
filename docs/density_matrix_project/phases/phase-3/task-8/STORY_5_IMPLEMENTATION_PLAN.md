@@ -64,7 +64,7 @@ Out of scope for this story:
 - The natural implementation home for Task 8 supported-path and benchmark-
   honesty validation is the same `benchmarks/density_matrix/publication_evidence/`
   package, with `supported_path_validation.py` as the Story 5 validation surface
-  and emitted artifacts rooted in `benchmarks/density_matrix/artifacts/phase3_task8/`.
+  and emitted artifacts rooted in `benchmarks/density_matrix/artifacts/publication_evidence/`.
 
 ## Engineering Tasks
 
@@ -260,7 +260,7 @@ Out of scope for this story:
 - Regression coverage remains narrow and publication-package focused.
 
 **Execution checklist**
-- [ ] Add focused checks in `tests/partitioning/test_phase3_task8.py` or a
+- [ ] Add focused checks in `tests/partitioning/test_publication_evidence.py` or a
       tightly related successor for Story 5 honesty validation.
 - [ ] Add negative checks for broader planner-family closure language.
 - [ ] Add negative checks for silent-fallback-compatible wording.
@@ -296,7 +296,7 @@ Out of scope for this story:
 
 **Execution checklist**
 - [ ] Add one stable Story 5 output location under
-      `benchmarks/density_matrix/artifacts/phase3_task8/story5_supported_path_scope/`.
+      `benchmarks/density_matrix/artifacts/publication_evidence/supported_path/`.
 - [ ] Emit one artifact such as `supported_path_scope_bundle.json`.
 - [ ] Record generation command, software metadata, and honesty-summary fields in
       the output.
@@ -438,7 +438,7 @@ Out of scope for this story:
 - The natural implementation home for Task 8 supported-path and benchmark-
   honesty validation is the same `benchmarks/density_matrix/publication_evidence/`
   package, with `supported_path_validation.py` as the Story 5 validation surface
-  and emitted artifacts rooted in `benchmarks/density_matrix/artifacts/phase3_task8/`.
+  and emitted artifacts rooted in `benchmarks/density_matrix/artifacts/publication_evidence/`.
 
 ## Engineering Tasks
 
@@ -634,7 +634,7 @@ Out of scope for this story:
 - Regression coverage remains narrow and publication-package focused.
 
 **Execution checklist**
-- [ ] Add focused checks in `tests/partitioning/test_phase3_task8.py` or a
+- [ ] Add focused checks in `tests/partitioning/test_publication_evidence.py` or a
       tightly related successor for Story 5 honesty validation.
 - [ ] Add negative checks for broader planner-family closure language.
 - [ ] Add negative checks for silent-fallback-compatible wording.
@@ -670,7 +670,7 @@ Out of scope for this story:
 
 **Execution checklist**
 - [ ] Add one stable Story 5 output location under
-      `benchmarks/density_matrix/artifacts/phase3_task8/story5_supported_path_scope/`.
+      `benchmarks/density_matrix/artifacts/publication_evidence/supported_path/`.
 - [ ] Emit one artifact such as `supported_path_scope_bundle.json`.
 - [ ] Record generation command, software metadata, and honesty-summary fields in
       the output.

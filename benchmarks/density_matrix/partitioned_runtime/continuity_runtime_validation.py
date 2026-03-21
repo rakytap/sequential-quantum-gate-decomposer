@@ -30,7 +30,7 @@ from benchmarks.density_matrix.partitioned_runtime.common import (
 )
 from benchmarks.density_matrix.planner_surface.common import (
     build_case_metadata,
-    build_phase3_story1_continuity_vqe,
+    build_phase2_continuity_vqe,
     build_software_metadata,
 )
 from squander.partitioning.noisy_planner import (
@@ -42,15 +42,15 @@ from squander.partitioning.noisy_runtime import (
     PHASE3_RUNTIME_SCHEMA_VERSION,
 )
 
-SUITE_NAME = "phase3_task3_story1_continuity_runtime"
+SUITE_NAME = "phase3_partitioned_runtime_continuity_runtime"
 ARTIFACT_FILENAME = "continuity_runtime_bundle.json"
 DEFAULT_OUTPUT_DIR = (
     REPO_ROOT
     / "benchmarks"
     / "density_matrix"
     / "artifacts"
-    / "phase3_task3"
-    / "story1_continuity_runtime"
+    / "partitioned_runtime"
+    / "continuity_runtime"
 )
 REQUIRED_QUBITS = (4, 6, 8, 10)
 ARTIFACT_CORE_FIELDS = (
@@ -64,7 +64,7 @@ ARTIFACT_CORE_FIELDS = (
 
 
 def build_case_result(qbit_num: int) -> dict:
-    vqe, hamiltonian, topology = build_phase3_story1_continuity_vqe(qbit_num)
+    vqe, hamiltonian, topology = build_phase2_continuity_vqe(qbit_num)
     descriptor_set = build_phase3_continuity_partition_descriptor_set(vqe)
     parameters = build_initial_parameters(vqe.get_Parameter_Num())
     runtime_result, reference_density, density_metrics = execute_partitioned_with_reference(
@@ -92,7 +92,7 @@ def build_case_result(qbit_num: int) -> dict:
     case.update(
         {
             "case_name": f"phase2_xxz_hea_q{qbit_num}_continuity",
-            "case_kind": "phase3_task3_story1_continuity_runtime",
+            "case_kind": "phase3_partitioned_runtime_continuity_runtime",
             "status": "pass" if energy_pass and density_pass and runtime_result.rho_is_valid else "fail",
             "requested_mode": runtime_payload["requested_mode"],
             "runtime_schema_version": runtime_payload["runtime_schema_version"],

@@ -52,7 +52,7 @@ MANDATORY_EVIDENCE_ITEMS = (
         "evidence_id": "micro_validation_matrix",
         "label": "Micro-validation matrix",
         "entry_point_phrases": ["mandatory 1 to 3 qubit micro-validation matrix"],
-        "primary_doc_id": "task5_mini_spec",
+        "primary_doc_id": "planner_calibration_mini_spec",
         "primary_source_phrases": [
             "The mandatory micro-validation layer covers 1 to 3 qubit circuits",
         ],
@@ -64,7 +64,7 @@ MANDATORY_EVIDENCE_ITEMS = (
             "mandatory 4 / 6 / 8 / 10 qubit fixed-parameter workflow matrix with 10",
             "parameter vectors per required size",
         ],
-        "primary_doc_id": "task5_mini_spec",
+        "primary_doc_id": "planner_calibration_mini_spec",
         "primary_source_phrases": [
             "mandatory 4 / 6 / 8 / 10",
             "at least 10 fixed",
@@ -77,7 +77,7 @@ MANDATORY_EVIDENCE_ITEMS = (
         "entry_point_phrases": [
             "at least one reproducible 4- or 6-qubit optimization trace",
         ],
-        "primary_doc_id": "task6_mini_spec",
+        "primary_doc_id": "correctness_evidence_mini_spec",
         "primary_source_phrases": [
             "At least one reproducible 4- or 6-qubit optimization trace",
         ],
@@ -86,7 +86,7 @@ MANDATORY_EVIDENCE_ITEMS = (
         "evidence_id": "anchor_case",
         "label": "10-qubit anchor case",
         "entry_point_phrases": ["one documented 10-qubit anchor case"],
-        "primary_doc_id": "task6_mini_spec",
+        "primary_doc_id": "correctness_evidence_mini_spec",
         "primary_source_phrases": [
             "At least one documented 10-qubit anchor evaluation case",
         ],
@@ -97,7 +97,7 @@ MANDATORY_EVIDENCE_ITEMS = (
         "entry_point_phrases": [
             "runtime and peak-memory recording for mandatory workflow evidence",
         ],
-        "primary_doc_id": "task5_mini_spec",
+        "primary_doc_id": "planner_calibration_mini_spec",
         "primary_source_phrases": [
             "The validation package must record workflow completion, runtime, and peak",
             "memory",
@@ -120,7 +120,7 @@ MANDATORY_EVIDENCE_ITEMS = (
         "evidence_id": "micro_threshold",
         "label": "Micro-validation threshold",
         "entry_point_phrases": ["mandatory micro-validation accuracy: `<= 1e-10`"],
-        "primary_doc_id": "task5_mini_spec",
+        "primary_doc_id": "planner_calibration_mini_spec",
         "primary_source_phrases": [
             "`<= 1e-10` maximum absolute energy error on the mandatory 1 to 3 qubit",
         ],
@@ -129,7 +129,7 @@ MANDATORY_EVIDENCE_ITEMS = (
         "evidence_id": "workflow_threshold",
         "label": "Workflow threshold",
         "entry_point_phrases": ["mandatory workflow-matrix accuracy: `<= 1e-8`"],
-        "primary_doc_id": "task5_mini_spec",
+        "primary_doc_id": "planner_calibration_mini_spec",
         "primary_source_phrases": [
             "`<= 1e-8` maximum absolute energy error on the mandatory 4 / 6 / 8 / 10",
         ],
@@ -138,7 +138,7 @@ MANDATORY_EVIDENCE_ITEMS = (
         "evidence_id": "mandatory_pass_rate",
         "label": "Mandatory pass rate",
         "entry_point_phrases": ["`100%` pass rate on the mandatory evidence package"],
-        "primary_doc_id": "task5_mini_spec",
+        "primary_doc_id": "planner_calibration_mini_spec",
         "primary_source_phrases": [
             "`100%` pass rate on the mandatory",
         ],

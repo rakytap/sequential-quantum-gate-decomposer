@@ -42,7 +42,7 @@ Out of scope for this story:
   `iter_story2_structured_descriptor_sets()` in
   `benchmarks/density_matrix/planner_surface/workloads.py`, plus the emitted
   bundle under
-  `benchmarks/density_matrix/artifacts/phase3_task2/story2_workloads/`.
+  `benchmarks/density_matrix/artifacts/planner_surface/mandatory_workload/`.
 - The canonical noisy planner surface from Task 1 already provides ordered gate
   and noise operations plus canonical operation indices that Story 3 should
   reuse rather than reconstruct.
@@ -55,7 +55,7 @@ Out of scope for this story:
   those existing fields rather than inventing a second ordered-membership
   schema.
 - Story 1 also established the first Task 2 regression and validation entry
-  points in `tests/partitioning/test_phase3_task2.py` and
+  points in `tests/partitioning/test_planner_surface_descriptors.py` and
   `benchmarks/density_matrix/planner_surface/continuity_descriptor_validation.py`.
 - Story 3 should keep ordering and noise-placement semantics explicit in the
   descriptor records rather than relying on hidden runtime conventions.
@@ -221,7 +221,7 @@ Out of scope for this story:
 - Schema drift in ordering semantics is caught early.
 
 **Execution checklist**
-- [ ] Add focused checks in `tests/partitioning/test_phase3_task2.py` for
+- [ ] Add focused checks in `tests/partitioning/test_planner_surface_descriptors.py` for
       continuity and methods-oriented fixtures.
 - [ ] Compare ordered descriptor membership across supported workload classes.
 - [ ] Keep the checks narrow to ordering and explicit noise placement rather
@@ -256,7 +256,7 @@ Out of scope for this story:
 
 **Execution checklist**
 - [ ] Add a dedicated Story 3 artifact location
-      (for example `benchmarks/density_matrix/artifacts/phase3_task2/story3_ordering/`).
+      (for example `benchmarks/density_matrix/artifacts/planner_surface/descriptor_ordering/`).
 - [ ] Emit at least one continuity case and one methods-oriented case through
       the Story 3 audit bundle.
 - [ ] Record the ordered descriptor membership and explicit noise-placement

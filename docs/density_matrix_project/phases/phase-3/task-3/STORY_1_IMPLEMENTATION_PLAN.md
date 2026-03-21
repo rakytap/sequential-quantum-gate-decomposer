@@ -46,7 +46,7 @@ Out of scope for this story:
   - `validate_partition_descriptor_set()` and
     `validate_partition_descriptor_set_against_surface()` in the same module,
   - and the emitted Task 2 continuity artifacts under
-    `benchmarks/density_matrix/artifacts/phase3_task2/story1_continuity_descriptors/`.
+    `benchmarks/density_matrix/artifacts/planner_surface/continuity_descriptor/`.
 - The sequential exact continuity workflow already has real evidence surfaces in
   `benchmarks/density_matrix/workflow_evidence/exact_density_vqe_validation.py`;
   Story 1 should reuse those continuity-case identities and observable
@@ -228,7 +228,7 @@ Out of scope for this story:
 
 **Execution checklist**
 - [ ] Add a focused Task 3 regression slice in
-      `tests/partitioning/test_phase3_task3.py` or a tightly related successor.
+      `tests/partitioning/test_partitioned_runtime.py` or a tightly related successor.
 - [ ] Add a continuity-runtime validation entry point under
       `benchmarks/density_matrix/partitioned_runtime/`, with
       `continuity_runtime_validation.py` as the primary Story 1 validator.
@@ -262,7 +262,7 @@ Out of scope for this story:
 
 **Execution checklist**
 - [ ] Add a dedicated Story 1 artifact location
-      (for example `benchmarks/density_matrix/artifacts/phase3_task3/story1_continuity_runtime/`).
+      (for example `benchmarks/density_matrix/artifacts/partitioned_runtime/continuity_runtime/`).
 - [ ] Record workload ID, requested mode, partition count, runtime-path label,
       exact-output presence, and continuity observable metadata for supported
       cases.

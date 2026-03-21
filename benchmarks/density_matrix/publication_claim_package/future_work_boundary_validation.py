@@ -24,7 +24,7 @@ if str(REPO_ROOT) not in sys.path:
 
 from benchmarks.density_matrix.publication_claim_package.doc_utils import (
     CANONICAL_NON_CLAIMS,
-    MANDATORY_TASK8_DOCS,
+    MANDATORY_PUBLICATION_EVIDENCE_DOCS,
     PHASE_POSITIONING_RULE,
     PUBLICATION_CLAIM_OUTPUT_DIR,
     build_software_metadata,
@@ -49,7 +49,7 @@ STORY5_PATH = DEFAULT_OUTPUT_DIR / STORY5_ARTIFACT_FILENAME
 ARTIFACT_FIELDS = (
     "suite_name",
     "status",
-    "story5_supported_path_scope",
+    "supported_path",
     "future_work_inventory",
     "software",
     "provenance",
@@ -112,7 +112,7 @@ def build_future_work_inventory():
     for item in MANDATORY_FUTURE_TOPICS:
         surface_entries = []
         for doc_id, phrases in item["surface_phrases"].items():
-            path = MANDATORY_TASK8_DOCS[doc_id]
+            path = MANDATORY_PUBLICATION_EVIDENCE_DOCS[doc_id]
             text = load_text(path)
             surface_entries.append(
                 {
@@ -156,7 +156,7 @@ def build_artifact_bundle():
     artifact = {
         "suite_name": SUITE_NAME,
         "status": "pass" if future_work_boundary_completed else "fail",
-        "story5_supported_path_scope": {
+        "supported_path": {
             "suite_name": story5_artifact["suite_name"],
             "status": story5_artifact["status"],
             "path": relative_to_repo(STORY5_PATH),
@@ -216,7 +216,7 @@ def validate_artifact_bundle(artifact):
 
     expected_completed = all(
         [
-            artifact["story5_supported_path_scope"]["status"] == "pass",
+            artifact["supported_path"]["status"] == "pass",
             artifact["summary"]["all_future_work_items_present"],
             artifact["summary"]["phase_positioning_present"],
         ]

@@ -27,7 +27,7 @@ from benchmarks.density_matrix.publication_claim_package.doc_utils import (
     CANONICAL_MAIN_CLAIM,
     CANONICAL_NON_CLAIMS,
     EVIDENCE_CLOSURE_RULE,
-    MANDATORY_TASK8_DOCS,
+    MANDATORY_PUBLICATION_EVIDENCE_DOCS,
     PUBLICATION_SURFACES,
     SURFACE_REQUIRED_HEADINGS,
     SURFACE_ROLE_PHRASES,
@@ -56,7 +56,7 @@ STORY1_ARTIFACT_PATH = PUBLICATION_CLAIM_OUTPUT_DIR_FROM_UTILS / STORY1_ARTIFACT
 ARTIFACT_FIELDS = (
     "suite_name",
     "status",
-    "story1_claim_package",
+    "claim_package",
     "surface_inventory",
     "software",
     "provenance",
@@ -142,7 +142,7 @@ def build_artifact_bundle():
     artifact = {
         "suite_name": SUITE_NAME,
         "status": "pass" if surface_alignment_completed else "fail",
-        "story1_claim_package": {
+        "claim_package": {
             "suite_name": story1_artifact["suite_name"],
             "status": story1_artifact["status"],
             "path": relative_to_repo(STORY1_ARTIFACT_PATH),
@@ -157,10 +157,10 @@ def build_artifact_bundle():
             ),
             "working_directory": str(REPO_ROOT),
             "git_revision": get_git_revision(),
-            "story1_claim_package_path": str(STORY1_ARTIFACT_PATH),
+            "claim_package_path": str(STORY1_ARTIFACT_PATH),
             "surface_paths": {
                 surface_id: relative_to_repo(
-                    MANDATORY_TASK8_DOCS[PUBLICATION_SURFACES[surface_id]["doc_id"]]
+                    MANDATORY_PUBLICATION_EVIDENCE_DOCS[PUBLICATION_SURFACES[surface_id]["doc_id"]]
                 )
                 for surface_id in PUBLICATION_SURFACES
             },
@@ -228,7 +228,7 @@ def validate_artifact_bundle(artifact):
 
     expected_completed = all(
         [
-            artifact["story1_claim_package"]["status"] == "pass",
+            artifact["claim_package"]["status"] == "pass",
             artifact["summary"]["all_surface_roles_present"],
             artifact["summary"]["all_claim_headings_present"],
             artifact["summary"]["all_main_claims_present"],

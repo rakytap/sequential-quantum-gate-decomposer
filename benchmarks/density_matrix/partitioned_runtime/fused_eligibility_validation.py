@@ -21,10 +21,10 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from benchmarks.density_matrix.planner_surface.common import build_software_metadata
-from benchmarks.density_matrix.partitioned_runtime.task4_case_selection import (
-    iter_task4_continuity_cases,
-    iter_task4_microcase_cases,
-    iter_task4_structured_cases,
+from benchmarks.density_matrix.partitioned_runtime.fusion_case_selection import (
+    iter_fusion_continuity_cases,
+    iter_fusion_microcase_cases,
+    iter_fusion_structured_cases,
 )
 from squander.partitioning.noisy_runtime import (
     PHASE3_FUSION_CLASS_DEFERRED,
@@ -36,14 +36,14 @@ from squander.partitioning.noisy_runtime import (
     execute_partitioned_density,
 )
 
-SUITE_NAME = "phase3_task4_story1_fused_eligibility"
+SUITE_NAME = "phase3_partitioned_runtime_fused_eligibility"
 ARTIFACT_FILENAME = "eligibility_bundle.json"
 DEFAULT_OUTPUT_DIR = (
     REPO_ROOT
     / "benchmarks"
     / "density_matrix"
     / "artifacts"
-    / "phase3_task4"
+    / "partitioned_runtime"
     / "story1_eligibility"
 )
 ARTIFACT_CORE_FIELDS = (
@@ -119,9 +119,9 @@ def _select_first_case(case_iter) -> dict:
 
 def build_cases() -> list[dict]:
     return [
-        _select_first_case(iter_task4_continuity_cases()),
-        _select_first_case(iter_task4_microcase_cases()),
-        _select_first_case(iter_task4_structured_cases()),
+        _select_first_case(iter_fusion_continuity_cases()),
+        _select_first_case(iter_fusion_microcase_cases()),
+        _select_first_case(iter_fusion_structured_cases()),
     ]
 
 

@@ -3,9 +3,9 @@
 ## Draft Status
 
 This is now an implementation-backed narrative short-paper surface for the
-Phase 3 Paper 2 package. Task 4 through Task 7 wording should track the
-delivered backend, correctness package, and benchmark package directly, while
-final publication packaging remains open.
+Phase 3 Paper 2 package. The wording should track the delivered fused-runtime,
+planner-calibration, correctness-evidence, and performance-evidence surfaces
+directly, while final publication packaging remains open.
 
 ## Abstract
 
@@ -23,7 +23,8 @@ combines a canonical noisy planner surface, partition descriptors that preserve
 explicit gate/noise ordering, an executable partitioned density runtime with at
 least one real fused execution mode, and a benchmark package that compares the
 result against both the sequential `NoisyCircuit` baseline and Qiskit Aer. In the
-current delivered Task 5 result, the benchmark-facing planning layer is a
+current delivered planner-calibration result, the benchmark-facing planning
+layer is a
 benchmark-calibrated policy over a bounded family of auditable
 `max_partition_qubits` span-budget settings on the existing noisy planner
 surface rather than a broad family of separately implemented noisy planner
@@ -43,15 +44,15 @@ SQUANDER can extend partitioning and limited fusion to exact noisy mixed-state
 circuits without reducing noise to planner-external metadata, while preserving
 exact semantics and yielding a scientifically useful benchmarked backend.
 
-Current Task 5 refinement:
+Current planner-calibration refinement:
 the supported planning claim is presently a benchmark-calibrated selection rule
 over a bounded noisy-planner candidate family, with broader adapted planner
 families retained as design-space or comparison references until separately
 implemented.
 
-Current Task 6 refinement:
+Current correctness-evidence refinement:
 the delivered correctness package is now pinned to the currently selected
-`span_budget_q2` surface and emitted through one shared `phase3_task6` bundle
+`span_budget_q2` surface and emitted through one shared `correctness_evidence` bundle
 family. It records `25` counted supported cases, a bounded Qiskit Aer slice of
 `4` cases, and `17` explicit unsupported-boundary cases that remain visible
 instead of being filtered away.
@@ -91,7 +92,8 @@ already established the first exact noisy workflow result by integrating the
 density backend into one canonical noisy XXZ `HEA` workflow. That solved the
 workflow-integration problem, but it did not solve the execution-cost problem.
 
-The project now sits at a clearer post-Task-6 transition point. SQUANDER now
+The project now sits at a clearer post-correctness-evidence transition point.
+SQUANDER now
 has:
 
 - a mature state-vector partitioning and gate-fusion subsystem,
@@ -100,9 +102,10 @@ has:
 What remained missing at the start of Phase 3 was a backend architecture in
 which noisy mixed-state circuits are partitioned in their own right rather than
 treated as unitary regions interrupted by noise boundaries that the planner did
-not understand. Tasks 1 through 7 now close that native-backend and benchmark
-layer on the frozen support surface. The main open work is now the final
-publication-packaging layer that sits on top of the delivered backend.
+not understand. The delivered planner, descriptor, runtime, fusion,
+calibration, correctness, and benchmark layers now close that native-backend
+and benchmark surface. The main open work is now the final publication-
+packaging layer that sits on top of the delivered backend.
 
 ## 2. Why Phase 3 Matters
 
@@ -136,7 +139,7 @@ with at least one real fused execution mode on eligible substructures. This is
 stronger than a planner-only story, but more bounded than a fully channel-native
 fusion architecture.
 
-Current Task 4 implementation findings sharpen that boundary. The baseline fused
+Current fused-runtime findings sharpen that boundary. The baseline fused
 result is now a concrete descriptor-local unitary-island path built on the
 density backend's local-unitary primitive, not an abstract future possibility.
 On representative 8- and 10-qubit structured workloads this path is real and
@@ -150,7 +153,8 @@ Fourth, the benchmark package studies representative noisy workloads
 rather than only synthetic kernels. The continuity anchor is the frozen Phase 2
 noisy XXZ `HEA` workflow, and the methods stress matrix is built from structured
 noisy `U3` / `CNOT` families under sparse, periodic, and dense local-noise
-placement. In the current delivered Task 7 package, that benchmark layer now
+placement. In the current delivered performance-evidence package, that
+benchmark layer now
 records `34` counted supported cases:
 
 - `4` continuity-anchor cases,
@@ -182,17 +186,20 @@ The current benchmark package can now answer three questions:
 3. Where do the resulting partitioning choices help, and where does the native
    baseline still leave a visible bottleneck?
 
-For the currently delivered Task 5 surface, the third question should be read as
+For the currently delivered planner-calibration surface, the third question
+should be read as
 "how does the bounded noisy-planner candidate family behave under one
 benchmark-grounded selection rule?" rather than as "which broad planner family
 has now been permanently settled as the final winner?"
 
-For the currently delivered Task 6 and Task 7 surfaces, that story is now
-implementation-backed end to end: one shared correctness package records `25`
+For the currently delivered correctness-evidence and performance-evidence
+surfaces, that story is now implementation-backed end to end: one shared
+correctness package records `25`
 counted supported cases, `4` required external-reference cases, and explicit
-negative boundary evidence, while the Task 7 benchmark package records `34`
-counted supported benchmark cases and keeps the `17` carried-forward Task 6
-boundary cases visible instead of relying on prose-only performance claims.
+negative boundary evidence, while the performance-evidence benchmark package
+records `34` counted supported benchmark cases and keeps the `17`
+carried-forward correctness-evidence boundary cases visible instead of relying
+on prose-only performance claims.
 
 The representative review set is deliberately smaller and more interpretable
 than the full benchmark matrix. It contains `6` primary-seed sparse structured

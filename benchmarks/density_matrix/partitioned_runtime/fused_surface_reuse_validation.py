@@ -21,10 +21,10 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from benchmarks.density_matrix.planner_surface.common import build_software_metadata
-from benchmarks.density_matrix.partitioned_runtime.task4_case_selection import (
-    iter_task4_continuity_cases,
-    iter_task4_microcase_cases,
-    iter_task4_structured_cases,
+from benchmarks.density_matrix.partitioned_runtime.fusion_case_selection import (
+    iter_fusion_continuity_cases,
+    iter_fusion_microcase_cases,
+    iter_fusion_structured_cases,
 )
 from squander.partitioning.noisy_runtime import (
     PHASE3_RUNTIME_PATH_BASELINE,
@@ -34,14 +34,14 @@ from squander.partitioning.noisy_runtime import (
     execute_partitioned_density_fused,
 )
 
-SUITE_NAME = "phase3_task4_story3_fused_surface_reuse"
+SUITE_NAME = "phase3_partitioned_runtime_fused_surface_reuse"
 ARTIFACT_FILENAME = "surface_reuse_bundle.json"
 DEFAULT_OUTPUT_DIR = (
     REPO_ROOT
     / "benchmarks"
     / "density_matrix"
     / "artifacts"
-    / "phase3_task4"
+    / "partitioned_runtime"
     / "story3_surface_reuse"
 )
 ARTIFACT_CORE_FIELDS = (
@@ -67,13 +67,13 @@ def _audit_case(metadata: dict, descriptor_set, parameters) -> dict:
 
 def build_cases() -> list[dict]:
     continuity_metadata, continuity_descriptor_set, continuity_parameters, _ = _first_case(
-        iter_task4_continuity_cases()
+        iter_fusion_continuity_cases()
     )
     micro_metadata, micro_descriptor_set, micro_parameters = _first_case(
-        iter_task4_microcase_cases()
+        iter_fusion_microcase_cases()
     )
     structured_metadata, structured_descriptor_set, structured_parameters = _first_case(
-        iter_task4_structured_cases()
+        iter_fusion_structured_cases()
     )
     return [
         _audit_case(continuity_metadata, continuity_descriptor_set, continuity_parameters),

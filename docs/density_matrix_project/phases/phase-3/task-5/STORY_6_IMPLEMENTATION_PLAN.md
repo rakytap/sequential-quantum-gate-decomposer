@@ -45,8 +45,8 @@ Out of scope for this story:
   - `NoisyRuntimeExecutionResult`,
   - `build_runtime_audit_record()`,
   - and the existing artifact bundles under
-    `benchmarks/density_matrix/artifacts/phase3_task3/` and
-    `benchmarks/density_matrix/artifacts/phase3_task4/`.
+    `benchmarks/density_matrix/artifacts/partitioned_runtime/` and
+    `benchmarks/density_matrix/artifacts/partitioned_runtime/`.
 - Story 6 should prefer additive schema evolution over inventing a disconnected
   Task 5 result language.
 - The most conservative implementation path is to keep overlapping field names
@@ -175,7 +175,7 @@ Out of scope for this story:
   interpretation.
 
 **Execution checklist**
-- [ ] Add focused checks in `tests/partitioning/test_phase3_task5.py` for
+- [ ] Add focused checks in `tests/partitioning/test_planner_calibration.py` for
       calibration-record stability across representative supported cases.
 - [ ] Compare top-level provenance, candidate identity, metric-field presence,
       correctness-verdict fields, and claim-selection fields across the
@@ -251,7 +251,7 @@ Out of scope for this story:
       `calibration_bundle_validation.py` as the primary checker.
 - [ ] Add a dedicated Story 6 artifact location
       (for example
-      `benchmarks/density_matrix/artifacts/phase3_task5/story6_calibration_bundle/`).
+      `benchmarks/density_matrix/artifacts/planner_calibration/calibration_bundle/`).
 - [ ] Emit supported Task 5 records through one stable schema plus a stable
       bundle summary.
 - [ ] Record rerun commands and software metadata with the emitted bundle.

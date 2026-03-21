@@ -12,7 +12,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from benchmarks.density_matrix.publication_evidence.common import (
-    MANDATORY_TASK8_DOCS,
+    MANDATORY_PUBLICATION_EVIDENCE_DOCS,
     PHASE_POSITIONING_RULE_ALTERNATIVES,
     build_software_metadata,
     get_git_revision,
@@ -20,7 +20,7 @@ from benchmarks.density_matrix.publication_evidence.common import (
     load_text,
     phrase_group_present,
     relative_to_repo,
-    task8_story_output_dir,
+    publication_evidence_output_dir,
     write_json,
 )
 from benchmarks.density_matrix.publication_evidence.supported_path_validation import (
@@ -30,17 +30,17 @@ from benchmarks.density_matrix.publication_evidence.supported_path_validation im
 )
 
 
-SUITE_NAME = "phase3_task8_story7_future_work_boundary"
+SUITE_NAME = "phase3_publication_evidence_future_work"
 ARTIFACT_FILENAME = "future_work_boundary_bundle.json"
-DEFAULT_OUTPUT_DIR = task8_story_output_dir("story7_future_work_boundary")
+DEFAULT_OUTPUT_DIR = publication_evidence_output_dir("future_work")
 STORY5_PATH = (
-    task8_story_output_dir("story5_supported_path_scope")
+    publication_evidence_output_dir("supported_path")
     / STORY5_ARTIFACT_FILENAME
 )
 ARTIFACT_FIELDS = (
     "suite_name",
     "status",
-    "story5_supported_path_scope",
+    "supported_path",
     "future_work_inventory",
     "software",
     "provenance",
@@ -141,7 +141,7 @@ def build_future_work_inventory():
     for item in MANDATORY_FUTURE_TOPICS:
         surface_entries = []
         for doc_id, phrases in item["surface_phrase_groups"].items():
-            path = MANDATORY_TASK8_DOCS[doc_id]
+            path = MANDATORY_PUBLICATION_EVIDENCE_DOCS[doc_id]
             text = load_text(path)
             surface_entries.append(
                 {
@@ -192,7 +192,7 @@ def build_artifact_bundle():
     artifact = {
         "suite_name": SUITE_NAME,
         "status": "pass" if future_work_boundary_completed else "fail",
-        "story5_supported_path_scope": {
+        "supported_path": {
             "suite_name": story5_artifact["suite_name"],
             "status": story5_artifact["status"],
             "path": relative_to_repo(STORY5_PATH),
@@ -265,7 +265,7 @@ def validate_artifact_bundle(artifact):
 
     expected_completed = all(
         [
-            artifact["story5_supported_path_scope"]["status"] == "pass",
+            artifact["supported_path"]["status"] == "pass",
             artifact["summary"]["all_future_work_items_present"],
             artifact["summary"]["phase_positioning_present"],
             artifact["summary"]["benchmark_driven_follow_on_present"],

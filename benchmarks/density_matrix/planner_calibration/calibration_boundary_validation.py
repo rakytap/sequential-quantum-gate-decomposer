@@ -20,20 +20,20 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from benchmarks.density_matrix.planner_calibration.boundary import (
-    TASK5_BOUNDARY_SCHEMA_VERSION,
-    build_task5_boundary_payload,
+    PLANNER_CALIBRATION_BOUNDARY_SCHEMA_VERSION,
+    build_planner_calibration_boundary_payload,
 )
 from benchmarks.density_matrix.planner_surface.common import build_software_metadata
 
-SUITE_NAME = "phase3_task5_story7_claim_boundary"
+SUITE_NAME = "phase3_planner_calibration_claim_boundary"
 ARTIFACT_FILENAME = "claim_boundary_bundle.json"
 DEFAULT_OUTPUT_DIR = (
     REPO_ROOT
     / "benchmarks"
     / "density_matrix"
     / "artifacts"
-    / "phase3_task5"
-    / "story7_claim_boundary"
+    / "planner_calibration"
+    / "claim_boundary"
 )
 ARTIFACT_CORE_FIELDS = (
     "suite_name",
@@ -45,7 +45,7 @@ ARTIFACT_CORE_FIELDS = (
 
 
 def build_artifact_bundle() -> dict:
-    payload = build_task5_boundary_payload()
+    payload = build_planner_calibration_boundary_payload()
     bundle = {
         "suite_name": SUITE_NAME,
         "status": "pass"
@@ -53,7 +53,7 @@ def build_artifact_bundle() -> dict:
         and payload["summary"]["approximation_area_count"] > 0
         and payload["summary"]["deferred_follow_on_branch_count"] > 0
         else "fail",
-        "boundary_schema_version": TASK5_BOUNDARY_SCHEMA_VERSION,
+        "boundary_schema_version": PLANNER_CALIBRATION_BOUNDARY_SCHEMA_VERSION,
         "software": build_software_metadata(),
         "summary": payload["summary"],
         "supported_claim": payload["supported_claim"],

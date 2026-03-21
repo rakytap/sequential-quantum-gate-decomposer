@@ -21,20 +21,20 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from benchmarks.density_matrix.planner_calibration.bundle import (
-    TASK5_CALIBRATION_BUNDLE_SCHEMA_VERSION,
-    build_task5_calibration_bundle_payload,
+    PLANNER_CALIBRATION_CALIBRATION_BUNDLE_SCHEMA_VERSION,
+    build_planner_calibration_calibration_bundle_payload,
 )
 from benchmarks.density_matrix.planner_surface.common import build_software_metadata
 
-SUITE_NAME = "phase3_task5_story6_calibration_bundle"
+SUITE_NAME = "phase3_planner_calibration_calibration_bundle"
 ARTIFACT_FILENAME = "calibration_bundle.json"
 DEFAULT_OUTPUT_DIR = (
     REPO_ROOT
     / "benchmarks"
     / "density_matrix"
     / "artifacts"
-    / "phase3_task5"
-    / "story6_calibration_bundle"
+    / "planner_calibration"
+    / "calibration_bundle"
 )
 ARTIFACT_CORE_FIELDS = (
     "suite_name",
@@ -48,7 +48,7 @@ ARTIFACT_CORE_FIELDS = (
 
 
 def build_artifact_bundle() -> dict:
-    payload = build_task5_calibration_bundle_payload()
+    payload = build_planner_calibration_calibration_bundle_payload()
     bundle = {
         "suite_name": SUITE_NAME,
         "status": "pass"
@@ -56,7 +56,7 @@ def build_artifact_bundle() -> dict:
         and payload["summary"]["comparison_cases"] > 0
         and payload["summary"]["counted_calibration_cases"] == payload["summary"]["total_cases"]
         else "fail",
-        "calibration_bundle_schema_version": TASK5_CALIBRATION_BUNDLE_SCHEMA_VERSION,
+        "calibration_bundle_schema_version": PLANNER_CALIBRATION_CALIBRATION_BUNDLE_SCHEMA_VERSION,
         "software": build_software_metadata(),
         "summary": payload["summary"],
         "claim_selection_rule": payload["claim_selection_rule"],

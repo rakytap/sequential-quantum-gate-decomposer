@@ -37,7 +37,7 @@ from benchmarks.density_matrix.noise_support.support_tiers import (
 from benchmarks.density_matrix.workflow_evidence.workflow_contract_validation import (
     ARTIFACT_FILENAME as STORY1_ARTIFACT_FILENAME,
     CONTRACT_VERSION,
-    DEFAULT_OUTPUT_DIR as TASK6_DEFAULT_OUTPUT_DIR,
+    DEFAULT_OUTPUT_DIR as CORRECTNESS_EVIDENCE_DEFAULT_OUTPUT_DIR,
     REFERENCE_BACKEND,
     WORKFLOW_ID,
     build_software_metadata,
@@ -58,7 +58,7 @@ from benchmarks.density_matrix.workflow_evidence.matrix_baseline_validation impo
 
 SUITE_NAME = "unsupported_workflow_validation"
 ARTIFACT_FILENAME = "unsupported_workflow_bundle.json"
-DEFAULT_OUTPUT_DIR = TASK6_DEFAULT_OUTPUT_DIR
+DEFAULT_OUTPUT_DIR = CORRECTNESS_EVIDENCE_DEFAULT_OUTPUT_DIR
 STORY1_CONTRACT_PATH = DEFAULT_OUTPUT_DIR / STORY1_ARTIFACT_FILENAME
 STORY2_BUNDLE_PATH = DEFAULT_OUTPUT_DIR / STORY2_ARTIFACT_FILENAME
 STORY3_BUNDLE_PATH = DEFAULT_OUTPUT_DIR / STORY3_ARTIFACT_FILENAME

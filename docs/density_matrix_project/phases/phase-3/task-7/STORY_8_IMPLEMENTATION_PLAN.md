@@ -43,7 +43,7 @@ Out of scope for this story:
 - Task 6 already provides summary-consistency and counted-status precedent Story
   8 should reuse where practical through:
   - `benchmarks/density_matrix/correctness_evidence/summary_consistency_validation.py`,
-  - `benchmarks/density_matrix/artifacts/phase3_task6/story8_summary_consistency/`,
+  - `benchmarks/density_matrix/artifacts/correctness_evidence/summary_consistency/`,
   - and the shared Task 6 correctness package.
 - Phase 2 already provides interpretation and claim-closure precedent Story 8
   should learn from where useful:
@@ -263,7 +263,7 @@ Out of scope for this story:
 **Execution checklist**
 - [ ] Add a dedicated Story 8 artifact location
       (for example
-      `benchmarks/density_matrix/artifacts/phase3_task7/story8_summary_consistency/`).
+      `benchmarks/density_matrix/artifacts/performance_evidence/summary_consistency/`).
 - [ ] Emit rollup counts, closure flags, and carry-forward semantics through one
       stable schema.
 - [ ] Record rerun commands and software metadata with the emitted bundle.

@@ -51,7 +51,7 @@ Out of scope for this story:
   `workload_family`, and `workload_id`.
 - Task 5 already emits calibration-side workload and planner-setting identity
   through `benchmarks/density_matrix/planner_calibration/` and
-  `benchmarks/density_matrix/artifacts/phase3_task5/`; Story 1 should preserve
+  `benchmarks/density_matrix/artifacts/planner_calibration/`; Story 1 should preserve
   joinability with that surface rather than redefining workload identity.
 - The current implementation learning is that Story 1 should freeze the Task 6
   matrix against the selected Task 5 supported candidate rather than against the
@@ -271,7 +271,7 @@ Out of scope for this story:
 
 **Execution checklist**
 - [ ] Add a dedicated Task 6 regression surface in
-      `tests/partitioning/test_phase3_task6.py`.
+      `tests/partitioning/test_correctness_evidence.py`.
 - [ ] Assert stable case ordering or canonicalization for representative Task 6
       matrix records.
 - [ ] Assert that mandatory fields such as workload ID, slice membership, seed
@@ -309,7 +309,7 @@ Out of scope for this story:
       `correctness_matrix_validation.py` as the primary checker.
 - [ ] Add a dedicated Story 1 artifact location
       (for example
-      `benchmarks/density_matrix/artifacts/phase3_task6/story1_correctness_matrix/`).
+      `benchmarks/density_matrix/artifacts/correctness_evidence/correctness_matrix/`).
 - [ ] Emit the shared case records, slice-membership labels, and matrix summary
       through one stable schema.
 - [ ] Record rerun commands and software metadata with the emitted bundle.

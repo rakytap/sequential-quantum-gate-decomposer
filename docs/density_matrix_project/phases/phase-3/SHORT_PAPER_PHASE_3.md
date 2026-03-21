@@ -3,9 +3,9 @@
 ## Draft Status
 
 This document is now an implementation-backed short-paper draft for Phase 3.
-Task 4 through Task 7 wording should track the delivered backend, correctness
-package, and benchmark package directly, while final publication packaging
-still remains to be tightened.
+The wording should track the delivered fused-runtime, planner-calibration,
+correctness-evidence, and performance-evidence surfaces directly, while final
+publication packaging still remains to be tightened.
 
 ## Abstract
 
@@ -95,9 +95,9 @@ This creates a natural Phase 3 methods question. SQUANDER already has:
 What it did not yet have at the start of Phase 3 was a native way to partition
 and partially fuse noisy mixed-state circuits while preserving the exact
 semantics that made the Phase 2 backend scientifically valuable in the first
-place. Tasks 1 through 7 now close that native-backend and benchmark layer on
-the frozen support surface, leaving the final publication-facing packaging as
-the main open work.
+place. The delivered planner, descriptor, runtime, fusion, calibration,
+correctness, and benchmark layers now close that native-backend and benchmark
+surface, leaving the final publication-facing packaging as the main open work.
 
 The purpose of Phase 3 is therefore not to broaden noisy VQE/VQA surface or to
 introduce approximate scaling. It is to make partitioning and limited fusion
@@ -120,13 +120,16 @@ At the start of Phase 3 that problem had four parts:
    real fused execution on representative noisy workloads.
 4. The current cost model was state-vector-oriented and noise-blind.
 
-Tasks 1 through 7 now close those parts on the frozen support surface:
+The delivered Phase 3 stack now closes those parts on the frozen support
+surface:
 
-- Tasks 1 through 4 plus Task 6 close the native-backend correctness side,
-- Task 5 narrows the delivered planning result to a benchmark-grounded
-  `max_partition_qubits` selection rule over a bounded candidate family,
-- and Task 7 turns the benchmark layer into one machine-reviewable performance
-  and sensitivity package.
+- the planner, descriptor, runtime, fusion, and correctness layers close the
+  native-backend exactness side,
+- planner calibration narrows the delivered planning result to a
+  benchmark-grounded `max_partition_qubits` selection rule over a bounded
+  candidate family,
+- and performance evidence turns the benchmark layer into one machine-reviewable
+  performance and sensitivity package.
 
 The main remaining open work is the final publication-facing evidence
 packaging.
@@ -175,7 +178,7 @@ Phase 3 should move beyond a state-vector FLOP model by using:
 - followed by a benchmark-calibrated density-aware objective, heuristic, or
   bounded candidate-setting policy.
 
-Current Task 5 implementation findings narrow the delivered surface further:
+Current planner-calibration findings narrow the delivered surface further:
 
 - the current benchmark-facing result calibrates auditable
   `max_partition_qubits` span-budget settings on the existing noisy planner
@@ -183,7 +186,7 @@ Current Task 5 implementation findings narrow the delivered surface further:
 - broader adapted `kahn` / `tdag` / `gtqcp` / `ilp` / `ilp-fusion-ca` families
   remain design-space or comparison references rather than already-delivered
   noisy planner variants,
-- and the supported Task 5 claim should be phrased around the auditable
+- and the supported planner-calibration claim should be phrased around the auditable
   selection rule and bounded candidate family rather than around one
   permanently frozen winner identity.
 
@@ -202,9 +205,10 @@ The current validation baseline has two layers:
 - Qiskit Aer density-matrix simulation as the required external reference on the
   mandatory microcases and the current 4-qubit continuity slice.
 
-Current Task 6 implementation findings now make that baseline concrete:
+Current correctness-evidence findings now make that baseline concrete:
 
-- the delivered Task 6 package records `25` counted supported cases on the
+- the delivered correctness-evidence package records `25` counted supported
+  cases on the
   currently selected `span_budget_q2` surface,
 - it records `4` required external-reference cases (`3` microcases plus the
   4-qubit continuity anchor),
@@ -258,8 +262,9 @@ It requires:
   diagnosis of why the native Phase 3 baseline still leaves a dominant
   bottleneck.
 
-Current Task 7 implementation findings now sharpen that interpretation. The
-shared Task 7 package records `34` counted supported benchmark cases:
+Current performance-evidence findings now sharpen that interpretation. The
+shared performance-evidence package records `34` counted supported benchmark
+cases:
 
 - `4` continuity-anchor cases,
 - and `30` structured cases across the required families, sizes, noise
@@ -274,10 +279,10 @@ sequential reference, peak memory does not improve, and the dominant per-case
 diagnosis points to supported islands left unfused plus Python-level fused-path
 overhead.
 
-Current Task 6 findings still anchor the exactness side of that interpretation.
-The Task 7 summary-consistency bundle carries forward the `17` explicit Task 6
-boundary cases so the benchmark claim stays honest about what remained outside
-the counted supported surface.
+Current correctness-evidence findings still anchor the exactness side of that
+interpretation. The performance-evidence summary-consistency bundle carries
+forward the `17` explicit correctness-evidence boundary cases so the benchmark
+claim stays honest about what remained outside the counted supported surface.
 
 ## 5. Scientific Contribution
 

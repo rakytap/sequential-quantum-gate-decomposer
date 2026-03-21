@@ -22,12 +22,12 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from benchmarks.density_matrix.planner_surface.common import (
-    build_phase3_story1_continuity_vqe,
+    build_phase2_continuity_vqe,
     build_software_metadata,
 )
 from benchmarks.density_matrix.planner_surface.workloads import (
-    iter_story2_microcase_surfaces,
-    iter_story2_structured_surfaces,
+    iter_microcase_surfaces,
+    iter_structured_surfaces,
 )
 from squander.partitioning.noisy_planner import (
     build_bridge_overlap_report,
@@ -35,7 +35,7 @@ from squander.partitioning.noisy_planner import (
     build_planner_audit_record,
 )
 
-SUITE_NAME = "phase3_task1_story3_planner_audit"
+SUITE_NAME = "phase3_planner_surface_planner_audit"
 ARTIFACT_FILENAME = "planner_audit_bundle.json"
 DEFAULT_OUTPUT_DIR = (
     REPO_ROOT / "benchmarks" / "density_matrix" / "artifacts" / "planner_surface"
@@ -51,7 +51,7 @@ ARTIFACT_CORE_FIELDS = (
 
 
 def build_cases() -> list[dict]:
-    continuity_vqe, _, _ = build_phase3_story1_continuity_vqe(4)
+    continuity_vqe, _, _ = build_phase2_continuity_vqe(4)
     continuity_surface = build_phase3_continuity_planner_surface(continuity_vqe)
     continuity_audit = build_planner_audit_record(
         continuity_surface, metadata={"case_kind": "continuity"}
@@ -61,11 +61,11 @@ def build_cases() -> list[dict]:
     )
     continuity_audit["case_name"] = continuity_surface.workload_id
 
-    micro_metadata, micro_surface = next(iter(iter_story2_microcase_surfaces()))
+    micro_metadata, micro_surface = next(iter(iter_microcase_surfaces()))
     micro_audit = build_planner_audit_record(micro_surface, metadata=micro_metadata)
     micro_audit["case_name"] = micro_surface.workload_id
 
-    structured_metadata, structured_surface = next(iter(iter_story2_structured_surfaces()))
+    structured_metadata, structured_surface = next(iter(iter_structured_surfaces()))
     structured_audit = build_planner_audit_record(
         structured_surface, metadata=structured_metadata
     )

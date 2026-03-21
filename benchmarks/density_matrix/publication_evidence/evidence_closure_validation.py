@@ -19,12 +19,12 @@ from benchmarks.density_matrix.publication_evidence.claim_traceability_validatio
 from benchmarks.density_matrix.publication_evidence.common import (
     EVIDENCE_CLOSURE_RULE,
     EVIDENCE_CLOSURE_RULE_ALTERNATIVES,
-    MANDATORY_TASK8_DOCS,
-    TASK6_SUMMARY_CONSISTENCY_PATH,
-    TASK6_UNSUPPORTED_BOUNDARY_PATH,
-    TASK7_DIAGNOSIS_PATH,
-    TASK7_POSITIVE_THRESHOLD_PATH,
-    TASK7_SUMMARY_CONSISTENCY_PATH,
+    MANDATORY_PUBLICATION_EVIDENCE_DOCS,
+    CORRECTNESS_EVIDENCE_SUMMARY_CONSISTENCY_PATH,
+    CORRECTNESS_EVIDENCE_UNSUPPORTED_BOUNDARY_PATH,
+    PERFORMANCE_EVIDENCE_DIAGNOSIS_PATH,
+    PERFORMANCE_EVIDENCE_POSITIVE_THRESHOLD_PATH,
+    PERFORMANCE_EVIDENCE_SUMMARY_CONSISTENCY_PATH,
     build_software_metadata,
     get_git_revision,
     load_json,
@@ -32,16 +32,16 @@ from benchmarks.density_matrix.publication_evidence.common import (
     load_text,
     missing_phrases,
     relative_to_repo,
-    task8_story_output_dir,
+    publication_evidence_output_dir,
     write_json,
 )
 
 
-SUITE_NAME = "phase3_task8_story4_evidence_closure"
+SUITE_NAME = "phase3_publication_evidence_evidence_closure"
 ARTIFACT_FILENAME = "evidence_closure_bundle.json"
-DEFAULT_OUTPUT_DIR = task8_story_output_dir("story4_evidence_closure")
+DEFAULT_OUTPUT_DIR = publication_evidence_output_dir("evidence_closure")
 STORY3_PATH = (
-    task8_story_output_dir("story3_claim_traceability") / STORY3_ARTIFACT_FILENAME
+    publication_evidence_output_dir("claim_traceability") / STORY3_ARTIFACT_FILENAME
 )
 ARTIFACT_FIELDS = (
     "suite_name",
@@ -63,17 +63,17 @@ def _story3(path: Path = STORY3_PATH):
 
 
 def build_evidence_inventory():
-    task6_summary = load_json(TASK6_SUMMARY_CONSISTENCY_PATH)
-    task7_summary = load_json(TASK7_SUMMARY_CONSISTENCY_PATH)
-    positive_threshold = load_json(TASK7_POSITIVE_THRESHOLD_PATH)
-    diagnosis_bundle = load_json(TASK7_DIAGNOSIS_PATH)
+    correctness_evidence_summary = load_json(CORRECTNESS_EVIDENCE_SUMMARY_CONSISTENCY_PATH)
+    performance_evidence_summary = load_json(PERFORMANCE_EVIDENCE_SUMMARY_CONSISTENCY_PATH)
+    positive_threshold = load_json(PERFORMANCE_EVIDENCE_POSITIVE_THRESHOLD_PATH)
+    diagnosis_bundle = load_json(PERFORMANCE_EVIDENCE_DIAGNOSIS_PATH)
 
     closure_rule_entries = []
     for surface_id, surface in (
-        ("abstract", MANDATORY_TASK8_DOCS["phase3_abstract"]),
-        ("short_paper", MANDATORY_TASK8_DOCS["phase3_short_paper"]),
-        ("short_paper_narrative", MANDATORY_TASK8_DOCS["phase3_short_paper_narrative"]),
-        ("paper", MANDATORY_TASK8_DOCS["phase3_paper"]),
+        ("abstract", MANDATORY_PUBLICATION_EVIDENCE_DOCS["phase3_abstract"]),
+        ("short_paper", MANDATORY_PUBLICATION_EVIDENCE_DOCS["phase3_short_paper"]),
+        ("short_paper_narrative", MANDATORY_PUBLICATION_EVIDENCE_DOCS["phase3_short_paper_narrative"]),
+        ("paper", MANDATORY_PUBLICATION_EVIDENCE_DOCS["phase3_paper"]),
     ):
         text = load_text(surface)
         closure_rule_entries.append(
@@ -91,43 +91,43 @@ def build_evidence_inventory():
 
     return [
         {
-            "item_id": "task6_main_correctness_claim",
+            "item_id": "correctness_evidence_main_correctness_claim",
             "label": "Task 6 correctness claim completes on counted supported evidence",
-            "path": relative_to_repo(TASK6_SUMMARY_CONSISTENCY_PATH),
-            "bundle_status": task6_summary["status"],
+            "path": relative_to_repo(CORRECTNESS_EVIDENCE_SUMMARY_CONSISTENCY_PATH),
+            "bundle_status": correctness_evidence_summary["status"],
             "summary_field": "main_correctness_claim_completed",
             "summary_value": bool(
-                task6_summary["summary"]["main_correctness_claim_completed"]
+                correctness_evidence_summary["summary"]["main_correctness_claim_completed"]
             ),
         },
         {
-            "item_id": "task6_boundary_visibility",
+            "item_id": "correctness_evidence_boundary_visibility",
             "label": "Task 6 boundary evidence remains explicit",
-            "path": relative_to_repo(TASK6_UNSUPPORTED_BOUNDARY_PATH),
-            "bundle_status": "pass" if TASK6_UNSUPPORTED_BOUNDARY_PATH.exists() else "fail",
+            "path": relative_to_repo(CORRECTNESS_EVIDENCE_UNSUPPORTED_BOUNDARY_PATH),
+            "bundle_status": "pass" if CORRECTNESS_EVIDENCE_UNSUPPORTED_BOUNDARY_PATH.exists() else "fail",
             "summary_field": "unsupported_boundary_cases",
-            "summary_value": int(task6_summary["summary"]["unsupported_boundary_cases"])
+            "summary_value": int(correctness_evidence_summary["summary"]["unsupported_boundary_cases"])
             > 0,
         },
         {
-            "item_id": "task7_main_benchmark_claim",
+            "item_id": "performance_evidence_main_benchmark_claim",
             "label": "Task 7 benchmark claim completes on supported evidence",
-            "path": relative_to_repo(TASK7_SUMMARY_CONSISTENCY_PATH),
-            "bundle_status": task7_summary["status"],
+            "path": relative_to_repo(PERFORMANCE_EVIDENCE_SUMMARY_CONSISTENCY_PATH),
+            "bundle_status": performance_evidence_summary["status"],
             "summary_field": "main_benchmark_claim_completed",
             "summary_value": bool(
-                task7_summary["summary"]["main_benchmark_claim_completed"]
+                performance_evidence_summary["summary"]["main_benchmark_claim_completed"]
             ),
         },
         {
-            "item_id": "task7_threshold_or_diagnosis_rule",
+            "item_id": "performance_evidence_threshold_or_diagnosis_rule",
             "label": "Task 7 closes through positive threshold or diagnosis path",
-            "path": relative_to_repo(TASK7_SUMMARY_CONSISTENCY_PATH),
-            "bundle_status": task7_summary["status"],
+            "path": relative_to_repo(PERFORMANCE_EVIDENCE_SUMMARY_CONSISTENCY_PATH),
+            "bundle_status": performance_evidence_summary["status"],
             "summary_field": "positive_or_diagnosis_path_completed",
             "summary_value": bool(
-                task7_summary["summary"]["positive_benchmark_claim_completed"]
-                or task7_summary["summary"]["diagnosis_grounded_closure_completed"]
+                performance_evidence_summary["summary"]["positive_benchmark_claim_completed"]
+                or performance_evidence_summary["summary"]["diagnosis_grounded_closure_completed"]
             ),
             "positive_threshold_status": positive_threshold["status"],
             "diagnosis_status": diagnosis_bundle["status"],
@@ -158,7 +158,7 @@ def build_artifact_bundle():
     positive_or_diagnosis_path_completed = next(
         entry["summary_value"]
         for entry in evidence_inventory
-        if entry["item_id"] == "task7_threshold_or_diagnosis_rule"
+        if entry["item_id"] == "performance_evidence_threshold_or_diagnosis_rule"
     )
     evidence_closure_completed = all(
         [
@@ -214,10 +214,10 @@ def validate_artifact_bundle(artifact):
 
     observed_item_ids = [item["item_id"] for item in artifact["evidence_inventory"]]
     required_item_ids = [
-        "task6_main_correctness_claim",
-        "task6_boundary_visibility",
-        "task7_main_benchmark_claim",
-        "task7_threshold_or_diagnosis_rule",
+        "correctness_evidence_main_correctness_claim",
+        "correctness_evidence_boundary_visibility",
+        "performance_evidence_main_benchmark_claim",
+        "performance_evidence_threshold_or_diagnosis_rule",
         "paper2_closure_rule",
     ]
     if observed_item_ids != required_item_ids:
@@ -246,7 +246,7 @@ def validate_artifact_bundle(artifact):
     positive_or_diagnosis_path_completed = next(
         entry["summary_value"]
         for entry in artifact["evidence_inventory"]
-        if entry["item_id"] == "task7_threshold_or_diagnosis_rule"
+        if entry["item_id"] == "performance_evidence_threshold_or_diagnosis_rule"
     )
     if (
         artifact["summary"]["positive_or_diagnosis_path_completed"]

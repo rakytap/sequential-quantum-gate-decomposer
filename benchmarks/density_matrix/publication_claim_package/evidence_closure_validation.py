@@ -24,7 +24,7 @@ if str(REPO_ROOT) not in sys.path:
 
 from benchmarks.density_matrix.publication_claim_package.doc_utils import (
     EVIDENCE_CLOSURE_RULE,
-    MANDATORY_TASK8_DOCS,
+    MANDATORY_PUBLICATION_EVIDENCE_DOCS,
     PUBLICATION_CLAIM_OUTPUT_DIR,
     build_software_metadata,
     get_git_revision,
@@ -129,7 +129,7 @@ def build_evidence_inventory():
     for item in MANDATORY_EVIDENCE_ITEMS:
         surface_entries = []
         for doc_id, phrases in item["surface_phrases"].items():
-            path = MANDATORY_TASK8_DOCS[doc_id]
+            path = MANDATORY_PUBLICATION_EVIDENCE_DOCS[doc_id]
             text = load_text(path)
             surface_entries.append(
                 {

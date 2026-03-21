@@ -265,7 +265,7 @@ Out of scope for this story:
 
 **Execution checklist**
 - [ ] Add a dedicated Story 4 artifact location
-      (for example `benchmarks/density_matrix/artifacts/phase3_task3/story4_semantics/`).
+      (for example `benchmarks/density_matrix/artifacts/partitioned_runtime/runtime_semantics/`).
 - [ ] Emit at least one continuity case and one methods-oriented case through
       the Story 4 runtime-semantics surface.
 - [ ] Record partition remap summaries, parameter-routing summaries, and ordered

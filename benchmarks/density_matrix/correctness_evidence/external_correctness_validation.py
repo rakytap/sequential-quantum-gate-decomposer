@@ -15,19 +15,19 @@ import argparse
 from pathlib import Path
 
 from benchmarks.density_matrix.correctness_evidence.common import (
-    TASK6_CASE_SCHEMA_VERSION,
-    build_task6_selected_candidate,
-    build_task6_software_metadata,
-    task6_story_output_dir,
+    CORRECTNESS_EVIDENCE_CASE_SCHEMA_VERSION,
+    build_correctness_evidence_selected_candidate,
+    build_correctness_evidence_software_metadata,
+    correctness_evidence_output_dir,
     write_artifact_bundle,
 )
 from benchmarks.density_matrix.correctness_evidence.records import (
-    build_task6_positive_records,
+    build_correctness_evidence_positive_records,
 )
 
-SUITE_NAME = "phase3_task6_story3_external_slice"
+SUITE_NAME = "phase3_correctness_evidence_external_correctness"
 ARTIFACT_FILENAME = "external_correctness_bundle.json"
-DEFAULT_OUTPUT_DIR = task6_story_output_dir("story3_external_slice")
+DEFAULT_OUTPUT_DIR = correctness_evidence_output_dir("external_correctness")
 ARTIFACT_CORE_FIELDS = (
     "suite_name",
     "status",
@@ -40,7 +40,7 @@ ARTIFACT_CORE_FIELDS = (
 
 
 def build_cases() -> list[dict]:
-    return [case for case in build_task6_positive_records() if case["external_reference_required"]]
+    return [case for case in build_correctness_evidence_positive_records() if case["external_reference_required"]]
 
 
 def build_artifact_bundle(cases: list[dict]) -> dict:
@@ -48,9 +48,9 @@ def build_artifact_bundle(cases: list[dict]) -> dict:
     bundle = {
         "suite_name": SUITE_NAME,
         "status": "pass" if len(cases) == 4 and external_passes == len(cases) else "fail",
-        "record_schema_version": TASK6_CASE_SCHEMA_VERSION,
-        "software": build_task6_software_metadata(),
-        "selected_candidate": build_task6_selected_candidate(),
+        "record_schema_version": CORRECTNESS_EVIDENCE_CASE_SCHEMA_VERSION,
+        "software": build_correctness_evidence_software_metadata(),
+        "selected_candidate": build_correctness_evidence_selected_candidate(),
         "summary": {
             "total_cases": len(cases),
             "external_reference_passes": external_passes,

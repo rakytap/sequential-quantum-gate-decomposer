@@ -49,24 +49,24 @@ Out of scope for this story:
   - and `TASK_1_MINI_SPEC.md` through `TASK_8_MINI_SPEC.md`.
 - The emitted Task 6 bundle family already provides stable machine-reviewable
   evidence entry points under
-  `benchmarks/density_matrix/artifacts/phase3_task6/`, including:
-  - `story7_correctness_package/correctness_package_bundle.json`,
-  - `story6_unsupported_boundary/unsupported_boundary_bundle.json`,
-  - and `story8_summary_consistency/summary_consistency_bundle.json`.
+  `benchmarks/density_matrix/artifacts/correctness_evidence/`, including:
+  - `correctness_package/correctness_package_bundle.json`,
+  - `unsupported_boundary/unsupported_boundary_bundle.json`,
+  - and `summary_consistency/summary_consistency_bundle.json`.
 - The emitted Task 7 bundle family already provides stable machine-reviewable
   evidence entry points under
-  `benchmarks/density_matrix/artifacts/phase3_task7/`, including:
-  - `story7_benchmark_package/benchmark_package_bundle.json`,
-  - `story6_diagnosis_path/diagnosis_bundle.json`,
-  - `story4_sensitivity_matrix/sensitivity_matrix_bundle.json`,
-  - and `story8_summary_consistency/summary_consistency_bundle.json`.
+  `benchmarks/density_matrix/artifacts/performance_evidence/`, including:
+  - `benchmark_package/benchmark_package_bundle.json`,
+  - `diagnosis/diagnosis_bundle.json`,
+  - `sensitivity_matrix/sensitivity_matrix_bundle.json`,
+  - and `summary_consistency/summary_consistency_bundle.json`.
 - Story 3 should prefer claim-level and section-level traceability over raw
   file-level indexing. It is a reviewer-audit surface, not a general document
   browser.
 - The natural implementation home for Task 8 traceability validation is the same
   `benchmarks/density_matrix/publication_evidence/` package, with
   `claim_traceability_validation.py` as the Story 3 validation surface and
-  emitted artifacts rooted in `benchmarks/density_matrix/artifacts/phase3_task8/`.
+  emitted artifacts rooted in `benchmarks/density_matrix/artifacts/publication_evidence/`.
 
 ## Engineering Tasks
 
@@ -261,7 +261,7 @@ Out of scope for this story:
 - Regression coverage remains narrow and publication-package focused.
 
 **Execution checklist**
-- [ ] Add focused checks in `tests/partitioning/test_phase3_task8.py` or a
+- [ ] Add focused checks in `tests/partitioning/test_publication_evidence.py` or a
       tightly related successor for Story 3 claim traceability.
 - [ ] Add negative checks for missing traceability on mandatory claims or
       sections.
@@ -298,7 +298,7 @@ Out of scope for this story:
 
 **Execution checklist**
 - [ ] Add one stable Story 3 output location under
-      `benchmarks/density_matrix/artifacts/phase3_task8/story3_claim_traceability/`.
+      `benchmarks/density_matrix/artifacts/publication_evidence/claim_traceability/`.
 - [ ] Emit one artifact such as `claim_traceability_bundle.json`.
 - [ ] Record generation command, software metadata, and source coverage summary
       in the output.

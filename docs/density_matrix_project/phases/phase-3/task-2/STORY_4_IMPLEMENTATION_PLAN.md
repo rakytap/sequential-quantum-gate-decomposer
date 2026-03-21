@@ -249,7 +249,7 @@ Out of scope for this story:
 
 **Execution checklist**
 - [ ] Add focused reconstruction checks in
-      `tests/partitioning/test_phase3_task2.py`.
+      `tests/partitioning/test_planner_surface_descriptors.py`.
 - [ ] Cover at least one continuity case and at least one methods-oriented case.
 - [ ] Include fixtures with nontrivial local indexing and multi-parameter gate
       routing.
@@ -282,7 +282,7 @@ Out of scope for this story:
 
 **Execution checklist**
 - [ ] Add a dedicated Story 4 artifact location
-      (for example `benchmarks/density_matrix/artifacts/phase3_task2/story4_reconstruction/`).
+      (for example `benchmarks/density_matrix/artifacts/planner_surface/descriptor_reconstruction/`).
 - [ ] Emit supported cases through the Story 4 reconstruction bundle.
 - [ ] Record rerun commands, software metadata, and the reconstruction summary
       with the artifact.

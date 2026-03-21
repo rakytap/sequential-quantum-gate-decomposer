@@ -20,19 +20,19 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from benchmarks.density_matrix.performance_evidence.common import (
-    TASK7_CASE_SCHEMA_VERSION,
-    build_task7_selected_candidate,
-    build_task7_software_metadata,
-    task7_story_output_dir,
+    PERFORMANCE_EVIDENCE_CASE_SCHEMA_VERSION,
+    build_performance_evidence_selected_candidate,
+    build_performance_evidence_software_metadata,
+    performance_evidence_output_dir,
     write_artifact_bundle,
 )
 from benchmarks.density_matrix.performance_evidence.records import (
-    build_task7_benchmark_records,
+    build_performance_evidence_benchmark_records,
 )
 
-SUITE_NAME = "phase3_task7_story5_metric_surface"
+SUITE_NAME = "phase3_performance_evidence_metric_surface"
 ARTIFACT_FILENAME = "metric_surface_bundle.json"
-DEFAULT_OUTPUT_DIR = task7_story_output_dir("story5_metric_surface")
+DEFAULT_OUTPUT_DIR = performance_evidence_output_dir("metric_surface")
 ARTIFACT_CORE_FIELDS = (
     "suite_name",
     "status",
@@ -45,7 +45,7 @@ ARTIFACT_CORE_FIELDS = (
 
 
 def build_cases() -> list[dict]:
-    return build_task7_benchmark_records()
+    return build_performance_evidence_benchmark_records()
 
 
 def build_artifact_bundle(cases: list[dict]) -> dict:
@@ -70,9 +70,9 @@ def build_artifact_bundle(cases: list[dict]) -> dict:
     bundle = {
         "suite_name": SUITE_NAME,
         "status": "pass" if metric_surface_pass else "fail",
-        "record_schema_version": TASK7_CASE_SCHEMA_VERSION,
-        "software": build_task7_software_metadata(),
-        "selected_candidate": build_task7_selected_candidate(),
+        "record_schema_version": PERFORMANCE_EVIDENCE_CASE_SCHEMA_VERSION,
+        "software": build_performance_evidence_software_metadata(),
+        "selected_candidate": build_performance_evidence_selected_candidate(),
         "summary": {
             "total_cases": len(cases),
             "representative_review_cases": sum(

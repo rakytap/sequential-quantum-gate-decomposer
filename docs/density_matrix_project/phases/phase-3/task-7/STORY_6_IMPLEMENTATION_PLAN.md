@@ -266,7 +266,7 @@ Out of scope for this story:
 **Execution checklist**
 - [ ] Add a dedicated Story 6 artifact location
       (for example
-      `benchmarks/density_matrix/artifacts/phase3_task7/story6_diagnosis_path/`).
+      `benchmarks/density_matrix/artifacts/performance_evidence/diagnosis/`).
 - [ ] Emit diagnosis-only benchmark cases through one stable schema plus a
       stable bundle summary.
 - [ ] Record rerun commands, software metadata, and any referenced profiler

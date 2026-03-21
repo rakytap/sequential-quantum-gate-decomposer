@@ -50,7 +50,7 @@ Out of scope for this story:
   - and `build_descriptor_audit_record()` already emits a positive
     machine-reviewable Task 2 audit surface.
 - Story 5 of Task 2 already emitted one shared supported descriptor-audit bundle
-  under `benchmarks/density_matrix/artifacts/phase3_task2/story5_audit/`; Story
+  under `benchmarks/density_matrix/artifacts/planner_surface/descriptor_audit/`; Story
   3 should extend that evidence line into runtime handoff records rather than
   inventing a disconnected runtime bookkeeping language.
 - The likely shared implementation substrate therefore remains:
@@ -184,7 +184,7 @@ Out of scope for this story:
 - Handoff-shape drift is caught early.
 
 **Execution checklist**
-- [ ] Add focused checks in `tests/partitioning/test_phase3_task3.py` for
+- [ ] Add focused checks in `tests/partitioning/test_partitioned_runtime.py` for
       workload-class handoff stability.
 - [ ] Compare schema identity, partition-level handoff fields, and direct
       descriptor references across supported workload classes.
@@ -256,7 +256,7 @@ Out of scope for this story:
 
 **Execution checklist**
 - [ ] Add a dedicated Story 3 artifact location
-      (for example `benchmarks/density_matrix/artifacts/phase3_task3/story3_handoff/`).
+      (for example `benchmarks/density_matrix/artifacts/partitioned_runtime/runtime_handoff/`).
 - [ ] Emit at least one continuity case and one methods-oriented case through
       the Story 3 handoff surface.
 - [ ] Include planner schema identity, descriptor schema identity, partition

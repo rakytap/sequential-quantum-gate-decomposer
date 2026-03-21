@@ -565,7 +565,8 @@ Contract:
 - The existing state-vector FLOP model in `squander/partitioning/tools.py` may
   be reused as scaffolding or a comparison point, but it does not define the
   Phase 3 claim.
-- In the current delivered Task 5 result, the supported calibration surface is
+- In the current delivered planner-calibration result, the supported calibration
+  surface is
   the existing noisy planner with auditable `max_partition_qubits` span-budget
   settings; broader adapted `kahn` / `tdag` / `gtqcp` / `ilp` /
   `ilp-fusion-ca` families remain design-space or comparison references until
@@ -895,7 +896,8 @@ Reusing a state-vector cost model would weaken the scientific Phase 3 claim.
 
 #### Current Implementation Findings
 
-- The delivered minimum Task 5 result is a benchmark-calibrated selection rule
+- The delivered minimum planner-calibration result is a benchmark-calibrated
+  selection rule
   over auditable `max_partition_qubits` span-budget candidates on the existing
   noisy planner surface rather than a broader family of separately implemented
   noisy `kahn` / `tdag` / `gtqcp` / `ilp` variants.
@@ -906,7 +908,8 @@ Reusing a state-vector cost model would weaken the scientific Phase 3 claim.
   representative small continuity slice, but the benchmark-grounded selected
   winner inside the bounded candidate family has proved rerun-sensitive rather
   than permanently frozen.
-- The current supported Task 5 claim should therefore be phrased around the
+- The current supported planner-calibration claim should therefore be phrased
+  around the
   auditable selection rule, bounded candidate family, and explicit comparison
   baselines rather than around one invariant winner identity.
 
@@ -944,15 +947,15 @@ weaken both the paper and the broader PhD path.
 
 #### Current Implementation Findings
 
-- Task 6 is now materialized through
+- Correctness evidence is now materialized through
   `benchmarks/density_matrix/correctness_evidence/`, with one
-  `task6_validation_pipeline.py` entry point that emits eight
+  `validation_pipeline.py` entry point that emits eight
   machine-reviewable story bundles under
-  `benchmarks/density_matrix/artifacts/phase3_task6/`.
-- The current Task 6 correctness matrix is pinned to the currently selected Task
-  5 supported candidate, `span_budget_q2`, rather than to the full comparison
-  family, while preserving Task 5 claim-selection provenance fields on every
-  Task 6 positive record.
+  `benchmarks/density_matrix/artifacts/correctness_evidence/`.
+- The current correctness matrix is pinned to the currently selected
+  planner-calibration candidate, `span_budget_q2`, rather than to the full
+  comparison family, while preserving planner-calibration provenance fields on
+  every positive record.
 - The current counted supported matrix contains `25` positive cases:
   - `4` continuity-anchor cases at 4, 6, 8, and 10 qubits,
   - `3` mandatory microcases,
@@ -971,7 +974,7 @@ weaken both the paper and the broader PhD path.
   - `6` planner-entry unsupported cases,
   - `6` descriptor-generation unsupported cases,
   - and `5` runtime-stage unsupported cases.
-- The current Task 6 summary-consistency bundle closes the main correctness
+- The current summary-consistency bundle closes the main correctness
   claim from counted supported evidence while keeping explicit negative boundary
   evidence visible, rather than treating unsupported or deferred outcomes as
   hidden exclusions.
@@ -1008,13 +1011,14 @@ partitioned runtime exists.
 
 #### Current Implementation Findings
 
-- Task 7 is now materialized through
+- Performance evidence is now materialized through
   `benchmarks/density_matrix/performance_evidence/`, with one
-  `task7_validation_pipeline.py` entry point that emits eight
+  `validation_pipeline.py` entry point that emits eight
   machine-reviewable story bundles under
-  `benchmarks/density_matrix/artifacts/phase3_task7/`.
-- The current Task 7 benchmark package remains aligned with the current Task 6
-  correctness package and the currently selected bounded Task 5
+  `benchmarks/density_matrix/artifacts/performance_evidence/`.
+- The current benchmark package remains aligned with the current
+  correctness-evidence package and the currently selected bounded
+  planner-calibration
   `span_budget_q2` surface rather than reopening the broader comparison family.
 - The current counted supported benchmark matrix contains `34` positive cases:
   - `4` continuity-anchor cases at 4, 6, 8, and 10 qubits,
@@ -1030,7 +1034,7 @@ partitioned runtime exists.
   structured cases, one primary-seed sparse case for each required family and
   size.
 - All `6` representative review cases preserve the frozen exactness thresholds,
-  but none satisfies the positive performance threshold. The current Task 7
+  but none satisfies the positive performance threshold. The current
   benchmark package therefore closes the performance rule through the diagnosis
   branch rather than the measured-benefit branch.
 - The current diagnosis surface shows that the benchmarked fused path is real on
@@ -1038,10 +1042,10 @@ partitioned runtime exists.
   - supported islands left unfused,
   - slower wall-clock runtime than the sequential reference,
   - and no peak-memory reduction on the representative review set.
-- The current Task 7 summary-consistency bundle closes the benchmark layer
+- The current summary-consistency bundle closes the benchmark layer
   through diagnosis-grounded closure with `34` counted supported cases, `6`
   diagnosis-only cases, `0` positive-threshold pass cases, and carry-forward of
-  the `17` explicit Task 6 boundary cases.
+  the `17` explicit correctness-evidence boundary cases.
 
 ### Task 8: Paper 2 Evidence And Documentation Bundle
 

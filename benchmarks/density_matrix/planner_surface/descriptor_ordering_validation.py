@@ -22,15 +22,15 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from benchmarks.density_matrix.planner_surface.common import (
-    build_phase3_story1_continuity_vqe,
+    build_phase2_continuity_vqe,
     build_software_metadata,
 )
 from benchmarks.density_matrix.planner_surface.workloads import (
-    build_story2_microcase_descriptor_set,
-    build_story2_microcase_surface,
-    build_story2_structured_descriptor_set,
-    build_story2_structured_surface,
-    iter_story2_structured_descriptor_sets,
+    build_microcase_descriptor_set,
+    build_microcase_surface,
+    build_structured_descriptor_set,
+    build_structured_surface,
+    iter_structured_descriptor_sets,
 )
 from squander.partitioning.noisy_planner import (
     PHASE3_DESCRIPTOR_SCHEMA_VERSION,
@@ -38,15 +38,15 @@ from squander.partitioning.noisy_planner import (
     build_phase3_continuity_planner_surface,
 )
 
-SUITE_NAME = "phase3_task2_story3_descriptor_ordering"
+SUITE_NAME = "phase3_planner_surface_descriptor_ordering"
 ARTIFACT_FILENAME = "descriptor_ordering_bundle.json"
 DEFAULT_OUTPUT_DIR = (
     REPO_ROOT
     / "benchmarks"
     / "density_matrix"
     / "artifacts"
-    / "phase3_task2"
-    / "story3_ordering"
+    / "planner_surface"
+    / "descriptor_ordering"
 )
 ARTIFACT_CORE_FIELDS = (
     "suite_name",
@@ -120,7 +120,7 @@ def _case_from_surface(case_kind: str, metadata: dict, surface, descriptor_set) 
 
 
 def run_validation(verbose: bool = True) -> list[dict]:
-    continuity_vqe, _, _ = build_phase3_story1_continuity_vqe(4)
+    continuity_vqe, _, _ = build_phase2_continuity_vqe(4)
     continuity_case = _case_from_surface(
         "continuity",
         {"qbit_num": 4, "workload_id": "phase2_xxz_hea_q4_continuity"},
@@ -128,10 +128,10 @@ def run_validation(verbose: bool = True) -> list[dict]:
         build_phase3_continuity_partition_descriptor_set(continuity_vqe),
     )
 
-    boundary_surface = build_story2_microcase_surface(
+    boundary_surface = build_microcase_surface(
         "microcase_4q_partition_boundary_triplet"
     )
-    boundary_descriptor_set = build_story2_microcase_descriptor_set(
+    boundary_descriptor_set = build_microcase_descriptor_set(
         "microcase_4q_partition_boundary_triplet"
     )
     boundary_case = _case_from_surface(
@@ -145,14 +145,14 @@ def run_validation(verbose: bool = True) -> list[dict]:
         boundary_descriptor_set,
     )
 
-    structured_metadata, _ = next(iter(iter_story2_structured_descriptor_sets()))
-    structured_surface = build_story2_structured_surface(
+    structured_metadata, _ = next(iter(iter_structured_descriptor_sets()))
+    structured_surface = build_structured_surface(
         structured_metadata["family_name"],
         qbit_num=structured_metadata["qbit_num"],
         noise_pattern=structured_metadata["noise_pattern"],
         seed=structured_metadata["seed"],
     )
-    structured_descriptor_set = build_story2_structured_descriptor_set(
+    structured_descriptor_set = build_structured_descriptor_set(
         structured_metadata["family_name"],
         qbit_num=structured_metadata["qbit_num"],
         noise_pattern=structured_metadata["noise_pattern"],

@@ -80,7 +80,7 @@
     "scipy": "1.16.3"
   },
   "status": "pass",
-  "suite_name": "phase3_task1_story5_unsupported_planner_boundary",
+  "suite_name": "phase3_planner_surface_unsupported_planner",
   "summary": {
     "fallback_count": 0,
     "total_cases": 6,

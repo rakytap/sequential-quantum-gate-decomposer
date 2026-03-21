@@ -53,7 +53,7 @@ Out of scope for this story:
   - `execute_fused_with_reference()` in
     `benchmarks/density_matrix/partitioned_runtime/common.py`,
   - and the fused validation bundles under
-    `benchmarks/density_matrix/artifacts/phase3_task4/`.
+    `benchmarks/density_matrix/artifacts/partitioned_runtime/`.
 - Current Task 5 implementation learning: span-budget candidates above the
   present 2-qubit fused-kernel boundary can still be valid baseline
   partitioned-runtime comparison cases, but they are not automatically valid
@@ -265,7 +265,7 @@ Out of scope for this story:
 **Execution checklist**
 - [ ] Add a dedicated Story 4 artifact location
       (for example
-      `benchmarks/density_matrix/artifacts/phase3_task5/story4_correctness_gate/`).
+      `benchmarks/density_matrix/artifacts/planner_calibration/calibration_correctness/`).
 - [ ] Emit candidate identity, workload provenance, threshold metrics, pass or
       fail verdicts, and counted-status fields through one stable schema.
 - [ ] Record rerun commands and software metadata with the emitted bundle.

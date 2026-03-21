@@ -22,7 +22,7 @@ if str(REPO_ROOT) not in sys.path:
 
 from benchmarks.density_matrix.planner_surface.common import (
     build_case_metadata,
-    build_phase3_story1_continuity_vqe,
+    build_phase2_continuity_vqe,
     build_software_metadata,
 )
 from squander.partitioning.noisy_planner import (
@@ -31,15 +31,15 @@ from squander.partitioning.noisy_planner import (
     build_phase3_continuity_partition_descriptor_set,
 )
 
-SUITE_NAME = "phase3_task2_story1_continuity_descriptors"
+SUITE_NAME = "phase3_planner_surface_continuity_descriptors"
 ARTIFACT_FILENAME = "continuity_descriptor_bundle.json"
 DEFAULT_OUTPUT_DIR = (
     REPO_ROOT
     / "benchmarks"
     / "density_matrix"
     / "artifacts"
-    / "phase3_task2"
-    / "story1_continuity_descriptors"
+    / "planner_surface"
+    / "continuity_descriptor"
 )
 REQUIRED_QUBITS = (4, 6, 8, 10)
 ARTIFACT_CORE_FIELDS = (
@@ -54,7 +54,7 @@ ARTIFACT_CORE_FIELDS = (
 
 
 def build_case_result(qbit_num: int) -> dict:
-    vqe, _, topology = build_phase3_story1_continuity_vqe(qbit_num)
+    vqe, _, topology = build_phase2_continuity_vqe(qbit_num)
     descriptor_set = build_phase3_continuity_partition_descriptor_set(vqe)
     payload = descriptor_set.to_dict()
 
@@ -66,7 +66,7 @@ def build_case_result(qbit_num: int) -> dict:
     case.update(
         {
             "case_name": f"phase2_xxz_hea_q{qbit_num}_continuity",
-            "case_kind": "phase3_task2_story1_continuity_descriptors",
+            "case_kind": "phase3_planner_surface_continuity_descriptors",
             "status": "pass",
             "requested_mode": payload["requested_mode"],
             "schema_version": payload["schema_version"],

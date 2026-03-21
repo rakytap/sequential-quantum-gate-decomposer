@@ -1,0 +1,124 @@
+{
+  "cases": [
+    {
+      "actual_fused_execution": true,
+      "case_kind": "structured_family",
+      "case_name": "layered_nearest_neighbor_q8_sparse_seed20260318",
+      "deferred_region_count": 0,
+      "frobenius_norm_diff": 1.0193792192773324e-15,
+      "fused_region_count": 12,
+      "fused_semantics_pass": true,
+      "max_abs_diff": 1.1631705747361534e-16,
+      "metadata": {
+        "case_kind": "structured_family",
+        "family_name": "layered_nearest_neighbor",
+        "noise_pattern": "sparse",
+        "qbit_num": 8,
+        "seed": 20260318,
+        "workload_id": "layered_nearest_neighbor_q8_sparse_seed20260318"
+      },
+      "qbit_num": 8,
+      "rho_is_valid": true,
+      "runtime_path": "partitioned_density_descriptor_fused_unitary_islands",
+      "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
+      "supported_unfused_region_count": 11,
+      "trace_deviation": 4.47362466282333e-16
+    },
+    {
+      "actual_fused_execution": true,
+      "case_kind": "structured_family",
+      "case_name": "layered_nearest_neighbor_q10_sparse_seed20260318",
+      "deferred_region_count": 0,
+      "frobenius_norm_diff": 1.5442025865469579e-15,
+      "fused_region_count": 20,
+      "fused_semantics_pass": true,
+      "max_abs_diff": 1.5301652386684786e-16,
+      "metadata": {
+        "case_kind": "structured_family",
+        "family_name": "layered_nearest_neighbor",
+        "noise_pattern": "sparse",
+        "qbit_num": 10,
+        "seed": 20260318,
+        "workload_id": "layered_nearest_neighbor_q10_sparse_seed20260318"
+      },
+      "qbit_num": 10,
+      "rho_is_valid": true,
+      "runtime_path": "partitioned_density_descriptor_fused_unitary_islands",
+      "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
+      "supported_unfused_region_count": 18,
+      "trace_deviation": 1.1103269987108257e-15
+    },
+    {
+      "actual_fused_execution": true,
+      "case_kind": "microcase",
+      "case_name": "microcase_2q_entangler_local_depolarizing",
+      "deferred_region_count": 1,
+      "frobenius_norm_diff": 2.6904740981827623e-17,
+      "fused_region_count": 1,
+      "fused_semantics_pass": true,
+      "max_abs_diff": 1.962615573354719e-17,
+      "metadata": {
+        "case_kind": "microcase",
+        "case_name": "microcase_2q_entangler_local_depolarizing",
+        "noise_pattern": "sparse",
+        "operation_specs": [
+          {
+            "kind": "gate",
+            "name": "U3",
+            "param_count": 3,
+            "target_qbit": 0
+          },
+          {
+            "kind": "gate",
+            "name": "U3",
+            "param_count": 3,
+            "target_qbit": 1
+          },
+          {
+            "control_qbit": 0,
+            "kind": "gate",
+            "name": "CNOT",
+            "param_count": 0,
+            "target_qbit": 1
+          },
+          {
+            "fixed_value": 0.1,
+            "kind": "noise",
+            "name": "local_depolarizing",
+            "param_count": 0,
+            "source_gate_index": 2,
+            "target_qbit": 1
+          },
+          {
+            "kind": "gate",
+            "name": "U3",
+            "param_count": 3,
+            "target_qbit": 0
+          }
+        ],
+        "qbit_num": 2,
+        "workload_id": "microcase_2q_entangler_local_depolarizing"
+      },
+      "qbit_num": 2,
+      "rho_is_valid": true,
+      "runtime_path": "partitioned_density_descriptor_fused_unitary_islands",
+      "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
+      "supported_unfused_region_count": 1,
+      "trace_deviation": 2.2226670100039737e-16
+    }
+  ],
+  "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
+  "software": {
+    "numpy": "2.3.5",
+    "python": "3.13.9",
+    "scipy": "1.16.3"
+  },
+  "status": "pass",
+  "suite_name": "phase3_partitioned_runtime_fused_semantics",
+  "summary": {
+    "fused_semantics_passes": 3,
+    "optional_microcase_cases": 1,
+    "required_structured_cases": 2,
+    "total_cases": 3
+  }
+}

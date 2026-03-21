@@ -4,26 +4,26 @@ from copy import deepcopy
 from functools import lru_cache
 
 from benchmarks.density_matrix.planner_calibration.bundle import (
-    build_task5_calibration_bundle_payload,
+    build_planner_calibration_calibration_bundle_payload,
 )
 from benchmarks.density_matrix.planner_calibration.claim_selection import (
-    TASK5_CLAIM_STATUS_COMPARISON,
+    PLANNER_CALIBRATION_CLAIM_STATUS_COMPARISON,
 )
 
-TASK5_BOUNDARY_SCHEMA_VERSION = "phase3_task5_claim_boundary_v1"
+PLANNER_CALIBRATION_BOUNDARY_SCHEMA_VERSION = "phase3_planner_calibration_claim_boundary_v1"
 
 
 @lru_cache(maxsize=1)
-def _build_task5_boundary_payload_cached() -> dict:
-    bundle_payload = build_task5_calibration_bundle_payload()
+def _build_planner_calibration_boundary_payload_cached() -> dict:
+    bundle_payload = build_planner_calibration_calibration_bundle_payload()
     selected_candidate = bundle_payload["selected_candidate"]
     comparison_cases = [
         case
         for case in bundle_payload["cases"]
-        if case["claim_status"] == TASK5_CLAIM_STATUS_COMPARISON
+        if case["claim_status"] == PLANNER_CALIBRATION_CLAIM_STATUS_COMPARISON
     ]
     return {
-        "schema_version": TASK5_BOUNDARY_SCHEMA_VERSION,
+        "schema_version": PLANNER_CALIBRATION_BOUNDARY_SCHEMA_VERSION,
         "supported_claim": {
             "candidate_id": selected_candidate["candidate_id"],
             "planner_family": selected_candidate["planner_family"],
@@ -81,5 +81,5 @@ def _build_task5_boundary_payload_cached() -> dict:
     }
 
 
-def build_task5_boundary_payload() -> dict:
-    return deepcopy(_build_task5_boundary_payload_cached())
+def build_planner_calibration_boundary_payload() -> dict:
+    return deepcopy(_build_planner_calibration_boundary_payload_cached())

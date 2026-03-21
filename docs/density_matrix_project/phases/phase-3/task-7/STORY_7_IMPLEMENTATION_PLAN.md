@@ -47,15 +47,15 @@ Out of scope for this story:
   remain directly compatible with through:
   - `benchmarks/density_matrix/planner_calibration/bundle.py`,
   - `benchmarks/density_matrix/planner_calibration/calibration_bundle_validation.py`,
-  - and `benchmarks/density_matrix/artifacts/phase3_task5/`.
+  - and `benchmarks/density_matrix/artifacts/planner_calibration/`.
 - Task 6 already emits one shared correctness package Story 7 should remain
   directly compatible with through:
   - `benchmarks/density_matrix/correctness_evidence/bundle.py`,
   - `benchmarks/density_matrix/correctness_evidence/correctness_bundle_validation.py`,
-  - and `benchmarks/density_matrix/artifacts/phase3_task6/`.
+  - and `benchmarks/density_matrix/artifacts/correctness_evidence/`.
 - Task 4 already provides benchmark-package precedent through the Story 7
   performance bundle under
-  `benchmarks/density_matrix/artifacts/phase3_task4/story7_performance/`; Story
+  `benchmarks/density_matrix/artifacts/partitioned_runtime/fused_performance/`; Story
   7 should learn from that bounded benchmark bundle without copying its fused-
   specific scope blindly.
 - Story 7 should prefer additive reuse of shared Phase 3 field names over
@@ -200,7 +200,7 @@ Out of scope for this story:
   semantics.
 
 **Execution checklist**
-- [ ] Add focused checks in `tests/partitioning/test_phase3_task7.py` for
+- [ ] Add focused checks in `tests/partitioning/test_performance_evidence.py` for
       counted-versus-diagnosis-versus-excluded package compatibility.
 - [ ] Compare top-level provenance, case identity, planner-setting references,
       metric-field presence, threshold or diagnosis fields, and exclusion status
@@ -274,7 +274,7 @@ Out of scope for this story:
       `benchmark_bundle_validation.py` as the primary checker.
 - [ ] Add a dedicated Story 7 artifact location
       (for example
-      `benchmarks/density_matrix/artifacts/phase3_task7/story7_benchmark_package/`).
+      `benchmarks/density_matrix/artifacts/performance_evidence/benchmark_package/`).
 - [ ] Emit Task 7 counted, diagnosis-only, and excluded records through one
       stable schema plus a stable bundle summary.
 - [ ] Record rerun commands and software metadata with the emitted package.

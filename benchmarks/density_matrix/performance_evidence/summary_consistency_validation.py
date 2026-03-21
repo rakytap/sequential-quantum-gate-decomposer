@@ -23,15 +23,15 @@ from benchmarks.density_matrix.performance_evidence.benchmark_bundle_validation 
     build_artifact_bundle as build_story7_bundle,
 )
 from benchmarks.density_matrix.performance_evidence.common import (
-    TASK7_SUMMARY_SCHEMA_VERSION,
-    build_task7_software_metadata,
-    task7_story_output_dir,
+    PERFORMANCE_EVIDENCE_SUMMARY_SCHEMA_VERSION,
+    build_performance_evidence_software_metadata,
+    performance_evidence_output_dir,
     write_artifact_bundle,
 )
 
-SUITE_NAME = "phase3_task7_story8_summary_consistency"
+SUITE_NAME = "phase3_performance_evidence_summary_consistency"
 ARTIFACT_FILENAME = "summary_consistency_bundle.json"
-DEFAULT_OUTPUT_DIR = task7_story_output_dir("story8_summary_consistency")
+DEFAULT_OUTPUT_DIR = performance_evidence_output_dir("summary_consistency")
 ARTIFACT_CORE_FIELDS = (
     "suite_name",
     "status",
@@ -63,7 +63,7 @@ def build_artifact_bundle() -> dict:
         and story7_bundle["summary"]["excluded_cases"] == excluded_cases
         and story7_bundle["summary"]["representative_review_cases"]
         == representative_review_cases
-        and story7_bundle["summary"]["task6_boundary_cases"] == len(negative_cases)
+        and story7_bundle["summary"]["correctness_evidence_boundary_cases"] == len(negative_cases)
     )
 
     positive_benchmark_claim_completed = positive_threshold_pass_cases >= 1
@@ -80,8 +80,8 @@ def build_artifact_bundle() -> dict:
     bundle = {
         "suite_name": SUITE_NAME,
         "status": "pass" if summary_consistency_pass and main_benchmark_claim_completed else "fail",
-        "schema_version": TASK7_SUMMARY_SCHEMA_VERSION,
-        "software": build_task7_software_metadata(),
+        "schema_version": PERFORMANCE_EVIDENCE_SUMMARY_SCHEMA_VERSION,
+        "software": build_performance_evidence_software_metadata(),
         "selected_candidate": story7_bundle["selected_candidate"],
         "requirements": {
             "positive_claim_rule": (
@@ -108,11 +108,11 @@ def build_artifact_bundle() -> dict:
             "diagnosis_only_cases": diagnosis_only_cases,
             "excluded_cases": excluded_cases,
             "representative_review_cases": representative_review_cases,
-            "task6_boundary_cases": len(negative_cases),
+            "correctness_evidence_boundary_cases": len(negative_cases),
         },
         "required_artifacts": [
             {
-                "artifact_id": "story7_benchmark_package",
+                "artifact_id": "benchmark_package",
                 "suite_name": story7_bundle["suite_name"],
                 "status": story7_bundle["status"],
                 "schema_version": story7_bundle["schema_version"],

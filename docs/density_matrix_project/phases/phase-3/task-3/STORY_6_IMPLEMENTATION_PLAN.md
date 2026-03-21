@@ -42,7 +42,7 @@ Out of scope for this story:
   a descriptor-audit provenance tuple in `squander/partitioning/noisy_planner.py`.
   Story 6 should extend that vocabulary rather than replace it.
 - Story 5 of Task 2 already emitted a shared descriptor-audit bundle under
-  `benchmarks/density_matrix/artifacts/phase3_task2/story5_audit/`; Story 6
+  `benchmarks/density_matrix/artifacts/planner_surface/descriptor_audit/`; Story 6
   should keep overlapping provenance and schema identity fields aligned with
   that positive descriptor surface.
 - Story 5 of Task 3 now also defines the positive runtime result surface whose
@@ -183,7 +183,7 @@ Out of scope for this story:
   correctness.
 
 **Execution checklist**
-- [ ] Add focused checks in `tests/partitioning/test_phase3_task3.py` for
+- [ ] Add focused checks in `tests/partitioning/test_partitioned_runtime.py` for
       workload-class runtime-audit stability.
 - [ ] Compare top-level provenance, runtime-path classification, schema
       identity, and summary-field presence across supported workload classes.
@@ -218,7 +218,7 @@ Out of scope for this story:
 
 **Execution checklist**
 - [ ] Add a dedicated Story 6 artifact location
-      (for example `benchmarks/density_matrix/artifacts/phase3_task3/story6_audit/`).
+      (for example `benchmarks/density_matrix/artifacts/partitioned_runtime/runtime_audit/`).
 - [ ] Emit at least one continuity case and one methods-oriented case through
       the shared Task 3 runtime-audit surface.
 - [ ] Include schema identity, case-level provenance, runtime-path labels,

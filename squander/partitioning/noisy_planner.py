@@ -29,7 +29,7 @@ SUPPORTED_PLANNER_SOURCE_TYPES = frozenset(
 
 
 class NoisyPlannerValidationError(ValueError):
-    """Structured planner-entry validation error for Phase 3 Task 1."""
+    """Structured planner-entry validation error for the Phase 3 noisy planner surface."""
 
     def __init__(
         self,
@@ -61,7 +61,7 @@ class NoisyPlannerValidationError(ValueError):
 
 
 class NoisyDescriptorValidationError(ValueError):
-    """Structured descriptor-generation validation error for Phase 3 Task 2."""
+    """Structured descriptor-generation validation error for the Phase 3 partition descriptor surface."""
 
     def __init__(
         self,
@@ -1084,7 +1084,7 @@ def _validate_descriptor_request(
             source_type=surface.source_type,
             requested_mode=surface.requested_mode,
             workload_id=surface.workload_id,
-            reason="Task 2 descriptor generation requires max_partition_qubits > 0",
+            reason="Partition descriptor generation requires max_partition_qubits > 0",
         )
     if surface.max_qubit_span > max_partition_qubits:
         raise NoisyDescriptorValidationError(
@@ -1095,7 +1095,7 @@ def _validate_descriptor_request(
             requested_mode=surface.requested_mode,
             workload_id=surface.workload_id,
             reason=(
-                "Task 2 descriptor generation requires max_partition_qubits >= "
+                "Partition descriptor generation requires max_partition_qubits >= "
                 "the canonical max_qubit_span {} for workload '{}'".format(
                     surface.max_qubit_span, surface.workload_id
                 )
@@ -1302,7 +1302,7 @@ def validate_partition_descriptor_set(
                 first_unsupported_condition="partition_index",
                 failure_stage="descriptor_validation",
                 reason=(
-                    "Task 2 descriptors require contiguous partition indices starting "
+                    "Partition descriptors require contiguous partition indices starting "
                     "at 0; got partition_index {} while expecting {}".format(
                         partition.partition_index, expected_partition_index
                     )
@@ -1314,7 +1314,7 @@ def validate_partition_descriptor_set(
                 category="descriptor_request",
                 first_unsupported_condition="empty_partition",
                 failure_stage="descriptor_validation",
-                reason="Task 2 descriptors do not support empty partitions",
+                reason="Partition descriptors do not support empty partitions",
             )
 
         if len(set(partition.local_to_global_qbits)) != len(partition.local_to_global_qbits):
@@ -1324,7 +1324,7 @@ def validate_partition_descriptor_set(
                 first_unsupported_condition="duplicate_global_qbit",
                 failure_stage="descriptor_validation",
                 reason=(
-                    "Task 2 descriptor partition {} contains duplicate entries in "
+                    "Partition descriptor partition {} contains duplicate entries in "
                     "local_to_global_qbits".format(partition.partition_index)
                 ),
             )
@@ -1339,7 +1339,7 @@ def validate_partition_descriptor_set(
                 first_unsupported_condition="canonical_operation_indices",
                 failure_stage="descriptor_validation",
                 reason=(
-                    "Task 2 descriptor partition {} must keep canonical_operation_indices "
+                    "Partition descriptor partition {} must keep canonical_operation_indices "
                     "aligned with ordered member canonical indices".format(
                         partition.partition_index
                     )
@@ -1361,7 +1361,7 @@ def validate_partition_descriptor_set(
                     first_unsupported_condition="partition_member_index",
                     failure_stage="descriptor_validation",
                     reason=(
-                        "Task 2 descriptor partition {} requires contiguous "
+                        "Partition descriptor partition {} requires contiguous "
                         "partition_member_index values".format(partition.partition_index)
                     ),
                 )
@@ -1372,7 +1372,7 @@ def validate_partition_descriptor_set(
                     first_unsupported_condition="canonical_operation_index",
                     failure_stage="descriptor_validation",
                     reason=(
-                        "Task 2 descriptors must preserve contiguous canonical "
+                        "Partition descriptors must preserve contiguous canonical "
                         "operation coverage; partition {} member {} expected canonical "
                         "index {} but got {}".format(
                             partition.partition_index,
@@ -1394,7 +1394,7 @@ def validate_partition_descriptor_set(
                     first_unsupported_condition="local_qubit_support",
                     failure_stage="descriptor_validation",
                     reason=(
-                        "Task 2 descriptor partition {} has inconsistent local_qubit_support "
+                        "Partition descriptor partition {} has inconsistent local_qubit_support "
                         "for canonical operation {}".format(
                             partition.partition_index, member.canonical_operation_index
                         )
@@ -1412,7 +1412,7 @@ def validate_partition_descriptor_set(
                     first_unsupported_condition="local_target_qbit",
                     failure_stage="descriptor_validation",
                     reason=(
-                        "Task 2 descriptor partition {} has inconsistent local_target_qbit "
+                        "Partition descriptor partition {} has inconsistent local_target_qbit "
                         "for canonical operation {}".format(
                             partition.partition_index, member.canonical_operation_index
                         )
@@ -1430,7 +1430,7 @@ def validate_partition_descriptor_set(
                     first_unsupported_condition="local_control_qbit",
                     failure_stage="descriptor_validation",
                     reason=(
-                        "Task 2 descriptor partition {} has inconsistent local_control_qbit "
+                        "Partition descriptor partition {} has inconsistent local_control_qbit "
                         "for canonical operation {}".format(
                             partition.partition_index, member.canonical_operation_index
                         )
@@ -1443,7 +1443,7 @@ def validate_partition_descriptor_set(
                     first_unsupported_condition="local_param_start",
                     failure_stage="descriptor_validation",
                     reason=(
-                        "Task 2 descriptor partition {} has non-contiguous local_param_start "
+                        "Partition descriptor partition {} has non-contiguous local_param_start "
                         "for canonical operation {}".format(
                             partition.partition_index, member.canonical_operation_index
                         )
@@ -1462,7 +1462,7 @@ def validate_partition_descriptor_set(
                 first_unsupported_condition="parameter_routing",
                 failure_stage="descriptor_validation",
                 reason=(
-                    "Task 2 descriptor partition {} must keep parameter_routing aligned "
+                    "Partition descriptor partition {} must keep parameter_routing aligned "
                     "with ordered member parameter metadata".format(partition.partition_index)
                 ),
             )
@@ -1475,7 +1475,7 @@ def validate_partition_descriptor_set(
             first_unsupported_condition="descriptor_member_count",
             failure_stage="descriptor_validation",
             reason=(
-                "Task 2 descriptor coverage ended at canonical index {} but "
+                "Partition descriptor coverage ended at canonical index {} but "
                 "descriptor_member_count reports {}".format(
                     expected_canonical_index, descriptor_set.descriptor_member_count
                 )
@@ -1497,7 +1497,7 @@ def validate_partition_descriptor_set_against_surface(
             first_unsupported_condition="planner_schema_version",
             failure_stage="descriptor_validation",
             reason=(
-                "Task 2 descriptor planner_schema_version '{}' does not match the "
+                "Partition descriptor planner_schema_version '{}' does not match the "
                 "canonical planner surface schema '{}'".format(
                     validated.planner_schema_version, surface.schema_version
                 )
@@ -1518,7 +1518,7 @@ def validate_partition_descriptor_set_against_surface(
             first_unsupported_condition="provenance_mismatch",
             failure_stage="descriptor_validation",
             reason=(
-                "Task 2 descriptor provenance and size metadata must match the "
+                "Partition descriptor provenance and size metadata must match the "
                 "canonical planner surface for workload '{}'".format(surface.workload_id)
             ),
         )
@@ -1529,7 +1529,7 @@ def validate_partition_descriptor_set_against_surface(
             first_unsupported_condition="operation_count",
             failure_stage="descriptor_validation",
             reason=(
-                "Task 2 descriptor workload '{}' records {} descriptor members but "
+                "Partition descriptor workload '{}' records {} descriptor members but "
                 "the canonical surface contains {} operations".format(
                     surface.workload_id,
                     validated.descriptor_member_count,
@@ -1544,7 +1544,7 @@ def validate_partition_descriptor_set_against_surface(
             first_unsupported_condition="noise_count",
             failure_stage="descriptor_validation",
             reason=(
-                "Task 2 descriptor workload '{}' records {} noise operations but "
+                "Partition descriptor workload '{}' records {} noise operations but "
                 "the canonical surface contains {}".format(
                     surface.workload_id,
                     validated.noise_count,
@@ -1585,7 +1585,7 @@ def validate_partition_descriptor_set_against_surface(
                     first_unsupported_condition=field,
                     failure_stage="descriptor_validation",
                     reason=(
-                        "Task 2 descriptor canonical operation {} mismatches the "
+                        "Partition descriptor canonical operation {} mismatches the "
                         "planner surface field '{}'".format(
                             member.canonical_operation_index, field
                         )
@@ -1604,7 +1604,7 @@ def validate_partition_descriptor_set_against_surface(
                 first_unsupported_condition="qubit_support",
                 failure_stage="descriptor_validation",
                 reason=(
-                    "Task 2 descriptor canonical operation {} mismatches the "
+                    "Partition descriptor canonical operation {} mismatches the "
                     "planner surface qubit_support".format(
                         member.canonical_operation_index
                     )

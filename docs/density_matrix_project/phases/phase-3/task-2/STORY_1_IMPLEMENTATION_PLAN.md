@@ -220,7 +220,7 @@ Out of scope for this story:
 
 **Execution checklist**
 - [ ] Add a focused Task 2 regression slice in
-      `tests/partitioning/test_phase3_task2.py` or a tightly related successor.
+      `tests/partitioning/test_planner_surface_descriptors.py` or a tightly related successor.
 - [ ] Check descriptor emission for supported 4, 6, 8, and 10 qubit continuity
       cases.
 - [ ] Assert stable partition ordering and stable canonical-operation references
@@ -254,7 +254,7 @@ Out of scope for this story:
 
 **Execution checklist**
 - [ ] Add a dedicated Story 1 artifact location
-      (for example `benchmarks/density_matrix/artifacts/phase3_task2/story1_continuity_descriptors/`).
+      (for example `benchmarks/density_matrix/artifacts/planner_surface/continuity_descriptor/`).
 - [ ] Record workload ID, partition ordering, canonical-operation references,
       and partition-span summaries for supported continuity cases.
 - [ ] Record the rerun command and software metadata with the artifact.

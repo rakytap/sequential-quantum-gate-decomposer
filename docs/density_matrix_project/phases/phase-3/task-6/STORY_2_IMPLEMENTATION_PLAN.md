@@ -51,7 +51,7 @@ Out of scope for this story:
   - `execute_fused_with_reference()` in
     `benchmarks/density_matrix/partitioned_runtime/common.py`,
   - `fused_semantics_validation.py`,
-  - and `benchmarks/density_matrix/artifacts/phase3_task4/`.
+  - and `benchmarks/density_matrix/artifacts/partitioned_runtime/`.
 - The current implementation learning is that Story 2 should run the shared Task
   6 positive matrix through the fused-capable runtime surface from the start and
   let the actual runtime path resolve to fused or baseline per case, rather than
@@ -264,7 +264,7 @@ Out of scope for this story:
 **Execution checklist**
 - [ ] Add a dedicated Story 2 artifact location
       (for example
-      `benchmarks/density_matrix/artifacts/phase3_task6/story2_sequential_gate/`).
+      `benchmarks/density_matrix/artifacts/correctness_evidence/sequential_correctness/`).
 - [ ] Emit case identity, runtime-path identity, internal metrics, threshold
       verdicts, and counted-status fields through one stable schema.
 - [ ] Record rerun commands and software metadata with the emitted bundle.

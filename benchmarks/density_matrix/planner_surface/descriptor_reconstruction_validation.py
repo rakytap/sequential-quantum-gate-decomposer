@@ -22,13 +22,13 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from benchmarks.density_matrix.planner_surface.common import (
-    build_phase3_story1_continuity_vqe,
+    build_phase2_continuity_vqe,
     build_software_metadata,
 )
 from benchmarks.density_matrix.planner_surface.workloads import (
-    build_story2_microcase_descriptor_set,
-    build_story2_structured_descriptor_set,
-    iter_story2_structured_descriptor_sets,
+    build_microcase_descriptor_set,
+    build_structured_descriptor_set,
+    iter_structured_descriptor_sets,
 )
 from squander.partitioning.noisy_planner import (
     PHASE3_DESCRIPTOR_SCHEMA_VERSION,
@@ -36,15 +36,15 @@ from squander.partitioning.noisy_planner import (
     validate_partition_descriptor_set,
 )
 
-SUITE_NAME = "phase3_task2_story4_descriptor_reconstruction"
+SUITE_NAME = "phase3_planner_surface_descriptor_reconstruction"
 ARTIFACT_FILENAME = "descriptor_reconstruction_bundle.json"
 DEFAULT_OUTPUT_DIR = (
     REPO_ROOT
     / "benchmarks"
     / "density_matrix"
     / "artifacts"
-    / "phase3_task2"
-    / "story4_reconstruction"
+    / "planner_surface"
+    / "descriptor_reconstruction"
 )
 ARTIFACT_CORE_FIELDS = (
     "suite_name",
@@ -87,7 +87,7 @@ def _reconstruction_case(case_kind: str, metadata: dict, descriptor_set) -> dict
 
 
 def run_validation(verbose: bool = True) -> list[dict]:
-    continuity_vqe, _, _ = build_phase3_story1_continuity_vqe(4)
+    continuity_vqe, _, _ = build_phase2_continuity_vqe(4)
     continuity_case = _reconstruction_case(
         "continuity",
         {"qbit_num": 4},
@@ -97,14 +97,14 @@ def run_validation(verbose: bool = True) -> list[dict]:
     boundary_case = _reconstruction_case(
         "boundary_microcase",
         {"case_name": "microcase_4q_partition_boundary_triplet", "qbit_num": 4},
-        build_story2_microcase_descriptor_set("microcase_4q_partition_boundary_triplet"),
+        build_microcase_descriptor_set("microcase_4q_partition_boundary_triplet"),
     )
 
-    structured_metadata, _ = next(iter(iter_story2_structured_descriptor_sets()))
+    structured_metadata, _ = next(iter(iter_structured_descriptor_sets()))
     structured_case = _reconstruction_case(
         "structured_family",
         structured_metadata,
-        build_story2_structured_descriptor_set(
+        build_structured_descriptor_set(
             structured_metadata["family_name"],
             qbit_num=structured_metadata["qbit_num"],
             noise_pattern=structured_metadata["noise_pattern"],

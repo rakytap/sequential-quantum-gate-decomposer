@@ -217,7 +217,7 @@
     "scipy": "1.16.3"
   },
   "status": "pass",
-  "suite_name": "phase3_task1_story4_legacy_exact_lowering",
+  "suite_name": "phase3_planner_surface_legacy_exact_lowering",
   "summary": {
     "negative_cases": 2,
     "positive_cases": 2,

@@ -6,15 +6,15 @@ import statistics
 from collections import defaultdict
 
 from benchmarks.density_matrix.planner_calibration.calibration_records import (
-    build_task5_calibration_records,
+    build_planner_calibration_calibration_records,
 )
 
-TASK5_CLAIM_SELECTION_SCHEMA_VERSION = "phase3_task5_claim_selection_v1"
-TASK5_CLAIM_SELECTION_RULE = (
+PLANNER_CALIBRATION_CLAIM_SELECTION_SCHEMA_VERSION = "phase3_planner_calibration_claim_selection_v1"
+PLANNER_CALIBRATION_CLAIM_SELECTION_RULE = (
     "min_median_density_aware_score_then_min_p90_then_smaller_span_budget"
 )
-TASK5_CLAIM_STATUS_SUPPORTED = "supported_claim"
-TASK5_CLAIM_STATUS_COMPARISON = "comparison_baseline"
+PLANNER_CALIBRATION_CLAIM_STATUS_SUPPORTED = "supported_claim"
+PLANNER_CALIBRATION_CLAIM_STATUS_COMPARISON = "comparison_baseline"
 
 
 def _p90(values: list[float]) -> float:
@@ -57,8 +57,8 @@ def select_supported_candidate(candidate_summaries: list[dict]) -> dict:
 
 
 @lru_cache(maxsize=1)
-def _build_task5_claim_selection_payload_cached() -> dict:
-    records = build_task5_calibration_records()
+def _build_planner_calibration_claim_selection_payload_cached() -> dict:
+    records = build_planner_calibration_calibration_records()
     grouped_records: dict[str, list[dict]] = defaultdict(list)
     for record in records:
         grouped_records[record["candidate_id"]].append(record)
@@ -74,25 +74,29 @@ def _build_task5_claim_selection_payload_cached() -> dict:
     for record in records:
         annotated_record = dict(record)
         annotated_record["claim_selection_schema_version"] = (
-            TASK5_CLAIM_SELECTION_SCHEMA_VERSION
+            PLANNER_CALIBRATION_CLAIM_SELECTION_SCHEMA_VERSION
         )
-        annotated_record["claim_selection_rule"] = TASK5_CLAIM_SELECTION_RULE
+        annotated_record["claim_selection_rule"] = PLANNER_CALIBRATION_CLAIM_SELECTION_RULE
         annotated_record["selected_candidate_id"] = selected_candidate_id
         annotated_record["claim_status"] = (
-            TASK5_CLAIM_STATUS_SUPPORTED
+            PLANNER_CALIBRATION_CLAIM_STATUS_SUPPORTED
             if record["candidate_id"] == selected_candidate_id
-            else TASK5_CLAIM_STATUS_COMPARISON
+            else PLANNER_CALIBRATION_CLAIM_STATUS_COMPARISON
         )
         annotated_records.append(annotated_record)
 
     return {
-        "schema_version": TASK5_CLAIM_SELECTION_SCHEMA_VERSION,
-        "claim_selection_rule": TASK5_CLAIM_SELECTION_RULE,
+        "schema_version": PLANNER_CALIBRATION_CLAIM_SELECTION_SCHEMA_VERSION,
+        "claim_selection_rule": PLANNER_CALIBRATION_CLAIM_SELECTION_RULE,
         "selected_candidate": selected_summary,
         "candidate_summaries": candidate_summaries,
         "cases": annotated_records,
     }
 
 
-def build_task5_claim_selection_payload() -> dict:
-    return deepcopy(_build_task5_claim_selection_payload_cached())
+def build_planner_calibration_claim_selection_payload() -> dict:
+    return deepcopy(_build_planner_calibration_claim_selection_payload_cached())
+
+
+def build_claim_selection_payload() -> dict:
+    return build_planner_calibration_claim_selection_payload()

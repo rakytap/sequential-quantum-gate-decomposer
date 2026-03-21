@@ -32,7 +32,7 @@ if str(REPO_ROOT) not in sys.path:
 from benchmarks.density_matrix.workflow_evidence.workflow_contract_validation import (
     ARTIFACT_FILENAME as STORY1_ARTIFACT_FILENAME,
     CONTRACT_VERSION,
-    DEFAULT_OUTPUT_DIR as TASK6_DEFAULT_OUTPUT_DIR,
+    DEFAULT_OUTPUT_DIR as CORRECTNESS_EVIDENCE_DEFAULT_OUTPUT_DIR,
     REFERENCE_BACKEND,
     WORKFLOW_ID,
     build_software_metadata,
@@ -48,10 +48,10 @@ from benchmarks.density_matrix.workflow_evidence.end_to_end_trace_validation imp
 
 SUITE_NAME = "matrix_baseline_validation"
 ARTIFACT_FILENAME = "matrix_baseline_bundle.json"
-DEFAULT_OUTPUT_DIR = TASK6_DEFAULT_OUTPUT_DIR
+DEFAULT_OUTPUT_DIR = CORRECTNESS_EVIDENCE_DEFAULT_OUTPUT_DIR
 STORY1_CONTRACT_PATH = DEFAULT_OUTPUT_DIR / STORY1_ARTIFACT_FILENAME
 STORY2_BUNDLE_PATH = DEFAULT_OUTPUT_DIR / STORY2_ARTIFACT_FILENAME
-TASK5_WORKFLOW_BUNDLE_PATH = (
+PLANNER_CALIBRATION_WORKFLOW_BUNDLE_PATH = (
     REPO_ROOT
     / "benchmarks"
     / "density_matrix"
@@ -112,8 +112,8 @@ def get_documented_anchor_qubit(story1_contract):
     return int(story1_contract["thresholds"]["documented_anchor_qubit"])
 
 
-def build_requirement_metadata(task5_workflow_bundle, story1_contract):
-    requirements = task5_workflow_bundle["requirements"]
+def build_requirement_metadata(planner_calibration_workflow_bundle, story1_contract):
+    requirements = planner_calibration_workflow_bundle["requirements"]
     return {
         "workflow_id": story1_contract["workflow_id"],
         "contract_version": story1_contract["contract_version"],
@@ -132,9 +132,9 @@ def build_requirement_metadata(task5_workflow_bundle, story1_contract):
     }
 
 
-def build_threshold_metadata(story1_contract, task5_workflow_bundle):
+def build_threshold_metadata(story1_contract, planner_calibration_workflow_bundle):
     contract_thresholds = story1_contract["thresholds"]
-    workflow_thresholds = task5_workflow_bundle["thresholds"]
+    workflow_thresholds = planner_calibration_workflow_bundle["thresholds"]
     threshold_fields = (
         "absolute_energy_error",
         "rho_is_valid_tol",
@@ -252,12 +252,12 @@ def _enrich_case(case, story1_contract):
     return case
 
 
-def build_artifact_bundle(story1_contract, story2_bundle, task5_workflow_bundle):
-    requirements = build_requirement_metadata(task5_workflow_bundle, story1_contract)
+def build_artifact_bundle(story1_contract, story2_bundle, planner_calibration_workflow_bundle):
+    requirements = build_requirement_metadata(planner_calibration_workflow_bundle, story1_contract)
     threshold_metadata, workflow_thresholds_match_contract = build_threshold_metadata(
-        story1_contract, task5_workflow_bundle
+        story1_contract, planner_calibration_workflow_bundle
     )
-    cases = [_enrich_case(case, story1_contract) for case in task5_workflow_bundle["cases"]]
+    cases = [_enrich_case(case, story1_contract) for case in planner_calibration_workflow_bundle["cases"]]
     for case in cases:
         validate_case_payload(case)
 
@@ -278,9 +278,9 @@ def build_artifact_bundle(story1_contract, story2_bundle, task5_workflow_bundle)
         for case in cases
     )
     workflow_inventory_matches_contract = bool(
-        task5_workflow_bundle["requirements"]["mandatory_workflow_qubits"]
+        planner_calibration_workflow_bundle["requirements"]["mandatory_workflow_qubits"]
         == requirements["mandatory_workflow_qubits"]
-        and task5_workflow_bundle["requirements"]["fixed_parameter_sets_per_size"]
+        and planner_calibration_workflow_bundle["requirements"]["fixed_parameter_sets_per_size"]
         == requirements["fixed_parameter_sets_per_size"]
     )
     documented_10q_anchor_present = any(
@@ -289,7 +289,7 @@ def build_artifact_bundle(story1_contract, story2_bundle, task5_workflow_bundle)
     matrix_gate_completed = bool(
         story1_contract["status"] == "pass"
         and story2_bundle["status"] == "pass"
-        and task5_workflow_bundle["status"] == "pass"
+        and planner_calibration_workflow_bundle["status"] == "pass"
         and case_identity["stable_case_ids_present"]
         and case_identity["stable_parameter_set_ids_present"]
         and passed_cases == total_cases
@@ -322,7 +322,7 @@ def build_artifact_bundle(story1_contract, story2_bundle, task5_workflow_bundle)
             "git_revision": get_git_revision(),
             "story1_contract_path": str(STORY1_CONTRACT_PATH),
             "story2_bundle_path": str(STORY2_BUNDLE_PATH),
-            "task5_workflow_bundle_path": str(TASK5_WORKFLOW_BUNDLE_PATH),
+            "planner_calibration_workflow_bundle_path": str(PLANNER_CALIBRATION_WORKFLOW_BUNDLE_PATH),
         },
         "summary": {
             "total_cases": total_cases,
@@ -356,10 +356,10 @@ def build_artifact_bundle(story1_contract, story2_bundle, task5_workflow_bundle)
                 "status": story2_bundle["status"],
                 "summary": story2_bundle["summary"],
             },
-            "task5_workflow_baseline_reference": {
-                "suite_name": task5_workflow_bundle["suite_name"],
-                "status": task5_workflow_bundle["status"],
-                "summary": task5_workflow_bundle["summary"],
+            "planner_calibration_workflow_baseline_reference": {
+                "suite_name": planner_calibration_workflow_bundle["suite_name"],
+                "status": planner_calibration_workflow_bundle["status"],
+                "summary": planner_calibration_workflow_bundle["summary"],
             },
         },
         "cases": cases,
@@ -460,16 +460,16 @@ def run_validation(
     *,
     story1_contract_path: Path = STORY1_CONTRACT_PATH,
     story2_bundle_path: Path = STORY2_BUNDLE_PATH,
-    task5_workflow_bundle_path: Path = TASK5_WORKFLOW_BUNDLE_PATH,
+    planner_calibration_workflow_bundle_path: Path = PLANNER_CALIBRATION_WORKFLOW_BUNDLE_PATH,
     verbose=False,
 ):
     story1_contract = _load_story1_contract(story1_contract_path)
     story2_bundle = _load_story2_bundle(story2_bundle_path)
-    task5_workflow_bundle = _load_json(task5_workflow_bundle_path)
+    planner_calibration_workflow_bundle = _load_json(planner_calibration_workflow_bundle_path)
     bundle = build_artifact_bundle(
         story1_contract,
         story2_bundle,
-        task5_workflow_bundle,
+        planner_calibration_workflow_bundle,
     )
     if verbose:
         print(
@@ -481,7 +481,7 @@ def run_validation(
                 bundle["summary"]["documented_10q_anchor_present"],
             )
         )
-    return story1_contract, story2_bundle, task5_workflow_bundle, bundle
+    return story1_contract, story2_bundle, planner_calibration_workflow_bundle, bundle
 
 
 def parse_args():
@@ -507,7 +507,7 @@ def parse_args():
     parser.add_argument(
         "--task5-workflow-bundle-path",
         type=Path,
-        default=TASK5_WORKFLOW_BUNDLE_PATH,
+        default=PLANNER_CALIBRATION_WORKFLOW_BUNDLE_PATH,
         help="Path to the committed Task 5 workflow baseline bundle.",
     )
     parser.add_argument(
@@ -523,7 +523,7 @@ def main():
     _, _, _, bundle = run_validation(
         story1_contract_path=args.story1_contract_path,
         story2_bundle_path=args.story2_bundle_path,
-        task5_workflow_bundle_path=args.task5_workflow_bundle_path,
+        planner_calibration_workflow_bundle_path=args.planner_calibration_workflow_bundle_path,
         verbose=not args.quiet,
     )
     output_path = args.output_dir / ARTIFACT_FILENAME

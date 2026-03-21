@@ -4,26 +4,26 @@ from copy import deepcopy
 from functools import lru_cache
 
 from benchmarks.density_matrix.correctness_evidence.common import (
-    TASK6_CORRECTNESS_PACKAGE_SCHEMA_VERSION,
-    build_task6_selected_candidate,
+    CORRECTNESS_PACKAGE_SCHEMA_VERSION,
+    build_selected_candidate,
 )
 from benchmarks.density_matrix.correctness_evidence.records import (
-    build_task6_negative_records,
-    build_task6_positive_records,
-    task6_counted_supported_case,
+    build_negative_records,
+    build_positive_records,
+    counted_supported_case,
 )
 
 
 @lru_cache(maxsize=1)
-def _build_task6_correctness_package_payload_cached() -> dict:
-    positive_cases = build_task6_positive_records()
-    negative_cases = build_task6_negative_records()
+def _build_correctness_package_payload_cached() -> dict:
+    positive_cases = build_positive_records()
+    negative_cases = build_negative_records()
     counted_supported_cases = [
-        case for case in positive_cases if task6_counted_supported_case(case)
+        case for case in positive_cases if counted_supported_case(case)
     ]
     package = {
-        "schema_version": TASK6_CORRECTNESS_PACKAGE_SCHEMA_VERSION,
-        "selected_candidate": build_task6_selected_candidate(),
+        "schema_version": CORRECTNESS_PACKAGE_SCHEMA_VERSION,
+        "selected_candidate": build_selected_candidate(),
         "cases": positive_cases,
         "negative_cases": negative_cases,
         "summary": {
@@ -52,5 +52,9 @@ def _build_task6_correctness_package_payload_cached() -> dict:
     return package
 
 
-def build_task6_correctness_package_payload() -> dict:
-    return deepcopy(_build_task6_correctness_package_payload_cached())
+def build_correctness_package_payload() -> dict:
+    return deepcopy(_build_correctness_package_payload_cached())
+
+
+def build_correctness_evidence_correctness_package_payload() -> dict:
+    return build_correctness_package_payload()

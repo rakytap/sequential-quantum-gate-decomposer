@@ -26,14 +26,14 @@ from benchmarks.density_matrix.partitioned_runtime.common import (
     execute_partitioned_with_reference,
 )
 from benchmarks.density_matrix.planner_surface.common import (
-    build_phase3_story1_continuity_vqe,
+    build_phase2_continuity_vqe,
     build_software_metadata,
 )
 from benchmarks.density_matrix.planner_surface.workloads import (
     STRUCTURED_FAMILY_NAMES,
     STRUCTURED_QUBITS,
-    build_story2_structured_descriptor_set,
-    iter_story2_microcase_descriptor_sets,
+    build_structured_descriptor_set,
+    iter_microcase_descriptor_sets,
 )
 from squander.partitioning.noisy_planner import build_phase3_continuity_partition_descriptor_set
 from squander.partitioning.noisy_runtime import (
@@ -41,15 +41,15 @@ from squander.partitioning.noisy_runtime import (
     PHASE3_RUNTIME_SCHEMA_VERSION,
 )
 
-SUITE_NAME = "phase3_task3_story2_mandatory_workloads"
+SUITE_NAME = "phase3_partitioned_runtime_workload_runtime"
 ARTIFACT_FILENAME = "mandatory_workload_runtime_bundle.json"
 DEFAULT_OUTPUT_DIR = (
     REPO_ROOT
     / "benchmarks"
     / "density_matrix"
     / "artifacts"
-    / "phase3_task3"
-    / "story2_workloads"
+    / "partitioned_runtime"
+    / "mandatory_workload"
 )
 ARTIFACT_CORE_FIELDS = (
     "suite_name",
@@ -118,7 +118,7 @@ def _runtime_case(
 
 
 def build_cases() -> list[dict]:
-    continuity_vqe, _, _ = build_phase3_story1_continuity_vqe(4)
+    continuity_vqe, _, _ = build_phase2_continuity_vqe(4)
     cases = [
         _runtime_case(
             case_name="phase2_xxz_hea_q4_continuity",
@@ -126,7 +126,7 @@ def build_cases() -> list[dict]:
             descriptor_set=build_phase3_continuity_partition_descriptor_set(continuity_vqe),
         )
     ]
-    for metadata, descriptor_set in iter_story2_microcase_descriptor_sets():
+    for metadata, descriptor_set in iter_microcase_descriptor_sets():
         cases.append(
             _runtime_case(
                 case_name=metadata["case_name"],
@@ -149,7 +149,7 @@ def build_cases() -> list[dict]:
                 _runtime_case(
                     case_name=metadata["workload_id"],
                     case_kind="structured_family",
-                    descriptor_set=build_story2_structured_descriptor_set(
+                    descriptor_set=build_structured_descriptor_set(
                         family_name,
                         qbit_num=qbit_num,
                         noise_pattern=STRUCTURED_VALIDATION_NOISE_PATTERN,

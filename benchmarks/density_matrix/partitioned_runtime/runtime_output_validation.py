@@ -28,25 +28,25 @@ from benchmarks.density_matrix.partitioned_runtime.common import (
     execute_partitioned_with_reference,
 )
 from benchmarks.density_matrix.planner_surface.common import (
-    build_phase3_story1_continuity_vqe,
+    build_phase2_continuity_vqe,
     build_software_metadata,
 )
 from benchmarks.density_matrix.planner_surface.workloads import (
-    build_story2_microcase_descriptor_set,
-    build_story2_structured_descriptor_set,
+    build_microcase_descriptor_set,
+    build_structured_descriptor_set,
 )
 from squander.partitioning.noisy_planner import build_phase3_continuity_partition_descriptor_set
 from squander.partitioning.noisy_runtime import PHASE3_RUNTIME_SCHEMA_VERSION
 
-SUITE_NAME = "phase3_task3_story5_runtime_outputs"
+SUITE_NAME = "phase3_partitioned_runtime_runtime_output"
 ARTIFACT_FILENAME = "runtime_output_bundle.json"
 DEFAULT_OUTPUT_DIR = (
     REPO_ROOT
     / "benchmarks"
     / "density_matrix"
     / "artifacts"
-    / "phase3_task3"
-    / "story5_results"
+    / "partitioned_runtime"
+    / "runtime_output"
 )
 ARTIFACT_CORE_FIELDS = (
     "suite_name",
@@ -119,7 +119,7 @@ def _output_case(
 
 
 def build_cases() -> list[dict]:
-    continuity_vqe, hamiltonian, _ = build_phase3_story1_continuity_vqe(4)
+    continuity_vqe, hamiltonian, _ = build_phase2_continuity_vqe(4)
     continuity_parameters = build_initial_parameters(continuity_vqe.get_Parameter_Num())
     continuity_case = _output_case(
         case_name="phase2_xxz_hea_q4_continuity",
@@ -131,14 +131,14 @@ def build_cases() -> list[dict]:
     microcase_case = _output_case(
         case_name="microcase_4q_partition_boundary_triplet",
         case_kind="microcase",
-        descriptor_set=build_story2_microcase_descriptor_set(
+        descriptor_set=build_microcase_descriptor_set(
             "microcase_4q_partition_boundary_triplet"
         ),
     )
     structured_case = _output_case(
         case_name="layered_nearest_neighbor_q8_sparse_seed20260318",
         case_kind="structured_family",
-        descriptor_set=build_story2_structured_descriptor_set(
+        descriptor_set=build_structured_descriptor_set(
             "layered_nearest_neighbor",
             qbit_num=8,
             noise_pattern="sparse",

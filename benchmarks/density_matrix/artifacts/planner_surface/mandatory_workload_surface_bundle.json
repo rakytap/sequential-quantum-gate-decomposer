@@ -19668,7 +19668,7 @@
     "scipy": "1.16.3"
   },
   "status": "pass",
-  "suite_name": "phase3_task1_story2_mandatory_workloads",
+  "suite_name": "phase3_planner_surface_workload_surface",
   "summary": {
     "microcase_count": 3,
     "operation_schema_count": 1,

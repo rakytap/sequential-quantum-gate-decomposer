@@ -51,7 +51,7 @@ Out of scope for this story:
   - `execute_partitioned_with_reference()`,
   - `runtime_semantics_validation.py`,
   - and the emitted bundle under
-    `benchmarks/density_matrix/artifacts/phase3_task3/story4_semantics/`.
+    `benchmarks/density_matrix/artifacts/partitioned_runtime/story4_semantics/`.
 - The fused baseline remains conservative unitary-island fusion inside noisy
   partitions. Story 4 should not require channel-native noisy-block fusion.
 - The most direct real fused path is to build descriptor-local 1- and 2-qubit
@@ -226,7 +226,7 @@ Out of scope for this story:
   package.
 
 **Execution checklist**
-- [ ] Add focused Story 4 checks in `tests/partitioning/test_phase3_task4.py`.
+- [ ] Add focused Story 4 checks in `tests/partitioning/test_partitioned_runtime.py`.
 - [ ] Add a Story 4 validator under
       `benchmarks/density_matrix/partitioned_runtime/`, with
       `fused_semantics_validation.py` as the primary checker.
@@ -263,7 +263,7 @@ Out of scope for this story:
 
 **Execution checklist**
 - [ ] Add a dedicated Story 4 artifact location
-      (for example `benchmarks/density_matrix/artifacts/phase3_task4/story4_fused_semantics/`).
+      (for example `benchmarks/density_matrix/artifacts/partitioned_runtime/fused_semantics/`).
 - [ ] Emit representative fused cases through one stable schema.
 - [ ] Record provenance, fused-path labels, exactness metrics, trace validity,
       and any boundary-review metadata needed for semantic audit.

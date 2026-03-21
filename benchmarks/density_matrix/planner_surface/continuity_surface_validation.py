@@ -26,7 +26,7 @@ from benchmarks.density_matrix.planner_surface.common import (
     DEFAULT_LAYERS,
     PRIMARY_BACKEND,
     build_case_metadata,
-    build_phase3_story1_continuity_vqe,
+    build_phase2_continuity_vqe,
     build_software_metadata,
 )
 from squander.partitioning.noisy_planner import (
@@ -35,7 +35,7 @@ from squander.partitioning.noisy_planner import (
     build_phase3_continuity_planner_surface,
 )
 
-SUITE_NAME = "phase3_task1_story1_continuity_surface"
+SUITE_NAME = "phase3_planner_surface_continuity_surface"
 ARTIFACT_FILENAME = "continuity_surface_bundle.json"
 DEFAULT_OUTPUT_DIR = (
     REPO_ROOT / "benchmarks" / "density_matrix" / "artifacts" / "planner_surface"
@@ -53,7 +53,7 @@ ARTIFACT_CORE_FIELDS = (
 
 
 def build_case_result(qbit_num: int) -> dict:
-    vqe, _, topology = build_phase3_story1_continuity_vqe(qbit_num)
+    vqe, _, topology = build_phase2_continuity_vqe(qbit_num)
     surface = build_phase3_continuity_planner_surface(vqe)
     payload = surface.to_dict()
 
@@ -65,7 +65,7 @@ def build_case_result(qbit_num: int) -> dict:
     case.update(
         {
             "case_name": "phase2_xxz_hea_q{}_continuity".format(qbit_num),
-            "case_kind": "phase3_task1_story1_continuity_surface",
+            "case_kind": "phase3_planner_surface_continuity_surface",
             "status": "pass",
             "requested_mode": payload["requested_mode"],
             "schema_version": payload["schema_version"],

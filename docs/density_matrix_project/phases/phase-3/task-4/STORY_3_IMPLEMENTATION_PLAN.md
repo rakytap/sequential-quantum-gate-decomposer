@@ -43,7 +43,7 @@ Out of scope for this story:
   - `benchmarks/density_matrix/partitioned_runtime/continuity_runtime_validation.py`,
   - `benchmarks/density_matrix/partitioned_runtime/mandatory_workload_runtime_validation.py`,
   - `benchmarks/density_matrix/partitioned_runtime/runtime_output_validation.py`,
-  - and their emitted bundles under `benchmarks/density_matrix/artifacts/phase3_task3/`.
+  - and their emitted bundles under `benchmarks/density_matrix/artifacts/partitioned_runtime/`.
 - The continuity builder Story 3 should reuse already exists through
   `build_phase3_story1_continuity_vqe()` and
   `build_phase3_continuity_partition_descriptor_set()`.
@@ -217,7 +217,7 @@ Out of scope for this story:
   work.
 
 **Execution checklist**
-- [ ] Add focused Story 3 checks in `tests/partitioning/test_phase3_task4.py`.
+- [ ] Add focused Story 3 checks in `tests/partitioning/test_partitioned_runtime.py`.
 - [ ] Add a Story 3 validator under
       `benchmarks/density_matrix/partitioned_runtime/`, with
       `fused_surface_reuse_validation.py` as the primary checker.
@@ -252,7 +252,7 @@ Out of scope for this story:
 
 **Execution checklist**
 - [ ] Add a dedicated Story 3 artifact location
-      (for example `benchmarks/density_matrix/artifacts/phase3_task4/story3_surface_reuse/`).
+      (for example `benchmarks/density_matrix/artifacts/partitioned_runtime/fused_surface_reuse/`).
 - [ ] Record representative structured, continuity, and microcase cases in one
       shared schema.
 - [ ] Record runtime-path labels, provenance fields, and any fused-coverage

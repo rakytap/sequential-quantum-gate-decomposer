@@ -21,21 +21,21 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from benchmarks.density_matrix.planner_calibration.calibration_records import (
-    TASK5_CALIBRATION_RECORD_SCHEMA_VERSION,
-    TASK5_REFERENCE_BACKEND,
-    build_task5_calibration_records,
+    PLANNER_CALIBRATION_CALIBRATION_RECORD_SCHEMA_VERSION,
+    PLANNER_CALIBRATION_REFERENCE_BACKEND,
+    build_planner_calibration_calibration_records,
 )
 from benchmarks.density_matrix.planner_surface.common import build_software_metadata
 
-SUITE_NAME = "phase3_task5_story4_correctness_gate"
+SUITE_NAME = "phase3_planner_calibration_correctness_gate"
 ARTIFACT_FILENAME = "calibration_correctness_bundle.json"
 DEFAULT_OUTPUT_DIR = (
     REPO_ROOT
     / "benchmarks"
     / "density_matrix"
     / "artifacts"
-    / "phase3_task5"
-    / "story4_correctness_gate"
+    / "planner_calibration"
+    / "calibration_correctness"
 )
 ARTIFACT_CORE_FIELDS = (
     "suite_name",
@@ -48,7 +48,7 @@ ARTIFACT_CORE_FIELDS = (
 
 
 def build_cases() -> list[dict]:
-    return build_task5_calibration_records()
+    return build_planner_calibration_calibration_records()
 
 
 def build_artifact_bundle(cases: list[dict]) -> dict:
@@ -74,7 +74,7 @@ def build_artifact_bundle(cases: list[dict]) -> dict:
         and counted_calibration_cases == len(cases)
         and continuity_energy_passes == continuity_energy_cases
         else "fail",
-        "record_schema_version": TASK5_CALIBRATION_RECORD_SCHEMA_VERSION,
+        "record_schema_version": PLANNER_CALIBRATION_CALIBRATION_RECORD_SCHEMA_VERSION,
         "software": build_software_metadata(),
         "summary": {
             "total_cases": len(cases),
@@ -84,7 +84,7 @@ def build_artifact_bundle(cases: list[dict]) -> dict:
             "counted_calibration_cases": counted_calibration_cases,
             "continuity_energy_cases": continuity_energy_cases,
             "continuity_energy_passes": continuity_energy_passes,
-            "reference_backend": TASK5_REFERENCE_BACKEND,
+            "reference_backend": PLANNER_CALIBRATION_REFERENCE_BACKEND,
         },
         "cases": cases,
     }

@@ -16,22 +16,22 @@ from functools import lru_cache
 from pathlib import Path
 
 from benchmarks.density_matrix.correctness_evidence.common import (
-    TASK6_CASE_SCHEMA_VERSION,
-    build_task6_selected_candidate,
-    build_task6_software_metadata,
-    task6_story_output_dir,
+    CORRECTNESS_EVIDENCE_CASE_SCHEMA_VERSION,
+    build_correctness_evidence_selected_candidate,
+    build_correctness_evidence_software_metadata,
+    correctness_evidence_output_dir,
     write_artifact_bundle,
 )
-from benchmarks.density_matrix.correctness_evidence.task6_case_selection import (
-    TASK6_CASE_KIND_CONTINUITY,
-    TASK6_CASE_KIND_MICROCASE,
-    TASK6_CASE_KIND_STRUCTURED,
-    build_task6_case_contexts,
+from benchmarks.density_matrix.correctness_evidence.case_selection import (
+    CORRECTNESS_EVIDENCE_CASE_KIND_CONTINUITY,
+    CORRECTNESS_EVIDENCE_CASE_KIND_MICROCASE,
+    CORRECTNESS_EVIDENCE_CASE_KIND_STRUCTURED,
+    build_correctness_evidence_case_contexts,
 )
 
-SUITE_NAME = "phase3_task6_story1_correctness_matrix"
+SUITE_NAME = "phase3_correctness_evidence_correctness_matrix"
 ARTIFACT_FILENAME = "correctness_matrix_bundle.json"
-DEFAULT_OUTPUT_DIR = task6_story_output_dir("story1_correctness_matrix")
+DEFAULT_OUTPUT_DIR = correctness_evidence_output_dir("correctness_matrix")
 ARTIFACT_CORE_FIELDS = (
     "suite_name",
     "status",
@@ -45,7 +45,7 @@ ARTIFACT_CORE_FIELDS = (
 
 @lru_cache(maxsize=1)
 def _build_story1_cases_cached() -> tuple[dict, ...]:
-    return tuple(dict(case_context.metadata) for case_context in build_task6_case_contexts())
+    return tuple(dict(case_context.metadata) for case_context in build_correctness_evidence_case_contexts())
 
 
 def build_cases() -> list[dict]:
@@ -53,9 +53,9 @@ def build_cases() -> list[dict]:
 
 
 def build_artifact_bundle(cases: list[dict]) -> dict:
-    continuity_cases = sum(case["case_kind"] == TASK6_CASE_KIND_CONTINUITY for case in cases)
-    microcases = sum(case["case_kind"] == TASK6_CASE_KIND_MICROCASE for case in cases)
-    structured_cases = sum(case["case_kind"] == TASK6_CASE_KIND_STRUCTURED for case in cases)
+    continuity_cases = sum(case["case_kind"] == CORRECTNESS_EVIDENCE_CASE_KIND_CONTINUITY for case in cases)
+    microcases = sum(case["case_kind"] == CORRECTNESS_EVIDENCE_CASE_KIND_MICROCASE for case in cases)
+    structured_cases = sum(case["case_kind"] == CORRECTNESS_EVIDENCE_CASE_KIND_STRUCTURED for case in cases)
     external_slice_cases = sum(case["external_reference_required"] for case in cases)
     bundle = {
         "suite_name": SUITE_NAME,
@@ -65,9 +65,9 @@ def build_artifact_bundle(cases: list[dict]) -> dict:
         and structured_cases == 18
         and external_slice_cases == 4
         else "fail",
-        "record_schema_version": TASK6_CASE_SCHEMA_VERSION,
-        "software": build_task6_software_metadata(),
-        "selected_candidate": build_task6_selected_candidate(),
+        "record_schema_version": CORRECTNESS_EVIDENCE_CASE_SCHEMA_VERSION,
+        "software": build_correctness_evidence_software_metadata(),
+        "selected_candidate": build_correctness_evidence_selected_candidate(),
         "summary": {
             "total_cases": len(cases),
             "continuity_cases": continuity_cases,

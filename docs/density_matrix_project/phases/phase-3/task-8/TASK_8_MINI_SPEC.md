@@ -12,8 +12,8 @@ workload surface, the frozen numeric thresholds, the bounded Task 5 calibrated
 planner claim, or the deferred channel-native / broader Phase 4 branches.
 
 ## Given / When / Then
-- Given the frozen Phase 3 contract, the emitted `phase3_task6` correctness and
-  unsupported-boundary bundle family, the emitted `phase3_task7` benchmark and
+- Given the frozen Phase 3 contract, the emitted `correctness_evidence` correctness and
+  unsupported-boundary bundle family, the emitted `performance_evidence` benchmark and
   diagnosis bundle family, and the current abstract, short-paper, narrative, and
   full-paper draft surfaces for Paper 2.
 - When an author, reviewer, or collaborator assembles, audits, or updates the
@@ -47,27 +47,27 @@ planner claim, or the deferred channel-native / broader Phase 4 branches.
   benchmark-grounded selection rule over auditable `max_partition_qubits`
   span-budget settings, not as a permanently settled broad planner-family win.
 - Task 6 provides the machine-reviewable correctness and unsupported-boundary
-  package under `benchmarks/density_matrix/artifacts/phase3_task6/`. The current
+  package under `benchmarks/density_matrix/artifacts/correctness_evidence/`. The current
   delivered surface records `25` counted supported cases, `4` required external
   reference cases, and `17` explicit unsupported-boundary cases across
   planner-entry, descriptor-generation, and runtime-stage evidence.
 - Task 6 also provides stable bundle entry points that Task 8 must package
   rather than paraphrase loosely, including:
-  - `story7_correctness_package/correctness_package_bundle.json`,
-  - `story6_unsupported_boundary/unsupported_boundary_bundle.json`,
-  - and `story8_summary_consistency/summary_consistency_bundle.json`.
+  - `correctness_package/correctness_package_bundle.json`,
+  - `unsupported_boundary/unsupported_boundary_bundle.json`,
+  - and `summary_consistency/summary_consistency_bundle.json`.
 - Task 7 provides the machine-reviewable benchmark and diagnosis package under
-  `benchmarks/density_matrix/artifacts/phase3_task7/`. The current delivered
+  `benchmarks/density_matrix/artifacts/performance_evidence/`. The current delivered
   surface records `34` counted supported benchmark cases, `6` representative
   review cases, diagnosis-grounded closure of the phase-level performance rule,
   and carry-forward of the `17` explicit Task 6 boundary cases into the summary
   layer.
 - Task 7 also provides stable bundle entry points that Task 8 must package
   rather than summarize ambiguously, including:
-  - `story7_benchmark_package/benchmark_package_bundle.json`,
-  - `story6_diagnosis_path/diagnosis_bundle.json`,
-  - `story4_sensitivity_matrix/sensitivity_matrix_bundle.json`,
-  - and `story8_summary_consistency/summary_consistency_bundle.json`.
+  - `benchmark_package/benchmark_package_bundle.json`,
+  - `diagnosis/diagnosis_bundle.json`,
+  - `sensitivity_matrix/sensitivity_matrix_bundle.json`,
+  - and `summary_consistency/summary_consistency_bundle.json`.
 - `docs/density_matrix_project/planning/PUBLICATIONS.md` defines Paper 2 as the
   major Phase 3 methods and systems paper, not as a broader optimizer, workflow,
   or approximate-scaling paper.
@@ -133,7 +133,7 @@ planner claim, or the deferred channel-native / broader Phase 4 branches.
   collapsing them into one generic omission bucket.
 - The package must remain manifest-driven over emitted bundles or rerunnable
   checkers rather than prose-only packaging. Reviewer-facing Paper 2 claims must
-  be traceable to concrete `phase3_task6` and `phase3_task7` bundle references
+  be traceable to concrete `correctness_evidence` and `performance_evidence` bundle references
   rather than only to narrative summaries or detached figures.
 - The publication package must include a stable reviewer-entry surface for Paper
   2, such as one top-level publication manifest or equivalent machine-reviewable
@@ -196,7 +196,7 @@ planner claim, or the deferred channel-native / broader Phase 4 branches.
   planner-family competition has already been permanently settled.
 - Building the Paper 2 package from detached plots, prose-only summaries, or
   manually edited counts without stable traceability back to the emitted
-  `phase3_task6` and `phase3_task7` bundle surfaces.
+  `correctness_evidence` and `performance_evidence` bundle surfaces.
 - Hiding the `17` explicit Task 6 unsupported-boundary cases or collapsing
   planner-entry, descriptor-generation, and runtime-stage exclusions into one
   ambiguous publication bucket.
@@ -290,13 +290,13 @@ planner claim, or the deferred channel-native / broader Phase 4 branches.
   `SHORT_PAPER_PHASE_3.md`, `SHORT_PAPER_NARRATIVE.md`, and `PAPER_PHASE_3.md`.
 - A stable Task 8 reviewer-entry surface, such as a top-level publication
   manifest or equivalent machine-reviewable checker under
-  `benchmarks/density_matrix/artifacts/phase3_task8/`.
+  `benchmarks/density_matrix/artifacts/publication_evidence/`.
 - The emitted Task 6 bundle family under
-  `benchmarks/density_matrix/artifacts/phase3_task6/`, especially the
+  `benchmarks/density_matrix/artifacts/correctness_evidence/`, especially the
   correctness-package, unsupported-boundary, and summary-consistency entry
   points.
 - The emitted Task 7 bundle family under
-  `benchmarks/density_matrix/artifacts/phase3_task7/`, especially the benchmark-
+  `benchmarks/density_matrix/artifacts/performance_evidence/`, especially the benchmark-
   package, diagnosis, sensitivity-matrix, and summary-consistency entry points.
 - Phase-level contract docs and decisions that the Paper 2 package must cite
   accurately: `DETAILED_PLANNING_PHASE_3.md`, `ADRs_PHASE_3.md`, and

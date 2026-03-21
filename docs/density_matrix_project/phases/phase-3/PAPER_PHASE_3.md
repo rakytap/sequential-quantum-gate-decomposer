@@ -9,11 +9,11 @@
 ## Draft Status
 
 This document began as a planning-facing full-paper draft for Phase 3. It is
-now implementation-backed through the delivered Task 4, Task 5, Task 6, and
-Task 7 evidence surfaces, including the emitted `phase3_task6` correctness
-bundles and `phase3_task7` benchmark bundles. The final publication-facing
-package still requires further tightening before submission-ready wording is
-frozen.
+now implementation-backed through the delivered fused-runtime,
+planner-calibration, correctness-evidence, and performance-evidence surfaces,
+including the emitted `correctness_evidence` correctness bundles and
+`performance_evidence` benchmark bundles. The final publication-facing package
+still requires further tightening before submission-ready wording is frozen.
 
 ## Abstract Summary
 
@@ -250,19 +250,22 @@ problem on the frozen support surface:
   correctness package,
 - the density backend executes partitioned workloads end to end and includes a
   real descriptor-local fused path,
-- Task 5 narrows the supported planning result to a benchmark-grounded
+- planner calibration narrows the supported planning result to a
+  benchmark-grounded
   `max_partition_qubits` selection rule over a bounded candidate family,
-- and Task 6 now validates that delivered surface on `25` counted supported
+- and correctness evidence now validates that delivered surface on `25` counted
+  supported
   cases, with a bounded Qiskit Aer slice of `4` cases and `17` explicit
   unsupported-boundary cases kept visible in the emitted bundle family,
-- and Task 7 now records the representative benchmark package on `34` counted
+- and performance evidence now records the representative benchmark package on
+  `34` counted
   supported cases, with `6` representative review cases closing the
   phase-level threshold-or-diagnosis rule through the diagnosis branch.
 
 What still remains open is therefore narrower and more publication-oriented:
 
-- the final Task 8 publication-facing manifest and section-level evidence
-  packaging built on top of the emitted Task 7 bundle family,
+- the final publication-facing manifest and section-level evidence packaging
+  built on top of the emitted performance-evidence bundle family,
 - and the explicitly deferred follow-on branches such as fully channel-native
   fused noisy blocks and broader Phase 4 workflow growth.
 
@@ -349,10 +352,11 @@ The fused path may still remain unitary-island-based internally if:
 - the surrounding noisy semantics remain exact,
 - and the fused path is benchmarked on representative noisy workloads.
 
-Current Task 4 implementation findings now make this branch concrete. The
+Current fused-runtime findings now make this branch concrete. The
 delivered minimum fused path is descriptor-local unitary-island fusion on 1- and
 2-qubit spans using the density backend's local-unitary primitive. The fused
-runtime extends the shared Task 3 surface additively through an explicit fused
+runtime extends the shared partitioned-runtime surface additively through an
+explicit fused
 runtime-path label plus auditable fused, supported-but-unfused, and deferred
 region records rather than through a second private runtime schema.
 
@@ -373,7 +377,7 @@ This keeps Paper 2 honest. The planner is allowed to begin from structural
 reuse of the state-vector machinery, but the final methods claim must be backed
 by density-aware evidence rather than by a renamed state-vector cost model.
 
-Current Task 5 implementation findings make the delivered surface narrower than
+Current planner-calibration findings make the delivered surface narrower than
 the broader longer-horizon algorithm family listed in the planning set:
 
 - the current benchmark-facing result calibrates auditable
@@ -382,7 +386,7 @@ the broader longer-horizon algorithm family listed in the planning set:
 - broader adapted `kahn` / `tdag` / `gtqcp` / `ilp` / `ilp-fusion-ca` families
   remain valid design-space or comparison references rather than already-
   delivered noisy planner variants,
-- and the supported Task 5 claim should therefore be phrased around the
+- and the supported planner-calibration claim should therefore be phrased around the
   auditable selection rule, bounded candidate family, and explicit comparison
   baselines rather than around one permanently frozen winner identity.
 
@@ -415,14 +419,14 @@ The planned validation package has three layers:
 - structured partitioning-family validation on representative 8- and 10-qubit
   noisy `U3` / `CNOT` families.
 
-Current Task 6 implementation findings now materialize this package more
+Current correctness-evidence findings now materialize this package more
 concretely:
 
 - the delivered correctness matrix contains `25` counted supported cases,
 - the required external slice contains `4` cases (`3` mandatory microcases plus
   the 4-qubit continuity anchor),
-- the package is pinned to the currently selected `span_budget_q2` planning
-  surface from Task 5,
+- the package is pinned to the currently selected `span_budget_q2`
+  planner-calibration surface,
 - and `17` explicit unsupported-boundary cases remain visible across planner-
   entry, descriptor-generation, and runtime-stage evidence rather than being
   hidden inside summary-only exclusions.
@@ -510,7 +514,8 @@ That second outcome is still scientifically valuable if the diagnosis is
 structured, reproducible, and clearly linked to the follow-on architecture
 decision gate.
 
-The current Task 7 benchmark package now illustrates that second outcome more
+The current performance-evidence benchmark package now illustrates that second
+outcome more
 fully. Across the `6` representative review cases, one primary-seed sparse
 structured case for each required family and size, the real fused path
 preserves exact semantics and remains benchmark-visible, but none reaches the
@@ -524,7 +529,8 @@ acceleration claim.
 
 ## 8. Expected Scientific Claims
 
-With the delivered Task 4 through Task 7 package in place, the Phase 3 paper can
+With the delivered fused-runtime, planner-calibration, correctness-evidence,
+and performance-evidence package in place, the Phase 3 paper can
 already support the following claims:
 
 - noisy mixed-state circuits are first-class partitioning inputs in SQUANDER,
@@ -535,7 +541,8 @@ already support the following claims:
 - the current correctness package is machine-reviewable rather than prose-only,
   with `25` counted supported cases and `17` explicit unsupported-boundary
   cases,
-- the current Task 7 package characterizes representative performance and
+- the current performance-evidence package characterizes representative
+  performance and
   sensitivity on `34` counted supported benchmark cases, including `6`
   representative review cases that close the benchmark rule through the
   diagnosis branch rather than through a measured speedup claim,
@@ -612,10 +619,11 @@ make noisy mixed-state circuits native objects of partition planning and runtime
 execution while preserving the exact semantics that define the density backend's
 scientific value. The delivered validation and benchmark package now closes the
 Phase 3 rule through diagnosis-grounded benchmark evidence rather than through a
-speedup claim. If Task 8 turns that emitted evidence into a final publication-
-facing package cleanly, Paper 2 will provide the central methods and systems
-result in the density-matrix publication ladder and the backend foundation
-needed for later noisy optimizer and trainability studies.
+speedup claim. If the publication-evidence layer turns that emitted evidence
+into a final publication-facing package cleanly, Paper 2 will provide the
+central methods and systems result in the density-matrix publication ladder and
+the backend foundation needed for later noisy optimizer and trainability
+studies.
 
 ## References
 

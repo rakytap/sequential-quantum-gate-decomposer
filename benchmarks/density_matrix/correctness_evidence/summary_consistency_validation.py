@@ -17,18 +17,18 @@ from benchmarks.density_matrix.correctness_evidence.correctness_bundle_validatio
     build_artifact_bundle as build_story7_bundle,
 )
 from benchmarks.density_matrix.correctness_evidence.common import (
-    TASK6_SUMMARY_SCHEMA_VERSION,
-    build_task6_software_metadata,
-    task6_story_output_dir,
+    CORRECTNESS_EVIDENCE_SUMMARY_SCHEMA_VERSION,
+    build_correctness_evidence_software_metadata,
+    correctness_evidence_output_dir,
     write_artifact_bundle,
 )
 from benchmarks.density_matrix.correctness_evidence.records import (
-    task6_counted_supported_case,
+    correctness_evidence_counted_supported_case,
 )
 
-SUITE_NAME = "phase3_task6_story8_summary_consistency"
+SUITE_NAME = "phase3_correctness_evidence_summary_consistency"
 ARTIFACT_FILENAME = "summary_consistency_bundle.json"
-DEFAULT_OUTPUT_DIR = task6_story_output_dir("story8_summary_consistency")
+DEFAULT_OUTPUT_DIR = correctness_evidence_output_dir("summary_consistency")
 ARTIFACT_CORE_FIELDS = (
     "suite_name",
     "status",
@@ -45,7 +45,7 @@ def build_artifact_bundle() -> dict:
     story7_bundle = build_story7_bundle()
     cases = story7_bundle["cases"]
     negative_cases = story7_bundle["negative_cases"]
-    counted_supported_cases = sum(task6_counted_supported_case(case) for case in cases)
+    counted_supported_cases = sum(correctness_evidence_counted_supported_case(case) for case in cases)
     summary_consistency_pass = (
         story7_bundle["summary"]["total_cases"] == len(cases)
         and story7_bundle["summary"]["counted_supported_cases"] == counted_supported_cases
@@ -59,8 +59,8 @@ def build_artifact_bundle() -> dict:
     bundle = {
         "suite_name": SUITE_NAME,
         "status": "pass" if summary_consistency_pass else "fail",
-        "schema_version": TASK6_SUMMARY_SCHEMA_VERSION,
-        "software": build_task6_software_metadata(),
+        "schema_version": CORRECTNESS_EVIDENCE_SUMMARY_SCHEMA_VERSION,
+        "software": build_correctness_evidence_software_metadata(),
         "selected_candidate": story7_bundle["selected_candidate"],
         "requirements": {
             "main_claim_rule": (
@@ -91,7 +91,7 @@ def build_artifact_bundle() -> dict:
         },
         "required_artifacts": [
             {
-                "artifact_id": "story7_correctness_package",
+                "artifact_id": "correctness_package",
                 "suite_name": story7_bundle["suite_name"],
                 "status": story7_bundle["status"],
                 "schema_version": story7_bundle["schema_version"],

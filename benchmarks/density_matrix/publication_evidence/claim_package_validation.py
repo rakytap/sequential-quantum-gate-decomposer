@@ -14,7 +14,7 @@ if str(REPO_ROOT) not in sys.path:
 from benchmarks.density_matrix.publication_evidence.common import (
     CLAIM_HEADING,
     EVIDENCE_CLOSURE_RULE,
-    MANDATORY_TASK8_DOCS,
+    MANDATORY_PUBLICATION_EVIDENCE_DOCS,
     PAPER_MAIN_CLAIM,
     ROLE_HEADING,
     SURFACE_ROLE_PHRASES,
@@ -23,17 +23,17 @@ from benchmarks.density_matrix.publication_evidence.common import (
     load_text,
     missing_phrases,
     relative_to_repo,
-    task8_story_output_dir,
+    publication_evidence_output_dir,
     write_json,
 )
 
 
-SUITE_NAME = "phase3_task8_story1_claim_package"
+SUITE_NAME = "phase3_publication_evidence_claim_package"
 ARTIFACT_FILENAME = "claim_package_bundle.json"
-DEFAULT_OUTPUT_DIR = task8_story_output_dir("story1_claim_package")
-PRIMARY_SURFACE_PATH = MANDATORY_TASK8_DOCS["phase3_paper"]
-PRIMARY_SOURCE_PATH = MANDATORY_TASK8_DOCS["task8_mini_spec"]
-PUBLICATION_STRATEGY_PATH = MANDATORY_TASK8_DOCS["planning_publications"]
+DEFAULT_OUTPUT_DIR = publication_evidence_output_dir("claim_package")
+PRIMARY_SURFACE_PATH = MANDATORY_PUBLICATION_EVIDENCE_DOCS["phase3_paper"]
+PRIMARY_SOURCE_PATH = MANDATORY_PUBLICATION_EVIDENCE_DOCS["publication_evidence_mini_spec"]
+PUBLICATION_STRATEGY_PATH = MANDATORY_PUBLICATION_EVIDENCE_DOCS["planning_publications"]
 ARTIFACT_FIELDS = (
     "suite_name",
     "status",
@@ -74,7 +74,7 @@ SUPPORTING_CLAIM_ITEMS = (
         ],
     },
     {
-        "claim_id": "bounded_task5_planner_result",
+        "claim_id": "bounded_planner_calibration_planner_result",
         "label": "Bounded benchmark-calibrated planning result",
         "text": "a benchmark-calibrated density-aware planning policy on a bounded candidate surface",
         "source_phrases": [
@@ -242,7 +242,7 @@ def build_artifact_bundle():
         },
         "source_docs": [
             {
-                "doc_id": "task8_mini_spec",
+                "doc_id": "publication_evidence_mini_spec",
                 "path": relative_to_repo(PRIMARY_SOURCE_PATH),
                 "exists": PRIMARY_SOURCE_PATH.exists(),
             },

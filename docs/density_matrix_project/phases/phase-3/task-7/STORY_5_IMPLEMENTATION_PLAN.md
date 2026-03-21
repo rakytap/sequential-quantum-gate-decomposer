@@ -267,7 +267,7 @@ Out of scope for this story:
 **Execution checklist**
 - [ ] Add a dedicated Story 5 artifact location
       (for example
-      `benchmarks/density_matrix/artifacts/phase3_task7/story5_metric_surface/`).
+      `benchmarks/density_matrix/artifacts/performance_evidence/metric_surface/`).
 - [ ] Emit comparable metric records through one stable schema plus a stable
       bundle summary.
 - [ ] Record rerun commands and software metadata with the emitted bundle.

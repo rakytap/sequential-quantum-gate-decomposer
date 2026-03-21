@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Shared helpers for Phase 3 Task 8 publication-evidence validation."""
+"""Shared helpers for Phase 3 publication-evidence validation."""
 
 from __future__ import annotations
 
@@ -16,48 +16,48 @@ DOCS_ROOT = REPO_ROOT / "docs" / "density_matrix_project"
 PHASE3_ROOT = DOCS_ROOT / "phases" / "phase-3"
 
 DEFAULT_OUTPUT_ROOT = (
-    REPO_ROOT / "benchmarks" / "density_matrix" / "artifacts" / "phase3_task8"
+    REPO_ROOT / "benchmarks" / "density_matrix" / "artifacts" / "publication_evidence"
 )
-TASK6_ARTIFACT_ROOT = (
-    REPO_ROOT / "benchmarks" / "density_matrix" / "artifacts" / "phase3_task6"
+CORRECTNESS_EVIDENCE_ARTIFACT_ROOT = (
+    REPO_ROOT / "benchmarks" / "density_matrix" / "artifacts" / "correctness_evidence"
 )
-TASK7_ARTIFACT_ROOT = (
-    REPO_ROOT / "benchmarks" / "density_matrix" / "artifacts" / "phase3_task7"
+PERFORMANCE_EVIDENCE_ARTIFACT_ROOT = (
+    REPO_ROOT / "benchmarks" / "density_matrix" / "artifacts" / "performance_evidence"
 )
 
-TASK6_CORRECTNESS_PACKAGE_PATH = (
-    TASK6_ARTIFACT_ROOT
-    / "story7_correctness_package"
+CORRECTNESS_EVIDENCE_CORRECTNESS_PACKAGE_PATH = (
+    CORRECTNESS_EVIDENCE_ARTIFACT_ROOT
+    / "correctness_package"
     / "correctness_package_bundle.json"
 )
-TASK6_UNSUPPORTED_BOUNDARY_PATH = (
-    TASK6_ARTIFACT_ROOT
-    / "story6_unsupported_boundary"
+CORRECTNESS_EVIDENCE_UNSUPPORTED_BOUNDARY_PATH = (
+    CORRECTNESS_EVIDENCE_ARTIFACT_ROOT
+    / "unsupported_boundary"
     / "unsupported_boundary_bundle.json"
 )
-TASK6_SUMMARY_CONSISTENCY_PATH = (
-    TASK6_ARTIFACT_ROOT
-    / "story8_summary_consistency"
+CORRECTNESS_EVIDENCE_SUMMARY_CONSISTENCY_PATH = (
+    CORRECTNESS_EVIDENCE_ARTIFACT_ROOT
+    / "summary_consistency"
     / "summary_consistency_bundle.json"
 )
 
-TASK7_BENCHMARK_PACKAGE_PATH = (
-    TASK7_ARTIFACT_ROOT / "story7_benchmark_package" / "benchmark_package_bundle.json"
+PERFORMANCE_EVIDENCE_BENCHMARK_PACKAGE_PATH = (
+    PERFORMANCE_EVIDENCE_ARTIFACT_ROOT / "benchmark_package" / "benchmark_package_bundle.json"
 )
-TASK7_DIAGNOSIS_PATH = (
-    TASK7_ARTIFACT_ROOT / "story6_diagnosis_path" / "diagnosis_bundle.json"
+PERFORMANCE_EVIDENCE_DIAGNOSIS_PATH = (
+    PERFORMANCE_EVIDENCE_ARTIFACT_ROOT / "diagnosis" / "diagnosis_bundle.json"
 )
-TASK7_SENSITIVITY_MATRIX_PATH = (
-    TASK7_ARTIFACT_ROOT / "story4_sensitivity_matrix" / "sensitivity_matrix_bundle.json"
+PERFORMANCE_EVIDENCE_SENSITIVITY_MATRIX_PATH = (
+    PERFORMANCE_EVIDENCE_ARTIFACT_ROOT / "sensitivity_matrix" / "sensitivity_matrix_bundle.json"
 )
-TASK7_POSITIVE_THRESHOLD_PATH = (
-    TASK7_ARTIFACT_ROOT / "story3_positive_threshold" / "positive_threshold_bundle.json"
+PERFORMANCE_EVIDENCE_POSITIVE_THRESHOLD_PATH = (
+    PERFORMANCE_EVIDENCE_ARTIFACT_ROOT / "positive_threshold" / "positive_threshold_bundle.json"
 )
-TASK7_SUMMARY_CONSISTENCY_PATH = (
-    TASK7_ARTIFACT_ROOT / "story8_summary_consistency" / "summary_consistency_bundle.json"
+PERFORMANCE_EVIDENCE_SUMMARY_CONSISTENCY_PATH = (
+    PERFORMANCE_EVIDENCE_ARTIFACT_ROOT / "summary_consistency" / "summary_consistency_bundle.json"
 )
 
-MANDATORY_TASK8_DOCS = {
+MANDATORY_PUBLICATION_EVIDENCE_DOCS = {
     "phase3_detailed_planning": PHASE3_ROOT / "DETAILED_PLANNING_PHASE_3.md",
     "phase3_adrs": PHASE3_ROOT / "ADRs_PHASE_3.md",
     "phase3_checklist": PHASE3_ROOT / "PRE_IMPLEMENTATION_COMPLETION_CHECKLIST.md",
@@ -65,25 +65,25 @@ MANDATORY_TASK8_DOCS = {
     "phase3_short_paper": PHASE3_ROOT / "SHORT_PAPER_PHASE_3.md",
     "phase3_short_paper_narrative": PHASE3_ROOT / "SHORT_PAPER_NARRATIVE.md",
     "phase3_paper": PHASE3_ROOT / "PAPER_PHASE_3.md",
-    "task1_mini_spec": PHASE3_ROOT / "task-1" / "TASK_1_MINI_SPEC.md",
-    "task2_mini_spec": PHASE3_ROOT / "task-2" / "TASK_2_MINI_SPEC.md",
-    "task3_mini_spec": PHASE3_ROOT / "task-3" / "TASK_3_MINI_SPEC.md",
-    "task4_mini_spec": PHASE3_ROOT / "task-4" / "TASK_4_MINI_SPEC.md",
-    "task5_mini_spec": PHASE3_ROOT / "task-5" / "TASK_5_MINI_SPEC.md",
-    "task6_mini_spec": PHASE3_ROOT / "task-6" / "TASK_6_MINI_SPEC.md",
-    "task7_mini_spec": PHASE3_ROOT / "task-7" / "TASK_7_MINI_SPEC.md",
-    "task8_mini_spec": PHASE3_ROOT / "task-8" / "TASK_8_MINI_SPEC.md",
-    "task8_stories": PHASE3_ROOT / "task-8" / "TASK_8_STORIES.md",
+    "planner_surface_entry_mini_spec": PHASE3_ROOT / "task-1" / "TASK_1_MINI_SPEC.md",
+    "planner_surface_descriptor_mini_spec": PHASE3_ROOT / "task-2" / "TASK_2_MINI_SPEC.md",
+    "partitioned_runtime_mini_spec": PHASE3_ROOT / "task-3" / "TASK_3_MINI_SPEC.md",
+    "fused_runtime_mini_spec": PHASE3_ROOT / "task-4" / "TASK_4_MINI_SPEC.md",
+    "planner_calibration_mini_spec": PHASE3_ROOT / "task-5" / "TASK_5_MINI_SPEC.md",
+    "correctness_evidence_mini_spec": PHASE3_ROOT / "task-6" / "TASK_6_MINI_SPEC.md",
+    "performance_evidence_mini_spec": PHASE3_ROOT / "task-7" / "TASK_7_MINI_SPEC.md",
+    "publication_evidence_mini_spec": PHASE3_ROOT / "task-8" / "TASK_8_MINI_SPEC.md",
+    "publication_evidence_stories": PHASE3_ROOT / "task-8" / "TASK_8_STORIES.md",
     "planning_publications": DOCS_ROOT / "planning" / "PUBLICATIONS.md",
     "planning_planning": DOCS_ROOT / "planning" / "PLANNING.md",
-    "task6_correctness_package_bundle": TASK6_CORRECTNESS_PACKAGE_PATH,
-    "task6_unsupported_boundary_bundle": TASK6_UNSUPPORTED_BOUNDARY_PATH,
-    "task6_summary_consistency_bundle": TASK6_SUMMARY_CONSISTENCY_PATH,
-    "task7_benchmark_package_bundle": TASK7_BENCHMARK_PACKAGE_PATH,
-    "task7_diagnosis_bundle": TASK7_DIAGNOSIS_PATH,
-    "task7_sensitivity_matrix_bundle": TASK7_SENSITIVITY_MATRIX_PATH,
-    "task7_positive_threshold_bundle": TASK7_POSITIVE_THRESHOLD_PATH,
-    "task7_summary_consistency_bundle": TASK7_SUMMARY_CONSISTENCY_PATH,
+    "correctness_evidence_correctness_package_bundle": CORRECTNESS_EVIDENCE_CORRECTNESS_PACKAGE_PATH,
+    "correctness_evidence_unsupported_boundary_bundle": CORRECTNESS_EVIDENCE_UNSUPPORTED_BOUNDARY_PATH,
+    "correctness_evidence_summary_consistency_bundle": CORRECTNESS_EVIDENCE_SUMMARY_CONSISTENCY_PATH,
+    "performance_evidence_benchmark_package_bundle": PERFORMANCE_EVIDENCE_BENCHMARK_PACKAGE_PATH,
+    "performance_evidence_diagnosis_bundle": PERFORMANCE_EVIDENCE_DIAGNOSIS_PATH,
+    "performance_evidence_sensitivity_matrix_bundle": PERFORMANCE_EVIDENCE_SENSITIVITY_MATRIX_PATH,
+    "performance_evidence_positive_threshold_bundle": PERFORMANCE_EVIDENCE_POSITIVE_THRESHOLD_PATH,
+    "performance_evidence_summary_consistency_bundle": PERFORMANCE_EVIDENCE_SUMMARY_CONSISTENCY_PATH,
 }
 
 PUBLICATION_SURFACES = {
@@ -198,8 +198,12 @@ BOTTLENECK_PHRASE_ALTERNATIVES = (
 )
 
 
-def task8_story_output_dir(story_dir_name: str) -> Path:
-    return DEFAULT_OUTPUT_ROOT / story_dir_name
+def publication_evidence_output_dir(slice_dir_name: str) -> Path:
+    return DEFAULT_OUTPUT_ROOT / slice_dir_name
+
+
+# Compatibility aliases for existing semantic imports.
+CORRECTNESS_PACKAGE_PATH = CORRECTNESS_EVIDENCE_CORRECTNESS_PACKAGE_PATH
 
 
 def write_artifact_bundle(
@@ -252,7 +256,7 @@ def build_surface_presence(
     forbidden_phrase_groups: list[dict[str, Any]] | tuple[dict[str, Any], ...] = (),
 ) -> dict[str, Any]:
     surface = PUBLICATION_SURFACES[surface_id]
-    path = MANDATORY_TASK8_DOCS[surface["doc_id"]]
+    path = MANDATORY_PUBLICATION_EVIDENCE_DOCS[surface["doc_id"]]
     text = load_text(path)
     missing_headings = [heading for heading in required_headings if heading not in text]
     missing_required_groups = [
@@ -330,41 +334,41 @@ def load_or_build_artifact(
 
 
 @lru_cache(maxsize=1)
-def load_task6_summary_bundle() -> dict[str, Any]:
-    return load_json(TASK6_SUMMARY_CONSISTENCY_PATH)
+def load_correctness_evidence_summary_bundle() -> dict[str, Any]:
+    return load_json(CORRECTNESS_EVIDENCE_SUMMARY_CONSISTENCY_PATH)
 
 
 @lru_cache(maxsize=1)
-def load_task7_summary_bundle() -> dict[str, Any]:
-    return load_json(TASK7_SUMMARY_CONSISTENCY_PATH)
+def load_performance_evidence_summary_bundle() -> dict[str, Any]:
+    return load_json(PERFORMANCE_EVIDENCE_SUMMARY_CONSISTENCY_PATH)
 
 
-def task6_count_phrase_options() -> tuple[str, ...]:
-    count = load_task6_summary_bundle()["summary"]["counted_supported_cases"]
+def correctness_evidence_count_phrase_options() -> tuple[str, ...]:
+    count = load_correctness_evidence_summary_bundle()["summary"]["counted_supported_cases"]
     return (f"`{count}` counted supported cases",)
 
 
-def task6_boundary_phrase_options() -> tuple[str, ...]:
-    count = load_task6_summary_bundle()["summary"]["unsupported_boundary_cases"]
+def correctness_evidence_boundary_phrase_options() -> tuple[str, ...]:
+    count = load_correctness_evidence_summary_bundle()["summary"]["unsupported_boundary_cases"]
     return (
         f"`{count}` explicit unsupported-boundary cases",
         f"`{count}` explicit unsupported- boundary cases",
-        f"`{count}` explicit Task 6 boundary cases",
-        f"the `{count}` explicit Task 6 boundary cases",
-        f"`{count}` carried-forward Task 6 boundary cases",
+        f"`{count}` explicit correctness-evidence boundary cases",
+        f"the `{count}` explicit correctness-evidence boundary cases",
+        f"`{count}` carried-forward unsupported-boundary cases",
     )
 
 
-def task7_count_phrase_options() -> tuple[str, ...]:
-    count = load_task7_summary_bundle()["summary"]["counted_supported_cases"]
+def performance_evidence_count_phrase_options() -> tuple[str, ...]:
+    count = load_performance_evidence_summary_bundle()["summary"]["counted_supported_cases"]
     return (
         f"`{count}` counted supported benchmark cases",
         f"`{count}` counted supported cases",
     )
 
 
-def task7_review_phrase_options() -> tuple[str, ...]:
-    count = load_task7_summary_bundle()["summary"]["representative_review_cases"]
+def performance_evidence_review_phrase_options() -> tuple[str, ...]:
+    count = load_performance_evidence_summary_bundle()["summary"]["representative_review_cases"]
     return (
         f"`{count}` representative review cases",
         f"representative review set contains `{count}`",

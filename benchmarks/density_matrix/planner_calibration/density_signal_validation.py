@@ -26,26 +26,26 @@ from benchmarks.density_matrix.partitioned_runtime.common import (
     execute_partitioned_with_reference,
 )
 from benchmarks.density_matrix.planner_calibration.signals import (
-    TASK5_DENSITY_AWARE_OBJECTIVE_NAME,
-    TASK5_DENSITY_SIGNAL_SCHEMA_VERSION,
+    PLANNER_CALIBRATION_DENSITY_AWARE_OBJECTIVE_NAME,
+    PLANNER_CALIBRATION_DENSITY_SIGNAL_SCHEMA_VERSION,
     apply_density_scores_and_rankings,
     build_density_signal_record,
 )
-from benchmarks.density_matrix.planner_calibration.task5_case_selection import (
-    iter_task5_story3_contrast_cases,
+from benchmarks.density_matrix.planner_calibration.case_selection import (
+    iter_density_signal_cases,
 )
 from benchmarks.density_matrix.planner_surface.common import build_software_metadata
 from squander.partitioning.noisy_runtime import PHASE3_RUNTIME_PATH_BASELINE
 
-SUITE_NAME = "phase3_task5_story3_density_signal"
+SUITE_NAME = "phase3_planner_calibration_density_signal"
 ARTIFACT_FILENAME = "density_signal_bundle.json"
 DEFAULT_OUTPUT_DIR = (
     REPO_ROOT
     / "benchmarks"
     / "density_matrix"
     / "artifacts"
-    / "phase3_task5"
-    / "story3_density_signal"
+    / "planner_calibration"
+    / "density_signal"
 )
 ARTIFACT_CORE_FIELDS = (
     "suite_name",
@@ -71,11 +71,11 @@ def _signal_case(metadata: dict, descriptor_set, parameters) -> dict:
 
 def _finalize_signal_records(records: list[dict]) -> list[dict]:
     apply_density_scores_and_rankings(
-        records, objective_name=TASK5_DENSITY_AWARE_OBJECTIVE_NAME
+        records, objective_name=PLANNER_CALIBRATION_DENSITY_AWARE_OBJECTIVE_NAME
     )
     for record in records:
         record["density_signal_pass"] = (
-            record["signal_schema_version"] == TASK5_DENSITY_SIGNAL_SCHEMA_VERSION
+            record["signal_schema_version"] == PLANNER_CALIBRATION_DENSITY_SIGNAL_SCHEMA_VERSION
             and record["runtime_path"] == PHASE3_RUNTIME_PATH_BASELINE
             and record["partition_count"] > 0
             and record["state_vector_proxy_score"] > 0.0
@@ -108,7 +108,7 @@ def _noise_sensitive_slice_count(records: list[dict]) -> int:
 def build_cases() -> list[dict]:
     records = [
         _signal_case(metadata, descriptor_set, parameters)
-        for metadata, descriptor_set, parameters, _ in iter_task5_story3_contrast_cases()
+        for metadata, descriptor_set, parameters, _ in iter_density_signal_cases()
     ]
     return _finalize_signal_records(records)
 
@@ -121,7 +121,7 @@ def build_artifact_bundle(cases: list[dict]) -> dict:
         "status": "pass"
         if density_signal_passes == len(cases) and noise_sensitive_slices >= 1
         else "fail",
-        "signal_schema_version": TASK5_DENSITY_SIGNAL_SCHEMA_VERSION,
+        "signal_schema_version": PLANNER_CALIBRATION_DENSITY_SIGNAL_SCHEMA_VERSION,
         "software": build_software_metadata(),
         "summary": {
             "total_cases": len(cases),

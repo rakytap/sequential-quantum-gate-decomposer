@@ -263,7 +263,7 @@ Out of scope for this story:
 **Execution checklist**
 - [ ] Add a dedicated Story 3 artifact location
       (for example
-      `benchmarks/density_matrix/artifacts/phase3_task7/story3_positive_threshold/`).
+      `benchmarks/density_matrix/artifacts/performance_evidence/positive_threshold/`).
 - [ ] Emit representative structured threshold cases through one stable schema
       plus a stable bundle summary.
 - [ ] Record rerun commands and software metadata with the emitted bundle.

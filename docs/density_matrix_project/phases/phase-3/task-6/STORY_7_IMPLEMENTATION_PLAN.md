@@ -45,7 +45,7 @@ Out of scope for this story:
   remain directly compatible with through:
   - `benchmarks/density_matrix/planner_calibration/calibration_bundle_validation.py`,
   - `benchmarks/density_matrix/planner_calibration/bundle.py`,
-  - and `benchmarks/density_matrix/artifacts/phase3_task5/`.
+  - and `benchmarks/density_matrix/artifacts/planner_calibration/`.
 - Phase 2 already provides publication-oriented bundle precedent Story 7 should
   learn from where practical:
   - `benchmarks/density_matrix/workflow_evidence/workflow_publication_bundle.py`,
@@ -195,7 +195,7 @@ Out of scope for this story:
   semantics.
 
 **Execution checklist**
-- [ ] Add focused checks in `tests/partitioning/test_phase3_task6.py` for
+- [ ] Add focused checks in `tests/partitioning/test_correctness_evidence.py` for
       positive-versus-negative package compatibility.
 - [ ] Compare top-level provenance, case identity, planner-setting reference,
       path-label presence, verdict fields, and exclusion fields across the Task
@@ -270,7 +270,7 @@ Out of scope for this story:
       `correctness_bundle_validation.py` as the primary checker.
 - [ ] Add a dedicated Story 7 artifact location
       (for example
-      `benchmarks/density_matrix/artifacts/phase3_task6/story7_correctness_package/`).
+      `benchmarks/density_matrix/artifacts/correctness_evidence/correctness_package/`).
 - [ ] Emit Task 6 positive and negative records through one stable schema plus a
       stable bundle summary.
 - [ ] Record rerun commands and software metadata with the emitted package.

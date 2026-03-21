@@ -229,7 +229,7 @@ Out of scope for this story:
   correctness verdicts.
 
 **Execution checklist**
-- [ ] Add focused checks in `tests/partitioning/test_phase3_task3.py` for
+- [ ] Add focused checks in `tests/partitioning/test_partitioned_runtime.py` for
       result-shape stability across supported workload classes.
 - [ ] Compare exact-output field presence, observable-output field presence
       where required, and top-level result metadata across supported cases.
@@ -264,7 +264,7 @@ Out of scope for this story:
 
 **Execution checklist**
 - [ ] Add a dedicated Story 5 artifact location
-      (for example `benchmarks/density_matrix/artifacts/phase3_task3/story5_results/`).
+      (for example `benchmarks/density_matrix/artifacts/partitioned_runtime/runtime_output/`).
 - [ ] Emit at least one continuity case, one microcase, and one structured case
       through the shared Story 5 result surface.
 - [ ] Include exact density outputs, continuity observable outputs where

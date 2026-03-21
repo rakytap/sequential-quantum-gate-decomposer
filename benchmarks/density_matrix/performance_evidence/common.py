@@ -14,8 +14,8 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from benchmarks.density_matrix.correctness_evidence.common import (  # noqa: E402
-    TASK6_CORRECTNESS_PACKAGE_SCHEMA_VERSION,
-    build_task6_selected_candidate,
+    CORRECTNESS_PACKAGE_SCHEMA_VERSION,
+    build_selected_candidate as build_correctness_selected_candidate,
 )
 from benchmarks.density_matrix.planner_surface.common import (  # noqa: E402
     build_software_metadata,
@@ -28,36 +28,36 @@ from squander.partitioning.noisy_runtime import (  # noqa: E402
     execute_sequential_density_reference,
 )
 
-TASK7_CASE_SCHEMA_VERSION = "phase3_task7_benchmark_record_v1"
-TASK7_BENCHMARK_PACKAGE_SCHEMA_VERSION = "phase3_task7_benchmark_package_v1"
-TASK7_SUMMARY_SCHEMA_VERSION = "phase3_task7_summary_consistency_v1"
+PERFORMANCE_EVIDENCE_CASE_SCHEMA_VERSION = "phase3_performance_evidence_record_v1"
+PERFORMANCE_EVIDENCE_BENCHMARK_PACKAGE_SCHEMA_VERSION = "phase3_performance_evidence_package_v1"
+PERFORMANCE_EVIDENCE_SUMMARY_SCHEMA_VERSION = "phase3_performance_evidence_summary_v1"
 
-TASK7_BENCHMARK_SLICE_CONTINUITY = "continuity_anchor"
-TASK7_BENCHMARK_SLICE_STRUCTURED = "structured_performance"
+PERFORMANCE_EVIDENCE_BENCHMARK_SLICE_CONTINUITY = "continuity_anchor"
+PERFORMANCE_EVIDENCE_BENCHMARK_SLICE_STRUCTURED = "structured_performance"
 
-TASK7_REFERENCE_BACKEND_INTERNAL = "sequential_density_descriptor_reference"
-TASK7_REFERENCE_BACKEND_EXTERNAL = "qiskit_aer_density_matrix"
+PERFORMANCE_EVIDENCE_REFERENCE_BACKEND_INTERNAL = "sequential_density_descriptor_reference"
+PERFORMANCE_EVIDENCE_REFERENCE_BACKEND_EXTERNAL = "qiskit_aer_density_matrix"
 
-TASK7_STATUS_COUNTED = "counted_supported"
-TASK7_STATUS_DIAGNOSIS_ONLY = "diagnosis_only"
-TASK7_STATUS_EXCLUDED = "excluded"
-TASK7_STATUS_NOT_REVIEW_CASE = "not_review_case"
+PERFORMANCE_EVIDENCE_STATUS_COUNTED = "counted_supported"
+PERFORMANCE_EVIDENCE_STATUS_DIAGNOSIS_ONLY = "diagnosis_only"
+PERFORMANCE_EVIDENCE_STATUS_EXCLUDED = "excluded"
+PERFORMANCE_EVIDENCE_STATUS_NOT_REVIEW_CASE = "not_review_case"
 
-TASK7_PRIMARY_STRUCTURED_SEED = DEFAULT_STRUCTURED_SEED
-TASK7_ADDITIONAL_STRUCTURED_SEEDS = (
+PERFORMANCE_EVIDENCE_PRIMARY_STRUCTURED_SEED = DEFAULT_STRUCTURED_SEED
+PERFORMANCE_EVIDENCE_ADDITIONAL_STRUCTURED_SEEDS = (
     DEFAULT_STRUCTURED_SEED + 1,
     DEFAULT_STRUCTURED_SEED + 2,
 )
-TASK7_REVIEW_NOISE_PATTERN = "sparse"
-TASK7_REPETITIONS = 3
+PERFORMANCE_EVIDENCE_REVIEW_NOISE_PATTERN = "sparse"
+PERFORMANCE_EVIDENCE_REPETITIONS = 3
 
 DEFAULT_OUTPUT_ROOT = (
-    REPO_ROOT / "benchmarks" / "density_matrix" / "artifacts" / "phase3_task7"
+    REPO_ROOT / "benchmarks" / "density_matrix" / "artifacts" / "performance_evidence"
 )
 
 
-def task7_story_output_dir(story_dir_name: str) -> Path:
-    return DEFAULT_OUTPUT_ROOT / story_dir_name
+def performance_evidence_output_dir(slice_dir_name: str) -> Path:
+    return DEFAULT_OUTPUT_ROOT / slice_dir_name
 
 
 def write_artifact_bundle(
@@ -70,39 +70,55 @@ def write_artifact_bundle(
 
 
 @lru_cache(maxsize=1)
-def build_task7_selected_candidate() -> dict[str, Any]:
-    return dict(build_task6_selected_candidate())
+def build_selected_candidate() -> dict[str, Any]:
+    return dict(build_correctness_selected_candidate())
 
 
-def build_task7_software_metadata() -> dict[str, Any]:
+def build_package_software_metadata() -> dict[str, Any]:
     metadata = build_software_metadata()
-    metadata["task5_selected_candidate_id"] = build_task7_selected_candidate()[
-        "candidate_id"
-    ]
-    metadata["task6_correctness_package_schema_version"] = (
-        TASK6_CORRECTNESS_PACKAGE_SCHEMA_VERSION
-    )
+    metadata["planner_calibration_selected_candidate_id"] = build_selected_candidate()["candidate_id"]
+    metadata["correctness_evidence_package_schema_version"] = CORRECTNESS_PACKAGE_SCHEMA_VERSION
     return metadata
 
 
 @lru_cache(maxsize=1)
-def build_task7_task6_reference_index() -> dict[str, dict[str, Any]]:
+def build_correctness_reference_index() -> dict[str, dict[str, Any]]:
     from benchmarks.density_matrix.correctness_evidence.bundle import (
-        build_task6_correctness_package_payload,
+        build_correctness_package_payload,
     )
 
-    payload = build_task6_correctness_package_payload()
+    payload = build_correctness_package_payload()
     return {case["workload_id"]: dict(case) for case in payload["cases"]}
 
 
 @lru_cache(maxsize=1)
-def build_task7_boundary_evidence() -> tuple[dict[str, Any], ...]:
+def build_boundary_evidence() -> tuple[dict[str, Any], ...]:
     from benchmarks.density_matrix.correctness_evidence.bundle import (
-        build_task6_correctness_package_payload,
+        build_correctness_package_payload,
     )
 
-    payload = build_task6_correctness_package_payload()
+    payload = build_correctness_package_payload()
     return tuple(dict(case) for case in payload["negative_cases"])
+
+
+# Compatibility aliases for existing semantic imports.
+CORRECTNESS_EVIDENCE_CORRECTNESS_PACKAGE_SCHEMA_VERSION = CORRECTNESS_PACKAGE_SCHEMA_VERSION
+
+
+def build_performance_evidence_selected_candidate() -> dict[str, Any]:
+    return build_selected_candidate()
+
+
+def build_performance_evidence_software_metadata() -> dict[str, Any]:
+    return build_package_software_metadata()
+
+
+def build_performance_evidence_correctness_evidence_reference_index() -> dict[str, dict[str, Any]]:
+    return build_correctness_reference_index()
+
+
+def build_performance_evidence_boundary_evidence() -> tuple[dict[str, Any], ...]:
+    return build_boundary_evidence()
 
 
 def _peak_rss_kb() -> int:

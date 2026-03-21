@@ -3,7 +3,7 @@
     {
       "ansatz": "HEA",
       "backend": "density_matrix",
-      "case_kind": "phase3_task1_story1_continuity_surface",
+      "case_kind": "phase3_planner_surface_continuity_surface",
       "case_name": "phase2_xxz_hea_q4_continuity",
       "continuity_anchor_pass": true,
       "density_noise": [
@@ -271,7 +271,7 @@
     {
       "ansatz": "HEA",
       "backend": "density_matrix",
-      "case_kind": "phase3_task1_story1_continuity_surface",
+      "case_kind": "phase3_planner_surface_continuity_surface",
       "case_name": "phase2_xxz_hea_q6_continuity",
       "continuity_anchor_pass": true,
       "density_noise": [
@@ -651,7 +651,7 @@
     {
       "ansatz": "HEA",
       "backend": "density_matrix",
-      "case_kind": "phase3_task1_story1_continuity_surface",
+      "case_kind": "phase3_planner_surface_continuity_surface",
       "case_name": "phase2_xxz_hea_q8_continuity",
       "continuity_anchor_pass": true,
       "density_noise": [
@@ -1143,7 +1143,7 @@
     {
       "ansatz": "HEA",
       "backend": "density_matrix",
-      "case_kind": "phase3_task1_story1_continuity_surface",
+      "case_kind": "phase3_planner_surface_continuity_surface",
       "case_name": "phase2_xxz_hea_q10_continuity",
       "continuity_anchor_pass": true,
       "density_noise": [
@@ -1753,7 +1753,7 @@
     "scipy": "1.16.3"
   },
   "status": "pass",
-  "suite_name": "phase3_task1_story1_continuity_surface",
+  "suite_name": "phase3_planner_surface_continuity_surface",
   "summary": {
     "actual_pass_rate": 1.0,
     "continuity_anchor_passes": 4,

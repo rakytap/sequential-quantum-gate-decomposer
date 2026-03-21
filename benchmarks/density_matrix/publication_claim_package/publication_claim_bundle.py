@@ -24,12 +24,12 @@ if str(REPO_ROOT) not in sys.path:
 from benchmarks.density_matrix.publication_claim_package.doc_utils import (
     EVIDENCE_CLOSURE_RULE,
     EXACT_REGIME_BOUNDARY,
-    MANDATORY_TASK8_DOCS,
+    MANDATORY_PUBLICATION_EVIDENCE_DOCS,
     PHASE2_DOCUMENTATION_INDEX_PATH,
     PHASE_POSITIONING_RULE,
     PUBLICATION_SURFACES,
     SUPPORTED_PATH_BOUNDARY,
-    TASK6_PUBLICATION_BUNDLE_PATH,
+    CORRECTNESS_EVIDENCE_PUBLICATION_BUNDLE_PATH,
     PUBLICATION_CLAIM_OUTPUT_DIR,
     build_software_metadata,
     get_git_revision,
@@ -225,7 +225,7 @@ def build_story_artifact_entries(
 
 def build_file_coverage():
     coverage = []
-    for doc_id, path in MANDATORY_TASK8_DOCS.items():
+    for doc_id, path in MANDATORY_PUBLICATION_EVIDENCE_DOCS.items():
         coverage.append(
             {
                 "doc_id": doc_id,
@@ -238,7 +238,7 @@ def build_file_coverage():
 
 def build_terminology_inventory():
     combined_text = "\n".join(
-        load_text(MANDATORY_TASK8_DOCS[surface["doc_id"]])
+        load_text(MANDATORY_PUBLICATION_EVIDENCE_DOCS[surface["doc_id"]])
         for surface in PUBLICATION_SURFACES.values()
     )
     combined_text += "\n" + load_text(PHASE2_DOCUMENTATION_INDEX_PATH)
@@ -253,7 +253,7 @@ def build_terminology_inventory():
     }
 
 
-def build_task8_story7_bundle(
+def build_publication_evidence_story7_bundle(
     *,
     story1_artifact,
     story2_artifact,
@@ -277,9 +277,9 @@ def build_task8_story7_bundle(
             "path": relative_to_repo(PHASE2_DOCUMENTATION_INDEX_PATH),
             "exists": PHASE2_DOCUMENTATION_INDEX_PATH.exists(),
         },
-        "task6_publication_bundle": {
-            "path": relative_to_repo(TASK6_PUBLICATION_BUNDLE_PATH),
-            "exists": TASK6_PUBLICATION_BUNDLE_PATH.exists(),
+        "correctness_evidence_publication_bundle": {
+            "path": relative_to_repo(CORRECTNESS_EVIDENCE_PUBLICATION_BUNDLE_PATH),
+            "exists": CORRECTNESS_EVIDENCE_PUBLICATION_BUNDLE_PATH.exists(),
         },
     }
 
@@ -332,11 +332,11 @@ def build_task8_story7_bundle(
             "reviewer_entry_paths_complete": reviewer_entry_paths_complete,
         },
     }
-    validate_task8_story7_bundle(bundle)
+    validate_publication_evidence_story7_bundle(bundle)
     return bundle
 
 
-def validate_task8_story7_bundle(bundle):
+def validate_publication_evidence_story7_bundle(bundle):
     missing_fields = [field for field in BUNDLE_FIELDS if field not in bundle]
     if missing_fields:
         raise ValueError(
@@ -403,8 +403,8 @@ def validate_task8_story7_bundle(bundle):
         raise ValueError("Task 8 Story 7 status does not match bundle summary")
 
 
-def write_task8_story7_bundle(output_path: Path, bundle):
-    validate_task8_story7_bundle(bundle)
+def write_publication_evidence_story7_bundle(output_path: Path, bundle):
+    validate_publication_evidence_story7_bundle(bundle)
     write_json(output_path, bundle)
 
 
@@ -424,7 +424,7 @@ def run_validation(
     story4_artifact = _load_story4(story4_path)
     story5_artifact = _load_story5(story5_path)
     story6_artifact = _load_story6(story6_path)
-    bundle = build_task8_story7_bundle(
+    bundle = build_publication_evidence_story7_bundle(
         story1_artifact=story1_artifact,
         story2_artifact=story2_artifact,
         story3_artifact=story3_artifact,
@@ -473,7 +473,7 @@ def main():
     args = parse_args()
     *_, bundle = run_validation(verbose=not args.quiet)
     output_path = args.output_dir / ARTIFACT_FILENAME
-    write_task8_story7_bundle(output_path, bundle)
+    write_publication_evidence_story7_bundle(output_path, bundle)
     print(
         "Wrote {} with status {} ({}/{})".format(
             output_path,

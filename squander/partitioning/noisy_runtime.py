@@ -35,7 +35,7 @@ PHASE3_FUSION_CLASS_DEFERRED = "deferred_or_unsupported_candidate"
 
 
 class NoisyRuntimeValidationError(ValueError):
-    """Structured runtime validation error for Phase 3 Task 3."""
+    """Structured runtime validation error for the Phase 3 partitioned runtime."""
 
     def __init__(
         self,
@@ -386,7 +386,7 @@ def _coerce_parameter_vector(
             first_unsupported_condition="parameter_vector",
             failure_stage="runtime_preflight",
             runtime_path=runtime_path,
-            reason="Task 3 runtime requires a one-dimensional parameter vector",
+            reason="Partitioned runtime requires a one-dimensional parameter vector",
         )
     if parameter_vector.size != descriptor_set.parameter_count:
         raise _runtime_error(
@@ -396,7 +396,7 @@ def _coerce_parameter_vector(
             failure_stage="runtime_preflight",
             runtime_path=runtime_path,
             reason=(
-                "Task 3 runtime workload '{}' requires {} parameters, got {}".format(
+                "Partitioned runtime workload '{}' requires {} parameters, got {}".format(
                     descriptor_set.workload_id,
                     descriptor_set.parameter_count,
                     parameter_vector.size,
@@ -421,7 +421,7 @@ def _validate_supported_member(
                 failure_stage="runtime_preflight",
                 runtime_path=runtime_path,
                 reason=(
-                    "Task 3 runtime supports only gate families {}, got '{}'".format(
+                    "Partitioned runtime supports only gate families {}, got '{}'".format(
                         sorted(SUPPORTED_PHASE3_GATE_NAMES), member.name
                     )
                 ),
@@ -433,7 +433,7 @@ def _validate_supported_member(
                 first_unsupported_condition="target_qbit",
                 failure_stage="runtime_preflight",
                 runtime_path=runtime_path,
-                reason="Task 3 runtime requires target_qbit for U3 operations",
+                reason="Partitioned runtime requires target_qbit for U3 operations",
             )
         if member.name == "CNOT" and (
             member.target_qbit is None or member.control_qbit is None
@@ -444,7 +444,7 @@ def _validate_supported_member(
                 first_unsupported_condition="control_qbit",
                 failure_stage="runtime_preflight",
                 runtime_path=runtime_path,
-                reason="Task 3 runtime requires both target_qbit and control_qbit for CNOT",
+                reason="Partitioned runtime requires both target_qbit and control_qbit for CNOT",
             )
         if member.fixed_value is not None:
             raise _runtime_error(
@@ -453,7 +453,7 @@ def _validate_supported_member(
                 first_unsupported_condition="fixed_value",
                 failure_stage="runtime_preflight",
                 runtime_path=runtime_path,
-                reason="Task 3 gate members must not carry fixed_value payloads",
+                reason="Partitioned runtime gate members must not carry fixed_value payloads",
             )
         return
 
@@ -466,7 +466,7 @@ def _validate_supported_member(
                 failure_stage="runtime_preflight",
                 runtime_path=runtime_path,
                 reason=(
-                    "Task 3 runtime supports only local-noise families {}, got '{}'".format(
+                    "Partitioned runtime supports only local-noise families {}, got '{}'".format(
                         sorted(SUPPORTED_PHASE3_NOISE_NAMES), member.name
                     )
                 ),
@@ -478,7 +478,7 @@ def _validate_supported_member(
                 first_unsupported_condition="target_qbit",
                 failure_stage="runtime_preflight",
                 runtime_path=runtime_path,
-                reason="Task 3 runtime requires target_qbit for local noise operations",
+                reason="Partitioned runtime requires target_qbit for local noise operations",
             )
         if member.param_count == 0 and member.fixed_value is None:
             raise _runtime_error(
@@ -488,7 +488,7 @@ def _validate_supported_member(
                 failure_stage="runtime_preflight",
                 runtime_path=runtime_path,
                 reason=(
-                    "Task 3 runtime requires fixed_value on zero-parameter noise "
+                    "Partitioned runtime requires fixed_value on zero-parameter noise "
                     "operations for workload '{}'".format(descriptor_set.workload_id)
                 ),
             )
@@ -500,7 +500,7 @@ def _validate_supported_member(
         first_unsupported_condition="operation_kind",
         failure_stage="runtime_preflight",
         runtime_path=runtime_path,
-        reason="Task 3 runtime does not support descriptor kind '{}'".format(member.kind),
+        reason="Partitioned runtime does not support descriptor kind '{}'".format(member.kind),
     )
 
 
@@ -522,7 +522,7 @@ def validate_runtime_request(
             failure_stage="runtime_preflight",
             runtime_path=runtime_path,
             reason=(
-                "Task 3 runtime supports only '{}' requests, got '{}'".format(
+                "Partitioned runtime supports only '{}' requests, got '{}'".format(
                     PARTITIONED_DENSITY_MODE, validated_descriptor_set.requested_mode
                 )
             ),
@@ -575,7 +575,7 @@ def _append_member_to_circuit(
         first_unsupported_condition="operation_name",
         failure_stage="runtime_preflight",
         runtime_path=runtime_path,
-        reason="Task 3 runtime cannot lower operation '{}'".format(member.name),
+        reason="Partitioned runtime cannot lower operation '{}'".format(member.name),
     )
 
 
@@ -621,7 +621,7 @@ def _validate_runtime_circuit_shape(
             failure_stage="runtime_preflight",
             runtime_path=runtime_path,
             reason=(
-                "Task 3 runtime built {} operations for workload '{}' but the "
+                "Partitioned runtime built {} operations for workload '{}' but the "
                 "descriptor members contain {}".format(
                     len(operation_info), descriptor_set.workload_id, len(members)
                 )
@@ -642,7 +642,7 @@ def _validate_runtime_circuit_shape(
                 failure_stage="runtime_preflight",
                 runtime_path=runtime_path,
                 reason=(
-                    "Task 3 runtime operation info diverged from the descriptor "
+                    "Partitioned runtime operation info diverged from the descriptor "
                     "contract for workload '{}' at canonical operation {}".format(
                         descriptor_set.workload_id, member.canonical_operation_index
                     )
@@ -657,7 +657,7 @@ def _validate_runtime_circuit_shape(
             failure_stage="runtime_preflight",
             runtime_path=runtime_path,
             reason=(
-                "Task 3 runtime circuit expected {} parameters but built {}".format(
+                "Partitioned runtime circuit expected {} parameters but built {}".format(
                     expected_parameter_count, circuit.parameter_num
                 )
             ),
@@ -680,7 +680,7 @@ def _validate_runtime_member_sequence(
             failure_stage="runtime_preflight",
             runtime_path=runtime_path,
             reason=(
-                "Task 3 runtime built {} operations for workload '{}' but the "
+                "Partitioned runtime built {} operations for workload '{}' but the "
                 "segment members contain {}".format(
                     len(operation_info), descriptor_set.workload_id, len(members)
                 )
@@ -701,7 +701,7 @@ def _validate_runtime_member_sequence(
                 failure_stage="runtime_preflight",
                 runtime_path=runtime_path,
                 reason=(
-                    "Task 3 runtime segment diverged from the descriptor contract "
+                    "Partitioned runtime segment diverged from the descriptor contract "
                     "for workload '{}' at canonical operation {}".format(
                         descriptor_set.workload_id, member.canonical_operation_index
                     )
@@ -716,7 +716,7 @@ def _validate_runtime_member_sequence(
             failure_stage="runtime_preflight",
             runtime_path=runtime_path,
             reason=(
-                "Task 3 runtime segment expected {} parameters but built {}".format(
+                "Partitioned runtime segment expected {} parameters but built {}".format(
                     expected_param_start, circuit.parameter_num
                 )
             ),
@@ -744,7 +744,7 @@ def _build_partition_parameter_vector(
                 failure_stage="runtime_preflight",
                 runtime_path=runtime_path,
                 reason=(
-                    "Task 3 runtime partition {} has out-of-range parameter_routing".format(
+                    "Partitioned runtime partition {} has out-of-range parameter_routing".format(
                         partition.partition_index
                     )
                 ),
@@ -797,7 +797,7 @@ def _segment_parameter_vector(
                 failure_stage="runtime_preflight",
                 runtime_path=runtime_path,
                 reason=(
-                    "Task 3 runtime segment for workload '{}' references "
+                    "Partitioned runtime segment for workload '{}' references "
                     "out-of-range local parameters at canonical operation {}".format(
                         descriptor_set.workload_id, member.canonical_operation_index
                     )
@@ -849,7 +849,7 @@ def _execute_member_sequence(
             failure_stage="runtime_execution",
             runtime_path=runtime_path,
             reason=(
-                "Task 3 runtime failed while executing a member segment of workload "
+                "Partitioned runtime failed while executing a member segment of workload "
                 "'{}': {}".format(descriptor_set.workload_id, exc)
             ),
         ) from exc
@@ -939,7 +939,7 @@ def _build_gate_matrix_for_member(
                 first_unsupported_condition="local_target_qbit",
                 failure_stage="runtime_preflight",
                 runtime_path=runtime_path,
-                reason="Task 4 fused runtime requires local_target_qbit for U3 members",
+                reason="Fused partitioned runtime requires local_target_qbit for U3 members",
             )
         local_start = member.local_param_start
         local_stop = local_start + member.param_count
@@ -951,7 +951,7 @@ def _build_gate_matrix_for_member(
                 failure_stage="runtime_preflight",
                 runtime_path=runtime_path,
                 reason=(
-                    "Task 4 fused runtime has out-of-range parameters for workload "
+                    "Fused partitioned runtime has out-of-range parameters for workload "
                     "'{}' at canonical operation {}".format(
                         descriptor_set.workload_id, member.canonical_operation_index
                     )
@@ -971,7 +971,7 @@ def _build_gate_matrix_for_member(
                 first_unsupported_condition="local_control_qbit",
                 failure_stage="runtime_preflight",
                 runtime_path=runtime_path,
-                reason="Task 4 fused runtime requires both local qubits for CNOT members",
+                reason="Fused partitioned runtime requires both local qubits for CNOT members",
             )
         return _embed_cnot_gate(
             total_kernel_qbits=total_kernel_qbits,
@@ -984,7 +984,7 @@ def _build_gate_matrix_for_member(
         first_unsupported_condition="fusion_gate_name",
         failure_stage="runtime_preflight",
         runtime_path=runtime_path,
-        reason="Task 4 fused runtime cannot build a fused kernel for '{}'".format(
+        reason="Fused partitioned runtime cannot build a fused kernel for '{}'".format(
             member.name
         ),
     )
@@ -1006,7 +1006,7 @@ def _build_fused_kernel(
             first_unsupported_condition="local_qubit_support",
             failure_stage="runtime_preflight",
             runtime_path=runtime_path,
-            reason="Task 4 fused runtime requires non-empty local_qubit_support",
+            reason="Fused partitioned runtime requires non-empty local_qubit_support",
         )
     if len(active_local_qbits) > 2:
         raise _runtime_error(
@@ -1016,7 +1016,7 @@ def _build_fused_kernel(
             failure_stage="runtime_preflight",
             runtime_path=runtime_path,
             reason=(
-                "Task 4 fused runtime supports only unitary islands on up to 2 "
+                "Fused partitioned runtime supports only unitary islands on up to 2 "
                 "qubits, got span {} for workload '{}'".format(
                     len(active_local_qbits), descriptor_set.workload_id
                 )
@@ -1036,7 +1036,7 @@ def _build_fused_kernel(
                 first_unsupported_condition="fusion_member_kind",
                 failure_stage="runtime_preflight",
                 runtime_path=runtime_path,
-                reason="Task 4 fused runtime only supports unitary members inside one fused island",
+                reason="Fused partitioned runtime only supports unitary members inside one fused island",
             )
         gate_matrix = _build_gate_matrix_for_member(
             descriptor_set,
@@ -1128,13 +1128,33 @@ def _execute_partition_with_optional_fusion(
         if is_unitary:
             eligible_for_fusion = len(segment_members) >= 2
             if allow_fusion and eligible_for_fusion:
-                fused_kernel, active_local_qbits, global_target_qbits = _build_fused_kernel(
-                    descriptor_set,
-                    partition,
-                    segment_members,
-                    local_parameter_vector,
-                    runtime_path=runtime_path,
-                )
+                try:
+                    fused_kernel, active_local_qbits, global_target_qbits = _build_fused_kernel(
+                        descriptor_set,
+                        partition,
+                        segment_members,
+                        local_parameter_vector,
+                        runtime_path=runtime_path,
+                    )
+                except NoisyRuntimeValidationError as exc:
+                    if exc.first_unsupported_condition != "fusion_qubit_span":
+                        raise
+                    _execute_member_sequence(
+                        descriptor_set,
+                        segment_members,
+                        local_parameter_vector,
+                        rho,
+                        runtime_path=runtime_path,
+                    )
+                    fused_regions.append(
+                        _build_unitary_region_record(
+                            partition,
+                            segment_members,
+                            classification=PHASE3_FUSION_CLASS_DEFERRED,
+                            reason="fusion_qubit_span",
+                        )
+                    )
+                    continue
                 try:
                     rho.apply_local_unitary(
                         np.asarray(fused_kernel, dtype=np.complex128),
@@ -1148,7 +1168,7 @@ def _execute_partition_with_optional_fusion(
                         failure_stage="runtime_execution",
                         runtime_path=runtime_path,
                         reason=(
-                            "Task 4 fused runtime failed while executing partition {} "
+                            "Fused partitioned runtime failed while executing partition {} "
                             "of workload '{}' on local span {}: {}".format(
                                 partition.partition_index,
                                 descriptor_set.workload_id,
@@ -1341,7 +1361,7 @@ def execute_sequential_density_reference(
             failure_stage="runtime_execution",
             runtime_path=runtime_path,
             reason=(
-                "Task 3 sequential reference execution failed for workload '{}': {}".format(
+                "Sequential reference execution failed for workload '{}': {}".format(
                     validated_descriptor_set.workload_id,
                     exc,
                 )

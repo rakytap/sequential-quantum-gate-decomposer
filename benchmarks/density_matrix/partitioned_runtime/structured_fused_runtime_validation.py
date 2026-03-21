@@ -23,8 +23,8 @@ from benchmarks.density_matrix.partitioned_runtime.common import (
     PHASE3_RUNTIME_DENSITY_TOL,
     execute_fused_with_reference,
 )
-from benchmarks.density_matrix.partitioned_runtime.task4_case_selection import (
-    iter_task4_structured_cases,
+from benchmarks.density_matrix.partitioned_runtime.fusion_case_selection import (
+    iter_fusion_structured_cases,
 )
 from benchmarks.density_matrix.planner_surface.common import build_software_metadata
 from squander.partitioning.noisy_runtime import (
@@ -32,15 +32,15 @@ from squander.partitioning.noisy_runtime import (
     PHASE3_RUNTIME_SCHEMA_VERSION,
 )
 
-SUITE_NAME = "phase3_task4_story2_structured_fused_runtime"
+SUITE_NAME = "phase3_partitioned_runtime_structured_fused_runtime"
 ARTIFACT_FILENAME = "structured_fused_runtime_bundle.json"
 DEFAULT_OUTPUT_DIR = (
     REPO_ROOT
     / "benchmarks"
     / "density_matrix"
     / "artifacts"
-    / "phase3_task4"
-    / "story2_structured_fused_runtime"
+    / "partitioned_runtime"
+    / "structured_fused_runtime"
 )
 ARTIFACT_CORE_FIELDS = (
     "suite_name",
@@ -89,7 +89,7 @@ def _fused_case(metadata: dict, descriptor_set, parameters) -> dict:
 
 def build_cases() -> list[dict]:
     selected_by_qubits: dict[int, dict] = {}
-    for metadata, descriptor_set, parameters in iter_task4_structured_cases():
+    for metadata, descriptor_set, parameters in iter_fusion_structured_cases():
         if metadata["qbit_num"] in selected_by_qubits:
             continue
         case = _fused_case(metadata, descriptor_set, parameters)

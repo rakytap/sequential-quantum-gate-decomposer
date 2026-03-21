@@ -112,7 +112,7 @@ def _load_json(path: Path):
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def build_task5_story6_bundle(
+def build_planner_calibration_story6_bundle(
     output_dir: Path,
     *,
     story1_bundle,
@@ -327,11 +327,11 @@ def build_task5_story6_bundle(
         },
         "artifacts": artifacts,
     }
-    validate_task5_story6_bundle(bundle, output_dir)
+    validate_planner_calibration_story6_bundle(bundle, output_dir)
     return bundle
 
 
-def validate_task5_story6_bundle(bundle, bundle_dir: Path):
+def validate_planner_calibration_story6_bundle(bundle, bundle_dir: Path):
     missing_fields = [field for field in BUNDLE_FIELDS if field not in bundle]
     if missing_fields:
         raise ValueError(
@@ -426,8 +426,8 @@ def validate_task5_story6_bundle(bundle, bundle_dir: Path):
             )
 
 
-def write_task5_story6_bundle(output_path: Path, bundle):
-    validate_task5_story6_bundle(bundle, output_path.parent)
+def write_planner_calibration_story6_bundle(output_path: Path, bundle):
+    validate_planner_calibration_story6_bundle(bundle, output_path.parent)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(
         json.dumps(bundle, indent=2, sort_keys=True) + "\n", encoding="utf-8"
@@ -484,7 +484,7 @@ def generate_story6_bundle(
     )
     write_exact_density_validation_bundle_file(output_dir / STORY5_ARTIFACT_FILENAME, story5_bundle)
 
-    bundle = build_task5_story6_bundle(
+    bundle = build_planner_calibration_story6_bundle(
         output_dir,
         story1_bundle=story1_bundle,
         story2_bundle=story2_bundle,
@@ -493,7 +493,7 @@ def generate_story6_bundle(
         story4_bundle=story4_bundle,
         story5_bundle=story5_bundle,
     )
-    write_task5_story6_bundle(output_dir / ARTIFACT_FILENAME, bundle)
+    write_planner_calibration_story6_bundle(output_dir / ARTIFACT_FILENAME, bundle)
     return bundle
 
 

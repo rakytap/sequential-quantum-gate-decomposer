@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Validation: Phase 3 Task 5 Story 1 planner-candidate audit surface.
+"""Validation: Phase 3 planner-candidate audit surface.
 
 Emits one auditable candidate surface for the current noisy planner by showing
-that each supported Task 5 candidate can build representative continuity,
+that each supported planner candidate can build representative continuity,
 microcase, and structured descriptor sets on the frozen Phase 3 workload
 surface.
 
@@ -22,28 +22,28 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from benchmarks.density_matrix.planner_calibration.common import (
-    TASK5_CANDIDATE_SCHEMA_VERSION,
-    build_task5_planner_candidates,
+    PLANNER_CANDIDATE_SCHEMA_VERSION,
+    build_planner_candidates,
 )
 from benchmarks.density_matrix.planner_surface.common import (
-    build_phase3_story1_continuity_vqe,
+    build_phase2_continuity_vqe,
     build_software_metadata,
 )
 from benchmarks.density_matrix.planner_surface.workloads import (
-    iter_story2_microcase_descriptor_sets,
-    iter_story2_structured_descriptor_sets,
+    iter_microcase_descriptor_sets,
+    iter_structured_descriptor_sets,
 )
 from squander.partitioning.noisy_planner import build_phase3_continuity_partition_descriptor_set
 
-SUITE_NAME = "phase3_task5_story1_planner_candidate_audit"
+SUITE_NAME = "phase3_planner_calibration_candidate_audit"
 ARTIFACT_FILENAME = "planner_candidate_audit_bundle.json"
 DEFAULT_OUTPUT_DIR = (
     REPO_ROOT
     / "benchmarks"
     / "density_matrix"
     / "artifacts"
-    / "phase3_task5"
-    / "story1_candidate_audit"
+    / "planner_calibration"
+    / "planner_candidate_audit"
 )
 ARTIFACT_CORE_FIELDS = (
     "suite_name",
@@ -78,7 +78,7 @@ def _descriptor_summary(case_kind: str, metadata: dict, descriptor_set) -> dict:
 
 def _representative_continuity_case(candidate) -> dict:
     qbit_num = 4
-    vqe, _, topology = build_phase3_story1_continuity_vqe(qbit_num)
+    vqe, _, topology = build_phase2_continuity_vqe(qbit_num)
     descriptor_set = build_phase3_continuity_partition_descriptor_set(
         vqe,
         workload_id=f"phase2_xxz_hea_q{qbit_num}_continuity",
@@ -94,7 +94,7 @@ def _representative_continuity_case(candidate) -> dict:
 def _representative_microcase(candidate) -> dict:
     metadata, descriptor_set = next(
         iter(
-            iter_story2_microcase_descriptor_sets(
+            iter_microcase_descriptor_sets(
                 max_partition_qubits=candidate.max_partition_qubits
             )
         )
@@ -105,7 +105,7 @@ def _representative_microcase(candidate) -> dict:
 def _representative_structured_case(candidate) -> dict:
     metadata, descriptor_set = next(
         iter(
-            iter_story2_structured_descriptor_sets(
+            iter_structured_descriptor_sets(
                 max_partition_qubits=candidate.max_partition_qubits
             )
         )
@@ -128,7 +128,7 @@ def _candidate_case(candidate) -> dict:
         "representative_workload_ids": representative_workload_ids,
         "representative_cases": representative_cases,
         "candidate_surface_pass": (
-            candidate_payload["schema_version"] == TASK5_CANDIDATE_SCHEMA_VERSION
+            candidate_payload["schema_version"] == PLANNER_CANDIDATE_SCHEMA_VERSION
             and supported_case_kinds == list(REQUIRED_CASE_KINDS)
             and len(set(representative_workload_ids)) == len(REQUIRED_CASE_KINDS)
             and all(
@@ -141,7 +141,7 @@ def _candidate_case(candidate) -> dict:
 
 
 def build_cases() -> list[dict]:
-    return [_candidate_case(candidate) for candidate in build_task5_planner_candidates()]
+    return [_candidate_case(candidate) for candidate in build_planner_candidates()]
 
 
 def build_artifact_bundle(cases: list[dict]) -> dict:
@@ -152,7 +152,7 @@ def build_artifact_bundle(cases: list[dict]) -> dict:
         "status": "pass"
         if candidate_passes == len(cases) and len(set(candidate_ids)) == len(candidate_ids)
         else "fail",
-        "candidate_schema_version": TASK5_CANDIDATE_SCHEMA_VERSION,
+        "candidate_schema_version": PLANNER_CANDIDATE_SCHEMA_VERSION,
         "software": build_software_metadata(),
         "summary": {
             "total_candidates": len(cases),
@@ -169,7 +169,7 @@ def build_artifact_bundle(cases: list[dict]) -> dict:
     missing = [field for field in ARTIFACT_CORE_FIELDS if field not in bundle]
     if missing:
         raise ValueError(
-            "Task 5 Story 1 bundle missing required fields: {}".format(
+            "Planner-candidate audit bundle missing required fields: {}".format(
                 ", ".join(missing)
             )
         )
@@ -189,7 +189,7 @@ def main(argv: list[str] | None = None) -> int:
         "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
-        help="Directory to write the Task 5 Story 1 bundle into.",
+        help="Directory to write the planner-candidate audit bundle into.",
     )
     parser.add_argument(
         "--quiet",

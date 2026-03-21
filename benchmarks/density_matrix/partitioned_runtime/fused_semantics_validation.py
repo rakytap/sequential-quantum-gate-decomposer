@@ -23,21 +23,21 @@ from benchmarks.density_matrix.partitioned_runtime.common import (
     PHASE3_RUNTIME_DENSITY_TOL,
     execute_fused_with_reference,
 )
-from benchmarks.density_matrix.partitioned_runtime.task4_case_selection import (
-    iter_task4_microcase_cases,
-    iter_task4_structured_cases,
+from benchmarks.density_matrix.partitioned_runtime.fusion_case_selection import (
+    iter_fusion_microcase_cases,
+    iter_fusion_structured_cases,
 )
 from benchmarks.density_matrix.planner_surface.common import build_software_metadata
 
-SUITE_NAME = "phase3_task4_story4_fused_semantics"
+SUITE_NAME = "phase3_partitioned_runtime_fused_semantics"
 ARTIFACT_FILENAME = "fused_semantics_bundle.json"
 DEFAULT_OUTPUT_DIR = (
     REPO_ROOT
     / "benchmarks"
     / "density_matrix"
     / "artifacts"
-    / "phase3_task4"
-    / "story4_fused_semantics"
+    / "partitioned_runtime"
+    / "fused_semantics"
 )
 ARTIFACT_CORE_FIELDS = (
     "suite_name",
@@ -83,7 +83,7 @@ def _semantics_case(metadata: dict, descriptor_set, parameters) -> dict:
 def build_cases() -> list[dict]:
     selected_structured: dict[int, dict] = {}
     optional_microcase: dict | None = None
-    for metadata, descriptor_set, parameters in iter_task4_structured_cases():
+    for metadata, descriptor_set, parameters in iter_fusion_structured_cases():
         if metadata["qbit_num"] in selected_structured:
             continue
         case = _semantics_case(metadata, descriptor_set, parameters)
@@ -93,7 +93,7 @@ def build_cases() -> list[dict]:
             break
     if set(selected_structured) != {8, 10}:
         raise RuntimeError("Missing representative structured fused semantics cases")
-    for metadata, descriptor_set, parameters in iter_task4_microcase_cases():
+    for metadata, descriptor_set, parameters in iter_fusion_microcase_cases():
         case = _semantics_case(metadata, descriptor_set, parameters)
         if case["fused_semantics_pass"]:
             optional_microcase = case

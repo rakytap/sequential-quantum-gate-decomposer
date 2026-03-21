@@ -265,7 +265,7 @@ Out of scope for this story:
 **Execution checklist**
 - [ ] Add a dedicated Story 6 artifact location
       (for example
-      `benchmarks/density_matrix/artifacts/phase3_task6/story6_unsupported_boundary/`).
+      `benchmarks/density_matrix/artifacts/correctness_evidence/unsupported_boundary/`).
 - [ ] Emit planner-entry, descriptor-generation, and runtime-stage negative
       cases through one stable schema with stage identity explicit.
 - [ ] Record rerun commands, software metadata, and exclusion semantics with the

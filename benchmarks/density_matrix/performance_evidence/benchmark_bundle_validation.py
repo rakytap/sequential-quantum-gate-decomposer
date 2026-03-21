@@ -19,18 +19,18 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from benchmarks.density_matrix.performance_evidence.bundle import (
-    build_task7_benchmark_package_payload,
+    build_performance_evidence_benchmark_package_payload,
 )
 from benchmarks.density_matrix.performance_evidence.common import (
-    TASK7_BENCHMARK_PACKAGE_SCHEMA_VERSION,
-    build_task7_software_metadata,
-    task7_story_output_dir,
+    PERFORMANCE_EVIDENCE_BENCHMARK_PACKAGE_SCHEMA_VERSION,
+    build_performance_evidence_software_metadata,
+    performance_evidence_output_dir,
     write_artifact_bundle,
 )
 
-SUITE_NAME = "phase3_task7_story7_benchmark_package"
+SUITE_NAME = "phase3_performance_evidence_benchmark_package"
 ARTIFACT_FILENAME = "benchmark_package_bundle.json"
-DEFAULT_OUTPUT_DIR = task7_story_output_dir("story7_benchmark_package")
+DEFAULT_OUTPUT_DIR = performance_evidence_output_dir("benchmark_package")
 ARTIFACT_CORE_FIELDS = (
     "suite_name",
     "status",
@@ -45,15 +45,15 @@ ARTIFACT_CORE_FIELDS = (
 
 
 def build_artifact_bundle() -> dict:
-    payload = build_task7_benchmark_package_payload()
+    payload = build_performance_evidence_benchmark_package_payload()
     bundle = {
         "suite_name": SUITE_NAME,
         "status": "pass"
         if payload["summary"]["total_cases"] == len(payload["cases"])
-        and payload["summary"]["task6_boundary_cases"] == len(payload["negative_cases"])
+        and payload["summary"]["correctness_evidence_boundary_cases"] == len(payload["negative_cases"])
         else "fail",
-        "schema_version": TASK7_BENCHMARK_PACKAGE_SCHEMA_VERSION,
-        "software": build_task7_software_metadata(),
+        "schema_version": PERFORMANCE_EVIDENCE_BENCHMARK_PACKAGE_SCHEMA_VERSION,
+        "software": build_performance_evidence_software_metadata(),
         "selected_candidate": payload["selected_candidate"],
         "summary": dict(payload["summary"]),
         "required_artifacts": list(payload["required_artifacts"]),

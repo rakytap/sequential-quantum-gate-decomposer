@@ -22,20 +22,20 @@ from benchmarks.density_matrix.publication_evidence.claim_traceability_validatio
     validate_artifact_bundle as validate_story3_artifact,
 )
 from benchmarks.density_matrix.publication_evidence.common import (
-    MANDATORY_TASK8_DOCS,
-    TASK6_CORRECTNESS_PACKAGE_PATH,
-    TASK6_SUMMARY_CONSISTENCY_PATH,
-    TASK6_UNSUPPORTED_BOUNDARY_PATH,
-    TASK7_BENCHMARK_PACKAGE_PATH,
-    TASK7_DIAGNOSIS_PATH,
-    TASK7_POSITIVE_THRESHOLD_PATH,
-    TASK7_SENSITIVITY_MATRIX_PATH,
-    TASK7_SUMMARY_CONSISTENCY_PATH,
+    MANDATORY_PUBLICATION_EVIDENCE_DOCS,
+    CORRECTNESS_EVIDENCE_CORRECTNESS_PACKAGE_PATH,
+    CORRECTNESS_EVIDENCE_SUMMARY_CONSISTENCY_PATH,
+    CORRECTNESS_EVIDENCE_UNSUPPORTED_BOUNDARY_PATH,
+    PERFORMANCE_EVIDENCE_BENCHMARK_PACKAGE_PATH,
+    PERFORMANCE_EVIDENCE_DIAGNOSIS_PATH,
+    PERFORMANCE_EVIDENCE_POSITIVE_THRESHOLD_PATH,
+    PERFORMANCE_EVIDENCE_SENSITIVITY_MATRIX_PATH,
+    PERFORMANCE_EVIDENCE_SUMMARY_CONSISTENCY_PATH,
     build_software_metadata,
     get_git_revision,
     load_or_build_artifact,
     relative_to_repo,
-    task8_story_output_dir,
+    publication_evidence_output_dir,
     write_json,
 )
 from benchmarks.density_matrix.publication_evidence.evidence_closure_validation import (
@@ -55,24 +55,24 @@ from benchmarks.density_matrix.publication_evidence.surface_alignment_validation
 )
 
 
-SUITE_NAME = "phase3_task8_story6_publication_manifest"
+SUITE_NAME = "phase3_publication_evidence_manifest"
 ARTIFACT_FILENAME = "publication_manifest_bundle.json"
-DEFAULT_OUTPUT_DIR = task8_story_output_dir("story6_publication_manifest")
-STORY1_PATH = task8_story_output_dir("story1_claim_package") / STORY1_ARTIFACT_FILENAME
+DEFAULT_OUTPUT_DIR = publication_evidence_output_dir("manifest")
+STORY1_PATH = publication_evidence_output_dir("claim_package") / STORY1_ARTIFACT_FILENAME
 STORY2_PATH = (
-    task8_story_output_dir("story2_surface_alignment")
+    publication_evidence_output_dir("surface_alignment")
     / STORY2_ARTIFACT_FILENAME
 )
 STORY3_PATH = (
-    task8_story_output_dir("story3_claim_traceability")
+    publication_evidence_output_dir("claim_traceability")
     / STORY3_ARTIFACT_FILENAME
 )
 STORY4_PATH = (
-    task8_story_output_dir("story4_evidence_closure")
+    publication_evidence_output_dir("evidence_closure")
     / STORY4_ARTIFACT_FILENAME
 )
 STORY5_PATH = (
-    task8_story_output_dir("story5_supported_path_scope")
+    publication_evidence_output_dir("supported_path")
     / STORY5_ARTIFACT_FILENAME
 )
 ARTIFACT_FIELDS = (
@@ -115,36 +115,36 @@ STORY_ARTIFACT_REQUIREMENTS = (
 )
 REQUIRED_EVIDENCE_REFS = (
     {
-        "artifact_id": "task6_correctness_package_bundle",
-        "path": TASK6_CORRECTNESS_PACKAGE_PATH,
+        "artifact_id": "correctness_evidence_correctness_package_bundle",
+        "path": CORRECTNESS_EVIDENCE_CORRECTNESS_PACKAGE_PATH,
     },
     {
-        "artifact_id": "task6_unsupported_boundary_bundle",
-        "path": TASK6_UNSUPPORTED_BOUNDARY_PATH,
+        "artifact_id": "correctness_evidence_unsupported_boundary_bundle",
+        "path": CORRECTNESS_EVIDENCE_UNSUPPORTED_BOUNDARY_PATH,
     },
     {
-        "artifact_id": "task6_summary_consistency_bundle",
-        "path": TASK6_SUMMARY_CONSISTENCY_PATH,
+        "artifact_id": "correctness_evidence_summary_consistency_bundle",
+        "path": CORRECTNESS_EVIDENCE_SUMMARY_CONSISTENCY_PATH,
     },
     {
-        "artifact_id": "task7_benchmark_package_bundle",
-        "path": TASK7_BENCHMARK_PACKAGE_PATH,
+        "artifact_id": "performance_evidence_benchmark_package_bundle",
+        "path": PERFORMANCE_EVIDENCE_BENCHMARK_PACKAGE_PATH,
     },
     {
-        "artifact_id": "task7_diagnosis_bundle",
-        "path": TASK7_DIAGNOSIS_PATH,
+        "artifact_id": "performance_evidence_diagnosis_bundle",
+        "path": PERFORMANCE_EVIDENCE_DIAGNOSIS_PATH,
     },
     {
-        "artifact_id": "task7_positive_threshold_bundle",
-        "path": TASK7_POSITIVE_THRESHOLD_PATH,
+        "artifact_id": "performance_evidence_positive_threshold_bundle",
+        "path": PERFORMANCE_EVIDENCE_POSITIVE_THRESHOLD_PATH,
     },
     {
-        "artifact_id": "task7_sensitivity_matrix_bundle",
-        "path": TASK7_SENSITIVITY_MATRIX_PATH,
+        "artifact_id": "performance_evidence_sensitivity_matrix_bundle",
+        "path": PERFORMANCE_EVIDENCE_SENSITIVITY_MATRIX_PATH,
     },
     {
-        "artifact_id": "task7_summary_consistency_bundle",
-        "path": TASK7_SUMMARY_CONSISTENCY_PATH,
+        "artifact_id": "performance_evidence_summary_consistency_bundle",
+        "path": PERFORMANCE_EVIDENCE_SUMMARY_CONSISTENCY_PATH,
     },
 )
 
@@ -219,23 +219,23 @@ def build_publication_surfaces():
     return [
         {
             "surface_id": "abstract",
-            "path": relative_to_repo(MANDATORY_TASK8_DOCS["phase3_abstract"]),
-            "exists": MANDATORY_TASK8_DOCS["phase3_abstract"].exists(),
+            "path": relative_to_repo(MANDATORY_PUBLICATION_EVIDENCE_DOCS["phase3_abstract"]),
+            "exists": MANDATORY_PUBLICATION_EVIDENCE_DOCS["phase3_abstract"].exists(),
         },
         {
             "surface_id": "short_paper",
-            "path": relative_to_repo(MANDATORY_TASK8_DOCS["phase3_short_paper"]),
-            "exists": MANDATORY_TASK8_DOCS["phase3_short_paper"].exists(),
+            "path": relative_to_repo(MANDATORY_PUBLICATION_EVIDENCE_DOCS["phase3_short_paper"]),
+            "exists": MANDATORY_PUBLICATION_EVIDENCE_DOCS["phase3_short_paper"].exists(),
         },
         {
             "surface_id": "short_paper_narrative",
-            "path": relative_to_repo(MANDATORY_TASK8_DOCS["phase3_short_paper_narrative"]),
-            "exists": MANDATORY_TASK8_DOCS["phase3_short_paper_narrative"].exists(),
+            "path": relative_to_repo(MANDATORY_PUBLICATION_EVIDENCE_DOCS["phase3_short_paper_narrative"]),
+            "exists": MANDATORY_PUBLICATION_EVIDENCE_DOCS["phase3_short_paper_narrative"].exists(),
         },
         {
             "surface_id": "paper",
-            "path": relative_to_repo(MANDATORY_TASK8_DOCS["phase3_paper"]),
-            "exists": MANDATORY_TASK8_DOCS["phase3_paper"].exists(),
+            "path": relative_to_repo(MANDATORY_PUBLICATION_EVIDENCE_DOCS["phase3_paper"]),
+            "exists": MANDATORY_PUBLICATION_EVIDENCE_DOCS["phase3_paper"].exists(),
         },
     ]
 
@@ -254,28 +254,28 @@ def build_required_evidence_refs():
 def build_reviewer_entry_paths():
     return {
         "phase3_paper": {
-            "path": relative_to_repo(MANDATORY_TASK8_DOCS["phase3_paper"]),
-            "exists": MANDATORY_TASK8_DOCS["phase3_paper"].exists(),
+            "path": relative_to_repo(MANDATORY_PUBLICATION_EVIDENCE_DOCS["phase3_paper"]),
+            "exists": MANDATORY_PUBLICATION_EVIDENCE_DOCS["phase3_paper"].exists(),
         },
         "phase3_short_paper": {
-            "path": relative_to_repo(MANDATORY_TASK8_DOCS["phase3_short_paper"]),
-            "exists": MANDATORY_TASK8_DOCS["phase3_short_paper"].exists(),
+            "path": relative_to_repo(MANDATORY_PUBLICATION_EVIDENCE_DOCS["phase3_short_paper"]),
+            "exists": MANDATORY_PUBLICATION_EVIDENCE_DOCS["phase3_short_paper"].exists(),
         },
         "phase3_short_paper_narrative": {
-            "path": relative_to_repo(MANDATORY_TASK8_DOCS["phase3_short_paper_narrative"]),
-            "exists": MANDATORY_TASK8_DOCS["phase3_short_paper_narrative"].exists(),
+            "path": relative_to_repo(MANDATORY_PUBLICATION_EVIDENCE_DOCS["phase3_short_paper_narrative"]),
+            "exists": MANDATORY_PUBLICATION_EVIDENCE_DOCS["phase3_short_paper_narrative"].exists(),
         },
-        "task6_correctness_package": {
-            "path": relative_to_repo(TASK6_CORRECTNESS_PACKAGE_PATH),
-            "exists": TASK6_CORRECTNESS_PACKAGE_PATH.exists(),
+        "correctness_evidence_correctness_package": {
+            "path": relative_to_repo(CORRECTNESS_EVIDENCE_CORRECTNESS_PACKAGE_PATH),
+            "exists": CORRECTNESS_EVIDENCE_CORRECTNESS_PACKAGE_PATH.exists(),
         },
-        "task7_benchmark_package": {
-            "path": relative_to_repo(TASK7_BENCHMARK_PACKAGE_PATH),
-            "exists": TASK7_BENCHMARK_PACKAGE_PATH.exists(),
+        "performance_evidence_benchmark_package": {
+            "path": relative_to_repo(PERFORMANCE_EVIDENCE_BENCHMARK_PACKAGE_PATH),
+            "exists": PERFORMANCE_EVIDENCE_BENCHMARK_PACKAGE_PATH.exists(),
         },
-        "task7_diagnosis_bundle": {
-            "path": relative_to_repo(TASK7_DIAGNOSIS_PATH),
-            "exists": TASK7_DIAGNOSIS_PATH.exists(),
+        "performance_evidence_diagnosis_bundle": {
+            "path": relative_to_repo(PERFORMANCE_EVIDENCE_DIAGNOSIS_PATH),
+            "exists": PERFORMANCE_EVIDENCE_DIAGNOSIS_PATH.exists(),
         },
     }
 

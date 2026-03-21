@@ -44,7 +44,7 @@ Out of scope for this story:
   directly through:
   - `benchmarks/density_matrix/correctness_evidence/correctness_bundle_validation.py`,
   - `benchmarks/density_matrix/correctness_evidence/bundle.py`,
-  - and `benchmarks/density_matrix/artifacts/phase3_task6/`.
+  - and `benchmarks/density_matrix/artifacts/correctness_evidence/`.
 - Task 4 and Task 3 already provide stable runtime-path, fused-coverage, and
   execution provenance surfaces Story 2 should preserve rather than rename.
 - Task 5 already emits the bounded supported planner-setting surface and claim-
@@ -266,7 +266,7 @@ Out of scope for this story:
 **Execution checklist**
 - [ ] Add a dedicated Story 2 artifact location
       (for example
-      `benchmarks/density_matrix/artifacts/phase3_task7/story2_counted_supported/`).
+      `benchmarks/density_matrix/artifacts/performance_evidence/counted_supported/`).
 - [ ] Emit counted and excluded benchmark records through one stable schema plus
       a stable bundle summary.
 - [ ] Record rerun commands and software metadata with the emitted bundle.

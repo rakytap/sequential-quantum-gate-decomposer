@@ -227,7 +227,7 @@ Out of scope for this story:
 
 **Execution checklist**
 - [ ] Add a dedicated Story 5 artifact location
-      (for example `benchmarks/density_matrix/artifacts/phase3_task1/story5_unsupported/`).
+      (for example `benchmarks/density_matrix/artifacts/planner_surface/`).
 - [ ] Emit representative unsupported cases through one stable schema.
 - [ ] Keep overlapping fields aligned with the existing Story 1 and Story 2
       planner-surface bundles so supported and unsupported cases remain

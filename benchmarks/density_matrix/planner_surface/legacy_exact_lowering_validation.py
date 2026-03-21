@@ -27,7 +27,7 @@ from squander.partitioning.noisy_planner import (
     build_planner_audit_record,
 )
 
-SUITE_NAME = "phase3_task1_story4_legacy_exact_lowering"
+SUITE_NAME = "phase3_planner_surface_legacy_exact_lowering"
 ARTIFACT_FILENAME = "legacy_exact_lowering_bundle.json"
 DEFAULT_OUTPUT_DIR = (
     REPO_ROOT / "benchmarks" / "density_matrix" / "artifacts" / "planner_surface"

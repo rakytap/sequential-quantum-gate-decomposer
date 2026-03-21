@@ -5,9 +5,9 @@ from statistics import median
 
 from squander.partitioning.noisy_runtime import PHASE3_FUSION_CLASS_SUPPORTED_UNFUSED
 
-TASK5_DENSITY_SIGNAL_SCHEMA_VERSION = "phase3_task5_density_signal_v1"
-TASK5_STATE_VECTOR_PROXY_NAME = "state_vector_partition_proxy_v1"
-TASK5_DENSITY_AWARE_OBJECTIVE_NAME = "phase3_benchmark_cost_v1"
+PLANNER_CALIBRATION_DENSITY_SIGNAL_SCHEMA_VERSION = "phase3_planner_calibration_density_signal_v1"
+PLANNER_CALIBRATION_STATE_VECTOR_PROXY_NAME = "state_vector_partition_proxy_v1"
+PLANNER_CALIBRATION_DENSITY_AWARE_OBJECTIVE_NAME = "phase3_benchmark_cost_v1"
 
 
 def build_state_vector_proxy_score(descriptor_set) -> float:
@@ -44,7 +44,7 @@ def build_density_signal_record(
     descriptor_member_count = max(descriptor_set.descriptor_member_count, 1)
     partition_count = max(descriptor_set.partition_count, 1)
     return {
-        "signal_schema_version": TASK5_DENSITY_SIGNAL_SCHEMA_VERSION,
+        "signal_schema_version": PLANNER_CALIBRATION_DENSITY_SIGNAL_SCHEMA_VERSION,
         "candidate_id": metadata["candidate_id"],
         "planner_family": metadata["planner_family"],
         "planner_variant": metadata["planner_variant"],
@@ -73,7 +73,7 @@ def build_density_signal_record(
         "supported_unfused_region_count": runtime_result.supported_unfused_region_count,
         "deferred_region_count": runtime_result.deferred_region_count,
         "actual_fused_execution": runtime_result.actual_fused_execution,
-        "state_vector_proxy_name": TASK5_STATE_VECTOR_PROXY_NAME,
+        "state_vector_proxy_name": PLANNER_CALIBRATION_STATE_VECTOR_PROXY_NAME,
         "state_vector_proxy_score": build_state_vector_proxy_score(descriptor_set),
         "frobenius_norm_diff": density_metrics["frobenius_norm_diff"],
         "max_abs_diff": density_metrics["max_abs_diff"],
@@ -97,7 +97,7 @@ def build_density_aware_score(record: dict, *, memory_weight: float) -> float:
 
 
 def apply_density_scores_and_rankings(
-    records: list[dict], *, objective_name: str = TASK5_DENSITY_AWARE_OBJECTIVE_NAME
+    records: list[dict], *, objective_name: str = PLANNER_CALIBRATION_DENSITY_AWARE_OBJECTIVE_NAME
 ) -> list[dict]:
     calibrated_memory_weight = calibrate_memory_weight(records)
     for record in records:

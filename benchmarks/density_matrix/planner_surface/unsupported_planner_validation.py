@@ -22,7 +22,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from benchmarks.density_matrix.planner_surface.common import (
-    build_phase3_story1_continuity_vqe,
+    build_phase2_continuity_vqe,
     build_software_metadata,
 )
 from benchmarks.density_matrix.planner_surface.workloads import mandatory_microcase_definitions
@@ -33,7 +33,7 @@ from squander.partitioning.noisy_planner import (
     preflight_planner_request,
 )
 
-SUITE_NAME = "phase3_task1_story5_unsupported_planner_boundary"
+SUITE_NAME = "phase3_planner_surface_unsupported_planner"
 ARTIFACT_FILENAME = "unsupported_planner_bundle.json"
 DEFAULT_OUTPUT_DIR = (
     REPO_ROOT / "benchmarks" / "density_matrix" / "artifacts" / "planner_surface"
@@ -73,7 +73,7 @@ def _unsupported_case(case_name: str, runner) -> dict:
 
 def build_cases() -> list[dict]:
     microcase = mandatory_microcase_definitions()[0]
-    continuity_vqe, _, _ = build_phase3_story1_continuity_vqe(4)
+    continuity_vqe, _, _ = build_phase2_continuity_vqe(4)
     continuity_bridge = continuity_vqe.describe_density_bridge()
 
     legacy_h = Circuit(1)

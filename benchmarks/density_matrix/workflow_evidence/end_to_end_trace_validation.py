@@ -32,7 +32,7 @@ if str(REPO_ROOT) not in sys.path:
 from benchmarks.density_matrix.workflow_evidence.workflow_contract_validation import (
     ARTIFACT_FILENAME as STORY1_ARTIFACT_FILENAME,
     CONTRACT_VERSION,
-    DEFAULT_OUTPUT_DIR as TASK6_DEFAULT_OUTPUT_DIR,
+    DEFAULT_OUTPUT_DIR as CORRECTNESS_EVIDENCE_DEFAULT_OUTPUT_DIR,
     REFERENCE_BACKEND,
     STATUS_VOCABULARY,
     WORKFLOW_ID,
@@ -44,9 +44,9 @@ from benchmarks.density_matrix.workflow_evidence.workflow_contract_validation im
 
 SUITE_NAME = "end_to_end_trace_validation"
 ARTIFACT_FILENAME = "end_to_end_trace_bundle.json"
-DEFAULT_OUTPUT_DIR = TASK6_DEFAULT_OUTPUT_DIR
+DEFAULT_OUTPUT_DIR = CORRECTNESS_EVIDENCE_DEFAULT_OUTPUT_DIR
 STORY1_CONTRACT_PATH = DEFAULT_OUTPUT_DIR / STORY1_ARTIFACT_FILENAME
-TASK5_WORKFLOW_BUNDLE_PATH = (
+PLANNER_CALIBRATION_WORKFLOW_BUNDLE_PATH = (
     REPO_ROOT
     / "benchmarks"
     / "density_matrix"
@@ -54,7 +54,7 @@ TASK5_WORKFLOW_BUNDLE_PATH = (
     / "validation_evidence"
     / "workflow_baseline_bundle.json"
 )
-TASK5_TRACE_ARTIFACT_PATH = (
+PLANNER_CALIBRATION_TRACE_ARTIFACT_PATH = (
     REPO_ROOT
     / "benchmarks"
     / "density_matrix"
@@ -377,8 +377,8 @@ def build_artifact_bundle(story1_contract, workflow_bundle, trace_artifact):
             "working_directory": str(REPO_ROOT),
             "git_revision": get_git_revision(),
             "story1_contract_path": str(STORY1_CONTRACT_PATH),
-            "task5_workflow_bundle_path": str(TASK5_WORKFLOW_BUNDLE_PATH),
-            "task5_trace_artifact_path": str(TASK5_TRACE_ARTIFACT_PATH),
+            "planner_calibration_workflow_bundle_path": str(PLANNER_CALIBRATION_WORKFLOW_BUNDLE_PATH),
+            "planner_calibration_trace_artifact_path": str(PLANNER_CALIBRATION_TRACE_ARTIFACT_PATH),
         },
         "summary": {
             "total_end_to_end_cases": total_cases,
@@ -410,12 +410,12 @@ def build_artifact_bundle(story1_contract, workflow_bundle, trace_artifact):
                 "thresholds": story1_contract["thresholds"],
                 "summary": story1_contract["summary"],
             },
-            "task5_workflow_baseline_reference": {
+            "planner_calibration_workflow_baseline_reference": {
                 "suite_name": workflow_bundle["suite_name"],
                 "status": workflow_bundle["status"],
                 "summary": workflow_bundle["summary"],
             },
-            "task5_trace_artifact": {
+            "planner_calibration_trace_artifact": {
                 "case_name": trace_artifact["case_name"],
                 "status": trace_artifact["status"],
                 "workflow_completed": trace_artifact["workflow_completed"],
@@ -503,8 +503,8 @@ def write_artifact_bundle(output_path: Path, bundle):
 def run_validation(
     *,
     story1_contract_path: Path = STORY1_CONTRACT_PATH,
-    workflow_bundle_path: Path = TASK5_WORKFLOW_BUNDLE_PATH,
-    trace_artifact_path: Path = TASK5_TRACE_ARTIFACT_PATH,
+    workflow_bundle_path: Path = PLANNER_CALIBRATION_WORKFLOW_BUNDLE_PATH,
+    trace_artifact_path: Path = PLANNER_CALIBRATION_TRACE_ARTIFACT_PATH,
     verbose=False,
 ):
     story1_contract = _load_story1_contract(story1_contract_path)
@@ -541,13 +541,13 @@ def parse_args():
     parser.add_argument(
         "--workflow-bundle-path",
         type=Path,
-        default=TASK5_WORKFLOW_BUNDLE_PATH,
+        default=PLANNER_CALIBRATION_WORKFLOW_BUNDLE_PATH,
         help="Path to the committed Task 5 workflow baseline bundle.",
     )
     parser.add_argument(
         "--trace-artifact-path",
         type=Path,
-        default=TASK5_TRACE_ARTIFACT_PATH,
+        default=PLANNER_CALIBRATION_TRACE_ARTIFACT_PATH,
         help="Path to the committed raw trace artifact used by Story 2.",
     )
     parser.add_argument(

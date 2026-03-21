@@ -28,7 +28,7 @@ from benchmarks.density_matrix.publication_claim_package.doc_utils import (
     CANONICAL_SUPPORTING_CLAIMS,
     CLAIM_HEADING,
     EVIDENCE_CLOSURE_RULE,
-    MANDATORY_TASK8_DOCS,
+    MANDATORY_PUBLICATION_EVIDENCE_DOCS,
     ROLE_HEADING,
     SURFACE_ROLE_PHRASES,
     PUBLICATION_CLAIM_OUTPUT_DIR,
@@ -44,9 +44,9 @@ from benchmarks.density_matrix.publication_claim_package.doc_utils import (
 SUITE_NAME = "claim_package"
 ARTIFACT_FILENAME = "claim_package.json"
 DEFAULT_OUTPUT_DIR = PUBLICATION_CLAIM_OUTPUT_DIR
-PRIMARY_SURFACE_PATH = MANDATORY_TASK8_DOCS["phase2_paper"]
-PRIMARY_SOURCE_PATH = MANDATORY_TASK8_DOCS["task8_mini_spec"]
-PUBLICATION_STRATEGY_PATH = MANDATORY_TASK8_DOCS["planning_publications"]
+PRIMARY_SURFACE_PATH = MANDATORY_PUBLICATION_EVIDENCE_DOCS["phase2_paper"]
+PRIMARY_SOURCE_PATH = MANDATORY_PUBLICATION_EVIDENCE_DOCS["publication_evidence_mini_spec"]
+PUBLICATION_STRATEGY_PATH = MANDATORY_PUBLICATION_EVIDENCE_DOCS["planning_publications"]
 ARTIFACT_FIELDS = (
     "suite_name",
     "status",
@@ -249,7 +249,7 @@ def build_artifact_bundle():
         },
         "source_docs": [
             {
-                "doc_id": "task8_mini_spec",
+                "doc_id": "publication_evidence_mini_spec",
                 "path": relative_to_repo(PRIMARY_SOURCE_PATH),
                 "exists": PRIMARY_SOURCE_PATH.exists(),
             },

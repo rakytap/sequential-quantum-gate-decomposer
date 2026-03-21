@@ -1,0 +1,96 @@
+{
+  "cases": [
+    {
+      "case_name": "partition_qubits_too_small",
+      "failure_stage": "descriptor_generation_preflight",
+      "fallback_used": false,
+      "first_unsupported_condition": "max_partition_qubits",
+      "reason": "Partition descriptor generation requires max_partition_qubits >= the canonical max_qubit_span 2 for workload 'phase2_xxz_hea_q4_continuity'",
+      "requested_mode": "partitioned_density",
+      "source_type": "generated_hea",
+      "status": "unsupported",
+      "supported_descriptor_case_recorded": false,
+      "unsupported_category": "partition_span",
+      "workload_id": "phase2_xxz_hea_q4_continuity"
+    },
+    {
+      "case_name": "dropped_operation",
+      "failure_stage": "descriptor_validation",
+      "fallback_used": false,
+      "first_unsupported_condition": "operation_count",
+      "reason": "Partition descriptor workload 'microcase_4q_partition_boundary_triplet' records 9 descriptor members but the canonical surface contains 10 operations",
+      "requested_mode": "partitioned_density",
+      "source_type": "microcase_builder",
+      "status": "unsupported",
+      "supported_descriptor_case_recorded": false,
+      "unsupported_category": "dropped_operations",
+      "workload_id": "microcase_4q_partition_boundary_triplet"
+    },
+    {
+      "case_name": "hidden_noise_placement",
+      "failure_stage": "descriptor_validation",
+      "fallback_used": false,
+      "first_unsupported_condition": "noise_count",
+      "reason": "Partition descriptor workload 'microcase_4q_partition_boundary_triplet' records 2 noise operations but the canonical surface contains 3",
+      "requested_mode": "partitioned_density",
+      "source_type": "microcase_builder",
+      "status": "unsupported",
+      "supported_descriptor_case_recorded": false,
+      "unsupported_category": "hidden_noise_placement",
+      "workload_id": "microcase_4q_partition_boundary_triplet"
+    },
+    {
+      "case_name": "incomplete_remapping",
+      "failure_stage": "descriptor_validation",
+      "fallback_used": false,
+      "first_unsupported_condition": "local_target_qbit",
+      "reason": "Partition descriptor partition 1 has inconsistent local_target_qbit for canonical operation 4",
+      "requested_mode": "partitioned_density",
+      "source_type": "microcase_builder",
+      "status": "unsupported",
+      "supported_descriptor_case_recorded": false,
+      "unsupported_category": "incomplete_remapping",
+      "workload_id": "microcase_4q_partition_boundary_triplet"
+    },
+    {
+      "case_name": "ambiguous_parameter_routing",
+      "failure_stage": "descriptor_validation",
+      "fallback_used": false,
+      "first_unsupported_condition": "local_param_start",
+      "reason": "Partition descriptor partition 0 has non-contiguous local_param_start for canonical operation 0",
+      "requested_mode": "partitioned_density",
+      "source_type": "microcase_builder",
+      "status": "unsupported",
+      "supported_descriptor_case_recorded": false,
+      "unsupported_category": "ambiguous_parameter_routing",
+      "workload_id": "microcase_4q_partition_boundary_triplet"
+    },
+    {
+      "case_name": "reordering_across_noise_boundaries",
+      "failure_stage": "descriptor_validation",
+      "fallback_used": false,
+      "first_unsupported_condition": "canonical_operation_indices",
+      "reason": "Partition descriptor partition 0 must keep canonical_operation_indices aligned with ordered member canonical indices",
+      "requested_mode": "partitioned_density",
+      "source_type": "microcase_builder",
+      "status": "unsupported",
+      "supported_descriptor_case_recorded": false,
+      "unsupported_category": "reordering_across_noise_boundaries",
+      "workload_id": "microcase_4q_partition_boundary_triplet"
+    }
+  ],
+  "schema_version": "phase3_noisy_partition_descriptor_v1",
+  "software": {
+    "numpy": "2.3.5",
+    "python": "3.13.9",
+    "scipy": "1.16.3"
+  },
+  "status": "pass",
+  "suite_name": "phase3_planner_surface_unsupported_descriptors",
+  "summary": {
+    "fallback_count": 0,
+    "total_cases": 6,
+    "unexpected_passes": 0,
+    "unsupported_cases": 6
+  }
+}

@@ -44,22 +44,22 @@ Out of scope for this story:
   `DETAILED_PLANNING_PHASE_3.md` and must not be softened here.
 - The emitted Task 6 bundle family already defines the correctness and
   unsupported-boundary substrate for Paper 2 closure, especially:
-  - `story7_correctness_package/correctness_package_bundle.json`,
-  - `story6_unsupported_boundary/unsupported_boundary_bundle.json`,
-  - and `story8_summary_consistency/summary_consistency_bundle.json`.
+  - `correctness_package/correctness_package_bundle.json`,
+  - `unsupported_boundary/unsupported_boundary_bundle.json`,
+  - and `summary_consistency/summary_consistency_bundle.json`.
 - The emitted Task 7 bundle family already defines the representative benchmark
   and diagnosis substrate for Paper 2 closure, especially:
-  - `story7_benchmark_package/benchmark_package_bundle.json`,
-  - `story6_diagnosis_path/diagnosis_bundle.json`,
-  - `story3_positive_threshold/positive_threshold_bundle.json`,
-  - and `story8_summary_consistency/summary_consistency_bundle.json`.
+  - `benchmark_package/benchmark_package_bundle.json`,
+  - `diagnosis/diagnosis_bundle.json`,
+  - `positive_threshold/positive_threshold_bundle.json`,
+  - and `summary_consistency/summary_consistency_bundle.json`.
 - Story 4 should treat the current implementation-backed state honestly: the
   representative benchmark package currently closes through the diagnosis branch
   rather than the positive-threshold branch.
 - The natural implementation home for Task 8 evidence-closure validation is the
   same `benchmarks/density_matrix/publication_evidence/` package, with
   `evidence_closure_validation.py` as the Story 4 validation surface and
-  emitted artifacts rooted in `benchmarks/density_matrix/artifacts/phase3_task8/`.
+  emitted artifacts rooted in `benchmarks/density_matrix/artifacts/publication_evidence/`.
 - Story 4 should validate evidence closure only. It should not itself build the
   top-level reviewer manifest or final package consistency surface.
 
@@ -257,7 +257,7 @@ Out of scope for this story:
 - Regression coverage remains narrow and publication-package focused.
 
 **Execution checklist**
-- [ ] Add focused checks in `tests/partitioning/test_phase3_task8.py` or a
+- [ ] Add focused checks in `tests/partitioning/test_publication_evidence.py` or a
       tightly related successor for Story 4 evidence closure.
 - [ ] Add negative checks for optional or incomplete evidence being treated as
       claim-closing.
@@ -294,7 +294,7 @@ Out of scope for this story:
 
 **Execution checklist**
 - [ ] Add one stable Story 4 output location under
-      `benchmarks/density_matrix/artifacts/phase3_task8/story4_evidence_closure/`.
+      `benchmarks/density_matrix/artifacts/publication_evidence/evidence_closure/`.
 - [ ] Emit one artifact such as `evidence_closure_bundle.json`.
 - [ ] Record generation command, software metadata, and closure summary in the
       output.

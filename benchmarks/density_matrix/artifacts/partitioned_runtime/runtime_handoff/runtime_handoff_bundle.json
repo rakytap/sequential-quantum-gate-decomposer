@@ -1,0 +1,2542 @@
+{
+  "cases": [
+    {
+      "case_name": "phase2_xxz_hea_q4_continuity",
+      "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
+      "exact_output": {
+        "density_imag": null,
+        "density_real": null,
+        "matrix_included": false,
+        "purity": 0.8971677230501824,
+        "rho_is_valid": true,
+        "rho_is_valid_tol": 1e-10,
+        "shape": [
+          16,
+          16
+        ],
+        "trace_deviation": 2.8947873981405094e-17,
+        "trace_imag": 2.8947873981405094e-17,
+        "trace_real": 1.0
+      },
+      "fused_regions": [
+        {
+          "candidate_kind": "unitary_island",
+          "canonical_operation_indices": [
+            0
+          ],
+          "classification": "supported_but_unfused",
+          "gate_count": 1,
+          "global_target_qbits": [
+            1
+          ],
+          "local_target_qbits": [
+            1
+          ],
+          "member_count": 1,
+          "operation_names": [
+            "U3"
+          ],
+          "partition_index": 0,
+          "partition_member_indices": [
+            0
+          ],
+          "reason": "singleton_unitary_region"
+        },
+        {
+          "candidate_kind": "noise_boundary",
+          "canonical_operation_indices": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "classification": "deferred_or_unsupported_candidate",
+          "gate_count": 3,
+          "global_target_qbits": [
+            0,
+            1
+          ],
+          "local_target_qbits": [
+            0,
+            1
+          ],
+          "member_count": 4,
+          "operation_names": [
+            "U3",
+            "local_depolarizing",
+            "U3",
+            "CNOT"
+          ],
+          "partition_index": 0,
+          "partition_member_indices": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "reason": "explicit_noise_boundary"
+        },
+        {
+          "candidate_kind": "unitary_island",
+          "canonical_operation_indices": [
+            2,
+            3
+          ],
+          "classification": "supported_but_unfused",
+          "gate_count": 2,
+          "global_target_qbits": [
+            0,
+            1
+          ],
+          "local_target_qbits": [
+            0,
+            1
+          ],
+          "member_count": 2,
+          "operation_names": [
+            "U3",
+            "CNOT"
+          ],
+          "partition_index": 0,
+          "partition_member_indices": [
+            2,
+            3
+          ],
+          "reason": "fusion_disabled"
+        },
+        {
+          "candidate_kind": "unitary_island",
+          "canonical_operation_indices": [
+            5,
+            6
+          ],
+          "classification": "supported_but_unfused",
+          "gate_count": 2,
+          "global_target_qbits": [
+            2,
+            3
+          ],
+          "local_target_qbits": [
+            0,
+            1
+          ],
+          "member_count": 2,
+          "operation_names": [
+            "U3",
+            "U3"
+          ],
+          "partition_index": 1,
+          "partition_member_indices": [
+            0,
+            1
+          ],
+          "reason": "fusion_disabled"
+        },
+        {
+          "candidate_kind": "unitary_island",
+          "canonical_operation_indices": [
+            8,
+            9
+          ],
+          "classification": "supported_but_unfused",
+          "gate_count": 2,
+          "global_target_qbits": [
+            2,
+            3
+          ],
+          "local_target_qbits": [
+            0,
+            1
+          ],
+          "member_count": 2,
+          "operation_names": [
+            "CNOT",
+            "U3"
+          ],
+          "partition_index": 3,
+          "partition_member_indices": [
+            0,
+            1
+          ],
+          "reason": "fusion_disabled"
+        },
+        {
+          "candidate_kind": "unitary_island",
+          "canonical_operation_indices": [
+            10,
+            11
+          ],
+          "classification": "supported_but_unfused",
+          "gate_count": 2,
+          "global_target_qbits": [
+            1,
+            2
+          ],
+          "local_target_qbits": [
+            0,
+            1
+          ],
+          "member_count": 2,
+          "operation_names": [
+            "U3",
+            "CNOT"
+          ],
+          "partition_index": 4,
+          "partition_member_indices": [
+            0,
+            1
+          ],
+          "reason": "fusion_disabled"
+        }
+      ],
+      "metadata": {
+        "case_kind": "continuity"
+      },
+      "partitions": [
+        {
+          "canonical_operation_indices": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "gate_count": 3,
+          "global_to_local_qbits": [
+            {
+              "global_qbit": 0,
+              "local_qbit": 0
+            },
+            {
+              "global_qbit": 1,
+              "local_qbit": 1
+            }
+          ],
+          "local_to_global_qbits": [
+            0,
+            1
+          ],
+          "member_count": 5,
+          "noise_count": 2,
+          "operation_classes": [
+            "GateOperation",
+            "NoiseOperation",
+            "GateOperation",
+            "GateOperation",
+            "NoiseOperation"
+          ],
+          "operation_names": [
+            "U3",
+            "local_depolarizing",
+            "U3",
+            "CNOT",
+            "amplitude_damping"
+          ],
+          "parameter_routing": [
+            {
+              "global_param_start": 0,
+              "local_param_start": 0,
+              "param_count": 3
+            },
+            {
+              "global_param_start": 3,
+              "local_param_start": 3,
+              "param_count": 3
+            }
+          ],
+          "partition_index": 0,
+          "partition_parameter_count": 6,
+          "partition_qubit_span": [
+            0,
+            1
+          ],
+          "requires_remap": false,
+          "runtime_circuit_parameter_count": 6,
+          "runtime_circuit_qbit_num": 4
+        },
+        {
+          "canonical_operation_indices": [
+            5,
+            6
+          ],
+          "gate_count": 2,
+          "global_to_local_qbits": [
+            {
+              "global_qbit": 2,
+              "local_qbit": 0
+            },
+            {
+              "global_qbit": 3,
+              "local_qbit": 1
+            }
+          ],
+          "local_to_global_qbits": [
+            2,
+            3
+          ],
+          "member_count": 2,
+          "noise_count": 0,
+          "operation_classes": [
+            "GateOperation",
+            "GateOperation"
+          ],
+          "operation_names": [
+            "U3",
+            "U3"
+          ],
+          "parameter_routing": [
+            {
+              "global_param_start": 6,
+              "local_param_start": 0,
+              "param_count": 3
+            },
+            {
+              "global_param_start": 9,
+              "local_param_start": 3,
+              "param_count": 3
+            }
+          ],
+          "partition_index": 1,
+          "partition_parameter_count": 6,
+          "partition_qubit_span": [
+            2,
+            3
+          ],
+          "requires_remap": true,
+          "runtime_circuit_parameter_count": 6,
+          "runtime_circuit_qbit_num": 4
+        },
+        {
+          "canonical_operation_indices": [
+            7
+          ],
+          "gate_count": 0,
+          "global_to_local_qbits": [
+            {
+              "global_qbit": 0,
+              "local_qbit": 0
+            }
+          ],
+          "local_to_global_qbits": [
+            0
+          ],
+          "member_count": 1,
+          "noise_count": 1,
+          "operation_classes": [
+            "NoiseOperation"
+          ],
+          "operation_names": [
+            "phase_damping"
+          ],
+          "parameter_routing": [],
+          "partition_index": 2,
+          "partition_parameter_count": 0,
+          "partition_qubit_span": [
+            0
+          ],
+          "requires_remap": false,
+          "runtime_circuit_parameter_count": 0,
+          "runtime_circuit_qbit_num": 4
+        },
+        {
+          "canonical_operation_indices": [
+            8,
+            9
+          ],
+          "gate_count": 2,
+          "global_to_local_qbits": [
+            {
+              "global_qbit": 2,
+              "local_qbit": 0
+            },
+            {
+              "global_qbit": 3,
+              "local_qbit": 1
+            }
+          ],
+          "local_to_global_qbits": [
+            2,
+            3
+          ],
+          "member_count": 2,
+          "noise_count": 0,
+          "operation_classes": [
+            "GateOperation",
+            "GateOperation"
+          ],
+          "operation_names": [
+            "CNOT",
+            "U3"
+          ],
+          "parameter_routing": [
+            {
+              "global_param_start": 12,
+              "local_param_start": 0,
+              "param_count": 3
+            }
+          ],
+          "partition_index": 3,
+          "partition_parameter_count": 3,
+          "partition_qubit_span": [
+            2,
+            3
+          ],
+          "requires_remap": true,
+          "runtime_circuit_parameter_count": 3,
+          "runtime_circuit_qbit_num": 4
+        },
+        {
+          "canonical_operation_indices": [
+            10,
+            11
+          ],
+          "gate_count": 2,
+          "global_to_local_qbits": [
+            {
+              "global_qbit": 1,
+              "local_qbit": 0
+            },
+            {
+              "global_qbit": 2,
+              "local_qbit": 1
+            }
+          ],
+          "local_to_global_qbits": [
+            1,
+            2
+          ],
+          "member_count": 2,
+          "noise_count": 0,
+          "operation_classes": [
+            "GateOperation",
+            "GateOperation"
+          ],
+          "operation_names": [
+            "U3",
+            "CNOT"
+          ],
+          "parameter_routing": [
+            {
+              "global_param_start": 15,
+              "local_param_start": 0,
+              "param_count": 3
+            }
+          ],
+          "partition_index": 4,
+          "partition_parameter_count": 3,
+          "partition_qubit_span": [
+            1,
+            2
+          ],
+          "requires_remap": true,
+          "runtime_circuit_parameter_count": 3,
+          "runtime_circuit_qbit_num": 4
+        }
+      ],
+      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
+      "provenance": {
+        "entry_route": "phase2_continuity_lowering",
+        "source_type": "generated_hea",
+        "workload_family": "phase2_continuity_workflow",
+        "workload_id": "phase2_xxz_hea_q4_continuity"
+      },
+      "requested_mode": "partitioned_density",
+      "runtime_path": "partitioned_density_descriptor_baseline",
+      "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
+      "summary": {
+        "actual_fused_execution": false,
+        "deferred_region_count": 1,
+        "density_trace_imag": 2.8947873981405094e-17,
+        "density_trace_real": 1.0,
+        "descriptor_member_count": 12,
+        "exact_output_present": true,
+        "fallback_used": false,
+        "fused_gate_count": 0,
+        "fused_region_count": 0,
+        "gate_count": 9,
+        "max_partition_span": 2,
+        "noise_count": 3,
+        "parameter_count": 18,
+        "parameter_routing_segment_count": 6,
+        "partition_count": 5,
+        "partition_member_counts": [
+          5,
+          2,
+          1,
+          2,
+          2
+        ],
+        "peak_rss_kb": 103812,
+        "purity": 0.8971677230501824,
+        "qbit_num": 4,
+        "remapped_partition_count": 3,
+        "rho_is_valid": true,
+        "rho_is_valid_tol": 1e-10,
+        "runtime_ms": 0.4708420019596815,
+        "runtime_path": "partitioned_density_descriptor_baseline",
+        "supported_unfused_gate_count": 9,
+        "supported_unfused_region_count": 5,
+        "trace_deviation": 2.8947873981405094e-17
+      }
+    },
+    {
+      "case_name": "microcase_2q_entangler_local_depolarizing",
+      "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
+      "exact_output": {
+        "density_imag": null,
+        "density_real": null,
+        "matrix_included": false,
+        "purity": 0.9045939792740259,
+        "rho_is_valid": true,
+        "rho_is_valid_tol": 1e-10,
+        "shape": [
+          4,
+          4
+        ],
+        "trace_deviation": 2.2221513140154287e-16,
+        "trace_imag": -8.703909896806051e-18,
+        "trace_real": 1.0000000000000002
+      },
+      "fused_regions": [
+        {
+          "candidate_kind": "unitary_island",
+          "canonical_operation_indices": [
+            0,
+            1,
+            2
+          ],
+          "classification": "supported_but_unfused",
+          "gate_count": 3,
+          "global_target_qbits": [
+            0,
+            1
+          ],
+          "local_target_qbits": [
+            0,
+            1
+          ],
+          "member_count": 3,
+          "operation_names": [
+            "U3",
+            "U3",
+            "CNOT"
+          ],
+          "partition_index": 0,
+          "partition_member_indices": [
+            0,
+            1,
+            2
+          ],
+          "reason": "fusion_disabled"
+        },
+        {
+          "candidate_kind": "noise_boundary",
+          "canonical_operation_indices": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "classification": "deferred_or_unsupported_candidate",
+          "gate_count": 4,
+          "global_target_qbits": [
+            0,
+            1
+          ],
+          "local_target_qbits": [
+            0,
+            1
+          ],
+          "member_count": 5,
+          "operation_names": [
+            "U3",
+            "U3",
+            "CNOT",
+            "local_depolarizing",
+            "U3"
+          ],
+          "partition_index": 0,
+          "partition_member_indices": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "reason": "explicit_noise_boundary"
+        },
+        {
+          "candidate_kind": "unitary_island",
+          "canonical_operation_indices": [
+            4
+          ],
+          "classification": "supported_but_unfused",
+          "gate_count": 1,
+          "global_target_qbits": [
+            0
+          ],
+          "local_target_qbits": [
+            0
+          ],
+          "member_count": 1,
+          "operation_names": [
+            "U3"
+          ],
+          "partition_index": 0,
+          "partition_member_indices": [
+            4
+          ],
+          "reason": "singleton_unitary_region"
+        }
+      ],
+      "metadata": {
+        "case_name": "microcase_2q_entangler_local_depolarizing",
+        "noise_pattern": "sparse",
+        "operation_specs": [
+          {
+            "kind": "gate",
+            "name": "U3",
+            "param_count": 3,
+            "target_qbit": 0
+          },
+          {
+            "kind": "gate",
+            "name": "U3",
+            "param_count": 3,
+            "target_qbit": 1
+          },
+          {
+            "control_qbit": 0,
+            "kind": "gate",
+            "name": "CNOT",
+            "param_count": 0,
+            "target_qbit": 1
+          },
+          {
+            "fixed_value": 0.1,
+            "kind": "noise",
+            "name": "local_depolarizing",
+            "param_count": 0,
+            "source_gate_index": 2,
+            "target_qbit": 1
+          },
+          {
+            "kind": "gate",
+            "name": "U3",
+            "param_count": 3,
+            "target_qbit": 0
+          }
+        ],
+        "qbit_num": 2
+      },
+      "partitions": [
+        {
+          "canonical_operation_indices": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "gate_count": 4,
+          "global_to_local_qbits": [
+            {
+              "global_qbit": 0,
+              "local_qbit": 0
+            },
+            {
+              "global_qbit": 1,
+              "local_qbit": 1
+            }
+          ],
+          "local_to_global_qbits": [
+            0,
+            1
+          ],
+          "member_count": 5,
+          "noise_count": 1,
+          "operation_classes": [
+            "GateOperation",
+            "GateOperation",
+            "GateOperation",
+            "NoiseOperation",
+            "GateOperation"
+          ],
+          "operation_names": [
+            "U3",
+            "U3",
+            "CNOT",
+            "local_depolarizing",
+            "U3"
+          ],
+          "parameter_routing": [
+            {
+              "global_param_start": 0,
+              "local_param_start": 0,
+              "param_count": 3
+            },
+            {
+              "global_param_start": 3,
+              "local_param_start": 3,
+              "param_count": 3
+            },
+            {
+              "global_param_start": 6,
+              "local_param_start": 6,
+              "param_count": 3
+            }
+          ],
+          "partition_index": 0,
+          "partition_parameter_count": 9,
+          "partition_qubit_span": [
+            0,
+            1
+          ],
+          "requires_remap": false,
+          "runtime_circuit_parameter_count": 9,
+          "runtime_circuit_qbit_num": 2
+        }
+      ],
+      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
+      "provenance": {
+        "entry_route": "phase3_microcase_generation",
+        "source_type": "microcase_builder",
+        "workload_family": "phase3_micro_validation",
+        "workload_id": "microcase_2q_entangler_local_depolarizing"
+      },
+      "requested_mode": "partitioned_density",
+      "runtime_path": "partitioned_density_descriptor_baseline",
+      "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
+      "summary": {
+        "actual_fused_execution": false,
+        "deferred_region_count": 1,
+        "density_trace_imag": -8.703909896806051e-18,
+        "density_trace_real": 1.0000000000000002,
+        "descriptor_member_count": 5,
+        "exact_output_present": true,
+        "fallback_used": false,
+        "fused_gate_count": 0,
+        "fused_region_count": 0,
+        "gate_count": 4,
+        "max_partition_span": 2,
+        "noise_count": 1,
+        "parameter_count": 9,
+        "parameter_routing_segment_count": 3,
+        "partition_count": 1,
+        "partition_member_counts": [
+          5
+        ],
+        "peak_rss_kb": 107680,
+        "purity": 0.9045939792740259,
+        "qbit_num": 2,
+        "remapped_partition_count": 0,
+        "rho_is_valid": true,
+        "rho_is_valid_tol": 1e-10,
+        "runtime_ms": 0.13052101712673903,
+        "runtime_path": "partitioned_density_descriptor_baseline",
+        "supported_unfused_gate_count": 4,
+        "supported_unfused_region_count": 2,
+        "trace_deviation": 2.2221513140154287e-16
+      }
+    },
+    {
+      "case_name": "layered_nearest_neighbor_q8_sparse_seed20260318",
+      "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
+      "exact_output": {
+        "density_imag": null,
+        "density_real": null,
+        "matrix_included": false,
+        "purity": 0.875132569153202,
+        "rho_is_valid": true,
+        "rho_is_valid_tol": 1e-10,
+        "shape": [
+          256,
+          256
+        ],
+        "trace_deviation": 8.883709084703726e-16,
+        "trace_imag": 1.8492317201022898e-17,
+        "trace_real": 1.0000000000000009
+      },
+      "fused_regions": [
+        {
+          "candidate_kind": "unitary_island",
+          "canonical_operation_indices": [
+            0,
+            1
+          ],
+          "classification": "supported_but_unfused",
+          "gate_count": 2,
+          "global_target_qbits": [
+            0,
+            1
+          ],
+          "local_target_qbits": [
+            0,
+            1
+          ],
+          "member_count": 2,
+          "operation_names": [
+            "U3",
+            "U3"
+          ],
+          "partition_index": 0,
+          "partition_member_indices": [
+            0,
+            1
+          ],
+          "reason": "fusion_disabled"
+        },
+        {
+          "candidate_kind": "unitary_island",
+          "canonical_operation_indices": [
+            2,
+            3
+          ],
+          "classification": "supported_but_unfused",
+          "gate_count": 2,
+          "global_target_qbits": [
+            2,
+            3
+          ],
+          "local_target_qbits": [
+            0,
+            1
+          ],
+          "member_count": 2,
+          "operation_names": [
+            "U3",
+            "U3"
+          ],
+          "partition_index": 1,
+          "partition_member_indices": [
+            0,
+            1
+          ],
+          "reason": "fusion_disabled"
+        },
+        {
+          "candidate_kind": "unitary_island",
+          "canonical_operation_indices": [
+            4,
+            5
+          ],
+          "classification": "supported_but_unfused",
+          "gate_count": 2,
+          "global_target_qbits": [
+            4,
+            5
+          ],
+          "local_target_qbits": [
+            0,
+            1
+          ],
+          "member_count": 2,
+          "operation_names": [
+            "U3",
+            "U3"
+          ],
+          "partition_index": 2,
+          "partition_member_indices": [
+            0,
+            1
+          ],
+          "reason": "fusion_disabled"
+        },
+        {
+          "candidate_kind": "unitary_island",
+          "canonical_operation_indices": [
+            6,
+            7
+          ],
+          "classification": "supported_but_unfused",
+          "gate_count": 2,
+          "global_target_qbits": [
+            6,
+            7
+          ],
+          "local_target_qbits": [
+            0,
+            1
+          ],
+          "member_count": 2,
+          "operation_names": [
+            "U3",
+            "U3"
+          ],
+          "partition_index": 3,
+          "partition_member_indices": [
+            0,
+            1
+          ],
+          "reason": "fusion_disabled"
+        },
+        {
+          "candidate_kind": "unitary_island",
+          "canonical_operation_indices": [
+            8
+          ],
+          "classification": "supported_but_unfused",
+          "gate_count": 1,
+          "global_target_qbits": [
+            0,
+            1
+          ],
+          "local_target_qbits": [
+            0,
+            1
+          ],
+          "member_count": 1,
+          "operation_names": [
+            "CNOT"
+          ],
+          "partition_index": 4,
+          "partition_member_indices": [
+            0
+          ],
+          "reason": "singleton_unitary_region"
+        },
+        {
+          "candidate_kind": "unitary_island",
+          "canonical_operation_indices": [
+            9
+          ],
+          "classification": "supported_but_unfused",
+          "gate_count": 1,
+          "global_target_qbits": [
+            2,
+            3
+          ],
+          "local_target_qbits": [
+            0,
+            1
+          ],
+          "member_count": 1,
+          "operation_names": [
+            "CNOT"
+          ],
+          "partition_index": 5,
+          "partition_member_indices": [
+            0
+          ],
+          "reason": "singleton_unitary_region"
+        },
+        {
+          "candidate_kind": "unitary_island",
+          "canonical_operation_indices": [
+            10
+          ],
+          "classification": "supported_but_unfused",
+          "gate_count": 1,
+          "global_target_qbits": [
+            4,
+            5
+          ],
+          "local_target_qbits": [
+            0,
+            1
+          ],
+          "member_count": 1,
+          "operation_names": [
+            "CNOT"
+          ],
+          "partition_index": 6,
+          "partition_member_indices": [
+            0
+          ],
+          "reason": "singleton_unitary_region"
+        },
+        {
+          "candidate_kind": "unitary_island",
+          "canonical_operation_indices": [
+            11
+          ],
+          "classification": "supported_but_unfused",
+          "gate_count": 1,
+          "global_target_qbits": [
+            6,
+            7
+          ],
+          "local_target_qbits": [
+            0,
+            1
+          ],
+          "member_count": 1,
+          "operation_names": [
+            "CNOT"
+          ],
+          "partition_index": 7,
+          "partition_member_indices": [
+            0
+          ],
+          "reason": "singleton_unitary_region"
+        },
+        {
+          "candidate_kind": "unitary_island",
+          "canonical_operation_indices": [
+            13,
+            14
+          ],
+          "classification": "supported_but_unfused",
+          "gate_count": 2,
+          "global_target_qbits": [
+            0,
+            1
+          ],
+          "local_target_qbits": [
+            0,
+            1
+          ],
+          "member_count": 2,
+          "operation_names": [
+            "U3",
+            "U3"
+          ],
+          "partition_index": 8,
+          "partition_member_indices": [
+            1,
+            2
+          ],
+          "reason": "fusion_disabled"
+        },
+        {
+          "candidate_kind": "unitary_island",
+          "canonical_operation_indices": [
+            15,
+            16
+          ],
+          "classification": "supported_but_unfused",
+          "gate_count": 2,
+          "global_target_qbits": [
+            2,
+            3
+          ],
+          "local_target_qbits": [
+            0,
+            1
+          ],
+          "member_count": 2,
+          "operation_names": [
+            "U3",
+            "U3"
+          ],
+          "partition_index": 9,
+          "partition_member_indices": [
+            0,
+            1
+          ],
+          "reason": "fusion_disabled"
+        },
+        {
+          "candidate_kind": "unitary_island",
+          "canonical_operation_indices": [
+            17,
+            18
+          ],
+          "classification": "supported_but_unfused",
+          "gate_count": 2,
+          "global_target_qbits": [
+            4,
+            5
+          ],
+          "local_target_qbits": [
+            0,
+            1
+          ],
+          "member_count": 2,
+          "operation_names": [
+            "U3",
+            "U3"
+          ],
+          "partition_index": 10,
+          "partition_member_indices": [
+            0,
+            1
+          ],
+          "reason": "fusion_disabled"
+        },
+        {
+          "candidate_kind": "unitary_island",
+          "canonical_operation_indices": [
+            19,
+            20
+          ],
+          "classification": "supported_but_unfused",
+          "gate_count": 2,
+          "global_target_qbits": [
+            6,
+            7
+          ],
+          "local_target_qbits": [
+            0,
+            1
+          ],
+          "member_count": 2,
+          "operation_names": [
+            "U3",
+            "U3"
+          ],
+          "partition_index": 11,
+          "partition_member_indices": [
+            0,
+            1
+          ],
+          "reason": "fusion_disabled"
+        },
+        {
+          "candidate_kind": "unitary_island",
+          "canonical_operation_indices": [
+            21
+          ],
+          "classification": "supported_but_unfused",
+          "gate_count": 1,
+          "global_target_qbits": [
+            1,
+            2
+          ],
+          "local_target_qbits": [
+            0,
+            1
+          ],
+          "member_count": 1,
+          "operation_names": [
+            "CNOT"
+          ],
+          "partition_index": 12,
+          "partition_member_indices": [
+            0
+          ],
+          "reason": "singleton_unitary_region"
+        },
+        {
+          "candidate_kind": "unitary_island",
+          "canonical_operation_indices": [
+            22
+          ],
+          "classification": "supported_but_unfused",
+          "gate_count": 1,
+          "global_target_qbits": [
+            3,
+            4
+          ],
+          "local_target_qbits": [
+            0,
+            1
+          ],
+          "member_count": 1,
+          "operation_names": [
+            "CNOT"
+          ],
+          "partition_index": 13,
+          "partition_member_indices": [
+            0
+          ],
+          "reason": "singleton_unitary_region"
+        },
+        {
+          "candidate_kind": "unitary_island",
+          "canonical_operation_indices": [
+            23
+          ],
+          "classification": "supported_but_unfused",
+          "gate_count": 1,
+          "global_target_qbits": [
+            5,
+            6
+          ],
+          "local_target_qbits": [
+            0,
+            1
+          ],
+          "member_count": 1,
+          "operation_names": [
+            "CNOT"
+          ],
+          "partition_index": 14,
+          "partition_member_indices": [
+            0
+          ],
+          "reason": "singleton_unitary_region"
+        },
+        {
+          "candidate_kind": "unitary_island",
+          "canonical_operation_indices": [
+            24,
+            25
+          ],
+          "classification": "supported_but_unfused",
+          "gate_count": 2,
+          "global_target_qbits": [
+            0,
+            1
+          ],
+          "local_target_qbits": [
+            0,
+            1
+          ],
+          "member_count": 2,
+          "operation_names": [
+            "U3",
+            "U3"
+          ],
+          "partition_index": 15,
+          "partition_member_indices": [
+            0,
+            1
+          ],
+          "reason": "fusion_disabled"
+        },
+        {
+          "candidate_kind": "unitary_island",
+          "canonical_operation_indices": [
+            26,
+            27
+          ],
+          "classification": "supported_but_unfused",
+          "gate_count": 2,
+          "global_target_qbits": [
+            2,
+            3
+          ],
+          "local_target_qbits": [
+            0,
+            1
+          ],
+          "member_count": 2,
+          "operation_names": [
+            "U3",
+            "U3"
+          ],
+          "partition_index": 16,
+          "partition_member_indices": [
+            0,
+            1
+          ],
+          "reason": "fusion_disabled"
+        },
+        {
+          "candidate_kind": "unitary_island",
+          "canonical_operation_indices": [
+            28,
+            29
+          ],
+          "classification": "supported_but_unfused",
+          "gate_count": 2,
+          "global_target_qbits": [
+            4,
+            5
+          ],
+          "local_target_qbits": [
+            0,
+            1
+          ],
+          "member_count": 2,
+          "operation_names": [
+            "U3",
+            "U3"
+          ],
+          "partition_index": 17,
+          "partition_member_indices": [
+            0,
+            1
+          ],
+          "reason": "fusion_disabled"
+        },
+        {
+          "candidate_kind": "unitary_island",
+          "canonical_operation_indices": [
+            30,
+            31
+          ],
+          "classification": "supported_but_unfused",
+          "gate_count": 2,
+          "global_target_qbits": [
+            6,
+            7
+          ],
+          "local_target_qbits": [
+            0,
+            1
+          ],
+          "member_count": 2,
+          "operation_names": [
+            "U3",
+            "U3"
+          ],
+          "partition_index": 18,
+          "partition_member_indices": [
+            0,
+            1
+          ],
+          "reason": "fusion_disabled"
+        },
+        {
+          "candidate_kind": "unitary_island",
+          "canonical_operation_indices": [
+            32
+          ],
+          "classification": "supported_but_unfused",
+          "gate_count": 1,
+          "global_target_qbits": [
+            0,
+            1
+          ],
+          "local_target_qbits": [
+            0,
+            1
+          ],
+          "member_count": 1,
+          "operation_names": [
+            "CNOT"
+          ],
+          "partition_index": 19,
+          "partition_member_indices": [
+            0
+          ],
+          "reason": "singleton_unitary_region"
+        },
+        {
+          "candidate_kind": "unitary_island",
+          "canonical_operation_indices": [
+            33
+          ],
+          "classification": "supported_but_unfused",
+          "gate_count": 1,
+          "global_target_qbits": [
+            2,
+            3
+          ],
+          "local_target_qbits": [
+            0,
+            1
+          ],
+          "member_count": 1,
+          "operation_names": [
+            "CNOT"
+          ],
+          "partition_index": 20,
+          "partition_member_indices": [
+            0
+          ],
+          "reason": "singleton_unitary_region"
+        },
+        {
+          "candidate_kind": "unitary_island",
+          "canonical_operation_indices": [
+            34
+          ],
+          "classification": "supported_but_unfused",
+          "gate_count": 1,
+          "global_target_qbits": [
+            4,
+            5
+          ],
+          "local_target_qbits": [
+            0,
+            1
+          ],
+          "member_count": 1,
+          "operation_names": [
+            "CNOT"
+          ],
+          "partition_index": 21,
+          "partition_member_indices": [
+            0
+          ],
+          "reason": "singleton_unitary_region"
+        },
+        {
+          "candidate_kind": "unitary_island",
+          "canonical_operation_indices": [
+            35
+          ],
+          "classification": "supported_but_unfused",
+          "gate_count": 1,
+          "global_target_qbits": [
+            6,
+            7
+          ],
+          "local_target_qbits": [
+            0,
+            1
+          ],
+          "member_count": 1,
+          "operation_names": [
+            "CNOT"
+          ],
+          "partition_index": 22,
+          "partition_member_indices": [
+            0
+          ],
+          "reason": "singleton_unitary_region"
+        }
+      ],
+      "metadata": {
+        "family_name": "layered_nearest_neighbor",
+        "noise_pattern": "sparse",
+        "qbit_num": 8,
+        "seed": 20260318,
+        "workload_id": "layered_nearest_neighbor_q8_sparse_seed20260318"
+      },
+      "partitions": [
+        {
+          "canonical_operation_indices": [
+            0,
+            1
+          ],
+          "gate_count": 2,
+          "global_to_local_qbits": [
+            {
+              "global_qbit": 0,
+              "local_qbit": 0
+            },
+            {
+              "global_qbit": 1,
+              "local_qbit": 1
+            }
+          ],
+          "local_to_global_qbits": [
+            0,
+            1
+          ],
+          "member_count": 2,
+          "noise_count": 0,
+          "operation_classes": [
+            "GateOperation",
+            "GateOperation"
+          ],
+          "operation_names": [
+            "U3",
+            "U3"
+          ],
+          "parameter_routing": [
+            {
+              "global_param_start": 0,
+              "local_param_start": 0,
+              "param_count": 3
+            },
+            {
+              "global_param_start": 3,
+              "local_param_start": 3,
+              "param_count": 3
+            }
+          ],
+          "partition_index": 0,
+          "partition_parameter_count": 6,
+          "partition_qubit_span": [
+            0,
+            1
+          ],
+          "requires_remap": false,
+          "runtime_circuit_parameter_count": 6,
+          "runtime_circuit_qbit_num": 8
+        },
+        {
+          "canonical_operation_indices": [
+            2,
+            3
+          ],
+          "gate_count": 2,
+          "global_to_local_qbits": [
+            {
+              "global_qbit": 2,
+              "local_qbit": 0
+            },
+            {
+              "global_qbit": 3,
+              "local_qbit": 1
+            }
+          ],
+          "local_to_global_qbits": [
+            2,
+            3
+          ],
+          "member_count": 2,
+          "noise_count": 0,
+          "operation_classes": [
+            "GateOperation",
+            "GateOperation"
+          ],
+          "operation_names": [
+            "U3",
+            "U3"
+          ],
+          "parameter_routing": [
+            {
+              "global_param_start": 6,
+              "local_param_start": 0,
+              "param_count": 3
+            },
+            {
+              "global_param_start": 9,
+              "local_param_start": 3,
+              "param_count": 3
+            }
+          ],
+          "partition_index": 1,
+          "partition_parameter_count": 6,
+          "partition_qubit_span": [
+            2,
+            3
+          ],
+          "requires_remap": true,
+          "runtime_circuit_parameter_count": 6,
+          "runtime_circuit_qbit_num": 8
+        },
+        {
+          "canonical_operation_indices": [
+            4,
+            5
+          ],
+          "gate_count": 2,
+          "global_to_local_qbits": [
+            {
+              "global_qbit": 4,
+              "local_qbit": 0
+            },
+            {
+              "global_qbit": 5,
+              "local_qbit": 1
+            }
+          ],
+          "local_to_global_qbits": [
+            4,
+            5
+          ],
+          "member_count": 2,
+          "noise_count": 0,
+          "operation_classes": [
+            "GateOperation",
+            "GateOperation"
+          ],
+          "operation_names": [
+            "U3",
+            "U3"
+          ],
+          "parameter_routing": [
+            {
+              "global_param_start": 12,
+              "local_param_start": 0,
+              "param_count": 3
+            },
+            {
+              "global_param_start": 15,
+              "local_param_start": 3,
+              "param_count": 3
+            }
+          ],
+          "partition_index": 2,
+          "partition_parameter_count": 6,
+          "partition_qubit_span": [
+            4,
+            5
+          ],
+          "requires_remap": true,
+          "runtime_circuit_parameter_count": 6,
+          "runtime_circuit_qbit_num": 8
+        },
+        {
+          "canonical_operation_indices": [
+            6,
+            7
+          ],
+          "gate_count": 2,
+          "global_to_local_qbits": [
+            {
+              "global_qbit": 6,
+              "local_qbit": 0
+            },
+            {
+              "global_qbit": 7,
+              "local_qbit": 1
+            }
+          ],
+          "local_to_global_qbits": [
+            6,
+            7
+          ],
+          "member_count": 2,
+          "noise_count": 0,
+          "operation_classes": [
+            "GateOperation",
+            "GateOperation"
+          ],
+          "operation_names": [
+            "U3",
+            "U3"
+          ],
+          "parameter_routing": [
+            {
+              "global_param_start": 18,
+              "local_param_start": 0,
+              "param_count": 3
+            },
+            {
+              "global_param_start": 21,
+              "local_param_start": 3,
+              "param_count": 3
+            }
+          ],
+          "partition_index": 3,
+          "partition_parameter_count": 6,
+          "partition_qubit_span": [
+            6,
+            7
+          ],
+          "requires_remap": true,
+          "runtime_circuit_parameter_count": 6,
+          "runtime_circuit_qbit_num": 8
+        },
+        {
+          "canonical_operation_indices": [
+            8
+          ],
+          "gate_count": 1,
+          "global_to_local_qbits": [
+            {
+              "global_qbit": 0,
+              "local_qbit": 0
+            },
+            {
+              "global_qbit": 1,
+              "local_qbit": 1
+            }
+          ],
+          "local_to_global_qbits": [
+            0,
+            1
+          ],
+          "member_count": 1,
+          "noise_count": 0,
+          "operation_classes": [
+            "GateOperation"
+          ],
+          "operation_names": [
+            "CNOT"
+          ],
+          "parameter_routing": [],
+          "partition_index": 4,
+          "partition_parameter_count": 0,
+          "partition_qubit_span": [
+            0,
+            1
+          ],
+          "requires_remap": false,
+          "runtime_circuit_parameter_count": 0,
+          "runtime_circuit_qbit_num": 8
+        },
+        {
+          "canonical_operation_indices": [
+            9
+          ],
+          "gate_count": 1,
+          "global_to_local_qbits": [
+            {
+              "global_qbit": 2,
+              "local_qbit": 0
+            },
+            {
+              "global_qbit": 3,
+              "local_qbit": 1
+            }
+          ],
+          "local_to_global_qbits": [
+            2,
+            3
+          ],
+          "member_count": 1,
+          "noise_count": 0,
+          "operation_classes": [
+            "GateOperation"
+          ],
+          "operation_names": [
+            "CNOT"
+          ],
+          "parameter_routing": [],
+          "partition_index": 5,
+          "partition_parameter_count": 0,
+          "partition_qubit_span": [
+            2,
+            3
+          ],
+          "requires_remap": true,
+          "runtime_circuit_parameter_count": 0,
+          "runtime_circuit_qbit_num": 8
+        },
+        {
+          "canonical_operation_indices": [
+            10
+          ],
+          "gate_count": 1,
+          "global_to_local_qbits": [
+            {
+              "global_qbit": 4,
+              "local_qbit": 0
+            },
+            {
+              "global_qbit": 5,
+              "local_qbit": 1
+            }
+          ],
+          "local_to_global_qbits": [
+            4,
+            5
+          ],
+          "member_count": 1,
+          "noise_count": 0,
+          "operation_classes": [
+            "GateOperation"
+          ],
+          "operation_names": [
+            "CNOT"
+          ],
+          "parameter_routing": [],
+          "partition_index": 6,
+          "partition_parameter_count": 0,
+          "partition_qubit_span": [
+            4,
+            5
+          ],
+          "requires_remap": true,
+          "runtime_circuit_parameter_count": 0,
+          "runtime_circuit_qbit_num": 8
+        },
+        {
+          "canonical_operation_indices": [
+            11
+          ],
+          "gate_count": 1,
+          "global_to_local_qbits": [
+            {
+              "global_qbit": 6,
+              "local_qbit": 0
+            },
+            {
+              "global_qbit": 7,
+              "local_qbit": 1
+            }
+          ],
+          "local_to_global_qbits": [
+            6,
+            7
+          ],
+          "member_count": 1,
+          "noise_count": 0,
+          "operation_classes": [
+            "GateOperation"
+          ],
+          "operation_names": [
+            "CNOT"
+          ],
+          "parameter_routing": [],
+          "partition_index": 7,
+          "partition_parameter_count": 0,
+          "partition_qubit_span": [
+            6,
+            7
+          ],
+          "requires_remap": true,
+          "runtime_circuit_parameter_count": 0,
+          "runtime_circuit_qbit_num": 8
+        },
+        {
+          "canonical_operation_indices": [
+            12,
+            13,
+            14
+          ],
+          "gate_count": 2,
+          "global_to_local_qbits": [
+            {
+              "global_qbit": 0,
+              "local_qbit": 0
+            },
+            {
+              "global_qbit": 1,
+              "local_qbit": 1
+            }
+          ],
+          "local_to_global_qbits": [
+            0,
+            1
+          ],
+          "member_count": 3,
+          "noise_count": 1,
+          "operation_classes": [
+            "NoiseOperation",
+            "GateOperation",
+            "GateOperation"
+          ],
+          "operation_names": [
+            "local_depolarizing",
+            "U3",
+            "U3"
+          ],
+          "parameter_routing": [
+            {
+              "global_param_start": 24,
+              "local_param_start": 0,
+              "param_count": 3
+            },
+            {
+              "global_param_start": 27,
+              "local_param_start": 3,
+              "param_count": 3
+            }
+          ],
+          "partition_index": 8,
+          "partition_parameter_count": 6,
+          "partition_qubit_span": [
+            0,
+            1
+          ],
+          "requires_remap": false,
+          "runtime_circuit_parameter_count": 6,
+          "runtime_circuit_qbit_num": 8
+        },
+        {
+          "canonical_operation_indices": [
+            15,
+            16
+          ],
+          "gate_count": 2,
+          "global_to_local_qbits": [
+            {
+              "global_qbit": 2,
+              "local_qbit": 0
+            },
+            {
+              "global_qbit": 3,
+              "local_qbit": 1
+            }
+          ],
+          "local_to_global_qbits": [
+            2,
+            3
+          ],
+          "member_count": 2,
+          "noise_count": 0,
+          "operation_classes": [
+            "GateOperation",
+            "GateOperation"
+          ],
+          "operation_names": [
+            "U3",
+            "U3"
+          ],
+          "parameter_routing": [
+            {
+              "global_param_start": 30,
+              "local_param_start": 0,
+              "param_count": 3
+            },
+            {
+              "global_param_start": 33,
+              "local_param_start": 3,
+              "param_count": 3
+            }
+          ],
+          "partition_index": 9,
+          "partition_parameter_count": 6,
+          "partition_qubit_span": [
+            2,
+            3
+          ],
+          "requires_remap": true,
+          "runtime_circuit_parameter_count": 6,
+          "runtime_circuit_qbit_num": 8
+        },
+        {
+          "canonical_operation_indices": [
+            17,
+            18
+          ],
+          "gate_count": 2,
+          "global_to_local_qbits": [
+            {
+              "global_qbit": 4,
+              "local_qbit": 0
+            },
+            {
+              "global_qbit": 5,
+              "local_qbit": 1
+            }
+          ],
+          "local_to_global_qbits": [
+            4,
+            5
+          ],
+          "member_count": 2,
+          "noise_count": 0,
+          "operation_classes": [
+            "GateOperation",
+            "GateOperation"
+          ],
+          "operation_names": [
+            "U3",
+            "U3"
+          ],
+          "parameter_routing": [
+            {
+              "global_param_start": 36,
+              "local_param_start": 0,
+              "param_count": 3
+            },
+            {
+              "global_param_start": 39,
+              "local_param_start": 3,
+              "param_count": 3
+            }
+          ],
+          "partition_index": 10,
+          "partition_parameter_count": 6,
+          "partition_qubit_span": [
+            4,
+            5
+          ],
+          "requires_remap": true,
+          "runtime_circuit_parameter_count": 6,
+          "runtime_circuit_qbit_num": 8
+        },
+        {
+          "canonical_operation_indices": [
+            19,
+            20
+          ],
+          "gate_count": 2,
+          "global_to_local_qbits": [
+            {
+              "global_qbit": 6,
+              "local_qbit": 0
+            },
+            {
+              "global_qbit": 7,
+              "local_qbit": 1
+            }
+          ],
+          "local_to_global_qbits": [
+            6,
+            7
+          ],
+          "member_count": 2,
+          "noise_count": 0,
+          "operation_classes": [
+            "GateOperation",
+            "GateOperation"
+          ],
+          "operation_names": [
+            "U3",
+            "U3"
+          ],
+          "parameter_routing": [
+            {
+              "global_param_start": 42,
+              "local_param_start": 0,
+              "param_count": 3
+            },
+            {
+              "global_param_start": 45,
+              "local_param_start": 3,
+              "param_count": 3
+            }
+          ],
+          "partition_index": 11,
+          "partition_parameter_count": 6,
+          "partition_qubit_span": [
+            6,
+            7
+          ],
+          "requires_remap": true,
+          "runtime_circuit_parameter_count": 6,
+          "runtime_circuit_qbit_num": 8
+        },
+        {
+          "canonical_operation_indices": [
+            21
+          ],
+          "gate_count": 1,
+          "global_to_local_qbits": [
+            {
+              "global_qbit": 1,
+              "local_qbit": 0
+            },
+            {
+              "global_qbit": 2,
+              "local_qbit": 1
+            }
+          ],
+          "local_to_global_qbits": [
+            1,
+            2
+          ],
+          "member_count": 1,
+          "noise_count": 0,
+          "operation_classes": [
+            "GateOperation"
+          ],
+          "operation_names": [
+            "CNOT"
+          ],
+          "parameter_routing": [],
+          "partition_index": 12,
+          "partition_parameter_count": 0,
+          "partition_qubit_span": [
+            1,
+            2
+          ],
+          "requires_remap": true,
+          "runtime_circuit_parameter_count": 0,
+          "runtime_circuit_qbit_num": 8
+        },
+        {
+          "canonical_operation_indices": [
+            22
+          ],
+          "gate_count": 1,
+          "global_to_local_qbits": [
+            {
+              "global_qbit": 3,
+              "local_qbit": 0
+            },
+            {
+              "global_qbit": 4,
+              "local_qbit": 1
+            }
+          ],
+          "local_to_global_qbits": [
+            3,
+            4
+          ],
+          "member_count": 1,
+          "noise_count": 0,
+          "operation_classes": [
+            "GateOperation"
+          ],
+          "operation_names": [
+            "CNOT"
+          ],
+          "parameter_routing": [],
+          "partition_index": 13,
+          "partition_parameter_count": 0,
+          "partition_qubit_span": [
+            3,
+            4
+          ],
+          "requires_remap": true,
+          "runtime_circuit_parameter_count": 0,
+          "runtime_circuit_qbit_num": 8
+        },
+        {
+          "canonical_operation_indices": [
+            23
+          ],
+          "gate_count": 1,
+          "global_to_local_qbits": [
+            {
+              "global_qbit": 5,
+              "local_qbit": 0
+            },
+            {
+              "global_qbit": 6,
+              "local_qbit": 1
+            }
+          ],
+          "local_to_global_qbits": [
+            5,
+            6
+          ],
+          "member_count": 1,
+          "noise_count": 0,
+          "operation_classes": [
+            "GateOperation"
+          ],
+          "operation_names": [
+            "CNOT"
+          ],
+          "parameter_routing": [],
+          "partition_index": 14,
+          "partition_parameter_count": 0,
+          "partition_qubit_span": [
+            5,
+            6
+          ],
+          "requires_remap": true,
+          "runtime_circuit_parameter_count": 0,
+          "runtime_circuit_qbit_num": 8
+        },
+        {
+          "canonical_operation_indices": [
+            24,
+            25
+          ],
+          "gate_count": 2,
+          "global_to_local_qbits": [
+            {
+              "global_qbit": 0,
+              "local_qbit": 0
+            },
+            {
+              "global_qbit": 1,
+              "local_qbit": 1
+            }
+          ],
+          "local_to_global_qbits": [
+            0,
+            1
+          ],
+          "member_count": 2,
+          "noise_count": 0,
+          "operation_classes": [
+            "GateOperation",
+            "GateOperation"
+          ],
+          "operation_names": [
+            "U3",
+            "U3"
+          ],
+          "parameter_routing": [
+            {
+              "global_param_start": 48,
+              "local_param_start": 0,
+              "param_count": 3
+            },
+            {
+              "global_param_start": 51,
+              "local_param_start": 3,
+              "param_count": 3
+            }
+          ],
+          "partition_index": 15,
+          "partition_parameter_count": 6,
+          "partition_qubit_span": [
+            0,
+            1
+          ],
+          "requires_remap": false,
+          "runtime_circuit_parameter_count": 6,
+          "runtime_circuit_qbit_num": 8
+        },
+        {
+          "canonical_operation_indices": [
+            26,
+            27
+          ],
+          "gate_count": 2,
+          "global_to_local_qbits": [
+            {
+              "global_qbit": 2,
+              "local_qbit": 0
+            },
+            {
+              "global_qbit": 3,
+              "local_qbit": 1
+            }
+          ],
+          "local_to_global_qbits": [
+            2,
+            3
+          ],
+          "member_count": 2,
+          "noise_count": 0,
+          "operation_classes": [
+            "GateOperation",
+            "GateOperation"
+          ],
+          "operation_names": [
+            "U3",
+            "U3"
+          ],
+          "parameter_routing": [
+            {
+              "global_param_start": 54,
+              "local_param_start": 0,
+              "param_count": 3
+            },
+            {
+              "global_param_start": 57,
+              "local_param_start": 3,
+              "param_count": 3
+            }
+          ],
+          "partition_index": 16,
+          "partition_parameter_count": 6,
+          "partition_qubit_span": [
+            2,
+            3
+          ],
+          "requires_remap": true,
+          "runtime_circuit_parameter_count": 6,
+          "runtime_circuit_qbit_num": 8
+        },
+        {
+          "canonical_operation_indices": [
+            28,
+            29
+          ],
+          "gate_count": 2,
+          "global_to_local_qbits": [
+            {
+              "global_qbit": 4,
+              "local_qbit": 0
+            },
+            {
+              "global_qbit": 5,
+              "local_qbit": 1
+            }
+          ],
+          "local_to_global_qbits": [
+            4,
+            5
+          ],
+          "member_count": 2,
+          "noise_count": 0,
+          "operation_classes": [
+            "GateOperation",
+            "GateOperation"
+          ],
+          "operation_names": [
+            "U3",
+            "U3"
+          ],
+          "parameter_routing": [
+            {
+              "global_param_start": 60,
+              "local_param_start": 0,
+              "param_count": 3
+            },
+            {
+              "global_param_start": 63,
+              "local_param_start": 3,
+              "param_count": 3
+            }
+          ],
+          "partition_index": 17,
+          "partition_parameter_count": 6,
+          "partition_qubit_span": [
+            4,
+            5
+          ],
+          "requires_remap": true,
+          "runtime_circuit_parameter_count": 6,
+          "runtime_circuit_qbit_num": 8
+        },
+        {
+          "canonical_operation_indices": [
+            30,
+            31
+          ],
+          "gate_count": 2,
+          "global_to_local_qbits": [
+            {
+              "global_qbit": 6,
+              "local_qbit": 0
+            },
+            {
+              "global_qbit": 7,
+              "local_qbit": 1
+            }
+          ],
+          "local_to_global_qbits": [
+            6,
+            7
+          ],
+          "member_count": 2,
+          "noise_count": 0,
+          "operation_classes": [
+            "GateOperation",
+            "GateOperation"
+          ],
+          "operation_names": [
+            "U3",
+            "U3"
+          ],
+          "parameter_routing": [
+            {
+              "global_param_start": 66,
+              "local_param_start": 0,
+              "param_count": 3
+            },
+            {
+              "global_param_start": 69,
+              "local_param_start": 3,
+              "param_count": 3
+            }
+          ],
+          "partition_index": 18,
+          "partition_parameter_count": 6,
+          "partition_qubit_span": [
+            6,
+            7
+          ],
+          "requires_remap": true,
+          "runtime_circuit_parameter_count": 6,
+          "runtime_circuit_qbit_num": 8
+        },
+        {
+          "canonical_operation_indices": [
+            32
+          ],
+          "gate_count": 1,
+          "global_to_local_qbits": [
+            {
+              "global_qbit": 0,
+              "local_qbit": 0
+            },
+            {
+              "global_qbit": 1,
+              "local_qbit": 1
+            }
+          ],
+          "local_to_global_qbits": [
+            0,
+            1
+          ],
+          "member_count": 1,
+          "noise_count": 0,
+          "operation_classes": [
+            "GateOperation"
+          ],
+          "operation_names": [
+            "CNOT"
+          ],
+          "parameter_routing": [],
+          "partition_index": 19,
+          "partition_parameter_count": 0,
+          "partition_qubit_span": [
+            0,
+            1
+          ],
+          "requires_remap": false,
+          "runtime_circuit_parameter_count": 0,
+          "runtime_circuit_qbit_num": 8
+        },
+        {
+          "canonical_operation_indices": [
+            33
+          ],
+          "gate_count": 1,
+          "global_to_local_qbits": [
+            {
+              "global_qbit": 2,
+              "local_qbit": 0
+            },
+            {
+              "global_qbit": 3,
+              "local_qbit": 1
+            }
+          ],
+          "local_to_global_qbits": [
+            2,
+            3
+          ],
+          "member_count": 1,
+          "noise_count": 0,
+          "operation_classes": [
+            "GateOperation"
+          ],
+          "operation_names": [
+            "CNOT"
+          ],
+          "parameter_routing": [],
+          "partition_index": 20,
+          "partition_parameter_count": 0,
+          "partition_qubit_span": [
+            2,
+            3
+          ],
+          "requires_remap": true,
+          "runtime_circuit_parameter_count": 0,
+          "runtime_circuit_qbit_num": 8
+        },
+        {
+          "canonical_operation_indices": [
+            34
+          ],
+          "gate_count": 1,
+          "global_to_local_qbits": [
+            {
+              "global_qbit": 4,
+              "local_qbit": 0
+            },
+            {
+              "global_qbit": 5,
+              "local_qbit": 1
+            }
+          ],
+          "local_to_global_qbits": [
+            4,
+            5
+          ],
+          "member_count": 1,
+          "noise_count": 0,
+          "operation_classes": [
+            "GateOperation"
+          ],
+          "operation_names": [
+            "CNOT"
+          ],
+          "parameter_routing": [],
+          "partition_index": 21,
+          "partition_parameter_count": 0,
+          "partition_qubit_span": [
+            4,
+            5
+          ],
+          "requires_remap": true,
+          "runtime_circuit_parameter_count": 0,
+          "runtime_circuit_qbit_num": 8
+        },
+        {
+          "canonical_operation_indices": [
+            35
+          ],
+          "gate_count": 1,
+          "global_to_local_qbits": [
+            {
+              "global_qbit": 6,
+              "local_qbit": 0
+            },
+            {
+              "global_qbit": 7,
+              "local_qbit": 1
+            }
+          ],
+          "local_to_global_qbits": [
+            6,
+            7
+          ],
+          "member_count": 1,
+          "noise_count": 0,
+          "operation_classes": [
+            "GateOperation"
+          ],
+          "operation_names": [
+            "CNOT"
+          ],
+          "parameter_routing": [],
+          "partition_index": 22,
+          "partition_parameter_count": 0,
+          "partition_qubit_span": [
+            6,
+            7
+          ],
+          "requires_remap": true,
+          "runtime_circuit_parameter_count": 0,
+          "runtime_circuit_qbit_num": 8
+        },
+        {
+          "canonical_operation_indices": [
+            36
+          ],
+          "gate_count": 0,
+          "global_to_local_qbits": [
+            {
+              "global_qbit": 1,
+              "local_qbit": 0
+            }
+          ],
+          "local_to_global_qbits": [
+            1
+          ],
+          "member_count": 1,
+          "noise_count": 1,
+          "operation_classes": [
+            "NoiseOperation"
+          ],
+          "operation_names": [
+            "phase_damping"
+          ],
+          "parameter_routing": [],
+          "partition_index": 23,
+          "partition_parameter_count": 0,
+          "partition_qubit_span": [
+            1
+          ],
+          "requires_remap": true,
+          "runtime_circuit_parameter_count": 0,
+          "runtime_circuit_qbit_num": 8
+        }
+      ],
+      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
+      "provenance": {
+        "entry_route": "phase3_structured_family_generation",
+        "source_type": "structured_family_builder",
+        "workload_family": "phase3_structured_family",
+        "workload_id": "layered_nearest_neighbor_q8_sparse_seed20260318"
+      },
+      "requested_mode": "partitioned_density",
+      "runtime_path": "partitioned_density_descriptor_baseline",
+      "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
+      "summary": {
+        "actual_fused_execution": false,
+        "deferred_region_count": 0,
+        "density_trace_imag": 1.8492317201022898e-17,
+        "density_trace_real": 1.0000000000000009,
+        "descriptor_member_count": 37,
+        "exact_output_present": true,
+        "fallback_used": false,
+        "fused_gate_count": 0,
+        "fused_region_count": 0,
+        "gate_count": 35,
+        "max_partition_span": 2,
+        "noise_count": 2,
+        "parameter_count": 72,
+        "parameter_routing_segment_count": 24,
+        "partition_count": 24,
+        "partition_member_counts": [
+          2,
+          2,
+          2,
+          2,
+          1,
+          1,
+          1,
+          1,
+          3,
+          2,
+          2,
+          2,
+          1,
+          1,
+          1,
+          2,
+          2,
+          2,
+          2,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "peak_rss_kb": 112800,
+        "purity": 0.875132569153202,
+        "qbit_num": 8,
+        "remapped_partition_count": 19,
+        "rho_is_valid": true,
+        "rho_is_valid_tol": 1e-10,
+        "runtime_ms": 28.987311001401395,
+        "runtime_path": "partitioned_density_descriptor_baseline",
+        "supported_unfused_gate_count": 35,
+        "supported_unfused_region_count": 23,
+        "trace_deviation": 8.883709084703726e-16
+      }
+    }
+  ],
+  "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
+  "software": {
+    "numpy": "2.3.5",
+    "python": "3.13.9",
+    "scipy": "1.16.3"
+  },
+  "status": "pass",
+  "suite_name": "phase3_partitioned_runtime_runtime_handoff",
+  "summary": {
+    "continuity_cases": 1,
+    "methods_cases": 0,
+    "partition_schema_count": 1,
+    "passed_cases": 3,
+    "summary_schema_count": 1,
+    "total_cases": 3
+  }
+}

@@ -41,9 +41,9 @@ Out of scope for this story:
 - The shared Task 2 descriptor substrate now lives in
   `squander/partitioning/noisy_planner.py`, and Story 1 already emits the first
   positive artifact bundle under
-  `benchmarks/density_matrix/artifacts/phase3_task2/story1_continuity_descriptors/`.
+  `benchmarks/density_matrix/artifacts/planner_surface/continuity_descriptor/`.
 - Story 2 now also emits the first multi-workload descriptor bundle under
-  `benchmarks/density_matrix/artifacts/phase3_task2/story2_workloads/`, which
+  `benchmarks/density_matrix/artifacts/planner_surface/mandatory_workload/`, which
   should become a direct input to Story 5 audit-shape stabilization.
 - Story 4 now also froze the positive reconstruction field set around
   `local_to_global_qbits`, `global_to_local_qbits`, `requires_remap`, and
@@ -183,7 +183,7 @@ Out of scope for this story:
 - The checks stay focused on audit stability rather than runtime exactness.
 
 **Execution checklist**
-- [ ] Add focused checks in `tests/partitioning/test_phase3_task2.py` for
+- [ ] Add focused checks in `tests/partitioning/test_planner_surface_descriptors.py` for
       workload-class audit stability.
 - [ ] Compare top-level provenance, schema identity, and summary-field presence
       across supported workload classes.
@@ -216,7 +216,7 @@ Out of scope for this story:
 
 **Execution checklist**
 - [ ] Add a dedicated Story 5 artifact location
-      (for example `benchmarks/density_matrix/artifacts/phase3_task2/story5_audit/`).
+      (for example `benchmarks/density_matrix/artifacts/planner_surface/descriptor_audit/`).
 - [ ] Emit at least one continuity case and one methods-oriented case through
       the shared Task 2 audit surface.
 - [ ] Include descriptor schema identity, case-level provenance, summary

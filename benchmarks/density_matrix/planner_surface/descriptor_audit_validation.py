@@ -22,12 +22,12 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from benchmarks.density_matrix.planner_surface.common import (
-    build_phase3_story1_continuity_vqe,
+    build_phase2_continuity_vqe,
     build_software_metadata,
 )
 from benchmarks.density_matrix.planner_surface.workloads import (
-    iter_story2_microcase_descriptor_sets,
-    iter_story2_structured_descriptor_sets,
+    iter_microcase_descriptor_sets,
+    iter_structured_descriptor_sets,
 )
 from squander import Circuit
 from squander.partitioning.noisy_planner import (
@@ -38,15 +38,15 @@ from squander.partitioning.noisy_planner import (
     build_phase3_continuity_partition_descriptor_set,
 )
 
-SUITE_NAME = "phase3_task2_story5_descriptor_audit"
+SUITE_NAME = "phase3_planner_surface_descriptor_audit"
 ARTIFACT_FILENAME = "descriptor_audit_bundle.json"
 DEFAULT_OUTPUT_DIR = (
     REPO_ROOT
     / "benchmarks"
     / "density_matrix"
     / "artifacts"
-    / "phase3_task2"
-    / "story5_audit"
+    / "planner_surface"
+    / "descriptor_audit"
 )
 ARTIFACT_CORE_FIELDS = (
     "suite_name",
@@ -59,21 +59,21 @@ ARTIFACT_CORE_FIELDS = (
 
 
 def build_cases() -> list[dict]:
-    continuity_vqe, _, _ = build_phase3_story1_continuity_vqe(4)
+    continuity_vqe, _, _ = build_phase2_continuity_vqe(4)
     continuity_audit = build_descriptor_audit_record(
         build_phase3_continuity_partition_descriptor_set(continuity_vqe),
         metadata={"case_kind": "continuity"},
     )
     continuity_audit["case_name"] = continuity_audit["provenance"]["workload_id"]
 
-    micro_metadata, micro_descriptor_set = next(iter(iter_story2_microcase_descriptor_sets()))
+    micro_metadata, micro_descriptor_set = next(iter(iter_microcase_descriptor_sets()))
     micro_audit = build_descriptor_audit_record(
         micro_descriptor_set, metadata=micro_metadata
     )
     micro_audit["case_name"] = micro_audit["provenance"]["workload_id"]
 
     structured_metadata, structured_descriptor_set = next(
-        iter(iter_story2_structured_descriptor_sets())
+        iter(iter_structured_descriptor_sets())
     )
     structured_audit = build_descriptor_audit_record(
         structured_descriptor_set, metadata=structured_metadata

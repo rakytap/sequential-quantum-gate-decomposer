@@ -261,7 +261,7 @@ Out of scope for this story:
 
 **Execution checklist**
 - [ ] Add a dedicated Story 4 artifact location
-      (for example `benchmarks/density_matrix/artifacts/phase3_task1/story4_legacy/`).
+      (for example `benchmarks/density_matrix/artifacts/planner_surface/`).
 - [ ] Record source label, eligibility status, first unsupported condition when
       applicable, and canonical planner-entry summary metadata.
 - [ ] Keep the emitted record shape aligned with the existing planner-surface

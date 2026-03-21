@@ -46,7 +46,7 @@ Out of scope for this story:
   directly through:
   - `benchmarks/density_matrix/planner_calibration/claim_selection.py`,
   - `benchmarks/density_matrix/planner_calibration/calibrated_claim_selection_validation.py`,
-  - and `benchmarks/density_matrix/artifacts/phase3_task5/`.
+  - and `benchmarks/density_matrix/artifacts/planner_calibration/`.
 - The structured workload builders and noise-pattern vocabulary Story 4 should
   reuse already exist in
   `benchmarks/density_matrix/planner_surface/workloads.py`, especially
@@ -266,7 +266,7 @@ Out of scope for this story:
 **Execution checklist**
 - [ ] Add a dedicated Story 4 artifact location
       (for example
-      `benchmarks/density_matrix/artifacts/phase3_task7/story4_sensitivity_matrix/`).
+      `benchmarks/density_matrix/artifacts/performance_evidence/sensitivity_matrix/`).
 - [ ] Emit sensitivity comparisons through one stable schema plus a stable
       bundle summary.
 - [ ] Record rerun commands and software metadata with the emitted bundle.

@@ -15,19 +15,19 @@ import argparse
 from pathlib import Path
 
 from benchmarks.density_matrix.correctness_evidence.common import (
-    TASK6_CASE_SCHEMA_VERSION,
-    build_task6_selected_candidate,
-    build_task6_software_metadata,
-    task6_story_output_dir,
+    CORRECTNESS_EVIDENCE_CASE_SCHEMA_VERSION,
+    build_correctness_evidence_selected_candidate,
+    build_correctness_evidence_software_metadata,
+    correctness_evidence_output_dir,
     write_artifact_bundle,
 )
 from benchmarks.density_matrix.correctness_evidence.records import (
-    build_task6_positive_records,
+    build_correctness_evidence_positive_records,
 )
 
-SUITE_NAME = "phase3_task6_story2_sequential_gate"
+SUITE_NAME = "phase3_correctness_evidence_sequential_correctness"
 ARTIFACT_FILENAME = "sequential_correctness_bundle.json"
-DEFAULT_OUTPUT_DIR = task6_story_output_dir("story2_sequential_gate")
+DEFAULT_OUTPUT_DIR = correctness_evidence_output_dir("sequential_correctness")
 ARTIFACT_CORE_FIELDS = (
     "suite_name",
     "status",
@@ -40,7 +40,7 @@ ARTIFACT_CORE_FIELDS = (
 
 
 def build_cases() -> list[dict]:
-    return build_task6_positive_records()
+    return build_correctness_evidence_positive_records()
 
 
 def build_artifact_bundle(cases: list[dict]) -> dict:
@@ -51,9 +51,9 @@ def build_artifact_bundle(cases: list[dict]) -> dict:
         "status": "pass"
         if internal_passes == len(cases) and supported_runtime_cases == len(cases)
         else "fail",
-        "record_schema_version": TASK6_CASE_SCHEMA_VERSION,
-        "software": build_task6_software_metadata(),
-        "selected_candidate": build_task6_selected_candidate(),
+        "record_schema_version": CORRECTNESS_EVIDENCE_CASE_SCHEMA_VERSION,
+        "software": build_correctness_evidence_software_metadata(),
+        "selected_candidate": build_correctness_evidence_selected_candidate(),
         "summary": {
             "total_cases": len(cases),
             "supported_runtime_cases": supported_runtime_cases,
