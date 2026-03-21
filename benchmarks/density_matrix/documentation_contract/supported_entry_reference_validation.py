@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Validation: Task 7 Story 2 supported entry and canonical workflow wording.
+"""Validation: Supported entry and canonical workflow wording.
 
 Builds a machine-readable documentation checker for the supported Phase 2 entry
 surface and the canonical workflow wording. This layer is intentionally thin:
-- it reuses the Story 1 document-entry surface,
-- it records the mandatory Story 2 statements and their source links,
+- it reuses the contract-reference surface,
+- it records the mandatory supported-entry statements and their source links,
 - it fails when supported-entry or exact-regime wording becomes ambiguous,
 - and it keeps the reader-facing contract narrow to the frozen Phase 2 path.
 
@@ -34,17 +34,17 @@ from benchmarks.density_matrix.documentation_contract.doc_utils import (
     write_json,
 )
 from benchmarks.density_matrix.documentation_contract.contract_reference_validation import (
-    ARTIFACT_FILENAME as STORY1_ARTIFACT_FILENAME,
-    run_validation as run_story1_validation,
-    validate_artifact_bundle as validate_story1_artifact,
+    ARTIFACT_FILENAME as CONTRACT_REFERENCE_ARTIFACT_FILENAME,
+    run_validation as run_contract_reference_validation,
+    validate_artifact_bundle as validate_contract_reference_artifact,
 )
 
 
 SUITE_NAME = "supported_entry_reference"
 ARTIFACT_FILENAME = "supported_entry_reference.json"
 DEFAULT_OUTPUT_DIR = DOCUMENTATION_CONTRACT_OUTPUT_DIR
-STORY1_ARTIFACT_PATH = DEFAULT_OUTPUT_DIR / STORY1_ARTIFACT_FILENAME
-STORY2_SECTION_HEADING = "## Supported Entry And Canonical Workflow"
+CONTRACT_REFERENCE_ARTIFACT_PATH = DEFAULT_OUTPUT_DIR / CONTRACT_REFERENCE_ARTIFACT_FILENAME
+SUPPORTED_ENTRY_SECTION_HEADING = "## Supported Entry And Canonical Workflow"
 MANDATORY_STATEMENTS = (
     {
         "statement_id": "backend_default",
@@ -107,7 +107,7 @@ MANDATORY_STATEMENTS = (
         "entry_point_phrases": [
             "Full end-to-end workflow execution is required at 4 and 6 qubits.",
         ],
-        "primary_doc_id": "correctness_evidence_mini_spec",
+        "primary_doc_id": "correctness_evidence_task_contract",
         "primary_source_phrases": [
             "End-to-end workflow execution is mandatory at 4 and 6 qubits",
         ],
@@ -119,7 +119,7 @@ MANDATORY_STATEMENTS = (
         "entry_point_phrases": [
             "Benchmark-ready fixed-parameter evaluation is required at 8 and 10 qubits.",
         ],
-        "primary_doc_id": "correctness_evidence_mini_spec",
+        "primary_doc_id": "correctness_evidence_task_contract",
         "primary_source_phrases": [
             "Benchmark-ready fixed-parameter evaluation is mandatory at 8 and 10 qubits",
         ],
@@ -142,7 +142,7 @@ ARTIFACT_CORE_FIELDS = (
     "status",
     "entry_point",
     "requirements",
-    "story1_reference_map",
+    "upstream_contract_reference_map",
     "required_statements",
     "software",
     "provenance",
@@ -150,14 +150,14 @@ ARTIFACT_CORE_FIELDS = (
 )
 
 
-def _load_story1_artifact(path: Path = STORY1_ARTIFACT_PATH):
+def _load_contract_reference_artifact(path: Path = CONTRACT_REFERENCE_ARTIFACT_PATH):
     if path.exists():
         from benchmarks.density_matrix.documentation_contract.doc_utils import load_json
 
         artifact = load_json(path)
-        validate_story1_artifact(artifact)
+        validate_contract_reference_artifact(artifact)
         return artifact
-    artifact = run_story1_validation(verbose=False)
+    artifact = run_contract_reference_validation(verbose=False)
     return artifact
 
 
@@ -193,11 +193,11 @@ def build_required_statement_inventory():
 
 
 def build_artifact_bundle():
-    story1_artifact = _load_story1_artifact()
+    contract_reference_artifact = _load_contract_reference_artifact()
     entry_text = load_text(PHASE2_DOCUMENTATION_INDEX_PATH)
     required_statements = build_required_statement_inventory()
 
-    section_heading_present = STORY2_SECTION_HEADING in entry_text
+    section_heading_present = SUPPORTED_ENTRY_SECTION_HEADING in entry_text
     all_entry_point_statements_present = all(
         item["entry_point_present"] for item in required_statements
     )
@@ -205,7 +205,7 @@ def build_artifact_bundle():
         item["primary_source_present"] for item in required_statements
     )
     supported_entry_reference_completed = bool(
-        story1_artifact["status"] == "pass"
+        contract_reference_artifact["status"] == "pass"
         and section_heading_present
         and all_entry_point_statements_present
         and all_primary_sources_present
@@ -216,7 +216,7 @@ def build_artifact_bundle():
         "status": "pass" if supported_entry_reference_completed else "fail",
         "entry_point": {
             "path": relative_to_repo(PHASE2_DOCUMENTATION_INDEX_PATH),
-            "section_heading": STORY2_SECTION_HEADING,
+            "section_heading": SUPPORTED_ENTRY_SECTION_HEADING,
             "section_heading_present": section_heading_present,
         },
         "requirements": {
@@ -224,22 +224,22 @@ def build_artifact_bundle():
                 statement["statement_id"] for statement in MANDATORY_STATEMENTS
             ],
         },
-        "story1_reference_map": {
-            "suite_name": story1_artifact["suite_name"],
-            "status": story1_artifact["status"],
-            "entry_point_path": story1_artifact["entry_point"]["path"],
-            "summary": story1_artifact["summary"],
+        "upstream_contract_reference_map": {
+            "suite_name": contract_reference_artifact["suite_name"],
+            "status": contract_reference_artifact["status"],
+            "entry_point_path": contract_reference_artifact["entry_point"]["path"],
+            "summary": contract_reference_artifact["summary"],
         },
         "required_statements": required_statements,
         "software": build_software_metadata(),
         "provenance": {
             "generation_command": (
-                "python benchmarks/density_matrix/"
+                "python benchmarks/density_matrix/documentation_contract/"
                 "supported_entry_reference_validation.py"
             ),
             "working_directory": str(REPO_ROOT),
             "git_revision": get_git_revision(),
-            "story1_reference_map_path": str(STORY1_ARTIFACT_PATH),
+            "contract_reference_map_path": str(CONTRACT_REFERENCE_ARTIFACT_PATH),
             "entry_point_path": str(PHASE2_DOCUMENTATION_INDEX_PATH),
         },
         "summary": {
@@ -258,7 +258,7 @@ def validate_artifact_bundle(artifact):
     missing_fields = [field for field in ARTIFACT_CORE_FIELDS if field not in artifact]
     if missing_fields:
         raise ValueError(
-            "Task 7 Story 2 artifact bundle is missing required fields: {}".format(
+            "supported_entry_reference artifact is missing required fields: {}".format(
                 ", ".join(missing_fields)
             )
         )
@@ -267,7 +267,7 @@ def validate_artifact_bundle(artifact):
     required_statement_ids = artifact["requirements"]["required_statement_ids"]
     if observed_statement_ids != required_statement_ids:
         raise ValueError(
-            "Task 7 Story 2 required statements mismatch: expected {}, observed {}".format(
+            "supported_entry_reference required statements mismatch: expected {}, observed {}".format(
                 required_statement_ids, observed_statement_ids
             )
         )
@@ -276,28 +276,28 @@ def validate_artifact_bundle(artifact):
         "section_heading_present"
     ]:
         raise ValueError(
-            "Task 7 Story 2 section_heading_present summary is inconsistent"
+            "supported_entry_reference section_heading_present summary is inconsistent"
         )
 
     if artifact["summary"]["all_entry_point_statements_present"] != all(
         item["entry_point_present"] for item in artifact["required_statements"]
     ):
         raise ValueError(
-            "Task 7 Story 2 all_entry_point_statements_present summary is inconsistent"
+            "supported_entry_reference all_entry_point_statements_present summary is inconsistent"
         )
 
     if artifact["summary"]["all_primary_sources_present"] != all(
         item["primary_source_present"] for item in artifact["required_statements"]
     ):
         raise ValueError(
-            "Task 7 Story 2 all_primary_sources_present summary is inconsistent"
+            "supported_entry_reference all_primary_sources_present summary is inconsistent"
         )
 
     if artifact["summary"]["supported_entry_reference_completed"] != (
         artifact["status"] == "pass"
     ):
         raise ValueError(
-            "Task 7 Story 2 supported_entry_reference_completed summary is inconsistent"
+            "supported_entry_reference supported_entry_reference_completed summary is inconsistent"
         )
 
 
@@ -326,7 +326,7 @@ def parse_args():
         "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
-        help="Directory for the Task 7 Story 2 JSON artifact bundle.",
+        help="Directory for the supported_entry_reference JSON artifact.",
     )
     parser.add_argument(
         "--quiet",

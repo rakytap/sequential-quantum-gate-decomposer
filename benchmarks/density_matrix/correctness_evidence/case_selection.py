@@ -175,7 +175,3 @@ def _build_correctness_evidence_case_contexts_cached() -> tuple[CorrectnessEvide
 
 def build_correctness_evidence_case_contexts() -> list[CorrectnessEvidenceCaseContext]:
     return deepcopy(list(_build_correctness_evidence_case_contexts_cached()))
-
-
-def build_case_contexts() -> list[CorrectnessEvidenceCaseContext]:
-    return build_correctness_evidence_case_contexts()

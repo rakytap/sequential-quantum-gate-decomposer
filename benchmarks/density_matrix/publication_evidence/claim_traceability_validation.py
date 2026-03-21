@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validation: Phase 3 Task 8 Story 3 claim-to-source traceability."""
+"""Validation: Claim-to-source traceability for publication surfaces."""
 
 from __future__ import annotations
 
@@ -12,9 +12,9 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from benchmarks.density_matrix.publication_evidence.claim_package_validation import (
-    ARTIFACT_FILENAME as STORY1_ARTIFACT_FILENAME,
-    run_validation as run_story1_validation,
-    validate_artifact_bundle as validate_story1_artifact,
+    ARTIFACT_FILENAME as CLAIM_PACKAGE_ARTIFACT_FILENAME,
+    run_validation as run_claim_package_validation,
+    validate_artifact_bundle as validate_claim_package_artifact,
 )
 from benchmarks.density_matrix.publication_evidence.common import (
     MANDATORY_PUBLICATION_EVIDENCE_DOCS,
@@ -29,24 +29,26 @@ from benchmarks.density_matrix.publication_evidence.common import (
     write_json,
 )
 from benchmarks.density_matrix.publication_evidence.surface_alignment_validation import (
-    ARTIFACT_FILENAME as STORY2_ARTIFACT_FILENAME,
-    run_validation as run_story2_validation,
-    validate_artifact_bundle as validate_story2_artifact,
+    ARTIFACT_FILENAME as PUBLICATION_SURFACE_ALIGNMENT_ARTIFACT_FILENAME,
+    run_validation as run_publication_surface_alignment_validation,
+    validate_artifact_bundle as validate_publication_surface_alignment_artifact,
 )
 
 
-SUITE_NAME = "phase3_publication_evidence_claim_traceability"
+SUITE_NAME = "claim_traceability"
 ARTIFACT_FILENAME = "claim_traceability_bundle.json"
 DEFAULT_OUTPUT_DIR = publication_evidence_output_dir("claim_traceability")
-STORY1_PATH = publication_evidence_output_dir("claim_package") / STORY1_ARTIFACT_FILENAME
-STORY2_PATH = (
-    publication_evidence_output_dir("surface_alignment")
-    / STORY2_ARTIFACT_FILENAME
+CLAIM_PACKAGE_BUNDLE_PATH = (
+    publication_evidence_output_dir("claim_package") / CLAIM_PACKAGE_ARTIFACT_FILENAME
+)
+PUBLICATION_SURFACE_ALIGNMENT_BUNDLE_PATH = (
+    publication_evidence_output_dir("publication_surface_alignment")
+    / PUBLICATION_SURFACE_ALIGNMENT_ARTIFACT_FILENAME
 )
 ARTIFACT_FIELDS = (
     "suite_name",
     "status",
-    "upstream_story_artifacts",
+    "upstream_reference_artifacts",
     "reviewer_entry_paths",
     "claim_traceability",
     "section_traceability",
@@ -143,19 +145,21 @@ SECTION_TRACEABILITY_ITEMS = (
 )
 
 
-def _story1(path: Path = STORY1_PATH):
+def _load_claim_package_artifact(path: Path = CLAIM_PACKAGE_BUNDLE_PATH):
     return load_or_build_artifact(
         path,
-        run_validation=run_story1_validation,
-        validate_artifact_bundle=validate_story1_artifact,
+        run_validation=run_claim_package_validation,
+        validate_artifact_bundle=validate_claim_package_artifact,
     )
 
 
-def _story2(path: Path = STORY2_PATH):
+def _load_publication_surface_alignment_artifact(
+    path: Path = PUBLICATION_SURFACE_ALIGNMENT_BUNDLE_PATH,
+):
     return load_or_build_artifact(
         path,
-        run_validation=run_story2_validation,
-        validate_artifact_bundle=validate_story2_artifact,
+        run_validation=run_publication_surface_alignment_validation,
+        validate_artifact_bundle=validate_publication_surface_alignment_artifact,
     )
 
 
@@ -211,8 +215,8 @@ def build_section_traceability():
 
 
 def build_artifact_bundle():
-    story1_artifact = _story1()
-    story2_artifact = _story2()
+    claim_package_artifact = _load_claim_package_artifact()
+    publication_surface_alignment_artifact = _load_publication_surface_alignment_artifact()
     claim_traceability = build_claim_traceability()
     section_traceability = build_section_traceability()
 
@@ -234,8 +238,8 @@ def build_artifact_bundle():
     )
     claim_traceability_completed = all(
         [
-            story1_artifact["status"] == "pass",
-            story2_artifact["status"] == "pass",
+            claim_package_artifact["status"] == "pass",
+            publication_surface_alignment_artifact["status"] == "pass",
             all_claim_sources_exist,
             all_section_sources_exist,
             all_section_headings_present,
@@ -246,18 +250,18 @@ def build_artifact_bundle():
     artifact = {
         "suite_name": SUITE_NAME,
         "status": "pass" if claim_traceability_completed else "fail",
-        "upstream_story_artifacts": [
+        "upstream_reference_artifacts": [
             {
-                "artifact_id": story1_artifact["suite_name"],
-                "path": relative_to_repo(STORY1_PATH),
-                "status": story1_artifact["status"],
-                "summary": dict(story1_artifact["summary"]),
+                "artifact_id": claim_package_artifact["suite_name"],
+                "path": relative_to_repo(CLAIM_PACKAGE_BUNDLE_PATH),
+                "status": claim_package_artifact["status"],
+                "summary": dict(claim_package_artifact["summary"]),
             },
             {
-                "artifact_id": story2_artifact["suite_name"],
-                "path": relative_to_repo(STORY2_PATH),
-                "status": story2_artifact["status"],
-                "summary": dict(story2_artifact["summary"]),
+                "artifact_id": publication_surface_alignment_artifact["suite_name"],
+                "path": relative_to_repo(PUBLICATION_SURFACE_ALIGNMENT_BUNDLE_PATH),
+                "status": publication_surface_alignment_artifact["status"],
+                "summary": dict(publication_surface_alignment_artifact["summary"]),
             },
         ],
         "reviewer_entry_paths": {
@@ -284,8 +288,10 @@ def build_artifact_bundle():
             ),
             "working_directory": str(REPO_ROOT),
             "git_revision": get_git_revision(),
-            "story1_path": str(STORY1_PATH),
-            "story2_path": str(STORY2_PATH),
+            "claim_package_bundle_path": str(CLAIM_PACKAGE_BUNDLE_PATH),
+            "publication_surface_alignment_bundle_path": str(
+                PUBLICATION_SURFACE_ALIGNMENT_BUNDLE_PATH
+            ),
         },
         "summary": {
             "claim_traceability_count": len(claim_traceability),
@@ -305,7 +311,7 @@ def validate_artifact_bundle(artifact):
     missing_fields = [field for field in ARTIFACT_FIELDS if field not in artifact]
     if missing_fields:
         raise ValueError(
-            "Phase 3 Task 8 Story 3 artifact is missing required fields: {}".format(
+            "claim_traceability artifact is missing required fields: {}".format(
                 ", ".join(missing_fields)
             )
         )
@@ -348,7 +354,7 @@ def validate_artifact_bundle(artifact):
 
     expected_completed = all(
         [
-            all(upstream["status"] == "pass" for upstream in artifact["upstream_story_artifacts"]),
+            all(upstream["status"] == "pass" for upstream in artifact["upstream_reference_artifacts"]),
             artifact["summary"]["all_claim_sources_exist"],
             artifact["summary"]["all_section_sources_exist"],
             artifact["summary"]["all_section_headings_present"],
@@ -358,7 +364,7 @@ def validate_artifact_bundle(artifact):
     if artifact["summary"]["claim_traceability_completed"] != expected_completed:
         raise ValueError("claim_traceability_completed summary is inconsistent")
     if artifact["status"] != ("pass" if expected_completed else "fail"):
-        raise ValueError("Phase 3 Task 8 Story 3 status does not match completion summary")
+        raise ValueError("claim_traceability status does not match completion summary")
 
 
 def write_artifact_bundle(output_path: Path, artifact):
@@ -387,7 +393,7 @@ def parse_args():
         "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
-        help="Directory for the Phase 3 Task 8 Story 3 JSON artifact bundle.",
+        help="Directory for the claim_traceability JSON artifact bundle.",
     )
     parser.add_argument(
         "--quiet",

@@ -260,11 +260,3 @@ def _build_performance_evidence_case_contexts_cached() -> tuple[PerformanceEvide
 
 def build_performance_evidence_case_contexts() -> list[PerformanceEvidenceCaseContext]:
     return deepcopy(list(_build_performance_evidence_case_contexts_cached()))
-
-
-def build_inventory_cases() -> list[dict[str, Any]]:
-    return build_performance_evidence_inventory_cases()
-
-
-def build_case_contexts() -> list[PerformanceEvidenceCaseContext]:
-    return build_performance_evidence_case_contexts()

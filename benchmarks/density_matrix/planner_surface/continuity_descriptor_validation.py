@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Validation: Phase 3 Task 2 Story 1 continuity descriptor slice.
+"""Continuity partition-descriptor validation.
 
 Builds the required 4, 6, 8, and 10 qubit Phase 2 continuity-anchor workloads
-and verifies that each one emits the first positive Task 2 partition-descriptor
-contract through the shared continuity route.
+and verifies that each one emits a conforming partition-descriptor set through
+the continuity entry route.
 
 Run with:
     python benchmarks/density_matrix/planner_surface/continuity_descriptor_validation.py
@@ -138,7 +138,7 @@ def write_artifact_bundle(bundle: dict, output_dir: Path = DEFAULT_OUTPUT_DIR) -
 def run_validation(verbose: bool = True) -> list[dict]:
     results = [build_case_result(qbit_num) for qbit_num in REQUIRED_QUBITS]
     if verbose:
-        print("Phase 3 Task 2 Story 1 continuity descriptors:")
+        print("Continuity partition descriptors:")
         for case in results:
             print(
                 "  q={qbit_num}: partitions={partition_count}, members={descriptor_member_count}, span={max_partition_span}, continuity_pass={continuity_descriptor_pass}".format(

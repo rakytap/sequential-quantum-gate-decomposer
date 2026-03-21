@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
-"""Validation: Task 6 Story 3 fixed-parameter matrix baseline.
+"""Validation: fixed-parameter matrix baseline.
 
-Builds the Task 6 Story 3 matrix gate from:
-- the emitted Task 6 Story 1 canonical workflow contract,
-- the emitted Task 6 Story 2 end-to-end plus trace bundle,
-- and the committed Task 5 workflow baseline bundle, which already contains the
-  rich 4/6/8/10 fixed-parameter matrix evidence.
+Builds the fixed-parameter matrix gate from:
+- the emitted canonical workflow contract,
+- the emitted end-to-end trace bundle,
+- and the committed validation workflow baseline bundle, which already contains
+  the rich 4/6/8/10 fixed-parameter matrix evidence.
 
 This layer is intentionally thin:
 - it preserves one stable exact-regime matrix identity,
-- it rebinds matrix cases to the canonical Task 6 workflow ID and version,
+- it rebinds matrix cases to the canonical workflow ID and version,
 - and it fails explicitly when required matrix identity or 10-qubit anchor
   evidence is incomplete.
 
@@ -30,28 +30,28 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from benchmarks.density_matrix.workflow_evidence.workflow_contract_validation import (
-    ARTIFACT_FILENAME as STORY1_ARTIFACT_FILENAME,
+    ARTIFACT_FILENAME as WORKFLOW_CONTRACT_ARTIFACT_FILENAME,
     CONTRACT_VERSION,
-    DEFAULT_OUTPUT_DIR as CORRECTNESS_EVIDENCE_DEFAULT_OUTPUT_DIR,
+    DEFAULT_OUTPUT_DIR as WORKFLOW_EVIDENCE_OUTPUT_DIR,
     REFERENCE_BACKEND,
     WORKFLOW_ID,
     build_software_metadata,
     get_git_revision,
-    run_validation as run_story1_validation,
-    validate_artifact_bundle as validate_story1_artifact,
+    run_validation as run_workflow_contract_validation,
+    validate_artifact_bundle as validate_workflow_contract_artifact,
 )
 from benchmarks.density_matrix.workflow_evidence.end_to_end_trace_validation import (
-    ARTIFACT_FILENAME as STORY2_ARTIFACT_FILENAME,
-    run_validation as run_story2_validation,
-    validate_artifact_bundle as validate_story2_artifact,
+    ARTIFACT_FILENAME as END_TO_END_TRACE_ARTIFACT_FILENAME,
+    run_validation as run_end_to_end_trace_validation,
+    validate_artifact_bundle as validate_end_to_end_trace_artifact,
 )
 
 SUITE_NAME = "matrix_baseline_validation"
 ARTIFACT_FILENAME = "matrix_baseline_bundle.json"
-DEFAULT_OUTPUT_DIR = CORRECTNESS_EVIDENCE_DEFAULT_OUTPUT_DIR
-STORY1_CONTRACT_PATH = DEFAULT_OUTPUT_DIR / STORY1_ARTIFACT_FILENAME
-STORY2_BUNDLE_PATH = DEFAULT_OUTPUT_DIR / STORY2_ARTIFACT_FILENAME
-PLANNER_CALIBRATION_WORKFLOW_BUNDLE_PATH = (
+DEFAULT_OUTPUT_DIR = WORKFLOW_EVIDENCE_OUTPUT_DIR
+WORKFLOW_CONTRACT_PATH = DEFAULT_OUTPUT_DIR / WORKFLOW_CONTRACT_ARTIFACT_FILENAME
+END_TO_END_TRACE_BUNDLE_PATH = DEFAULT_OUTPUT_DIR / END_TO_END_TRACE_ARTIFACT_FILENAME
+VALIDATION_WORKFLOW_BASELINE_PATH = (
     REPO_ROOT
     / "benchmarks"
     / "density_matrix"
@@ -59,8 +59,6 @@ PLANNER_CALIBRATION_WORKFLOW_BUNDLE_PATH = (
     / "validation_evidence"
     / "workflow_baseline_bundle.json"
 )
-# Compatibility alias for legacy auxiliary validation imports.
-TASK5_WORKFLOW_BUNDLE_PATH = PLANNER_CALIBRATION_WORKFLOW_BUNDLE_PATH
 MANDATORY_WORKFLOW_QUBITS = (4, 6, 8, 10)
 PARAMETER_SET_COUNT = 10
 ARTIFACT_CORE_FIELDS = (
@@ -84,59 +82,59 @@ def _load_json(path: Path):
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def _load_story1_contract(path: Path = STORY1_CONTRACT_PATH):
+def _load_workflow_contract(path: Path = WORKFLOW_CONTRACT_PATH):
     if path.exists():
         artifact = _load_json(path)
-        validate_story1_artifact(artifact)
+        validate_workflow_contract_artifact(artifact)
         return artifact
-    _, artifact = run_story1_validation(verbose=False)
+    _, artifact = run_workflow_contract_validation(verbose=False)
     return artifact
 
 
-def _load_story2_bundle(path: Path = STORY2_BUNDLE_PATH):
+def _load_end_to_end_trace_bundle(path: Path = END_TO_END_TRACE_BUNDLE_PATH):
     if path.exists():
         artifact = _load_json(path)
-        validate_story2_artifact(artifact)
+        validate_end_to_end_trace_artifact(artifact)
         return artifact
-    _, _, _, artifact = run_story2_validation(verbose=False)
+    _, _, _, artifact = run_end_to_end_trace_validation(verbose=False)
     return artifact
 
 
-def get_required_workflow_qubits(story1_contract):
-    return tuple(story1_contract["thresholds"]["required_workflow_qubits"])
+def get_required_workflow_qubits(workflow_contract):
+    return tuple(workflow_contract["thresholds"]["required_workflow_qubits"])
 
 
-def get_required_parameter_set_count(story1_contract):
-    return int(story1_contract["thresholds"]["fixed_parameter_sets_per_size"])
+def get_required_parameter_set_count(workflow_contract):
+    return int(workflow_contract["thresholds"]["fixed_parameter_sets_per_size"])
 
 
-def get_documented_anchor_qubit(story1_contract):
-    return int(story1_contract["thresholds"]["documented_anchor_qubit"])
+def get_documented_anchor_qubit(workflow_contract):
+    return int(workflow_contract["thresholds"]["documented_anchor_qubit"])
 
 
-def build_requirement_metadata(planner_calibration_workflow_bundle, story1_contract):
-    requirements = planner_calibration_workflow_bundle["requirements"]
+def build_requirement_metadata(validation_workflow_baseline_bundle, workflow_contract):
+    requirements = validation_workflow_baseline_bundle["requirements"]
     return {
-        "workflow_id": story1_contract["workflow_id"],
-        "contract_version": story1_contract["contract_version"],
-        "mandatory_workflow_qubits": list(get_required_workflow_qubits(story1_contract)),
+        "workflow_id": workflow_contract["workflow_id"],
+        "contract_version": workflow_contract["contract_version"],
+        "mandatory_workflow_qubits": list(get_required_workflow_qubits(workflow_contract)),
         "fixed_parameter_sets_per_size": get_required_parameter_set_count(
-            story1_contract
+            workflow_contract
         ),
         "mandatory_parameter_set_ids": list(requirements["mandatory_parameter_set_ids"]),
         "required_case_names": list(requirements["mandatory_case_names"]),
-        "documented_anchor_qubit": get_documented_anchor_qubit(story1_contract),
+        "documented_anchor_qubit": get_documented_anchor_qubit(workflow_contract),
         "required_bundle_sources": [
-            story1_contract["suite_name"],
+            workflow_contract["suite_name"],
             "end_to_end_trace_validation",
             "workflow_baseline_validation",
         ],
     }
 
 
-def build_threshold_metadata(story1_contract, planner_calibration_workflow_bundle):
-    contract_thresholds = story1_contract["thresholds"]
-    workflow_thresholds = planner_calibration_workflow_bundle["thresholds"]
+def build_threshold_metadata(workflow_contract, validation_workflow_baseline_bundle):
+    contract_thresholds = workflow_contract["thresholds"]
+    workflow_thresholds = validation_workflow_baseline_bundle["thresholds"]
     threshold_fields = (
         "absolute_energy_error",
         "rho_is_valid_tol",
@@ -176,13 +174,13 @@ def validate_case_payload(case):
         "counts_toward_mandatory_baseline",
         "workflow_id",
         "contract_version",
-        "story6_case_role",
+        "workflow_evidence_role",
         "required_matrix_case",
     )
     missing_fields = [field for field in required_fields if field not in case]
     if missing_fields:
         raise ValueError(
-            "Task 6 Story 3 matrix case is missing required fields: {}".format(
+            "Matrix baseline case is missing required fields: {}".format(
                 ", ".join(missing_fields)
             )
         )
@@ -245,21 +243,30 @@ def build_case_identity_summary(cases, requirements):
     }
 
 
-def _enrich_case(case, story1_contract):
+def _enrich_case(case, workflow_contract):
     case = dict(case)
-    case["workflow_id"] = story1_contract["workflow_id"]
-    case["contract_version"] = story1_contract["contract_version"]
-    case["story6_case_role"] = "required_fixed_parameter_matrix"
+    case["workflow_id"] = workflow_contract["workflow_id"]
+    case["contract_version"] = workflow_contract["contract_version"]
+    case["workflow_evidence_role"] = "required_fixed_parameter_matrix"
     case["required_matrix_case"] = True
     return case
 
 
-def build_artifact_bundle(story1_contract, story2_bundle, planner_calibration_workflow_bundle):
-    requirements = build_requirement_metadata(planner_calibration_workflow_bundle, story1_contract)
-    threshold_metadata, workflow_thresholds_match_contract = build_threshold_metadata(
-        story1_contract, planner_calibration_workflow_bundle
+def build_artifact_bundle(
+    workflow_contract,
+    end_to_end_trace_bundle,
+    validation_workflow_baseline_bundle,
+):
+    requirements = build_requirement_metadata(
+        validation_workflow_baseline_bundle, workflow_contract
     )
-    cases = [_enrich_case(case, story1_contract) for case in planner_calibration_workflow_bundle["cases"]]
+    threshold_metadata, workflow_thresholds_match_contract = build_threshold_metadata(
+        workflow_contract, validation_workflow_baseline_bundle
+    )
+    cases = [
+        _enrich_case(case, workflow_contract)
+        for case in validation_workflow_baseline_bundle["cases"]
+    ]
     for case in cases:
         validate_case_payload(case)
 
@@ -275,23 +282,25 @@ def build_artifact_bundle(story1_contract, story2_bundle, planner_calibration_wo
         case["counts_toward_mandatory_baseline"] for case in cases
     )
     all_cases_match_contract = all(
-        case["workflow_id"] == story1_contract["workflow_id"]
-        and case["contract_version"] == story1_contract["contract_version"]
+        case["workflow_id"] == workflow_contract["workflow_id"]
+        and case["contract_version"] == workflow_contract["contract_version"]
         for case in cases
     )
     workflow_inventory_matches_contract = bool(
-        planner_calibration_workflow_bundle["requirements"]["mandatory_workflow_qubits"]
+        validation_workflow_baseline_bundle["requirements"]["mandatory_workflow_qubits"]
         == requirements["mandatory_workflow_qubits"]
-        and planner_calibration_workflow_bundle["requirements"]["fixed_parameter_sets_per_size"]
+        and validation_workflow_baseline_bundle["requirements"][
+            "fixed_parameter_sets_per_size"
+        ]
         == requirements["fixed_parameter_sets_per_size"]
     )
     documented_10q_anchor_present = any(
         case["qbit_num"] == requirements["documented_anchor_qubit"] for case in cases
     )
     matrix_gate_completed = bool(
-        story1_contract["status"] == "pass"
-        and story2_bundle["status"] == "pass"
-        and planner_calibration_workflow_bundle["status"] == "pass"
+        workflow_contract["status"] == "pass"
+        and end_to_end_trace_bundle["status"] == "pass"
+        and validation_workflow_baseline_bundle["status"] == "pass"
         and case_identity["stable_case_ids_present"]
         and case_identity["stable_parameter_set_ids_present"]
         and passed_cases == total_cases
@@ -308,23 +317,25 @@ def build_artifact_bundle(story1_contract, story2_bundle, planner_calibration_wo
     bundle = {
         "suite_name": SUITE_NAME,
         "status": "pass" if matrix_gate_completed else "fail",
-        "workflow_id": story1_contract["workflow_id"],
-        "contract_version": story1_contract["contract_version"],
-        "backend": story1_contract["backend"],
-        "reference_backend": story1_contract["reference_backend"],
+        "workflow_id": workflow_contract["workflow_id"],
+        "contract_version": workflow_contract["contract_version"],
+        "backend": workflow_contract["backend"],
+        "reference_backend": workflow_contract["reference_backend"],
         "requirements": requirements,
         "thresholds": threshold_metadata,
         "software": build_software_metadata(),
         "provenance": {
             "generation_command": (
                 "python benchmarks/density_matrix/"
-                "matrix_baseline_validation_validation.py"
+                "workflow_evidence/matrix_baseline_validation.py"
             ),
             "working_directory": str(REPO_ROOT),
             "git_revision": get_git_revision(),
-            "story1_contract_path": str(STORY1_CONTRACT_PATH),
-            "story2_bundle_path": str(STORY2_BUNDLE_PATH),
-            "planner_calibration_workflow_bundle_path": str(PLANNER_CALIBRATION_WORKFLOW_BUNDLE_PATH),
+            "workflow_contract_path": str(WORKFLOW_CONTRACT_PATH),
+            "end_to_end_trace_bundle_path": str(END_TO_END_TRACE_BUNDLE_PATH),
+            "validation_workflow_baseline_path": str(
+                VALIDATION_WORKFLOW_BASELINE_PATH
+            ),
         },
         "summary": {
             "total_cases": total_cases,
@@ -345,23 +356,23 @@ def build_artifact_bundle(story1_contract, story2_bundle, planner_calibration_wo
             "matrix_gate_completed": matrix_gate_completed,
         },
         "required_artifacts": {
-            "story1_contract": {
-                "suite_name": story1_contract["suite_name"],
-                "status": story1_contract["status"],
-                "workflow_id": story1_contract["workflow_id"],
-                "contract_version": story1_contract["contract_version"],
-                "thresholds": story1_contract["thresholds"],
-                "summary": story1_contract["summary"],
+            "workflow_contract": {
+                "suite_name": workflow_contract["suite_name"],
+                "status": workflow_contract["status"],
+                "workflow_id": workflow_contract["workflow_id"],
+                "contract_version": workflow_contract["contract_version"],
+                "thresholds": workflow_contract["thresholds"],
+                "summary": workflow_contract["summary"],
             },
             "end_to_end_trace_reference": {
-                "suite_name": story2_bundle["suite_name"],
-                "status": story2_bundle["status"],
-                "summary": story2_bundle["summary"],
+                "suite_name": end_to_end_trace_bundle["suite_name"],
+                "status": end_to_end_trace_bundle["status"],
+                "summary": end_to_end_trace_bundle["summary"],
             },
-            "planner_calibration_workflow_baseline_reference": {
-                "suite_name": planner_calibration_workflow_bundle["suite_name"],
-                "status": planner_calibration_workflow_bundle["status"],
-                "summary": planner_calibration_workflow_bundle["summary"],
+            "validation_workflow_baseline_reference": {
+                "suite_name": validation_workflow_baseline_bundle["suite_name"],
+                "status": validation_workflow_baseline_bundle["status"],
+                "summary": validation_workflow_baseline_bundle["summary"],
             },
         },
         "cases": cases,
@@ -374,20 +385,20 @@ def validate_artifact_bundle(bundle):
     missing_fields = [field for field in ARTIFACT_CORE_FIELDS if field not in bundle]
     if missing_fields:
         raise ValueError(
-            "Task 6 Story 3 artifact bundle is missing required fields: {}".format(
+            "Matrix baseline bundle is missing required fields: {}".format(
                 ", ".join(missing_fields)
             )
         )
 
     if bundle["workflow_id"] != WORKFLOW_ID:
         raise ValueError(
-            "Task 6 Story 3 bundle has unexpected workflow_id '{}'".format(
+            "Matrix baseline bundle has unexpected workflow_id '{}'".format(
                 bundle["workflow_id"]
             )
         )
     if bundle["contract_version"] != CONTRACT_VERSION:
         raise ValueError(
-            "Task 6 Story 3 bundle has unexpected contract_version '{}'".format(
+            "Matrix baseline bundle has unexpected contract_version '{}'".format(
                 bundle["contract_version"]
             )
         )
@@ -396,57 +407,57 @@ def validate_artifact_bundle(bundle):
         != bundle["thresholds"]["required_workflow_qubits"]
     ):
         raise ValueError(
-            "Task 6 Story 3 bundle has inconsistent workflow-qubit requirements"
+            "Matrix baseline bundle has inconsistent workflow-qubit requirements"
         )
     if (
         bundle["requirements"]["fixed_parameter_sets_per_size"]
         != bundle["thresholds"]["fixed_parameter_sets_per_size"]
     ):
         raise ValueError(
-            "Task 6 Story 3 bundle has inconsistent parameter-set-count requirements"
+            "Matrix baseline bundle has inconsistent parameter-set-count requirements"
         )
     if (
         bundle["requirements"]["documented_anchor_qubit"]
         != bundle["thresholds"]["documented_anchor_qubit"]
     ):
         raise ValueError(
-            "Task 6 Story 3 bundle has inconsistent documented-anchor requirements"
+            "Matrix baseline bundle has inconsistent documented-anchor requirements"
         )
     if bundle["summary"]["matrix_gate_completed"] != (bundle["status"] == "pass"):
         raise ValueError(
-            "Task 6 Story 3 matrix_gate_completed summary is inconsistent"
+            "Matrix baseline bundle matrix_gate_completed summary is inconsistent"
         )
     for case in bundle["cases"]:
         validate_case_payload(case)
         if case["workflow_id"] != bundle["workflow_id"]:
             raise ValueError(
-                "Task 6 Story 3 case '{}' does not match bundle workflow_id".format(
+                "Matrix baseline case '{}' does not match bundle workflow_id".format(
                     case["case_name"]
                 )
             )
         if case["contract_version"] != bundle["contract_version"]:
             raise ValueError(
-                "Task 6 Story 3 case '{}' does not match bundle contract_version".format(
+                "Matrix baseline case '{}' does not match bundle contract_version".format(
                     case["case_name"]
                 )
             )
     if not bundle["summary"]["all_cases_match_contract"] and bundle["status"] == "pass":
         raise ValueError(
-            "Task 6 Story 3 cannot pass when matrix cases do not match the canonical contract"
+            "Matrix baseline bundle cannot pass when matrix cases do not match the canonical contract"
         )
     if (
         bundle["summary"]["workflow_inventory_matches_contract"] is False
         and bundle["status"] == "pass"
     ):
         raise ValueError(
-            "Task 6 Story 3 cannot pass when matrix inventory drifts from Story 1 contract metadata"
+            "Matrix baseline bundle cannot pass when matrix inventory drifts from workflow-contract metadata"
         )
     if (
         bundle["summary"]["workflow_thresholds_match_contract"] is False
         and bundle["status"] == "pass"
     ):
         raise ValueError(
-            "Task 6 Story 3 cannot pass when matrix thresholds drift from Story 1 contract metadata"
+            "Matrix baseline bundle cannot pass when matrix thresholds drift from workflow-contract metadata"
         )
 
 
@@ -460,18 +471,22 @@ def write_artifact_bundle(output_path: Path, bundle):
 
 def run_validation(
     *,
-    story1_contract_path: Path = STORY1_CONTRACT_PATH,
-    story2_bundle_path: Path = STORY2_BUNDLE_PATH,
-    planner_calibration_workflow_bundle_path: Path = PLANNER_CALIBRATION_WORKFLOW_BUNDLE_PATH,
+    workflow_contract_path: Path = WORKFLOW_CONTRACT_PATH,
+    end_to_end_trace_bundle_path: Path = END_TO_END_TRACE_BUNDLE_PATH,
+    validation_workflow_baseline_path: Path = VALIDATION_WORKFLOW_BASELINE_PATH,
     verbose=False,
 ):
-    story1_contract = _load_story1_contract(story1_contract_path)
-    story2_bundle = _load_story2_bundle(story2_bundle_path)
-    planner_calibration_workflow_bundle = _load_json(planner_calibration_workflow_bundle_path)
+    workflow_contract = _load_workflow_contract(workflow_contract_path)
+    end_to_end_trace_bundle = _load_end_to_end_trace_bundle(
+        end_to_end_trace_bundle_path
+    )
+    validation_workflow_baseline_bundle = _load_json(
+        validation_workflow_baseline_path
+    )
     bundle = build_artifact_bundle(
-        story1_contract,
-        story2_bundle,
-        planner_calibration_workflow_bundle,
+        workflow_contract,
+        end_to_end_trace_bundle,
+        validation_workflow_baseline_bundle,
     )
     if verbose:
         print(
@@ -483,7 +498,12 @@ def run_validation(
                 bundle["summary"]["documented_10q_anchor_present"],
             )
         )
-    return story1_contract, story2_bundle, planner_calibration_workflow_bundle, bundle
+    return (
+        workflow_contract,
+        end_to_end_trace_bundle,
+        validation_workflow_baseline_bundle,
+        bundle,
+    )
 
 
 def parse_args():
@@ -492,25 +512,25 @@ def parse_args():
         "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
-        help="Directory for the Task 6 Story 3 JSON artifact bundle.",
+        help="Directory for the matrix-baseline JSON artifact bundle.",
     )
     parser.add_argument(
-        "--story1-contract-path",
+        "--workflow-contract-path",
         type=Path,
-        default=STORY1_CONTRACT_PATH,
-        help="Path to the Task 6 Story 1 canonical workflow contract artifact.",
+        default=WORKFLOW_CONTRACT_PATH,
+        help="Path to the canonical workflow-contract artifact.",
     )
     parser.add_argument(
-        "--story2-bundle-path",
+        "--end-to-end-trace-bundle-path",
         type=Path,
-        default=STORY2_BUNDLE_PATH,
-        help="Path to the Task 6 Story 2 end-to-end plus trace bundle.",
+        default=END_TO_END_TRACE_BUNDLE_PATH,
+        help="Path to the end-to-end trace bundle.",
     )
     parser.add_argument(
-        "--task5-workflow-bundle-path",
+        "--validation-workflow-baseline-path",
         type=Path,
-        default=PLANNER_CALIBRATION_WORKFLOW_BUNDLE_PATH,
-        help="Path to the committed Task 5 workflow baseline bundle.",
+        default=VALIDATION_WORKFLOW_BASELINE_PATH,
+        help="Path to the committed validation workflow-baseline bundle.",
     )
     parser.add_argument(
         "--quiet",
@@ -523,9 +543,9 @@ def parse_args():
 def main():
     args = parse_args()
     _, _, _, bundle = run_validation(
-        story1_contract_path=args.story1_contract_path,
-        story2_bundle_path=args.story2_bundle_path,
-        planner_calibration_workflow_bundle_path=args.planner_calibration_workflow_bundle_path,
+        workflow_contract_path=args.workflow_contract_path,
+        end_to_end_trace_bundle_path=args.end_to_end_trace_bundle_path,
+        validation_workflow_baseline_path=args.validation_workflow_baseline_path,
         verbose=not args.quiet,
     )
     output_path = args.output_dir / ARTIFACT_FILENAME

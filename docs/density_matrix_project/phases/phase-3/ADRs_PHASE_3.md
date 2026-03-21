@@ -61,7 +61,7 @@ Phase 3 work must be guided by explicit documentation-first contracts covering:
 
 - scope,
 - non-goals,
-- task goals,
+- deliverable goals,
 - semantic-preservation rules,
 - benchmark evidence,
 - and Paper 2 claim boundaries.
@@ -307,8 +307,8 @@ At the same time, requiring fully channel-native fused noisy blocks immediately
 would push the phase into a far more invasive architecture than the accepted
 critical path requires.
 
-Task 1 and Task 2 have now also made the handoff boundary more concrete than it
-was at initial planning time:
+The planner surface and partition-descriptor contract have now also made the
+handoff boundary more concrete than it was at initial planning time:
 
 - the planner input is now a real schema-versioned canonical noisy mixed-state
   surface,
@@ -363,20 +363,20 @@ result.
 - Channel-native fusion remains an explicit future branch instead of an implicit
   unfinished requirement.
 
-### Implementation Note (Task 4 Findings)
+### Implementation Note (Fused Runtime)
 
-The current Task 4 implementation realizes this decision conservatively through
-descriptor-local unitary-island fusion on 1- and 2-qubit spans using the
+The current fused-runtime implementation realizes this decision conservatively
+through descriptor-local unitary-island fusion on 1- and 2-qubit spans using the
 density backend's local-unitary primitive.
 
-It extends the shared Task 3 runtime surface additively rather than replacing
-it:
+It extends the shared partitioned density runtime surface additively rather than
+replacing it:
 
 - fused execution is labeled through an explicit fused runtime path,
 - fused, supported-but-unfused, and deferred regions are recorded as auditable
   evidence categories,
-- and the runtime schema version remains shared with the Task 3 baseline rather
-  than splitting into a second private fusion-only schema.
+- and the runtime schema version remains shared with the partitioned-runtime
+  baseline rather than splitting into a second private fusion-only schema.
 
 Representative 8- and 10-qubit layered nearest-neighbor sparse workloads now
 exercise the real fused path and preserve exact noisy semantics, but the current
@@ -417,8 +417,8 @@ Using it unchanged for Phase 3 would weaken the density-aware claim. However,
 trying to jump directly to a fully calibrated density objective before a working
 runtime exists would also be risky.
 
-Task 1 and Task 2 have now frozen the benchmark side of this decision more
-concretely than the original planning text:
+The planner surface and partition-descriptor contract have now frozen the
+benchmark side of this decision more concretely than the original planning text:
 
 - the mandatory workload inventory now exists as deterministic continuity,
   microcase, and structured-family evidence surfaces,
@@ -447,7 +447,8 @@ Additional contract details:
   rerunnable checkers so later benchmark and paper work can consume the result
   directly.
 - The first delivered benchmark-facing calibration surface may be narrower than
-  the full longer-horizon planner design space. In the current Task 5 result,
+  the full longer-horizon planner design space. In the current planner-calibration
+  result,
   the supported calibration surface is the existing noisy planner with
   auditable `max_partition_qubits` span-budget settings, while broader adapted
   `kahn` / `tdag` / `gtqcp` / `ilp` / `ilp-fusion-ca` families remain
@@ -474,7 +475,7 @@ Additional contract details:
 - Core heuristic and calibration claims should now be phrased against the
   already-frozen workload IDs, seed rules, and noise-pattern vocabulary instead
   of against a moving benchmark target.
-- The first delivered Task 5 claim may therefore be a benchmark-calibrated rule
+- The first delivered planner-calibration claim may therefore be a benchmark-calibrated rule
   over a bounded noisy-planner candidate family rather than a broad
   algorithm-family closure.
 - A rerun-sensitive winner inside that bounded candidate family is still a valid
@@ -570,8 +571,9 @@ Relying only on internal comparison would weaken the methods paper. Relying only
 on an external simulator would miss regressions against the exact delivered Phase
 2/3 backend contract.
 
-Task 1 and Task 2 have also shown that validation evidence now exists in
-multiple real layers before runtime numerical checks:
+The planner surface and descriptor-generation layers have also shown that
+validation evidence now exists in multiple real layers before runtime numerical
+checks:
 
 - planner-entry unsupported behavior already has a machine-reviewable evidence
   surface,
@@ -580,13 +582,14 @@ multiple real layers before runtime numerical checks:
 - and positive supported-path audit bundles already exist at the planner and
   descriptor layers.
 
-Task 6 now closes these validation layers into one explicit correctness package:
+Correctness evidence now closes these validation layers into one explicit
+package:
 
 - a shared `benchmarks/density_matrix/correctness_evidence/` pipeline emits one
-  machine-reviewable Task 6 correctness surface instead of leaving validation as
-  disconnected task-local checks,
-- the current Task 6 package records `25` counted supported cases on the
-  selected Task 5 supported candidate surface,
+  machine-reviewable correctness-evidence surface instead of leaving validation as
+  disconnected slice-local checks,
+- the current correctness-evidence package records `25` counted supported cases on the
+  selected planner-calibration supported candidate surface,
 - it records a bounded external slice of `4` Qiskit Aer cases (`3` microcases
   plus the 4-qubit continuity anchor),
 - and it keeps `17` explicit negative boundary cases visible across planner-
@@ -611,7 +614,7 @@ Additional contract details:
   evidence, runtime-stage unsupported evidence, and runtime numerical
   correctness evidence should remain distinct in the artifact package rather
   than being collapsed into one generic failure bucket,
-- the current Task 6 package should preserve one shared positive record surface
+- the current correctness-evidence package should preserve one shared positive record surface
   plus one shared negative-boundary surface so later benchmark and publication
   consumers do not need to infer counted status or boundary meaning from
   disconnected outputs,
@@ -668,7 +671,7 @@ Using only the Phase 2 continuity workflow would make the Phase 3 paper too
 narrow as a methods result. Using only synthetic partitioning circuits would
 weaken the connection to the broader noisy-training agenda.
 
-Task 1 and Task 2 have now frozen the benchmark identity layer more concretely:
+The planner surface and partition-descriptor contract have now frozen the benchmark identity layer more concretely:
 
 - the continuity anchor is a real required case family,
 - the external micro-validation slice is a real deterministic microcase

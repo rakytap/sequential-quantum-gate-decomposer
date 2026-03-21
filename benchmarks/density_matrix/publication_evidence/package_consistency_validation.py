@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validation: Phase 3 Task 8 Story 8 final package consistency."""
+"""Validation: Final cross-surface consistency for the publication evidence package."""
 
 from __future__ import annotations
 
@@ -34,33 +34,33 @@ from benchmarks.density_matrix.publication_evidence.common import (
     write_json,
 )
 from benchmarks.density_matrix.publication_evidence.future_work_boundary_validation import (
-    ARTIFACT_FILENAME as STORY7_ARTIFACT_FILENAME,
-    run_validation as run_story7_validation,
-    validate_artifact_bundle as validate_story7_artifact,
+    ARTIFACT_FILENAME as FUTURE_WORK_BOUNDARY_ARTIFACT_FILENAME,
+    run_validation as run_future_work_boundary_validation,
+    validate_artifact_bundle as validate_future_work_boundary_artifact,
 )
 from benchmarks.density_matrix.publication_evidence.publication_manifest_validation import (
-    ARTIFACT_FILENAME as STORY6_ARTIFACT_FILENAME,
-    run_validation as run_story6_validation,
-    validate_artifact_bundle as validate_story6_artifact,
+    ARTIFACT_FILENAME as PUBLICATION_MANIFEST_ARTIFACT_FILENAME,
+    run_validation as run_publication_manifest_validation,
+    validate_artifact_bundle as validate_publication_manifest_artifact,
 )
 
 
-SUITE_NAME = "phase3_publication_evidence_package_consistency"
+SUITE_NAME = "package_consistency"
 ARTIFACT_FILENAME = "package_consistency_bundle.json"
 DEFAULT_OUTPUT_DIR = publication_evidence_output_dir("package_consistency")
-STORY6_PATH = (
-    publication_evidence_output_dir("manifest")
-    / STORY6_ARTIFACT_FILENAME
+PUBLICATION_MANIFEST_BUNDLE_PATH = (
+    publication_evidence_output_dir("publication_manifest")
+    / PUBLICATION_MANIFEST_ARTIFACT_FILENAME
 )
-STORY7_PATH = (
-    publication_evidence_output_dir("future_work")
-    / STORY7_ARTIFACT_FILENAME
+FUTURE_WORK_BOUNDARY_BUNDLE_PATH = (
+    publication_evidence_output_dir("future_work_boundary")
+    / FUTURE_WORK_BOUNDARY_ARTIFACT_FILENAME
 )
 ARTIFACT_FIELDS = (
     "suite_name",
     "status",
-    "manifest",
-    "future_work",
+    "publication_manifest",
+    "future_work_boundary",
     "reviewer_entry_paths",
     "terminology_inventory",
     "surface_inventory",
@@ -81,19 +81,19 @@ REQUIRED_GLOSSARY_TERMS = (
 )
 
 
-def _story6():
+def _load_publication_manifest_artifact():
     return load_or_build_artifact(
-        STORY6_PATH,
-        run_validation=run_story6_validation,
-        validate_artifact_bundle=validate_story6_artifact,
+        PUBLICATION_MANIFEST_BUNDLE_PATH,
+        run_validation=run_publication_manifest_validation,
+        validate_artifact_bundle=validate_publication_manifest_artifact,
     )
 
 
-def _story7():
+def _load_future_work_boundary_artifact():
     return load_or_build_artifact(
-        STORY7_PATH,
-        run_validation=run_story7_validation,
-        validate_artifact_bundle=validate_story7_artifact,
+        FUTURE_WORK_BOUNDARY_BUNDLE_PATH,
+        run_validation=run_future_work_boundary_validation,
+        validate_artifact_bundle=validate_future_work_boundary_artifact,
     )
 
 
@@ -176,12 +176,12 @@ def build_surface_inventory():
 
 
 def build_artifact_bundle():
-    story6_artifact = _story6()
-    story7_artifact = _story7()
+    publication_manifest_artifact = _load_publication_manifest_artifact()
+    future_work_boundary_artifact = _load_future_work_boundary_artifact()
     terminology_inventory = build_terminology_inventory()
     surface_inventory = build_surface_inventory()
     reviewer_entry_paths_complete = all(
-        entry["exists"] for entry in story6_artifact["reviewer_entry_paths"].values()
+        entry["exists"] for entry in publication_manifest_artifact["reviewer_entry_paths"].values()
     )
     terminology_complete = not terminology_inventory["missing_glossary_terms"]
     count_consistency_complete = all(
@@ -194,8 +194,8 @@ def build_artifact_bundle():
     performance_evidence_summary = load_json(PERFORMANCE_EVIDENCE_SUMMARY_CONSISTENCY_PATH)
     package_consistency_completed = all(
         [
-            story6_artifact["status"] == "pass",
-            story7_artifact["status"] == "pass",
+            publication_manifest_artifact["status"] == "pass",
+            future_work_boundary_artifact["status"] == "pass",
             reviewer_entry_paths_complete,
             terminology_complete,
             count_consistency_complete,
@@ -208,19 +208,19 @@ def build_artifact_bundle():
     artifact = {
         "suite_name": SUITE_NAME,
         "status": "pass" if package_consistency_completed else "fail",
-        "manifest": {
-            "suite_name": story6_artifact["suite_name"],
-            "status": story6_artifact["status"],
-            "path": relative_to_repo(STORY6_PATH),
-            "summary": dict(story6_artifact["summary"]),
+        "publication_manifest": {
+            "suite_name": publication_manifest_artifact["suite_name"],
+            "status": publication_manifest_artifact["status"],
+            "path": relative_to_repo(PUBLICATION_MANIFEST_BUNDLE_PATH),
+            "summary": dict(publication_manifest_artifact["summary"]),
         },
-        "future_work": {
-            "suite_name": story7_artifact["suite_name"],
-            "status": story7_artifact["status"],
-            "path": relative_to_repo(STORY7_PATH),
-            "summary": dict(story7_artifact["summary"]),
+        "future_work_boundary": {
+            "suite_name": future_work_boundary_artifact["suite_name"],
+            "status": future_work_boundary_artifact["status"],
+            "path": relative_to_repo(FUTURE_WORK_BOUNDARY_BUNDLE_PATH),
+            "summary": dict(future_work_boundary_artifact["summary"]),
         },
-        "reviewer_entry_paths": dict(story6_artifact["reviewer_entry_paths"]),
+        "reviewer_entry_paths": dict(publication_manifest_artifact["reviewer_entry_paths"]),
         "terminology_inventory": terminology_inventory,
         "surface_inventory": surface_inventory,
         "software": build_software_metadata(),
@@ -231,8 +231,8 @@ def build_artifact_bundle():
             ),
             "working_directory": str(REPO_ROOT),
             "git_revision": get_git_revision(),
-            "story6_path": str(STORY6_PATH),
-            "story7_path": str(STORY7_PATH),
+            "publication_manifest_bundle_path": str(PUBLICATION_MANIFEST_BUNDLE_PATH),
+            "future_work_boundary_bundle_path": str(FUTURE_WORK_BOUNDARY_BUNDLE_PATH),
         },
         "summary": {
             "surface_count": len(surface_inventory),
@@ -260,7 +260,7 @@ def validate_artifact_bundle(artifact):
     missing_fields = [field for field in ARTIFACT_FIELDS if field not in artifact]
     if missing_fields:
         raise ValueError(
-            "Phase 3 Task 8 Story 8 artifact is missing required fields: {}".format(
+            "package_consistency artifact is missing required fields: {}".format(
                 ", ".join(missing_fields)
             )
         )
@@ -291,8 +291,8 @@ def validate_artifact_bundle(artifact):
 
     expected_completed = all(
         [
-            artifact["manifest"]["status"] == "pass",
-            artifact["future_work"]["status"] == "pass",
+            artifact["publication_manifest"]["status"] == "pass",
+            artifact["future_work_boundary"]["status"] == "pass",
             artifact["summary"]["reviewer_entry_paths_complete"],
             artifact["summary"]["terminology_complete"],
             artifact["summary"]["count_consistency_complete"],
@@ -304,7 +304,7 @@ def validate_artifact_bundle(artifact):
     if artifact["summary"]["package_consistency_completed"] != expected_completed:
         raise ValueError("package_consistency_completed summary is inconsistent")
     if artifact["status"] != ("pass" if expected_completed else "fail"):
-        raise ValueError("Phase 3 Task 8 Story 8 status does not match completion summary")
+        raise ValueError("package_consistency status does not match completion summary")
 
 
 def write_artifact_bundle(output_path: Path, artifact):
@@ -333,7 +333,7 @@ def parse_args():
         "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
-        help="Directory for the Phase 3 Task 8 Story 8 JSON artifact bundle.",
+        help="Directory for the package_consistency JSON artifact bundle.",
     )
     parser.add_argument(
         "--quiet",

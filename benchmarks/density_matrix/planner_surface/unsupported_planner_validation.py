@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Validation: Phase 3 Task 1 Story 5 unsupported planner boundary.
+"""Unsupported planner boundary validation.
 
 Exercises representative unsupported planner-entry requests and records the
-stable no-fallback outcome for each one. The goal is to prove that unsupported
-requests fail before execution and are not silently relabeled as supported
-`partitioned_density` behavior.
+stable no-fallback outcome for each one. Unsupported requests fail before
+execution and are not silently relabeled as supported `partitioned_density`
+behavior.
 
 Run with:
     python benchmarks/density_matrix/planner_surface/unsupported_planner_validation.py

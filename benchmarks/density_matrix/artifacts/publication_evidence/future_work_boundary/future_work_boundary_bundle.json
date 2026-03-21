@@ -186,15 +186,15 @@
   ],
   "provenance": {
     "generation_command": "python benchmarks/density_matrix/publication_evidence/future_work_boundary_validation.py",
-    "git_revision": "1af8716f9ed42d8c3b156bfb2b7fe26f61357fb8",
-    "story5_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/publication_evidence/supported_path/supported_path_scope_bundle.json",
+    "git_revision": "77cd8168869d9b4c67c0dd0dbe49baab02b0fe25",
+    "supported_path_scope_bundle_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/publication_evidence/supported_path_scope/supported_path_scope_bundle.json",
     "working_directory": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer"
   },
   "software": {
     "python": "3.13.9"
   },
   "status": "pass",
-  "suite_name": "phase3_publication_evidence_future_work",
+  "suite_name": "future_work_boundary",
   "summary": {
     "all_future_work_items_present": true,
     "benchmark_driven_follow_on_present": true,
@@ -202,10 +202,10 @@
     "phase_positioning_present": true,
     "required_topic_count": 5
   },
-  "supported_path": {
-    "path": "benchmarks/density_matrix/artifacts/publication_evidence/supported_path/supported_path_scope_bundle.json",
+  "supported_path_scope": {
+    "path": "benchmarks/density_matrix/artifacts/publication_evidence/supported_path_scope/supported_path_scope_bundle.json",
     "status": "pass",
-    "suite_name": "phase3_publication_evidence_supported_path",
+    "suite_name": "supported_path_scope",
     "summary": {
       "all_bounded_planner_claims_present": true,
       "all_correctness_evidence_count_surfaces_honest": true,

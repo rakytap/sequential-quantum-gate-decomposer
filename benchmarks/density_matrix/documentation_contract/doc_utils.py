@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Shared helpers for Task 7 documentation validation."""
+"""Shared helpers for Phase 2 documentation-contract validation."""
 
 from __future__ import annotations
 
@@ -25,18 +25,18 @@ MANDATORY_PHASE2_DOCS = {
     "phase2_abstract": PHASE2_ROOT / "ABSTRACT_PHASE_2.md",
     "phase2_short_paper": PHASE2_ROOT / "SHORT_PAPER_PHASE_2.md",
     "phase2_paper": PHASE2_ROOT / "PAPER_PHASE_2.md",
-    "task1_mini_spec": PHASE2_ROOT / "task-1" / "TASK_1_MINI_SPEC.md",
-    "task2_mini_spec": PHASE2_ROOT / "task-2" / "TASK_2_MINI_SPEC.md",
-    "task3_mini_spec": PHASE2_ROOT / "task-3" / "TASK_3_MINI_SPEC.md",
-    "task4_mini_spec": PHASE2_ROOT / "task-4" / "TASK_4_MINI_SPEC.md",
-    "planner_calibration_mini_spec": PHASE2_ROOT / "task-5" / "TASK_5_MINI_SPEC.md",
-    "correctness_evidence_mini_spec": PHASE2_ROOT / "task-6" / "TASK_6_MINI_SPEC.md",
-    "performance_evidence_mini_spec": PHASE2_ROOT / "task-7" / "TASK_7_MINI_SPEC.md",
+    "backend_selection_task_contract": PHASE2_ROOT / "task-1" / "TASK_1_MINI_SPEC.md",
+    "observable_scope_task_contract": PHASE2_ROOT / "task-2" / "TASK_2_MINI_SPEC.md",
+    "bridge_scope_task_contract": PHASE2_ROOT / "task-3" / "TASK_3_MINI_SPEC.md",
+    "support_matrix_task_contract": PHASE2_ROOT / "task-4" / "TASK_4_MINI_SPEC.md",
+    "planner_calibration_task_contract": PHASE2_ROOT / "task-5" / "TASK_5_MINI_SPEC.md",
+    "correctness_evidence_task_contract": PHASE2_ROOT / "task-6" / "TASK_6_MINI_SPEC.md",
+    "documentation_evidence_task_contract": PHASE2_ROOT / "task-7" / "TASK_7_MINI_SPEC.md",
     "planning_planning": DOCS_ROOT / "planning" / "PLANNING.md",
     "planning_publications": DOCS_ROOT / "planning" / "PUBLICATIONS.md",
     "research_alignment": DOCS_ROOT / "RESEARCH_ALIGNMENT.md",
     "changelog": DOCS_ROOT / "CHANGELOG.md",
-    "correctness_evidence_publication_bundle": REPO_ROOT
+    "workflow_publication_bundle": REPO_ROOT
     / "benchmarks"
     / "density_matrix"
     / "artifacts"

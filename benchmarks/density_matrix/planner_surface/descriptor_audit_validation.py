@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Validation: Phase 3 Task 2 Story 5 descriptor audit surface.
+"""Partition-descriptor audit surface validation.
 
 Emits audit-oriented descriptor records for one continuity case, one microcase,
-one structured-family case, and one supported legacy exact-lowering case. The
-goal is to validate that the shared Task 2 audit surface now carries stable
-provenance and descriptor summary metadata across supported workload classes.
+one structured-family case, and one supported legacy exact-lowering case.
+Validates that the shared descriptor audit surface carries stable provenance
+and summary metadata across supported workload classes.
 
 Run with:
     python benchmarks/density_matrix/planner_surface/descriptor_audit_validation.py

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validation: Phase 3 Task 8 Story 5 supported-path and benchmark honesty."""
+"""Validation: Supported execution path, benchmark honesty, and diagnosis wording."""
 
 from __future__ import annotations
 
@@ -31,16 +31,18 @@ from benchmarks.density_matrix.publication_evidence.common import (
     load_or_build_artifact,
 )
 from benchmarks.density_matrix.publication_evidence.evidence_closure_validation import (
-    ARTIFACT_FILENAME as STORY4_ARTIFACT_FILENAME,
-    run_validation as run_story4_validation,
-    validate_artifact_bundle as validate_story4_artifact,
+    ARTIFACT_FILENAME as EVIDENCE_CLOSURE_ARTIFACT_FILENAME,
+    run_validation as run_evidence_closure_validation,
+    validate_artifact_bundle as validate_evidence_closure_artifact,
 )
 
 
-SUITE_NAME = "phase3_publication_evidence_supported_path"
+SUITE_NAME = "supported_path_scope"
 ARTIFACT_FILENAME = "supported_path_scope_bundle.json"
-DEFAULT_OUTPUT_DIR = publication_evidence_output_dir("supported_path")
-STORY4_PATH = publication_evidence_output_dir("evidence_closure") / STORY4_ARTIFACT_FILENAME
+DEFAULT_OUTPUT_DIR = publication_evidence_output_dir("supported_path_scope")
+EVIDENCE_CLOSURE_BUNDLE_PATH = (
+    publication_evidence_output_dir("evidence_closure") / EVIDENCE_CLOSURE_ARTIFACT_FILENAME
+)
 ARTIFACT_FIELDS = (
     "suite_name",
     "status",
@@ -59,11 +61,11 @@ BOUNDED_PLANNER_ALTERNATIVES = (
 )
 
 
-def _story4(path: Path = STORY4_PATH):
+def _load_evidence_closure_artifact(path: Path = EVIDENCE_CLOSURE_BUNDLE_PATH):
     return load_or_build_artifact(
         path,
-        run_validation=run_story4_validation,
-        validate_artifact_bundle=validate_story4_artifact,
+        run_validation=run_evidence_closure_validation,
+        validate_artifact_bundle=validate_evidence_closure_artifact,
     )
 
 
@@ -141,7 +143,7 @@ def build_surface_inventory():
 
 
 def build_artifact_bundle():
-    story4_artifact = _story4()
+    evidence_closure_artifact = _load_evidence_closure_artifact()
     surface_inventory = build_surface_inventory()
     all_supported_path_boundaries_present = all(
         entry["supported_path_boundary_present"] for entry in surface_inventory
@@ -164,7 +166,7 @@ def build_artifact_bundle():
     )
     supported_path_scope_completed = all(
         [
-            story4_artifact["status"] == "pass",
+            evidence_closure_artifact["status"] == "pass",
             all_supported_path_boundaries_present,
             all_no_fallback_rules_present,
             all_bounded_planner_claims_present,
@@ -178,10 +180,10 @@ def build_artifact_bundle():
         "suite_name": SUITE_NAME,
         "status": "pass" if supported_path_scope_completed else "fail",
         "evidence_closure": {
-            "suite_name": story4_artifact["suite_name"],
-            "status": story4_artifact["status"],
-            "path": relative_to_repo(STORY4_PATH),
-            "summary": dict(story4_artifact["summary"]),
+            "suite_name": evidence_closure_artifact["suite_name"],
+            "status": evidence_closure_artifact["status"],
+            "path": relative_to_repo(EVIDENCE_CLOSURE_BUNDLE_PATH),
+            "summary": dict(evidence_closure_artifact["summary"]),
         },
         "surface_inventory": surface_inventory,
         "software": build_software_metadata(),
@@ -192,7 +194,7 @@ def build_artifact_bundle():
             ),
             "working_directory": str(REPO_ROOT),
             "git_revision": get_git_revision(),
-            "story4_path": str(STORY4_PATH),
+            "evidence_closure_bundle_path": str(EVIDENCE_CLOSURE_BUNDLE_PATH),
             "paper_main_claim_anchor": PAPER_MAIN_CLAIM,
         },
         "summary": {
@@ -216,7 +218,7 @@ def validate_artifact_bundle(artifact):
     missing_fields = [field for field in ARTIFACT_FIELDS if field not in artifact]
     if missing_fields:
         raise ValueError(
-            "Phase 3 Task 8 Story 5 artifact is missing required fields: {}".format(
+            "supported_path_scope artifact is missing required fields: {}".format(
                 ", ".join(missing_fields)
             )
         )
@@ -269,7 +271,7 @@ def validate_artifact_bundle(artifact):
     if artifact["summary"]["supported_path_scope_completed"] != expected_completed:
         raise ValueError("supported_path_scope_completed summary is inconsistent")
     if artifact["status"] != ("pass" if expected_completed else "fail"):
-        raise ValueError("Phase 3 Task 8 Story 5 status does not match completion summary")
+        raise ValueError("supported_path_scope status does not match completion summary")
 
 
 def write_artifact_bundle(output_path: Path, artifact):
@@ -297,7 +299,7 @@ def parse_args():
         "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
-        help="Directory for the Phase 3 Task 8 Story 5 JSON artifact bundle.",
+        help="Directory for the supported_path_scope JSON artifact bundle.",
     )
     parser.add_argument(
         "--quiet",

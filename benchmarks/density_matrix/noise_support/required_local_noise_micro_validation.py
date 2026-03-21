@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-"""Validation: Task 4 Story 2 required local-noise exact microcases.
+"""Validation: required local-noise exact microcases.
 
-Reuses the canonical Story 2 exactness harness and adds Task 4-specific
+Reuses the canonical micro-validation harness and adds required-local-noise
 traceability for:
 - required local-noise coverage,
 - mixed required-noise sequence order,
 - mandatory-baseline classification that keeps these cases milestone-defining,
-- and one stable task-level artifact bundle for the mandatory 1 to 3 qubit
-  exact micro-validation matrix.
+- and one stable artifact bundle for the mandatory 1 to 3 qubit exact
+  micro-validation matrix.
 
 Run with:
     python benchmarks/density_matrix/noise_support/required_local_noise_micro_validation.py
@@ -30,7 +30,7 @@ from benchmarks.density_matrix.validate_squander_vs_qiskit import (
     REFERENCE_BACKEND,
     build_software_metadata,
     build_threshold_metadata,
-    run_validation as run_story2_validation,
+    run_validation as run_required_local_noise_micro_validation,
 )
 from benchmarks.density_matrix.noise_support.support_tiers import (
     SUPPORT_TIER_VOCABULARY,
@@ -107,7 +107,7 @@ def validate_case_payload(case):
     missing_fields = [field for field in required_fields if field not in case]
     if missing_fields:
         raise ValueError(
-            "Task 4 Story 2 case payload is missing required fields: {}".format(
+            "Required local-noise microcase payload is missing required fields: {}".format(
                 ", ".join(missing_fields)
             )
         )
@@ -191,7 +191,7 @@ def validate_artifact_bundle(bundle):
     missing_fields = [field for field in ARTIFACT_CORE_FIELDS if field not in bundle]
     if missing_fields:
         raise ValueError(
-            "Task 4 Story 2 artifact bundle is missing required fields: {}".format(
+            "Required local-noise micro-validation bundle is missing required fields: {}".format(
                 ", ".join(missing_fields)
             )
         )
@@ -209,7 +209,7 @@ def parse_args():
         "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
-        help="Directory for the Task 4 Story 2 JSON artifact bundle.",
+        help="Directory for the required local-noise micro-validation JSON artifact bundle.",
     )
     parser.add_argument(
         "--quiet",
@@ -221,7 +221,7 @@ def parse_args():
 
 def main():
     args = parse_args()
-    results = run_story2_validation(verbose=not args.quiet)
+    results = run_required_local_noise_micro_validation(verbose=not args.quiet)
     bundle = build_artifact_bundle(results)
     output_path = args.output_dir / ARTIFACT_FILENAME
     write_artifact_bundle(output_path, bundle)

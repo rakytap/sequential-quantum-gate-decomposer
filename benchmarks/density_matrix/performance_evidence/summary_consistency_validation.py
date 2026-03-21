@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Validation: Phase 3 Task 7 Story 8 summary-consistency guardrails.
+"""Summary-consistency guardrails for performance evidence.
 
-Interprets the shared Task 7 benchmark package and verifies that downstream
-rollups, limitation carry-forward, and claim-closure flags stay consistent with
-the underlying per-case evidence.
+Interprets the shared benchmark package and verifies that downstream rollups,
+limitation carry-forward, and claim-closure flags stay consistent with the
+underlying per-case evidence.
 
 Run with:
     python benchmarks/density_matrix/performance_evidence/summary_consistency_validation.py
@@ -20,7 +20,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from benchmarks.density_matrix.performance_evidence.benchmark_bundle_validation import (
-    build_artifact_bundle as build_story7_bundle,
+    build_performance_evidence_benchmark_package,
 )
 from benchmarks.density_matrix.performance_evidence.common import (
     PERFORMANCE_EVIDENCE_SUMMARY_SCHEMA_VERSION,
@@ -29,7 +29,7 @@ from benchmarks.density_matrix.performance_evidence.common import (
     write_artifact_bundle,
 )
 
-SUITE_NAME = "phase3_performance_evidence_summary_consistency"
+SUITE_NAME = "performance_evidence_summary_consistency"
 ARTIFACT_FILENAME = "summary_consistency_bundle.json"
 DEFAULT_OUTPUT_DIR = performance_evidence_output_dir("summary_consistency")
 ARTIFACT_CORE_FIELDS = (
@@ -44,10 +44,10 @@ ARTIFACT_CORE_FIELDS = (
 )
 
 
-def build_artifact_bundle() -> dict:
-    story7_bundle = build_story7_bundle()
-    cases = story7_bundle["cases"]
-    negative_cases = story7_bundle["negative_cases"]
+def build_summary_consistency_bundle() -> dict:
+    benchmark_package = build_performance_evidence_benchmark_package()
+    cases = benchmark_package["cases"]
+    negative_cases = benchmark_package["negative_cases"]
     counted_supported_cases = sum(case["counted_supported_benchmark_case"] for case in cases)
     positive_threshold_pass_cases = sum(case["positive_threshold_pass"] for case in cases)
     diagnosis_only_cases = sum(case["diagnosis_only_case"] for case in cases)
@@ -55,15 +55,15 @@ def build_artifact_bundle() -> dict:
     representative_review_cases = sum(case["representative_review_case"] for case in cases)
 
     summary_consistency_pass = (
-        story7_bundle["summary"]["total_cases"] == len(cases)
-        and story7_bundle["summary"]["counted_supported_cases"] == counted_supported_cases
-        and story7_bundle["summary"]["positive_threshold_pass_cases"]
+        benchmark_package["summary"]["total_cases"] == len(cases)
+        and benchmark_package["summary"]["counted_supported_cases"] == counted_supported_cases
+        and benchmark_package["summary"]["positive_threshold_pass_cases"]
         == positive_threshold_pass_cases
-        and story7_bundle["summary"]["diagnosis_only_cases"] == diagnosis_only_cases
-        and story7_bundle["summary"]["excluded_cases"] == excluded_cases
-        and story7_bundle["summary"]["representative_review_cases"]
+        and benchmark_package["summary"]["diagnosis_only_cases"] == diagnosis_only_cases
+        and benchmark_package["summary"]["excluded_cases"] == excluded_cases
+        and benchmark_package["summary"]["representative_review_cases"]
         == representative_review_cases
-        and story7_bundle["summary"]["correctness_evidence_boundary_cases"] == len(negative_cases)
+        and benchmark_package["summary"]["correctness_evidence_boundary_cases"] == len(negative_cases)
     )
 
     positive_benchmark_claim_completed = positive_threshold_pass_cases >= 1
@@ -82,11 +82,11 @@ def build_artifact_bundle() -> dict:
         "status": "pass" if summary_consistency_pass and main_benchmark_claim_completed else "fail",
         "schema_version": PERFORMANCE_EVIDENCE_SUMMARY_SCHEMA_VERSION,
         "software": build_performance_evidence_software_metadata(),
-        "selected_candidate": story7_bundle["selected_candidate"],
+        "selected_candidate": benchmark_package["selected_candidate"],
         "requirements": {
             "positive_claim_rule": (
-                "Only counted representative Task 7 evidence may close a positive "
-                "benchmark claim."
+                "Only counted representative performance-evidence cases may close a "
+                "positive benchmark claim."
             ),
             "diagnosis_rule": (
                 "If no representative case meets the positive threshold, diagnosis-"
@@ -113,16 +113,16 @@ def build_artifact_bundle() -> dict:
         "required_artifacts": [
             {
                 "artifact_id": "benchmark_package",
-                "suite_name": story7_bundle["suite_name"],
-                "status": story7_bundle["status"],
-                "schema_version": story7_bundle["schema_version"],
+                "suite_name": benchmark_package["suite_name"],
+                "status": benchmark_package["status"],
+                "schema_version": benchmark_package["schema_version"],
             }
         ],
     }
     missing = [field for field in ARTIFACT_CORE_FIELDS if field not in bundle]
     if missing:
         raise ValueError(
-            "Task 7 Story 8 bundle missing required fields: {}".format(
+            "Summary consistency bundle missing required fields: {}".format(
                 ", ".join(missing)
             )
         )
@@ -135,7 +135,7 @@ def main(argv: list[str] | None = None) -> int:
         "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
-        help="Directory to write the Task 7 Story 8 bundle into.",
+        help="Directory to write the summary consistency bundle into.",
     )
     parser.add_argument(
         "--quiet",
@@ -144,7 +144,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    bundle = build_artifact_bundle()
+    bundle = build_summary_consistency_bundle()
     output_path = write_artifact_bundle(bundle, args.output_dir, ARTIFACT_FILENAME)
 
     if not args.quiet:

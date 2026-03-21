@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Validation: Phase 3 Task 6 Story 5 runtime and fusion classification surface.
+"""Runtime and fusion path classification validation.
 
-Records how the fused-capable runtime classifies supported Task 6 cases while
+Records how the fused-capable runtime classifies supported matrix cases while
 keeping those classifications directly comparable to the same correctness
-thresholds used elsewhere in the task.
+thresholds used elsewhere in the evidence pipeline.
 
 Run with:
     python benchmarks/density_matrix/correctness_evidence/runtime_classification_validation.py
@@ -26,7 +26,7 @@ from benchmarks.density_matrix.correctness_evidence.records import (
     build_correctness_evidence_positive_records,
 )
 
-SUITE_NAME = "phase3_correctness_evidence_runtime_classification"
+SUITE_NAME = "correctness_evidence_runtime_classification"
 ARTIFACT_FILENAME = "runtime_classification_bundle.json"
 DEFAULT_OUTPUT_DIR = correctness_evidence_output_dir("runtime_classification")
 ARTIFACT_CORE_FIELDS = (
@@ -81,7 +81,7 @@ def build_artifact_bundle(cases: list[dict]) -> dict:
     missing = [field for field in ARTIFACT_CORE_FIELDS if field not in bundle]
     if missing:
         raise ValueError(
-            "Task 6 Story 5 bundle missing required fields: {}".format(
+            "Runtime classification bundle missing required fields: {}".format(
                 ", ".join(missing)
             )
         )
@@ -94,7 +94,7 @@ def main(argv: list[str] | None = None) -> int:
         "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
-        help="Directory to write the Task 6 Story 5 bundle into.",
+        help="Directory to write the runtime classification bundle into.",
     )
     parser.add_argument(
         "--quiet",

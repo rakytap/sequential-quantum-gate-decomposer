@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Validation: Phase 3 Task 2 Story 6 unsupported descriptor boundary.
+"""Unsupported partition-descriptor boundary validation.
 
 Exercises representative unsupported or lossy descriptor-generation situations
-and records the stable no-fallback outcome for each one. The goal is to prove
-that unsupported Task 2 descriptor requests fail before runtime and are not
-silently relabeled as supported descriptor behavior.
+and records the stable no-fallback outcome for each one. Unsupported descriptor
+requests fail before runtime and are not silently relabeled as supported
+descriptor behavior.
 
 Run with:
     python benchmarks/density_matrix/planner_surface/unsupported_descriptor_validation.py
@@ -199,7 +199,7 @@ def _reordered_descriptor_runner():
     raise ValueError("No mixed partition available for reordering negative case")
 
 
-def build_cases() -> list[dict]:
+def build_unsupported_descriptor_cases() -> list[dict]:
     _, continuity_bridge = _build_continuity_bridge_request()
     return [
         _unsupported_case(
@@ -276,7 +276,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    cases = build_cases()
+    cases = build_unsupported_descriptor_cases()
     bundle = build_artifact_bundle(cases)
     output_path = write_artifact_bundle(bundle, output_dir=args.output_dir)
 

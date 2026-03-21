@@ -56,7 +56,7 @@
         "h": 0.5
       },
       "case_name": "unsupported_bridge_custom_gate_structure_source",
-      "case_kind": "task3_bridge_unsupported_validation",
+      "case_kind": "unsupported_bridge_validation",
       "purpose": "Verify a custom manual circuit source fails before bridge execution with a source-category unsupported result.",
       "bridge_source_type": "custom_gate_structure",
       "unsupported_category": "circuit_source",
@@ -90,7 +90,7 @@
         "h": 0.5
       },
       "case_name": "unsupported_bridge_hea_zyz_lowering",
-      "case_kind": "task3_bridge_unsupported_validation",
+      "case_kind": "unsupported_bridge_validation",
       "purpose": "Verify the unsupported HEA_ZYZ lowering path fails before bridge execution.",
       "bridge_source_type": "generated_hea_zyz",
       "unsupported_category": "lowering_path",
@@ -131,7 +131,7 @@
         "h": 0.5
       },
       "case_name": "unsupported_bridge_after_gate_index",
-      "case_kind": "task3_bridge_unsupported_validation",
+      "case_kind": "unsupported_bridge_validation",
       "purpose": "Verify invalid ordered noise insertion fails before density execution.",
       "bridge_source_type": "generated_hea",
       "unsupported_category": "noise_insertion",
@@ -167,7 +167,7 @@
         "h": 0.5
       },
       "case_name": "unsupported_bridge_noise_channel",
-      "case_kind": "task3_bridge_unsupported_validation",
+      "case_kind": "unsupported_bridge_validation",
       "purpose": "Verify unsupported density-noise channel names fail during bridge configuration.",
       "bridge_source_type": "unset",
       "unsupported_category": "noise_type",

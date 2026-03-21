@@ -128,7 +128,6 @@
         "paper_path": "docs/density_matrix_project/phases/phase-3/PAPER_PHASE_3.md",
         "source_path": "docs/density_matrix_project/phases/phase-3/task-8/TASK_8_MINI_SPEC.md",
         "source_phrases": [
-          "bounded Task 5 calibrated planner claim",
           "benchmark-calibrated planning result",
           "`max_partition_qubits`"
         ],
@@ -161,7 +160,7 @@
   },
   "provenance": {
     "generation_command": "python benchmarks/density_matrix/publication_evidence/claim_package_validation.py",
-    "git_revision": "1af8716f9ed42d8c3b156bfb2b7fe26f61357fb8",
+    "git_revision": "77cd8168869d9b4c67c0dd0dbe49baab02b0fe25",
     "primary_source_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/docs/density_matrix_project/phases/phase-3/task-8/TASK_8_MINI_SPEC.md",
     "primary_surface_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/docs/density_matrix_project/phases/phase-3/PAPER_PHASE_3.md",
     "working_directory": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer"
@@ -187,7 +186,7 @@
     }
   ],
   "status": "pass",
-  "suite_name": "phase3_publication_evidence_claim_package",
+  "suite_name": "claim_package",
   "summary": {
     "all_non_claims_present": true,
     "all_source_phrases_present": true,

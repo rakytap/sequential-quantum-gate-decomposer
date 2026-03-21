@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validation: Phase 3 Task 5 Story 6 shared calibration bundle.
+"""Validation: Phase 3 planner-calibration integrated bundle (shared artifact).
 
 Packages the selected supported claim, comparison baselines, and all calibrated
 case records into one stable machine-reviewable bundle for later validation,
@@ -68,7 +68,7 @@ def build_artifact_bundle() -> dict:
     missing = [field for field in ARTIFACT_CORE_FIELDS if field not in bundle]
     if missing:
         raise ValueError(
-            "Task 5 Story 6 bundle missing required fields: {}".format(
+            "Integrated calibration bundle missing required fields: {}".format(
                 ", ".join(missing)
             )
         )
@@ -88,7 +88,7 @@ def main(argv: list[str] | None = None) -> int:
         "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
-        help="Directory to write the Task 5 Story 6 bundle into.",
+        help="Directory to write the integrated calibration bundle into.",
     )
     parser.add_argument(
         "--quiet",

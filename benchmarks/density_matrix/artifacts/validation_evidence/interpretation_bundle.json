@@ -20,7 +20,7 @@
         "workflow_cases_with_stable_execution": 40
       }
     },
-    "task4_story3_optional_classification": {
+    "optional_noise_reference": {
       "status": "pass",
       "suite_name": "optional_noise_classification",
       "summary": {
@@ -40,7 +40,7 @@
         ]
       }
     },
-    "task4_story4_unsupported_noise": {
+    "unsupported_noise_reference": {
       "status": "pass",
       "suite_name": "unsupported_noise_boundary",
       "summary": {
@@ -104,7 +104,7 @@
       "unsupported",
       "incomplete"
     ],
-    "main_claim_rule": "Only mandatory, complete, supported evidence may close the main Task 5 validation claim.",
+    "main_claim_rule": "Only mandatory, complete, supported evidence may close the main validation-evidence claim.",
     "required_bundle_sources": [
       "metric_completeness_validation",
       "optional_noise_classification",
@@ -128,7 +128,7 @@
   "summary": {
     "deferred_cases": 4,
     "incomplete_mandatory_artifacts": [],
-    "main_phase2_claim_completed": true,
+    "main_validation_claim_completed": true,
     "mandatory_artifacts": [
       "local_correctness_reference",
       "workflow_baseline_reference",

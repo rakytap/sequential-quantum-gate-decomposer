@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Validation: Phase 3 Task 3 Story 2 shared mandatory runtime surface.
+"""Mandatory workload runtime validation for the shared partitioned runtime surface.
 
 Executes the required microcases plus one structured case per mandatory family
-and size through the same Task 3 partitioned runtime surface already used by
-the continuity anchor.
+and size through the same partitioned runtime entry used by the continuity
+anchor workloads.
 
 Run with:
     python benchmarks/density_matrix/partitioned_runtime/mandatory_workload_runtime_validation.py

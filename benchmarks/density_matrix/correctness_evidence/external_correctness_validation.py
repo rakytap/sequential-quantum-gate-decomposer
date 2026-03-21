@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Validation: Phase 3 Task 6 Story 3 bounded Qiskit Aer slice.
+"""External correctness validation (bounded Qiskit Aer reference slice).
 
-Checks the required external Task 6 slice against Qiskit Aer while keeping the
-slice explicitly bounded to mandatory microcases plus the selected small
+Checks the required external-reference slice against Qiskit Aer while keeping
+the slice explicitly bounded to mandatory microcases plus the selected small
 continuity subset.
 
 Run with:
@@ -25,7 +25,7 @@ from benchmarks.density_matrix.correctness_evidence.records import (
     build_correctness_evidence_positive_records,
 )
 
-SUITE_NAME = "phase3_correctness_evidence_external_correctness"
+SUITE_NAME = "correctness_evidence_external_correctness"
 ARTIFACT_FILENAME = "external_correctness_bundle.json"
 DEFAULT_OUTPUT_DIR = correctness_evidence_output_dir("external_correctness")
 ARTIFACT_CORE_FIELDS = (
@@ -62,7 +62,7 @@ def build_artifact_bundle(cases: list[dict]) -> dict:
     missing = [field for field in ARTIFACT_CORE_FIELDS if field not in bundle]
     if missing:
         raise ValueError(
-            "Task 6 Story 3 bundle missing required fields: {}".format(
+            "External correctness bundle missing required fields: {}".format(
                 ", ".join(missing)
             )
         )
@@ -75,7 +75,7 @@ def main(argv: list[str] | None = None) -> int:
         "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
-        help="Directory to write the Task 6 Story 3 bundle into.",
+        help="Directory to write the external correctness bundle into.",
     )
     parser.add_argument(
         "--quiet",

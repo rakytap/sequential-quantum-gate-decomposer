@@ -41,7 +41,7 @@ from benchmarks.density_matrix.planner_surface.workloads import (
     iter_structured_descriptor_sets,
 )
 from benchmarks.density_matrix.planner_surface.unsupported_descriptor_validation import (
-    build_cases as build_story6_cases,
+    build_unsupported_descriptor_cases,
 )
 
 
@@ -86,7 +86,7 @@ def _expected_partition_parameter_routing(partition: dict) -> list[dict]:
 
 
 @pytest.mark.parametrize("qbit_num", [4, 6, 8, 10])
-def test_planner_surface_story1_continuity_descriptor_slice_matches_continuity_surface(qbit_num):
+def test_continuity_partition_descriptor_aligns_with_planner_surface(qbit_num):
     vqe, _, _ = build_phase2_continuity_vqe(qbit_num)
     surface = build_phase3_continuity_planner_surface(vqe)
     descriptor_set = build_phase3_continuity_partition_descriptor_set(vqe)
@@ -120,7 +120,7 @@ def test_planner_surface_story1_continuity_descriptor_slice_matches_continuity_s
         assert len(partition["partition_qubit_span"]) <= DEFAULT_PARTITION_DESCRIPTOR_MAX_QUBITS
 
 
-def test_planner_surface_story1_continuity_descriptor_emission_is_deterministic():
+def test_continuity_partition_descriptor_emission_is_deterministic():
     vqe, _, _ = build_phase2_continuity_vqe(4)
 
     first_payload = build_phase3_continuity_partition_descriptor_set(vqe).to_dict()
@@ -129,7 +129,7 @@ def test_planner_surface_story1_continuity_descriptor_emission_is_deterministic(
     assert first_payload == second_payload
 
 
-def test_planner_surface_story2_microcase_descriptors_share_schema():
+def test_microcase_partition_descriptors_share_schema():
     reference_keys = None
     partition_keys = None
     member_keys = None
@@ -158,7 +158,7 @@ def test_planner_surface_story2_microcase_descriptors_share_schema():
         assert payload["max_partition_qubits"] == DEFAULT_PARTITION_DESCRIPTOR_MAX_QUBITS
 
 
-def test_planner_surface_story2_structured_descriptors_share_schema():
+def test_structured_partition_descriptors_share_schema():
     structured_cases = list(iter_structured_descriptor_sets())
     assert len(structured_cases) == (
         len(STRUCTURED_FAMILY_NAMES) * len(STRUCTURED_QUBITS) * len(MANDATORY_NOISE_PATTERNS)
@@ -179,7 +179,7 @@ def test_planner_surface_story2_structured_descriptors_share_schema():
         assert payload["max_partition_qubits"] == DEFAULT_PARTITION_DESCRIPTOR_MAX_QUBITS
 
 
-def test_planner_surface_story2_continuity_and_methods_share_descriptor_schema():
+def test_continuity_microcase_structured_share_partition_descriptor_schema():
     continuity_vqe, _, _ = build_phase2_continuity_vqe(4)
     continuity_payload = build_phase3_continuity_partition_descriptor_set(
         continuity_vqe
@@ -208,7 +208,7 @@ def test_planner_surface_story2_continuity_and_methods_share_descriptor_schema()
     assert len(member_keys) == 1
 
 
-def test_planner_surface_story2_workload_ids_are_unique():
+def test_partition_descriptor_workload_ids_unique_across_mandatory_workloads():
     workload_ids = set()
 
     continuity_vqe, _, _ = build_phase2_continuity_vqe(4)
@@ -228,7 +228,7 @@ def test_planner_surface_story2_workload_ids_are_unique():
         workload_ids.add(descriptor_set.workload_id)
 
 
-def test_planner_surface_story3_continuity_descriptor_members_match_surface_order():
+def test_continuity_descriptor_members_match_surface_operation_order():
     vqe, _, _ = build_phase2_continuity_vqe(4)
     surface = build_phase3_continuity_planner_surface(vqe)
     descriptor_payload = build_phase3_continuity_partition_descriptor_set(vqe).to_dict()
@@ -248,7 +248,7 @@ def test_planner_surface_story3_continuity_descriptor_members_match_surface_orde
     )
 
 
-def test_planner_surface_story3_boundary_microcase_keeps_noise_explicit_inside_partitions():
+def test_boundary_microcase_descriptor_keeps_explicit_noise_in_partitions():
     surface = build_microcase_surface("microcase_4q_partition_boundary_triplet")
     descriptor_payload = build_microcase_descriptor_set(
         "microcase_4q_partition_boundary_triplet"
@@ -271,7 +271,7 @@ def test_planner_surface_story3_boundary_microcase_keeps_noise_explicit_inside_p
     ]
 
 
-def test_planner_surface_story3_structured_descriptor_members_match_surface_order():
+def test_structured_descriptor_members_match_surface_operation_order():
     metadata, descriptor_set = next(iter(iter_structured_descriptor_sets()))
     surface = build_structured_surface(
         metadata["family_name"],
@@ -290,7 +290,7 @@ def test_planner_surface_story3_structured_descriptor_members_match_surface_orde
     ]
 
 
-def test_planner_surface_story4_continuity_descriptors_validate_and_round_trip_support():
+def test_continuity_validated_partition_descriptors_round_trip_qubit_support():
     vqe, _, _ = build_phase2_continuity_vqe(4)
     descriptor_set = build_phase3_continuity_partition_descriptor_set(vqe)
     payload = validate_partition_descriptor_set(descriptor_set).to_dict()
@@ -303,7 +303,7 @@ def test_planner_surface_story4_continuity_descriptors_validate_and_round_trip_s
             assert expected_global_support == reconstructed_global_support
 
 
-def test_planner_surface_story4_boundary_microcase_parameter_routing_round_trip():
+def test_boundary_microcase_validated_partition_descriptors_round_trip_parameter_routing():
     descriptor_set = build_microcase_descriptor_set(
         "microcase_4q_partition_boundary_triplet"
     )
@@ -316,7 +316,7 @@ def test_planner_surface_story4_boundary_microcase_parameter_routing_round_trip(
         )
 
 
-def test_planner_surface_story4_structured_descriptor_exposes_nontrivial_remap():
+def test_structured_validated_partition_descriptor_marks_remap_at_span_limit():
     metadata, descriptor_set = next(iter(iter_structured_descriptor_sets()))
     payload = validate_partition_descriptor_set(descriptor_set).to_dict()
 
@@ -376,7 +376,7 @@ def test_planner_surface_descriptor_audit_record_tracks_legacy_exact_provenance(
     assert audit["metadata"]["case_kind"] == "legacy_exact"
 
 
-def test_planner_surface_story5_supported_cases_share_audit_shape():
+def test_descriptor_audit_records_share_shape_across_supported_workloads():
     continuity_vqe, _, _ = build_phase2_continuity_vqe(4)
     continuity_audit = build_descriptor_audit_record(
         build_phase3_continuity_partition_descriptor_set(continuity_vqe),
@@ -417,7 +417,7 @@ def test_planner_surface_story5_supported_cases_share_audit_shape():
     assert len(partition_keys) == 1
 
 
-def test_planner_surface_story6_preflight_accepts_supported_continuity_request():
+def test_preflight_accepts_supported_phase2_continuity_request():
     vqe, _, _ = build_phase2_continuity_vqe(4)
     bridge = vqe.describe_density_bridge()
 
@@ -434,7 +434,7 @@ def test_planner_surface_story6_preflight_accepts_supported_continuity_request()
     assert descriptor_set.workload_id == "phase2_xxz_hea_q4_continuity"
 
 
-def test_planner_surface_story6_validate_against_surface_accepts_supported_descriptor():
+def test_validate_against_surface_accepts_supported_microcase_descriptor():
     surface = build_microcase_surface("microcase_4q_partition_boundary_triplet")
     descriptor_set = build_microcase_descriptor_set(
         "microcase_4q_partition_boundary_triplet"
@@ -446,8 +446,8 @@ def test_planner_surface_story6_validate_against_surface_accepts_supported_descr
     assert validated.partition_count == descriptor_set.partition_count
 
 
-def test_planner_surface_story6_negative_matrix_has_expected_categories_and_no_fallback():
-    cases = build_story6_cases()
+def test_unsupported_descriptor_matrix_reports_categories_without_fallback():
+    cases = build_unsupported_descriptor_cases()
     expected_categories = {
         "partition_qubits_too_small": "partition_span",
         "dropped_operation": "dropped_operations",

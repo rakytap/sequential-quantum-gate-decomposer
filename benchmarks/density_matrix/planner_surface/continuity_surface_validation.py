@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validation: Phase 3 Task 1 Story 1 continuity planner surface.
+"""Continuity planner surface validation.
 
 Builds the required 4, 6, 8, and 10 qubit Phase 2 continuity-anchor workloads
 and verifies that each one reaches the canonical Phase 3 planner surface through
@@ -130,7 +130,7 @@ def write_artifact_bundle(bundle: dict, output_dir: Path = DEFAULT_OUTPUT_DIR) -
 def run_validation(verbose: bool = True) -> list[dict]:
     results = [build_case_result(qbit_num) for qbit_num in REQUIRED_QUBITS]
     if verbose:
-        print("Phase 3 Task 1 Story 1 continuity surface:")
+        print("Continuity planner surface validation:")
         for case in results:
             print(
                 "  q={qbit_num}: ops={operation_count}, gates={gate_count}, noise={noise_count}, continuity_pass={continuity_anchor_pass}".format(

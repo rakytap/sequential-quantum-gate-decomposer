@@ -1,6 +1,6 @@
 # Detailed Planning for Phase 3
 
-This document is the Phase 3 source of truth for scope, task goals,
+This document is the Phase 3 source of truth for scope, deliverable goals,
 acceptance criteria, validation expectations, and Paper 2 evidence.
 
 Primary Phase 3 theme:
@@ -110,15 +110,16 @@ Boundary to later work:
   fusion remains a benchmark-driven follow-on branch beyond the baseline Phase 3
   closure condition.
 
-## 0.4 Task 1 And Task 2 Learnings That Now Constrain Remaining Work
+## 0.4 Planner Surface And Partition Descriptor: Learnings That Constrain Remaining Work
 
-Task 1 and Task 2 implementation converted several Phase 3 planning assumptions
-into real contract surfaces that later tasks should now treat as fixed unless a
-cross-task phase decision is explicitly reopened.
+The planner surface and the partition-descriptor / semantic-preservation contract
+have converted several Phase 3 planning assumptions into real contract surfaces
+that downstream work should now treat as fixed unless a phase-level decision is
+explicitly reopened.
 
 The main implementation learnings are:
 
-- the planner-side canonical noisy mixed-state surface and the Task 2 partition
+- the planner-side canonical noisy mixed-state surface and the partition
   descriptor contract now both exist as schema-versioned, machine-reviewable
   handoff surfaces rather than only as planning abstractions,
 - the mandatory workload matrix is no longer hypothetical:
@@ -130,18 +131,20 @@ The main implementation learnings are:
     seed rules, and sparse/periodic/dense local-noise placement vocabulary,
 - unsupported-boundary evidence is already layered:
   - planner-entry unsupported behavior is now a machine-reviewable evidence
-    surface from Task 1,
+    surface from the planner-surface work,
   - descriptor-generation unsupported and lossy behavior is now a separate
-    machine-reviewable evidence surface from Task 2,
-  - so later runtime correctness work should extend those layers rather than
-    collapse them into one generic failure bucket,
+    machine-reviewable evidence surface from the descriptor contract,
+  - so later partitioned-runtime correctness work should extend those layers
+    rather than collapse them into one generic failure bucket,
 - and machine-reviewable artifact bundles are now part of the real Phase 3
   contract:
-  - later tasks should emit reusable bundles or rerunnable checkers,
+  - subsequent deliverables should emit reusable bundles or rerunnable checkers,
   - and they should validate summary correctness and provenance completeness,
     not only bundle presence or schema shape.
 
-Practical implication for Tasks 3 through 8:
+Practical implication for the remaining Phase 3 contract slices (partitioned
+density runtime, fused runtime, planner calibration, correctness evidence,
+performance evidence, publication evidence):
 
 - the remaining work should consume the frozen canonical-surface and
   descriptor-set contracts directly,
@@ -178,7 +181,7 @@ boundaries:
 - `docs/density_matrix_project/planning/PUBLICATIONS.md`
 - `docs/density_matrix_project/planning/REFERENCES.md`
 
-### Tier 2: Accepted Roadmap And Milestone Wording
+### Tier 2: Accepted Milestone Wording
 
 These documents define accepted milestone wording and must remain consistent
 with the Phase 3 plan:
@@ -225,7 +228,7 @@ These sources are informative, but do not override the above:
 
 Phase 3 should follow spec-driven development in the following sense:
 
-1. Freeze cross-task scope and semantic decisions before implementation details
+1. Freeze phase-wide scope and semantic decisions before implementation details
    drift into architecture.
 2. Define required observable behavior of the partitioned runtime before choosing
    specific planner or kernel tactics.
@@ -734,11 +737,11 @@ Trade-offs:
 - They avoid making Phase 3 success depend on an unrealistic global speedup
   claim across all noisy workloads.
 
-## 11. Phase 3 Task Breakdown
+## 11. Phase 3 Contract Slices
 
-Each task below is a goal, not an implementation recipe.
+Each slice below states a goal, not an implementation recipe.
 
-### Task 1: Canonical Noisy Planner Surface
+### Canonical Noisy Planner Surface
 
 #### Goal
 
@@ -762,7 +765,7 @@ instead of a clear methods result.
 - explicit entry and unsupported-case semantics,
 - and at least one required workload family routed through that contract.
 
-### Task 2: Partition Descriptor And Semantic-Preservation Contract
+### Partition Descriptor And Semantic-Preservation Contract
 
 #### Goal
 
@@ -786,12 +789,13 @@ parameter routing become ambiguous.
 - correctness criteria tied to the sequential baseline,
 - and negative-case handling for unsupported transformations.
 
-### Task 3: Executable Partitioned Density Runtime
+### Executable Partitioned Density Runtime
 
 #### Goal
 
 Deliver an end-to-end partitioned density execution path that consumes the
-frozen Task 2 partition-descriptor contract on the mandatory workload matrix.
+frozen partition-descriptor / semantic-preservation contract on the mandatory
+workload matrix.
 
 #### Why It Exists
 
@@ -800,7 +804,7 @@ Planner-only representation is not enough to support the Phase 3 methods claim.
 #### Success Looks Like
 
 - the partitioned path executes required cases end to end from the validated
-  Task 2 descriptor set rather than from hidden planner state or
+  descriptor contract outputs rather than from hidden planner state or
   workload-specific ad hoc adapters,
 - explicit partitioned mode selection exists in the harness,
 - and no silent sequential fallback remains.
@@ -810,14 +814,14 @@ Planner-only representation is not enough to support the Phase 3 methods claim.
 - required benchmark runs using the partitioned path on the frozen continuity,
   microcase, and structured-workload matrix,
 - explicit descriptor-to-runtime handoff evidence showing that the runtime
-  consumes the supported Task 2 contract rather than a second private runtime
-  schema,
+  consumes the supported partition-descriptor contract rather than a second
+  private runtime schema,
 - explicit baseline comparison to the sequential runtime,
 - and documented unsupported-case behavior that remains distinguishable from the
   already-frozen planner-entry and descriptor-generation negative-evidence
   layers.
 
-### Task 4: Real Fused Execution On Eligible Substructures
+### Real Fused Execution On Eligible Substructures
 
 #### Goal
 
@@ -831,7 +835,7 @@ real runtime result.
 
 #### Success Looks Like
 
-- an eligible substructure defined against the supported Task 2 descriptor
+- an eligible substructure defined against the supported partition-descriptor
   contract actually executes through a fused path,
 - that fused path is benchmarked on representative noisy circuits,
 - surrounding noise semantics remain exact,
@@ -852,19 +856,19 @@ real runtime result.
 - The delivered minimum fused path is descriptor-local unitary-island fusion on
   1- and 2-qubit spans using the density backend local-unitary primitive rather
   than a separate private fusion-only runtime.
-- The shared Task 3 runtime contract remained additive: the runtime schema
-  stayed stable while fused-region classifications and an explicit fused runtime
-  path were added on top of the existing audit surface.
+- The shared partitioned density runtime contract remained additive: the runtime
+  schema stayed stable while fused-region classifications and an explicit fused
+  runtime path were added on top of the existing audit surface.
 - Representative 8- and 10-qubit layered nearest-neighbor sparse structured
   workloads now exercise a real fused path and preserve exact noisy semantics
   against the sequential density baseline within the frozen thresholds.
-- The current Task 4 benchmark result closes the performance-evidence rule via
+- The current fused-runtime benchmark result closes the performance-evidence rule via
   the diagnosis branch rather than the positive-threshold branch. On those
   representative structured cases, the current fused baseline remains slower and
   does not reduce peak memory, mainly because supported islands remain partially
   unfused and the present Python-level fused-kernel path adds overhead.
 
-### Task 5: Noise-Aware Planning Heuristic And Calibration
+### Noise-Aware Planning Heuristic And Planner Calibration
 
 #### Goal
 
@@ -913,7 +917,7 @@ Reusing a state-vector cost model would weaken the scientific Phase 3 claim.
   auditable selection rule, bounded candidate family, and explicit comparison
   baselines rather than around one invariant winner identity.
 
-### Task 6: Correctness Validation And Unsupported-Boundary Evidence
+### Correctness Evidence And Unsupported-Boundary Validation
 
 #### Goal
 
@@ -942,15 +946,15 @@ weaken both the paper and the broader PhD path.
 - structured unsupported-boundary artifacts covering:
   - planner-entry unsupported cases,
   - descriptor-generation unsupported or lossy cases,
-  - and runtime-only unsupported or deferred behavior where later tasks expose
-    it.
+  - and runtime-only unsupported or deferred behavior where later runtime stages
+    expose it.
 
 #### Current Implementation Findings
 
 - Correctness evidence is now materialized through
   `benchmarks/density_matrix/correctness_evidence/`, with one
   `validation_pipeline.py` entry point that emits eight
-  machine-reviewable story bundles under
+  machine-reviewable slice bundles under
   `benchmarks/density_matrix/artifacts/correctness_evidence/`.
 - The current correctness matrix is pinned to the currently selected
   planner-calibration candidate, `span_budget_q2`, rather than to the full
@@ -970,7 +974,7 @@ weaken both the paper and the broader PhD path.
   record surface instead of being reconstructed separately by later benchmark or
   paper consumers.
 - Structured negative evidence is now aggregated across all three pre-
-  performance Task 6 boundary layers in one shared package:
+  performance correctness-evidence boundary layers in one shared package:
   - `6` planner-entry unsupported cases,
   - `6` descriptor-generation unsupported cases,
   - and `5` runtime-stage unsupported cases.
@@ -979,7 +983,7 @@ weaken both the paper and the broader PhD path.
   evidence visible, rather than treating unsupported or deferred outcomes as
   hidden exclusions.
 
-### Task 7: Performance And Sensitivity Benchmark Package
+### Performance Evidence And Sensitivity Benchmark Package
 
 #### Goal
 
@@ -1014,7 +1018,7 @@ partitioned runtime exists.
 - Performance evidence is now materialized through
   `benchmarks/density_matrix/performance_evidence/`, with one
   `validation_pipeline.py` entry point that emits eight
-  machine-reviewable story bundles under
+  machine-reviewable slice bundles under
   `benchmarks/density_matrix/artifacts/performance_evidence/`.
 - The current benchmark package remains aligned with the current
   correctness-evidence package and the currently selected bounded
@@ -1047,7 +1051,7 @@ partitioned runtime exists.
   diagnosis-only cases, `0` positive-threshold pass cases, and carry-forward of
   the `17` explicit correctness-evidence boundary cases.
 
-### Task 8: Paper 2 Evidence And Documentation Bundle
+### Publication Evidence And Paper 2 Documentation Bundle
 
 #### Goal
 
@@ -1077,7 +1081,7 @@ being retrofitted after implementation.
   negative unsupported-boundary evidence,
 - summary-consistency and provenance-completeness checks for the publication
   bundle,
-- and traceability from Phase 3 tasks to publication sections.
+- and traceability from Phase 3 contract slices to publication sections.
 
 ## 12. Full-Phase Acceptance Criteria
 

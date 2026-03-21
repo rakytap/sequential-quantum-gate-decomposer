@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validation: Phase 3 Task 3 Story 6 runtime audit surface.
+"""Runtime audit validation: stable provenance and partition audit record shape.
 
 Emits one shared runtime-audit record across supported workload classes and
 checks that provenance, runtime-path labels, summary fields, and partition

@@ -14,7 +14,7 @@ from benchmarks.density_matrix.correctness_evidence.common import (
     build_validation_slice,
 )
 from benchmarks.density_matrix.correctness_evidence.case_selection import (
-    build_case_contexts,
+    build_correctness_evidence_case_contexts,
 )
 from benchmarks.density_matrix.partitioned_runtime.common import (
     PHASE3_RUNTIME_DENSITY_TOL,
@@ -27,15 +27,18 @@ from benchmarks.density_matrix.planner_calibration.calibration_records import (
     execute_qiskit_density_reference,
 )
 from benchmarks.density_matrix.planner_surface.unsupported_descriptor_validation import (
-    build_cases as build_descriptor_unsupported_cases,
+    SUITE_NAME as UNSUPPORTED_DESCRIPTOR_ORIGIN_SUITE_NAME,
+    build_unsupported_descriptor_cases as build_descriptor_unsupported_cases,
 )
 from benchmarks.density_matrix.planner_surface.unsupported_planner_validation import (
+    SUITE_NAME as UNSUPPORTED_PLANNER_ORIGIN_SUITE_NAME,
     build_cases as build_planner_unsupported_cases,
 )
 from benchmarks.density_matrix.planner_calibration.claim_selection import (
     PLANNER_CALIBRATION_CLAIM_STATUS_SUPPORTED,
 )
 from benchmarks.density_matrix.partitioned_runtime.unsupported_runtime_validation import (
+    SUITE_NAME as UNSUPPORTED_RUNTIME_ORIGIN_SUITE_NAME,
     build_cases as build_runtime_unsupported_cases,
 )
 from squander.partitioning.noisy_runtime import (
@@ -217,7 +220,7 @@ def build_correctness_evidence_positive_record(case_context) -> dict[str, Any]:
 def _build_correctness_evidence_positive_records_cached() -> tuple[dict[str, Any], ...]:
     return tuple(
         build_correctness_evidence_positive_record(case_context)
-        for case_context in build_case_contexts()
+        for case_context in build_correctness_evidence_case_contexts()
     )
 
 
@@ -260,7 +263,7 @@ def _build_correctness_evidence_negative_records_cached() -> tuple[dict[str, Any
         _normalize_negative_case(
             case,
             boundary_stage="planner_entry",
-            origin_suite_name="phase3_planner_surface_unsupported_planner",
+            origin_suite_name=UNSUPPORTED_PLANNER_ORIGIN_SUITE_NAME,
         )
         for case in build_planner_unsupported_cases()
     )
@@ -268,7 +271,7 @@ def _build_correctness_evidence_negative_records_cached() -> tuple[dict[str, Any
         _normalize_negative_case(
             case,
             boundary_stage="descriptor_generation",
-            origin_suite_name="phase3_planner_surface_unsupported_descriptors",
+            origin_suite_name=UNSUPPORTED_DESCRIPTOR_ORIGIN_SUITE_NAME,
         )
         for case in build_descriptor_unsupported_cases()
     )
@@ -276,7 +279,7 @@ def _build_correctness_evidence_negative_records_cached() -> tuple[dict[str, Any
         _normalize_negative_case(
             case,
             boundary_stage="runtime_stage",
-            origin_suite_name="phase3_partitioned_runtime_unsupported_runtime",
+            origin_suite_name=UNSUPPORTED_RUNTIME_ORIGIN_SUITE_NAME,
         )
         for case in build_runtime_unsupported_cases()
     )
@@ -307,14 +310,6 @@ def build_positive_records() -> list[dict[str, Any]]:
 
 def build_negative_records() -> list[dict[str, Any]]:
     return build_correctness_evidence_negative_records()
-
-
-def build_case_contexts():
-    from benchmarks.density_matrix.correctness_evidence.case_selection import (
-        build_correctness_evidence_case_contexts,
-    )
-
-    return build_correctness_evidence_case_contexts()
 
 
 def correctness_evidence_counted_supported_case(record: dict[str, Any]) -> bool:

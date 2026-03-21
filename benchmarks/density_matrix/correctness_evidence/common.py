@@ -25,10 +25,10 @@ from benchmarks.density_matrix.planner_surface.common import (  # noqa: E402
     build_software_metadata,
 )
 
-CORRECTNESS_EVIDENCE_CASE_SCHEMA_VERSION = "phase3_correctness_evidence_record_v1"
-CORRECTNESS_EVIDENCE_NEGATIVE_RECORD_SCHEMA_VERSION = "phase3_correctness_evidence_negative_record_v1"
-CORRECTNESS_PACKAGE_SCHEMA_VERSION = "phase3_correctness_evidence_package_v1"
-CORRECTNESS_EVIDENCE_SUMMARY_SCHEMA_VERSION = "phase3_correctness_evidence_summary_v1"
+CORRECTNESS_EVIDENCE_CASE_SCHEMA_VERSION = "correctness_evidence_case_record_v1"
+CORRECTNESS_EVIDENCE_NEGATIVE_RECORD_SCHEMA_VERSION = "correctness_evidence_negative_record_v1"
+CORRECTNESS_PACKAGE_SCHEMA_VERSION = "correctness_evidence_package_v1"
+CORRECTNESS_EVIDENCE_SUMMARY_SCHEMA_VERSION = "correctness_evidence_summary_v1"
 
 CORRECTNESS_EVIDENCE_VALIDATION_SLICE_INTERNAL_ONLY = "internal_only"
 CORRECTNESS_EVIDENCE_VALIDATION_SLICE_INTERNAL_PLUS_EXTERNAL = "internal_plus_external"
@@ -93,10 +93,6 @@ def build_package_software_metadata() -> dict[str, Any]:
     metadata = build_software_metadata()
     metadata["planner_calibration_selected_candidate_id"] = build_selected_candidate()["candidate_id"]
     return metadata
-
-
-# Compatibility aliases for existing semantic imports.
-CORRECTNESS_EVIDENCE_CORRECTNESS_PACKAGE_SCHEMA_VERSION = CORRECTNESS_PACKAGE_SCHEMA_VERSION
 
 
 def build_correctness_evidence_selected_candidate() -> dict[str, Any]:

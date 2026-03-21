@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Validation: Task 8 Story 2 publication-surface alignment.
+"""Validation: Publication-surface alignment for Paper 1.
 
-Builds a machine-readable checker for the Task 8 publication surfaces. This
+Builds a machine-readable checker for the Phase 2 publication surfaces. This
 layer is intentionally thin:
-- it reuses the Story 1 claim package,
+- it reuses the claim package,
 - it records the mandatory publication surfaces and their roles,
 - it validates that each surface preserves the same claim boundary and closure
   rule,
@@ -38,9 +38,9 @@ from benchmarks.density_matrix.publication_claim_package.doc_utils import (
     write_json,
 )
 from benchmarks.density_matrix.publication_claim_package.claim_package_validation import (
-    ARTIFACT_FILENAME as STORY1_ARTIFACT_FILENAME,
-    run_validation as run_story1_validation,
-    validate_artifact_bundle as validate_story1_artifact,
+    ARTIFACT_FILENAME as CLAIM_PACKAGE_ARTIFACT_FILENAME,
+    run_validation as run_claim_package_validation,
+    validate_artifact_bundle as validate_claim_package_artifact,
 )
 from benchmarks.density_matrix.publication_claim_package.doc_utils import (
     PUBLICATION_CLAIM_OUTPUT_DIR as PUBLICATION_CLAIM_OUTPUT_DIR_FROM_UTILS,
@@ -52,7 +52,9 @@ from benchmarks.density_matrix.publication_claim_package.doc_utils import (
 SUITE_NAME = "publication_surface_alignment"
 ARTIFACT_FILENAME = "publication_surface_alignment.json"
 DEFAULT_OUTPUT_DIR = PUBLICATION_CLAIM_OUTPUT_DIR
-STORY1_ARTIFACT_PATH = PUBLICATION_CLAIM_OUTPUT_DIR_FROM_UTILS / STORY1_ARTIFACT_FILENAME
+CLAIM_PACKAGE_ARTIFACT_PATH = (
+    PUBLICATION_CLAIM_OUTPUT_DIR_FROM_UTILS / CLAIM_PACKAGE_ARTIFACT_FILENAME
+)
 ARTIFACT_FIELDS = (
     "suite_name",
     "status",
@@ -64,12 +66,12 @@ ARTIFACT_FIELDS = (
 )
 
 
-def _load_story1_artifact(path: Path = STORY1_ARTIFACT_PATH):
+def _load_claim_package_artifact(path: Path = CLAIM_PACKAGE_ARTIFACT_PATH):
     if path.exists():
         artifact = load_json(path)
-        validate_story1_artifact(artifact)
+        validate_claim_package_artifact(artifact)
         return artifact
-    return run_story1_validation(verbose=False)
+    return run_claim_package_validation(verbose=False)
 
 
 def build_surface_inventory():
@@ -113,7 +115,7 @@ def build_surface_inventory():
 
 
 def build_artifact_bundle():
-    story1_artifact = _load_story1_artifact()
+    claim_package_artifact = _load_claim_package_artifact()
     surface_inventory = build_surface_inventory()
     all_surface_roles_present = all(entry["role_present"] for entry in surface_inventory)
     all_claim_headings_present = all(
@@ -130,7 +132,7 @@ def build_artifact_bundle():
     )
     surface_alignment_completed = all(
         [
-            story1_artifact["status"] == "pass",
+            claim_package_artifact["status"] == "pass",
             all_surface_roles_present,
             all_claim_headings_present,
             all_main_claims_present,
@@ -143,21 +145,21 @@ def build_artifact_bundle():
         "suite_name": SUITE_NAME,
         "status": "pass" if surface_alignment_completed else "fail",
         "claim_package": {
-            "suite_name": story1_artifact["suite_name"],
-            "status": story1_artifact["status"],
-            "path": relative_to_repo(STORY1_ARTIFACT_PATH),
-            "summary": dict(story1_artifact["summary"]),
+            "suite_name": claim_package_artifact["suite_name"],
+            "status": claim_package_artifact["status"],
+            "path": relative_to_repo(CLAIM_PACKAGE_ARTIFACT_PATH),
+            "summary": dict(claim_package_artifact["summary"]),
         },
         "surface_inventory": surface_inventory,
         "software": build_software_metadata(),
         "provenance": {
             "generation_command": (
-                "python benchmarks/density_matrix/"
+                "python benchmarks/density_matrix/publication_claim_package/"
                 "publication_surface_alignment.py"
             ),
             "working_directory": str(REPO_ROOT),
             "git_revision": get_git_revision(),
-            "claim_package_path": str(STORY1_ARTIFACT_PATH),
+            "claim_package_path": str(CLAIM_PACKAGE_ARTIFACT_PATH),
             "surface_paths": {
                 surface_id: relative_to_repo(
                     MANDATORY_PUBLICATION_EVIDENCE_DOCS[PUBLICATION_SURFACES[surface_id]["doc_id"]]
@@ -183,7 +185,7 @@ def validate_artifact_bundle(artifact):
     missing_fields = [field for field in ARTIFACT_FIELDS if field not in artifact]
     if missing_fields:
         raise ValueError(
-            "Task 8 Story 2 artifact is missing required fields: {}".format(
+            "publication_surface_alignment artifact is missing required fields: {}".format(
                 ", ".join(missing_fields)
             )
         )
@@ -239,7 +241,9 @@ def validate_artifact_bundle(artifact):
     if artifact["summary"]["surface_alignment_completed"] != expected_completed:
         raise ValueError("surface_alignment_completed summary is inconsistent")
     if artifact["status"] != ("pass" if expected_completed else "fail"):
-        raise ValueError("Task 8 Story 2 status does not match completion summary")
+        raise ValueError(
+            "publication_surface_alignment status does not match completion summary"
+        )
 
 
 def write_artifact_bundle(output_path: Path, artifact):
@@ -267,7 +271,7 @@ def parse_args():
         "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
-        help="Directory for the Task 8 Story 2 JSON artifact bundle.",
+        help="Directory for the publication_surface_alignment JSON artifact.",
     )
     parser.add_argument(
         "--quiet",

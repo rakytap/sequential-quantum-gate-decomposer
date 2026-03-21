@@ -5,10 +5,10 @@
     "section_heading_present": true
   },
   "provenance": {
+    "contract_reference_map_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/documentation_contract/contract_reference_map.json",
     "entry_point_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/docs/density_matrix_project/phases/phase-2/PHASE_2_DOCUMENTATION_INDEX.md",
     "generation_command": "python benchmarks/density_matrix/supported_entry_reference_validation.py",
-    "git_revision": "199d588c2230fc62a39934ddc7d79a6e74a8b64e",
-    "story1_reference_map_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/documentation_contract/contract_reference_map.json",
+    "git_revision": "77cd8168869d9b4c67c0dd0dbe49baab02b0fe25",
     "working_directory": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer"
   },
   "required_statements": [
@@ -84,7 +84,7 @@
       ],
       "entry_point_present": true,
       "label": "4q and 6q end-to-end scope",
-      "primary_doc_id": "task6_mini_spec",
+      "primary_doc_id": "correctness_evidence_task_contract",
       "primary_path": "docs/density_matrix_project/phases/phase-2/task-6/TASK_6_MINI_SPEC.md",
       "primary_source_phrases": [
         "End-to-end workflow execution is mandatory at 4 and 6 qubits"
@@ -99,7 +99,7 @@
       ],
       "entry_point_present": true,
       "label": "8q and 10q benchmark scope",
-      "primary_doc_id": "task6_mini_spec",
+      "primary_doc_id": "correctness_evidence_task_contract",
       "primary_path": "docs/density_matrix_project/phases/phase-2/task-6/TASK_6_MINI_SPEC.md",
       "primary_source_phrases": [
         "Benchmark-ready fixed-parameter evaluation is mandatory at 8 and 10 qubits"
@@ -136,10 +136,18 @@
     ]
   },
   "software": {
-    "python": "3.13.9"
+    "python": "3.12.7"
   },
   "status": "pass",
-  "story1_reference_map": {
+  "suite_name": "supported_entry_reference",
+  "summary": {
+    "all_entry_point_statements_present": true,
+    "all_primary_sources_present": true,
+    "required_statement_count": 7,
+    "section_heading_present": true,
+    "supported_entry_reference_completed": true
+  },
+  "upstream_contract_reference_map": {
     "entry_point_path": "docs/density_matrix_project/phases/phase-2/PHASE_2_DOCUMENTATION_INDEX.md",
     "status": "pass",
     "suite_name": "contract_reference_map",
@@ -155,13 +163,5 @@
       "entry_point_topics_complete": true,
       "topic_count": 9
     }
-  },
-  "suite_name": "supported_entry_reference",
-  "summary": {
-    "all_entry_point_statements_present": true,
-    "all_primary_sources_present": true,
-    "required_statement_count": 7,
-    "section_heading_present": true,
-    "supported_entry_reference_completed": true
   }
 }

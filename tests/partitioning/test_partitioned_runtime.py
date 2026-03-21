@@ -15,16 +15,16 @@ from benchmarks.density_matrix.partitioned_runtime.common import (
     execute_partitioned_with_reference,
 )
 from benchmarks.density_matrix.partitioned_runtime.runtime_audit_validation import (
-    build_cases as build_story6_cases,
+    build_cases as build_runtime_audit_cases,
 )
 from benchmarks.density_matrix.partitioned_runtime.runtime_handoff_validation import (
-    build_cases as build_story3_cases,
+    build_cases as build_runtime_handoff_cases,
 )
 from benchmarks.density_matrix.partitioned_runtime.runtime_output_validation import (
-    build_cases as build_story5_cases,
+    build_cases as build_runtime_output_cases,
 )
 from benchmarks.density_matrix.partitioned_runtime.unsupported_runtime_validation import (
-    build_cases as build_story7_cases,
+    build_cases as build_unsupported_runtime_cases,
 )
 from benchmarks.density_matrix.planner_surface.common import (
     build_phase2_continuity_vqe,
@@ -76,7 +76,7 @@ def test_phase3_partitioned_runtime_continuity_runtime_executes_supported_anchor
 
 
 @pytest.mark.parametrize("qbit_num", [4, 6])
-def test_partitioned_runtime_story1_continuity_energy_matches_existing_density_backend(qbit_num):
+def test_partitioned_runtime_continuity_energy_matches_existing_density_backend(qbit_num):
     vqe, hamiltonian, _ = build_phase2_continuity_vqe(qbit_num)
     descriptor_set = build_phase3_continuity_partition_descriptor_set(vqe)
     parameters = build_initial_parameters(vqe.get_Parameter_Num())
@@ -91,7 +91,7 @@ def test_partitioned_runtime_story1_continuity_energy_matches_existing_density_b
     assert abs(partitioned_energy_imag) <= PHASE3_RUNTIME_DENSITY_TOL
 
 
-def test_partitioned_runtime_story2_microcases_execute_through_shared_runtime_surface():
+def test_partitioned_runtime_mandatory_microcases_execute_through_shared_runtime_surface():
     for metadata, descriptor_set in iter_microcase_descriptor_sets():
         parameters = build_initial_parameters(descriptor_set.parameter_count)
         result = execute_partitioned_density(descriptor_set, parameters)
@@ -108,7 +108,7 @@ def test_partitioned_runtime_story2_microcases_execute_through_shared_runtime_su
         assert result.fallback_used is False
 
 
-def test_partitioned_runtime_story2_structured_case_executes_through_shared_runtime_surface():
+def test_partitioned_runtime_mandatory_structured_case_executes_through_shared_runtime_surface():
     descriptor_set = build_structured_descriptor_set(
         STRUCTURED_FAMILY_NAMES[0],
         qbit_num=STRUCTURED_QUBITS[0],
@@ -126,7 +126,7 @@ def test_partitioned_runtime_story2_structured_case_executes_through_shared_runt
     assert result.rho_is_valid is True
 
 
-def test_partitioned_runtime_story3_runtime_audit_record_tracks_continuity_provenance():
+def test_partitioned_runtime_continuity_runtime_audit_record_tracks_provenance():
     vqe, _, _ = build_phase2_continuity_vqe(4)
     descriptor_set = build_phase3_continuity_partition_descriptor_set(vqe)
     parameters = build_initial_parameters(descriptor_set.parameter_count)
@@ -143,7 +143,7 @@ def test_partitioned_runtime_story3_runtime_audit_record_tracks_continuity_prove
 
 
 def test_phase3_partitioned_runtime_runtime_handoff_cases_share_shape():
-    cases = build_story3_cases()
+    cases = build_runtime_handoff_cases()
     top_level_keys = {frozenset(case.keys()) for case in cases}
     summary_key_sets = {frozenset(case["summary"].keys()) for case in cases}
     partition_key_sets = {
@@ -156,7 +156,7 @@ def test_phase3_partitioned_runtime_runtime_handoff_cases_share_shape():
     assert len(partition_key_sets) == 1
 
 
-def test_partitioned_runtime_story4_boundary_microcase_matches_sequential_reference():
+def test_partitioned_runtime_semantics_boundary_microcase_matches_sequential_reference():
     descriptor_set = build_microcase_descriptor_set(
         "microcase_4q_partition_boundary_triplet"
     )
@@ -172,7 +172,7 @@ def test_partitioned_runtime_story4_boundary_microcase_matches_sequential_refere
     assert density_metrics["max_abs_diff"] <= PHASE3_RUNTIME_DENSITY_TOL
 
 
-def test_partitioned_runtime_story4_structured_case_matches_sequential_reference():
+def test_partitioned_runtime_semantics_structured_case_matches_sequential_reference():
     descriptor_set = build_structured_descriptor_set(
         STRUCTURED_FAMILY_NAMES[0],
         qbit_num=STRUCTURED_QUBITS[0],
@@ -189,8 +189,8 @@ def test_partitioned_runtime_story4_structured_case_matches_sequential_reference
     assert density_metrics["max_abs_diff"] <= PHASE3_RUNTIME_DENSITY_TOL
 
 
-def test_partitioned_runtime_story5_output_cases_share_exact_output_shape():
-    cases = build_story5_cases()
+def test_partitioned_runtime_output_cases_share_exact_output_shape():
+    cases = build_runtime_output_cases()
     exact_output_key_sets = {frozenset(case["exact_output"].keys()) for case in cases}
 
     assert len(cases) == 3
@@ -205,7 +205,7 @@ def test_partitioned_runtime_story5_output_cases_share_exact_output_shape():
 
 
 def test_phase3_partitioned_runtime_runtime_audit_cases_share_shape():
-    cases = build_story6_cases()
+    cases = build_runtime_audit_cases()
     top_level_keys = {frozenset(case.keys()) for case in cases}
     summary_key_sets = {frozenset(case["summary"].keys()) for case in cases}
     partition_key_sets = {
@@ -219,8 +219,8 @@ def test_phase3_partitioned_runtime_runtime_audit_cases_share_shape():
     assert {case["runtime_path"] for case in cases} == {PHASE3_RUNTIME_PATH_BASELINE}
 
 
-def test_partitioned_runtime_story7_negative_matrix_has_expected_categories_and_no_fallback():
-    cases = build_story7_cases()
+def test_partitioned_runtime_unsupported_cases_have_expected_categories_and_no_fallback():
+    cases = build_unsupported_runtime_cases()
     expected_categories = {
         "wrong_requested_mode": "runtime_request",
         "parameter_count_mismatch": "runtime_request",

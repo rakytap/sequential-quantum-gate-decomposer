@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Validation: Task 7 Story 6 documentation-consistency bundle.
+"""Validation: Top-level documentation contract bundle.
 
-Builds the top-level Task 7 bundle by assembling Story 1 to Story 5 outputs into
-one machine-checkable documentation surface. The bundle preserves the shared
-entry-point path, validates the lower-story semantic gates, records mandatory
-file coverage, and checks the canonical Phase 2 terminology inventory.
+Assembles contract_reference_map through future_work_boundary into one
+machine-checkable documentation surface. Preserves the shared entry-point path,
+validates lower-layer semantic gates, records mandatory file coverage, and
+checks the canonical Phase 2 terminology inventory.
 
 Run with:
     python benchmarks/density_matrix/documentation_contract/documentation_contract_bundle.py
@@ -33,68 +33,68 @@ from benchmarks.density_matrix.documentation_contract.doc_utils import (
     write_json,
 )
 from benchmarks.density_matrix.documentation_contract.contract_reference_validation import (
-    ARTIFACT_FILENAME as STORY1_ARTIFACT_FILENAME,
-    run_validation as run_story1_validation,
-    validate_artifact_bundle as validate_story1_artifact,
+    ARTIFACT_FILENAME as CONTRACT_REFERENCE_MAP_FILENAME,
+    run_validation as run_contract_reference_map_validation,
+    validate_artifact_bundle as validate_contract_reference_map_artifact,
 )
 from benchmarks.density_matrix.documentation_contract.supported_entry_reference_validation import (
-    ARTIFACT_FILENAME as STORY2_ARTIFACT_FILENAME,
-    run_validation as run_story2_validation,
-    validate_artifact_bundle as validate_story2_artifact,
+    ARTIFACT_FILENAME as SUPPORTED_ENTRY_REFERENCE_FILENAME,
+    run_validation as run_supported_entry_reference_validation,
+    validate_artifact_bundle as validate_supported_entry_reference_artifact,
 )
 from benchmarks.density_matrix.documentation_contract.support_surface_reference_validation import (
-    ARTIFACT_FILENAME as STORY3_ARTIFACT_FILENAME,
-    run_validation as run_story3_validation,
-    validate_artifact_bundle as validate_story3_artifact,
+    ARTIFACT_FILENAME as SUPPORT_SURFACE_REFERENCE_FILENAME,
+    run_validation as run_support_surface_reference_validation,
+    validate_artifact_bundle as validate_support_surface_reference_artifact,
 )
 from benchmarks.density_matrix.documentation_contract.evidence_bar_validation import (
-    ARTIFACT_FILENAME as STORY4_ARTIFACT_FILENAME,
-    run_validation as run_story4_validation,
-    validate_artifact_bundle as validate_story4_artifact,
+    ARTIFACT_FILENAME as EVIDENCE_BAR_REFERENCE_FILENAME,
+    run_validation as run_evidence_bar_reference_validation,
+    validate_artifact_bundle as validate_evidence_bar_reference_artifact,
 )
 from benchmarks.density_matrix.documentation_contract.future_work_boundary_validation import (
-    ARTIFACT_FILENAME as STORY5_ARTIFACT_FILENAME,
-    run_validation as run_story5_validation,
-    validate_artifact_bundle as validate_story5_artifact,
+    ARTIFACT_FILENAME as FUTURE_WORK_BOUNDARY_FILENAME,
+    run_validation as run_future_work_boundary_validation,
+    validate_artifact_bundle as validate_future_work_boundary_artifact,
 )
 
 
 SUITE_NAME = "documentation_contract_bundle"
 ARTIFACT_FILENAME = "documentation_contract_bundle.json"
 DEFAULT_OUTPUT_DIR = DOCUMENTATION_CONTRACT_OUTPUT_DIR
-STORY1_PATH = DEFAULT_OUTPUT_DIR / STORY1_ARTIFACT_FILENAME
-STORY2_PATH = DEFAULT_OUTPUT_DIR / STORY2_ARTIFACT_FILENAME
-STORY3_PATH = DEFAULT_OUTPUT_DIR / STORY3_ARTIFACT_FILENAME
-STORY4_PATH = DEFAULT_OUTPUT_DIR / STORY4_ARTIFACT_FILENAME
-STORY5_PATH = DEFAULT_OUTPUT_DIR / STORY5_ARTIFACT_FILENAME
-STORY_ARTIFACT_REQUIREMENTS = (
+CONTRACT_REFERENCE_MAP_PATH = DEFAULT_OUTPUT_DIR / CONTRACT_REFERENCE_MAP_FILENAME
+SUPPORTED_ENTRY_REFERENCE_PATH = DEFAULT_OUTPUT_DIR / SUPPORTED_ENTRY_REFERENCE_FILENAME
+SUPPORT_SURFACE_REFERENCE_PATH = DEFAULT_OUTPUT_DIR / SUPPORT_SURFACE_REFERENCE_FILENAME
+EVIDENCE_BAR_REFERENCE_PATH = DEFAULT_OUTPUT_DIR / EVIDENCE_BAR_REFERENCE_FILENAME
+FUTURE_WORK_BOUNDARY_PATH = DEFAULT_OUTPUT_DIR / FUTURE_WORK_BOUNDARY_FILENAME
+COMPONENT_ARTIFACT_REQUIREMENTS = (
     {
         "artifact_id": "contract_reference_map",
-        "path": STORY1_PATH,
+        "path": CONTRACT_REFERENCE_MAP_PATH,
         "expected_statuses": ("pass",),
         "semantic_flag": "contract_reference_map_completed",
     },
     {
         "artifact_id": "supported_entry_reference",
-        "path": STORY2_PATH,
+        "path": SUPPORTED_ENTRY_REFERENCE_PATH,
         "expected_statuses": ("pass",),
         "semantic_flag": "supported_entry_reference_completed",
     },
     {
         "artifact_id": "support_surface_reference",
-        "path": STORY3_PATH,
+        "path": SUPPORT_SURFACE_REFERENCE_PATH,
         "expected_statuses": ("pass",),
         "semantic_flag": "support_surface_reference_completed",
     },
     {
         "artifact_id": "evidence_bar_reference",
-        "path": STORY4_PATH,
+        "path": EVIDENCE_BAR_REFERENCE_PATH,
         "expected_statuses": ("pass",),
         "semantic_flag": "evidence_bar_reference_completed",
     },
     {
         "artifact_id": "future_work_boundary",
-        "path": STORY5_PATH,
+        "path": FUTURE_WORK_BOUNDARY_PATH,
         "expected_statuses": ("pass",),
         "semantic_flag": "future_work_boundary_completed",
     },
@@ -113,7 +113,7 @@ BUNDLE_FIELDS = (
     "suite_name",
     "status",
     "entry_point",
-    "story_artifacts",
+    "component_artifacts",
     "file_coverage",
     "terminology_inventory",
     "software",
@@ -122,63 +122,63 @@ BUNDLE_FIELDS = (
 )
 
 
-def _load_story1(path: Path = STORY1_PATH):
+def _load_contract_reference_map(path: Path = CONTRACT_REFERENCE_MAP_PATH):
     if path.exists():
         artifact = load_json(path)
-        validate_story1_artifact(artifact)
+        validate_contract_reference_map_artifact(artifact)
         return artifact
-    return run_story1_validation(verbose=False)
+    return run_contract_reference_map_validation(verbose=False)
 
 
-def _load_story2(path: Path = STORY2_PATH):
+def _load_supported_entry_reference(path: Path = SUPPORTED_ENTRY_REFERENCE_PATH):
     if path.exists():
         artifact = load_json(path)
-        validate_story2_artifact(artifact)
+        validate_supported_entry_reference_artifact(artifact)
         return artifact
-    return run_story2_validation(verbose=False)
+    return run_supported_entry_reference_validation(verbose=False)
 
 
-def _load_story3(path: Path = STORY3_PATH):
+def _load_support_surface_reference(path: Path = SUPPORT_SURFACE_REFERENCE_PATH):
     if path.exists():
         artifact = load_json(path)
-        validate_story3_artifact(artifact)
+        validate_support_surface_reference_artifact(artifact)
         return artifact
-    return run_story3_validation(verbose=False)
+    return run_support_surface_reference_validation(verbose=False)
 
 
-def _load_story4(path: Path = STORY4_PATH):
+def _load_evidence_bar_reference(path: Path = EVIDENCE_BAR_REFERENCE_PATH):
     if path.exists():
         artifact = load_json(path)
-        validate_story4_artifact(artifact)
+        validate_evidence_bar_reference_artifact(artifact)
         return artifact
-    return run_story4_validation(verbose=False)
+    return run_evidence_bar_reference_validation(verbose=False)
 
 
-def _load_story5(path: Path = STORY5_PATH):
+def _load_future_work_boundary(path: Path = FUTURE_WORK_BOUNDARY_PATH):
     if path.exists():
         artifact = load_json(path)
-        validate_story5_artifact(artifact)
+        validate_future_work_boundary_artifact(artifact)
         return artifact
-    return run_story5_validation(verbose=False)
+    return run_future_work_boundary_validation(verbose=False)
 
 
-def build_story_artifact_entries(
+def build_component_artifact_entries(
     *,
-    story1_artifact,
-    story2_artifact,
-    story3_artifact,
-    story4_artifact,
-    story5_artifact,
+    contract_reference_map_artifact,
+    supported_entry_reference_artifact,
+    support_surface_reference_artifact,
+    evidence_bar_reference_artifact,
+    future_work_boundary_artifact,
 ):
     artifact_map = {
-        "contract_reference_map": story1_artifact,
-        "supported_entry_reference": story2_artifact,
-        "support_surface_reference": story3_artifact,
-        "evidence_bar_reference": story4_artifact,
-        "future_work_boundary": story5_artifact,
+        "contract_reference_map": contract_reference_map_artifact,
+        "supported_entry_reference": supported_entry_reference_artifact,
+        "support_surface_reference": support_surface_reference_artifact,
+        "evidence_bar_reference": evidence_bar_reference_artifact,
+        "future_work_boundary": future_work_boundary_artifact,
     }
     entries = []
-    for item in STORY_ARTIFACT_REQUIREMENTS:
+    for item in COMPONENT_ARTIFACT_REQUIREMENTS:
         payload = artifact_map[item["artifact_id"]]
         entries.append(
             {
@@ -222,29 +222,29 @@ def build_terminology_inventory():
     }
 
 
-def build_performance_evidence_story6_bundle(
+def build_documentation_contract_bundle(
     output_dir: Path,
     *,
-    story1_artifact,
-    story2_artifact,
-    story3_artifact,
-    story4_artifact,
-    story5_artifact,
+    contract_reference_map_artifact,
+    supported_entry_reference_artifact,
+    support_surface_reference_artifact,
+    evidence_bar_reference_artifact,
+    future_work_boundary_artifact,
 ):
-    story_artifacts = build_story_artifact_entries(
-        story1_artifact=story1_artifact,
-        story2_artifact=story2_artifact,
-        story3_artifact=story3_artifact,
-        story4_artifact=story4_artifact,
-        story5_artifact=story5_artifact,
+    component_artifacts = build_component_artifact_entries(
+        contract_reference_map_artifact=contract_reference_map_artifact,
+        supported_entry_reference_artifact=supported_entry_reference_artifact,
+        support_surface_reference_artifact=support_surface_reference_artifact,
+        evidence_bar_reference_artifact=evidence_bar_reference_artifact,
+        future_work_boundary_artifact=future_work_boundary_artifact,
     )
     file_coverage = build_file_coverage()
     terminology_inventory = build_terminology_inventory()
 
-    story_artifacts_complete = all(
+    component_artifacts_complete = all(
         artifact["status"] in artifact["expected_statuses"]
         and artifact["semantic_flag_passed"]
-        for artifact in story_artifacts
+        for artifact in component_artifacts
     )
     file_coverage_complete = all(entry["exists"] for entry in file_coverage)
     glossary_complete = not terminology_inventory["missing_glossary_terms"]
@@ -252,13 +252,13 @@ def build_performance_evidence_story6_bundle(
     bundle = {
         "suite_name": SUITE_NAME,
         "status": "pass"
-        if story_artifacts_complete and file_coverage_complete and glossary_complete
+        if component_artifacts_complete and file_coverage_complete and glossary_complete
         else "fail",
         "entry_point": {
             "path": relative_to_repo(PHASE2_DOCUMENTATION_INDEX_PATH),
             "exists": PHASE2_DOCUMENTATION_INDEX_PATH.exists(),
         },
-        "story_artifacts": story_artifacts,
+        "component_artifacts": component_artifacts,
         "file_coverage": file_coverage,
         "terminology_inventory": terminology_inventory,
         "software": build_software_metadata(),
@@ -268,128 +268,154 @@ def build_performance_evidence_story6_bundle(
             ),
             "working_directory": str(REPO_ROOT),
             "git_revision": get_git_revision(),
-            "story1_path": str(STORY1_PATH),
-            "story2_path": str(STORY2_PATH),
-            "story3_path": str(STORY3_PATH),
-            "exact_regime_path": str(STORY4_PATH),
-            "story5_path": str(STORY5_PATH),
+            "contract_reference_map_path": str(CONTRACT_REFERENCE_MAP_PATH),
+            "supported_entry_reference_path": str(SUPPORTED_ENTRY_REFERENCE_PATH),
+            "support_surface_reference_path": str(SUPPORT_SURFACE_REFERENCE_PATH),
+            "evidence_bar_reference_path": str(EVIDENCE_BAR_REFERENCE_PATH),
+            "future_work_boundary_path": str(FUTURE_WORK_BOUNDARY_PATH),
         },
         "summary": {
-            "mandatory_story_artifact_count": len(story_artifacts),
-            "story_artifacts_complete": story_artifacts_complete,
+            "mandatory_component_count": len(component_artifacts),
+            "component_artifacts_complete": component_artifacts_complete,
             "mandatory_file_count": len(file_coverage),
             "file_coverage_complete": file_coverage_complete,
             "glossary_term_count": len(REQUIRED_GLOSSARY_TERMS),
             "glossary_complete": glossary_complete,
         },
     }
-    validate_performance_evidence_story6_bundle(bundle)
+    validate_documentation_contract_bundle(bundle)
     return bundle
 
 
-def validate_performance_evidence_story6_bundle(bundle):
+def validate_documentation_contract_bundle(bundle):
     missing_fields = [field for field in BUNDLE_FIELDS if field not in bundle]
     if missing_fields:
         raise ValueError(
-            "Task 7 Story 6 bundle is missing required fields: {}".format(
+            "documentation_contract_bundle is missing required fields: {}".format(
                 ", ".join(missing_fields)
             )
         )
 
     required_artifact_ids = {
-        item["artifact_id"] for item in STORY_ARTIFACT_REQUIREMENTS
+        item["artifact_id"] for item in COMPONENT_ARTIFACT_REQUIREMENTS
     }
-    observed_artifact_ids = {artifact["artifact_id"] for artifact in bundle["story_artifacts"]}
+    observed_artifact_ids = {
+        artifact["artifact_id"] for artifact in bundle["component_artifacts"]
+    }
     if required_artifact_ids != observed_artifact_ids:
         raise ValueError(
-            "Task 7 Story 6 bundle is missing required story artifact IDs: {}".format(
+            "documentation_contract_bundle is missing required component artifact IDs: {}".format(
                 ", ".join(sorted(required_artifact_ids - observed_artifact_ids))
             )
         )
 
     if not bundle["entry_point"]["exists"]:
-        raise ValueError("Task 7 Story 6 entry point must exist")
+        raise ValueError("documentation_contract_bundle entry point must exist")
 
-    if bundle["summary"]["story_artifacts_complete"] != all(
+    if bundle["summary"]["component_artifacts_complete"] != all(
         artifact["status"] in artifact["expected_statuses"]
         and artifact["semantic_flag_passed"]
-        for artifact in bundle["story_artifacts"]
+        for artifact in bundle["component_artifacts"]
     ):
         raise ValueError(
-            "Task 7 Story 6 story_artifacts_complete summary is inconsistent"
+            "documentation_contract_bundle component_artifacts_complete summary is inconsistent"
         )
 
     if bundle["summary"]["file_coverage_complete"] != all(
         entry["exists"] for entry in bundle["file_coverage"]
     ):
         raise ValueError(
-            "Task 7 Story 6 file_coverage_complete summary is inconsistent"
+            "documentation_contract_bundle file_coverage_complete summary is inconsistent"
         )
 
     if bundle["summary"]["glossary_complete"] != (
         len(bundle["terminology_inventory"]["missing_glossary_terms"]) == 0
     ):
-        raise ValueError("Task 7 Story 6 glossary_complete summary is inconsistent")
+        raise ValueError(
+            "documentation_contract_bundle glossary_complete summary is inconsistent"
+        )
 
     if bundle["status"] != "pass" and (
-        bundle["summary"]["story_artifacts_complete"]
+        bundle["summary"]["component_artifacts_complete"]
         and bundle["summary"]["file_coverage_complete"]
         and bundle["summary"]["glossary_complete"]
     ):
-        raise ValueError("Task 7 Story 6 bundle status is inconsistent")
+        raise ValueError("documentation_contract_bundle status is inconsistent")
 
 
-def write_performance_evidence_story6_bundle(output_path: Path, bundle):
-    validate_performance_evidence_story6_bundle(bundle)
+def write_documentation_contract_bundle(output_path: Path, bundle):
+    validate_documentation_contract_bundle(bundle)
     write_json(output_path, bundle)
 
 
 def run_validation(
     *,
-    story1_path: Path = STORY1_PATH,
-    story2_path: Path = STORY2_PATH,
-    story3_path: Path = STORY3_PATH,
-    story4_path: Path = STORY4_PATH,
-    story5_path: Path = STORY5_PATH,
+    contract_reference_map_path: Path = CONTRACT_REFERENCE_MAP_PATH,
+    supported_entry_reference_path: Path = SUPPORTED_ENTRY_REFERENCE_PATH,
+    support_surface_reference_path: Path = SUPPORT_SURFACE_REFERENCE_PATH,
+    evidence_bar_reference_path: Path = EVIDENCE_BAR_REFERENCE_PATH,
+    future_work_boundary_path: Path = FUTURE_WORK_BOUNDARY_PATH,
     output_dir: Path = DEFAULT_OUTPUT_DIR,
     verbose=False,
 ):
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
-    story1_artifact = _load_story1(story1_path)
-    story2_artifact = _load_story2(story2_path)
-    story3_artifact = _load_story3(story3_path)
-    story4_artifact = _load_story4(story4_path)
-    story5_artifact = _load_story5(story5_path)
-    write_json(output_dir / STORY1_ARTIFACT_FILENAME, story1_artifact)
-    write_json(output_dir / STORY2_ARTIFACT_FILENAME, story2_artifact)
-    write_json(output_dir / STORY3_ARTIFACT_FILENAME, story3_artifact)
-    write_json(output_dir / STORY4_ARTIFACT_FILENAME, story4_artifact)
-    write_json(output_dir / STORY5_ARTIFACT_FILENAME, story5_artifact)
-    bundle = build_performance_evidence_story6_bundle(
+    contract_reference_map_artifact = _load_contract_reference_map(
+        contract_reference_map_path
+    )
+    supported_entry_reference_artifact = _load_supported_entry_reference(
+        supported_entry_reference_path
+    )
+    support_surface_reference_artifact = _load_support_surface_reference(
+        support_surface_reference_path
+    )
+    evidence_bar_reference_artifact = _load_evidence_bar_reference(
+        evidence_bar_reference_path
+    )
+    future_work_boundary_artifact = _load_future_work_boundary(
+        future_work_boundary_path
+    )
+    write_json(output_dir / CONTRACT_REFERENCE_MAP_FILENAME, contract_reference_map_artifact)
+    write_json(
+        output_dir / SUPPORTED_ENTRY_REFERENCE_FILENAME,
+        supported_entry_reference_artifact,
+    )
+    write_json(
+        output_dir / SUPPORT_SURFACE_REFERENCE_FILENAME,
+        support_surface_reference_artifact,
+    )
+    write_json(
+        output_dir / EVIDENCE_BAR_REFERENCE_FILENAME,
+        evidence_bar_reference_artifact,
+    )
+    write_json(
+        output_dir / FUTURE_WORK_BOUNDARY_FILENAME,
+        future_work_boundary_artifact,
+    )
+    bundle = build_documentation_contract_bundle(
         output_dir,
-        story1_artifact=story1_artifact,
-        story2_artifact=story2_artifact,
-        story3_artifact=story3_artifact,
-        story4_artifact=story4_artifact,
-        story5_artifact=story5_artifact,
+        contract_reference_map_artifact=contract_reference_map_artifact,
+        supported_entry_reference_artifact=supported_entry_reference_artifact,
+        support_surface_reference_artifact=support_surface_reference_artifact,
+        evidence_bar_reference_artifact=evidence_bar_reference_artifact,
+        future_work_boundary_artifact=future_work_boundary_artifact,
     )
     if verbose:
         print(
-            "{} [{}] story_artifacts_complete={} file_coverage_complete={} glossary_complete={}".format(
+            "{} [{}] component_artifacts_complete={} file_coverage_complete={} glossary_complete={}".format(
                 bundle["suite_name"],
                 bundle["status"],
-                bundle["summary"]["story_artifacts_complete"],
+                bundle["summary"]["component_artifacts_complete"],
                 bundle["summary"]["file_coverage_complete"],
                 bundle["summary"]["glossary_complete"],
             )
         )
     return (
-        story1_artifact,
-        story2_artifact,
-        story3_artifact,
-        story4_artifact,
-        story5_artifact,
+        contract_reference_map_artifact,
+        supported_entry_reference_artifact,
+        support_surface_reference_artifact,
+        evidence_bar_reference_artifact,
+        future_work_boundary_artifact,
         bundle,
     )
 
@@ -400,37 +426,37 @@ def parse_args():
         "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
-        help="Directory for the Task 7 Story 6 JSON artifact bundle.",
+        help="Directory for documentation_contract JSON artifacts.",
     )
     parser.add_argument(
-        "--story1-path",
+        "--contract-reference-map-path",
         type=Path,
-        default=STORY1_PATH,
-        help="Path to the Task 7 Story 1 contract-reference map artifact.",
+        default=CONTRACT_REFERENCE_MAP_PATH,
+        help="Path to the contract_reference_map artifact.",
     )
     parser.add_argument(
-        "--story2-path",
+        "--supported-entry-reference-path",
         type=Path,
-        default=STORY2_PATH,
-        help="Path to the Task 7 Story 2 supported-entry artifact.",
+        default=SUPPORTED_ENTRY_REFERENCE_PATH,
+        help="Path to the supported_entry_reference artifact.",
     )
     parser.add_argument(
-        "--story3-path",
+        "--support-surface-reference-path",
         type=Path,
-        default=STORY3_PATH,
-        help="Path to the Task 7 Story 3 support-surface artifact.",
+        default=SUPPORT_SURFACE_REFERENCE_PATH,
+        help="Path to the support_surface_reference artifact.",
     )
     parser.add_argument(
-        "--workflow-bundle-path",
+        "--evidence-bar-reference-path",
         type=Path,
-        default=STORY4_PATH,
-        help="Path to the Task 7 Story 4 evidence-bar artifact.",
+        default=EVIDENCE_BAR_REFERENCE_PATH,
+        help="Path to the evidence_bar_reference artifact.",
     )
     parser.add_argument(
-        "--publication-bundle-path",
+        "--future-work-boundary-path",
         type=Path,
-        default=STORY5_PATH,
-        help="Path to the Task 7 Story 5 future-work artifact.",
+        default=FUTURE_WORK_BOUNDARY_PATH,
+        help="Path to the future_work_boundary artifact.",
     )
     parser.add_argument(
         "--quiet",
@@ -443,32 +469,26 @@ def parse_args():
 def main():
     args = parse_args()
     *_, bundle = run_validation(
-        story1_path=args.story1_path,
-        story2_path=args.story2_path,
-        story3_path=args.story3_path,
-        story4_path=args.workflow_bundle_path,
-        story5_path=args.publication_bundle_path,
+        contract_reference_map_path=args.contract_reference_map_path,
+        supported_entry_reference_path=args.supported_entry_reference_path,
+        support_surface_reference_path=args.support_surface_reference_path,
+        evidence_bar_reference_path=args.evidence_bar_reference_path,
+        future_work_boundary_path=args.future_work_boundary_path,
         output_dir=args.output_dir,
         verbose=not args.quiet,
     )
     output_path = args.output_dir / ARTIFACT_FILENAME
-    write_performance_evidence_story6_bundle(output_path, bundle)
+    write_documentation_contract_bundle(output_path, bundle)
     print(
         "Wrote {} with status {} ({}/{})".format(
             output_path,
             bundle["status"],
-            bundle["summary"]["mandatory_story_artifact_count"],
+            bundle["summary"]["mandatory_component_count"],
             bundle["summary"]["mandatory_file_count"],
         )
     )
     if bundle["status"] != "pass":
         raise SystemExit(1)
-
-
-# Compatibility aliases for legacy auxiliary validation imports.
-build_task7_story6_bundle = build_performance_evidence_story6_bundle
-validate_task7_story6_bundle = validate_performance_evidence_story6_bundle
-write_task7_story6_bundle = write_performance_evidence_story6_bundle
 
 
 if __name__ == "__main__":

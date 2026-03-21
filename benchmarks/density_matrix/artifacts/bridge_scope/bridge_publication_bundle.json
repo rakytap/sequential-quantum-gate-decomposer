@@ -12,7 +12,7 @@
   "provenance": {
     "generation_command": "python benchmarks/density_matrix/bridge_scope/bridge_publication_bundle.py --output-dir benchmarks/density_matrix/artifacts/bridge_scope",
     "working_directory": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer",
-    "git_revision": "199d588c2230fc62a39934ddc7d79a6e74a8b64e"
+    "git_revision": "77cd8168869d9b4c67c0dd0dbe49baab02b0fe25"
   },
   "summary": {
     "mandatory_artifact_count": 6,

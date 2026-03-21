@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Validation: Task 7 Story 4 evidence-bar reference layer.
+"""Validation: Evidence-bar reference layer.
 
 Builds a machine-readable checker for the mandatory Phase 2 evidence bar. This
 layer is intentionally thin:
-- it reuses the Story 3 support-surface clarification,
+- it reuses the support-surface clarification,
 - it records the mandatory evidence package and its thresholds,
 - it makes exclusion semantics explicit for optional, unsupported, and
   incomplete evidence,
@@ -36,23 +36,25 @@ from benchmarks.density_matrix.documentation_contract.doc_utils import (
     write_json,
 )
 from benchmarks.density_matrix.documentation_contract.support_surface_reference_validation import (
-    ARTIFACT_FILENAME as STORY3_ARTIFACT_FILENAME,
-    run_validation as run_story3_validation,
-    validate_artifact_bundle as validate_story3_artifact,
+    ARTIFACT_FILENAME as SUPPORT_SURFACE_REFERENCE_ARTIFACT_FILENAME,
+    run_validation as run_support_surface_reference_validation,
+    validate_artifact_bundle as validate_support_surface_reference_artifact,
 )
 
 
 SUITE_NAME = "evidence_bar_reference"
 ARTIFACT_FILENAME = "evidence_bar_reference.json"
 DEFAULT_OUTPUT_DIR = DOCUMENTATION_CONTRACT_OUTPUT_DIR
-STORY3_ARTIFACT_PATH = DEFAULT_OUTPUT_DIR / STORY3_ARTIFACT_FILENAME
-STORY4_SECTION_HEADING = "## Mandatory Evidence Bar"
+SUPPORT_SURFACE_REFERENCE_ARTIFACT_PATH = (
+    DEFAULT_OUTPUT_DIR / SUPPORT_SURFACE_REFERENCE_ARTIFACT_FILENAME
+)
+EVIDENCE_BAR_SECTION_HEADING = "## Mandatory Evidence Bar"
 MANDATORY_EVIDENCE_ITEMS = (
     {
         "evidence_id": "micro_validation_matrix",
         "label": "Micro-validation matrix",
         "entry_point_phrases": ["mandatory 1 to 3 qubit micro-validation matrix"],
-        "primary_doc_id": "planner_calibration_mini_spec",
+        "primary_doc_id": "planner_calibration_task_contract",
         "primary_source_phrases": [
             "The mandatory micro-validation layer covers 1 to 3 qubit circuits",
         ],
@@ -64,7 +66,7 @@ MANDATORY_EVIDENCE_ITEMS = (
             "mandatory 4 / 6 / 8 / 10 qubit fixed-parameter workflow matrix with 10",
             "parameter vectors per required size",
         ],
-        "primary_doc_id": "planner_calibration_mini_spec",
+        "primary_doc_id": "planner_calibration_task_contract",
         "primary_source_phrases": [
             "mandatory 4 / 6 / 8 / 10",
             "at least 10 fixed",
@@ -77,7 +79,7 @@ MANDATORY_EVIDENCE_ITEMS = (
         "entry_point_phrases": [
             "at least one reproducible 4- or 6-qubit optimization trace",
         ],
-        "primary_doc_id": "correctness_evidence_mini_spec",
+        "primary_doc_id": "correctness_evidence_task_contract",
         "primary_source_phrases": [
             "At least one reproducible 4- or 6-qubit optimization trace",
         ],
@@ -86,7 +88,7 @@ MANDATORY_EVIDENCE_ITEMS = (
         "evidence_id": "anchor_case",
         "label": "10-qubit anchor case",
         "entry_point_phrases": ["one documented 10-qubit anchor case"],
-        "primary_doc_id": "correctness_evidence_mini_spec",
+        "primary_doc_id": "correctness_evidence_task_contract",
         "primary_source_phrases": [
             "At least one documented 10-qubit anchor evaluation case",
         ],
@@ -97,7 +99,7 @@ MANDATORY_EVIDENCE_ITEMS = (
         "entry_point_phrases": [
             "runtime and peak-memory recording for mandatory workflow evidence",
         ],
-        "primary_doc_id": "planner_calibration_mini_spec",
+        "primary_doc_id": "planner_calibration_task_contract",
         "primary_source_phrases": [
             "The validation package must record workflow completion, runtime, and peak",
             "memory",
@@ -120,7 +122,7 @@ MANDATORY_EVIDENCE_ITEMS = (
         "evidence_id": "micro_threshold",
         "label": "Micro-validation threshold",
         "entry_point_phrases": ["mandatory micro-validation accuracy: `<= 1e-10`"],
-        "primary_doc_id": "planner_calibration_mini_spec",
+        "primary_doc_id": "planner_calibration_task_contract",
         "primary_source_phrases": [
             "`<= 1e-10` maximum absolute energy error on the mandatory 1 to 3 qubit",
         ],
@@ -129,7 +131,7 @@ MANDATORY_EVIDENCE_ITEMS = (
         "evidence_id": "workflow_threshold",
         "label": "Workflow threshold",
         "entry_point_phrases": ["mandatory workflow-matrix accuracy: `<= 1e-8`"],
-        "primary_doc_id": "planner_calibration_mini_spec",
+        "primary_doc_id": "planner_calibration_task_contract",
         "primary_source_phrases": [
             "`<= 1e-8` maximum absolute energy error on the mandatory 4 / 6 / 8 / 10",
         ],
@@ -138,7 +140,7 @@ MANDATORY_EVIDENCE_ITEMS = (
         "evidence_id": "mandatory_pass_rate",
         "label": "Mandatory pass rate",
         "entry_point_phrases": ["`100%` pass rate on the mandatory evidence package"],
-        "primary_doc_id": "planner_calibration_mini_spec",
+        "primary_doc_id": "planner_calibration_task_contract",
         "primary_source_phrases": [
             "`100%` pass rate on the mandatory",
         ],
@@ -183,7 +185,7 @@ ARTIFACT_CORE_FIELDS = (
     "status",
     "entry_point",
     "requirements",
-    "story3_support_surface",
+    "upstream_support_surface_reference",
     "evidence_inventory",
     "software",
     "provenance",
@@ -191,12 +193,14 @@ ARTIFACT_CORE_FIELDS = (
 )
 
 
-def _load_story3_artifact(path: Path = STORY3_ARTIFACT_PATH):
+def _load_support_surface_reference_artifact(
+    path: Path = SUPPORT_SURFACE_REFERENCE_ARTIFACT_PATH,
+):
     if path.exists():
         artifact = load_json(path)
-        validate_story3_artifact(artifact)
+        validate_support_surface_reference_artifact(artifact)
         return artifact
-    artifact = run_story3_validation(verbose=False)
+    artifact = run_support_surface_reference_validation(verbose=False)
     return artifact
 
 
@@ -231,17 +235,17 @@ def build_evidence_inventory():
 
 
 def build_artifact_bundle():
-    story3_artifact = _load_story3_artifact()
+    support_surface_reference_artifact = _load_support_surface_reference_artifact()
     entry_text = load_text(PHASE2_DOCUMENTATION_INDEX_PATH)
     evidence_inventory = build_evidence_inventory()
 
-    section_heading_present = STORY4_SECTION_HEADING in entry_text
+    section_heading_present = EVIDENCE_BAR_SECTION_HEADING in entry_text
     all_evidence_items_present = all(
         item["entry_point_present"] and item["primary_source_present"]
         for item in evidence_inventory
     )
     evidence_bar_reference_completed = bool(
-        story3_artifact["status"] == "pass"
+        support_surface_reference_artifact["status"] == "pass"
         and section_heading_present
         and all_evidence_items_present
     )
@@ -251,7 +255,7 @@ def build_artifact_bundle():
         "status": "pass" if evidence_bar_reference_completed else "fail",
         "entry_point": {
             "path": relative_to_repo(PHASE2_DOCUMENTATION_INDEX_PATH),
-            "section_heading": STORY4_SECTION_HEADING,
+            "section_heading": EVIDENCE_BAR_SECTION_HEADING,
             "section_heading_present": section_heading_present,
         },
         "requirements": {
@@ -259,21 +263,23 @@ def build_artifact_bundle():
                 item["evidence_id"] for item in MANDATORY_EVIDENCE_ITEMS
             ],
         },
-        "story3_support_surface": {
-            "suite_name": story3_artifact["suite_name"],
-            "status": story3_artifact["status"],
-            "summary": story3_artifact["summary"],
+        "upstream_support_surface_reference": {
+            "suite_name": support_surface_reference_artifact["suite_name"],
+            "status": support_surface_reference_artifact["status"],
+            "summary": support_surface_reference_artifact["summary"],
         },
         "evidence_inventory": evidence_inventory,
         "software": build_software_metadata(),
         "provenance": {
             "generation_command": (
-                "python benchmarks/density_matrix/"
+                "python benchmarks/density_matrix/documentation_contract/"
                 "evidence_bar_validation.py"
             ),
             "working_directory": str(REPO_ROOT),
             "git_revision": get_git_revision(),
-            "story3_support_surface_path": str(STORY3_ARTIFACT_PATH),
+            "support_surface_reference_path": str(
+                SUPPORT_SURFACE_REFERENCE_ARTIFACT_PATH
+            ),
             "entry_point_path": str(PHASE2_DOCUMENTATION_INDEX_PATH),
         },
         "summary": {
@@ -291,7 +297,7 @@ def validate_artifact_bundle(artifact):
     missing_fields = [field for field in ARTIFACT_CORE_FIELDS if field not in artifact]
     if missing_fields:
         raise ValueError(
-            "Task 7 Story 4 artifact bundle is missing required fields: {}".format(
+            "evidence_bar_reference artifact is missing required fields: {}".format(
                 ", ".join(missing_fields)
             )
         )
@@ -300,7 +306,7 @@ def validate_artifact_bundle(artifact):
     required_ids = artifact["requirements"]["required_evidence_ids"]
     if observed_ids != required_ids:
         raise ValueError(
-            "Task 7 Story 4 evidence inventory mismatch: expected {}, observed {}".format(
+            "evidence_bar_reference evidence inventory mismatch: expected {}, observed {}".format(
                 required_ids, observed_ids
             )
         )
@@ -309,7 +315,7 @@ def validate_artifact_bundle(artifact):
         "section_heading_present"
     ]:
         raise ValueError(
-            "Task 7 Story 4 section_heading_present summary is inconsistent"
+            "evidence_bar_reference section_heading_present summary is inconsistent"
         )
 
     if artifact["summary"]["all_evidence_items_present"] != all(
@@ -317,14 +323,14 @@ def validate_artifact_bundle(artifact):
         for item in artifact["evidence_inventory"]
     ):
         raise ValueError(
-            "Task 7 Story 4 all_evidence_items_present summary is inconsistent"
+            "evidence_bar_reference all_evidence_items_present summary is inconsistent"
         )
 
     if artifact["summary"]["evidence_bar_reference_completed"] != (
         artifact["status"] == "pass"
     ):
         raise ValueError(
-            "Task 7 Story 4 evidence_bar_reference_completed summary is inconsistent"
+            "evidence_bar_reference evidence_bar_reference_completed summary is inconsistent"
         )
 
 
@@ -353,7 +359,7 @@ def parse_args():
         "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
-        help="Directory for the Task 7 Story 4 JSON artifact bundle.",
+        help="Directory for the evidence_bar_reference JSON artifact.",
     )
     parser.add_argument(
         "--quiet",

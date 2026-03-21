@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validation: Phase 3 Task 3 Story 7 unsupported runtime boundary.
+"""Unsupported runtime boundary validation: explicit categories and no silent fallback.
 
 Exercises representative runtime-stage unsupported or incomplete execution
 conditions and records the stable no-fallback outcome for each one.

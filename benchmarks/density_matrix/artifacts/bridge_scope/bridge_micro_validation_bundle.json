@@ -68,7 +68,7 @@
         "h": 0.5
       },
       "case_name": "bridge_1q_local_depolarizing_after_u3",
-      "case_kind": "task3_bridge_micro_validation",
+      "case_kind": "bridge_micro_validation",
       "purpose": "Verify the generated-HEA bridge lowers a required U3-only microcase with local depolarizing noise.",
       "required_gate_families": [
         "U3"
@@ -185,7 +185,7 @@
         "h": 0.5
       },
       "case_name": "bridge_1q_amplitude_damping_after_u3",
-      "case_kind": "task3_bridge_micro_validation",
+      "case_kind": "bridge_micro_validation",
       "purpose": "Verify the generated-HEA bridge lowers a required U3-only microcase with amplitude damping noise.",
       "required_gate_families": [
         "U3"
@@ -302,7 +302,7 @@
         "h": 0.5
       },
       "case_name": "bridge_1q_phase_damping_after_u3",
-      "case_kind": "task3_bridge_micro_validation",
+      "case_kind": "bridge_micro_validation",
       "purpose": "Verify the generated-HEA bridge lowers a required U3-only microcase with phase damping noise.",
       "required_gate_families": [
         "U3"
@@ -424,7 +424,7 @@
         "h": 0.5
       },
       "case_name": "bridge_2q_cnot_with_local_depolarizing",
-      "case_kind": "task3_bridge_micro_validation",
+      "case_kind": "bridge_micro_validation",
       "purpose": "Verify the required CNOT bridge slice lowers cleanly on a 2-qubit anchor microcase.",
       "required_gate_families": [
         "U3",
@@ -618,7 +618,7 @@
         "h": 0.5
       },
       "case_name": "bridge_3q_mixed_local_noise_sequence",
-      "case_kind": "task3_bridge_micro_validation",
+      "case_kind": "bridge_micro_validation",
       "purpose": "Verify mixed required local-noise insertion remains ordered and auditable on a 3-qubit bridge microcase.",
       "required_gate_families": [
         "U3",

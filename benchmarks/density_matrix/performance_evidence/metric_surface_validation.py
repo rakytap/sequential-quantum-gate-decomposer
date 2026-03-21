@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Validation: Phase 3 Task 7 Story 5 comparable metric surface.
+"""Comparable metric surface validation for performance evidence.
 
-Verifies that counted and diagnosis-only Task 7 benchmark cases share one
-comparable metric vocabulary, including auditable repeated-timing fields for the
+Verifies that counted and diagnosis-only benchmark cases share one comparable
+metric vocabulary, including auditable repeated-timing fields for the
 representative review set.
 
 Run with:
@@ -30,7 +30,7 @@ from benchmarks.density_matrix.performance_evidence.records import (
     build_performance_evidence_benchmark_records,
 )
 
-SUITE_NAME = "phase3_performance_evidence_metric_surface"
+SUITE_NAME = "performance_evidence_metric_surface"
 ARTIFACT_FILENAME = "metric_surface_bundle.json"
 DEFAULT_OUTPUT_DIR = performance_evidence_output_dir("metric_surface")
 ARTIFACT_CORE_FIELDS = (
@@ -44,11 +44,11 @@ ARTIFACT_CORE_FIELDS = (
 )
 
 
-def build_cases() -> list[dict]:
+def build_metric_surface_cases() -> list[dict]:
     return build_performance_evidence_benchmark_records()
 
 
-def build_artifact_bundle(cases: list[dict]) -> dict:
+def build_metric_surface_bundle(cases: list[dict]) -> dict:
     metric_surface_pass = all(
         case["runtime_ms"] is not None
         and case["peak_rss_kb"] is not None
@@ -90,7 +90,7 @@ def build_artifact_bundle(cases: list[dict]) -> dict:
     missing = [field for field in ARTIFACT_CORE_FIELDS if field not in bundle]
     if missing:
         raise ValueError(
-            "Task 7 Story 5 bundle missing required fields: {}".format(
+            "Metric surface bundle missing required fields: {}".format(
                 ", ".join(missing)
             )
         )
@@ -103,7 +103,7 @@ def main(argv: list[str] | None = None) -> int:
         "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
-        help="Directory to write the Task 7 Story 5 bundle into.",
+        help="Directory to write the metric surface bundle into.",
     )
     parser.add_argument(
         "--quiet",
@@ -112,8 +112,8 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    cases = build_cases()
-    bundle = build_artifact_bundle(cases)
+    cases = build_metric_surface_cases()
+    bundle = build_metric_surface_bundle(cases)
     output_path = write_artifact_bundle(bundle, args.output_dir, ARTIFACT_FILENAME)
 
     if not args.quiet:

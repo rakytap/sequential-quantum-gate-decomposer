@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Validation: Phase 3 Task 5 Story 5 supported-claim selection surface.
+"""Validation: Phase 3 planner-calibration supported-claim selection surface.
 
-Selects one supported Task 5 planner claim from the correctness-gated
-calibration matrix using an explicit benchmark-grounded rule and keeps the other
-candidate settings visible as comparison baselines.
+Selects one supported planner claim from the correctness-gated calibration
+matrix using an explicit benchmark-grounded rule and keeps the other candidate
+settings visible as comparison baselines.
 
 Run with:
     python benchmarks/density_matrix/planner_calibration/calibrated_claim_selection_validation.py
@@ -88,7 +88,7 @@ def build_artifact_bundle() -> dict:
     missing = [field for field in ARTIFACT_CORE_FIELDS if field not in bundle]
     if missing:
         raise ValueError(
-            "Task 5 Story 5 bundle missing required fields: {}".format(
+            "Calibrated claim-selection bundle missing required fields: {}".format(
                 ", ".join(missing)
             )
         )
@@ -108,7 +108,7 @@ def main(argv: list[str] | None = None) -> int:
         "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
-        help="Directory to write the Task 5 Story 5 bundle into.",
+        help="Directory to write the calibrated claim-selection bundle into.",
     )
     parser.add_argument(
         "--quiet",

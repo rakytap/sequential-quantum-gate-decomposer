@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Validation: Phase 3 Task 7 Story 1 benchmark-matrix surface.
+"""Benchmark matrix validation for performance evidence.
 
-Freezes the dual-anchor Task 7 benchmark matrix and representative review-set
-membership through one stable machine-reviewable surface.
+Freezes the dual-anchor benchmark matrix and representative review-set membership
+through one stable machine-reviewable surface.
 
 Run with:
     python benchmarks/density_matrix/performance_evidence/benchmark_matrix_validation.py
@@ -30,7 +30,7 @@ from benchmarks.density_matrix.performance_evidence.case_selection import (
     build_performance_evidence_inventory_cases,
 )
 
-SUITE_NAME = "phase3_performance_evidence_benchmark_matrix"
+SUITE_NAME = "performance_evidence_benchmark_matrix"
 ARTIFACT_FILENAME = "benchmark_matrix_bundle.json"
 DEFAULT_OUTPUT_DIR = performance_evidence_output_dir("benchmark_matrix")
 ARTIFACT_CORE_FIELDS = (
@@ -43,11 +43,11 @@ ARTIFACT_CORE_FIELDS = (
 )
 
 
-def build_cases() -> list[dict]:
+def build_benchmark_matrix_cases() -> list[dict]:
     return build_performance_evidence_inventory_cases()
 
 
-def build_artifact_bundle(cases: list[dict]) -> dict:
+def build_benchmark_matrix_bundle(cases: list[dict]) -> dict:
     bundle = {
         "suite_name": SUITE_NAME,
         "status": "pass",
@@ -96,7 +96,7 @@ def build_artifact_bundle(cases: list[dict]) -> dict:
     missing = [field for field in ARTIFACT_CORE_FIELDS if field not in bundle]
     if missing:
         raise ValueError(
-            "Task 7 Story 1 bundle missing required fields: {}".format(
+            "Benchmark matrix bundle missing required fields: {}".format(
                 ", ".join(missing)
             )
         )
@@ -109,7 +109,7 @@ def main(argv: list[str] | None = None) -> int:
         "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
-        help="Directory to write the Task 7 Story 1 bundle into.",
+        help="Directory to write the benchmark matrix bundle into.",
     )
     parser.add_argument(
         "--quiet",
@@ -118,8 +118,8 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    cases = build_cases()
-    bundle = build_artifact_bundle(cases)
+    cases = build_benchmark_matrix_cases()
+    bundle = build_benchmark_matrix_bundle(cases)
     output_path = write_artifact_bundle(bundle, args.output_dir, ARTIFACT_FILENAME)
 
     if not args.quiet:

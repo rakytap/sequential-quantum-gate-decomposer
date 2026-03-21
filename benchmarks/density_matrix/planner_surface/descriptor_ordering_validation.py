@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Validation: Phase 3 Task 2 Story 3 descriptor ordering and noise placement.
+"""Partition-descriptor ordering and noise placement validation.
 
 Emits order-and-noise audits for one continuity case, the boundary-heavy 4-qubit
-microcase, and one structured-family case. The goal is to prove that Task 2
-descriptors preserve exact within-partition order and keep noise placement
-explicit as first-class descriptor content.
+microcase, and one structured-family case. Verifies that partition descriptors
+preserve exact within-partition order and keep noise placement explicit as
+first-class descriptor content.
 
 Run with:
     python benchmarks/density_matrix/planner_surface/descriptor_ordering_validation.py
@@ -167,7 +167,7 @@ def run_validation(verbose: bool = True) -> list[dict]:
 
     cases = [continuity_case, boundary_case, structured_case]
     if verbose:
-        print("Phase 3 Task 2 Story 3 descriptor ordering:")
+        print("Descriptor ordering and noise placement:")
         for case in cases:
             print(
                 "  {case_name}: members={descriptor_member_count}, mixed_partitions={boundary_mixed_partition_count}, ordering_pass={ordering_pass}".format(

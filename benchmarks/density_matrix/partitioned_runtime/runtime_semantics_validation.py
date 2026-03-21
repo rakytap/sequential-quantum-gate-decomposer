@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validation: Phase 3 Task 3 Story 4 runtime semantic preservation.
+"""Runtime semantics validation: partitioned vs sequential reference exactness.
 
 Exercises representative supported cases that stress remapping, parameter
 routing, and explicit noise placement, then checks that the partitioned runtime

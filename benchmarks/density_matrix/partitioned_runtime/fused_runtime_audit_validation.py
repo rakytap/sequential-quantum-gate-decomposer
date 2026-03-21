@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validation: Phase 3 Task 4 Story 6 fused runtime audit surface.
+"""Fused runtime audit validation: stable audit records on the fused-capable path.
 
 Emits one shared fused-capable runtime-audit record across representative
 supported cases and checks that fused-region and summary schemas remain stable.
@@ -41,7 +41,7 @@ DEFAULT_OUTPUT_DIR = (
     / "density_matrix"
     / "artifacts"
     / "partitioned_runtime"
-    / "story6_fused_audit"
+    / "fused_runtime_audit"
 )
 ARTIFACT_CORE_FIELDS = (
     "suite_name",
@@ -124,7 +124,7 @@ def build_artifact_bundle(cases: list[dict]) -> dict:
     missing = [field for field in ARTIFACT_CORE_FIELDS if field not in bundle]
     if missing:
         raise ValueError(
-            "Task 4 Story 6 bundle missing required fields: {}".format(
+            "Fused runtime audit bundle missing required fields: {}".format(
                 ", ".join(missing)
             )
         )
@@ -144,7 +144,7 @@ def main(argv: list[str] | None = None) -> int:
         "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
-        help="Directory to write the Task 4 Story 6 bundle into.",
+        help="Directory to write the fused runtime audit bundle into.",
     )
     parser.add_argument(
         "--quiet",

@@ -2,16 +2,16 @@
   "required_artifacts": [
     {
       "artifact_id": "correctness_package",
-      "schema_version": "phase3_correctness_evidence_package_v1",
+      "schema_version": "correctness_evidence_package_v1",
       "status": "pass",
-      "suite_name": "phase3_correctness_evidence_correctness_package"
+      "suite_name": "correctness_evidence_correctness_package"
     }
   ],
   "requirements": {
     "boundary_visibility_rule": "Excluded, unsupported, or deferred evidence must remain visible as claim-boundary evidence in downstream summaries.",
-    "main_claim_rule": "Only mandatory, complete, supported evidence may close the main Task 6 correctness claim."
+    "main_claim_rule": "Only mandatory, complete, supported evidence may close the main correctness claim for this package."
   },
-  "schema_version": "phase3_correctness_evidence_summary_v1",
+  "schema_version": "correctness_evidence_summary_v1",
   "selected_candidate": {
     "candidate_id": "span_budget_q4",
     "candidate_schema_version": "phase3_planner_calibration_candidate_v1",
@@ -40,7 +40,7 @@
     "scipy": "1.16.3"
   },
   "status": "pass",
-  "suite_name": "phase3_correctness_evidence_summary_consistency",
+  "suite_name": "correctness_evidence_summary_consistency",
   "summary": {
     "counted_supported_cases": 25,
     "descriptor_generation_boundary_cases": 6,

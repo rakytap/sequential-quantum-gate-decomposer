@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Validation: Phase 3 Task 6 Story 8 summary-consistency guardrails.
+"""Summary consistency validation for the correctness-evidence package.
 
-Interprets the shared Task 6 correctness package and verifies that downstream
+Interprets the shared correctness package bundle and verifies that downstream
 rollups and closure flags stay consistent with the underlying per-case evidence.
 
 Run with:
@@ -14,7 +14,7 @@ import argparse
 from pathlib import Path
 
 from benchmarks.density_matrix.correctness_evidence.correctness_bundle_validation import (
-    build_artifact_bundle as build_story7_bundle,
+    build_artifact_bundle as build_correctness_package_bundle,
 )
 from benchmarks.density_matrix.correctness_evidence.common import (
     CORRECTNESS_EVIDENCE_SUMMARY_SCHEMA_VERSION,
@@ -26,7 +26,7 @@ from benchmarks.density_matrix.correctness_evidence.records import (
     correctness_evidence_counted_supported_case,
 )
 
-SUITE_NAME = "phase3_correctness_evidence_summary_consistency"
+SUITE_NAME = "correctness_evidence_summary_consistency"
 ARTIFACT_FILENAME = "summary_consistency_bundle.json"
 DEFAULT_OUTPUT_DIR = correctness_evidence_output_dir("summary_consistency")
 ARTIFACT_CORE_FIELDS = (
@@ -42,14 +42,14 @@ ARTIFACT_CORE_FIELDS = (
 
 
 def build_artifact_bundle() -> dict:
-    story7_bundle = build_story7_bundle()
-    cases = story7_bundle["cases"]
-    negative_cases = story7_bundle["negative_cases"]
+    correctness_package = build_correctness_package_bundle()
+    cases = correctness_package["cases"]
+    negative_cases = correctness_package["negative_cases"]
     counted_supported_cases = sum(correctness_evidence_counted_supported_case(case) for case in cases)
     summary_consistency_pass = (
-        story7_bundle["summary"]["total_cases"] == len(cases)
-        and story7_bundle["summary"]["counted_supported_cases"] == counted_supported_cases
-        and story7_bundle["summary"]["unsupported_boundary_cases"] == len(negative_cases)
+        correctness_package["summary"]["total_cases"] == len(cases)
+        and correctness_package["summary"]["counted_supported_cases"] == counted_supported_cases
+        and correctness_package["summary"]["unsupported_boundary_cases"] == len(negative_cases)
     )
     main_correctness_claim_completed = (
         counted_supported_cases == len(cases)
@@ -61,11 +61,11 @@ def build_artifact_bundle() -> dict:
         "status": "pass" if summary_consistency_pass else "fail",
         "schema_version": CORRECTNESS_EVIDENCE_SUMMARY_SCHEMA_VERSION,
         "software": build_correctness_evidence_software_metadata(),
-        "selected_candidate": story7_bundle["selected_candidate"],
+        "selected_candidate": correctness_package["selected_candidate"],
         "requirements": {
             "main_claim_rule": (
                 "Only mandatory, complete, supported evidence may close the main "
-                "Task 6 correctness claim."
+                "correctness claim for this package."
             ),
             "boundary_visibility_rule": (
                 "Excluded, unsupported, or deferred evidence must remain visible "
@@ -92,16 +92,16 @@ def build_artifact_bundle() -> dict:
         "required_artifacts": [
             {
                 "artifact_id": "correctness_package",
-                "suite_name": story7_bundle["suite_name"],
-                "status": story7_bundle["status"],
-                "schema_version": story7_bundle["schema_version"],
+                "suite_name": correctness_package["suite_name"],
+                "status": correctness_package["status"],
+                "schema_version": correctness_package["schema_version"],
             }
         ],
     }
     missing = [field for field in ARTIFACT_CORE_FIELDS if field not in bundle]
     if missing:
         raise ValueError(
-            "Task 6 Story 8 bundle missing required fields: {}".format(
+            "Summary consistency bundle missing required fields: {}".format(
                 ", ".join(missing)
             )
         )
@@ -114,7 +114,7 @@ def main(argv: list[str] | None = None) -> int:
         "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
-        help="Directory to write the Task 6 Story 8 bundle into.",
+        help="Directory to write the summary consistency bundle into.",
     )
     parser.add_argument(
         "--quiet",

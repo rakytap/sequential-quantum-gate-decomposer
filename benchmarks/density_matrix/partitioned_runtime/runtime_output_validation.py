@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validation: Phase 3 Task 3 Story 5 runtime output surface.
+"""Runtime output validation: exact-output schema and comparison-ready payloads.
 
 Emits supported runtime outputs in the shared comparison-ready shape used by
 later exact-baseline checks. Small cases include the explicit density matrix in

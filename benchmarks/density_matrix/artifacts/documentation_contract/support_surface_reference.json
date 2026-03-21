@@ -21,8 +21,8 @@
   "provenance": {
     "entry_point_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/docs/density_matrix_project/phases/phase-2/PHASE_2_DOCUMENTATION_INDEX.md",
     "generation_command": "python benchmarks/density_matrix/support_surface_reference_validation.py",
-    "git_revision": "199d588c2230fc62a39934ddc7d79a6e74a8b64e",
-    "story2_supported_entry_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/documentation_contract/supported_entry_reference.json",
+    "git_revision": "77cd8168869d9b4c67c0dd0dbe49baab02b0fe25",
+    "supported_entry_reference_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/documentation_contract/supported_entry_reference.json",
     "working_directory": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer"
   },
   "requirements": {
@@ -43,20 +43,9 @@
     ]
   },
   "software": {
-    "python": "3.13.9"
+    "python": "3.12.7"
   },
   "status": "pass",
-  "story2_supported_entry": {
-    "status": "pass",
-    "suite_name": "supported_entry_reference",
-    "summary": {
-      "all_entry_point_statements_present": true,
-      "all_primary_sources_present": true,
-      "required_statement_count": 7,
-      "section_heading_present": true,
-      "supported_entry_reference_completed": true
-    }
-  },
   "suite_name": "support_surface_reference",
   "summary": {
     "all_boundary_examples_present": true,
@@ -87,7 +76,7 @@
       ],
       "entry_point_present": true,
       "label": "Required gate families",
-      "primary_doc_id": "task4_mini_spec",
+      "primary_doc_id": "support_matrix_task_contract",
       "primary_path": "docs/density_matrix_project/phases/phase-2/task-4/TASK_4_MINI_SPEC.md",
       "primary_source_phrases": [
         "The guaranteed mandatory gate surface remains `U3` and `CNOT`"
@@ -101,7 +90,7 @@
       ],
       "entry_point_present": true,
       "label": "Required local noise models",
-      "primary_doc_id": "task4_mini_spec",
+      "primary_doc_id": "support_matrix_task_contract",
       "primary_path": "docs/density_matrix_project/phases/phase-2/task-4/TASK_4_MINI_SPEC.md",
       "primary_source_phrases": [
         "The mandatory Phase 2 local-noise baseline is:",
@@ -117,7 +106,7 @@
       ],
       "entry_point_present": true,
       "label": "Whole-register depolarizing optional",
-      "primary_doc_id": "task4_mini_spec",
+      "primary_doc_id": "support_matrix_task_contract",
       "primary_path": "docs/density_matrix_project/phases/phase-2/task-4/TASK_4_MINI_SPEC.md",
       "primary_source_phrases": [
         "whole-register depolarizing is optional only as a regression or",
@@ -163,7 +152,7 @@
       ],
       "entry_point_present": true,
       "label": "No full qgd_Circuit parity",
-      "primary_doc_id": "task3_mini_spec",
+      "primary_doc_id": "bridge_scope_task_contract",
       "primary_path": "docs/density_matrix_project/phases/phase-2/task-3/TASK_3_MINI_SPEC.md",
       "primary_source_phrases": [
         "full `qgd_Circuit` parity is not assumed"
@@ -177,7 +166,7 @@
       ],
       "entry_point_present": true,
       "label": "Standalone breadth is not workflow guarantee",
-      "primary_doc_id": "task4_mini_spec",
+      "primary_doc_id": "support_matrix_task_contract",
       "primary_path": "docs/density_matrix_project/phases/phase-2/task-4/TASK_4_MINI_SPEC.md",
       "primary_source_phrases": [
         "Using standalone `NoisyCircuit` breadth to overstate the guaranteed VQE-facing",
@@ -186,5 +175,16 @@
       "primary_source_present": true,
       "support_id": "standalone_not_guaranteed"
     }
-  ]
+  ],
+  "upstream_supported_entry_reference": {
+    "status": "pass",
+    "suite_name": "supported_entry_reference",
+    "summary": {
+      "all_entry_point_statements_present": true,
+      "all_primary_sources_present": true,
+      "required_statement_count": 7,
+      "section_heading_present": true,
+      "supported_entry_reference_completed": true
+    }
+  }
 }

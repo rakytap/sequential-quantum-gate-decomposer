@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run and emit all Phase 3 correctness-evidence validation bundles in one process.
+"""Run and emit all density-matrix correctness-evidence validation bundles in one process.
 
 Run with:
     python benchmarks/density_matrix/correctness_evidence/validation_pipeline.py

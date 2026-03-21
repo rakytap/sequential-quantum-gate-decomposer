@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-"""Validation: Task 5 Story 1 local correctness baseline.
+"""Validation: local correctness baseline.
 
 Builds the phase-level local correctness gate from the already authoritative
 micro-validation surfaces:
-- the canonical Story 2 exactness matrix against Qiskit Aer,
-- and the Task 4 Story 2 required-local-noise wrapper that adds required-noise
-  coverage, mixed-sequence auditability, and mandatory-baseline semantics.
+- the canonical exactness matrix against Qiskit Aer,
+- and the required-local-noise wrapper that adds required-noise coverage,
+  mixed-sequence auditability, and mandatory-baseline semantics.
 
-The resulting bundle is intentionally a thin Task 5 layer:
+The resulting bundle is intentionally a thin validation-evidence layer:
 - it freezes the mandatory 1 to 3 qubit local correctness inventory,
 - it validates stable case identity and explicit status fields,
 - it preserves required gate/noise coverage and mixed-sequence auditability,
@@ -41,10 +41,10 @@ from benchmarks.density_matrix.noise_support.support_tiers import (
 from benchmarks.density_matrix.validate_squander_vs_qiskit import (
     PRIMARY_BACKEND,
     REFERENCE_BACKEND,
-    build_artifact_bundle as build_story2_bundle,
+    build_artifact_bundle as build_micro_validation_bundle,
     build_software_metadata,
     build_threshold_metadata,
-    run_validation as run_story2_validation,
+    run_validation as run_micro_validation,
 )
 
 SUITE_NAME = "local_correctness_validation"
@@ -74,7 +74,7 @@ def build_requirement_metadata():
         "required_local_noise_models": list(REQUIRED_LOCAL_NOISE_MODELS),
         "support_tier_vocabulary": list(SUPPORT_TIER_VOCABULARY),
         "required_bundle_sources": [
-            "story2_mandatory_micro_validation",
+            "mandatory_micro_validation",
             "required_local_noise_micro_validation",
         ],
         "required_pass_rate": 1.0,
@@ -102,7 +102,7 @@ def validate_case_payload(case):
     missing_fields = [field for field in required_fields if field not in case]
     if missing_fields:
         raise ValueError(
-            "Task 5 Story 1 case payload is missing required fields: {}".format(
+            "Local-correctness case payload is missing required fields: {}".format(
                 ", ".join(missing_fields)
             )
         )
@@ -131,7 +131,9 @@ def build_case_identity_summary(cases):
     }
 
 
-def build_artifact_bundle(story2_bundle, required_local_noise_micro_validation_bundle):
+def build_artifact_bundle(
+    micro_validation_bundle, required_local_noise_micro_validation_bundle
+):
     cases = [dict(case) for case in required_local_noise_micro_validation_bundle["cases"]]
     for case in cases:
         validate_case_payload(case)
@@ -166,7 +168,7 @@ def build_artifact_bundle(story2_bundle, required_local_noise_micro_validation_b
         case["counts_toward_mandatory_baseline"] for case in cases
     )
     local_correctness_gate_completed = bool(
-        story2_bundle["status"] == "pass"
+        micro_validation_bundle["status"] == "pass"
         and required_local_noise_micro_validation_bundle["status"] == "pass"
         and case_identity["stable_case_ids_present"]
         and all_cases_required
@@ -217,9 +219,9 @@ def build_artifact_bundle(story2_bundle, required_local_noise_micro_validation_b
         },
         "required_artifacts": {
             "micro_validation_reference": {
-                "suite_name": story2_bundle["suite_name"],
-                "status": story2_bundle["status"],
-                "summary": story2_bundle["summary"],
+                "suite_name": micro_validation_bundle["suite_name"],
+                "status": micro_validation_bundle["status"],
+                "summary": micro_validation_bundle["summary"],
             },
             "required_local_noise_micro_validation": {
                 "suite_name": required_local_noise_micro_validation_bundle["suite_name"],
@@ -237,7 +239,7 @@ def validate_artifact_bundle(bundle):
     missing_fields = [field for field in ARTIFACT_CORE_FIELDS if field not in bundle]
     if missing_fields:
         raise ValueError(
-            "Task 5 Story 1 artifact bundle is missing required fields: {}".format(
+            "Local-correctness bundle is missing required fields: {}".format(
                 ", ".join(missing_fields)
             )
         )
@@ -252,10 +254,14 @@ def write_artifact_bundle(output_path: Path, bundle):
 
 
 def run_validation(*, verbose=False):
-    results = run_story2_validation(verbose=verbose)
-    story2_bundle = build_story2_bundle(results)
-    required_local_noise_micro_validation_bundle = build_required_local_noise_micro_validation_bundle(results)
-    bundle = build_artifact_bundle(story2_bundle, required_local_noise_micro_validation_bundle)
+    results = run_micro_validation(verbose=verbose)
+    micro_validation_bundle = build_micro_validation_bundle(results)
+    required_local_noise_micro_validation_bundle = (
+        build_required_local_noise_micro_validation_bundle(results)
+    )
+    bundle = build_artifact_bundle(
+        micro_validation_bundle, required_local_noise_micro_validation_bundle
+    )
     if verbose:
         print(
             "{} [{}] mandatory cases={}/{} stable_case_ids={}".format(
@@ -266,7 +272,7 @@ def run_validation(*, verbose=False):
                 bundle["summary"]["stable_case_ids_present"],
             )
         )
-    return story2_bundle, required_local_noise_micro_validation_bundle, bundle
+    return micro_validation_bundle, required_local_noise_micro_validation_bundle, bundle
 
 
 def parse_args():
@@ -275,7 +281,7 @@ def parse_args():
         "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
-        help="Directory for the Task 5 Story 1 JSON artifact bundle.",
+        help="Directory for the local-correctness JSON artifact bundle.",
     )
     parser.add_argument(
         "--quiet",

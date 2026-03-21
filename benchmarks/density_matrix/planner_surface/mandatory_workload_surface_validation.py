@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validation: Phase 3 Task 1 Story 2 mandatory workload planner surfaces.
+"""Mandatory workload planner surface validation.
 
 Builds the required 2 to 4 qubit microcases and the structured noisy
 `U3` / `CNOT` workload families, then verifies that all of them enter the same
@@ -80,7 +80,7 @@ def run_validation(verbose: bool = True) -> list[dict]:
         cases.append(_surface_case("structured_family", metadata, surface))
 
     if verbose:
-        print("Phase 3 Task 1 Story 2 mandatory workload surfaces:")
+        print("Mandatory workload planner surfaces:")
         for case in cases:
             print(
                 "  {case_name}: q={qbit_num}, ops={operation_count}, gates={gate_count}, noise={noise_count}".format(

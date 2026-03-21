@@ -901,7 +901,7 @@
       "micro_validation_3q_u3_cnot_mixed_local_noise"
     ],
     "required_bundle_sources": [
-      "story2_mandatory_micro_validation",
+      "mandatory_micro_validation",
       "required_local_noise_micro_validation"
     ],
     "required_gate_families": [

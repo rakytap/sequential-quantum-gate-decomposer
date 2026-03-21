@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validation: Task 8 Story 1 Paper 1 claim package.
+"""Validation: Paper 1 claim package.
 
 Builds a machine-readable claim package for Paper 1. This layer is intentionally
 thin:
@@ -45,7 +45,7 @@ SUITE_NAME = "claim_package"
 ARTIFACT_FILENAME = "claim_package.json"
 DEFAULT_OUTPUT_DIR = PUBLICATION_CLAIM_OUTPUT_DIR
 PRIMARY_SURFACE_PATH = MANDATORY_PUBLICATION_EVIDENCE_DOCS["phase2_paper"]
-PRIMARY_SOURCE_PATH = MANDATORY_PUBLICATION_EVIDENCE_DOCS["publication_evidence_mini_spec"]
+PRIMARY_SOURCE_PATH = MANDATORY_PUBLICATION_EVIDENCE_DOCS["publication_claim_task_contract"]
 PUBLICATION_STRATEGY_PATH = MANDATORY_PUBLICATION_EVIDENCE_DOCS["planning_publications"]
 ARTIFACT_FIELDS = (
     "suite_name",
@@ -249,7 +249,7 @@ def build_artifact_bundle():
         },
         "source_docs": [
             {
-                "doc_id": "publication_evidence_mini_spec",
+                "doc_id": "publication_claim_task_contract",
                 "path": relative_to_repo(PRIMARY_SOURCE_PATH),
                 "exists": PRIMARY_SOURCE_PATH.exists(),
             },
@@ -299,7 +299,7 @@ def validate_artifact_bundle(artifact):
     missing_fields = [field for field in ARTIFACT_FIELDS if field not in artifact]
     if missing_fields:
         raise ValueError(
-            "Task 8 Story 1 artifact is missing required fields: {}".format(
+            "claim_package artifact is missing required fields: {}".format(
                 ", ".join(missing_fields)
             )
         )
@@ -371,7 +371,7 @@ def validate_artifact_bundle(artifact):
     if artifact["summary"]["claim_package_completed"] != expected_completed:
         raise ValueError("claim_package_completed summary is inconsistent")
     if artifact["status"] != ("pass" if expected_completed else "fail"):
-        raise ValueError("Task 8 Story 1 status does not match completion summary")
+        raise ValueError("claim_package status does not match completion summary")
 
 
 def write_artifact_bundle(output_path: Path, artifact):
@@ -400,7 +400,7 @@ def parse_args():
         "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
-        help="Directory for the Task 8 Story 1 JSON artifact bundle.",
+        help="Directory for the claim_package JSON artifact.",
     )
     parser.add_argument(
         "--quiet",

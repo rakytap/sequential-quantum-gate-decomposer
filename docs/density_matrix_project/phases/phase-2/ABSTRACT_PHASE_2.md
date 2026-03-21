@@ -39,15 +39,15 @@ links the canonical workflow contract
 `matrix_baseline_bundle.json`, the unsupported-workflow bundle
 `unsupported_workflow_bundle.json`, and the interpretation-guardrail
 bundle `workflow_interpretation_bundle.json` in one backend-explicit
-reproducibility package while preserving traceability to the underlying Task 5
-validation layers. An implementation learning that now shapes publication
+reproducibility package while preserving traceability to the underlying
+validation baseline and validation-evidence layers. An implementation learning that now shapes publication
 claims is explicit support-tier classification (`required`, `optional`,
 `deferred`, `unsupported`) together with hard-error boundary handling,
 metric-completeness checks, and interpretation guardrails that prevent partial,
 optional, deferred, or unsupported evidence from inflating the main claim. Only
 mandatory, complete, supported evidence closes the main Phase 2 result, and the
-top-level publication bundle now verifies semantic closure across those lower
-evidence layers rather than only artifact presence and shared workflow
+top-level publication bundle now verifies semantic closure across those
+constituent evidence layers rather than only artifact presence and shared workflow
 identity.
 
 The Phase 2 contribution is a research-grade exact noisy backend slice for

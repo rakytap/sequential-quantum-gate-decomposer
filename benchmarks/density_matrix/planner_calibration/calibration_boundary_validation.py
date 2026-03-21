@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Validation: Phase 3 Task 5 Story 7 explicit claim-boundary surface.
+"""Validation: Phase 3 planner-calibration explicit claim-boundary surface.
 
-Packages the supported Task 5 claim together with explicit approximation areas,
-comparison-baseline visibility, and deferred follow-on branches.
+Packages the supported calibration claim together with explicit approximation
+areas, comparison-baseline visibility, and deferred follow-on branches.
 
 Run with:
     python benchmarks/density_matrix/planner_calibration/calibration_boundary_validation.py
@@ -66,7 +66,7 @@ def build_artifact_bundle() -> dict:
     missing = [field for field in ARTIFACT_CORE_FIELDS if field not in bundle]
     if missing:
         raise ValueError(
-            "Task 5 Story 7 bundle missing required fields: {}".format(
+            "Claim-boundary validation bundle missing required fields: {}".format(
                 ", ".join(missing)
             )
         )
@@ -86,7 +86,7 @@ def main(argv: list[str] | None = None) -> int:
         "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
-        help="Directory to write the Task 5 Story 7 bundle into.",
+        help="Directory to write the claim-boundary validation bundle into.",
     )
     parser.add_argument(
         "--quiet",

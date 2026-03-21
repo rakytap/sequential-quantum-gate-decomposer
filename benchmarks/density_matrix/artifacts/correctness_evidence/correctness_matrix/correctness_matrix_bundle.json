@@ -801,7 +801,7 @@
       "workload_id": "partition_stress_ladder_q10_dense_seed20260318"
     }
   ],
-  "record_schema_version": "phase3_correctness_evidence_record_v1",
+  "record_schema_version": "correctness_evidence_case_record_v1",
   "selected_candidate": {
     "candidate_id": "span_budget_q4",
     "candidate_schema_version": "phase3_planner_calibration_candidate_v1",
@@ -830,7 +830,7 @@
     "scipy": "1.16.3"
   },
   "status": "pass",
-  "suite_name": "phase3_correctness_evidence_correctness_matrix",
+  "suite_name": "correctness_evidence_correctness_matrix",
   "summary": {
     "continuity_cases": 4,
     "external_slice_cases": 4,

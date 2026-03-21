@@ -24,7 +24,7 @@ from benchmarks.density_matrix.performance_evidence.common import (
     measure_sequential_density_reference,
 )
 from benchmarks.density_matrix.performance_evidence.case_selection import (
-    build_case_contexts,
+    build_performance_evidence_case_contexts,
 )
 from benchmarks.density_matrix.planner_calibration.calibration_records import (
     execute_qiskit_density_reference,
@@ -385,7 +385,7 @@ def build_performance_evidence_core_benchmark_record(case_context) -> dict:
 def _build_performance_evidence_core_benchmark_records_cached() -> tuple[dict, ...]:
     return tuple(
         build_performance_evidence_core_benchmark_record(case_context)
-        for case_context in build_case_contexts()
+        for case_context in build_performance_evidence_case_contexts()
     )
 
 
@@ -444,7 +444,7 @@ def build_performance_evidence_benchmark_record(case_context) -> dict:
 def _build_performance_evidence_benchmark_records_cached() -> tuple[dict, ...]:
     contexts_by_workload_id = {
         case_context.metadata["workload_id"]: case_context
-        for case_context in build_case_contexts()
+        for case_context in build_performance_evidence_case_contexts()
     }
     return tuple(
         _augment_review_fields(

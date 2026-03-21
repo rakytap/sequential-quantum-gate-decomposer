@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run and emit all Phase 3 publication-evidence validation bundles in one process."""
+"""Run and emit all publication-evidence validation bundles in one process."""
 
 from __future__ import annotations
 
@@ -24,7 +24,7 @@ from benchmarks.density_matrix.publication_evidence import (
     evidence_closure_validation as evidence_closure,
 )
 from benchmarks.density_matrix.publication_evidence import (
-    supported_path_validation as supported_path,
+    supported_path_validation as supported_path_scope,
 )
 from benchmarks.density_matrix.publication_evidence import (
     publication_manifest_validation as publication_manifest,
@@ -84,12 +84,12 @@ def run_pipeline() -> list[tuple[str, str, Path]]:
         )
     )
 
-    supported_path_bundle = supported_path.build_artifact_bundle()
+    supported_path_scope_bundle = supported_path_scope.build_artifact_bundle()
     results.append(
         (
-            supported_path.SUITE_NAME,
-            supported_path_bundle["status"],
-            _write_slice_bundle(supported_path, supported_path_bundle),
+            supported_path_scope.SUITE_NAME,
+            supported_path_scope_bundle["status"],
+            _write_slice_bundle(supported_path_scope, supported_path_scope_bundle),
         )
     )
 

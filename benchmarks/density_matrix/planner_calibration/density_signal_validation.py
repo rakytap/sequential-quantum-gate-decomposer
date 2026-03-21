@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Validation: Phase 3 Task 5 Story 3 density-aware signal surface.
+"""Validation: Phase 3 planner-calibration density-aware signal surface.
 
-Builds a representative contrast matrix across the supported Task 5 candidate
-settings, records state-vector-style proxy scores alongside benchmark-grounded
+Builds a representative contrast matrix across supported span-budget planner
+candidates, records state-vector-style proxy scores alongside benchmark-grounded
 density-aware scores, and shows that explicit noise placement changes the
 recorded density-aware score on real noisy mixed-state workloads.
 
@@ -141,7 +141,7 @@ def build_artifact_bundle(cases: list[dict]) -> dict:
     missing = [field for field in ARTIFACT_CORE_FIELDS if field not in bundle]
     if missing:
         raise ValueError(
-            "Task 5 Story 3 bundle missing required fields: {}".format(
+            "Density-signal validation bundle missing required fields: {}".format(
                 ", ".join(missing)
             )
         )
@@ -161,7 +161,7 @@ def main(argv: list[str] | None = None) -> int:
         "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
-        help="Directory to write the Task 5 Story 3 bundle into.",
+        help="Directory to write the density-signal validation bundle into.",
     )
     parser.add_argument(
         "--quiet",

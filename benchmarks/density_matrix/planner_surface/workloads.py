@@ -237,7 +237,9 @@ def _apply_noise_pattern(
                 entangler_counter += 1
             continue
         else:
-            raise ValueError("Unsupported Story 2 noise pattern '{}'".format(noise_pattern))
+            raise ValueError(
+                "Unsupported structured workload noise pattern '{}'".format(noise_pattern)
+            )
 
         entangler_counter += len(layer_entanglers)
 
@@ -257,7 +259,7 @@ def _structured_family_layers(
         return _seeded_random_layered_layers(qbit_num, layer_count, seed)
     if family_name == "partition_stress_ladder":
         return _partition_stress_layers(qbit_num, layer_count)
-    raise ValueError("Unsupported Story 2 family '{}'".format(family_name))
+    raise ValueError("Unsupported structured workload family '{}'".format(family_name))
 
 
 def build_structured_surface(

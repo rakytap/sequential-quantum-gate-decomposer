@@ -126,10 +126,10 @@
     }
   ],
   "provenance": {
+    "claim_package_bundle_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/publication_evidence/claim_package/claim_package_bundle.json",
     "generation_command": "python benchmarks/density_matrix/publication_evidence/claim_traceability_validation.py",
-    "git_revision": "1af8716f9ed42d8c3b156bfb2b7fe26f61357fb8",
-    "story1_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/publication_evidence/claim_package/claim_package_bundle.json",
-    "story2_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/publication_evidence/surface_alignment/publication_surface_alignment_bundle.json",
+    "git_revision": "77cd8168869d9b4c67c0dd0dbe49baab02b0fe25",
+    "publication_surface_alignment_bundle_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/publication_evidence/publication_surface_alignment/publication_surface_alignment_bundle.json",
     "working_directory": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer"
   },
   "reviewer_entry_paths": {
@@ -267,7 +267,7 @@
     "python": "3.13.9"
   },
   "status": "pass",
-  "suite_name": "phase3_publication_evidence_claim_traceability",
+  "suite_name": "claim_traceability",
   "summary": {
     "all_claim_sources_exist": true,
     "all_section_headings_present": true,
@@ -277,9 +277,9 @@
     "reviewer_entry_paths_complete": true,
     "section_traceability_count": 5
   },
-  "upstream_story_artifacts": [
+  "upstream_reference_artifacts": [
     {
-      "artifact_id": "phase3_publication_evidence_claim_package",
+      "artifact_id": "claim_package",
       "path": "benchmarks/density_matrix/artifacts/publication_evidence/claim_package/claim_package_bundle.json",
       "status": "pass",
       "summary": {
@@ -297,8 +297,8 @@
       }
     },
     {
-      "artifact_id": "phase3_publication_evidence_surface_alignment",
-      "path": "benchmarks/density_matrix/artifacts/publication_evidence/surface_alignment/publication_surface_alignment_bundle.json",
+      "artifact_id": "publication_surface_alignment",
+      "path": "benchmarks/density_matrix/artifacts/publication_evidence/publication_surface_alignment/publication_surface_alignment_bundle.json",
       "status": "pass",
       "summary": {
         "all_claim_headings_present": true,
@@ -309,7 +309,7 @@
         "all_phase_positioning_present": true,
         "all_supported_path_present": true,
         "all_surface_roles_present": true,
-        "surface_alignment_completed": true,
+        "publication_surface_alignment_completed": true,
         "surface_count": 4
       }
     }

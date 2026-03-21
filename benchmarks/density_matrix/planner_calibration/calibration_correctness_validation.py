@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Validation: Phase 3 Task 5 Story 4 correctness-gated calibration surface.
+"""Validation: Phase 3 planner-calibration correctness-gated surface.
 
-Builds the full Task 5 calibration matrix, applies the internal exactness gate
-to every candidate-workload case, and applies the external Aer gate on the
-required microcase and representative small continuity slice.
+Builds the full calibration matrix, applies the internal exactness gate to every
+candidate-workload case, and applies the external Aer gate on the required
+microcase and representative small continuity slice.
 
 Run with:
     python benchmarks/density_matrix/planner_calibration/calibration_correctness_validation.py
@@ -91,7 +91,7 @@ def build_artifact_bundle(cases: list[dict]) -> dict:
     missing = [field for field in ARTIFACT_CORE_FIELDS if field not in bundle]
     if missing:
         raise ValueError(
-            "Task 5 Story 4 bundle missing required fields: {}".format(
+            "Calibration correctness bundle missing required fields: {}".format(
                 ", ".join(missing)
             )
         )
@@ -111,7 +111,7 @@ def main(argv: list[str] | None = None) -> int:
         "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
-        help="Directory to write the Task 5 Story 4 bundle into.",
+        help="Directory to write the calibration correctness bundle into.",
     )
     parser.add_argument(
         "--quiet",

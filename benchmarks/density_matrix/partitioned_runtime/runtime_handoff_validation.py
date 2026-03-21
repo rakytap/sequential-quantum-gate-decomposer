@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Validation: Phase 3 Task 3 Story 3 runtime handoff surface.
+"""Runtime handoff validation: stable partition handoff records across workload classes.
 
 Emits audit-oriented runtime handoff records for one continuity case, one
-microcase, and one structured-family case. The goal is to validate that the
-shared Task 3 runtime consumes the Task 2 descriptor contract directly and
-records a stable partition handoff surface.
+microcase, and one structured-family case. Validates that the partitioned
+runtime consumes the planner-surface descriptor contract directly and records a
+stable partition handoff surface.
 
 Run with:
     python benchmarks/density_matrix/partitioned_runtime/runtime_handoff_validation.py

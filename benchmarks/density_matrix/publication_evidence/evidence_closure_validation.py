@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validation: Phase 3 Task 8 Story 4 evidence-closure semantics."""
+"""Validation: Evidence-closure semantics linking publications to evidence bundles."""
 
 from __future__ import annotations
 
@@ -12,9 +12,9 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from benchmarks.density_matrix.publication_evidence.claim_traceability_validation import (
-    ARTIFACT_FILENAME as STORY3_ARTIFACT_FILENAME,
-    run_validation as run_story3_validation,
-    validate_artifact_bundle as validate_story3_artifact,
+    ARTIFACT_FILENAME as CLAIM_TRACEABILITY_ARTIFACT_FILENAME,
+    run_validation as run_claim_traceability_validation,
+    validate_artifact_bundle as validate_claim_traceability_artifact,
 )
 from benchmarks.density_matrix.publication_evidence.common import (
     EVIDENCE_CLOSURE_RULE,
@@ -37,16 +37,17 @@ from benchmarks.density_matrix.publication_evidence.common import (
 )
 
 
-SUITE_NAME = "phase3_publication_evidence_evidence_closure"
+SUITE_NAME = "evidence_closure"
 ARTIFACT_FILENAME = "evidence_closure_bundle.json"
 DEFAULT_OUTPUT_DIR = publication_evidence_output_dir("evidence_closure")
-STORY3_PATH = (
-    publication_evidence_output_dir("claim_traceability") / STORY3_ARTIFACT_FILENAME
+CLAIM_TRACEABILITY_BUNDLE_PATH = (
+    publication_evidence_output_dir("claim_traceability")
+    / CLAIM_TRACEABILITY_ARTIFACT_FILENAME
 )
 ARTIFACT_FIELDS = (
     "suite_name",
     "status",
-    "story3_traceability",
+    "upstream_claim_traceability",
     "evidence_inventory",
     "software",
     "provenance",
@@ -54,11 +55,11 @@ ARTIFACT_FIELDS = (
 )
 
 
-def _story3(path: Path = STORY3_PATH):
+def _load_claim_traceability_artifact(path: Path = CLAIM_TRACEABILITY_BUNDLE_PATH):
     return load_or_build_artifact(
         path,
-        run_validation=run_story3_validation,
-        validate_artifact_bundle=validate_story3_artifact,
+        run_validation=run_claim_traceability_validation,
+        validate_artifact_bundle=validate_claim_traceability_artifact,
     )
 
 
@@ -92,7 +93,7 @@ def build_evidence_inventory():
     return [
         {
             "item_id": "correctness_evidence_main_correctness_claim",
-            "label": "Task 6 correctness claim completes on counted supported evidence",
+            "label": "Correctness-evidence main claim completes on counted supported cases",
             "path": relative_to_repo(CORRECTNESS_EVIDENCE_SUMMARY_CONSISTENCY_PATH),
             "bundle_status": correctness_evidence_summary["status"],
             "summary_field": "main_correctness_claim_completed",
@@ -102,7 +103,7 @@ def build_evidence_inventory():
         },
         {
             "item_id": "correctness_evidence_boundary_visibility",
-            "label": "Task 6 boundary evidence remains explicit",
+            "label": "Correctness-evidence unsupported-boundary cases remain explicit",
             "path": relative_to_repo(CORRECTNESS_EVIDENCE_UNSUPPORTED_BOUNDARY_PATH),
             "bundle_status": "pass" if CORRECTNESS_EVIDENCE_UNSUPPORTED_BOUNDARY_PATH.exists() else "fail",
             "summary_field": "unsupported_boundary_cases",
@@ -111,7 +112,7 @@ def build_evidence_inventory():
         },
         {
             "item_id": "performance_evidence_main_benchmark_claim",
-            "label": "Task 7 benchmark claim completes on supported evidence",
+            "label": "Performance-evidence main benchmark claim completes on supported cases",
             "path": relative_to_repo(PERFORMANCE_EVIDENCE_SUMMARY_CONSISTENCY_PATH),
             "bundle_status": performance_evidence_summary["status"],
             "summary_field": "main_benchmark_claim_completed",
@@ -121,7 +122,7 @@ def build_evidence_inventory():
         },
         {
             "item_id": "performance_evidence_threshold_or_diagnosis_rule",
-            "label": "Task 7 closes through positive threshold or diagnosis path",
+            "label": "Performance evidence closes via positive threshold or diagnosis path",
             "path": relative_to_repo(PERFORMANCE_EVIDENCE_SUMMARY_CONSISTENCY_PATH),
             "bundle_status": performance_evidence_summary["status"],
             "summary_field": "positive_or_diagnosis_path_completed",
@@ -141,7 +142,7 @@ def build_evidence_inventory():
 
 
 def build_artifact_bundle():
-    story3_artifact = _story3()
+    claim_traceability_artifact = _load_claim_traceability_artifact()
     evidence_inventory = build_evidence_inventory()
     non_rule_entries = [
         entry for entry in evidence_inventory if entry["item_id"] != "paper2_closure_rule"
@@ -162,7 +163,7 @@ def build_artifact_bundle():
     )
     evidence_closure_completed = all(
         [
-            story3_artifact["status"] == "pass",
+            claim_traceability_artifact["status"] == "pass",
             all_evidence_items_present,
             claim_closure_rule_present,
             positive_or_diagnosis_path_completed,
@@ -172,11 +173,11 @@ def build_artifact_bundle():
     artifact = {
         "suite_name": SUITE_NAME,
         "status": "pass" if evidence_closure_completed else "fail",
-        "story3_traceability": {
-            "suite_name": story3_artifact["suite_name"],
-            "status": story3_artifact["status"],
-            "path": relative_to_repo(STORY3_PATH),
-            "summary": dict(story3_artifact["summary"]),
+        "upstream_claim_traceability": {
+            "suite_name": claim_traceability_artifact["suite_name"],
+            "status": claim_traceability_artifact["status"],
+            "path": relative_to_repo(CLAIM_TRACEABILITY_BUNDLE_PATH),
+            "summary": dict(claim_traceability_artifact["summary"]),
         },
         "evidence_inventory": evidence_inventory,
         "software": build_software_metadata(),
@@ -187,7 +188,7 @@ def build_artifact_bundle():
             ),
             "working_directory": str(REPO_ROOT),
             "git_revision": get_git_revision(),
-            "story3_path": str(STORY3_PATH),
+            "claim_traceability_bundle_path": str(CLAIM_TRACEABILITY_BUNDLE_PATH),
         },
         "summary": {
             "required_evidence_count": len(evidence_inventory),
@@ -207,7 +208,7 @@ def validate_artifact_bundle(artifact):
     missing_fields = [field for field in ARTIFACT_FIELDS if field not in artifact]
     if missing_fields:
         raise ValueError(
-            "Phase 3 Task 8 Story 4 artifact is missing required fields: {}".format(
+            "evidence_closure artifact is missing required fields: {}".format(
                 ", ".join(missing_fields)
             )
         )
@@ -256,7 +257,7 @@ def validate_artifact_bundle(artifact):
 
     expected_completed = all(
         [
-            artifact["story3_traceability"]["status"] == "pass",
+            artifact["upstream_claim_traceability"]["status"] == "pass",
             artifact["summary"]["all_evidence_items_present"],
             artifact["summary"]["claim_closure_rule_present"],
             artifact["summary"]["positive_or_diagnosis_path_completed"],
@@ -265,7 +266,7 @@ def validate_artifact_bundle(artifact):
     if artifact["summary"]["evidence_closure_completed"] != expected_completed:
         raise ValueError("evidence_closure_completed summary is inconsistent")
     if artifact["status"] != ("pass" if expected_completed else "fail"):
-        raise ValueError("Phase 3 Task 8 Story 4 status does not match completion summary")
+        raise ValueError("evidence_closure status does not match completion summary")
 
 
 def write_artifact_bundle(output_path: Path, artifact):
@@ -293,7 +294,7 @@ def parse_args():
         "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
-        help="Directory for the Phase 3 Task 8 Story 4 JSON artifact bundle.",
+        help="Directory for the evidence_closure JSON artifact bundle.",
     )
     parser.add_argument(
         "--quiet",

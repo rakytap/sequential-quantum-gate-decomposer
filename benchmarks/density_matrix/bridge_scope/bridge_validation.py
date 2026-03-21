@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validation: Task 3 Story 2 bridge micro-validation matrix.
+"""Validation: bridge micro-validation matrix.
 
 Validates the supported VQE-side density bridge on deterministic 1 to 3 qubit
 microcases. The goal is not observable-threshold closure, but proof that the
@@ -244,7 +244,9 @@ def build_expected_bridge_operations(vqe):
                 }
             )
         else:
-            raise ValueError(f"Unsupported Task 3 Story 2 gate in expected bridge: {gate_name}")
+            raise ValueError(
+                f"Unsupported bridge micro-validation gate in expected bridge: {gate_name}"
+            )
 
         for noise_spec in noise_by_gate.get(gate_index, []):
             expected.append(
@@ -308,7 +310,7 @@ def _case_base(case, topology):
     metadata.update(
         {
             "case_name": case["case_name"],
-            "case_kind": "task3_bridge_micro_validation",
+            "case_kind": "bridge_micro_validation",
             "purpose": case["purpose"],
             "required_gate_families": case["required_gate_families"],
             "required_noise_models": case["required_noise_models"],
@@ -405,7 +407,7 @@ def capture_bridge_microcase(case, verbose=True):
 
 def run_validation(verbose=True):
     print("=" * 78)
-    print("  Task 3 Story 2 Bridge Micro-Validation [{}]".format(PRIMARY_BACKEND))
+    print("  Bridge Micro-Validation [{}]".format(PRIMARY_BACKEND))
     print("=" * 78)
 
     results = []
@@ -494,9 +496,9 @@ def print_summary(bundle):
         )
     )
     if bundle["status"] == "pass":
-        print("\n  ALL TESTS PASSED - Task 3 Story 2 bridge micro-validation gate is closed.")
+        print("\n  ALL TESTS PASSED - Bridge micro-validation gate is closed.")
     else:
-        print("\n  Some mandatory bridge microcases failed - Task 3 Story 2 is not yet closed.")
+        print("\n  Some mandatory bridge microcases failed - bridge micro-validation is not yet closed.")
     print("=" * 78)
 
 
@@ -506,7 +508,7 @@ def main():
         "--output-dir",
         type=Path,
         default=None,
-        help="Optional directory for the Task 3 Story 2 JSON artifact bundle.",
+        help="Optional directory for the bridge micro-validation JSON artifact bundle.",
     )
     args = parser.parse_args()
 

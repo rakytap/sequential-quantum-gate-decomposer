@@ -28,9 +28,9 @@ from squander.partitioning.noisy_runtime import (  # noqa: E402
     execute_sequential_density_reference,
 )
 
-PERFORMANCE_EVIDENCE_CASE_SCHEMA_VERSION = "phase3_performance_evidence_record_v1"
-PERFORMANCE_EVIDENCE_BENCHMARK_PACKAGE_SCHEMA_VERSION = "phase3_performance_evidence_package_v1"
-PERFORMANCE_EVIDENCE_SUMMARY_SCHEMA_VERSION = "phase3_performance_evidence_summary_v1"
+PERFORMANCE_EVIDENCE_CASE_SCHEMA_VERSION = "performance_evidence_record_v1"
+PERFORMANCE_EVIDENCE_BENCHMARK_PACKAGE_SCHEMA_VERSION = "performance_evidence_package_v1"
+PERFORMANCE_EVIDENCE_SUMMARY_SCHEMA_VERSION = "performance_evidence_summary_v1"
 
 PERFORMANCE_EVIDENCE_BENCHMARK_SLICE_CONTINUITY = "continuity_anchor"
 PERFORMANCE_EVIDENCE_BENCHMARK_SLICE_STRUCTURED = "structured_performance"

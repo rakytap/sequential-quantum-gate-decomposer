@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validation: Phase 3 Task 4 Story 5 fusion classification surface.
+"""Fusion classification validation: fused, supported-unfused, and deferred labels.
 
 Checks that fused, supported-but-unfused, and deferred or unsupported candidate
 records remain explicit with no silent fallback.
@@ -42,7 +42,7 @@ DEFAULT_OUTPUT_DIR = (
     / "density_matrix"
     / "artifacts"
     / "partitioned_runtime"
-    / "story5_classification"
+    / "fused_classification"
 )
 ARTIFACT_CORE_FIELDS = (
     "suite_name",
@@ -106,7 +106,7 @@ def build_cases() -> list[dict]:
             }:
                 return cases
     raise RuntimeError(
-        "Task 4 Story 5 could not observe all required fusion classifications"
+        "Could not observe all required fusion classifications in sampled workloads"
     )
 
 
@@ -141,7 +141,7 @@ def build_artifact_bundle(cases: list[dict]) -> dict:
     missing = [field for field in ARTIFACT_CORE_FIELDS if field not in bundle]
     if missing:
         raise ValueError(
-            "Task 4 Story 5 bundle missing required fields: {}".format(
+            "Fusion classification bundle missing required fields: {}".format(
                 ", ".join(missing)
             )
         )
@@ -161,7 +161,7 @@ def main(argv: list[str] | None = None) -> int:
         "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
-        help="Directory to write the Task 4 Story 5 bundle into.",
+        help="Directory to write the fusion classification bundle into.",
     )
     parser.add_argument(
         "--quiet",

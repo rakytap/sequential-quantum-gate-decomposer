@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validation: Phase 3 Task 8 Story 1 claim package."""
+"""Validation: Paper 2 claim package boundary for publication evidence."""
 
 from __future__ import annotations
 
@@ -28,7 +28,7 @@ from benchmarks.density_matrix.publication_evidence.common import (
 )
 
 
-SUITE_NAME = "phase3_publication_evidence_claim_package"
+SUITE_NAME = "claim_package"
 ARTIFACT_FILENAME = "claim_package_bundle.json"
 DEFAULT_OUTPUT_DIR = publication_evidence_output_dir("claim_package")
 PRIMARY_SURFACE_PATH = MANDATORY_PUBLICATION_EVIDENCE_DOCS["phase3_paper"]
@@ -78,7 +78,6 @@ SUPPORTING_CLAIM_ITEMS = (
         "label": "Bounded benchmark-calibrated planning result",
         "text": "a benchmark-calibrated density-aware planning policy on a bounded candidate surface",
         "source_phrases": [
-            "bounded Task 5 calibrated planner claim",
             "benchmark-calibrated planning result",
             "`max_partition_qubits`",
         ],
@@ -292,7 +291,7 @@ def validate_artifact_bundle(artifact):
     missing_fields = [field for field in ARTIFACT_FIELDS if field not in artifact]
     if missing_fields:
         raise ValueError(
-            "Phase 3 Task 8 Story 1 artifact is missing required fields: {}".format(
+            "claim_package artifact is missing required fields: {}".format(
                 ", ".join(missing_fields)
             )
         )
@@ -364,7 +363,7 @@ def validate_artifact_bundle(artifact):
     if artifact["summary"]["claim_package_completed"] != expected_completed:
         raise ValueError("claim_package_completed summary is inconsistent")
     if artifact["status"] != ("pass" if expected_completed else "fail"):
-        raise ValueError("Phase 3 Task 8 Story 1 status does not match completion summary")
+        raise ValueError("claim_package status does not match completion summary")
 
 
 def write_artifact_bundle(output_path: Path, artifact):
@@ -393,7 +392,7 @@ def parse_args():
         "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
-        help="Directory for the Phase 3 Task 8 Story 1 JSON artifact bundle.",
+        help="Directory for the claim_package JSON artifact bundle.",
     )
     parser.add_argument(
         "--quiet",

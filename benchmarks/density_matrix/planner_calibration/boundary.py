@@ -37,7 +37,7 @@ def _build_planner_calibration_boundary_payload_cached() -> dict:
         "approximation_areas": [
             {
                 "category": "bounded_candidate_surface",
-                "description": "Task 5 calibrates the current noisy planner's span-budget settings rather than a broader family of already-implemented noisy planner variants.",
+                "description": "Planner calibration tunes the current noisy planner's span-budget settings rather than a broader family of already-implemented noisy planner variants.",
             },
             {
                 "category": "bounded_workload_matrix",
@@ -49,7 +49,7 @@ def _build_planner_calibration_boundary_payload_cached() -> dict:
             },
             {
                 "category": "optional_fused_signal_scope",
-                "description": "Fused-runtime opportunity may inform the signal surface where available, but the supported Task 5 claim is still rooted in the baseline partitioned-density runtime surface.",
+                "description": "Fused-runtime opportunity may inform the signal surface where available, but the supported planner-calibration claim is still rooted in the baseline partitioned-density runtime surface.",
             },
         ],
         "deferred_follow_on_branches": [
@@ -59,15 +59,15 @@ def _build_planner_calibration_boundary_payload_cached() -> dict:
             },
             {
                 "category": "broader_noisy_workflow_growth",
-                "description": "Broader noisy VQE/VQA workflow growth and gradient-routing features remain outside the minimum Task 5 claim.",
+                "description": "Broader noisy VQE/VQA workflow growth and gradient-routing features remain outside the minimum planner-calibration claim.",
             },
             {
                 "category": "calibration_aware_or_readout_features",
-                "description": "Calibration-aware, readout-oriented, and shot-noise workflow features remain deferred beyond the core Task 5 surface.",
+                "description": "Calibration-aware, readout-oriented, and shot-noise workflow features remain deferred beyond the core planner-calibration surface.",
             },
             {
                 "category": "approximate_scaling_methods",
-                "description": "Approximate scaling branches such as trajectories or MPDO-style methods remain future work rather than part of the supported Task 5 claim.",
+                "description": "Approximate scaling branches such as trajectories or MPDO-style methods remain future work rather than part of the supported planner-calibration claim.",
             },
         ],
         "summary": {

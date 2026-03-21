@@ -326,8 +326,8 @@ The following elements do not transfer unchanged:
 | `bqskit-Quick` / `Scan` / `Greedy` / `Cluster` | medium | use as external heuristic comparisons rather than native noisy mixed-state planners | comparison baseline |
 
 This table is the broader Phase 3 planner design space, not a statement that
-every listed strategy is already delivered in the current Task 5 baseline. The
-implemented Task 5 calibration surface is narrower: it currently calibrates a
+every listed strategy is already delivered in the current planner-calibration
+baseline. The implemented planner-calibration surface is narrower: it currently calibrates a
 bounded family of auditable `max_partition_qubits` span-budget settings on the
 existing noisy planner surface, while the adapted `kahn` / `tdag` / `gtqcp` /
 `ilp` / `ilp-fusion` / `ilp-fusion-ca` families remain valid design-space and
@@ -353,11 +353,11 @@ The recommended implementation and evaluation ladder is:
    baseline,
 4. multilevel or hypergraph extensions only if the simpler baselines plateau.
 
-Current Task 5 implementation finding:
+Current planner-calibration implementation finding:
 
 - the delivered benchmark-facing calibration surface is narrower than the full
   longer-horizon ladder above,
-- the current supported Task 5 result calibrates auditable span-budget
+- the current supported planner-calibration result calibrates auditable span-budget
   candidates on the existing noisy planner surface,
 - and the broader adapted `kahn` / `tdag` / `gtqcp` / `ilp` / `ilp-fusion` /
   `ilp-fusion-ca` family should currently be read as Phase 3 design-space or
@@ -371,7 +371,7 @@ Current Task 5 implementation finding:
 - and local channel fusion considered only where support remains very small and
   exact semantics are easy to validate.
 
-Current Task 4 implementation findings support this choice. The first delivered
+Current fused-runtime implementation findings support this choice. The first delivered
 real fused path is exactly this conservative descriptor-local unitary-island
 baseline, realized through the density backend's local-unitary primitive rather
 than through a broader channel-native architecture. The resulting benchmark
@@ -389,7 +389,7 @@ instead of premature architecture escalation.
 - and every planner or fusion claim is judged against the frozen noisy semantics
   before performance claims are interpreted.
 
-Current Task 6 implementation findings now make this backbone concrete. The
+Current correctness-evidence implementation findings now make this backbone concrete. The
 shared `benchmarks/density_matrix/correctness_evidence/` pipeline emits one
 machine-reviewable correctness package over:
 
@@ -402,9 +402,9 @@ machine-reviewable correctness package over:
 This means the validation backbone is no longer only conceptual. It is now an
 implemented artifact bundle family under
 `benchmarks/density_matrix/artifacts/correctness_evidence/` plus a rerunnable
-`task6_validation_pipeline.py` entry point.
+`benchmarks/density_matrix/correctness_evidence/validation_pipeline.py` entry point.
 
-Current Task 7 implementation findings now extend that backbone into the
+Current performance-evidence implementation findings now extend that backbone into the
 benchmark layer. The shared
 `benchmarks/density_matrix/performance_evidence/` pipeline emits one
 machine-reviewable benchmark package over:
@@ -417,15 +417,15 @@ machine-reviewable benchmark package over:
   each required family and size,
 - `0` positive-threshold pass cases,
 - `6` diagnosis-only representative cases,
-- and carry-forward of the `17` explicit Task 6 boundary cases into the
+- and carry-forward of the `17` explicit correctness-evidence boundary cases into the
   benchmark-summary layer.
 
 This means the benchmark package is no longer only a planning concept either. It
 is now an implemented artifact bundle family under
 `benchmarks/density_matrix/artifacts/performance_evidence/` plus a rerunnable
-`task7_validation_pipeline.py` entry point. The delivered baseline therefore
+`benchmarks/density_matrix/performance_evidence/validation_pipeline.py` entry point. The delivered baseline therefore
 supports diagnosis-grounded benchmark closure directly, not only the earlier
-Task 4 fused-runtime observation.
+fused-runtime observation.
 
 ## 6. Phase Boundary Classification
 
@@ -477,18 +477,18 @@ The main planning conclusion is:
 
 Current implementation finding:
 
-- the delivered Task 5 surface has not yet closed that entire broader algorithm
+- the delivered planner-calibration surface has not yet closed that entire broader algorithm
   family as separate noisy planner implementations,
 - instead it currently calibrates a bounded span-budget candidate family on the
   existing noisy planner surface and keeps the broader ladder as explicit
   design-space context,
-- and the supported Task 5 claim should therefore be phrased against the
+- and the supported planner-calibration claim should therefore be phrased against the
   auditable selection rule and bounded candidate family rather than against one
   permanently frozen winning planner identity.
 
-Current Task 7 benchmark finding:
+Current performance-evidence benchmark finding:
 
-- the emitted benchmark package is now aligned with that bounded Task 5 claim
+- the emitted benchmark package is now aligned with that bounded planner-calibration claim
   surface rather than with the longer-horizon planner ladder,
 - the current diagnosis closure therefore speaks about the delivered
   `span_budget_q2` baseline plus its measured sensitivity surface,

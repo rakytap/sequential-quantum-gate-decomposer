@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Validation: Phase 3 Task 2 Story 4 descriptor reconstruction contract.
+"""Partition-descriptor reconstruction validation.
 
 Emits reconstruction-oriented audits for one continuity case, the boundary-heavy
-4-qubit microcase, and one structured-family case. The goal is to prove that
-Task 2 descriptors expose reviewable qubit-support, remapping, and
-parameter-routing metadata.
+4-qubit microcase, and one structured-family case. Verifies that partition
+descriptors expose reviewable qubit-support, remapping, and parameter-routing
+metadata.
 
 Run with:
     python benchmarks/density_matrix/planner_surface/descriptor_reconstruction_validation.py
@@ -114,7 +114,7 @@ def run_validation(verbose: bool = True) -> list[dict]:
 
     cases = [continuity_case, boundary_case, structured_case]
     if verbose:
-        print("Phase 3 Task 2 Story 4 descriptor reconstruction:")
+        print("Partition-descriptor reconstruction:")
         for case in cases:
             print(
                 "  {case_name}: remapped_partitions={remapped_partition_count}, parameter_segments={parameter_routing_segment_count}, reconstruction_pass={reconstruction_pass}".format(

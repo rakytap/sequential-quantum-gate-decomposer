@@ -92,7 +92,7 @@ class Test_VQE:
         }
 
     @staticmethod
-    def _get_story2_config():
+    def _get_density_backend_config():
         return {
             "max_inner_iterations": 4,
             "max_iterations": 1,
@@ -100,7 +100,7 @@ class Test_VQE:
         }
 
     @staticmethod
-    def _get_story2_noise():
+    def _get_density_backend_noise():
         return [
             {
                 "channel": "local_depolarizing",
@@ -123,7 +123,7 @@ class Test_VQE:
         ]
 
     @staticmethod
-    def _get_task4_story1_required_noise_cases():
+    def _get_required_local_noise_cases():
         return (
             {
                 "case_name": "required_local_noise_4q_local_depolarizing_positive",
@@ -194,16 +194,16 @@ class Test_VQE:
         vqe.Generate_Circuit(1, 1)
         return vqe
 
-    def _build_story2_density_vqe(self, qbit_num, optimizer=None, density_noise=None):
+    def _build_density_backend_vqe(self, qbit_num, optimizer=None, density_noise=None):
         topology = [(idx, idx + 1) for idx in range(qbit_num - 1)]
         Hamiltonian = generate_hamiltonian(topology, qbit_num)
         VQE_cls = self._get_vqe_class()
         if density_noise is None:
-            density_noise = self._get_story2_noise()
+            density_noise = self._get_density_backend_noise()
         vqe = VQE_cls(
             Hamiltonian,
             qbit_num,
-            self._get_story2_config(),
+            self._get_density_backend_config(),
             backend="density_matrix",
             density_noise=density_noise,
         )
@@ -213,19 +213,19 @@ class Test_VQE:
         vqe.Generate_Circuit(1, 1)
         return vqe, Hamiltonian
 
-    def _build_story2_state_vector_vqe_with_density_noise(
+    def _build_state_vector_vqe_with_density_noise(
         self, qbit_num, *, omit_backend=False
     ):
         topology = [(idx, idx + 1) for idx in range(qbit_num - 1)]
         Hamiltonian = generate_hamiltonian(topology, qbit_num)
         VQE_cls = self._get_vqe_class()
-        kwargs = {"density_noise": self._get_story2_noise()}
+        kwargs = {"density_noise": self._get_density_backend_noise()}
         if not omit_backend:
             kwargs["backend"] = "state_vector"
         vqe = VQE_cls(
             Hamiltonian,
             qbit_num,
-            self._get_story2_config(),
+            self._get_density_backend_config(),
             **kwargs,
         )
         vqe.set_Ansatz("HEA")
@@ -281,7 +281,9 @@ class Test_VQE:
                         [noisy_circuit.qubits[target]],
                     )
                 else:
-                    raise ValueError(f"Unsupported Story 2 channel: {channel}")
+                    raise ValueError(
+                        f"Unsupported density-backend channel: {channel}"
+                    )
 
         noisy_circuit.save_density_matrix()
         return noisy_circuit
@@ -291,14 +293,14 @@ class Test_VQE:
         energy = np.trace(hamiltonian.dot(density_matrix))
         return float(np.real(energy)), float(np.imag(energy))
 
-    def _get_story2_aer_reference(self, vqe, Hamiltonian):
+    def _get_density_backend_aer_reference(self, vqe, Hamiltonian):
         pytest.importorskip("qiskit_aer")
 
         from qiskit_aer import AerSimulator
 
         noisy_qiskit_circuit = self._insert_reference_noise(
             vqe.get_Qiskit_Circuit(),
-            self._get_story2_noise(),
+            self._get_density_backend_noise(),
         )
         simulator = AerSimulator(method="density_matrix")
         result = simulator.run(noisy_qiskit_circuit, shots=1).result()
@@ -306,7 +308,7 @@ class Test_VQE:
         return self._density_energy(Hamiltonian, aer_rho)
 
     @staticmethod
-    def _expected_story1_bridge_operations(vqe):
+    def _expected_bridge_operations(vqe):
         pytest.importorskip("qiskit")
 
         base_circuit = vqe.get_Qiskit_Circuit()
@@ -354,7 +356,9 @@ class Test_VQE:
                     }
                 )
             else:
-                raise ValueError(f"Unsupported Story 1 gate in expected bridge: {gate_name}")
+                raise ValueError(
+                    f"Unsupported gate in expected bridge: {gate_name}"
+                )
 
             for noise_spec in noise_by_gate.get(gate_index, []):
                 expected.append(
@@ -418,9 +422,9 @@ class Test_VQE:
         vqe = VQE_cls(
             Hamiltonian,
             qbit_num,
-            self._get_story2_config(),
+            self._get_density_backend_config(),
             backend="density_matrix",
-            density_noise=self._get_story2_noise(),
+            density_noise=self._get_density_backend_noise(),
         )
 
         assert vqe.backend == "density_matrix"
@@ -448,7 +452,7 @@ class Test_VQE:
     @pytest.mark.parametrize("omit_backend", [False, True])
     def test_state_vector_rejects_density_noise(self, omit_backend):
         qbit_num = 4
-        vqe, _ = self._build_story2_state_vector_vqe_with_density_noise(
+        vqe, _ = self._build_state_vector_vqe_with_density_noise(
             qbit_num, omit_backend=omit_backend
         )
 
@@ -473,9 +477,9 @@ class Test_VQE:
         vqe = VQE_cls(
             Hamiltonian,
             qbit_num,
-            self._get_story2_config(),
+            self._get_density_backend_config(),
             backend="density_matrix",
-            density_noise=self._get_story2_noise(),
+            density_noise=self._get_density_backend_noise(),
         )
         vqe.set_Ansatz("HEA_ZYZ")
         vqe.Generate_Circuit(1, 1)
@@ -498,9 +502,9 @@ class Test_VQE:
         vqe = VQE_cls(
             Hamiltonian,
             qbit_num,
-            self._get_story2_config(),
+            self._get_density_backend_config(),
             backend="density_matrix",
-            density_noise=self._get_story2_noise(),
+            density_noise=self._get_density_backend_noise(),
         )
 
         with pytest.raises(Exception, match="requires a generated HEA circuit"):
@@ -514,7 +518,7 @@ class Test_VQE:
         vqe = VQE_cls(
             Hamiltonian,
             qbit_num,
-            self._get_story2_config(),
+            self._get_density_backend_config(),
             backend="density_matrix",
             density_noise=[
                 {
@@ -550,7 +554,7 @@ class Test_VQE:
         vqe = VQE_cls(
             Hamiltonian,
             qbit_num,
-            self._get_story2_config(),
+            self._get_density_backend_config(),
             backend="density_matrix",
         )
         custom_circuit = qgd_Circuit(qbit_num)
@@ -573,7 +577,7 @@ class Test_VQE:
             VQE_cls(
                 Hamiltonian,
                 qbit_num,
-                self._get_story2_config(),
+                self._get_density_backend_config(),
                 backend="density_matrix",
                 density_noise=[
                     {
@@ -636,7 +640,7 @@ class Test_VQE:
             VQE_cls(
                 Hamiltonian,
                 qbit_num,
-                self._get_story2_config(),
+                self._get_density_backend_config(),
                 backend="density_matrix",
                 density_noise=[
                     {
@@ -658,7 +662,7 @@ class Test_VQE:
             VQE_cls(
                 Hamiltonian,
                 qbit_num,
-                self._get_story2_config(),
+                self._get_density_backend_config(),
                 backend="density_matrix",
                 density_noise=[
                     {
@@ -680,7 +684,7 @@ class Test_VQE:
             VQE_cls(
                 Hamiltonian,
                 qbit_num,
-                self._get_story2_config(),
+                self._get_density_backend_config(),
                 backend="density_matrix",
                 density_noise=[
                     {
@@ -702,7 +706,7 @@ class Test_VQE:
             VQE_cls(
                 Hamiltonian,
                 qbit_num,
-                self._get_story2_config(),
+                self._get_density_backend_config(),
                 backend="density_matrix",
                 density_noise=[
                     {
@@ -715,7 +719,7 @@ class Test_VQE:
             )
 
     def test_density_backend_rejects_gradient_entrypoint(self):
-        vqe, _ = self._build_story2_density_vqe(4)
+        vqe, _ = self._build_density_backend_vqe(4)
         parameters = np.linspace(
             0.05,
             0.05 * vqe.get_Parameter_Num(),
@@ -763,12 +767,12 @@ class Test_VQE:
 
     @pytest.mark.parametrize("qbit_num", [4, 6, 8, 10])
     def test_density_matrix_backend_anchor_fixed_parameter_smoke(self, qbit_num):
-        density_vqe, Hamiltonian = self._build_story2_density_vqe(qbit_num)
+        density_vqe, Hamiltonian = self._build_density_backend_vqe(qbit_num)
         VQE_cls = self._get_vqe_class()
         state_vector_vqe = VQE_cls(
             Hamiltonian,
             qbit_num,
-            self._get_story2_config(),
+            self._get_density_backend_config(),
             backend="state_vector",
         )
         state_vector_vqe.set_Ansatz("HEA")
@@ -791,7 +795,7 @@ class Test_VQE:
     ):
         pytest.importorskip("qiskit")
 
-        density_vqe, _ = self._build_story2_density_vqe(qbit_num)
+        density_vqe, _ = self._build_density_backend_vqe(qbit_num)
         parameters = np.linspace(
             0.05,
             0.05 * density_vqe.get_Parameter_Num(),
@@ -800,7 +804,7 @@ class Test_VQE:
         )
         density_vqe.set_Optimized_Parameters(parameters)
         bridge = density_vqe.describe_density_bridge()
-        expected_operations = self._expected_story1_bridge_operations(density_vqe)
+        expected_operations = self._expected_bridge_operations(density_vqe)
 
         assert bridge["backend"] == "density_matrix"
         assert bridge["source_type"] == "generated_hea"
@@ -849,8 +853,8 @@ class Test_VQE:
         )
 
     def test_required_local_noise_validation_models_execute_on_supported_path(self):
-        for case in self._get_task4_story1_required_noise_cases():
-            density_vqe, _ = self._build_story2_density_vqe(
+        for case in self._get_required_local_noise_cases():
+            density_vqe, _ = self._build_density_backend_vqe(
                 case["qbit_num"],
                 density_noise=case["density_noise"],
             )
@@ -928,7 +932,7 @@ class Test_VQE:
             for case in bundle["cases"]
         )
 
-    def test_task3_story2_mixed_bridge_case_passes(self):
+    def test_bridge_scope_mixed_bridge_case_passes(self):
         pytest.importorskip("qiskit")
         pytest.importorskip("qiskit_aer")
 
@@ -957,7 +961,7 @@ class Test_VQE:
             for op in result["bridge_operations"]
         )
 
-    def test_task3_story2_bridge_bundle_schema(self):
+    def test_bridge_scope_bundle_schema(self):
         pytest.importorskip("qiskit")
         pytest.importorskip("qiskit_aer")
 
@@ -1013,7 +1017,7 @@ class Test_VQE:
         pytest.importorskip("qiskit_aer")
 
         from benchmarks.density_matrix.noise_support.unsupported_noise_validation import (
-            TASK4_UNSUPPORTED_CASES,
+            UNSUPPORTED_NOISE_BOUNDARY_CASES,
             build_artifact_bundle,
             run_validation,
         )
@@ -1023,16 +1027,18 @@ class Test_VQE:
 
         assert bundle["status"] == "pass"
         assert bundle["backend"] == "density_matrix"
-        assert bundle["summary"]["total_cases"] == len(TASK4_UNSUPPORTED_CASES)
+        assert bundle["summary"]["total_cases"] == len(UNSUPPORTED_NOISE_BOUNDARY_CASES)
         assert bundle["summary"]["unsupported_status_cases"] == len(
-            TASK4_UNSUPPORTED_CASES
+            UNSUPPORTED_NOISE_BOUNDARY_CASES
         )
-        assert bundle["summary"]["error_match_count"] == len(TASK4_UNSUPPORTED_CASES)
+        assert bundle["summary"]["error_match_count"] == len(
+            UNSUPPORTED_NOISE_BOUNDARY_CASES
+        )
         assert bundle["summary"]["pre_execution_failure_count"] == len(
-            TASK4_UNSUPPORTED_CASES
+            UNSUPPORTED_NOISE_BOUNDARY_CASES
         )
         assert bundle["summary"]["boundary_passed_cases"] == len(
-            TASK4_UNSUPPORTED_CASES
+            UNSUPPORTED_NOISE_BOUNDARY_CASES
         )
         assert bundle["summary"]["deferred_cases"] == 4
         assert bundle["summary"]["unsupported_cases"] == 4
@@ -1077,7 +1083,7 @@ class Test_VQE:
             not case["counts_toward_mandatory_baseline"] for case in bundle["cases"]
         )
 
-    def test_story4_workflow_case_includes_bridge_metadata(self):
+    def test_exact_regime_workflow_case_includes_bridge_metadata(self):
         pytest.importorskip("qiskit")
         pytest.importorskip("qiskit_aer")
 
@@ -1086,7 +1092,7 @@ class Test_VQE:
             run_exact_regime_workflow_case,
         )
 
-        density_vqe, _ = self._build_story2_density_vqe(4)
+        density_vqe, _ = self._build_density_backend_vqe(4)
         parameter_set = build_exact_regime_parameter_sets(
             density_vqe.get_Parameter_Num(),
             count=1,
@@ -1128,7 +1134,7 @@ class Test_VQE:
             run_exact_regime_workflow_case,
         )
 
-        density_vqe, _ = self._build_story2_density_vqe(4)
+        density_vqe, _ = self._build_density_backend_vqe(4)
         parameter_set = build_exact_regime_parameter_sets(
             density_vqe.get_Parameter_Num(),
             count=1,
@@ -1174,7 +1180,7 @@ class Test_VQE:
         assert bundle["summary"]["optional_cases_count_toward_mandatory_baseline"] == 0
         assert bundle["thresholds"]["absolute_energy_error"] == 1e-8
 
-    def test_story4_trace_artifact_includes_bridge_metadata(self):
+    def test_trace_artifact_includes_bridge_metadata(self):
         pytest.importorskip("qiskit")
         pytest.importorskip("qiskit_aer")
 
@@ -1198,7 +1204,7 @@ class Test_VQE:
         assert artifact["counts_toward_mandatory_baseline"] is False
         assert artifact["required_validation_trace"] is True
 
-    def test_story5_trace_artifact_schema(self):
+    def test_trace_artifact_schema(self):
         pytest.importorskip("qiskit")
         pytest.importorskip("qiskit_aer")
 
@@ -1283,13 +1289,13 @@ class Test_VQE:
             run_validation,
         )
 
-        story4_bundle, bundle = run_validation(
+        exact_regime_workflow_bundle, bundle = run_validation(
             qubit_sizes=(4,),
             parameter_set_count=1,
             verbose=False,
         )
 
-        assert story4_bundle["status"] == "pass"
+        assert exact_regime_workflow_bundle["status"] == "pass"
         assert bundle["status"] == "pass"
         assert bundle["suite_name"] == "workflow_baseline_validation"
         assert bundle["backend"] == "density_matrix"
@@ -1307,7 +1313,7 @@ class Test_VQE:
         assert len(bundle["cases"]) == 1
         assert bundle["cases"][0]["parameter_set_id"] == "set_00"
 
-    def test_task5_story2_missing_case_blocks_workflow_baseline_closure(self):
+    def test_workflow_baseline_missing_case_blocks_closure(self):
         pytest.importorskip("qiskit")
         pytest.importorskip("qiskit_aer")
 
@@ -1318,7 +1324,7 @@ class Test_VQE:
             run_validation,
         )
 
-        story4_bundle, bundle = run_validation(
+        exact_regime_workflow_bundle, bundle = run_validation(
             qubit_sizes=(4,),
             parameter_set_count=1,
             verbose=False,
@@ -1327,7 +1333,7 @@ class Test_VQE:
         omitted_case = broken_workflow_results.pop()
 
         broken_bundle = build_artifact_bundle(
-            story4_bundle,
+            exact_regime_workflow_bundle,
             broken_workflow_results,
             qubit_sizes=(4,),
             parameter_set_count=1,
@@ -1350,13 +1356,13 @@ class Test_VQE:
             run_validation,
         )
 
-        story2_bundle, trace_result, bundle = run_validation(
+        workflow_baseline_bundle, trace_result, bundle = run_validation(
             qubit_sizes=(10,),
             parameter_set_count=1,
             verbose=False,
         )
 
-        assert story2_bundle["status"] == "pass"
+        assert workflow_baseline_bundle["status"] == "pass"
         assert trace_result["status"] == "completed"
         assert bundle["status"] == "pass"
         assert bundle["suite_name"] == "trace_anchor_validation"
@@ -1370,7 +1376,7 @@ class Test_VQE:
         assert bundle["required_artifacts"]["workflow_baseline_reference"]["status"] == "pass"
         assert bundle["trace_artifact"]["case_name"] == "optimization_trace_4q"
 
-    def test_task5_story3_missing_trace_marker_blocks_trace_anchor_closure(self):
+    def test_trace_anchor_missing_trace_marker_blocks_closure(self):
         pytest.importorskip("qiskit")
         pytest.importorskip("qiskit_aer")
 
@@ -1381,7 +1387,7 @@ class Test_VQE:
             run_validation,
         )
 
-        story2_bundle, trace_result, _ = run_validation(
+        workflow_baseline_bundle, trace_result, _ = run_validation(
             qubit_sizes=(10,),
             parameter_set_count=1,
             verbose=False,
@@ -1390,7 +1396,7 @@ class Test_VQE:
         broken_trace_result["required_validation_trace"] = False
 
         bundle = build_artifact_bundle(
-            story2_bundle,
+            workflow_baseline_bundle,
             broken_trace_result,
             qubit_sizes=(10,),
             parameter_set_count=1,
@@ -1429,7 +1435,7 @@ class Test_VQE:
         assert bundle["required_artifacts"]["workflow_baseline_reference"]["status"] == "pass"
         assert bundle["required_artifacts"]["trace_anchor_reference"]["status"] == "pass"
 
-    def test_task5_story4_missing_workflow_metric_blocks_metric_completeness(self):
+    def test_metric_completeness_missing_workflow_metric_blocks_gate(self):
         pytest.importorskip("qiskit")
         pytest.importorskip("qiskit_aer")
 
@@ -1440,19 +1446,19 @@ class Test_VQE:
             run_validation,
         )
 
-        story1_bundle, story2_bundle, story3_bundle, _ = run_validation(
+        local_correctness_bundle, workflow_baseline_bundle, trace_anchor_bundle, _ = run_validation(
             qubit_sizes=(10,),
             parameter_set_count=1,
             verbose=False,
         )
-        broken_story2_bundle = copy.deepcopy(story2_bundle)
-        broken_case = broken_story2_bundle["cases"][0]
+        broken_workflow_baseline_bundle = copy.deepcopy(workflow_baseline_bundle)
+        broken_case = broken_workflow_baseline_bundle["cases"][0]
         del broken_case["process_peak_rss_kb"]
 
         bundle = build_artifact_bundle(
-            story1_bundle,
-            broken_story2_bundle,
-            story3_bundle,
+            local_correctness_bundle,
+            broken_workflow_baseline_bundle,
+            trace_anchor_bundle,
         )
 
         assert bundle["status"] == "fail"
@@ -1470,13 +1476,13 @@ class Test_VQE:
             run_validation,
         )
 
-        story4_bundle, optional_bundle, unsupported_bundle, bundle = run_validation(
+        metric_completeness_bundle, optional_bundle, unsupported_bundle, bundle = run_validation(
             qubit_sizes=(10,),
             parameter_set_count=1,
             verbose=False,
         )
 
-        assert story4_bundle["status"] == "pass"
+        assert metric_completeness_bundle["status"] == "pass"
         assert optional_bundle["status"] == "pass"
         assert unsupported_bundle["status"] == "pass"
         assert bundle["status"] == "pass"
@@ -1484,16 +1490,16 @@ class Test_VQE:
         assert bundle["summary"]["mandatory_artifacts_complete"] is True
         assert bundle["summary"]["optional_evidence_supplemental"] is True
         assert bundle["summary"]["unsupported_evidence_negative_only"] is True
-        assert bundle["summary"]["main_phase2_claim_completed"] is True
+        assert bundle["summary"]["main_validation_claim_completed"] is True
         assert bundle["summary"]["incomplete_mandatory_artifacts"] == []
         assert bundle["required_artifacts"]["metric_completeness_validation"]["status"] == "pass"
         assert (
-            bundle["required_artifacts"]["task4_story3_optional_classification"]["status"]
+            bundle["required_artifacts"]["optional_noise_reference"]["status"]
             == "pass"
         )
-        assert bundle["required_artifacts"]["task4_story4_unsupported_noise"]["status"] == "pass"
+        assert bundle["required_artifacts"]["unsupported_noise_reference"]["status"] == "pass"
 
-    def test_task5_story5_incomplete_mandatory_artifact_blocks_main_claim(self):
+    def test_validation_interpretation_incomplete_mandatory_artifact_blocks_main_claim(self):
         pytest.importorskip("qiskit")
         pytest.importorskip("qiskit_aer")
 
@@ -1504,18 +1510,18 @@ class Test_VQE:
             run_validation,
         )
 
-        story4_bundle, optional_bundle, unsupported_bundle, _ = run_validation(
+        metric_completeness_bundle, optional_bundle, unsupported_bundle, _ = run_validation(
             qubit_sizes=(10,),
             parameter_set_count=1,
             verbose=False,
         )
-        broken_story4_bundle = copy.deepcopy(story4_bundle)
-        broken_story4_bundle["required_artifacts"]["workflow_baseline_reference"][
+        broken_metric_completeness_bundle = copy.deepcopy(metric_completeness_bundle)
+        broken_metric_completeness_bundle["required_artifacts"]["workflow_baseline_reference"][
             "status"
         ] = "fail"
 
         bundle = build_artifact_bundle(
-            broken_story4_bundle,
+            broken_metric_completeness_bundle,
             optional_bundle,
             unsupported_bundle,
         )
@@ -1525,7 +1531,7 @@ class Test_VQE:
             "incomplete_mandatory_artifacts"
         ]
         assert bundle["summary"]["mandatory_artifacts_complete"] is False
-        assert bundle["summary"]["main_phase2_claim_completed"] is False
+        assert bundle["summary"]["main_validation_claim_completed"] is False
 
     def test_validation_evidence_publication_bundle_schema(self, tmp_path):
         pytest.importorskip("qiskit")
@@ -1533,10 +1539,10 @@ class Test_VQE:
 
         from benchmarks.density_matrix.validation_evidence.validation_evidence_publication_bundle import (
             ARTIFACT_FILENAME,
-            generate_story6_bundle,
+            generate_validation_evidence_publication_bundle,
         )
 
-        bundle = generate_story6_bundle(
+        bundle = generate_validation_evidence_publication_bundle(
             tmp_path,
             qubit_sizes=(10,),
             parameter_set_count=1,
@@ -1562,26 +1568,26 @@ class Test_VQE:
         }
         assert (tmp_path / ARTIFACT_FILENAME).exists()
 
-    def test_task5_story6_missing_trace_file_fails_bundle_validation(self, tmp_path):
+    def test_validation_evidence_publication_missing_trace_file_fails_bundle_validation(self, tmp_path):
         pytest.importorskip("qiskit")
         pytest.importorskip("qiskit_aer")
 
         from benchmarks.density_matrix.validation_evidence.validation_evidence_publication_bundle import (
-            STORY3_TRACE_ARTIFACT_FILENAME,
-            generate_story6_bundle,
-            validate_task5_story6_bundle,
+            TRACE_ARTIFACT_FILENAME,
+            generate_validation_evidence_publication_bundle,
+            validate_validation_evidence_publication_bundle,
         )
 
-        bundle = generate_story6_bundle(
+        bundle = generate_validation_evidence_publication_bundle(
             tmp_path,
             qubit_sizes=(10,),
             parameter_set_count=1,
             verbose=False,
         )
-        (tmp_path / STORY3_TRACE_ARTIFACT_FILENAME).unlink()
+        (tmp_path / TRACE_ARTIFACT_FILENAME).unlink()
 
         with pytest.raises(ValueError, match="missing artifact file"):
-            validate_task5_story6_bundle(bundle, tmp_path)
+            validate_validation_evidence_publication_bundle(bundle, tmp_path)
 
     def test_noise_support_publication_bundle_schema(self, tmp_path):
         pytest.importorskip("qiskit")
@@ -1589,10 +1595,10 @@ class Test_VQE:
 
         from benchmarks.density_matrix.noise_support.noise_support_publication_bundle import (
             ARTIFACT_FILENAME,
-            generate_story6_bundle,
+            generate_noise_support_publication_bundle,
         )
 
-        bundle = generate_story6_bundle(
+        bundle = generate_noise_support_publication_bundle(
             tmp_path,
             qubit_sizes=(4,),
             parameter_set_count=1,
@@ -1701,12 +1707,12 @@ class Test_VQE:
             "unsupported_state_vector_density_noise",
         }
 
-    def test_task3_story5_bundle_manifest_schema(self, tmp_path):
+    def test_bridge_publication_bundle_manifest_schema(self, tmp_path):
         from benchmarks.density_matrix.bridge_scope.bridge_publication_bundle import (
-            TASK3_STORY2_BUNDLE_FILENAME,
-            TASK3_STORY3_BUNDLE_FILENAME,
-            TASK3_STORY5_BUNDLE_FILENAME,
-            build_task3_story5_bundle,
+            BRIDGE_MICRO_VALIDATION_BUNDLE_FILENAME,
+            BRIDGE_PUBLICATION_BUNDLE_FILENAME,
+            UNSUPPORTED_BRIDGE_BUNDLE_FILENAME,
+            build_bridge_publication_bundle,
         )
         from benchmarks.density_matrix.workflow_evidence.exact_density_vqe_validation import (
             OPTIMIZATION_TRACE_ARTIFACT_FILENAME,
@@ -1721,8 +1727,12 @@ class Test_VQE:
         (tmp_path / EXACT_REGIME_WORKFLOW_BUNDLE_FILENAME).write_text(
             "{}\n", encoding="utf-8"
         )
-        (tmp_path / TASK3_STORY2_BUNDLE_FILENAME).write_text("{}\n", encoding="utf-8")
-        (tmp_path / TASK3_STORY3_BUNDLE_FILENAME).write_text("{}\n", encoding="utf-8")
+        (tmp_path / BRIDGE_MICRO_VALIDATION_BUNDLE_FILENAME).write_text(
+            "{}\n", encoding="utf-8"
+        )
+        (tmp_path / UNSUPPORTED_BRIDGE_BUNDLE_FILENAME).write_text(
+            "{}\n", encoding="utf-8"
+        )
 
         fixed_results = [
             {
@@ -1752,12 +1762,12 @@ class Test_VQE:
             "initial_energy": 1.0,
             "final_energy": -1.0,
         }
-        task3_story2_bundle = {
+        bridge_micro_validation_bundle = {
             "status": "pass",
             "requirements": {"microcase_qubits": [1, 2, 3]},
             "summary": {"total_cases": 5, "passed_cases": 5, "pass_rate": 1.0},
         }
-        task3_story3_bundle = {
+        unsupported_bridge_bundle = {
             "status": "pass",
             "requirements": {
                 "required_categories": [
@@ -1788,12 +1798,12 @@ class Test_VQE:
             },
         }
 
-        bundle = build_task3_story5_bundle(
+        bundle = build_bridge_publication_bundle(
             tmp_path,
             fixed_results=fixed_results,
             trace_result=trace_result,
-            task3_story2_bundle=task3_story2_bundle,
-            task3_story3_bundle=task3_story3_bundle,
+            bridge_micro_validation_bundle=bridge_micro_validation_bundle,
+            unsupported_bridge_bundle=unsupported_bridge_bundle,
             workflow_bundle=workflow_bundle,
         )
 
@@ -1810,17 +1820,17 @@ class Test_VQE:
             "bridge_optimization_trace_4q",
             "unsupported_bridge_bundle",
         }
-        assert (tmp_path / TASK3_STORY5_BUNDLE_FILENAME).name == TASK3_STORY5_BUNDLE_FILENAME
+        assert (tmp_path / BRIDGE_PUBLICATION_BUNDLE_FILENAME).name == BRIDGE_PUBLICATION_BUNDLE_FILENAME
 
     def test_density_matrix_backend_anchor_fixed_parameter_matches_aer_reference(self):
-        density_vqe, Hamiltonian = self._build_story2_density_vqe(4)
+        density_vqe, Hamiltonian = self._build_density_backend_vqe(4)
 
         param_num = density_vqe.get_Parameter_Num()
         parameters = np.linspace(0.05, 0.05 * param_num, param_num, dtype=np.float64)
         density_vqe.set_Optimized_Parameters(parameters)
 
         density_energy = float(density_vqe.Optimization_Problem(parameters))
-        aer_energy_real, aer_energy_imag = self._get_story2_aer_reference(
+        aer_energy_real, aer_energy_imag = self._get_density_backend_aer_reference(
             density_vqe, Hamiltonian
         )
 
@@ -1830,7 +1840,7 @@ class Test_VQE:
         assert abs(aer_energy_imag) <= 1e-12
 
     def test_density_matrix_backend_bounded_optimization_trace(self):
-        density_vqe, _ = self._build_story2_density_vqe(4, optimizer="COSINE")
+        density_vqe, _ = self._build_density_backend_vqe(4, optimizer="COSINE")
 
         param_num = density_vqe.get_Parameter_Num()
         parameters = np.linspace(0.05, 0.05 * param_num, param_num, dtype=np.float64)
@@ -1846,7 +1856,7 @@ class Test_VQE:
         assert final_parameters.shape == parameters.shape
 
     def test_density_backend_rejects_unsupported_optimizer_on_start(self):
-        density_vqe, _ = self._build_story2_density_vqe(4, optimizer="ADAM")
+        density_vqe, _ = self._build_density_backend_vqe(4, optimizer="ADAM")
 
         param_num = density_vqe.get_Parameter_Num()
         parameters = np.linspace(0.05, 0.05 * param_num, param_num, dtype=np.float64)

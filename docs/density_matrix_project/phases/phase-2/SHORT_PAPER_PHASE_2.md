@@ -104,14 +104,14 @@ noisy backend slice for the frozen canonical workflow scope.
 
 That slice is now backed by a complete workflow-facing publication package
 archived in `benchmarks/density_matrix/artifacts/workflow_evidence/`, with
-`workflow_publication_bundle.json` as the top-level manifest. The final
-Task 6 manifest links the canonical workflow contract
+`workflow_publication_bundle.json` as the top-level manifest. That manifest
+links the canonical workflow contract
 `workflow_contract_bundle.json`, the end-to-end plus trace bundle
 `end_to_end_trace_bundle.json`, the workflow matrix bundle
 `matrix_baseline_bundle.json`, the unsupported-workflow bundle
 `unsupported_workflow_bundle.json`, and the interpretation-guardrail
 bundle `workflow_interpretation_bundle.json` in one machine-readable evidence
-surface while preserving traceability to the underlying Task 5 validation
+surface while preserving traceability to the underlying validation-evidence
 layers. The publication bundle now checks semantic closure across those layers,
 including contract completeness, contract-aligned workflow gates, unsupported-
 boundary integrity, and interpretation guardrails, rather than only artifact

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validation: Phase 3 Task 1 Story 4 legacy exact lowering.
+"""Legacy exact lowering validation.
 
 Builds representative legacy `qgd_Circuit` inputs and verifies that exact
 in-bounds cases lower into the canonical planner surface while unsupported gate

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validation: Phase 3 Task 6 Story 6 unsupported-boundary surface.
+"""Unsupported-boundary (negative evidence) validation.
 
 Builds a stage-separated negative-evidence layer for planner-entry,
 descriptor-generation, and runtime-stage unsupported or deferred behavior.
@@ -24,7 +24,7 @@ from benchmarks.density_matrix.correctness_evidence.records import (
     build_correctness_evidence_negative_records,
 )
 
-SUITE_NAME = "phase3_correctness_evidence_unsupported_boundary"
+SUITE_NAME = "correctness_evidence_unsupported_boundary"
 ARTIFACT_FILENAME = "unsupported_boundary_bundle.json"
 DEFAULT_OUTPUT_DIR = correctness_evidence_output_dir("unsupported_boundary")
 ARTIFACT_CORE_FIELDS = (
@@ -69,7 +69,7 @@ def build_artifact_bundle(cases: list[dict]) -> dict:
     missing = [field for field in ARTIFACT_CORE_FIELDS if field not in bundle]
     if missing:
         raise ValueError(
-            "Task 6 Story 6 bundle missing required fields: {}".format(
+            "Unsupported boundary bundle missing required fields: {}".format(
                 ", ".join(missing)
             )
         )
@@ -82,7 +82,7 @@ def main(argv: list[str] | None = None) -> int:
         "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
-        help="Directory to write the Task 6 Story 6 bundle into.",
+        help="Directory to write the unsupported boundary bundle into.",
     )
     parser.add_argument(
         "--quiet",

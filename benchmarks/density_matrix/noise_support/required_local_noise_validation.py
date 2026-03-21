@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
-"""Validation: Task 4 Story 1 required local-noise positive slice.
+"""Validation: required local-noise positive slice.
 
 Runs one supported positive case per required Phase 2 local-noise model and
 records reviewable bridge metadata proving that the requested local model is
 what actually reaches the VQE-facing density path.
 
-This script is intentionally narrower than the broader Task 2 and Task 4
-workflow validation package:
+This script is intentionally narrower than the broader exactness and
+noise-support workflow validation package:
 - it proves each required local model executes on the supported generated-HEA
   density path,
 - it records model identity, placement, and fixed value metadata,
-- it marks every emitted case as part of the mandatory Task 4 baseline,
+- it marks every emitted case as part of the mandatory required-local-noise baseline,
 - and it rejects whole-register depolarizing as a stand-in for the required
   local-noise baseline.
 
@@ -159,21 +159,21 @@ def validate_case_artifact(case):
     missing_fields = [field for field in required_fields if field not in case]
     if missing_fields:
         raise ValueError(
-            "Task 4 Story 1 case artifact is missing required fields: {}".format(
+            "Required local-noise case artifact is missing required fields: {}".format(
                 ", ".join(missing_fields)
             )
         )
 
     if case["status"] not in {"pass", "fail"}:
         raise ValueError(
-            "Task 4 Story 1 case artifact has unsupported status '{}'".format(
+            "Required local-noise case artifact has unsupported status '{}'".format(
                 case["status"]
             )
         )
 
     if case["backend"] != PRIMARY_BACKEND:
         raise ValueError(
-            "Task 4 Story 1 case artifact has unexpected backend '{}'".format(
+            "Required local-noise case artifact has unexpected backend '{}'".format(
                 case["backend"]
             )
         )
@@ -337,7 +337,7 @@ def write_artifact_bundle(path: Path, bundle):
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description="Run Task 4 Story 1 required local-noise validation."
+        description="Run required local-noise validation."
     )
     parser.add_argument(
         "--output-dir",

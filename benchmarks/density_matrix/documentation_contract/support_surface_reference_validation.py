@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Validation: Task 7 Story 3 support-surface reference layer.
+"""Validation: Support-surface reference layer.
 
 Builds a machine-readable checker for the guaranteed VQE-facing support surface.
 This layer is intentionally thin:
-- it reuses the Story 1 entry point and Story 2 wording surface,
+- it reuses the supported-entry wording surface,
 - it records the required / optional / deferred / unsupported support boundary,
 - it preserves a few explicit boundary examples,
 - and it fails when broader capability is allowed to masquerade as guaranteed
@@ -36,17 +36,19 @@ from benchmarks.density_matrix.documentation_contract.doc_utils import (
     write_json,
 )
 from benchmarks.density_matrix.documentation_contract.supported_entry_reference_validation import (
-    ARTIFACT_FILENAME as STORY2_ARTIFACT_FILENAME,
-    run_validation as run_story2_validation,
-    validate_artifact_bundle as validate_story2_artifact,
+    ARTIFACT_FILENAME as SUPPORTED_ENTRY_REFERENCE_ARTIFACT_FILENAME,
+    run_validation as run_supported_entry_reference_validation,
+    validate_artifact_bundle as validate_supported_entry_reference_artifact,
 )
 
 
 SUITE_NAME = "support_surface_reference"
 ARTIFACT_FILENAME = "support_surface_reference.json"
 DEFAULT_OUTPUT_DIR = DOCUMENTATION_CONTRACT_OUTPUT_DIR
-STORY2_ARTIFACT_PATH = DEFAULT_OUTPUT_DIR / STORY2_ARTIFACT_FILENAME
-STORY3_SECTION_HEADING = "## Guaranteed VQE-Facing Support Surface"
+SUPPORTED_ENTRY_REFERENCE_ARTIFACT_PATH = (
+    DEFAULT_OUTPUT_DIR / SUPPORTED_ENTRY_REFERENCE_ARTIFACT_FILENAME
+)
+SUPPORT_SURFACE_SECTION_HEADING = "## Guaranteed VQE-Facing Support Surface"
 MANDATORY_SUPPORT_ITEMS = (
     {
         "support_id": "generated_hea_only",
@@ -65,7 +67,7 @@ MANDATORY_SUPPORT_ITEMS = (
         "entry_point_phrases": [
             "Required gate families: `U3`, `CNOT`",
         ],
-        "primary_doc_id": "task4_mini_spec",
+        "primary_doc_id": "support_matrix_task_contract",
         "primary_source_phrases": [
             "The guaranteed mandatory gate surface remains `U3` and `CNOT`",
         ],
@@ -76,7 +78,7 @@ MANDATORY_SUPPORT_ITEMS = (
         "entry_point_phrases": [
             "Required local noise models: local depolarizing, local phase damping or dephasing, and local amplitude damping",
         ],
-        "primary_doc_id": "task4_mini_spec",
+        "primary_doc_id": "support_matrix_task_contract",
         "primary_source_phrases": [
             "The mandatory Phase 2 local-noise baseline is:",
             "`local single-qubit depolarizing`, `local amplitude damping`, and",
@@ -89,7 +91,7 @@ MANDATORY_SUPPORT_ITEMS = (
         "entry_point_phrases": [
             "Whole-register depolarizing remains optional and does not count as required local-noise support",
         ],
-        "primary_doc_id": "task4_mini_spec",
+        "primary_doc_id": "support_matrix_task_contract",
         "primary_source_phrases": [
             "whole-register depolarizing is optional only as a regression or",
             "stress-test baseline",
@@ -126,7 +128,7 @@ MANDATORY_SUPPORT_ITEMS = (
         "entry_point_phrases": [
             "Full `qgd_Circuit` parity is not part of the Phase 2 guarantee",
         ],
-        "primary_doc_id": "task3_mini_spec",
+        "primary_doc_id": "bridge_scope_task_contract",
         "primary_source_phrases": [
             "full `qgd_Circuit` parity is not assumed",
         ],
@@ -137,7 +139,7 @@ MANDATORY_SUPPORT_ITEMS = (
         "entry_point_phrases": [
             "Broader standalone `NoisyCircuit` capability does not automatically imply guaranteed VQE-facing support.",
         ],
-        "primary_doc_id": "task4_mini_spec",
+        "primary_doc_id": "support_matrix_task_contract",
         "primary_source_phrases": [
             "Using standalone `NoisyCircuit` breadth to overstate the guaranteed VQE-facing",
             "Phase 2 support surface",
@@ -154,7 +156,7 @@ ARTIFACT_CORE_FIELDS = (
     "status",
     "entry_point",
     "requirements",
-    "story2_supported_entry",
+    "upstream_supported_entry_reference",
     "support_surface_inventory",
     "boundary_examples",
     "software",
@@ -163,12 +165,14 @@ ARTIFACT_CORE_FIELDS = (
 )
 
 
-def _load_story2_artifact(path: Path = STORY2_ARTIFACT_PATH):
+def _load_supported_entry_reference_artifact(
+    path: Path = SUPPORTED_ENTRY_REFERENCE_ARTIFACT_PATH,
+):
     if path.exists():
         artifact = load_json(path)
-        validate_story2_artifact(artifact)
+        validate_supported_entry_reference_artifact(artifact)
         return artifact
-    artifact = run_story2_validation(verbose=False)
+    artifact = run_supported_entry_reference_validation(verbose=False)
     return artifact
 
 
@@ -216,12 +220,12 @@ def build_boundary_examples():
 
 
 def build_artifact_bundle():
-    story2_artifact = _load_story2_artifact()
+    supported_entry_reference_artifact = _load_supported_entry_reference_artifact()
     entry_text = load_text(PHASE2_DOCUMENTATION_INDEX_PATH)
     support_surface_inventory = build_support_surface_inventory()
     boundary_examples = build_boundary_examples()
 
-    section_heading_present = STORY3_SECTION_HEADING in entry_text
+    section_heading_present = SUPPORT_SURFACE_SECTION_HEADING in entry_text
     all_support_items_present = all(
         item["entry_point_present"] and item["primary_source_present"]
         for item in support_surface_inventory
@@ -230,7 +234,7 @@ def build_artifact_bundle():
         example["entry_point_present"] for example in boundary_examples
     )
     support_surface_reference_completed = bool(
-        story2_artifact["status"] == "pass"
+        supported_entry_reference_artifact["status"] == "pass"
         and section_heading_present
         and all_support_items_present
         and all_boundary_examples_present
@@ -241,7 +245,7 @@ def build_artifact_bundle():
         "status": "pass" if support_surface_reference_completed else "fail",
         "entry_point": {
             "path": relative_to_repo(PHASE2_DOCUMENTATION_INDEX_PATH),
-            "section_heading": STORY3_SECTION_HEADING,
+            "section_heading": SUPPORT_SURFACE_SECTION_HEADING,
             "section_heading_present": section_heading_present,
         },
         "requirements": {
@@ -250,22 +254,24 @@ def build_artifact_bundle():
             ],
             "required_boundary_examples": list(MANDATORY_BOUNDARY_EXAMPLES),
         },
-        "story2_supported_entry": {
-            "suite_name": story2_artifact["suite_name"],
-            "status": story2_artifact["status"],
-            "summary": story2_artifact["summary"],
+        "upstream_supported_entry_reference": {
+            "suite_name": supported_entry_reference_artifact["suite_name"],
+            "status": supported_entry_reference_artifact["status"],
+            "summary": supported_entry_reference_artifact["summary"],
         },
         "support_surface_inventory": support_surface_inventory,
         "boundary_examples": boundary_examples,
         "software": build_software_metadata(),
         "provenance": {
             "generation_command": (
-                "python benchmarks/density_matrix/"
+                "python benchmarks/density_matrix/documentation_contract/"
                 "support_surface_reference_validation.py"
             ),
             "working_directory": str(REPO_ROOT),
             "git_revision": get_git_revision(),
-            "story2_supported_entry_path": str(STORY2_ARTIFACT_PATH),
+            "supported_entry_reference_path": str(
+                SUPPORTED_ENTRY_REFERENCE_ARTIFACT_PATH
+            ),
             "entry_point_path": str(PHASE2_DOCUMENTATION_INDEX_PATH),
         },
         "summary": {
@@ -285,7 +291,7 @@ def validate_artifact_bundle(artifact):
     missing_fields = [field for field in ARTIFACT_CORE_FIELDS if field not in artifact]
     if missing_fields:
         raise ValueError(
-            "Task 7 Story 3 artifact bundle is missing required fields: {}".format(
+            "support_surface_reference artifact is missing required fields: {}".format(
                 ", ".join(missing_fields)
             )
         )
@@ -294,7 +300,7 @@ def validate_artifact_bundle(artifact):
     required_support_ids = artifact["requirements"]["required_support_ids"]
     if observed_support_ids != required_support_ids:
         raise ValueError(
-            "Task 7 Story 3 support inventory mismatch: expected {}, observed {}".format(
+            "support_surface_reference support inventory mismatch: expected {}, observed {}".format(
                 required_support_ids, observed_support_ids
             )
         )
@@ -303,7 +309,7 @@ def validate_artifact_bundle(artifact):
         "section_heading_present"
     ]:
         raise ValueError(
-            "Task 7 Story 3 section_heading_present summary is inconsistent"
+            "support_surface_reference section_heading_present summary is inconsistent"
         )
 
     if artifact["summary"]["all_support_items_present"] != all(
@@ -311,21 +317,21 @@ def validate_artifact_bundle(artifact):
         for item in artifact["support_surface_inventory"]
     ):
         raise ValueError(
-            "Task 7 Story 3 all_support_items_present summary is inconsistent"
+            "support_surface_reference all_support_items_present summary is inconsistent"
         )
 
     if artifact["summary"]["all_boundary_examples_present"] != all(
         example["entry_point_present"] for example in artifact["boundary_examples"]
     ):
         raise ValueError(
-            "Task 7 Story 3 all_boundary_examples_present summary is inconsistent"
+            "support_surface_reference all_boundary_examples_present summary is inconsistent"
         )
 
     if artifact["summary"]["support_surface_reference_completed"] != (
         artifact["status"] == "pass"
     ):
         raise ValueError(
-            "Task 7 Story 3 support_surface_reference_completed summary is inconsistent"
+            "support_surface_reference support_surface_reference_completed summary is inconsistent"
         )
 
 
@@ -354,7 +360,7 @@ def parse_args():
         "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
-        help="Directory for the Task 7 Story 3 JSON artifact bundle.",
+        help="Directory for the support_surface_reference JSON artifact.",
     )
     parser.add_argument(
         "--quiet",

@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Validation: Task 4 Story 3 optional-noise classification layer.
+"""Validation: optional-noise classification layer.
 
-Builds on the already passing required Task 4 bundles and adds explicit optional
+Builds on the already passing required-noise bundles and adds explicit optional
 whole-register depolarizing cases so reviewers can see that:
 - required local-noise evidence remains milestone-defining,
 - optional evidence is clearly marked optional,
-- and optional cases do not count toward mandatory Task 4 completion.
+- and optional cases do not count toward mandatory baseline completion.
 
 Run with:
     python benchmarks/density_matrix/noise_support/optional_noise_classification_validation.py
@@ -27,12 +27,12 @@ if str(REPO_ROOT) not in sys.path:
 from benchmarks.density_matrix.circuits import DualBuilder
 from benchmarks.density_matrix.noise_support.required_local_noise_validation import (
     REQUIRED_LOCAL_NOISE_MODELS,
-    build_artifact_bundle as build_story1_bundle,
-    run_validation as run_story1_validation,
+    build_artifact_bundle as build_required_local_noise_bundle,
+    run_validation as run_required_local_noise_validation,
 )
 from benchmarks.density_matrix.noise_support.required_local_noise_micro_validation import (
-    build_artifact_bundle as build_story2_bundle,
-    run_story2_validation,
+    build_artifact_bundle as build_required_local_noise_micro_bundle,
+    run_required_local_noise_micro_validation,
 )
 from benchmarks.density_matrix.noise_support.support_tiers import (
     CASE_PURPOSE_OPTIONAL_REGRESSION,
@@ -193,7 +193,7 @@ def validate_optional_case_payload(case):
     missing_fields = [field for field in required_fields if field not in case]
     if missing_fields:
         raise ValueError(
-            "Task 4 Story 3 optional case payload is missing required fields: {}".format(
+            "Optional-noise classification case payload is missing required fields: {}".format(
                 ", ".join(missing_fields)
             )
         )
@@ -226,17 +226,31 @@ def run_optional_case(case, *, verbose=False):
 
 
 def run_validation(*, verbose=False):
-    story1_results = run_story1_validation(verbose=verbose)
-    story1_bundle = build_story1_bundle(story1_results)
-    story2_results = run_story2_validation(verbose=verbose)
-    story2_bundle = build_story2_bundle(story2_results)
-    optional_results = [run_optional_case(case, verbose=verbose) for case in OPTIONAL_WHOLE_REGISTER_CASES]
-    return story1_bundle, story2_bundle, optional_results
+    required_local_noise_results = run_required_local_noise_validation(verbose=verbose)
+    required_local_noise_bundle = build_required_local_noise_bundle(
+        required_local_noise_results
+    )
+    required_local_noise_micro_results = run_required_local_noise_micro_validation(
+        verbose=verbose
+    )
+    required_local_noise_micro_bundle = build_required_local_noise_micro_bundle(
+        required_local_noise_micro_results
+    )
+    optional_results = [
+        run_optional_case(case, verbose=verbose) for case in OPTIONAL_WHOLE_REGISTER_CASES
+    ]
+    return required_local_noise_bundle, required_local_noise_micro_bundle, optional_results
 
 
-def build_artifact_bundle(story1_bundle, story2_bundle, optional_results):
+def build_artifact_bundle(
+    required_local_noise_bundle,
+    required_local_noise_micro_bundle,
+    optional_results,
+):
     optional_results = list(optional_results)
-    required_cases = list(story1_bundle["cases"]) + list(story2_bundle["cases"])
+    required_cases = list(required_local_noise_bundle["cases"]) + list(
+        required_local_noise_micro_bundle["cases"]
+    )
     required_summary = build_support_tier_summary(required_cases)
     optional_summary = build_support_tier_summary(optional_results)
 
@@ -279,15 +293,15 @@ def build_artifact_bundle(story1_bundle, story2_bundle, optional_results):
             ),
         },
         "required_artifacts": {
-            "story1": {
-                "suite_name": story1_bundle["suite_name"],
-                "status": story1_bundle["status"],
-                "summary": story1_bundle["summary"],
+            "required_local_noise_bundle": {
+                "suite_name": required_local_noise_bundle["suite_name"],
+                "status": required_local_noise_bundle["status"],
+                "summary": required_local_noise_bundle["summary"],
             },
-            "story2": {
-                "suite_name": story2_bundle["suite_name"],
-                "status": story2_bundle["status"],
-                "summary": story2_bundle["summary"],
+            "required_local_noise_micro_bundle": {
+                "suite_name": required_local_noise_micro_bundle["suite_name"],
+                "status": required_local_noise_micro_bundle["status"],
+                "summary": required_local_noise_micro_bundle["summary"],
             },
         },
         "cases": optional_results,
@@ -300,7 +314,7 @@ def validate_artifact_bundle(bundle):
     missing_fields = [field for field in ARTIFACT_CORE_FIELDS if field not in bundle]
     if missing_fields:
         raise ValueError(
-            "Task 4 Story 3 artifact bundle is missing required fields: {}".format(
+            "Optional-noise classification bundle is missing required fields: {}".format(
                 ", ".join(missing_fields)
             )
         )
@@ -318,7 +332,7 @@ def parse_args():
         "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
-        help="Directory for the Task 4 Story 3 JSON artifact bundle.",
+        help="Directory for the optional-noise classification JSON artifact bundle.",
     )
     parser.add_argument(
         "--quiet",
@@ -330,10 +344,16 @@ def parse_args():
 
 def main():
     args = parse_args()
-    story1_bundle, story2_bundle, optional_results = run_validation(
+    required_local_noise_bundle, required_local_noise_micro_bundle, optional_results = (
+        run_validation(
         verbose=not args.quiet
+        )
     )
-    bundle = build_artifact_bundle(story1_bundle, story2_bundle, optional_results)
+    bundle = build_artifact_bundle(
+        required_local_noise_bundle,
+        required_local_noise_micro_bundle,
+        optional_results,
+    )
     output_path = args.output_dir / ARTIFACT_FILENAME
     write_artifact_bundle(output_path, bundle)
     print(

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Validation: Phase 3 Task 7 Story 6 diagnosis path.
+"""Diagnosis-path validation for performance evidence.
 
-Verifies that representative cases which do not satisfy the measurable-benefit
-path remain benchmark-grounded, carry explicit bottleneck reasons, and preserve
-follow-on branch visibility.
+Verifies that representative cases which do not satisfy the measurable-benefit path
+remain benchmark-grounded, carry explicit bottleneck reasons, and preserve follow-on
+branch visibility.
 
 Run with:
     python benchmarks/density_matrix/performance_evidence/diagnosis_validation.py
@@ -31,7 +31,7 @@ from benchmarks.density_matrix.performance_evidence.records import (
     build_performance_evidence_benchmark_records,
 )
 
-SUITE_NAME = "phase3_performance_evidence_diagnosis"
+SUITE_NAME = "performance_evidence_diagnosis"
 ARTIFACT_FILENAME = "diagnosis_bundle.json"
 DEFAULT_OUTPUT_DIR = performance_evidence_output_dir("diagnosis")
 ARTIFACT_CORE_FIELDS = (
@@ -45,7 +45,7 @@ ARTIFACT_CORE_FIELDS = (
 )
 
 
-def build_cases() -> list[dict]:
+def build_diagnosis_cases() -> list[dict]:
     return [
         case
         for case in build_performance_evidence_benchmark_records()
@@ -53,7 +53,7 @@ def build_cases() -> list[dict]:
     ]
 
 
-def build_artifact_bundle(cases: list[dict]) -> dict:
+def build_diagnosis_bundle(cases: list[dict]) -> dict:
     diagnosis_surface_pass = all(case["diagnosis_reasons"] for case in cases)
     bundle = {
         "suite_name": SUITE_NAME,
@@ -83,7 +83,7 @@ def build_artifact_bundle(cases: list[dict]) -> dict:
     missing = [field for field in ARTIFACT_CORE_FIELDS if field not in bundle]
     if missing:
         raise ValueError(
-            "Task 7 Story 6 bundle missing required fields: {}".format(
+            "Diagnosis bundle missing required fields: {}".format(
                 ", ".join(missing)
             )
         )
@@ -96,7 +96,7 @@ def main(argv: list[str] | None = None) -> int:
         "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
-        help="Directory to write the Task 7 Story 6 bundle into.",
+        help="Directory to write the diagnosis bundle into.",
     )
     parser.add_argument(
         "--quiet",
@@ -105,8 +105,8 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    cases = build_cases()
-    bundle = build_artifact_bundle(cases)
+    cases = build_diagnosis_cases()
+    bundle = build_diagnosis_bundle(cases)
     output_path = write_artifact_bundle(bundle, args.output_dir, ARTIFACT_FILENAME)
 
     if not args.quiet:

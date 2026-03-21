@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
-"""Validation: Phase 3 Task 1 Story 3 planner audit surface.
+"""Planner audit surface validation.
 
 Emits audit-oriented planner records for one continuity-anchor case, one
-microcase, and one structured-family case. The goal is to validate that the
-shared canonical planner schema now carries explicit provenance and qubit-support
-audit metadata.
+microcase, and one structured-family case. Validates that the shared canonical
+planner schema carries explicit provenance and qubit-support audit metadata.
 
 Run with:
     python benchmarks/density_matrix/planner_surface/planner_audit_validation.py

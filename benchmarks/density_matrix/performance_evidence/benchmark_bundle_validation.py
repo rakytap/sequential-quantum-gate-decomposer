@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Validation: Phase 3 Task 7 Story 7 shared benchmark package.
+"""Shared benchmark package validation for performance evidence.
 
-Packages counted, diagnosis-only, and excluded Task 7 evidence together with the
-explicit boundary evidence later publication consumers need.
+Packages counted, diagnosis-only, and excluded evidence together with explicit
+boundary records for downstream publication consumers.
 
 Run with:
     python benchmarks/density_matrix/performance_evidence/benchmark_bundle_validation.py
@@ -28,7 +28,7 @@ from benchmarks.density_matrix.performance_evidence.common import (
     write_artifact_bundle,
 )
 
-SUITE_NAME = "phase3_performance_evidence_benchmark_package"
+SUITE_NAME = "performance_evidence_benchmark_package"
 ARTIFACT_FILENAME = "benchmark_package_bundle.json"
 DEFAULT_OUTPUT_DIR = performance_evidence_output_dir("benchmark_package")
 ARTIFACT_CORE_FIELDS = (
@@ -44,7 +44,7 @@ ARTIFACT_CORE_FIELDS = (
 )
 
 
-def build_artifact_bundle() -> dict:
+def build_performance_evidence_benchmark_package() -> dict:
     payload = build_performance_evidence_benchmark_package_payload()
     bundle = {
         "suite_name": SUITE_NAME,
@@ -63,7 +63,7 @@ def build_artifact_bundle() -> dict:
     missing = [field for field in ARTIFACT_CORE_FIELDS if field not in bundle]
     if missing:
         raise ValueError(
-            "Task 7 Story 7 bundle missing required fields: {}".format(
+            "Performance evidence benchmark package missing required fields: {}".format(
                 ", ".join(missing)
             )
         )
@@ -76,7 +76,7 @@ def main(argv: list[str] | None = None) -> int:
         "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
-        help="Directory to write the Task 7 Story 7 bundle into.",
+        help="Directory to write the benchmark package bundle into.",
     )
     parser.add_argument(
         "--quiet",
@@ -85,7 +85,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    bundle = build_artifact_bundle()
+    bundle = build_performance_evidence_benchmark_package()
     output_path = write_artifact_bundle(bundle, args.output_dir, ARTIFACT_FILENAME)
 
     if not args.quiet:

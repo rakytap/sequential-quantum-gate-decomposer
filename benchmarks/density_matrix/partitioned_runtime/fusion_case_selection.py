@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Shared Task 4 representative case iterators."""
+"""Representative workload iterators for fused partitioned-runtime validation."""
 
 from __future__ import annotations
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validation: Phase 3 correctness package.
+"""Validation: density-matrix correctness-evidence package.
 
 Builds the shared correctness-evidence package by joining positive supported
 records and stage-separated unsupported-boundary evidence through one stable
@@ -27,7 +27,7 @@ from benchmarks.density_matrix.correctness_evidence.records import (
     counted_supported_case,
 )
 
-SUITE_NAME = "phase3_correctness_evidence_correctness_package"
+SUITE_NAME = "correctness_evidence_correctness_package"
 ARTIFACT_FILENAME = "correctness_package_bundle.json"
 DEFAULT_OUTPUT_DIR = correctness_evidence_output_dir("correctness_package")
 ARTIFACT_CORE_FIELDS = (

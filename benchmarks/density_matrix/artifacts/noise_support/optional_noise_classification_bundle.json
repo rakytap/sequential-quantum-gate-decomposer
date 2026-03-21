@@ -228,7 +228,7 @@
   ],
   "reference_backend": "qiskit_aer_density_matrix",
   "required_artifacts": {
-    "story1": {
+    "required_local_noise_bundle": {
       "status": "pass",
       "suite_name": "required_local_noise_validation",
       "summary": {
@@ -255,7 +255,7 @@
         "whole_register_substitute_failures": 0
       }
     },
-    "story2": {
+    "required_local_noise_micro_bundle": {
       "status": "pass",
       "suite_name": "required_local_noise_micro_validation",
       "summary": {

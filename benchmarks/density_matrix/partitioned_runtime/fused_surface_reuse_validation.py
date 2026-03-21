@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Validation: Phase 3 Task 4 Story 3 fused-capable surface reuse.
+"""Fused surface reuse validation: shared fused-capable entry and stable audit shape.
 
 Exercises one continuity, one microcase, and one structured workload through the
-same fused-capable runtime entry surface and checks that the emitted audit
-records stay structurally aligned.
+same fused-capable runtime entry surface and checks that emitted audit records
+stay structurally aligned.
 
 Run with:
     python benchmarks/density_matrix/partitioned_runtime/fused_surface_reuse_validation.py
@@ -42,7 +42,7 @@ DEFAULT_OUTPUT_DIR = (
     / "density_matrix"
     / "artifacts"
     / "partitioned_runtime"
-    / "story3_surface_reuse"
+    / "fused_surface_reuse"
 )
 ARTIFACT_CORE_FIELDS = (
     "suite_name",
@@ -124,7 +124,7 @@ def build_artifact_bundle(cases: list[dict]) -> dict:
     missing = [field for field in ARTIFACT_CORE_FIELDS if field not in bundle]
     if missing:
         raise ValueError(
-            "Task 4 Story 3 bundle missing required fields: {}".format(
+            "Fused surface reuse bundle missing required fields: {}".format(
                 ", ".join(missing)
             )
         )
@@ -144,7 +144,7 @@ def main(argv: list[str] | None = None) -> int:
         "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
-        help="Directory to write the Task 4 Story 3 bundle into.",
+        help="Directory to write the fused surface reuse bundle into.",
     )
     parser.add_argument(
         "--quiet",

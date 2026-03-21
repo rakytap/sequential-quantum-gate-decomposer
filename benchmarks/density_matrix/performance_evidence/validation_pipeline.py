@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run and emit all Phase 3 performance-evidence validation bundles in one process.
+"""Run and write every performance-evidence validation bundle (full pipeline) in one process.
 
 Run with:
     python benchmarks/density_matrix/performance_evidence/validation_pipeline.py
@@ -52,8 +52,8 @@ def _write_slice_bundle(module, bundle: dict) -> Path:
 def run_pipeline() -> list[tuple[str, str, Path]]:
     results: list[tuple[str, str, Path]] = []
 
-    benchmark_matrix_cases = benchmark_matrix.build_cases()
-    benchmark_matrix_bundle = benchmark_matrix.build_artifact_bundle(
+    benchmark_matrix_cases = benchmark_matrix.build_benchmark_matrix_cases()
+    benchmark_matrix_bundle = benchmark_matrix.build_benchmark_matrix_bundle(
         benchmark_matrix_cases
     )
     results.append(
@@ -64,8 +64,8 @@ def run_pipeline() -> list[tuple[str, str, Path]]:
         )
     )
 
-    counted_supported_cases = counted_supported.build_cases()
-    counted_supported_bundle = counted_supported.build_artifact_bundle(
+    counted_supported_cases = counted_supported.build_counted_supported_cases()
+    counted_supported_bundle = counted_supported.build_counted_supported_bundle(
         counted_supported_cases
     )
     results.append(
@@ -76,8 +76,8 @@ def run_pipeline() -> list[tuple[str, str, Path]]:
         )
     )
 
-    positive_threshold_cases = positive_threshold.build_cases()
-    positive_threshold_bundle = positive_threshold.build_artifact_bundle(
+    positive_threshold_cases = positive_threshold.build_positive_threshold_cases()
+    positive_threshold_bundle = positive_threshold.build_positive_threshold_bundle(
         positive_threshold_cases
     )
     results.append(
@@ -88,8 +88,8 @@ def run_pipeline() -> list[tuple[str, str, Path]]:
         )
     )
 
-    sensitivity_cases = sensitivity_matrix.build_cases()
-    sensitivity_bundle = sensitivity_matrix.build_artifact_bundle(sensitivity_cases)
+    sensitivity_cases = sensitivity_matrix.build_sensitivity_matrix_cases()
+    sensitivity_bundle = sensitivity_matrix.build_sensitivity_matrix_bundle(sensitivity_cases)
     results.append(
         (
             sensitivity_matrix.SUITE_NAME,
@@ -98,8 +98,8 @@ def run_pipeline() -> list[tuple[str, str, Path]]:
         )
     )
 
-    metric_surface_cases = metric_surface.build_cases()
-    metric_surface_bundle = metric_surface.build_artifact_bundle(
+    metric_surface_cases = metric_surface.build_metric_surface_cases()
+    metric_surface_bundle = metric_surface.build_metric_surface_bundle(
         metric_surface_cases
     )
     results.append(
@@ -110,8 +110,8 @@ def run_pipeline() -> list[tuple[str, str, Path]]:
         )
     )
 
-    diagnosis_cases = diagnosis.build_cases()
-    diagnosis_bundle = diagnosis.build_artifact_bundle(diagnosis_cases)
+    diagnosis_cases = diagnosis.build_diagnosis_cases()
+    diagnosis_bundle = diagnosis.build_diagnosis_bundle(diagnosis_cases)
     results.append(
         (
             diagnosis.SUITE_NAME,
@@ -120,7 +120,7 @@ def run_pipeline() -> list[tuple[str, str, Path]]:
         )
     )
 
-    benchmark_package_bundle = benchmark_package.build_artifact_bundle()
+    benchmark_package_bundle = benchmark_package.build_performance_evidence_benchmark_package()
     results.append(
         (
             benchmark_package.SUITE_NAME,
@@ -129,7 +129,7 @@ def run_pipeline() -> list[tuple[str, str, Path]]:
         )
     )
 
-    summary_bundle = summary_consistency.build_artifact_bundle()
+    summary_bundle = summary_consistency.build_summary_consistency_bundle()
     results.append(
         (
             summary_consistency.SUITE_NAME,

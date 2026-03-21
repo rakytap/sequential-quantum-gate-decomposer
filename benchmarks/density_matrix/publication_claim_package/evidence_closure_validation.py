@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Validation: Task 8 Story 4 evidence-closure semantics.
+"""Validation: Evidence-closure semantics for Paper 1.
 
 Builds a machine-readable evidence-closure checker for Paper 1. This layer is
 intentionally thin:
-- it reuses the Story 3 traceability bundle,
+- it reuses the claim-traceability artifact,
 - it records the mandatory evidence-floor items used by publication-facing docs,
 - it validates the explicit closure rule for the main Paper 1 claim,
 - and it fails when optional or incomplete evidence can masquerade as closure.
@@ -35,20 +35,20 @@ from benchmarks.density_matrix.publication_claim_package.doc_utils import (
     write_json,
 )
 from benchmarks.density_matrix.publication_claim_package.claim_traceability_bundle import (
-    ARTIFACT_FILENAME as STORY3_ARTIFACT_FILENAME,
-    run_validation as run_story3_validation,
-    validate_artifact_bundle as validate_story3_artifact,
+    ARTIFACT_FILENAME as CLAIM_TRACEABILITY_ARTIFACT_FILENAME,
+    run_validation as run_claim_traceability_validation,
+    validate_artifact_bundle as validate_claim_traceability_artifact,
 )
 
 
-SUITE_NAME = "evidence_closure_bundle"
-ARTIFACT_FILENAME = "evidence_closure_bundle.json"
+SUITE_NAME = "evidence_closure"
+ARTIFACT_FILENAME = "evidence_closure.json"
 DEFAULT_OUTPUT_DIR = PUBLICATION_CLAIM_OUTPUT_DIR
-STORY3_PATH = DEFAULT_OUTPUT_DIR / STORY3_ARTIFACT_FILENAME
+CLAIM_TRACEABILITY_PATH = DEFAULT_OUTPUT_DIR / CLAIM_TRACEABILITY_ARTIFACT_FILENAME
 ARTIFACT_FIELDS = (
     "suite_name",
     "status",
-    "story3_traceability",
+    "upstream_claim_traceability",
     "evidence_inventory",
     "software",
     "provenance",
@@ -116,12 +116,12 @@ MANDATORY_EVIDENCE_ITEMS = (
 )
 
 
-def _load_story3(path: Path = STORY3_PATH):
+def _load_claim_traceability(path: Path = CLAIM_TRACEABILITY_PATH):
     if path.exists():
         artifact = load_json(path)
-        validate_story3_artifact(artifact)
+        validate_claim_traceability_artifact(artifact)
         return artifact
-    return run_story3_validation(verbose=False)
+    return run_claim_traceability_validation(verbose=False)
 
 
 def build_evidence_inventory():
@@ -150,7 +150,7 @@ def build_evidence_inventory():
 
 
 def build_artifact_bundle():
-    story3_artifact = _load_story3()
+    claim_traceability_artifact = _load_claim_traceability()
     evidence_inventory = build_evidence_inventory()
     all_evidence_items_present = all(
         all(not surface["missing_phrases"] for surface in item["surface_entries"])
@@ -164,7 +164,7 @@ def build_artifact_bundle():
     )
     evidence_closure_completed = all(
         [
-            story3_artifact["status"] == "pass",
+            claim_traceability_artifact["status"] == "pass",
             all_evidence_items_present,
             claim_closure_rule_present,
         ]
@@ -173,22 +173,22 @@ def build_artifact_bundle():
     artifact = {
         "suite_name": SUITE_NAME,
         "status": "pass" if evidence_closure_completed else "fail",
-        "story3_traceability": {
-            "suite_name": story3_artifact["suite_name"],
-            "status": story3_artifact["status"],
-            "path": relative_to_repo(STORY3_PATH),
-            "summary": dict(story3_artifact["summary"]),
+        "upstream_claim_traceability": {
+            "suite_name": claim_traceability_artifact["suite_name"],
+            "status": claim_traceability_artifact["status"],
+            "path": relative_to_repo(CLAIM_TRACEABILITY_PATH),
+            "summary": dict(claim_traceability_artifact["summary"]),
         },
         "evidence_inventory": evidence_inventory,
         "software": build_software_metadata(),
         "provenance": {
             "generation_command": (
-                "python benchmarks/density_matrix/"
+                "python benchmarks/density_matrix/publication_claim_package/"
                 "evidence_closure_validation.py"
             ),
             "working_directory": str(REPO_ROOT),
             "git_revision": get_git_revision(),
-            "story3_path": str(STORY3_PATH),
+            "claim_traceability_path": str(CLAIM_TRACEABILITY_PATH),
         },
         "summary": {
             "required_evidence_count": len(MANDATORY_EVIDENCE_ITEMS),
@@ -205,7 +205,7 @@ def validate_artifact_bundle(artifact):
     missing_fields = [field for field in ARTIFACT_FIELDS if field not in artifact]
     if missing_fields:
         raise ValueError(
-            "Task 8 Story 4 artifact is missing required fields: {}".format(
+            "evidence_closure artifact is missing required fields: {}".format(
                 ", ".join(missing_fields)
             )
         )
@@ -233,7 +233,7 @@ def validate_artifact_bundle(artifact):
 
     expected_completed = all(
         [
-            artifact["story3_traceability"]["status"] == "pass",
+            artifact["upstream_claim_traceability"]["status"] == "pass",
             artifact["summary"]["all_evidence_items_present"],
             artifact["summary"]["claim_closure_rule_present"],
         ]
@@ -241,7 +241,7 @@ def validate_artifact_bundle(artifact):
     if artifact["summary"]["evidence_closure_completed"] != expected_completed:
         raise ValueError("evidence_closure_completed summary is inconsistent")
     if artifact["status"] != ("pass" if expected_completed else "fail"):
-        raise ValueError("Task 8 Story 4 status does not match completion summary")
+        raise ValueError("evidence_closure status does not match completion summary")
 
 
 def write_artifact_bundle(output_path: Path, artifact):
@@ -269,7 +269,7 @@ def parse_args():
         "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
-        help="Directory for the Task 8 Story 4 JSON artifact bundle.",
+        help="Directory for the evidence_closure JSON artifact.",
     )
     parser.add_argument(
         "--quiet",

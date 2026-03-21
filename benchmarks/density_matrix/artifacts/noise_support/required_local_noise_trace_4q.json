@@ -96,8 +96,8 @@
   "parameter_count": 18,
   "workflow_completed": true,
   "trace_kind": "bounded_optimization_trace",
-  "total_trace_runtime_ms": 46.29614499935997,
-  "process_peak_rss_kb": 853916,
+  "total_trace_runtime_ms": 77.10262102773413,
+  "process_peak_rss_kb": 862700,
   "status": "completed",
   "bridge_source_type": "generated_hea",
   "bridge_parameter_count": 18,
@@ -129,5 +129,5 @@
   "case_purpose": "mandatory_baseline",
   "counts_toward_mandatory_baseline": false,
   "required_validation_trace": true,
-  "case_name": "story5_required_local_noise_trace_4q"
+  "case_name": "required_local_noise_trace_4q"
 }

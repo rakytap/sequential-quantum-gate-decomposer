@@ -2,7 +2,7 @@
   "evidence_closure": {
     "path": "benchmarks/density_matrix/artifacts/publication_evidence/evidence_closure/evidence_closure_bundle.json",
     "status": "pass",
-    "suite_name": "phase3_publication_evidence_evidence_closure",
+    "suite_name": "evidence_closure",
     "summary": {
       "all_evidence_items_present": true,
       "claim_closure_rule_present": true,
@@ -12,17 +12,17 @@
     }
   },
   "provenance": {
+    "evidence_closure_bundle_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/publication_evidence/evidence_closure/evidence_closure_bundle.json",
     "generation_command": "python benchmarks/density_matrix/publication_evidence/supported_path_validation.py",
-    "git_revision": "1af8716f9ed42d8c3b156bfb2b7fe26f61357fb8",
+    "git_revision": "77cd8168869d9b4c67c0dd0dbe49baab02b0fe25",
     "paper_main_claim_anchor": "SQUANDER extends partitioning and limited fusion to exact noisy mixed-state circuits by making noisy operations first-class planner inputs, preserving exact gate/noise semantics across partition descriptors and runtime execution, and validating the resulting partitioned density path on representative noisy workloads.",
-    "story4_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/publication_evidence/evidence_closure/evidence_closure_bundle.json",
     "working_directory": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer"
   },
   "software": {
     "python": "3.13.9"
   },
   "status": "pass",
-  "suite_name": "phase3_publication_evidence_supported_path",
+  "suite_name": "supported_path_scope",
   "summary": {
     "all_bounded_planner_claims_present": true,
     "all_correctness_evidence_count_surfaces_honest": true,

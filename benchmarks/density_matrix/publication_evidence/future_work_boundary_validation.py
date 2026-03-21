@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validation: Phase 3 Task 8 Story 7 future-work and publication-ladder boundary."""
+"""Validation: Future-work topics and publication-ladder boundary wording."""
 
 from __future__ import annotations
 
@@ -24,23 +24,23 @@ from benchmarks.density_matrix.publication_evidence.common import (
     write_json,
 )
 from benchmarks.density_matrix.publication_evidence.supported_path_validation import (
-    ARTIFACT_FILENAME as STORY5_ARTIFACT_FILENAME,
-    run_validation as run_story5_validation,
-    validate_artifact_bundle as validate_story5_artifact,
+    ARTIFACT_FILENAME as SUPPORTED_PATH_SCOPE_ARTIFACT_FILENAME,
+    run_validation as run_supported_path_scope_validation,
+    validate_artifact_bundle as validate_supported_path_scope_artifact,
 )
 
 
-SUITE_NAME = "phase3_publication_evidence_future_work"
+SUITE_NAME = "future_work_boundary"
 ARTIFACT_FILENAME = "future_work_boundary_bundle.json"
-DEFAULT_OUTPUT_DIR = publication_evidence_output_dir("future_work")
-STORY5_PATH = (
-    publication_evidence_output_dir("supported_path")
-    / STORY5_ARTIFACT_FILENAME
+DEFAULT_OUTPUT_DIR = publication_evidence_output_dir("future_work_boundary")
+SUPPORTED_PATH_SCOPE_BUNDLE_PATH = (
+    publication_evidence_output_dir("supported_path_scope")
+    / SUPPORTED_PATH_SCOPE_ARTIFACT_FILENAME
 )
 ARTIFACT_FIELDS = (
     "suite_name",
     "status",
-    "supported_path",
+    "supported_path_scope",
     "future_work_inventory",
     "software",
     "provenance",
@@ -128,11 +128,11 @@ MANDATORY_FUTURE_TOPICS = (
 )
 
 
-def _story5():
+def _load_supported_path_scope_artifact():
     return load_or_build_artifact(
-        STORY5_PATH,
-        run_validation=run_story5_validation,
-        validate_artifact_bundle=validate_story5_artifact,
+        SUPPORTED_PATH_SCOPE_BUNDLE_PATH,
+        run_validation=run_supported_path_scope_validation,
+        validate_artifact_bundle=validate_supported_path_scope_artifact,
     )
 
 
@@ -162,7 +162,7 @@ def build_future_work_inventory():
 
 
 def build_artifact_bundle():
-    story5_artifact = _story5()
+    supported_path_scope_artifact = _load_supported_path_scope_artifact()
     future_work_inventory = build_future_work_inventory()
     all_future_work_items_present = all(
         all(surface["present"] for surface in item["surface_entries"])
@@ -182,7 +182,7 @@ def build_artifact_bundle():
     )
     future_work_boundary_completed = all(
         [
-            story5_artifact["status"] == "pass",
+            supported_path_scope_artifact["status"] == "pass",
             all_future_work_items_present,
             phase_positioning_present,
             benchmark_driven_follow_on_present,
@@ -192,11 +192,11 @@ def build_artifact_bundle():
     artifact = {
         "suite_name": SUITE_NAME,
         "status": "pass" if future_work_boundary_completed else "fail",
-        "supported_path": {
-            "suite_name": story5_artifact["suite_name"],
-            "status": story5_artifact["status"],
-            "path": relative_to_repo(STORY5_PATH),
-            "summary": dict(story5_artifact["summary"]),
+        "supported_path_scope": {
+            "suite_name": supported_path_scope_artifact["suite_name"],
+            "status": supported_path_scope_artifact["status"],
+            "path": relative_to_repo(SUPPORTED_PATH_SCOPE_BUNDLE_PATH),
+            "summary": dict(supported_path_scope_artifact["summary"]),
         },
         "future_work_inventory": future_work_inventory,
         "software": build_software_metadata(),
@@ -207,7 +207,7 @@ def build_artifact_bundle():
             ),
             "working_directory": str(REPO_ROOT),
             "git_revision": get_git_revision(),
-            "story5_path": str(STORY5_PATH),
+            "supported_path_scope_bundle_path": str(SUPPORTED_PATH_SCOPE_BUNDLE_PATH),
         },
         "summary": {
             "required_topic_count": len(MANDATORY_FUTURE_TOPICS),
@@ -225,7 +225,7 @@ def validate_artifact_bundle(artifact):
     missing_fields = [field for field in ARTIFACT_FIELDS if field not in artifact]
     if missing_fields:
         raise ValueError(
-            "Phase 3 Task 8 Story 7 artifact is missing required fields: {}".format(
+            "future_work_boundary artifact is missing required fields: {}".format(
                 ", ".join(missing_fields)
             )
         )
@@ -265,7 +265,7 @@ def validate_artifact_bundle(artifact):
 
     expected_completed = all(
         [
-            artifact["supported_path"]["status"] == "pass",
+            artifact["supported_path_scope"]["status"] == "pass",
             artifact["summary"]["all_future_work_items_present"],
             artifact["summary"]["phase_positioning_present"],
             artifact["summary"]["benchmark_driven_follow_on_present"],
@@ -274,7 +274,7 @@ def validate_artifact_bundle(artifact):
     if artifact["summary"]["future_work_boundary_completed"] != expected_completed:
         raise ValueError("future_work_boundary_completed summary is inconsistent")
     if artifact["status"] != ("pass" if expected_completed else "fail"):
-        raise ValueError("Phase 3 Task 8 Story 7 status does not match completion summary")
+        raise ValueError("future_work_boundary status does not match completion summary")
 
 
 def write_artifact_bundle(output_path: Path, artifact):
@@ -302,7 +302,7 @@ def parse_args():
         "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
-        help="Directory for the Phase 3 Task 8 Story 7 JSON artifact bundle.",
+        help="Directory for the future_work_boundary JSON artifact bundle.",
     )
     parser.add_argument(
         "--quiet",

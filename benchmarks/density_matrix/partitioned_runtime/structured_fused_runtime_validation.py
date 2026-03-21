@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validation: Phase 3 Task 4 Story 2 structured fused runtime slice.
+"""Structured fused runtime validation: representative high-qubit fused paths.
 
 Finds one representative 8-qubit and one representative 10-qubit structured
 workload that execute through the real fused unitary-island runtime path.
@@ -129,7 +129,7 @@ def build_artifact_bundle(cases: list[dict]) -> dict:
     missing = [field for field in ARTIFACT_CORE_FIELDS if field not in bundle]
     if missing:
         raise ValueError(
-            "Task 4 Story 2 bundle missing required fields: {}".format(
+            "Structured fused runtime bundle missing required fields: {}".format(
                 ", ".join(missing)
             )
         )
@@ -149,7 +149,7 @@ def main(argv: list[str] | None = None) -> int:
         "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
-        help="Directory to write the Task 4 Story 2 bundle into.",
+        help="Directory to write the structured fused runtime bundle into.",
     )
     parser.add_argument(
         "--quiet",

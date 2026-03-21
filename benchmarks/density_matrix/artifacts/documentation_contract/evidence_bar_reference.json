@@ -12,7 +12,7 @@
       "entry_point_present": true,
       "evidence_id": "micro_validation_matrix",
       "label": "Micro-validation matrix",
-      "primary_doc_id": "task5_mini_spec",
+      "primary_doc_id": "planner_calibration_task_contract",
       "primary_path": "docs/density_matrix_project/phases/phase-2/task-5/TASK_5_MINI_SPEC.md",
       "primary_source_phrases": [
         "The mandatory micro-validation layer covers 1 to 3 qubit circuits"
@@ -27,7 +27,7 @@
       "entry_point_present": true,
       "evidence_id": "workflow_matrix",
       "label": "Workflow matrix",
-      "primary_doc_id": "task5_mini_spec",
+      "primary_doc_id": "planner_calibration_task_contract",
       "primary_path": "docs/density_matrix_project/phases/phase-2/task-5/TASK_5_MINI_SPEC.md",
       "primary_source_phrases": [
         "mandatory 4 / 6 / 8 / 10",
@@ -43,7 +43,7 @@
       "entry_point_present": true,
       "evidence_id": "optimization_trace",
       "label": "Optimization trace",
-      "primary_doc_id": "task6_mini_spec",
+      "primary_doc_id": "correctness_evidence_task_contract",
       "primary_path": "docs/density_matrix_project/phases/phase-2/task-6/TASK_6_MINI_SPEC.md",
       "primary_source_phrases": [
         "At least one reproducible 4- or 6-qubit optimization trace"
@@ -57,7 +57,7 @@
       "entry_point_present": true,
       "evidence_id": "anchor_case",
       "label": "10-qubit anchor case",
-      "primary_doc_id": "task6_mini_spec",
+      "primary_doc_id": "correctness_evidence_task_contract",
       "primary_path": "docs/density_matrix_project/phases/phase-2/task-6/TASK_6_MINI_SPEC.md",
       "primary_source_phrases": [
         "At least one documented 10-qubit anchor evaluation case"
@@ -71,7 +71,7 @@
       "entry_point_present": true,
       "evidence_id": "runtime_peak_memory",
       "label": "Runtime and peak memory",
-      "primary_doc_id": "task5_mini_spec",
+      "primary_doc_id": "planner_calibration_task_contract",
       "primary_path": "docs/density_matrix_project/phases/phase-2/task-5/TASK_5_MINI_SPEC.md",
       "primary_source_phrases": [
         "The validation package must record workflow completion, runtime, and peak",
@@ -102,7 +102,7 @@
       "entry_point_present": true,
       "evidence_id": "micro_threshold",
       "label": "Micro-validation threshold",
-      "primary_doc_id": "task5_mini_spec",
+      "primary_doc_id": "planner_calibration_task_contract",
       "primary_path": "docs/density_matrix_project/phases/phase-2/task-5/TASK_5_MINI_SPEC.md",
       "primary_source_phrases": [
         "`<= 1e-10` maximum absolute energy error on the mandatory 1 to 3 qubit"
@@ -116,7 +116,7 @@
       "entry_point_present": true,
       "evidence_id": "workflow_threshold",
       "label": "Workflow threshold",
-      "primary_doc_id": "task5_mini_spec",
+      "primary_doc_id": "planner_calibration_task_contract",
       "primary_path": "docs/density_matrix_project/phases/phase-2/task-5/TASK_5_MINI_SPEC.md",
       "primary_source_phrases": [
         "`<= 1e-8` maximum absolute energy error on the mandatory 4 / 6 / 8 / 10"
@@ -130,7 +130,7 @@
       "entry_point_present": true,
       "evidence_id": "mandatory_pass_rate",
       "label": "Mandatory pass rate",
-      "primary_doc_id": "task5_mini_spec",
+      "primary_doc_id": "planner_calibration_task_contract",
       "primary_path": "docs/density_matrix_project/phases/phase-2/task-5/TASK_5_MINI_SPEC.md",
       "primary_source_phrases": [
         "`100%` pass rate on the mandatory"
@@ -184,8 +184,8 @@
   "provenance": {
     "entry_point_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/docs/density_matrix_project/phases/phase-2/PHASE_2_DOCUMENTATION_INDEX.md",
     "generation_command": "python benchmarks/density_matrix/evidence_bar_validation.py",
-    "git_revision": "199d588c2230fc62a39934ddc7d79a6e74a8b64e",
-    "story3_support_surface_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/documentation_contract/support_surface_reference.json",
+    "git_revision": "77cd8168869d9b4c67c0dd0dbe49baab02b0fe25",
+    "support_surface_reference_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/documentation_contract/support_surface_reference.json",
     "working_directory": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer"
   },
   "requirements": {
@@ -205,10 +205,17 @@
     ]
   },
   "software": {
-    "python": "3.13.9"
+    "python": "3.12.7"
   },
   "status": "pass",
-  "story3_support_surface": {
+  "suite_name": "evidence_bar_reference",
+  "summary": {
+    "all_evidence_items_present": true,
+    "evidence_bar_reference_completed": true,
+    "required_evidence_count": 12,
+    "section_heading_present": true
+  },
+  "upstream_support_surface_reference": {
     "status": "pass",
     "suite_name": "support_surface_reference",
     "summary": {
@@ -219,12 +226,5 @@
       "section_heading_present": true,
       "support_surface_reference_completed": true
     }
-  },
-  "suite_name": "evidence_bar_reference",
-  "summary": {
-    "all_evidence_items_present": true,
-    "evidence_bar_reference_completed": true,
-    "required_evidence_count": 12,
-    "section_heading_present": true
   }
 }

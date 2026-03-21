@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-"""Validation: Phase 3 Task 7 Story 2 counted-supported benchmark gate.
+"""Counted-supported gate validation for performance evidence.
 
-Verifies that positive Task 7 benchmark evidence closes only from
-correctness-preserving supported cases with stable provenance and explicit
-runtime-path identity.
+Verifies that positive benchmark evidence closes only from correctness-preserving
+supported cases with stable provenance and explicit runtime-path identity.
 
 Run with:
     python benchmarks/density_matrix/performance_evidence/counted_supported_validation.py
@@ -31,7 +30,7 @@ from benchmarks.density_matrix.performance_evidence.records import (
     performance_evidence_counted_supported_case,
 )
 
-SUITE_NAME = "phase3_performance_evidence_counted_supported"
+SUITE_NAME = "performance_evidence_counted_supported"
 ARTIFACT_FILENAME = "counted_supported_bundle.json"
 DEFAULT_OUTPUT_DIR = performance_evidence_output_dir("counted_supported")
 ARTIFACT_CORE_FIELDS = (
@@ -45,11 +44,11 @@ ARTIFACT_CORE_FIELDS = (
 )
 
 
-def build_cases() -> list[dict]:
+def build_counted_supported_cases() -> list[dict]:
     return build_performance_evidence_core_benchmark_records()
 
 
-def build_artifact_bundle(cases: list[dict]) -> dict:
+def build_counted_supported_bundle(cases: list[dict]) -> dict:
     counted_supported_cases = [case for case in cases if performance_evidence_counted_supported_case(case)]
     bundle = {
         "suite_name": SUITE_NAME,
@@ -77,7 +76,7 @@ def build_artifact_bundle(cases: list[dict]) -> dict:
     missing = [field for field in ARTIFACT_CORE_FIELDS if field not in bundle]
     if missing:
         raise ValueError(
-            "Task 7 Story 2 bundle missing required fields: {}".format(
+            "Counted-supported bundle missing required fields: {}".format(
                 ", ".join(missing)
             )
         )
@@ -90,7 +89,7 @@ def main(argv: list[str] | None = None) -> int:
         "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
-        help="Directory to write the Task 7 Story 2 bundle into.",
+        help="Directory to write the counted-supported bundle into.",
     )
     parser.add_argument(
         "--quiet",
@@ -99,8 +98,8 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    cases = build_cases()
-    bundle = build_artifact_bundle(cases)
+    cases = build_counted_supported_cases()
+    bundle = build_counted_supported_bundle(cases)
     output_path = write_artifact_bundle(bundle, args.output_dir, ARTIFACT_FILENAME)
 
     if not args.quiet:

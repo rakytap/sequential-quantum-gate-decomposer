@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Validation: Phase 3 Task 5 Story 2 workload-matrix surface.
+"""Validation: Phase 3 planner-calibration workload-matrix surface.
 
-Builds the full Task 5 candidate-plus-workload inventory and records stable
-workload provenance for the mandatory continuity, microcase, and structured
-workload classes.
+Builds the full candidate-by-workload inventory and records stable workload
+provenance for the mandatory continuity, microcase, and structured workload
+classes.
 
 Run with:
     python benchmarks/density_matrix/planner_calibration/calibration_workload_matrix_validation.py
@@ -149,7 +149,7 @@ def build_artifact_bundle(cases: list[dict]) -> dict:
     missing = [field for field in ARTIFACT_CORE_FIELDS if field not in bundle]
     if missing:
         raise ValueError(
-            "Task 5 Story 2 bundle missing required fields: {}".format(
+            "Calibration workload-matrix bundle missing required fields: {}".format(
                 ", ".join(missing)
             )
         )
@@ -169,7 +169,7 @@ def main(argv: list[str] | None = None) -> int:
         "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
-        help="Directory to write the Task 5 Story 2 bundle into.",
+        help="Directory to write the calibration workload-matrix bundle into.",
     )
     parser.add_argument(
         "--quiet",

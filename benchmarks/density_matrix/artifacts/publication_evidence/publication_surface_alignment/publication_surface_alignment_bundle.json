@@ -2,7 +2,7 @@
   "claim_package": {
     "path": "benchmarks/density_matrix/artifacts/publication_evidence/claim_package/claim_package_bundle.json",
     "status": "pass",
-    "suite_name": "phase3_publication_evidence_claim_package",
+    "suite_name": "claim_package",
     "summary": {
       "all_non_claims_present": true,
       "all_source_phrases_present": true,
@@ -18,16 +18,16 @@
     }
   },
   "provenance": {
-    "claim_package_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/publication_evidence/claim_package/claim_package_bundle.json",
+    "claim_package_bundle_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/publication_evidence/claim_package/claim_package_bundle.json",
     "generation_command": "python benchmarks/density_matrix/publication_evidence/surface_alignment_validation.py",
-    "git_revision": "1af8716f9ed42d8c3b156bfb2b7fe26f61357fb8",
+    "git_revision": "77cd8168869d9b4c67c0dd0dbe49baab02b0fe25",
     "working_directory": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer"
   },
   "software": {
     "python": "3.13.9"
   },
   "status": "pass",
-  "suite_name": "phase3_publication_evidence_surface_alignment",
+  "suite_name": "publication_surface_alignment",
   "summary": {
     "all_claim_headings_present": true,
     "all_evidence_rules_present": true,
@@ -37,7 +37,7 @@
     "all_phase_positioning_present": true,
     "all_supported_path_present": true,
     "all_surface_roles_present": true,
-    "surface_alignment_completed": true,
+    "publication_surface_alignment_completed": true,
     "surface_count": 4
   },
   "surface_inventory": [

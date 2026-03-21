@@ -58,7 +58,9 @@ def _apply_member_to_qiskit(qc: QuantumCircuit, member, parameters: np.ndarray) 
         if member.name == "CNOT":
             qc.cx(member.control_qbit, member.target_qbit)
             return
-        raise ValueError("Unsupported Task 5 Qiskit gate '{}'".format(member.name))
+        raise ValueError(
+            "Unsupported Qiskit gate '{}' for planner calibration reference".format(member.name)
+        )
 
     if member.kind == "noise":
         value = (
@@ -75,9 +77,15 @@ def _apply_member_to_qiskit(qc: QuantumCircuit, member, parameters: np.ndarray) 
         if member.name == "phase_damping":
             qc.append(phase_damping_error(value), [member.target_qbit])
             return
-        raise ValueError("Unsupported Task 5 Qiskit noise '{}'".format(member.name))
+        raise ValueError(
+            "Unsupported Qiskit noise '{}' for planner calibration reference".format(member.name)
+        )
 
-    raise ValueError("Unsupported Task 5 member kind '{}'".format(member.kind))
+    raise ValueError(
+        "Unsupported descriptor member kind '{}' for planner calibration reference".format(
+            member.kind
+        )
+    )
 
 
 def execute_qiskit_density_reference(

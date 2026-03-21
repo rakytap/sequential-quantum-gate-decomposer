@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Shared helpers for Phase 3 publication-evidence validation."""
+"""Shared helpers for publication-evidence validation bundles."""
 
 from __future__ import annotations
 

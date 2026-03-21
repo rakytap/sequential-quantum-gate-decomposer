@@ -13,28 +13,28 @@ from benchmarks.density_matrix.planner_calibration.common import (
     build_planner_calibration_planner_candidates,
 )
 from benchmarks.density_matrix.planner_calibration.planner_candidate_audit_validation import (
-    build_artifact_bundle as build_story1_bundle,
+    build_artifact_bundle as build_planner_candidate_audit_bundle,
 )
 from benchmarks.density_matrix.planner_calibration.planner_candidate_audit_validation import (
-    build_cases as build_story1_cases,
+    build_cases as build_planner_candidate_audit_cases,
 )
 from benchmarks.density_matrix.planner_calibration.calibration_workload_matrix_validation import (
-    build_artifact_bundle as build_story2_bundle,
+    build_artifact_bundle as build_calibration_workload_matrix_bundle,
 )
 from benchmarks.density_matrix.planner_calibration.calibration_workload_matrix_validation import (
-    build_cases as build_story2_cases,
+    build_cases as build_calibration_workload_matrix_cases,
 )
 from benchmarks.density_matrix.planner_calibration.density_signal_validation import (
-    build_artifact_bundle as build_story3_bundle,
+    build_artifact_bundle as build_density_signal_bundle,
 )
 from benchmarks.density_matrix.planner_calibration.density_signal_validation import (
-    build_cases as build_story3_cases,
+    build_cases as build_density_signal_cases,
 )
 from benchmarks.density_matrix.planner_calibration.calibration_correctness_validation import (
-    build_artifact_bundle as build_story4_bundle,
+    build_artifact_bundle as build_calibration_correctness_bundle,
 )
 from benchmarks.density_matrix.planner_calibration.calibration_correctness_validation import (
-    build_cases as build_story4_cases,
+    build_cases as build_calibration_correctness_cases,
 )
 from benchmarks.density_matrix.planner_calibration.claim_selection import (
     PLANNER_CALIBRATION_CLAIM_STATUS_COMPARISON,
@@ -42,23 +42,23 @@ from benchmarks.density_matrix.planner_calibration.claim_selection import (
     build_planner_calibration_claim_selection_payload,
 )
 from benchmarks.density_matrix.planner_calibration.calibrated_claim_selection_validation import (
-    build_artifact_bundle as build_story5_bundle,
+    build_artifact_bundle as build_calibrated_claim_selection_bundle,
 )
 from benchmarks.density_matrix.planner_calibration.bundle import (
     build_planner_calibration_calibration_bundle_payload,
 )
 from benchmarks.density_matrix.planner_calibration.calibration_bundle_validation import (
-    build_artifact_bundle as build_story6_bundle,
+    build_artifact_bundle as build_integrated_calibration_bundle,
 )
 from benchmarks.density_matrix.planner_calibration.boundary import (
     build_planner_calibration_boundary_payload,
 )
 from benchmarks.density_matrix.planner_calibration.calibration_boundary_validation import (
-    build_artifact_bundle as build_story7_bundle,
+    build_artifact_bundle as build_claim_boundary_bundle,
 )
 
 
-def test_planner_calibration_story1_candidate_enumeration_is_deterministic():
+def test_planner_calibration_span_budget_candidates_are_deterministic():
     candidates = build_planner_calibration_planner_candidates()
     assert [candidate.candidate_id for candidate in candidates] == [
         "span_budget_q2",
@@ -75,7 +75,7 @@ def test_planner_calibration_story1_candidate_enumeration_is_deterministic():
 
 
 def test_planner_calibration_planner_candidate_audit_covers_required_workload_kinds():
-    cases = build_story1_cases()
+    cases = build_planner_candidate_audit_cases()
     assert [case["candidate_id"] for case in cases] == [
         "span_budget_q2",
         "span_budget_q3",
@@ -96,8 +96,8 @@ def test_planner_calibration_planner_candidate_audit_covers_required_workload_ki
         )
 
 
-def test_planner_calibration_story1_bundle_core_fields_are_stable():
-    bundle = build_story1_bundle(build_story1_cases())
+def test_planner_calibration_planner_candidate_audit_bundle_core_fields_are_stable():
+    bundle = build_planner_candidate_audit_bundle(build_planner_candidate_audit_cases())
     assert bundle["status"] == "pass"
     assert bundle["candidate_schema_version"] == PLANNER_CALIBRATION_CANDIDATE_SCHEMA_VERSION
     assert bundle["summary"]["total_candidates"] == 3
@@ -109,7 +109,7 @@ def test_planner_calibration_story1_bundle_core_fields_are_stable():
 
 
 def test_phase3_planner_calibration_workload_matrix_covers_required_case_inventory():
-    cases = build_story2_cases()
+    cases = build_calibration_workload_matrix_cases()
     assert len(cases) == 75
     assert {case["candidate_id"] for case in cases} == {
         "span_budget_q2",
@@ -130,8 +130,8 @@ def test_phase3_planner_calibration_workload_matrix_covers_required_case_invento
     assert all(case["workload_matrix_pass"] is True for case in cases)
 
 
-def test_planner_calibration_story2_bundle_core_fields_are_stable():
-    bundle = build_story2_bundle(build_story2_cases())
+def test_planner_calibration_workload_matrix_bundle_core_fields_are_stable():
+    bundle = build_calibration_workload_matrix_bundle(build_calibration_workload_matrix_cases())
     assert bundle["status"] == "pass"
     assert bundle["candidate_schema_version"] == PLANNER_CALIBRATION_CANDIDATE_SCHEMA_VERSION
     assert bundle["summary"]["continuity_cases"] == 12
@@ -140,7 +140,7 @@ def test_planner_calibration_story2_bundle_core_fields_are_stable():
 
 
 def test_phase3_planner_calibration_density_signal_surface_is_present_and_ranked():
-    cases = build_story3_cases()
+    cases = build_density_signal_cases()
     assert len(cases) == 12
     assert all(case["density_signal_pass"] is True for case in cases)
     assert {case["candidate_id"] for case in cases} == {
@@ -152,8 +152,8 @@ def test_phase3_planner_calibration_density_signal_surface_is_present_and_ranked
     assert all(case["state_vector_proxy_rank"] in {1, 2, 3} for case in cases)
 
 
-def test_planner_calibration_story3_density_score_changes_with_noise_pattern():
-    cases = build_story3_cases()
+def test_planner_calibration_density_aware_score_differs_between_sparse_and_dense_noise():
+    cases = build_density_signal_cases()
     layered_by_candidate = {}
     for case in cases:
         if (
@@ -175,8 +175,8 @@ def test_planner_calibration_story3_density_score_changes_with_noise_pattern():
         assert scores["dense"] != scores["sparse"]
 
 
-def test_planner_calibration_story3_bundle_core_fields_are_stable():
-    bundle = build_story3_bundle(build_story3_cases())
+def test_planner_calibration_density_signal_bundle_core_fields_are_stable():
+    bundle = build_density_signal_bundle(build_density_signal_cases())
     assert bundle["status"] == "pass"
     assert bundle["signal_schema_version"] == "phase3_planner_calibration_density_signal_v1"
     assert bundle["summary"]["total_cases"] == 12
@@ -184,23 +184,25 @@ def test_planner_calibration_story3_bundle_core_fields_are_stable():
 
 
 @pytest.fixture(scope="module")
-def story4_cases():
-    return build_story4_cases()
+def calibration_correctness_cases():
+    return build_calibration_correctness_cases()
 
 
-def test_phase3_planner_calibration_correctness_gate_marks_full_matrix_counted(story4_cases):
-    assert len(story4_cases) == 75
-    assert all(case["internal_correctness_pass"] is True for case in story4_cases)
-    assert all(case["counted_calibration_case"] is True for case in story4_cases)
-    assert sum(case["external_reference_required"] for case in story4_cases) == 12
+def test_phase3_planner_calibration_correctness_gate_marks_full_matrix_counted(
+    calibration_correctness_cases,
+):
+    assert len(calibration_correctness_cases) == 75
+    assert all(case["internal_correctness_pass"] is True for case in calibration_correctness_cases)
+    assert all(case["counted_calibration_case"] is True for case in calibration_correctness_cases)
+    assert sum(case["external_reference_required"] for case in calibration_correctness_cases) == 12
     assert all(
         (not case["external_reference_required"]) or case["external_reference_pass"]
-        for case in story4_cases
+        for case in calibration_correctness_cases
     )
 
 
-def test_planner_calibration_story4_bundle_core_fields_are_stable(story4_cases):
-    bundle = build_story4_bundle(story4_cases)
+def test_planner_calibration_correctness_bundle_core_fields_are_stable(calibration_correctness_cases):
+    bundle = build_calibration_correctness_bundle(calibration_correctness_cases)
     assert bundle["status"] == "pass"
     assert bundle["record_schema_version"] == "phase3_planner_calibration_record_v1"
     assert bundle["summary"]["total_cases"] == 75
@@ -208,29 +210,31 @@ def test_planner_calibration_story4_bundle_core_fields_are_stable(story4_cases):
 
 
 @pytest.fixture(scope="module")
-def story5_payload():
+def claim_selection_payload():
     return build_planner_calibration_claim_selection_payload()
 
 
-def test_planner_calibration_story5_selects_one_supported_candidate(story5_payload):
-    assert story5_payload["selected_candidate"]["candidate_id"] in {
+def test_planner_calibration_claim_selection_marks_supported_and_comparison_cases(
+    claim_selection_payload,
+):
+    assert claim_selection_payload["selected_candidate"]["candidate_id"] in {
         "span_budget_q2",
         "span_budget_q3",
         "span_budget_q4",
     }
-    assert {summary["candidate_id"] for summary in story5_payload["candidate_summaries"]} == {
+    assert {summary["candidate_id"] for summary in claim_selection_payload["candidate_summaries"]} == {
         "span_budget_q2",
         "span_budget_q3",
         "span_budget_q4",
     }
-    assert {case["claim_status"] for case in story5_payload["cases"]} == {
+    assert {case["claim_status"] for case in claim_selection_payload["cases"]} == {
         PLANNER_CALIBRATION_CLAIM_STATUS_SUPPORTED,
         PLANNER_CALIBRATION_CLAIM_STATUS_COMPARISON,
     }
 
 
-def test_planner_calibration_story5_bundle_core_fields_are_stable():
-    bundle = build_story5_bundle()
+def test_planner_calibration_calibrated_claim_selection_bundle_core_fields_are_stable():
+    bundle = build_calibrated_claim_selection_bundle()
     assert bundle["status"] == "pass"
     assert bundle["claim_selection_schema_version"] == "phase3_planner_calibration_claim_selection_v1"
     assert bundle["summary"]["selected_candidate_id"] in {
@@ -240,7 +244,7 @@ def test_planner_calibration_story5_bundle_core_fields_are_stable():
     }
 
 
-def test_planner_calibration_story6_shared_bundle_is_consumer_stable():
+def test_planner_calibration_integrated_calibration_bundle_payload_matches_selection_counts():
     payload = build_planner_calibration_calibration_bundle_payload()
     assert payload["selected_candidate"]["candidate_id"] in {
         "span_budget_q2",
@@ -252,14 +256,14 @@ def test_planner_calibration_story6_shared_bundle_is_consumer_stable():
     assert payload["summary"]["comparison_cases"] == 50
 
 
-def test_planner_calibration_story6_bundle_core_fields_are_stable():
-    bundle = build_story6_bundle()
+def test_planner_calibration_integrated_calibration_bundle_core_fields_are_stable():
+    bundle = build_integrated_calibration_bundle()
     assert bundle["status"] == "pass"
     assert bundle["calibration_bundle_schema_version"] == "phase3_planner_calibration_bundle_v1"
     assert bundle["summary"]["total_cases"] == 75
 
 
-def test_planner_calibration_story7_boundary_surface_is_explicit():
+def test_planner_calibration_claim_boundary_payload_lists_baselines_and_deferred_scope():
     payload = build_planner_calibration_boundary_payload()
     assert payload["supported_claim"]["candidate_id"] in {
         "span_budget_q2",
@@ -271,8 +275,8 @@ def test_planner_calibration_story7_boundary_surface_is_explicit():
     assert payload["summary"]["deferred_follow_on_branch_count"] == 4
 
 
-def test_planner_calibration_story7_bundle_core_fields_are_stable():
-    bundle = build_story7_bundle()
+def test_planner_calibration_claim_boundary_bundle_core_fields_are_stable():
+    bundle = build_claim_boundary_bundle()
     assert bundle["status"] == "pass"
     assert bundle["boundary_schema_version"] == "phase3_planner_calibration_claim_boundary_v1"
     assert bundle["summary"]["selected_candidate_id"] in {

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Validation: Phase 3 Task 7 Story 3 positive-threshold review surface.
+"""Positive-threshold review surface validation for performance evidence.
 
-Evaluates the bounded representative structured review set against the
-sequential baseline and records per-case positive-threshold verdicts without
-turning the result into a universal acceleration claim.
+Evaluates the bounded representative structured review set against the sequential
+baseline and records per-case positive-threshold verdicts without turning the
+result into a universal acceleration claim.
 
 Run with:
     python benchmarks/density_matrix/performance_evidence/positive_threshold_validation.py
@@ -30,7 +30,7 @@ from benchmarks.density_matrix.performance_evidence.records import (
     build_performance_evidence_benchmark_records,
 )
 
-SUITE_NAME = "phase3_performance_evidence_positive_threshold"
+SUITE_NAME = "performance_evidence_positive_threshold"
 ARTIFACT_FILENAME = "positive_threshold_bundle.json"
 DEFAULT_OUTPUT_DIR = performance_evidence_output_dir("positive_threshold")
 ARTIFACT_CORE_FIELDS = (
@@ -44,7 +44,7 @@ ARTIFACT_CORE_FIELDS = (
 )
 
 
-def build_cases() -> list[dict]:
+def build_positive_threshold_cases() -> list[dict]:
     return [
         case
         for case in build_performance_evidence_benchmark_records()
@@ -52,7 +52,7 @@ def build_cases() -> list[dict]:
     ]
 
 
-def build_artifact_bundle(cases: list[dict]) -> dict:
+def build_positive_threshold_bundle(cases: list[dict]) -> dict:
     review_surface_pass = all(
         case["sequential_median_runtime_ms"] is not None
         and case["fused_median_runtime_ms"] is not None
@@ -85,7 +85,7 @@ def build_artifact_bundle(cases: list[dict]) -> dict:
     missing = [field for field in ARTIFACT_CORE_FIELDS if field not in bundle]
     if missing:
         raise ValueError(
-            "Task 7 Story 3 bundle missing required fields: {}".format(
+            "Positive-threshold bundle missing required fields: {}".format(
                 ", ".join(missing)
             )
         )
@@ -98,7 +98,7 @@ def main(argv: list[str] | None = None) -> int:
         "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
-        help="Directory to write the Task 7 Story 3 bundle into.",
+        help="Directory to write the positive-threshold bundle into.",
     )
     parser.add_argument(
         "--quiet",
@@ -107,8 +107,8 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    cases = build_cases()
-    bundle = build_artifact_bundle(cases)
+    cases = build_positive_threshold_cases()
+    bundle = build_positive_threshold_bundle(cases)
     output_path = write_artifact_bundle(bundle, args.output_dir, ARTIFACT_FILENAME)
 
     if not args.quiet:

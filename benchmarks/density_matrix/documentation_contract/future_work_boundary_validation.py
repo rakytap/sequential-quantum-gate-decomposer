@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Validation: Task 7 Story 5 future-work and non-goal boundary layer.
+"""Validation: Future-work and non-goal boundary layer.
 
 Builds a machine-readable checker for the current-versus-future boundary in the
 Phase 2 documentation bundle. This layer is intentionally thin:
-- it reuses the Story 4 evidence-bar clarification,
+- it reuses the evidence-bar clarification,
 - it records the later-phase topics that Phase 2 must not overclaim,
 - it ties those topics to roadmap-facing source docs,
 - and it fails when later-phase work can be mistaken for a delivered Phase 2
@@ -36,17 +36,19 @@ from benchmarks.density_matrix.documentation_contract.doc_utils import (
     write_json,
 )
 from benchmarks.density_matrix.documentation_contract.evidence_bar_validation import (
-    ARTIFACT_FILENAME as STORY4_ARTIFACT_FILENAME,
-    run_validation as run_story4_validation,
-    validate_artifact_bundle as validate_story4_artifact,
+    ARTIFACT_FILENAME as EVIDENCE_BAR_REFERENCE_ARTIFACT_FILENAME,
+    run_validation as run_evidence_bar_reference_validation,
+    validate_artifact_bundle as validate_evidence_bar_reference_artifact,
 )
 
 
 SUITE_NAME = "future_work_boundary"
 ARTIFACT_FILENAME = "future_work_boundary.json"
 DEFAULT_OUTPUT_DIR = DOCUMENTATION_CONTRACT_OUTPUT_DIR
-STORY4_ARTIFACT_PATH = DEFAULT_OUTPUT_DIR / STORY4_ARTIFACT_FILENAME
-STORY5_SECTION_HEADING = "## Future Work And Non-Goals"
+EVIDENCE_BAR_REFERENCE_ARTIFACT_PATH = (
+    DEFAULT_OUTPUT_DIR / EVIDENCE_BAR_REFERENCE_ARTIFACT_FILENAME
+)
+FUTURE_WORK_SECTION_HEADING = "## Future Work And Non-Goals"
 MANDATORY_FUTURE_TOPICS = (
     {
         "topic_id": "phase2_exact_integration",
@@ -125,7 +127,7 @@ ARTIFACT_CORE_FIELDS = (
     "status",
     "entry_point",
     "requirements",
-    "exact_regime_evidence_bar",
+    "upstream_evidence_bar_reference",
     "future_work_inventory",
     "software",
     "provenance",
@@ -133,12 +135,14 @@ ARTIFACT_CORE_FIELDS = (
 )
 
 
-def _load_story4_artifact(path: Path = STORY4_ARTIFACT_PATH):
+def _load_evidence_bar_reference_artifact(
+    path: Path = EVIDENCE_BAR_REFERENCE_ARTIFACT_PATH,
+):
     if path.exists():
         artifact = load_json(path)
-        validate_story4_artifact(artifact)
+        validate_evidence_bar_reference_artifact(artifact)
         return artifact
-    artifact = run_story4_validation(verbose=False)
+    artifact = run_evidence_bar_reference_validation(verbose=False)
     return artifact
 
 
@@ -171,17 +175,17 @@ def build_future_work_inventory():
 
 
 def build_artifact_bundle():
-    story4_artifact = _load_story4_artifact()
+    evidence_bar_reference_artifact = _load_evidence_bar_reference_artifact()
     entry_text = load_text(PHASE2_DOCUMENTATION_INDEX_PATH)
     future_work_inventory = build_future_work_inventory()
 
-    section_heading_present = STORY5_SECTION_HEADING in entry_text
+    section_heading_present = FUTURE_WORK_SECTION_HEADING in entry_text
     all_future_work_items_present = all(
         item["entry_point_present"] and item["source_present"]
         for item in future_work_inventory
     )
     future_work_boundary_completed = bool(
-        story4_artifact["status"] == "pass"
+        evidence_bar_reference_artifact["status"] == "pass"
         and section_heading_present
         and all_future_work_items_present
     )
@@ -191,7 +195,7 @@ def build_artifact_bundle():
         "status": "pass" if future_work_boundary_completed else "fail",
         "entry_point": {
             "path": relative_to_repo(PHASE2_DOCUMENTATION_INDEX_PATH),
-            "section_heading": STORY5_SECTION_HEADING,
+            "section_heading": FUTURE_WORK_SECTION_HEADING,
             "section_heading_present": section_heading_present,
         },
         "requirements": {
@@ -199,21 +203,21 @@ def build_artifact_bundle():
                 item["topic_id"] for item in MANDATORY_FUTURE_TOPICS
             ],
         },
-        "exact_regime_evidence_bar": {
-            "suite_name": story4_artifact["suite_name"],
-            "status": story4_artifact["status"],
-            "summary": story4_artifact["summary"],
+        "upstream_evidence_bar_reference": {
+            "suite_name": evidence_bar_reference_artifact["suite_name"],
+            "status": evidence_bar_reference_artifact["status"],
+            "summary": evidence_bar_reference_artifact["summary"],
         },
         "future_work_inventory": future_work_inventory,
         "software": build_software_metadata(),
         "provenance": {
             "generation_command": (
-                "python benchmarks/density_matrix/"
+                "python benchmarks/density_matrix/documentation_contract/"
                 "future_work_boundary_validation.py"
             ),
             "working_directory": str(REPO_ROOT),
             "git_revision": get_git_revision(),
-            "exact_regime_evidence_bar_path": str(STORY4_ARTIFACT_PATH),
+            "evidence_bar_reference_path": str(EVIDENCE_BAR_REFERENCE_ARTIFACT_PATH),
             "entry_point_path": str(PHASE2_DOCUMENTATION_INDEX_PATH),
         },
         "summary": {
@@ -231,7 +235,7 @@ def validate_artifact_bundle(artifact):
     missing_fields = [field for field in ARTIFACT_CORE_FIELDS if field not in artifact]
     if missing_fields:
         raise ValueError(
-            "Task 7 Story 5 artifact bundle is missing required fields: {}".format(
+            "future_work_boundary artifact is missing required fields: {}".format(
                 ", ".join(missing_fields)
             )
         )
@@ -240,7 +244,7 @@ def validate_artifact_bundle(artifact):
     required_ids = artifact["requirements"]["required_topic_ids"]
     if observed_ids != required_ids:
         raise ValueError(
-            "Task 7 Story 5 future-work inventory mismatch: expected {}, observed {}".format(
+            "future_work_boundary future-work inventory mismatch: expected {}, observed {}".format(
                 required_ids, observed_ids
             )
         )
@@ -249,7 +253,7 @@ def validate_artifact_bundle(artifact):
         "section_heading_present"
     ]:
         raise ValueError(
-            "Task 7 Story 5 section_heading_present summary is inconsistent"
+            "future_work_boundary section_heading_present summary is inconsistent"
         )
 
     if artifact["summary"]["all_future_work_items_present"] != all(
@@ -257,14 +261,14 @@ def validate_artifact_bundle(artifact):
         for item in artifact["future_work_inventory"]
     ):
         raise ValueError(
-            "Task 7 Story 5 all_future_work_items_present summary is inconsistent"
+            "future_work_boundary all_future_work_items_present summary is inconsistent"
         )
 
     if artifact["summary"]["future_work_boundary_completed"] != (
         artifact["status"] == "pass"
     ):
         raise ValueError(
-            "Task 7 Story 5 future_work_boundary_completed summary is inconsistent"
+            "future_work_boundary future_work_boundary_completed summary is inconsistent"
         )
 
 
@@ -293,7 +297,7 @@ def parse_args():
         "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
-        help="Directory for the Task 7 Story 5 JSON artifact bundle.",
+        help="Directory for the future_work_boundary JSON artifact.",
     )
     parser.add_argument(
         "--quiet",

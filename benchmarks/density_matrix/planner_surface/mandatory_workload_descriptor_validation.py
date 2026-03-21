@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Validation: Phase 3 Task 2 Story 2 mandatory workload descriptors.
+"""Mandatory workload partition-descriptor validation.
 
 Builds one continuity-reference descriptor case plus the required 2 to 4 qubit
 microcases and structured noisy `U3` / `CNOT` workload families, then verifies
-that all of them emit the same Task 2 descriptor contract.
+that all of them emit the same partition-descriptor schema.
 
 Run with:
     python benchmarks/density_matrix/planner_surface/mandatory_workload_descriptor_validation.py
@@ -104,7 +104,7 @@ def run_validation(verbose: bool = True) -> list[dict]:
         cases.append(_descriptor_case("structured_family", metadata, descriptor_set))
 
     if verbose:
-        print("Phase 3 Task 2 Story 2 mandatory workload descriptors:")
+        print("Mandatory workload partition descriptors:")
         for case in cases:
             print(
                 "  {case_name}: q={qbit_num}, partitions={partition_count}, members={descriptor_member_count}".format(

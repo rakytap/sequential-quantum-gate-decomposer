@@ -154,35 +154,35 @@ training workflow without sacrificing correctness or reproducibility?
 - and a clear statement of supported gate/noise scope plus explicit deferred
   boundaries.
 
-### Current Evidence Maturity (After Phase 2 Tasks 1-6)
+### Current evidence maturity (after Phase 2 integration deliverables)
 
 - implemented artifacts now include a complete top-level canonical-workflow
   manifest at
   `benchmarks/density_matrix/artifacts/workflow_evidence/workflow_publication_bundle.json`,
 - mandatory artifact presence, expected-status checks, workflow-identity checks,
-  and lower-story semantic-closure checks now pass across all five required Task
-  6 publication artifacts:
+  and semantic-closure checks now pass across all five required workflow
+  publication bundle components:
   `workflow_contract_bundle.json`,
   `end_to_end_trace_bundle.json`,
   `matrix_baseline_bundle.json`,
   `unsupported_workflow_bundle.json`, and
   `workflow_interpretation_bundle.json`,
-- the Task 6 publication bundle packages one stable workflow ID and contract
+- the workflow publication bundle packages one stable workflow ID and contract
   version, two passed end-to-end required cases at 4 and 6 qubits, 40 passed
   fixed-parameter required cases across 4 / 6 / 8 / 10 qubits, and explicit
   unsupported-workflow boundary evidence,
-- the Task 6 contract and publication bundle reuse the Task 5 local-correctness,
-  workflow-baseline, trace-and-anchor, metric-completeness, and interpretation
-  layers as referenced underlying validation evidence rather than replacing them,
+- the canonical workflow contract and workflow publication bundle reuse the
+  validation-evidence layers—local correctness, workflow baseline, trace anchor,
+  metric completeness, and interpretation—as referenced underlying evidence
+  rather than replacing them,
 - the canonical workflow contract now carries explicit threshold metadata,
   deterministic parameter/trace policy metadata, and required unsupported-case
-  field inventory that downstream Task 6 layers consume directly instead of
-  re-declaring independently,
+  field inventory that downstream workflow-evidence bundles consume directly
+  instead of re-declaring independently,
 - required-local-noise mandatory baseline cases currently pass at `100%` for the
   frozen integrated-backend scope,
 - documented 10-qubit anchor evidence remains present and is now incorporated
-  into the Task 6 workflow-level matrix bundle and top-level publication
-  surface,
+  into the workflow matrix baseline bundle and top-level publication surface,
 - claim-closure semantics are now machine-checkable: only mandatory, complete,
   supported evidence closes the main claim, optional whole-register
   depolarizing remains supplemental, and deferred or unsupported evidence

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Validation: Phase 3 Task 4 Story 1 fused eligibility surface.
+"""Fused eligibility validation: eligible unitary regions on the baseline runtime path.
 
 Finds one representative continuity, microcase, and structured workload whose
 descriptor-level runtime evidence exposes at least one eligible unitary-island
-span through the shared Task 3 baseline runtime surface.
+span on the shared baseline partitioned runtime surface.
 
 Run with:
     python benchmarks/density_matrix/partitioned_runtime/fused_eligibility_validation.py
@@ -44,7 +44,7 @@ DEFAULT_OUTPUT_DIR = (
     / "density_matrix"
     / "artifacts"
     / "partitioned_runtime"
-    / "story1_eligibility"
+    / "fused_eligibility"
 )
 ARTIFACT_CORE_FIELDS = (
     "suite_name",
@@ -114,7 +114,9 @@ def _select_first_case(case_iter) -> dict:
         case_record = _case_from_runtime(metadata, runtime_result)
         if case_record["eligibility_pass"]:
             return case_record
-    raise RuntimeError("No representative Task 4 Story 1 case exposed an eligible unitary island")
+    raise RuntimeError(
+        "No representative fused-eligibility case exposed an eligible unitary island"
+    )
 
 
 def build_cases() -> list[dict]:
@@ -155,7 +157,7 @@ def build_artifact_bundle(cases: list[dict]) -> dict:
     missing = [field for field in ARTIFACT_CORE_FIELDS if field not in bundle]
     if missing:
         raise ValueError(
-            "Task 4 Story 1 bundle missing required fields: {}".format(
+            "Fused eligibility bundle missing required fields: {}".format(
                 ", ".join(missing)
             )
         )
@@ -175,7 +177,7 @@ def main(argv: list[str] | None = None) -> int:
         "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
-        help="Directory to write the Task 4 Story 1 eligibility bundle into.",
+        help="Directory to write the fused eligibility bundle into.",
     )
     parser.add_argument(
         "--quiet",

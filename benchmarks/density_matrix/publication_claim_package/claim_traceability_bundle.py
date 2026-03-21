@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Validation: Task 8 Story 3 claim-to-source traceability.
+"""Validation: Claim-to-source traceability for Paper 1.
 
 Builds a machine-readable traceability bundle for Paper 1. This layer is
 intentionally thin:
-- it reuses the Story 1 claim package and Story 2 surface-alignment outputs,
+- it reuses the claim-package and publication-surface-alignment outputs,
 - it maps major Paper 1 claims and section classes to authoritative sources,
 - it preserves reviewer navigation through the Phase 2 documentation index and
-  the Task 6 publication bundle,
+  the workflow publication bundle,
 - and it fails when major publication items lose a stable source path.
 
 Run with:
@@ -26,7 +26,7 @@ if str(REPO_ROOT) not in sys.path:
 from benchmarks.density_matrix.publication_claim_package.doc_utils import (
     MANDATORY_PUBLICATION_EVIDENCE_DOCS,
     PHASE2_DOCUMENTATION_INDEX_PATH,
-    CORRECTNESS_EVIDENCE_PUBLICATION_BUNDLE_PATH,
+    WORKFLOW_PUBLICATION_BUNDLE_PATH,
     PUBLICATION_CLAIM_OUTPUT_DIR,
     build_software_metadata,
     get_git_revision,
@@ -36,26 +36,28 @@ from benchmarks.density_matrix.publication_claim_package.doc_utils import (
     write_json,
 )
 from benchmarks.density_matrix.publication_claim_package.claim_package_validation import (
-    ARTIFACT_FILENAME as STORY1_ARTIFACT_FILENAME,
-    run_validation as run_story1_validation,
-    validate_artifact_bundle as validate_story1_artifact,
+    ARTIFACT_FILENAME as CLAIM_PACKAGE_ARTIFACT_FILENAME,
+    run_validation as run_claim_package_validation,
+    validate_artifact_bundle as validate_claim_package_artifact,
 )
 from benchmarks.density_matrix.publication_claim_package.publication_surface_alignment import (
-    ARTIFACT_FILENAME as STORY2_ARTIFACT_FILENAME,
-    run_validation as run_story2_validation,
-    validate_artifact_bundle as validate_story2_artifact,
+    ARTIFACT_FILENAME as PUBLICATION_SURFACE_ALIGNMENT_ARTIFACT_FILENAME,
+    run_validation as run_publication_surface_alignment,
+    validate_artifact_bundle as validate_publication_surface_alignment_artifact,
 )
 
 
-SUITE_NAME = "claim_traceability_bundle"
-ARTIFACT_FILENAME = "claim_traceability_bundle.json"
+SUITE_NAME = "claim_traceability"
+ARTIFACT_FILENAME = "claim_traceability.json"
 DEFAULT_OUTPUT_DIR = PUBLICATION_CLAIM_OUTPUT_DIR
-STORY1_PATH = DEFAULT_OUTPUT_DIR / STORY1_ARTIFACT_FILENAME
-STORY2_PATH = DEFAULT_OUTPUT_DIR / STORY2_ARTIFACT_FILENAME
+CLAIM_PACKAGE_PATH = DEFAULT_OUTPUT_DIR / CLAIM_PACKAGE_ARTIFACT_FILENAME
+PUBLICATION_SURFACE_ALIGNMENT_PATH = (
+    DEFAULT_OUTPUT_DIR / PUBLICATION_SURFACE_ALIGNMENT_ARTIFACT_FILENAME
+)
 ARTIFACT_FIELDS = (
     "suite_name",
     "status",
-    "upstream_story_artifacts",
+    "upstream_reference_artifacts",
     "reviewer_entry_paths",
     "claim_traceability",
     "section_traceability",
@@ -68,7 +70,7 @@ CLAIM_TRACEABILITY_ITEMS = (
         "claim_id": "paper1_main_claim",
         "label": "Paper 1 main claim",
         "surface_ids": ["abstract", "short_paper", "short_paper_narrative", "paper"],
-        "primary_doc_id": "publication_evidence_mini_spec",
+        "primary_doc_id": "publication_claim_task_contract",
         "supporting_doc_ids": ["planning_publications", "phase2_paper"],
     },
     {
@@ -76,20 +78,20 @@ CLAIM_TRACEABILITY_ITEMS = (
         "label": "Supported workflow and scope claim",
         "surface_ids": ["short_paper", "short_paper_narrative", "paper"],
         "primary_doc_id": "phase2_documentation_index",
-        "supporting_doc_ids": ["correctness_evidence_mini_spec", "correctness_evidence_publication_bundle"],
+        "supporting_doc_ids": ["correctness_evidence_task_contract", "workflow_publication_bundle"],
     },
     {
         "claim_id": "evidence_closure_rule",
         "label": "Mandatory evidence closure rule",
         "surface_ids": ["abstract", "short_paper", "short_paper_narrative", "paper"],
-        "primary_doc_id": "publication_evidence_mini_spec",
-        "supporting_doc_ids": ["planner_calibration_mini_spec", "correctness_evidence_publication_bundle"],
+        "primary_doc_id": "publication_claim_task_contract",
+        "supporting_doc_ids": ["planner_calibration_task_contract", "workflow_publication_bundle"],
     },
     {
         "claim_id": "limitations_and_non_claims",
         "label": "Limitations and explicit non-claims",
         "surface_ids": ["short_paper", "short_paper_narrative", "paper"],
-        "primary_doc_id": "publication_evidence_mini_spec",
+        "primary_doc_id": "publication_claim_task_contract",
         "supporting_doc_ids": ["research_alignment", "phase2_paper"],
     },
     {
@@ -106,32 +108,32 @@ SECTION_TRACEABILITY_ITEMS = (
         "label": "Full-paper abstract summary",
         "doc_id": "phase2_paper",
         "required_heading": "## Abstract Summary",
-        "primary_doc_id": "publication_evidence_mini_spec",
-        "supporting_doc_ids": ["planning_publications", "publication_evidence_mini_spec"],
+        "primary_doc_id": "publication_claim_task_contract",
+        "supporting_doc_ids": ["planning_publications", "publication_claim_task_contract"],
     },
     {
         "section_id": "paper_validation_methodology",
         "label": "Full-paper validation methodology section",
         "doc_id": "phase2_paper",
         "required_heading": "## 7. Validation Methodology",
-        "primary_doc_id": "correctness_evidence_publication_bundle",
-        "supporting_doc_ids": ["planner_calibration_mini_spec", "correctness_evidence_mini_spec"],
+        "primary_doc_id": "workflow_publication_bundle",
+        "supporting_doc_ids": ["planner_calibration_task_contract", "correctness_evidence_task_contract"],
     },
     {
         "section_id": "paper_scope_boundaries",
         "label": "Full-paper scope boundaries section",
         "doc_id": "phase2_paper",
         "required_heading": "## 6. Scope Boundaries",
-        "primary_doc_id": "publication_evidence_mini_spec",
-        "supporting_doc_ids": ["performance_evidence_documentation_bundle", "research_alignment"],
+        "primary_doc_id": "publication_claim_task_contract",
+        "supporting_doc_ids": ["documentation_contract_bundle", "research_alignment"],
     },
     {
         "section_id": "short_paper_validation_baseline",
         "label": "Compact short-paper validation baseline section",
         "doc_id": "phase2_short_paper",
         "required_heading": "## 6. Validation and Benchmark Baseline (Delivered)",
-        "primary_doc_id": "correctness_evidence_publication_bundle",
-        "supporting_doc_ids": ["planner_calibration_mini_spec", "correctness_evidence_mini_spec"],
+        "primary_doc_id": "workflow_publication_bundle",
+        "supporting_doc_ids": ["planner_calibration_task_contract", "correctness_evidence_task_contract"],
     },
     {
         "section_id": "short_paper_follow_on_phases",
@@ -144,20 +146,22 @@ SECTION_TRACEABILITY_ITEMS = (
 )
 
 
-def _load_story1(path: Path = STORY1_PATH):
+def _load_claim_package(path: Path = CLAIM_PACKAGE_PATH):
     if path.exists():
         artifact = load_json(path)
-        validate_story1_artifact(artifact)
+        validate_claim_package_artifact(artifact)
         return artifact
-    return run_story1_validation(verbose=False)
+    return run_claim_package_validation(verbose=False)
 
 
-def _load_story2(path: Path = STORY2_PATH):
+def _load_publication_surface_alignment(
+    path: Path = PUBLICATION_SURFACE_ALIGNMENT_PATH,
+):
     if path.exists():
         artifact = load_json(path)
-        validate_story2_artifact(artifact)
+        validate_publication_surface_alignment_artifact(artifact)
         return artifact
-    return run_story2_validation(verbose=False)
+    return run_publication_surface_alignment(verbose=False)
 
 
 def build_claim_traceability():
@@ -212,8 +216,8 @@ def build_section_traceability():
 
 
 def build_artifact_bundle():
-    story1_artifact = _load_story1()
-    story2_artifact = _load_story2()
+    claim_package_artifact = _load_claim_package()
+    publication_surface_alignment_artifact = _load_publication_surface_alignment()
     claim_traceability = build_claim_traceability()
     section_traceability = build_section_traceability()
 
@@ -229,12 +233,12 @@ def build_artifact_bundle():
         entry["heading_present"] for entry in section_traceability
     )
     reviewer_entry_paths_complete = (
-        PHASE2_DOCUMENTATION_INDEX_PATH.exists() and CORRECTNESS_EVIDENCE_PUBLICATION_BUNDLE_PATH.exists()
+        PHASE2_DOCUMENTATION_INDEX_PATH.exists() and WORKFLOW_PUBLICATION_BUNDLE_PATH.exists()
     )
     claim_traceability_completed = all(
         [
-            story1_artifact["status"] == "pass",
-            story2_artifact["status"] == "pass",
+            claim_package_artifact["status"] == "pass",
+            publication_surface_alignment_artifact["status"] == "pass",
             all_claim_sources_exist,
             all_section_sources_exist,
             all_section_headings_present,
@@ -245,18 +249,18 @@ def build_artifact_bundle():
     artifact = {
         "suite_name": SUITE_NAME,
         "status": "pass" if claim_traceability_completed else "fail",
-        "upstream_story_artifacts": [
+        "upstream_reference_artifacts": [
             {
-                "artifact_id": story1_artifact["suite_name"],
-                "path": relative_to_repo(STORY1_PATH),
-                "status": story1_artifact["status"],
-                "summary": dict(story1_artifact["summary"]),
+                "artifact_id": claim_package_artifact["suite_name"],
+                "path": relative_to_repo(CLAIM_PACKAGE_PATH),
+                "status": claim_package_artifact["status"],
+                "summary": dict(claim_package_artifact["summary"]),
             },
             {
-                "artifact_id": story2_artifact["suite_name"],
-                "path": relative_to_repo(STORY2_PATH),
-                "status": story2_artifact["status"],
-                "summary": dict(story2_artifact["summary"]),
+                "artifact_id": publication_surface_alignment_artifact["suite_name"],
+                "path": relative_to_repo(PUBLICATION_SURFACE_ALIGNMENT_PATH),
+                "status": publication_surface_alignment_artifact["status"],
+                "summary": dict(publication_surface_alignment_artifact["summary"]),
             },
         ],
         "reviewer_entry_paths": {
@@ -264,9 +268,9 @@ def build_artifact_bundle():
                 "path": relative_to_repo(PHASE2_DOCUMENTATION_INDEX_PATH),
                 "exists": PHASE2_DOCUMENTATION_INDEX_PATH.exists(),
             },
-            "correctness_evidence_publication_bundle": {
-                "path": relative_to_repo(CORRECTNESS_EVIDENCE_PUBLICATION_BUNDLE_PATH),
-                "exists": CORRECTNESS_EVIDENCE_PUBLICATION_BUNDLE_PATH.exists(),
+            "workflow_publication_bundle": {
+                "path": relative_to_repo(WORKFLOW_PUBLICATION_BUNDLE_PATH),
+                "exists": WORKFLOW_PUBLICATION_BUNDLE_PATH.exists(),
             },
         },
         "claim_traceability": claim_traceability,
@@ -274,15 +278,17 @@ def build_artifact_bundle():
         "software": build_software_metadata(),
         "provenance": {
             "generation_command": (
-                "python benchmarks/density_matrix/"
+                "python benchmarks/density_matrix/publication_claim_package/"
                 "claim_traceability_bundle.py"
             ),
             "working_directory": str(REPO_ROOT),
             "git_revision": get_git_revision(),
-            "story1_path": str(STORY1_PATH),
-            "story2_path": str(STORY2_PATH),
+            "claim_package_path": str(CLAIM_PACKAGE_PATH),
+            "publication_surface_alignment_path": str(
+                PUBLICATION_SURFACE_ALIGNMENT_PATH
+            ),
             "phase2_documentation_index_path": str(PHASE2_DOCUMENTATION_INDEX_PATH),
-            "correctness_evidence_publication_bundle_path": str(CORRECTNESS_EVIDENCE_PUBLICATION_BUNDLE_PATH),
+            "workflow_publication_bundle_path": str(WORKFLOW_PUBLICATION_BUNDLE_PATH),
         },
         "summary": {
             "claim_traceability_count": len(claim_traceability),
@@ -302,7 +308,7 @@ def validate_artifact_bundle(artifact):
     missing_fields = [field for field in ARTIFACT_FIELDS if field not in artifact]
     if missing_fields:
         raise ValueError(
-            "Task 8 Story 3 artifact is missing required fields: {}".format(
+            "claim_traceability artifact is missing required fields: {}".format(
                 ", ".join(missing_fields)
             )
         )
@@ -345,7 +351,7 @@ def validate_artifact_bundle(artifact):
 
     expected_completed = all(
         [
-            all(upstream["status"] == "pass" for upstream in artifact["upstream_story_artifacts"]),
+            all(upstream["status"] == "pass" for upstream in artifact["upstream_reference_artifacts"]),
             artifact["summary"]["all_claim_sources_exist"],
             artifact["summary"]["all_section_sources_exist"],
             artifact["summary"]["all_section_headings_present"],
@@ -355,7 +361,7 @@ def validate_artifact_bundle(artifact):
     if artifact["summary"]["claim_traceability_completed"] != expected_completed:
         raise ValueError("claim_traceability_completed summary is inconsistent")
     if artifact["status"] != ("pass" if expected_completed else "fail"):
-        raise ValueError("Task 8 Story 3 status does not match completion summary")
+        raise ValueError("claim_traceability status does not match completion summary")
 
 
 def write_artifact_bundle(output_path: Path, artifact):
@@ -384,7 +390,7 @@ def parse_args():
         "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
-        help="Directory for the Task 8 Story 3 JSON artifact bundle.",
+        help="Directory for the claim_traceability JSON artifact.",
     )
     parser.add_argument(
         "--quiet",

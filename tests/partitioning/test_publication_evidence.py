@@ -11,41 +11,41 @@ if str(REPO_ROOT) not in sys.path:
 from benchmarks.density_matrix.publication_evidence.claim_package_validation import (
     NON_CLAIM_ITEMS,
     SUPPORTING_CLAIM_ITEMS,
-    run_validation as run_story1_validation,
-    validate_artifact_bundle as validate_story1_artifact,
+    run_validation as run_claim_package_validation,
+    validate_artifact_bundle as validate_claim_package_artifact,
 )
 from benchmarks.density_matrix.publication_evidence.surface_alignment_validation import (
     PUBLICATION_SURFACES,
-    run_validation as run_story2_validation,
+    run_validation as run_publication_surface_alignment_validation,
 )
 from benchmarks.density_matrix.publication_evidence.claim_traceability_validation import (
     CLAIM_TRACEABILITY_ITEMS,
     SECTION_TRACEABILITY_ITEMS,
-    run_validation as run_story3_validation,
+    run_validation as run_claim_traceability_validation,
 )
 from benchmarks.density_matrix.publication_evidence.evidence_closure_validation import (
-    run_validation as run_story4_validation,
+    run_validation as run_evidence_closure_validation,
 )
 from benchmarks.density_matrix.publication_evidence.supported_path_validation import (
-    run_validation as run_story5_validation,
+    run_validation as run_supported_path_scope_validation,
 )
 from benchmarks.density_matrix.publication_evidence.publication_manifest_validation import (
-    run_validation as run_story6_validation,
-    validate_artifact_bundle as validate_story6_artifact,
+    run_validation as run_publication_manifest_validation,
+    validate_artifact_bundle as validate_publication_manifest_artifact,
 )
 from benchmarks.density_matrix.publication_evidence.future_work_boundary_validation import (
     MANDATORY_FUTURE_TOPICS,
-    run_validation as run_story7_validation,
+    run_validation as run_future_work_boundary_validation,
 )
 from benchmarks.density_matrix.publication_evidence.package_consistency_validation import (
     REQUIRED_GLOSSARY_TERMS,
-    run_validation as run_story8_validation,
-    validate_artifact_bundle as validate_story8_artifact,
+    run_validation as run_package_consistency_validation,
+    validate_artifact_bundle as validate_package_consistency_artifact,
 )
 
 
-def test_phase3_publication_evidence_claim_package_schema_module_level():
-    artifact = run_story1_validation(verbose=False)
+def test_publication_evidence_claim_package_schema_module_level():
+    artifact = run_claim_package_validation(verbose=False)
 
     assert artifact["status"] == "pass"
     assert artifact["summary"]["supporting_claim_count"] == len(SUPPORTING_CLAIM_ITEMS)
@@ -56,30 +56,30 @@ def test_phase3_publication_evidence_claim_package_schema_module_level():
     assert artifact["summary"]["claim_package_completed"] is True
 
 
-def test_publication_evidence_story1_non_claim_inventory_mismatch_fails_validation_module_level():
-    artifact = run_story1_validation(verbose=False)
+def test_publication_evidence_claim_package_non_claim_inventory_mismatch_fails_validation_module_level():
+    artifact = run_claim_package_validation(verbose=False)
     broken_artifact = copy.deepcopy(artifact)
     broken_artifact["claim_package"]["explicit_non_claims"] = broken_artifact[
         "claim_package"
     ]["explicit_non_claims"][:-1]
 
     with pytest.raises(ValueError, match="explicit non-claim inventory mismatch"):
-        validate_story1_artifact(broken_artifact)
+        validate_claim_package_artifact(broken_artifact)
 
 
-def test_phase3_publication_evidence_surface_alignment_schema_module_level():
-    artifact = run_story2_validation(verbose=False)
+def test_publication_evidence_publication_surface_alignment_schema_module_level():
+    artifact = run_publication_surface_alignment_validation(verbose=False)
 
     assert artifact["status"] == "pass"
     assert artifact["summary"]["surface_count"] == len(PUBLICATION_SURFACES)
     assert artifact["summary"]["all_surface_roles_present"] is True
     assert artifact["summary"]["all_main_claims_present"] is True
     assert artifact["summary"]["all_non_claims_present"] is True
-    assert artifact["summary"]["surface_alignment_completed"] is True
+    assert artifact["summary"]["publication_surface_alignment_completed"] is True
 
 
-def test_phase3_publication_evidence_claim_traceability_schema_module_level():
-    artifact = run_story3_validation(verbose=False)
+def test_publication_evidence_claim_traceability_schema_module_level():
+    artifact = run_claim_traceability_validation(verbose=False)
 
     assert artifact["status"] == "pass"
     assert artifact["summary"]["claim_traceability_count"] == len(
@@ -93,8 +93,8 @@ def test_phase3_publication_evidence_claim_traceability_schema_module_level():
     assert artifact["summary"]["claim_traceability_completed"] is True
 
 
-def test_phase3_publication_evidence_evidence_closure_schema_module_level():
-    artifact = run_story4_validation(verbose=False)
+def test_publication_evidence_evidence_closure_schema_module_level():
+    artifact = run_evidence_closure_validation(verbose=False)
 
     assert artifact["status"] == "pass"
     assert artifact["summary"]["required_evidence_count"] == 5
@@ -104,8 +104,8 @@ def test_phase3_publication_evidence_evidence_closure_schema_module_level():
     assert artifact["summary"]["evidence_closure_completed"] is True
 
 
-def test_phase3_publication_evidence_supported_path_schema_module_level():
-    artifact = run_story5_validation(verbose=False)
+def test_publication_evidence_supported_path_scope_schema_module_level():
+    artifact = run_supported_path_scope_validation(verbose=False)
 
     assert artifact["status"] == "pass"
     assert artifact["summary"]["surface_count"] == len(PUBLICATION_SURFACES)
@@ -117,31 +117,31 @@ def test_phase3_publication_evidence_supported_path_schema_module_level():
     assert artifact["summary"]["supported_path_scope_completed"] is True
 
 
-def test_phase3_publication_evidence_manifest_schema_module_level():
-    artifact = run_story6_validation(verbose=False)
+def test_publication_evidence_publication_manifest_schema_module_level():
+    artifact = run_publication_manifest_validation(verbose=False)
 
     assert artifact["status"] == "pass"
-    assert artifact["summary"]["mandatory_story_artifact_count"] == 5
+    assert artifact["summary"]["mandatory_component_artifact_count"] == 5
     assert artifact["summary"]["required_evidence_ref_count"] == 8
-    assert artifact["summary"]["story_artifacts_complete"] is True
+    assert artifact["summary"]["component_artifacts_complete"] is True
     assert artifact["summary"]["required_evidence_refs_complete"] is True
     assert artifact["summary"]["reviewer_entry_paths_complete"] is True
     assert artifact["summary"]["publication_manifest_completed"] is True
 
 
-def test_publication_evidence_story6_missing_required_evidence_ref_fails_validation_module_level():
-    artifact = run_story6_validation(verbose=False)
+def test_publication_evidence_publication_manifest_missing_required_evidence_ref_fails_validation_module_level():
+    artifact = run_publication_manifest_validation(verbose=False)
     broken_artifact = copy.deepcopy(artifact)
     broken_artifact["required_evidence_refs"] = broken_artifact["required_evidence_refs"][:-1]
 
     with pytest.raises(
         ValueError, match="publication manifest evidence reference inventory mismatch"
     ):
-        validate_story6_artifact(broken_artifact)
+        validate_publication_manifest_artifact(broken_artifact)
 
 
-def test_phase3_publication_evidence_future_work_schema_module_level():
-    artifact = run_story7_validation(verbose=False)
+def test_publication_evidence_future_work_boundary_schema_module_level():
+    artifact = run_future_work_boundary_validation(verbose=False)
 
     assert artifact["status"] == "pass"
     assert artifact["summary"]["required_topic_count"] == len(MANDATORY_FUTURE_TOPICS)
@@ -151,8 +151,8 @@ def test_phase3_publication_evidence_future_work_schema_module_level():
     assert artifact["summary"]["future_work_boundary_completed"] is True
 
 
-def test_phase3_publication_evidence_package_consistency_schema_module_level():
-    artifact = run_story8_validation(verbose=False)
+def test_publication_evidence_package_consistency_schema_module_level():
+    artifact = run_package_consistency_validation(verbose=False)
 
     assert artifact["status"] == "pass"
     assert artifact["summary"]["surface_count"] == len(PUBLICATION_SURFACES)
@@ -164,10 +164,10 @@ def test_phase3_publication_evidence_package_consistency_schema_module_level():
     assert artifact["summary"]["package_consistency_completed"] is True
 
 
-def test_publication_evidence_story8_surface_inventory_mismatch_fails_validation_module_level():
-    artifact = run_story8_validation(verbose=False)
+def test_publication_evidence_package_consistency_surface_inventory_mismatch_fails_validation_module_level():
+    artifact = run_package_consistency_validation(verbose=False)
     broken_artifact = copy.deepcopy(artifact)
     broken_artifact["surface_inventory"] = broken_artifact["surface_inventory"][:-1]
 
     with pytest.raises(ValueError, match="package consistency surface inventory mismatch"):
-        validate_story8_artifact(broken_artifact)
+        validate_package_consistency_artifact(broken_artifact)

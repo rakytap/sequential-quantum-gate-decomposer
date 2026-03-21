@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Validation: Task 5 Story 6 publication-ready validation bundle.
+"""Validation: publication-ready validation bundle.
 
-Builds the top-level Task 5 manifest by assembling the delivered artifacts from
-Stories 1 to 5 into one reproducible, machine-checkable package. The bundle
+Builds the top-level validation-evidence manifest by assembling the delivered
+artifacts into one reproducible, machine-checkable package. The bundle
 preserves the canonical raw trace artifact explicitly while keeping the other
-Task 5 story bundles as first-class top-level evidence layers.
+validation-evidence bundles as first-class top-level evidence layers.
 
 Run with:
     python benchmarks/density_matrix/validation_evidence/validation_evidence_publication_bundle.py
@@ -31,39 +31,39 @@ from benchmarks.density_matrix.workflow_evidence.exact_density_vqe_validation im
     write_json,
 )
 from benchmarks.density_matrix.validation_evidence.local_correctness_validation import (
-    ARTIFACT_FILENAME as STORY1_ARTIFACT_FILENAME,
-    run_validation as run_story1_validation,
-    write_artifact_bundle as write_story1_bundle_file,
+    ARTIFACT_FILENAME as LOCAL_CORRECTNESS_ARTIFACT_FILENAME,
+    run_validation as run_local_correctness_validation,
+    write_artifact_bundle as write_local_correctness_bundle_file,
 )
 from benchmarks.density_matrix.validation_evidence.workflow_baseline_validation import (
-    ARTIFACT_FILENAME as STORY2_ARTIFACT_FILENAME,
-    run_validation as run_story2_validation,
-    write_artifact_bundle as write_story2_bundle_file,
+    ARTIFACT_FILENAME as WORKFLOW_BASELINE_ARTIFACT_FILENAME,
+    run_validation as run_workflow_baseline_validation,
+    write_artifact_bundle as write_workflow_baseline_bundle_file,
 )
 from benchmarks.density_matrix.validation_evidence.trace_anchor_validation import (
-    ARTIFACT_FILENAME as STORY3_ARTIFACT_FILENAME,
+    ARTIFACT_FILENAME as TRACE_ANCHOR_ARTIFACT_FILENAME,
     TRACE_CASE_NAME,
-    TRACE_ARTIFACT_FILENAME as STORY3_TRACE_ARTIFACT_FILENAME,
-    build_artifact_bundle as build_story3_bundle,
-    write_artifact_bundle as write_story3_bundle_file,
+    TRACE_ARTIFACT_FILENAME as TRACE_ARTIFACT_FILENAME,
+    build_artifact_bundle as build_trace_anchor_bundle,
+    write_artifact_bundle as write_trace_anchor_bundle_file,
 )
 from benchmarks.density_matrix.validation_evidence.metric_completeness_validation import (
-    ARTIFACT_FILENAME as STORY4_ARTIFACT_FILENAME,
-    build_artifact_bundle as build_story4_bundle,
-    write_artifact_bundle as write_story4_bundle_file,
+    ARTIFACT_FILENAME as METRIC_COMPLETENESS_ARTIFACT_FILENAME,
+    build_artifact_bundle as build_metric_completeness_bundle,
+    write_artifact_bundle as write_metric_completeness_bundle_file,
 )
 from benchmarks.density_matrix.validation_evidence.interpretation_validation import (
-    ARTIFACT_FILENAME as STORY5_ARTIFACT_FILENAME,
-    build_artifact_bundle as build_exact_density_validation_bundle,
-    write_artifact_bundle as write_exact_density_validation_bundle_file,
+    ARTIFACT_FILENAME as INTERPRETATION_ARTIFACT_FILENAME,
+    build_artifact_bundle as build_validation_interpretation_bundle,
+    write_artifact_bundle as write_validation_interpretation_bundle_file,
 )
 from benchmarks.density_matrix.noise_support.optional_noise_classification_validation import (
-    build_artifact_bundle as build_task4_story3_bundle,
-    run_validation as run_task4_story3_validation,
+    build_artifact_bundle as build_optional_noise_bundle,
+    run_validation as run_optional_noise_validation,
 )
 from benchmarks.density_matrix.noise_support.unsupported_noise_validation import (
-    build_artifact_bundle as build_task4_story4_bundle,
-    run_validation as run_task4_story4_validation,
+    build_artifact_bundle as build_unsupported_noise_bundle,
+    run_validation as run_unsupported_noise_validation,
 )
 
 SUITE_NAME = "validation_evidence_publication"
@@ -112,38 +112,38 @@ def _load_json(path: Path):
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def build_planner_calibration_story6_bundle(
+def build_validation_evidence_publication_bundle(
     output_dir: Path,
     *,
-    story1_bundle,
-    story2_bundle,
-    story3_bundle,
-    story3_trace_result,
-    story4_bundle,
-    story5_bundle,
+    local_correctness_bundle,
+    workflow_baseline_bundle,
+    trace_anchor_bundle,
+    trace_artifact,
+    metric_completeness_bundle,
+    interpretation_bundle,
 ):
     output_dir = Path(output_dir)
-    story1_command = (
+    local_correctness_command = (
         f"python benchmarks/density_matrix/validation_evidence/local_correctness_validation.py "
         f"--output-dir {output_dir}"
     )
-    story2_command = (
+    workflow_baseline_command = (
         f"python benchmarks/density_matrix/validation_evidence/workflow_baseline_validation.py "
         f"--output-dir {output_dir}"
     )
-    story3_command = (
+    trace_anchor_command = (
         f"python benchmarks/density_matrix/validation_evidence/trace_anchor_validation.py "
         f"--output-dir {output_dir}"
     )
-    story4_command = (
+    metric_completeness_command = (
         f"python benchmarks/density_matrix/validation_evidence/metric_completeness_validation.py "
         f"--output-dir {output_dir}"
     )
-    story5_command = (
+    interpretation_command = (
         f"python benchmarks/density_matrix/validation_evidence/interpretation_validation.py "
         f"--output-dir {output_dir}"
     )
-    story6_command = (
+    publication_bundle_command = (
         f"python benchmarks/density_matrix/validation_evidence/validation_evidence_publication_bundle.py "
         f"--output-dir {output_dir}"
     )
@@ -153,18 +153,20 @@ def build_planner_calibration_story6_bundle(
             artifact_id="local_correctness_bundle",
             artifact_class="local_correctness_baseline_bundle",
             mandatory=True,
-            path=STORY1_ARTIFACT_FILENAME,
-            status=story1_bundle["status"],
+            path=LOCAL_CORRECTNESS_ARTIFACT_FILENAME,
+            status=local_correctness_bundle["status"],
             expected_statuses=["pass"],
             purpose="Phase-level local correctness gate for the mandatory 1 to 3 qubit micro-validation matrix.",
-            generation_command=story1_command,
+            generation_command=local_correctness_command,
             summary={
-                "required_cases": story1_bundle["summary"]["required_cases"],
-                "required_passed_cases": story1_bundle["summary"][
+                "required_cases": local_correctness_bundle["summary"]["required_cases"],
+                "required_passed_cases": local_correctness_bundle["summary"][
                     "required_passed_cases"
                 ],
-                "required_pass_rate": story1_bundle["summary"]["required_pass_rate"],
-                "stable_case_ids_present": story1_bundle["summary"][
+                "required_pass_rate": local_correctness_bundle["summary"][
+                    "required_pass_rate"
+                ],
+                "stable_case_ids_present": local_correctness_bundle["summary"][
                     "stable_case_ids_present"
                 ],
             },
@@ -173,24 +175,26 @@ def build_planner_calibration_story6_bundle(
             artifact_id="workflow_baseline_bundle",
             artifact_class="workflow_exact_regime_baseline_bundle",
             mandatory=True,
-            path=STORY2_ARTIFACT_FILENAME,
-            status=story2_bundle["status"],
+            path=WORKFLOW_BASELINE_ARTIFACT_FILENAME,
+            status=workflow_baseline_bundle["status"],
             expected_statuses=["pass"],
             purpose="Phase-level 4/6/8/10 workflow-scale exact-regime baseline.",
-            generation_command=story2_command,
+            generation_command=workflow_baseline_command,
             summary={
-                "required_cases": story2_bundle["summary"]["required_cases"],
-                "required_passed_cases": story2_bundle["summary"][
+                "required_cases": workflow_baseline_bundle["summary"]["required_cases"],
+                "required_passed_cases": workflow_baseline_bundle["summary"][
                     "required_passed_cases"
                 ],
-                "required_pass_rate": story2_bundle["summary"]["required_pass_rate"],
-                "documented_10q_anchor_present": story2_bundle["summary"][
+                "required_pass_rate": workflow_baseline_bundle["summary"][
+                    "required_pass_rate"
+                ],
+                "documented_10q_anchor_present": workflow_baseline_bundle["summary"][
                     "documented_10q_anchor_present"
                 ],
-                "stable_case_ids_present": story2_bundle["summary"][
+                "stable_case_ids_present": workflow_baseline_bundle["summary"][
                     "stable_case_ids_present"
                 ],
-                "stable_parameter_set_ids_present": story2_bundle["summary"][
+                "stable_parameter_set_ids_present": workflow_baseline_bundle["summary"][
                     "stable_parameter_set_ids_present"
                 ],
             },
@@ -199,25 +203,25 @@ def build_planner_calibration_story6_bundle(
             artifact_id="trace_anchor_bundle",
             artifact_class="trace_and_anchor_bundle",
             mandatory=True,
-            path=STORY3_ARTIFACT_FILENAME,
-            status=story3_bundle["status"],
+            path=TRACE_ANCHOR_ARTIFACT_FILENAME,
+            status=trace_anchor_bundle["status"],
             expected_statuses=["pass"],
             purpose="Phase-level bounded trace plus documented 10-qubit anchor package.",
-            generation_command=story3_command,
+            generation_command=trace_anchor_command,
             summary={
-                "documented_10q_anchor_present": story3_bundle["summary"][
+                "documented_10q_anchor_present": trace_anchor_bundle["summary"][
                     "documented_10q_anchor_present"
                 ],
-                "required_trace_case_name": story3_bundle["summary"][
+                "required_trace_case_name": trace_anchor_bundle["summary"][
                     "required_trace_case_name"
                 ],
-                "required_trace_present": story3_bundle["summary"][
+                "required_trace_present": trace_anchor_bundle["summary"][
                     "required_trace_present"
                 ],
-                "required_trace_completed": story3_bundle["summary"][
+                "required_trace_completed": trace_anchor_bundle["summary"][
                     "required_trace_completed"
                 ],
-                "required_trace_bridge_supported": story3_bundle["summary"][
+                "required_trace_bridge_supported": trace_anchor_bundle["summary"][
                     "required_trace_bridge_supported"
                 ],
             },
@@ -226,38 +230,46 @@ def build_planner_calibration_story6_bundle(
             artifact_id="optimization_trace_4q",
             artifact_class="raw_trace_artifact",
             mandatory=True,
-            path=STORY3_TRACE_ARTIFACT_FILENAME,
-            status=story3_trace_result["status"],
+            path=TRACE_ARTIFACT_FILENAME,
+            status=trace_artifact["status"],
             expected_statuses=["completed"],
-            purpose="Canonical raw bounded optimization trace linked from the Task 5 Story 3 bundle.",
-            generation_command=story3_command,
+            purpose="Canonical raw bounded optimization trace linked from the trace-and-anchor bundle.",
+            generation_command=trace_anchor_command,
             summary={
-                "case_name": story3_trace_result["case_name"],
-                "workflow_completed": story3_trace_result["workflow_completed"],
-                "bridge_supported_pass": story3_trace_result["bridge_supported_pass"],
-                "required_validation_trace": story3_trace_result["required_validation_trace"],
+                "case_name": trace_artifact["case_name"],
+                "workflow_completed": trace_artifact["workflow_completed"],
+                "bridge_supported_pass": trace_artifact["bridge_supported_pass"],
+                "required_validation_trace": trace_artifact["required_validation_trace"],
             },
         ),
         _build_artifact_entry(
             artifact_id="metric_completeness_bundle",
             artifact_class="metric_completeness_bundle",
             mandatory=True,
-            path=STORY4_ARTIFACT_FILENAME,
-            status=story4_bundle["status"],
+            path=METRIC_COMPLETENESS_ARTIFACT_FILENAME,
+            status=metric_completeness_bundle["status"],
             expected_statuses=["pass"],
             purpose="Phase-level metric-completeness gate for mandatory supported evidence.",
-            generation_command=story4_command,
+            generation_command=metric_completeness_command,
             summary={
-                "micro_cases_missing_required_metrics": story4_bundle["summary"][
+                "micro_cases_missing_required_metrics": metric_completeness_bundle[
+                    "summary"
+                ][
                     "micro_cases_missing_required_metrics"
                 ],
-                "workflow_cases_missing_required_metrics": story4_bundle["summary"][
+                "workflow_cases_missing_required_metrics": metric_completeness_bundle[
+                    "summary"
+                ][
                     "workflow_cases_missing_required_metrics"
                 ],
-                "trace_artifacts_missing_required_metrics": story4_bundle["summary"][
+                "trace_artifacts_missing_required_metrics": metric_completeness_bundle[
+                    "summary"
+                ][
                     "trace_artifacts_missing_required_metrics"
                 ],
-                "metric_completeness_gate_completed": story4_bundle["summary"][
+                "metric_completeness_gate_completed": metric_completeness_bundle[
+                    "summary"
+                ][
                     "metric_completeness_gate_completed"
                 ],
             },
@@ -266,23 +278,23 @@ def build_planner_calibration_story6_bundle(
             artifact_id="interpretation_bundle",
             artifact_class="interpretation_guardrail_bundle",
             mandatory=True,
-            path=STORY5_ARTIFACT_FILENAME,
-            status=story5_bundle["status"],
+            path=INTERPRETATION_ARTIFACT_FILENAME,
+            status=interpretation_bundle["status"],
             expected_statuses=["pass"],
             purpose="Phase-level interpretation guardrails preventing optional, unsupported, or incomplete evidence from inflating the main claim.",
-            generation_command=story5_command,
+            generation_command=interpretation_command,
             summary={
-                "mandatory_artifacts_complete": story5_bundle["summary"][
+                "mandatory_artifacts_complete": interpretation_bundle["summary"][
                     "mandatory_artifacts_complete"
                 ],
-                "optional_evidence_supplemental": story5_bundle["summary"][
+                "optional_evidence_supplemental": interpretation_bundle["summary"][
                     "optional_evidence_supplemental"
                 ],
-                "unsupported_evidence_negative_only": story5_bundle["summary"][
+                "unsupported_evidence_negative_only": interpretation_bundle["summary"][
                     "unsupported_evidence_negative_only"
                 ],
-                "main_phase2_claim_completed": story5_bundle["summary"][
-                    "main_phase2_claim_completed"
+                "main_validation_claim_completed": interpretation_bundle["summary"][
+                    "main_validation_claim_completed"
                 ],
             },
         ),
@@ -306,11 +318,11 @@ def build_planner_calibration_story6_bundle(
     bundle = {
         "suite_name": SUITE_NAME,
         "status": bundle_status,
-        "backend": story1_bundle["backend"],
-        "reference_backend": story1_bundle["reference_backend"],
+        "backend": local_correctness_bundle["backend"],
+        "reference_backend": local_correctness_bundle["reference_backend"],
         "software": build_software_metadata(),
         "provenance": {
-            "generation_command": story6_command,
+            "generation_command": publication_bundle_command,
             "working_directory": str(REPO_ROOT),
             "git_revision": get_git_revision(),
         },
@@ -320,22 +332,22 @@ def build_planner_calibration_story6_bundle(
             "status_match_count": status_match_count,
             "missing_artifact_count": len(mandatory_artifacts) - present_count,
             "mismatched_status_count": len(mandatory_artifacts) - status_match_count,
-            "raw_trace_reference_pass": story3_bundle["summary"][
+            "raw_trace_reference_pass": trace_anchor_bundle["summary"][
                 "required_trace_case_name"
             ]
-            == story3_trace_result["case_name"],
+            == trace_artifact["case_name"],
         },
         "artifacts": artifacts,
     }
-    validate_planner_calibration_story6_bundle(bundle, output_dir)
+    validate_validation_evidence_publication_bundle(bundle, output_dir)
     return bundle
 
 
-def validate_planner_calibration_story6_bundle(bundle, bundle_dir: Path):
+def validate_validation_evidence_publication_bundle(bundle, bundle_dir: Path):
     missing_fields = [field for field in BUNDLE_FIELDS if field not in bundle]
     if missing_fields:
         raise ValueError(
-            "Task 5 Story 6 bundle is missing required fields: {}".format(
+            "Validation-evidence publication bundle is missing required fields: {}".format(
                 ", ".join(missing_fields)
             )
         )
@@ -352,7 +364,7 @@ def validate_planner_calibration_story6_bundle(bundle, bundle_dir: Path):
     missing_ids = required_ids - artifact_ids
     if missing_ids:
         raise ValueError(
-            "Task 5 Story 6 bundle is missing required artifact IDs: {}".format(
+            "Validation-evidence publication bundle is missing required artifact IDs: {}".format(
                 ", ".join(sorted(missing_ids))
             )
         )
@@ -395,7 +407,7 @@ def validate_planner_calibration_story6_bundle(bundle, bundle_dir: Path):
             "mandatory_artifacts_complete",
             "optional_evidence_supplemental",
             "unsupported_evidence_negative_only",
-            "main_phase2_claim_completed",
+            "main_validation_claim_completed",
         },
     }
 
@@ -403,11 +415,11 @@ def validate_planner_calibration_story6_bundle(bundle, bundle_dir: Path):
         artifact_path = bundle_dir / artifact["path"]
         if artifact["mandatory"] and not artifact_path.exists():
             raise ValueError(
-                f"Task 5 Story 6 bundle is missing artifact file: {artifact['path']}"
+                f"Validation-evidence publication bundle is missing artifact file: {artifact['path']}"
             )
         if artifact["status"] not in artifact["expected_statuses"]:
             raise ValueError(
-                "Task 5 Story 6 artifact {} has unexpected status {}".format(
+                "Validation-evidence publication artifact {} has unexpected status {}".format(
                     artifact["artifact_id"], artifact["status"]
                 )
             )
@@ -426,15 +438,15 @@ def validate_planner_calibration_story6_bundle(bundle, bundle_dir: Path):
             )
 
 
-def write_planner_calibration_story6_bundle(output_path: Path, bundle):
-    validate_planner_calibration_story6_bundle(bundle, output_path.parent)
+def write_validation_evidence_publication_bundle(output_path: Path, bundle):
+    validate_validation_evidence_publication_bundle(bundle, output_path.parent)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(
         json.dumps(bundle, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
 
 
-def generate_story6_bundle(
+def generate_validation_evidence_publication_bundle(
     output_dir: Path,
     *,
     qubit_sizes=EXACT_REGIME_WORKFLOW_QUBITS,
@@ -444,56 +456,75 @@ def generate_story6_bundle(
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    _, _, story1_bundle = run_story1_validation(verbose=verbose)
-    write_story1_bundle_file(output_dir / STORY1_ARTIFACT_FILENAME, story1_bundle)
+    _, _, local_correctness_bundle = run_local_correctness_validation(verbose=verbose)
+    write_local_correctness_bundle_file(
+        output_dir / LOCAL_CORRECTNESS_ARTIFACT_FILENAME,
+        local_correctness_bundle,
+    )
 
-    _, story2_bundle = run_story2_validation(
+    _, workflow_baseline_bundle = run_workflow_baseline_validation(
         qubit_sizes=qubit_sizes,
         parameter_set_count=parameter_set_count,
         verbose=verbose,
     )
-    write_story2_bundle_file(output_dir / STORY2_ARTIFACT_FILENAME, story2_bundle)
+    write_workflow_baseline_bundle_file(
+        output_dir / WORKFLOW_BASELINE_ARTIFACT_FILENAME,
+        workflow_baseline_bundle,
+    )
 
-    story3_trace_result = capture_case(TRACE_CASE_NAME, run_optimization_trace)
-    story3_bundle = build_story3_bundle(
-        story2_bundle,
-        story3_trace_result,
+    trace_artifact = capture_case(TRACE_CASE_NAME, run_optimization_trace)
+    trace_anchor_bundle = build_trace_anchor_bundle(
+        workflow_baseline_bundle,
+        trace_artifact,
         qubit_sizes=qubit_sizes,
         parameter_set_count=parameter_set_count,
     )
-    write_story3_bundle_file(output_dir / STORY3_ARTIFACT_FILENAME, story3_bundle)
-    write_json(output_dir / STORY3_TRACE_ARTIFACT_FILENAME, story3_trace_result)
-
-    story4_bundle = build_story4_bundle(story1_bundle, story2_bundle, story3_bundle)
-    write_story4_bundle_file(output_dir / STORY4_ARTIFACT_FILENAME, story4_bundle)
-
-    task4_story3_story1_bundle, task4_story3_story2_bundle, optional_results = (
-        run_task4_story3_validation(verbose=verbose)
+    write_trace_anchor_bundle_file(
+        output_dir / TRACE_ANCHOR_ARTIFACT_FILENAME,
+        trace_anchor_bundle,
     )
-    optional_bundle = build_task4_story3_bundle(
-        task4_story3_story1_bundle,
-        task4_story3_story2_bundle,
+    write_json(output_dir / TRACE_ARTIFACT_FILENAME, trace_artifact)
+
+    metric_completeness_bundle = build_metric_completeness_bundle(
+        local_correctness_bundle,
+        workflow_baseline_bundle,
+        trace_anchor_bundle,
+    )
+    write_metric_completeness_bundle_file(
+        output_dir / METRIC_COMPLETENESS_ARTIFACT_FILENAME,
+        metric_completeness_bundle,
+    )
+
+    required_local_noise_bundle, required_local_noise_micro_bundle, optional_results = (
+        run_optional_noise_validation(verbose=verbose)
+    )
+    optional_bundle = build_optional_noise_bundle(
+        required_local_noise_bundle,
+        required_local_noise_micro_bundle,
         optional_results,
     )
-    unsupported_results = run_task4_story4_validation(verbose=verbose)
-    unsupported_bundle = build_task4_story4_bundle(unsupported_results)
-    story5_bundle = build_exact_density_validation_bundle(
-        story4_bundle,
+    unsupported_results = run_unsupported_noise_validation(verbose=verbose)
+    unsupported_bundle = build_unsupported_noise_bundle(unsupported_results)
+    interpretation_bundle = build_validation_interpretation_bundle(
+        metric_completeness_bundle,
         optional_bundle,
         unsupported_bundle,
     )
-    write_exact_density_validation_bundle_file(output_dir / STORY5_ARTIFACT_FILENAME, story5_bundle)
-
-    bundle = build_planner_calibration_story6_bundle(
-        output_dir,
-        story1_bundle=story1_bundle,
-        story2_bundle=story2_bundle,
-        story3_bundle=story3_bundle,
-        story3_trace_result=story3_trace_result,
-        story4_bundle=story4_bundle,
-        story5_bundle=story5_bundle,
+    write_validation_interpretation_bundle_file(
+        output_dir / INTERPRETATION_ARTIFACT_FILENAME,
+        interpretation_bundle,
     )
-    write_planner_calibration_story6_bundle(output_dir / ARTIFACT_FILENAME, bundle)
+
+    bundle = build_validation_evidence_publication_bundle(
+        output_dir,
+        local_correctness_bundle=local_correctness_bundle,
+        workflow_baseline_bundle=workflow_baseline_bundle,
+        trace_anchor_bundle=trace_anchor_bundle,
+        trace_artifact=trace_artifact,
+        metric_completeness_bundle=metric_completeness_bundle,
+        interpretation_bundle=interpretation_bundle,
+    )
+    write_validation_evidence_publication_bundle(output_dir / ARTIFACT_FILENAME, bundle)
     return bundle
 
 
@@ -503,7 +534,7 @@ def parse_args():
         "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
-        help="Directory for the Task 5 Story 6 JSON artifacts.",
+        help="Directory for the validation-evidence publication JSON artifacts.",
     )
     parser.add_argument(
         "--parameter-set-count",
@@ -528,7 +559,7 @@ def parse_args():
 
 def main():
     args = parse_args()
-    bundle = generate_story6_bundle(
+    bundle = generate_validation_evidence_publication_bundle(
         args.output_dir,
         qubit_sizes=tuple(args.qubit_sizes),
         parameter_set_count=args.parameter_set_count,

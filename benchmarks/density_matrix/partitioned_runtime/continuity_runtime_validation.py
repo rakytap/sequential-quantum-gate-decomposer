@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Validation: Phase 3 Task 3 Story 1 continuity runtime slice.
+"""Continuity runtime validation for Phase 3 partitioned density execution.
 
-Builds the required 4, 6, 8, and 10 qubit Phase 2 continuity-anchor workloads
-and verifies that each one executes through the first positive Task 3
-partitioned density runtime path from validated Task 2 descriptors.
+Builds the required 4-, 6-, 8-, and 10-qubit Phase 2 continuity-anchor workloads
+and verifies that each executes through the baseline partitioned density runtime
+path using validated planner-surface descriptors.
 
 Run with:
     python benchmarks/density_matrix/partitioned_runtime/continuity_runtime_validation.py
@@ -186,7 +186,7 @@ def write_artifact_bundle(bundle: dict, output_dir: Path = DEFAULT_OUTPUT_DIR) -
 def run_validation(verbose: bool = True) -> list[dict]:
     results = [build_case_result(qbit_num) for qbit_num in REQUIRED_QUBITS]
     if verbose:
-        print("Phase 3 Task 3 Story 1 continuity runtime:")
+        print("Continuity partitioned runtime:")
         for case in results:
             print(
                 "  q={qbit_num}: partitions={partition_count}, runtime_path={runtime_path}, dE={absolute_energy_error:.3e}, dRho={frobenius_norm_diff:.3e}, pass={continuity_runtime_pass}".format(

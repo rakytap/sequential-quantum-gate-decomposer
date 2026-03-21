@@ -10,7 +10,7 @@
   "requirements": {
     "boundary_visibility_rule": "Excluded, unsupported, or deferred evidence must remain visible as claim-boundary evidence in downstream summaries.",
     "diagnosis_rule": "If no representative case meets the positive threshold, diagnosis-only cases must remain benchmark-grounded and visible as explicit limitation evidence.",
-    "positive_claim_rule": "Only counted representative Task 7 evidence may close a positive benchmark claim."
+    "positive_claim_rule": "Only counted representative performance-evidence cases may close a positive benchmark claim."
   },
   "schema_version": "phase3_performance_evidence_summary_v1",
   "selected_candidate": {

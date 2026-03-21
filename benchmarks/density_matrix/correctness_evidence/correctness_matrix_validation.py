@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Validation: Phase 3 Task 6 Story 1 correctness matrix.
+"""Correctness matrix validation for density-matrix correctness evidence.
 
-Builds the mandatory Task 6 case inventory for the selected Task 5 supported
+Builds the mandatory case inventory for the selected supported calibration
 candidate and records stable case identity plus validation-slice membership.
 
 Run with:
@@ -29,7 +29,7 @@ from benchmarks.density_matrix.correctness_evidence.case_selection import (
     build_correctness_evidence_case_contexts,
 )
 
-SUITE_NAME = "phase3_correctness_evidence_correctness_matrix"
+SUITE_NAME = "correctness_evidence_correctness_matrix"
 ARTIFACT_FILENAME = "correctness_matrix_bundle.json"
 DEFAULT_OUTPUT_DIR = correctness_evidence_output_dir("correctness_matrix")
 ARTIFACT_CORE_FIELDS = (
@@ -44,12 +44,12 @@ ARTIFACT_CORE_FIELDS = (
 
 
 @lru_cache(maxsize=1)
-def _build_story1_cases_cached() -> tuple[dict, ...]:
+def _build_correctness_matrix_cases_cached() -> tuple[dict, ...]:
     return tuple(dict(case_context.metadata) for case_context in build_correctness_evidence_case_contexts())
 
 
 def build_cases() -> list[dict]:
-    return deepcopy(list(_build_story1_cases_cached()))
+    return deepcopy(list(_build_correctness_matrix_cases_cached()))
 
 
 def build_artifact_bundle(cases: list[dict]) -> dict:
@@ -86,7 +86,7 @@ def build_artifact_bundle(cases: list[dict]) -> dict:
     missing = [field for field in ARTIFACT_CORE_FIELDS if field not in bundle]
     if missing:
         raise ValueError(
-            "Task 6 Story 1 bundle missing required fields: {}".format(
+            "Correctness matrix bundle missing required fields: {}".format(
                 ", ".join(missing)
             )
         )
@@ -99,7 +99,7 @@ def main(argv: list[str] | None = None) -> int:
         "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
-        help="Directory to write the Task 6 Story 1 bundle into.",
+        help="Directory to write the correctness matrix bundle into.",
     )
     parser.add_argument(
         "--quiet",

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Validation: Phase 3 Task 7 Story 4 sensitivity surface.
+"""Sensitivity matrix validation for performance evidence.
 
-Records bounded sensitivity across planner-setting identity, noise placement,
-and workload identity through one machine-reviewable benchmark surface.
+Records bounded sensitivity across planner-setting identity, noise placement, and
+workload identity through one machine-reviewable benchmark surface.
 
 Run with:
     python benchmarks/density_matrix/performance_evidence/sensitivity_matrix_validation.py
@@ -30,7 +30,7 @@ from benchmarks.density_matrix.performance_evidence.records import (
     build_performance_evidence_core_benchmark_records,
 )
 
-SUITE_NAME = "phase3_performance_evidence_sensitivity_matrix"
+SUITE_NAME = "performance_evidence_sensitivity_matrix"
 ARTIFACT_FILENAME = "sensitivity_matrix_bundle.json"
 DEFAULT_OUTPUT_DIR = performance_evidence_output_dir("sensitivity_matrix")
 ARTIFACT_CORE_FIELDS = (
@@ -44,7 +44,7 @@ ARTIFACT_CORE_FIELDS = (
 )
 
 
-def build_cases() -> list[dict]:
+def build_sensitivity_matrix_cases() -> list[dict]:
     return [
         case
         for case in build_performance_evidence_core_benchmark_records()
@@ -52,7 +52,7 @@ def build_cases() -> list[dict]:
     ]
 
 
-def build_artifact_bundle(cases: list[dict]) -> dict:
+def build_sensitivity_matrix_bundle(cases: list[dict]) -> dict:
     grouped: dict[str, list[dict]] = defaultdict(list)
     for case in cases:
         grouped[case["review_group_id"]].append(case)
@@ -89,7 +89,7 @@ def build_artifact_bundle(cases: list[dict]) -> dict:
     missing = [field for field in ARTIFACT_CORE_FIELDS if field not in bundle]
     if missing:
         raise ValueError(
-            "Task 7 Story 4 bundle missing required fields: {}".format(
+            "Sensitivity matrix bundle missing required fields: {}".format(
                 ", ".join(missing)
             )
         )
@@ -102,7 +102,7 @@ def main(argv: list[str] | None = None) -> int:
         "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
-        help="Directory to write the Task 7 Story 4 bundle into.",
+        help="Directory to write the sensitivity matrix bundle into.",
     )
     parser.add_argument(
         "--quiet",
@@ -111,8 +111,8 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    cases = build_cases()
-    bundle = build_artifact_bundle(cases)
+    cases = build_sensitivity_matrix_cases()
+    bundle = build_sensitivity_matrix_bundle(cases)
     output_path = write_artifact_bundle(bundle, args.output_dir, ARTIFACT_FILENAME)
 
     if not args.quiet:

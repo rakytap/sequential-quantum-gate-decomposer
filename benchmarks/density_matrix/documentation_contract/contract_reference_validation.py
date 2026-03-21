@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validation: Task 7 Story 1 documentation contract reference map.
+"""Validation: Phase 2 documentation contract reference map.
 
 Builds a machine-readable map for the authoritative Phase 2 documentation path.
 This layer is intentionally thin:
@@ -80,19 +80,19 @@ DOC_CLASS_ROLES = (
     {
         "document_class": "task_contracts",
         "doc_ids": [
-            "task1_mini_spec",
-            "task2_mini_spec",
-            "task3_mini_spec",
-            "task4_mini_spec",
-            "planner_calibration_mini_spec",
-            "correctness_evidence_mini_spec",
-            "performance_evidence_mini_spec",
+            "backend_selection_task_contract",
+            "observable_scope_task_contract",
+            "bridge_scope_task_contract",
+            "support_matrix_task_contract",
+            "planner_calibration_task_contract",
+            "correctness_evidence_task_contract",
+            "documentation_evidence_task_contract",
         ],
         "role": "task-level behavior contracts and acceptance evidence",
     },
     {
         "document_class": "workflow_evidence_surface",
-        "doc_ids": ["correctness_evidence_publication_bundle"],
+        "doc_ids": ["workflow_publication_bundle"],
         "role": "machine-readable evidence surface for the delivered workflow claim",
     },
     {
@@ -122,32 +122,32 @@ MANDATORY_TOPICS = {
         "supporting_doc_ids": [
             "phase2_adrs",
             "phase2_checklist",
-            "task1_mini_spec",
+            "backend_selection_task_contract",
         ],
         "layer": "phase contract + task contract",
     },
     "observable_scope": {
         "label": "Observable scope",
         "primary_doc_id": "phase2_detailed_planning",
-        "supporting_doc_ids": ["phase2_adrs", "task2_mini_spec"],
+        "supporting_doc_ids": ["phase2_adrs", "observable_scope_task_contract"],
         "layer": "phase contract + task contract",
     },
     "bridge_scope": {
         "label": "Bridge scope",
         "primary_doc_id": "phase2_detailed_planning",
-        "supporting_doc_ids": ["phase2_adrs", "task3_mini_spec"],
+        "supporting_doc_ids": ["phase2_adrs", "bridge_scope_task_contract"],
         "layer": "phase contract + task contract",
     },
     "support_matrix": {
         "label": "Support matrix",
         "primary_doc_id": "phase2_detailed_planning",
-        "supporting_doc_ids": ["phase2_adrs", "task4_mini_spec"],
+        "supporting_doc_ids": ["phase2_adrs", "support_matrix_task_contract"],
         "layer": "phase contract + task contract",
     },
     "workflow_anchor": {
         "label": "Workflow anchor",
         "primary_doc_id": "phase2_detailed_planning",
-        "supporting_doc_ids": ["phase2_adrs", "correctness_evidence_mini_spec"],
+        "supporting_doc_ids": ["phase2_adrs", "correctness_evidence_task_contract"],
         "layer": "phase contract + task contract",
     },
     "benchmark_minimum": {
@@ -155,8 +155,8 @@ MANDATORY_TOPICS = {
         "primary_doc_id": "phase2_detailed_planning",
         "supporting_doc_ids": [
             "phase2_adrs",
-            "planner_calibration_mini_spec",
-            "correctness_evidence_publication_bundle",
+            "planner_calibration_task_contract",
+            "workflow_publication_bundle",
         ],
         "layer": "phase contract + evidence surface",
     },
@@ -165,8 +165,8 @@ MANDATORY_TOPICS = {
         "primary_doc_id": "phase2_detailed_planning",
         "supporting_doc_ids": [
             "phase2_adrs",
-            "planner_calibration_mini_spec",
-            "correctness_evidence_mini_spec",
+            "planner_calibration_task_contract",
+            "correctness_evidence_task_contract",
         ],
         "layer": "phase contract + task contract",
     },
@@ -182,7 +182,7 @@ MANDATORY_TOPICS = {
     },
     "publication_evidence_surface": {
         "label": "Publication evidence surface",
-        "primary_doc_id": "correctness_evidence_publication_bundle",
+        "primary_doc_id": "workflow_publication_bundle",
         "supporting_doc_ids": [
             "planning_publications",
             "phase2_abstract",
@@ -320,7 +320,7 @@ def build_artifact_bundle():
         "software": build_software_metadata(),
         "provenance": {
             "generation_command": (
-                "python benchmarks/density_matrix/"
+                "python benchmarks/density_matrix/documentation_contract/"
                 "contract_reference_validation.py"
             ),
             "working_directory": str(DEFAULT_OUTPUT_DIR.parents[3]),
@@ -348,7 +348,7 @@ def validate_artifact_bundle(artifact):
     missing_fields = [field for field in ARTIFACT_CORE_FIELDS if field not in artifact]
     if missing_fields:
         raise ValueError(
-            "Task 7 Story 1 artifact bundle is missing required fields: {}".format(
+            "contract_reference_map artifact is missing required fields: {}".format(
                 ", ".join(missing_fields)
             )
         )
@@ -357,7 +357,7 @@ def validate_artifact_bundle(artifact):
     required_topic_ids = sorted(artifact["requirements"]["required_topic_ids"])
     if observed_topic_ids != required_topic_ids:
         raise ValueError(
-            "Task 7 Story 1 topic map mismatch: expected {}, observed {}".format(
+            "contract_reference_map topic map mismatch: expected {}, observed {}".format(
                 required_topic_ids, observed_topic_ids
             )
         )
@@ -366,42 +366,46 @@ def validate_artifact_bundle(artifact):
         len(artifact["entry_point"]["missing_headings"]) == 0
     ):
         raise ValueError(
-            "Task 7 Story 1 entry_point_headings_complete summary is inconsistent"
+            "contract_reference_map entry_point_headings_complete summary is inconsistent"
         )
 
     if artifact["summary"]["entry_point_topics_complete"] != (
         len(artifact["entry_point"]["missing_topic_labels"]) == 0
     ):
         raise ValueError(
-            "Task 7 Story 1 entry_point_topics_complete summary is inconsistent"
+            "contract_reference_map entry_point_topics_complete summary is inconsistent"
         )
 
     if artifact["summary"]["entry_point_primary_paths_complete"] != (
         len(artifact["entry_point"]["missing_primary_paths"]) == 0
     ):
         raise ValueError(
-            "Task 7 Story 1 entry_point_primary_paths_complete summary is inconsistent"
+            "contract_reference_map entry_point_primary_paths_complete summary is inconsistent"
         )
 
     if not artifact["entry_point"]["exists"]:
-        raise ValueError("Task 7 Story 1 entry point must exist")
+        raise ValueError("contract_reference_map entry point must exist")
 
     if not artifact["summary"]["all_documents_exist"]:
-        raise ValueError("Task 7 Story 1 requires all referenced documents to exist")
+        raise ValueError(
+            "contract_reference_map requires all referenced documents to exist"
+        )
 
     if not artifact["summary"]["all_primary_references_exist"]:
-        raise ValueError("Task 7 Story 1 requires all topic primary references to exist")
+        raise ValueError(
+            "contract_reference_map requires all topic primary references to exist"
+        )
 
     if not artifact["summary"]["all_supporting_references_exist"]:
         raise ValueError(
-            "Task 7 Story 1 requires all topic supporting references to exist"
+            "contract_reference_map requires all topic supporting references to exist"
         )
 
     if artifact["summary"]["contract_reference_map_completed"] != (
         artifact["status"] == "pass"
     ):
         raise ValueError(
-            "Task 7 Story 1 contract_reference_map_completed summary is inconsistent"
+            "contract_reference_map contract_reference_map_completed summary is inconsistent"
         )
 
 
@@ -430,7 +434,7 @@ def parse_args():
         "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
-        help="Directory for the Task 7 Story 1 JSON artifact bundle.",
+        help="Directory for the contract_reference_map JSON artifact.",
     )
     parser.add_argument(
         "--quiet",

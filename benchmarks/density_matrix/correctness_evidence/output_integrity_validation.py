@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Validation: Phase 3 Task 6 Story 4 output integrity and continuity agreement.
+"""Output integrity and continuity agreement validation.
 
 Ensures trace validity, density validity, and required continuity-anchor energy
-agreement remain first-class parts of the Task 6 correctness surface.
+agreement remain first-class parts of the correctness-evidence surface.
 
 Run with:
     python benchmarks/density_matrix/correctness_evidence/output_integrity_validation.py
@@ -24,7 +24,7 @@ from benchmarks.density_matrix.correctness_evidence.records import (
     build_correctness_evidence_positive_records,
 )
 
-SUITE_NAME = "phase3_correctness_evidence_output_integrity"
+SUITE_NAME = "correctness_evidence_output_integrity"
 ARTIFACT_FILENAME = "output_integrity_bundle.json"
 DEFAULT_OUTPUT_DIR = correctness_evidence_output_dir("output_integrity")
 ARTIFACT_CORE_FIELDS = (
@@ -66,7 +66,7 @@ def build_artifact_bundle(cases: list[dict]) -> dict:
     missing = [field for field in ARTIFACT_CORE_FIELDS if field not in bundle]
     if missing:
         raise ValueError(
-            "Task 6 Story 4 bundle missing required fields: {}".format(
+            "Output integrity bundle missing required fields: {}".format(
                 ", ".join(missing)
             )
         )
@@ -79,7 +79,7 @@ def main(argv: list[str] | None = None) -> int:
         "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
-        help="Directory to write the Task 6 Story 4 bundle into.",
+        help="Directory to write the output integrity bundle into.",
     )
     parser.add_argument(
         "--quiet",

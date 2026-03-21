@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validation: Phase 3 Task 4 Story 4 fused semantic preservation.
+"""Fused semantics validation: fused runtime vs sequential reference exactness.
 
 Checks representative fused cases against the sequential density reference using
 the frozen exactness thresholds.
@@ -124,7 +124,7 @@ def build_artifact_bundle(cases: list[dict]) -> dict:
     missing = [field for field in ARTIFACT_CORE_FIELDS if field not in bundle]
     if missing:
         raise ValueError(
-            "Task 4 Story 4 bundle missing required fields: {}".format(
+            "Fused semantics bundle missing required fields: {}".format(
                 ", ".join(missing)
             )
         )
@@ -144,7 +144,7 @@ def main(argv: list[str] | None = None) -> int:
         "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
-        help="Directory to write the Task 4 Story 4 bundle into.",
+        help="Directory to write the fused semantics bundle into.",
     )
     parser.add_argument(
         "--quiet",

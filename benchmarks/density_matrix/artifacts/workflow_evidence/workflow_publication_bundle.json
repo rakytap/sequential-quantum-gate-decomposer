@@ -12,14 +12,14 @@
     "qiskit_aer": "0.17.2"
   },
   "provenance": {
-    "generation_command": "python benchmarks/density_matrix/workflow_evidence/workflow_publication_bundle.py --output-dir benchmarks/density_matrix/artifacts/workflow_evidence",
+    "generation_command": "python benchmarks/density_matrix/workflow_evidence/workflow_publication_bundle.py --output-dir /home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/workflow_evidence",
     "working_directory": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer",
-    "git_revision": "199d588c2230fc62a39934ddc7d79a6e74a8b64e",
-    "story1_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/workflow_evidence/workflow_contract_bundle.json",
-    "story2_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/workflow_evidence/end_to_end_trace_bundle.json",
-    "story3_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/workflow_evidence/matrix_baseline_bundle.json",
-    "exact_regime_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/workflow_evidence/unsupported_workflow_bundle.json",
-    "story5_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/workflow_evidence/workflow_interpretation_bundle.json"
+    "git_revision": "77cd8168869d9b4c67c0dd0dbe49baab02b0fe25",
+    "workflow_contract_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/workflow_evidence/workflow_contract_bundle.json",
+    "end_to_end_trace_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/workflow_evidence/end_to_end_trace_bundle.json",
+    "matrix_baseline_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/workflow_evidence/matrix_baseline_bundle.json",
+    "unsupported_workflow_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/workflow_evidence/unsupported_workflow_bundle.json",
+    "workflow_interpretation_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/workflow_evidence/workflow_interpretation_bundle.json"
   },
   "summary": {
     "mandatory_artifact_count": 5,
@@ -42,8 +42,8 @@
       "expected_statuses": [
         "pass"
       ],
-      "purpose": "Canonical Task 6 workflow contract artifact defining workflow identity, contract version, input/output sections, and boundary classes.",
-      "generation_command": "python benchmarks/density_matrix/workflow_evidence/workflow_contract_validation.py --output-dir benchmarks/density_matrix/artifacts/workflow_evidence",
+      "purpose": "Canonical workflow-contract artifact defining workflow identity, contract version, input/output sections, and boundary classes.",
+      "generation_command": "python benchmarks/density_matrix/workflow_evidence/workflow_contract_validation.py --output-dir /home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/workflow_evidence",
       "summary": {
         "workflow_id": "phase2_xxz_hea_density_matrix_anchor_workflow",
         "contract_version": "v1",
@@ -66,8 +66,8 @@
       "expected_statuses": [
         "pass"
       ],
-      "purpose": "Task 6 Story 2 4q/6q end-to-end execution plus required bounded trace evidence.",
-      "generation_command": "python benchmarks/density_matrix/workflow_evidence/end_to_end_trace_validation.py --output-dir benchmarks/density_matrix/artifacts/workflow_evidence",
+      "purpose": "4q/6q end-to-end execution plus required bounded trace evidence.",
+      "generation_command": "python benchmarks/density_matrix/workflow_evidence/end_to_end_trace_validation.py --output-dir /home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/workflow_evidence",
       "summary": {
         "total_end_to_end_cases": 2,
         "passed_end_to_end_cases": 2,
@@ -89,8 +89,8 @@
       "expected_statuses": [
         "pass"
       ],
-      "purpose": "Task 6 Story 3 fixed-parameter 4/6/8/10 matrix baseline with explicit 10-qubit anchor presence.",
-      "generation_command": "python benchmarks/density_matrix/workflow_evidence/matrix_baseline_validation.py --output-dir benchmarks/density_matrix/artifacts/workflow_evidence",
+      "purpose": "Fixed-parameter 4/6/8/10 matrix baseline with explicit 10-qubit anchor presence.",
+      "generation_command": "python benchmarks/density_matrix/workflow_evidence/matrix_baseline_validation.py --output-dir /home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/workflow_evidence",
       "summary": {
         "required_cases": 40,
         "required_passed_cases": 40,
@@ -111,8 +111,8 @@
       "expected_statuses": [
         "pass"
       ],
-      "purpose": "Task 6 Story 4 deterministic unsupported/deferred workflow boundary evidence.",
-      "generation_command": "python benchmarks/density_matrix/workflow_evidence/unsupported_workflow_validation.py --output-dir benchmarks/density_matrix/artifacts/workflow_evidence",
+      "purpose": "Deterministic unsupported/deferred workflow boundary evidence.",
+      "generation_command": "python benchmarks/density_matrix/workflow_evidence/unsupported_workflow_validation.py --output-dir /home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/workflow_evidence",
       "summary": {
         "unsupported_status_cases": 9,
         "backend_incompatible_case_present": true,
@@ -130,8 +130,8 @@
       "expected_statuses": [
         "pass"
       ],
-      "purpose": "Task 6 Story 5 interpretation guardrails preventing optional, unsupported, or incomplete evidence from inflating the main claim.",
-      "generation_command": "python benchmarks/density_matrix/workflow_evidence/workflow_interpretation_validation.py --output-dir benchmarks/density_matrix/artifacts/workflow_evidence",
+      "purpose": "Interpretation guardrails preventing optional, unsupported, or incomplete evidence from inflating the main claim.",
+      "generation_command": "python benchmarks/density_matrix/workflow_evidence/workflow_interpretation_validation.py --output-dir /home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/workflow_evidence",
       "summary": {
         "mandatory_artifacts_complete": true,
         "optional_evidence_supplemental": true,
