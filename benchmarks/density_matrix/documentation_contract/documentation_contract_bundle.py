@@ -465,5 +465,11 @@ def main():
         raise SystemExit(1)
 
 
+# Compatibility aliases for legacy auxiliary validation imports.
+build_task7_story6_bundle = build_performance_evidence_story6_bundle
+validate_task7_story6_bundle = validate_performance_evidence_story6_bundle
+write_task7_story6_bundle = write_performance_evidence_story6_bundle
+
+
 if __name__ == "__main__":
     main()

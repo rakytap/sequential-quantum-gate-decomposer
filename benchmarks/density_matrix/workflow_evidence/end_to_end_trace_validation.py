@@ -62,6 +62,9 @@ PLANNER_CALIBRATION_TRACE_ARTIFACT_PATH = (
     / "validation_evidence"
     / "optimization_trace_4q.json"
 )
+# Compatibility aliases for legacy auxiliary validation imports.
+TASK5_WORKFLOW_BUNDLE_PATH = PLANNER_CALIBRATION_WORKFLOW_BUNDLE_PATH
+TASK5_TRACE_ARTIFACT_PATH = PLANNER_CALIBRATION_TRACE_ARTIFACT_PATH
 MANDATORY_END_TO_END_CASE_NAMES = ("exact_regime_4q_set_00", "exact_regime_6q_set_00")
 MANDATORY_END_TO_END_QUBITS = (4, 6)
 TRACE_CASE_NAME = "optimization_trace_4q"

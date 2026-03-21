@@ -59,6 +59,8 @@ PLANNER_CALIBRATION_WORKFLOW_BUNDLE_PATH = (
     / "validation_evidence"
     / "workflow_baseline_bundle.json"
 )
+# Compatibility alias for legacy auxiliary validation imports.
+TASK5_WORKFLOW_BUNDLE_PATH = PLANNER_CALIBRATION_WORKFLOW_BUNDLE_PATH
 MANDATORY_WORKFLOW_QUBITS = (4, 6, 8, 10)
 PARAMETER_SET_COUNT = 10
 ARTIFACT_CORE_FIELDS = (

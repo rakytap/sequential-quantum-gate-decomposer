@@ -68,7 +68,7 @@ MANDATORY_FUTURE_TOPICS = (
         ],
         "source_doc_ids": ["planning_planning", "research_alignment"],
         "source_phrases": [
-            "Phase 3: Density-Aware Partitioning, Fusion, And Acceleration",
+            "Phase 3: Noise-Aware Partitioning And Fusion For Mixed-State Circuits",
             "Phase 3 | Full noise module and validation",
         ],
     },
@@ -92,7 +92,7 @@ MANDATORY_FUTURE_TOPICS = (
         ],
         "source_doc_ids": ["planning_planning", "research_alignment"],
         "source_phrases": [
-            "Phase 4: Noisy VQA Workflows And Optimizer Studies",
+            "Phase 4: Broader Noisy VQE/VQA Workflows And Optimizer Studies",
             "Phase 4 | Noisy VQA integration and optimizer comparisons",
         ],
     },
