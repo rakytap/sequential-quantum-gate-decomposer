@@ -234,11 +234,73 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
         acc = 0.0
         for v in Lc: acc += np.exp((v - m)/tau)
         return tau * np.log(acc) + m
+    def dyadic_loss(S, max_dyadic, rho=0.9, tol=1e-4):
+        tot_dyadic = N_Qubit_Decomposition_Guided_Tree.ceil_log2(len(S))
+        w = 1.0
+        acc = 0.0
+        for k in range(max_dyadic-1, -1, -1):
+            if k < tot_dyadic:
+                val = S[1 << k] - S[0] * tol    
+                acc += w * val * val
+            w *= rho
+        return acc
+    def avg_loss(cuts_S, rho=0.9):
+        max_dyadic = N_Qubit_Decomposition_Guided_Tree.ceil_log2(max(len(S) for S in cuts_S))
+        total_loss = 0.0
+        for S in cuts_S:
+            total_loss += N_Qubit_Decomposition_Guided_Tree.dyadic_loss(S, max_dyadic, rho)
+        return total_loss / len(cuts_S)
+    # Aggregated cost over cuts: softmax (log-sum-exp) of per-cut dyadic losses
+    def cuts_softmax_dyadic_cost(cuts_S, rho=0.1, tau=1e-2):
+        if tau <= 0.0: raise RuntimeError("tau must be > 0")
+        Lc = []
+        max_dyadic = N_Qubit_Decomposition_Guided_Tree.ceil_log2(max(len(S) for S in cuts_S))
+        for S in cuts_S:
+            Lc.append(N_Qubit_Decomposition_Guided_Tree.dyadic_loss(S, max_dyadic, rho))
+        return N_Qubit_Decomposition_Guided_Tree.logsumexp_smoothmax(Lc, tau)
+
+    # Gradient w.r.t. the singular values (diagonal of dL/dΣ):
+    def dyadic_loss_grad_diag(S, max_dyadic, Fnorm, rho=0.1, tol=1e-4):
+        n = len(S)
+        # c_k = rho^k / Mk  for k=1..n-1, then prefix sum C_j = sum_{k=1}^j c_k
+        tot_dyadic = N_Qubit_Decomposition_Guided_Tree.ceil_log2(n)
+        grad = [0.0] * tot_dyadic
+        w = 1.0
+        for k in range(max_dyadic-1, -1, -1):
+            if k < tot_dyadic:
+                idx = 1 << k
+                grad[k] = 2.0 * w * S[idx] * (1.0-tol) / Fnorm  #1-tol not needed if using stop-grad
+            w *= rho                         # w = rho^k
+        return grad
+    def cuts_avg_dyadic_grad(cuts_S, Fnorm, rho=0.1):
+        C = len(cuts_S)
+        max_dyadic = N_Qubit_Decomposition_Guided_Tree.ceil_log2(max(len(S) for S in cuts_S))
+        Lc = []
+        for c in range(C):
+            Lc.append(N_Qubit_Decomposition_Guided_Tree.dyadic_loss_grad_diag(cuts_S[c], max_dyadic, Fnorm * C, rho))
+        return Lc
+    # Gradient w.r.t. singular values (same length as S).
+    # Only dyadic positions (1,2,4,...) get nonzero entries; others are 0.
+    def cuts_softmax_tail_grad(cuts_S, Fnorm, rho=0.1, tau=1e-2):
+        C = len(cuts_S)
+        if C == 0: return []
+        max_dyadic = N_Qubit_Decomposition_Guided_Tree.ceil_log2(max(len(S) for S in cuts_S))
+        # 1) per-cut losses
+        Lc = [N_Qubit_Decomposition_Guided_Tree.dyadic_loss(cuts_S[c], max_dyadic, rho) for c in range(C)]
+
+        # 2) softmax weights w_c = exp((Lc - m)/tau) / Z
+        m = max(Lc)
+        w = [np.exp((Lc[c] - m)/tau) for c in range(C)]
+        Z = np.sum(w)
+        for c in range(C): w[c] /= (Z if Z > 0.0 else 1.0)
+
+        # 3) dL/dS^{(c)} = w_c * dL_c/dS^{(c)}
+        return [[v * w[c] for v in N_Qubit_Decomposition_Guided_Tree.dyadic_loss_grad_diag(cuts_S[c], max_dyadic, Fnorm, rho)] for c in range(C)]        
     def loss_for_rank(S, rank):
         start = 1 << rank
         if start >= len(S): return 0.0
         return sum(x*x for x in S[start:])
-    def avg_loss(cuts_S, rank):
+    def avg_loss_for_rank(cuts_S, rank):
         if not cuts_S: return 0.0
         total_loss = 0.0
         for S in cuts_S:
@@ -497,7 +559,7 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
                 allU = self.params_to_mat(x)
                 S = [N_Qubit_Decomposition_Guided_Tree.operator_schmidt_rank(U, self.qbit_num, cut, Fnorm, tol)[1] for U in allU for cut in cuts]
                 if use_softmax: return N_Qubit_Decomposition_Guided_Tree.cuts_softmax_rank_cost(S, rank)
-                else: return N_Qubit_Decomposition_Guided_Tree.avg_loss(S, rank)
+                else: return N_Qubit_Decomposition_Guided_Tree.avg_loss_for_rank(S, rank)
             def jacobian(x):
                 allU = self.params_to_mat(x)
                 grad = np.zeros(len(x), dtype=float)
@@ -966,7 +1028,7 @@ class qgd_Wide_Circuit_Optimization:
         for idx in range( len(involved_qbits) ):
             qbit_map[ involved_qbits[idx] ] = idx
         mini_topology = None 
-        if config["topology"] != None:
+        if config["topology"] is not None:
             mini_topology = extract_subtopology(involved_qbits, qbit_map, config)
         # remap the subcircuit to a smaller qubit register
         remapped_subcircuit = subcircuit.Remap_Qbits( qbit_map, qbit_num )
@@ -1049,7 +1111,7 @@ class qgd_Wide_Circuit_Optimization:
             gates = frozenset.union(part, *(single_qubit_chains_prepost[v] for v in surrounded_chains))
             #topo sort part + surrounded chains
             c = Circuit( qbit_num_orig_circuit )
-            for gate_idx in _get_topo_order({x: go[x] & gates for x in gates}, {x: rgo[x] & gates for x in gates}):
+            for gate_idx in _get_topo_order({x: go[x] & gates for x in gates}, {x: rgo[x] & gates for x in gates}, gate_to_qubit):
                 c.add_Gate( gate_dict[gate_idx] )
                 start = gate_dict[gate_idx].get_Parameter_Start_Index()
                 params.append(orig_parameters[start:start + gate_dict[gate_idx].get_Parameter_Num()])
@@ -1085,14 +1147,19 @@ class qgd_Wide_Circuit_Optimization:
         single_qubit_chain_idx = {frozenset(chain): idx + len(allparts) for idx, chain in enumerate(single_qubit_chains)}
         for extrapart in parts[len(struct_idxs):]:
             struct_idxs.append(single_qubit_chain_idx[extrapart])
-        L = topo_sort_partitions(circ, max_partition_size, parts)
+        L = topo_sort_partitions(circ, parts)
         return [parts[i] for i in L], [struct_idxs[i] for i in L]
 
     def OptimizeWideCircuit( self, circ: Circuit, parameters: np.ndarray, global_min=True ) -> Tuple[Circuit, np.ndarray]:
+        if self.config["topology"] is not None and self.config["routed"]==False:
+            topo = self.config["topology"]
+            self.config['topology'] = None
+            self.OptimizeWideCircuit( circ, parameters, global_min=global_min )
+            self.config['topology'] = topo
+            circ, parameters = self.route_circuit(circ,parameters)
         part_size_start = self.max_partition_size
-        if part_size_end is None:
-            part_size_end = self.max_partition_size
-            if self.config.get("use_osr", False) or self.config.get("use_graph_search", False): part_size_end = 4
+        part_size_end = self.max_partition_size
+        if self.config.get("use_osr", False) or self.config.get("use_graph_search", False): part_size_end = 4
         count = CNOTGateCount(circ, 0)
         fingerprint_dict = {}
         for max_part_size in range(part_size_start, part_size_end + 1):
@@ -1127,8 +1194,6 @@ class qgd_Wide_Circuit_Optimization:
         from squander.utils import circuit_to_CNOT_basis
         circ, orig_parameters = circuit_to_CNOT_basis(circ, orig_parameters)
         max_gates = sum(y for x, y in circ.get_Gate_Nums().items() if x !='CNOT')
-        if self.config["topology"] != None and self.config["routed"]==False:
-            circ, orig_parameters = self.route_circuit(circ,orig_parameters)
 
         if global_min:
             partitined_circuit, parameters, recombine_info = qgd_Wide_Circuit_Optimization.make_all_partition_circuit(circ, orig_parameters, self.max_partition_size)
@@ -1255,14 +1320,28 @@ class qgd_Wide_Circuit_Optimization:
             CompareCircuits( partitined_circuit, parameters, wide_circuit, wide_parameters )
             #print("Test final circuit passed")
 
-        
+        if self.config["topology"] is not None:
+            topo_set = {frozenset(edge) for edge in self.config["topology"]}
+            assert all(frozenset(gate.get_Involved_Qbits()) in topo_set
+                for gate in wide_circuit.get_Flat_Circuit().get_Gates()
+                if len(gate.get_Involved_Qbits()) > 1), "Final circuit contains gates that do not respect the topology constraints."
+
         return wide_circuit, wide_parameters
 
-    def route_circuit(self, circ: Circuit, orig_parameters: np.ndarray):
-
-        sabre = SABRE(circ, self.config["topology"])
-        Squander_remapped_circuit, parameters_remapped_circuit, pi, final_pi, swap_count = sabre.map_circuit(orig_parameters)
-        self.config.setdefault("initial_mapping",pi)
-        self.config.setdefault("final_mapping",final_pi)
-        self.config["routed"] = True
-        return Squander_remapped_circuit, parameters_remapped_circuit
+    def route_circuit(self, circ: Circuit, orig_parameters: np.ndarray, use_qiskit=True):
+        if use_qiskit:
+            from squander import Qiskit_IO
+            from qiskit import transpile
+            circo = Qiskit_IO.get_Qiskit_Circuit(circ.get_Flat_Circuit(),orig_parameters)
+            coupling_map = [[i,j] for i,j in self.config['topology']]
+            circuit_qiskit_sabre = transpile(circo, coupling_map=coupling_map)
+            circ, parameters = Qiskit_IO.convert_Qiskit_to_Squander(circuit_qiskit_sabre)
+            self.config['routed']= True
+            return circ, parameters
+        else:
+            sabre = SABRE(circ, self.config["topology"])
+            Squander_remapped_circuit, parameters_remapped_circuit, pi, final_pi, swap_count = sabre.map_circuit(orig_parameters)
+            self.config.setdefault("initial_mapping",pi)
+            self.config.setdefault("final_mapping",final_pi)
+            self.config["routed"] = True
+            return Squander_remapped_circuit, parameters_remapped_circuit
