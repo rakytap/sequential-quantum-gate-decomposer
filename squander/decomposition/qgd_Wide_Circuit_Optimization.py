@@ -18,7 +18,7 @@ from typing import List, Callable, Tuple
 
 import multiprocessing as mp
 from multiprocessing import Process, Pool, parent_process
-import os, contextlib
+import os, contextlib, collections, time
 
 
 from squander.partitioning.partition import PartitionCircuit
@@ -1108,8 +1108,7 @@ class qgd_Wide_Circuit_Optimization:
                     if other_part != i and part < allparts[other_part]:
                         g[i].add(other_part)
                         rg[other_part].add(i)
-        rg_ret = {i: set(rg[i]) for i in range(len(allparts))}
-        import collections
+        rg_ret = {i: set(rg[i]) for i in range(len(allparts))}        
         S = collections.deque(m for m in rg if len(rg[m]) == 0)
         L = []
         while S:
@@ -1262,6 +1261,8 @@ class qgd_Wide_Circuit_Optimization:
         # list of AsyncResult objects
         async_results = [None] * len(subcircuits)
 
+        total_opt = [0]
+
         def process_result(partition_idx):
             if optimized_subcircuits[partition_idx] is not None: return
             subcircuit = subcircuits[ partition_idx ]
@@ -1284,37 +1285,52 @@ class qgd_Wide_Circuit_Optimization:
                     fingerprint_dict[qgd_Wide_Circuit_Optimization.get_fingerprint(new_subcircuit, new_parameters)] = (new_subcircuit, new_parameters)
                     trim_subcirc, trim_parameters = qgd_Wide_Circuit_Optimization.strip_single_qubit_head_tails(new_subcircuit, new_parameters)
                     fingerprint_dict[qgd_Wide_Circuit_Optimization.get_fingerprint(trim_subcirc, trim_parameters)] = (trim_subcirc, trim_parameters)
+            if total_opt[0] % 100 == 99: print(total_opt[0]+1, "partitions optimized")
+            total_opt[0] += 1
             optimized_subcircuits[ partition_idx ] = new_subcircuit
             optimized_parameter_list[ partition_idx ] = new_parameters
         with (contextlib.nullcontext() if parent_process() is not None else Pool(processes=mp.cpu_count())) as pool:
+            remaining = list(range(len(subcircuits)))
+            while remaining:
+                still_remaining = []
+                #  code for iterate over partitions and optimize them
+                for partition_idx in remaining:
+                    subcircuit = subcircuits[partition_idx]
 
-            #  code for iterate over partitions and optimize them
-            for partition_idx, subcircuit in enumerate( subcircuits ):
-        
+                    # isolate the parameters corresponding to the given sub-circuit
+                    start_idx = subcircuit.get_Parameter_Start_Index()
+                    end_idx   = start_idx + subcircuit.get_Parameter_Num()
+                    subcircuit_parameters = parameters[ start_idx:end_idx ]
 
-                # isolate the parameters corresponding to the given sub-circuit
-                start_idx = subcircuit.get_Parameter_Start_Index()
-                end_idx   = start_idx + subcircuit.get_Parameter_Num()
-                subcircuit_parameters = parameters[ start_idx:end_idx ]
-
-    
-                fingerprint = None if fingerprint_dict is None else qgd_Wide_Circuit_Optimization.get_fingerprint(subcircuit, subcircuit_parameters)
-                if fingerprint_dict is not None and fingerprint in fingerprint_dict: continue
-                # call a process to decompose a subcircuit
-                config = {**self.config, 'tree_level_max': max(0, subcircuit.get_Gate_Nums().get('CNOT', 0)-1)}
-                fargs = (self.PartitionDecompositionProcess, (subcircuit, subcircuit_parameters, config, None))
-                if part_deps is not None and partition_idx in part_deps:
-                    any_optimized = False
-                    for dep_idx in part_deps[partition_idx]:                        
-                        process_result(dep_idx)
-                        if CNOTGateCount(optimized_subcircuits[dep_idx]) < CNOTGateCount(subcircuits[dep_idx]): #if the dependency partition was optimized, skip
-                            any_optimized = True
-                            break
-                    if any_optimized:
-                        optimized_subcircuits[ partition_idx ] = subcircuit
-                        optimized_parameter_list[ partition_idx ] = subcircuit_parameters
+                    fingerprint = None if fingerprint_dict is None else qgd_Wide_Circuit_Optimization.get_fingerprint(subcircuit, subcircuit_parameters)
+                    if fingerprint_dict is not None and fingerprint in fingerprint_dict:
+                        optimized_subcircuits[ partition_idx ], optimized_parameter_list[ partition_idx ] = fingerprint_dict[fingerprint]
                         continue
-                async_results[partition_idx] = fargs if parent_process() is not None else pool.apply_async(*fargs)
+                    if part_deps is not None and partition_idx in part_deps:
+                        any_optimized, any_remaining = False, False
+                        for dep_idx in part_deps[partition_idx]:
+                            if optimized_subcircuits[dep_idx] is None and (async_results[dep_idx] is None or not async_results[dep_idx].ready()):
+                                any_remaining = True
+                                continue
+                            elif optimized_subcircuits[dep_idx] is None:
+                                process_result(dep_idx)
+                            if CNOTGateCount(optimized_subcircuits[dep_idx]) < CNOTGateCount(subcircuits[dep_idx]): #if the dependency partition was optimized, skip
+                                any_optimized = True
+                                break
+                        if any_optimized:
+                            optimized_subcircuits[ partition_idx ] = subcircuit
+                            optimized_parameter_list[ partition_idx ] = subcircuit_parameters
+                            continue
+                        if any_remaining:
+                            still_remaining.append(partition_idx)
+                            continue
+                    # call a process to decompose a subcircuit
+                    config = {**self.config, 'tree_level_max': max(0, subcircuit.get_Gate_Nums().get('CNOT', 0)-1)}
+                    fargs = (self.PartitionDecompositionProcess, (subcircuit, subcircuit_parameters, config, None))
+                    async_results[partition_idx] = fargs if parent_process() is not None else pool.apply_async(*fargs)
+                if len(remaining) == len(still_remaining):
+                    time.sleep(0.05)
+                remaining = still_remaining
             #  code for iterate over async results and retrieve the new subcircuits
             for partition_idx in range( len(subcircuits ) ):
                 process_result(partition_idx)
