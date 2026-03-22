@@ -248,7 +248,7 @@ def contract_single_qubit_chains(go, rgo, gate_to_qubit, topo_order):
     topo_order = [x for x in topo_order if not x in single_qubit_gates] #topo_order = _get_topo_order(g, rg, gate_to_qubit)
     return g, rg, topo_order, set(tuple(x) for x in single_qubit_chains.values())
 
-def recombine_single_qubit_chains(g, rg, single_qubit_chains, gate_to_tqubit, L, fusion_info):
+def recombine_single_qubit_chains(g, rg, single_qubit_chains, gate_to_tqubit, L, fusion_info, surrounded_only=False):
     """
     Re-insert contracted single-qubit chains back into partition groups.
 
@@ -272,17 +272,17 @@ def recombine_single_qubit_chains(g, rg, single_qubit_chains, gate_to_tqubit, L,
         if rg[chain[0]] and g[chain[-1]]:
             v = next(iter(rg[chain[0]]))
             w = next(iter(g[chain[-1]]))
-            if fusion_info is None or gate_to_part[v] == gate_to_part[w] or chain[0] in inpre:
+            if not surrounded_only and (fusion_info is None or chain[0] in inpre) or gate_to_part[v] == gate_to_part[w]:
                 gate_to_part[v] |= frozenset(chain)
-            elif fusion_info is None or chain[-1] in inpost:
+            elif not surrounded_only and (fusion_info is None or chain[-1] in inpost):
                 gate_to_part[w] |= frozenset(chain)
             else: L.append(frozenset(chain))
-        elif rg[chain[0]]:
+        elif not surrounded_only and rg[chain[0]]:
             v = next(iter(rg[chain[0]]))
             if fusion_info is None or chain[0] in inpre:
                 gate_to_part[v] |= frozenset(chain)
             else: L.append(frozenset(chain))
-        elif g[chain[-1]]:
+        elif not surrounded_only and g[chain[-1]]:
             v = next(iter(g[chain[-1]]))
             if fusion_info is None or chain[-1] in inpost:
                 gate_to_part[v] |= frozenset(chain)
