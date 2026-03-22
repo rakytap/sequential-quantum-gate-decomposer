@@ -18,11 +18,11 @@ from typing import List, Callable, Tuple
 
 import multiprocessing as mp
 from multiprocessing import Process, Pool, parent_process
-import os
+import os, contextlib
 
 
 from squander.partitioning.partition import PartitionCircuit
-from squander.partitioning.tools import get_qubits
+from squander.partitioning.tools import translate_param_order, build_dependency
 from squander.synthesis.qgd_SABRE import qgd_SABRE as SABRE
 
 
@@ -941,7 +941,7 @@ class qgd_Wide_Circuit_Optimization:
         if strategy == "Custom":
             err = cDecompose.Optimization_Problem(parameters)
             it = 0
-            while err > tolerance and it < 10:
+            while err > tolerance and it < 20:
                 cDecompose.set_Optimized_Parameters(np.random.rand(cDecompose.get_Parameter_Num())*(2*np.pi))
                 cDecompose.Start_Decomposition()
                 parameters       = cDecompose.get_Optimized_Parameters()
@@ -1046,7 +1046,7 @@ class qgd_Wide_Circuit_Optimization:
                 innercirc_parameters = params[ start_idx:start_idx+innercirc.get_Parameter_Num() ]
                 callback_fnc = lambda  x : qgd_Wide_Circuit_Optimization.CompareAndPickCircuits( [innercirc, *(z[0] for z in x)], [innercirc_parameters, *(z[1] for z in x)] )
                 optimized_circuits.append(callback_fnc(qgd_Wide_Circuit_Optimization.PartitionDecompositionProcess(innercirc, innercirc_parameters, {**config, "stop_first_solution": True, 'tree_level_max': max(0, subcircuit.get_Gate_Nums().get('CNOT', 0)-1)}, structure=None)))
-            parts, struct_idxs = qgd_Wide_Circuit_Optimization.recombine_all_partition_circuit(remapped_subcircuit, 3, [x[0] for x in optimized_circuits], recombine_info)
+            parts, struct_idxs = qgd_Wide_Circuit_Optimization.recombine_all_partition_circuit(remapped_subcircuit, [x[0] for x in optimized_circuits], params, recombine_info)
             #enumerate all solutions for each subcircuit in the optimal
             all_sol_for_idx = []
             for idx in struct_idxs:
@@ -1104,8 +1104,9 @@ class qgd_Wide_Circuit_Optimization:
         single_qubit_chains_pre = {x[0]: x for x in single_qubit_chains if rgo[x[0]]}
         single_qubit_chains_post = {x[-1]: x for x in single_qubit_chains if go[x[-1]]}
         single_qubit_chains_prepost = {x[0]: x for x in single_qubit_chains if x[0] in single_qubit_chains_pre and x[-1] in single_qubit_chains_post}
-        partitined_circuit = Circuit( qbit_num_orig_circuit )
+        partitioned_circuit = Circuit( qbit_num_orig_circuit )
         params = []
+        allparts = list(sorted(allparts, key=len))
         for part in allparts:
             surrounded_chains = {t for s in part for t in go[s] if t in single_qubit_chains_prepost and go[single_qubit_chains_prepost[t][-1]] and next(iter(go[single_qubit_chains_prepost[t][-1]])) in part}
             gates = frozenset.union(part, *(single_qubit_chains_prepost[v] for v in surrounded_chains))
@@ -1115,46 +1116,58 @@ class qgd_Wide_Circuit_Optimization:
                 c.add_Gate( gate_dict[gate_idx] )
                 start = gate_dict[gate_idx].get_Parameter_Start_Index()
                 params.append(orig_parameters[start:start + gate_dict[gate_idx].get_Parameter_Num()])
-            partitined_circuit.add_Circuit(c)
+            partitioned_circuit.add_Circuit(c)
         for chain in single_qubit_chains:
             c = Circuit( qbit_num_orig_circuit )
             for gate_idx in chain:
                 c.add_Gate( gate_dict[gate_idx] )
                 start = gate_dict[gate_idx].get_Parameter_Start_Index()
                 params.append(orig_parameters[start:start + gate_dict[gate_idx].get_Parameter_Num()])
-            partitined_circuit.add_Circuit(c)
+            partitioned_circuit.add_Circuit(c)
         parameters = np.concatenate(params, axis=0)
-        return partitined_circuit, parameters, (allparts, g, go, rgo, single_qubit_chains, gate_to_qubit, gate_to_tqubit)
-    def copy_circuit_structure(structure):
-        from squander.gates.qgd_Circuit import CNOT
-        newcirc = Circuit(structure.get_Qbit_Num())
-        for gate in structure.get_Gates():
-            if isinstance(gate, CNOT):
-                newcirc.add_U3(gate.get_Target_Qbit())
-                newcirc.add_U3(gate.get_Control_Qbit())
-                newcirc.add_Gate(gate)
-        for qbit in structure.get_Qbits():
-            newcirc.add_U3(qbit)
-        return newcirc
-    def recombine_all_partition_circuit(circ, max_partition_size, optimized_subcircuits, recombine_info ):
+        return partitioned_circuit, parameters, (allparts, g, go, rgo, single_qubit_chains, gate_to_qubit, gate_to_tqubit)
+    def copy_circuit(circ, params):
+        newcirc = Circuit(circ.get_Qbit_Num())
+        new_params = []
+        for gate in circ.get_Gates():
+            newcirc.add_Gate(gate)
+            start_idx = gate.get_Parameter_Start_Index()
+            new_params.append(params[start_idx:start_idx + gate.get_Parameter_Num()])
+        return newcirc, np.empty((0,), dtype=np.float64) if len(new_params) == 0 else np.concatenate(new_params, axis=0)
+    def strip_single_qubit_head_tails(circ, params):
+        circ, params = qgd_Wide_Circuit_Optimization.copy_circuit(circ, params)
+        gate_dict, g, rg, gate_to_qubit, S = build_dependency(circ)
+        newcirc = Circuit(circ.get_Qbit_Num())
+        new_params = []
+        for i in gate_dict:
+            gate = gate_dict[i]
+            if len(gate_to_qubit[i]) == 1 and (len(g[i]) == 0 or len(rg[i]) == 0):
+                continue
+            newcirc.add_Gate(gate)
+            start_idx = gate.get_Parameter_Start_Index()
+            new_params.append(params[start_idx:start_idx + gate.get_Parameter_Num()])
+        return newcirc, np.empty((0,), dtype=np.float64) if len(new_params) == 0 else np.concatenate(new_params, axis=0)
+    def get_fingerprint(circ, params):
+        return tuple((gate.get_Name(), tuple(gate.get_Involved_Qbits())) for gate in circ.get_Gates()) + tuple(params)
+    def recombine_all_partition_circuit(circ, optimized_subcircuits, optimized_parameter_list, recombine_info ):
         from squander.partitioning.ilp import topo_sort_partitions, ilp_global_optimal, recombine_single_qubit_chains
         allparts, g, go, rgo, single_qubit_chains, gate_to_qubit, gate_to_tqubit = recombine_info
         max_gates = sum(sum(y for x, y in c.get_Gate_Nums().items() if x !='CNOT') for c in optimized_subcircuits[:len(allparts)])        
         weights = [CNOTGateCount(circ, max_gates) for circ in optimized_subcircuits[:len(allparts)]]
         L, fusion_info = ilp_global_optimal(allparts, g, weights=weights)
         struct_idxs = list(L)
-        parts = recombine_single_qubit_chains(go, rgo, single_qubit_chains, gate_to_tqubit, [allparts[i] for i in L], fusion_info)
+        parts = recombine_single_qubit_chains(go, rgo, single_qubit_chains, gate_to_tqubit, [allparts[i] for i in L], fusion_info, surrounded_only=True)
         single_qubit_chain_idx = {frozenset(chain): idx + len(allparts) for idx, chain in enumerate(single_qubit_chains)}
         for extrapart in parts[len(struct_idxs):]:
             struct_idxs.append(single_qubit_chain_idx[extrapart])
         L = topo_sort_partitions(circ, parts)
-        return [parts[i] for i in L], [struct_idxs[i] for i in L]
+        return [optimized_subcircuits[struct_idxs[i]] for i in L], [optimized_parameter_list[struct_idxs[i]] for i in L]
 
     def OptimizeWideCircuit( self, circ: Circuit, parameters: np.ndarray, global_min=True ) -> Tuple[Circuit, np.ndarray]:
         if self.config["topology"] is not None and self.config["routed"]==False:
             topo = self.config["topology"]
             self.config['topology'] = None
-            self.OptimizeWideCircuit( circ, parameters, global_min=global_min )
+            circ, parameters = self.OptimizeWideCircuit( circ, parameters, global_min=global_min )
             self.config['topology'] = topo
             circ, parameters = self.route_circuit(circ,parameters)
         part_size_start = self.max_partition_size
@@ -1174,7 +1187,7 @@ class qgd_Wide_Circuit_Optimization:
                 count = newcount
                 if no_improve: break
         return circ, parameters
-    def _OptimizeWideCircuit( self, circ: Circuit, orig_parameters: np.ndarray, global_min=True, prepartitioning=None, structures=None, fingerprint_dict=None ) -> Tuple[Circuit, np.ndarray]:
+    def _OptimizeWideCircuit( self, circ: Circuit, orig_parameters: np.ndarray, global_min=True, fingerprint_dict=None ) -> Tuple[Circuit, np.ndarray]:
         """
         Call to optimize a wide circuit (i.e. circuits with many qubits) by
         partitioning the circuit into smaller partitions and redecompose the smaller partitions
@@ -1196,20 +1209,14 @@ class qgd_Wide_Circuit_Optimization:
         max_gates = sum(y for x, y in circ.get_Gate_Nums().items() if x !='CNOT')
 
         if global_min:
-            partitined_circuit, parameters, recombine_info = qgd_Wide_Circuit_Optimization.make_all_partition_circuit(circ, orig_parameters, self.max_partition_size)
+            partitioned_circuit, parameters, recombine_info = qgd_Wide_Circuit_Optimization.make_all_partition_circuit(circ, orig_parameters, self.max_partition_size)
 
-        elif prepartitioning is not None:
-            from squander.partitioning.kahn import kahn_partition_preparts
-            from squander.partitioning.tools import translate_param_order
-            partitined_circuit, param_order, _ = kahn_partition_preparts(circ, self.max_partition_size, prepartitioning)
-            parameters = translate_param_order(orig_parameters, param_order)
         else:
-            partitined_circuit, parameters, _ = PartitionCircuit( circ, orig_parameters, self.max_partition_size, strategy=self.config['partition_strategy'] )
+            partitioned_circuit, parameters, _ = PartitionCircuit( circ, orig_parameters, self.max_partition_size, strategy=self.config['partition_strategy'] )
 
         qbit_num_orig_circuit = circ.get_Qbit_Num()
 
-
-        subcircuits = partitined_circuit.get_Gates()
+        subcircuits = partitioned_circuit.get_Gates()
 
         #subcircuits = subcircuits[9:10]
 
@@ -1222,10 +1229,10 @@ class qgd_Wide_Circuit_Optimization:
         # the list of parameters associated with the optimized subcircuits
         optimized_parameter_list = [None] * len(subcircuits)
 
-        def get_fingerprint(circ, params):
-            return tuple((gate.get_Name(), tuple(gate.get_Involved_Qbits())) for gate in circ.get_Gates()) + tuple(params)
+        # list of AsyncResult objects
+        async_results = [None] * len(subcircuits)
+        with (contextlib.nullcontext() if parent_process() is not None else Pool(processes=mp.cpu_count())) as pool:
 
-        if parent_process() is not None:
             #  code for iterate over partitions and optimize them
             for partition_idx, subcircuit in enumerate( subcircuits ):
         
@@ -1234,80 +1241,42 @@ class qgd_Wide_Circuit_Optimization:
                 start_idx = subcircuit.get_Parameter_Start_Index()
                 end_idx   = start_idx + subcircuit.get_Parameter_Num()
                 subcircuit_parameters = parameters[ start_idx:end_idx ]
-            
-                # callback function done on the master process to compare the new decomposed and the original suncircuit
-                callback_fnc = lambda  x : self.CompareAndPickCircuits( [subcircuit, *(z[0] for z in x)], [subcircuit_parameters, *(z[1] for z in x)], lambda c: CNOTGateCount(c, max_gates) )
 
+    
+                fingerprint = None if fingerprint_dict is None else qgd_Wide_Circuit_Optimization.get_fingerprint(subcircuit, subcircuit_parameters)
+                if fingerprint_dict is not None and fingerprint in fingerprint_dict: continue
                 # call a process to decompose a subcircuit
-                fingerprint = None if fingerprint_dict is None else get_fingerprint(subcircuit, subcircuit_parameters)
+                config = {**self.config, 'tree_level_max': max(0, subcircuit.get_Gate_Nums().get('CNOT', 0)-1)}
+                fargs = (self.PartitionDecompositionProcess, (subcircuit, subcircuit_parameters, config, None))
+                async_results[partition_idx] = fargs if parent_process() is not None else pool.apply_async(*fargs)
+            #  code for iterate over async results and retrieve the new subcircuits
+            for partition_idx, subcircuit in enumerate( subcircuits ):
+                # callback function done on the master process to compare the new decomposed and the original suncircuit
+                start_idx = subcircuit.get_Parameter_Start_Index()
+                subcircuit_parameters = parameters[ start_idx:start_idx + subcircuit.get_Parameter_Num() ]
+                fingerprint = None if fingerprint_dict is None else qgd_Wide_Circuit_Optimization.get_fingerprint(subcircuit, subcircuit_parameters)
+                callback_fnc = lambda  x : self.CompareAndPickCircuits( [subcircuit, *(z[0] for z in x)], [subcircuit_parameters, *(z[1] for z in x)], lambda c: CNOTGateCount(c, max_gates) )
                 if fingerprint_dict is not None and fingerprint in fingerprint_dict:
                     new_subcircuit, new_parameters = fingerprint_dict[fingerprint]
                 else:
-                    config = {**self.config, 'tree_level_max': max(0, subcircuit.get_Gate_Nums().get('CNOT', 0)-1)}
-                    config = config if structures is None or partition_idx >= len(structures) else {**config, 'strategy': 'Custom', 'max_inner_iterations': 10000, 'max_iteration_loops': 4}                
-                    new_subcircuit, new_parameters = callback_fnc(self.PartitionDecompositionProcess( subcircuit, subcircuit_parameters, config,
-                                                                                        None if structures is None or partition_idx >= len(structures) else structures[partition_idx] ))
-                    if subcircuit != new_subcircuit:
+                    new_subcircuit, new_parameters = callback_fnc(async_results[partition_idx][0](*async_results[partition_idx][1])
+                        if parent_process() is not None else async_results[partition_idx].get( timeout = None ))
 
+                    if subcircuit != new_subcircuit:
                         print( "original subcircuit:    ", subcircuit.get_Gate_Nums(), partition_idx) 
-                        print( "reoptimized subcircuit: ", new_subcircuit.get_Gate_Nums())
+                        print( "reoptimized subcircuit: ", new_subcircuit.get_Gate_Nums()) 
                     if fingerprint_dict is not None:
                         fingerprint_dict[fingerprint] = (new_subcircuit, new_parameters)
-                        fingerprint_dict[get_fingerprint(new_subcircuit, new_parameters)] = (new_subcircuit, new_parameters)
-
+                        fingerprint_dict[qgd_Wide_Circuit_Optimization.get_fingerprint(new_subcircuit, new_parameters)] = (new_subcircuit, new_parameters)
+                        trim_subcirc, trim_parameters = qgd_Wide_Circuit_Optimization.strip_single_qubit_head_tails(new_subcircuit, new_parameters)
+                        fingerprint_dict[qgd_Wide_Circuit_Optimization.get_fingerprint(trim_subcirc, trim_parameters)] = (trim_subcirc, trim_parameters)
                 if partition_idx % 100 == 99: print(partition_idx+1, "partitions optimized")
                 optimized_subcircuits[ partition_idx ] = new_subcircuit
                 optimized_parameter_list[ partition_idx ] = new_parameters
-        else:
-            # list of AsyncResult objects
-            async_results = [None] * len(subcircuits)
-            with Pool(processes=mp.cpu_count()) as pool:
-
-                #  code for iterate over partitions and optimize them
-                for partition_idx, subcircuit in enumerate( subcircuits ):
-            
-
-                    # isolate the parameters corresponding to the given sub-circuit
-                    start_idx = subcircuit.get_Parameter_Start_Index()
-                    end_idx   = start_idx + subcircuit.get_Parameter_Num()
-                    subcircuit_parameters = parameters[ start_idx:end_idx ]
-    
-        
-                    fingerprint = None if fingerprint_dict is None else get_fingerprint(subcircuit, subcircuit_parameters)
-                    if fingerprint_dict is not None and fingerprint in fingerprint_dict: continue
-                    # call a process to decompose a subcircuit
-                    config = {**self.config, 'tree_level_max': max(0, subcircuit.get_Gate_Nums().get('CNOT', 0)-1)}
-                    config = config if structures is None or partition_idx >= len(structures) else {**config, 'strategy': 'Custom', 'max_inner_iterations': 10000, 'max_iteration_loops': 4}
-                    async_results[partition_idx]  = pool.apply_async( self.PartitionDecompositionProcess, (subcircuit, subcircuit_parameters, config,
-                                                                                                        None if structures is None or partition_idx >= len(structures) else structures[partition_idx]))
-                #  code for iterate over async results and retrieve the new subcircuits
-                for partition_idx, subcircuit in enumerate( subcircuits ):
-                    # callback function done on the master process to compare the new decomposed and the original suncircuit
-                    start_idx = subcircuit.get_Parameter_Start_Index()
-                    subcircuit_parameters = parameters[ start_idx:start_idx + subcircuit.get_Parameter_Num() ]
-                    fingerprint = None if fingerprint_dict is None else get_fingerprint(subcircuit, subcircuit_parameters)
-                    callback_fnc = lambda  x : self.CompareAndPickCircuits( [subcircuit, *(z[0] for z in x)], [subcircuit_parameters, *(z[1] for z in x)], lambda c: CNOTGateCount(c, max_gates) )
-                    if fingerprint_dict is not None and fingerprint in fingerprint_dict:
-                        new_subcircuit, new_parameters = fingerprint_dict[fingerprint]
-                    else:
-                        new_subcircuit, new_parameters = callback_fnc(async_results[partition_idx].get( timeout = None ))
-
-                        if subcircuit != new_subcircuit:
-
-                            print( "original subcircuit:    ", subcircuit.get_Gate_Nums(), partition_idx) 
-                            print( "reoptimized subcircuit: ", new_subcircuit.get_Gate_Nums()) 
-                        if fingerprint_dict is not None:
-                            fingerprint_dict[fingerprint] = (new_subcircuit, new_parameters)
-                            fingerprint_dict[get_fingerprint(new_subcircuit, new_parameters)] = (new_subcircuit, new_parameters)
-                    if partition_idx % 100 == 99: print(partition_idx+1, "partitions optimized")
-                    optimized_subcircuits[ partition_idx ] = new_subcircuit
-                    optimized_parameter_list[ partition_idx ] = new_parameters
 
         # construct the wide circuit from the optimized suncircuits
         if global_min:
-            parts, struct_idxs = qgd_Wide_Circuit_Optimization.recombine_all_partition_circuit(circ, self.max_partition_size, optimized_subcircuits, recombine_info)
-            structures = [qgd_Wide_Circuit_Optimization.copy_circuit_structure(optimized_subcircuits[x]) for x in struct_idxs]
-            return self._OptimizeWideCircuit(circ, orig_parameters, global_min=False, prepartitioning=parts, structures=structures, fingerprint_dict=fingerprint_dict)
+            optimized_subcircuits, optimized_parameter_list = qgd_Wide_Circuit_Optimization.recombine_all_partition_circuit(circ, optimized_subcircuits, optimized_parameter_list, recombine_info)
         
         wide_circuit, wide_parameters = self.ConstructCircuitFromPartitions( optimized_subcircuits, optimized_parameter_list )
 
@@ -1317,7 +1286,7 @@ class qgd_Wide_Circuit_Optimization:
 
 
         if self.config["test_final_circuit"]:
-            CompareCircuits( partitined_circuit, parameters, wide_circuit, wide_parameters )
+            CompareCircuits( circ, orig_parameters, wide_circuit, wide_parameters )
             #print("Test final circuit passed")
 
         if self.config["topology"] is not None:
