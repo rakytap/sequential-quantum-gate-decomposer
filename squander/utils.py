@@ -130,7 +130,7 @@ def qasm_to_squander_circuit( filename: str, return_transpiled=False):
     
     qc = qiskit.QuantumCircuit.from_qasm_file(filename)
     from squander.gates import gates_Wrapper as gate
-    SUPPORTED_GATES_NAMES = {n.lower().replace("cnot", "cx") for n in dir(gate) if not n.startswith("_") and issubclass(getattr(gate, n), gate.Gate) and n != "Gate"}
+    SUPPORTED_GATES_NAMES = {n.lower().replace("cnot", "cx") for n in dir(gate) if not n.startswith("_") and issubclass(getattr(gate, n), gate.Gate) and n not in ("Gate", "CROT", "CR", "SYC")}
     if any(gate.operation.name not in SUPPORTED_GATES_NAMES for gate in qc.data):
         qc_transpiled = qiskit.transpile(qc, basis_gates=SUPPORTED_GATES_NAMES, optimization_level=0)
     else:
