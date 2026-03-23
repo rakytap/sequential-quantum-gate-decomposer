@@ -1724,7 +1724,9 @@ void Gates_block::add_gate( Gate* gate ) {
 
         //set the number of qubit in the gate
         gate->set_qbit_num( qbit_num );
-        
+
+        gate->clear_children();
+        gate->clear_parents();
         // determine the parents of the gate
         determine_parents( gate );
 
@@ -1755,6 +1757,8 @@ void Gates_block::add_gate( Gate* gate ) {
 
         // set the number of qubit in the gate
         gate->set_qbit_num( qbit_num );
+        gate->clear_children();
+        gate->clear_parents();
 
         // determine the parents of the gate
         determine_children( gate );
@@ -2469,6 +2473,8 @@ void Gates_block::combine(Gates_block* op_block) {
     for(std::vector<Gate*>::iterator it = (gates_in).begin(); it != (gates_in).end(); ++it) {
         Gate* op = *it;
         Gate* op_cloned = op->clone();
+        op_cloned->clear_children();
+        op_cloned->clear_parents();
         add_gate( op_cloned );
     }
 
