@@ -39,6 +39,10 @@ What is already true:
   validate contract completeness, workflow-gate completeness, unsupported-case
   boundary integrity, and claim-closure rules rather than only artifact
   presence,
+- Phase 3 is complete and now provides a canonical noisy mixed-state planner
+  surface, schema-backed descriptor sets, an executable partitioned density
+  runtime, limited real fused execution on eligible substructures, and layered
+  correctness, performance, and publication-evidence packages,
 - the partitioning stack is mature for state-vector simulation and wide-circuit
   unitary optimization.
 
@@ -46,13 +50,16 @@ What remains intentionally open for later phases:
 
 - the completed Phase 2 density path is intentionally anchored to one generated-
   `HEA` canonical workflow rather than broad circuit-source parity,
-- partitioning and gate fusion are not yet available in a native noise-aware
-  density-matrix form,
-- the current partitioning cost model is still state-vector-oriented and
-  noise-blind,
+- the delivered Phase 3 planner-calibration result is intentionally bounded to
+  the audited support surface rather than full density-aware parity across every
+  planner variant and circuit source,
 - and broader VQE/VQA feature growth, including density-backend gradient
   routing, richer workflow support, and optimizer studies, remains Phase 4+
-  work.
+  work,
+- fully channel-native fused noisy blocks remain a benchmark-driven follow-on
+  branch rather than part of the delivered baseline,
+- and approximate scaling paths such as stochastic trajectories or MPDO-style
+  methods remain outside the current exact-backend critical path.
 
 ## 2. Guiding Principles
 
@@ -67,11 +74,11 @@ The following principles should govern the project:
 - Reuse the existing state-vector partitioning infrastructure where possible,
   but do not pretend its current objective or data model is already
   density-aware and noise-aware.
-- Make noisy mixed-state circuits first-class inputs to the Phase 3
-  partitioning/fusion work instead of treating noise only as partition-boundary
-  metadata.
-- Keep broader VQE/VQA feature expansion out of Phase 3; Phase 4 is the
-  earliest home for new workflow surface beyond the frozen Phase 2 contract.
+- Treat noisy mixed-state circuits as first-class inputs to partitioning/fusion
+  work instead of treating noise only as partition-boundary metadata.
+- Keep broader VQE/VQA feature expansion out of the bounded Phase 3 baseline;
+  Phase 4 is the earliest home for new workflow surface beyond the frozen
+  Phase 2 contract.
 - Delay high-risk architectural generalization until benchmark evidence justifies
   it.
 - Maintain reproducibility as a first-class output: code, configs, benchmarks,
@@ -103,11 +110,12 @@ without a strong thesis-level scientific contribution.
 
 ## 3. Recommended Research Path
 
-The recommended path is:
+The recommended dependency order is:
 
-1. freeze and package the exact noisy training integration achieved in Phase 2,
-2. make partitioning and gate fusion natively noise-aware for mixed-state
-   circuits,
+1. preserve and package the exact noisy training integration achieved in
+   Phase 2,
+2. build later work on top of the delivered Phase 3 noise-aware
+   partitioning/fusion baseline rather than reopening its core scope by default,
 3. broaden VQE/VQA workflows, gradients, and optimizer studies only after that
    Phase 3 backend exists,
 4. use the resulting exact backend for full trainability studies,
@@ -214,6 +222,10 @@ First major paper: exact noisy backend integration.
 
 ### Phase 3: Noise-Aware Partitioning And Fusion For Mixed-State Circuits
 
+### Status
+
+`Complete (minimum backend contract delivered; planner calibration is bounded and the current performance rule closes through diagnosis-grounded benchmark evidence while paper packaging continues in parallel)`
+
 ### Main Goal
 
 Extend SQUANDER's partitioning and gate-fusion subsystem so noisy
@@ -289,14 +301,14 @@ meaningful acceleration on target workloads?
 - documented limitations and a clear handoff to any more invasive follow-on
   fusion work.
 
-### Decision Gate
+### Decision Gate Resolution
 
-At the end of Phase 3, decide whether:
+The delivered Phase 3 evidence resolves this gate in favor of keeping the
+native noise-aware planner/runtime plus limited real fused execution as the
+default main path.
 
-- the native noise-aware planner/runtime plus limited real fused execution is
-  sufficient for the main scientific path,
-- or whether a more invasive IR-first / channel-native fusion branch is
-  justified by the benchmark evidence.
+Channel-native / IR-first fusion remains a benchmark-driven follow-on branch,
+not a prerequisite for baseline Phase 3 closure.
 
 ### Publication Target
 
@@ -512,44 +524,23 @@ treat the questions below as the rollup across phases.
 
 ### DG-1: After Phase 2
 
-Question:
+Status:
 
-- Is the exact noisy backend integrated enough to support reproducible training
-  experiments (aligned with Phase 2 exit criteria and the Phase 2 handoff gate:
-  remaining gaps are primarily performance and execution cost, not missing
-  workflow integration)?
-
-If yes:
-
-- proceed with Phase 3 noise-aware partitioning and fusion as the main technical
-  track.
-
-If no:
-
-- do not move major effort into density-aware partitioning yet.
+- Satisfied in the delivered roadmap: Phase 2 proved the exact noisy backend is
+  integrated enough to support reproducible experiments on the frozen canonical
+  workflow, so Phase 3 proceeded as the main technical track.
 
 ### DG-2: At Phase 3 Completion
 
-Question:
+Status:
 
-- Does the native noise-aware partitioned runtime plus limited real fused
-  execution satisfy the Phase 3 exit criteria and prove **sufficient for the
-  main Phase 3 scientific path**, as judged by the mandatory benchmark package
-  (not only raw speedup)?
-
-This is the same decision as the Phase 3 **Decision Gate** under §4 Phase 3.
-
-If yes:
-
-- keep the Phase 3 noise-aware architecture as the default main path,
-- and treat channel-native / IR-first fusion as deferred follow-on unless a
-  dedicated branch is opened with benchmark justification (see §5.1 and
-  ADR-007).
-
-If no:
-
-- use the benchmark and profiling evidence to justify a separate research
-  branch for more invasive channel-native fusion.
+- Answered `yes` for baseline closure: the native noise-aware partitioned
+  runtime plus limited real fused execution satisfies the Phase 3 exit criteria
+  on the delivered bounded support surface.
+- The performance rule closes through diagnosis-grounded benchmark evidence,
+  not through positive-threshold speedup cases.
+- Channel-native / IR-first fusion remains deferred follow-on work unless a
+  dedicated branch is opened with stronger benchmark justification.
 
 ### DG-3: Phase 3 To Phase 4 Handoff
 
@@ -638,19 +629,9 @@ premature expansions:
 
 ## 9. Suggested Calendar Alignment
 
-The following mapping keeps the new planning consistent with the existing PhD
-roadmap while sharpening the technical priorities:
-
-| Calendar window | Recommended emphasis |
-|---|---|
-| Fall 2025 | Phase 1 foundation work |
-| Spring 2026 | Phase 2 backend integration, canonical workflow contract, and publication bundle delivered |
-| Fall 2026 | Phase 2 paper packaging and Phase 3 noise-aware partitioning/fusion begins |
-| Spring 2027 | Phase 3 matures into benchmark-driven methods work |
-| 2027 to 2028 | Phase 4 broader noisy VQE/VQA workflows and optimizer studies |
-| 2028 onward | Phase 5 trainability and final thesis science |
-
-This mapping is approximate. The more important point is dependency order:
+The original calendar mapping is now partly historical because Phases 1-3 have
+been delivered in code and documentation. The more important point remains the
+dependency order:
 
 - exact backend first,
 - noise-aware partitioning/fusion second,
@@ -658,13 +639,24 @@ This mapping is approximate. The more important point is dependency order:
 - trainability science fourth,
 - optional large-scale approximation branches only when justified.
 
+Current roadmap emphasis:
+
+| Period | Recommended emphasis |
+|---|---|
+| Completed milestone window | Phase 1 exact mixed-state foundation, Phase 2 exact noisy workflow integration, and Phase 3 bounded partitioning/fusion backend all delivered |
+| Current publication window | Phase 2 and Phase 3 manuscript packaging, figure polishing, and venue shaping |
+| Next implementation milestone | Phase 4 broader noisy VQE/VQA workflows, gradients, and optimizer studies |
+| Later thesis milestones | Phase 5 trainability studies plus any benchmark-justified scaling branches |
+
 ## 10. Bottom Line
 
 The most successful and meaningful version of this PhD project is not "build the
-most general noisy simulator first." It is:
+most general noisy simulator first." It is to preserve the dependency order
+that has now been partially realized:
 
-- build a trusted exact noisy backend,
-- make partitioning and fusion noise-aware for mixed-state circuits,
+- build and keep a trusted exact noisy backend,
+- establish a bounded noise-aware partitioning/fusion baseline for mixed-state
+  circuits,
 - broaden VQE/VQA workflows and optimizer studies only after that backend
   exists,
 - and use it to answer real questions about training under realistic noise.

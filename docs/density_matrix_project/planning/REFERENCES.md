@@ -9,7 +9,8 @@ note on why it matters for this PhD direction.
 Tag legend:
 
 - `[Current code]`: directly reflected in the existing SQUANDER codebase.
-- `[Near-term]`: strongly relevant to the recommended implementation path.
+- `[Near-term]`: strongly relevant to the current manuscript and follow-on
+  implementation path.
 - `[Future branch]`: useful for later scaling or optional architecture branches.
 - `[Trainability]`: central to the noise-aware optimization and barren-plateau
   agenda.
@@ -260,7 +261,8 @@ Tag legend:
 
 ### 7.1 Phase 3 Methods / Systems Paper
 
-Use this document as the only planning source of truth for Phase 3 literature.
+Use this document as the only planning source of truth for the Phase 3 paper
+literature.
 
 Core citation set for the Phase 3 paper:
 
@@ -288,8 +290,8 @@ Priority entries for Paper 2:
 
 ## 8. Practical Reading Order
 
-For the immediate planning and implementation path, the most useful reading order
-is:
+For the current manuscript and follow-on planning path after delivered Phase 3
+work, the most useful reading order is:
 
 1. SQUANDER density-matrix docs already in this repository,
 2. `TDAG`, `GTQCP`, and `QGo`,

@@ -44,10 +44,11 @@ Review takeaway:
 - Foundation goals are complete.
 - Phase 2 exact noisy backend integration is complete for one canonical
   workflow.
-- Phase 3 now targets noise-aware partitioning/fusion rather than additional
-  VQE/VQA surface growth.
+- Phase 3 delivered a bounded noise-aware partitioning/fusion baseline with an
+  executable partitioned runtime, real fused execution on eligible
+  substructures, and machine-checkable evidence packages.
 - Research-facing noisy VQE/VQA studies broaden in Phase 4 after the
-  partitioning/fusion milestone.
+  delivered partitioning/fusion milestone.
 
 ## PhD Milestone Mapping
 
@@ -60,8 +61,8 @@ Review takeaway:
 
 Roadmap shorthand used in the documentation contract:
 
-- Phase 3 | Full noise module and validation
-- Phase 4 | Noisy VQA integration and optimizer comparisons
+- Phase 3 | Native noise-aware partitioning/fusion baseline and Paper 2 evidence package
+- Phase 4 | Noisy VQA integration, gradients, and optimizer comparisons
 
 
 ## Objective-by-Objective Mapping
@@ -74,10 +75,10 @@ Roadmap shorthand used in the documentation contract:
   - exact noisy backend integrated for one canonical workflow,
   - exact observable path and validation bundle established.
 - Phase 3:
-  - extend partitioning/fusion so noise channels and density-matrix semantics are
-    first-class in the circuit model,
-  - add calibration and fidelity validation workflows required by partitioning
-    benchmarks.
+  - delivered a native planner/runtime path where noise channels and
+    density-matrix semantics are first-class in the circuit model,
+  - added bounded benchmark-calibrated planning plus layered correctness,
+    performance, and publication evidence for partitioning workloads.
 
 ### 2) Trainability analysis under noise
 
@@ -116,10 +117,13 @@ Roadmap shorthand used in the documentation contract:
     noise to partition-boundary-only metadata,
   - Phase 3 includes an executable partitioned path with at least one real
     fused execution mode rather than only a planner/runtime representation,
-  - partitioning decisions are noise-aware for density workloads,
+  - partitioning decisions are benchmark-calibrated on density workloads within
+    the bounded delivered support surface,
   - partitioned/fused execution matches the sequential density baseline,
   - channel-native fused noisy blocks are not required for minimum Phase 3
-    closure.
+    closure,
+  - and the baseline methods claim can close through diagnosis-grounded
+    performance evidence rather than only through positive speedup cases.
 - Phase 4:
   - end-to-end noisy VQE/VQA training loop beyond the Phase 2 baseline is
     functional,

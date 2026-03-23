@@ -18,6 +18,11 @@ Status legend:
 - `Rejected for now`: useful idea in principle, but not justified at the current
   project stage.
 
+These ADRs remain the program-level planning rationale after the delivery of
+Phases 1-3. Where phase-specific documents contain tighter implementation-backed
+wording, treat them as the record of delivered scope while using these ADRs as
+the long-horizon explanation for why that scope was chosen.
+
 ## Decision Summary
 
 | ADR | Title | Status |
@@ -54,9 +59,11 @@ Phase 2 now already delivers:
 
 The next tempting step would be to keep expanding the VQE/VQA surface
 immediately with broader workflow support, gradients, and richer training-loop
-features. At the same time, the project still needs a clearly defined Phase 3
-methods milestone inside the partitioning/fusion subsystem. Noisy circuit
-re-synthesis and noisy wide-circuit compilation remain even broader claims.
+features. At the time this ADR was set, the project still needed a clearly
+defined Phase 3 methods milestone inside the partitioning/fusion subsystem.
+That milestone has since been delivered as a bounded noise-aware
+partitioning/fusion baseline, while noisy circuit re-synthesis and noisy
+wide-circuit compilation remain broader claims.
 
 ### Decision
 
@@ -114,7 +121,9 @@ state-vector fusion:
 - the planner lives in `squander/partitioning`,
 - the runtime fusion happens in `Gates_block::apply_to()`,
 - the current cost model is state-vector-oriented,
-- and `NoisyCircuit` currently executes sequentially.
+- and the sequential `NoisyCircuit` path remains the exact reference baseline
+  even though the delivered Phase 3 runtime now adds bounded partitioned/fused
+  execution on the supported surface.
 
 The simplest port would treat noise operations as opaque barriers, partition
 only contiguous unitary islands, and keep the planner effectively unitary-first.
@@ -204,6 +213,12 @@ Implementation sequence:
 3. then introduce a benchmark-calibrated density-matrix cost model and retune
    `ilp-fusion` / `ilp-fusion-ca` (or a successor planner) for density
    execution.
+
+Current status:
+
+- steps 1 and 2 are delivered,
+- and the benchmark-facing result is a bounded calibration surface rather than
+  blanket density-optimal parity across every planner variant or circuit source.
 
 ### Rationale
 
@@ -424,6 +439,12 @@ Decision gate:
   fusion as a dedicated research branch;
 - otherwise, keep it as a future extension rather than the main architecture.
 
+Current status:
+
+- the delivered Phase 3 diagnosis package keeps this branch deferred, but now
+  with concrete benchmark motivation rather than only speculative future
+  interest.
+
 ### Rationale
 
 - This protects the PhD critical path.
@@ -456,8 +477,9 @@ density matrices, two major approximate directions become attractive:
 - tensor-based mixed-state methods such as MPDOs.
 
 Both are scientifically relevant, but they are not the best starting point for
-the current project because the exact backend is still becoming integrated into
-training workflows.
+the current project because the exact backend is already integrated into the
+delivered Phase 2/3 baseline and must remain the scientific anchor for later
+scaling work.
 
 ### Decision
 

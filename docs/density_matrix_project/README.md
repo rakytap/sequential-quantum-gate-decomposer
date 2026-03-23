@@ -20,7 +20,7 @@ Density matrices are required for:
 
 ## Current Status
 
-Phase 1 is complete on `feature/density-matrix-phase1`:
+Phase 1 is complete and established the foundation for the density-matrix project:
 
 - `DensityMatrix` C++ core with quantum properties and partial trace,
 - `NoisyCircuit` unified gate + noise execution path,
@@ -28,8 +28,7 @@ Phase 1 is complete on `feature/density-matrix-phase1`:
 - Python bindings in `squander.density_matrix`,
 - dedicated tests and Qiskit comparison benchmarks.
 
-Phase 2 is now also complete in branch scope and establishes the current exact
-noisy-workflow baseline:
+Phase 2 is complete and established the current exact noisy-workflow baseline:
 
 - backend selection between state-vector and density-matrix execution,
 - exact Hermitian-energy evaluation via `Re Tr(H*rho)`,
@@ -38,8 +37,24 @@ noisy-workflow baseline:
 - and machine-checkable validation/publication bundles for that frozen support
   surface.
 
-The remaining work is Phase 3 noise-aware partitioning/fusion, followed by
-Phase 4+ broader noisy VQE/VQA feature growth and optimizer studies.
+Phase 3 is complete and established the noise-aware partitioning/fusion foundation:
+
+- canonical noisy mixed-state planner and descriptor surfaces that treat gates
+  and noise as first-class planner inputs,
+- an executable partitioned density runtime with limited real fused execution on
+  eligible substructures,
+- machine-checkable correctness, performance, and publication-evidence bundles
+  grounded in sequential `NoisyCircuit` and Qiskit Aer baselines,
+- and a bounded planner-calibration result with diagnosis-grounded performance
+  closure, while channel-native fusion and broader workflow growth remain
+  deferred.
+
+Phase 4 is planned and will broaden the noisy VQE/VQA surface, gradients, and
+optimizer studies.
+
+Phase 5 is planned and will focus on trainability analysis under noise
+(gradient collapse, barren plateaus).
+
 
 ## 5-Phase Roadmap
 
@@ -47,9 +62,9 @@ Phase 4+ broader noisy VQE/VQA feature growth and optimizer studies.
 | Phase | Goal                                                            | Status   |
 | ----- | --------------------------------------------------------------- | -------- |
 | 1     | Foundation: density matrices + initial noise channels           | Complete |
-| 2     | Exact noisy backend integration for one canonical workflow        | Complete |
-| 3     | Noise-aware partitioning and gate fusion for mixed-state circuits | Planned  |
-| 4     | Broader noisy VQE/VQA features, gradients, and optimizer studies | Planned  |
+| 2     | Exact noisy backend integration for one canonical workflow       | Complete |
+| 3     | Noise-aware partitioning and gate fusion for mixed-state circuits | Complete |
+| 4     | Broader noisy VQE/VQA features, gradients, and optimizer studies | Planned |
 | 5     | Trainability analysis under noise (BP and expressivity studies) | Planned  |
 
 

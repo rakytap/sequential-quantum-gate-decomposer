@@ -54,32 +54,40 @@ Implementation acceptance criteria:
 
 ---
 
-## Phase 3 (Planned)
+## Phase 3 (Complete)
 
-- Extend the partitioning and gate-fusion subsystem so noisy mixed-state circuits
-  are first-class inputs, not just unitary regions with noise left outside the
-  partition model.
-- Represent noise channels and density-matrix execution semantics inside the
-  partitioning/fusion contract.
-- Introduce a noise-aware partitioning objective / heuristic and benchmark
-  calibration for mixed-state workloads.
-- Add mixed-state partitioned/fused execution plus any optional,
-  benchmark-driven density-kernel optimizations required by that runtime, such
-  as AVX work when profiling justifies it.
-- Add correctness and performance validation against the sequential density
-  baseline on representative noisy circuit families.
+### Delivered
 
-Implementation acceptance criteria:
-- Partitioning can represent circuits that contain both gates and noise
-  operations while preserving exact execution order.
-- Partitioning decisions are calibrated on noisy density workloads rather than
-  state-vector-only costs.
-- Phase 3 delivers an executable partitioned path with at least one real fused
-  execution mode; planner-only representation is not sufficient.
-- Partitioned/fused execution matches the unfused density baseline on
-  representative noisy circuits.
-- Fully channel-native fused noisy blocks are optional follow-on work rather
-  than the minimum Phase 3 completion bar.
+- Added a canonical noisy mixed-state planner surface and schema-backed
+  partition descriptor contract in `squander/partitioning/noisy_planner.py`.
+- Added descriptor metadata that preserves explicit gate/noise order, qubit
+  remapping, and parameter-routing semantics on the supported Phase 3 surface.
+- Added an executable partitioned density runtime in
+  `squander/partitioning/noisy_runtime.py`.
+- Added a conservative real fused execution baseline via descriptor-local
+  unitary-island fusion on eligible supported substructures.
+- Added machine-checkable correctness, performance, and publication-evidence
+  pipelines under `benchmarks/density_matrix/`.
+
+Documented closure points:
+- Noisy mixed-state circuits enter the planner as first-class supported inputs
+  without reducing noise to boundary-only metadata.
+- Phase 3 delivers more than planner-only representation: the shipped runtime
+  executes partitioned workloads and exercises at least one real fused path.
+- Partitioned and fused execution are validated against the sequential density
+  baseline on the required workloads.
+
+### Scope Notes
+
+- Sequential `NoisyCircuit` execution and Qiskit Aer remain the required
+  validation baselines.
+- The delivered planner-calibration result is bounded to the audited Phase 3
+  support surface; it does not claim full density-aware parity for every
+  planner variant or circuit source.
+- Phase 3 performance closure is diagnosis-grounded rather than a blanket
+  speedup claim.
+- Fully channel-native fused noisy blocks, full `qgd_Circuit` parity, broader
+  Phase 4 workflow growth, and approximate scaling remain deferred.
 
 ---
 

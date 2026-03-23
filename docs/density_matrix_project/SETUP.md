@@ -1,13 +1,13 @@
 # Density Matrix Setup and Verification
 
-This guide covers installation and validation for the density matrix module on
-`feature/density-matrix-phase1`.
+This guide covers installation and validation for the current density-matrix
+and partitioned-density stack.
 
 Primary audience: developers and users who need to build and run the module.
 
 ## Prerequisites
 
-- Python 3.10+ (3.13 tested on this branch)
+- Python 3.10+ (3.13 tested)
 - CMake >= 3.15
 - C++11-capable compiler (for example GCC >= 4.8.1, Intel >= 14.0.1, or MSVC equivalent)
 - Conda (recommended)
@@ -37,7 +37,6 @@ pip install pybind11
 
 ```bash
 cd /path/to/sequential-quantum-gate-decomposer
-git checkout feature/density-matrix-phase1
 
 # Required in many conda-based setups
 export TBB_INC_DIR=~/.conda/envs/qgd/include
@@ -87,11 +86,31 @@ Python tests:
 pytest tests/density_matrix/ -v
 ```
 
+Phase 3 partitioning/runtime tests:
+
+```bash
+pytest tests/partitioning/ -q
+```
+
 Examples:
 
 ```bash
 python examples/density_matrix/basic_usage.py
 ```
+
+Phase 3 evidence pipelines:
+
+```bash
+python benchmarks/density_matrix/correctness_evidence/validation_pipeline.py
+python benchmarks/density_matrix/performance_evidence/validation_pipeline.py
+python benchmarks/density_matrix/publication_evidence/validation_pipeline.py
+```
+
+Recommended order:
+- run correctness evidence first,
+- then performance evidence,
+- then publication evidence once the Phase 3 docs and emitted evidence bundles
+  are in sync.
 
 Optional C++ tests:
 

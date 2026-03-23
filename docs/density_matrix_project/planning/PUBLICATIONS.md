@@ -24,6 +24,11 @@ implementation phase." The more realistic structure is:
 - an applications / optimizer paper at Phase 4,
 - and the main trainability paper at Phase 5.
 
+Phases 1-3 implementation and evidence delivery are already ahead of final
+venue submission. The ladder below is therefore about publication packaging and
+submission order, not about whether the corresponding code and evidence surfaces
+exist.
+
 ## Publication Principles
 
 To maximize scientific credibility, every paper should satisfy as many of the
@@ -47,6 +52,16 @@ following as possible:
 | Phase 3 | Major methods / systems paper | High | Noise-aware partitioning and fusion for mixed-state circuits |
 | Phase 4 | Applications / optimization paper | High | Broader noisy VQE/VQA workflows and optimizer behavior under exact noise |
 | Phase 5 | Main thesis science paper | Very high | Trainability, entropy, and barren plateaus under realistic noise |
+
+## Current Readiness Snapshot
+
+- Phase 1 implementation is complete; a paper remains optional.
+- Phase 2 implementation and evidence packaging are delivered; the remaining
+  work is primarily manuscript narrative, figures, and venue shaping.
+- Phase 3 backend and evidence surfaces are delivered; the remaining work is
+  manuscript tightening, figure selection, and reviewer-facing positioning
+  around bounded planner calibration and diagnosis-grounded performance
+  closure.
 
 ## Recommended Publication Ladder
 
@@ -212,8 +227,8 @@ Second major paper and the most natural place for the partitioning/fusion work.
 ### Core Question
 
 Can partitioning and fusion techniques be extended so noisy mixed-state circuits
-are first-class objects while still accelerating exact density-matrix
-simulation on training-relevant workloads?
+are first-class objects while still yielding a useful, auditable performance
+story for exact density-matrix simulation on training-relevant workloads?
 
 ### Contribution
 
@@ -222,7 +237,8 @@ simulation on training-relevant workloads?
   ordering,
 - an executable partitioned runtime with at least one real fused execution path
   on eligible substructures inside noisy mixed-state circuits,
-- density-matrix-specific kernel and cost-model analysis under noisy workloads,
+- bounded benchmark-calibrated planner and cost-model analysis under noisy
+  workloads,
 - optional AVX-level kernel tuning only when profiler and benchmark evidence
   show that it materially contributes to the Phase 3 runtime result,
 - benchmark comparison between sequential density execution and partitioned/fused
@@ -246,7 +262,9 @@ simulation on training-relevant workloads?
   executable partitioned noisy-circuit runtime plus at least one real fused
   execution mode on representative workloads,
 - exact agreement with the unfused sequential density baseline,
-- runtime and memory improvements on representative noisy circuits,
+- runtime and memory measurements on representative noisy circuits, with either
+  positive-threshold gains or diagnosis-grounded evidence explaining why the
+  current baseline plateaus,
 - sensitivity studies over partition size, noise placement/density, and gate
   locality,
 - a clear explanation of where the speedups do and do not occur, including
@@ -402,8 +420,9 @@ Question:
 - When does the Phase 3 noise-aware partitioning baseline stop being enough, and
   when would more invasive channel-native fusion become justified?
 
-This is only worth doing after Phase 3 benchmark evidence suggests the native
-noise-aware baseline still leaves the dominant remaining limitation unresolved.
+The delivered Phase 3 benchmark evidence now makes this decision study
+concrete, but it is only worth pursuing as a separate paper if the current
+diagnosis package is developed into a benchmark-justified follow-on branch.
 
 ### Side Paper B: Exact Density Matrix Versus Trajectories / MPDO Cross-Over
 
