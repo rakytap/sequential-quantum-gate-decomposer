@@ -1,11 +1,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Iterable, Mapping
-
+from typing import Any, Iterable, Literal, Mapping, cast
 
 CANONICAL_PLANNER_SCHEMA_VERSION = "phase3_canonical_noisy_planner_v1"
-PHASE3_DESCRIPTOR_SCHEMA_VERSION = "phase3_noisy_partition_descriptor_v1"
+DESCRIPTOR_SCHEMA_VERSION = "phase3_noisy_partition_descriptor_v1"
 PARTITIONED_DENSITY_MODE = "partitioned_density"
 DEFAULT_PARTITION_DESCRIPTOR_MAX_QUBITS = 2
 
@@ -19,13 +18,25 @@ PHASE3_WORKLOAD_FAMILY_MICROCASE = "phase3_micro_validation"
 PHASE3_WORKLOAD_FAMILY_STRUCTURED = "phase3_structured_family"
 PHASE3_WORKLOAD_FAMILY_LEGACY = "phase3_legacy_exact_lowering"
 
-SUPPORTED_PHASE3_GATE_NAMES = frozenset({"U3", "CNOT"})
-SUPPORTED_PHASE3_NOISE_NAMES = frozenset(
+SUPPORTED_GATE_NAMES = frozenset({"U3", "CNOT"})
+SUPPORTED_NOISE_NAMES = frozenset(
     {"local_depolarizing", "amplitude_damping", "phase_damping"}
 )
 SUPPORTED_PLANNER_SOURCE_TYPES = frozenset(
-    {"generated_hea", "microcase_builder", "structured_family_builder", "legacy_qgd_circuit_exact"}
+    {
+        "generated_hea",
+        "microcase_builder",
+        "structured_family_builder",
+        "legacy_qgd_circuit_exact",
+    }
 )
+
+PLANNER_OP_KIND_GATE = "gate"
+PLANNER_OP_KIND_NOISE = "noise"
+PLANNER_OP_KINDS: frozenset[str] = frozenset(
+    {PLANNER_OP_KIND_GATE, PLANNER_OP_KIND_NOISE}
+)
+PlannerOperationKindWire = Literal["gate", "noise"]
 
 
 class NoisyPlannerValidationError(ValueError):
@@ -98,8 +109,7 @@ class NoisyDescriptorValidationError(ValueError):
 @dataclass(frozen=True)
 class CanonicalNoisyPlannerOperation:
     index: int
-    operation_class: str
-    kind: str
+    kind: PlannerOperationKindWire
     name: str
     is_unitary: bool
     source_gate_index: int
@@ -121,7 +131,6 @@ class CanonicalNoisyPlannerOperation:
     def to_dict(self) -> dict[str, Any]:
         return {
             "index": self.index,
-            "operation_class": self.operation_class,
             "kind": self.kind,
             "name": self.name,
             "is_unitary": self.is_unitary,
@@ -153,22 +162,20 @@ class CanonicalNoisyPlannerSurface:
 
     @property
     def gate_count(self) -> int:
-        return sum(op.operation_class == "GateOperation" for op in self.operations)
+        return sum(op.kind == PLANNER_OP_KIND_GATE for op in self.operations)
 
     @property
     def noise_count(self) -> int:
-        return sum(op.operation_class == "NoiseOperation" for op in self.operations)
+        return sum(op.kind == PLANNER_OP_KIND_NOISE for op in self.operations)
 
     @property
     def gate_names(self) -> tuple[str, ...]:
-        return tuple(
-            op.name for op in self.operations if op.operation_class == "GateOperation"
-        )
+        return tuple(op.name for op in self.operations if op.kind == PLANNER_OP_KIND_GATE)
 
     @property
     def noise_names(self) -> tuple[str, ...]:
         return tuple(
-            op.name for op in self.operations if op.operation_class == "NoiseOperation"
+            op.name for op in self.operations if op.kind == PLANNER_OP_KIND_NOISE
         )
 
     @property
@@ -209,8 +216,7 @@ class CanonicalNoisyPlannerSurface:
 class NoisyPartitionDescriptorMember:
     partition_member_index: int
     canonical_operation_index: int
-    operation_class: str
-    kind: str
+    kind: PlannerOperationKindWire
     name: str
     is_unitary: bool
     source_gate_index: int
@@ -229,7 +235,6 @@ class NoisyPartitionDescriptorMember:
         return {
             "partition_member_index": self.partition_member_index,
             "canonical_operation_index": self.canonical_operation_index,
-            "operation_class": self.operation_class,
             "kind": self.kind,
             "name": self.name,
             "is_unitary": self.is_unitary,
@@ -261,11 +266,11 @@ class NoisyPartitionDescriptor:
 
     @property
     def gate_count(self) -> int:
-        return sum(member.operation_class == "GateOperation" for member in self.members)
+        return sum(member.kind == PLANNER_OP_KIND_GATE for member in self.members)
 
     @property
     def noise_count(self) -> int:
-        return sum(member.operation_class == "NoiseOperation" for member in self.members)
+        return sum(member.kind == PLANNER_OP_KIND_NOISE for member in self.members)
 
     @property
     def partition_parameter_count(self) -> int:
@@ -277,11 +282,16 @@ class NoisyPartitionDescriptor:
 
     @property
     def requires_remap(self) -> bool:
-        return self.local_to_global_qbits != tuple(range(len(self.local_to_global_qbits)))
+        return self.local_to_global_qbits != tuple(
+            range(len(self.local_to_global_qbits))
+        )
 
     @property
     def global_to_local_qbits(self) -> tuple[tuple[int, int], ...]:
-        return tuple((global_qbit, local_qbit) for local_qbit, global_qbit in enumerate(self.local_to_global_qbits))
+        return tuple(
+            (global_qbit, local_qbit)
+            for local_qbit, global_qbit in enumerate(self.local_to_global_qbits)
+        )
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -351,7 +361,10 @@ class NoisyPartitionDescriptorSet:
 
     @property
     def max_partition_span(self) -> int:
-        return max((len(partition.partition_qubit_span) for partition in self.partitions), default=0)
+        return max(
+            (len(partition.partition_qubit_span) for partition in self.partitions),
+            default=0,
+        )
 
     @property
     def partition_member_counts(self) -> tuple[int, ...]:
@@ -406,10 +419,21 @@ def _normalize_noise_name(name: str) -> str:
     return aliases.get(normalized.replace(" ", "").lower(), normalized.lower())
 
 
-def _canonicalize_operation_name(name: str, operation_class: str) -> str:
-    if operation_class == "GateOperation":
+def _coerce_operation_kind(value: Any) -> PlannerOperationKindWire:
+    raw_kind = str(value)
+    if raw_kind not in PLANNER_OP_KINDS:
+        raise ValueError(
+            "Unsupported planner kind '{}', expected one of {}".format(
+                raw_kind, sorted(PLANNER_OP_KINDS)
+            )
+        )
+    return cast(PlannerOperationKindWire, raw_kind)
+
+
+def _canonicalize_operation_name(name: str, kind: PlannerOperationKindWire) -> str:
+    if kind == PLANNER_OP_KIND_GATE:
         return _normalize_gate_name(name)
-    if operation_class == "NoiseOperation":
+    if kind == PLANNER_OP_KIND_NOISE:
         return _normalize_noise_name(name)
     return name
 
@@ -429,28 +453,13 @@ def _coerce_optional_float(value: Any) -> float | None:
 def _build_operation_from_mapping(
     payload: Mapping[str, Any], *, fallback_index: int
 ) -> CanonicalNoisyPlannerOperation:
-    operation_class = str(payload["operation_class"])
-    kind = str(payload["kind"])
+    kind = _coerce_operation_kind(payload["kind"])
     is_unitary = bool(payload["is_unitary"])
-
-    if operation_class == "GateOperation" and kind != "gate":
-        raise ValueError(
-            "GateOperation planner payload must declare kind='gate', got '{}'".format(
-                kind
-            )
-        )
-    if operation_class == "NoiseOperation" and kind != "noise":
-        raise ValueError(
-            "NoiseOperation planner payload must declare kind='noise', got '{}'".format(
-                kind
-            )
-        )
 
     return CanonicalNoisyPlannerOperation(
         index=int(payload.get("index", fallback_index)),
-        operation_class=operation_class,
         kind=kind,
-        name=_canonicalize_operation_name(str(payload["name"]), operation_class),
+        name=_canonicalize_operation_name(str(payload["name"]), kind),
         is_unitary=is_unitary,
         source_gate_index=int(payload["source_gate_index"]),
         target_qbit=_coerce_optional_int(payload.get("target_qbit")),
@@ -468,18 +477,16 @@ def _build_operation_from_spec(
     default_param_start: int,
     gate_index: int,
 ) -> CanonicalNoisyPlannerOperation:
-    kind = str(payload["kind"])
-    operation_class = "GateOperation" if kind == "gate" else "NoiseOperation"
-    name = _canonicalize_operation_name(str(payload["name"]), operation_class)
+    kind = _coerce_operation_kind(payload["kind"])
+    name = _canonicalize_operation_name(str(payload["name"]), kind)
     param_count = int(payload.get("param_count", 0))
     source_gate_index = int(payload.get("source_gate_index", gate_index))
 
     return CanonicalNoisyPlannerOperation(
         index=index,
-        operation_class=operation_class,
         kind=kind,
         name=name,
-        is_unitary=bool(payload.get("is_unitary", kind == "gate")),
+        is_unitary=bool(payload.get("is_unitary", kind == PLANNER_OP_KIND_GATE)),
         source_gate_index=source_gate_index,
         target_qbit=_coerce_optional_int(payload.get("target_qbit")),
         control_qbit=_coerce_optional_int(payload.get("control_qbit")),
@@ -525,16 +532,20 @@ def _validate_surface(
                 "Canonical planner operations must use contiguous indices starting at 0"
             )
         if operation.param_start < 0 or operation.param_count < 0:
-            raise ValueError("Planner operation parameter metadata must be non-negative")
+            raise ValueError(
+                "Planner operation parameter metadata must be non-negative"
+            )
         seen_param_starts.append(operation.param_start)
 
-        if operation.operation_class == "GateOperation":
+        if operation.kind == PLANNER_OP_KIND_GATE:
             gate_count += 1
             if operation.target_qbit is None:
                 raise ValueError(
-                    "GateOperation planner records must provide target_qbit"
+                    "{} planner records must provide target_qbit".format(
+                        PLANNER_OP_KIND_GATE
+                    )
                 )
-            if strict_phase3_support and operation.name not in SUPPORTED_PHASE3_GATE_NAMES:
+            if strict_phase3_support and operation.name not in SUPPORTED_GATE_NAMES:
                 raise NoisyPlannerValidationError(
                     category="gate_family",
                     first_unsupported_condition=operation.name,
@@ -545,12 +556,17 @@ def _validate_surface(
                         "Unsupported Phase 3 planner gate '{}' in canonical surface"
                     ).format(operation.name),
                 )
-        elif operation.operation_class == "NoiseOperation":
+        elif operation.kind == PLANNER_OP_KIND_NOISE:
             if operation.target_qbit is None:
                 raise ValueError(
-                    "NoiseOperation planner records must provide target_qbit"
+                    "{} planner records must provide target_qbit".format(
+                        PLANNER_OP_KIND_NOISE
+                    )
                 )
-            if operation.source_gate_index < 0 or operation.source_gate_index >= gate_count:
+            if (
+                operation.source_gate_index < 0
+                or operation.source_gate_index >= gate_count
+            ):
                 raise NoisyPlannerValidationError(
                     category="noise_insertion",
                     first_unsupported_condition="after_gate_index",
@@ -562,7 +578,7 @@ def _validate_surface(
                         "after_gate_index {}".format(operation.source_gate_index)
                     ),
                 )
-            if strict_phase3_support and operation.name not in SUPPORTED_PHASE3_NOISE_NAMES:
+            if strict_phase3_support and operation.name not in SUPPORTED_NOISE_NAMES:
                 raise NoisyPlannerValidationError(
                     category="noise_type",
                     first_unsupported_condition=operation.name,
@@ -576,9 +592,7 @@ def _validate_surface(
                 )
         else:
             raise ValueError(
-                "Unsupported planner operation_class '{}'".format(
-                    operation.operation_class
-                )
+                "Unsupported planner kind '{}'".format(operation.kind)
             )
 
         expected_index += 1
@@ -641,8 +655,8 @@ def build_canonical_planner_surface_from_operation_specs(
     param_start = 0
     gate_index = -1
     for index, payload in enumerate(operation_specs):
-        kind = str(payload["kind"])
-        if kind == "gate":
+        kind = _coerce_operation_kind(payload["kind"])
+        if kind == PLANNER_OP_KIND_GATE:
             gate_index += 1
         operation = _build_operation_from_spec(
             payload,
@@ -662,7 +676,10 @@ def build_canonical_planner_surface_from_operation_specs(
         workload_id=workload_id,
         qbit_num=int(qbit_num),
         parameter_count=max(
-            (operation.param_start + operation.param_count for operation in canonical_operations),
+            (
+                operation.param_start + operation.param_count
+                for operation in canonical_operations
+            ),
             default=0,
         ),
         operations=tuple(canonical_operations),
@@ -710,7 +727,7 @@ def _normalize_legacy_noise_specs(
     normalized_specs: list[dict[str, Any]] = []
     for spec in density_noise:
         channel = _normalize_noise_name(str(spec["channel"]))
-        if channel not in SUPPORTED_PHASE3_NOISE_NAMES:
+        if channel not in SUPPORTED_NOISE_NAMES:
             raise NoisyPlannerValidationError(
                 category="noise_type",
                 first_unsupported_condition=channel,
@@ -781,7 +798,7 @@ def build_canonical_planner_surface_from_legacy_circuit(
     gate_specs: list[dict[str, Any]] = []
     for gate in legacy_circuit.get_Gates():
         gate_name = _normalize_gate_name(str(gate.get_Name()))
-        if strict_phase3_support and gate_name not in SUPPORTED_PHASE3_GATE_NAMES:
+        if strict_phase3_support and gate_name not in SUPPORTED_GATE_NAMES:
             raise NoisyPlannerValidationError(
                 category="gate_family",
                 first_unsupported_condition=gate_name,
@@ -1022,14 +1039,18 @@ def build_bridge_overlap_report(
     for key in ("parameter_count", "operation_count", "gate_count", "noise_count"):
         if payload[key] != bridge_metadata[key]:
             mismatches.append(
-                {"kind": "summary", "field": key, "actual": payload[key], "expected": bridge_metadata[key]}
+                {
+                    "kind": "summary",
+                    "field": key,
+                    "actual": payload[key],
+                    "expected": bridge_metadata[key],
+                }
             )
 
     for index, (actual, expected) in enumerate(
         zip(payload["operations"], bridge_metadata["operations"])
     ):
         for key in (
-            "operation_class",
             "kind",
             "name",
             "is_unitary",
@@ -1051,7 +1072,9 @@ def build_bridge_overlap_report(
                     }
                 )
         expected_support = [
-            q for q in (expected["control_qbit"], expected["target_qbit"]) if q is not None
+            q
+            for q in (expected["control_qbit"], expected["target_qbit"])
+            if q is not None
         ]
         if actual["qubit_support"] != expected_support:
             mismatches.append(
@@ -1149,7 +1172,6 @@ def _build_descriptor_partition(
         member = NoisyPartitionDescriptorMember(
             partition_member_index=partition_member_index,
             canonical_operation_index=operation.index,
-            operation_class=operation.operation_class,
             kind=operation.kind,
             name=operation.name,
             is_unitary=operation.is_unitary,
@@ -1180,9 +1202,7 @@ def _build_descriptor_partition(
 
     return NoisyPartitionDescriptor(
         partition_index=partition_index,
-        canonical_operation_indices=tuple(
-            operation.index for operation in operations
-        ),
+        canonical_operation_indices=tuple(operation.index for operation in operations),
         local_to_global_qbits=local_to_global_qbits,
         parameter_routing=tuple(parameter_routing),
         members=tuple(members),
@@ -1196,7 +1216,9 @@ def build_partition_descriptor_set(
 ) -> NoisyPartitionDescriptorSet:
     _validate_descriptor_request(surface, max_partition_qubits=max_partition_qubits)
     partitions = tuple(
-        _build_descriptor_partition(partition_operations, partition_index=partition_index)
+        _build_descriptor_partition(
+            partition_operations, partition_index=partition_index
+        )
         for partition_index, partition_operations in enumerate(
             _partition_surface_operations(
                 surface, max_partition_qubits=max_partition_qubits
@@ -1204,7 +1226,7 @@ def build_partition_descriptor_set(
         )
     )
     descriptor_set = NoisyPartitionDescriptorSet(
-        schema_version=PHASE3_DESCRIPTOR_SCHEMA_VERSION,
+        schema_version=DESCRIPTOR_SCHEMA_VERSION,
         planner_schema_version=surface.schema_version,
         requested_mode=surface.requested_mode,
         source_type=surface.source_type,
@@ -1317,7 +1339,9 @@ def validate_partition_descriptor_set(
                 reason="Partition descriptors do not support empty partitions",
             )
 
-        if len(set(partition.local_to_global_qbits)) != len(partition.local_to_global_qbits):
+        if len(set(partition.local_to_global_qbits)) != len(
+            partition.local_to_global_qbits
+        ):
             raise _descriptor_error(
                 descriptor_set,
                 category="incomplete_remapping",
@@ -1362,7 +1386,9 @@ def validate_partition_descriptor_set(
                     failure_stage="descriptor_validation",
                     reason=(
                         "Partition descriptor partition {} requires contiguous "
-                        "partition_member_index values".format(partition.partition_index)
+                        "partition_member_index values".format(
+                            partition.partition_index
+                        )
                     ),
                 )
             if member.canonical_operation_index != expected_canonical_index:
@@ -1463,7 +1489,9 @@ def validate_partition_descriptor_set(
                 failure_stage="descriptor_validation",
                 reason=(
                     "Partition descriptor partition {} must keep parameter_routing aligned "
-                    "with ordered member parameter metadata".format(partition.partition_index)
+                    "with ordered member parameter metadata".format(
+                        partition.partition_index
+                    )
                 ),
             )
         expected_partition_index += 1
@@ -1519,7 +1547,9 @@ def validate_partition_descriptor_set_against_surface(
             failure_stage="descriptor_validation",
             reason=(
                 "Partition descriptor provenance and size metadata must match the "
-                "canonical planner surface for workload '{}'".format(surface.workload_id)
+                "canonical planner surface for workload '{}'".format(
+                    surface.workload_id
+                )
             ),
         )
     if validated.descriptor_member_count != surface.operation_count:
@@ -1554,14 +1584,11 @@ def validate_partition_descriptor_set_against_surface(
         )
 
     flattened_members = [
-        member
-        for partition in validated.partitions
-        for member in partition.members
+        member for partition in validated.partitions for member in partition.members
     ]
     for member in flattened_members:
         expected = surface.operations[member.canonical_operation_index]
         for field in (
-            "operation_class",
             "kind",
             "name",
             "is_unitary",
@@ -1575,8 +1602,8 @@ def validate_partition_descriptor_set_against_surface(
             if getattr(member, field) != getattr(expected, field):
                 category = (
                     "hidden_noise_placement"
-                    if expected.operation_class == "NoiseOperation"
-                    or member.operation_class == "NoiseOperation"
+                    if expected.kind == PLANNER_OP_KIND_NOISE
+                    or member.kind == PLANNER_OP_KIND_NOISE
                     else "dropped_operations"
                 )
                 raise _descriptor_error(
@@ -1594,8 +1621,8 @@ def validate_partition_descriptor_set_against_surface(
         if member.qubit_support != expected.qubit_support:
             category = (
                 "hidden_noise_placement"
-                if expected.operation_class == "NoiseOperation"
-                or member.operation_class == "NoiseOperation"
+                if expected.kind == PLANNER_OP_KIND_NOISE
+                or member.kind == PLANNER_OP_KIND_NOISE
                 else "dropped_operations"
             )
             raise _descriptor_error(
@@ -1639,7 +1666,8 @@ def build_descriptor_audit_record(
                 partition["requires_remap"] for partition in payload["partitions"]
             ),
             "parameter_routing_segment_count": sum(
-                len(partition["parameter_routing"]) for partition in payload["partitions"]
+                len(partition["parameter_routing"])
+                for partition in payload["partitions"]
             ),
         },
         "partitions": payload["partitions"],

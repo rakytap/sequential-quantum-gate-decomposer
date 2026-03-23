@@ -53,6 +53,10 @@ from benchmarks.density_matrix.noise_support.support_tiers import (
 )
 from squander import Variational_Quantum_Eigensolver
 from squander.density_matrix import DensityMatrix, NoisyCircuit
+from squander.partitioning.noisy_planner import (
+    PLANNER_OP_KIND_GATE,
+    PLANNER_OP_KIND_NOISE,
+)
 
 PRIMARY_BACKEND = "density_matrix"
 REFERENCE_BACKEND = "qiskit_aer_density_matrix"
@@ -300,7 +304,7 @@ def build_vqe(
 def build_reference_bridge_metadata(vqe):
     bridge = vqe.describe_density_bridge()
     noise_operations = [
-        op for op in bridge["operations"] if op["operation_class"] == "NoiseOperation"
+        op for op in bridge["operations"] if op["kind"] == PLANNER_OP_KIND_NOISE
     ]
     return {
         "bridge_source_type": bridge["source_type"],
@@ -379,10 +383,10 @@ def classify_bridge_unsupported_reason(reason: str):
 def build_exact_regime_bridge_metadata(vqe, *, execution_ready: bool):
     bridge = vqe.describe_density_bridge()
     gate_sequence = [
-        op["name"] for op in bridge["operations"] if op["operation_class"] == "GateOperation"
+        op["name"] for op in bridge["operations"] if op["kind"] == PLANNER_OP_KIND_GATE
     ]
     noise_sequence = [
-        op["name"] for op in bridge["operations"] if op["operation_class"] == "NoiseOperation"
+        op["name"] for op in bridge["operations"] if op["kind"] == PLANNER_OP_KIND_NOISE
     ]
 
     source_pass = bridge["source_type"] == "generated_hea"

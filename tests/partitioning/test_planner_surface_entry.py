@@ -1,5 +1,5 @@
-from pathlib import Path
 import sys
+from pathlib import Path
 
 import pytest
 
@@ -7,7 +7,6 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from squander import Circuit
 from benchmarks.density_matrix.planner_surface.common import (
     build_phase2_continuity_vqe,
 )
@@ -19,22 +18,25 @@ from benchmarks.density_matrix.planner_surface.workloads import (
     iter_structured_surfaces,
     mandatory_microcase_definitions,
 )
+from squander import Circuit
 from squander.partitioning.noisy_planner import (
-    NoisyPlannerValidationError,
-    PHASE3_ENTRY_ROUTE_PHASE2_CONTINUITY,
-    PHASE3_ENTRY_ROUTE_MICROCASE,
-    PHASE3_ENTRY_ROUTE_STRUCTURED_FAMILY,
-    PHASE3_WORKLOAD_FAMILY_PHASE2_CONTINUITY,
-    PHASE3_WORKLOAD_FAMILY_MICROCASE,
-    PHASE3_WORKLOAD_FAMILY_STRUCTURED,
     PARTITIONED_DENSITY_MODE,
-    SUPPORTED_PHASE3_GATE_NAMES,
-    SUPPORTED_PHASE3_NOISE_NAMES,
-    build_planner_audit_record,
+    PLANNER_OP_KIND_GATE,
+    PLANNER_OP_KIND_NOISE,
+    PHASE3_ENTRY_ROUTE_MICROCASE,
+    PHASE3_ENTRY_ROUTE_PHASE2_CONTINUITY,
+    PHASE3_ENTRY_ROUTE_STRUCTURED_FAMILY,
+    PHASE3_WORKLOAD_FAMILY_MICROCASE,
+    PHASE3_WORKLOAD_FAMILY_PHASE2_CONTINUITY,
+    PHASE3_WORKLOAD_FAMILY_STRUCTURED,
+    SUPPORTED_GATE_NAMES,
+    SUPPORTED_NOISE_NAMES,
+    NoisyPlannerValidationError,
     build_bridge_overlap_report,
     build_canonical_planner_surface_from_bridge_metadata,
-    build_phase3_continuity_planner_surface,
     build_canonical_planner_surface_from_qgd_circuit,
+    build_phase3_continuity_planner_surface,
+    build_planner_audit_record,
     preflight_planner_request,
 )
 
@@ -61,7 +63,6 @@ def test_continuity_surface_matches_bridge_metadata(qbit_num):
     for actual, expected in zip(payload["operations"], bridge["operations"]):
         for key in (
             "index",
-            "operation_class",
             "kind",
             "name",
             "is_unitary",
@@ -74,18 +75,23 @@ def test_continuity_surface_matches_bridge_metadata(qbit_num):
         ):
             assert actual[key] == expected[key]
         assert actual["qubit_support"] == [
-            q for q in (expected["control_qbit"], expected["target_qbit"]) if q is not None
+            q
+            for q in (expected["control_qbit"], expected["target_qbit"])
+            if q is not None
         ]
     assert payload["gate_count"] + payload["noise_count"] == payload["operation_count"]
-    assert payload["operations"][0]["operation_class"] == "GateOperation"
-    assert any(op["operation_class"] == "NoiseOperation" for op in payload["operations"])
+    assert payload["operations"][0]["kind"] == PLANNER_OP_KIND_GATE
+    assert any(
+        op["kind"] == PLANNER_OP_KIND_NOISE for op in payload["operations"]
+    )
 
 
 def test_rejects_non_partitioned_density_mode():
     vqe, _, _ = build_phase2_continuity_vqe(4)
 
     with pytest.raises(
-        NoisyPlannerValidationError, match="supports only 'partitioned_density' requests"
+        NoisyPlannerValidationError,
+        match="supports only 'partitioned_density' requests",
     ) as err:
         build_phase3_continuity_planner_surface(vqe, requested_mode="state_vector")
 
@@ -100,8 +106,7 @@ def test_rejects_bridge_noise_with_invalid_after_gate_index():
     bridge["operations"] = [
         {
             "index": 0,
-            "operation_class": "NoiseOperation",
-            "kind": "noise",
+            "kind": PLANNER_OP_KIND_NOISE,
             "name": "local_depolarizing",
             "is_unitary": False,
             "source_gate_index": 99,
@@ -150,14 +155,16 @@ def test_microcases_share_canonical_schema():
         assert payload["qbit_num"] == metadata["qbit_num"]
         assert payload["gate_count"] > 0
         assert payload["noise_count"] > 0
-        assert set(surface.gate_names).issubset(SUPPORTED_PHASE3_GATE_NAMES)
-        assert set(surface.noise_names).issubset(SUPPORTED_PHASE3_NOISE_NAMES)
+        assert set(surface.gate_names).issubset(SUPPORTED_GATE_NAMES)
+        assert set(surface.noise_names).issubset(SUPPORTED_NOISE_NAMES)
 
 
 def test_structured_families_share_canonical_schema():
     structured_cases = list(iter_structured_surfaces())
     assert len(structured_cases) == (
-        len(STRUCTURED_FAMILY_NAMES) * len(STRUCTURED_QUBITS) * len(MANDATORY_NOISE_PATTERNS)
+        len(STRUCTURED_FAMILY_NAMES)
+        * len(STRUCTURED_QUBITS)
+        * len(MANDATORY_NOISE_PATTERNS)
     )
 
     for metadata, surface in structured_cases:
@@ -171,8 +178,8 @@ def test_structured_families_share_canonical_schema():
         assert payload["qbit_num"] == metadata["qbit_num"]
         assert payload["gate_count"] > 0
         assert payload["noise_count"] > 0
-        assert set(surface.gate_names).issubset(SUPPORTED_PHASE3_GATE_NAMES)
-        assert set(surface.noise_names).issubset(SUPPORTED_PHASE3_NOISE_NAMES)
+        assert set(surface.gate_names).issubset(SUPPORTED_GATE_NAMES)
+        assert set(surface.noise_names).issubset(SUPPORTED_NOISE_NAMES)
 
 
 def test_workload_ids_are_unique():
@@ -197,7 +204,10 @@ def test_audit_record_tracks_continuity_provenance():
 
     assert audit["provenance"]["source_type"] == "generated_hea"
     assert audit["provenance"]["entry_route"] == PHASE3_ENTRY_ROUTE_PHASE2_CONTINUITY
-    assert audit["provenance"]["workload_family"] == PHASE3_WORKLOAD_FAMILY_PHASE2_CONTINUITY
+    assert (
+        audit["provenance"]["workload_family"]
+        == PHASE3_WORKLOAD_FAMILY_PHASE2_CONTINUITY
+    )
     assert audit["summary"]["operation_count"] == surface.operation_count
     assert audit["summary"]["max_qubit_span"] >= 1
     assert audit["operations"][0]["qubit_support"]
@@ -229,7 +239,11 @@ def test_exact_qgd_circuit_lowering_preserves_order_and_param_spans():
         circuit,
         workload_id="legacy_manual_u3_cnot",
     )
-    gate_payloads = [op for op in surface.to_dict()["operations"] if op["operation_class"] == "GateOperation"]
+    gate_payloads = [
+        op
+        for op in surface.to_dict()["operations"]
+        if op["kind"] == PLANNER_OP_KIND_GATE
+    ]
     source_gates = circuit.get_Gates()
 
     assert surface.source_type == "legacy_qgd_circuit_exact"
@@ -264,7 +278,7 @@ def test_legacy_lowering_accepts_explicit_supported_noise():
     payload = surface.to_dict()
 
     assert payload["noise_count"] == 1
-    assert payload["operations"][2]["operation_class"] == "NoiseOperation"
+    assert payload["operations"][2]["kind"] == PLANNER_OP_KIND_NOISE
     assert payload["operations"][2]["name"] == "local_depolarizing"
     assert payload["operations"][2]["source_gate_index"] == 1
     assert payload["operations"][2]["fixed_value"] == pytest.approx(0.1)

@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 import resource
 import time
+from dataclasses import dataclass
 from typing import Any, Iterable, Mapping
 
 import numpy as np
@@ -10,8 +10,8 @@ import numpy as np
 from squander.density_matrix import DensityMatrix, NoisyCircuit
 from squander.partitioning.noisy_planner import (
     PARTITIONED_DENSITY_MODE,
-    SUPPORTED_PHASE3_GATE_NAMES,
-    SUPPORTED_PHASE3_NOISE_NAMES,
+    SUPPORTED_GATE_NAMES,
+    SUPPORTED_NOISE_NAMES,
     NoisyPartitionDescriptor,
     NoisyPartitionDescriptorMember,
     NoisyPartitionDescriptorSet,
@@ -88,7 +88,7 @@ class NoisyRuntimePartitionRecord:
     gate_count: int
     noise_count: int
     operation_names: tuple[str, ...]
-    operation_classes: tuple[str, ...]
+    operation_kinds: tuple[str, ...]
     runtime_circuit_qbit_num: int
     runtime_circuit_parameter_count: int
 
@@ -120,7 +120,7 @@ class NoisyRuntimePartitionRecord:
                 for global_param_start, local_param_start, param_count in self.parameter_routing
             ],
             "operation_names": list(self.operation_names),
-            "operation_classes": list(self.operation_classes),
+            "operation_kinds": list(self.operation_kinds),
             "runtime_circuit_qbit_num": self.runtime_circuit_qbit_num,
             "runtime_circuit_parameter_count": self.runtime_circuit_parameter_count,
         }
@@ -204,7 +204,10 @@ class NoisyRuntimeExecutionResult:
 
     @property
     def max_partition_span(self) -> int:
-        return max((len(partition.partition_qubit_span) for partition in self.partitions), default=0)
+        return max(
+            (len(partition.partition_qubit_span) for partition in self.partitions),
+            default=0,
+        )
 
     @property
     def partition_member_counts(self) -> tuple[int, ...]:
@@ -413,7 +416,7 @@ def _validate_supported_member(
     runtime_path: str,
 ) -> None:
     if member.kind == "gate":
-        if member.name not in SUPPORTED_PHASE3_GATE_NAMES:
+        if member.name not in SUPPORTED_GATE_NAMES:
             raise _runtime_error(
                 descriptor_set,
                 category="unsupported_runtime_operation",
@@ -422,7 +425,7 @@ def _validate_supported_member(
                 runtime_path=runtime_path,
                 reason=(
                     "Partitioned runtime supports only gate families {}, got '{}'".format(
-                        sorted(SUPPORTED_PHASE3_GATE_NAMES), member.name
+                        sorted(SUPPORTED_GATE_NAMES), member.name
                     )
                 ),
             )
@@ -458,7 +461,7 @@ def _validate_supported_member(
         return
 
     if member.kind == "noise":
-        if member.name not in SUPPORTED_PHASE3_NOISE_NAMES:
+        if member.name not in SUPPORTED_NOISE_NAMES:
             raise _runtime_error(
                 descriptor_set,
                 category="unsupported_runtime_operation",
@@ -467,7 +470,7 @@ def _validate_supported_member(
                 runtime_path=runtime_path,
                 reason=(
                     "Partitioned runtime supports only local-noise families {}, got '{}'".format(
-                        sorted(SUPPORTED_PHASE3_NOISE_NAMES), member.name
+                        sorted(SUPPORTED_NOISE_NAMES), member.name
                     )
                 ),
             )
@@ -500,7 +503,9 @@ def _validate_supported_member(
         first_unsupported_condition="operation_kind",
         failure_stage="runtime_preflight",
         runtime_path=runtime_path,
-        reason="Partitioned runtime does not support descriptor kind '{}'".format(member.kind),
+        reason="Partitioned runtime does not support descriptor kind '{}'".format(
+            member.kind
+        ),
     )
 
 
@@ -733,10 +738,17 @@ def _build_partition_parameter_vector(
     local_parameter_vector = np.zeros(
         partition.partition_parameter_count, dtype=np.float64
     )
-    for global_param_start, local_param_start, param_count in partition.parameter_routing:
+    for (
+        global_param_start,
+        local_param_start,
+        param_count,
+    ) in partition.parameter_routing:
         global_stop = global_param_start + param_count
         local_stop = local_param_start + param_count
-        if global_stop > parameter_vector.size or local_stop > local_parameter_vector.size:
+        if (
+            global_stop > parameter_vector.size
+            or local_stop > local_parameter_vector.size
+        ):
             raise _runtime_error(
                 descriptor_set,
                 category="descriptor_to_runtime_mismatch",
@@ -770,7 +782,7 @@ def _build_partition_record(
         gate_count=partition.gate_count,
         noise_count=partition.noise_count,
         operation_names=tuple(member.name for member in partition.members),
-        operation_classes=tuple(member.operation_class for member in partition.members),
+        operation_kinds=tuple(member.kind for member in partition.members),
         runtime_circuit_qbit_num=runtime_circuit.qbit_num,
         runtime_circuit_parameter_count=runtime_circuit.parameter_num,
     )
@@ -804,9 +816,9 @@ def _segment_parameter_vector(
                 ),
             )
         if member.param_count:
-            segment_parameters[cursor : cursor + member.param_count] = local_parameter_vector[
-                local_start:local_stop
-            ]
+            segment_parameters[cursor : cursor + member.param_count] = (
+                local_parameter_vector[local_start:local_stop]
+            )
         cursor += member.param_count
     return segment_parameters
 
@@ -878,7 +890,13 @@ def _unique_local_qbits(
     members: tuple[NoisyPartitionDescriptorMember, ...],
 ) -> tuple[int, ...]:
     return tuple(
-        sorted({local_qbit for member in members for local_qbit in member.local_qubit_support})
+        sorted(
+            {
+                local_qbit
+                for member in members
+                for local_qbit in member.local_qubit_support
+            }
+        )
     )
 
 
@@ -1129,12 +1147,14 @@ def _execute_partition_with_optional_fusion(
             eligible_for_fusion = len(segment_members) >= 2
             if allow_fusion and eligible_for_fusion:
                 try:
-                    fused_kernel, active_local_qbits, global_target_qbits = _build_fused_kernel(
-                        descriptor_set,
-                        partition,
-                        segment_members,
-                        local_parameter_vector,
-                        runtime_path=runtime_path,
+                    fused_kernel, active_local_qbits, global_target_qbits = (
+                        _build_fused_kernel(
+                            descriptor_set,
+                            partition,
+                            segment_members,
+                            local_parameter_vector,
+                            runtime_path=runtime_path,
+                        )
                     )
                 except NoisyRuntimeValidationError as exc:
                     if exc.first_unsupported_condition != "fusion_qubit_span":

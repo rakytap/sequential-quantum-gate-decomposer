@@ -31,7 +31,7 @@ from benchmarks.density_matrix.planner_surface.workloads import (
     iter_structured_descriptor_sets,
 )
 from squander.partitioning.noisy_planner import (
-    PHASE3_DESCRIPTOR_SCHEMA_VERSION,
+    DESCRIPTOR_SCHEMA_VERSION,
     build_phase3_continuity_partition_descriptor_set,
     validate_partition_descriptor_set,
 )
@@ -133,13 +133,15 @@ def build_artifact_bundle(cases: list[dict]) -> dict:
         if passed_cases == len(cases) and reconstruction_passes == len(cases)
         else "fail",
         "requested_mode": "partitioned_density",
-        "schema_version": PHASE3_DESCRIPTOR_SCHEMA_VERSION,
+        "schema_version": DESCRIPTOR_SCHEMA_VERSION,
         "software": build_software_metadata(),
         "summary": {
             "total_cases": len(cases),
             "passed_cases": passed_cases,
             "reconstruction_passes": reconstruction_passes,
-            "continuity_cases": sum(case["case_kind"] == "continuity" for case in cases),
+            "continuity_cases": sum(
+                case["case_kind"] == "continuity" for case in cases
+            ),
             "boundary_microcases": sum(
                 case["case_kind"] == "boundary_microcase" for case in cases
             ),

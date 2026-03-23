@@ -336,19 +336,19 @@
           ],
           "member_count": 12,
           "noise_count": 3,
-          "operation_classes": [
-            "GateOperation",
-            "NoiseOperation",
-            "GateOperation",
-            "GateOperation",
-            "NoiseOperation",
-            "GateOperation",
-            "GateOperation",
-            "NoiseOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "noise",
+            "gate",
+            "gate",
+            "noise",
+            "gate",
+            "gate",
+            "noise",
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -835,19 +835,19 @@
           ],
           "member_count": 12,
           "noise_count": 3,
-          "operation_classes": [
-            "GateOperation",
-            "NoiseOperation",
-            "GateOperation",
-            "GateOperation",
-            "NoiseOperation",
-            "GateOperation",
-            "GateOperation",
-            "NoiseOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "noise",
+            "gate",
+            "gate",
+            "noise",
+            "gate",
+            "gate",
+            "noise",
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -938,13 +938,13 @@
           ],
           "member_count": 6,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -1467,19 +1467,19 @@
           ],
           "member_count": 12,
           "noise_count": 3,
-          "operation_classes": [
-            "GateOperation",
-            "NoiseOperation",
-            "GateOperation",
-            "GateOperation",
-            "NoiseOperation",
-            "GateOperation",
-            "GateOperation",
-            "NoiseOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "noise",
+            "gate",
+            "gate",
+            "noise",
+            "gate",
+            "gate",
+            "noise",
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -1576,14 +1576,14 @@
           ],
           "member_count": 7,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -1663,12 +1663,12 @@
           ],
           "member_count": 5,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -2238,19 +2238,19 @@
           ],
           "member_count": 12,
           "noise_count": 3,
-          "operation_classes": [
-            "GateOperation",
-            "NoiseOperation",
-            "GateOperation",
-            "GateOperation",
-            "NoiseOperation",
-            "GateOperation",
-            "GateOperation",
-            "NoiseOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "noise",
+            "gate",
+            "gate",
+            "noise",
+            "gate",
+            "gate",
+            "noise",
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -2347,14 +2347,14 @@
           ],
           "member_count": 7,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -2440,13 +2440,13 @@
           ],
           "member_count": 6,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -2520,12 +2520,12 @@
           ],
           "member_count": 5,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -2807,12 +2807,12 @@
           ],
           "member_count": 5,
           "noise_count": 1,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "NoiseOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "noise",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -3133,15 +3133,15 @@
           ],
           "member_count": 8,
           "noise_count": 2,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "NoiseOperation",
-            "GateOperation",
-            "GateOperation",
-            "NoiseOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "noise",
+            "gate",
+            "gate",
+            "noise",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -3491,17 +3491,17 @@
           ],
           "member_count": 10,
           "noise_count": 3,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "NoiseOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "NoiseOperation",
-            "GateOperation",
-            "NoiseOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "noise",
+            "gate",
+            "gate",
+            "gate",
+            "noise",
+            "gate",
+            "noise"
           ],
           "operation_names": [
             "U3",
@@ -4099,11 +4099,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -4179,11 +4179,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -4257,9 +4257,9 @@
           ],
           "member_count": 2,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -4310,9 +4310,9 @@
           ],
           "member_count": 2,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -4366,12 +4366,12 @@
           ],
           "member_count": 5,
           "noise_count": 1,
-          "operation_classes": [
-            "NoiseOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "noise",
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "local_depolarizing",
@@ -4448,11 +4448,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -4526,9 +4526,9 @@
           ],
           "member_count": 2,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -4580,10 +4580,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -4648,11 +4648,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -4727,10 +4727,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -4793,9 +4793,9 @@
           ],
           "member_count": 2,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -4841,9 +4841,9 @@
           ],
           "member_count": 2,
           "noise_count": 1,
-          "operation_classes": [
-            "GateOperation",
-            "NoiseOperation"
+          "operation_kinds": [
+            "gate",
+            "noise"
           ],
           "operation_names": [
             "CNOT",
@@ -5467,11 +5467,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -5547,11 +5547,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -5625,9 +5625,9 @@
           ],
           "member_count": 2,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -5679,10 +5679,10 @@
           ],
           "member_count": 3,
           "noise_count": 1,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "NoiseOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "noise"
           ],
           "operation_names": [
             "CNOT",
@@ -5736,11 +5736,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -5816,11 +5816,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -5894,9 +5894,9 @@
           ],
           "member_count": 2,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -5949,11 +5949,11 @@
           ],
           "member_count": 4,
           "noise_count": 1,
-          "operation_classes": [
-            "GateOperation",
-            "NoiseOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "noise",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -6019,11 +6019,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -6098,10 +6098,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -6164,9 +6164,9 @@
           ],
           "member_count": 2,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -6207,9 +6207,9 @@
           ],
           "member_count": 2,
           "noise_count": 1,
-          "operation_classes": [
-            "GateOperation",
-            "NoiseOperation"
+          "operation_kinds": [
+            "gate",
+            "noise"
           ],
           "operation_names": [
             "CNOT",
@@ -6778,11 +6778,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -6858,11 +6858,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -6936,9 +6936,9 @@
           ],
           "member_count": 2,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -6989,9 +6989,9 @@
           ],
           "member_count": 2,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -7044,11 +7044,11 @@
           ],
           "member_count": 4,
           "noise_count": 4,
-          "operation_classes": [
-            "NoiseOperation",
-            "NoiseOperation",
-            "NoiseOperation",
-            "NoiseOperation"
+          "operation_kinds": [
+            "noise",
+            "noise",
+            "noise",
+            "noise"
           ],
           "operation_names": [
             "local_depolarizing",
@@ -7103,11 +7103,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -7183,11 +7183,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -7261,9 +7261,9 @@
           ],
           "member_count": 2,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -7316,11 +7316,11 @@
           ],
           "member_count": 4,
           "noise_count": 3,
-          "operation_classes": [
-            "GateOperation",
-            "NoiseOperation",
-            "NoiseOperation",
-            "NoiseOperation"
+          "operation_kinds": [
+            "gate",
+            "noise",
+            "noise",
+            "noise"
           ],
           "operation_names": [
             "CNOT",
@@ -7375,11 +7375,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -7455,11 +7455,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -7533,9 +7533,9 @@
           ],
           "member_count": 2,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -7586,9 +7586,9 @@
           ],
           "member_count": 2,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -7641,11 +7641,11 @@
           ],
           "member_count": 4,
           "noise_count": 4,
-          "operation_classes": [
-            "NoiseOperation",
-            "NoiseOperation",
-            "NoiseOperation",
-            "NoiseOperation"
+          "operation_kinds": [
+            "noise",
+            "noise",
+            "noise",
+            "noise"
           ],
           "operation_names": [
             "amplitude_damping",
@@ -8534,11 +8534,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -8614,11 +8614,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -8693,10 +8693,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -8759,9 +8759,9 @@
           ],
           "member_count": 2,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -8812,9 +8812,9 @@
           ],
           "member_count": 2,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -8868,12 +8868,12 @@
           ],
           "member_count": 5,
           "noise_count": 1,
-          "operation_classes": [
-            "NoiseOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "noise",
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "local_depolarizing",
@@ -8950,11 +8950,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -9029,10 +9029,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -9095,9 +9095,9 @@
           ],
           "member_count": 2,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -9149,10 +9149,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -9217,11 +9217,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -9297,11 +9297,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -9375,9 +9375,9 @@
           ],
           "member_count": 2,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -9428,9 +9428,9 @@
           ],
           "member_count": 2,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -9483,11 +9483,11 @@
           ],
           "member_count": 4,
           "noise_count": 1,
-          "operation_classes": [
-            "GateOperation",
-            "NoiseOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "noise",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -9553,11 +9553,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -9633,11 +9633,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -9711,9 +9711,9 @@
           ],
           "member_count": 2,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -9764,9 +9764,9 @@
           ],
           "member_count": 2,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -10709,11 +10709,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -10789,11 +10789,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -10868,10 +10868,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -10934,9 +10934,9 @@
           ],
           "member_count": 2,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -10988,10 +10988,10 @@
           ],
           "member_count": 3,
           "noise_count": 1,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "NoiseOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "noise"
           ],
           "operation_names": [
             "CNOT",
@@ -11045,11 +11045,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -11125,11 +11125,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -11204,10 +11204,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -11270,9 +11270,9 @@
           ],
           "member_count": 2,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -11325,11 +11325,11 @@
           ],
           "member_count": 4,
           "noise_count": 1,
-          "operation_classes": [
-            "GateOperation",
-            "NoiseOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "noise",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -11395,11 +11395,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -11475,11 +11475,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -11553,9 +11553,9 @@
           ],
           "member_count": 2,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -11606,9 +11606,9 @@
           ],
           "member_count": 2,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -11661,11 +11661,11 @@
           ],
           "member_count": 4,
           "noise_count": 1,
-          "operation_classes": [
-            "GateOperation",
-            "NoiseOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "noise",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -11731,11 +11731,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -11811,11 +11811,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -11889,9 +11889,9 @@
           ],
           "member_count": 2,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -11943,10 +11943,10 @@
           ],
           "member_count": 3,
           "noise_count": 1,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "NoiseOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "noise"
           ],
           "operation_names": [
             "CNOT",
@@ -12801,11 +12801,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -12881,11 +12881,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -12960,10 +12960,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -13026,9 +13026,9 @@
           ],
           "member_count": 2,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -13079,9 +13079,9 @@
           ],
           "member_count": 2,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -13134,11 +13134,11 @@
           ],
           "member_count": 4,
           "noise_count": 4,
-          "operation_classes": [
-            "NoiseOperation",
-            "NoiseOperation",
-            "NoiseOperation",
-            "NoiseOperation"
+          "operation_kinds": [
+            "noise",
+            "noise",
+            "noise",
+            "noise"
           ],
           "operation_names": [
             "local_depolarizing",
@@ -13193,11 +13193,11 @@
           ],
           "member_count": 4,
           "noise_count": 1,
-          "operation_classes": [
-            "NoiseOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "noise",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "amplitude_damping",
@@ -13268,11 +13268,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -13342,10 +13342,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -13412,9 +13412,9 @@
           ],
           "member_count": 2,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -13465,9 +13465,9 @@
           ],
           "member_count": 2,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -13520,11 +13520,11 @@
           ],
           "member_count": 4,
           "noise_count": 4,
-          "operation_classes": [
-            "NoiseOperation",
-            "NoiseOperation",
-            "NoiseOperation",
-            "NoiseOperation"
+          "operation_kinds": [
+            "noise",
+            "noise",
+            "noise",
+            "noise"
           ],
           "operation_names": [
             "phase_damping",
@@ -13579,11 +13579,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -13659,11 +13659,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -13738,10 +13738,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -13804,9 +13804,9 @@
           ],
           "member_count": 2,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -13857,9 +13857,9 @@
           ],
           "member_count": 2,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -13912,11 +13912,11 @@
           ],
           "member_count": 4,
           "noise_count": 4,
-          "operation_classes": [
-            "NoiseOperation",
-            "NoiseOperation",
-            "NoiseOperation",
-            "NoiseOperation"
+          "operation_kinds": [
+            "noise",
+            "noise",
+            "noise",
+            "noise"
           ],
           "operation_names": [
             "local_depolarizing",
@@ -13971,11 +13971,11 @@
           ],
           "member_count": 4,
           "noise_count": 1,
-          "operation_classes": [
-            "NoiseOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "noise",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "amplitude_damping",
@@ -14046,11 +14046,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -14120,10 +14120,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -14190,9 +14190,9 @@
           ],
           "member_count": 2,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -14243,9 +14243,9 @@
           ],
           "member_count": 2,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -14298,11 +14298,11 @@
           ],
           "member_count": 4,
           "noise_count": 4,
-          "operation_classes": [
-            "NoiseOperation",
-            "NoiseOperation",
-            "NoiseOperation",
-            "NoiseOperation"
+          "operation_kinds": [
+            "noise",
+            "noise",
+            "noise",
+            "noise"
           ],
           "operation_names": [
             "phase_damping",
@@ -14873,11 +14873,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -14953,11 +14953,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -15031,9 +15031,9 @@
           ],
           "member_count": 2,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -15084,9 +15084,9 @@
           ],
           "member_count": 2,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -15140,12 +15140,12 @@
           ],
           "member_count": 5,
           "noise_count": 1,
-          "operation_classes": [
-            "NoiseOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "noise",
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "local_depolarizing",
@@ -15222,11 +15222,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -15300,9 +15300,9 @@
           ],
           "member_count": 2,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -15354,10 +15354,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -15422,11 +15422,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -15501,10 +15501,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -15567,9 +15567,9 @@
           ],
           "member_count": 2,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -15615,9 +15615,9 @@
           ],
           "member_count": 2,
           "noise_count": 1,
-          "operation_classes": [
-            "GateOperation",
-            "NoiseOperation"
+          "operation_kinds": [
+            "gate",
+            "noise"
           ],
           "operation_names": [
             "CNOT",
@@ -16241,11 +16241,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -16321,11 +16321,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -16399,9 +16399,9 @@
           ],
           "member_count": 2,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -16453,10 +16453,10 @@
           ],
           "member_count": 3,
           "noise_count": 1,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "NoiseOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "noise"
           ],
           "operation_names": [
             "CNOT",
@@ -16510,11 +16510,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -16590,11 +16590,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -16668,9 +16668,9 @@
           ],
           "member_count": 2,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -16723,11 +16723,11 @@
           ],
           "member_count": 4,
           "noise_count": 1,
-          "operation_classes": [
-            "GateOperation",
-            "NoiseOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "noise",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -16793,11 +16793,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -16872,10 +16872,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -16938,9 +16938,9 @@
           ],
           "member_count": 2,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -16981,9 +16981,9 @@
           ],
           "member_count": 2,
           "noise_count": 1,
-          "operation_classes": [
-            "GateOperation",
-            "NoiseOperation"
+          "operation_kinds": [
+            "gate",
+            "noise"
           ],
           "operation_names": [
             "CNOT",
@@ -17570,11 +17570,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -17650,11 +17650,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -17728,9 +17728,9 @@
           ],
           "member_count": 2,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -17781,9 +17781,9 @@
           ],
           "member_count": 2,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -17837,12 +17837,12 @@
           ],
           "member_count": 5,
           "noise_count": 4,
-          "operation_classes": [
-            "NoiseOperation",
-            "NoiseOperation",
-            "NoiseOperation",
-            "NoiseOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "noise",
+            "noise",
+            "noise",
+            "noise",
+            "gate"
           ],
           "operation_names": [
             "local_depolarizing",
@@ -17904,11 +17904,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -17978,10 +17978,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -18048,9 +18048,9 @@
           ],
           "member_count": 2,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -18103,11 +18103,11 @@
           ],
           "member_count": 4,
           "noise_count": 3,
-          "operation_classes": [
-            "GateOperation",
-            "NoiseOperation",
-            "NoiseOperation",
-            "NoiseOperation"
+          "operation_kinds": [
+            "gate",
+            "noise",
+            "noise",
+            "noise"
           ],
           "operation_names": [
             "CNOT",
@@ -18162,11 +18162,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -18242,11 +18242,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -18320,9 +18320,9 @@
           ],
           "member_count": 2,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -18373,9 +18373,9 @@
           ],
           "member_count": 2,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -18428,11 +18428,11 @@
           ],
           "member_count": 4,
           "noise_count": 4,
-          "operation_classes": [
-            "NoiseOperation",
-            "NoiseOperation",
-            "NoiseOperation",
-            "NoiseOperation"
+          "operation_kinds": [
+            "noise",
+            "noise",
+            "noise",
+            "noise"
           ],
           "operation_names": [
             "amplitude_damping",
@@ -19321,11 +19321,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -19401,11 +19401,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -19480,10 +19480,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -19546,9 +19546,9 @@
           ],
           "member_count": 2,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -19599,9 +19599,9 @@
           ],
           "member_count": 2,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -19655,12 +19655,12 @@
           ],
           "member_count": 5,
           "noise_count": 1,
-          "operation_classes": [
-            "NoiseOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "noise",
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "local_depolarizing",
@@ -19737,11 +19737,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -19816,10 +19816,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -19882,9 +19882,9 @@
           ],
           "member_count": 2,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -19936,10 +19936,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -20004,11 +20004,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -20084,11 +20084,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -20162,9 +20162,9 @@
           ],
           "member_count": 2,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -20215,9 +20215,9 @@
           ],
           "member_count": 2,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -20270,11 +20270,11 @@
           ],
           "member_count": 4,
           "noise_count": 1,
-          "operation_classes": [
-            "GateOperation",
-            "NoiseOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "noise",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -20340,11 +20340,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -20420,11 +20420,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -20498,9 +20498,9 @@
           ],
           "member_count": 2,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -20551,9 +20551,9 @@
           ],
           "member_count": 2,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -21496,11 +21496,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -21576,11 +21576,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -21655,10 +21655,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -21721,9 +21721,9 @@
           ],
           "member_count": 2,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -21775,10 +21775,10 @@
           ],
           "member_count": 3,
           "noise_count": 1,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "NoiseOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "noise"
           ],
           "operation_names": [
             "CNOT",
@@ -21832,11 +21832,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -21912,11 +21912,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -21991,10 +21991,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -22057,9 +22057,9 @@
           ],
           "member_count": 2,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -22112,11 +22112,11 @@
           ],
           "member_count": 4,
           "noise_count": 1,
-          "operation_classes": [
-            "GateOperation",
-            "NoiseOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "noise",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -22182,11 +22182,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -22262,11 +22262,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -22340,9 +22340,9 @@
           ],
           "member_count": 2,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -22393,9 +22393,9 @@
           ],
           "member_count": 2,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -22448,11 +22448,11 @@
           ],
           "member_count": 4,
           "noise_count": 1,
-          "operation_classes": [
-            "GateOperation",
-            "NoiseOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "noise",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -22518,11 +22518,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -22598,11 +22598,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -22676,9 +22676,9 @@
           ],
           "member_count": 2,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -22730,10 +22730,10 @@
           ],
           "member_count": 3,
           "noise_count": 1,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "NoiseOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "noise"
           ],
           "operation_names": [
             "CNOT",
@@ -23588,11 +23588,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -23668,11 +23668,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -23747,10 +23747,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -23813,9 +23813,9 @@
           ],
           "member_count": 2,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -23866,9 +23866,9 @@
           ],
           "member_count": 2,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -23921,11 +23921,11 @@
           ],
           "member_count": 4,
           "noise_count": 4,
-          "operation_classes": [
-            "NoiseOperation",
-            "NoiseOperation",
-            "NoiseOperation",
-            "NoiseOperation"
+          "operation_kinds": [
+            "noise",
+            "noise",
+            "noise",
+            "noise"
           ],
           "operation_names": [
             "local_depolarizing",
@@ -23980,11 +23980,11 @@
           ],
           "member_count": 4,
           "noise_count": 1,
-          "operation_classes": [
-            "NoiseOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "noise",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "amplitude_damping",
@@ -24055,11 +24055,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -24129,10 +24129,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -24199,9 +24199,9 @@
           ],
           "member_count": 2,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -24252,9 +24252,9 @@
           ],
           "member_count": 2,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -24307,11 +24307,11 @@
           ],
           "member_count": 4,
           "noise_count": 4,
-          "operation_classes": [
-            "NoiseOperation",
-            "NoiseOperation",
-            "NoiseOperation",
-            "NoiseOperation"
+          "operation_kinds": [
+            "noise",
+            "noise",
+            "noise",
+            "noise"
           ],
           "operation_names": [
             "phase_damping",
@@ -24366,11 +24366,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -24446,11 +24446,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -24525,10 +24525,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -24591,9 +24591,9 @@
           ],
           "member_count": 2,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -24644,9 +24644,9 @@
           ],
           "member_count": 2,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -24699,11 +24699,11 @@
           ],
           "member_count": 4,
           "noise_count": 4,
-          "operation_classes": [
-            "NoiseOperation",
-            "NoiseOperation",
-            "NoiseOperation",
-            "NoiseOperation"
+          "operation_kinds": [
+            "noise",
+            "noise",
+            "noise",
+            "noise"
           ],
           "operation_names": [
             "local_depolarizing",
@@ -24758,11 +24758,11 @@
           ],
           "member_count": 4,
           "noise_count": 1,
-          "operation_classes": [
-            "NoiseOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "noise",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "amplitude_damping",
@@ -24833,11 +24833,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -24907,10 +24907,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -24977,9 +24977,9 @@
           ],
           "member_count": 2,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -25030,9 +25030,9 @@
           ],
           "member_count": 2,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -25085,11 +25085,11 @@
           ],
           "member_count": 4,
           "noise_count": 4,
-          "operation_classes": [
-            "NoiseOperation",
-            "NoiseOperation",
-            "NoiseOperation",
-            "NoiseOperation"
+          "operation_kinds": [
+            "noise",
+            "noise",
+            "noise",
+            "noise"
           ],
           "operation_names": [
             "phase_damping",
@@ -25773,11 +25773,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -25853,11 +25853,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -25932,10 +25932,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -25988,10 +25988,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -26045,11 +26045,11 @@
           ],
           "member_count": 4,
           "noise_count": 1,
-          "operation_classes": [
-            "GateOperation",
-            "NoiseOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "noise",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -26115,11 +26115,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -26196,12 +26196,12 @@
           ],
           "member_count": 5,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -26267,10 +26267,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -26325,12 +26325,12 @@
           ],
           "member_count": 5,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -26407,11 +26407,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -26486,10 +26486,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -26542,10 +26542,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -26592,9 +26592,9 @@
           ],
           "member_count": 2,
           "noise_count": 1,
-          "operation_classes": [
-            "GateOperation",
-            "NoiseOperation"
+          "operation_kinds": [
+            "gate",
+            "noise"
           ],
           "operation_names": [
             "CNOT",
@@ -27341,11 +27341,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -27421,11 +27421,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -27500,10 +27500,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -27556,10 +27556,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -27613,11 +27613,11 @@
           ],
           "member_count": 4,
           "noise_count": 1,
-          "operation_classes": [
-            "GateOperation",
-            "NoiseOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "noise",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -27683,11 +27683,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -27764,12 +27764,12 @@
           ],
           "member_count": 5,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -27835,10 +27835,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -27894,13 +27894,13 @@
           ],
           "member_count": 6,
           "noise_count": 1,
-          "operation_classes": [
-            "GateOperation",
-            "NoiseOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "noise",
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -27978,11 +27978,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -28057,10 +28057,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -28113,10 +28113,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -28158,9 +28158,9 @@
           ],
           "member_count": 2,
           "noise_count": 1,
-          "operation_classes": [
-            "GateOperation",
-            "NoiseOperation"
+          "operation_kinds": [
+            "gate",
+            "noise"
           ],
           "operation_names": [
             "CNOT",
@@ -28832,11 +28832,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -28912,11 +28912,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -28991,10 +28991,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -29047,10 +29047,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -29103,10 +29103,10 @@
           ],
           "member_count": 3,
           "noise_count": 2,
-          "operation_classes": [
-            "GateOperation",
-            "NoiseOperation",
-            "NoiseOperation"
+          "operation_kinds": [
+            "gate",
+            "noise",
+            "noise"
           ],
           "operation_names": [
             "CNOT",
@@ -29160,11 +29160,11 @@
           ],
           "member_count": 4,
           "noise_count": 4,
-          "operation_classes": [
-            "NoiseOperation",
-            "NoiseOperation",
-            "NoiseOperation",
-            "NoiseOperation"
+          "operation_kinds": [
+            "noise",
+            "noise",
+            "noise",
+            "noise"
           ],
           "operation_names": [
             "phase_damping",
@@ -29219,11 +29219,11 @@
           ],
           "member_count": 4,
           "noise_count": 1,
-          "operation_classes": [
-            "NoiseOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "noise",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "local_depolarizing",
@@ -29294,11 +29294,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -29374,11 +29374,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -29438,10 +29438,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -29494,10 +29494,10 @@
           ],
           "member_count": 3,
           "noise_count": 2,
-          "operation_classes": [
-            "GateOperation",
-            "NoiseOperation",
-            "NoiseOperation"
+          "operation_kinds": [
+            "gate",
+            "noise",
+            "noise"
           ],
           "operation_names": [
             "CNOT",
@@ -29551,11 +29551,11 @@
           ],
           "member_count": 4,
           "noise_count": 4,
-          "operation_classes": [
-            "NoiseOperation",
-            "NoiseOperation",
-            "NoiseOperation",
-            "NoiseOperation"
+          "operation_kinds": [
+            "noise",
+            "noise",
+            "noise",
+            "noise"
           ],
           "operation_names": [
             "local_depolarizing",
@@ -29611,12 +29611,12 @@
           ],
           "member_count": 5,
           "noise_count": 1,
-          "operation_classes": [
-            "NoiseOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "noise",
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "amplitude_damping",
@@ -29693,11 +29693,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -29772,10 +29772,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -29828,10 +29828,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -29884,10 +29884,10 @@
           ],
           "member_count": 3,
           "noise_count": 2,
-          "operation_classes": [
-            "GateOperation",
-            "NoiseOperation",
-            "NoiseOperation"
+          "operation_kinds": [
+            "gate",
+            "noise",
+            "noise"
           ],
           "operation_names": [
             "CNOT",
@@ -29941,11 +29941,11 @@
           ],
           "member_count": 4,
           "noise_count": 4,
-          "operation_classes": [
-            "NoiseOperation",
-            "NoiseOperation",
-            "NoiseOperation",
-            "NoiseOperation"
+          "operation_kinds": [
+            "noise",
+            "noise",
+            "noise",
+            "noise"
           ],
           "operation_names": [
             "amplitude_damping",
@@ -29982,8 +29982,8 @@
           ],
           "member_count": 1,
           "noise_count": 1,
-          "operation_classes": [
-            "NoiseOperation"
+          "operation_kinds": [
+            "noise"
           ],
           "operation_names": [
             "phase_damping"
@@ -30914,11 +30914,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -30994,11 +30994,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -31073,10 +31073,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -31140,10 +31140,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -31196,10 +31196,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -31252,10 +31252,10 @@
           ],
           "member_count": 3,
           "noise_count": 1,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "NoiseOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "noise"
           ],
           "operation_names": [
             "CNOT",
@@ -31309,11 +31309,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -31389,11 +31389,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -31470,12 +31470,12 @@
           ],
           "member_count": 5,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -31541,10 +31541,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -31601,14 +31601,14 @@
           ],
           "member_count": 7,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -31687,11 +31687,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -31766,10 +31766,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -31833,10 +31833,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -31889,10 +31889,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -31945,10 +31945,10 @@
           ],
           "member_count": 3,
           "noise_count": 1,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "NoiseOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "noise"
           ],
           "operation_names": [
             "CNOT",
@@ -32002,11 +32002,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -32082,11 +32082,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -32163,12 +32163,12 @@
           ],
           "member_count": 5,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -32234,10 +32234,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -32290,10 +32290,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -33421,11 +33421,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -33501,11 +33501,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -33580,10 +33580,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -33647,10 +33647,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -33703,10 +33703,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -33760,11 +33760,11 @@
           ],
           "member_count": 4,
           "noise_count": 1,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "NoiseOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "noise",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -33825,11 +33825,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -33905,11 +33905,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -33985,11 +33985,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -34049,10 +34049,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -34110,15 +34110,15 @@
           ],
           "member_count": 8,
           "noise_count": 1,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "NoiseOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "noise",
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -34198,11 +34198,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -34277,10 +34277,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -34344,10 +34344,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -34400,10 +34400,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -34457,11 +34457,11 @@
           ],
           "member_count": 4,
           "noise_count": 1,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "NoiseOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "noise",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -34522,11 +34522,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -34602,11 +34602,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -34682,11 +34682,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -34746,10 +34746,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -34803,11 +34803,11 @@
           ],
           "member_count": 4,
           "noise_count": 1,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "NoiseOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "noise"
           ],
           "operation_names": [
             "CNOT",
@@ -35780,11 +35780,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -35860,11 +35860,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -35939,10 +35939,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -36006,10 +36006,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -36062,10 +36062,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -36118,10 +36118,10 @@
           ],
           "member_count": 3,
           "noise_count": 1,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "NoiseOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "noise"
           ],
           "operation_names": [
             "CNOT",
@@ -36175,11 +36175,11 @@
           ],
           "member_count": 4,
           "noise_count": 4,
-          "operation_classes": [
-            "NoiseOperation",
-            "NoiseOperation",
-            "NoiseOperation",
-            "NoiseOperation"
+          "operation_kinds": [
+            "noise",
+            "noise",
+            "noise",
+            "noise"
           ],
           "operation_names": [
             "amplitude_damping",
@@ -36234,11 +36234,11 @@
           ],
           "member_count": 4,
           "noise_count": 4,
-          "operation_classes": [
-            "NoiseOperation",
-            "NoiseOperation",
-            "NoiseOperation",
-            "NoiseOperation"
+          "operation_kinds": [
+            "noise",
+            "noise",
+            "noise",
+            "noise"
           ],
           "operation_names": [
             "phase_damping",
@@ -36293,11 +36293,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -36373,11 +36373,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -36454,12 +36454,12 @@
           ],
           "member_count": 5,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -36525,10 +36525,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -36581,10 +36581,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -36638,11 +36638,11 @@
           ],
           "member_count": 4,
           "noise_count": 4,
-          "operation_classes": [
-            "NoiseOperation",
-            "NoiseOperation",
-            "NoiseOperation",
-            "NoiseOperation"
+          "operation_kinds": [
+            "noise",
+            "noise",
+            "noise",
+            "noise"
           ],
           "operation_names": [
             "local_depolarizing",
@@ -36697,11 +36697,11 @@
           ],
           "member_count": 4,
           "noise_count": 4,
-          "operation_classes": [
-            "NoiseOperation",
-            "NoiseOperation",
-            "NoiseOperation",
-            "NoiseOperation"
+          "operation_kinds": [
+            "noise",
+            "noise",
+            "noise",
+            "noise"
           ],
           "operation_names": [
             "amplitude_damping",
@@ -36757,12 +36757,12 @@
           ],
           "member_count": 5,
           "noise_count": 1,
-          "operation_classes": [
-            "NoiseOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "noise",
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "phase_damping",
@@ -36839,11 +36839,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -36918,10 +36918,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -36985,10 +36985,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -37041,10 +37041,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -37097,10 +37097,10 @@
           ],
           "member_count": 3,
           "noise_count": 1,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "NoiseOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "noise"
           ],
           "operation_names": [
             "CNOT",
@@ -37154,11 +37154,11 @@
           ],
           "member_count": 4,
           "noise_count": 4,
-          "operation_classes": [
-            "NoiseOperation",
-            "NoiseOperation",
-            "NoiseOperation",
-            "NoiseOperation"
+          "operation_kinds": [
+            "noise",
+            "noise",
+            "noise",
+            "noise"
           ],
           "operation_names": [
             "amplitude_damping",
@@ -37213,11 +37213,11 @@
           ],
           "member_count": 4,
           "noise_count": 4,
-          "operation_classes": [
-            "NoiseOperation",
-            "NoiseOperation",
-            "NoiseOperation",
-            "NoiseOperation"
+          "operation_kinds": [
+            "noise",
+            "noise",
+            "noise",
+            "noise"
           ],
           "operation_names": [
             "phase_damping",
@@ -37272,11 +37272,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -37352,11 +37352,11 @@
           ],
           "member_count": 4,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -37433,12 +37433,12 @@
           ],
           "member_count": 5,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -37504,10 +37504,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -37560,10 +37560,10 @@
           ],
           "member_count": 3,
           "noise_count": 0,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "CNOT",
@@ -37617,11 +37617,11 @@
           ],
           "member_count": 4,
           "noise_count": 4,
-          "operation_classes": [
-            "NoiseOperation",
-            "NoiseOperation",
-            "NoiseOperation",
-            "NoiseOperation"
+          "operation_kinds": [
+            "noise",
+            "noise",
+            "noise",
+            "noise"
           ],
           "operation_names": [
             "local_depolarizing",
@@ -37676,11 +37676,11 @@
           ],
           "member_count": 4,
           "noise_count": 4,
-          "operation_classes": [
-            "NoiseOperation",
-            "NoiseOperation",
-            "NoiseOperation",
-            "NoiseOperation"
+          "operation_kinds": [
+            "noise",
+            "noise",
+            "noise",
+            "noise"
           ],
           "operation_names": [
             "amplitude_damping",
@@ -37717,8 +37717,8 @@
           ],
           "member_count": 1,
           "noise_count": 1,
-          "operation_classes": [
-            "NoiseOperation"
+          "operation_kinds": [
+            "noise"
           ],
           "operation_names": [
             "phase_damping"

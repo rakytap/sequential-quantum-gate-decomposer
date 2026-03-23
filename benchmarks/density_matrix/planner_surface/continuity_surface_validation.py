@@ -32,6 +32,8 @@ from benchmarks.density_matrix.planner_surface.common import (
 from squander.partitioning.noisy_planner import (
     PHASE3_ENTRY_ROUTE_PHASE2_CONTINUITY,
     PHASE3_WORKLOAD_FAMILY_PHASE2_CONTINUITY,
+    PLANNER_OP_KIND_GATE,
+    PLANNER_OP_KIND_NOISE,
     build_phase3_continuity_planner_surface,
 )
 
@@ -78,10 +80,14 @@ def build_case_result(qbit_num: int) -> dict:
             "gate_count": payload["gate_count"],
             "noise_count": payload["noise_count"],
             "gate_sequence": [
-                op["name"] for op in payload["operations"] if op["operation_class"] == "GateOperation"
+                op["name"]
+                for op in payload["operations"]
+                if op["kind"] == PLANNER_OP_KIND_GATE
             ],
             "noise_sequence": [
-                op["name"] for op in payload["operations"] if op["operation_class"] == "NoiseOperation"
+                op["name"]
+                for op in payload["operations"]
+                if op["kind"] == PLANNER_OP_KIND_NOISE
             ],
             "continuity_anchor_pass": (
                 payload["source_type"] == "generated_hea"

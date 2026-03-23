@@ -336,19 +336,19 @@
           ],
           "member_count": 12,
           "noise_count": 3,
-          "operation_classes": [
-            "GateOperation",
-            "NoiseOperation",
-            "GateOperation",
-            "GateOperation",
-            "NoiseOperation",
-            "GateOperation",
-            "GateOperation",
-            "NoiseOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "noise",
+            "gate",
+            "gate",
+            "noise",
+            "gate",
+            "gate",
+            "noise",
+            "gate",
+            "gate",
+            "gate",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -629,12 +629,12 @@
           ],
           "member_count": 5,
           "noise_count": 1,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "NoiseOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "noise",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -955,15 +955,15 @@
           ],
           "member_count": 8,
           "noise_count": 2,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "NoiseOperation",
-            "GateOperation",
-            "GateOperation",
-            "NoiseOperation",
-            "GateOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "noise",
+            "gate",
+            "gate",
+            "noise",
+            "gate"
           ],
           "operation_names": [
             "U3",
@@ -1313,17 +1313,17 @@
           ],
           "member_count": 10,
           "noise_count": 3,
-          "operation_classes": [
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "NoiseOperation",
-            "GateOperation",
-            "GateOperation",
-            "GateOperation",
-            "NoiseOperation",
-            "GateOperation",
-            "NoiseOperation"
+          "operation_kinds": [
+            "gate",
+            "gate",
+            "gate",
+            "noise",
+            "gate",
+            "gate",
+            "gate",
+            "noise",
+            "gate",
+            "noise"
           ],
           "operation_names": [
             "U3",

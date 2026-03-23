@@ -39,6 +39,10 @@ from benchmarks.density_matrix.workflow_evidence.exact_density_vqe_validation im
     build_open_chain_topology,
 )
 from squander import Variational_Quantum_Eigensolver
+from squander.partitioning.noisy_planner import (
+    PLANNER_OP_KIND_GATE,
+    PLANNER_OP_KIND_NOISE,
+)
 
 SUITE_NAME = "bridge_micro_validation"
 ARTIFACT_FILENAME = "bridge_micro_validation_bundle.json"
@@ -214,8 +218,7 @@ def build_expected_bridge_operations(vqe):
             expected.append(
                 {
                     "index": len(expected),
-                    "operation_class": "GateOperation",
-                    "kind": "gate",
+                    "kind": PLANNER_OP_KIND_GATE,
                     "name": "U3",
                     "is_unitary": True,
                     "source_gate_index": gate_index,
@@ -231,8 +234,7 @@ def build_expected_bridge_operations(vqe):
             expected.append(
                 {
                     "index": len(expected),
-                    "operation_class": "GateOperation",
-                    "kind": "gate",
+                    "kind": PLANNER_OP_KIND_GATE,
                     "name": "CNOT",
                     "is_unitary": True,
                     "source_gate_index": gate_index,
@@ -252,8 +254,7 @@ def build_expected_bridge_operations(vqe):
             expected.append(
                 {
                     "index": len(expected),
-                    "operation_class": "NoiseOperation",
-                    "kind": "noise",
+                    "kind": PLANNER_OP_KIND_NOISE,
                     "name": noise_spec["channel"],
                     "is_unitary": False,
                     "source_gate_index": gate_index,
@@ -275,7 +276,6 @@ def bridge_operations_match(actual_operations, expected_operations):
     for actual, expected in zip(actual_operations, expected_operations):
         for key in (
             "index",
-            "operation_class",
             "kind",
             "name",
             "is_unitary",

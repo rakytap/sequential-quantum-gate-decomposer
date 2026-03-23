@@ -31,9 +31,11 @@ from benchmarks.density_matrix.planner_surface.workloads import (
     build_microcase_surface,
 )
 from squander.partitioning.noisy_planner import (
-    PHASE3_DESCRIPTOR_SCHEMA_VERSION,
+    DESCRIPTOR_SCHEMA_VERSION,
     PHASE3_ENTRY_ROUTE_PHASE2_CONTINUITY,
     PHASE3_WORKLOAD_FAMILY_PHASE2_CONTINUITY,
+    PLANNER_OP_KIND_GATE,
+    PLANNER_OP_KIND_NOISE,
     preflight_descriptor_request,
     validate_partition_descriptor_set_against_surface,
 )
@@ -111,17 +113,14 @@ def _hide_noise_member_runner():
     partitions = list(descriptor_set.partitions)
     for partition_index, partition in enumerate(partitions):
         for member_index, member in enumerate(partition.members):
-            if member.operation_class == "NoiseOperation":
+            if member.kind == PLANNER_OP_KIND_NOISE:
                 members = list(partition.members)
                 members[member_index] = replace(
                     member,
-                    operation_class="GateOperation",
-                    kind="gate",
+                    kind=PLANNER_OP_KIND_GATE,
                     is_unitary=True,
                 )
-                partitions[partition_index] = replace(
-                    partition, members=tuple(members)
-                )
+                partitions[partition_index] = replace(partition, members=tuple(members))
                 tampered = replace(descriptor_set, partitions=tuple(partitions))
                 return lambda: validate_partition_descriptor_set_against_surface(
                     surface, tampered
@@ -232,9 +231,11 @@ def build_artifact_bundle(cases: list[dict]) -> dict:
     bundle = {
         "suite_name": SUITE_NAME,
         "status": "pass"
-        if unsupported_cases == len(cases) and unexpected_passes == 0 and fallback_count == 0
+        if unsupported_cases == len(cases)
+        and unexpected_passes == 0
+        and fallback_count == 0
         else "fail",
-        "schema_version": PHASE3_DESCRIPTOR_SCHEMA_VERSION,
+        "schema_version": DESCRIPTOR_SCHEMA_VERSION,
         "software": build_software_metadata(),
         "summary": {
             "total_cases": len(cases),

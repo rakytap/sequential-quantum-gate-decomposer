@@ -158,7 +158,7 @@ qgd_Variational_Quantum_Eigensolver_Base(
 
 - **`describe_density_bridge() -> dict`**
   - Reviewable metadata: `source_type`, qubit and parameter counts, ordered
-    `operations` (gates and noise with `operation_class`, `param_start`, etc.).
+    `operations` (gates and noise with `kind`, `param_start`, etc.).
   - This dict is the handoff format for **`build_canonical_planner_surface_from_bridge_metadata`** in Phase 3.
 
 - **Energy evaluation**

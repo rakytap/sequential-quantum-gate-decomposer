@@ -27,7 +27,7 @@ from benchmarks.density_matrix.planner_surface.common import (
 )
 from squander.partitioning.noisy_planner import (
     DEFAULT_PARTITION_DESCRIPTOR_MAX_QUBITS,
-    PHASE3_DESCRIPTOR_SCHEMA_VERSION,
+    DESCRIPTOR_SCHEMA_VERSION,
     build_phase3_continuity_partition_descriptor_set,
 )
 
@@ -84,7 +84,7 @@ def build_case_result(qbit_num: int) -> dict:
             "max_partition_span": payload["max_partition_span"],
             "partition_member_counts": payload["partition_member_counts"],
             "continuity_descriptor_pass": (
-                payload["schema_version"] == PHASE3_DESCRIPTOR_SCHEMA_VERSION
+                payload["schema_version"] == DESCRIPTOR_SCHEMA_VERSION
                 and payload["partition_count"] > 0
                 and payload["descriptor_member_count"]
                 == payload["gate_count"] + payload["noise_count"]
@@ -106,7 +106,7 @@ def build_artifact_bundle(cases: list[dict]) -> dict:
         if passed_cases == len(cases) and descriptor_passes == len(cases)
         else "fail",
         "requested_mode": "partitioned_density",
-        "schema_version": PHASE3_DESCRIPTOR_SCHEMA_VERSION,
+        "schema_version": DESCRIPTOR_SCHEMA_VERSION,
         "software": build_software_metadata(),
         "summary": {
             "total_cases": len(cases),

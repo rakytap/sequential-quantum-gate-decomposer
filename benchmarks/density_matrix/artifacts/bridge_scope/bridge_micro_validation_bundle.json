@@ -1,439 +1,489 @@
 {
-  "suite_name": "bridge_micro_validation",
-  "status": "pass",
   "backend": "density_matrix",
-  "requirements": {
-    "source_type": "generated_hea",
-    "required_gate_families": [
-      "U3",
-      "CNOT"
-    ],
-    "required_noise_models": [
-      "local_depolarizing",
-      "amplitude_damping",
-      "phase_damping"
-    ],
-    "microcase_qubits": [
-      1,
-      2,
-      3
-    ],
-    "required_pass_rate": 1.0,
-    "canonical_bridge_fields": [
-      "bridge_source_type",
-      "bridge_parameter_count",
-      "bridge_operation_count",
-      "bridge_gate_count",
-      "bridge_noise_count",
-      "bridge_operations"
-    ]
-  },
-  "software": {
-    "python": "3.13.9",
-    "numpy": "2.3.5",
-    "qiskit": "2.2.3",
-    "qiskit_aer": "0.17.2"
-  },
-  "summary": {
-    "total_cases": 5,
-    "passed_cases": 5,
-    "failed_cases": 0,
-    "pass_rate": 1.0,
-    "cases_per_qbit": {
-      "1": 3,
-      "2": 1,
-      "3": 1
-    }
-  },
   "cases": [
     {
-      "backend": "density_matrix",
-      "qbit_num": 1,
-      "topology": [],
       "ansatz": "HEA",
-      "layers": 1,
-      "inner_blocks": 1,
-      "density_noise": [
-        {
-          "channel": "local_depolarizing",
-          "target": 0,
-          "after_gate_index": 0,
-          "error_rate": 0.1
-        }
+      "backend": "density_matrix",
+      "bridge_gate_count": 1,
+      "bridge_noise_after_gate_indices": [
+        0
       ],
-      "hamiltonian": {
-        "Jx": 1.0,
-        "Jy": 1.0,
-        "Jz": 1.0,
-        "h": 0.5
-      },
-      "case_name": "bridge_1q_local_depolarizing_after_u3",
-      "case_kind": "bridge_micro_validation",
-      "purpose": "Verify the generated-HEA bridge lowers a required U3-only microcase with local depolarizing noise.",
-      "required_gate_families": [
-        "U3"
+      "bridge_noise_count": 1,
+      "bridge_noise_fixed_values": [
+        0.1
       ],
-      "required_noise_models": [
+      "bridge_noise_sequence": [
         "local_depolarizing"
       ],
-      "status": "pass",
-      "parameter_vector": [
-        0.05,
-        0.1,
-        0.15000000000000002
+      "bridge_noise_targets": [
+        0
+      ],
+      "bridge_operation_count": 2,
+      "bridge_operations": [
+        {
+          "control_qbit": null,
+          "fixed_value": null,
+          "index": 0,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "U3",
+          "param_count": 3,
+          "param_start": 0,
+          "source_gate_index": 0,
+          "target_qbit": 0
+        },
+        {
+          "control_qbit": null,
+          "fixed_value": 0.1,
+          "index": 1,
+          "is_unitary": false,
+          "kind": "noise",
+          "name": "local_depolarizing",
+          "param_count": 0,
+          "param_start": 3,
+          "source_gate_index": 0,
+          "target_qbit": 0
+        }
+      ],
+      "bridge_parameter_count": 3,
+      "bridge_source_type": "generated_hea",
+      "case_kind": "bridge_micro_validation",
+      "case_name": "bridge_1q_local_depolarizing_after_u3",
+      "density_noise": [
+        {
+          "after_gate_index": 0,
+          "channel": "local_depolarizing",
+          "error_rate": 0.1,
+          "target": 0
+        }
       ],
       "execution_energy": 0.44775187437511166,
       "execution_ready": true,
-      "source_pass": true,
-      "gate_pass": true,
-      "noise_pass": true,
-      "operation_match_pass": true,
-      "expected_operation_count": 2,
       "expected_bridge_operations": [
         {
+          "control_qbit": null,
+          "fixed_value": null,
           "index": 0,
-          "operation_class": "GateOperation",
+          "is_unitary": true,
           "kind": "gate",
           "name": "U3",
-          "is_unitary": true,
-          "source_gate_index": 0,
-          "target_qbit": 0,
-          "control_qbit": null,
           "param_count": 3,
           "param_start": 0,
-          "fixed_value": null
+          "source_gate_index": 0,
+          "target_qbit": 0
         },
         {
+          "control_qbit": null,
+          "fixed_value": 0.1,
           "index": 1,
-          "operation_class": "NoiseOperation",
+          "is_unitary": false,
           "kind": "noise",
           "name": "local_depolarizing",
-          "is_unitary": false,
-          "source_gate_index": 0,
-          "target_qbit": 0,
-          "control_qbit": null,
           "param_count": 0,
           "param_start": 3,
-          "fixed_value": 0.1
-        }
-      ],
-      "bridge_source_type": "generated_hea",
-      "bridge_parameter_count": 3,
-      "bridge_operation_count": 2,
-      "bridge_gate_count": 1,
-      "bridge_noise_count": 1,
-      "bridge_operations": [
-        {
-          "index": 0,
-          "operation_class": "GateOperation",
-          "kind": "gate",
-          "name": "U3",
-          "is_unitary": true,
           "source_gate_index": 0,
-          "target_qbit": 0,
-          "control_qbit": null,
-          "param_count": 3,
-          "param_start": 0,
-          "fixed_value": null
-        },
-        {
-          "index": 1,
-          "operation_class": "NoiseOperation",
-          "kind": "noise",
-          "name": "local_depolarizing",
-          "is_unitary": false,
-          "source_gate_index": 0,
-          "target_qbit": 0,
-          "control_qbit": null,
-          "param_count": 0,
-          "param_start": 3,
-          "fixed_value": 0.1
+          "target_qbit": 0
         }
       ],
-      "bridge_noise_sequence": [
-        "local_depolarizing"
-      ],
-      "bridge_noise_targets": [
-        0
-      ],
-      "bridge_noise_after_gate_indices": [
-        0
-      ],
-      "bridge_noise_fixed_values": [
-        0.1
-      ]
-    },
-    {
-      "backend": "density_matrix",
-      "qbit_num": 1,
-      "topology": [],
-      "ansatz": "HEA",
-      "layers": 1,
-      "inner_blocks": 1,
-      "density_noise": [
-        {
-          "channel": "amplitude_damping",
-          "target": 0,
-          "after_gate_index": 0,
-          "gamma": 0.05
-        }
-      ],
+      "expected_operation_count": 2,
+      "gate_pass": true,
       "hamiltonian": {
         "Jx": 1.0,
         "Jy": 1.0,
         "Jz": 1.0,
         "h": 0.5
       },
-      "case_name": "bridge_1q_amplitude_damping_after_u3",
-      "case_kind": "bridge_micro_validation",
-      "purpose": "Verify the generated-HEA bridge lowers a required U3-only microcase with amplitude damping noise.",
-      "required_gate_families": [
-        "U3"
-      ],
-      "required_noise_models": [
-        "amplitude_damping"
-      ],
-      "status": "pass",
+      "inner_blocks": 1,
+      "layers": 1,
+      "noise_pass": true,
+      "operation_match_pass": true,
       "parameter_vector": [
         0.05,
         0.1,
         0.15000000000000002
+      ],
+      "purpose": "Verify the generated-HEA bridge lowers a required U3-only microcase with local depolarizing noise.",
+      "qbit_num": 1,
+      "required_gate_families": [
+        "U3"
+      ],
+      "required_noise_models": [
+        "local_depolarizing"
+      ],
+      "source_pass": true,
+      "status": "pass",
+      "topology": []
+    },
+    {
+      "ansatz": "HEA",
+      "backend": "density_matrix",
+      "bridge_gate_count": 1,
+      "bridge_noise_after_gate_indices": [
+        0
+      ],
+      "bridge_noise_count": 1,
+      "bridge_noise_fixed_values": [
+        0.05
+      ],
+      "bridge_noise_sequence": [
+        "amplitude_damping"
+      ],
+      "bridge_noise_targets": [
+        0
+      ],
+      "bridge_operation_count": 2,
+      "bridge_operations": [
+        {
+          "control_qbit": null,
+          "fixed_value": null,
+          "index": 0,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "U3",
+          "param_count": 3,
+          "param_start": 0,
+          "source_gate_index": 0,
+          "target_qbit": 0
+        },
+        {
+          "control_qbit": null,
+          "fixed_value": 0.05,
+          "index": 1,
+          "is_unitary": false,
+          "kind": "noise",
+          "name": "amplitude_damping",
+          "param_count": 0,
+          "param_start": 3,
+          "source_gate_index": 0,
+          "target_qbit": 0
+        }
+      ],
+      "bridge_parameter_count": 3,
+      "bridge_source_type": "generated_hea",
+      "case_kind": "bridge_micro_validation",
+      "case_name": "bridge_1q_amplitude_damping_after_u3",
+      "density_noise": [
+        {
+          "after_gate_index": 0,
+          "channel": "amplitude_damping",
+          "gamma": 0.05,
+          "target": 0
+        }
       ],
       "execution_energy": 0.4976269785070623,
       "execution_ready": true,
-      "source_pass": true,
-      "gate_pass": true,
-      "noise_pass": true,
-      "operation_match_pass": true,
-      "expected_operation_count": 2,
       "expected_bridge_operations": [
         {
+          "control_qbit": null,
+          "fixed_value": null,
           "index": 0,
-          "operation_class": "GateOperation",
+          "is_unitary": true,
           "kind": "gate",
           "name": "U3",
-          "is_unitary": true,
-          "source_gate_index": 0,
-          "target_qbit": 0,
-          "control_qbit": null,
           "param_count": 3,
           "param_start": 0,
-          "fixed_value": null
+          "source_gate_index": 0,
+          "target_qbit": 0
         },
         {
+          "control_qbit": null,
+          "fixed_value": 0.05,
           "index": 1,
-          "operation_class": "NoiseOperation",
+          "is_unitary": false,
           "kind": "noise",
           "name": "amplitude_damping",
-          "is_unitary": false,
-          "source_gate_index": 0,
-          "target_qbit": 0,
-          "control_qbit": null,
           "param_count": 0,
           "param_start": 3,
-          "fixed_value": 0.05
-        }
-      ],
-      "bridge_source_type": "generated_hea",
-      "bridge_parameter_count": 3,
-      "bridge_operation_count": 2,
-      "bridge_gate_count": 1,
-      "bridge_noise_count": 1,
-      "bridge_operations": [
-        {
-          "index": 0,
-          "operation_class": "GateOperation",
-          "kind": "gate",
-          "name": "U3",
-          "is_unitary": true,
           "source_gate_index": 0,
-          "target_qbit": 0,
-          "control_qbit": null,
-          "param_count": 3,
-          "param_start": 0,
-          "fixed_value": null
-        },
-        {
-          "index": 1,
-          "operation_class": "NoiseOperation",
-          "kind": "noise",
-          "name": "amplitude_damping",
-          "is_unitary": false,
-          "source_gate_index": 0,
-          "target_qbit": 0,
-          "control_qbit": null,
-          "param_count": 0,
-          "param_start": 3,
-          "fixed_value": 0.05
+          "target_qbit": 0
         }
       ],
-      "bridge_noise_sequence": [
-        "amplitude_damping"
-      ],
-      "bridge_noise_targets": [
-        0
-      ],
-      "bridge_noise_after_gate_indices": [
-        0
-      ],
-      "bridge_noise_fixed_values": [
-        0.05
-      ]
-    },
-    {
-      "backend": "density_matrix",
-      "qbit_num": 1,
-      "topology": [],
-      "ansatz": "HEA",
-      "layers": 1,
-      "inner_blocks": 1,
-      "density_noise": [
-        {
-          "channel": "phase_damping",
-          "target": 0,
-          "after_gate_index": 0,
-          "lambda": 0.07
-        }
-      ],
+      "expected_operation_count": 2,
+      "gate_pass": true,
       "hamiltonian": {
         "Jx": 1.0,
         "Jy": 1.0,
         "Jz": 1.0,
         "h": 0.5
       },
-      "case_name": "bridge_1q_phase_damping_after_u3",
+      "inner_blocks": 1,
+      "layers": 1,
+      "noise_pass": true,
+      "operation_match_pass": true,
+      "parameter_vector": [
+        0.05,
+        0.1,
+        0.15000000000000002
+      ],
+      "purpose": "Verify the generated-HEA bridge lowers a required U3-only microcase with amplitude damping noise.",
+      "qbit_num": 1,
+      "required_gate_families": [
+        "U3"
+      ],
+      "required_noise_models": [
+        "amplitude_damping"
+      ],
+      "source_pass": true,
+      "status": "pass",
+      "topology": []
+    },
+    {
+      "ansatz": "HEA",
+      "backend": "density_matrix",
+      "bridge_gate_count": 1,
+      "bridge_noise_after_gate_indices": [
+        0
+      ],
+      "bridge_noise_count": 1,
+      "bridge_noise_fixed_values": [
+        0.07
+      ],
+      "bridge_noise_sequence": [
+        "phase_damping"
+      ],
+      "bridge_noise_targets": [
+        0
+      ],
+      "bridge_operation_count": 2,
+      "bridge_operations": [
+        {
+          "control_qbit": null,
+          "fixed_value": null,
+          "index": 0,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "U3",
+          "param_count": 3,
+          "param_start": 0,
+          "source_gate_index": 0,
+          "target_qbit": 0
+        },
+        {
+          "control_qbit": null,
+          "fixed_value": 0.07,
+          "index": 1,
+          "is_unitary": false,
+          "kind": "noise",
+          "name": "phase_damping",
+          "param_count": 0,
+          "param_start": 3,
+          "source_gate_index": 0,
+          "target_qbit": 0
+        }
+      ],
+      "bridge_parameter_count": 3,
+      "bridge_source_type": "generated_hea",
       "case_kind": "bridge_micro_validation",
+      "case_name": "bridge_1q_phase_damping_after_u3",
+      "density_noise": [
+        {
+          "after_gate_index": 0,
+          "channel": "phase_damping",
+          "lambda": 0.07,
+          "target": 0
+        }
+      ],
+      "execution_energy": 0.4975020826390129,
+      "execution_ready": true,
+      "expected_bridge_operations": [
+        {
+          "control_qbit": null,
+          "fixed_value": null,
+          "index": 0,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "U3",
+          "param_count": 3,
+          "param_start": 0,
+          "source_gate_index": 0,
+          "target_qbit": 0
+        },
+        {
+          "control_qbit": null,
+          "fixed_value": 0.07,
+          "index": 1,
+          "is_unitary": false,
+          "kind": "noise",
+          "name": "phase_damping",
+          "param_count": 0,
+          "param_start": 3,
+          "source_gate_index": 0,
+          "target_qbit": 0
+        }
+      ],
+      "expected_operation_count": 2,
+      "gate_pass": true,
+      "hamiltonian": {
+        "Jx": 1.0,
+        "Jy": 1.0,
+        "Jz": 1.0,
+        "h": 0.5
+      },
+      "inner_blocks": 1,
+      "layers": 1,
+      "noise_pass": true,
+      "operation_match_pass": true,
+      "parameter_vector": [
+        0.05,
+        0.1,
+        0.15000000000000002
+      ],
       "purpose": "Verify the generated-HEA bridge lowers a required U3-only microcase with phase damping noise.",
+      "qbit_num": 1,
       "required_gate_families": [
         "U3"
       ],
       "required_noise_models": [
         "phase_damping"
       ],
-      "status": "pass",
-      "parameter_vector": [
-        0.05,
-        0.1,
-        0.15000000000000002
-      ],
-      "execution_energy": 0.4975020826390129,
-      "execution_ready": true,
       "source_pass": true,
-      "gate_pass": true,
-      "noise_pass": true,
-      "operation_match_pass": true,
-      "expected_operation_count": 2,
-      "expected_bridge_operations": [
-        {
-          "index": 0,
-          "operation_class": "GateOperation",
-          "kind": "gate",
-          "name": "U3",
-          "is_unitary": true,
-          "source_gate_index": 0,
-          "target_qbit": 0,
-          "control_qbit": null,
-          "param_count": 3,
-          "param_start": 0,
-          "fixed_value": null
-        },
-        {
-          "index": 1,
-          "operation_class": "NoiseOperation",
-          "kind": "noise",
-          "name": "phase_damping",
-          "is_unitary": false,
-          "source_gate_index": 0,
-          "target_qbit": 0,
-          "control_qbit": null,
-          "param_count": 0,
-          "param_start": 3,
-          "fixed_value": 0.07
-        }
+      "status": "pass",
+      "topology": []
+    },
+    {
+      "ansatz": "HEA",
+      "backend": "density_matrix",
+      "bridge_gate_count": 3,
+      "bridge_noise_after_gate_indices": [
+        2
       ],
-      "bridge_source_type": "generated_hea",
-      "bridge_parameter_count": 3,
-      "bridge_operation_count": 2,
-      "bridge_gate_count": 1,
       "bridge_noise_count": 1,
-      "bridge_operations": [
-        {
-          "index": 0,
-          "operation_class": "GateOperation",
-          "kind": "gate",
-          "name": "U3",
-          "is_unitary": true,
-          "source_gate_index": 0,
-          "target_qbit": 0,
-          "control_qbit": null,
-          "param_count": 3,
-          "param_start": 0,
-          "fixed_value": null
-        },
-        {
-          "index": 1,
-          "operation_class": "NoiseOperation",
-          "kind": "noise",
-          "name": "phase_damping",
-          "is_unitary": false,
-          "source_gate_index": 0,
-          "target_qbit": 0,
-          "control_qbit": null,
-          "param_count": 0,
-          "param_start": 3,
-          "fixed_value": 0.07
-        }
+      "bridge_noise_fixed_values": [
+        0.1
       ],
       "bridge_noise_sequence": [
-        "phase_damping"
+        "local_depolarizing"
       ],
       "bridge_noise_targets": [
         0
       ],
-      "bridge_noise_after_gate_indices": [
-        0
-      ],
-      "bridge_noise_fixed_values": [
-        0.07
-      ]
-    },
-    {
-      "backend": "density_matrix",
-      "qbit_num": 2,
-      "topology": [
-        [
-          0,
-          1
-        ]
-      ],
-      "ansatz": "HEA",
-      "layers": 1,
-      "inner_blocks": 1,
-      "density_noise": [
+      "bridge_operation_count": 4,
+      "bridge_operations": [
         {
-          "channel": "local_depolarizing",
-          "target": 0,
-          "after_gate_index": 2,
-          "error_rate": 0.1
+          "control_qbit": null,
+          "fixed_value": null,
+          "index": 0,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "U3",
+          "param_count": 3,
+          "param_start": 0,
+          "source_gate_index": 0,
+          "target_qbit": 1
+        },
+        {
+          "control_qbit": null,
+          "fixed_value": null,
+          "index": 1,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "U3",
+          "param_count": 3,
+          "param_start": 3,
+          "source_gate_index": 1,
+          "target_qbit": 0
+        },
+        {
+          "control_qbit": 0,
+          "fixed_value": null,
+          "index": 2,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "CNOT",
+          "param_count": 0,
+          "param_start": 6,
+          "source_gate_index": 2,
+          "target_qbit": 1
+        },
+        {
+          "control_qbit": null,
+          "fixed_value": 0.1,
+          "index": 3,
+          "is_unitary": false,
+          "kind": "noise",
+          "name": "local_depolarizing",
+          "param_count": 0,
+          "param_start": 6,
+          "source_gate_index": 2,
+          "target_qbit": 0
         }
       ],
+      "bridge_parameter_count": 6,
+      "bridge_source_type": "generated_hea",
+      "case_kind": "bridge_micro_validation",
+      "case_name": "bridge_2q_cnot_with_local_depolarizing",
+      "density_noise": [
+        {
+          "after_gate_index": 2,
+          "channel": "local_depolarizing",
+          "error_rate": 0.1,
+          "target": 0
+        }
+      ],
+      "execution_energy": 1.7699074495670348,
+      "execution_ready": true,
+      "expected_bridge_operations": [
+        {
+          "control_qbit": null,
+          "fixed_value": null,
+          "index": 0,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "U3",
+          "param_count": 3,
+          "param_start": 0,
+          "source_gate_index": 0,
+          "target_qbit": 1
+        },
+        {
+          "control_qbit": null,
+          "fixed_value": null,
+          "index": 1,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "U3",
+          "param_count": 3,
+          "param_start": 3,
+          "source_gate_index": 1,
+          "target_qbit": 0
+        },
+        {
+          "control_qbit": 0,
+          "fixed_value": null,
+          "index": 2,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "CNOT",
+          "param_count": 0,
+          "param_start": 6,
+          "source_gate_index": 2,
+          "target_qbit": 1
+        },
+        {
+          "control_qbit": null,
+          "fixed_value": 0.1,
+          "index": 3,
+          "is_unitary": false,
+          "kind": "noise",
+          "name": "local_depolarizing",
+          "param_count": 0,
+          "param_start": 6,
+          "source_gate_index": 2,
+          "target_qbit": 0
+        }
+      ],
+      "expected_operation_count": 4,
+      "gate_pass": true,
       "hamiltonian": {
         "Jx": 1.0,
         "Jy": 1.0,
         "Jz": 1.0,
         "h": 0.5
       },
-      "case_name": "bridge_2q_cnot_with_local_depolarizing",
-      "case_kind": "bridge_micro_validation",
-      "purpose": "Verify the required CNOT bridge slice lowers cleanly on a 2-qubit anchor microcase.",
-      "required_gate_families": [
-        "U3",
-        "CNOT"
-      ],
-      "required_noise_models": [
-        "local_depolarizing"
-      ],
-      "status": "pass",
+      "inner_blocks": 1,
+      "layers": 1,
+      "noise_pass": true,
+      "operation_match_pass": true,
       "parameter_vector": [
         0.05,
         0.1,
@@ -442,194 +492,308 @@
         0.25000000000000006,
         0.30000000000000004
       ],
-      "execution_energy": 1.7699074495670348,
-      "execution_ready": true,
-      "source_pass": true,
-      "gate_pass": true,
-      "noise_pass": true,
-      "operation_match_pass": true,
-      "expected_operation_count": 4,
-      "expected_bridge_operations": [
-        {
-          "index": 0,
-          "operation_class": "GateOperation",
-          "kind": "gate",
-          "name": "U3",
-          "is_unitary": true,
-          "source_gate_index": 0,
-          "target_qbit": 1,
-          "control_qbit": null,
-          "param_count": 3,
-          "param_start": 0,
-          "fixed_value": null
-        },
-        {
-          "index": 1,
-          "operation_class": "GateOperation",
-          "kind": "gate",
-          "name": "U3",
-          "is_unitary": true,
-          "source_gate_index": 1,
-          "target_qbit": 0,
-          "control_qbit": null,
-          "param_count": 3,
-          "param_start": 3,
-          "fixed_value": null
-        },
-        {
-          "index": 2,
-          "operation_class": "GateOperation",
-          "kind": "gate",
-          "name": "CNOT",
-          "is_unitary": true,
-          "source_gate_index": 2,
-          "target_qbit": 1,
-          "control_qbit": 0,
-          "param_count": 0,
-          "param_start": 6,
-          "fixed_value": null
-        },
-        {
-          "index": 3,
-          "operation_class": "NoiseOperation",
-          "kind": "noise",
-          "name": "local_depolarizing",
-          "is_unitary": false,
-          "source_gate_index": 2,
-          "target_qbit": 0,
-          "control_qbit": null,
-          "param_count": 0,
-          "param_start": 6,
-          "fixed_value": 0.1
-        }
+      "purpose": "Verify the required CNOT bridge slice lowers cleanly on a 2-qubit anchor microcase.",
+      "qbit_num": 2,
+      "required_gate_families": [
+        "U3",
+        "CNOT"
       ],
-      "bridge_source_type": "generated_hea",
-      "bridge_parameter_count": 6,
-      "bridge_operation_count": 4,
-      "bridge_gate_count": 3,
-      "bridge_noise_count": 1,
-      "bridge_operations": [
-        {
-          "index": 0,
-          "operation_class": "GateOperation",
-          "kind": "gate",
-          "name": "U3",
-          "is_unitary": true,
-          "source_gate_index": 0,
-          "target_qbit": 1,
-          "control_qbit": null,
-          "param_count": 3,
-          "param_start": 0,
-          "fixed_value": null
-        },
-        {
-          "index": 1,
-          "operation_class": "GateOperation",
-          "kind": "gate",
-          "name": "U3",
-          "is_unitary": true,
-          "source_gate_index": 1,
-          "target_qbit": 0,
-          "control_qbit": null,
-          "param_count": 3,
-          "param_start": 3,
-          "fixed_value": null
-        },
-        {
-          "index": 2,
-          "operation_class": "GateOperation",
-          "kind": "gate",
-          "name": "CNOT",
-          "is_unitary": true,
-          "source_gate_index": 2,
-          "target_qbit": 1,
-          "control_qbit": 0,
-          "param_count": 0,
-          "param_start": 6,
-          "fixed_value": null
-        },
-        {
-          "index": 3,
-          "operation_class": "NoiseOperation",
-          "kind": "noise",
-          "name": "local_depolarizing",
-          "is_unitary": false,
-          "source_gate_index": 2,
-          "target_qbit": 0,
-          "control_qbit": null,
-          "param_count": 0,
-          "param_start": 6,
-          "fixed_value": 0.1
-        }
-      ],
-      "bridge_noise_sequence": [
+      "required_noise_models": [
         "local_depolarizing"
       ],
-      "bridge_noise_targets": [
-        0
-      ],
-      "bridge_noise_after_gate_indices": [
-        2
-      ],
-      "bridge_noise_fixed_values": [
-        0.1
-      ]
-    },
-    {
-      "backend": "density_matrix",
-      "qbit_num": 3,
+      "source_pass": true,
+      "status": "pass",
       "topology": [
         [
           0,
           1
-        ],
-        [
-          1,
-          2
         ]
-      ],
+      ]
+    },
+    {
       "ansatz": "HEA",
-      "layers": 1,
-      "inner_blocks": 1,
-      "density_noise": [
+      "backend": "density_matrix",
+      "bridge_gate_count": 6,
+      "bridge_noise_after_gate_indices": [
+        0,
+        1,
+        2
+      ],
+      "bridge_noise_count": 3,
+      "bridge_noise_fixed_values": [
+        0.1,
+        0.05,
+        0.07
+      ],
+      "bridge_noise_sequence": [
+        "local_depolarizing",
+        "amplitude_damping",
+        "phase_damping"
+      ],
+      "bridge_noise_targets": [
+        0,
+        1,
+        0
+      ],
+      "bridge_operation_count": 9,
+      "bridge_operations": [
         {
-          "channel": "local_depolarizing",
-          "target": 0,
-          "after_gate_index": 0,
-          "error_rate": 0.1
+          "control_qbit": null,
+          "fixed_value": null,
+          "index": 0,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "U3",
+          "param_count": 3,
+          "param_start": 0,
+          "source_gate_index": 0,
+          "target_qbit": 1
         },
         {
-          "channel": "amplitude_damping",
-          "target": 1,
-          "after_gate_index": 1,
-          "gamma": 0.05
+          "control_qbit": null,
+          "fixed_value": 0.1,
+          "index": 1,
+          "is_unitary": false,
+          "kind": "noise",
+          "name": "local_depolarizing",
+          "param_count": 0,
+          "param_start": 3,
+          "source_gate_index": 0,
+          "target_qbit": 0
         },
         {
-          "channel": "phase_damping",
-          "target": 0,
-          "after_gate_index": 2,
-          "lambda": 0.07
+          "control_qbit": null,
+          "fixed_value": null,
+          "index": 2,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "U3",
+          "param_count": 3,
+          "param_start": 3,
+          "source_gate_index": 1,
+          "target_qbit": 0
+        },
+        {
+          "control_qbit": null,
+          "fixed_value": 0.05,
+          "index": 3,
+          "is_unitary": false,
+          "kind": "noise",
+          "name": "amplitude_damping",
+          "param_count": 0,
+          "param_start": 6,
+          "source_gate_index": 1,
+          "target_qbit": 1
+        },
+        {
+          "control_qbit": 0,
+          "fixed_value": null,
+          "index": 4,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "CNOT",
+          "param_count": 0,
+          "param_start": 6,
+          "source_gate_index": 2,
+          "target_qbit": 1
+        },
+        {
+          "control_qbit": null,
+          "fixed_value": 0.07,
+          "index": 5,
+          "is_unitary": false,
+          "kind": "noise",
+          "name": "phase_damping",
+          "param_count": 0,
+          "param_start": 6,
+          "source_gate_index": 2,
+          "target_qbit": 0
+        },
+        {
+          "control_qbit": null,
+          "fixed_value": null,
+          "index": 6,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "U3",
+          "param_count": 3,
+          "param_start": 6,
+          "source_gate_index": 3,
+          "target_qbit": 2
+        },
+        {
+          "control_qbit": null,
+          "fixed_value": null,
+          "index": 7,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "U3",
+          "param_count": 3,
+          "param_start": 9,
+          "source_gate_index": 4,
+          "target_qbit": 1
+        },
+        {
+          "control_qbit": 1,
+          "fixed_value": null,
+          "index": 8,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "CNOT",
+          "param_count": 0,
+          "param_start": 12,
+          "source_gate_index": 5,
+          "target_qbit": 2
         }
       ],
+      "bridge_parameter_count": 12,
+      "bridge_source_type": "generated_hea",
+      "case_kind": "bridge_micro_validation",
+      "case_name": "bridge_3q_mixed_local_noise_sequence",
+      "density_noise": [
+        {
+          "after_gate_index": 0,
+          "channel": "local_depolarizing",
+          "error_rate": 0.1,
+          "target": 0
+        },
+        {
+          "after_gate_index": 1,
+          "channel": "amplitude_damping",
+          "gamma": 0.05,
+          "target": 1
+        },
+        {
+          "after_gate_index": 2,
+          "channel": "phase_damping",
+          "lambda": 0.07,
+          "target": 0
+        }
+      ],
+      "execution_energy": 2.0562030026845175,
+      "execution_ready": true,
+      "expected_bridge_operations": [
+        {
+          "control_qbit": null,
+          "fixed_value": null,
+          "index": 0,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "U3",
+          "param_count": 3,
+          "param_start": 0,
+          "source_gate_index": 0,
+          "target_qbit": 1
+        },
+        {
+          "control_qbit": null,
+          "fixed_value": 0.1,
+          "index": 1,
+          "is_unitary": false,
+          "kind": "noise",
+          "name": "local_depolarizing",
+          "param_count": 0,
+          "param_start": 3,
+          "source_gate_index": 0,
+          "target_qbit": 0
+        },
+        {
+          "control_qbit": null,
+          "fixed_value": null,
+          "index": 2,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "U3",
+          "param_count": 3,
+          "param_start": 3,
+          "source_gate_index": 1,
+          "target_qbit": 0
+        },
+        {
+          "control_qbit": null,
+          "fixed_value": 0.05,
+          "index": 3,
+          "is_unitary": false,
+          "kind": "noise",
+          "name": "amplitude_damping",
+          "param_count": 0,
+          "param_start": 6,
+          "source_gate_index": 1,
+          "target_qbit": 1
+        },
+        {
+          "control_qbit": 0,
+          "fixed_value": null,
+          "index": 4,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "CNOT",
+          "param_count": 0,
+          "param_start": 6,
+          "source_gate_index": 2,
+          "target_qbit": 1
+        },
+        {
+          "control_qbit": null,
+          "fixed_value": 0.07,
+          "index": 5,
+          "is_unitary": false,
+          "kind": "noise",
+          "name": "phase_damping",
+          "param_count": 0,
+          "param_start": 6,
+          "source_gate_index": 2,
+          "target_qbit": 0
+        },
+        {
+          "control_qbit": null,
+          "fixed_value": null,
+          "index": 6,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "U3",
+          "param_count": 3,
+          "param_start": 6,
+          "source_gate_index": 3,
+          "target_qbit": 2
+        },
+        {
+          "control_qbit": null,
+          "fixed_value": null,
+          "index": 7,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "U3",
+          "param_count": 3,
+          "param_start": 9,
+          "source_gate_index": 4,
+          "target_qbit": 1
+        },
+        {
+          "control_qbit": 1,
+          "fixed_value": null,
+          "index": 8,
+          "is_unitary": true,
+          "kind": "gate",
+          "name": "CNOT",
+          "param_count": 0,
+          "param_start": 12,
+          "source_gate_index": 5,
+          "target_qbit": 2
+        }
+      ],
+      "expected_operation_count": 9,
+      "gate_pass": true,
       "hamiltonian": {
         "Jx": 1.0,
         "Jy": 1.0,
         "Jz": 1.0,
         "h": 0.5
       },
-      "case_name": "bridge_3q_mixed_local_noise_sequence",
-      "case_kind": "bridge_micro_validation",
-      "purpose": "Verify mixed required local-noise insertion remains ordered and auditable on a 3-qubit bridge microcase.",
-      "required_gate_families": [
-        "U3",
-        "CNOT"
-      ],
-      "required_noise_models": [
-        "local_depolarizing",
-        "amplitude_damping",
-        "phase_damping"
-      ],
-      "status": "pass",
+      "inner_blocks": 1,
+      "layers": 1,
+      "noise_pass": true,
+      "operation_match_pass": true,
       "parameter_vector": [
         0.05,
         0.1,
@@ -644,276 +808,74 @@
         0.55,
         0.6000000000000001
       ],
-      "execution_energy": 2.0562030026845175,
-      "execution_ready": true,
-      "source_pass": true,
-      "gate_pass": true,
-      "noise_pass": true,
-      "operation_match_pass": true,
-      "expected_operation_count": 9,
-      "expected_bridge_operations": [
-        {
-          "index": 0,
-          "operation_class": "GateOperation",
-          "kind": "gate",
-          "name": "U3",
-          "is_unitary": true,
-          "source_gate_index": 0,
-          "target_qbit": 1,
-          "control_qbit": null,
-          "param_count": 3,
-          "param_start": 0,
-          "fixed_value": null
-        },
-        {
-          "index": 1,
-          "operation_class": "NoiseOperation",
-          "kind": "noise",
-          "name": "local_depolarizing",
-          "is_unitary": false,
-          "source_gate_index": 0,
-          "target_qbit": 0,
-          "control_qbit": null,
-          "param_count": 0,
-          "param_start": 3,
-          "fixed_value": 0.1
-        },
-        {
-          "index": 2,
-          "operation_class": "GateOperation",
-          "kind": "gate",
-          "name": "U3",
-          "is_unitary": true,
-          "source_gate_index": 1,
-          "target_qbit": 0,
-          "control_qbit": null,
-          "param_count": 3,
-          "param_start": 3,
-          "fixed_value": null
-        },
-        {
-          "index": 3,
-          "operation_class": "NoiseOperation",
-          "kind": "noise",
-          "name": "amplitude_damping",
-          "is_unitary": false,
-          "source_gate_index": 1,
-          "target_qbit": 1,
-          "control_qbit": null,
-          "param_count": 0,
-          "param_start": 6,
-          "fixed_value": 0.05
-        },
-        {
-          "index": 4,
-          "operation_class": "GateOperation",
-          "kind": "gate",
-          "name": "CNOT",
-          "is_unitary": true,
-          "source_gate_index": 2,
-          "target_qbit": 1,
-          "control_qbit": 0,
-          "param_count": 0,
-          "param_start": 6,
-          "fixed_value": null
-        },
-        {
-          "index": 5,
-          "operation_class": "NoiseOperation",
-          "kind": "noise",
-          "name": "phase_damping",
-          "is_unitary": false,
-          "source_gate_index": 2,
-          "target_qbit": 0,
-          "control_qbit": null,
-          "param_count": 0,
-          "param_start": 6,
-          "fixed_value": 0.07
-        },
-        {
-          "index": 6,
-          "operation_class": "GateOperation",
-          "kind": "gate",
-          "name": "U3",
-          "is_unitary": true,
-          "source_gate_index": 3,
-          "target_qbit": 2,
-          "control_qbit": null,
-          "param_count": 3,
-          "param_start": 6,
-          "fixed_value": null
-        },
-        {
-          "index": 7,
-          "operation_class": "GateOperation",
-          "kind": "gate",
-          "name": "U3",
-          "is_unitary": true,
-          "source_gate_index": 4,
-          "target_qbit": 1,
-          "control_qbit": null,
-          "param_count": 3,
-          "param_start": 9,
-          "fixed_value": null
-        },
-        {
-          "index": 8,
-          "operation_class": "GateOperation",
-          "kind": "gate",
-          "name": "CNOT",
-          "is_unitary": true,
-          "source_gate_index": 5,
-          "target_qbit": 2,
-          "control_qbit": 1,
-          "param_count": 0,
-          "param_start": 12,
-          "fixed_value": null
-        }
+      "purpose": "Verify mixed required local-noise insertion remains ordered and auditable on a 3-qubit bridge microcase.",
+      "qbit_num": 3,
+      "required_gate_families": [
+        "U3",
+        "CNOT"
       ],
-      "bridge_source_type": "generated_hea",
-      "bridge_parameter_count": 12,
-      "bridge_operation_count": 9,
-      "bridge_gate_count": 6,
-      "bridge_noise_count": 3,
-      "bridge_operations": [
-        {
-          "index": 0,
-          "operation_class": "GateOperation",
-          "kind": "gate",
-          "name": "U3",
-          "is_unitary": true,
-          "source_gate_index": 0,
-          "target_qbit": 1,
-          "control_qbit": null,
-          "param_count": 3,
-          "param_start": 0,
-          "fixed_value": null
-        },
-        {
-          "index": 1,
-          "operation_class": "NoiseOperation",
-          "kind": "noise",
-          "name": "local_depolarizing",
-          "is_unitary": false,
-          "source_gate_index": 0,
-          "target_qbit": 0,
-          "control_qbit": null,
-          "param_count": 0,
-          "param_start": 3,
-          "fixed_value": 0.1
-        },
-        {
-          "index": 2,
-          "operation_class": "GateOperation",
-          "kind": "gate",
-          "name": "U3",
-          "is_unitary": true,
-          "source_gate_index": 1,
-          "target_qbit": 0,
-          "control_qbit": null,
-          "param_count": 3,
-          "param_start": 3,
-          "fixed_value": null
-        },
-        {
-          "index": 3,
-          "operation_class": "NoiseOperation",
-          "kind": "noise",
-          "name": "amplitude_damping",
-          "is_unitary": false,
-          "source_gate_index": 1,
-          "target_qbit": 1,
-          "control_qbit": null,
-          "param_count": 0,
-          "param_start": 6,
-          "fixed_value": 0.05
-        },
-        {
-          "index": 4,
-          "operation_class": "GateOperation",
-          "kind": "gate",
-          "name": "CNOT",
-          "is_unitary": true,
-          "source_gate_index": 2,
-          "target_qbit": 1,
-          "control_qbit": 0,
-          "param_count": 0,
-          "param_start": 6,
-          "fixed_value": null
-        },
-        {
-          "index": 5,
-          "operation_class": "NoiseOperation",
-          "kind": "noise",
-          "name": "phase_damping",
-          "is_unitary": false,
-          "source_gate_index": 2,
-          "target_qbit": 0,
-          "control_qbit": null,
-          "param_count": 0,
-          "param_start": 6,
-          "fixed_value": 0.07
-        },
-        {
-          "index": 6,
-          "operation_class": "GateOperation",
-          "kind": "gate",
-          "name": "U3",
-          "is_unitary": true,
-          "source_gate_index": 3,
-          "target_qbit": 2,
-          "control_qbit": null,
-          "param_count": 3,
-          "param_start": 6,
-          "fixed_value": null
-        },
-        {
-          "index": 7,
-          "operation_class": "GateOperation",
-          "kind": "gate",
-          "name": "U3",
-          "is_unitary": true,
-          "source_gate_index": 4,
-          "target_qbit": 1,
-          "control_qbit": null,
-          "param_count": 3,
-          "param_start": 9,
-          "fixed_value": null
-        },
-        {
-          "index": 8,
-          "operation_class": "GateOperation",
-          "kind": "gate",
-          "name": "CNOT",
-          "is_unitary": true,
-          "source_gate_index": 5,
-          "target_qbit": 2,
-          "control_qbit": 1,
-          "param_count": 0,
-          "param_start": 12,
-          "fixed_value": null
-        }
-      ],
-      "bridge_noise_sequence": [
+      "required_noise_models": [
         "local_depolarizing",
         "amplitude_damping",
         "phase_damping"
       ],
-      "bridge_noise_targets": [
-        0,
-        1,
-        0
-      ],
-      "bridge_noise_after_gate_indices": [
-        0,
-        1,
-        2
-      ],
-      "bridge_noise_fixed_values": [
-        0.1,
-        0.05,
-        0.07
+      "source_pass": true,
+      "status": "pass",
+      "topology": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          2
+        ]
       ]
     }
-  ]
+  ],
+  "requirements": {
+    "canonical_bridge_fields": [
+      "bridge_source_type",
+      "bridge_parameter_count",
+      "bridge_operation_count",
+      "bridge_gate_count",
+      "bridge_noise_count",
+      "bridge_operations"
+    ],
+    "microcase_qubits": [
+      1,
+      2,
+      3
+    ],
+    "required_gate_families": [
+      "U3",
+      "CNOT"
+    ],
+    "required_noise_models": [
+      "local_depolarizing",
+      "amplitude_damping",
+      "phase_damping"
+    ],
+    "required_pass_rate": 1.0,
+    "source_type": "generated_hea"
+  },
+  "software": {
+    "numpy": "2.3.5",
+    "python": "3.13.9",
+    "qiskit": "2.2.3",
+    "qiskit_aer": "0.17.2"
+  },
+  "status": "pass",
+  "suite_name": "bridge_micro_validation",
+  "summary": {
+    "cases_per_qbit": {
+      "1": 3,
+      "2": 1,
+      "3": 1
+    },
+    "failed_cases": 0,
+    "pass_rate": 1.0,
+    "passed_cases": 5,
+    "total_cases": 5
+  }
 }

@@ -9,6 +9,11 @@ Phase 2 documentation bundle. This layer is intentionally thin:
 - and it fails when later-phase work can be mistaken for a delivered Phase 2
   commitment.
 
+Source matching uses ``source_requirements``: a list of clauses, each either
+``{"all": [phrases...]}`` (every phrase required) or ``{"any": [phrases...]}``
+(at least one alternative), so roadmap wording can evolve without brittle
+single-string locks.
+
 Run with:
     python benchmarks/density_matrix/documentation_contract/future_work_boundary_validation.py
 """
@@ -57,9 +62,13 @@ MANDATORY_FUTURE_TOPICS = (
             "Phase 2 remains the exact noisy backend integration milestone",
         ],
         "source_doc_ids": ["planning_planning", "phase2_detailed_planning"],
-        "source_phrases": [
-            "Phase 2: Exact Noisy Training Backend Integration",
-            "Phase 2 establishes the exact noisy backend as a usable scientific workflow",
+        "source_requirements": [
+            {
+                "all": [
+                    "Phase 2: Exact Noisy Training Backend Integration",
+                    "Phase 2 establishes the exact noisy backend as a usable scientific workflow",
+                ]
+            },
         ],
     },
     {
@@ -69,9 +78,18 @@ MANDATORY_FUTURE_TOPICS = (
             "Density-aware partitioning, fusion, and acceleration are future work for Phase 3",
         ],
         "source_doc_ids": ["planning_planning", "research_alignment"],
-        "source_phrases": [
-            "Phase 3: Noise-Aware Partitioning And Fusion For Mixed-State Circuits",
-            "Phase 3 | Full noise module and validation",
+        "source_requirements": [
+            {
+                "all": [
+                    "Phase 3: Noise-Aware Partitioning And Fusion For Mixed-State Circuits",
+                ]
+            },
+            {
+                "any": [
+                    "Phase 3 | Full noise module and validation",
+                    "Phase 3 | Native noise-aware partitioning/fusion baseline and Paper 2 evidence package",
+                ]
+            },
         ],
     },
     {
@@ -81,9 +99,13 @@ MANDATORY_FUTURE_TOPICS = (
             "Gradient support and approximate scaling methods remain future work beyond the core Phase 2 milestone",
         ],
         "source_doc_ids": ["planning_planning", "phase2_detailed_planning"],
-        "source_phrases": [
-            "gradient-path completion for density-matrix optimization",
-            "stochastic trajectories or MPDO-based approximation paths",
+        "source_requirements": [
+            {
+                "all": [
+                    "gradient-path completion for density-matrix optimization",
+                    "stochastic trajectories or MPDO-based approximation paths",
+                ]
+            },
         ],
     },
     {
@@ -93,9 +115,18 @@ MANDATORY_FUTURE_TOPICS = (
             "Broader noisy-VQA integration and optimizer comparisons are future work for Phase 4",
         ],
         "source_doc_ids": ["planning_planning", "research_alignment"],
-        "source_phrases": [
-            "Phase 4: Broader Noisy VQE/VQA Workflows And Optimizer Studies",
-            "Phase 4 | Noisy VQA integration and optimizer comparisons",
+        "source_requirements": [
+            {
+                "all": [
+                    "Phase 4: Broader Noisy VQE/VQA Workflows And Optimizer Studies",
+                ]
+            },
+            {
+                "any": [
+                    "Phase 4 | Noisy VQA integration and optimizer comparisons",
+                    "Phase 4 | Noisy VQA integration, gradients, and optimizer comparisons",
+                ]
+            },
         ],
     },
     {
@@ -105,9 +136,13 @@ MANDATORY_FUTURE_TOPICS = (
             "Trainability analysis is future work for Phase 5",
         ],
         "source_doc_ids": ["planning_planning", "research_alignment"],
-        "source_phrases": [
-            "Phase 5: Trainability Analysis Under Realistic Noise",
-            "Phase 5 | Trainability analysis under noise",
+        "source_requirements": [
+            {
+                "all": [
+                    "Phase 5: Trainability Analysis Under Realistic Noise",
+                    "Phase 5 | Trainability analysis under noise",
+                ]
+            },
         ],
     },
     {
@@ -117,8 +152,8 @@ MANDATORY_FUTURE_TOPICS = (
             "These topics are not current Phase 2 commitments.",
         ],
         "source_doc_ids": ["phase2_detailed_planning"],
-        "source_phrases": [
-            "must not be presented as Phase 2 commitments",
+        "source_requirements": [
+            {"all": ["must not be presented as Phase 2 commitments"]},
         ],
     },
 )
@@ -151,12 +186,45 @@ def _phrases_present(text: str, phrases: list[str]) -> bool:
     return all(normalize_text(phrase) in normalized_text for phrase in phrases)
 
 
+def _flatten_source_requirements(requirements: list[dict[str, list[str]]]) -> list[str]:
+    """All candidate phrases (for artifact `source_phrases` compatibility)."""
+    out: list[str] = []
+    for clause in requirements:
+        if "all" in clause:
+            out.extend(clause["all"])
+        elif "any" in clause:
+            out.extend(clause["any"])
+    return out
+
+
+def _source_requirements_satisfied(
+    text: str, requirements: list[dict[str, list[str]]]
+) -> bool:
+    """Each clause is satisfied: `all` needs every phrase; `any` needs at least one."""
+    normalized_text = normalize_text(text)
+    for clause in requirements:
+        if "all" in clause and "any" in clause:
+            raise ValueError("source requirement clause cannot combine 'all' and 'any'")
+        if "all" in clause:
+            phrases = clause["all"]
+            if not all(normalize_text(p) in normalized_text for p in phrases):
+                return False
+        elif "any" in clause:
+            phrases = clause["any"]
+            if not any(normalize_text(p) in normalized_text for p in phrases):
+                return False
+        else:
+            raise ValueError("source requirement clause must contain 'all' or 'any'")
+    return True
+
+
 def build_future_work_inventory():
     entry_text = load_text(PHASE2_DOCUMENTATION_INDEX_PATH)
     inventory = []
     for item in MANDATORY_FUTURE_TOPICS:
         source_paths = [MANDATORY_PHASE2_DOCS[doc_id] for doc_id in item["source_doc_ids"]]
         source_text = "\n".join(load_text(path) for path in source_paths)
+        requirements = item["source_requirements"]
         inventory.append(
             {
                 "topic_id": item["topic_id"],
@@ -164,11 +232,14 @@ def build_future_work_inventory():
                 "source_doc_ids": list(item["source_doc_ids"]),
                 "source_paths": [relative_to_repo(path) for path in source_paths],
                 "entry_point_phrases": list(item["entry_point_phrases"]),
-                "source_phrases": list(item["source_phrases"]),
+                "source_requirements": [dict(c) for c in requirements],
+                "source_phrases": _flatten_source_requirements(requirements),
                 "entry_point_present": _phrases_present(
                     entry_text, item["entry_point_phrases"]
                 ),
-                "source_present": _phrases_present(source_text, item["source_phrases"]),
+                "source_present": _source_requirements_satisfied(
+                    source_text, requirements
+                ),
             }
         )
     return inventory

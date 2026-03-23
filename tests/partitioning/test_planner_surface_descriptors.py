@@ -1,5 +1,5 @@
-from pathlib import Path
 import sys
+from pathlib import Path
 
 import pytest
 
@@ -7,28 +7,11 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from squander import Circuit
 from benchmarks.density_matrix.planner_surface.common import (
     build_phase2_continuity_vqe,
 )
-from squander.partitioning.noisy_planner import (
-    DEFAULT_PARTITION_DESCRIPTOR_MAX_QUBITS,
-    PARTITIONED_DENSITY_MODE,
-    PHASE3_DESCRIPTOR_SCHEMA_VERSION,
-    PHASE3_ENTRY_ROUTE_PHASE2_CONTINUITY,
-    PHASE3_ENTRY_ROUTE_MICROCASE,
-    PHASE3_ENTRY_ROUTE_STRUCTURED_FAMILY,
-    PHASE3_WORKLOAD_FAMILY_PHASE2_CONTINUITY,
-    PHASE3_WORKLOAD_FAMILY_MICROCASE,
-    PHASE3_WORKLOAD_FAMILY_STRUCTURED,
-    build_canonical_planner_surface_from_qgd_circuit,
-    build_descriptor_audit_record,
-    build_partition_descriptor_set,
-    build_phase3_continuity_partition_descriptor_set,
-    build_phase3_continuity_planner_surface,
-    preflight_descriptor_request,
-    validate_partition_descriptor_set,
-    validate_partition_descriptor_set_against_surface,
+from benchmarks.density_matrix.planner_surface.unsupported_descriptor_validation import (
+    build_unsupported_descriptor_cases,
 )
 from benchmarks.density_matrix.planner_surface.workloads import (
     MANDATORY_NOISE_PATTERNS,
@@ -40,8 +23,26 @@ from benchmarks.density_matrix.planner_surface.workloads import (
     iter_microcase_descriptor_sets,
     iter_structured_descriptor_sets,
 )
-from benchmarks.density_matrix.planner_surface.unsupported_descriptor_validation import (
-    build_unsupported_descriptor_cases,
+from squander import Circuit
+from squander.partitioning.noisy_planner import (
+    DEFAULT_PARTITION_DESCRIPTOR_MAX_QUBITS,
+    DESCRIPTOR_SCHEMA_VERSION,
+    PARTITIONED_DENSITY_MODE,
+    PLANNER_OP_KIND_NOISE,
+    PHASE3_ENTRY_ROUTE_MICROCASE,
+    PHASE3_ENTRY_ROUTE_PHASE2_CONTINUITY,
+    PHASE3_ENTRY_ROUTE_STRUCTURED_FAMILY,
+    PHASE3_WORKLOAD_FAMILY_MICROCASE,
+    PHASE3_WORKLOAD_FAMILY_PHASE2_CONTINUITY,
+    PHASE3_WORKLOAD_FAMILY_STRUCTURED,
+    build_canonical_planner_surface_from_qgd_circuit,
+    build_descriptor_audit_record,
+    build_partition_descriptor_set,
+    build_phase3_continuity_partition_descriptor_set,
+    build_phase3_continuity_planner_surface,
+    preflight_descriptor_request,
+    validate_partition_descriptor_set,
+    validate_partition_descriptor_set_against_surface,
 )
 
 
@@ -55,11 +56,15 @@ def _flatten_canonical_indices(payload: dict) -> list[int]:
 
 def _flatten_member_names(payload: dict) -> list[str]:
     return [
-        member["name"] for partition in payload["partitions"] for member in partition["members"]
+        member["name"]
+        for partition in payload["partitions"]
+        for member in partition["members"]
     ]
 
 
-def _round_trip_partition_support(partition: dict) -> list[tuple[tuple[int, ...], tuple[int, ...]]]:
+def _round_trip_partition_support(
+    partition: dict,
+) -> list[tuple[tuple[int, ...], tuple[int, ...]]]:
     local_to_global = {
         local_qbit: global_qbit
         for local_qbit, global_qbit in enumerate(partition["local_to_global_qbits"])
@@ -67,7 +72,10 @@ def _round_trip_partition_support(partition: dict) -> list[tuple[tuple[int, ...]
     return [
         (
             tuple(member["qubit_support"]),
-            tuple(local_to_global[local_qbit] for local_qbit in member["local_qubit_support"]),
+            tuple(
+                local_to_global[local_qbit]
+                for local_qbit in member["local_qubit_support"]
+            ),
         )
         for member in partition["members"]
     ]
@@ -92,7 +100,7 @@ def test_continuity_partition_descriptor_aligns_with_planner_surface(qbit_num):
     descriptor_set = build_phase3_continuity_partition_descriptor_set(vqe)
     payload = descriptor_set.to_dict()
 
-    assert descriptor_set.schema_version == PHASE3_DESCRIPTOR_SCHEMA_VERSION
+    assert descriptor_set.schema_version == DESCRIPTOR_SCHEMA_VERSION
     assert descriptor_set.planner_schema_version == surface.schema_version
     assert descriptor_set.requested_mode == PARTITIONED_DENSITY_MODE
     assert descriptor_set.source_type == "generated_hea"
@@ -117,7 +125,10 @@ def test_continuity_partition_descriptor_aligns_with_planner_surface(qbit_num):
             member["canonical_operation_index"] for member in partition["members"]
         ]
         assert partition["partition_qubit_span"] == partition["local_to_global_qbits"]
-        assert len(partition["partition_qubit_span"]) <= DEFAULT_PARTITION_DESCRIPTOR_MAX_QUBITS
+        assert (
+            len(partition["partition_qubit_span"])
+            <= DEFAULT_PARTITION_DESCRIPTOR_MAX_QUBITS
+        )
 
 
 def test_continuity_partition_descriptor_emission_is_deterministic():
@@ -146,7 +157,7 @@ def test_microcase_partition_descriptors_share_schema():
             assert set(payload["partitions"][0].keys()) == partition_keys
             assert set(payload["partitions"][0]["members"][0].keys()) == member_keys
 
-        assert payload["schema_version"] == PHASE3_DESCRIPTOR_SCHEMA_VERSION
+        assert payload["schema_version"] == DESCRIPTOR_SCHEMA_VERSION
         assert payload["requested_mode"] == PARTITIONED_DENSITY_MODE
         assert payload["source_type"] == "microcase_builder"
         assert payload["entry_route"] == PHASE3_ENTRY_ROUTE_MICROCASE
@@ -154,20 +165,27 @@ def test_microcase_partition_descriptors_share_schema():
         assert payload["workload_id"] == metadata["case_name"]
         assert payload["qbit_num"] == metadata["qbit_num"]
         assert payload["partition_count"] > 0
-        assert payload["descriptor_member_count"] == payload["gate_count"] + payload["noise_count"]
-        assert payload["max_partition_qubits"] == DEFAULT_PARTITION_DESCRIPTOR_MAX_QUBITS
+        assert (
+            payload["descriptor_member_count"]
+            == payload["gate_count"] + payload["noise_count"]
+        )
+        assert (
+            payload["max_partition_qubits"] == DEFAULT_PARTITION_DESCRIPTOR_MAX_QUBITS
+        )
 
 
 def test_structured_partition_descriptors_share_schema():
     structured_cases = list(iter_structured_descriptor_sets())
     assert len(structured_cases) == (
-        len(STRUCTURED_FAMILY_NAMES) * len(STRUCTURED_QUBITS) * len(MANDATORY_NOISE_PATTERNS)
+        len(STRUCTURED_FAMILY_NAMES)
+        * len(STRUCTURED_QUBITS)
+        * len(MANDATORY_NOISE_PATTERNS)
     )
 
     for metadata, descriptor_set in structured_cases:
         payload = descriptor_set.to_dict()
 
-        assert payload["schema_version"] == PHASE3_DESCRIPTOR_SCHEMA_VERSION
+        assert payload["schema_version"] == DESCRIPTOR_SCHEMA_VERSION
         assert payload["requested_mode"] == PARTITIONED_DENSITY_MODE
         assert payload["source_type"] == "structured_family_builder"
         assert payload["entry_route"] == PHASE3_ENTRY_ROUTE_STRUCTURED_FAMILY
@@ -175,8 +193,13 @@ def test_structured_partition_descriptors_share_schema():
         assert payload["workload_id"] == metadata["workload_id"]
         assert payload["qbit_num"] == metadata["qbit_num"]
         assert payload["partition_count"] > 0
-        assert payload["descriptor_member_count"] == payload["gate_count"] + payload["noise_count"]
-        assert payload["max_partition_qubits"] == DEFAULT_PARTITION_DESCRIPTOR_MAX_QUBITS
+        assert (
+            payload["descriptor_member_count"]
+            == payload["gate_count"] + payload["noise_count"]
+        )
+        assert (
+            payload["max_partition_qubits"] == DEFAULT_PARTITION_DESCRIPTOR_MAX_QUBITS
+        )
 
 
 def test_continuity_microcase_structured_share_partition_descriptor_schema():
@@ -195,7 +218,9 @@ def test_continuity_microcase_structured_share_partition_descriptor_schema():
 
     top_level_keys = {frozenset(payload.keys()) for payload in payloads}
     partition_keys = {
-        frozenset(payload["partitions"][0].keys()) for payload in payloads if payload["partitions"]
+        frozenset(payload["partitions"][0].keys())
+        for payload in payloads
+        if payload["partitions"]
     }
     member_keys = {
         frozenset(payload["partitions"][0]["members"][0].keys())
@@ -242,7 +267,7 @@ def test_continuity_descriptor_members_match_surface_operation_order():
     )
     assert actual_names == expected_names
     assert descriptor_payload["noise_count"] == sum(
-        member["operation_class"] == "NoiseOperation"
+        member["kind"] == PLANNER_OP_KIND_NOISE
         for partition in descriptor_payload["partitions"]
         for member in partition["members"]
     )
@@ -266,9 +291,10 @@ def test_boundary_microcase_descriptor_keeps_explicit_noise_in_partitions():
         partition["gate_count"] > 0 and partition["noise_count"] > 0
         for partition in descriptor_payload["partitions"]
     )
-    assert sum(partition["noise_count"] for partition in descriptor_payload["partitions"]) == surface_payload[
-        "noise_count"
-    ]
+    assert (
+        sum(partition["noise_count"] for partition in descriptor_payload["partitions"])
+        == surface_payload["noise_count"]
+    )
 
 
 def test_structured_descriptor_members_match_surface_operation_order():
@@ -297,9 +323,10 @@ def test_continuity_validated_partition_descriptors_round_trip_qubit_support():
 
     assert any(partition["requires_remap"] for partition in payload["partitions"])
     for partition in payload["partitions"]:
-        for expected_global_support, reconstructed_global_support in _round_trip_partition_support(
-            partition
-        ):
+        for (
+            expected_global_support,
+            reconstructed_global_support,
+        ) in _round_trip_partition_support(partition):
             assert expected_global_support == reconstructed_global_support
 
 
@@ -323,7 +350,8 @@ def test_structured_validated_partition_descriptor_marks_remap_at_span_limit():
     assert payload["workload_id"] == metadata["workload_id"]
     assert any(partition["requires_remap"] for partition in payload["partitions"])
     assert any(
-        len(partition["partition_qubit_span"]) == DEFAULT_PARTITION_DESCRIPTOR_MAX_QUBITS
+        len(partition["partition_qubit_span"])
+        == DEFAULT_PARTITION_DESCRIPTOR_MAX_QUBITS
         for partition in payload["partitions"]
     )
 
@@ -335,12 +363,18 @@ def test_planner_surface_descriptor_audit_record_tracks_continuity_provenance():
         descriptor_set, metadata={"case_kind": "continuity"}
     )
 
-    assert audit["schema_version"] == PHASE3_DESCRIPTOR_SCHEMA_VERSION
+    assert audit["schema_version"] == DESCRIPTOR_SCHEMA_VERSION
     assert audit["provenance"]["source_type"] == "generated_hea"
     assert audit["provenance"]["entry_route"] == PHASE3_ENTRY_ROUTE_PHASE2_CONTINUITY
-    assert audit["provenance"]["workload_family"] == PHASE3_WORKLOAD_FAMILY_PHASE2_CONTINUITY
+    assert (
+        audit["provenance"]["workload_family"]
+        == PHASE3_WORKLOAD_FAMILY_PHASE2_CONTINUITY
+    )
     assert audit["summary"]["partition_count"] == descriptor_set.partition_count
-    assert audit["summary"]["descriptor_member_count"] == descriptor_set.descriptor_member_count
+    assert (
+        audit["summary"]["descriptor_member_count"]
+        == descriptor_set.descriptor_member_count
+    )
     assert audit["metadata"]["case_kind"] == "continuity"
 
 
@@ -440,7 +474,9 @@ def test_validate_against_surface_accepts_supported_microcase_descriptor():
         "microcase_4q_partition_boundary_triplet"
     )
 
-    validated = validate_partition_descriptor_set_against_surface(surface, descriptor_set)
+    validated = validate_partition_descriptor_set_against_surface(
+        surface, descriptor_set
+    )
 
     assert validated.workload_id == surface.workload_id
     assert validated.partition_count == descriptor_set.partition_count

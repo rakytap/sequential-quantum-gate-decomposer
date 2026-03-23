@@ -28,6 +28,10 @@ from benchmarks.density_matrix.planner_surface.workloads import (
     iter_microcase_surfaces,
     iter_structured_surfaces,
 )
+from squander.partitioning.noisy_planner import (
+    PLANNER_OP_KIND_GATE,
+    PLANNER_OP_KIND_NOISE,
+)
 
 SUITE_NAME = "phase3_planner_surface_workload_surface"
 ARTIFACT_FILENAME = "mandatory_workload_surface_bundle.json"
@@ -62,10 +66,14 @@ def _surface_case(case_kind: str, metadata: dict, surface) -> dict:
         "gate_count": payload["gate_count"],
         "noise_count": payload["noise_count"],
         "gate_sequence": [
-            op["name"] for op in payload["operations"] if op["operation_class"] == "GateOperation"
+            op["name"]
+            for op in payload["operations"]
+            if op["kind"] == PLANNER_OP_KIND_GATE
         ],
         "noise_sequence": [
-            op["name"] for op in payload["operations"] if op["operation_class"] == "NoiseOperation"
+            op["name"]
+            for op in payload["operations"]
+            if op["kind"] == PLANNER_OP_KIND_NOISE
         ],
         "planner_operations": payload["operations"],
         "metadata": metadata,

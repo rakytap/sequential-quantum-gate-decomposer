@@ -549,13 +549,6 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_get_Density_Matrix_Bridge_Metad
             if (set_dict_item(op_dict, "index", PyLong_FromLong((long)idx)) != 0 ||
                 set_dict_item(
                     op_dict,
-                    "operation_class",
-                    PyUnicode_FromString(
-                        operation.is_unitary ? "GateOperation" : "NoiseOperation"
-                    )
-                ) != 0 ||
-                set_dict_item(
-                    op_dict,
                     "kind",
                     PyUnicode_FromString(operation.is_unitary ? "gate" : "noise")
                 ) != 0 ||

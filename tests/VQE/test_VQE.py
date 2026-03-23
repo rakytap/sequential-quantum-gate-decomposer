@@ -1,6 +1,18 @@
+import functools
 import numpy as np
 import scipy as sp
 import pytest
+
+
+@functools.lru_cache(maxsize=1)
+def _planner_operation_kind_tags():
+    """Lazy import so test collection works without a full squander extension build."""
+    from squander.partitioning.noisy_planner import (
+        PLANNER_OP_KIND_GATE,
+        PLANNER_OP_KIND_NOISE,
+    )
+
+    return PLANNER_OP_KIND_GATE, PLANNER_OP_KIND_NOISE
 
 
 sigmax = sp.sparse.csr_matrix(np.array([[0,1],
@@ -311,6 +323,8 @@ class Test_VQE:
     def _expected_bridge_operations(vqe):
         pytest.importorskip("qiskit")
 
+        planner_gate_kind, planner_noise_kind = _planner_operation_kind_tags()
+
         base_circuit = vqe.get_Qiskit_Circuit()
         noise_by_gate = {}
         for noise_spec in vqe.density_noise:
@@ -327,8 +341,7 @@ class Test_VQE:
             if gate_name == "u":
                 expected.append(
                     {
-                        "operation_class": "GateOperation",
-                        "kind": "gate",
+                        "kind": planner_gate_kind,
                         "name": "U3",
                         "is_unitary": True,
                         "source_gate_index": gate_index,
@@ -343,8 +356,7 @@ class Test_VQE:
             elif gate_name in {"cx", "cnot"}:
                 expected.append(
                     {
-                        "operation_class": "GateOperation",
-                        "kind": "gate",
+                        "kind": planner_gate_kind,
                         "name": "CNOT",
                         "is_unitary": True,
                         "source_gate_index": gate_index,
@@ -363,8 +375,7 @@ class Test_VQE:
             for noise_spec in noise_by_gate.get(gate_index, []):
                 expected.append(
                     {
-                        "operation_class": "NoiseOperation",
-                        "kind": "noise",
+                        "kind": planner_noise_kind,
                         "name": noise_spec["channel"],
                         "is_unitary": False,
                         "source_gate_index": gate_index,
@@ -816,7 +827,6 @@ class Test_VQE:
         assert len(bridge["operations"]) == len(expected_operations)
 
         for actual, expected in zip(bridge["operations"], expected_operations):
-            assert actual["operation_class"] == expected["operation_class"]
             assert actual["kind"] == expected["kind"]
             assert actual["name"] == expected["name"]
             assert actual["is_unitary"] == expected["is_unitary"]
@@ -846,9 +856,10 @@ class Test_VQE:
         assert artifact["bridge_gate_count"] + artifact["bridge_noise_count"] == artifact["bridge_operation_count"]
         assert artifact["bridge_noise_count"] == len(artifact["density_noise"])
         assert artifact["bridge_parameter_count"] > 0
-        assert artifact["bridge_operations"][0]["operation_class"] == "GateOperation"
+        gate_kind, noise_kind = _planner_operation_kind_tags()
+        assert artifact["bridge_operations"][0]["kind"] == gate_kind
         assert any(
-            op["operation_class"] == "NoiseOperation"
+            op["kind"] == noise_kind
             for op in artifact["bridge_operations"]
         )
 
@@ -868,10 +879,11 @@ class Test_VQE:
             density_vqe.set_Optimized_Parameters(parameters)
             density_energy = density_vqe.Optimization_Problem(parameters)
             bridge = density_vqe.describe_density_bridge()
+            _, noise_kind = _planner_operation_kind_tags()
             noise_ops = [
                 op
                 for op in bridge["operations"]
-                if op["operation_class"] == "NoiseOperation"
+                if op["kind"] == noise_kind
             ]
 
             assert density_vqe.backend == "density_matrix"
@@ -956,8 +968,9 @@ class Test_VQE:
         assert result["execution_ready"]
         assert result["bridge_source_type"] == "generated_hea"
         assert result["bridge_noise_count"] == 3
+        gate_kind, _ = _planner_operation_kind_tags()
         assert any(
-            op["name"] == "CNOT" and op["operation_class"] == "GateOperation"
+            op["name"] == "CNOT" and op["kind"] == gate_kind
             for op in result["bridge_operations"]
         )
 

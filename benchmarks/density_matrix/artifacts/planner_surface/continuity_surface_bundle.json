@@ -57,7 +57,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "U3",
-          "operation_class": "GateOperation",
           "param_count": 3,
           "param_start": 0,
           "qubit_support": [
@@ -73,7 +72,6 @@
           "is_unitary": false,
           "kind": "noise",
           "name": "local_depolarizing",
-          "operation_class": "NoiseOperation",
           "param_count": 0,
           "param_start": 3,
           "qubit_support": [
@@ -89,7 +87,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "U3",
-          "operation_class": "GateOperation",
           "param_count": 3,
           "param_start": 3,
           "qubit_support": [
@@ -105,7 +102,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "CNOT",
-          "operation_class": "GateOperation",
           "param_count": 0,
           "param_start": 6,
           "qubit_support": [
@@ -122,7 +118,6 @@
           "is_unitary": false,
           "kind": "noise",
           "name": "amplitude_damping",
-          "operation_class": "NoiseOperation",
           "param_count": 0,
           "param_start": 6,
           "qubit_support": [
@@ -138,7 +133,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "U3",
-          "operation_class": "GateOperation",
           "param_count": 3,
           "param_start": 6,
           "qubit_support": [
@@ -154,7 +148,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "U3",
-          "operation_class": "GateOperation",
           "param_count": 3,
           "param_start": 9,
           "qubit_support": [
@@ -170,7 +163,6 @@
           "is_unitary": false,
           "kind": "noise",
           "name": "phase_damping",
-          "operation_class": "NoiseOperation",
           "param_count": 0,
           "param_start": 12,
           "qubit_support": [
@@ -186,7 +178,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "CNOT",
-          "operation_class": "GateOperation",
           "param_count": 0,
           "param_start": 12,
           "qubit_support": [
@@ -203,7 +194,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "U3",
-          "operation_class": "GateOperation",
           "param_count": 3,
           "param_start": 12,
           "qubit_support": [
@@ -219,7 +209,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "U3",
-          "operation_class": "GateOperation",
           "param_count": 3,
           "param_start": 15,
           "qubit_support": [
@@ -235,7 +224,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "CNOT",
-          "operation_class": "GateOperation",
           "param_count": 0,
           "param_start": 18,
           "qubit_support": [
@@ -331,7 +319,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "U3",
-          "operation_class": "GateOperation",
           "param_count": 3,
           "param_start": 0,
           "qubit_support": [
@@ -347,7 +334,6 @@
           "is_unitary": false,
           "kind": "noise",
           "name": "local_depolarizing",
-          "operation_class": "NoiseOperation",
           "param_count": 0,
           "param_start": 3,
           "qubit_support": [
@@ -363,7 +349,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "U3",
-          "operation_class": "GateOperation",
           "param_count": 3,
           "param_start": 3,
           "qubit_support": [
@@ -379,7 +364,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "CNOT",
-          "operation_class": "GateOperation",
           "param_count": 0,
           "param_start": 6,
           "qubit_support": [
@@ -396,7 +380,6 @@
           "is_unitary": false,
           "kind": "noise",
           "name": "amplitude_damping",
-          "operation_class": "NoiseOperation",
           "param_count": 0,
           "param_start": 6,
           "qubit_support": [
@@ -412,7 +395,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "U3",
-          "operation_class": "GateOperation",
           "param_count": 3,
           "param_start": 6,
           "qubit_support": [
@@ -428,7 +410,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "U3",
-          "operation_class": "GateOperation",
           "param_count": 3,
           "param_start": 9,
           "qubit_support": [
@@ -444,7 +425,6 @@
           "is_unitary": false,
           "kind": "noise",
           "name": "phase_damping",
-          "operation_class": "NoiseOperation",
           "param_count": 0,
           "param_start": 12,
           "qubit_support": [
@@ -460,7 +440,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "CNOT",
-          "operation_class": "GateOperation",
           "param_count": 0,
           "param_start": 12,
           "qubit_support": [
@@ -477,7 +456,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "U3",
-          "operation_class": "GateOperation",
           "param_count": 3,
           "param_start": 12,
           "qubit_support": [
@@ -493,7 +471,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "U3",
-          "operation_class": "GateOperation",
           "param_count": 3,
           "param_start": 15,
           "qubit_support": [
@@ -509,7 +486,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "CNOT",
-          "operation_class": "GateOperation",
           "param_count": 0,
           "param_start": 18,
           "qubit_support": [
@@ -526,7 +502,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "U3",
-          "operation_class": "GateOperation",
           "param_count": 3,
           "param_start": 18,
           "qubit_support": [
@@ -542,7 +517,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "U3",
-          "operation_class": "GateOperation",
           "param_count": 3,
           "param_start": 21,
           "qubit_support": [
@@ -558,7 +532,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "CNOT",
-          "operation_class": "GateOperation",
           "param_count": 0,
           "param_start": 24,
           "qubit_support": [
@@ -575,7 +548,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "U3",
-          "operation_class": "GateOperation",
           "param_count": 3,
           "param_start": 24,
           "qubit_support": [
@@ -591,7 +563,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "U3",
-          "operation_class": "GateOperation",
           "param_count": 3,
           "param_start": 27,
           "qubit_support": [
@@ -607,7 +578,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "CNOT",
-          "operation_class": "GateOperation",
           "param_count": 0,
           "param_start": 30,
           "qubit_support": [
@@ -717,7 +687,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "U3",
-          "operation_class": "GateOperation",
           "param_count": 3,
           "param_start": 0,
           "qubit_support": [
@@ -733,7 +702,6 @@
           "is_unitary": false,
           "kind": "noise",
           "name": "local_depolarizing",
-          "operation_class": "NoiseOperation",
           "param_count": 0,
           "param_start": 3,
           "qubit_support": [
@@ -749,7 +717,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "U3",
-          "operation_class": "GateOperation",
           "param_count": 3,
           "param_start": 3,
           "qubit_support": [
@@ -765,7 +732,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "CNOT",
-          "operation_class": "GateOperation",
           "param_count": 0,
           "param_start": 6,
           "qubit_support": [
@@ -782,7 +748,6 @@
           "is_unitary": false,
           "kind": "noise",
           "name": "amplitude_damping",
-          "operation_class": "NoiseOperation",
           "param_count": 0,
           "param_start": 6,
           "qubit_support": [
@@ -798,7 +763,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "U3",
-          "operation_class": "GateOperation",
           "param_count": 3,
           "param_start": 6,
           "qubit_support": [
@@ -814,7 +778,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "U3",
-          "operation_class": "GateOperation",
           "param_count": 3,
           "param_start": 9,
           "qubit_support": [
@@ -830,7 +793,6 @@
           "is_unitary": false,
           "kind": "noise",
           "name": "phase_damping",
-          "operation_class": "NoiseOperation",
           "param_count": 0,
           "param_start": 12,
           "qubit_support": [
@@ -846,7 +808,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "CNOT",
-          "operation_class": "GateOperation",
           "param_count": 0,
           "param_start": 12,
           "qubit_support": [
@@ -863,7 +824,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "U3",
-          "operation_class": "GateOperation",
           "param_count": 3,
           "param_start": 12,
           "qubit_support": [
@@ -879,7 +839,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "U3",
-          "operation_class": "GateOperation",
           "param_count": 3,
           "param_start": 15,
           "qubit_support": [
@@ -895,7 +854,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "CNOT",
-          "operation_class": "GateOperation",
           "param_count": 0,
           "param_start": 18,
           "qubit_support": [
@@ -912,7 +870,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "U3",
-          "operation_class": "GateOperation",
           "param_count": 3,
           "param_start": 18,
           "qubit_support": [
@@ -928,7 +885,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "U3",
-          "operation_class": "GateOperation",
           "param_count": 3,
           "param_start": 21,
           "qubit_support": [
@@ -944,7 +900,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "CNOT",
-          "operation_class": "GateOperation",
           "param_count": 0,
           "param_start": 24,
           "qubit_support": [
@@ -961,7 +916,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "U3",
-          "operation_class": "GateOperation",
           "param_count": 3,
           "param_start": 24,
           "qubit_support": [
@@ -977,7 +931,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "U3",
-          "operation_class": "GateOperation",
           "param_count": 3,
           "param_start": 27,
           "qubit_support": [
@@ -993,7 +946,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "CNOT",
-          "operation_class": "GateOperation",
           "param_count": 0,
           "param_start": 30,
           "qubit_support": [
@@ -1010,7 +962,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "U3",
-          "operation_class": "GateOperation",
           "param_count": 3,
           "param_start": 30,
           "qubit_support": [
@@ -1026,7 +977,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "U3",
-          "operation_class": "GateOperation",
           "param_count": 3,
           "param_start": 33,
           "qubit_support": [
@@ -1042,7 +992,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "CNOT",
-          "operation_class": "GateOperation",
           "param_count": 0,
           "param_start": 36,
           "qubit_support": [
@@ -1059,7 +1008,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "U3",
-          "operation_class": "GateOperation",
           "param_count": 3,
           "param_start": 36,
           "qubit_support": [
@@ -1075,7 +1023,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "U3",
-          "operation_class": "GateOperation",
           "param_count": 3,
           "param_start": 39,
           "qubit_support": [
@@ -1091,7 +1038,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "CNOT",
-          "operation_class": "GateOperation",
           "param_count": 0,
           "param_start": 42,
           "qubit_support": [
@@ -1215,7 +1161,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "U3",
-          "operation_class": "GateOperation",
           "param_count": 3,
           "param_start": 0,
           "qubit_support": [
@@ -1231,7 +1176,6 @@
           "is_unitary": false,
           "kind": "noise",
           "name": "local_depolarizing",
-          "operation_class": "NoiseOperation",
           "param_count": 0,
           "param_start": 3,
           "qubit_support": [
@@ -1247,7 +1191,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "U3",
-          "operation_class": "GateOperation",
           "param_count": 3,
           "param_start": 3,
           "qubit_support": [
@@ -1263,7 +1206,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "CNOT",
-          "operation_class": "GateOperation",
           "param_count": 0,
           "param_start": 6,
           "qubit_support": [
@@ -1280,7 +1222,6 @@
           "is_unitary": false,
           "kind": "noise",
           "name": "amplitude_damping",
-          "operation_class": "NoiseOperation",
           "param_count": 0,
           "param_start": 6,
           "qubit_support": [
@@ -1296,7 +1237,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "U3",
-          "operation_class": "GateOperation",
           "param_count": 3,
           "param_start": 6,
           "qubit_support": [
@@ -1312,7 +1252,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "U3",
-          "operation_class": "GateOperation",
           "param_count": 3,
           "param_start": 9,
           "qubit_support": [
@@ -1328,7 +1267,6 @@
           "is_unitary": false,
           "kind": "noise",
           "name": "phase_damping",
-          "operation_class": "NoiseOperation",
           "param_count": 0,
           "param_start": 12,
           "qubit_support": [
@@ -1344,7 +1282,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "CNOT",
-          "operation_class": "GateOperation",
           "param_count": 0,
           "param_start": 12,
           "qubit_support": [
@@ -1361,7 +1298,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "U3",
-          "operation_class": "GateOperation",
           "param_count": 3,
           "param_start": 12,
           "qubit_support": [
@@ -1377,7 +1313,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "U3",
-          "operation_class": "GateOperation",
           "param_count": 3,
           "param_start": 15,
           "qubit_support": [
@@ -1393,7 +1328,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "CNOT",
-          "operation_class": "GateOperation",
           "param_count": 0,
           "param_start": 18,
           "qubit_support": [
@@ -1410,7 +1344,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "U3",
-          "operation_class": "GateOperation",
           "param_count": 3,
           "param_start": 18,
           "qubit_support": [
@@ -1426,7 +1359,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "U3",
-          "operation_class": "GateOperation",
           "param_count": 3,
           "param_start": 21,
           "qubit_support": [
@@ -1442,7 +1374,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "CNOT",
-          "operation_class": "GateOperation",
           "param_count": 0,
           "param_start": 24,
           "qubit_support": [
@@ -1459,7 +1390,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "U3",
-          "operation_class": "GateOperation",
           "param_count": 3,
           "param_start": 24,
           "qubit_support": [
@@ -1475,7 +1405,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "U3",
-          "operation_class": "GateOperation",
           "param_count": 3,
           "param_start": 27,
           "qubit_support": [
@@ -1491,7 +1420,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "CNOT",
-          "operation_class": "GateOperation",
           "param_count": 0,
           "param_start": 30,
           "qubit_support": [
@@ -1508,7 +1436,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "U3",
-          "operation_class": "GateOperation",
           "param_count": 3,
           "param_start": 30,
           "qubit_support": [
@@ -1524,7 +1451,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "U3",
-          "operation_class": "GateOperation",
           "param_count": 3,
           "param_start": 33,
           "qubit_support": [
@@ -1540,7 +1466,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "CNOT",
-          "operation_class": "GateOperation",
           "param_count": 0,
           "param_start": 36,
           "qubit_support": [
@@ -1557,7 +1482,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "U3",
-          "operation_class": "GateOperation",
           "param_count": 3,
           "param_start": 36,
           "qubit_support": [
@@ -1573,7 +1497,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "U3",
-          "operation_class": "GateOperation",
           "param_count": 3,
           "param_start": 39,
           "qubit_support": [
@@ -1589,7 +1512,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "CNOT",
-          "operation_class": "GateOperation",
           "param_count": 0,
           "param_start": 42,
           "qubit_support": [
@@ -1606,7 +1528,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "U3",
-          "operation_class": "GateOperation",
           "param_count": 3,
           "param_start": 42,
           "qubit_support": [
@@ -1622,7 +1543,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "U3",
-          "operation_class": "GateOperation",
           "param_count": 3,
           "param_start": 45,
           "qubit_support": [
@@ -1638,7 +1558,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "CNOT",
-          "operation_class": "GateOperation",
           "param_count": 0,
           "param_start": 48,
           "qubit_support": [
@@ -1655,7 +1574,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "U3",
-          "operation_class": "GateOperation",
           "param_count": 3,
           "param_start": 48,
           "qubit_support": [
@@ -1671,7 +1589,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "U3",
-          "operation_class": "GateOperation",
           "param_count": 3,
           "param_start": 51,
           "qubit_support": [
@@ -1687,7 +1604,6 @@
           "is_unitary": true,
           "kind": "gate",
           "name": "CNOT",
-          "operation_class": "GateOperation",
           "param_count": 0,
           "param_start": 54,
           "qubit_support": [

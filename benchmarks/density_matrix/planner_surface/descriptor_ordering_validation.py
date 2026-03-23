@@ -33,7 +33,8 @@ from benchmarks.density_matrix.planner_surface.workloads import (
     iter_structured_descriptor_sets,
 )
 from squander.partitioning.noisy_planner import (
-    PHASE3_DESCRIPTOR_SCHEMA_VERSION,
+    DESCRIPTOR_SCHEMA_VERSION,
+    PLANNER_OP_KIND_NOISE,
     build_phase3_continuity_partition_descriptor_set,
     build_phase3_continuity_planner_surface,
 )
@@ -69,7 +70,9 @@ def _flatten_canonical_indices(payload: dict) -> list[int]:
 
 def _flatten_member_names(payload: dict) -> list[str]:
     return [
-        member["name"] for partition in payload["partitions"] for member in partition["members"]
+        member["name"]
+        for partition in payload["partitions"]
+        for member in partition["members"]
     ]
 
 
@@ -79,13 +82,13 @@ def _case_from_surface(case_kind: str, metadata: dict, surface, descriptor_set) 
     expected_names = [operation["name"] for operation in surface_payload["operations"]]
     actual_names = _flatten_member_names(descriptor_payload)
     ordering_pass = (
-        descriptor_payload["schema_version"] == PHASE3_DESCRIPTOR_SCHEMA_VERSION
+        descriptor_payload["schema_version"] == DESCRIPTOR_SCHEMA_VERSION
         and _flatten_canonical_indices(descriptor_payload)
         == list(range(surface_payload["operation_count"]))
         and actual_names == expected_names
         and descriptor_payload["noise_count"]
         == sum(
-            member["operation_class"] == "NoiseOperation"
+            member["kind"] == PLANNER_OP_KIND_NOISE
             for partition in descriptor_payload["partitions"]
             for member in partition["members"]
         )
@@ -186,13 +189,15 @@ def build_artifact_bundle(cases: list[dict]) -> dict:
         if passed_cases == len(cases) and ordering_passes == len(cases)
         else "fail",
         "requested_mode": "partitioned_density",
-        "schema_version": PHASE3_DESCRIPTOR_SCHEMA_VERSION,
+        "schema_version": DESCRIPTOR_SCHEMA_VERSION,
         "software": build_software_metadata(),
         "summary": {
             "total_cases": len(cases),
             "passed_cases": passed_cases,
             "ordering_passes": ordering_passes,
-            "continuity_cases": sum(case["case_kind"] == "continuity" for case in cases),
+            "continuity_cases": sum(
+                case["case_kind"] == "continuity" for case in cases
+            ),
             "boundary_microcases": sum(
                 case["case_kind"] == "boundary_microcase" for case in cases
             ),
