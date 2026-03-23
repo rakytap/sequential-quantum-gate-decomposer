@@ -1380,7 +1380,10 @@ class qgd_Wide_Circuit_Optimization:
             circuit_qiskit_sabre = transpile(circo, basis_gates=SUPPORTED_GATES_NAMES, coupling_map=coupling_map, optimization_level=0)
             Squander_remapped_circuit, parameters_remapped_circuit = Qiskit_IO.convert_Qiskit_to_Squander(circuit_qiskit_sabre)
         else:
-            sabre = SABRE(circ, self.config["topology"])
+            new_circ = Circuit(circ.get_Qbit_Num())
+            for gate in circ.get_Gates():
+                new_circ.add_Gate(gate)
+            sabre = SABRE(new_circ, self.config["topology"])
             Squander_remapped_circuit, parameters_remapped_circuit, pi, final_pi, swap_count = sabre.map_circuit(orig_parameters)
             self.config.setdefault("initial_mapping",pi)
             self.config.setdefault("final_mapping",final_pi)
