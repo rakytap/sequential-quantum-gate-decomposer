@@ -1197,7 +1197,7 @@ class qgd_Wide_Circuit_Optimization:
             self.config['topology'] = None
             circ, parameters = self.OptimizeWideCircuit( circ, parameters, global_min=global_min )
             self.config['topology'] = topo
-            circ, parameters = self.route_circuit(circ,parameters)
+            circ, parameters = self.route_circuit(circ, parameters)
         part_size_start = self.max_partition_size
         part_size_end = self.max_partition_size
         if self.config.get("use_osr", False) or self.config.get("use_graph_search", False): part_size_end = 4
@@ -1349,30 +1349,43 @@ class qgd_Wide_Circuit_Optimization:
 
         if self.config["test_final_circuit"]:
             CompareCircuits( circ, orig_parameters, wide_circuit, wide_parameters )
-            #print("Test final circuit passed")
 
+        self.check_valid_topo(wide_circuit)
+
+        return wide_circuit, wide_parameters
+
+    def all_to_all_topology(num_qubits):
+        return [(i, j) for i in range(num_qubits) for j in range(i+1, num_qubits)]
+    def linear_topology(num_qubits):
+        return [(i, i+1) for i in range(num_qubits - 1)]
+    def star_topology(num_qubits):
+        return [(0, i) for i in range(1, num_qubits)]
+    def ring_topology(num_qubits):
+        return [(i, (i+1) % num_qubits) for i in range(num_qubits)]
+    def check_valid_topo(self, wide_circuit):
         if self.config["topology"] is not None:
             topo_set = {frozenset(edge) for edge in self.config["topology"]}
             assert all(frozenset(gate.get_Involved_Qbits()) in topo_set
                 for gate in wide_circuit.get_Flat_Circuit().get_Gates()
                 if len(gate.get_Involved_Qbits()) > 1), "Final circuit contains gates that do not respect the topology constraints."
 
-        return wide_circuit, wide_parameters
-
     def route_circuit(self, circ: Circuit, orig_parameters: np.ndarray, use_qiskit=True):
         if use_qiskit:
             from squander import Qiskit_IO
             from qiskit import transpile
-            circo = Qiskit_IO.get_Qiskit_Circuit(circ.get_Flat_Circuit(),orig_parameters)
+            from squander.gates import gates_Wrapper as gate
+            SUPPORTED_GATES_NAMES = {n.lower().replace("cnot", "cx") for n in dir(gate) if not n.startswith("_") and issubclass(getattr(gate, n), gate.Gate) and n not in ("Gate", "CROT", "CR", "SYC", "CCX", "CSWAP")}
+            circo = Qiskit_IO.get_Qiskit_Circuit(circ, orig_parameters)
             coupling_map = [[i,j] for i,j in self.config['topology']]
-            circuit_qiskit_sabre = transpile(circo, coupling_map=coupling_map)
-            circ, parameters = Qiskit_IO.convert_Qiskit_to_Squander(circuit_qiskit_sabre)
-            self.config['routed']= True
-            return circ, parameters
+            circuit_qiskit_sabre = transpile(circo, basis_gates=SUPPORTED_GATES_NAMES, coupling_map=coupling_map, optimization_level=0)
+            Squander_remapped_circuit, parameters_remapped_circuit = Qiskit_IO.convert_Qiskit_to_Squander(circuit_qiskit_sabre)
         else:
             sabre = SABRE(circ, self.config["topology"])
             Squander_remapped_circuit, parameters_remapped_circuit, pi, final_pi, swap_count = sabre.map_circuit(orig_parameters)
             self.config.setdefault("initial_mapping",pi)
             self.config.setdefault("final_mapping",final_pi)
-            self.config["routed"] = True
-            return Squander_remapped_circuit, parameters_remapped_circuit
+        if self.config["test_final_circuit"]:
+            CompareCircuits( circ, orig_parameters, Squander_remapped_circuit, parameters_remapped_circuit )
+        self.check_valid_topo(Squander_remapped_circuit)
+        self.config['routed']= True
+        return Squander_remapped_circuit, parameters_remapped_circuit
