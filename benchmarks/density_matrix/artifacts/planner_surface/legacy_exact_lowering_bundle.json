@@ -69,9 +69,7 @@
         }
       ],
       "provenance": {
-        "entry_route": "phase3_legacy_exact_lowering",
         "source_type": "legacy_qgd_circuit_exact",
-        "workload_family": "phase3_legacy_exact_lowering",
         "workload_id": "legacy_manual_u3_cnot"
       },
       "requested_mode": "partitioned_density",
@@ -148,9 +146,7 @@
         }
       ],
       "provenance": {
-        "entry_route": "phase3_legacy_exact_lowering",
         "source_type": "legacy_qgd_circuit_exact",
-        "workload_family": "phase3_legacy_exact_lowering",
         "workload_id": "legacy_manual_with_noise"
       },
       "requested_mode": "partitioned_density",

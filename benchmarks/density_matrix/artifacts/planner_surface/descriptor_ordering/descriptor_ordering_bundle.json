@@ -486,7 +486,6 @@
           "requires_remap": true
         }
       ],
-      "entry_route": "phase2_continuity_lowering",
       "expected_name_sequence": [
         "U3",
         "local_depolarizing",
@@ -515,7 +514,6 @@
       "schema_version": "phase3_noisy_partition_descriptor_v1",
       "source_type": "generated_hea",
       "status": "pass",
-      "workload_family": "phase2_continuity_workflow",
       "workload_id": "phase2_xxz_hea_q4_continuity"
     },
     {
@@ -888,7 +886,6 @@
           "requires_remap": true
         }
       ],
-      "entry_route": "phase3_microcase_generation",
       "expected_name_sequence": [
         "U3",
         "U3",
@@ -916,7 +913,6 @@
       "schema_version": "phase3_noisy_partition_descriptor_v1",
       "source_type": "microcase_builder",
       "status": "pass",
-      "workload_family": "phase3_micro_validation",
       "workload_id": "microcase_4q_partition_boundary_triplet"
     },
     {
@@ -2708,7 +2704,6 @@
           "requires_remap": true
         }
       ],
-      "entry_route": "phase3_structured_family_generation",
       "expected_name_sequence": [
         "U3",
         "U3",
@@ -2765,7 +2760,6 @@
       "schema_version": "phase3_noisy_partition_descriptor_v1",
       "source_type": "structured_family_builder",
       "status": "pass",
-      "workload_family": "phase3_structured_family",
       "workload_id": "layered_nearest_neighbor_q8_sparse_seed20260318"
     }
   ],

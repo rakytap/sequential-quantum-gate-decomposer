@@ -26,7 +26,6 @@
         "fused_runtime_slower_than_sequential_reference",
         "no_peak_memory_reduction_against_sequential_reference"
       ],
-      "entry_route": "phase3_structured_family_generation",
       "exact_output_present": true,
       "exclusion_reason": null,
       "external_frobenius_norm_diff": null,
@@ -127,7 +126,6 @@
       "timing_mode": "median_3",
       "topology": null,
       "trace_deviation": 8.883709084703726e-16,
-      "workload_family": "phase3_structured_family",
       "workload_id": "layered_nearest_neighbor_q8_sparse_seed20260318"
     },
     {
@@ -155,7 +153,6 @@
         "fused_runtime_slower_than_sequential_reference",
         "no_peak_memory_reduction_against_sequential_reference"
       ],
-      "entry_route": "phase3_structured_family_generation",
       "exact_output_present": true,
       "exclusion_reason": null,
       "external_frobenius_norm_diff": null,
@@ -263,7 +260,6 @@
       "timing_mode": "median_3",
       "topology": null,
       "trace_deviation": 1.5543182254163305e-15,
-      "workload_family": "phase3_structured_family",
       "workload_id": "layered_nearest_neighbor_q10_sparse_seed20260318"
     },
     {
@@ -292,7 +288,6 @@
         "fused_runtime_slower_than_sequential_reference",
         "no_peak_memory_reduction_against_sequential_reference"
       ],
-      "entry_route": "phase3_structured_family_generation",
       "exact_output_present": true,
       "exclusion_reason": null,
       "external_frobenius_norm_diff": null,
@@ -393,7 +388,6 @@
       "timing_mode": "median_3",
       "topology": null,
       "trace_deviation": 1.1107607107334693e-15,
-      "workload_family": "phase3_structured_family",
       "workload_id": "seeded_random_layered_q8_sparse_seed20260318"
     },
     {
@@ -421,7 +415,6 @@
         "fused_runtime_slower_than_sequential_reference",
         "no_peak_memory_reduction_against_sequential_reference"
       ],
-      "entry_route": "phase3_structured_family_generation",
       "exact_output_present": true,
       "exclusion_reason": null,
       "external_frobenius_norm_diff": null,
@@ -529,7 +522,6 @@
       "timing_mode": "median_3",
       "topology": null,
       "trace_deviation": 1.999148158434178e-15,
-      "workload_family": "phase3_structured_family",
       "workload_id": "seeded_random_layered_q10_sparse_seed20260318"
     },
     {
@@ -557,7 +549,6 @@
         "fused_runtime_slower_than_sequential_reference",
         "no_peak_memory_reduction_against_sequential_reference"
       ],
-      "entry_route": "phase3_structured_family_generation",
       "exact_output_present": true,
       "exclusion_reason": null,
       "external_frobenius_norm_diff": null,
@@ -659,7 +650,6 @@
       "timing_mode": "median_3",
       "topology": null,
       "trace_deviation": 4.441551448053264e-16,
-      "workload_family": "phase3_structured_family",
       "workload_id": "partition_stress_ladder_q8_sparse_seed20260318"
     },
     {
@@ -687,7 +677,6 @@
         "fused_runtime_slower_than_sequential_reference",
         "no_peak_memory_reduction_against_sequential_reference"
       ],
-      "entry_route": "phase3_structured_family_generation",
       "exact_output_present": true,
       "exclusion_reason": null,
       "external_frobenius_norm_diff": null,
@@ -797,7 +786,6 @@
       "timing_mode": "median_3",
       "topology": null,
       "trace_deviation": 4.440932257458426e-16,
-      "workload_family": "phase3_structured_family",
       "workload_id": "partition_stress_ladder_q10_sparse_seed20260318"
     }
   ],

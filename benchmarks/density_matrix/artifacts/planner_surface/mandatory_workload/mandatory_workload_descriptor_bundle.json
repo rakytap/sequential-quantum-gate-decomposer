@@ -471,7 +471,6 @@
           "requires_remap": true
         }
       ],
-      "entry_route": "phase2_continuity_lowering",
       "gate_count": 9,
       "max_partition_qubits": 2,
       "max_partition_span": 2,
@@ -494,7 +493,6 @@
       "schema_version": "phase3_noisy_partition_descriptor_v1",
       "source_type": "generated_hea",
       "status": "pass",
-      "workload_family": "phase2_continuity_workflow",
       "workload_id": "phase2_xxz_hea_q4_continuity"
     },
     {
@@ -667,7 +665,6 @@
           "requires_remap": false
         }
       ],
-      "entry_route": "phase3_microcase_generation",
       "gate_count": 4,
       "max_partition_qubits": 2,
       "max_partition_span": 2,
@@ -722,7 +719,6 @@
       "schema_version": "phase3_noisy_partition_descriptor_v1",
       "source_type": "microcase_builder",
       "status": "pass",
-      "workload_family": "phase3_micro_validation",
       "workload_id": "microcase_2q_entangler_local_depolarizing"
     },
     {
@@ -1029,7 +1025,6 @@
           "requires_remap": false
         }
       ],
-      "entry_route": "phase3_microcase_generation",
       "gate_count": 6,
       "max_partition_qubits": 2,
       "max_partition_span": 2,
@@ -1107,7 +1102,6 @@
       "schema_version": "phase3_noisy_partition_descriptor_v1",
       "source_type": "microcase_builder",
       "status": "pass",
-      "workload_family": "phase3_micro_validation",
       "workload_id": "microcase_3q_mixed_local_noise_sequence"
     },
     {
@@ -1467,7 +1461,6 @@
           "requires_remap": true
         }
       ],
-      "entry_route": "phase3_microcase_generation",
       "gate_count": 7,
       "max_partition_qubits": 2,
       "max_partition_span": 2,
@@ -1560,7 +1553,6 @@
       "schema_version": "phase3_noisy_partition_descriptor_v1",
       "source_type": "microcase_builder",
       "status": "pass",
-      "workload_family": "phase3_micro_validation",
       "workload_id": "microcase_4q_partition_boundary_triplet"
     },
     {
@@ -3312,7 +3304,6 @@
           "requires_remap": true
         }
       ],
-      "entry_route": "phase3_structured_family_generation",
       "gate_count": 35,
       "max_partition_qubits": 2,
       "max_partition_span": 2,
@@ -3357,7 +3348,6 @@
       "schema_version": "phase3_noisy_partition_descriptor_v1",
       "source_type": "structured_family_builder",
       "status": "pass",
-      "workload_family": "phase3_structured_family",
       "workload_id": "layered_nearest_neighbor_q8_sparse_seed20260318"
     },
     {
@@ -5107,7 +5097,6 @@
           "requires_remap": true
         }
       ],
-      "entry_route": "phase3_structured_family_generation",
       "gate_count": 35,
       "max_partition_qubits": 2,
       "max_partition_span": 2,
@@ -5151,7 +5140,6 @@
       "schema_version": "phase3_noisy_partition_descriptor_v1",
       "source_type": "structured_family_builder",
       "status": "pass",
-      "workload_family": "phase3_structured_family",
       "workload_id": "layered_nearest_neighbor_q8_periodic_seed20260318"
     },
     {
@@ -7266,7 +7254,6 @@
           "requires_remap": true
         }
       ],
-      "entry_route": "phase3_structured_family_generation",
       "gate_count": 35,
       "max_partition_qubits": 2,
       "max_partition_span": 2,
@@ -7316,7 +7303,6 @@
       "schema_version": "phase3_noisy_partition_descriptor_v1",
       "source_type": "structured_family_builder",
       "status": "pass",
-      "workload_family": "phase3_structured_family",
       "workload_id": "layered_nearest_neighbor_q8_dense_seed20260318"
     },
     {
@@ -10139,7 +10125,6 @@
           "requires_remap": true
         }
       ],
-      "entry_route": "phase3_structured_family_generation",
       "gate_count": 58,
       "max_partition_qubits": 2,
       "max_partition_span": 2,
@@ -10198,7 +10183,6 @@
       "schema_version": "phase3_noisy_partition_descriptor_v1",
       "source_type": "structured_family_builder",
       "status": "pass",
-      "workload_family": "phase3_structured_family",
       "workload_id": "layered_nearest_neighbor_q10_sparse_seed20260318"
     },
     {
@@ -13067,7 +13051,6 @@
           "requires_remap": true
         }
       ],
-      "entry_route": "phase3_structured_family_generation",
       "gate_count": 58,
       "max_partition_qubits": 2,
       "max_partition_span": 2,
@@ -13126,7 +13109,6 @@
       "schema_version": "phase3_noisy_partition_descriptor_v1",
       "source_type": "structured_family_builder",
       "status": "pass",
-      "workload_family": "phase3_structured_family",
       "workload_id": "layered_nearest_neighbor_q10_periodic_seed20260318"
     },
     {
@@ -16617,7 +16599,6 @@
           "requires_remap": true
         }
       ],
-      "entry_route": "phase3_structured_family_generation",
       "gate_count": 58,
       "max_partition_qubits": 2,
       "max_partition_span": 2,
@@ -16686,7 +16667,6 @@
       "schema_version": "phase3_noisy_partition_descriptor_v1",
       "source_type": "structured_family_builder",
       "status": "pass",
-      "workload_family": "phase3_structured_family",
       "workload_id": "layered_nearest_neighbor_q10_dense_seed20260318"
     },
     {
@@ -18438,7 +18418,6 @@
           "requires_remap": true
         }
       ],
-      "entry_route": "phase3_structured_family_generation",
       "gate_count": 35,
       "max_partition_qubits": 2,
       "max_partition_span": 2,
@@ -18483,7 +18462,6 @@
       "schema_version": "phase3_noisy_partition_descriptor_v1",
       "source_type": "structured_family_builder",
       "status": "pass",
-      "workload_family": "phase3_structured_family",
       "workload_id": "seeded_random_layered_q8_sparse_seed20260318"
     },
     {
@@ -20233,7 +20211,6 @@
           "requires_remap": true
         }
       ],
-      "entry_route": "phase3_structured_family_generation",
       "gate_count": 35,
       "max_partition_qubits": 2,
       "max_partition_span": 2,
@@ -20277,7 +20254,6 @@
       "schema_version": "phase3_noisy_partition_descriptor_v1",
       "source_type": "structured_family_builder",
       "status": "pass",
-      "workload_family": "phase3_structured_family",
       "workload_id": "seeded_random_layered_q8_periodic_seed20260318"
     },
     {
@@ -22392,7 +22368,6 @@
           "requires_remap": true
         }
       ],
-      "entry_route": "phase3_structured_family_generation",
       "gate_count": 35,
       "max_partition_qubits": 2,
       "max_partition_span": 2,
@@ -22442,7 +22417,6 @@
       "schema_version": "phase3_noisy_partition_descriptor_v1",
       "source_type": "structured_family_builder",
       "status": "pass",
-      "workload_family": "phase3_structured_family",
       "workload_id": "seeded_random_layered_q8_dense_seed20260318"
     },
     {
@@ -25265,7 +25239,6 @@
           "requires_remap": true
         }
       ],
-      "entry_route": "phase3_structured_family_generation",
       "gate_count": 58,
       "max_partition_qubits": 2,
       "max_partition_span": 2,
@@ -25324,7 +25297,6 @@
       "schema_version": "phase3_noisy_partition_descriptor_v1",
       "source_type": "structured_family_builder",
       "status": "pass",
-      "workload_family": "phase3_structured_family",
       "workload_id": "seeded_random_layered_q10_sparse_seed20260318"
     },
     {
@@ -28193,7 +28165,6 @@
           "requires_remap": true
         }
       ],
-      "entry_route": "phase3_structured_family_generation",
       "gate_count": 58,
       "max_partition_qubits": 2,
       "max_partition_span": 2,
@@ -28252,7 +28223,6 @@
       "schema_version": "phase3_noisy_partition_descriptor_v1",
       "source_type": "structured_family_builder",
       "status": "pass",
-      "workload_family": "phase3_structured_family",
       "workload_id": "seeded_random_layered_q10_periodic_seed20260318"
     },
     {
@@ -31743,7 +31713,6 @@
           "requires_remap": true
         }
       ],
-      "entry_route": "phase3_structured_family_generation",
       "gate_count": 58,
       "max_partition_qubits": 2,
       "max_partition_span": 2,
@@ -31812,7 +31781,6 @@
       "schema_version": "phase3_noisy_partition_descriptor_v1",
       "source_type": "structured_family_builder",
       "status": "pass",
-      "workload_family": "phase3_structured_family",
       "workload_id": "seeded_random_layered_q10_dense_seed20260318"
     },
     {
@@ -34062,7 +34030,6 @@
           "requires_remap": true
         }
       ],
-      "entry_route": "phase3_structured_family_generation",
       "gate_count": 45,
       "max_partition_qubits": 2,
       "max_partition_span": 2,
@@ -34115,7 +34082,6 @@
       "schema_version": "phase3_noisy_partition_descriptor_v1",
       "source_type": "structured_family_builder",
       "status": "pass",
-      "workload_family": "phase3_structured_family",
       "workload_id": "partition_stress_ladder_q8_sparse_seed20260318"
     },
     {
@@ -36363,7 +36329,6 @@
           "requires_remap": true
         }
       ],
-      "entry_route": "phase3_structured_family_generation",
       "gate_count": 45,
       "max_partition_qubits": 2,
       "max_partition_span": 2,
@@ -36415,7 +36380,6 @@
       "schema_version": "phase3_noisy_partition_descriptor_v1",
       "source_type": "structured_family_builder",
       "status": "pass",
-      "workload_family": "phase3_structured_family",
       "workload_id": "partition_stress_ladder_q8_periodic_seed20260318"
     },
     {
@@ -39444,7 +39408,6 @@
           "requires_remap": true
         }
       ],
-      "entry_route": "phase3_structured_family_generation",
       "gate_count": 45,
       "max_partition_qubits": 2,
       "max_partition_span": 2,
@@ -39508,7 +39471,6 @@
       "schema_version": "phase3_noisy_partition_descriptor_v1",
       "source_type": "structured_family_builder",
       "status": "pass",
-      "workload_family": "phase3_structured_family",
       "workload_id": "partition_stress_ladder_q8_dense_seed20260318"
     },
     {
@@ -43246,7 +43208,6 @@
           "requires_remap": false
         }
       ],
-      "entry_route": "phase3_structured_family_generation",
       "gate_count": 76,
       "max_partition_qubits": 2,
       "max_partition_span": 2,
@@ -43320,7 +43281,6 @@
       "schema_version": "phase3_noisy_partition_descriptor_v1",
       "source_type": "structured_family_builder",
       "status": "pass",
-      "workload_family": "phase3_structured_family",
       "workload_id": "partition_stress_ladder_q10_sparse_seed20260318"
     },
     {
@@ -47104,7 +47064,6 @@
           "requires_remap": false
         }
       ],
-      "entry_route": "phase3_structured_family_generation",
       "gate_count": 76,
       "max_partition_qubits": 2,
       "max_partition_span": 2,
@@ -47178,7 +47137,6 @@
       "schema_version": "phase3_noisy_partition_descriptor_v1",
       "source_type": "structured_family_builder",
       "status": "pass",
-      "workload_family": "phase3_structured_family",
       "workload_id": "partition_stress_ladder_q10_periodic_seed20260318"
     },
     {
@@ -52314,7 +52272,6 @@
           "requires_remap": false
         }
       ],
-      "entry_route": "phase3_structured_family_generation",
       "gate_count": 76,
       "max_partition_qubits": 2,
       "max_partition_span": 2,
@@ -52408,7 +52365,6 @@
       "schema_version": "phase3_noisy_partition_descriptor_v1",
       "source_type": "structured_family_builder",
       "status": "pass",
-      "workload_family": "phase3_structured_family",
       "workload_id": "partition_stress_ladder_q10_dense_seed20260318"
     }
   ],

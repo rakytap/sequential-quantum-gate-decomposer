@@ -14,7 +14,6 @@
       "deferred_region_count": 4,
       "descriptor_member_count": 12,
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
-      "entry_route": "phase2_continuity_lowering",
       "exact_output": {
         "density_imag": null,
         "density_real": null,
@@ -453,7 +452,6 @@
       ],
       "trace_deviation": 2.225939624248894e-16,
       "validation_slice": "internal_plus_external",
-      "workload_family": "phase2_continuity_workflow",
       "workload_id": "phase2_xxz_hea_q4_continuity"
     },
     {
@@ -470,7 +468,6 @@
       "deferred_region_count": 5,
       "descriptor_member_count": 18,
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
-      "entry_route": "phase2_continuity_lowering",
       "exact_output": {
         "density_imag": null,
         "density_real": null,
@@ -1040,7 +1037,6 @@
       ],
       "trace_deviation": 2.1160146379947457e-17,
       "validation_slice": "internal_only",
-      "workload_family": "phase2_continuity_workflow",
       "workload_id": "phase2_xxz_hea_q6_continuity"
     },
     {
@@ -1057,7 +1053,6 @@
       "deferred_region_count": 6,
       "descriptor_member_count": 24,
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
-      "entry_route": "phase2_continuity_lowering",
       "exact_output": {
         "density_imag": null,
         "density_real": null,
@@ -1766,7 +1761,6 @@
       ],
       "trace_deviation": 4.491679486023476e-16,
       "validation_slice": "internal_only",
-      "workload_family": "phase2_continuity_workflow",
       "workload_id": "phase2_xxz_hea_q8_continuity"
     },
     {
@@ -1783,7 +1777,6 @@
       "deferred_region_count": 7,
       "descriptor_member_count": 30,
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
-      "entry_route": "phase2_continuity_lowering",
       "exact_output": {
         "density_imag": null,
         "density_real": null,
@@ -2631,7 +2624,6 @@
       ],
       "trace_deviation": 1.114483122935327e-15,
       "validation_slice": "internal_only",
-      "workload_family": "phase2_continuity_workflow",
       "workload_id": "phase2_xxz_hea_q10_continuity"
     },
     {
@@ -2648,7 +2640,6 @@
       "deferred_region_count": 1,
       "descriptor_member_count": 5,
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
-      "entry_route": "phase3_microcase_generation",
       "exact_output": {
         "density_imag": null,
         "density_real": null,
@@ -2880,7 +2871,6 @@
       "topology": null,
       "trace_deviation": 2.2226670100039737e-16,
       "validation_slice": "internal_plus_external",
-      "workload_family": "phase3_micro_validation",
       "workload_id": "microcase_2q_entangler_local_depolarizing"
     },
     {
@@ -2897,7 +2887,6 @@
       "deferred_region_count": 2,
       "descriptor_member_count": 8,
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
-      "entry_route": "phase3_microcase_generation",
       "exact_output": {
         "density_imag": null,
         "density_real": null,
@@ -3218,7 +3207,6 @@
       "topology": null,
       "trace_deviation": 2.225796022928092e-16,
       "validation_slice": "internal_plus_external",
-      "workload_family": "phase3_micro_validation",
       "workload_id": "microcase_3q_mixed_local_noise_sequence"
     },
     {
@@ -3235,7 +3223,6 @@
       "deferred_region_count": 2,
       "descriptor_member_count": 10,
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
-      "entry_route": "phase3_microcase_generation",
       "exact_output": {
         "density_imag": null,
         "density_real": null,
@@ -3581,7 +3568,6 @@
       "topology": null,
       "trace_deviation": 2.2214206008691573e-16,
       "validation_slice": "internal_plus_external",
-      "workload_family": "phase3_micro_validation",
       "workload_id": "microcase_4q_partition_boundary_triplet"
     },
     {
@@ -3598,7 +3584,6 @@
       "deferred_region_count": 11,
       "descriptor_member_count": 37,
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
-      "entry_route": "phase3_structured_family_generation",
       "exact_output": {
         "density_imag": null,
         "density_real": null,
@@ -4893,7 +4878,6 @@
       "topology": null,
       "trace_deviation": 8.883709084703726e-16,
       "validation_slice": "internal_only",
-      "workload_family": "phase3_structured_family",
       "workload_id": "layered_nearest_neighbor_q8_sparse_seed20260318"
     },
     {
@@ -4910,7 +4894,6 @@
       "deferred_region_count": 11,
       "descriptor_member_count": 38,
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
-      "entry_route": "phase3_structured_family_generation",
       "exact_output": {
         "density_imag": null,
         "density_real": null,
@@ -6258,7 +6241,6 @@
       "topology": null,
       "trace_deviation": 2.232384077836451e-16,
       "validation_slice": "internal_only",
-      "workload_family": "phase3_structured_family",
       "workload_id": "layered_nearest_neighbor_q8_periodic_seed20260318"
     },
     {
@@ -6275,7 +6257,6 @@
       "deferred_region_count": 11,
       "descriptor_member_count": 46,
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
-      "entry_route": "phase3_structured_family_generation",
       "exact_output": {
         "density_imag": null,
         "density_real": null,
@@ -7698,7 +7679,6 @@
       "topology": null,
       "trace_deviation": 8.892572593257721e-16,
       "validation_slice": "internal_only",
-      "workload_family": "phase3_structured_family",
       "workload_id": "layered_nearest_neighbor_q8_dense_seed20260318"
     },
     {
@@ -7715,7 +7695,6 @@
       "deferred_region_count": 19,
       "descriptor_member_count": 60,
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
-      "entry_route": "phase3_structured_family_generation",
       "exact_output": {
         "density_imag": null,
         "density_real": null,
@@ -9817,7 +9796,6 @@
       "topology": null,
       "trace_deviation": 1.5543182254163305e-15,
       "validation_slice": "internal_only",
-      "workload_family": "phase3_structured_family",
       "workload_id": "layered_nearest_neighbor_q10_sparse_seed20260318"
     },
     {
@@ -9834,7 +9812,6 @@
       "deferred_region_count": 19,
       "descriptor_member_count": 62,
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
-      "entry_route": "phase3_structured_family_generation",
       "exact_output": {
         "density_imag": null,
         "density_real": null,
@@ -11998,7 +11975,6 @@
       "topology": null,
       "trace_deviation": 2.4435614701804937e-15,
       "validation_slice": "internal_only",
-      "workload_family": "phase3_structured_family",
       "workload_id": "layered_nearest_neighbor_q10_periodic_seed20260318"
     },
     {
@@ -12015,7 +11991,6 @@
       "deferred_region_count": 20,
       "descriptor_member_count": 76,
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
-      "entry_route": "phase3_structured_family_generation",
       "exact_output": {
         "density_imag": null,
         "density_real": null,
@@ -14355,7 +14330,6 @@
       "topology": null,
       "trace_deviation": 1.776357945377658e-15,
       "validation_slice": "internal_only",
-      "workload_family": "phase3_structured_family",
       "workload_id": "layered_nearest_neighbor_q10_dense_seed20260318"
     },
     {
@@ -14372,7 +14346,6 @@
       "deferred_region_count": 11,
       "descriptor_member_count": 37,
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
-      "entry_route": "phase3_structured_family_generation",
       "exact_output": {
         "density_imag": null,
         "density_real": null,
@@ -15667,7 +15640,6 @@
       "topology": null,
       "trace_deviation": 1.1107607107334693e-15,
       "validation_slice": "internal_only",
-      "workload_family": "phase3_structured_family",
       "workload_id": "seeded_random_layered_q8_sparse_seed20260318"
     },
     {
@@ -15684,7 +15656,6 @@
       "deferred_region_count": 11,
       "descriptor_member_count": 38,
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
-      "entry_route": "phase3_structured_family_generation",
       "exact_output": {
         "density_imag": null,
         "density_real": null,
@@ -17032,7 +17003,6 @@
       "topology": null,
       "trace_deviation": 1.1102590462229502e-15,
       "validation_slice": "internal_only",
-      "workload_family": "phase3_structured_family",
       "workload_id": "seeded_random_layered_q8_periodic_seed20260318"
     },
     {
@@ -17049,7 +17019,6 @@
       "deferred_region_count": 11,
       "descriptor_member_count": 46,
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
-      "entry_route": "phase3_structured_family_generation",
       "exact_output": {
         "density_imag": null,
         "density_real": null,
@@ -18485,7 +18454,6 @@
       "topology": null,
       "trace_deviation": 1.3322774700276199e-15,
       "validation_slice": "internal_only",
-      "workload_family": "phase3_structured_family",
       "workload_id": "seeded_random_layered_q8_dense_seed20260318"
     },
     {
@@ -18502,7 +18470,6 @@
       "deferred_region_count": 19,
       "descriptor_member_count": 60,
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
-      "entry_route": "phase3_structured_family_generation",
       "exact_output": {
         "density_imag": null,
         "density_real": null,
@@ -20604,7 +20571,6 @@
       "topology": null,
       "trace_deviation": 1.999148158434178e-15,
       "validation_slice": "internal_only",
-      "workload_family": "phase3_structured_family",
       "workload_id": "seeded_random_layered_q10_sparse_seed20260318"
     },
     {
@@ -20621,7 +20587,6 @@
       "deferred_region_count": 19,
       "descriptor_member_count": 62,
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
-      "entry_route": "phase3_structured_family_generation",
       "exact_output": {
         "density_imag": null,
         "density_real": null,
@@ -22785,7 +22750,6 @@
       "topology": null,
       "trace_deviation": 1.111404070044046e-15,
       "validation_slice": "internal_only",
-      "workload_family": "phase3_structured_family",
       "workload_id": "seeded_random_layered_q10_periodic_seed20260318"
     },
     {
@@ -22802,7 +22766,6 @@
       "deferred_region_count": 20,
       "descriptor_member_count": 76,
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
-      "entry_route": "phase3_structured_family_generation",
       "exact_output": {
         "density_imag": null,
         "density_real": null,
@@ -25142,7 +25105,6 @@
       "topology": null,
       "trace_deviation": 1.332300590188483e-15,
       "validation_slice": "internal_only",
-      "workload_family": "phase3_structured_family",
       "workload_id": "seeded_random_layered_q10_dense_seed20260318"
     },
     {
@@ -25159,7 +25121,6 @@
       "deferred_region_count": 12,
       "descriptor_member_count": 47,
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
-      "entry_route": "phase3_structured_family_generation",
       "exact_output": {
         "density_imag": null,
         "density_real": null,
@@ -26644,7 +26605,6 @@
       "topology": null,
       "trace_deviation": 4.441551448053264e-16,
       "validation_slice": "internal_only",
-      "workload_family": "phase3_structured_family",
       "workload_id": "partition_stress_ladder_q8_sparse_seed20260318"
     },
     {
@@ -26661,7 +26621,6 @@
       "deferred_region_count": 13,
       "descriptor_member_count": 48,
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
-      "entry_route": "phase3_structured_family_generation",
       "exact_output": {
         "density_imag": null,
         "density_real": null,
@@ -28209,7 +28168,6 @@
       "topology": null,
       "trace_deviation": 1.3323445813255682e-15,
       "validation_slice": "internal_only",
-      "workload_family": "phase3_structured_family",
       "workload_id": "partition_stress_ladder_q8_periodic_seed20260318"
     },
     {
@@ -28226,7 +28184,6 @@
       "deferred_region_count": 12,
       "descriptor_member_count": 66,
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
-      "entry_route": "phase3_structured_family_generation",
       "exact_output": {
         "density_imag": null,
         "density_real": null,
@@ -30030,7 +29987,6 @@
       "topology": null,
       "trace_deviation": 1.3329684966317344e-15,
       "validation_slice": "internal_only",
-      "workload_family": "phase3_structured_family",
       "workload_id": "partition_stress_ladder_q8_dense_seed20260318"
     },
     {
@@ -30047,7 +30003,6 @@
       "deferred_region_count": 21,
       "descriptor_member_count": 78,
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
-      "entry_route": "phase3_structured_family_generation",
       "exact_output": {
         "density_imag": null,
         "density_real": null,
@@ -32345,7 +32300,6 @@
       "topology": null,
       "trace_deviation": 4.440932257458426e-16,
       "validation_slice": "internal_only",
-      "workload_family": "phase3_structured_family",
       "workload_id": "partition_stress_ladder_q10_sparse_seed20260318"
     },
     {
@@ -32362,7 +32316,6 @@
       "deferred_region_count": 25,
       "descriptor_member_count": 80,
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
-      "entry_route": "phase3_structured_family_generation",
       "exact_output": {
         "density_imag": null,
         "density_real": null,
@@ -34860,7 +34813,6 @@
       "topology": null,
       "trace_deviation": 2.221013428873438e-16,
       "validation_slice": "internal_only",
-      "workload_family": "phase3_structured_family",
       "workload_id": "partition_stress_ladder_q10_periodic_seed20260318"
     },
     {
@@ -34877,7 +34829,6 @@
       "deferred_region_count": 22,
       "descriptor_member_count": 112,
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
-      "entry_route": "phase3_structured_family_generation",
       "exact_output": {
         "density_imag": null,
         "density_real": null,
@@ -37765,7 +37716,6 @@
       "topology": null,
       "trace_deviation": 2.2222239703003735e-16,
       "validation_slice": "internal_only",
-      "workload_family": "phase3_structured_family",
       "workload_id": "partition_stress_ladder_q10_dense_seed20260318"
     }
   ],

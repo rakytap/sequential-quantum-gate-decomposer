@@ -194,9 +194,7 @@
         }
       ],
       "provenance": {
-        "entry_route": "phase2_continuity_lowering",
         "source_type": "generated_hea",
-        "workload_family": "phase2_continuity_workflow",
         "workload_id": "phase2_xxz_hea_q4_continuity"
       },
       "requested_mode": "partitioned_density",
@@ -347,9 +345,7 @@
         }
       ],
       "provenance": {
-        "entry_route": "phase3_microcase_generation",
         "source_type": "microcase_builder",
-        "workload_family": "phase3_micro_validation",
         "workload_id": "microcase_2q_entangler_local_depolarizing"
       },
       "requested_mode": "partitioned_density",
@@ -950,9 +946,7 @@
         }
       ],
       "provenance": {
-        "entry_route": "phase3_structured_family_generation",
         "source_type": "structured_family_builder",
-        "workload_family": "phase3_structured_family",
         "workload_id": "layered_nearest_neighbor_q8_sparse_seed20260318"
       },
       "requested_mode": "partitioned_density",

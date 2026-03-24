@@ -494,7 +494,6 @@
           "requires_remap": true
         }
       ],
-      "entry_route": "phase2_continuity_lowering",
       "gate_count": 9,
       "inner_blocks": 1,
       "layers": 1,
@@ -530,7 +529,6 @@
           3
         ]
       ],
-      "workload_family": "phase2_continuity_workflow",
       "workload_id": "phase2_xxz_hea_q4_continuity"
     },
     {
@@ -1253,7 +1251,6 @@
           "requires_remap": true
         }
       ],
-      "entry_route": "phase2_continuity_lowering",
       "gate_count": 15,
       "inner_blocks": 1,
       "layers": 1,
@@ -1299,7 +1296,6 @@
           5
         ]
       ],
-      "workload_family": "phase2_continuity_workflow",
       "workload_id": "phase2_xxz_hea_q6_continuity"
     },
     {
@@ -2248,7 +2244,6 @@
           "requires_remap": true
         }
       ],
-      "entry_route": "phase2_continuity_lowering",
       "gate_count": 21,
       "inner_blocks": 1,
       "layers": 1,
@@ -2304,7 +2299,6 @@
           7
         ]
       ],
-      "workload_family": "phase2_continuity_workflow",
       "workload_id": "phase2_xxz_hea_q8_continuity"
     },
     {
@@ -3479,7 +3473,6 @@
           "requires_remap": true
         }
       ],
-      "entry_route": "phase2_continuity_lowering",
       "gate_count": 27,
       "inner_blocks": 1,
       "layers": 1,
@@ -3545,7 +3538,6 @@
           9
         ]
       ],
-      "workload_family": "phase2_continuity_workflow",
       "workload_id": "phase2_xxz_hea_q10_continuity"
     }
   ],

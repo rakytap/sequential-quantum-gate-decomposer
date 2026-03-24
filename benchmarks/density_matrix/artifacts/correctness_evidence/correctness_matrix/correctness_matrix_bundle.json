@@ -4,7 +4,6 @@
       "candidate_id": "span_budget_q4",
       "case_kind": "continuity",
       "case_name": "phase2_xxz_hea_q4_continuity",
-      "entry_route": "phase2_continuity_lowering",
       "external_reference_required": true,
       "family_name": null,
       "max_partition_qubits": 4,
@@ -38,14 +37,12 @@
         ]
       ],
       "validation_slice": "internal_plus_external",
-      "workload_family": "phase2_continuity_workflow",
       "workload_id": "phase2_xxz_hea_q4_continuity"
     },
     {
       "candidate_id": "span_budget_q4",
       "case_kind": "continuity",
       "case_name": "phase2_xxz_hea_q6_continuity",
-      "entry_route": "phase2_continuity_lowering",
       "external_reference_required": false,
       "family_name": null,
       "max_partition_qubits": 4,
@@ -87,14 +84,12 @@
         ]
       ],
       "validation_slice": "internal_only",
-      "workload_family": "phase2_continuity_workflow",
       "workload_id": "phase2_xxz_hea_q6_continuity"
     },
     {
       "candidate_id": "span_budget_q4",
       "case_kind": "continuity",
       "case_name": "phase2_xxz_hea_q8_continuity",
-      "entry_route": "phase2_continuity_lowering",
       "external_reference_required": false,
       "family_name": null,
       "max_partition_qubits": 4,
@@ -144,14 +139,12 @@
         ]
       ],
       "validation_slice": "internal_only",
-      "workload_family": "phase2_continuity_workflow",
       "workload_id": "phase2_xxz_hea_q8_continuity"
     },
     {
       "candidate_id": "span_budget_q4",
       "case_kind": "continuity",
       "case_name": "phase2_xxz_hea_q10_continuity",
-      "entry_route": "phase2_continuity_lowering",
       "external_reference_required": false,
       "family_name": null,
       "max_partition_qubits": 4,
@@ -209,14 +202,12 @@
         ]
       ],
       "validation_slice": "internal_only",
-      "workload_family": "phase2_continuity_workflow",
       "workload_id": "phase2_xxz_hea_q10_continuity"
     },
     {
       "candidate_id": "span_budget_q4",
       "case_kind": "microcase",
       "case_name": "microcase_2q_entangler_local_depolarizing",
-      "entry_route": "phase3_microcase_generation",
       "external_reference_required": true,
       "family_name": null,
       "max_partition_qubits": 4,
@@ -237,14 +228,12 @@
       "source_type": "microcase_builder",
       "topology": null,
       "validation_slice": "internal_plus_external",
-      "workload_family": "phase3_micro_validation",
       "workload_id": "microcase_2q_entangler_local_depolarizing"
     },
     {
       "candidate_id": "span_budget_q4",
       "case_kind": "microcase",
       "case_name": "microcase_3q_mixed_local_noise_sequence",
-      "entry_route": "phase3_microcase_generation",
       "external_reference_required": true,
       "family_name": null,
       "max_partition_qubits": 4,
@@ -265,14 +254,12 @@
       "source_type": "microcase_builder",
       "topology": null,
       "validation_slice": "internal_plus_external",
-      "workload_family": "phase3_micro_validation",
       "workload_id": "microcase_3q_mixed_local_noise_sequence"
     },
     {
       "candidate_id": "span_budget_q4",
       "case_kind": "microcase",
       "case_name": "microcase_4q_partition_boundary_triplet",
-      "entry_route": "phase3_microcase_generation",
       "external_reference_required": true,
       "family_name": null,
       "max_partition_qubits": 4,
@@ -293,14 +280,12 @@
       "source_type": "microcase_builder",
       "topology": null,
       "validation_slice": "internal_plus_external",
-      "workload_family": "phase3_micro_validation",
       "workload_id": "microcase_4q_partition_boundary_triplet"
     },
     {
       "candidate_id": "span_budget_q4",
       "case_kind": "structured_family",
       "case_name": "layered_nearest_neighbor_q8_sparse_seed20260318",
-      "entry_route": "phase3_structured_family_generation",
       "external_reference_required": false,
       "family_name": "layered_nearest_neighbor",
       "max_partition_qubits": 4,
@@ -321,14 +306,12 @@
       "source_type": "structured_family_builder",
       "topology": null,
       "validation_slice": "internal_only",
-      "workload_family": "phase3_structured_family",
       "workload_id": "layered_nearest_neighbor_q8_sparse_seed20260318"
     },
     {
       "candidate_id": "span_budget_q4",
       "case_kind": "structured_family",
       "case_name": "layered_nearest_neighbor_q8_periodic_seed20260318",
-      "entry_route": "phase3_structured_family_generation",
       "external_reference_required": false,
       "family_name": "layered_nearest_neighbor",
       "max_partition_qubits": 4,
@@ -349,14 +332,12 @@
       "source_type": "structured_family_builder",
       "topology": null,
       "validation_slice": "internal_only",
-      "workload_family": "phase3_structured_family",
       "workload_id": "layered_nearest_neighbor_q8_periodic_seed20260318"
     },
     {
       "candidate_id": "span_budget_q4",
       "case_kind": "structured_family",
       "case_name": "layered_nearest_neighbor_q8_dense_seed20260318",
-      "entry_route": "phase3_structured_family_generation",
       "external_reference_required": false,
       "family_name": "layered_nearest_neighbor",
       "max_partition_qubits": 4,
@@ -377,14 +358,12 @@
       "source_type": "structured_family_builder",
       "topology": null,
       "validation_slice": "internal_only",
-      "workload_family": "phase3_structured_family",
       "workload_id": "layered_nearest_neighbor_q8_dense_seed20260318"
     },
     {
       "candidate_id": "span_budget_q4",
       "case_kind": "structured_family",
       "case_name": "layered_nearest_neighbor_q10_sparse_seed20260318",
-      "entry_route": "phase3_structured_family_generation",
       "external_reference_required": false,
       "family_name": "layered_nearest_neighbor",
       "max_partition_qubits": 4,
@@ -405,14 +384,12 @@
       "source_type": "structured_family_builder",
       "topology": null,
       "validation_slice": "internal_only",
-      "workload_family": "phase3_structured_family",
       "workload_id": "layered_nearest_neighbor_q10_sparse_seed20260318"
     },
     {
       "candidate_id": "span_budget_q4",
       "case_kind": "structured_family",
       "case_name": "layered_nearest_neighbor_q10_periodic_seed20260318",
-      "entry_route": "phase3_structured_family_generation",
       "external_reference_required": false,
       "family_name": "layered_nearest_neighbor",
       "max_partition_qubits": 4,
@@ -433,14 +410,12 @@
       "source_type": "structured_family_builder",
       "topology": null,
       "validation_slice": "internal_only",
-      "workload_family": "phase3_structured_family",
       "workload_id": "layered_nearest_neighbor_q10_periodic_seed20260318"
     },
     {
       "candidate_id": "span_budget_q4",
       "case_kind": "structured_family",
       "case_name": "layered_nearest_neighbor_q10_dense_seed20260318",
-      "entry_route": "phase3_structured_family_generation",
       "external_reference_required": false,
       "family_name": "layered_nearest_neighbor",
       "max_partition_qubits": 4,
@@ -461,14 +436,12 @@
       "source_type": "structured_family_builder",
       "topology": null,
       "validation_slice": "internal_only",
-      "workload_family": "phase3_structured_family",
       "workload_id": "layered_nearest_neighbor_q10_dense_seed20260318"
     },
     {
       "candidate_id": "span_budget_q4",
       "case_kind": "structured_family",
       "case_name": "seeded_random_layered_q8_sparse_seed20260318",
-      "entry_route": "phase3_structured_family_generation",
       "external_reference_required": false,
       "family_name": "seeded_random_layered",
       "max_partition_qubits": 4,
@@ -489,14 +462,12 @@
       "source_type": "structured_family_builder",
       "topology": null,
       "validation_slice": "internal_only",
-      "workload_family": "phase3_structured_family",
       "workload_id": "seeded_random_layered_q8_sparse_seed20260318"
     },
     {
       "candidate_id": "span_budget_q4",
       "case_kind": "structured_family",
       "case_name": "seeded_random_layered_q8_periodic_seed20260318",
-      "entry_route": "phase3_structured_family_generation",
       "external_reference_required": false,
       "family_name": "seeded_random_layered",
       "max_partition_qubits": 4,
@@ -517,14 +488,12 @@
       "source_type": "structured_family_builder",
       "topology": null,
       "validation_slice": "internal_only",
-      "workload_family": "phase3_structured_family",
       "workload_id": "seeded_random_layered_q8_periodic_seed20260318"
     },
     {
       "candidate_id": "span_budget_q4",
       "case_kind": "structured_family",
       "case_name": "seeded_random_layered_q8_dense_seed20260318",
-      "entry_route": "phase3_structured_family_generation",
       "external_reference_required": false,
       "family_name": "seeded_random_layered",
       "max_partition_qubits": 4,
@@ -545,14 +514,12 @@
       "source_type": "structured_family_builder",
       "topology": null,
       "validation_slice": "internal_only",
-      "workload_family": "phase3_structured_family",
       "workload_id": "seeded_random_layered_q8_dense_seed20260318"
     },
     {
       "candidate_id": "span_budget_q4",
       "case_kind": "structured_family",
       "case_name": "seeded_random_layered_q10_sparse_seed20260318",
-      "entry_route": "phase3_structured_family_generation",
       "external_reference_required": false,
       "family_name": "seeded_random_layered",
       "max_partition_qubits": 4,
@@ -573,14 +540,12 @@
       "source_type": "structured_family_builder",
       "topology": null,
       "validation_slice": "internal_only",
-      "workload_family": "phase3_structured_family",
       "workload_id": "seeded_random_layered_q10_sparse_seed20260318"
     },
     {
       "candidate_id": "span_budget_q4",
       "case_kind": "structured_family",
       "case_name": "seeded_random_layered_q10_periodic_seed20260318",
-      "entry_route": "phase3_structured_family_generation",
       "external_reference_required": false,
       "family_name": "seeded_random_layered",
       "max_partition_qubits": 4,
@@ -601,14 +566,12 @@
       "source_type": "structured_family_builder",
       "topology": null,
       "validation_slice": "internal_only",
-      "workload_family": "phase3_structured_family",
       "workload_id": "seeded_random_layered_q10_periodic_seed20260318"
     },
     {
       "candidate_id": "span_budget_q4",
       "case_kind": "structured_family",
       "case_name": "seeded_random_layered_q10_dense_seed20260318",
-      "entry_route": "phase3_structured_family_generation",
       "external_reference_required": false,
       "family_name": "seeded_random_layered",
       "max_partition_qubits": 4,
@@ -629,14 +592,12 @@
       "source_type": "structured_family_builder",
       "topology": null,
       "validation_slice": "internal_only",
-      "workload_family": "phase3_structured_family",
       "workload_id": "seeded_random_layered_q10_dense_seed20260318"
     },
     {
       "candidate_id": "span_budget_q4",
       "case_kind": "structured_family",
       "case_name": "partition_stress_ladder_q8_sparse_seed20260318",
-      "entry_route": "phase3_structured_family_generation",
       "external_reference_required": false,
       "family_name": "partition_stress_ladder",
       "max_partition_qubits": 4,
@@ -657,14 +618,12 @@
       "source_type": "structured_family_builder",
       "topology": null,
       "validation_slice": "internal_only",
-      "workload_family": "phase3_structured_family",
       "workload_id": "partition_stress_ladder_q8_sparse_seed20260318"
     },
     {
       "candidate_id": "span_budget_q4",
       "case_kind": "structured_family",
       "case_name": "partition_stress_ladder_q8_periodic_seed20260318",
-      "entry_route": "phase3_structured_family_generation",
       "external_reference_required": false,
       "family_name": "partition_stress_ladder",
       "max_partition_qubits": 4,
@@ -685,14 +644,12 @@
       "source_type": "structured_family_builder",
       "topology": null,
       "validation_slice": "internal_only",
-      "workload_family": "phase3_structured_family",
       "workload_id": "partition_stress_ladder_q8_periodic_seed20260318"
     },
     {
       "candidate_id": "span_budget_q4",
       "case_kind": "structured_family",
       "case_name": "partition_stress_ladder_q8_dense_seed20260318",
-      "entry_route": "phase3_structured_family_generation",
       "external_reference_required": false,
       "family_name": "partition_stress_ladder",
       "max_partition_qubits": 4,
@@ -713,14 +670,12 @@
       "source_type": "structured_family_builder",
       "topology": null,
       "validation_slice": "internal_only",
-      "workload_family": "phase3_structured_family",
       "workload_id": "partition_stress_ladder_q8_dense_seed20260318"
     },
     {
       "candidate_id": "span_budget_q4",
       "case_kind": "structured_family",
       "case_name": "partition_stress_ladder_q10_sparse_seed20260318",
-      "entry_route": "phase3_structured_family_generation",
       "external_reference_required": false,
       "family_name": "partition_stress_ladder",
       "max_partition_qubits": 4,
@@ -741,14 +696,12 @@
       "source_type": "structured_family_builder",
       "topology": null,
       "validation_slice": "internal_only",
-      "workload_family": "phase3_structured_family",
       "workload_id": "partition_stress_ladder_q10_sparse_seed20260318"
     },
     {
       "candidate_id": "span_budget_q4",
       "case_kind": "structured_family",
       "case_name": "partition_stress_ladder_q10_periodic_seed20260318",
-      "entry_route": "phase3_structured_family_generation",
       "external_reference_required": false,
       "family_name": "partition_stress_ladder",
       "max_partition_qubits": 4,
@@ -769,14 +722,12 @@
       "source_type": "structured_family_builder",
       "topology": null,
       "validation_slice": "internal_only",
-      "workload_family": "phase3_structured_family",
       "workload_id": "partition_stress_ladder_q10_periodic_seed20260318"
     },
     {
       "candidate_id": "span_budget_q4",
       "case_kind": "structured_family",
       "case_name": "partition_stress_ladder_q10_dense_seed20260318",
-      "entry_route": "phase3_structured_family_generation",
       "external_reference_required": false,
       "family_name": "partition_stress_ladder",
       "max_partition_qubits": 4,
@@ -797,7 +748,6 @@
       "source_type": "structured_family_builder",
       "topology": null,
       "validation_slice": "internal_only",
-      "workload_family": "phase3_structured_family",
       "workload_id": "partition_stress_ladder_q10_dense_seed20260318"
     }
   ],

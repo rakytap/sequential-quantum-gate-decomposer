@@ -32,7 +32,6 @@
       "descriptor_member_count": 12,
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "energy_pass": true,
-      "entry_route": "phase2_continuity_lowering",
       "exact_output_present": true,
       "fallback_used": false,
       "frobenius_norm_diff": 0.0,
@@ -323,7 +322,6 @@
         ]
       ],
       "trace_deviation": 2.8947873981405094e-17,
-      "workload_family": "phase2_continuity_workflow",
       "workload_id": "phase2_xxz_hea_q4_continuity"
     },
     {
@@ -358,7 +356,6 @@
       "descriptor_member_count": 18,
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "energy_pass": true,
-      "entry_route": "phase2_continuity_lowering",
       "exact_output_present": true,
       "fallback_used": false,
       "frobenius_norm_diff": 0.0,
@@ -769,7 +766,6 @@
         ]
       ],
       "trace_deviation": 2.233296094363482e-16,
-      "workload_family": "phase2_continuity_workflow",
       "workload_id": "phase2_xxz_hea_q6_continuity"
     },
     {
@@ -804,7 +800,6 @@
       "descriptor_member_count": 24,
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "energy_pass": true,
-      "entry_route": "phase2_continuity_lowering",
       "exact_output_present": true,
       "fallback_used": false,
       "frobenius_norm_diff": 0.0,
@@ -1335,7 +1330,6 @@
         ]
       ],
       "trace_deviation": 2.269052191606848e-16,
-      "workload_family": "phase2_continuity_workflow",
       "workload_id": "phase2_xxz_hea_q8_continuity"
     },
     {
@@ -1370,7 +1364,6 @@
       "descriptor_member_count": 30,
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "energy_pass": true,
-      "entry_route": "phase2_continuity_lowering",
       "exact_output_present": true,
       "fallback_used": false,
       "frobenius_norm_diff": 0.0,
@@ -2021,7 +2014,6 @@
         ]
       ],
       "trace_deviation": 8.897161534197464e-16,
-      "workload_family": "phase2_continuity_workflow",
       "workload_id": "phase2_xxz_hea_q10_continuity"
     }
   ],

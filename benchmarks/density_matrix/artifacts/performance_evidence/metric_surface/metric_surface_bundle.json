@@ -20,7 +20,6 @@
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "diagnosis_only_case": false,
       "diagnosis_reasons": [],
-      "entry_route": "phase2_continuity_lowering",
       "exact_output_present": true,
       "exclusion_reason": null,
       "external_frobenius_norm_diff": 1.7542740977453263e-15,
@@ -107,7 +106,6 @@
         ]
       ],
       "trace_deviation": 2.225939624248894e-16,
-      "workload_family": "phase2_continuity_workflow",
       "workload_id": "phase2_xxz_hea_q4_continuity"
     },
     {
@@ -130,7 +128,6 @@
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "diagnosis_only_case": false,
       "diagnosis_reasons": [],
-      "entry_route": "phase2_continuity_lowering",
       "exact_output_present": true,
       "exclusion_reason": null,
       "external_frobenius_norm_diff": null,
@@ -226,7 +223,6 @@
         ]
       ],
       "trace_deviation": 2.1160146379947457e-17,
-      "workload_family": "phase2_continuity_workflow",
       "workload_id": "phase2_xxz_hea_q6_continuity"
     },
     {
@@ -249,7 +245,6 @@
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "diagnosis_only_case": false,
       "diagnosis_reasons": [],
-      "entry_route": "phase2_continuity_lowering",
       "exact_output_present": true,
       "exclusion_reason": null,
       "external_frobenius_norm_diff": null,
@@ -354,7 +349,6 @@
         ]
       ],
       "trace_deviation": 4.491679486023476e-16,
-      "workload_family": "phase2_continuity_workflow",
       "workload_id": "phase2_xxz_hea_q8_continuity"
     },
     {
@@ -377,7 +371,6 @@
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "diagnosis_only_case": false,
       "diagnosis_reasons": [],
-      "entry_route": "phase2_continuity_lowering",
       "exact_output_present": true,
       "exclusion_reason": null,
       "external_frobenius_norm_diff": null,
@@ -491,7 +484,6 @@
         ]
       ],
       "trace_deviation": 1.114483122935327e-15,
-      "workload_family": "phase2_continuity_workflow",
       "workload_id": "phase2_xxz_hea_q10_continuity"
     },
     {
@@ -520,7 +512,6 @@
         "fused_runtime_slower_than_sequential_reference",
         "no_peak_memory_reduction_against_sequential_reference"
       ],
-      "entry_route": "phase3_structured_family_generation",
       "exact_output_present": true,
       "exclusion_reason": null,
       "external_frobenius_norm_diff": null,
@@ -621,7 +612,6 @@
       "timing_mode": "median_3",
       "topology": null,
       "trace_deviation": 8.883709084703726e-16,
-      "workload_family": "phase3_structured_family",
       "workload_id": "layered_nearest_neighbor_q8_sparse_seed20260318"
     },
     {
@@ -644,7 +634,6 @@
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "diagnosis_only_case": false,
       "diagnosis_reasons": [],
-      "entry_route": "phase3_structured_family_generation",
       "exact_output_present": true,
       "exclusion_reason": null,
       "external_frobenius_norm_diff": null,
@@ -729,7 +718,6 @@
       "timing_mode": "single_run",
       "topology": null,
       "trace_deviation": 2.232384077836451e-16,
-      "workload_family": "phase3_structured_family",
       "workload_id": "layered_nearest_neighbor_q8_periodic_seed20260318"
     },
     {
@@ -752,7 +740,6 @@
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "diagnosis_only_case": false,
       "diagnosis_reasons": [],
-      "entry_route": "phase3_structured_family_generation",
       "exact_output_present": true,
       "exclusion_reason": null,
       "external_frobenius_norm_diff": null,
@@ -839,7 +826,6 @@
       "timing_mode": "single_run",
       "topology": null,
       "trace_deviation": 8.892572593257721e-16,
-      "workload_family": "phase3_structured_family",
       "workload_id": "layered_nearest_neighbor_q8_dense_seed20260318"
     },
     {
@@ -862,7 +848,6 @@
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "diagnosis_only_case": false,
       "diagnosis_reasons": [],
-      "entry_route": "phase3_structured_family_generation",
       "exact_output_present": true,
       "exclusion_reason": null,
       "external_frobenius_norm_diff": null,
@@ -947,7 +932,6 @@
       "timing_mode": "single_run",
       "topology": null,
       "trace_deviation": 8.883709084703726e-16,
-      "workload_family": "phase3_structured_family",
       "workload_id": "layered_nearest_neighbor_q8_sparse_seed20260319"
     },
     {
@@ -970,7 +954,6 @@
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "diagnosis_only_case": false,
       "diagnosis_reasons": [],
-      "entry_route": "phase3_structured_family_generation",
       "exact_output_present": true,
       "exclusion_reason": null,
       "external_frobenius_norm_diff": null,
@@ -1055,7 +1038,6 @@
       "timing_mode": "single_run",
       "topology": null,
       "trace_deviation": 8.883709084703726e-16,
-      "workload_family": "phase3_structured_family",
       "workload_id": "layered_nearest_neighbor_q8_sparse_seed20260320"
     },
     {
@@ -1083,7 +1065,6 @@
         "fused_runtime_slower_than_sequential_reference",
         "no_peak_memory_reduction_against_sequential_reference"
       ],
-      "entry_route": "phase3_structured_family_generation",
       "exact_output_present": true,
       "exclusion_reason": null,
       "external_frobenius_norm_diff": null,
@@ -1191,7 +1172,6 @@
       "timing_mode": "median_3",
       "topology": null,
       "trace_deviation": 1.5543182254163305e-15,
-      "workload_family": "phase3_structured_family",
       "workload_id": "layered_nearest_neighbor_q10_sparse_seed20260318"
     },
     {
@@ -1214,7 +1194,6 @@
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "diagnosis_only_case": false,
       "diagnosis_reasons": [],
-      "entry_route": "phase3_structured_family_generation",
       "exact_output_present": true,
       "exclusion_reason": null,
       "external_frobenius_norm_diff": null,
@@ -1306,7 +1285,6 @@
       "timing_mode": "single_run",
       "topology": null,
       "trace_deviation": 2.4435614701804937e-15,
-      "workload_family": "phase3_structured_family",
       "workload_id": "layered_nearest_neighbor_q10_periodic_seed20260318"
     },
     {
@@ -1329,7 +1307,6 @@
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "diagnosis_only_case": false,
       "diagnosis_reasons": [],
-      "entry_route": "phase3_structured_family_generation",
       "exact_output_present": true,
       "exclusion_reason": null,
       "external_frobenius_norm_diff": null,
@@ -1426,7 +1403,6 @@
       "timing_mode": "single_run",
       "topology": null,
       "trace_deviation": 1.776357945377658e-15,
-      "workload_family": "phase3_structured_family",
       "workload_id": "layered_nearest_neighbor_q10_dense_seed20260318"
     },
     {
@@ -1449,7 +1425,6 @@
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "diagnosis_only_case": false,
       "diagnosis_reasons": [],
-      "entry_route": "phase3_structured_family_generation",
       "exact_output_present": true,
       "exclusion_reason": null,
       "external_frobenius_norm_diff": null,
@@ -1541,7 +1516,6 @@
       "timing_mode": "single_run",
       "topology": null,
       "trace_deviation": 1.5543182254163305e-15,
-      "workload_family": "phase3_structured_family",
       "workload_id": "layered_nearest_neighbor_q10_sparse_seed20260319"
     },
     {
@@ -1564,7 +1538,6 @@
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "diagnosis_only_case": false,
       "diagnosis_reasons": [],
-      "entry_route": "phase3_structured_family_generation",
       "exact_output_present": true,
       "exclusion_reason": null,
       "external_frobenius_norm_diff": null,
@@ -1656,7 +1629,6 @@
       "timing_mode": "single_run",
       "topology": null,
       "trace_deviation": 1.5543182254163305e-15,
-      "workload_family": "phase3_structured_family",
       "workload_id": "layered_nearest_neighbor_q10_sparse_seed20260320"
     },
     {
@@ -1685,7 +1657,6 @@
         "fused_runtime_slower_than_sequential_reference",
         "no_peak_memory_reduction_against_sequential_reference"
       ],
-      "entry_route": "phase3_structured_family_generation",
       "exact_output_present": true,
       "exclusion_reason": null,
       "external_frobenius_norm_diff": null,
@@ -1786,7 +1757,6 @@
       "timing_mode": "median_3",
       "topology": null,
       "trace_deviation": 1.1107607107334693e-15,
-      "workload_family": "phase3_structured_family",
       "workload_id": "seeded_random_layered_q8_sparse_seed20260318"
     },
     {
@@ -1809,7 +1779,6 @@
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "diagnosis_only_case": false,
       "diagnosis_reasons": [],
-      "entry_route": "phase3_structured_family_generation",
       "exact_output_present": true,
       "exclusion_reason": null,
       "external_frobenius_norm_diff": null,
@@ -1894,7 +1863,6 @@
       "timing_mode": "single_run",
       "topology": null,
       "trace_deviation": 1.1102590462229502e-15,
-      "workload_family": "phase3_structured_family",
       "workload_id": "seeded_random_layered_q8_periodic_seed20260318"
     },
     {
@@ -1917,7 +1885,6 @@
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "diagnosis_only_case": false,
       "diagnosis_reasons": [],
-      "entry_route": "phase3_structured_family_generation",
       "exact_output_present": true,
       "exclusion_reason": null,
       "external_frobenius_norm_diff": null,
@@ -2004,7 +1971,6 @@
       "timing_mode": "single_run",
       "topology": null,
       "trace_deviation": 1.3322774700276199e-15,
-      "workload_family": "phase3_structured_family",
       "workload_id": "seeded_random_layered_q8_dense_seed20260318"
     },
     {
@@ -2027,7 +1993,6 @@
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "diagnosis_only_case": false,
       "diagnosis_reasons": [],
-      "entry_route": "phase3_structured_family_generation",
       "exact_output_present": true,
       "exclusion_reason": null,
       "external_frobenius_norm_diff": null,
@@ -2112,7 +2077,6 @@
       "timing_mode": "single_run",
       "topology": null,
       "trace_deviation": 1.3323286873625e-15,
-      "workload_family": "phase3_structured_family",
       "workload_id": "seeded_random_layered_q8_sparse_seed20260319"
     },
     {
@@ -2135,7 +2099,6 @@
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "diagnosis_only_case": false,
       "diagnosis_reasons": [],
-      "entry_route": "phase3_structured_family_generation",
       "exact_output_present": true,
       "exclusion_reason": null,
       "external_frobenius_norm_diff": null,
@@ -2220,7 +2183,6 @@
       "timing_mode": "single_run",
       "topology": null,
       "trace_deviation": 1.332402787843974e-15,
-      "workload_family": "phase3_structured_family",
       "workload_id": "seeded_random_layered_q8_sparse_seed20260320"
     },
     {
@@ -2248,7 +2210,6 @@
         "fused_runtime_slower_than_sequential_reference",
         "no_peak_memory_reduction_against_sequential_reference"
       ],
-      "entry_route": "phase3_structured_family_generation",
       "exact_output_present": true,
       "exclusion_reason": null,
       "external_frobenius_norm_diff": null,
@@ -2356,7 +2317,6 @@
       "timing_mode": "median_3",
       "topology": null,
       "trace_deviation": 1.999148158434178e-15,
-      "workload_family": "phase3_structured_family",
       "workload_id": "seeded_random_layered_q10_sparse_seed20260318"
     },
     {
@@ -2379,7 +2339,6 @@
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "diagnosis_only_case": false,
       "diagnosis_reasons": [],
-      "entry_route": "phase3_structured_family_generation",
       "exact_output_present": true,
       "exclusion_reason": null,
       "external_frobenius_norm_diff": null,
@@ -2471,7 +2430,6 @@
       "timing_mode": "single_run",
       "topology": null,
       "trace_deviation": 1.111404070044046e-15,
-      "workload_family": "phase3_structured_family",
       "workload_id": "seeded_random_layered_q10_periodic_seed20260318"
     },
     {
@@ -2494,7 +2452,6 @@
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "diagnosis_only_case": false,
       "diagnosis_reasons": [],
-      "entry_route": "phase3_structured_family_generation",
       "exact_output_present": true,
       "exclusion_reason": null,
       "external_frobenius_norm_diff": null,
@@ -2591,7 +2548,6 @@
       "timing_mode": "single_run",
       "topology": null,
       "trace_deviation": 1.332300590188483e-15,
-      "workload_family": "phase3_structured_family",
       "workload_id": "seeded_random_layered_q10_dense_seed20260318"
     },
     {
@@ -2614,7 +2570,6 @@
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "diagnosis_only_case": false,
       "diagnosis_reasons": [],
-      "entry_route": "phase3_structured_family_generation",
       "exact_output_present": true,
       "exclusion_reason": null,
       "external_frobenius_norm_diff": null,
@@ -2706,7 +2661,6 @@
       "timing_mode": "single_run",
       "topology": null,
       "trace_deviation": 2.3031954040149993e-16,
-      "workload_family": "phase3_structured_family",
       "workload_id": "seeded_random_layered_q10_sparse_seed20260319"
     },
     {
@@ -2729,7 +2683,6 @@
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "diagnosis_only_case": false,
       "diagnosis_reasons": [],
-      "entry_route": "phase3_structured_family_generation",
       "exact_output_present": true,
       "exclusion_reason": null,
       "external_frobenius_norm_diff": null,
@@ -2821,7 +2774,6 @@
       "timing_mode": "single_run",
       "topology": null,
       "trace_deviation": 2.220637381373262e-15,
-      "workload_family": "phase3_structured_family",
       "workload_id": "seeded_random_layered_q10_sparse_seed20260320"
     },
     {
@@ -2849,7 +2801,6 @@
         "fused_runtime_slower_than_sequential_reference",
         "no_peak_memory_reduction_against_sequential_reference"
       ],
-      "entry_route": "phase3_structured_family_generation",
       "exact_output_present": true,
       "exclusion_reason": null,
       "external_frobenius_norm_diff": null,
@@ -2951,7 +2902,6 @@
       "timing_mode": "median_3",
       "topology": null,
       "trace_deviation": 4.441551448053264e-16,
-      "workload_family": "phase3_structured_family",
       "workload_id": "partition_stress_ladder_q8_sparse_seed20260318"
     },
     {
@@ -2974,7 +2924,6 @@
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "diagnosis_only_case": false,
       "diagnosis_reasons": [],
-      "entry_route": "phase3_structured_family_generation",
       "exact_output_present": true,
       "exclusion_reason": null,
       "external_frobenius_norm_diff": null,
@@ -3060,7 +3009,6 @@
       "timing_mode": "single_run",
       "topology": null,
       "trace_deviation": 1.3323445813255682e-15,
-      "workload_family": "phase3_structured_family",
       "workload_id": "partition_stress_ladder_q8_periodic_seed20260318"
     },
     {
@@ -3083,7 +3031,6 @@
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "diagnosis_only_case": false,
       "diagnosis_reasons": [],
-      "entry_route": "phase3_structured_family_generation",
       "exact_output_present": true,
       "exclusion_reason": null,
       "external_frobenius_norm_diff": null,
@@ -3175,7 +3122,6 @@
       "timing_mode": "single_run",
       "topology": null,
       "trace_deviation": 1.3329684966317344e-15,
-      "workload_family": "phase3_structured_family",
       "workload_id": "partition_stress_ladder_q8_dense_seed20260318"
     },
     {
@@ -3198,7 +3144,6 @@
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "diagnosis_only_case": false,
       "diagnosis_reasons": [],
-      "entry_route": "phase3_structured_family_generation",
       "exact_output_present": true,
       "exclusion_reason": null,
       "external_frobenius_norm_diff": null,
@@ -3284,7 +3229,6 @@
       "timing_mode": "single_run",
       "topology": null,
       "trace_deviation": 4.441551448053264e-16,
-      "workload_family": "phase3_structured_family",
       "workload_id": "partition_stress_ladder_q8_sparse_seed20260319"
     },
     {
@@ -3307,7 +3251,6 @@
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "diagnosis_only_case": false,
       "diagnosis_reasons": [],
-      "entry_route": "phase3_structured_family_generation",
       "exact_output_present": true,
       "exclusion_reason": null,
       "external_frobenius_norm_diff": null,
@@ -3393,7 +3336,6 @@
       "timing_mode": "single_run",
       "topology": null,
       "trace_deviation": 4.441551448053264e-16,
-      "workload_family": "phase3_structured_family",
       "workload_id": "partition_stress_ladder_q8_sparse_seed20260320"
     },
     {
@@ -3421,7 +3363,6 @@
         "fused_runtime_slower_than_sequential_reference",
         "no_peak_memory_reduction_against_sequential_reference"
       ],
-      "entry_route": "phase3_structured_family_generation",
       "exact_output_present": true,
       "exclusion_reason": null,
       "external_frobenius_norm_diff": null,
@@ -3531,7 +3472,6 @@
       "timing_mode": "median_3",
       "topology": null,
       "trace_deviation": 4.440932257458426e-16,
-      "workload_family": "phase3_structured_family",
       "workload_id": "partition_stress_ladder_q10_sparse_seed20260318"
     },
     {
@@ -3554,7 +3494,6 @@
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "diagnosis_only_case": false,
       "diagnosis_reasons": [],
-      "entry_route": "phase3_structured_family_generation",
       "exact_output_present": true,
       "exclusion_reason": null,
       "external_frobenius_norm_diff": null,
@@ -3648,7 +3587,6 @@
       "timing_mode": "single_run",
       "topology": null,
       "trace_deviation": 2.221013428873438e-16,
-      "workload_family": "phase3_structured_family",
       "workload_id": "partition_stress_ladder_q10_periodic_seed20260318"
     },
     {
@@ -3671,7 +3609,6 @@
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "diagnosis_only_case": false,
       "diagnosis_reasons": [],
-      "entry_route": "phase3_structured_family_generation",
       "exact_output_present": true,
       "exclusion_reason": null,
       "external_frobenius_norm_diff": null,
@@ -3775,7 +3712,6 @@
       "timing_mode": "single_run",
       "topology": null,
       "trace_deviation": 2.2222239703003735e-16,
-      "workload_family": "phase3_structured_family",
       "workload_id": "partition_stress_ladder_q10_dense_seed20260318"
     },
     {
@@ -3798,7 +3734,6 @@
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "diagnosis_only_case": false,
       "diagnosis_reasons": [],
-      "entry_route": "phase3_structured_family_generation",
       "exact_output_present": true,
       "exclusion_reason": null,
       "external_frobenius_norm_diff": null,
@@ -3892,7 +3827,6 @@
       "timing_mode": "single_run",
       "topology": null,
       "trace_deviation": 4.440932257458426e-16,
-      "workload_family": "phase3_structured_family",
       "workload_id": "partition_stress_ladder_q10_sparse_seed20260319"
     },
     {
@@ -3915,7 +3849,6 @@
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "diagnosis_only_case": false,
       "diagnosis_reasons": [],
-      "entry_route": "phase3_structured_family_generation",
       "exact_output_present": true,
       "exclusion_reason": null,
       "external_frobenius_norm_diff": null,
@@ -4009,7 +3942,6 @@
       "timing_mode": "single_run",
       "topology": null,
       "trace_deviation": 4.440932257458426e-16,
-      "workload_family": "phase3_structured_family",
       "workload_id": "partition_stress_ladder_q10_sparse_seed20260320"
     }
   ],

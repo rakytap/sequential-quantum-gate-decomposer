@@ -15,7 +15,6 @@
           "case_kind": "continuity",
           "descriptor_member_count": 12,
           "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
-          "entry_route": "phase2_continuity_lowering",
           "family_name": null,
           "max_partition_qubits": 2,
           "max_partition_span": 2,
@@ -30,14 +29,12 @@
           ],
           "qbit_num": 4,
           "source_type": "generated_hea",
-          "workload_family": "phase2_continuity_workflow",
           "workload_id": "phase2_xxz_hea_q4_continuity"
         },
         {
           "case_kind": "microcase",
           "descriptor_member_count": 5,
           "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
-          "entry_route": "phase3_microcase_generation",
           "family_name": null,
           "max_partition_qubits": 2,
           "max_partition_span": 2,
@@ -48,14 +45,12 @@
           ],
           "qbit_num": 2,
           "source_type": "microcase_builder",
-          "workload_family": "phase3_micro_validation",
           "workload_id": "microcase_2q_entangler_local_depolarizing"
         },
         {
           "case_kind": "structured_family",
           "descriptor_member_count": 37,
           "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
-          "entry_route": "phase3_structured_family_generation",
           "family_name": "layered_nearest_neighbor",
           "max_partition_qubits": 2,
           "max_partition_span": 2,
@@ -89,7 +84,6 @@
           ],
           "qbit_num": 8,
           "source_type": "structured_family_builder",
-          "workload_family": "phase3_structured_family",
           "workload_id": "layered_nearest_neighbor_q8_sparse_seed20260318"
         }
       ],
@@ -119,7 +113,6 @@
           "case_kind": "continuity",
           "descriptor_member_count": 12,
           "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
-          "entry_route": "phase2_continuity_lowering",
           "family_name": null,
           "max_partition_qubits": 3,
           "max_partition_span": 3,
@@ -132,14 +125,12 @@
           ],
           "qbit_num": 4,
           "source_type": "generated_hea",
-          "workload_family": "phase2_continuity_workflow",
           "workload_id": "phase2_xxz_hea_q4_continuity"
         },
         {
           "case_kind": "microcase",
           "descriptor_member_count": 5,
           "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
-          "entry_route": "phase3_microcase_generation",
           "family_name": null,
           "max_partition_qubits": 3,
           "max_partition_span": 2,
@@ -150,14 +141,12 @@
           ],
           "qbit_num": 2,
           "source_type": "microcase_builder",
-          "workload_family": "phase3_micro_validation",
           "workload_id": "microcase_2q_entangler_local_depolarizing"
         },
         {
           "case_kind": "structured_family",
           "descriptor_member_count": 37,
           "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
-          "entry_route": "phase3_structured_family_generation",
           "family_name": "layered_nearest_neighbor",
           "max_partition_qubits": 3,
           "max_partition_span": 3,
@@ -186,7 +175,6 @@
           ],
           "qbit_num": 8,
           "source_type": "structured_family_builder",
-          "workload_family": "phase3_structured_family",
           "workload_id": "layered_nearest_neighbor_q8_sparse_seed20260318"
         }
       ],
@@ -216,7 +204,6 @@
           "case_kind": "continuity",
           "descriptor_member_count": 12,
           "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
-          "entry_route": "phase2_continuity_lowering",
           "family_name": null,
           "max_partition_qubits": 4,
           "max_partition_span": 4,
@@ -227,14 +214,12 @@
           ],
           "qbit_num": 4,
           "source_type": "generated_hea",
-          "workload_family": "phase2_continuity_workflow",
           "workload_id": "phase2_xxz_hea_q4_continuity"
         },
         {
           "case_kind": "microcase",
           "descriptor_member_count": 5,
           "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
-          "entry_route": "phase3_microcase_generation",
           "family_name": null,
           "max_partition_qubits": 4,
           "max_partition_span": 2,
@@ -245,14 +230,12 @@
           ],
           "qbit_num": 2,
           "source_type": "microcase_builder",
-          "workload_family": "phase3_micro_validation",
           "workload_id": "microcase_2q_entangler_local_depolarizing"
         },
         {
           "case_kind": "structured_family",
           "descriptor_member_count": 37,
           "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
-          "entry_route": "phase3_structured_family_generation",
           "family_name": "layered_nearest_neighbor",
           "max_partition_qubits": 4,
           "max_partition_span": 4,
@@ -274,7 +257,6 @@
           ],
           "qbit_num": 8,
           "source_type": "structured_family_builder",
-          "workload_family": "phase3_structured_family",
           "workload_id": "layered_nearest_neighbor_q8_sparse_seed20260318"
         }
       ],

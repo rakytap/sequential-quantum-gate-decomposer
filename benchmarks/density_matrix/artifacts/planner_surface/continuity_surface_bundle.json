@@ -26,7 +26,6 @@
           "value": 0.07
         }
       ],
-      "entry_route": "phase2_continuity_lowering",
       "gate_count": 9,
       "gate_sequence": [
         "U3",
@@ -253,7 +252,6 @@
           3
         ]
       ],
-      "workload_family": "phase2_continuity_workflow",
       "workload_id": "phase2_xxz_hea_q4_continuity"
     },
     {
@@ -282,7 +280,6 @@
           "value": 0.07
         }
       ],
-      "entry_route": "phase2_continuity_lowering",
       "gate_count": 15,
       "gate_sequence": [
         "U3",
@@ -615,7 +612,6 @@
           5
         ]
       ],
-      "workload_family": "phase2_continuity_workflow",
       "workload_id": "phase2_xxz_hea_q6_continuity"
     },
     {
@@ -644,7 +640,6 @@
           "value": 0.07
         }
       ],
-      "entry_route": "phase2_continuity_lowering",
       "gate_count": 21,
       "gate_sequence": [
         "U3",
@@ -1083,7 +1078,6 @@
           7
         ]
       ],
-      "workload_family": "phase2_continuity_workflow",
       "workload_id": "phase2_xxz_hea_q8_continuity"
     },
     {
@@ -1112,7 +1106,6 @@
           "value": 0.07
         }
       ],
-      "entry_route": "phase2_continuity_lowering",
       "gate_count": 27,
       "gate_sequence": [
         "U3",
@@ -1657,7 +1650,6 @@
           9
         ]
       ],
-      "workload_family": "phase2_continuity_workflow",
       "workload_id": "phase2_xxz_hea_q10_continuity"
     }
   ],

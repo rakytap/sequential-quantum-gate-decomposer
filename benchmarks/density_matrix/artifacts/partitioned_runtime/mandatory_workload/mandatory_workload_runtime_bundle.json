@@ -5,7 +5,6 @@
       "case_name": "phase2_xxz_hea_q4_continuity",
       "descriptor_member_count": 12,
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
-      "entry_route": "phase2_continuity_lowering",
       "exact_output_present": true,
       "fallback_used": false,
       "frobenius_norm_diff": 0.0,
@@ -31,7 +30,6 @@
       "shared_runtime_pass": true,
       "source_type": "generated_hea",
       "status": "pass",
-      "workload_family": "phase2_continuity_workflow",
       "workload_id": "phase2_xxz_hea_q4_continuity"
     },
     {
@@ -39,7 +37,6 @@
       "case_name": "microcase_2q_entangler_local_depolarizing",
       "descriptor_member_count": 5,
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
-      "entry_route": "phase3_microcase_generation",
       "exact_output_present": true,
       "fallback_used": false,
       "frobenius_norm_diff": 0.0,
@@ -100,7 +97,6 @@
       "shared_runtime_pass": true,
       "source_type": "microcase_builder",
       "status": "pass",
-      "workload_family": "phase3_micro_validation",
       "workload_id": "microcase_2q_entangler_local_depolarizing"
     },
     {
@@ -108,7 +104,6 @@
       "case_name": "microcase_3q_mixed_local_noise_sequence",
       "descriptor_member_count": 8,
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
-      "entry_route": "phase3_microcase_generation",
       "exact_output_present": true,
       "fallback_used": false,
       "frobenius_norm_diff": 0.0,
@@ -192,7 +187,6 @@
       "shared_runtime_pass": true,
       "source_type": "microcase_builder",
       "status": "pass",
-      "workload_family": "phase3_micro_validation",
       "workload_id": "microcase_3q_mixed_local_noise_sequence"
     },
     {
@@ -200,7 +194,6 @@
       "case_name": "microcase_4q_partition_boundary_triplet",
       "descriptor_member_count": 10,
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
-      "entry_route": "phase3_microcase_generation",
       "exact_output_present": true,
       "fallback_used": false,
       "frobenius_norm_diff": 0.0,
@@ -299,7 +292,6 @@
       "shared_runtime_pass": true,
       "source_type": "microcase_builder",
       "status": "pass",
-      "workload_family": "phase3_micro_validation",
       "workload_id": "microcase_4q_partition_boundary_triplet"
     },
     {
@@ -307,7 +299,6 @@
       "case_name": "layered_nearest_neighbor_q8_sparse_seed20260318",
       "descriptor_member_count": 37,
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
-      "entry_route": "phase3_structured_family_generation",
       "exact_output_present": true,
       "fallback_used": false,
       "frobenius_norm_diff": 0.0,
@@ -357,7 +348,6 @@
       "shared_runtime_pass": true,
       "source_type": "structured_family_builder",
       "status": "pass",
-      "workload_family": "phase3_structured_family",
       "workload_id": "layered_nearest_neighbor_q8_sparse_seed20260318"
     },
     {
@@ -365,7 +355,6 @@
       "case_name": "layered_nearest_neighbor_q10_sparse_seed20260318",
       "descriptor_member_count": 60,
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
-      "entry_route": "phase3_structured_family_generation",
       "exact_output_present": true,
       "fallback_used": false,
       "frobenius_norm_diff": 0.0,
@@ -429,7 +418,6 @@
       "shared_runtime_pass": true,
       "source_type": "structured_family_builder",
       "status": "pass",
-      "workload_family": "phase3_structured_family",
       "workload_id": "layered_nearest_neighbor_q10_sparse_seed20260318"
     },
     {
@@ -437,7 +425,6 @@
       "case_name": "seeded_random_layered_q8_sparse_seed20260318",
       "descriptor_member_count": 37,
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
-      "entry_route": "phase3_structured_family_generation",
       "exact_output_present": true,
       "fallback_used": false,
       "frobenius_norm_diff": 0.0,
@@ -487,7 +474,6 @@
       "shared_runtime_pass": true,
       "source_type": "structured_family_builder",
       "status": "pass",
-      "workload_family": "phase3_structured_family",
       "workload_id": "seeded_random_layered_q8_sparse_seed20260318"
     },
     {
@@ -495,7 +481,6 @@
       "case_name": "seeded_random_layered_q10_sparse_seed20260318",
       "descriptor_member_count": 60,
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
-      "entry_route": "phase3_structured_family_generation",
       "exact_output_present": true,
       "fallback_used": false,
       "frobenius_norm_diff": 0.0,
@@ -559,7 +544,6 @@
       "shared_runtime_pass": true,
       "source_type": "structured_family_builder",
       "status": "pass",
-      "workload_family": "phase3_structured_family",
       "workload_id": "seeded_random_layered_q10_sparse_seed20260318"
     },
     {
@@ -567,7 +551,6 @@
       "case_name": "partition_stress_ladder_q8_sparse_seed20260318",
       "descriptor_member_count": 47,
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
-      "entry_route": "phase3_structured_family_generation",
       "exact_output_present": true,
       "fallback_used": false,
       "frobenius_norm_diff": 0.0,
@@ -625,7 +608,6 @@
       "shared_runtime_pass": true,
       "source_type": "structured_family_builder",
       "status": "pass",
-      "workload_family": "phase3_structured_family",
       "workload_id": "partition_stress_ladder_q8_sparse_seed20260318"
     },
     {
@@ -633,7 +615,6 @@
       "case_name": "partition_stress_ladder_q10_sparse_seed20260318",
       "descriptor_member_count": 78,
       "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
-      "entry_route": "phase3_structured_family_generation",
       "exact_output_present": true,
       "fallback_used": false,
       "frobenius_norm_diff": 0.0,
@@ -712,7 +693,6 @@
       "shared_runtime_pass": true,
       "source_type": "structured_family_builder",
       "status": "pass",
-      "workload_family": "phase3_structured_family",
       "workload_id": "partition_stress_ladder_q10_sparse_seed20260318"
     }
   ],

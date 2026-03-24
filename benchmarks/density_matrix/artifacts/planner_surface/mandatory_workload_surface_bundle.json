@@ -3,7 +3,6 @@
     {
       "case_kind": "microcase",
       "case_name": "microcase_2q_entangler_local_depolarizing",
-      "entry_route": "phase3_microcase_generation",
       "gate_count": 4,
       "gate_sequence": [
         "U3",
@@ -139,13 +138,11 @@
       "schema_version": "phase3_canonical_noisy_planner_v1",
       "source_type": "microcase_builder",
       "status": "pass",
-      "workload_family": "phase3_micro_validation",
       "workload_id": "microcase_2q_entangler_local_depolarizing"
     },
     {
       "case_kind": "microcase",
       "case_name": "microcase_3q_mixed_local_noise_sequence",
-      "entry_route": "phase3_microcase_generation",
       "gate_count": 6,
       "gate_sequence": [
         "U3",
@@ -351,13 +348,11 @@
       "schema_version": "phase3_canonical_noisy_planner_v1",
       "source_type": "microcase_builder",
       "status": "pass",
-      "workload_family": "phase3_micro_validation",
       "workload_id": "microcase_3q_mixed_local_noise_sequence"
     },
     {
       "case_kind": "microcase",
       "case_name": "microcase_4q_partition_boundary_triplet",
-      "entry_route": "phase3_microcase_generation",
       "gate_count": 7,
       "gate_sequence": [
         "U3",
@@ -611,13 +606,11 @@
       "schema_version": "phase3_canonical_noisy_planner_v1",
       "source_type": "microcase_builder",
       "status": "pass",
-      "workload_family": "phase3_micro_validation",
       "workload_id": "microcase_4q_partition_boundary_triplet"
     },
     {
       "case_kind": "structured_family",
       "case_name": "layered_nearest_neighbor_q8_sparse_seed20260318",
-      "entry_route": "phase3_structured_family_generation",
       "gate_count": 35,
       "gate_sequence": [
         "U3",
@@ -1242,13 +1235,11 @@
       "schema_version": "phase3_canonical_noisy_planner_v1",
       "source_type": "structured_family_builder",
       "status": "pass",
-      "workload_family": "phase3_structured_family",
       "workload_id": "layered_nearest_neighbor_q8_sparse_seed20260318"
     },
     {
       "case_kind": "structured_family",
       "case_name": "layered_nearest_neighbor_q8_periodic_seed20260318",
-      "entry_route": "phase3_structured_family_generation",
       "gate_count": 35,
       "gate_sequence": [
         "U3",
@@ -1889,13 +1880,11 @@
       "schema_version": "phase3_canonical_noisy_planner_v1",
       "source_type": "structured_family_builder",
       "status": "pass",
-      "workload_family": "phase3_structured_family",
       "workload_id": "layered_nearest_neighbor_q8_periodic_seed20260318"
     },
     {
       "case_kind": "structured_family",
       "case_name": "layered_nearest_neighbor_q8_dense_seed20260318",
-      "entry_route": "phase3_structured_family_generation",
       "gate_count": 35,
       "gate_sequence": [
         "U3",
@@ -2664,13 +2653,11 @@
       "schema_version": "phase3_canonical_noisy_planner_v1",
       "source_type": "structured_family_builder",
       "status": "pass",
-      "workload_family": "phase3_structured_family",
       "workload_id": "layered_nearest_neighbor_q8_dense_seed20260318"
     },
     {
       "case_kind": "structured_family",
       "case_name": "layered_nearest_neighbor_q10_sparse_seed20260318",
-      "entry_route": "phase3_structured_family_generation",
       "gate_count": 58,
       "gate_sequence": [
         "U3",
@@ -3670,13 +3657,11 @@
       "schema_version": "phase3_canonical_noisy_planner_v1",
       "source_type": "structured_family_builder",
       "status": "pass",
-      "workload_family": "phase3_structured_family",
       "workload_id": "layered_nearest_neighbor_q10_sparse_seed20260318"
     },
     {
       "case_kind": "structured_family",
       "case_name": "layered_nearest_neighbor_q10_periodic_seed20260318",
-      "entry_route": "phase3_structured_family_generation",
       "gate_count": 58,
       "gate_sequence": [
         "U3",
@@ -4708,13 +4693,11 @@
       "schema_version": "phase3_canonical_noisy_planner_v1",
       "source_type": "structured_family_builder",
       "status": "pass",
-      "workload_family": "phase3_structured_family",
       "workload_id": "layered_nearest_neighbor_q10_periodic_seed20260318"
     },
     {
       "case_kind": "structured_family",
       "case_name": "layered_nearest_neighbor_q10_dense_seed20260318",
-      "entry_route": "phase3_structured_family_generation",
       "gate_count": 58,
       "gate_sequence": [
         "U3",
@@ -5970,13 +5953,11 @@
       "schema_version": "phase3_canonical_noisy_planner_v1",
       "source_type": "structured_family_builder",
       "status": "pass",
-      "workload_family": "phase3_structured_family",
       "workload_id": "layered_nearest_neighbor_q10_dense_seed20260318"
     },
     {
       "case_kind": "structured_family",
       "case_name": "seeded_random_layered_q8_sparse_seed20260318",
-      "entry_route": "phase3_structured_family_generation",
       "gate_count": 35,
       "gate_sequence": [
         "U3",
@@ -6601,13 +6582,11 @@
       "schema_version": "phase3_canonical_noisy_planner_v1",
       "source_type": "structured_family_builder",
       "status": "pass",
-      "workload_family": "phase3_structured_family",
       "workload_id": "seeded_random_layered_q8_sparse_seed20260318"
     },
     {
       "case_kind": "structured_family",
       "case_name": "seeded_random_layered_q8_periodic_seed20260318",
-      "entry_route": "phase3_structured_family_generation",
       "gate_count": 35,
       "gate_sequence": [
         "U3",
@@ -7248,13 +7227,11 @@
       "schema_version": "phase3_canonical_noisy_planner_v1",
       "source_type": "structured_family_builder",
       "status": "pass",
-      "workload_family": "phase3_structured_family",
       "workload_id": "seeded_random_layered_q8_periodic_seed20260318"
     },
     {
       "case_kind": "structured_family",
       "case_name": "seeded_random_layered_q8_dense_seed20260318",
-      "entry_route": "phase3_structured_family_generation",
       "gate_count": 35,
       "gate_sequence": [
         "U3",
@@ -8023,13 +8000,11 @@
       "schema_version": "phase3_canonical_noisy_planner_v1",
       "source_type": "structured_family_builder",
       "status": "pass",
-      "workload_family": "phase3_structured_family",
       "workload_id": "seeded_random_layered_q8_dense_seed20260318"
     },
     {
       "case_kind": "structured_family",
       "case_name": "seeded_random_layered_q10_sparse_seed20260318",
-      "entry_route": "phase3_structured_family_generation",
       "gate_count": 58,
       "gate_sequence": [
         "U3",
@@ -9029,13 +9004,11 @@
       "schema_version": "phase3_canonical_noisy_planner_v1",
       "source_type": "structured_family_builder",
       "status": "pass",
-      "workload_family": "phase3_structured_family",
       "workload_id": "seeded_random_layered_q10_sparse_seed20260318"
     },
     {
       "case_kind": "structured_family",
       "case_name": "seeded_random_layered_q10_periodic_seed20260318",
-      "entry_route": "phase3_structured_family_generation",
       "gate_count": 58,
       "gate_sequence": [
         "U3",
@@ -10067,13 +10040,11 @@
       "schema_version": "phase3_canonical_noisy_planner_v1",
       "source_type": "structured_family_builder",
       "status": "pass",
-      "workload_family": "phase3_structured_family",
       "workload_id": "seeded_random_layered_q10_periodic_seed20260318"
     },
     {
       "case_kind": "structured_family",
       "case_name": "seeded_random_layered_q10_dense_seed20260318",
-      "entry_route": "phase3_structured_family_generation",
       "gate_count": 58,
       "gate_sequence": [
         "U3",
@@ -11329,13 +11300,11 @@
       "schema_version": "phase3_canonical_noisy_planner_v1",
       "source_type": "structured_family_builder",
       "status": "pass",
-      "workload_family": "phase3_structured_family",
       "workload_id": "seeded_random_layered_q10_dense_seed20260318"
     },
     {
       "case_kind": "structured_family",
       "case_name": "partition_stress_ladder_q8_sparse_seed20260318",
-      "entry_route": "phase3_structured_family_generation",
       "gate_count": 45,
       "gate_sequence": [
         "U3",
@@ -12130,13 +12099,11 @@
       "schema_version": "phase3_canonical_noisy_planner_v1",
       "source_type": "structured_family_builder",
       "status": "pass",
-      "workload_family": "phase3_structured_family",
       "workload_id": "partition_stress_ladder_q8_sparse_seed20260318"
     },
     {
       "case_kind": "structured_family",
       "case_name": "partition_stress_ladder_q8_periodic_seed20260318",
-      "entry_route": "phase3_structured_family_generation",
       "gate_count": 45,
       "gate_sequence": [
         "U3",
@@ -12947,13 +12914,11 @@
       "schema_version": "phase3_canonical_noisy_planner_v1",
       "source_type": "structured_family_builder",
       "status": "pass",
-      "workload_family": "phase3_structured_family",
       "workload_id": "partition_stress_ladder_q8_periodic_seed20260318"
     },
     {
       "case_kind": "structured_family",
       "case_name": "partition_stress_ladder_q8_dense_seed20260318",
-      "entry_route": "phase3_structured_family_generation",
       "gate_count": 45,
       "gate_sequence": [
         "U3",
@@ -14052,13 +14017,11 @@
       "schema_version": "phase3_canonical_noisy_planner_v1",
       "source_type": "structured_family_builder",
       "status": "pass",
-      "workload_family": "phase3_structured_family",
       "workload_id": "partition_stress_ladder_q8_dense_seed20260318"
     },
     {
       "case_kind": "structured_family",
       "case_name": "partition_stress_ladder_q10_sparse_seed20260318",
-      "entry_route": "phase3_structured_family_generation",
       "gate_count": 76,
       "gate_sequence": [
         "U3",
@@ -15364,13 +15327,11 @@
       "schema_version": "phase3_canonical_noisy_planner_v1",
       "source_type": "structured_family_builder",
       "status": "pass",
-      "workload_family": "phase3_structured_family",
       "workload_id": "partition_stress_ladder_q10_sparse_seed20260318"
     },
     {
       "case_kind": "structured_family",
       "case_name": "partition_stress_ladder_q10_periodic_seed20260318",
-      "entry_route": "phase3_structured_family_generation",
       "gate_count": 76,
       "gate_sequence": [
         "U3",
@@ -16708,13 +16669,11 @@
       "schema_version": "phase3_canonical_noisy_planner_v1",
       "source_type": "structured_family_builder",
       "status": "pass",
-      "workload_family": "phase3_structured_family",
       "workload_id": "partition_stress_ladder_q10_periodic_seed20260318"
     },
     {
       "case_kind": "structured_family",
       "case_name": "partition_stress_ladder_q10_dense_seed20260318",
-      "entry_route": "phase3_structured_family_generation",
       "gate_count": 76,
       "gate_sequence": [
         "U3",
@@ -18564,7 +18523,6 @@
       "schema_version": "phase3_canonical_noisy_planner_v1",
       "source_type": "structured_family_builder",
       "status": "pass",
-      "workload_family": "phase3_structured_family",
       "workload_id": "partition_stress_ladder_q10_dense_seed20260318"
     }
   ],

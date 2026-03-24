@@ -97,7 +97,6 @@
       "state_vector_proxy_score": 3.8333333333333335,
       "supported_unfused_region_count": 5,
       "trace_deviation": 2.8947873981405094e-17,
-      "workload_family": "phase2_continuity_workflow",
       "workload_id": "phase2_xxz_hea_q4_continuity"
     },
     {
@@ -153,7 +152,6 @@
       "state_vector_proxy_score": 3.888888888888889,
       "supported_unfused_region_count": 7,
       "trace_deviation": 2.233296094363482e-16,
-      "workload_family": "phase2_continuity_workflow",
       "workload_id": "phase2_xxz_hea_q6_continuity"
     },
     {
@@ -209,7 +207,6 @@
       "state_vector_proxy_score": 3.9166666666666665,
       "supported_unfused_region_count": 9,
       "trace_deviation": 2.269052191606848e-16,
-      "workload_family": "phase2_continuity_workflow",
       "workload_id": "phase2_xxz_hea_q8_continuity"
     },
     {
@@ -265,7 +262,6 @@
       "state_vector_proxy_score": 3.933333333333333,
       "supported_unfused_region_count": 11,
       "trace_deviation": 8.897161534197464e-16,
-      "workload_family": "phase2_continuity_workflow",
       "workload_id": "phase2_xxz_hea_q10_continuity"
     },
     {
@@ -321,7 +317,6 @@
       "state_vector_proxy_score": 7.333333333333333,
       "supported_unfused_region_count": 6,
       "trace_deviation": 2.8947873981405094e-17,
-      "workload_family": "phase2_continuity_workflow",
       "workload_id": "phase2_xxz_hea_q4_continuity"
     },
     {
@@ -377,7 +372,6 @@
       "state_vector_proxy_score": 8.0,
       "supported_unfused_region_count": 7,
       "trace_deviation": 2.233296094363482e-16,
-      "workload_family": "phase2_continuity_workflow",
       "workload_id": "phase2_xxz_hea_q6_continuity"
     },
     {
@@ -433,7 +427,6 @@
       "state_vector_proxy_score": 8.0,
       "supported_unfused_region_count": 8,
       "trace_deviation": 2.269052191606848e-16,
-      "workload_family": "phase2_continuity_workflow",
       "workload_id": "phase2_xxz_hea_q8_continuity"
     },
     {
@@ -489,7 +482,6 @@
       "state_vector_proxy_score": 8.0,
       "supported_unfused_region_count": 9,
       "trace_deviation": 8.897161534197464e-16,
-      "workload_family": "phase2_continuity_workflow",
       "workload_id": "phase2_xxz_hea_q10_continuity"
     },
     {
@@ -545,7 +537,6 @@
       "state_vector_proxy_score": 16.0,
       "supported_unfused_region_count": 4,
       "trace_deviation": 2.8947873981405094e-17,
-      "workload_family": "phase2_continuity_workflow",
       "workload_id": "phase2_xxz_hea_q4_continuity"
     },
     {
@@ -601,7 +592,6 @@
       "state_vector_proxy_score": 13.333333333333334,
       "supported_unfused_region_count": 5,
       "trace_deviation": 2.233296094363482e-16,
-      "workload_family": "phase2_continuity_workflow",
       "workload_id": "phase2_xxz_hea_q6_continuity"
     },
     {
@@ -657,7 +647,6 @@
       "state_vector_proxy_score": 14.333333333333334,
       "supported_unfused_region_count": 6,
       "trace_deviation": 2.269052191606848e-16,
-      "workload_family": "phase2_continuity_workflow",
       "workload_id": "phase2_xxz_hea_q8_continuity"
     },
     {
@@ -713,7 +702,6 @@
       "state_vector_proxy_score": 14.666666666666666,
       "supported_unfused_region_count": 7,
       "trace_deviation": 8.897161534197464e-16,
-      "workload_family": "phase2_continuity_workflow",
       "workload_id": "phase2_xxz_hea_q10_continuity"
     },
     {
@@ -769,7 +757,6 @@
       "state_vector_proxy_score": 4.0,
       "supported_unfused_region_count": 2,
       "trace_deviation": 2.2221513140154287e-16,
-      "workload_family": "phase3_micro_validation",
       "workload_id": "microcase_2q_entangler_local_depolarizing"
     },
     {
@@ -825,7 +812,6 @@
       "state_vector_proxy_score": 3.75,
       "supported_unfused_region_count": 3,
       "trace_deviation": 2.225368923345606e-16,
-      "workload_family": "phase3_micro_validation",
       "workload_id": "microcase_3q_mixed_local_noise_sequence"
     },
     {
@@ -881,7 +867,6 @@
       "state_vector_proxy_score": 4.0,
       "supported_unfused_region_count": 3,
       "trace_deviation": 1.5527910752810928e-18,
-      "workload_family": "phase3_micro_validation",
       "workload_id": "microcase_4q_partition_boundary_triplet"
     },
     {
@@ -937,7 +922,6 @@
       "state_vector_proxy_score": 4.0,
       "supported_unfused_region_count": 2,
       "trace_deviation": 2.2221513140154287e-16,
-      "workload_family": "phase3_micro_validation",
       "workload_id": "microcase_2q_entangler_local_depolarizing"
     },
     {
@@ -993,7 +977,6 @@
       "state_vector_proxy_score": 8.0,
       "supported_unfused_region_count": 3,
       "trace_deviation": 2.225368923345606e-16,
-      "workload_family": "phase3_micro_validation",
       "workload_id": "microcase_3q_mixed_local_noise_sequence"
     },
     {
@@ -1049,7 +1032,6 @@
       "state_vector_proxy_score": 8.0,
       "supported_unfused_region_count": 4,
       "trace_deviation": 1.5527910752810928e-18,
-      "workload_family": "phase3_micro_validation",
       "workload_id": "microcase_4q_partition_boundary_triplet"
     },
     {
@@ -1105,7 +1087,6 @@
       "state_vector_proxy_score": 4.0,
       "supported_unfused_region_count": 2,
       "trace_deviation": 2.2221513140154287e-16,
-      "workload_family": "phase3_micro_validation",
       "workload_id": "microcase_2q_entangler_local_depolarizing"
     },
     {
@@ -1161,7 +1142,6 @@
       "state_vector_proxy_score": 8.0,
       "supported_unfused_region_count": 3,
       "trace_deviation": 2.225368923345606e-16,
-      "workload_family": "phase3_micro_validation",
       "workload_id": "microcase_3q_mixed_local_noise_sequence"
     },
     {
@@ -1217,7 +1197,6 @@
       "state_vector_proxy_score": 16.0,
       "supported_unfused_region_count": 3,
       "trace_deviation": 1.5527910752810928e-18,
-      "workload_family": "phase3_micro_validation",
       "workload_id": "microcase_4q_partition_boundary_triplet"
     },
     {
@@ -1273,7 +1252,6 @@
       "state_vector_proxy_score": 3.945945945945946,
       "supported_unfused_region_count": 23,
       "trace_deviation": 8.883709084703726e-16,
-      "workload_family": "phase3_structured_family",
       "workload_id": "layered_nearest_neighbor_q8_sparse_seed20260318"
     },
     {
@@ -1329,7 +1307,6 @@
       "state_vector_proxy_score": 4.0,
       "supported_unfused_region_count": 23,
       "trace_deviation": 2.2237506195090437e-16,
-      "workload_family": "phase3_structured_family",
       "workload_id": "layered_nearest_neighbor_q8_periodic_seed20260318"
     },
     {
@@ -1385,7 +1362,6 @@
       "state_vector_proxy_score": 3.9565217391304346,
       "supported_unfused_region_count": 24,
       "trace_deviation": 8.892572593257721e-16,
-      "workload_family": "phase3_structured_family",
       "workload_id": "layered_nearest_neighbor_q8_dense_seed20260318"
     },
     {
@@ -1441,7 +1417,6 @@
       "state_vector_proxy_score": 4.0,
       "supported_unfused_region_count": 38,
       "trace_deviation": 1.5543241560447276e-15,
-      "workload_family": "phase3_structured_family",
       "workload_id": "layered_nearest_neighbor_q10_sparse_seed20260318"
     },
     {
@@ -1497,7 +1472,6 @@
       "state_vector_proxy_score": 4.0,
       "supported_unfused_region_count": 38,
       "trace_deviation": 2.44277177701513e-15,
-      "workload_family": "phase3_structured_family",
       "workload_id": "layered_nearest_neighbor_q10_periodic_seed20260318"
     },
     {
@@ -1553,7 +1527,6 @@
       "state_vector_proxy_score": 3.9473684210526314,
       "supported_unfused_region_count": 40,
       "trace_deviation": 1.776357945377658e-15,
-      "workload_family": "phase3_structured_family",
       "workload_id": "layered_nearest_neighbor_q10_dense_seed20260318"
     },
     {
@@ -1609,7 +1582,6 @@
       "state_vector_proxy_score": 3.945945945945946,
       "supported_unfused_region_count": 23,
       "trace_deviation": 1.1107607107334693e-15,
-      "workload_family": "phase3_structured_family",
       "workload_id": "seeded_random_layered_q8_sparse_seed20260318"
     },
     {
@@ -1665,7 +1637,6 @@
       "state_vector_proxy_score": 4.0,
       "supported_unfused_region_count": 23,
       "trace_deviation": 8.88897889927846e-16,
-      "workload_family": "phase3_structured_family",
       "workload_id": "seeded_random_layered_q8_periodic_seed20260318"
     },
     {
@@ -1721,7 +1692,6 @@
       "state_vector_proxy_score": 3.9565217391304346,
       "supported_unfused_region_count": 24,
       "trace_deviation": 1.3322774700276199e-15,
-      "workload_family": "phase3_structured_family",
       "workload_id": "seeded_random_layered_q8_dense_seed20260318"
     },
     {
@@ -1777,7 +1747,6 @@
       "state_vector_proxy_score": 4.0,
       "supported_unfused_region_count": 38,
       "trace_deviation": 1.998734629071901e-15,
-      "workload_family": "phase3_structured_family",
       "workload_id": "seeded_random_layered_q10_sparse_seed20260318"
     },
     {
@@ -1833,7 +1802,6 @@
       "state_vector_proxy_score": 4.0,
       "supported_unfused_region_count": 38,
       "trace_deviation": 1.113724960463269e-15,
-      "workload_family": "phase3_structured_family",
       "workload_id": "seeded_random_layered_q10_periodic_seed20260318"
     },
     {
@@ -1889,7 +1857,6 @@
       "state_vector_proxy_score": 3.9473684210526314,
       "supported_unfused_region_count": 40,
       "trace_deviation": 1.332300590188483e-15,
-      "workload_family": "phase3_structured_family",
       "workload_id": "seeded_random_layered_q10_dense_seed20260318"
     },
     {
@@ -1945,7 +1912,6 @@
       "state_vector_proxy_score": 3.9574468085106385,
       "supported_unfused_region_count": 31,
       "trace_deviation": 4.442014124316167e-16,
-      "workload_family": "phase3_structured_family",
       "workload_id": "partition_stress_ladder_q8_sparse_seed20260318"
     },
     {
@@ -2001,7 +1967,6 @@
       "state_vector_proxy_score": 4.0,
       "supported_unfused_region_count": 32,
       "trace_deviation": 1.1104554684838527e-15,
-      "workload_family": "phase3_structured_family",
       "workload_id": "partition_stress_ladder_q8_periodic_seed20260318"
     },
     {
@@ -2057,7 +2022,6 @@
       "state_vector_proxy_score": 3.9696969696969697,
       "supported_unfused_region_count": 33,
       "trace_deviation": 1.3329684966317344e-15,
-      "workload_family": "phase3_structured_family",
       "workload_id": "partition_stress_ladder_q8_dense_seed20260318"
     },
     {
@@ -2113,7 +2077,6 @@
       "state_vector_proxy_score": 4.0,
       "supported_unfused_region_count": 53,
       "trace_deviation": 4.440932257458426e-16,
-      "workload_family": "phase3_structured_family",
       "workload_id": "partition_stress_ladder_q10_sparse_seed20260318"
     },
     {
@@ -2169,7 +2132,6 @@
       "state_vector_proxy_score": 4.0,
       "supported_unfused_region_count": 54,
       "trace_deviation": 2.221013428873438e-16,
-      "workload_family": "phase3_structured_family",
       "workload_id": "partition_stress_ladder_q10_periodic_seed20260318"
     },
     {
@@ -2225,7 +2187,6 @@
       "state_vector_proxy_score": 3.982142857142857,
       "supported_unfused_region_count": 56,
       "trace_deviation": 2.2222239703003735e-16,
-      "workload_family": "phase3_structured_family",
       "workload_id": "partition_stress_ladder_q10_dense_seed20260318"
     },
     {
@@ -2281,7 +2242,6 @@
       "state_vector_proxy_score": 6.8108108108108105,
       "supported_unfused_region_count": 19,
       "trace_deviation": 8.883709084703726e-16,
-      "workload_family": "phase3_structured_family",
       "workload_id": "layered_nearest_neighbor_q8_sparse_seed20260318"
     },
     {
@@ -2337,7 +2297,6 @@
       "state_vector_proxy_score": 6.947368421052632,
       "supported_unfused_region_count": 20,
       "trace_deviation": 2.2237506195090437e-16,
-      "workload_family": "phase3_structured_family",
       "workload_id": "layered_nearest_neighbor_q8_periodic_seed20260318"
     },
     {
@@ -2393,7 +2352,6 @@
       "state_vector_proxy_score": 7.043478260869565,
       "supported_unfused_region_count": 20,
       "trace_deviation": 8.892572593257721e-16,
-      "workload_family": "phase3_structured_family",
       "workload_id": "layered_nearest_neighbor_q8_dense_seed20260318"
     },
     {
@@ -2449,7 +2407,6 @@
       "state_vector_proxy_score": 7.2,
       "supported_unfused_region_count": 30,
       "trace_deviation": 1.5543241560447276e-15,
-      "workload_family": "phase3_structured_family",
       "workload_id": "layered_nearest_neighbor_q10_sparse_seed20260318"
     },
     {
@@ -2505,7 +2462,6 @@
       "state_vector_proxy_score": 7.032258064516129,
       "supported_unfused_region_count": 33,
       "trace_deviation": 2.44277177701513e-15,
-      "workload_family": "phase3_structured_family",
       "workload_id": "layered_nearest_neighbor_q10_periodic_seed20260318"
     },
     {
@@ -2561,7 +2517,6 @@
       "state_vector_proxy_score": 7.157894736842105,
       "supported_unfused_region_count": 32,
       "trace_deviation": 1.776357945377658e-15,
-      "workload_family": "phase3_structured_family",
       "workload_id": "layered_nearest_neighbor_q10_dense_seed20260318"
     },
     {
@@ -2617,7 +2572,6 @@
       "state_vector_proxy_score": 7.135135135135135,
       "supported_unfused_region_count": 19,
       "trace_deviation": 1.1107607107334693e-15,
-      "workload_family": "phase3_structured_family",
       "workload_id": "seeded_random_layered_q8_sparse_seed20260318"
     },
     {
@@ -2673,7 +2627,6 @@
       "state_vector_proxy_score": 6.947368421052632,
       "supported_unfused_region_count": 20,
       "trace_deviation": 8.88897889927846e-16,
-      "workload_family": "phase3_structured_family",
       "workload_id": "seeded_random_layered_q8_periodic_seed20260318"
     },
     {
@@ -2729,7 +2682,6 @@
       "state_vector_proxy_score": 7.043478260869565,
       "supported_unfused_region_count": 20,
       "trace_deviation": 1.3322774700276199e-15,
-      "workload_family": "phase3_structured_family",
       "workload_id": "seeded_random_layered_q8_dense_seed20260318"
     },
     {
@@ -2785,7 +2737,6 @@
       "state_vector_proxy_score": 7.133333333333334,
       "supported_unfused_region_count": 31,
       "trace_deviation": 1.998734629071901e-15,
-      "workload_family": "phase3_structured_family",
       "workload_id": "seeded_random_layered_q10_sparse_seed20260318"
     },
     {
@@ -2841,7 +2792,6 @@
       "state_vector_proxy_score": 7.032258064516129,
       "supported_unfused_region_count": 33,
       "trace_deviation": 1.113724960463269e-15,
-      "workload_family": "phase3_structured_family",
       "workload_id": "seeded_random_layered_q10_periodic_seed20260318"
     },
     {
@@ -2897,7 +2847,6 @@
       "state_vector_proxy_score": 7.157894736842105,
       "supported_unfused_region_count": 32,
       "trace_deviation": 1.332300590188483e-15,
-      "workload_family": "phase3_structured_family",
       "workload_id": "seeded_random_layered_q10_dense_seed20260318"
     },
     {
@@ -2953,7 +2902,6 @@
       "state_vector_proxy_score": 7.659574468085107,
       "supported_unfused_region_count": 19,
       "trace_deviation": 4.442014124316167e-16,
-      "workload_family": "phase3_structured_family",
       "workload_id": "partition_stress_ladder_q8_sparse_seed20260318"
     },
     {
@@ -3009,7 +2957,6 @@
       "state_vector_proxy_score": 7.5,
       "supported_unfused_region_count": 21,
       "trace_deviation": 1.1104554684838527e-15,
-      "workload_family": "phase3_structured_family",
       "workload_id": "partition_stress_ladder_q8_periodic_seed20260318"
     },
     {
@@ -3065,7 +3012,6 @@
       "state_vector_proxy_score": 7.757575757575758,
       "supported_unfused_region_count": 20,
       "trace_deviation": 1.3329684966317344e-15,
-      "workload_family": "phase3_structured_family",
       "workload_id": "partition_stress_ladder_q8_dense_seed20260318"
     },
     {
@@ -3121,7 +3067,6 @@
       "state_vector_proxy_score": 7.948717948717949,
       "supported_unfused_region_count": 31,
       "trace_deviation": 4.440932257458426e-16,
-      "workload_family": "phase3_structured_family",
       "workload_id": "partition_stress_ladder_q10_sparse_seed20260318"
     },
     {
@@ -3177,7 +3122,6 @@
       "state_vector_proxy_score": 7.9,
       "supported_unfused_region_count": 32,
       "trace_deviation": 2.221013428873438e-16,
-      "workload_family": "phase3_structured_family",
       "workload_id": "partition_stress_ladder_q10_periodic_seed20260318"
     },
     {
@@ -3233,7 +3177,6 @@
       "state_vector_proxy_score": 7.928571428571429,
       "supported_unfused_region_count": 32,
       "trace_deviation": 2.2222239703003735e-16,
-      "workload_family": "phase3_structured_family",
       "workload_id": "partition_stress_ladder_q10_dense_seed20260318"
     },
     {
@@ -3289,7 +3232,6 @@
       "state_vector_proxy_score": 15.567567567567568,
       "supported_unfused_region_count": 12,
       "trace_deviation": 8.883709084703726e-16,
-      "workload_family": "phase3_structured_family",
       "workload_id": "layered_nearest_neighbor_q8_sparse_seed20260318"
     },
     {
@@ -3345,7 +3287,6 @@
       "state_vector_proxy_score": 15.368421052631579,
       "supported_unfused_region_count": 13,
       "trace_deviation": 2.2237506195090437e-16,
-      "workload_family": "phase3_structured_family",
       "workload_id": "layered_nearest_neighbor_q8_periodic_seed20260318"
     },
     {
@@ -3401,7 +3342,6 @@
       "state_vector_proxy_score": 16.0,
       "supported_unfused_region_count": 12,
       "trace_deviation": 8.892572593257721e-16,
-      "workload_family": "phase3_structured_family",
       "workload_id": "layered_nearest_neighbor_q8_dense_seed20260318"
     },
     {
@@ -3457,7 +3397,6 @@
       "state_vector_proxy_score": 16.0,
       "supported_unfused_region_count": 20,
       "trace_deviation": 1.5543241560447276e-15,
-      "workload_family": "phase3_structured_family",
       "workload_id": "layered_nearest_neighbor_q10_sparse_seed20260318"
     },
     {
@@ -3513,7 +3452,6 @@
       "state_vector_proxy_score": 16.0,
       "supported_unfused_region_count": 21,
       "trace_deviation": 2.44277177701513e-15,
-      "workload_family": "phase3_structured_family",
       "workload_id": "layered_nearest_neighbor_q10_periodic_seed20260318"
     },
     {
@@ -3569,7 +3507,6 @@
       "state_vector_proxy_score": 15.368421052631579,
       "supported_unfused_region_count": 20,
       "trace_deviation": 1.776357945377658e-15,
-      "workload_family": "phase3_structured_family",
       "workload_id": "layered_nearest_neighbor_q10_dense_seed20260318"
     },
     {
@@ -3625,7 +3562,6 @@
       "state_vector_proxy_score": 15.567567567567568,
       "supported_unfused_region_count": 12,
       "trace_deviation": 1.1107607107334693e-15,
-      "workload_family": "phase3_structured_family",
       "workload_id": "seeded_random_layered_q8_sparse_seed20260318"
     },
     {
@@ -3681,7 +3617,6 @@
       "state_vector_proxy_score": 15.368421052631579,
       "supported_unfused_region_count": 13,
       "trace_deviation": 8.88897889927846e-16,
-      "workload_family": "phase3_structured_family",
       "workload_id": "seeded_random_layered_q8_periodic_seed20260318"
     },
     {
@@ -3737,7 +3672,6 @@
       "state_vector_proxy_score": 15.478260869565217,
       "supported_unfused_region_count": 13,
       "trace_deviation": 1.3322774700276199e-15,
-      "workload_family": "phase3_structured_family",
       "workload_id": "seeded_random_layered_q8_dense_seed20260318"
     },
     {
@@ -3793,7 +3727,6 @@
       "state_vector_proxy_score": 16.0,
       "supported_unfused_region_count": 20,
       "trace_deviation": 1.998734629071901e-15,
-      "workload_family": "phase3_structured_family",
       "workload_id": "seeded_random_layered_q10_sparse_seed20260318"
     },
     {
@@ -3849,7 +3782,6 @@
       "state_vector_proxy_score": 16.0,
       "supported_unfused_region_count": 21,
       "trace_deviation": 1.113724960463269e-15,
-      "workload_family": "phase3_structured_family",
       "workload_id": "seeded_random_layered_q10_periodic_seed20260318"
     },
     {
@@ -3905,7 +3837,6 @@
       "state_vector_proxy_score": 15.368421052631579,
       "supported_unfused_region_count": 20,
       "trace_deviation": 1.332300590188483e-15,
-      "workload_family": "phase3_structured_family",
       "workload_id": "seeded_random_layered_q10_dense_seed20260318"
     },
     {
@@ -3961,7 +3892,6 @@
       "state_vector_proxy_score": 15.659574468085106,
       "supported_unfused_region_count": 14,
       "trace_deviation": 4.442014124316167e-16,
-      "workload_family": "phase3_structured_family",
       "workload_id": "partition_stress_ladder_q8_sparse_seed20260318"
     },
     {
@@ -4017,7 +3947,6 @@
       "state_vector_proxy_score": 15.5,
       "supported_unfused_region_count": 15,
       "trace_deviation": 1.1104554684838527e-15,
-      "workload_family": "phase3_structured_family",
       "workload_id": "partition_stress_ladder_q8_periodic_seed20260318"
     },
     {
@@ -4073,7 +4002,6 @@
       "state_vector_proxy_score": 15.787878787878787,
       "supported_unfused_region_count": 15,
       "trace_deviation": 1.3329684966317344e-15,
-      "workload_family": "phase3_structured_family",
       "workload_id": "partition_stress_ladder_q8_dense_seed20260318"
     },
     {
@@ -4129,7 +4057,6 @@
       "state_vector_proxy_score": 16.0,
       "supported_unfused_region_count": 21,
       "trace_deviation": 4.440932257458426e-16,
-      "workload_family": "phase3_structured_family",
       "workload_id": "partition_stress_ladder_q10_sparse_seed20260318"
     },
     {
@@ -4185,7 +4112,6 @@
       "state_vector_proxy_score": 16.0,
       "supported_unfused_region_count": 24,
       "trace_deviation": 2.221013428873438e-16,
-      "workload_family": "phase3_structured_family",
       "workload_id": "partition_stress_ladder_q10_periodic_seed20260318"
     },
     {
@@ -4241,7 +4167,6 @@
       "state_vector_proxy_score": 15.875,
       "supported_unfused_region_count": 22,
       "trace_deviation": 2.2222239703003735e-16,
-      "workload_family": "phase3_structured_family",
       "workload_id": "partition_stress_ladder_q10_dense_seed20260318"
     }
   ],
