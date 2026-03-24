@@ -42,7 +42,7 @@ Out of scope for this story:
   - `CanonicalNoisyPlannerSurface`,
   - `build_canonical_planner_surface_from_operation_specs()`,
   - and the stable provenance vocabulary for `requested_mode`, `source_type`,
-    `entry_route`, `workload_family`, and `workload_id`.
+    and `workload_id` (route/family implied by `source_type`).
 - Task 2 already established the schema-versioned partition handoff surface Story
   1 should treat as the auditable planning result boundary through:
   - `NoisyPartitionDescriptorSet`,

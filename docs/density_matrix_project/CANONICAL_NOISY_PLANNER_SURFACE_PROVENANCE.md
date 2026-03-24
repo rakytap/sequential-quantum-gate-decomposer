@@ -1,151 +1,63 @@
-# CanonicalNoisyPlannerSurface — provenance attributes and combinations
-
-This note inventories how **provenance** is represented on `CanonicalNoisyPlannerSurface`, which string vocabularies the codebase defines, which **(source_type, entry_route, workload_family)** triples appear in supported call paths and tests, and where those definitions live.
+# CanonicalNoisyPlannerSurface — provenance and implied route / family
 
 Primary implementation: `squander/partitioning/noisy_planner.py`.
 
 ---
 
-## Provenance attributes on the surface
+## Stored provenance
 
-`CanonicalNoisyPlannerSurface` stores provenance as four string fields on the dataclass. The **`provenance`** property returns exactly these four keys (see `CanonicalNoisyPlannerSurface.provenance` and `to_dict()` in `noisy_planner.py`).
-
-| Field | Role |
-| --- | --- |
-| `source_type` | Labels the **origin** of the workload (e.g. bridge from a VQE builder, synthetic microcase, structured family generator, or legacy circuit lowering). Must be one of `SUPPORTED_PLANNER_SOURCE_TYPES` when using `preflight_planner_request`. |
-| `entry_route` | Identifies **how** the workload entered the Phase 3 planner API (which lowering or generation path). |
-| `workload_family` | Coarse **family** grouping for audits, benchmarks, and continuity checks (often aligned with `entry_route` in this repo). |
-| `workload_id` | Stable **instance** identifier within a family (case name, structured workload id, continuity default id, or caller-supplied string). |
-
-Related fields on the same surface that are **not** inside the `provenance` dict but appear alongside it in `to_dict()`:
+`CanonicalNoisyPlannerSurface` carries **`source_type`** and **`workload_id`** as the workload identity for audits. The **`provenance`** property and nested copy inside **`to_dict()`** include only:
 
 | Field | Role |
 | --- | --- |
-| `schema_version` | Canonical planner schema id (`CANONICAL_PLANNER_SCHEMA_VERSION`). |
-| `requested_mode` | Execution mode; Phase 3 validation currently requires `partitioned_density` (`PARTITIONED_DENSITY_MODE`). |
+| `source_type` | Supported Phase 3 origin label (`SUPPORTED_PLANNER_SOURCE_TYPES`). |
+| `workload_id` | Instance id (continuity default, microcase name, structured id, or caller string). |
 
-Operation-level records use `source_gate_index` on `CanonicalNoisyPlannerOperation` to tie noise rows to a preceding gate index; that is **not** part of the top-level `provenance` dict.
+Related top-level fields (not inside `provenance`): `schema_version`, `requested_mode`, qubit/parameter counts, operations.
 
----
-
-## Frozen string vocabularies (constants)
-
-Defined at the top of `squander/partitioning/noisy_planner.py`:
-
-**Entry routes**
-
-| Constant | String value |
-| --- | --- |
-| `PHASE3_ENTRY_ROUTE_PHASE2_CONTINUITY` | `phase2_continuity_lowering` |
-| `PHASE3_ENTRY_ROUTE_MICROCASE` | `phase3_microcase_generation` |
-| `PHASE3_ENTRY_ROUTE_STRUCTURED_FAMILY` | `phase3_structured_family_generation` |
-| `PHASE3_ENTRY_ROUTE_LEGACY_EXACT` | `phase3_legacy_exact_lowering` |
-
-**Workload families**
-
-| Constant | String value |
-| --- | --- |
-| `PHASE3_WORKLOAD_FAMILY_PHASE2_CONTINUITY` | `phase2_continuity_workflow` |
-| `PHASE3_WORKLOAD_FAMILY_MICROCASE` | `phase3_micro_validation` |
-| `PHASE3_WORKLOAD_FAMILY_STRUCTURED` | `phase3_structured_family` |
-| `PHASE3_WORKLOAD_FAMILY_LEGACY` | `phase3_legacy_exact_lowering` |
-
-**Supported `source_type` values** (`SUPPORTED_PLANNER_SOURCE_TYPES`)
-
-| Value | Typical use in this repo |
-| --- | --- |
-| `generated_hea` | Density bridge metadata from Phase 2–style HEA / VQE workloads (`describe_density_bridge()`). |
-| `microcase_builder` | Small mandatory operation-spec workloads in benchmarks and tests. |
-| `structured_family_builder` | Larger structured synthetic workloads (families × qubit counts × noise patterns). |
-| `legacy_qgd_circuit_exact` | Legacy `qgd_Circuit` (or compatible) lowering via `get_Gates()` / `get_Qbit_Num()`. |
+`NoisyPartitionDescriptorSet` and runtime handoff types mirror the same **`provenance`** shape (`source_type` + `workload_id` only).
 
 ---
 
-## Provenance combinations (triple + workload_id pattern)
+## Implied entry route and workload family
 
-The APIs **`build_canonical_planner_surface_from_bridge_metadata`**, **`build_canonical_planner_surface_from_operation_specs`**, and **`preflight_planner_request`** take `source_type`, `entry_route`, and `workload_family` as **caller-provided strings** (except legacy lowering, which fixes route and family internally). So many triples are *syntactically* possible if they pass validation. Below are the **combinations that the codebase explicitly wires or asserts** as the intended Phase 3 shapes.
+**`entry_route` and `workload_family` are not stored** on surfaces or descriptors. For each supported `source_type`, the canonical labels are defined by the Phase 3 constants and exposed as helpers:
 
-### 1. Phase 2 continuity (bridge metadata)
+- **`phase3_entry_route_for_source_type(source_type)`**
+- **`phase3_workload_family_for_source_type(source_type)`**
 
-| Attribute | Value |
-| --- | --- |
-| `source_type` | `generated_hea` (from `bridge_metadata["source_type"]`; continuity VQE matches this) |
-| `entry_route` | `phase2_continuity_lowering` (`PHASE3_ENTRY_ROUTE_PHASE2_CONTINUITY`) |
-| `workload_family` | `phase2_continuity_workflow` (`PHASE3_WORKLOAD_FAMILY_PHASE2_CONTINUITY`) |
-| `workload_id` | Default `phase2_xxz_hea_q{qbit_num}_continuity` when not overridden |
+These map:
 
-**Description:** Builds the surface from `vqe.describe_density_bridge()` and pins route/family to the Phase 2 continuity path.
+| `source_type` | Entry route constant | Workload family constant |
+| --- | --- | --- |
+| `generated_hea` | `PHASE3_ENTRY_ROUTE_PHASE2_CONTINUITY` | `PHASE3_WORKLOAD_FAMILY_PHASE2_CONTINUITY` |
+| `microcase_builder` | `PHASE3_ENTRY_ROUTE_MICROCASE` | `PHASE3_WORKLOAD_FAMILY_MICROCASE` |
+| `structured_family_builder` | `PHASE3_ENTRY_ROUTE_STRUCTURED_FAMILY` | `PHASE3_WORKLOAD_FAMILY_STRUCTURED` |
+| `legacy_qgd_circuit_exact` | `PHASE3_ENTRY_ROUTE_LEGACY_EXACT` | `PHASE3_WORKLOAD_FAMILY_LEGACY` |
 
-**Where:** `build_phase3_continuity_planner_surface()` in `squander/partitioning/noisy_planner.py`; tests and benchmarks under `tests/partitioning/test_planner_surface_entry.py`, `tests/partitioning/test_planner_surface_descriptors.py`, `tests/partitioning/test_partitioned_runtime.py`, and `benchmarks/density_matrix/planner_surface/continuity_surface_validation.py`.
-
-### 2. Microcase operation specs
-
-| Attribute | Value |
-| --- | --- |
-| `source_type` | `microcase_builder` |
-| `entry_route` | `phase3_microcase_generation` (`PHASE3_ENTRY_ROUTE_MICROCASE`) |
-| `workload_family` | `phase3_micro_validation` (`PHASE3_WORKLOAD_FAMILY_MICROCASE`) |
-| `workload_id` | Per-case name (e.g. `microcase_2q_entangler_local_depolarizing`) |
-
-**Description:** Mandatory small circuits built from explicit operation spec lists for validation and descriptor audits.
-
-**Where:** `benchmarks/density_matrix/planner_surface/workloads.py` (`build_microcase_surface`, `iter_microcase_surfaces`); asserted in `tests/partitioning/test_planner_surface_entry.py` and related partitioning tests.
-
-### 3. Structured family operation specs
-
-| Attribute | Value |
-| --- | --- |
-| `source_type` | `structured_family_builder` |
-| `entry_route` | `phase3_structured_family_generation` (`PHASE3_ENTRY_ROUTE_STRUCTURED_FAMILY`) |
-| `workload_family` | `phase3_structured_family` (`PHASE3_WORKLOAD_FAMILY_STRUCTURED`) |
-| `workload_id` | Generated per family / qubit count / noise pattern (see `workloads.py`) |
-
-**Description:** Scaled synthetic workloads for stress and audit bundles.
-
-**Where:** `benchmarks/density_matrix/planner_surface/workloads.py` (`build_structured_surface` path); asserted in `tests/partitioning/test_planner_surface_entry.py` and related tests.
-
-### 4. Legacy QGD circuit lowering
-
-| Attribute | Value |
-| --- | --- |
-| `source_type` | `legacy_qgd_circuit_exact` (default; overridable in `build_canonical_planner_surface_from_legacy_circuit`, fixed in `build_canonical_planner_surface_from_qgd_circuit`) |
-| `entry_route` | `phase3_legacy_exact_lowering` (`PHASE3_ENTRY_ROUTE_LEGACY_EXACT`) — **always** set inside `build_canonical_planner_surface_from_legacy_circuit` |
-| `workload_family` | `phase3_legacy_exact_lowering` (`PHASE3_WORKLOAD_FAMILY_LEGACY`) — **always** set there |
-| `workload_id` | Caller-supplied |
-
-**Description:** Lowers a legacy circuit object into canonical operations, optionally inserting noise from `density_noise` specs.
-
-**Where:** `build_canonical_planner_surface_from_legacy_circuit` and `build_canonical_planner_surface_from_qgd_circuit` in `squander/partitioning/noisy_planner.py`; tests in `tests/partitioning/test_planner_surface_entry.py`, `tests/partitioning/test_planner_surface_descriptors.py`, and benchmarks under `benchmarks/density_matrix/planner_surface/legacy_exact_lowering_validation.py`.
+Benchmarks that still need a human-readable “family” string for grouping (for example planner calibration) derive **`workload_family`** from `phase3_workload_family_for_source_type` when building metadata, not from the descriptor object.
 
 ---
 
-## Other combinations (API vs. in-repo usage)
+## Builders and preflight
 
-- **`preflight_planner_request`** dispatches on payload shape (`bridge_metadata`, `operation_specs`, or `legacy_circuit` exclusively). For **bridge** and **operation_specs** branches it **requires** `entry_route` and `workload_family` and passes them through with the caller’s `source_type`, as long as `source_type ∈ SUPPORTED_PLANNER_SOURCE_TYPES`. The codebase does not enumerate every valid triple; descriptor validation later checks that descriptor provenance matches the surface (`provenance_mismatch` path in `noisy_planner.py`).
-- **`build_canonical_planner_surface_from_bridge_metadata`** can resolve `source_type` from `bridge_metadata["source_type"]` when the optional `source_type` argument is omitted; **route and family remain caller-supplied**. The continuity helper is the main in-repo example pairing `generated_hea` with the phase2 continuity route/family.
-- **Tests** that call `preflight_planner_request` with `microcase_builder` reuse the same microcase **entry_route** / **workload_family** as the benchmark workloads when asserting validation behavior (`tests/partitioning/test_planner_surface_entry.py`).
+- **`build_canonical_planner_surface_from_bridge_metadata`**: `bridge_metadata`, `workload_id`, optional `source_type` override (else `bridge_metadata["source_type"]`).
+- **`build_canonical_planner_surface_from_operation_specs`**: `qbit_num`, `source_type`, `workload_id`, `operation_specs`.
+- **`preflight_planner_request`**: `source_type`, `workload_id`, and exactly one of `bridge_metadata`, `operation_specs`, or `legacy_circuit`; operation-spec branch requires `qbit_num`.
+- **`build_phase3_continuity_planner_surface`**: bridge from VQE + default or explicit `workload_id`.
+
+Descriptor preflight (**`preflight_descriptor_request`**) follows the same surface preflight rules, then **`build_partition_descriptor_set`**.
+
+**`validate_partition_descriptor_set_against_surface`** checks `requested_mode`, `source_type`, `workload_id`, `qbit_num`, and `parameter_count` match between surface and descriptor set (plus structural operation equality).
 
 ---
 
-## Where provenance is serialized or checked
+## Where to look in the repo
 
-| Location | Purpose |
+| Area | Location |
 | --- | --- |
-| `CanonicalNoisyPlannerSurface.provenance` / `to_dict()` | Audit-friendly nested `provenance` object in the full surface dict. |
-| `build_planner_audit_record()` | Copies `provenance` into planner audit records. |
-| Descriptor builders and validators in `noisy_planner.py` | Compare `source_type`, `entry_route`, and `workload_family` between surface and descriptor payloads (e.g. provenance mismatch errors). |
-| `tests/partitioning/test_planner_surface_*.py`, `tests/partitioning/test_partitioned_runtime.py` | Assert expected provenance for continuity, microcase, structured, and legacy paths. |
-| `benchmarks/density_matrix/planner_surface/*.py` | Construct surfaces and bundles with the combinations above. |
-
----
-
-## Summary table (primary triples)
-
-| `source_type` | `entry_route` | `workload_family` | Primary builder / entry |
-| --- | --- | --- | --- |
-| `generated_hea` | `phase2_continuity_lowering` | `phase2_continuity_workflow` | `build_phase3_continuity_planner_surface`; bridge + explicit metadata in tests |
-| `microcase_builder` | `phase3_microcase_generation` | `phase3_micro_validation` | `build_canonical_planner_surface_from_operation_specs` in `workloads.py` |
-| `structured_family_builder` | `phase3_structured_family_generation` | `phase3_structured_family` | `build_canonical_planner_surface_from_operation_specs` in `workloads.py` |
-| `legacy_qgd_circuit_exact` | `phase3_legacy_exact_lowering` | `phase3_legacy_exact_lowering` | `build_canonical_planner_surface_from_legacy_circuit` / `from_qgd_circuit` |
-
-`workload_id` is always caller- or helper-defined and is not limited to a fixed vocabulary in code.
+| Surface / descriptor / validation | `squander/partitioning/noisy_planner.py` |
+| Runtime result provenance | `squander/partitioning/noisy_runtime.py` (`NoisyRuntimeExecutionResult`) |
+| Tests | `tests/partitioning/test_planner_surface_entry.py`, `test_planner_surface_descriptors.py`, `test_partitioned_runtime.py` |
+| Benchmark surfaces / bundles | `benchmarks/density_matrix/planner_surface/` |
+| Phase 3 API overview | `docs/density_matrix_project/phases/phase-3/API_REFERENCE_PHASE_3.md` |

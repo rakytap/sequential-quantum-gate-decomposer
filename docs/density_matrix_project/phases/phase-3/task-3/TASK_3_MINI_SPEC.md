@@ -27,8 +27,8 @@ workflow-growth decisions.
 ## Assumptions and dependencies
 - Task 1 provides the canonical Phase 3 planner-entry contract as a
   schema-versioned `CanonicalNoisyPlannerSurface` with stable provenance fields
-  for `requested_mode`, `source_type`, `entry_route`, `workload_family`, and
-  `workload_id`.
+  for `requested_mode`, `source_type`, and `workload_id` (entry route and
+  workload family implied by `source_type`, not stored on the surface).
 - Task 2 provides the schema-versioned partition handoff contract through
   `NoisyPartitionDescriptorSet`, `NoisyPartitionDescriptor`, and
   `NoisyPartitionDescriptorMember`, including canonical operation references,

@@ -293,15 +293,11 @@ descriptor_set = build_phase3_continuity_partition_descriptor_set(
 from squander.partitioning.noisy_planner import (
     build_canonical_planner_surface_from_operation_specs,
     build_partition_descriptor_set,
-    PHASE3_ENTRY_ROUTE_MICROCASE,
-    PHASE3_WORKLOAD_FAMILY_MICROCASE,
 )
 
 surface = build_canonical_planner_surface_from_operation_specs(
     qbit_num=2,
     source_type="microcase_builder",
-    entry_route=PHASE3_ENTRY_ROUTE_MICROCASE,
-    workload_family=PHASE3_WORKLOAD_FAMILY_MICROCASE,
     workload_id="my_2q_case",
     operation_specs=[
         {"kind": "gate", "name": "U3", "target_qbit": 0, "param_count": 3},

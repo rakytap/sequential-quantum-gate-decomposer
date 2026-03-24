@@ -47,8 +47,8 @@ Out of scope for this story:
   - and `build_phase3_continuity_partition_descriptor_set()` in
     `squander/partitioning/noisy_planner.py`.
 - Task 1 already froze the shared provenance tuple Story 1 should extend rather
-  than rename, especially `requested_mode`, `source_type`, `entry_route`,
-  `workload_family`, and `workload_id`.
+  than rename, especially `requested_mode`, `source_type`, and `workload_id`
+  (route/family implied by `source_type`).
 - Task 5 already emits claim-selection and calibration-side workload identity
   through `benchmarks/density_matrix/planner_calibration/` and
   `benchmarks/density_matrix/artifacts/planner_calibration/`; Story 1 should preserve
