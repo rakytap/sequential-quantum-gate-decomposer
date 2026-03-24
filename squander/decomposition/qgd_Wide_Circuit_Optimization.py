@@ -1154,16 +1154,7 @@ class qgd_Wide_Circuit_Optimization:
             partitioned_circuit.add_Circuit(c)
         parameters = np.concatenate(params, axis=0)
         return partitioned_circuit, parameters, (allparts, g, go, rgo, single_qubit_chains, gate_to_qubit, gate_to_tqubit), part_deps
-    def copy_circuit(circ, params):
-        newcirc = Circuit(circ.get_Qbit_Num())
-        new_params = []
-        for gate in circ.get_Gates():
-            newcirc.add_Gate(gate)
-            start_idx = gate.get_Parameter_Start_Index()
-            new_params.append(params[start_idx:start_idx + gate.get_Parameter_Num()])
-        return newcirc, np.empty((0,), dtype=np.float64) if len(new_params) == 0 else np.concatenate(new_params, axis=0)
     def strip_single_qubit_head_tails(circ, params):
-        circ, params = qgd_Wide_Circuit_Optimization.copy_circuit(circ, params)
         gate_dict, g, rg, gate_to_qubit, S = build_dependency(circ)
         newcirc = Circuit(circ.get_Qbit_Num())
         new_params = []
@@ -1242,8 +1233,6 @@ class qgd_Wide_Circuit_Optimization:
         else:
             partitioned_circuit, parameters, _ = PartitionCircuit( circ, orig_parameters, self.max_partition_size, strategy=self.config['partition_strategy'] )
             part_deps = None
-
-        qbit_num_orig_circuit = circ.get_Qbit_Num()
 
         subcircuits = partitioned_circuit.get_Gates()
 
@@ -1346,11 +1335,9 @@ class qgd_Wide_Circuit_Optimization:
             print( "original circuit:    ", circ.get_Gate_Nums()) 
             print( "reoptimized circuit: ", wide_circuit.get_Gate_Nums()) 
 
-
-        if self.config["test_final_circuit"]:
-            CompareCircuits( circ, orig_parameters, wide_circuit, wide_parameters )
-
         self.check_valid_topo(wide_circuit)
+
+        self.check_compare_circuits( circ, orig_parameters, wide_circuit, wide_parameters )
 
         return wide_circuit, wide_parameters
 
@@ -1368,8 +1355,14 @@ class qgd_Wide_Circuit_Optimization:
             assert all(frozenset(gate.get_Involved_Qbits()) in topo_set
                 for gate in wide_circuit.get_Flat_Circuit().get_Gates()
                 if len(gate.get_Involved_Qbits()) > 1), "Final circuit contains gates that do not respect the topology constraints."
-
-    def route_circuit(self, circ: Circuit, orig_parameters: np.ndarray, use_qiskit=True):
+    def check_compare_circuits(self, circ, orig_parameters, wide_circuit, wide_parameters, routing=False):
+        if self.config["test_final_circuit"]:
+            if routing:
+                CompareCircuits(circ, orig_parameters, wide_circuit, wide_parameters,
+                    initial_mapping=self.config["initial_mapping"], final_mapping=self.config["final_mapping"] )
+            else:
+                CompareCircuits(circ, orig_parameters, wide_circuit, wide_parameters)
+    def route_circuit(self, circ: Circuit, orig_parameters: np.ndarray, use_qiskit=False):
         if use_qiskit:
             from squander import Qiskit_IO
             from qiskit import transpile
@@ -1379,16 +1372,14 @@ class qgd_Wide_Circuit_Optimization:
             coupling_map = [[i,j] for i,j in self.config['topology']]
             circuit_qiskit_sabre = transpile(circo, basis_gates=SUPPORTED_GATES_NAMES, coupling_map=coupling_map, optimization_level=0)
             Squander_remapped_circuit, parameters_remapped_circuit = Qiskit_IO.convert_Qiskit_to_Squander(circuit_qiskit_sabre)
+            self.config["initial_mapping"] = circuit_qiskit_sabre.layout.initial_index_layout()
+            self.config["final_mapping"] = circuit_qiskit_sabre.layout.final_index_layout()
         else:
-            new_circ = Circuit(circ.get_Qbit_Num())
-            for gate in circ.get_Gates():
-                new_circ.add_Gate(gate)
-            sabre = SABRE(new_circ, self.config["topology"])
+            sabre = SABRE(circ, self.config["topology"])
             Squander_remapped_circuit, parameters_remapped_circuit, pi, final_pi, swap_count = sabre.map_circuit(orig_parameters)
-            self.config.setdefault("initial_mapping",pi)
-            self.config.setdefault("final_mapping",final_pi)
-        if self.config["test_final_circuit"]:
-            CompareCircuits( circ, orig_parameters, Squander_remapped_circuit, parameters_remapped_circuit )
-        self.check_valid_topo(Squander_remapped_circuit)
+            self.config["initial_mapping"] = pi
+            self.config["final_mapping"] = final_pi
         self.config['routed']= True
+        self.check_valid_topo(Squander_remapped_circuit)
+        self.check_compare_circuits(circ, orig_parameters, Squander_remapped_circuit, parameters_remapped_circuit, routing=True)
         return Squander_remapped_circuit, parameters_remapped_circuit
