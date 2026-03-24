@@ -31,6 +31,29 @@ SUPPORTED_PLANNER_SOURCE_TYPES = frozenset(
     }
 )
 
+
+def phase3_entry_route_for_source_type(source_type: str) -> str:
+    """Canonical Phase 3 entry-route label implied by ``source_type``."""
+    by_source = {
+        "generated_hea": PHASE3_ENTRY_ROUTE_PHASE2_CONTINUITY,
+        "microcase_builder": PHASE3_ENTRY_ROUTE_MICROCASE,
+        "structured_family_builder": PHASE3_ENTRY_ROUTE_STRUCTURED_FAMILY,
+        "legacy_qgd_circuit_exact": PHASE3_ENTRY_ROUTE_LEGACY_EXACT,
+    }
+    return by_source[source_type]
+
+
+def phase3_workload_family_for_source_type(source_type: str) -> str:
+    """Canonical Phase 3 workload-family label implied by ``source_type``."""
+    by_source = {
+        "generated_hea": PHASE3_WORKLOAD_FAMILY_PHASE2_CONTINUITY,
+        "microcase_builder": PHASE3_WORKLOAD_FAMILY_MICROCASE,
+        "structured_family_builder": PHASE3_WORKLOAD_FAMILY_STRUCTURED,
+        "legacy_qgd_circuit_exact": PHASE3_WORKLOAD_FAMILY_LEGACY,
+    }
+    return by_source[source_type]
+
+
 PLANNER_OP_KIND_GATE = "gate"
 PLANNER_OP_KIND_NOISE = "noise"
 PLANNER_OP_KINDS: frozenset[str] = frozenset(
@@ -149,8 +172,6 @@ class CanonicalNoisyPlannerSurface:
     schema_version: str
     requested_mode: str
     source_type: str
-    entry_route: str
-    workload_family: str
     workload_id: str
     qbit_num: int
     parameter_count: int
@@ -186,8 +207,6 @@ class CanonicalNoisyPlannerSurface:
     def provenance(self) -> dict[str, Any]:
         return {
             "source_type": self.source_type,
-            "entry_route": self.entry_route,
-            "workload_family": self.workload_family,
             "workload_id": self.workload_id,
         }
 
@@ -196,8 +215,6 @@ class CanonicalNoisyPlannerSurface:
             "schema_version": self.schema_version,
             "requested_mode": self.requested_mode,
             "source_type": self.source_type,
-            "entry_route": self.entry_route,
-            "workload_family": self.workload_family,
             "workload_id": self.workload_id,
             "provenance": self.provenance,
             "qbit_num": self.qbit_num,
@@ -326,8 +343,6 @@ class NoisyPartitionDescriptorSet:
     planner_schema_version: str
     requested_mode: str
     source_type: str
-    entry_route: str
-    workload_family: str
     workload_id: str
     qbit_num: int
     parameter_count: int
@@ -338,8 +353,6 @@ class NoisyPartitionDescriptorSet:
     def provenance(self) -> dict[str, Any]:
         return {
             "source_type": self.source_type,
-            "entry_route": self.entry_route,
-            "workload_family": self.workload_family,
             "workload_id": self.workload_id,
         }
 
@@ -376,8 +389,6 @@ class NoisyPartitionDescriptorSet:
             "planner_schema_version": self.planner_schema_version,
             "requested_mode": self.requested_mode,
             "source_type": self.source_type,
-            "entry_route": self.entry_route,
-            "workload_family": self.workload_family,
             "workload_id": self.workload_id,
             "provenance": self.provenance,
             "qbit_num": self.qbit_num,
@@ -609,8 +620,6 @@ def _validate_surface(
 def build_canonical_planner_surface_from_bridge_metadata(
     bridge_metadata: Mapping[str, Any],
     *,
-    entry_route: str,
-    workload_family: str,
     workload_id: str,
     requested_mode: str = PARTITIONED_DENSITY_MODE,
     source_type: str | None = None,
@@ -628,8 +637,6 @@ def build_canonical_planner_surface_from_bridge_metadata(
         schema_version=CANONICAL_PLANNER_SCHEMA_VERSION,
         requested_mode=requested_mode,
         source_type=resolved_source_type,
-        entry_route=entry_route,
-        workload_family=workload_family,
         workload_id=workload_id,
         qbit_num=int(bridge_metadata["qbit_num"]),
         parameter_count=int(bridge_metadata["parameter_count"]),
@@ -642,8 +649,6 @@ def build_canonical_planner_surface_from_operation_specs(
     *,
     qbit_num: int,
     source_type: str,
-    entry_route: str,
-    workload_family: str,
     workload_id: str,
     operation_specs: Iterable[Mapping[str, Any]],
     requested_mode: str = PARTITIONED_DENSITY_MODE,
@@ -671,8 +676,6 @@ def build_canonical_planner_surface_from_operation_specs(
         schema_version=CANONICAL_PLANNER_SCHEMA_VERSION,
         requested_mode=requested_mode,
         source_type=source_type,
-        entry_route=entry_route,
-        workload_family=workload_family,
         workload_id=workload_id,
         qbit_num=int(qbit_num),
         parameter_count=max(
@@ -851,8 +854,6 @@ def build_canonical_planner_surface_from_legacy_circuit(
     return build_canonical_planner_surface_from_operation_specs(
         qbit_num=int(legacy_circuit.get_Qbit_Num()),
         source_type=source_type,
-        entry_route=PHASE3_ENTRY_ROUTE_LEGACY_EXACT,
-        workload_family=PHASE3_WORKLOAD_FAMILY_LEGACY,
         workload_id=workload_id,
         operation_specs=operation_specs,
         requested_mode=requested_mode,
@@ -886,8 +887,6 @@ def preflight_planner_request(
     bridge_metadata: Mapping[str, Any] | None = None,
     operation_specs: Iterable[Mapping[str, Any]] | None = None,
     qbit_num: int | None = None,
-    entry_route: str | None = None,
-    workload_family: str | None = None,
     legacy_circuit: Any | None = None,
     density_noise: Iterable[Mapping[str, Any]] | None = None,
     strict_phase3_support: bool = True,
@@ -929,22 +928,8 @@ def preflight_planner_request(
         )
 
     if bridge_metadata is not None:
-        if entry_route is None or workload_family is None:
-            raise NoisyPlannerValidationError(
-                category="malformed_request",
-                first_unsupported_condition="missing_route_metadata",
-                failure_stage="planner_entry_preflight",
-                source_type=resolved_source_type,
-                requested_mode=requested_mode,
-                reason=(
-                    "Bridge-based planner preflight requires entry_route and "
-                    "workload_family metadata"
-                ),
-            )
         return build_canonical_planner_surface_from_bridge_metadata(
             bridge_metadata,
-            entry_route=entry_route,
-            workload_family=workload_family,
             workload_id=workload_id,
             requested_mode=requested_mode,
             source_type=resolved_source_type,
@@ -952,23 +937,18 @@ def preflight_planner_request(
         )
 
     if operation_specs is not None:
-        if qbit_num is None or entry_route is None or workload_family is None:
+        if qbit_num is None:
             raise NoisyPlannerValidationError(
                 category="malformed_request",
-                first_unsupported_condition="missing_route_metadata",
+                first_unsupported_condition="missing_qbit_num",
                 failure_stage="planner_entry_preflight",
                 source_type=resolved_source_type,
                 requested_mode=requested_mode,
-                reason=(
-                    "Operation-spec planner preflight requires qbit_num, "
-                    "entry_route, and workload_family metadata"
-                ),
+                reason="Operation-spec planner preflight requires qbit_num",
             )
         return build_canonical_planner_surface_from_operation_specs(
             qbit_num=qbit_num,
             source_type=resolved_source_type,
-            entry_route=entry_route,
-            workload_family=workload_family,
             workload_id=workload_id,
             operation_specs=operation_specs,
             requested_mode=requested_mode,
@@ -997,8 +977,6 @@ def build_phase3_continuity_planner_surface(
     )
     return build_canonical_planner_surface_from_bridge_metadata(
         bridge_metadata,
-        entry_route=PHASE3_ENTRY_ROUTE_PHASE2_CONTINUITY,
-        workload_family=PHASE3_WORKLOAD_FAMILY_PHASE2_CONTINUITY,
         workload_id=resolved_workload_id,
         requested_mode=requested_mode,
         strict_phase3_support=True,
@@ -1230,8 +1208,6 @@ def build_partition_descriptor_set(
         planner_schema_version=surface.schema_version,
         requested_mode=surface.requested_mode,
         source_type=surface.source_type,
-        entry_route=surface.entry_route,
-        workload_family=surface.workload_family,
         workload_id=surface.workload_id,
         qbit_num=surface.qbit_num,
         parameter_count=surface.parameter_count,
@@ -1266,8 +1242,6 @@ def preflight_descriptor_request(
     bridge_metadata: Mapping[str, Any] | None = None,
     operation_specs: Iterable[Mapping[str, Any]] | None = None,
     qbit_num: int | None = None,
-    entry_route: str | None = None,
-    workload_family: str | None = None,
     legacy_circuit: Any | None = None,
     density_noise: Iterable[Mapping[str, Any]] | None = None,
     strict_phase3_support: bool = True,
@@ -1280,8 +1254,6 @@ def preflight_descriptor_request(
         bridge_metadata=bridge_metadata,
         operation_specs=operation_specs,
         qbit_num=qbit_num,
-        entry_route=entry_route,
-        workload_family=workload_family,
         legacy_circuit=legacy_circuit,
         density_noise=density_noise,
         strict_phase3_support=strict_phase3_support,
@@ -1534,8 +1506,6 @@ def validate_partition_descriptor_set_against_surface(
     if (
         validated.requested_mode != surface.requested_mode
         or validated.source_type != surface.source_type
-        or validated.entry_route != surface.entry_route
-        or validated.workload_family != surface.workload_family
         or validated.workload_id != surface.workload_id
         or validated.qbit_num != surface.qbit_num
         or validated.parameter_count != surface.parameter_count

@@ -163,8 +163,6 @@ class NoisyRuntimeExecutionResult:
     descriptor_schema_version: str
     requested_mode: str
     source_type: str
-    entry_route: str
-    workload_family: str
     workload_id: str
     qbit_num: int
     parameter_count: int
@@ -181,8 +179,6 @@ class NoisyRuntimeExecutionResult:
     def provenance(self) -> dict[str, Any]:
         return {
             "source_type": self.source_type,
-            "entry_route": self.entry_route,
-            "workload_family": self.workload_family,
             "workload_id": self.workload_id,
         }
 
@@ -309,8 +305,6 @@ class NoisyRuntimeExecutionResult:
             "descriptor_schema_version": self.descriptor_schema_version,
             "requested_mode": self.requested_mode,
             "source_type": self.source_type,
-            "entry_route": self.entry_route,
-            "workload_family": self.workload_family,
             "workload_id": self.workload_id,
             "provenance": self.provenance,
             "qbit_num": self.qbit_num,
@@ -1315,8 +1309,6 @@ def execute_partitioned_density(
         descriptor_schema_version=validated_descriptor_set.schema_version,
         requested_mode=validated_descriptor_set.requested_mode,
         source_type=validated_descriptor_set.source_type,
-        entry_route=validated_descriptor_set.entry_route,
-        workload_family=validated_descriptor_set.workload_family,
         workload_id=validated_descriptor_set.workload_id,
         qbit_num=validated_descriptor_set.qbit_num,
         parameter_count=validated_descriptor_set.parameter_count,
