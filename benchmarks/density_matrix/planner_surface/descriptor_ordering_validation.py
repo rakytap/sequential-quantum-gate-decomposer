@@ -103,8 +103,6 @@ def _case_from_surface(case_kind: str, metadata: dict, surface, descriptor_set) 
         "schema_version": descriptor_payload["schema_version"],
         "planner_schema_version": descriptor_payload["planner_schema_version"],
         "source_type": descriptor_payload["source_type"],
-        "entry_route": descriptor_payload["entry_route"],
-        "workload_family": descriptor_payload["workload_family"],
         "workload_id": descriptor_payload["workload_id"],
         "qbit_num": descriptor_payload["qbit_num"],
         "partition_count": descriptor_payload["partition_count"],

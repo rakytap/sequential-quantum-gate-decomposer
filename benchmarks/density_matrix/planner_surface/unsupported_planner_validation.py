@@ -27,11 +27,7 @@ from benchmarks.density_matrix.planner_surface.common import (
 )
 from benchmarks.density_matrix.planner_surface.workloads import mandatory_microcase_definitions
 from squander import Circuit
-from squander.partitioning.noisy_planner import (
-    PHASE3_ENTRY_ROUTE_MICROCASE,
-    PHASE3_WORKLOAD_FAMILY_MICROCASE,
-    preflight_planner_request,
-)
+from squander.partitioning.noisy_planner import preflight_planner_request
 
 SUITE_NAME = "phase3_planner_surface_unsupported_planner"
 ARTIFACT_FILENAME = "unsupported_planner_bundle.json"
@@ -87,8 +83,6 @@ def build_cases() -> list[dict]:
                 workload_id="unsupported_source_type",
                 operation_specs=[],
                 qbit_num=2,
-                entry_route=PHASE3_ENTRY_ROUTE_MICROCASE,
-                workload_family=PHASE3_WORKLOAD_FAMILY_MICROCASE,
             ),
         ),
         _unsupported_case(
@@ -97,8 +91,6 @@ def build_cases() -> list[dict]:
                 source_type="microcase_builder",
                 workload_id="missing_source_payload",
                 qbit_num=2,
-                entry_route=PHASE3_ENTRY_ROUTE_MICROCASE,
-                workload_family=PHASE3_WORKLOAD_FAMILY_MICROCASE,
             ),
         ),
         _unsupported_case(
@@ -108,8 +100,6 @@ def build_cases() -> list[dict]:
                 workload_id="unsupported_mode_claim",
                 requested_mode="state_vector",
                 bridge_metadata=continuity_bridge,
-                entry_route="phase2_continuity_lowering",
-                workload_family="phase2_continuity_workflow",
             ),
         ),
         _unsupported_case(
@@ -129,8 +119,6 @@ def build_cases() -> list[dict]:
                     },
                 ],
                 qbit_num=microcase["qbit_num"],
-                entry_route=PHASE3_ENTRY_ROUTE_MICROCASE,
-                workload_family=PHASE3_WORKLOAD_FAMILY_MICROCASE,
             ),
         ),
         _unsupported_case(
@@ -163,8 +151,6 @@ def build_cases() -> list[dict]:
                     },
                 ],
                 qbit_num=1,
-                entry_route=PHASE3_ENTRY_ROUTE_MICROCASE,
-                workload_family=PHASE3_WORKLOAD_FAMILY_MICROCASE,
             ),
         ),
     ]

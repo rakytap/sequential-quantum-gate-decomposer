@@ -69,8 +69,6 @@ def _reconstruction_case(case_kind: str, metadata: dict, descriptor_set) -> dict
         "schema_version": payload["schema_version"],
         "planner_schema_version": payload["planner_schema_version"],
         "source_type": payload["source_type"],
-        "entry_route": payload["entry_route"],
-        "workload_family": payload["workload_family"],
         "workload_id": payload["workload_id"],
         "qbit_num": payload["qbit_num"],
         "partition_count": payload["partition_count"],

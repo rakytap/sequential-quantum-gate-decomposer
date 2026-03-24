@@ -68,8 +68,6 @@ def _case_from_descriptor(metadata: dict, descriptor_set) -> dict:
         "max_partition_qubits": metadata["max_partition_qubits"],
         "case_kind": metadata["case_kind"],
         "source_type": payload["source_type"],
-        "entry_route": payload["entry_route"],
-        "workload_family": payload["workload_family"],
         "workload_id": payload["workload_id"],
         "qbit_num": payload["qbit_num"],
         "family_name": metadata["family_name"],

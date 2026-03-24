@@ -99,8 +99,6 @@ def build_case_result(qbit_num: int) -> dict:
             "planner_schema_version": runtime_payload["planner_schema_version"],
             "descriptor_schema_version": runtime_payload["descriptor_schema_version"],
             "source_type": runtime_payload["source_type"],
-            "entry_route": runtime_payload["entry_route"],
-            "workload_family": runtime_payload["workload_family"],
             "workload_id": runtime_payload["workload_id"],
             "parameter_count": runtime_payload["parameter_count"],
             "runtime_path": runtime_payload["runtime_path"],

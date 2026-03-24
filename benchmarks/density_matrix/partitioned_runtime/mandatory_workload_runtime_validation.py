@@ -87,8 +87,6 @@ def _runtime_case(
         "descriptor_schema_version": runtime_payload["descriptor_schema_version"],
         "requested_mode": runtime_payload["requested_mode"],
         "source_type": runtime_payload["source_type"],
-        "entry_route": runtime_payload["entry_route"],
-        "workload_family": runtime_payload["workload_family"],
         "workload_id": runtime_payload["workload_id"],
         "qbit_num": runtime_payload["qbit_num"],
         "parameter_count": runtime_payload["parameter_count"],

@@ -76,8 +76,6 @@ def _base_metadata_from_descriptor(
         ],
         "planner_calibration_claim_selection_rule": selected_candidate["claim_selection_rule"],
         "source_type": descriptor_set.source_type,
-        "entry_route": descriptor_set.entry_route,
-        "workload_family": descriptor_set.workload_family,
         "workload_id": descriptor_set.workload_id,
         "qbit_num": descriptor_set.qbit_num,
         "parameter_count": descriptor_set.parameter_count,

@@ -40,6 +40,8 @@ from squander.partitioning.noisy_planner import (
     build_partition_descriptor_set,
     build_phase3_continuity_partition_descriptor_set,
     build_phase3_continuity_planner_surface,
+    phase3_entry_route_for_source_type,
+    phase3_workload_family_for_source_type,
     preflight_descriptor_request,
     validate_partition_descriptor_set,
     validate_partition_descriptor_set_against_surface,
@@ -104,8 +106,12 @@ def test_continuity_partition_descriptor_aligns_with_planner_surface(qbit_num):
     assert descriptor_set.planner_schema_version == surface.schema_version
     assert descriptor_set.requested_mode == PARTITIONED_DENSITY_MODE
     assert descriptor_set.source_type == "generated_hea"
-    assert descriptor_set.entry_route == PHASE3_ENTRY_ROUTE_PHASE2_CONTINUITY
-    assert descriptor_set.workload_family == PHASE3_WORKLOAD_FAMILY_PHASE2_CONTINUITY
+    assert phase3_entry_route_for_source_type(descriptor_set.source_type) == (
+        PHASE3_ENTRY_ROUTE_PHASE2_CONTINUITY
+    )
+    assert phase3_workload_family_for_source_type(descriptor_set.source_type) == (
+        PHASE3_WORKLOAD_FAMILY_PHASE2_CONTINUITY
+    )
     assert descriptor_set.workload_id == f"phase2_xxz_hea_q{qbit_num}_continuity"
     assert descriptor_set.qbit_num == qbit_num
     assert descriptor_set.parameter_count == surface.parameter_count
@@ -160,8 +166,12 @@ def test_microcase_partition_descriptors_share_schema():
         assert payload["schema_version"] == DESCRIPTOR_SCHEMA_VERSION
         assert payload["requested_mode"] == PARTITIONED_DENSITY_MODE
         assert payload["source_type"] == "microcase_builder"
-        assert payload["entry_route"] == PHASE3_ENTRY_ROUTE_MICROCASE
-        assert payload["workload_family"] == PHASE3_WORKLOAD_FAMILY_MICROCASE
+        assert phase3_entry_route_for_source_type(payload["source_type"]) == (
+            PHASE3_ENTRY_ROUTE_MICROCASE
+        )
+        assert phase3_workload_family_for_source_type(payload["source_type"]) == (
+            PHASE3_WORKLOAD_FAMILY_MICROCASE
+        )
         assert payload["workload_id"] == metadata["case_name"]
         assert payload["qbit_num"] == metadata["qbit_num"]
         assert payload["partition_count"] > 0
@@ -188,8 +198,12 @@ def test_structured_partition_descriptors_share_schema():
         assert payload["schema_version"] == DESCRIPTOR_SCHEMA_VERSION
         assert payload["requested_mode"] == PARTITIONED_DENSITY_MODE
         assert payload["source_type"] == "structured_family_builder"
-        assert payload["entry_route"] == PHASE3_ENTRY_ROUTE_STRUCTURED_FAMILY
-        assert payload["workload_family"] == PHASE3_WORKLOAD_FAMILY_STRUCTURED
+        assert phase3_entry_route_for_source_type(payload["source_type"]) == (
+            PHASE3_ENTRY_ROUTE_STRUCTURED_FAMILY
+        )
+        assert phase3_workload_family_for_source_type(payload["source_type"]) == (
+            PHASE3_WORKLOAD_FAMILY_STRUCTURED
+        )
         assert payload["workload_id"] == metadata["workload_id"]
         assert payload["qbit_num"] == metadata["qbit_num"]
         assert payload["partition_count"] > 0
@@ -365,11 +379,12 @@ def test_planner_surface_descriptor_audit_record_tracks_continuity_provenance():
 
     assert audit["schema_version"] == DESCRIPTOR_SCHEMA_VERSION
     assert audit["provenance"]["source_type"] == "generated_hea"
-    assert audit["provenance"]["entry_route"] == PHASE3_ENTRY_ROUTE_PHASE2_CONTINUITY
-    assert (
-        audit["provenance"]["workload_family"]
-        == PHASE3_WORKLOAD_FAMILY_PHASE2_CONTINUITY
+    assert phase3_entry_route_for_source_type(audit["provenance"]["source_type"]) == (
+        PHASE3_ENTRY_ROUTE_PHASE2_CONTINUITY
     )
+    assert phase3_workload_family_for_source_type(
+        audit["provenance"]["source_type"]
+    ) == PHASE3_WORKLOAD_FAMILY_PHASE2_CONTINUITY
     assert audit["summary"]["partition_count"] == descriptor_set.partition_count
     assert (
         audit["summary"]["descriptor_member_count"]
@@ -383,8 +398,12 @@ def test_planner_surface_descriptor_audit_record_tracks_methods_workload_provena
     audit = build_descriptor_audit_record(descriptor_set, metadata=metadata)
 
     assert audit["provenance"]["source_type"] == "structured_family_builder"
-    assert audit["provenance"]["entry_route"] == PHASE3_ENTRY_ROUTE_STRUCTURED_FAMILY
-    assert audit["provenance"]["workload_family"] == PHASE3_WORKLOAD_FAMILY_STRUCTURED
+    assert phase3_entry_route_for_source_type(audit["provenance"]["source_type"]) == (
+        PHASE3_ENTRY_ROUTE_STRUCTURED_FAMILY
+    )
+    assert phase3_workload_family_for_source_type(
+        audit["provenance"]["source_type"]
+    ) == PHASE3_WORKLOAD_FAMILY_STRUCTURED
     assert audit["provenance"]["workload_id"] == metadata["workload_id"]
     assert audit["summary"]["partition_count"] > 0
     assert audit["summary"]["parameter_routing_segment_count"] > 0
@@ -459,8 +478,6 @@ def test_preflight_accepts_supported_phase2_continuity_request():
         source_type="generated_hea",
         workload_id="phase2_xxz_hea_q4_continuity",
         bridge_metadata=bridge,
-        entry_route=PHASE3_ENTRY_ROUTE_PHASE2_CONTINUITY,
-        workload_family=PHASE3_WORKLOAD_FAMILY_PHASE2_CONTINUITY,
     )
 
     assert descriptor_set.requested_mode == PARTITIONED_DENSITY_MODE

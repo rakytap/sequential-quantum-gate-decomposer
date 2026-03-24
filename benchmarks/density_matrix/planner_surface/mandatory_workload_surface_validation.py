@@ -58,8 +58,6 @@ def _surface_case(case_kind: str, metadata: dict, surface) -> dict:
         "requested_mode": payload["requested_mode"],
         "schema_version": payload["schema_version"],
         "source_type": payload["source_type"],
-        "entry_route": payload["entry_route"],
-        "workload_family": payload["workload_family"],
         "workload_id": payload["workload_id"],
         "qbit_num": payload["qbit_num"],
         "operation_count": payload["operation_count"],

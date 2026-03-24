@@ -35,6 +35,8 @@ from squander.partitioning.noisy_planner import (
     PLANNER_OP_KIND_GATE,
     PLANNER_OP_KIND_NOISE,
     build_phase3_continuity_planner_surface,
+    phase3_entry_route_for_source_type,
+    phase3_workload_family_for_source_type,
 )
 
 SUITE_NAME = "phase3_planner_surface_continuity_surface"
@@ -72,8 +74,6 @@ def build_case_result(qbit_num: int) -> dict:
             "requested_mode": payload["requested_mode"],
             "schema_version": payload["schema_version"],
             "source_type": payload["source_type"],
-            "entry_route": payload["entry_route"],
-            "workload_family": payload["workload_family"],
             "workload_id": payload["workload_id"],
             "parameter_count": payload["parameter_count"],
             "operation_count": payload["operation_count"],
@@ -91,8 +91,10 @@ def build_case_result(qbit_num: int) -> dict:
             ],
             "continuity_anchor_pass": (
                 payload["source_type"] == "generated_hea"
-                and payload["entry_route"] == PHASE3_ENTRY_ROUTE_PHASE2_CONTINUITY
-                and payload["workload_family"] == PHASE3_WORKLOAD_FAMILY_PHASE2_CONTINUITY
+                and phase3_entry_route_for_source_type(payload["source_type"])
+                == PHASE3_ENTRY_ROUTE_PHASE2_CONTINUITY
+                and phase3_workload_family_for_source_type(payload["source_type"])
+                == PHASE3_WORKLOAD_FAMILY_PHASE2_CONTINUITY
                 and payload["operation_count"] == payload["gate_count"] + payload["noise_count"]
             ),
             "planner_operations": payload["operations"],

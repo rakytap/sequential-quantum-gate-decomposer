@@ -70,8 +70,6 @@ def _descriptor_summary(case_kind: str, metadata: dict, descriptor_set) -> dict:
         "family_name": metadata.get("family_name"),
         "noise_pattern": metadata.get("noise_pattern"),
         "source_type": payload["source_type"],
-        "entry_route": payload["entry_route"],
-        "workload_family": payload["workload_family"],
         "descriptor_schema_version": payload["schema_version"],
     }
 

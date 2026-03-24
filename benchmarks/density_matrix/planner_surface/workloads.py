@@ -5,10 +5,6 @@ from typing import Iterable
 
 from squander.partitioning.noisy_planner import (
     DEFAULT_PARTITION_DESCRIPTOR_MAX_QUBITS,
-    PHASE3_ENTRY_ROUTE_MICROCASE,
-    PHASE3_ENTRY_ROUTE_STRUCTURED_FAMILY,
-    PHASE3_WORKLOAD_FAMILY_MICROCASE,
-    PHASE3_WORKLOAD_FAMILY_STRUCTURED,
     build_partition_descriptor_set,
     build_canonical_planner_surface_from_operation_specs,
 )
@@ -121,8 +117,6 @@ def build_microcase_surface(case_name: str):
     return build_canonical_planner_surface_from_operation_specs(
         qbit_num=case["qbit_num"],
         source_type="microcase_builder",
-        entry_route=PHASE3_ENTRY_ROUTE_MICROCASE,
-        workload_family=PHASE3_WORKLOAD_FAMILY_MICROCASE,
         workload_id=case["case_name"],
         operation_specs=case["operation_specs"],
     )
@@ -275,8 +269,6 @@ def build_structured_surface(
     return build_canonical_planner_surface_from_operation_specs(
         qbit_num=qbit_num,
         source_type="structured_family_builder",
-        entry_route=PHASE3_ENTRY_ROUTE_STRUCTURED_FAMILY,
-        workload_family=PHASE3_WORKLOAD_FAMILY_STRUCTURED,
         workload_id=workload_id,
         operation_specs=operation_specs,
     )

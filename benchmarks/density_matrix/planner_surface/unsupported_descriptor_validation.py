@@ -32,8 +32,6 @@ from benchmarks.density_matrix.planner_surface.workloads import (
 )
 from squander.partitioning.noisy_planner import (
     DESCRIPTOR_SCHEMA_VERSION,
-    PHASE3_ENTRY_ROUTE_PHASE2_CONTINUITY,
-    PHASE3_WORKLOAD_FAMILY_PHASE2_CONTINUITY,
     PLANNER_OP_KIND_GATE,
     PLANNER_OP_KIND_NOISE,
     preflight_descriptor_request,
@@ -207,8 +205,6 @@ def build_unsupported_descriptor_cases() -> list[dict]:
                 source_type="generated_hea",
                 workload_id="phase2_xxz_hea_q4_continuity",
                 bridge_metadata=continuity_bridge,
-                entry_route=PHASE3_ENTRY_ROUTE_PHASE2_CONTINUITY,
-                workload_family=PHASE3_WORKLOAD_FAMILY_PHASE2_CONTINUITY,
                 max_partition_qubits=1,
             ),
         ),

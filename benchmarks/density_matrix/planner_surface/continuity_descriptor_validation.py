@@ -72,8 +72,6 @@ def build_case_result(qbit_num: int) -> dict:
             "schema_version": payload["schema_version"],
             "planner_schema_version": payload["planner_schema_version"],
             "source_type": payload["source_type"],
-            "entry_route": payload["entry_route"],
-            "workload_family": payload["workload_family"],
             "workload_id": payload["workload_id"],
             "parameter_count": payload["parameter_count"],
             "partition_count": payload["partition_count"],
