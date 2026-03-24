@@ -145,7 +145,8 @@ def qasm_to_squander_circuit( filename: str, return_transpiled=False):
 
 
 
-def CompareCircuits( circ1: Circuit, parameters1: np.ndarray, circ2: Circuit, parameters2: np.ndarray, parallel : int = 1, tolerance: float = 1e-5) :
+def CompareCircuits( circ1: Circuit, parameters1: np.ndarray, circ2: Circuit, parameters2: np.ndarray,
+    parallel : int = 1, tolerance: float = 1e-5, initial_mapping = None, final_mapping = None ):
     """
     Call to test if the two circuits give the same state transformation upon a random input state
 
@@ -190,12 +191,19 @@ def CompareCircuits( circ1: Circuit, parameters1: np.ndarray, circ2: Circuit, pa
     transformed_state_2 = initial_state    
     
     circ1.apply_to( parameters1, transformed_state_1, parallel=parallel )
-    circ2.apply_to( parameters2, transformed_state_2, parallel=parallel)    
-    
+    if initial_mapping is not None:
+        from squander.synthesis.qgd_SABRE import qgd_SABRE
+        tensor_perm = [qbit_num2 - 1 - p for p in reversed(qgd_SABRE.get_inverse_pi(None, initial_mapping))]
+        transformed_state_2 = transformed_state_2.reshape( [2]*qbit_num2 ).transpose( tensor_perm ).copy().reshape( (matrix_size,) )
+    circ2.apply_to( parameters2, transformed_state_2, parallel=parallel)
+    if final_mapping is not None:
+        tensor_perm = [qbit_num2 - 1 - p for p in reversed(final_mapping)]
+        transformed_state_2 = transformed_state_2.reshape( [2]*qbit_num2 ).transpose( tensor_perm ).copy().reshape( (matrix_size,) )
+
     overlap = np.sum( transformed_state_1.conj() * transformed_state_2 )
     #print( "overlap: ", np.abs(overlap) )
 
-    assert( (1-np.abs(overlap)) < tolerance )
+    assert( (1-np.abs(overlap)) < tolerance ), (1-np.abs(overlap))
 
 
 def circuit_to_CNOT_basis( circ: Circuit, parameters: np.ndarray):
