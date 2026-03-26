@@ -32,7 +32,6 @@ from benchmarks.density_matrix.planner_surface.workloads import (
 )
 from squander.partitioning.noisy_planner import (
     build_phase3_continuity_partition_descriptor_set,
-    phase3_entry_route_for_source_type,
 )
 from squander.partitioning.noisy_runtime import (
     PHASE3_RUNTIME_SCHEMA_VERSION,
@@ -153,12 +152,10 @@ def main(argv: list[str] | None = None) -> int:
     if not args.quiet:
         for case in cases:
             print(
-                "{case_name}: partitions={partition_count}, route={entry_route}, runtime_path={runtime_path}".format(
+                "{case_name}: partitions={partition_count}, source_type={source_type}, runtime_path={runtime_path}".format(
                     case_name=case["case_name"],
                     partition_count=case["summary"]["partition_count"],
-                    entry_route=phase3_entry_route_for_source_type(
-                        case["provenance"]["source_type"]
-                    ),
+                    source_type=case["provenance"]["source_type"],
                     runtime_path=case["runtime_path"],
                 )
             )

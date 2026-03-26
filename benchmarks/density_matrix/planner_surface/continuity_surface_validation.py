@@ -30,13 +30,9 @@ from benchmarks.density_matrix.planner_surface.common import (
     build_software_metadata,
 )
 from squander.partitioning.noisy_planner import (
-    PHASE3_ENTRY_ROUTE_PHASE2_CONTINUITY,
-    PHASE3_WORKLOAD_FAMILY_PHASE2_CONTINUITY,
     PLANNER_OP_KIND_GATE,
     PLANNER_OP_KIND_NOISE,
     build_phase3_continuity_planner_surface,
-    phase3_entry_route_for_source_type,
-    phase3_workload_family_for_source_type,
 )
 
 SUITE_NAME = "phase3_planner_surface_continuity_surface"
@@ -91,11 +87,8 @@ def build_case_result(qbit_num: int) -> dict:
             ],
             "continuity_anchor_pass": (
                 payload["source_type"] == "generated_hea"
-                and phase3_entry_route_for_source_type(payload["source_type"])
-                == PHASE3_ENTRY_ROUTE_PHASE2_CONTINUITY
-                and phase3_workload_family_for_source_type(payload["source_type"])
-                == PHASE3_WORKLOAD_FAMILY_PHASE2_CONTINUITY
-                and payload["operation_count"] == payload["gate_count"] + payload["noise_count"]
+                and payload["operation_count"]
+                == payload["gate_count"] + payload["noise_count"]
             ),
             "planner_operations": payload["operations"],
         }

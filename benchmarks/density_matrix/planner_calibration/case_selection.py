@@ -21,7 +21,6 @@ from benchmarks.density_matrix.planner_surface.workloads import (
 )
 from squander.partitioning.noisy_planner import (
     build_phase3_continuity_partition_descriptor_set,
-    phase3_workload_family_for_source_type,
 )
 
 PLANNER_CALIBRATION_CASE_KIND_CONTINUITY = "continuity"
@@ -54,9 +53,7 @@ def _metadata_from_descriptor(
         "max_partition_qubits": candidate.max_partition_qubits,
         "case_kind": case_kind,
         "source_type": descriptor_set.source_type,
-        "workload_family": phase3_workload_family_for_source_type(
-            descriptor_set.source_type
-        ),
+        "workload_family": descriptor_set.source_type,
         "workload_id": descriptor_set.workload_id,
         "qbit_num": descriptor_set.qbit_num,
         "planning_time_ms": planning_time_ms,

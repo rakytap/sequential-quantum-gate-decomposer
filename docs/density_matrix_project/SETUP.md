@@ -59,6 +59,7 @@ rho = DensityMatrix(qbit_num=2)
 circuit = NoisyCircuit(2)
 circuit.add_H(0)
 circuit.add_CNOT(1, 0)
+circuit.add_local_depolarizing(0, 0.1)
 circuit.apply_to(np.array([]), rho)
 
 print("Density matrix module import and execution: OK")
@@ -70,7 +71,7 @@ EOF
 Expected:
 - import succeeds,
 - circuit execution succeeds,
-- purity is `1.0` for this unitary-only circuit.
+- purity is < 1.0 for this noisy circuit.
 
 ## 5) Run Tests
 
@@ -84,12 +85,14 @@ Python tests:
 
 ```bash
 pytest tests/density_matrix/ -v
+pytest tests/partitioning/ -v
+pytest tests/VQA/ -v
 ```
 
-Phase 3 partitioning/runtime tests:
+Benchmark tests:
 
 ```bash
-pytest tests/partitioning/ -q
+pytest benchmarks/density_matrix/ -v
 ```
 
 Examples:
@@ -98,19 +101,17 @@ Examples:
 python examples/density_matrix/basic_usage.py
 ```
 
-Phase 3 evidence pipelines:
+Validation evidence pipelines:
 
 ```bash
 python benchmarks/density_matrix/correctness_evidence/validation_pipeline.py
 python benchmarks/density_matrix/performance_evidence/validation_pipeline.py
-python benchmarks/density_matrix/publication_evidence/validation_pipeline.py
 ```
 
 Recommended order:
 - run correctness evidence first,
 - then performance evidence,
-- then publication evidence once the Phase 3 docs and emitted evidence bundles
-  are in sync.
+
 
 Optional C++ tests:
 
@@ -181,7 +182,6 @@ conda install -y qiskit qiskit-aer -c conda-forge
 ## Next Documents
 
 - Project overview and roadmap: [`README.md`](README.md)
-- API details: [`API_REFERENCE.md`](API_REFERENCE.md)
 - Architecture details: [`ARCHITECTURE.md`](ARCHITECTURE.md)
 - External context: [`RESEARCH_ALIGNMENT.md`](RESEARCH_ALIGNMENT.md)
 - Delivered and planned work: [`CHANGELOG.md`](CHANGELOG.md)

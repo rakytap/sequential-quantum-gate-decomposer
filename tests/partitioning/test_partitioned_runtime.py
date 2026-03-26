@@ -39,15 +39,7 @@ from benchmarks.density_matrix.planner_surface.workloads import (
 )
 from squander.partitioning.noisy_planner import (
     PARTITIONED_DENSITY_MODE,
-    PHASE3_ENTRY_ROUTE_PHASE2_CONTINUITY,
-    PHASE3_ENTRY_ROUTE_MICROCASE,
-    PHASE3_ENTRY_ROUTE_STRUCTURED_FAMILY,
-    PHASE3_WORKLOAD_FAMILY_PHASE2_CONTINUITY,
-    PHASE3_WORKLOAD_FAMILY_MICROCASE,
-    PHASE3_WORKLOAD_FAMILY_STRUCTURED,
     build_phase3_continuity_partition_descriptor_set,
-    phase3_entry_route_for_source_type,
-    phase3_workload_family_for_source_type,
 )
 from squander.partitioning.noisy_runtime import (
     PHASE3_RUNTIME_PATH_BASELINE,
@@ -67,12 +59,6 @@ def test_phase3_partitioned_runtime_continuity_runtime_executes_supported_anchor
     assert result.runtime_schema_version == PHASE3_RUNTIME_SCHEMA_VERSION
     assert result.requested_mode == PARTITIONED_DENSITY_MODE
     assert result.source_type == "generated_hea"
-    assert phase3_entry_route_for_source_type(result.source_type) == (
-        PHASE3_ENTRY_ROUTE_PHASE2_CONTINUITY
-    )
-    assert phase3_workload_family_for_source_type(result.source_type) == (
-        PHASE3_WORKLOAD_FAMILY_PHASE2_CONTINUITY
-    )
     assert result.workload_id == f"phase2_xxz_hea_q{qbit_num}_continuity"
     assert result.runtime_path == PHASE3_RUNTIME_PATH_BASELINE
     assert result.partition_count > 0
@@ -105,12 +91,6 @@ def test_partitioned_runtime_mandatory_microcases_execute_through_shared_runtime
         assert result.runtime_schema_version == PHASE3_RUNTIME_SCHEMA_VERSION
         assert result.requested_mode == PARTITIONED_DENSITY_MODE
         assert result.source_type == "microcase_builder"
-        assert phase3_entry_route_for_source_type(result.source_type) == (
-            PHASE3_ENTRY_ROUTE_MICROCASE
-        )
-        assert phase3_workload_family_for_source_type(result.source_type) == (
-            PHASE3_WORKLOAD_FAMILY_MICROCASE
-        )
         assert result.workload_id == metadata["case_name"]
         assert result.partition_count > 0
         assert result.runtime_path == PHASE3_RUNTIME_PATH_BASELINE
@@ -129,12 +109,6 @@ def test_partitioned_runtime_mandatory_structured_case_executes_through_shared_r
 
     assert result.runtime_schema_version == PHASE3_RUNTIME_SCHEMA_VERSION
     assert result.source_type == "structured_family_builder"
-    assert phase3_entry_route_for_source_type(result.source_type) == (
-        PHASE3_ENTRY_ROUTE_STRUCTURED_FAMILY
-    )
-    assert phase3_workload_family_for_source_type(result.source_type) == (
-        PHASE3_WORKLOAD_FAMILY_STRUCTURED
-    )
     assert result.partition_count > 0
     assert result.runtime_path == PHASE3_RUNTIME_PATH_BASELINE
     assert result.rho_is_valid is True
@@ -149,12 +123,6 @@ def test_partitioned_runtime_continuity_runtime_audit_record_tracks_provenance()
 
     assert audit["runtime_schema_version"] == PHASE3_RUNTIME_SCHEMA_VERSION
     assert audit["provenance"]["source_type"] == "generated_hea"
-    assert phase3_entry_route_for_source_type(audit["provenance"]["source_type"]) == (
-        PHASE3_ENTRY_ROUTE_PHASE2_CONTINUITY
-    )
-    assert phase3_workload_family_for_source_type(
-        audit["provenance"]["source_type"]
-    ) == PHASE3_WORKLOAD_FAMILY_PHASE2_CONTINUITY
     assert audit["summary"]["partition_count"] == result.partition_count
     assert audit["summary"]["descriptor_member_count"] == result.descriptor_member_count
     assert audit["metadata"]["case_kind"] == "continuity"

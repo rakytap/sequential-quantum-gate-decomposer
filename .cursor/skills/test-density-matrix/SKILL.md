@@ -9,9 +9,14 @@ description: Runs the SQUANDER density matrix test workflow end-to-end. Use when
 
 Use this skill when working on:
 - `squander/density_matrix/*`
+- `squander/partitioning/*`
 - `squander/src-cpp/density_matrix/*`
+- `squander/src-cpp/variational_quantum_eigensolver/*`
 - `tests/density_matrix/*`
+- `tests/partitioning/*`
+- `tests/VQE/*`
 - `examples/density_matrix/*`
+- `examples/VQE/*`
 - `benchmarks/*` for density matrix validation
 
 Also use before PRs that touch density matrix code or docs.
@@ -57,6 +62,11 @@ Run full density-matrix tests:
 
 ```bash
 pytest tests/density_matrix/ -v
+pytest tests/partitioning/ -v
+pytest tests/VQE/ -v
+pytest examples/density_matrix/ -v
+pytest examples/VQE/ -v
+pytest benchmarks/density_matrix/ -v
 ```
 
 Notes:
@@ -68,12 +78,16 @@ Run only slow tests:
 
 ```bash
 pytest tests/density_matrix/ -v -m slow
+pytest tests/partitioning/ -v -m slow
+pytest tests/VQE/ -v -m slow
 ```
 
 Run only non-slow tests:
 
 ```bash
 pytest tests/density_matrix/ -v -m "not slow"
+pytest tests/partitioning/ -v -m "not slow"
+pytest tests/VQE/ -v -m "not slow"
 ```
 
 Run a single test:

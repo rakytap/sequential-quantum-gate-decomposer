@@ -23,12 +23,6 @@ from squander.partitioning.noisy_planner import (
     PARTITIONED_DENSITY_MODE,
     PLANNER_OP_KIND_GATE,
     PLANNER_OP_KIND_NOISE,
-    PHASE3_ENTRY_ROUTE_MICROCASE,
-    PHASE3_ENTRY_ROUTE_PHASE2_CONTINUITY,
-    PHASE3_ENTRY_ROUTE_STRUCTURED_FAMILY,
-    PHASE3_WORKLOAD_FAMILY_MICROCASE,
-    PHASE3_WORKLOAD_FAMILY_PHASE2_CONTINUITY,
-    PHASE3_WORKLOAD_FAMILY_STRUCTURED,
     SUPPORTED_GATE_NAMES,
     SUPPORTED_NOISE_NAMES,
     NoisyPlannerValidationError,
@@ -37,8 +31,6 @@ from squander.partitioning.noisy_planner import (
     build_canonical_planner_surface_from_qgd_circuit,
     build_phase3_continuity_planner_surface,
     build_planner_audit_record,
-    phase3_entry_route_for_source_type,
-    phase3_workload_family_for_source_type,
     preflight_planner_request,
 )
 
@@ -54,12 +46,6 @@ def test_continuity_surface_matches_bridge_metadata(qbit_num):
     assert surface.schema_version == "phase3_canonical_noisy_planner_v1"
     assert surface.requested_mode == PARTITIONED_DENSITY_MODE
     assert surface.source_type == "generated_hea"
-    assert phase3_entry_route_for_source_type(surface.source_type) == (
-        PHASE3_ENTRY_ROUTE_PHASE2_CONTINUITY
-    )
-    assert phase3_workload_family_for_source_type(surface.source_type) == (
-        PHASE3_WORKLOAD_FAMILY_PHASE2_CONTINUITY
-    )
     assert surface.workload_id == f"phase2_xxz_hea_q{qbit_num}_continuity"
     assert surface.qbit_num == qbit_num
     assert surface.parameter_count == bridge["parameter_count"]
@@ -153,12 +139,6 @@ def test_microcases_share_canonical_schema():
 
         assert payload["requested_mode"] == PARTITIONED_DENSITY_MODE
         assert payload["source_type"] == "microcase_builder"
-        assert phase3_entry_route_for_source_type(payload["source_type"]) == (
-            PHASE3_ENTRY_ROUTE_MICROCASE
-        )
-        assert phase3_workload_family_for_source_type(payload["source_type"]) == (
-            PHASE3_WORKLOAD_FAMILY_MICROCASE
-        )
         assert payload["workload_id"] == metadata["case_name"]
         assert payload["qbit_num"] == metadata["qbit_num"]
         assert payload["gate_count"] > 0
@@ -180,12 +160,6 @@ def test_structured_families_share_canonical_schema():
 
         assert payload["requested_mode"] == PARTITIONED_DENSITY_MODE
         assert payload["source_type"] == "structured_family_builder"
-        assert phase3_entry_route_for_source_type(payload["source_type"]) == (
-            PHASE3_ENTRY_ROUTE_STRUCTURED_FAMILY
-        )
-        assert phase3_workload_family_for_source_type(payload["source_type"]) == (
-            PHASE3_WORKLOAD_FAMILY_STRUCTURED
-        )
         assert payload["workload_id"] == metadata["workload_id"]
         assert payload["qbit_num"] == metadata["qbit_num"]
         assert payload["gate_count"] > 0
@@ -215,12 +189,6 @@ def test_audit_record_tracks_continuity_provenance():
     overlap = build_bridge_overlap_report(surface, vqe.describe_density_bridge())
 
     assert audit["provenance"]["source_type"] == "generated_hea"
-    assert phase3_entry_route_for_source_type(audit["provenance"]["source_type"]) == (
-        PHASE3_ENTRY_ROUTE_PHASE2_CONTINUITY
-    )
-    assert phase3_workload_family_for_source_type(
-        audit["provenance"]["source_type"]
-    ) == PHASE3_WORKLOAD_FAMILY_PHASE2_CONTINUITY
     assert audit["summary"]["operation_count"] == surface.operation_count
     assert audit["summary"]["max_qubit_span"] >= 1
     assert audit["operations"][0]["qubit_support"]
@@ -233,12 +201,6 @@ def test_audit_record_tracks_structured_workload_provenance():
     audit = build_planner_audit_record(surface, metadata=metadata)
 
     assert audit["provenance"]["source_type"] == "structured_family_builder"
-    assert phase3_entry_route_for_source_type(audit["provenance"]["source_type"]) == (
-        PHASE3_ENTRY_ROUTE_STRUCTURED_FAMILY
-    )
-    assert phase3_workload_family_for_source_type(
-        audit["provenance"]["source_type"]
-    ) == PHASE3_WORKLOAD_FAMILY_STRUCTURED
     assert audit["provenance"]["workload_id"] == metadata["workload_id"]
     assert audit["summary"]["gate_sequence"]
     assert audit["summary"]["noise_sequence"]
@@ -264,12 +226,6 @@ def test_exact_qgd_circuit_lowering_preserves_order_and_param_spans():
     source_gates = circuit.get_Gates()
 
     assert surface.source_type == "legacy_qgd_circuit_exact"
-    assert phase3_entry_route_for_source_type(surface.source_type) == (
-        "phase3_legacy_exact_lowering"
-    )
-    assert phase3_workload_family_for_source_type(surface.source_type) == (
-        "phase3_legacy_exact_lowering"
-    )
     assert [op["name"] for op in gate_payloads] == ["U3", "U3", "CNOT", "U3"]
     assert [op["param_start"] for op in gate_payloads] == [
         gate.get_Parameter_Start_Index() for gate in source_gates
@@ -357,12 +313,6 @@ def test_preflight_accepts_supported_bridge_request():
     )
 
     assert surface.requested_mode == PARTITIONED_DENSITY_MODE
-    assert phase3_entry_route_for_source_type(surface.source_type) == (
-        PHASE3_ENTRY_ROUTE_PHASE2_CONTINUITY
-    )
-    assert phase3_workload_family_for_source_type(surface.source_type) == (
-        PHASE3_WORKLOAD_FAMILY_PHASE2_CONTINUITY
-    )
 
 
 def test_preflight_rejects_unsupported_source_type():

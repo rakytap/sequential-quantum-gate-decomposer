@@ -8,16 +8,6 @@ DESCRIPTOR_SCHEMA_VERSION = "phase3_noisy_partition_descriptor_v1"
 PARTITIONED_DENSITY_MODE = "partitioned_density"
 DEFAULT_PARTITION_DESCRIPTOR_MAX_QUBITS = 2
 
-PHASE3_ENTRY_ROUTE_PHASE2_CONTINUITY = "phase2_continuity_lowering"
-PHASE3_ENTRY_ROUTE_MICROCASE = "phase3_microcase_generation"
-PHASE3_ENTRY_ROUTE_STRUCTURED_FAMILY = "phase3_structured_family_generation"
-PHASE3_ENTRY_ROUTE_LEGACY_EXACT = "phase3_legacy_exact_lowering"
-
-PHASE3_WORKLOAD_FAMILY_PHASE2_CONTINUITY = "phase2_continuity_workflow"
-PHASE3_WORKLOAD_FAMILY_MICROCASE = "phase3_micro_validation"
-PHASE3_WORKLOAD_FAMILY_STRUCTURED = "phase3_structured_family"
-PHASE3_WORKLOAD_FAMILY_LEGACY = "phase3_legacy_exact_lowering"
-
 SUPPORTED_GATE_NAMES = frozenset({"U3", "CNOT"})
 SUPPORTED_NOISE_NAMES = frozenset(
     {"local_depolarizing", "amplitude_damping", "phase_damping"}
@@ -30,29 +20,6 @@ SUPPORTED_PLANNER_SOURCE_TYPES = frozenset(
         "legacy_qgd_circuit_exact",
     }
 )
-
-
-def phase3_entry_route_for_source_type(source_type: str) -> str:
-    """Canonical Phase 3 entry-route label implied by ``source_type``."""
-    by_source = {
-        "generated_hea": PHASE3_ENTRY_ROUTE_PHASE2_CONTINUITY,
-        "microcase_builder": PHASE3_ENTRY_ROUTE_MICROCASE,
-        "structured_family_builder": PHASE3_ENTRY_ROUTE_STRUCTURED_FAMILY,
-        "legacy_qgd_circuit_exact": PHASE3_ENTRY_ROUTE_LEGACY_EXACT,
-    }
-    return by_source[source_type]
-
-
-def phase3_workload_family_for_source_type(source_type: str) -> str:
-    """Canonical Phase 3 workload-family label implied by ``source_type``."""
-    by_source = {
-        "generated_hea": PHASE3_WORKLOAD_FAMILY_PHASE2_CONTINUITY,
-        "microcase_builder": PHASE3_WORKLOAD_FAMILY_MICROCASE,
-        "structured_family_builder": PHASE3_WORKLOAD_FAMILY_STRUCTURED,
-        "legacy_qgd_circuit_exact": PHASE3_WORKLOAD_FAMILY_LEGACY,
-    }
-    return by_source[source_type]
-
 
 PLANNER_OP_KIND_GATE = "gate"
 PLANNER_OP_KIND_NOISE = "noise"

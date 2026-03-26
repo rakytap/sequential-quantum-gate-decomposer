@@ -235,8 +235,6 @@ Phase 3 introduces a **contract-first** pipeline:
 | `CANONICAL_PLANNER_SCHEMA_VERSION` | Planner schema tag |
 | `PHASE3_DESCRIPTOR_SCHEMA_VERSION` | Descriptor schema tag |
 | `DEFAULT_PARTITION_DESCRIPTOR_MAX_QUBITS` | Default span budget (2) |
-| `PHASE3_ENTRY_ROUTE_PHASE2_CONTINUITY` | Continuity workload route id |
-| `PHASE3_ENTRY_ROUTE_MICROCASE` / `STRUCTURED_FAMILY` / `LEGACY_EXACT` | Other routes |
 
 ### Exceptions
 

@@ -36,7 +36,6 @@ from squander.partitioning.noisy_planner import (
     build_descriptor_audit_record,
     build_partition_descriptor_set,
     build_phase3_continuity_partition_descriptor_set,
-    phase3_entry_route_for_source_type,
 )
 
 SUITE_NAME = "phase3_planner_surface_descriptor_audit"
@@ -169,12 +168,10 @@ def main(argv: list[str] | None = None) -> int:
     if not args.quiet:
         for case in cases:
             print(
-                "{case_name}: partitions={partition_count}, route={entry_route}".format(
+                "{case_name}: partitions={partition_count}, source_type={source_type}".format(
                     case_name=case["case_name"],
                     partition_count=case["summary"]["partition_count"],
-                    entry_route=phase3_entry_route_for_source_type(
-                        case["provenance"]["source_type"]
-                    ),
+                    source_type=case["provenance"]["source_type"],
                 )
             )
         print("Wrote {}".format(output_path))
