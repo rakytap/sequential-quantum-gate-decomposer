@@ -1,7 +1,11 @@
 # Phase 3 ADRs
 
+**Implementation Status: COMPLETE**
+
 This document records the detailed architecture and scope decisions that apply
-specifically to Phase 3.
+specifically to Phase 3. All decisions documented here have been implemented in
+the current codebase (`noisy_planner.py`, `noisy_runtime.py`, and the evidence
+pipelines under `benchmarks/density_matrix/`).
 
 It refines, but does not override, the upstream planning decisions in:
 

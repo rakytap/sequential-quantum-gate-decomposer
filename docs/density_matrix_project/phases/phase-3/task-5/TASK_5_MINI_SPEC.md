@@ -1,7 +1,13 @@
 # Task 5: Noise-Aware Planning Heuristic And Calibration
 
-This mini-spec turns Phase 3 Task 5 into an implementation-ready contract. It
-inherits the frozen phase decisions from `DETAILED_PLANNING_PHASE_3.md`,
+**Implementation Status: COMPLETE**
+
+This mini-spec defined the Phase 3 Task 5 implementation contract. The noise-aware
+planning heuristic is implemented via the `max_partition_qubits` span-budget
+parameter in `build_partition_descriptor_set()`. Calibration evidence is produced
+under `benchmarks/density_matrix/planner_calibration/`.
+
+This document inherits the frozen phase decisions from `DETAILED_PLANNING_PHASE_3.md`,
 `P3-ADR-003`, `P3-ADR-004`, `P3-ADR-005`, `P3-ADR-006`, `P3-ADR-007`,
 `P3-ADR-008`, `P3-ADR-009`, and `P3-ADR-010`, plus the closed canonical
 planner-surface, semantic-preservation, runtime-minimum, cost-model

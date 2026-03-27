@@ -1,7 +1,14 @@
 # Task 7: Performance And Sensitivity Benchmark Package
 
-This mini-spec turns Phase 3 Task 7 into an implementation-ready contract. It
-inherits the frozen phase decisions from `DETAILED_PLANNING_PHASE_3.md`,
+**Implementation Status: COMPLETE**
+
+This mini-spec defined the Phase 3 Task 7 implementation contract. Performance
+and sensitivity benchmark evidence is implemented in
+`benchmarks/density_matrix/performance_evidence/` with machine-checkable bundles
+emitted under `benchmarks/density_matrix/artifacts/performance_evidence/`.
+Performance closure was achieved through the diagnosis branch.
+
+This document inherits the frozen phase decisions from `DETAILED_PLANNING_PHASE_3.md`,
 `P3-ADR-003`, `P3-ADR-004`, `P3-ADR-005`, `P3-ADR-006`, `P3-ADR-007`,
 `P3-ADR-008`, `P3-ADR-009`, and `P3-ADR-010`, plus the closed canonical
 planner-surface, semantic-preservation, runtime-minimum, cost-model

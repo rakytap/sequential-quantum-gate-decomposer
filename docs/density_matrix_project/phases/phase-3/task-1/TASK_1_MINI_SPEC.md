@@ -1,7 +1,12 @@
 # Task 1: Canonical Noisy Planner Surface
 
-This mini-spec turns Phase 3 Task 1 into an implementation-ready contract. It
-inherits the frozen phase decisions from `DETAILED_PLANNING_PHASE_3.md`,
+**Implementation Status: COMPLETE**
+
+This mini-spec defined the Phase 3 Task 1 implementation contract. The canonical
+noisy planner surface is now implemented in `squander/partitioning/noisy_planner.py`
+as the `CanonicalNoisyPlannerSurface` dataclass and associated builder functions.
+
+This document inherits the frozen phase decisions from `DETAILED_PLANNING_PHASE_3.md`,
 `P3-ADR-003`, `P3-ADR-007`, and `P3-ADR-009`, plus the closed canonical
 planner-surface, support-matrix, and benchmark-anchor items in
 `PRE_IMPLEMENTATION_COMPLETION_CHECKLIST.md`. It does not reopen

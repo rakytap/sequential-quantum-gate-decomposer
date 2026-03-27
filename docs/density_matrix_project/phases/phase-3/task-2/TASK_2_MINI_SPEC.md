@@ -1,7 +1,13 @@
 # Task 2: Partition Descriptor And Semantic-Preservation Contract
 
-This mini-spec turns Phase 3 Task 2 into an implementation-ready contract. It
-inherits the frozen phase decisions from `DETAILED_PLANNING_PHASE_3.md`,
+**Implementation Status: COMPLETE**
+
+This mini-spec defined the Phase 3 Task 2 implementation contract. The partition
+descriptor and semantic-preservation contract is now implemented in
+`squander/partitioning/noisy_planner.py` as `NoisyPartitionDescriptorSet`,
+`NoisyPartitionDescriptor`, and `NoisyPartitionDescriptorMember` dataclasses.
+
+This document inherits the frozen phase decisions from `DETAILED_PLANNING_PHASE_3.md`,
 `P3-ADR-003`, `P3-ADR-004`, `P3-ADR-007`, `P3-ADR-008`, and `P3-ADR-009`,
 plus the closed semantic-preservation, support-matrix, validation-baseline,
 and benchmark-anchor items in

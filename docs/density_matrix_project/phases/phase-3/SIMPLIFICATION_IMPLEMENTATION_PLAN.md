@@ -1,15 +1,17 @@
 # Phase 3 Simplicity Implementation Plan
 
-This document turns the current branch simplicity review into a concrete
-implementation plan.
+**Status: COMPLETED**
+
+This document turned the Phase 3 simplicity review into a concrete implementation
+plan. All six simplification stories have been completed. The current codebase
+reflects the simplified implementation described here.
 
 Important framing:
 
 - The current codebase is the source of truth.
-- This is a behavior-preserving simplification plan, not a request to realign the
-code with older planning docs.
-- Ranking below is the recommended implementation order after considering payoff,
-coupling, blast radius, and validation cost.
+- This was a behavior-preserving simplification effort, not a realignment with
+  older planning docs.
+- All stories below have been completed in the recommended implementation order.
 
 ## Purpose
 
@@ -747,18 +749,20 @@ compatibility surface once the new structure is settled.
 
 ## Definition Of Done For The Full Simplification Pass
 
-The simplification effort is complete when all of the following are true:
+**Status: COMPLETED**
+
+The simplification effort is complete. All of the following are now true:
 
 - the evidence layer has one shared supported-case rule and one shared common
-runtime field builder,
+  runtime field builder,
 - validation slices no longer repeat full module scaffolding for every bundle,
 - runtime validation and lowering logic has one clear contract path,
 - planner, descriptor, and runtime layers no longer store copied upstream data
-unless a compatibility serializer requires it,
+  unless a compatibility serializer requires it,
 - partitioning tests read as API behavior tests first and benchmark artifact
-tests second,
+  tests second,
 - and remaining aliases, duplicated payload fields, and ambiguous names are
-either removed or intentionally documented as compatibility shims.
+  either removed or intentionally documented as compatibility shims.
 
 ## Notes For Implementation
 

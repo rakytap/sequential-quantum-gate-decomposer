@@ -1,15 +1,18 @@
 # Pre-Implementation Completion Checklist
 
-This document validates that the Phase 3 planning set is detailed enough to
-start implementation and maps each major contract area to the decision that
-closes it.
+**Status: IMPLEMENTATION COMPLETE**
 
-The Phase 3 source-of-truth contract is:
+This document validated that the Phase 3 planning set was detailed enough to
+start implementation. Phase 3 implementation is now complete. This checklist
+serves as the historical record of the planning closure that enabled
+implementation.
+
+The Phase 3 source-of-truth contract was:
 
 - `DETAILED_PLANNING_PHASE_3.md`
 - `ADRs_PHASE_3.md`
 
-Its purpose is:
+Its purpose was:
 
 > show that Phase 3 is specified tightly enough to begin implementation for the
 > documented baseline methods claim, while keeping explicit follow-on branches
@@ -17,14 +20,13 @@ Its purpose is:
 
 ## Current Readiness Verdict
 
-Phase 3 is implementation-ready for the frozen baseline contract.
+**Phase 3 implementation is now complete.**
 
-At the time this checklist was closed, the remaining open work was
-implementation work plus the benchmark-driven branch decision described in the
-planning and ADR docs. That decision gate was a Phase 3 outcome question, not a
-blocker to starting the implementation.
+The planning specification was detailed enough to guide successful
+implementation. The delivered implementation in `noisy_planner.py` and
+`noisy_runtime.py` satisfies the frozen baseline contract documented here.
 
-Deliberately deferred items still exist, but they are now explicit trade-offs
+Deliberately deferred items remain explicit trade-offs documented in the ADRs
 rather than hidden specification gaps.
 
 ## Closure Map
@@ -223,25 +225,22 @@ This is better for implementation because:
 
 ## Go / No-Go Rule
 
-Implementation can now begin safely in both modes:
+**Implementation is complete.**
 
-- `Controlled early implementation`: allowed.
-- `Broad phase implementation`: also allowed for the frozen Phase 3 baseline
-  contract.
+The Phase 3 baseline contract has been fully implemented. The following
+interpretation remains relevant for future work:
 
-Important interpretation:
-
-- requests outside the documented support matrix should now be treated as new
+- requests outside the documented support matrix should be treated as new
   scope decisions or follow-on ADRs,
 - channel-native fused noisy blocks remain a benchmark-driven follow-on branch,
   not a hidden prerequisite,
-- and broader VQE/VQA workflow growth still belongs to Phase 4 unless the Phase
-  3 contract is explicitly re-opened.
+- and broader VQE/VQA workflow growth belongs to Phase 4.
 
 ## Final Practical Assessment
 
-The checklist is solidly closed for the Phase 3 baseline contract.
+The checklist was solidly closed for the Phase 3 baseline contract, and
+implementation proceeded successfully.
 
-Phase 3 is specified tightly enough to start broad implementation for the
-documented methods scope, with the main remaining uncertainty shifted from
-specification to benchmark outcome and execution.
+Phase 3 delivered the documented methods scope. The benchmark outcome confirmed
+diagnosis-grounded performance closure rather than positive-threshold closure on
+representative workloads.

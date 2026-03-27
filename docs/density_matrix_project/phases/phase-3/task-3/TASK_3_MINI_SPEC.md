@@ -1,7 +1,12 @@
 # Task 3: Executable Partitioned Density Runtime
 
-This mini-spec turns Phase 3 Task 3 into an implementation-ready contract. It
-inherits the frozen phase decisions from `DETAILED_PLANNING_PHASE_3.md`,
+**Implementation Status: COMPLETE**
+
+This mini-spec defined the Phase 3 Task 3 implementation contract. The executable
+partitioned density runtime is now implemented in `squander/partitioning/noisy_runtime.py`
+with `execute_partitioned_density()` and `execute_sequential_density_reference()`.
+
+This document inherits the frozen phase decisions from `DETAILED_PLANNING_PHASE_3.md`,
 `P3-ADR-003`, `P3-ADR-004`, `P3-ADR-005`, `P3-ADR-006`, `P3-ADR-007`,
 `P3-ADR-008`, and `P3-ADR-009`, plus the closed runtime-minimum,
 validation-baseline, benchmark-anchor, and performance-claim-boundary items in

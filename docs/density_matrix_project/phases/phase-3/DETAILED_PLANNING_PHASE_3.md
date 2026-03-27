@@ -1,7 +1,11 @@
 # Detailed Planning for Phase 3
 
+**Status: COMPLETE**
+
 This document is the Phase 3 source of truth for scope, deliverable goals,
-acceptance criteria, validation expectations, and Paper 2 evidence.
+acceptance criteria, validation expectations, and Paper 2 evidence. Phase 3
+implementation is complete; this document now serves as the historical record
+of the delivered contract.
 
 Primary Phase 3 theme:
 
@@ -9,7 +13,9 @@ Primary Phase 3 theme:
 > native noise-aware partitioning and limited-fusion backend that remains
 > semantically exact on representative noisy mixed-state workloads.
 
-This is a specification document, not an implementation log.
+This was the specification document for Phase 3. The implementation is now
+delivered in `squander/partitioning/noisy_planner.py` and
+`squander/partitioning/noisy_runtime.py`.
 
 ## 0.1 Starting Baseline After Phase 2
 
@@ -1283,18 +1289,22 @@ To avoid later ambiguity, the following are explicit non-goals of this phase:
 - maximizing qubit count beyond the honest exact-regime paper narrative,
 - and replacing the exact backend with approximate scaling methods.
 
-## 17. Expected Outcome
+## 17. Delivered Outcome
 
-At the end of Phase 3, the project should have:
+**Status: COMPLETE**
 
-- a native noise-aware partitioning contract for exact mixed-state circuits,
-- an executable partitioned density runtime,
-- at least one benchmarked real fused execution mode,
+Phase 3 has delivered:
+
+- a native noise-aware partitioning contract for exact mixed-state circuits
+  (`noisy_planner.py`),
+- an executable partitioned density runtime (`noisy_runtime.py`),
+- a real fused execution mode (unitary-island fusion on 1- and 2-qubit spans),
 - a validated benchmark package showing where the approach helps and where it
-  still falls short,
-- a reproducible Paper 2 evidence bundle,
+  still falls short (diagnosis-grounded closure),
+- a reproducible Paper 2 evidence bundle under `benchmarks/density_matrix/`,
 - and a clean handoff into Phase 4, where broader noisy workflows and optimizer
   science can build on the stabilized backend.
 
-That is the minimum outcome required for Phase 3 to count as a meaningful
-methods step toward the broader PhD objective.
+The implementation satisfies the Phase 3 methods objective. Performance closure
+was achieved through the diagnosis branch rather than the positive-threshold
+branch on representative workloads.

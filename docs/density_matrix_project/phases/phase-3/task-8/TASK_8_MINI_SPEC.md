@@ -1,7 +1,13 @@
 # Task 8: Paper 2 Evidence And Documentation Bundle
 
-This mini-spec turns Phase 3 Task 8 into an implementation-ready contract. It
-inherits the frozen phase decisions from `DETAILED_PLANNING_PHASE_3.md`,
+**Implementation Status: COMPLETE**
+
+This mini-spec defined the Phase 3 Task 8 implementation contract. The Paper 2
+evidence and documentation bundle is implemented under
+`benchmarks/density_matrix/publication_evidence/` with supporting artifacts and
+machine-checkable bundles. Draft papers are under `phases/phase-3/`.
+
+This document inherits the frozen phase decisions from `DETAILED_PLANNING_PHASE_3.md`,
 `P3-ADR-001`, `P3-ADR-002`, `P3-ADR-003`, `P3-ADR-004`, `P3-ADR-005`,
 `P3-ADR-006`, `P3-ADR-007`, `P3-ADR-008`, `P3-ADR-009`, and `P3-ADR-010`,
 plus the closed canonical planner-surface, semantic-preservation,

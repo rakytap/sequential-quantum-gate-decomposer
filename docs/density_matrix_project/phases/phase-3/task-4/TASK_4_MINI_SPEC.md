@@ -1,7 +1,14 @@
 # Task 4: Real Fused Execution On Eligible Substructures
 
-This mini-spec turns Phase 3 Task 4 into an implementation-ready contract. It
-inherits the frozen phase decisions from `DETAILED_PLANNING_PHASE_3.md`,
+**Implementation Status: COMPLETE**
+
+This mini-spec defined the Phase 3 Task 4 implementation contract. Real fused
+execution is now implemented in `squander/partitioning/noisy_runtime.py` via
+`execute_partitioned_density_fused()` and the unitary-island fusion logic with
+fused region classification (`PHASE3_FUSION_CLASS_FUSED`, `PHASE3_FUSION_CLASS_SUPPORTED_UNFUSED`,
+`PHASE3_FUSION_CLASS_DEFERRED`).
+
+This document inherits the frozen phase decisions from `DETAILED_PLANNING_PHASE_3.md`,
 `P3-ADR-004`, `P3-ADR-005`, `P3-ADR-007`, `P3-ADR-008`, `P3-ADR-009`, and
 `P3-ADR-010`, plus the closed runtime-minimum, support-matrix,
 validation-baseline, benchmark-anchor, and performance-claim-boundary items in
