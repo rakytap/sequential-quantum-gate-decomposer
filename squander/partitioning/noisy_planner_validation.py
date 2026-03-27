@@ -18,37 +18,7 @@ from squander.partitioning.noisy_types import (
     CanonicalNoisyPlannerOperation,
     CanonicalNoisyPlannerSurface,
 )
-
-class NoisyPlannerValidationError(ValueError):
-    """Structured planner-entry validation error for the Phase 3 noisy planner surface."""
-
-    def __init__(
-        self,
-        *,
-        category: str,
-        first_unsupported_condition: str,
-        failure_stage: str,
-        source_type: str,
-        requested_mode: str,
-        reason: str,
-    ) -> None:
-        super().__init__(reason)
-        self.category = category
-        self.first_unsupported_condition = first_unsupported_condition
-        self.failure_stage = failure_stage
-        self.source_type = source_type
-        self.requested_mode = requested_mode
-        self.reason = reason
-
-    def to_dict(self) -> dict[str, Any]:
-        return {
-            "unsupported_category": self.category,
-            "first_unsupported_condition": self.first_unsupported_condition,
-            "failure_stage": self.failure_stage,
-            "source_type": self.source_type,
-            "requested_mode": self.requested_mode,
-            "reason": self.reason,
-        }
+from squander.partitioning.noisy_validation_errors import NoisyPlannerValidationError
 
 def _normalize_gate_name(name: str) -> str:
     normalized = name.strip()
