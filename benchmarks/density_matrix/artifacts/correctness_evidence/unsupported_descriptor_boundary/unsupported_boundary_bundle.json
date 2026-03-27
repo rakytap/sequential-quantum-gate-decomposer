@@ -3,7 +3,6 @@
     {
       "boundary_stage": "planner_entry",
       "case_name": "unsupported_source_type",
-      "descriptor_schema_version": null,
       "failure_stage": "planner_entry_preflight",
       "fallback_used": false,
       "first_unsupported_condition": "binary_import",
@@ -22,7 +21,6 @@
     {
       "boundary_stage": "planner_entry",
       "case_name": "missing_source_payload",
-      "descriptor_schema_version": null,
       "failure_stage": "planner_entry_preflight",
       "fallback_used": false,
       "first_unsupported_condition": "missing_source_payload",
@@ -41,7 +39,6 @@
     {
       "boundary_stage": "planner_entry",
       "case_name": "unsupported_mode_claim",
-      "descriptor_schema_version": null,
       "failure_stage": "planner_entry_preflight",
       "fallback_used": false,
       "first_unsupported_condition": "unsupported_mode",
@@ -60,7 +57,6 @@
     {
       "boundary_stage": "planner_entry",
       "case_name": "unsupported_noise_model",
-      "descriptor_schema_version": null,
       "failure_stage": "planner_entry_preflight",
       "fallback_used": false,
       "first_unsupported_condition": "readout_noise",
@@ -79,7 +75,6 @@
     {
       "boundary_stage": "planner_entry",
       "case_name": "legacy_gate_family_h",
-      "descriptor_schema_version": null,
       "failure_stage": "planner_entry_preflight",
       "fallback_used": false,
       "first_unsupported_condition": "H",
@@ -98,7 +93,6 @@
     {
       "boundary_stage": "planner_entry",
       "case_name": "invalid_noise_insertion_index",
-      "descriptor_schema_version": null,
       "failure_stage": "planner_entry_preflight",
       "fallback_used": false,
       "first_unsupported_condition": "after_gate_index",
@@ -117,7 +111,6 @@
     {
       "boundary_stage": "descriptor_generation",
       "case_name": "partition_qubits_too_small",
-      "descriptor_schema_version": null,
       "failure_stage": "descriptor_generation_preflight",
       "fallback_used": false,
       "first_unsupported_condition": "max_partition_qubits",
@@ -136,7 +129,6 @@
     {
       "boundary_stage": "descriptor_generation",
       "case_name": "dropped_operation",
-      "descriptor_schema_version": null,
       "failure_stage": "descriptor_validation",
       "fallback_used": false,
       "first_unsupported_condition": "operation_count",
@@ -155,7 +147,6 @@
     {
       "boundary_stage": "descriptor_generation",
       "case_name": "hidden_noise_placement",
-      "descriptor_schema_version": null,
       "failure_stage": "descriptor_validation",
       "fallback_used": false,
       "first_unsupported_condition": "noise_count",
@@ -174,7 +165,6 @@
     {
       "boundary_stage": "descriptor_generation",
       "case_name": "incomplete_remapping",
-      "descriptor_schema_version": null,
       "failure_stage": "descriptor_validation",
       "fallback_used": false,
       "first_unsupported_condition": "local_target_qbit",
@@ -193,7 +183,6 @@
     {
       "boundary_stage": "descriptor_generation",
       "case_name": "ambiguous_parameter_routing",
-      "descriptor_schema_version": null,
       "failure_stage": "descriptor_validation",
       "fallback_used": false,
       "first_unsupported_condition": "local_param_start",
@@ -212,7 +201,6 @@
     {
       "boundary_stage": "descriptor_generation",
       "case_name": "reordering_across_noise_boundaries",
-      "descriptor_schema_version": null,
       "failure_stage": "descriptor_validation",
       "fallback_used": false,
       "first_unsupported_condition": "canonical_operation_indices",
@@ -231,7 +219,6 @@
     {
       "boundary_stage": "runtime_stage",
       "case_name": "wrong_requested_mode",
-      "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "failure_stage": "runtime_preflight",
       "fallback_used": false,
       "first_unsupported_condition": "requested_mode",
@@ -250,7 +237,6 @@
     {
       "boundary_stage": "runtime_stage",
       "case_name": "parameter_count_mismatch",
-      "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "failure_stage": "runtime_preflight",
       "fallback_used": false,
       "first_unsupported_condition": "parameter_count",
@@ -269,7 +255,6 @@
     {
       "boundary_stage": "runtime_stage",
       "case_name": "unsupported_gate_name",
-      "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "failure_stage": "runtime_preflight",
       "fallback_used": false,
       "first_unsupported_condition": "gate_name",
@@ -288,7 +273,6 @@
     {
       "boundary_stage": "runtime_stage",
       "case_name": "unsupported_noise_name",
-      "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "failure_stage": "runtime_preflight",
       "fallback_used": false,
       "first_unsupported_condition": "noise_name",
@@ -307,7 +291,6 @@
     {
       "boundary_stage": "runtime_stage",
       "case_name": "gate_fixed_value",
-      "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "failure_stage": "runtime_preflight",
       "fallback_used": false,
       "first_unsupported_condition": "fixed_value",

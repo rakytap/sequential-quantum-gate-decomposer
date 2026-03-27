@@ -6,7 +6,6 @@
       "case_name": "phase2_xxz_hea_q4_continuity",
       "continuity_energy_real": -0.46777193318615934,
       "continuity_output_pass": true,
-      "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "exact_output": {
         "density_imag": [
           [
@@ -604,18 +603,15 @@
       "matrix_included": true,
       "partitioned_energy_imag": -2.7755575615628914e-17,
       "partitioned_energy_real": -0.4677719331861591,
-      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "qbit_num": 4,
       "result_output_pass": true,
       "runtime_path": "partitioned_density_descriptor_baseline",
-      "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
       "status": "pass",
       "workload_id": "phase2_xxz_hea_q4_continuity"
     },
     {
       "case_kind": "microcase",
       "case_name": "microcase_4q_partition_boundary_triplet",
-      "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "exact_output": {
         "density_imag": [
           [
@@ -1211,18 +1207,15 @@
       },
       "exact_output_present": true,
       "matrix_included": true,
-      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "qbit_num": 4,
       "result_output_pass": true,
       "runtime_path": "partitioned_density_descriptor_baseline",
-      "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
       "status": "pass",
       "workload_id": "microcase_4q_partition_boundary_triplet"
     },
     {
       "case_kind": "structured_family",
       "case_name": "layered_nearest_neighbor_q8_sparse_seed20260318",
-      "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "exact_output": {
         "density_imag": null,
         "density_real": null,
@@ -1240,16 +1233,13 @@
       },
       "exact_output_present": true,
       "matrix_included": false,
-      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "qbit_num": 8,
       "result_output_pass": true,
       "runtime_path": "partitioned_density_descriptor_baseline",
-      "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
       "status": "pass",
       "workload_id": "layered_nearest_neighbor_q8_sparse_seed20260318"
     }
   ],
-  "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
   "software": {
     "numpy": "2.3.5",
     "python": "3.13.9",

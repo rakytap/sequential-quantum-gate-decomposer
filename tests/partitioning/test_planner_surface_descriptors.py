@@ -26,7 +26,6 @@ from benchmarks.density_matrix.planner_surface.workloads import (
 from squander import Circuit
 from squander.partitioning.noisy_planner import (
     DEFAULT_PARTITION_DESCRIPTOR_MAX_QUBITS,
-    DESCRIPTOR_SCHEMA_VERSION,
     PARTITIONED_DENSITY_MODE,
     PLANNER_OP_KIND_NOISE,
     build_canonical_planner_surface_from_qgd_circuit,
@@ -94,8 +93,6 @@ def test_continuity_partition_descriptor_aligns_with_planner_surface(qbit_num):
     descriptor_set = build_phase3_continuity_partition_descriptor_set(vqe)
     payload = descriptor_set.to_dict()
 
-    assert descriptor_set.schema_version == DESCRIPTOR_SCHEMA_VERSION
-    assert descriptor_set.planner_schema_version == surface.schema_version
     assert descriptor_set.requested_mode == PARTITIONED_DENSITY_MODE
     assert descriptor_set.source_type == "generated_hea"
     assert descriptor_set.workload_id == f"phase2_xxz_hea_q{qbit_num}_continuity"
@@ -149,7 +146,6 @@ def test_microcase_partition_descriptors_share_schema():
             assert set(payload["partitions"][0].keys()) == partition_keys
             assert set(payload["partitions"][0]["members"][0].keys()) == member_keys
 
-        assert payload["schema_version"] == DESCRIPTOR_SCHEMA_VERSION
         assert payload["requested_mode"] == PARTITIONED_DENSITY_MODE
         assert payload["source_type"] == "microcase_builder"
         assert payload["workload_id"] == metadata["case_name"]
@@ -175,7 +171,6 @@ def test_structured_partition_descriptors_share_schema():
     for metadata, descriptor_set in structured_cases:
         payload = descriptor_set.to_dict()
 
-        assert payload["schema_version"] == DESCRIPTOR_SCHEMA_VERSION
         assert payload["requested_mode"] == PARTITIONED_DENSITY_MODE
         assert payload["source_type"] == "structured_family_builder"
         assert payload["workload_id"] == metadata["workload_id"]
@@ -351,7 +346,6 @@ def test_planner_surface_descriptor_audit_record_tracks_continuity_provenance():
         descriptor_set, metadata={"case_kind": "continuity"}
     )
 
-    assert audit["schema_version"] == DESCRIPTOR_SCHEMA_VERSION
     assert audit["provenance"]["source_type"] == "generated_hea"
     assert audit["summary"]["partition_count"] == descriptor_set.partition_count
     assert (

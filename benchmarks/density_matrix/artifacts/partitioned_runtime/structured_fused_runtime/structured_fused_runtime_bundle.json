@@ -22,7 +22,6 @@
       "partition_count": 24,
       "qbit_num": 8,
       "runtime_path": "partitioned_density_descriptor_fused_unitary_islands",
-      "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
       "structured_fused_runtime_pass": true,
       "supported_unfused_region_count": 11
     },
@@ -48,12 +47,10 @@
       "partition_count": 38,
       "qbit_num": 10,
       "runtime_path": "partitioned_density_descriptor_fused_unitary_islands",
-      "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
       "structured_fused_runtime_pass": true,
       "supported_unfused_region_count": 18
     }
   ],
-  "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
   "software": {
     "numpy": "2.3.5",
     "python": "3.13.9",

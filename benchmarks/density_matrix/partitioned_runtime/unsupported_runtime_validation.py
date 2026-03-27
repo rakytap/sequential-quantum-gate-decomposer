@@ -31,10 +31,7 @@ from benchmarks.density_matrix.planner_surface.workloads import (
     build_microcase_descriptor_set,
 )
 from squander.partitioning.noisy_planner import build_phase3_continuity_partition_descriptor_set
-from squander.partitioning.noisy_runtime import (
-    PHASE3_RUNTIME_SCHEMA_VERSION,
-    execute_partitioned_density,
-)
+from squander.partitioning.noisy_runtime import execute_partitioned_density
 
 SUITE_NAME = "phase3_partitioned_runtime_unsupported_runtime"
 ARTIFACT_FILENAME = "unsupported_runtime_bundle.json"
@@ -49,7 +46,6 @@ DEFAULT_OUTPUT_DIR = (
 ARTIFACT_CORE_FIELDS = (
     "suite_name",
     "status",
-    "runtime_schema_version",
     "software",
     "summary",
     "cases",
@@ -170,7 +166,6 @@ def build_artifact_bundle(cases: list[dict]) -> dict:
         and unexpected_passes == 0
         and fallback_count == 0
         else "fail",
-        "runtime_schema_version": PHASE3_RUNTIME_SCHEMA_VERSION,
         "software": build_software_metadata(),
         "summary": {
             "total_cases": len(cases),

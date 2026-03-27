@@ -35,7 +35,6 @@ from benchmarks.density_matrix.planner_surface.workloads import (
     iter_structured_descriptor_sets,
 )
 from squander.partitioning.noisy_planner import build_phase3_continuity_partition_descriptor_set
-from squander.partitioning.noisy_runtime import PHASE3_RUNTIME_SCHEMA_VERSION
 
 SUITE_NAME = "phase3_partitioned_runtime_runtime_semantics"
 ARTIFACT_FILENAME = "runtime_semantics_bundle.json"
@@ -50,7 +49,6 @@ DEFAULT_OUTPUT_DIR = (
 ARTIFACT_CORE_FIELDS = (
     "suite_name",
     "status",
-    "runtime_schema_version",
     "software",
     "summary",
     "cases",
@@ -71,9 +69,6 @@ def _semantic_case(*, case_name: str, case_kind: str, descriptor_set, metadata: 
         and density_metrics["max_abs_diff"] <= PHASE3_RUNTIME_DENSITY_TOL
         and runtime_result.rho_is_valid
         else "fail",
-        "runtime_schema_version": runtime_payload["runtime_schema_version"],
-        "planner_schema_version": runtime_payload["planner_schema_version"],
-        "descriptor_schema_version": runtime_payload["descriptor_schema_version"],
         "workload_id": runtime_payload["workload_id"],
         "qbit_num": runtime_payload["qbit_num"],
         "partition_count": runtime_payload["summary"]["partition_count"],
@@ -86,8 +81,7 @@ def _semantic_case(*, case_name: str, case_kind: str, descriptor_set, metadata: 
         "rho_is_valid": runtime_payload["summary"]["rho_is_valid"],
         "trace_deviation": runtime_payload["summary"]["trace_deviation"],
         "runtime_semantics_pass": (
-            runtime_payload["runtime_schema_version"] == PHASE3_RUNTIME_SCHEMA_VERSION
-            and density_metrics["frobenius_norm_diff"] <= PHASE3_RUNTIME_DENSITY_TOL
+            density_metrics["frobenius_norm_diff"] <= PHASE3_RUNTIME_DENSITY_TOL
             and density_metrics["max_abs_diff"] <= PHASE3_RUNTIME_DENSITY_TOL
             and runtime_payload["summary"]["parameter_routing_segment_count"] > 0
         ),
@@ -131,7 +125,6 @@ def build_artifact_bundle(cases: list[dict]) -> dict:
         "status": "pass"
         if semantics_passes == len(cases) and passed_cases == len(cases)
         else "fail",
-        "runtime_schema_version": PHASE3_RUNTIME_SCHEMA_VERSION,
         "software": build_software_metadata(),
         "summary": {
             "total_cases": len(cases),

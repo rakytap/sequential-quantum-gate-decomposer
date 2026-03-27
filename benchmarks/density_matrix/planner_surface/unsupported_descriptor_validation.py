@@ -31,7 +31,6 @@ from benchmarks.density_matrix.planner_surface.workloads import (
     build_microcase_surface,
 )
 from squander.partitioning.noisy_planner import (
-    DESCRIPTOR_SCHEMA_VERSION,
     PLANNER_OP_KIND_GATE,
     PLANNER_OP_KIND_NOISE,
     preflight_descriptor_request,
@@ -51,7 +50,6 @@ DEFAULT_OUTPUT_DIR = (
 ARTIFACT_CORE_FIELDS = (
     "suite_name",
     "status",
-    "schema_version",
     "software",
     "summary",
     "cases",
@@ -231,7 +229,6 @@ def build_artifact_bundle(cases: list[dict]) -> dict:
         and unexpected_passes == 0
         and fallback_count == 0
         else "fail",
-        "schema_version": DESCRIPTOR_SCHEMA_VERSION,
         "software": build_software_metadata(),
         "summary": {
             "total_cases": len(cases),

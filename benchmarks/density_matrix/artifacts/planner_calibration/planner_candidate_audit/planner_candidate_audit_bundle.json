@@ -14,7 +14,6 @@
         {
           "case_kind": "continuity",
           "descriptor_member_count": 12,
-          "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
           "family_name": null,
           "max_partition_qubits": 2,
           "max_partition_span": 2,
@@ -34,7 +33,6 @@
         {
           "case_kind": "microcase",
           "descriptor_member_count": 5,
-          "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
           "family_name": null,
           "max_partition_qubits": 2,
           "max_partition_span": 2,
@@ -50,7 +48,6 @@
         {
           "case_kind": "structured_family",
           "descriptor_member_count": 37,
-          "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
           "family_name": "layered_nearest_neighbor",
           "max_partition_qubits": 2,
           "max_partition_span": 2,
@@ -112,7 +109,6 @@
         {
           "case_kind": "continuity",
           "descriptor_member_count": 12,
-          "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
           "family_name": null,
           "max_partition_qubits": 3,
           "max_partition_span": 3,
@@ -130,7 +126,6 @@
         {
           "case_kind": "microcase",
           "descriptor_member_count": 5,
-          "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
           "family_name": null,
           "max_partition_qubits": 3,
           "max_partition_span": 2,
@@ -146,7 +141,6 @@
         {
           "case_kind": "structured_family",
           "descriptor_member_count": 37,
-          "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
           "family_name": "layered_nearest_neighbor",
           "max_partition_qubits": 3,
           "max_partition_span": 3,
@@ -203,7 +197,6 @@
         {
           "case_kind": "continuity",
           "descriptor_member_count": 12,
-          "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
           "family_name": null,
           "max_partition_qubits": 4,
           "max_partition_span": 4,
@@ -219,7 +212,6 @@
         {
           "case_kind": "microcase",
           "descriptor_member_count": 5,
-          "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
           "family_name": null,
           "max_partition_qubits": 4,
           "max_partition_span": 2,
@@ -235,7 +227,6 @@
         {
           "case_kind": "structured_family",
           "descriptor_member_count": 37,
-          "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
           "family_name": "layered_nearest_neighbor",
           "max_partition_qubits": 4,
           "max_partition_span": 4,

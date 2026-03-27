@@ -3,8 +3,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Iterable, Literal, Mapping, cast
 
-CANONICAL_PLANNER_SCHEMA_VERSION = "phase3_canonical_noisy_planner_v1"
-DESCRIPTOR_SCHEMA_VERSION = "phase3_noisy_partition_descriptor_v1"
+from squander.VQA.qgd_Variational_Quantum_Eigensolver_Base import (
+    qgd_Variational_Quantum_Eigensolver_Base,
+)
+
 PARTITIONED_DENSITY_MODE = "partitioned_density"
 DEFAULT_PARTITION_DESCRIPTOR_MAX_QUBITS = 2
 
@@ -136,7 +138,6 @@ class CanonicalNoisyPlannerOperation:
 
 @dataclass(frozen=True)
 class CanonicalNoisyPlannerSurface:
-    schema_version: str
     requested_mode: str
     source_type: str
     workload_id: str
@@ -158,7 +159,9 @@ class CanonicalNoisyPlannerSurface:
 
     @property
     def gate_names(self) -> tuple[str, ...]:
-        return tuple(op.name for op in self.operations if op.kind == PLANNER_OP_KIND_GATE)
+        return tuple(
+            op.name for op in self.operations if op.kind == PLANNER_OP_KIND_GATE
+        )
 
     @property
     def noise_names(self) -> tuple[str, ...]:
@@ -179,7 +182,6 @@ class CanonicalNoisyPlannerSurface:
 
     def to_dict(self) -> dict[str, Any]:
         return {
-            "schema_version": self.schema_version,
             "requested_mode": self.requested_mode,
             "source_type": self.source_type,
             "workload_id": self.workload_id,
@@ -306,8 +308,6 @@ class NoisyPartitionDescriptor:
 
 @dataclass(frozen=True)
 class NoisyPartitionDescriptorSet:
-    schema_version: str
-    planner_schema_version: str
     requested_mode: str
     source_type: str
     workload_id: str
@@ -352,8 +352,6 @@ class NoisyPartitionDescriptorSet:
 
     def to_dict(self) -> dict[str, Any]:
         return {
-            "schema_version": self.schema_version,
-            "planner_schema_version": self.planner_schema_version,
             "requested_mode": self.requested_mode,
             "source_type": self.source_type,
             "workload_id": self.workload_id,
@@ -432,13 +430,12 @@ def _build_operation_from_mapping(
     payload: Mapping[str, Any], *, fallback_index: int
 ) -> CanonicalNoisyPlannerOperation:
     kind = _coerce_operation_kind(payload["kind"])
-    is_unitary = bool(payload["is_unitary"])
 
     return CanonicalNoisyPlannerOperation(
         index=int(payload.get("index", fallback_index)),
         kind=kind,
         name=_canonicalize_operation_name(str(payload["name"]), kind),
-        is_unitary=is_unitary,
+        is_unitary=bool(payload["is_unitary"]),
         source_gate_index=int(payload["source_gate_index"]),
         target_qbit=_coerce_optional_int(payload.get("target_qbit")),
         control_qbit=_coerce_optional_int(payload.get("control_qbit")),
@@ -456,30 +453,27 @@ def _build_operation_from_spec(
     gate_index: int,
 ) -> CanonicalNoisyPlannerOperation:
     kind = _coerce_operation_kind(payload["kind"])
-    name = _canonicalize_operation_name(str(payload["name"]), kind)
-    param_count = int(payload.get("param_count", 0))
-    source_gate_index = int(payload.get("source_gate_index", gate_index))
 
     return CanonicalNoisyPlannerOperation(
         index=index,
         kind=kind,
-        name=name,
+        name=_canonicalize_operation_name(str(payload["name"]), kind),
         is_unitary=bool(payload.get("is_unitary", kind == PLANNER_OP_KIND_GATE)),
-        source_gate_index=source_gate_index,
+        source_gate_index=int(payload.get("source_gate_index", gate_index)),
         target_qbit=_coerce_optional_int(payload.get("target_qbit")),
         control_qbit=_coerce_optional_int(payload.get("control_qbit")),
-        param_count=param_count,
+        param_count=int(payload.get("param_count", 0)),
         param_start=int(payload.get("param_start", default_param_start)),
         fixed_value=_coerce_optional_float(payload.get("fixed_value")),
     )
 
 
-def _validate_mode(requested_mode: str, *, source_type: str) -> None:
+def _validate_mode(requested_mode: str, *, stage: str, source_type: str) -> None:
     if requested_mode != PARTITIONED_DENSITY_MODE:
         raise NoisyPlannerValidationError(
             category="mode",
             first_unsupported_condition="unsupported_mode",
-            failure_stage="planner_entry_preflight",
+            failure_stage=stage,
             source_type=source_type,
             requested_mode=requested_mode,
             reason=(
@@ -492,6 +486,7 @@ def _validate_mode(requested_mode: str, *, source_type: str) -> None:
 def _validate_surface(
     surface: CanonicalNoisyPlannerSurface,
     *,
+    stage: str,
     strict_phase3_support: bool,
 ) -> CanonicalNoisyPlannerSurface:
     if surface.qbit_num <= 0:
@@ -527,7 +522,7 @@ def _validate_surface(
                 raise NoisyPlannerValidationError(
                     category="gate_family",
                     first_unsupported_condition=operation.name,
-                    failure_stage="planner_entry_preflight",
+                    failure_stage=stage,
                     source_type=surface.source_type,
                     requested_mode=surface.requested_mode,
                     reason=(
@@ -548,7 +543,7 @@ def _validate_surface(
                 raise NoisyPlannerValidationError(
                     category="noise_insertion",
                     first_unsupported_condition="after_gate_index",
-                    failure_stage="planner_entry_preflight",
+                    failure_stage=stage,
                     source_type=surface.source_type,
                     requested_mode=surface.requested_mode,
                     reason=(
@@ -560,7 +555,7 @@ def _validate_surface(
                 raise NoisyPlannerValidationError(
                     category="noise_type",
                     first_unsupported_condition=operation.name,
-                    failure_stage="planner_entry_preflight",
+                    failure_stage=stage,
                     source_type=surface.source_type,
                     requested_mode=surface.requested_mode,
                     reason=(
@@ -569,9 +564,7 @@ def _validate_surface(
                     ).format(operation.name),
                 )
         else:
-            raise ValueError(
-                "Unsupported planner kind '{}'".format(operation.kind)
-            )
+            raise ValueError("Unsupported planner kind '{}'".format(operation.kind))
 
         expected_index += 1
 
@@ -593,7 +586,11 @@ def build_canonical_planner_surface_from_bridge_metadata(
     strict_phase3_support: bool = True,
 ) -> CanonicalNoisyPlannerSurface:
     resolved_source_type = str(source_type or bridge_metadata["source_type"])
-    _validate_mode(requested_mode, source_type=resolved_source_type)
+    _validate_mode(
+        requested_mode,
+        stage="planner_entry_from_bridge_metadata_preflight",
+        source_type=resolved_source_type,
+    )
 
     operations = tuple(
         _build_operation_from_mapping(payload, fallback_index=index)
@@ -601,7 +598,6 @@ def build_canonical_planner_surface_from_bridge_metadata(
     )
 
     surface = CanonicalNoisyPlannerSurface(
-        schema_version=CANONICAL_PLANNER_SCHEMA_VERSION,
         requested_mode=requested_mode,
         source_type=resolved_source_type,
         workload_id=workload_id,
@@ -609,7 +605,11 @@ def build_canonical_planner_surface_from_bridge_metadata(
         parameter_count=int(bridge_metadata["parameter_count"]),
         operations=operations,
     )
-    return _validate_surface(surface, strict_phase3_support=strict_phase3_support)
+    return _validate_surface(
+        surface,
+        stage="planner_entry_from_bridge_metadata_preflight",
+        strict_phase3_support=strict_phase3_support,
+    )
 
 
 def build_canonical_planner_surface_from_operation_specs(
@@ -621,7 +621,11 @@ def build_canonical_planner_surface_from_operation_specs(
     requested_mode: str = PARTITIONED_DENSITY_MODE,
     strict_phase3_support: bool = True,
 ) -> CanonicalNoisyPlannerSurface:
-    _validate_mode(requested_mode, source_type=source_type)
+    _validate_mode(
+        requested_mode,
+        stage="planner_entry_from_operation_specs_preflight",
+        source_type=source_type,
+    )
 
     canonical_operations: list[CanonicalNoisyPlannerOperation] = []
     param_start = 0
@@ -640,7 +644,6 @@ def build_canonical_planner_surface_from_operation_specs(
         param_start = max(param_start, operation.param_start + operation.param_count)
 
     surface = CanonicalNoisyPlannerSurface(
-        schema_version=CANONICAL_PLANNER_SCHEMA_VERSION,
         requested_mode=requested_mode,
         source_type=source_type,
         workload_id=workload_id,
@@ -654,7 +657,11 @@ def build_canonical_planner_surface_from_operation_specs(
         ),
         operations=tuple(canonical_operations),
     )
-    return _validate_surface(surface, strict_phase3_support=strict_phase3_support)
+    return _validate_surface(
+        surface,
+        stage="planner_entry_from_operation_specs_preflight",
+        strict_phase3_support=strict_phase3_support,
+    )
 
 
 def _extract_legacy_noise_value(
@@ -749,7 +756,11 @@ def build_canonical_planner_surface_from_legacy_circuit(
     source_type: str = "legacy_qgd_circuit_exact",
     strict_phase3_support: bool = True,
 ) -> CanonicalNoisyPlannerSurface:
-    _validate_mode(requested_mode, source_type=source_type)
+    _validate_mode(
+        requested_mode,
+        stage="planner_entry_preflight",
+        source_type=source_type,
+    )
 
     required_methods = ("get_Gates", "get_Qbit_Num")
     if any(not hasattr(legacy_circuit, method) for method in required_methods):
@@ -932,8 +943,14 @@ def preflight_planner_request(
     )
 
 
+##
+# @brief Build a canonical planner surface from a Phase 2 continuity VQE instance.
+# @param vqe: A Phase 2 continuity VQE instance. The VQE instance should be configured for the exact noisy HEA anchor workflow.
+# @param workload_id: The workload ID to use for the planner surface.
+# @param requested_mode: The requested mode for the planner surface.
+# @return A canonical planner surface.
 def build_phase3_continuity_planner_surface(
-    vqe,
+    vqe: qgd_Variational_Quantum_Eigensolver_Base,
     *,
     workload_id: str | None = None,
     requested_mode: str = PARTITIONED_DENSITY_MODE,
@@ -957,7 +974,6 @@ def build_planner_audit_record(
 ) -> dict[str, Any]:
     payload = surface.to_dict()
     return {
-        "schema_version": payload["schema_version"],
         "requested_mode": payload["requested_mode"],
         "provenance": payload["provenance"],
         "summary": {
@@ -975,6 +991,11 @@ def build_planner_audit_record(
     }
 
 
+##
+# @brief Build a bridge overlap report from a canonical planner surface and a bridge metadata.
+# @param surface: A canonical planner surface.
+# @param bridge_metadata: A bridge metadata.
+# @return A bridge overlap report.
 def build_bridge_overlap_report(
     surface: CanonicalNoisyPlannerSurface, bridge_metadata: Mapping[str, Any]
 ) -> dict[str, Any]:
@@ -1071,6 +1092,17 @@ def _validate_descriptor_request(
         )
 
 
+##
+# @brief Partition the operations of a canonical planner surface into partitions.
+# The partition is done by the following algorithm (greedy algorithm):
+# 1. Start with an empty partition.
+# 2. Add the first operation to the partition.
+# 3. For each subsequent operation, add it to the partition if it can be added without exceeding the maximum number of qubits allowed in a partition.
+# 4. If the next operation cannot be added to the partition without exceeding the maximum number of qubits allowed in a partition, start a new partition.
+# 5. Repeat steps 2-4 until all operations have been added to a partition.
+# @param surface: A canonical planner surface.
+# @param max_partition_qubits: The maximum number of qubits allowed in a partition.
+# @return A tuple of tuples of operations, where each tuple is a partition.
 def _partition_surface_operations(
     surface: CanonicalNoisyPlannerSurface, *, max_partition_qubits: int
 ) -> tuple[tuple[CanonicalNoisyPlannerOperation, ...], ...]:
@@ -1171,8 +1203,6 @@ def build_partition_descriptor_set(
         )
     )
     descriptor_set = NoisyPartitionDescriptorSet(
-        schema_version=DESCRIPTOR_SCHEMA_VERSION,
-        planner_schema_version=surface.schema_version,
         requested_mode=surface.requested_mode,
         source_type=surface.source_type,
         workload_id=surface.workload_id,
@@ -1457,19 +1487,6 @@ def validate_partition_descriptor_set_against_surface(
     descriptor_set: NoisyPartitionDescriptorSet,
 ) -> NoisyPartitionDescriptorSet:
     validated = validate_partition_descriptor_set(descriptor_set)
-    if validated.planner_schema_version != surface.schema_version:
-        raise _descriptor_error(
-            validated,
-            category="descriptor_request",
-            first_unsupported_condition="planner_schema_version",
-            failure_stage="descriptor_validation",
-            reason=(
-                "Partition descriptor planner_schema_version '{}' does not match the "
-                "canonical planner surface schema '{}'".format(
-                    validated.planner_schema_version, surface.schema_version
-                )
-            ),
-        )
     if (
         validated.requested_mode != surface.requested_mode
         or validated.source_type != surface.source_type
@@ -1585,8 +1602,6 @@ def build_descriptor_audit_record(
 ) -> dict[str, Any]:
     payload = validate_partition_descriptor_set(descriptor_set).to_dict()
     return {
-        "schema_version": payload["schema_version"],
-        "planner_schema_version": payload["planner_schema_version"],
         "requested_mode": payload["requested_mode"],
         "provenance": payload["provenance"],
         "summary": {

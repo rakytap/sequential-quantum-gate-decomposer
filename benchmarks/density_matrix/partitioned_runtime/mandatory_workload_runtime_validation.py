@@ -36,10 +36,7 @@ from benchmarks.density_matrix.planner_surface.workloads import (
     iter_microcase_descriptor_sets,
 )
 from squander.partitioning.noisy_planner import build_phase3_continuity_partition_descriptor_set
-from squander.partitioning.noisy_runtime import (
-    PHASE3_RUNTIME_PATH_BASELINE,
-    PHASE3_RUNTIME_SCHEMA_VERSION,
-)
+from squander.partitioning.noisy_runtime import PHASE3_RUNTIME_PATH_BASELINE
 
 SUITE_NAME = "phase3_partitioned_runtime_workload_runtime"
 ARTIFACT_FILENAME = "mandatory_workload_runtime_bundle.json"
@@ -54,7 +51,6 @@ DEFAULT_OUTPUT_DIR = (
 ARTIFACT_CORE_FIELDS = (
     "suite_name",
     "status",
-    "runtime_schema_version",
     "software",
     "summary",
     "cases",
@@ -82,9 +78,6 @@ def _runtime_case(
         and density_metrics["max_abs_diff"] <= PHASE3_RUNTIME_DENSITY_TOL
         and runtime_result.rho_is_valid
         else "fail",
-        "runtime_schema_version": runtime_payload["runtime_schema_version"],
-        "planner_schema_version": runtime_payload["planner_schema_version"],
-        "descriptor_schema_version": runtime_payload["descriptor_schema_version"],
         "requested_mode": runtime_payload["requested_mode"],
         "source_type": runtime_payload["source_type"],
         "workload_id": runtime_payload["workload_id"],
@@ -102,8 +95,7 @@ def _runtime_case(
         "frobenius_norm_diff": density_metrics["frobenius_norm_diff"],
         "max_abs_diff": density_metrics["max_abs_diff"],
         "shared_runtime_pass": (
-            runtime_payload["runtime_schema_version"] == PHASE3_RUNTIME_SCHEMA_VERSION
-            and runtime_payload["runtime_path"] == PHASE3_RUNTIME_PATH_BASELINE
+            runtime_payload["runtime_path"] == PHASE3_RUNTIME_PATH_BASELINE
             and runtime_payload["summary"]["partition_count"] > 0
             and runtime_payload["summary"]["fallback_used"] is False
             and runtime_payload["summary"]["exact_output_present"] is True
@@ -166,7 +158,6 @@ def build_artifact_bundle(cases: list[dict]) -> dict:
         "status": "pass"
         if shared_runtime_passes == len(cases) and passed_cases == len(cases)
         else "fail",
-        "runtime_schema_version": PHASE3_RUNTIME_SCHEMA_VERSION,
         "software": build_software_metadata(),
         "summary": {
             "total_cases": len(cases),

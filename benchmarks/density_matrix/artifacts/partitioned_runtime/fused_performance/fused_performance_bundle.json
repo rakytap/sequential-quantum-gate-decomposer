@@ -33,7 +33,6 @@
       "positive_threshold_pass": false,
       "qbit_num": 8,
       "runtime_path": "partitioned_density_descriptor_fused_unitary_islands",
-      "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
       "speedup": 0.2894017151100592,
       "supported_unfused_region_count": 11,
       "threshold_or_diagnosis_pass": true
@@ -71,13 +70,11 @@
       "positive_threshold_pass": false,
       "qbit_num": 10,
       "runtime_path": "partitioned_density_descriptor_fused_unitary_islands",
-      "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
       "speedup": 0.29593699806851914,
       "supported_unfused_region_count": 18,
       "threshold_or_diagnosis_pass": true
     }
   ],
-  "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
   "software": {
     "numpy": "2.3.5",
     "python": "3.13.9",

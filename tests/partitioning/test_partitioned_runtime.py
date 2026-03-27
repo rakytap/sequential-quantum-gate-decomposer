@@ -43,7 +43,6 @@ from squander.partitioning.noisy_planner import (
 )
 from squander.partitioning.noisy_runtime import (
     PHASE3_RUNTIME_PATH_BASELINE,
-    PHASE3_RUNTIME_SCHEMA_VERSION,
     build_runtime_audit_record,
     execute_partitioned_density,
 )
@@ -56,7 +55,6 @@ def test_phase3_partitioned_runtime_continuity_runtime_executes_supported_anchor
     parameters = build_initial_parameters(vqe.get_Parameter_Num())
     result = execute_partitioned_density(descriptor_set, parameters)
 
-    assert result.runtime_schema_version == PHASE3_RUNTIME_SCHEMA_VERSION
     assert result.requested_mode == PARTITIONED_DENSITY_MODE
     assert result.source_type == "generated_hea"
     assert result.workload_id == f"phase2_xxz_hea_q{qbit_num}_continuity"
@@ -88,7 +86,6 @@ def test_partitioned_runtime_mandatory_microcases_execute_through_shared_runtime
         parameters = build_initial_parameters(descriptor_set.parameter_count)
         result = execute_partitioned_density(descriptor_set, parameters)
 
-        assert result.runtime_schema_version == PHASE3_RUNTIME_SCHEMA_VERSION
         assert result.requested_mode == PARTITIONED_DENSITY_MODE
         assert result.source_type == "microcase_builder"
         assert result.workload_id == metadata["case_name"]
@@ -107,7 +104,6 @@ def test_partitioned_runtime_mandatory_structured_case_executes_through_shared_r
     parameters = build_initial_parameters(descriptor_set.parameter_count)
     result = execute_partitioned_density(descriptor_set, parameters)
 
-    assert result.runtime_schema_version == PHASE3_RUNTIME_SCHEMA_VERSION
     assert result.source_type == "structured_family_builder"
     assert result.partition_count > 0
     assert result.runtime_path == PHASE3_RUNTIME_PATH_BASELINE
@@ -121,7 +117,6 @@ def test_partitioned_runtime_continuity_runtime_audit_record_tracks_provenance()
     result = execute_partitioned_density(descriptor_set, parameters)
     audit = build_runtime_audit_record(result, metadata={"case_kind": "continuity"})
 
-    assert audit["runtime_schema_version"] == PHASE3_RUNTIME_SCHEMA_VERSION
     assert audit["provenance"]["source_type"] == "generated_hea"
     assert audit["summary"]["partition_count"] == result.partition_count
     assert audit["summary"]["descriptor_member_count"] == result.descriptor_member_count

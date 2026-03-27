@@ -31,7 +31,6 @@ from benchmarks.density_matrix.planner_surface.workloads import (
 )
 from squander import Circuit
 from squander.partitioning.noisy_planner import (
-    DESCRIPTOR_SCHEMA_VERSION,
     build_canonical_planner_surface_from_qgd_circuit,
     build_descriptor_audit_record,
     build_partition_descriptor_set,
@@ -51,7 +50,6 @@ DEFAULT_OUTPUT_DIR = (
 ARTIFACT_CORE_FIELDS = (
     "suite_name",
     "status",
-    "schema_version",
     "software",
     "summary",
     "cases",
@@ -109,7 +107,6 @@ def build_artifact_bundle(cases: list[dict]) -> dict:
         and len(summary_key_sets) == 1
         and len(partition_key_sets) == 1
         else "fail",
-        "schema_version": DESCRIPTOR_SCHEMA_VERSION,
         "software": build_software_metadata(),
         "summary": {
             "total_cases": len(cases),

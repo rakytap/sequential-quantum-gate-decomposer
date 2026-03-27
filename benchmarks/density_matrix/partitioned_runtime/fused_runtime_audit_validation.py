@@ -28,7 +28,6 @@ from benchmarks.density_matrix.partitioned_runtime.fusion_case_selection import 
 from squander.partitioning.noisy_runtime import (
     PHASE3_RUNTIME_PATH_BASELINE,
     PHASE3_RUNTIME_PATH_FUSED_UNITARY_ISLANDS,
-    PHASE3_RUNTIME_SCHEMA_VERSION,
     build_runtime_audit_record,
     execute_partitioned_density_fused,
 )
@@ -46,7 +45,6 @@ DEFAULT_OUTPUT_DIR = (
 ARTIFACT_CORE_FIELDS = (
     "suite_name",
     "status",
-    "runtime_schema_version",
     "software",
     "summary",
     "cases",
@@ -106,7 +104,6 @@ def build_artifact_bundle(cases: list[dict]) -> dict:
             PHASE3_RUNTIME_PATH_FUSED_UNITARY_ISLANDS,
         }
         else "fail",
-        "runtime_schema_version": PHASE3_RUNTIME_SCHEMA_VERSION,
         "software": build_software_metadata(),
         "summary": {
             "total_cases": len(cases),

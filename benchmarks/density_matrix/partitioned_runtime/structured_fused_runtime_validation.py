@@ -27,10 +27,7 @@ from benchmarks.density_matrix.partitioned_runtime.fusion_case_selection import 
     iter_fusion_structured_cases,
 )
 from benchmarks.density_matrix.planner_surface.common import build_software_metadata
-from squander.partitioning.noisy_runtime import (
-    PHASE3_RUNTIME_PATH_FUSED_UNITARY_ISLANDS,
-    PHASE3_RUNTIME_SCHEMA_VERSION,
-)
+from squander.partitioning.noisy_runtime import PHASE3_RUNTIME_PATH_FUSED_UNITARY_ISLANDS
 
 SUITE_NAME = "phase3_partitioned_runtime_structured_fused_runtime"
 ARTIFACT_FILENAME = "structured_fused_runtime_bundle.json"
@@ -45,7 +42,6 @@ DEFAULT_OUTPUT_DIR = (
 ARTIFACT_CORE_FIELDS = (
     "suite_name",
     "status",
-    "runtime_schema_version",
     "software",
     "summary",
     "cases",
@@ -63,7 +59,6 @@ def _fused_case(metadata: dict, descriptor_set, parameters) -> dict:
         "family_name": metadata["family_name"],
         "qbit_num": metadata["qbit_num"],
         "noise_pattern": metadata["noise_pattern"],
-        "runtime_schema_version": payload["runtime_schema_version"],
         "runtime_path": payload["runtime_path"],
         "partition_count": payload["summary"]["partition_count"],
         "fused_region_count": payload["summary"]["fused_region_count"],
@@ -76,8 +71,7 @@ def _fused_case(metadata: dict, descriptor_set, parameters) -> dict:
         "frobenius_norm_diff": density_metrics["frobenius_norm_diff"],
         "max_abs_diff": density_metrics["max_abs_diff"],
         "structured_fused_runtime_pass": (
-            payload["runtime_schema_version"] == PHASE3_RUNTIME_SCHEMA_VERSION
-            and payload["runtime_path"] == PHASE3_RUNTIME_PATH_FUSED_UNITARY_ISLANDS
+            payload["runtime_path"] == PHASE3_RUNTIME_PATH_FUSED_UNITARY_ISLANDS
             and payload["summary"]["actual_fused_execution"] is True
             and payload["summary"]["fused_region_count"] > 0
             and density_metrics["frobenius_norm_diff"] <= PHASE3_RUNTIME_DENSITY_TOL
@@ -112,7 +106,6 @@ def build_artifact_bundle(cases: list[dict]) -> dict:
     bundle = {
         "suite_name": SUITE_NAME,
         "status": "pass" if fused_passes == len(cases) else "fail",
-        "runtime_schema_version": PHASE3_RUNTIME_SCHEMA_VERSION,
         "software": build_software_metadata(),
         "summary": {
             "total_cases": len(cases),

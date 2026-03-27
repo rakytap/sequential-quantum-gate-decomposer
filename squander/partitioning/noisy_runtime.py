@@ -18,7 +18,6 @@ from squander.partitioning.noisy_planner import (
     validate_partition_descriptor_set,
 )
 
-PHASE3_RUNTIME_SCHEMA_VERSION = "phase3_partitioned_density_runtime_v1"
 PHASE3_RUNTIME_PATH_BASELINE = "partitioned_density_descriptor_baseline"
 PHASE3_RUNTIME_PATH_FUSED_UNITARY_ISLANDS = (
     "partitioned_density_descriptor_fused_unitary_islands"
@@ -46,7 +45,6 @@ class NoisyRuntimeValidationError(ValueError):
         source_type: str,
         requested_mode: str,
         workload_id: str,
-        descriptor_schema_version: str,
         runtime_path: str,
         reason: str,
     ) -> None:
@@ -57,7 +55,6 @@ class NoisyRuntimeValidationError(ValueError):
         self.source_type = source_type
         self.requested_mode = requested_mode
         self.workload_id = workload_id
-        self.descriptor_schema_version = descriptor_schema_version
         self.runtime_path = runtime_path
         self.reason = reason
 
@@ -69,7 +66,6 @@ class NoisyRuntimeValidationError(ValueError):
             "source_type": self.source_type,
             "requested_mode": self.requested_mode,
             "workload_id": self.workload_id,
-            "descriptor_schema_version": self.descriptor_schema_version,
             "runtime_path": self.runtime_path,
             "reason": self.reason,
         }
@@ -158,9 +154,6 @@ class NoisyRuntimeFusedRegionRecord:
 
 @dataclass(frozen=True)
 class NoisyRuntimeExecutionResult:
-    runtime_schema_version: str
-    planner_schema_version: str
-    descriptor_schema_version: str
     requested_mode: str
     source_type: str
     workload_id: str
@@ -300,9 +293,6 @@ class NoisyRuntimeExecutionResult:
 
     def to_dict(self, *, include_density_matrix: bool = False) -> dict[str, Any]:
         return {
-            "runtime_schema_version": self.runtime_schema_version,
-            "planner_schema_version": self.planner_schema_version,
-            "descriptor_schema_version": self.descriptor_schema_version,
             "requested_mode": self.requested_mode,
             "source_type": self.source_type,
             "workload_id": self.workload_id,
@@ -363,7 +353,6 @@ def _runtime_error(
         source_type=descriptor_set.source_type,
         requested_mode=descriptor_set.requested_mode,
         workload_id=descriptor_set.workload_id,
-        descriptor_schema_version=descriptor_set.schema_version,
         runtime_path=runtime_path,
         reason=reason,
     )
@@ -503,6 +492,12 @@ def _validate_supported_member(
     )
 
 
+##
+# @brief Validate a runtime request.
+# @param descriptor_set: A descriptor set.
+# @param parameters: A list of parameters.
+# @param runtime_path: The runtime path to use.
+# @return A tuple of a validated descriptor set and a parameter vector.
 def validate_runtime_request(
     descriptor_set: NoisyPartitionDescriptorSet,
     parameters: Iterable[float],
@@ -861,6 +856,11 @@ def _execute_member_sequence(
         ) from exc
 
 
+##
+# @brief Iterate over member segments.
+# A member segment is a tuple of booleans and tuples of members, where the boolean is True if the members are all unitary and False otherwise.
+# @param members: A tuple of members.
+# @return A tuple of tuples of booleans and tuples of members, where each tuple is a segment.
 def _iter_member_segments(
     members: tuple[NoisyPartitionDescriptorMember, ...],
 ) -> tuple[tuple[bool, tuple[NoisyPartitionDescriptorMember, ...]], ...]:
@@ -1245,6 +1245,13 @@ def _peak_rss_kb() -> int:
     return int(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
 
 
+##
+# @brief Execute a partitioned density.
+# @param descriptor_set: A descriptor set.
+# @param parameters: A list of parameters.
+# @param runtime_path: The runtime path to use.
+# @param allow_fusion: Whether to allow fusion.
+# @return A runtime execution result.
 def execute_partitioned_density(
     descriptor_set: NoisyPartitionDescriptorSet,
     parameters: Iterable[float],
@@ -1304,9 +1311,6 @@ def execute_partitioned_density(
         else PHASE3_RUNTIME_PATH_BASELINE
     )
     return NoisyRuntimeExecutionResult(
-        runtime_schema_version=PHASE3_RUNTIME_SCHEMA_VERSION,
-        planner_schema_version=validated_descriptor_set.planner_schema_version,
-        descriptor_schema_version=validated_descriptor_set.schema_version,
         requested_mode=validated_descriptor_set.requested_mode,
         source_type=validated_descriptor_set.source_type,
         workload_id=validated_descriptor_set.workload_id,
@@ -1335,6 +1339,13 @@ def execute_partitioned_density_fused(
     )
 
 
+##
+# @brief Execute a sequential density reference.
+# The sequential density reference is the exact semantic oracle for the workload.
+# @param descriptor_set: A descriptor set.
+# @param parameters: A list of parameters.
+# @param runtime_path: The runtime path to use.
+# @return A density matrix.
 def execute_sequential_density_reference(
     descriptor_set: NoisyPartitionDescriptorSet,
     parameters: Iterable[float],
@@ -1389,9 +1400,6 @@ def build_runtime_audit_record(
 ) -> dict[str, Any]:
     payload = result.to_dict(include_density_matrix=False)
     return {
-        "runtime_schema_version": payload["runtime_schema_version"],
-        "planner_schema_version": payload["planner_schema_version"],
-        "descriptor_schema_version": payload["descriptor_schema_version"],
         "requested_mode": payload["requested_mode"],
         "runtime_path": payload["runtime_path"],
         "provenance": payload["provenance"],

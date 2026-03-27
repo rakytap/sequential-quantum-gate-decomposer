@@ -2,7 +2,6 @@
   "cases": [
     {
       "case_name": "wrong_requested_mode",
-      "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "failure_stage": "runtime_preflight",
       "fallback_used": false,
       "first_unsupported_condition": "requested_mode",
@@ -17,7 +16,6 @@
     },
     {
       "case_name": "parameter_count_mismatch",
-      "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "failure_stage": "runtime_preflight",
       "fallback_used": false,
       "first_unsupported_condition": "parameter_count",
@@ -32,7 +30,6 @@
     },
     {
       "case_name": "unsupported_gate_name",
-      "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "failure_stage": "runtime_preflight",
       "fallback_used": false,
       "first_unsupported_condition": "gate_name",
@@ -47,7 +44,6 @@
     },
     {
       "case_name": "unsupported_noise_name",
-      "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "failure_stage": "runtime_preflight",
       "fallback_used": false,
       "first_unsupported_condition": "noise_name",
@@ -62,7 +58,6 @@
     },
     {
       "case_name": "gate_fixed_value",
-      "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "failure_stage": "runtime_preflight",
       "fallback_used": false,
       "first_unsupported_condition": "fixed_value",
@@ -76,7 +71,6 @@
       "workload_id": "microcase_4q_partition_boundary_triplet"
     }
   ],
-  "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
   "software": {
     "numpy": "2.3.5",
     "python": "3.13.9",

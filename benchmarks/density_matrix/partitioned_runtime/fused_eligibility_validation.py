@@ -32,7 +32,6 @@ from squander.partitioning.noisy_runtime import (
     PHASE3_FUSION_KIND_NOISE_BOUNDARY,
     PHASE3_FUSION_KIND_UNITARY_ISLAND,
     PHASE3_RUNTIME_PATH_BASELINE,
-    PHASE3_RUNTIME_SCHEMA_VERSION,
     execute_partitioned_density,
 )
 
@@ -49,7 +48,6 @@ DEFAULT_OUTPUT_DIR = (
 ARTIFACT_CORE_FIELDS = (
     "suite_name",
     "status",
-    "runtime_schema_version",
     "software",
     "summary",
     "cases",
@@ -83,7 +81,6 @@ def _case_from_runtime(metadata: dict, runtime_result) -> dict:
         "case_name": metadata["case_name"] if "case_name" in metadata else metadata["workload_id"],
         "case_kind": metadata["case_kind"],
         "workload_id": payload["workload_id"],
-        "runtime_schema_version": payload["runtime_schema_version"],
         "runtime_path": payload["runtime_path"],
         "partition_count": payload["summary"]["partition_count"],
         "eligible_unitary_region_count": len(eligible_regions),
@@ -95,8 +92,7 @@ def _case_from_runtime(metadata: dict, runtime_result) -> dict:
         ],
         "deferred_region_count": payload["summary"]["deferred_region_count"],
         "eligibility_pass": (
-            payload["runtime_schema_version"] == PHASE3_RUNTIME_SCHEMA_VERSION
-            and payload["runtime_path"] == PHASE3_RUNTIME_PATH_BASELINE
+            payload["runtime_path"] == PHASE3_RUNTIME_PATH_BASELINE
             and len(eligible_regions) > 0
             and payload["summary"]["fused_region_count"] == 0
         ),
@@ -132,7 +128,6 @@ def build_artifact_bundle(cases: list[dict]) -> dict:
     bundle = {
         "suite_name": SUITE_NAME,
         "status": "pass" if eligibility_passes == len(cases) else "fail",
-        "runtime_schema_version": PHASE3_RUNTIME_SCHEMA_VERSION,
         "software": build_software_metadata(),
         "summary": {
             "total_cases": len(cases),

@@ -20,7 +20,6 @@
       "qbit_num": 8,
       "rho_is_valid": true,
       "runtime_path": "partitioned_density_descriptor_fused_unitary_islands",
-      "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
       "supported_unfused_region_count": 11,
       "trace_deviation": 4.47362466282333e-16
     },
@@ -44,7 +43,6 @@
       "qbit_num": 10,
       "rho_is_valid": true,
       "runtime_path": "partitioned_density_descriptor_fused_unitary_islands",
-      "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
       "supported_unfused_region_count": 18,
       "trace_deviation": 1.1103269987108257e-15
     },
@@ -102,12 +100,10 @@
       "qbit_num": 2,
       "rho_is_valid": true,
       "runtime_path": "partitioned_density_descriptor_fused_unitary_islands",
-      "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
       "supported_unfused_region_count": 1,
       "trace_deviation": 2.2226670100039737e-16
     }
   ],
-  "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
   "software": {
     "numpy": "2.3.5",
     "python": "3.13.9",

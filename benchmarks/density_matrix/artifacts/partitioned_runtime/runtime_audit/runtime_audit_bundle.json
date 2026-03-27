@@ -2,7 +2,6 @@
   "cases": [
     {
       "case_name": "phase2_xxz_hea_q4_continuity",
-      "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "exact_output": {
         "density_imag": null,
         "density_real": null,
@@ -433,14 +432,12 @@
           "runtime_circuit_qbit_num": 4
         }
       ],
-      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "provenance": {
         "source_type": "generated_hea",
         "workload_id": "phase2_xxz_hea_q4_continuity"
       },
       "requested_mode": "partitioned_density",
       "runtime_path": "partitioned_density_descriptor_baseline",
-      "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
       "summary": {
         "actual_fused_execution": false,
         "deferred_region_count": 1,
@@ -479,7 +476,6 @@
     },
     {
       "case_name": "microcase_2q_entangler_local_depolarizing",
-      "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "exact_output": {
         "density_imag": null,
         "density_real": null,
@@ -696,14 +692,12 @@
           "runtime_circuit_qbit_num": 2
         }
       ],
-      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "provenance": {
         "source_type": "microcase_builder",
         "workload_id": "microcase_2q_entangler_local_depolarizing"
       },
       "requested_mode": "partitioned_density",
       "runtime_path": "partitioned_density_descriptor_baseline",
-      "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
       "summary": {
         "actual_fused_execution": false,
         "deferred_region_count": 1,
@@ -738,7 +732,6 @@
     },
     {
       "case_name": "layered_nearest_neighbor_q8_sparse_seed20260318",
-      "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "exact_output": {
         "density_imag": null,
         "density_real": null,
@@ -2453,14 +2446,12 @@
           "runtime_circuit_qbit_num": 8
         }
       ],
-      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "provenance": {
         "source_type": "structured_family_builder",
         "workload_id": "layered_nearest_neighbor_q8_sparse_seed20260318"
       },
       "requested_mode": "partitioned_density",
       "runtime_path": "partitioned_density_descriptor_baseline",
-      "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
       "summary": {
         "actual_fused_execution": false,
         "deferred_region_count": 0,
@@ -2517,7 +2508,6 @@
       }
     }
   ],
-  "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
   "software": {
     "numpy": "2.3.5",
     "python": "3.13.9",

@@ -43,8 +43,7 @@
         "seed": 20260318,
         "workload_id": "layered_nearest_neighbor_q8_sparse_seed20260318"
       },
-      "runtime_path": "partitioned_density_descriptor_fused_unitary_islands",
-      "runtime_schema_version": "phase3_partitioned_density_runtime_v1"
+      "runtime_path": "partitioned_density_descriptor_fused_unitary_islands"
     },
     {
       "actual_fused_execution": true,
@@ -89,8 +88,7 @@
         "seed": 20260318,
         "workload_id": "layered_nearest_neighbor_q8_periodic_seed20260318"
       },
-      "runtime_path": "partitioned_density_descriptor_fused_unitary_islands",
-      "runtime_schema_version": "phase3_partitioned_density_runtime_v1"
+      "runtime_path": "partitioned_density_descriptor_fused_unitary_islands"
     },
     {
       "actual_fused_execution": true,
@@ -136,8 +134,7 @@
         "seed": 20260318,
         "workload_id": "layered_nearest_neighbor_q8_dense_seed20260318"
       },
-      "runtime_path": "partitioned_density_descriptor_fused_unitary_islands",
-      "runtime_schema_version": "phase3_partitioned_density_runtime_v1"
+      "runtime_path": "partitioned_density_descriptor_fused_unitary_islands"
     },
     {
       "actual_fused_execution": true,
@@ -197,8 +194,7 @@
         "seed": 20260318,
         "workload_id": "layered_nearest_neighbor_q10_sparse_seed20260318"
       },
-      "runtime_path": "partitioned_density_descriptor_fused_unitary_islands",
-      "runtime_schema_version": "phase3_partitioned_density_runtime_v1"
+      "runtime_path": "partitioned_density_descriptor_fused_unitary_islands"
     },
     {
       "actual_fused_execution": true,
@@ -258,8 +254,7 @@
         "seed": 20260318,
         "workload_id": "layered_nearest_neighbor_q10_periodic_seed20260318"
       },
-      "runtime_path": "partitioned_density_descriptor_fused_unitary_islands",
-      "runtime_schema_version": "phase3_partitioned_density_runtime_v1"
+      "runtime_path": "partitioned_density_descriptor_fused_unitary_islands"
     },
     {
       "actual_fused_execution": true,
@@ -321,8 +316,7 @@
         "seed": 20260318,
         "workload_id": "layered_nearest_neighbor_q10_dense_seed20260318"
       },
-      "runtime_path": "partitioned_density_descriptor_fused_unitary_islands",
-      "runtime_schema_version": "phase3_partitioned_density_runtime_v1"
+      "runtime_path": "partitioned_density_descriptor_fused_unitary_islands"
     },
     {
       "actual_fused_execution": true,
@@ -367,8 +361,7 @@
         "seed": 20260318,
         "workload_id": "seeded_random_layered_q8_sparse_seed20260318"
       },
-      "runtime_path": "partitioned_density_descriptor_fused_unitary_islands",
-      "runtime_schema_version": "phase3_partitioned_density_runtime_v1"
+      "runtime_path": "partitioned_density_descriptor_fused_unitary_islands"
     },
     {
       "actual_fused_execution": true,
@@ -413,8 +406,7 @@
         "seed": 20260318,
         "workload_id": "seeded_random_layered_q8_periodic_seed20260318"
       },
-      "runtime_path": "partitioned_density_descriptor_fused_unitary_islands",
-      "runtime_schema_version": "phase3_partitioned_density_runtime_v1"
+      "runtime_path": "partitioned_density_descriptor_fused_unitary_islands"
     },
     {
       "actual_fused_execution": true,
@@ -460,8 +452,7 @@
         "seed": 20260318,
         "workload_id": "seeded_random_layered_q8_dense_seed20260318"
       },
-      "runtime_path": "partitioned_density_descriptor_fused_unitary_islands",
-      "runtime_schema_version": "phase3_partitioned_density_runtime_v1"
+      "runtime_path": "partitioned_density_descriptor_fused_unitary_islands"
     },
     {
       "actual_fused_execution": true,
@@ -521,8 +512,7 @@
         "seed": 20260318,
         "workload_id": "seeded_random_layered_q10_sparse_seed20260318"
       },
-      "runtime_path": "partitioned_density_descriptor_fused_unitary_islands",
-      "runtime_schema_version": "phase3_partitioned_density_runtime_v1"
+      "runtime_path": "partitioned_density_descriptor_fused_unitary_islands"
     },
     {
       "actual_fused_execution": true,
@@ -582,8 +572,7 @@
         "seed": 20260318,
         "workload_id": "seeded_random_layered_q10_periodic_seed20260318"
       },
-      "runtime_path": "partitioned_density_descriptor_fused_unitary_islands",
-      "runtime_schema_version": "phase3_partitioned_density_runtime_v1"
+      "runtime_path": "partitioned_density_descriptor_fused_unitary_islands"
     },
     {
       "actual_fused_execution": true,
@@ -645,8 +634,7 @@
         "seed": 20260318,
         "workload_id": "seeded_random_layered_q10_dense_seed20260318"
       },
-      "runtime_path": "partitioned_density_descriptor_fused_unitary_islands",
-      "runtime_schema_version": "phase3_partitioned_density_runtime_v1"
+      "runtime_path": "partitioned_density_descriptor_fused_unitary_islands"
     },
     {
       "actual_fused_execution": true,
@@ -699,8 +687,7 @@
         "seed": 20260318,
         "workload_id": "partition_stress_ladder_q8_sparse_seed20260318"
       },
-      "runtime_path": "partitioned_density_descriptor_fused_unitary_islands",
-      "runtime_schema_version": "phase3_partitioned_density_runtime_v1"
+      "runtime_path": "partitioned_density_descriptor_fused_unitary_islands"
     },
     {
       "actual_fused_execution": true,
@@ -755,11 +742,9 @@
         "seed": 20260318,
         "workload_id": "partition_stress_ladder_q8_periodic_seed20260318"
       },
-      "runtime_path": "partitioned_density_descriptor_fused_unitary_islands",
-      "runtime_schema_version": "phase3_partitioned_density_runtime_v1"
+      "runtime_path": "partitioned_density_descriptor_fused_unitary_islands"
     }
   ],
-  "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
   "software": {
     "numpy": "2.3.5",
     "python": "3.13.9",

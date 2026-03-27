@@ -37,10 +37,7 @@ from squander.partitioning.noisy_planner import (
     PARTITIONED_DENSITY_MODE,
     build_phase3_continuity_partition_descriptor_set,
 )
-from squander.partitioning.noisy_runtime import (
-    PHASE3_RUNTIME_PATH_BASELINE,
-    PHASE3_RUNTIME_SCHEMA_VERSION,
-)
+from squander.partitioning.noisy_runtime import PHASE3_RUNTIME_PATH_BASELINE
 
 SUITE_NAME = "phase3_partitioned_runtime_continuity_runtime"
 ARTIFACT_FILENAME = "continuity_runtime_bundle.json"
@@ -56,7 +53,6 @@ REQUIRED_QUBITS = (4, 6, 8, 10)
 ARTIFACT_CORE_FIELDS = (
     "suite_name",
     "status",
-    "runtime_schema_version",
     "software",
     "summary",
     "cases",
@@ -95,9 +91,6 @@ def build_case_result(qbit_num: int) -> dict:
             "case_kind": "phase3_partitioned_runtime_continuity_runtime",
             "status": "pass" if energy_pass and density_pass and runtime_result.rho_is_valid else "fail",
             "requested_mode": runtime_payload["requested_mode"],
-            "runtime_schema_version": runtime_payload["runtime_schema_version"],
-            "planner_schema_version": runtime_payload["planner_schema_version"],
-            "descriptor_schema_version": runtime_payload["descriptor_schema_version"],
             "source_type": runtime_payload["source_type"],
             "workload_id": runtime_payload["workload_id"],
             "parameter_count": runtime_payload["parameter_count"],
@@ -131,7 +124,6 @@ def build_case_result(qbit_num: int) -> dict:
             "runtime_partitions": runtime_payload["partitions"],
             "continuity_runtime_pass": (
                 runtime_payload["requested_mode"] == PARTITIONED_DENSITY_MODE
-                and runtime_payload["runtime_schema_version"] == PHASE3_RUNTIME_SCHEMA_VERSION
                 and runtime_payload["runtime_path"] == PHASE3_RUNTIME_PATH_BASELINE
                 and runtime_payload["summary"]["partition_count"] > 0
                 and runtime_payload["summary"]["fallback_used"] is False
@@ -152,7 +144,6 @@ def build_artifact_bundle(cases: list[dict]) -> dict:
         "status": "pass"
         if passed_cases == len(cases) and continuity_runtime_passes == len(cases)
         else "fail",
-        "runtime_schema_version": PHASE3_RUNTIME_SCHEMA_VERSION,
         "software": build_software_metadata(),
         "summary": {
             "total_cases": len(cases),

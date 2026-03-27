@@ -154,9 +154,6 @@ def _apply_correctness_evidence_reference_fields(
     record: dict, correctness_evidence_reference: dict
 ) -> None:
     for field in (
-        "runtime_schema_version",
-        "planner_schema_version",
-        "descriptor_schema_version",
         "runtime_path",
         "supported_runtime_case",
         "fallback_used",
@@ -265,9 +262,6 @@ def build_performance_evidence_core_benchmark_record(case_context) -> dict:
 
         record.update(
             {
-                "runtime_schema_version": runtime_payload["runtime_schema_version"],
-                "planner_schema_version": runtime_payload["planner_schema_version"],
-                "descriptor_schema_version": runtime_payload["descriptor_schema_version"],
                 "runtime_path": runtime_payload["runtime_path"],
                 "supported_runtime_case": (
                     runtime_payload["summary"]["exact_output_present"]

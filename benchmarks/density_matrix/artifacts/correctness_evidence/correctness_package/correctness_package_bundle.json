@@ -13,7 +13,6 @@
       "correctness_matrix_pass": true,
       "deferred_region_count": 4,
       "descriptor_member_count": 12,
-      "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "exact_output": {
         "density_imag": null,
         "density_real": null,
@@ -414,7 +413,6 @@
       "planner_calibration_claim_selection_schema_version": "phase3_planner_calibration_claim_selection_v1",
       "planner_calibration_selected_candidate_id": "span_budget_q4",
       "planner_family": "phase3_span_budget",
-      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "planner_settings": {
         "max_partition_qubits": 4
       },
@@ -430,7 +428,6 @@
       "runtime_ms": 0.6559430039487779,
       "runtime_path": "partitioned_density_descriptor_fused_unitary_islands",
       "runtime_path_classification": "actually_fused",
-      "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
       "seed": null,
       "source_type": "generated_hea",
       "supported_runtime_case": true,
@@ -467,7 +464,6 @@
       "correctness_matrix_pass": true,
       "deferred_region_count": 5,
       "descriptor_member_count": 18,
-      "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "exact_output": {
         "density_imag": null,
         "density_real": null,
@@ -991,7 +987,6 @@
       "planner_calibration_claim_selection_schema_version": "phase3_planner_calibration_claim_selection_v1",
       "planner_calibration_selected_candidate_id": "span_budget_q4",
       "planner_family": "phase3_span_budget",
-      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "planner_settings": {
         "max_partition_qubits": 4
       },
@@ -1007,7 +1002,6 @@
       "runtime_ms": 3.4080450423061848,
       "runtime_path": "partitioned_density_descriptor_fused_unitary_islands",
       "runtime_path_classification": "actually_fused",
-      "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
       "seed": null,
       "source_type": "generated_hea",
       "supported_runtime_case": true,
@@ -1052,7 +1046,6 @@
       "correctness_matrix_pass": true,
       "deferred_region_count": 6,
       "descriptor_member_count": 24,
-      "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "exact_output": {
         "density_imag": null,
         "density_real": null,
@@ -1707,7 +1700,6 @@
       "planner_calibration_claim_selection_schema_version": "phase3_planner_calibration_claim_selection_v1",
       "planner_calibration_selected_candidate_id": "span_budget_q4",
       "planner_family": "phase3_span_budget",
-      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "planner_settings": {
         "max_partition_qubits": 4
       },
@@ -1723,7 +1715,6 @@
       "runtime_ms": 34.489262965507805,
       "runtime_path": "partitioned_density_descriptor_fused_unitary_islands",
       "runtime_path_classification": "actually_fused",
-      "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
       "seed": null,
       "source_type": "generated_hea",
       "supported_runtime_case": true,
@@ -1776,7 +1767,6 @@
       "correctness_matrix_pass": true,
       "deferred_region_count": 7,
       "descriptor_member_count": 30,
-      "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "exact_output": {
         "density_imag": null,
         "density_real": null,
@@ -2562,7 +2552,6 @@
       "planner_calibration_claim_selection_schema_version": "phase3_planner_calibration_claim_selection_v1",
       "planner_calibration_selected_candidate_id": "span_budget_q4",
       "planner_family": "phase3_span_budget",
-      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "planner_settings": {
         "max_partition_qubits": 4
       },
@@ -2578,7 +2567,6 @@
       "runtime_ms": 564.0969880041666,
       "runtime_path": "partitioned_density_descriptor_fused_unitary_islands",
       "runtime_path_classification": "actually_fused",
-      "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
       "seed": null,
       "source_type": "generated_hea",
       "supported_runtime_case": true,
@@ -2639,7 +2627,6 @@
       "correctness_matrix_pass": true,
       "deferred_region_count": 1,
       "descriptor_member_count": 5,
-      "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "exact_output": {
         "density_imag": null,
         "density_real": null,
@@ -2846,7 +2833,6 @@
       "planner_calibration_claim_selection_schema_version": "phase3_planner_calibration_claim_selection_v1",
       "planner_calibration_selected_candidate_id": "span_budget_q4",
       "planner_family": "phase3_span_budget",
-      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "planner_settings": {
         "max_partition_qubits": 4
       },
@@ -2862,7 +2848,6 @@
       "runtime_ms": 0.4715819959528744,
       "runtime_path": "partitioned_density_descriptor_fused_unitary_islands",
       "runtime_path_classification": "actually_fused",
-      "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
       "seed": null,
       "source_type": "microcase_builder",
       "supported_runtime_case": true,
@@ -2886,7 +2871,6 @@
       "correctness_matrix_pass": true,
       "deferred_region_count": 2,
       "descriptor_member_count": 8,
-      "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "exact_output": {
         "density_imag": null,
         "density_real": null,
@@ -3182,7 +3166,6 @@
       "planner_calibration_claim_selection_schema_version": "phase3_planner_calibration_claim_selection_v1",
       "planner_calibration_selected_candidate_id": "span_budget_q4",
       "planner_family": "phase3_span_budget",
-      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "planner_settings": {
         "max_partition_qubits": 4
       },
@@ -3198,7 +3181,6 @@
       "runtime_ms": 0.3777120145969093,
       "runtime_path": "partitioned_density_descriptor_fused_unitary_islands",
       "runtime_path_classification": "actually_fused",
-      "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
       "seed": null,
       "source_type": "microcase_builder",
       "supported_runtime_case": true,
@@ -3222,7 +3204,6 @@
       "correctness_matrix_pass": true,
       "deferred_region_count": 2,
       "descriptor_member_count": 10,
-      "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "exact_output": {
         "density_imag": null,
         "density_real": null,
@@ -3543,7 +3524,6 @@
       "planner_calibration_claim_selection_schema_version": "phase3_planner_calibration_claim_selection_v1",
       "planner_calibration_selected_candidate_id": "span_budget_q4",
       "planner_family": "phase3_span_budget",
-      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "planner_settings": {
         "max_partition_qubits": 4
       },
@@ -3559,7 +3539,6 @@
       "runtime_ms": 0.43783197179436684,
       "runtime_path": "partitioned_density_descriptor_fused_unitary_islands",
       "runtime_path_classification": "actually_fused",
-      "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
       "seed": null,
       "source_type": "microcase_builder",
       "supported_runtime_case": true,
@@ -3583,7 +3562,6 @@
       "correctness_matrix_pass": true,
       "deferred_region_count": 11,
       "descriptor_member_count": 37,
-      "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "exact_output": {
         "density_imag": null,
         "density_real": null,
@@ -4853,7 +4831,6 @@
       "planner_calibration_claim_selection_schema_version": "phase3_planner_calibration_claim_selection_v1",
       "planner_calibration_selected_candidate_id": "span_budget_q4",
       "planner_family": "phase3_span_budget",
-      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "planner_settings": {
         "max_partition_qubits": 4
       },
@@ -4869,7 +4846,6 @@
       "runtime_ms": 29.012051003519446,
       "runtime_path": "partitioned_density_descriptor_baseline",
       "runtime_path_classification": "supported_but_unfused",
-      "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
       "seed": 20260318,
       "source_type": "structured_family_builder",
       "supported_runtime_case": true,
@@ -4893,7 +4869,6 @@
       "correctness_matrix_pass": true,
       "deferred_region_count": 11,
       "descriptor_member_count": 38,
-      "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "exact_output": {
         "density_imag": null,
         "density_real": null,
@@ -6216,7 +6191,6 @@
       "planner_calibration_claim_selection_schema_version": "phase3_planner_calibration_claim_selection_v1",
       "planner_calibration_selected_candidate_id": "span_budget_q4",
       "planner_family": "phase3_span_budget",
-      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "planner_settings": {
         "max_partition_qubits": 4
       },
@@ -6232,7 +6206,6 @@
       "runtime_ms": 33.653640013653785,
       "runtime_path": "partitioned_density_descriptor_fused_unitary_islands",
       "runtime_path_classification": "actually_fused",
-      "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
       "seed": 20260318,
       "source_type": "structured_family_builder",
       "supported_runtime_case": true,
@@ -6256,7 +6229,6 @@
       "correctness_matrix_pass": true,
       "deferred_region_count": 11,
       "descriptor_member_count": 46,
-      "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "exact_output": {
         "density_imag": null,
         "density_real": null,
@@ -7654,7 +7626,6 @@
       "planner_calibration_claim_selection_schema_version": "phase3_planner_calibration_claim_selection_v1",
       "planner_calibration_selected_candidate_id": "span_budget_q4",
       "planner_family": "phase3_span_budget",
-      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "planner_settings": {
         "max_partition_qubits": 4
       },
@@ -7670,7 +7641,6 @@
       "runtime_ms": 37.032953987363726,
       "runtime_path": "partitioned_density_descriptor_baseline",
       "runtime_path_classification": "supported_but_unfused",
-      "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
       "seed": 20260318,
       "source_type": "structured_family_builder",
       "supported_runtime_case": true,
@@ -7694,7 +7664,6 @@
       "correctness_matrix_pass": true,
       "deferred_region_count": 19,
       "descriptor_member_count": 60,
-      "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "exact_output": {
         "density_imag": null,
         "density_real": null,
@@ -9771,7 +9740,6 @@
       "planner_calibration_claim_selection_schema_version": "phase3_planner_calibration_claim_selection_v1",
       "planner_calibration_selected_candidate_id": "span_budget_q4",
       "planner_family": "phase3_span_budget",
-      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "planner_settings": {
         "max_partition_qubits": 4
       },
@@ -9787,7 +9755,6 @@
       "runtime_ms": 838.9659930253401,
       "runtime_path": "partitioned_density_descriptor_fused_unitary_islands",
       "runtime_path_classification": "actually_fused",
-      "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
       "seed": 20260318,
       "source_type": "structured_family_builder",
       "supported_runtime_case": true,
@@ -9811,7 +9778,6 @@
       "correctness_matrix_pass": true,
       "deferred_region_count": 19,
       "descriptor_member_count": 62,
-      "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "exact_output": {
         "density_imag": null,
         "density_real": null,
@@ -11950,7 +11916,6 @@
       "planner_calibration_claim_selection_schema_version": "phase3_planner_calibration_claim_selection_v1",
       "planner_calibration_selected_candidate_id": "span_budget_q4",
       "planner_family": "phase3_span_budget",
-      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "planner_settings": {
         "max_partition_qubits": 4
       },
@@ -11966,7 +11931,6 @@
       "runtime_ms": 1016.5582820191048,
       "runtime_path": "partitioned_density_descriptor_fused_unitary_islands",
       "runtime_path_classification": "actually_fused",
-      "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
       "seed": 20260318,
       "source_type": "structured_family_builder",
       "supported_runtime_case": true,
@@ -11990,7 +11954,6 @@
       "correctness_matrix_pass": true,
       "deferred_region_count": 20,
       "descriptor_member_count": 76,
-      "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "exact_output": {
         "density_imag": null,
         "density_real": null,
@@ -14305,7 +14268,6 @@
       "planner_calibration_claim_selection_schema_version": "phase3_planner_calibration_claim_selection_v1",
       "planner_calibration_selected_candidate_id": "span_budget_q4",
       "planner_family": "phase3_span_budget",
-      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "planner_settings": {
         "max_partition_qubits": 4
       },
@@ -14321,7 +14283,6 @@
       "runtime_ms": 1138.914440991357,
       "runtime_path": "partitioned_density_descriptor_baseline",
       "runtime_path_classification": "deferred_or_unsupported_candidate",
-      "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
       "seed": 20260318,
       "source_type": "structured_family_builder",
       "supported_runtime_case": true,
@@ -14345,7 +14306,6 @@
       "correctness_matrix_pass": true,
       "deferred_region_count": 11,
       "descriptor_member_count": 37,
-      "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "exact_output": {
         "density_imag": null,
         "density_real": null,
@@ -15615,7 +15575,6 @@
       "planner_calibration_claim_selection_schema_version": "phase3_planner_calibration_claim_selection_v1",
       "planner_calibration_selected_candidate_id": "span_budget_q4",
       "planner_family": "phase3_span_budget",
-      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "planner_settings": {
         "max_partition_qubits": 4
       },
@@ -15631,7 +15590,6 @@
       "runtime_ms": 28.32597802625969,
       "runtime_path": "partitioned_density_descriptor_baseline",
       "runtime_path_classification": "supported_but_unfused",
-      "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
       "seed": 20260318,
       "source_type": "structured_family_builder",
       "supported_runtime_case": true,
@@ -15655,7 +15613,6 @@
       "correctness_matrix_pass": true,
       "deferred_region_count": 11,
       "descriptor_member_count": 38,
-      "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "exact_output": {
         "density_imag": null,
         "density_real": null,
@@ -16978,7 +16935,6 @@
       "planner_calibration_claim_selection_schema_version": "phase3_planner_calibration_claim_selection_v1",
       "planner_calibration_selected_candidate_id": "span_budget_q4",
       "planner_family": "phase3_span_budget",
-      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "planner_settings": {
         "max_partition_qubits": 4
       },
@@ -16994,7 +16950,6 @@
       "runtime_ms": 33.52752898354083,
       "runtime_path": "partitioned_density_descriptor_fused_unitary_islands",
       "runtime_path_classification": "actually_fused",
-      "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
       "seed": 20260318,
       "source_type": "structured_family_builder",
       "supported_runtime_case": true,
@@ -17018,7 +16973,6 @@
       "correctness_matrix_pass": true,
       "deferred_region_count": 11,
       "descriptor_member_count": 46,
-      "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "exact_output": {
         "density_imag": null,
         "density_real": null,
@@ -18429,7 +18383,6 @@
       "planner_calibration_claim_selection_schema_version": "phase3_planner_calibration_claim_selection_v1",
       "planner_calibration_selected_candidate_id": "span_budget_q4",
       "planner_family": "phase3_span_budget",
-      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "planner_settings": {
         "max_partition_qubits": 4
       },
@@ -18445,7 +18398,6 @@
       "runtime_ms": 36.631472990848124,
       "runtime_path": "partitioned_density_descriptor_baseline",
       "runtime_path_classification": "supported_but_unfused",
-      "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
       "seed": 20260318,
       "source_type": "structured_family_builder",
       "supported_runtime_case": true,
@@ -18469,7 +18421,6 @@
       "correctness_matrix_pass": true,
       "deferred_region_count": 19,
       "descriptor_member_count": 60,
-      "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "exact_output": {
         "density_imag": null,
         "density_real": null,
@@ -20546,7 +20497,6 @@
       "planner_calibration_claim_selection_schema_version": "phase3_planner_calibration_claim_selection_v1",
       "planner_calibration_selected_candidate_id": "span_budget_q4",
       "planner_family": "phase3_span_budget",
-      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "planner_settings": {
         "max_partition_qubits": 4
       },
@@ -20562,7 +20512,6 @@
       "runtime_ms": 834.23264301382,
       "runtime_path": "partitioned_density_descriptor_fused_unitary_islands",
       "runtime_path_classification": "actually_fused",
-      "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
       "seed": 20260318,
       "source_type": "structured_family_builder",
       "supported_runtime_case": true,
@@ -20586,7 +20535,6 @@
       "correctness_matrix_pass": true,
       "deferred_region_count": 19,
       "descriptor_member_count": 62,
-      "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "exact_output": {
         "density_imag": null,
         "density_real": null,
@@ -22725,7 +22673,6 @@
       "planner_calibration_claim_selection_schema_version": "phase3_planner_calibration_claim_selection_v1",
       "planner_calibration_selected_candidate_id": "span_budget_q4",
       "planner_family": "phase3_span_budget",
-      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "planner_settings": {
         "max_partition_qubits": 4
       },
@@ -22741,7 +22688,6 @@
       "runtime_ms": 978.6137840128504,
       "runtime_path": "partitioned_density_descriptor_fused_unitary_islands",
       "runtime_path_classification": "actually_fused",
-      "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
       "seed": 20260318,
       "source_type": "structured_family_builder",
       "supported_runtime_case": true,
@@ -22765,7 +22711,6 @@
       "correctness_matrix_pass": true,
       "deferred_region_count": 20,
       "descriptor_member_count": 76,
-      "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "exact_output": {
         "density_imag": null,
         "density_real": null,
@@ -25080,7 +25025,6 @@
       "planner_calibration_claim_selection_schema_version": "phase3_planner_calibration_claim_selection_v1",
       "planner_calibration_selected_candidate_id": "span_budget_q4",
       "planner_family": "phase3_span_budget",
-      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "planner_settings": {
         "max_partition_qubits": 4
       },
@@ -25096,7 +25040,6 @@
       "runtime_ms": 1101.6790459980257,
       "runtime_path": "partitioned_density_descriptor_baseline",
       "runtime_path_classification": "deferred_or_unsupported_candidate",
-      "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
       "seed": 20260318,
       "source_type": "structured_family_builder",
       "supported_runtime_case": true,
@@ -25120,7 +25063,6 @@
       "correctness_matrix_pass": true,
       "deferred_region_count": 12,
       "descriptor_member_count": 47,
-      "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "exact_output": {
         "density_imag": null,
         "density_real": null,
@@ -26580,7 +26522,6 @@
       "planner_calibration_claim_selection_schema_version": "phase3_planner_calibration_claim_selection_v1",
       "planner_calibration_selected_candidate_id": "span_budget_q4",
       "planner_family": "phase3_span_budget",
-      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "planner_settings": {
         "max_partition_qubits": 4
       },
@@ -26596,7 +26537,6 @@
       "runtime_ms": 57.62982997111976,
       "runtime_path": "partitioned_density_descriptor_fused_unitary_islands",
       "runtime_path_classification": "actually_fused",
-      "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
       "seed": 20260318,
       "source_type": "structured_family_builder",
       "supported_runtime_case": true,
@@ -26620,7 +26560,6 @@
       "correctness_matrix_pass": true,
       "deferred_region_count": 13,
       "descriptor_member_count": 48,
-      "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "exact_output": {
         "density_imag": null,
         "density_real": null,
@@ -28143,7 +28082,6 @@
       "planner_calibration_claim_selection_schema_version": "phase3_planner_calibration_claim_selection_v1",
       "planner_calibration_selected_candidate_id": "span_budget_q4",
       "planner_family": "phase3_span_budget",
-      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "planner_settings": {
         "max_partition_qubits": 4
       },
@@ -28159,7 +28097,6 @@
       "runtime_ms": 41.620492993388325,
       "runtime_path": "partitioned_density_descriptor_fused_unitary_islands",
       "runtime_path_classification": "actually_fused",
-      "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
       "seed": 20260318,
       "source_type": "structured_family_builder",
       "supported_runtime_case": true,
@@ -28183,7 +28120,6 @@
       "correctness_matrix_pass": true,
       "deferred_region_count": 12,
       "descriptor_member_count": 66,
-      "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "exact_output": {
         "density_imag": null,
         "density_real": null,
@@ -29962,7 +29898,6 @@
       "planner_calibration_claim_selection_schema_version": "phase3_planner_calibration_claim_selection_v1",
       "planner_calibration_selected_candidate_id": "span_budget_q4",
       "planner_family": "phase3_span_budget",
-      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "planner_settings": {
         "max_partition_qubits": 4
       },
@@ -29978,7 +29913,6 @@
       "runtime_ms": 53.68903296766803,
       "runtime_path": "partitioned_density_descriptor_baseline",
       "runtime_path_classification": "supported_but_unfused",
-      "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
       "seed": 20260318,
       "source_type": "structured_family_builder",
       "supported_runtime_case": true,
@@ -30002,7 +29936,6 @@
       "correctness_matrix_pass": true,
       "deferred_region_count": 21,
       "descriptor_member_count": 78,
-      "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "exact_output": {
         "density_imag": null,
         "density_real": null,
@@ -32275,7 +32208,6 @@
       "planner_calibration_claim_selection_schema_version": "phase3_planner_calibration_claim_selection_v1",
       "planner_calibration_selected_candidate_id": "span_budget_q4",
       "planner_family": "phase3_span_budget",
-      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "planner_settings": {
         "max_partition_qubits": 4
       },
@@ -32291,7 +32223,6 @@
       "runtime_ms": 1001.4047989971004,
       "runtime_path": "partitioned_density_descriptor_baseline",
       "runtime_path_classification": "deferred_or_unsupported_candidate",
-      "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
       "seed": 20260318,
       "source_type": "structured_family_builder",
       "supported_runtime_case": true,
@@ -32315,7 +32246,6 @@
       "correctness_matrix_pass": true,
       "deferred_region_count": 25,
       "descriptor_member_count": 80,
-      "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "exact_output": {
         "density_imag": null,
         "density_real": null,
@@ -34788,7 +34718,6 @@
       "planner_calibration_claim_selection_schema_version": "phase3_planner_calibration_claim_selection_v1",
       "planner_calibration_selected_candidate_id": "span_budget_q4",
       "planner_family": "phase3_span_budget",
-      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "planner_settings": {
         "max_partition_qubits": 4
       },
@@ -34804,7 +34733,6 @@
       "runtime_ms": 1074.550163000822,
       "runtime_path": "partitioned_density_descriptor_baseline",
       "runtime_path_classification": "supported_but_unfused",
-      "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
       "seed": 20260318,
       "source_type": "structured_family_builder",
       "supported_runtime_case": true,
@@ -34828,7 +34756,6 @@
       "correctness_matrix_pass": true,
       "deferred_region_count": 22,
       "descriptor_member_count": 112,
-      "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "exact_output": {
         "density_imag": null,
         "density_real": null,
@@ -37691,7 +37618,6 @@
       "planner_calibration_claim_selection_schema_version": "phase3_planner_calibration_claim_selection_v1",
       "planner_calibration_selected_candidate_id": "span_budget_q4",
       "planner_family": "phase3_span_budget",
-      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "planner_settings": {
         "max_partition_qubits": 4
       },
@@ -37707,7 +37633,6 @@
       "runtime_ms": 1775.7012420333922,
       "runtime_path": "partitioned_density_descriptor_baseline",
       "runtime_path_classification": "deferred_or_unsupported_candidate",
-      "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
       "seed": 20260318,
       "source_type": "structured_family_builder",
       "supported_runtime_case": true,
@@ -37723,7 +37648,6 @@
     {
       "boundary_stage": "planner_entry",
       "case_name": "unsupported_source_type",
-      "descriptor_schema_version": null,
       "failure_stage": "planner_entry_preflight",
       "fallback_used": false,
       "first_unsupported_condition": "binary_import",
@@ -37742,7 +37666,6 @@
     {
       "boundary_stage": "planner_entry",
       "case_name": "missing_source_payload",
-      "descriptor_schema_version": null,
       "failure_stage": "planner_entry_preflight",
       "fallback_used": false,
       "first_unsupported_condition": "missing_source_payload",
@@ -37761,7 +37684,6 @@
     {
       "boundary_stage": "planner_entry",
       "case_name": "unsupported_mode_claim",
-      "descriptor_schema_version": null,
       "failure_stage": "planner_entry_preflight",
       "fallback_used": false,
       "first_unsupported_condition": "unsupported_mode",
@@ -37780,7 +37702,6 @@
     {
       "boundary_stage": "planner_entry",
       "case_name": "unsupported_noise_model",
-      "descriptor_schema_version": null,
       "failure_stage": "planner_entry_preflight",
       "fallback_used": false,
       "first_unsupported_condition": "readout_noise",
@@ -37799,7 +37720,6 @@
     {
       "boundary_stage": "planner_entry",
       "case_name": "legacy_gate_family_h",
-      "descriptor_schema_version": null,
       "failure_stage": "planner_entry_preflight",
       "fallback_used": false,
       "first_unsupported_condition": "H",
@@ -37818,7 +37738,6 @@
     {
       "boundary_stage": "planner_entry",
       "case_name": "invalid_noise_insertion_index",
-      "descriptor_schema_version": null,
       "failure_stage": "planner_entry_preflight",
       "fallback_used": false,
       "first_unsupported_condition": "after_gate_index",
@@ -37837,7 +37756,6 @@
     {
       "boundary_stage": "descriptor_generation",
       "case_name": "partition_qubits_too_small",
-      "descriptor_schema_version": null,
       "failure_stage": "descriptor_generation_preflight",
       "fallback_used": false,
       "first_unsupported_condition": "max_partition_qubits",
@@ -37856,7 +37774,6 @@
     {
       "boundary_stage": "descriptor_generation",
       "case_name": "dropped_operation",
-      "descriptor_schema_version": null,
       "failure_stage": "descriptor_validation",
       "fallback_used": false,
       "first_unsupported_condition": "operation_count",
@@ -37875,7 +37792,6 @@
     {
       "boundary_stage": "descriptor_generation",
       "case_name": "hidden_noise_placement",
-      "descriptor_schema_version": null,
       "failure_stage": "descriptor_validation",
       "fallback_used": false,
       "first_unsupported_condition": "noise_count",
@@ -37894,7 +37810,6 @@
     {
       "boundary_stage": "descriptor_generation",
       "case_name": "incomplete_remapping",
-      "descriptor_schema_version": null,
       "failure_stage": "descriptor_validation",
       "fallback_used": false,
       "first_unsupported_condition": "local_target_qbit",
@@ -37913,7 +37828,6 @@
     {
       "boundary_stage": "descriptor_generation",
       "case_name": "ambiguous_parameter_routing",
-      "descriptor_schema_version": null,
       "failure_stage": "descriptor_validation",
       "fallback_used": false,
       "first_unsupported_condition": "local_param_start",
@@ -37932,7 +37846,6 @@
     {
       "boundary_stage": "descriptor_generation",
       "case_name": "reordering_across_noise_boundaries",
-      "descriptor_schema_version": null,
       "failure_stage": "descriptor_validation",
       "fallback_used": false,
       "first_unsupported_condition": "canonical_operation_indices",
@@ -37951,7 +37864,6 @@
     {
       "boundary_stage": "runtime_stage",
       "case_name": "wrong_requested_mode",
-      "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "failure_stage": "runtime_preflight",
       "fallback_used": false,
       "first_unsupported_condition": "requested_mode",
@@ -37970,7 +37882,6 @@
     {
       "boundary_stage": "runtime_stage",
       "case_name": "parameter_count_mismatch",
-      "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "failure_stage": "runtime_preflight",
       "fallback_used": false,
       "first_unsupported_condition": "parameter_count",
@@ -37989,7 +37900,6 @@
     {
       "boundary_stage": "runtime_stage",
       "case_name": "unsupported_gate_name",
-      "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "failure_stage": "runtime_preflight",
       "fallback_used": false,
       "first_unsupported_condition": "gate_name",
@@ -38008,7 +37918,6 @@
     {
       "boundary_stage": "runtime_stage",
       "case_name": "unsupported_noise_name",
-      "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "failure_stage": "runtime_preflight",
       "fallback_used": false,
       "first_unsupported_condition": "noise_name",
@@ -38027,7 +37936,6 @@
     {
       "boundary_stage": "runtime_stage",
       "case_name": "gate_fixed_value",
-      "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "failure_stage": "runtime_preflight",
       "fallback_used": false,
       "first_unsupported_condition": "fixed_value",

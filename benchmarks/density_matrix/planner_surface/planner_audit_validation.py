@@ -42,7 +42,6 @@ DEFAULT_OUTPUT_DIR = (
 ARTIFACT_CORE_FIELDS = (
     "suite_name",
     "status",
-    "schema_version",
     "software",
     "summary",
     "cases",
@@ -81,7 +80,6 @@ def build_artifact_bundle(cases: list[dict]) -> dict:
         "status": "pass"
         if passed_cases == len(cases) and bridge_overlap_passes == len(cases)
         else "fail",
-        "schema_version": "phase3_canonical_noisy_planner_v1",
         "software": build_software_metadata(),
         "summary": {
             "total_cases": len(cases),

@@ -79,7 +79,6 @@
       "workload_id": "microcase_4q_partition_boundary_triplet"
     }
   ],
-  "schema_version": "phase3_noisy_partition_descriptor_v1",
   "software": {
     "numpy": "2.3.5",
     "python": "3.13.9",

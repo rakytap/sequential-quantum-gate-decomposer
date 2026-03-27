@@ -487,10 +487,8 @@
         2,
         2
       ],
-      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "qbit_num": 4,
       "requested_mode": "partitioned_density",
-      "schema_version": "phase3_noisy_partition_descriptor_v1",
       "source_type": "generated_hea",
       "status": "pass",
       "workload_id": "phase2_xxz_hea_q4_continuity"
@@ -713,10 +711,8 @@
       "partition_member_counts": [
         5
       ],
-      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "qbit_num": 2,
       "requested_mode": "partitioned_density",
-      "schema_version": "phase3_noisy_partition_descriptor_v1",
       "source_type": "microcase_builder",
       "status": "pass",
       "workload_id": "microcase_2q_entangler_local_depolarizing"
@@ -1096,10 +1092,8 @@
         3,
         1
       ],
-      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "qbit_num": 3,
       "requested_mode": "partitioned_density",
-      "schema_version": "phase3_noisy_partition_descriptor_v1",
       "source_type": "microcase_builder",
       "status": "pass",
       "workload_id": "microcase_3q_mixed_local_noise_sequence"
@@ -1547,10 +1541,8 @@
         4,
         2
       ],
-      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "qbit_num": 4,
       "requested_mode": "partitioned_density",
-      "schema_version": "phase3_noisy_partition_descriptor_v1",
       "source_type": "microcase_builder",
       "status": "pass",
       "workload_id": "microcase_4q_partition_boundary_triplet"
@@ -3342,10 +3334,8 @@
         1,
         1
       ],
-      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "qbit_num": 8,
       "requested_mode": "partitioned_density",
-      "schema_version": "phase3_noisy_partition_descriptor_v1",
       "source_type": "structured_family_builder",
       "status": "pass",
       "workload_id": "layered_nearest_neighbor_q8_sparse_seed20260318"
@@ -5134,10 +5124,8 @@
         1,
         2
       ],
-      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "qbit_num": 8,
       "requested_mode": "partitioned_density",
-      "schema_version": "phase3_noisy_partition_descriptor_v1",
       "source_type": "structured_family_builder",
       "status": "pass",
       "workload_id": "layered_nearest_neighbor_q8_periodic_seed20260318"
@@ -7297,10 +7285,8 @@
         2,
         2
       ],
-      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "qbit_num": 8,
       "requested_mode": "partitioned_density",
-      "schema_version": "phase3_noisy_partition_descriptor_v1",
       "source_type": "structured_family_builder",
       "status": "pass",
       "workload_id": "layered_nearest_neighbor_q8_dense_seed20260318"
@@ -10177,10 +10163,8 @@
         1,
         1
       ],
-      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "qbit_num": 10,
       "requested_mode": "partitioned_density",
-      "schema_version": "phase3_noisy_partition_descriptor_v1",
       "source_type": "structured_family_builder",
       "status": "pass",
       "workload_id": "layered_nearest_neighbor_q10_sparse_seed20260318"
@@ -13103,10 +13087,8 @@
         1,
         2
       ],
-      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "qbit_num": 10,
       "requested_mode": "partitioned_density",
-      "schema_version": "phase3_noisy_partition_descriptor_v1",
       "source_type": "structured_family_builder",
       "status": "pass",
       "workload_id": "layered_nearest_neighbor_q10_periodic_seed20260318"
@@ -16661,10 +16643,8 @@
         2,
         2
       ],
-      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "qbit_num": 10,
       "requested_mode": "partitioned_density",
-      "schema_version": "phase3_noisy_partition_descriptor_v1",
       "source_type": "structured_family_builder",
       "status": "pass",
       "workload_id": "layered_nearest_neighbor_q10_dense_seed20260318"
@@ -18456,10 +18436,8 @@
         1,
         1
       ],
-      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "qbit_num": 8,
       "requested_mode": "partitioned_density",
-      "schema_version": "phase3_noisy_partition_descriptor_v1",
       "source_type": "structured_family_builder",
       "status": "pass",
       "workload_id": "seeded_random_layered_q8_sparse_seed20260318"
@@ -20248,10 +20226,8 @@
         1,
         2
       ],
-      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "qbit_num": 8,
       "requested_mode": "partitioned_density",
-      "schema_version": "phase3_noisy_partition_descriptor_v1",
       "source_type": "structured_family_builder",
       "status": "pass",
       "workload_id": "seeded_random_layered_q8_periodic_seed20260318"
@@ -22411,10 +22387,8 @@
         2,
         2
       ],
-      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "qbit_num": 8,
       "requested_mode": "partitioned_density",
-      "schema_version": "phase3_noisy_partition_descriptor_v1",
       "source_type": "structured_family_builder",
       "status": "pass",
       "workload_id": "seeded_random_layered_q8_dense_seed20260318"
@@ -25291,10 +25265,8 @@
         1,
         1
       ],
-      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "qbit_num": 10,
       "requested_mode": "partitioned_density",
-      "schema_version": "phase3_noisy_partition_descriptor_v1",
       "source_type": "structured_family_builder",
       "status": "pass",
       "workload_id": "seeded_random_layered_q10_sparse_seed20260318"
@@ -28217,10 +28189,8 @@
         1,
         2
       ],
-      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "qbit_num": 10,
       "requested_mode": "partitioned_density",
-      "schema_version": "phase3_noisy_partition_descriptor_v1",
       "source_type": "structured_family_builder",
       "status": "pass",
       "workload_id": "seeded_random_layered_q10_periodic_seed20260318"
@@ -31775,10 +31745,8 @@
         2,
         2
       ],
-      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "qbit_num": 10,
       "requested_mode": "partitioned_density",
-      "schema_version": "phase3_noisy_partition_descriptor_v1",
       "source_type": "structured_family_builder",
       "status": "pass",
       "workload_id": "seeded_random_layered_q10_dense_seed20260318"
@@ -34076,10 +34044,8 @@
         1,
         1
       ],
-      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "qbit_num": 8,
       "requested_mode": "partitioned_density",
-      "schema_version": "phase3_noisy_partition_descriptor_v1",
       "source_type": "structured_family_builder",
       "status": "pass",
       "workload_id": "partition_stress_ladder_q8_sparse_seed20260318"
@@ -36374,10 +36340,8 @@
         1,
         2
       ],
-      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "qbit_num": 8,
       "requested_mode": "partitioned_density",
-      "schema_version": "phase3_noisy_partition_descriptor_v1",
       "source_type": "structured_family_builder",
       "status": "pass",
       "workload_id": "partition_stress_ladder_q8_periodic_seed20260318"
@@ -39465,10 +39429,8 @@
         2,
         1
       ],
-      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "qbit_num": 8,
       "requested_mode": "partitioned_density",
-      "schema_version": "phase3_noisy_partition_descriptor_v1",
       "source_type": "structured_family_builder",
       "status": "pass",
       "workload_id": "partition_stress_ladder_q8_dense_seed20260318"
@@ -43275,10 +43237,8 @@
         1,
         1
       ],
-      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "qbit_num": 10,
       "requested_mode": "partitioned_density",
-      "schema_version": "phase3_noisy_partition_descriptor_v1",
       "source_type": "structured_family_builder",
       "status": "pass",
       "workload_id": "partition_stress_ladder_q10_sparse_seed20260318"
@@ -47131,10 +47091,8 @@
         1,
         2
       ],
-      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "qbit_num": 10,
       "requested_mode": "partitioned_density",
-      "schema_version": "phase3_noisy_partition_descriptor_v1",
       "source_type": "structured_family_builder",
       "status": "pass",
       "workload_id": "partition_stress_ladder_q10_periodic_seed20260318"
@@ -52359,17 +52317,14 @@
         2,
         1
       ],
-      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "qbit_num": 10,
       "requested_mode": "partitioned_density",
-      "schema_version": "phase3_noisy_partition_descriptor_v1",
       "source_type": "structured_family_builder",
       "status": "pass",
       "workload_id": "partition_stress_ladder_q10_dense_seed20260318"
     }
   ],
   "requested_mode": "partitioned_density",
-  "schema_version": "phase3_noisy_partition_descriptor_v1",
   "software": {
     "numpy": "2.3.5",
     "python": "3.13.9",

@@ -34,7 +34,6 @@ from squander.partitioning.noisy_planner import (
     build_phase3_continuity_partition_descriptor_set,
 )
 from squander.partitioning.noisy_runtime import (
-    PHASE3_RUNTIME_SCHEMA_VERSION,
     build_runtime_audit_record,
     execute_partitioned_density,
 )
@@ -52,7 +51,6 @@ DEFAULT_OUTPUT_DIR = (
 ARTIFACT_CORE_FIELDS = (
     "suite_name",
     "status",
-    "runtime_schema_version",
     "software",
     "summary",
     "cases",
@@ -95,7 +93,6 @@ def build_artifact_bundle(cases: list[dict]) -> dict:
         and len(summary_key_sets) == 1
         and len(partition_key_sets) == 1
         else "fail",
-        "runtime_schema_version": PHASE3_RUNTIME_SCHEMA_VERSION,
         "software": build_software_metadata(),
         "summary": {
             "total_cases": len(cases),

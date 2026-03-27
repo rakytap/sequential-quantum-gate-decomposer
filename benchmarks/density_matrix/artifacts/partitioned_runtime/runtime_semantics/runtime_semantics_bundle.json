@@ -3,13 +3,11 @@
     {
       "case_kind": "continuity",
       "case_name": "phase2_xxz_hea_q4_continuity",
-      "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "frobenius_norm_diff": 0.0,
       "max_abs_diff": 0.0,
       "metadata": {},
       "parameter_routing_segment_count": 6,
       "partition_count": 5,
-      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "qbit_num": 4,
       "remapped_partition_count": 3,
       "rho_is_valid": true,
@@ -254,7 +252,6 @@
           "runtime_circuit_qbit_num": 4
         }
       ],
-      "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
       "runtime_semantics_pass": true,
       "status": "pass",
       "trace_deviation": 2.8947873981405094e-17,
@@ -263,13 +260,11 @@
     {
       "case_kind": "microcase",
       "case_name": "microcase_4q_partition_boundary_triplet",
-      "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "frobenius_norm_diff": 0.0,
       "max_abs_diff": 0.0,
       "metadata": {},
       "parameter_routing_segment_count": 4,
       "partition_count": 3,
-      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "qbit_num": 4,
       "remapped_partition_count": 2,
       "rho_is_valid": true,
@@ -432,7 +427,6 @@
           "runtime_circuit_qbit_num": 4
         }
       ],
-      "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
       "runtime_semantics_pass": true,
       "status": "pass",
       "trace_deviation": 1.5527910752810928e-18,
@@ -441,7 +435,6 @@
     {
       "case_kind": "structured_family",
       "case_name": "layered_nearest_neighbor_q8_sparse_seed20260318",
-      "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "frobenius_norm_diff": 0.0,
       "max_abs_diff": 0.0,
       "metadata": {
@@ -453,7 +446,6 @@
       },
       "parameter_routing_segment_count": 24,
       "partition_count": 24,
-      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "qbit_num": 8,
       "remapped_partition_count": 19,
       "rho_is_valid": true,
@@ -1536,14 +1528,12 @@
           "runtime_circuit_qbit_num": 8
         }
       ],
-      "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
       "runtime_semantics_pass": true,
       "status": "pass",
       "trace_deviation": 8.883709084703726e-16,
       "workload_id": "layered_nearest_neighbor_q8_sparse_seed20260318"
     }
   ],
-  "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
   "software": {
     "numpy": "2.3.5",
     "python": "3.13.9",

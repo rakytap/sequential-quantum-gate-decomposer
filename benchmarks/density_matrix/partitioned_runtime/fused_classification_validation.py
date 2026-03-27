@@ -30,7 +30,6 @@ from squander.partitioning.noisy_runtime import (
     PHASE3_FUSION_CLASS_SUPPORTED_UNFUSED,
     PHASE3_RUNTIME_PATH_BASELINE,
     PHASE3_RUNTIME_PATH_FUSED_UNITARY_ISLANDS,
-    PHASE3_RUNTIME_SCHEMA_VERSION,
     execute_partitioned_density_fused,
 )
 
@@ -47,7 +46,6 @@ DEFAULT_OUTPUT_DIR = (
 ARTIFACT_CORE_FIELDS = (
     "suite_name",
     "status",
-    "runtime_schema_version",
     "software",
     "summary",
     "cases",
@@ -61,7 +59,6 @@ def _classification_case(metadata: dict, descriptor_set, parameters) -> dict:
     return {
         "case_name": metadata["workload_id"],
         "case_kind": metadata["case_kind"],
-        "runtime_schema_version": payload["runtime_schema_version"],
         "runtime_path": payload["runtime_path"],
         "actual_fused_execution": payload["summary"]["actual_fused_execution"],
         "classifications": classifications,
@@ -75,16 +72,13 @@ def _classification_case(metadata: dict, descriptor_set, parameters) -> dict:
             ),
         },
         "classification_pass": (
-            payload["runtime_schema_version"] == PHASE3_RUNTIME_SCHEMA_VERSION
-            and (
-                (
-                    payload["summary"]["actual_fused_execution"] is True
-                    and payload["runtime_path"] == PHASE3_RUNTIME_PATH_FUSED_UNITARY_ISLANDS
-                )
-                or (
-                    payload["summary"]["actual_fused_execution"] is False
-                    and payload["runtime_path"] == PHASE3_RUNTIME_PATH_BASELINE
-                )
+            (
+                payload["summary"]["actual_fused_execution"] is True
+                and payload["runtime_path"] == PHASE3_RUNTIME_PATH_FUSED_UNITARY_ISLANDS
+            )
+            or (
+                payload["summary"]["actual_fused_execution"] is False
+                and payload["runtime_path"] == PHASE3_RUNTIME_PATH_BASELINE
             )
         ),
         "metadata": dict(metadata),
@@ -128,7 +122,6 @@ def build_artifact_bundle(cases: list[dict]) -> dict:
             PHASE3_FUSION_CLASS_DEFERRED,
         }
         else "fail",
-        "runtime_schema_version": PHASE3_RUNTIME_SCHEMA_VERSION,
         "software": build_software_metadata(),
         "summary": {
             "total_cases": len(cases),

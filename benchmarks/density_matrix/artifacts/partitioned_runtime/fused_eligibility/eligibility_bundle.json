@@ -31,7 +31,6 @@
       },
       "partition_count": 5,
       "runtime_path": "partitioned_density_descriptor_baseline",
-      "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
       "singleton_unitary_region_count": 1,
       "supported_unfused_region_count": 5,
       "workload_id": "phase2_xxz_hea_q4_continuity"
@@ -88,7 +87,6 @@
       },
       "partition_count": 1,
       "runtime_path": "partitioned_density_descriptor_baseline",
-      "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
       "singleton_unitary_region_count": 1,
       "supported_unfused_region_count": 2,
       "workload_id": "microcase_2q_entangler_local_depolarizing"
@@ -111,13 +109,11 @@
       },
       "partition_count": 24,
       "runtime_path": "partitioned_density_descriptor_baseline",
-      "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
       "singleton_unitary_region_count": 11,
       "supported_unfused_region_count": 23,
       "workload_id": "layered_nearest_neighbor_q8_sparse_seed20260318"
     }
   ],
-  "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
   "software": {
     "numpy": "2.3.5",
     "python": "3.13.9",

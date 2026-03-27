@@ -36,7 +36,6 @@ from benchmarks.density_matrix.planner_surface.workloads import (
     build_structured_descriptor_set,
 )
 from squander.partitioning.noisy_planner import build_phase3_continuity_partition_descriptor_set
-from squander.partitioning.noisy_runtime import PHASE3_RUNTIME_SCHEMA_VERSION
 
 SUITE_NAME = "phase3_partitioned_runtime_runtime_output"
 ARTIFACT_FILENAME = "runtime_output_bundle.json"
@@ -51,7 +50,6 @@ DEFAULT_OUTPUT_DIR = (
 ARTIFACT_CORE_FIELDS = (
     "suite_name",
     "status",
-    "runtime_schema_version",
     "software",
     "summary",
     "cases",
@@ -79,9 +77,6 @@ def _output_case(
         "case_name": case_name,
         "case_kind": case_kind,
         "status": "pass",
-        "runtime_schema_version": runtime_payload["runtime_schema_version"],
-        "planner_schema_version": runtime_payload["planner_schema_version"],
-        "descriptor_schema_version": runtime_payload["descriptor_schema_version"],
         "workload_id": runtime_payload["workload_id"],
         "qbit_num": runtime_payload["qbit_num"],
         "runtime_path": runtime_payload["runtime_path"],
@@ -89,8 +84,7 @@ def _output_case(
         "matrix_included": runtime_payload["exact_output"]["matrix_included"],
         "exact_output": runtime_payload["exact_output"],
         "result_output_pass": (
-            runtime_payload["runtime_schema_version"] == PHASE3_RUNTIME_SCHEMA_VERSION
-            and runtime_payload["summary"]["exact_output_present"] is True
+            runtime_payload["summary"]["exact_output_present"] is True
             and "shape" in runtime_payload["exact_output"]
             and "trace_real" in runtime_payload["exact_output"]
             and "trace_imag" in runtime_payload["exact_output"]
@@ -160,7 +154,6 @@ def build_artifact_bundle(cases: list[dict]) -> dict:
         and continuity_output_passes == 1
         and len(exact_output_key_sets) == 1
         else "fail",
-        "runtime_schema_version": PHASE3_RUNTIME_SCHEMA_VERSION,
         "software": build_software_metadata(),
         "summary": {
             "total_cases": len(cases),

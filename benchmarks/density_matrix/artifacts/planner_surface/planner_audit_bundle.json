@@ -198,7 +198,6 @@
         "workload_id": "phase2_xxz_hea_q4_continuity"
       },
       "requested_mode": "partitioned_density",
-      "schema_version": "phase3_canonical_noisy_planner_v1",
       "summary": {
         "gate_count": 9,
         "gate_sequence": [
@@ -349,7 +348,6 @@
         "workload_id": "microcase_2q_entangler_local_depolarizing"
       },
       "requested_mode": "partitioned_density",
-      "schema_version": "phase3_canonical_noisy_planner_v1",
       "summary": {
         "gate_count": 4,
         "gate_sequence": [
@@ -950,7 +948,6 @@
         "workload_id": "layered_nearest_neighbor_q8_sparse_seed20260318"
       },
       "requested_mode": "partitioned_density",
-      "schema_version": "phase3_canonical_noisy_planner_v1",
       "summary": {
         "gate_count": 35,
         "gate_sequence": [
@@ -1002,7 +999,6 @@
       }
     }
   ],
-  "schema_version": "phase3_canonical_noisy_planner_v1",
   "software": {
     "numpy": "2.3.5",
     "python": "3.13.9",

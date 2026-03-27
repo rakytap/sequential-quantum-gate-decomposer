@@ -31,10 +31,7 @@ from benchmarks.density_matrix.planner_surface.workloads import (
     iter_microcase_descriptor_sets,
     iter_structured_descriptor_sets,
 )
-from squander.partitioning.noisy_planner import (
-    DESCRIPTOR_SCHEMA_VERSION,
-    build_phase3_continuity_partition_descriptor_set,
-)
+from squander.partitioning.noisy_planner import build_phase3_continuity_partition_descriptor_set
 
 SUITE_NAME = "phase3_planner_surface_workload_descriptors"
 ARTIFACT_FILENAME = "mandatory_workload_descriptor_bundle.json"
@@ -50,7 +47,6 @@ ARTIFACT_CORE_FIELDS = (
     "suite_name",
     "status",
     "requested_mode",
-    "schema_version",
     "software",
     "summary",
     "cases",
@@ -64,8 +60,6 @@ def _descriptor_case(case_kind: str, metadata: dict, descriptor_set) -> dict:
         "case_name": payload["workload_id"],
         "status": "pass",
         "requested_mode": payload["requested_mode"],
-        "schema_version": payload["schema_version"],
-        "planner_schema_version": payload["planner_schema_version"],
         "source_type": payload["source_type"],
         "workload_id": payload["workload_id"],
         "qbit_num": payload["qbit_num"],
@@ -134,7 +128,6 @@ def build_artifact_bundle(cases: list[dict]) -> dict:
         and len(member_key_sets) == 1
         else "fail",
         "requested_mode": "partitioned_density",
-        "schema_version": DESCRIPTOR_SCHEMA_VERSION,
         "software": build_software_metadata(),
         "summary": {
             "total_cases": len(cases),

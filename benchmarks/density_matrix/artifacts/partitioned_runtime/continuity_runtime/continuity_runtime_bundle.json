@@ -30,7 +30,6 @@
       ],
       "density_pass": true,
       "descriptor_member_count": 12,
-      "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "energy_pass": true,
       "exact_output_present": true,
       "fallback_used": false,
@@ -54,7 +53,6 @@
       "partitioned_energy_imag": -2.7755575615628914e-17,
       "partitioned_energy_real": -0.4677719331861591,
       "peak_rss_kb": 105844,
-      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "qbit_num": 4,
       "reference_energy_imag": -2.7755575615628914e-17,
       "reference_energy_real": -0.4677719331861591,
@@ -304,7 +302,6 @@
         }
       ],
       "runtime_path": "partitioned_density_descriptor_baseline",
-      "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
       "source_type": "generated_hea",
       "status": "pass",
       "topology": [
@@ -354,7 +351,6 @@
       ],
       "density_pass": true,
       "descriptor_member_count": 18,
-      "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "energy_pass": true,
       "exact_output_present": true,
       "fallback_used": false,
@@ -380,7 +376,6 @@
       "partitioned_energy_imag": 5.551115123125783e-17,
       "partitioned_energy_real": 0.16091009555123598,
       "peak_rss_kb": 109736,
-      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "qbit_num": 6,
       "reference_energy_imag": 5.551115123125783e-17,
       "reference_energy_real": 0.16091009555123598,
@@ -740,7 +735,6 @@
         }
       ],
       "runtime_path": "partitioned_density_descriptor_baseline",
-      "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
       "source_type": "generated_hea",
       "status": "pass",
       "topology": [
@@ -798,7 +792,6 @@
       ],
       "density_pass": true,
       "descriptor_member_count": 24,
-      "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "energy_pass": true,
       "exact_output_present": true,
       "fallback_used": false,
@@ -826,7 +819,6 @@
       "partitioned_energy_imag": 7.025630077706069e-17,
       "partitioned_energy_real": -0.8252583612171599,
       "peak_rss_kb": 130404,
-      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "qbit_num": 8,
       "reference_energy_imag": 7.025630077706069e-17,
       "reference_energy_real": -0.8252583612171599,
@@ -1296,7 +1288,6 @@
         }
       ],
       "runtime_path": "partitioned_density_descriptor_baseline",
-      "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
       "source_type": "generated_hea",
       "status": "pass",
       "topology": [
@@ -1362,7 +1353,6 @@
       ],
       "density_pass": true,
       "descriptor_member_count": 30,
-      "descriptor_schema_version": "phase3_noisy_partition_descriptor_v1",
       "energy_pass": true,
       "exact_output_present": true,
       "fallback_used": false,
@@ -1392,7 +1382,6 @@
       "partitioned_energy_imag": 5.551115123125783e-17,
       "partitioned_energy_real": -0.9777729641437831,
       "peak_rss_kb": 251772,
-      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "qbit_num": 10,
       "reference_energy_imag": 5.551115123125783e-17,
       "reference_energy_real": -0.9777729641437831,
@@ -1972,7 +1961,6 @@
         }
       ],
       "runtime_path": "partitioned_density_descriptor_baseline",
-      "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
       "source_type": "generated_hea",
       "status": "pass",
       "topology": [
@@ -2017,7 +2005,6 @@
       "workload_id": "phase2_xxz_hea_q10_continuity"
     }
   ],
-  "runtime_schema_version": "phase3_partitioned_density_runtime_v1",
   "software": {
     "numpy": "2.3.5",
     "python": "3.13.9",

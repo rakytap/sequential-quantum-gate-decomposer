@@ -509,10 +509,8 @@
         2,
         2
       ],
-      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "qbit_num": 4,
       "requested_mode": "partitioned_density",
-      "schema_version": "phase3_noisy_partition_descriptor_v1",
       "source_type": "generated_hea",
       "status": "pass",
       "topology": [
@@ -1268,10 +1266,8 @@
         4,
         2
       ],
-      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "qbit_num": 6,
       "requested_mode": "partitioned_density",
-      "schema_version": "phase3_noisy_partition_descriptor_v1",
       "source_type": "generated_hea",
       "status": "pass",
       "topology": [
@@ -2263,10 +2259,8 @@
         4,
         2
       ],
-      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "qbit_num": 8,
       "requested_mode": "partitioned_density",
-      "schema_version": "phase3_noisy_partition_descriptor_v1",
       "source_type": "generated_hea",
       "status": "pass",
       "topology": [
@@ -3494,10 +3488,8 @@
         4,
         2
       ],
-      "planner_schema_version": "phase3_canonical_noisy_planner_v1",
       "qbit_num": 10,
       "requested_mode": "partitioned_density",
-      "schema_version": "phase3_noisy_partition_descriptor_v1",
       "source_type": "generated_hea",
       "status": "pass",
       "topology": [
@@ -3542,7 +3534,6 @@
     }
   ],
   "requested_mode": "partitioned_density",
-  "schema_version": "phase3_noisy_partition_descriptor_v1",
   "software": {
     "numpy": "2.3.5",
     "python": "3.13.9",

@@ -73,7 +73,6 @@
         "workload_id": "legacy_manual_u3_cnot"
       },
       "requested_mode": "partitioned_density",
-      "schema_version": "phase3_canonical_noisy_planner_v1",
       "status": "pass",
       "summary": {
         "gate_count": 4,
@@ -150,7 +149,6 @@
         "workload_id": "legacy_manual_with_noise"
       },
       "requested_mode": "partitioned_density",
-      "schema_version": "phase3_canonical_noisy_planner_v1",
       "status": "pass",
       "summary": {
         "gate_count": 2,
@@ -199,7 +197,6 @@
       "status": "unsupported"
     }
   ],
-  "schema_version": "phase3_canonical_noisy_planner_v1",
   "software": {
     "numpy": "2.3.5",
     "python": "3.13.9",

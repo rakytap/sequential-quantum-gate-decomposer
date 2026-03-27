@@ -46,7 +46,6 @@ DEFAULT_OUTPUT_DIR = (
 ARTIFACT_CORE_FIELDS = (
     "suite_name",
     "status",
-    "runtime_schema_version",
     "software",
     "summary",
     "cases",
@@ -122,7 +121,6 @@ def _benchmark_case(metadata: dict, descriptor_set, parameters) -> dict:
         "family_name": metadata["family_name"],
         "qbit_num": metadata["qbit_num"],
         "noise_pattern": metadata["noise_pattern"],
-        "runtime_schema_version": fused_result.runtime_schema_version,
         "runtime_path": fused_result.runtime_path,
         "actual_fused_execution": fused_result.actual_fused_execution,
         "fused_region_count": fused_result.fused_region_count,
@@ -181,7 +179,6 @@ def build_artifact_bundle(cases: list[dict]) -> dict:
             or all(case["diagnosis_reasons"] for case in cases if not case["positive_threshold_pass"])
         )
         else "fail",
-        "runtime_schema_version": cases[0]["runtime_schema_version"],
         "software": build_software_metadata(),
         "summary": {
             "total_cases": len(cases),

@@ -147,9 +147,6 @@ def build_correctness_evidence_positive_record(case_context) -> dict[str, Any]:
 
     record.update(
         {
-            "runtime_schema_version": runtime_payload["runtime_schema_version"],
-            "planner_schema_version": runtime_payload["planner_schema_version"],
-            "descriptor_schema_version": runtime_payload["descriptor_schema_version"],
             "runtime_path": runtime_payload["runtime_path"],
             "runtime_path_classification": _runtime_classification(runtime_result),
             "supported_runtime_case": (
@@ -241,7 +238,6 @@ def _normalize_negative_case(
         "source_type": case.get("source_type"),
         "requested_mode": case.get("requested_mode"),
         "workload_id": case.get("workload_id"),
-        "descriptor_schema_version": case.get("descriptor_schema_version"),
         "runtime_path": case.get("runtime_path"),
         "fallback_used": bool(case.get("fallback_used", False)),
         "supported_case_recorded": bool(

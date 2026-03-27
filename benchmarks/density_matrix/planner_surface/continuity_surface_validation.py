@@ -45,7 +45,6 @@ ARTIFACT_CORE_FIELDS = (
     "suite_name",
     "status",
     "requested_mode",
-    "schema_version",
     "software",
     "summary",
     "cases",
@@ -68,7 +67,6 @@ def build_case_result(qbit_num: int) -> dict:
             "case_kind": "phase3_planner_surface_continuity_surface",
             "status": "pass",
             "requested_mode": payload["requested_mode"],
-            "schema_version": payload["schema_version"],
             "source_type": payload["source_type"],
             "workload_id": payload["workload_id"],
             "parameter_count": payload["parameter_count"],
@@ -103,7 +101,6 @@ def build_artifact_bundle(cases: list[dict]) -> dict:
         "suite_name": SUITE_NAME,
         "status": "pass" if passed_cases == len(cases) and continuity_passes == len(cases) else "fail",
         "requested_mode": "partitioned_density",
-        "schema_version": "phase3_canonical_noisy_planner_v1",
         "software": build_software_metadata(),
         "summary": {
             "total_cases": len(cases),

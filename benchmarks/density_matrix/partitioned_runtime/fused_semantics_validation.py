@@ -42,7 +42,6 @@ DEFAULT_OUTPUT_DIR = (
 ARTIFACT_CORE_FIELDS = (
     "suite_name",
     "status",
-    "runtime_schema_version",
     "software",
     "summary",
     "cases",
@@ -58,7 +57,6 @@ def _semantics_case(metadata: dict, descriptor_set, parameters) -> dict:
         "case_name": metadata["workload_id"],
         "case_kind": metadata["case_kind"],
         "qbit_num": metadata["qbit_num"],
-        "runtime_schema_version": payload["runtime_schema_version"],
         "runtime_path": payload["runtime_path"],
         "actual_fused_execution": payload["summary"]["actual_fused_execution"],
         "fused_region_count": payload["summary"]["fused_region_count"],
@@ -109,7 +107,6 @@ def build_artifact_bundle(cases: list[dict]) -> dict:
     bundle = {
         "suite_name": SUITE_NAME,
         "status": "pass" if passes == len(cases) and len(cases) >= 2 else "fail",
-        "runtime_schema_version": cases[0]["runtime_schema_version"],
         "software": build_software_metadata(),
         "summary": {
             "total_cases": len(cases),

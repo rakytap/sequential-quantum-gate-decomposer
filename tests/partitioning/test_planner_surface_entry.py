@@ -43,7 +43,6 @@ def test_continuity_surface_matches_bridge_metadata(qbit_num):
     surface = build_phase3_continuity_planner_surface(vqe)
     payload = surface.to_dict()
 
-    assert surface.schema_version == "phase3_canonical_noisy_planner_v1"
     assert surface.requested_mode == PARTITIONED_DENSITY_MODE
     assert surface.source_type == "generated_hea"
     assert surface.workload_id == f"phase2_xxz_hea_q{qbit_num}_continuity"
@@ -89,7 +88,7 @@ def test_rejects_non_partitioned_density_mode():
 
     assert err.value.category == "mode"
     assert err.value.first_unsupported_condition == "unsupported_mode"
-    assert err.value.failure_stage == "planner_entry_preflight"
+    assert err.value.failure_stage == "planner_entry_from_bridge_metadata_preflight"
 
 
 def test_rejects_bridge_noise_with_invalid_after_gate_index():

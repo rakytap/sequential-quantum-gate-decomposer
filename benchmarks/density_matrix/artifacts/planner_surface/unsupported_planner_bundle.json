@@ -73,7 +73,6 @@
       "unsupported_category": "noise_insertion"
     }
   ],
-  "schema_version": "phase3_canonical_noisy_planner_v1",
   "software": {
     "numpy": "2.3.5",
     "python": "3.13.9",
