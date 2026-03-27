@@ -635,7 +635,7 @@ bundle behavior.
 - Risk: moving too much logic into test helpers can hide what each test proves.
 - Rollback/mitigation: keep helpers small and focused on setup, not assertions.
 
-## Story 6: Public Names And Payloads Expose One Concept One Way
+## Story 6 (COMPLETED): Public Names And Payloads Expose One Concept One Way
 
 **Why ranked #6**
 
