@@ -19,7 +19,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from benchmarks.density_matrix.performance_evidence.common import (
-    build_performance_evidence_boundary_evidence,
+    build_boundary_evidence,
     performance_evidence_output_dir,
 )
 from benchmarks.density_matrix.performance_evidence.records import (
@@ -60,7 +60,7 @@ def build_diagnosis_bundle(cases: list[dict]) -> dict:
     status = "pass" if diagnosis_surface_pass else "fail"
     summary = {
         "total_cases": len(cases),
-        "correctness_evidence_boundary_cases": len(build_performance_evidence_boundary_evidence()),
+        "correctness_evidence_boundary_cases": len(build_boundary_evidence()),
         "no_real_fused_coverage_cases": sum(
             "no_real_fused_coverage" in case["diagnosis_reasons"] for case in cases
         ),

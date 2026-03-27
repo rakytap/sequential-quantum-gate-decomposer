@@ -23,7 +23,7 @@ from benchmarks.density_matrix.performance_evidence.bundle import (
 )
 from benchmarks.density_matrix.performance_evidence.common import (
     PERFORMANCE_EVIDENCE_BENCHMARK_PACKAGE_SCHEMA_VERSION,
-    build_performance_evidence_software_metadata,
+    build_package_software_metadata,
     performance_evidence_output_dir,
     write_artifact_bundle,
 )
@@ -54,7 +54,7 @@ def build_performance_evidence_benchmark_package() -> dict:
         and payload["summary"]["correctness_evidence_boundary_cases"] == len(payload["negative_cases"])
         else "fail",
         "schema_version": PERFORMANCE_EVIDENCE_BENCHMARK_PACKAGE_SCHEMA_VERSION,
-        "software": build_performance_evidence_software_metadata(),
+        "software": build_package_software_metadata(),
         "selected_candidate": payload["selected_candidate"],
         "summary": dict(payload["summary"]),
         "required_artifacts": list(payload["required_artifacts"]),

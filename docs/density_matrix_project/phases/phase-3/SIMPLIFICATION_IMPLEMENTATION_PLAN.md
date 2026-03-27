@@ -535,7 +535,7 @@ is copied across layers.
 - Rollback/mitigation: introduce compatibility serializers first, migrate
 consumers, then remove redundant storage.
 
-## Story 5: Partitioning Tests Validate API Behavior Directly
+## Story 5 (COMPLETED): Partitioning Tests Validate API Behavior Directly
 
 **Why ranked #5**
 

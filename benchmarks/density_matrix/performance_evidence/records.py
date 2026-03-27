@@ -9,6 +9,7 @@ from benchmarks.density_matrix.evidence_core import (
     build_runtime_correctness_bridge_fields,
     counted_supported_case,
 )
+from benchmarks.density_matrix.correctness_evidence.common import build_selected_candidate
 from benchmarks.density_matrix.partitioned_runtime.common import execute_fused_with_reference
 from benchmarks.density_matrix.performance_evidence.common import (
     PERFORMANCE_EVIDENCE_CASE_SCHEMA_VERSION,
@@ -19,7 +20,6 @@ from benchmarks.density_matrix.performance_evidence.common import (
     PERFORMANCE_EVIDENCE_STATUS_DIAGNOSIS_ONLY,
     PERFORMANCE_EVIDENCE_STATUS_EXCLUDED,
     build_correctness_reference_index,
-    build_selected_candidate,
     measure_sequential_density_reference,
 )
 from benchmarks.density_matrix.performance_evidence.case_selection import (

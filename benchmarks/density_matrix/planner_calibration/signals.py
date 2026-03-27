@@ -13,7 +13,7 @@ PLANNER_CALIBRATION_DENSITY_AWARE_OBJECTIVE_NAME = "phase3_benchmark_cost_v1"
 def build_state_vector_proxy_score(descriptor_set) -> float:
     descriptor_member_count = max(descriptor_set.descriptor_member_count, 1)
     return sum(
-        (2 ** len(partition.partition_qubit_span)) * partition.member_count
+        (2 ** len(partition.local_to_global_qbits)) * partition.member_count
         for partition in descriptor_set.partitions
     ) / descriptor_member_count
 
@@ -21,7 +21,7 @@ def build_state_vector_proxy_score(descriptor_set) -> float:
 def build_density_partition_cost(descriptor_set) -> float:
     descriptor_member_count = max(descriptor_set.descriptor_member_count, 1)
     return sum(
-        (4 ** len(partition.partition_qubit_span)) * partition.member_count
+        (4 ** len(partition.local_to_global_qbits)) * partition.member_count
         for partition in descriptor_set.partitions
     ) / descriptor_member_count
 

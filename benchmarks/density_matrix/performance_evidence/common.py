@@ -14,7 +14,7 @@ if str(REPO_ROOT) not in sys.path:
 
 from benchmarks.density_matrix.correctness_evidence.common import (  # noqa: E402
     CORRECTNESS_PACKAGE_SCHEMA_VERSION,
-    build_selected_candidate as build_correctness_selected_candidate,
+    build_selected_candidate,
 )
 from benchmarks.density_matrix.evidence_io import write_artifact_bundle  # noqa: E402
 from benchmarks.density_matrix.planner_surface.common import (  # noqa: E402
@@ -55,14 +55,12 @@ DEFAULT_OUTPUT_ROOT = (
     REPO_ROOT / "benchmarks" / "density_matrix" / "artifacts" / "performance_evidence"
 )
 
+# Story 6: performance evidence uses correctness_evidence.common.build_selected_candidate
+# and the functions below directly—no build_performance_evidence_* thin wrappers.
+
 
 def performance_evidence_output_dir(slice_dir_name: str) -> Path:
     return DEFAULT_OUTPUT_ROOT / slice_dir_name
-
-
-@lru_cache(maxsize=1)
-def build_selected_candidate() -> dict[str, Any]:
-    return dict(build_correctness_selected_candidate())
 
 
 def build_package_software_metadata() -> dict[str, Any]:
@@ -90,22 +88,6 @@ def build_boundary_evidence() -> tuple[dict[str, Any], ...]:
 
     payload = build_correctness_package_payload()
     return tuple(dict(case) for case in payload["negative_cases"])
-
-
-def build_performance_evidence_selected_candidate() -> dict[str, Any]:
-    return build_selected_candidate()
-
-
-def build_performance_evidence_software_metadata() -> dict[str, Any]:
-    return build_package_software_metadata()
-
-
-def build_performance_evidence_correctness_evidence_reference_index() -> dict[str, dict[str, Any]]:
-    return build_correctness_reference_index()
-
-
-def build_performance_evidence_boundary_evidence() -> tuple[dict[str, Any], ...]:
-    return build_boundary_evidence()
 
 
 def _peak_rss_kb() -> int:

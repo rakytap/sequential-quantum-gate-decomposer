@@ -8,13 +8,13 @@ from typing import Any
 
 import numpy as np
 
+from benchmarks.density_matrix.correctness_evidence.common import build_selected_candidate
 from benchmarks.density_matrix.performance_evidence.common import (
     PERFORMANCE_EVIDENCE_ADDITIONAL_STRUCTURED_SEEDS,
     PERFORMANCE_EVIDENCE_BENCHMARK_SLICE_CONTINUITY,
     PERFORMANCE_EVIDENCE_BENCHMARK_SLICE_STRUCTURED,
     PERFORMANCE_EVIDENCE_PRIMARY_STRUCTURED_SEED,
     PERFORMANCE_EVIDENCE_REVIEW_NOISE_PATTERN,
-    build_performance_evidence_selected_candidate,
 )
 from benchmarks.density_matrix.partitioned_runtime.common import build_initial_parameters
 from benchmarks.density_matrix.planner_surface.common import build_phase2_continuity_vqe
@@ -44,7 +44,7 @@ class PerformanceEvidenceCaseContext:
 
 
 def _selected_partition_qubits() -> int:
-    return int(build_performance_evidence_selected_candidate()["max_partition_qubits"])
+    return int(build_selected_candidate()["max_partition_qubits"])
 
 
 def _base_metadata_from_descriptor(
@@ -59,7 +59,7 @@ def _base_metadata_from_descriptor(
     seed: int | None = None,
     topology: list[tuple[int, int]] | None = None,
 ) -> dict[str, Any]:
-    selected_candidate = build_performance_evidence_selected_candidate()
+    selected_candidate = build_selected_candidate()
     external_reference_required = (
         case_kind == PERFORMANCE_EVIDENCE_CASE_KIND_CONTINUITY
         and descriptor_set.qbit_num in PERFORMANCE_EVIDENCE_EXTERNAL_REFERENCE_CONTINUITY_QUBITS
@@ -135,7 +135,7 @@ def _structured_seed_noise_pairs() -> tuple[tuple[int, str], ...]:
 
 @lru_cache(maxsize=1)
 def _build_performance_evidence_inventory_cases_cached() -> tuple[dict[str, Any], ...]:
-    selected_candidate = build_performance_evidence_selected_candidate()
+    selected_candidate = build_selected_candidate()
     inventory_cases: list[dict[str, Any]] = []
     for qbit_num in PERFORMANCE_EVIDENCE_CONTINUITY_QUBITS:
         inventory_cases.append(

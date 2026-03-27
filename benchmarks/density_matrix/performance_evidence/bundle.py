@@ -6,10 +6,10 @@ from functools import lru_cache
 from benchmarks.density_matrix.correctness_evidence.bundle import (
     build_correctness_evidence_correctness_package_payload,
 )
+from benchmarks.density_matrix.correctness_evidence.common import build_selected_candidate
 from benchmarks.density_matrix.performance_evidence.common import (
     PERFORMANCE_EVIDENCE_BENCHMARK_PACKAGE_SCHEMA_VERSION,
-    build_performance_evidence_boundary_evidence,
-    build_performance_evidence_selected_candidate,
+    build_boundary_evidence,
 )
 from benchmarks.density_matrix.performance_evidence.records import (
     build_performance_evidence_benchmark_records,
@@ -24,10 +24,10 @@ def _build_performance_evidence_benchmark_package_payload_cached() -> dict:
     planner_calibration_bundle = build_planner_calibration_calibration_bundle_payload()
     correctness_evidence_bundle = build_correctness_evidence_correctness_package_payload()
     cases = build_performance_evidence_benchmark_records()
-    negative_cases = list(build_performance_evidence_boundary_evidence())
+    negative_cases = list(build_boundary_evidence())
     return {
         "schema_version": PERFORMANCE_EVIDENCE_BENCHMARK_PACKAGE_SCHEMA_VERSION,
-        "selected_candidate": build_performance_evidence_selected_candidate(),
+        "selected_candidate": build_selected_candidate(),
         "cases": cases,
         "negative_cases": negative_cases,
         "required_artifacts": [

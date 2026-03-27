@@ -24,7 +24,7 @@ from benchmarks.density_matrix.performance_evidence.benchmark_bundle_validation 
 )
 from benchmarks.density_matrix.performance_evidence.common import (
     PERFORMANCE_EVIDENCE_SUMMARY_SCHEMA_VERSION,
-    build_performance_evidence_software_metadata,
+    build_package_software_metadata,
     performance_evidence_output_dir,
     write_artifact_bundle,
 )
@@ -82,7 +82,7 @@ def build_summary_consistency_bundle() -> dict:
         "suite_name": SUITE_NAME,
         "status": "pass" if summary_consistency_pass and main_benchmark_claim_completed else "fail",
         "schema_version": PERFORMANCE_EVIDENCE_SUMMARY_SCHEMA_VERSION,
-        "software": build_performance_evidence_software_metadata(),
+        "software": build_package_software_metadata(),
         "selected_candidate": benchmark_package["selected_candidate"],
         "requirements": {
             "positive_claim_rule": (

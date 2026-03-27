@@ -10,6 +10,8 @@ import numpy as np
 from squander.density_matrix import DensityMatrix, NoisyCircuit
 from squander.partitioning.noisy_planner import (
     PARTITIONED_DENSITY_MODE,
+    PLANNER_OP_KIND_GATE,
+    PLANNER_OP_KIND_NOISE,
     SUPPORTED_GATE_NAMES,
     SUPPORTED_NOISE_NAMES,
     NoisyPartitionDescriptor,
@@ -293,10 +295,6 @@ class NoisyRuntimeExecutionResult:
             "runtime_path": self.runtime_path,
             "requested_runtime_path": self.requested_runtime_path,
             "summary": {
-                "qbit_num": self.qbit_num,
-                "parameter_count": self.parameter_count,
-                "runtime_path": self.runtime_path,
-                "requested_runtime_path": self.requested_runtime_path,
                 "fallback_used": self.fallback_used,
                 "exact_output_present": self.exact_output_present,
                 "partition_count": self.partition_count,
@@ -394,7 +392,7 @@ def _validate_supported_member(
     runtime_path: str,
 ) -> None:
     op = descriptor_set.canonical_operation_for(member)
-    if op.kind == "gate":
+    if op.kind == PLANNER_OP_KIND_GATE:
         if op.name not in SUPPORTED_GATE_NAMES:
             raise _runtime_error(
                 descriptor_set,
@@ -439,7 +437,7 @@ def _validate_supported_member(
             )
         return
 
-    if op.kind == "noise":
+    if op.kind == PLANNER_OP_KIND_NOISE:
         if op.name not in SUPPORTED_NOISE_NAMES:
             raise _runtime_error(
                 descriptor_set,
@@ -548,11 +546,11 @@ def _append_member_to_circuit(
 ) -> None:
     """Lower one member; members must already satisfy validate_runtime_request."""
     op = descriptor_set.canonical_operation_for(member)
-    if op.kind == "gate":
+    if op.kind == PLANNER_OP_KIND_GATE:
         if op.name in _PHASE3_LOWERABLE_UNITARY_GATE_NAMES:
             _append_lowered_unitary_gate(circuit, member, op=op)
             return
-    elif op.kind == "noise":
+    elif op.kind == PLANNER_OP_KIND_NOISE:
         if op.name == "local_depolarizing":
             if op.param_count == 0:
                 circuit.add_local_depolarizing(op.target_qbit, op.fixed_value)
@@ -1435,6 +1433,8 @@ def build_runtime_audit_record(
         "requested_mode": payload["requested_mode"],
         "runtime_path": payload["runtime_path"],
         "requested_runtime_path": payload["requested_runtime_path"],
+        "qbit_num": payload["qbit_num"],
+        "parameter_count": payload["parameter_count"],
         "provenance": payload["provenance"],
         "summary": payload["summary"],
         "exact_output": payload["exact_output"],

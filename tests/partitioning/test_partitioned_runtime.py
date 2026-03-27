@@ -118,7 +118,8 @@ def test_partitioned_runtime_continuity_runtime_audit_record_tracks_provenance()
     assert audit["summary"]["descriptor_member_count"] == result.descriptor_member_count
     assert audit["metadata"]["case_kind"] == "continuity"
     assert audit["requested_runtime_path"] == PHASE3_RUNTIME_PATH_BASELINE
-    assert audit["summary"]["requested_runtime_path"] == PHASE3_RUNTIME_PATH_BASELINE
+    assert audit["qbit_num"] == result.qbit_num
+    assert audit["parameter_count"] == result.parameter_count
 
 
 def test_partitioned_runtime_semantics_boundary_microcase_matches_sequential_reference():

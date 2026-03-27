@@ -225,6 +225,7 @@ class NoisyPartitionDescriptor:
 
     @property
     def partition_qubit_span(self) -> tuple[int, ...]:
+        """Legacy compatibility name: same tuple as ``local_to_global_qbits`` (global indices)."""
         return self.local_to_global_qbits
 
     @property
@@ -389,6 +390,7 @@ def descriptor_partition_to_dict(
         "canonical_operation_indices": list(
             descriptor_set.partition_canonical_operation_indices(partition)
         ),
+        # partition_qubit_span duplicates local_to_global_qbits for frozen JSON compatibility.
         "partition_qubit_span": list(partition.partition_qubit_span),
         "local_to_global_qbits": list(partition.local_to_global_qbits),
         "global_to_local_qbits": [
