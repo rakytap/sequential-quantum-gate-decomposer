@@ -26,6 +26,7 @@ from benchmarks.density_matrix.correctness_evidence.common import (
 from benchmarks.density_matrix.correctness_evidence.records import (
     counted_supported_case,
 )
+from benchmarks.density_matrix.validation_scaffold import require_bundle_fields
 
 SUITE_NAME = "correctness_evidence_correctness_package"
 ARTIFACT_FILENAME = "correctness_package_bundle.json"
@@ -65,13 +66,7 @@ def build_artifact_bundle() -> dict:
         "cases": cases,
         "negative_cases": negative_cases,
     }
-    missing = [field for field in ARTIFACT_CORE_FIELDS if field not in bundle]
-    if missing:
-        raise ValueError(
-            "Correctness package bundle missing required fields: {}".format(
-                ", ".join(missing)
-            )
-        )
+    require_bundle_fields(bundle, ARTIFACT_CORE_FIELDS, "Correctness package bundle")
     return bundle
 
 

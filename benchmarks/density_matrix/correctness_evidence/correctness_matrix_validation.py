@@ -10,23 +10,25 @@ Run with:
 
 from __future__ import annotations
 
-import argparse
 from copy import deepcopy
 from functools import lru_cache
 from pathlib import Path
 
-from benchmarks.density_matrix.correctness_evidence.common import (
-    CORRECTNESS_EVIDENCE_CASE_SCHEMA_VERSION,
-    build_correctness_evidence_selected_candidate,
-    build_correctness_evidence_software_metadata,
-    correctness_evidence_output_dir,
-    write_artifact_bundle,
-)
 from benchmarks.density_matrix.correctness_evidence.case_selection import (
     CORRECTNESS_EVIDENCE_CASE_KIND_CONTINUITY,
     CORRECTNESS_EVIDENCE_CASE_KIND_MICROCASE,
     CORRECTNESS_EVIDENCE_CASE_KIND_STRUCTURED,
     build_correctness_evidence_case_contexts,
+)
+from benchmarks.density_matrix.correctness_evidence.common import (
+    correctness_evidence_output_dir,
+)
+from benchmarks.density_matrix.correctness_evidence.validation_support import (
+    assemble_positive_case_bundle,
+)
+from benchmarks.density_matrix.validation_scaffold import (
+    require_bundle_fields,
+    run_case_slice_cli,
 )
 
 SUITE_NAME = "correctness_evidence_correctness_matrix"
@@ -57,71 +59,46 @@ def build_artifact_bundle(cases: list[dict]) -> dict:
     microcases = sum(case["case_kind"] == CORRECTNESS_EVIDENCE_CASE_KIND_MICROCASE for case in cases)
     structured_cases = sum(case["case_kind"] == CORRECTNESS_EVIDENCE_CASE_KIND_STRUCTURED for case in cases)
     external_slice_cases = sum(case["external_reference_required"] for case in cases)
-    bundle = {
-        "suite_name": SUITE_NAME,
-        "status": "pass"
+    status = (
+        "pass"
         if continuity_cases == 4
         and microcases == 3
         and structured_cases == 18
         and external_slice_cases == 4
-        else "fail",
-        "record_schema_version": CORRECTNESS_EVIDENCE_CASE_SCHEMA_VERSION,
-        "software": build_correctness_evidence_software_metadata(),
-        "selected_candidate": build_correctness_evidence_selected_candidate(),
-        "summary": {
-            "total_cases": len(cases),
-            "continuity_cases": continuity_cases,
-            "microcases": microcases,
-            "structured_cases": structured_cases,
-            "external_slice_cases": external_slice_cases,
-            "internal_only_cases": sum(
-                case["validation_slice"] == "internal_only" for case in cases
-            ),
-            "internal_plus_external_cases": sum(
-                case["validation_slice"] == "internal_plus_external" for case in cases
-            ),
-        },
-        "cases": cases,
+        else "fail"
+    )
+    summary = {
+        "total_cases": len(cases),
+        "continuity_cases": continuity_cases,
+        "microcases": microcases,
+        "structured_cases": structured_cases,
+        "external_slice_cases": external_slice_cases,
+        "internal_only_cases": sum(case["validation_slice"] == "internal_only" for case in cases),
+        "internal_plus_external_cases": sum(
+            case["validation_slice"] == "internal_plus_external" for case in cases
+        ),
     }
-    missing = [field for field in ARTIFACT_CORE_FIELDS if field not in bundle]
-    if missing:
-        raise ValueError(
-            "Correctness matrix bundle missing required fields: {}".format(
-                ", ".join(missing)
-            )
-        )
+    bundle = assemble_positive_case_bundle(SUITE_NAME, status, summary, cases)
+    require_bundle_fields(bundle, ARTIFACT_CORE_FIELDS, "Correctness matrix bundle")
     return bundle
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "--output-dir",
-        type=Path,
-        default=DEFAULT_OUTPUT_DIR,
-        help="Directory to write the correctness matrix bundle into.",
-    )
-    parser.add_argument(
-        "--quiet",
-        action="store_true",
-        help="Suppress per-case console output.",
-    )
-    args = parser.parse_args(argv)
-
-    cases = build_cases()
-    bundle = build_artifact_bundle(cases)
-    output_path = write_artifact_bundle(bundle, args.output_dir, ARTIFACT_FILENAME)
-
-    if not args.quiet:
-        print(
+    return run_case_slice_cli(
+        argv,
+        build_cases=build_cases,
+        build_artifact_bundle=build_artifact_bundle,
+        artifact_filename=ARTIFACT_FILENAME,
+        default_output_dir=DEFAULT_OUTPUT_DIR,
+        description=__doc__ or "",
+        output_dir_help="Directory to write the correctness matrix bundle into.",
+        quiet_report=lambda b: print(
             "selected_candidate={candidate_id}, total_cases={total_cases}".format(
-                candidate_id=bundle["selected_candidate"]["candidate_id"],
-                total_cases=bundle["summary"]["total_cases"],
+                candidate_id=b["selected_candidate"]["candidate_id"],
+                total_cases=b["summary"]["total_cases"],
             )
-        )
-        print("Wrote {}".format(output_path))
-
-    return 0 if bundle["status"] == "pass" else 1
+        ),
+    )
 
 
 if __name__ == "__main__":

@@ -10,7 +10,6 @@ Run with:
 
 from __future__ import annotations
 
-import argparse
 import sys
 from pathlib import Path
 
@@ -19,15 +18,18 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from benchmarks.density_matrix.performance_evidence.common import (
-    PERFORMANCE_EVIDENCE_CASE_SCHEMA_VERSION,
-    build_performance_evidence_selected_candidate,
-    build_performance_evidence_software_metadata,
     performance_evidence_output_dir,
-    write_artifact_bundle,
 )
 from benchmarks.density_matrix.performance_evidence.records import (
     build_performance_evidence_core_benchmark_records,
     performance_evidence_counted_supported_case,
+)
+from benchmarks.density_matrix.performance_evidence.validation_support import (
+    assemble_record_schema_case_bundle,
+)
+from benchmarks.density_matrix.validation_scaffold import (
+    require_bundle_fields,
+    run_case_slice_cli,
 )
 
 SUITE_NAME = "performance_evidence_counted_supported"
@@ -49,68 +51,47 @@ def build_counted_supported_cases() -> list[dict]:
 
 
 def build_counted_supported_bundle(cases: list[dict]) -> dict:
-    counted_supported_cases = [case for case in cases if performance_evidence_counted_supported_case(case)]
-    bundle = {
-        "suite_name": SUITE_NAME,
-        "status": "pass"
+    counted_supported_cases = [
+        case for case in cases if performance_evidence_counted_supported_case(case)
+    ]
+    status = (
+        "pass"
         if len(counted_supported_cases) == len(cases)
         and all(case["benchmark_status"] != "excluded" for case in counted_supported_cases)
-        else "fail",
-        "record_schema_version": PERFORMANCE_EVIDENCE_CASE_SCHEMA_VERSION,
-        "software": build_performance_evidence_software_metadata(),
-        "selected_candidate": build_performance_evidence_selected_candidate(),
-        "summary": {
-            "total_cases": len(cases),
-            "counted_supported_cases": len(counted_supported_cases),
-            "excluded_cases": len(cases) - len(counted_supported_cases),
-            "correctness_evidence_reference_available": sum(
-                case["correctness_evidence_reference_available"] for case in cases
-            ),
-            "correctness_evidence_counted_reference_available": sum(
-                case["correctness_evidence_counted_reference_available"] for case in cases
-            ),
-            "supported_runtime_cases": sum(case["supported_runtime_case"] for case in cases),
-        },
-        "cases": cases,
+        else "fail"
+    )
+    summary = {
+        "total_cases": len(cases),
+        "counted_supported_cases": len(counted_supported_cases),
+        "excluded_cases": len(cases) - len(counted_supported_cases),
+        "correctness_evidence_reference_available": sum(
+            case["correctness_evidence_reference_available"] for case in cases
+        ),
+        "correctness_evidence_counted_reference_available": sum(
+            case["correctness_evidence_counted_reference_available"] for case in cases
+        ),
+        "supported_runtime_cases": sum(case["supported_runtime_case"] for case in cases),
     }
-    missing = [field for field in ARTIFACT_CORE_FIELDS if field not in bundle]
-    if missing:
-        raise ValueError(
-            "Counted-supported bundle missing required fields: {}".format(
-                ", ".join(missing)
-            )
-        )
+    bundle = assemble_record_schema_case_bundle(SUITE_NAME, status, summary, cases)
+    require_bundle_fields(bundle, ARTIFACT_CORE_FIELDS, "Counted-supported bundle")
     return bundle
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "--output-dir",
-        type=Path,
-        default=DEFAULT_OUTPUT_DIR,
-        help="Directory to write the counted-supported bundle into.",
-    )
-    parser.add_argument(
-        "--quiet",
-        action="store_true",
-        help="Suppress console output.",
-    )
-    args = parser.parse_args(argv)
-
-    cases = build_counted_supported_cases()
-    bundle = build_counted_supported_bundle(cases)
-    output_path = write_artifact_bundle(bundle, args.output_dir, ARTIFACT_FILENAME)
-
-    if not args.quiet:
-        print(
+    return run_case_slice_cli(
+        argv,
+        build_cases=build_counted_supported_cases,
+        build_artifact_bundle=build_counted_supported_bundle,
+        artifact_filename=ARTIFACT_FILENAME,
+        default_output_dir=DEFAULT_OUTPUT_DIR,
+        description=__doc__ or "",
+        output_dir_help="Directory to write the counted-supported bundle into.",
+        quiet_report=lambda b: print(
             "counted_supported_cases={counted_supported_cases}, excluded_cases={excluded_cases}".format(
-                **bundle["summary"]
+                **b["summary"]
             )
-        )
-        print("Wrote {}".format(output_path))
-
-    return 0 if bundle["status"] == "pass" else 1
+        ),
+    )
 
 
 if __name__ == "__main__":

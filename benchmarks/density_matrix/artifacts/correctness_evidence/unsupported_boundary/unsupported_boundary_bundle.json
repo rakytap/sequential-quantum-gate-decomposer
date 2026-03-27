@@ -39,7 +39,7 @@
     {
       "boundary_stage": "planner_entry",
       "case_name": "unsupported_mode_claim",
-      "failure_stage": "planner_entry_preflight",
+      "failure_stage": "planner_entry_from_bridge_metadata_preflight",
       "fallback_used": false,
       "first_unsupported_condition": "unsupported_mode",
       "negative_record_schema_version": "correctness_evidence_negative_record_v1",
@@ -57,7 +57,7 @@
     {
       "boundary_stage": "planner_entry",
       "case_name": "unsupported_noise_model",
-      "failure_stage": "planner_entry_preflight",
+      "failure_stage": "planner_entry_from_operation_specs_preflight",
       "fallback_used": false,
       "first_unsupported_condition": "readout_noise",
       "negative_record_schema_version": "correctness_evidence_negative_record_v1",
@@ -93,7 +93,7 @@
     {
       "boundary_stage": "planner_entry",
       "case_name": "invalid_noise_insertion_index",
-      "failure_stage": "planner_entry_preflight",
+      "failure_stage": "planner_entry_from_operation_specs_preflight",
       "fallback_used": false,
       "first_unsupported_condition": "after_gate_index",
       "negative_record_schema_version": "correctness_evidence_negative_record_v1",

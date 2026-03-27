@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import sys
 from pathlib import Path
+from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 if str(REPO_ROOT) not in sys.path:
@@ -45,98 +46,42 @@ from benchmarks.density_matrix.performance_evidence.common import (  # noqa: E40
 )
 
 
-def _write_slice_bundle(module, bundle: dict) -> Path:
+def _write_slice_bundle(module: Any, bundle: dict) -> Path:
     return write_artifact_bundle(bundle, module.DEFAULT_OUTPUT_DIR, module.ARTIFACT_FILENAME)
+
+
+# (module, build_cases_attr, build_bundle_attr)
+_CASE_SLICE_REGISTRY: tuple[tuple[Any, str, str], ...] = (
+    (benchmark_matrix, "build_benchmark_matrix_cases", "build_benchmark_matrix_bundle"),
+    (counted_supported, "build_counted_supported_cases", "build_counted_supported_bundle"),
+    (positive_threshold, "build_positive_threshold_cases", "build_positive_threshold_bundle"),
+    (sensitivity_matrix, "build_sensitivity_matrix_cases", "build_sensitivity_matrix_bundle"),
+    (metric_surface, "build_metric_surface_cases", "build_metric_surface_bundle"),
+    (diagnosis, "build_diagnosis_cases", "build_diagnosis_bundle"),
+)
+
+# (module, build_bundle_attr)
+_SPECIAL_BUNDLE_REGISTRY: tuple[tuple[Any, str], ...] = (
+    (benchmark_package, "build_performance_evidence_benchmark_package"),
+    (summary_consistency, "build_summary_consistency_bundle"),
+)
 
 
 def run_pipeline() -> list[tuple[str, str, Path]]:
     results: list[tuple[str, str, Path]] = []
 
-    benchmark_matrix_cases = benchmark_matrix.build_benchmark_matrix_cases()
-    benchmark_matrix_bundle = benchmark_matrix.build_benchmark_matrix_bundle(
-        benchmark_matrix_cases
-    )
-    results.append(
-        (
-            benchmark_matrix.SUITE_NAME,
-            benchmark_matrix_bundle["status"],
-            _write_slice_bundle(benchmark_matrix, benchmark_matrix_bundle),
+    for mod, cases_attr, bundle_attr in _CASE_SLICE_REGISTRY:
+        cases = getattr(mod, cases_attr)()
+        bundle = getattr(mod, bundle_attr)(cases)
+        results.append(
+            (mod.SUITE_NAME, bundle["status"], _write_slice_bundle(mod, bundle))
         )
-    )
 
-    counted_supported_cases = counted_supported.build_counted_supported_cases()
-    counted_supported_bundle = counted_supported.build_counted_supported_bundle(
-        counted_supported_cases
-    )
-    results.append(
-        (
-            counted_supported.SUITE_NAME,
-            counted_supported_bundle["status"],
-            _write_slice_bundle(counted_supported, counted_supported_bundle),
+    for mod, bundle_attr in _SPECIAL_BUNDLE_REGISTRY:
+        bundle = getattr(mod, bundle_attr)()
+        results.append(
+            (mod.SUITE_NAME, bundle["status"], _write_slice_bundle(mod, bundle))
         )
-    )
-
-    positive_threshold_cases = positive_threshold.build_positive_threshold_cases()
-    positive_threshold_bundle = positive_threshold.build_positive_threshold_bundle(
-        positive_threshold_cases
-    )
-    results.append(
-        (
-            positive_threshold.SUITE_NAME,
-            positive_threshold_bundle["status"],
-            _write_slice_bundle(positive_threshold, positive_threshold_bundle),
-        )
-    )
-
-    sensitivity_cases = sensitivity_matrix.build_sensitivity_matrix_cases()
-    sensitivity_bundle = sensitivity_matrix.build_sensitivity_matrix_bundle(sensitivity_cases)
-    results.append(
-        (
-            sensitivity_matrix.SUITE_NAME,
-            sensitivity_bundle["status"],
-            _write_slice_bundle(sensitivity_matrix, sensitivity_bundle),
-        )
-    )
-
-    metric_surface_cases = metric_surface.build_metric_surface_cases()
-    metric_surface_bundle = metric_surface.build_metric_surface_bundle(
-        metric_surface_cases
-    )
-    results.append(
-        (
-            metric_surface.SUITE_NAME,
-            metric_surface_bundle["status"],
-            _write_slice_bundle(metric_surface, metric_surface_bundle),
-        )
-    )
-
-    diagnosis_cases = diagnosis.build_diagnosis_cases()
-    diagnosis_bundle = diagnosis.build_diagnosis_bundle(diagnosis_cases)
-    results.append(
-        (
-            diagnosis.SUITE_NAME,
-            diagnosis_bundle["status"],
-            _write_slice_bundle(diagnosis, diagnosis_bundle),
-        )
-    )
-
-    benchmark_package_bundle = benchmark_package.build_performance_evidence_benchmark_package()
-    results.append(
-        (
-            benchmark_package.SUITE_NAME,
-            benchmark_package_bundle["status"],
-            _write_slice_bundle(benchmark_package, benchmark_package_bundle),
-        )
-    )
-
-    summary_bundle = summary_consistency.build_summary_consistency_bundle()
-    results.append(
-        (
-            summary_consistency.SUITE_NAME,
-            summary_bundle["status"],
-            _write_slice_bundle(summary_consistency, summary_bundle),
-        )
-    )
 
     return results
 

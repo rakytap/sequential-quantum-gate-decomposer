@@ -27,6 +27,7 @@ from benchmarks.density_matrix.performance_evidence.common import (
     performance_evidence_output_dir,
     write_artifact_bundle,
 )
+from benchmarks.density_matrix.validation_scaffold import require_bundle_fields
 
 SUITE_NAME = "performance_evidence_benchmark_package"
 ARTIFACT_FILENAME = "benchmark_package_bundle.json"
@@ -60,13 +61,7 @@ def build_performance_evidence_benchmark_package() -> dict:
         "cases": payload["cases"],
         "negative_cases": payload["negative_cases"],
     }
-    missing = [field for field in ARTIFACT_CORE_FIELDS if field not in bundle]
-    if missing:
-        raise ValueError(
-            "Performance evidence benchmark package missing required fields: {}".format(
-                ", ".join(missing)
-            )
-        )
+    require_bundle_fields(bundle, ARTIFACT_CORE_FIELDS, "Performance evidence benchmark package")
     return bundle
 
 

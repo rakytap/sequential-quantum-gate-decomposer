@@ -1,3 +1,4 @@
+from collections.abc import Callable
 from pathlib import Path
 import sys
 
@@ -44,6 +45,40 @@ from benchmarks.density_matrix.performance_evidence.summary_consistency_validati
     build_summary_consistency_bundle,
 )
 
+_PERFORMANCE_RECORD_SCHEMA_SLICES: tuple[
+    tuple[Callable[[], list[dict]], Callable[[list[dict]], dict]],
+    ...,
+] = (
+    (build_counted_supported_cases, build_counted_supported_bundle),
+    (build_positive_threshold_cases, build_positive_threshold_bundle),
+    (build_sensitivity_matrix_cases, build_sensitivity_matrix_bundle),
+    (build_metric_surface_cases, build_metric_surface_bundle),
+    (build_diagnosis_cases, build_diagnosis_bundle),
+)
+
+_PERFORMANCE_RECORD_SCHEMA_SLICE_IDS = (
+    "counted_supported",
+    "positive_threshold",
+    "sensitivity_matrix",
+    "metric_surface",
+    "diagnosis",
+)
+
+
+@pytest.mark.parametrize(
+    "build_cases_fn,build_bundle_fn",
+    _PERFORMANCE_RECORD_SCHEMA_SLICES,
+    ids=list(_PERFORMANCE_RECORD_SCHEMA_SLICE_IDS),
+)
+def test_performance_evidence_record_schema_slice_bundle_schema_and_pass(
+    build_cases_fn: Callable[[], list[dict]],
+    build_bundle_fn: Callable[[list[dict]], dict],
+):
+    cases = build_cases_fn()
+    bundle = build_bundle_fn(cases)
+    assert bundle["status"] == "pass"
+    assert bundle["record_schema_version"] == PERFORMANCE_EVIDENCE_CASE_SCHEMA_VERSION
+
 
 def test_performance_evidence_benchmark_matrix_covers_required_inventory():
     cases = build_benchmark_matrix_cases()
@@ -66,6 +101,7 @@ def test_performance_evidence_benchmark_matrix_covers_required_inventory():
 def test_performance_evidence_benchmark_matrix_bundle_core_fields_are_stable():
     bundle = build_benchmark_matrix_bundle(build_benchmark_matrix_cases())
     assert bundle["status"] == "pass"
+    assert "record_schema_version" not in bundle
     assert bundle["summary"]["total_cases"] == 34
     assert bundle["summary"]["continuity_cases"] == 4
     assert bundle["summary"]["structured_cases"] == 30
@@ -87,12 +123,8 @@ def test_performance_evidence_counted_supported_gate_passes_full_matrix(
     assert all(case["supported_runtime_case"] for case in cases)
 
 
-def test_performance_evidence_counted_supported_bundle_core_fields_are_stable(
-    counted_supported_cases_fixture,
-):
+def test_performance_evidence_counted_supported_bundle_summary(counted_supported_cases_fixture):
     bundle = build_counted_supported_bundle(counted_supported_cases_fixture)
-    assert bundle["status"] == "pass"
-    assert bundle["record_schema_version"] == PERFORMANCE_EVIDENCE_CASE_SCHEMA_VERSION
     assert bundle["summary"]["total_cases"] == 34
     assert bundle["summary"]["counted_supported_cases"] == 34
     assert bundle["summary"]["excluded_cases"] == 0
@@ -106,10 +138,8 @@ def test_performance_evidence_positive_threshold_review_surface_is_bounded_and_a
     assert all(case["fused_median_runtime_ms"] is not None for case in cases)
 
 
-def test_performance_evidence_positive_threshold_bundle_core_fields_are_stable():
+def test_performance_evidence_positive_threshold_bundle_summary():
     bundle = build_positive_threshold_bundle(build_positive_threshold_cases())
-    assert bundle["status"] == "pass"
-    assert bundle["record_schema_version"] == PERFORMANCE_EVIDENCE_CASE_SCHEMA_VERSION
     assert bundle["summary"]["total_cases"] == 6
     assert len(bundle["summary"]["review_groups"]) == 6
 
@@ -125,10 +155,8 @@ def test_performance_evidence_sensitivity_matrix_covers_required_groups():
     assert {case["qbit_num"] for case in cases} == {8, 10}
 
 
-def test_performance_evidence_sensitivity_matrix_bundle_core_fields_are_stable():
+def test_performance_evidence_sensitivity_matrix_bundle_summary():
     bundle = build_sensitivity_matrix_bundle(build_sensitivity_matrix_cases())
-    assert bundle["status"] == "pass"
-    assert bundle["record_schema_version"] == PERFORMANCE_EVIDENCE_CASE_SCHEMA_VERSION
     assert bundle["summary"]["total_cases"] == 30
     assert bundle["summary"]["full_noise_groups"] == 6
     assert bundle["summary"]["full_seed_groups"] == 6
@@ -147,11 +175,8 @@ def test_performance_evidence_metric_surface_is_complete(metric_surface_cases_fi
     assert all(case["planning_time_ms"] is not None for case in cases)
 
 
-def test_performance_evidence_metric_surface_bundle_core_fields_are_stable(
-    metric_surface_cases_fixture,
-):
+def test_performance_evidence_metric_surface_bundle_summary(metric_surface_cases_fixture):
     bundle = build_metric_surface_bundle(metric_surface_cases_fixture)
-    assert bundle["status"] == "pass"
     assert bundle["summary"]["total_cases"] == 34
     assert bundle["summary"]["representative_review_cases"] == 6
     assert bundle["summary"]["median_timed_cases"] == 6
@@ -164,10 +189,8 @@ def test_performance_evidence_diagnosis_surface_is_explicit():
     assert all(case["diagnosis_reasons"] for case in cases)
 
 
-def test_performance_evidence_diagnosis_bundle_core_fields_are_stable():
+def test_performance_evidence_diagnosis_bundle_summary():
     bundle = build_diagnosis_bundle(build_diagnosis_cases())
-    assert bundle["status"] == "pass"
-    assert bundle["record_schema_version"] == PERFORMANCE_EVIDENCE_CASE_SCHEMA_VERSION
     assert bundle["summary"]["correctness_evidence_boundary_cases"] >= 1
 
 

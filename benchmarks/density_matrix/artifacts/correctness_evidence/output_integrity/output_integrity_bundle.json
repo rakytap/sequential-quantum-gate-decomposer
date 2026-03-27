@@ -407,8 +407,8 @@
           "runtime_circuit_qbit_num": 4
         }
       ],
-      "peak_rss_kb": 107788,
-      "peak_rss_mb": 105.26171875,
+      "peak_rss_kb": 106764,
+      "peak_rss_mb": 104.26171875,
       "planner_calibration_claim_selection_rule": "min_median_density_aware_score_then_min_p90_then_smaller_span_budget",
       "planner_calibration_claim_selection_schema_version": "phase3_planner_calibration_claim_selection_v1",
       "planner_calibration_selected_candidate_id": "span_budget_q4",
@@ -425,7 +425,7 @@
       "requested_mode": "partitioned_density",
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
-      "runtime_ms": 0.6559430039487779,
+      "runtime_ms": 0.7169719319790602,
       "runtime_path": "partitioned_density_descriptor_fused_unitary_islands",
       "runtime_path_classification": "actually_fused",
       "seed": null,
@@ -981,8 +981,8 @@
           "runtime_circuit_qbit_num": 6
         }
       ],
-      "peak_rss_kb": 123884,
-      "peak_rss_mb": 120.98046875,
+      "peak_rss_kb": 122568,
+      "peak_rss_mb": 119.6953125,
       "planner_calibration_claim_selection_rule": "min_median_density_aware_score_then_min_p90_then_smaller_span_budget",
       "planner_calibration_claim_selection_schema_version": "phase3_planner_calibration_claim_selection_v1",
       "planner_calibration_selected_candidate_id": "span_budget_q4",
@@ -999,7 +999,7 @@
       "requested_mode": "partitioned_density",
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
-      "runtime_ms": 3.4080450423061848,
+      "runtime_ms": 3.4273010678589344,
       "runtime_path": "partitioned_density_descriptor_fused_unitary_islands",
       "runtime_path_classification": "actually_fused",
       "seed": null,
@@ -1694,8 +1694,8 @@
           "runtime_circuit_qbit_num": 8
         }
       ],
-      "peak_rss_kb": 148888,
-      "peak_rss_mb": 145.3984375,
+      "peak_rss_kb": 146692,
+      "peak_rss_mb": 143.25390625,
       "planner_calibration_claim_selection_rule": "min_median_density_aware_score_then_min_p90_then_smaller_span_budget",
       "planner_calibration_claim_selection_schema_version": "phase3_planner_calibration_claim_selection_v1",
       "planner_calibration_selected_candidate_id": "span_budget_q4",
@@ -1712,7 +1712,7 @@
       "requested_mode": "partitioned_density",
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
-      "runtime_ms": 34.489262965507805,
+      "runtime_ms": 42.381794075481594,
       "runtime_path": "partitioned_density_descriptor_fused_unitary_islands",
       "runtime_path_classification": "actually_fused",
       "seed": null,
@@ -2546,8 +2546,8 @@
           "runtime_circuit_qbit_num": 10
         }
       ],
-      "peak_rss_kb": 269600,
-      "peak_rss_mb": 263.28125,
+      "peak_rss_kb": 258480,
+      "peak_rss_mb": 252.421875,
       "planner_calibration_claim_selection_rule": "min_median_density_aware_score_then_min_p90_then_smaller_span_budget",
       "planner_calibration_claim_selection_schema_version": "phase3_planner_calibration_claim_selection_v1",
       "planner_calibration_selected_candidate_id": "span_budget_q4",
@@ -2564,7 +2564,7 @@
       "requested_mode": "partitioned_density",
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
-      "runtime_ms": 564.0969880041666,
+      "runtime_ms": 559.7603169735521,
       "runtime_path": "partitioned_density_descriptor_fused_unitary_islands",
       "runtime_path_classification": "actually_fused",
       "seed": null,
@@ -2827,8 +2827,8 @@
           "runtime_circuit_qbit_num": 2
         }
       ],
-      "peak_rss_kb": 575436,
-      "peak_rss_mb": 561.94921875,
+      "peak_rss_kb": 580904,
+      "peak_rss_mb": 567.2890625,
       "planner_calibration_claim_selection_rule": "min_median_density_aware_score_then_min_p90_then_smaller_span_budget",
       "planner_calibration_claim_selection_schema_version": "phase3_planner_calibration_claim_selection_v1",
       "planner_calibration_selected_candidate_id": "span_budget_q4",
@@ -2845,7 +2845,7 @@
       "requested_mode": "partitioned_density",
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
-      "runtime_ms": 0.4715819959528744,
+      "runtime_ms": 0.6216519977897406,
       "runtime_path": "partitioned_density_descriptor_fused_unitary_islands",
       "runtime_path_classification": "actually_fused",
       "seed": null,
@@ -3160,8 +3160,8 @@
           "runtime_circuit_qbit_num": 3
         }
       ],
-      "peak_rss_kb": 575436,
-      "peak_rss_mb": 561.94921875,
+      "peak_rss_kb": 580904,
+      "peak_rss_mb": 567.2890625,
       "planner_calibration_claim_selection_rule": "min_median_density_aware_score_then_min_p90_then_smaller_span_budget",
       "planner_calibration_claim_selection_schema_version": "phase3_planner_calibration_claim_selection_v1",
       "planner_calibration_selected_candidate_id": "span_budget_q4",
@@ -3178,7 +3178,7 @@
       "requested_mode": "partitioned_density",
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
-      "runtime_ms": 0.3777120145969093,
+      "runtime_ms": 0.4392010159790516,
       "runtime_path": "partitioned_density_descriptor_fused_unitary_islands",
       "runtime_path_classification": "actually_fused",
       "seed": null,
@@ -3518,8 +3518,8 @@
           "runtime_circuit_qbit_num": 4
         }
       ],
-      "peak_rss_kb": 575436,
-      "peak_rss_mb": 561.94921875,
+      "peak_rss_kb": 580904,
+      "peak_rss_mb": 567.2890625,
       "planner_calibration_claim_selection_rule": "min_median_density_aware_score_then_min_p90_then_smaller_span_budget",
       "planner_calibration_claim_selection_schema_version": "phase3_planner_calibration_claim_selection_v1",
       "planner_calibration_selected_candidate_id": "span_budget_q4",
@@ -3536,7 +3536,7 @@
       "requested_mode": "partitioned_density",
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
-      "runtime_ms": 0.43783197179436684,
+      "runtime_ms": 0.5125619936734438,
       "runtime_path": "partitioned_density_descriptor_fused_unitary_islands",
       "runtime_path_classification": "actually_fused",
       "seed": null,
@@ -4825,8 +4825,8 @@
           "runtime_circuit_qbit_num": 8
         }
       ],
-      "peak_rss_kb": 575436,
-      "peak_rss_mb": 561.94921875,
+      "peak_rss_kb": 580904,
+      "peak_rss_mb": 567.2890625,
       "planner_calibration_claim_selection_rule": "min_median_density_aware_score_then_min_p90_then_smaller_span_budget",
       "planner_calibration_claim_selection_schema_version": "phase3_planner_calibration_claim_selection_v1",
       "planner_calibration_selected_candidate_id": "span_budget_q4",
@@ -4843,7 +4843,7 @@
       "requested_mode": "partitioned_density",
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
-      "runtime_ms": 29.012051003519446,
+      "runtime_ms": 32.48139296192676,
       "runtime_path": "partitioned_density_descriptor_baseline",
       "runtime_path_classification": "supported_but_unfused",
       "seed": 20260318,
@@ -6185,8 +6185,8 @@
           "runtime_circuit_qbit_num": 8
         }
       ],
-      "peak_rss_kb": 575436,
-      "peak_rss_mb": 561.94921875,
+      "peak_rss_kb": 580904,
+      "peak_rss_mb": 567.2890625,
       "planner_calibration_claim_selection_rule": "min_median_density_aware_score_then_min_p90_then_smaller_span_budget",
       "planner_calibration_claim_selection_schema_version": "phase3_planner_calibration_claim_selection_v1",
       "planner_calibration_selected_candidate_id": "span_budget_q4",
@@ -6203,7 +6203,7 @@
       "requested_mode": "partitioned_density",
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
-      "runtime_ms": 33.653640013653785,
+      "runtime_ms": 33.62469607964158,
       "runtime_path": "partitioned_density_descriptor_fused_unitary_islands",
       "runtime_path_classification": "actually_fused",
       "seed": 20260318,
@@ -7620,8 +7620,8 @@
           "runtime_circuit_qbit_num": 8
         }
       ],
-      "peak_rss_kb": 575436,
-      "peak_rss_mb": 561.94921875,
+      "peak_rss_kb": 580904,
+      "peak_rss_mb": 567.2890625,
       "planner_calibration_claim_selection_rule": "min_median_density_aware_score_then_min_p90_then_smaller_span_budget",
       "planner_calibration_claim_selection_schema_version": "phase3_planner_calibration_claim_selection_v1",
       "planner_calibration_selected_candidate_id": "span_budget_q4",
@@ -7638,7 +7638,7 @@
       "requested_mode": "partitioned_density",
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
-      "runtime_ms": 37.032953987363726,
+      "runtime_ms": 45.338082942180336,
       "runtime_path": "partitioned_density_descriptor_baseline",
       "runtime_path_classification": "supported_but_unfused",
       "seed": 20260318,
@@ -9734,8 +9734,8 @@
           "runtime_circuit_qbit_num": 10
         }
       ],
-      "peak_rss_kb": 577588,
-      "peak_rss_mb": 564.05078125,
+      "peak_rss_kb": 583780,
+      "peak_rss_mb": 570.09765625,
       "planner_calibration_claim_selection_rule": "min_median_density_aware_score_then_min_p90_then_smaller_span_budget",
       "planner_calibration_claim_selection_schema_version": "phase3_planner_calibration_claim_selection_v1",
       "planner_calibration_selected_candidate_id": "span_budget_q4",
@@ -9752,7 +9752,7 @@
       "requested_mode": "partitioned_density",
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
-      "runtime_ms": 838.9659930253401,
+      "runtime_ms": 822.2872759215534,
       "runtime_path": "partitioned_density_descriptor_fused_unitary_islands",
       "runtime_path_classification": "actually_fused",
       "seed": 20260318,
@@ -11910,8 +11910,8 @@
           "runtime_circuit_qbit_num": 10
         }
       ],
-      "peak_rss_kb": 636744,
-      "peak_rss_mb": 621.8203125,
+      "peak_rss_kb": 640332,
+      "peak_rss_mb": 625.32421875,
       "planner_calibration_claim_selection_rule": "min_median_density_aware_score_then_min_p90_then_smaller_span_budget",
       "planner_calibration_claim_selection_schema_version": "phase3_planner_calibration_claim_selection_v1",
       "planner_calibration_selected_candidate_id": "span_budget_q4",
@@ -11928,7 +11928,7 @@
       "requested_mode": "partitioned_density",
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
-      "runtime_ms": 1016.5582820191048,
+      "runtime_ms": 980.5091260932386,
       "runtime_path": "partitioned_density_descriptor_fused_unitary_islands",
       "runtime_path_classification": "actually_fused",
       "seed": 20260318,
@@ -14262,8 +14262,8 @@
           "runtime_circuit_qbit_num": 10
         }
       ],
-      "peak_rss_kb": 649160,
-      "peak_rss_mb": 633.9453125,
+      "peak_rss_kb": 647424,
+      "peak_rss_mb": 632.25,
       "planner_calibration_claim_selection_rule": "min_median_density_aware_score_then_min_p90_then_smaller_span_budget",
       "planner_calibration_claim_selection_schema_version": "phase3_planner_calibration_claim_selection_v1",
       "planner_calibration_selected_candidate_id": "span_budget_q4",
@@ -14280,7 +14280,7 @@
       "requested_mode": "partitioned_density",
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
-      "runtime_ms": 1138.914440991357,
+      "runtime_ms": 1113.6852760100737,
       "runtime_path": "partitioned_density_descriptor_baseline",
       "runtime_path_classification": "deferred_or_unsupported_candidate",
       "seed": 20260318,
@@ -15569,8 +15569,8 @@
           "runtime_circuit_qbit_num": 8
         }
       ],
-      "peak_rss_kb": 649160,
-      "peak_rss_mb": 633.9453125,
+      "peak_rss_kb": 670960,
+      "peak_rss_mb": 655.234375,
       "planner_calibration_claim_selection_rule": "min_median_density_aware_score_then_min_p90_then_smaller_span_budget",
       "planner_calibration_claim_selection_schema_version": "phase3_planner_calibration_claim_selection_v1",
       "planner_calibration_selected_candidate_id": "span_budget_q4",
@@ -15587,7 +15587,7 @@
       "requested_mode": "partitioned_density",
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
-      "runtime_ms": 28.32597802625969,
+      "runtime_ms": 28.679909999482334,
       "runtime_path": "partitioned_density_descriptor_baseline",
       "runtime_path_classification": "supported_but_unfused",
       "seed": 20260318,
@@ -16929,8 +16929,8 @@
           "runtime_circuit_qbit_num": 8
         }
       ],
-      "peak_rss_kb": 649160,
-      "peak_rss_mb": 633.9453125,
+      "peak_rss_kb": 670960,
+      "peak_rss_mb": 655.234375,
       "planner_calibration_claim_selection_rule": "min_median_density_aware_score_then_min_p90_then_smaller_span_budget",
       "planner_calibration_claim_selection_schema_version": "phase3_planner_calibration_claim_selection_v1",
       "planner_calibration_selected_candidate_id": "span_budget_q4",
@@ -16947,7 +16947,7 @@
       "requested_mode": "partitioned_density",
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
-      "runtime_ms": 33.52752898354083,
+      "runtime_ms": 33.38926495052874,
       "runtime_path": "partitioned_density_descriptor_fused_unitary_islands",
       "runtime_path_classification": "actually_fused",
       "seed": 20260318,
@@ -18377,8 +18377,8 @@
           "runtime_circuit_qbit_num": 8
         }
       ],
-      "peak_rss_kb": 649160,
-      "peak_rss_mb": 633.9453125,
+      "peak_rss_kb": 670960,
+      "peak_rss_mb": 655.234375,
       "planner_calibration_claim_selection_rule": "min_median_density_aware_score_then_min_p90_then_smaller_span_budget",
       "planner_calibration_claim_selection_schema_version": "phase3_planner_calibration_claim_selection_v1",
       "planner_calibration_selected_candidate_id": "span_budget_q4",
@@ -18395,7 +18395,7 @@
       "requested_mode": "partitioned_density",
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
-      "runtime_ms": 36.631472990848124,
+      "runtime_ms": 36.42057499382645,
       "runtime_path": "partitioned_density_descriptor_baseline",
       "runtime_path_classification": "supported_but_unfused",
       "seed": 20260318,
@@ -20491,8 +20491,8 @@
           "runtime_circuit_qbit_num": 10
         }
       ],
-      "peak_rss_kb": 649160,
-      "peak_rss_mb": 633.9453125,
+      "peak_rss_kb": 670960,
+      "peak_rss_mb": 655.234375,
       "planner_calibration_claim_selection_rule": "min_median_density_aware_score_then_min_p90_then_smaller_span_budget",
       "planner_calibration_claim_selection_schema_version": "phase3_planner_calibration_claim_selection_v1",
       "planner_calibration_selected_candidate_id": "span_budget_q4",
@@ -20509,7 +20509,7 @@
       "requested_mode": "partitioned_density",
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
-      "runtime_ms": 834.23264301382,
+      "runtime_ms": 824.8114540474489,
       "runtime_path": "partitioned_density_descriptor_fused_unitary_islands",
       "runtime_path_classification": "actually_fused",
       "seed": 20260318,
@@ -22667,8 +22667,8 @@
           "runtime_circuit_qbit_num": 10
         }
       ],
-      "peak_rss_kb": 663636,
-      "peak_rss_mb": 648.08203125,
+      "peak_rss_kb": 670960,
+      "peak_rss_mb": 655.234375,
       "planner_calibration_claim_selection_rule": "min_median_density_aware_score_then_min_p90_then_smaller_span_budget",
       "planner_calibration_claim_selection_schema_version": "phase3_planner_calibration_claim_selection_v1",
       "planner_calibration_selected_candidate_id": "span_budget_q4",
@@ -22685,7 +22685,7 @@
       "requested_mode": "partitioned_density",
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
-      "runtime_ms": 978.6137840128504,
+      "runtime_ms": 1007.978492998518,
       "runtime_path": "partitioned_density_descriptor_fused_unitary_islands",
       "runtime_path_classification": "actually_fused",
       "seed": 20260318,
@@ -25019,8 +25019,8 @@
           "runtime_circuit_qbit_num": 10
         }
       ],
-      "peak_rss_kb": 663676,
-      "peak_rss_mb": 648.12109375,
+      "peak_rss_kb": 671572,
+      "peak_rss_mb": 655.83203125,
       "planner_calibration_claim_selection_rule": "min_median_density_aware_score_then_min_p90_then_smaller_span_budget",
       "planner_calibration_claim_selection_schema_version": "phase3_planner_calibration_claim_selection_v1",
       "planner_calibration_selected_candidate_id": "span_budget_q4",
@@ -25037,7 +25037,7 @@
       "requested_mode": "partitioned_density",
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
-      "runtime_ms": 1101.6790459980257,
+      "runtime_ms": 1116.6088560130447,
       "runtime_path": "partitioned_density_descriptor_baseline",
       "runtime_path_classification": "deferred_or_unsupported_candidate",
       "seed": 20260318,
@@ -26516,8 +26516,8 @@
           "runtime_circuit_qbit_num": 8
         }
       ],
-      "peak_rss_kb": 663752,
-      "peak_rss_mb": 648.1953125,
+      "peak_rss_kb": 672452,
+      "peak_rss_mb": 656.69140625,
       "planner_calibration_claim_selection_rule": "min_median_density_aware_score_then_min_p90_then_smaller_span_budget",
       "planner_calibration_claim_selection_schema_version": "phase3_planner_calibration_claim_selection_v1",
       "planner_calibration_selected_candidate_id": "span_budget_q4",
@@ -26534,7 +26534,7 @@
       "requested_mode": "partitioned_density",
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
-      "runtime_ms": 57.62982997111976,
+      "runtime_ms": 60.48573099542409,
       "runtime_path": "partitioned_density_descriptor_fused_unitary_islands",
       "runtime_path_classification": "actually_fused",
       "seed": 20260318,
@@ -28076,8 +28076,8 @@
           "runtime_circuit_qbit_num": 8
         }
       ],
-      "peak_rss_kb": 663752,
-      "peak_rss_mb": 648.1953125,
+      "peak_rss_kb": 672452,
+      "peak_rss_mb": 656.69140625,
       "planner_calibration_claim_selection_rule": "min_median_density_aware_score_then_min_p90_then_smaller_span_budget",
       "planner_calibration_claim_selection_schema_version": "phase3_planner_calibration_claim_selection_v1",
       "planner_calibration_selected_candidate_id": "span_budget_q4",
@@ -28094,7 +28094,7 @@
       "requested_mode": "partitioned_density",
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
-      "runtime_ms": 41.620492993388325,
+      "runtime_ms": 41.32580093573779,
       "runtime_path": "partitioned_density_descriptor_fused_unitary_islands",
       "runtime_path_classification": "actually_fused",
       "seed": 20260318,
@@ -29892,8 +29892,8 @@
           "runtime_circuit_qbit_num": 8
         }
       ],
-      "peak_rss_kb": 663752,
-      "peak_rss_mb": 648.1953125,
+      "peak_rss_kb": 672452,
+      "peak_rss_mb": 656.69140625,
       "planner_calibration_claim_selection_rule": "min_median_density_aware_score_then_min_p90_then_smaller_span_budget",
       "planner_calibration_claim_selection_schema_version": "phase3_planner_calibration_claim_selection_v1",
       "planner_calibration_selected_candidate_id": "span_budget_q4",
@@ -29910,7 +29910,7 @@
       "requested_mode": "partitioned_density",
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
-      "runtime_ms": 53.68903296766803,
+      "runtime_ms": 53.81923995446414,
       "runtime_path": "partitioned_density_descriptor_baseline",
       "runtime_path_classification": "supported_but_unfused",
       "seed": 20260318,
@@ -32202,8 +32202,8 @@
           "runtime_circuit_qbit_num": 10
         }
       ],
-      "peak_rss_kb": 663752,
-      "peak_rss_mb": 648.1953125,
+      "peak_rss_kb": 672452,
+      "peak_rss_mb": 656.69140625,
       "planner_calibration_claim_selection_rule": "min_median_density_aware_score_then_min_p90_then_smaller_span_budget",
       "planner_calibration_claim_selection_schema_version": "phase3_planner_calibration_claim_selection_v1",
       "planner_calibration_selected_candidate_id": "span_budget_q4",
@@ -32220,7 +32220,7 @@
       "requested_mode": "partitioned_density",
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
-      "runtime_ms": 1001.4047989971004,
+      "runtime_ms": 996.41703593079,
       "runtime_path": "partitioned_density_descriptor_baseline",
       "runtime_path_classification": "deferred_or_unsupported_candidate",
       "seed": 20260318,
@@ -34712,8 +34712,8 @@
           "runtime_circuit_qbit_num": 10
         }
       ],
-      "peak_rss_kb": 663752,
-      "peak_rss_mb": 648.1953125,
+      "peak_rss_kb": 672452,
+      "peak_rss_mb": 656.69140625,
       "planner_calibration_claim_selection_rule": "min_median_density_aware_score_then_min_p90_then_smaller_span_budget",
       "planner_calibration_claim_selection_schema_version": "phase3_planner_calibration_claim_selection_v1",
       "planner_calibration_selected_candidate_id": "span_budget_q4",
@@ -34730,7 +34730,7 @@
       "requested_mode": "partitioned_density",
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
-      "runtime_ms": 1074.550163000822,
+      "runtime_ms": 1081.097672926262,
       "runtime_path": "partitioned_density_descriptor_baseline",
       "runtime_path_classification": "supported_but_unfused",
       "seed": 20260318,
@@ -37612,8 +37612,8 @@
           "runtime_circuit_qbit_num": 10
         }
       ],
-      "peak_rss_kb": 663752,
-      "peak_rss_mb": 648.1953125,
+      "peak_rss_kb": 672452,
+      "peak_rss_mb": 656.69140625,
       "planner_calibration_claim_selection_rule": "min_median_density_aware_score_then_min_p90_then_smaller_span_budget",
       "planner_calibration_claim_selection_schema_version": "phase3_planner_calibration_claim_selection_v1",
       "planner_calibration_selected_candidate_id": "span_budget_q4",
@@ -37630,7 +37630,7 @@
       "requested_mode": "partitioned_density",
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
-      "runtime_ms": 1775.7012420333922,
+      "runtime_ms": 1782.3399070184678,
       "runtime_path": "partitioned_density_descriptor_baseline",
       "runtime_path_classification": "deferred_or_unsupported_candidate",
       "seed": 20260318,

@@ -839,14 +839,14 @@
     "total_cases": 25
   },
   "software": {
-    "correctness_evidence_package_schema_version": "phase3_correctness_evidence_package_v1",
+    "correctness_evidence_package_schema_version": "correctness_evidence_package_v1",
     "numpy": "2.3.5",
     "planner_calibration_selected_candidate_id": "span_budget_q4",
     "python": "3.13.9",
     "scipy": "1.16.3"
   },
   "status": "pass",
-  "suite_name": "phase3_performance_evidence_benchmark_matrix",
+  "suite_name": "performance_evidence_benchmark_matrix",
   "summary": {
     "continuity_cases": 4,
     "continuity_qbits": [

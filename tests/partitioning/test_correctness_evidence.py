@@ -1,3 +1,4 @@
+from collections.abc import Callable
 from pathlib import Path
 import sys
 
@@ -45,6 +46,40 @@ from benchmarks.density_matrix.correctness_evidence.summary_consistency_validati
     build_artifact_bundle as build_summary_consistency_bundle,
 )
 
+_CORRECTNESS_POSITIVE_CASE_SLICES: tuple[
+    tuple[Callable[[], list[dict]], Callable[[list[dict]], dict]],
+    ...,
+] = (
+    (build_correctness_matrix_cases, build_correctness_matrix_bundle),
+    (build_sequential_correctness_cases, build_sequential_correctness_bundle),
+    (build_external_correctness_cases, build_external_correctness_bundle),
+    (build_output_integrity_cases, build_output_integrity_bundle),
+    (build_runtime_classification_cases, build_runtime_classification_bundle),
+)
+
+_CORRECTNESS_POSITIVE_CASE_SLICE_IDS = (
+    "correctness_matrix",
+    "sequential_correctness",
+    "external_correctness",
+    "output_integrity",
+    "runtime_classification",
+)
+
+
+@pytest.mark.parametrize(
+    "build_cases_fn,build_bundle_fn",
+    _CORRECTNESS_POSITIVE_CASE_SLICES,
+    ids=list(_CORRECTNESS_POSITIVE_CASE_SLICE_IDS),
+)
+def test_correctness_evidence_positive_case_slice_bundle_schema_and_pass(
+    build_cases_fn: Callable[[], list[dict]],
+    build_bundle_fn: Callable[[list[dict]], dict],
+):
+    cases = build_cases_fn()
+    bundle = build_bundle_fn(cases)
+    assert bundle["status"] == "pass"
+    assert bundle["record_schema_version"] == CORRECTNESS_EVIDENCE_CASE_SCHEMA_VERSION
+
 
 def test_correctness_evidence_correctness_matrix_covers_required_inventory():
     cases = build_correctness_matrix_cases()
@@ -58,10 +93,8 @@ def test_correctness_evidence_correctness_matrix_covers_required_inventory():
     assert sum(case["external_reference_required"] for case in cases) == 4
 
 
-def test_correctness_evidence_correctness_matrix_bundle_core_fields_are_stable():
+def test_correctness_evidence_correctness_matrix_bundle_summary_counts():
     bundle = build_correctness_matrix_bundle(build_correctness_matrix_cases())
-    assert bundle["status"] == "pass"
-    assert bundle["record_schema_version"] == CORRECTNESS_EVIDENCE_CASE_SCHEMA_VERSION
     assert bundle["summary"]["continuity_cases"] == 4
     assert bundle["summary"]["microcases"] == 3
     assert bundle["summary"]["structured_cases"] == 18
@@ -84,12 +117,8 @@ def test_correctness_evidence_sequential_correctness_internal_gate_passes_full_m
     )
 
 
-def test_correctness_evidence_sequential_correctness_bundle_core_fields_are_stable(
-    sequential_correctness_cases,
-):
-    bundle = build_sequential_correctness_bundle(sequential_correctness_cases)
-    assert bundle["status"] == "pass"
-    assert bundle["record_schema_version"] == CORRECTNESS_EVIDENCE_CASE_SCHEMA_VERSION
+def test_correctness_evidence_sequential_correctness_bundle_summary():
+    bundle = build_sequential_correctness_bundle(build_sequential_correctness_cases())
     assert bundle["summary"]["total_cases"] == 25
     assert bundle["summary"]["internal_reference_passes"] == 25
 
@@ -102,10 +131,8 @@ def test_correctness_evidence_external_correctness_is_bounded_and_exact():
     assert all(case["external_reference_pass"] for case in cases)
 
 
-def test_correctness_evidence_external_correctness_bundle_core_fields_are_stable():
+def test_correctness_evidence_external_correctness_bundle_summary():
     bundle = build_external_correctness_bundle(build_external_correctness_cases())
-    assert bundle["status"] == "pass"
-    assert bundle["record_schema_version"] == CORRECTNESS_EVIDENCE_CASE_SCHEMA_VERSION
     assert bundle["summary"]["total_cases"] == 4
     assert bundle["summary"]["external_reference_passes"] == 4
 
@@ -124,11 +151,8 @@ def test_correctness_evidence_output_integrity_and_continuity_are_present(
     assert all(case["continuity_energy_pass"] for case in continuity_cases)
 
 
-def test_correctness_evidence_output_integrity_bundle_core_fields_are_stable(
-    output_integrity_cases,
-):
+def test_correctness_evidence_output_integrity_bundle_summary(output_integrity_cases):
     bundle = build_output_integrity_bundle(output_integrity_cases)
-    assert bundle["status"] == "pass"
     assert bundle["summary"]["total_cases"] == 25
     assert bundle["summary"]["continuity_cases"] == 4
     assert bundle["summary"]["continuity_energy_passes"] == 4
@@ -151,9 +175,8 @@ def test_correctness_evidence_runtime_classifications_cover_full_matrix():
     assert all(case["supported_runtime_case"] for case in cases)
 
 
-def test_correctness_evidence_runtime_classification_bundle_core_fields_are_stable():
+def test_correctness_evidence_runtime_classification_bundle_summary():
     bundle = build_runtime_classification_bundle(build_runtime_classification_cases())
-    assert bundle["status"] == "pass"
     assert bundle["summary"]["total_cases"] == 25
     assert sum(
         bundle["summary"][key]

@@ -10,18 +10,18 @@ Run with:
 
 from __future__ import annotations
 
-import argparse
-from pathlib import Path
-
 from benchmarks.density_matrix.correctness_evidence.common import (
-    CORRECTNESS_EVIDENCE_CASE_SCHEMA_VERSION,
-    build_correctness_evidence_selected_candidate,
-    build_correctness_evidence_software_metadata,
     correctness_evidence_output_dir,
-    write_artifact_bundle,
 )
 from benchmarks.density_matrix.correctness_evidence.records import (
     build_correctness_evidence_positive_records,
+)
+from benchmarks.density_matrix.correctness_evidence.validation_support import (
+    assemble_positive_case_bundle,
+)
+from benchmarks.density_matrix.validation_scaffold import (
+    require_bundle_fields,
+    run_case_slice_cli,
 )
 
 SUITE_NAME = "correctness_evidence_output_integrity"
@@ -46,61 +46,38 @@ def build_artifact_bundle(cases: list[dict]) -> dict:
     output_integrity_passes = sum(case["output_integrity_pass"] for case in cases)
     continuity_cases = [case for case in cases if case["continuity_energy_required"]]
     continuity_energy_passes = sum(case["continuity_energy_pass"] for case in continuity_cases)
-    bundle = {
-        "suite_name": SUITE_NAME,
-        "status": "pass"
+    status = (
+        "pass"
         if output_integrity_passes == len(cases)
         and continuity_energy_passes == len(continuity_cases)
-        else "fail",
-        "record_schema_version": CORRECTNESS_EVIDENCE_CASE_SCHEMA_VERSION,
-        "software": build_correctness_evidence_software_metadata(),
-        "selected_candidate": build_correctness_evidence_selected_candidate(),
-        "summary": {
-            "total_cases": len(cases),
-            "output_integrity_passes": output_integrity_passes,
-            "continuity_cases": len(continuity_cases),
-            "continuity_energy_passes": continuity_energy_passes,
-        },
-        "cases": cases,
+        else "fail"
+    )
+    summary = {
+        "total_cases": len(cases),
+        "output_integrity_passes": output_integrity_passes,
+        "continuity_cases": len(continuity_cases),
+        "continuity_energy_passes": continuity_energy_passes,
     }
-    missing = [field for field in ARTIFACT_CORE_FIELDS if field not in bundle]
-    if missing:
-        raise ValueError(
-            "Output integrity bundle missing required fields: {}".format(
-                ", ".join(missing)
-            )
-        )
+    bundle = assemble_positive_case_bundle(SUITE_NAME, status, summary, cases)
+    require_bundle_fields(bundle, ARTIFACT_CORE_FIELDS, "Output integrity bundle")
     return bundle
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "--output-dir",
-        type=Path,
-        default=DEFAULT_OUTPUT_DIR,
-        help="Directory to write the output integrity bundle into.",
-    )
-    parser.add_argument(
-        "--quiet",
-        action="store_true",
-        help="Suppress per-case console output.",
-    )
-    args = parser.parse_args(argv)
-
-    cases = build_cases()
-    bundle = build_artifact_bundle(cases)
-    output_path = write_artifact_bundle(bundle, args.output_dir, ARTIFACT_FILENAME)
-
-    if not args.quiet:
-        print(
+    return run_case_slice_cli(
+        argv,
+        build_cases=build_cases,
+        build_artifact_bundle=build_artifact_bundle,
+        artifact_filename=ARTIFACT_FILENAME,
+        default_output_dir=DEFAULT_OUTPUT_DIR,
+        description=__doc__ or "",
+        output_dir_help="Directory to write the output integrity bundle into.",
+        quiet_report=lambda b: print(
             "output_integrity_passes={output_integrity_passes}, continuity_energy_passes={continuity_energy_passes}".format(
-                **bundle["summary"]
+                **b["summary"]
             )
-        )
-        print("Wrote {}".format(output_path))
-
-    return 0 if bundle["status"] == "pass" else 1
+        ),
+    )
 
 
 if __name__ == "__main__":

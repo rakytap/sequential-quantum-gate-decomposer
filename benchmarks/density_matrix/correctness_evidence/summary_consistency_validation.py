@@ -25,6 +25,7 @@ from benchmarks.density_matrix.correctness_evidence.common import (
 from benchmarks.density_matrix.correctness_evidence.records import (
     correctness_evidence_counted_supported_case,
 )
+from benchmarks.density_matrix.validation_scaffold import require_bundle_fields
 
 SUITE_NAME = "correctness_evidence_summary_consistency"
 ARTIFACT_FILENAME = "summary_consistency_bundle.json"
@@ -98,13 +99,7 @@ def build_artifact_bundle() -> dict:
             }
         ],
     }
-    missing = [field for field in ARTIFACT_CORE_FIELDS if field not in bundle]
-    if missing:
-        raise ValueError(
-            "Summary consistency bundle missing required fields: {}".format(
-                ", ".join(missing)
-            )
-        )
+    require_bundle_fields(bundle, ARTIFACT_CORE_FIELDS, "Summary consistency bundle")
     return bundle
 
 

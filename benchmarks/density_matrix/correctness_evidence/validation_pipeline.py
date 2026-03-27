@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import sys
 from pathlib import Path
+from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 if str(REPO_ROOT) not in sys.path:
@@ -45,100 +46,42 @@ from benchmarks.density_matrix.correctness_evidence.common import (
 )
 
 
-def _write_slice_bundle(module, bundle: dict) -> Path:
+def _write_slice_bundle(module: Any, bundle: dict) -> Path:
     return write_artifact_bundle(bundle, module.DEFAULT_OUTPUT_DIR, module.ARTIFACT_FILENAME)
+
+
+# (module, build_cases_attr, build_bundle_attr)
+_CASE_SLICE_REGISTRY: tuple[tuple[Any, str, str], ...] = (
+    (correctness_matrix, "build_cases", "build_artifact_bundle"),
+    (sequential_correctness, "build_cases", "build_artifact_bundle"),
+    (external_correctness, "build_cases", "build_artifact_bundle"),
+    (output_integrity, "build_cases", "build_artifact_bundle"),
+    (runtime_classification, "build_cases", "build_artifact_bundle"),
+    (unsupported_boundary, "build_cases", "build_artifact_bundle"),
+)
+
+# (module, build_bundle_attr) — nullary bundle builders
+_NULLARY_BUNDLE_REGISTRY: tuple[tuple[Any, str], ...] = (
+    (correctness_package, "build_artifact_bundle"),
+    (summary_consistency, "build_artifact_bundle"),
+)
 
 
 def run_pipeline() -> list[tuple[str, str, Path]]:
     results: list[tuple[str, str, Path]] = []
 
-    correctness_matrix_cases = correctness_matrix.build_cases()
-    correctness_matrix_bundle = correctness_matrix.build_artifact_bundle(
-        correctness_matrix_cases
-    )
-    results.append(
-        (
-            correctness_matrix.SUITE_NAME,
-            correctness_matrix_bundle["status"],
-            _write_slice_bundle(correctness_matrix, correctness_matrix_bundle),
+    for mod, cases_attr, bundle_attr in _CASE_SLICE_REGISTRY:
+        cases = getattr(mod, cases_attr)()
+        bundle = getattr(mod, bundle_attr)(cases)
+        results.append(
+            (mod.SUITE_NAME, bundle["status"], _write_slice_bundle(mod, bundle))
         )
-    )
 
-    sequential_cases = sequential_correctness.build_cases()
-    sequential_bundle = sequential_correctness.build_artifact_bundle(sequential_cases)
-    results.append(
-        (
-            sequential_correctness.SUITE_NAME,
-            sequential_bundle["status"],
-            _write_slice_bundle(sequential_correctness, sequential_bundle),
+    for mod, bundle_attr in _NULLARY_BUNDLE_REGISTRY:
+        bundle = getattr(mod, bundle_attr)()
+        results.append(
+            (mod.SUITE_NAME, bundle["status"], _write_slice_bundle(mod, bundle))
         )
-    )
-
-    external_cases = external_correctness.build_cases()
-    external_bundle = external_correctness.build_artifact_bundle(external_cases)
-    results.append(
-        (
-            external_correctness.SUITE_NAME,
-            external_bundle["status"],
-            _write_slice_bundle(external_correctness, external_bundle),
-        )
-    )
-
-    output_integrity_cases = output_integrity.build_cases()
-    output_integrity_bundle = output_integrity.build_artifact_bundle(
-        output_integrity_cases
-    )
-    results.append(
-        (
-            output_integrity.SUITE_NAME,
-            output_integrity_bundle["status"],
-            _write_slice_bundle(output_integrity, output_integrity_bundle),
-        )
-    )
-
-    runtime_classification_cases = runtime_classification.build_cases()
-    runtime_classification_bundle = runtime_classification.build_artifact_bundle(
-        runtime_classification_cases
-    )
-    results.append(
-        (
-            runtime_classification.SUITE_NAME,
-            runtime_classification_bundle["status"],
-            _write_slice_bundle(
-                runtime_classification, runtime_classification_bundle
-            ),
-        )
-    )
-
-    unsupported_boundary_cases = unsupported_boundary.build_cases()
-    unsupported_boundary_bundle = unsupported_boundary.build_artifact_bundle(
-        unsupported_boundary_cases
-    )
-    results.append(
-        (
-            unsupported_boundary.SUITE_NAME,
-            unsupported_boundary_bundle["status"],
-            _write_slice_bundle(unsupported_boundary, unsupported_boundary_bundle),
-        )
-    )
-
-    correctness_package_bundle = correctness_package.build_artifact_bundle()
-    results.append(
-        (
-            correctness_package.SUITE_NAME,
-            correctness_package_bundle["status"],
-            _write_slice_bundle(correctness_package, correctness_package_bundle),
-        )
-    )
-
-    summary_bundle = summary_consistency.build_artifact_bundle()
-    results.append(
-        (
-            summary_consistency.SUITE_NAME,
-            summary_bundle["status"],
-            _write_slice_bundle(summary_consistency, summary_bundle),
-        )
-    )
 
     return results
 
