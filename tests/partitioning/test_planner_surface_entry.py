@@ -7,10 +7,8 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from benchmarks.density_matrix.planner_surface.common import (
-    build_phase2_continuity_vqe,
-)
-from benchmarks.density_matrix.planner_surface.workloads import (
+from tests.partitioning.fixtures.continuity import build_phase2_continuity_vqe
+from tests.partitioning.fixtures.workloads import (
     MANDATORY_NOISE_PATTERNS,
     STRUCTURED_FAMILY_NAMES,
     STRUCTURED_QUBITS,

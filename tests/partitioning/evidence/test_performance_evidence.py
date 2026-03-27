@@ -4,7 +4,7 @@ import sys
 
 import pytest
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
+REPO_ROOT = Path(__file__).resolve().parents[3]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
@@ -43,6 +43,10 @@ from benchmarks.density_matrix.performance_evidence.benchmark_bundle_validation 
 )
 from benchmarks.density_matrix.performance_evidence.summary_consistency_validation import (
     build_summary_consistency_bundle,
+)
+from tests.partitioning.evidence.bundle_assertions import (
+    assert_performance_benchmark_matrix_bundle_core,
+    assert_performance_full_benchmark_package_bundle,
 )
 
 _PERFORMANCE_RECORD_SCHEMA_SLICES: tuple[
@@ -100,12 +104,7 @@ def test_performance_evidence_benchmark_matrix_covers_required_inventory():
 
 def test_performance_evidence_benchmark_matrix_bundle_core_fields_are_stable():
     bundle = build_benchmark_matrix_bundle(build_benchmark_matrix_cases())
-    assert bundle["status"] == "pass"
-    assert "record_schema_version" not in bundle
-    assert bundle["summary"]["total_cases"] == 34
-    assert bundle["summary"]["continuity_cases"] == 4
-    assert bundle["summary"]["structured_cases"] == 30
-    assert bundle["summary"]["representative_review_cases"] == 6
+    assert_performance_benchmark_matrix_bundle_core(bundle)
 
 
 @pytest.fixture(scope="module")
@@ -196,11 +195,11 @@ def test_performance_evidence_diagnosis_bundle_summary():
 
 def test_performance_evidence_benchmark_package_is_complete():
     bundle = build_performance_evidence_benchmark_package()
-    assert bundle["status"] == "pass"
-    assert bundle["schema_version"] == PERFORMANCE_EVIDENCE_BENCHMARK_PACKAGE_SCHEMA_VERSION
-    assert bundle["summary"]["total_cases"] == 34
-    assert bundle["summary"]["representative_review_cases"] == 6
-    assert bundle["summary"]["correctness_evidence_boundary_cases"] == len(bundle["negative_cases"])
+    assert_performance_full_benchmark_package_bundle(
+        bundle,
+        schema_version=PERFORMANCE_EVIDENCE_BENCHMARK_PACKAGE_SCHEMA_VERSION,
+        negative_case_count=len(bundle["negative_cases"]),
+    )
 
 
 def test_performance_evidence_summary_consistency_closes_from_positive_or_diagnosis_path():

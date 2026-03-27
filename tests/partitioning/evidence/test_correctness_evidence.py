@@ -4,7 +4,7 @@ import sys
 
 import pytest
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
+REPO_ROOT = Path(__file__).resolve().parents[3]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
@@ -44,6 +44,10 @@ from benchmarks.density_matrix.correctness_evidence.correctness_bundle_validatio
 )
 from benchmarks.density_matrix.correctness_evidence.summary_consistency_validation import (
     build_artifact_bundle as build_summary_consistency_bundle,
+)
+from tests.partitioning.evidence.bundle_assertions import (
+    assert_correctness_full_package_bundle,
+    assert_correctness_unsupported_boundary_bundle_core,
 )
 
 _CORRECTNESS_POSITIVE_CASE_SLICES: tuple[
@@ -206,20 +210,19 @@ def test_correctness_evidence_unsupported_boundary_negative_evidence_is_stage_se
 
 def test_correctness_evidence_unsupported_boundary_bundle_core_fields_are_stable():
     bundle = build_unsupported_boundary_bundle(build_unsupported_boundary_cases())
-    assert bundle["status"] == "pass"
-    assert bundle["negative_record_schema_version"] == CORRECTNESS_EVIDENCE_NEGATIVE_RECORD_SCHEMA_VERSION
-    assert bundle["summary"]["planner_entry_cases"] >= 1
-    assert bundle["summary"]["descriptor_generation_cases"] >= 1
-    assert bundle["summary"]["runtime_stage_cases"] >= 1
+    assert_correctness_unsupported_boundary_bundle_core(
+        bundle,
+        negative_record_schema_version=CORRECTNESS_EVIDENCE_NEGATIVE_RECORD_SCHEMA_VERSION,
+    )
 
 
 def test_correctness_evidence_correctness_package_is_complete():
     bundle = build_correctness_package_bundle()
-    assert bundle["status"] == "pass"
-    assert bundle["schema_version"] == CORRECTNESS_PACKAGE_SCHEMA_VERSION
-    assert bundle["summary"]["total_cases"] == 25
-    assert bundle["summary"]["counted_supported_cases"] == 25
-    assert bundle["summary"]["unsupported_boundary_cases"] == len(bundle["negative_cases"])
+    assert_correctness_full_package_bundle(
+        bundle,
+        schema_version=CORRECTNESS_PACKAGE_SCHEMA_VERSION,
+        unsupported_case_count=len(bundle["negative_cases"]),
+    )
 
 
 def test_correctness_evidence_summary_consistency_closes_only_from_counted_supported_evidence():
