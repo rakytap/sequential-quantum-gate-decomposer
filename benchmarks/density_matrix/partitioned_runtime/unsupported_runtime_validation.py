@@ -30,7 +30,11 @@ from benchmarks.density_matrix.planner_surface.common import (
 from benchmarks.density_matrix.planner_surface.workloads import (
     build_microcase_descriptor_set,
 )
-from squander.partitioning.noisy_planner import build_phase3_continuity_partition_descriptor_set
+from squander.partitioning.noisy_planner import (
+    PLANNER_OP_KIND_GATE,
+    PLANNER_OP_KIND_NOISE,
+    build_phase3_continuity_partition_descriptor_set,
+)
 from squander.partitioning.noisy_runtime import execute_partitioned_density
 
 SUITE_NAME = "phase3_partitioned_runtime_unsupported_runtime"
@@ -75,15 +79,12 @@ def _unsupported_case(case_name: str, runner) -> dict:
     }
 
 
-def _replace_member(descriptor_set, *, predicate, replacer):
-    partitions = list(descriptor_set.partitions)
-    for partition_index, partition in enumerate(partitions):
-        members = list(partition.members)
-        for member_index, member in enumerate(members):
-            if predicate(member):
-                members[member_index] = replacer(member)
-                partitions[partition_index] = replace(partition, members=tuple(members))
-                return replace(descriptor_set, partitions=tuple(partitions))
+def _replace_first_operation(descriptor_set, *, predicate, replacer):
+    ops = list(descriptor_set.operations)
+    for i, op in enumerate(ops):
+        if predicate(op):
+            ops[i] = replacer(op)
+            return replace(descriptor_set, operations=tuple(ops))
     raise ValueError("Unable to build requested unsupported runtime case")
 
 
@@ -106,10 +107,10 @@ def _unsupported_gate_name_runner():
     descriptor_set = build_microcase_descriptor_set(
         "microcase_4q_partition_boundary_triplet"
     )
-    bad_descriptor = _replace_member(
+    bad_descriptor = _replace_first_operation(
         descriptor_set,
-        predicate=lambda member: member.kind == "gate",
-        replacer=lambda member: replace(member, name="CZ"),
+        predicate=lambda op: op.kind == PLANNER_OP_KIND_GATE,
+        replacer=lambda op: replace(op, name="CZ"),
     )
     parameters = build_initial_parameters(bad_descriptor.parameter_count)
     return lambda: execute_partitioned_density(bad_descriptor, parameters)
@@ -119,10 +120,10 @@ def _unsupported_noise_name_runner():
     descriptor_set = build_microcase_descriptor_set(
         "microcase_4q_partition_boundary_triplet"
     )
-    bad_descriptor = _replace_member(
+    bad_descriptor = _replace_first_operation(
         descriptor_set,
-        predicate=lambda member: member.kind == "noise",
-        replacer=lambda member: replace(member, name="depolarizing"),
+        predicate=lambda op: op.kind == PLANNER_OP_KIND_NOISE,
+        replacer=lambda op: replace(op, name="depolarizing"),
     )
     parameters = build_initial_parameters(bad_descriptor.parameter_count)
     return lambda: execute_partitioned_density(bad_descriptor, parameters)
@@ -132,10 +133,10 @@ def _gate_fixed_value_runner():
     descriptor_set = build_microcase_descriptor_set(
         "microcase_4q_partition_boundary_triplet"
     )
-    bad_descriptor = _replace_member(
+    bad_descriptor = _replace_first_operation(
         descriptor_set,
-        predicate=lambda member: member.kind == "gate",
-        replacer=lambda member: replace(member, fixed_value=0.1),
+        predicate=lambda op: op.kind == PLANNER_OP_KIND_GATE,
+        replacer=lambda op: replace(op, fixed_value=0.1),
     )
     parameters = build_initial_parameters(bad_descriptor.parameter_count)
     return lambda: execute_partitioned_density(bad_descriptor, parameters)

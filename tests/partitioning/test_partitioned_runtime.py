@@ -267,7 +267,7 @@ def test_runtime_operation_alignment_descriptor_and_segment_policies():
     )
 
     segment = partition.members[:3]
-    assert all(m.is_unitary for m in segment)
+    assert all(validated.canonical_operation_for(m).is_unitary for m in segment)
     circuit_seg, ordered_seg = noisy_runtime_mod._build_runtime_circuit(
         validated,
         segment,

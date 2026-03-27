@@ -36,6 +36,120 @@
             1
           ],
           "member_count": 5,
+          "members": [
+            {
+              "canonical_operation_index": 0,
+              "control_qbit": null,
+              "fixed_value": null,
+              "is_unitary": true,
+              "kind": "gate",
+              "local_control_qbit": null,
+              "local_param_start": 0,
+              "local_qubit_support": [
+                1
+              ],
+              "local_target_qbit": 1,
+              "name": "U3",
+              "param_count": 3,
+              "param_start": 0,
+              "partition_member_index": 0,
+              "qubit_support": [
+                1
+              ],
+              "source_gate_index": 0,
+              "target_qbit": 1
+            },
+            {
+              "canonical_operation_index": 1,
+              "control_qbit": null,
+              "fixed_value": 0.1,
+              "is_unitary": false,
+              "kind": "noise",
+              "local_control_qbit": null,
+              "local_param_start": 3,
+              "local_qubit_support": [
+                0
+              ],
+              "local_target_qbit": 0,
+              "name": "local_depolarizing",
+              "param_count": 0,
+              "param_start": 3,
+              "partition_member_index": 1,
+              "qubit_support": [
+                0
+              ],
+              "source_gate_index": 0,
+              "target_qbit": 0
+            },
+            {
+              "canonical_operation_index": 2,
+              "control_qbit": null,
+              "fixed_value": null,
+              "is_unitary": true,
+              "kind": "gate",
+              "local_control_qbit": null,
+              "local_param_start": 3,
+              "local_qubit_support": [
+                0
+              ],
+              "local_target_qbit": 0,
+              "name": "U3",
+              "param_count": 3,
+              "param_start": 3,
+              "partition_member_index": 2,
+              "qubit_support": [
+                0
+              ],
+              "source_gate_index": 1,
+              "target_qbit": 0
+            },
+            {
+              "canonical_operation_index": 3,
+              "control_qbit": 0,
+              "fixed_value": null,
+              "is_unitary": true,
+              "kind": "gate",
+              "local_control_qbit": 0,
+              "local_param_start": 6,
+              "local_qubit_support": [
+                0,
+                1
+              ],
+              "local_target_qbit": 1,
+              "name": "CNOT",
+              "param_count": 0,
+              "param_start": 6,
+              "partition_member_index": 3,
+              "qubit_support": [
+                0,
+                1
+              ],
+              "source_gate_index": 2,
+              "target_qbit": 1
+            },
+            {
+              "canonical_operation_index": 4,
+              "control_qbit": null,
+              "fixed_value": 0.05,
+              "is_unitary": false,
+              "kind": "noise",
+              "local_control_qbit": null,
+              "local_param_start": 6,
+              "local_qubit_support": [
+                1
+              ],
+              "local_target_qbit": 1,
+              "name": "amplitude_damping",
+              "param_count": 0,
+              "param_start": 6,
+              "partition_member_index": 4,
+              "qubit_support": [
+                1
+              ],
+              "source_gate_index": 2,
+              "target_qbit": 1
+            }
+          ],
           "noise_count": 2,
           "operation_kinds": [
             "gate",
@@ -94,6 +208,52 @@
             3
           ],
           "member_count": 2,
+          "members": [
+            {
+              "canonical_operation_index": 5,
+              "control_qbit": null,
+              "fixed_value": null,
+              "is_unitary": true,
+              "kind": "gate",
+              "local_control_qbit": null,
+              "local_param_start": 0,
+              "local_qubit_support": [
+                0
+              ],
+              "local_target_qbit": 0,
+              "name": "U3",
+              "param_count": 3,
+              "param_start": 6,
+              "partition_member_index": 0,
+              "qubit_support": [
+                2
+              ],
+              "source_gate_index": 3,
+              "target_qbit": 2
+            },
+            {
+              "canonical_operation_index": 6,
+              "control_qbit": null,
+              "fixed_value": null,
+              "is_unitary": true,
+              "kind": "gate",
+              "local_control_qbit": null,
+              "local_param_start": 3,
+              "local_qubit_support": [
+                1
+              ],
+              "local_target_qbit": 1,
+              "name": "U3",
+              "param_count": 3,
+              "param_start": 9,
+              "partition_member_index": 1,
+              "qubit_support": [
+                3
+              ],
+              "source_gate_index": 4,
+              "target_qbit": 3
+            }
+          ],
           "noise_count": 0,
           "operation_kinds": [
             "gate",
@@ -140,6 +300,30 @@
             0
           ],
           "member_count": 1,
+          "members": [
+            {
+              "canonical_operation_index": 7,
+              "control_qbit": null,
+              "fixed_value": 0.07,
+              "is_unitary": false,
+              "kind": "noise",
+              "local_control_qbit": null,
+              "local_param_start": 0,
+              "local_qubit_support": [
+                0
+              ],
+              "local_target_qbit": 0,
+              "name": "phase_damping",
+              "param_count": 0,
+              "param_start": 12,
+              "partition_member_index": 0,
+              "qubit_support": [
+                0
+              ],
+              "source_gate_index": 4,
+              "target_qbit": 0
+            }
+          ],
           "noise_count": 1,
           "operation_kinds": [
             "noise"
@@ -178,6 +362,54 @@
             3
           ],
           "member_count": 2,
+          "members": [
+            {
+              "canonical_operation_index": 8,
+              "control_qbit": 2,
+              "fixed_value": null,
+              "is_unitary": true,
+              "kind": "gate",
+              "local_control_qbit": 0,
+              "local_param_start": 0,
+              "local_qubit_support": [
+                0,
+                1
+              ],
+              "local_target_qbit": 1,
+              "name": "CNOT",
+              "param_count": 0,
+              "param_start": 12,
+              "partition_member_index": 0,
+              "qubit_support": [
+                2,
+                3
+              ],
+              "source_gate_index": 5,
+              "target_qbit": 3
+            },
+            {
+              "canonical_operation_index": 9,
+              "control_qbit": null,
+              "fixed_value": null,
+              "is_unitary": true,
+              "kind": "gate",
+              "local_control_qbit": null,
+              "local_param_start": 0,
+              "local_qubit_support": [
+                0
+              ],
+              "local_target_qbit": 0,
+              "name": "U3",
+              "param_count": 3,
+              "param_start": 12,
+              "partition_member_index": 1,
+              "qubit_support": [
+                2
+              ],
+              "source_gate_index": 6,
+              "target_qbit": 2
+            }
+          ],
           "noise_count": 0,
           "operation_kinds": [
             "gate",
@@ -225,6 +457,54 @@
             2
           ],
           "member_count": 2,
+          "members": [
+            {
+              "canonical_operation_index": 10,
+              "control_qbit": null,
+              "fixed_value": null,
+              "is_unitary": true,
+              "kind": "gate",
+              "local_control_qbit": null,
+              "local_param_start": 0,
+              "local_qubit_support": [
+                0
+              ],
+              "local_target_qbit": 0,
+              "name": "U3",
+              "param_count": 3,
+              "param_start": 15,
+              "partition_member_index": 0,
+              "qubit_support": [
+                1
+              ],
+              "source_gate_index": 7,
+              "target_qbit": 1
+            },
+            {
+              "canonical_operation_index": 11,
+              "control_qbit": 1,
+              "fixed_value": null,
+              "is_unitary": true,
+              "kind": "gate",
+              "local_control_qbit": 0,
+              "local_param_start": 3,
+              "local_qubit_support": [
+                0,
+                1
+              ],
+              "local_target_qbit": 1,
+              "name": "CNOT",
+              "param_count": 0,
+              "param_start": 18,
+              "partition_member_index": 1,
+              "qubit_support": [
+                1,
+                2
+              ],
+              "source_gate_index": 8,
+              "target_qbit": 2
+            }
+          ],
           "noise_count": 0,
           "operation_kinds": [
             "gate",
@@ -292,6 +572,98 @@
             1
           ],
           "member_count": 4,
+          "members": [
+            {
+              "canonical_operation_index": 0,
+              "control_qbit": null,
+              "fixed_value": null,
+              "is_unitary": true,
+              "kind": "gate",
+              "local_control_qbit": null,
+              "local_param_start": 0,
+              "local_qubit_support": [
+                0
+              ],
+              "local_target_qbit": 0,
+              "name": "U3",
+              "param_count": 3,
+              "param_start": 0,
+              "partition_member_index": 0,
+              "qubit_support": [
+                0
+              ],
+              "source_gate_index": 0,
+              "target_qbit": 0
+            },
+            {
+              "canonical_operation_index": 1,
+              "control_qbit": null,
+              "fixed_value": null,
+              "is_unitary": true,
+              "kind": "gate",
+              "local_control_qbit": null,
+              "local_param_start": 3,
+              "local_qubit_support": [
+                1
+              ],
+              "local_target_qbit": 1,
+              "name": "U3",
+              "param_count": 3,
+              "param_start": 3,
+              "partition_member_index": 1,
+              "qubit_support": [
+                1
+              ],
+              "source_gate_index": 1,
+              "target_qbit": 1
+            },
+            {
+              "canonical_operation_index": 2,
+              "control_qbit": 0,
+              "fixed_value": null,
+              "is_unitary": true,
+              "kind": "gate",
+              "local_control_qbit": 0,
+              "local_param_start": 6,
+              "local_qubit_support": [
+                0,
+                1
+              ],
+              "local_target_qbit": 1,
+              "name": "CNOT",
+              "param_count": 0,
+              "param_start": 6,
+              "partition_member_index": 2,
+              "qubit_support": [
+                0,
+                1
+              ],
+              "source_gate_index": 2,
+              "target_qbit": 1
+            },
+            {
+              "canonical_operation_index": 3,
+              "control_qbit": null,
+              "fixed_value": 0.1,
+              "is_unitary": false,
+              "kind": "noise",
+              "local_control_qbit": null,
+              "local_param_start": 6,
+              "local_qubit_support": [
+                0
+              ],
+              "local_target_qbit": 0,
+              "name": "local_depolarizing",
+              "param_count": 0,
+              "param_start": 6,
+              "partition_member_index": 3,
+              "qubit_support": [
+                0
+              ],
+              "source_gate_index": 2,
+              "target_qbit": 0
+            }
+          ],
           "noise_count": 1,
           "operation_kinds": [
             "gate",
@@ -350,6 +722,98 @@
             3
           ],
           "member_count": 4,
+          "members": [
+            {
+              "canonical_operation_index": 4,
+              "control_qbit": null,
+              "fixed_value": null,
+              "is_unitary": true,
+              "kind": "gate",
+              "local_control_qbit": null,
+              "local_param_start": 0,
+              "local_qubit_support": [
+                0
+              ],
+              "local_target_qbit": 0,
+              "name": "U3",
+              "param_count": 3,
+              "param_start": 6,
+              "partition_member_index": 0,
+              "qubit_support": [
+                2
+              ],
+              "source_gate_index": 3,
+              "target_qbit": 2
+            },
+            {
+              "canonical_operation_index": 5,
+              "control_qbit": null,
+              "fixed_value": null,
+              "is_unitary": true,
+              "kind": "gate",
+              "local_control_qbit": null,
+              "local_param_start": 3,
+              "local_qubit_support": [
+                1
+              ],
+              "local_target_qbit": 1,
+              "name": "U3",
+              "param_count": 3,
+              "param_start": 9,
+              "partition_member_index": 1,
+              "qubit_support": [
+                3
+              ],
+              "source_gate_index": 4,
+              "target_qbit": 3
+            },
+            {
+              "canonical_operation_index": 6,
+              "control_qbit": 2,
+              "fixed_value": null,
+              "is_unitary": true,
+              "kind": "gate",
+              "local_control_qbit": 0,
+              "local_param_start": 6,
+              "local_qubit_support": [
+                0,
+                1
+              ],
+              "local_target_qbit": 1,
+              "name": "CNOT",
+              "param_count": 0,
+              "param_start": 12,
+              "partition_member_index": 2,
+              "qubit_support": [
+                2,
+                3
+              ],
+              "source_gate_index": 5,
+              "target_qbit": 3
+            },
+            {
+              "canonical_operation_index": 7,
+              "control_qbit": null,
+              "fixed_value": 0.07,
+              "is_unitary": false,
+              "kind": "noise",
+              "local_control_qbit": null,
+              "local_param_start": 6,
+              "local_qubit_support": [
+                0
+              ],
+              "local_target_qbit": 0,
+              "name": "phase_damping",
+              "param_count": 0,
+              "param_start": 12,
+              "partition_member_index": 3,
+              "qubit_support": [
+                2
+              ],
+              "source_gate_index": 5,
+              "target_qbit": 2
+            }
+          ],
           "noise_count": 1,
           "operation_kinds": [
             "gate",
@@ -406,6 +870,54 @@
             2
           ],
           "member_count": 2,
+          "members": [
+            {
+              "canonical_operation_index": 8,
+              "control_qbit": 1,
+              "fixed_value": null,
+              "is_unitary": true,
+              "kind": "gate",
+              "local_control_qbit": 0,
+              "local_param_start": 0,
+              "local_qubit_support": [
+                0,
+                1
+              ],
+              "local_target_qbit": 1,
+              "name": "CNOT",
+              "param_count": 0,
+              "param_start": 12,
+              "partition_member_index": 0,
+              "qubit_support": [
+                1,
+                2
+              ],
+              "source_gate_index": 6,
+              "target_qbit": 2
+            },
+            {
+              "canonical_operation_index": 9,
+              "control_qbit": null,
+              "fixed_value": 0.05,
+              "is_unitary": false,
+              "kind": "noise",
+              "local_control_qbit": null,
+              "local_param_start": 0,
+              "local_qubit_support": [
+                0
+              ],
+              "local_target_qbit": 0,
+              "name": "amplitude_damping",
+              "param_count": 0,
+              "param_start": 12,
+              "partition_member_index": 1,
+              "qubit_support": [
+                1
+              ],
+              "source_gate_index": 6,
+              "target_qbit": 1
+            }
+          ],
           "noise_count": 1,
           "operation_kinds": [
             "gate",
@@ -471,6 +983,52 @@
             1
           ],
           "member_count": 2,
+          "members": [
+            {
+              "canonical_operation_index": 0,
+              "control_qbit": null,
+              "fixed_value": null,
+              "is_unitary": true,
+              "kind": "gate",
+              "local_control_qbit": null,
+              "local_param_start": 0,
+              "local_qubit_support": [
+                0
+              ],
+              "local_target_qbit": 0,
+              "name": "U3",
+              "param_count": 3,
+              "param_start": 0,
+              "partition_member_index": 0,
+              "qubit_support": [
+                0
+              ],
+              "source_gate_index": 0,
+              "target_qbit": 0
+            },
+            {
+              "canonical_operation_index": 1,
+              "control_qbit": null,
+              "fixed_value": null,
+              "is_unitary": true,
+              "kind": "gate",
+              "local_control_qbit": null,
+              "local_param_start": 3,
+              "local_qubit_support": [
+                1
+              ],
+              "local_target_qbit": 1,
+              "name": "U3",
+              "param_count": 3,
+              "param_start": 3,
+              "partition_member_index": 1,
+              "qubit_support": [
+                1
+              ],
+              "source_gate_index": 1,
+              "target_qbit": 1
+            }
+          ],
           "noise_count": 0,
           "operation_kinds": [
             "gate",
@@ -523,6 +1081,52 @@
             3
           ],
           "member_count": 2,
+          "members": [
+            {
+              "canonical_operation_index": 2,
+              "control_qbit": null,
+              "fixed_value": null,
+              "is_unitary": true,
+              "kind": "gate",
+              "local_control_qbit": null,
+              "local_param_start": 0,
+              "local_qubit_support": [
+                0
+              ],
+              "local_target_qbit": 0,
+              "name": "U3",
+              "param_count": 3,
+              "param_start": 6,
+              "partition_member_index": 0,
+              "qubit_support": [
+                2
+              ],
+              "source_gate_index": 2,
+              "target_qbit": 2
+            },
+            {
+              "canonical_operation_index": 3,
+              "control_qbit": null,
+              "fixed_value": null,
+              "is_unitary": true,
+              "kind": "gate",
+              "local_control_qbit": null,
+              "local_param_start": 3,
+              "local_qubit_support": [
+                1
+              ],
+              "local_target_qbit": 1,
+              "name": "U3",
+              "param_count": 3,
+              "param_start": 9,
+              "partition_member_index": 1,
+              "qubit_support": [
+                3
+              ],
+              "source_gate_index": 3,
+              "target_qbit": 3
+            }
+          ],
           "noise_count": 0,
           "operation_kinds": [
             "gate",
@@ -575,6 +1179,52 @@
             5
           ],
           "member_count": 2,
+          "members": [
+            {
+              "canonical_operation_index": 4,
+              "control_qbit": null,
+              "fixed_value": null,
+              "is_unitary": true,
+              "kind": "gate",
+              "local_control_qbit": null,
+              "local_param_start": 0,
+              "local_qubit_support": [
+                0
+              ],
+              "local_target_qbit": 0,
+              "name": "U3",
+              "param_count": 3,
+              "param_start": 12,
+              "partition_member_index": 0,
+              "qubit_support": [
+                4
+              ],
+              "source_gate_index": 4,
+              "target_qbit": 4
+            },
+            {
+              "canonical_operation_index": 5,
+              "control_qbit": null,
+              "fixed_value": null,
+              "is_unitary": true,
+              "kind": "gate",
+              "local_control_qbit": null,
+              "local_param_start": 3,
+              "local_qubit_support": [
+                1
+              ],
+              "local_target_qbit": 1,
+              "name": "U3",
+              "param_count": 3,
+              "param_start": 15,
+              "partition_member_index": 1,
+              "qubit_support": [
+                5
+              ],
+              "source_gate_index": 5,
+              "target_qbit": 5
+            }
+          ],
           "noise_count": 0,
           "operation_kinds": [
             "gate",
@@ -627,6 +1277,52 @@
             7
           ],
           "member_count": 2,
+          "members": [
+            {
+              "canonical_operation_index": 6,
+              "control_qbit": null,
+              "fixed_value": null,
+              "is_unitary": true,
+              "kind": "gate",
+              "local_control_qbit": null,
+              "local_param_start": 0,
+              "local_qubit_support": [
+                0
+              ],
+              "local_target_qbit": 0,
+              "name": "U3",
+              "param_count": 3,
+              "param_start": 18,
+              "partition_member_index": 0,
+              "qubit_support": [
+                6
+              ],
+              "source_gate_index": 6,
+              "target_qbit": 6
+            },
+            {
+              "canonical_operation_index": 7,
+              "control_qbit": null,
+              "fixed_value": null,
+              "is_unitary": true,
+              "kind": "gate",
+              "local_control_qbit": null,
+              "local_param_start": 3,
+              "local_qubit_support": [
+                1
+              ],
+              "local_target_qbit": 1,
+              "name": "U3",
+              "param_count": 3,
+              "param_start": 21,
+              "partition_member_index": 1,
+              "qubit_support": [
+                7
+              ],
+              "source_gate_index": 7,
+              "target_qbit": 7
+            }
+          ],
           "noise_count": 0,
           "operation_kinds": [
             "gate",
@@ -678,6 +1374,32 @@
             1
           ],
           "member_count": 1,
+          "members": [
+            {
+              "canonical_operation_index": 8,
+              "control_qbit": 0,
+              "fixed_value": null,
+              "is_unitary": true,
+              "kind": "gate",
+              "local_control_qbit": 0,
+              "local_param_start": 0,
+              "local_qubit_support": [
+                0,
+                1
+              ],
+              "local_target_qbit": 1,
+              "name": "CNOT",
+              "param_count": 0,
+              "param_start": 24,
+              "partition_member_index": 0,
+              "qubit_support": [
+                0,
+                1
+              ],
+              "source_gate_index": 8,
+              "target_qbit": 1
+            }
+          ],
           "noise_count": 0,
           "operation_kinds": [
             "gate"
@@ -716,6 +1438,32 @@
             3
           ],
           "member_count": 1,
+          "members": [
+            {
+              "canonical_operation_index": 9,
+              "control_qbit": 2,
+              "fixed_value": null,
+              "is_unitary": true,
+              "kind": "gate",
+              "local_control_qbit": 0,
+              "local_param_start": 0,
+              "local_qubit_support": [
+                0,
+                1
+              ],
+              "local_target_qbit": 1,
+              "name": "CNOT",
+              "param_count": 0,
+              "param_start": 24,
+              "partition_member_index": 0,
+              "qubit_support": [
+                2,
+                3
+              ],
+              "source_gate_index": 9,
+              "target_qbit": 3
+            }
+          ],
           "noise_count": 0,
           "operation_kinds": [
             "gate"
@@ -754,6 +1502,32 @@
             5
           ],
           "member_count": 1,
+          "members": [
+            {
+              "canonical_operation_index": 10,
+              "control_qbit": 4,
+              "fixed_value": null,
+              "is_unitary": true,
+              "kind": "gate",
+              "local_control_qbit": 0,
+              "local_param_start": 0,
+              "local_qubit_support": [
+                0,
+                1
+              ],
+              "local_target_qbit": 1,
+              "name": "CNOT",
+              "param_count": 0,
+              "param_start": 24,
+              "partition_member_index": 0,
+              "qubit_support": [
+                4,
+                5
+              ],
+              "source_gate_index": 10,
+              "target_qbit": 5
+            }
+          ],
           "noise_count": 0,
           "operation_kinds": [
             "gate"
@@ -792,6 +1566,32 @@
             7
           ],
           "member_count": 1,
+          "members": [
+            {
+              "canonical_operation_index": 11,
+              "control_qbit": 6,
+              "fixed_value": null,
+              "is_unitary": true,
+              "kind": "gate",
+              "local_control_qbit": 0,
+              "local_param_start": 0,
+              "local_qubit_support": [
+                0,
+                1
+              ],
+              "local_target_qbit": 1,
+              "name": "CNOT",
+              "param_count": 0,
+              "param_start": 24,
+              "partition_member_index": 0,
+              "qubit_support": [
+                6,
+                7
+              ],
+              "source_gate_index": 11,
+              "target_qbit": 7
+            }
+          ],
           "noise_count": 0,
           "operation_kinds": [
             "gate"
@@ -832,6 +1632,74 @@
             1
           ],
           "member_count": 3,
+          "members": [
+            {
+              "canonical_operation_index": 12,
+              "control_qbit": null,
+              "fixed_value": 0.1,
+              "is_unitary": false,
+              "kind": "noise",
+              "local_control_qbit": null,
+              "local_param_start": 0,
+              "local_qubit_support": [
+                1
+              ],
+              "local_target_qbit": 1,
+              "name": "local_depolarizing",
+              "param_count": 0,
+              "param_start": 24,
+              "partition_member_index": 0,
+              "qubit_support": [
+                1
+              ],
+              "source_gate_index": 8,
+              "target_qbit": 1
+            },
+            {
+              "canonical_operation_index": 13,
+              "control_qbit": null,
+              "fixed_value": null,
+              "is_unitary": true,
+              "kind": "gate",
+              "local_control_qbit": null,
+              "local_param_start": 0,
+              "local_qubit_support": [
+                0
+              ],
+              "local_target_qbit": 0,
+              "name": "U3",
+              "param_count": 3,
+              "param_start": 24,
+              "partition_member_index": 1,
+              "qubit_support": [
+                0
+              ],
+              "source_gate_index": 12,
+              "target_qbit": 0
+            },
+            {
+              "canonical_operation_index": 14,
+              "control_qbit": null,
+              "fixed_value": null,
+              "is_unitary": true,
+              "kind": "gate",
+              "local_control_qbit": null,
+              "local_param_start": 3,
+              "local_qubit_support": [
+                1
+              ],
+              "local_target_qbit": 1,
+              "name": "U3",
+              "param_count": 3,
+              "param_start": 27,
+              "partition_member_index": 2,
+              "qubit_support": [
+                1
+              ],
+              "source_gate_index": 13,
+              "target_qbit": 1
+            }
+          ],
           "noise_count": 1,
           "operation_kinds": [
             "noise",
@@ -886,6 +1754,52 @@
             3
           ],
           "member_count": 2,
+          "members": [
+            {
+              "canonical_operation_index": 15,
+              "control_qbit": null,
+              "fixed_value": null,
+              "is_unitary": true,
+              "kind": "gate",
+              "local_control_qbit": null,
+              "local_param_start": 0,
+              "local_qubit_support": [
+                0
+              ],
+              "local_target_qbit": 0,
+              "name": "U3",
+              "param_count": 3,
+              "param_start": 30,
+              "partition_member_index": 0,
+              "qubit_support": [
+                2
+              ],
+              "source_gate_index": 14,
+              "target_qbit": 2
+            },
+            {
+              "canonical_operation_index": 16,
+              "control_qbit": null,
+              "fixed_value": null,
+              "is_unitary": true,
+              "kind": "gate",
+              "local_control_qbit": null,
+              "local_param_start": 3,
+              "local_qubit_support": [
+                1
+              ],
+              "local_target_qbit": 1,
+              "name": "U3",
+              "param_count": 3,
+              "param_start": 33,
+              "partition_member_index": 1,
+              "qubit_support": [
+                3
+              ],
+              "source_gate_index": 15,
+              "target_qbit": 3
+            }
+          ],
           "noise_count": 0,
           "operation_kinds": [
             "gate",
@@ -938,6 +1852,52 @@
             5
           ],
           "member_count": 2,
+          "members": [
+            {
+              "canonical_operation_index": 17,
+              "control_qbit": null,
+              "fixed_value": null,
+              "is_unitary": true,
+              "kind": "gate",
+              "local_control_qbit": null,
+              "local_param_start": 0,
+              "local_qubit_support": [
+                0
+              ],
+              "local_target_qbit": 0,
+              "name": "U3",
+              "param_count": 3,
+              "param_start": 36,
+              "partition_member_index": 0,
+              "qubit_support": [
+                4
+              ],
+              "source_gate_index": 16,
+              "target_qbit": 4
+            },
+            {
+              "canonical_operation_index": 18,
+              "control_qbit": null,
+              "fixed_value": null,
+              "is_unitary": true,
+              "kind": "gate",
+              "local_control_qbit": null,
+              "local_param_start": 3,
+              "local_qubit_support": [
+                1
+              ],
+              "local_target_qbit": 1,
+              "name": "U3",
+              "param_count": 3,
+              "param_start": 39,
+              "partition_member_index": 1,
+              "qubit_support": [
+                5
+              ],
+              "source_gate_index": 17,
+              "target_qbit": 5
+            }
+          ],
           "noise_count": 0,
           "operation_kinds": [
             "gate",
@@ -990,6 +1950,52 @@
             7
           ],
           "member_count": 2,
+          "members": [
+            {
+              "canonical_operation_index": 19,
+              "control_qbit": null,
+              "fixed_value": null,
+              "is_unitary": true,
+              "kind": "gate",
+              "local_control_qbit": null,
+              "local_param_start": 0,
+              "local_qubit_support": [
+                0
+              ],
+              "local_target_qbit": 0,
+              "name": "U3",
+              "param_count": 3,
+              "param_start": 42,
+              "partition_member_index": 0,
+              "qubit_support": [
+                6
+              ],
+              "source_gate_index": 18,
+              "target_qbit": 6
+            },
+            {
+              "canonical_operation_index": 20,
+              "control_qbit": null,
+              "fixed_value": null,
+              "is_unitary": true,
+              "kind": "gate",
+              "local_control_qbit": null,
+              "local_param_start": 3,
+              "local_qubit_support": [
+                1
+              ],
+              "local_target_qbit": 1,
+              "name": "U3",
+              "param_count": 3,
+              "param_start": 45,
+              "partition_member_index": 1,
+              "qubit_support": [
+                7
+              ],
+              "source_gate_index": 19,
+              "target_qbit": 7
+            }
+          ],
           "noise_count": 0,
           "operation_kinds": [
             "gate",
@@ -1041,6 +2047,32 @@
             2
           ],
           "member_count": 1,
+          "members": [
+            {
+              "canonical_operation_index": 21,
+              "control_qbit": 1,
+              "fixed_value": null,
+              "is_unitary": true,
+              "kind": "gate",
+              "local_control_qbit": 0,
+              "local_param_start": 0,
+              "local_qubit_support": [
+                0,
+                1
+              ],
+              "local_target_qbit": 1,
+              "name": "CNOT",
+              "param_count": 0,
+              "param_start": 48,
+              "partition_member_index": 0,
+              "qubit_support": [
+                1,
+                2
+              ],
+              "source_gate_index": 20,
+              "target_qbit": 2
+            }
+          ],
           "noise_count": 0,
           "operation_kinds": [
             "gate"
@@ -1079,6 +2111,32 @@
             4
           ],
           "member_count": 1,
+          "members": [
+            {
+              "canonical_operation_index": 22,
+              "control_qbit": 3,
+              "fixed_value": null,
+              "is_unitary": true,
+              "kind": "gate",
+              "local_control_qbit": 0,
+              "local_param_start": 0,
+              "local_qubit_support": [
+                0,
+                1
+              ],
+              "local_target_qbit": 1,
+              "name": "CNOT",
+              "param_count": 0,
+              "param_start": 48,
+              "partition_member_index": 0,
+              "qubit_support": [
+                3,
+                4
+              ],
+              "source_gate_index": 21,
+              "target_qbit": 4
+            }
+          ],
           "noise_count": 0,
           "operation_kinds": [
             "gate"
@@ -1117,6 +2175,32 @@
             6
           ],
           "member_count": 1,
+          "members": [
+            {
+              "canonical_operation_index": 23,
+              "control_qbit": 5,
+              "fixed_value": null,
+              "is_unitary": true,
+              "kind": "gate",
+              "local_control_qbit": 0,
+              "local_param_start": 0,
+              "local_qubit_support": [
+                0,
+                1
+              ],
+              "local_target_qbit": 1,
+              "name": "CNOT",
+              "param_count": 0,
+              "param_start": 48,
+              "partition_member_index": 0,
+              "qubit_support": [
+                5,
+                6
+              ],
+              "source_gate_index": 22,
+              "target_qbit": 6
+            }
+          ],
           "noise_count": 0,
           "operation_kinds": [
             "gate"
@@ -1156,6 +2240,52 @@
             1
           ],
           "member_count": 2,
+          "members": [
+            {
+              "canonical_operation_index": 24,
+              "control_qbit": null,
+              "fixed_value": null,
+              "is_unitary": true,
+              "kind": "gate",
+              "local_control_qbit": null,
+              "local_param_start": 0,
+              "local_qubit_support": [
+                0
+              ],
+              "local_target_qbit": 0,
+              "name": "U3",
+              "param_count": 3,
+              "param_start": 48,
+              "partition_member_index": 0,
+              "qubit_support": [
+                0
+              ],
+              "source_gate_index": 23,
+              "target_qbit": 0
+            },
+            {
+              "canonical_operation_index": 25,
+              "control_qbit": null,
+              "fixed_value": null,
+              "is_unitary": true,
+              "kind": "gate",
+              "local_control_qbit": null,
+              "local_param_start": 3,
+              "local_qubit_support": [
+                1
+              ],
+              "local_target_qbit": 1,
+              "name": "U3",
+              "param_count": 3,
+              "param_start": 51,
+              "partition_member_index": 1,
+              "qubit_support": [
+                1
+              ],
+              "source_gate_index": 24,
+              "target_qbit": 1
+            }
+          ],
           "noise_count": 0,
           "operation_kinds": [
             "gate",
@@ -1208,6 +2338,52 @@
             3
           ],
           "member_count": 2,
+          "members": [
+            {
+              "canonical_operation_index": 26,
+              "control_qbit": null,
+              "fixed_value": null,
+              "is_unitary": true,
+              "kind": "gate",
+              "local_control_qbit": null,
+              "local_param_start": 0,
+              "local_qubit_support": [
+                0
+              ],
+              "local_target_qbit": 0,
+              "name": "U3",
+              "param_count": 3,
+              "param_start": 54,
+              "partition_member_index": 0,
+              "qubit_support": [
+                2
+              ],
+              "source_gate_index": 25,
+              "target_qbit": 2
+            },
+            {
+              "canonical_operation_index": 27,
+              "control_qbit": null,
+              "fixed_value": null,
+              "is_unitary": true,
+              "kind": "gate",
+              "local_control_qbit": null,
+              "local_param_start": 3,
+              "local_qubit_support": [
+                1
+              ],
+              "local_target_qbit": 1,
+              "name": "U3",
+              "param_count": 3,
+              "param_start": 57,
+              "partition_member_index": 1,
+              "qubit_support": [
+                3
+              ],
+              "source_gate_index": 26,
+              "target_qbit": 3
+            }
+          ],
           "noise_count": 0,
           "operation_kinds": [
             "gate",
@@ -1260,6 +2436,52 @@
             5
           ],
           "member_count": 2,
+          "members": [
+            {
+              "canonical_operation_index": 28,
+              "control_qbit": null,
+              "fixed_value": null,
+              "is_unitary": true,
+              "kind": "gate",
+              "local_control_qbit": null,
+              "local_param_start": 0,
+              "local_qubit_support": [
+                0
+              ],
+              "local_target_qbit": 0,
+              "name": "U3",
+              "param_count": 3,
+              "param_start": 60,
+              "partition_member_index": 0,
+              "qubit_support": [
+                4
+              ],
+              "source_gate_index": 27,
+              "target_qbit": 4
+            },
+            {
+              "canonical_operation_index": 29,
+              "control_qbit": null,
+              "fixed_value": null,
+              "is_unitary": true,
+              "kind": "gate",
+              "local_control_qbit": null,
+              "local_param_start": 3,
+              "local_qubit_support": [
+                1
+              ],
+              "local_target_qbit": 1,
+              "name": "U3",
+              "param_count": 3,
+              "param_start": 63,
+              "partition_member_index": 1,
+              "qubit_support": [
+                5
+              ],
+              "source_gate_index": 28,
+              "target_qbit": 5
+            }
+          ],
           "noise_count": 0,
           "operation_kinds": [
             "gate",
@@ -1312,6 +2534,52 @@
             7
           ],
           "member_count": 2,
+          "members": [
+            {
+              "canonical_operation_index": 30,
+              "control_qbit": null,
+              "fixed_value": null,
+              "is_unitary": true,
+              "kind": "gate",
+              "local_control_qbit": null,
+              "local_param_start": 0,
+              "local_qubit_support": [
+                0
+              ],
+              "local_target_qbit": 0,
+              "name": "U3",
+              "param_count": 3,
+              "param_start": 66,
+              "partition_member_index": 0,
+              "qubit_support": [
+                6
+              ],
+              "source_gate_index": 29,
+              "target_qbit": 6
+            },
+            {
+              "canonical_operation_index": 31,
+              "control_qbit": null,
+              "fixed_value": null,
+              "is_unitary": true,
+              "kind": "gate",
+              "local_control_qbit": null,
+              "local_param_start": 3,
+              "local_qubit_support": [
+                1
+              ],
+              "local_target_qbit": 1,
+              "name": "U3",
+              "param_count": 3,
+              "param_start": 69,
+              "partition_member_index": 1,
+              "qubit_support": [
+                7
+              ],
+              "source_gate_index": 30,
+              "target_qbit": 7
+            }
+          ],
           "noise_count": 0,
           "operation_kinds": [
             "gate",
@@ -1363,6 +2631,32 @@
             1
           ],
           "member_count": 1,
+          "members": [
+            {
+              "canonical_operation_index": 32,
+              "control_qbit": 0,
+              "fixed_value": null,
+              "is_unitary": true,
+              "kind": "gate",
+              "local_control_qbit": 0,
+              "local_param_start": 0,
+              "local_qubit_support": [
+                0,
+                1
+              ],
+              "local_target_qbit": 1,
+              "name": "CNOT",
+              "param_count": 0,
+              "param_start": 72,
+              "partition_member_index": 0,
+              "qubit_support": [
+                0,
+                1
+              ],
+              "source_gate_index": 31,
+              "target_qbit": 1
+            }
+          ],
           "noise_count": 0,
           "operation_kinds": [
             "gate"
@@ -1401,6 +2695,32 @@
             3
           ],
           "member_count": 1,
+          "members": [
+            {
+              "canonical_operation_index": 33,
+              "control_qbit": 2,
+              "fixed_value": null,
+              "is_unitary": true,
+              "kind": "gate",
+              "local_control_qbit": 0,
+              "local_param_start": 0,
+              "local_qubit_support": [
+                0,
+                1
+              ],
+              "local_target_qbit": 1,
+              "name": "CNOT",
+              "param_count": 0,
+              "param_start": 72,
+              "partition_member_index": 0,
+              "qubit_support": [
+                2,
+                3
+              ],
+              "source_gate_index": 32,
+              "target_qbit": 3
+            }
+          ],
           "noise_count": 0,
           "operation_kinds": [
             "gate"
@@ -1439,6 +2759,32 @@
             5
           ],
           "member_count": 1,
+          "members": [
+            {
+              "canonical_operation_index": 34,
+              "control_qbit": 4,
+              "fixed_value": null,
+              "is_unitary": true,
+              "kind": "gate",
+              "local_control_qbit": 0,
+              "local_param_start": 0,
+              "local_qubit_support": [
+                0,
+                1
+              ],
+              "local_target_qbit": 1,
+              "name": "CNOT",
+              "param_count": 0,
+              "param_start": 72,
+              "partition_member_index": 0,
+              "qubit_support": [
+                4,
+                5
+              ],
+              "source_gate_index": 33,
+              "target_qbit": 5
+            }
+          ],
           "noise_count": 0,
           "operation_kinds": [
             "gate"
@@ -1477,6 +2823,32 @@
             7
           ],
           "member_count": 1,
+          "members": [
+            {
+              "canonical_operation_index": 35,
+              "control_qbit": 6,
+              "fixed_value": null,
+              "is_unitary": true,
+              "kind": "gate",
+              "local_control_qbit": 0,
+              "local_param_start": 0,
+              "local_qubit_support": [
+                0,
+                1
+              ],
+              "local_target_qbit": 1,
+              "name": "CNOT",
+              "param_count": 0,
+              "param_start": 72,
+              "partition_member_index": 0,
+              "qubit_support": [
+                6,
+                7
+              ],
+              "source_gate_index": 34,
+              "target_qbit": 7
+            }
+          ],
           "noise_count": 0,
           "operation_kinds": [
             "gate"
@@ -1510,6 +2882,30 @@
             1
           ],
           "member_count": 1,
+          "members": [
+            {
+              "canonical_operation_index": 36,
+              "control_qbit": null,
+              "fixed_value": 0.07,
+              "is_unitary": false,
+              "kind": "noise",
+              "local_control_qbit": null,
+              "local_param_start": 0,
+              "local_qubit_support": [
+                0
+              ],
+              "local_target_qbit": 0,
+              "name": "phase_damping",
+              "param_count": 0,
+              "param_start": 72,
+              "partition_member_index": 0,
+              "qubit_support": [
+                1
+              ],
+              "source_gate_index": 31,
+              "target_qbit": 1
+            }
+          ],
           "noise_count": 1,
           "operation_kinds": [
             "noise"

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import resource
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Iterable, Literal, Mapping
 
 import numpy as np
@@ -15,6 +15,7 @@ from squander.partitioning.noisy_planner import (
     NoisyPartitionDescriptor,
     NoisyPartitionDescriptorMember,
     NoisyPartitionDescriptorSet,
+    descriptor_partition_to_dict,
     validate_partition_descriptor_set,
 )
 
@@ -76,53 +77,33 @@ class NoisyRuntimeValidationError(ValueError):
 
 @dataclass(frozen=True)
 class NoisyRuntimePartitionRecord:
+    """Runtime-only partition execution metadata; audit payloads merge descriptor serialization."""
+
     partition_index: int
-    canonical_operation_indices: tuple[int, ...]
-    local_to_global_qbits: tuple[int, ...]
-    global_to_local_qbits: tuple[tuple[int, int], ...]
-    requires_remap: bool
-    parameter_routing: tuple[tuple[int, int, int], ...]
-    partition_parameter_count: int
-    member_count: int
-    gate_count: int
-    noise_count: int
-    operation_names: tuple[str, ...]
-    operation_kinds: tuple[str, ...]
     runtime_circuit_qbit_num: int
     runtime_circuit_parameter_count: int
 
-    @property
-    def partition_qubit_span(self) -> tuple[int, ...]:
-        return self.local_to_global_qbits
+    def to_dict(self, descriptor_set: NoisyPartitionDescriptorSet) -> dict[str, Any]:
+        return runtime_partition_audit_dict(descriptor_set, self)
 
-    def to_dict(self) -> dict[str, Any]:
-        return {
-            "partition_index": self.partition_index,
-            "member_count": self.member_count,
-            "gate_count": self.gate_count,
-            "noise_count": self.noise_count,
-            "canonical_operation_indices": list(self.canonical_operation_indices),
-            "partition_qubit_span": list(self.partition_qubit_span),
-            "local_to_global_qbits": list(self.local_to_global_qbits),
-            "global_to_local_qbits": [
-                {"global_qbit": global_qbit, "local_qbit": local_qbit}
-                for global_qbit, local_qbit in self.global_to_local_qbits
-            ],
-            "requires_remap": self.requires_remap,
-            "partition_parameter_count": self.partition_parameter_count,
-            "parameter_routing": [
-                {
-                    "global_param_start": global_param_start,
-                    "local_param_start": local_param_start,
-                    "param_count": param_count,
-                }
-                for global_param_start, local_param_start, param_count in self.parameter_routing
-            ],
-            "operation_names": list(self.operation_names),
-            "operation_kinds": list(self.operation_kinds),
-            "runtime_circuit_qbit_num": self.runtime_circuit_qbit_num,
-            "runtime_circuit_parameter_count": self.runtime_circuit_parameter_count,
-        }
+
+def runtime_partition_audit_dict(
+    descriptor_set: NoisyPartitionDescriptorSet,
+    record: NoisyRuntimePartitionRecord,
+) -> dict[str, Any]:
+    partition = descriptor_set.partitions[record.partition_index]
+    payload = descriptor_partition_to_dict(descriptor_set, partition)
+    payload["operation_names"] = [
+        descriptor_set.operations[m.canonical_operation_index].name
+        for m in partition.members
+    ]
+    payload["operation_kinds"] = [
+        descriptor_set.operations[m.canonical_operation_index].kind
+        for m in partition.members
+    ]
+    payload["runtime_circuit_qbit_num"] = record.runtime_circuit_qbit_num
+    payload["runtime_circuit_parameter_count"] = record.runtime_circuit_parameter_count
+    return payload
 
 
 @dataclass(frozen=True)
@@ -169,6 +150,7 @@ class NoisyRuntimeExecutionResult:
     fallback_used: bool
     exact_output_present: bool
     density_matrix: DensityMatrix
+    descriptor_set: NoisyPartitionDescriptorSet = field(repr=False)
     partitions: tuple[NoisyRuntimePartitionRecord, ...]
     fused_regions: tuple[NoisyRuntimeFusedRegionRecord, ...]
     runtime_ms: float
@@ -187,34 +169,37 @@ class NoisyRuntimeExecutionResult:
 
     @property
     def descriptor_member_count(self) -> int:
-        return sum(partition.member_count for partition in self.partitions)
+        return self.descriptor_set.descriptor_member_count
 
     @property
     def gate_count(self) -> int:
-        return sum(partition.gate_count for partition in self.partitions)
+        return self.descriptor_set.gate_count
 
     @property
     def noise_count(self) -> int:
-        return sum(partition.noise_count for partition in self.partitions)
+        return self.descriptor_set.noise_count
 
     @property
     def max_partition_span(self) -> int:
-        return max(
-            (len(partition.partition_qubit_span) for partition in self.partitions),
-            default=0,
-        )
+        return self.descriptor_set.max_partition_span
 
     @property
     def partition_member_counts(self) -> tuple[int, ...]:
-        return tuple(partition.member_count for partition in self.partitions)
+        return self.descriptor_set.partition_member_counts
 
     @property
     def remapped_partition_count(self) -> int:
-        return sum(partition.requires_remap for partition in self.partitions)
+        return sum(
+            self.descriptor_set.partitions[rec.partition_index].requires_remap
+            for rec in self.partitions
+        )
 
     @property
     def parameter_routing_segment_count(self) -> int:
-        return sum(len(partition.parameter_routing) for partition in self.partitions)
+        return sum(
+            len(self.descriptor_set.partition_parameter_routing(p))
+            for p in self.descriptor_set.partitions
+        )
 
     @property
     def fused_region_count(self) -> int:
@@ -340,7 +325,9 @@ class NoisyRuntimeExecutionResult:
             "exact_output": self.build_exact_output_record(
                 include_density_matrix=include_density_matrix
             ),
-            "partitions": [partition.to_dict() for partition in self.partitions],
+            "partitions": [
+                rec.to_dict(self.descriptor_set) for rec in self.partitions
+            ],
             "fused_regions": [region.to_dict() for region in self.fused_regions],
         }
 
@@ -406,8 +393,9 @@ def _validate_supported_member(
     *,
     runtime_path: str,
 ) -> None:
-    if member.kind == "gate":
-        if member.name not in SUPPORTED_GATE_NAMES:
+    op = descriptor_set.canonical_operation_for(member)
+    if op.kind == "gate":
+        if op.name not in SUPPORTED_GATE_NAMES:
             raise _runtime_error(
                 descriptor_set,
                 category="unsupported_runtime_operation",
@@ -416,11 +404,11 @@ def _validate_supported_member(
                 runtime_path=runtime_path,
                 reason=(
                     "Partitioned runtime supports only gate families {}, got '{}'".format(
-                        sorted(SUPPORTED_GATE_NAMES), member.name
+                        sorted(SUPPORTED_GATE_NAMES), op.name
                     )
                 ),
             )
-        if member.name == "U3" and member.target_qbit is None:
+        if op.name == "U3" and op.target_qbit is None:
             raise _runtime_error(
                 descriptor_set,
                 category="descriptor_to_runtime_mismatch",
@@ -429,8 +417,8 @@ def _validate_supported_member(
                 runtime_path=runtime_path,
                 reason="Partitioned runtime requires target_qbit for U3 operations",
             )
-        if member.name == "CNOT" and (
-            member.target_qbit is None or member.control_qbit is None
+        if op.name == "CNOT" and (
+            op.target_qbit is None or op.control_qbit is None
         ):
             raise _runtime_error(
                 descriptor_set,
@@ -440,7 +428,7 @@ def _validate_supported_member(
                 runtime_path=runtime_path,
                 reason="Partitioned runtime requires both target_qbit and control_qbit for CNOT",
             )
-        if member.fixed_value is not None:
+        if op.fixed_value is not None:
             raise _runtime_error(
                 descriptor_set,
                 category="descriptor_to_runtime_mismatch",
@@ -451,8 +439,8 @@ def _validate_supported_member(
             )
         return
 
-    if member.kind == "noise":
-        if member.name not in SUPPORTED_NOISE_NAMES:
+    if op.kind == "noise":
+        if op.name not in SUPPORTED_NOISE_NAMES:
             raise _runtime_error(
                 descriptor_set,
                 category="unsupported_runtime_operation",
@@ -461,11 +449,11 @@ def _validate_supported_member(
                 runtime_path=runtime_path,
                 reason=(
                     "Partitioned runtime supports only local-noise families {}, got '{}'".format(
-                        sorted(SUPPORTED_NOISE_NAMES), member.name
+                        sorted(SUPPORTED_NOISE_NAMES), op.name
                     )
                 ),
             )
-        if member.target_qbit is None:
+        if op.target_qbit is None:
             raise _runtime_error(
                 descriptor_set,
                 category="descriptor_to_runtime_mismatch",
@@ -474,7 +462,7 @@ def _validate_supported_member(
                 runtime_path=runtime_path,
                 reason="Partitioned runtime requires target_qbit for local noise operations",
             )
-        if member.param_count == 0 and member.fixed_value is None:
+        if op.param_count == 0 and op.fixed_value is None:
             raise _runtime_error(
                 descriptor_set,
                 category="descriptor_to_runtime_mismatch",
@@ -495,7 +483,7 @@ def _validate_supported_member(
         failure_stage="runtime_preflight",
         runtime_path=runtime_path,
         reason="Partitioned runtime does not support descriptor kind '{}'".format(
-            member.kind
+            op.kind
         ),
     )
 
@@ -538,14 +526,17 @@ def validate_runtime_request(
 
 
 def _append_lowered_unitary_gate(
-    circuit: NoisyCircuit, member: NoisyPartitionDescriptorMember
+    circuit: NoisyCircuit,
+    member: NoisyPartitionDescriptorMember,
+    *,
+    op,
 ) -> None:
     """Append U3 or CNOT. Caller must ensure member is a supported unitary gate."""
-    if member.name == "U3":
-        circuit.add_U3(member.target_qbit)
+    if op.name == "U3":
+        circuit.add_U3(op.target_qbit)
         return
     # NoisyCircuit.add_CNOT(target_qbit, control_qbit) matches descriptor field order.
-    circuit.add_CNOT(member.target_qbit, member.control_qbit)
+    circuit.add_CNOT(op.target_qbit, op.control_qbit)
 
 
 def _append_member_to_circuit(
@@ -556,28 +547,29 @@ def _append_member_to_circuit(
     runtime_path: str,
 ) -> None:
     """Lower one member; members must already satisfy validate_runtime_request."""
-    if member.kind == "gate":
-        if member.name in _PHASE3_LOWERABLE_UNITARY_GATE_NAMES:
-            _append_lowered_unitary_gate(circuit, member)
+    op = descriptor_set.canonical_operation_for(member)
+    if op.kind == "gate":
+        if op.name in _PHASE3_LOWERABLE_UNITARY_GATE_NAMES:
+            _append_lowered_unitary_gate(circuit, member, op=op)
             return
-    elif member.kind == "noise":
-        if member.name == "local_depolarizing":
-            if member.param_count == 0:
-                circuit.add_local_depolarizing(member.target_qbit, member.fixed_value)
+    elif op.kind == "noise":
+        if op.name == "local_depolarizing":
+            if op.param_count == 0:
+                circuit.add_local_depolarizing(op.target_qbit, op.fixed_value)
             else:
-                circuit.add_local_depolarizing(member.target_qbit)
+                circuit.add_local_depolarizing(op.target_qbit)
             return
-        if member.name == "amplitude_damping":
-            if member.param_count == 0:
-                circuit.add_amplitude_damping(member.target_qbit, member.fixed_value)
+        if op.name == "amplitude_damping":
+            if op.param_count == 0:
+                circuit.add_amplitude_damping(op.target_qbit, op.fixed_value)
             else:
-                circuit.add_amplitude_damping(member.target_qbit)
+                circuit.add_amplitude_damping(op.target_qbit)
             return
-        if member.name == "phase_damping":
-            if member.param_count == 0:
-                circuit.add_phase_damping(member.target_qbit, member.fixed_value)
+        if op.name == "phase_damping":
+            if op.param_count == 0:
+                circuit.add_phase_damping(op.target_qbit, op.fixed_value)
             else:
-                circuit.add_phase_damping(member.target_qbit)
+                circuit.add_phase_damping(op.target_qbit)
             return
     raise _runtime_error(
         descriptor_set,
@@ -585,7 +577,7 @@ def _append_member_to_circuit(
         first_unsupported_condition="operation_name",
         failure_stage="runtime_preflight",
         runtime_path=runtime_path,
-        reason="Partitioned runtime cannot lower operation '{}'".format(member.name),
+        reason="Partitioned runtime cannot lower operation '{}'".format(op.name),
     )
 
 
@@ -663,14 +655,18 @@ def _validate_runtime_operation_alignment(
 
     running_segment_param = 0
     for info, member in zip(operation_info, members):
+        op = descriptor_set.canonical_operation_for(member)
         if param_start_policy == "from_member_attr":
-            expected_param_start = getattr(member, param_start_attr)  # type: ignore[arg-type]
+            if hasattr(member, param_start_attr):
+                expected_param_start = getattr(member, param_start_attr)  # type: ignore[arg-type]
+            else:
+                expected_param_start = getattr(op, param_start_attr)
         else:
             expected_param_start = running_segment_param
         if (
-            _normalize_runtime_operation_name(info.name) != member.name
-            or info.is_unitary != member.is_unitary
-            or info.param_count != member.param_count
+            _normalize_runtime_operation_name(info.name) != op.name
+            or info.is_unitary != op.is_unitary
+            or info.param_count != op.param_count
             or info.param_start != expected_param_start
         ):
             raise _runtime_error(
@@ -684,10 +680,12 @@ def _validate_runtime_operation_alignment(
                 ),
             )
         if param_start_policy == "segment_accumulated":
-            running_segment_param += member.param_count
+            running_segment_param += op.param_count
 
     if param_start_policy == "from_member_attr":
-        expected_parameter_total = sum(member.param_count for member in members)
+        expected_parameter_total = sum(
+            descriptor_set.canonical_operation_for(m).param_count for m in members
+        )
     else:
         expected_parameter_total = running_segment_param
 
@@ -712,13 +710,13 @@ def _build_partition_parameter_vector(
     runtime_path: str,
 ) -> np.ndarray:
     local_parameter_vector = np.zeros(
-        partition.partition_parameter_count, dtype=np.float64
+        descriptor_set.partition_parameter_count(partition), dtype=np.float64
     )
     for (
         global_param_start,
         local_param_start,
         param_count,
-    ) in partition.parameter_routing:
+    ) in descriptor_set.partition_parameter_routing(partition):
         global_stop = global_param_start + param_count
         local_stop = local_param_start + param_count
         if (
@@ -748,17 +746,6 @@ def _build_partition_record(
 ) -> NoisyRuntimePartitionRecord:
     return NoisyRuntimePartitionRecord(
         partition_index=partition.partition_index,
-        canonical_operation_indices=partition.canonical_operation_indices,
-        local_to_global_qbits=partition.local_to_global_qbits,
-        global_to_local_qbits=partition.global_to_local_qbits,
-        requires_remap=partition.requires_remap,
-        parameter_routing=partition.parameter_routing,
-        partition_parameter_count=partition.partition_parameter_count,
-        member_count=partition.member_count,
-        gate_count=partition.gate_count,
-        noise_count=partition.noise_count,
-        operation_names=tuple(member.name for member in partition.members),
-        operation_kinds=tuple(member.kind for member in partition.members),
         runtime_circuit_qbit_num=runtime_circuit.qbit_num,
         runtime_circuit_parameter_count=runtime_circuit.parameter_num,
     )
@@ -771,12 +758,15 @@ def _segment_parameter_vector(
     *,
     runtime_path: str,
 ) -> np.ndarray:
-    segment_parameter_count = sum(member.param_count for member in members)
+    segment_parameter_count = sum(
+        descriptor_set.canonical_operation_for(m).param_count for m in members
+    )
     segment_parameters = np.zeros(segment_parameter_count, dtype=np.float64)
     cursor = 0
     for member in members:
+        op = descriptor_set.canonical_operation_for(member)
         local_start = member.local_param_start
-        local_stop = local_start + member.param_count
+        local_stop = local_start + op.param_count
         if local_stop > local_parameter_vector.size:
             raise _runtime_error(
                 descriptor_set,
@@ -791,11 +781,11 @@ def _segment_parameter_vector(
                     )
                 ),
             )
-        if member.param_count:
-            segment_parameters[cursor : cursor + member.param_count] = (
+        if op.param_count:
+            segment_parameters[cursor : cursor + op.param_count] = (
                 local_parameter_vector[local_start:local_stop]
             )
-        cursor += member.param_count
+        cursor += op.param_count
     return segment_parameters
 
 
@@ -851,19 +841,20 @@ def _execute_member_sequence(
 # @param members: A tuple of members.
 # @return A tuple of tuples of booleans and tuples of members, where each tuple is a segment.
 def _iter_member_segments(
+    descriptor_set: NoisyPartitionDescriptorSet,
     members: tuple[NoisyPartitionDescriptorMember, ...],
 ) -> tuple[tuple[bool, tuple[NoisyPartitionDescriptorMember, ...]], ...]:
     if not members:
         return tuple()
     segments: list[tuple[bool, tuple[NoisyPartitionDescriptorMember, ...]]] = []
-    current_is_unitary = members[0].is_unitary
+    current_is_unitary = descriptor_set.canonical_operation_for(members[0]).is_unitary
     current_members: list[NoisyPartitionDescriptorMember] = [members[0]]
     for member in members[1:]:
-        if member.is_unitary == current_is_unitary:
+        if descriptor_set.canonical_operation_for(member).is_unitary == current_is_unitary:
             current_members.append(member)
             continue
         segments.append((current_is_unitary, tuple(current_members)))
-        current_is_unitary = member.is_unitary
+        current_is_unitary = descriptor_set.canonical_operation_for(member).is_unitary
         current_members = [member]
     segments.append((current_is_unitary, tuple(current_members)))
     return tuple(segments)
@@ -952,7 +943,8 @@ def _build_gate_matrix_for_member(
     total_kernel_qbits: int,
     runtime_path: str,
 ) -> np.ndarray:
-    if member.name == "U3":
+    op = descriptor_set.canonical_operation_for(member)
+    if op.name == "U3":
         if member.local_target_qbit is None:
             raise _runtime_error(
                 descriptor_set,
@@ -963,7 +955,7 @@ def _build_gate_matrix_for_member(
                 reason="Fused partitioned runtime requires local_target_qbit for U3 members",
             )
         local_start = member.local_param_start
-        local_stop = local_start + member.param_count
+        local_stop = local_start + op.param_count
         if local_stop > local_parameter_vector.size:
             raise _runtime_error(
                 descriptor_set,
@@ -985,7 +977,7 @@ def _build_gate_matrix_for_member(
             total_kernel_qbits=total_kernel_qbits,
             kernel_target_qbit=local_qbit_to_kernel_index[member.local_target_qbit],
         )
-    if member.name == "CNOT":
+    if op.name == "CNOT":
         if member.local_target_qbit is None or member.local_control_qbit is None:
             raise _runtime_error(
                 descriptor_set,
@@ -1012,7 +1004,7 @@ def _build_gate_matrix_for_member(
         failure_stage="runtime_preflight",
         runtime_path=runtime_path,
         reason="Fused partitioned runtime cannot build a fused kernel for '{}'".format(
-            member.name
+            op.name
         ),
     )
 
@@ -1056,7 +1048,8 @@ def _build_fused_kernel(
     kernel_dim = 1 << len(active_local_qbits)
     fused_kernel = np.eye(kernel_dim, dtype=np.complex128)
     for member in members:
-        if not member.is_unitary:
+        op = descriptor_set.canonical_operation_for(member)
+        if not op.is_unitary:
             raise _runtime_error(
                 descriptor_set,
                 category="unsupported_runtime_operation",
@@ -1081,6 +1074,7 @@ def _build_fused_kernel(
 
 
 def _build_unitary_region_record(
+    descriptor_set: NoisyPartitionDescriptorSet,
     partition: NoisyPartitionDescriptor,
     members: tuple[NoisyPartitionDescriptorMember, ...],
     *,
@@ -1102,15 +1096,20 @@ def _build_unitary_region_record(
         canonical_operation_indices=tuple(
             member.canonical_operation_index for member in members
         ),
-        operation_names=tuple(member.name for member in members),
+        operation_names=tuple(
+            descriptor_set.canonical_operation_for(m).name for m in members
+        ),
         global_target_qbits=global_target_qbits,
         local_target_qbits=active_local_qbits,
         member_count=len(members),
-        gate_count=sum(member.is_unitary for member in members),
+        gate_count=sum(
+            descriptor_set.canonical_operation_for(m).is_unitary for m in members
+        ),
     )
 
 
 def _build_noise_boundary_record(
+    descriptor_set: NoisyPartitionDescriptorSet,
     partition: NoisyPartitionDescriptor,
     left_members: tuple[NoisyPartitionDescriptorMember, ...],
     boundary_members: tuple[NoisyPartitionDescriptorMember, ...],
@@ -1132,11 +1131,16 @@ def _build_noise_boundary_record(
         canonical_operation_indices=tuple(
             member.canonical_operation_index for member in relevant_members
         ),
-        operation_names=tuple(member.name for member in relevant_members),
+        operation_names=tuple(
+            descriptor_set.canonical_operation_for(m).name for m in relevant_members
+        ),
         global_target_qbits=global_target_qbits,
         local_target_qbits=active_local_qbits,
         member_count=len(relevant_members),
-        gate_count=sum(member.is_unitary for member in relevant_members),
+        gate_count=sum(
+            descriptor_set.canonical_operation_for(m).is_unitary
+            for m in relevant_members
+        ),
     )
 
 
@@ -1149,7 +1153,7 @@ def _execute_partition_with_optional_fusion(
     runtime_path: str,
     allow_fusion: bool,
 ) -> tuple[NoisyRuntimeFusedRegionRecord, ...]:
-    segments = _iter_member_segments(partition.members)
+    segments = _iter_member_segments(descriptor_set, partition.members)
     fused_regions: list[NoisyRuntimeFusedRegionRecord] = []
     for segment_index, (is_unitary, segment_members) in enumerate(segments):
         if is_unitary:
@@ -1177,6 +1181,7 @@ def _execute_partition_with_optional_fusion(
                     )
                     fused_regions.append(
                         _build_unitary_region_record(
+                            descriptor_set,
                             partition,
                             segment_members,
                             classification=PHASE3_FUSION_CLASS_DEFERRED,
@@ -1208,6 +1213,7 @@ def _execute_partition_with_optional_fusion(
                     ) from exc
                 fused_regions.append(
                     _build_unitary_region_record(
+                        descriptor_set,
                         partition,
                         segment_members,
                         classification=PHASE3_FUSION_CLASS_FUSED,
@@ -1224,6 +1230,7 @@ def _execute_partition_with_optional_fusion(
                 )
                 fused_regions.append(
                     _build_unitary_region_record(
+                        descriptor_set,
                         partition,
                         segment_members,
                         classification=PHASE3_FUSION_CLASS_SUPPORTED_UNFUSED,
@@ -1250,7 +1257,11 @@ def _execute_partition_with_optional_fusion(
         if left_is_unitary and right_is_unitary:
             fused_regions.append(
                 _build_noise_boundary_record(
-                    partition, left_members, segment_members, right_members
+                    descriptor_set,
+                    partition,
+                    left_members,
+                    segment_members,
+                    right_members,
                 )
             )
     return tuple(fused_regions)
@@ -1338,6 +1349,7 @@ def execute_partitioned_density(
         fallback_used=False,
         exact_output_present=True,
         density_matrix=rho.clone(),
+        descriptor_set=validated_descriptor_set,
         partitions=tuple(partition_records),
         fused_regions=tuple(fused_regions),
         runtime_ms=(time.perf_counter() - result_start) * 1000.0,

@@ -274,7 +274,7 @@ harder to read.
 - Rollback/mitigation: stop at a small registry plus shared bundle builder; do
 not force every detail into one meta-language.
 
-## Story 3: Partitioned Runtime Has One Contract-Checking Path And One Lowering Source
+## Story 3 (COMPLETED): Partitioned Runtime Has One Contract-Checking Path And One Lowering Source
 
 **Why ranked #3**
 
@@ -402,7 +402,7 @@ reporting in subtle ways.
 - Rollback/mitigation: lock current runtime behavior with targeted tests before
 helper consolidation.
 
-## Story 4: Planner, Descriptor, And Runtime Surfaces Carry One Minimal Model Per Concept
+## Story 4 (COMPLETED): Planner, Descriptor, And Runtime Surfaces Carry One Minimal Model Per Concept
 
 **Why ranked #4**
 

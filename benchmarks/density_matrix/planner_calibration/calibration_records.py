@@ -42,48 +42,52 @@ def _flatten_members(descriptor_set):
     )
 
 
-def _member_parameter_value(parameters: np.ndarray, member) -> float:
-    return float(parameters[member.param_start])
+def _member_parameter_value(parameters: np.ndarray, descriptor_set, member) -> float:
+    op = descriptor_set.operations[member.canonical_operation_index]
+    return float(parameters[op.param_start])
 
 
-def _apply_member_to_qiskit(qc: QuantumCircuit, member, parameters: np.ndarray) -> None:
-    if member.kind == "gate":
-        if member.name == "U3":
-            theta, phi, lam = parameters[member.param_start : member.param_start + 3]
+def _apply_member_to_qiskit(
+    qc: QuantumCircuit, descriptor_set, member, parameters: np.ndarray
+) -> None:
+    op = descriptor_set.operations[member.canonical_operation_index]
+    if op.kind == "gate":
+        if op.name == "U3":
+            theta, phi, lam = parameters[op.param_start : op.param_start + 3]
             qiskit_theta = np.fmod(2.0 * float(theta), 4.0 * np.pi)
             qiskit_phi = np.fmod(float(phi), 2.0 * np.pi)
             qiskit_lambda = np.fmod(float(lam), 2.0 * np.pi)
-            qc.u(qiskit_theta, qiskit_phi, qiskit_lambda, member.target_qbit)
+            qc.u(qiskit_theta, qiskit_phi, qiskit_lambda, op.target_qbit)
             return
-        if member.name == "CNOT":
-            qc.cx(member.control_qbit, member.target_qbit)
+        if op.name == "CNOT":
+            qc.cx(op.control_qbit, op.target_qbit)
             return
         raise ValueError(
-            "Unsupported Qiskit gate '{}' for planner calibration reference".format(member.name)
+            "Unsupported Qiskit gate '{}' for planner calibration reference".format(op.name)
         )
 
-    if member.kind == "noise":
+    if op.kind == "noise":
         value = (
-            float(member.fixed_value)
-            if member.fixed_value is not None
-            else _member_parameter_value(parameters, member)
+            float(op.fixed_value)
+            if op.fixed_value is not None
+            else _member_parameter_value(parameters, descriptor_set, member)
         )
-        if member.name == "local_depolarizing":
-            qc.append(depolarizing_error(value, 1), [member.target_qbit])
+        if op.name == "local_depolarizing":
+            qc.append(depolarizing_error(value, 1), [op.target_qbit])
             return
-        if member.name == "amplitude_damping":
-            qc.append(amplitude_damping_error(value), [member.target_qbit])
+        if op.name == "amplitude_damping":
+            qc.append(amplitude_damping_error(value), [op.target_qbit])
             return
-        if member.name == "phase_damping":
-            qc.append(phase_damping_error(value), [member.target_qbit])
+        if op.name == "phase_damping":
+            qc.append(phase_damping_error(value), [op.target_qbit])
             return
         raise ValueError(
-            "Unsupported Qiskit noise '{}' for planner calibration reference".format(member.name)
+            "Unsupported Qiskit noise '{}' for planner calibration reference".format(op.name)
         )
 
     raise ValueError(
         "Unsupported descriptor member kind '{}' for planner calibration reference".format(
-            member.kind
+            op.kind
         )
     )
 
@@ -94,7 +98,7 @@ def execute_qiskit_density_reference(
 ) -> np.ndarray:
     qc = QuantumCircuit(descriptor_set.qbit_num)
     for member in _flatten_members(descriptor_set):
-        _apply_member_to_qiskit(qc, member, parameters)
+        _apply_member_to_qiskit(qc, descriptor_set, member, parameters)
     qc.save_density_matrix()
     simulator = AerSimulator(method="density_matrix")
     result = simulator.run(qc, shots=1).result()

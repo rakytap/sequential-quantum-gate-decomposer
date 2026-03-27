@@ -92,11 +92,7 @@ def _drop_last_descriptor_member_runner():
     )
     partitions = list(descriptor_set.partitions)
     last_partition = partitions[-1]
-    partitions[-1] = replace(
-        last_partition,
-        canonical_operation_indices=last_partition.canonical_operation_indices[:-1],
-        members=last_partition.members[:-1],
-    )
+    partitions[-1] = replace(last_partition, members=last_partition.members[:-1])
     tampered = replace(descriptor_set, partitions=tuple(partitions))
     return lambda: validate_partition_descriptor_set_against_surface(surface, tampered)
 
@@ -109,15 +105,18 @@ def _hide_noise_member_runner():
     partitions = list(descriptor_set.partitions)
     for partition_index, partition in enumerate(partitions):
         for member_index, member in enumerate(partition.members):
-            if member.kind == PLANNER_OP_KIND_NOISE:
-                members = list(partition.members)
-                members[member_index] = replace(
-                    member,
+            if (
+                descriptor_set.operations[member.canonical_operation_index].kind
+                == PLANNER_OP_KIND_NOISE
+            ):
+                ops = list(descriptor_set.operations)
+                idx = member.canonical_operation_index
+                ops[idx] = replace(
+                    ops[idx],
                     kind=PLANNER_OP_KIND_GATE,
                     is_unitary=True,
                 )
-                partitions[partition_index] = replace(partition, members=tuple(members))
-                tampered = replace(descriptor_set, partitions=tuple(partitions))
+                tampered = replace(descriptor_set, operations=tuple(ops))
                 return lambda: validate_partition_descriptor_set_against_surface(
                     surface, tampered
                 )
@@ -161,7 +160,10 @@ def _ambiguous_parameter_routing_runner():
     partitions = list(descriptor_set.partitions)
     for partition_index, partition in enumerate(partitions):
         for member_index, member in enumerate(partition.members):
-            if member.param_count <= 0:
+            if (
+                descriptor_set.operations[member.canonical_operation_index].param_count
+                <= 0
+            ):
                 continue
             members = list(partition.members)
             members[member_index] = replace(
@@ -182,7 +184,10 @@ def _reordered_descriptor_runner():
     )
     partitions = list(descriptor_set.partitions)
     for partition_index, partition in enumerate(partitions):
-        if partition.noise_count == 0 or partition.member_count < 2:
+        if (
+            descriptor_set.partition_noise_count(partition) == 0
+            or partition.member_count < 2
+        ):
             continue
         members = list(partition.members)
         members[0], members[1] = members[1], members[0]
