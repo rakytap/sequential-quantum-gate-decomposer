@@ -2,6 +2,8 @@
 
 This document inventories **where** a `CanonicalNoisyPlannerSurface` is produced, which **`source_type`** values the Phase 3 contract recognizes, and **where** those surfaces are consumed. Primary implementation: `squander/partitioning/noisy_planner.py` (`SUPPORTED_PLANNER_SOURCE_TYPES`, builder functions, descriptor pipeline).
 
+For a **per–workload_id catalog** (continuity IDs, microcases, structured ID patterns, legacy IDs, and negative-test labels), see [`CANONICAL_NOISY_PLANNER_SURFACE_WORKLOAD_INSTANCES.md`](./CANONICAL_NOISY_PLANNER_SURFACE_WORKLOAD_INSTANCES.md).
+
 **Note:** `preflight_planner_request()` is the only public entry that enforces `source_type ∈ SUPPORTED_PLANNER_SOURCE_TYPES`. Direct calls to `build_canonical_planner_surface_from_operation_specs()` (and similar) do not re-check the enum unless they go through preflight.
 
 ---
