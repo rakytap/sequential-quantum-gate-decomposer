@@ -1,6 +1,7 @@
 from pathlib import Path
 import sys
 
+import numpy as np
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -78,9 +79,24 @@ def test_partitioned_runtime_direct_fused_runtime_path_differs_from_baseline_whe
     fused_result = execute_partitioned_density_fused(descriptor_set, parameters)
 
     assert baseline_result.runtime_path == PHASE3_RUNTIME_PATH_BASELINE
+    assert baseline_result.requested_runtime_path == PHASE3_RUNTIME_PATH_BASELINE
     assert fused_result.actual_fused_execution is True
     assert fused_result.runtime_path == PHASE3_RUNTIME_PATH_FUSED_UNITARY_ISLANDS
+    assert fused_result.requested_runtime_path == PHASE3_RUNTIME_PATH_FUSED_UNITARY_ISLANDS
     assert fused_result.fused_region_count > 0
+
+
+def test_partitioned_runtime_fused_and_unfused_density_matrices_match():
+    """Fused kernels and sequential NoisyCircuit lowering share gate semantics."""
+    _, descriptor_set, parameters = _first_structured_case()
+    fused = execute_partitioned_density(descriptor_set, parameters, allow_fusion=True)
+    unfused = execute_partitioned_density(descriptor_set, parameters, allow_fusion=False)
+    np.testing.assert_allclose(
+        fused.density_matrix_numpy(),
+        unfused.density_matrix_numpy(),
+        atol=PHASE3_RUNTIME_DENSITY_TOL,
+        rtol=0.0,
+    )
 
 
 def test_partitioned_runtime_fused_surface_reuse_cases_share_audit_shape():

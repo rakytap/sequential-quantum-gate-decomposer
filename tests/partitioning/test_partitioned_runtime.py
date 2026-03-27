@@ -39,12 +39,21 @@ from benchmarks.density_matrix.planner_surface.workloads import (
 )
 from squander.partitioning.noisy_planner import (
     PARTITIONED_DENSITY_MODE,
+    build_canonical_planner_surface_from_operation_specs,
+    build_partition_descriptor_set,
     build_phase3_continuity_partition_descriptor_set,
 )
+from squander.partitioning import noisy_runtime as noisy_runtime_mod
 from squander.partitioning.noisy_runtime import (
     PHASE3_RUNTIME_PATH_BASELINE,
+    PHASE3_RUNTIME_PATH_FUSED_UNITARY_ISLANDS,
     build_runtime_audit_record,
     execute_partitioned_density,
+)
+from benchmarks.density_matrix.planner_surface.workloads import (
+    _noise,
+    _noise_value,
+    _u3,
 )
 
 
@@ -59,6 +68,7 @@ def test_phase3_partitioned_runtime_continuity_runtime_executes_supported_anchor
     assert result.source_type == "generated_hea"
     assert result.workload_id == f"phase2_xxz_hea_q{qbit_num}_continuity"
     assert result.runtime_path == PHASE3_RUNTIME_PATH_BASELINE
+    assert result.requested_runtime_path == PHASE3_RUNTIME_PATH_BASELINE
     assert result.partition_count > 0
     assert result.exact_output_present is True
     assert result.fallback_used is False
@@ -91,6 +101,7 @@ def test_partitioned_runtime_mandatory_microcases_execute_through_shared_runtime
         assert result.workload_id == metadata["case_name"]
         assert result.partition_count > 0
         assert result.runtime_path == PHASE3_RUNTIME_PATH_BASELINE
+        assert result.requested_runtime_path == PHASE3_RUNTIME_PATH_BASELINE
         assert result.exact_output_present is True
         assert result.fallback_used is False
 
@@ -107,6 +118,7 @@ def test_partitioned_runtime_mandatory_structured_case_executes_through_shared_r
     assert result.source_type == "structured_family_builder"
     assert result.partition_count > 0
     assert result.runtime_path == PHASE3_RUNTIME_PATH_BASELINE
+    assert result.requested_runtime_path == PHASE3_RUNTIME_PATH_BASELINE
     assert result.rho_is_valid is True
 
 
@@ -121,6 +133,8 @@ def test_partitioned_runtime_continuity_runtime_audit_record_tracks_provenance()
     assert audit["summary"]["partition_count"] == result.partition_count
     assert audit["summary"]["descriptor_member_count"] == result.descriptor_member_count
     assert audit["metadata"]["case_kind"] == "continuity"
+    assert audit["requested_runtime_path"] == PHASE3_RUNTIME_PATH_BASELINE
+    assert audit["summary"]["requested_runtime_path"] == PHASE3_RUNTIME_PATH_BASELINE
 
 
 def test_phase3_partitioned_runtime_runtime_handoff_cases_share_shape():
@@ -198,6 +212,76 @@ def test_phase3_partitioned_runtime_runtime_audit_cases_share_shape():
     assert len(summary_key_sets) == 1
     assert len(partition_key_sets) == 1
     assert {case["runtime_path"] for case in cases} == {PHASE3_RUNTIME_PATH_BASELINE}
+    assert {case["requested_runtime_path"] for case in cases} == {PHASE3_RUNTIME_PATH_BASELINE}
+
+
+def test_partitioned_runtime_fusion_requested_path_without_actual_fusion_downgrades_runtime_path():
+    """allow_fusion upgrades the request to fused path, but singleton unitary segments never fuse."""
+    surface = build_canonical_planner_surface_from_operation_specs(
+        qbit_num=2,
+        source_type="test",
+        workload_id="story3_singleton_unitary_segments",
+        operation_specs=[
+            _u3(0),
+            _noise(
+                "local_depolarizing",
+                0,
+                0,
+                _noise_value("local_depolarizing"),
+            ),
+            _u3(1),
+        ],
+    )
+    descriptor_set = build_partition_descriptor_set(surface)
+    parameters = build_initial_parameters(descriptor_set.parameter_count)
+    result = execute_partitioned_density(descriptor_set, parameters, allow_fusion=True)
+
+    assert result.requested_runtime_path == PHASE3_RUNTIME_PATH_FUSED_UNITARY_ISLANDS
+    assert result.runtime_path == PHASE3_RUNTIME_PATH_BASELINE
+    assert not result.actual_fused_execution
+
+
+def test_runtime_operation_alignment_descriptor_and_segment_policies():
+    descriptor_set = build_microcase_descriptor_set("microcase_2q_entangler_local_depolarizing")
+    parameters = build_initial_parameters(descriptor_set.parameter_count)
+    validated, _ = noisy_runtime_mod.validate_runtime_request(
+        descriptor_set, parameters, runtime_path=noisy_runtime_mod.PHASE3_RUNTIME_PATH_BASELINE
+    )
+    partition = validated.partitions[0]
+    rp = noisy_runtime_mod.PHASE3_RUNTIME_PATH_BASELINE
+
+    circuit_full, ordered_full = noisy_runtime_mod._build_runtime_circuit(
+        validated,
+        partition.members,
+        qbit_num=validated.qbit_num,
+        runtime_path=rp,
+    )
+    noisy_runtime_mod._validate_runtime_operation_alignment(
+        validated,
+        circuit_full,
+        ordered_full,
+        runtime_path=rp,
+        member_sequence_kind="descriptor",
+        param_start_policy="from_member_attr",
+        param_start_attr="local_param_start",
+    )
+
+    segment = partition.members[:3]
+    assert all(m.is_unitary for m in segment)
+    circuit_seg, ordered_seg = noisy_runtime_mod._build_runtime_circuit(
+        validated,
+        segment,
+        qbit_num=validated.qbit_num,
+        runtime_path=rp,
+    )
+    noisy_runtime_mod._validate_runtime_operation_alignment(
+        validated,
+        circuit_seg,
+        ordered_seg,
+        runtime_path=rp,
+        member_sequence_kind="segment",
+        param_start_policy="segment_accumulated",
+    )
 
 
 def test_partitioned_runtime_unsupported_cases_have_expected_categories_and_no_fallback():

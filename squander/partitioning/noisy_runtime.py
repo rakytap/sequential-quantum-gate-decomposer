@@ -3,7 +3,7 @@ from __future__ import annotations
 import resource
 import time
 from dataclasses import dataclass
-from typing import Any, Iterable, Mapping
+from typing import Any, Iterable, Literal, Mapping
 
 import numpy as np
 
@@ -31,6 +31,9 @@ PHASE3_FUSION_KIND_NOISE_BOUNDARY = "noise_boundary"
 PHASE3_FUSION_CLASS_FUSED = "actually_fused"
 PHASE3_FUSION_CLASS_SUPPORTED_UNFUSED = "supported_but_unfused"
 PHASE3_FUSION_CLASS_DEFERRED = "deferred_or_unsupported_candidate"
+
+# Unitary gates lowered both to NoisyCircuit and to fused kernels (subset of SUPPORTED_GATE_NAMES).
+_PHASE3_LOWERABLE_UNITARY_GATE_NAMES = frozenset({"U3", "CNOT"})
 
 
 class NoisyRuntimeValidationError(ValueError):
@@ -154,12 +157,15 @@ class NoisyRuntimeFusedRegionRecord:
 
 @dataclass(frozen=True)
 class NoisyRuntimeExecutionResult:
+    """Partitioned runtime outcome. runtime_path is realized (may downgrade to baseline)."""
+
     requested_mode: str
     source_type: str
     workload_id: str
     qbit_num: int
     parameter_count: int
     runtime_path: str
+    requested_runtime_path: str
     fallback_used: bool
     exact_output_present: bool
     density_matrix: DensityMatrix
@@ -300,10 +306,12 @@ class NoisyRuntimeExecutionResult:
             "qbit_num": self.qbit_num,
             "parameter_count": self.parameter_count,
             "runtime_path": self.runtime_path,
+            "requested_runtime_path": self.requested_runtime_path,
             "summary": {
                 "qbit_num": self.qbit_num,
                 "parameter_count": self.parameter_count,
                 "runtime_path": self.runtime_path,
+                "requested_runtime_path": self.requested_runtime_path,
                 "fallback_used": self.fallback_used,
                 "exact_output_present": self.exact_output_present,
                 "partition_count": self.partition_count,
@@ -529,6 +537,17 @@ def validate_runtime_request(
     return validated_descriptor_set, parameter_vector
 
 
+def _append_lowered_unitary_gate(
+    circuit: NoisyCircuit, member: NoisyPartitionDescriptorMember
+) -> None:
+    """Append U3 or CNOT. Caller must ensure member is a supported unitary gate."""
+    if member.name == "U3":
+        circuit.add_U3(member.target_qbit)
+        return
+    # NoisyCircuit.add_CNOT(target_qbit, control_qbit) matches descriptor field order.
+    circuit.add_CNOT(member.target_qbit, member.control_qbit)
+
+
 def _append_member_to_circuit(
     descriptor_set: NoisyPartitionDescriptorSet,
     circuit: NoisyCircuit,
@@ -536,13 +555,10 @@ def _append_member_to_circuit(
     *,
     runtime_path: str,
 ) -> None:
-    _validate_supported_member(descriptor_set, member, runtime_path=runtime_path)
+    """Lower one member; members must already satisfy validate_runtime_request."""
     if member.kind == "gate":
-        if member.name == "U3":
-            circuit.add_U3(member.target_qbit)
-            return
-        if member.name == "CNOT":
-            circuit.add_CNOT(member.target_qbit, member.control_qbit)
+        if member.name in _PHASE3_LOWERABLE_UNITARY_GATE_NAMES:
+            _append_lowered_unitary_gate(circuit, member)
             return
     elif member.kind == "noise":
         if member.name == "local_depolarizing":
@@ -580,6 +596,7 @@ def _build_runtime_circuit(
     qbit_num: int,
     runtime_path: str,
 ) -> tuple[NoisyCircuit, tuple[NoisyPartitionDescriptorMember, ...]]:
+    """Build a circuit from members already validated by validate_runtime_request (or a slice thereof)."""
     ordered_members = tuple(members)
     circuit = NoisyCircuit(qbit_num)
     for member in ordered_members:
@@ -598,14 +615,38 @@ def _normalize_runtime_operation_name(name: str) -> str:
     return aliases.get(name, name)
 
 
-def _validate_runtime_circuit_shape(
+def _validate_runtime_operation_alignment(
     descriptor_set: NoisyPartitionDescriptorSet,
     circuit: NoisyCircuit,
     members: tuple[NoisyPartitionDescriptorMember, ...],
     *,
     runtime_path: str,
-    expected_param_start_attr: str,
+    member_sequence_kind: Literal["descriptor", "segment"],
+    param_start_policy: Literal["from_member_attr", "segment_accumulated"],
+    param_start_attr: str | None = None,
 ) -> None:
+    if param_start_policy == "from_member_attr" and param_start_attr is None:
+        raise ValueError("param_start_attr is required when param_start_policy is from_member_attr")
+
+    if member_sequence_kind == "descriptor":
+        count_suffix = "descriptor members contain {}"
+        diverged_operation = (
+            "Partitioned runtime operation info diverged from the descriptor "
+            "contract for workload '{}' at canonical operation {}"
+        )
+        param_mismatch = (
+            "Partitioned runtime circuit expected {} parameters but built {}"
+        )
+    else:
+        count_suffix = "segment members contain {}"
+        diverged_operation = (
+            "Partitioned runtime segment diverged from the descriptor contract "
+            "for workload '{}' at canonical operation {}"
+        )
+        param_mismatch = (
+            "Partitioned runtime segment expected {} parameters but built {}"
+        )
+
     operation_info = list(circuit.get_operation_info())
     if len(operation_info) != len(members):
         raise _runtime_error(
@@ -616,13 +657,16 @@ def _validate_runtime_circuit_shape(
             runtime_path=runtime_path,
             reason=(
                 "Partitioned runtime built {} operations for workload '{}' but the "
-                "descriptor members contain {}".format(
-                    len(operation_info), descriptor_set.workload_id, len(members)
-                )
-            ),
+                + count_suffix
+            ).format(len(operation_info), descriptor_set.workload_id, len(members)),
         )
+
+    running_segment_param = 0
     for info, member in zip(operation_info, members):
-        expected_param_start = getattr(member, expected_param_start_attr)
+        if param_start_policy == "from_member_attr":
+            expected_param_start = getattr(member, param_start_attr)  # type: ignore[arg-type]
+        else:
+            expected_param_start = running_segment_param
         if (
             _normalize_runtime_operation_name(info.name) != member.name
             or info.is_unitary != member.is_unitary
@@ -635,84 +679,27 @@ def _validate_runtime_circuit_shape(
                 first_unsupported_condition="operation_info",
                 failure_stage="runtime_preflight",
                 runtime_path=runtime_path,
-                reason=(
-                    "Partitioned runtime operation info diverged from the descriptor "
-                    "contract for workload '{}' at canonical operation {}".format(
-                        descriptor_set.workload_id, member.canonical_operation_index
-                    )
+                reason=diverged_operation.format(
+                    descriptor_set.workload_id, member.canonical_operation_index
                 ),
             )
-    expected_parameter_count = sum(member.param_count for member in members)
-    if circuit.parameter_num != expected_parameter_count:
+        if param_start_policy == "segment_accumulated":
+            running_segment_param += member.param_count
+
+    if param_start_policy == "from_member_attr":
+        expected_parameter_total = sum(member.param_count for member in members)
+    else:
+        expected_parameter_total = running_segment_param
+
+    if circuit.parameter_num != expected_parameter_total:
         raise _runtime_error(
             descriptor_set,
             category="descriptor_to_runtime_mismatch",
             first_unsupported_condition="runtime_parameter_count",
             failure_stage="runtime_preflight",
             runtime_path=runtime_path,
-            reason=(
-                "Partitioned runtime circuit expected {} parameters but built {}".format(
-                    expected_parameter_count, circuit.parameter_num
-                )
-            ),
-        )
-
-
-def _validate_runtime_member_sequence(
-    descriptor_set: NoisyPartitionDescriptorSet,
-    circuit: NoisyCircuit,
-    members: tuple[NoisyPartitionDescriptorMember, ...],
-    *,
-    runtime_path: str,
-) -> None:
-    operation_info = list(circuit.get_operation_info())
-    if len(operation_info) != len(members):
-        raise _runtime_error(
-            descriptor_set,
-            category="descriptor_to_runtime_mismatch",
-            first_unsupported_condition="operation_count",
-            failure_stage="runtime_preflight",
-            runtime_path=runtime_path,
-            reason=(
-                "Partitioned runtime built {} operations for workload '{}' but the "
-                "segment members contain {}".format(
-                    len(operation_info), descriptor_set.workload_id, len(members)
-                )
-            ),
-        )
-    expected_param_start = 0
-    for info, member in zip(operation_info, members):
-        if (
-            _normalize_runtime_operation_name(info.name) != member.name
-            or info.is_unitary != member.is_unitary
-            or info.param_count != member.param_count
-            or info.param_start != expected_param_start
-        ):
-            raise _runtime_error(
-                descriptor_set,
-                category="descriptor_to_runtime_mismatch",
-                first_unsupported_condition="operation_info",
-                failure_stage="runtime_preflight",
-                runtime_path=runtime_path,
-                reason=(
-                    "Partitioned runtime segment diverged from the descriptor contract "
-                    "for workload '{}' at canonical operation {}".format(
-                        descriptor_set.workload_id, member.canonical_operation_index
-                    )
-                ),
-            )
-        expected_param_start += member.param_count
-    if circuit.parameter_num != expected_param_start:
-        raise _runtime_error(
-            descriptor_set,
-            category="descriptor_to_runtime_mismatch",
-            first_unsupported_condition="runtime_parameter_count",
-            failure_stage="runtime_preflight",
-            runtime_path=runtime_path,
-            reason=(
-                "Partitioned runtime segment expected {} parameters but built {}".format(
-                    expected_param_start, circuit.parameter_num
-                )
+            reason=param_mismatch.format(
+                expected_parameter_total, circuit.parameter_num
             ),
         )
 
@@ -828,11 +815,13 @@ def _execute_member_sequence(
         qbit_num=descriptor_set.qbit_num,
         runtime_path=runtime_path,
     )
-    _validate_runtime_member_sequence(
+    _validate_runtime_operation_alignment(
         descriptor_set,
         segment_circuit,
         ordered_members,
         runtime_path=runtime_path,
+        member_sequence_kind="segment",
+        param_start_policy="segment_accumulated",
     )
     segment_parameters = _segment_parameter_vector(
         descriptor_set,
@@ -907,6 +896,26 @@ def _u3_unitary(theta_over_2: float, phi: float, lam: float) -> np.ndarray:
     )
 
 
+def _u3_unitary_from_local_parameter_slice(
+    local_parameter_vector: np.ndarray, local_start: int, local_stop: int
+) -> np.ndarray:
+    theta, phi, lam = local_parameter_vector[local_start:local_stop]
+    return _u3_unitary(float(theta), float(phi), float(lam))
+
+
+def _kernel_indices_for_fused_cnot(
+    *,
+    local_qbit_to_kernel_index: Mapping[int, int],
+    local_target_qbit: int,
+    local_control_qbit: int,
+) -> tuple[int, int]:
+    """Map descriptor CNOT wires to _embed_cnot_gate(kernel_control, kernel_target)."""
+    return (
+        local_qbit_to_kernel_index[local_control_qbit],
+        local_qbit_to_kernel_index[local_target_qbit],
+    )
+
+
 def _embed_single_qubit_gate(
     gate_matrix: np.ndarray, *, total_kernel_qbits: int, kernel_target_qbit: int
 ) -> np.ndarray:
@@ -969,9 +978,10 @@ def _build_gate_matrix_for_member(
                     )
                 ),
             )
-        theta, phi, lam = local_parameter_vector[local_start:local_stop]
         return _embed_single_qubit_gate(
-            _u3_unitary(float(theta), float(phi), float(lam)),
+            _u3_unitary_from_local_parameter_slice(
+                local_parameter_vector, local_start, local_stop
+            ),
             total_kernel_qbits=total_kernel_qbits,
             kernel_target_qbit=local_qbit_to_kernel_index[member.local_target_qbit],
         )
@@ -985,10 +995,15 @@ def _build_gate_matrix_for_member(
                 runtime_path=runtime_path,
                 reason="Fused partitioned runtime requires both local qubits for CNOT members",
             )
+        k_ctl, k_tgt = _kernel_indices_for_fused_cnot(
+            local_qbit_to_kernel_index=local_qbit_to_kernel_index,
+            local_target_qbit=member.local_target_qbit,
+            local_control_qbit=member.local_control_qbit,
+        )
         return _embed_cnot_gate(
             total_kernel_qbits=total_kernel_qbits,
-            kernel_control_qbit=local_qbit_to_kernel_index[member.local_control_qbit],
-            kernel_target_qbit=local_qbit_to_kernel_index[member.local_target_qbit],
+            kernel_control_qbit=k_ctl,
+            kernel_target_qbit=k_tgt,
         )
     raise _runtime_error(
         descriptor_set,
@@ -1276,12 +1291,14 @@ def execute_partitioned_density(
             qbit_num=validated_descriptor_set.qbit_num,
             runtime_path=requested_runtime_path,
         )
-        _validate_runtime_circuit_shape(
+        _validate_runtime_operation_alignment(
             validated_descriptor_set,
             partition_circuit,
             ordered_members,
             runtime_path=requested_runtime_path,
-            expected_param_start_attr="local_param_start",
+            member_sequence_kind="descriptor",
+            param_start_policy="from_member_attr",
+            param_start_attr="local_param_start",
         )
         local_parameter_vector = _build_partition_parameter_vector(
             validated_descriptor_set,
@@ -1317,6 +1334,7 @@ def execute_partitioned_density(
         qbit_num=validated_descriptor_set.qbit_num,
         parameter_count=validated_descriptor_set.parameter_count,
         runtime_path=actual_runtime_path,
+        requested_runtime_path=requested_runtime_path,
         fallback_used=False,
         exact_output_present=True,
         density_matrix=rho.clone(),
@@ -1366,12 +1384,14 @@ def execute_sequential_density_reference(
         qbit_num=validated_descriptor_set.qbit_num,
         runtime_path=runtime_path,
     )
-    _validate_runtime_circuit_shape(
+    _validate_runtime_operation_alignment(
         validated_descriptor_set,
         circuit,
         ordered_members,
         runtime_path=runtime_path,
-        expected_param_start_attr="param_start",
+        member_sequence_kind="descriptor",
+        param_start_policy="from_member_attr",
+        param_start_attr="param_start",
     )
     rho = DensityMatrix(validated_descriptor_set.qbit_num)
     try:
@@ -1402,6 +1422,7 @@ def build_runtime_audit_record(
     return {
         "requested_mode": payload["requested_mode"],
         "runtime_path": payload["runtime_path"],
+        "requested_runtime_path": payload["requested_runtime_path"],
         "provenance": payload["provenance"],
         "summary": payload["summary"],
         "exact_output": payload["exact_output"],
