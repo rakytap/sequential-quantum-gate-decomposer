@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 import resource
 import sys
 import time
@@ -17,6 +16,7 @@ from benchmarks.density_matrix.correctness_evidence.common import (  # noqa: E40
     CORRECTNESS_PACKAGE_SCHEMA_VERSION,
     build_selected_candidate as build_correctness_selected_candidate,
 )
+from benchmarks.density_matrix.evidence_io import write_artifact_bundle  # noqa: E402
 from benchmarks.density_matrix.planner_surface.common import (  # noqa: E402
     build_software_metadata,
 )
@@ -60,15 +60,6 @@ def performance_evidence_output_dir(slice_dir_name: str) -> Path:
     return DEFAULT_OUTPUT_ROOT / slice_dir_name
 
 
-def write_artifact_bundle(
-    bundle: dict[str, Any], output_dir: Path, artifact_filename: str
-) -> Path:
-    output_dir.mkdir(parents=True, exist_ok=True)
-    output_path = output_dir / artifact_filename
-    output_path.write_text(json.dumps(bundle, indent=2, sort_keys=True) + "\n")
-    return output_path
-
-
 @lru_cache(maxsize=1)
 def build_selected_candidate() -> dict[str, Any]:
     return dict(build_correctness_selected_candidate())
@@ -99,10 +90,6 @@ def build_boundary_evidence() -> tuple[dict[str, Any], ...]:
 
     payload = build_correctness_package_payload()
     return tuple(dict(case) for case in payload["negative_cases"])
-
-
-# Compatibility aliases for existing semantic imports.
-CORRECTNESS_EVIDENCE_CORRECTNESS_PACKAGE_SCHEMA_VERSION = CORRECTNESS_PACKAGE_SCHEMA_VERSION
 
 
 def build_performance_evidence_selected_candidate() -> dict[str, Any]:

@@ -31,10 +31,18 @@ If instructions conflict, follow `docs/density_matrix_project/SETUP.md`.
 
 ## Required Environment
 
-Always activate the conda environment first:
+Always use the **`qgd` conda environment** for density-matrix and partitioning tests (never rely on the system interpreter).
+
+Interactive shell:
 
 ```bash
 conda activate qgd
+```
+
+Non-interactive runs (agents, CI-style one-liners) should invoke pytest through conda, for example:
+
+```bash
+conda run -n qgd --no-capture-output pytest tests/partitioning/ -q
 ```
 
 ## Test Workflow (Default)
