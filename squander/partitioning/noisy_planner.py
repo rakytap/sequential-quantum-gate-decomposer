@@ -13,7 +13,7 @@ from squander.partitioning.noisy_descriptor import (
     validate_partition_descriptor_set,
     validate_partition_descriptor_set_against_surface,
 )
-from squander.partitioning.noisy_planner_validation import (
+from squander.partitioning.noisy_planner_surface_builders import (
     NoisyPlannerValidationError,
     build_bridge_overlap_report,
     build_canonical_planner_surface_from_bridge_metadata,

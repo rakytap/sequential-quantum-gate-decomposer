@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Iterable, Mapping
 
-from squander.partitioning.noisy_planner_validation import (
+from squander.partitioning.noisy_planner_surface_builders import (
     build_phase3_continuity_planner_surface,
     preflight_planner_request,
 )
