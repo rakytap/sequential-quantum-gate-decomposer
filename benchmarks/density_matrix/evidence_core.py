@@ -19,7 +19,6 @@ from benchmarks.density_matrix.planner_calibration.calibration_records import (
 RUNTIME_CORRECTNESS_BRIDGE_FIELD_NAMES: tuple[str, ...] = (
     "runtime_path",
     "supported_runtime_case",
-    "fallback_used",
     "exact_output_present",
     "runtime_ms",
     "peak_rss_kb",
@@ -121,11 +120,7 @@ def build_runtime_correctness_bridge_fields(
 
     fields: dict[str, Any] = {
         "runtime_path": runtime_payload["runtime_path"],
-        "supported_runtime_case": (
-            runtime_payload["summary"]["exact_output_present"]
-            and not runtime_payload["summary"]["fallback_used"]
-        ),
-        "fallback_used": runtime_payload["summary"]["fallback_used"],
+        "supported_runtime_case": runtime_payload["summary"]["exact_output_present"],
         "exact_output_present": runtime_payload["summary"]["exact_output_present"],
         "runtime_ms": runtime_payload["summary"]["runtime_ms"],
         "peak_rss_kb": runtime_payload["summary"]["peak_rss_kb"],

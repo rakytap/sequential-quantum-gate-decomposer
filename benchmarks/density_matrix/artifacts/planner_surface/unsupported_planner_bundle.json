@@ -3,7 +3,6 @@
     {
       "case_name": "unsupported_source_type",
       "failure_stage": "planner_entry_preflight",
-      "fallback_used": false,
       "first_unsupported_condition": "binary_import",
       "reason": "Unsupported Phase 3 planner source type 'binary_import'",
       "requested_mode": "partitioned_density",
@@ -15,7 +14,6 @@
     {
       "case_name": "missing_source_payload",
       "failure_stage": "planner_entry_preflight",
-      "fallback_used": false,
       "first_unsupported_condition": "missing_source_payload",
       "reason": "Phase 3 planner preflight requires exactly one source payload (bridge_metadata, operation_specs, or legacy_circuit)",
       "requested_mode": "partitioned_density",
@@ -27,7 +25,6 @@
     {
       "case_name": "unsupported_mode_claim",
       "failure_stage": "planner_entry_preflight",
-      "fallback_used": false,
       "first_unsupported_condition": "unsupported_mode",
       "reason": "Phase 3 canonical planner surface supports only 'partitioned_density' requests, got 'state_vector'",
       "requested_mode": "state_vector",
@@ -39,7 +36,6 @@
     {
       "case_name": "unsupported_noise_model",
       "failure_stage": "planner_entry_preflight",
-      "fallback_used": false,
       "first_unsupported_condition": "readout_noise",
       "reason": "Unsupported Phase 3 planner noise model 'readout_noise' in canonical surface",
       "requested_mode": "partitioned_density",
@@ -51,7 +47,6 @@
     {
       "case_name": "legacy_gate_family_h",
       "failure_stage": "planner_entry_preflight",
-      "fallback_used": false,
       "first_unsupported_condition": "H",
       "reason": "Unsupported Phase 3 planner gate 'H' in legacy-source lowering",
       "requested_mode": "partitioned_density",
@@ -63,7 +58,6 @@
     {
       "case_name": "invalid_noise_insertion_index",
       "failure_stage": "planner_entry_preflight",
-      "fallback_used": false,
       "first_unsupported_condition": "after_gate_index",
       "reason": "Canonical planner noise operation references unsupported after_gate_index 99",
       "requested_mode": "partitioned_density",
@@ -81,7 +75,6 @@
   "status": "pass",
   "suite_name": "phase3_planner_surface_unsupported_planner",
   "summary": {
-    "fallback_count": 0,
     "total_cases": 6,
     "unexpected_passes": 0,
     "unsupported_cases": 6

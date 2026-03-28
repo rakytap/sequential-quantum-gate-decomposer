@@ -32,7 +32,6 @@ _EXPECTED_SORTED_BRIDGE_FIELD_NAMES: tuple[str, ...] = (
     "external_frobenius_norm_diff",
     "external_max_abs_diff",
     "external_reference_pass",
-    "fallback_used",
     "frobenius_norm_diff",
     "fused_gate_count",
     "fused_region_count",

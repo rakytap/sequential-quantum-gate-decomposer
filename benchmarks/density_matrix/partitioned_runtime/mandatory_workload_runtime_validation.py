@@ -90,14 +90,12 @@ def _runtime_case(
         "noise_count": runtime_payload["summary"]["noise_count"],
         "max_partition_span": runtime_payload["summary"]["max_partition_span"],
         "partition_member_counts": runtime_payload["summary"]["partition_member_counts"],
-        "fallback_used": runtime_payload["summary"]["fallback_used"],
         "exact_output_present": runtime_payload["summary"]["exact_output_present"],
         "frobenius_norm_diff": density_metrics["frobenius_norm_diff"],
         "max_abs_diff": density_metrics["max_abs_diff"],
         "shared_runtime_pass": (
             runtime_payload["runtime_path"] == PHASE3_RUNTIME_PATH_BASELINE
             and runtime_payload["summary"]["partition_count"] > 0
-            and runtime_payload["summary"]["fallback_used"] is False
             and runtime_payload["summary"]["exact_output_present"] is True
             and density_metrics["frobenius_norm_diff"] <= PHASE3_RUNTIME_DENSITY_TOL
             and density_metrics["max_abs_diff"] <= PHASE3_RUNTIME_DENSITY_TOL

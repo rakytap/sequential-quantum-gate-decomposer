@@ -55,7 +55,6 @@ def test_phase3_partitioned_runtime_continuity_runtime_executes_supported_anchor
     assert result.requested_runtime_path == PHASE3_RUNTIME_PATH_BASELINE
     assert result.partition_count > 0
     assert result.exact_output_present is True
-    assert result.fallback_used is False
     assert result.rho_is_valid is True
 
 
@@ -87,7 +86,6 @@ def test_partitioned_runtime_mandatory_microcases_execute_through_shared_runtime
         assert result.runtime_path == PHASE3_RUNTIME_PATH_BASELINE
         assert result.requested_runtime_path == PHASE3_RUNTIME_PATH_BASELINE
         assert result.exact_output_present is True
-        assert result.fallback_used is False
 
 
 def test_partitioned_runtime_mandatory_structured_case_executes_through_shared_runtime_surface():

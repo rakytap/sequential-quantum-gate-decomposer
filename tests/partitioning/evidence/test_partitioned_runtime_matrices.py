@@ -69,7 +69,7 @@ def test_phase3_partitioned_runtime_runtime_audit_cases_share_shape():
     assert {case["requested_runtime_path"] for case in cases} == {PHASE3_RUNTIME_PATH_BASELINE}
 
 
-def test_partitioned_runtime_unsupported_cases_have_expected_categories_and_no_fallback():
+def test_partitioned_runtime_unsupported_cases_have_expected_categories():
     cases = build_unsupported_runtime_cases()
     expected_categories = {
         "wrong_requested_mode": "runtime_request",
@@ -83,5 +83,4 @@ def test_partitioned_runtime_unsupported_cases_have_expected_categories_and_no_f
     for case in cases:
         assert case["status"] == "unsupported"
         assert case["unsupported_category"] == expected_categories[case["case_name"]]
-        assert case["fallback_used"] is False
         assert case["supported_runtime_case_recorded"] is False

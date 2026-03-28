@@ -151,7 +151,6 @@ def _normalize_negative_case(
         "requested_mode": case.get("requested_mode"),
         "workload_id": case.get("workload_id"),
         "runtime_path": case.get("runtime_path"),
-        "fallback_used": bool(case.get("fallback_used", False)),
         "supported_case_recorded": bool(
             case.get("supported_partitioned_case_recorded")
             or case.get("supported_descriptor_case_recorded")

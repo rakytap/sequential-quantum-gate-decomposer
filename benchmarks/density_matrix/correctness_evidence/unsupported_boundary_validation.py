@@ -53,12 +53,7 @@ def build_artifact_bundle(cases: list[dict]) -> dict:
         ),
         "runtime_stage_cases": sum(case["boundary_stage"] == "runtime_stage" for case in cases),
     }
-    status = (
-        "pass"
-        if all(case["status"] == "unsupported" for case in cases)
-        and all(not case["fallback_used"] for case in cases)
-        else "fail"
-    )
+    status = "pass" if all(case["status"] == "unsupported" for case in cases) else "fail"
     summary = {
         "total_cases": len(cases),
         **stage_counts,

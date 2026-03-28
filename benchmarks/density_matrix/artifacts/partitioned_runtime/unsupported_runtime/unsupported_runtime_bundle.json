@@ -3,7 +3,6 @@
     {
       "case_name": "wrong_requested_mode",
       "failure_stage": "runtime_preflight",
-      "fallback_used": false,
       "first_unsupported_condition": "requested_mode",
       "reason": "Partitioned runtime supports only 'partitioned_density' requests, got 'state_vector'",
       "requested_mode": "state_vector",
@@ -17,7 +16,6 @@
     {
       "case_name": "parameter_count_mismatch",
       "failure_stage": "runtime_preflight",
-      "fallback_used": false,
       "first_unsupported_condition": "parameter_count",
       "reason": "Partitioned runtime workload 'phase2_xxz_hea_q4_continuity' requires 18 parameters, got 17",
       "requested_mode": "partitioned_density",
@@ -31,7 +29,6 @@
     {
       "case_name": "unsupported_gate_name",
       "failure_stage": "runtime_preflight",
-      "fallback_used": false,
       "first_unsupported_condition": "gate_name",
       "reason": "Partitioned runtime supports only gate families ['CNOT', 'U3'], got 'CZ'",
       "requested_mode": "partitioned_density",
@@ -45,7 +42,6 @@
     {
       "case_name": "unsupported_noise_name",
       "failure_stage": "runtime_preflight",
-      "fallback_used": false,
       "first_unsupported_condition": "noise_name",
       "reason": "Partitioned runtime supports only local-noise families ['amplitude_damping', 'local_depolarizing', 'phase_damping'], got 'depolarizing'",
       "requested_mode": "partitioned_density",
@@ -59,7 +55,6 @@
     {
       "case_name": "gate_fixed_value",
       "failure_stage": "runtime_preflight",
-      "fallback_used": false,
       "first_unsupported_condition": "fixed_value",
       "reason": "Partitioned runtime gate members must not carry fixed_value payloads",
       "requested_mode": "partitioned_density",
@@ -79,7 +74,6 @@
   "status": "pass",
   "suite_name": "phase3_partitioned_runtime_unsupported_runtime",
   "summary": {
-    "fallback_count": 0,
     "total_cases": 5,
     "unexpected_passes": 0,
     "unsupported_cases": 5

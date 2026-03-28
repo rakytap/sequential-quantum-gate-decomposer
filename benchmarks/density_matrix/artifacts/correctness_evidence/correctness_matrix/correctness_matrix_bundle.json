@@ -751,7 +751,7 @@
       "workload_id": "partition_stress_ladder_q10_dense_seed20260318"
     }
   ],
-  "record_schema_version": "correctness_evidence_case_record_v1",
+  "record_schema_version": "correctness_evidence_case_record_v2",
   "selected_candidate": {
     "candidate_id": "span_budget_q4",
     "candidate_schema_version": "phase3_planner_calibration_candidate_v1",

@@ -105,7 +105,6 @@ def build_case_result(qbit_num: int) -> dict:
             "parameter_routing_segment_count": runtime_payload["summary"][
                 "parameter_routing_segment_count"
             ],
-            "fallback_used": runtime_payload["summary"]["fallback_used"],
             "exact_output_present": runtime_payload["summary"]["exact_output_present"],
             "rho_is_valid": runtime_payload["summary"]["rho_is_valid"],
             "trace_deviation": runtime_payload["summary"]["trace_deviation"],
@@ -126,7 +125,6 @@ def build_case_result(qbit_num: int) -> dict:
                 runtime_payload["requested_mode"] == PARTITIONED_DENSITY_MODE
                 and runtime_payload["runtime_path"] == PHASE3_RUNTIME_PATH_BASELINE
                 and runtime_payload["summary"]["partition_count"] > 0
-                and runtime_payload["summary"]["fallback_used"] is False
                 and runtime_payload["summary"]["exact_output_present"] is True
                 and energy_pass
                 and density_pass

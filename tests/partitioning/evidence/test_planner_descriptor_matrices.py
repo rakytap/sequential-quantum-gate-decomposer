@@ -27,5 +27,4 @@ def test_unsupported_descriptor_matrix_reports_categories_without_fallback():
     for case in cases:
         assert case["status"] == "unsupported"
         assert case["unsupported_category"] == expected_categories[case["case_name"]]
-        assert case["fallback_used"] is False
         assert case["supported_descriptor_case_recorded"] is False

@@ -41,10 +41,9 @@ PHASE3_FUSION_CLASS_DEFERRED = "deferred_or_unsupported_candidate"
 # Unitary gates lowered both to NoisyCircuit and to fused kernels (subset of SUPPORTED_GATE_NAMES).
 _PHASE3_LOWERABLE_UNITARY_GATE_NAMES = frozenset({"U3", "CNOT"})
 
+
 @dataclass(frozen=True)
 class NoisyRuntimePartitionRecord:
-    """Runtime-only partition execution metadata; audit payloads merge descriptor serialization."""
-
     partition_index: int
     runtime_circuit_qbit_num: int
     runtime_circuit_parameter_count: int
@@ -113,7 +112,6 @@ class NoisyRuntimeExecutionResult:
     parameter_count: int
     runtime_path: str
     requested_runtime_path: str
-    fallback_used: bool
     exact_output_present: bool
     density_matrix: DensityMatrix
     descriptor_set: NoisyPartitionDescriptorSet = field(repr=False)
@@ -259,7 +257,6 @@ class NoisyRuntimeExecutionResult:
             "runtime_path": self.runtime_path,
             "requested_runtime_path": self.requested_runtime_path,
             "summary": {
-                "fallback_used": self.fallback_used,
                 "exact_output_present": self.exact_output_present,
                 "partition_count": self.partition_count,
                 "descriptor_member_count": self.descriptor_member_count,
@@ -287,12 +284,9 @@ class NoisyRuntimeExecutionResult:
             "exact_output": self.build_exact_output_record(
                 include_density_matrix=include_density_matrix
             ),
-            "partitions": [
-                rec.to_dict(self.descriptor_set) for rec in self.partitions
-            ],
+            "partitions": [rec.to_dict(self.descriptor_set) for rec in self.partitions],
             "fused_regions": [region.to_dict() for region in self.fused_regions],
         }
-
 
 
 def _coerce_parameter_vector(
@@ -359,9 +353,7 @@ def _validate_supported_member(
                 runtime_path=runtime_path,
                 reason="Partitioned runtime requires target_qbit for U3 operations",
             )
-        if op.name == "CNOT" and (
-            op.target_qbit is None or op.control_qbit is None
-        ):
+        if op.name == "CNOT" and (op.target_qbit is None or op.control_qbit is None):
             raise runtime_validation_error(
                 descriptor_set,
                 category="descriptor_to_runtime_mismatch",
@@ -560,7 +552,9 @@ def _validate_runtime_operation_alignment(
     param_start_attr: str | None = None,
 ) -> None:
     if param_start_policy == "from_member_attr" and param_start_attr is None:
-        raise ValueError("param_start_attr is required when param_start_policy is from_member_attr")
+        raise ValueError(
+            "param_start_attr is required when param_start_policy is from_member_attr"
+        )
 
     if member_sequence_kind == "descriptor":
         count_suffix = "descriptor members contain {}"
@@ -780,6 +774,7 @@ def _execute_member_sequence(
 def _peak_rss_kb() -> int:
     return int(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
 
+
 def execute_partitioned_density(
     descriptor_set: NoisyPartitionDescriptorSet,
     parameters: Iterable[float],
@@ -852,7 +847,6 @@ def execute_partitioned_density(
         parameter_count=validated_descriptor_set.parameter_count,
         runtime_path=actual_runtime_path,
         requested_runtime_path=requested_runtime_path,
-        fallback_used=False,
         exact_output_present=True,
         density_matrix=rho.clone(),
         descriptor_set=validated_descriptor_set,

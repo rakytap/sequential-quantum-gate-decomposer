@@ -65,7 +65,6 @@ def _unsupported_case(case_name: str, runner) -> dict:
             {
                 "case_name": case_name,
                 "status": "unsupported",
-                "fallback_used": False,
                 "supported_runtime_case_recorded": False,
             }
         )
@@ -73,7 +72,6 @@ def _unsupported_case(case_name: str, runner) -> dict:
     return {
         "case_name": case_name,
         "status": "unexpected_pass",
-        "fallback_used": False,
         "supported_runtime_case_recorded": False,
         "reason": "unsupported runtime case unexpectedly passed",
     }
@@ -159,20 +157,16 @@ def build_cases() -> list[dict]:
 def build_artifact_bundle(cases: list[dict]) -> dict:
     unsupported_cases = sum(case["status"] == "unsupported" for case in cases)
     unexpected_passes = sum(case["status"] == "unexpected_pass" for case in cases)
-    fallback_count = sum(bool(case["fallback_used"]) for case in cases)
     bundle = {
         "suite_name": SUITE_NAME,
         "status": "pass"
-        if unsupported_cases == len(cases)
-        and unexpected_passes == 0
-        and fallback_count == 0
+        if unsupported_cases == len(cases) and unexpected_passes == 0
         else "fail",
         "software": build_software_metadata(),
         "summary": {
             "total_cases": len(cases),
             "unsupported_cases": unsupported_cases,
             "unexpected_passes": unexpected_passes,
-            "fallback_count": fallback_count,
         },
         "cases": cases,
     }

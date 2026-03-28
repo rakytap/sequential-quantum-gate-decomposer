@@ -27,8 +27,8 @@ from benchmarks.density_matrix.planner_surface.common import (  # noqa: E402
     build_software_metadata,
 )
 
-CORRECTNESS_EVIDENCE_CASE_SCHEMA_VERSION = "correctness_evidence_case_record_v1"
-CORRECTNESS_EVIDENCE_NEGATIVE_RECORD_SCHEMA_VERSION = "correctness_evidence_negative_record_v1"
+CORRECTNESS_EVIDENCE_CASE_SCHEMA_VERSION = "correctness_evidence_case_record_v2"
+CORRECTNESS_EVIDENCE_NEGATIVE_RECORD_SCHEMA_VERSION = "correctness_evidence_negative_record_v2"
 CORRECTNESS_PACKAGE_SCHEMA_VERSION = "correctness_evidence_package_v1"
 CORRECTNESS_EVIDENCE_SUMMARY_SCHEMA_VERSION = "correctness_evidence_summary_v1"
 
