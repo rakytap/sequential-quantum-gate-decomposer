@@ -159,7 +159,7 @@ qgd_Variational_Quantum_Eigensolver_Base(
 - **`describe_density_bridge() -> dict`**
   - Reviewable metadata: `source_type`, qubit and parameter counts, ordered
     `operations` (gates and noise with `kind`, `param_start`, etc.).
-  - This dict is the handoff format for **`build_canonical_planner_surface_from_bridge_metadata`** in Phase 3.
+  - This dict is the handoff format for **`build_canonical_planner_surface_from_bridge_metadata`** in Phase 3 (import `squander.partitioning.noisy_planner`; implementation in `noisy_planner_validation.py`).
 
 - **Energy evaluation**
   - `Optimization_Problem(parameters)` uses the density backend path when
@@ -207,6 +207,8 @@ assert bridge["noise_count"] >= 1
 
 ## Phase 3: canonical planner surface (`squander.partitioning.noisy_planner`)
 
+**Module layout:** Import the public Phase 3 API from **`squander.partitioning.noisy_planner`** (re-export module). **Surface construction, preflight, and planner audit helpers** are implemented in **`squander/partitioning/noisy_planner_validation.py`**. **Descriptor partitioning** (`build_partition_descriptor_set`, `preflight_descriptor_request`, `validate_partition_descriptor_set_against_surface`, …) lives in **`squander/partitioning/noisy_descriptor.py`**. **Dataclasses and support constants** (`CanonicalNoisyPlannerSurface`, `SUPPORTED_PLANNER_SOURCE_TYPES`, …) are defined in **`squander/partitioning/noisy_types.py`**. **`NoisyPlannerValidationError`** and **`NoisyDescriptorValidationError`** are defined in **`squander/partitioning/noisy_validation_errors.py`**. A file-level inventory of builders and call sites: [`CANONICAL_NOISY_PLANNER_SURFACE_SOURCES.md`](../../CANONICAL_NOISY_PLANNER_SURFACE_SOURCES.md).
+
 Phase 3 introduces a **contract-first** pipeline:
 
 1. Build a **`CanonicalNoisyPlannerSurface`** (ordered gate + noise operations,
@@ -230,13 +232,19 @@ Phase 3 introduces a **contract-first** pipeline:
 
 ### Key constants (selection)
 
+These are defined in **`noisy_types.py`** and re-exported from **`noisy_planner`**.
+
 | Name | Role |
 |------|------|
-| `CANONICAL_PLANNER_SCHEMA_VERSION` | Planner schema tag |
-| `PHASE3_DESCRIPTOR_SCHEMA_VERSION` | Descriptor schema tag |
-| `DEFAULT_PARTITION_DESCRIPTOR_MAX_QUBITS` | Default span budget (2) |
+| `PARTITIONED_DENSITY_MODE` | Accepted planner/runtime mode (`"partitioned_density"`) |
+| `SUPPORTED_PLANNER_SOURCE_TYPES` | Frozenset of allowed `source_type` strings for preflight |
+| `DEFAULT_PARTITION_DESCRIPTOR_MAX_QUBITS` | Default partition span budget (2) |
+
+Wire-shape tags such as `phase3_canonical_noisy_planner_v1` and `phase3_noisy_partition_descriptor_v1` describe documented JSON/audit layouts; they are not separate Python globals in the partitioning package.
 
 ### Exceptions
+
+Defined in **`noisy_validation_errors.py`**, re-exported from **`noisy_planner`**.
 
 - **`NoisyPlannerValidationError`**: planner entry / surface validation;
   structured fields: `category`, `first_unsupported_condition`, `failure_stage`,
@@ -245,6 +253,8 @@ Phase 3 introduces a **contract-first** pipeline:
   includes `workload_id`.
 
 ### Data classes (high level)
+
+Defined in **`noisy_types.py`**, re-exported from **`noisy_planner`**.
 
 - **`CanonicalNoisyPlannerOperation`**: one ordered operation (gate or noise)
   with indices, qubit fields, parameter metadata, `fixed_value` for fixed noise.
@@ -256,18 +266,20 @@ Phase 3 introduces a **contract-first** pipeline:
 
 ### Main functions
 
-| Function | Purpose |
-|----------|---------|
-| `preflight_planner_request(...)` | Validate inputs; return `CanonicalNoisyPlannerSurface` (exactly one of `bridge_metadata`, `operation_specs`, `legacy_circuit`) |
-| `build_canonical_planner_surface_from_bridge_metadata(...)` | From `vqe.describe_density_bridge()`-shaped dict |
-| `build_phase3_continuity_planner_surface(vqe, ...)` | Convenience for Phase 2 continuity VQE |
-| `build_canonical_planner_surface_from_qgd_circuit(circuit, workload_id=..., density_noise=...)` | Legacy `qgd_Circuit` lowering + optional noise specs |
-| `build_partition_descriptor_set(surface, max_partition_qubits=...)` | Descriptor set from surface |
-| `build_phase3_continuity_partition_descriptor_set(vqe, ...)` | VQE + partition in one step |
-| `preflight_descriptor_request(...)` | Planner preflight + descriptor build |
-| `build_planner_audit_record(surface, metadata=...)` | JSON-serializable audit |
-| `build_bridge_overlap_report(surface, bridge_metadata)` | Compare surface vs bridge |
-| `build_descriptor_audit_record(descriptor_set, metadata=...)` | Descriptor audit |
+| Function | Purpose | Implemented in |
+|----------|---------|----------------|
+| `preflight_planner_request(...)` | Validate inputs; return `CanonicalNoisyPlannerSurface` (exactly one of `bridge_metadata`, `operation_specs`, `legacy_circuit`) | `noisy_planner_validation.py` |
+| `build_canonical_planner_surface_from_bridge_metadata(...)` | From `vqe.describe_density_bridge()`-shaped dict | `noisy_planner_validation.py` |
+| `build_canonical_planner_surface_from_operation_specs(...)` | From explicit operation spec dicts | `noisy_planner_validation.py` |
+| `build_canonical_planner_surface_from_legacy_circuit(...)` | Legacy circuit + noise → operation-spec path | `noisy_planner_validation.py` |
+| `build_phase3_continuity_planner_surface(vqe, ...)` | Convenience for Phase 2 continuity VQE | `noisy_planner_validation.py` |
+| `build_canonical_planner_surface_from_qgd_circuit(circuit, workload_id=..., density_noise=...)` | Legacy `qgd_Circuit` lowering + optional noise specs | `noisy_planner_validation.py` |
+| `build_partition_descriptor_set(surface, max_partition_qubits=...)` | Descriptor set from surface | `noisy_descriptor.py` |
+| `build_phase3_continuity_partition_descriptor_set(vqe, ...)` | VQE + partition in one step | `noisy_descriptor.py` |
+| `preflight_descriptor_request(...)` | Planner preflight + descriptor build (`preflight_planner_request` then `build_partition_descriptor_set`) | `noisy_descriptor.py` |
+| `build_planner_audit_record(surface, metadata=...)` | JSON-serializable audit | `noisy_planner_validation.py` |
+| `build_bridge_overlap_report(surface, bridge_metadata)` | Compare surface vs bridge | `noisy_planner_validation.py` |
+| `build_descriptor_audit_record(descriptor_set, metadata=...)` | Descriptor audit | `noisy_descriptor.py` |
 
 ### Example: continuity surface and descriptors from a configured VQE
 
