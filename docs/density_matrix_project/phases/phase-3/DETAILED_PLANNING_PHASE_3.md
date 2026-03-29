@@ -108,7 +108,10 @@ Boundary to later work:
   the Phase 3 runtime if it preserves the exact contract cleanly,
 - and fully channel-native, Liouville-space, or superoperator-based noisy-block
   fusion remains a benchmark-driven follow-on branch beyond the baseline Phase 3
-  closure condition.
+  closure condition, now formalized as **Phase 3.1** in
+  [`../phase-3-1/DETAILED_PLANNING_PHASE_3_1.md`](../phase-3-1/DETAILED_PLANNING_PHASE_3_1.md)
+  (spec-driven planning only until that phase’s pre-implementation checklist
+  closes).
 
 ## 0.4 Planner Surface And Partition Descriptor: Learnings That Constrain Remaining Work
 

@@ -118,6 +118,11 @@ The recommended dependency order is:
   partitioning/fusion baseline rather than reopening its core scope by default,
 3. broaden VQE/VQA workflows, gradients, and optimizer studies only after that
   Phase 3 backend exists,
+   - optional: pursue Phase 3.1 channel-native / superoperator fusion as a
+     documented follow-on partitioning milestone after the Phase 3 baseline
+     (see §4 Phase 3.1 and `docs/density_matrix_project/phases/phase-3-1/`)
+     when the research program prioritizes that branch; the default PhD
+     sequencing may still advance Phase 4 first,
 4. use the resulting exact backend for full trainability studies,
 5. only then branch into more invasive fusion models or approximate scaling
   methods if the exact backend has reached its practical limit.
@@ -372,6 +377,64 @@ anymore. It is a fully emitted performance-and-sensitivity package that closes
 the Phase 3 rule through diagnosis-grounded benchmark evidence rather than
 through a speedup claim.
 
+### Phase 3.1: Channel-Native / Superoperator Fusion
+
+### Status
+
+`Planned` (specification and publication surfaces in
+`docs/density_matrix_project/phases/phase-3-1/`; implementation awaits pre-
+implementation checklist closure)
+
+### Main Goal
+
+Extend the delivered Phase 3 partitioned density runtime with **exact**
+channel-native or superoperator-native fusion of eligible noisy regions where
+the Phase 3 conservative unitary-island fused baseline is insufficient, and
+produce benchmark-justified evidence comparing against both sequential
+`NoisyCircuit` execution and the Phase 3 fused path.
+
+### Technical Focus
+
+- exact CPTP / superoperator (or equivalent) representation and composition for
+  fused noisy blocks on a frozen small support,
+- integration with the existing noise-aware planner and descriptor contracts
+  without silent semantic fallback for advertised channel-native modes,
+- eligibility and unsupported tiers aligned with realistic local noise models,
+- correctness evidence against the sequential density baseline and external
+  micro-validation posture consistent with Phase 3 culture,
+- comparative performance evidence versus sequential execution and Phase 3
+  fused execution, including diagnosis-grounded closure if speedups are absent.
+
+### Relationship To Phase 3
+
+Phase 3.1 is **additive**. It does not reopen Phase 3’s minimum deliverable or
+Paper 2 claim boundary. It consumes the Phase 3 diagnosis that points toward a
+more invasive fusion branch as a plausible next step.
+
+### Primary Scientific Question
+
+When does native channel or superoperator fusion materially improve exact noisy
+partitioned simulation on training-relevant workloads, and when is the remaining
+bottleneck elsewhere?
+
+### Publication Target
+
+Follow-on methods paper or decision study (see `PUBLICATIONS.md` Phase 3.1 /
+Side Paper A).
+
+### Exit Criteria
+
+- frozen support matrix and primary representation choice documented in Phase
+  3.1 ADRs and checklist,
+- at least one executable channel-native or superoperator-native mode validated
+  on the mandatory correctness slice, **or** a benchmark-grounded documented
+  negative outcome with the same comparative baselines,
+- publication-facing claim boundary matches emitted evidence and does not
+  contradict closed Phase 3 claims.
+
+Detailed tasks, validation matrix, and gates:
+[`DETAILED_PLANNING_PHASE_3_1.md`](../phases/phase-3-1/DETAILED_PLANNING_PHASE_3_1.md).
+
 ### Phase 4: Broader Noisy VQE/VQA Workflows And Optimizer Studies
 
 ### Main Goal
@@ -461,19 +524,12 @@ five-phase plan unless benchmark evidence strongly justifies accelerating them.
 
 ### 5.1 Channel-Native / Superoperator Fusion
 
-Why it matters:
-
-- it may outperform the first native noise-aware partition/runtime for
-sufficiently noise-dense circuits,
-- it is architecturally elegant,
-- and it could become a strong follow-on methods paper.
-
-Why it is not first:
-
-- it is much more invasive,
-- it is harder to validate,
-- and it should follow the benchmark evidence produced by the Phase 3
-noise-aware baseline rather than replace it.
+This parallel track is **formalized as Phase 3.1** in §4. Rationale, scope, exit
+criteria, and spec-driven contracts live in
+[`docs/density_matrix_project/phases/phase-3-1/`](../phases/phase-3-1/)
+(`DETAILED_PLANNING_PHASE_3_1.md`, `ADRs_PHASE_3_1.md`, and companion paper
+drafts). It remains subordinate to the main five-phase narrative unless the
+program explicitly prioritizes implementation before Phase 4.
 
 ### 5.2 Stochastic Trajectories
 
@@ -540,7 +596,10 @@ on the delivered bounded support surface.
 - The performance rule closes through diagnosis-grounded benchmark evidence,
 not through positive-threshold speedup cases.
 - Channel-native / IR-first fusion remains deferred follow-on work unless a
-dedicated branch is opened with stronger benchmark justification.
+dedicated branch is opened with stronger benchmark justification. Phase 3.1
+(`docs/density_matrix_project/phases/phase-3-1/`) is the **documented container**
+for that branch when opened; opening Phase 3.1 planning does not by itself
+satisfy ADR-007 for code delivery.
 
 ### DG-3: Phase 3 To Phase 4 Handoff
 
@@ -557,6 +616,11 @@ If yes:
 If no:
 
 - close Phase 3 backend debt before expanding workflow scope.
+
+Phase 3.1 is **not** a prerequisite for clearing DG-3 unless remaining
+limitations are explicitly scoped as channel-native fusion debt rather than
+broader workflow or optimizer surface. The default handoff still assumes Phase 4
+can proceed when Phase 3 semantics and evidence are closed as delivered.
 
 ### DG-4: Before Large-Scale Phase 5 Experiments
 
@@ -647,6 +711,7 @@ Current roadmap emphasis:
 | Completed milestone window    | Phase 1 exact mixed-state foundation, Phase 2 exact noisy workflow integration, and Phase 3 bounded partitioning/fusion backend all delivered |
 | Current publication window    | Phase 2 and Phase 3 manuscript packaging, figure polishing, and venue shaping                                                                 |
 | Next implementation milestone | Phase 4 broader noisy VQE/VQA workflows, gradients, and optimizer studies                                                                     |
+| Optional follow-on milestone  | Phase 3.1 channel-native / superoperator fusion (specification in `phases/phase-3-1/`; scheduling relative to Phase 4 is program choice)     |
 | Later thesis milestones       | Phase 5 trainability studies plus any benchmark-justified scaling branches                                                                    |
 
 

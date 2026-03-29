@@ -27,6 +27,21 @@ Unless noted, `source_type` is either passed explicitly to a builder or inherite
 
 ---
 
+## Table 2B — Phase 3.1 counted microcases (`source_type`: `microcase_builder`)
+
+These IDs are now present in the executable workload catalogs as **Phase 3.1
+helpers**, but they are **not** yet wired into the default Phase 3 evidence
+pipelines. They mirror the frozen Phase 3.1 counted microcase surface.
+
+| workload_id | Where defined | Primary consumers |
+|-------------|---------------|-------------------|
+| `phase31_microcase_1q_u3_local_noise_chain` | `phase31_microcase_definitions()` in `benchmarks/density_matrix/planner_surface/workloads.py` and mirror `tests/partitioning/fixtures/workloads.py` | `build_microcase_surface`, `build_phase31_microcase_descriptor_set`, Phase 3.1 planning helpers in correctness evidence. |
+| `phase31_microcase_2q_cnot_local_noise_pair` | Same | Same. |
+| `phase31_microcase_2q_multi_noise_entangler_chain` | Same | Same. |
+| `phase31_microcase_2q_dense_same_support_motif` | Same | Same. |
+
+---
+
 ## Table 3 — Structured families (`source_type`: `structured_family_builder`)
 
 **ID pattern** (canonical in code): `{family}_q{qbit_num}_{noise_pattern}_seed{seed}` with:
@@ -41,6 +56,37 @@ Unless noted, `source_type` is either passed explicitly to a builder or inherite
 | `20260318` | `DEFAULT_STRUCTURED_SEED` in `workloads.py` / fixtures; `build_structured_surface` / `iter_structured_surfaces` | Full Cartesian product: **3 × 2 × 3 = 18** IDs (e.g. `layered_nearest_neighbor_q8_sparse_seed20260318`). Used by default in correctness evidence, planner calibration, mandatory workload surface/descriptor benchmarks, descriptor ordering (first `iter_structured_descriptor_sets()` item), etc. |
 | `20260318` only (hard-coded suffix) | `benchmarks/density_matrix/partitioned_runtime/mandatory_workload_runtime_validation.py` — builds `"{family}_q{qbit_num}_{noise_pattern}_seed20260318"` with `STRUCTURED_VALIDATION_NOISE_PATTERN` | Subset of the default seed grid (noise pattern fixed by that module’s constant). |
 | `20260318`, `20260319`, `20260320` | `benchmarks/density_matrix/performance_evidence/case_selection.py` — `_structured_seed_noise_pairs()` uses `PERFORMANCE_EVIDENCE_PRIMARY_STRUCTURED_SEED` (= `DEFAULT_STRUCTURED_SEED`) and `PERFORMANCE_EVIDENCE_ADDITIONAL_STRUCTURED_SEEDS`; inventory builder enumerates the same | Extra structured cases for performance evidence (still `structured_family_builder`). |
+
+---
+
+## Table 3B — Phase 3.1 counted structured families (`source_type`: `structured_family_builder`)
+
+These IDs are now present in the executable workload catalogs as **Phase 3.1
+helpers**, but they are **not** yet part of the default Phase 3 evidence
+package builders.
+
+**ID pattern**: `{family}_q{qbit_num}_{noise_pattern}_seed{seed}` with:
+
+- primary families `phase31_pair_repeat`, `phase31_alternating_ladder`,
+- control family `layered_nearest_neighbor`,
+- `qbit_num ∈ {8, 10}`,
+- primary noise patterns `{periodic, dense}`,
+- control noise pattern `{sparse}`,
+- primary seeds `{20260318, 20260319, 20260320}`,
+- control seed `20260318`.
+
+| Family / seed policy | Where defined | Notes |
+|----------------------|---------------|-------|
+| `phase31_pair_repeat`, `phase31_alternating_ladder` with primary seeds/patterns | `iter_phase31_structured_surfaces()` / `iter_phase31_structured_descriptor_sets()` in `benchmarks/density_matrix/planner_surface/workloads.py` and mirror fixtures | Mirrors the frozen counted positive-method slice in Phase 3.1 planning. |
+| `layered_nearest_neighbor` sparse control (`seed=20260318`) | Same helpers | Control family retained for “Phase 3 sufficient?” comparisons on the same evaluation grid. |
+
+Phase 3.1 planning helpers also exist in:
+
+- `benchmarks/density_matrix/correctness_evidence/case_selection.py`
+- `benchmarks/density_matrix/performance_evidence/case_selection.py`
+
+These helpers intentionally do **not** alter the default Phase 3 case caches
+until Phase 3.1 implementation work wires them in.
 
 ---
 

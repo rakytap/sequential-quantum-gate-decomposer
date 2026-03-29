@@ -49,6 +49,11 @@ Phase 3 is complete and established the noise-aware partitioning/fusion foundati
   closure, while channel-native fusion and broader workflow growth remain
   deferred.
 
+Phase 3.1 is **planned** as the spec-driven follow-on for channel-native /
+superoperator fusion (PLANNING.md §5.1), with contracts and paper surfaces in
+[`phases/phase-3-1/`](phases/phase-3-1/). It is optional relative to the default
+Phase 4 sequencing; implementation has not started.
+
 Phase 4 is planned and will broaden the noisy VQE/VQA surface, gradients, and
 optimizer studies.
 
@@ -56,7 +61,7 @@ Phase 5 is planned and will focus on trainability analysis under noise
 (gradient collapse, barren plateaus).
 
 
-## 5-Phase Roadmap
+## Main Roadmap (Phases 1–5 And Optional 3.1)
 
 
 | Phase | Goal                                                            | Status   |
@@ -64,8 +69,12 @@ Phase 5 is planned and will focus on trainability analysis under noise
 | 1     | Foundation: density matrices + initial noise channels           | Complete |
 | 2     | Exact noisy backend integration for one canonical workflow       | Complete |
 | 3     | Noise-aware partitioning and gate fusion for mixed-state circuits | Complete |
+| 3.1   | Channel-native / superoperator fusion follow-on (optional)      | Planned (docs) |
 | 4     | Broader noisy VQE/VQA features, gradients, and optimizer studies | Planned |
 | 5     | Trainability analysis under noise (BP and expressivity studies) | Planned  |
+
+Phase 3.1 sits between 3 and 4 in the partitioning line but does not replace
+Phase 4 on the default critical path; see [`planning/PLANNING.md`](planning/PLANNING.md) §4 and §5.1.
 
 
 Notes:
@@ -77,6 +86,8 @@ available.
 
 ## Documentation Map
 
+- `[phases/phase-3-1/](phases/phase-3-1/)`: Phase 3.1 spec-driven contracts
+  (channel-native / superoperator fusion follow-on).
 - `[CHANGELOG.md](CHANGELOG.md)`: delivered phase outputs and upcoming phase
 targets.
 - `[ARCHITECTURE.md](ARCHITECTURE.md)`: implementation structure and integration

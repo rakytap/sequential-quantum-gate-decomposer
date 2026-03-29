@@ -56,12 +56,14 @@ Review takeaway:
 |---|---|
 | Phase 2 | Exact noisy backend integration for one canonical workflow (Spring 2026) |
 | Phase 3 | Noise-aware partitioning and fusion for mixed-state circuits (Fall 2026) |
+| Phase 3.1 | Optional follow-on: channel-native / superoperator fusion after Phase 3 (scheduling relative to Phase 4 is program choice) |
 | Phase 4 | Broader noisy VQE/VQA integration, gradients, and optimizer comparisons (Spring 2027) |
 | Phase 5 | Trainability analysis under noise (Fall 2027) |
 
 Roadmap shorthand used in the documentation contract:
 
 - Phase 3 | Native noise-aware partitioning/fusion baseline and Paper 2 evidence package
+- Phase 3.1 | Optional channel-native / superoperator fusion follow-on (`phases/phase-3-1/`)
 - Phase 4 | Noisy VQA integration, gradients, and optimizer comparisons
 
 
@@ -79,6 +81,12 @@ Roadmap shorthand used in the documentation contract:
     density-matrix semantics are first-class in the circuit model,
   - added bounded benchmark-calibrated planning plus layered correctness,
     performance, and publication evidence for partitioning workloads.
+- Phase 3.1 (planned; optional sequencing):
+  - targets exact channel-native or superoperator-native fusion of eligible
+    noisy regions as a follow-on to the Phase 3 unitary-island fused baseline,
+  - preserves sequential `NoisyCircuit` semantics as the reference and compares
+    performance honestly against both sequential and Phase 3 partitioned paths
+    (see `docs/density_matrix_project/phases/phase-3-1/`).
 
 ### 2) Trainability analysis under noise
 
@@ -124,6 +132,12 @@ Roadmap shorthand used in the documentation contract:
     closure,
   - and the baseline methods claim can close through diagnosis-grounded
     performance evidence rather than only through positive speedup cases.
+- Phase 3.1 (when pursued):
+  - pre-implementation checklist in `phases/phase-3-1/` closed before code work,
+  - exact agreement with sequential density baseline on the frozen mandatory
+    slice for the Phase 3.1 support matrix,
+  - comparative performance evidence versus Phase 3 fused and sequential paths,
+  - claims remain additive and do not restate Phase 3 minimum closure.
 - Phase 4:
   - end-to-end noisy VQE/VQA training loop beyond the Phase 2 baseline is
     functional,

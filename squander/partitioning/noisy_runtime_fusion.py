@@ -5,7 +5,6 @@ from typing import Mapping
 import numpy as np
 
 from squander.density_matrix import DensityMatrix
-from squander.partitioning.noisy_descriptor import NoisyPartitionDescriptorSet
 from squander.partitioning.noisy_runtime_core import (
     PHASE3_FUSION_CLASS_DEFERRED,
     PHASE3_FUSION_CLASS_FUSED,
@@ -20,11 +19,11 @@ from squander.partitioning.noisy_runtime_errors import (
     runtime_validation_error,
 )
 from squander.partitioning.noisy_types import (
-    PLANNER_OP_KIND_GATE,
     NoisyPartitionDescriptor,
     NoisyPartitionDescriptorMember,
     NoisyPartitionDescriptorSet,
 )
+
 
 def _iter_member_segments(
     descriptor_set: NoisyPartitionDescriptorSet,
@@ -36,7 +35,10 @@ def _iter_member_segments(
     current_is_unitary = descriptor_set.canonical_operation_for(members[0]).is_unitary
     current_members: list[NoisyPartitionDescriptorMember] = [members[0]]
     for member in members[1:]:
-        if descriptor_set.canonical_operation_for(member).is_unitary == current_is_unitary:
+        if (
+            descriptor_set.canonical_operation_for(member).is_unitary
+            == current_is_unitary
+        ):
             current_members.append(member)
             continue
         segments.append((current_is_unitary, tuple(current_members)))
@@ -451,4 +453,3 @@ def _execute_partition_with_optional_fusion(
                 )
             )
     return tuple(fused_regions)
-

@@ -126,6 +126,21 @@ Tag legend:
   Relevance: practical reference simulator with noisy and parametric support;
   useful as a comparison point for performance-oriented papers.
 
+- `[Near-term]` Michael A. Nielsen and Isaac L. Chuang, *Quantum Computation and
+  Quantum Information*, Cambridge University Press, 10th Anniversary Edition
+  (2010).
+  Relevance: canonical reference for quantum operations, Kraus maps, Choi-style
+  reasoning, and superoperator semantics; useful for Phase 3.1 exact channel
+  contracts and CPTP invariants.
+
+- `[Near-term]` Christopher J. Wood, Jacob D. Biamonte, and David G. Cory,
+  *Tensor networks and graphical calculus for open quantum systems*, `Quantum
+  Information and Computation 15, 759-811 (2015)`, `arXiv:1111.6950`.
+  Relevance: explicit mapping among Kraus, Choi, Liouville superoperator,
+  process-matrix, and system-environment representations; especially useful for
+  choosing a primary Phase 3.1 channel representation and proving exact
+  composition rules for bounded fused noisy blocks.
+
 - `[Future branch]` J. R. Johansson, P. D. Nation, and Franco Nori, *QuTiP: An
   open-source Python framework for the dynamics of open quantum systems*,
   `Computer Physics Communications 183, 1760 (2012)`, DOI

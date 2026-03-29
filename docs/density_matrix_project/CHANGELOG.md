@@ -91,6 +91,25 @@ Documented closure points:
 
 ---
 
+## Phase 3.1 (Planned)
+
+### Delivered (documentation only)
+
+- Spec-driven phase contract package in `docs/density_matrix_project/phases/phase-3-1/`:
+  `DETAILED_PLANNING_PHASE_3_1.md`, `ADRs_PHASE_3_1.md`,
+  `PRE_IMPLEMENTATION_COMPLETION_CHECKLIST.md`, and initial short-paper,
+  narrative, abstract, and full-paper outline surfaces.
+- Program-level cross-links from `planning/PLANNING.md` §4, §5.1, §6, and §9.
+
+### Scope Notes
+
+- Formalizes PLANNING.md §5.1 (channel-native / superoperator fusion) as an
+  optional follow-on to the closed Phase 3 baseline.
+- Implementation and code changes are **out of scope** until the Phase 3.1 pre-
+  implementation checklist reaches **Go**.
+
+---
+
 ## Phase 4 (Planned)
 
 - Broaden noisy VQE/VQA integration beyond the frozen Phase 2 canonical

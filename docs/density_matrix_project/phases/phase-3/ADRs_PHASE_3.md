@@ -791,6 +791,9 @@ Decision rule:
   technical debt.
 - Follow-on architecture decisions become benchmark-driven rather than taste-
   driven.
+- The channel-native / superoperator fusion follow-on is formalized as **Phase
+  3.1** in [`../phase-3-1/`](../phase-3-1/) (planning and publication surfaces;
+  implementation follows that phase’s pre-implementation checklist).
 
 ### Rejected Alternatives
 

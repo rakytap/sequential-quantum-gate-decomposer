@@ -21,6 +21,9 @@ implementation phase." The more realistic structure is:
 - a smaller Phase 1 engineering / validation paper or workshop contribution,
 - a first major paper at Phase 2,
 - a strong methods / systems paper at Phase 3,
+- an optional follow-on methods or decision-study paper at Phase 3.1
+  (channel-native / superoperator fusion; see
+  `docs/density_matrix_project/phases/phase-3-1/`),
 - an applications / optimizer paper at Phase 4,
 - and the main trainability paper at Phase 5.
 
@@ -50,6 +53,7 @@ following as possible:
 | Phase 1 | Software / validation note, workshop, or methods short paper | Medium | Exact mixed-state backend and reference validation |
 | Phase 2 | Major methods paper | High | Exact noisy backend integrated into one canonical SQUANDER workflow |
 | Phase 3 | Major methods / systems paper | High | Noise-aware partitioning and fusion for mixed-state circuits |
+| Phase 3.1 | Follow-on methods / decision study (optional) | Medium to High (TBD by evidence) | When channel-native or superoperator fusion helps exact noisy partitioned simulation |
 | Phase 4 | Applications / optimization paper | High | Broader noisy VQE/VQA workflows and optimizer behavior under exact noise |
 | Phase 5 | Main thesis science paper | Very high | Trainability, entropy, and barren plateaus under realistic noise |
 
@@ -62,6 +66,9 @@ following as possible:
   manuscript tightening, figure selection, and reviewer-facing positioning
   around bounded planner calibration and diagnosis-grounded performance
   closure.
+- Phase 3.1 is in **planning documentation** only: spec-driven contracts and
+  paper skeletons live in `docs/density_matrix_project/phases/phase-3-1/`;
+  venue-ready packaging follows implementation and evidence.
 
 ## Recommended Publication Ladder
 
@@ -415,6 +422,11 @@ These are useful, but they should not displace the primary thesis narrative.
 
 ### Side Paper A: Superoperator Or Channel-Native Fusion Decision Study
 
+**Realized as Phase 3.1** in the documentation contract:
+[`docs/density_matrix_project/phases/phase-3-1/`](../phases/phase-3-1/) (start
+with `SHORT_PAPER_PHASE_3_1.md`, `SHORT_PAPER_NARRATIVE.md`, and
+`DETAILED_PLANNING_PHASE_3_1.md`).
+
 Question:
 
 - When does the Phase 3 noise-aware partitioning baseline stop being enough, and
@@ -455,7 +467,9 @@ recommended priority is:
 In that compressed strategy:
 
 - Phase 1 becomes a preprint or workshop contribution,
-- Phase 4 results can be folded into the Phase 5 paper if needed.
+- Phase 4 results can be folded into the Phase 5 paper if needed,
+- Phase 3.1 can be folded into an extended Phase 3 discussion, kept as a
+  separate short methods note, or deferred if the branch does not open.
 
 ## Common Evidence Package Across Papers
 

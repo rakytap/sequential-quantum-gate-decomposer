@@ -33,7 +33,7 @@ the long-horizon explanation for why that scope was chosen.
 | ADR-004 | Prioritize realistic local noise models over global whole-register noise as the main scientific target | Accepted |
 | ADR-005 | Keep exact dense density matrices as the reference backend through the first four research phases | Accepted |
 | ADR-006 | Expand gate coverage in a workload-driven order rather than chasing full `qgd_Circuit` parity immediately | Accepted |
-| ADR-007 | Evaluate IR-first channel-native fusion only after a benchmark-driven decision gate | Deferred |
+| ADR-007 | Evaluate IR-first channel-native fusion only after a benchmark-driven decision gate | Deferred (Phase 3.1 in `docs/density_matrix_project/phases/phase-3-1/` owns the specification and publication container when the branch opens; code remains deferred until that checklist goes) |
 | ADR-008 | Treat stochastic trajectories and MPDO-style methods as later scaling branches, not the initial architecture | Deferred |
 
 ## ADR-001: Freeze Phase 2 And Prioritize Phase 3 Partitioning Work Over Broader VQE/VQA Growth
@@ -444,6 +444,13 @@ Current status:
 - the delivered Phase 3 diagnosis package keeps this branch deferred, but now
   with concrete benchmark motivation rather than only speculative future
   interest.
+- **Phase 3.1 documentation** (`docs/density_matrix_project/phases/phase-3-1/`,
+  including `DETAILED_PLANNING_PHASE_3_1.md`, `ADRs_PHASE_3_1.md`, and the
+  pre-implementation checklist) is the **execution and publication planning
+  container** for this ADR when the program chooses to open the branch. Opening
+  those docs does not by itself satisfy the gate for shipping code; closing
+  `PRE_IMPLEMENTATION_COMPLETION_CHECKLIST.md` with a **Go** verdict is the
+  documented prerequisite to treat implementation as contract-backed.
 
 ### Rationale
 

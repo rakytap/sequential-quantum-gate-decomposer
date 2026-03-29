@@ -24,7 +24,7 @@ and audit records.
 | **C++ density module**               | Exact dense `DensityMatrix` state, ordered gate+noise execution via `NoisyCircuit`, operation adapters, legacy standalone noise channels.                                                                                                        |
 | **Python `squander.density_matrix`** | Bindings to the C++ module: `DensityMatrix`, `NoisyCircuit`, `OperationInfo`, noise channel classes, NumPy interop.                                                                                                                              |
 | **Variational integration**          | `qgd_Variational_Quantum_Eigensolver_Base` (C++ core + Python façade): optional density backend, ordered fixed local-noise specification, bridge metadata for downstream tools.                                                                  |
-| **Partitioning (noisy)**             | `noisy_planner.py`: canonical mixed-state operation surface, validation, partition descriptors (remap + parameter routing). `noisy_runtime.py`: executable partitioned execution and conservative unitary-island fusion vs sequential reference. |
+| **Partitioning (noisy)**             | `noisy_planner.py`: canonical mixed-state operation surface, validation, partition descriptors (remap + parameter routing). `noisy_runtime.py`: executable partitioned execution and conservative unitary-island fusion vs sequential reference. Planned follow-on **Phase 3.1** (docs only today): channel-native / superoperator fusion on eligible blocks; see [`phases/phase-3-1/DETAILED_PLANNING_PHASE_3_1.md`](phases/phase-3-1/DETAILED_PLANNING_PHASE_3_1.md). |
 | **State-vector partitioning**        | `squander/partitioning/*.py` (e.g. Kahn, TDAG, ILP): mature for `qgd_Circuit`-style workloads; the noisy planner/runtime form a **parallel** contract aimed at mixed-state semantics rather than replacing that stack wholesale.                 |
 | **Evidence and benchmarks**          | `benchmarks/density_matrix/`: workflow validation, planner/runtime correctness, performance narratives, publication-facing manifests and checkers.                                                                                               |
 | **Tests**                            | `tests/density_matrix/`, `tests/partitioning/`: Python and optional C++ tests aligned with the above.                                                                                                                                            |
@@ -193,7 +193,7 @@ are not promises of immediate implementation:
 | **Circuit sources**      | Broaden lowering from `qgd_Circuit` / `Gates_block` and custom structures into the canonical noisy surface beyond today’s audited routes.                                |
 | **VQE/VQA surface**      | Widen which ansätze, optimizers, and gradient paths are allowed on the density backend; route optimizer callbacks through `Optimization_Interface` when gradients exist. |
 | **Python VQE façade**    | Additional knobs and reporting once the C++ contract for broader workflows stabilizes.                                                                                   |
-| **Noise model**          | Richer channels, parametric noise programs, or channel-native fused blocks in `noisy_circuit.cpp` / `noise_operation` if benchmarked and semantics-preserving.           |
+| **Noise model**          | Richer channels, parametric noise programs, or channel-native fused blocks in `noisy_circuit.cpp` / `noise_operation` if benchmarked and semantics-preserving; Phase 3.1 planning in [`phases/phase-3-1/`](phases/phase-3-1/).           |
 | **Kernels**              | Optional SIMD or memory-layout work in `density_matrix.cpp` if profiling shows it dominates after Python and fusion overhead are addressed.                              |
 | **Planner cost model**   | Deeper integration with or replacement of span-budget heuristics using density-aware costs; optional ties to the existing state-vector partitioners for comparison only. |
 | **Trainability science** | Higher-level experiment runners (gradients variance, entropies, barren-plateau diagnostics) consuming the same exact backend.                                            |
@@ -224,7 +224,10 @@ state-vector partitioner variant is explicitly **out of scope** for the
 delivered noisy partition contract until extended through the table above.
 - **Conservative fusion** — Unitary-island fusion is real and exact on eligible
 substructures but does not replace a general superoperator or Kraus fusion
-architecture for arbitrary noisy subcircuits.
+architecture for arbitrary noisy subcircuits. **Phase 3.1** documents the
+intended follow-on for that deeper fusion layer
+([`phases/phase-3-1/DETAILED_PLANNING_PHASE_3_1.md`](phases/phase-3-1/DETAILED_PLANNING_PHASE_3_1.md));
+it is not implemented until that phase’s checklist closes.
 - **pybind11 style** — Direct exposure preserves performance and fidelity to C++
 naming; Python ergonomics are thinner than a pure-Python simulator would be.
 - **Relationship to state-vector partitioning** — The mature partitioners
