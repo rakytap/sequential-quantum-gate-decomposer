@@ -332,6 +332,12 @@ def _build_noise_boundary_record(
     )
 
 
+##
+# @brief: execute a partition with optional fusion
+# explain: this function is used to execute a partition with optional fusion.
+#
+
+
 def _execute_partition_with_optional_fusion(
     descriptor_set: NoisyPartitionDescriptorSet,
     partition: NoisyPartitionDescriptor,

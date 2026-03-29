@@ -239,6 +239,19 @@ Note: Adjust decision areas per phase — Phase 2 needs all listed; later phases
 3. **Step 3** → Closes each gap; updates planning, ADRs, checklist until implementation-ready.
 4. **Implementation** → Create task mini-specs as needed; implement task by task.
 
+### After Layer 1 Closure
+
+Once `PRE_IMPLEMENTATION_COMPLETION_CHECKLIST.md` is fully closed and the phase
+is implementation-ready:
+
+- do **not** fully story-split the entire phase before coding,
+- create Layer 3 stories and Layer 4 engineering tasks only for the **first
+  vertical slice**,
+- prefer one thin end-to-end slice that validates the new scientific object
+  before broad horizontal infrastructure work,
+- expand bundle/pipeline/schema migration only after that first slice produces
+  real runtime and evidence feedback.
+
 ## Spec-Driven Principles
 
 1. Define contracts, scope, and success criteria **before** implementation.

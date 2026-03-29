@@ -79,6 +79,21 @@ pipeline after stabilization, prefer this migration policy:
   after its sibling builders and validation slices are complete,
 - avoid a mode flag when reproducibility and paper auditability matter.
 
+### Implementation Start Pattern (bounded positive-methods branch)
+
+After the checklist is fully closed and Layer 2 mini-specs exist:
+
+- start with one **vertical slice** (typically Task 1 + Task 2 + the minimum
+  correctness path from Task 3),
+- avoid a broad horizontal implementation pass before the first end-to-end
+  slice works,
+- if a later phase is expected to replace the current evidence flow, implement
+  **sibling** builders/pipelines first,
+- only after the later-phase flow is stable should the default
+  `validation_pipeline.py` entrypoints switch,
+- keep the previous phase available through **explicit legacy
+  scripts/functions**, not a mode flag.
+
 ## Phase Contract Closure Pattern (Phase 2 — historical example)
 
 The Phase 2 `PRE_IMPLEMENTATION_COMPLETION_CHECKLIST.md` mapped open gaps to

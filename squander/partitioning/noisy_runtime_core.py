@@ -31,6 +31,9 @@ PHASE3_RUNTIME_PATH_FUSED_UNITARY_ISLANDS = (
 PHASE3_RUNTIME_PATH_SEQUENTIAL_REFERENCE = "sequential_density_descriptor_reference"
 PHASE3_RUNTIME_VALIDITY_TOL = 1e-10
 
+PHASE31_RUNTIME_PATH_CHANNEL_NATIVE = "phase31_channel_native"
+PHASE31_FUSION_KIND_CHANNEL_NATIVE_MOTIF = "channel_native_motif"
+
 PHASE3_FUSION_KIND_UNITARY_ISLAND = "unitary_island"
 PHASE3_FUSION_KIND_NOISE_BOUNDARY = "noise_boundary"
 
@@ -782,6 +785,9 @@ def execute_partitioned_density(
     runtime_path: str = PHASE3_RUNTIME_PATH_BASELINE,
     allow_fusion: bool = False,
 ) -> NoisyRuntimeExecutionResult:
+    from squander.partitioning.noisy_runtime_channel_native import (
+        execute_partition_channel_native,
+    )
     from squander.partitioning.noisy_runtime_fusion import (
         _execute_partition_with_optional_fusion,
     )
@@ -789,6 +795,7 @@ def execute_partitioned_density(
     requested_runtime_path = runtime_path
     if allow_fusion and requested_runtime_path == PHASE3_RUNTIME_PATH_BASELINE:
         requested_runtime_path = PHASE3_RUNTIME_PATH_FUSED_UNITARY_ISLANDS
+    channel_native_path = requested_runtime_path == PHASE31_RUNTIME_PATH_CHANNEL_NATIVE
     validated_descriptor_set, parameter_vector = validate_runtime_request(
         descriptor_set, parameters, runtime_path=requested_runtime_path
     )
@@ -818,27 +825,40 @@ def execute_partitioned_density(
             parameter_vector,
             runtime_path=requested_runtime_path,
         )
-        fused_regions.extend(
-            _execute_partition_with_optional_fusion(
+        if channel_native_path:
+            recs, rho = execute_partition_channel_native(
                 validated_descriptor_set,
                 partition,
                 local_parameter_vector,
                 rho,
                 runtime_path=requested_runtime_path,
-                allow_fusion=allow_fusion,
             )
-        )
+            fused_regions.extend(recs)
+        else:
+            fused_regions.extend(
+                _execute_partition_with_optional_fusion(
+                    validated_descriptor_set,
+                    partition,
+                    local_parameter_vector,
+                    rho,
+                    runtime_path=requested_runtime_path,
+                    allow_fusion=allow_fusion,
+                )
+            )
         partition_records.append(
             _build_partition_record(partition, runtime_circuit=partition_circuit)
         )
-    actual_runtime_path = (
-        requested_runtime_path
-        if any(
-            region.classification == PHASE3_FUSION_CLASS_FUSED
-            for region in fused_regions
+    if channel_native_path:
+        actual_runtime_path = PHASE31_RUNTIME_PATH_CHANNEL_NATIVE
+    else:
+        actual_runtime_path = (
+            requested_runtime_path
+            if any(
+                region.classification == PHASE3_FUSION_CLASS_FUSED
+                for region in fused_regions
+            )
+            else PHASE3_RUNTIME_PATH_BASELINE
         )
-        else PHASE3_RUNTIME_PATH_BASELINE
-    )
     return NoisyRuntimeExecutionResult(
         requested_mode=validated_descriptor_set.requested_mode,
         source_type=validated_descriptor_set.source_type,
@@ -866,6 +886,18 @@ def execute_partitioned_density_fused(
         parameters,
         runtime_path=PHASE3_RUNTIME_PATH_FUSED_UNITARY_ISLANDS,
         allow_fusion=True,
+    )
+
+
+def execute_partitioned_density_channel_native(
+    descriptor_set: NoisyPartitionDescriptorSet,
+    parameters: Iterable[float],
+) -> NoisyRuntimeExecutionResult:
+    return execute_partitioned_density(
+        descriptor_set,
+        parameters,
+        runtime_path=PHASE31_RUNTIME_PATH_CHANNEL_NATIVE,
+        allow_fusion=False,
     )
 
 

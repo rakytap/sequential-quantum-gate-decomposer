@@ -462,6 +462,10 @@ Layer 2 mini-spec stubs (trace to §8 tasks and to **P31-C-01..09** in
 | 5 | [`task-5/TASK_5_MINI_SPEC.md`](task-5/TASK_5_MINI_SPEC.md) |
 | 6 | [`task-6/TASK_6_MINI_SPEC.md`](task-6/TASK_6_MINI_SPEC.md) |
 
+**First vertical slice (Layers 3–4):** Behavioral stories and engineering tasks
+for Tasks 1–2 plus a minimal Task 3 correctness gate are in
+[`FIRST_VERTICAL_SLICE_STORIES_AND_ENGINEERING_TASKS.md`](FIRST_VERTICAL_SLICE_STORIES_AND_ENGINEERING_TASKS.md).
+
 ### Task 1: Fusion representation and IR contract
 
 **Goal:** Define how bounded 1- and 2-qubit channel-native / superoperator
