@@ -217,13 +217,13 @@ an auditable bounded object for support widths 1 and 2.
 
 **Execution checklist**
 
-- [ ] Add one helper that converts support width into bundle dimension.
-- [ ] Replace the fixed identity bundle constant with a size-aware helper.
-- [ ] Add explicit bundle-shape guards for:
+- [x] Add one helper that converts support width into bundle dimension.
+- [x] Replace the fixed identity bundle constant with a size-aware helper.
+- [x] Add explicit bundle-shape guards for:
       rank-3 bundles,
       square Kraus matrices,
       and supported dimensions `{2, 4}` only.
-- [ ] Keep failures inside the existing runtime validation taxonomy rather than
+- [x] Keep failures inside the existing runtime validation taxonomy rather than
       introducing a new error family.
 
 **Why first**
@@ -239,12 +239,12 @@ threshold policy.
 
 **Execution checklist**
 
-- [ ] Refactor `_check_kraus_bundle_invariants()` to derive `d` from the bundle
+- [x] Refactor `_check_kraus_bundle_invariants()` to derive `d` from the bundle
       shape.
-- [ ] Build the completeness residual against `np.eye(d)`.
-- [ ] Build the Choi matrix with `d * d` flattening driven by the inferred
+- [x] Build the completeness residual against `np.eye(d)`.
+- [x] Build the Choi matrix with `d * d` flattening driven by the inferred
       dimension.
-- [ ] Add at least one focused 4x4 positive invariant test and one focused
+- [x] Add at least one focused 4x4 positive invariant test and one focused
       broken-bundle negative test.
 
 **Recommended narrow test cases**
@@ -263,12 +263,12 @@ through explicit support metadata.
 
 **Execution checklist**
 
-- [ ] Change `_apply_kraus_bundle()` to accept local-support and global-target
+- [x] Change `_apply_kraus_bundle()` to accept local-support and global-target
       metadata explicitly.
-- [ ] Preserve the current 1-qubit exact behavior as a regression-preserving
+- [x] Preserve the current 1-qubit exact behavior as a regression-preserving
       fast path.
-- [ ] Add a generic embedding path for 1q/2q bundles on the full density matrix.
-- [ ] Keep support sizes above 2 qubits as explicit hard failures.
+- [x] Add a generic embedding path for 1q/2q bundles on the full density matrix.
+- [x] Keep support sizes above 2 qubits as explicit hard failures.
 
 **Recommended implementation constraint**
 
@@ -293,11 +293,11 @@ substrate is generalized.
 
 **Execution checklist**
 
-- [ ] Keep `execute_partitioned_density_channel_native()` unchanged.
-- [ ] Keep the `execute_partitioned_density()` channel-native branch structure
+- [x] Keep `execute_partitioned_density_channel_native()` unchanged.
+- [x] Keep the `execute_partitioned_density()` channel-native branch structure
       unchanged unless an internal helper signature forces a tiny callsite edit.
-- [ ] Reuse `NoisyRuntimeFusedRegionRecord` as-is for later support-audit tests.
-- [ ] Avoid adding new runtime result fields during this task.
+- [x] Reuse `NoisyRuntimeFusedRegionRecord` as-is for later support-audit tests.
+- [x] Avoid adding new runtime result fields during this task.
 
 **Reasoning**
 
@@ -312,13 +312,13 @@ completed first slice and the planned second slice.
 
 **Execution checklist**
 
-- [ ] Re-run the existing first-slice pytest file unchanged as the primary
+- [x] Re-run the existing first-slice pytest file unchanged as the primary
       regression gate.
-- [ ] Add a new second-slice helper-oriented test module rather than mixing
+- [x] Add a new second-slice helper-oriented test module rather than mixing
       internal-substrate coverage into the first-slice public-runtime file.
-- [ ] Keep public positive 2-qubit runtime tests for `P31-S04-E02` and
+- [x] Keep public positive 2-qubit runtime tests for `P31-S04-E02` and
       `P31-S05-E01`, not for this engineering task.
-- [ ] Document clearly in the new test module which behaviors are still deferred
+- [x] Document clearly in the new test module which behaviors are still deferred
       after `P31-S04-E01`.
 
 **Recommended test inventory for this task**
@@ -346,6 +346,15 @@ representation substrate directly rather than the final counted public slice.
 - and the next handoff to `P31-S04-E02` is explicit: `CNOT` lowering plugs into
   a now size-aware `kraus_bundle` substrate rather than reopening the 1q-only
   helpers.
+
+## Completion (2026-03-29)
+
+`P31-S04-E01` is **complete**.
+
+- **Code:** [`squander/partitioning/noisy_runtime_channel_native.py`](../../../../../squander/partitioning/noisy_runtime_channel_native.py) — size-aware Kraus bundle contract, composition, `_check_kraus_bundle_invariants`, `_embed_two_qubit_operator_on_globals`, support-aware `_apply_kraus_bundle` (reuses [`_embed_single_qubit_gate`](../../../../../squander/partitioning/noisy_runtime_fusion.py) for 1q embedding). [`execute_partition_channel_native`](../../../../../squander/partitioning/noisy_runtime_channel_native.py) threads `local_support` / `global_target_qbits` and re-raises `NoisyRuntimeValidationError` from apply-time checks without wrapping.
+- **Tests:** [`tests/partitioning/test_partitioned_channel_native_phase31_slice.py`](../../../../../tests/partitioning/test_partitioned_channel_native_phase31_slice.py) (unchanged 1q public gate); [`tests/partitioning/test_partitioned_channel_native_phase31_second_slice.py`](../../../../../tests/partitioning/test_partitioned_channel_native_phase31_second_slice.py) (4×4 invariants, 1q-into-2q apply vs embedded reference, 2q identity sanity, representation rejections).
+- **Stable:** [`squander/partitioning/noisy_runtime_core.py`](../../../../../squander/partitioning/noisy_runtime_core.py) public channel-native entrypoints unchanged.
+- **Still deferred:** `CNOT` lowering and ordered 2q composition (`P31-S04-E02`); whole-workload-width gating remains in `_validate_whole_partition_motif` until `P31-S05-E01`; counted 2q end-to-end sequential-reference promotion (`P31-S06-E01`).
 
 ## Handoff To The Next Engineering Tasks
 

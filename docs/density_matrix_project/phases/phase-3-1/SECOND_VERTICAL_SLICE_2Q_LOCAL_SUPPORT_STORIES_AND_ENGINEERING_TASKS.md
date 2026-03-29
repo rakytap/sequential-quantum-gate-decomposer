@@ -125,6 +125,8 @@ the replacement ID here and keep the same acceptance intent: one eligible
 
 ##### Engineering Task P31-S04-E01: Generalize the primary representation and invariant helpers to support size-aware 1q/2q blocks
 
+**Status:** Complete (2026-03-29). See `task-1/ENGINEERING_TASK_P31_S04_E01_IMPLEMENTATION_PLAN.md` §Completion.
+
 **Implements story**
 
 - Story P31-S04
@@ -146,11 +148,13 @@ the replacement ID here and keep the same acceptance intent: one eligible
 
 **Execution checklist**
 
-- [ ] Replace hard-coded 1-qubit / `2x2` assumptions in representation and
+- [x] Replace hard-coded 1-qubit / `2x2` assumptions in representation and
       invariant helpers with support-aware dimension logic.
-- [ ] Freeze and document the canonical 2-qubit local ordering convention used
-      by `CNOT` lowering and local-support embedding.
-- [ ] Keep support widths above 2 qubits as explicit hard failures under the
+- [x] Freeze and document the canonical 2-qubit local ordering convention used
+      by `CNOT` lowering and local-support embedding (see
+      `_embed_two_qubit_operator_on_globals` and `_embed_single_qubit_gate` in
+      code; `ENGINEERING_TASK_P31_S04_E01_IMPLEMENTATION_PLAN.md` Completion).
+- [x] Keep support widths above 2 qubits as explicit hard failures under the
       Phase 3.1 unsupported taxonomy.
 
 **Evidence produced**
@@ -203,6 +207,8 @@ the replacement ID here and keep the same acceptance intent: one eligible
   2-qubit motif.
 - Reviewable direct-comparison evidence against sequential density evolution
   before full partition-runtime wiring.
+- Concrete file-level implementation plan:
+  `task-1/ENGINEERING_TASK_P31_S04_E02_IMPLEMENTATION_PLAN.md`.
 
 **Risks / rollback**
 
@@ -515,7 +521,7 @@ Parallelism:
 
 ## Slice completion checklist
 
-- [ ] P31-S04-E01: support-aware representation and invariant helpers for 1q/2q
+- [x] P31-S04-E01: support-aware representation and invariant helpers for 1q/2q
       bounded objects are in place.
 - [ ] P31-S04-E02: `CNOT` lowering and ordered 2-qubit composition tests pass.
 - [ ] P31-S05-E01: runtime local-support gating and mapped application work for
@@ -538,7 +544,7 @@ not fold into `PRE_IMPLEMENTATION_COMPLETION_CHECKLIST.md`).
 |-------|-------|
 | Counted slice case ID | `phase31_microcase_2q_cnot_local_noise_pair` |
 | Non-counted local-support smoke ID | `phase31_local_support_q4_spectator_embedding_smoke` (recommended) |
-| Second vertical slice implementation | **Planned** |
+| Second vertical slice implementation | **In progress** (P31-S04-E01 complete; remaining E02–E06) |
 | Recommended evidence module | `tests/partitioning/test_partitioned_channel_native_phase31_second_slice.py` |
 | Deferred counted correctness IDs after this slice | `phase31_microcase_2q_multi_noise_entangler_chain`, `phase31_microcase_2q_dense_same_support_motif`, `phase2_xxz_hea_q4_continuity`, `phase2_xxz_hea_q6_continuity`, plus every counted performance case from `P31-ADR-010` |
 | Deferred full Task 3 work | Aer per `P31-ADR-011`; version-bumped `correctness_evidence` rows and `channel_invariants` packaging per `P31-ADR-013` |

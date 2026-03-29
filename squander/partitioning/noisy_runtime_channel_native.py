@@ -12,6 +12,8 @@ from squander.partitioning.noisy_runtime_core import (
     _segment_parameter_vector,
 )
 from squander.partitioning.noisy_runtime_errors import runtime_validation_error
+from squander.partitioning.noisy_runtime_fusion import _embed_single_qubit_gate
+from squander.partitioning.noisy_validation_errors import NoisyRuntimeValidationError
 from squander.partitioning.noisy_types import (
     PLANNER_OP_KIND_GATE,
     PLANNER_OP_KIND_NOISE,
@@ -248,11 +250,17 @@ def _check_kraus_bundle_invariants(
     descriptor_set: NoisyPartitionDescriptorSet,
     runtime_path: str,
 ) -> None:
-    acc = np.zeros((2, 2), dtype=np.complex128)
+    d = _validate_kraus_bundle_shape(
+        bundle,
+        descriptor_set=descriptor_set,
+        runtime_path=runtime_path,
+        label="invariant check",
+    )
+    acc = np.zeros((d, d), dtype=np.complex128)
     for k in range(bundle.shape[0]):
         kj = bundle[k]
         acc += kj.conj().T @ kj
-    res = float(np.linalg.norm(acc - np.eye(2, dtype=np.complex128), ord="fro"))
+    res = float(np.linalg.norm(acc - np.eye(d, dtype=np.complex128), ord="fro"))
     if res > _PHASE31_KRAUS_COMPLETENESS_TOL:
         raise runtime_validation_error(
             descriptor_set,
@@ -266,7 +274,6 @@ def _check_kraus_bundle_invariants(
                 )
             ),
         )
-    d = 2
     choi = np.zeros((d * d, d * d), dtype=np.complex128)
     for k in range(bundle.shape[0]):
         v = np.reshape(bundle[k], (d * d,), order="C")
@@ -288,21 +295,156 @@ def _check_kraus_bundle_invariants(
         )
 
 
+def _embed_two_qubit_operator_on_globals(
+    op: np.ndarray,
+    *,
+    qbit_num: int,
+    g0: int,
+    g1: int,
+) -> np.ndarray:
+    """Embed a 4×4 operator on global qubits ``g0`` (local index 0) and ``g1`` (local index 1).
+
+    Basis convention matches ``_embed_single_qubit_gate``: global state index bit ``k`` is qubit ``k``.
+    Subsystem row/column index is ``b_g0 + 2 * b_g1``.
+    """
+    dim = 1 << qbit_num
+    mask_all = dim - 1
+    rest_mask = mask_all & ~((1 << g0) | (1 << g1))
+    embedded = np.zeros((dim, dim), dtype=np.complex128)
+    for r in range(dim):
+        for c in range(dim):
+            if (r & rest_mask) != (c & rest_mask):
+                continue
+            sub_r = ((r >> g0) & 1) + 2 * ((r >> g1) & 1)
+            sub_c = ((c >> g0) & 1) + 2 * ((c >> g1) & 1)
+            embedded[r, c] = op[sub_r, sub_c]
+    return embedded
+
+
 def _apply_kraus_bundle(
     bundle: np.ndarray,
     rho: DensityMatrix,
     *,
     qbit_num: int,
+    local_support: tuple[int, ...],
+    global_target_qbits: tuple[int, ...],
+    descriptor_set: NoisyPartitionDescriptorSet,
+    runtime_path: str,
 ) -> DensityMatrix:
-    if qbit_num != 1:
-        raise NotImplementedError(
-            "Slice v1 supports only qbit_num == 1 workloads for channel-native apply"
+    d = _validate_kraus_bundle_shape(
+        bundle,
+        descriptor_set=descriptor_set,
+        runtime_path=runtime_path,
+        label="apply",
+    )
+    if len(local_support) != len(global_target_qbits):
+        raise runtime_validation_error(
+            descriptor_set,
+            category="unsupported_runtime_execution",
+            first_unsupported_condition="channel_native_representation",
+            failure_stage="runtime_preflight",
+            runtime_path=runtime_path,
+            reason=(
+                "Channel-native apply local_support length {} does not match "
+                "global_target_qbits length {}".format(
+                    len(local_support), len(global_target_qbits)
+                )
+            ),
         )
+    if len(local_support) > 2:
+        raise runtime_validation_error(
+            descriptor_set,
+            category="unsupported_runtime_execution",
+            first_unsupported_condition="channel_native_representation",
+            failure_stage="runtime_preflight",
+            runtime_path=runtime_path,
+            reason=(
+                "Channel-native apply supports at most two local qubits, got {}".format(
+                    len(local_support)
+                )
+            ),
+        )
+    if (1 << len(local_support)) != d:
+        raise runtime_validation_error(
+            descriptor_set,
+            category="unsupported_runtime_execution",
+            first_unsupported_condition="channel_native_representation",
+            failure_stage="runtime_preflight",
+            runtime_path=runtime_path,
+            reason=(
+                "Channel-native apply bundle dimension d={} inconsistent with "
+                "local support width {}".format(d, len(local_support))
+            ),
+        )
+    for g in global_target_qbits:
+        if g < 0 or g >= qbit_num:
+            raise runtime_validation_error(
+                descriptor_set,
+                category="unsupported_runtime_execution",
+                first_unsupported_condition="channel_native_representation",
+                failure_stage="runtime_preflight",
+                runtime_path=runtime_path,
+                reason=(
+                    "Channel-native apply global target qubit {} out of range for qbit_num={}".format(
+                        g, qbit_num
+                    )
+                ),
+            )
+    if d == 4 and global_target_qbits[0] == global_target_qbits[1]:
+        raise runtime_validation_error(
+            descriptor_set,
+            category="unsupported_runtime_execution",
+            first_unsupported_condition="channel_native_representation",
+            failure_stage="runtime_preflight",
+            runtime_path=runtime_path,
+            reason="Channel-native apply requires two distinct global qubits for a 2-qubit bundle",
+        )
+
     rho_np = np.asarray(rho.to_numpy(), dtype=np.complex128)
-    out = np.zeros((2, 2), dtype=np.complex128)
+    dim = 1 << qbit_num
+    if rho_np.shape != (dim, dim):
+        raise runtime_validation_error(
+            descriptor_set,
+            category="unsupported_runtime_execution",
+            first_unsupported_condition="channel_native_representation",
+            failure_stage="runtime_preflight",
+            runtime_path=runtime_path,
+            reason=(
+                "Channel-native apply density matrix shape {} does not match qbit_num={}".format(
+                    rho_np.shape, qbit_num
+                )
+            ),
+        )
+
+    if (
+        qbit_num == 1
+        and len(local_support) == 1
+        and d == 2
+        and global_target_qbits == (0,)
+    ):
+        out = np.zeros((2, 2), dtype=np.complex128)
+        for k in range(bundle.shape[0]):
+            kj = bundle[k]
+            out += kj @ rho_np @ kj.conj().T
+        return DensityMatrix.from_numpy(out)
+
+    out = np.zeros((dim, dim), dtype=np.complex128)
     for k in range(bundle.shape[0]):
         kj = bundle[k]
-        out += kj @ rho_np @ kj.conj().T
+        if d == 2:
+            k_full = _embed_single_qubit_gate(
+                kj,
+                total_kernel_qbits=qbit_num,
+                kernel_target_qbit=global_target_qbits[0],
+            )
+        else:
+            k_full = _embed_two_qubit_operator_on_globals(
+                kj,
+                qbit_num=qbit_num,
+                g0=global_target_qbits[0],
+                g1=global_target_qbits[1],
+            )
+        out += k_full @ rho_np @ k_full.conj().T
     return DensityMatrix.from_numpy(out)
 
 
@@ -580,13 +722,19 @@ def execute_partition_channel_native(
         descriptor_set=descriptor_set,
         runtime_path=runtime_path,
     )
-    _ = _global_targets_for_local_support(partition, local_support)
+    global_target_qbits = _global_targets_for_local_support(partition, local_support)
     try:
         rho_out = _apply_kraus_bundle(
             kraus_bundle,
             rho,
             qbit_num=descriptor_set.qbit_num,
+            local_support=local_support,
+            global_target_qbits=global_target_qbits,
+            descriptor_set=descriptor_set,
+            runtime_path=runtime_path,
         )
+    except NoisyRuntimeValidationError:
+        raise
     except NotImplementedError as exc:
         raise runtime_validation_error(
             descriptor_set,
