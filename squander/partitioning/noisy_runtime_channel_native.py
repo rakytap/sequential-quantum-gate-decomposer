@@ -28,7 +28,112 @@ _PAULI_X = np.array([[0, 1], [1, 0]], dtype=np.complex128)
 _PAULI_Y = np.array([[0, -1j], [1j, 0]], dtype=np.complex128)
 _PAULI_Z = np.array([[1, 0], [0, -1]], dtype=np.complex128)
 
-_IDENTITY_KRAUS_BUNDLE = np.array([np.eye(2, dtype=np.complex128)])
+
+def _kraus_operator_dim_for_support_qubit_count(
+    support_qubit_count: int,
+    *,
+    descriptor_set: NoisyPartitionDescriptorSet,
+    runtime_path: str,
+) -> int:
+    """Hilbert-space dimension d = 2**n for bounded local support n in {1, 2}."""
+    if support_qubit_count == 1:
+        return 2
+    if support_qubit_count == 2:
+        return 4
+    raise runtime_validation_error(
+        descriptor_set,
+        category="unsupported_runtime_execution",
+        first_unsupported_condition="channel_native_representation",
+        failure_stage="runtime_preflight",
+        runtime_path=runtime_path,
+        reason=(
+            "Channel-native Kraus operator dimension supports local support "
+            "qubit count 1 or 2 only, got {}".format(support_qubit_count)
+        ),
+    )
+
+
+def _validate_kraus_bundle_shape(
+    bundle: np.ndarray,
+    *,
+    descriptor_set: NoisyPartitionDescriptorSet,
+    runtime_path: str,
+    label: str = "kraus_bundle",
+) -> int:
+    """Require rank-3 (K, d, d) with square Kraus matrices and d in {2, 4}."""
+    if bundle.ndim != 3:
+        raise runtime_validation_error(
+            descriptor_set,
+            category="unsupported_runtime_execution",
+            first_unsupported_condition="channel_native_representation",
+            failure_stage="runtime_preflight",
+            runtime_path=runtime_path,
+            reason=(
+                "Channel-native {} must be rank-3 (kraus_count, d, d), got ndim={}".format(
+                    label, bundle.ndim
+                )
+            ),
+        )
+    if bundle.shape[0] < 1:
+        raise runtime_validation_error(
+            descriptor_set,
+            category="unsupported_runtime_execution",
+            first_unsupported_condition="channel_native_representation",
+            failure_stage="runtime_preflight",
+            runtime_path=runtime_path,
+            reason="Channel-native {} must have at least one Kraus operator".format(
+                label
+            ),
+        )
+    d = int(bundle.shape[1])
+    if bundle.shape[2] != d:
+        raise runtime_validation_error(
+            descriptor_set,
+            category="unsupported_runtime_execution",
+            first_unsupported_condition="channel_native_representation",
+            failure_stage="runtime_preflight",
+            runtime_path=runtime_path,
+            reason=(
+                "Channel-native {} Kraus matrices must be square, got shape {}".format(
+                    label, bundle.shape
+                )
+            ),
+        )
+    if d not in (2, 4):
+        raise runtime_validation_error(
+            descriptor_set,
+            category="unsupported_runtime_execution",
+            first_unsupported_condition="channel_native_representation",
+            failure_stage="runtime_preflight",
+            runtime_path=runtime_path,
+            reason=(
+                "Channel-native {} supports operator dimension d in {{2, 4}} only, got d={}".format(
+                    label, d
+                )
+            ),
+        )
+    return d
+
+
+def _identity_kraus_bundle_for_support_qubit_count(
+    support_qubit_count: int,
+    *,
+    descriptor_set: NoisyPartitionDescriptorSet,
+    runtime_path: str,
+) -> np.ndarray:
+    d = _kraus_operator_dim_for_support_qubit_count(
+        support_qubit_count,
+        descriptor_set=descriptor_set,
+        runtime_path=runtime_path,
+    )
+    bundle = np.array([np.eye(d, dtype=np.complex128)])
+    _validate_kraus_bundle_shape(
+        bundle,
+        descriptor_set=descriptor_set,
+        runtime_path=runtime_path,
+        label="identity kraus bundle",
+    )
+    return bundle
 
 
 def _clamp_noise_rate_to_unit_interval(x: float) -> float:
@@ -54,11 +159,42 @@ def _u3_unitary(theta_over_2: float, phi: float, lam: float) -> np.ndarray:
     )
 
 
-def _compose_kraus_bundles(acc: np.ndarray, nxt: np.ndarray) -> np.ndarray:
+def _compose_kraus_bundles(
+    acc: np.ndarray,
+    nxt: np.ndarray,
+    *,
+    descriptor_set: NoisyPartitionDescriptorSet,
+    runtime_path: str,
+) -> np.ndarray:
     """Φ_nxt ∘ Φ_acc has Kraus operators N_b A_a (apply acc first, then nxt)."""
+    d_acc = _validate_kraus_bundle_shape(
+        acc,
+        descriptor_set=descriptor_set,
+        runtime_path=runtime_path,
+        label="compose acc",
+    )
+    d_nxt = _validate_kraus_bundle_shape(
+        nxt,
+        descriptor_set=descriptor_set,
+        runtime_path=runtime_path,
+        label="compose nxt",
+    )
+    if d_acc != d_nxt:
+        raise runtime_validation_error(
+            descriptor_set,
+            category="unsupported_runtime_execution",
+            first_unsupported_condition="channel_native_representation",
+            failure_stage="runtime_preflight",
+            runtime_path=runtime_path,
+            reason=(
+                "Channel-native Kraus bundle dimension mismatch in composition: "
+                "d_acc={} d_nxt={}".format(d_acc, d_nxt)
+            ),
+        )
     na = acc.shape[0]
     nb = nxt.shape[0]
-    out = np.empty((na * nb, 2, 2), dtype=np.complex128)
+    d = d_acc
+    out = np.empty((na * nb, d, d), dtype=np.complex128)
     idx = 0
     for b in range(nb):
         for a in range(na):
@@ -421,7 +557,11 @@ def execute_partition_channel_native(
         local_parameter_vector,
         runtime_path=runtime_path,
     )
-    kraus_bundle = _IDENTITY_KRAUS_BUNDLE.copy()
+    kraus_bundle = _identity_kraus_bundle_for_support_qubit_count(
+        len(local_support),
+        descriptor_set=descriptor_set,
+        runtime_path=runtime_path,
+    )
     for member in members:
         step = _member_to_kraus_bundle(
             descriptor_set,
@@ -429,7 +569,12 @@ def execute_partition_channel_native(
             segment_parameters,
             runtime_path=runtime_path,
         )
-        kraus_bundle = _compose_kraus_bundles(kraus_bundle, step)
+        kraus_bundle = _compose_kraus_bundles(
+            kraus_bundle,
+            step,
+            descriptor_set=descriptor_set,
+            runtime_path=runtime_path,
+        )
     _check_kraus_bundle_invariants(
         kraus_bundle,
         descriptor_set=descriptor_set,

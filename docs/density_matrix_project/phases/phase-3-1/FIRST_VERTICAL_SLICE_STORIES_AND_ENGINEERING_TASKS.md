@@ -87,7 +87,8 @@ change here.
   oracle).
 - **Deferred (next increment):** a **2-qubit** motif on the same contract
   (requires `CNOT` and 4×4 Kraus / embedding in channel-native apply); explicitly
-  **out of slice v1** implementation status.
+  **out of slice v1** implementation status. See
+  [`SECOND_VERTICAL_SLICE_2Q_LOCAL_SUPPORT_STORIES_AND_ENGINEERING_TASKS.md`](SECOND_VERTICAL_SLICE_2Q_LOCAL_SUPPORT_STORIES_AND_ENGINEERING_TASKS.md).
 - Short design note (or ADR pointer) listing rejected representation shortcuts.
 
 **Traceability**
@@ -415,6 +416,6 @@ not fold into `PRE_IMPLEMENTATION_COMPLETION_CHECKLIST.md`).
 | Field | Value |
 |-------|-------|
 | Slice case ID | `phase31_microcase_1q_u3_local_noise_chain` |
-| First vertical slice implementation | **Complete** for 1q channel-native motifs (code: `execute_partitioned_density_channel_native`, Kraus composition + invariant in `squander/partitioning/noisy_runtime_channel_native.py`). **P31-S01** acceptance for a **2-qubit** fused motif is **not** claimed here until channel-native supports `CNOT` / 2q Kraus embedding (deferred increment). |
+| First vertical slice implementation | **Complete** for 1q channel-native motifs (code: `execute_partitioned_density_channel_native`, Kraus composition + invariant in `squander/partitioning/noisy_runtime_channel_native.py`). **P31-S01** acceptance for a **2-qubit** fused motif is **not** claimed here until channel-native supports `CNOT` / 2q Kraus embedding (deferred increment; see `SECOND_VERTICAL_SLICE_2Q_LOCAL_SUPPORT_STORIES_AND_ENGINEERING_TASKS.md`). |
 | Tests / evidence pointer | `tests/partitioning/test_partitioned_channel_native_phase31_slice.py` — run with `conda run -n qgd python -m pytest tests/partitioning/test_partitioned_channel_native_phase31_slice.py -q` |
 | Full Task 3 expansion | `task-3/TASK_3_MINI_SPEC.md` — remaining `P31-ADR-009` IDs, Aer per `P31-ADR-011`, bundles per `P31-ADR-013` |

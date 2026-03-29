@@ -466,6 +466,11 @@ Layer 2 mini-spec stubs (trace to §8 tasks and to **P31-C-01..09** in
 for Tasks 1–2 plus a minimal Task 3 correctness gate are in
 [`FIRST_VERTICAL_SLICE_STORIES_AND_ENGINEERING_TASKS.md`](FIRST_VERTICAL_SLICE_STORIES_AND_ENGINEERING_TASKS.md).
 
+**Second vertical slice (2q / local-support increment):** the next bounded
+Tasks 1–2 expansion plus a minimal Task 3 correctness gate for the frozen
+2-qubit local-support contract are in
+[`SECOND_VERTICAL_SLICE_2Q_LOCAL_SUPPORT_STORIES_AND_ENGINEERING_TASKS.md`](SECOND_VERTICAL_SLICE_2Q_LOCAL_SUPPORT_STORIES_AND_ENGINEERING_TASKS.md).
+
 ### Task 1: Fusion representation and IR contract
 
 **Goal:** Define how bounded 1- and 2-qubit channel-native / superoperator
