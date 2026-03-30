@@ -470,6 +470,8 @@ for Tasks 1–2 plus a minimal Task 3 correctness gate are in
 Tasks 1–2 expansion plus a minimal Task 3 correctness gate for the frozen
 2-qubit local-support contract are in
 [`SECOND_VERTICAL_SLICE_2Q_LOCAL_SUPPORT_STORIES_AND_ENGINEERING_TASKS.md`](SECOND_VERTICAL_SLICE_2Q_LOCAL_SUPPORT_STORIES_AND_ENGINEERING_TASKS.md).
+Bounded slice completion vs. deferred Task 3 / Task 4 work is recorded there under
+**Slice implementation status** (not in `PRE_IMPLEMENTATION_COMPLETION_CHECKLIST.md`).
 
 ### Task 1: Fusion representation and IR contract
 

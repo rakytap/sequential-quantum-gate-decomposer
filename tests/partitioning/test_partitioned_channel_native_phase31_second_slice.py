@@ -1,4 +1,4 @@
-"""Phase 3.1 channel-native second slice: helper substrate, public runtime, boundaries.
+"""Phase 3.1 channel-native second slice: helper substrate, public runtime, correctness gate, boundaries.
 
 **Helper / E01–E02 substrate:** imports private helpers from
 ``noisy_runtime_channel_native`` for bundle shape, invariants, support-aware
@@ -9,13 +9,28 @@ sequential reference.
 admits bounded mixed motifs per partition via local-support validation in
 ``_validate_whole_partition_motif`` (no whole-workload single-qubit gate).
 
-**Public boundary + audit (``P31-S05-E02``):** negative matrix for span, noise
-presence, and non-channel-native gates on surfaces built with
-``strict_phase3_support=False``; fused-region audit fields on positives.
+**Public positives (``P31-S05``):** integration tests assert runtime path,
+fused-region audit fields, and density vs. sequential reference.
 
-The first-slice file ``test_partitioned_channel_native_phase31_slice.py`` is the
-unchanged 1q public regression anchor; counted end-to-end 2q gates remain
-``P31-S06-E01``.
+**Public boundary (``P31-S05-E02``):** negative matrix for span, noise presence,
+and non-channel-native gates on surfaces built with
+``strict_phase3_support=False``.
+
+**Public correctness gate (``P31-S06-E01``):** minimal Task 3 slice closure:
+counted ``phase31_microcase_2q_cnot_local_noise_pair`` and non-counted
+``phase31_local_support_q4_spectator_embedding_smoke`` vs. sequential oracle with
+Frobenius/max-abs, ``trace_deviation``, ``rho_is_valid``; explicit Kraus bundle
+invariant check on the counted fused 2q block.
+
+**Not claimed here (deferred):** remaining counted IDs from ``P31-ADR-009``
+(``phase31_microcase_2q_multi_noise_entangler_chain``,
+``phase31_microcase_2q_dense_same_support_motif``, ``phase2_xxz_hea_q4_continuity``,
+``phase2_xxz_hea_q6_continuity``, counted performance cases per ``P31-ADR-010``);
+Aer external slice per ``P31-ADR-011``; ``correctness_evidence`` /
+``channel_invariants`` packaging per ``P31-ADR-013``; Task 4 performance evidence.
+
+The first-slice file ``test_partitioned_channel_native_phase31_slice.py`` remains
+the unchanged 1q public regression anchor.
 """
 
 from __future__ import annotations
@@ -518,7 +533,7 @@ def test_phase31_channel_native_descriptor_order_matters_for_fusion():
     assert fro_rev > 10.0 * PHASE3_RUNTIME_DENSITY_TOL
 
 
-# --- Public runtime (P31-S05-E01) + fused-region audit (P31-S05-E02) ---
+# --- Public runtime positives (P31-S05-E01) + fused-region audit ---
 
 
 def test_phase31_local_support_q4_smoke_partitions_two_disjoint_pairs():
@@ -564,9 +579,12 @@ def test_phase31_channel_native_public_2q_cnot_microcase_matches_sequential():
     metrics = build_density_comparison_metrics(result.density_matrix, reference)
     assert metrics["frobenius_norm_diff"] <= PHASE3_RUNTIME_DENSITY_TOL
     assert metrics["max_abs_diff"] <= PHASE3_RUNTIME_DENSITY_TOL
+    assert result.trace_deviation <= PHASE3_RUNTIME_DENSITY_TOL
+    assert result.rho_is_valid is True
 
 
 def test_phase31_channel_native_public_4q_smoke_matches_sequential():
+    """Non-counted larger-workload smoke; full 4q state vs sequential oracle."""
     ds = build_phase31_microcase_descriptor_set(
         "phase31_local_support_q4_spectator_embedding_smoke"
     )
@@ -592,6 +610,53 @@ def test_phase31_channel_native_public_4q_smoke_matches_sequential():
     metrics = build_density_comparison_metrics(result.density_matrix, reference)
     assert metrics["frobenius_norm_diff"] <= PHASE3_RUNTIME_DENSITY_TOL
     assert metrics["max_abs_diff"] <= PHASE3_RUNTIME_DENSITY_TOL
+    assert result.trace_deviation <= PHASE3_RUNTIME_DENSITY_TOL
+    assert result.rho_is_valid is True
+
+
+# --- Public correctness gate (P31-S06-E01) ---
+
+
+def test_phase31_s06_e01_counted_2q_fused_kraus_bundle_satisfies_invariants():
+    ds = build_phase31_microcase_descriptor_set(
+        "phase31_microcase_2q_cnot_local_noise_pair"
+    )
+    partition = _find_partition_with_span(ds)
+    params = build_initial_parameters(ds.parameter_count)
+    local_vec = _build_partition_parameter_vector(
+        ds,
+        partition,
+        params,
+        runtime_path=PHASE31_RUNTIME_PATH_CHANNEL_NATIVE,
+    )
+    seg = _segment_parameter_vector(
+        ds,
+        partition.members,
+        local_vec,
+        runtime_path=PHASE31_RUNTIME_PATH_CHANNEL_NATIVE,
+    )
+    local_support = tuple(range(len(partition.local_to_global_qbits)))
+    steps = [
+        _member_to_kraus_bundle(
+            ds,
+            m,
+            seg,
+            local_support=local_support,
+            runtime_path=PHASE31_RUNTIME_PATH_CHANNEL_NATIVE,
+        )
+        for m in partition.members
+    ]
+    acc = _compose_kraus_step_sequence(
+        steps,
+        descriptor_set=ds,
+        support_qubit_count=len(local_support),
+        runtime_path=PHASE31_RUNTIME_PATH_CHANNEL_NATIVE,
+    )
+    _check_kraus_bundle_invariants(
+        acc,
+        descriptor_set=ds,
+        runtime_path=PHASE31_RUNTIME_PATH_CHANNEL_NATIVE,
+    )
 
 
 # --- Public boundary (P31-S05-E02) ---

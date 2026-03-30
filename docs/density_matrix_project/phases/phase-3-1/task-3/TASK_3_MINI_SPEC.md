@@ -2,6 +2,11 @@
 
 **Phase planning traceability:** `DETAILED_PLANNING_PHASE_3_1.md` §8, Task 3.
 
+**Layer 4 implementation plans (second vertical slice, Story P31-S06)**
+
+- [`ENGINEERING_TASK_P31_S06_E01_IMPLEMENTATION_PLAN.md`](ENGINEERING_TASK_P31_S06_E01_IMPLEMENTATION_PLAN.md)
+- [`ENGINEERING_TASK_P31_S06_E02_IMPLEMENTATION_PLAN.md`](ENGINEERING_TASK_P31_S06_E02_IMPLEMENTATION_PLAN.md)
+
 **Pre-implementation checklist traceability**
 
 | P31-C row | Role in this task |

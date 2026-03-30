@@ -88,7 +88,9 @@ change here.
 - **Deferred (next increment):** a **2-qubit** motif on the same contract
   (requires `CNOT` and 4×4 Kraus / embedding in channel-native apply); explicitly
   **out of slice v1** implementation status. See
-  [`SECOND_VERTICAL_SLICE_2Q_LOCAL_SUPPORT_STORIES_AND_ENGINEERING_TASKS.md`](SECOND_VERTICAL_SLICE_2Q_LOCAL_SUPPORT_STORIES_AND_ENGINEERING_TASKS.md).
+  [`SECOND_VERTICAL_SLICE_2Q_LOCAL_SUPPORT_STORIES_AND_ENGINEERING_TASKS.md`](SECOND_VERTICAL_SLICE_2Q_LOCAL_SUPPORT_STORIES_AND_ENGINEERING_TASKS.md)
+  for the bounded second-slice completion record and deferred follow-ons (**Slice
+  implementation status**).
 - Short design note (or ADR pointer) listing rejected representation shortcuts.
 
 **Traceability**

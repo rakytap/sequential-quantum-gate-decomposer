@@ -194,11 +194,11 @@ the replacement ID here and keep the same acceptance intent: one eligible
 
 **Execution checklist**
 
-- [ ] Implement `CNOT` lowering for the channel-native path using the same local
+- [x] Implement `CNOT` lowering for the channel-native path using the same local
       support convention documented in P31-S04-E01.
-- [ ] Add direct tests covering ordered composition for gate-noise-gate and
+- [x] Add direct tests covering ordered composition for gate-noise-gate and
       noise-on-either-qubit variants.
-- [ ] Assert that descriptor order, not an internal shortcut order, defines the
+- [x] Assert that descriptor order, not an internal shortcut order, defines the
       resulting fused object.
 
 **Evidence produced**
@@ -300,11 +300,11 @@ the replacement ID here and keep the same acceptance intent: one eligible
 
 **Execution checklist**
 
-- [ ] Remove the whole-workload-width assumption from channel-native motif
+- [x] Remove the whole-workload-width assumption from channel-native motif
       validation and replace it with local-support validation.
-- [ ] Thread local-support to global-support mapping explicitly through the apply
+- [x] Thread local-support to global-support mapping explicitly through the apply
       path and fused-region record.
-- [ ] Keep pure-unitary islands and broader unsupported motifs as explicit hard
+- [x] Keep pure-unitary islands and broader unsupported motifs as explicit hard
       failures when channel-native mode is requested.
 
 **Evidence produced**
@@ -344,13 +344,13 @@ the replacement ID here and keep the same acceptance intent: one eligible
 
 **Execution checklist**
 
-- [ ] Add a `> 2` local-support negative case and assert
+- [x] Add a `> 2` local-support negative case and assert
       `channel_native_qubit_span`.
-- [ ] Add a pure-unitary 2-qubit negative case and assert
+- [x] Add a pure-unitary 2-qubit negative case and assert
       `channel_native_noise_presence`.
-- [ ] Add one unsupported off-support or unsupported-operation negative case and
+- [x] Add one unsupported off-support or unsupported-operation negative case and
       assert `channel_native_support_surface`.
-- [ ] Tighten positive tests so fused-region metadata is asserted, not merely
+- [x] Tighten positive tests so fused-region metadata is asserted, not merely
       inspected manually.
 
 **Evidence produced**
@@ -418,9 +418,16 @@ the replacement ID here and keep the same acceptance intent: one eligible
 - ADRs: `P31-ADR-009` (subset), `P31-ADR-011` (future external slice),
   `P31-ADR-013` (future bundle alignment).
 
+**Layer 4 implementation plans (Task 3)**
+
+- [`ENGINEERING_TASK_P31_S06_E01_IMPLEMENTATION_PLAN.md`](task-3/ENGINEERING_TASK_P31_S06_E01_IMPLEMENTATION_PLAN.md)
+- [`ENGINEERING_TASK_P31_S06_E02_IMPLEMENTATION_PLAN.md`](task-3/ENGINEERING_TASK_P31_S06_E02_IMPLEMENTATION_PLAN.md)
+
 #### Engineering tasks (Story P31-S06)
 
 ##### Engineering Task P31-S06-E01: Register the second-slice fixtures and end-to-end comparisons
+
+**Implementation plan:** [`ENGINEERING_TASK_P31_S06_E01_IMPLEMENTATION_PLAN.md`](task-3/ENGINEERING_TASK_P31_S06_E01_IMPLEMENTATION_PLAN.md)
 
 **Implements story**
 
@@ -442,13 +449,13 @@ the replacement ID here and keep the same acceptance intent: one eligible
 
 **Execution checklist**
 
-- [ ] Keep the counted 2-qubit case ID unchanged so later Task 3 evidence can
+- [x] Keep the counted 2-qubit case ID unchanged so later Task 3 evidence can
       reuse it directly.
-- [ ] Add or document one stable larger-workload local-support smoke case ID for
+- [x] Add or document one stable larger-workload local-support smoke case ID for
       the slice.
-- [ ] Add end-to-end tests asserting Frobenius, trace-validity, and invariant
+- [x] Add end-to-end tests asserting Frobenius, trace-validity, and invariant
       checks on both cases.
-- [ ] Document in the test module what remains intentionally uncovered after the
+- [x] Document in the test module what remains intentionally uncovered after the
       second slice.
 
 **Evidence produced**
@@ -467,6 +474,8 @@ the replacement ID here and keep the same acceptance intent: one eligible
 ---
 
 ##### Engineering Task P31-S06-E02: Record second-slice completion and the remaining Task 3 / Task 4 expansion hooks
+
+**Implementation plan:** [`ENGINEERING_TASK_P31_S06_E02_IMPLEMENTATION_PLAN.md`](task-3/ENGINEERING_TASK_P31_S06_E02_IMPLEMENTATION_PLAN.md)
 
 **Implements story**
 
@@ -488,11 +497,11 @@ the replacement ID here and keep the same acceptance intent: one eligible
 
 **Execution checklist**
 
-- [ ] Update the **Slice implementation status** section in this file when the
+- [x] Update the **Slice implementation status** section in this file when the
       second slice is implemented.
-- [ ] Keep Layer 1 contract closure in
+- [x] Keep Layer 1 contract closure in
       `PRE_IMPLEMENTATION_COMPLETION_CHECKLIST.md` separate from slice progress.
-- [ ] Add or maintain pointers from the first-slice and detailed-planning docs.
+- [x] Add or maintain pointers from the first-slice and detailed-planning docs.
 
 **Evidence produced**
 
@@ -530,6 +539,10 @@ Parallelism:
 
 ## Slice completion checklist
 
+Only the `P31-S06` rows are being closed here by `P31-S06-E02`; earlier
+`P31-S04` / `P31-S05` rows are not retroactively certified by this
+documentation task.
+
 - [x] P31-S04-E01: support-aware representation and invariant helpers for 1q/2q
       bounded objects are in place.
 - [ ] P31-S04-E02: `CNOT` lowering and ordered 2-qubit composition tests pass.
@@ -537,23 +550,23 @@ Parallelism:
       2-qubit motifs inside larger workloads.
 - [ ] P31-S05-E02: negative local-support matrix and fused-region audit
       assertions are in place.
-- [ ] P31-S06-E01: counted 2-qubit case plus larger-workload smoke case pass
+- [x] P31-S06-E01: counted 2-qubit case plus larger-workload smoke case pass
       end-to-end sequential-reference comparison.
-- [ ] P31-S06-E02: implementation status and deferred follow-on hooks are
+- [x] P31-S06-E02: implementation status and deferred follow-on hooks are
       recorded in docs.
 
 ---
 
 ## Slice implementation status
 
-Update this section when P31-S06-E02 completes (implementation progress only; do
-not fold into `PRE_IMPLEMENTATION_COMPLETION_CHECKLIST.md`).
+Authoritative bounded second-slice status (implementation progress only; do not
+fold into `PRE_IMPLEMENTATION_COMPLETION_CHECKLIST.md`).
 
 | Field | Value |
 |-------|-------|
 | Counted slice case ID | `phase31_microcase_2q_cnot_local_noise_pair` |
 | Non-counted local-support smoke ID | `phase31_local_support_q4_spectator_embedding_smoke` (recommended) |
-| Second vertical slice implementation | **In progress** (P31-S04-E01 complete; remaining E02–E06) |
+| Second vertical slice implementation | **Complete** for the counted 2-qubit microcase and the non-counted 4-qubit local-support smoke above (full Task 3 package and Task 4 remain deferred; see rows below). |
 | Recommended evidence module | `tests/partitioning/test_partitioned_channel_native_phase31_second_slice.py` |
 | Deferred counted correctness IDs after this slice | `phase31_microcase_2q_multi_noise_entangler_chain`, `phase31_microcase_2q_dense_same_support_motif`, `phase2_xxz_hea_q4_continuity`, `phase2_xxz_hea_q6_continuity`, plus every counted performance case from `P31-ADR-010` |
 | Deferred full Task 3 work | Aer per `P31-ADR-011`; version-bumped `correctness_evidence` rows and `channel_invariants` packaging per `P31-ADR-013` |
