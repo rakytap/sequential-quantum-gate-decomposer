@@ -16,11 +16,18 @@ def assemble_positive_case_bundle(
     status: str,
     summary: dict[str, Any],
     cases: list[dict[str, Any]],
+    *,
+    record_schema_version: str | None = None,
 ) -> dict[str, Any]:
+    schema = (
+        record_schema_version
+        if record_schema_version is not None
+        else CORRECTNESS_EVIDENCE_CASE_SCHEMA_VERSION
+    )
     return {
         "suite_name": suite_name,
         "status": status,
-        "record_schema_version": CORRECTNESS_EVIDENCE_CASE_SCHEMA_VERSION,
+        "record_schema_version": schema,
         "software": build_correctness_evidence_software_metadata(),
         "selected_candidate": build_correctness_evidence_selected_candidate(),
         "summary": summary,

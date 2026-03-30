@@ -3,8 +3,8 @@
 ## Draft Status
 
 Science-first narrative companion grounded in the current implementation-backed
-results. This draft intentionally avoids codebase-specific API details and
-project-roadmap framing.
+results. This draft now reflects the initial hybrid whole-workload evidence as
+well as the stricter claim boundary it implies.
 
 ## Abstract
 
@@ -20,11 +20,14 @@ being treated only as barriers between unitary islands. It also sharpens the
 methodological picture: a scientifically credible path appears to need both a
 strict motif-proof layer, where the fused object itself is validated, and a
 separate hybrid whole-workload layer, where that object is tested inside larger
-exact workloads. The current result is not yet a broad speedup claim. Its
-scientific value is methodological: it identifies a reusable path toward exact
-noisy acceleration based on bounded channel composition, invariant-aware
-validation, local-support embedding, explicit unsupported boundaries, and clear
-separation between proof mode and workload-evaluation mode.
+exact workloads with explicit route attribution. The current evidence now
+reaches both layers: a counted 4-qubit continuity anchor remains exact under
+the hybrid interpretation, and a first frozen 8-qubit pilot row shows that
+feasibility does not automatically imply performance benefit. The scientific
+value is therefore methodological and decision-oriented: it identifies a
+reusable path toward exact noisy acceleration while also showing that broader
+workload-level justification remains an empirical question rather than an
+assumption.
 
 ## Publication Surface Role
 
@@ -82,6 +85,15 @@ larger exact workloads that still contain structure outside the bounded fused
 slice. The former belongs to a strict motif-proof setting; the latter belongs
 to an explicit hybrid whole-workload setting.
 
+This two-layer story is no longer only conceptual. The hybrid layer now has a
+first counted whole-workload correctness anchor: a 4-qubit continuity case that
+matches the sequential oracle while preserving explicit route attribution
+between channel-native and existing exact execution. It also has a first frozen
+8-qubit structured pilot row with route coverage and comparative timing. That
+pilot currently indicates overhead-dominant behavior relative to the existing
+Phase 3 fused baseline, which is scientifically useful because it separates
+mathematical feasibility from workload-level justification.
+
 Scientifically, this matters because it changes the role of noise in the
 simulation narrative. Noise is no longer treated only as a point where fusion
 must stop. Instead, some noisy motifs can themselves become the fused object,
@@ -92,7 +104,7 @@ performance. That distinction is important and should remain explicit.
 
 ## 4. Reusable Working Principles
 
-The current bounded study suggests four reusable principles for future exact
+The current bounded study suggests five reusable principles for future exact
 noisy acceleration work.
 
 - Start from the **ordered noisy semantics**, not from the representation alone.
@@ -113,7 +125,8 @@ noisy acceleration work.
   interpretation.
 
 These principles are potentially reusable beyond the present bounded support
-surface.
+surface. The first hybrid pilot now provides an empirical reason for this
+separation: exactness can close before performance justification does.
 
 ## 5. What Remains Hard
 
@@ -122,6 +135,9 @@ Several hard questions remain open.
 First, mathematical feasibility and performance usefulness are not the same.
 Showing that a noisy motif can be fused exactly does not yet show that the
 resulting method improves runtime or memory on the workloads that matter most.
+The first hybrid pilot already illustrates this separation: a method can be
+exact and auditable on a whole workload while still failing to outperform the
+existing baseline on that row.
 
 Second, exact noisy acceleration remains scale-limited by dense mixed-state
 representation itself. Even a successful bounded fusion method operates inside a
@@ -130,6 +146,10 @@ regime where memory and data movement remain fundamental constraints.
 Third, broader noisy structure is still unresolved: correlated noise, larger
 supports, and more heterogeneous motif families may require different
 representations or different validation strategies.
+
+Broader continuity anchors, external cross-validation, and the full structured
+matrix also remain to be completed before one can say how general the current
+negative-to-inconclusive pilot result really is.
 
 The right scientific conclusion is therefore not "noisy fusion is solved," but
 "a bounded exact path now exists and can be studied honestly."

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from functools import lru_cache
 from typing import Any
 
@@ -43,6 +43,14 @@ CORRECTNESS_EVIDENCE_CASE_KIND_STRUCTURED = "structured_family"
 CORRECTNESS_EVIDENCE_CONTINUITY_QUBITS = (4, 6, 8, 10)
 CORRECTNESS_EVIDENCE_EXTERNAL_REFERENCE_CONTINUITY_QUBITS = (4,)
 PHASE31_CORRECTNESS_CONTINUITY_QUBITS = (4, 6)
+
+# Frozen counted microcase IDs for Stage-A bounded package (excludes non-counted smoke workloads).
+PHASE31_BOUNDED_COUNTED_MICROCASE_IDS: tuple[str, ...] = (
+    "phase31_microcase_1q_u3_local_noise_chain",
+    "phase31_microcase_2q_cnot_local_noise_pair",
+    "phase31_microcase_2q_multi_noise_entangler_chain",
+    "phase31_microcase_2q_dense_same_support_motif",
+)
 
 
 @dataclass(frozen=True)
@@ -319,3 +327,31 @@ def _build_correctness_evidence_case_contexts_cached() -> tuple[CorrectnessEvide
 
 def build_correctness_evidence_case_contexts() -> list[CorrectnessEvidenceCaseContext]:
     return deepcopy(list(_build_correctness_evidence_case_contexts_cached()))
+
+
+@lru_cache(maxsize=1)
+def _build_phase31_correctness_evidence_case_contexts_cached() -> tuple[
+    CorrectnessEvidenceCaseContext, ...
+]:
+    """Bounded Stage-A package: four counted microcases + q4/q6 continuity; no structured rows."""
+
+    contexts: list[CorrectnessEvidenceCaseContext] = []
+    for ctx in iter_phase31_correctness_microcase_cases():
+        if ctx.descriptor_set.workload_id not in PHASE31_BOUNDED_COUNTED_MICROCASE_IDS:
+            continue
+        contexts.append(deepcopy(ctx))
+    for ctx in iter_phase31_correctness_continuity_cases():
+        meta = dict(ctx.metadata)
+        # Whole-workload hybrid routing; not a single fused support tuple (§10.6 audit field).
+        meta["fused_block_support_qbits"] = None
+        contexts.append(replace(deepcopy(ctx), metadata=meta))
+    if len(contexts) != 6:
+        raise AssertionError(
+            "expected 6 Phase 3.1 bounded contexts, got {}".format(len(contexts))
+        )
+    return tuple(contexts)
+
+
+def build_phase31_correctness_evidence_case_contexts() -> list[CorrectnessEvidenceCaseContext]:
+    """Stage-A sibling selector for P31-S10-E02 (does not alter default Phase 3 case matrix)."""
+    return deepcopy(list(_build_phase31_correctness_evidence_case_contexts_cached()))

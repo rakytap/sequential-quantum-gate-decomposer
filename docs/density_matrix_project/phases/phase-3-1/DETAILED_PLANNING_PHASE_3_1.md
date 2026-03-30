@@ -78,26 +78,60 @@ What is already closed before Phase 3.1 implementation is treated as contract-co
 - Phase 3 performance closure was diagnosis-grounded; channel-native /
   superoperator-native fusion was explicitly deferred as follow-on (see
   `P3-ADR-010`, PLANNING.md §5.1).
-- Current implementation-backed Phase 3.1 progress already proves the **strict**
-  bounded motif slice: `phase31_channel_native` is implemented and validated on
-  the 1-qubit slice and the bounded 2-qubit local-support slice. That strict
-  path establishes the exact fused object on fully eligible workloads, but it
-  does not yet close continuity or structured-workload evidence.
+- Current implementation-backed Phase 3.1 progress already proves the
+  **strict-plus-hybrid runtime design at thin-slice level**:
+  - `phase31_channel_native` is implemented and validated on the 1-qubit slice
+    and the bounded 2-qubit local-support slice,
+  - `phase31_channel_native_hybrid` is implemented with explicit route
+    attribution on the counted `phase2_xxz_hea_q4_continuity` anchor and on one
+    frozen structured pilot,
+    `phase31_pair_repeat_q8_periodic_seed20260318`.
+- This means the open Phase 3.1 question is no longer "does the runtime design
+  exist?" but "does the full frozen correctness and performance slice justify a
+  bounded positive-methods closure relative to the Phase 3 fused baseline, or
+  does it close more honestly as a benchmark-grounded decision study?"
 
 What remains intentionally open for **full Phase 3.1 claim closure**:
 
-- an explicit **strict-plus-hybrid** runtime contract:
-  - **strict** mode proves the exact fused object on fully eligible motifs,
-  - **hybrid** mode executes whole workloads by routing eligible partitions
-    through the Phase 3.1 channel-native path and routing Phase-3-supported but
-    Phase-3.1-ineligible partitions through the shipped Phase 3 exact path with
-    explicit route attribution,
-- remaining **correctness, external-reference, and performance** evidence on the
-  frozen counted slice under that strict-plus-hybrid runtime design,
-- emitted **evidence bundle schema** and runtime-route metadata for both strict
-  and hybrid Phase 3.1 modes,
-- optional **host-side** C++/TBB/AVX policy for evidence builds when Task 6 is
-  in play.
+- remaining counted **correctness** closure on the frozen slice:
+  - `phase31_microcase_2q_multi_noise_entangler_chain`,
+  - `phase31_microcase_2q_dense_same_support_motif`,
+  - `phase2_xxz_hea_q6_continuity`,
+  - required Aer rows from §10.4,
+  - full `correctness_evidence` / `channel_invariants` /
+    `partition_route_summary` migration under `P31-ADR-013`,
+- remaining counted **performance** closure on the frozen slice:
+  - the full `P31-ADR-010` matrix beyond the current pilot,
+  - control-family closure,
+  - emitted `break_even_table` / `justification_map`,
+  - route-aware case summaries on the counted hybrid rows,
+- the **publication-closure decision** after the emitted evidence exists and is
+  reviewed against §6 and §13,
+- optional **host-side C++/TBB/AVX** work only if the later Task 6 branch is
+  explicitly opened; it is not part of the recommended immediate closure path.
+
+## 0.1.1 Current State And Recommended Closure Path
+
+This rebaseline note updates the **execution stance** for Phase 3.1 without
+reopening the frozen contracts in §7 or the counted slices in §10.
+
+- **Keep the frozen Phase 3.1 contract.** Do not broaden the support surface,
+  relax thresholds, or reduce the counted slice because of partial
+  implementation feedback.
+- **Rebaseline the working approach to evidence-first closure.** The feature
+  existence question has already been answered by the strict slice, the hybrid
+  runtime, the counted `q4` continuity anchor, and the first structured pilot.
+- **Treat the positive-methods outcome as allowed but not assumed.** Current
+  evidence includes a real hybrid pilot row, but that row is presently
+  overhead-dominant relative to the Phase 3 fused baseline; it is informative,
+  not claim-closing.
+- **Finish Tasks 3 and 4 before deciding publication closure.** The next phase
+  of work should close the remaining correctness and performance contracts on
+  the frozen slice and produce a pre-closure evidence summary that makes the
+  publication choice mechanical rather than interpretive.
+- **Keep Task 5 downstream and Task 6 separate.** Publication framing follows
+  emitted evidence; host-acceleration work remains a later branch unless the
+  phase contract is explicitly reopened.
 
 ## 0.2 Spec-Driven Development Principles for Phase 3.1
 
@@ -526,6 +560,21 @@ continuity anchor, and one representative structured pilot case are in
 This slice is the first thin end-to-end increment for the strict-plus-hybrid
 Phase 3.1 contract and remains smaller than full Task 3 / Task 4 closure.
 
+**Fourth vertical slice (remaining counted correctness closure):** the next
+bounded Task 3 expansion for the remaining counted strict microcases, the
+counted `q6` hybrid continuity anchor, the required Aer subset, and the
+versioned correctness package migration is in
+[`FOURTH_VERTICAL_SLICE_REMAINING_COUNTED_CORRECTNESS_STORIES_AND_ENGINEERING_TASKS.md`](FOURTH_VERTICAL_SLICE_REMAINING_COUNTED_CORRECTNESS_STORIES_AND_ENGINEERING_TASKS.md).
+This is the recommended **actual next execution slice** after the completed
+third slice and stops before the full Task 4 matrix and before publication
+closure.
+
+**Recommended post-third-slice forward path (Layers 3-4, pre-publication-closure):**
+the next tranche should **not** broaden scope. It should close the remaining
+Task 3 / Task 4 evidence obligations on the frozen slice and stop once the
+publication-closure decision can be made from emitted artifacts rather than
+inference.
+
 ### Task 1: Fusion representation and IR contract
 
 **Goal:** Define how bounded 1- and 2-qubit channel-native / superoperator
@@ -610,6 +659,333 @@ on the same representative workloads as Task 4.
 **Evidence:** Profiler captures, A/B benchmark rows, and explicit note of SIMD
 and threading settings in emitted performance bundles (optional / amended
 **P31-C-09** only).
+
+### Recommended Layer 3 / 4 Execution Path From The Current State
+
+The stories below describe the recommended behavioral path from the current
+implementation state **up to but excluding** the final publication-closure
+decision. They preserve the frozen support surface, thresholds, and counted
+case inventory.
+
+### Story P31-S10: The remaining counted correctness slice closes under the frozen strict-plus-hybrid contract
+
+**User/Research value**
+
+- Converts Phase 3.1 exactness from a strong partial result into a full frozen
+  counted slice.
+- Prevents Task 4 performance interpretation from resting on an incompletely
+  validated support surface.
+
+**Given / When / Then**
+
+- **Given** the strict motif-proof slice, the hybrid `q4` continuity anchor, and
+  the thin structured pilot already implemented.
+- **When** the remaining counted correctness rows and required external
+  micro-validation rows run through the Phase 3.1 correctness harness.
+- **Then** every frozen correctness case is either green with stable bundle
+  metadata or explicitly recorded as a blocking failure on the frozen slice.
+
+**Scope**
+
+- **In:** the remaining strict counted 2-qubit microcases, counted hybrid
+  `phase2_xxz_hea_q6_continuity`, the required Aer subset, and the
+  `correctness_evidence` / `channel_invariants` / `partition_route_summary`
+  package migration.
+- **Out:** the structured performance matrix, publication framing, and Task 6.
+
+**Acceptance signals**
+
+- `phase31_microcase_2q_multi_noise_entangler_chain` passes through the strict
+  path under §10.1.
+- `phase31_microcase_2q_dense_same_support_motif` passes through the strict
+  path under §10.1.
+- `phase2_xxz_hea_q6_continuity` passes through the hybrid path with stable
+  route-summary assertions.
+- The Aer subset from §10.4 is emitted with versioned schema and stable case
+  identifiers.
+- The counted correctness bundle contains the required Phase 3.1 fields from
+  §10.6.
+
+**Traceability**
+
+- Phase: §6, §8 Task 3, §10.1, §10.2, §10.4, §10.6.
+- ADRs: `P31-ADR-003`, `P31-ADR-008`, `P31-ADR-009`, `P31-ADR-011`,
+  `P31-ADR-013`.
+
+#### Engineering tasks (Story P31-S10)
+
+##### Engineering Task P31-S10-E01: Promote the remaining counted strict microcases and `q6` hybrid continuity row into claim-bearing correctness gates
+
+**Implements story**
+
+- Story P31-S10
+
+**Change type**
+
+- code | tests | validation automation
+
+**Definition of done**
+
+- The remaining counted strict microcases and the counted `q6` hybrid continuity
+  row are green in reproducible pytest or harness form.
+- Hybrid `q6` route-summary assertions are stable and reviewer-auditable.
+
+**Execution checklist**
+
+- [ ] Promote `phase31_microcase_2q_multi_noise_entangler_chain` to a
+      claim-bearing exactness gate.
+- [ ] Promote `phase31_microcase_2q_dense_same_support_motif` to a
+      claim-bearing exactness gate.
+- [ ] Add the counted `phase2_xxz_hea_q6_continuity` hybrid exactness gate with
+      route-summary assertions.
+- [ ] Record explicit blockers if any counted correctness row fails.
+
+**Evidence produced**
+
+- Passing tests or harness outputs for the remaining counted correctness rows.
+- Updated case inventory or manifest inputs tied to the frozen IDs.
+
+**Risks / rollback**
+
+- Risk: `q6` continuity exposes a routing or scale behavior that invalidates the
+  current partial-confidence boundary.
+- Rollback/mitigation: keep the failure explicit and do not widen the support
+  surface to compensate.
+
+##### Engineering Task P31-S10-E02: Emit the versioned correctness package with Aer rows and Phase 3.1 slices
+
+**Implements story**
+
+- Story P31-S10
+
+**Change type**
+
+- validation automation | docs
+
+**Definition of done**
+
+- The required Aer subset is emitted for the frozen external slice only.
+- The versioned `correctness_evidence` successor includes the required Phase
+  3.1 fields plus `channel_invariants` and `partition_route_summary`.
+- A stable Case ID -> internal pass -> Aer pass summary exists for review.
+
+**Execution checklist**
+
+- [ ] Wire the required Aer rows from §10.4 into the correctness package.
+- [ ] Version-bump the package or case schema where Phase 3.1 fields are added.
+- [ ] Emit `channel_invariants` for the counted strict microcases.
+- [ ] Emit `partition_route_summary` for the counted hybrid rows.
+
+**Evidence produced**
+
+- Regeneratable correctness bundle for the full frozen counted correctness
+  surface.
+- Review-ready case summary table aligned to the same frozen IDs.
+
+**Risks / rollback**
+
+- Risk: partial schema migration obscures which rows are truly Phase 3.1-counted.
+- Rollback/mitigation: prefer explicit successor schema names over silent
+  reuse of Phase 3 package shapes.
+
+### Story P31-S11: The frozen performance matrix yields route-aware decision rows
+
+**User/Research value**
+
+- Answers the whole-workload "when does channel-native fusion matter?" question
+  on the frozen slice rather than on one pilot row.
+- Separates local exactness success from workload-level justification.
+
+**Given / When / Then**
+
+- **Given** the mandatory counted correctness slice is green for rows that carry
+  counted performance claims, or explicit blockers are recorded and the matrix
+  is being run in diagnosis-only mode pending closure.
+- **When** the full `P31-ADR-010` counted performance matrix runs through the
+  explicit hybrid Phase 3.1 harness.
+- **Then** each counted row records the baseline trio, route coverage, and a
+  measured decision classification, with no publication framing yet attached.
+
+**Scope**
+
+- **In:** all remaining primary-family and control rows from §10.3, scalar-build
+  metadata, route-coverage emission, and the required
+  `break_even_table` / `justification_map`.
+- **Out:** Task 5 publication updates and Task 6 host-acceleration work.
+
+**Acceptance signals**
+
+- All frozen counted rows from §10.3 are emitted with stable IDs.
+- Each row records sequential, Phase 3 fused, and Phase 3.1 hybrid timings.
+- Each row records hybrid route coverage and `decision_class`.
+- The matrix emits a `break_even_table` or `justification_map` tied to the same
+  case IDs.
+
+**Traceability**
+
+- Phase: §6, §8 Task 4, §10.3, §10.6, §10.7.
+- ADRs: `P31-ADR-005`, `P31-ADR-006`, `P31-ADR-010`, `P31-ADR-013`,
+  `P31-ADR-014`.
+
+#### Engineering tasks (Story P31-S11)
+
+##### Engineering Task P31-S11-E01: Expand the current hybrid pilot harness into the full frozen counted matrix
+
+**Implements story**
+
+- Story P31-S11
+
+**Change type**
+
+- benchmark harness | tests
+
+**Definition of done**
+
+- The current pilot runner expands to the full counted matrix from §10.3.
+- Each emitted row carries the baseline trio and scalar-build metadata required
+  by §10.7.
+
+**Execution checklist**
+
+- [ ] Add the remaining primary-family rows from `phase31_pair_repeat` and
+      `phase31_alternating_ladder`.
+- [ ] Add the control-family `layered_nearest_neighbor` rows.
+- [ ] Preserve the frozen case IDs, seeds, patterns, and qubit bands from §10.3.
+- [ ] Guard the inventory and iterator helpers with regression tests.
+
+**Evidence produced**
+
+- Reproducible benchmark rows for the full frozen counted matrix.
+- Regression tests protecting the counted matrix inventory.
+
+**Risks / rollback**
+
+- Risk: harness expansion drifts from the frozen slice and reintroduces
+  selection bias.
+- Rollback/mitigation: derive rows from the frozen inventory and test the exact
+  counts.
+
+##### Engineering Task P31-S11-E02: Emit the route-aware decision artifact and machine-readable matrix summary
+
+**Implements story**
+
+- Story P31-S11
+
+**Change type**
+
+- validation automation | docs
+
+**Definition of done**
+
+- The matrix emits `break_even_table` / `justification_map` directly from the
+  measured rows.
+- A machine-readable summary table exists for later publication use without
+  requiring manual reconstruction.
+
+**Execution checklist**
+
+- [ ] Emit `decision_class` for every counted performance row.
+- [ ] Emit route-coverage counters and partition-level route records.
+- [ ] Build the `break_even_table` / `justification_map` from measured results.
+- [ ] Record explicit negative or mixed outcomes without rewriting the frozen
+      success rule.
+
+**Evidence produced**
+
+- Full performance bundle with decision artifact.
+- Review-ready case table: Case ID -> baselines -> route coverage -> decision.
+
+**Risks / rollback**
+
+- Risk: one favorable row is mistaken for matrix closure.
+- Rollback/mitigation: keep the matrix-level artifact mandatory and include the
+  control family in the same summary.
+
+### Story P31-S12: A pre-closure evidence summary makes the publication decision mechanical
+
+**User/Research value**
+
+- Prevents ad hoc interpretation after the bundles land.
+- Separates evidence closure from publication framing and venue strategy.
+
+**Given / When / Then**
+
+- **Given** the Task 3 and Task 4 artifacts exist for the frozen counted slice.
+- **When** the pre-closure review runs.
+- **Then** the phase records whether the evidence is
+  `positive-methods-ready`, `decision-study-ready`, or `not-ready-yet`, with
+  explicit blockers and without yet executing Task 5 publication closure.
+
+**Scope**
+
+- **In:** a concise phase-local evidence summary, blocker inventory, and status
+  rubric tied to the emitted bundles.
+- **Out:** actual paper rewrites, venue-specific framing, and final publication
+  choice.
+
+**Acceptance signals**
+
+- One review table maps correctness coverage, performance coverage, and open
+  blockers across the frozen slice.
+- The phase-local summary explicitly states that publication closure is
+  downstream of this evidence review.
+- No new scientific claims are added beyond the emitted artifacts.
+
+**Traceability**
+
+- Phase: §6, §9, §10, §13.
+- ADRs: `P31-ADR-005`, `P31-ADR-006`, `P31-ADR-013`.
+
+#### Engineering tasks (Story P31-S12)
+
+##### Engineering Task P31-S12-E01: Produce the pre-publication evidence review pack and go/no-go summary
+
+**Implements story**
+
+- Story P31-S12
+
+**Change type**
+
+- docs | validation automation
+
+**Definition of done**
+
+- One reviewer-facing summary exists for the full frozen counted slice.
+- The summary records one of the three pre-closure states:
+  `positive-methods-ready`, `decision-study-ready`, or `not-ready-yet`.
+- Task 5 publication updates remain explicitly downstream of this summary.
+
+**Execution checklist**
+
+- [ ] Summarize correctness-slice coverage and blockers from Story P31-S10.
+- [ ] Summarize performance-matrix coverage and decision artifacts from Story P31-S11.
+- [ ] Record the pre-closure state without changing publication documents.
+- [ ] Link the summary to the emitted bundle locations or stable builder entrypoints.
+
+**Evidence produced**
+
+- One pre-closure evidence summary suitable for phase review.
+- Explicit go/no-go input for the later publication-closure decision.
+
+**Risks / rollback**
+
+- Risk: the status summary drifts into publication argument instead of evidence review.
+- Rollback/mitigation: keep it artifact-indexed, case-ID-indexed, and
+  explicitly pre-publication.
+
+### Recommended implementation order after the third slice
+
+1. `P31-S10-E01`
+2. `P31-S10-E02`
+3. `P31-S11-E01`
+4. `P31-S11-E02`
+5. `P31-S12-E01`
+
+**Stop condition before publication closure**
+
+Pause before Task 5 once Story P31-S12 is complete. At that point the phase
+should have enough evidence to decide between the §6 / §13 closure modes
+without broadening scope or inferring from partial rows.
 
 ## 9. Full-Phase Acceptance Criteria
 

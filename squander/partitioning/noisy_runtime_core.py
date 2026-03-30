@@ -32,6 +32,7 @@ PHASE3_RUNTIME_PATH_SEQUENTIAL_REFERENCE = "sequential_density_descriptor_refere
 PHASE3_RUNTIME_VALIDITY_TOL = 1e-10
 
 PHASE31_RUNTIME_PATH_CHANNEL_NATIVE = "phase31_channel_native"
+PHASE31_RUNTIME_PATH_CHANNEL_NATIVE_HYBRID = "phase31_channel_native_hybrid"
 PHASE31_FUSION_KIND_CHANNEL_NATIVE_MOTIF = "channel_native_motif"
 
 PHASE3_FUSION_KIND_UNITARY_ISLAND = "unitary_island"
@@ -50,6 +51,8 @@ class NoisyRuntimePartitionRecord:
     partition_index: int
     runtime_circuit_qbit_num: int
     runtime_circuit_parameter_count: int
+    partition_runtime_class: str | None = None
+    partition_route_reason: str | None = None
 
     def to_dict(self, descriptor_set: NoisyPartitionDescriptorSet) -> dict[str, Any]:
         return runtime_partition_audit_dict(descriptor_set, self)
@@ -71,6 +74,10 @@ def runtime_partition_audit_dict(
     ]
     payload["runtime_circuit_qbit_num"] = record.runtime_circuit_qbit_num
     payload["runtime_circuit_parameter_count"] = record.runtime_circuit_parameter_count
+    if record.partition_runtime_class is not None:
+        payload["partition_runtime_class"] = record.partition_runtime_class
+    if record.partition_route_reason is not None:
+        payload["partition_route_reason"] = record.partition_route_reason
     return payload
 
 
@@ -691,13 +698,31 @@ def _build_partition_parameter_vector(
 
 
 def _build_partition_record(
-    partition: NoisyPartitionDescriptor, *, runtime_circuit: NoisyCircuit
+    partition: NoisyPartitionDescriptor,
+    *,
+    runtime_circuit: NoisyCircuit,
+    partition_runtime_class: str | None = None,
+    partition_route_reason: str | None = None,
 ) -> NoisyRuntimePartitionRecord:
     return NoisyRuntimePartitionRecord(
         partition_index=partition.partition_index,
         runtime_circuit_qbit_num=runtime_circuit.qbit_num,
         runtime_circuit_parameter_count=runtime_circuit.parameter_num,
+        partition_runtime_class=partition_runtime_class,
+        partition_route_reason=partition_route_reason,
     )
+
+
+def _hybrid_phase3_partition_runtime_class(
+    regions: tuple[NoisyRuntimeFusedRegionRecord, ...],
+    partition_index: int,
+) -> str:
+    for region in regions:
+        if region.partition_index != partition_index:
+            continue
+        if region.classification == PHASE3_FUSION_CLASS_FUSED:
+            return "phase3_unitary_island_fused"
+    return "phase3_supported_unfused"
 
 
 def _segment_parameter_vector(
@@ -796,6 +821,7 @@ def execute_partitioned_density(
     allow_fusion: bool = False,
 ) -> NoisyRuntimeExecutionResult:
     from squander.partitioning.noisy_runtime_channel_native import (
+        classify_partition_channel_native_route,
         execute_partition_channel_native,
     )
     from squander.partitioning.noisy_runtime_fusion import (
@@ -806,6 +832,10 @@ def execute_partitioned_density(
     if allow_fusion and requested_runtime_path == PHASE3_RUNTIME_PATH_BASELINE:
         requested_runtime_path = PHASE3_RUNTIME_PATH_FUSED_UNITARY_ISLANDS
     channel_native_path = requested_runtime_path == PHASE31_RUNTIME_PATH_CHANNEL_NATIVE
+    channel_native_hybrid_path = (
+        requested_runtime_path == PHASE31_RUNTIME_PATH_CHANNEL_NATIVE_HYBRID
+    )
+    hybrid_allow_fusion = allow_fusion or channel_native_hybrid_path
     validated_descriptor_set, parameter_vector = validate_runtime_request(
         descriptor_set, parameters, runtime_path=requested_runtime_path
     )
@@ -844,6 +874,52 @@ def execute_partitioned_density(
                 runtime_path=requested_runtime_path,
             )
             fused_regions.extend(recs)
+            partition_records.append(
+                _build_partition_record(partition, runtime_circuit=partition_circuit)
+            )
+        elif channel_native_hybrid_path:
+            eligible, _local_support, route_reason = classify_partition_channel_native_route(
+                validated_descriptor_set,
+                partition,
+                runtime_path=requested_runtime_path,
+            )
+            if eligible:
+                recs, rho = execute_partition_channel_native(
+                    validated_descriptor_set,
+                    partition,
+                    local_parameter_vector,
+                    rho,
+                    runtime_path=requested_runtime_path,
+                )
+                fused_regions.extend(recs)
+                partition_records.append(
+                    _build_partition_record(
+                        partition,
+                        runtime_circuit=partition_circuit,
+                        partition_runtime_class="phase31_channel_native",
+                        partition_route_reason="eligible_channel_native_motif",
+                    )
+                )
+            else:
+                phase3_recs = _execute_partition_with_optional_fusion(
+                    validated_descriptor_set,
+                    partition,
+                    local_parameter_vector,
+                    rho,
+                    runtime_path=requested_runtime_path,
+                    allow_fusion=hybrid_allow_fusion,
+                )
+                fused_regions.extend(phase3_recs)
+                partition_records.append(
+                    _build_partition_record(
+                        partition,
+                        runtime_circuit=partition_circuit,
+                        partition_runtime_class=_hybrid_phase3_partition_runtime_class(
+                            phase3_recs, partition.partition_index
+                        ),
+                        partition_route_reason=route_reason,
+                    )
+                )
         else:
             fused_regions.extend(
                 _execute_partition_with_optional_fusion(
@@ -855,11 +931,13 @@ def execute_partitioned_density(
                     allow_fusion=allow_fusion,
                 )
             )
-        partition_records.append(
-            _build_partition_record(partition, runtime_circuit=partition_circuit)
-        )
+            partition_records.append(
+                _build_partition_record(partition, runtime_circuit=partition_circuit)
+            )
     if channel_native_path:
         actual_runtime_path = PHASE31_RUNTIME_PATH_CHANNEL_NATIVE
+    elif channel_native_hybrid_path:
+        actual_runtime_path = PHASE31_RUNTIME_PATH_CHANNEL_NATIVE_HYBRID
     else:
         actual_runtime_path = (
             requested_runtime_path
@@ -908,6 +986,18 @@ def execute_partitioned_density_channel_native(
         parameters,
         runtime_path=PHASE31_RUNTIME_PATH_CHANNEL_NATIVE,
         allow_fusion=False,
+    )
+
+
+def execute_partitioned_density_channel_native_hybrid(
+    descriptor_set: NoisyPartitionDescriptorSet,
+    parameters: Iterable[float],
+) -> NoisyRuntimeExecutionResult:
+    return execute_partitioned_density(
+        descriptor_set,
+        parameters,
+        runtime_path=PHASE31_RUNTIME_PATH_CHANNEL_NATIVE_HYBRID,
+        allow_fusion=True,
     )
 
 

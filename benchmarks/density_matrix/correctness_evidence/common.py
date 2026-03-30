@@ -32,6 +32,12 @@ CORRECTNESS_EVIDENCE_NEGATIVE_RECORD_SCHEMA_VERSION = "correctness_evidence_nega
 CORRECTNESS_PACKAGE_SCHEMA_VERSION = "correctness_evidence_package_v1"
 CORRECTNESS_EVIDENCE_SUMMARY_SCHEMA_VERSION = "correctness_evidence_summary_v1"
 
+# Stage-A bounded Phase 3.1 sibling package (fourth vertical slice); does not replace v2 defaults.
+CORRECTNESS_EVIDENCE_PHASE31_CASE_SCHEMA_VERSION = "correctness_evidence_phase31_case_record_v1"
+CORRECTNESS_EVIDENCE_PHASE31_PACKAGE_SCHEMA_VERSION = "correctness_evidence_phase31_package_v1"
+CORRECTNESS_EVIDENCE_PHASE31_SUMMARY_SCHEMA_VERSION = "correctness_evidence_phase31_summary_v1"
+PHASE31_CORRECTNESS_EVIDENCE_STAGE_A_ROOT = "phase31_stage_a"
+
 CORRECTNESS_EVIDENCE_VALIDATION_SLICE_INTERNAL_ONLY = "internal_only"
 CORRECTNESS_EVIDENCE_VALIDATION_SLICE_INTERNAL_PLUS_EXTERNAL = "internal_plus_external"
 CORRECTNESS_EVIDENCE_REFERENCE_BACKEND_INTERNAL = "sequential_density_descriptor_reference"
@@ -54,6 +60,11 @@ PLANNER_CALIBRATION_CLAIM_SELECTION_BUNDLE_PATH = (
 
 def correctness_evidence_output_dir(slice_dir_name: str) -> Path:
     return DEFAULT_OUTPUT_ROOT / slice_dir_name
+
+
+def phase31_correctness_evidence_output_dir(slice_dir_name: str) -> Path:
+    """Artifact subdirectory for Stage-A Phase 3.1 sibling bundles (isolated from default Phase 3)."""
+    return DEFAULT_OUTPUT_ROOT / PHASE31_CORRECTNESS_EVIDENCE_STAGE_A_ROOT / slice_dir_name
 
 
 @lru_cache(maxsize=1)

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections import Counter
 from copy import deepcopy
 from functools import lru_cache
 from typing import Any
@@ -11,6 +12,7 @@ from benchmarks.density_matrix.evidence_core import (
 from benchmarks.density_matrix.correctness_evidence.common import (
     CORRECTNESS_EVIDENCE_CASE_SCHEMA_VERSION,
     CORRECTNESS_EVIDENCE_NEGATIVE_RECORD_SCHEMA_VERSION,
+    CORRECTNESS_EVIDENCE_PHASE31_CASE_SCHEMA_VERSION,
     CORRECTNESS_EVIDENCE_REFERENCE_BACKEND_EXTERNAL,
     CORRECTNESS_EVIDENCE_REFERENCE_BACKEND_INTERNAL,
     CORRECTNESS_EVIDENCE_RUNTIME_CLASS_BASELINE,
@@ -18,9 +20,19 @@ from benchmarks.density_matrix.correctness_evidence.common import (
     build_validation_slice,
 )
 from benchmarks.density_matrix.correctness_evidence.case_selection import (
+    CORRECTNESS_EVIDENCE_CASE_KIND_CONTINUITY,
+    CORRECTNESS_EVIDENCE_CASE_KIND_MICROCASE,
+    _build_phase31_correctness_evidence_case_contexts_cached,
     build_correctness_evidence_case_contexts,
+    build_phase31_correctness_evidence_case_contexts,
 )
-from benchmarks.density_matrix.partitioned_runtime.common import execute_fused_with_reference
+from benchmarks.density_matrix.correctness_evidence.phase31_channel_invariants import (
+    build_strict_microcase_channel_invariants_slice,
+)
+from benchmarks.density_matrix.partitioned_runtime.common import (
+    build_density_comparison_metrics,
+    execute_fused_with_reference,
+)
 from benchmarks.density_matrix.planner_surface.unsupported_descriptor_validation import (
     SUITE_NAME as UNSUPPORTED_DESCRIPTOR_ORIGIN_SUITE_NAME,
     build_unsupported_descriptor_cases as build_descriptor_unsupported_cases,
@@ -40,6 +52,9 @@ from squander.partitioning.noisy_runtime import (
     PHASE3_FUSION_CLASS_DEFERRED,
     PHASE3_FUSION_CLASS_FUSED,
     PHASE3_FUSION_CLASS_SUPPORTED_UNFUSED,
+    execute_partitioned_density_channel_native,
+    execute_partitioned_density_channel_native_hybrid,
+    execute_sequential_density_reference,
 )
 
 
@@ -93,6 +108,56 @@ def _runtime_classification(runtime_result) -> str:
     return CORRECTNESS_EVIDENCE_RUNTIME_CLASS_BASELINE
 
 
+def _phase31_hybrid_partition_route_summary(runtime_result) -> dict[str, Any]:
+    classes = [rec.partition_runtime_class for rec in runtime_result.partitions]
+    reasons = [rec.partition_route_reason for rec in runtime_result.partitions]
+    return {
+        "partition_count": len(runtime_result.partitions),
+        "runtime_class_counts": dict(Counter(c for c in classes if c is not None)),
+        "route_reason_counts": dict(Counter(r for r in reasons if r is not None)),
+    }
+
+
+def _phase31_base_case_record(metadata: dict[str, Any], descriptor_set) -> dict[str, Any]:
+    selected_candidate = build_selected_candidate()
+    external_reference_required = bool(metadata["external_reference_required"])
+    return {
+        "record_schema_version": CORRECTNESS_EVIDENCE_PHASE31_CASE_SCHEMA_VERSION,
+        "candidate_schema_version": selected_candidate["candidate_schema_version"],
+        "claim_status": PLANNER_CALIBRATION_CLAIM_STATUS_SUPPORTED,
+        "case_name": metadata["case_name"],
+        "case_kind": metadata["case_kind"],
+        "candidate_id": metadata["candidate_id"],
+        "planner_family": metadata["planner_family"],
+        "planner_variant": metadata["planner_variant"],
+        "planner_settings": dict(metadata["planner_settings"]),
+        "max_partition_qubits": metadata["max_partition_qubits"],
+        "planner_calibration_selected_candidate_id": metadata["planner_calibration_selected_candidate_id"],
+        "planner_calibration_claim_selection_schema_version": metadata[
+            "planner_calibration_claim_selection_schema_version"
+        ],
+        "planner_calibration_claim_selection_rule": metadata["planner_calibration_claim_selection_rule"],
+        "requested_mode": descriptor_set.requested_mode,
+        "source_type": descriptor_set.source_type,
+        "workload_id": descriptor_set.workload_id,
+        "qbit_num": descriptor_set.qbit_num,
+        "parameter_count": descriptor_set.parameter_count,
+        "family_name": metadata["family_name"],
+        "noise_pattern": metadata["noise_pattern"],
+        "seed": metadata["seed"],
+        "topology": metadata["topology"],
+        "validation_slice": build_validation_slice(
+            external_reference_required=external_reference_required
+        ),
+        "external_reference_required": external_reference_required,
+        "reference_backend_internal": CORRECTNESS_EVIDENCE_REFERENCE_BACKEND_INTERNAL,
+        "reference_backend_external": (
+            CORRECTNESS_EVIDENCE_REFERENCE_BACKEND_EXTERNAL if external_reference_required else None
+        ),
+        "correctness_matrix_pass": True,
+    }
+
+
 def build_correctness_evidence_positive_record(case_context) -> dict[str, Any]:
     record = _base_case_record(case_context.metadata, case_context.descriptor_set)
 
@@ -133,6 +198,78 @@ def _build_correctness_evidence_positive_records_cached() -> tuple[dict[str, Any
 
 def build_correctness_evidence_positive_records() -> list[dict[str, Any]]:
     return deepcopy(list(_build_correctness_evidence_positive_records_cached()))
+
+
+def build_phase31_correctness_evidence_positive_record(case_context) -> dict[str, Any]:
+    """Positive record via strict (microcases) or hybrid (continuity) Phase 3.1 paths."""
+    record = _phase31_base_case_record(case_context.metadata, case_context.descriptor_set)
+    external_reference_required = bool(record["external_reference_required"])
+    case_kind = case_context.metadata["case_kind"]
+    if case_kind == CORRECTNESS_EVIDENCE_CASE_KIND_MICROCASE:
+        runtime_result = execute_partitioned_density_channel_native(
+            case_context.descriptor_set, case_context.parameters
+        )
+    elif case_kind == CORRECTNESS_EVIDENCE_CASE_KIND_CONTINUITY:
+        runtime_result = execute_partitioned_density_channel_native_hybrid(
+            case_context.descriptor_set, case_context.parameters
+        )
+    else:
+        raise ValueError("Phase 3.1 bounded package only supports microcase and continuity rows")
+
+    reference_density = execute_sequential_density_reference(
+        case_context.descriptor_set, case_context.parameters
+    )
+    density_metrics = build_density_comparison_metrics(
+        runtime_result.density_matrix, reference_density
+    )
+    runtime_payload = runtime_result.to_dict(include_density_matrix=False)
+    record.update(
+        build_runtime_correctness_bridge_fields(
+            case_context,
+            runtime_result,
+            reference_density,
+            density_metrics,
+            external_reference_required=external_reference_required,
+            runtime_payload=runtime_payload,
+        )
+    )
+    record.update(
+        {
+            "runtime_path_classification": _runtime_classification(runtime_result),
+            "partitions": runtime_payload["partitions"],
+            "fused_regions": runtime_payload["fused_regions"],
+            "exact_output": runtime_payload["exact_output"],
+            "runtime_class": runtime_payload["runtime_path"],
+            "claim_surface_id": case_context.metadata["claim_surface_id"],
+            "representation_primary": case_context.metadata["representation_primary"],
+            "fused_block_support_qbits": case_context.metadata.get("fused_block_support_qbits"),
+            "contains_noise": case_context.metadata["contains_noise"],
+            "counted_phase31_case": case_context.metadata["counted_phase31_case"],
+        }
+    )
+    if case_kind == CORRECTNESS_EVIDENCE_CASE_KIND_MICROCASE:
+        record["channel_invariants"] = build_strict_microcase_channel_invariants_slice(
+            case_context.descriptor_set, case_context.parameters
+        )
+        record["partition_route_summary"] = None
+    else:
+        record["channel_invariants"] = None
+        record["partition_route_summary"] = _phase31_hybrid_partition_route_summary(
+            runtime_result
+        )
+    return record
+
+
+@lru_cache(maxsize=1)
+def _build_phase31_correctness_evidence_positive_records_cached() -> tuple[dict[str, Any], ...]:
+    return tuple(
+        build_phase31_correctness_evidence_positive_record(ctx)
+        for ctx in _build_phase31_correctness_evidence_case_contexts_cached()
+    )
+
+
+def build_phase31_correctness_evidence_positive_records() -> list[dict[str, Any]]:
+    return deepcopy(list(_build_phase31_correctness_evidence_positive_records_cached()))
 
 
 def _normalize_negative_case(

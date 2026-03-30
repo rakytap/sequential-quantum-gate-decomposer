@@ -35,8 +35,9 @@ the new whole-workload **hybrid** interpretation.
   - `phase2_xxz_hea_q4_continuity`.
 - One representative **hybrid** structured pilot case from the frozen
   performance family inventory:
-  - recommended stable pilot ID:
-    `phase31_pair_repeat_q8_dense_seed20260318`.
+  - frozen pilot ID:
+    `phase31_pair_repeat_q8_periodic_seed20260318` (replaced from the dense row
+    so the pilot exercises mixed channel-native + Phase 3 routing).
 - Route-attribution and route-coverage metadata sufficient to support later
   `partition_route_summary` and performance route summaries.
 - Existing **strict** path remains unchanged as the motif-proof regression
@@ -62,7 +63,7 @@ the new whole-workload **hybrid** interpretation.
 `phase2_xxz_hea_q4_continuity`
 
 **Representative hybrid structured pilot**
-`phase31_pair_repeat_q8_dense_seed20260318`
+`phase31_pair_repeat_q8_periodic_seed20260318`
 
 If implementation order forces a different structured pilot row, record the
 replacement ID here and preserve the same intent: one case from the frozen
@@ -124,6 +125,8 @@ and the baseline trio.
 
 ##### Engineering Task P31-S07-E01: Add explicit hybrid runtime entrypoint and partition-route policy
 
+**Implementation plan:** [`ENGINEERING_TASK_P31_S07_E01_IMPLEMENTATION_PLAN.md`](task-2/ENGINEERING_TASK_P31_S07_E01_IMPLEMENTATION_PLAN.md)
+
 **Implements story**
 
 - Story P31-S07
@@ -143,9 +146,9 @@ and the baseline trio.
 
 **Execution checklist**
 
-- [ ] Add hybrid runtime identity without reopening `requested_mode`.
-- [ ] Freeze and emit partition-route reasons under the `P31-ADR-012` contract.
-- [ ] Keep strict `phase31_channel_native` behavior unchanged.
+- [x] Add hybrid runtime identity without reopening `requested_mode`.
+- [x] Freeze and emit partition-route reasons under the `P31-ADR-012` contract.
+- [x] Keep strict `phase31_channel_native` behavior unchanged.
 
 **Evidence produced**
 
@@ -207,6 +210,8 @@ and the baseline trio.
 
 ##### Engineering Task P31-S08-E01: Add the counted q4 hybrid continuity correctness gate
 
+**Implementation plan:** [`ENGINEERING_TASK_P31_S08_E01_IMPLEMENTATION_PLAN.md`](task-3/ENGINEERING_TASK_P31_S08_E01_IMPLEMENTATION_PLAN.md)
+
 **Implements story**
 
 - Story P31-S08
@@ -224,10 +229,10 @@ and the baseline trio.
 
 **Execution checklist**
 
-- [ ] Add one end-to-end hybrid correctness module or section for
+- [x] Add one end-to-end hybrid correctness module or section for
       `phase2_xxz_hea_q4_continuity`.
-- [ ] Assert full-density exactness and route-summary stability.
-- [ ] Record what remains deferred after this gate.
+- [x] Assert full-density exactness and route-summary stability.
+- [x] Record what remains deferred after this gate.
 
 **Evidence produced**
 
@@ -270,8 +275,8 @@ and the baseline trio.
 
 **Acceptance signals**
 
-- `phase31_pair_repeat_q8_dense_seed20260318` (or a documented replacement
-  frozen ID) runs through the hybrid path.
+- `phase31_pair_repeat_q8_periodic_seed20260318` (or a documented replacement
+  frozen ID) runs through the hybrid path with nonzero channel-native coverage.
 - The pilot row records:
   - sequential baseline,
   - Phase 3 fused baseline,
@@ -293,6 +298,8 @@ and the baseline trio.
 
 ##### Engineering Task P31-S09-E01: Add one representative hybrid structured benchmark pilot
 
+**Implementation plan:** [`ENGINEERING_TASK_P31_S09_E01_IMPLEMENTATION_PLAN.md`](task-4/ENGINEERING_TASK_P31_S09_E01_IMPLEMENTATION_PLAN.md)
+
 **Implements story**
 
 - Story P31-S09
@@ -309,11 +316,11 @@ and the baseline trio.
 
 **Execution checklist**
 
-- [ ] Freeze the pilot case ID (recommended:
-      `phase31_pair_repeat_q8_dense_seed20260318`) or document the replacement.
-- [ ] Record timings for sequential, Phase 3 fused, and hybrid Phase 3.1.
-- [ ] Emit route-coverage counters and one diagnosis tag.
-- [ ] Document the remaining full Task 4 matrix work.
+- [x] Freeze the pilot case ID (frozen:
+      `phase31_pair_repeat_q8_periodic_seed20260318`) or document the replacement.
+- [x] Record timings for sequential, Phase 3 fused, and hybrid Phase 3.1.
+- [x] Emit route-coverage counters and one diagnosis tag.
+- [x] Document the remaining full Task 4 matrix work.
 
 **Evidence produced**
 
@@ -353,12 +360,16 @@ Parallelism:
 
 ## Slice implementation status
 
-Update this section when the third-slice engineering tasks land.
+In-scope third vertical slice (Stories P31-S07–S09) is **complete** in code and
+tests. Full Task 3 / Task 4 closure items in the table below remain explicitly
+out of scope for this slice.
 
 | Field | Value |
 |-------|-------|
 | Hybrid continuity anchor | `phase2_xxz_hea_q4_continuity` |
-| Hybrid structured pilot | `phase31_pair_repeat_q8_dense_seed20260318` (recommended) |
-| Third vertical slice implementation | **Planned** |
+| Hybrid structured pilot | `phase31_pair_repeat_q8_periodic_seed20260318` (frozen) |
+| Third vertical slice implementation (in-scope) | **Complete** |
+| Primary hybrid correctness + routing evidence | `tests/partitioning/test_partitioned_channel_native_phase31_hybrid_slice.py` |
+| Primary hybrid pilot evidence | `tests/partitioning/evidence/test_phase31_hybrid_pilot_validation.py`; CLI `benchmarks/density_matrix/performance_evidence/phase31_hybrid_pilot_validation.py` |
 | Deferred Task 3 work after this slice | `phase2_xxz_hea_q6_continuity`, full Aer slice, full `correctness_evidence` migration |
 | Deferred Task 4 work after this slice | remaining counted structured rows, control-family closure, full `break_even_table` / `justification_map` |

@@ -16,18 +16,20 @@ fused-region audit fields, and density vs. sequential reference.
 and non-channel-native gates on surfaces built with
 ``strict_phase3_support=False``.
 
-**Public correctness gate (``P31-S06-E01``):** minimal Task 3 slice closure:
-counted ``phase31_microcase_2q_cnot_local_noise_pair`` and non-counted
-``phase31_local_support_q4_spectator_embedding_smoke`` vs. sequential oracle with
-Frobenius/max-abs, ``trace_deviation``, ``rho_is_valid``; explicit Kraus bundle
-invariant check on the counted fused 2q block.
+**Public correctness gates:** counted 2q closure includes ``P31-S06-E01``
+(``phase31_microcase_2q_cnot_local_noise_pair``) and ``P31-S10-E01`` (remaining
+strict counted microcases below) vs. sequential oracle with Frobenius/max-abs,
+``trace_deviation``, ``rho_is_valid``; Kraus bundle invariant checks on fused 2q
+blocks. Non-counted ``phase31_local_support_q4_spectator_embedding_smoke`` remains
+a larger-workload smoke.
 
-**Not claimed here (deferred):** remaining counted IDs from ``P31-ADR-009``
-(``phase31_microcase_2q_multi_noise_entangler_chain``,
-``phase31_microcase_2q_dense_same_support_motif``, ``phase2_xxz_hea_q4_continuity``,
-``phase2_xxz_hea_q6_continuity``, counted performance cases per ``P31-ADR-010``);
-Aer external slice per ``P31-ADR-011``; ``correctness_evidence`` /
-``channel_invariants`` packaging per ``P31-ADR-013``; Task 4 performance evidence.
+**Hybrid continuity** (``phase2_xxz_hea_q4_continuity``, ``phase2_xxz_hea_q6_continuity``)
+lives in ``test_partitioned_channel_native_phase31_hybrid_slice.py``.
+
+**Still deferred:** Qiskit Aer on the frozen external slice (``P31-ADR-011``);
+versioned ``correctness_evidence`` / ``channel_invariants`` / route-summary
+packaging (``P31-S10-E02``, ``P31-ADR-013``); counted structured performance cases
+(``P31-ADR-010``); Task 4 performance matrix.
 
 The first-slice file ``test_partitioned_channel_native_phase31_slice.py`` remains
 the unchanged 1q public regression anchor.
@@ -620,6 +622,181 @@ def test_phase31_channel_native_public_4q_smoke_matches_sequential():
 def test_phase31_s06_e01_counted_2q_fused_kraus_bundle_satisfies_invariants():
     ds = build_phase31_microcase_descriptor_set(
         "phase31_microcase_2q_cnot_local_noise_pair"
+    )
+    partition = _find_partition_with_span(ds)
+    params = build_initial_parameters(ds.parameter_count)
+    local_vec = _build_partition_parameter_vector(
+        ds,
+        partition,
+        params,
+        runtime_path=PHASE31_RUNTIME_PATH_CHANNEL_NATIVE,
+    )
+    seg = _segment_parameter_vector(
+        ds,
+        partition.members,
+        local_vec,
+        runtime_path=PHASE31_RUNTIME_PATH_CHANNEL_NATIVE,
+    )
+    local_support = tuple(range(len(partition.local_to_global_qbits)))
+    steps = [
+        _member_to_kraus_bundle(
+            ds,
+            m,
+            seg,
+            local_support=local_support,
+            runtime_path=PHASE31_RUNTIME_PATH_CHANNEL_NATIVE,
+        )
+        for m in partition.members
+    ]
+    acc = _compose_kraus_step_sequence(
+        steps,
+        descriptor_set=ds,
+        support_qubit_count=len(local_support),
+        runtime_path=PHASE31_RUNTIME_PATH_CHANNEL_NATIVE,
+    )
+    _check_kraus_bundle_invariants(
+        acc,
+        descriptor_set=ds,
+        runtime_path=PHASE31_RUNTIME_PATH_CHANNEL_NATIVE,
+    )
+
+
+# --- P31-S10-E01: remaining counted strict microcases (fourth vertical slice) ---
+
+
+def _assert_multi_noise_entangler_motif_fused_region(fr):
+    assert fr.candidate_kind == PHASE31_FUSION_KIND_CHANNEL_NATIVE_MOTIF
+    assert fr.global_target_qbits == (0, 1)
+    assert fr.local_target_qbits == (0, 1)
+    assert fr.operation_names == (
+        "U3",
+        "U3",
+        "CNOT",
+        "local_depolarizing",
+        "U3",
+        "CNOT",
+        "amplitude_damping",
+        "U3",
+        "phase_damping",
+    )
+
+
+def _assert_dense_same_support_motif_fused_region(fr):
+    assert fr.candidate_kind == PHASE31_FUSION_KIND_CHANNEL_NATIVE_MOTIF
+    assert fr.global_target_qbits == (0, 1)
+    assert fr.local_target_qbits == (0, 1)
+    assert fr.operation_names == (
+        "U3",
+        "U3",
+        "CNOT",
+        "local_depolarizing",
+        "CNOT",
+        "amplitude_damping",
+        "U3",
+        "U3",
+        "phase_damping",
+    )
+
+
+def test_phase31_s10_e01_counted_2q_multi_noise_entangler_chain_matches_sequential():
+    ds = build_phase31_microcase_descriptor_set(
+        "phase31_microcase_2q_multi_noise_entangler_chain"
+    )
+    assert ds.workload_id == "phase31_microcase_2q_multi_noise_entangler_chain"
+    parameters = build_initial_parameters(ds.parameter_count)
+    reference = execute_sequential_density_reference(ds, parameters)
+    result = execute_partitioned_density_channel_native(ds, parameters)
+
+    assert result.runtime_path == PHASE31_RUNTIME_PATH_CHANNEL_NATIVE
+    assert result.requested_runtime_path == PHASE31_RUNTIME_PATH_CHANNEL_NATIVE
+    assert result.fused_region_count >= 1
+    motifs = [
+        fr
+        for fr in result.fused_regions
+        if fr.candidate_kind == PHASE31_FUSION_KIND_CHANNEL_NATIVE_MOTIF
+    ]
+    assert len(motifs) >= 1
+    _assert_multi_noise_entangler_motif_fused_region(motifs[0])
+
+    metrics = build_density_comparison_metrics(result.density_matrix, reference)
+    assert metrics["frobenius_norm_diff"] <= PHASE3_RUNTIME_DENSITY_TOL
+    assert metrics["max_abs_diff"] <= PHASE3_RUNTIME_DENSITY_TOL
+    assert result.trace_deviation <= PHASE3_RUNTIME_DENSITY_TOL
+    assert result.rho_is_valid is True
+
+
+def test_phase31_s10_e01_counted_2q_dense_same_support_motif_matches_sequential():
+    ds = build_phase31_microcase_descriptor_set(
+        "phase31_microcase_2q_dense_same_support_motif"
+    )
+    assert ds.workload_id == "phase31_microcase_2q_dense_same_support_motif"
+    parameters = build_initial_parameters(ds.parameter_count)
+    reference = execute_sequential_density_reference(ds, parameters)
+    result = execute_partitioned_density_channel_native(ds, parameters)
+
+    assert result.runtime_path == PHASE31_RUNTIME_PATH_CHANNEL_NATIVE
+    assert result.requested_runtime_path == PHASE31_RUNTIME_PATH_CHANNEL_NATIVE
+    assert result.fused_region_count >= 1
+    motifs = [
+        fr
+        for fr in result.fused_regions
+        if fr.candidate_kind == PHASE31_FUSION_KIND_CHANNEL_NATIVE_MOTIF
+    ]
+    assert len(motifs) >= 1
+    _assert_dense_same_support_motif_fused_region(motifs[0])
+
+    metrics = build_density_comparison_metrics(result.density_matrix, reference)
+    assert metrics["frobenius_norm_diff"] <= PHASE3_RUNTIME_DENSITY_TOL
+    assert metrics["max_abs_diff"] <= PHASE3_RUNTIME_DENSITY_TOL
+    assert result.trace_deviation <= PHASE3_RUNTIME_DENSITY_TOL
+    assert result.rho_is_valid is True
+
+
+def test_phase31_s10_e01_multi_noise_entangler_fused_kraus_bundle_satisfies_invariants():
+    ds = build_phase31_microcase_descriptor_set(
+        "phase31_microcase_2q_multi_noise_entangler_chain"
+    )
+    partition = _find_partition_with_span(ds)
+    params = build_initial_parameters(ds.parameter_count)
+    local_vec = _build_partition_parameter_vector(
+        ds,
+        partition,
+        params,
+        runtime_path=PHASE31_RUNTIME_PATH_CHANNEL_NATIVE,
+    )
+    seg = _segment_parameter_vector(
+        ds,
+        partition.members,
+        local_vec,
+        runtime_path=PHASE31_RUNTIME_PATH_CHANNEL_NATIVE,
+    )
+    local_support = tuple(range(len(partition.local_to_global_qbits)))
+    steps = [
+        _member_to_kraus_bundle(
+            ds,
+            m,
+            seg,
+            local_support=local_support,
+            runtime_path=PHASE31_RUNTIME_PATH_CHANNEL_NATIVE,
+        )
+        for m in partition.members
+    ]
+    acc = _compose_kraus_step_sequence(
+        steps,
+        descriptor_set=ds,
+        support_qubit_count=len(local_support),
+        runtime_path=PHASE31_RUNTIME_PATH_CHANNEL_NATIVE,
+    )
+    _check_kraus_bundle_invariants(
+        acc,
+        descriptor_set=ds,
+        runtime_path=PHASE31_RUNTIME_PATH_CHANNEL_NATIVE,
+    )
+
+
+def test_phase31_s10_e01_dense_same_support_motif_fused_kraus_bundle_satisfies_invariants():
+    ds = build_phase31_microcase_descriptor_set(
+        "phase31_microcase_2q_dense_same_support_motif"
     )
     partition = _find_partition_with_span(ds)
     params = build_initial_parameters(ds.parameter_count)

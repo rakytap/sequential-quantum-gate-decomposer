@@ -19,6 +19,7 @@ from benchmarks.density_matrix.performance_evidence.common import (
 from benchmarks.density_matrix.partitioned_runtime.common import build_initial_parameters
 from benchmarks.density_matrix.planner_surface.common import build_phase2_continuity_vqe
 from benchmarks.density_matrix.planner_surface.workloads import (
+    DEFAULT_STRUCTURED_SEED,
     MANDATORY_NOISE_PATTERNS,
     PHASE31_CONTROL_NOISE_PATTERNS,
     PHASE31_CONTROL_STRUCTURED_FAMILY_NAMES,
@@ -39,6 +40,11 @@ PERFORMANCE_EVIDENCE_CASE_KIND_CONTINUITY = "continuity"
 PERFORMANCE_EVIDENCE_CASE_KIND_STRUCTURED = "structured_family"
 PERFORMANCE_EVIDENCE_CONTINUITY_QUBITS = (4, 6, 8, 10)
 PERFORMANCE_EVIDENCE_EXTERNAL_REFERENCE_CONTINUITY_QUBITS = (4,)
+
+# Frozen Phase 3.1 hybrid performance pilot (P31-S09-E01); do not rename without updating docs/tests.
+# Replaced dense with periodic so the pilot exercises mixed hybrid routing (nonzero channel-native partitions).
+PHASE31_HYBRID_PILOT_WORKLOAD_ID = "phase31_pair_repeat_q8_periodic_seed20260318"
+BENCHMARK_SLICE_PHASE31_HYBRID_PILOT = "phase31_hybrid_pilot"
 
 
 @dataclass(frozen=True)
@@ -424,6 +430,55 @@ def iter_phase31_performance_cases():
                     descriptor_set=descriptor_set,
                     parameters=build_initial_parameters(descriptor_set.parameter_count),
                 )
+
+
+def build_phase31_hybrid_pilot_case_context() -> PerformanceEvidenceCaseContext:
+    """Single frozen structured workload for the Phase 3.1 hybrid performance pilot row."""
+    max_partition_qubits = _selected_partition_qubits()
+    family_name = "phase31_pair_repeat"
+    qbit_num = 8
+    noise_pattern = "periodic"
+    seed = PERFORMANCE_EVIDENCE_PRIMARY_STRUCTURED_SEED
+    start = perf_counter()
+    descriptor_set = build_phase31_structured_descriptor_set(
+        family_name,
+        qbit_num=qbit_num,
+        noise_pattern=noise_pattern,
+        seed=seed,
+        max_partition_qubits=max_partition_qubits,
+    )
+    planning_time_ms = (perf_counter() - start) * 1000.0
+    if descriptor_set.workload_id != PHASE31_HYBRID_PILOT_WORKLOAD_ID:
+        raise RuntimeError(
+            "Phase 3.1 hybrid pilot workload_id mismatch: expected {!r}, got {!r}".format(
+                PHASE31_HYBRID_PILOT_WORKLOAD_ID,
+                descriptor_set.workload_id,
+            )
+        )
+    metadata = _base_metadata_from_descriptor(
+        descriptor_set,
+        case_kind=PERFORMANCE_EVIDENCE_CASE_KIND_STRUCTURED,
+        benchmark_slice=BENCHMARK_SLICE_PHASE31_HYBRID_PILOT,
+        planning_time_ms=planning_time_ms,
+        representative_review_case=True,
+        family_name=family_name,
+        noise_pattern=noise_pattern,
+        seed=seed,
+    )
+    metadata.update(
+        {
+            "claim_surface_id": "phase31_bounded_mixed_motif_v1",
+            "representation_primary": "kraus_bundle",
+            "contains_noise": True,
+            "counted_phase31_case": True,
+            "phase31_hybrid_pilot_case": True,
+        }
+    )
+    return PerformanceEvidenceCaseContext(
+        metadata=metadata,
+        descriptor_set=descriptor_set,
+        parameters=build_initial_parameters(descriptor_set.parameter_count),
+    )
 
 
 @lru_cache(maxsize=1)

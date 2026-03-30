@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Literal
+
 import numpy as np
 
 from squander.density_matrix import DensityMatrix
@@ -452,12 +454,90 @@ def _apply_kraus_bundle(
     return DensityMatrix.from_numpy(out)
 
 
+_CHANNEL_NATIVE_SLICE_ALLOWED_OPS = frozenset(
+    {"U3", "CNOT", "local_depolarizing", "amplitude_damping", "phase_damping"}
+)
+
+
+def _scan_channel_native_whole_partition_motif(
+    descriptor_set: NoisyPartitionDescriptorSet,
+    partition: NoisyPartitionDescriptor,
+) -> tuple[Literal["eligible"], tuple[int, ...]] | tuple[Literal["route"], str]:
+    """Return eligible local support, or a frozen hybrid route reason (no exceptions)."""
+    members = partition.members
+    if not members:
+        return ("route", "channel_native_support_surface")
+    noise_seen = False
+    local_support: set[int] = set()
+    for member in members:
+        op = descriptor_set.canonical_operation_for(member)
+        if op.name not in _CHANNEL_NATIVE_SLICE_ALLOWED_OPS:
+            return ("route", "channel_native_support_surface")
+        if op.kind == PLANNER_OP_KIND_NOISE:
+            noise_seen = True
+        elif op.kind != PLANNER_OP_KIND_GATE:
+            return ("route", "channel_native_support_surface")
+        local_support.update(member.local_qubit_support)
+    if not noise_seen:
+        return ("route", "pure_unitary_partition")
+    if len(local_support) > 2:
+        return ("route", "channel_native_qubit_span")
+    for member in members:
+        for lb in member.local_qubit_support:
+            if lb not in local_support:
+                return ("route", "channel_native_support_surface")
+    return ("eligible", tuple(sorted(local_support)))
+
+
+def classify_partition_channel_native_route(
+    descriptor_set: NoisyPartitionDescriptorSet,
+    partition: NoisyPartitionDescriptor,
+    *,
+    runtime_path: str,
+) -> tuple[bool, tuple[int, ...] | None, str]:
+    """Preflight classification for hybrid routing (strict execution unchanged).
+
+    Returns ``(eligible, local_support_or_none, route_reason)``. When ``eligible``
+    is True, ``route_reason`` is ``eligible_channel_native_motif`` and
+    ``local_support`` is the motif support. When ``eligible`` is False, the
+    partition should be executed via the shipped Phase 3 path with
+    ``partition_route_reason`` set to the returned frozen reason string.
+    """
+    del runtime_path  # reserved for future diagnostics parity with strict path
+    scan = _scan_channel_native_whole_partition_motif(descriptor_set, partition)
+    if scan[0] == "eligible":
+        return (True, scan[1], "eligible_channel_native_motif")
+    return (False, None, scan[1])
+
+
 def _validate_whole_partition_motif(
     descriptor_set: NoisyPartitionDescriptorSet,
     partition: NoisyPartitionDescriptor,
     *,
     runtime_path: str,
 ) -> tuple[int, ...]:
+    scan = _scan_channel_native_whole_partition_motif(descriptor_set, partition)
+    if scan[0] == "eligible":
+        return scan[1]
+    route_reason = scan[1]
+    if route_reason == "pure_unitary_partition":
+        raise runtime_validation_error(
+            descriptor_set,
+            category="unsupported_runtime_operation",
+            first_unsupported_condition="channel_native_noise_presence",
+            failure_stage="runtime_preflight",
+            runtime_path=runtime_path,
+            reason="Channel-native counted motif requires at least one noise operation",
+        )
+    if route_reason == "channel_native_qubit_span":
+        raise runtime_validation_error(
+            descriptor_set,
+            category="unsupported_runtime_operation",
+            first_unsupported_condition="channel_native_qubit_span",
+            failure_stage="runtime_preflight",
+            runtime_path=runtime_path,
+            reason="Channel-native slice supports at most two local qubits in the motif",
+        )
     members = partition.members
     if not members:
         raise runtime_validation_error(
@@ -468,11 +548,7 @@ def _validate_whole_partition_motif(
             runtime_path=runtime_path,
             reason="Channel-native slice requires non-empty partition members",
         )
-    allowed = frozenset(
-        {"U3", "CNOT", "local_depolarizing", "amplitude_damping", "phase_damping"}
-    )
-    noise_seen = False
-    local_support: set[int] = set()
+    allowed = _CHANNEL_NATIVE_SLICE_ALLOWED_OPS
     for member in members:
         op = descriptor_set.canonical_operation_for(member)
         if op.name not in allowed:
@@ -486,9 +562,7 @@ def _validate_whole_partition_motif(
                     op.name
                 ),
             )
-        if op.kind == PLANNER_OP_KIND_NOISE:
-            noise_seen = True
-        elif op.kind != PLANNER_OP_KIND_GATE:
+        if op.kind != PLANNER_OP_KIND_GATE and op.kind != PLANNER_OP_KIND_NOISE:
             raise runtime_validation_error(
                 descriptor_set,
                 category="unsupported_runtime_operation",
@@ -497,37 +571,14 @@ def _validate_whole_partition_motif(
                 runtime_path=runtime_path,
                 reason="Channel-native slice expected gate or noise kind",
             )
-        local_support.update(member.local_qubit_support)
-    if not noise_seen:
-        raise runtime_validation_error(
-            descriptor_set,
-            category="unsupported_runtime_operation",
-            first_unsupported_condition="channel_native_noise_presence",
-            failure_stage="runtime_preflight",
-            runtime_path=runtime_path,
-            reason="Channel-native counted motif requires at least one noise operation",
-        )
-    if len(local_support) > 2:
-        raise runtime_validation_error(
-            descriptor_set,
-            category="unsupported_runtime_operation",
-            first_unsupported_condition="channel_native_qubit_span",
-            failure_stage="runtime_preflight",
-            runtime_path=runtime_path,
-            reason="Channel-native slice supports at most two local qubits in the motif",
-        )
-    for member in members:
-        for lb in member.local_qubit_support:
-            if lb not in local_support:
-                raise runtime_validation_error(
-                    descriptor_set,
-                    category="unsupported_runtime_operation",
-                    first_unsupported_condition="channel_native_support_surface",
-                    failure_stage="runtime_preflight",
-                    runtime_path=runtime_path,
-                    reason="Member local qubit not contained in motif support",
-                )
-    return tuple(sorted(local_support))
+    raise runtime_validation_error(
+        descriptor_set,
+        category="unsupported_runtime_operation",
+        first_unsupported_condition="channel_native_support_surface",
+        failure_stage="runtime_preflight",
+        runtime_path=runtime_path,
+        reason="Member local qubit not contained in motif support",
+    )
 
 
 def _local_qbit_to_kernel_index(local_support: tuple[int, ...]) -> dict[int, int]:
