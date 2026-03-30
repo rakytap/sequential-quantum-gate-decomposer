@@ -212,6 +212,26 @@ genuinely different purposes:
 Do **not** create a third `SHORT_PAPER_4PAGE.md`. The two surfaces above replace
 the earlier three-paper pattern (consolidated from phases 2-3 onward).
 
+### Publication Sync After Implementation
+
+Before revising `ABSTRACT_PHASE_X.md`, `SHORT_PAPER_PHASE_X.md`,
+`SHORT_PAPER_NARRATIVE.md`, or `PAPER_PHASE_X.md` after implementation work has
+started:
+
+1. Verify the current state from code, tests, and emitted artifacts, not only
+   from planning documents.
+2. Classify publication statements as:
+   - implemented and validated,
+   - implemented but only partially validated,
+   - scaffolded/planned only.
+3. Keep the technical short paper and full paper aligned to the current evidence
+   boundary.
+4. Keep `SHORT_PAPER_NARRATIVE.md` science-first unless the user explicitly asks
+   for a software/systems-paper framing:
+   - avoid repo file-path inventory,
+   - avoid internal task IDs and roadmap phrasing,
+   - avoid API-level detail that does not matter to the scientific audience.
+
 ### Step 1: Create Initial Phase Documents
 
 Work out a detailed plan per `docs/density_matrix_project/planning/PLANNING.md` and all docs in `docs/density_matrix_project/planning/`, plus findings. Write into `DETAILED_PLANNING_PHASE_X.md`. Do not change code. Apply spec-driven development principles. Prepare publication outputs per `docs/density_matrix_project/planning/PUBLICATIONS.md` in 4 steps: (1) technical short paper in `SHORT_PAPER_PHASE_X.md`, (2) narrative positioning short paper in `SHORT_PAPER_NARRATIVE.md`, (3) abstract in `ABSTRACT_PHASE_X.md` for PhD conference presentation, (4) full paper in `PAPER_PHASE_X.md`. Put all phase documents in `docs/density_matrix_project/phases/phase-X/`. Break down implementation into tasks and acceptance criteria. Tasks are goals, not implementations. No code snippets in phase docs except API-reference ones after implementation. Document all phase decisions in `ADRs_PHASE_X.md`.

@@ -66,9 +66,11 @@ following as possible:
   manuscript tightening, figure selection, and reviewer-facing positioning
   around bounded planner calibration and diagnosis-grounded performance
   closure.
-- Phase 3.1 is in **planning documentation** only: spec-driven contracts and
-  paper skeletons live in `docs/density_matrix_project/phases/phase-3-1/`;
-  venue-ready packaging follows implementation and evidence.
+- Phase 3.1 now has **implementation-backed bounded slices**: exact
+  channel-native fusion is present for the delivered 1-qubit and bounded
+  2-qubit local-support slices, together with workload and evidence scaffolding
+  for the broader counted surface. Venue-ready packaging still depends on the
+  remaining correctness, external-reference, and performance evidence.
 
 ## Recommended Publication Ladder
 

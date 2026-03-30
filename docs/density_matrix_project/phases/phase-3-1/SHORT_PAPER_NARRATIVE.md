@@ -1,65 +1,148 @@
-# Beyond Unitary Islands: Why Channel-Native Fusion Matters for Exact Noisy Simulation
+# Beyond Unitary Fusion in Exact Noisy Quantum Simulation
 
 ## Draft Status
 
-Planning-phase narrative companion to `SHORT_PAPER_PHASE_3_1.md`. It now follows
-the same bounded **positive-methods-first** contract: Phase 3.1 is the attempt
-to show that exact noisy fusion can do more than unitary islands on a narrow,
-scientifically chosen slice. Wording will still tighten against delivered
-evidence after implementation.
+Science-first narrative companion grounded in the current implementation-backed
+results. This draft intentionally avoids codebase-specific API details and
+project-roadmap framing.
 
 ## Abstract
 
-Researchers often treat noise as something that happens *between* unitary
-chunks of a quantum circuit. Phase 3 showed that SQUANDER can do better than
-that at the planning level: noise is a first-class object in the partitioned
-runtime contract, even though the shipped fused primitive is still a unitary
-island. Phase 3.1 is the next, more ambitious step. It targets **exact
-channel-native fusion of bounded 1- and 2-qubit mixed gate+noise motifs** so
-that dense same-support noisy regions can be executed as single CPTP blocks
-rather than repeatedly broken apart at noise boundaries.
-
-That matters scientifically because the project is no longer asking only
-whether noise-aware partitioning is possible. It is asking whether a stronger,
-still exact fused object can beat the already delivered Phase 3 fused baseline
-on the kind of noise-dense local motifs that are most likely to matter in
-training-relevant workloads. The expected paper story is therefore a bounded
-positive methods result first, with an honest fallback to a negative or mixed
-diagnosis if the benchmark slice does not justify the added complexity.
+Partitioning and gate fusion are standard tools in unitary quantum simulation,
+while open-system theory provides the language of Kraus maps, Choi matrices,
+and superoperators for noisy evolution. What remains underdeveloped is the
+bridge between these two traditions: how to treat a small noisy region of a
+circuit as an exact reusable object without losing the ordered semantics of
+open-system evolution. The present study provides a bounded answer. It shows
+that same-support 1- and 2-qubit noisy motifs can be composed as exact CPTP
+objects and validated against sequential density-matrix evolution, rather than
+being treated only as barriers between unitary islands. The current result is
+not yet a broad speedup claim. Its scientific value is methodological: it
+identifies a reusable path toward exact noisy acceleration based on bounded
+channel composition, invariant-aware validation, local-support embedding, and
+explicit unsupported boundaries.
 
 ## Publication Surface Role
 
-Narrative positioning for a PhD-conference or general technical audience within
-the Phase 3.1 package. Answers “why this phase matters in the research arc”
-alongside the technical short paper.
+Scientific narrative short paper for a quantum-computing or quantum-machine-
+learning audience. Its purpose is to explain why the current bounded result
+matters, where it fits in the literature, and what reusable insight it offers.
 
-## Research Arc Position
+## 1. Why This Problem Matters
 
-- Phase 2: exact noisy workflows are real in SQUANDER.
-- Phase 3: partitioning and fusion respect noisy semantics; limited fusion ships.
-- Phase 3.1: asks whether **bounded exact fusion of mixed noisy motifs** is the
-  right next lever for performance beyond unitary islands, with benchmark
-  discipline against the shipped Phase 3 fused baseline.
-- Phase 4: returns to training-facing features once backend questions are
-  settled.
+Exact noisy simulation matters because realistic local noise can qualitatively
+change the behavior of variational algorithms. For questions about trainability,
+loss landscapes, or optimizer robustness, a state-vector-only picture is often
+not enough. Density-matrix simulation provides the cleanest exact reference, but
+it is computationally expensive and therefore forces careful choices about what
+kind of structure can be reused safely.
 
-## What Success Looks Like (Narratively)
+This tension creates a natural scientific target: identify classes of noisy
+structure that can be fused exactly, so that noisy simulation becomes more
+structured than "unitaries plus interruptions" without sacrificing physical
+correctness.
 
-Success is first a **bounded positive answer**: at least one representative
-motif-dense case shows a real benefit beyond the Phase 3 fused baseline while
-preserving exactness. More broadly, success is a reviewable explanation of
-where that richer fused object is justified and where it is not, backed by
-exact checks and comparative benchmarks against both sequential simulation and
-the Phase 3 fused baseline.
+## 2. Where the Literature Is Split
 
-## Non-Goals (Audience Clarity)
+The current literature offers strong ingredients, but not yet a full answer.
 
-Phase 3.1 is not the thesis trainability paper, not the optimizer paper, and
-not the approximate scaling paper. It is also not a broad gate-coverage or
-correlated-noise paper. Those remain later milestones.
+Graph-based partitioning and gate-fusion papers such as TDAG, GTQCP, QGo, and
+QMin show how much can be gained when circuits are treated as structured
+dependency objects. However, these methods are typically developed for unitary
+or state-vector simulation.
+
+Open-system and density-matrix literature, by contrast, gives the mathematical
+language needed for exact noisy evolution. Nielsen and Chuang formalize quantum
+channels and CPTP structure; Wood, Biamonte, and Cory make explicit the
+relations among Kraus, Choi, and Liouville forms; Li et al., QuEST, and Qulacs
+show that exact mixed-state simulation is a serious high-performance computing
+problem in its own right.
+
+What is still relatively unexplored is the exact noisy middle ground: bounded
+fusion of mixed gate-noise motifs inside a partitioned execution flow.
+
+## 3. Current Scientific Result
+
+The current result is intentionally narrow but already meaningful.
+
+It shows that a small same-support noisy motif can be promoted to a first-class
+exact object: a bounded CPTP block composed in operation order and validated
+against sequential density-matrix evolution. In the present bounded slice, this
+has been demonstrated for 1-qubit and 2-qubit motifs and for local-support
+application inside a larger density state.
+
+Scientifically, this matters because it changes the role of noise in the
+simulation narrative. Noise is no longer treated only as a point where fusion
+must stop. Instead, some noisy motifs can themselves become the fused object,
+provided the representation, ordering, and invariant checks are all exact.
+
+This is a result about **feasibility and methodology**, not yet about universal
+performance. That distinction is important and should remain explicit.
+
+## 4. Reusable Working Principles
+
+The current bounded study suggests four reusable principles for future exact
+noisy acceleration work.
+
+- Start from the **ordered noisy semantics**, not from the representation alone.
+  A fused object is only meaningful if it preserves the exact order of gates and
+  channels.
+- Choose one **primary exact representation** for the counted claim. Here the
+  useful lesson is not that Kraus form is universally best, but that one primary
+  representation should anchor the scientific claim.
+- Require **physical invariant checks** before making performance claims.
+  Trace-preservation and positivity are not optional bookkeeping; they are part
+  of the evidence that the fused object remains a valid channel.
+- Enforce **no silent fallback**. If a method advertises noisy fusion, then
+  unsupported cases must remain visible. Otherwise benchmarks become difficult
+  to interpret scientifically.
+
+These principles are potentially reusable beyond the present bounded support
+surface.
+
+## 5. What Remains Hard
+
+Several hard questions remain open.
+
+First, mathematical feasibility and performance usefulness are not the same.
+Showing that a noisy motif can be fused exactly does not yet show that the
+resulting method improves runtime or memory on the workloads that matter most.
+
+Second, exact noisy acceleration remains scale-limited by dense mixed-state
+representation itself. Even a successful bounded fusion method operates inside a
+regime where memory and data movement remain fundamental constraints.
+
+Third, broader noisy structure is still unresolved: correlated noise, larger
+supports, and more heterogeneous motif families may require different
+representations or different validation strategies.
+
+The right scientific conclusion is therefore not "noisy fusion is solved," but
+"a bounded exact path now exists and can be studied honestly."
+
+## Selected References
+
+- Michael A. Nielsen and Isaac L. Chuang, *Quantum Computation and Quantum
+  Information*, Cambridge University Press (2010).
+- Christopher J. Wood, Jacob D. Biamonte, and David G. Cory, *Tensor networks
+  and graphical calculus for open quantum systems*, `Quantum Information and
+  Computation 15, 759-811 (2015)`.
+- Ang Li, Omer Subasi, Xiu Yang, and Sriram Krishnamoorthy, *Density Matrix
+  Quantum Circuit Simulation via the BSP Machine on Modern GPU Clusters*, SC20.
+- Tyson Jones, Anna Brown, Ian Bush, and Simon C. Benjamin, *QuEST and High
+  Performance Simulation of Quantum Computers*, `Scientific Reports 9, 10736
+  (2019)`.
+- Yasunari Suzuki et al., *Qulacs: a fast and versatile quantum circuit
+  simulator for research purpose*, `Quantum 5, 559 (2021)`.
+- Joseph Clark, Travis S. Humble, and Himanshu Thapliyal, *TDAG: Tree-based
+  Directed Acyclic Graph Partitioning for Quantum Circuits*, ACM GLSVLSI 2023.
+- Joseph Clark, Travis S. Humble, and Himanshu Thapliyal, *GTQCP: Greedy
+  Topology-Aware Quantum Circuit Partitioning*, `arXiv:2410.02901`.
+- Longshan Xu, Edwin Hsing-Mean Sha, Yuhong Song, and Qingfeng Zhu, *QMin:
+  Quantum Circuit Minimization via Gate Fusions for Efficient State Vector
+  Simulation*, `Quantum Information Processing 25, 6 (2026)`.
 
 ## Traceability
 
-- `DETAILED_PLANNING_PHASE_3_1.md`
 - `SHORT_PAPER_PHASE_3_1.md`
-- `docs/density_matrix_project/planning/PUBLICATIONS.md` (Side Paper A / Phase 3.1)
+- `PAPER_PHASE_3_1.md`
+- `task-5/TASK_5_MINI_SPEC.md`

@@ -1,150 +1,187 @@
-# Bounded Exact Channel-Native Fusion for Noise-Dense Motifs in Partitioned Density-Matrix Simulation
+# Bounded Exact Channel-Native Fusion for Local Noisy Motifs in Partitioned Density-Matrix Simulation
 
 ## Draft Status
 
-Planning-phase technical short-paper surface aligned with the current Phase 3.1
-contract. It now targets a **bounded positive-methods paper first** on the
-frozen v1 slice; fallback to a diagnosis-grounded negative result remains
-allowed if the counted slice does not justify the stronger claim. No API-level
-claims until `API_REFERENCE` exists post-implementation.
+Implementation-backed technical short-paper surface revised to match the actual
+Phase 3.1 state. The current evidence supports a bounded exactness result and a
+reusable methods contribution; it does **not** yet support the originally
+planned broader performance claim.
 
 ## Abstract
 
-Phase 3 delivered an exact partitioned noisy density runtime with real
-unitary-island fusion, but it intentionally stopped at noise boundaries.
-Phase 3.1 targets the next bounded methods step: **exact channel-native /
-superoperator-native fusion of contiguous 1- and 2-qubit mixed gate+noise
-motifs** built from `U3`, `CNOT`, and local single-qubit noise channels on the
-same support. The intended contribution is not merely a new representation, but
-an exact fused execution path for small CPTP blocks that preserves ordered
-`NoisyCircuit` semantics and delivers a measurable benefit beyond the shipped
-Phase 3 fused baseline on a frozen workload slice. The counted claim surface is
-therefore a positive-methods result first: if at least one representative
-motif-dense 8- or 10-qubit case shows `>= 1.2x` median wall-clock speedup or
-`>= 15%` peak-memory reduction relative to the Phase 3 fused baseline, with no
-correctness loss, the paper closes as a bounded methods contribution. If not,
-the same evidence closes honestly as a diagnosis-grounded negative result.
+Exact density-matrix simulation is the most trustworthy classical baseline for
+studying variational quantum circuits under realistic local noise, but existing
+partitioning and fusion techniques largely stop at unitary subcircuits. This
+work studies a bounded exact alternative: channel-native fusion of small mixed
+gate-noise motifs inside partitioned density-matrix execution. The current
+method uses Kraus bundles as the primary exact representation for 1- and
+2-qubit same-support motifs built from `U3`, `CNOT`, and local depolarizing,
+amplitude-damping, and phase-damping channels. The fused object preserves the
+ordered noisy-circuit semantics of the sequential reference, enforces CPTP
+invariants, and can be applied on local support within a larger density state.
+Current validation shows `<= 1e-10` Frobenius-norm agreement with sequential
+exact execution on a 1-qubit motif, one counted 2-qubit motif, and a 4-qubit
+local-support smoke case, together with explicit hard failures on out-of-scope
+motifs. The present result therefore establishes that bounded exact
+channel-native fusion is feasible and scientifically auditable, but it is not
+yet a closed acceleration claim: the remaining counted microcases, Qiskit Aer
+cross-validation, and structured 8- and 10-qubit benchmarking are still
+pending.
 
 ## Publication Surface Role
 
-Technical methods / systems short paper for Phase 3.1 (follow-on to Paper 2;
-aligns with `PUBLICATIONS.md` Side Paper A, but now framed as a bounded
-positive-methods contribution first).
+Concise methods short paper for the Phase 3.1 publication surface. It follows a
+short-paper structure centered on problem, method, current results, and
+limitations rather than on a roadmap.
 
-## Claim Boundary (Planning Draft)
+## Current Claim Boundary
 
-**In scope for the counted v1 Phase 3.1 claim:**
+**Supported by current implementation-backed evidence**
 
-- Exact channel-native / superoperator-native fusion for **contiguous 1- and
-  2-qubit mixed motifs** on a fixed support, with **at least one noise
-  operation** in each counted Phase 3.1 fused block.
-- Primary counted-claim representation:
-  - `kraus_bundle`, with Liouville / superoperator matrices allowed only as
-    internal apply/cache views after equivalence is shown.
-- Primitive surface frozen to `U3`, `CNOT`, local depolarizing, local amplitude
-  damping, and local phase damping / dephasing.
-- Multiple successive gates and multiple same-support local noise insertions
-  inside one fused block.
-- Exactness versus sequential `NoisyCircuit` under the frozen numeric policy:
-  `<= 1e-10` Frobenius agreement, validity checks, and representation-level
-  CPTP invariants.
-- Comparative benchmarking against:
-  - sequential `NoisyCircuit`,
-  - Phase 3 partitioned+fused,
-  - Phase 3.1 channel-native.
+- Exact channel-native fusion for bounded 1- and 2-qubit same-support mixed
+  motifs containing at least one noise operation.
+- Kraus-bundle composition as the primary counted representation, with
+  representation-level completeness and positivity checks.
+- Local-support application of the fused CPTP object inside a larger global
+  density matrix.
+- Explicit no-silent-fallback behavior for out-of-scope motifs.
 
-**Explicit non-claims until evidenced:**
+**Not yet supported by current evidence**
 
-- Universal speedup across all noisy workloads.
-- Support beyond 2 qubits, correlated noise, spectator-qubit effects, or
-  arbitrary unbounded CPTP fusion.
-- Phase 4 gradients, optimizers, or broader circuit sources.
-- Task 6 host-acceleration claims as part of the main paper story; mandatory
-  bundles remain scalar-only.
+- The full counted correctness surface:
+  `phase31_microcase_2q_multi_noise_entangler_chain`,
+  `phase31_microcase_2q_dense_same_support_motif`,
+  `phase2_xxz_hea_q4_continuity`, and `phase2_xxz_hea_q6_continuity`.
+- External Qiskit Aer validation for the frozen Phase 3.1 slice.
+- The structured 8- and 10-qubit performance study and its required
+  `break_even_table` / `justification_map`.
+- General support beyond 2 qubits, correlated noise, or arbitrary unbounded
+  CPTP fusion.
 
-**Evidence-closure rule (intent):**
+## 1. Problem and Gap
 
-Only mandatory, complete, supported correctness evidence plus counted
-performance evidence closes the main positive-methods claim. The benchmark
-package must also emit a `break_even_table` / `justification_map` classifying
-where Phase 3 remains sufficient and where Phase 3.1 is actually justified.
+Partitioning and gate-fusion methods are well developed for unitary or
+state-vector simulation, as illustrated by TDAG, GTQCP, QGo, and more recent
+gate-fusion work such as QMin. Open-system simulation, by contrast, is usually
+discussed through channel representations such as Kraus, Choi, or Liouville
+forms, as in standard quantum-information and open-system references.
 
-## Traceability Table (Planning Draft)
+The gap is that these two traditions do not automatically compose. A noisy
+region of a circuit is not just a unitary block with annotations attached to
+its boundary; the order of gates and channels is itself part of the semantics.
+The scientific question addressed here is therefore narrow but important:
 
-| Claim / paper question | Planned evidence anchor | Contract source |
-|---|---|---|
-| What is the new fused scientific object? | `phase31_bounded_mixed_motif_v1`; Task 1 representation contract; invariant-aware microcases | `P31-ADR-004`, `P31-ADR-007`, `task-1/TASK_1_MINI_SPEC.md` |
-| Is the new path still exact? | counted correctness slice + `channel_invariants` + Aer external slice | `P31-ADR-008`, `P31-ADR-009`, `P31-ADR-011`, `task-3/TASK_3_MINI_SPEC.md` |
-| Does it beat the shipped Phase 3 fused baseline anywhere meaningful? | counted performance slice + `break_even_table` / `justification_map` | `P31-ADR-010`, `task-4/TASK_4_MINI_SPEC.md` |
-| How is the new path distinguished from the old one? | `phase31_channel_native` runtime path and additive API surface | `P31-ADR-012`, `task-2/TASK_2_MINI_SPEC.md` |
-| How does the evidence flow evolve? | scalar-only counted v1 bundles; Phase 3.1 may later become the default evidence surface while Phase 3 remains explicit legacy scripts/functions | `P31-ADR-014`, `P31-ADR-015`, `task-6/TASK_6_MINI_SPEC.md` |
-| What is not part of the main claim? | non-claims list, scalar-only v1 evidence builds, Task 6 later-branch status | this file §Claim Boundary, `task-6/TASK_6_MINI_SPEC.md` |
+> Can small noisy motifs be fused exactly, without breaking ordered
+> density-matrix semantics, so that noise-dense local structure becomes a real
+> optimization object rather than a mandatory fusion barrier?
 
-## 1. Introduction and Motivation
+## 2. Bounded Method
 
-Exact density-matrix simulation remains the strongest classical anchor for noisy
-variational research in this project. Phase 3 connected partitioning to that
-anchor while deferring fusion through noise itself. Phase 3.1 asks whether the
-next exact fusion layer—operating natively on small noisy CPTP motifs rather
-than only on unitary islands—changes the performance story while preserving the
-ordered semantics that justify the anchor.
+The current method adopts four design rules.
 
-## 2. Relationship to Phase 3
+First, the primary mathematical object is a **Kraus bundle** on bounded support.
+This keeps the counted claim in a standard exact channel representation rather
+than in a hidden internal optimization view.
 
-Phase 3 closed with a bounded methods result and diagnosis-grounded performance
-closure. Phase 3.1 **adds** a new counted fused object: bounded mixed noisy
-motifs on 1- and 2-qubit support. It does not restate or weaken Phase 3’s
-minimum deliverable. Comparisons therefore name three baselines where relevant:
-sequential density, Phase 3 partitioned with unitary-island fusion, and Phase
-3.1 channel-native fusion.
+Second, the support surface is intentionally narrow: contiguous 1- and 2-qubit
+same-support motifs built from `U3`, `CNOT`, and local depolarizing,
+amplitude-damping, or phase-damping channels. Each fused motif must contain at
+least one noise operation.
 
-## 3. Technical Scope (Planning)
+Third, exactness is protected by construction. Composition follows descriptor
+order, not an implementation shortcut order; fused objects are checked through
+trace-preservation and positivity-style invariants before they are treated as
+valid counted objects.
 
-- Representation and composition of fused noisy blocks, with `kraus_bundle` as
-  the primary counted-claim form.
-- Eligibility rules for the v1 slice:
-  - contiguous 1- and 2-qubit same-support mixed motifs,
-  - at least one noise operation per counted fused block,
-  - multiple same-support local noise insertions allowed,
-  - pure unitary islands continue to use the Phase 3 fused path.
-- Explicit unsupported behavior beyond the bounded slice.
+Fourth, interpretability matters as much as exactness. The current path hard
+fails on unsupported motifs instead of silently reverting to a weaker execution
+mode, which keeps future benchmark comparisons scientifically meaningful.
 
-## 4. Evaluation Plan (Planning)
+## 3. Current Results
 
-- Correctness:
-  - counted microcases:
-    - `phase31_microcase_1q_u3_local_noise_chain`,
-    - `phase31_microcase_2q_cnot_local_noise_pair`,
-    - `phase31_microcase_2q_multi_noise_entangler_chain`,
-    - `phase31_microcase_2q_dense_same_support_motif`,
-  - counted continuity anchors:
-    - `phase2_xxz_hea_q4_continuity`,
-    - `phase2_xxz_hea_q6_continuity`,
-  - sequential exactness `<= 1e-10`, validity checks, and representation-level
-    CPTP invariants.
-- Performance:
-  - primary families:
-    - `phase31_pair_repeat`,
-    - `phase31_alternating_ladder`,
-  - control family:
-    - `layered_nearest_neighbor`,
-  - counted positive-method threshold:
-    - `>= 1.2x` median wall-clock speedup or `>= 15%` peak-memory reduction
-      versus the Phase 3 fused baseline on at least one representative primary
-      family case,
-  - required decision artifact:
-    - `break_even_table` / `justification_map`.
+The current implemented result is deliberately bounded but already scientific.
 
-## 5. Limitations
+- A 1-qubit mixed motif executes through the channel-native path and matches the
+  sequential exact reference within the frozen `1e-10` density threshold.
+- One counted 2-qubit motif, built around `CNOT` plus local noise on the same
+  support, also matches the sequential exact reference within the same
+  threshold.
+- A 4-qubit spectator-support smoke case shows that a bounded 2-qubit fused
+  noisy block can be embedded into a larger global density state without losing
+  correctness on the full matrix.
+- Ordered composition is claim-bearing: reversing the composed sequence changes
+  the result, confirming that ordered noisy semantics must remain explicit.
+- Boundary behavior is explicit: pure unitary motifs, support larger than two
+  qubits, and unsupported gate or noise families fail deterministically instead
+  of being silently downgraded.
 
-Support matrix is intentionally narrow at first. Approximate simulators and
-trajectory methods remain out of scope for the core Phase 3.1 exact claim. If
-the frozen positive-method threshold is not met, this short paper falls back to
-an honest diagnosis-grounded negative result rather than quietly expanding the
-claim surface.
+Together, these results support a narrow but concrete statement: bounded exact
+channel-native fusion is feasible for local noisy motifs and can be validated in
+a way that is auditable and reproducible.
+
+## 4. Current Answer to the Guiding Question
+
+The guiding question for this publication surface is:
+
+> When does the existing exact partitioned baseline stop being enough, and when
+> would more invasive channel-native fusion become justified?
+
+The current answer is now sharper than it was at planning time.
+
+The existing unitary-island baseline stops being enough when repeated local
+noise insertions fragment a same-support motif that is still small enough to be
+represented exactly as one CPTP object. Channel-native fusion is therefore
+**mathematically justified** on bounded 1- and 2-qubit noisy motifs today.
+
+However, it is **not yet performance-justified** as a broader methods claim.
+That stronger claim still requires the remaining counted correctness rows,
+external cross-validation, and the structured 8- and 10-qubit benchmark matrix.
+
+## 5. Limitations and Remaining Claim Gate
+
+This short paper should stay honest about what is still missing.
+
+- The current result is a bounded exactness study, not a closed acceleration
+  paper.
+- The full counted correctness surface has not yet been exercised through the
+  new path.
+- Qiskit Aer has not yet been wired into the current Phase 3.1 channel-native
+  evidence slice.
+- The planned motif-dense 8- and 10-qubit performance families exist as
+  deterministic workload inventories, but they are not yet claim-closing
+  evidence bundles.
+
+If those missing layers later show a real advantage relative to the existing
+partitioned exact baseline, this short paper can close as a bounded positive
+methods result. If they do not, the scientifically honest closure is a
+decision-study paper explaining where the richer fused object is and is not
+justified.
+
+## Selected References
+
+- Joseph Clark, Travis S. Humble, and Himanshu Thapliyal, *TDAG: Tree-based
+  Directed Acyclic Graph Partitioning for Quantum Circuits*, ACM GLSVLSI 2023.
+- Joseph Clark, Travis S. Humble, and Himanshu Thapliyal, *GTQCP: Greedy
+  Topology-Aware Quantum Circuit Partitioning*, `arXiv:2410.02901`.
+- Xin-Chuan Wu, Marc Grau Davis, Frederic T. Chong, and Costin Iancu, *QGo:
+  Scalable Quantum Circuit Optimization Using Automated Synthesis*,
+  `arXiv:2012.09835`.
+- Longshan Xu, Edwin Hsing-Mean Sha, Yuhong Song, and Qingfeng Zhu, *QMin:
+  Quantum Circuit Minimization via Gate Fusions for Efficient State Vector
+  Simulation*, `Quantum Information Processing 25, 6 (2026)`.
+- Michael A. Nielsen and Isaac L. Chuang, *Quantum Computation and Quantum
+  Information*, Cambridge University Press (2010).
+- Christopher J. Wood, Jacob D. Biamonte, and David G. Cory, *Tensor networks
+  and graphical calculus for open quantum systems*, `Quantum Information and
+  Computation 15, 759-811 (2015)`.
+- Ang Li, Omer Subasi, Xiu Yang, and Sriram Krishnamoorthy, *Density Matrix
+  Quantum Circuit Simulation via the BSP Machine on Modern GPU Clusters*, SC20.
+- Tyson Jones, Anna Brown, Ian Bush, and Simon C. Benjamin, *QuEST and High
+  Performance Simulation of Quantum Computers*, `Scientific Reports 9, 10736
+  (2019)`.
 
 ## Traceability
 
 - `DETAILED_PLANNING_PHASE_3_1.md`
 - `ADRs_PHASE_3_1.md`
-- `docs/density_matrix_project/planning/PLANNING.md` §5.1
+- `task-5/TASK_5_MINI_SPEC.md`
