@@ -78,17 +78,24 @@ What is already closed before Phase 3.1 implementation is treated as contract-co
 - Phase 3 performance closure was diagnosis-grounded; channel-native /
   superoperator-native fusion was explicitly deferred as follow-on (see
   `P3-ADR-010`, PLANNING.md §5.1).
+- Current implementation-backed Phase 3.1 progress already proves the **strict**
+  bounded motif slice: `phase31_channel_native` is implemented and validated on
+  the 1-qubit slice and the bounded 2-qubit local-support slice. That strict
+  path establishes the exact fused object on fully eligible workloads, but it
+  does not yet close continuity or structured-workload evidence.
 
-What remains intentionally open at the start of Phase 3.1 (closure targets for
-this phase):
+What remains intentionally open for **full Phase 3.1 claim closure**:
 
-- a **primary** exact representation for fused CPTP blocks and its descriptor /
-  runtime handoff,
-- **eligibility and unsupported** rules for channel-native fusion beyond
-  unitary-island fusion,
-- frozen **support matrix**, **numeric thresholds**, **mandatory correctness and
-  performance case sets**, **evidence bundle schema**, and **mode / API naming**
-  for Phase 3.1 modes,
+- an explicit **strict-plus-hybrid** runtime contract:
+  - **strict** mode proves the exact fused object on fully eligible motifs,
+  - **hybrid** mode executes whole workloads by routing eligible partitions
+    through the Phase 3.1 channel-native path and routing Phase-3-supported but
+    Phase-3.1-ineligible partitions through the shipped Phase 3 exact path with
+    explicit route attribution,
+- remaining **correctness, external-reference, and performance** evidence on the
+  frozen counted slice under that strict-plus-hybrid runtime design,
+- emitted **evidence bundle schema** and runtime-route metadata for both strict
+  and hybrid Phase 3.1 modes,
 - optional **host-side** C++/TBB/AVX policy for evidence builds when Task 6 is
   in play.
 
@@ -96,8 +103,10 @@ this phase):
 
 1. Close phase-wide representation, support matrix, and evidence contracts before
    implementation details drift (checklist Gate P31-G-1).
-2. Separate **required** channel-native behavior from **unsupported** tiers;
-   no silent fallback for modes that advertise channel-native fusion
+2. Separate **required** channel-native behavior from **unsupported** tiers:
+   - strict channel-native mode has **no fallback**,
+   - hybrid mode may route only through **explicit documented paths** with
+     emitted route attribution, never through silent downgrade
    (`P31-ADR-003`, `P31-ADR-001`).
 3. Keep Phase 3.1 **additive** relative to closed Phase 3 claims
    (`P31-ADR-002`).
@@ -130,13 +139,25 @@ superoperator-native, or IR-first fused execution** of noisy regions where such
 representation is exact, auditable, and benchmark-justified relative to both
 the sequential density baseline and the Phase 3 partitioned baseline.
 
+The current Phase 3.1 design now has two explicit runtime layers:
+
+- a **strict** motif-proof path, `phase31_channel_native`, for workloads whose
+  partitions are all fully eligible for the bounded 1- and 2-qubit mixed-motif
+  contract,
+- an explicit **hybrid** whole-workload path,
+  `phase31_channel_native_hybrid`, for continuity and structured benchmark
+  cases, where eligible partitions execute channel-natively and
+  Phase-3-supported but Phase-3.1-ineligible partitions execute through the
+  shipped Phase 3 exact runtime with auditable route attribution.
+
 ### Novelty hypothesis and primary publication stance
 
 Phase 3.1's candidate novelty is **not** the mere use of Kraus, PTM, or
 Liouville representations in isolation; those are established open-system
 tools. The intended claim is narrower and stronger: SQUANDER can execute
 **bounded exact channel-native fusion of mixed gate+noise motifs inside a
-partitioned noisy runtime** while preserving the canonical ordered
+partitioned noisy runtime**, first in strict motif-proof mode and then in an
+explicit hybrid whole-workload mode, while preserving the canonical ordered
 `NoisyCircuit` semantics and delivering a measurable benefit beyond Phase 3's
 unitary-island fused baseline on a scientifically chosen workload slice.
 
@@ -323,15 +344,27 @@ Phase 3.1 may begin **planning** immediately. **Implementation** should assume:
   noise operation. Spectator-qubit effects, correlated multi-qubit noise, and
   support beyond 2 qubits remain outside the v1 minimum claim.
 - **Eligibility and unsupported** rules: which gate+noise patterns may be
-  fused into channel-native blocks, which remain sequential or unitary-island
-  fused only, and how failures surface (no silent fallback for claimed
-  partitioned-channel-native modes).
+  fused into channel-native blocks, which remain on the shipped Phase 3 exact
+  path, and how failures surface:
+  - **strict** channel-native mode hard-fails on any ineligible partition,
+  - **hybrid** channel-native mode may route only Phase-3-supported but
+    Phase-3.1-ineligible partitions to the shipped Phase 3 exact path with
+    explicit route attribution,
+  - unsupported-by-both cases still fail loudly.
+- **Strict-plus-hybrid runtime design**:
+  - strict `phase31_channel_native` for counted microcases and motif-proof
+    validation,
+  - hybrid `phase31_channel_native_hybrid` for bounded continuity anchors and
+    structured whole-workload performance cases.
 - **Correctness evidence**: exact agreement (within frozen numerical thresholds)
   with sequential `NoisyCircuit` density execution; explicit comparison or
-  regression posture versus the Phase 3 partitioned path where both exist.
+  regression posture versus the Phase 3 partitioned path where both exist, with
+  strict-mode evidence on the mixed-motif microcases and hybrid-mode evidence on
+  continuity / whole-workload rows.
 - **Performance evidence**: structured comparison versus Phase 3 fused baseline
   and sequential baseline on workloads that stress noise density and locality,
-  with honest reporting of wins, ties, and regressions.
+  using the explicit hybrid Phase 3.1 path on counted whole-workload cases and
+  reporting route coverage together with honest wins, ties, and regressions.
 - **Publication package**: claim boundary aligned with `PUBLICATIONS.md` Phase
   3.1 / Side Paper A positioning (decision study or follow-on methods paper).
 - **Host-side performance engineering (investigation)**: benchmark-justified
@@ -376,10 +409,15 @@ Phase 3.1 is successful if:
   the frozen v1 slice: at least one **non-trivial** bounded mixed
   gate+noise eligibility class shows exact channel-native or
   superoperator-native benefit relative to the Phase 3 fused baseline, meeting
-  the frozen positive-method threshold in `P31-ADR-010`.
+  the frozen positive-method threshold in `P31-ADR-010`. For whole-workload
+  counted cases, that claim is carried by the explicit hybrid runtime path.
 - If the targeted slice fails to show such a benefit, the phase may still close
   through a **benchmark-justified negative result** explaining why the richer
   fusion class does not pay off under the contract.
+- The strict `phase31_channel_native` path is demonstrated on the counted
+  mixed-motif microcases, and the explicit hybrid
+  `phase31_channel_native_hybrid` path is demonstrated on the counted
+  continuity / structured-workload slice with auditable partition routing.
 - Exactness versus the sequential density baseline is **demonstrated** on the
   mandatory correctness slice for the frozen Phase 3.1 support matrix.
 - Publication-facing documents state claims no stronger than the emitted
@@ -424,20 +462,28 @@ contract-complete. Each item maps to a checklist ID for auditability.
   invariant residuals use `<= 1e-10`; positivity-style eigenvalue floors use
   `>= -1e-12`.
 - **Baseline trio**: sequential `NoisyCircuit`, Phase 3 partitioned+fused path,
-  and Phase 3.1 path (where applicable) for performance narratives.
+  and the relevant Phase 3.1 path:
+  - strict `phase31_channel_native` on fully eligible mixed-motif cases,
+  - hybrid `phase31_channel_native_hybrid` on counted whole-workload cases.
 - **External reference slice**: Qiskit Aer is required on the four counted
   Phase 3.1 mixed-motif microcases and on `phase2_xxz_hea_q4_continuity`; it is
   not required on `q6` continuity or the counted 8/10-qubit performance cases.
 - **Workflow anchor**: whether Phase 3.1 evidence reuses the Phase 2 continuity
   anchor and Phase 3 structured families only, or extends them (documented).
 - **Mode naming and API surface**: keep planner `requested_mode` as
-  `partitioned_density`; expose the counted Phase 3.1 path through
-  `execute_partitioned_density_channel_native(...)` and runtime-path label
-  `phase31_channel_native`, while retaining `execute_partitioned_density_fused`
-  for the Phase 3 unitary-island baseline.
+  `partitioned_density`; preserve the strict motif-proof helper
+  `execute_partitioned_density_channel_native(...)` with runtime-path label
+  `phase31_channel_native`; add the explicit hybrid whole-workload helper
+  `execute_partitioned_density_channel_native_hybrid(...)` with runtime-path
+  label `phase31_channel_native_hybrid`; retain
+  `execute_partitioned_density_fused` for the Phase 3 unitary-island baseline.
+  Strict mode hard-fails on any ineligible partition. Hybrid mode may route only
+  Phase-3-supported but Phase-3.1-ineligible partitions through the shipped
+  Phase 3 exact path, with emitted route records and no silent downgrade.
 - **Evidence schema policy**: extend the existing `correctness_evidence` and
   `performance_evidence` trees with Phase 3.1 fields and required slices rather
-  than creating a new top-level evidence family.
+  than creating a new top-level evidence family; include strict-vs-hybrid
+  runtime identity and partition-route metadata for hybrid counted cases.
 - **Host performance build and runtime policy**: which SIMD baseline is required
   for evidence builds. For v1 counted evidence, scalar-only builds are required:
   `build_policy_id = "phase31_scalar_only_v1"`, `build_flavor = "scalar"`,
@@ -473,6 +519,13 @@ Tasks 1–2 expansion plus a minimal Task 3 correctness gate for the frozen
 Bounded slice completion vs. deferred Task 3 / Task 4 work is recorded there under
 **Slice implementation status** (not in `PRE_IMPLEMENTATION_COMPLETION_CHECKLIST.md`).
 
+**Third vertical slice (strict plus hybrid whole-workload increment):** the next
+bounded Tasks 2–4 expansion for the explicit hybrid runtime, one counted hybrid
+continuity anchor, and one representative structured pilot case are in
+[`THIRD_VERTICAL_SLICE_STRICT_PLUS_HYBRID_WHOLE_WORKLOAD_STORIES_AND_ENGINEERING_TASKS.md`](THIRD_VERTICAL_SLICE_STRICT_PLUS_HYBRID_WHOLE_WORKLOAD_STORIES_AND_ENGINEERING_TASKS.md).
+This slice is the first thin end-to-end increment for the strict-plus-hybrid
+Phase 3.1 contract and remains smaller than full Task 3 / Task 4 closure.
+
 ### Task 1: Fusion representation and IR contract
 
 **Goal:** Define how bounded 1- and 2-qubit channel-native / superoperator
@@ -488,11 +541,18 @@ specified in mini-specs.
 ### Task 2: Runtime integration and eligibility
 
 **Goal:** Integrate the chosen representation into the partitioned noisy runtime
-so that eligible regions execute through the new path without breaking ordering
-contracts.
+so that:
 
-**Success looks like:** Executable path behind explicit flags or modes;
-hard errors for unsupported channel-native requests when that mode is selected.
+- fully eligible workloads can execute through the **strict** channel-native
+  path without breaking ordering contracts,
+- counted whole workloads can execute through an explicit **hybrid** path where
+  eligible partitions use channel-native execution and Phase-3-supported but
+  Phase-3.1-ineligible partitions use the shipped Phase 3 exact path with route
+  attribution.
+
+**Success looks like:** Explicit strict and hybrid execution identities;
+hard errors for unsupported strict requests; explicit route metadata and
+hard-fail behavior for unsupported-by-both hybrid requests.
 
 **Evidence:** Tests and benchmark hooks as defined in mini-specs.
 
@@ -500,7 +560,8 @@ hard errors for unsupported channel-native requests when that mode is selected.
 
 **Goal:** Emit or extend machine-checkable correctness evidence for Phase 3.1,
 including mandatory internal matrix and external micro-validation posture
-consistent with Phase 3 culture.
+consistent with Phase 3 culture, using strict mode for counted mixed-motif
+microcases and hybrid mode for counted continuity / whole-workload cases.
 
 **Success looks like:** Reproducible bundle with stable IDs; boundary cases
 visible.
@@ -510,7 +571,8 @@ visible.
 ### Task 4: Performance and diagnosis evidence
 
 **Goal:** Measure runtime and memory versus sequential and Phase 3 fused
-baselines on agreed structured families; record diagnosis when gains are absent.
+baselines on agreed structured families through the explicit hybrid Phase 3.1
+path; record diagnosis when gains are absent together with route coverage.
 
 **Success looks like:** Honest performance package; no inflation of Phase 3
 claims.
@@ -553,8 +615,10 @@ and threading settings in emitted performance bundles (optional / amended
 
 - Phase 3.1 support matrix and representation choices are frozen and auditable.
 - At least one real channel-native or superoperator-native execution mode is
-  implemented and validated on the mandatory slice, **or** a benchmark-grounded
-  report documents why the branch does not proceed.
+  implemented and validated on the mandatory slice, and the whole-workload
+  counted surface uses an explicit hybrid runtime contract rather than an
+  undocumented downgrade, **or** a benchmark-grounded report documents why the
+  branch does not proceed.
 - No silent semantic fallback for modes that advertise channel-native fusion.
 - Publication documents updated to match evidence; no contradiction with Phase 3
   closed claims.
@@ -568,6 +632,9 @@ Reuse the Phase 3 evaluation philosophy:
   fusion where applicable.
 - **External reference:** Qiskit Aer (or successor agreed in checklist) on the
   frozen micro-validation slice.
+- **Phase 3.1 execution policy:** strict `phase31_channel_native` on counted
+  mixed-motif microcases; explicit hybrid `phase31_channel_native_hybrid` on
+  counted continuity and structured whole-workload rows.
 - **Dimensions:** qubit count bands, noise placement (sparse / periodic / dense
   as relevant), locality, and fusion granularity.
 
@@ -605,6 +672,10 @@ The counted Phase 3.1 correctness slice is:
 Interpretation:
 
 - the counted correctness slice is the claim-bearing Phase 3.1 v1 surface,
+- counted mixed-motif microcases run through the **strict**
+  `phase31_channel_native` path,
+- counted continuity anchors and counted performance-carry-forward rows run
+  through the explicit **hybrid** `phase31_channel_native_hybrid` path,
 - inherited Phase 3 microcases outside this set may remain regression or
   unsupported-boundary checks, but they are not part of the counted positive
   methods claim unless explicitly promoted later.
@@ -646,7 +717,7 @@ Every counted performance record must also include:
 
 - sequential `NoisyCircuit`,
 - Phase 3 partitioned+fused,
-- Phase 3.1 channel-native,
+- Phase 3.1 channel-native hybrid,
 - and a `break_even_table` / `justification_map` classification:
   - `phase3_sufficient`,
   - `phase31_justified`,
@@ -663,6 +734,13 @@ on the following counted Phase 3.1 slice:
 - `phase31_microcase_2q_dense_same_support_motif`,
 - `phase2_xxz_hea_q4_continuity`.
 
+Execution interpretation:
+
+- the four `phase31_microcase_*` cases use the strict
+  `phase31_channel_native` path,
+- `phase2_xxz_hea_q4_continuity` uses the explicit hybrid
+  `phase31_channel_native_hybrid` path.
+
 Not required externally for the counted claim:
 
 - `phase2_xxz_hea_q6_continuity`,
@@ -675,12 +753,18 @@ Phase 3.1 keeps the planner and descriptor entry contract:
 
 - `requested_mode = "partitioned_density"` (`PARTITIONED_DENSITY_MODE`)
 
-and adds a distinct execution identity for the counted v1 path:
+and adds two explicit Phase 3.1 execution identities:
 
-- convenience helper:
-  - `execute_partitioned_density_channel_native(...)`,
-- runtime-path label:
-  - `phase31_channel_native`.
+- **strict** motif-proof path:
+  - convenience helper:
+    - `execute_partitioned_density_channel_native(...)`,
+  - runtime-path label:
+    - `phase31_channel_native`,
+- **hybrid** whole-workload path:
+  - convenience helper:
+    - `execute_partitioned_density_channel_native_hybrid(...)`,
+  - runtime-path label:
+    - `phase31_channel_native_hybrid`.
 
 Error-policy freeze:
 
@@ -699,6 +783,25 @@ Error-policy freeze:
   - `channel_native_representation`,
   - `channel_native_invariant_failure`,
   - `channel_native_runtime_execution`.
+
+Hybrid-route policy freeze:
+
+- strict `phase31_channel_native` keeps the existing no-fallback contract:
+  any ineligible partition is a hard error,
+- hybrid `phase31_channel_native_hybrid` may route a partition to the shipped
+  Phase 3 exact path only when the partition is Phase-3-supported but
+  Phase-3.1-ineligible for a documented support-surface reason,
+- representation, invariant, or runtime-execution failures on a partition that
+  was supposed to execute channel-natively remain hard errors rather than
+  reroute conditions.
+
+Required hybrid route reasons:
+
+- `eligible_channel_native_motif`,
+- `pure_unitary_partition`,
+- `channel_native_noise_presence`,
+- `channel_native_qubit_span`,
+- `channel_native_support_surface`.
 
 ### 10.6 Frozen Evidence Packaging Policy (`P31-C-08`)
 
@@ -719,13 +822,27 @@ Required counted-case metadata:
 Required additions under `correctness_evidence`:
 
 - `channel_invariants` slice,
-- invariant summary fields tied to the chosen primary representation.
+- invariant summary fields tied to the chosen primary representation,
+- `partition_route_summary` slice for hybrid-counted cases.
 
 Required additions under `performance_evidence`:
 
 - `break_even_table` slice,
 - `decision_class ∈ {phase3_sufficient, phase31_justified, phase31_not_justified_yet}`,
-- explicit metrics relative to the Phase 3 fused baseline.
+- explicit metrics relative to the Phase 3 fused baseline,
+- route-coverage metadata for hybrid-counted cases, including:
+  - `channel_native_partition_count`,
+  - `phase3_routed_partition_count`,
+  - `channel_native_member_count`,
+  - `phase3_routed_member_count`.
+
+Required runtime / route vocabularies:
+
+- `runtime_class ∈ {"plain_partitioned_baseline", "phase3_unitary_island_fused",
+  "phase31_channel_native", "phase31_channel_native_hybrid"}`,
+- `partition_runtime_class ∈ {"phase31_channel_native",
+  "phase3_unitary_island_fused", "phase3_supported_unfused"}`,
+- `partition_route_reason` uses the frozen reasons in §10.5.
 
 Versioning rule:
 

@@ -15,7 +15,16 @@ Upstream: Tasks 3–4 deliverables, `PUBLICATIONS.md` Phase 3.1 / Side Paper A, 
 
 ## Scientific outcome
 
-A reviewer can trace **each claim** in the Phase 3.1 short paper, narrative, abstract, and full paper skeleton to **specific case IDs, baselines, and thresholds**—or see an explicit **limitations** paragraph where evidence is absent. Phase 3 Paper 2 wording remains untouched except for additive cross-references.
+A reviewer can trace **each claim** in the Phase 3.1 short paper, narrative,
+abstract, and full paper skeleton to **specific case IDs, baselines,
+thresholds, and execution interpretation**:
+
+- **strict** `phase31_channel_native` for bounded motif-proof claims,
+- **hybrid** `phase31_channel_native_hybrid` for continuity and
+  whole-workload performance claims,
+
+or see an explicit **limitations** paragraph where evidence is absent. Phase 3
+Paper 2 wording remains untouched except for additive cross-references.
 
 The primary publication target is now a **bounded positive-methods paper** on
 the frozen v1 slice. The Side Paper A decision-study question remains
@@ -26,9 +35,17 @@ by evidence rather than assumed.
 
 ## Given / When / Then
 
-- **Given** frozen **P31-C-01–C-09** and emitted correctness/performance bundles (or a documented decision to ship a **negative-result** narrative with partial bundles).
+- **Given** frozen **P31-C-01–C-09** and emitted correctness/performance bundles
+  (or a documented decision to ship a **negative-result** narrative with partial
+  bundles).
 - **When** publication docs are revised for Phase 3.1 submission or internal review.
-- **Then** every methods or results sentence in `SHORT_PAPER_PHASE_3_1.md`, `SHORT_PAPER_NARRATIVE.md`, `ABSTRACT_PHASE_3_1.md`, and `PAPER_PHASE_3_1.md` maps to evidence or is labeled speculation/limitation; Side Paper A’s guiding question (quoted below) has an explicit answer or a scoped “not addressed by current evidence” with limitations.
+- **Then** every methods or results sentence in
+  `SHORT_PAPER_PHASE_3_1.md`, `SHORT_PAPER_NARRATIVE.md`,
+  `ABSTRACT_PHASE_3_1.md`, and `PAPER_PHASE_3_1.md` maps to evidence or is
+  labeled speculation/limitation; every whole-workload claim states whether it
+  is carried by the strict or hybrid runtime interpretation; and Side Paper A’s
+  guiding question (quoted below) has an explicit answer or a scoped
+  “not addressed by current evidence” with limitations.
 
 ---
 
@@ -42,12 +59,17 @@ by evidence rather than assumed.
 ## Required behavior
 
 - **Claim boundary** subsection in technical short paper: in-scope contributions, explicit non-goals, what Phase 3 did vs Phase 3.1.
+- Publication surfaces must distinguish:
+  - the **strict** motif-proof contribution (bounded exact fused object),
+  - the **hybrid** whole-workload evaluation layer (continuity and structured
+    benchmark interpretation).
 - The technical short paper presents Phase 3.1 **first** as a bounded
   positive-methods contribution on the frozen v1 slice; if the evidence
   does not support that framing, the docs must explicitly fall back to a scoped
   negative-result / decision-study narrative rather than quietly overstating the
   method.
-- **Traceability table** (in `DETAILED_PLANNING_PHASE_3_1.md` or paper appendix): claim → case ID / artifact → threshold.
+- **Traceability table** (in `DETAILED_PLANNING_PHASE_3_1.md` or paper appendix):
+  claim → strict/hybrid path → case ID / artifact → threshold.
 - Narrative doc explains **why** the phase matters without overstating performance (`P31-ADR-005`).
 - **Side Paper A alignment:** at least one subsection or paragraph in the technical short paper (or answer map) explicitly addresses the verbatim question under **Acceptance evidence** using evidence-backed language.
 
@@ -58,6 +80,10 @@ by evidence rather than assumed.
 - Strengthening Phase 3 claims retroactively (`P31-ADR-002`).
 - Performance superlatives without **P31-C-06** row citations.
 - Correctness language without **P31-C-04** / **P31-C-03** alignment.
+- Whole-workload performance language that does not name the **hybrid**
+  interpretation when that is the actual claim-carrying path.
+- Treating strict motif-proof evidence as if it already closes the hybrid
+  whole-workload benchmark question.
 
 ---
 
@@ -67,7 +93,10 @@ by evidence rather than assumed.
 
   > When does the Phase 3 noise-aware partitioning baseline stop being enough, and when would more invasive channel-native fusion become justified?
 
-- A short **answer map** (in the technical short paper or in `DETAILED_PLANNING_PHASE_3_1.md` traceability): for that question, which claims are supported by which case IDs / bundles (`P31-C-04`, `P31-C-06`, `P31-C-08`), and what remains open.
+- A short **answer map** (in the technical short paper or in
+  `DETAILED_PLANNING_PHASE_3_1.md` traceability): for that question, which
+  claims are supported by which **strict/hybrid** path, case IDs, and bundles
+  (`P31-C-04`, `P31-C-06`, `P31-C-08`), and what remains open.
 - Checklist pass: independent read-through (self or colleague) with mark-up resolved.
 - Version notes in paper headers or CHANGELOG entry pointing to bundle hashes or CI run IDs if the project uses them.
 

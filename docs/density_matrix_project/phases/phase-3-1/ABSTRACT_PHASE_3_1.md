@@ -14,21 +14,23 @@ studying how realistic local noise changes variational quantum circuits, yet
 most partitioning and fusion methods still stop at unitary subcircuits. This
 work studies a bounded exact alternative: channel-native fusion of small mixed
 gate-noise motifs inside partitioned density-matrix execution. The current
-implementation composes same-support 1- and 2-qubit motifs built from `U3`,
-`CNOT`, and local depolarizing, amplitude-damping, and phase-damping channels
-into Kraus bundles, preserves ordered noisy-circuit semantics, and applies the
-resulting CPTP object on local support within a larger density state. Internal
-validation against sequential exact execution confirms Frobenius-norm agreement
-below `1e-10` on a 1-qubit motif, one counted 2-qubit motif, and a 4-qubit
-spectator-support smoke case, while invariant checks confirm trace preservation
-and positivity under the frozen numerical policy. The present result therefore
-establishes the feasibility of bounded exact channel-native fusion and a
-reproducible methodology for validating such blocks, rather than a completed
-acceleration claim. The remaining counted microcases, Qiskit Aer
-cross-validation, and 8- and 10-qubit structured performance study are still
-pending, so broader performance conclusions are intentionally withheld. The
-current outcome is best read as a methods-grounding result and a reusable
-foundation for future exact noisy acceleration studies.
+method uses two execution interpretations. A **strict** motif-proof path treats
+same-support 1- and 2-qubit motifs built from `U3`, `CNOT`, and local
+depolarizing, amplitude-damping, and phase-damping channels as exact Kraus-
+bundle CPTP objects. An explicit **hybrid** whole-workload path is the intended
+evaluation vehicle for continuity and structured benchmark cases, where eligible
+partitions run channel-natively and Phase-3-supported but Phase-3.1-ineligible
+partitions remain on the shipped exact baseline with route attribution.
+Current implementation-backed validation covers the strict path: Frobenius-norm
+agreement below `1e-10` is observed on a 1-qubit motif, one counted 2-qubit
+motif, and a 4-qubit fully eligible local-support smoke case, while invariant
+checks confirm trace preservation and positivity under the frozen numerical
+policy. The present result therefore establishes the feasibility of bounded
+exact channel-native fusion and a reproducible methodology for validating such
+blocks, rather than a completed acceleration claim. Publication-backed coverage
+of the remaining counted rows, external Qiskit Aer comparison, and the hybrid
+8- and 10-qubit structured performance study are still pending, so broader
+performance conclusions are intentionally withheld.
 
 ## Keywords (Draft)
 

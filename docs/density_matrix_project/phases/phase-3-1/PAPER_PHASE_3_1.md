@@ -19,21 +19,25 @@ studying variational quantum circuits under realistic local noise, yet most
 partitioning and fusion techniques are still centered on unitary or
 state-vector-style subcircuits. We study a bounded exact alternative inside the
 SQUANDER mixed-state execution stack: channel-native fusion of small same-
-support gate-noise motifs. The current method treats 1- and 2-qubit motifs
+support gate-noise motifs. The current design now has two execution
+interpretations. A **strict** motif-proof path treats 1- and 2-qubit motifs
 built from `U3`, `CNOT`, and local depolarizing, amplitude-damping, or phase-
 damping channels as exact CPTP objects represented primarily by Kraus bundles.
-Composition follows ordered noisy-circuit semantics, invariant checks enforce
-trace preservation and positivity, and the fused object can be applied on local
-support within a larger density state. Current implementation-backed validation
-shows `<= 1e-10` Frobenius-norm agreement with sequential exact execution on a
-1-qubit motif, one counted 2-qubit motif, and a 4-qubit spectator-support smoke
-case, together with deterministic rejection of out-of-scope motifs. These
-results establish that bounded exact channel-native fusion is feasible and
-scientifically auditable. They do not yet close a broader acceleration claim:
-the remaining counted microcases, external Qiskit Aer validation, and
-structured 8- and 10-qubit benchmarking are still pending. The current outcome
-is therefore best interpreted as a methods-grounding result and a reusable
-framework for future exact noisy acceleration studies.
+An explicit **hybrid** whole-workload path is the intended evaluation vehicle
+for continuity and structured benchmark cases, where eligible partitions run
+channel-natively and Phase-3-supported but Phase-3.1-ineligible partitions stay
+on the shipped exact baseline with route attribution. Composition follows
+ordered noisy-circuit semantics, invariant checks enforce trace preservation and
+positivity, and the fused object can be applied on local support within a larger
+density state. Current implementation-backed validation covers the strict path:
+`<= 1e-10` Frobenius-norm agreement with sequential exact execution is shown on
+a 1-qubit motif, one counted 2-qubit motif, and a 4-qubit fully eligible local-
+support smoke case, together with deterministic rejection of out-of-scope
+motifs. These results establish that bounded exact channel-native fusion is
+feasible and scientifically auditable. They do not yet close a broader
+acceleration claim: publication-backed coverage of the remaining counted rows,
+external Qiskit Aer validation, and hybrid 8- and 10-qubit benchmarking are
+still pending.
 
 ## Publication Surface Role
 
@@ -46,17 +50,21 @@ method, current results, limitations, and reproducibility posture.
 **Current supported claim**
 
 - Small same-support noisy motifs can be fused exactly as CPTP objects inside a
-  partitioned density-matrix execution flow.
+  partitioned density-matrix execution flow, carried by the **strict**
+  motif-proof runtime interpretation.
 - The fused object can be validated through sequential-reference agreement plus
   channel-invariant checks.
 - Local-support embedding into a larger density state is feasible on the current
-  bounded slice.
+  bounded slice, including a larger but still fully eligible smoke workload.
 - Unsupported motifs remain explicit rather than silently falling back.
 
 **Claim-bearing gate that remains open**
 
-- The full counted correctness slice,
-- external Qiskit Aer validation on the frozen external slice,
+- Publication-backed coverage of the remaining strict mixed-motif rows,
+- external Qiskit Aer validation on the frozen strict-plus-hybrid external
+  slice,
+- explicit hybrid whole-workload execution on the continuity and structured
+  counted cases,
 - and the structured 8- and 10-qubit performance matrix with decision-surface
   reporting.
 
@@ -86,6 +94,12 @@ flow.
 The current contribution is therefore a methods-grounding result rather than a
 finished acceleration paper. It establishes the exact fused object, the current
 validation discipline, and the scientific boundary of the claim.
+
+The runtime interpretation now has two levels. The **strict** path proves the
+exact fused object on fully eligible motif workloads. The explicit **hybrid**
+path is the intended whole-workload evaluation vehicle for continuity and
+structured benchmark cases, where some partitions are eligible for the new exact
+channel-native treatment and others remain on the shipped exact Phase 3 path.
 
 ## 2. Related Work and Scientific Gap
 
@@ -145,6 +159,13 @@ The current bounded support surface is deliberately narrow:
 
 This scope is a design decision, not a claim of generality.
 
+The current execution interpretation is likewise split deliberately:
+
+- **strict** execution proves the bounded fused object on fully eligible
+  workloads,
+- **hybrid** execution is the contractually intended whole-workload path for the
+  counted continuity and structured benchmark slice.
+
 ## 4. Method
 
 ### 4.1 Primary Exact Representation
@@ -184,20 +205,43 @@ larger-workload smoke case.
 Equally important, unsupported motifs fail explicitly. This no-silent-fallback
 rule keeps future benchmark interpretation honest.
 
+### 4.5 Strict and Hybrid Execution Interpretation
+
+The current contract separates two execution interpretations.
+
+In **strict** execution, every partition in the workload must be fully eligible
+for the bounded 1- and 2-qubit mixed-motif contract. This is the correct path
+for proving the fused object itself and for small counted motif cases. Any
+ineligible partition is a hard failure.
+
+In **hybrid** execution, eligible partitions use the channel-native exact path,
+while partitions that remain supported by the shipped Phase 3 exact runtime but
+fall outside the bounded Phase 3.1 eligibility surface stay on that baseline
+with explicit route attribution. This interpretation is required for continuity
+and structured whole-workload benchmarking because many such workloads mix
+strictly eligible and merely Phase-3-supported partitions.
+
+The scientific importance of this split is interpretability: the field should be
+able to distinguish "the new fused object was proved here" from "the new fused
+object was exercised inside a larger exact workload here."
+
 ## 5. Current Implementation-Backed Evaluation
 
 ### 5.1 Current Implemented Slice
 
-The current implementation-backed slice includes:
+The current implementation-backed slice is currently carried by the **strict**
+motif-proof path. It includes:
 
 - one 1-qubit mixed motif,
 - one counted 2-qubit mixed motif,
-- and one non-counted 4-qubit spectator-support smoke case.
+- and one non-counted 4-qubit spectator-support smoke case whose partitions all
+  remain fully eligible for the strict path.
 
 Deterministic workload inventories also already exist for the remaining counted
-microcases and for the future 8- and 10-qubit structured performance families,
-but those inventories are not yet wired into claim-closing Phase 3.1 evidence
-bundles.
+microcases and for the future 8- and 10-qubit structured performance families.
+Under the current contract, those future whole-workload rows are to be carried
+by the explicit **hybrid** path rather than by the strict path, but they are not
+yet wired into claim-closing Phase 3.1 evidence bundles.
 
 ### 5.2 Metrics and Thresholds
 
@@ -234,11 +278,13 @@ different path.
 
 ### 5.4 What Is Still Missing
 
-The current full-paper claim remains incomplete because three layers are still
+The current full-paper claim remains incomplete because four layers are still
 missing:
 
-- the remaining counted correctness rows,
+- publication-backed coverage of the remaining counted correctness rows,
 - the external Qiskit Aer slice,
+- the explicit hybrid whole-workload evidence path for continuity and structured
+  cases,
 - and the structured 8- and 10-qubit benchmark matrix together with the
   required decision-surface reporting.
 
@@ -259,8 +305,10 @@ composition. The current study shows that such motifs exist and can be handled
 exactly.
 
 What remains unknown is whether this mathematically justified object is also a
-performance-justified object on the workload families that matter most. That is
-the next claim-bearing gate, and the paper should say so directly.
+performance-justified object on the workload families that matter most. Under
+the current contract, that question is now explicitly assigned to the **hybrid**
+whole-workload interpretation rather than to the strict motif-proof path alone.
+That is the next claim-bearing gate, and the paper should say so directly.
 
 ## 7. Threats to Validity and Limitations
 
@@ -274,9 +322,10 @@ claim about correlated noise, larger supports, or arbitrary CPTP fusion.
 
 ### 7.2 Missing External and Performance Closure
 
-The current paper does not yet have the full external Qiskit Aer slice or the
-structured 8- and 10-qubit performance matrix. This is the main reason broader
-acceleration language must remain withheld.
+The current paper does not yet have the full external Qiskit Aer slice, the
+claim-bearing hybrid whole-workload evidence path, or the structured 8- and
+10-qubit performance matrix. This is the main reason broader acceleration
+language must remain withheld.
 
 ### 7.3 Dense-Regime Scale Limits
 
@@ -293,12 +342,15 @@ best representation.
 
 ## 8. Reproducibility and Reporting
 
-The current reproducibility posture follows four rules.
+The current reproducibility posture follows five rules.
 
 - Use deterministic microcase definitions and stable case identifiers.
 - Report explicit numerical thresholds for exactness and invariant checks.
 - Keep unsupported cases visible.
-- Separate current slice evidence from future claim-bearing bundles.
+- Separate strict motif-proof evidence from future hybrid whole-workload
+  evidence.
+- When the hybrid path is wired into the evidence bundle, report route coverage
+  explicitly rather than treating all Phase 3.1 execution as one opaque class.
 
 At the current state of the work, reproducibility is strongest at the level of
 deterministic workload definitions and exact-threshold regression tests. The
@@ -309,12 +361,13 @@ benchmark reporting, and explicit decision-surface artifacts.
 
 This paper surface now supports a clear, bounded conclusion. Exact channel-
 native fusion of local noisy motifs is feasible, auditable, and already
-demonstrated on a narrow implementation-backed slice. That is scientifically
-useful because it establishes a concrete bridge between unitary fusion ideas and
-open-system channel semantics. At the same time, the work is not yet a closed
-performance paper. The remaining counted correctness rows, external validation,
-and structured benchmarking are still required before stronger acceleration
-claims can be made.
+demonstrated on a narrow implementation-backed **strict** slice. That is
+scientifically useful because it establishes a concrete bridge between unitary
+fusion ideas and open-system channel semantics. At the same time, the broader
+whole-workload question is now explicitly assigned to the **hybrid** evaluation
+layer, and that layer is not yet publication-backed. The remaining counted
+correctness rows, external validation, and hybrid structured benchmarking are
+still required before stronger acceleration claims can be made.
 
 ## Selected References
 

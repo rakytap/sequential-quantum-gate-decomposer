@@ -21,7 +21,8 @@ surfaces listed in `DETAILED_PLANNING_PHASE_3_1.md` Tier 4.
 All `P31-C-01 .. P31-C-09` rows are now closed below, with explicit trade-offs
 and a staged default-pipeline migration policy.
 
-Planning, paper, and implementation work may now proceed under Gate `P31-G-1`.
+Planning, paper, and implementation work may now proceed under Gate `P31-G-1`,
+with the frozen strict-plus-hybrid Phase 3.1 runtime contract reflected below.
 
 ## Checklist Items (Closure Status)
 
@@ -30,11 +31,11 @@ Planning, paper, and implementation work may now proceed under Gate `P31-G-1`.
 | P31-C-01 | Primary fusion representation | **Closed by** `P31-ADR-004`: primary counted-claim representation is `kraus_bundle`; Liouville / superoperator form is allowed only as an internal apply/cache optimization after equivalence to the Kraus bundle is demonstrated on the same block. | `P31-ADR-004`; detailed planning §7, §10.6 | Closed |
 | P31-C-02 | Support matrix | Gate names, noise channels, max fused support, partition patterns in vs out. **Closed by** `P31-ADR-007`: contiguous 1- and 2-qubit mixed gate+noise motifs built from `U3` / `CNOT` plus local single-qubit depolarizing / amplitude-damping / phase-damping channels on the same support, allowing multiple successive gates and multiple local noise insertions; each eligible block contains at least one noise operation. | `P31-ADR-007`; detailed planning §3, §7 | Closed |
 | P31-C-03 | Numerical correctness thresholds | **Closed by** `P31-ADR-008`: Phase 3 exactness tolerances retained (`<= 1e-10` Frobenius / trace-validity family, `<= 1e-8` continuity energy) plus representation-level CPTP-invariant policy (`<= 1e-10` equality residuals, `>= -1e-12` positivity floors). | `P31-ADR-008`; detailed planning §10.1; Task 1 / Task 3 mini-specs | Closed |
-| P31-C-04 | Mandatory correctness case set | **Closed by** `P31-ADR-009`: four stable v1 mixed-motif microcases, bounded continuity anchors at `q4` and `q6`, and every counted performance case from `P31-ADR-010`; inherited Phase 3 microcases may remain regression-only outside the counted claim surface. | `P31-ADR-009`; detailed planning §10.2 | Closed |
-| P31-C-05 | External reference slice | **Closed by** `P31-ADR-011`: Qiskit Aer is required on all four `phase31_microcase_*` cases plus `phase2_xxz_hea_q4_continuity`; not required on `q6` continuity or counted 8/10-qubit performance cases. | `P31-ADR-011`; detailed planning §10.4 | Closed |
-| P31-C-06 | Performance case set | **Closed by** `P31-ADR-010`: counted motif-dense families `phase31_pair_repeat` and `phase31_alternating_ladder` at `q ∈ {8,10}`, patterns `{periodic,dense}`, seeds `{20260318,20260319,20260320}`, plus sparse `layered_nearest_neighbor` control cases; required `break_even_table` / `justification_map`; positive-method threshold measured versus the Phase 3 fused baseline. | `P31-ADR-010`; detailed planning §10.3 | Closed |
-| P31-C-07 | Mode naming and API surface | **Closed by** `P31-ADR-012`: planner `requested_mode` stays `partitioned_density`; counted runtime path uses `execute_partitioned_density_channel_native(...)` and runtime-path label `phase31_channel_native`; existing exception families and categories remain, with Phase 3.1 `first_unsupported_condition` vocabulary added. | `P31-ADR-012`; detailed planning §10.5 | Closed |
-| P31-C-08 | Evidence bundle schema | **Closed by** `P31-ADR-013`: keep top-level `correctness_evidence` / `performance_evidence` trees, add Phase 3.1 fields and required slices (`channel_invariants`, `break_even_table`), and require version-bumped successor schemas when mandatory fields expand. | `P31-ADR-013`; detailed planning §10.6 | Closed |
+| P31-C-04 | Mandatory correctness case set | **Closed by** `P31-ADR-009`: four stable v1 mixed-motif microcases use the **strict** `phase31_channel_native` path; bounded continuity anchors at `q4` and `q6`, plus every counted performance case from `P31-ADR-010`, use the explicit **hybrid** `phase31_channel_native_hybrid` path; inherited Phase 3 microcases may remain regression-only outside the counted claim surface. | `P31-ADR-009`; detailed planning §10.2 | Closed |
+| P31-C-05 | External reference slice | **Closed by** `P31-ADR-011`: Qiskit Aer is required on all four `phase31_microcase_*` cases plus `phase2_xxz_hea_q4_continuity`; the microcases use the strict path, while `q4` continuity uses the hybrid path; Aer is not required on `q6` continuity or counted 8/10-qubit performance cases. | `P31-ADR-011`; detailed planning §10.4 | Closed |
+| P31-C-06 | Performance case set | **Closed by** `P31-ADR-010`: counted motif-dense families `phase31_pair_repeat` and `phase31_alternating_ladder` at `q ∈ {8,10}`, patterns `{periodic,dense}`, seeds `{20260318,20260319,20260320}`, plus sparse `layered_nearest_neighbor` control cases; counted whole-workload Phase 3.1 baseline is the explicit **hybrid** path; required `break_even_table` / `justification_map` and route-coverage reporting; positive-method threshold measured versus the Phase 3 fused baseline. | `P31-ADR-010`; detailed planning §10.3 | Closed |
+| P31-C-07 | Mode naming and API surface | **Closed by** `P31-ADR-012`: planner `requested_mode` stays `partitioned_density`; strict surface uses `execute_partitioned_density_channel_native(...)` / `phase31_channel_native`; hybrid whole-workload surface uses `execute_partitioned_density_channel_native_hybrid(...)` / `phase31_channel_native_hybrid`; existing exception families and categories remain, with Phase 3.1 `first_unsupported_condition` vocabulary plus frozen hybrid route reasons. | `P31-ADR-012`; detailed planning §10.5 | Closed |
+| P31-C-08 | Evidence bundle schema | **Closed by** `P31-ADR-013`: keep top-level `correctness_evidence` / `performance_evidence` trees, add Phase 3.1 fields and required slices (`channel_invariants`, `break_even_table`, `partition_route_summary`), route-coverage metadata for hybrid-counted cases, and require version-bumped successor schemas when mandatory fields expand. | `P31-ADR-013`; detailed planning §10.6 | Closed |
 | P31-C-09 | Host performance build and runtime policy | **Closed by** `P31-ADR-014`: counted v1 builds are scalar-only and must record `build_policy_id = "phase31_scalar_only_v1"`, `build_flavor = "scalar"`, `simd_enabled = false`, `tbb_enabled = false`, `thread_count = 1`, and `counted_claim_build = true`. Optional host acceleration remains a later non-counted branch under Task 6. | `P31-ADR-014`; detailed planning §10.7; `task-6/TASK_6_MINI_SPEC.md` | Closed |
 
 ## Closure Map
@@ -44,11 +45,11 @@ Planning, paper, and implementation work may now proceed under Gate `P31-G-1`.
 | Representation primary | `P31-ADR-004` Kraus-bundle primary representation with Liouville/PTM as non-primary views only | Closed |
 | Support matrix | `P31-ADR-007` frozen v1 slice plus written unsupported tiers and final max-support wording | Closed |
 | Thresholds | `P31-ADR-008` frozen numeric policy plus representation-level invariant policy | Closed |
-| Correctness slice | `P31-ADR-009` frozen counted case list and IDs, including v1 mixed-motif cases | Closed |
-| External reference slice | `P31-ADR-011` frozen Aer slice on four `phase31_microcase_*` cases plus `phase2_xxz_hea_q4_continuity` | Closed |
-| Performance slice | `P31-ADR-010` frozen counted case list and IDs plus `break_even_table` / `justification_map` | Closed |
-| Mode naming / API surface | `P31-ADR-012` planner-mode continuity plus `phase31_channel_native` runtime identity | Closed |
-| Evidence packaging | `P31-ADR-013` schema and emission rules agreed | Closed |
+| Correctness slice | `P31-ADR-009` frozen counted case list and IDs, with strict microcases plus hybrid continuity / performance carry-forward rows | Closed |
+| External reference slice | `P31-ADR-011` frozen Aer slice on four strict `phase31_microcase_*` cases plus hybrid `phase2_xxz_hea_q4_continuity` | Closed |
+| Performance slice | `P31-ADR-010` frozen counted case list and IDs plus hybrid counted baseline and `break_even_table` / `justification_map` | Closed |
+| Mode naming / API surface | `P31-ADR-012` planner-mode continuity plus strict/hybrid runtime identities | Closed |
+| Evidence packaging | `P31-ADR-013` schema, route-summary, and emission rules agreed | Closed |
 | Host build / threading / SIMD | `P31-ADR-014` scalar-only counted-build policy for v1; Task 6 deferred to later non-counted branch | Closed |
 
 ## Closure Details (This Pass)
@@ -112,6 +113,11 @@ Closure decision:
   - `phase2_xxz_hea_q6_continuity`.
 - Every counted performance case is also part of the internal correctness
   matrix.
+- Execution interpretation:
+  - the four `phase31_microcase_*` counted mixed-motif rows use the **strict**
+    `phase31_channel_native` path,
+  - the counted continuity anchors and counted performance carry-forward rows
+    use the explicit **hybrid** `phase31_channel_native_hybrid` path.
 - Older Phase 3 microcases may remain regression checks, but they do not define
   the counted v1 Phase 3.1 paper surface unless promoted later.
 
@@ -135,11 +141,18 @@ Closure decision:
   - primary families at `q ∈ {8, 10}`, patterns `{periodic, dense}`, seeds
     `{20260318, 20260319, 20260320}`,
   - control family at `q ∈ {8, 10}`, pattern `sparse`, seed `20260318`.
+- The counted whole-workload Phase 3.1 baseline is the explicit hybrid runtime
+  `phase31_channel_native_hybrid`, not the strict microcase-only path.
 - Positive methods closure requires at least one representative primary-family
   case to show `>= 1.2x` median wall-clock speedup or `>= 15%` peak-memory
   reduction **versus the Phase 3 fused baseline**, with no correctness loss.
 - Every counted performance package must include a `break_even_table` or
   `justification_map`.
+- Every counted whole-workload performance package must also include
+  route-coverage data sufficient to reconstruct how much of the workload
+  executed through:
+  - `phase31_channel_native`,
+  - the shipped Phase 3 exact path.
 
 Trade-off recorded:
 
@@ -177,6 +190,11 @@ Closure decision:
 - Qiskit Aer is required on:
   - all four `phase31_microcase_*` counted mixed-motif cases,
   - `phase2_xxz_hea_q4_continuity`.
+- Execution interpretation:
+  - the four `phase31_microcase_*` cases use the strict
+    `phase31_channel_native` path,
+  - `phase2_xxz_hea_q4_continuity` uses the explicit hybrid
+    `phase31_channel_native_hybrid` path.
 - Qiskit Aer is not required on:
   - `phase2_xxz_hea_q6_continuity`,
   - counted 8/10-qubit performance cases,
@@ -194,18 +212,29 @@ Status: `Closed`
 Closure decision:
 
 - Planner and descriptor entry keep `requested_mode = "partitioned_density"`.
-- The counted Phase 3.1 runtime path is named `phase31_channel_native`.
-- The canonical convenience helper is
+- The strict motif-proof Phase 3.1 runtime path is named
+  `phase31_channel_native`.
+- The strict motif-proof convenience helper is
   `execute_partitioned_density_channel_native(...)`.
+- The hybrid whole-workload Phase 3.1 runtime path is named
+  `phase31_channel_native_hybrid`.
+- The hybrid whole-workload convenience helper is
+  `execute_partitioned_density_channel_native_hybrid(...)`.
 - Existing exception families and high-level runtime categories remain; Phase
   3.1 extends the `first_unsupported_condition` vocabulary rather than creating
   a new error framework.
+- Frozen hybrid route reasons are:
+  - `eligible_channel_native_motif`,
+  - `pure_unitary_partition`,
+  - `channel_native_noise_presence`,
+  - `channel_native_qubit_span`,
+  - `channel_native_support_surface`.
 
 Trade-off recorded:
 
 - This preserves continuity with the shipped Phase 3 planner contract.
-- The new runtime identity is still explicit enough for audits, bundles, and
-  papers.
+- The strict and hybrid runtime identities are still explicit enough for
+  audits, bundles, and papers without introducing a second planner-entry mode.
 
 ### P31-C-08: Evidence Packaging
 
@@ -225,14 +254,25 @@ Closure decision:
   - `counted_phase31_case`.
 - Required new slices:
   - `channel_invariants` under correctness,
+  - `partition_route_summary` under correctness for hybrid-counted rows,
   - `break_even_table` under performance.
+- Required hybrid-counted route metadata includes:
+  - `channel_native_partition_count`,
+  - `phase3_routed_partition_count`,
+  - `channel_native_member_count`,
+  - `phase3_routed_member_count`,
+  - partition-level `partition_runtime_class`,
+  - partition-level `partition_route_reason`.
+- Required runtime vocabularies now include:
+  - `phase31_channel_native`,
+  - `phase31_channel_native_hybrid`.
 - Schema versions must bump when mandatory Phase 3.1 fields are added.
 
 Trade-off recorded:
 
 - Phase 3.1 stays continuous with the mature Phase 3 evidence machinery.
-- The richer exact-channel claim becomes machine-reviewable rather than
-  free-text-only.
+- The richer exact-channel and hybrid-routing claims become machine-reviewable
+  rather than free-text-only.
 
 ### P31-C-09: Host Build / Threading / SIMD
 

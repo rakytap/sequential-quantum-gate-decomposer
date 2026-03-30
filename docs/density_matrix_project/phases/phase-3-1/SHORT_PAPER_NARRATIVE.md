@@ -16,11 +16,15 @@ circuit as an exact reusable object without losing the ordered semantics of
 open-system evolution. The present study provides a bounded answer. It shows
 that same-support 1- and 2-qubit noisy motifs can be composed as exact CPTP
 objects and validated against sequential density-matrix evolution, rather than
-being treated only as barriers between unitary islands. The current result is
-not yet a broad speedup claim. Its scientific value is methodological: it
-identifies a reusable path toward exact noisy acceleration based on bounded
-channel composition, invariant-aware validation, local-support embedding, and
-explicit unsupported boundaries.
+being treated only as barriers between unitary islands. It also sharpens the
+methodological picture: a scientifically credible path appears to need both a
+strict motif-proof layer, where the fused object itself is validated, and a
+separate hybrid whole-workload layer, where that object is tested inside larger
+exact workloads. The current result is not yet a broad speedup claim. Its
+scientific value is methodological: it identifies a reusable path toward exact
+noisy acceleration based on bounded channel composition, invariant-aware
+validation, local-support embedding, explicit unsupported boundaries, and clear
+separation between proof mode and workload-evaluation mode.
 
 ## Publication Surface Role
 
@@ -71,6 +75,13 @@ against sequential density-matrix evolution. In the present bounded slice, this
 has been demonstrated for 1-qubit and 2-qubit motifs and for local-support
 application inside a larger density state.
 
+Just as importantly, the current interpretation now separates two scientific
+roles that are often blurred together. One role is to prove that the exact noisy
+object itself is sound. The other is to test whether that object helps inside
+larger exact workloads that still contain structure outside the bounded fused
+slice. The former belongs to a strict motif-proof setting; the latter belongs
+to an explicit hybrid whole-workload setting.
+
 Scientifically, this matters because it changes the role of noise in the
 simulation narrative. Noise is no longer treated only as a point where fusion
 must stop. Instead, some noisy motifs can themselves become the fused object,
@@ -96,6 +107,10 @@ noisy acceleration work.
 - Enforce **no silent fallback**. If a method advertises noisy fusion, then
   unsupported cases must remain visible. Otherwise benchmarks become difficult
   to interpret scientifically.
+- Separate **proof mode** from **whole-workload evaluation mode**. The exact
+  fused object can be scientifically established on a strict bounded slice
+  before broader workload-level claims are made through an explicit hybrid
+  interpretation.
 
 These principles are potentially reusable beyond the present bounded support
 surface.
