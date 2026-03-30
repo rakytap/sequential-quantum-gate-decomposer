@@ -185,6 +185,30 @@ def phase31_microcase_definitions() -> tuple[dict, ...]:
                 _noise("phase_damping", 1, 5, _noise_value("phase_damping")),
             ],
         },
+        {
+            "case_name": "phase31_local_support_q4_spectator_embedding_smoke",
+            "qbit_num": 4,
+            "noise_pattern": "periodic",
+            "support_qbits": (0, 1, 2, 3),
+            "operation_specs": [
+                _u3(0),
+                _u3(1),
+                _cnot(1, 0),
+                _noise(
+                    "amplitude_damping", 1, 2, _noise_value("amplitude_damping")
+                ),
+                _noise("phase_damping", 0, 2, _noise_value("phase_damping")),
+                _u3(0),
+                _u3(2),
+                _u3(3),
+                _cnot(3, 2),
+                _noise(
+                    "amplitude_damping", 3, 6, _noise_value("amplitude_damping")
+                ),
+                _noise("phase_damping", 2, 6, _noise_value("phase_damping")),
+                _u3(2),
+            ],
+        },
     )
 
 

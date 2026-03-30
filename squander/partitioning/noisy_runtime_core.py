@@ -335,10 +335,15 @@ def _validate_supported_member(
     op = descriptor_set.canonical_operation_for(member)
     if op.kind == PLANNER_OP_KIND_GATE:
         if op.name not in SUPPORTED_GATE_NAMES:
+            unsupported_gate_condition = (
+                "channel_native_support_surface"
+                if runtime_path == PHASE31_RUNTIME_PATH_CHANNEL_NATIVE
+                else "gate_name"
+            )
             raise runtime_validation_error(
                 descriptor_set,
                 category="unsupported_runtime_operation",
-                first_unsupported_condition="gate_name",
+                first_unsupported_condition=unsupported_gate_condition,
                 failure_stage="runtime_preflight",
                 runtime_path=runtime_path,
                 reason=(
@@ -378,10 +383,15 @@ def _validate_supported_member(
 
     if op.kind == PLANNER_OP_KIND_NOISE:
         if op.name not in SUPPORTED_NOISE_NAMES:
+            unsupported_noise_condition = (
+                "channel_native_support_surface"
+                if runtime_path == PHASE31_RUNTIME_PATH_CHANNEL_NATIVE
+                else "noise_name"
+            )
             raise runtime_validation_error(
                 descriptor_set,
                 category="unsupported_runtime_operation",
-                first_unsupported_condition="noise_name",
+                first_unsupported_condition=unsupported_noise_condition,
                 failure_stage="runtime_preflight",
                 runtime_path=runtime_path,
                 reason=(

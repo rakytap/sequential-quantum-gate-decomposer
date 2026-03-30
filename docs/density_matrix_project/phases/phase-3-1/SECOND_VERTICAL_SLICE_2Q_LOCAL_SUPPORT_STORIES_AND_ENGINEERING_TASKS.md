@@ -270,9 +270,16 @@ the replacement ID here and keep the same acceptance intent: one eligible
   **P31-C-07**, **P31-C-08** (path attribution direction).
 - ADRs: `P31-ADR-012`, `P31-ADR-007`, `P31-ADR-003`, `P31-ADR-005`.
 
+**Layer 4 implementation plans (Task 2)**
+
+- [`ENGINEERING_TASK_P31_S05_E01_IMPLEMENTATION_PLAN.md`](task-2/ENGINEERING_TASK_P31_S05_E01_IMPLEMENTATION_PLAN.md)
+- [`ENGINEERING_TASK_P31_S05_E02_IMPLEMENTATION_PLAN.md`](task-2/ENGINEERING_TASK_P31_S05_E02_IMPLEMENTATION_PLAN.md)
+
 #### Engineering tasks (Story P31-S05)
 
 ##### Engineering Task P31-S05-E01: Replace whole-workload gating with local-support eligibility and mapped application
+
+**Implementation plan:** [`ENGINEERING_TASK_P31_S05_E01_IMPLEMENTATION_PLAN.md`](task-2/ENGINEERING_TASK_P31_S05_E01_IMPLEMENTATION_PLAN.md)
 
 **Implements story**
 
@@ -317,6 +324,8 @@ the replacement ID here and keep the same acceptance intent: one eligible
 ---
 
 ##### Engineering Task P31-S05-E02: Add the local-support negative matrix and audit assertions for the second slice
+
+**Implementation plan:** [`ENGINEERING_TASK_P31_S05_E02_IMPLEMENTATION_PLAN.md`](task-2/ENGINEERING_TASK_P31_S05_E02_IMPLEMENTATION_PLAN.md)
 
 **Implements story**
 

@@ -12,7 +12,11 @@ from squander.partitioning.noisy_runtime_core import (
     _segment_parameter_vector,
 )
 from squander.partitioning.noisy_runtime_errors import runtime_validation_error
-from squander.partitioning.noisy_runtime_fusion import _embed_single_qubit_gate
+from squander.partitioning.noisy_runtime_fusion import (
+    _embed_cnot_gate,
+    _embed_single_qubit_gate,
+    _kernel_indices_for_fused_cnot,
+)
 from squander.partitioning.noisy_validation_errors import NoisyRuntimeValidationError
 from squander.partitioning.noisy_types import (
     PLANNER_OP_KIND_GATE,
@@ -523,25 +527,158 @@ def _validate_whole_partition_motif(
                     runtime_path=runtime_path,
                     reason="Member local qubit not contained in motif support",
                 )
-    if descriptor_set.qbit_num != 1 or len(local_support) != 1:
-        raise runtime_validation_error(
-            descriptor_set,
-            category="unsupported_runtime_operation",
-            first_unsupported_condition="channel_native_qubit_span",
-            failure_stage="runtime_preflight",
-            runtime_path=runtime_path,
-            reason="Slice v1 channel-native fusion is implemented only for single-qubit workloads",
-        )
-    if tuple(sorted(local_support)) != (0,):
-        raise runtime_validation_error(
-            descriptor_set,
-            category="unsupported_runtime_operation",
-            first_unsupported_condition="channel_native_qubit_span",
-            failure_stage="runtime_preflight",
-            runtime_path=runtime_path,
-            reason="Single-qubit slice requires local motif support {{0}}",
-        )
     return tuple(sorted(local_support))
+
+
+def _local_qbit_to_kernel_index(local_support: tuple[int, ...]) -> dict[int, int]:
+    return {lq: idx for idx, lq in enumerate(local_support)}
+
+
+def _kraus_bundle_cnot_for_local_support(
+    member: NoisyPartitionDescriptorMember,
+    *,
+    local_support: tuple[int, ...],
+    descriptor_set: NoisyPartitionDescriptorSet,
+    runtime_path: str,
+) -> np.ndarray:
+    if len(local_support) != 2:
+        raise runtime_validation_error(
+            descriptor_set,
+            category="unsupported_runtime_execution",
+            first_unsupported_condition="channel_native_representation",
+            failure_stage="runtime_preflight",
+            runtime_path=runtime_path,
+            reason=(
+                "Channel-native CNOT lowering requires local support width 2, got {}".format(
+                    len(local_support)
+                )
+            ),
+        )
+    if member.local_control_qbit is None or member.local_target_qbit is None:
+        raise runtime_validation_error(
+            descriptor_set,
+            category="descriptor_to_runtime_mismatch",
+            first_unsupported_condition="local_control_qbit",
+            failure_stage="runtime_preflight",
+            runtime_path=runtime_path,
+            reason="Channel-native CNOT requires local control and target qubits",
+        )
+    for wire in (member.local_control_qbit, member.local_target_qbit):
+        if wire not in local_support:
+            raise runtime_validation_error(
+                descriptor_set,
+                category="descriptor_to_runtime_mismatch",
+                first_unsupported_condition="local_target_qbit",
+                failure_stage="runtime_preflight",
+                runtime_path=runtime_path,
+                reason="Channel-native CNOT wire {} not in motif local_support".format(
+                    wire
+                ),
+            )
+    lmap = _local_qbit_to_kernel_index(local_support)
+    k_ctl, k_tgt = _kernel_indices_for_fused_cnot(
+        local_qbit_to_kernel_index=lmap,
+        local_target_qbit=member.local_target_qbit,
+        local_control_qbit=member.local_control_qbit,
+    )
+    u = _embed_cnot_gate(
+        total_kernel_qbits=2,
+        kernel_control_qbit=k_ctl,
+        kernel_target_qbit=k_tgt,
+    )
+    return np.array([u], dtype=np.complex128)
+
+
+def _lift_single_qubit_kraus_bundle_to_local_support(
+    bundle_1q: np.ndarray,
+    *,
+    target_local_qbit: int | None,
+    local_support: tuple[int, ...],
+    descriptor_set: NoisyPartitionDescriptorSet,
+    runtime_path: str,
+    label: str = "single-qubit kraus bundle",
+) -> np.ndarray:
+    n = len(local_support)
+    if n == 1:
+        d = _validate_kraus_bundle_shape(
+            bundle_1q,
+            descriptor_set=descriptor_set,
+            runtime_path=runtime_path,
+            label=label,
+        )
+        if d != 2:
+            raise runtime_validation_error(
+                descriptor_set,
+                category="unsupported_runtime_execution",
+                first_unsupported_condition="channel_native_representation",
+                failure_stage="runtime_preflight",
+                runtime_path=runtime_path,
+                reason="Channel-native {} on 1-qubit support must have d=2".format(
+                    label
+                ),
+            )
+        return bundle_1q
+    if n == 2:
+        if target_local_qbit is None:
+            raise runtime_validation_error(
+                descriptor_set,
+                category="descriptor_to_runtime_mismatch",
+                first_unsupported_condition="local_target_qbit",
+                failure_stage="runtime_preflight",
+                runtime_path=runtime_path,
+                reason=(
+                    "Channel-native {} lift to 2-qubit support requires "
+                    "local_target_qbit".format(label)
+                ),
+            )
+        if target_local_qbit not in local_support:
+            raise runtime_validation_error(
+                descriptor_set,
+                category="descriptor_to_runtime_mismatch",
+                first_unsupported_condition="local_target_qbit",
+                failure_stage="runtime_preflight",
+                runtime_path=runtime_path,
+                reason="Channel-native {} target local qubit {} not in support".format(
+                    label, target_local_qbit
+                ),
+            )
+        d = _validate_kraus_bundle_shape(
+            bundle_1q,
+            descriptor_set=descriptor_set,
+            runtime_path=runtime_path,
+            label=label,
+        )
+        if d != 2:
+            raise runtime_validation_error(
+                descriptor_set,
+                category="unsupported_runtime_execution",
+                first_unsupported_condition="channel_native_representation",
+                failure_stage="runtime_preflight",
+                runtime_path=runtime_path,
+                reason="Channel-native {} before lift must have d=2".format(label),
+            )
+        kernel_idx = local_support.index(target_local_qbit)
+        kcnt = bundle_1q.shape[0]
+        out = np.empty((kcnt, 4, 4), dtype=np.complex128)
+        for i in range(kcnt):
+            out[i] = _embed_single_qubit_gate(
+                bundle_1q[i],
+                total_kernel_qbits=2,
+                kernel_target_qbit=kernel_idx,
+            )
+        return out
+    raise runtime_validation_error(
+        descriptor_set,
+        category="unsupported_runtime_execution",
+        first_unsupported_condition="channel_native_representation",
+        failure_stage="runtime_preflight",
+        runtime_path=runtime_path,
+        reason=(
+            "Channel-native single-qubit bundle lift supports width 1 or 2 only, got {}".format(
+                n
+            )
+        ),
+    )
 
 
 def _member_to_kraus_bundle(
@@ -549,6 +686,7 @@ def _member_to_kraus_bundle(
     member: NoisyPartitionDescriptorMember,
     segment_parameters: np.ndarray,
     *,
+    local_support: tuple[int, ...],
     runtime_path: str,
 ) -> np.ndarray:
     op = descriptor_set.canonical_operation_for(member)
@@ -566,15 +704,21 @@ def _member_to_kraus_bundle(
             local_start = member.local_param_start
             local_stop = local_start + op.param_count
             theta, phi, lam = segment_parameters[local_start:local_stop]
-            return _kraus_bundle_u3(float(theta), float(phi), float(lam))
-        if op.name == "CNOT":
-            raise runtime_validation_error(
-                descriptor_set,
-                category="unsupported_runtime_operation",
-                first_unsupported_condition="channel_native_support_surface",
-                failure_stage="runtime_preflight",
+            base = _kraus_bundle_u3(float(theta), float(phi), float(lam))
+            return _lift_single_qubit_kraus_bundle_to_local_support(
+                base,
+                target_local_qbit=member.local_target_qbit,
+                local_support=local_support,
+                descriptor_set=descriptor_set,
                 runtime_path=runtime_path,
-                reason="Slice v1 channel-native does not support CNOT motifs yet",
+                label="U3 kraus bundle",
+            )
+        if op.name == "CNOT":
+            return _kraus_bundle_cnot_for_local_support(
+                member,
+                local_support=local_support,
+                descriptor_set=descriptor_set,
+                runtime_path=runtime_path,
             )
     if op.kind == PLANNER_OP_KIND_NOISE:
         local_start = member.local_param_start
@@ -595,7 +739,15 @@ def _member_to_kraus_bundle(
                 p = _clamp_noise_rate_to_unit_interval(
                     float(segment_parameters[local_start])
                 )
-            return _kraus_bundle_local_depolarizing(p)
+            base = _kraus_bundle_local_depolarizing(p)
+            return _lift_single_qubit_kraus_bundle_to_local_support(
+                base,
+                target_local_qbit=member.local_target_qbit,
+                local_support=local_support,
+                descriptor_set=descriptor_set,
+                runtime_path=runtime_path,
+                label="local_depolarizing kraus bundle",
+            )
         if op.name == "amplitude_damping":
             if op.param_count == 0:
                 g = _clamp_noise_rate_to_unit_interval(float(op.fixed_value))
@@ -612,7 +764,15 @@ def _member_to_kraus_bundle(
                 g = _clamp_noise_rate_to_unit_interval(
                     float(segment_parameters[local_start])
                 )
-            return _kraus_bundle_amplitude_damping(g)
+            base = _kraus_bundle_amplitude_damping(g)
+            return _lift_single_qubit_kraus_bundle_to_local_support(
+                base,
+                target_local_qbit=member.local_target_qbit,
+                local_support=local_support,
+                descriptor_set=descriptor_set,
+                runtime_path=runtime_path,
+                label="amplitude_damping kraus bundle",
+            )
         if op.name == "phase_damping":
             if op.param_count == 0:
                 lam = _clamp_noise_rate_to_unit_interval(float(op.fixed_value))
@@ -629,7 +789,15 @@ def _member_to_kraus_bundle(
                 lam = _clamp_noise_rate_to_unit_interval(
                     float(segment_parameters[local_start])
                 )
-            return _kraus_bundle_phase_damping(lam)
+            base = _kraus_bundle_phase_damping(lam)
+            return _lift_single_qubit_kraus_bundle_to_local_support(
+                base,
+                target_local_qbit=member.local_target_qbit,
+                local_support=local_support,
+                descriptor_set=descriptor_set,
+                runtime_path=runtime_path,
+                label="phase_damping kraus bundle",
+            )
     raise runtime_validation_error(
         descriptor_set,
         category="unsupported_runtime_operation",
@@ -709,6 +877,7 @@ def execute_partition_channel_native(
             descriptor_set,
             member,
             segment_parameters,
+            local_support=local_support,
             runtime_path=runtime_path,
         )
         kraus_bundle = _compose_kraus_bundles(
