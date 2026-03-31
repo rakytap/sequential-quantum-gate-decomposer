@@ -2,14 +2,10 @@
 
 ## Draft Status
 
-Pre-closure science-first narrative companion aligned to
-`CLOSURE_PLAN_PHASE_3_1.md`. The required
-`PRE_PUBLICATION_EVIDENCE_REVIEW_PHASE_3_1.md` now exists and currently records
-the closure state as `decision-study-ready`, so this document should now be
-read as a boundary-synchronized narrative companion for the bounded
-decision-study outcome rather than as a not-ready draft. The current text reflects the stronger implementation-backed
-evidence boundary now present in the repo while keeping the narrative
-scientific rather than task-oriented.
+Decision-study narrative companion aligned to
+`PRE_PUBLICATION_EVIDENCE_REVIEW_PHASE_3_1.md`. This document now serves as the
+science-first narrative surface for the bounded Phase 3.1 decision-study
+outcome rather than as a pre-closure status note.
 
 ## Abstract
 
@@ -39,11 +35,9 @@ assumption.
 ## Publication Surface Role
 
 Scientific narrative short paper for a quantum-computing or quantum-machine-
-learning audience. Its purpose is to explain why the current bounded result
-matters, where it fits in the literature, and what reusable insight it offers.
-Until the pre-publication evidence review exists, this document functions as a
-boundary-sync narrative companion rather than as a submission-ready narrative
-paper.
+learning audience. Its purpose is to explain why the bounded Phase 3.1
+decision-study result matters, where it fits in the literature, and what
+reusable methodological insight it offers.
 
 ## 1. Why This Problem Matters
 
@@ -61,7 +55,8 @@ correctness.
 
 ## 2. Where the Literature Is Split
 
-The current literature offers strong ingredients, but not yet a full answer.
+The current literature offers strong ingredients, but not a fully integrated
+answer to the bounded exact noisy-fusion question addressed here.
 
 Graph-based partitioning and gate-fusion papers such as TDAG, GTQCP, QGo, and
 QMin show how much can be gained when circuits are treated as structured
@@ -112,7 +107,7 @@ simulation narrative. Noise is no longer treated only as a point where fusion
 must stop. Instead, some noisy motifs can themselves become the fused object,
 provided the representation, ordering, and invariant checks are all exact.
 
-This is a result about **feasibility and methodology**, not yet about universal
+This is a result about **feasibility and methodology**, not about universal
 performance. That distinction is important and should remain explicit.
 
 ## 4. Reusable Working Principles
@@ -160,9 +155,10 @@ Third, broader noisy structure is still unresolved: correlated noise, larger
 supports, and more heterogeneous motif families may require different
 representations or different validation strategies.
 
-The full structured 8- and 10-qubit matrix, its decision artifact, and the
-formal pre-publication evidence review still remain before one can say how
-general the current negative-to-inconclusive pilot result really is.
+The emitted 8- and 10-qubit matrix now makes the bounded conclusion sharper,
+but broader noisy structure is still unresolved: correlated noise, larger
+supports, and more heterogeneous motif families may require different
+representations or different validation strategies.
 
 The right scientific conclusion is therefore not "noisy fusion is solved," but
 "a bounded exact path now exists and can be studied honestly."

@@ -2,19 +2,13 @@
 
 ## Draft Status
 
-Pre-Task-5 boundary-sync draft aligned to `CLOSURE_PLAN_PHASE_3_1.md`. The
-required `PRE_PUBLICATION_EVIDENCE_REVIEW_PHASE_3_1.md` now exists and records
-the closure state `decision-study-ready`. This surface is therefore no longer
-blocked on missing evidence review, but it is still intentionally **not** yet a
-venue-ready short paper because the final Task 5 decision-study rewrite has not
-been completed. The current draft reflects the stronger implementation-backed
-evidence boundary now present in the repo: the bounded counted correctness
-package spans all four `phase31_microcase_*` rows plus
-`phase2_xxz_hea_q4_continuity` and `phase2_xxz_hea_q6_continuity`, the
-required five-row external slice is already present on the current Stage-A
-evidence path, and the full counted performance matrix now emits the
-matrix-wide `break_even_table` / `justification_map` required for the bounded
-decision-study closure.
+Decision-study closure surface aligned to the recorded
+`decision-study-ready` state in
+`PRE_PUBLICATION_EVIDENCE_REVIEW_PHASE_3_1.md`. This short paper now reflects
+the full bounded evidence package: the counted correctness slice is green, the
+required five-row external slice is present, and the full 26-row counted
+performance matrix emits the machine-readable `break_even_table` /
+`justification_map` that closes the bounded decision-study mode.
 
 ## Abstract
 
@@ -38,21 +32,22 @@ case and explicit hard failures on out-of-scope motifs. On the hybrid path,
 both counted continuity anchors (`phase2_xxz_hea_q4_continuity` and
 `phase2_xxz_hea_q6_continuity`) match the sequential oracle within the same
 threshold, and the bounded external-reference slice against Qiskit Aer is
-already present for the four strict microcases plus `q4` continuity. One frozen
-8-qubit structured pilot row records route coverage plus sequential, Phase 3
-fused, and hybrid timings. In the current pilot, hybrid execution remains
-slower than the existing Phase 3 fused baseline. The present result therefore
-establishes a bounded exactness result with initial decision-study evidence,
-but not yet a closed positive-methods acceleration claim because the full
-structured 8/10-qubit matrix and its decision artifact remain outstanding.
+already present for the four strict microcases plus `q4` continuity. The full
+frozen 26-row whole-workload matrix now records route-aware comparisons against
+the sequential reference and the shipped Phase 3 fused baseline. That matrix
+supports a bounded **decision-study** conclusion rather than a positive-methods
+closure: `17` rows are classified `phase3_sufficient`, `9` rows are classified
+`phase31_not_justified_yet`, and `0` rows are classified `phase31_justified`.
+The present result therefore establishes a bounded exactness-and-decision-study
+contribution: exact channel-native fusion is feasible and scientifically
+auditable on the frozen motif slice, but the stronger performance-justification
+threshold is not met on the frozen whole-workload matrix.
 
 ## Publication Surface Role
 
-Concise methods short paper for the Phase 3.1 publication surface. It follows a
-short-paper structure centered on problem, method, current results, and
-limitations rather than on a roadmap. Until the pre-publication evidence review
-exists, this document functions as a boundary-sync technical surface rather
-than as a submission-ready manuscript.
+Concise methods short paper for the Phase 3.1 decision-study publication
+surface. It follows a short-paper structure centered on problem, method,
+current results, and limitations.
 
 ## Current Claim Boundary
 
@@ -80,24 +75,23 @@ than as a submission-ready manuscript.
   shipped Phase 3 fused baseline.
 - Explicit no-silent-fallback behavior for out-of-scope motifs.
 
-**Implemented but not yet claim-closing**
+**Decision-study claim now closed**
 
-- The bounded counted correctness and external slices are already stronger than
-  earlier drafts, but they have not yet been turned into a formal closure state
-  through `PRE_PUBLICATION_EVIDENCE_REVIEW_PHASE_3_1.md`.
-- The frozen hybrid pilot row proves route-aware whole-workload execution and
-  provides an initial decision-study signal, but one row cannot close the
-  whole-workload justification question.
+- The bounded counted correctness and external slices are formally closed in the
+  recorded review state.
+- The full structured 8- and 10-qubit performance matrix is emitted with
+  control-family coverage and the required machine-readable
+  `break_even_table` / `justification_map`.
+- The recorded review state is `decision-study-ready`, not
+  `positive-methods-ready`, because the matrix contains `0`
+  `phase31_justified` rows.
 
-**Still missing for Phase 3.1 closure**
+**Out of scope / still not claimed**
 
-- The full structured 8- and 10-qubit performance matrix, including
-  control-family closure and the required `break_even_table` /
-  `justification_map`.
-- The pre-publication evidence review and explicit closure-state record
-  (`positive-methods-ready`, `decision-study-ready`, or `not-ready-yet`).
 - General support beyond 2 qubits, correlated noise, or arbitrary unbounded
   CPTP fusion.
+- Any positive-methods acceleration claim against the Phase 3 fused baseline on
+  the frozen slice.
 
 ### Claim-to-evidence traceability
 
@@ -232,29 +226,27 @@ evidence, channel-native fusion is therefore mathematically justified and
 semantically executable, but not yet performance-justified as a broader
 workload method.
 
-## 5. Limitations and Remaining Claim Gate
+## 5. Limitations and Final Claim Gate
 
-This short paper should stay honest about what is still missing.
+This short paper should stay honest about what the emitted evidence does and
+does not support.
 
-- The current result is a bounded exactness result with initial decision-study
-  evidence, not a closed acceleration paper.
-- The bounded counted correctness package and required five-row external slice
-  are already present in current evidence, but they still need to be turned
-  into a formal closure-state decision through
-  `PRE_PUBLICATION_EVIDENCE_REVIEW_PHASE_3_1.md`.
-- The current hybrid evidence includes only one frozen structured pilot row.
-  That row is informative precisely because it is not positive: it shows that
-  mathematical feasibility does not automatically translate into workload-level
-  speedup.
-- The broader 8- and 10-qubit structured matrix, control-family closure, final
-  `break_even_table` / `justification_map`, and the resulting closure-state
-  decision remain undelivered.
+- The current result is a bounded exactness-and-decision-study contribution,
+  not a positive-methods acceleration paper.
+- The counted correctness package and required five-row external slice are
+  already green on the frozen bounded surface, so correctness is no longer the
+  publication blocker.
+- The full 26-row counted matrix and its machine-readable
+  `break_even_table` / `justification_map` are now emitted, and the formal
+  pre-publication review records the closure state as `decision-study-ready`.
+- The stronger positive-methods threshold is **not** met on the frozen slice:
+  the emitted matrix classifies `17` rows as `phase3_sufficient`, `9` rows as
+  `phase31_not_justified_yet`, and `0` rows as `phase31_justified`.
 
-If those missing layers later show a real advantage relative to the existing
-partitioned exact baseline, this short paper can close as a bounded positive
-methods result. If they do not, the scientifically honest closure is a
-decision-study paper explaining where the richer fused object is and is not
-justified.
+The scientifically honest closure is therefore a bounded decision-study paper
+explaining where the richer fused object is mathematically valid, where the
+shipped Phase 3 fused baseline is already sufficient, and where the richer
+whole-workload path is still not justified under the frozen threshold rule.
 
 ## Selected References
 
