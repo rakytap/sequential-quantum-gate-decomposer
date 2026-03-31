@@ -3,12 +3,12 @@
 ## Draft Status
 
 Pre-closure science-first narrative companion aligned to
-`CLOSURE_PLAN_PHASE_3_1.md`. This document is intentionally **not** yet
-venue-ready because the required
-`PRE_PUBLICATION_EVIDENCE_REVIEW_PHASE_3_1.md` has not yet recorded a closure
-state. The current text reflects the stronger implementation-backed evidence
-boundary now present in the repo while keeping the narrative scientific rather
-than task-oriented.
+`CLOSURE_PLAN_PHASE_3_1.md`. The required
+`PRE_PUBLICATION_EVIDENCE_REVIEW_PHASE_3_1.md` now exists and currently records
+the closure state as `not-ready-yet`, so this document is intentionally **not**
+yet venue-ready. The current text reflects the stronger implementation-backed
+evidence boundary now present in the repo while keeping the narrative
+scientific rather than task-oriented.
 
 ## Abstract
 

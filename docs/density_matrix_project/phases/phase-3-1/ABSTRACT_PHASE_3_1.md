@@ -3,9 +3,10 @@
 ## Draft Status
 
 Pre-closure abstract draft aligned to `CLOSURE_PLAN_PHASE_3_1.md`. This
-document is intentionally **not** yet submission-ready because the required
-`PRE_PUBLICATION_EVIDENCE_REVIEW_PHASE_3_1.md` has not yet recorded a closure
-state. The current text reflects the stronger implementation-backed evidence
+document is intentionally **not** yet submission-ready because
+`PRE_PUBLICATION_EVIDENCE_REVIEW_PHASE_3_1.md` now records the current closure
+state as `not-ready-yet`. The current text reflects the stronger
+implementation-backed evidence
 boundary now present in the repo: the bounded counted correctness package spans
 all four `phase31_microcase_*` rows plus `phase2_xxz_hea_q4_continuity` and
 `phase2_xxz_hea_q6_continuity`, the required five-row external slice is already
