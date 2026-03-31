@@ -65,7 +65,9 @@ def test_phase31_counted_matrix_record_fields():
         "phase31_not_justified_yet",
     }
     assert isinstance(record["hybrid_partition_route_records"], list)
-    assert len(record["hybrid_partition_route_records"]) == record["partition_count"]
+    assert len(record["hybrid_partition_route_records"]) == (
+        record["channel_native_partition_count"] + record["phase3_routed_partition_count"]
+    )
     for key in (
         "channel_native_partition_count",
         "phase3_routed_partition_count",
