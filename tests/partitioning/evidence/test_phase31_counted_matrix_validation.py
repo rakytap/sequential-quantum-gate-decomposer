@@ -21,6 +21,7 @@ from benchmarks.density_matrix.performance_evidence.phase31_counted_matrix_valid
     build_cases,
 )
 from benchmarks.density_matrix.performance_evidence.records import (
+    build_phase31_decision_summary,
     build_phase31_counted_performance_record,
 )
 
@@ -97,3 +98,24 @@ def test_phase31_counted_matrix_bundle_summary():
     assert summary["route_fields_present"] is True
     assert summary["build_metadata_present"] is True
     assert summary["inventory_match"] is True
+    assert summary["decision_rows"] == 26
+    assert summary["decision_inventory_match"] is True
+    assert summary["break_even_table_rows"] == 26
+    assert summary["justification_map_rows"] == 26
+
+
+def test_phase31_counted_matrix_decision_summary_machine_readable():
+    cases = build_cases()
+    decision_summary = build_phase31_decision_summary(cases)
+    assert decision_summary["total_cases"] == 26
+    assert len(decision_summary["break_even_table"]) == 26
+    assert len(decision_summary["justification_map"]) == 26
+    assert decision_summary["decision_class_counts"]["phase3_sufficient"] >= 0
+    assert decision_summary["decision_class_counts"]["phase31_justified"] >= 0
+    assert decision_summary["decision_class_counts"]["phase31_not_justified_yet"] >= 0
+    assert sorted(
+        entry["case_name"] for entry in decision_summary["break_even_table"]
+    ) == sorted(case["case_name"] for case in cases)
+    assert set(decision_summary["justification_map"]) == {
+        case["case_name"] for case in cases
+    }

@@ -354,6 +354,14 @@ def _prefixed_runtime_bridge_fields(prefix: str, bridge: dict) -> dict:
     return {f"{prefix}{key}": value for key, value in bridge.items()}
 
 
+def _phase31_decision_priority(decision_class: str) -> int:
+    if decision_class == "phase31_justified":
+        return 0
+    if decision_class == "phase31_not_justified_yet":
+        return 1
+    return 2
+
+
 def _hybrid_route_coverage(runtime_result, descriptor_set) -> dict[str, Any]:
     channel_native_partition_count = 0
     phase3_routed_partition_count = 0
@@ -681,6 +689,105 @@ def build_phase31_counted_performance_record(case_context) -> dict[str, Any]:
     record.update(_prefixed_runtime_bridge_fields("phase3_fused_", fused_bridge))
     record.update(_prefixed_runtime_bridge_fields("phase31_hybrid_", hybrid_bridge))
     return record
+
+
+def build_phase31_break_even_table(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    table: list[dict[str, Any]] = []
+    for record in records:
+        table.append(
+            {
+                "case_name": record["case_name"],
+                "workload_id": record["workload_id"],
+                "family_name": record["family_name"],
+                "qbit_num": record["qbit_num"],
+                "noise_pattern": record["noise_pattern"],
+                "seed": record["seed"],
+                "benchmark_slice": record["benchmark_slice"],
+                "decision_class": record["decision_class"],
+                "diagnosis_tag": record["diagnosis_tag"],
+                "sequential_median_runtime_ms": record["sequential_median_runtime_ms"],
+                "phase3_fused_median_runtime_ms": record["phase3_fused_median_runtime_ms"],
+                "phase31_hybrid_median_runtime_ms": record["phase31_hybrid_median_runtime_ms"],
+                "sequential_median_peak_rss_kb": record["sequential_median_peak_rss_kb"],
+                "phase3_fused_median_peak_rss_kb": record["phase3_fused_median_peak_rss_kb"],
+                "phase31_hybrid_median_peak_rss_kb": record["phase31_hybrid_median_peak_rss_kb"],
+                "channel_native_partition_count": record["channel_native_partition_count"],
+                "phase3_routed_partition_count": record["phase3_routed_partition_count"],
+                "channel_native_member_count": record["channel_native_member_count"],
+                "phase3_routed_member_count": record["phase3_routed_member_count"],
+                "phase31_hybrid_internal_reference_pass": record[
+                    "phase31_hybrid_internal_reference_pass"
+                ],
+            }
+        )
+    table.sort(
+        key=lambda row: (
+            _phase31_decision_priority(row["decision_class"]),
+            row["case_name"],
+        )
+    )
+    return table
+
+
+def build_phase31_decision_summary(records: list[dict[str, Any]]) -> dict[str, Any]:
+    break_even_table = build_phase31_break_even_table(records)
+    case_names = [row["case_name"] for row in break_even_table]
+    decision_class_counts = {
+        decision_class: sum(
+            row["decision_class"] == decision_class for row in break_even_table
+        )
+        for decision_class in sorted(_PHASE31_HYBRID_DECISION_CLASSES)
+    }
+    diagnosis_tag_counts = {
+        diagnosis_tag: sum(
+            row["diagnosis_tag"] == diagnosis_tag for row in break_even_table
+        )
+        for diagnosis_tag in sorted(_PHASE31_HYBRID_DIAGNOSIS_TAGS)
+    }
+    representative_rows = [row for row in break_even_table if row["seed"] == 20260318]
+    review_ready_case_table = [
+        {
+            "case_name": row["case_name"],
+            "family_name": row["family_name"],
+            "qbit_num": row["qbit_num"],
+            "noise_pattern": row["noise_pattern"],
+            "decision_class": row["decision_class"],
+            "diagnosis_tag": row["diagnosis_tag"],
+            "channel_native_partition_count": row["channel_native_partition_count"],
+            "phase3_routed_partition_count": row["phase3_routed_partition_count"],
+            "phase3_fused_median_runtime_ms": row["phase3_fused_median_runtime_ms"],
+            "phase31_hybrid_median_runtime_ms": row["phase31_hybrid_median_runtime_ms"],
+        }
+        for row in break_even_table
+    ]
+    justification_map = {
+        row["case_name"]: {
+            "decision_class": row["decision_class"],
+            "diagnosis_tag": row["diagnosis_tag"],
+            "channel_native_partition_count": row["channel_native_partition_count"],
+            "phase3_routed_partition_count": row["phase3_routed_partition_count"],
+        }
+        for row in break_even_table
+    }
+    return {
+        "total_cases": len(break_even_table),
+        "inventory_match": len(case_names) == len(set(case_names)),
+        "decision_vocabulary": sorted(_PHASE31_HYBRID_DECISION_CLASSES),
+        "diagnosis_vocabulary": sorted(_PHASE31_HYBRID_DIAGNOSIS_TAGS),
+        "decision_class_counts": decision_class_counts,
+        "diagnosis_tag_counts": diagnosis_tag_counts,
+        "phase3_sufficient_rows": decision_class_counts["phase3_sufficient"],
+        "phase31_justified_rows": decision_class_counts["phase31_justified"],
+        "phase31_not_justified_yet_rows": decision_class_counts[
+            "phase31_not_justified_yet"
+        ],
+        "break_even_table": break_even_table,
+        "justification_map": justification_map,
+        "review_ready_case_table": review_ready_case_table,
+        "representative_review_cases": [
+            row["case_name"] for row in representative_rows
+        ],
+    }
 
 
 @lru_cache(maxsize=1)

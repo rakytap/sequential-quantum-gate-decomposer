@@ -25,6 +25,7 @@ from benchmarks.density_matrix.performance_evidence.common import (
     performance_evidence_output_dir,
 )
 from benchmarks.density_matrix.performance_evidence.records import (
+    build_phase31_decision_summary,
     build_phase31_counted_performance_records,
 )
 from benchmarks.density_matrix.performance_evidence.validation_support import (
@@ -57,6 +58,7 @@ def build_artifact_bundle(cases: list[dict]) -> dict:
     inventory = build_phase31_counted_performance_inventory_cases()
     case_ids = [case["case_name"] for case in cases]
     inventory_ids = [case["case_name"] for case in inventory]
+    decision_summary = build_phase31_decision_summary(cases)
     primary_rows = sum(case["benchmark_slice"] == "phase31_structured_performance" for case in cases)
     control_rows = sum(case["benchmark_slice"] == "phase31_control_performance" for case in cases)
     route_fields_present = all(
@@ -104,6 +106,9 @@ def build_artifact_bundle(cases: list[dict]) -> dict:
         and route_fields_present
         and baseline_trio_present
         and build_metadata_present
+        and decision_summary["inventory_match"]
+        and len(decision_summary["break_even_table"]) == 26
+        and len(decision_summary["justification_map"]) == 26
         else "fail"
     )
     summary = {
@@ -114,6 +119,13 @@ def build_artifact_bundle(cases: list[dict]) -> dict:
         "baseline_trio_present": baseline_trio_present,
         "build_metadata_present": build_metadata_present,
         "inventory_match": case_ids == inventory_ids,
+        "decision_rows": decision_summary["total_cases"],
+        "decision_inventory_match": decision_summary["inventory_match"],
+        "phase3_sufficient_rows": decision_summary["phase3_sufficient_rows"],
+        "phase31_justified_rows": decision_summary["phase31_justified_rows"],
+        "phase31_not_justified_yet_rows": decision_summary["phase31_not_justified_yet_rows"],
+        "break_even_table_rows": len(decision_summary["break_even_table"]),
+        "justification_map_rows": len(decision_summary["justification_map"]),
     }
     bundle = assemble_record_schema_case_bundle(
         SUITE_NAME,
@@ -122,6 +134,7 @@ def build_artifact_bundle(cases: list[dict]) -> dict:
         cases,
     )
     bundle["record_schema_version"] = PERFORMANCE_EVIDENCE_PHASE31_CASE_SCHEMA_VERSION
+    bundle["decision_summary"] = decision_summary
     require_bundle_fields(bundle, ARTIFACT_CORE_FIELDS, "Phase 3.1 counted matrix bundle")
     return bundle
 
