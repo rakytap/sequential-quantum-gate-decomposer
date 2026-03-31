@@ -381,9 +381,11 @@ through a speedup claim.
 
 ### Status
 
-`Planned` (specification and publication surfaces in
-`docs/density_matrix_project/phases/phase-3-1/`; implementation awaits pre-
-implementation checklist closure)
+`Complete (bounded v1 decision study)` — implementation-backed, with the
+frozen counted correctness slice, full counted 26-row performance matrix,
+machine-readable `break_even_table` / `justification_map`, and
+`PRE_PUBLICATION_EVIDENCE_REVIEW_PHASE_3_1.md` recorded at
+`decision-study-ready`.
 
 ### Main Goal
 
@@ -419,18 +421,18 @@ bottleneck elsewhere?
 
 ### Publication Target
 
-Follow-on methods paper or decision study (see `PUBLICATIONS.md` Phase 3.1 /
-Side Paper A).
+Bounded decision-study paper / methods note on the frozen v1 slice (see
+`PUBLICATIONS.md` Phase 3.1 / Side Paper A).
 
 ### Exit Criteria
 
 - frozen support matrix and primary representation choice documented in Phase
   3.1 ADRs and checklist,
-- at least one executable channel-native or superoperator-native mode validated
-  on the mandatory correctness slice, **or** a benchmark-grounded documented
-  negative outcome with the same comparative baselines,
-- publication-facing claim boundary matches emitted evidence and does not
-  contradict closed Phase 3 claims.
+- exact strict/hybrid execution validated on the frozen counted correctness
+  slice,
+- full counted 26-row matrix emitted with matrix-wide decision artifact,
+- and publication-facing claim boundary matches the emitted bounded
+  decision-study evidence and does not contradict closed Phase 3 claims.
 
 Detailed tasks, validation matrix, and gates:
 [`DETAILED_PLANNING_PHASE_3_1.md`](../phases/phase-3-1/DETAILED_PLANNING_PHASE_3_1.md).

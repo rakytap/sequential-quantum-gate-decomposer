@@ -49,10 +49,15 @@ Phase 3 is complete and established the noise-aware partitioning/fusion foundati
   closure, while channel-native fusion and broader workflow growth remain
   deferred.
 
-Phase 3.1 is **planned** as the spec-driven follow-on for channel-native /
-superoperator fusion (PLANNING.md §5.1), with contracts and paper surfaces in
-[`phases/phase-3-1/`](phases/phase-3-1/). It is optional relative to the default
-Phase 4 sequencing; implementation has not started.
+Phase 3.1 is complete on its frozen v1 slice as a **bounded decision-study**
+follow-on for channel-native / superoperator fusion (PLANNING.md §5.1). The
+phase-local record in [`phases/phase-3-1/`](phases/phase-3-1/) now includes the
+implemented strict/hybrid runtime surfaces, the full counted 26-row
+whole-workload matrix, a machine-readable decision artifact, a recorded
+pre-publication review state of `decision-study-ready`, and finalized
+phase-local paper surfaces in decision-study mode. Phase 3.1 remains optional
+relative to the default Phase 4 sequencing in the thesis plan, but it is **not**
+an unopened or docs-only branch anymore.
 
 Phase 4 is planned and will broaden the noisy VQE/VQA surface, gradients, and
 optimizer studies.
@@ -69,12 +74,14 @@ Phase 5 is planned and will focus on trainability analysis under noise
 | 1     | Foundation: density matrices + initial noise channels           | Complete |
 | 2     | Exact noisy backend integration for one canonical workflow       | Complete |
 | 3     | Noise-aware partitioning and gate fusion for mixed-state circuits | Complete |
-| 3.1   | Channel-native / superoperator fusion follow-on (optional)      | Planned (docs) |
+| 3.1   | Channel-native / superoperator fusion follow-on (optional)      | Complete (bounded decision study) |
 | 4     | Broader noisy VQE/VQA features, gradients, and optimizer studies | Planned |
 | 5     | Trainability analysis under noise (BP and expressivity studies) | Planned  |
 
 Phase 3.1 sits between 3 and 4 in the partitioning line but does not replace
-Phase 4 on the default critical path; see [`planning/PLANNING.md`](planning/PLANNING.md) §4 and §5.1.
+Phase 4 on the default critical path; its delivered result is a bounded
+decision-study milestone rather than a broader optimizer or trainability paper.
+See [`planning/PLANNING.md`](planning/PLANNING.md) §4 and §5.1.
 
 
 Notes:
@@ -86,8 +93,9 @@ available.
 
 ## Documentation Map
 
-- `[phases/phase-3-1/](phases/phase-3-1/)`: Phase 3.1 spec-driven contracts
-  (channel-native / superoperator fusion follow-on).
+- `[phases/phase-3-1/](phases/phase-3-1/)`: Phase 3.1 delivered contracts,
+  evidence review, and paper surfaces for the bounded channel-native /
+  superoperator decision-study follow-on.
 - `[CHANGELOG.md](CHANGELOG.md)`: delivered phase outputs and upcoming phase
 targets.
 - `[ARCHITECTURE.md](ARCHITECTURE.md)`: implementation structure and integration

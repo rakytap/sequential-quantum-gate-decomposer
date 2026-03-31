@@ -85,8 +85,11 @@ Phase 3.1 planning helpers also exist in:
 - `benchmarks/density_matrix/correctness_evidence/case_selection.py`
 - `benchmarks/density_matrix/performance_evidence/case_selection.py`
 
-These helpers intentionally do **not** alter the default Phase 3 case caches
-until Phase 3.1 implementation work wires them in.
+These helpers intentionally do **not** alter the default Phase 3 case caches by
+default. Phase 3.1 now uses **sibling** selectors, bundles, and validation
+surfaces for its bounded counted matrix and decision-study closure, while the
+historical Phase 3 default package remains available as a separate legacy
+surface.
 
 ---
 
