@@ -5,8 +5,9 @@
 Pre-closure science-first narrative companion aligned to
 `CLOSURE_PLAN_PHASE_3_1.md`. The required
 `PRE_PUBLICATION_EVIDENCE_REVIEW_PHASE_3_1.md` now exists and currently records
-the closure state as `not-ready-yet`, so this document is intentionally **not**
-yet venue-ready. The current text reflects the stronger implementation-backed
+the closure state as `decision-study-ready`, so this document should now be
+read as a boundary-synchronized narrative companion for the bounded
+decision-study outcome rather than as a not-ready draft. The current text reflects the stronger implementation-backed
 evidence boundary now present in the repo while keeping the narrative
 scientific rather than task-oriented.
 

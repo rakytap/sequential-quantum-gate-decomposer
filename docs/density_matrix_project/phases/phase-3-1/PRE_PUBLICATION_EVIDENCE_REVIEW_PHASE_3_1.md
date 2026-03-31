@@ -29,7 +29,7 @@ It does **not** reopen:
 
 ## Review state
 
-**Recorded closure state:** `not-ready-yet`
+**Recorded closure state:** `decision-study-ready`
 
 ## Why this is the current state
 
@@ -44,24 +44,26 @@ substantial implementation-backed bounded result:
 - and one structured hybrid pilot row already provides initial whole-workload
   decision evidence.
 
-However, the phase does **not** yet satisfy the closure conditions for either
-`positive-methods-ready` or `decision-study-ready`, because the full frozen
-performance matrix and its decision artifact are still missing.
+However, the phase still does **not** satisfy the closure conditions for
+`positive-methods-ready`, because the full frozen counted matrix now shows no
+`phase31_justified` rows. The emitted matrix instead supports a bounded
+decision-study closure.
 
 Therefore the current review outcome is:
 
 - **not a positive-methods closure,**
-- **not yet a decision-study closure,**
-- but **an implementation-backed bounded result with correctness substantially
-  ahead of performance closure.**
+- **yes a bounded decision-study closure,**
+- with **correctness green on the frozen bounded slice and matrix-level
+  performance evidence showing where Phase 3 remains sufficient and where Phase
+  3.1 is still not justified yet.**
 
 ## Closure-state rubric check
 
 | Closure state | Required condition | Current verdict | Reason |
 |---|---|---|---|
-| `positive-methods-ready` | Mandatory correctness slice green; required external slice green; full counted performance matrix emitted; `break_even_table` / `justification_map` emitted; at least one representative primary-family row meets the frozen positive threshold | **No** | The correctness and external slices are present, but the full counted performance matrix and decision artifact are not yet emitted |
-| `decision-study-ready` | Mandatory correctness slice green; full counted performance matrix emitted; decision artifact emitted; evidence supports a bounded negative or mixed whole-workload conclusion | **No** | One pilot row exists, but one row is not the full matrix and cannot close the whole-workload question |
-| `not-ready-yet` | Any mandatory correctness or performance obligation remains incomplete, contradictory, or blocked | **Yes** | The full `P31-ADR-010` matrix and its decision artifact remain outstanding |
+| `positive-methods-ready` | Mandatory correctness slice green; required external slice green; full counted performance matrix emitted; `break_even_table` / `justification_map` emitted; at least one representative primary-family row meets the frozen positive threshold | **No** | The counted matrix is now emitted, but it contains `0` `phase31_justified` rows and therefore does not satisfy the frozen positive-method rule |
+| `decision-study-ready` | Mandatory correctness slice green; full counted performance matrix emitted; decision artifact emitted; evidence supports a bounded negative or mixed whole-workload conclusion | **Yes** | The counted matrix and decision artifact are now emitted; the current result shows `17` `phase3_sufficient` rows, `9` `phase31_not_justified_yet` rows, and `0` `phase31_justified` rows |
+| `not-ready-yet` | Any mandatory correctness or performance obligation remains incomplete, contradictory, or blocked | **No** | The full `P31-ADR-010` matrix and its machine-readable decision artifact are now present |
 
 ## Review table: frozen slice status
 
@@ -80,11 +82,11 @@ Therefore the current review outcome is:
 
 | Evidence area | Frozen requirement | Current status | Primary evidence anchor | Review note |
 |---|---|---|---|---|
-| Full `P31-ADR-010` counted performance matrix | 26 counted Phase 3.1 rows | **Blocked / incomplete** | `tests/partitioning/evidence/test_phase31_hybrid_pilot_validation.py` | Inventory helpers define the full 26-row matrix, but the current dedicated emitted artifact is still the single pilot row |
-| Baseline trio on all counted rows | sequential, Phase 3 fused, Phase 3.1 hybrid | **Partial** | same file | The pilot row records the full baseline trio, but matrix-wide emission is not yet present |
-| Route-coverage metadata on counted rows | route counters and route records | **Partial** | same file | Present on the pilot row; not yet present across the full counted matrix |
-| Decision artifact | `break_even_table` / `justification_map` | **Missing** | planning and mini-specs | No emitted matrix-wide decision artifact has been recorded yet |
-| Matrix-level closure mode | positive methods or decision study | **Not decidable yet** | this review | One pilot row is informative but insufficient for matrix-level closure |
+| Full `P31-ADR-010` counted performance matrix | 26 counted Phase 3.1 rows | **Green** | `tests/partitioning/evidence/test_phase31_counted_matrix_validation.py`; `phase31_counted_matrix_bundle.json` | Focused validation now asserts `26` total rows with the frozen `24` primary + `2` control split |
+| Baseline trio on all counted rows | sequential, Phase 3 fused, Phase 3.1 hybrid | **Green** | same file | The bundle summary asserts baseline-trio presence across all counted rows |
+| Route-coverage metadata on counted rows | route counters and route records | **Green** | same file | The bundle summary asserts route-field presence across all counted rows |
+| Decision artifact | `break_even_table` / `justification_map` | **Green** | same file; `phase31_counted_matrix_bundle.json` | The bundle now emits both matrix-wide artifacts and a machine-readable decision summary |
+| Matrix-level closure mode | positive methods or decision study | **Decision-study-ready** | this review + counted matrix bundle | Matrix-level counts are `17` `phase3_sufficient`, `9` `phase31_not_justified_yet`, `0` `phase31_justified` |
 
 ## Case-indexed evidence summary
 
@@ -100,8 +102,8 @@ Therefore the current review outcome is:
 
 | Evidence unit | Workload / slice | Runtime interpretation | Current review status |
 |---|---|---|---|
-| Structured pilot row | `phase31_pair_repeat_q8_periodic_seed20260318` | hybrid `phase31_channel_native_hybrid` | **Implemented and partially validated** |
-| Full counted matrix inventory | 26 counted rows from the frozen `P31-ADR-010` slice | hybrid `phase31_channel_native_hybrid` | **Planned inventory exists, emitted closure package still missing** |
+| Structured pilot row | `phase31_pair_repeat_q8_periodic_seed20260318` | hybrid `phase31_channel_native_hybrid` | **Implemented and validated as one member of the counted matrix** |
+| Full counted matrix inventory | 26 counted rows from the frozen `P31-ADR-010` slice | hybrid `phase31_channel_native_hybrid` | **Implemented and validated** |
 
 ## Current evidence-backed answer to Side Paper A
 
@@ -112,7 +114,8 @@ The Side Paper A question is:
 
 ### Current answer status
 
-**Partial answer only; not yet claim-closing.**
+**Bounded decision-study answer; claim-closing for the decision-study mode, but
+not for the positive-methods mode.**
 
 ### What the current evidence already supports
 
@@ -124,64 +127,65 @@ The Side Paper A question is:
   strict path on the counted microcase surface.
 - The hybrid path is already **implemented and validated** on the counted
   continuity anchors and is therefore not only hypothetical.
-- The first structured hybrid pilot row already indicates that mathematical
-  feasibility does **not** automatically imply workload-level advantage over the
-  shipped Phase 3 fused baseline.
+- The full counted matrix now indicates that mathematical feasibility does
+  **not** automatically imply workload-level advantage over the shipped Phase 3
+  fused baseline.
+- The current matrix-wide result is mixed and negative-to-non-proceed for the
+  stronger methods claim:
+  - `17` rows classify as `phase3_sufficient`,
+  - `9` rows classify as `phase31_not_justified_yet`,
+  - `0` rows classify as `phase31_justified`.
 
 ### What the current evidence does not yet support
 
-- A matrix-level statement about where Phase 3.1 is justified across the frozen
-  8/10-qubit workload families.
 - A positive-methods claim against the Phase 3 fused baseline.
-- A closed decision-study claim across the full frozen performance slice.
+- Any statement stronger than the current bounded decision-study outcome on the
+  frozen slice.
 
 ## Blockers to publication closure
 
-The current blockers are:
+The remaining blockers are now narrower:
 
-1. **Full counted performance matrix not yet emitted**
-   - The frozen 26-row matrix is defined, but the current dedicated emitted
-     evidence surface still centers on the pilot row.
+1. **Positive-methods threshold not met**
+   - The emitted counted matrix shows `0` `phase31_justified` rows under the
+     frozen rule.
 
-2. **Decision artifact not yet emitted**
-   - `break_even_table` / `justification_map` is still required to classify:
-     - `phase3_sufficient`,
-     - `phase31_justified`,
-     - `phase31_not_justified_yet`.
+2. **Task 5 publication closure still pending**
+   - The review state is now decision-study-ready, but the paper surfaces still
+     need their final Task 5 decision-study closure wording.
 
-3. **Closure-state decision cannot yet be upgraded**
-   - Without the full matrix and decision artifact, the phase cannot be promoted
-     to either `positive-methods-ready` or `decision-study-ready`.
+3. **Program-level sync still pending**
+   - Top-level docs still need to be updated after Task 5 so the repo tells one
+     consistent story.
 
 ## Recommended next actions
 
-The next actions remain exactly those specified by the closure playbook:
+The next actions now are:
 
-1. **Finish Package B / Story P31-S11**
-   - emit the full frozen 26-row counted matrix,
-   - emit route-aware summaries on the counted rows,
-   - emit the matrix-wide decision artifact.
+1. **Proceed to Task 5 publication closure**
+   - The recorded state is `decision-study-ready`, so the publication surfaces
+     may now be tightened to the bounded decision-study mode.
 
-2. **Re-run this review**
-   - upgrade the closure state only after the matrix-level artifact exists.
+2. **Keep the positive-methods branch closed unless new evidence changes the matrix**
+   - Any attempt to reopen the stronger claim would require new emitted evidence,
+     not reinterpretation of the current matrix.
 
-3. **Then execute Task 5 publication closure**
-   - only if the revised review state is:
-     - `positive-methods-ready`, or
-     - `decision-study-ready`.
+3. **Then execute program-level sync**
+   - Update `PLANNING.md`, `CHANGELOG.md`, and any publication-strategy pointers
+     so the repo reflects the recorded decision-study-ready state.
 
 ## Publication-writing implications of the current review state
 
-Because the current recorded state is `not-ready-yet`:
+Because the current recorded state is `decision-study-ready`:
 
-- the publication surfaces may describe the bounded exactness result and the
-  current pilot row,
-- they may describe the current state as a **pre-closure boundary-sync draft**,
-- they may explicitly state that the full structured matrix and decision
-  artifact remain the claim-closing gate,
-- but they must **not** present Phase 3.1 as submission-ready,
-- and they must **not** claim either a closed positive-methods outcome or a
-  closed matrix-level decision-study outcome.
+- the publication surfaces may now describe the bounded exactness result and the
+  full counted matrix-level decision-study outcome,
+- they may state explicitly that the stronger positive-methods closure was not
+  met on the frozen slice,
+- they may proceed to Task 5 decision-study framing,
+- but they must **not** present Phase 3.1 as a positive-methods success,
+- and they must **not** upgrade the result beyond the emitted decision-study
+  evidence.
 
 ## Review evidence anchors
 
@@ -189,8 +193,10 @@ Because the current recorded state is `not-ready-yet`:
 - `docs/density_matrix_project/phases/phase-3-1/task-5/TASK_5_MINI_SPEC.md`
 - `tests/partitioning/evidence/test_phase31_correctness_evidence.py`
 - `tests/partitioning/evidence/test_phase31_hybrid_pilot_validation.py`
+- `tests/partitioning/evidence/test_phase31_counted_matrix_validation.py`
 - `benchmarks/density_matrix/artifacts/correctness_evidence/phase31_stage_a/correctness_package/phase31_correctness_package_bundle.json`
 - `benchmarks/density_matrix/artifacts/correctness_evidence/phase31_stage_a/external_correctness/phase31_external_correctness_bundle.json`
+- `benchmarks/density_matrix/artifacts/performance_evidence/phase31_counted_matrix/phase31_counted_matrix_bundle.json`
 
 ## Traceability
 

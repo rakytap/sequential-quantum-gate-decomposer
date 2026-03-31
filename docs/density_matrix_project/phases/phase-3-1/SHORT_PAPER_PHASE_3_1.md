@@ -2,19 +2,19 @@
 
 ## Draft Status
 
-Pre-closure boundary-sync draft aligned to
-`CLOSURE_PLAN_PHASE_3_1.md`. The required
-`PRE_PUBLICATION_EVIDENCE_REVIEW_PHASE_3_1.md` now exists and currently records
-the closure state `not-ready-yet`, so this surface is intentionally **not** yet
-a venue-ready short paper. The current draft reflects the stronger implementation-backed evidence
-boundary now present in the repo: the bounded counted correctness package spans
-all four `phase31_microcase_*` rows plus `phase2_xxz_hea_q4_continuity` and
-`phase2_xxz_hea_q6_continuity`, the required five-row external slice is already
-present on the current Stage-A evidence path, and one structured hybrid pilot
-row provides initial whole-workload decision-study evidence. The remaining
-claim-closing gate is the full structured performance matrix plus the
-`break_even_table` / `justification_map`, followed by the pre-publication
-evidence review.
+Pre-Task-5 boundary-sync draft aligned to `CLOSURE_PLAN_PHASE_3_1.md`. The
+required `PRE_PUBLICATION_EVIDENCE_REVIEW_PHASE_3_1.md` now exists and records
+the closure state `decision-study-ready`. This surface is therefore no longer
+blocked on missing evidence review, but it is still intentionally **not** yet a
+venue-ready short paper because the final Task 5 decision-study rewrite has not
+been completed. The current draft reflects the stronger implementation-backed
+evidence boundary now present in the repo: the bounded counted correctness
+package spans all four `phase31_microcase_*` rows plus
+`phase2_xxz_hea_q4_continuity` and `phase2_xxz_hea_q6_continuity`, the
+required five-row external slice is already present on the current Stage-A
+evidence path, and the full counted performance matrix now emits the
+matrix-wide `break_even_table` / `justification_map` required for the bounded
+decision-study closure.
 
 ## Abstract
 
