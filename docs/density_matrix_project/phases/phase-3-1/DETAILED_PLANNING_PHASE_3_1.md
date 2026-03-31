@@ -571,6 +571,16 @@ This is the recommended **actual next execution slice** after the completed
 third slice and stops before the full Task 4 matrix and before publication
 closure.
 
+**Fifth vertical slice (full counted performance matrix closure):** the next
+bounded Task 4 expansion for the full frozen `P31-ADR-010` matrix, route-aware
+row emission, and the matrix-wide decision artifact is in
+[`FIFTH_VERTICAL_SLICE_FULL_COUNTED_PERFORMANCE_MATRIX_STORIES_AND_ENGINEERING_TASKS.md`](FIFTH_VERTICAL_SLICE_FULL_COUNTED_PERFORMANCE_MATRIX_STORIES_AND_ENGINEERING_TASKS.md).
+
+**Sixth vertical slice (pre-publication evidence review):** the final
+pre-publication Layer 3 / 4 closure increment for the formal review artifact and
+go / no-go state is in
+[`SIXTH_VERTICAL_SLICE_PRE_PUBLICATION_EVIDENCE_REVIEW_STORIES_AND_ENGINEERING_TASKS.md`](SIXTH_VERTICAL_SLICE_PRE_PUBLICATION_EVIDENCE_REVIEW_STORIES_AND_ENGINEERING_TASKS.md).
+
 **Recommended post-third-slice forward path (Layers 3-4, pre-publication-closure):**
 the next tranche should **not** broaden scope. It should close the remaining
 Task 3 / Task 4 evidence obligations on the frozen slice and stop once the
