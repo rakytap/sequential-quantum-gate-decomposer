@@ -33,7 +33,7 @@ the long-horizon explanation for why that scope was chosen.
 | ADR-004 | Prioritize realistic local noise models over global whole-register noise as the main scientific target | Accepted |
 | ADR-005 | Keep exact dense density matrices as the reference backend through the first four research phases | Accepted |
 | ADR-006 | Expand gate coverage in a workload-driven order rather than chasing full `qgd_Circuit` parity immediately | Accepted |
-| ADR-007 | Evaluate IR-first channel-native fusion only after a benchmark-driven decision gate | Deferred (Phase 3.1 in `docs/density_matrix_project/phases/phase-3-1/` owns the specification and publication container when the branch opens; code remains deferred until that checklist goes) |
+| ADR-007 | Evaluate IR-first channel-native fusion only after a benchmark-driven decision gate | Deferred for broader generalization (Phase 3.1 in `docs/density_matrix_project/phases/phase-3-1/` now records the delivered bounded v1 channel-native branch and its decision-study-ready closure; fuller IR-first generalization remains deferred) |
 | ADR-008 | Treat stochastic trajectories and MPDO-style methods as later scaling branches, not the initial architecture | Deferred |
 
 ## ADR-001: Freeze Phase 2 And Prioritize Phase 3 Partitioning Work Over Broader VQE/VQA Growth

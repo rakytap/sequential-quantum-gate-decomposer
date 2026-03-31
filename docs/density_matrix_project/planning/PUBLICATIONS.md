@@ -66,11 +66,13 @@ following as possible:
   manuscript tightening, figure selection, and reviewer-facing positioning
   around bounded planner calibration and diagnosis-grounded performance
   closure.
-- Phase 3.1 now has **implementation-backed bounded slices**: exact
-  channel-native fusion is present for the delivered 1-qubit and bounded
-  2-qubit local-support slices, together with workload and evidence scaffolding
-  for the broader counted surface. Venue-ready packaging still depends on the
-  remaining correctness, external-reference, and performance evidence.
+- Phase 3.1 is now closed on the frozen v1 slice as a **bounded decision-study
+  result**: exact channel-native fusion is implemented on the strict bounded
+  motif surface, the hybrid whole-workload path is implemented and validated on
+  the counted continuity anchors, the required bounded external slice is
+  present, and the full 26-row counted performance matrix plus machine-readable
+  decision artifact are emitted. The remaining work is publication packaging and
+  top-level program sync, not missing core evidence for that bounded slice.
 
 ## Recommended Publication Ladder
 
@@ -434,9 +436,12 @@ Question:
 - When does the Phase 3 noise-aware partitioning baseline stop being enough, and
   when would more invasive channel-native fusion become justified?
 
-The delivered Phase 3 benchmark evidence now makes this decision study
-concrete, but it is only worth pursuing as a separate paper if the current
-diagnosis package is developed into a benchmark-justified follow-on branch.
+The delivered Phase 3.1 evidence now makes this decision study concrete as a
+bounded closed branch: the emitted counted matrix shows where the shipped Phase
+3 fused baseline is already sufficient and where the richer Phase 3.1 path is
+still not justified under the frozen threshold rule. It should therefore be
+packaged either as a discrete short decision-study paper or folded into an
+extended Phase 3 discussion, depending on venue strategy.
 
 ### Side Paper B: Exact Density Matrix Versus Trajectories / MPDO Cross-Over
 
@@ -470,8 +475,9 @@ In that compressed strategy:
 
 - Phase 1 becomes a preprint or workshop contribution,
 - Phase 4 results can be folded into the Phase 5 paper if needed,
-- Phase 3.1 can be folded into an extended Phase 3 discussion, kept as a
-  separate short methods note, or deferred if the branch does not open.
+- Phase 3.1 can be folded into an extended Phase 3 discussion or kept as a
+  separate short decision-study note, but it is no longer a hypothetical branch
+  that might not open.
 
 ## Common Evidence Package Across Papers
 

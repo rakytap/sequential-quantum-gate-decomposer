@@ -35,9 +35,10 @@ by evidence rather than assumed.
 
 ## Given / When / Then
 
-- **Given** frozen **P31-C-01–C-09** and emitted correctness/performance bundles
-  (or a documented decision to ship a **negative-result** narrative with partial
-  bundles).
+- **Given** frozen **P31-C-01–C-09**, emitted correctness/performance bundles,
+  and the closure state recorded in
+  `../CLOSURE_PLAN_PHASE_3_1.md` plus the required
+  `PRE_PUBLICATION_EVIDENCE_REVIEW_PHASE_3_1.md` review pack.
 - **When** publication docs are revised for Phase 3.1 submission or internal review.
 - **Then** every methods or results sentence in
   `SHORT_PAPER_PHASE_3_1.md`, `SHORT_PAPER_NARRATIVE.md`,
@@ -53,6 +54,10 @@ by evidence rather than assumed.
 
 - Evidence artifacts exist or their absence is itself the documented outcome (benchmark-grounded non-proceed decision per planning §9).
 - Program editors align with `PUBLICATIONS.md` positioning.
+- Publication sync follows the evidence-first closure workflow in
+  `../CLOSURE_PLAN_PHASE_3_1.md`, including the rule that Task 5 starts only
+  after the pre-publication evidence review records
+  `positive-methods-ready` or `decision-study-ready`.
 
 ---
 
@@ -72,6 +77,11 @@ by evidence rather than assumed.
   claim → strict/hybrid path → case ID / artifact → threshold.
 - Narrative doc explains **why** the phase matters without overstating performance (`P31-ADR-005`).
 - **Side Paper A alignment:** at least one subsection or paragraph in the technical short paper (or answer map) explicitly addresses the verbatim question under **Acceptance evidence** using evidence-backed language.
+- Publication surfaces are revised in the ordered workflow defined by
+  `../CLOSURE_PLAN_PHASE_3_1.md`: evidence review first, technical short paper
+  next, full paper next, abstract derived last from the stabilized claim
+  boundary, and the narrative companion revised in science-first form after the
+  technical boundary is fixed.
 
 ---
 
@@ -84,6 +94,8 @@ by evidence rather than assumed.
   interpretation when that is the actual claim-carrying path.
 - Treating strict motif-proof evidence as if it already closes the hybrid
   whole-workload benchmark question.
+- Writing venue-ready or conclusive Phase 3.1 prose while the recorded closure
+  state is `not-ready-yet`.
 
 ---
 
@@ -97,6 +109,9 @@ by evidence rather than assumed.
   `DETAILED_PLANNING_PHASE_3_1.md` traceability): for that question, which
   claims are supported by which **strict/hybrid** path, case IDs, and bundles
   (`P31-C-04`, `P31-C-06`, `P31-C-08`), and what remains open.
+- A completed `PRE_PUBLICATION_EVIDENCE_REVIEW_PHASE_3_1.md` records one of:
+  `positive-methods-ready`, `decision-study-ready`, or `not-ready-yet`, and
+  Task 5 proceeds only in the first two states.
 - Checklist pass: independent read-through (self or colleague) with mark-up resolved.
 - Version notes in paper headers or CHANGELOG entry pointing to bundle hashes or CI run IDs if the project uses them.
 
@@ -108,6 +123,8 @@ by evidence rather than assumed.
 - `docs/density_matrix_project/phases/phase-3-1/SHORT_PAPER_NARRATIVE.md`
 - `docs/density_matrix_project/phases/phase-3-1/ABSTRACT_PHASE_3_1.md`
 - `docs/density_matrix_project/phases/phase-3-1/PAPER_PHASE_3_1.md`
+- `docs/density_matrix_project/phases/phase-3-1/CLOSURE_PLAN_PHASE_3_1.md`
+- `docs/density_matrix_project/phases/phase-3-1/PRE_PUBLICATION_EVIDENCE_REVIEW_PHASE_3_1.md`
 - Optional: `PLANNING.md` / `CHANGELOG.md` one-line pointers if program policy requires.
 
 ---

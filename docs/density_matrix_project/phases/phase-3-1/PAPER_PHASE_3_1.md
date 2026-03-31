@@ -2,10 +2,11 @@
 
 ## Draft Status
 
-Implementation-backed full-paper surface revised to reflect the current Phase
-3.1 state. This draft now includes initial hybrid whole-workload evidence:
-exact `q4` continuity plus one structured `q8` pilot row whose current outcome
-is overhead-dominant relative to the Phase 3 fused baseline.
+Decision-study closure draft aligned to
+`PRE_PUBLICATION_EVIDENCE_REVIEW_PHASE_3_1.md`, which now records the frozen
+Phase 3.1 v1 slice as `decision-study-ready`. This full paper therefore uses
+the recorded bounded decision-study claim boundary rather than a pre-closure
+placeholder stance.
 
 ## Title Candidates
 
@@ -31,39 +32,49 @@ on the shipped exact baseline with route attribution. Composition follows
 ordered noisy-circuit semantics, invariant checks enforce trace preservation and
 positivity, and the fused object can be applied on local support within a larger
 density state. Current implementation-backed validation now spans both layers:
-`<= 1e-10` Frobenius-norm agreement with sequential exact execution is shown on
-a 1-qubit motif, one counted 2-qubit motif, a 4-qubit fully eligible local-
-support smoke case, and the counted hybrid continuity anchor
-`phase2_xxz_hea_q4_continuity`, together with deterministic rejection of
-out-of-scope motifs. A first frozen 8-qubit structured hybrid pilot row also
-records route coverage plus sequential, Phase 3 fused, and hybrid timings; on
-the current evidence, that row remains slower than the existing Phase 3 fused
-baseline. These results establish a bounded exactness-and-decision-study
-contribution. They do not yet close a broader acceleration claim: publication-
-backed coverage of the remaining counted rows, external Qiskit Aer validation,
-and the full structured 8- and 10-qubit matrix are still pending.
+the bounded counted microcase surface agrees with the sequential exact
+reference below `1e-10`, both counted hybrid continuity anchors
+(`phase2_xxz_hea_q4_continuity` and `phase2_xxz_hea_q6_continuity`) also match
+the sequential oracle under the same threshold, and the required bounded
+Qiskit Aer slice is already present for the four strict microcases plus
+`phase2_xxz_hea_q4_continuity`. A first frozen 8-qubit structured hybrid pilot
+row records route coverage plus sequential, Phase 3 fused, and hybrid timings;
+on the current evidence, that row remains slower than the existing Phase 3
+fused baseline. The full frozen 26-row whole-workload matrix now records the
+same baseline trio on every counted case and emits a machine-readable decision
+artifact. That matrix supports a bounded **decision-study** conclusion rather
+than a positive-methods closure: `17` rows are classified
+`phase3_sufficient`, `9` rows are classified `phase31_not_justified_yet`, and
+`0` rows are classified `phase31_justified`. These results therefore establish
+a bounded exactness-and-decision-study contribution: exact channel-native
+fusion is feasible and scientifically auditable on the frozen motif slice, but
+the stronger performance-justification threshold is not met on the frozen
+whole-workload matrix.
 
 ## Publication Surface Role
 
-This document is the full-paper draft surface for the Phase 3.1 publication
-track. It follows a research-paper structure with explicit problem statement,
-method, current results, limitations, and reproducibility posture.
+This document is the full-paper surface for the Phase 3.1 decision-study
+publication track. It follows a research-paper structure with explicit problem
+statement, method, current results, limitations, and reproducibility posture.
 
 ## Current Claim Boundary
 
-**Current supported claim**
+**Implemented and validated on the current evidence boundary**
 
 - Small same-support noisy motifs can be fused exactly as CPTP objects inside a
   partitioned density-matrix execution flow, carried by the **strict**
   motif-proof runtime interpretation.
 - The fused object can be validated through sequential-reference agreement plus
-  channel-invariant checks.
+  channel-invariant checks across the bounded counted strict microcase surface.
 - Local-support embedding into a larger density state is feasible on the current
   bounded slice, including a larger but still fully eligible smoke workload.
 - Explicit **hybrid** whole-workload execution with partition-level route
   attribution is implemented and scientifically interpretable.
-- The counted hybrid continuity anchor `phase2_xxz_hea_q4_continuity` executes
-  exactly under the hybrid interpretation.
+- The counted hybrid continuity anchors `phase2_xxz_hea_q4_continuity` and
+  `phase2_xxz_hea_q6_continuity` execute exactly under the hybrid
+  interpretation.
+- The required bounded external Qiskit Aer slice is present on the four strict
+  `phase31_microcase_*` rows plus hybrid `phase2_xxz_hea_q4_continuity`.
 - One frozen structured hybrid pilot row,
   `phase31_pair_repeat_q8_periodic_seed20260318`, records baseline-trio timing
   and route coverage. The current row supports only the
@@ -71,15 +82,23 @@ method, current results, limitations, and reproducibility posture.
   shipped Phase 3 fused baseline.
 - Unsupported motifs remain explicit rather than silently falling back.
 
-**Claim-bearing gate that remains open**
+**Decision-study claim now closed**
 
-- Publication-backed coverage of the remaining strict mixed-motif rows,
-- publication-backed coverage of the remaining hybrid continuity anchor
-  `phase2_xxz_hea_q6_continuity`,
-- external Qiskit Aer validation on the frozen strict-plus-hybrid external
-  slice,
-- and the full structured 8- and 10-qubit performance matrix with
-  control-family closure and decision-surface reporting.
+- The bounded counted correctness and external slices are formally closed in the
+  recorded review state.
+- The full structured 8- and 10-qubit performance matrix is emitted with
+  control-family coverage and the required machine-readable
+  `break_even_table` / `justification_map`.
+- The recorded review state is `decision-study-ready`, not
+  `positive-methods-ready`, because the matrix contains `0`
+  `phase31_justified` rows.
+
+**Out of scope / still not claimed**
+
+- General support beyond 2 qubits, correlated noise, or arbitrary unbounded
+  CPTP fusion.
+- Any positive-methods acceleration claim against the Phase 3 fused baseline on
+  the frozen slice.
 
 ## 1. Introduction
 
@@ -119,7 +138,7 @@ The current contribution can therefore be stated in three parts:
 - a bounded exact fused object for 1- and 2-qubit mixed motifs under a strict
   motif-proof interpretation,
 - a route-attributed hybrid whole-workload interpretation together with an
-  exact counted `q4` continuity anchor,
+  exact counted `q4` and `q6` continuity anchors,
 - and a first structured `q8` pilot row showing that whole-workload performance
   justification remains open and may be narrower than motif-level feasibility.
 
@@ -254,18 +273,19 @@ object was exercised inside a larger exact workload here."
 The current implementation-backed slice now spans both the **strict** and the
 initial **hybrid** layer. It includes:
 
-- one 1-qubit mixed motif,
-- one counted 2-qubit mixed motif,
-- and one non-counted 4-qubit spectator-support smoke case whose partitions all
+- four counted strict `phase31_microcase_*` motifs,
+- one non-counted 4-qubit spectator-support smoke case whose partitions all
   remain fully eligible for the strict path,
-- one counted 4-qubit hybrid continuity anchor,
+- two counted hybrid continuity anchors at `q4` and `q6`,
 - and one frozen 8-qubit structured hybrid pilot row.
 
-Deterministic workload inventories also already exist for the remaining counted
-microcases and for the future 8- and 10-qubit structured performance families.
-Under the current contract, those remaining whole-workload rows are to be
-carried by the explicit **hybrid** path rather than by the strict path, but
-they are not yet wired into claim-closing Phase 3.1 evidence bundles.
+The required bounded external-reference slice is already present on the four
+strict microcases plus `phase2_xxz_hea_q4_continuity`. Deterministic workload
+inventories also already exist for the future 8- and 10-qubit structured
+performance families. Under the current contract, those remaining whole-
+workload rows are to be carried by the explicit **hybrid** path rather than by
+the strict path, but they are not yet wired into the claim-closing Phase 3.1
+performance matrix and decision artifact.
 
 ### 5.2 Metrics and Thresholds
 
@@ -284,20 +304,21 @@ comparison metrics.
 
 The current results support six statements.
 
-First, the 1-qubit mixed motif matches the sequential exact reference within the
-frozen threshold.
+First, the bounded counted strict microcase surface now matches the sequential
+exact reference within the frozen threshold across all four
+`phase31_microcase_*` rows.
 
-Second, the counted 2-qubit motif, built around `CNOT` plus local noise on the
-same support, also matches the sequential exact reference within the same
-threshold and satisfies the current invariant checks.
+Second, the strict microcase package also carries the current invariant checks
+and the bounded external-reference slice on the frozen required rows, so the
+strict layer is no longer supported only by internal-reference agreement.
 
 Third, the 4-qubit spectator-support smoke case shows that a bounded 2-qubit
 fused noisy object can be embedded into a larger density state while preserving
 the correctness of the full global output.
 
-Fourth, the counted `q4` continuity anchor shows that the new fused object can
-be exercised inside a larger exact workload that mixes channel-native and
-shipped Phase 3 partitions without losing full-matrix correctness or route
+Fourth, the counted `q4` and `q6` continuity anchors show that the new fused
+object can be exercised inside larger exact workloads that mix channel-native
+and shipped Phase 3 partitions without losing full-matrix correctness or route
 auditability.
 
 Fifth, the first frozen `q8` structured pilot row records the baseline trio and
@@ -306,28 +327,25 @@ relative to the existing Phase 3 fused baseline, so it supports a negative-to-
 inconclusive whole-workload decision result rather than a positive acceleration
 claim.
 
-Sixth, out-of-scope motifs fail deterministically. Pure unitary motifs, motifs
-with support above two qubits, and motifs using unsupported operations remain
-visible as unsupported behavior rather than being silently absorbed into a
-different path.
+Sixth, out-of-scope motifs fail deterministically, and ordered composition
+remains claim-bearing: pure unitary motifs, motifs with support above two
+qubits, and motifs using unsupported operations remain visible as unsupported
+behavior rather than being silently absorbed into a different path, and
+reversing the composed sequence changes the result.
 
-Across the strict slice, ordered composition remains claim-bearing: reversing
-the composed sequence changes the result, so ordered noisy semantics must
-remain explicit.
+### 5.4 Decision-study outcome and remaining non-claims
 
-### 5.4 What Is Still Missing
+The current full-paper claim is no longer blocked on missing matrix evidence.
+The emitted matrix and the recorded review state now close the bounded
+decision-study mode:
 
-The current full-paper claim remains incomplete because four layers are still
-missing:
+- `17` counted rows are classified `phase3_sufficient`,
+- `9` counted rows are classified `phase31_not_justified_yet`,
+- `0` counted rows are classified `phase31_justified`.
 
-- publication-backed coverage of the remaining counted correctness rows,
-- the remaining counted `q6` hybrid continuity anchor,
-- the external Qiskit Aer slice,
-- and the structured 8- and 10-qubit benchmark matrix together with the
-  required control-family and decision-surface reporting.
-
-As a result, this paper should currently report a bounded exactness result, not
-yet a broader performance result.
+As a result, this paper should report a bounded exactness-and-decision-study
+result. What remains outside the claim is not the existence of a matrix-level
+answer, but the absence of any positive-methods win on the frozen slice.
 
 ## 6. Discussion
 
@@ -346,10 +364,12 @@ What remains unknown is whether this mathematically justified object is also a
 performance-justified object on the workload families that matter most. Under
 the current contract, that question is now explicitly assigned to the **hybrid**
 whole-workload interpretation rather than to the strict motif-proof path alone.
-The first hybrid pilot already shows why this separation matters: the exact
-fused object can be sound and scientifically useful even when the current whole-
-workload row does not yet justify using it as a faster runtime. That is the
-next claim-bearing gate, and the paper should say so directly.
+The emitted counted matrix now makes that separation concrete. The exact fused
+object can be sound and scientifically useful even when the matrix-level result
+shows that the shipped Phase 3 fused runtime is already sufficient on many rows
+and that the richer Phase 3.1 path is not yet justified on the remainder. That
+is a real methods result, but it is a decision-study result rather than a
+positive acceleration result.
 
 ## 7. Threats to Validity and Limitations
 
@@ -361,13 +381,14 @@ The current result is deliberately restricted to bounded 1- and 2-qubit local
 motifs with specific gate and noise families. It should not be interpreted as a
 claim about correlated noise, larger supports, or arbitrary CPTP fusion.
 
-### 7.2 Partial Whole-Workload Evidence and Missing Matrix Closure
+### 7.2 Decision-study, not positive-methods, closure
 
-The current paper does not yet have the full external Qiskit Aer slice, the
-remaining counted hybrid continuity rows, or the structured 8- and 10-qubit
-performance matrix. It does have one hybrid pilot row, but one row is not a
-matrix, and the current row is not positive. This is the main reason broader
-acceleration language must remain withheld.
+The current paper already has the bounded external Qiskit Aer slice, both
+counted hybrid continuity anchors, the full structured 8- and 10-qubit matrix,
+and its decision artifact. The limitation is therefore not missing matrix
+evidence; it is that the matrix does **not** support the stronger positive-
+methods closure. Broader acceleration language must remain withheld because the
+frozen counted matrix contains no `phase31_justified` rows.
 
 ### 7.3 Dense-Regime Scale Limits
 
@@ -394,11 +415,11 @@ The current reproducibility posture follows five rules.
 - For hybrid rows, report route coverage and the baseline trio explicitly rather
   than treating all Phase 3.1 execution as one opaque class.
 
-At the current state of the work, reproducibility is strongest at the level of
-deterministic workload definitions and exact-threshold regression tests. The
-later full evidence package should add the remaining external-reference rows,
-the broader structured benchmark matrix, and explicit decision-surface
-artifacts.
+At the current state of the work, reproducibility spans deterministic workload
+definitions, exact-threshold regression tests, the bounded correctness/external
+packages, and the full counted matrix with explicit decision-surface artifacts.
+The remaining reproducibility work is program-level packaging and top-level
+synchronization, not matrix emission itself.
 
 ## 9. Conclusion
 
@@ -406,13 +427,15 @@ This paper surface now supports a clear, bounded conclusion. Exact channel-
 native fusion of local noisy motifs is feasible, auditable, and already
 demonstrated on a narrow implementation-backed **strict** slice. That is
 scientifically useful because it establishes a concrete bridge between unitary
-fusion ideas and open-system channel semantics. The hybrid layer is no longer
-only planned: a counted `q4` continuity anchor shows whole-workload exactness
-with explicit route attribution, and a first frozen `q8` pilot row provides the
-initial decision-study evidence. That pilot does not yet justify broader
-acceleration language. The remaining counted correctness rows, external
-validation, and the full structured benchmark matrix are still required before
-stronger workload-level claims can be made.
+fusion ideas and open-system channel semantics. The hybrid layer is also fully
+claim-bearing on the frozen whole-workload surface: counted `q4` and `q6`
+continuity anchors show whole-workload exactness with explicit route
+attribution, the bounded external slice is present on the required rows, and
+the full emitted 26-row matrix shows that the stronger positive-methods
+threshold is not met. Phase 3.1 therefore closes as a bounded decision-study:
+the richer fused object is real and exact, but the shipped Phase 3 fused
+baseline remains sufficient on `17` counted rows and Phase 3.1 remains not yet
+justified on the remaining `9`.
 
 ## Selected References
 
@@ -446,4 +469,6 @@ stronger workload-level claims can be made.
 - `DETAILED_PLANNING_PHASE_3_1.md`
 - `ADRs_PHASE_3_1.md`
 - `PRE_IMPLEMENTATION_COMPLETION_CHECKLIST.md`
+- `CLOSURE_PLAN_PHASE_3_1.md`
+- `SHORT_PAPER_PHASE_3_1.md`
 - `task-5/TASK_5_MINI_SPEC.md`

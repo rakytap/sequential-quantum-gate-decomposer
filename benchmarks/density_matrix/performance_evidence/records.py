@@ -17,6 +17,7 @@ from benchmarks.density_matrix.partitioned_runtime.common import (
 )
 from benchmarks.density_matrix.performance_evidence.common import (
     PERFORMANCE_EVIDENCE_CASE_SCHEMA_VERSION,
+    PERFORMANCE_EVIDENCE_PHASE31_CASE_SCHEMA_VERSION,
     PERFORMANCE_EVIDENCE_REFERENCE_BACKEND_EXTERNAL,
     PERFORMANCE_EVIDENCE_REFERENCE_BACKEND_INTERNAL,
     PERFORMANCE_EVIDENCE_REPETITIONS,
@@ -24,10 +25,12 @@ from benchmarks.density_matrix.performance_evidence.common import (
     PERFORMANCE_EVIDENCE_STATUS_DIAGNOSIS_ONLY,
     PERFORMANCE_EVIDENCE_STATUS_EXCLUDED,
     build_correctness_reference_index,
+    build_phase31_counted_build_metadata,
     measure_sequential_density_reference,
 )
 from benchmarks.density_matrix.performance_evidence.case_selection import (
     build_performance_evidence_case_contexts,
+    build_phase31_counted_performance_case_contexts,
 )
 from squander.partitioning.noisy_runtime import (
     execute_partitioned_density_channel_native_hybrid,
@@ -76,6 +79,24 @@ def _base_record(case_context) -> dict:
         ),
         "benchmark_matrix_pass": True,
     }
+
+
+def _base_phase31_record(case_context) -> dict:
+    record = _base_record(case_context)
+    metadata = case_context.metadata
+    record["record_schema_version"] = PERFORMANCE_EVIDENCE_PHASE31_CASE_SCHEMA_VERSION
+    record.update(
+        {
+            "claim_surface_id": metadata["claim_surface_id"],
+            "representation_primary": metadata["representation_primary"],
+            "contains_noise": bool(metadata["contains_noise"]),
+            "counted_phase31_case": bool(metadata["counted_phase31_case"]),
+            "fused_block_support_qbits": metadata.get("fused_block_support_qbits"),
+            "runtime_class": "phase31_channel_native_hybrid",
+            **build_phase31_counted_build_metadata(),
+        }
+    )
+    return record
 
 
 def _measure_review_timings(case_context) -> dict:
@@ -333,6 +354,14 @@ def _prefixed_runtime_bridge_fields(prefix: str, bridge: dict) -> dict:
     return {f"{prefix}{key}": value for key, value in bridge.items()}
 
 
+def _phase31_decision_priority(decision_class: str) -> int:
+    if decision_class == "phase31_justified":
+        return 0
+    if decision_class == "phase31_not_justified_yet":
+        return 1
+    return 2
+
+
 def _hybrid_route_coverage(runtime_result, descriptor_set) -> dict[str, Any]:
     channel_native_partition_count = 0
     phase3_routed_partition_count = 0
@@ -382,6 +411,87 @@ def _phase31_hybrid_pilot_decision(
     if channel_native_partition_count == 0:
         return "phase3_sufficient", "limited_channel_native_coverage"
     return "phase31_not_justified_yet", "hybrid_overhead_dominant"
+
+
+def _measure_phase31_hybrid_timings(case_context) -> dict[str, Any]:
+    descriptor_set = case_context.descriptor_set
+    parameters = case_context.parameters
+
+    sequential_runtime_ms_samples: list[float] = []
+    phase3_fused_runtime_ms_samples: list[float] = []
+    phase31_hybrid_runtime_ms_samples: list[float] = []
+    sequential_peak_rss_kb_samples: list[int] = []
+    phase3_fused_peak_rss_kb_samples: list[int] = []
+    phase31_hybrid_peak_rss_kb_samples: list[int] = []
+
+    last_reference_density = None
+    last_fused_result = None
+    last_hybrid_result = None
+
+    for _ in range(PERFORMANCE_EVIDENCE_REPETITIONS):
+        sequential_measurement = measure_sequential_density_reference(
+            descriptor_set, parameters
+        )
+        fused_result = execute_partitioned_density_fused(descriptor_set, parameters)
+        hybrid_result = execute_partitioned_density_channel_native_hybrid(
+            descriptor_set, parameters
+        )
+        sequential_runtime_ms_samples.append(sequential_measurement.runtime_ms)
+        phase3_fused_runtime_ms_samples.append(fused_result.runtime_ms)
+        phase31_hybrid_runtime_ms_samples.append(hybrid_result.runtime_ms)
+        sequential_peak_rss_kb_samples.append(sequential_measurement.peak_rss_kb)
+        phase3_fused_peak_rss_kb_samples.append(fused_result.peak_rss_kb)
+        phase31_hybrid_peak_rss_kb_samples.append(hybrid_result.peak_rss_kb)
+        last_reference_density = sequential_measurement.density_matrix
+        last_fused_result = fused_result
+        last_hybrid_result = hybrid_result
+
+    assert last_reference_density is not None
+    assert last_fused_result is not None
+    assert last_hybrid_result is not None
+
+    fused_metrics = build_density_comparison_metrics(
+        last_fused_result.density_matrix, last_reference_density
+    )
+    hybrid_metrics = build_density_comparison_metrics(
+        last_hybrid_result.density_matrix, last_reference_density
+    )
+
+    sequential_median_runtime_ms = float(statistics.median(sequential_runtime_ms_samples))
+    phase3_fused_median_runtime_ms = float(
+        statistics.median(phase3_fused_runtime_ms_samples)
+    )
+    phase31_hybrid_median_runtime_ms = float(
+        statistics.median(phase31_hybrid_runtime_ms_samples)
+    )
+    sequential_median_peak_rss_kb = int(statistics.median(sequential_peak_rss_kb_samples))
+    phase3_fused_median_peak_rss_kb = int(
+        statistics.median(phase3_fused_peak_rss_kb_samples)
+    )
+    phase31_hybrid_median_peak_rss_kb = int(
+        statistics.median(phase31_hybrid_peak_rss_kb_samples)
+    )
+
+    return {
+        "timing_mode": "median_3",
+        "sequential_runtime_ms_samples": sequential_runtime_ms_samples,
+        "phase3_fused_runtime_ms_samples": phase3_fused_runtime_ms_samples,
+        "phase31_hybrid_runtime_ms_samples": phase31_hybrid_runtime_ms_samples,
+        "sequential_peak_rss_kb_samples": sequential_peak_rss_kb_samples,
+        "phase3_fused_peak_rss_kb_samples": phase3_fused_peak_rss_kb_samples,
+        "phase31_hybrid_peak_rss_kb_samples": phase31_hybrid_peak_rss_kb_samples,
+        "sequential_median_runtime_ms": sequential_median_runtime_ms,
+        "phase3_fused_median_runtime_ms": phase3_fused_median_runtime_ms,
+        "phase31_hybrid_median_runtime_ms": phase31_hybrid_median_runtime_ms,
+        "sequential_median_peak_rss_kb": sequential_median_peak_rss_kb,
+        "phase3_fused_median_peak_rss_kb": phase3_fused_median_peak_rss_kb,
+        "phase31_hybrid_median_peak_rss_kb": phase31_hybrid_median_peak_rss_kb,
+        "last_reference_density": last_reference_density,
+        "last_fused_result": last_fused_result,
+        "last_hybrid_result": last_hybrid_result,
+        "fused_metrics": fused_metrics,
+        "hybrid_metrics": hybrid_metrics,
+    }
 
 
 def _measure_phase31_hybrid_pilot_timings(case_context) -> dict[str, Any]:
@@ -522,3 +632,171 @@ def build_phase31_hybrid_pilot_record(case_context) -> dict[str, Any]:
     record.update(_prefixed_runtime_bridge_fields("phase3_fused_", fused_bridge))
     record.update(_prefixed_runtime_bridge_fields("phase31_hybrid_", hybrid_bridge))
     return record
+
+
+def build_phase31_counted_performance_record(case_context) -> dict[str, Any]:
+    """One counted Phase 3.1 matrix row with baseline trio and route coverage."""
+    record = _base_phase31_record(case_context)
+    timings = _measure_phase31_hybrid_timings(case_context)
+    fused_bridge = build_runtime_correctness_bridge_fields(
+        case_context,
+        timings["last_fused_result"],
+        timings["last_reference_density"],
+        timings["fused_metrics"],
+        external_reference_required=record["external_reference_required"],
+    )
+    hybrid_bridge = build_runtime_correctness_bridge_fields(
+        case_context,
+        timings["last_hybrid_result"],
+        timings["last_reference_density"],
+        timings["hybrid_metrics"],
+        external_reference_required=record["external_reference_required"],
+    )
+    route = _hybrid_route_coverage(
+        timings["last_hybrid_result"], case_context.descriptor_set
+    )
+    decision_class, diagnosis_tag = _phase31_hybrid_pilot_decision(
+        channel_native_partition_count=route["channel_native_partition_count"],
+        phase3_fused_median_runtime_ms=timings["phase3_fused_median_runtime_ms"],
+        phase31_hybrid_median_runtime_ms=timings["phase31_hybrid_median_runtime_ms"],
+    )
+    if decision_class not in _PHASE31_HYBRID_DECISION_CLASSES:
+        raise AssertionError("unexpected decision_class {!r}".format(decision_class))
+    if diagnosis_tag not in _PHASE31_HYBRID_DIAGNOSIS_TAGS:
+        raise AssertionError("unexpected diagnosis_tag {!r}".format(diagnosis_tag))
+
+    record.update(
+        {
+            "artifact_kind": "phase31_counted_performance_matrix_row",
+            "timing_mode": timings["timing_mode"],
+            "sequential_runtime_ms_samples": timings["sequential_runtime_ms_samples"],
+            "phase3_fused_runtime_ms_samples": timings["phase3_fused_runtime_ms_samples"],
+            "phase31_hybrid_runtime_ms_samples": timings["phase31_hybrid_runtime_ms_samples"],
+            "sequential_peak_rss_kb_samples": timings["sequential_peak_rss_kb_samples"],
+            "phase3_fused_peak_rss_kb_samples": timings["phase3_fused_peak_rss_kb_samples"],
+            "phase31_hybrid_peak_rss_kb_samples": timings["phase31_hybrid_peak_rss_kb_samples"],
+            "sequential_median_runtime_ms": timings["sequential_median_runtime_ms"],
+            "phase3_fused_median_runtime_ms": timings["phase3_fused_median_runtime_ms"],
+            "phase31_hybrid_median_runtime_ms": timings["phase31_hybrid_median_runtime_ms"],
+            "sequential_median_peak_rss_kb": timings["sequential_median_peak_rss_kb"],
+            "phase3_fused_median_peak_rss_kb": timings["phase3_fused_median_peak_rss_kb"],
+            "phase31_hybrid_median_peak_rss_kb": timings["phase31_hybrid_median_peak_rss_kb"],
+            "decision_class": decision_class,
+            "diagnosis_tag": diagnosis_tag,
+            **route,
+        }
+    )
+    record.update(_prefixed_runtime_bridge_fields("phase3_fused_", fused_bridge))
+    record.update(_prefixed_runtime_bridge_fields("phase31_hybrid_", hybrid_bridge))
+    return record
+
+
+def build_phase31_break_even_table(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    table: list[dict[str, Any]] = []
+    for record in records:
+        table.append(
+            {
+                "case_name": record["case_name"],
+                "workload_id": record["workload_id"],
+                "family_name": record["family_name"],
+                "qbit_num": record["qbit_num"],
+                "noise_pattern": record["noise_pattern"],
+                "seed": record["seed"],
+                "benchmark_slice": record["benchmark_slice"],
+                "decision_class": record["decision_class"],
+                "diagnosis_tag": record["diagnosis_tag"],
+                "sequential_median_runtime_ms": record["sequential_median_runtime_ms"],
+                "phase3_fused_median_runtime_ms": record["phase3_fused_median_runtime_ms"],
+                "phase31_hybrid_median_runtime_ms": record["phase31_hybrid_median_runtime_ms"],
+                "sequential_median_peak_rss_kb": record["sequential_median_peak_rss_kb"],
+                "phase3_fused_median_peak_rss_kb": record["phase3_fused_median_peak_rss_kb"],
+                "phase31_hybrid_median_peak_rss_kb": record["phase31_hybrid_median_peak_rss_kb"],
+                "channel_native_partition_count": record["channel_native_partition_count"],
+                "phase3_routed_partition_count": record["phase3_routed_partition_count"],
+                "channel_native_member_count": record["channel_native_member_count"],
+                "phase3_routed_member_count": record["phase3_routed_member_count"],
+                "phase31_hybrid_internal_reference_pass": record[
+                    "phase31_hybrid_internal_reference_pass"
+                ],
+            }
+        )
+    table.sort(
+        key=lambda row: (
+            _phase31_decision_priority(row["decision_class"]),
+            row["case_name"],
+        )
+    )
+    return table
+
+
+def build_phase31_decision_summary(records: list[dict[str, Any]]) -> dict[str, Any]:
+    break_even_table = build_phase31_break_even_table(records)
+    case_names = [row["case_name"] for row in break_even_table]
+    decision_class_counts = {
+        decision_class: sum(
+            row["decision_class"] == decision_class for row in break_even_table
+        )
+        for decision_class in sorted(_PHASE31_HYBRID_DECISION_CLASSES)
+    }
+    diagnosis_tag_counts = {
+        diagnosis_tag: sum(
+            row["diagnosis_tag"] == diagnosis_tag for row in break_even_table
+        )
+        for diagnosis_tag in sorted(_PHASE31_HYBRID_DIAGNOSIS_TAGS)
+    }
+    representative_rows = [row for row in break_even_table if row["seed"] == 20260318]
+    review_ready_case_table = [
+        {
+            "case_name": row["case_name"],
+            "family_name": row["family_name"],
+            "qbit_num": row["qbit_num"],
+            "noise_pattern": row["noise_pattern"],
+            "decision_class": row["decision_class"],
+            "diagnosis_tag": row["diagnosis_tag"],
+            "channel_native_partition_count": row["channel_native_partition_count"],
+            "phase3_routed_partition_count": row["phase3_routed_partition_count"],
+            "phase3_fused_median_runtime_ms": row["phase3_fused_median_runtime_ms"],
+            "phase31_hybrid_median_runtime_ms": row["phase31_hybrid_median_runtime_ms"],
+        }
+        for row in break_even_table
+    ]
+    justification_map = {
+        row["case_name"]: {
+            "decision_class": row["decision_class"],
+            "diagnosis_tag": row["diagnosis_tag"],
+            "channel_native_partition_count": row["channel_native_partition_count"],
+            "phase3_routed_partition_count": row["phase3_routed_partition_count"],
+        }
+        for row in break_even_table
+    }
+    return {
+        "total_cases": len(break_even_table),
+        "inventory_match": len(case_names) == len(set(case_names)),
+        "decision_vocabulary": sorted(_PHASE31_HYBRID_DECISION_CLASSES),
+        "diagnosis_vocabulary": sorted(_PHASE31_HYBRID_DIAGNOSIS_TAGS),
+        "decision_class_counts": decision_class_counts,
+        "diagnosis_tag_counts": diagnosis_tag_counts,
+        "phase3_sufficient_rows": decision_class_counts["phase3_sufficient"],
+        "phase31_justified_rows": decision_class_counts["phase31_justified"],
+        "phase31_not_justified_yet_rows": decision_class_counts[
+            "phase31_not_justified_yet"
+        ],
+        "break_even_table": break_even_table,
+        "justification_map": justification_map,
+        "review_ready_case_table": review_ready_case_table,
+        "representative_review_cases": [
+            row["case_name"] for row in representative_rows
+        ],
+    }
+
+
+@lru_cache(maxsize=1)
+def _build_phase31_counted_performance_records_cached() -> tuple[dict[str, Any], ...]:
+    return tuple(
+        build_phase31_counted_performance_record(case_context)
+        for case_context in build_phase31_counted_performance_case_contexts()
+    )
+
+
+def build_phase31_counted_performance_records() -> list[dict[str, Any]]:
+    return deepcopy(list(_build_phase31_counted_performance_records_cached()))

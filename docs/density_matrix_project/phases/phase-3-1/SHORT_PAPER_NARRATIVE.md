@@ -2,9 +2,10 @@
 
 ## Draft Status
 
-Science-first narrative companion grounded in the current implementation-backed
-results. This draft now reflects the initial hybrid whole-workload evidence as
-well as the stricter claim boundary it implies.
+Decision-study narrative companion aligned to
+`PRE_PUBLICATION_EVIDENCE_REVIEW_PHASE_3_1.md`. This document now serves as the
+science-first narrative surface for the bounded Phase 3.1 decision-study
+outcome rather than as a pre-closure status note.
 
 ## Abstract
 
@@ -21,19 +22,22 @@ methodological picture: a scientifically credible path appears to need both a
 strict motif-proof layer, where the fused object itself is validated, and a
 separate hybrid whole-workload layer, where that object is tested inside larger
 exact workloads with explicit route attribution. The current evidence now
-reaches both layers: a counted 4-qubit continuity anchor remains exact under
-the hybrid interpretation, and a first frozen 8-qubit pilot row shows that
+reaches both layers more strongly than earlier drafts suggested: the bounded
+counted correctness package spans the strict microcase surface plus two hybrid
+continuity anchors, the bounded external-reference slice is already present on
+the frozen required rows, and a first frozen 8-qubit pilot row shows that
 feasibility does not automatically imply performance benefit. The scientific
 value is therefore methodological and decision-oriented: it identifies a
 reusable path toward exact noisy acceleration while also showing that broader
-workload-level justification remains an empirical question rather than an
+whole-workload justification remains an empirical question rather than an
 assumption.
 
 ## Publication Surface Role
 
 Scientific narrative short paper for a quantum-computing or quantum-machine-
-learning audience. Its purpose is to explain why the current bounded result
-matters, where it fits in the literature, and what reusable insight it offers.
+learning audience. Its purpose is to explain why the bounded Phase 3.1
+decision-study result matters, where it fits in the literature, and what
+reusable methodological insight it offers.
 
 ## 1. Why This Problem Matters
 
@@ -51,7 +55,8 @@ correctness.
 
 ## 2. Where the Literature Is Split
 
-The current literature offers strong ingredients, but not yet a full answer.
+The current literature offers strong ingredients, but not a fully integrated
+answer to the bounded exact noisy-fusion question addressed here.
 
 Graph-based partitioning and gate-fusion papers such as TDAG, GTQCP, QGo, and
 QMin show how much can be gained when circuits are treated as structured
@@ -85,10 +90,13 @@ larger exact workloads that still contain structure outside the bounded fused
 slice. The former belongs to a strict motif-proof setting; the latter belongs
 to an explicit hybrid whole-workload setting.
 
-This two-layer story is no longer only conceptual. The hybrid layer now has a
-first counted whole-workload correctness anchor: a 4-qubit continuity case that
-matches the sequential oracle while preserving explicit route attribution
-between channel-native and existing exact execution. It also has a first frozen
+This two-layer story is no longer only conceptual. The hybrid layer now has two
+counted whole-workload correctness anchors at 4 and 6 qubits that match the
+sequential oracle while preserving explicit route attribution between
+channel-native and existing exact execution. The bounded external-reference
+slice is also already present on the frozen required rows, which keeps the
+current narrative tied to a real external check without turning the study into a
+broad simulator comparison. In addition, the phase now has a first frozen
 8-qubit structured pilot row with route coverage and comparative timing. That
 pilot currently indicates overhead-dominant behavior relative to the existing
 Phase 3 fused baseline, which is scientifically useful because it separates
@@ -99,7 +107,7 @@ simulation narrative. Noise is no longer treated only as a point where fusion
 must stop. Instead, some noisy motifs can themselves become the fused object,
 provided the representation, ordering, and invariant checks are all exact.
 
-This is a result about **feasibility and methodology**, not yet about universal
+This is a result about **feasibility and methodology**, not about universal
 performance. That distinction is important and should remain explicit.
 
 ## 4. Reusable Working Principles
@@ -147,9 +155,10 @@ Third, broader noisy structure is still unresolved: correlated noise, larger
 supports, and more heterogeneous motif families may require different
 representations or different validation strategies.
 
-Broader continuity anchors, external cross-validation, and the full structured
-matrix also remain to be completed before one can say how general the current
-negative-to-inconclusive pilot result really is.
+The emitted 8- and 10-qubit matrix now makes the bounded conclusion sharper,
+but broader noisy structure is still unresolved: correlated noise, larger
+supports, and more heterogeneous motif families may require different
+representations or different validation strategies.
 
 The right scientific conclusion is therefore not "noisy fusion is solved," but
 "a bounded exact path now exists and can be studied honestly."
@@ -178,6 +187,7 @@ The right scientific conclusion is therefore not "noisy fusion is solved," but
 
 ## Traceability
 
+- `CLOSURE_PLAN_PHASE_3_1.md`
 - `SHORT_PAPER_PHASE_3_1.md`
 - `PAPER_PHASE_3_1.md`
 - `task-5/TASK_5_MINI_SPEC.md`

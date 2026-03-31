@@ -56,6 +56,8 @@ Publication surfaces aligned with `PUBLICATIONS.md` Phase 3.1 / Side Paper A
 - `SHORT_PAPER_NARRATIVE.md` (research arc positioning)
 - `ABSTRACT_PHASE_3_1.md`
 - `PAPER_PHASE_3_1.md`
+- `CLOSURE_PLAN_PHASE_3_1.md` (evidence-first closeout playbook from remaining
+  execution slices through publication sync)
 
 ### Tier 5: Legacy Or Supportive Context
 
@@ -569,11 +571,27 @@ This is the recommended **actual next execution slice** after the completed
 third slice and stops before the full Task 4 matrix and before publication
 closure.
 
+**Fifth vertical slice (full counted performance matrix closure):** the next
+bounded Task 4 expansion for the full frozen `P31-ADR-010` matrix, route-aware
+row emission, and the matrix-wide decision artifact is in
+[`FIFTH_VERTICAL_SLICE_FULL_COUNTED_PERFORMANCE_MATRIX_STORIES_AND_ENGINEERING_TASKS.md`](FIFTH_VERTICAL_SLICE_FULL_COUNTED_PERFORMANCE_MATRIX_STORIES_AND_ENGINEERING_TASKS.md).
+
+**Sixth vertical slice (pre-publication evidence review):** the final
+pre-publication Layer 3 / 4 closure increment for the formal review artifact and
+go / no-go state is in
+[`SIXTH_VERTICAL_SLICE_PRE_PUBLICATION_EVIDENCE_REVIEW_STORIES_AND_ENGINEERING_TASKS.md`](SIXTH_VERTICAL_SLICE_PRE_PUBLICATION_EVIDENCE_REVIEW_STORIES_AND_ENGINEERING_TASKS.md).
+
 **Recommended post-third-slice forward path (Layers 3-4, pre-publication-closure):**
 the next tranche should **not** broaden scope. It should close the remaining
 Task 3 / Task 4 evidence obligations on the frozen slice and stop once the
 publication-closure decision can be made from emitted artifacts rather than
 inference.
+
+The execution order, closure-state rubric, and science-first writing workflow
+for that final tranche are summarized in
+[`CLOSURE_PLAN_PHASE_3_1.md`](CLOSURE_PLAN_PHASE_3_1.md). Treat that document as
+the companion playbook for Story `P31-S10` through Task 5; it does not reopen
+the frozen contracts in this file.
 
 ### Task 1: Fusion representation and IR contract
 
@@ -639,7 +657,8 @@ in `task-5/TASK_5_MINI_SPEC.md`) to concrete, evidence-backed answers.
 **Success looks like:** Claim boundary section matches emitted bundles;
 reviewer-facing limitations explicit.
 
-**Evidence:** Updated paper docs; traceability table in this file.
+**Evidence:** Updated paper docs; traceability table in this file; closure-state
+decision and writing sequence recorded in `CLOSURE_PLAN_PHASE_3_1.md`.
 
 ### Task 6: C++ hot-path offload and host parallel / SIMD evaluation (later branch)
 

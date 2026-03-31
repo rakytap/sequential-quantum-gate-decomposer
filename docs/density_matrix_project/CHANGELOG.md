@@ -91,22 +91,44 @@ Documented closure points:
 
 ---
 
-## Phase 3.1 (Planned)
+## Phase 3.1 (Complete — bounded decision study)
 
-### Delivered (documentation only)
+### Delivered
 
-- Spec-driven phase contract package in `docs/density_matrix_project/phases/phase-3-1/`:
+- Spec-driven phase contract, closure, and publication package in
+  `docs/density_matrix_project/phases/phase-3-1/`, including:
   `DETAILED_PLANNING_PHASE_3_1.md`, `ADRs_PHASE_3_1.md`,
-  `PRE_IMPLEMENTATION_COMPLETION_CHECKLIST.md`, and initial short-paper,
-  narrative, abstract, and full-paper outline surfaces.
-- Program-level cross-links from `planning/PLANNING.md` §4, §5.1, §6, and §9.
+  `PRE_IMPLEMENTATION_COMPLETION_CHECKLIST.md`,
+  `CLOSURE_PLAN_PHASE_3_1.md`,
+  `PRE_PUBLICATION_EVIDENCE_REVIEW_PHASE_3_1.md`,
+  and the finalized short-paper, narrative, abstract, and full-paper surfaces.
+- Implemented bounded strict and hybrid Phase 3.1 runtime paths on the frozen
+  v1 slice:
+  - strict `phase31_channel_native`,
+  - hybrid `phase31_channel_native_hybrid`.
+- Delivered bounded counted correctness and external-reference evidence for the
+  frozen Phase 3.1 slice:
+  - 4 strict counted microcases,
+  - 2 counted hybrid continuity anchors,
+  - 5 required external-reference rows.
+- Delivered the full frozen 26-row counted Phase 3.1 performance matrix plus
+  machine-readable decision artifacts:
+  - `break_even_table`,
+  - `justification_map`,
+  - route-aware row summaries.
+- Recorded the formal review state as **`decision-study-ready`**:
+  - `17` rows classify as `phase3_sufficient`,
+  - `9` rows classify as `phase31_not_justified_yet`,
+  - `0` rows classify as `phase31_justified`.
 
 ### Scope Notes
 
-- Formalizes PLANNING.md §5.1 (channel-native / superoperator fusion) as an
-  optional follow-on to the closed Phase 3 baseline.
-- Implementation and code changes are **out of scope** until the Phase 3.1 pre-
-  implementation checklist reaches **Go**.
+- Phase 3.1 is a **bounded additive follow-on** to the closed Phase 3 baseline.
+- The frozen v1 slice closes as a **decision study**, not as a positive-methods
+  acceleration result.
+- Fully general channel-native fusion, broader support surfaces, Phase 4
+  workflow growth, and host-acceleration follow-ons remain outside the closed
+  v1 Phase 3.1 claim.
 
 ---
 

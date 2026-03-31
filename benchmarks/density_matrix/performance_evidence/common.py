@@ -31,6 +31,7 @@ from squander.partitioning.noisy_runtime import (  # noqa: E402
 PERFORMANCE_EVIDENCE_CASE_SCHEMA_VERSION = "performance_evidence_record_v1"
 PERFORMANCE_EVIDENCE_BENCHMARK_PACKAGE_SCHEMA_VERSION = "performance_evidence_package_v1"
 PERFORMANCE_EVIDENCE_SUMMARY_SCHEMA_VERSION = "performance_evidence_summary_v1"
+PERFORMANCE_EVIDENCE_PHASE31_CASE_SCHEMA_VERSION = "performance_evidence_phase31_record_v1"
 
 PERFORMANCE_EVIDENCE_BENCHMARK_SLICE_CONTINUITY = "continuity_anchor"
 PERFORMANCE_EVIDENCE_BENCHMARK_SLICE_STRUCTURED = "structured_performance"
@@ -51,6 +52,13 @@ PERFORMANCE_EVIDENCE_ADDITIONAL_STRUCTURED_SEEDS = (
 PERFORMANCE_EVIDENCE_REVIEW_NOISE_PATTERN = "sparse"
 PERFORMANCE_EVIDENCE_REPETITIONS = 3
 
+PHASE31_COUNTED_BUILD_POLICY_ID = "phase31_scalar_only_v1"
+PHASE31_COUNTED_BUILD_FLAVOR = "scalar"
+PHASE31_COUNTED_SIMD_ENABLED = False
+PHASE31_COUNTED_TBB_ENABLED = False
+PHASE31_COUNTED_THREAD_COUNT = 1
+PHASE31_COUNTED_CLAIM_BUILD = True
+
 DEFAULT_OUTPUT_ROOT = (
     REPO_ROOT / "benchmarks" / "density_matrix" / "artifacts" / "performance_evidence"
 )
@@ -61,6 +69,17 @@ DEFAULT_OUTPUT_ROOT = (
 
 def performance_evidence_output_dir(slice_dir_name: str) -> Path:
     return DEFAULT_OUTPUT_ROOT / slice_dir_name
+
+
+def build_phase31_counted_build_metadata() -> dict[str, Any]:
+    return {
+        "build_policy_id": PHASE31_COUNTED_BUILD_POLICY_ID,
+        "build_flavor": PHASE31_COUNTED_BUILD_FLAVOR,
+        "simd_enabled": PHASE31_COUNTED_SIMD_ENABLED,
+        "tbb_enabled": PHASE31_COUNTED_TBB_ENABLED,
+        "thread_count": PHASE31_COUNTED_THREAD_COUNT,
+        "counted_claim_build": PHASE31_COUNTED_CLAIM_BUILD,
+    }
 
 
 def build_package_software_metadata() -> dict[str, Any]:
