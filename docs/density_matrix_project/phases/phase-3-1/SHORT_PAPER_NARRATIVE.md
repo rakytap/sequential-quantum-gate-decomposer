@@ -2,9 +2,13 @@
 
 ## Draft Status
 
-Science-first narrative companion grounded in the current implementation-backed
-results. This draft now reflects the initial hybrid whole-workload evidence as
-well as the stricter claim boundary it implies.
+Pre-closure science-first narrative companion aligned to
+`CLOSURE_PLAN_PHASE_3_1.md`. This document is intentionally **not** yet
+venue-ready because the required
+`PRE_PUBLICATION_EVIDENCE_REVIEW_PHASE_3_1.md` has not yet recorded a closure
+state. The current text reflects the stronger implementation-backed evidence
+boundary now present in the repo while keeping the narrative scientific rather
+than task-oriented.
 
 ## Abstract
 
@@ -21,12 +25,14 @@ methodological picture: a scientifically credible path appears to need both a
 strict motif-proof layer, where the fused object itself is validated, and a
 separate hybrid whole-workload layer, where that object is tested inside larger
 exact workloads with explicit route attribution. The current evidence now
-reaches both layers: a counted 4-qubit continuity anchor remains exact under
-the hybrid interpretation, and a first frozen 8-qubit pilot row shows that
+reaches both layers more strongly than earlier drafts suggested: the bounded
+counted correctness package spans the strict microcase surface plus two hybrid
+continuity anchors, the bounded external-reference slice is already present on
+the frozen required rows, and a first frozen 8-qubit pilot row shows that
 feasibility does not automatically imply performance benefit. The scientific
 value is therefore methodological and decision-oriented: it identifies a
 reusable path toward exact noisy acceleration while also showing that broader
-workload-level justification remains an empirical question rather than an
+whole-workload justification remains an empirical question rather than an
 assumption.
 
 ## Publication Surface Role
@@ -34,6 +40,9 @@ assumption.
 Scientific narrative short paper for a quantum-computing or quantum-machine-
 learning audience. Its purpose is to explain why the current bounded result
 matters, where it fits in the literature, and what reusable insight it offers.
+Until the pre-publication evidence review exists, this document functions as a
+boundary-sync narrative companion rather than as a submission-ready narrative
+paper.
 
 ## 1. Why This Problem Matters
 
@@ -85,10 +94,13 @@ larger exact workloads that still contain structure outside the bounded fused
 slice. The former belongs to a strict motif-proof setting; the latter belongs
 to an explicit hybrid whole-workload setting.
 
-This two-layer story is no longer only conceptual. The hybrid layer now has a
-first counted whole-workload correctness anchor: a 4-qubit continuity case that
-matches the sequential oracle while preserving explicit route attribution
-between channel-native and existing exact execution. It also has a first frozen
+This two-layer story is no longer only conceptual. The hybrid layer now has two
+counted whole-workload correctness anchors at 4 and 6 qubits that match the
+sequential oracle while preserving explicit route attribution between
+channel-native and existing exact execution. The bounded external-reference
+slice is also already present on the frozen required rows, which keeps the
+current narrative tied to a real external check without turning the study into a
+broad simulator comparison. In addition, the phase now has a first frozen
 8-qubit structured pilot row with route coverage and comparative timing. That
 pilot currently indicates overhead-dominant behavior relative to the existing
 Phase 3 fused baseline, which is scientifically useful because it separates
@@ -147,9 +159,9 @@ Third, broader noisy structure is still unresolved: correlated noise, larger
 supports, and more heterogeneous motif families may require different
 representations or different validation strategies.
 
-Broader continuity anchors, external cross-validation, and the full structured
-matrix also remain to be completed before one can say how general the current
-negative-to-inconclusive pilot result really is.
+The full structured 8- and 10-qubit matrix, its decision artifact, and the
+formal pre-publication evidence review still remain before one can say how
+general the current negative-to-inconclusive pilot result really is.
 
 The right scientific conclusion is therefore not "noisy fusion is solved," but
 "a bounded exact path now exists and can be studied honestly."
@@ -178,6 +190,7 @@ The right scientific conclusion is therefore not "noisy fusion is solved," but
 
 ## Traceability
 
+- `CLOSURE_PLAN_PHASE_3_1.md`
 - `SHORT_PAPER_PHASE_3_1.md`
 - `PAPER_PHASE_3_1.md`
 - `task-5/TASK_5_MINI_SPEC.md`
