@@ -13,8 +13,10 @@ from benchmarks.density_matrix.performance_evidence.common import (
     PERFORMANCE_EVIDENCE_ADDITIONAL_STRUCTURED_SEEDS,
     PERFORMANCE_EVIDENCE_BENCHMARK_SLICE_CONTINUITY,
     PERFORMANCE_EVIDENCE_BENCHMARK_SLICE_STRUCTURED,
+    PERFORMANCE_EVIDENCE_PHASE31_CASE_SCHEMA_VERSION,
     PERFORMANCE_EVIDENCE_PRIMARY_STRUCTURED_SEED,
     PERFORMANCE_EVIDENCE_REVIEW_NOISE_PATTERN,
+    build_phase31_counted_build_metadata,
 )
 from benchmarks.density_matrix.partitioned_runtime.common import build_initial_parameters
 from benchmarks.density_matrix.planner_surface.common import build_phase2_continuity_vqe
@@ -45,6 +47,7 @@ PERFORMANCE_EVIDENCE_EXTERNAL_REFERENCE_CONTINUITY_QUBITS = (4,)
 # Replaced dense with periodic so the pilot exercises mixed hybrid routing (nonzero channel-native partitions).
 PHASE31_HYBRID_PILOT_WORKLOAD_ID = "phase31_pair_repeat_q8_periodic_seed20260318"
 BENCHMARK_SLICE_PHASE31_HYBRID_PILOT = "phase31_hybrid_pilot"
+BENCHMARK_SLICE_PHASE31_COUNTED_MATRIX = "phase31_counted_matrix"
 
 
 @dataclass(frozen=True)
@@ -479,6 +482,36 @@ def build_phase31_hybrid_pilot_case_context() -> PerformanceEvidenceCaseContext:
         descriptor_set=descriptor_set,
         parameters=build_initial_parameters(descriptor_set.parameter_count),
     )
+
+
+@lru_cache(maxsize=1)
+def _build_phase31_counted_performance_inventory_cases_cached() -> tuple[dict[str, Any], ...]:
+    inventory = build_phase31_performance_inventory_cases()
+    for case in inventory:
+        case["phase31_matrix_slice"] = BENCHMARK_SLICE_PHASE31_COUNTED_MATRIX
+        case.update(build_phase31_counted_build_metadata())
+    return tuple(inventory)
+
+
+def build_phase31_counted_performance_inventory_cases() -> list[dict[str, Any]]:
+    """Explicit sibling inventory for the full Phase 3.1 counted performance matrix."""
+
+    return deepcopy(list(_build_phase31_counted_performance_inventory_cases_cached()))
+
+
+@lru_cache(maxsize=1)
+def _build_phase31_counted_performance_case_contexts_cached() -> tuple[PerformanceEvidenceCaseContext, ...]:
+    cases = list(iter_phase31_performance_cases())
+    for case_context in cases:
+        case_context.metadata["phase31_matrix_slice"] = BENCHMARK_SLICE_PHASE31_COUNTED_MATRIX
+        case_context.metadata.update(build_phase31_counted_build_metadata())
+    return tuple(cases)
+
+
+def build_phase31_counted_performance_case_contexts() -> list[PerformanceEvidenceCaseContext]:
+    """Explicit sibling contexts for the full Phase 3.1 counted performance matrix."""
+
+    return deepcopy(list(_build_phase31_counted_performance_case_contexts_cached()))
 
 
 @lru_cache(maxsize=1)
