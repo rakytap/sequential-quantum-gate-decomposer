@@ -1,13 +1,7 @@
-# Beyond Unitary Fusion in Exact Noisy Quantum Simulation
+# Efficent Simulation of Noise in Quantum Circuits
 
-## Draft Status
 
-Conference-facing narrative short paper derived from the current Phase 3.1
-decision-study result. This version is written to stand on its own for an
-audience that is not expected to know the project history, internal milestone
-structure, or software architecture details in advance.
-
-## Abstract
+## Introduction
 
 Partitioning and gate fusion are standard tools in unitary quantum simulation,
 while open-system theory provides the language of Kraus maps, Choi matrices,
@@ -32,14 +26,8 @@ acceleration while also showing, on a frozen workload family, where the
 existing exact baseline is already sufficient and where the richer path is
 still not justified.
 
-## Publication Surface Role
 
-Scientific narrative short paper for a quantum-computing or
-quantum-machine-learning audience. Its purpose is to explain why the bounded
-decision-study result matters, where it fits in the literature, and what
-reusable methodological insight it offers.
-
-## 1. Why This Problem Matters
+## 1. Motivation
 
 Exact noisy simulation matters because realistic local noise can qualitatively
 change the behavior of variational algorithms. For questions about trainability,
@@ -53,15 +41,15 @@ structure that can be fused exactly, so that noisy simulation becomes more
 structured than "unitaries plus interruptions" without sacrificing physical
 correctness.
 
-## 2. Where the Literature Is Split
+## 2. Related Work
 
 The current literature offers strong ingredients, but not a fully integrated
 answer to the bounded exact noisy-fusion question addressed here.
 
-Graph-based partitioning and gate-fusion papers such as TDAG, GTQCP, QGo, and
-QMin show how much can be gained when circuits are treated as structured
-dependency objects. However, these methods are typically developed for unitary
-or state-vector simulation.
+Graph-based partitioning and gate-fusion papers such as TDAG, GTQCP, QGo (Wu
+et al., arXiv:2012.09835), and QMin show how much can be gained when circuits
+are treated as structured dependency objects. However, these methods are
+typically developed for unitary or state-vector simulation.
 
 Open-system and density-matrix literature, by contrast, gives the mathematical
 language needed for exact noisy evolution. Nielsen and Chuang formalize quantum
@@ -73,7 +61,7 @@ problem in its own right.
 What is still relatively unexplored is the exact noisy middle ground: bounded
 fusion of mixed gate-noise motifs inside a partitioned execution flow.
 
-## 3. Current Scientific Result
+## 3. Methodology and result
 
 The current result is intentionally narrow but already meaningful.
 
@@ -110,7 +98,7 @@ provided the representation, ordering, and invariant checks are all exact.
 This is a result about **feasibility and methodology**, not about universal
 performance. That distinction is important and should remain explicit.
 
-## 4. Reusable Working Principles
+## 4. Discussion
 
 The current bounded study suggests five reusable principles for future exact
 noisy acceleration work.
@@ -136,8 +124,6 @@ These principles are potentially reusable beyond the present bounded support
 surface. The full emitted matrix now reinforces that separation: exactness can
 close while workload-level justification still remains negative or mixed.
 
-## 5. What Remains Hard
-
 Several hard questions remain open.
 
 First, mathematical feasibility and performance usefulness are not the same.
@@ -154,11 +140,14 @@ Third, broader noisy structure is still unresolved: correlated noise, larger
 supports, and more heterogeneous motif families may require different
 representations or different validation strategies.
 
+## 5. Conclusion
+
 The right scientific conclusion is therefore not "noisy fusion is solved," but
 "a bounded exact path now exists and can be studied honestly."
 
-## Selected References
+## References
 
+- SQUANDER: https://github.com/rakytap/sequential-quantum-gate-decomposer
 - Michael A. Nielsen and Isaac L. Chuang, *Quantum Computation and Quantum
   Information*, Cambridge University Press (2010).
 - Christopher J. Wood, Jacob D. Biamonte, and David G. Cory, *Tensor networks
@@ -175,13 +164,9 @@ The right scientific conclusion is therefore not "noisy fusion is solved," but
   Directed Acyclic Graph Partitioning for Quantum Circuits*, ACM GLSVLSI 2023.
 - Joseph Clark, Travis S. Humble, and Himanshu Thapliyal, *GTQCP: Greedy
   Topology-Aware Quantum Circuit Partitioning*, `arXiv:2410.02901`.
+- Xin-Chuan Wu, Marc Grau Davis, Frederic T. Chong, and Costin Iancu, *QGo:
+  Scalable Quantum Circuit Optimization Using Automated Synthesis*,
+  `arXiv:2012.09835`.
 - Longshan Xu, Edwin Hsing-Mean Sha, Yuhong Song, and Qingfeng Zhu, *QMin:
   Quantum Circuit Minimization via Gate Fusions for Efficient State Vector
   Simulation*, `Quantum Information Processing 25, 6 (2026)`.
-
-## Traceability
-
-- `SHORT_PAPER_NARRATIVE.md`
-- `PRE_PUBLICATION_EVIDENCE_REVIEW_PHASE_3_1.md`
-- `SHORT_PAPER_PHASE_3_1.md`
-- `PAPER_PHASE_3_1.md`
