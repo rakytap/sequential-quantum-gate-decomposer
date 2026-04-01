@@ -1105,7 +1105,7 @@ class qgd_Wide_Circuit_Optimization:
         for i, part in enumerate(allparts):
             for gate in part:
                 for other_part in gate_to_parts[gate]:
-                    if other_part != i and part < allparts[other_part]:
+                    if other_part != i and (len(part & allparts[other_part]) > 0 and (len(part) < len(allparts[other_part])) or part < allparts[other_part]):
                         g[i].add(other_part)
                         rg[other_part].add(i)
         rg_ret = {i: set(rg[i]) for i in range(len(allparts))}        
@@ -1349,28 +1349,154 @@ class qgd_Wide_Circuit_Optimization:
         return [(0, i) for i in range(1, num_qubits)]
     def ring_topology(num_qubits):
         return [(i, (i+1) % num_qubits) for i in range(num_qubits)]
+    def lattice_topology(x_qbits, y_qbits):
+        return [(i*x_qbits + j, i*x_qbits + (j+1)) for i in range(y_qbits) for j in range(x_qbits - 1)] + [(i*x_qbits + j, (i+1)*x_qbits + j) for i in range(y_qbits - 1) for j in range(x_qbits)]
+    def heavy_hexagonal_topology(rows, cols):
+        """
+        Finite heavy-hex patch.
+
+        rows, cols describe the underlying honeycomb 'brick-wall' patch.
+        The first rows*cols qubits are the original honeycomb vertices.
+        Every original edge gets one inserted degree-2 qubit.
+
+        Returns:
+            list[(u, v)]  undirected couplers
+        """
+
+        def vid(r, c):
+            return r * cols + c
+
+        # Underlying honeycomb / brick-wall edges
+        base_edges = []
+
+        for r in range(rows):
+            for c in range(cols):
+                # Vertical brick-wall edges
+                if r + 1 < rows:
+                    base_edges.append((vid(r, c), vid(r + 1, c)))
+
+                # Alternating horizontal edges
+                if c + 1 < cols and ((r + c) % 2 == 0):
+                    base_edges.append((vid(r, c), vid(r, c + 1)))
+
+        # Subdivide every honeycomb edge by inserting a qubit
+        next_id = rows * cols
+        heavy_edges = []
+
+        for u, v in base_edges:
+            w = next_id
+            next_id += 1
+            heavy_edges.append((u, w))
+            heavy_edges.append((w, v))
+
+        return heavy_edges
+    def sycamore_topology(): return qgd_Wide_Circuit_Optimization.lattice_topology(6, 9) #there is a defective qubit at (0, 3) in the sycamore chip, but we ignore it here for simplicity
     def check_valid_topo(self, wide_circuit):
         if self.config["topology"] is not None:
+            import itertools
             topo_set = {frozenset(edge) for edge in self.config["topology"]}
-            assert all(frozenset(gate.get_Involved_Qbits()) in topo_set
+            def qubits_connected(qubits):
+                if len(qubits) <= 1: return True
+                edges = {frozenset((q1, q2)) for q1, q2 in itertools.combinations(qubits, 2) if frozenset((q1, q2)) in topo_set}
+                if len(edges) == 0: return False
+                cur_set = set(edges.pop())
+                while edges:
+                    next_edge = next((e for e in edges if len(e & cur_set) > 0), None)
+                    if next_edge is None: return False
+                    cur_set |= next_edge
+                    edges.remove(next_edge)
+                return True
+            assert all(qubits_connected(gate.get_Involved_Qbits())
                 for gate in wide_circuit.get_Flat_Circuit().get_Gates()
                 if len(gate.get_Involved_Qbits()) > 1), "Final circuit contains gates that do not respect the topology constraints."
     def check_compare_circuits(self, circ, orig_parameters, wide_circuit, wide_parameters, routing=False):
         if self.config["test_final_circuit"]:
             if routing:
                 CompareCircuits(circ, orig_parameters, wide_circuit, wide_parameters,
-                    initial_mapping=self.config["initial_mapping"], final_mapping=self.config["final_mapping"] )
+                    initial_mapping=self.config["initial_mapping"], final_mapping=self.config["final_mapping"], parallel=0 )
             else:
                 CompareCircuits(circ, orig_parameters, wide_circuit, wide_parameters)
-    def route_circuit(self, circ: Circuit, orig_parameters: np.ndarray, use_qiskit=False):
-        if use_qiskit:
+    def route_circuit(self, circ: Circuit, orig_parameters: np.ndarray):
+        if self.config.get("use_bqskit_routing", False):
+            from squander import Qiskit_IO
+            from bqskit import Circuit as BQSKitCircuit, compile
+            from bqskit.compiler import Compiler
+            from bqskit.compiler.compile import build_seqpam_mapping_optimization_workflow
+            from bqskit.passes import (
+                GeneralizedSabreLayoutPass,
+                GeneralizedSabreRoutingPass,
+                SetModelPass,
+            )
+            from bqskit.ir.gates import CNOTGate  # example; extend as needed
+            from bqskit.compiler.machine import MachineModel
+            from bqskit.ir.lang.qasm2 import OPENQASM2Language
+            from qiskit import qasm2, QuantumCircuit
+
+            # Build BQSKit machine model from your topology
+            model        = MachineModel(circ.get_Qbit_Num(), self.config["topology"])
+
+            # Convert squander circuit → qiskit → BQSKit
+            # (BQSKit has a from_qiskit helper if you go via Qiskit IR)
+            circo        = Qiskit_IO.get_Qiskit_Circuit(circ, orig_parameters)
+            
+            bqskit_circ = OPENQASM2Language().decode(qasm2.dumps(circo))
+            # Customizable knobs
+
+            # Routing-only pass pipeline — NO optimization passes
+            routing_workflow = [
+                SetModelPass(model),                          # attach hardware model to circuit
+                build_seqpam_mapping_optimization_workflow()
+                #GeneralizedSabreLayoutPass(),                # SABRE-style layout
+                #GeneralizedSabreRoutingPass(),               # SABRE-style routing
+            ]
+
+            with Compiler() as compiler:
+                routed_bqskit_circ, pass_data = compiler.compile(bqskit_circ, routing_workflow, True)
+                print(pass_data.placement, pass_data.initial_mapping, pass_data.final_mapping)
+
+            # Convert back: BQSKit → Qiskit → Squander
+            circuit_qiskit_routed = QuantumCircuit.from_qasm_str(OPENQASM2Language().encode(routed_bqskit_circ))            
+            Squander_remapped_circuit, parameters_remapped_circuit = \
+                Qiskit_IO.convert_Qiskit_to_Squander(circuit_qiskit_routed)
+            Squander_remapped_circuit = Squander_remapped_circuit.Remap_Qbits({i: j for i, j in enumerate(pass_data.placement)})
+            self.config["initial_mapping"] = list(pass_data.placement[x] for x in pass_data.initial_mapping)
+            self.config["final_mapping"] = list(pass_data.placement[x] for x in pass_data.final_mapping)
+        elif self.config.get("use_qiskit_sabre", False):
             from squander import Qiskit_IO
             from qiskit import transpile
+            from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
+            from qiskit.transpiler.passes import SabreLayout, SabreSwap
+            from qiskit.transpiler import PassManager, CouplingMap
             from squander.gates import gates_Wrapper as gate
-            SUPPORTED_GATES_NAMES = {n.lower().replace("cnot", "cx") for n in dir(gate) if not n.startswith("_") and issubclass(getattr(gate, n), gate.Gate) and n not in ("Gate", "CROT", "CR", "SYC", "CCX", "CSWAP")}
+            #SUPPORTED_GATES_NAMES = {n.lower().replace("cnot", "cx") for n in dir(gate) if not n.startswith("_") and issubclass(getattr(gate, n), gate.Gate) and n not in ("Gate", "CROT", "CR", "SYC", "CCX", "CSWAP")}
             circo = Qiskit_IO.get_Qiskit_Circuit(circ, orig_parameters)
             coupling_map = [[i,j] for i,j in self.config['topology']]
-            circuit_qiskit_sabre = transpile(circo, basis_gates=SUPPORTED_GATES_NAMES, coupling_map=coupling_map, optimization_level=0)
+            #circuit_qiskit_sabre = transpile(circo, basis_gates=SUPPORTED_GATES_NAMES, coupling_map=coupling_map, optimization_level=0)
+            coupling_map = CouplingMap(coupling_map)
+            # Customizable SABRE parameters
+            sabre_seed     = self.config.get("sabre_seed", 42)
+            sabre_trials   = self.config.get("sabre_trials", 5)   # layout trials
+            swap_trials    = self.config.get("sabre_swap_trials", sabre_trials)
+            heuristic      = self.config.get("sabre_heuristic", "decay")  # "basic" | "lookahead" | "decay"
+
+            layout_pass = SabreLayout(
+                coupling_map,
+                seed=sabre_seed,
+                max_iterations=sabre_trials,
+                swap_trials=swap_trials,
+            )
+            swap_pass = SabreSwap(
+                coupling_map,
+                heuristic=heuristic,
+                seed=sabre_seed,
+                trials=swap_trials,
+            )
+
+            pm = PassManager([
+                layout_pass,          # find initial qubit mapping via SABRE
+                swap_pass,            # insert SWAP gates for routing
+            ])            
+            circuit_qiskit_sabre = pm.run(circo)
             Squander_remapped_circuit, parameters_remapped_circuit = Qiskit_IO.convert_Qiskit_to_Squander(circuit_qiskit_sabre)
             self.config["initial_mapping"] = circuit_qiskit_sabre.layout.initial_index_layout()
             self.config["final_mapping"] = circuit_qiskit_sabre.layout.final_index_layout()
