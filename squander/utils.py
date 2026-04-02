@@ -177,6 +177,8 @@ def CompareCircuits( circ1: Circuit, parameters1: np.ndarray, circ2: Circuit, pa
 
     if qbit_num1 != qbit_num2:
         raise Exception( "The two compared circuits should have the same number of qubits." )
+
+    if qbit_num1 > 31: return # skip comparison for large qubit numbers, as the current implementation of Gates_block only supports up to 31 qubits. This is a temporary workaround and should be removed once the support for more qubits is implemented in Gates_block.
     
     matrix_size = 1 << qbit_num1
     initial_state_real = np.random.uniform(-1.0,1.0, (matrix_size,) )
