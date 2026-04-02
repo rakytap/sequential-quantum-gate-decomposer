@@ -706,7 +706,7 @@ SearchNode N_Qubit_Decomposition_Tree_Search::evaluate_path(
             osr_result.reserve(all_cuts.size());
             int newrank = rank;
             for (const std::vector<int>& eval_cut : all_cuts) {
-                osr_result.emplace_back(operator_schmidt_rank(U, qbit_num, eval_cut, Fnorm, osr_tol, true));
+                osr_result.emplace_back(operator_schmidt_rank(U, qbit_num, eval_cut, Fnorm, osr_tol));
                 if (cut == eval_cut) newrank = osr_result.back().first;
                 //newrank = std::max(newrank, osr_result.back().first);
             }
@@ -866,9 +866,9 @@ GrayCode N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures_bes
         if (!inserted) {
             return false;
         }
-        if (forbidden.contains_forbidden_subsequence(path)) {
-            return false;
-        }
+        // if (forbidden.contains_forbidden_subsequence(path)) {
+        //     return false;
+        // }
         // for (int i = 0; i < path.size(); i++) {
         //     if (visited.find(path.remove_Digit(i)) == visited.end()) {
         //         return false;
@@ -878,10 +878,10 @@ GrayCode N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures_bes
         //std::chrono::time_point<std::chrono::high_resolution_clock> start = std::chrono::high_resolution_clock::now();
         SearchNode sn = evaluate_path(cDecomp_custom_random, osr_bound_solver, all_cuts, Fnorm, osr_tol, distrib_real, gen, path);
         //printf("%.2fs\n", std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now() - start).count()*1e-9);
-        if (path.size()+sn.get_min_cnots() > level_limit) {
-            forbidden.insert_forbidden(path);
-            return false;
-        }
+        // if (path.size()+sn.get_min_cnots() > level_limit) {
+        //     forbidden.insert_forbidden(path);
+        //     return false;
+        // }
 
         heap.emplace(sn);
         return true;
@@ -896,26 +896,32 @@ GrayCode N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures_bes
 
     while (!heap.empty()) {
         SearchNode cur = heap.top();
+        heap = std::priority_queue<SearchNode, std::vector<SearchNode>, std::greater<SearchNode>>(); // clear the heap to save memory
         if (cur.get_min_cnots() == 0) {
             return cur.path;
         }
         const std::tuple<int, double, std::vector<int>, std::vector<std::pair<int, double>>>& cur_best_osr_result = cur.get_best_osr_result();
         const std::vector<int>& best_edge_counts = std::get<2>(cur_best_osr_result);
         std::vector<int> topo_filter(topology.size());
-        std::iota(topo_filter.begin(), topo_filter.end(), 0);
-        std::sort(topo_filter.begin(), topo_filter.end(), [&](int a, int b){
-            return best_edge_counts[a] > best_edge_counts[b];
-        });
-        //topo_filter.resize(std::get<0>(cur_best_osr_result));
-        //topo_filter.resize(std::count_if(best_edge_counts.begin(), best_edge_counts.end(), [](int c){ return c > 0; }));
-        // for (size_t i = 0; i < best_edge_counts.size(); i++) {
-        //     for (int j = 0; j < best_edge_counts[i]; j++) {
-        //         topo_filter.push_back(static_cast<int>(i));
-        //     }
-        // }
+        bool exact_edges = true;
+        int num_cnot;
+        if (!exact_edges) {
+            num_cnot = 1;
+            std::iota(topo_filter.begin(), topo_filter.end(), 0);
+            std::sort(topo_filter.begin(), topo_filter.end(), [&](int a, int b){
+                return best_edge_counts[a] > best_edge_counts[b];
+            });
+        } else {
+            num_cnot = std::get<0>(cur_best_osr_result);
+            topo_filter.resize(std::get<0>(cur_best_osr_result));
+            //topo_filter.resize(std::count_if(best_edge_counts.begin(), best_edge_counts.end(), [](int c){ return c > 0; }));
+            for (size_t i = 0; i < best_edge_counts.size(); i++) {
+                for (int j = 0; j < best_edge_counts[i]; j++) {
+                    topo_filter.push_back(static_cast<int>(i));
+                }
+            }
+        }
 
-        int num_cnot = 1;
-        //int num_cnot = std::get<0>(cur_best_osr_result);
         while (true) {
             // safety guard
             if (cur.path.size() + num_cnot > level_limit) {
@@ -936,13 +942,13 @@ GrayCode N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures_bes
             // if (std::get<0>(top_best_osr_result) < std::get<0>(cur_best_osr_result) ||
             //     std::get<0>(top_best_osr_result) == std::get<0>(cur_best_osr_result) &&
             //     std::get<1>(top_best_osr_result) + 1e-3 < std::get<1>(cur_best_osr_result)) {
-                break;
+                //break;
             }
             
 
             ++num_cnot;
 
-            //break;
+            break;
         }
 
         // Optional beam trimming:
