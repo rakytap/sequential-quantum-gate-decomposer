@@ -2495,11 +2495,6 @@ void Gates_block::set_min_fusion( int min_fusion ) {
 */
 void Gates_block::set_qbit_num( int qbit_num_in ) {
 
-    if (qbit_num_in > 30) {
-        std::string err("Gates_block::set_qbit_num: Number of qubits supported up to 30"); 
-        throw err;        
-    }
-
     // setting the number of qubits
     Gate::set_qbit_num(qbit_num_in);
 
