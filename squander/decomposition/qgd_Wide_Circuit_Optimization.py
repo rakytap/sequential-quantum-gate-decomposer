@@ -1475,7 +1475,6 @@ class qgd_Wide_Circuit_Optimization:
 
             with Compiler() as compiler:
                 routed_bqskit_circ, pass_data = compiler.compile(bqskit_circ, routing_workflow, True)
-                print(pass_data.placement, pass_data.initial_mapping, pass_data.final_mapping)
 
             # Convert back: BQSKit → Qiskit → Squander
             circuit_qiskit_routed = QuantumCircuit.from_qasm_str(OPENQASM2Language().encode(routed_bqskit_circ))
