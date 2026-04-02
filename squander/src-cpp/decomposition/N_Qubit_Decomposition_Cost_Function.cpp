@@ -847,6 +847,19 @@ inline double logsumexp_smoothmax(const std::vector<double>& Lc, double tau=1e-2
     return tau * std::log(sum) + m;
 }
 
+// Assumes S are nonnegative singular values (ideally sorted desc).
+double weighted_loss_for_rank(const std::vector<double>& S, int rank, double rho=0.1, double tol=1e-4) {
+    const size_t start = size_t(1) << rank;
+    double w = 1.0;
+    double acc = 0.0;
+    for (int k = S.size()-1; k >= start; --k) {
+        double val = S[k]; // - S[0] * tol;
+        acc += w * val * val;
+        w *= rho;  // geometric weight rho^k
+    }
+    return acc;
+}
+
 // rank = 0 -> target rank 1  -> tail starts at index 1
 // rank = 1 -> target rank 2  -> tail starts at index 2
 // rank = 2 -> target rank 4  -> tail starts at index 4
@@ -1080,7 +1093,7 @@ std::vector<std::vector<double>> cuts_softmax_tail_grad(
 // Public: operator-Schmidt rank across cut A|B
 std::pair<int, double> operator_schmidt_rank(const Matrix& U, int n,
                           const std::vector<int>& A_qubits,
-                          double Fnorm, double tol, int rank)
+                          double Fnorm, double tol)
 {
     
     int mr=0, mc=0;
@@ -1088,7 +1101,9 @@ std::pair<int, double> operator_schmidt_rank(const Matrix& U, int n,
     std::vector<double> S = osr(M, mr, mc, Fnorm);
     int min_cnot = numerical_rank_osr(S, tol);
     return std::pair<int, double>(min_cnot,
-        rank ? tail_loss(S, static_cast<int>(lg_up(static_cast<uint32_t>(S.size())))) : loss_for_rank(S, min_cnot));
+        //tail_loss(S, static_cast<int>(lg_up(static_cast<uint32_t>(S.size()))))
+        weighted_loss_for_rank(S, min_cnot)
+    );
 }
 
 double get_osr_entanglement_test(Matrix& matrix, std::vector<std::vector<int>> &use_cuts, int rank, bool use_softmax) {
