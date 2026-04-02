@@ -1422,10 +1422,26 @@ class qgd_Wide_Circuit_Optimization:
             from bqskit import Circuit as BQSKitCircuit, compile
             from bqskit.compiler import Compiler
             from bqskit.compiler.compile import build_seqpam_mapping_optimization_workflow
+            from bqskit.compiler.basepass import BasePass
+            class SquanderPartitioner(BasePass):
+                def __init__(self, max_partition_size):
+                    super().__init__()
+                    self.max_partition_size = max_partition_size
+                async def run(self, circuit: BQSKitCircuit, data=None):
+                    from squander import Qiskit_IO
+                    from squander.partitioning.partition import PartitionCircuit
+                    circ_qiskit = QuantumCircuit.from_qasm_str(OPENQASM2Language().encode(circuit))
+                    circ, orig_parameters = Qiskit_IO.convert_Qiskit_to_Squander(circ_qiskit)
+                    partitioned_circuit, parameters, _ = PartitionCircuit( circ, orig_parameters, self.max_partition_size, strategy="ilp" )
+                    partitioned_circuit_qiskit = Qiskit_IO.get_Qiskit_Circuit(partitioned_circuit, parameters)
+                    partitioned_circuit_bqskit = OPENQASM2Language().decode(qasm2.dumps(partitioned_circuit_qiskit))
+                    circuit.become(partitioned_circuit_bqskit, False)
             from bqskit.passes import (
                 GeneralizedSabreLayoutPass,
                 GeneralizedSabreRoutingPass,
                 SetModelPass,
+                IfThenElsePass,
+                QuickPartitioner
             )
             from bqskit.ir.gates import CNOTGate  # example; extend as needed
             from bqskit.compiler.machine import MachineModel
@@ -1443,6 +1459,13 @@ class qgd_Wide_Circuit_Optimization:
             # Customizable knobs
 
             # Routing-only pass pipeline — NO optimization passes
+            mainflow = build_seqpam_mapping_optimization_workflow(block_size=self.config['max_partition_size'])
+            for curpass in mainflow._passes:
+                if isinstance(curpass, IfThenElsePass):
+                    for i in range(len(curpass.on_true._passes)):
+                        if isinstance(curpass.on_true._passes[i], QuickPartitioner):
+                            curpass.on_true._passes[i] = SquanderPartitioner(self.config['max_partition_size'])
+            
             routing_workflow = [
                 SetModelPass(model),                          # attach hardware model to circuit
                 build_seqpam_mapping_optimization_workflow()
@@ -1455,7 +1478,7 @@ class qgd_Wide_Circuit_Optimization:
                 print(pass_data.placement, pass_data.initial_mapping, pass_data.final_mapping)
 
             # Convert back: BQSKit → Qiskit → Squander
-            circuit_qiskit_routed = QuantumCircuit.from_qasm_str(OPENQASM2Language().encode(routed_bqskit_circ))            
+            circuit_qiskit_routed = QuantumCircuit.from_qasm_str(OPENQASM2Language().encode(routed_bqskit_circ))
             Squander_remapped_circuit, parameters_remapped_circuit = \
                 Qiskit_IO.convert_Qiskit_to_Squander(circuit_qiskit_routed)
             Squander_remapped_circuit = Squander_remapped_circuit.Remap_Qbits({i: j for i, j in enumerate(pass_data.placement)})
