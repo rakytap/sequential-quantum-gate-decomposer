@@ -258,8 +258,8 @@ Gates_block::apply_to( Matrix_real& parameters_mtx_in, Matrix& input, int parall
         throw err;    
     }
 
-    if (qbit_num > 30) {
-        std::string err("Gates_block::apply_to: Number of qubits supported up to 30"); 
+    if (qbit_num > 31) {
+        std::string err("Gates_block::apply_to: Number of qubits supported up to 31"); 
         throw err;        
     }
 
