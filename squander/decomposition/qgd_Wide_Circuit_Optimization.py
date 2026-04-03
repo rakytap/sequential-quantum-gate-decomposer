@@ -784,7 +784,6 @@ class qgd_Wide_Circuit_Optimization:
         config.setdefault('test_final_circuit', True )
         config.setdefault('max_partition_size', 3 )
         config.setdefault('topology', None)
-        config.setdefault('routed', False)
         config.setdefault('partition_strategy','ilp')
         
         #testing the fields of config 
@@ -1182,13 +1181,21 @@ class qgd_Wide_Circuit_Optimization:
         L = topo_sort_partitions(circ, parts)
         return [optimized_subcircuits[struct_idxs[i]] for i in L], [optimized_parameter_list[struct_idxs[i]] for i in L]
 
-    def OptimizeWideCircuit( self, circ: Circuit, parameters: np.ndarray, global_min=True ) -> Tuple[Circuit, np.ndarray]:
-        if self.config["topology"] is not None and self.config["routed"]==False:
-            topo = self.config["topology"]
+    def OptimizeWideCircuit( self, circ: Circuit, parameters: np.ndarray ) -> Tuple[Circuit, np.ndarray]:
+        if not qgd_Wide_Circuit_Optimization.is_valid_routing(circ, self.config['topology']):
+            topo = self.config['topology']
             self.config['topology'] = None
-            circ, parameters = self.OptimizeWideCircuit( circ, parameters, global_min=global_min )
+            circ, parameters = self.OptimizeWideCircuit( circ, parameters )
+            self.config['all_to_all_optimization_time'] = self.config['optimization_time']
+            self.config['all_to_all_circuit'] = circ
+            self.config['all_to_all_parameters'] = parameters
             self.config['topology'] = topo
+            start_time = time.time()
             circ, parameters = self.route_circuit(circ, parameters)
+            self.config['routing_time'] = time.time() - start_time
+            self.config['routed_circuit'] = circ
+            self.config['routed_parameters'] = parameters
+        start_time = time.time()
         part_size_start = self.max_partition_size
         part_size_end = self.max_partition_size
         if self.config.get("use_osr", False) or self.config.get("use_graph_search", False): part_size_end = 4
@@ -1199,14 +1206,15 @@ class qgd_Wide_Circuit_Optimization:
             wide_circuit_optimizer = qgd_Wide_Circuit_Optimization( {**self.config, 'max_partition_size': max_part_size} )
             while True:
                 # run circuit optimization
-                circ_flat, parameters = wide_circuit_optimizer._OptimizeWideCircuit( circ, parameters, global_min=global_min, fingerprint_dict=fingerprint_dict )
+                circ_flat, parameters = wide_circuit_optimizer.InnerOptimizeWideCircuit( circ, parameters, fingerprint_dict=fingerprint_dict )
                 circ = circ_flat.get_Flat_Circuit()
                 newcount = CNOTGateCount(circ, 0)
                 no_improve = newcount >= count
                 count = newcount
                 if no_improve: break
+        self.config['optimization_time'] = time.time() - start_time
         return circ, parameters
-    def _OptimizeWideCircuit( self, circ: Circuit, orig_parameters: np.ndarray, global_min=True, fingerprint_dict=None ) -> Tuple[Circuit, np.ndarray]:
+    def InnerOptimizeWideCircuit( self, circ: Circuit, orig_parameters: np.ndarray, fingerprint_dict=None ) -> Tuple[Circuit, np.ndarray]:
         """
         Call to optimize a wide circuit (i.e. circuits with many qubits) by
         partitioning the circuit into smaller partitions and redecompose the smaller partitions
@@ -1226,7 +1234,8 @@ class qgd_Wide_Circuit_Optimization:
         from squander.utils import circuit_to_CNOT_basis
         circ, orig_parameters = circuit_to_CNOT_basis(circ, orig_parameters)
         max_gates = sum(y for x, y in circ.get_Gate_Nums().items() if x !='CNOT')
-
+        
+        global_min = self.config.get("global_min", True)
         if global_min:
             partitioned_circuit, parameters, recombine_info, part_deps = qgd_Wide_Circuit_Optimization.make_all_partition_circuit(circ, orig_parameters, self.max_partition_size)            
 
@@ -1335,7 +1344,7 @@ class qgd_Wide_Circuit_Optimization:
             print( "original circuit:    ", circ.get_Gate_Nums()) 
             print( "reoptimized circuit: ", wide_circuit.get_Gate_Nums()) 
 
-        self.check_valid_topo(wide_circuit)
+        qgd_Wide_Circuit_Optimization.check_valid_routing(wide_circuit, self.config["topology"])
 
         self.check_compare_circuits( circ, orig_parameters, wide_circuit, wide_parameters )
 
@@ -1391,24 +1400,26 @@ class qgd_Wide_Circuit_Optimization:
 
         return heavy_edges
     def sycamore_topology(): return qgd_Wide_Circuit_Optimization.lattice_topology(6, 9) #there is a defective qubit at (0, 3) in the sycamore chip, but we ignore it here for simplicity
-    def check_valid_topo(self, wide_circuit):
-        if self.config["topology"] is not None:
-            import itertools
-            topo_set = {frozenset(edge) for edge in self.config["topology"]}
-            def qubits_connected(qubits):
-                if len(qubits) <= 1: return True
-                edges = {frozenset((q1, q2)) for q1, q2 in itertools.combinations(qubits, 2) if frozenset((q1, q2)) in topo_set}
-                if len(edges) == 0: return False
-                cur_set = set(edges.pop())
-                while edges:
-                    next_edge = next((e for e in edges if len(e & cur_set) > 0), None)
-                    if next_edge is None: return False
-                    cur_set |= next_edge
-                    edges.remove(next_edge)
-                return True
-            assert all(qubits_connected(gate.get_Involved_Qbits())
-                for gate in wide_circuit.get_Flat_Circuit().get_Gates()
-                if len(gate.get_Involved_Qbits()) > 1), "Final circuit contains gates that do not respect the topology constraints."
+    def is_valid_routing(wide_circuit, topo):
+        if topo is None: return True
+        import itertools
+        topo_set = {frozenset(edge) for edge in topo}
+        def qubits_connected(qubits):
+            if len(qubits) <= 1: return True
+            edges = {frozenset((q1, q2)) for q1, q2 in itertools.combinations(qubits, 2) if frozenset((q1, q2)) in topo_set}
+            if len(edges) == 0: return False
+            cur_set = set(edges.pop())
+            while edges:
+                next_edge = next((e for e in edges if len(e & cur_set) > 0), None)
+                if next_edge is None: return False
+                cur_set |= next_edge
+                edges.remove(next_edge)
+            return True
+        return all(qubits_connected(gate.get_Involved_Qbits())
+            for gate in wide_circuit.get_Flat_Circuit().get_Gates()
+            if len(gate.get_Involved_Qbits()) > 1)
+    def check_valid_routing(wide_circuit, topo):
+        assert qgd_Wide_Circuit_Optimization.is_valid_routing(wide_circuit, topo), "Final circuit contains gates that do not respect the routing constraints."
     def check_compare_circuits(self, circ, orig_parameters, wide_circuit, wide_parameters, routing=False):
         if self.config["test_final_circuit"]:
             if routing:
@@ -1527,7 +1538,6 @@ class qgd_Wide_Circuit_Optimization:
             Squander_remapped_circuit, parameters_remapped_circuit, pi, final_pi, swap_count = sabre.map_circuit(orig_parameters)
             self.config["initial_mapping"] = pi
             self.config["final_mapping"] = final_pi
-        self.config['routed']= True
-        self.check_valid_topo(Squander_remapped_circuit)
+        qgd_Wide_Circuit_Optimization.check_valid_routing(Squander_remapped_circuit, self.config["topology"])
         self.check_compare_circuits(circ, orig_parameters, Squander_remapped_circuit, parameters_remapped_circuit, routing=True)
         return Squander_remapped_circuit, parameters_remapped_circuit
