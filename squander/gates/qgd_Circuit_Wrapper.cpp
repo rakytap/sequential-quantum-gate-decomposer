@@ -1943,12 +1943,20 @@ qgd_Circuit_Wrapper_getstate( qgd_Circuit_Wrapper *self ) {
         return NULL;
     }
 
+    PyObject* qbit_num_key = PyUnicode_FromString("qbit_num");
+    if (qbit_num_key == NULL) {
+        Py_DECREF(method_name);
+        Py_DECREF(ret);
+        return NULL;
+    }
+
     // iterate over the gates to get the gate list
     for (int idx = 0; idx < op_num; idx++ ) {
 
         // get metadata about the idx-th gate
         PyObject* gate = get_gate( self->circuit, idx );
         if (gate == NULL) {
+            Py_DECREF(qbit_num_key);
             Py_DECREF(method_name);
             Py_DECREF(ret);
             return NULL;
@@ -1957,6 +1965,7 @@ qgd_Circuit_Wrapper_getstate( qgd_Circuit_Wrapper *self ) {
         PyObject* gate_state  = PyObject_CallMethodObjArgs( gate, method_name, NULL );   
         if (gate_state == NULL) {
             Py_DECREF(gate);
+            Py_DECREF(qbit_num_key);
             Py_DECREF(method_name);
             Py_DECREF(ret);
             return NULL;
@@ -1964,13 +1973,14 @@ qgd_Circuit_Wrapper_getstate( qgd_Circuit_Wrapper *self ) {
 
 
         // remove the field qbit_num from gate dict sice this will be redundant information
-        if ( PyDict_ContainsString(gate_state, "qbit_num") == 1 ) {
+        if ( PyDict_Contains(gate_state, qbit_num_key) == 1 ) {
 
-            if ( PyDict_DelItemString(gate_state, "qbit_num") != 0 ) {
+            if ( PyDict_DelItem(gate_state, qbit_num_key) != 0 ) {
                 std::string err( "Failed to delete item qbit_num from gate state");
                 PyErr_SetString(PyExc_Exception, err.c_str());
                 Py_DECREF(gate_state);
                 Py_DECREF(gate);
+                Py_DECREF(qbit_num_key);
                 Py_DECREF(method_name);
                 Py_DECREF(ret);
                 return NULL;    
@@ -1989,6 +1999,7 @@ qgd_Circuit_Wrapper_getstate( qgd_Circuit_Wrapper *self ) {
 
     }
 
+    Py_DECREF( qbit_num_key );
     Py_DECREF( method_name );
     
     return ret;
