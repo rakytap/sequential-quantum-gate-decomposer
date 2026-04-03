@@ -35,6 +35,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include <utility>
 #include <vector>
 
+using GrayCodeCNOT = GrayCode_base<int8_t>;
+
 /**
 @brief Structure containing level information for breadth-first search over gate structures.
 This structure tracks visited states, sequence pairs, and the queue of states to process during BFS enumeration.
@@ -43,7 +45,7 @@ struct LevelInfo {
     /// Set of visited states (represented as vectors of integers)
     std::set<std::vector<int>> visited;
     /// Map from state vectors to their corresponding Gray code sequences
-    std::map<std::vector<int>, GrayCode> seq_pairs_of;
+    std::map<std::vector<int>, GrayCodeCNOT> seq_pairs_of;
     /// Queue of states to be processed in the next BFS level
     std::vector<std::vector<int>> q;
 };
@@ -224,8 +226,8 @@ private:
 
 struct SearchNode {
     std::vector<std::tuple<int, double, std::vector<int>, std::vector<std::pair<int, double>>>> osr_results;
-    GrayCode path;
-    SearchNode(GrayCode path) : path(path) {}
+    GrayCodeCNOT path;
+    SearchNode(GrayCodeCNOT path) : path(path) {}
     int get_min_cnots() const {
         return std::get<0>(*std::min_element(osr_results.begin(), osr_results.end(),
                                 [](const std::tuple<int, double, std::vector<int>, std::vector<std::pair<int, double>>>& a, const std::tuple<int, double, std::vector<int>, std::vector<std::pair<int, double>>>& b) {
@@ -290,7 +292,7 @@ struct CutInfo {
     /// Map from CNOT pair (target, control) to the indices of cuts that are affected by this pair
     MinCnotBoundSolver osr_bound_solver;
     /// Map from Gray code sequences to their OSR result pairs (rank, cost) for different cuts
-    std::map<GrayCode, SearchNode> prefixes;
+    std::map<GrayCodeCNOT, SearchNode> prefixes;
     CutInfo(std::vector<std::vector<int>> all_cuts, MinCnotBoundSolver osr_bound_solver) : all_cuts(std::move(all_cuts)), osr_bound_solver(std::move(osr_bound_solver)) {}
 };
 
@@ -299,11 +301,11 @@ struct CutInfo {
 */
 struct TreeSearchResult {
     /// Vector of successful Gray-code solutions
-    std::vector<GrayCode> solutions;
+    std::vector<GrayCodeCNOT> solutions;
     /// Updated LevelInfo containing visited states and sequence pairs
     LevelInfo level_info;
-    /// Map of GrayCode to OSR (Operator Schmidt Rank) result pairs
-    std::map<GrayCode, SearchNode> prefixes;
+    /// Map of GrayCodeCNOT to OSR (Operator Schmidt Rank) result pairs
+    std::map<GrayCodeCNOT, SearchNode> prefixes;
 };
 
 /**
@@ -391,7 +393,7 @@ class N_Qubit_Decomposition_Tree_Search : public Optimization_Interface {
     @param gcode The N-ary Gray code describing the configuration of the two-qubit gates.
     @return Returns with the generated circuit
     */
-    Gates_block* construct_gate_structure_from_Gray_code(const GrayCode& gcode, bool finalize = true);
+    Gates_block* construct_gate_structure_from_Gray_code(const GrayCodeCNOT& gcode, bool finalize = true);
 
     /**
     @brief Call to perform tree search over possible gate structures
@@ -399,13 +401,13 @@ class N_Qubit_Decomposition_Tree_Search : public Optimization_Interface {
     @return Returns with the best Gray-code corresponding to the best circuit (The associated gate structure can be
     costructed by function construct_gate_structure_from_Gray_code)
     */
-    GrayCode tree_search_over_gate_structures(int level_num);
+    GrayCodeCNOT tree_search_over_gate_structures(int level_num);
 
     SearchNode evaluate_path(
         N_Qubit_Decomposition_custom& cDecomp_custom_random, MinCnotBoundSolver& osr_bound_solver,
         std::vector<std::vector<int>>& all_cuts, double Fnorm, double osr_tol,
         std::uniform_real_distribution<>& distrib_real, std::mt19937& gen,
-        const GrayCode& path);
+        const GrayCodeCNOT& path);
 
     /**
     @brief Perform tree search over possible gate structures using Gray code enumeration and Operator Schmidt Rank (OSR)
@@ -429,13 +431,13 @@ class N_Qubit_Decomposition_Tree_Search : public Optimization_Interface {
     @return Returns a TreeSearchResult structure containing:
             - solutions: Vector of successful Gray-code solutions that achieved zero operator Schmidt rank
             - level_info: Updated LevelInfo with visited states and sequence pairs for the next level
-            - prefixes: Map of GrayCode to OSR result pairs for candidates that passed the filtering criteria
+            - prefixes: Map of GrayCodeCNOT to OSR result pairs for candidates that passed the filtering criteria
     @note The function modifies the input parameters li and ci to maintain state across multiple calls.
           The associated gate structure can be constructed from a Gray code using the function
           construct_gate_structure_from_Gray_code.
     */
     TreeSearchResult tree_search_over_gate_structures_osr(int level_num, LevelInfo& li, CutInfo& ci);
-    GrayCode tree_search_over_gate_structures_best_first();
+    GrayCodeCNOT tree_search_over_gate_structures_best_first();
 
     /**
     @brief Call to perform the optimization on the given gate structure
@@ -462,7 +464,7 @@ class N_Qubit_Decomposition_Tree_Search : public Optimization_Interface {
     @return Returns with the best Gray-code corresponding to the best circuit (The associated gate structure can be
     costructed by function construct_gate_structure_from_Gray_code)
     */
-    GrayCode tabu_search_over_gate_structures();
+    GrayCodeCNOT tabu_search_over_gate_structures();
 };
 
 #endif
