@@ -100,8 +100,7 @@ if __name__ == '__main__':
     results = {}
     for filename in files:
         print(filename)
-        if os.path.basename(filename) != "heisenberg-16-20.qasm": continue
-        start_time = time.time()
+        if os.path.basename(filename) != "bv_n14.qasm": continue
         # load the circuit from a file
         circ, parameters = utils.qasm_to_squander_circuit(filename)
         config['topology'] = Wide_Circuit_Optimization.qgd_Wide_Circuit_Optimization.linear_topology(circ.get_Qbit_Num())
@@ -119,11 +118,26 @@ if __name__ == '__main__':
 
         # run circuit optimization
         wide_circuit_optimizer = Wide_Circuit_Optimization.qgd_Wide_Circuit_Optimization( config )
-        circ, parameters = wide_circuit_optimizer.OptimizeWideCircuit( circ, parameters )
-        cnot_count, elapsed = circ.get_Gate_Nums().get('CNOT', 0), time.time() - start_time
-        results[os.path.basename(filename)] = (cnot_count, elapsed)
+        start_time = time.time()
+        optcirc, optparameters = wide_circuit_optimizer.OptimizeWideCircuit( circ, parameters )
+        elapsed = time.time() - start_time
+        init_cnot_count = circ.get_Gate_Nums().get('CNOT', 0)
+        cnot_count, opt_time = optcirc.get_Gate_Nums().get('CNOT', 0), wide_circuit_optimizer.config.get('optimization_time', None)
+        a2a_cnot_count, routed_cnot_count = None, None
+        a2a_time, routing_time = None, None
+
+        if config.get('topology', None) is not None:
+            init_map, final_map = wide_circuit_optimizer.config["initial_mapping"], wide_circuit_optimizer.config["final_mapping"]
+            a2acirc, a2aparams = wide_circuit_optimizer.config["all_to_all_circuit"], wide_circuit_optimizer.config["all_to_all_parameters"]
+            routedcirc, routedparams = wide_circuit_optimizer.config["routed_circuit"], wide_circuit_optimizer.config["routed_parameters"]
+            a2a_cnot_count = a2acirc.get_Gate_Nums().get('CNOT', 0)
+            routed_cnot_count = routedcirc.get_Gate_Nums().get('CNOT', 0)
+            a2a_time = wide_circuit_optimizer.config.get('all_to_all_optimization_time', None)
+            routing_time = wide_circuit_optimizer.config.get('routing_time', None)
+        results[os.path.basename(filename)] = ((init_cnot_count, a2a_cnot_count, routed_cnot_count, cnot_count), (a2a_time, routing_time, opt_time, elapsed))
+        wide_circuit_optimizer.check_compare_circuits(circ, optparameters, optcirc, optparameters, routing=True)
         with open("results.txt", "a") as f:
-            f.write(f"{os.path.basename(filename)}: CNOT count = {cnot_count}, elapsed time = {elapsed:.2f} seconds\n")
+            f.write(f"{os.path.basename(filename)}: CNOT count = {init_cnot_count, a2a_cnot_count, routed_cnot_count, cnot_count}, elapsed time = {a2a_time:.2f} + {routing_time:.2f} + {opt_time:.2f} = {elapsed:.2f} seconds\n")
 
         print("--- %s seconds elapsed during optimization ---" % elapsed)
 
