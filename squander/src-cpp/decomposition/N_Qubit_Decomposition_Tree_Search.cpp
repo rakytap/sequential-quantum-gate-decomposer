@@ -537,7 +537,7 @@ void N_Qubit_Decomposition_Tree_Search::start_decomposition() {
 Gates_block* N_Qubit_Decomposition_Tree_Search::determine_gate_structure(Matrix_real& optimized_parameters_mtx_loc) {
 
     double optimization_tolerance_loc;
-    long long level_max;
+    long long level_max = 14;
     if (config.count("optimization_tolerance") > 0) {
         config["optimization_tolerance"].get_property(optimization_tolerance_loc);
 
@@ -547,8 +547,6 @@ Gates_block* N_Qubit_Decomposition_Tree_Search::determine_gate_structure(Matrix_
 
     if (config.count("tree_level_max") > 0) {
         config["tree_level_max"].get_property(level_max);
-    } else {
-        level_max = 14;
     }
     long long use_osr = 1;
     if (config.count("use_osr") > 0) {
@@ -564,7 +562,7 @@ Gates_block* N_Qubit_Decomposition_Tree_Search::determine_gate_structure(Matrix_
         config["stop_first_solution"].get_property(stop_first_solution);
     }
 
-    level_limit = (int)level_max;
+    level_limit = std::min(std::max((int)level_max, 0), 14);
 
     if (level_limit < 0) {
         std::string error("please increase level limit");
@@ -897,6 +895,7 @@ GrayCode N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures_bes
     while (!heap.empty()) {
         SearchNode cur = heap.top();
         heap = std::priority_queue<SearchNode, std::vector<SearchNode>, std::greater<SearchNode>>(); // clear the heap to save memory
+        visited.clear(); // clear visited to save memory, relying on the fact that we won't revisit nodes anyway
         if (cur.get_min_cnots() == 0) {
             return cur.path;
         }
