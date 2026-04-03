@@ -118,7 +118,7 @@ N_Qubit_Decomposition_Tabu_Search::determine_gate_structure(Matrix_real& optimiz
 
     level_limit = (int)level_max;
    
-    GrayCode gcode_best_solution = tabu_search_over_gate_structures();
+    GrayCodeCNOT gcode_best_solution = tabu_search_over_gate_structures();
 
 
     if (current_minimum > optimization_tolerance_loc) {
@@ -138,7 +138,7 @@ N_Qubit_Decomposition_Tabu_Search::determine_gate_structure(Matrix_real& optimiz
 @brief Perform tabu serach over gate structures
 @return Returns with the best Gray-code corresponding to the best circuit (The associated gate structure can be costructed by function construct_gate_structure_from_Gray_code)
 */
-GrayCode 
+GrayCodeCNOT 
 N_Qubit_Decomposition_Tabu_Search::tabu_search_over_gate_structures() {
 
 
@@ -161,7 +161,7 @@ N_Qubit_Decomposition_Tabu_Search::tabu_search_over_gate_structures() {
     }
 
 */
-    GrayCode gcode;
+    GrayCodeCNOT gcode;
 /*
     // initiate Gray code to structure containing no CNOT gates
     for( int idx=0; idx<gcode.size(); idx++ ) {
@@ -169,13 +169,13 @@ N_Qubit_Decomposition_Tabu_Search::tabu_search_over_gate_structures() {
     }
 */
 
-    GrayCode gcode_best_solution = gcode;
+    GrayCodeCNOT gcode_best_solution = gcode;
 
 
     std::uniform_real_distribution<double> unif(0.0,1.0);
     std::default_random_engine re;
     
-    std::vector<GrayCode> possible_gate_structures;
+    std::vector<GrayCodeCNOT> possible_gate_structures;
 
     long long use_osr = 0;
     if (config.count("use_osr") > 0) {
@@ -305,7 +305,7 @@ N_Qubit_Decomposition_Tabu_Search::tabu_search_over_gate_structures() {
 
             while( best_solutions.size() > 0 ) {
             
-                std::pair<GrayCode, double> pair = best_solutions[0];
+                std::pair<GrayCodeCNOT, double> pair = best_solutions[0];
                 best_solutions.erase( best_solutions.begin() );
                 
                 gcode_best_solution = std::get<0>(pair);
@@ -330,7 +330,7 @@ N_Qubit_Decomposition_Tabu_Search::tabu_search_over_gate_structures() {
         std::cout << "uuuuuuuuuuuuuuuuuuuuuuuu size:" << possible_gate_structures.size() << std::endl;
         for(  int idx=0; idx<possible_gate_structures.size(); idx++ ) {
 
-            GrayCode& gcode = possible_gate_structures[ idx ];
+            GrayCodeCNOT& gcode = possible_gate_structures[ idx ];
 
             gcode.print_matrix();
 
@@ -364,7 +364,7 @@ std::cout << " decreasing the gate structure" << std::endl;
 @param minimum_ The achieved cost function minimum with the given gate structure
 */
 void 
-N_Qubit_Decomposition_Tabu_Search::insert_into_best_solution( const GrayCode& gcode_, double minimum_ ) {
+N_Qubit_Decomposition_Tabu_Search::insert_into_best_solution( const GrayCodeCNOT& gcode_, double minimum_ ) {
 
 //std::cout << "N_Qubit_Decomposition_Tabu_Search::insert_into_best_solution a " << best_solutions.size()  << " " << minimum_ << std::endl;
 
@@ -372,7 +372,7 @@ N_Qubit_Decomposition_Tabu_Search::insert_into_best_solution( const GrayCode& gc
         best_solutions.insert( best_solutions.begin(), std::make_pair(gcode_, minimum_) );
     }
 
-    for( std::vector<std::pair<GrayCode, double>>::iterator it=best_solutions.begin(); it!=best_solutions.end(); it++ ) {
+    for( std::vector<std::pair<GrayCodeCNOT, double>>::iterator it=best_solutions.begin(); it!=best_solutions.end(); it++ ) {
     
         double minimum = std::get<1>( *it );
         
@@ -397,11 +397,11 @@ N_Qubit_Decomposition_Tabu_Search::insert_into_best_solution( const GrayCode& gc
 @param gcode The Gray code encoding the gate structure around which we mutate the structure.
 @return Returns with the list of modified gray code encoding the gate structures
 */
-std::vector<GrayCode> 
-N_Qubit_Decomposition_Tabu_Search::determine_mutated_structures( const GrayCode& gcode ) {
+std::vector<GrayCodeCNOT> 
+N_Qubit_Decomposition_Tabu_Search::determine_mutated_structures( const GrayCodeCNOT& gcode ) {
 
 
-    std::vector<GrayCode> possible_structures_list;
+    std::vector<GrayCodeCNOT> possible_structures_list;
     int n_ary_limit_max = static_cast<int>(topology.size());
 /*
     std::cout << "ooooooooooooo " << n_ary_limit_max << std::endl;
@@ -415,7 +415,7 @@ N_Qubit_Decomposition_Tabu_Search::determine_mutated_structures( const GrayCode&
 
         for( int gcode_element=0; gcode_element<n_ary_limit_max; gcode_element++ ) {
 
-            GrayCode gcode_modified = gcode.copy();
+            GrayCodeCNOT gcode_modified = gcode.copy();
             gcode_modified[gcode_idx] = gcode_element;
 
             // add the modified Gray code if not present in the list of visited gate structures
@@ -431,7 +431,7 @@ N_Qubit_Decomposition_Tabu_Search::determine_mutated_structures( const GrayCode&
     // generate structures with a less two-qubit blocks by one
     for( int gcode_idx=0; gcode_idx<gcode.size(); gcode_idx++ ) {
     
-        GrayCode&& gcode_modified = gcode.remove_Digit( gcode_idx );
+        GrayCodeCNOT&& gcode_modified = gcode.remove_Digit( gcode_idx );
         
         // add the modified Gray code if not present in the list of visited gate structures
         if( tested_gate_structures.count( gcode_modified ) == 0 ) {
@@ -448,11 +448,11 @@ N_Qubit_Decomposition_Tabu_Search::determine_mutated_structures( const GrayCode&
 
     
     // generates structure with an extra two-qubit block
-    GrayCode&& gcode_extended = gcode.add_Digit( n_ary_limit_max );
+    GrayCodeCNOT&& gcode_extended = gcode.add_Digit( n_ary_limit_max );
     
     for( int gcode_element=0; gcode_element<n_ary_limit_max; gcode_element++ ) {
     
-        GrayCode gcode_modified = gcode_extended.copy();
+        GrayCodeCNOT gcode_modified = gcode_extended.copy();
         gcode_modified[ gcode_extended.size()-1 ] = gcode_element;
         
         // add the modified Gray code if not present in the list of visited gate structures
@@ -473,15 +473,15 @@ N_Qubit_Decomposition_Tabu_Search::determine_mutated_structures( const GrayCode&
 @param gcodes The list of possible Gray codes encoding the gate structures.
 @return Returns with the sampled Gray code. The chosen Gray code is removed from the input list.
 */
-GrayCode
-N_Qubit_Decomposition_Tabu_Search::draw_gate_structure_from_list( std::vector<GrayCode>& gcodes ) {
+GrayCodeCNOT
+N_Qubit_Decomposition_Tabu_Search::draw_gate_structure_from_list( std::vector<GrayCodeCNOT>& gcodes ) {
 
     if ( gcodes.size() == 0 ) {
 	std::string err("N_Qubit_Decomposition_Tabu_Search::draw_gate_structure_from_list: The list of gates structure is empty." );
         throw( err );
     }
 
-    GrayCode gcode = gcodes[0];
+    GrayCodeCNOT gcode = gcodes[0];
 
     int levels = gcode.size();
 
@@ -535,7 +535,7 @@ N_Qubit_Decomposition_Tabu_Search::draw_gate_structure_from_list( std::vector<Gr
 
    
 
-    GrayCode chosen_gcode = gcodes[ chosen_idx ];
+    GrayCodeCNOT chosen_gcode = gcodes[ chosen_idx ];
     gcodes.erase( gcodes.begin() + chosen_idx );
 
     return chosen_gcode;
