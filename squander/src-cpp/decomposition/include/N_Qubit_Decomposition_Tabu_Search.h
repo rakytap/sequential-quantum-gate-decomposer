@@ -31,6 +31,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "GrayCodeHash.h"
 #include <unordered_set>
 
+using GrayCodeHashCNOT = GrayCodeHash_base<int8_t>;
 
 /**
 @brief A base class to determine the decomposition of an N-qubit unitary into a sequence of CNOT and U3 gates.
@@ -44,9 +45,9 @@ public:
 protected:
  
     /// the set of already examined gate structures (mapped to n-ary Gray codes)
-    std::unordered_set<GrayCode, GrayCodeHash> tested_gate_structures;
+    std::unordered_set<GrayCodeCNOT, GrayCodeHashCNOT> tested_gate_structures;
     
-    std::vector< std::pair<GrayCode, double> > best_solutions;
+    std::vector< std::pair<GrayCodeCNOT, double> > best_solutions;
     
 
 public:
@@ -101,7 +102,7 @@ Gates_block* determine_gate_structure(Matrix_real& optimized_parameters_mtx);
 @brief Perform tabu serach over gate structures
 @return Returns with the best Gray-code corresponding to the best circuit (The associated gate structure can be costructed by function construct_gate_structure_from_Gray_code)
 */
-GrayCode tabu_search_over_gate_structures();
+GrayCodeCNOT tabu_search_over_gate_structures();
 
 
 /** 
@@ -109,7 +110,7 @@ GrayCode tabu_search_over_gate_structures();
 @param gcode The Gray code encoding the gate structure around which we mutate the structure.
 @return Returns with the list of modified gray code encoding the gate structures
 */
-std::vector<GrayCode> determine_mutated_structures( const GrayCode& gcode );
+std::vector<GrayCodeCNOT> determine_mutated_structures( const GrayCodeCNOT& gcode );
 
 
 
@@ -118,7 +119,7 @@ std::vector<GrayCode> determine_mutated_structures( const GrayCode& gcode );
 @param gcodes The list of possible Gray codes encoding the gate structures.
 @return Returns with the sampled Gray code. The chosen Gray code is removed from the input list.
 */
-GrayCode draw_gate_structure_from_list( std::vector<GrayCode>& gcodes );
+GrayCodeCNOT draw_gate_structure_from_list( std::vector<GrayCodeCNOT>& gcodes );
 
 
 
@@ -127,7 +128,7 @@ GrayCode draw_gate_structure_from_list( std::vector<GrayCode>& gcodes );
 @param gcode_ The Gray code encoding the gate structure
 @param minimum_ The achieved cost function minimum with the given gate structure
 */
-void insert_into_best_solution( const GrayCode& gcode_, double minimum_ );
+void insert_into_best_solution( const GrayCodeCNOT& gcode_, double minimum_ );
 
 
 };
