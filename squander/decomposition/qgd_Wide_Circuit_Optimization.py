@@ -54,10 +54,11 @@ def CNOTGateCount( circ: Circuit, max_gates: int = 0 ) -> int :
         raise Exception("The input parameters should be an instance of Squander Circuit")
 
     gate_counts = circ.get_Gate_Nums()
-    num_cnots = gate_counts.get('CNOT', 0)
-    
-    if max_gates > 0: return num_cnots*max_gates + sum(y for x, y in gate_counts.items() if x !='CNOT')
-    return num_cnots  #+  3*gate_counts.get('SWAP', 0)
+    CNOT_COUNT_DICT = {'CNOT': 1, 'CH': 1, 'CZ': 1, 'SYC': 3, 'CRY': 2, 'CU': 2, 'CR': 2, 'CROT': 2, 'CRX': 2, 'CRZ': 2, 'CP': 2, 'CCX': 6, 'CSWAP': 7, 'SWAP': 3}
+    num_cnots = sum(CNOT_COUNT_DICT.get(gate, 0) * count for gate, count in gate_counts.items())
+
+    if max_gates > 0: return num_cnots*max_gates + sum(y for x, y in gate_counts.items() if x not in CNOT_COUNT_DICT)
+    return num_cnots
 
 
 
