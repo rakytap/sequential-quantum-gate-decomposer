@@ -1924,35 +1924,55 @@ qgd_Circuit_Wrapper_getstate( qgd_Circuit_Wrapper *self ) {
     }
     
     int qbit_num = self->circuit->get_qbit_num();
-    PyObject* qbit_num_key = Py_BuildValue( "s", "qbit_num" );
-    PyObject* qbit_num_val = Py_BuildValue("i", qbit_num );    
-
-    PyDict_SetItem(qbit_num_dict, qbit_num_key, qbit_num_val);
+    PyObject* qbit_num_val = Py_BuildValue("i", qbit_num );
+    if (qbit_num_val == NULL || PyDict_SetItemString(qbit_num_dict, "qbit_num", qbit_num_val) != 0) {
+        Py_XDECREF(qbit_num_val);
+        Py_DECREF(qbit_num_dict);
+        Py_DECREF(ret);
+        return NULL;
+    }
 
     PyTuple_SetItem( ret, 0, qbit_num_dict );
 
-    Py_DECREF( qbit_num_key );
     Py_DECREF( qbit_num_val );
-    //Py_DECREF( qbit_num_dict );
 
 
-    PyObject* method_name = Py_BuildValue("s", "__getstate__");
+    PyObject* method_name = PyUnicode_FromString("__getstate__");
+    if (method_name == NULL) {
+        Py_DECREF(ret);
+        return NULL;
+    }
 
     // iterate over the gates to get the gate list
     for (int idx = 0; idx < op_num; idx++ ) {
 
         // get metadata about the idx-th gate
         PyObject* gate = get_gate( self->circuit, idx );
+        if (gate == NULL) {
+            Py_DECREF(method_name);
+            Py_DECREF(ret);
+            return NULL;
+        }
 
         PyObject* gate_state  = PyObject_CallMethodObjArgs( gate, method_name, NULL );   
+        if (gate_state == NULL) {
+            Py_DECREF(gate);
+            Py_DECREF(method_name);
+            Py_DECREF(ret);
+            return NULL;
+        }
 
 
         // remove the field qbit_num from gate dict sice this will be redundant information
-        if ( PyDict_Contains(gate_state, qbit_num_key) == 1 ) {
+        if ( PyDict_ContainsString(gate_state, "qbit_num") == 1 ) {
 
-            if ( PyDict_DelItem(gate_state, qbit_num_key) != 0 ) {
+            if ( PyDict_DelItemString(gate_state, "qbit_num") != 0 ) {
                 std::string err( "Failed to delete item qbit_num from gate state");
                 PyErr_SetString(PyExc_Exception, err.c_str());
+                Py_DECREF(gate_state);
+                Py_DECREF(gate);
+                Py_DECREF(method_name);
+                Py_DECREF(ret);
                 return NULL;    
             }
 
@@ -1997,8 +2017,6 @@ qgd_Circuit_Wrapper_setstate( qgd_Circuit_Wrapper *self, PyObject *args ) {
     if ( PyTuple_Size(state) == 0 ) {
         std::string err( "State should contain at least one element");
         PyErr_SetString(PyExc_Exception, err.c_str());
-
-        Py_DECREF( state );
         return NULL;
     }
 
@@ -2012,7 +2030,6 @@ qgd_Circuit_Wrapper_setstate( qgd_Circuit_Wrapper *self, PyObject *args ) {
         PyErr_SetString(PyExc_Exception, err.c_str());
 
         Py_DECREF( qbit_num_key );
-        Py_DECREF( state );
         return NULL;
     }
 
@@ -2023,7 +2040,6 @@ qgd_Circuit_Wrapper_setstate( qgd_Circuit_Wrapper *self, PyObject *args ) {
         PyErr_SetString(PyExc_Exception, err.c_str());
 
         Py_DECREF( qbit_num_key );
-        Py_DECREF( state );
         return NULL;
     } 
 
@@ -2037,7 +2053,6 @@ qgd_Circuit_Wrapper_setstate( qgd_Circuit_Wrapper *self, PyObject *args ) {
     if ( qgd_gate == NULL ) {
         PyErr_SetString(PyExc_Exception, "Module import error: squander.gates.gates_Wrapper" );
         Py_DECREF( qbit_num_key );
-        Py_DECREF( state );
         return NULL;
     }
 
@@ -2065,9 +2080,7 @@ qgd_Circuit_Wrapper_setstate( qgd_Circuit_Wrapper *self, PyObject *args ) {
                 PyErr_SetString(PyExc_Exception, err.c_str());
 
                 Py_DECREF( qgd_gate );
-                Py_DECREF( qgd_gate_Dict );
                 Py_DECREF( qbit_num_key );
-                Py_DECREF( state );
                 Py_DECREF( setstate_name );
                 Py_DECREF( dummy_target_qbit );
                 return NULL;
@@ -2077,9 +2090,27 @@ qgd_Circuit_Wrapper_setstate( qgd_Circuit_Wrapper *self, PyObject *args ) {
 
             PyObject* gate_input = Py_BuildValue( "(O)", qbit_num_py );
             PyObject* py_gate    = PyObject_CallObject(py_gate_class, gate_input);
+            if (py_gate == NULL) {
+                Py_DECREF(gate_input);
+                Py_DECREF( qgd_gate );
+                Py_DECREF( qbit_num_key );
+                Py_DECREF( setstate_name );
+                Py_DECREF( dummy_target_qbit );
+                return NULL;
+            }
 
             // turn the generic gate into a specific gate
-            PyObject_CallMethodObjArgs( py_gate, setstate_name, gate_state_dict, NULL );
+            PyObject* setstate_ret = PyObject_CallMethodObjArgs( py_gate, setstate_name, gate_state_dict, NULL );
+            if (setstate_ret == NULL) {
+                Py_DECREF( gate_input );
+                Py_DECREF( py_gate );
+                Py_DECREF( qgd_gate );
+                Py_DECREF( qbit_num_key );
+                Py_DECREF( setstate_name );
+                Py_DECREF( dummy_target_qbit );
+                return NULL;
+            }
+            Py_DECREF(setstate_ret);
             
             Gate* gate_loc = static_cast<Gate*>( ((qgd_Gate*)py_gate)->gate->clone() );
             self->circuit->add_gate( gate_loc );
@@ -2095,10 +2126,18 @@ qgd_Circuit_Wrapper_setstate( qgd_Circuit_Wrapper *self, PyObject *args ) {
 
     }
     catch (std::string err) {
+        Py_DECREF( qgd_gate );
+        Py_DECREF( qbit_num_key );
+        Py_DECREF( setstate_name );
+        Py_DECREF( dummy_target_qbit );
         PyErr_SetString(PyExc_Exception, err.c_str());
         return NULL;
     }
     catch(...) {
+        Py_DECREF( qgd_gate );
+        Py_DECREF( qbit_num_key );
+        Py_DECREF( setstate_name );
+        Py_DECREF( dummy_target_qbit );
         std::string err( "Invalid pointer to circuit class");
         PyErr_SetString(PyExc_Exception, err.c_str());
         return NULL;
