@@ -789,7 +789,7 @@ class qgd_Wide_Circuit_Optimization:
         
         #testing the fields of config 
         strategy = config[ 'strategy' ]
-        allowed_startegies = ['TreeSearch', 'TabuSearch', 'Adaptive', 'TreeGuided' ]
+        allowed_startegies = ['TreeSearch', 'TabuSearch', 'Adaptive', 'TreeGuided', 'qiskit', 'bqskit' ]
         if not strategy in allowed_startegies :
             raise Exception(f"The decomposition startegy should be either of {allowed_startegies}, got {strategy}.")
 
@@ -1186,10 +1186,13 @@ class qgd_Wide_Circuit_Optimization:
         if not qgd_Wide_Circuit_Optimization.is_valid_routing(circ, self.config['topology']):
             topo = self.config['topology']
             self.config['topology'] = None
+            strat = self.config['strategy']
+            self.config['strategy'] = self.config['pre-opt-strategy']
             circ, parameters = self.OptimizeWideCircuit( circ, parameters )
             self.config['all_to_all_optimization_time'] = self.config['optimization_time']
             self.config['all_to_all_circuit'] = circ
             self.config['all_to_all_parameters'] = parameters
+            self.config['strategy'] = strat
             self.config['topology'] = topo
             start_time = time.time()
             circ, parameters = self.route_circuit(circ, parameters)
@@ -1197,22 +1200,63 @@ class qgd_Wide_Circuit_Optimization:
             self.config['routed_circuit'] = circ
             self.config['routed_parameters'] = parameters
         start_time = time.time()
-        part_size_start = self.max_partition_size
-        part_size_end = self.max_partition_size
-        if self.config.get("use_osr", False) or self.config.get("use_graph_search", False): part_size_end = min(4, circ.get_Qbit_Num())
-        count = CNOTGateCount(circ, 0)
-        fingerprint_dict = {}
-        for max_part_size in range(part_size_start, part_size_end + 1):
-            # instantiate the object for optimizing wide circuits
-            wide_circuit_optimizer = qgd_Wide_Circuit_Optimization( {**self.config, 'max_partition_size': max_part_size} )
-            while True:
-                # run circuit optimization
-                circ_flat, parameters = wide_circuit_optimizer.InnerOptimizeWideCircuit( circ, parameters, fingerprint_dict=fingerprint_dict )
-                circ = circ_flat.get_Flat_Circuit()
-                newcount = CNOTGateCount(circ, 0)
-                no_improve = newcount >= count
-                count = newcount
-                if no_improve: break
+        if self.config['strategy'] == 'bqskit':
+            from squander import Qiskit_IO
+            from bqskit import Circuit as BQSKitCircuit, compile
+            from bqskit.compiler import Compiler
+            from bqskit.compiler.compile import compile
+
+            from bqskit.compiler.machine import MachineModel
+            from bqskit.ir.lang.qasm2 import OPENQASM2Language
+            from qiskit import qasm2, QuantumCircuit
+
+            # Build BQSKit machine model from your topology
+            model        = MachineModel(circ.get_Qbit_Num(), self.config["topology"])
+
+            # Convert squander circuit → qiskit → BQSKit
+            # (BQSKit has a from_qiskit helper if you go via Qiskit IR)
+            circo        = Qiskit_IO.get_Qiskit_Circuit(circ, parameters)
+            
+            bqskit_circ = OPENQASM2Language().decode(qasm2.dumps(circo))
+
+            routed_bqskit_circ, initial_map, final_map = compile(bqskit_circ, model, optimization_level=4, max_synthesis_size=self.max_partition_size, synthesis_epsilon=self.config['tolerance'], with_mapping=True)
+
+            # Convert back: BQSKit → Qiskit → Squander
+            circuit_qiskit = QuantumCircuit.from_qasm_str(OPENQASM2Language().encode(routed_bqskit_circ))
+            newcirc, newparameters = \
+                Qiskit_IO.convert_Qiskit_to_Squander(circuit_qiskit)
+            self.check_compare_circuits(circ, parameters, newcirc, newparameters)
+            circ, parameters = newcirc, newparameters
+        elif self.config['strategy'] == 'qiskit':
+            from squander import Qiskit_IO
+            from qiskit import transpile
+            from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
+            from qiskit.transpiler import CouplingMap
+            from squander.gates import gates_Wrapper as gate
+            SUPPORTED_GATES_NAMES = {n.lower().replace("cnot", "cx") for n in dir(gate) if not n.startswith("_") and issubclass(getattr(gate, n), gate.Gate) and n not in ("Gate", "CROT", "CR", "SYC", "CCX", "CSWAP")}
+            circo = Qiskit_IO.get_Qiskit_Circuit(circ, parameters)
+            coupling_map = None if self.config['topology'] is None else CouplingMap([[i,j] for i,j in self.config['topology']])
+            circuit_qiskit = transpile(circo, basis_gates=SUPPORTED_GATES_NAMES, coupling_map=coupling_map, optimization_level=3)
+            newcirc, newparameters = Qiskit_IO.convert_Qiskit_to_Squander(circuit_qiskit)
+            self.check_compare_circuits(circ, parameters, newcirc, newparameters)
+            circ, parameters = newcirc, newparameters
+        else:
+            part_size_start = self.max_partition_size
+            part_size_end = self.max_partition_size
+            if self.config.get("use_osr", False) or self.config.get("use_graph_search", False): part_size_end = min(4, circ.get_Qbit_Num())
+            count = CNOTGateCount(circ, 0)
+            fingerprint_dict = {}
+            for max_part_size in range(part_size_start, part_size_end + 1):
+                # instantiate the object for optimizing wide circuits
+                wide_circuit_optimizer = qgd_Wide_Circuit_Optimization( {**self.config, 'max_partition_size': max_part_size} )
+                while True:
+                    # run circuit optimization
+                    circ_flat, parameters = wide_circuit_optimizer.InnerOptimizeWideCircuit( circ, parameters, fingerprint_dict=fingerprint_dict )
+                    circ = circ_flat.get_Flat_Circuit()
+                    newcount = CNOTGateCount(circ, 0)
+                    no_improve = newcount >= count
+                    count = newcount
+                    if no_improve: break
         self.config['optimization_time'] = time.time() - start_time
         return circ, parameters
     def InnerOptimizeWideCircuit( self, circ: Circuit, orig_parameters: np.ndarray, fingerprint_dict=None ) -> Tuple[Circuit, np.ndarray]:
@@ -1430,7 +1474,8 @@ class qgd_Wide_Circuit_Optimization:
             else:
                 CompareCircuits(circ, orig_parameters, wide_circuit, wide_parameters)
     def route_circuit(self, circ: Circuit, orig_parameters: np.ndarray):
-        if self.config.get("use_bqskit_routing", False):
+        strategy = self.config.get("routing-strategy", "seqpam-ilp")
+        if strategy in ("seqpam-ilp", "seqpam-quick", "bqskit-sabre"):
             from squander import Qiskit_IO
             from bqskit import Circuit as BQSKitCircuit, compile
             from bqskit.compiler import Compiler
@@ -1473,17 +1518,19 @@ class qgd_Wide_Circuit_Optimization:
 
             # Routing-only pass pipeline — NO optimization passes
             mainflow = build_seqpam_mapping_optimization_workflow(block_size=self.config['max_partition_size'])
-            for curpass in mainflow._passes:
-                if isinstance(curpass, IfThenElsePass):
-                    for i in range(len(curpass.on_true._passes)):
-                        if isinstance(curpass.on_true._passes[i], QuickPartitioner):
-                            curpass.on_true._passes[i] = SquanderPartitioner(self.config['max_partition_size'])
+            if strategy == "seqpam-ilp":
+                for curpass in mainflow._passes:
+                    if isinstance(curpass, IfThenElsePass):
+                        for i in range(len(curpass.on_true._passes)):
+                            if isinstance(curpass.on_true._passes[i], QuickPartitioner):
+                                curpass.on_true._passes[i] = SquanderPartitioner(self.config['max_partition_size'])
             
             routing_workflow = [
                 SetModelPass(model),                          # attach hardware model to circuit
-                build_seqpam_mapping_optimization_workflow()
-                #GeneralizedSabreLayoutPass(),                # SABRE-style layout
-                #GeneralizedSabreRoutingPass(),               # SABRE-style routing
+                *((build_seqpam_mapping_optimization_workflow(),)
+                if strategy != "bqskit-sabre" else
+                 (GeneralizedSabreLayoutPass(),                # SABRE-style layout
+                  GeneralizedSabreRoutingPass()))              # SABRE-style routing
             ]
 
             with Compiler() as compiler:
@@ -1496,7 +1543,7 @@ class qgd_Wide_Circuit_Optimization:
             Squander_remapped_circuit = Squander_remapped_circuit.Remap_Qbits({i: j for i, j in enumerate(pass_data.placement)})
             self.config["initial_mapping"] = list(pass_data.placement[x] for x in pass_data.initial_mapping)
             self.config["final_mapping"] = list(pass_data.placement[x] for x in pass_data.final_mapping)
-        elif self.config.get("use_qiskit_sabre", False):
+        elif strategy == "light-sabre":
             from squander import Qiskit_IO
             from qiskit import transpile
             from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
@@ -1530,12 +1577,12 @@ class qgd_Wide_Circuit_Optimization:
             pm = PassManager([
                 layout_pass,          # find initial qubit mapping via SABRE
                 swap_pass,            # insert SWAP gates for routing
-            ])            
+            ])
             circuit_qiskit_sabre = pm.run(circo)
             Squander_remapped_circuit, parameters_remapped_circuit = Qiskit_IO.convert_Qiskit_to_Squander(circuit_qiskit_sabre)
             self.config["initial_mapping"] = circuit_qiskit_sabre.layout.initial_index_layout()
             self.config["final_mapping"] = circuit_qiskit_sabre.layout.final_index_layout()
-        else:
+        elif strategy == "sabre":
             sabre = SABRE(circ, self.config["topology"])
             Squander_remapped_circuit, parameters_remapped_circuit, pi, final_pi, swap_count = sabre.map_circuit(orig_parameters)
             self.config["initial_mapping"] = pi
