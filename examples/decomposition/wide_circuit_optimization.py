@@ -40,7 +40,7 @@ if __name__ == '__main__':
             "use_osr": True,
             "use_graph_search": True,
             "use_bqskit_routing": True,
-            "use_qiskit_sabre": True,
+            "use_qiskit_sabre": False,
             'tolerance': 1e-10,
             #**{'use_basin_hopping': True, 'bh_T': 1.1822334624366124, 'bh_stepsize': 0.9020671823381502, 'bh_interval': 165, 'bh_target_accept_rate': 0.7037812116166546, 'bh_stepwise_factor': 0.8254028860713254}
     }
@@ -100,7 +100,7 @@ if __name__ == '__main__':
     results = {}
     for filename in files:
         print(filename)
-        if os.path.basename(filename) != "bv_n14.qasm": continue
+        #if os.path.basename(filename) in ("adder_n4.qasm", "tfim.qasm",): continue
         # load the circuit from a file
         circ, parameters = utils.qasm_to_squander_circuit(filename)
         config['topology'] = Wide_Circuit_Optimization.qgd_Wide_Circuit_Optimization.linear_topology(circ.get_Qbit_Num())
@@ -117,7 +117,7 @@ if __name__ == '__main__':
 
 
         # run circuit optimization
-        wide_circuit_optimizer = Wide_Circuit_Optimization.qgd_Wide_Circuit_Optimization( config )
+        wide_circuit_optimizer = Wide_Circuit_Optimization.qgd_Wide_Circuit_Optimization( {**config} )
         start_time = time.time()
         optcirc, optparameters = wide_circuit_optimizer.OptimizeWideCircuit( circ, parameters )
         elapsed = time.time() - start_time
