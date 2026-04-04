@@ -87,6 +87,10 @@ protected:
     double correction2_scale;    
     /// cuts used for OSR entanglement cost function
     std::vector<std::vector<int>> use_cuts;
+    /// rank used for OSR entanglement cost function
+    int osr_rank = -1;
+    /// logical variable indicating whether to use softmax or average in the OSR entanglement cost function
+    bool use_softmax = false;
     
 
     /// number of iterations
@@ -542,6 +546,8 @@ void upload_Umtx_to_DFE();
 @brief Get the number of accelerators to be reserved on DFEs on users demand.
 */
 int get_accelerator_num();
+
+void set_osr_params( std::vector<std::vector<int>> use_cuts_in, int osr_rank_in, bool use_softmax_in );
 
 
 

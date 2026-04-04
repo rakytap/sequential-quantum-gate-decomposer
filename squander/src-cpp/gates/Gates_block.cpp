@@ -258,8 +258,8 @@ Gates_block::apply_to( Matrix_real& parameters_mtx_in, Matrix& input, int parall
         throw err;    
     }
 
-    if (qbit_num > 30) {
-        std::string err("Gates_block::apply_to: Number of qubits supported up to 30"); 
+    if (qbit_num > 31) {
+        std::string err("Gates_block::apply_to: Number of qubits supported up to 31"); 
         throw err;        
     }
 
@@ -1724,7 +1724,9 @@ void Gates_block::add_gate( Gate* gate ) {
 
         //set the number of qubit in the gate
         gate->set_qbit_num( qbit_num );
-        
+
+        gate->clear_children();
+        gate->clear_parents();
         // determine the parents of the gate
         determine_parents( gate );
 
@@ -1755,6 +1757,8 @@ void Gates_block::add_gate( Gate* gate ) {
 
         // set the number of qubit in the gate
         gate->set_qbit_num( qbit_num );
+        gate->clear_children();
+        gate->clear_parents();
 
         // determine the parents of the gate
         determine_children( gate );
@@ -2469,6 +2473,8 @@ void Gates_block::combine(Gates_block* op_block) {
     for(std::vector<Gate*>::iterator it = (gates_in).begin(); it != (gates_in).end(); ++it) {
         Gate* op = *it;
         Gate* op_cloned = op->clone();
+        op_cloned->clear_children();
+        op_cloned->clear_parents();
         add_gate( op_cloned );
     }
 
@@ -2488,11 +2494,6 @@ void Gates_block::set_min_fusion( int min_fusion ) {
 @param qbit_num_in The number of qubits spanning the matrices.
 */
 void Gates_block::set_qbit_num( int qbit_num_in ) {
-
-    if (qbit_num_in > 30) {
-        std::string err("Gates_block::set_qbit_num: Number of qubits supported up to 30"); 
-        throw err;        
-    }
 
     // setting the number of qubits
     Gate::set_qbit_num(qbit_num_in);

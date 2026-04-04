@@ -21,6 +21,7 @@ limitations under the License.
 ## \brief Simple example python code demonstrating a wide circuit optimization
 
 import squander.decomposition.qgd_Wide_Circuit_Optimization as Wide_Circuit_Optimization
+from squander.decomposition.qgd_Wide_Circuit_Optimization import CNOTGateCount
 from squander.gates.qgd_Circuit import qgd_Circuit as Circuit
 from squander import utils
 from squander import Qiskit_IO
@@ -32,13 +33,17 @@ if __name__ == '__main__':
 
 
     config = {  
-            'strategy': "TreeSearch", 
+            'strategy': "TreeSearch", #"qiskit", "bqskit", "TabuSearch"
             'test_subcircuits': False,
-            'test_final_circuit': True,
+            'test_final_circuit': False,
             'max_partition_size': 3,
-            'beam': 16,
+            'beam': None,
             "use_osr": True,
+            "use_graph_search": True,
+            "pre-opt-strategy": "TreeSearch", #"qiskit", "bqskit", "TabuSearch"
+            "routing-strategy": "seqpam-ilp", #"sabre", "light-sabre", "bqskit-sabre", "seqpam-quick", "seqpam-ilp"
             'tolerance': 1e-10,
+            #**{'use_basin_hopping': True, 'bh_T': 1.1822334624366124, 'bh_stepsize': 0.9020671823381502, 'bh_interval': 165, 'bh_target_accept_rate': 0.7037812116166546, 'bh_stepwise_factor': 0.8254028860713254}
     }
     #git clone https://github.com/onestruggler/qasm-quipper
     #sudo yum install gmp-devel
@@ -90,28 +95,52 @@ if __name__ == '__main__':
     #filename = next(x for x in qasm_files if "gf2^E8_mult_before" in x)
     #filename = next(x for x in qasm_files if "csum_mux_9_before" in x)
 
-    filename = "examples/partitioning/qasm_samples/heisenberg-16-20.qasm"
-    start_time = time.time()
+    import glob, re, os
+    files = list(sorted((filename for filename in glob.glob("/home/morse/processed_qasm/**/*.qasm", recursive=True) if "_u3cx" not in filename),
+        key=lambda x: re.sub(r'(\d+)', lambda m: f"{int(m.group(1)):010}", x)))
+    results = {}
+    for filename in files:
+        print(filename)
+        #if os.path.basename(filename) in ("adder_n4.qasm", "tfim.qasm",): continue
+        #if os.path.basename(filename) not in ("ghz_state_n23.qasm",): continue
+        # load the circuit from a file
+        circ, parameters = utils.qasm_to_squander_circuit(filename)
+        config['topology'] = Wide_Circuit_Optimization.qgd_Wide_Circuit_Optimization.linear_topology(circ.get_Qbit_Num())
+        #config['topology'] = [
+        #(0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7),
+        #(8, 9), (8, 10), (8, 11), (8, 12), (8, 13), (8, 14), (8, 15),
+        #(0, 8),
+        #]
+        #circ = Circuit(3); circ.add_CNOT(0, 1); circ.add_CNOT(2, 0); circ.add_CNOT(1, 2)
+        #circ = Circuit(2); circ.add_CNOT(0, 1); circ.add_H(0)
+        #circ = Circuit(2); circ.add_SWAP([0, 1])
+        #circ = Circuit(2); circ.add_S(0); circ.add_S(1); circ.add_H(0); circ.add_CNOT(0, 1); circ.add_CNOT(1, 0); circ.add_H(1)
+        #circ = Circuit(3); circ.add_U3(0); circ.add_U3(1); circ.add_CNOT(0, 1); circ.add_U3(0); circ.add_U3(1); circ.add_CNOT(0, 1); import numpy as np; parameters = np.array([0.7]*12)
 
-    # load the circuit from a file
-    circ, parameters = utils.qasm_to_squander_circuit(filename)
-    #circ = Circuit(3); circ.add_CNOT(0, 1); circ.add_CNOT(2, 0); circ.add_CNOT(1, 2)
-    #circ = Circuit(2); circ.add_CNOT(0, 1); circ.add_H(0)
-    #circ = Circuit(2); circ.add_SWAP([0, 1])
-    #circ = Circuit(2); circ.add_S(0); circ.add_S(1); circ.add_H(0); circ.add_CNOT(0, 1); circ.add_CNOT(1, 0); circ.add_H(1)
-    #circ = Circuit(3); circ.add_U3(0); circ.add_U3(1); circ.add_CNOT(0, 1); circ.add_U3(0); circ.add_U3(1); circ.add_CNOT(0, 1); import numpy as np; parameters = np.array([0.7]*12)
 
+        # run circuit optimization
+        wide_circuit_optimizer = Wide_Circuit_Optimization.qgd_Wide_Circuit_Optimization( {**config} )
+        start_time = time.time()
+        optcirc, optparameters = wide_circuit_optimizer.OptimizeWideCircuit( circ, parameters )
+        elapsed = time.time() - start_time
+        init_cnot_count = CNOTGateCount(circ, 0)
+        cnot_count, opt_time = CNOTGateCount(optcirc, 0), wide_circuit_optimizer.config.get('optimization_time', None)
+        a2a_cnot_count, routed_cnot_count = None, None
+        a2a_time, routing_time = 0.0, 0.0
 
-    # run circuit optimization
-    wide_circuit_optimizer = Wide_Circuit_Optimization.qgd_Wide_Circuit_Optimization( config )
-    circ, parameters = wide_circuit_optimizer.OptimizeWideCircuit( circ, parameters )
+        if wide_circuit_optimizer.config.get('routed_circuit', None) is not None:
+            init_map, final_map = wide_circuit_optimizer.config["initial_mapping"], wide_circuit_optimizer.config["final_mapping"]
+            a2acirc, a2aparams = wide_circuit_optimizer.config["all_to_all_circuit"], wide_circuit_optimizer.config["all_to_all_parameters"]
+            routedcirc, routedparams = wide_circuit_optimizer.config["routed_circuit"], wide_circuit_optimizer.config["routed_parameters"]
+            a2a_cnot_count = CNOTGateCount(a2acirc, 0)
+            routed_cnot_count = CNOTGateCount(routedcirc, 0)
+            a2a_time = wide_circuit_optimizer.config.get('all_to_all_optimization_time', None)
+            routing_time = wide_circuit_optimizer.config.get('routing_time', None)
+        results[os.path.basename(filename)] = ((init_cnot_count, a2a_cnot_count, routed_cnot_count, cnot_count), (a2a_time, routing_time, opt_time, elapsed))
+        wide_circuit_optimizer.check_compare_circuits(circ, optparameters, optcirc, optparameters, routing=True)
+        with open("results.txt", "a") as f:
+            f.write(f"{os.path.basename(filename)}: {config['pre-opt-strategy']}, {config['routing-strategy']}, {config['strategy']} CNOT count = {init_cnot_count, a2a_cnot_count, routed_cnot_count, cnot_count}, elapsed time = {a2a_time:.2f} + {routing_time:.2f} + {opt_time:.2f} = {elapsed:.2f} seconds\n")
 
-    #config['topology'] = [
-    #(0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7),
-    #(8, 9), (8, 10), (8, 11), (8, 12), (8, 13), (8, 14), (8, 15),
-    #(0, 8),
-    #]
-
-    print("--- %s seconds elapsed during optimization ---" % (time.time() - start_time))
+        print("--- %s seconds elapsed during optimization ---" % elapsed)
 
 

@@ -46,7 +46,8 @@ extern "C" int LAPACKE_zgesvd( int matrix_order, char jobu, char jobvt,
 extern "C" int LAPACKE_zgesdd(int matrix_order, char jobz, int m, int n, QGD_Complex16* a,
                           int lda, double* s, QGD_Complex16* u, int ldu,
                           QGD_Complex16* vt, int ldvt);
-
+#define USE_SDD
+#define USE_COL_MAJ
 
 #ifdef __cplusplus
 }
@@ -626,8 +627,12 @@ static inline int extract_bits(int x, const std::vector<int>& pos) {
 }
 
 // Index: row-major 2^n x 2^n
-static inline size_t rm_idx(int row, int col, int N) {
-    return (size_t)row * (size_t)N + (size_t)col;
+static inline size_t mat_idx(int row, int col, int nrows, int ncols) {
+#ifdef USE_COL_MAJ
+    return (size_t)row + (size_t)col * (size_t)nrows;
+#else
+    return (size_t)row * (size_t)ncols + (size_t)col;
+#endif
 }
 
 //https://www.sciencedirect.com/science/article/pii/S0024379518303446
@@ -666,7 +671,7 @@ static std::vector<QGD_Complex16> build_osr_matrix(const Matrix& U, int n,
             const int r = a + ap;   // row in M
             const int c = b + bp;   // col in M
             const auto& val = U[(size_t)in + (size_t)out * (size_t)N];
-            M[rm_idx(r, c, m_cols)] = val;
+            M[mat_idx(r, c, m_rows, m_cols)] = val;
         }
     }
     return M;
@@ -675,7 +680,7 @@ static std::vector<QGD_Complex16> build_osr_matrix(const Matrix& U, int n,
 static void accumulate_grad_for_cut(Matrix& accum, const std::vector<double>& G,
                              const std::vector<QGD_Complex16> & Umat,
                              const std::vector<QGD_Complex16> & VTmat,
-                             int n, const std::vector<int>& A) // qubits on A
+                             int n, const std::vector<int>& A, int rank=-1) // qubits on A
 {
     std::vector<int> A_sorted = A;
     std::sort(A_sorted.begin(), A_sorted.end());
@@ -704,20 +709,34 @@ static void accumulate_grad_for_cut(Matrix& accum, const std::vector<double>& G,
             const int r = a + ap;   // row in M
             const int c = b + bp;   // col in M
             QGD_Complex16 val{0.0, 0.0};
-            for (int i = 0; i < tot_dyadic; i++) {
-                int idx = 1<<i; //here we would conjugate again but that cancels out so we do nothing
-                QGD_Complex16 u_val = Umat[(size_t)r * (size_t)k + (size_t)idx];
-                QGD_Complex16 vt_val = VTmat[(size_t)idx * (size_t)m_cols + (size_t)c];
-                // Multiply: G[i] * u_val * vt_val
-                // (a+bi) * (c+di) = (ac-bd) + (ad+bc)i
-                double re_prod = u_val.real * vt_val.real - u_val.imag * vt_val.imag;
-                double im_prod = u_val.real * vt_val.imag + u_val.imag * vt_val.real;
-                // Multiply by G[i]
-                re_prod *= G[i];
-                im_prod *= G[i];
-                // Add to val
-                val.real += re_prod;
-                val.imag += im_prod;
+            if (rank < 0) {
+                // Old dyadic mode: G[i] applies to singular index 2^i
+                for (int i = 0; i < tot_dyadic; i++) {
+                    int idx = 1<<i; //here we would conjugate again but that cancels out so we do nothing
+                    if (idx >= k) break;  // critical safety check
+                    QGD_Complex16 u_val = Umat[mat_idx(r, idx, m_rows, k)];
+                    QGD_Complex16 vt_val = VTmat[mat_idx(idx, c, k, m_cols)];
+                    // Multiply: G[i] * u_val * vt_val
+                    // (a+bi) * (c+di) = (ac-bd) + (ad+bc)i
+                    double re_prod = u_val.real * vt_val.real - u_val.imag * vt_val.imag;
+                    double im_prod = u_val.real * vt_val.imag + u_val.imag * vt_val.real;
+                    // Multiply by G[i] and add to val
+                    val.real += G[i] * re_prod;
+                    val.imag += G[i] * im_prod;
+                }
+            } else {
+                // New rank-tail mode: G[j] applies directly to singular index j
+                const int diag_len = std::min<int>((int)G.size(), k);
+                for (int j = 0; j < diag_len; ++j) {
+                    const QGD_Complex16 u_val = Umat[mat_idx(r, j, m_rows, k)];
+                    const QGD_Complex16 vt_val = VTmat[mat_idx(j, c, k, m_cols)];
+
+                    const double re_prod = u_val.real * vt_val.real - u_val.imag * vt_val.imag;
+                    const double im_prod = u_val.real * vt_val.imag + u_val.imag * vt_val.real;
+
+                    val.real += G[j] * re_prod;
+                    val.imag += G[j] * im_prod;
+                }
             }
             accum[(size_t)in + (size_t)out * (size_t)N].real += val.real;
             accum[(size_t)in + (size_t)out * (size_t)N].imag += val.imag;
@@ -730,16 +749,37 @@ static std::vector<double> osr(std::vector<QGD_Complex16>& A, int m_rows, int m_
     std::vector<double> S;
     int k = std::min(m_rows, m_cols);
     S.resize(k);
+#ifdef USE_COL_MAJ
+    constexpr int lapack_layout = LAPACK_COL_MAJOR;
+    const int lda  = m_rows;
+    const int ldu  = m_rows;
+    const int ldvt = k;       // VT is k x m_cols in col-major
+#else
+    constexpr int lapack_layout = LAPACK_ROW_MAJOR;
+    const int lda  = m_cols;
+    const int ldu  = k;       // U is m_rows x k in row-major
+    const int ldvt = m_cols;
+#endif
+#ifdef USE_SDD
+    int info = LAPACKE_zgesdd(lapack_layout,
+                              'N',
+                              m_rows, m_cols,
+                              A.data(), lda,
+                              S.data(),
+                              nullptr, ldu,
+                              nullptr, ldvt);
+#else
     std::vector<double> superb(std::max(1, k - 1));  // REQUIRED for complex *gesvd
     // We don’t need U/V; job='N' for economy; gesvd is fine too.
-    int info = LAPACKE_zgesvd(LAPACK_ROW_MAJOR,
+    int info = LAPACKE_zgesvd(lapack_layout,
                               'N','N',
                               m_rows, m_cols,
-                              A.data(), m_cols,
+                              A.data(), lda,
                               S.data(),
-                              nullptr, 1,
-                              nullptr, 1,
+                              nullptr, ldu,
+                              nullptr, ldvt,
                               superb.data());
+#endif
     if (info != 0) {
         throw std::runtime_error("zgesvd failed, info=" + std::to_string(info));
     }
@@ -748,7 +788,7 @@ static std::vector<double> osr(std::vector<QGD_Complex16>& A, int m_rows, int m_
     return S;
 }
 
-// Numerical rank via LAPACKE_zgesvd (SVD)
+// Numerical rank via LAPACKE_zgesdd/svd (SVD)
 static int numerical_rank_osr(std::vector<double> S, double tol)
 {
     int rnk = 0;
@@ -805,6 +845,136 @@ inline double logsumexp_smoothmax(const std::vector<double>& Lc, double tau=1e-2
     double sum = 0.0;
     for (double v : Lc) sum += std::exp((v - m)/tau);
     return tau * std::log(sum) + m;
+}
+
+// Assumes S are nonnegative singular values (ideally sorted desc).
+double weighted_loss_for_rank(const std::vector<double>& S, int rank, double rho=0.1, double tol=1e-4) {
+    const size_t start = size_t(1) << rank;
+    double w = 1.0;
+    double acc = 0.0;
+    for (int k = S.size()-1; k >= start; --k) {
+        double val = S[k]; // - S[0] * tol;
+        acc += w * val * val;
+        w *= rho;  // geometric weight rho^k
+    }
+    return acc;
+}
+
+// rank = 0 -> target rank 1  -> tail starts at index 1
+// rank = 1 -> target rank 2  -> tail starts at index 2
+// rank = 2 -> target rank 4  -> tail starts at index 4
+double loss_for_rank(const std::vector<double>& S, int rank) {
+    const size_t start = size_t(1) << rank;
+    if (start >= S.size()) return 0.0;
+
+    double acc = 0.0;
+    for (size_t i = start; i < S.size(); ++i) {
+        acc += S[i] * S[i];
+    }
+    return acc;
+}
+
+double avg_loss_for_rank(const std::vector<std::vector<double>>& cuts_S, int rank) {
+    if (cuts_S.empty()) return 0.0;
+
+    double tot = 0.0;
+    for (const auto& S : cuts_S) {
+        tot += loss_for_rank(S, rank);
+    }
+    return tot / static_cast<double>(cuts_S.size());
+}
+
+double cuts_softmax_rank_cost(const std::vector<std::vector<double>>& cuts_S,
+                              int rank, double tau = 1e-2) {
+    if (tau <= 0.0) {
+        throw std::invalid_argument("cuts_softmax_rank_cost: tau must be > 0");
+    }
+    if (cuts_S.empty()) return 0.0;
+
+    std::vector<double> Lc;
+    Lc.reserve(cuts_S.size());
+    for (const auto& S : cuts_S) {
+        Lc.push_back(loss_for_rank(S, rank));
+    }
+    return logsumexp_smoothmax(Lc, tau);
+}
+
+std::vector<double> loss_for_rank_grad_diag(const std::vector<double>& S, int rank, double Fnorm) {
+    const size_t n = S.size();
+    const size_t start = size_t(1) << rank;
+
+    std::vector<double> grad(n, 0.0);
+    if (start >= n) return grad;
+
+    const double invF = 1.0 / Fnorm;
+    for (size_t i = start; i < n; ++i) {
+        grad[i] = 2.0 * S[i] * invF;
+    }
+    return grad;
+}
+
+std::vector<std::vector<double>> cuts_avg_rank_grad(
+    const std::vector<std::vector<double>>& cuts_S,
+    int rank,
+    double Fnorm)
+{
+    const size_t C = cuts_S.size();
+    if (C == 0) return {};
+
+    const double scale = 1.0 / static_cast<double>(C);
+
+    std::vector<std::vector<double>> G;
+    G.reserve(C);
+
+    for (const auto& S : cuts_S) {
+        std::vector<double> g = loss_for_rank_grad_diag(S, rank, Fnorm);
+        for (double& v : g) v *= scale;
+        G.emplace_back(std::move(g));
+    }
+    return G;
+}
+
+std::vector<std::vector<double>> cuts_softmax_rank_grad(
+    const std::vector<std::vector<double>>& cuts_S,
+    int rank,
+    double Fnorm,
+    double tau = 1e-2)
+{
+    const size_t C = cuts_S.size();
+    if (C == 0) return {};
+    if (tau <= 0.0) {
+        throw std::invalid_argument("cuts_softmax_rank_grad: tau must be > 0");
+    }
+
+    // 1) per-cut losses
+    std::vector<double> Lc(C, 0.0);
+    for (size_t c = 0; c < C; ++c) {
+        Lc[c] = loss_for_rank(cuts_S[c], rank);
+    }
+
+    // 2) softmax weights
+    const double m = *std::max_element(Lc.begin(), Lc.end());
+    std::vector<double> w(C, 0.0);
+    double Z = 0.0;
+    for (size_t c = 0; c < C; ++c) {
+        w[c] = std::exp((Lc[c] - m) / tau);
+        Z += w[c];
+    }
+    if (Z <= 0.0) Z = 1.0;
+    for (size_t c = 0; c < C; ++c) {
+        w[c] /= Z;
+    }
+
+    // 3) weighted per-cut gradients
+    std::vector<std::vector<double>> G;
+    G.reserve(C);
+
+    for (size_t c = 0; c < C; ++c) {
+        std::vector<double> g = loss_for_rank_grad_diag(cuts_S[c], rank, Fnorm);
+        for (double& v : g) v *= w[c];
+        G.emplace_back(std::move(g));
+    }
+    return G;
 }
 
 // Assumes S are nonnegative singular values (ideally sorted desc).
@@ -929,10 +1099,14 @@ std::pair<int, double> operator_schmidt_rank(const Matrix& U, int n,
     int mr=0, mc=0;
     std::vector<QGD_Complex16> M = build_osr_matrix(U, n, A_qubits, mr, mc);
     std::vector<double> S = osr(M, mr, mc, Fnorm);
-    return std::pair<int, double>(numerical_rank_osr(S, tol), tail_loss(S, static_cast<int>(lg_up(static_cast<uint32_t>(S.size())))));
+    int min_cnot = numerical_rank_osr(S, tol);
+    return std::pair<int, double>(min_cnot,
+        //tail_loss(S, static_cast<int>(lg_up(static_cast<uint32_t>(S.size()))))
+        weighted_loss_for_rank(S, min_cnot)
+    );
 }
 
-double get_osr_entanglement_test(Matrix& matrix, std::vector<std::vector<int>> &use_cuts, bool use_softmax) {
+double get_osr_entanglement_test(Matrix& matrix, std::vector<std::vector<int>> &use_cuts, int rank, bool use_softmax) {
     //double hscost = get_hilbert_schmidt_test(matrix);
     int qbit_num = lg_down(matrix.rows);
     const auto& cuts = use_cuts.size() == 0 ? unique_cuts(qbit_num) : use_cuts;
@@ -946,8 +1120,12 @@ double get_osr_entanglement_test(Matrix& matrix, std::vector<std::vector<int>> &
         allS.emplace_back(S);
         //printf("%f ", S[0]);
     }
-
-    double res = use_softmax ? cuts_softmax_tail_cost(allS, 1.0) : avg_tail_loss(allS, 0.9);
+    double res;
+    if (rank == -1) {
+        res = use_softmax ? cuts_softmax_tail_cost(allS, 1.0) : avg_tail_loss(allS, 0.9);
+    } else {
+        res = use_softmax ? cuts_softmax_rank_cost(allS, rank) : avg_loss_for_rank(allS, rank);
+    }
     //printf("%f\n", res);
     return res;
 }
@@ -985,20 +1163,43 @@ static OSRTriplet top_k_triplet_for_cut(
     std::vector<double> S(k);
     std::vector<QGD_Complex16> Umat((size_t)m_rows * (size_t)k); // m x k
     std::vector<QGD_Complex16> VTmat((size_t)k * (size_t)m_cols); // k x n
-    std::vector<double> superb(std::max(1, k - 1));  // REQUIRED for complex *gesvd
 
     // 3) SVD: M = U * diag(S) * VT  (VT = V^H)
     // Row-major API handles leading dims as col counts.
+#ifdef USE_COL_MAJ
+    constexpr int lapack_layout = LAPACK_COL_MAJOR;
+    const int lda  = m_rows;
+    const int ldu  = m_rows;
+    const int ldvt = k;       // VT is k x m_cols in col-major
+#else
+    constexpr int lapack_layout = LAPACK_ROW_MAJOR;
+    const int lda  = m_cols;
+    const int ldu  = k;       // U is m_rows x k in row-major
+    const int ldvt = m_cols;
+#endif
+#ifdef USE_SDD
+    int info = LAPACKE_zgesdd(
+        lapack_layout,
+        'S',                    // econ / thin U, VT
+        m_rows, m_cols,
+        M.data(), lda,       // a, lda (row-major => lda = ncols)
+        S.data(),
+        Umat.data(), ldu,         // U is (m_rows x k), row-major => ldu = k
+        VTmat.data(), ldvt    // VT is (k x m_cols), row-major => ldvt = m_cols
+    );
+#else
+    std::vector<double> superb(std::max(1, k - 1));  // REQUIRED for complex *gesvd
     int info = LAPACKE_zgesvd(
-        LAPACK_ROW_MAJOR,
+        lapack_layout,
         'S', 'S',           // econ U, VT
         m_rows, m_cols,
-        M.data(), m_cols,   // a, lda (row-major -> lda = n)
+        M.data(), lda,   // a, lda (row-major -> lda = n)
         S.data(),
-        Umat.data(), k,    // U (m x k), ldu = k (row-major)
-        VTmat.data(), m_cols,     // VT (k x n), ldvt = n
+        Umat.data(), ldu,    // U (m x k), ldu = k (row-major)
+        VTmat.data(), ldvt,     // VT (k x n), ldvt = n
         superb.data()
     );
+#endif
     if (info != 0) {
         throw std::runtime_error("zgesvd failed, info=" + std::to_string(info));
     }
@@ -1007,7 +1208,7 @@ static OSRTriplet top_k_triplet_for_cut(
     return OSRTriplet(std::move(S), std::move(Umat), std::move(VTmat));
 }
 
-Matrix get_deriv_osr_entanglement(Matrix &matrix, std::vector<std::vector<int>> &use_cuts, bool use_softmax) {
+Matrix get_deriv_osr_entanglement(Matrix &matrix, std::vector<std::vector<int>> &use_cuts, int rank, bool use_softmax) {
     int qbit_num = lg_down(matrix.rows);
     const auto& cuts = use_cuts.size() == 0 ? unique_cuts(qbit_num) : use_cuts;
     double Fnorm = std::sqrt(matrix.rows);
@@ -1027,8 +1228,13 @@ Matrix get_deriv_osr_entanglement(Matrix &matrix, std::vector<std::vector<int>> 
         stored.right_factors = std::move(triplet.right_factors);
         triplets.emplace_back(std::move(stored));
     }
-    if (use_softmax) allS = cuts_softmax_tail_grad(allS, Fnorm, 1.0);
-    else allS = cuts_avg_tail_grad(allS, Fnorm, 0.9);
+    if (rank == -1) {
+        if (use_softmax) allS = cuts_softmax_tail_grad(allS, Fnorm, 1.0);
+        else allS = cuts_avg_tail_grad(allS, Fnorm, 0.9);
+    } else {
+        if (use_softmax) allS = cuts_softmax_rank_grad(allS, rank, Fnorm);
+        else allS = cuts_avg_rank_grad(allS, rank, Fnorm);
+    }
     for (int i = 0; i < (int)cuts.size(); ++i) {
         triplets[i].singulars = std::move(allS[i]);
     }
@@ -1039,7 +1245,7 @@ Matrix get_deriv_osr_entanglement(Matrix &matrix, std::vector<std::vector<int>> 
                                 triplet.left_factors,
                                 triplet.right_factors,
                                 qbit_num,
-                                cuts[i]);
+                                cuts[i], rank);
     }
     return deriv;
 }
