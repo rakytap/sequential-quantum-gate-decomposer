@@ -33,6 +33,7 @@ def extract_subtopology(involved_qbits, qbit_map, config ):
             mini_topology.append((qbit_map[edge[0]],qbit_map[edge[1]]))
     return mini_topology
 
+CNOT_COUNT_DICT = {'CNOT': 1, 'CH': 1, 'CZ': 1, 'SYC': 3, 'CRY': 2, 'CU': 2, 'CR': 2, 'CROT': 2, 'CRX': 2, 'CRZ': 2, 'CP': 2, 'CCX': 6, 'CSWAP': 7, 'SWAP': 3}
 def CNOTGateCount( circ: Circuit, max_gates: int = 0 ) -> int :
     """
     Call to get the number of CNOT gates in the circuit
@@ -53,8 +54,7 @@ def CNOTGateCount( circ: Circuit, max_gates: int = 0 ) -> int :
     if not isinstance(circ, Circuit ):
         raise Exception("The input parameters should be an instance of Squander Circuit")
 
-    gate_counts = circ.get_Gate_Nums()
-    CNOT_COUNT_DICT = {'CNOT': 1, 'CH': 1, 'CZ': 1, 'SYC': 3, 'CRY': 2, 'CU': 2, 'CR': 2, 'CROT': 2, 'CRX': 2, 'CRZ': 2, 'CP': 2, 'CCX': 6, 'CSWAP': 7, 'SWAP': 3}
+    gate_counts = circ.get_Gate_Nums()    
     num_cnots = sum(CNOT_COUNT_DICT.get(gate, 0) * count for gate, count in gate_counts.items())
 
     if max_gates > 0: return num_cnots*max_gates + sum(y for x, y in gate_counts.items() if x not in CNOT_COUNT_DICT)
@@ -1045,7 +1045,7 @@ class qgd_Wide_Circuit_Optimization:
                 start_idx = innercirc.get_Parameter_Start_Index()
                 innercirc_parameters = params[ start_idx:start_idx+innercirc.get_Parameter_Num() ]
                 callback_fnc = lambda  x : qgd_Wide_Circuit_Optimization.CompareAndPickCircuits( [innercirc, *(z[0] for z in x)], [innercirc_parameters, *(z[1] for z in x)] )
-                optimized_circuits.append(callback_fnc(qgd_Wide_Circuit_Optimization.PartitionDecompositionProcess(innercirc, innercirc_parameters, {**config, "stop_first_solution": True, 'tree_level_max': max(0, subcircuit.get_Gate_Nums().get('CNOT', 0)-1)}, structure=None)))
+                optimized_circuits.append(callback_fnc(qgd_Wide_Circuit_Optimization.PartitionDecompositionProcess(innercirc, innercirc_parameters, {**config, "stop_first_solution": True, 'tree_level_max': max(0, CNOTGateCount(subcircuit, 0)-1)}, structure=None)))
             parts, struct_idxs = qgd_Wide_Circuit_Optimization.recombine_all_partition_circuit(remapped_subcircuit, [x[0] for x in optimized_circuits], params, recombine_info)
             #enumerate all solutions for each subcircuit in the optimal
             all_sol_for_idx = []
@@ -1054,7 +1054,7 @@ class qgd_Wide_Circuit_Optimization:
                 start_idx = innercirc.get_Parameter_Start_Index()
                 innercirc_parameters = params[ start_idx:start_idx+innercirc.get_Parameter_Num() ]
                 callback_fnc = lambda  x : x + [(innercirc, innercirc_parameters)]
-                all_sol_for_idx.append(callback_fnc(qgd_Wide_Circuit_Optimization.PartitionDecompositionProcess(innercirc, innercirc_parameters, {**config, "stop_first_solution": False, 'tree_level_max': max(0, subcircuit.get_Gate_Nums().get('CNOT', 0))}, structure=None)))
+                all_sol_for_idx.append(callback_fnc(qgd_Wide_Circuit_Optimization.PartitionDecompositionProcess(innercirc, innercirc_parameters, {**config, "stop_first_solution": False, 'tree_level_max': max(0, CNOTGateCount(subcircuit, 0))}, structure=None)))
             all_decomposed = []
             import itertools
             opt = qgd_Wide_Circuit_Optimization({**config, "max_partition_size": 3})
@@ -1171,7 +1171,7 @@ class qgd_Wide_Circuit_Optimization:
     def recombine_all_partition_circuit(circ, optimized_subcircuits, optimized_parameter_list, recombine_info ):
         from squander.partitioning.ilp import topo_sort_partitions, ilp_global_optimal, recombine_single_qubit_chains
         allparts, g, go, rgo, single_qubit_chains, gate_to_qubit, gate_to_tqubit = recombine_info
-        max_gates = sum(sum(y for x, y in c.get_Gate_Nums().items() if x !='CNOT') for c in optimized_subcircuits[:len(allparts)])        
+        max_gates = sum(sum(y for x, y in c.get_Gate_Nums().items() if x not in CNOT_COUNT_DICT) for c in optimized_subcircuits[:len(allparts)])        
         weights = [CNOTGateCount(circ, max_gates) for circ in optimized_subcircuits[:len(allparts)]]
         L, fusion_info = ilp_global_optimal(allparts, g, weights=weights)
         struct_idxs = list(L)
@@ -1199,7 +1199,7 @@ class qgd_Wide_Circuit_Optimization:
         start_time = time.time()
         part_size_start = self.max_partition_size
         part_size_end = self.max_partition_size
-        if self.config.get("use_osr", False) or self.config.get("use_graph_search", False): part_size_end = 4
+        if self.config.get("use_osr", False) or self.config.get("use_graph_search", False): part_size_end = min(4, circ.get_Qbit_Num())
         count = CNOTGateCount(circ, 0)
         fingerprint_dict = {}
         for max_part_size in range(part_size_start, part_size_end + 1):
@@ -1234,7 +1234,7 @@ class qgd_Wide_Circuit_Optimization:
         """
         from squander.utils import circuit_to_CNOT_basis
         circ, orig_parameters = circuit_to_CNOT_basis(circ, orig_parameters)
-        max_gates = sum(y for x, y in circ.get_Gate_Nums().items() if x !='CNOT')
+        max_gates = sum(y for x, y in circ.get_Gate_Nums().items() if x not in CNOT_COUNT_DICT)
         
         global_min = self.config.get("global_min", True)
         if global_min:
@@ -1324,11 +1324,12 @@ class qgd_Wide_Circuit_Optimization:
                             still_remaining.append(partition_idx)
                             continue
                     # call a process to decompose a subcircuit
-                    config = {**self.config, 'tree_level_max': max(0, subcircuit.get_Gate_Nums().get('CNOT', 0)-1)}
+                    config = {**self.config, 'tree_level_max': max(0, CNOTGateCount(subcircuit, 0)-1)}
                     fargs = (self.PartitionDecompositionProcess, (subcircuit, subcircuit_parameters, config, None))
+                    #print("Dispatching", subcircuit.get_Involved_Qubits(), "qubits with", CNOGateCount(subcircuit, 0), "CNOT gates, partition ", partition_idx)
                     async_results[partition_idx] = fargs if parent_process() is not None else pool.apply_async(*fargs)
                 if len(remaining) == len(still_remaining):
-                    time.sleep(0.05)
+                    time.sleep(0.1)
                 remaining = still_remaining
             #  code for iterate over async results and retrieve the new subcircuits
             for partition_idx in range( len(subcircuits ) ):
