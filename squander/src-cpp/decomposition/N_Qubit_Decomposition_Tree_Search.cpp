@@ -882,7 +882,7 @@ GrayCodeCNOT N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures
         //     return false;
         // }
 
-        if (top_heap == nullptr || sn < *top_heap) {
+        if (top_heap == nullptr || !(*top_heap < sn)) {
             top_heap.reset(new SearchNode(std::move(sn)));
         }
         // heap.emplace(sn);
@@ -914,7 +914,7 @@ GrayCodeCNOT N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures
                 return best_edge_counts[a] > best_edge_counts[b];
             });
         } else {
-            num_cnot = std::get<0>(cur_best_osr_result);
+            num_cnot = 1; //std::get<0>(cur_best_osr_result);
             topo_filter.resize(std::get<0>(cur_best_osr_result));
             //topo_filter.resize(std::count_if(best_edge_counts.begin(), best_edge_counts.end(), [](int c){ return c > 0; }));
             for (size_t i = 0; i < best_edge_counts.size(); i++) {
@@ -940,17 +940,16 @@ GrayCodeCNOT N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures
                 });
 
             //const std::tuple<int, double, std::vector<int>, std::vector<std::pair<int, double>>>& top_best_osr_result = top_heap->get_best_osr_result();
-            if (*cur > *top_heap) {
+            if (*cur > *top_heap || num_cnot == std::get<0>(cur_best_osr_result)) {
             // if (std::get<0>(top_best_osr_result) < std::get<0>(cur_best_osr_result) ||
             //     std::get<0>(top_best_osr_result) == std::get<0>(cur_best_osr_result) &&
             //     std::get<1>(top_best_osr_result) + 1e-3 < std::get<1>(cur_best_osr_result)) {
-                //break;
+                break;
             }
             
 
             ++num_cnot;
 
-            break;
         }
 
         // Optional beam trimming:
