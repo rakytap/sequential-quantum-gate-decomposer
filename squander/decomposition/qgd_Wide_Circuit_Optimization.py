@@ -1202,9 +1202,7 @@ class qgd_Wide_Circuit_Optimization:
         start_time = time.time()
         if self.config['strategy'] == 'bqskit':
             from squander import Qiskit_IO
-            from bqskit import Circuit as BQSKitCircuit, compile
-            from bqskit.compiler import Compiler
-            from bqskit.compiler.compile import compile
+            from bqskit import compile
 
             from bqskit.compiler.machine import MachineModel
             from bqskit.ir.lang.qasm2 import OPENQASM2Language
@@ -1225,12 +1223,13 @@ class qgd_Wide_Circuit_Optimization:
             circuit_qiskit = QuantumCircuit.from_qasm_str(OPENQASM2Language().encode(routed_bqskit_circ))
             newcirc, newparameters = \
                 Qiskit_IO.convert_Qiskit_to_Squander(circuit_qiskit)
+            assert initial_map == final_map and initial_map == list(range(circ.get_Qbit_Num())), "BQSKit routing should not change qubit order in an already routed circuit"
+            qgd_Wide_Circuit_Optimization.check_valid_routing(newcirc, self.config["topology"])
             self.check_compare_circuits(circ, parameters, newcirc, newparameters)
             circ, parameters = newcirc, newparameters
         elif self.config['strategy'] == 'qiskit':
             from squander import Qiskit_IO
             from qiskit import transpile
-            from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
             from qiskit.transpiler import CouplingMap
             from squander.gates import gates_Wrapper as gate
             SUPPORTED_GATES_NAMES = {n.lower().replace("cnot", "cx") for n in dir(gate) if not n.startswith("_") and issubclass(getattr(gate, n), gate.Gate) and n not in ("Gate", "CROT", "CR", "SYC", "CCX", "CSWAP")}
@@ -1238,6 +1237,7 @@ class qgd_Wide_Circuit_Optimization:
             coupling_map = None if self.config['topology'] is None else CouplingMap([[i,j] for i,j in self.config['topology']])
             circuit_qiskit = transpile(circo, basis_gates=SUPPORTED_GATES_NAMES, coupling_map=coupling_map, optimization_level=3)
             newcirc, newparameters = Qiskit_IO.convert_Qiskit_to_Squander(circuit_qiskit)
+            qgd_Wide_Circuit_Optimization.check_valid_routing(newcirc, self.config["topology"])
             self.check_compare_circuits(circ, parameters, newcirc, newparameters)
             circ, parameters = newcirc, newparameters
         else:
