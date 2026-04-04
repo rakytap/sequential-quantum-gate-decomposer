@@ -102,7 +102,7 @@ if __name__ == '__main__':
     for filename in files:
         print(filename)
         #if os.path.basename(filename) in ("adder_n4.qasm", "tfim.qasm",): continue
-        if os.path.basename(filename) not in ("ghz_state_n23.qasm",): continue
+        #if os.path.basename(filename) not in ("ghz_state_n23.qasm",): continue
         # load the circuit from a file
         circ, parameters = utils.qasm_to_squander_circuit(filename)
         config['topology'] = Wide_Circuit_Optimization.qgd_Wide_Circuit_Optimization.linear_topology(circ.get_Qbit_Num())
@@ -128,7 +128,7 @@ if __name__ == '__main__':
         a2a_cnot_count, routed_cnot_count = None, None
         a2a_time, routing_time = 0.0, 0.0
 
-        if config.get('routed_circuit', None) is not None:
+        if wide_circuit_optimizer.config.get('routed_circuit', None) is not None:
             init_map, final_map = wide_circuit_optimizer.config["initial_mapping"], wide_circuit_optimizer.config["final_mapping"]
             a2acirc, a2aparams = wide_circuit_optimizer.config["all_to_all_circuit"], wide_circuit_optimizer.config["all_to_all_parameters"]
             routedcirc, routedparams = wide_circuit_optimizer.config["routed_circuit"], wide_circuit_optimizer.config["routed_parameters"]
