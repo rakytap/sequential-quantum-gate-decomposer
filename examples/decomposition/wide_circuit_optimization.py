@@ -102,7 +102,7 @@ if __name__ == '__main__':
     for filename in files:
         print(filename)
         #if os.path.basename(filename) in ("adder_n4.qasm", "tfim.qasm",): continue
-        if os.path.basename(filename) not in ("heisenberg-16-20.qasm",): continue
+        if os.path.basename(filename) not in ("ghz_state_n23.qasm",): continue
         # load the circuit from a file
         circ, parameters = utils.qasm_to_squander_circuit(filename)
         config['topology'] = Wide_Circuit_Optimization.qgd_Wide_Circuit_Optimization.linear_topology(circ.get_Qbit_Num())
@@ -139,7 +139,7 @@ if __name__ == '__main__':
         results[os.path.basename(filename)] = ((init_cnot_count, a2a_cnot_count, routed_cnot_count, cnot_count), (a2a_time, routing_time, opt_time, elapsed))
         wide_circuit_optimizer.check_compare_circuits(circ, optparameters, optcirc, optparameters, routing=True)
         with open("results.txt", "a") as f:
-            f.write(f"{os.path.basename(filename)}: CNOT count = {init_cnot_count, a2a_cnot_count, routed_cnot_count, cnot_count}, elapsed time = {a2a_time:.2f} + {routing_time:.2f} + {opt_time:.2f} = {elapsed:.2f} seconds\n")
+            f.write(f"{os.path.basename(filename)}: {config['pre-opt-strategy']}, {config['routing-strategy']}, {config['strategy']} CNOT count = {init_cnot_count, a2a_cnot_count, routed_cnot_count, cnot_count}, elapsed time = {a2a_time:.2f} + {routing_time:.2f} + {opt_time:.2f} = {elapsed:.2f} seconds\n")
 
         print("--- %s seconds elapsed during optimization ---" % elapsed)
 
