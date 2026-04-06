@@ -14,7 +14,7 @@ from squander.utils import CompareCircuits
 import numpy as np
 from qiskit import QuantumCircuit
 
-from typing import List, Callable, Tuple, Optional, Set, Dict
+from typing import List, Callable, Tuple, Optional, Set, Dict, Any, cast
 
 import multiprocessing as mp
 from multiprocessing import Process, Pool, parent_process
@@ -63,26 +63,23 @@ CNOT_COUNT_DICT = {
 
 
 def CNOTGateCount(circ: Circuit, max_gates: int = 0) -> int:
-    """
-    Call to get the number of CNOT gates in the circuit
+    """Compute weighted two-qubit gate count for a circuit.
 
+    The base count is the CNOT-equivalent cost derived from ``CNOT_COUNT_DICT``.
+    When ``max_gates > 0``, the function returns a lexicographic-style score:
+    ``two_qubit_cost * max_gates + single_qubit_gate_count``.
 
     Args:
+        circ: Squander circuit representation.
+        max_gates: Weight multiplier for the two-qubit cost term.
 
-        circ (Circuit) A squander circuit representation
-
-
-    Return:
-
-        Returns with the CNOT gate count
-
-
+    Returns:
+        Integer gate-cost score used by optimization heuristics.
     """
 
-    if not isinstance(circ, Circuit):
-        raise Exception(
-            "The input parameters should be an instance of Squander Circuit"
-        )
+    assert isinstance(
+        circ, Circuit
+    ), "The input parameters should be an instance of Squander Circuit"
 
     gate_counts = circ.get_Gate_Nums()
     num_cnots = sum(
@@ -152,7 +149,7 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
             if topology is None
             else topology
         )
-        prior_level_info = None
+        prior_level_info: tuple[Any, Any, Any, Any] = None
         while True:
             visited, seq_pairs_of, seq_dir_of, res = (
                 N_Qubit_Decomposition_Guided_Tree.enumerate_unordered_cnot_BFS_level(
@@ -1348,21 +1345,14 @@ class qgd_Wide_Circuit_Optimization:
     def ConstructCircuitFromPartitions(
         self, circs: List[Circuit], parameter_arrs: List[List[np.ndarray]]
     ) -> Tuple[Circuit, np.ndarray]:
-        """
-        Call to construct the wide quantum circuit from the partitions.
-
+        """Concatenate optimized partition circuits into a single wide circuit.
 
         Args:
+            circs: Partition circuits in execution order.
+            parameter_arrs: Parameter arrays corresponding to ``circs``.
 
-            circs ( List[Circuit] ) A list of Squander circuits to be compared
-
-            parameter_arrs ( List[np.ndarray] ) A list of parameter arrays associated with the sqaunder circuits
-
-        Return:
-
-            Returns with the constructed circuit and the corresponding parameter array
-
-
+        Returns:
+            Tuple of ``(wide_circuit, wide_parameters)``.
         """
 
         if not isinstance(circs, list):
@@ -1392,7 +1382,7 @@ class qgd_Wide_Circuit_Optimization:
     @staticmethod
     def DecomposePartition(
         Umtx: np.ndarray, config: dict, mini_topology=None, structure=None
-    ) -> Circuit:
+    ) -> list[tuple[Circuit, np.ndarray]]:
         """
         Decompose a unitary ``Umtx`` (e.g. from a partition) using ``config['strategy']``.
 
@@ -1453,6 +1443,7 @@ class qgd_Wide_Circuit_Optimization:
             # return []
         if not config.get("stop_first_solution", True):
             return cDecompose.all_solutions
+
         squander_circuit = cDecompose.get_Circuit()
         parameters = cDecompose.get_Optimized_Parameters()
         assert parameters is not None
@@ -1482,9 +1473,9 @@ class qgd_Wide_Circuit_Optimization:
     @staticmethod
     def CompareAndPickCircuits(
         circs: List[Circuit],
-        parameter_arrs: List[List[np.ndarray]],
+        parameter_arrs: List[np.ndarray],
         metric: Callable[[Circuit], int] = CNOTGateCount,
-    ) -> Circuit:
+    ) -> tuple[Circuit, np.ndarray]:
         """
         Call to pick the most optimal circuit corresponding a specific metric. Looks for the circuit
         with the minimal metric value.
@@ -1568,7 +1559,7 @@ class qgd_Wide_Circuit_Optimization:
             for gate in remapped_subcircuit.get_Gates():
                 circo.add_Gate(gate)
             remapped_subcircuit = circo
-            partitioned_circuit, params, recombine_info = (
+            partitioned_circuit, params, recombine_info, _ = (
                 qgd_Wide_Circuit_Optimization.make_all_partition_circuit(
                     remapped_subcircuit, subcircuit_parameters, 3
                 )
@@ -1692,7 +1683,7 @@ class qgd_Wide_Circuit_Optimization:
 
             new_subcircuit = new_subcircuit.get_Flat_Circuit()
             result.append((new_subcircuit, decomposed_parameters))
-        return result
+        return tuple(result)
 
     @staticmethod
     def build_partition_topo_deps(allparts):
@@ -1811,7 +1802,7 @@ class qgd_Wide_Circuit_Optimization:
     @staticmethod
     def strip_single_qubit_head_tails(circ, params):
         """Remove single-qubit gates that are purely at the head/tail of the dependency graph."""
-        gate_dict, g, rg, gate_to_qubit, S = build_dependency(circ)
+        gate_dict, g, rg, gate_to_qubit, _ = build_dependency(circ)
         newcirc = Circuit(circ.get_Qbit_Num())
         new_params = []
         for i in gate_dict:
@@ -1839,7 +1830,11 @@ class qgd_Wide_Circuit_Optimization:
     def recombine_all_partition_circuit(
         circ, optimized_subcircuits, optimized_parameter_list, recombine_info
     ):
-        """Reorder optimized partition circuits via ILP / topo sort to match global gate dependencies."""
+        """Reorder partition results to satisfy global dependencies.
+
+        Uses ILP-based ordering and a final topological sort, then returns
+        reordered subcircuits and parameter arrays aligned by structure index.
+        """
         from squander.partitioning.ilp import (
             topo_sort_partitions,
             ilp_global_optimal,
@@ -1873,7 +1868,7 @@ class qgd_Wide_Circuit_Optimization:
             for idx, chain in enumerate(single_qubit_chains)
         }
         for extrapart in parts[len(struct_idxs) :]:
-            struct_idxs.append(single_qubit_chain_idx[extrapart])
+            struct_idxs.append(single_qubit_chain_idx[frozenset(extrapart)])
         L = topo_sort_partitions(circ, parts)
         return [optimized_subcircuits[struct_idxs[i]] for i in L], [
             optimized_parameter_list[struct_idxs[i]] for i in L
@@ -2055,21 +2050,18 @@ class qgd_Wide_Circuit_Optimization:
     def InnerOptimizeWideCircuit(
         self, circ: Circuit, orig_parameters: np.ndarray, fingerprint_dict=None
     ) -> Tuple[Circuit, np.ndarray]:
-        """
-        Call to optimize a wide circuit (i.e. circuits with many qubits) by
-        partitioning the circuit into smaller partitions and redecompose the smaller partitions
+        """Optimize one pass of wide-circuit partition decomposition.
 
+        The circuit is converted to a CNOT basis, partitioned, each partition is
+        optimized (possibly in parallel), and then reconstructed into one circuit.
 
         Args:
+            circ: Input circuit to optimize.
+            orig_parameters: Parameter array associated with ``circ``.
+            fingerprint_dict: Optional decomposition cache shared across passes.
 
-            circ ( Circuit ) A circuit to be partitioned
-
-            orig_parameters ( np.ndarray ) A parameter array associated with the input circuit
-
-        Return:
-
-            Returns with the optimized circuit and the corresponding parameter array
-
+        Returns:
+            Tuple of ``(optimized_circuit, optimized_parameters)``.
         """
         from squander.utils import circuit_to_CNOT_basis
 
@@ -2087,7 +2079,7 @@ class qgd_Wide_Circuit_Optimization:
             )
 
         else:
-            partitioned_circuit, parameters, _ = PartitionCircuit(
+            partitioned_circuit, parameters = PartitionCircuit(
                 circ,
                 orig_parameters,
                 self.max_partition_size,
@@ -2103,10 +2095,12 @@ class qgd_Wide_Circuit_Optimization:
             print(len(subcircuits), "partitions found to optimize")
 
         # the list of optimized subcircuits
-        optimized_subcircuits = [None] * len(subcircuits)
+        optimized_subcircuits: List[Optional[Circuit]] = [None] * len(subcircuits)
 
         # the list of parameters associated with the optimized subcircuits
-        optimized_parameter_list = [None] * len(subcircuits)
+        optimized_parameter_list: List[Optional[List[np.ndarray]]] = [None] * len(
+            subcircuits
+        )
 
         # list of AsyncResult objects
         async_results = [None] * len(subcircuits)
@@ -2215,9 +2209,12 @@ class qgd_Wide_Circuit_Optimization:
                                 continue
                             elif optimized_subcircuits[dep_idx] is None:
                                 process_result(dep_idx)
-                            if CNOTGateCount(
-                                optimized_subcircuits[dep_idx]
-                            ) < CNOTGateCount(
+
+                            optimized_subcircuits_loc = optimized_subcircuits[dep_idx]
+                            assert isinstance(optimized_subcircuits_loc, Circuit)
+                            assert optimized_subcircuits_loc is not None
+
+                            if CNOTGateCount(optimized_subcircuits_loc) < CNOTGateCount(
                                 subcircuits[dep_idx]
                             ):  # if the dependency partition was optimized, skip
                                 any_optimized = True
@@ -2264,8 +2261,15 @@ class qgd_Wide_Circuit_Optimization:
                 )
             )
 
+        if any(c is None for c in optimized_subcircuits) or any(
+            p is None for p in optimized_parameter_list
+        ):
+            raise RuntimeError(
+                "Internal error: some partitions were not optimized before reconstruction."
+            )
         wide_circuit, wide_parameters = self.ConstructCircuitFromPartitions(
-            optimized_subcircuits, optimized_parameter_list
+            cast(List[Circuit], optimized_subcircuits),
+            cast(List[List[np.ndarray]], optimized_parameter_list),
         )
 
         if parent_process() is None:
