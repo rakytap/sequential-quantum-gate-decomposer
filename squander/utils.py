@@ -186,8 +186,6 @@ def CompareCircuits( circ1: Circuit, parameters1: np.ndarray, circ2: Circuit, pa
     initial_state = initial_state_real + initial_state_imag*1j
     norm = np.sum(initial_state_real * initial_state_real + initial_state_imag*initial_state_imag)
     initial_state = initial_state/np.sqrt(norm)
-    
-
 
     transformed_state_1 = initial_state.copy()
     transformed_state_2 = initial_state    
@@ -203,7 +201,7 @@ def CompareCircuits( circ1: Circuit, parameters1: np.ndarray, circ2: Circuit, pa
         transformed_state_2 = transformed_state_2.reshape( [2]*qbit_num2 ).transpose( tensor_perm ).copy().reshape( (matrix_size,) )
 
     overlap = np.sum( transformed_state_1.conj() * transformed_state_2 )
-    #print( "overlap: ", np.abs(overlap) )
+    print( "Circuit overlap: ", np.abs(overlap) )
 
     assert( (1-np.abs(overlap)) < tolerance ), (1-np.abs(overlap))
 

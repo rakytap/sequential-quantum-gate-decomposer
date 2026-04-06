@@ -96,8 +96,7 @@ if __name__ == '__main__':
     #filename = next(x for x in qasm_files if "csum_mux_9_before" in x)
 
     import glob, re, os
-    files = list(sorted((filename for filename in glob.glob("/home/morse/processed_qasm/**/*.qasm", recursive=True) if "_u3cx" not in filename),
-        key=lambda x: re.sub(r'(\d+)', lambda m: f"{int(m.group(1)):010}", x)))
+    files = ['bv_n14.qasm']
     results = {}
     for filename in files:
         print(filename)
