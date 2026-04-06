@@ -850,9 +850,10 @@ inline double logsumexp_smoothmax(const std::vector<double>& Lc, double tau=1e-2
 // Assumes S are nonnegative singular values (ideally sorted desc).
 double weighted_loss_for_rank(const std::vector<double>& S, int rank, double rho=0.1, double tol=1e-4) {
     const size_t start = size_t(1) << rank;
+    const int start_i = static_cast<int>(start);
     double w = 1.0;
     double acc = 0.0;
-    for (int k = S.size()-1; k >= start; --k) {
+    for (int k = static_cast<int>(S.size()) - 1; k >= start_i; --k) {
         double val = S[k]; // - S[0] * tol;
         acc += w * val * val;
         w *= rho;  // geometric weight rho^k

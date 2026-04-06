@@ -135,8 +135,6 @@ void RYY::apply_to(Matrix_real& parameters, Matrix& input, int parallel) {
     U_2qbit[2*4+1].imag = -1.*std::sin(ThetaOver2);
     U_2qbit[3*4+3].real = std::cos(ThetaOver2);
     U_2qbit[3*4].imag = 1.*std::sin(ThetaOver2);
-    int inner_qbit = target_qbits[0]<target_qbits[1] ? target_qbits[0]:target_qbits[1];
-    int outer_qbit = target_qbits[0]>target_qbits[1] ? target_qbits[0]:target_qbits[1];
     switch (parallel){
         case 0:{
             apply_large_kernel_to_input(U_2qbit,input,target_qbits,input.rows);
