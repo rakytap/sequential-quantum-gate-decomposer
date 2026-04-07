@@ -25,6 +25,7 @@ limitations under the License.
 
 #include <Python.h>
 #include <numpy/arrayobject.h>
+#include "structmember.h"
 #include <stdio.h>
 #include "Variational_Quantum_Eigensolver_Base.h"
 

@@ -460,7 +460,6 @@ void DensityMatrix::apply_two_qubit_unitary(
 
   int dim = rows;
   int target_step = 1 << target_qbit;
-  int control_step = 1 << control_qbit;
 
   // Temporary storage
   std::vector<QGD_Complex16> temp(dim * dim);
