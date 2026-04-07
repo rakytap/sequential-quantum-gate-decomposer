@@ -1,70 +1,54 @@
 {
-  "backend": "density_matrix",
-  "qbit_num": 4,
-  "topology": [
-    [
-      0,
-      1
-    ],
-    [
-      1,
-      2
-    ],
-    [
-      2,
-      3
-    ]
-  ],
   "ansatz": "HEA",
-  "layers": 1,
-  "inner_blocks": 1,
+  "backend": "density_matrix",
+  "bridge_gate_count": 9,
+  "bridge_gate_sequence": [
+    "U3",
+    "U3",
+    "CNOT",
+    "U3",
+    "U3",
+    "CNOT",
+    "U3",
+    "U3",
+    "CNOT"
+  ],
+  "bridge_noise_count": 3,
+  "bridge_noise_sequence": [
+    "local_depolarizing",
+    "amplitude_damping",
+    "phase_damping"
+  ],
+  "bridge_operation_count": 12,
+  "bridge_parameter_count": 18,
+  "bridge_source_type": "generated_hea",
+  "bridge_supported_pass": true,
+  "case_name": "required_local_noise_trace_4q",
+  "case_purpose": "mandatory_baseline",
+  "counts_toward_mandatory_baseline": false,
   "density_noise": [
     {
-      "channel": "local_depolarizing",
-      "target": 0,
       "after_gate_index": 0,
-      "error_rate": 0.1
+      "channel": "local_depolarizing",
+      "error_rate": 0.1,
+      "target": 0
     },
     {
-      "channel": "amplitude_damping",
-      "target": 1,
       "after_gate_index": 2,
-      "gamma": 0.05
+      "channel": "amplitude_damping",
+      "gamma": 0.05,
+      "target": 1
     },
     {
-      "channel": "phase_damping",
-      "target": 0,
       "after_gate_index": 4,
-      "lambda": 0.07
+      "channel": "phase_damping",
+      "lambda": 0.07,
+      "target": 0
     }
   ],
-  "hamiltonian": {
-    "Jx": 1.0,
-    "Jy": 1.0,
-    "Jz": 1.0,
-    "h": 0.5
-  },
-  "optimizer": "COSINE",
-  "initial_parameters": [
-    0.05,
-    0.1,
-    0.15,
-    0.2,
-    0.25,
-    0.3,
-    0.35,
-    0.39999999999999997,
-    0.44999999999999996,
-    0.49999999999999994,
-    0.5499999999999999,
-    0.6,
-    0.65,
-    0.7,
-    0.75,
-    0.7999999999999999,
-    0.85,
-    0.9
-  ],
+  "energy_improvement": 5.194998592054739,
+  "execution_ready": true,
+  "final_energy": -4.25945472568242,
   "final_parameters": [
     0.4247997981089508,
     0.2980618717479162,
@@ -85,49 +69,65 @@
     1.870543247638433,
     1.0674469751095814
   ],
+  "gate_pass": true,
+  "hamiltonian": {
+    "Jx": 1.0,
+    "Jy": 1.0,
+    "Jz": 1.0,
+    "h": 0.5
+  },
   "initial_energy": 0.9355438663723187,
-  "final_energy": -4.25945472568242,
-  "energy_improvement": 5.194998592054739,
+  "initial_parameters": [
+    0.05,
+    0.1,
+    0.15,
+    0.2,
+    0.25,
+    0.3,
+    0.35,
+    0.39999999999999997,
+    0.44999999999999996,
+    0.49999999999999994,
+    0.5499999999999999,
+    0.6,
+    0.65,
+    0.7,
+    0.75,
+    0.7999999999999999,
+    0.85,
+    0.9
+  ],
+  "inner_blocks": 1,
+  "layers": 1,
+  "noise_pass": true,
+  "optimizer": "COSINE",
   "optimizer_config": {
+    "convergence_length": 2,
     "max_inner_iterations": 4,
-    "max_iterations": 1,
-    "convergence_length": 2
+    "max_iterations": 1
   },
   "parameter_count": 18,
-  "workflow_completed": true,
-  "trace_kind": "bounded_optimization_trace",
-  "total_trace_runtime_ms": 46.29614499935997,
-  "process_peak_rss_kb": 853916,
-  "status": "completed",
-  "bridge_source_type": "generated_hea",
-  "bridge_parameter_count": 18,
-  "bridge_operation_count": 12,
-  "bridge_gate_count": 9,
-  "bridge_noise_count": 3,
-  "bridge_gate_sequence": [
-    "U3",
-    "U3",
-    "CNOT",
-    "U3",
-    "U3",
-    "CNOT",
-    "U3",
-    "U3",
-    "CNOT"
-  ],
-  "bridge_noise_sequence": [
-    "local_depolarizing",
-    "amplitude_damping",
-    "phase_damping"
-  ],
-  "source_pass": true,
-  "gate_pass": true,
-  "noise_pass": true,
-  "execution_ready": true,
-  "bridge_supported_pass": true,
-  "support_tier": "required",
-  "case_purpose": "mandatory_baseline",
-  "counts_toward_mandatory_baseline": false,
+  "process_peak_rss_kb": 862700,
+  "qbit_num": 4,
   "required_validation_trace": true,
-  "case_name": "story5_required_local_noise_trace_4q"
+  "source_pass": true,
+  "status": "completed",
+  "support_tier": "required",
+  "topology": [
+    [
+      0,
+      1
+    ],
+    [
+      1,
+      2
+    ],
+    [
+      2,
+      3
+    ]
+  ],
+  "total_trace_runtime_ms": 77.10262102773413,
+  "trace_kind": "bounded_optimization_trace",
+  "workflow_completed": true
 }

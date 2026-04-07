@@ -92,10 +92,10 @@
         0.85,
         0.9
       ],
-      "process_peak_rss_kb": 141940,
+      "process_peak_rss_kb": 140760,
       "qbit_num": 4,
       "reference_backend": "qiskit_aer_density_matrix",
-      "reference_runtime_ms": 5.567591000726679,
+      "reference_runtime_ms": 4.606688977219164,
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
       "source_pass": true,
@@ -103,7 +103,7 @@
       "squander_energy_from_rho_real": 0.9355438663723182,
       "squander_energy_imag": 5.551115123125783e-17,
       "squander_purity": 0.8971677230501824,
-      "squander_runtime_ms": 0.10226000085822307,
+      "squander_runtime_ms": 0.09864103049039841,
       "squander_trace_imag": 2.8947873981405094e-17,
       "squander_trace_real": 1.0,
       "state_fidelity": 0.9999999999999993,
@@ -123,7 +123,7 @@
           3
         ]
       ],
-      "total_case_runtime_ms": 7.293277001735987,
+      "total_case_runtime_ms": 6.260176014620811,
       "trace_deviation": 2.8947873981405094e-17,
       "trace_pass": true,
       "workflow_completed": true
@@ -219,10 +219,10 @@
         0.9412499999999999,
         0.9924999999999999
       ],
-      "process_peak_rss_kb": 141940,
+      "process_peak_rss_kb": 140760,
       "qbit_num": 4,
       "reference_backend": "qiskit_aer_density_matrix",
-      "reference_runtime_ms": 4.425276998517802,
+      "reference_runtime_ms": 4.147567029576749,
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
       "source_pass": true,
@@ -230,7 +230,7 @@
       "squander_energy_from_rho_real": -0.07475309864212731,
       "squander_energy_imag": 5.551115123125783e-17,
       "squander_purity": 0.8909917969090365,
-      "squander_runtime_ms": 0.07539999933214858,
+      "squander_runtime_ms": 0.05630997475236654,
       "squander_trace_imag": -5.852499088279234e-18,
       "squander_trace_real": 1.0000000000000004,
       "state_fidelity": 0.9999999999999991,
@@ -250,7 +250,7 @@
           3
         ]
       ],
-      "total_case_runtime_ms": 5.848921999131562,
+      "total_case_runtime_ms": 5.367632023990154,
       "trace_deviation": 4.441277722129424e-16,
       "trace_pass": true,
       "workflow_completed": true
@@ -346,10 +346,10 @@
         1.0325,
         1.085
       ],
-      "process_peak_rss_kb": 141940,
+      "process_peak_rss_kb": 140760,
       "qbit_num": 4,
       "reference_backend": "qiskit_aer_density_matrix",
-      "reference_runtime_ms": 4.129995002585929,
+      "reference_runtime_ms": 4.137177020311356,
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
       "source_pass": true,
@@ -357,7 +357,7 @@
       "squander_energy_from_rho_real": -0.8964357674694137,
       "squander_energy_imag": 5.551115123125783e-17,
       "squander_purity": 0.8837008254375293,
-      "squander_runtime_ms": 0.06555000072694384,
+      "squander_runtime_ms": 0.056469987612217665,
       "squander_trace_imag": -2.7728155645987985e-17,
       "squander_trace_real": 1.0,
       "state_fidelity": 0.9999999999999996,
@@ -377,7 +377,7 @@
           3
         ]
       ],
-      "total_case_runtime_ms": 5.364330001611961,
+      "total_case_runtime_ms": 5.369491991586983,
       "trace_deviation": 2.7728155645987985e-17,
       "trace_pass": true,
       "workflow_completed": true
@@ -473,10 +473,10 @@
         1.12375,
         1.1775
       ],
-      "process_peak_rss_kb": 141940,
+      "process_peak_rss_kb": 140760,
       "qbit_num": 4,
       "reference_backend": "qiskit_aer_density_matrix",
-      "reference_runtime_ms": 4.156495997449383,
+      "reference_runtime_ms": 4.224577045533806,
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
       "source_pass": true,
@@ -484,7 +484,7 @@
       "squander_energy_from_rho_real": -1.4014751519733786,
       "squander_energy_imag": -8.326672684688674e-17,
       "squander_purity": 0.8758408672208623,
-      "squander_runtime_ms": 0.0840600005176384,
+      "squander_runtime_ms": 0.05531997885555029,
       "squander_trace_imag": 3.1083035936367405e-17,
       "squander_trace_real": 1.0,
       "state_fidelity": 0.9999999999999936,
@@ -504,7 +504,7 @@
           3
         ]
       ],
-      "total_case_runtime_ms": 5.40270000055898,
+      "total_case_runtime_ms": 5.421633017249405,
       "trace_deviation": 3.1083035936367405e-17,
       "trace_pass": true,
       "workflow_completed": true
@@ -600,10 +600,10 @@
         1.215,
         1.27
       ],
-      "process_peak_rss_kb": 141940,
+      "process_peak_rss_kb": 140760,
       "qbit_num": 4,
       "reference_backend": "qiskit_aer_density_matrix",
-      "reference_runtime_ms": 4.117135002161376,
+      "reference_runtime_ms": 4.08056698506698,
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
       "source_pass": true,
@@ -611,7 +611,7 @@
       "squander_energy_from_rho_real": -1.5650603022262708,
       "squander_energy_imag": 6.938893903907228e-17,
       "squander_purity": 0.8679485293615339,
-      "squander_runtime_ms": 0.07340999945881777,
+      "squander_runtime_ms": 0.05741103086620569,
       "squander_trace_imag": -5.904338626364644e-18,
       "squander_trace_real": 1.0000000000000002,
       "state_fidelity": 0.9999999999999987,
@@ -631,7 +631,7 @@
           3
         ]
       ],
-      "total_case_runtime_ms": 5.35157999911462,
+      "total_case_runtime_ms": 5.287022038828582,
       "trace_deviation": 2.221230915301874e-16,
       "trace_pass": true,
       "workflow_completed": true
@@ -727,10 +727,10 @@
         1.30625,
         1.3625
       ],
-      "process_peak_rss_kb": 141940,
+      "process_peak_rss_kb": 140760,
       "qbit_num": 4,
       "reference_backend": "qiskit_aer_density_matrix",
-      "reference_runtime_ms": 4.093675997864921,
+      "reference_runtime_ms": 4.104336956515908,
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
       "source_pass": true,
@@ -738,7 +738,7 @@
       "squander_energy_from_rho_real": -1.4608845043324536,
       "squander_energy_imag": 5.551115123125783e-17,
       "squander_purity": 0.8605399105327857,
-      "squander_runtime_ms": 0.08082999920588918,
+      "squander_runtime_ms": 0.05634099943563342,
       "squander_trace_imag": 1.7618895479402308e-17,
       "squander_trace_real": 0.9999999999999996,
       "state_fidelity": 0.9999999999999962,
@@ -758,7 +758,7 @@
           3
         ]
       ],
-      "total_case_runtime_ms": 5.334429999493295,
+      "total_case_runtime_ms": 5.297301977407187,
       "trace_deviation": 4.444385804396003e-16,
       "trace_pass": true,
       "workflow_completed": true
@@ -854,10 +854,10 @@
         1.3975,
         1.455
       ],
-      "process_peak_rss_kb": 141940,
+      "process_peak_rss_kb": 140760,
       "qbit_num": 4,
       "reference_backend": "qiskit_aer_density_matrix",
-      "reference_runtime_ms": 4.098274999705609,
+      "reference_runtime_ms": 4.5222180197015405,
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
       "source_pass": true,
@@ -865,7 +865,7 @@
       "squander_energy_from_rho_real": -1.2023500112556962,
       "squander_energy_imag": -6.245004513516506e-17,
       "squander_purity": 0.8541325210243822,
-      "squander_runtime_ms": 0.07872000060160644,
+      "squander_runtime_ms": 0.05628995131701231,
       "squander_trace_imag": 7.938038190626388e-18,
       "squander_trace_real": 1.0,
       "state_fidelity": 0.9999999999999969,
@@ -885,7 +885,7 @@
           3
         ]
       ],
-      "total_case_runtime_ms": 5.3403700003400445,
+      "total_case_runtime_ms": 5.724574031773955,
       "trace_deviation": 7.938038190626388e-18,
       "trace_pass": true,
       "workflow_completed": true
@@ -981,10 +981,10 @@
         1.48875,
         1.5475
       ],
-      "process_peak_rss_kb": 141940,
+      "process_peak_rss_kb": 141784,
       "qbit_num": 4,
       "reference_backend": "qiskit_aer_density_matrix",
-      "reference_runtime_ms": 4.054826000356115,
+      "reference_runtime_ms": 4.0557869942858815,
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
       "source_pass": true,
@@ -992,7 +992,7 @@
       "squander_energy_from_rho_real": -0.8827711206979141,
       "squander_energy_imag": 8.326672684688674e-17,
       "squander_purity": 0.8492681495782166,
-      "squander_runtime_ms": 0.08216999776777811,
+      "squander_runtime_ms": 0.0543509959243238,
       "squander_trace_imag": 4.7147455243137705e-17,
       "squander_trace_real": 0.9999999999999999,
       "state_fidelity": 0.9999999999999978,
@@ -1012,7 +1012,7 @@
           3
         ]
       ],
-      "total_case_runtime_ms": 5.294639999192441,
+      "total_case_runtime_ms": 5.251861992292106,
       "trace_deviation": 1.2061854824189347e-16,
       "trace_pass": true,
       "workflow_completed": true
@@ -1108,10 +1108,10 @@
         1.58,
         1.6400000000000001
       ],
-      "process_peak_rss_kb": 141940,
+      "process_peak_rss_kb": 141784,
       "qbit_num": 4,
       "reference_backend": "qiskit_aer_density_matrix",
-      "reference_runtime_ms": 4.015695001726272,
+      "reference_runtime_ms": 4.043627006467432,
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
       "source_pass": true,
@@ -1119,7 +1119,7 @@
       "squander_energy_from_rho_real": -0.5512971412456507,
       "squander_energy_imag": 8.326672684688674e-17,
       "squander_purity": 0.8464971816038552,
-      "squander_runtime_ms": 0.05514000076800585,
+      "squander_runtime_ms": 0.05498999962583184,
       "squander_trace_imag": 1.4274837175018495e-17,
       "squander_trace_real": 1.0,
       "state_fidelity": 0.9999999999999978,
@@ -1139,7 +1139,7 @@
           3
         ]
       ],
-      "total_case_runtime_ms": 5.202219999773661,
+      "total_case_runtime_ms": 5.223821965046227,
       "trace_deviation": 1.4274837175018495e-17,
       "trace_pass": true,
       "workflow_completed": true
@@ -1235,10 +1235,10 @@
         1.6712500000000001,
         1.7325000000000002
       ],
-      "process_peak_rss_kb": 141940,
+      "process_peak_rss_kb": 141784,
       "qbit_num": 4,
       "reference_backend": "qiskit_aer_density_matrix",
-      "reference_runtime_ms": 4.493567001190968,
+      "reference_runtime_ms": 4.543368995655328,
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
       "source_pass": true,
@@ -1246,7 +1246,7 @@
       "squander_energy_from_rho_real": -0.22457440447987875,
       "squander_energy_imag": 3.469446951953614e-17,
       "squander_purity": 0.8463011310805715,
-      "squander_runtime_ms": 0.05483099812408909,
+      "squander_runtime_ms": 0.05374103784561157,
       "squander_trace_imag": -3.381952470795388e-17,
       "squander_trace_real": 0.9999999999999994,
       "state_fidelity": 0.9999999999999971,
@@ -1266,7 +1266,7 @@
           3
         ]
       ],
-      "total_case_runtime_ms": 5.750352000177372,
+      "total_case_runtime_ms": 5.807393987197429,
       "trace_deviation": 5.561407657719668e-16,
       "trace_pass": true,
       "workflow_completed": true
@@ -1380,10 +1380,10 @@
         1.45,
         1.5
       ],
-      "process_peak_rss_kb": 156560,
+      "process_peak_rss_kb": 157304,
       "qbit_num": 6,
       "reference_backend": "qiskit_aer_density_matrix",
-      "reference_runtime_ms": 5.644221000693506,
+      "reference_runtime_ms": 4.930369963403791,
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
       "source_pass": true,
@@ -1391,7 +1391,7 @@
       "squander_energy_from_rho_real": -0.32182019110247195,
       "squander_energy_imag": -1.1102230246251565e-16,
       "squander_purity": 0.8971677230501827,
-      "squander_runtime_ms": 1.027862999762874,
+      "squander_runtime_ms": 1.0623749694786966,
       "squander_trace_imag": 2.3922957063845076e-17,
       "squander_trace_real": 1.0000000000000002,
       "state_fidelity": 1.0000000000000098,
@@ -1419,7 +1419,7 @@
           5
         ]
       ],
-      "total_case_runtime_ms": 15.07307599968044,
+      "total_case_runtime_ms": 12.749304005410522,
       "trace_deviation": 2.233296094363482e-16,
       "trace_pass": true,
       "workflow_completed": true
@@ -1533,10 +1533,10 @@
         1.55625,
         1.6075
       ],
-      "process_peak_rss_kb": 156560,
+      "process_peak_rss_kb": 157304,
       "qbit_num": 6,
       "reference_backend": "qiskit_aer_density_matrix",
-      "reference_runtime_ms": 4.80565799807664,
+      "reference_runtime_ms": 4.718270036391914,
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
       "source_pass": true,
@@ -1544,7 +1544,7 @@
       "squander_energy_from_rho_real": -0.18452314801045605,
       "squander_energy_imag": -1.6653345369377348e-16,
       "squander_purity": 0.8909917969090364,
-      "squander_runtime_ms": 0.8642829998279922,
+      "squander_runtime_ms": 0.8614030084572732,
       "squander_trace_imag": -8.813809353379846e-18,
       "squander_trace_real": 1.0000000000000004,
       "state_fidelity": 1.000000000000008,
@@ -1572,7 +1572,7 @@
           5
         ]
       ],
-      "total_case_runtime_ms": 11.81035400077235,
+      "total_case_runtime_ms": 11.606998043134809,
       "trace_deviation": 4.441766647861757e-16,
       "trace_pass": true,
       "workflow_completed": true
@@ -1686,10 +1686,10 @@
         1.6625,
         1.7150000000000003
       ],
-      "process_peak_rss_kb": 156560,
+      "process_peak_rss_kb": 157304,
       "qbit_num": 6,
       "reference_backend": "qiskit_aer_density_matrix",
-      "reference_runtime_ms": 5.595072001597146,
+      "reference_runtime_ms": 4.73206996684894,
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
       "source_pass": true,
@@ -1697,7 +1697,7 @@
       "squander_energy_from_rho_real": 0.06586713236717195,
       "squander_energy_imag": 5.551115123125783e-17,
       "squander_purity": 0.883700825437529,
-      "squander_runtime_ms": 0.9080929994524922,
+      "squander_runtime_ms": 0.8467430016025901,
       "squander_trace_imag": -2.554040043242237e-17,
       "squander_trace_real": 0.9999999999999999,
       "state_fidelity": 1.0000000000000089,
@@ -1725,7 +1725,7 @@
           5
         ]
       ],
-      "total_case_runtime_ms": 13.53594100146438,
+      "total_case_runtime_ms": 11.666578007861972,
       "trace_deviation": 1.1392218264379764e-16,
       "trace_pass": true,
       "workflow_completed": true
@@ -1839,10 +1839,10 @@
         1.7687499999999998,
         1.8224999999999998
       ],
-      "process_peak_rss_kb": 156560,
+      "process_peak_rss_kb": 157304,
       "qbit_num": 6,
       "reference_backend": "qiskit_aer_density_matrix",
-      "reference_runtime_ms": 4.983458999049617,
+      "reference_runtime_ms": 5.543273000512272,
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
       "source_pass": true,
@@ -1850,7 +1850,7 @@
       "squander_energy_from_rho_real": 0.3516371177122278,
       "squander_energy_imag": 5.551115123125783e-17,
       "squander_purity": 0.875840867220862,
-      "squander_runtime_ms": 1.0203439996985253,
+      "squander_runtime_ms": 0.8994239615276456,
       "squander_trace_imag": 3.7597534485297124e-17,
       "squander_trace_real": 1.0,
       "state_fidelity": 1.000000000000007,
@@ -1878,7 +1878,7 @@
           5
         ]
       ],
-      "total_case_runtime_ms": 12.168606001068838,
+      "total_case_runtime_ms": 13.617597054690123,
       "trace_deviation": 3.7597534485297124e-17,
       "trace_pass": true,
       "workflow_completed": true
@@ -1992,10 +1992,10 @@
         1.875,
         1.9300000000000002
       ],
-      "process_peak_rss_kb": 156560,
+      "process_peak_rss_kb": 157304,
       "qbit_num": 6,
       "reference_backend": "qiskit_aer_density_matrix",
-      "reference_runtime_ms": 4.684077997808345,
+      "reference_runtime_ms": 5.121761001646519,
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
       "source_pass": true,
@@ -2003,7 +2003,7 @@
       "squander_energy_from_rho_real": 0.564994817814322,
       "squander_energy_imag": -4.163336342344337e-17,
       "squander_purity": 0.8679485293615337,
-      "squander_runtime_ms": 0.8558730005461257,
+      "squander_runtime_ms": 0.9576239972375333,
       "squander_trace_imag": -9.560411983141374e-18,
       "squander_trace_real": 1.0000000000000002,
       "state_fidelity": 1.0000000000000098,
@@ -2031,7 +2031,7 @@
           5
         ]
       ],
-      "total_case_runtime_ms": 11.59153300250182,
+      "total_case_runtime_ms": 13.763857015874237,
       "trace_deviation": 2.2225032745442835e-16,
       "trace_pass": true,
       "workflow_completed": true
@@ -2145,10 +2145,10 @@
         1.98125,
         2.0375
       ],
-      "process_peak_rss_kb": 156560,
+      "process_peak_rss_kb": 157304,
       "qbit_num": 6,
       "reference_backend": "qiskit_aer_density_matrix",
-      "reference_runtime_ms": 4.709098000603262,
+      "reference_runtime_ms": 4.941430990584195,
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
       "source_pass": true,
@@ -2156,7 +2156,7 @@
       "squander_energy_from_rho_real": 0.6221981959355585,
       "squander_energy_imag": 1.249000902703301e-16,
       "squander_purity": 0.8605399105327854,
-      "squander_runtime_ms": 0.9356530026707333,
+      "squander_runtime_ms": 1.0396339930593967,
       "squander_trace_imag": 5.669056164794348e-18,
       "squander_trace_real": 0.9999999999999994,
       "state_fidelity": 1.000000000000007,
@@ -2184,7 +2184,7 @@
           5
         ]
       ],
-      "total_case_runtime_ms": 11.65264399969601,
+      "total_case_runtime_ms": 13.45549599500373,
       "trace_deviation": 5.551404590729785e-16,
       "trace_pass": true,
       "workflow_completed": true
@@ -2298,10 +2298,10 @@
         2.0875,
         2.145
       ],
-      "process_peak_rss_kb": 156560,
+      "process_peak_rss_kb": 157304,
       "qbit_num": 6,
       "reference_backend": "qiskit_aer_density_matrix",
-      "reference_runtime_ms": 4.670106998673873,
+      "reference_runtime_ms": 4.624928988050669,
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
       "source_pass": true,
@@ -2309,7 +2309,7 @@
       "squander_energy_from_rho_real": 0.5137838906158274,
       "squander_energy_imag": 2.7755575615628914e-17,
       "squander_purity": 0.8541325210243825,
-      "squander_runtime_ms": 0.8371330004592892,
+      "squander_runtime_ms": 1.064844022039324,
       "squander_trace_imag": 6.162720913250098e-18,
       "squander_trace_real": 1.0000000000000004,
       "state_fidelity": 1.000000000000011,
@@ -2337,7 +2337,7 @@
           5
         ]
       ],
-      "total_case_runtime_ms": 11.497373998281546,
+      "total_case_runtime_ms": 13.615925970952958,
       "trace_deviation": 4.44131968489443e-16,
       "trace_pass": true,
       "workflow_completed": true
@@ -2451,10 +2451,10 @@
         2.19375,
         2.2525000000000004
       ],
-      "process_peak_rss_kb": 156560,
+      "process_peak_rss_kb": 157304,
       "qbit_num": 6,
       "reference_backend": "qiskit_aer_density_matrix",
-      "reference_runtime_ms": 4.655987999285571,
+      "reference_runtime_ms": 4.53240901697427,
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
       "source_pass": true,
@@ -2462,7 +2462,7 @@
       "squander_energy_from_rho_real": 0.3011553866233696,
       "squander_energy_imag": 1.1102230246251565e-16,
       "squander_purity": 0.8492681495782167,
-      "squander_runtime_ms": 0.845112997922115,
+      "squander_runtime_ms": 0.8533740183338523,
       "squander_trace_imag": 3.364362517211771e-17,
       "squander_trace_real": 0.9999999999999997,
       "state_fidelity": 1.000000000000012,
@@ -2490,7 +2490,7 @@
           5
         ]
       ],
-      "total_case_runtime_ms": 11.473392998595955,
+      "total_case_runtime_ms": 12.872124032583088,
       "trace_deviation": 3.34761793386621e-16,
       "trace_pass": true,
       "workflow_completed": true
@@ -2604,10 +2604,10 @@
         2.3,
         2.36
       ],
-      "process_peak_rss_kb": 156560,
+      "process_peak_rss_kb": 157304,
       "qbit_num": 6,
       "reference_backend": "qiskit_aer_density_matrix",
-      "reference_runtime_ms": 4.677767999964999,
+      "reference_runtime_ms": 4.450639011338353,
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
       "source_pass": true,
@@ -2615,7 +2615,7 @@
       "squander_energy_from_rho_real": 0.07410012869882565,
       "squander_energy_imag": 1.3877787807814457e-16,
       "squander_purity": 0.8464971816038545,
-      "squander_runtime_ms": 0.9661630028858781,
+      "squander_runtime_ms": 0.8777640177868307,
       "squander_trace_imag": 7.14851226126483e-18,
       "squander_trace_real": 0.9999999999999997,
       "state_fidelity": 1.0000000000000107,
@@ -2643,7 +2643,7 @@
           5
         ]
       ],
-      "total_case_runtime_ms": 11.675304001983022,
+      "total_case_runtime_ms": 12.12327100802213,
       "trace_deviation": 3.331436117116074e-16,
       "trace_pass": true,
       "workflow_completed": true
@@ -2757,10 +2757,10 @@
         2.40625,
         2.4675000000000002
       ],
-      "process_peak_rss_kb": 156560,
+      "process_peak_rss_kb": 157304,
       "qbit_num": 6,
       "reference_backend": "qiskit_aer_density_matrix",
-      "reference_runtime_ms": 4.632388001482468,
+      "reference_runtime_ms": 5.552523012738675,
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
       "source_pass": true,
@@ -2768,7 +2768,7 @@
       "squander_energy_from_rho_real": -0.0809594433643627,
       "squander_energy_imag": -9.71445146547012e-17,
       "squander_purity": 0.8463011310805716,
-      "squander_runtime_ms": 0.882782998814946,
+      "squander_runtime_ms": 0.8928240276873112,
       "squander_trace_imag": -3.802922236020952e-17,
       "squander_trace_real": 0.9999999999999991,
       "state_fidelity": 1.0000000000000084,
@@ -2796,7 +2796,7 @@
           5
         ]
       ],
-      "total_case_runtime_ms": 11.530243002198404,
+      "total_case_runtime_ms": 14.355960011016577,
       "trace_deviation": 8.889921973641468e-16,
       "trace_pass": true,
       "workflow_completed": true
@@ -2928,10 +2928,10 @@
         2.0500000000000003,
         2.1
       ],
-      "process_peak_rss_kb": 422180,
+      "process_peak_rss_kb": 415724,
       "qbit_num": 8,
       "reference_backend": "qiskit_aer_density_matrix",
-      "reference_runtime_ms": 212.6780830003554,
+      "reference_runtime_ms": 216.37305105105042,
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
       "source_pass": true,
@@ -2939,7 +2939,7 @@
       "squander_energy_from_rho_real": 1.6505167224343198,
       "squander_energy_imag": -1.4051260155412137e-16,
       "squander_purity": 0.8971677230501833,
-      "squander_runtime_ms": 20.222525999997742,
+      "squander_runtime_ms": 20.064053998794407,
       "squander_trace_imag": -4.671372288787484e-17,
       "squander_trace_real": 1.0000000000000002,
       "state_fidelity": 1.000000000000064,
@@ -2975,7 +2975,7 @@
           7
         ]
       ],
-      "total_case_runtime_ms": 621.3669930002652,
+      "total_case_runtime_ms": 648.9896120037884,
       "trace_deviation": 2.269052191606848e-16,
       "trace_pass": true,
       "workflow_completed": true
@@ -3107,10 +3107,10 @@
         2.17125,
         2.2224999999999997
       ],
-      "process_peak_rss_kb": 422180,
+      "process_peak_rss_kb": 415724,
       "qbit_num": 8,
       "reference_backend": "qiskit_aer_density_matrix",
-      "reference_runtime_ms": 207.50495299944305,
+      "reference_runtime_ms": 208.74973898753524,
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
       "source_pass": true,
@@ -3118,7 +3118,7 @@
       "squander_energy_from_rho_real": 1.0526345633126957,
       "squander_energy_imag": 2.7755575615628914e-16,
       "squander_purity": 0.8909917969090352,
-      "squander_runtime_ms": 17.29679499840131,
+      "squander_runtime_ms": 28.40815798845142,
       "squander_trace_imag": 1.3043778809847457e-17,
       "squander_trace_real": 0.9999999999999992,
       "state_fidelity": 1.0000000000000604,
@@ -3154,7 +3154,7 @@
           7
         ]
       ],
-      "total_case_runtime_ms": 469.5415900023363,
+      "total_case_runtime_ms": 623.2983449590392,
       "trace_deviation": 7.772655728420482e-16,
       "trace_pass": true,
       "workflow_completed": true
@@ -3286,10 +3286,10 @@
         2.2925000000000004,
         2.345
       ],
-      "process_peak_rss_kb": 422180,
+      "process_peak_rss_kb": 415724,
       "qbit_num": 8,
       "reference_backend": "qiskit_aer_density_matrix",
-      "reference_runtime_ms": 204.57746099782526,
+      "reference_runtime_ms": 210.93864797148854,
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
       "source_pass": true,
@@ -3297,7 +3297,7 @@
       "squander_energy_from_rho_real": 0.6427402735170344,
       "squander_energy_imag": -8.326672684688674e-17,
       "squander_purity": 0.8837008254375287,
-      "squander_runtime_ms": 30.435054999543354,
+      "squander_runtime_ms": 27.232852997258306,
       "squander_trace_imag": -4.469282168664903e-19,
       "squander_trace_real": 1.0000000000000004,
       "state_fidelity": 1.0000000000000617,
@@ -3333,7 +3333,7 @@
           7
         ]
       ],
-      "total_case_runtime_ms": 534.4569759981823,
+      "total_case_runtime_ms": 638.658988988027,
       "trace_deviation": 4.440894347426924e-16,
       "trace_pass": true,
       "workflow_completed": true
@@ -3465,10 +3465,10 @@
         2.4137500000000003,
         2.4675
       ],
-      "process_peak_rss_kb": 422180,
+      "process_peak_rss_kb": 415724,
       "qbit_num": 8,
       "reference_backend": "qiskit_aer_density_matrix",
-      "reference_runtime_ms": 206.82799999849522,
+      "reference_runtime_ms": 206.97282103355974,
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
       "source_pass": true,
@@ -3476,7 +3476,7 @@
       "squander_energy_from_rho_real": 0.4669784205793599,
       "squander_energy_imag": 1.1102230246251565e-16,
       "squander_purity": 0.8758408672208629,
-      "squander_runtime_ms": 22.250594000070123,
+      "squander_runtime_ms": 18.153946031816304,
       "squander_trace_imag": 1.3376904250072168e-17,
       "squander_trace_real": 1.0000000000000009,
       "state_fidelity": 1.00000000000006,
@@ -3512,7 +3512,7 @@
           7
         ]
       ],
-      "total_case_runtime_ms": 522.9906829990796,
+      "total_case_runtime_ms": 600.8673119940795,
       "trace_deviation": 8.882791491351847e-16,
       "trace_pass": true,
       "workflow_completed": true
@@ -3644,10 +3644,10 @@
         2.535,
         2.5900000000000007
       ],
-      "process_peak_rss_kb": 422180,
+      "process_peak_rss_kb": 415724,
       "qbit_num": 8,
       "reference_backend": "qiskit_aer_density_matrix",
-      "reference_runtime_ms": 208.19209500041325,
+      "reference_runtime_ms": 207.1806730236858,
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
       "source_pass": true,
@@ -3655,7 +3655,7 @@
       "squander_energy_from_rho_real": 0.5243375354293591,
       "squander_energy_imag": 2.220446049250313e-16,
       "squander_purity": 0.8679485293615342,
-      "squander_runtime_ms": 30.846055997244548,
+      "squander_runtime_ms": 18.351275997702032,
       "squander_trace_imag": 7.480573245494482e-17,
       "squander_trace_real": 1.0000000000000007,
       "state_fidelity": 1.00000000000006,
@@ -3691,7 +3691,7 @@
           7
         ]
       ],
-      "total_case_runtime_ms": 574.3500860007771,
+      "total_case_runtime_ms": 649.1270819678903,
       "trace_deviation": 6.703209356680872e-16,
       "trace_pass": true,
       "workflow_completed": true
@@ -3823,10 +3823,10 @@
         2.6562500000000004,
         2.7125000000000004
       ],
-      "process_peak_rss_kb": 422180,
+      "process_peak_rss_kb": 415724,
       "qbit_num": 8,
       "reference_backend": "qiskit_aer_density_matrix",
-      "reference_runtime_ms": 207.18662199942628,
+      "reference_runtime_ms": 207.87680603098124,
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
       "source_pass": true,
@@ -3834,7 +3834,7 @@
       "squander_energy_from_rho_real": 0.7663804229820826,
       "squander_energy_imag": 2.7755575615628914e-17,
       "squander_purity": 0.8605399105327862,
-      "squander_runtime_ms": 28.44555699994089,
+      "squander_runtime_ms": 18.859658972360194,
       "squander_trace_imag": 1.9518691462761277e-17,
       "squander_trace_real": 1.0000000000000002,
       "state_fidelity": 1.00000000000006,
@@ -3870,7 +3870,7 @@
           7
         ]
       ],
-      "total_case_runtime_ms": 544.5464440017531,
+      "total_case_runtime_ms": 603.0596909695305,
       "trace_deviation": 2.229008431853314e-16,
       "trace_pass": true,
       "workflow_completed": true
@@ -4002,10 +4002,10 @@
         2.7775,
         2.835
       ],
-      "process_peak_rss_kb": 422180,
+      "process_peak_rss_kb": 415724,
       "qbit_num": 8,
       "reference_backend": "qiskit_aer_density_matrix",
-      "reference_runtime_ms": 214.25355799874524,
+      "reference_runtime_ms": 213.31104799173772,
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
       "source_pass": true,
@@ -4013,7 +4013,7 @@
       "squander_energy_from_rho_real": 1.0184760206321368,
       "squander_energy_imag": 6.938893903907228e-18,
       "squander_purity": 0.8541325210243816,
-      "squander_runtime_ms": 18.18197899774532,
+      "squander_runtime_ms": 18.609078018926084,
       "squander_trace_imag": -1.2275106679939458e-17,
       "squander_trace_real": 0.9999999999999994,
       "state_fidelity": 1.0000000000000555,
@@ -4049,7 +4049,7 @@
           7
         ]
       ],
-      "total_case_runtime_ms": 604.9888620000274,
+      "total_case_runtime_ms": 626.103826041799,
       "trace_deviation": 5.552472146224253e-16,
       "trace_pass": true,
       "workflow_completed": true
@@ -4181,10 +4181,10 @@
         2.8987500000000006,
         2.9575000000000005
       ],
-      "process_peak_rss_kb": 422180,
+      "process_peak_rss_kb": 415724,
       "qbit_num": 8,
       "reference_backend": "qiskit_aer_density_matrix",
-      "reference_runtime_ms": 212.21457999854465,
+      "reference_runtime_ms": 209.4916919595562,
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
       "source_pass": true,
@@ -4192,7 +4192,7 @@
       "squander_energy_from_rho_real": 1.1023089972289548,
       "squander_energy_imag": 0.0,
       "squander_purity": 0.8492681495782182,
-      "squander_runtime_ms": 34.251949000463355,
+      "squander_runtime_ms": 34.86309596337378,
       "squander_trace_imag": 6.678263574568844e-18,
       "squander_trace_real": 1.0000000000000002,
       "state_fidelity": 1.0000000000000564,
@@ -4228,7 +4228,7 @@
           7
         ]
       ],
-      "total_case_runtime_ms": 588.522689002275,
+      "total_case_runtime_ms": 634.533962002024,
       "trace_deviation": 2.2214501070400987e-16,
       "trace_pass": true,
       "workflow_completed": true
@@ -4360,10 +4360,10 @@
         3.0200000000000005,
         3.08
       ],
-      "process_peak_rss_kb": 422180,
+      "process_peak_rss_kb": 415724,
       "qbit_num": 8,
       "reference_backend": "qiskit_aer_density_matrix",
-      "reference_runtime_ms": 208.12607499829028,
+      "reference_runtime_ms": 209.1981410048902,
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
       "source_pass": true,
@@ -4371,7 +4371,7 @@
       "squander_energy_from_rho_real": 1.125929772593713,
       "squander_energy_imag": 1.8041124150158794e-16,
       "squander_purity": 0.8464971816038546,
-      "squander_runtime_ms": 28.174866001791088,
+      "squander_runtime_ms": 18.24416604358703,
       "squander_trace_imag": 4.4461585538133876e-17,
       "squander_trace_real": 0.9999999999999994,
       "state_fidelity": 1.0000000000000568,
@@ -4407,7 +4407,7 @@
           7
         ]
       ],
-      "total_case_runtime_ms": 613.5646539987647,
+      "total_case_runtime_ms": 588.7719909660518,
       "trace_deviation": 5.56889238260646e-16,
       "trace_pass": true,
       "workflow_completed": true
@@ -4539,10 +4539,10 @@
         3.1412500000000003,
         3.2025000000000006
       ],
-      "process_peak_rss_kb": 422180,
+      "process_peak_rss_kb": 415724,
       "qbit_num": 8,
       "reference_backend": "qiskit_aer_density_matrix",
-      "reference_runtime_ms": 207.65197299988358,
+      "reference_runtime_ms": 208.15971598494798,
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
       "source_pass": true,
@@ -4550,7 +4550,7 @@
       "squander_energy_from_rho_real": 1.3976834130503046,
       "squander_energy_imag": -1.942890293094024e-16,
       "squander_purity": 0.846301131080571,
-      "squander_runtime_ms": 28.69722800096497,
+      "squander_runtime_ms": 18.44430697383359,
       "squander_trace_imag": 1.607189564598896e-17,
       "squander_trace_real": 1.0,
       "state_fidelity": 1.0000000000000542,
@@ -4586,7 +4586,7 @@
           7
         ]
       ],
-      "total_case_runtime_ms": 553.5038779999013,
+      "total_case_runtime_ms": 614.3836380215362,
       "trace_deviation": 1.607189564598896e-17,
       "trace_pass": true,
       "workflow_completed": true
@@ -4736,10 +4736,10 @@
         2.6500000000000004,
         2.7
       ],
-      "process_peak_rss_kb": 856480,
+      "process_peak_rss_kb": 858664,
       "qbit_num": 10,
       "reference_backend": "qiskit_aer_density_matrix",
-      "reference_runtime_ms": 252.3095309989003,
+      "reference_runtime_ms": 251.83988799108192,
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
       "source_pass": true,
@@ -4747,7 +4747,7 @@
       "squander_energy_from_rho_real": 1.9555459282875662,
       "squander_energy_imag": -1.1102230246251565e-16,
       "squander_purity": 0.8971677230501834,
-      "squander_runtime_ms": 407.66524799983017,
+      "squander_runtime_ms": 396.9564519939013,
       "squander_trace_imag": -5.228698150608884e-17,
       "squander_trace_real": 1.0000000000000009,
       "state_fidelity": 1.0000000000002265,
@@ -4791,7 +4791,7 @@
           9
         ]
       ],
-      "total_case_runtime_ms": 4165.2777700001025,
+      "total_case_runtime_ms": 4671.4848969713785,
       "trace_deviation": 8.897161534197464e-16,
       "trace_pass": true,
       "workflow_completed": true
@@ -4941,10 +4941,10 @@
         2.78625,
         2.8375
       ],
-      "process_peak_rss_kb": 856480,
+      "process_peak_rss_kb": 858664,
       "qbit_num": 10,
       "reference_backend": "qiskit_aer_density_matrix",
-      "reference_runtime_ms": 258.67291599934106,
+      "reference_runtime_ms": 249.15980704827234,
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
       "source_pass": true,
@@ -4952,7 +4952,7 @@
       "squander_energy_from_rho_real": 1.7756720000298531,
       "squander_energy_imag": 1.8041124150158794e-16,
       "squander_purity": 0.8909917969090348,
-      "squander_runtime_ms": 421.55694000030053,
+      "squander_runtime_ms": 397.16743398457766,
       "squander_trace_imag": 1.3771523281545166e-17,
       "squander_trace_real": 0.9999999999999997,
       "state_fidelity": 1.0000000000002238,
@@ -4996,7 +4996,7 @@
           9
         ]
       ],
-      "total_case_runtime_ms": 4049.2515420010022,
+      "total_case_runtime_ms": 4087.5220660236664,
       "trace_deviation": 3.333514956471606e-16,
       "trace_pass": true,
       "workflow_completed": true
@@ -5146,10 +5146,10 @@
         2.9225000000000008,
         2.9750000000000005
       ],
-      "process_peak_rss_kb": 856480,
+      "process_peak_rss_kb": 858664,
       "qbit_num": 10,
       "reference_backend": "qiskit_aer_density_matrix",
-      "reference_runtime_ms": 250.83193599857623,
+      "reference_runtime_ms": 249.35134802944958,
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
       "source_pass": true,
@@ -5157,7 +5157,7 @@
       "squander_energy_from_rho_real": 1.6852734190677392,
       "squander_energy_imag": -2.7755575615628914e-17,
       "squander_purity": 0.8837008254375287,
-      "squander_runtime_ms": 453.30793900211575,
+      "squander_runtime_ms": 437.5039620208554,
       "squander_trace_imag": -4.065094056635023e-18,
       "squander_trace_real": 0.9999999999999991,
       "state_fidelity": 1.0000000000002203,
@@ -5201,7 +5201,7 @@
           9
         ]
       ],
-      "total_case_runtime_ms": 4031.6216350001923,
+      "total_case_runtime_ms": 4256.638769991696,
       "trace_deviation": 8.881877223935834e-16,
       "trace_pass": true,
       "workflow_completed": true
@@ -5351,10 +5351,10 @@
         3.0587500000000003,
         3.1125
       ],
-      "process_peak_rss_kb": 856480,
+      "process_peak_rss_kb": 858664,
       "qbit_num": 10,
       "reference_backend": "qiskit_aer_density_matrix",
-      "reference_runtime_ms": 251.9678099997691,
+      "reference_runtime_ms": 249.2432469734922,
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
       "source_pass": true,
@@ -5362,7 +5362,7 @@
       "squander_energy_from_rho_real": 1.9107322541905414,
       "squander_energy_imag": 1.6653345369377348e-16,
       "squander_purity": 0.8758408672208624,
-      "squander_runtime_ms": 460.5995569982042,
+      "squander_runtime_ms": 437.5541520421393,
       "squander_trace_imag": 1.2763658402096418e-17,
       "squander_trace_real": 0.9999999999999991,
       "state_fidelity": 1.0000000000002216,
@@ -5406,7 +5406,7 @@
           9
         ]
       ],
-      "total_case_runtime_ms": 4313.226957998268,
+      "total_case_runtime_ms": 4321.180928964168,
       "trace_deviation": 8.882701256919639e-16,
       "trace_pass": true,
       "workflow_completed": true
@@ -5556,10 +5556,10 @@
         3.1950000000000003,
         3.250000000000001
       ],
-      "process_peak_rss_kb": 856480,
+      "process_peak_rss_kb": 858664,
       "qbit_num": 10,
       "reference_backend": "qiskit_aer_density_matrix",
-      "reference_runtime_ms": 250.5298549986037,
+      "reference_runtime_ms": 252.44134099921212,
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
       "source_pass": true,
@@ -5567,7 +5567,7 @@
       "squander_energy_from_rho_real": 2.58316635373365,
       "squander_energy_imag": 3.3306690738754696e-16,
       "squander_purity": 0.8679485293615343,
-      "squander_runtime_ms": 443.28358200073126,
+      "squander_runtime_ms": 416.3361329701729,
       "squander_trace_imag": 7.482097208776216e-17,
       "squander_trace_real": 1.0000000000000016,
       "state_fidelity": 1.000000000000222,
@@ -5611,7 +5611,7 @@
           9
         ]
       ],
-      "total_case_runtime_ms": 4096.906501999911,
+      "total_case_runtime_ms": 4855.09682103293,
       "trace_deviation": 1.5561120461276258e-15,
       "trace_pass": true,
       "workflow_completed": true
@@ -5761,10 +5761,10 @@
         3.3312500000000003,
         3.3875
       ],
-      "process_peak_rss_kb": 856480,
+      "process_peak_rss_kb": 858664,
       "qbit_num": 10,
       "reference_backend": "qiskit_aer_density_matrix",
-      "reference_runtime_ms": 253.74538699907134,
+      "reference_runtime_ms": 258.09678400401026,
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
       "source_pass": true,
@@ -5772,7 +5772,7 @@
       "squander_energy_from_rho_real": 3.3474081955023287,
       "squander_energy_imag": 1.6653345369377348e-16,
       "squander_purity": 0.8605399105327861,
-      "squander_runtime_ms": 456.5036809981393,
+      "squander_runtime_ms": 477.7866390068084,
       "squander_trace_imag": 2.1226811899257482e-17,
       "squander_trace_real": 1.000000000000001,
       "state_fidelity": 1.0000000000002212,
@@ -5816,7 +5816,7 @@
           9
         ]
       ],
-      "total_case_runtime_ms": 4383.542452000256,
+      "total_case_runtime_ms": 4329.946195008233,
       "trace_deviation": 1.110425928169564e-15,
       "trace_pass": true,
       "workflow_completed": true
@@ -5966,10 +5966,10 @@
         3.4675000000000002,
         3.525
       ],
-      "process_peak_rss_kb": 856480,
+      "process_peak_rss_kb": 858664,
       "qbit_num": 10,
       "reference_backend": "qiskit_aer_density_matrix",
-      "reference_runtime_ms": 249.47171100211563,
+      "reference_runtime_ms": 247.40412004757673,
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
       "source_pass": true,
@@ -5977,7 +5977,7 @@
       "squander_energy_from_rho_real": 3.598631341761615,
       "squander_energy_imag": 1.734723475976807e-17,
       "squander_purity": 0.8541325210243816,
-      "squander_runtime_ms": 489.7924670003704,
+      "squander_runtime_ms": 440.5691740103066,
       "squander_trace_imag": -1.1235908502111428e-17,
       "squander_trace_real": 0.9999999999999997,
       "state_fidelity": 1.0000000000002247,
@@ -6021,7 +6021,7 @@
           9
         ]
       ],
-      "total_case_runtime_ms": 5333.7510700002895,
+      "total_case_runtime_ms": 4250.358022982255,
       "trace_deviation": 3.332563734372872e-16,
       "trace_pass": true,
       "workflow_completed": true
@@ -6171,10 +6171,10 @@
         3.6037500000000007,
         3.6625000000000005
       ],
-      "process_peak_rss_kb": 856480,
+      "process_peak_rss_kb": 858664,
       "qbit_num": 10,
       "reference_backend": "qiskit_aer_density_matrix",
-      "reference_runtime_ms": 251.52624899783405,
+      "reference_runtime_ms": 246.51160597568378,
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
       "source_pass": true,
@@ -6182,7 +6182,7 @@
       "squander_energy_from_rho_real": 3.2943122190736545,
       "squander_energy_imag": 4.163336342344337e-17,
       "squander_purity": 0.8492681495782182,
-      "squander_runtime_ms": 486.1305140002514,
+      "squander_runtime_ms": 426.7467870377004,
       "squander_trace_imag": 4.783070021434885e-18,
       "squander_trace_real": 1.0000000000000022,
       "state_fidelity": 1.000000000000226,
@@ -6226,7 +6226,7 @@
           9
         ]
       ],
-      "total_case_runtime_ms": 4316.413059001206,
+      "total_case_runtime_ms": 4329.064021992963,
       "trace_deviation": 2.220451200857644e-15,
       "trace_pass": true,
       "workflow_completed": true
@@ -6376,10 +6376,10 @@
         3.74,
         3.8000000000000003
       ],
-      "process_peak_rss_kb": 856480,
+      "process_peak_rss_kb": 858664,
       "qbit_num": 10,
       "reference_backend": "qiskit_aer_density_matrix",
-      "reference_runtime_ms": 245.78225699951872,
+      "reference_runtime_ms": 251.6819279990159,
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
       "source_pass": true,
@@ -6387,7 +6387,7 @@
       "squander_energy_from_rho_real": 2.9381348371476097,
       "squander_energy_imag": 2.0209528495129803e-16,
       "squander_purity": 0.8464971816038543,
-      "squander_runtime_ms": 447.52924799831817,
+      "squander_runtime_ms": 473.4580109943636,
       "squander_trace_imag": 4.3640357251657376e-17,
       "squander_trace_real": 1.0000000000000002,
       "state_fidelity": 1.000000000000222,
@@ -6431,7 +6431,7 @@
           9
         ]
       ],
-      "total_case_runtime_ms": 4779.712475999986,
+      "total_case_runtime_ms": 4794.049646996427,
       "trace_deviation": 2.262924818843205e-16,
       "trace_pass": true,
       "workflow_completed": true
@@ -6581,10 +6581,10 @@
         3.8762500000000006,
         3.937500000000001
       ],
-      "process_peak_rss_kb": 857260,
+      "process_peak_rss_kb": 858664,
       "qbit_num": 10,
       "reference_backend": "qiskit_aer_density_matrix",
-      "reference_runtime_ms": 252.2984120005276,
+      "reference_runtime_ms": 251.83069898048416,
       "rho_is_valid": true,
       "rho_is_valid_tol": 1e-10,
       "source_pass": true,
@@ -6592,7 +6592,7 @@
       "squander_energy_from_rho_real": 2.8227834409265866,
       "squander_energy_imag": -8.847089727481716e-17,
       "squander_purity": 0.846301131080571,
-      "squander_runtime_ms": 464.1590110004472,
+      "squander_runtime_ms": 462.23428403027356,
       "squander_trace_imag": 1.6411820866030207e-17,
       "squander_trace_real": 0.9999999999999982,
       "state_fidelity": 1.0000000000002172,
@@ -6636,7 +6636,7 @@
           9
         ]
       ],
-      "total_case_runtime_ms": 4274.887303003197,
+      "total_case_runtime_ms": 4393.772900977638,
       "trace_deviation": 1.7764326524662244e-15,
       "trace_pass": true,
       "workflow_completed": true

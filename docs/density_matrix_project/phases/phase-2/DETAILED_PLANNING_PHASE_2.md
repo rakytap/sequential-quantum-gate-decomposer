@@ -1,6 +1,6 @@
 # Detailed Planning for Phase 2
 
-This document is the Phase 2 source of truth for scope, task goals,
+This document is the Phase 2 source of truth for scope, capability goals,
 acceptance criteria, validation expectations, and research-facing deliverables.
 
 Primary Phase 2 theme:
@@ -10,13 +10,13 @@ Primary Phase 2 theme:
 
 This is a specification document, not an implementation log.
 
-## 0.1 Revalidation After Phase 2 Tasks 1-6
+## 0.1 Revalidation after Phase 2 integration deliverables
 
-The Phase 2 contract remains valid after implementation of Tasks 1 to 6. The
-implemented slice now closes the frozen integrated-backend, validation, and
-workflow-demonstration baseline for backend selection, observable evaluation,
-bridge behavior, required local-noise validation, and the phase-level
-publication-facing evidence package.
+The Phase 2 contract remains valid after the delivered integration scope is
+implemented. The implemented slice now closes the frozen integrated-backend,
+validation, and workflow-demonstration baseline for backend selection,
+observable evaluation, bridge behavior, required local-noise validation, and
+the phase-level publication-facing evidence package.
 
 Implementation-backed status at this point:
 
@@ -45,14 +45,14 @@ Implementation-backed status at this point:
   canonical workflow contract, end-to-end trace bundle, matrix baseline bundle,
   unsupported-workflow bundle, and interpretation bundle while preserving
   traceability to the underlying validation-evidence layers and now validating
-  lower-story semantic closure in addition to artifact presence, expected
-  status, and cross-artifact workflow identity.
+  semantic closure across linked bundles in addition to artifact presence,
+  expected status, and cross-artifact workflow identity.
 
 This document therefore continues to describe the full Phase 2 contract, while
 the notes below clarify the intentional scientific boundaries that remain in
 place for later phases.
 
-## 0.2 Learnings From Implemented Tasks
+## 0.2 Learnings from the delivered integration scope
 
 Phase 2 implementation produced several process and contract learnings that are
 now part of the validation posture:
@@ -156,7 +156,7 @@ Phase 2 should follow spec-driven development in the following sense:
 3. Maintain explicit traceability from milestone goals to validation evidence.
 4. Treat unsupported cases and deferred work as first-class documented outcomes.
 5. Use publication evidence requirements to guide what counts as done.
-6. Keep task descriptions goal-oriented rather than implementation-prescriptive.
+6. Keep goal descriptions capability-oriented rather than implementation-prescriptive.
 
 In practice, this means Phase 2 documentation should answer:
 
@@ -225,7 +225,7 @@ The following are explicitly outside the Phase 2 core deliverable.
 - density-aware partitioning and gate fusion,
 - channel-native fusion or superoperator fusion,
 - gradient-path completion for density-matrix optimization,
-- AVX-focused density-kernel acceleration as a main milestone,
+- AVX-focused density-kernel acceleration as a required or main milestone,
 - stochastic trajectories or MPDO-based approximation paths,
 - full `qgd_Circuit` gate parity,
 - and noisy circuit re-synthesis as a primary result.
@@ -598,8 +598,8 @@ Current implementation-backed clarification:
 - The top-level completeness, status, and workflow-identity checks are encoded
   in `workflow_publication_bundle.json`, which verifies mandatory artifact
   presence, expected status alignment, cross-artifact workflow identity, and
-  lower-story semantic closure flags across the final Task 6 publication-facing
-  evidence layers.
+  semantic-closure flags across the workflow publication bundle and its linked
+  constituent artifacts.
 
 Optional:
 
@@ -645,11 +645,11 @@ Trade-offs:
 - They avoid introducing runtime or speedup pass or fail thresholds, because
   Phase 2 is about exact integrated correctness rather than acceleration.
 
-## 11. Phase 2 Task Breakdown
+## 11. Phase 2 capability and evidence areas
 
-Each task below is a goal, not an implementation recipe.
+Each area below is a goal, not an implementation recipe.
 
-### Task 1: Backend Selection Contract
+### Backend selection contract
 
 #### Goal
 
@@ -674,7 +674,7 @@ standalone tool instead of a usable research backend.
 - and validation that the density path can actually be invoked in the intended
   workflow class.
 
-### Task 2: Exact Noisy Expectation-Value Path
+### Exact noisy expectation-value path
 
 #### Goal
 
@@ -701,7 +701,7 @@ backend to participate in VQA or similar training loops.
 - and benchmark or test evidence showing stable exact noisy `Re Tr(H*rho)`
   evaluation in the canonical workflow.
 
-### Task 3: Circuit-to-Density Backend Bridge
+### Circuit-to-density backend bridge
 
 #### Goal
 
@@ -711,8 +711,8 @@ into the density-matrix execution path.
 #### Why It Exists
 
 The current density backend is structurally separate from the main circuit path.
-This task turns that separation into a documented, usable bridge rather than an
-implicit gap.
+This bridge deliverable turns that separation into a documented, usable bridge
+rather than an implicit gap.
 
 #### Success Looks Like
 
@@ -726,7 +726,7 @@ implicit gap.
 - defined behavior for unsupported gate/noise combinations,
 - and at least one end-to-end workflow that depends on the bridge.
 
-### Task 4: Phase 2 Noise Support Baseline
+### Noise support baseline
 
 #### Goal
 
@@ -750,7 +750,7 @@ an unbounded effort to implement every possible noise model.
 - rationale for why each required model is included,
 - and benchmark or validation plans tied to those models.
 
-### Task 5: Validation Baseline
+### Validation baseline
 
 #### Goal
 
@@ -773,7 +773,7 @@ Phase 2 is exact-first. Its scientific value depends on trusted correctness.
 - internal consistency checks,
 - and a documented pass/fail interpretation for Phase 2 claims.
 
-### Task 6: Noisy Workflow Demonstration Goal
+### Noisy workflow demonstration
 
 #### Goal
 
@@ -796,7 +796,7 @@ backend availability.
 - expected input/output contract,
 - and demonstration-ready validation or benchmark design.
 
-### Task 7: Documentation and User-Facing Clarity
+### Documentation and user-facing clarity
 
 #### Goal
 
@@ -820,7 +820,7 @@ scope boundaries.
 - terminology consistency,
 - and explicit alignment with the planning and roadmap docs.
 
-### Task 8: Paper 1 Evidence Package
+### Paper 1 evidence package
 
 #### Goal
 

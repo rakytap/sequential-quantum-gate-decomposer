@@ -69,7 +69,7 @@ typedef enum vqe_backend_type {
   DENSITY_MATRIX_BACKEND = 1
 } vqe_backend_type;
 
-/// @brief Fixed local noise channels supported by the Story 2 density path.
+/// @brief Supported local noise channels.
 typedef enum density_noise_type {
   LOCAL_DEPOLARIZING_NOISE = 0,
   AMPLITUDE_DAMPING_NOISE = 1,

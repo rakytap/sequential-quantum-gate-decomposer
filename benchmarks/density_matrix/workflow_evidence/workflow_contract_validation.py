@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-"""Validation: Task 6 Story 1 canonical workflow contract.
+"""Validation: canonical workflow contract.
 
 Builds a machine-readable contract artifact for the canonical Phase 2 noisy
 workflow. This is intentionally a thin contract layer:
 - it freezes one stable workflow ID and contract version,
 - it defines explicit input and output contract sections,
 - it records supported / optional / deferred / unsupported workflow boundaries,
-- and it links those contract sections back to the already delivered Task 5
-  evidence inventory without re-running the full validation stack.
+- and it links those contract sections back to the delivered validation-evidence
+  inventory without re-running the full validation stack.
 
 Run with:
     python benchmarks/density_matrix/workflow_evidence/workflow_contract_validation.py
@@ -49,7 +49,7 @@ ARTIFACT_FILENAME = "workflow_contract_bundle.json"
 DEFAULT_OUTPUT_DIR = (
     REPO_ROOT / "benchmarks" / "density_matrix" / "artifacts" / "workflow_evidence"
 )
-TASK5_REFERENCE_BUNDLE_PATH = (
+VALIDATION_EVIDENCE_REFERENCE_BUNDLE_PATH = (
     REPO_ROOT
     / "benchmarks"
     / "density_matrix"
@@ -165,13 +165,15 @@ def get_git_revision():
         return "unknown"
 
 
-def _load_reference_task5_bundle(reference_path: Path = TASK5_REFERENCE_BUNDLE_PATH):
+def _load_reference_validation_bundle(
+    reference_path: Path = VALIDATION_EVIDENCE_REFERENCE_BUNDLE_PATH,
+):
     payload = json.loads(reference_path.read_text(encoding="utf-8"))
     required_fields = ("suite_name", "status", "artifacts", "software", "provenance")
     missing_fields = [field for field in required_fields if field not in payload]
     if missing_fields:
         raise ValueError(
-            "Task 5 reference bundle is missing required fields: {}".format(
+            "Validation-evidence reference bundle is missing required fields: {}".format(
                 ", ".join(missing_fields)
             )
         )
@@ -482,7 +484,9 @@ def build_artifact_bundle(reference_bundle):
             ),
             "working_directory": str(REPO_ROOT),
             "git_revision": get_git_revision(),
-            "reference_task5_bundle_path": str(TASK5_REFERENCE_BUNDLE_PATH),
+            "reference_validation_bundle_path": str(
+                VALIDATION_EVIDENCE_REFERENCE_BUNDLE_PATH
+            ),
         },
         "summary": {},
     }
@@ -515,19 +519,19 @@ def validate_artifact_bundle(artifact):
     missing_fields = [field for field in ARTIFACT_CORE_FIELDS if field not in artifact]
     if missing_fields:
         raise ValueError(
-            "Task 6 Story 1 artifact bundle is missing required fields: {}".format(
+            "Workflow contract artifact is missing required fields: {}".format(
                 ", ".join(missing_fields)
             )
         )
 
     if not artifact["workflow_id"]:
-        raise ValueError("Task 6 Story 1 workflow_id must be non-empty")
+        raise ValueError("Workflow contract workflow_id must be non-empty")
     if not artifact["contract_version"]:
-        raise ValueError("Task 6 Story 1 contract_version must be non-empty")
+        raise ValueError("Workflow contract contract_version must be non-empty")
 
     if artifact["status"] not in {"pass", "fail"}:
         raise ValueError(
-            "Task 6 Story 1 artifact has unsupported status '{}'".format(
+            "Workflow contract artifact has unsupported status '{}'".format(
                 artifact["status"]
             )
         )
@@ -536,7 +540,7 @@ def validate_artifact_bundle(artifact):
     observed_boundary_classes = set(artifact["boundary_classification"].keys())
     if required_boundary_classes != observed_boundary_classes:
         raise ValueError(
-            "Task 6 Story 1 boundary classes mismatch: expected {}, observed {}".format(
+            "Workflow contract boundary classes mismatch: expected {}, observed {}".format(
                 sorted(required_boundary_classes), sorted(observed_boundary_classes)
             )
         )
@@ -544,7 +548,7 @@ def validate_artifact_bundle(artifact):
     for field in artifact["requirements"]["required_input_fields"]:
         if field not in artifact["input_contract"]:
             raise ValueError(
-                "Task 6 Story 1 input_contract is missing required field '{}'".format(
+                "Workflow contract input_contract is missing required field '{}'".format(
                     field
                 )
             )
@@ -552,7 +556,7 @@ def validate_artifact_bundle(artifact):
     for field in artifact["requirements"]["required_output_fields"]:
         if field not in artifact["output_contract"]:
             raise ValueError(
-                "Task 6 Story 1 output_contract is missing required field '{}'".format(
+                "Workflow contract output_contract is missing required field '{}'".format(
                     field
                 )
             )
@@ -560,7 +564,7 @@ def validate_artifact_bundle(artifact):
     for field in artifact["output_contract"]["required_bundle_fields"]:
         if field not in artifact:
             raise ValueError(
-                "Task 6 Story 1 artifact bundle is missing required bundle field '{}'".format(
+                "Workflow contract artifact is missing required bundle field '{}'".format(
                     field
                 )
             )
@@ -568,7 +572,7 @@ def validate_artifact_bundle(artifact):
     for field in artifact["requirements"]["required_threshold_fields"]:
         if field not in artifact["thresholds"]:
             raise ValueError(
-                "Task 6 Story 1 thresholds are missing required field '{}'".format(
+                "Workflow contract thresholds are missing required field '{}'".format(
                     field
                 )
             )
@@ -576,11 +580,11 @@ def validate_artifact_bundle(artifact):
     aggregate_status_semantics = artifact["output_contract"]["aggregate_status_semantics"]
     if set(aggregate_status_semantics.keys()) != {"pass", "fail"}:
         raise ValueError(
-            "Task 6 Story 1 aggregate_status_semantics must define exactly 'pass' and 'fail'"
+            "Workflow contract aggregate_status_semantics must define exactly 'pass' and 'fail'"
         )
 
     if not artifact["reference_artifacts"]:
-        raise ValueError("Task 6 Story 1 requires at least one reference artifact")
+        raise ValueError("Workflow contract requires at least one reference artifact")
 
     required_reference_fields = (
         "artifact_id",
@@ -598,7 +602,7 @@ def validate_artifact_bundle(artifact):
         ]
         if missing_reference_fields:
             raise ValueError(
-                "Task 6 Story 1 reference artifact is missing fields: {}".format(
+                "Workflow contract reference artifact is missing fields: {}".format(
                     ", ".join(missing_reference_fields)
                 )
             )
@@ -606,7 +610,7 @@ def validate_artifact_bundle(artifact):
     contract_sections_complete = _contract_sections_complete(artifact)
     if artifact["summary"]["contract_sections_complete"] != contract_sections_complete:
         raise ValueError(
-            "Task 6 Story 1 contract_sections_complete summary is inconsistent"
+            "Workflow contract contract_sections_complete summary is inconsistent"
         )
 
 
@@ -618,8 +622,12 @@ def write_artifact_bundle(output_path: Path, artifact):
     )
 
 
-def run_validation(*, verbose=False, reference_bundle_path: Path = TASK5_REFERENCE_BUNDLE_PATH):
-    reference_bundle = _load_reference_task5_bundle(reference_bundle_path)
+def run_validation(
+    *,
+    verbose=False,
+    reference_bundle_path: Path = VALIDATION_EVIDENCE_REFERENCE_BUNDLE_PATH,
+):
+    reference_bundle = _load_reference_validation_bundle(reference_bundle_path)
     artifact = build_artifact_bundle(reference_bundle)
     if verbose:
         print(
@@ -639,13 +647,13 @@ def parse_args():
         "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
-        help="Directory for the Task 6 Story 1 JSON artifact bundle.",
+        help="Directory for the workflow-contract JSON artifact bundle.",
     )
     parser.add_argument(
         "--reference-bundle-path",
         type=Path,
-        default=TASK5_REFERENCE_BUNDLE_PATH,
-        help="Path to the Task 5 publication bundle used as the reference inventory.",
+        default=VALIDATION_EVIDENCE_REFERENCE_BUNDLE_PATH,
+        help="Path to the validation-evidence bundle used as the reference inventory.",
     )
     parser.add_argument(
         "--quiet",

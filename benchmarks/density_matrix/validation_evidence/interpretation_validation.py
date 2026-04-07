@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Validation: Task 5 Story 5 interpretation guardrails.
+"""Validation: validation-evidence interpretation guardrails.
 
-Builds the phase-level Task 5 interpretation layer from:
-- the already passing Task 5 Story 4 metric-completeness bundle,
-- the Task 4 Story 3 optional classification bundle,
-- and the Task 4 Story 4 unsupported-noise bundle.
+Builds the phase-level interpretation layer from:
+- the already passing metric-completeness bundle,
+- the optional-noise classification bundle,
+- and the unsupported-noise bundle.
 
-The resulting bundle is intentionally a thin Task 5 layer:
+The resulting bundle is intentionally a thin validation-evidence layer:
 - it computes the main Phase 2 validation claim only from mandatory, complete,
   supported evidence,
 - it keeps optional evidence explicitly supplemental,
@@ -35,18 +35,18 @@ from benchmarks.density_matrix.workflow_evidence.exact_density_vqe_validation im
     build_software_metadata,
 )
 from benchmarks.density_matrix.noise_support.optional_noise_classification_validation import (
-    build_artifact_bundle as build_task4_story3_bundle,
-    run_validation as run_task4_story3_validation,
+    build_artifact_bundle as build_optional_noise_bundle,
+    run_validation as run_optional_noise_validation,
 )
 from benchmarks.density_matrix.noise_support.unsupported_noise_validation import (
-    build_artifact_bundle as build_task4_story4_bundle,
-    run_validation as run_task4_story4_validation,
+    build_artifact_bundle as build_unsupported_noise_bundle,
+    run_validation as run_unsupported_noise_validation,
 )
 from benchmarks.density_matrix.noise_support.support_tiers import SUPPORT_TIER_VOCABULARY
 from benchmarks.density_matrix.validation_evidence.metric_completeness_validation import (
     PRIMARY_BACKEND,
     REFERENCE_BACKEND,
-    run_validation as run_story4_validation,
+    run_validation as run_metric_completeness_validation,
 )
 
 SUITE_NAME = "validation_evidence_interpretation"
@@ -72,7 +72,7 @@ def build_requirement_metadata():
         "support_tier_vocabulary": list(SUPPORT_TIER_VOCABULARY),
         "main_claim_rule": (
             "Only mandatory, complete, supported evidence may close the main "
-            "Task 5 validation claim."
+            "validation-evidence claim."
         ),
         "excluded_evidence_classes": [
             "optional",
@@ -88,28 +88,34 @@ def build_requirement_metadata():
     }
 
 
-def build_artifact_bundle(story4_bundle, optional_bundle, unsupported_bundle):
+def build_artifact_bundle(
+    metric_completeness_bundle,
+    optional_noise_bundle,
+    unsupported_noise_bundle,
+):
     incomplete_mandatory_artifacts = []
-    if story4_bundle["status"] != "pass":
+    if metric_completeness_bundle["status"] != "pass":
         incomplete_mandatory_artifacts.append("metric_completeness_validation")
 
-    for artifact_id, artifact in story4_bundle["required_artifacts"].items():
+    for artifact_id, artifact in metric_completeness_bundle["required_artifacts"].items():
         if artifact["status"] != "pass":
             incomplete_mandatory_artifacts.append(artifact_id)
 
     mandatory_artifacts_complete = not incomplete_mandatory_artifacts
     optional_evidence_supplemental = bool(
-        optional_bundle["status"] == "pass"
-        and optional_bundle["summary"]["optional_cases_count_toward_mandatory_baseline"]
+        optional_noise_bundle["status"] == "pass"
+        and optional_noise_bundle["summary"][
+            "optional_cases_count_toward_mandatory_baseline"
+        ]
         == 0
     )
     unsupported_evidence_negative_only = bool(
-        unsupported_bundle["status"] == "pass"
-        and unsupported_bundle["summary"]["unsupported_status_cases"]
-        == unsupported_bundle["summary"]["total_cases"]
-        and unsupported_bundle["summary"]["mandatory_baseline_case_count"] == 0
+        unsupported_noise_bundle["status"] == "pass"
+        and unsupported_noise_bundle["summary"]["unsupported_status_cases"]
+        == unsupported_noise_bundle["summary"]["total_cases"]
+        and unsupported_noise_bundle["summary"]["mandatory_baseline_case_count"] == 0
     )
-    main_phase2_claim_completed = bool(
+    main_validation_claim_completed = bool(
         mandatory_artifacts_complete
         and optional_evidence_supplemental
         and unsupported_evidence_negative_only
@@ -117,11 +123,11 @@ def build_artifact_bundle(story4_bundle, optional_bundle, unsupported_bundle):
 
     bundle = {
         "suite_name": SUITE_NAME,
-        "status": "pass" if main_phase2_claim_completed else "fail",
+        "status": "pass" if main_validation_claim_completed else "fail",
         "backend": PRIMARY_BACKEND,
         "reference_backend": REFERENCE_BACKEND,
         "requirements": build_requirement_metadata(),
-        "thresholds": dict(story4_bundle["thresholds"]),
+        "thresholds": dict(metric_completeness_bundle["thresholds"]),
         "software": build_software_metadata(),
         "summary": {
             "mandatory_artifacts": [
@@ -132,35 +138,39 @@ def build_artifact_bundle(story4_bundle, optional_bundle, unsupported_bundle):
             ],
             "incomplete_mandatory_artifacts": incomplete_mandatory_artifacts,
             "mandatory_artifacts_complete": mandatory_artifacts_complete,
-            "optional_cases": optional_bundle["summary"]["optional_cases"],
-            "optional_passed_cases": optional_bundle["summary"]["optional_passed_cases"],
-            "optional_cases_count_toward_mandatory_baseline": optional_bundle[
+            "optional_cases": optional_noise_bundle["summary"]["optional_cases"],
+            "optional_passed_cases": optional_noise_bundle["summary"][
+                "optional_passed_cases"
+            ],
+            "optional_cases_count_toward_mandatory_baseline": optional_noise_bundle[
                 "summary"
             ]["optional_cases_count_toward_mandatory_baseline"],
             "optional_evidence_supplemental": optional_evidence_supplemental,
-            "unsupported_status_cases": unsupported_bundle["summary"][
+            "unsupported_status_cases": unsupported_noise_bundle["summary"][
                 "unsupported_status_cases"
             ],
-            "unsupported_cases": unsupported_bundle["summary"]["unsupported_cases"],
-            "deferred_cases": unsupported_bundle["summary"]["deferred_cases"],
+            "unsupported_cases": unsupported_noise_bundle["summary"][
+                "unsupported_cases"
+            ],
+            "deferred_cases": unsupported_noise_bundle["summary"]["deferred_cases"],
             "unsupported_evidence_negative_only": unsupported_evidence_negative_only,
-            "main_phase2_claim_completed": main_phase2_claim_completed,
+            "main_validation_claim_completed": main_validation_claim_completed,
         },
         "required_artifacts": {
             "metric_completeness_validation": {
-                "suite_name": story4_bundle["suite_name"],
-                "status": story4_bundle["status"],
-                "summary": story4_bundle["summary"],
+                "suite_name": metric_completeness_bundle["suite_name"],
+                "status": metric_completeness_bundle["status"],
+                "summary": metric_completeness_bundle["summary"],
             },
-            "task4_story3_optional_classification": {
-                "suite_name": optional_bundle["suite_name"],
-                "status": optional_bundle["status"],
-                "summary": optional_bundle["summary"],
+            "optional_noise_reference": {
+                "suite_name": optional_noise_bundle["suite_name"],
+                "status": optional_noise_bundle["status"],
+                "summary": optional_noise_bundle["summary"],
             },
-            "task4_story4_unsupported_noise": {
-                "suite_name": unsupported_bundle["suite_name"],
-                "status": unsupported_bundle["status"],
-                "summary": unsupported_bundle["summary"],
+            "unsupported_noise_reference": {
+                "suite_name": unsupported_noise_bundle["suite_name"],
+                "status": unsupported_noise_bundle["status"],
+                "summary": unsupported_noise_bundle["summary"],
             },
         },
     }
@@ -172,7 +182,7 @@ def validate_artifact_bundle(bundle):
     missing_fields = [field for field in ARTIFACT_CORE_FIELDS if field not in bundle]
     if missing_fields:
         raise ValueError(
-            "Task 5 Story 5 artifact bundle is missing required fields: {}".format(
+            "Interpretation bundle is missing required fields: {}".format(
                 ", ".join(missing_fields)
             )
         )
@@ -192,22 +202,26 @@ def run_validation(
     parameter_set_count: int = EXACT_REGIME_PARAMETER_SET_COUNT,
     verbose=False,
 ):
-    _, _, _, story4_bundle = run_story4_validation(
+    _, _, _, metric_completeness_bundle = run_metric_completeness_validation(
         qubit_sizes=qubit_sizes,
         parameter_set_count=parameter_set_count,
         verbose=verbose,
     )
-    task4_story3_story1_bundle, task4_story3_story2_bundle, optional_results = (
-        run_task4_story3_validation(verbose=verbose)
+    required_local_noise_bundle, required_local_noise_micro_bundle, optional_results = (
+        run_optional_noise_validation(verbose=verbose)
     )
-    optional_bundle = build_task4_story3_bundle(
-        task4_story3_story1_bundle,
-        task4_story3_story2_bundle,
+    optional_noise_bundle = build_optional_noise_bundle(
+        required_local_noise_bundle,
+        required_local_noise_micro_bundle,
         optional_results,
     )
-    unsupported_results = run_task4_story4_validation(verbose=verbose)
-    unsupported_bundle = build_task4_story4_bundle(unsupported_results)
-    bundle = build_artifact_bundle(story4_bundle, optional_bundle, unsupported_bundle)
+    unsupported_results = run_unsupported_noise_validation(verbose=verbose)
+    unsupported_noise_bundle = build_unsupported_noise_bundle(unsupported_results)
+    bundle = build_artifact_bundle(
+        metric_completeness_bundle,
+        optional_noise_bundle,
+        unsupported_noise_bundle,
+    )
     if verbose:
         print(
             "{} [{}] mandatory_complete={} optional_supplemental={} unsupported_negative_only={}".format(
@@ -218,7 +232,7 @@ def run_validation(
                 bundle["summary"]["unsupported_evidence_negative_only"],
             )
         )
-    return story4_bundle, optional_bundle, unsupported_bundle, bundle
+    return metric_completeness_bundle, optional_noise_bundle, unsupported_noise_bundle, bundle
 
 
 def parse_args():
@@ -227,7 +241,7 @@ def parse_args():
         "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
-        help="Directory for the Task 5 Story 5 JSON artifact bundle.",
+        help="Directory for the interpretation JSON artifact bundle.",
     )
     parser.add_argument(
         "--parameter-set-count",

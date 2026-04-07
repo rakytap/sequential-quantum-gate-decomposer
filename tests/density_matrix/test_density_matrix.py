@@ -424,8 +424,8 @@ class TestNoisyCircuitMixed:
         assert info[3].param_count == 0
         assert info[3].param_start == 3
 
-    def test_story2_density_energy_helper(self):
-        """Test Story 2 exact-energy helper on a deterministic tiny fixture."""
+    def test_density_energy_helper_matches_trace_estimate(self):
+        """Test the exact-energy helper on a deterministic tiny fixture."""
         pytest.importorskip("qiskit")
         pytest.importorskip("qiskit_aer")
 
@@ -505,18 +505,18 @@ class TestNoisyCircuitMixed:
         ]
         assert result["noise_operation_targets"] == [0, 1, 2]
 
-    def test_required_local_noise_micro_validation_required_local_noise_bundle_schema(self):
-        """Test the Task 4 Story 2 exact micro-validation bundle schema."""
+    def test_required_local_noise_micro_bundle_schema(self):
+        """Test the required local-noise micro-validation bundle schema."""
         pytest.importorskip("qiskit")
         pytest.importorskip("qiskit_aer")
 
         from benchmarks.density_matrix.noise_support.required_local_noise_micro_validation import (
             REQUIRED_LOCAL_NOISE_MODELS,
             build_artifact_bundle,
-            run_story2_validation,
+            run_required_local_noise_micro_validation,
         )
 
-        results = run_story2_validation(verbose=False)
+        results = run_required_local_noise_micro_validation(verbose=False)
         bundle = build_artifact_bundle(results)
 
         assert bundle["status"] == "pass"
@@ -547,7 +547,7 @@ class TestNoisyCircuitMixed:
         assert all(case["counts_toward_mandatory_baseline"] for case in bundle["cases"])
 
     def test_local_correctness_bundle_schema(self):
-        """Test the Task 5 Story 1 local correctness bundle schema."""
+        """Test the local-correctness bundle schema."""
         pytest.importorskip("qiskit")
         pytest.importorskip("qiskit_aer")
 
@@ -556,9 +556,13 @@ class TestNoisyCircuitMixed:
             run_validation,
         )
 
-        story2_bundle, required_local_noise_micro_validation_bundle, bundle = run_validation(verbose=False)
+        (
+            micro_validation_bundle,
+            required_local_noise_micro_validation_bundle,
+            bundle,
+        ) = run_validation(verbose=False)
 
-        assert story2_bundle["status"] == "pass"
+        assert micro_validation_bundle["status"] == "pass"
         assert required_local_noise_micro_validation_bundle["status"] == "pass"
         assert bundle["status"] == "pass"
         assert bundle["backend"] == "density_matrix"
@@ -589,8 +593,8 @@ class TestNoisyCircuitMixed:
         assert all(case["support_tier"] == "required" for case in bundle["cases"])
         assert all(case["counts_toward_mandatory_baseline"] for case in bundle["cases"])
 
-    def test_task5_story1_missing_case_blocks_local_correctness_closure(self):
-        """Test that missing mandatory microcases fail the Task 5 Story 1 gate."""
+    def test_missing_case_blocks_local_correctness_closure(self):
+        """Test that missing mandatory microcases fail the local-correctness gate."""
         pytest.importorskip("qiskit")
         pytest.importorskip("qiskit_aer")
 
@@ -601,11 +605,20 @@ class TestNoisyCircuitMixed:
             run_validation,
         )
 
-        story2_bundle, required_local_noise_micro_validation_bundle, _ = run_validation(verbose=False)
-        broken_required_local_noise_micro_validation_bundle = copy.deepcopy(required_local_noise_micro_validation_bundle)
+        (
+            micro_validation_bundle,
+            required_local_noise_micro_validation_bundle,
+            _,
+        ) = run_validation(verbose=False)
+        broken_required_local_noise_micro_validation_bundle = copy.deepcopy(
+            required_local_noise_micro_validation_bundle
+        )
         omitted_case = broken_required_local_noise_micro_validation_bundle["cases"].pop()
 
-        bundle = build_artifact_bundle(story2_bundle, broken_required_local_noise_micro_validation_bundle)
+        bundle = build_artifact_bundle(
+            micro_validation_bundle,
+            broken_required_local_noise_micro_validation_bundle,
+        )
 
         assert bundle["status"] == "fail"
         assert bundle["summary"]["stable_case_ids_present"] is False
@@ -613,7 +626,7 @@ class TestNoisyCircuitMixed:
         assert omitted_case["case_name"] in bundle["summary"]["missing_mandatory_case_names"]
 
     def test_optional_noise_classification_bundle_schema(self):
-        """Test the Task 4 Story 3 optional classification bundle schema."""
+        """Test the optional-noise classification bundle schema."""
         pytest.importorskip("qiskit")
         pytest.importorskip("qiskit_aer")
 
@@ -623,8 +636,16 @@ class TestNoisyCircuitMixed:
             run_validation,
         )
 
-        story1_bundle, story2_bundle, optional_results = run_validation(verbose=False)
-        bundle = build_artifact_bundle(story1_bundle, story2_bundle, optional_results)
+        (
+            required_local_noise_bundle,
+            required_local_noise_micro_bundle,
+            optional_results,
+        ) = run_validation(verbose=False)
+        bundle = build_artifact_bundle(
+            required_local_noise_bundle,
+            required_local_noise_micro_bundle,
+            optional_results,
+        )
 
         assert bundle["status"] == "pass"
         assert bundle["backend"] == "density_matrix"
@@ -637,8 +658,11 @@ class TestNoisyCircuitMixed:
         assert bundle["summary"]["optional_cases_count_toward_mandatory_baseline"] == 0
         assert bundle["summary"]["mandatory_baseline_completed"]
         assert set(bundle["summary"]["support_tiers_present"]) == {"optional", "required"}
-        assert bundle["required_artifacts"]["story1"]["status"] == "pass"
-        assert bundle["required_artifacts"]["story2"]["status"] == "pass"
+        assert bundle["required_artifacts"]["required_local_noise_bundle"]["status"] == "pass"
+        assert (
+            bundle["required_artifacts"]["required_local_noise_micro_bundle"]["status"]
+            == "pass"
+        )
         assert "optional" in bundle["requirements"]["support_tier_vocabulary"]
         assert all(case["support_tier"] == "optional" for case in bundle["cases"])
         assert all(not case["counts_toward_mandatory_baseline"] for case in bundle["cases"])
@@ -948,7 +972,7 @@ class TestPerformance:
 
 
 def test_workflow_contract_validation_schema_module_level():
-    """Test the Task 6 Story 1 canonical workflow contract schema."""
+    """Test the workflow-contract bundle schema."""
     from benchmarks.density_matrix.workflow_evidence.workflow_contract_validation import (
         CONTRACT_VERSION,
         STATUS_VOCABULARY,
@@ -1011,8 +1035,8 @@ def test_workflow_contract_validation_schema_module_level():
     )
 
 
-def test_task6_story1_missing_boundary_classification_fails_validation_module_level():
-    """Test that missing boundary classes fail Task 6 Story 1 validation."""
+def test_workflow_contract_missing_boundary_classification_fails_validation_module_level():
+    """Test that missing boundary classes fail workflow-contract validation."""
     import copy
 
     from benchmarks.density_matrix.workflow_evidence.workflow_contract_validation import (
@@ -1028,8 +1052,8 @@ def test_task6_story1_missing_boundary_classification_fails_validation_module_le
         validate_artifact_bundle(broken_artifact)
 
 
-def test_task6_story1_missing_workflow_id_fails_validation_module_level():
-    """Test that missing workflow identity fails Task 6 Story 1 validation."""
+def test_workflow_contract_missing_workflow_id_fails_validation_module_level():
+    """Test that missing workflow identity fails workflow-contract validation."""
     import copy
 
     from benchmarks.density_matrix.workflow_evidence.workflow_contract_validation import (
@@ -1045,8 +1069,8 @@ def test_task6_story1_missing_workflow_id_fails_validation_module_level():
         validate_artifact_bundle(broken_artifact)
 
 
-def test_task6_story1_missing_threshold_field_fails_validation_module_level():
-    """Test that missing threshold fields fail Task 6 Story 1 validation."""
+def test_workflow_contract_missing_threshold_field_fails_validation_module_level():
+    """Test that missing threshold fields fail workflow-contract validation."""
     import copy
 
     from benchmarks.density_matrix.workflow_evidence.workflow_contract_validation import (
@@ -1063,7 +1087,7 @@ def test_task6_story1_missing_threshold_field_fails_validation_module_level():
 
 
 def test_end_to_end_trace_bundle_schema_module_level():
-    """Test the Task 6 Story 2 end-to-end plus trace bundle schema."""
+    """Test the end-to-end trace bundle schema."""
     from benchmarks.density_matrix.workflow_evidence.end_to_end_trace_validation import (
         MANDATORY_END_TO_END_CASE_NAMES,
         TRACE_CASE_NAME,
@@ -1071,11 +1095,11 @@ def test_end_to_end_trace_bundle_schema_module_level():
         run_validation,
     )
 
-    story1_contract, workflow_bundle, trace_artifact, bundle = run_validation(
+    workflow_contract, workflow_bundle, trace_artifact, bundle = run_validation(
         verbose=False
     )
 
-    assert story1_contract["status"] == "pass"
+    assert workflow_contract["status"] == "pass"
     assert workflow_bundle["status"] == "pass"
     assert trace_artifact["case_name"] == TRACE_CASE_NAME
     assert bundle["status"] == "pass"
@@ -1104,28 +1128,28 @@ def test_end_to_end_trace_bundle_schema_module_level():
     assert bundle["trace_artifact"]["required_workflow_trace"] is True
 
 
-def test_task6_story2_missing_end_to_end_case_blocks_closure_module_level():
-    """Test that missing mandatory end-to-end cases fail Task 6 Story 2 closure."""
+def test_end_to_end_trace_missing_end_to_end_case_blocks_closure_module_level():
+    """Test that missing mandatory end-to-end cases fail the trace gate."""
     import copy
 
     from benchmarks.density_matrix.workflow_evidence.end_to_end_trace_validation import (
-        TASK5_TRACE_ARTIFACT_PATH,
-        TASK5_WORKFLOW_BUNDLE_PATH,
+        VALIDATION_TRACE_ARTIFACT_PATH,
+        VALIDATION_WORKFLOW_BASELINE_PATH,
         build_artifact_bundle,
         _load_json,
-        _load_story1_contract,
+        _load_workflow_contract,
     )
 
-    story1_contract = _load_story1_contract()
-    workflow_bundle = copy.deepcopy(_load_json(TASK5_WORKFLOW_BUNDLE_PATH))
-    trace_artifact = _load_json(TASK5_TRACE_ARTIFACT_PATH)
+    workflow_contract = _load_workflow_contract()
+    workflow_bundle = copy.deepcopy(_load_json(VALIDATION_WORKFLOW_BASELINE_PATH))
+    trace_artifact = _load_json(VALIDATION_TRACE_ARTIFACT_PATH)
     workflow_bundle["cases"] = [
         case
         for case in workflow_bundle["cases"]
         if case["case_name"] != "exact_regime_6q_set_00"
     ]
 
-    bundle = build_artifact_bundle(story1_contract, workflow_bundle, trace_artifact)
+    bundle = build_artifact_bundle(workflow_contract, workflow_bundle, trace_artifact)
 
     assert bundle["status"] == "fail"
     assert bundle["summary"]["stable_case_ids_present"] is False
@@ -1133,26 +1157,26 @@ def test_task6_story2_missing_end_to_end_case_blocks_closure_module_level():
     assert "exact_regime_6q_set_00" in bundle["summary"]["missing_mandatory_case_names"]
 
 
-def test_task6_story2_trace_contract_mismatch_blocks_closure_module_level():
-    """Test that Story 1 trace-name contract drift blocks Task 6 Story 2 closure."""
+def test_end_to_end_trace_contract_mismatch_blocks_closure_module_level():
+    """Test that workflow-contract trace-name drift blocks the trace gate."""
     import copy
 
     from benchmarks.density_matrix.workflow_evidence.end_to_end_trace_validation import (
-        TASK5_TRACE_ARTIFACT_PATH,
-        TASK5_WORKFLOW_BUNDLE_PATH,
+        VALIDATION_TRACE_ARTIFACT_PATH,
+        VALIDATION_WORKFLOW_BASELINE_PATH,
         build_artifact_bundle,
         _load_json,
-        _load_story1_contract,
+        _load_workflow_contract,
     )
 
-    story1_contract = copy.deepcopy(_load_story1_contract())
-    workflow_bundle = _load_json(TASK5_WORKFLOW_BUNDLE_PATH)
-    trace_artifact = _load_json(TASK5_TRACE_ARTIFACT_PATH)
-    story1_contract["input_contract"]["execution_modes"]["bounded_optimization_trace"][
+    workflow_contract = copy.deepcopy(_load_workflow_contract())
+    workflow_bundle = _load_json(VALIDATION_WORKFLOW_BASELINE_PATH)
+    trace_artifact = _load_json(VALIDATION_TRACE_ARTIFACT_PATH)
+    workflow_contract["input_contract"]["execution_modes"]["bounded_optimization_trace"][
         "canonical_trace_case_name"
-    ] = "story2_trace_6q"
+    ] = "unexpected_trace_6q"
 
-    bundle = build_artifact_bundle(story1_contract, workflow_bundle, trace_artifact)
+    bundle = build_artifact_bundle(workflow_contract, workflow_bundle, trace_artifact)
 
     assert bundle["status"] == "fail"
     assert bundle["summary"]["required_trace_present"] is False
@@ -1160,24 +1184,24 @@ def test_task6_story2_trace_contract_mismatch_blocks_closure_module_level():
     assert bundle["summary"]["end_to_end_gate_completed"] is False
 
 
-def test_task6_story2_incomplete_trace_blocks_closure_module_level():
-    """Test that incomplete trace evidence fails Task 6 Story 2 closure."""
+def test_end_to_end_trace_incomplete_trace_blocks_closure_module_level():
+    """Test that incomplete trace evidence fails the trace gate."""
     import copy
 
     from benchmarks.density_matrix.workflow_evidence.end_to_end_trace_validation import (
-        TASK5_TRACE_ARTIFACT_PATH,
-        TASK5_WORKFLOW_BUNDLE_PATH,
+        VALIDATION_TRACE_ARTIFACT_PATH,
+        VALIDATION_WORKFLOW_BASELINE_PATH,
         build_artifact_bundle,
         _load_json,
-        _load_story1_contract,
+        _load_workflow_contract,
     )
 
-    story1_contract = _load_story1_contract()
-    workflow_bundle = _load_json(TASK5_WORKFLOW_BUNDLE_PATH)
-    trace_artifact = copy.deepcopy(_load_json(TASK5_TRACE_ARTIFACT_PATH))
+    workflow_contract = _load_workflow_contract()
+    workflow_bundle = _load_json(VALIDATION_WORKFLOW_BASELINE_PATH)
+    trace_artifact = copy.deepcopy(_load_json(VALIDATION_TRACE_ARTIFACT_PATH))
     trace_artifact["workflow_completed"] = False
 
-    bundle = build_artifact_bundle(story1_contract, workflow_bundle, trace_artifact)
+    bundle = build_artifact_bundle(workflow_contract, workflow_bundle, trace_artifact)
 
     assert bundle["status"] == "fail"
     assert bundle["summary"]["required_trace_completed"] is False
@@ -1185,19 +1209,19 @@ def test_task6_story2_incomplete_trace_blocks_closure_module_level():
 
 
 def test_matrix_baseline_bundle_schema_module_level():
-    """Test the Task 6 Story 3 matrix baseline bundle schema."""
+    """Test the matrix-baseline bundle schema."""
     from benchmarks.density_matrix.workflow_evidence.matrix_baseline_validation import (
         WORKFLOW_ID,
         run_validation,
     )
 
-    story1_contract, story2_bundle, task5_workflow_bundle, bundle = run_validation(
+    workflow_contract, end_to_end_trace_bundle, workflow_baseline_bundle, bundle = run_validation(
         verbose=False
     )
 
-    assert story1_contract["status"] == "pass"
-    assert story2_bundle["status"] == "pass"
-    assert task5_workflow_bundle["status"] == "pass"
+    assert workflow_contract["status"] == "pass"
+    assert end_to_end_trace_bundle["status"] == "pass"
+    assert workflow_baseline_bundle["status"] == "pass"
     assert bundle["status"] == "pass"
     assert bundle["workflow_id"] == WORKFLOW_ID
     assert bundle["summary"]["required_cases"] == 40
@@ -1221,28 +1245,34 @@ def test_matrix_baseline_bundle_schema_module_level():
     assert all(case["required_matrix_case"] for case in bundle["cases"])
 
 
-def test_task6_story3_missing_matrix_case_blocks_closure_module_level():
-    """Test that missing matrix cases fail Task 6 Story 3 closure."""
+def test_matrix_baseline_missing_matrix_case_blocks_closure_module_level():
+    """Test that missing matrix cases fail the matrix baseline gate."""
     import copy
 
     from benchmarks.density_matrix.workflow_evidence.matrix_baseline_validation import (
-        TASK5_WORKFLOW_BUNDLE_PATH,
+        VALIDATION_WORKFLOW_BASELINE_PATH,
         _load_json,
-        _load_story1_contract,
-        _load_story2_bundle,
+        _load_workflow_contract,
+        _load_end_to_end_trace_bundle,
         build_artifact_bundle,
     )
 
-    story1_contract = _load_story1_contract()
-    story2_bundle = _load_story2_bundle()
-    task5_workflow_bundle = copy.deepcopy(_load_json(TASK5_WORKFLOW_BUNDLE_PATH))
-    task5_workflow_bundle["cases"] = [
+    workflow_contract = _load_workflow_contract()
+    end_to_end_trace_bundle = _load_end_to_end_trace_bundle()
+    workflow_baseline_bundle = copy.deepcopy(
+        _load_json(VALIDATION_WORKFLOW_BASELINE_PATH)
+    )
+    workflow_baseline_bundle["cases"] = [
         case
-        for case in task5_workflow_bundle["cases"]
+        for case in workflow_baseline_bundle["cases"]
         if case["case_name"] != "exact_regime_10q_set_09"
     ]
 
-    bundle = build_artifact_bundle(story1_contract, story2_bundle, task5_workflow_bundle)
+    bundle = build_artifact_bundle(
+        workflow_contract,
+        end_to_end_trace_bundle,
+        workflow_baseline_bundle,
+    )
 
     assert bundle["status"] == "fail"
     assert bundle["summary"]["stable_case_ids_present"] is False
@@ -1250,32 +1280,36 @@ def test_task6_story3_missing_matrix_case_blocks_closure_module_level():
     assert "exact_regime_10q_set_09" in bundle["summary"]["missing_mandatory_case_names"]
 
 
-def test_task6_story3_threshold_contract_mismatch_blocks_closure_module_level():
-    """Test that Story 1 threshold drift blocks Task 6 Story 3 closure."""
+def test_matrix_baseline_threshold_contract_mismatch_blocks_closure_module_level():
+    """Test that workflow-contract threshold drift blocks the matrix gate."""
     import copy
 
     from benchmarks.density_matrix.workflow_evidence.matrix_baseline_validation import (
-        TASK5_WORKFLOW_BUNDLE_PATH,
+        VALIDATION_WORKFLOW_BASELINE_PATH,
         _load_json,
-        _load_story1_contract,
-        _load_story2_bundle,
+        _load_workflow_contract,
+        _load_end_to_end_trace_bundle,
         build_artifact_bundle,
     )
 
-    story1_contract = copy.deepcopy(_load_story1_contract())
-    story2_bundle = _load_story2_bundle()
-    task5_workflow_bundle = _load_json(TASK5_WORKFLOW_BUNDLE_PATH)
-    story1_contract["thresholds"]["absolute_energy_error"] = 1e-7
+    workflow_contract = copy.deepcopy(_load_workflow_contract())
+    end_to_end_trace_bundle = _load_end_to_end_trace_bundle()
+    workflow_baseline_bundle = _load_json(VALIDATION_WORKFLOW_BASELINE_PATH)
+    workflow_contract["thresholds"]["absolute_energy_error"] = 1e-7
 
-    bundle = build_artifact_bundle(story1_contract, story2_bundle, task5_workflow_bundle)
+    bundle = build_artifact_bundle(
+        workflow_contract,
+        end_to_end_trace_bundle,
+        workflow_baseline_bundle,
+    )
 
     assert bundle["status"] == "fail"
     assert bundle["summary"]["workflow_thresholds_match_contract"] is False
     assert bundle["summary"]["matrix_gate_completed"] is False
 
 
-def test_task6_story3_case_contract_mismatch_fails_validation_module_level():
-    """Test that case-level contract mismatch fails Task 6 Story 3 validation."""
+def test_matrix_baseline_case_contract_mismatch_fails_validation_module_level():
+    """Test that case-level contract mismatch fails matrix-baseline validation."""
     import copy
 
     from benchmarks.density_matrix.workflow_evidence.matrix_baseline_validation import (
@@ -1292,25 +1326,25 @@ def test_task6_story3_case_contract_mismatch_fails_validation_module_level():
 
 
 def test_unsupported_workflow_bundle_schema_module_level():
-    """Test the Task 6 Story 4 unsupported-workflow bundle schema."""
+    """Test the unsupported-workflow bundle schema."""
     from benchmarks.density_matrix.workflow_evidence.unsupported_workflow_validation import (
         BACKEND_MISMATCH_CASE_NAME,
         run_validation,
     )
 
     (
-        story1_contract,
-        story2_bundle,
-        story3_bundle,
-        task4_unsupported_bundle,
+        workflow_contract,
+        end_to_end_trace_bundle,
+        matrix_baseline_bundle,
+        unsupported_noise_bundle,
         backend_mismatch_case,
         bundle,
     ) = run_validation(verbose=False)
 
-    assert story1_contract["status"] == "pass"
-    assert story2_bundle["status"] == "pass"
-    assert story3_bundle["status"] == "pass"
-    assert task4_unsupported_bundle["status"] == "pass"
+    assert workflow_contract["status"] == "pass"
+    assert end_to_end_trace_bundle["status"] == "pass"
+    assert matrix_baseline_bundle["status"] == "pass"
+    assert unsupported_noise_bundle["status"] == "pass"
     assert backend_mismatch_case["case_name"] == BACKEND_MISMATCH_CASE_NAME
     assert bundle["status"] == "pass"
     assert bundle["summary"]["unsupported_status_cases"] == bundle["summary"]["total_cases"]
@@ -1320,39 +1354,39 @@ def test_unsupported_workflow_bundle_schema_module_level():
     assert bundle["summary"]["unsupported_gate_completed"] is True
     assert (
         bundle["requirements"]["required_case_fields"]
-        == story1_contract["output_contract"]["required_unsupported_case_fields"]
+        == workflow_contract["output_contract"]["required_unsupported_case_fields"]
     )
     assert bundle["thresholds"]["silent_fallback_allowed"] is False
     assert "backend_incompatible_request" in bundle["summary"]["categories_present"]
     assert all(case["required_unsupported_case"] for case in bundle["cases"])
 
 
-def test_task6_story4_missing_backend_mismatch_case_blocks_closure_module_level():
-    """Test that missing backend-mismatch evidence fails Task 6 Story 4 closure."""
+def test_unsupported_workflow_missing_backend_mismatch_case_blocks_closure_module_level():
+    """Test that missing backend-mismatch evidence fails the unsupported gate."""
     import copy
 
     from benchmarks.density_matrix.workflow_evidence.unsupported_workflow_validation import (
-        TASK2_BACKEND_MISMATCH_PATH,
-        TASK4_UNSUPPORTED_BUNDLE_PATH,
+        BACKEND_MISMATCH_CASE_PATH,
+        UNSUPPORTED_NOISE_BUNDLE_PATH,
         _load_json,
-        _load_story1_contract,
-        _load_story2_bundle,
-        _load_story3_bundle,
+        _load_workflow_contract,
+        _load_end_to_end_trace_bundle,
+        _load_matrix_baseline_bundle,
         build_artifact_bundle,
     )
 
-    story1_contract = _load_story1_contract()
-    story2_bundle = _load_story2_bundle()
-    story3_bundle = _load_story3_bundle()
-    task4_unsupported_bundle = _load_json(TASK4_UNSUPPORTED_BUNDLE_PATH)
-    backend_mismatch_case = copy.deepcopy(_load_json(TASK2_BACKEND_MISMATCH_PATH))
+    workflow_contract = _load_workflow_contract()
+    end_to_end_trace_bundle = _load_end_to_end_trace_bundle()
+    matrix_baseline_bundle = _load_matrix_baseline_bundle()
+    unsupported_noise_bundle = _load_json(UNSUPPORTED_NOISE_BUNDLE_PATH)
+    backend_mismatch_case = copy.deepcopy(_load_json(BACKEND_MISMATCH_CASE_PATH))
     backend_mismatch_case["case_name"] = "missing_backend_case"
 
     bundle = build_artifact_bundle(
-        story1_contract,
-        story2_bundle,
-        story3_bundle,
-        task4_unsupported_bundle,
+        workflow_contract,
+        end_to_end_trace_bundle,
+        matrix_baseline_bundle,
+        unsupported_noise_bundle,
         backend_mismatch_case,
     )
 
@@ -1361,8 +1395,8 @@ def test_task6_story4_missing_backend_mismatch_case_blocks_closure_module_level(
     assert bundle["summary"]["unsupported_gate_completed"] is False
 
 
-def test_task6_story4_missing_first_condition_fails_validation_module_level():
-    """Test that missing first-unsupported-condition fields fail Story 4 validation."""
+def test_unsupported_workflow_missing_first_condition_fails_validation_module_level():
+    """Test that missing first-unsupported-condition fields fail validation."""
     import copy
 
     from benchmarks.density_matrix.workflow_evidence.unsupported_workflow_validation import (
@@ -1378,63 +1412,63 @@ def test_task6_story4_missing_first_condition_fails_validation_module_level():
         validate_artifact_bundle(broken_bundle)
 
 
-def test_task6_story4_story1_required_field_mismatch_raises_module_level():
-    """Test that Story 1 unsupported-field drift is enforced by Task 6 Story 4."""
+def test_unsupported_workflow_required_field_mismatch_raises_module_level():
+    """Test that workflow-contract field drift is enforced by the unsupported gate."""
     import copy
 
     from benchmarks.density_matrix.workflow_evidence.unsupported_workflow_validation import (
-        TASK2_BACKEND_MISMATCH_PATH,
-        TASK4_UNSUPPORTED_BUNDLE_PATH,
+        BACKEND_MISMATCH_CASE_PATH,
+        UNSUPPORTED_NOISE_BUNDLE_PATH,
         _load_json,
-        _load_story1_contract,
-        _load_story2_bundle,
-        _load_story3_bundle,
+        _load_workflow_contract,
+        _load_end_to_end_trace_bundle,
+        _load_matrix_baseline_bundle,
         build_artifact_bundle,
     )
 
-    story1_contract = copy.deepcopy(_load_story1_contract())
-    story2_bundle = _load_story2_bundle()
-    story3_bundle = _load_story3_bundle()
-    task4_unsupported_bundle = _load_json(TASK4_UNSUPPORTED_BUNDLE_PATH)
-    backend_mismatch_case = _load_json(TASK2_BACKEND_MISMATCH_PATH)
-    story1_contract["output_contract"]["required_unsupported_case_fields"].append(
-        "story1_only_required_field"
+    workflow_contract = copy.deepcopy(_load_workflow_contract())
+    end_to_end_trace_bundle = _load_end_to_end_trace_bundle()
+    matrix_baseline_bundle = _load_matrix_baseline_bundle()
+    unsupported_noise_bundle = _load_json(UNSUPPORTED_NOISE_BUNDLE_PATH)
+    backend_mismatch_case = _load_json(BACKEND_MISMATCH_CASE_PATH)
+    workflow_contract["output_contract"]["required_unsupported_case_fields"].append(
+        "workflow_contract_only_required_field"
     )
 
     with pytest.raises(ValueError, match="missing required fields"):
         build_artifact_bundle(
-            story1_contract,
-            story2_bundle,
-            story3_bundle,
-            task4_unsupported_bundle,
+            workflow_contract,
+            end_to_end_trace_bundle,
+            matrix_baseline_bundle,
+            unsupported_noise_bundle,
             backend_mismatch_case,
         )
 
 
 def test_workflow_interpretation_bundle_schema_module_level():
-    """Test the Task 6 Story 5 interpretation bundle schema."""
+    """Test the workflow-interpretation bundle schema."""
     from benchmarks.density_matrix.workflow_evidence.workflow_interpretation_validation import (
         WORKFLOW_ID,
         run_validation,
     )
 
     (
-        story1_contract,
-        story2_bundle,
-        story3_bundle,
-        story4_bundle,
-        optional_bundle,
+        workflow_contract,
+        end_to_end_trace_bundle,
+        matrix_baseline_bundle,
+        unsupported_workflow_bundle,
+        optional_noise_bundle,
         bundle,
     ) = run_validation(verbose=False)
 
-    assert story1_contract["status"] == "pass"
-    assert story2_bundle["status"] == "pass"
-    assert story3_bundle["status"] == "pass"
-    assert story4_bundle["status"] == "pass"
-    assert optional_bundle["status"] == "pass"
+    assert workflow_contract["status"] == "pass"
+    assert end_to_end_trace_bundle["status"] == "pass"
+    assert matrix_baseline_bundle["status"] == "pass"
+    assert unsupported_workflow_bundle["status"] == "pass"
+    assert optional_noise_bundle["status"] == "pass"
     assert bundle["status"] == "pass"
     assert bundle["workflow_id"] == WORKFLOW_ID
-    assert bundle["summary"]["story1_contract_complete"] is True
+    assert bundle["summary"]["workflow_contract_complete"] is True
     assert bundle["summary"]["end_to_end_gate_complete"] is True
     assert bundle["summary"]["matrix_baseline_gate_complete"] is True
     assert bundle["summary"]["unsupported_workflow_gate_complete"] is True
@@ -1447,33 +1481,33 @@ def test_workflow_interpretation_bundle_schema_module_level():
     assert bundle["required_artifacts"]["unsupported_workflow_reference"]["status"] == "pass"
 
 
-def test_task6_story5_optional_evidence_counting_toward_mandatory_blocks_closure_module_level():
-    """Test that optional evidence cannot count toward the Task 6 mandatory claim."""
+def test_workflow_interpretation_optional_evidence_counting_toward_mandatory_blocks_closure_module_level():
+    """Test that optional evidence cannot count toward the main workflow claim."""
     import copy
 
     from benchmarks.density_matrix.workflow_evidence.workflow_interpretation_validation import (
-        OPTIONAL_BUNDLE_PATH,
+        OPTIONAL_NOISE_BUNDLE_PATH,
         _load_json,
-        _load_story1_contract,
-        _load_story2_bundle,
-        _load_story3_bundle,
-        _load_story4_bundle,
+        _load_workflow_contract,
+        _load_end_to_end_trace_bundle,
+        _load_matrix_baseline_bundle,
+        _load_unsupported_workflow_bundle,
         build_artifact_bundle,
     )
 
-    story1_contract = _load_story1_contract()
-    story2_bundle = _load_story2_bundle()
-    story3_bundle = _load_story3_bundle()
-    story4_bundle = _load_story4_bundle()
-    optional_bundle = copy.deepcopy(_load_json(OPTIONAL_BUNDLE_PATH))
-    optional_bundle["summary"]["optional_cases_count_toward_mandatory_baseline"] = 1
+    workflow_contract = _load_workflow_contract()
+    end_to_end_trace_bundle = _load_end_to_end_trace_bundle()
+    matrix_baseline_bundle = _load_matrix_baseline_bundle()
+    unsupported_workflow_bundle = _load_unsupported_workflow_bundle()
+    optional_noise_bundle = copy.deepcopy(_load_json(OPTIONAL_NOISE_BUNDLE_PATH))
+    optional_noise_bundle["summary"]["optional_cases_count_toward_mandatory_baseline"] = 1
 
     bundle = build_artifact_bundle(
-        story1_contract,
-        story2_bundle,
-        story3_bundle,
-        story4_bundle,
-        optional_bundle,
+        workflow_contract,
+        end_to_end_trace_bundle,
+        matrix_baseline_bundle,
+        unsupported_workflow_bundle,
+        optional_noise_bundle,
     )
 
     assert bundle["status"] == "fail"
@@ -1481,33 +1515,33 @@ def test_task6_story5_optional_evidence_counting_toward_mandatory_blocks_closure
     assert bundle["summary"]["main_workflow_claim_completed"] is False
 
 
-def test_task6_story5_incomplete_mandatory_artifact_blocks_closure_module_level():
-    """Test that incomplete mandatory artifacts block Task 6 Story 5 closure."""
+def test_workflow_interpretation_incomplete_mandatory_artifact_blocks_closure_module_level():
+    """Test that incomplete mandatory artifacts block claim closure."""
     import copy
 
     from benchmarks.density_matrix.workflow_evidence.workflow_interpretation_validation import (
-        OPTIONAL_BUNDLE_PATH,
+        OPTIONAL_NOISE_BUNDLE_PATH,
         _load_json,
-        _load_story1_contract,
-        _load_story2_bundle,
-        _load_story3_bundle,
-        _load_story4_bundle,
+        _load_workflow_contract,
+        _load_end_to_end_trace_bundle,
+        _load_matrix_baseline_bundle,
+        _load_unsupported_workflow_bundle,
         build_artifact_bundle,
     )
 
-    story1_contract = _load_story1_contract()
-    story2_bundle = _load_story2_bundle()
-    story3_bundle = copy.deepcopy(_load_story3_bundle())
-    story4_bundle = _load_story4_bundle()
-    optional_bundle = _load_json(OPTIONAL_BUNDLE_PATH)
-    story3_bundle["status"] = "fail"
+    workflow_contract = _load_workflow_contract()
+    end_to_end_trace_bundle = _load_end_to_end_trace_bundle()
+    matrix_baseline_bundle = copy.deepcopy(_load_matrix_baseline_bundle())
+    unsupported_workflow_bundle = _load_unsupported_workflow_bundle()
+    optional_noise_bundle = _load_json(OPTIONAL_NOISE_BUNDLE_PATH)
+    matrix_baseline_bundle["status"] = "fail"
 
     bundle = build_artifact_bundle(
-        story1_contract,
-        story2_bundle,
-        story3_bundle,
-        story4_bundle,
-        optional_bundle,
+        workflow_contract,
+        end_to_end_trace_bundle,
+        matrix_baseline_bundle,
+        unsupported_workflow_bundle,
+        optional_noise_bundle,
     )
 
     assert bundle["status"] == "fail"
@@ -1516,35 +1550,35 @@ def test_task6_story5_incomplete_mandatory_artifact_blocks_closure_module_level(
     assert bundle["summary"]["main_workflow_claim_completed"] is False
 
 
-def test_task6_story5_story4_field_alignment_required_for_main_claim_module_level():
-    """Test that Story 4 field-inventory drift blocks the main Task 6 claim."""
+def test_workflow_interpretation_field_alignment_required_for_main_claim_module_level():
+    """Test that unsupported-field drift blocks the main workflow claim."""
     import copy
 
     from benchmarks.density_matrix.workflow_evidence.workflow_interpretation_validation import (
-        OPTIONAL_BUNDLE_PATH,
+        OPTIONAL_NOISE_BUNDLE_PATH,
         _load_json,
-        _load_story1_contract,
-        _load_story2_bundle,
-        _load_story3_bundle,
-        _load_story4_bundle,
+        _load_workflow_contract,
+        _load_end_to_end_trace_bundle,
+        _load_matrix_baseline_bundle,
+        _load_unsupported_workflow_bundle,
         build_artifact_bundle,
     )
 
-    story1_contract = _load_story1_contract()
-    story2_bundle = _load_story2_bundle()
-    story3_bundle = _load_story3_bundle()
-    story4_bundle = copy.deepcopy(_load_story4_bundle())
-    optional_bundle = _load_json(OPTIONAL_BUNDLE_PATH)
-    story4_bundle["requirements"]["required_case_fields"].append(
+    workflow_contract = _load_workflow_contract()
+    end_to_end_trace_bundle = _load_end_to_end_trace_bundle()
+    matrix_baseline_bundle = _load_matrix_baseline_bundle()
+    unsupported_workflow_bundle = copy.deepcopy(_load_unsupported_workflow_bundle())
+    optional_noise_bundle = _load_json(OPTIONAL_NOISE_BUNDLE_PATH)
+    unsupported_workflow_bundle["requirements"]["required_case_fields"].append(
         "exact_regime_only_field_drift"
     )
 
     bundle = build_artifact_bundle(
-        story1_contract,
-        story2_bundle,
-        story3_bundle,
-        story4_bundle,
-        optional_bundle,
+        workflow_contract,
+        end_to_end_trace_bundle,
+        matrix_baseline_bundle,
+        unsupported_workflow_bundle,
+        optional_noise_bundle,
     )
 
     assert bundle["status"] == "fail"
@@ -1554,26 +1588,26 @@ def test_task6_story5_story4_field_alignment_required_for_main_claim_module_leve
 
 
 def test_workflow_publication_bundle_schema_module_level():
-    """Test the Task 6 Story 6 publication bundle schema."""
+    """Test the workflow-publication bundle schema."""
     from benchmarks.density_matrix.workflow_evidence.workflow_publication_bundle import (
         WORKFLOW_ID,
         run_validation,
     )
 
     (
-        story1_bundle,
-        story2_bundle,
-        story3_bundle,
-        story4_bundle,
-        story5_bundle,
+        workflow_contract,
+        end_to_end_trace_bundle,
+        matrix_baseline_bundle,
+        unsupported_workflow_bundle,
+        workflow_interpretation_bundle,
         bundle,
     ) = run_validation(verbose=False)
 
-    assert story1_bundle["status"] == "pass"
-    assert story2_bundle["status"] == "pass"
-    assert story3_bundle["status"] == "pass"
-    assert story4_bundle["status"] == "pass"
-    assert story5_bundle["status"] == "pass"
+    assert workflow_contract["status"] == "pass"
+    assert end_to_end_trace_bundle["status"] == "pass"
+    assert matrix_baseline_bundle["status"] == "pass"
+    assert unsupported_workflow_bundle["status"] == "pass"
+    assert workflow_interpretation_bundle["status"] == "pass"
     assert bundle["status"] == "pass"
     assert bundle["workflow_id"] == WORKFLOW_ID
     assert bundle["summary"]["mandatory_artifact_count"] == 5
@@ -1585,14 +1619,14 @@ def test_workflow_publication_bundle_schema_module_level():
     assert all(artifact["mandatory"] for artifact in bundle["artifacts"])
 
 
-def test_task6_story6_missing_artifact_entry_fails_validation_module_level():
-    """Test that missing mandatory artifact entries fail Story 6 validation."""
+def test_workflow_publication_missing_artifact_entry_fails_validation_module_level():
+    """Test that missing mandatory artifact entries fail publication validation."""
     import copy
 
     from benchmarks.density_matrix.workflow_evidence.workflow_publication_bundle import (
         DEFAULT_OUTPUT_DIR,
         run_validation,
-        validate_task6_story6_bundle,
+        validate_workflow_publication_bundle,
     )
 
     *_, bundle = run_validation(verbose=False)
@@ -1600,17 +1634,17 @@ def test_task6_story6_missing_artifact_entry_fails_validation_module_level():
     broken_bundle["artifacts"] = broken_bundle["artifacts"][:-1]
 
     with pytest.raises(ValueError, match="missing required artifact IDs"):
-        validate_task6_story6_bundle(broken_bundle, DEFAULT_OUTPUT_DIR)
+        validate_workflow_publication_bundle(broken_bundle, DEFAULT_OUTPUT_DIR)
 
 
-def test_task6_story6_mismatched_contract_version_fails_validation_module_level():
-    """Test that mismatched contract versions fail Story 6 validation."""
+def test_workflow_publication_mismatched_contract_version_fails_validation_module_level():
+    """Test that mismatched contract versions fail publication validation."""
     import copy
 
     from benchmarks.density_matrix.workflow_evidence.workflow_publication_bundle import (
         DEFAULT_OUTPUT_DIR,
         run_validation,
-        validate_task6_story6_bundle,
+        validate_workflow_publication_bundle,
     )
 
     *_, bundle = run_validation(verbose=False)
@@ -1618,17 +1652,17 @@ def test_task6_story6_mismatched_contract_version_fails_validation_module_level(
     broken_bundle["artifacts"][0]["summary"]["contract_version"] = "v2"
 
     with pytest.raises(ValueError, match="mismatched contract_version"):
-        validate_task6_story6_bundle(broken_bundle, DEFAULT_OUTPUT_DIR)
+        validate_workflow_publication_bundle(broken_bundle, DEFAULT_OUTPUT_DIR)
 
 
-def test_task6_story6_missing_semantic_flag_fails_validation_module_level():
-    """Test that missing semantic closure flags fail Story 6 validation."""
+def test_workflow_publication_missing_semantic_flag_fails_validation_module_level():
+    """Test that missing semantic closure flags fail publication validation."""
     import copy
 
     from benchmarks.density_matrix.workflow_evidence.workflow_publication_bundle import (
         DEFAULT_OUTPUT_DIR,
         run_validation,
-        validate_task6_story6_bundle,
+        validate_workflow_publication_bundle,
     )
 
     *_, bundle = run_validation(verbose=False)
@@ -1636,7 +1670,7 @@ def test_task6_story6_missing_semantic_flag_fails_validation_module_level():
     broken_bundle["artifacts"][1]["summary"]["end_to_end_gate_completed"] = False
 
     with pytest.raises(ValueError, match="missing required semantic closure flags"):
-        validate_task6_story6_bundle(broken_bundle, DEFAULT_OUTPUT_DIR)
+        validate_workflow_publication_bundle(broken_bundle, DEFAULT_OUTPUT_DIR)
 
 
 if __name__ == "__main__":

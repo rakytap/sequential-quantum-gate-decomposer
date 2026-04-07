@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Validation: Task 5 Story 2 exact-regime workflow baseline.
+"""Validation: exact-regime workflow baseline.
 
-Builds the phase-level workflow-scale gate from the canonical Story 4 workflow
-matrix while keeping the dedicated optimization trace out of scope until
-Task 5 Story 3.
+Builds the phase-level workflow-scale gate from the canonical exact-regime
+workflow matrix while keeping the dedicated optimization trace out of scope
+until the trace-anchor layer.
 
-The resulting bundle is intentionally a thin Task 5 layer:
+The resulting bundle is intentionally a thin validation-evidence layer:
 - it freezes the mandatory 4 / 6 / 8 / 10 workflow inventory,
 - it validates stable workflow case identity and parameter-set coverage,
 - it preserves exactness, backend attribution, and unsupported-free completion,
@@ -108,7 +108,7 @@ def validate_case_payload(case):
     missing_fields = [field for field in required_fields if field not in case]
     if missing_fields:
         raise ValueError(
-            "Task 5 Story 2 workflow case is missing required fields: {}".format(
+            "Workflow-baseline case is missing required fields: {}".format(
                 ", ".join(missing_fields)
             )
         )
@@ -182,7 +182,7 @@ def build_case_identity_summary(
 
 
 def build_artifact_bundle(
-    story4_bundle,
+    exact_regime_workflow_bundle,
     workflow_results,
     *,
     qubit_sizes=EXACT_REGIME_WORKFLOW_QUBITS,
@@ -210,7 +210,7 @@ def build_artifact_bundle(
         case["counts_toward_mandatory_baseline"] for case in cases
     )
     workflow_baseline_completed = bool(
-        story4_bundle["status"] == "pass"
+        exact_regime_workflow_bundle["status"] == "pass"
         and case_identity["stable_case_ids_present"]
         and case_identity["stable_parameter_set_ids_present"]
         and all_cases_required
@@ -268,9 +268,9 @@ def build_artifact_bundle(
         },
         "required_artifacts": {
             "exact_regime_workflow_reference": {
-                "suite_name": story4_bundle["suite_name"],
-                "status": story4_bundle["status"],
-                "summary": story4_bundle["summary"],
+                "suite_name": exact_regime_workflow_bundle["suite_name"],
+                "status": exact_regime_workflow_bundle["status"],
+                "summary": exact_regime_workflow_bundle["summary"],
             }
         },
         "cases": cases,
@@ -283,7 +283,7 @@ def validate_artifact_bundle(bundle):
     missing_fields = [field for field in ARTIFACT_CORE_FIELDS if field not in bundle]
     if missing_fields:
         raise ValueError(
-            "Task 5 Story 2 artifact bundle is missing required fields: {}".format(
+            "Workflow-baseline bundle is missing required fields: {}".format(
                 ", ".join(missing_fields)
             )
         )
@@ -306,14 +306,14 @@ def run_validation(
     workflow_results = run_exact_regime_workflow_matrix(
         qubit_sizes=qubit_sizes, parameter_set_count=parameter_set_count
     )
-    story4_bundle = build_exact_regime_workflow_bundle(
+    exact_regime_workflow_bundle = build_exact_regime_workflow_bundle(
         workflow_results,
         qubit_sizes=qubit_sizes,
         parameter_set_count=parameter_set_count,
         trace_result=None,
     )
     bundle = build_artifact_bundle(
-        story4_bundle,
+        exact_regime_workflow_bundle,
         workflow_results,
         qubit_sizes=qubit_sizes,
         parameter_set_count=parameter_set_count,
@@ -329,7 +329,7 @@ def run_validation(
                 bundle["summary"]["stable_parameter_set_ids_present"],
             )
         )
-    return story4_bundle, bundle
+    return exact_regime_workflow_bundle, bundle
 
 
 def parse_args():
@@ -338,7 +338,7 @@ def parse_args():
         "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
-        help="Directory for the Task 5 Story 2 JSON artifact bundle.",
+        help="Directory for the workflow-baseline JSON artifact bundle.",
     )
     parser.add_argument(
         "--parameter-set-count",

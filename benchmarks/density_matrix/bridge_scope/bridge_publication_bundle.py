@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Publication bundle: Task 3 Story 5 bridge evidence.
+"""Publication bundle: bridge evidence.
 
-Assembles the delivered Task 3 bridge evidence from Stories 1 to 4 into a
-single publication-oriented manifest plus completeness checks.
+Assembles the delivered bridge evidence into a single publication-oriented
+manifest plus completeness checks.
 
 Run with:
     python benchmarks/density_matrix/bridge_scope/bridge_publication_bundle.py --output-dir <dir>
@@ -36,20 +36,20 @@ from benchmarks.density_matrix.workflow_evidence.exact_density_vqe_validation im
     write_exact_regime_workflow_bundle,
 )
 from benchmarks.density_matrix.bridge_scope.bridge_validation import (
-    ARTIFACT_FILENAME as TASK3_STORY2_BUNDLE_FILENAME,
-    build_artifact_bundle as build_task3_story2_bundle,
-    run_validation as run_task3_story2_validation,
-    write_artifact_bundle as write_task3_story2_bundle,
+    ARTIFACT_FILENAME as BRIDGE_MICRO_VALIDATION_BUNDLE_FILENAME,
+    build_artifact_bundle as build_bridge_micro_validation_bundle,
+    run_validation as run_bridge_micro_validation,
+    write_artifact_bundle as write_bridge_micro_validation_bundle,
 )
 from benchmarks.density_matrix.bridge_scope.unsupported_bridge_validation import (
-    ARTIFACT_FILENAME as TASK3_STORY3_BUNDLE_FILENAME,
-    build_artifact_bundle as build_task3_story3_bundle,
-    run_validation as run_task3_story3_validation,
-    write_artifact_bundle as write_task3_story3_bundle,
+    ARTIFACT_FILENAME as UNSUPPORTED_BRIDGE_BUNDLE_FILENAME,
+    build_artifact_bundle as build_unsupported_bridge_bundle,
+    run_validation as run_unsupported_bridge_validation,
+    write_artifact_bundle as write_unsupported_bridge_bundle,
 )
 
-TASK3_STORY5_BUNDLE_FILENAME = "bridge_publication_bundle.json"
-TASK3_STORY5_BUNDLE_FIELDS = (
+BRIDGE_PUBLICATION_BUNDLE_FILENAME = "bridge_publication_bundle.json"
+BRIDGE_PUBLICATION_BUNDLE_FIELDS = (
     "suite_name",
     "status",
     "backend",
@@ -90,33 +90,33 @@ def _build_artifact_entry(
     }
 
 
-def build_task3_story5_bundle(
+def build_bridge_publication_bundle(
     output_dir: Path,
     *,
     fixed_results,
     trace_result,
-    task3_story2_bundle,
-    task3_story3_bundle,
+    bridge_micro_validation_bundle,
+    unsupported_bridge_bundle,
     workflow_bundle,
 ):
     output_dir = Path(output_dir)
-    story1_command = (
+    supported_fixed_parameter_command = (
         f"python benchmarks/density_matrix/workflow_evidence/exact_density_vqe_validation.py "
         f"--output-dir {output_dir}"
     )
-    story2_command = (
+    bridge_micro_validation_command = (
         f"python benchmarks/density_matrix/bridge_scope/bridge_validation.py "
         f"--output-dir {output_dir}"
     )
-    story3_command = (
+    unsupported_bridge_command = (
         f"python benchmarks/density_matrix/bridge_scope/unsupported_bridge_validation.py "
         f"--output-dir {output_dir}"
     )
-    story4_command = (
+    workflow_command = (
         f"python benchmarks/density_matrix/workflow_evidence/exact_density_vqe_validation.py "
         f"--workflow-bundle --output-dir {output_dir}"
     )
-    story5_command = (
+    publication_bundle_command = (
         f"python benchmarks/density_matrix/bridge_scope/bridge_publication_bundle.py "
         f"--output-dir {output_dir}"
     )
@@ -130,7 +130,7 @@ def build_task3_story5_bundle(
             status=fixed_results[0]["status"],
             expected_statuses=["completed"],
             purpose="Supported positive 4-qubit bridge artifact for the generated-HEA anchor workflow.",
-            generation_command=story1_command,
+            generation_command=supported_fixed_parameter_command,
             summary={
                 "qbit_num": fixed_results[0]["qbit_num"],
                 "absolute_energy_error": fixed_results[0].get("absolute_energy_error"),
@@ -147,7 +147,7 @@ def build_task3_story5_bundle(
             status=fixed_results[1]["status"],
             expected_statuses=["completed"],
             purpose="Supported positive 6-qubit bridge artifact for the generated-HEA anchor workflow.",
-            generation_command=story1_command,
+            generation_command=supported_fixed_parameter_command,
             summary={
                 "qbit_num": fixed_results[1]["qbit_num"],
                 "absolute_energy_error": fixed_results[1].get("absolute_energy_error"),
@@ -160,16 +160,20 @@ def build_task3_story5_bundle(
             artifact_id="bridge_micro_validation_bundle",
             artifact_class="bridge_micro_validation_bundle",
             mandatory=True,
-            path=TASK3_STORY2_BUNDLE_FILENAME,
-            status=task3_story2_bundle["status"],
+            path=BRIDGE_MICRO_VALIDATION_BUNDLE_FILENAME,
+            status=bridge_micro_validation_bundle["status"],
             expected_statuses=["pass"],
             purpose="Canonical local bridge-support validation bundle for 1 to 3 qubit generated-HEA microcases.",
-            generation_command=story2_command,
+            generation_command=bridge_micro_validation_command,
             summary={
-                "total_cases": task3_story2_bundle["summary"]["total_cases"],
-                "passed_cases": task3_story2_bundle["summary"]["passed_cases"],
-                "pass_rate": task3_story2_bundle["summary"]["pass_rate"],
-                "microcase_qubits": task3_story2_bundle["requirements"]["microcase_qubits"],
+                "total_cases": bridge_micro_validation_bundle["summary"]["total_cases"],
+                "passed_cases": bridge_micro_validation_bundle["summary"][
+                    "passed_cases"
+                ],
+                "pass_rate": bridge_micro_validation_bundle["summary"]["pass_rate"],
+                "microcase_qubits": bridge_micro_validation_bundle["requirements"][
+                    "microcase_qubits"
+                ],
             },
         ),
         _build_artifact_entry(
@@ -180,7 +184,7 @@ def build_task3_story5_bundle(
             status=workflow_bundle["status"],
             expected_statuses=["pass"],
             purpose="Canonical workflow-scale bridge bundle across the mandatory 4/6/8/10 exact regime.",
-            generation_command=story4_command,
+            generation_command=workflow_command,
             summary={
                 "total_cases": workflow_bundle["summary"]["total_cases"],
                 "passed_cases": workflow_bundle["summary"]["passed_cases"],
@@ -206,7 +210,7 @@ def build_task3_story5_bundle(
             status=trace_result["status"],
             expected_statuses=["completed"],
             purpose="Supported bounded 4-qubit optimization trace proving the full workflow crosses the bridge.",
-            generation_command=story4_command,
+            generation_command=workflow_command,
             summary={
                 "case_name": trace_result.get("case_name"),
                 "optimizer": trace_result.get("optimizer"),
@@ -221,23 +225,23 @@ def build_task3_story5_bundle(
             artifact_id="unsupported_bridge_bundle",
             artifact_class="unsupported_bridge_bundle",
             mandatory=True,
-            path=TASK3_STORY3_BUNDLE_FILENAME,
-            status=task3_story3_bundle["status"],
+            path=UNSUPPORTED_BRIDGE_BUNDLE_FILENAME,
+            status=unsupported_bridge_bundle["status"],
             expected_statuses=["pass"],
             purpose="Canonical representative unsupported-bridge bundle covering source, lowering, insertion, and noise-type failures.",
-            generation_command=story3_command,
+            generation_command=unsupported_bridge_command,
             summary={
-                "required_categories": task3_story3_bundle["requirements"][
+                "required_categories": unsupported_bridge_bundle["requirements"][
                     "required_categories"
                 ],
-                "total_cases": task3_story3_bundle["summary"]["total_cases"],
-                "unsupported_cases": task3_story3_bundle["summary"][
+                "total_cases": unsupported_bridge_bundle["summary"]["total_cases"],
+                "unsupported_cases": unsupported_bridge_bundle["summary"][
                     "unsupported_cases"
                 ],
-                "error_match_count": task3_story3_bundle["summary"][
+                "error_match_count": unsupported_bridge_bundle["summary"][
                     "error_match_count"
                 ],
-                "required_case_count": task3_story3_bundle["summary"][
+                "required_case_count": unsupported_bridge_bundle["summary"][
                     "required_case_count"
                 ],
             },
@@ -267,7 +271,7 @@ def build_task3_story5_bundle(
         "reference_backend": REFERENCE_BACKEND,
         "software": build_software_metadata(),
         "provenance": {
-            "generation_command": story5_command,
+            "generation_command": publication_bundle_command,
             "working_directory": str(REPO_ROOT),
             "git_revision": get_git_revision(),
         },
@@ -280,17 +284,17 @@ def build_task3_story5_bundle(
         },
         "artifacts": artifacts,
     }
-    validate_task3_story5_bundle(bundle, output_dir)
+    validate_bridge_publication_bundle(bundle, output_dir)
     return bundle
 
 
-def validate_task3_story5_bundle(bundle, bundle_dir: Path):
+def validate_bridge_publication_bundle(bundle, bundle_dir: Path):
     missing_fields = [
-        field for field in TASK3_STORY5_BUNDLE_FIELDS if field not in bundle
+        field for field in BRIDGE_PUBLICATION_BUNDLE_FIELDS if field not in bundle
     ]
     if missing_fields:
         raise ValueError(
-            "Task 3 Story 5 bundle is missing required fields: {}".format(
+            "Bridge-publication bundle is missing required fields: {}".format(
                 ", ".join(missing_fields)
             )
         )
@@ -306,7 +310,7 @@ def validate_task3_story5_bundle(bundle, bundle_dir: Path):
     }
     if required_ids - artifact_ids:
         raise ValueError(
-            "Task 3 Story 5 bundle is missing required artifact IDs: {}".format(
+            "Bridge-publication bundle is missing required artifact IDs: {}".format(
                 ", ".join(sorted(required_ids - artifact_ids))
             )
         )
@@ -348,34 +352,34 @@ def validate_task3_story5_bundle(bundle, bundle_dir: Path):
         artifact_path = bundle_dir / artifact["path"]
         if artifact["mandatory"] and not artifact_path.exists():
             raise ValueError(
-                f"Task 3 Story 5 bundle is missing artifact file: {artifact['path']}"
+                f"Bridge-publication bundle is missing artifact file: {artifact['path']}"
             )
         if artifact["status"] not in artifact["expected_statuses"]:
             raise ValueError(
-                "Task 3 Story 5 artifact {} has unexpected status {}".format(
+                "Bridge-publication artifact {} has unexpected status {}".format(
                     artifact["artifact_id"], artifact["status"]
                 )
             )
         expected_summary_keys = required_summary_keys.get(artifact["artifact_id"])
         if expected_summary_keys and expected_summary_keys - set(artifact["summary"].keys()):
             raise ValueError(
-                "Task 3 Story 5 artifact {} is missing summary keys: {}".format(
+                "Bridge-publication artifact {} is missing summary keys: {}".format(
                     artifact["artifact_id"],
                     ", ".join(sorted(expected_summary_keys - set(artifact["summary"].keys()))),
                 )
             )
 
 
-def write_task3_story5_bundle(output_path: Path, bundle):
-    validate_task3_story5_bundle(bundle, output_path.parent)
+def write_bridge_publication_bundle(output_path: Path, bundle):
+    validate_bridge_publication_bundle(bundle, output_path.parent)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(json.dumps(bundle, indent=2) + "\n", encoding="utf-8")
 
 
-def print_task3_story5_bundle_summary(bundle):
+def print_bridge_publication_bundle_summary(bundle):
     print("\n" + "=" * 78)
     print(
-        "  Task 3 Story 5 Bridge Publication Bundle [{} vs {}]".format(
+        "  Bridge Publication Bundle [{} vs {}]".format(
             bundle["backend"], bundle["reference_backend"]
         )
     )
@@ -395,7 +399,7 @@ def print_task3_story5_bundle_summary(bundle):
     print("  Git revision:", bundle["provenance"]["git_revision"])
 
 
-def generate_task3_story5_bundle(output_dir: Path):
+def generate_bridge_publication_bundle(output_dir: Path):
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -423,21 +427,29 @@ def generate_task3_story5_bundle(output_dir: Path):
         trace_result = capture_case("optimization_trace_4q", run_optimization_trace)
         write_json(trace_path, trace_result)
 
-    task3_story2_path = output_dir / TASK3_STORY2_BUNDLE_FILENAME
-    if task3_story2_path.exists():
-        task3_story2_bundle = _load_json(task3_story2_path)
+    bridge_micro_validation_path = output_dir / BRIDGE_MICRO_VALIDATION_BUNDLE_FILENAME
+    if bridge_micro_validation_path.exists():
+        bridge_micro_validation_bundle = _load_json(bridge_micro_validation_path)
     else:
-        task3_story2_results = run_task3_story2_validation(verbose=False)
-        task3_story2_bundle = build_task3_story2_bundle(task3_story2_results)
-        write_task3_story2_bundle(task3_story2_path, task3_story2_bundle)
+        bridge_micro_validation_results = run_bridge_micro_validation(verbose=False)
+        bridge_micro_validation_bundle = build_bridge_micro_validation_bundle(
+            bridge_micro_validation_results
+        )
+        write_bridge_micro_validation_bundle(
+            bridge_micro_validation_path, bridge_micro_validation_bundle
+        )
 
-    task3_story3_path = output_dir / TASK3_STORY3_BUNDLE_FILENAME
-    if task3_story3_path.exists():
-        task3_story3_bundle = _load_json(task3_story3_path)
+    unsupported_bridge_path = output_dir / UNSUPPORTED_BRIDGE_BUNDLE_FILENAME
+    if unsupported_bridge_path.exists():
+        unsupported_bridge_bundle = _load_json(unsupported_bridge_path)
     else:
-        task3_story3_results = run_task3_story3_validation(verbose=False)
-        task3_story3_bundle = build_task3_story3_bundle(task3_story3_results)
-        write_task3_story3_bundle(task3_story3_path, task3_story3_bundle)
+        unsupported_bridge_results = run_unsupported_bridge_validation(verbose=False)
+        unsupported_bridge_bundle = build_unsupported_bridge_bundle(
+            unsupported_bridge_results
+        )
+        write_unsupported_bridge_bundle(
+            unsupported_bridge_path, unsupported_bridge_bundle
+        )
 
     workflow_path = output_dir / EXACT_REGIME_WORKFLOW_BUNDLE_FILENAME
     if workflow_path.exists():
@@ -449,15 +461,15 @@ def generate_task3_story5_bundle(output_dir: Path):
         )
         write_exact_regime_workflow_bundle(workflow_path, workflow_bundle)
 
-    bundle = build_task3_story5_bundle(
+    bundle = build_bridge_publication_bundle(
         output_dir,
         fixed_results=fixed_results,
         trace_result=trace_result,
-        task3_story2_bundle=task3_story2_bundle,
-        task3_story3_bundle=task3_story3_bundle,
+        bridge_micro_validation_bundle=bridge_micro_validation_bundle,
+        unsupported_bridge_bundle=unsupported_bridge_bundle,
         workflow_bundle=workflow_bundle,
     )
-    write_task3_story5_bundle(output_dir / TASK3_STORY5_BUNDLE_FILENAME, bundle)
+    write_bridge_publication_bundle(output_dir / BRIDGE_PUBLICATION_BUNDLE_FILENAME, bundle)
     return bundle
 
 
@@ -467,12 +479,12 @@ def main():
         "--output-dir",
         type=Path,
         required=True,
-        help="Directory where Task 3 Story 5 publication artifacts will be written.",
+        help="Directory where bridge publication artifacts will be written.",
     )
     args = parser.parse_args()
 
-    bundle = generate_task3_story5_bundle(args.output_dir)
-    print_task3_story5_bundle_summary(bundle)
+    bundle = generate_bridge_publication_bundle(args.output_dir)
+    print_bridge_publication_bundle_summary(bundle)
 
     if bundle["status"] != "pass":
         raise SystemExit(1)

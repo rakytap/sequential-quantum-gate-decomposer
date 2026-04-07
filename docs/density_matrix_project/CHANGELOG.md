@@ -34,12 +34,14 @@ Primary audience: maintainers tracking delivered scope vs planned milestones.
 
 ---
 
-## Phase 2 (Planned)
+## Phase 2 (Complete)
 
 - Deep integration entry points:
   - backend selection in VQE configuration,
   - expectation value path `Tr(H*rho)`,
-  - bridge from existing gate sequences to density-matrix circuit execution.
+  - bridge from existing gate sequences to density-matrix circuit execution,
+  - canonical noisy XXZ workflow contract and publication-facing validation
+    bundle.
 - Extend noise stack with additional noise channels:
   - generalized amplitude damping,
   - coherent unitary error model.
@@ -52,28 +54,99 @@ Implementation acceptance criteria:
 
 ---
 
-## Phase 3 (Planned)
+## Phase 3 (Complete)
 
-- Complete density-matrix noise module features required by experiments.
-- Add gradient path for density-matrix optimization.
-- Add AVX-focused optimization for key density operations.
-- Add calibration and fidelity validation workflows for noise channels.
+### Delivered
 
-Implementation acceptance criteria:
-- Gradient support is wired for the density backend.
-- Expanded noise channels are validated against Qiskit Aer.
+- Added a canonical noisy mixed-state planner surface and schema-backed
+  partition descriptor contract in `squander/partitioning/noisy_planner.py`.
+- Added descriptor metadata that preserves explicit gate/noise order, qubit
+  remapping, and parameter-routing semantics on the supported Phase 3 surface.
+- Added an executable partitioned density runtime in
+  `squander/partitioning/noisy_runtime.py`.
+- Added a conservative real fused execution baseline via descriptor-local
+  unitary-island fusion on eligible supported substructures.
+- Added machine-checkable correctness, performance, and publication-evidence
+  pipelines under `benchmarks/density_matrix/`.
+
+Documented closure points:
+- Noisy mixed-state circuits enter the planner as first-class supported inputs
+  without reducing noise to boundary-only metadata.
+- Phase 3 delivers more than planner-only representation: the shipped runtime
+  executes partitioned workloads and exercises at least one real fused path.
+- Partitioned and fused execution are validated against the sequential density
+  baseline on the required workloads.
+
+### Scope Notes
+
+- Sequential `NoisyCircuit` execution and Qiskit Aer remain the required
+  validation baselines.
+- The delivered planner-calibration result is bounded to the audited Phase 3
+  support surface; it does not claim full density-aware parity for every
+  planner variant or circuit source.
+- Phase 3 performance closure is diagnosis-grounded rather than a blanket
+  speedup claim.
+- Fully channel-native fused noisy blocks, full `qgd_Circuit` parity, broader
+  Phase 4 workflow growth, and approximate scaling remain deferred.
+
+---
+
+## Phase 3.1 (Complete — bounded decision study)
+
+### Delivered
+
+- Spec-driven phase contract, closure, and publication package in
+  `docs/density_matrix_project/phases/phase-3-1/`, including:
+  `DETAILED_PLANNING_PHASE_3_1.md`, `ADRs_PHASE_3_1.md`,
+  `PRE_IMPLEMENTATION_COMPLETION_CHECKLIST.md`,
+  `CLOSURE_PLAN_PHASE_3_1.md`,
+  `PRE_PUBLICATION_EVIDENCE_REVIEW_PHASE_3_1.md`,
+  and the finalized short-paper, narrative, abstract, and full-paper surfaces.
+- Implemented bounded strict and hybrid Phase 3.1 runtime paths on the frozen
+  v1 slice:
+  - strict `phase31_channel_native`,
+  - hybrid `phase31_channel_native_hybrid`.
+- Delivered bounded counted correctness and external-reference evidence for the
+  frozen Phase 3.1 slice:
+  - 4 strict counted microcases,
+  - 2 counted hybrid continuity anchors,
+  - 5 required external-reference rows.
+- Delivered the full frozen 26-row counted Phase 3.1 performance matrix plus
+  machine-readable decision artifacts:
+  - `break_even_table`,
+  - `justification_map`,
+  - route-aware row summaries.
+- Recorded the formal review state as **`decision-study-ready`**:
+  - `17` rows classify as `phase3_sufficient`,
+  - `9` rows classify as `phase31_not_justified_yet`,
+  - `0` rows classify as `phase31_justified`.
+
+### Scope Notes
+
+- Phase 3.1 is a **bounded additive follow-on** to the closed Phase 3 baseline.
+- The frozen v1 slice closes as a **decision study**, not as a positive-methods
+  acceleration result.
+- Fully general channel-native fusion, broader support surfaces, Phase 4
+  workflow growth, and host-acceleration follow-ons remain outside the closed
+  v1 Phase 3.1 claim.
 
 ---
 
 ## Phase 4 (Planned)
 
-- Full noisy VQA integration through the baseline SQUANDER training loop.
+- Broaden noisy VQE/VQA integration beyond the frozen Phase 2 canonical
+  workflow.
+- Add density-backend gradient and optimizer routing for the supported Phase 4
+  workflow surface.
 - Optimizer evaluations under noise (including BLS workflows).
 - Scaling targets for noisy VQA experiments in the 16-20 qubit range.
 - Experiment runner and reproducible configuration logging.
 
 Implementation acceptance criteria:
-- End-to-end noisy VQA training loop is functional.
+- End-to-end noisy VQE/VQA workflows beyond the Phase 2 baseline are
+  functional.
+- Density-backend gradient and optimizer support exist for the supported Phase 4
+  workflow surface.
 - Optimizer comparison experiments are reproducible.
 
 ---

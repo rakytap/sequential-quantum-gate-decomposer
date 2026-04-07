@@ -189,11 +189,12 @@ different levels of the software stack.*
 
 - SQUANDER has a **mature state-vector partitioning and gate-fusion
   subsystem** --- no other framework has this
-- Phase 3 plan: extend partitioning/fusion to density-matrix workloads
-  using barrier-based unitary-island partitioning with noise barriers
+- Phase 3 plan: extend partitioning/fusion so noisy density-matrix circuits are
+  first-class inputs and partitioning becomes noise-aware
 - This research direction has **no equivalent** in Qiskit, Cirq, PennyLane,
   or Qulacs
-- Phase 2 creates the **stable exact backend** that Phase 3 will accelerate
+- Phase 2 creates the **stable exact backend** that Phase 3 will extend and
+  accelerate
 - The crossover at 10 qubits provides a concrete optimization target
 
 *Evidence: PLANNING.md Phase 3 description. Existing squander/partitioning

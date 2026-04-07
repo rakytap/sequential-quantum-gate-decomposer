@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validation: Task 3 Story 2 bridge micro-validation matrix.
+"""Validation: bridge micro-validation matrix.
 
 Validates the supported VQE-side density bridge on deterministic 1 to 3 qubit
 microcases. The goal is not observable-threshold closure, but proof that the
@@ -39,6 +39,10 @@ from benchmarks.density_matrix.workflow_evidence.exact_density_vqe_validation im
     build_open_chain_topology,
 )
 from squander import Variational_Quantum_Eigensolver
+from squander.partitioning.noisy_planner import (
+    PLANNER_OP_KIND_GATE,
+    PLANNER_OP_KIND_NOISE,
+)
 
 SUITE_NAME = "bridge_micro_validation"
 ARTIFACT_FILENAME = "bridge_micro_validation_bundle.json"
@@ -214,8 +218,7 @@ def build_expected_bridge_operations(vqe):
             expected.append(
                 {
                     "index": len(expected),
-                    "operation_class": "GateOperation",
-                    "kind": "gate",
+                    "kind": PLANNER_OP_KIND_GATE,
                     "name": "U3",
                     "is_unitary": True,
                     "source_gate_index": gate_index,
@@ -231,8 +234,7 @@ def build_expected_bridge_operations(vqe):
             expected.append(
                 {
                     "index": len(expected),
-                    "operation_class": "GateOperation",
-                    "kind": "gate",
+                    "kind": PLANNER_OP_KIND_GATE,
                     "name": "CNOT",
                     "is_unitary": True,
                     "source_gate_index": gate_index,
@@ -244,14 +246,15 @@ def build_expected_bridge_operations(vqe):
                 }
             )
         else:
-            raise ValueError(f"Unsupported Task 3 Story 2 gate in expected bridge: {gate_name}")
+            raise ValueError(
+                f"Unsupported bridge micro-validation gate in expected bridge: {gate_name}"
+            )
 
         for noise_spec in noise_by_gate.get(gate_index, []):
             expected.append(
                 {
                     "index": len(expected),
-                    "operation_class": "NoiseOperation",
-                    "kind": "noise",
+                    "kind": PLANNER_OP_KIND_NOISE,
                     "name": noise_spec["channel"],
                     "is_unitary": False,
                     "source_gate_index": gate_index,
@@ -273,7 +276,6 @@ def bridge_operations_match(actual_operations, expected_operations):
     for actual, expected in zip(actual_operations, expected_operations):
         for key in (
             "index",
-            "operation_class",
             "kind",
             "name",
             "is_unitary",
@@ -308,7 +310,7 @@ def _case_base(case, topology):
     metadata.update(
         {
             "case_name": case["case_name"],
-            "case_kind": "task3_bridge_micro_validation",
+            "case_kind": "bridge_micro_validation",
             "purpose": case["purpose"],
             "required_gate_families": case["required_gate_families"],
             "required_noise_models": case["required_noise_models"],
@@ -405,7 +407,7 @@ def capture_bridge_microcase(case, verbose=True):
 
 def run_validation(verbose=True):
     print("=" * 78)
-    print("  Task 3 Story 2 Bridge Micro-Validation [{}]".format(PRIMARY_BACKEND))
+    print("  Bridge Micro-Validation [{}]".format(PRIMARY_BACKEND))
     print("=" * 78)
 
     results = []
@@ -494,9 +496,9 @@ def print_summary(bundle):
         )
     )
     if bundle["status"] == "pass":
-        print("\n  ALL TESTS PASSED - Task 3 Story 2 bridge micro-validation gate is closed.")
+        print("\n  ALL TESTS PASSED - Bridge micro-validation gate is closed.")
     else:
-        print("\n  Some mandatory bridge microcases failed - Task 3 Story 2 is not yet closed.")
+        print("\n  Some mandatory bridge microcases failed - bridge micro-validation is not yet closed.")
     print("=" * 78)
 
 
@@ -506,7 +508,7 @@ def main():
         "--output-dir",
         type=Path,
         default=None,
-        help="Optional directory for the Task 3 Story 2 JSON artifact bundle.",
+        help="Optional directory for the bridge micro-validation JSON artifact bundle.",
     )
     args = parser.parse_args()
 

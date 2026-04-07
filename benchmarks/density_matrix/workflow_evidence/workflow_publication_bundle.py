@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Validation: Task 6 Story 6 publication-ready evidence bundle.
+"""Validation: workflow publication bundle.
 
-Builds the top-level Task 6 manifest by assembling the emitted Story 1 to Story
-5 artifacts into one reproducible, machine-checkable package. The bundle
+Builds the top-level workflow manifest by assembling the emitted workflow
+evidence artifacts into one reproducible, machine-checkable package. The bundle
 preserves canonical workflow identity and contract-version fields across the
 packaged evidence layers.
 
@@ -22,45 +22,47 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from benchmarks.density_matrix.workflow_evidence.workflow_contract_validation import (
-    ARTIFACT_FILENAME as STORY1_ARTIFACT_FILENAME,
+    ARTIFACT_FILENAME as WORKFLOW_CONTRACT_ARTIFACT_FILENAME,
     CONTRACT_VERSION,
-    DEFAULT_OUTPUT_DIR as TASK6_DEFAULT_OUTPUT_DIR,
+    DEFAULT_OUTPUT_DIR as WORKFLOW_EVIDENCE_OUTPUT_DIR,
     REFERENCE_BACKEND,
     WORKFLOW_ID,
     build_software_metadata,
     get_git_revision,
-    run_validation as run_story1_validation,
-    validate_artifact_bundle as validate_story1_artifact,
+    run_validation as run_workflow_contract_validation,
+    validate_artifact_bundle as validate_workflow_contract_artifact,
 )
 from benchmarks.density_matrix.workflow_evidence.end_to_end_trace_validation import (
-    ARTIFACT_FILENAME as STORY2_ARTIFACT_FILENAME,
-    run_validation as run_story2_validation,
-    validate_artifact_bundle as validate_story2_artifact,
+    ARTIFACT_FILENAME as END_TO_END_TRACE_ARTIFACT_FILENAME,
+    run_validation as run_end_to_end_trace_validation,
+    validate_artifact_bundle as validate_end_to_end_trace_artifact,
 )
 from benchmarks.density_matrix.workflow_evidence.matrix_baseline_validation import (
-    ARTIFACT_FILENAME as STORY3_ARTIFACT_FILENAME,
-    run_validation as run_story3_validation,
-    validate_artifact_bundle as validate_story3_artifact,
+    ARTIFACT_FILENAME as MATRIX_BASELINE_ARTIFACT_FILENAME,
+    run_validation as run_matrix_baseline_validation,
+    validate_artifact_bundle as validate_matrix_baseline_artifact,
 )
 from benchmarks.density_matrix.workflow_evidence.unsupported_workflow_validation import (
-    ARTIFACT_FILENAME as STORY4_ARTIFACT_FILENAME,
-    run_validation as run_story4_validation,
-    validate_artifact_bundle as validate_story4_artifact,
+    ARTIFACT_FILENAME as UNSUPPORTED_WORKFLOW_ARTIFACT_FILENAME,
+    run_validation as run_unsupported_workflow_validation,
+    validate_artifact_bundle as validate_unsupported_workflow_artifact,
 )
 from benchmarks.density_matrix.workflow_evidence.workflow_interpretation_validation import (
-    ARTIFACT_FILENAME as STORY5_ARTIFACT_FILENAME,
-    run_validation as run_story5_validation,
-    validate_artifact_bundle as validate_story5_artifact,
+    ARTIFACT_FILENAME as WORKFLOW_INTERPRETATION_ARTIFACT_FILENAME,
+    run_validation as run_workflow_interpretation_validation,
+    validate_artifact_bundle as validate_workflow_interpretation_artifact,
 )
 
 SUITE_NAME = "workflow_publication_evidence"
 ARTIFACT_FILENAME = "workflow_publication_bundle.json"
-DEFAULT_OUTPUT_DIR = TASK6_DEFAULT_OUTPUT_DIR
-STORY1_PATH = DEFAULT_OUTPUT_DIR / STORY1_ARTIFACT_FILENAME
-STORY2_PATH = DEFAULT_OUTPUT_DIR / STORY2_ARTIFACT_FILENAME
-STORY3_PATH = DEFAULT_OUTPUT_DIR / STORY3_ARTIFACT_FILENAME
-STORY4_PATH = DEFAULT_OUTPUT_DIR / STORY4_ARTIFACT_FILENAME
-STORY5_PATH = DEFAULT_OUTPUT_DIR / STORY5_ARTIFACT_FILENAME
+DEFAULT_OUTPUT_DIR = WORKFLOW_EVIDENCE_OUTPUT_DIR
+WORKFLOW_CONTRACT_PATH = DEFAULT_OUTPUT_DIR / WORKFLOW_CONTRACT_ARTIFACT_FILENAME
+END_TO_END_TRACE_PATH = DEFAULT_OUTPUT_DIR / END_TO_END_TRACE_ARTIFACT_FILENAME
+MATRIX_BASELINE_PATH = DEFAULT_OUTPUT_DIR / MATRIX_BASELINE_ARTIFACT_FILENAME
+UNSUPPORTED_WORKFLOW_PATH = DEFAULT_OUTPUT_DIR / UNSUPPORTED_WORKFLOW_ARTIFACT_FILENAME
+WORKFLOW_INTERPRETATION_PATH = (
+    DEFAULT_OUTPUT_DIR / WORKFLOW_INTERPRETATION_ARTIFACT_FILENAME
+)
 BUNDLE_FIELDS = (
     "suite_name",
     "status",
@@ -104,48 +106,48 @@ def _load_json(path: Path):
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def _load_story1(path: Path = STORY1_PATH):
+def _load_workflow_contract(path: Path = WORKFLOW_CONTRACT_PATH):
     if path.exists():
         artifact = _load_json(path)
-        validate_story1_artifact(artifact)
+        validate_workflow_contract_artifact(artifact)
         return artifact
-    _, artifact = run_story1_validation(verbose=False)
+    _, artifact = run_workflow_contract_validation(verbose=False)
     return artifact
 
 
-def _load_story2(path: Path = STORY2_PATH):
+def _load_end_to_end_trace(path: Path = END_TO_END_TRACE_PATH):
     if path.exists():
         artifact = _load_json(path)
-        validate_story2_artifact(artifact)
+        validate_end_to_end_trace_artifact(artifact)
         return artifact
-    _, _, _, artifact = run_story2_validation(verbose=False)
+    _, _, _, artifact = run_end_to_end_trace_validation(verbose=False)
     return artifact
 
 
-def _load_story3(path: Path = STORY3_PATH):
+def _load_matrix_baseline(path: Path = MATRIX_BASELINE_PATH):
     if path.exists():
         artifact = _load_json(path)
-        validate_story3_artifact(artifact)
+        validate_matrix_baseline_artifact(artifact)
         return artifact
-    _, _, _, artifact = run_story3_validation(verbose=False)
+    _, _, _, artifact = run_matrix_baseline_validation(verbose=False)
     return artifact
 
 
-def _load_story4(path: Path = STORY4_PATH):
+def _load_unsupported_workflow(path: Path = UNSUPPORTED_WORKFLOW_PATH):
     if path.exists():
         artifact = _load_json(path)
-        validate_story4_artifact(artifact)
+        validate_unsupported_workflow_artifact(artifact)
         return artifact
-    *_, artifact = run_story4_validation(verbose=False)
+    *_, artifact = run_unsupported_workflow_validation(verbose=False)
     return artifact
 
 
-def _load_story5(path: Path = STORY5_PATH):
+def _load_workflow_interpretation(path: Path = WORKFLOW_INTERPRETATION_PATH):
     if path.exists():
         artifact = _load_json(path)
-        validate_story5_artifact(artifact)
+        validate_workflow_interpretation_artifact(artifact)
         return artifact
-    *_, artifact = run_story5_validation(verbose=False)
+    *_, artifact = run_workflow_interpretation_validation(verbose=False)
     return artifact
 
 
@@ -184,37 +186,37 @@ def _artifact_semantics_complete(artifact):
     return all(artifact["summary"].get(flag, False) for flag in required_flags)
 
 
-def build_task6_story6_bundle(
+def build_workflow_publication_bundle(
     output_dir: Path,
     *,
-    story1_bundle,
-    story2_bundle,
-    story3_bundle,
-    story4_bundle,
-    story5_bundle,
+    workflow_contract,
+    end_to_end_trace_bundle,
+    matrix_baseline_bundle,
+    unsupported_workflow_bundle,
+    workflow_interpretation_bundle,
 ):
     output_dir = Path(output_dir)
-    story1_command = (
+    workflow_contract_command = (
         f"python benchmarks/density_matrix/workflow_evidence/workflow_contract_validation.py "
         f"--output-dir {output_dir}"
     )
-    story2_command = (
+    end_to_end_trace_command = (
         f"python benchmarks/density_matrix/workflow_evidence/end_to_end_trace_validation.py "
         f"--output-dir {output_dir}"
     )
-    story3_command = (
+    matrix_baseline_command = (
         f"python benchmarks/density_matrix/workflow_evidence/matrix_baseline_validation.py "
         f"--output-dir {output_dir}"
     )
-    story4_command = (
+    unsupported_workflow_command = (
         f"python benchmarks/density_matrix/workflow_evidence/unsupported_workflow_validation.py "
         f"--output-dir {output_dir}"
     )
-    story5_command = (
+    workflow_interpretation_command = (
         f"python benchmarks/density_matrix/workflow_evidence/workflow_interpretation_validation.py "
         f"--output-dir {output_dir}"
     )
-    story6_command = (
+    workflow_publication_command = (
         f"python benchmarks/density_matrix/workflow_evidence/workflow_publication_bundle.py "
         f"--output-dir {output_dir}"
     )
@@ -224,19 +226,21 @@ def build_task6_story6_bundle(
             artifact_id="workflow_contract_bundle",
             artifact_class="canonical_workflow_contract_bundle",
             mandatory=True,
-            path=STORY1_ARTIFACT_FILENAME,
-            status=story1_bundle["status"],
+            path=WORKFLOW_CONTRACT_ARTIFACT_FILENAME,
+            status=workflow_contract["status"],
             expected_statuses=["pass"],
-            purpose="Canonical Task 6 workflow contract artifact defining workflow identity, contract version, input/output sections, and boundary classes.",
-            generation_command=story1_command,
+            purpose="Canonical workflow-contract artifact defining workflow identity, contract version, input/output sections, and boundary classes.",
+            generation_command=workflow_contract_command,
             summary={
-                "workflow_id": story1_bundle["workflow_id"],
-                "contract_version": story1_bundle["contract_version"],
-                "contract_sections_complete": story1_bundle["summary"]["contract_sections_complete"],
-                "absolute_energy_error": story1_bundle["thresholds"][
+                "workflow_id": workflow_contract["workflow_id"],
+                "contract_version": workflow_contract["contract_version"],
+                "contract_sections_complete": workflow_contract["summary"][
+                    "contract_sections_complete"
+                ],
+                "absolute_energy_error": workflow_contract["thresholds"][
                     "absolute_energy_error"
                 ],
-                "required_workflow_qubits": story1_bundle["thresholds"][
+                "required_workflow_qubits": workflow_contract["thresholds"][
                     "required_workflow_qubits"
                 ],
             },
@@ -245,117 +249,117 @@ def build_task6_story6_bundle(
             artifact_id="end_to_end_trace_bundle",
             artifact_class="end_to_end_trace_bundle",
             mandatory=True,
-            path=STORY2_ARTIFACT_FILENAME,
-            status=story2_bundle["status"],
+            path=END_TO_END_TRACE_ARTIFACT_FILENAME,
+            status=end_to_end_trace_bundle["status"],
             expected_statuses=["pass"],
-            purpose="Task 6 Story 2 4q/6q end-to-end execution plus required bounded trace evidence.",
-            generation_command=story2_command,
+            purpose="4q/6q end-to-end execution plus required bounded trace evidence.",
+            generation_command=end_to_end_trace_command,
             summary={
-                "total_end_to_end_cases": story2_bundle["summary"][
+                "total_end_to_end_cases": end_to_end_trace_bundle["summary"][
                     "total_end_to_end_cases"
                 ],
-                "passed_end_to_end_cases": story2_bundle["summary"][
+                "passed_end_to_end_cases": end_to_end_trace_bundle["summary"][
                     "passed_end_to_end_cases"
                 ],
-                "required_trace_completed": story2_bundle["summary"][
+                "required_trace_completed": end_to_end_trace_bundle["summary"][
                     "required_trace_completed"
                 ],
-                "end_to_end_gate_completed": story2_bundle["summary"][
+                "end_to_end_gate_completed": end_to_end_trace_bundle["summary"][
                     "end_to_end_gate_completed"
                 ],
-                "end_to_end_qubits_match_contract": story2_bundle["summary"][
+                "end_to_end_qubits_match_contract": end_to_end_trace_bundle["summary"][
                     "end_to_end_qubits_match_contract"
                 ],
-                "trace_case_name_matches_contract": story2_bundle["summary"][
+                "trace_case_name_matches_contract": end_to_end_trace_bundle["summary"][
                     "trace_case_name_matches_contract"
                 ],
-                "workflow_thresholds_match_contract": story2_bundle["summary"][
+                "workflow_thresholds_match_contract": end_to_end_trace_bundle["summary"][
                     "workflow_thresholds_match_contract"
                 ],
-                "workflow_id": story2_bundle["workflow_id"],
-                "contract_version": story2_bundle["contract_version"],
+                "workflow_id": end_to_end_trace_bundle["workflow_id"],
+                "contract_version": end_to_end_trace_bundle["contract_version"],
             },
         ),
         _build_artifact_entry(
             artifact_id="matrix_baseline_bundle",
             artifact_class="matrix_baseline_bundle",
             mandatory=True,
-            path=STORY3_ARTIFACT_FILENAME,
-            status=story3_bundle["status"],
+            path=MATRIX_BASELINE_ARTIFACT_FILENAME,
+            status=matrix_baseline_bundle["status"],
             expected_statuses=["pass"],
-            purpose="Task 6 Story 3 fixed-parameter 4/6/8/10 matrix baseline with explicit 10-qubit anchor presence.",
-            generation_command=story3_command,
+            purpose="Fixed-parameter 4/6/8/10 matrix baseline with explicit 10-qubit anchor presence.",
+            generation_command=matrix_baseline_command,
             summary={
-                "required_cases": story3_bundle["summary"]["required_cases"],
-                "required_passed_cases": story3_bundle["summary"][
+                "required_cases": matrix_baseline_bundle["summary"]["required_cases"],
+                "required_passed_cases": matrix_baseline_bundle["summary"][
                     "required_passed_cases"
                 ],
-                "documented_10q_anchor_present": story3_bundle["summary"][
+                "documented_10q_anchor_present": matrix_baseline_bundle["summary"][
                     "documented_10q_anchor_present"
                 ],
-                "matrix_gate_completed": story3_bundle["summary"][
+                "matrix_gate_completed": matrix_baseline_bundle["summary"][
                     "matrix_gate_completed"
                 ],
-                "workflow_inventory_matches_contract": story3_bundle["summary"][
+                "workflow_inventory_matches_contract": matrix_baseline_bundle["summary"][
                     "workflow_inventory_matches_contract"
                 ],
-                "workflow_thresholds_match_contract": story3_bundle["summary"][
+                "workflow_thresholds_match_contract": matrix_baseline_bundle["summary"][
                     "workflow_thresholds_match_contract"
                 ],
-                "workflow_id": story3_bundle["workflow_id"],
-                "contract_version": story3_bundle["contract_version"],
+                "workflow_id": matrix_baseline_bundle["workflow_id"],
+                "contract_version": matrix_baseline_bundle["contract_version"],
             },
         ),
         _build_artifact_entry(
             artifact_id="unsupported_workflow_bundle",
             artifact_class="unsupported_workflow_bundle",
             mandatory=True,
-            path=STORY4_ARTIFACT_FILENAME,
-            status=story4_bundle["status"],
+            path=UNSUPPORTED_WORKFLOW_ARTIFACT_FILENAME,
+            status=unsupported_workflow_bundle["status"],
             expected_statuses=["pass"],
-            purpose="Task 6 Story 4 deterministic unsupported/deferred workflow boundary evidence.",
-            generation_command=story4_command,
+            purpose="Deterministic unsupported/deferred workflow boundary evidence.",
+            generation_command=unsupported_workflow_command,
             summary={
-                "unsupported_status_cases": story4_bundle["summary"][
+                "unsupported_status_cases": unsupported_workflow_bundle["summary"][
                     "unsupported_status_cases"
                 ],
-                "backend_incompatible_case_present": story4_bundle["summary"][
+                "backend_incompatible_case_present": unsupported_workflow_bundle["summary"][
                     "backend_incompatible_case_present"
                 ],
-                "unsupported_gate_completed": story4_bundle["summary"][
+                "unsupported_gate_completed": unsupported_workflow_bundle["summary"][
                     "unsupported_gate_completed"
                 ],
-                "workflow_id": story4_bundle["workflow_id"],
-                "contract_version": story4_bundle["contract_version"],
+                "workflow_id": unsupported_workflow_bundle["workflow_id"],
+                "contract_version": unsupported_workflow_bundle["contract_version"],
             },
         ),
         _build_artifact_entry(
             artifact_id="workflow_interpretation_bundle",
             artifact_class="interpretation_guardrail_bundle",
             mandatory=True,
-            path=STORY5_ARTIFACT_FILENAME,
-            status=story5_bundle["status"],
+            path=WORKFLOW_INTERPRETATION_ARTIFACT_FILENAME,
+            status=workflow_interpretation_bundle["status"],
             expected_statuses=["pass"],
-            purpose="Task 6 Story 5 interpretation guardrails preventing optional, unsupported, or incomplete evidence from inflating the main claim.",
-            generation_command=story5_command,
+            purpose="Interpretation guardrails preventing optional, unsupported, or incomplete evidence from inflating the main claim.",
+            generation_command=workflow_interpretation_command,
             summary={
-                "mandatory_artifacts_complete": story5_bundle["summary"][
+                "mandatory_artifacts_complete": workflow_interpretation_bundle["summary"][
                     "mandatory_artifacts_complete"
                 ],
-                "optional_evidence_supplemental": story5_bundle["summary"][
+                "optional_evidence_supplemental": workflow_interpretation_bundle["summary"][
                     "optional_evidence_supplemental"
                 ],
-                "unsupported_evidence_negative_only": story5_bundle["summary"][
+                "unsupported_evidence_negative_only": workflow_interpretation_bundle["summary"][
                     "unsupported_evidence_negative_only"
                 ],
-                "unsupported_case_field_alignment": story5_bundle["summary"][
+                "unsupported_case_field_alignment": workflow_interpretation_bundle["summary"][
                     "unsupported_case_field_alignment"
                 ],
-                "main_workflow_claim_completed": story5_bundle["summary"][
+                "main_workflow_claim_completed": workflow_interpretation_bundle["summary"][
                     "main_workflow_claim_completed"
                 ],
-                "workflow_id": story5_bundle["workflow_id"],
-                "contract_version": story5_bundle["contract_version"],
+                "workflow_id": workflow_interpretation_bundle["workflow_id"],
+                "contract_version": workflow_interpretation_bundle["contract_version"],
             },
         ),
     ]
@@ -391,18 +395,18 @@ def build_task6_story6_bundle(
         "status": bundle_status,
         "workflow_id": WORKFLOW_ID,
         "contract_version": CONTRACT_VERSION,
-        "backend": story1_bundle["backend"],
-        "reference_backend": story1_bundle["reference_backend"],
+        "backend": workflow_contract["backend"],
+        "reference_backend": workflow_contract["reference_backend"],
         "software": build_software_metadata(),
         "provenance": {
-            "generation_command": story6_command,
+            "generation_command": workflow_publication_command,
             "working_directory": str(REPO_ROOT),
             "git_revision": get_git_revision(),
-            "story1_path": str(STORY1_PATH),
-            "story2_path": str(STORY2_PATH),
-            "story3_path": str(STORY3_PATH),
-            "exact_regime_path": str(STORY4_PATH),
-            "story5_path": str(STORY5_PATH),
+            "workflow_contract_path": str(WORKFLOW_CONTRACT_PATH),
+            "end_to_end_trace_path": str(END_TO_END_TRACE_PATH),
+            "matrix_baseline_path": str(MATRIX_BASELINE_PATH),
+            "unsupported_workflow_path": str(UNSUPPORTED_WORKFLOW_PATH),
+            "workflow_interpretation_path": str(WORKFLOW_INTERPRETATION_PATH),
         },
         "summary": {
             "mandatory_artifact_count": len(mandatory_artifacts),
@@ -418,28 +422,28 @@ def build_task6_story6_bundle(
         },
         "artifacts": artifacts,
     }
-    validate_task6_story6_bundle(bundle, output_dir)
+    validate_workflow_publication_bundle(bundle, output_dir)
     return bundle
 
 
-def validate_task6_story6_bundle(bundle, bundle_dir: Path):
+def validate_workflow_publication_bundle(bundle, bundle_dir: Path):
     missing_fields = [field for field in BUNDLE_FIELDS if field not in bundle]
     if missing_fields:
         raise ValueError(
-            "Task 6 Story 6 bundle is missing required fields: {}".format(
+            "Workflow publication bundle is missing required fields: {}".format(
                 ", ".join(missing_fields)
             )
         )
 
     if bundle["workflow_id"] != WORKFLOW_ID:
         raise ValueError(
-            "Task 6 Story 6 bundle has unexpected workflow_id '{}'".format(
+            "Workflow publication bundle has unexpected workflow_id '{}'".format(
                 bundle["workflow_id"]
             )
         )
     if bundle["contract_version"] != CONTRACT_VERSION:
         raise ValueError(
-            "Task 6 Story 6 bundle has unexpected contract_version '{}'".format(
+            "Workflow publication bundle has unexpected contract_version '{}'".format(
                 bundle["contract_version"]
             )
         )
@@ -454,7 +458,7 @@ def validate_task6_story6_bundle(bundle, bundle_dir: Path):
     artifact_ids = {artifact["artifact_id"] for artifact in bundle["artifacts"]}
     if required_ids - artifact_ids:
         raise ValueError(
-            "Task 6 Story 6 bundle is missing required artifact IDs: {}".format(
+            "Workflow publication bundle is missing required artifact IDs: {}".format(
                 ", ".join(sorted(required_ids - artifact_ids))
             )
         )
@@ -463,19 +467,19 @@ def validate_task6_story6_bundle(bundle, bundle_dir: Path):
         artifact_path = bundle_dir / artifact["path"]
         if artifact["mandatory"] and not artifact_path.exists():
             raise ValueError(
-                "Task 6 Story 6 bundle is missing artifact file: {}".format(
+                "Workflow publication bundle is missing artifact file: {}".format(
                     artifact["path"]
                 )
             )
         if artifact["status"] not in artifact["expected_statuses"]:
             raise ValueError(
-                "Task 6 Story 6 artifact {} has unexpected status {}".format(
+                "Workflow publication artifact {} has unexpected status {}".format(
                     artifact["artifact_id"], artifact["status"]
                 )
             )
         if artifact["summary"].get("workflow_id", WORKFLOW_ID) != bundle["workflow_id"]:
             raise ValueError(
-                "Task 6 Story 6 artifact {} has mismatched workflow_id".format(
+                "Workflow publication artifact {} has mismatched workflow_id".format(
                     artifact["artifact_id"]
                 )
             )
@@ -483,53 +487,63 @@ def validate_task6_story6_bundle(bundle, bundle_dir: Path):
             "contract_version", CONTRACT_VERSION
         ) != bundle["contract_version"]:
             raise ValueError(
-                "Task 6 Story 6 artifact {} has mismatched contract_version".format(
+                "Workflow publication artifact {} has mismatched contract_version".format(
                     artifact["artifact_id"]
                 )
             )
         if not _artifact_semantics_complete(artifact):
             raise ValueError(
-                "Task 6 Story 6 artifact {} is missing required semantic closure flags".format(
+                "Workflow publication artifact {} is missing required semantic closure flags".format(
                     artifact["artifact_id"]
                 )
             )
 
 
-def write_task6_story6_bundle(output_path: Path, bundle):
-    validate_task6_story6_bundle(bundle, output_path.parent)
+def write_workflow_publication_bundle(output_path: Path, bundle):
+    validate_workflow_publication_bundle(bundle, output_path.parent)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(json.dumps(bundle, indent=2) + "\n", encoding="utf-8")
 
 
 def run_validation(
     *,
-    story1_path: Path = STORY1_PATH,
-    story2_path: Path = STORY2_PATH,
-    story3_path: Path = STORY3_PATH,
-    story4_path: Path = STORY4_PATH,
-    story5_path: Path = STORY5_PATH,
+    workflow_contract_path: Path = WORKFLOW_CONTRACT_PATH,
+    end_to_end_trace_path: Path = END_TO_END_TRACE_PATH,
+    matrix_baseline_path: Path = MATRIX_BASELINE_PATH,
+    unsupported_workflow_path: Path = UNSUPPORTED_WORKFLOW_PATH,
+    workflow_interpretation_path: Path = WORKFLOW_INTERPRETATION_PATH,
     output_dir: Path = DEFAULT_OUTPUT_DIR,
     verbose=False,
 ):
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
-    story1_bundle = _load_story1(story1_path)
-    story2_bundle = _load_story2(story2_path)
-    story3_bundle = _load_story3(story3_path)
-    story4_bundle = _load_story4(story4_path)
-    story5_bundle = _load_story5(story5_path)
-    _write_artifact(output_dir / STORY1_ARTIFACT_FILENAME, story1_bundle)
-    _write_artifact(output_dir / STORY2_ARTIFACT_FILENAME, story2_bundle)
-    _write_artifact(output_dir / STORY3_ARTIFACT_FILENAME, story3_bundle)
-    _write_artifact(output_dir / STORY4_ARTIFACT_FILENAME, story4_bundle)
-    _write_artifact(output_dir / STORY5_ARTIFACT_FILENAME, story5_bundle)
-    bundle = build_task6_story6_bundle(
+    workflow_contract = _load_workflow_contract(workflow_contract_path)
+    end_to_end_trace_bundle = _load_end_to_end_trace(end_to_end_trace_path)
+    matrix_baseline_bundle = _load_matrix_baseline(matrix_baseline_path)
+    unsupported_workflow_bundle = _load_unsupported_workflow(unsupported_workflow_path)
+    workflow_interpretation_bundle = _load_workflow_interpretation(
+        workflow_interpretation_path
+    )
+    _write_artifact(output_dir / WORKFLOW_CONTRACT_ARTIFACT_FILENAME, workflow_contract)
+    _write_artifact(
+        output_dir / END_TO_END_TRACE_ARTIFACT_FILENAME, end_to_end_trace_bundle
+    )
+    _write_artifact(output_dir / MATRIX_BASELINE_ARTIFACT_FILENAME, matrix_baseline_bundle)
+    _write_artifact(
+        output_dir / UNSUPPORTED_WORKFLOW_ARTIFACT_FILENAME,
+        unsupported_workflow_bundle,
+    )
+    _write_artifact(
+        output_dir / WORKFLOW_INTERPRETATION_ARTIFACT_FILENAME,
+        workflow_interpretation_bundle,
+    )
+    bundle = build_workflow_publication_bundle(
         output_dir,
-        story1_bundle=story1_bundle,
-        story2_bundle=story2_bundle,
-        story3_bundle=story3_bundle,
-        story4_bundle=story4_bundle,
-        story5_bundle=story5_bundle,
+        workflow_contract=workflow_contract,
+        end_to_end_trace_bundle=end_to_end_trace_bundle,
+        matrix_baseline_bundle=matrix_baseline_bundle,
+        unsupported_workflow_bundle=unsupported_workflow_bundle,
+        workflow_interpretation_bundle=workflow_interpretation_bundle,
     )
     if verbose:
         print(
@@ -544,7 +558,14 @@ def run_validation(
                 bundle["summary"]["mandatory_artifact_count"],
             )
         )
-    return story1_bundle, story2_bundle, story3_bundle, story4_bundle, story5_bundle, bundle
+    return (
+        workflow_contract,
+        end_to_end_trace_bundle,
+        matrix_baseline_bundle,
+        unsupported_workflow_bundle,
+        workflow_interpretation_bundle,
+        bundle,
+    )
 
 
 def parse_args():
@@ -553,37 +574,37 @@ def parse_args():
         "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
-        help="Directory for the Task 6 Story 6 JSON artifact bundle.",
+        help="Directory for the workflow-publication JSON artifact bundle.",
     )
     parser.add_argument(
-        "--story1-path",
+        "--workflow-contract-path",
         type=Path,
-        default=STORY1_PATH,
-        help="Path to the Task 6 Story 1 canonical workflow contract artifact.",
+        default=WORKFLOW_CONTRACT_PATH,
+        help="Path to the canonical workflow-contract artifact.",
     )
     parser.add_argument(
-        "--story2-path",
+        "--end-to-end-trace-path",
         type=Path,
-        default=STORY2_PATH,
-        help="Path to the Task 6 Story 2 end-to-end plus trace bundle.",
+        default=END_TO_END_TRACE_PATH,
+        help="Path to the end-to-end trace bundle.",
     )
     parser.add_argument(
-        "--story3-path",
+        "--matrix-baseline-path",
         type=Path,
-        default=STORY3_PATH,
-        help="Path to the Task 6 Story 3 matrix baseline bundle.",
+        default=MATRIX_BASELINE_PATH,
+        help="Path to the matrix-baseline bundle.",
     )
     parser.add_argument(
-        "--workflow-bundle-path",
+        "--unsupported-workflow-path",
         type=Path,
-        default=STORY4_PATH,
-        help="Path to the Task 6 Story 4 unsupported-workflow bundle.",
+        default=UNSUPPORTED_WORKFLOW_PATH,
+        help="Path to the unsupported-workflow bundle.",
     )
     parser.add_argument(
-        "--publication-bundle-path",
+        "--workflow-interpretation-path",
         type=Path,
-        default=STORY5_PATH,
-        help="Path to the Task 6 Story 5 interpretation bundle.",
+        default=WORKFLOW_INTERPRETATION_PATH,
+        help="Path to the workflow-interpretation bundle.",
     )
     parser.add_argument(
         "--quiet",
@@ -596,16 +617,16 @@ def parse_args():
 def main():
     args = parse_args()
     *_, bundle = run_validation(
-        story1_path=args.story1_path,
-        story2_path=args.story2_path,
-        story3_path=args.story3_path,
-        story4_path=args.workflow_bundle_path,
-        story5_path=args.publication_bundle_path,
+        workflow_contract_path=args.workflow_contract_path,
+        end_to_end_trace_path=args.end_to_end_trace_path,
+        matrix_baseline_path=args.matrix_baseline_path,
+        unsupported_workflow_path=args.unsupported_workflow_path,
+        workflow_interpretation_path=args.workflow_interpretation_path,
         output_dir=args.output_dir,
         verbose=not args.quiet,
     )
     output_path = args.output_dir / ARTIFACT_FILENAME
-    write_task6_story6_bundle(output_path, bundle)
+    write_workflow_publication_bundle(output_path, bundle)
     print(
         "Wrote {} with status {} ({}/{})".format(
             output_path,

@@ -18,20 +18,25 @@ Status legend:
 - `Rejected for now`: useful idea in principle, but not justified at the current
   project stage.
 
+These ADRs remain the program-level planning rationale after the delivery of
+Phases 1-3. Where phase-specific documents contain tighter implementation-backed
+wording, treat them as the record of delivered scope while using these ADRs as
+the long-horizon explanation for why that scope was chosen.
+
 ## Decision Summary
 
 | ADR | Title | Status |
 |---|---|---|
-| ADR-001 | Prioritize exact noisy emulation and training integration over noisy circuit re-synthesis | Accepted |
-| ADR-002 | Use adapter-based unitary-island partitioning with noise barriers as the first density-matrix fusion path | Accepted |
-| ADR-003 | Introduce a density-matrix-aware partitioning cost model only after the correctness baseline is in place | Accepted |
+| ADR-001 | Freeze Phase 2 and prioritize Phase 3 partitioning work over broader VQE/VQA growth | Accepted |
+| ADR-002 | Make noise channels and density semantics first-class in partitioning and fusion | Accepted |
+| ADR-003 | Introduce a noise-aware density-matrix partitioning cost model only after native noisy-circuit correctness is in place | Accepted |
 | ADR-004 | Prioritize realistic local noise models over global whole-register noise as the main scientific target | Accepted |
-| ADR-005 | Keep exact dense density matrices as the reference backend through the first three research phases | Accepted |
+| ADR-005 | Keep exact dense density matrices as the reference backend through the first four research phases | Accepted |
 | ADR-006 | Expand gate coverage in a workload-driven order rather than chasing full `qgd_Circuit` parity immediately | Accepted |
-| ADR-007 | Evaluate IR-first channel-native fusion only after a benchmark-driven decision gate | Deferred |
+| ADR-007 | Evaluate IR-first channel-native fusion only after a benchmark-driven decision gate | Deferred for broader generalization (Phase 3.1 in `docs/density_matrix_project/phases/phase-3-1/` now records the delivered bounded v1 channel-native branch and its decision-study-ready closure; fuller IR-first generalization remains deferred) |
 | ADR-008 | Treat stochastic trajectories and MPDO-style methods as later scaling branches, not the initial architecture | Deferred |
 
-## ADR-001: Prioritize Exact Noisy Emulation And Training Integration Over Noisy Circuit Re-Synthesis
+## ADR-001: Freeze Phase 2 And Prioritize Phase 3 Partitioning Work Over Broader VQE/VQA Growth
 
 ### Status
 
@@ -45,46 +50,50 @@ The current codebase has two strong but distinct assets:
 - a new exact density-matrix backend built around `DensityMatrix` and
   `NoisyCircuit`.
 
-The density-matrix backend is already scientifically useful for exact noisy
-simulation, validation against Qiskit Aer, and small-to-medium-scale mixed-state
-experiments. By contrast, noisy circuit re-synthesis or noisy wide-circuit
-optimization would require combining:
+Phase 2 now already delivers:
 
-- exact noisy simulation,
-- noisy cost functions,
-- decomposition / compilation quality,
-- and optimizer behavior
+- backend selection for the canonical exact noisy workflow,
+- exact `Re Tr(H*rho)` observable evaluation,
+- one frozen supported noisy XXZ workflow contract,
+- and publication-facing validation bundles for that scope.
 
-into one early research claim.
-
-That is architecturally attractive, but scientifically risky.
+The next tempting step would be to keep expanding the VQE/VQA surface
+immediately with broader workflow support, gradients, and richer training-loop
+features. At the time this ADR was set, the project still needed a clearly
+defined Phase 3 methods milestone inside the partitioning/fusion subsystem.
+That milestone has since been delivered as a bounded noise-aware
+partitioning/fusion baseline, while noisy circuit re-synthesis and noisy
+wide-circuit compilation remain broader claims.
 
 ### Decision
 
-The primary research target is:
+The primary sequencing decision is:
 
-- exact noisy emulation,
-- density-matrix integration into VQA / training workflows,
-- and scalable methods that improve noisy training experiments.
-
-Noisy circuit re-synthesis and noise-aware wide-circuit compilation are deferred
-until the exact noisy training backend is mature.
+- treat the Phase 2 canonical workflow as accomplished and frozen,
+- make Phase 3 about noise-aware partitioning/fusion rather than new VQE/VQA
+  surface growth,
+- defer broader VQE/VQA features such as density-backend gradient routing and
+  richer workflow support to Phase 4 or later,
+- and keep noisy circuit re-synthesis / noise-aware wide-circuit compilation
+  outside the near-term critical path.
 
 ### Rationale
 
-- Exact noisy simulation is easier to validate than noisy compilation.
-- The PhD theme is scalable training under realistic noise, not primarily noisy
-  circuit compilation.
-- The strongest early papers come from clean exactness and reproducible
-  comparisons, not from combining too many moving parts.
-- This path aligns with the existing `ARCHITECTURE.md`, `CHANGELOG.md`, and
-  `RESEARCH_ALIGNMENT.md` trajectory, where backend integration and `Tr(H*rho)`
-  are the next explicit milestones.
+- Freezing Phase 2 keeps the first major claim stable and publishable.
+- It gives Phase 3 a clear methods target instead of mixing partitioning work
+  with new workflow-surface promises.
+- The PhD theme is still scalable training under realistic noise, but the next
+  architectural bottleneck is inside partitioning/fusion rather than the
+  already-accomplished minimal workflow integration.
+- Noisy circuit compilation remains scientifically interesting, but it still
+  creates a broader and harder-to-defend claim than the revised Phase 3 scope.
 
 ### Consequences
 
-- Early density-matrix work should be evaluated on simulation and training tasks,
-  not on noisy circuit-size reduction claims.
+- Phase 3 benchmarks may still use training-relevant circuits, but they should
+  not depend on new VQE/VQA features beyond the Phase 2 contract.
+- Gradient routing, broader circuit-source support, and richer optimizer-facing
+  workflows become explicit Phase 4 items.
 - `Wide_Circuit_Optimization` remains a useful conceptual reference, but not the
   first integration target for density matrices.
 - Performance work is judged by how much it improves exact noisy training
@@ -92,10 +101,13 @@ until the exact noisy training backend is mature.
 
 ### Alternatives Considered
 
+- **Continue expanding VQE/VQA features immediately after Phase 2**: rejected
+  for now because it weakens the clarity of the Phase 3 partitioning/fusion
+  milestone.
 - **Immediate noisy circuit re-synthesis**: deferred because it creates a much
   broader and harder-to-defend scientific claim too early.
 
-## ADR-002: Use Adapter-Based Unitary-Island Partitioning With Noise Barriers As The First Density-Matrix Fusion Path
+## ADR-002: Make Noise Channels And Density Semantics First-Class In Partitioning And Fusion
 
 ### Status
 
@@ -109,53 +121,65 @@ state-vector fusion:
 - the planner lives in `squander/partitioning`,
 - the runtime fusion happens in `Gates_block::apply_to()`,
 - the current cost model is state-vector-oriented,
-- and `NoisyCircuit` currently executes sequentially.
+- and the sequential `NoisyCircuit` path remains the exact reference baseline
+  even though the delivered Phase 3 runtime now adds bounded partitioned/fused
+  execution on the supported surface.
 
-At the same time, the density-matrix backend already has the key local primitive
-needed for fused unitary execution:
-
-- `DensityMatrix::apply_local_unitary(...)`.
-
-Noise channels are not unitary and therefore do not naturally fit the existing
-fusion path.
+The simplest port would treat noise operations as opaque barriers, partition
+only contiguous unitary islands, and keep the planner effectively unitary-first.
+That reuses existing infrastructure, but it is too narrow for the revised
+Phase 3 goal where noise should be a natural part of any circuit at any level
+and the partitioning logic itself must be noise-aware.
 
 ### Decision
 
-The first density-matrix partitioning/fusion implementation should:
+The Phase 3 partitioning/fusion contract should:
 
-- keep `NoisyCircuit` as the density-matrix public API,
-- treat noise operations as explicit fusion barriers,
-- partition only contiguous unitary islands,
-- adapt those islands into the existing circuit/gate partitioning machinery,
-- and execute each fused unitary island through a density-matrix local-unitary
-  block operation.
+- keep `NoisyCircuit`-style noisy mixed-state semantics visible to the planner,
+- treat noisy mixed-state circuits as valid partitioning inputs,
+- retain exact noise placement and execution ordering inside partition
+  descriptors and runtime interfaces,
+- make partitioning decisions noise-aware rather than state-vector-aware plus
+  external barriers,
+- require an executable partitioned runtime with at least one real fused
+  execution mode on eligible substructures,
+- and allow unitary-island execution as an internal optimization tactic without
+  making it the definition of the Phase 3 problem.
 
 ### Rationale
 
-- This reuses the strongest current assets with the least architectural risk.
-- It preserves exact semantics because noise order is unchanged.
-- It gives a clean validation path against the current sequential
+- It matches the actual target workload, where noise can appear throughout a
+  circuit rather than only between pre-existing unitary islands.
+- It avoids architecturally misrepresenting noise as out-of-band metadata.
+- It still gives a clean validation path against the current sequential
   `NoisyCircuit` executor and Qiskit Aer.
-- It aligns with the most scientifically feasible early claim:
-  "partitioning and fusion accelerate exact density-matrix simulation without
-  changing results."
+- It aligns the Phase 3 claim with the project requirement that partitioning
+  itself be noise-aware.
 
 ### Consequences
 
-- Noise-dense circuits may fragment into many small unitary islands, limiting
-  speedup.
-- The first performance gains will be strongest for circuits where local noise is
-  realistic but not inserted after every elementary gate.
+- Phase 3 becomes a broader planner/runtime change than a barrier-only adapter
+  layer.
+- Early implementations may still exploit unitary substructure, but the planner
+  must understand noise explicitly.
+- Planner-only representation is not enough to close the phase; there must be an
+  executable noisy-circuit path with real fused execution on at least some
+  representative cases.
+- Fully channel-native fused noisy blocks remain optional follow-on work rather
+  than the minimum Phase 3 threshold.
 - The architecture remains compatible with later channel-native fusion, but does
-  not require it up front.
+  not require the most invasive form up front.
 
 ### Alternatives Considered
 
+- **Boundary-only unitary-island partitioning with noise barriers**: rejected as
+  the phase-defining contract because it treats noise as an external exception
+  instead of part of the circuit model.
 - **Channel-native fused CPTP blocks from the start**: deferred to ADR-007.
 - **No partitioning until full backend integration**: rejected because it delays
   a strong Phase 3 methods paper without scientific benefit.
 
-## ADR-003: Introduce A Density-Matrix-Aware Partitioning Cost Model Only After The Correctness Baseline Is In Place
+## ADR-003: Introduce A Noise-Aware Density-Matrix Partitioning Cost Model Only After Native Noisy-Circuit Correctness Is In Place
 
 ### Status
 
@@ -164,42 +188,56 @@ The first density-matrix partitioning/fusion implementation should:
 ### Context
 
 The current partitioning cost model in `squander/partitioning/tools.py` is
-state-vector-specific. It scales with `2^n`, assumes one-sided gate application,
-and is currently used by `ilp-fusion` and `ilp-fusion-ca` to optimize
-state-vector execution.
+state-vector-specific. It scales with `2^n`, assumes one-sided gate
+application, is blind to noise placement, and is currently used by
+`ilp-fusion` and `ilp-fusion-ca` to optimize state-vector execution.
 
 Directly reusing that objective for density matrices would be scientifically and
-architecturally misleading because density-matrix evolution has different:
+architecturally misleading because noisy density-matrix evolution has different:
 
 - state size,
 - arithmetic intensity,
 - cache behavior,
-- and left/right application costs.
+- left/right application costs,
+- and structural effects from noise placement and channel density.
 
 ### Decision
 
-The project should not claim density-aware optimal partitioning until there is a
-separate, benchmark-calibrated density-matrix cost model.
+The project should not claim density-aware or noise-aware optimal partitioning
+until there is a separate, benchmark-calibrated density-matrix cost model.
 
 Implementation sequence:
 
-1. establish the density-matrix correctness baseline,
-2. implement unitary-island fusion with simple structural heuristics,
-3. then introduce a density-matrix-aware cost model and retune
-   `ilp-fusion` / `ilp-fusion-ca` for density execution.
+1. establish the native noisy-circuit correctness baseline,
+2. implement noise-aware partitioning with simple structural heuristics,
+3. then introduce a benchmark-calibrated density-matrix cost model and retune
+   `ilp-fusion` / `ilp-fusion-ca` (or a successor planner) for density
+   execution.
+
+Current status:
+
+- steps 1 and 2 are delivered,
+- and the benchmark-facing result is a bounded calibration surface rather than
+  blanket density-optimal parity across every planner variant or circuit source.
 
 ### Rationale
 
 - Correctness-first is the safest scientific strategy.
-- Early benchmark calibration is more trustworthy than premature analytic claims.
-- The density-matrix crossover points for useful block sizes will almost
-  certainly differ from the state-vector ones.
+- Early benchmark calibration is more trustworthy than premature analytic
+  claims.
+- The useful crossover points will differ from the state-vector ones because
+  the planner must react to both mixed-state cost and noise structure.
 
 ### Consequences
 
 - Phase 2 claims should center on integration and exactness, not "optimal"
   density partitioning.
-- Phase 3 becomes the natural home for a density-aware methods paper.
+- Phase 3 claims should center on native noisy-circuit partitioning plus
+  benchmark-calibrated heuristics, not premature optimality language.
+- AVX-level kernel tuning is optional support work in Phase 3, not a
+  phase-defining success criterion by itself; only pursue it if profiling and
+  benchmark evidence identify a material hotspot in the native noisy-circuit
+  runtime.
 - Existing state-vector partitioning can still be reused structurally before the
   density-specific objective is finalized.
 
@@ -267,7 +305,7 @@ but not as the main research workload.
 - **Keep global depolarizing as the dominant model**: rejected because it weakens
   both scientific relevance and partitioning usefulness.
 
-## ADR-005: Keep Exact Dense Density Matrices As The Reference Backend Through The First Three Research Phases
+## ADR-005: Keep Exact Dense Density Matrices As The Reference Backend Through The First Four Research Phases
 
 ### Status
 
@@ -290,7 +328,9 @@ Exact dense density-matrix simulation is the reference backend through:
 
 - Phase 1: exact mixed-state foundation,
 - Phase 2: noisy training integration,
-- Phase 3: density-aware partitioning/fusion and acceleration.
+- Phase 3: noise-aware partitioning/fusion plus optional benchmark-driven
+  acceleration support,
+- Phase 4: broader noisy VQE/VQA workflows and optimizer studies.
 
 Approximate scaling methods are allowed later, but only after they can be
 benchmarked against this exact reference on overlapping problem sizes.
@@ -298,8 +338,8 @@ benchmarked against this exact reference on overlapping problem sizes.
 ### Rationale
 
 - Early papers are stronger when they can claim exactness.
-- Exact results provide a trustworthy baseline for optimizer and trainability
-  studies.
+- Exact results provide a trustworthy baseline for broader VQE/VQA, optimizer,
+  and trainability studies.
 - This keeps later scaling branches scientifically anchored instead of turning
   the project into an approximation study too early.
 
@@ -326,8 +366,8 @@ benchmarked against this exact reference on overlapping problem sizes.
 
 `NoisyCircuit` currently exposes a useful but narrower gate set than
 `qgd_Circuit`. Full parity would be convenient, but it is not required to reach
-publishable Phase 2 and Phase 3 results if the supported set is aligned with the
-target VQA workloads.
+publishable Phase 2 and Phase 3 results if the supported set is aligned with
+target noisy mixed-state benchmarks and later VQE/VQA workloads.
 
 ### Decision
 
@@ -335,8 +375,8 @@ Gate coverage should be expanded in the following order:
 
 1. retain and thoroughly validate the existing single-qubit and controlled-gate
    subset,
-2. prioritize gates that are common in noisy VQA workloads and partitioning
-   experiments,
+2. prioritize gates that are common in Phase 3 partitioning benchmarks and later
+   Phase 4 VQE/VQA workloads,
 3. add less common gates only when required by benchmark suites or applications.
 
 Priority expansion candidates:
@@ -351,8 +391,8 @@ Priority expansion candidates:
 
 - Publishable work needs representative scope, not immediate total scope.
 - Workload-driven expansion is faster and easier to validate.
-- It keeps the critical path focused on noisy training and density-aware
-  acceleration.
+- It keeps the critical path focused on noise-aware partitioning first and noisy
+  training expansion second.
 
 ### Consequences
 
@@ -381,21 +421,36 @@ A more ambitious long-term design would introduce a shared IR with:
   superoperators.
 
 This is a powerful research direction, but it is significantly more invasive
-than adapter-based unitary-island fusion.
+than the planned Phase 3 noise-aware baseline.
 
 ### Decision
 
 Channel-native fusion is deferred until after the project has:
 
 - a working exact noisy training backend,
-- unitary-island density fusion,
-- and benchmark evidence that noise barriers are the main remaining bottleneck.
+- a native noise-aware density partitioning baseline,
+- and benchmark evidence that more native channel handling is the main remaining
+  bottleneck.
 
 Decision gate:
 
-- if Phase 3 benchmarks show that barrier costs dominate realistic target
-  workloads, prototype channel-native fusion as a dedicated research branch;
+- if Phase 3 benchmarks show that the native noise-aware baseline is still
+  bottlenecked by the lack of channel-native fusion, prototype channel-native
+  fusion as a dedicated research branch;
 - otherwise, keep it as a future extension rather than the main architecture.
+
+Current status:
+
+- the delivered Phase 3 diagnosis package keeps this branch deferred, but now
+  with concrete benchmark motivation rather than only speculative future
+  interest.
+- **Phase 3.1 documentation** (`docs/density_matrix_project/phases/phase-3-1/`,
+  including `DETAILED_PLANNING_PHASE_3_1.md`, `ADRs_PHASE_3_1.md`, and the
+  pre-implementation checklist) is the **execution and publication planning
+  container** for this ADR when the program chooses to open the branch. Opening
+  those docs does not by itself satisfy the gate for shipping code; closing
+  `PRE_IMPLEMENTATION_COMPLETION_CHECKLIST.md` with a **Go** verdict is the
+  documented prerequisite to treat implementation as contract-backed.
 
 ### Rationale
 
@@ -429,8 +484,9 @@ density matrices, two major approximate directions become attractive:
 - tensor-based mixed-state methods such as MPDOs.
 
 Both are scientifically relevant, but they are not the best starting point for
-the current project because the exact backend is still becoming integrated into
-training workflows.
+the current project because the exact backend is already integrated into the
+delivered Phase 2/3 baseline and must remain the scientific anchor for later
+scaling work.
 
 ### Decision
 

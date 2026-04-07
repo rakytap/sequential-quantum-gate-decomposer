@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validation: Task 3 Story 3 unsupported bridge cases.
+"""Validation: unsupported bridge cases.
 
 Captures representative unsupported bridge requests as structured artifacts. The
 goal is to prove that unsupported circuit-source, lowering, and noise-boundary
@@ -120,7 +120,7 @@ def _base_case_metadata(
     metadata.update(
         {
             "case_name": case_name,
-            "case_kind": "task3_bridge_unsupported_validation",
+            "case_kind": "unsupported_bridge_validation",
             "purpose": purpose,
             "bridge_source_type": bridge_source_type,
             "unsupported_category": unsupported_category,
@@ -306,7 +306,7 @@ def capture_unsupported_case(case_builder, verbose=True):
 
 def run_validation(verbose=True):
     print("=" * 78)
-    print("  Task 3 Story 3 Unsupported Bridge Validation [{}]".format(PRIMARY_BACKEND))
+    print("  Unsupported Bridge Validation [{}]".format(PRIMARY_BACKEND))
     print("=" * 78)
     return [capture_unsupported_case(builder, verbose=verbose) for builder in UNSUPPORTED_CASE_BUILDERS]
 
@@ -377,7 +377,7 @@ def print_summary(bundle):
         )
     )
     if bundle["status"] == "pass":
-        print("\n  ALL TESTS PASSED - Task 3 Story 3 unsupported bridge gate is closed.")
+        print("\n  ALL TESTS PASSED - Unsupported bridge validation gate is closed.")
     else:
         print("\n  Some representative unsupported bridge cases did not behave as expected.")
     print("=" * 78)
@@ -389,7 +389,7 @@ def main():
         "--output-dir",
         type=Path,
         default=None,
-        help="Optional directory for the Task 3 Story 3 JSON artifact bundle.",
+        help="Optional directory for the unsupported-bridge JSON artifact bundle.",
     )
     args = parser.parse_args()
 

@@ -1,0 +1,72 @@
+{
+  "cases": [
+    {
+      "actual_fused_execution": true,
+      "case_kind": "structured_family",
+      "case_name": "layered_nearest_neighbor_q8_sparse_seed20260318",
+      "deferred_region_count": 0,
+      "family_name": "layered_nearest_neighbor",
+      "frobenius_norm_diff": 1.0193792192773324e-15,
+      "fused_gate_count": 24,
+      "fused_region_count": 12,
+      "max_abs_diff": 1.1631705747361534e-16,
+      "metadata": {
+        "case_kind": "structured_family",
+        "family_name": "layered_nearest_neighbor",
+        "noise_pattern": "sparse",
+        "qbit_num": 8,
+        "seed": 20260318,
+        "workload_id": "layered_nearest_neighbor_q8_sparse_seed20260318"
+      },
+      "noise_pattern": "sparse",
+      "partition_count": 24,
+      "qbit_num": 8,
+      "runtime_path": "partitioned_density_descriptor_fused_unitary_islands",
+      "structured_fused_runtime_pass": true,
+      "supported_unfused_region_count": 11
+    },
+    {
+      "actual_fused_execution": true,
+      "case_kind": "structured_family",
+      "case_name": "layered_nearest_neighbor_q10_sparse_seed20260318",
+      "deferred_region_count": 0,
+      "family_name": "layered_nearest_neighbor",
+      "frobenius_norm_diff": 1.5442025865469579e-15,
+      "fused_gate_count": 40,
+      "fused_region_count": 20,
+      "max_abs_diff": 1.5301652386684786e-16,
+      "metadata": {
+        "case_kind": "structured_family",
+        "family_name": "layered_nearest_neighbor",
+        "noise_pattern": "sparse",
+        "qbit_num": 10,
+        "seed": 20260318,
+        "workload_id": "layered_nearest_neighbor_q10_sparse_seed20260318"
+      },
+      "noise_pattern": "sparse",
+      "partition_count": 38,
+      "qbit_num": 10,
+      "runtime_path": "partitioned_density_descriptor_fused_unitary_islands",
+      "structured_fused_runtime_pass": true,
+      "supported_unfused_region_count": 18
+    }
+  ],
+  "software": {
+    "numpy": "2.3.5",
+    "python": "3.13.9",
+    "scipy": "1.16.3"
+  },
+  "status": "pass",
+  "suite_name": "phase3_partitioned_runtime_structured_fused_runtime",
+  "summary": {
+    "deferred_regions": 0,
+    "fused_regions": 32,
+    "required_qubits": [
+      8,
+      10
+    ],
+    "structured_fused_runtime_passes": 2,
+    "supported_unfused_regions": 29,
+    "total_cases": 2
+  }
+}

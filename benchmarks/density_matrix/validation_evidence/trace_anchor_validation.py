@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-"""Validation: Task 5 Story 3 trace-and-anchor package.
+"""Validation: trace-and-anchor package.
 
-Builds the phase-level Task 5 trace-and-anchor gate from:
-- the already passing Task 5 Story 2 workflow baseline, which must contain the
-  documented 10-qubit anchor evidence,
+Builds the phase-level trace-and-anchor gate from:
+- the already passing workflow baseline, which must contain the documented
+  10-qubit anchor evidence,
 - and the canonical bounded 4-qubit optimization trace, kept as a stable raw
   artifact rather than renamed into a second trace identity.
 
-The resulting bundle is intentionally a thin Task 5 layer:
+The resulting bundle is intentionally a thin validation-evidence layer:
 - it keeps the workflow baseline and the bounded trace as separate evidence
   layers,
 - it requires both the supported trace and the documented 10-qubit anchor,
@@ -39,7 +39,7 @@ from benchmarks.density_matrix.workflow_evidence.exact_density_vqe_validation im
 from benchmarks.density_matrix.validation_evidence.workflow_baseline_validation import (
     PRIMARY_BACKEND,
     REFERENCE_BACKEND,
-    run_validation as run_story2_validation,
+    run_validation as run_workflow_baseline_validation,
 )
 
 SUITE_NAME = "trace_anchor_validation"
@@ -64,7 +64,7 @@ ARTIFACT_CORE_FIELDS = (
 
 
 def build_requirement_metadata(
-    story2_bundle,
+    workflow_baseline_bundle,
     *,
     qubit_sizes=EXACT_REGIME_WORKFLOW_QUBITS,
     parameter_set_count: int = EXACT_REGIME_PARAMETER_SET_COUNT,
@@ -79,7 +79,7 @@ def build_requirement_metadata(
             "workflow_baseline_validation",
             "canonical_bounded_optimization_trace",
         ],
-        "workflow_baseline_status": story2_bundle["status"],
+        "workflow_baseline_status": workflow_baseline_bundle["status"],
     }
 
 
@@ -101,14 +101,14 @@ def validate_trace_artifact(trace_artifact):
     missing_fields = [field for field in required_fields if field not in trace_artifact]
     if missing_fields:
         raise ValueError(
-            "Task 5 Story 3 trace artifact is missing required fields: {}".format(
+            "Trace-anchor artifact is missing required fields: {}".format(
                 ", ".join(missing_fields)
             )
         )
 
 
 def build_artifact_bundle(
-    story2_bundle,
+    workflow_baseline_bundle,
     trace_result,
     *,
     qubit_sizes=EXACT_REGIME_WORKFLOW_QUBITS,
@@ -119,14 +119,14 @@ def build_artifact_bundle(
 
     documented_10q_anchor_case_names = sorted(
         case["case_name"]
-        for case in story2_bundle["cases"]
+        for case in workflow_baseline_bundle["cases"]
         if case["qbit_num"] == 10
     )
     workflow_baseline_completed = bool(
-        story2_bundle["summary"]["workflow_baseline_completed"]
+        workflow_baseline_bundle["summary"]["workflow_baseline_completed"]
     )
     documented_10q_anchor_present = bool(
-        story2_bundle["summary"]["documented_10q_anchor_present"]
+        workflow_baseline_bundle["summary"]["documented_10q_anchor_present"]
     )
     required_trace_present = bool(trace_artifact.get("required_validation_trace"))
     required_trace_completed = bool(
@@ -150,13 +150,13 @@ def build_artifact_bundle(
         "backend": PRIMARY_BACKEND,
         "reference_backend": REFERENCE_BACKEND,
         "requirements": build_requirement_metadata(
-            story2_bundle,
+            workflow_baseline_bundle,
             qubit_sizes=qubit_sizes,
             parameter_set_count=parameter_set_count,
             required_trace_case_name=trace_artifact["case_name"],
         ),
-        "thresholds": dict(story2_bundle["thresholds"]),
-        "software": dict(story2_bundle["software"]),
+        "thresholds": dict(workflow_baseline_bundle["thresholds"]),
+        "software": dict(workflow_baseline_bundle["software"]),
         "summary": {
             "workflow_baseline_completed": workflow_baseline_completed,
             "documented_10q_anchor_present": documented_10q_anchor_present,
@@ -172,9 +172,9 @@ def build_artifact_bundle(
         },
         "required_artifacts": {
             "workflow_baseline_reference": {
-                "suite_name": story2_bundle["suite_name"],
-                "status": story2_bundle["status"],
-                "summary": story2_bundle["summary"],
+                "suite_name": workflow_baseline_bundle["suite_name"],
+                "status": workflow_baseline_bundle["status"],
+                "summary": workflow_baseline_bundle["summary"],
             }
         },
         "trace_artifact": trace_artifact,
@@ -187,7 +187,7 @@ def validate_artifact_bundle(bundle):
     missing_fields = [field for field in ARTIFACT_CORE_FIELDS if field not in bundle]
     if missing_fields:
         raise ValueError(
-            "Task 5 Story 3 artifact bundle is missing required fields: {}".format(
+            "Trace-anchor bundle is missing required fields: {}".format(
                 ", ".join(missing_fields)
             )
         )
@@ -207,14 +207,14 @@ def run_validation(
     parameter_set_count: int = EXACT_REGIME_PARAMETER_SET_COUNT,
     verbose=False,
 ):
-    _, story2_bundle = run_story2_validation(
+    _, workflow_baseline_bundle = run_workflow_baseline_validation(
         qubit_sizes=qubit_sizes,
         parameter_set_count=parameter_set_count,
         verbose=verbose,
     )
     trace_result = capture_case(TRACE_CASE_NAME, run_optimization_trace)
     bundle = build_artifact_bundle(
-        story2_bundle,
+        workflow_baseline_bundle,
         trace_result,
         qubit_sizes=qubit_sizes,
         parameter_set_count=parameter_set_count,
@@ -228,7 +228,7 @@ def run_validation(
                 bundle["summary"]["required_trace_completed"],
             )
         )
-    return story2_bundle, trace_result, bundle
+    return workflow_baseline_bundle, trace_result, bundle
 
 
 def parse_args():
@@ -237,7 +237,7 @@ def parse_args():
         "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
-        help="Directory for the Task 5 Story 3 JSON artifacts.",
+        help="Directory for the trace-and-anchor JSON artifacts.",
     )
     parser.add_argument(
         "--parameter-set-count",

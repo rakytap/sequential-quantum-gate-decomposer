@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-"""Validation: Task 5 Story 4 metric completeness gate.
+"""Validation: metric-completeness gate.
 
-Builds the phase-level metric-completeness gate from the already delivered Task
-5 evidence layers:
-- Task 5 Story 1 local correctness bundle,
-- Task 5 Story 2 workflow baseline bundle,
-- Task 5 Story 3 trace-and-anchor bundle plus raw trace artifact.
+Builds the phase-level metric-completeness gate from the delivered validation
+evidence layers:
+- local correctness bundle,
+- workflow baseline bundle,
+- trace-and-anchor bundle plus raw trace artifact.
 
-The resulting bundle is intentionally a thin Task 5 layer:
+The resulting bundle is intentionally a thin validation-evidence layer:
 - it checks required internal-consistency fields on mandatory microcases,
 - it checks required execution and performance fields on mandatory workflow
   cases,
@@ -35,12 +35,12 @@ from benchmarks.density_matrix.workflow_evidence.exact_density_vqe_validation im
     EXACT_REGIME_WORKFLOW_QUBITS,
 )
 from benchmarks.density_matrix.validation_evidence.local_correctness_validation import (
-    run_validation as run_story1_validation,
+    run_validation as run_local_correctness_validation,
 )
 from benchmarks.density_matrix.validation_evidence.trace_anchor_validation import (
     PRIMARY_BACKEND,
     REFERENCE_BACKEND,
-    run_validation as run_story3_validation,
+    run_validation as run_trace_anchor_validation,
 )
 
 SUITE_NAME = "metric_completeness_validation"
@@ -113,10 +113,14 @@ def _build_missing_field_map(cases, required_fields):
     return missing_by_case
 
 
-def build_artifact_bundle(story1_bundle, story2_bundle, story3_bundle):
-    micro_cases = [dict(case) for case in story1_bundle["cases"]]
-    workflow_cases = [dict(case) for case in story2_bundle["cases"]]
-    trace_artifact = dict(story3_bundle["trace_artifact"])
+def build_artifact_bundle(
+    local_correctness_bundle,
+    workflow_baseline_bundle,
+    trace_anchor_bundle,
+):
+    micro_cases = [dict(case) for case in local_correctness_bundle["cases"]]
+    workflow_cases = [dict(case) for case in workflow_baseline_bundle["cases"]]
+    trace_artifact = dict(trace_anchor_bundle["trace_artifact"])
 
     missing_micro_metric_fields_by_case = _build_missing_field_map(
         micro_cases, REQUIRED_MICRO_FIELDS
@@ -140,9 +144,9 @@ def build_artifact_bundle(story1_bundle, story2_bundle, story3_bundle):
         and trace_artifact.get("status") == "completed"
     )
     metric_completeness_gate_completed = bool(
-        story1_bundle["status"] == "pass"
-        and story2_bundle["status"] == "pass"
-        and story3_bundle["status"] == "pass"
+        local_correctness_bundle["status"] == "pass"
+        and workflow_baseline_bundle["status"] == "pass"
+        and trace_anchor_bundle["status"] == "pass"
         and not missing_micro_metric_fields_by_case
         and not missing_workflow_metric_fields_by_case
         and not missing_trace_metric_fields
@@ -155,10 +159,10 @@ def build_artifact_bundle(story1_bundle, story2_bundle, story3_bundle):
         "reference_backend": REFERENCE_BACKEND,
         "requirements": build_requirement_metadata(),
         "thresholds": {
-            "micro": dict(story1_bundle["thresholds"]),
-            "workflow": dict(story2_bundle["thresholds"]),
+            "micro": dict(local_correctness_bundle["thresholds"]),
+            "workflow": dict(workflow_baseline_bundle["thresholds"]),
         },
-        "software": dict(story2_bundle["software"]),
+        "software": dict(workflow_baseline_bundle["software"]),
         "summary": {
             "micro_cases_checked": len(micro_cases),
             "workflow_cases_checked": len(workflow_cases),
@@ -183,19 +187,19 @@ def build_artifact_bundle(story1_bundle, story2_bundle, story3_bundle):
         },
         "required_artifacts": {
             "local_correctness_reference": {
-                "suite_name": story1_bundle["suite_name"],
-                "status": story1_bundle["status"],
-                "summary": story1_bundle["summary"],
+                "suite_name": local_correctness_bundle["suite_name"],
+                "status": local_correctness_bundle["status"],
+                "summary": local_correctness_bundle["summary"],
             },
             "workflow_baseline_reference": {
-                "suite_name": story2_bundle["suite_name"],
-                "status": story2_bundle["status"],
-                "summary": story2_bundle["summary"],
+                "suite_name": workflow_baseline_bundle["suite_name"],
+                "status": workflow_baseline_bundle["status"],
+                "summary": workflow_baseline_bundle["summary"],
             },
             "trace_anchor_reference": {
-                "suite_name": story3_bundle["suite_name"],
-                "status": story3_bundle["status"],
-                "summary": story3_bundle["summary"],
+                "suite_name": trace_anchor_bundle["suite_name"],
+                "status": trace_anchor_bundle["status"],
+                "summary": trace_anchor_bundle["summary"],
             },
         },
     }
@@ -207,7 +211,7 @@ def validate_artifact_bundle(bundle):
     missing_fields = [field for field in ARTIFACT_CORE_FIELDS if field not in bundle]
     if missing_fields:
         raise ValueError(
-            "Task 5 Story 4 artifact bundle is missing required fields: {}".format(
+            "Metric-completeness bundle is missing required fields: {}".format(
                 ", ".join(missing_fields)
             )
         )
@@ -227,13 +231,17 @@ def run_validation(
     parameter_set_count: int = EXACT_REGIME_PARAMETER_SET_COUNT,
     verbose=False,
 ):
-    _, _, story1_bundle = run_story1_validation(verbose=verbose)
-    story2_bundle, _, story3_bundle = run_story3_validation(
+    _, _, local_correctness_bundle = run_local_correctness_validation(verbose=verbose)
+    workflow_baseline_bundle, _, trace_anchor_bundle = run_trace_anchor_validation(
         qubit_sizes=qubit_sizes,
         parameter_set_count=parameter_set_count,
         verbose=verbose,
     )
-    bundle = build_artifact_bundle(story1_bundle, story2_bundle, story3_bundle)
+    bundle = build_artifact_bundle(
+        local_correctness_bundle,
+        workflow_baseline_bundle,
+        trace_anchor_bundle,
+    )
     if verbose:
         print(
             "{} [{}] micro_missing={} workflow_missing={} trace_missing={}".format(
@@ -244,7 +252,12 @@ def run_validation(
                 bundle["summary"]["trace_artifacts_missing_required_metrics"],
             )
         )
-    return story1_bundle, story2_bundle, story3_bundle, bundle
+    return (
+        local_correctness_bundle,
+        workflow_baseline_bundle,
+        trace_anchor_bundle,
+        bundle,
+    )
 
 
 def parse_args():
@@ -253,7 +266,7 @@ def parse_args():
         "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
-        help="Directory for the Task 5 Story 4 JSON artifact bundle.",
+        help="Directory for the metric-completeness JSON artifact bundle.",
     )
     parser.add_argument(
         "--parameter-set-count",

@@ -2,9 +2,10 @@
 
 This directory documents the density-matrix track of SQUANDER.
 
-The objective is to move SQUANDER from ideal pure-state simulation to  
-noise-aware mixed-state simulation, then integrate that capability into the VQA  
-training flow.
+The objective is to move SQUANDER from ideal pure-state simulation to
+noise-aware mixed-state simulation, then make noise a first-class concern in
+the partitioning and gate-fusion stack, and only after that broaden noisy
+VQE/VQA workflow capabilities.
 
 ## Why This Project Exists
 
@@ -19,7 +20,7 @@ Density matrices are required for:
 
 ## Current Status
 
-Phase 1 is complete on `feature/density-matrix-phase1`:
+Phase 1 is complete and established the foundation for the density-matrix project:
 
 - `DensityMatrix` C++ core with quantum properties and partial trace,
 - `NoisyCircuit` unified gate + noise execution path,
@@ -27,18 +28,60 @@ Phase 1 is complete on `feature/density-matrix-phase1`:
 - Python bindings in `squander.density_matrix`,
 - dedicated tests and Qiskit comparison benchmarks.
 
-The remaining work is deeper baseline integration and noisy VQA feature completion.
+Phase 2 is complete and established the current exact noisy-workflow baseline:
 
-## 5-Phase Roadmap
+- backend selection between state-vector and density-matrix execution,
+- exact Hermitian-energy evaluation via `Re Tr(H*rho)`,
+- one canonical noisy XXZ workflow contract with explicit supported and
+  deferred boundaries,
+- and machine-checkable validation/publication bundles for that frozen support
+  surface.
+
+Phase 3 is complete and established the noise-aware partitioning/fusion foundation:
+
+- canonical noisy mixed-state planner and descriptor surfaces that treat gates
+  and noise as first-class planner inputs,
+- an executable partitioned density runtime with limited real fused execution on
+  eligible substructures,
+- machine-checkable correctness, performance, and publication-evidence bundles
+  grounded in sequential `NoisyCircuit` and Qiskit Aer baselines,
+- and a bounded planner-calibration result with diagnosis-grounded performance
+  closure, while channel-native fusion and broader workflow growth remain
+  deferred.
+
+Phase 3.1 is complete on its frozen v1 slice as a **bounded decision-study**
+follow-on for channel-native / superoperator fusion (PLANNING.md §5.1). The
+phase-local record in [`phases/phase-3-1/`](phases/phase-3-1/) now includes the
+implemented strict/hybrid runtime surfaces, the full counted 26-row
+whole-workload matrix, a machine-readable decision artifact, a recorded
+pre-publication review state of `decision-study-ready`, and finalized
+phase-local paper surfaces in decision-study mode. Phase 3.1 remains optional
+relative to the default Phase 4 sequencing in the thesis plan, but it is **not**
+an unopened or docs-only branch anymore.
+
+Phase 4 is planned and will broaden the noisy VQE/VQA surface, gradients, and
+optimizer studies.
+
+Phase 5 is planned and will focus on trainability analysis under noise
+(gradient collapse, barren plateaus).
+
+
+## Main Roadmap (Phases 1–5 And Optional 3.1)
 
 
 | Phase | Goal                                                            | Status   |
 | ----- | --------------------------------------------------------------- | -------- |
 | 1     | Foundation: density matrices + initial noise channels           | Complete |
-| 2     | Deep baseline integration + noise completion + basic VQA hooks  | Planned  |
-| 3     | Full noise stack + density-matrix gradients + AVX optimization  | Planned  |
-| 4     | Full noisy VQA training loop for 16-20 qubits                   | Planned  |
+| 2     | Exact noisy backend integration for one canonical workflow       | Complete |
+| 3     | Noise-aware partitioning and gate fusion for mixed-state circuits | Complete |
+| 3.1   | Channel-native / superoperator fusion follow-on (optional)      | Complete (bounded decision study) |
+| 4     | Broader noisy VQE/VQA features, gradients, and optimizer studies | Planned |
 | 5     | Trainability analysis under noise (BP and expressivity studies) | Planned  |
+
+Phase 3.1 sits between 3 and 4 in the partitioning line but does not replace
+Phase 4 on the default critical path; its delivered result is a bounded
+decision-study milestone rather than a broader optimizer or trainability paper.
+See [`planning/PLANNING.md`](planning/PLANNING.md) §4 and §5.1.
 
 
 Notes:
@@ -50,6 +93,9 @@ available.
 
 ## Documentation Map
 
+- `[phases/phase-3-1/](phases/phase-3-1/)`: Phase 3.1 delivered contracts,
+  evidence review, and paper surfaces for the bounded channel-native /
+  superoperator decision-study follow-on.
 - `[CHANGELOG.md](CHANGELOG.md)`: delivered phase outputs and upcoming phase
 targets.
 - `[ARCHITECTURE.md](ARCHITECTURE.md)`: implementation structure and integration

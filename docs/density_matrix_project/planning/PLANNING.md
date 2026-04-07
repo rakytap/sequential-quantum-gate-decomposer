@@ -21,52 +21,68 @@ step, but to define a research program that is:
 The current repository already provides two important foundations:
 
 - a mature state-vector circuit partitioning and fusion path in
-  `squander/partitioning` plus `qgd_Circuit` / `Gates_block`,
+`squander/partitioning` plus `qgd_Circuit` / `Gates_block`,
 - and a real exact density-matrix backend based on `DensityMatrix`,
-  `GateOperation`, `NoiseOperation`, and `NoisyCircuit`.
+`GateOperation`, `NoiseOperation`, and `NoisyCircuit`.
 
 What is already true:
 
 - density matrices, basic noisy channels, tests, and benchmark scripts exist,
 - the density backend is usable for standalone exact noisy simulation,
-- Phase 2 Tasks 1 to 6 now provide an integrated VQE-facing density path with
-  explicit backend selection, exact `Re Tr(H*rho)` Hermitian-energy
-  evaluation, required local-noise support, one canonical noisy XXZ VQE
-  workflow contract, and a layered machine-checkable publication bundle
-  covering the workflow contract, end-to-end 4/6 qubit evidence, 4/6/8/10
-  exact-regime matrix evidence, deterministic unsupported-boundary evidence,
-  and interpretation guardrails, with top-level semantic-closure checks that
-  validate contract completeness, workflow-gate completeness, unsupported-case
-  boundary integrity, and claim-closure rules rather than only artifact
-  presence,
+- Phase 2 is complete and now provides an integrated VQE-facing density path
+with explicit backend selection, exact `Re Tr(H*rho)` Hermitian-energy
+evaluation, required local-noise support, one frozen canonical noisy XXZ VQE
+workflow contract, and a layered machine-checkable publication bundle
+covering the workflow contract, end-to-end 4/6 qubit evidence, 4/6/8/10
+exact-regime matrix evidence, deterministic unsupported-boundary evidence,
+and interpretation guardrails, with top-level semantic-closure checks that
+validate contract completeness, workflow-gate completeness, unsupported-case
+boundary integrity, and claim-closure rules rather than only artifact
+presence,
+- Phase 3 is complete and now provides a canonical noisy mixed-state planner
+surface, schema-backed descriptor sets, an executable partitioned density
+runtime, limited real fused execution on eligible substructures, and layered
+correctness, performance, and publication-evidence packages,
 - the partitioning stack is mature for state-vector simulation and wide-circuit
-  unitary optimization.
+unitary optimization.
 
 What remains intentionally open for later phases:
 
-- the integrated density path is currently anchored to generated-`HEA` VQE
-  workflows rather than broad decomposition and custom-circuit parity,
-- partitioning and gate fusion are not yet available in the density-matrix path,
-- the current partitioning cost model is still state-vector-oriented,
-- and density-backend gradient routing plus broader circuit-source support remain
-  future work.
+- the completed Phase 2 density path is intentionally anchored to one generated-
+`HEA` canonical workflow rather than broad circuit-source parity,
+- the delivered Phase 3 planner-calibration result is intentionally bounded to
+the audited support surface rather than full density-aware parity across every
+planner variant and circuit source,
+- and broader VQE/VQA feature growth, including density-backend gradient
+routing, richer workflow support, and optimizer studies, remains Phase 4+
+work,
+- fully channel-native fused noisy blocks remain a benchmark-driven follow-on
+branch rather than part of the delivered baseline,
+- and approximate scaling paths such as stochastic trajectories or MPDO-style
+methods remain outside the current exact-backend critical path.
 
 ## 2. Guiding Principles
 
 The following principles should govern the project:
 
 - Keep exact dense density matrices as the scientific anchor during the early
-  phases.
+phases.
 - Prioritize realistic local noise models over toy global noise when making
-  scientific claims.
+scientific claims.
 - Judge performance work by its value for noisy training workflows, not only by
-  raw simulator throughput.
+raw simulator throughput.
 - Reuse the existing state-vector partitioning infrastructure where possible,
-  but do not pretend its current objective is already density-aware.
+but do not pretend its current objective or data model is already
+density-aware and noise-aware.
+- Treat noisy mixed-state circuits as first-class inputs to partitioning/fusion
+work instead of treating noise only as partition-boundary metadata.
+- Keep broader VQE/VQA feature expansion out of the bounded Phase 3 baseline;
+Phase 4 is the earliest home for new workflow surface beyond the frozen
+Phase 2 contract.
 - Delay high-risk architectural generalization until benchmark evidence justifies
-  it.
+it.
 - Maintain reproducibility as a first-class output: code, configs, benchmarks,
-  and validation data.
+and validation data.
 
 ## 2.1 Success Conditions For A Meaningful PhD Project
 
@@ -74,34 +90,42 @@ The project should be considered scientifically successful only if all of the
 following become true by the end of the main research path:
 
 - the work answers training-related scientific questions, not only simulator
-  implementation questions,
+implementation questions,
 - the exact density-matrix backend remains strong enough to serve as a trusted
-  reference for at least the early and middle phases,
+reference for at least the early and middle phases,
 - realistic local noise models are used in the core studies,
 - the benchmark suite includes training-relevant circuits and not only synthetic
-  simulation kernels,
+simulation kernels,
 - the performance work is tied to concrete experimental reach, such as more
-  optimizer runs, larger sweeps, or broader trainability studies,
+optimizer runs, larger sweeps, or broader trainability studies,
 - the optimizer studies are rigorous enough to produce conclusions beyond a
-  single task or ansatz,
+single task or ansatz,
 - the trainability phase produces a reusable dataset and publication-grade
-  evidence,
+evidence,
 - and the code, experiment configuration, and validation methodology are all
-  reproducible enough to survive external review.
+reproducible enough to survive external review.
 
 If these conditions are not met, the project risks becoming an engineering effort
 without a strong thesis-level scientific contribution.
 
 ## 3. Recommended Research Path
 
-The recommended path is:
+The recommended dependency order is:
 
-1. finish exact noisy training integration,
-2. add density-aware acceleration through adapter-based unitary-island
-   partitioning and fusion,
-3. use the resulting backend for noisy optimizer and trainability studies,
-4. only then branch into channel-native fusion or approximate scaling methods if
-   the exact backend has reached its practical limit.
+1. preserve and package the exact noisy training integration achieved in
+  Phase 2,
+2. build later work on top of the delivered Phase 3 noise-aware
+  partitioning/fusion baseline rather than reopening its core scope by default,
+3. broaden VQE/VQA workflows, gradients, and optimizer studies only after that
+  Phase 3 backend exists,
+   - optional: pursue Phase 3.1 channel-native / superoperator fusion as a
+     documented follow-on partitioning milestone after the Phase 3 baseline
+     (see §4 Phase 3.1 and `docs/density_matrix_project/phases/phase-3-1/`)
+     when the research program prioritizes that branch; the default PhD
+     sequencing may still advance Phase 4 first,
+4. use the resulting exact backend for full trainability studies,
+5. only then branch into more invasive fusion models or approximate scaling
+  methods if the exact backend has reached its practical limit.
 
 This path maximizes the chance of a coherent PhD narrative and multiple strong
 papers.
@@ -147,7 +171,7 @@ strongest standalone full paper.
 
 ### Status
 
-`In Progress (Tasks 1-6 now deliver the canonical workflow contract and publication-facing evidence bundle; paper drafting and follow-on phase handoff remain active)`
+`Complete (core technical scope delivered; paper drafting and packaging continue as a parallel publication track)`
 
 ### Main Goal
 
@@ -159,11 +183,11 @@ for noisy variational workflows.
 - backend selection for state-vector versus density-matrix workflows,
 - exact Hermitian-energy path `Re Tr(H*rho)` for the supported XXZ workflow,
 - generated-`HEA` bridge from `qgd_Variational_Quantum_Eigensolver_Base` into
-  density-matrix execution,
+density-matrix execution,
 - additional realistic local noise channels as required by the first training
-  studies,
+studies,
 - stronger validation and benchmark coverage around small and medium noisy
-  circuits.
+circuits.
 
 ### Recommended Scope Boundary
 
@@ -182,10 +206,10 @@ scientifically reliable and practically usable?
 - exact noisy energy / observable evaluation,
 - benchmark suite for noisy training-relevant circuits,
 - one canonical noisy XXZ VQE workflow contract with explicit supported,
-  optional, deferred, and unsupported boundaries,
+optional, deferred, and unsupported boundaries,
 - and a machine-checkable validation and publication-evidence package with stable
-  workflow and case IDs, explicit status checks, metric completeness, and
-  interpretation guardrails.
+workflow and case IDs, explicit status checks, metric completeness, and
+interpretation guardrails.
 
 ### Publication Target
 
@@ -197,54 +221,99 @@ First major paper: exact noisy backend integration.
 - exact noisy training loop runs end-to-end,
 - noisy emulation stable around the exact target regime,
 - machine-checkable benchmark and validation bundles exist for the delivered
-  Phase 2 support surface,
+Phase 2 support surface,
 - only mandatory, complete, supported evidence closes the main Phase 2 claim,
 - and paper-quality benchmark, validation, and evidence-packaging outputs exist.
 
-### Phase 3: Density-Aware Partitioning, Fusion, And Acceleration
+### Phase 3: Noise-Aware Partitioning And Fusion For Mixed-State Circuits
+
+### Status
+
+`Complete (minimum backend contract delivered; planner calibration is bounded and the current performance rule closes through diagnosis-grounded benchmark evidence while paper packaging continues in parallel)`
 
 ### Main Goal
 
-Bring the scientific value of the existing partitioning/fusion subsystem into the
-density-matrix path.
+Extend SQUANDER's partitioning and gate-fusion subsystem so noisy
+density-matrix circuits are first-class inputs rather than post hoc unitary
+islands separated by opaque noise boundaries.
 
 ### Technical Focus
 
-- adapter-based unitary-island partitioning with noise barriers,
-- density-unitary fused block execution,
-- density-aware cost-model design and calibration,
-- AVX/GPU-oriented acceleration of key density operations,
-- benchmark comparison between sequential density execution and partitioned /
-  fused density execution.
+- represent noise channels and density-matrix execution semantics inside
+partition planning and fusion contracts,
+- make partitioning decisions aware of noise placement, channel density, and
+mixed-state execution cost,
+- adapt fusion/runtime interfaces so partitions derived from noisy circuits
+preserve exact gate/noise order,
+- benchmark correctness and performance against the unfused sequential density
+baseline on representative noisy circuit families,
+- and only add optional density-kernel acceleration, including AVX-focused work,
+when profiling and benchmark evidence shows that it materially supports the
+mixed-state partition/fusion runtime.
 
 ### Architectural Decision
 
-Use the barrier-based unitary-island path first:
+Start from the existing partitioning/fusion assets, but raise the Phase 3
+contract:
 
-- partition contiguous unitary segments,
-- preserve noise order exactly,
-- use the current partitioning stack as a planner,
-- validate every fused result against the unfused density baseline.
+- noisy circuits must be valid planner inputs,
+- partition descriptors must retain exact noise placement and mixed-state
+semantics,
+- unitary-only islands may remain an internal optimization tactic, but not the
+definition of the Phase 3 problem,
+- every partitioned/fused result must be validated against the unfused density
+baseline.
+
+### Minimum Acceptable Implementation
+
+Phase 3 is **not** complete if it only delivers a noise-aware planner/runtime
+representation on paper.
+
+The minimum acceptable implementation must include:
+
+- an executable partitioned path for noisy mixed-state circuits end to end,
+- at least one real fused execution mode for eligible substructures inside that
+noisy-circuit runtime,
+- and correctness plus benchmark evidence on representative noisy workloads.
+
+The minimum acceptable implementation does **not** require:
+
+- channel-native fused noisy blocks,
+- monolithic CPTP or superoperator fusion of arbitrary gate+noise regions,
+- or a proof that every useful noisy partition must already execute as one
+fused noisy block.
+
+In other words, Phase 3 must deliver more than planner-only representation, but
+it does not require the most invasive fully fused noisy-block architecture as
+its minimum closure condition.
 
 ### Primary Scientific Question
 
-Can partitioning and gate-fusion ideas, which are already useful for state-vector
- simulation, produce meaningful gains for exact density-matrix workloads relevant
- to noisy training?
+Can SQUANDER's partitioning/fusion subsystem be extended so exact noisy
+mixed-state circuits remain semantically faithful while still yielding
+meaningful acceleration on target workloads?
 
 ### Main Deliverables
 
-- density-aware partitioning prototype,
-- benchmark-calibrated cost model,
-- performance study over circuit families, partition sizes, and noise densities,
-- documented limitations of barrier-based fusion.
+- a partitioning representation that accepts noisy mixed-state circuits as
+first-class inputs,
+- a noise-aware partitioning objective / heuristic with benchmark calibration,
+- an executable mixed-state partition/fusion runtime that preserves exact noise
+ordering and includes at least one real fused execution path for eligible
+substructures,
+- a correctness and performance study over circuit families, noise placements,
+and noise densities,
+- documented limitations and a clear handoff to any more invasive follow-on
+fusion work.
 
-### Decision Gate
+### Decision Gate Resolution
 
-At the end of Phase 3, decide whether:
+The delivered Phase 3 evidence resolves this gate in favor of keeping the
+native noise-aware planner/runtime plus limited real fused execution as the
+default main path.
 
-- the barrier-based approach is sufficient for the project's scientific goals,
-- or whether an IR-first / channel-native fusion branch should be prototyped.
+Channel-native / IR-first fusion remains a benchmark-driven follow-on branch,
+not a prerequisite for baseline Phase 3 closure.
 
 ### Publication Target
 
@@ -252,20 +321,135 @@ Major methods / systems paper.
 
 ### Exit Criteria
 
-- exact agreement with the unfused density path,
-- measurable speedups on representative noisy workloads,
-- clear understanding of where partitioning helps and where it does not.
+- partitioning and fusion accept noisy mixed-state circuits without reducing
+noise to partition-boundary-only metadata,
+- Phase 3 delivers more than planner-only representation by providing an
+executable partitioned path plus at least one real fused execution mode on
+representative noisy circuits,
+- exact agreement with the unfused density path holds on representative noisy
+workloads,
+- channel-native fused noisy blocks remain optional follow-on work rather than a
+minimum Phase 3 closure requirement,
+- measurable speedups or, at minimum, benchmark-grounded evidence clearly
+explains where noise-aware partitioning helps and where additional
+architecture is required.
 
-### Phase 4: Noisy VQA Workflows And Optimizer Studies
+### Current Phase 3 Evidence Findings
+
+The current fused-runtime implementation has now realized the minimum fused
+backend in
+one conservative concrete form:
+
+- descriptor-local unitary-island fusion on 1- and 2-qubit spans using the
+density backend's local-unitary primitive,
+- an additive extension of the shared partitioned runtime and audit surface
+rather than a second private runtime schema,
+- and real fused coverage plus exact agreement with the sequential density
+baseline on representative 8- and 10-qubit structured workloads.
+
+The current benchmark outcome closes the Phase 3 performance rule through the
+diagnosis branch rather than the positive-threshold branch. On representative
+layered nearest-neighbor sparse workloads, the current fused baseline remains
+slower at 8 and 10 qubits and shows no peak-memory reduction, primarily because
+supported islands still remain partially unfused and the present Python-level
+fused-kernel path adds overhead. This now argues for benchmark-driven follow-on
+optimization or a more invasive channel-native branch, not for stronger
+acceleration claims in the baseline Phase 3 result.
+
+Current performance-evidence findings now make that diagnosis package concrete
+at the phase
+level. The emitted `performance_evidence` bundles record:
+
+- `34` counted supported benchmark cases total,
+- `4` continuity-anchor cases,
+- `30` structured benchmark cases across the required families, sizes,
+noise-placement patterns, and rerun-sensitive seed slices,
+- `6` representative review cases, one primary-seed sparse structured case for
+each required family and size,
+- `0` positive-threshold pass cases,
+- `6` diagnosis-only representative cases,
+- and carry-forward of the `17` explicit correctness-evidence boundary cases
+into the summary
+layer.
+
+The current benchmark closure is therefore not only a fused-runtime finding
+anymore. It is a fully emitted performance-and-sensitivity package that closes
+the Phase 3 rule through diagnosis-grounded benchmark evidence rather than
+through a speedup claim.
+
+### Phase 3.1: Channel-Native / Superoperator Fusion
+
+### Status
+
+`Complete (bounded v1 decision study)` — implementation-backed, with the
+frozen counted correctness slice, full counted 26-row performance matrix,
+machine-readable `break_even_table` / `justification_map`, and
+`PRE_PUBLICATION_EVIDENCE_REVIEW_PHASE_3_1.md` recorded at
+`decision-study-ready`.
 
 ### Main Goal
 
-Use the integrated and accelerated exact noisy backend to study training
-behavior, not just simulation throughput.
+Extend the delivered Phase 3 partitioned density runtime with **exact**
+channel-native or superoperator-native fusion of eligible noisy regions where
+the Phase 3 conservative unitary-island fused baseline is insufficient, and
+produce benchmark-justified evidence comparing against both sequential
+`NoisyCircuit` execution and the Phase 3 fused path.
 
 ### Technical Focus
 
-- end-to-end noisy VQA workflows,
+- exact CPTP / superoperator (or equivalent) representation and composition for
+  fused noisy blocks on a frozen small support,
+- integration with the existing noise-aware planner and descriptor contracts
+  without silent semantic fallback for advertised channel-native modes,
+- eligibility and unsupported tiers aligned with realistic local noise models,
+- correctness evidence against the sequential density baseline and external
+  micro-validation posture consistent with Phase 3 culture,
+- comparative performance evidence versus sequential execution and Phase 3
+  fused execution, including diagnosis-grounded closure if speedups are absent.
+
+### Relationship To Phase 3
+
+Phase 3.1 is **additive**. It does not reopen Phase 3’s minimum deliverable or
+Paper 2 claim boundary. It consumes the Phase 3 diagnosis that points toward a
+more invasive fusion branch as a plausible next step.
+
+### Primary Scientific Question
+
+When does native channel or superoperator fusion materially improve exact noisy
+partitioned simulation on training-relevant workloads, and when is the remaining
+bottleneck elsewhere?
+
+### Publication Target
+
+Bounded decision-study paper / methods note on the frozen v1 slice (see
+`PUBLICATIONS.md` Phase 3.1 / Side Paper A).
+
+### Exit Criteria
+
+- frozen support matrix and primary representation choice documented in Phase
+  3.1 ADRs and checklist,
+- exact strict/hybrid execution validated on the frozen counted correctness
+  slice,
+- full counted 26-row matrix emitted with matrix-wide decision artifact,
+- and publication-facing claim boundary matches the emitted bounded
+  decision-study evidence and does not contradict closed Phase 3 claims.
+
+Detailed tasks, validation matrix, and gates:
+[`DETAILED_PLANNING_PHASE_3_1.md`](../phases/phase-3-1/DETAILED_PLANNING_PHASE_3_1.md).
+
+### Phase 4: Broader Noisy VQE/VQA Workflows And Optimizer Studies
+
+### Main Goal
+
+Build on the completed Phase 2 workflow and the Phase 3 backend to broaden the
+VQE/VQA surface, rather than adding those features during the partitioning
+phase.
+
+### Technical Focus
+
+- broader circuit-source support beyond the generated-`HEA` Phase 2 contract,
+- density-backend gradient and optimizer routing,
+- end-to-end noisy VQE/VQA workflows,
 - optimizer comparison under exact local noise,
 - BLS and baseline methods under matched conditions,
 - entropy, purity, and gradient instrumentation,
@@ -273,15 +457,18 @@ behavior, not just simulation throughput.
 
 ### Primary Scientific Question
 
-How do optimizer choices and workflow design interact with realistic local noise
-when the backend is exact rather than approximate or shot-driven?
+How do workflow design and optimizer choices interact with realistic local noise
+once the exact backend and noise-aware partitioning path are both in place?
 
 ### Main Deliverables
 
+- broader noisy VQE/VQA support beyond the frozen Phase 2 workflow,
+- density-backend gradient/optimizer infrastructure for the supported Phase 4
+surface,
 - optimizer comparison datasets,
 - one or more realistic application cases,
 - reproducible noisy training workflows suitable for publication and later thesis
-  experiments.
+experiments.
 
 ### Publication Target
 
@@ -289,7 +476,10 @@ Applications / optimization paper.
 
 ### Exit Criteria
 
-- at least one full noisy training workflow is robust and reproducible,
+- at least one noisy VQE/VQA workflow beyond the Phase 2 baseline is robust and
+reproducible,
+- supported density-backend gradient and optimizer flows are stable enough for
+optimizer studies,
 - optimizer comparisons are strong enough for publication,
 - experiments can be scaled into the Phase 5 trainability campaign.
 
@@ -336,17 +526,12 @@ five-phase plan unless benchmark evidence strongly justifies accelerating them.
 
 ### 5.1 Channel-Native / Superoperator Fusion
 
-Why it matters:
-
-- it may outperform barrier-based fusion for sufficiently noise-dense circuits,
-- it is architecturally elegant,
-- and it could become a strong follow-on methods paper.
-
-Why it is not first:
-
-- it is much more invasive,
-- it is harder to validate,
-- and it is not needed to reach the first major scientific results.
+This parallel track is **formalized as Phase 3.1** in §4. Rationale, scope, exit
+criteria, and spec-driven contracts live in
+[`docs/density_matrix_project/phases/phase-3-1/`](../phases/phase-3-1/)
+(`DETAILED_PLANNING_PHASE_3_1.md`, `ADRs_PHASE_3_1.md`, and companion paper
+drafts). It remains subordinate to the main five-phase narrative unless the
+program explicitly prioritizes implementation before Phase 4.
 
 ### 5.2 Stochastic Trajectories
 
@@ -359,7 +544,7 @@ Why it is not first:
 
 - the exact density backend should remain the reference engine first,
 - and the PhD gains more from exactness early than from larger but approximate
-  scale.
+scale.
 
 ### 5.3 MPDO And Other Tensor-Based Mixed-State Methods
 
@@ -389,43 +574,71 @@ fed by the exact-backend results rather than replacing them.
 
 To keep the project coherent, use explicit decision gates.
 
+**Scope note:** The labels `DG-1` … here are **program-level** gates for this
+document only. Phase detailed plans (`DETAILED_PLANNING_PHASE_2.md`,
+`DETAILED_PLANNING_PHASE_3.md`, …) define their own numbered gates in context;
+when cross-referencing, use the phase document’s wording as the checklist, and
+treat the questions below as the rollup across phases.
+
 ### DG-1: After Phase 2
 
+Status:
+
+- Satisfied in the delivered roadmap: Phase 2 proved the exact noisy backend is
+integrated enough to support reproducible experiments on the frozen canonical
+workflow, so Phase 3 proceeded as the main technical track.
+
+### DG-2: At Phase 3 Completion
+
+Status:
+
+- Answered `yes` for baseline closure: the native noise-aware partitioned
+runtime plus limited real fused execution satisfies the Phase 3 exit criteria
+on the delivered bounded support surface.
+- The performance rule closes through diagnosis-grounded benchmark evidence,
+not through positive-threshold speedup cases.
+- Channel-native / IR-first fusion remains deferred follow-on work unless a
+dedicated branch is opened with stronger benchmark justification. Phase 3.1
+(`docs/density_matrix_project/phases/phase-3-1/`) is the **documented container**
+for that branch when opened; opening Phase 3.1 planning does not by itself
+satisfy ADR-007 for code delivery.
+
+### DG-3: Phase 3 To Phase 4 Handoff
+
 Question:
 
-- Is the exact noisy backend integrated enough to support reproducible training
-  experiments?
-
-If no:
-
-- do not move major effort into density-aware partitioning yet.
-
-### DG-2: During Phase 3
-
-Question:
-
-- Does barrier-based unitary-island fusion give enough benefit on target noisy
-  workloads?
+- Are remaining limitations primarily broader workflow surface, gradients, and
+optimizer-facing features, rather than unresolved Phase 3 backend semantics or
+performance architecture?
 
 If yes:
 
-- keep the barrier-based architecture as the default.
+- proceed to Phase 4 broader noisy VQE/VQA work.
 
 If no:
 
-- prototype channel-native fusion as a separate research branch.
+- close Phase 3 backend debt before expanding workflow scope.
 
-### DG-3: Before Large-Scale Phase 5 Experiments
+Phase 3.1 is **not** a prerequisite for clearing DG-3 unless remaining
+limitations are explicitly scoped as channel-native fusion debt rather than
+broader workflow or optimizer surface. The default handoff still assumes Phase 4
+can proceed when Phase 3 semantics and evidence are closed as delivered.
+
+### DG-4: Before Large-Scale Phase 5 Experiments
 
 Question:
 
 - Is exact dense density-matrix simulation still sufficient for the most
-  important trainability experiments?
+important trainability experiments?
+
+If yes:
+
+- run Phase 5 at the planned scale on the exact backend and evidence bundle.
 
 If no:
 
 - introduce trajectories or MPDO-style methods, but benchmark them against the
-  exact backend first.
+exact backend first.
 
 ## 7. Benchmark And Validation Matrix
 
@@ -435,9 +648,9 @@ The following evaluation matrix should be built up progressively across phases.
 
 - Qiskit Aer density-matrix backend,
 - one additional simulator or framework when feasible, such as QuEST, Qulacs,
-  or QuTiP depending on the experiment type,
+or QuTiP depending on the experiment type,
 - and the existing unfused sequential density path as the internal exact
-  baseline.
+baseline.
 
 ### Circuit Families
 
@@ -453,9 +666,9 @@ The following evaluation matrix should be built up progressively across phases.
 - dephasing / phase damping,
 - amplitude damping,
 - whole-register depolarizing only as an optional regression or stress-test
-  baseline,
+baseline,
 - generalized amplitude damping or coherent over-rotation only when a later
-  justified benchmark extension requires them,
+justified benchmark extension requires them,
 - and readout / shot-noise plus calibration-aware variants only in later phases.
 
 ### Metrics
@@ -482,34 +695,39 @@ premature expansions:
 
 ## 9. Suggested Calendar Alignment
 
-The following mapping keeps the new planning consistent with the existing PhD
-roadmap while sharpening the technical priorities:
-
-| Calendar window | Recommended emphasis |
-|---|---|
-| Fall 2025 | Phase 1 foundation work |
-| Spring 2026 | Phase 2 backend integration, canonical workflow contract, and publication bundle delivered (Tasks 1-6) |
-| Fall 2026 | Phase 2 paper packaging and Phase 3 acceleration begins |
-| Spring 2027 | Phase 3 matures into benchmark-driven methods work |
-| 2027 to 2028 | Phase 4 noisy optimization workflows |
-| 2028 onward | Phase 5 trainability and final thesis science |
-
-This mapping is approximate. The more important point is dependency order:
+The original calendar mapping is now partly historical because Phases 1-3 have
+been delivered in code and documentation. The more important point remains the
+dependency order:
 
 - exact backend first,
-- density-aware acceleration second,
-- optimizer science third,
+- noise-aware partitioning/fusion second,
+- broader VQE/VQA and optimizer science third,
 - trainability science fourth,
 - optional large-scale approximation branches only when justified.
+
+Current roadmap emphasis:
+
+
+| Period                        | Recommended emphasis                                                                                                                          |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Completed milestone window    | Phase 1 exact mixed-state foundation, Phase 2 exact noisy workflow integration, and Phase 3 bounded partitioning/fusion backend all delivered |
+| Current publication window    | Phase 2 and Phase 3 manuscript packaging, figure polishing, and venue shaping                                                                 |
+| Next implementation milestone | Phase 4 broader noisy VQE/VQA workflows, gradients, and optimizer studies                                                                     |
+| Optional follow-on milestone  | Phase 3.1 channel-native / superoperator fusion (specification in `phases/phase-3-1/`; scheduling relative to Phase 4 is program choice)     |
+| Later thesis milestones       | Phase 5 trainability studies plus any benchmark-justified scaling branches                                                                    |
+
 
 ## 10. Bottom Line
 
 The most successful and meaningful version of this PhD project is not "build the
-most general noisy simulator first." It is:
+most general noisy simulator first." It is to preserve the dependency order
+that has now been partially realized:
 
-- build a trusted exact noisy backend,
-- integrate it into training workflows,
-- accelerate it with density-aware partitioning and fusion,
+- build and keep a trusted exact noisy backend,
+- establish a bounded noise-aware partitioning/fusion baseline for mixed-state
+circuits,
+- broaden VQE/VQA workflows and optimizer studies only after that backend
+exists,
 - and use it to answer real questions about training under realistic noise.
 
 That path gives the project:
@@ -517,3 +735,4 @@ That path gives the project:
 - the cleanest scientific claims,
 - the strongest publication sequence,
 - and the best alignment with the stated PhD research goal.
+

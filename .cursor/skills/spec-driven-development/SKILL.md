@@ -1,18 +1,24 @@
 ---
 name: spec-driven-development
 description: >-
-  Guides spec-driven development for the density matrix project in SQUANDER.
-  Use when planning phases, creating phase docs, writing DETAILED_PLANNING,
-  ADRs, task mini-specs, pre-implementation checklists, or papers; or when the
-  user mentions spec-driven development, phase contracts, task-level specs, or
-  the density matrix planning workflow.
+  Guides spec-driven development under docs/density_matrix_project only:
+  phase planning, DETAILED_PLANNING, ADRs, task mini-specs, pre-implementation
+  checklists, API reference and publication docs. Applied when work touches that
+  tree or when the user mentions spec-driven development, phase contracts,
+  task-level specs, or the density matrix planning workflow.
 ---
 
 # Spec-Driven Development (Density Matrix Project)
 
-This skill documents the working model for spec-driven development in the
-density matrix project. All phase work follows a layered hierarchy:
-contracts first, then task mini-specs, then stories, then code.
+**Scope:** `docs/density_matrix_project/` only — not other SQUANDER trees unless
+the user explicitly extends scope.
+
+This skill documents the working model for spec-driven development in that
+documentation set. All phase work follows a layered hierarchy: contracts
+first, then task mini-specs, then stories, then code.
+
+**Path rule:** Phase artifacts always live under
+`docs/density_matrix_project/phases/...` (no shorthand `phases/` from repo root).
 
 ## Source-of-Truth Documents
 
@@ -21,7 +27,19 @@ Phase work is driven by:
 - `docs/density_matrix_project/planning/PLANNING.md` — high-level research plan
 - `docs/density_matrix_project/planning/PUBLICATIONS.md` — publication strategy
 - `docs/density_matrix_project/planning/` — ADRs, REFERENCES, etc.
-- `docs/density_matrix_project/phases/phase-X/` — phase-specific outputs
+- `docs/density_matrix_project/phases/<phase-dir>/` — phase-specific outputs
+
+### Phase directories and sub-phases
+
+- **Numeric phase:** `docs/density_matrix_project/phases/phase-2/`,
+  `phase-3/`, etc.
+- **Sub-phase (same artifact set, extended slug):** e.g.
+  `docs/density_matrix_project/phases/phase-3-1/` uses the same document
+  types as `phase-3/`, with phase-specific filenames using the underscore form
+  of the slug (e.g. `DETAILED_PLANNING_PHASE_3_1.md`, `ADRs_PHASE_3_1.md`,
+  `SHORT_PAPER_PHASE_3_1.md`, `ABSTRACT_PHASE_3_1.md`, `PAPER_PHASE_3_1.md`).
+  The narrative companion stays **`SHORT_PAPER_NARRATIVE.md`** in that directory
+  (unprefixed; same convention as `phase-3/`).
 
 ## Four-Layer Hierarchy
 
@@ -41,6 +59,9 @@ Primary deliverables:
 | `ADRs_PHASE_X.md` | Architecture and scope decisions for the phase |
 | `PRE_IMPLEMENTATION_COMPLETION_CHECKLIST.md` | Gap list validating that the plan is detailed enough to implement |
 
+Replace `PHASE_X` with the phase id matching the directory (e.g. `PHASE_2`,
+`PHASE_3_1`).
+
 **Practical rule:** If a decision affects multiple tasks, close it at the phase level (ADRs). If it affects only one task, defer to that task's mini-spec.
 
 ### Layer 2: Task-Level Mini-Spec (before each task)
@@ -53,9 +74,11 @@ Before starting each task, define in a mini-spec:
 - Affected interfaces
 - Publication relevance (if any)
 
-**Location:** `phases/phase-X/task-N/TASK_N_MINI_SPEC.md`
+**Location:**
+`docs/density_matrix_project/phases/phase-X/task-N/TASK_N_MINI_SPEC.md`
 
-Example: `phases/phase-2/task-1/TASK_1_MINI_SPEC.md`
+Example:
+`docs/density_matrix_project/phases/phase-2/task-1/TASK_1_MINI_SPEC.md`
 
 ### Layer 3: Stories (behavioral slices)
 
@@ -169,19 +192,57 @@ Quality gate for engineering tasks:
 
 ## Phase Workflow (Three Steps)
 
-The first step for any phase is creating the initial phase documents. Then validate, then close the checklist. Use the prompts below (substitute `phase-X` and `Phase X` for the target phase, e.g. phase-2, Phase 2).
+The first step for any phase is creating the initial phase documents. Then validate, then close the checklist. Use the prompts below (substitute `phase-X` and `Phase X` for the target directory, e.g. `phase-2` / Phase 2, or `phase-3-1` / Phase 3.1).
+
+### Short Paper Surfaces (Two-Paper Model)
+
+Each phase produces two short paper surfaces with distinct roles:
+
+| Document | Purpose | Audience |
+|----------|---------|----------|
+| `SHORT_PAPER_PHASE_X.md` | Technical methods paper — structured sections, detailed validation plan, numerical thresholds, scope boundaries, claim boundary | Venue-ready technical audience |
+| `SHORT_PAPER_NARRATIVE.md` | Narrative positioning companion — scientific motivation, research arc, "why this phase matters", scientific positioning | General PhD-conference audience |
+
+The two surfaces are **not** different lengths of the same content. They serve
+genuinely different purposes:
+
+- **PHASE_X** answers "what is the contribution and how is it validated?"
+- **NARRATIVE** answers "why does this phase matter in the research arc?"
+
+Do **not** create a third `SHORT_PAPER_4PAGE.md`. The two surfaces above replace
+the earlier three-paper pattern (consolidated from phases 2-3 onward).
+
+### Publication Sync After Implementation
+
+Before revising `ABSTRACT_PHASE_X.md`, `SHORT_PAPER_PHASE_X.md`,
+`SHORT_PAPER_NARRATIVE.md`, or `PAPER_PHASE_X.md` after implementation work has
+started:
+
+1. Verify the current state from code, tests, and emitted artifacts, not only
+   from planning documents.
+2. Classify publication statements as:
+   - implemented and validated,
+   - implemented but only partially validated,
+   - scaffolded/planned only.
+3. Keep the technical short paper and full paper aligned to the current evidence
+   boundary.
+4. Keep `SHORT_PAPER_NARRATIVE.md` science-first unless the user explicitly asks
+   for a software/systems-paper framing:
+   - avoid repo file-path inventory,
+   - avoid internal task IDs and roadmap phrasing,
+   - avoid API-level detail that does not matter to the scientific audience.
 
 ### Step 1: Create Initial Phase Documents
 
-Work out a detailed plan per PLANNING.md and all docs in `planning/`, plus findings. Write into `DETAILED_PLANNING_PHASE_X.md`. Do not change code. Apply spec-driven development principles. Prepare the phase paper per PUBLICATIONS.md in 3 steps: (1) ~4-page short paper in `SHORT_PAPER_PHASE_X.md`, (2) abstract in `ABSTRACT_PHASE_X.md` for PhD conference presentation, (3) full paper in `PAPER_PHASE_X.md`. Put all phase-X docs in `phases/phase-X/`. Break down implementation into tasks and acceptance criteria. Tasks are goals, not implementations. No code snippets in phase docs except API-reference ones after implementation. Document all phase-X decisions in `ADRs_PHASE_X.md`.
+Work out a detailed plan per `docs/density_matrix_project/planning/PLANNING.md` and all docs in `docs/density_matrix_project/planning/`, plus findings. Write into `DETAILED_PLANNING_PHASE_X.md`. Do not change code. Apply spec-driven development principles. Prepare publication outputs per `docs/density_matrix_project/planning/PUBLICATIONS.md` in 4 steps: (1) technical short paper in `SHORT_PAPER_PHASE_X.md`, (2) narrative positioning short paper in `SHORT_PAPER_NARRATIVE.md`, (3) abstract in `ABSTRACT_PHASE_X.md` for PhD conference presentation, (4) full paper in `PAPER_PHASE_X.md`. Put all phase documents in `docs/density_matrix_project/phases/phase-X/`. Break down implementation into tasks and acceptance criteria. Tasks are goals, not implementations. No code snippets in phase docs except API-reference ones after implementation. Document all phase decisions in `ADRs_PHASE_X.md`.
 
-**Example invocation (phase 2):** "Work out a detailed plan for phase 2 according to @docs/density_matrix_project/planning/PLANNING.md and according to all the documentation in @docs/density_matrix_project/planning and according to all the findings. Write it into file DETAILED_PLANNING_PHASE_2.md. Do not change code. Apply spec driven development principles. Prepare Paper 1 according to @docs/density_matrix_project/planning/PUBLICATIONS.md in 3 steps, first one is 4 page-long short paper in SHORT_PAPER_PHASE_2.md and an abstract ABSTRACT_PHASE_2.md for a phd conference presentation and a 'normal' paper in PAPER_PHASE_2.md. All the new phase-2 related documents should be put in directory @phases/phase-2. Break down the phase 2 implementation into tasks and acceptance criteria. Tasks are goals, not implementations. No code snippets in phase files except for the API reference related ones after the implementation. Document all the phase-2 related decisions in detail in ADRs_PHASE_2.md. Work in phase specific subdirectory phase-2."
+**Example invocation (phase 2):** "Work out a detailed plan for phase 2 according to @docs/density_matrix_project/planning/PLANNING.md and according to all the documentation in @docs/density_matrix_project/planning and according to all the findings. Write it into file DETAILED_PLANNING_PHASE_2.md. Do not change code. Apply spec driven development principles. Prepare outputs per @docs/density_matrix_project/planning/PUBLICATIONS.md in 4 steps: (1) technical short paper in SHORT_PAPER_PHASE_2.md, (2) narrative positioning short paper in SHORT_PAPER_NARRATIVE.md, (3) abstract in ABSTRACT_PHASE_2.md for PhD conference presentation, (4) full paper in PAPER_PHASE_2.md. Put all new phase-2 documents in @docs/density_matrix_project/phases/phase-2. Break down the phase 2 implementation into tasks and acceptance criteria. Tasks are goals, not implementations. No code snippets in phase files except for the API reference related ones after the implementation. Document all phase-2 decisions in detail in ADRs_PHASE_2.md."
 
 ### Step 2: Validate Completeness and Implementation Readiness
 
 Validate whether `DETAILED_PLANNING_PHASE_X.md` is detailed and thorough enough to start implementation. Turn the validation into a concise gap list in `PRE_IMPLEMENTATION_COMPLETION_CHECKLIST.md`.
 
-**Example invocation (phase 2):** "Validate if DETAILED_PLANNING_PHASE_2.md is detailed and thorough enough to start the implementation. Turn this validation into a concise gap list and add to a separate phase 2 doc as PRE_IMPLEMENTATION_COMPLETION_CHECKLIST.md."
+**Example invocation (phase 2):** "Validate if docs/density_matrix_project/phases/phase-2/DETAILED_PLANNING_PHASE_2.md is detailed and thorough enough to start implementation. Turn this validation into a concise gap list in docs/density_matrix_project/phases/phase-2/PRE_IMPLEMENTATION_COMPLETION_CHECKLIST.md."
 
 ### Step 3: Close Pre-Implementation Checklist Items
 
@@ -193,12 +254,25 @@ Note: Adjust decision areas per phase — Phase 2 needs all listed; later phases
 
 ### Sequence Summary
 
-1. **Step 1** → Creates DETAILED_PLANNING, ADRs, abstract, short paper, full paper in `phases/phase-X/`.
+1. **Step 1** → Creates DETAILED_PLANNING, ADRs, abstract, two short papers (technical + narrative), full paper under `docs/density_matrix_project/phases/phase-X/`.
 2. **Step 2** → Creates `PRE_IMPLEMENTATION_COMPLETION_CHECKLIST.md` with initial gap list.
 3. **Step 3** → Closes each gap; updates planning, ADRs, checklist until implementation-ready.
 4. **Implementation** → Create task mini-specs as needed; implement task by task.
 
-## Spec-Driven Principles (from Phase 2)
+### After Layer 1 Closure
+
+Once `PRE_IMPLEMENTATION_COMPLETION_CHECKLIST.md` is fully closed and the phase
+is implementation-ready:
+
+- do **not** fully story-split the entire phase before coding,
+- create Layer 3 stories and Layer 4 engineering tasks only for the **first
+  vertical slice**,
+- prefer one thin end-to-end slice that validates the new scientific object
+  before broad horizontal infrastructure work,
+- expand bundle/pipeline/schema migration only after that first slice produces
+  real runtime and evidence feedback.
+
+## Spec-Driven Principles
 
 1. Define contracts, scope, and success criteria **before** implementation.
 2. Separate **required behavior** from implementation choices.
@@ -258,15 +332,17 @@ Use this rubric to validate template quality before implementation starts.
 - affected interfaces,
 - publication relevance.
 
-### Current validation verdict (Phase 2 artifacts)
+### Historical rubric snapshot (Phase 2, for calibration only)
 
-- **ADRs template:** `Pass` (all core ADR sections present and consistent).
-- **Detailed planning template:** `Pass with strength` (contains full contract
-  structure, thresholds, tasks, risks, and gates).
-- **Task mini-spec template:** `Pass` (required sections present and behavior
-  first).
+Phase 2 artifacts were reviewed once against this rubric; **new phases should
+be validated again** — this is not a standing “Pass” for future work.
 
-Observed improvements to apply going forward:
+- **ADRs template:** Pass (all core ADR sections present and consistent).
+- **Detailed planning template:** Pass with strength (full contract structure,
+  thresholds, tasks, risks, gates).
+- **Task mini-spec template:** Pass (required sections present, behavior first).
+
+Improvements noted during that review (still recommended):
 - add explicit `Given/When/Then` behavioral wording where helpful,
 - add a lightweight assumptions/dependencies subsection to mini-specs when
   external coupling is significant,
@@ -290,7 +366,10 @@ Observed improvements to apply going forward:
 
 ## Additional Resources
 
-- For full prompt text (copy-paste), closure patterns, task mini-spec template, and story vs. engineering-task guidance, see [reference.md](reference.md)
+**Canonical workflow** (three steps, two-paper model, path rules) is this file.
+[reference.md](reference.md) holds copy-paste prompts and historical Phase 2
+closure examples; it must stay aligned with this SKILL — if in doubt, edit
+SKILL first, then mirror prompts in reference.
 
 ## Example Phase 2 References
 
@@ -299,4 +378,8 @@ Observed improvements to apply going forward:
 - `docs/density_matrix_project/phases/phase-2/PRE_IMPLEMENTATION_COMPLETION_CHECKLIST.md`
 - `docs/density_matrix_project/phases/phase-2/ABSTRACT_PHASE_2.md`
 - `docs/density_matrix_project/phases/phase-2/SHORT_PAPER_PHASE_2.md`
+- `docs/density_matrix_project/phases/phase-2/SHORT_PAPER_NARRATIVE.md`
 - `docs/density_matrix_project/phases/phase-2/PAPER_PHASE_2.md`
+
+Sub-phase example (same artifact set, `PHASE_3_1` filename stem):
+`docs/density_matrix_project/phases/phase-3-1/DETAILED_PLANNING_PHASE_3_1.md`

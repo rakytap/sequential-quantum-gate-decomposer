@@ -1,7 +1,6 @@
 # Density Matrix API Reference (Phase 1)
 
-This is the API source of truth for `squander.density_matrix` on
-`feature/density-matrix-phase1`.
+This is the API source of truth for `squander.density_matrix` 
 
 Primary audience: developers and advanced users writing code against phase-1 APIs.
 

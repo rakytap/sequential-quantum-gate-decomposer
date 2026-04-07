@@ -1,15 +1,153 @@
 {
-  "suite_name": "unsupported_bridge_validation",
-  "status": "pass",
   "backend": "density_matrix",
+  "cases": [
+    {
+      "ansatz": "HEA",
+      "backend": "density_matrix",
+      "bridge_source_type": "custom_gate_structure",
+      "case_kind": "unsupported_bridge_validation",
+      "case_name": "unsupported_bridge_custom_gate_structure_source",
+      "density_noise": [],
+      "error_match_pass": true,
+      "execution_ready": false,
+      "first_unsupported_condition": "custom_gate_structure",
+      "gate_pass": false,
+      "hamiltonian": {
+        "Jx": 1.0,
+        "Jy": 1.0,
+        "Jz": 1.0,
+        "h": 0.5
+      },
+      "inner_blocks": 1,
+      "layers": 1,
+      "noise_pass": false,
+      "operation_match_pass": false,
+      "purpose": "Verify a custom manual circuit source fails before bridge execution with a source-category unsupported result.",
+      "qbit_num": 2,
+      "source_pass": false,
+      "status": "unsupported",
+      "topology": [
+        [
+          0,
+          1
+        ]
+      ],
+      "unsupported_category": "circuit_source",
+      "unsupported_reason": "Variational_Quantum_Eigensolver_Base::validate_density_anchor_support: unsupported circuit source in density backend path: custom_gate_structure"
+    },
+    {
+      "ansatz": "HEA_ZYZ",
+      "backend": "density_matrix",
+      "bridge_source_type": "generated_hea_zyz",
+      "case_kind": "unsupported_bridge_validation",
+      "case_name": "unsupported_bridge_hea_zyz_lowering",
+      "density_noise": [],
+      "error_match_pass": true,
+      "execution_ready": false,
+      "first_unsupported_condition": "generated_hea_zyz",
+      "gate_pass": false,
+      "hamiltonian": {
+        "Jx": 1.0,
+        "Jy": 1.0,
+        "Jz": 1.0,
+        "h": 0.5
+      },
+      "inner_blocks": 1,
+      "layers": 1,
+      "noise_pass": false,
+      "operation_match_pass": false,
+      "purpose": "Verify the unsupported HEA_ZYZ lowering path fails before bridge execution.",
+      "qbit_num": 2,
+      "source_pass": false,
+      "status": "unsupported",
+      "topology": [
+        [
+          0,
+          1
+        ]
+      ],
+      "unsupported_category": "lowering_path",
+      "unsupported_reason": "Variational_Quantum_Eigensolver_Base::validate_density_anchor_support: density_matrix backend currently supports only the HEA ansatz"
+    },
+    {
+      "ansatz": "HEA",
+      "backend": "density_matrix",
+      "bridge_source_type": "generated_hea",
+      "case_kind": "unsupported_bridge_validation",
+      "case_name": "unsupported_bridge_after_gate_index",
+      "density_noise": [
+        {
+          "after_gate_index": 999,
+          "channel": "local_depolarizing",
+          "error_rate": 0.1,
+          "target": 0
+        }
+      ],
+      "error_match_pass": true,
+      "execution_ready": false,
+      "first_unsupported_condition": "after_gate_index",
+      "gate_pass": true,
+      "hamiltonian": {
+        "Jx": 1.0,
+        "Jy": 1.0,
+        "Jz": 1.0,
+        "h": 0.5
+      },
+      "inner_blocks": 1,
+      "layers": 1,
+      "noise_pass": false,
+      "operation_match_pass": false,
+      "purpose": "Verify invalid ordered noise insertion fails before density execution.",
+      "qbit_num": 2,
+      "source_pass": true,
+      "status": "unsupported",
+      "topology": [
+        [
+          0,
+          1
+        ]
+      ],
+      "unsupported_category": "noise_insertion",
+      "unsupported_reason": "Variational_Quantum_Eigensolver_Base::validate_density_anchor_support: unsupported density-noise insertion at index 0 because after_gate_index exceeds generated gate count"
+    },
+    {
+      "ansatz": "HEA",
+      "backend": "density_matrix",
+      "bridge_source_type": "unset",
+      "case_kind": "unsupported_bridge_validation",
+      "case_name": "unsupported_bridge_noise_channel",
+      "density_noise": [
+        {
+          "after_gate_index": 0,
+          "channel": "readout_noise",
+          "target": 0,
+          "value": 0.1
+        }
+      ],
+      "error_match_pass": true,
+      "execution_ready": false,
+      "first_unsupported_condition": "unsupported_density_noise_channel",
+      "gate_pass": false,
+      "hamiltonian": {
+        "Jx": 1.0,
+        "Jy": 1.0,
+        "Jz": 1.0,
+        "h": 0.5
+      },
+      "inner_blocks": 1,
+      "layers": 1,
+      "noise_pass": false,
+      "operation_match_pass": false,
+      "purpose": "Verify unsupported density-noise channel names fail during bridge configuration.",
+      "qbit_num": 1,
+      "source_pass": false,
+      "status": "unsupported",
+      "topology": [],
+      "unsupported_category": "noise_type",
+      "unsupported_reason": "Unsupported density-noise channel 'readout_noise'. Supported channels are 'local_depolarizing', 'amplitude_damping', and 'phase_damping'."
+    }
+  ],
   "requirements": {
-    "expected_status": "unsupported",
-    "required_categories": [
-      "circuit_source",
-      "lowering_path",
-      "noise_insertion",
-      "noise_type"
-    ],
     "canonical_bridge_fields": [
       "bridge_source_type",
       "unsupported_category",
@@ -20,166 +158,28 @@
       "noise_pass",
       "operation_match_pass",
       "execution_ready"
+    ],
+    "expected_status": "unsupported",
+    "required_categories": [
+      "circuit_source",
+      "lowering_path",
+      "noise_insertion",
+      "noise_type"
     ]
   },
   "software": {
-    "python": "3.13.9",
     "numpy": "2.3.5",
+    "python": "3.13.9",
     "qiskit": "2.2.3",
     "qiskit_aer": "0.17.2"
   },
+  "status": "pass",
+  "suite_name": "unsupported_bridge_validation",
   "summary": {
-    "total_cases": 4,
-    "unsupported_cases": 4,
-    "failed_cases": 0,
     "error_match_count": 4,
-    "required_case_count": 4
-  },
-  "cases": [
-    {
-      "backend": "density_matrix",
-      "qbit_num": 2,
-      "topology": [
-        [
-          0,
-          1
-        ]
-      ],
-      "ansatz": "HEA",
-      "layers": 1,
-      "inner_blocks": 1,
-      "density_noise": [],
-      "hamiltonian": {
-        "Jx": 1.0,
-        "Jy": 1.0,
-        "Jz": 1.0,
-        "h": 0.5
-      },
-      "case_name": "unsupported_bridge_custom_gate_structure_source",
-      "case_kind": "task3_bridge_unsupported_validation",
-      "purpose": "Verify a custom manual circuit source fails before bridge execution with a source-category unsupported result.",
-      "bridge_source_type": "custom_gate_structure",
-      "unsupported_category": "circuit_source",
-      "first_unsupported_condition": "custom_gate_structure",
-      "source_pass": false,
-      "gate_pass": false,
-      "noise_pass": false,
-      "operation_match_pass": false,
-      "execution_ready": false,
-      "status": "unsupported",
-      "unsupported_reason": "Variational_Quantum_Eigensolver_Base::validate_density_anchor_support: unsupported circuit source in density backend path: custom_gate_structure",
-      "error_match_pass": true
-    },
-    {
-      "backend": "density_matrix",
-      "qbit_num": 2,
-      "topology": [
-        [
-          0,
-          1
-        ]
-      ],
-      "ansatz": "HEA_ZYZ",
-      "layers": 1,
-      "inner_blocks": 1,
-      "density_noise": [],
-      "hamiltonian": {
-        "Jx": 1.0,
-        "Jy": 1.0,
-        "Jz": 1.0,
-        "h": 0.5
-      },
-      "case_name": "unsupported_bridge_hea_zyz_lowering",
-      "case_kind": "task3_bridge_unsupported_validation",
-      "purpose": "Verify the unsupported HEA_ZYZ lowering path fails before bridge execution.",
-      "bridge_source_type": "generated_hea_zyz",
-      "unsupported_category": "lowering_path",
-      "first_unsupported_condition": "generated_hea_zyz",
-      "source_pass": false,
-      "gate_pass": false,
-      "noise_pass": false,
-      "operation_match_pass": false,
-      "execution_ready": false,
-      "status": "unsupported",
-      "unsupported_reason": "Variational_Quantum_Eigensolver_Base::validate_density_anchor_support: density_matrix backend currently supports only the HEA ansatz",
-      "error_match_pass": true
-    },
-    {
-      "backend": "density_matrix",
-      "qbit_num": 2,
-      "topology": [
-        [
-          0,
-          1
-        ]
-      ],
-      "ansatz": "HEA",
-      "layers": 1,
-      "inner_blocks": 1,
-      "density_noise": [
-        {
-          "channel": "local_depolarizing",
-          "target": 0,
-          "after_gate_index": 999,
-          "error_rate": 0.1
-        }
-      ],
-      "hamiltonian": {
-        "Jx": 1.0,
-        "Jy": 1.0,
-        "Jz": 1.0,
-        "h": 0.5
-      },
-      "case_name": "unsupported_bridge_after_gate_index",
-      "case_kind": "task3_bridge_unsupported_validation",
-      "purpose": "Verify invalid ordered noise insertion fails before density execution.",
-      "bridge_source_type": "generated_hea",
-      "unsupported_category": "noise_insertion",
-      "first_unsupported_condition": "after_gate_index",
-      "source_pass": true,
-      "gate_pass": true,
-      "noise_pass": false,
-      "operation_match_pass": false,
-      "execution_ready": false,
-      "status": "unsupported",
-      "unsupported_reason": "Variational_Quantum_Eigensolver_Base::validate_density_anchor_support: unsupported density-noise insertion at index 0 because after_gate_index exceeds generated gate count",
-      "error_match_pass": true
-    },
-    {
-      "backend": "density_matrix",
-      "qbit_num": 1,
-      "topology": [],
-      "ansatz": "HEA",
-      "layers": 1,
-      "inner_blocks": 1,
-      "density_noise": [
-        {
-          "channel": "readout_noise",
-          "target": 0,
-          "after_gate_index": 0,
-          "value": 0.1
-        }
-      ],
-      "hamiltonian": {
-        "Jx": 1.0,
-        "Jy": 1.0,
-        "Jz": 1.0,
-        "h": 0.5
-      },
-      "case_name": "unsupported_bridge_noise_channel",
-      "case_kind": "task3_bridge_unsupported_validation",
-      "purpose": "Verify unsupported density-noise channel names fail during bridge configuration.",
-      "bridge_source_type": "unset",
-      "unsupported_category": "noise_type",
-      "first_unsupported_condition": "unsupported_density_noise_channel",
-      "source_pass": false,
-      "gate_pass": false,
-      "noise_pass": false,
-      "operation_match_pass": false,
-      "execution_ready": false,
-      "status": "unsupported",
-      "unsupported_reason": "Unsupported density-noise channel 'readout_noise'. Supported channels are 'local_depolarizing', 'amplitude_damping', and 'phase_damping'.",
-      "error_match_pass": true
-    }
-  ]
+    "failed_cases": 0,
+    "required_case_count": 4,
+    "total_cases": 4,
+    "unsupported_cases": 4
+  }
 }

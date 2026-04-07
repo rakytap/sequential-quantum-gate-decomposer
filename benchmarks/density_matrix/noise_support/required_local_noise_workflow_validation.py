@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Validation: Task 4 Story 5 required local-noise workflow bundle.
+"""Validation: required local-noise workflow bundle.
 
-Reuses the canonical workflow-scale exactness harness and emits the Task 4
-Story 5 artifact pair:
+Reuses the canonical workflow-scale exactness harness and emits the required
+local-noise artifact pair:
 - one required-local-noise workflow bundle across the mandatory exact regime,
 - one bounded required-baseline optimization trace.
 
@@ -36,7 +36,7 @@ from benchmarks.density_matrix.workflow_evidence.exact_density_vqe_validation im
 SUITE_NAME = "required_local_noise_workflow"
 WORKFLOW_BUNDLE_FILENAME = "required_local_noise_workflow_bundle.json"
 TRACE_ARTIFACT_FILENAME = "required_local_noise_trace_4q.json"
-TRACE_CASE_NAME = "story5_required_local_noise_trace_4q"
+TRACE_CASE_NAME = "required_local_noise_trace_4q"
 DEFAULT_OUTPUT_DIR = (
     REPO_ROOT / "benchmarks" / "density_matrix" / "artifacts" / "noise_support"
 )
@@ -89,24 +89,24 @@ def validate_artifact_bundle(bundle, *, trace_result):
     missing_fields = [field for field in ARTIFACT_CORE_FIELDS if field not in bundle]
     if missing_fields:
         raise ValueError(
-            "Task 4 Story 5 workflow bundle is missing required fields: {}".format(
+            "Required local-noise workflow bundle is missing required fields: {}".format(
                 ", ".join(missing_fields)
             )
         )
 
     if bundle["summary"]["required_cases"] != bundle["summary"]["total_cases"]:
         raise ValueError(
-            "Task 4 Story 5 workflow bundle mixes non-required cases into the mandatory matrix"
+            "Required local-noise workflow bundle mixes non-required cases into the mandatory matrix"
         )
 
     if not trace_result.get("required_validation_trace", False):
-        raise ValueError("Task 4 Story 5 trace is missing required_validation_trace")
+        raise ValueError("Required local-noise trace is missing required_validation_trace")
 
     if trace_result.get("support_tier") != "required":
-        raise ValueError("Task 4 Story 5 trace is not marked as required support")
+        raise ValueError("Required local-noise trace is not marked as required support")
 
     if trace_result.get("status") != "completed":
-        raise ValueError("Task 4 Story 5 trace did not complete successfully")
+        raise ValueError("Required local-noise trace did not complete successfully")
 
 
 def write_artifact_bundle(output_path: Path, bundle, *, trace_result):
@@ -154,7 +154,7 @@ def parse_args():
         "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
-        help="Directory for the Task 4 Story 5 JSON artifacts.",
+        help="Directory for the required local-noise workflow JSON artifacts.",
     )
     parser.add_argument(
         "--parameter-set-count",

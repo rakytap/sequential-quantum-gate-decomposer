@@ -194,6 +194,28 @@ PYBIND11_MODULE(_density_matrix_cpp, m) {
           py::arg("u_2x2"), py::arg("target_qbit"),
           "Apply single-qubit unitary using optimized local kernel")
 
+      .def(
+          "apply_local_unitary",
+          [](DensityMatrix &self, py::array_t<std::complex<double>> u,
+             const std::vector<int> &target_qbits) {
+            auto buf = u.request();
+            if (buf.ndim != 2 || buf.shape[0] != buf.shape[1]) {
+              throw std::runtime_error("Kernel must be square 2D array");
+            }
+
+            int dim = static_cast<int>(buf.shape[0]);
+            Matrix u_mat(dim, dim);
+            auto *src = static_cast<std::complex<double> *>(buf.ptr);
+            for (int i = 0; i < dim * dim; i++) {
+              u_mat.get_data()[i].real = src[i].real();
+              u_mat.get_data()[i].imag = src[i].imag();
+            }
+
+            self.apply_local_unitary(u_mat, target_qbits);
+          },
+          py::arg("u_kernel"), py::arg("target_qbits"),
+          "Apply a k-qubit local unitary using optimized local kernel")
+
       .def("partial_trace", &DensityMatrix::partial_trace, py::arg("trace_out"),
            "Partial trace over specified qubits")
       .def("clone", &DensityMatrix::clone, "Create a deep copy")

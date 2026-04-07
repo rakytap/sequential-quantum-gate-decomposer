@@ -9,7 +9,8 @@ note on why it matters for this PhD direction.
 Tag legend:
 
 - `[Current code]`: directly reflected in the existing SQUANDER codebase.
-- `[Near-term]`: strongly relevant to the recommended implementation path.
+- `[Near-term]`: strongly relevant to the current manuscript and follow-on
+  implementation path.
 - `[Future branch]`: useful for later scaling or optional architecture branches.
 - `[Trainability]`: central to the noise-aware optimization and barren-plateau
   agenda.
@@ -124,6 +125,21 @@ Tag legend:
   `10.22331/q-2021-10-06-559`.
   Relevance: practical reference simulator with noisy and parametric support;
   useful as a comparison point for performance-oriented papers.
+
+- `[Near-term]` Michael A. Nielsen and Isaac L. Chuang, *Quantum Computation and
+  Quantum Information*, Cambridge University Press, 10th Anniversary Edition
+  (2010).
+  Relevance: canonical reference for quantum operations, Kraus maps, Choi-style
+  reasoning, and superoperator semantics; useful for Phase 3.1 exact channel
+  contracts and CPTP invariants.
+
+- `[Near-term]` Christopher J. Wood, Jacob D. Biamonte, and David G. Cory,
+  *Tensor networks and graphical calculus for open quantum systems*, `Quantum
+  Information and Computation 15, 759-811 (2015)`, `arXiv:1111.6950`.
+  Relevance: explicit mapping among Kraus, Choi, Liouville superoperator,
+  process-matrix, and system-environment representations; especially useful for
+  choosing a primary Phase 3.1 channel representation and proving exact
+  composition rules for bounded fused noisy blocks.
 
 - `[Future branch]` J. R. Johansson, P. D. Nation, and Franco Nori, *QuTiP: An
   open-source Python framework for the dynamics of open quantum systems*,
@@ -256,10 +272,41 @@ Tag legend:
 - `[Current code]` arXiv:1807.02811 — Referenced in Bayes_Opt.h for the Bayesian
   optimization algorithm used as one of VQE's supported optimizers.
 
-## 7. Practical Reading Order
+## 7. Phase-Specific Shortlists
 
-For the immediate planning and implementation path, the most useful reading order
-is:
+### 7.1 Phase 3 Methods / Systems Paper
+
+Use this document as the only planning source of truth for the Phase 3 paper
+literature.
+
+Core citation set for the Phase 3 paper:
+
+- `Section 1` for SQUANDER platform lineage and internal technical grounding.
+- `Section 2` for partitioning and gate-fusion prior art.
+- `Section 4` for exact density-matrix, HPC, and memory-locality context.
+- `Section 5` for software-framework positioning when comparisons to other
+  platforms are needed.
+
+Priority entries for Paper 2:
+
+- `Approaching the theoretical limit in quantum gate decomposition` for the
+  core SQUANDER platform lineage.
+- `TDAG`, `GTQCP`, and `QGo` for the strongest partition-planning lineage.
+- `QMin` and Nguyen et al. for the gate-fusion side of the story.
+- Fang et al. and Burt et al. for hierarchical or multilevel partitioning
+  context.
+- Li et al. and Doi & Horii for exact mixed-state/HPC and memory-locality
+  motivation.
+- `QuEST` and `Qulacs` for practical external simulator baselines.
+- `Atlas` as optional modern hierarchical GPU context when hardware-aware
+  planning becomes relevant.
+- `QuTiP` only when discussing channel-native, superoperator, or Liouville-space
+  follow-on branches rather than the minimum Phase 3 claim.
+
+## 8. Practical Reading Order
+
+For the current manuscript and follow-on planning path after delivered Phase 3
+work, the most useful reading order is:
 
 1. SQUANDER density-matrix docs already in this repository,
 2. `TDAG`, `GTQCP`, and `QGo`,
@@ -269,7 +316,7 @@ is:
 6. `Cheng et al.` and other approximate scaling references once exact density
    matrices become the limiting factor.
 
-## 8. How To Use This List
+## 9. How To Use This List
 
 - Use the partitioning/fusion papers to justify the planner/runtime split and the
   density-aware performance work.

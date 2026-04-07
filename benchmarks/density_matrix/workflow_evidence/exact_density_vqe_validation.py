@@ -53,6 +53,10 @@ from benchmarks.density_matrix.noise_support.support_tiers import (
 )
 from squander import Variational_Quantum_Eigensolver
 from squander.density_matrix import DensityMatrix, NoisyCircuit
+from squander.partitioning.noisy_planner import (
+    PLANNER_OP_KIND_GATE,
+    PLANNER_OP_KIND_NOISE,
+)
 
 PRIMARY_BACKEND = "density_matrix"
 REFERENCE_BACKEND = "qiskit_aer_density_matrix"
@@ -300,7 +304,7 @@ def build_vqe(
 def build_reference_bridge_metadata(vqe):
     bridge = vqe.describe_density_bridge()
     noise_operations = [
-        op for op in bridge["operations"] if op["operation_class"] == "NoiseOperation"
+        op for op in bridge["operations"] if op["kind"] == PLANNER_OP_KIND_NOISE
     ]
     return {
         "bridge_source_type": bridge["source_type"],
@@ -379,10 +383,10 @@ def classify_bridge_unsupported_reason(reason: str):
 def build_exact_regime_bridge_metadata(vqe, *, execution_ready: bool):
     bridge = vqe.describe_density_bridge()
     gate_sequence = [
-        op["name"] for op in bridge["operations"] if op["operation_class"] == "GateOperation"
+        op["name"] for op in bridge["operations"] if op["kind"] == PLANNER_OP_KIND_GATE
     ]
     noise_sequence = [
-        op["name"] for op in bridge["operations"] if op["operation_class"] == "NoiseOperation"
+        op["name"] for op in bridge["operations"] if op["kind"] == PLANNER_OP_KIND_NOISE
     ]
 
     source_pass = bridge["source_type"] == "generated_hea"
@@ -472,7 +476,7 @@ def insert_reference_noise(base_circuit: QuantumCircuit, density_noise):
                     [noisy_circuit.qubits[target]],
                 )
             else:
-                raise ValueError(f"Unsupported Story 2 channel: {channel}")
+                raise ValueError(f"Unsupported fixed-parameter channel: {channel}")
 
     noisy_circuit.save_density_matrix()
     return noisy_circuit
@@ -511,7 +515,9 @@ def build_squander_density_from_qiskit_circuit(base_circuit, density_noise):
         elif gate_name in {"cx", "cnot"}:
             circuit.add_CNOT(qubit_indices[1], qubit_indices[0])
         else:
-            raise ValueError(f"Unsupported Story 4 gate in reconstruction: {gate_name}")
+            raise ValueError(
+                f"Unsupported workflow gate in reconstruction: {gate_name}"
+            )
 
         for noise_spec in noise_by_gate.get(gate_index, []):
             target = noise_spec["target"]
@@ -526,7 +532,7 @@ def build_squander_density_from_qiskit_circuit(base_circuit, density_noise):
                 circuit.add_phase_damping(target, lambda_param=noise_spec["lambda"])
             else:
                 raise ValueError(
-                    f"Unsupported Story 4 noise channel in reconstruction: {channel}"
+                    f"Unsupported workflow noise channel in reconstruction: {channel}"
                 )
 
     rho = DensityMatrix(base_circuit.num_qubits)
@@ -655,20 +661,20 @@ def capture_exact_regime_workflow_case(qbit_num: int, parameter_set: dict):
     except Exception as exc:
         unsupported_reason = str(exc)
         unsupported_metadata = classify_bridge_unsupported_reason(unsupported_reason)
-        task4_boundary_metadata = classify_noise_boundary_reason(
+        noise_boundary_metadata = classify_noise_boundary_reason(
             unsupported_reason
         )
-        if task4_boundary_metadata["unsupported_category"] != "workflow_execution":
-            unsupported_metadata["unsupported_category"] = task4_boundary_metadata[
+        if noise_boundary_metadata["unsupported_category"] != "workflow_execution":
+            unsupported_metadata["unsupported_category"] = noise_boundary_metadata[
                 "unsupported_category"
             ]
             unsupported_metadata["first_unsupported_condition"] = (
-                task4_boundary_metadata["first_unsupported_condition"]
+                noise_boundary_metadata["first_unsupported_condition"]
             )
-        unsupported_metadata["noise_boundary_class"] = task4_boundary_metadata[
+        unsupported_metadata["noise_boundary_class"] = noise_boundary_metadata[
             "noise_boundary_class"
         ]
-        unsupported_metadata["failure_stage"] = task4_boundary_metadata[
+        unsupported_metadata["failure_stage"] = noise_boundary_metadata[
             "failure_stage"
         ]
         return {
@@ -807,7 +813,7 @@ def validate_exact_regime_workflow_bundle(bundle):
     ]
     if missing_fields:
         raise ValueError(
-            "Story 4 workflow bundle is missing required fields: {}".format(
+            "Exact-regime workflow bundle is missing required fields: {}".format(
                 ", ".join(missing_fields)
             )
         )
@@ -818,7 +824,7 @@ def validate_exact_regime_workflow_bundle(bundle):
     for qbit_num in required_qubits:
         if cases_per_qbit.get(str(qbit_num), 0) < required_count:
             raise ValueError(
-                f"Story 4 workflow bundle is missing required cases for {qbit_num} qubits"
+                f"Exact-regime workflow bundle is missing required cases for {qbit_num} qubits"
             )
 
 
@@ -831,7 +837,7 @@ def write_exact_regime_workflow_bundle(output_path: Path, bundle):
 def print_exact_regime_workflow_summary(bundle):
     print("\n" + "=" * 78)
     print(
-        "  Story 4 Workflow Bundle [{} vs {}]".format(
+        "  Exact-Regime Workflow Bundle [{} vs {}]".format(
             bundle["backend"], bundle["reference_backend"]
         )
     )
@@ -1043,7 +1049,7 @@ def validate_exact_density_validation_bundle(bundle, bundle_dir: Path):
     missing_fields = [field for field in EXACT_DENSITY_VALIDATION_BUNDLE_FIELDS if field not in bundle]
     if missing_fields:
         raise ValueError(
-            "Story 5 bundle is missing required fields: {}".format(
+            "Exact-density validation bundle is missing required fields: {}".format(
                 ", ".join(missing_fields)
             )
         )
@@ -1059,7 +1065,7 @@ def validate_exact_density_validation_bundle(bundle, bundle_dir: Path):
     }
     if required_ids - artifact_ids:
         raise ValueError(
-            "Story 5 bundle is missing required artifact IDs: {}".format(
+            "Exact-density validation bundle is missing required artifact IDs: {}".format(
                 ", ".join(sorted(required_ids - artifact_ids))
             )
         )
@@ -1067,10 +1073,12 @@ def validate_exact_density_validation_bundle(bundle, bundle_dir: Path):
     for artifact in bundle["artifacts"]:
         artifact_path = bundle_dir / artifact["path"]
         if artifact["mandatory"] and not artifact_path.exists():
-            raise ValueError(f"Story 5 bundle is missing artifact file: {artifact['path']}")
+            raise ValueError(
+                f"Exact-density validation bundle is missing artifact file: {artifact['path']}"
+            )
         if artifact["status"] not in artifact["expected_statuses"]:
             raise ValueError(
-                f"Story 5 artifact {artifact['artifact_id']} has unexpected status {artifact['status']}"
+                f"Exact-density validation artifact {artifact['artifact_id']} has unexpected status {artifact['status']}"
             )
 
 
@@ -1083,7 +1091,7 @@ def write_exact_density_validation_bundle(output_path: Path, bundle):
 def print_exact_density_validation_bundle_summary(bundle):
     print("\n" + "=" * 78)
     print(
-        "  Story 5 Publication Bundle [{} vs {}]".format(
+        "  Exact-Density Validation Bundle [{} vs {}]".format(
             bundle["backend"], bundle["reference_backend"]
         )
     )
@@ -1306,18 +1314,20 @@ def main():
     parser.add_argument(
         "--workflow-bundle",
         action="store_true",
-        help="Run the Story 4 workflow-scale validation matrix and emit the bundle.",
+        help="Run the workflow-scale exact-regime validation matrix and emit the bundle.",
     )
     parser.add_argument(
         "--publication-bundle",
         action="store_true",
-        help="Run the full Story 5 publication-evidence bundle workflow.",
+        help="Run the full exact-density validation bundle workflow.",
     )
     args = parser.parse_args()
 
     if args.publication_bundle:
         if args.output_dir is None:
-            raise ValueError("Story 5 bundle generation requires --output-dir")
+            raise ValueError(
+                "Exact-density validation bundle generation requires --output-dir"
+            )
         validation_bundle = generate_exact_density_validation_bundle(args.output_dir)
         print_exact_density_validation_bundle_summary(validation_bundle)
         if validation_bundle["status"] != "pass":
@@ -1333,7 +1343,7 @@ def main():
         print_exact_regime_workflow_summary(workflow_bundle)
         if trace_result["status"] == "completed":
             print(
-                "  Story 4 supported trace [{}]:".format(trace_result["backend"]),
+                "  Workflow supported trace [{}]:".format(trace_result["backend"]),
                 trace_result["trace_kind"],
                 "bridge_pass =",
                 trace_result["bridge_supported_pass"],
@@ -1374,14 +1384,14 @@ def main():
     for result in fixed_results:
         if result["status"] == "completed":
             print(
-                "Story 2 fixed case [{}]:".format(result["backend"]),
+                "Fixed-parameter case [{}]:".format(result["backend"]),
                 result["qbit_num"],
                 "qubits, |E_sq - E_aer| =",
                 f"{result['absolute_energy_error']:.6e}",
             )
         else:
             print(
-                "Story 2 fixed case [{}]:".format(result["backend"]),
+                "Fixed-parameter case [{}]:".format(result["backend"]),
                 result["status"],
                 result["case_name"],
                 result["unsupported_reason"],
@@ -1389,7 +1399,7 @@ def main():
 
     if trace_result["status"] == "completed":
         print(
-            "Story 2 optimization trace [{}]:".format(trace_result["backend"]),
+            "Optimization trace [{}]:".format(trace_result["backend"]),
             "initial =",
             f"{trace_result['initial_energy']:.6e}",
             "final =",
@@ -1397,13 +1407,13 @@ def main():
         )
     else:
         print(
-            "Story 2 optimization trace [{}]:".format(trace_result["backend"]),
+            "Optimization trace [{}]:".format(trace_result["backend"]),
             trace_result["status"],
             trace_result["unsupported_reason"],
         )
 
     print(
-        "Story 3 unsupported case [{}]:".format(unsupported_result["backend"]),
+        "Unsupported backend-mismatch case [{}]:".format(unsupported_result["backend"]),
         unsupported_result["status"],
         unsupported_result.get("unsupported_reason", ""),
     )

@@ -258,8 +258,8 @@
   },
   "provenance": {
     "generation_command": "python benchmarks/density_matrix/workflow_evidence/workflow_contract_validation.py",
-    "git_revision": "199d588c2230fc62a39934ddc7d79a6e74a8b64e",
-    "reference_task5_bundle_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/validation_evidence/validation_evidence_publication_bundle.json",
+    "git_revision": "77cd8168869d9b4c67c0dd0dbe49baab02b0fe25",
+    "reference_validation_bundle_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/validation_evidence/validation_evidence_publication_bundle.json",
     "working_directory": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer"
   },
   "reference_artifacts": [
@@ -269,7 +269,7 @@
       "expected_statuses": [
         "pass"
       ],
-      "generation_command": "python benchmarks/density_matrix/validation_evidence/local_correctness_validation.py --output-dir benchmarks/density_matrix/artifacts/validation_evidence",
+      "generation_command": "python benchmarks/density_matrix/validation_evidence/local_correctness_validation.py --output-dir /home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/validation_evidence",
       "mandatory": true,
       "path": "local_correctness_bundle.json",
       "purpose": "Phase-level local correctness gate for the mandatory 1 to 3 qubit micro-validation matrix.",
@@ -281,7 +281,7 @@
       "expected_statuses": [
         "pass"
       ],
-      "generation_command": "python benchmarks/density_matrix/validation_evidence/workflow_baseline_validation.py --output-dir benchmarks/density_matrix/artifacts/validation_evidence",
+      "generation_command": "python benchmarks/density_matrix/validation_evidence/workflow_baseline_validation.py --output-dir /home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/validation_evidence",
       "mandatory": true,
       "path": "workflow_baseline_bundle.json",
       "purpose": "Phase-level 4/6/8/10 workflow-scale exact-regime baseline.",
@@ -293,7 +293,7 @@
       "expected_statuses": [
         "pass"
       ],
-      "generation_command": "python benchmarks/density_matrix/validation_evidence/trace_anchor_validation.py --output-dir benchmarks/density_matrix/artifacts/validation_evidence",
+      "generation_command": "python benchmarks/density_matrix/validation_evidence/trace_anchor_validation.py --output-dir /home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/validation_evidence",
       "mandatory": true,
       "path": "trace_anchor_bundle.json",
       "purpose": "Phase-level bounded trace plus documented 10-qubit anchor package.",
@@ -305,10 +305,10 @@
       "expected_statuses": [
         "completed"
       ],
-      "generation_command": "python benchmarks/density_matrix/validation_evidence/trace_anchor_validation.py --output-dir benchmarks/density_matrix/artifacts/validation_evidence",
+      "generation_command": "python benchmarks/density_matrix/validation_evidence/trace_anchor_validation.py --output-dir /home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/validation_evidence",
       "mandatory": true,
       "path": "optimization_trace_4q.json",
-      "purpose": "Canonical raw bounded optimization trace linked from the Task 5 Story 3 bundle.",
+      "purpose": "Canonical raw bounded optimization trace linked from the trace-and-anchor bundle.",
       "status": "completed"
     },
     {
@@ -317,7 +317,7 @@
       "expected_statuses": [
         "pass"
       ],
-      "generation_command": "python benchmarks/density_matrix/validation_evidence/metric_completeness_validation.py --output-dir benchmarks/density_matrix/artifacts/validation_evidence",
+      "generation_command": "python benchmarks/density_matrix/validation_evidence/metric_completeness_validation.py --output-dir /home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/validation_evidence",
       "mandatory": true,
       "path": "metric_completeness_bundle.json",
       "purpose": "Phase-level metric-completeness gate for mandatory supported evidence.",
@@ -329,7 +329,7 @@
       "expected_statuses": [
         "pass"
       ],
-      "generation_command": "python benchmarks/density_matrix/validation_evidence/interpretation_validation.py --output-dir benchmarks/density_matrix/artifacts/validation_evidence",
+      "generation_command": "python benchmarks/density_matrix/validation_evidence/interpretation_validation.py --output-dir /home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/validation_evidence",
       "mandatory": true,
       "path": "interpretation_bundle.json",
       "purpose": "Phase-level interpretation guardrails preventing optional, unsupported, or incomplete evidence from inflating the main claim.",

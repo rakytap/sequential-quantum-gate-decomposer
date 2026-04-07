@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Validation: Task 4 Story 4 unsupported and deferred noise boundary.
+"""Validation: unsupported and deferred noise boundary.
 
-Captures representative Task 4 negative cases as structured artifacts. The
+Captures representative negative cases as structured artifacts. The
 focus is the frozen Phase 2 noise support matrix:
 - deferred families fail before execution,
 - invalid ordered-noise schedule metadata fails deterministically,
@@ -68,7 +68,7 @@ ARTIFACT_CORE_FIELDS = (
     "cases",
 )
 
-TASK4_UNSUPPORTED_CASES = (
+UNSUPPORTED_NOISE_BOUNDARY_CASES = (
     {
         "case_name": "deferred_readout_noise",
         "qbit_num": 1,
@@ -243,15 +243,21 @@ def build_requirement_metadata():
         "required_support_tiers": [SUPPORT_TIER_DEFERRED, SUPPORT_TIER_UNSUPPORTED],
         "deferred_family_reasons": list(DEFERRED_FAMILY_REASONS),
         "required_categories": sorted(
-            {case["expected_unsupported_category"] for case in TASK4_UNSUPPORTED_CASES}
+            {
+                case["expected_unsupported_category"]
+                for case in UNSUPPORTED_NOISE_BOUNDARY_CASES
+            }
         ),
         "required_boundary_classes": sorted(
-            {case["expected_noise_boundary_class"] for case in TASK4_UNSUPPORTED_CASES}
+            {
+                case["expected_noise_boundary_class"]
+                for case in UNSUPPORTED_NOISE_BOUNDARY_CASES
+            }
         ),
         "required_failure_stages": sorted(
-            {case["expected_failure_stage"] for case in TASK4_UNSUPPORTED_CASES}
+            {case["expected_failure_stage"] for case in UNSUPPORTED_NOISE_BOUNDARY_CASES}
         ),
-        "case_names": [case["case_name"] for case in TASK4_UNSUPPORTED_CASES],
+        "case_names": [case["case_name"] for case in UNSUPPORTED_NOISE_BOUNDARY_CASES],
         "canonical_negative_fields": [
             "support_tier",
             "case_purpose",
@@ -307,7 +313,9 @@ def _build_case_runner(case):
         return _constructor_failure_runner(case)
     if case["runner_kind"] == "bridge_preflight":
         return _bridge_preflight_runner(case)
-    raise ValueError("Unsupported Story 4 runner kind '{}'".format(case["runner_kind"]))
+    raise ValueError(
+        "Unsupported noise-boundary runner kind '{}'".format(case["runner_kind"])
+    )
 
 
 def _base_case_metadata(case, topology):
@@ -324,7 +332,7 @@ def _base_case_metadata(case, topology):
     metadata.update(
         {
             "case_name": case["case_name"],
-            "case_kind": "task4_unsupported_noise_boundary_validation",
+            "case_kind": "unsupported_noise_boundary_validation",
             "purpose": case["purpose"],
             "requested_noise_channel": case["density_noise"][0]["channel"],
             "expected_support_tier": case["expected_support_tier"],
@@ -373,14 +381,14 @@ def validate_case_payload(case):
     missing_fields = [field for field in required_fields if field not in case]
     if missing_fields:
         raise ValueError(
-            "Task 4 Story 4 case payload is missing required fields: {}".format(
+            "Unsupported-noise boundary case payload is missing required fields: {}".format(
                 ", ".join(missing_fields)
             )
         )
 
     if case["support_tier"] == SUPPORT_TIER_DEFERRED and "deferred_reason" not in case:
         raise ValueError(
-            "Task 4 Story 4 deferred case '{}' is missing deferred_reason".format(
+            "Deferred noise-boundary case '{}' is missing deferred_reason".format(
                 case["case_name"]
             )
         )
@@ -390,7 +398,7 @@ def validate_case_payload(case):
         and "unsupported_scope_reason" not in case
     ):
         raise ValueError(
-            "Task 4 Story 4 unsupported case '{}' is missing unsupported_scope_reason".format(
+            "Unsupported noise-boundary case '{}' is missing unsupported_scope_reason".format(
                 case["case_name"]
             )
         )
@@ -479,7 +487,7 @@ def capture_unsupported_case(case, *, verbose=False):
 def run_validation(*, verbose=False):
     return [
         capture_unsupported_case(case, verbose=verbose)
-        for case in TASK4_UNSUPPORTED_CASES
+        for case in UNSUPPORTED_NOISE_BOUNDARY_CASES
     ]
 
 
@@ -541,7 +549,7 @@ def validate_artifact_bundle(bundle):
     missing_fields = [field for field in ARTIFACT_CORE_FIELDS if field not in bundle]
     if missing_fields:
         raise ValueError(
-            "Task 4 Story 4 bundle is missing required fields: {}".format(
+            "Unsupported-noise boundary bundle is missing required fields: {}".format(
                 ", ".join(missing_fields)
             )
         )
@@ -562,7 +570,7 @@ def parse_args():
         "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
-        help="Directory for the Task 4 Story 4 JSON artifact bundle.",
+        help="Directory for the unsupported-noise boundary JSON artifact bundle.",
     )
     parser.add_argument(
         "--quiet",

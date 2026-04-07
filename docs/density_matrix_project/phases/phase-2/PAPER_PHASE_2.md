@@ -151,12 +151,12 @@ Implementation-backed status for the completed integrated-backend slice:
   `benchmarks/density_matrix/artifacts/workflow_evidence/` with
   `workflow_publication_bundle.json` as the top-level manifest. That
   manifest links the canonical workflow contract
-  `workflow_contract_bundle.json`, the Story 2 end-to-end plus trace
-  bundle `end_to_end_trace_bundle.json`, the Story 3 matrix baseline
-  bundle `matrix_baseline_bundle.json`, the Story 4 unsupported-workflow
-  bundle `unsupported_workflow_bundle.json`, and the Story 5
-  interpretation-guardrail bundle `workflow_interpretation_bundle.json` while
-  preserving traceability to the underlying Task 5 validation bundles.
+  `workflow_contract_bundle.json`, the end-to-end plus trace bundle
+  `end_to_end_trace_bundle.json`, the workflow matrix baseline bundle
+  `matrix_baseline_bundle.json`, the unsupported-workflow bundle
+  `unsupported_workflow_bundle.json`, and the interpretation-guardrail bundle
+  `workflow_interpretation_bundle.json` while preserving traceability to the
+  underlying validation-evidence bundles.
 
 ### 1.2 Why This Contribution Matters
 
@@ -177,7 +177,7 @@ Bridging that gap in a well-validated and workflow-oriented way is a meaningful
 methods contribution, especially when the target use case is realistic noisy
 variational research.
 
-### 1.3 Implementation Learnings From Tasks 1-6
+### 1.3 Implementation learnings across the Phase 2 integration scope
 
 Phase 2 implementation produced several learnings that materially shape Paper 1
 claim quality:
@@ -199,9 +199,10 @@ claim quality:
   first-class machine-checkable evidence layers rather than left implicit in raw
   benchmark payloads,
 - machine-checkable manifests must verify not only artifact presence, expected
-  status alignment, and workflow identity, but also lower-story semantic
-  closure flags such as contract completeness, contract-aligned workflow gates,
-  unsupported-boundary integrity, and interpretation guardrails.
+  status alignment, and workflow identity, but also semantic-closure flags
+  across linked validation and workflow-publication layers, such as contract
+  completeness, contract-aligned workflow gates, unsupported-boundary integrity,
+  and interpretation guardrails.
 
 ## 2. Background and Related Work
 

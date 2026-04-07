@@ -4,7 +4,7 @@
     {
       "ansatz": "HEA",
       "backend": "density_matrix",
-      "case_kind": "task4_unsupported_noise_boundary_validation",
+      "case_kind": "unsupported_noise_boundary_validation",
       "case_name": "deferred_readout_noise",
       "case_purpose": "deferred_scope_guard",
       "counts_toward_mandatory_baseline": false,
@@ -50,7 +50,7 @@
     {
       "ansatz": "HEA",
       "backend": "density_matrix",
-      "case_kind": "task4_unsupported_noise_boundary_validation",
+      "case_kind": "unsupported_noise_boundary_validation",
       "case_name": "deferred_correlated_multi_qubit_noise",
       "case_purpose": "deferred_scope_guard",
       "counts_toward_mandatory_baseline": false,
@@ -101,7 +101,7 @@
     {
       "ansatz": "HEA",
       "backend": "density_matrix",
-      "case_kind": "task4_unsupported_noise_boundary_validation",
+      "case_kind": "unsupported_noise_boundary_validation",
       "case_name": "deferred_calibration_aware_noise",
       "case_purpose": "deferred_scope_guard",
       "counts_toward_mandatory_baseline": false,
@@ -147,7 +147,7 @@
     {
       "ansatz": "HEA",
       "backend": "density_matrix",
-      "case_kind": "task4_unsupported_noise_boundary_validation",
+      "case_kind": "unsupported_noise_boundary_validation",
       "case_name": "deferred_non_markovian_noise",
       "case_purpose": "deferred_scope_guard",
       "counts_toward_mandatory_baseline": false,
@@ -193,7 +193,7 @@
     {
       "ansatz": "HEA",
       "backend": "density_matrix",
-      "case_kind": "task4_unsupported_noise_boundary_validation",
+      "case_kind": "unsupported_noise_boundary_validation",
       "case_name": "invalid_negative_after_gate_index",
       "case_purpose": "unsupported_scope_guard",
       "counts_toward_mandatory_baseline": false,
@@ -252,7 +252,7 @@
     {
       "ansatz": "HEA",
       "backend": "density_matrix",
-      "case_kind": "task4_unsupported_noise_boundary_validation",
+      "case_kind": "unsupported_noise_boundary_validation",
       "case_name": "invalid_after_gate_index_exceeds_gate_count",
       "case_purpose": "unsupported_scope_guard",
       "counts_toward_mandatory_baseline": false,
@@ -311,7 +311,7 @@
     {
       "ansatz": "HEA",
       "backend": "density_matrix",
-      "case_kind": "task4_unsupported_noise_boundary_validation",
+      "case_kind": "unsupported_noise_boundary_validation",
       "case_name": "invalid_noise_target_out_of_range",
       "case_purpose": "unsupported_scope_guard",
       "counts_toward_mandatory_baseline": false,
@@ -362,7 +362,7 @@
     {
       "ansatz": "HEA",
       "backend": "density_matrix",
-      "case_kind": "task4_unsupported_noise_boundary_validation",
+      "case_kind": "unsupported_noise_boundary_validation",
       "case_name": "invalid_noise_value_out_of_range",
       "case_purpose": "unsupported_scope_guard",
       "counts_toward_mandatory_baseline": false,
