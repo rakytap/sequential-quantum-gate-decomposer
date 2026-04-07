@@ -72,8 +72,8 @@ void apply_X_kernel_to_input(Matrix& input, const std::vector<int>& target_qbits
             // Apply X gate only when ALL controls are active
             if (all_controls_active) {
 
-                int row_offset = current_idx_loc * input.stride;
-                int row_offset_pair = current_idx_pair_loc * input.stride;
+                long long row_offset = (long long)current_idx_loc * input.stride;
+                long long row_offset_pair = (long long)current_idx_pair_loc * input.stride;
 
                 std::swap_ranges(
                     input.get_data() + row_offset,
@@ -319,14 +319,13 @@ void apply_X_kernel_to_input_tbb(Matrix& input, const std::vector<int>& target_q
 
     int target_qbit = target_qbits[0];
     int index_step_target = 1 << target_qbit;
+    int total_blocks = matrix_size >> (target_qbit + 1);
 
-    tbb::parallel_for(tbb::blocked_range<int>(0, matrix_size >> 1, 1024),
+    tbb::parallel_for(tbb::blocked_range<int>(0, total_blocks, 1024),
         [&](const tbb::blocked_range<int>& range) {
             for (int block_idx = range.begin(); block_idx != range.end(); ++block_idx) {
                 int current_idx = block_idx * (index_step_target << 1);
                 int current_idx_pair = current_idx + index_step_target;
-
-                if (current_idx_pair >= matrix_size) continue;
 
                 for(int idx = 0; idx < index_step_target; idx++) {
                     int current_idx_loc = current_idx + idx;
@@ -342,8 +341,8 @@ void apply_X_kernel_to_input_tbb(Matrix& input, const std::vector<int>& target_q
                     }
 
                     if (all_controls_active) {
-                        int row_offset = current_idx_loc * input.stride;
-                        int row_offset_pair = current_idx_pair_loc * input.stride;
+                        long long row_offset = (long long)current_idx_loc * input.stride;
+                        long long row_offset_pair = (long long)current_idx_pair_loc * input.stride;
 
                         std::swap_ranges(
                             input.get_data() + row_offset,
@@ -602,14 +601,12 @@ void apply_X_kernel_to_input_omp(Matrix& input, const std::vector<int>& target_q
 
     int target_qbit = target_qbits[0];
     int index_step_target = 1 << target_qbit;
-    int total_blocks = matrix_size >> 1;
+    int total_blocks = matrix_size >> (target_qbit + 1);
 
     #pragma omp parallel for schedule(static)
     for (int block_idx = 0; block_idx < total_blocks; block_idx++) {
         int current_idx = block_idx * (index_step_target << 1);
         int current_idx_pair = current_idx + index_step_target;
-
-        if (current_idx_pair >= matrix_size) continue;
 
         for(int idx = 0; idx < index_step_target; idx++) {
             int current_idx_loc = current_idx + idx;
@@ -625,8 +622,8 @@ void apply_X_kernel_to_input_omp(Matrix& input, const std::vector<int>& target_q
             }
 
             if (all_controls_active) {
-                int row_offset = current_idx_loc * input.stride;
-                int row_offset_pair = current_idx_pair_loc * input.stride;
+                long long row_offset = (long long)current_idx_loc * input.stride;
+                long long row_offset_pair = (long long)current_idx_pair_loc * input.stride;
 
                 std::swap_ranges(
                     input.get_data() + row_offset,
