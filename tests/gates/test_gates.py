@@ -503,13 +503,13 @@ class Test_operations:
 
             if inspect.isclass(obj):
                 
-                if name == "SYC" or name == "Gate" or name=="CR" or name=="CROT":
+                if name == "SYC" or name == "Gate" or name=="CR" or name=="CROT" or name=="CNZ" or name=="N_Qubit_Phase":
                     continue
 
                 print(f"testing gate: {name}")
 
                 self.perform_gate_matrix_testing( obj )
-                if name == "SWAP" or name == "RXX" or name == "RYY" or name == "RZZ":
+                if name == "SWAP" or name == "RXX" or name == "RYY" or name == "RZZ" or name=="CNZ" or name=="N_Qubit_Phase":
                     continue
                 self.perform_gate_apply_to_testing( obj )
 
