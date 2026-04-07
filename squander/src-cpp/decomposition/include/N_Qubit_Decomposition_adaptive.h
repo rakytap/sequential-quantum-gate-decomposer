@@ -246,6 +246,12 @@ void add_layer_to_imported_gate_structure();
 
 double extract_theta_from_layer( Gates_block* gate_structure, int layer_idx, Matrix_real& optimized_parameters);
 
+double calculate_U3_score(Gate* gate, Matrix_real& optimized_parameters);
+
+void compress_U3_gates_PBC( );
+
+Gates_block* compress_gate_structure_U3_gates_PBC( Gates_block* gate_structure, int uncompressed_iter_num );
+
 };
 
 

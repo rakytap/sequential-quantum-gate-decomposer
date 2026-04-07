@@ -85,7 +85,44 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
             target_qbit: Target qubit index (int)
         """
 
-        # call the C wrapper function
+    def __setstate__(self, state):
+        super().__setstate__( state )
+    
+
+    def __new__(cls, *args, **kwargs):
+
+        return super().__new__(cls, *args, **kwargs)
+
+    def __copy__(self):
+        """
+        Shallow copy implementation using Python's copy protocol.
+        Creates a new circuit with the same gates.
+        """
+        return self.copy()
+
+    def __deepcopy__(self, memo):
+        """
+        Deep copy implementation using Python's copy protocol.
+        Creates a new circuit with all gates deeply copied.
+        @param memo A dictionary to track already copied objects.
+        @return A new qgd_Circuit instance with all gates copied.
+        """
+        return self.copy()
+
+    def copy(self):
+        """
+        Create a deep copy of the circuit.
+        @return A new qgd_Circuit instance with all gates copied.
+        """
+        # Call the C wrapper function that uses the clone() method
+        return super().copy()
+#@brief Call to add a U1 gate to the front of the gate structure.
+#@param self A pointer pointing to an instance of the class qgd_Circuit.
+#@param Input argument: target_qbit (int)
+
+    def add_U1( self, target_qbit):
+
+	# call the C wrapper function
         super().add_U1(target_qbit)
 
     def add_U2(self, target_qbit):
@@ -252,12 +289,20 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
 
         # call the C wrapper function
         super().add_SX(target_qbit)
+        
 
-    def add_S(self, target_qbit):
-        """Add a S gate to the front of the gate structure.
+    def add_Phase_Gate( self):
 
+	# call the C wrapper function
+        super().add_Phase_Gate()
+    #@brief Call to add a S gate to the front of the gate structure.
+    #@param self A pointer pointing to an instance of the class qgd_Circuit.
+    #@param Input arguments: target_qbit (int).
+   
+    def add_S(self,target_qbit):
+        """
         Args:
-            target_qbit: Target qubit index (int)
+        target_qbit: Target qubit index (int)
         """
 
         # call the C wrapper function
@@ -303,6 +348,15 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
 
         # call the C wrapper function
         super().add_adaptive(target_qbit, control_qbit)
+
+    def add_CNZ( self, phase_string=None):
+        if phase_string == None:
+            phase_string = "1"*self.get_Qbit_Num()
+	# call the C wrapper function
+        super().add_CNZ(phase_string)        
+#@brief Call to add a CROT gate to the front of the gate structure.
+#@param self A pointer pointing to an instance of the class qgd_Circuit.
+#@param Input arguments: target_qbit (int).
 
     def add_CROT(self, target_qbit, control_qbit):
         """Add a CROT gate to the front of the gate structure.

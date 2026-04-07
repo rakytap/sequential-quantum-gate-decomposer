@@ -306,6 +306,20 @@ void apply_SWAP_kernel_to_input(Matrix& input, const std::vector<int>& target_qb
     }
 }
 
+
+void apply_diagonal_gate_to_matrix_input(Matrix& diag_Nqbit, Matrix& input, const int& matrix_size){
+
+    for (int col_idx = 0; col_idx < input.cols; col_idx++) {
+            	for (int idx=0; idx<matrix_size; idx++){
+	                    int index = idx * input.stride + col_idx;
+                        QGD_Complex16 tmp = mult(diag_Nqbit[idx], input[index]);
+                        input[index].real = tmp.real;
+                        input[index].imag = tmp.imag;
+            	}
+    }
+}
+
+
 // TBB Parallelized versions
 
 void apply_X_kernel_to_input_tbb(Matrix& input, const std::vector<int>& target_qbits,
@@ -589,6 +603,24 @@ void apply_SWAP_kernel_to_input_tbb(Matrix& input, const std::vector<int>& targe
     );
 }
 
+void apply_diagonal_gate_to_matrix_input_tbb(Matrix& diag_Nqbit, Matrix& input, const int& matrix_size) {
+
+
+
+    tbb::parallel_for(tbb::blocked_range<int>(0, matrix_size, 64),
+        [&](const tbb::blocked_range<int>& range) {
+            for (int idx = range.begin(); idx != range.end(); ++idx) {
+                for (int col_idx=0; col_idx<input.cols; col_idx++){
+                    int index = idx * input.stride + col_idx;
+                    QGD_Complex16 tmp = mult(diag_Nqbit[idx], input[index]);
+                    input[index].real = tmp.real;
+                    input[index].imag = tmp.imag;
+                }
+            }
+        }
+    );
+}
+
 // OpenMP Parallelized versions
 
 void apply_X_kernel_to_input_omp(Matrix& input, const std::vector<int>& target_qbits,
@@ -854,5 +886,19 @@ void apply_SWAP_kernel_to_input_omp(Matrix& input, const std::vector<int>& targe
             input.get_data() + swap_idx*input.stride + input.cols,
             input.get_data() + swap_idx_pair*input.stride
         );
+    }
+}
+
+void apply_diagonal_gate_to_matrix_input_omp(Matrix& diag_Nqbit, Matrix& input, const int& matrix_size) {
+    int total_blocks = matrix_size;
+
+    #pragma omp parallel for schedule(static)
+    for (int idx = 0; idx < total_blocks; idx++) {
+        for (int col_idx=0; col_idx<input.cols; col_idx++){
+            int index = idx * input.stride + col_idx;
+            QGD_Complex16 tmp = mult(diag_Nqbit[idx], input[index]);
+            input[index].real = tmp.real;
+            input[index].imag = tmp.imag;
+        }
     }
 }

@@ -234,6 +234,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_init(qgd_N_Qubit_Decomposition_Wrappe
     }
 }
 
+
 static int 
 qgd_N_Qubit_Decomposition_custom_Wrapper_init(qgd_N_Qubit_Decomposition_Wrapper* self, PyObject* args, PyObject* kwds)
 {
@@ -883,6 +884,8 @@ qgd_N_Qubit_Decomposition_Wrapper_get_Num_of_Iters(qgd_N_Qubit_Decomposition_Wra
     int number_of_iters = self->decomp->get_num_iters();   
     return Py_BuildValue("i", number_of_iters);
 }
+
+
 
 /**
 @brief Export unitary matrix to binary file
@@ -1809,6 +1812,30 @@ qgd_N_Qubit_Decomposition_Wrapper_Compress_Circuit(qgd_N_Qubit_Decomposition_Wra
 }
 
 /**
+@brief Call to compress circuit with U3 gates
+@note applicable to: Adaptive
+*/
+
+static PyObject *
+qgd_N_Qubit_Decomposition_Wrapper_Compress_Circuit_U3_Gates_PBC(qgd_N_Qubit_Decomposition_Wrapper *self)
+{
+    try {
+        N_Qubit_Decomposition_adaptive* adaptive_decomp = dynamic_cast<N_Qubit_Decomposition_adaptive*>(self->decomp);
+        if (adaptive_decomp == NULL) {
+            PyErr_SetString(PyExc_AttributeError, "compress_circuit_U3_gates_PBC is only available for N_Qubit_Decomposition_adaptive");
+            return NULL;
+        }
+        adaptive_decomp->compress_U3_gates_PBC();
+        Py_RETURN_NONE;
+    } catch (std::exception& e) {
+        PyErr_SetString(PyExc_Exception, e.what());
+        return NULL;
+    }
+}
+
+
+
+/**
 @brief Call to finalize circuit
 @note applicable to: Adaptive
 */
@@ -2004,6 +2031,48 @@ qgd_N_Qubit_Decomposition_Wrapper_apply_Imported_Gate_Structure(qgd_N_Qubit_Deco
     return Py_BuildValue("i", 0);
 }
 
+/**
+ */
+ static PyObject * qgd_N_Qubit_Decomposition_Wrapper_set_Two_Qubit_Block_Template(qgd_N_Qubit_Decomposition_Wrapper *self, PyObject *args) {
+
+    // initiate variables for input arguments
+    PyObject* gate_structure_py; 
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|O", &gate_structure_py )) return Py_BuildValue("i", -1);
+
+
+    // convert gate structure from PyObject to qgd_Circuit_Wrapper
+    qgd_Circuit_Wrapper* qgd_op_block = (qgd_Circuit_Wrapper*) gate_structure_py;
+
+    try {
+        N_Qubit_Decomposition_Tree_Search* tree_search_decomp = dynamic_cast<N_Qubit_Decomposition_Tree_Search*>(self->decomp);
+        if (tree_search_decomp == NULL) {
+            N_Qubit_Decomposition_Tabu_Search* tabu_search_decomp = dynamic_cast<N_Qubit_Decomposition_Tabu_Search*>(self->decomp);
+            if (tabu_search_decomp == NULL) {
+                PyErr_SetString(PyExc_AttributeError, "set_Two_Qubit_Block_Template is only available for N_Qubit_Decomposition_Tree_Search or N_Qubit_Decomposition_Tabu_Search");
+                return NULL;
+            }
+            tabu_search_decomp->set_two_qubit_block_template( qgd_op_block->gate );
+        } else {
+            tree_search_decomp->set_two_qubit_block_template( qgd_op_block->gate );
+        }
+    }
+    catch (std::string err ) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    catch(...) {
+        std::string err( "Invalid pointer to decomposition class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    
+
+    return Py_BuildValue("i", 0);
+
+
+}
 // ========================================================================= METHODS SHARED ACROSS DECOMP CLASSES
 
 /**
@@ -3016,6 +3085,8 @@ static PyMethodDef qgd_N_Qubit_Decomposition_adaptive_methods[] = {
      "Apply imported gate structure"},
     {"set_Unitary", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_set_Unitary, METH_VARARGS,
      "Call to set unitary matrix"},
+    {"Compress_Circuit_U3_Gates_PBC", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_Compress_Circuit_U3_Gates_PBC, METH_NOARGS,
+     "Method to compress circuit with U3 gates"},
     {NULL}
 };
 
@@ -3034,6 +3105,8 @@ static PyMethodDef qgd_N_Qubit_Decomposition_Tabu_Search_methods[] = {
     DECOMPOSITION_WRAPPER_BASE_METHODS
     {"set_Unitary", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_set_Unitary, METH_VARARGS,
      "Call to set unitary matrix"},
+    {"set_Two_Qubit_Block_Template", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_set_Two_Qubit_Block_Template, METH_VARARGS,
+     "Set two qubit block template"},
     {NULL}
 };
 
@@ -3044,6 +3117,8 @@ static PyMethodDef qgd_N_Qubit_Decomposition_Tree_Search_methods[] = {
     DECOMPOSITION_WRAPPER_BASE_METHODS
     {"set_Unitary", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_set_Unitary, METH_VARARGS,
      "Call to set unitary matrix"},
+    {"set_Two_Qubit_Block_Template", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_set_Two_Qubit_Block_Template, METH_VARARGS,
+     "Set two qubit block template"},
     {NULL}
 };
 

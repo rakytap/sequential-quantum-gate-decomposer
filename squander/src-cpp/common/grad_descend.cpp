@@ -45,6 +45,8 @@ Grad_Descend::Grad_Descend(void (* f_pointer) (Matrix_real, void *, double *, Ma
     // number of function calls during the optimization process
     function_call_count = 0;
 
+    eta = 0.9;
+
 }
 
 
@@ -70,6 +72,9 @@ Grad_Descend::Grad_Descend(void (* f_pointer) (Matrix_real, void *, double *, Ma
 
     // number of function calls during the optimization process
     function_call_count = 0;
+
+    eta = 0.9;
+
 
 }
 
@@ -126,8 +131,6 @@ double Grad_Descend::Start_Optimization(Matrix_real &x, long maximal_iterations_
 */  
 void  Grad_Descend::line_search(Matrix_real& x, Matrix_real& g, Matrix_real& search_direction, Matrix_real& x0_search, Matrix_real& g0_search, double& maximal_step, double& d__dot__g0, double& f)
 {
-
-
 
 
     memcpy( x0_search.get_data(), x.get_data(), x.size()*sizeof(double) );
@@ -271,6 +274,298 @@ void  Grad_Descend::line_search(Matrix_real& x, Matrix_real& g, Matrix_real& sea
     return;
 } 
 
+/**
+@brief Call to perform inexact line search terminated with Wolfe 1st and 2nd conditions
+@param x The guess for the starting point. The coordinated of the optimized cost function are returned via x.
+@param g The gradient at x. The updated gradient is returned via this argument.
+@param search_direction The search direction.
+@param x0_search Stores the starting point. (automatically updated with the starting x during the execution)
+@param g0_search Stores the starting gradient. (automatically updated with the starting x during the execution)
+@param maximal_step The maximal allowed step in the search direction
+@param d__dot__g The overlap of the gradient with the search direction to test downhill.
+@param f The value of the minimized cost function is returned via this argument
+*/  
+void  Grad_Descend::line_search_Zhang_Hager(Matrix_real& x, Matrix_real& g, Matrix_real& search_direction, Matrix_real& x0_search, Matrix_real& g0_search, double& maximal_step, double& d__dot__g0, double& f)
+{
+    // Wolfe parameters (keep your original Armijo=0.1, curvature=0.7)
+    const double delta = 0.1;
+    const double sigma = 0.7;
+
+    const long max_loops = 50;
+
+    // Cache start point
+    std::memcpy(
+        x0_search.get_data(),
+        x.get_data(),
+        x.size() * sizeof(double)
+    );
+    std::memcpy(
+        g0_search.get_data(),
+        g.get_data(),
+        g.size() * sizeof(double)
+    );
+
+    const double f0 = f;
+
+    // Compute d__dot__g0 = g0^T d
+    d__dot__g0 = 0.0;
+    for (long i = 0; i < variable_num; i++) {
+        d__dot__g0 += g0_search[i] * search_direction[i];
+    }
+
+    // Must be a descent direction
+    if (!(d__dot__g0 < 0.0)) {
+        return;
+    }
+
+    // Zhang–Hager nonmonotone reference:
+    // Assumes members: double C, Q, eta;  (eta in [0, 1))
+    // If not initialized by caller, do a safe init.
+    if (!(Q > 0.0) || !std::isfinite(C)) {
+        Q = 1.0;
+        C = f0;
+    }
+    const double Cref = C;
+
+    // Trial gradient buffer
+    Matrix_real g_trial = g.copy();
+
+    // Best-so-far fallback (optional but matches your current behavior)
+    Matrix_real g_best = g.copy();
+    double step_best = 0.0;
+    double f_best = f0;
+    double dg_abs_best = std::fabs(d__dot__g0);
+
+    // Evaluate f, g, and directional derivative at alpha
+    auto eval = [&](double alpha, double& fout, Matrix_real& gout,
+                    double& dgout) {
+        for (long i = 0; i < variable_num; i++) {
+            x[i] = x0_search[i] + alpha * search_direction[i];
+        }
+
+        get_f_ang_gradient(x, fout, gout);
+
+        dgout = 0.0;
+        for (long i = 0; i < variable_num; i++) {
+            dgout += gout[i] * search_direction[i];
+        }
+    };
+
+    auto consider_best = [&](double alpha, double fv, const Matrix_real& gv,
+                             double dgv) {
+        if (fv < f_best || std::fabs(dgv) < dg_abs_best) {
+            step_best = alpha;
+            f_best = fv;
+            dg_abs_best = std::fabs(dgv);
+
+            std::memcpy(
+                g_best.get_data(),
+                gv.get_data(),
+                gv.size() * sizeof(double)
+            );
+        }
+    };
+
+    // Initial step
+    double step = std::min(1.0, maximal_step);
+    if (step <= 0.0) step = std::min(1e-3, maximal_step);
+
+    // Bracketing data
+    double step_prev = 0.0;
+    double f_prev = f0;
+    double dg_prev = d__dot__g0;
+
+    bool have_bracket = false;
+    double alo = 0.0, ahi = 0.0;
+    double flo = f0, fhi = f0;
+    double dglo = d__dot__g0, dghi = d__dot__g0;
+
+    // -----------------------
+    // Bracketing phase
+    // -----------------------
+    for (long iter_idx = 0; iter_idx < max_loops; iter_idx++) {
+        double f_cur = 0.0;
+        double dg_cur = 0.0;
+
+        eval(step, f_cur, g_trial, dg_cur);
+        consider_best(step, f_cur, g_trial, dg_cur);
+
+        if (function_call_count == maximal_iterations) {
+            break;
+        }
+
+        const bool armijo_ok = (f_cur <= Cref + delta * step * d__dot__g0);
+        const bool curvature_ok = (dg_cur >= sigma * d__dot__g0);
+
+        if (armijo_ok && curvature_ok) {
+            // Accept
+            f = f_cur;
+            std::memcpy(
+                g.get_data(),
+                g_trial.get_data(),
+                g.size() * sizeof(double)
+            );
+            maximal_step = step;
+
+            // Update Zhang–Hager reference using accepted f
+            const double Q_prev = Q;
+            Q = eta * Q + 1.0;
+            C = (eta * Q_prev * C + f) / Q;
+
+            return;
+        }
+
+        // If Armijo fails, or function increased vs previous -> bracket
+        if (!armijo_ok || (iter_idx > 0 && f_cur >= f_prev)) {
+            have_bracket = true;
+
+            alo = step_prev;
+            flo = f_prev;
+            dglo = dg_prev;
+
+            ahi = step;
+            fhi = f_cur;
+            dghi = dg_cur;
+
+            break;
+        }
+
+        // If derivative turned positive -> bracket
+        if (dg_cur >= 0.0) {
+            have_bracket = true;
+
+            alo = step;
+            flo = f_cur;
+            dglo = dg_cur;
+
+            ahi = step_prev;
+            fhi = f_prev;
+            dghi = dg_prev;
+
+            break;
+        }
+
+        // No bracket yet: expand step
+        step_prev = step;
+        f_prev = f_cur;
+        dg_prev = dg_cur;
+
+        if (step >= maximal_step) {
+            break;
+        }
+        step = std::min(2.0 * step, maximal_step);
+
+        if (step < num_precision) {
+            break;
+        }
+    }
+
+    // -----------------------
+    // Zoom phase (bisection)
+    // -----------------------
+    if (have_bracket) {
+        const long max_zoom = 10;
+        for (long iter_idx = 0; iter_idx < max_zoom; iter_idx++) {
+            double step_mid;
+            {
+                const double d1 = dglo + dghi - 3.0 * (fhi - flo) / (ahi - alo);
+                const double disc = d1 * d1 - dglo * dghi;
+                if (disc >= 0.0) {
+                    const double d2 = std::copysign(std::sqrt(disc), ahi - alo);
+                    step_mid = ahi - (ahi - alo) * (dghi + d2 - d1) / (dghi - dglo + 2.0 * d2);
+                    const double lo_bound = std::min(alo, ahi);
+                    const double hi_bound = std::max(alo, ahi);
+                    if (!std::isfinite(step_mid) || step_mid <= lo_bound || step_mid >= hi_bound) {
+                        step_mid = 0.5 * (alo + ahi);
+                    }
+                } else {
+                    step_mid = 0.5 * (alo + ahi);
+                }
+            }
+
+            double f_mid = 0.0;
+            double dg_mid = 0.0;
+
+            eval(step_mid, f_mid, g_trial, dg_mid);
+            consider_best(step_mid, f_mid, g_trial, dg_mid);
+
+            if (function_call_count == maximal_iterations) {
+                break;
+            }
+
+            const bool armijo_ok =
+                (f_mid <= Cref + delta * step_mid * d__dot__g0);
+
+            if (!armijo_ok || (f_mid >= flo)) {
+                ahi = step_mid;
+                fhi = f_mid;
+                dghi = dg_mid;
+            } else {
+                const bool curvature_ok = (dg_mid >= sigma * d__dot__g0);
+                if (curvature_ok) {
+                    // Accept
+                    f = f_mid;
+                    std::memcpy(
+                        g.get_data(),
+                        g_trial.get_data(),
+                        g.size() * sizeof(double)
+                    );
+                    maximal_step = step_mid;
+
+                    // Update Zhang–Hager reference using accepted f
+                    const double Q_prev = Q;
+                    Q = eta * Q + 1.0;
+                    C = (eta * Q_prev * C + f) / Q;
+
+                    return;
+                }
+
+                if (dg_mid * (ahi - alo) >= 0.0) {
+                    ahi = alo;
+                    fhi = flo;
+                    dghi = dglo;
+                }
+
+                alo = step_mid;
+                flo = f_mid;
+                dglo = dg_mid;
+            }
+
+            if (std::fabs(ahi - alo) < num_precision) {
+                break;
+            }
+        }
+    }
+
+    // -----------------------
+    // Fallback: best-so-far
+    // -----------------------
+    step = step_best;
+    f = f_best;
+
+    std::memcpy(
+        g.get_data(),
+        g_best.get_data(),
+        g.size() * sizeof(double)
+    );
+
+    for (long i = 0; i < variable_num; i++) {
+        x[i] = x0_search[i] + step * search_direction[i];
+    }
+
+    maximal_step = step;
+
+    // Update Zhang–Hager reference on fallback path
+    const double Q_prev = Q;
+    Q = eta * Q + 1.0;
+    C = (eta * Q_prev * C + f) / Q;
+
+    if (step == 0.0) {
+        status = ZERO_STEP_SIZE_OCCURED;
+        return;
+    }
+
+}
 
 
 

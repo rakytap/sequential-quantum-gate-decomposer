@@ -58,6 +58,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "ON.h"
 #include "Adaptive.h"
 #include "Composite.h"
+#include "CNZ.h"
+#include "N_Qubit_Phase_Gate.h"
 #include "RXX.h"
 #include "RYY.h"
 #include "RZZ.h"
@@ -369,6 +371,7 @@ qgd_Circuit_Wrapper_add_two_qubit_gate(crot, CROT)
 
 qgd_Circuit_Wrapper_add_two_qubit_gate(adaptive, adaptive)
 
+
 /**
 @brief Wrapper function to add a CCX gate to the front of the gate structure.
 @param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper.
@@ -464,7 +467,45 @@ qgd_Circuit_Wrapper_add_CSWAP(qgd_Circuit_Wrapper *self, PyObject *args, PyObjec
 
 }
 
-/**
+static PyObject *
+qgd_Circuit_Wrapper_add_phase_gate(qgd_Circuit_Wrapper *self)
+{
+
+
+    self->circuit->add_phase_gate();
+    
+
+    return Py_BuildValue("i", 0);
+
+}
+
+static PyObject *
+qgd_Circuit_Wrapper_add_cnz(qgd_Circuit_Wrapper *self,  PyObject *args, PyObject *kwds)
+{
+
+    static char *kwlist[] = {(char*)"Phase State", NULL};
+    PyObject* phase_string=NULL; 
+
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|O", kwlist, &phase_string)) {
+        std::string err( "Unable to parse arguments");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;   
+    }
+    PyObject* phase_string_py = PyObject_Str(phase_string);
+    PyObject* phase_string_py_unicode = PyUnicode_AsEncodedString(phase_string_py, "utf-8", "~E~");
+    const char* phase_string_C = PyBytes_AS_STRING(phase_string_py_unicode);
+    std::string phase_string_str = ( phase_string_C );
+    int phase_idx = std::stoi(phase_string_str, nullptr, 2); 
+    self->circuit->add_cnz(phase_idx);
+    
+
+    return Py_BuildValue("i", 0);
+
+
+}
+
+/*
 @brief Wrapper function to add a block of operations to the front of the gate structure.
 @param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper.
 @param args A tuple of the input arguments: Py_qgd_Circuit_Wrapper (PyObject)
@@ -1484,6 +1525,31 @@ get_gate( Gates_block* circuit, int &idx ) {
         return py_gate;
 
     }
+    else if (gate->get_type() == N_QUBIT_PHASE_OPERATION) {
+        PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
+        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "N_Qubit_Phase");
+        PyObject* gate_input = Py_BuildValue("(O)", qbit_num );
+        py_gate              = PyObject_CallObject(py_gate_class, gate_input);
+        qgd_Gate* py_gate_C = reinterpret_cast<qgd_Gate*>( py_gate );
+        delete( py_gate_C->gate );
+        py_gate_C->gate = static_cast<Gate*>( gate->clone() );
+        Py_DECREF( qgd_gate );
+        Py_DECREF( gate_input );
+    }
+    else if (gate->get_type() == CNZ_OPERATION) {
+        // CNZ needs special handling because it requires phase_idx
+        // We'll create a dummy gate with phase_idx=0 and then replace it with the cloned one
+        PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
+        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "CNZ");
+        // Create with dummy phase string "0"
+        PyObject* gate_input = Py_BuildValue("(Os)", qbit_num, "0");
+        py_gate              = PyObject_CallObject(py_gate_class, gate_input);
+        qgd_Gate* py_gate_C = reinterpret_cast<qgd_Gate*>( py_gate );
+        delete( py_gate_C->gate );
+        py_gate_C->gate = static_cast<Gate*>( gate->clone() );
+        Py_DECREF( qgd_gate );
+        Py_DECREF( gate_input );
+    }
     else if (gate->get_type() == BLOCK_OPERATION) {
 
         // import gate operation modules
@@ -1897,6 +1963,60 @@ qgd_Circuit_Wrapper_get_Flat_Circuit( qgd_Circuit_Wrapper *self ) {
 
 
 /**
+@brief Method to create a copy of the circuit
+*/
+static PyObject *
+qgd_Circuit_Wrapper_copy( qgd_Circuit_Wrapper *self ) {
+
+    Gates_block* copied_circuit = NULL;
+
+    try {
+        copied_circuit = self->circuit->clone();
+    }
+    catch (std::string err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        std::cout << err << std::endl;
+        return NULL;
+    }
+    catch(...) {
+        std::string err( "Invalid pointer to circuit class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+    int qbit_num = copied_circuit->get_qbit_num();
+
+    // import gate operation modules
+    PyObject* qgd_circuit  = PyImport_ImportModule("squander.gates.qgd_Circuit");
+
+    if ( qgd_circuit == NULL ) {
+        PyErr_SetString(PyExc_Exception, "Module import error: squander.gates.qgd_Circuit" );
+        delete copied_circuit;
+        return NULL;
+    }
+
+    PyObject* qgd_circuit_Dict  = PyModule_GetDict( qgd_circuit );
+
+    // PyDict_GetItemString creates a borrowed reference to the item in the dict. Reference counting is not increased on this element, dont need to decrease the reference counting at the end
+    PyObject* py_circuit_class = PyDict_GetItemString( qgd_circuit_Dict, "qgd_Circuit");
+
+    PyObject* circuit_input = Py_BuildValue("(O)", Py_BuildValue("i", qbit_num) );
+    PyObject* py_circuit    = PyObject_CallObject(py_circuit_class, circuit_input);
+
+    // replace dummy data with real gate data
+    qgd_Circuit_Wrapper* py_circuit_C = reinterpret_cast<qgd_Circuit_Wrapper*>( py_circuit );
+
+    delete( py_circuit_C->circuit );
+    py_circuit_C->circuit = copied_circuit;
+
+    Py_DECREF( qgd_circuit );
+    Py_DECREF( circuit_input );
+
+    return py_circuit;
+}
+
+
+/**
 @brief Method to extract the stored quantum circuit in a human-readable data serialized and pickle-able format
 @param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper
 @return Returns a Python dictionary containing the serialized circuit state
@@ -2290,6 +2410,12 @@ static PyMethodDef qgd_Circuit_Wrapper_Methods[] = {
     {"add_adaptive", (PyCFunction) qgd_Circuit_Wrapper_add_adaptive, METH_VARARGS | METH_KEYWORDS,
      "Call to add an adaptive gate to the front of the gate structure"
     },
+    {"add_Phase_Gate", (PyCFunction) qgd_Circuit_Wrapper_add_phase_gate, METH_NOARGS,
+     "Call to add an phase gate to the front of the gate structure"
+    },    
+    {"add_CNZ", (PyCFunction) qgd_Circuit_Wrapper_add_cnz, METH_VARARGS | METH_KEYWORDS,
+     "Call to add an phase gate to the front of the gate structure"
+    },
     {"add_Circuit", (PyCFunction) qgd_Circuit_Wrapper_add_Circuit, METH_VARARGS,
      "Call to add a block of operations to the front of the gate structure."
     },
@@ -2351,6 +2477,9 @@ static PyMethodDef qgd_Circuit_Wrapper_Methods[] = {
     },
     {"get_Flat_Circuit", (PyCFunction) qgd_Circuit_Wrapper_get_Flat_Circuit, METH_NOARGS,
      "Method to generate a flat circuit. A flat circuit does not contain subcircuits: there are no Gates_block instances (containing subcircuits) in the resulting circuit. If the original circuit contains subcircuits, the gates in the subcircuits are directly incorporated in the resulting flat circuit."
+    },
+    {"copy", (PyCFunction) qgd_Circuit_Wrapper_copy, METH_NOARGS,
+     "Method to create a deep copy of the circuit."
     },
     {"get_Parents", (PyCFunction) qgd_Circuit_Wrapper_get_parents, METH_VARARGS,
      "Method to get the list of parent gate indices. Then the parent gates can be obtained from the list of gates involved in the circuit."

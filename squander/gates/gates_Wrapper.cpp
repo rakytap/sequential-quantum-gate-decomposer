@@ -28,6 +28,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 
 #include <Python.h>
+#include <stdexcept>
+#include <string>
 #include "structmember.h"
 #include "Gate.h"
 #include "CU.h"
@@ -57,6 +59,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "R.h"
 #include "CR.h"
 #include "CROT.h"
+#include "CNZ.h"
+#include "N_Qubit_Phase_Gate.h"
 #include "CCX.h"
 #include "SWAP.h"
 #include "CSWAP.h"
@@ -65,6 +69,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "RYY.h"
 #include "RZZ.h"
 #include "SXdg.h"
+#include "common.h"
+
 
 //////////////////////////////////////
 
@@ -96,6 +102,12 @@ Gate* create_controlled_gate( int qbit_num, int target_qbit, int control_qbit ) 
 }
 
 template<typename GateT>
+Gate* create_n_qubit_gate( int qbit_num) {
+    GateT* gate = new GateT( qbit_num );
+    return static_cast<Gate*>( gate );
+}
+
+template<typename GateT>
 Gate* create_multi_target_gate( int qbit_num, const std::vector<int>& target_qbits ) {
 
     GateT* gate = new GateT( qbit_num, target_qbits );
@@ -119,7 +131,10 @@ Gate* create_multi_target_controlled_gate( int qbit_num, const std::vector<int>&
 
 }
 
-
+Gate* create_cnz_gate( int qbit_num, int phase_idx) {
+    CNZ* gate = new CNZ( qbit_num, phase_idx );
+    return static_cast<Gate*>( gate );
+}
 
 /**
 @brief Method called when a python instance of the class  Gate_Wrapper is destroyed
@@ -255,6 +270,7 @@ static PyObject *
     return (PyObject *) self;
     
 }
+
 
 /**
 @brief Generic wrapper for single-target multi-control gates (e.g., CCX)
@@ -445,9 +461,136 @@ static PyObject *
     }
 
     return (PyObject *) self;
+
+}
+/**
+@brief Method called when a python instance of the class  qgd_CH_Wrapper is allocated
+@param type A pointer pointing to a structure describing the type of the class  qgd_CH_Wrapper.
+*/
+template<typename GateT>
+static PyObject *
+ n_qubit_Gate_Wrapper_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
+{
+        static char *kwlist[] = {(char*)"qbit_num", NULL};
+    int qbit_num = -1; 
+
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i", kwlist, &qbit_num)) {
+        std::string err( "Unable to parse arguments");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;   
+    }
+
+    if (qbit_num == -1){
+        PyErr_SetString(PyExc_ValueError, "Qubit_num must be set!");
+        return NULL;   
+    }
+
+
+    Gate_Wrapper *self;
+    self = (Gate_Wrapper *) type->tp_alloc(type, 0);
+    if (self != NULL) {
+        self->gate =create_n_qubit_gate<GateT>( qbit_num );
+   }
+       return (PyObject *) self;
+
 }
 
 
+
+/**
+@brief Method called when a python instance of the class  qgd_CH_Wrapper is allocated
+@param type A pointer pointing to a structure describing the type of the class  qgd_CH_Wrapper.
+*/
+template<typename GateT>
+static PyObject *
+ cnz_Gate_Wrapper_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
+{
+
+    static char *kwlist[] = {(char*)"qbit_num",(char*)"Phase State", NULL};
+    int qbit_num = -1; 
+    PyObject* phase_string=NULL; 
+
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|iO", kwlist, &qbit_num, &phase_string)) {
+        std::string err( "Unable to parse arguments");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;   
+    }
+    
+    if (qbit_num == -1){
+        PyErr_SetString(PyExc_ValueError, "Qubit_num must be set!");
+        return NULL;   
+    }
+    
+    int phase_idx;
+    
+    // Handle default case: if phase_string is None or not provided, default to all 1s
+    if (phase_string == NULL || phase_string == Py_None) {
+        // Default: all qubits in state 1 -> phase_idx = 2^qbit_num - 1
+        phase_idx = (1 << qbit_num) - 1;
+    } else {
+        // Convert Python string to C++ string
+        PyObject* phase_string_py = PyObject_Str(phase_string);
+        if (phase_string_py == NULL) {
+            PyErr_SetString(PyExc_ValueError, "Failed to convert phase_string to string");
+            return NULL;
+        }
+        
+        PyObject* phase_string_py_unicode = PyUnicode_AsEncodedString(phase_string_py, "utf-8", "~E~");
+        Py_DECREF(phase_string_py);
+        
+        if (phase_string_py_unicode == NULL) {
+            PyErr_SetString(PyExc_ValueError, "Failed to encode phase_string");
+            return NULL;
+        }
+        
+        const char* phase_string_C = PyBytes_AS_STRING(phase_string_py_unicode);
+        std::string phase_string_str = phase_string_C;
+        Py_DECREF(phase_string_py_unicode);
+        
+        // Validate that string contains only binary characters (0 and 1)
+        for (char c : phase_string_str) {
+            if (c != '0' && c != '1') {
+                std::string err = "Invalid character in phase_string: '" + std::string(1, c) + "'. Only '0' and '1' are allowed.";
+                PyErr_SetString(PyExc_ValueError, err.c_str());
+                return NULL;
+            }
+        }
+        
+        // Parse binary string to integer with error handling
+        // std::stoi handles leading zeros automatically
+        try {
+            phase_idx = std::stoi(phase_string_str, nullptr, 2);
+        } catch (const std::invalid_argument& e) {
+            PyErr_SetString(PyExc_ValueError, "Invalid phase_string: not a valid binary number");
+            return NULL;
+        } catch (const std::out_of_range& e) {
+            PyErr_SetString(PyExc_ValueError, "phase_string value out of range");
+            return NULL;
+        }
+        
+        // Validate that the parsed value fits in qbit_num bits
+        // phase_idx must be < 2^qbit_num
+        int max_phase_idx = (1 << qbit_num) - 1;
+        if (phase_idx > max_phase_idx) {
+            std::string err = "phase_string value (" + std::to_string(phase_idx) + 
+                            ") exceeds maximum for qbit_num (" + std::to_string(qbit_num) + 
+                            "). Maximum value is " + std::to_string(max_phase_idx);
+            PyErr_SetString(PyExc_ValueError, err.c_str());
+            return NULL;
+        }
+    }
+
+    Gate_Wrapper *self;
+    self = (Gate_Wrapper *) type->tp_alloc(type, 0);
+    if (self != NULL) {
+        self->gate =create_cnz_gate( qbit_num,phase_idx );
+    }
+
+
+    return (PyObject *) self;
+}
 /**
 @brief Method called when a python instance of a non-controlled gate class is initialized
 @param self A pointer pointing to an instance of the class  Gate_Wrapper.
@@ -541,6 +684,17 @@ Gate_Wrapper_get_Matrix( Gate_Wrapper *self, PyObject *args, PyObject *kwds ) {
 
     }
 
+    // Special handling for CNZ gate: convert column vector to square diagonal matrix
+    if (gate->get_type() == CNZ_OPERATION && gate_mtx.cols == 1) {
+        // CNZ returns a column vector (diagonal elements), convert to square matrix
+        int matrix_size = gate_mtx.rows;
+        Matrix square_matrix = create_identity(matrix_size);
+        // Copy diagonal elements from column vector to square matrix
+        for (int idx = 0; idx < matrix_size; idx++) {
+            square_matrix[idx * matrix_size + idx] = gate_mtx[idx];
+        }
+        gate_mtx = square_matrix;
+    }
 
     // convert to numpy array
     gate_mtx.set_owner(false);
@@ -1812,6 +1966,25 @@ struct CSWAP_Wrapper_Type: Gate_Wrapper_Type_tmp{
 };
 static CSWAP_Wrapper_Type CSWAP_Wrapper_Type_ins;
 
+struct N_QUBIT_PHASE_Wrapper_Type : Gate_Wrapper_Type_tmp {
+
+    N_QUBIT_PHASE_Wrapper_Type() {    
+        tp_name      = "N_Qubit_Phase";
+        tp_doc       = "Object to represent python binding for a CNZ gate of the Squander package.";
+        tp_new      = (newfunc) n_qubit_Gate_Wrapper_new<N_Qubit_Phase_Gate>;
+        tp_base      = &Gate_Wrapper_Type;
+    }
+};
+struct CNZ_Wrapper_Type : Gate_Wrapper_Type_tmp {
+
+    CNZ_Wrapper_Type() {    
+        tp_name      = "CNZ";
+        tp_doc       = "Object to represent python binding for a CNZ gate of the Squander package.";
+        tp_new      = (newfunc) cnz_Gate_Wrapper_new<CNZ>;
+        tp_base      = &Gate_Wrapper_Type;
+    }
+};
+
 gate_wrapper_type_template(CH, controlled_gate_Wrapper_new);
 
 gate_wrapper_type_template(CNOT, controlled_gate_Wrapper_new);
@@ -1870,7 +2043,8 @@ gate_wrapper_type_template(R, Gate_Wrapper_new);
 
 
 
-
+static N_QUBIT_PHASE_Wrapper_Type N_QUBIT_PHASE_Wrapper_Type_ins;
+static CNZ_Wrapper_Type CNZ_Wrapper_Type_ins;
 ////////////////////////////////////////
 
 
@@ -1941,9 +2115,11 @@ PyInit_gates_Wrapper(void)
         PyType_Ready(&Tdg_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&CR_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&CROT_Wrapper_Type_ins) < 0 ||
-        PyType_Ready(&CCX_Wrapper_Type_ins) < 0 ||
-        PyType_Ready(&SWAP_Wrapper_Type_ins) < 0 ||
+        PyType_Ready(&N_QUBIT_PHASE_Wrapper_Type_ins) < 0 ||
+        PyType_Ready(&CNZ_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&CSWAP_Wrapper_Type_ins) < 0 ||
+        PyType_Ready(&SWAP_Wrapper_Type_ins) < 0 ||
+        PyType_Ready(&CCX_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&R_Wrapper_Type_ins) < 0 ) {
 
         Py_DECREF(m);
@@ -1962,6 +2138,8 @@ PyInit_gates_Wrapper(void)
     Py_INCREF_template(CH);
 
     Py_INCREF_template(CNOT);
+
+    Py_INCREF_template(CROT);
 
     Py_INCREF_template(CZ);
 
@@ -2034,8 +2212,20 @@ PyInit_gates_Wrapper(void)
     
     Py_INCREF_template(CR);
     
-    Py_INCREF_template(CROT);
+    Py_INCREF(&CNZ_Wrapper_Type_ins);
+    if (PyModule_AddObject(m, "CNZ", (PyObject *) & CNZ_Wrapper_Type_ins) < 0) {
+        Py_DECREF(&CNZ_Wrapper_Type_ins);
+        Py_DECREF(m);
+        return NULL;
+    }
 
+
+    Py_INCREF(&N_QUBIT_PHASE_Wrapper_Type_ins);
+    if (PyModule_AddObject(m, "N_Qubit_Phase", (PyObject *) & N_QUBIT_PHASE_Wrapper_Type_ins) < 0) {
+        Py_DECREF(&N_QUBIT_PHASE_Wrapper_Type_ins);
+        Py_DECREF(m);
+        return NULL;
+    }
     Py_INCREF_template(CCX);
 
     Py_INCREF_template(SWAP);

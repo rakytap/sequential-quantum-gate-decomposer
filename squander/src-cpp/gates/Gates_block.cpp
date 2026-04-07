@@ -60,6 +60,8 @@ limitations under the License.
 #include "Adaptive.h"
 #include "CZ_NU.h"
 #include "Composite.h"
+#include "CNZ.h"
+#include "N_Qubit_Phase_Gate.h"
 #include "Gates_block.h"
 
 #include "custom_kernel_1qubit_gate.h"
@@ -400,7 +402,8 @@ Gates_block::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
         case CRY_OPERATION: case CR_OPERATION:
         case CRX_OPERATION: case CRZ_OPERATION:
         case CZ_NU_OPERATION: case CP_OPERATION:
-        case ADAPTIVE_OPERATION:
+        case ADAPTIVE_OPERATION: 
+
         {
             operation->apply_from_right( parameters_mtx, input );
         }
@@ -414,11 +417,22 @@ Gates_block::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
             on_operation->apply_from_right( parameters_mtx, input );
             break; 
         }
+        case N_QUBIT_PHASE_OPERATION:
+        {
+            N_Qubit_Phase_Gate* on_operation = static_cast<N_Qubit_Phase_Gate*>(operation);
+            on_operation->apply_from_right( parameters_mtx, input );
+            break; 
+        }
+        case CNZ_OPERATION:{
+            CNZ* on_operation = static_cast<CNZ*>(operation);
+            on_operation->apply_from_right(input );
+            break; 
+        }
         case BLOCK_OPERATION: {
             Gates_block* block_operation = static_cast<Gates_block*>(operation);
             block_operation->apply_from_right(parameters_mtx, input);
             break;
-        }       
+        }
         case COMPOSITE_OPERATION: {
             Composite* com_operation = static_cast<Composite*>(operation);
             com_operation->apply_from_right( parameters_mtx, input );
@@ -1656,7 +1670,6 @@ void Gates_block::add_on_to_front() {
 
 }
 
-
 /**
 @brief Append a Composite gate to the list of gates
 */
@@ -1681,6 +1694,60 @@ void Gates_block::add_composite_to_front()  {
         add_gate_to_front( gate );
 
 }
+
+
+
+/**
+@brief Append a Composite gate to the list of gates
+*/
+void Gates_block::add_phase_gate()  {
+
+        // create the operation
+        Gate* operation = static_cast<Gate*>(new N_Qubit_Phase_Gate( qbit_num ));
+
+        // adding the operation to the end of the list of gates
+        add_gate( operation );
+}
+
+/**
+@brief Add a Composite gate to the front of the list of gates
+*/
+void Gates_block::add_phase_gate_to_front()  {
+
+        // create the operation
+        Gate* gate = static_cast<Gate*>(new N_Qubit_Phase_Gate( qbit_num ));
+
+        // adding the operation to the front of the list of gates
+        add_gate_to_front( gate );
+
+}
+
+
+/**
+@brief Append a Composite gate to the list of gates
+*/
+void Gates_block::add_cnz(int phase_idx)  {
+
+        // create the operation
+        Gate* operation = static_cast<Gate*>(new CNZ( qbit_num,phase_idx ));
+
+        // adding the operation to the end of the list of gates
+        add_gate( operation );
+}
+
+/**
+@brief Add a Composite gate to the front of the list of gates
+*/
+void Gates_block::add_cnz_to_front(int phase_idx)  {
+
+        // create the operation
+        Gate* gate = static_cast<Gate*>(new CNZ( qbit_num,phase_idx ));
+
+        // adding the operation to the front of the list of gates
+        add_gate_to_front( gate );
+
+}
+
 
 
 
@@ -2308,6 +2375,8 @@ Gates_block::create_remapped_circuit( const std::map<int, int>& qbit_map, const 
         case CZ_NU_OPERATION: case CU_OPERATION:
         case RXX_OPERATION: case RYY_OPERATION:
         case RZZ_OPERATION: case SXDG_OPERATION:
+        case CNZ_OPERATION: case N_QUBIT_PHASE_OPERATION:
+        case CROT_OPERATION:
         {
             Gate* cloned_op = op->clone();
 
@@ -2508,8 +2577,9 @@ void Gates_block::set_qbit_num( int qbit_num_in ) {
         case U3_OPERATION:
         case CP_OPERATION: case SWAP_OPERATION:
         case CSWAP_OPERATION: case CCX_OPERATION:
-        case RY_OPERATION: case CRY_OPERATION: 
+        case RY_OPERATION: case CRY_OPERATION:
         case RX_OPERATION: case CR_OPERATION:
+        case CRX_OPERATION: case CRZ_OPERATION:
         case RZ_OPERATION: case X_OPERATION:
         case Y_OPERATION: case Z_OPERATION:
         case SX_OPERATION: case BLOCK_OPERATION:
@@ -2522,10 +2592,11 @@ void Gates_block::set_qbit_num( int qbit_num_in ) {
         case T_OPERATION: case TDG_OPERATION:
         case RXX_OPERATION: case RYY_OPERATION:
         case RZZ_OPERATION: case SXDG_OPERATION:
+        case CNZ_OPERATION: case N_QUBIT_PHASE_OPERATION:
             op->set_qbit_num( qbit_num_in );
             break;
         default:
-            std::string err("Gates_block::set_qbit_num: unimplemented gate"); 
+            std::string err("Gates_block::set_qbit_num: unimplemented gate");
             throw err;
         }
     }
@@ -2587,6 +2658,7 @@ int Gates_block::extract_gates( Gates_block* op_block ) {
         case T_OPERATION: case TDG_OPERATION:
         case SWAP_OPERATION: case RXX_OPERATION:
         case RYY_OPERATION: case RZZ_OPERATION:
+        case CNZ_OPERATION: case N_QUBIT_PHASE_OPERATION:
         case CSWAP_OPERATION: case CCX_OPERATION:
         case SXDG_OPERATION:
         {

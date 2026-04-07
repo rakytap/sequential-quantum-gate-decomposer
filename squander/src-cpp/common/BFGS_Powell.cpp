@@ -111,9 +111,11 @@ void BFGS_Powell::Optimize(Matrix_real& x, double& f)
     
     if (function_call_count == 0 || status == VARIABLES_INITIALIZED) {
         get_f_ang_gradient(x, f, g);
+        C = f;     // f(x0)
+        Q = 1.0;
     }
     
-    double fprev = fabs(f + f + 1.0);
+    double Cprev = fabs(C + C + 1.0);
 
     // Calculate the next search direction. 
 
@@ -156,12 +158,12 @@ void BFGS_Powell::Optimize(Matrix_real& x, double& f)
 
 
         // terminate cycles if the cost function is not decreased any more
-        if (f >= fprev) {
+        if (C >= Cprev) {
             status = MINIMUM_REACHED;
             return;
         }
 
-        fprev = f;
+        Cprev = C;
 
 
         // terminate if maximal number of iteration reached
@@ -172,8 +174,8 @@ void BFGS_Powell::Optimize(Matrix_real& x, double& f)
 
         
         // perform line search in the direction search_direction
-        line_search(x, g, search_direction, x0_search, g0_search, maximal_step, d__dot__g, f);
-    
+        line_search_Zhang_Hager(x, g, search_direction, x0_search, g0_search, maximal_step, d__dot__g, f);
+        //update_Zhang_Hager_parameters(f);
         if (status == ZERO_STEP_SIZE_OCCURED) {
             return;
         }

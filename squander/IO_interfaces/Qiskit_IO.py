@@ -61,7 +61,9 @@ from squander.gates.gates_Wrapper import (
     CCX,
     RXX,
     RYY,
-    RZZ )
+    RZZ,
+    CCX,
+    CNZ)
 
 
 
@@ -232,6 +234,13 @@ def get_Qiskit_Circuit( Squander_circuit, parameters ):
             target_qbits = gate.get_Target_Qbits()
             circuit.rzz( parameters_gate[0], target_qbits[0], target_qbits[1] )
 
+        elif isinstance(gate, CNZ):
+            #CNZ gate - Z gate with all-1 control
+            from qiskit.circuit.library import ZGate
+            target_qbits = gate.get_Target_Qbits()
+            # CNZ is a Z gate controlled on all qubits being in state 1
+            num_controls = len(target_qbits) - 1
+            circuit.append(ZGate().control(num_controls, ctrl_state='1'*num_controls), target_qbits)
         elif isinstance( gate, Circuit ):
             # Sub-circuit gate
             raise ValueError("Qiskit export of circuits with subcircuit is not supported. Use Circuit::get_Flat_Circuit prior of exporting circuit.")  

@@ -58,6 +58,13 @@ protected:
     /// status of the solver
     enum solver_status status;
 
+    /// Zhang-Hager Line search parameters
+    double Q;
+
+    double C;
+
+    double eta;
+
 protected:
 
 /**
@@ -72,6 +79,8 @@ protected:
 @param f The value of the minimized cost function is returned via this argument
 */  
 void line_search(Matrix_real& x, Matrix_real& g, Matrix_real& search_direction, Matrix_real& x0_search, Matrix_real& g0_search, double& maximal_step, double& d__dot__g, double& f);
+
+void line_search_Zhang_Hager(Matrix_real& x, Matrix_real& g, Matrix_real& search_direction, Matrix_real& x0_search, Matrix_real& g0_search, double& maximal_step, double& d__dot__g, double& f);
 
 /**
 @brief Call this method to start the optimization process

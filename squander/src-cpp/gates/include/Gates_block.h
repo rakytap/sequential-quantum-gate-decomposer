@@ -651,6 +651,26 @@ void add_composite();
 */
 void add_composite_to_front();
 
+/**
+@brief Append a Composite gate to the list of gates
+*/
+void add_phase_gate();
+
+/**
+@brief Add a Composite gate to the front of the list of gates
+*/
+void add_phase_gate_to_front();
+
+/**
+@brief Append a Composite gate to the list of gates
+*/
+void add_cnz(int phase_idx);
+
+/**
+@brief Add a Composite gate to the front of the list of gates
+*/
+void add_cnz_to_front(int phase_idx);
+
 
 /**
 @brief Append a Adaptive gate to the list of gates
