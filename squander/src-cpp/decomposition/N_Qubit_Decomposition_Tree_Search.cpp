@@ -361,6 +361,7 @@ N_Qubit_Decomposition_Tree_Search::N_Qubit_Decomposition_Tree_Search() : Optimiz
         // Maximal number of iterations in the optimization process
         max_outer_iterations = 1;
     }
+    custom_blocks = false;
 }
 
 /**
@@ -456,6 +457,7 @@ N_Qubit_Decomposition_Tree_Search::N_Qubit_Decomposition_Tree_Search(Matrix Umtx
         // Maximal number of iterations in the optimization process
         max_outer_iterations = 1;
     }
+    custom_blocks = false;
 }
 
 /**
@@ -1418,6 +1420,16 @@ Gates_block* N_Qubit_Decomposition_Tree_Search::construct_gate_structure_from_Gr
 void N_Qubit_Decomposition_Tree_Search::add_two_qubit_block(Gates_block* gate_structure, int target_qbit,
                                                             int control_qbit) {
 
+        if (custom_blocks){
+
+            std::map<int, int> qbit_map = {{0, target_qbit}, {1, control_qbit}};
+            Gates_block* layer = two_qubit_block_template->create_remapped_circuit(qbit_map, qbit_num);
+            gate_structure->add_gate(layer);
+
+        }
+    else{
+            Gates_block* layer = new Gates_block( qbit_num );
+
     if (control_qbit >= qbit_num || target_qbit >= qbit_num) {
         std::string error("N_Qubit_Decomposition_Tree_Search::add_two_qubit_block: Label of control/target qubit "
                           "should be less than the number of qubits in the register.");
@@ -1430,19 +1442,13 @@ void N_Qubit_Decomposition_Tree_Search::add_two_qubit_block(Gates_block* gate_st
         throw error;
     }
 
-    Gates_block* layer = new Gates_block(qbit_num);
-    /*layer->add_rz(target_qbit);
-    layer->add_ry(target_qbit);
-    layer->add_rz(target_qbit);
+        layer->add_u3(target_qbit);
+        layer->add_u3(control_qbit);
+        layer->add_cnot(target_qbit, control_qbit); 
+        gate_structure->add_gate(layer);
+    }
 
-    layer->add_rz(control_qbit);
-    layer->add_ry(control_qbit);
-    layer->add_rz(control_qbit);*/
 
-    layer->add_u3(target_qbit);
-    layer->add_u3(control_qbit);
-    layer->add_cnot(target_qbit, control_qbit);
-    gate_structure->add_gate(layer);
 }
 
 /**
@@ -1482,3 +1488,20 @@ void N_Qubit_Decomposition_Tree_Search::set_unitary(Matrix& Umtx_new) {
 
     Umtx = Umtx_new;
 }
+
+/**
+@param template to set over
+*/
+void 
+N_Qubit_Decomposition_Tree_Search::set_two_qubit_block_template( Gates_block* template_new ) {
+
+    two_qubit_block_template = template_new;
+    custom_blocks = true;
+
+}
+
+
+
+
+
+

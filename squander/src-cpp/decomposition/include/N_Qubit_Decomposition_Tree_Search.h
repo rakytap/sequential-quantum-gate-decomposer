@@ -327,6 +327,14 @@ class N_Qubit_Decomposition_Tree_Search : public Optimization_Interface {
     matrix_base<int> possible_target_qbits;
     /// List of possible control qubits according to the topology -- paired up with possible target qubits
     matrix_base<int> possible_control_qbits;
+    
+    bool custom_blocks;
+    
+    Gates_block* two_qubit_block_template;
+    
+    /// Number of nodes (gate structures) evaluated during tree search
+    int64_t nodes_evaluated;
+    
 
   public:
     /**
@@ -459,6 +467,12 @@ class N_Qubit_Decomposition_Tree_Search : public Optimization_Interface {
     */
     void set_unitary(Matrix& Umtx_new);
 
+/**
+@brief call to set two_qubit_block_template
+@param template to set over
+*/
+void 
+set_two_qubit_block_template( Gates_block* template_new );
     /**
     @brief Perform tabu serach over gate structures
     @return Returns with the best Gray-code corresponding to the best circuit (The associated gate structure can be
