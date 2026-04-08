@@ -2091,7 +2091,9 @@ class qgd_Wide_Circuit_Optimization:
 
         # subcircuits = subcircuits[9:10]
 
-        if parent_process() is None:
+        in_parent = parent_process() is not None
+
+        if not in_parent:
             print(len(subcircuits), "partitions found to optimize")
 
         # the list of optimized subcircuits
@@ -2134,7 +2136,7 @@ class qgd_Wide_Circuit_Optimization:
             else:
                 new_subcircuit, new_parameters = callback_fnc(
                     async_results[partition_idx][0](*async_results[partition_idx][1])
-                    if parent_process() is not None
+                    if in_parent
                     else async_results[partition_idx].get(timeout=None)
                 )
 
@@ -2170,7 +2172,7 @@ class qgd_Wide_Circuit_Optimization:
 
         with (
             contextlib.nullcontext()
-            if parent_process() is not None
+            if in_parent
             else Pool(processes=mp.cpu_count())
         ) as pool:
             remaining = list(range(len(subcircuits)))
@@ -2203,7 +2205,8 @@ class qgd_Wide_Circuit_Optimization:
                         for dep_idx in part_deps[partition_idx]:
                             if optimized_subcircuits[dep_idx] is None and (
                                 async_results[dep_idx] is None
-                                or not async_results[dep_idx].ready()
+                                or not isinstance(async_results[dep_idx], tuple)
+                                and not async_results[dep_idx].ready()
                             ):
                                 any_remaining = True
                                 continue
@@ -2240,7 +2243,7 @@ class qgd_Wide_Circuit_Optimization:
                     # print("Dispatching", subcircuit.get_Involved_Qubits(), "qubits with", CNOGateCount(subcircuit, 0), "CNOT gates, partition ", partition_idx)
                     async_results[partition_idx] = (
                         fargs
-                        if parent_process() is not None
+                        if in_parent
                         else pool.apply_async(*fargs)
                     )
                 if len(remaining) == len(still_remaining):
@@ -2272,7 +2275,7 @@ class qgd_Wide_Circuit_Optimization:
             cast(List[List[np.ndarray]], optimized_parameter_list),
         )
 
-        if parent_process() is None:
+        if not in_parent:
             print("original circuit:    ", circ.get_Gate_Nums())
             print("reoptimized circuit: ", wide_circuit.get_Gate_Nums())
 
