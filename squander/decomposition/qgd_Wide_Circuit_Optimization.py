@@ -2396,7 +2396,7 @@ class qgd_Wide_Circuit_Optimization:
                     return False
                 cur_set |= next_edge
                 edges.remove(next_edge)
-            return True
+            return set(qubits) <= cur_set
 
         return all(
             qubits_connected(gate.get_Involved_Qbits())
