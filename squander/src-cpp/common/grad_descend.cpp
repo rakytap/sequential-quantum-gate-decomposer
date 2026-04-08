@@ -434,13 +434,17 @@ void  Grad_Descend::line_search_Zhang_Hager(Matrix_real& x, Matrix_real& g, Matr
         if (dg_cur >= 0.0) {
             have_bracket = true;
 
-            alo = step;
-            flo = f_cur;
-            dglo = dg_cur;
+            // The lower endpoint should be the previous step, which is the
+            // smaller alpha and usually still has negative directional derivative.
+            alo = step_prev;
+            flo = f_prev;
+            dglo = dg_prev;
 
-            ahi = step_prev;
-            fhi = f_prev;
-            dghi = dg_prev;
+            // The upper endpoint is the current step where the derivative
+            // has turned nonnegative.
+            ahi = step;
+            fhi = f_cur;
+            dghi = dg_cur;
 
             break;
         }
