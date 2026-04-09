@@ -904,18 +904,19 @@ GrayCodeCNOT N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures
         }
         const std::tuple<int, double, std::vector<int>, std::vector<std::pair<int, double>>>& cur_best_osr_result = cur->get_best_osr_result();
         const std::vector<int>& best_edge_counts = std::get<2>(cur_best_osr_result);
-        std::vector<int> topo_filter(topology.size());
-        bool exact_edges = true;
+        std::vector<int> topo_filter;
+        bool exact_edges = false;
         int num_cnot;
         if (!exact_edges) {
             num_cnot = 1;
+            topo_filter.resize(topology.size());
             std::iota(topo_filter.begin(), topo_filter.end(), 0);
             std::sort(topo_filter.begin(), topo_filter.end(), [&](int a, int b){
                 return best_edge_counts[a] > best_edge_counts[b];
             });
         } else {
-            num_cnot = 1; //std::get<0>(cur_best_osr_result);
-            topo_filter.resize(std::get<0>(cur_best_osr_result));
+            num_cnot = std::get<0>(cur_best_osr_result);
+            topo_filter.reserve(std::get<0>(cur_best_osr_result));
             //topo_filter.resize(std::count_if(best_edge_counts.begin(), best_edge_counts.end(), [](int c){ return c > 0; }));
             for (size_t i = 0; i < best_edge_counts.size(); i++) {
                 for (int j = 0; j < best_edge_counts[i]; j++) {
