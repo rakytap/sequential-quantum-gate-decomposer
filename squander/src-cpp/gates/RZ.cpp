@@ -28,25 +28,11 @@ limitations under the License.
 /**
 @brief Nullary constructor of the class.
 */
-RZ::RZ() {
-
-    // A string labeling the gate operation
-    name = "RZ";
-    // number of qubits spanning the matrix of the gate
-    qbit_num = -1;
-    // the size of the matrix
-    matrix_size = -1;
-    // A string describing the type of the gate
-    type = RZ_OPERATION;
-
-    // The index of the qubit on which the gate acts (target_qbit >= 0)
-    target_qbit = -1;
-    // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gates
-    control_qbit = -1;
-
-    parameter_num = 0;
+RZ::RZ() : RZ(-1, -1) {
 
 }
+
+
 
 
 
@@ -72,12 +58,12 @@ RZ::RZ(int qbit_num_in, int target_qbit_in) {
     // number of qubits spanning the matrix of the gate
     qbit_num = qbit_num_in;
     // the size of the matrix
-    matrix_size = Power_of_2(qbit_num);
+    matrix_size = (qbit_num >= 0) ? Power_of_2(qbit_num) : -1;
     // A string describing the type of the gate
     type = RZ_OPERATION;
 
 
-    if (target_qbit_in >= qbit_num) {
+    if (qbit_num_in >= 0 && target_qbit_in >= qbit_num) {
         verbose_level=1;
         sstream << "The index of the target qubit is larger than the number of qubits" << std::endl;
 	print(sstream,verbose_level);	    	

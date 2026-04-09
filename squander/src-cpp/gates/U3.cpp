@@ -30,26 +30,11 @@ static double M_PIOver2 = M_PI/2;
 /**
 @brief Nullary constructor of the class.
 */
-U3::U3() {
-
-    // A string labeling the gate operation
-    name = "U3";
-
-    // number of qubits spanning the matrix of the gate
-    qbit_num = -1;
-    // the size of the matrix
-    matrix_size = -1;
-    // A string describing the type of the gate
-    type = U3_OPERATION;
-
-    // The index of the qubit on which the gate acts (target_qbit >= 0)
-    target_qbit = -1;
-    // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gates
-    control_qbit = -1;
-
-    parameter_num = 0;
+U3::U3() : U3(-1, -1) {
 
 }
+
+
 
 /**
 @brief Constructor of the class.
@@ -64,11 +49,11 @@ U3::U3(int qbit_num_in, int target_qbit_in) {
     // number of qubits spanning the matrix of the gate
     qbit_num = qbit_num_in;
     // the size of the matrix
-    matrix_size = Power_of_2(qbit_num);
+    matrix_size = (qbit_num >= 0) ? Power_of_2(qbit_num) : -1;
     // A string describing the type of the gate
     type = U3_OPERATION;
 
-    if (target_qbit_in >= qbit_num) {
+    if (qbit_num_in >= 0 && target_qbit_in >= qbit_num) {
         std::stringstream sstream;
         sstream << "The index of the target qubit is larger than the number of qubits" << std::endl;
         print(sstream, 0);        
