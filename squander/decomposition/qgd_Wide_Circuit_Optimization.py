@@ -15,7 +15,7 @@ from squander.utils import CompareCircuits
 import numpy as np
 from qiskit import QuantumCircuit
 
-from typing import List, Callable, Tuple, Optional, Set, Dict, Any, cast
+from typing import List, Callable, Tuple, Optional, Set, Dict, Any, cast, Union
 
 import multiprocessing as mp
 from multiprocessing import Process, Pool, parent_process
@@ -153,7 +153,7 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
             if topology is None
             else topology
         )
-        prior_level_info: tuple[Any, Any, Any, Any] = None
+        prior_level_info: Union[tuple[Any, Any, Any, Any], None] = None
         while True:
             visited, seq_pairs_of, seq_dir_of, res = (
                 N_Qubit_Decomposition_Guided_Tree.enumerate_unordered_cnot_BFS_level(
@@ -258,6 +258,7 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
             A = q.pop()
             last_pairs = seq_pairs_of[A]
             last_dirs = seq_dir_of[A]
+            assert topology is not None
             for p in topology:
                 if not use_gl:
                     if len(last_pairs) >= 3 and all(p == x for x in last_pairs[-3:]):
@@ -1001,6 +1002,7 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
                 )
             # print(best)
             self.set_Cost_Function_Variant(3)
+            assert best is not None
             allU = self.params_to_mat(best.x)
         else:
             allU = self.Umtx
@@ -2110,7 +2112,7 @@ class qgd_Wide_Circuit_Optimization:
             )
 
         else:
-            partitioned_circuit, parameters = PartitionCircuit(
+            partitioned_circuit, parameters, _ = PartitionCircuit(
                 circ,
                 orig_parameters,
                 self.max_partition_size,
@@ -2270,6 +2272,7 @@ class qgd_Wide_Circuit_Optimization:
                         (subcircuit, subcircuit_parameters, config, None),
                     )
                     # print("Dispatching", subcircuit.get_Involved_Qubits(), "qubits with", CNOGateCount(subcircuit, 0), "CNOT gates, partition ", partition_idx)
+                    assert pool is not None
                     async_results[partition_idx] = (
                         fargs if in_parent else pool.apply_async(*fargs)
                     )
