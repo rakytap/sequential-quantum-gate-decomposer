@@ -59,6 +59,9 @@ CNOT_COUNT_DICT = {
     "CCX": 6,
     "CSWAP": 7,
     "SWAP": 3,
+    "RXX": 2,
+    "RYY": 2,
+    "RZZ": 2
 }
 
 
