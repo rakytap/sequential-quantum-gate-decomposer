@@ -23,7 +23,6 @@ limitations under the License.
 
 #include "matrix.h"
 
-#ifdef ENABLE_FLOAT32
 #include "matrix_float.h"
 
 /**
@@ -43,5 +42,4 @@ Matrix_float Matrix::to_float32() const {
     if (is_transposed()) ret.transpose();
     return ret;
 }
-#endif
 

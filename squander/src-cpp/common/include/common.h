@@ -34,6 +34,8 @@ limitations under the License.
 #include "matrix_sparse.h"
 #include "matrix_real.h"
 
+class Matrix_float;
+
 #include <string>
 #include <stdio.h>
 #include <iostream>
@@ -156,6 +158,14 @@ void subtract_diag( Matrix& mtx,  QGD_Complex16 scalar );
 QGD_Complex16 mult( QGD_Complex16& a, QGD_Complex16& b );
 
 /**
+@brief Call to calculate the product of two single-precision complex scalars
+@param a The firs scalar
+@param b The second scalar
+@return Returns with the calculated product.
+*/
+QGD_Complex8 mult( QGD_Complex8& a, QGD_Complex8& b );
+
+/**
 @brief calculate the product of a real scalar and a complex scalar
 @param a The real scalar.
 @param b The complex scalar.
@@ -164,11 +174,26 @@ QGD_Complex16 mult( QGD_Complex16& a, QGD_Complex16& b );
 QGD_Complex16 mult( double a, QGD_Complex16 b );
 
 /**
+@brief calculate the product of a real scalar and a single-precision complex scalar
+@param a The real scalar.
+@param b The complex scalar.
+@return Returns with the calculated product.
+*/
+QGD_Complex8 mult( float a, QGD_Complex8 b );
+
+/**
 @brief Multiply the elements of matrix b by a scalar a.
 @param a A complex scalar.
 @param b A square shaped matrix.
 */
 void mult( QGD_Complex16 a, Matrix& b );
+
+/**
+@brief Multiply the elements of matrix b by a scalar a.
+@param a A single-precision complex scalar.
+@param b A square shaped single-precision complex matrix.
+*/
+void mult( QGD_Complex8 a, Matrix_float& b );
 
 
 /**

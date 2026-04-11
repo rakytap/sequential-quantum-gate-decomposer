@@ -25,6 +25,7 @@ limitations under the License.
 #define apply_kerel_to_state_vector_input_AVX_H
 
 #include "matrix.h"
+#include "matrix_float.h"
 #include "common.h"
 
 /**
@@ -63,6 +64,10 @@ apply_kernel_to_state_vector_input_parallel_OpenMP_AVX(Matrix& u3_1qbit, Matrix&
 @param matrix_size The size of the input
 */
 void apply_kernel_to_state_vector_input_parallel_AVX(Matrix& u3_1qbit, Matrix& input, const bool& deriv, const int& target_qbit, const int& control_qbit, const int& matrix_size);
+
+void apply_kernel_to_state_vector_input_AVX32(Matrix_float& u3_1qbit, Matrix_float& input, const bool& deriv, const int& target_qbit, const int& control_qbit, const int& matrix_size);
+void apply_kernel_to_state_vector_input_parallel_OpenMP_AVX32(Matrix_float& u3_1qbit, Matrix_float& input, const bool& deriv, const int& target_qbit, const int& control_qbit, const int& matrix_size);
+void apply_kernel_to_state_vector_input_parallel_AVX32(Matrix_float& u3_1qbit, Matrix_float& input, const bool& deriv, const int& target_qbit, const int& control_qbit, const int& matrix_size);
 
 
 #endif
