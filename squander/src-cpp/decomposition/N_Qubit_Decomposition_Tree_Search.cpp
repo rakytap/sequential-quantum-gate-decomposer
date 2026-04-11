@@ -624,13 +624,30 @@ Gates_block* N_Qubit_Decomposition_Tree_Search::determine_gate_structure(Matrix_
                 }
             }
         }
+
+        // If OSR search did not find a fully disentangling solution, keep the
+        // best prefix candidates discovered so far and evaluate them with
+        // Hilbert-Schmidt optimization below.
+        if (use_osr && all_solutions.empty() && !ci.prefixes.empty()) {
+            all_solutions.reserve(ci.prefixes.size());
+            for (std::map<GrayCodeCNOT, SearchNode>::const_iterator it = ci.prefixes.begin(); it != ci.prefixes.end(); ++it) {
+                all_solutions.emplace_back(it->first.copy());
+            }
+
+            std::stringstream sstream;
+            sstream << "OSR did not find a fully disentangled solution; evaluating best prefix candidates with Hilbert-Schmidt optimization." << std::endl;
+            print(sstream, 1);
+        }
     }
     if (use_osr || use_graph_search) {
         N_Qubit_Decomposition_custom&& cDecomp_custom_random = perform_optimization(nullptr);
         std::uniform_real_distribution<> distrib_real(0.0, 2 * M_PI);
         std::vector<double> optimized_parameters;
         current_minimum = std::numeric_limits<double>::max();
-        if (all_solutions.size() == 0) { return new Gates_block(qbit_num); }
+        if (all_solutions.size() == 0) {
+            // Last-resort fallback: evaluate the current best-known structure.
+            all_solutions.emplace_back(best_solution.copy());
+        }
         for (const GrayCodeCNOT& solution : all_solutions) {
             std::unique_ptr<Gates_block> gate_structure_loc;
             gate_structure_loc.reset(construct_gate_structure_from_Gray_code(solution));
@@ -928,7 +945,7 @@ GrayCodeCNOT N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures
         while (true) {
             // safety guard
             if (cur->path.size() + num_cnot > level_limit) {
-                return startpath;
+                return cur->path; // best solution found within level limit, return immediately
             }
 
             generate_insertions(cur->path, topology, topo_filter, num_cnot,
@@ -957,7 +974,7 @@ GrayCodeCNOT N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures
         // if beam_width > 0 and heap.size() > beam_width, can rebuild a trimmed heap here.
     }
     //printf("failed\n");
-    return startpath;
+    return startpath; // single qubit fall-through case
 }
 
 /**

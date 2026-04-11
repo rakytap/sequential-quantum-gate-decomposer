@@ -267,6 +267,9 @@ def circuit_to_CNOT_basis(circ: Circuit, parameters: np.ndarray):
         CRX,
         CRZ,
         CP,
+        RXX,
+        RYY,
+        RZZ,
     )
 
     gates = circ.get_Gates()
@@ -459,6 +462,40 @@ def circuit_to_CNOT_basis(circ: Circuit, parameters: np.ndarray):
             circuit.add_CNOT(t2, t1)
             circuit.add_CNOT(t1, t2)
             params.append([])
+        elif isinstance(gate, RXX):
+            t1, t2 = gate.get_Target_Qbits()
+            circuit.add_CNOT(t1, t2)
+            circuit.add_RX(t2)
+            circuit.add_CNOT(t1, t2)
+            (theta,) = parameters[
+                gate.get_Parameter_Start_Index() : gate.get_Parameter_Start_Index()
+                + gate.get_Parameter_Num()
+            ]
+            params.append([theta])
+        elif isinstance(gate, RYY):
+            t1, t2 = gate.get_Target_Qbits()
+            circuit.add_RX(t1)
+            circuit.add_RX(t2)
+            circuit.add_CNOT(t1, t2)
+            circuit.add_RZ(t1)
+            circuit.add_CNOT(t1, t2)
+            circuit.add_RX(t1)
+            circuit.add_RX(t2)
+            (theta,) = parameters[
+                gate.get_Parameter_Start_Index() : gate.get_Parameter_Start_Index()
+                + gate.get_Parameter_Num()
+            ]
+            params.append([np.pi/2/2, np.pi/2/2, theta, -np.pi/2/2, -np.pi/2/2])
+        elif isinstance(gate, RZZ):
+            t1, t2 = gate.get_Target_Qbits()
+            circuit.add_CNOT(t1, t2)
+            circuit.add_RZ(t1)
+            circuit.add_CNOT(t1, t2)
+            (theta,) = parameters[
+                gate.get_Parameter_Start_Index() : gate.get_Parameter_Start_Index()
+                + gate.get_Parameter_Num()
+            ]
+            params.append([theta])
         else:
             circuit.add_Gate(gate)
             params.append(
@@ -484,7 +521,11 @@ def test_circuit_to_CNOT_basis():
     circ1.add_CRX(0, 1)
     circ1.add_CRZ(0, 1)
     circ1.add_SWAP([0, 1])
-    paramcount1 = 0 + 0 + 1 + 0 + 2 + 2 + 4 + 1 + 1 + 1 + 0
+    circ1.add_RXX(0, 1)
+    circ1.add_RYY(0, 1)
+    circ1.add_RZZ(0, 1)
+
+    paramcount1 = 0 + 0 + 1 + 0 + 2 + 2 + 4 + 1 + 1 + 1 + 0 + 1 + 1 + 1
     circ2 = Circuit(3)
     circ2.add_CCX(0, [1, 2])
     circ2.add_CSWAP([0, 1], 2)

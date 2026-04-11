@@ -108,5 +108,12 @@ void set_qbit_num(int qbit_num_in);
 @return Vector of qubit indices
 */
 std::vector<int> get_involved_qubits(bool only_target);
+
+/**
+@brief Call to extract parameters from the parameter array corresponding to the circuit, in which the gate is embedded.
+@param parameters The parameter array corresponding to the circuit in which the gate is embedded
+@return Returns with the array of the extracted parameters.
+*/
+virtual Matrix_real extract_parameters( Matrix_real& parameters ) override;
 };
 #endif //RXX,

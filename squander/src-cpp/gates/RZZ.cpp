@@ -123,6 +123,16 @@ RZZ::get_matrix(Matrix_real& parameters, int parallel) {
 */
 void RZZ::apply_to(Matrix_real& parameters, Matrix& input, int parallel) {
 
+    if (input.rows != matrix_size ) {
+        std::string err("RZZ::apply_to: Wrong input size in RZZ gate apply.");
+        throw err;
+    }
+
+    if (parameters.size() < 1) {
+        std::string err("RZZ::apply_to: Wrong number of parameters.");
+        throw err;
+    }
+
     double ThetaOver2;
     ThetaOver2 = parameters[0];
     Matrix U_2qbit(4,4);
@@ -172,6 +182,11 @@ std::vector<Matrix> RZZ::apply_derivate_to( Matrix_real& parameters_mtx, Matrix&
 	sstream << "Wrong matrix size in RZZ apply_derivate_to" << std::endl;
         print(sstream, 0);
         exit(-1);
+    }
+
+    if (parameters_mtx.size() < 1) {
+        std::string err("RZZ::apply_derivate_to: Wrong number of parameters.");
+        throw err;
     }
 
 
@@ -230,4 +245,23 @@ void RZZ::set_qbit_num(int qbit_num_in) {
 std::vector<int> RZZ::get_involved_qubits(bool only_target) {
     // Use Gate's implementation which now handles vectors
     return Gate::get_involved_qubits(only_target);
+}
+
+/**
+@brief Call to extract parameters from the parameter array corresponding to the circuit, in which the gate is embedded.
+@param parameters The parameter array corresponding to the circuit in which the gate is embedded
+@return Returns with the array of the extracted parameters.
+*/
+Matrix_real
+RZZ::extract_parameters( Matrix_real& parameters ) {
+
+    if ( get_parameter_start_idx() + get_parameter_num() > parameters.size() ) {
+        std::string err("RZZ::extract_parameters: Cant extract parameters, since the input arary has not enough elements.");
+        throw err;
+    }
+
+    Matrix_real extracted_parameters(1, 1);
+    extracted_parameters[0] = std::fmod(2 * parameters[get_parameter_start_idx()], 4 * M_PI);
+
+    return extracted_parameters;
 }
