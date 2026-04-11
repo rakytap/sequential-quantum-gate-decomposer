@@ -51,7 +51,8 @@ from squander.gates.gates_Wrapper import (
     CSWAP,
     RXX,
     RYY,
-    RZZ
+    RZZ,
+    SXdg
 )
 
 

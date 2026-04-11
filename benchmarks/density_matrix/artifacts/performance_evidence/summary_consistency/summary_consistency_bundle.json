@@ -1,0 +1,58 @@
+{
+  "required_artifacts": [
+    {
+      "artifact_id": "benchmark_package",
+      "schema_version": "performance_evidence_package_v1",
+      "status": "pass",
+      "suite_name": "performance_evidence_benchmark_package"
+    }
+  ],
+  "requirements": {
+    "boundary_visibility_rule": "Excluded, unsupported, or deferred evidence must remain visible as claim-boundary evidence in downstream summaries.",
+    "diagnosis_rule": "If no representative case meets the positive threshold, diagnosis-only cases must remain benchmark-grounded and visible as explicit limitation evidence.",
+    "positive_claim_rule": "Only counted representative performance-evidence cases may close a positive benchmark claim."
+  },
+  "schema_version": "performance_evidence_summary_v1",
+  "selected_candidate": {
+    "candidate_id": "span_budget_q4",
+    "candidate_schema_version": "phase3_planner_calibration_candidate_v1",
+    "claim_selection_rule": "min_median_density_aware_score_then_min_p90_then_smaller_span_budget",
+    "claim_selection_schema_version": "phase3_planner_calibration_claim_selection_v1",
+    "counted_cases": 25,
+    "max_density_aware_score": 1746.0800799308345,
+    "max_partition_qubits": 4,
+    "mean_peak_rss_mb": 505.29921875,
+    "mean_planning_time_ms": 0.7369691948406398,
+    "mean_runtime_ms": 390.22179051535204,
+    "median_density_aware_score": 102.95129893347621,
+    "p90_density_aware_score": 1096.648766018916,
+    "planner_family": "phase3_span_budget",
+    "planner_settings": {
+      "max_partition_qubits": 4
+    },
+    "planner_variant": "max_partition_qubits_4",
+    "selected_candidate_id": "span_budget_q4",
+    "total_cases": 25
+  },
+  "software": {
+    "correctness_evidence_package_schema_version": "correctness_evidence_package_v1",
+    "numpy": "2.3.5",
+    "planner_calibration_selected_candidate_id": "span_budget_q4",
+    "python": "3.13.9",
+    "scipy": "1.16.3"
+  },
+  "status": "pass",
+  "suite_name": "performance_evidence_summary_consistency",
+  "summary": {
+    "correctness_evidence_boundary_cases": 17,
+    "counted_supported_cases": 34,
+    "diagnosis_grounded_closure_completed": true,
+    "diagnosis_only_cases": 6,
+    "excluded_cases": 0,
+    "main_benchmark_claim_completed": true,
+    "positive_benchmark_claim_completed": false,
+    "positive_threshold_pass_cases": 0,
+    "representative_review_cases": 6,
+    "summary_consistency_pass": true
+  }
+}

@@ -1,0 +1,340 @@
+{
+  "absolute_energy_error": 2.7755575615628914e-16,
+  "aer_energy_imag": -1.1102230246251565e-16,
+  "aer_energy_real": -0.3218201911024714,
+  "aer_purity": 0.8971677230501791,
+  "aer_trace_imag": -2.168404344971009e-19,
+  "aer_trace_real": 0.9999999999999982,
+  "ansatz": "HEA",
+  "backend": "density_matrix",
+  "bridge_gate_count": 15,
+  "bridge_noise_after_gate_indices": [
+    0,
+    2,
+    4
+  ],
+  "bridge_noise_count": 3,
+  "bridge_noise_fixed_values": [
+    0.1,
+    0.05,
+    0.07
+  ],
+  "bridge_noise_sequence": [
+    "local_depolarizing",
+    "amplitude_damping",
+    "phase_damping"
+  ],
+  "bridge_noise_targets": [
+    0,
+    1,
+    0
+  ],
+  "bridge_operation_count": 18,
+  "bridge_operations": [
+    {
+      "control_qbit": null,
+      "fixed_value": null,
+      "index": 0,
+      "is_unitary": true,
+      "kind": "gate",
+      "name": "U3",
+      "param_count": 3,
+      "param_start": 0,
+      "source_gate_index": 0,
+      "target_qbit": 1
+    },
+    {
+      "control_qbit": null,
+      "fixed_value": 0.1,
+      "index": 1,
+      "is_unitary": false,
+      "kind": "noise",
+      "name": "local_depolarizing",
+      "param_count": 0,
+      "param_start": 3,
+      "source_gate_index": 0,
+      "target_qbit": 0
+    },
+    {
+      "control_qbit": null,
+      "fixed_value": null,
+      "index": 2,
+      "is_unitary": true,
+      "kind": "gate",
+      "name": "U3",
+      "param_count": 3,
+      "param_start": 3,
+      "source_gate_index": 1,
+      "target_qbit": 0
+    },
+    {
+      "control_qbit": 0,
+      "fixed_value": null,
+      "index": 3,
+      "is_unitary": true,
+      "kind": "gate",
+      "name": "CNOT",
+      "param_count": 0,
+      "param_start": 6,
+      "source_gate_index": 2,
+      "target_qbit": 1
+    },
+    {
+      "control_qbit": null,
+      "fixed_value": 0.05,
+      "index": 4,
+      "is_unitary": false,
+      "kind": "noise",
+      "name": "amplitude_damping",
+      "param_count": 0,
+      "param_start": 6,
+      "source_gate_index": 2,
+      "target_qbit": 1
+    },
+    {
+      "control_qbit": null,
+      "fixed_value": null,
+      "index": 5,
+      "is_unitary": true,
+      "kind": "gate",
+      "name": "U3",
+      "param_count": 3,
+      "param_start": 6,
+      "source_gate_index": 3,
+      "target_qbit": 2
+    },
+    {
+      "control_qbit": null,
+      "fixed_value": null,
+      "index": 6,
+      "is_unitary": true,
+      "kind": "gate",
+      "name": "U3",
+      "param_count": 3,
+      "param_start": 9,
+      "source_gate_index": 4,
+      "target_qbit": 3
+    },
+    {
+      "control_qbit": null,
+      "fixed_value": 0.07,
+      "index": 7,
+      "is_unitary": false,
+      "kind": "noise",
+      "name": "phase_damping",
+      "param_count": 0,
+      "param_start": 12,
+      "source_gate_index": 4,
+      "target_qbit": 0
+    },
+    {
+      "control_qbit": 2,
+      "fixed_value": null,
+      "index": 8,
+      "is_unitary": true,
+      "kind": "gate",
+      "name": "CNOT",
+      "param_count": 0,
+      "param_start": 12,
+      "source_gate_index": 5,
+      "target_qbit": 3
+    },
+    {
+      "control_qbit": null,
+      "fixed_value": null,
+      "index": 9,
+      "is_unitary": true,
+      "kind": "gate",
+      "name": "U3",
+      "param_count": 3,
+      "param_start": 12,
+      "source_gate_index": 6,
+      "target_qbit": 2
+    },
+    {
+      "control_qbit": null,
+      "fixed_value": null,
+      "index": 10,
+      "is_unitary": true,
+      "kind": "gate",
+      "name": "U3",
+      "param_count": 3,
+      "param_start": 15,
+      "source_gate_index": 7,
+      "target_qbit": 1
+    },
+    {
+      "control_qbit": 1,
+      "fixed_value": null,
+      "index": 11,
+      "is_unitary": true,
+      "kind": "gate",
+      "name": "CNOT",
+      "param_count": 0,
+      "param_start": 18,
+      "source_gate_index": 8,
+      "target_qbit": 2
+    },
+    {
+      "control_qbit": null,
+      "fixed_value": null,
+      "index": 12,
+      "is_unitary": true,
+      "kind": "gate",
+      "name": "U3",
+      "param_count": 3,
+      "param_start": 18,
+      "source_gate_index": 9,
+      "target_qbit": 4
+    },
+    {
+      "control_qbit": null,
+      "fixed_value": null,
+      "index": 13,
+      "is_unitary": true,
+      "kind": "gate",
+      "name": "U3",
+      "param_count": 3,
+      "param_start": 21,
+      "source_gate_index": 10,
+      "target_qbit": 5
+    },
+    {
+      "control_qbit": 4,
+      "fixed_value": null,
+      "index": 14,
+      "is_unitary": true,
+      "kind": "gate",
+      "name": "CNOT",
+      "param_count": 0,
+      "param_start": 24,
+      "source_gate_index": 11,
+      "target_qbit": 5
+    },
+    {
+      "control_qbit": null,
+      "fixed_value": null,
+      "index": 15,
+      "is_unitary": true,
+      "kind": "gate",
+      "name": "U3",
+      "param_count": 3,
+      "param_start": 24,
+      "source_gate_index": 12,
+      "target_qbit": 4
+    },
+    {
+      "control_qbit": null,
+      "fixed_value": null,
+      "index": 16,
+      "is_unitary": true,
+      "kind": "gate",
+      "name": "U3",
+      "param_count": 3,
+      "param_start": 27,
+      "source_gate_index": 13,
+      "target_qbit": 3
+    },
+    {
+      "control_qbit": 3,
+      "fixed_value": null,
+      "index": 17,
+      "is_unitary": true,
+      "kind": "gate",
+      "name": "CNOT",
+      "param_count": 0,
+      "param_start": 30,
+      "source_gate_index": 14,
+      "target_qbit": 4
+    }
+  ],
+  "bridge_parameter_count": 30,
+  "bridge_source_type": "generated_hea",
+  "case_name": "fixed_parameters_6q",
+  "density_noise": [
+    {
+      "after_gate_index": 0,
+      "channel": "local_depolarizing",
+      "error_rate": 0.1,
+      "target": 0
+    },
+    {
+      "after_gate_index": 2,
+      "channel": "amplitude_damping",
+      "gamma": 0.05,
+      "target": 1
+    },
+    {
+      "after_gate_index": 4,
+      "channel": "phase_damping",
+      "lambda": 0.07,
+      "target": 0
+    }
+  ],
+  "hamiltonian": {
+    "Jx": 1.0,
+    "Jy": 1.0,
+    "Jz": 1.0,
+    "h": 0.5
+  },
+  "inner_blocks": 1,
+  "layers": 1,
+  "parameter_vector": [
+    0.05,
+    0.1,
+    0.15,
+    0.2,
+    0.25,
+    0.3,
+    0.35,
+    0.39999999999999997,
+    0.44999999999999996,
+    0.49999999999999994,
+    0.5499999999999999,
+    0.6,
+    0.65,
+    0.7,
+    0.75,
+    0.7999999999999999,
+    0.85,
+    0.9,
+    0.95,
+    1.0,
+    1.0499999999999998,
+    1.0999999999999999,
+    1.15,
+    1.2,
+    1.25,
+    1.3,
+    1.3499999999999999,
+    1.4,
+    1.45,
+    1.5
+  ],
+  "qbit_num": 6,
+  "reference_backend": "qiskit_aer_density_matrix",
+  "squander_energy": -0.3218201911024711,
+  "status": "completed",
+  "topology": [
+    [
+      0,
+      1
+    ],
+    [
+      1,
+      2
+    ],
+    [
+      2,
+      3
+    ],
+    [
+      3,
+      4
+    ],
+    [
+      4,
+      5
+    ]
+  ]
+}

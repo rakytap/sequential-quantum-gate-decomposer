@@ -64,6 +64,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "RXX.h"
 #include "RYY.h"
 #include "RZZ.h"
+#include "SXdg.h"
 
 //////////////////////////////////////
 
@@ -594,6 +595,7 @@ Gate_Wrapper_Wrapper_apply_to( Gate_Wrapper *self, PyObject *args, PyObject *kwd
     Gate* gate = self->gate;
 
     const int param_count = gate->get_parameter_num();
+    bool release_parameters_arr = false;
 
     try {
         if (param_count == 0) {
@@ -620,6 +622,12 @@ Gate_Wrapper_Wrapper_apply_to( Gate_Wrapper *self, PyObject *args, PyObject *kwd
             else {
                 parameters_arr = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
             }
+
+            if (parameters_arr == NULL) {
+                PyErr_SetString(PyExc_TypeError, "Failed to cast parameters to a contiguous double numpy array");
+                return NULL;
+            }
+            release_parameters_arr = true;
             
             Matrix_real&& parameters_mtx = numpy2matrix_real( parameters_arr );
 
@@ -633,10 +641,16 @@ Gate_Wrapper_Wrapper_apply_to( Gate_Wrapper *self, PyObject *args, PyObject *kwd
         }
     }
     catch (const std::string& err) {
+        if (release_parameters_arr) {
+            Py_DECREF(parameters_arr);
+        }
         PyErr_SetString(PyExc_RuntimeError, err.c_str());
         return NULL;
     }
     catch(...) {
+        if (release_parameters_arr) {
+            Py_DECREF(parameters_arr);
+        }
         PyErr_SetString(PyExc_RuntimeError, "Unknown error in gate operation");
         return NULL;
     }
@@ -1111,6 +1125,11 @@ Gate_Wrapper_Extract_Parameters( Gate_Wrapper *self, PyObject *args ) {
         parameters_arr = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
     }
 
+    if (parameters_arr == NULL) {
+        PyErr_SetString(PyExc_TypeError, "Failed to cast parameter array to contiguous double format");
+        return NULL;
+    }
+
     // get the C++ wrapper around the data
     Matrix_real&& parameters_mtx = numpy2matrix_real( parameters_arr );
 
@@ -1135,6 +1154,10 @@ Gate_Wrapper_Extract_Parameters( Gate_Wrapper *self, PyObject *args ) {
     // convert to numpy array
     extracted_parameters.set_owner(false);
     PyObject *extracted_parameters_py = matrix_real_to_numpy( extracted_parameters );
+    if (extracted_parameters_py == NULL) {
+        Py_DECREF(parameters_arr);
+        return NULL;
+    }
 
     // flatten the extracted array
     npy_intp param_num = (npy_intp)extracted_parameters.size();
@@ -1143,6 +1166,11 @@ Gate_Wrapper_Extract_Parameters( Gate_Wrapper *self, PyObject *args ) {
     new_shape.len = 1;
 
     PyObject *extracted_parameters_py_flatten = PyArray_Newshape( (PyArrayObject*)extracted_parameters_py, &new_shape, NPY_CORDER);
+    Py_DECREF(extracted_parameters_py);
+    if (extracted_parameters_py_flatten == NULL) {
+        Py_DECREF(parameters_arr);
+        return NULL;
+    }
    
     Py_DECREF(parameters_arr);
     return extracted_parameters_py_flatten;
@@ -1192,39 +1220,83 @@ Gate_Wrapper_getstate( Gate_Wrapper *self ) {
     }
 
 
-    PyObject* key = Py_BuildValue( "s", "type" );
     PyObject* val = Py_BuildValue("i", self->gate->get_type() );
-    PyDict_SetItem(gate_state, key, val);
+    if (val == NULL || PyDict_SetItemString(gate_state, "type", val) != 0) {
+        Py_XDECREF(val);
+        Py_DECREF(gate_state);
+        return NULL;
+    }
+    Py_DECREF(val);
 
-    key = Py_BuildValue( "s", "qbit_num" );
     val = Py_BuildValue("i", self->gate->get_qbit_num() );
-    PyDict_SetItem(gate_state, key, val);
+    if (val == NULL || PyDict_SetItemString(gate_state, "qbit_num", val) != 0) {
+        Py_XDECREF(val);
+        Py_DECREF(gate_state);
+        return NULL;
+    }
+    Py_DECREF(val);
 
-    key = Py_BuildValue( "s", "target_qbit" );
     val = Py_BuildValue("i", self->gate->get_target_qbit() );
-    PyDict_SetItem(gate_state, key, val);
+    if (val == NULL || PyDict_SetItemString(gate_state, "target_qbit", val) != 0) {
+        Py_XDECREF(val);
+        Py_DECREF(gate_state);
+        return NULL;
+    }
+    Py_DECREF(val);
 
-    key = Py_BuildValue( "s", "control_qbit" );
     val = Py_BuildValue("i", self->gate->get_control_qbit() );
-    PyDict_SetItem(gate_state, key, val);
+    if (val == NULL || PyDict_SetItemString(gate_state, "control_qbit", val) != 0) {
+        Py_XDECREF(val);
+        Py_DECREF(gate_state);
+        return NULL;
+    }
+    Py_DECREF(val);
 
     // Serialize target_qbits vector
     std::vector<int> target_qbits = self->gate->get_target_qbits();
     PyObject* target_qbits_py = PyList_New((Py_ssize_t)target_qbits.size());
-    for (size_t i = 0; i < target_qbits.size(); i++) {
-        PyList_SetItem(target_qbits_py, (Py_ssize_t)i, Py_BuildValue("i", target_qbits[i]));
+    if (target_qbits_py == NULL) {
+        Py_DECREF(gate_state);
+        return NULL;
     }
-    key = Py_BuildValue( "s", "target_qbits" );
-    PyDict_SetItem(gate_state, key, target_qbits_py);
+    for (size_t i = 0; i < target_qbits.size(); i++) {
+        PyObject* item = Py_BuildValue("i", target_qbits[i]);
+        if (item == NULL || PyList_SetItem(target_qbits_py, (Py_ssize_t)i, item) != 0) {
+            Py_XDECREF(item);
+            Py_DECREF(target_qbits_py);
+            Py_DECREF(gate_state);
+            return NULL;
+        }
+    }
+    if (PyDict_SetItemString(gate_state, "target_qbits", target_qbits_py) != 0) {
+        Py_DECREF(target_qbits_py);
+        Py_DECREF(gate_state);
+        return NULL;
+    }
+    Py_DECREF(target_qbits_py);
 
     // Serialize control_qbits vector
     std::vector<int> control_qbits = self->gate->get_control_qbits();
     PyObject* control_qbits_py = PyList_New((Py_ssize_t)control_qbits.size());
-    for (size_t i = 0; i < control_qbits.size(); i++) {
-        PyList_SetItem(control_qbits_py, (Py_ssize_t)i, Py_BuildValue("i", control_qbits[i]));
+    if (control_qbits_py == NULL) {
+        Py_DECREF(gate_state);
+        return NULL;
     }
-    key = Py_BuildValue( "s", "control_qbits" );
-    PyDict_SetItem(gate_state, key, control_qbits_py);
+    for (size_t i = 0; i < control_qbits.size(); i++) {
+        PyObject* item = Py_BuildValue("i", control_qbits[i]);
+        if (item == NULL || PyList_SetItem(control_qbits_py, (Py_ssize_t)i, item) != 0) {
+            Py_XDECREF(item);
+            Py_DECREF(control_qbits_py);
+            Py_DECREF(gate_state);
+            return NULL;
+        }
+    }
+    if (PyDict_SetItemString(gate_state, "control_qbits", control_qbits_py) != 0) {
+        Py_DECREF(control_qbits_py);
+        Py_DECREF(gate_state);
+        return NULL;
+    }
+    Py_DECREF(control_qbits_py);
 
     return gate_state;
 
@@ -1389,6 +1461,10 @@ Gate_Wrapper_setstate( Gate_Wrapper *self, PyObject *args ) {
     }    
     case SX_OPERATION: {
         gate = create_gate<SX>( qbit_num, target_qbit );
+        break;
+    }    
+    case SXDG_OPERATION: {
+        gate = create_gate<SXdg>( qbit_num, target_qbit );
         break;
     }    
     case T_OPERATION: {
@@ -1784,6 +1860,8 @@ gate_wrapper_type_template(SDG, Gate_Wrapper_new);
 
 gate_wrapper_type_template(SX, Gate_Wrapper_new);
 
+gate_wrapper_type_template(SXdg, Gate_Wrapper_new);
+
 gate_wrapper_type_template(T, Gate_Wrapper_new);
 
 gate_wrapper_type_template(Tdg, Gate_Wrapper_new);
@@ -1848,6 +1926,7 @@ PyInit_gates_Wrapper(void)
         PyType_Ready(&RY_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&RZ_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&SX_Wrapper_Type_ins) < 0 ||
+        PyType_Ready(&SXdg_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&SYC_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&U1_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&U2_Wrapper_Type_ins) < 0 ||
@@ -1931,6 +2010,13 @@ PyInit_gates_Wrapper(void)
     Py_INCREF(&SDG_Wrapper_Type_ins);
     if (PyModule_AddObject(m, "Sdg", (PyObject *) & SDG_Wrapper_Type_ins) < 0) {
         Py_DECREF(& SDG_Wrapper_Type_ins);
+        Py_DECREF(m);
+        return NULL;
+    }
+
+    Py_INCREF(&SXdg_Wrapper_Type_ins);
+    if (PyModule_AddObject(m, "SXdg", (PyObject *) & SXdg_Wrapper_Type_ins) < 0) {
+        Py_DECREF(& SXdg_Wrapper_Type_ins);
         Py_DECREF(m);
         return NULL;
     }

@@ -20,187 +20,395 @@ limitations under the License.
     \brief Class to solve VQE problems
 */
 
-
 #ifndef VARIATIONAL_QUANTUM_EIGENSOLVER_BASE_H
-#define  VARIATIONAL_QUANTUM_EIGENSOLVER_BASE_H
+#define VARIATIONAL_QUANTUM_EIGENSOLVER_BASE_H
 
 #include "Optimization_Interface.h"
 
+namespace squander {
+namespace density {
+class DensityMatrix;
+class NoisyCircuit;
+} // namespace density
+} // namespace squander
+
+//=====================================================================================================================================================================================
+//=====================================================================================================================================================================================
+//=====================================================================================================================================================================================
+
+// --- SimulationResult struct ---
+/**
+ * @brief Container for statistics returned by shot-noise simulations.
+ *
+ * Fields represent Monte–Carlo estimates produced by
+ * `Expectation_value_with_shot_noise_real`:
+ *  - `mean` : sample mean of the estimated energy ⟨H⟩ over the performed
+ *             measurement shots.
+ *  - `variance` : sample variance of the per-shot energy estimator.
+ *  - `std_error` : estimated standard error of the mean (typically
+ *                  sqrt(variance / shots)).
+ *
+ * This plain-aggregate struct is returned by the wrapper into Python as a
+ * dictionary with the same keys.
+ */
+struct SimulationResult {
+  double mean;
+  double variance;
+  double std_error;
+};
+//=====================================================================================================================================================================================
+//=====================================================================================================================================================================================
+//=====================================================================================================================================================================================
+
 /// @brief Type definition of the fifferent types of ansatz
-typedef enum ansatz_type {HEA, HEA_ZYZ} ansatz_type;
-    
+typedef enum ansatz_type { HEA, HEA_ZYZ } ansatz_type;
 
+/// @brief Supported execution backends for the VQE workflow contract.
+typedef enum vqe_backend_type {
+  STATE_VECTOR_BACKEND = 0,
+  DENSITY_MATRIX_BACKEND = 1
+} vqe_backend_type;
 
+/// @brief Supported local noise channels.
+typedef enum density_noise_type {
+  LOCAL_DEPOLARIZING_NOISE = 0,
+  AMPLITUDE_DAMPING_NOISE = 1,
+  PHASE_DAMPING_NOISE = 2
+} density_noise_type;
+
+/// @brief Provenance of the active VQE circuit used for backend validation.
+typedef enum vqe_circuit_source_type {
+  VQE_CIRCUIT_SOURCE_UNSET = 0,
+  VQE_CIRCUIT_SOURCE_GENERATED_HEA = 1,
+  VQE_CIRCUIT_SOURCE_GENERATED_HEA_ZYZ = 2,
+  VQE_CIRCUIT_SOURCE_BINARY_IMPORT = 3,
+  VQE_CIRCUIT_SOURCE_CUSTOM_GATE_STRUCTURE = 4
+} vqe_circuit_source_type;
+
+/// @brief Ordered fixed-noise insertion metadata.
+struct DensityNoiseSpec {
+  density_noise_type type;
+  int target_qbit;
+  int after_gate_index;
+  double value;
+};
+
+/// @brief Reviewable metadata describing one lowered density-bridge operation.
+struct DensityBridgeOperationInfo {
+  std::string name;
+  bool is_unitary;
+  int source_gate_index;
+  int target_qbit;
+  int control_qbit;
+  int param_count;
+  int param_start;
+  bool has_fixed_value;
+  double fixed_value;
+};
 
 /**
 @brief A base class to solve VQE problems
-This class can be used to approximate the ground state of the input Hamiltonian (sparse format) via a quantum circuit
+This class can be used to approximate the ground state of the input Hamiltonian
+(sparse format) via a quantum circuit
 */
 class Variational_Quantum_Eigensolver_Base : public Optimization_Interface {
 public:
+  //================================================================================================================================================================================
+  //================================================================================================================================================================================
+  //================================================================================================================================================================================
 
+  /**
+   * @brief Return a copy of the stored initial state used for VQE runs.
+   *
+   * Returns a `Matrix` copy to avoid exposing internal storage; callers
+   * may mutate the returned object without affecting the class internals.
+   */
+  Matrix get_initial_state() const { return initial_state.copy(); }
+
+  /// @brief Return the current circuit-source label used by bridge inspection.
+  std::string get_density_bridge_source_label() const;
+
+  /**
+   * @brief Describe the supported density bridge for the current VQE instance.
+   *
+   * The returned operation list follows the exact lowering order used by the
+   * supported density path: generated source gates first, then ordered fixed
+   * noise insertions after each source gate.
+   */
+  std::vector<DensityBridgeOperationInfo> inspect_density_bridge();
+  //================================================================================================================================================================================
+  //================================================================================================================================================================================
+  //================================================================================================================================================================================
 
 private:
+  /// The Hamiltonian of the system
+  Matrix_sparse Hamiltonian;
 
-    /// The Hamiltonian of the system
-    Matrix_sparse Hamiltonian;
-    
-    /// Quantum state used as an initial state in the VQE iterations
-    Matrix initial_state;
-    
-    /// Ansatz type (HEA stands for hardware efficient ansatz)
-    ansatz_type ansatz;
+  /// Quantum state used as an initial state in the VQE iterations
+  Matrix initial_state;
+
+  /// Ansatz type (HEA stands for hardware efficient ansatz)
+  ansatz_type ansatz;
+
+  /// Effective execution backend selected for this VQE instance.
+  vqe_backend_type backend_mode;
+
+  /// Provenance of the currently configured circuit.
+  vqe_circuit_source_type circuit_source;
+
+  /// Ordered fixed local-noise insertions for the density backend.
+  std::vector<DensityNoiseSpec> density_noise_specs;
+
+  void validate_density_anchor_support(bool require_optimizer_support = false,
+                                       bool require_gradient_support = false);
+  void
+  append_density_noise_for_gate_index(squander::density::NoisyCircuit &circuit,
+                                      int gate_index) const;
+  void lower_anchor_circuit_to_noisy_circuit(
+      squander::density::NoisyCircuit &circuit);
+  double evaluate_density_matrix_backend(Matrix_real &parameters);
+  double expectation_value_of_density_energy_real(
+      const squander::density::DensityMatrix &rho) const;
+  bool density_optimizer_supported() const;
 
 public:
+  //================================================================================================================================================================================
+  //================================================================================================================================================================================
+  //================================================================================================================================================================================
 
+  /**
+   * @name Hamiltonian term containers
+   *
+   * Public members used by the Python wrapper to pass measured-term
+   * lists into the C++ implementation. Each element is stored in a
+   * compact form and interpreted as follows:
+   *  - `zz_terms`: tuples `(i, j, coeff)` representing `coeff * Z_i Z_j`.
+   *  - `xx_terms`: tuples `(i, j, coeff)` representing `coeff * X_i X_j`.
+   *  - `yy_terms`: tuples `(i, j, coeff)` representing `coeff * Y_i Y_j`.
+   *  - `z_terms` : pairs `(i, coeff)` representing local field `coeff * Z_i`.
+   *
+   * In all tuples, `i` and `j` are qubit indices (0-based) and `coeff` is a
+   * double precision coefficient. The wrapper populates these vectors from
+   * Python dictionaries of the form `{ "i": int, "j": int, "coeff": float }`.
+   */
+  /// Coupling terms of the form coeff * Z_i * Z_j
+  std::vector<std::tuple<int, int, double>> zz_terms;
 
-/**
-@brief Nullary constructor of the class.
-@return An instance of the class
-*/
-Variational_Quantum_Eigensolver_Base();
+  /// Local magnetic field terms of the form coeff * Z_i
+  std::vector<std::pair<int, double>> z_terms;
 
+  /// Coupling terms of the form coeff * X_i * X_j
+  std::vector<std::tuple<int, int, double>> xx_terms;
 
-/**
-@brief Constructor of the class.
-@param Hamiltonian_in The Hamiltonian describing the physical system
-@param qbit_num_in The number of qubits spanning the unitary Umtx
-@param config_in A map that can be used to set hyperparameters during the process
-@return An instance of the class
-*/
-Variational_Quantum_Eigensolver_Base( Matrix_sparse Hamiltonian_in, int qbit_num_in, std::map<std::string, Config_Element>& config_in, int accelerator_num=0);
+  /// Coupling terms of the form coeff * Y_i * Y_j
+  std::vector<std::tuple<int, int, double>> yy_terms;
 
-/**
-@brief Destructor of the class
-*/
-virtual ~Variational_Quantum_Eigensolver_Base();
+  //================================================================================================================================================================================
+  //================================================================================================================================================================================
+  //================================================================================================================================================================================
 
-/**
-@brief Call to evaluate the expectation value of the energy  <State_left| H | State_right>.
-@param State_left The state on the let for which the expectation value is evaluated. It is a column vector. In the sandwich product it is transposed and conjugated inside the function.
-@param State_right The state on the right for which the expectation value is evaluated. It is a column vector.
-@return The calculated expectation value
-*/
-QGD_Complex16 Expectation_value_of_energy(Matrix& State_left, Matrix& State_right);
+  /**
+  @brief Nullary constructor of the class.
+  @return An instance of the class
+  */
+  Variational_Quantum_Eigensolver_Base();
 
+  /**
+  @brief Constructor of the class.
+  @param Hamiltonian_in The Hamiltonian describing the physical system
+  @param qbit_num_in The number of qubits spanning the unitary Umtx
+  @param config_in A map that can be used to set hyperparameters during the
+  process
+  @return An instance of the class
+  */
+  Variational_Quantum_Eigensolver_Base(
+      Matrix_sparse Hamiltonian_in, int qbit_num_in,
+      std::map<std::string, Config_Element> &config_in,
+      int accelerator_num = 0);
 
-/**
-@brief Call to evaluate the expectation value of the energy  <State_left| H | State_right>. Calculates only the real part of the expectation value.
-@param State_left The state on the let for which the expectation value is evaluated. It is a column vector. In the sandwich product it is transposed and conjugated inside the function.
-@param State_right The state on the right for which the expectation value is evaluated. It is a column vector.
-@return The calculated expectation value
-*/
-double Expectation_value_of_energy_real(Matrix& State_left, Matrix& State_right);
+  /**
+  @brief Destructor of the class
+  */
+  virtual ~Variational_Quantum_Eigensolver_Base();
 
+  /**
+  @brief Call to evaluate the expectation value of the energy  <State_left| H |
+  State_right>.
+  @param State_left The state on the let for which the expectation value is
+  evaluated. It is a column vector. In the sandwich product it is transposed and
+  conjugated inside the function.
+  @param State_right The state on the right for which the expectation value is
+  evaluated. It is a column vector.
+  @return The calculated expectation value
+  */
+  QGD_Complex16 Expectation_value_of_energy(Matrix &State_left,
+                                            Matrix &State_right);
 
+  /**
+  @brief Call to evaluate the expectation value of the energy  <State_left| H |
+  State_right>. Calculates only the real part of the expectation value.
+  @param State_left The state on the let for which the expectation value is
+  evaluated. It is a column vector. In the sandwich product it is transposed and
+  conjugated inside the function.
+  @param State_right The state on the right for which the expectation value is
+  evaluated. It is a column vector.
+  @return The calculated expectation value
+  */
+  double Expectation_value_of_energy_real(Matrix &State_left,
+                                          Matrix &State_right);
 
-/**
-@brief The optimization problem of the final optimization
-@param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
-@return Returns with the cost function. (zero if the qubits are desintangled.)
-*/
-virtual double optimization_problem(Matrix_real& parameters) override;
+  //=====================================================================================================================================================================================
+  //=====================================================================================================================================================================================
+  //=====================================================================================================================================================================================
 
+  /**
+   * @brief Evaluate the expectation value of the energy with simulated shot
+   * noise and readout error.
+   * @param State The quantum state (column vector).
+   * @param shots Number of measurement shots to simulate.
+   * @param seed Random seed for reproducibility.
+   * @param p_readout Probability of bit-flip readout error per qubit.
+   * @return A SimulationResult struct containing mean, variance, and standard
+   * error.
+   */
+  SimulationResult Expectation_value_with_shot_noise_real(Matrix &State,
+                                                          int shots,
+                                                          uint64_t seed,
+                                                          double p_readout);
 
-/**
-@brief The optimization problem of the final optimization
-@param parameters Array containing the parameters to be optimized.
-@param void_instance A void pointer pointing to the instance of the current class.
-@return Returns with the cost function. (zero if the qubits are desintangled.)
-*/
-virtual double optimization_problem_non_static( Matrix_real parameters, void* void_instance) override;
+  //=====================================================================================================================================================================================
+  //=====================================================================================================================================================================================
+  //=====================================================================================================================================================================================
 
+  /**
+  @brief The optimization problem of the final optimization
+  @param parameters An array of the free parameters to be optimized. (The number
+  of teh free paramaters should be equal to the number of parameters in one
+  sub-layer)
+  @return Returns with the cost function. (zero if the qubits are desintangled.)
+  */
+  virtual double optimization_problem(Matrix_real &parameters) override;
+
+  /**
+  @brief The optimization problem of the final optimization
+  @param parameters Array containing the parameters to be optimized.
+  @param void_instance A void pointer pointing to the instance of the current
+  class.
+  @return Returns with the cost function. (zero if the qubits are desintangled.)
+  */
+  virtual double optimization_problem_non_static(Matrix_real parameters,
+                                                 void *void_instance) override;
 
 #ifdef __GROQ__
-/**
-@brief The optimization problem of the final optimization implemented to be run on Groq hardware
-@param parameters An array of the free parameters to be optimized.
-@param chosen_device Indicate the device on which the state vector emulation is performed
-@return Returns with the cost function.
-*/
-double optimization_problem_Groq(Matrix_real& parameters, int chosen_device) ;
+  /**
+  @brief The optimization problem of the final optimization implemented to be
+  run on Groq hardware
+  @param parameters An array of the free parameters to be optimized.
+  @param chosen_device Indicate the device on which the state vector emulation
+  is performed
+  @return Returns with the cost function.
+  */
+  double optimization_problem_Groq(Matrix_real &parameters, int chosen_device);
 #endif
 
+  /**
+  @brief The optimization problem of the final optimization
+  @param parameters An array of the free parameters to be optimized. (The number
+  of teh free paramaters should be equal to the number of parameters in one
+  sub-layer)
+  @return Returns with the cost function. (zero if the qubits are desintangled.)
+  */
+  double optimization_problem(double *parameters);
 
+  /**
+  @brief Call to calculate both the cost function and the its gradient
+  components.
+  @param parameters Array containing the free parameters to be optimized.
+  @param void_instance A void pointer pointing to the instance of the current
+  class.
+  @param f0 The value of the cost function at x0.
+  @param grad Array containing the calculated gradient components.
+  */
+  virtual void
+  optimization_problem_combined_non_static(Matrix_real parameters,
+                                           void *void_instance, double *f0,
+                                           Matrix_real &grad) override;
 
-/**
-@brief The optimization problem of the final optimization
-@param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
-@return Returns with the cost function. (zero if the qubits are desintangled.)
-*/
-double optimization_problem( double* parameters);
+  /**
+  @brief Call to calculate both the cost function and the its gradient
+  components.
+  @param parameters Array containing the free parameters to be optimized.
+  @param f0 The value of the cost function at x0.
+  @param grad Array containing the calculated gradient components.
+  */
+  virtual void optimization_problem_combined(Matrix_real parameters, double *f0,
+                                             Matrix_real grad) override;
 
+  /**
+  @brief Calculate the derivative of the cost function with respect to the free
+  parameters.
+  @param parameters Array containing the free parameters to be optimized.
+  @param void_instance A void pointer pointing to the instance of the current
+  class.
+  @param grad Array containing the calculated gradient components.
+  */
+  static void optimization_problem_grad_vqe(Matrix_real parameters,
+                                            void *void_instance,
+                                            Matrix_real &grad);
 
-/**
-@brief Call to calculate both the cost function and the its gradient components.
-@param parameters Array containing the free parameters to be optimized.
-@param void_instance A void pointer pointing to the instance of the current class.
-@param f0 The value of the cost function at x0.
-@param grad Array containing the calculated gradient components.
-*/
-virtual void optimization_problem_combined_non_static( Matrix_real parameters, void* void_instance, double* f0, Matrix_real& grad ) override;
+  /**
+  @brief Initialize the state used in the quantun circuit. All qubits are
+  initialized to state 0
+  */
+  void initialize_zero_state();
 
+  /**
+  @brief Call to start solving the VQE problem to get the approximation for the
+  ground state
+  */
+  void start_optimization();
 
-/**
-@brief Call to calculate both the cost function and the its gradient components.
-@param parameters Array containing the free parameters to be optimized.
-@param f0 The value of the cost function at x0.
-@param grad Array containing the calculated gradient components.
-*/
-virtual void optimization_problem_combined( Matrix_real parameters, double* f0, Matrix_real grad ) override;
+  /**
+  @brief Call to set the ansatz type. Currently imp
+  @param ansatz_in The ansatz type . Possible values: "HEA" (hardware efficient
+  ansatz with U3 and CNOT gates).
+  */
+  void set_ansatz(ansatz_type ansatz_in);
 
+  /**
+  @brief Call to generate the circuit ansatz
+  @param layers The number of layers. The depth of the generated circuit is
+  2*layers+1 (U3-CNOT-U3-CNOT...CNOT)
+  @param inner_blocks The number of U3-CNOT repetition within a single layer
+  */
+  void generate_circuit(int layers, int inner_blocks);
 
-/**
-@brief Calculate the derivative of the cost function with respect to the free parameters.
-@param parameters Array containing the free parameters to be optimized.
-@param void_instance A void pointer pointing to the instance of the current class.
-@param grad Array containing the calculated gradient components.
-*/
-static void optimization_problem_grad_vqe( Matrix_real parameters, void* void_instance, Matrix_real& grad );
+  /**
+  @brief Call to set custom layers to the gate structure that are intended to be
+  used in the VQE process.
+  @param filename The path to the binary file
+  */
+  void set_gate_structure(std::string filename);
 
+  /**
+  @brief Call to set custom gate structure for VQE experiments.
+  @param gate_structure_in Pointer to the gate structure to use.
+  */
+  void set_custom_gate_structure(Gates_block *gate_structure_in);
 
-/**
-@brief Initialize the state used in the quantun circuit. All qubits are initialized to state 0
-*/
-void initialize_zero_state();
+  /**
+  @brief Call to set the initial quantum state in the VQE iterations
+  @param initial_state_in A vector containing the amplitudes of the initial
+  state.
+  */
+  void set_initial_state(Matrix initial_state_in);
 
-
-/**
-@brief Call to start solving the VQE problem to get the approximation for the ground state  
-*/ 
-void start_optimization();
-
-
-/**
-@brief Call to set the ansatz type. Currently imp
-@param ansatz_in The ansatz type . Possible values: "HEA" (hardware efficient ansatz with U3 and CNOT gates).
-*/ 
-void set_ansatz(ansatz_type ansatz_in);
-
-
-/**
-@brief Call to generate the circuit ansatz
-@param layers The number of layers. The depth of the generated circuit is 2*layers+1 (U3-CNOT-U3-CNOT...CNOT)
-@param inner_blocks The number of U3-CNOT repetition within a single layer
-*/
-void generate_circuit( int layers, int inner_blocks );
-
-
-/**
-@brief Call to set custom layers to the gate structure that are intended to be used in the VQE process.
-@param filename The path to the binary file
-*/
-void set_gate_structure( std::string filename );
-
-
-/**
-@brief Call to set the initial quantum state in the VQE iterations
-@param initial_state_in A vector containing the amplitudes of the initial state.
-*/
-void set_initial_state( Matrix initial_state_in );
-
-
-
+  /**
+  @brief Configure ordered fixed local-noise insertions for the density backend.
+  @param density_noise_specs_in Fixed local-noise specs in insertion order.
+  */
+  void set_density_noise_specs(
+      const std::vector<DensityNoiseSpec> &density_noise_specs_in);
 };
 
 #endif

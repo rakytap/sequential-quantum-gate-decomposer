@@ -1,0 +1,134 @@
+{
+  "cases": [
+    {
+      "case_kind": "continuity",
+      "case_name": "phase2_xxz_hea_q4_continuity",
+      "deferred_noise_boundary_count": 1,
+      "deferred_region_count": 1,
+      "eligibility_pass": true,
+      "eligible_unitary_region_count": 4,
+      "fused_region_count": 0,
+      "metadata": {
+        "case_kind": "continuity",
+        "case_name": "phase2_xxz_hea_q4_continuity",
+        "continuity_energy_real": -0.46777193318615934,
+        "qbit_num": 4,
+        "topology": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            3
+          ]
+        ],
+        "workload_id": "phase2_xxz_hea_q4_continuity"
+      },
+      "partition_count": 5,
+      "runtime_path": "partitioned_density_descriptor_baseline",
+      "singleton_unitary_region_count": 1,
+      "supported_unfused_region_count": 5,
+      "workload_id": "phase2_xxz_hea_q4_continuity"
+    },
+    {
+      "case_kind": "microcase",
+      "case_name": "microcase_2q_entangler_local_depolarizing",
+      "deferred_noise_boundary_count": 1,
+      "deferred_region_count": 1,
+      "eligibility_pass": true,
+      "eligible_unitary_region_count": 1,
+      "fused_region_count": 0,
+      "metadata": {
+        "case_kind": "microcase",
+        "case_name": "microcase_2q_entangler_local_depolarizing",
+        "noise_pattern": "sparse",
+        "operation_specs": [
+          {
+            "kind": "gate",
+            "name": "U3",
+            "param_count": 3,
+            "target_qbit": 0
+          },
+          {
+            "kind": "gate",
+            "name": "U3",
+            "param_count": 3,
+            "target_qbit": 1
+          },
+          {
+            "control_qbit": 0,
+            "kind": "gate",
+            "name": "CNOT",
+            "param_count": 0,
+            "target_qbit": 1
+          },
+          {
+            "fixed_value": 0.1,
+            "kind": "noise",
+            "name": "local_depolarizing",
+            "param_count": 0,
+            "source_gate_index": 2,
+            "target_qbit": 1
+          },
+          {
+            "kind": "gate",
+            "name": "U3",
+            "param_count": 3,
+            "target_qbit": 0
+          }
+        ],
+        "qbit_num": 2,
+        "workload_id": "microcase_2q_entangler_local_depolarizing"
+      },
+      "partition_count": 1,
+      "runtime_path": "partitioned_density_descriptor_baseline",
+      "singleton_unitary_region_count": 1,
+      "supported_unfused_region_count": 2,
+      "workload_id": "microcase_2q_entangler_local_depolarizing"
+    },
+    {
+      "case_kind": "structured_family",
+      "case_name": "layered_nearest_neighbor_q8_sparse_seed20260318",
+      "deferred_noise_boundary_count": 0,
+      "deferred_region_count": 0,
+      "eligibility_pass": true,
+      "eligible_unitary_region_count": 12,
+      "fused_region_count": 0,
+      "metadata": {
+        "case_kind": "structured_family",
+        "family_name": "layered_nearest_neighbor",
+        "noise_pattern": "sparse",
+        "qbit_num": 8,
+        "seed": 20260318,
+        "workload_id": "layered_nearest_neighbor_q8_sparse_seed20260318"
+      },
+      "partition_count": 24,
+      "runtime_path": "partitioned_density_descriptor_baseline",
+      "singleton_unitary_region_count": 11,
+      "supported_unfused_region_count": 23,
+      "workload_id": "layered_nearest_neighbor_q8_sparse_seed20260318"
+    }
+  ],
+  "software": {
+    "numpy": "2.3.5",
+    "python": "3.13.9",
+    "scipy": "1.16.3"
+  },
+  "status": "pass",
+  "suite_name": "phase3_partitioned_runtime_fused_eligibility",
+  "summary": {
+    "continuity_cases": 1,
+    "deferred_noise_boundaries": 2,
+    "eligibility_passes": 3,
+    "eligible_unitary_regions": 17,
+    "microcases": 1,
+    "singleton_unitary_regions": 13,
+    "structured_cases": 1,
+    "total_cases": 3
+  }
+}

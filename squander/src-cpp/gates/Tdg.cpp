@@ -28,28 +28,11 @@ static double invsqrt2 = 1.0 / std::sqrt(2.0);
 /**
 @brief NullaRX constructor of the class.
 */
-Tdg::Tdg() {
-
-    // A string labeling the gate operation
-    name = "Tdg";
-
-    // number of qubits spanning the matrix of the gate
-    qbit_num = -1;
-    // the size of the matrix
-    matrix_size = -1;
-    // A string describing the type of the gate
-    type = TDG_OPERATION;
-
-    // The index of the qubit on which the gate acts (target_qbit >= 0)
-    target_qbit = -1;
-    // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gates
-    control_qbit = -1;
-
-    parameter_num = 0;
-
-
+Tdg::Tdg() : Tdg(-1, -1) {
 
 }
+
+
 
 
 
@@ -68,12 +51,12 @@ Tdg::Tdg(int qbit_num_in, int target_qbit_in) {
     // number of qubits spanning the matrix of the gate
     qbit_num = qbit_num_in;
     // the size of the matrix
-    matrix_size = Power_of_2(qbit_num);
+    matrix_size = (qbit_num >= 0) ? Power_of_2(qbit_num) : -1;
     // A string describing the type of the gate
     type = TDG_OPERATION;
 
 
-    if (target_qbit_in >= qbit_num) {
+    if (qbit_num_in >= 0 && target_qbit_in >= qbit_num) {
        std::stringstream sstream;
        sstream << "The index of the target qubit is larger than the number of qubits" << std::endl;
        print(sstream, 0);
