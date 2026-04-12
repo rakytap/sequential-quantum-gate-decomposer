@@ -280,6 +280,14 @@ If you use SQUANDER in your research, please cite the following publications:
 
 ---
 
+## Posters and Conference Presentations
+
+- **Poster session.** Muhammad Al Farizi, Gregory Morse, Jakab Nádori, László Hajas, Péter Rakyta. *Scalable Quantum Circuit Design: Partitioning and Optimization Strategies.* Quantum Informatics National Laboratory Workshop 2025. Bosch Budapest Innovation Campus, June 5, 2025, 16:30-18:30. <https://qi.nemzetilabor.hu/events/quantum-information-national-laboratory-workshop-2025>
+- **Invited lecturer.** Gregory Morse. *Scalable Globally Optimal Partitioning of Quantum Circuits.* Lectures on Modern Scientific Programming 2025, HUN-REN Wigner RCP. November 25, 2025, 9:20-10:30 lecture and 14:00-15:30 hands-on session. <https://indico.wigner.hu/event/1709/>
+- **Poster session.** Zoltán Kégli, Gregory Morse, Jakab Nádori, Barna Fülöp Villám, Muhammad Al Farizi, Tamás Kozsik, Péter Rakyta. *SQUANDER: a classical technique to train quantum circuits.* The 13th International Conference on Applied Informatics (ICAI2026). Eszterházy Károly Catholic University, Eger, February 20, 2026, 10:15-11:15. <https://icai.uni-eszterhazy.hu/2026/program/>
+
+---
+
 ## Acknowledgments
 
 This project was supported by:
