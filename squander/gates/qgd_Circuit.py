@@ -255,6 +255,16 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
         # call the C wrapper function
         super().add_SX(target_qbit)
 
+    def add_SXdg(self, target_qbit):
+        """Add a SXdg gate to the front of the gate structure.
+
+        Args:
+            target_qbit: Target qubit index (int)
+        """
+
+        # call the C wrapper function
+        super().add_SXdg(target_qbit)
+
     def add_S(self, target_qbit):
         """Add a S gate to the front of the gate structure.
 
@@ -708,10 +718,7 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
         elif isinstance(qgd_gate, SX):
             self.add_SX(qgd_gate.get_Target_Qbit())
         elif isinstance(qgd_gate, SXdg):
-            # SXdg is represented as Z-SX-Z up to a global phase.
-            self.add_Z(qgd_gate.get_Target_Qbit())
-            self.add_SX(qgd_gate.get_Target_Qbit())
-            self.add_Z(qgd_gate.get_Target_Qbit())
+            self.add_SXdg(qgd_gate.get_Target_Qbit())
         elif isinstance(qgd_gate, U1):
             self.add_U1(qgd_gate.get_Target_Qbit())
         elif isinstance(qgd_gate, U2):
