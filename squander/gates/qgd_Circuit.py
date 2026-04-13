@@ -54,8 +54,10 @@ from squander.gates.gates_Wrapper import (
     CRZ,
     CRX,
     CP,
+    CU,
     CR,
     CROT,
+    SXdg,
     CCX,
     CSWAP,
     SWAP,
@@ -705,6 +707,11 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
             self.add_RZ(qgd_gate.get_Target_Qbit())
         elif isinstance(qgd_gate, SX):
             self.add_SX(qgd_gate.get_Target_Qbit())
+        elif isinstance(qgd_gate, SXdg):
+            # SXdg is represented as Z-SX-Z up to a global phase.
+            self.add_Z(qgd_gate.get_Target_Qbit())
+            self.add_SX(qgd_gate.get_Target_Qbit())
+            self.add_Z(qgd_gate.get_Target_Qbit())
         elif isinstance(qgd_gate, U1):
             self.add_U1(qgd_gate.get_Target_Qbit())
         elif isinstance(qgd_gate, U2):
@@ -737,6 +744,8 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
             self.add_CRX(qgd_gate.get_Target_Qbit(), qgd_gate.get_Control_Qbit())
         elif isinstance(qgd_gate, CP):
             self.add_CP(qgd_gate.get_Target_Qbit(), qgd_gate.get_Control_Qbit())
+        elif isinstance(qgd_gate, CU):
+            self.add_CU(qgd_gate.get_Target_Qbit(), qgd_gate.get_Control_Qbit())
         elif isinstance(qgd_gate, SWAP):
             self.add_SWAP(qgd_gate.get_Target_Qbits())
         elif isinstance(qgd_gate, RXX):
