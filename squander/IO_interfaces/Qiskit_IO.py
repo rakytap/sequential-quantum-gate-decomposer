@@ -50,6 +50,7 @@ from squander.gates.gates_Wrapper import (
     RY,
     RZ,
     SX,
+    SXdg,
     SYC,
     CRY,
     CRZ,
@@ -190,6 +191,10 @@ def get_Qiskit_Circuit( Squander_circuit, parameters ):
         elif isinstance( gate, SX ):
             # SX gate
             circuit.sx( gate.get_Target_Qbit() )  
+
+        elif isinstance( gate, SXdg ):
+            # SXdg gate
+            circuit.sxdg( gate.get_Target_Qbit() )
         
         elif isinstance( gate, T ):
             # T gate
@@ -364,6 +369,10 @@ def get_Qiskit_Circuit_inverse( Squander_circuit, parameters ):
         elif isinstance( gate, SX ):
             # SX gate inverse is SXdg
             circuit.sxdg( gate.get_Target_Qbit() )
+
+        elif isinstance( gate, SXdg ):
+            # SXdg gate inverse is SX
+            circuit.sx( gate.get_Target_Qbit() )
         
         elif isinstance( gate, T ):
             # T gate (inverse is Tdg)
@@ -651,11 +660,8 @@ def convert_Qiskit_to_Squander( qc_in ):
             qubits = gate.qubits
             qubit = q_register.index(qubits[0])
 
-            # SXdg = Z * SX * Z up to a global phase.
-            # SQUANDER currently exposes SX but not SXdg in qgd_Circuit.
-            Circuit_Squander.add_Z(qubit)
-            Circuit_Squander.add_SX(qubit)
-            Circuit_Squander.add_Z(qubit)
+            # Native SXdg support is exposed via qgd_Circuit.
+            Circuit_Squander.add_SXdg(qubit)
         
         elif name == "t":
             qubits = gate.qubits                
