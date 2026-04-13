@@ -478,77 +478,97 @@ Gate_Wrapper_get_Matrix( Gate_Wrapper *self, PyObject *args, PyObject *kwds ) {
 
     static char *kwlist[] = {(char*)"parameters", NULL};
 
+    PyObject* parameters_obj = NULL;
     PyArrayObject * parameters_arr = NULL;
 
 
     // parsing input arguments
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|O", kwlist, &parameters_arr )) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|O", kwlist, &parameters_obj )) {
         std::string err( "Unable to parse keyword arguments");
         PyErr_SetString(PyExc_Exception, err.c_str());
         return NULL;
     }
 
-    Gate* gate = self->gate;
+    try {
+            Gate* gate = self->gate;
 
-    Matrix gate_mtx;
+            Matrix gate_mtx;
 
-    if( gate->get_parameter_num() == 0 ) {
+            if (parameters_obj != NULL) {
+                parameters_arr = (PyArrayObject*)PyArray_FROM_OTF(parameters_obj, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+                if (parameters_arr == NULL) {
+                    PyErr_SetString(PyExc_TypeError, "Parameter vector should be real typed and array-like");
+                    return NULL;
+                }
+            }
 
-        if( parameters_arr != NULL ) {
-            std::string err( "The gate contains no parameters to set, but parameter array was given as input");
-            PyErr_SetString(PyExc_Exception, err.c_str());
+            if( gate->get_parameter_num() == 0 ) {
+
+                if( parameters_arr != NULL ) {
+                    PyErr_SetString(PyExc_Exception, "The gate contains no parameters to set, but parameter array was given as input");
+                    Py_DECREF(parameters_arr);
+                    return NULL;
+                }
+
+                int parallel = 1;
+                gate_mtx = gate->get_matrix( parallel );
+
+            }
+            else if( gate->get_parameter_num() > 0 ) {
+
+                if( parameters_arr == NULL ) {
+                    PyErr_SetString(PyExc_Exception, "The gate has free parameters to set, but no parameter array was given as input");
+                    return NULL;
+                }
+
+                // get the C++ wrapper around the input data
+                Matrix_real&& parameters_mtx = numpy2matrix_real( parameters_arr );
+                int parallel = 1;
+                gate_mtx = self->gate->get_matrix( parameters_mtx, parallel );
+
+                Py_DECREF(parameters_arr);
+
+
+            }
+            else {
+                std::string err( "The number of parameters in a gate is set to a negative value");
+                PyErr_SetString(PyExc_Exception, err.c_str());
+                if (parameters_arr != NULL) {
+                    Py_DECREF(parameters_arr);
+                }
+                return NULL;
+
+            }
+
+
+            // convert to numpy array
+            gate_mtx.set_owner(false);
+            PyObject *gate_mtx_py = matrix_to_numpy( gate_mtx );
+
+
+            return gate_mtx_py;
+        }
+        catch (const std::string& err) {
+            if (parameters_arr != NULL) {
+                Py_DECREF(parameters_arr);
+            }
+            PyErr_SetString(PyExc_RuntimeError, err.c_str());
             return NULL;
         }
-
-        int parallel = 1;
-        gate_mtx = gate->get_matrix( parallel );
-
-    }
-    else if( gate->get_parameter_num() > 0 ) {
-
-        if( parameters_arr == NULL ) {
-            std::string err( "The gate has free parameters to set, but no parameter array was given as input");
-            PyErr_SetString(PyExc_Exception, err.c_str());
+        catch (const std::exception& err) {
+            if (parameters_arr != NULL) {
+                Py_DECREF(parameters_arr);
+            }
+            PyErr_SetString(PyExc_RuntimeError, err.what());
             return NULL;
         }
-
-        if ( PyArray_TYPE(parameters_arr) != NPY_DOUBLE ) {
-            PyErr_SetString(PyExc_Exception, "Parameter vector should be real typed");
+        catch(...) {
+            if (parameters_arr != NULL) {
+                Py_DECREF(parameters_arr);
+            }
+            PyErr_SetString(PyExc_RuntimeError, "Unknown error in Gate_Wrapper_get_Matrix");
             return NULL;
         }
-
-        if ( PyArray_IS_C_CONTIGUOUS(parameters_arr) ) {
-            Py_INCREF(parameters_arr);
-        }
-        else {
-            parameters_arr = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
-        }
-
-
-        // get the C++ wrapper around the input data
-        Matrix_real&& parameters_mtx = numpy2matrix_real( parameters_arr );
-        int parallel = 1;
-        gate_mtx = self->gate->get_matrix( parameters_mtx, parallel );
-
-        Py_DECREF(parameters_arr);
-
-
-    }
-    else {
-        std::string err( "The number of parameters in a gate is set to a negative value");
-        PyErr_SetString(PyExc_Exception, err.c_str());
-        return NULL;
-
-    }
-
-
-    // convert to numpy array
-    gate_mtx.set_owner(false);
-    PyObject *gate_mtx_py = matrix_to_numpy( gate_mtx );
-    
-
-    return gate_mtx_py;
-
 }
 
 

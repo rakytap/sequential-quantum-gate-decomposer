@@ -54,6 +54,10 @@ CROT(int qbit_num_in, int target_qbit_in, int control_qbit_in);
 
 virtual ~CROT();
 
+virtual Matrix get_matrix( Matrix_real& parameters_mtx ) override;
+
+virtual Matrix get_matrix( Matrix_real& parameters_mtx, int parallel ) override;
+
 void apply_to_list( Matrix_real& parameters_mtx, std::vector<Matrix>& input );
 
 void apply_to_list( Matrix_real& parameters_mtx, std::vector<Matrix>& inputs, int parallel ) override;
