@@ -105,6 +105,31 @@ CROT::~CROT() {
 
 }
 
+/**
+@brief Call to retrieve the gate matrix.
+@param parameters_mtx Parameters of the CROT gate.
+@return Returns with a matrix of the gate.
+*/
+Matrix
+CROT::get_matrix( Matrix_real& parameters_mtx ) {
+    return get_matrix(parameters_mtx, 0);
+}
+
+/**
+@brief Call to retrieve the gate matrix.
+@param parameters_mtx Parameters of the CROT gate.
+@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB.
+@return Returns with a matrix of the gate.
+*/
+Matrix
+CROT::get_matrix( Matrix_real& parameters_mtx, int parallel ) {
+
+    Matrix CROT_matrix = create_identity(matrix_size);
+    apply_to(parameters_mtx, CROT_matrix, parallel);
+
+    return CROT_matrix;
+}
+
 
 /**
 @brief Call to apply the gate on the input array/matrix by U3*input
