@@ -75,6 +75,7 @@ custom_kernel_1qubit_gate::custom_kernel_1qubit_gate(int qbit_num_in, int target
     type = CUSTOM_KERNEL_1QUBIT_GATE_OPERATION;
 
     kernel = kernel_in;
+    kernel_float = kernel_in.to_float32();
 
 
     if (target_qbit_in >= qbit_num) {
@@ -92,6 +93,46 @@ custom_kernel_1qubit_gate::custom_kernel_1qubit_gate(int qbit_num_in, int target
     parameter_num = 0;
 
 
+}
+
+
+custom_kernel_1qubit_gate::custom_kernel_1qubit_gate(int qbit_num_in, int target_qbit_in, Matrix_any& kernel_in) {
+
+    // A string labeling the gate operation
+    name = "custom_kernel";
+    //The stringstream input to store the output messages.
+    std::stringstream sstream;
+
+
+    // number of qubits spanning the matrix of the gate
+    qbit_num = qbit_num_in;
+    // the size of the matrix
+    matrix_size = Power_of_2(qbit_num);
+    // A string describing the type of the gate
+    type = CUSTOM_KERNEL_1QUBIT_GATE_OPERATION;
+
+    if (kernel_in.is_float64()) {
+        kernel = kernel_in.as_float64();
+        kernel_float = kernel.to_float32();
+    }
+    else {
+        kernel_float = kernel_in.as_float32();
+        kernel = kernel_float.to_float64();
+    }
+
+    if (target_qbit_in >= qbit_num) {
+       sstream << "The index of the target qubit is larger than the number of qubits" << std::endl;
+       print(sstream, 1);
+
+       throw "The index of the target qubit is larger than the number of qubits";
+    }
+
+    // The index of the qubit on which the gate acts (target_qbit >= 0)
+    target_qbit = target_qbit_in;
+    // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gates
+    control_qbit = -1;
+
+    parameter_num = 0;
 }
 
 
@@ -114,6 +155,13 @@ custom_kernel_1qubit_gate::~custom_kernel_1qubit_gate() {
 void 
 custom_kernel_1qubit_gate::apply_to( Matrix& input ) {
 
+    apply_to(input, 0);
+}
+
+
+void
+custom_kernel_1qubit_gate::apply_to( Matrix& input, int parallel ) {
+
 
     if (input.rows != matrix_size ) {
         std::string err("Wrong matrix size in custom_kernel_1qubit_gate gate apply");
@@ -121,7 +169,23 @@ custom_kernel_1qubit_gate::apply_to( Matrix& input ) {
     }
 
 
-    apply_kernel_to( kernel, input );
+    apply_kernel_to( kernel, input, false, parallel );
+
+
+}
+
+
+void
+custom_kernel_1qubit_gate::apply_to( Matrix_float& input, int parallel ) {
+
+
+    if (input.rows != matrix_size ) {
+        std::string err("Wrong matrix size in custom_kernel_1qubit_gate gate apply");
+        throw err;
+    }
+
+
+    apply_kernel_to( kernel_float, input, false, parallel );
 
 
 }

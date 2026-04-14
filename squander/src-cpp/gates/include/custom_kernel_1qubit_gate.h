@@ -25,6 +25,8 @@ limitations under the License.
 
 #include "U3.h"
 #include "matrix.h"
+#include "matrix_float.h"
+#include "matrix_any.h"
 #include "matrix_real.h"
 #define _USE_MATH_DEFINES
 #include <math.h>
@@ -37,6 +39,7 @@ class custom_kernel_1qubit_gate: public U3 {
 
     // the lernel of the gate operation
     Matrix kernel;
+    Matrix_float kernel_float;
 
 public:
 
@@ -54,6 +57,8 @@ custom_kernel_1qubit_gate();
 */
 custom_kernel_1qubit_gate(int qbit_num_in, int target_qbit_in, Matrix& kernel_in);
 
+custom_kernel_1qubit_gate(int qbit_num_in, int target_qbit_in, Matrix_any& kernel_in);
+
 /**
 @brief Destructor of the class
 */
@@ -66,6 +71,10 @@ custom_kernel_1qubit_gate(int qbit_num_in, int target_qbit_in, Matrix& kernel_in
 @param input The input array on which the gate is applied
 */
 void apply_to( Matrix& input );
+
+void apply_to( Matrix& input, int parallel ) override;
+
+void apply_to( Matrix_float& input, int parallel ) override;
 
 
 /**

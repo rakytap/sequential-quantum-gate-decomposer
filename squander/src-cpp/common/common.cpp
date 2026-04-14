@@ -195,6 +195,27 @@ Matrix create_identity( int matrix_size ) {
 
 }
 
+/**
+@brief Call to create a single-precision complex identity matrix
+@param matrix_size The number of rows in the resulted identity matrix
+@return Returns with a single-precision complex identity matrix.
+*/
+Matrix_float create_identity_float( int matrix_size ) {
+
+    Matrix_float mtx = Matrix_float(matrix_size, matrix_size);
+    memset(mtx.get_data(), 0, mtx.size()*sizeof(QGD_Complex8) );
+
+    // setting the diagonal elements to identity
+    for(int idx = 0; idx < matrix_size; ++idx)
+    {
+        int element_index = idx*mtx.stride + idx;
+        mtx[element_index].real = 1.0f;
+    }
+
+    return mtx;
+
+}
+
 
 
 /**

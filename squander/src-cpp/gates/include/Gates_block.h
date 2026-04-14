@@ -27,6 +27,8 @@ limitations under the License.
 #include <map>
 #include "common.h"
 #include "matrix_real.h"
+#include "matrix_real_any.h"
+#include "matrix_any.h"
 #include "CROT.h"
 #include "Gate.h"
 #include "utils.hpp"
@@ -113,6 +115,18 @@ void apply_to_list( Matrix_real& parameters, std::vector<Matrix>& inputs, int pa
 */
 virtual void apply_to( Matrix_real& parameters_mtx, Matrix& input, int parallel=0 );
 
+virtual void apply_to( Matrix_float& input, int parallel=0 ) override;
+
+virtual void apply_to( Matrix_real_float& parameters_mtx, Matrix_float& input, int parallel=0 ) override;
+
+/**
+@brief Precision-agnostic apply entry point for float32/float64 execution.
+@param parameters_mtx Precision-tagged parameter matrix carrier
+@param input Precision-tagged matrix/state carrier
+@param parallel Set 0 for sequential execution, 1 for OpenMP and 2 for TBB
+*/
+virtual void apply_to( Matrix_real_any& parameters_mtx, Matrix_any& input, int parallel=0 );
+
 
 
 
@@ -121,6 +135,8 @@ virtual void apply_to( Matrix_real& parameters_mtx, Matrix& input, int parallel=
 @param input The input array on which the gate is applied
 */
 virtual void apply_from_right( Matrix_real& parameters_mtx, Matrix& input );
+
+virtual void apply_from_right( Matrix_real_float& parameters_mtx, Matrix_float& input ) override;
 
 
 /**

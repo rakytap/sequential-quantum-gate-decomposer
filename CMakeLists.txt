@@ -67,6 +67,7 @@ endif()
 enable_testing()
 
 option(ENABLE_FLOAT32 "Enable float32 matrix support (experimental)" ON)
+option(ENABLE_AVX "Enable AVX/AVX2/AVX512 kernels and compiler flags" ON)
 
 if(SKBUILD)
     message(STATUS "The project is built using scikit-build")
@@ -430,7 +431,14 @@ if(ENABLE_FLOAT32)
 endif()
 
 # checking for AVX/AVX2 support
-CHECK_FOR_AVX()
+if(ENABLE_AVX)
+  CHECK_FOR_AVX()
+else()
+  set(HAVE_AVX_EXTENSIONS FALSE)
+  set(HAVE_AVX2_EXTENSIONS FALSE)
+  set(HAVE_AVX512F_EXTENSIONS FALSE)
+  message(STATUS "AVX support disabled via ENABLE_AVX=OFF")
+endif()
 
 # Identify the compiler type and set compiler specific options
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
@@ -836,7 +844,10 @@ list(APPEND qgd_files
 )
 
 if(ENABLE_FLOAT32)
-  list(APPEND qgd_files ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/matrix_float.cpp)
+  list(APPEND qgd_files
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/matrix_float.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/matrix_real_float.cpp
+  )
 endif()
 
 if (${HAVE_AVX512F_EXTENSIONS})

@@ -212,3 +212,87 @@ sl.print_matrix();
 
 }
 
+
+/**
+@brief Generates an orthogonal matrix from float32 parameters.
+@param vargamma array of dim*(dim-1)/2 elements
+@return Returns with the generated float32 orthogonal matrix.
+*/
+Matrix_float
+Random_Orthogonal::Construct_Orthogonal_Matrix( Matrix_real_float &vargamma ) {
+
+    if (vargamma.size() != dim*(dim-1)/2) {
+        throw std::string("Wrong number of parameters in Random_Orthogonal::Construct_Orthogonal_Matrix(float32)");
+    }
+
+    // construct vargamma matrix elements
+    Matrix_real_float vargamma_mtx(dim, dim);
+    memset( vargamma_mtx.get_data(), 0, vargamma_mtx.size()*sizeof(float) );
+    int gamma_index = 0;
+    for (int idx=0; idx<dim; idx++) {
+        for (int jdx=idx+1; jdx<dim; jdx++) {
+            vargamma_mtx[idx*vargamma_mtx.stride + jdx] = vargamma[gamma_index];
+            gamma_index++;
+        }
+    }
+
+    Matrix_real_float T2(1,1);
+    T2[0] = 1.0f;
+
+    // spawn iterations to construct dim x dim orthogonal matrix
+    Matrix_real_float Tn = T2;
+    for (int ndx=2; ndx<=dim; ndx++) {
+
+        // preallocate matrix for the new T
+        Matrix_real_float Tn_new(ndx, ndx);
+
+        // construct matrix tn from Eq (6) of  https://doi.org/10.1002/qua.560040725
+        Matrix_real_float tn(ndx, ndx);
+        memset( tn.get_data(), 0, tn.size()*sizeof(float) );
+        for ( int row_idx=0; row_idx<ndx-1; row_idx++) {
+            memcpy( tn.get_data()+row_idx*tn.stride, Tn.get_data() + row_idx*Tn.stride, (ndx-1)*sizeof(float) );
+        }
+        tn[ndx*tn.stride -1] = 1.0f;
+
+        // construct matrix Tn from Eq (14) in  https://doi.org/10.1002/qua.560040725
+        for ( int col_idx=0; col_idx<ndx; col_idx++) {
+
+            // allocate a column in matrix s defined by Eq (15)
+            Matrix_real_float sl(ndx, 1);
+
+            // k = 0 case of Eq (16)
+            sl[0] = -tn[col_idx*tn.stride + ndx-1];
+
+            // k = 0 case in Eq (14)
+            Tn_new[col_idx] = tn[col_idx]*std::cos(vargamma_mtx[ndx-1]) - sl[0]*std::sin(vargamma_mtx[ndx-1]);
+
+            // k > 0 case in Eq (14), (15)
+            for ( int row_idx=1; row_idx<ndx; row_idx++) {
+
+                int kdx = row_idx-1;
+                sl[row_idx] = tn[kdx*tn.stride+col_idx] * std::sin(vargamma_mtx[kdx*dim+ndx-1]) + sl[kdx] * std::cos(vargamma_mtx[kdx*dim+ndx-1]);
+
+                if ( row_idx == ndx-1 ) {
+                    Tn_new[row_idx*Tn_new.stride + col_idx] = -sl[row_idx];
+                }
+                else {
+                    Tn_new[row_idx*Tn_new.stride + col_idx] = tn[row_idx*tn.stride + col_idx] * std::cos(vargamma_mtx[row_idx*dim+ndx-1]) - sl[row_idx] * std::sin(vargamma_mtx[row_idx*dim+ndx-1]);
+                }
+
+            }
+        }
+
+        Tn = Tn_new;
+
+    }
+
+    Matrix_float ret(Tn.rows, Tn.cols);
+    memset( ret.get_data(), 0, ret.size()*sizeof(QGD_Complex8) );
+    for ( int idx=0; idx<ret.size(); idx++) {
+        ret[idx].real = Tn[idx];
+    }
+
+    return ret;
+
+}
+

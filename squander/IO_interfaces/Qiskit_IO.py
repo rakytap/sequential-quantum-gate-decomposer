@@ -50,6 +50,7 @@ from squander.gates.gates_Wrapper import (
     RY,
     RZ,
     SX,
+    SXdg,
     SYC,
     CRY,
     CRZ,
@@ -142,7 +143,7 @@ def get_Qiskit_Circuit( Squander_circuit, parameters ):
         elif isinstance( gate, CU ):
             # adding U3 gate to the quantum circuit
             parameters_gate = gate.Extract_Parameters( parameters )
-            circuit.cu( parameters_gate[0], parameters_gate[1], parameters_gate[2], gate.get_Control_Qbit(), gate.get_Target_Qbit() )
+            circuit.cu( parameters_gate[0], parameters_gate[1], parameters_gate[2], parameters_gate[3], gate.get_Control_Qbit(), gate.get_Target_Qbit() )
 
         elif isinstance( gate, RX ):
             # RX gate
@@ -190,6 +191,10 @@ def get_Qiskit_Circuit( Squander_circuit, parameters ):
         elif isinstance( gate, SX ):
             # SX gate
             circuit.sx( gate.get_Target_Qbit() )  
+
+        elif isinstance( gate, SXdg ):
+            # SXdg gate
+            circuit.sxdg( gate.get_Target_Qbit() )
         
         elif isinstance( gate, T ):
             # T gate
@@ -244,177 +249,17 @@ def get_Qiskit_Circuit( Squander_circuit, parameters ):
     
 
 ##
-# @brief Export the inverse of a Squsnder circuit into Qiskit circuit.
-# @param a Squander object containing a squander circuit (Circuit, any decomposing class, VQE class, etc..)
-# @return Return with a Qiskit compatible quantum circuit.
+# @brief Export the inverse of a Squander circuit into Qiskit format.
+# @param Squander_circuit A squander circuit object.
+# @param parameters The parameter array associated with the circuit.
+# @return Return with a Qiskit compatible quantum circuit representing the adjoint.
 def get_Qiskit_Circuit_inverse( Squander_circuit, parameters ):
 
-    from qiskit import QuantumCircuit
+    from squander import utils
 
-    # creating Qiskit quantum circuit
-    circuit = QuantumCircuit(Squander_circuit.get_Qbit_Num() )
-    
-    gates = Squander_circuit.get_Gates()
-    
-    # constructing quantum circuit
-    for idx in range(len(gates)-1, -1, -1):
-
-        gate = gates[idx]
-
-        if isinstance( gate, CNOT ):
-            # adding CNOT gate to the quantum circuit
-            circuit.cx( gate.get_Control_Qbit(), gate.get_Target_Qbit() )
-            
-        elif isinstance( gate, CRY ):
-            # adding CNOT gate to the quantum circuit
-            parameters_gate = [scalar(p) for p in gate.Extract_Parameters( parameters )]
-            circuit.cry( -parameters_gate[0], gate.get_Control_Qbit(), gate.get_Target_Qbit() )
-
-        elif isinstance( gate, CRZ ):
-            # adding CNOT gate to the quantum circuit
-            parameters_gate = [scalar(p) for p in gate.Extract_Parameters( parameters )]
-            circuit.crz( -parameters_gate[0], gate.get_Control_Qbit(), gate.get_Target_Qbit() )
-        
-        elif isinstance( gate, CRX ):
-            # adding CNOT gate to the quantum circuit
-            parameters_gate = [scalar(p) for p in gate.Extract_Parameters( parameters )]
-            circuit.crx( -parameters_gate[0], gate.get_Control_Qbit(), gate.get_Target_Qbit() )
-        
-        elif isinstance( gate, CP ):
-            # adding CNOT gate to the quantum circuit
-            parameters_gate = [scalar(p) for p in gate.Extract_Parameters( parameters )]
-            circuit.cp( -parameters_gate[0], gate.get_Control_Qbit(), gate.get_Target_Qbit() )
-
-        elif isinstance( gate, R ):
-            # R gate
-            parameters_gate = gate.Extract_Parameters( parameters )
-            circuit.r( -parameters_gate[0],parameters_gate[1], gate.get_Target_Qbit() )    
-        elif isinstance( gate, CZ ):
-            # adding CZ gate to the quantum circuit
-            circuit.cz( gate.get_Control_Qbit(), gate.get_Target_Qbit() )
-
-        elif isinstance( gate, CH ):
-            # adding CZ gate to the quantum circuit
-            circuit.ch( gate.get_Control_Qbit(), gate.get_Target_Qbit() )
-
-        elif isinstance( gate, SYC ):
-            # Sycamore gate
-            print("Unsupported gate in the circuit export: Sycamore gate")
-            return None
-
-        elif isinstance( gate, U1 ):
-            # adding U1 gate to the quantum circuit
-            parameters_gate = [scalar(p) for p in gate.Extract_Parameters( parameters )]
-            circuit.p( -parameters_gate[0], gate.get_Target_Qbit() ) # U1 is equivalent to P gate
-
-        elif isinstance( gate, U2 ):
-            # adding U2 gate to the quantum circuit
-            parameters_gate = [scalar(p) for p in gate.Extract_Parameters( parameters )]
-            circuit.u( -np.pi/2, -parameters_gate[0], -parameters_gate[1], gate.get_Target_Qbit() )
-
-        elif isinstance( gate, U3 ):
-            # adding U3 gate to the quantum circuit
-            parameters_gate = [scalar(p) for p in gate.Extract_Parameters( parameters )]
-            circuit.u( -parameters_gate[0], -parameters_gate[2], -parameters_gate[1], gate.get_Target_Qbit() )   
-
-        elif isinstance( gate, CU ):
-            # adding U3 gate to the quantum circuit
-            parameters_gate = [scalar(p) for p in gate.Extract_Parameters( parameters )]
-            circuit.cu( -parameters_gate[0], -parameters_gate[2], -parameters_gate[1], gate.get_Control_Qbit(), gate.get_Target_Qbit() )   
-
-        elif isinstance( gate, RX ):
-            # RX gate
-            parameters_gate = [scalar(p) for p in gate.Extract_Parameters( parameters )]
-            circuit.rx( -parameters_gate[0], gate.get_Target_Qbit() )    
-            
-        elif isinstance( gate, RY ):
-            # RY gate
-            parameters_gate = [scalar(p) for p in gate.Extract_Parameters( parameters )]
-            circuit.ry( -parameters_gate[0], gate.get_Target_Qbit() )    
-
-        elif isinstance( gate, RZ ):
-            # RZ gate
-            parameters_gate = [scalar(p) for p in gate.Extract_Parameters( parameters )]
-            circuit.rz( -parameters_gate[0], gate.get_Target_Qbit() )    
-            
-        elif isinstance( gate, H ):
-            # Hadamard gate
-            circuit.h( gate.get_Target_Qbit() )    
-
-        elif isinstance( gate, X ):
-            # X gate
-            circuit.x( gate.get_Target_Qbit() )  
-
-        elif isinstance( gate, Y ):
-            # Y gate
-            circuit.y( gate.get_Target_Qbit() )  
-
-        elif isinstance( gate, Z ):
-            # Z gate
-            circuit.z( gate.get_Target_Qbit() ) 
-
-        elif isinstance( gate, S ):
-            # S gate
-            circuit.sdg( gate.get_Target_Qbit() )  
-
-        elif isinstance( gate, Sdg ):
-            # Sdg gate
-            circuit.s( gate.get_Target_Qbit() )  
-
-        elif isinstance( gate, SX ):
-            # SX gate
-            circuit.sx( gate.get_Target_Qbit() )
-        
-        elif isinstance( gate, T ):
-            # T gate (inverse is Tdg)
-            circuit.tdg( gate.get_Target_Qbit() )
-        
-        elif isinstance( gate, Tdg ):
-            # Tdg gate (inverse is T)
-            circuit.t( gate.get_Target_Qbit() )
-
-        elif isinstance(gate, CCX):
-            #CCX gate
-            control_qbits = gate.get_Control_Qbits()
-            circuit.ccx(control_qbits[0], control_qbits[1], gate.get_Target_Qbit())
-
-        elif isinstance(gate, CSWAP):
-            #CCX gate
-            target_qbits = gate.get_Target_Qbits()
-            circuit.cswap( gate.get_Control_Qbit(), target_qbits[0], target_qbits[1])
-
-        elif isinstance(gate, SWAP):
-            #CCX gate
-            target_qbits = gate.get_Target_Qbits()
-            circuit.swap(target_qbits[0], target_qbits[1])
-        elif isinstance( gate, RXX ):
-            # RXX gate
-            parameters_gate = gate.Extract_Parameters( parameters )
-            target_qbits = gate.get_Target_Qbits()
-            circuit.rxx( -parameters_gate[0], target_qbits[0], target_qbits[1] )
-
-        elif isinstance( gate, RYY ):
-            # RYY gate
-            parameters_gate = gate.Extract_Parameters( parameters )
-            target_qbits = gate.get_Target_Qbits()
-            circuit.ryy( -parameters_gate[0], target_qbits[0], target_qbits[1] )
-
-        elif isinstance( gate, RZZ ):
-            # RZZ gate
-            parameters_gate = gate.Extract_Parameters( parameters )
-            target_qbits = gate.get_Target_Qbits()
-            circuit.rzz( -parameters_gate[0], target_qbits[0], target_qbits[1] )
-
-        elif isinstance( gate, Circuit ):
-            # Sub-circuit gate
-            raise ValueError("Qiskit export of circuits with subcircuit is not supported. Use Circuit::get_Flat_Circuit prior of exporting circuit.")   
-            
-        else:
-            print(gate)
-            raise ValueError("Unsupported gate in the circuit export.")
-            
-            
-    return( circuit )
+    inv_circuit, inv_parameters = utils.invert_circuit( Squander_circuit, parameters )
+    cnot_circuit, cnot_parameters = utils.circuit_to_CNOT_basis( inv_circuit, inv_parameters )
+    return get_Qiskit_Circuit( cnot_circuit, cnot_parameters )
 
 
 ##
@@ -543,7 +388,7 @@ def convert_Qiskit_to_Squander( qc_in ):
             Circuit_Squander.add_CRX( qubit1, qubit0 )
 
 
-        elif name == "cu1":
+        elif name == "cu1" or name == "cp":
 
             qubits = gate.qubits
             qubit0 = q_register.index( qubits[0] )
@@ -646,6 +491,13 @@ def convert_Qiskit_to_Squander( qc_in ):
             qubit = q_register.index( qubits[0] ) 
 
             Circuit_Squander.add_SX( qubit )
+
+        elif name == "sxdg":
+            qubits = gate.qubits
+            qubit = q_register.index(qubits[0])
+
+            # Native SXdg support is exposed via qgd_Circuit.
+            Circuit_Squander.add_SXdg(qubit)
         
         elif name == "t":
             qubits = gate.qubits                

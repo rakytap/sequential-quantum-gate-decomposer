@@ -26,7 +26,9 @@ limitations under the License.
 #include <vector>
 #include "common.h"
 #include "matrix.h"
+#include "matrix_float.h"
 #include "matrix_real.h"
+#include "matrix_real_float.h"
 #include "Gate.h"
 
 /**
@@ -86,15 +88,36 @@ void apply_to( Matrix_real& parameters, Matrix& input, int parallel );
 
 
 /**
+@brief Float32 overload for parametric gate application.
+@param parameters Float32 gate parameters
+@param input Float32 input matrix/state
+@param parallel Parallel mode selector
+*/
+void apply_to( Matrix_real_float& parameters, Matrix_float& input, int parallel ) override;
+
+
+/**
 @brief Call to retrieve the qbit_num-1 kernel of the UN gate.
 */
 Matrix get_submatrix( Matrix_real& parameters );
+
+/**
+@brief Float32 overload to retrieve the qbit_num-1 kernel of the UN gate.
+*/
+Matrix_float get_submatrix( Matrix_real_float& parameters );
 
 /**
 @brief Call to apply the gate on the input array/matrix by input*Gate
 @param input The input array on which the gate is applied
 */
 void apply_from_right( Matrix_real& parameters, Matrix& input );
+
+/**
+@brief Float32 overload to apply the gate by input*Gate.
+@param parameters Float32 gate parameters
+@param input Float32 input array/matrix
+*/
+void apply_from_right( Matrix_real_float& parameters, Matrix_float& input );
 
 
 

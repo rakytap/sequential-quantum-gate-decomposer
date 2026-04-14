@@ -152,7 +152,7 @@ void RZZ::apply_to(Matrix_real& parameters, Matrix& input, int parallel) {
         }
         case 1:{
             #ifdef USE_AVX
-                apply_large_kernel_to_input_AVX_OpenMP(U_2qbit,input,target_qbits,input.cols);
+                apply_large_kernel_to_input_AVX_OpenMP(U_2qbit,input,target_qbits,input.rows);
             #else
                 apply_large_kernel_to_input(U_2qbit,input,target_qbits,input.rows);
             #endif
@@ -160,7 +160,7 @@ void RZZ::apply_to(Matrix_real& parameters, Matrix& input, int parallel) {
         }
         case 2:{
             #ifdef USE_AVX
-                apply_large_kernel_to_input_AVX_TBB(U_2qbit,input,target_qbits,input.cols);
+                apply_large_kernel_to_input_AVX_TBB(U_2qbit,input,target_qbits,input.rows);
             #else
                 apply_large_kernel_to_input(U_2qbit,input,target_qbits,input.rows);
             #endif

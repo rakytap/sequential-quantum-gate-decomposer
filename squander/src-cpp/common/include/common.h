@@ -134,6 +134,13 @@ void add_unique_elelement( std::vector<int>& involved_qbits, int qbit );
 Matrix create_identity( int matrix_size );
 
 /**
+@brief Call to create a single-precision complex identity matrix
+@param matrix_size The number of rows in the resulted identity matrix
+@return Returns with a single-precision complex identity matrix.
+*/
+Matrix_float create_identity_float( int matrix_size );
+
+/**
 @brief Calculate the product of several square shaped complex matrices stored in a vector.
 @param mtxs The vector of matrices.
 @param matrix_size The number rows in the matrices
