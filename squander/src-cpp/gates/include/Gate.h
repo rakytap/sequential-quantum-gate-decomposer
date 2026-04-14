@@ -84,12 +84,6 @@ typedef enum gate_type {GENERAL_OPERATION=1,
                         SXDG_OPERATION=47} gate_type;
 
 
-#ifdef _WIN32
-void sincos(double x, double *s, double *c);
-#elif defined(__APPLE__)
-#define sincos __sincos
-#endif
-
 
 /**
 @brief Base class for the representation of general gate operations.

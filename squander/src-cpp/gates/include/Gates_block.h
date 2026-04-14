@@ -88,7 +88,7 @@ void release_gate( int idx);
 @param parameters An array pointing to the parameters of the gates
 @return Returns with the gate matrix
 */
-Matrix get_matrix( Matrix_real& parameters );
+Matrix get_matrix( Matrix_real& parameters ) override;
 
 /**
 @brief Call to retrieve the gate matrix (Which is the product of all the gate matrices stored in the gate block)
@@ -96,7 +96,7 @@ Matrix get_matrix( Matrix_real& parameters );
 @param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 @return Returns with the gate matrix
 */
-Matrix get_matrix( Matrix_real& parameters, int parallel );
+Matrix get_matrix( Matrix_real& parameters, int parallel ) override;
 
 
 /**
@@ -105,7 +105,7 @@ Matrix get_matrix( Matrix_real& parameters, int parallel );
 @param inputs The input array on which the gate is applied
 @param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
-void apply_to_list( Matrix_real& parameters, std::vector<Matrix>& inputs, int parallel );
+void apply_to_list( Matrix_real& parameters, std::vector<Matrix>& inputs, int parallel ) override;
 
 /**
 @brief Call to apply the gate on the input array/matrix Gates_block*input
@@ -113,7 +113,7 @@ void apply_to_list( Matrix_real& parameters, std::vector<Matrix>& inputs, int pa
 @param input The input array on which the gate is applied
 @param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
-virtual void apply_to( Matrix_real& parameters_mtx, Matrix& input, int parallel=0 );
+virtual void apply_to( Matrix_real& parameters_mtx, Matrix& input, int parallel=0 ) override;
 
 virtual void apply_to( Matrix_float& input, int parallel=0 ) override;
 
@@ -145,7 +145,7 @@ virtual void apply_from_right( Matrix_real_float& parameters_mtx, Matrix_float& 
 @param input The input array on which the gate is applied
 @param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP (NOT IMPLEMENTED YET) and 2 for parallel with TBB (optional)
 */
-virtual std::vector<Matrix> apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input, int parallel );
+virtual std::vector<Matrix> apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input, int parallel ) override;
 
 /**
 @brief Append a U1 gate to the list of gates
@@ -812,14 +812,14 @@ void set_min_fusion( int min_fusion );
 @brief Set the number of qubits spanning the matrix of the gates stored in the block of gates.
 @param qbit_num_in The number of qubits spanning the matrices.
 */
-virtual void set_qbit_num( int qbit_num_in );
+virtual void set_qbit_num( int qbit_num_in ) override;
 
 
 /**
 @brief Create a clone of the present class.
 @return Return with a pointer pointing to the cloned object.
 */
-virtual Gates_block* clone();
+virtual Gates_block* clone() override;
 
 /**
 @brief Call to extract the gates stored in the class.
@@ -957,7 +957,7 @@ Gates_block* get_flat_circuit();
 @param parameters The parameter array corresponding to the circuit in which the gate is embedded
 @return Returns with the array of the extracted parameters.
 */
-virtual Matrix_real extract_parameters( Matrix_real& parameters );
+virtual Matrix_real extract_parameters( Matrix_real& parameters ) override;
 
 };
 
