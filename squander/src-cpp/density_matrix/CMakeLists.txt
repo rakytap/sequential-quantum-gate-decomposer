@@ -92,7 +92,6 @@ target_compile_options(density_matrix_core PRIVATE
         $<$<CONFIG:Debug>:-g -O0>
     >
     $<$<CXX_COMPILER_ID:MSVC>:
-        /W4
         $<$<CONFIG:Release>:/O2>
         $<$<CONFIG:Debug>:/Od /Zi>
     >

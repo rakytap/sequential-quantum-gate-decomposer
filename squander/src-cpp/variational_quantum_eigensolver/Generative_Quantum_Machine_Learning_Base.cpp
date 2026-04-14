@@ -603,7 +603,7 @@ void Generative_Quantum_Machine_Learning_Base::optimization_problem_grad_vqe( Ma
 @param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
 @return Returns with the cost function. (zero if the qubits are desintangled.)
 */
-double Generative_Quantum_Machine_Learning_Base::optimization_problem( double* parameters ) {
+double Generative_Quantum_Machine_Learning_Base::optimization_problem( const double* parameters ) {
 
     // get the transformed matrix with the gates in the list
     Matrix_real parameters_mtx(parameters, 1, parameter_num );
@@ -626,7 +626,9 @@ void Generative_Quantum_Machine_Learning_Base::export_current_cost_fnc(double cu
     if (project_name != ""){filename = project_name + "_" + filename;}
 
         const char* c_filename = filename.c_str();
+#ifdef _WIN32
 #pragma warning(suppress: 4996)
+#endif
 	pFile = fopen(c_filename, "a");
 
         if (pFile==NULL) {

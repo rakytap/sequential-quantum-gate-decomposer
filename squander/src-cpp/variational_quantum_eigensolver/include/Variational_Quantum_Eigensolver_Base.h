@@ -318,7 +318,7 @@ public:
   sub-layer)
   @return Returns with the cost function. (zero if the qubits are desintangled.)
   */
-  double optimization_problem(double *parameters);
+  double optimization_problem(const double *parameters);
 
   /**
   @brief Call to calculate both the cost function and the its gradient

@@ -406,7 +406,7 @@ PYBIND11_MODULE(_density_matrix_cpp, m) {
           [](NoisyCircuit &self, py::array_t<double> params,
              DensityMatrix &rho) {
             auto buf = params.request();
-            self.apply_to(static_cast<double *>(buf.ptr), buf.size, rho);
+            self.apply_to(static_cast<double *>(buf.ptr), static_cast<int>(buf.size), rho);
           },
           py::arg("parameters"), py::arg("density_matrix"),
           "Apply circuit to density matrix")
