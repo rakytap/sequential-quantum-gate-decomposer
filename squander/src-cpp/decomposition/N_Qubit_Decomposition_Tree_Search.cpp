@@ -278,7 +278,7 @@ void generate_insertions_recursive(
 
     if (depth == num_cnot) {
         matrix_base<int8_t> limits = matrix_base<int8_t>(1, curpath.size()+num_cnot);
-        std::fill(limits.data, limits.data + limits.size(), topology.size());
+        std::fill(limits.data, limits.data + limits.size(), static_cast<int8_t>(topology.size()));
         GrayCodeCNOT out(limits);
 
         int j = 0, k = 0;
@@ -782,7 +782,7 @@ bool contains_topological_subsequence(
 
     // reachable[S] = whether subset S of small nodes can be matched
     // after scanning some prefix of big
-    std::vector<char> reachable(1u << m, 0), next_reachable(1u << m, 0);
+    std::vector<char> reachable(size_t(1) << m, 0), next_reachable(size_t(1) << m, 0);
     reachable[0] = 1;
 
     for (int i = 0; i < bigpath.size(); i++) {

@@ -4330,8 +4330,8 @@ void apply_nqbit_unitary_AVX32( Matrix_float& gate_kernel_unitary, Matrix_float&
 
     for (int iter_idx = 0; iter_idx < num_blocks; iter_idx++) {
         get_block_indices_fast32(iter_idx, involved_qbits, non_targets, block_pattern, indices);
-        std::fill(new_block_real.begin(), new_block_real.end(), 0.0);
-        std::fill(new_block_imag.begin(), new_block_imag.end(), 0.0);
+        std::fill(new_block_real.begin(), new_block_real.end(), 0.0f);
+        std::fill(new_block_imag.begin(), new_block_imag.end(), 0.0f);
             
     for (int rdx = 0; rdx < block_size; rdx++) {
         __m256 result = _mm256_setzero_ps();
@@ -4354,8 +4354,8 @@ void apply_nqbit_unitary_AVX32( Matrix_float& gate_kernel_unitary, Matrix_float&
         double real = _mm_cvtss_f32(low128);                        // element 0 = a0+a2
         double imag = _mm_cvtss_f32(_mm_movehdup_ps(low128)); // element 1 = a1+a3
 
-        new_block_real[rdx] = real;
-        new_block_imag[rdx] = imag;
+        new_block_real[rdx] = static_cast<float>(real);
+        new_block_imag[rdx] = static_cast<float>(imag);
     }
 
         
@@ -7464,7 +7464,7 @@ void apply_2qbit_kernel_to_matrix_input_parallel_AVX_OpenMP32(Matrix_float& two_
                 int current_idx_outer_pair = row_offset_outer_pair + col_idx;
                 int current_idx_inner_pair = row_offset_inner_pair + col_idx;
                 
-	            double results[8] = {0.,0.,0.,0.,0.,0.,0.,0.};
+	            float results[8] = {0.f,0.f,0.f,0.f,0.f,0.f,0.f,0.f};
 			    
                 float* element_outer = (float*)input.get_data() + 2 * current_idx_outer;
                 float* element_inner = (float*)input.get_data() + 2 * current_idx_inner;

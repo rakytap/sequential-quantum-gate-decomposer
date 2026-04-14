@@ -102,7 +102,7 @@ Z* clone() override;
 @param u3_1qbit Matrix parameter for the gate.
 
 */
-Matrix calc_one_qubit_u3( );
+Matrix calc_one_qubit_u3( ) override;
 
 };
 
