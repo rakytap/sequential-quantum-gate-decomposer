@@ -318,7 +318,16 @@ public:
   sub-layer)
   @return Returns with the cost function. (zero if the qubits are desintangled.)
   */
-  double optimization_problem(const double *parameters);
+  using Decomposition_Base::optimization_problem;
+
+  /**
+  @brief The optimization problem of the final optimization
+  @param parameters An array of the free parameters to be optimized. (The number
+  of teh free paramaters should be equal to the number of parameters in one
+  sub-layer)
+  @return Returns with the cost function. (zero if the qubits are desintangled.)
+  */
+  double optimization_problem(double *parameters);
 
   /**
   @brief Call to calculate both the cost function and the its gradient
