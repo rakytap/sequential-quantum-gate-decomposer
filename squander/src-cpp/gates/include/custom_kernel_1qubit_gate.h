@@ -82,7 +82,7 @@ void apply_to( Matrix_float& input, int parallel ) override;
 @param parameters An array of parameters to calculate the matrix of the U3 gate.
 @param input The input array on which the gate is applied
 */
-void apply_from_right( Matrix_real& parameters, Matrix& input );
+void apply_from_right( Matrix_real& parameters, Matrix& input ) override;
 
 
 
@@ -91,7 +91,7 @@ void apply_from_right( Matrix_real& parameters, Matrix& input );
 @brief Call to create a clone of the present class
 @return Return with a pointer pointing to the cloned object
 */
-custom_kernel_1qubit_gate* clone();
+custom_kernel_1qubit_gate* clone() override;
 
 
 

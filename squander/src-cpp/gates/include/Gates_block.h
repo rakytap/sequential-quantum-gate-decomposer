@@ -776,14 +776,14 @@ Gates_block* create_remapped_circuit( const std::map<int, int>& qbit_map, const 
 @brief Call to reorder the qubits in the matrix of the gates (Obsolete function)
 @param qbit_list The reordered list of qubits spanning the matrix
 */
-virtual void reorder_qubits( std::vector<int> qbit_list );
+virtual void reorder_qubits( std::vector<int> qbit_list ) override;
 
 
 /**
 @brief Call to get the qubits involved in the gates stored in the block of gates.
 @return Return with a list of the involved qubits
 */
-std::vector<int> get_involved_qubits(bool only_target=false);
+std::vector<int> get_involved_qubits(bool only_target=false) override;
 
 /**
 @brief Call to get the gates stored in the class.

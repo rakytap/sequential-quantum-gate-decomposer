@@ -58,7 +58,7 @@ RXX(int qbit_num_in, const std::vector<int>& target_qbits_in);
 @return Returns with a matrix of the gate
 */
 Matrix
-get_matrix(Matrix_real& parameters);
+get_matrix(Matrix_real& parameters) override;
 
 /**
 @brief Call to retrieve the gate matrix
@@ -66,7 +66,7 @@ get_matrix(Matrix_real& parameters);
 @return Returns with a matrix of the gate
 */
 Matrix
-get_matrix(Matrix_real& parameters, int parallel);
+get_matrix(Matrix_real& parameters, int parallel) override;
 
 
 /**
@@ -75,7 +75,7 @@ get_matrix(Matrix_real& parameters, int parallel);
 @param input The input matrix on which the transformation is applied
 @param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with Intel TBB
 */
-void apply_to(Matrix_real& parameters, Matrix& input, int parallel);
+void apply_to(Matrix_real& parameters, Matrix& input, int parallel) override;
 /**
 @brief Call to evaluate the derivate of the circuit on an inout with respect to all of the free parameters.
 @param parameters An array of the input parameters.
@@ -83,31 +83,31 @@ void apply_to(Matrix_real& parameters, Matrix& input, int parallel);
 @param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
 
-std::vector<Matrix> apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input, int parallel );
+std::vector<Matrix> apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input, int parallel ) override;
 /**
 @brief Call to create a clone of the present class
 @return Return with a pointer pointing to the cloned object
 */
-RXX* clone();
+RXX* clone() override;
 
 /**
 @brief Call to reorder the qubits in the matrix of the gate
 @param qbit_list The reordered list of qubits spanning the matrix
 */
-void reorder_qubits(std::vector<int> qbit_list);
+void reorder_qubits(std::vector<int> qbit_list) override;
 
 /**
 @brief Call to set the number of qubits spanning the matrix of the gate
 @param qbit_num_in The number of qubits
 */
-void set_qbit_num(int qbit_num_in);
+void set_qbit_num(int qbit_num_in) override;
 
 /**
 @brief Get list of involved qubits
 @param only_target If true, return only target qubits, otherwise include control qubits too
 @return Vector of qubit indices
 */
-std::vector<int> get_involved_qubits(bool only_target);
+std::vector<int> get_involved_qubits(bool only_target) override;
 
 /**
 @brief Call to extract parameters from the parameter array corresponding to the circuit, in which the gate is embedded.

@@ -256,10 +256,20 @@ def get_Qiskit_Circuit( Squander_circuit, parameters ):
 def get_Qiskit_Circuit_inverse( Squander_circuit, parameters ):
 
     from squander import utils
+    from squander.gates.gates_Wrapper import CR, CROT
 
     inv_circuit, inv_parameters = utils.invert_circuit( Squander_circuit, parameters )
-    cnot_circuit, cnot_parameters = utils.circuit_to_CNOT_basis( inv_circuit, inv_parameters )
-    return get_Qiskit_Circuit( cnot_circuit, cnot_parameters )
+
+    # CR and CROT have no native Qiskit export; convert them to CNOT basis.
+    # All other gates (including SYC, which invert_circuit already decomposes
+    # to CNOT/U1 primitives) are handled directly by get_Qiskit_Circuit.
+    # Routing CSWAP etc. through circuit_to_CNOT_basis would introduce a
+    # spurious global phase from the SX-based decomposition.
+    if any(isinstance(g, (CR, CROT)) for g in inv_circuit.get_Gates()):
+        cnot_circuit, cnot_parameters = utils.circuit_to_CNOT_basis( inv_circuit, inv_parameters )
+        return get_Qiskit_Circuit( cnot_circuit, cnot_parameters )
+
+    return get_Qiskit_Circuit( inv_circuit, inv_parameters )
 
 
 ##

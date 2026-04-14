@@ -50,6 +50,8 @@ inline void qgd_sincos<float>(float x, float* s, float* c) {
 #if defined(_WIN32)
     *s = std::sin(x);
     *c = std::cos(x);
+#elif defined(__APPLE__)
+    ::__sincosf(x, s, c);
 #else
     ::sincosf(x, s, c);
 #endif
