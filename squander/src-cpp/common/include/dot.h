@@ -20,6 +20,7 @@ limitations under the License.
 
 #include "matrix.h"
 #include "logging.h"
+#include "matrix_float.h"
 
 #ifndef CPYTHON
 #include <tbb/tbb.h>
@@ -36,6 +37,10 @@ typedef enum CBLAS_TRANSPOSE {CblasNoTrans=111, CblasTrans=112, CblasConjTrans=1
 /// Definition of the zgemm function from CBLAS
 void cblas_zgemm(const enum CBLAS_ORDER Order, const enum CBLAS_TRANSPOSE TransA, const enum CBLAS_TRANSPOSE TransB, const int M, const int N, const int K,
 		 const void *alpha, const void *A, const int lda, const void *B, const int ldb, const void *beta, void *C, const int ldc);
+
+/// Definition of the cgemm function from CBLAS (single-precision complex matrix multiply)
+void cblas_cgemm(const enum CBLAS_ORDER Order, const enum CBLAS_TRANSPOSE TransA, const enum CBLAS_TRANSPOSE TransB, const int M, const int N, const int K,
+                 const void *alpha, const void *A, const int lda, const void *B, const int ldb, const void *beta, void *C, const int ldc);
 
 /// Definition of the zgemv function from CBLAS to calculate matrix-vector product
 void cblas_zgemv(const enum CBLAS_ORDER Order, const enum CBLAS_TRANSPOSE TransA, const int M, const int N, const void *alpha, const void *A, const int lda,
@@ -64,6 +69,14 @@ void vzConj(int num, QGD_Complex16* input, QGD_Complex16* output);
 @return Returns with the resulted matrix.
 */
 Matrix dot( Matrix &A, Matrix &B );
+
+/**
+@brief Call to calculate the product of two single-precision complex matrices using CBLAS cgemm.
+@param A The first matrix in the product.
+@param B The second matrix in the product.
+@return Returns with the result matrix.
+*/
+Matrix_float dot( Matrix_float &A, Matrix_float &B );
 
 
 

@@ -22,7 +22,9 @@ limitations under the License.
 #include <Python.h>
 #include <numpy/arrayobject.h>
 #include "matrix.h"
+#include "matrix_float.h"
 #include "matrix_real.h"
+#include "matrix_real_float.h"
 
 
 /**
@@ -50,12 +52,24 @@ PyObject* array_from_ptr(void * ptr, int dim, npy_intp* shape, int np_type);
 */
 PyObject* matrix_to_numpy( Matrix &mtx );
 
+/**
+@brief Call to make a numpy array from an instance of matrix_float class.
+@param mtx a matrix instance
+*/
+PyObject* matrix_float_to_numpy( Matrix_float &mtx );
+
 
 /**
 @brief Call to make a numpy array from an instance of matrix class.
 @param mtx a matrix instance
 */
 PyObject* matrix_real_to_numpy( Matrix_real &mtx );
+
+/**
+@brief Call to make a numpy array from an instance of matrix_real_float class.
+@param mtx a matrix instance
+*/
+PyObject* matrix_real_float_to_numpy( Matrix_real_float &mtx );
 
 
 /**
@@ -69,11 +83,21 @@ PyObject* matrix_int8_to_numpy( matrix_base<int8_t> &mtx );
 */
 Matrix numpy2matrix(PyArrayObject *arr);
 
+/**
+@brief Call to create a PIC matrix_float representation of a numpy array
+*/
+Matrix_float numpy2matrix_float(PyArrayObject *arr);
+
 
 /**
 @brief Call to create a PIC matrix_real representation of a numpy array
 */
 Matrix_real numpy2matrix_real(PyArrayObject *arr);
+
+/**
+@brief Call to create a PIC matrix_real_float representation of a numpy array
+*/
+Matrix_real_float numpy2matrix_real_float(PyArrayObject *arr);
 
 
 

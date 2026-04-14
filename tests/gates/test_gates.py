@@ -51,8 +51,20 @@ def _discover_gate_names():
 ALL_GATE_NAMES = _discover_gate_names()
 QISKIT_EXCLUDED_GATES = {"SYC", "CR", "CROT"}
 QISKIT_MATRIX_UNSUPPORTED = {"Gate"} | QISKIT_EXCLUDED_GATES
-NATIVE_UNSAFE_MATRIX_GATES = {"Gate", "CROT"}
-NATIVE_UNSAFE_APPLY_GATES = {"Gate", "CROT", "SWAP", "RXX", "RYY", "RZZ"}
+NATIVE_UNSAFE_MATRIX_GATES = {"Gate"}
+NATIVE_UNSAFE_APPLY_GATES = {"Gate"}
+DERIVATIVE_TEST_EXCLUDED_GATES = set()
+
+
+def _discover_parameterized_gate_names():
+    names = []
+    for gate_name in ALL_GATE_NAMES:
+        if gate_name in DERIVATIVE_TEST_EXCLUDED_GATES:
+            continue
+        gate_obj = _instantiate_gate(gate_name)
+        if gate_obj.get_Parameter_Num() > 0:
+            names.append(gate_name)
+    return sorted(names)
 
 
 def _discover_multi_qubit_gate_names():
@@ -84,17 +96,24 @@ def _instantiate_gate(gate_name, qbit_num=4):
     return gate_cls(qbit_num, 0)
 
 
-def _parameters_for_gate(gate_obj):
+def _parameters_for_gate(gate_obj, dtype=np.float64):
     pnum = gate_obj.get_Parameter_Num()
     if pnum == 0:
-        return np.asarray([], dtype=np.float64)
-    return np.linspace(0.1, 0.1 * pnum, pnum, dtype=np.float64)
+        return np.asarray([], dtype=dtype)
+    return np.linspace(0.1, 0.1 * pnum, pnum, dtype=dtype)
 
 
 def _gate_matrix(gate_obj, parameters):
     if gate_obj.get_Parameter_Num() == 0:
         return np.asarray(gate_obj.get_Matrix())
     return np.asarray(gate_obj.get_Matrix(parameters))
+
+
+def _apply_gate(gate_obj, state, parameters, is_f32=False, parallel=0):
+    if gate_obj.get_Parameter_Num() == 0:
+        gate_obj.apply_to(state, parallel=parallel, is_f32=is_f32)
+    else:
+        gate_obj.apply_to(state, parameters=parameters, parallel=parallel, is_f32=is_f32)
 
 
 def _assert_matrices_close(a, b, tol=1e-8):
@@ -156,6 +175,7 @@ def _add_gate_to_qiskit(circuit, gate_name, parameters):
 
 
 MULTI_QUBIT_GATE_NAMES = _discover_multi_qubit_gate_names()
+DERIVATIVE_GATE_NAMES = _discover_parameterized_gate_names()
 FORBIDDEN_MULTI_QUBIT_GATES_IN_CNOT_BASIS = {
     gate_name for gate_name in MULTI_QUBIT_GATE_NAMES if gate_name != "CNOT"
 }
@@ -222,6 +242,275 @@ class TestGates:
                 gate_obj.apply_to(state_out, p)
 
             assert np.linalg.norm(state_out - expected) < 1e-8
+
+    @pytest.mark.parametrize("gate_name", [name for name in ALL_GATE_NAMES if name != "Gate"])
+    def test_gate_apply_to_float32_float64_parity(self, gate_name):
+        script = f"""
+import json
+import numpy as np
+from tests.gates.test_gates import _instantiate_gate, _parameters_for_gate
+
+gate_name = {gate_name!r}
+
+try:
+    gate_obj = _instantiate_gate(gate_name)
+    p64 = _parameters_for_gate(gate_obj, dtype=np.float64)
+    p32 = p64.astype(np.float32)
+
+    state64 = np.random.uniform(-1.0, 1.0, (1 << 4,)) + 1j * np.random.uniform(-1.0, 1.0, (1 << 4,))
+    state64 = state64.astype(np.complex128)
+    state64 = state64 / np.linalg.norm(state64)
+
+    state32 = state64.astype(np.complex64)
+    state32 = state32 / np.linalg.norm(state32)
+
+    out64 = state64.copy()
+    out32 = state32.copy()
+
+    if gate_obj.get_Parameter_Num() == 0:
+        gate_obj.apply_to(out64, parallel=0, is_f32=False)
+        gate_obj.apply_to(out32, parallel=0, is_f32=True)
+    else:
+        gate_obj.apply_to(out64, parameters=p64, parallel=0, is_f32=False)
+        gate_obj.apply_to(out32, parameters=p32, parallel=0, is_f32=True)
+
+    err = float(np.linalg.norm(out32 - out64.astype(np.complex64)))
+    print(json.dumps({{"status": "ok", "err": err}}))
+except Exception as exc:
+    print(json.dumps({{"status": "exception", "message": str(exc)}}))
+"""
+
+        proc = subprocess.run(
+            [sys.executable, "-c", script],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+        if proc.returncode != 0:
+            pytest.fail(
+                f"Gate {gate_name} crashed in float32/float64 parity subprocess. "
+                f"returncode={proc.returncode}\nstdout={proc.stdout}\nstderr={proc.stderr}"
+            )
+
+        result = json.loads(proc.stdout.strip().splitlines()[-1])
+        assert result["status"] == "ok", result
+        assert result["err"] < 1e-4, f"float32/float64 parity mismatch for {gate_name}: {result['err']}"
+
+    @pytest.mark.parametrize("gate_name", [name for name in ALL_GATE_NAMES if name != "Gate"])
+    def test_gate_get_matrix_float32_float64_parity(self, gate_name):
+        script = f"""
+import json
+import numpy as np
+from tests.gates.test_gates import _instantiate_gate, _parameters_for_gate
+
+gate_name = {gate_name!r}
+
+try:
+    gate_obj = _instantiate_gate(gate_name)
+    p64 = _parameters_for_gate(gate_obj, dtype=np.float64)
+    p32 = p64.astype(np.float32)
+
+    if gate_obj.get_Parameter_Num() == 0:
+        m64 = np.asarray(gate_obj.get_Matrix(is_f32=False))
+        m32 = np.asarray(gate_obj.get_Matrix(is_f32=True))
+    else:
+        m64 = np.asarray(gate_obj.get_Matrix(p64, is_f32=False))
+        m32 = np.asarray(gate_obj.get_Matrix(p32, is_f32=True))
+
+    err = float(np.linalg.norm(m32 - m64.astype(np.complex64)))
+    print(json.dumps({{"status": "ok", "err": err, "dtype64": str(m64.dtype), "dtype32": str(m32.dtype)}}))
+except Exception as exc:
+    print(json.dumps({{"status": "exception", "message": str(exc)}}))
+"""
+
+        proc = subprocess.run(
+            [sys.executable, "-c", script],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+        if proc.returncode != 0:
+            pytest.fail(
+                f"Gate {gate_name} crashed in get_Matrix float32/float64 parity subprocess. "
+                f"returncode={proc.returncode}\nstdout={proc.stdout}\nstderr={proc.stderr}"
+            )
+
+        result = json.loads(proc.stdout.strip().splitlines()[-1])
+        assert result["status"] == "ok", result
+        assert result["dtype64"] == "complex128", result
+        assert result["dtype32"] == "complex64", result
+        assert result["err"] < 1e-4, f"float32/float64 get_Matrix parity mismatch for {gate_name}: {result['err']}"
+
+    @pytest.mark.parametrize("gate_name", [name for name in ALL_GATE_NAMES if name != "Gate"])
+    def test_gate_apply_from_right_float32_float64_parity(self, gate_name):
+        script = f"""
+import json
+import numpy as np
+from tests.gates.test_gates import _instantiate_gate, _parameters_for_gate
+
+gate_name = {gate_name!r}
+
+try:
+    gate_obj = _instantiate_gate(gate_name)
+    p64 = _parameters_for_gate(gate_obj, dtype=np.float64)
+    p32 = p64.astype(np.float32)
+
+    inp64 = np.random.uniform(-1.0, 1.0, (1 << 4, 1 << 4)) + 1j * np.random.uniform(-1.0, 1.0, (1 << 4, 1 << 4))
+    inp64 = inp64.astype(np.complex128)
+    inp32 = inp64.astype(np.complex64)
+
+    out64 = inp64.copy()
+    out32 = inp32.copy()
+
+    if gate_obj.get_Parameter_Num() == 0:
+        gate_obj.apply_from_right(out64, is_f32=False)
+        gate_obj.apply_from_right(out32, is_f32=True)
+    else:
+        gate_obj.apply_from_right(out64, parameters=p64, is_f32=False)
+        gate_obj.apply_from_right(out32, parameters=p32, is_f32=True)
+
+    err = float(np.linalg.norm(out32 - out64.astype(np.complex64)))
+    print(json.dumps({{"status": "ok", "err": err}}))
+except Exception as exc:
+    print(json.dumps({{"status": "exception", "message": str(exc)}}))
+"""
+
+        proc = subprocess.run(
+            [sys.executable, "-c", script],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+        if proc.returncode != 0:
+            pytest.fail(
+                f"Gate {gate_name} crashed in apply_from_right float32/float64 parity subprocess. "
+                f"returncode={proc.returncode}\nstdout={proc.stdout}\nstderr={proc.stderr}"
+            )
+
+        result = json.loads(proc.stdout.strip().splitlines()[-1])
+        assert result["status"] == "ok", result
+        assert result["err"] < 1e-4, f"float32/float64 apply_from_right parity mismatch for {gate_name}: {result['err']}"
+
+    @pytest.mark.parametrize("gate_name", [name for name in ALL_GATE_NAMES if name != "Gate"])
+    def test_gate_apply_to_list_float32_float64_parity(self, gate_name):
+        script = f"""
+import json
+import numpy as np
+from tests.gates.test_gates import _instantiate_gate, _parameters_for_gate
+
+gate_name = {gate_name!r}
+
+try:
+    gate_obj = _instantiate_gate(gate_name)
+    p64 = _parameters_for_gate(gate_obj, dtype=np.float64)
+    p32 = p64.astype(np.float32)
+
+    inputs64 = []
+    for _ in range(3):
+        vec = np.random.uniform(-1.0, 1.0, (1 << 4,)) + 1j * np.random.uniform(-1.0, 1.0, (1 << 4,))
+        vec = vec.astype(np.complex128)
+        vec = vec / np.linalg.norm(vec)
+        inputs64.append(vec)
+
+    inputs32 = [v.astype(np.complex64) for v in inputs64]
+
+    out64 = [v.copy() for v in inputs64]
+    out32 = [v.copy() for v in inputs32]
+
+    if gate_obj.get_Parameter_Num() == 0:
+        gate_obj.apply_to_list(out64, parallel=0, is_f32=False)
+        gate_obj.apply_to_list(out32, parallel=0, is_f32=True)
+    else:
+        gate_obj.apply_to_list(out64, parameters=p64, parallel=0, is_f32=False)
+        gate_obj.apply_to_list(out32, parameters=p32, parallel=0, is_f32=True)
+
+    errs = [float(np.linalg.norm(a - b.astype(np.complex64))) for a, b in zip(out32, out64)]
+    print(json.dumps({{"status": "ok", "max_err": float(max(errs))}}))
+except Exception as exc:
+    print(json.dumps({{"status": "exception", "message": str(exc)}}))
+"""
+
+        proc = subprocess.run(
+            [sys.executable, "-c", script],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+        if proc.returncode != 0:
+            pytest.fail(
+                f"Gate {gate_name} crashed in apply_to_list float32/float64 parity subprocess. "
+                f"returncode={proc.returncode}\nstdout={proc.stdout}\nstderr={proc.stderr}"
+            )
+
+        result = json.loads(proc.stdout.strip().splitlines()[-1])
+        assert result["status"] == "ok", result
+        assert result["max_err"] < 1e-4, f"float32/float64 apply_to_list parity mismatch for {gate_name}: {result['max_err']}"
+
+    @pytest.mark.parametrize("gate_name", DERIVATIVE_GATE_NAMES)
+    def test_gate_apply_derivate_wrapper_smoke(self, gate_name):
+        script = f"""
+import json
+import numpy as np
+from tests.gates.test_gates import _instantiate_gate, _parameters_for_gate
+
+gate_name = {gate_name!r}
+
+try:
+    gate_obj = _instantiate_gate(gate_name)
+    p64 = _parameters_for_gate(gate_obj, dtype=np.float64)
+    p32 = p64.astype(np.float32)
+
+    state64 = np.random.uniform(-1.0, 1.0, (1 << 4,)) + 1j * np.random.uniform(-1.0, 1.0, (1 << 4,))
+    state64 = state64.astype(np.complex128)
+    state64 = state64 / np.linalg.norm(state64)
+
+    state32 = state64.astype(np.complex64)
+    state32 = state32 / np.linalg.norm(state32)
+
+    d64 = gate_obj.apply_derivate_to(state64.copy(), parameters=p64, parallel=0, is_f32=False)
+    d32 = gate_obj.apply_derivate_to(state32.copy(), parameters=p32, parallel=0, is_f32=True)
+
+    if not isinstance(d64, list) or not isinstance(d32, list):
+        raise RuntimeError("apply_derivate_to must return a list")
+
+    for arr in d64:
+        a = np.asarray(arr)
+        if a.dtype != np.complex128:
+            raise RuntimeError("float64 derivative output must be complex128")
+        if a.size != state64.size:
+            raise RuntimeError("float64 derivative output shape mismatch")
+
+    for arr in d32:
+        a = np.asarray(arr)
+        if a.dtype != np.complex64:
+            raise RuntimeError("float32 derivative output must be complex64")
+        if a.size != state32.size:
+            raise RuntimeError("float32 derivative output shape mismatch")
+
+    print(json.dumps({{"status": "ok", "n64": len(d64), "n32": len(d32)}}))
+except Exception as exc:
+    print(json.dumps({{"status": "exception", "message": str(exc)}}))
+"""
+
+        proc = subprocess.run(
+            [sys.executable, "-c", script],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+        if proc.returncode != 0:
+            pytest.fail(
+                f"Gate {gate_name} crashed in apply_derivate_to wrapper subprocess. "
+                f"returncode={proc.returncode}\nstdout={proc.stdout}\nstderr={proc.stderr}"
+            )
+
+        result = json.loads(proc.stdout.strip().splitlines()[-1])
+        assert result["status"] == "ok", result
 
     @pytest.mark.parametrize(
         "gate_name",
@@ -316,6 +605,59 @@ except Exception as exc:
                 f"{gate_name} is only equivalent up to global phase. "
                 f"raw={result['ident_raw_err']}, phase_aligned={result['ident_phase_err']}"
             )
+
+    @pytest.mark.parametrize(
+        "gate_name",
+        [name for name in ALL_GATE_NAMES if name != "Gate"],
+    )
+    def test_squander_invert_circuit(self, gate_name):
+        script = f"""
+import json
+import numpy as np
+from squander import utils
+from squander.gates.qgd_Circuit import qgd_Circuit as Circuit
+from tests.gates.test_gates import _instantiate_gate, _parameters_for_gate
+
+gate_name = {gate_name!r}
+
+try:
+    gate_obj = _instantiate_gate(gate_name)
+    circuit = Circuit(4)
+    circuit.add_Gate(gate_obj)
+    params = _parameters_for_gate(gate_obj, dtype=np.float64)
+
+    inv_circuit, inv_params = utils.invert_circuit(circuit, params)
+
+    n = 1 << 4
+    M = np.eye(n, dtype=np.complex128)
+    Minv = np.eye(n, dtype=np.complex128)
+    circuit.apply_to(params, M)
+    inv_circuit.apply_to(inv_params, Minv)
+
+    product = Minv @ M
+    err = float(np.linalg.norm(product - np.eye(n)))
+    print(json.dumps({{"status": "ok", "err": err}}))
+except Exception as exc:
+    import traceback
+    print(json.dumps({{"status": "exception", "message": str(exc), "trace": traceback.format_exc()}}))
+"""
+
+        proc = subprocess.run(
+            [sys.executable, "-c", script],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+        if proc.returncode != 0:
+            pytest.fail(
+                f"Gate {gate_name} crashed in invert_circuit subprocess. "
+                f"returncode={proc.returncode}\nstdout={proc.stdout}\nstderr={proc.stderr}"
+            )
+
+        result = json.loads(proc.stdout.strip().splitlines()[-1])
+        assert result["status"] == "ok", result
+        assert result["err"] < 1e-8, f"invert_circuit error for {gate_name}: {result['err']}"
 
     @pytest.mark.parametrize("gate_name", MULTI_QUBIT_GATE_NAMES)
     def test_circuit_to_cnot_basis_removes_non_cnot_multi_qubit_gates(self, gate_name):

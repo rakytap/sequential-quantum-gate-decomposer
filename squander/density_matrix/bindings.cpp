@@ -33,7 +33,7 @@ DensityMatrix numpy_to_density_matrix(py::array_t<std::complex<double>> arr) {
     throw std::runtime_error("Input must be square matrix");
   }
 
-  int dim = buf.shape[0];
+  int dim = static_cast<int>(buf.shape[0]);
 
   // Check if dimension is power of 2
   int temp = dim;
@@ -121,7 +121,7 @@ PYBIND11_MODULE(_density_matrix_cpp, m) {
                throw std::runtime_error("State vector must be 1D");
              }
 
-             int dim = buf.shape[0];
+             int dim = static_cast<int>(buf.shape[0]);
 
              Matrix state_vec(dim, 1);
              auto *src = static_cast<std::complex<double> *>(buf.ptr);
@@ -161,7 +161,7 @@ PYBIND11_MODULE(_density_matrix_cpp, m) {
               throw std::runtime_error("Unitary must be square 2D array");
             }
 
-            int dim = buf.shape[0];
+            int dim = static_cast<int>(buf.shape[0]);
             Matrix U_mat(dim, dim);
             auto *src = static_cast<std::complex<double> *>(buf.ptr);
             for (int i = 0; i < dim * dim; i++) {
@@ -406,7 +406,7 @@ PYBIND11_MODULE(_density_matrix_cpp, m) {
           [](NoisyCircuit &self, py::array_t<double> params,
              DensityMatrix &rho) {
             auto buf = params.request();
-            self.apply_to(static_cast<double *>(buf.ptr), buf.size, rho);
+            self.apply_to(static_cast<double *>(buf.ptr), static_cast<int>(buf.size), rho);
           },
           py::arg("parameters"), py::arg("density_matrix"),
           "Apply circuit to density matrix")
