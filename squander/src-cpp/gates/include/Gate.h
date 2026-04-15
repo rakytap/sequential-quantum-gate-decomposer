@@ -201,6 +201,21 @@ virtual void apply_to_list( std::vector<Matrix>& inputs, int parallel );
 virtual void apply_to_list( Matrix_real& parameters_mtx, std::vector<Matrix>& inputs, int parallel );
 
 /**
+@brief Float32 overload: apply gate to a list of float32 inputs without parameters.
+@param inputs Float32 input matrices/states
+@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
+*/
+virtual void apply_to_list( std::vector<Matrix_float>& inputs, int parallel );
+
+/**
+@brief Float32 overload: apply gate to a list of float32 inputs with float32 parameters.
+@param parameters_mtx Float32 parameter matrix
+@param inputs Float32 input matrices/states
+@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
+*/
+virtual void apply_to_list( Matrix_real_float& parameters_mtx, std::vector<Matrix_float>& inputs, int parallel );
+
+/**
 @brief Call to apply the gate on the input array/matrix
 @param input The input array on which the gate is applied
 @param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)

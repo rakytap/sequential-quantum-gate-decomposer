@@ -285,6 +285,46 @@ Gate::apply_to_list( Matrix_real& parameters_mtx, std::vector<Matrix>& inputs, i
 }
 
 
+/**
+@brief Float32 overload: apply gate to a list of float32 inputs without parameters.
+@param inputs Float32 input matrices/states
+@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
+*/
+void
+Gate::apply_to_list( std::vector<Matrix_float>& inputs, int parallel ) {
+
+    int work_batch = 1;
+    if ( parallel == 0 ) {
+        work_batch = static_cast<int>(inputs.size());
+    }
+    else {
+        work_batch = 1;
+    }
+
+    tbb::parallel_for( tbb::blocked_range<int>(0,static_cast<int>(inputs.size()),work_batch), [&](tbb::blocked_range<int> r) {
+        for (int idx=r.begin(); idx<r.end(); ++idx) {
+            Matrix_float* input = &inputs[idx];
+            apply_to( *input, parallel );
+        }
+    });
+
+}
+
+
+/**
+@brief Float32 overload: apply gate to a list of float32 inputs with float32 parameters.
+@param parameters_mtx Float32 parameter matrix
+@param inputs Float32 input matrices/states
+@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
+*/
+void
+Gate::apply_to_list( Matrix_real_float& parameters_mtx, std::vector<Matrix_float>& inputs, int parallel ) {
+
+    return;
+
+}
+
+
 
 /**
 @brief Call to apply the gate on the input array/matrix

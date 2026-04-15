@@ -241,6 +241,36 @@ Gates_block::apply_to_list( Matrix_real& parameters_mtx, std::vector<Matrix>& in
 
 
 /**
+@brief Float32 overload: apply circuit to a list of float32 matrices.
+@param parameters_mtx Float32 parameter array
+@param inputs Float32 input matrices/states
+@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
+*/
+void
+Gates_block::apply_to_list( Matrix_real_float& parameters_mtx, std::vector<Matrix_float>& inputs, int parallel ) {
+
+    int work_batch = 1;
+    if ( parallel == 0 ) {
+        work_batch = static_cast<int>(inputs.size());
+    }
+    else {
+        work_batch = 1;
+    }
+
+    tbb::parallel_for( tbb::blocked_range<int>(0,static_cast<int>(inputs.size()),work_batch), [&](tbb::blocked_range<int> r) {
+        for (int idx=r.begin(); idx<r.end(); ++idx) {
+
+            Matrix_float* input = &inputs[idx];
+
+            apply_to( parameters_mtx, *input, parallel );
+
+        }
+    });
+
+}
+
+
+/**
 @brief Call to apply the gate on the input array/matrix Gates_block*input
 @param parameters An array of parameters to calculate the matrix of the U3 gate.
 @param input The input array on which the gate is applied
@@ -666,6 +696,56 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input, i
     return grad;
 
 }
+
+
+/**
+@brief Float32 overload: evaluate the derivative of the circuit w.r.t. all free parameters.
+       Stabilized path: casts inputs to float64, runs the float64 derivative, then casts
+       the results back to float32. Identical computational route to the float64 overload.
+@param parameters_mtx_in Float32 parameter array
+@param input Float32 input matrix/state
+@param parallel Set 0 for sequential execution, 1 for parallel with TBB (optional)
+*/
+std::vector<Matrix_float>
+Gates_block::apply_derivate_to( Matrix_real_float& parameters_mtx_in, Matrix_float& input, int parallel ) {
+
+    // Cast float32 parameters -> float64
+    Matrix_real params_f64(1, parameters_mtx_in.size());
+    {
+        const float* src = parameters_mtx_in.get_data();
+        double* dst = params_f64.get_data();
+        for (int i = 0; i < parameters_mtx_in.size(); i++) {
+            dst[i] = static_cast<double>(src[i]);
+        }
+    }
+
+    // Cast float32 input -> float64
+    Matrix input_f64 = input.to_float64();
+
+    // Run the float64 derivate path (identical route)
+    std::vector<Matrix> derivs_f64 = apply_derivate_to(params_f64, input_f64, parallel);
+
+    // Cast results back to float32
+    std::vector<Matrix_float> derivs_f32;
+    derivs_f32.reserve(derivs_f64.size());
+    for (Matrix& d : derivs_f64) {
+        if (d.rows == 0 || d.cols == 0) {
+            derivs_f32.push_back(Matrix_float(0, 0));
+            continue;
+        }
+        Matrix_float df(d.rows, d.cols);
+        const QGD_Complex16* src_data = d.get_data();
+        QGD_Complex8* dst_data = df.get_data();
+        for (int i = 0; i < d.size(); i++) {
+            dst_data[i].real = static_cast<float>(src_data[i].real);
+            dst_data[i].imag = static_cast<float>(src_data[i].imag);
+        }
+        derivs_f32.push_back(std::move(df));
+    }
+    return derivs_f32;
+
+}
+
 
 /**
 @brief Append a U1 gate to the list of gates

@@ -546,28 +546,30 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
         # call the C wrapper function
         super().apply_from_right(parameters_mtx, unitary_mtx, parallel=parallel, is_f32=is_f32)
 
-    def apply_to_list(self, inputs, parameters_mtx, parallel=1):
-        """Apply the circuit to a list of input matrices (float64/complex128 only).
+    def apply_to_list(self, inputs, parameters_mtx, parallel=1, is_f32=False):
+        """Apply the circuit to a list of input matrices with float32/float64 dispatch.
 
         Args:
-            inputs: List of numpy arrays (complex128) to transform in-place
-            parameters_mtx: Parameter array (float64 numpy array)
+            inputs: List of numpy arrays to transform in-place (complex128 or complex64 when is_f32=True)
+            parameters_mtx: Parameter array (float64 or float32 when is_f32=True)
             parallel: Parallel execution mode (int, optional, default=1)
+            is_f32: Use float32/complex64 precision (bool, optional, default=False)
         """
-        super().apply_to_list(inputs, parameters_mtx, parallel)
+        super().apply_to_list(inputs, parameters_mtx, parallel, is_f32=is_f32)
 
-    def apply_derivate_to(self, parameters_mtx, unitary_mtx, parallel=1):
+    def apply_derivate_to(self, parameters_mtx, unitary_mtx, parallel=1, is_f32=False):
         """Evaluate the derivative of the circuit on an input matrix w.r.t. all free parameters.
 
         Args:
-            parameters_mtx: Parameter array (float64 numpy array)
-            unitary_mtx: Input matrix (complex128 numpy array)
+            parameters_mtx: Parameter array (float64 or float32 when is_f32=True)
+            unitary_mtx: Input matrix (complex128 or complex64 when is_f32=True)
             parallel: Parallel execution mode (int, optional, default=1)
+            is_f32: Use float32/complex64 precision (bool, optional, default=False)
 
         Returns:
-            list of numpy arrays: One complex128 matrix per free parameter
+            list of numpy arrays: One matrix per free parameter (complex128 or complex64 when is_f32=True)
         """
-        return super().apply_derivate_to(parameters_mtx, unitary_mtx, parallel)
+        return super().apply_derivate_to(parameters_mtx, unitary_mtx, parallel, is_f32=is_f32)
 
     def get_Second_Renyi_Entropy(
         self, parameters=None, input_state=None, qubit_list=None

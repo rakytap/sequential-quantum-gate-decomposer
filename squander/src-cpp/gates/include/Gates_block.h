@@ -108,6 +108,14 @@ Matrix get_matrix( Matrix_real& parameters, int parallel ) override;
 void apply_to_list( Matrix_real& parameters, std::vector<Matrix>& inputs, int parallel ) override;
 
 /**
+@brief Float32 overload: apply circuit to a list of float32 matrices.
+@param parameters Float32 parameter array
+@param inputs Float32 input matrices/states
+@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
+*/
+void apply_to_list( Matrix_real_float& parameters, std::vector<Matrix_float>& inputs, int parallel ) override;
+
+/**
 @brief Call to apply the gate on the input array/matrix Gates_block*input
 @param parameters An array of the input parameters.
 @param input The input array on which the gate is applied
@@ -146,6 +154,14 @@ virtual void apply_from_right( Matrix_real_float& parameters_mtx, Matrix_float& 
 @param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP (NOT IMPLEMENTED YET) and 2 for parallel with TBB (optional)
 */
 virtual std::vector<Matrix> apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input, int parallel ) override;
+
+/**
+@brief Float32 overload: evaluate the derivative of the circuit w.r.t. all free parameters.
+@param parameters_mtx Float32 parameter array
+@param input Float32 input matrix/state
+@param parallel Set 0 for sequential execution, 1 for parallel with TBB (optional)
+*/
+virtual std::vector<Matrix_float> apply_derivate_to( Matrix_real_float& parameters_mtx, Matrix_float& input, int parallel ) override;
 
 /**
 @brief Append a U1 gate to the list of gates

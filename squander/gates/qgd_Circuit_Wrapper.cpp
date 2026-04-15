@@ -984,25 +984,35 @@ circuit_matrix_owner_capsule_destruct( PyObject* cap ) {
     delete m;
 }
 
+/**
+@brief Capsule destructor: calls delete on a heap-allocated Matrix_float, which correctly
+       decrements the reference counter and then calls scalable_aligned_free.
+*/
+static void
+circuit_matrix_float_owner_capsule_destruct( PyObject* cap ) {
+    Matrix_float* m = static_cast<Matrix_float*>( PyCapsule_GetPointer(cap, "squander.circuit_matrix_float_owner") );
+    delete m;
+}
+
 
 /**
-@brief Apply the circuit to a list of input matrices (float64 only — no float32 overload
-       exists in Gates_block for apply_to_list).
+@brief Apply the circuit to a list of input matrices with float32/float64 dispatch.
 @param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper
 @param args A tuple of the input arguments: inputs (list of numpy arrays), parameters_arr (numpy array), parallel (int, optional)
-@param kwds Optional keyword arguments
+@param kwds Keywords: is_f32 (bool, optional, default False)
 @return Returns 0 on success
 */
 static PyObject *
 qgd_Circuit_Wrapper_apply_to_list( qgd_Circuit_Wrapper *self, PyObject *args, PyObject *kwds ) {
 
-    static char *kwlist[] = {(char*)"inputs", (char*)"parameters", (char*)"parallel", NULL};
+    static char *kwlist[] = {(char*)"inputs", (char*)"parameters", (char*)"parallel", (char*)"is_f32", NULL};
 
     PyObject * inputs_obj = NULL;
     PyArrayObject * parameters_arr = NULL;
     int parallel = 1;
+    int is_f32 = 0;
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "OO|i", kwlist, &inputs_obj, &parameters_arr, &parallel )) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "OO|ip", kwlist, &inputs_obj, &parameters_arr, &parallel, &is_f32 )) {
         PyErr_SetString(PyExc_Exception, "Unable to parse input");
         return NULL;
     }
@@ -1017,13 +1027,97 @@ qgd_Circuit_Wrapper_apply_to_list( qgd_Circuit_Wrapper *self, PyObject *args, Py
         return NULL;
     }
 
-    if ( PyArray_TYPE(parameters_arr) != NPY_DOUBLE ) {
-        PyErr_SetString(PyExc_TypeError, "Parameter vector should be float64");
+    PyObject* seq = PySequence_Fast(inputs_obj, "inputs must be a sequence of numpy arrays");
+    if (seq == NULL) {
         return NULL;
     }
 
-    PyObject* seq = PySequence_Fast(inputs_obj, "inputs must be a sequence of numpy arrays");
-    if (seq == NULL) {
+    const Py_ssize_t n = PySequence_Fast_GET_SIZE(seq);
+    PyObject** items = PySequence_Fast_ITEMS(seq);
+
+    // ---- float32 path ----
+    if (is_f32) {
+
+        if ( PyArray_TYPE(parameters_arr) != NPY_FLOAT ) {
+            Py_DECREF(seq);
+            PyErr_SetString(PyExc_TypeError, "Parameter vector should be float32 when is_f32=True");
+            return NULL;
+        }
+
+        if ( PyArray_IS_C_CONTIGUOUS(parameters_arr) ) {
+            Py_INCREF(parameters_arr);
+        }
+        else {
+            parameters_arr = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)parameters_arr, NPY_FLOAT, NPY_ARRAY_IN_ARRAY);
+        }
+
+        Matrix_real_float parameters_mtx = numpy2matrix_real_float( parameters_arr );
+
+        std::vector<Matrix_float> inputs;
+        inputs.reserve((size_t)n);
+
+        for (Py_ssize_t idx = 0; idx < n; idx++) {
+            PyObject* item = items[idx];
+            if (!PyArray_Check(item)) {
+                Py_DECREF(seq);
+                Py_DECREF(parameters_arr);
+                PyErr_SetString(PyExc_TypeError, "All inputs should be numpy arrays");
+                return NULL;
+            }
+
+            PyArrayObject* input = (PyArrayObject*)item;
+            if ( PyArray_TYPE(input) != NPY_COMPLEX64 ) {
+                Py_DECREF(seq);
+                Py_DECREF(parameters_arr);
+                PyErr_SetString(PyExc_TypeError, "All inputs should be complex64 when is_f32=True");
+                return NULL;
+            }
+
+            if ( !PyArray_IS_C_CONTIGUOUS(input) ) {
+                Py_DECREF(seq);
+                Py_DECREF(parameters_arr);
+                PyErr_SetString(PyExc_TypeError, "All inputs should be C-contiguous");
+                return NULL;
+            }
+
+            inputs.push_back( numpy2matrix_float(input) );
+        }
+
+        try {
+            self->circuit->apply_to_list( parameters_mtx, inputs, parallel );
+        }
+        catch (std::string err) {
+            Py_DECREF(seq);
+            Py_DECREF(parameters_arr);
+            PyErr_SetString(PyExc_Exception, err.c_str());
+            return NULL;
+        }
+        catch(...) {
+            Py_DECREF(seq);
+            Py_DECREF(parameters_arr);
+            std::string err( "Invalid pointer to circuit class");
+            PyErr_SetString(PyExc_Exception, err.c_str());
+            return NULL;
+        }
+
+        // Copy back any data that was reallocated inside C++
+        for (Py_ssize_t idx = 0; idx < n; idx++) {
+            PyArrayObject* input = (PyArrayObject*)items[idx];
+            Matrix_float& mtx = inputs[(size_t)idx];
+            if (mtx.data != PyArray_DATA(input)) {
+                memcpy(PyArray_DATA(input), mtx.data, mtx.size() * sizeof(QGD_Complex8));
+            }
+        }
+
+        Py_DECREF(seq);
+        Py_DECREF(parameters_arr);
+        return Py_BuildValue("i", 0);
+    }
+
+    // ---- float64 path ----
+    if ( PyArray_TYPE(parameters_arr) != NPY_DOUBLE ) {
+        Py_DECREF(seq);
+        PyErr_SetString(PyExc_TypeError, "Parameter vector should be float64 when is_f32=False");
         return NULL;
     }
 
@@ -1035,9 +1129,6 @@ qgd_Circuit_Wrapper_apply_to_list( qgd_Circuit_Wrapper *self, PyObject *args, Py
     }
 
     Matrix_real parameters_mtx = numpy2matrix_real( parameters_arr );
-
-    const Py_ssize_t n = PySequence_Fast_GET_SIZE(seq);
-    PyObject** items = PySequence_Fast_ITEMS(seq);
 
     std::vector<Matrix> inputs;
     inputs.reserve((size_t)n);
@@ -1055,7 +1146,7 @@ qgd_Circuit_Wrapper_apply_to_list( qgd_Circuit_Wrapper *self, PyObject *args, Py
         if ( PyArray_TYPE(input) != NPY_COMPLEX128 ) {
             Py_DECREF(seq);
             Py_DECREF(parameters_arr);
-            PyErr_SetString(PyExc_TypeError, "All inputs should be complex128");
+            PyErr_SetString(PyExc_TypeError, "All inputs should be complex128 when is_f32=False");
             return NULL;
         }
 
@@ -1111,13 +1202,14 @@ qgd_Circuit_Wrapper_apply_to_list( qgd_Circuit_Wrapper *self, PyObject *args, Py
 static PyObject *
 qgd_Circuit_Wrapper_apply_derivate_to( qgd_Circuit_Wrapper *self, PyObject *args, PyObject *kwds ) {
 
-    static char *kwlist[] = {(char*)"parameters", (char*)"unitary", (char*)"parallel", NULL};
+    static char *kwlist[] = {(char*)"parameters", (char*)"unitary", (char*)"parallel", (char*)"is_f32", NULL};
 
     PyArrayObject * parameters_arr = NULL;
     PyArrayObject * unitary_arg = NULL;
     int parallel = 1;
+    int is_f32 = 0;
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "OO|i", kwlist, &parameters_arr, &unitary_arg, &parallel )) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "OO|ip", kwlist, &parameters_arr, &unitary_arg, &parallel, &is_f32 )) {
         PyErr_SetString(PyExc_Exception, "Unable to parse input");
         return NULL;
     }
@@ -1132,18 +1224,92 @@ qgd_Circuit_Wrapper_apply_derivate_to( qgd_Circuit_Wrapper *self, PyObject *args
         return NULL;
     }
 
+    if ( !PyArray_IS_C_CONTIGUOUS(unitary_arg) ) {
+        PyErr_SetString(PyExc_Exception, "input matrix is not memory contiguous");
+        return NULL;
+    }
+
+    // ---- float32 path ----
+    if (is_f32) {
+
+        if ( PyArray_TYPE(parameters_arr) != NPY_FLOAT ) {
+            PyErr_SetString(PyExc_TypeError, "Parameter vector should be float32 when is_f32=True");
+            return NULL;
+        }
+
+        if ( PyArray_TYPE(unitary_arg) != NPY_COMPLEX64 ) {
+            PyErr_SetString(PyExc_TypeError, "Input matrix should be complex64 when is_f32=True");
+            return NULL;
+        }
+
+        if ( PyArray_IS_C_CONTIGUOUS(parameters_arr) ) {
+            Py_INCREF(parameters_arr);
+        }
+        else {
+            parameters_arr = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)parameters_arr, NPY_FLOAT, NPY_ARRAY_IN_ARRAY);
+        }
+
+        Matrix_real_float parameters_mtx = numpy2matrix_real_float( parameters_arr );
+        Matrix_float unitary_mtx = numpy2matrix_float( unitary_arg );
+
+        std::vector<Matrix_float> derivs;
+        try {
+            derivs = self->circuit->apply_derivate_to( parameters_mtx, unitary_mtx, parallel );
+        }
+        catch (std::string err) {
+            Py_DECREF(parameters_arr);
+            PyErr_SetString(PyExc_Exception, err.c_str());
+            return NULL;
+        }
+        catch(...) {
+            Py_DECREF(parameters_arr);
+            std::string err( "Invalid pointer to circuit class");
+            PyErr_SetString(PyExc_Exception, err.c_str());
+            return NULL;
+        }
+
+        PyObject* deriv_list = PyList_New((Py_ssize_t)derivs.size());
+        if (deriv_list == NULL) {
+            Py_DECREF(parameters_arr);
+            return NULL;
+        }
+
+        for (Py_ssize_t idx = 0; idx < (Py_ssize_t)derivs.size(); ++idx) {
+            Matrix_float* owned = new Matrix_float(derivs[(size_t)idx]);
+            PyObject* cap = PyCapsule_New(
+                owned, "squander.circuit_matrix_float_owner",
+                circuit_matrix_float_owner_capsule_destruct);
+            if (cap == NULL) {
+                delete owned;
+                Py_DECREF(deriv_list);
+                Py_DECREF(parameters_arr);
+                return NULL;
+            }
+            npy_intp shape[2] = { (npy_intp)owned->rows, (npy_intp)owned->cols };
+            PyObject* deriv_py = PyArray_SimpleNewFromData(
+                2, shape, NPY_COMPLEX64, owned->get_data());
+            if (deriv_py == NULL) {
+                Py_DECREF(cap);
+                Py_DECREF(deriv_list);
+                Py_DECREF(parameters_arr);
+                return NULL;
+            }
+            PyArray_SetBaseObject((PyArrayObject*)deriv_py, cap);
+            PyList_SET_ITEM(deriv_list, idx, deriv_py);
+        }
+
+        Py_DECREF(parameters_arr);
+        return deriv_list;
+    }
+
+    // ---- float64 path ----
     if ( PyArray_TYPE(parameters_arr) != NPY_DOUBLE ) {
-        PyErr_SetString(PyExc_TypeError, "Parameter vector should be float64");
+        PyErr_SetString(PyExc_TypeError, "Parameter vector should be float64 when is_f32=False");
         return NULL;
     }
 
     if ( PyArray_TYPE(unitary_arg) != NPY_COMPLEX128 ) {
-        PyErr_SetString(PyExc_TypeError, "Input matrix should be complex128");
-        return NULL;
-    }
-
-    if ( !PyArray_IS_C_CONTIGUOUS(unitary_arg) ) {
-        PyErr_SetString(PyExc_Exception, "input matrix is not memory contiguous");
+        PyErr_SetString(PyExc_TypeError, "Input matrix should be complex128 when is_f32=False");
         return NULL;
     }
 

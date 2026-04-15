@@ -763,3 +763,180 @@ class TestApplyDerivateTo:
         mat = _identity(4)
         with pytest.raises(Exception):
             circ.apply_derivate_to(params32, mat)
+
+
+# ---------------------------------------------------------------------------
+# Float32 apply_to_list
+# ---------------------------------------------------------------------------
+
+class TestApplyToListF32:
+    """apply_to_list is_f32=True: float32/complex64 batch path."""
+
+    @pytest.mark.parametrize("qbit_num", [2, 3, 4])
+    def test_f32_matches_f64_reference(self, qbit_num):
+        """f32 apply_to_list result must be close to f64 result."""
+        circ = _build_rx_rz_cnot_circuit(qbit_num)
+        p64 = _params64(circ.get_Parameter_Num())
+        p32 = p64.astype(np.float32)
+        dim = 2 ** qbit_num
+
+        matrices_f64 = [_identity(dim) for _ in range(4)]
+        matrices_f32 = [_identity(dim, dtype=np.complex64) for _ in range(4)]
+
+        circ.apply_to_list(matrices_f64, p64)
+        circ.apply_to_list(matrices_f32, p32, is_f32=True)
+
+        for got, expected in zip(matrices_f32, matrices_f64):
+            _assert_unitary_close(expected, got.astype(np.complex128), rtol=1e-4)
+
+    @pytest.mark.parametrize("qbit_num", [2, 3])
+    def test_f32_single_element_matches_apply_to_f32(self, qbit_num):
+        """Single-element f32 list should match apply_to with is_f32=True."""
+        circ = _build_rx_rz_cnot_circuit(qbit_num)
+        p32 = _params32(circ.get_Parameter_Num())
+        dim = 2 ** qbit_num
+
+        m_list = [_identity(dim, dtype=np.complex64)]
+        m_single = _identity(dim, dtype=np.complex64)
+
+        circ.apply_to_list(m_list, p32, is_f32=True)
+        circ.apply_to(p32, m_single, is_f32=True)
+
+        _assert_unitary_close(m_single.astype(np.complex128),
+                              m_list[0].astype(np.complex128), rtol=1e-4)
+
+    @pytest.mark.parametrize("qbit_num", [2, 3, 4])
+    def test_f32_dtype_preserved(self, qbit_num):
+        """Output dtype should remain complex64 after f32 apply_to_list."""
+        circ = _build_rx_rz_cnot_circuit(qbit_num)
+        p32 = _params32(circ.get_Parameter_Num())
+        dim = 2 ** qbit_num
+
+        matrices = [_identity(dim, dtype=np.complex64) for _ in range(3)]
+        circ.apply_to_list(matrices, p32, is_f32=True)
+
+        for m in matrices:
+            assert m.dtype == np.complex64
+
+    def test_f32_empty_list_no_crash(self):
+        """Empty f32 list should not crash."""
+        circ = Circuit(2)
+        circ.add_RX(0)
+        p32 = _params32(circ.get_Parameter_Num())
+        circ.apply_to_list([], p32, is_f32=True)
+
+    @pytest.mark.parametrize("qbit_num", [2, 3])
+    def test_f32_wrong_dtype_raises(self, qbit_num):
+        """Passing complex128 inputs with is_f32=True should raise."""
+        circ = _build_rx_rz_cnot_circuit(qbit_num)
+        p32 = _params32(circ.get_Parameter_Num())
+        dim = 2 ** qbit_num
+        bad = [_identity(dim, dtype=np.complex128)]
+        with pytest.raises(Exception):
+            circ.apply_to_list(bad, p32, is_f32=True)
+
+
+# ---------------------------------------------------------------------------
+# Float32 apply_derivate_to
+# ---------------------------------------------------------------------------
+
+class TestApplyDerivateToF32:
+    """apply_derivate_to is_f32=True: float32/complex64 derivative path."""
+
+    @pytest.mark.parametrize("qbit_num", [2, 3, 4])
+    def test_f32_derivative_count_matches_parameter_num(self, qbit_num):
+        """f32 derivative list length must equal get_Parameter_Num()."""
+        circ = _build_rx_rz_cnot_circuit(qbit_num)
+        p32 = _params32(circ.get_Parameter_Num())
+        dim = 2 ** qbit_num
+
+        mat = _identity(dim, dtype=np.complex64)
+        derivs = circ.apply_derivate_to(p32, mat, is_f32=True)
+
+        assert len(derivs) == circ.get_Parameter_Num()
+
+    @pytest.mark.parametrize("qbit_num", [2, 3, 4])
+    def test_f32_derivative_shapes_match_input(self, qbit_num):
+        """Each f32 derivative matrix must have the same shape as the input."""
+        circ = _build_rx_rz_cnot_circuit(qbit_num)
+        p32 = _params32(circ.get_Parameter_Num())
+        dim = 2 ** qbit_num
+
+        mat = _identity(dim, dtype=np.complex64)
+        derivs = circ.apply_derivate_to(p32, mat, is_f32=True)
+
+        for i, d in enumerate(derivs):
+            assert d.shape == (dim, dim), f"deriv[{i}] shape {d.shape} != ({dim},{dim})"
+
+    @pytest.mark.parametrize("qbit_num", [2, 3])
+    def test_f32_derivative_dtype_is_complex64(self, qbit_num):
+        """f32 derivative matrices must be complex64."""
+        circ = _build_rx_rz_cnot_circuit(qbit_num)
+        p32 = _params32(circ.get_Parameter_Num())
+        dim = 2 ** qbit_num
+
+        mat = _identity(dim, dtype=np.complex64)
+        derivs = circ.apply_derivate_to(p32, mat, is_f32=True)
+
+        for i, d in enumerate(derivs):
+            assert d.dtype == np.complex64, f"deriv[{i}] dtype {d.dtype} != complex64"
+
+    @pytest.mark.parametrize("qbit_num", [2, 3])
+    def test_f32_derivative_close_to_f64_reference(self, qbit_num):
+        """f32 derivatives must be close to f64 reference derivatives."""
+        circ = _build_rx_rz_cnot_circuit(qbit_num)
+        p64 = _params64(circ.get_Parameter_Num())
+        p32 = p64.astype(np.float32)
+        dim = 2 ** qbit_num
+
+        mat64 = _identity(dim)
+        mat32 = _identity(dim, dtype=np.complex64)
+
+        derivs64 = circ.apply_derivate_to(p64, mat64)
+        derivs32 = circ.apply_derivate_to(p32, mat32, is_f32=True)
+
+        assert len(derivs32) == len(derivs64)
+        for i, (d32, d64) in enumerate(zip(derivs32, derivs64)):
+            err = np.linalg.norm(d32.astype(np.complex128) - d64)
+            assert err < 1e-3, f"deriv[{i}]: f32 vs f64 error = {err:.3e}"
+
+    @pytest.mark.parametrize("qbit_num", [2, 3])
+    def test_f32_derivative_nonzero_for_parametric_circuit(self, qbit_num):
+        """All f32 derivative matrices must be non-zero for a parametric circuit."""
+        circ = _build_rx_rz_cnot_circuit(qbit_num)
+        p32 = _params32(circ.get_Parameter_Num())
+        dim = 2 ** qbit_num
+
+        mat = _identity(dim, dtype=np.complex64)
+        derivs = circ.apply_derivate_to(p32, mat, is_f32=True)
+
+        for i, d in enumerate(derivs):
+            assert np.linalg.norm(d) > 1e-7, f"f32 deriv[{i}] is unexpectedly zero"
+
+    def test_f32_no_params_returns_empty_list(self):
+        """f32 parameter-free circuit should return empty derivative list."""
+        circ = Circuit(2)
+        circ.add_H(0)
+        circ.add_CNOT(0, 1)
+        params = np.array([], dtype=np.float32)
+        mat = _identity(4, dtype=np.complex64)
+        derivs = circ.apply_derivate_to(params, mat, is_f32=True)
+        assert len(derivs) == 0
+
+    def test_f32_wrong_param_dtype_raises(self):
+        """Passing float64 params with is_f32=True should raise."""
+        circ = Circuit(2)
+        circ.add_RX(0)
+        params64 = np.array([0.3], dtype=np.float64)
+        mat = _identity(4, dtype=np.complex64)
+        with pytest.raises(Exception):
+            circ.apply_derivate_to(params64, mat, is_f32=True)
+
+    def test_f32_wrong_matrix_dtype_raises(self):
+        """Passing complex128 matrix with is_f32=True should raise."""
+        circ = Circuit(2)
+        circ.add_RX(0)
+        params32 = np.array([0.3], dtype=np.float32)
+        mat64 = _identity(4, dtype=np.complex128)
+        with pytest.raises(Exception):
+            circ.apply_derivate_to(params32, mat64, is_f32=True)
