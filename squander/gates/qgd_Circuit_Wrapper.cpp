@@ -709,12 +709,13 @@ qgd_Circuit_Wrapper_apply_to( qgd_Circuit_Wrapper *self, PyObject *args, PyObjec
     PyArrayObject * unitary_arg = NULL;
     
     int parallel = 1;
+    int is_f32 = 0;
     
-    static char *kwlist[] = {(char*)"", (char*)"", (char*)"parallel", NULL};
+    static char *kwlist[] = {(char*)"", (char*)"", (char*)"parallel", (char*)"is_f32", NULL};
 
 
     // parsing input arguments
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "OO|i", kwlist, &parameters_arr, &unitary_arg, &parallel )) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "OO|ip", kwlist, &parameters_arr, &unitary_arg, &parallel, &is_f32 )) {
         PyErr_SetString(PyExc_Exception, "Unable to parse input");
         return NULL;
     } 
@@ -733,15 +734,68 @@ qgd_Circuit_Wrapper_apply_to( qgd_Circuit_Wrapper *self, PyObject *args, PyObjec
     }
 
 
+    if ( !PyArray_IS_C_CONTIGUOUS(unitary_arg) ) {
+        PyErr_SetString(PyExc_Exception, "input matrix is not memory contiguous");
+        return NULL;
+    }
 
+
+    // ---- float32 path ----
+    if (is_f32) {
+
+        if ( PyArray_TYPE(unitary_arg) != NPY_COMPLEX64 ) {
+            PyErr_SetString(PyExc_TypeError, "input matrix or state should be complex64 when is_f32=True");
+            return NULL;
+        }
+
+        if ( PyArray_TYPE(parameters_arr) != NPY_FLOAT ) {
+            PyErr_SetString(PyExc_TypeError, "Parameter vector should be float32 when is_f32=True");
+            return NULL;
+        }
+
+        if ( PyArray_IS_C_CONTIGUOUS(parameters_arr) ) {
+            Py_INCREF(parameters_arr);
+        }
+        else {
+            parameters_arr = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)parameters_arr, NPY_FLOAT, NPY_ARRAY_IN_ARRAY);
+        }
+
+        Matrix_real_float parameters_mtx = numpy2matrix_real_float( parameters_arr );
+        Matrix_float input_mtx = numpy2matrix_float( unitary_arg );
+
+        try {
+            self->circuit->apply_to( parameters_mtx, input_mtx, parallel );
+        }
+        catch (std::string err) {
+            Py_DECREF(parameters_arr);
+            PyErr_SetString(PyExc_Exception, err.c_str());
+            return NULL;
+        }
+        catch(...) {
+            Py_DECREF(parameters_arr);
+            std::string err( "Invalid pointer to circuit class");
+            PyErr_SetString(PyExc_Exception, err.c_str());
+            return NULL;
+        }
+
+        if (input_mtx.data != PyArray_DATA(unitary_arg)) {
+            memcpy(PyArray_DATA(unitary_arg), input_mtx.data, input_mtx.size() * sizeof(QGD_Complex8));
+        }
+
+        Py_DECREF(parameters_arr);
+        return Py_BuildValue("i", 0);
+    }
+
+
+    // ---- float64 path ----
     if ( PyArray_TYPE(parameters_arr) != NPY_DOUBLE ) {
-        PyErr_SetString(PyExc_Exception, "Parameter vector should be real typed");
+        PyErr_SetString(PyExc_TypeError, "Parameter vector should be float64 when is_f32=False");
         return NULL;
     }
     
     
     if ( PyArray_TYPE(unitary_arg) != NPY_COMPLEX128 ) {
-        PyErr_SetString(PyExc_Exception, "input matrix or state should be complex typed");
+        PyErr_SetString(PyExc_TypeError, "input matrix or state should be complex128 when is_f32=False");
         return NULL;
     }    
 
@@ -754,21 +808,11 @@ qgd_Circuit_Wrapper_apply_to( qgd_Circuit_Wrapper *self, PyObject *args, PyObjec
     }
 
     // get the C++ wrapper around the data
-    Matrix_real&& parameters_mtx = numpy2matrix_real( parameters_arr );
-
-
-
-    PyArrayObject* unitary = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)unitary_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
-
-    // test C-style contiguous memory allocation of the array
-    if ( !PyArray_IS_C_CONTIGUOUS(unitary) ) {
-        PyErr_SetString(PyExc_Exception, "input matrix is not memory contiguous");
-        return NULL;
-    }
+    Matrix_real parameters_mtx = numpy2matrix_real( parameters_arr );
 
 
     // create QGD version of the input matrix
-    Matrix unitary_mtx = numpy2matrix(unitary);
+    Matrix unitary_mtx = numpy2matrix(unitary_arg);
 
     try {
         self->circuit->apply_to( parameters_mtx, unitary_mtx, parallel );
@@ -776,7 +820,6 @@ qgd_Circuit_Wrapper_apply_to( qgd_Circuit_Wrapper *self, PyObject *args, PyObjec
     catch (std::string err) {
     
         Py_DECREF(parameters_arr);
-        Py_DECREF(unitary);
     
         PyErr_SetString(PyExc_Exception, err.c_str());
         return NULL;
@@ -784,20 +827,148 @@ qgd_Circuit_Wrapper_apply_to( qgd_Circuit_Wrapper *self, PyObject *args, PyObjec
     catch(...) {
     
         Py_DECREF(parameters_arr);
-        Py_DECREF(unitary);
     
         std::string err( "Invalid pointer to circuit class");
         PyErr_SetString(PyExc_Exception, err.c_str());
         return NULL;
     }
     
-    if (unitary_mtx.data != PyArray_DATA(unitary)) {
-        memcpy(PyArray_DATA(unitary), unitary_mtx.data, unitary_mtx.size() * sizeof(QGD_Complex16));
+    if (unitary_mtx.data != PyArray_DATA(unitary_arg)) {
+        memcpy(PyArray_DATA(unitary_arg), unitary_mtx.data, unitary_mtx.size() * sizeof(QGD_Complex16));
     }
 
     Py_DECREF(parameters_arr);
-    Py_DECREF(unitary);
 
+    return Py_BuildValue("i", 0);
+}
+
+
+
+/**
+@brief Apply the gate circuit from the right on the input matrix with float32/float64 dispatch.
+@param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper
+@param args A tuple of the input arguments: parameters_arr (numpy array), unitary_arg (numpy array), parallel (int, optional)
+@param kwds Keywords: is_f32 (bool, optional, default False)
+@return Returns 0 on success
+*/
+static PyObject *
+qgd_Circuit_Wrapper_apply_from_right( qgd_Circuit_Wrapper *self, PyObject *args, PyObject *kwds ) {
+
+    PyArrayObject * parameters_arr = NULL;
+    PyArrayObject * unitary_arg = NULL;
+
+    int parallel = 1;
+    int is_f32 = 0;
+
+    static char *kwlist[] = {(char*)"", (char*)"", (char*)"parallel", (char*)"is_f32", NULL};
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "OO|ip", kwlist, &parameters_arr, &unitary_arg, &parallel, &is_f32 )) {
+        PyErr_SetString(PyExc_Exception, "Unable to parse input");
+        return NULL;
+    }
+
+    if ( unitary_arg == NULL ) {
+        PyErr_SetString(PyExc_Exception, "Input matrix was not given");
+        return NULL;
+    }
+
+    if ( parameters_arr == NULL ) {
+        PyErr_SetString(PyExc_Exception, "Parameters were not given");
+        return NULL;
+    }
+
+    if ( !PyArray_IS_C_CONTIGUOUS(unitary_arg) ) {
+        PyErr_SetString(PyExc_Exception, "input matrix is not memory contiguous");
+        return NULL;
+    }
+
+    // ---- float32 path ----
+    if (is_f32) {
+
+        if ( PyArray_TYPE(unitary_arg) != NPY_COMPLEX64 ) {
+            PyErr_SetString(PyExc_TypeError, "input matrix should be complex64 when is_f32=True");
+            return NULL;
+        }
+
+        if ( PyArray_TYPE(parameters_arr) != NPY_FLOAT ) {
+            PyErr_SetString(PyExc_TypeError, "Parameter vector should be float32 when is_f32=True");
+            return NULL;
+        }
+
+        if ( PyArray_IS_C_CONTIGUOUS(parameters_arr) ) {
+            Py_INCREF(parameters_arr);
+        }
+        else {
+            parameters_arr = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)parameters_arr, NPY_FLOAT, NPY_ARRAY_IN_ARRAY);
+        }
+
+        Matrix_real_float parameters_mtx = numpy2matrix_real_float( parameters_arr );
+        Matrix_float input_mtx = numpy2matrix_float( unitary_arg );
+
+        try {
+            self->circuit->apply_from_right( parameters_mtx, input_mtx );
+        }
+        catch (std::string err) {
+            Py_DECREF(parameters_arr);
+            PyErr_SetString(PyExc_Exception, err.c_str());
+            return NULL;
+        }
+        catch(...) {
+            Py_DECREF(parameters_arr);
+            std::string err( "Invalid pointer to circuit class");
+            PyErr_SetString(PyExc_Exception, err.c_str());
+            return NULL;
+        }
+
+        if (input_mtx.data != PyArray_DATA(unitary_arg)) {
+            memcpy(PyArray_DATA(unitary_arg), input_mtx.data, input_mtx.size() * sizeof(QGD_Complex8));
+        }
+
+        Py_DECREF(parameters_arr);
+        return Py_BuildValue("i", 0);
+    }
+
+    // ---- float64 path ----
+    if ( PyArray_TYPE(parameters_arr) != NPY_DOUBLE ) {
+        PyErr_SetString(PyExc_TypeError, "Parameter vector should be float64 when is_f32=False");
+        return NULL;
+    }
+
+    if ( PyArray_TYPE(unitary_arg) != NPY_COMPLEX128 ) {
+        PyErr_SetString(PyExc_TypeError, "input matrix should be complex128 when is_f32=False");
+        return NULL;
+    }
+
+    if ( PyArray_IS_C_CONTIGUOUS(parameters_arr) ) {
+        Py_INCREF(parameters_arr);
+    }
+    else {
+        parameters_arr = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+    }
+
+    Matrix_real parameters_mtx = numpy2matrix_real( parameters_arr );
+    Matrix unitary_mtx = numpy2matrix( unitary_arg );
+
+    try {
+        self->circuit->apply_from_right( parameters_mtx, unitary_mtx );
+    }
+    catch (std::string err) {
+        Py_DECREF(parameters_arr);
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    catch(...) {
+        Py_DECREF(parameters_arr);
+        std::string err( "Invalid pointer to circuit class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+    if (unitary_mtx.data != PyArray_DATA(unitary_arg)) {
+        memcpy(PyArray_DATA(unitary_arg), unitary_mtx.data, unitary_mtx.size() * sizeof(QGD_Complex16));
+    }
+
+    Py_DECREF(parameters_arr);
     return Py_BuildValue("i", 0);
 }
 
@@ -2314,7 +2485,10 @@ static PyMethodDef qgd_Circuit_Wrapper_Methods[] = {
      "Call to get the number of free parameters in the circuit"
     },
     {"apply_to", (PyCFunction) qgd_Circuit_Wrapper_apply_to, METH_VARARGS | METH_KEYWORDS,
-     "Call to apply the gate on the input matrix (or state)."
+     "Call to apply the gate on the input matrix (or state). Keyword is_f32=True selects float32/complex64 path."
+    },
+    {"apply_from_right", (PyCFunction) qgd_Circuit_Wrapper_apply_from_right, METH_VARARGS | METH_KEYWORDS,
+     "Call to apply the gate from the right on the input matrix. Keyword is_f32=True selects float32/complex64 path."
     },
     {"get_Second_Renyi_Entropy", (PyCFunction) qgd_Circuit_Wrapper_get_Second_Renyi_Entropy, METH_VARARGS,
      "Wrapper function to evaluate the second Rényi entropy of a quantum circuit at a specific parameter set."

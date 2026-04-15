@@ -1,0 +1,596 @@
+'''
+Copyright 2020 Peter Rakyta, Ph.D.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+Tests for qgd_Circuit: covers float32/float64 dispatch, state vector vs unitary,
+apply_from_right, gate fusion (set_min_fusion), nested circuits, and boundary qubit
+counts that stress AVX kernels (small kernel: qbit_num<14, TBB large kernel: qbit_num>=14).
+'''
+
+import numpy as np
+import pytest
+
+from squander.gates.qgd_Circuit import qgd_Circuit as Circuit
+
+# ──────────────────────────────────────────────────────────────────────────────
+# helpers
+# ──────────────────────────────────────────────────────────────────────────────
+
+def _identity(n, dtype=np.complex128):
+    return np.eye(n, dtype=dtype, order='C')
+
+
+def _random_state(n, dtype=np.complex128, seed=42):
+    """Return a normalised random state vector of length n."""
+    rng = np.random.default_rng(seed)
+    v = rng.standard_normal(n) + 1j * rng.standard_normal(n)
+    v = v.astype(dtype)
+    return np.ascontiguousarray(v / np.linalg.norm(v))
+
+
+def _params64(n):
+    """Float64 parameter array of length n."""
+    if n == 0:
+        return np.array([], dtype=np.float64)
+    return np.linspace(0.1, 0.1 * n, n, dtype=np.float64)
+
+
+def _params32(n):
+    """Float32 parameter array of length n."""
+    if n == 0:
+        return np.array([], dtype=np.float32)
+    return np.linspace(0.1, 0.1 * n, n, dtype=np.float32)
+
+
+def _build_rx_rz_cnot_circuit(qbit_num):
+    """Build RX(0) → RZ(0) → CNOT(0,1) circuit if qbit_num >= 2, else RX → RZ."""
+    c = Circuit(qbit_num)
+    c.add_RX(0)
+    c.add_RZ(0)
+    if qbit_num >= 2:
+        c.add_CNOT(0, 1)
+        c.add_RY(1)
+    return c
+
+
+def _ref_matrix64(circuit):
+    """Compute reference unitary via get_Matrix (float64)."""
+    params = _params64(circuit.get_Parameter_Num())
+    return np.array(circuit.get_Matrix(params))
+
+
+def _assert_unitary_close(a, b, rtol=1e-6):
+    """Assert two unitaries are the same up to a global phase."""
+    assert a.shape == b.shape, f"shape mismatch {a.shape} vs {b.shape}"
+    overlap = np.vdot(a.reshape(-1), b.reshape(-1))
+    if abs(overlap) > 0:
+        b = b * np.exp(-1j * np.angle(overlap))
+    err = np.linalg.norm(a - b)
+    assert err < rtol, f"unitary mismatch: error={err:.3e}"
+
+
+def _assert_state_close(a, b, rtol=1e-6):
+    """Assert two state vectors are the same up to a global phase."""
+    assert a.shape == b.shape
+    overlap = np.vdot(a, b)
+    if abs(overlap) > 0:
+        b = b * np.exp(-1j * np.angle(overlap))
+    err = np.linalg.norm(a - b)
+    assert err < rtol, f"state mismatch: error={err:.3e}"
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Qubit counts chosen to stress different AVX dispatch paths.
+#   qbit_num = 1,2,3  → small gate kernel (direct index arithmetic)
+#   qbit_num = 4,5,6  → medium sizes, apply_large_kernel_to_input_AVX
+#   qbit_num = 14     → AVX TBB path (qbit_num >= 14, for fusion)
+# ──────────────────────────────────────────────────────────────────────────────
+QBIT_NUMS_SMALL = [1, 2, 3]
+QBIT_NUMS_MEDIUM = [4, 5, 6]
+QBIT_NUMS_ALL = QBIT_NUMS_SMALL + QBIT_NUMS_MEDIUM
+
+
+class TestApplyToFloat64:
+    """Apply_to float64: unitary and state-vector correctness."""
+
+    @pytest.mark.parametrize("qbit_num", QBIT_NUMS_ALL)
+    def test_apply_to_unitary_matches_get_matrix(self, qbit_num):
+        """apply_to on identity should reproduce get_Matrix output."""
+        circ = _build_rx_rz_cnot_circuit(qbit_num)
+        params = _params64(circ.get_Parameter_Num())
+        ref = np.array(circ.get_Matrix(params))
+
+        dim = 2 ** qbit_num
+        identity = _identity(dim)
+        circ.apply_to(params, identity)
+
+        _assert_unitary_close(ref, identity)
+
+    @pytest.mark.parametrize("qbit_num", QBIT_NUMS_ALL)
+    def test_apply_to_state_vector(self, qbit_num):
+        """apply_to on a state vector should give U @ |state>."""
+        circ = _build_rx_rz_cnot_circuit(qbit_num)
+        params = _params64(circ.get_Parameter_Num())
+        U = np.array(circ.get_Matrix(params))
+
+        dim = 2 ** qbit_num
+        state = _random_state(dim, dtype=np.complex128)
+        expected = U @ state
+
+        sv = state.copy()
+        circ.apply_to(params, sv.reshape(dim, 1))
+        result = sv.reshape(-1)
+
+        _assert_state_close(expected, result)
+
+    @pytest.mark.parametrize("qbit_num", QBIT_NUMS_ALL)
+    def test_apply_to_twice_is_squared_unitary(self, qbit_num):
+        """Applying circuit twice equals U^2 applied to identity."""
+        circ = _build_rx_rz_cnot_circuit(qbit_num)
+        params = _params64(circ.get_Parameter_Num())
+        U = np.array(circ.get_Matrix(params))
+
+        dim = 2 ** qbit_num
+        mtx = _identity(dim)
+        circ.apply_to(params, mtx)
+        circ.apply_to(params, mtx)
+
+        expected = U @ U
+        _assert_unitary_close(expected, mtx)
+
+
+class TestApplyToFloat32:
+    """Apply_to float32: complex64 precision correctness against float64 reference."""
+
+    @pytest.mark.parametrize("qbit_num", QBIT_NUMS_ALL)
+    def test_apply_to_f32_unitary_close_to_f64(self, qbit_num):
+        """float32 apply_to result should be close to float64 result."""
+        circ = _build_rx_rz_cnot_circuit(qbit_num)
+        p64 = _params64(circ.get_Parameter_Num())
+        p32 = p64.astype(np.float32)
+
+        dim = 2 ** qbit_num
+
+        # float64 reference
+        ref64 = _identity(dim, dtype=np.complex128)
+        circ.apply_to(p64, ref64)
+
+        # float32 result
+        mat32 = _identity(dim, dtype=np.complex64)
+        circ.apply_to(p32, mat32, is_f32=True)
+
+        _assert_unitary_close(ref64, mat32.astype(np.complex128), rtol=1e-4)
+
+    @pytest.mark.parametrize("qbit_num", QBIT_NUMS_ALL)
+    def test_apply_to_f32_state_vector(self, qbit_num):
+        """float32 state vector apply matches float64 reference."""
+        circ = _build_rx_rz_cnot_circuit(qbit_num)
+        p64 = _params64(circ.get_Parameter_Num())
+        p32 = p64.astype(np.float32)
+
+        dim = 2 ** qbit_num
+        state64 = _random_state(dim, dtype=np.complex128)
+        state32 = state64.astype(np.complex64)
+
+        sv64 = state64.reshape(dim, 1).copy()
+        circ.apply_to(p64, sv64)
+        result64 = sv64.reshape(-1)
+
+        sv32 = state32.reshape(dim, 1).copy()
+        circ.apply_to(p32, sv32, is_f32=True)
+        result32 = sv32.reshape(-1)
+
+        _assert_state_close(result64, result32.astype(np.complex128), rtol=1e-4)
+
+    @pytest.mark.parametrize("qbit_num", QBIT_NUMS_ALL)
+    def test_apply_to_f32_dtype_preserved(self, qbit_num):
+        """Output dtype should remain complex64 after float32 apply_to."""
+        circ = _build_rx_rz_cnot_circuit(qbit_num)
+        p32 = _params32(circ.get_Parameter_Num())
+
+        dim = 2 ** qbit_num
+        mat = _identity(dim, dtype=np.complex64)
+        circ.apply_to(p32, mat, is_f32=True)
+
+        assert mat.dtype == np.complex64, f"expected complex64, got {mat.dtype}"
+
+    def test_apply_to_f32_wrong_dtype_raises(self):
+        """Passing complex128 with is_f32=True should raise."""
+        circ = Circuit(2)
+        circ.add_RX(0)
+        params = _params32(1)
+        mat = _identity(4, dtype=np.complex128)  # wrong dtype for f32 path
+        with pytest.raises(Exception):
+            circ.apply_to(params, mat, is_f32=True)
+
+    def test_apply_to_f64_wrong_dtype_raises(self):
+        """Passing complex64 with is_f32=False (default) should raise."""
+        circ = Circuit(2)
+        circ.add_RX(0)
+        params = _params64(1)
+        mat = _identity(4, dtype=np.complex64)  # wrong dtype for f64 path
+        with pytest.raises(Exception):
+            circ.apply_to(params, mat, is_f32=False)
+
+
+class TestApplyFromRight:
+    """apply_from_right: both f64 and f32.
+
+    Gates_block::apply_from_right iterates gates in forward order but reads
+    the parameter array from the END backward (by design for gradient
+    computations).  For a SINGLE-GATE circuit there is no ordering ambiguity,
+    so we can verify the result against the matrix; for multi-gate circuits we
+    verify f32/f64 consistency and that the matrix is actually mutated.
+    """
+
+    @pytest.mark.parametrize("qbit_num", QBIT_NUMS_SMALL + [4])
+    def test_apply_from_right_single_gate_f64(self, qbit_num):
+        """For a single-gate circuit apply_from_right(params, I) == U."""
+        circ = Circuit(qbit_num)
+        circ.add_RX(0)                              # single parametric gate
+
+        params = _params64(circ.get_Parameter_Num())
+        U = np.array(circ.get_Matrix(params))
+
+        dim = 2 ** qbit_num
+        mat = _identity(dim)
+        circ.apply_from_right(params, mat)          # I @ U = U
+
+        _assert_unitary_close(U, mat)
+
+    @pytest.mark.parametrize("qbit_num", QBIT_NUMS_SMALL + [4])
+    def test_apply_from_right_single_gate_noparams_f64(self, qbit_num):
+        """Single parameter-free gate (H): apply_from_right([], A) == A @ H."""
+        circ = Circuit(qbit_num)
+        circ.add_H(0)
+
+        params = np.array([], dtype=np.float64)
+        U = np.array(circ.get_Matrix(params))       # should be H ⊗ I...
+
+        dim = 2 ** qbit_num
+        mat = _identity(dim)
+        circ.apply_from_right(params, mat)
+
+        _assert_unitary_close(U, mat)
+
+    @pytest.mark.parametrize("qbit_num", QBIT_NUMS_SMALL + [4])
+    def test_apply_from_right_mutates_matrix(self, qbit_num):
+        """apply_from_right must modify the input matrix in-place."""
+        circ = _build_rx_rz_cnot_circuit(qbit_num)
+        params = _params64(circ.get_Parameter_Num())
+
+        dim = 2 ** qbit_num
+        mat = _identity(dim)
+        circ.apply_from_right(params, mat)
+
+        # As long as the circuit is non-trivial the matrix should differ from I
+        assert not np.allclose(mat, np.eye(dim, dtype=np.complex128), atol=1e-6), (
+            "apply_from_right did not modify the input matrix"
+        )
+
+    @pytest.mark.parametrize("qbit_num", QBIT_NUMS_SMALL + [4])
+    def test_apply_from_right_f32_close_to_f64(self, qbit_num):
+        """float32 apply_from_right result should match float64 reference."""
+        circ = _build_rx_rz_cnot_circuit(qbit_num)
+        p64 = _params64(circ.get_Parameter_Num())
+        p32 = p64.astype(np.float32)
+
+        dim = 2 ** qbit_num
+        rng = np.random.default_rng(9)
+        A64 = np.ascontiguousarray(
+            rng.standard_normal((dim, dim)) + 1j * rng.standard_normal((dim, dim)),
+            dtype=np.complex128
+        )
+        A32 = A64.astype(np.complex64).copy(order='C')
+
+        ref = A64.copy()
+        circ.apply_from_right(p64, ref)
+
+        circ.apply_from_right(p32, A32, is_f32=True)
+
+        _assert_unitary_close(ref, A32.astype(np.complex128), rtol=1e-4)
+
+
+class TestGateFusion:
+    """Gate fusion via set_min_fusion: fused results must match unfused."""
+
+    def _make_multi_gate_circuit(self, qbit_num):
+        """Build a circuit with enough gates to trigger fusion."""
+        c = Circuit(qbit_num)
+        for q in range(min(qbit_num, 3)):
+            c.add_RX(q)
+            c.add_RZ(q)
+        if qbit_num >= 2:
+            c.add_CNOT(0, 1)
+            c.add_RY(0)
+        if qbit_num >= 3:
+            c.add_CNOT(1, 2)
+            c.add_RZ(2)
+        return c
+
+    @pytest.mark.parametrize("qbit_num", [3, 4, 5, 6])
+    @pytest.mark.parametrize("min_fusion", [2, 3, 4, 5, 6])
+    def test_fusion_unitary_matches_unfused(self, qbit_num, min_fusion):
+        """Fused circuit unitary should match unfused for various min_fusion values."""
+        if min_fusion > qbit_num:
+            pytest.skip("min_fusion > qbit_num — fusion won't activate")
+
+        circ_ref = self._make_multi_gate_circuit(qbit_num)
+        circ_fused = self._make_multi_gate_circuit(qbit_num)
+        circ_fused.set_min_fusion(min_fusion)
+
+        params = _params64(circ_ref.get_Parameter_Num())
+        dim = 2 ** qbit_num
+
+        ref = _identity(dim)
+        circ_ref.apply_to(params, ref)
+
+        fused = _identity(dim)
+        circ_fused.apply_to(params, fused)
+
+        _assert_unitary_close(ref, fused, rtol=1e-9)
+
+    @pytest.mark.parametrize("qbit_num", [3, 4, 5, 6])
+    @pytest.mark.parametrize("min_fusion", [2, 3])
+    def test_fusion_state_vector_matches_unfused(self, qbit_num, min_fusion):
+        """Fused circuit applied to a state should match unfused result."""
+        if min_fusion > qbit_num:
+            pytest.skip("min_fusion > qbit_num — fusion won't activate")
+
+        circ_ref = self._make_multi_gate_circuit(qbit_num)
+        circ_fused = self._make_multi_gate_circuit(qbit_num)
+        circ_fused.set_min_fusion(min_fusion)
+
+        params = _params64(circ_ref.get_Parameter_Num())
+        dim = 2 ** qbit_num
+        state = _random_state(dim, dtype=np.complex128)
+
+        sv_ref = state.reshape(dim, 1).copy()
+        circ_ref.apply_to(params, sv_ref)
+
+        sv_fused = state.reshape(dim, 1).copy()
+        circ_fused.apply_to(params, sv_fused)
+
+        _assert_state_close(sv_ref.reshape(-1), sv_fused.reshape(-1), rtol=1e-9)
+
+    @pytest.mark.parametrize("min_fusion", [2, 3, 5])
+    def test_fusion_large_circuit_avx_tbb_path(self, min_fusion):
+        """
+        With qbit_num=14 the fused path uses apply_large_kernel_to_input_AVX_TBB.
+        Compare against an unfused circuit to verify correctness.
+        """
+        qbit_num = 14
+        circ_ref = Circuit(qbit_num)
+        circ_fused = Circuit(qbit_num)
+
+        # Only involve qubits 0..1 so fusion kernel sees size==2 involved qubits
+        for _ in range(4):
+            circ_ref.add_RX(0)
+            circ_ref.add_CNOT(0, 1)
+            circ_ref.add_RZ(1)
+            circ_fused.add_RX(0)
+            circ_fused.add_CNOT(0, 1)
+            circ_fused.add_RZ(1)
+
+        circ_fused.set_min_fusion(min_fusion)
+
+        params = _params64(circ_ref.get_Parameter_Num())
+        dim = 2 ** qbit_num
+        state = _random_state(dim, dtype=np.complex128, seed=100)
+
+        sv_ref = state.reshape(dim, 1).copy()
+        circ_ref.apply_to(params, sv_ref)
+
+        sv_fused = state.reshape(dim, 1).copy()
+        circ_fused.apply_to(params, sv_fused)
+
+        _assert_state_close(sv_ref.reshape(-1), sv_fused.reshape(-1), rtol=1e-9)
+
+
+class TestNestedCircuit:
+    """Nested circuits (add_Circuit): sub-circuit applied inside outer circuit."""
+
+    @pytest.mark.parametrize("qbit_num", [2, 3, 4])
+    def test_nested_matches_flat(self, qbit_num):
+        """Outer circuit containing a sub-circuit matches flat equivalent."""
+        # Flat reference
+        flat = Circuit(qbit_num)
+        flat.add_RX(0)
+        flat.add_CNOT(0, min(1, qbit_num - 1))
+        flat.add_RZ(0)
+        flat.add_H(0)
+
+        # Sub-circuit with first two gates
+        sub = Circuit(qbit_num)
+        sub.add_RX(0)
+        sub.add_CNOT(0, min(1, qbit_num - 1))
+
+        # Outer circuit: sub + last two gates
+        outer = Circuit(qbit_num)
+        outer.add_Circuit(sub)
+        outer.add_RZ(0)
+        outer.add_H(0)
+
+        params = _params64(flat.get_Parameter_Num())
+        assert flat.get_Parameter_Num() == outer.get_Parameter_Num(), (
+            "flat and nested circuits should have the same number of parameters"
+        )
+
+        dim = 2 ** qbit_num
+        mat_flat = _identity(dim)
+        flat.apply_to(params, mat_flat)
+
+        mat_nested = _identity(dim)
+        outer.apply_to(params, mat_nested)
+
+        _assert_unitary_close(mat_flat, mat_nested)
+
+    @pytest.mark.parametrize("qbit_num", [2, 3])
+    def test_nested_f32_matches_f64(self, qbit_num):
+        """float32 apply on nested circuit matches float64 reference."""
+        sub = Circuit(qbit_num)
+        sub.add_RX(0)
+        sub.add_CNOT(0, min(1, qbit_num - 1))
+
+        outer = Circuit(qbit_num)
+        outer.add_Circuit(sub)
+        outer.add_RZ(0)
+
+        p64 = _params64(outer.get_Parameter_Num())
+        p32 = p64.astype(np.float32)
+
+        dim = 2 ** qbit_num
+        ref64 = _identity(dim)
+        outer.apply_to(p64, ref64)
+
+        mat32 = _identity(dim, dtype=np.complex64)
+        outer.apply_to(p32, mat32, is_f32=True)
+
+        _assert_unitary_close(ref64, mat32.astype(np.complex128), rtol=1e-4)
+
+    @pytest.mark.parametrize("qbit_num", [2, 3, 4])
+    def test_doubly_nested_matches_flat(self, qbit_num):
+        """Two levels of nesting produce the same result as a flat circuit."""
+        flat = Circuit(qbit_num)
+        flat.add_H(0)
+        flat.add_RX(0)
+        flat.add_CNOT(0, min(1, qbit_num - 1))
+        flat.add_RZ(0)
+
+        inner = Circuit(qbit_num)
+        inner.add_H(0)
+        inner.add_RX(0)
+
+        middle = Circuit(qbit_num)
+        middle.add_Circuit(inner)
+        middle.add_CNOT(0, min(1, qbit_num - 1))
+
+        outer = Circuit(qbit_num)
+        outer.add_Circuit(middle)
+        outer.add_RZ(0)
+
+        params = _params64(flat.get_Parameter_Num())
+        assert flat.get_Parameter_Num() == outer.get_Parameter_Num()
+
+        dim = 2 ** qbit_num
+        mat_flat = _identity(dim)
+        flat.apply_to(params, mat_flat)
+
+        mat_outer = _identity(dim)
+        outer.apply_to(params, mat_outer)
+
+        _assert_unitary_close(mat_flat, mat_outer)
+
+
+class TestCircuitMisc:
+    """Miscellaneous circuit-level tests."""
+
+    def test_parameter_num_consistent(self):
+        """get_Parameter_Num matches sum of individual gate parameter counts."""
+        circ = Circuit(3)
+        circ.add_RX(0)     # 1 param
+        circ.add_RZ(1)     # 1 param
+        circ.add_U3(2)     # 3 params
+        circ.add_CNOT(0, 2)  # 0 params
+        assert circ.get_Parameter_Num() == 5
+
+    def test_get_qbit_num(self):
+        for n in [1, 2, 4, 8]:
+            c = Circuit(n)
+            assert c.get_Qbit_Num() == n
+
+    def test_empty_circuit_is_identity_f64(self):
+        """An empty circuit should act as identity on any matrix."""
+        for qbit_num in [1, 2, 3, 4]:
+            circ = Circuit(qbit_num)
+            dim = 2 ** qbit_num
+            mat = _identity(dim)
+            circ.apply_to(np.array([], dtype=np.float64), mat)
+            np.testing.assert_allclose(mat, np.eye(dim, dtype=np.complex128), atol=1e-12)
+
+    def test_empty_circuit_is_identity_f32(self):
+        """An empty circuit, float32 path, should act as identity."""
+        for qbit_num in [1, 2, 3]:
+            circ = Circuit(qbit_num)
+            dim = 2 ** qbit_num
+            mat = _identity(dim, dtype=np.complex64)
+            circ.apply_to(np.array([], dtype=np.float32), mat, is_f32=True)
+            np.testing.assert_allclose(mat, np.eye(dim, dtype=np.complex64), atol=1e-6)
+
+    @pytest.mark.parametrize("qbit_num", [1, 2, 3, 4, 5, 6])
+    def test_get_matrix_matches_apply_to_identity(self, qbit_num):
+        """get_Matrix and apply_to on identity give the same result for all qubit counts."""
+        circ = Circuit(qbit_num)
+        circ.add_RX(0)
+        circ.add_RZ(0)
+        if qbit_num >= 2:
+            circ.add_CNOT(0, 1)
+
+        params = _params64(circ.get_Parameter_Num())
+        dim = 2 ** qbit_num
+
+        ref = np.array(circ.get_Matrix(params))
+        mat = _identity(dim)
+        circ.apply_to(params, mat)
+
+        _assert_unitary_close(ref, mat)
+
+    def test_non_contiguous_params_handled(self):
+        """Non-contiguous parameter arrays should be handled correctly (no crash)."""
+        circ = Circuit(2)
+        circ.add_RX(0)
+        circ.add_RZ(1)
+
+        params_full = np.array([0.1, 0.0, 0.2], dtype=np.float64)
+        params_strided = params_full[::2]   # non-contiguous: values 0.1, 0.2
+        assert not params_strided.flags['C_CONTIGUOUS']
+
+        mat = _identity(4)
+        circ.apply_to(params_strided, mat)
+        assert not np.allclose(mat, np.eye(4, dtype=np.complex128))
+
+    @pytest.mark.parametrize("qbit_num", QBIT_NUMS_ALL)
+    def test_h_x_cnot_no_params_f64(self, qbit_num):
+        """Circuits with only parameter-free gates work with empty param arrays."""
+        circ = Circuit(qbit_num)
+        circ.add_H(0)
+        circ.add_X(0)
+        if qbit_num >= 2:
+            circ.add_CNOT(0, 1)
+
+        params = np.array([], dtype=np.float64)
+        dim = 2 ** qbit_num
+        ref = np.array(circ.get_Matrix(params))
+        mat = _identity(dim)
+        circ.apply_to(params, mat)
+        _assert_unitary_close(ref, mat)
+
+    @pytest.mark.parametrize("qbit_num", QBIT_NUMS_ALL)
+    def test_h_x_cnot_no_params_f32(self, qbit_num):
+        """Parameter-free circuit float32 path produces correct result."""
+        circ = Circuit(qbit_num)
+        circ.add_H(0)
+        circ.add_X(0)
+        if qbit_num >= 2:
+            circ.add_CNOT(0, 1)
+
+        p64 = np.array([], dtype=np.float64)
+        p32 = np.array([], dtype=np.float32)
+        dim = 2 ** qbit_num
+
+        ref = np.array(circ.get_Matrix(p64))
+        mat32 = _identity(dim, dtype=np.complex64)
+        circ.apply_to(p32, mat32, is_f32=True)
+
+        _assert_unitary_close(ref, mat32.astype(np.complex128), rtol=1e-4)

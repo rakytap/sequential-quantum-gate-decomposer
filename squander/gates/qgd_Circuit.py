@@ -520,17 +520,31 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
         # call the C wrapper function
         return super().get_Parameter_Num()
 
-    def apply_to(self, parameters_mtx, unitary_mtx, parallel=1):
+    def apply_to(self, parameters_mtx, unitary_mtx, parallel=1, is_f32=False):
         """Apply the gate circuit operation on the input matrix.
 
         Args:
             parameters_mtx: Parameter array (numpy array) for parametric gates
             unitary_mtx: Input matrix (numpy array) to be transformed
             parallel: Parallel execution mode (int, optional, default=1)
+            is_f32: Use float32/complex64 precision (bool, optional, default=False)
         """
 
         # call the C wrapper function
-        super().apply_to(parameters_mtx, unitary_mtx, parallel=parallel)
+        super().apply_to(parameters_mtx, unitary_mtx, parallel=parallel, is_f32=is_f32)
+
+    def apply_from_right(self, parameters_mtx, unitary_mtx, parallel=1, is_f32=False):
+        """Apply the gate circuit from the right on the input matrix.
+
+        Args:
+            parameters_mtx: Parameter array (numpy array) for parametric gates
+            unitary_mtx: Input matrix (numpy array) to be transformed
+            parallel: Parallel execution mode (int, optional, default=1)
+            is_f32: Use float32/complex64 precision (bool, optional, default=False)
+        """
+
+        # call the C wrapper function
+        super().apply_from_right(parameters_mtx, unitary_mtx, parallel=parallel, is_f32=is_f32)
 
     def get_Second_Renyi_Entropy(
         self, parameters=None, input_state=None, qubit_list=None

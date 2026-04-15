@@ -480,6 +480,7 @@ Gates_block::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
         case ADAPTIVE_OPERATION:
         {
             operation->apply_from_right( parameters_mtx, input );
+            break;
         }
         case UN_OPERATION: {
             UN* un_operation = static_cast<UN*>(operation);
