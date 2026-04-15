@@ -319,12 +319,11 @@ class TestGateFusion:
             c.add_RZ(2)
         return c
 
-    @pytest.mark.parametrize("qbit_num", [3, 4, 5, 6])
-    @pytest.mark.parametrize("min_fusion", [2, 3, 4, 5, 6])
+    @pytest.mark.parametrize("qbit_num,min_fusion", [
+        (qn, mf) for qn in [3, 4, 5, 6] for mf in [2, 3, 4, 5, 6] if mf <= qn
+    ])
     def test_fusion_unitary_matches_unfused(self, qbit_num, min_fusion):
         """Fused circuit unitary should match unfused for various min_fusion values."""
-        if min_fusion > qbit_num:
-            pytest.skip("min_fusion > qbit_num — fusion won't activate")
 
         circ_ref = self._make_multi_gate_circuit(qbit_num)
         circ_fused = self._make_multi_gate_circuit(qbit_num)

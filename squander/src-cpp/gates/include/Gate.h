@@ -295,7 +295,7 @@ virtual void apply_from_right( Matrix_float& input );
 @param parameter_mtx An array of the input parameters.
 @param input The input array on which the gate is applied
 */
-void apply_from_right( Matrix_real& parameter_mtx, Matrix& input );
+virtual void apply_from_right( Matrix_real& parameter_mtx, Matrix& input );
 
 /**
 @brief Float32 overload for right-side parametric gate application by input*Gate.

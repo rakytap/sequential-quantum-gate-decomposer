@@ -208,6 +208,22 @@ Gates_block::get_matrix( Matrix_real& parameters, int parallel ) {
 
 
 
+
+namespace {
+/// Helper used by both apply_to_list overloads (f64 and f32) to avoid code duplication.
+template<typename Params, typename Input>
+static void apply_to_list_impl(Gates_block* self, Params& parameters_mtx, std::vector<Input>& inputs, int parallel) {
+    int work_batch = (parallel == 0) ? static_cast<int>(inputs.size()) : 1;
+    tbb::parallel_for( tbb::blocked_range<int>(0, static_cast<int>(inputs.size()), work_batch),
+        [&](tbb::blocked_range<int> r) {
+            for (int idx = r.begin(); idx < r.end(); ++idx) {
+                self->apply_to(parameters_mtx, inputs[idx], parallel);
+            }
+        });
+}
+} // anonymous namespace
+
+
 /**
 @brief Call to apply the gate on the input array/matrix by U3*input
 @param parameters An array of parameters to calculate the matrix of the U3 gate.
@@ -216,26 +232,7 @@ Gates_block::get_matrix( Matrix_real& parameters, int parallel ) {
 void 
 Gates_block::apply_to_list( Matrix_real& parameters_mtx, std::vector<Matrix>& inputs, int parallel ) {
 
-    int work_batch = 1;
-    if ( parallel == 0 ) {
-        work_batch = static_cast<int>(inputs.size());
-    }
-    else {
-        work_batch = 1;
-    }
-
-
-    tbb::parallel_for( tbb::blocked_range<int>(0,static_cast<int>(inputs.size()),work_batch), [&](tbb::blocked_range<int> r) {
-        for (int idx=r.begin(); idx<r.end(); ++idx) { 
-
-            Matrix* input = &inputs[idx];
-
-            apply_to( parameters_mtx, *input, parallel );
-
-        }
-
-    });
-
+    apply_to_list_impl(this, parameters_mtx, inputs, parallel);
 
 }
 
@@ -249,23 +246,7 @@ Gates_block::apply_to_list( Matrix_real& parameters_mtx, std::vector<Matrix>& in
 void
 Gates_block::apply_to_list( Matrix_real_float& parameters_mtx, std::vector<Matrix_float>& inputs, int parallel ) {
 
-    int work_batch = 1;
-    if ( parallel == 0 ) {
-        work_batch = static_cast<int>(inputs.size());
-    }
-    else {
-        work_batch = 1;
-    }
-
-    tbb::parallel_for( tbb::blocked_range<int>(0,static_cast<int>(inputs.size()),work_batch), [&](tbb::blocked_range<int> r) {
-        for (int idx=r.begin(); idx<r.end(); ++idx) {
-
-            Matrix_float* input = &inputs[idx];
-
-            apply_to( parameters_mtx, *input, parallel );
-
-        }
-    });
+    apply_to_list_impl(this, parameters_mtx, inputs, parallel);
 
 }
 
@@ -462,12 +443,6 @@ bool is_qbit_present(std::vector<int> involved_qubits, int new_qbit, int num_of_
 void 
 Gates_block::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
 
-
-    //The stringstream input to store the output messages.
-    std::stringstream sstream;
-
-
-
     // determine the number of parameters
     int parameters_num_total = 0;  
     for (size_t idx=0; idx<gates.size(); idx++) {
@@ -486,55 +461,13 @@ Gates_block::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
     for( int idx=0; idx<(int)gates.size(); idx++) {
 
         Gate* operation = gates[idx];
-        Matrix_real parameters_mtx(parameters-operation->get_parameter_num(), 1, operation->get_parameter_num());
+        Matrix_real parameters_mtx_loc(parameters-operation->get_parameter_num(), 1, operation->get_parameter_num());
 
-        switch (operation->get_type()) {
-        case CNOT_OPERATION: case CZ_OPERATION:
-        case CH_OPERATION: case SYC_OPERATION:
-        case X_OPERATION: case Y_OPERATION:
-        case Z_OPERATION: case SX_OPERATION:
-        case SXDG_OPERATION:
-        case T_OPERATION: case TDG_OPERATION:
-        case S_OPERATION: case SDG_OPERATION:
-        case GENERAL_OPERATION: case H_OPERATION:
+        if (parameters_mtx_loc.size() == 0 && operation->get_type() != BLOCK_OPERATION) {
             operation->apply_from_right(input);
-            break;  
-                  
-        case U1_OPERATION: case U2_OPERATION:
-        case U3_OPERATION: case CU_OPERATION:
-        case R_OPERATION: case RX_OPERATION:
-        case RY_OPERATION: case RZ_OPERATION:
-        case CRY_OPERATION: case CR_OPERATION:
-        case CRX_OPERATION: case CRZ_OPERATION:
-        case CZ_NU_OPERATION: case CP_OPERATION:
-        case ADAPTIVE_OPERATION:
-        {
-            operation->apply_from_right( parameters_mtx, input );
-            break;
         }
-        case UN_OPERATION: {
-            UN* un_operation = static_cast<UN*>(operation);
-            un_operation->apply_from_right( parameters_mtx, input );
-            break; 
-        }
-        case ON_OPERATION: {
-            ON* on_operation = static_cast<ON*>(operation);
-            on_operation->apply_from_right( parameters_mtx, input );
-            break; 
-        }
-        case BLOCK_OPERATION: {
-            Gates_block* block_operation = static_cast<Gates_block*>(operation);
-            block_operation->apply_from_right(parameters_mtx, input);
-            break;
-        }       
-        case COMPOSITE_OPERATION: {
-            Composite* com_operation = static_cast<Composite*>(operation);
-            com_operation->apply_from_right( parameters_mtx, input );
-            break; 
-        }
-        default:
-            std::string err("Gates_block::apply_from_right: unimplemented gate"); 
-            throw err;
+        else {
+            operation->apply_from_right(parameters_mtx_loc, input);
         }
 
         parameters = parameters - operation->get_parameter_num();
@@ -601,9 +534,6 @@ Gates_block::apply_from_right( Matrix_real_float& parameters_mtx, Matrix_float& 
 std::vector<Matrix> 
 Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input, int parallel ) {
 
-    //The stringstream input to store the output messages.
-    std::stringstream sstream;
-  
     std::vector<Matrix> grad(parameter_num, Matrix(0,0));
 
     int work_batch = 1;
@@ -643,17 +573,13 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input, i
                 
                 
                 Matrix_real parameters_mtx(parameters_mtx_in.get_data() + operation->get_parameter_start_idx(), 1, operation->get_parameter_num());
-                
-                switch (operation->get_type()) {
-                case UN_OPERATION:
-                case ON_OPERATION:
-                case SYC_OPERATION:
-                case COMPOSITE_OPERATION: {
-                    std::string err( "Gates_block::apply_derivate_to: Given operation not supported in gardient calculation");
-			        throw( err );
-	                break;
+
+                gate_type op_type = operation->get_type();
+                if (op_type == UN_OPERATION || op_type == ON_OPERATION ||
+                    op_type == SYC_OPERATION || op_type == COMPOSITE_OPERATION) {
+                    std::string err("Gates_block::apply_derivate_to: Given operation not supported in gradient calculation");
+                    throw(err);
                 }
-                default :
                 
                     if ( operation->get_parameter_num() == 0 ) {
                 
@@ -678,8 +604,6 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input, i
                         }                       
                     
                     }
-                    
-                }
             }
 
 
