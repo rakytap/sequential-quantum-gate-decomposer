@@ -433,7 +433,8 @@ decomp_dict = {
     'SWAP': lambda: compile_gates(2, [("CNOT", [0, 1]), ("CNOT", [1, 0]), ("CNOT", [0, 1])]),
     #7 CNOT CSWAP: https://arxiv.org/pdf/2305.18128
     #'CSWAP': lambda: compile_gates(3, [("S", [1]), ("CNOT", [2, 1]), ("Sdg", [1]), ("Sx", [2]), ("T", [2]), ("CNOT", [0, 2]), ("T", [2]), ("CNOT", [1, 2]), ("T", [1]), ("Tdg", [2]), ("CNOT", [0, 2]), ("CNOT", [0, 1]), ("T", [2]), ("T", [0]), ("Tdg", [1]), ("H", [2]), ("CNOT", [0, 1]), ("CNOT", [2, 1]), ("GP", -sympy.pi/4, 3, [0, 1, 2])]).applyfunc(textbook_simp), #compile_gates(3, [("CNOT", [2, 1]), ("H", [2]), ("CNOT", [1, 2]), ("Tdg", [2]), ("CNOT", [0, 2]), ("T", [2]), ("CNOT", [1, 2]), ("Tdg", [2]), ("CNOT", [0, 2]), ("T", [1]), ("T", [2]), ("H", [2]), ("CNOT", [0, 1]), ("T", [0]), ("Tdg", [1]), ("CNOT", [0, 1]), ("CNOT", [2, 1])])
-    'CSWAP': lambda: compile_gates(3, [('Tdg', (1,)), ('T', (2,)), ('CNOT', [2, 1]), ('T', (1,)), ('Rx', sympy.pi/2, (2,)), ('T', (2,)), ('CNOT', [0, 2]), ('T', (2,)), ('CNOT', [1, 2]), ('Tdg', (2,)), ('CNOT', [0, 2]), ('T', (2,)), ('Rx', -sympy.pi/4, (2,)), ('Ry', -sympy.pi/2, (2,)), ('CNOT', [0, 1]), ('T', (1,)), ('CNOT', [0, 1]), ('CNOT', [2, 1]), ('Tdg', (0,)), ('Tdg', (1,)), ('GP', -sympy.pi/8, 3, [0, 1, 2])]),
+    #'CSWAP': lambda: compile_gates(3, [('Tdg', (1,)), ('T', (2,)), ('CNOT', [2, 1]), ('T', (1,)), ('Rx', sympy.pi/2, (2,)), ('T', (2,)), ('CNOT', [0, 2]), ('T', (2,)), ('CNOT', [1, 2]), ('Tdg', (2,)), ('CNOT', [0, 2]), ('T', (2,)), ('Rx', -sympy.pi/4, (2,)), ('Ry', -sympy.pi/2, (2,)), ('CNOT', [0, 1]), ('T', (1,)), ('CNOT', [0, 1]), ('CNOT', [2, 1]), ('Tdg', (0,)), ('Tdg', (1,)), ('GP', -sympy.pi/8, 3, [0, 1, 2])]),
+    'CSWAP': lambda: compile_gates(3, [('Tdg', (1,)), ('T', (2,)), ('CNOT', [2, 1]), ('T', (1,)), ('T', (2,)), ('U2', -sympy.pi/4, sympy.pi/4, (2,)), ('CNOT', [0, 2]), ('T', (2,)), ('CNOT', [1, 2]), ('Tdg', (2,)), ('CNOT', [0, 2]), ('U2', 3*sympy.pi/4, -3*sympy.pi/4, (2,)), ('CNOT', [0, 1]), ('T', (1,)), ('CNOT', [0, 1]), ('CNOT', [2, 1]), ('Tdg', (0,)), ('Tdg', (1,))]),
     'iSWAP': lambda: compile_gates(2, [("S", [0]), ("S", [1]), ("H", [0]), ("CNOT", [0, 1]), ("CNOT", [1, 0]), ("H", [1])]),
     'SSWAP': lambda: compile_gates(2, [("CNOT", [0, 1]), ("H", [0]), ("T", [0]), ("Tdg", [1]), ("H", [0]), ("H", [1]), ("CNOT", [0, 1]), ("H", [0]), ("H", [1]), ("Tdg", [0]), ("H", [0]), ("CNOT", [0, 1]), ("Sdg", [0]), ("S", [1])]).applyfunc(textbook_simp),
     #'SiSWAP': lambda: compile_gates(2, [("Sx", [0]), ("Rz", sympy.pi/2, [0]), ("CNOT", [0, 1]), ("Sx", [0]), ("Sx", [1]), ("Rz", sympy.pi*7/4, [0]), ("Rz", sympy.pi*7/4, [1]), ("Sx", [0]), ("Rz", sympy.pi/2, [0]), ("CNOT", [0, 1]), ("Sx", [0]), ("Sx", [1])]).applyfunc(textbook_simp),
@@ -453,6 +454,7 @@ def test_decomp():
             assert compile_gates(1, [(inv, *params, [0]), (gate_inverses[inv][0], *gate_inverses[inv][1](*params), [0])]).applyfunc(textbook_simp) == sympy.eye(2), inv
     for gate in gate_descs:
         print(gate)
+        if gate != 'CSWAP': continue
         params = [vardict[param[1]] for param in gate_descs[gate][1]]
         if gate == "GP": params.append(1)
         textbook = make_gate(gate, *params)
@@ -479,7 +481,7 @@ def test_decomp():
         for j in range(3):
             if i == j : continue
             print(f"CRY({i}, {j})@CRY(0, 1) pure, sparse control:", find_control_qubits(compile_gates(3, [("CRY", theta, [i, j]), ("CRY", theta2, (0, 1))]), 3))
-#test_decomp(); assert False
+test_decomp(); assert False
 
 QUBIT = int #np.int32
 
@@ -720,9 +722,9 @@ def eval_osrcost(num_qubits, rescirc, params, param_syms):
             #s2 = [x*x for x in s]
             #ss2 = sum(s2)
             #kappa = 1.0 - sum(x*x for x in s2)/(ss2*ss2)
-            kappa = sum(x*x for i, x in enumerate(s[1:]))
+            kappa = N_Qubit_Decomposition_Guided_Tree.dyadic_loss(s, N_Qubit_Decomposition_Guided_Tree.ceil_log2(len(s)))
             osr_result.append((num_cnot, kappa))
-        osr_results.append(N_Qubit_Decomposition_Guided_Tree.solve_best_min_cnots(num_qubits, all_cuts, osr_result, topology, use_surplus=False))
+        osr_results.append(N_Qubit_Decomposition_Guided_Tree.solve_best_min_cnots(num_qubits, all_cuts, osr_result, topology, use_surplus=True))
     osrcost = sum(max(osr_results)) #sum(sum(x) for x in osr_results)/len(osr_results)
     return osrcost
 def eval_symcost(num_qubits, rescirc, allow_global_phase=False):
@@ -739,7 +741,7 @@ def eval_symcost(num_qubits, rescirc, allow_global_phase=False):
     return symcost
 def get_gatecost(compiled_circuit, param_syms):
     param_cost = 0.2
-    gatecost = sum(1+sum((complex(sympy.log(sympy.Abs(z.to_sympy(param_syms).simplify().as_numer_denom()[1]), 2).evalf()).real+0.01)*param_cost for z in x[2]) for x in compiled_circuit.gates)
+    gatecost = sum((1<<len(x[1]))+sum((complex(sympy.log(sympy.Abs(z.to_sympy(param_syms).simplify().as_numer_denom()[1]), 2).evalf()).real+0.01)*param_cost for z in x[2]) for x in compiled_circuit.gates)
     return gatecost
 def eval_circ(unitary, params, compiled_circuit, symonly=False, allow_global_phase=False):
     param_syms = [vardict[x[1]] for x in params]
@@ -786,7 +788,7 @@ def evaluate(individual, pset, hof, unitary, params, num_qubits, ansatz, cost_fu
         print("NaN cost detected:", [str(x) for x in individual], osrcost, symcost, cost, rescirc, unitary)
     #print(cost)
     #if cost < 0.0: print(individual, "Negative cost!", cost, tr, rescirc, unitary)
-    return osrcost, symcost, cost, gatecost
+    return osrcost, symcost, cost, gatecost #return osrcost, symcost, cost, gatecost
 
 def find_best_orientation(cnot_structure, Umtx, param_info):
     results = []
@@ -819,7 +821,7 @@ def gen_ansatz(gate, scale_max, layers, basis, u3_ansatz=False, gp_gate=False):
     elif gate in ("CSWAP",): cnot_structure = [(2, 1), (0, 2), (1, 2), (0, 2), (0, 1), (0, 1), (2, 1)]
     elif num_qubits > 1: cnot_structure = determine_CNOT_structure(Umtx, param_info)
     else: cnot_structure = []
-    if len(cnot_structure):
+    if len(cnot_structure) and False:
         cnot_structure = find_best_orientation(cnot_structure, Umtx, param_info)
         print("CNOT structure:", cnot_structure)
     if u3_ansatz:
@@ -874,7 +876,7 @@ def decompose_unitary(gate, scale_max, layers=4, basis=('CNOT', 'S', 'Sdg', 'T',
     # Set up the DEAP framework
     def init_individual(regions):
         return creator.Individual([gp.PrimitiveTree((toolbox if is_circ else toolboxangle).expr()) for is_circ in regions])
-    creator.create("FitnessMin", base.Fitness, weights=(-1.0, -0.1, -0.01))
+    creator.create("FitnessMin", base.Fitness, weights=(-1.0, -0.1, -0.01, -0.001))
     creator.create("Individual", list, fitness=creator.FitnessMin)
     tree_depth = num_qubits * (num_qubits - 1) * layers
     # Register the genetic operators
@@ -1086,9 +1088,11 @@ def gen_clifford():
 #maximally entangling only at specific angles: CRX, CRY, CRZ, CP, Rxy, iSWAP_pow
 def decompose_unitary_search(orig_gate, scale_max, layers=4, basis=('CNOT',)+single_gate_clifford+('T', 'Tdg', 'P', 'Rx', 'Ry', 'Rz', 'U2'), allow_global_phase=True, find_min=False):
     ansatz, regions, num_qubits, Umtx, param_info = gen_ansatz(orig_gate, scale_max, layers, basis)
+    no_ansatz = False
+    if no_ansatz: ansatz, regions = [None], [True]
     params = [vardict[x[1]] for x in param_info]
-    num_regions = len(regions)*num_qubits #we use a half open interval based on (−π,π].
-    def gen_angles(s, reversed=False):
+    num_regions = len(regions)*num_qubits
+    def gen_angles(s, reversed=False): #we use a half open interval based on (−π,π].
         return [make_angle(ParamIndex(i), AngleScale(scale*s, scale_max*(1 if i==-1 else param_info[i][0]))) for i in range(-1, len(param_info)) for scale in (range(scale_max//2-1, -scale_max//2-1, -1) if reversed else range(-scale_max//2+1, scale_max//2+1)) if scale != 0 or i == 0]
     def sympy_to_paramsum(expr, s):
         res = ParamIndexSum()
@@ -1140,6 +1144,37 @@ def decompose_unitary_search(orig_gate, scale_max, layers=4, basis=('CNOT',)+sin
                  for qbit in range(num_qubits)
                  for angles in gen_gate_angles(gate) if (gate, angles) in unique_gates
             ]
+    """
+    motifs = [((SINGLE_QUBIT_GATES, ANY_QUBIT_POS),),
+        ((SINGLE_QUBIT_GATES, ANY_QUBIT_POS), (SAME_GATE, ANY_OTHER_QUBIT_POS),),
+        ((SINGLE_QUBIT_GATES, ANY_QUBIT_POS), (INV_GATE, SAME_POS),),
+        ((TWO_QUBIT_GATES, ANY_TWOQUBIT_POS),),
+        ((TWO_QUBIT_GATES, ANY_TWOQUBIT_POS), (TWO_QUBIT_GATES, ANY_COMMON_TWOQUBIT_POS),),
+        ((TWO_QUBIT_GATES, ANY_TWOQUBIT_POS), (TWO_QUBIT_GATES, SAME_REV_POS), (TWO_QUBIT_GATES, SAME_POS))] #SWAP motif
+    """
+    if no_ansatz: #1, 2 and 3 CNOT motifs
+        all_gates.extend([tuple((("CNOT", qbit1, qbit2),) if i==region*num_qubits+qbit1 or i==region*num_qubits+qbit2 else () for i in range(num_regions)) for qbit1 in range(num_qubits) for qbit2 in range(num_qubits) if qbit1 != qbit2
+                                    for region in range(len(regions)) if regions[region]])
+        all_gates.extend([tuple((("CNOT", qbit1, qbit2),("CNOT", qbit3, qbit4)) if i==region*num_qubits+qbit1 or i==region*num_qubits+qbit2 else () for i in range(num_regions)) for qbit1 in range(num_qubits) for qbit2 in range(num_qubits) for qbit3 in range(num_qubits) for qbit4 in range(num_qubits) if qbit1 != qbit2 and qbit3 != qbit4 and len({qbit1, qbit2} & {qbit3, qbit4}) != 0
+                                    for region in range(len(regions)) if regions[region]])
+        all_gates.extend([tuple((("CNOT", qbit1, qbit2),("CNOT", qbit2, qbit1),("CNOT", qbit1, qbit2)) if i==region*num_qubits+qbit1 or i==region*num_qubits+qbit2 else () for i in range(num_regions)) for qbit1 in range(num_qubits) for qbit2 in range(num_qubits) if qbit1 != qbit2
+                                    for region in range(len(regions)) if regions[region]]) #SWAP motif
+        all_gates.extend([tuple(((gate1, *angles1, qbit1), ("CNOT", qbit1, qbit2), (gate2, *angles2, qbit1)) if i==region*num_qubits+qbit1 else () for i in range(num_regions)) for qbit1 in range(num_qubits) for qbit2 in range(num_qubits) if qbit1 != qbit2
+                                    for region in range(len(regions)) if regions[region]
+                                    for gate1 in gate_inverses if gate1 in basis
+                                    for angles1 in gen_gate_angles(gate1) if (gate1, angles1) in unique_gates
+                                    for gate2, angles2 in (reverse_gate(gate1, angles1),)                        ])
+        all_gates.extend([tuple(((gate1, *angles1, qbit2), ("CNOT", qbit1, qbit2), (gate2, *angles2, qbit2)) if i==region*num_qubits+qbit1 else () for i in range(num_regions)) for qbit1 in range(num_qubits) for qbit2 in range(num_qubits) if qbit1 != qbit2
+                                    for region in range(len(regions)) if regions[region]
+                                    for gate1 in gate_inverses if gate1 in basis
+                                    for angles1 in gen_gate_angles(gate1) if (gate1, angles1) in unique_gates
+                                    for gate2, angles2 in (reverse_gate(gate1, angles1),)
+                        ])
+        all_gates.extend([tuple((("CNOT", qbit1, qbit2),(gate, *angles, qbit1),(gate, *angles, qbit2),("CNOT", qbit3, qbit4)) if i==region*num_qubits+qbit1 or i==region*num_qubits+qbit2 else () for i in range(num_regions)) for qbit1 in range(num_qubits) for qbit2 in range(num_qubits) for qbit3 in range(num_qubits) for qbit4 in range(num_qubits) if qbit1 != qbit2 and qbit3 != qbit4 and len({qbit1, qbit2} & {qbit3, qbit4}) != 0
+                                    for region in range(len(regions)) if regions[region]
+                                    for gate in basis if gate_descs[gate][0] == 1
+                                    for angles in gen_gate_angles(gate) if (gate, angles) in unique_gates
+                                    ])
     if num_qubits > 1:
         all_gates.extend([tuple(((gate, *angles, qbit1),) if i==region*num_qubits+qbit1 else ((gate, *angles, qbit2),) if i==region*num_qubits+qbit2 else () for i in range(num_regions))
                         for gate in basis if gate_descs[gate][0] == 1
@@ -1160,7 +1195,13 @@ def decompose_unitary_search(orig_gate, scale_max, layers=4, basis=('CNOT',)+sin
 
     #startcost = eval_circ(Umtx, param_info, CircuitBuilder())[0]
     starts = list(itertools.product(*[(((),) if region else ((x,) for x in gen_angles(1))) for region in regions for qbit in range(num_qubits if region else 1)]))
-    #print(starts)
+    starts[0] = ((), (('Tdg', 1,),), (('T', 2,),), (), (('T', 1,),), (('Rx', sympy.pi/2, 2,), ('T', 2,)), (), (), (('T', 2,),),
+                 (), (), (('Tdg', 2,),), (), (), (('T', 2,), ('Rx', -sympy.pi/4, 2,), ('Ry', -sympy.pi/2, 2,)), (), (('T', 1,),), (),
+                 (), (), (), (('Tdg', 0,),), (('Tdg', 1,),), ())
+    starts[0] = ((), (('Tdg', 1,),), (('T', 2,),), (), (('T', 1,),), (('T', 2,),), (), (), (('T', 2,),),
+                 (), (), (('Tdg', 2,),), (), (), (('T', 2,),), (), (('T', 1,),), (),
+                 (), (), (), (('Tdg', 0,),), (('Tdg', 1,),), ())
+    #'CSWAP': lambda: compile_gates(3, [('Tdg', (1,)), ('T', (2,)), ('CNOT', [2, 1]), ('T', (1,)), ('Rx', sympy.pi/2, (2,)), ('T', (2,)), ('CNOT', [0, 2]), ('T', (2,)), ('CNOT', [1, 2]), ('Tdg', (2,)), ('CNOT', [0, 2]), ('T', (2,)), ('Rx', -sympy.pi/4, (2,)), ('Ry', -sympy.pi/2, (2,)), ('CNOT', [0, 1]), ('T', (1,)), ('CNOT', [0, 1]), ('CNOT', [2, 1]), ('Tdg', (0,)), ('Tdg', (1,)), ('GP', -sympy.pi/8, 3, [0, 1, 2])]),
     #res = A_star(starts, lambda node: eval(node) == 0, lambda node: eval(node),
     #       lambda node: [tuple(x+((gate[1:],) if gate[0] == i else ()) for i, x in enumerate(node)) for gate in gates],
     #       lambda node1, node2: abs(eval(node2) - eval(node1)))
@@ -1192,7 +1233,7 @@ def decompose_unitary_search(orig_gate, scale_max, layers=4, basis=('CNOT',)+sin
     res = best_first(starts, lambda E: E[0] == 0.0 and (E[1] == 0.0 or E[2] == 0.0), get_neighbors,
                      functools.partial(eval, Umtx, param_info, ansatz, allow_global_phase), canonicalize, find_min=find_min)
     if res is None: return res
-    if not find_min:
+    if not find_min and not no_ansatz:
         basis_no_clifford = tuple(g for g in basis if g not in clifford_descs)
         print(res)
         def remap_qubits(x, qbit): return tuple(z[:-1] + (qbit,) for z in x)
@@ -1258,14 +1299,15 @@ def decompose_unitary_search(orig_gate, scale_max, layers=4, basis=('CNOT',)+sin
 #decompose_unitary_search("CRY", 4)
 #decompose_unitary_search("CRZ", 4)
 #decompose_unitary_search("SYC", 24)
-decompose_unitary_search("CSWAP", 8)
+decompose_unitary_search("CSWAP", 8, allow_global_phase=False)
+#decompose_unitary_search("CSWAP", 8, basis=cnot_full_clifford_t, allow_global_phase=False)
 #decompose_unitary_search("CU3", 4)
 #decompose_unitary_search("U3", 2, allow_global_phase=False)
 #decompose_unitary_search("GP", 1)
 #decompose_unitary_search("P", 1)
 #decompose_unitary_search("Deutsch", 1)
-#decompose_unitary_search("fFredkin", basis=cnot_full_clifford_t)
-#decompose_unitary_search("Peres", basis=cnot_full_clifford_t)
+#decompose_unitary_search("fFredkin", 8, basis=cnot_full_clifford_t)
+#decompose_unitary_search("Peres", 8, basis=cnot_full_clifford_t)
 #decompose_unitary_search("CCX", 1, basis=cnot_full_clifford_t)
 #decompose_unitary_search("CCZ", 1)
 #decompose_unitary_search((1, [], lambda: compile_gates(1, [("Rx", -3*sympy.pi/2, [0]), ("Rz", -sympy.pi/4, [0]), ("H", [0]), ("X", [0]), ("Rz", -3*sympy.pi/2, [0])])), 8)
