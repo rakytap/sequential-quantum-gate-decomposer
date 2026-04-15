@@ -5,6 +5,7 @@ import sympy
 import multiprocessing
 from squander import Circuit
 from squander.decomposition.qgd_Wide_Circuit_Optimization import N_Qubit_Decomposition_Guided_Tree
+from sympy_gen import *
 
 #A Symbolic Search Framework for Exact Multi-Basis Quantum Gate Decomposition
 def get_param_space(params):
@@ -76,26 +77,38 @@ def find_control_qubits(psi, num_qubits):
     return pure_controls, sparsity_controls
 def make_gateprep_dict(): #primitive roots of unity
     d = {}
-    for i1 in (3, 4, 6, 9, 15, 18, 20, 21): #0
+    for i1 in (3, 4, 6, 8, 9, 15, 16, 18, 20, 21): #0
         for sgn in (1, -1):
             z = sgn*sympy.exp(sympy.I*sympy.pi*i1/24)
             d[sympy.factor_terms(sympy.expand_mul(sympy.expand_complex(z)))] = z
-        for i2 in (i1, (i1+12)%24):
+        for i2 in (i1, (i1+12)%24, 24-i1):
             for sgn0, sgn1 in itertools.product((1, -1), repeat=2):
                 z = sgn0*sympy.exp(sympy.I*sympy.pi*i1/24)/2+sgn1*sympy.exp(-sympy.I*sympy.pi*i2/24)/2
                 #print(i1, i2, sgn0, sgn1, sympy.factor_terms(sympy.expand_mul(sympy.expand_complex(z))))
                 d[sympy.factor_terms(sympy.expand_mul(sympy.expand_complex(z)))] = z
     return d
 gateprep_dict = make_gateprep_dict()
+#print(gateprep_dict); assert False
+def has_radical(expr):
+    return len(expr.atoms(sympy.Pow)) > 0
+def separate_exp(expr):
+    expexprs, nonexpexprs = [], []
+    for x in sympy.Mul.make_args(expr):
+        if x.atoms(sympy.exp):
+            expexprs.append(x)
+        else:
+            nonexpexprs.append(x)
+    return sympy.Mul(*expexprs), sympy.Mul(*nonexpexprs)
 def gateprep(x):
     x = sympy.factor_terms(x)
-    if x in gateprep_dict: x = gateprep_dict[x]
+    if x == 0: return x
+    x = sympy.Mul(*[gateprep_dict[z] if z in gateprep_dict else z for y in sympy.separatevars(x).as_independent(*x.free_symbols) for z in separate_exp(y)])
+    assert not has_radical(x), (x, sympy.separatevars(x).as_independent(*x.free_symbols))
     return quantsimp(x)
 def quantsimp(x):
     #x = sympy.sympify(x)
     #if isinstance(x, sympy.Expr) and x.is_zero:
     #    return sympy.S.Zero if not x.is_Number else x
-    #assert "sqrt" not in str(x), x
     x = x.rewrite(sympy.exp)#.rewrite(sympy.sqrt)
     #x = sympy.expand_power_exp(x)
     #x = sympy.powdenest(x)
@@ -106,7 +119,11 @@ def quantsimp(x):
     x = sympy.together(x)
     x = sympy.cancel(x)
     #x = sympy.powsimp(x, combine="base")
-    x = sympy.expand_mul(x)
+    x = sympy.expand_mul(x)    
+    #x = sympy.together(x)
+    #x = sympy.cancel(x)
+    #x = sympy.expand_complex(x)
+    assert not has_radical(x), x
     return x.doit()
 def textbook_simp(x):
     #print(x)
@@ -346,561 +363,6 @@ gate_descs = { #(num_qubits, num_params, sympy_generator_function)
     "Deutsch": (3, [(1, "theta")], lambda theta: sympy.Matrix([[1, 0, 0, 0, 0, 0, 0, 0], [0, 1, 0, 0, 0, 0, 0, 0], [0, 0, 1, 0, 0, 0, 0, 0], [0, 0, 0, sympy.I*sympy.cos(theta), 0, 0, 0, sympy.sin(theta)], [0, 0, 0, 0, 1, 0, 0, 0], [0, 0, 0, 0, 0, 1, 0, 0], [0, 0, 0, 0, 0, 0, 1, 0], [0, 0, 0, sympy.sin(theta), 0, 0, 0, sympy.I*sympy.cos(theta)]]))
 }
 
-clifford_decomps = {
-    "I_q1": [('S', (0,)), ('Rz', -sympy.pi/2, (0,))],
-    "I_q2": [('Z', (0,)), ('Rz', -sympy.pi, (0,))],
-    "I_q3": [('Sdg', (0,)), ('Rz', -3*sympy.pi/2, (0,))],
-    "I_q4": [('Rx', -2*sympy.pi, (0,))],
-    "I_q5": [('S', (0,)), ('Rz', 3*sympy.pi/2, (0,))],
-    "I_q6": [('Z', (0,)), ('Rz', sympy.pi, (0,))],
-    "I_q7": [('Sdg', (0,)), ('Rz', sympy.pi/2, (0,))],
-    "X_q1": [('Rx', -sympy.pi/2, (0,)), ('Sxdg', (0,))],
-    "X_q2": [('Rx', -sympy.pi, (0,))],
-    "X_q3": [('Sx', (0,)), ('Rx', -3*sympy.pi/2, (0,))],
-    "X_q4": [('Z', (0,)), ('Ry', -sympy.pi, (0,))],
-    "X_q5": [('Sxdg', (0,)), ('Rx', 3*sympy.pi/2, (0,))],
-    "X_q6": [('Rx', sympy.pi, (0,))],
-    "X_q7": [('Rx', sympy.pi/2, (0,)), ('Sx', (0,))],
-    "Y_q1": [('Tdg', (0,)), ('Ry', -sympy.pi, (0,)), ('Tdg', (0,))],
-    "Y_q2": [('Ry', -sympy.pi, (0,))],
-    "Y_q3": [('T', (0,)), ('Ry', -sympy.pi, (0,)), ('T', (0,))],
-    "Y_q4": [('Rx', -sympy.pi, (0,)), ('Z', (0,))],
-    "Y_q5": [('Tdg', (0,)), ('Ry', sympy.pi, (0,)), ('Tdg', (0,))],
-    "Y_q6": [('Ry', sympy.pi, (0,))],
-    "Y_q7": [('T', (0,)), ('Ry', sympy.pi, (0,)), ('T', (0,))],
-    "Z_q1": [('Sdg', (0,)), ('Rz', -sympy.pi/2, (0,))],
-    "Z_q2": [('Rz', -sympy.pi, (0,))],
-    "Z_q3": [('S', (0,)), ('Rz', -3*sympy.pi/2, (0,))],
-    "Z_q4": [('Z', (0,)), ('Rx', -2*sympy.pi, (0,))],
-    "Z_q5": [('Sdg', (0,)), ('Rz', 3*sympy.pi/2, (0,))],
-    "Z_q6": [('Rz', sympy.pi, (0,))],
-    "Z_q7": [('S', (0,)), ('Rz', sympy.pi/2, (0,))],
-    "H_q1": [('S', (0,)), ('Sx', (0,)), ('S', (0,))],
-    "H_q2": [('Rx', -sympy.pi, (0,)), ('Ry', -sympy.pi/2, (0,))],
-    "H_q3": [('Rx', -3*sympy.pi/2, (0,)), ('H', (0,)), ('Sdg', (0,))],
-    "H_q4": [('Rx', -2*sympy.pi, (0,)), ('H', (0,))],
-    "H_q5": [('Rx', 3*sympy.pi/2, (0,)), ('H', (0,)), ('S', (0,))],
-    "H_q6": [('Rx', -sympy.pi, (0,)), ('Ry', 3*sympy.pi/2, (0,))],
-    "H_q7": [('Sdg', (0,)), ('Sxdg', (0,)), ('Sdg', (0,))],
-    "HX": [('Ry', sympy.pi/2, (0,))],
-    "HX_q1": [('Sx', (0,)), ('S', (0,)), ('Sxdg', (0,))],
-    "HX_q2": [('H', (0,)), ('Rx', -sympy.pi, (0,))],
-    "HX_q3": [('S', (0,)), ('H', (0,)), ('Rx', -3*sympy.pi/2, (0,))],
-    "HX_q4": [('Ry', -3*sympy.pi/2, (0,))],
-    "HX_q5": [('Sdg', (0,)), ('H', (0,)), ('Rx', 3*sympy.pi/2, (0,))],
-    "HX_q6": [('H', (0,)), ('Rx', sympy.pi, (0,))],
-    "HX_q7": [('Sxdg', (0,)), ('Sdg', (0,)), ('Sx', (0,))],
-    "HY": [('H', (0,)), ('Y', (0,))],
-    "HY_q1": [('S', (0,)), ('Sxdg', (0,)), ('S', (0,))],
-    "HY_q2": [('H', (0,)), ('Ry', -sympy.pi, (0,))],
-    "HY_q3": [('Sdg', (0,)), ('Sx', (0,)), ('Sdg', (0,))],
-    "HY_q4": [('Y', (0,)), ('H', (0,))],
-    "HY_q5": [('Sx', (0,)), ('Sdg', (0,)), ('Sx', (0,))],
-    "HY_q6": [('Ry', -sympy.pi, (0,)), ('H', (0,))],
-    "HY_q7": [('Sxdg', (0,)), ('S', (0,)), ('Sxdg', (0,))],
-    "HZ": [('Ry', -sympy.pi/2, (0,))],
-    "HZ_q1": [('S', (0,)), ('Sx', (0,)), ('Sdg', (0,))],
-    "HZ_q2": [('Rx', -sympy.pi, (0,)), ('H', (0,))],
-    "HZ_q3": [('Rx', -3*sympy.pi/2, (0,)), ('H', (0,)), ('S', (0,))],
-    "HZ_q4": [('Ry', 3*sympy.pi/2, (0,))],
-    "HZ_q5": [('Rx', 3*sympy.pi/2, (0,)), ('H', (0,)), ('Sdg', (0,))],
-    "HZ_q6": [('Rx', sympy.pi, (0,)), ('H', (0,))],
-    "HZ_q7": [('Sdg', (0,)), ('Sxdg', (0,)), ('S', (0,))],
-    "S_q1": [('Z', (0,)), ('Rz', -sympy.pi/2, (0,))],
-    "S_q2": [('Sdg', (0,)), ('Rz', -sympy.pi, (0,))],
-    "S_q3": [('Rz', -3*sympy.pi/2, (0,))],
-    "S_q4": [('S', (0,)), ('Rx', -2*sympy.pi, (0,))],
-    "S_q5": [('Rz', 3*sympy.pi/2, (0,)), ('Z', (0,))],
-    "S_q6": [('Sdg', (0,)), ('Rz', sympy.pi, (0,))],
-    "S_q7": [('Rz', sympy.pi/2, (0,))],
-    "SX": [('Rx', -sympy.pi, (0,)), ('Sdg', (0,))],
-    "SX_q1": [('Rx', -sympy.pi, (0,)), ('Rz', -sympy.pi/2, (0,))],
-    "SX_q2": [('S', (0,)), ('Rx', -sympy.pi, (0,))],
-    "SX_q3": [('Rz', -sympy.pi/2, (0,)), ('Y', (0,))],
-    "SX_q4": [('Rx', sympy.pi, (0,)), ('Sdg', (0,))],
-    "SX_q5": [('Rx', sympy.pi, (0,)), ('Rz', -sympy.pi/2, (0,))],
-    "SX_q6": [('S', (0,)), ('Rx', sympy.pi, (0,))],
-    "SX_q7": [('X', (0,)), ('Rz', -sympy.pi/2, (0,))],
-    "SY": [('Sdg', (0,)), ('Rx', -sympy.pi, (0,))],
-    "SY_q1": [('Rz', -sympy.pi/2, (0,)), ('Rx', -sympy.pi, (0,))],
-    "SY_q2": [('Rx', -sympy.pi, (0,)), ('S', (0,))],
-    "SY_q3": [('X', (0,)), ('Rz', -3*sympy.pi/2, (0,))],
-    "SY_q4": [('Sdg', (0,)), ('Rx', sympy.pi, (0,))],
-    "SY_q5": [('Rz', -sympy.pi/2, (0,)), ('Rx', sympy.pi, (0,))],
-    "SY_q6": [('Rx', sympy.pi, (0,)), ('S', (0,))],
-    "SY_q7": [('Rz', -sympy.pi/2, (0,)), ('X', (0,))],
-    "Sdg_q1": [('Rz', -sympy.pi/2, (0,))],
-    "Sdg_q2": [('S', (0,)), ('Rz', -sympy.pi, (0,))],
-    "Sdg_q3": [('Z', (0,)), ('Rz', -3*sympy.pi/2, (0,))],
-    "Sdg_q4": [('Sdg', (0,)), ('Rx', -2*sympy.pi, (0,))],
-    "Sdg_q5": [('Rz', 3*sympy.pi/2, (0,))],
-    "Sdg_q6": [('S', (0,)), ('Rz', sympy.pi, (0,))],
-    "Sdg_q7": [('Z', (0,)), ('Rz', sympy.pi/2, (0,))],
-    "HS": [('H', (0,)), ('S', (0,))],
-    "HS_q1": [('Rx', -sympy.pi/2, (0,)), ('Ry', -sympy.pi/2, (0,))],
-    "HS_q2": [('Rx', -sympy.pi, (0,)), ('H', (0,)), ('Sdg', (0,))],
-    "HS_q3": [('Rx', -3*sympy.pi/2, (0,)), ('H', (0,))],
-    "HS_q4": [('Ry', 3*sympy.pi/2, (0,)), ('Sdg', (0,))],
-    "HS_q5": [('Rx', -sympy.pi/2, (0,)), ('Ry', 3*sympy.pi/2, (0,))],
-    "HS_q6": [('Rx', sympy.pi, (0,)), ('H', (0,)), ('Sdg', (0,))],
-    "HS_q7": [('Sdg', (0,)), ('Sxdg', (0,))],
-    "HSX": [('Sx', (0,)), ('Ry', sympy.pi/2, (0,))],
-    "HSX_q1": [('S', (0,)), ('Sx', (0,)), ('Ry', sympy.pi, (0,))],
-    "HSX_q2": [('Ry', -3*sympy.pi/2, (0,)), ('Sdg', (0,))],
-    "HSX_q3": [('Rx', sympy.pi/2, (0,)), ('Ry', -3*sympy.pi/2, (0,))],
-    "HSX_q4": [('Sx', (0,)), ('Ry', -3*sympy.pi/2, (0,))],
-    "HSX_q5": [('Sdg', (0,)), ('Rx', sympy.pi, (0,)), ('Sxdg', (0,))],
-    "HSX_q6": [('Ry', sympy.pi/2, (0,)), ('Sdg', (0,))],
-    "HSX_q7": [('Sdg', (0,)), ('Sx', (0,))],
-    "HSY": [('Ry', sympy.pi/2, (0,)), ('S', (0,))],
-    "HSY_q1": [('S', (0,)), ('Rx', -sympy.pi, (0,)), ('Sx', (0,))],
-    "HSY_q2": [('Sxdg', (0,)), ('Ry', -3*sympy.pi/2, (0,))],
-    "HSY_q3": [('Rx', -sympy.pi/2, (0,)), ('Ry', -3*sympy.pi/2, (0,))],
-    "HSY_q4": [('Ry', -3*sympy.pi/2, (0,)), ('S', (0,))],
-    "HSY_q5": [('Sdg', (0,)), ('Sxdg', (0,)), ('Ry', sympy.pi, (0,))],
-    "HSY_q6": [('Sxdg', (0,)), ('Ry', sympy.pi/2, (0,))],
-    "HSY_q7": [('S', (0,)), ('Sxdg', (0,))],
-    "HSdg": [('H', (0,)), ('Sdg', (0,))],
-    "HSdg_q1": [('S', (0,)), ('Sx', (0,))],
-    "HSdg_q2": [('Rx', -sympy.pi, (0,)), ('H', (0,)), ('S', (0,))],
-    "HSdg_q3": [('Rx', sympy.pi/2, (0,)), ('Ry', 3*sympy.pi/2, (0,))],
-    "HSdg_q4": [('Ry', 3*sympy.pi/2, (0,)), ('S', (0,))],
-    "HSdg_q5": [('Rx', 3*sympy.pi/2, (0,)), ('H', (0,))],
-    "HSdg_q6": [('Rx', sympy.pi, (0,)), ('H', (0,)), ('S', (0,))],
-    "HSdg_q7": [('Rx', sympy.pi/2, (0,)), ('Ry', -sympy.pi/2, (0,))],
-    "SH": [('H', (0,)), ('Sx', (0,))],
-    "SH_q1": [('Ry', sympy.pi/2, (0,)), ('Rx', -sympy.pi/2, (0,))],
-    "SH_q2": [('H', (0,)), ('Rx', -sympy.pi, (0,)), ('Sxdg', (0,))],
-    "SH_q3": [('H', (0,)), ('Rx', -3*sympy.pi/2, (0,))],
-    "SH_q4": [('Rx', 3*sympy.pi/2, (0,)), ('Sdg', (0,))],
-    "SH_q5": [('Ry', sympy.pi/2, (0,)), ('Rx', 3*sympy.pi/2, (0,))],
-    "SH_q6": [('H', (0,)), ('Rx', sympy.pi, (0,)), ('Sxdg', (0,))],
-    "SH_q7": [('Sxdg', (0,)), ('Sdg', (0,))],
-    "SHX": [('H', (0,)), ('Sxdg', (0,))],
-    "SHX_q1": [('Sx', (0,)), ('S', (0,))],
-    "SHX_q2": [('H', (0,)), ('Rx', -sympy.pi, (0,)), ('Sx', (0,))],
-    "SHX_q3": [('Ry', sympy.pi/2, (0,)), ('Rx', -3*sympy.pi/2, (0,))],
-    "SHX_q4": [('Rx', -3*sympy.pi/2, (0,)), ('S', (0,))],
-    "SHX_q5": [('H', (0,)), ('Rx', 3*sympy.pi/2, (0,))],
-    "SHX_q6": [('H', (0,)), ('Rx', sympy.pi, (0,)), ('Sx', (0,))],
-    "SHX_q7": [('Ry', sympy.pi/2, (0,)), ('Rx', sympy.pi/2, (0,))],
-    "SHY": [('Ry', 3*sympy.pi/2, (0,)), ('Sx', (0,))],
-    "SHY_q1": [('Ry', sympy.pi, (0,)), ('Sx', (0,)), ('S', (0,))],
-    "SHY_q2": [('Rx', sympy.pi/2, (0,)), ('Sdg', (0,))],
-    "SHY_q3": [('Sx', (0,)), ('Sdg', (0,))],
-    "SHY_q4": [('Ry', -sympy.pi/2, (0,)), ('Sx', (0,))],
-    "SHY_q5": [('Ry', -sympy.pi, (0,)), ('Sx', (0,)), ('S', (0,))],
-    "SHY_q6": [('Rx', -3*sympy.pi/2, (0,)), ('Sdg', (0,))],
-    "SHY_q7": [('Ry', -sympy.pi/2, (0,)), ('Rx', -3*sympy.pi/2, (0,))],
-    "SHZ": [('Rx', -sympy.pi/2, (0,)), ('S', (0,))],
-    "SHZ_q1": [('Ry', sympy.pi, (0,)), ('Sxdg', (0,)), ('Sdg', (0,))],
-    "SHZ_q2": [('Ry', 3*sympy.pi/2, (0,)), ('Sxdg', (0,))],
-    "SHZ_q3": [('Ry', -sympy.pi/2, (0,)), ('Rx', 3*sympy.pi/2, (0,))],
-    "SHZ_q4": [('Rx', 3*sympy.pi/2, (0,)), ('S', (0,))],
-    "SHZ_q5": [('Ry', -sympy.pi, (0,)), ('Sxdg', (0,)), ('Sdg', (0,))],
-    "SHZ_q6": [('Ry', -sympy.pi/2, (0,)), ('Sxdg', (0,))],
-    "SHZ_q7": [('Sxdg', (0,)), ('S', (0,))],
-    "Sx_q1": [('X', (0,)), ('Rx', -sympy.pi/2, (0,))],
-    "Sx_q2": [('Rx', -sympy.pi, (0,)), ('Sxdg', (0,))],
-    "Sx_q3": [('Rx', -3*sympy.pi/2, (0,))],
-    "Sx_q4": [('Rx', -2*sympy.pi, (0,)), ('Sx', (0,))],
-    "Sx_q5": [('X', (0,)), ('Rx', 3*sympy.pi/2, (0,))],
-    "Sx_q6": [('Rx', sympy.pi, (0,)), ('Sxdg', (0,))],
-    "Sx_q7": [('Rx', sympy.pi/2, (0,))],
-    "Sxdg_q1": [('Rx', -sympy.pi/2, (0,))],
-    "Sxdg_q2": [('Rx', -sympy.pi, (0,)), ('Sx', (0,))],
-    "Sxdg_q3": [('X', (0,)), ('Rx', -3*sympy.pi/2, (0,))],
-    "Sxdg_q4": [('Rx', -2*sympy.pi, (0,)), ('Sxdg', (0,))],
-    "Sxdg_q5": [('Rx', 3*sympy.pi/2, (0,))],
-    "Sxdg_q6": [('Rx', sympy.pi, (0,)), ('Sx', (0,))],
-    "Sxdg_q7": [('X', (0,)), ('Rx', sympy.pi/2, (0,))],
-    "SxY": [('Ry', -sympy.pi, (0,)), ('Sxdg', (0,))],
-    "SxY_q1": [('Ry', sympy.pi, (0,)), ('Rx', 3*sympy.pi/2, (0,))],
-    "SxY_q2": [('Sxdg', (0,)), ('Z', (0,))],
-    "SxY_q3": [('Rx', -sympy.pi/2, (0,)), ('Z', (0,))],
-    "SxY_q4": [('Ry', sympy.pi, (0,)), ('Sxdg', (0,))],
-    "SxY_q5": [('Ry', sympy.pi, (0,)), ('Rx', -sympy.pi/2, (0,))],
-    "SxY_q6": [('Y', (0,)), ('Sxdg', (0,))],
-    "SxY_q7": [('Y', (0,)), ('Rx', -sympy.pi/2, (0,))],
-    "SxZ": [('Y', (0,)), ('Sx', (0,))],
-    "SxZ_q1": [('Ry', -sympy.pi, (0,)), ('Rx', sympy.pi/2, (0,))],
-    "SxZ_q2": [('Ry', -sympy.pi, (0,)), ('Sx', (0,))],
-    "SxZ_q3": [('Y', (0,)), ('Rx', -3*sympy.pi/2, (0,))],
-    "SxZ_q4": [('Sxdg', (0,)), ('Ry', sympy.pi, (0,))],
-    "SxZ_q5": [('Ry', sympy.pi, (0,)), ('Rx', sympy.pi/2, (0,))],
-    "SxZ_q6": [('Ry', sympy.pi, (0,)), ('Sx', (0,))],
-    "SxZ_q7": [('Y', (0,)), ('Rx', sympy.pi/2, (0,))],
-}
-
-clifford_descs = {
-    #Clifford additions at all global phases
-    "I_q1": (1, [], lambda: compile_gates(1, clifford_decomps["I_q1"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[sympy.sqrt(2)*(sympy.I + 1)/2, 0], [0, sympy.sqrt(2)*(sympy.I + 1)/2]])),
-    "I_q2": (1, [], lambda: compile_gates(1, clifford_decomps["I_q2"]),
-        lambda: sympy.Matrix([[sympy.I, 0], [0, sympy.I]])),
-    "I_q3": (1, [], lambda: compile_gates(1, clifford_decomps["I_q3"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[sympy.sqrt(2)*(sympy.I - 1)/2, 0], [0, sympy.sqrt(2)*(sympy.I - 1)/2]])),
-    "I_q4": (1, [], lambda: compile_gates(1, clifford_decomps["I_q4"]),
-        lambda: sympy.Matrix([[-1, 0], [0, -1]])),
-    "I_q5": (1, [], lambda: compile_gates(1, clifford_decomps["I_q5"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[-sympy.sqrt(2)*(sympy.I + 1)/2, 0], [0, -sympy.sqrt(2)*(sympy.I + 1)/2]])),
-    "I_q6": (1, [], lambda: compile_gates(1, clifford_decomps["I_q6"]),
-        lambda: sympy.Matrix([[-sympy.I, 0], [0, -sympy.I]])),
-    "I_q7": (1, [], lambda: compile_gates(1, clifford_decomps["I_q7"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[sympy.sqrt(2)*(1 - sympy.I)/2, 0], [0, sympy.sqrt(2)*(1 - sympy.I)/2]])),
-    "X_q1": (1, [], lambda: compile_gates(1, clifford_decomps["X_q1"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[0, sympy.sqrt(2)*(sympy.I + 1)/2], [sympy.sqrt(2)*(sympy.I + 1)/2, 0]])),
-    "X_q2": (1, [], lambda: compile_gates(1, clifford_decomps["X_q2"]),
-        lambda: sympy.Matrix([[0, sympy.I], [sympy.I, 0]])),
-    "X_q3": (1, [], lambda: compile_gates(1, clifford_decomps["X_q3"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[0, sympy.sqrt(2)*(sympy.I - 1)/2], [sympy.sqrt(2)*(sympy.I - 1)/2, 0]])),
-    "X_q4": (1, [], lambda: compile_gates(1, clifford_decomps["X_q4"]),
-        lambda: sympy.Matrix([[0, -1], [-1, 0]])),
-    "X_q5": (1, [], lambda: compile_gates(1, clifford_decomps["X_q5"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[0, -sympy.sqrt(2)*(sympy.I + 1)/2], [-sympy.sqrt(2)*(sympy.I + 1)/2, 0]])),
-    "X_q6": (1, [], lambda: compile_gates(1, clifford_decomps["X_q6"]),
-        lambda: sympy.Matrix([[0, -sympy.I], [-sympy.I, 0]])),
-    "X_q7": (1, [], lambda: compile_gates(1, clifford_decomps["X_q7"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[0, sympy.sqrt(2)*(1 - sympy.I)/2], [sympy.sqrt(2)*(1 - sympy.I)/2, 0]])),
-    "Y_q1": (1, [], lambda: compile_gates(1, clifford_decomps["Y_q1"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[0, sympy.sqrt(2)*(1 - sympy.I)/2], [sympy.sqrt(2)*(sympy.I - 1)/2, 0]])),
-    "Y_q2": (1, [], lambda: compile_gates(1, clifford_decomps["Y_q2"]),
-        lambda: sympy.Matrix([[0, 1], [-1, 0]])),
-    "Y_q3": (1, [], lambda: compile_gates(1, clifford_decomps["Y_q3"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[0, sympy.sqrt(2)*(sympy.I + 1)/2], [-sympy.sqrt(2)*(sympy.I + 1)/2, 0]])),
-    "Y_q4": (1, [], lambda: compile_gates(1, clifford_decomps["Y_q4"]),
-        lambda: sympy.Matrix([[0, sympy.I], [-sympy.I, 0]])),
-    "Y_q5": (1, [], lambda: compile_gates(1, clifford_decomps["Y_q5"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[0, sympy.sqrt(2)*(sympy.I - 1)/2], [sympy.sqrt(2)*(1 - sympy.I)/2, 0]])),
-    "Y_q6": (1, [], lambda: compile_gates(1, clifford_decomps["Y_q6"]),
-        lambda: sympy.Matrix([[0, -1], [1, 0]])),
-    "Y_q7": (1, [], lambda: compile_gates(1, clifford_decomps["Y_q7"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[0, -sympy.sqrt(2)*(sympy.I + 1)/2], [sympy.sqrt(2)*(sympy.I + 1)/2, 0]])),
-    "Z_q1": (1, [], lambda: compile_gates(1, clifford_decomps["Z_q1"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[sympy.sqrt(2)*(sympy.I + 1)/2, 0], [0, -sympy.sqrt(2)*(sympy.I + 1)/2]])),
-    "Z_q2": (1, [], lambda: compile_gates(1, clifford_decomps["Z_q2"]),
-        lambda: sympy.Matrix([[sympy.I, 0], [0, -sympy.I]])),
-    "Z_q3": (1, [], lambda: compile_gates(1, clifford_decomps["Z_q3"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[sympy.sqrt(2)*(sympy.I - 1)/2, 0], [0, sympy.sqrt(2)*(1 - sympy.I)/2]])),
-    "Z_q4": (1, [], lambda: compile_gates(1, clifford_decomps["Z_q4"]),
-        lambda: sympy.Matrix([[-1, 0], [0, 1]])),
-    "Z_q5": (1, [], lambda: compile_gates(1, clifford_decomps["Z_q5"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[-sympy.sqrt(2)*(sympy.I + 1)/2, 0], [0, sympy.sqrt(2)*(sympy.I + 1)/2]])),
-    "Z_q6": (1, [], lambda: compile_gates(1, clifford_decomps["Z_q6"]),
-        lambda: sympy.Matrix([[-sympy.I, 0], [0, sympy.I]])),
-    "Z_q7": (1, [], lambda: compile_gates(1, clifford_decomps["Z_q7"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[sympy.sqrt(2)*(1 - sympy.I)/2, 0], [0, sympy.sqrt(2)*(sympy.I - 1)/2]])),
-    "H_q1": (1, [], lambda: compile_gates(1, clifford_decomps["H_q1"]),
-        lambda: sympy.Matrix([[(sympy.I + 1)/2, (sympy.I + 1)/2], [(sympy.I + 1)/2, -(sympy.I + 1)/2]])),
-    "H_q2": (1, [], lambda: compile_gates(1, clifford_decomps["H_q2"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[sympy.sqrt(2)*sympy.I/2, sympy.sqrt(2)*sympy.I/2], [sympy.sqrt(2)*sympy.I/2, -sympy.sqrt(2)*sympy.I/2]])),
-    "H_q3": (1, [], lambda: compile_gates(1, clifford_decomps["H_q3"]),
-        lambda: sympy.Matrix([[(sympy.I - 1)/2, (sympy.I - 1)/2], [(sympy.I - 1)/2, (1 - sympy.I)/2]])),
-    "H_q4": (1, [], lambda: compile_gates(1, clifford_decomps["H_q4"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[-sympy.sqrt(2)/2, -sympy.sqrt(2)/2], [-sympy.sqrt(2)/2, sympy.sqrt(2)/2]])),
-    "H_q5": (1, [], lambda: compile_gates(1, clifford_decomps["H_q5"]),
-        lambda: sympy.Matrix([[-(sympy.I + 1)/2, -(sympy.I + 1)/2], [-(sympy.I + 1)/2, (sympy.I + 1)/2]])),
-    "H_q6": (1, [], lambda: compile_gates(1, clifford_decomps["H_q6"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[-sympy.sqrt(2)*sympy.I/2, -sympy.sqrt(2)*sympy.I/2], [-sympy.sqrt(2)*sympy.I/2, sympy.sqrt(2)*sympy.I/2]])),
-    "H_q7": (1, [], lambda: compile_gates(1, clifford_decomps["H_q7"]),
-        lambda: sympy.Matrix([[(1 - sympy.I)/2, (1 - sympy.I)/2], [(1 - sympy.I)/2, (sympy.I - 1)/2]])),
-    "HX": (1, [], lambda: compile_gates(1, clifford_decomps["HX"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[sympy.sqrt(2)/2, -sympy.sqrt(2)/2], [sympy.sqrt(2)/2, sympy.sqrt(2)/2]])),
-    "HX_q1": (1, [], lambda: compile_gates(1, clifford_decomps["HX_q1"]),
-        lambda: sympy.Matrix([[(sympy.I + 1)/2, -(sympy.I + 1)/2], [(sympy.I + 1)/2, (sympy.I + 1)/2]])),
-    "HX_q2": (1, [], lambda: compile_gates(1, clifford_decomps["HX_q2"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[sympy.sqrt(2)*sympy.I/2, -sympy.sqrt(2)*sympy.I/2], [sympy.sqrt(2)*sympy.I/2, sympy.sqrt(2)*sympy.I/2]])),
-    "HX_q3": (1, [], lambda: compile_gates(1, clifford_decomps["HX_q3"]),
-        lambda: sympy.Matrix([[(sympy.I - 1)/2, (1 - sympy.I)/2], [(sympy.I - 1)/2, (sympy.I - 1)/2]])),
-    "HX_q4": (1, [], lambda: compile_gates(1, clifford_decomps["HX_q4"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[-sympy.sqrt(2)/2, sympy.sqrt(2)/2], [-sympy.sqrt(2)/2, -sympy.sqrt(2)/2]])),
-    "HX_q5": (1, [], lambda: compile_gates(1, clifford_decomps["HX_q5"]),
-        lambda: sympy.Matrix([[-(sympy.I + 1)/2, (sympy.I + 1)/2], [-(sympy.I + 1)/2, -(sympy.I + 1)/2]])),
-    "HX_q6": (1, [], lambda: compile_gates(1, clifford_decomps["HX_q6"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[-sympy.sqrt(2)*sympy.I/2, sympy.sqrt(2)*sympy.I/2], [-sympy.sqrt(2)*sympy.I/2, -sympy.sqrt(2)*sympy.I/2]])),
-    "HX_q7": (1, [], lambda: compile_gates(1, clifford_decomps["HX_q7"]),
-        lambda: sympy.Matrix([[(1 - sympy.I)/2, (sympy.I - 1)/2], [(1 - sympy.I)/2, (1 - sympy.I)/2]])),
-    "HY": (1, [], lambda: compile_gates(1, clifford_decomps["HY"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[-sympy.sqrt(2)*sympy.I/2, sympy.sqrt(2)*sympy.I/2], [sympy.sqrt(2)*sympy.I/2, sympy.sqrt(2)*sympy.I/2]])),
-    "HY_q1": (1, [], lambda: compile_gates(1, clifford_decomps["HY_q1"]),
-        lambda: sympy.Matrix([[(1 - sympy.I)/2, (sympy.I - 1)/2], [(sympy.I - 1)/2, (sympy.I - 1)/2]])),
-    "HY_q2": (1, [], lambda: compile_gates(1, clifford_decomps["HY_q2"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[sympy.sqrt(2)/2, -sympy.sqrt(2)/2], [-sympy.sqrt(2)/2, -sympy.sqrt(2)/2]])),
-    "HY_q3": (1, [], lambda: compile_gates(1, clifford_decomps["HY_q3"]),
-        lambda: sympy.Matrix([[(sympy.I + 1)/2, -(sympy.I + 1)/2], [-(sympy.I + 1)/2, -(sympy.I + 1)/2]])),
-    "HY_q4": (1, [], lambda: compile_gates(1, clifford_decomps["HY_q4"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[sympy.sqrt(2)*sympy.I/2, -sympy.sqrt(2)*sympy.I/2], [-sympy.sqrt(2)*sympy.I/2, -sympy.sqrt(2)*sympy.I/2]])),
-    "HY_q5": (1, [], lambda: compile_gates(1, clifford_decomps["HY_q5"]),
-        lambda: sympy.Matrix([[(sympy.I - 1)/2, (1 - sympy.I)/2], [(1 - sympy.I)/2, (1 - sympy.I)/2]])),
-    "HY_q6": (1, [], lambda: compile_gates(1, clifford_decomps["HY_q6"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[-sympy.sqrt(2)/2, sympy.sqrt(2)/2], [sympy.sqrt(2)/2, sympy.sqrt(2)/2]])),
-    "HY_q7": (1, [], lambda: compile_gates(1, clifford_decomps["HY_q7"]),
-        lambda: sympy.Matrix([[-(sympy.I + 1)/2, (sympy.I + 1)/2], [(sympy.I + 1)/2, (sympy.I + 1)/2]])),
-    "HZ": (1, [], lambda: compile_gates(1, clifford_decomps["HZ"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[sympy.sqrt(2)/2, sympy.sqrt(2)/2], [-sympy.sqrt(2)/2, sympy.sqrt(2)/2]])),
-    "HZ_q1": (1, [], lambda: compile_gates(1, clifford_decomps["HZ_q1"]),
-        lambda: sympy.Matrix([[(sympy.I + 1)/2, (sympy.I + 1)/2], [-(sympy.I + 1)/2, (sympy.I + 1)/2]])),
-    "HZ_q2": (1, [], lambda: compile_gates(1, clifford_decomps["HZ_q2"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[sympy.sqrt(2)*sympy.I/2, sympy.sqrt(2)*sympy.I/2], [-sympy.sqrt(2)*sympy.I/2, sympy.sqrt(2)*sympy.I/2]])),
-    "HZ_q3": (1, [], lambda: compile_gates(1, clifford_decomps["HZ_q3"]),
-        lambda: sympy.Matrix([[(sympy.I - 1)/2, (sympy.I - 1)/2], [(1 - sympy.I)/2, (sympy.I - 1)/2]])),
-    "HZ_q4": (1, [], lambda: compile_gates(1, clifford_decomps["HZ_q4"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[-sympy.sqrt(2)/2, -sympy.sqrt(2)/2], [sympy.sqrt(2)/2, -sympy.sqrt(2)/2]])),
-    "HZ_q5": (1, [], lambda: compile_gates(1, clifford_decomps["HZ_q5"]),
-        lambda: sympy.Matrix([[-(sympy.I + 1)/2, -(sympy.I + 1)/2], [(sympy.I + 1)/2, -(sympy.I + 1)/2]])),
-    "HZ_q6": (1, [], lambda: compile_gates(1, clifford_decomps["HZ_q6"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[-sympy.sqrt(2)*sympy.I/2, -sympy.sqrt(2)*sympy.I/2], [sympy.sqrt(2)*sympy.I/2, -sympy.sqrt(2)*sympy.I/2]])),
-    "HZ_q7": (1, [], lambda: compile_gates(1, clifford_decomps["HZ_q7"]),
-        lambda: sympy.Matrix([[(1 - sympy.I)/2, (1 - sympy.I)/2], [(sympy.I - 1)/2, (1 - sympy.I)/2]])),
-    "S_q1": (1, [], lambda: compile_gates(1, clifford_decomps["S_q1"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[sympy.sqrt(2)*(sympy.I + 1)/2, 0], [0, sympy.sqrt(2)*(sympy.I - 1)/2]])),
-    "S_q2": (1, [], lambda: compile_gates(1, clifford_decomps["S_q2"]),
-        lambda: sympy.Matrix([[sympy.I, 0], [0, -1]])),
-    "S_q3": (1, [], lambda: compile_gates(1, clifford_decomps["S_q3"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[sympy.sqrt(2)*(sympy.I - 1)/2, 0], [0, -sympy.sqrt(2)*(sympy.I + 1)/2]])),
-    "S_q4": (1, [], lambda: compile_gates(1, clifford_decomps["S_q4"]),
-        lambda: sympy.Matrix([[-1, 0], [0, -sympy.I]])),
-    "S_q5": (1, [], lambda: compile_gates(1, clifford_decomps["S_q5"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[-sympy.sqrt(2)*(sympy.I + 1)/2, 0], [0, sympy.sqrt(2)*(1 - sympy.I)/2]])),
-    "S_q6": (1, [], lambda: compile_gates(1, clifford_decomps["S_q6"]),
-        lambda: sympy.Matrix([[-sympy.I, 0], [0, 1]])),
-    "S_q7": (1, [], lambda: compile_gates(1, clifford_decomps["S_q7"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[sympy.sqrt(2)*(1 - sympy.I)/2, 0], [0, sympy.sqrt(2)*(sympy.I + 1)/2]])),
-    "SX": (1, [], lambda: compile_gates(1, clifford_decomps["SX"]),
-        lambda: sympy.Matrix([[0, sympy.I], [1, 0]])),
-    "SX_q1": (1, [], lambda: compile_gates(1, clifford_decomps["SX_q1"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[0, sympy.sqrt(2)*(sympy.I - 1)/2], [sympy.sqrt(2)*(sympy.I + 1)/2, 0]])),
-    "SX_q2": (1, [], lambda: compile_gates(1, clifford_decomps["SX_q2"]),
-        lambda: sympy.Matrix([[0, -1], [sympy.I, 0]])),
-    "SX_q3": (1, [], lambda: compile_gates(1, clifford_decomps["SX_q3"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[0, -sympy.sqrt(2)*(sympy.I + 1)/2], [sympy.sqrt(2)*(sympy.I - 1)/2, 0]])),
-    "SX_q4": (1, [], lambda: compile_gates(1, clifford_decomps["SX_q4"]),
-        lambda: sympy.Matrix([[0, -sympy.I], [-1, 0]])),
-    "SX_q5": (1, [], lambda: compile_gates(1, clifford_decomps["SX_q5"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[0, sympy.sqrt(2)*(1 - sympy.I)/2], [-sympy.sqrt(2)*(sympy.I + 1)/2, 0]])),
-    "SX_q6": (1, [], lambda: compile_gates(1, clifford_decomps["SX_q6"]),
-        lambda: sympy.Matrix([[0, 1], [-sympy.I, 0]])),
-    "SX_q7": (1, [], lambda: compile_gates(1, clifford_decomps["SX_q7"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[0, sympy.sqrt(2)*(sympy.I + 1)/2], [sympy.sqrt(2)*(1 - sympy.I)/2, 0]])),
-    "SY": (1, [], lambda: compile_gates(1, clifford_decomps["SY"]),
-        lambda: sympy.Matrix([[0, 1], [sympy.I, 0]])),
-    "SY_q1": (1, [], lambda: compile_gates(1, clifford_decomps["SY_q1"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[0, sympy.sqrt(2)*(sympy.I + 1)/2], [sympy.sqrt(2)*(sympy.I - 1)/2, 0]])),
-    "SY_q2": (1, [], lambda: compile_gates(1, clifford_decomps["SY_q2"]),
-        lambda: sympy.Matrix([[0, sympy.I], [-1, 0]])),
-    "SY_q3": (1, [], lambda: compile_gates(1, clifford_decomps["SY_q3"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[0, sympy.sqrt(2)*(sympy.I - 1)/2], [-sympy.sqrt(2)*(sympy.I + 1)/2, 0]])),
-    "SY_q4": (1, [], lambda: compile_gates(1, clifford_decomps["SY_q4"]),
-        lambda: sympy.Matrix([[0, -1], [-sympy.I, 0]])),
-    "SY_q5": (1, [], lambda: compile_gates(1, clifford_decomps["SY_q5"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[0, -sympy.sqrt(2)*(sympy.I + 1)/2], [sympy.sqrt(2)*(1 - sympy.I)/2, 0]])),
-    "SY_q6": (1, [], lambda: compile_gates(1, clifford_decomps["SY_q6"]),
-        lambda: sympy.Matrix([[0, -sympy.I], [1, 0]])),
-    "SY_q7": (1, [], lambda: compile_gates(1, clifford_decomps["SY_q7"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[0, sympy.sqrt(2)*(1 - sympy.I)/2], [sympy.sqrt(2)*(sympy.I + 1)/2, 0]])),
-    "Sdg_q1": (1, [], lambda: compile_gates(1, clifford_decomps["Sdg_q1"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[sympy.sqrt(2)*(sympy.I + 1)/2, 0], [0, sympy.sqrt(2)*(1 - sympy.I)/2]])),
-    "Sdg_q2": (1, [], lambda: compile_gates(1, clifford_decomps["Sdg_q2"]),
-        lambda: sympy.Matrix([[sympy.I, 0], [0, 1]])),
-    "Sdg_q3": (1, [], lambda: compile_gates(1, clifford_decomps["Sdg_q3"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[sympy.sqrt(2)*(sympy.I - 1)/2, 0], [0, sympy.sqrt(2)*(sympy.I + 1)/2]])),
-    "Sdg_q4": (1, [], lambda: compile_gates(1, clifford_decomps["Sdg_q4"]),
-        lambda: sympy.Matrix([[-1, 0], [0, sympy.I]])),
-    "Sdg_q5": (1, [], lambda: compile_gates(1, clifford_decomps["Sdg_q5"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[-sympy.sqrt(2)*(sympy.I + 1)/2, 0], [0, sympy.sqrt(2)*(sympy.I - 1)/2]])),
-    "Sdg_q6": (1, [], lambda: compile_gates(1, clifford_decomps["Sdg_q6"]),
-        lambda: sympy.Matrix([[-sympy.I, 0], [0, -1]])),
-    "Sdg_q7": (1, [], lambda: compile_gates(1, clifford_decomps["Sdg_q7"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[sympy.sqrt(2)*(1 - sympy.I)/2, 0], [0, -sympy.sqrt(2)*(sympy.I + 1)/2]])),
-    "HS": (1, [], lambda: compile_gates(1, clifford_decomps["HS"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[sympy.sqrt(2)/2, sympy.sqrt(2)/2], [sympy.sqrt(2)*sympy.I/2, -sympy.sqrt(2)*sympy.I/2]])),
-    "HS_q1": (1, [], lambda: compile_gates(1, clifford_decomps["HS_q1"]),
-        lambda: sympy.Matrix([[(sympy.I + 1)/2, (sympy.I + 1)/2], [(sympy.I - 1)/2, (1 - sympy.I)/2]])),
-    "HS_q2": (1, [], lambda: compile_gates(1, clifford_decomps["HS_q2"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[sympy.sqrt(2)*sympy.I/2, sympy.sqrt(2)*sympy.I/2], [-sympy.sqrt(2)/2, sympy.sqrt(2)/2]])),
-    "HS_q3": (1, [], lambda: compile_gates(1, clifford_decomps["HS_q3"]),
-        lambda: sympy.Matrix([[(sympy.I - 1)/2, (sympy.I - 1)/2], [-(sympy.I + 1)/2, (sympy.I + 1)/2]])),
-    "HS_q4": (1, [], lambda: compile_gates(1, clifford_decomps["HS_q4"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[-sympy.sqrt(2)/2, -sympy.sqrt(2)/2], [-sympy.sqrt(2)*sympy.I/2, sympy.sqrt(2)*sympy.I/2]])),
-    "HS_q5": (1, [], lambda: compile_gates(1, clifford_decomps["HS_q5"]),
-        lambda: sympy.Matrix([[-(sympy.I + 1)/2, -(sympy.I + 1)/2], [(1 - sympy.I)/2, (sympy.I - 1)/2]])),
-    "HS_q6": (1, [], lambda: compile_gates(1, clifford_decomps["HS_q6"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[-sympy.sqrt(2)*sympy.I/2, -sympy.sqrt(2)*sympy.I/2], [sympy.sqrt(2)/2, -sympy.sqrt(2)/2]])),
-    "HS_q7": (1, [], lambda: compile_gates(1, clifford_decomps["HS_q7"]),
-        lambda: sympy.Matrix([[(1 - sympy.I)/2, (1 - sympy.I)/2], [(sympy.I + 1)/2, -(sympy.I + 1)/2]])),
-    "HSX": (1, [], lambda: compile_gates(1, clifford_decomps["HSX"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[sympy.sqrt(2)*sympy.I/2, -sympy.sqrt(2)*sympy.I/2], [sympy.sqrt(2)/2, sympy.sqrt(2)/2]])),
-    "HSX_q1": (1, [], lambda: compile_gates(1, clifford_decomps["HSX_q1"]),
-        lambda: sympy.Matrix([[(sympy.I - 1)/2, (1 - sympy.I)/2], [(sympy.I + 1)/2, (sympy.I + 1)/2]])),
-    "HSX_q2": (1, [], lambda: compile_gates(1, clifford_decomps["HSX_q2"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[-sympy.sqrt(2)/2, sympy.sqrt(2)/2], [sympy.sqrt(2)*sympy.I/2, sympy.sqrt(2)*sympy.I/2]])),
-    "HSX_q3": (1, [], lambda: compile_gates(1, clifford_decomps["HSX_q3"]),
-        lambda: sympy.Matrix([[-(sympy.I + 1)/2, (sympy.I + 1)/2], [(sympy.I - 1)/2, (sympy.I - 1)/2]])),
-    "HSX_q4": (1, [], lambda: compile_gates(1, clifford_decomps["HSX_q4"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[-sympy.sqrt(2)*sympy.I/2, sympy.sqrt(2)*sympy.I/2], [-sympy.sqrt(2)/2, -sympy.sqrt(2)/2]])),
-    "HSX_q5": (1, [], lambda: compile_gates(1, clifford_decomps["HSX_q5"]),
-        lambda: sympy.Matrix([[(1 - sympy.I)/2, (sympy.I - 1)/2], [-(sympy.I + 1)/2, -(sympy.I + 1)/2]])),
-    "HSX_q6": (1, [], lambda: compile_gates(1, clifford_decomps["HSX_q6"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[sympy.sqrt(2)/2, -sympy.sqrt(2)/2], [-sympy.sqrt(2)*sympy.I/2, -sympy.sqrt(2)*sympy.I/2]])),
-    "HSX_q7": (1, [], lambda: compile_gates(1, clifford_decomps["HSX_q7"]),
-        lambda: sympy.Matrix([[(sympy.I + 1)/2, -(sympy.I + 1)/2], [(1 - sympy.I)/2, (1 - sympy.I)/2]])),
-    "HSY": (1, [], lambda: compile_gates(1, clifford_decomps["HSY"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[sympy.sqrt(2)/2, -sympy.sqrt(2)/2], [sympy.sqrt(2)*sympy.I/2, sympy.sqrt(2)*sympy.I/2]])),
-    "HSY_q1": (1, [], lambda: compile_gates(1, clifford_decomps["HSY_q1"]),
-        lambda: sympy.Matrix([[(sympy.I + 1)/2, -(sympy.I + 1)/2], [(sympy.I - 1)/2, (sympy.I - 1)/2]])),
-    "HSY_q2": (1, [], lambda: compile_gates(1, clifford_decomps["HSY_q2"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[sympy.sqrt(2)*sympy.I/2, -sympy.sqrt(2)*sympy.I/2], [-sympy.sqrt(2)/2, -sympy.sqrt(2)/2]])),
-    "HSY_q3": (1, [], lambda: compile_gates(1, clifford_decomps["HSY_q3"]),
-        lambda: sympy.Matrix([[(sympy.I - 1)/2, (1 - sympy.I)/2], [-(sympy.I + 1)/2, -(sympy.I + 1)/2]])),
-    "HSY_q4": (1, [], lambda: compile_gates(1, clifford_decomps["HSY_q4"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[-sympy.sqrt(2)/2, sympy.sqrt(2)/2], [-sympy.sqrt(2)*sympy.I/2, -sympy.sqrt(2)*sympy.I/2]])),
-    "HSY_q5": (1, [], lambda: compile_gates(1, clifford_decomps["HSY_q5"]),
-        lambda: sympy.Matrix([[-(sympy.I + 1)/2, (sympy.I + 1)/2], [(1 - sympy.I)/2, (1 - sympy.I)/2]])),
-    "HSY_q6": (1, [], lambda: compile_gates(1, clifford_decomps["HSY_q6"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[-sympy.sqrt(2)*sympy.I/2, sympy.sqrt(2)*sympy.I/2], [sympy.sqrt(2)/2, sympy.sqrt(2)/2]])),
-    "HSY_q7": (1, [], lambda: compile_gates(1, clifford_decomps["HSY_q7"]),
-        lambda: sympy.Matrix([[(1 - sympy.I)/2, (sympy.I - 1)/2], [(sympy.I + 1)/2, (sympy.I + 1)/2]])),
-    "HSdg": (1, [], lambda: compile_gates(1, clifford_decomps["HSdg"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[sympy.sqrt(2)/2, sympy.sqrt(2)/2], [-sympy.sqrt(2)*sympy.I/2, sympy.sqrt(2)*sympy.I/2]])),
-    "HSdg_q1": (1, [], lambda: compile_gates(1, clifford_decomps["HSdg_q1"]),
-        lambda: sympy.Matrix([[(sympy.I + 1)/2, (sympy.I + 1)/2], [(1 - sympy.I)/2, (sympy.I - 1)/2]])),
-    "HSdg_q2": (1, [], lambda: compile_gates(1, clifford_decomps["HSdg_q2"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[sympy.sqrt(2)*sympy.I/2, sympy.sqrt(2)*sympy.I/2], [sympy.sqrt(2)/2, -sympy.sqrt(2)/2]])),
-    "HSdg_q3": (1, [], lambda: compile_gates(1, clifford_decomps["HSdg_q3"]),
-        lambda: sympy.Matrix([[(sympy.I - 1)/2, (sympy.I - 1)/2], [(sympy.I + 1)/2, -(sympy.I + 1)/2]])),
-    "HSdg_q4": (1, [], lambda: compile_gates(1, clifford_decomps["HSdg_q4"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[-sympy.sqrt(2)/2, -sympy.sqrt(2)/2], [sympy.sqrt(2)*sympy.I/2, -sympy.sqrt(2)*sympy.I/2]])),
-    "HSdg_q5": (1, [], lambda: compile_gates(1, clifford_decomps["HSdg_q5"]),
-        lambda: sympy.Matrix([[-(sympy.I + 1)/2, -(sympy.I + 1)/2], [(sympy.I - 1)/2, (1 - sympy.I)/2]])),
-    "HSdg_q6": (1, [], lambda: compile_gates(1, clifford_decomps["HSdg_q6"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[-sympy.sqrt(2)*sympy.I/2, -sympy.sqrt(2)*sympy.I/2], [-sympy.sqrt(2)/2, sympy.sqrt(2)/2]])),
-    "HSdg_q7": (1, [], lambda: compile_gates(1, clifford_decomps["HSdg_q7"]),
-        lambda: sympy.Matrix([[(1 - sympy.I)/2, (1 - sympy.I)/2], [-(sympy.I + 1)/2, (sympy.I + 1)/2]])),
-    "SH": (1, [], lambda: compile_gates(1, clifford_decomps["SH"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[sympy.sqrt(2)/2, sympy.sqrt(2)*sympy.I/2], [sympy.sqrt(2)/2, -sympy.sqrt(2)*sympy.I/2]])),
-    "SH_q1": (1, [], lambda: compile_gates(1, clifford_decomps["SH_q1"]),
-        lambda: sympy.Matrix([[(sympy.I + 1)/2, (sympy.I - 1)/2], [(sympy.I + 1)/2, (1 - sympy.I)/2]])),
-    "SH_q2": (1, [], lambda: compile_gates(1, clifford_decomps["SH_q2"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[sympy.sqrt(2)*sympy.I/2, -sympy.sqrt(2)/2], [sympy.sqrt(2)*sympy.I/2, sympy.sqrt(2)/2]])),
-    "SH_q3": (1, [], lambda: compile_gates(1, clifford_decomps["SH_q3"]),
-        lambda: sympy.Matrix([[(sympy.I - 1)/2, -(sympy.I + 1)/2], [(sympy.I - 1)/2, (sympy.I + 1)/2]])),
-    "SH_q4": (1, [], lambda: compile_gates(1, clifford_decomps["SH_q4"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[-sympy.sqrt(2)/2, -sympy.sqrt(2)*sympy.I/2], [-sympy.sqrt(2)/2, sympy.sqrt(2)*sympy.I/2]])),
-    "SH_q5": (1, [], lambda: compile_gates(1, clifford_decomps["SH_q5"]),
-        lambda: sympy.Matrix([[-(sympy.I + 1)/2, (1 - sympy.I)/2], [-(sympy.I + 1)/2, (sympy.I - 1)/2]])),
-    "SH_q6": (1, [], lambda: compile_gates(1, clifford_decomps["SH_q6"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[-sympy.sqrt(2)*sympy.I/2, sympy.sqrt(2)/2], [-sympy.sqrt(2)*sympy.I/2, -sympy.sqrt(2)/2]])),
-    "SH_q7": (1, [], lambda: compile_gates(1, clifford_decomps["SH_q7"]),
-        lambda: sympy.Matrix([[(1 - sympy.I)/2, (sympy.I + 1)/2], [(1 - sympy.I)/2, -(sympy.I + 1)/2]])),
-    "SHX": (1, [], lambda: compile_gates(1, clifford_decomps["SHX"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[sympy.sqrt(2)/2, -sympy.sqrt(2)*sympy.I/2], [sympy.sqrt(2)/2, sympy.sqrt(2)*sympy.I/2]])),
-    "SHX_q1": (1, [], lambda: compile_gates(1, clifford_decomps["SHX_q1"]),
-        lambda: sympy.Matrix([[(sympy.I + 1)/2, (1 - sympy.I)/2], [(sympy.I + 1)/2, (sympy.I - 1)/2]])),
-    "SHX_q2": (1, [], lambda: compile_gates(1, clifford_decomps["SHX_q2"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[sympy.sqrt(2)*sympy.I/2, sympy.sqrt(2)/2], [sympy.sqrt(2)*sympy.I/2, -sympy.sqrt(2)/2]])),
-    "SHX_q3": (1, [], lambda: compile_gates(1, clifford_decomps["SHX_q3"]),
-        lambda: sympy.Matrix([[(sympy.I - 1)/2, (sympy.I + 1)/2], [(sympy.I - 1)/2, -(sympy.I + 1)/2]])),
-    "SHX_q4": (1, [], lambda: compile_gates(1, clifford_decomps["SHX_q4"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[-sympy.sqrt(2)/2, sympy.sqrt(2)*sympy.I/2], [-sympy.sqrt(2)/2, -sympy.sqrt(2)*sympy.I/2]])),
-    "SHX_q5": (1, [], lambda: compile_gates(1, clifford_decomps["SHX_q5"]),
-        lambda: sympy.Matrix([[-(sympy.I + 1)/2, (sympy.I - 1)/2], [-(sympy.I + 1)/2, (1 - sympy.I)/2]])),
-    "SHX_q6": (1, [], lambda: compile_gates(1, clifford_decomps["SHX_q6"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[-sympy.sqrt(2)*sympy.I/2, -sympy.sqrt(2)/2], [-sympy.sqrt(2)*sympy.I/2, sympy.sqrt(2)/2]])),
-    "SHX_q7": (1, [], lambda: compile_gates(1, clifford_decomps["SHX_q7"]),
-        lambda: sympy.Matrix([[(1 - sympy.I)/2, -(sympy.I + 1)/2], [(1 - sympy.I)/2, (sympy.I + 1)/2]])),
-    "SHY": (1, [], lambda: compile_gates(1, clifford_decomps["SHY"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[-sympy.sqrt(2)*sympy.I/2, -sympy.sqrt(2)/2], [sympy.sqrt(2)*sympy.I/2, -sympy.sqrt(2)/2]])),
-    "SHY_q1": (1, [], lambda: compile_gates(1, clifford_decomps["SHY_q1"]),
-        lambda: sympy.Matrix([[(1 - sympy.I)/2, -(sympy.I + 1)/2], [(sympy.I - 1)/2, -(sympy.I + 1)/2]])),
-    "SHY_q2": (1, [], lambda: compile_gates(1, clifford_decomps["SHY_q2"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[sympy.sqrt(2)/2, -sympy.sqrt(2)*sympy.I/2], [-sympy.sqrt(2)/2, -sympy.sqrt(2)*sympy.I/2]])),
-    "SHY_q3": (1, [], lambda: compile_gates(1, clifford_decomps["SHY_q3"]),
-        lambda: sympy.Matrix([[(sympy.I + 1)/2, (1 - sympy.I)/2], [-(sympy.I + 1)/2, (1 - sympy.I)/2]])),
-    "SHY_q4": (1, [], lambda: compile_gates(1, clifford_decomps["SHY_q4"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[sympy.sqrt(2)*sympy.I/2, sympy.sqrt(2)/2], [-sympy.sqrt(2)*sympy.I/2, sympy.sqrt(2)/2]])),
-    "SHY_q5": (1, [], lambda: compile_gates(1, clifford_decomps["SHY_q5"]),
-        lambda: sympy.Matrix([[(sympy.I - 1)/2, (sympy.I + 1)/2], [(1 - sympy.I)/2, (sympy.I + 1)/2]])),
-    "SHY_q6": (1, [], lambda: compile_gates(1, clifford_decomps["SHY_q6"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[-sympy.sqrt(2)/2, sympy.sqrt(2)*sympy.I/2], [sympy.sqrt(2)/2, sympy.sqrt(2)*sympy.I/2]])),
-    "SHY_q7": (1, [], lambda: compile_gates(1, clifford_decomps["SHY_q7"]),
-        lambda: sympy.Matrix([[-(sympy.I + 1)/2, (sympy.I - 1)/2], [(sympy.I + 1)/2, (sympy.I - 1)/2]])),
-    "SHZ": (1, [], lambda: compile_gates(1, clifford_decomps["SHZ"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[sympy.sqrt(2)/2, sympy.sqrt(2)*sympy.I/2], [-sympy.sqrt(2)/2, sympy.sqrt(2)*sympy.I/2]])),
-    "SHZ_q1": (1, [], lambda: compile_gates(1, clifford_decomps["SHZ_q1"]),
-        lambda: sympy.Matrix([[(sympy.I + 1)/2, (sympy.I - 1)/2], [-(sympy.I + 1)/2, (sympy.I - 1)/2]])),
-    "SHZ_q2": (1, [], lambda: compile_gates(1, clifford_decomps["SHZ_q2"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[sympy.sqrt(2)*sympy.I/2, -sympy.sqrt(2)/2], [-sympy.sqrt(2)*sympy.I/2, -sympy.sqrt(2)/2]])),
-    "SHZ_q3": (1, [], lambda: compile_gates(1, clifford_decomps["SHZ_q3"]),
-        lambda: sympy.Matrix([[(sympy.I - 1)/2, -(sympy.I + 1)/2], [(1 - sympy.I)/2, -(sympy.I + 1)/2]])),
-    "SHZ_q4": (1, [], lambda: compile_gates(1, clifford_decomps["SHZ_q4"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[-sympy.sqrt(2)/2, -sympy.sqrt(2)*sympy.I/2], [sympy.sqrt(2)/2, -sympy.sqrt(2)*sympy.I/2]])),
-    "SHZ_q5": (1, [], lambda: compile_gates(1, clifford_decomps["SHZ_q5"]),
-        lambda: sympy.Matrix([[-(sympy.I + 1)/2, (1 - sympy.I)/2], [(sympy.I + 1)/2, (1 - sympy.I)/2]])),
-    "SHZ_q6": (1, [], lambda: compile_gates(1, clifford_decomps["SHZ_q6"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[-sympy.sqrt(2)*sympy.I/2, sympy.sqrt(2)/2], [sympy.sqrt(2)*sympy.I/2, sympy.sqrt(2)/2]])),
-    "SHZ_q7": (1, [], lambda: compile_gates(1, clifford_decomps["SHZ_q7"]),
-        lambda: sympy.Matrix([[(1 - sympy.I)/2, (sympy.I + 1)/2], [(sympy.I - 1)/2, (sympy.I + 1)/2]])),
-    "Sx_q1": (1, [], lambda: compile_gates(1, clifford_decomps["Sx_q1"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[sympy.sqrt(2)*sympy.I/2, sympy.sqrt(2)/2], [sympy.sqrt(2)/2, sympy.sqrt(2)*sympy.I/2]])),
-    "Sx_q2": (1, [], lambda: compile_gates(1, clifford_decomps["Sx_q2"]),
-        lambda: sympy.Matrix([[(sympy.I - 1)/2, (sympy.I + 1)/2], [(sympy.I + 1)/2, (sympy.I - 1)/2]])),
-    "Sx_q3": (1, [], lambda: compile_gates(1, clifford_decomps["Sx_q3"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[-sympy.sqrt(2)/2, sympy.sqrt(2)*sympy.I/2], [sympy.sqrt(2)*sympy.I/2, -sympy.sqrt(2)/2]])),
-    "Sx_q4": (1, [], lambda: compile_gates(1, clifford_decomps["Sx_q4"]),
-        lambda: sympy.Matrix([[-(sympy.I + 1)/2, (sympy.I - 1)/2], [(sympy.I - 1)/2, -(sympy.I + 1)/2]])),
-    "Sx_q5": (1, [], lambda: compile_gates(1, clifford_decomps["Sx_q5"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[-sympy.sqrt(2)*sympy.I/2, -sympy.sqrt(2)/2], [-sympy.sqrt(2)/2, -sympy.sqrt(2)*sympy.I/2]])),
-    "Sx_q6": (1, [], lambda: compile_gates(1, clifford_decomps["Sx_q6"]),
-        lambda: sympy.Matrix([[(1 - sympy.I)/2, -(sympy.I + 1)/2], [-(sympy.I + 1)/2, (1 - sympy.I)/2]])),
-    "Sx_q7": (1, [], lambda: compile_gates(1, clifford_decomps["Sx_q7"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[sympy.sqrt(2)/2, -sympy.sqrt(2)*sympy.I/2], [-sympy.sqrt(2)*sympy.I/2, sympy.sqrt(2)/2]])),
-    "Sxdg_q1": (1, [], lambda: compile_gates(1, clifford_decomps["Sxdg_q1"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[sympy.sqrt(2)/2, sympy.sqrt(2)*sympy.I/2], [sympy.sqrt(2)*sympy.I/2, sympy.sqrt(2)/2]])),
-    "Sxdg_q2": (1, [], lambda: compile_gates(1, clifford_decomps["Sxdg_q2"]),
-        lambda: sympy.Matrix([[(sympy.I + 1)/2, (sympy.I - 1)/2], [(sympy.I - 1)/2, (sympy.I + 1)/2]])),
-    "Sxdg_q3": (1, [], lambda: compile_gates(1, clifford_decomps["Sxdg_q3"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[sympy.sqrt(2)*sympy.I/2, -sympy.sqrt(2)/2], [-sympy.sqrt(2)/2, sympy.sqrt(2)*sympy.I/2]])),
-    "Sxdg_q4": (1, [], lambda: compile_gates(1, clifford_decomps["Sxdg_q4"]),
-        lambda: sympy.Matrix([[(sympy.I - 1)/2, -(sympy.I + 1)/2], [-(sympy.I + 1)/2, (sympy.I - 1)/2]])),
-    "Sxdg_q5": (1, [], lambda: compile_gates(1, clifford_decomps["Sxdg_q5"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[-sympy.sqrt(2)/2, -sympy.sqrt(2)*sympy.I/2], [-sympy.sqrt(2)*sympy.I/2, -sympy.sqrt(2)/2]])),
-    "Sxdg_q6": (1, [], lambda: compile_gates(1, clifford_decomps["Sxdg_q6"]),
-        lambda: sympy.Matrix([[-(sympy.I + 1)/2, (1 - sympy.I)/2], [(1 - sympy.I)/2, -(sympy.I + 1)/2]])),
-    "Sxdg_q7": (1, [], lambda: compile_gates(1, clifford_decomps["Sxdg_q7"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[-sympy.sqrt(2)*sympy.I/2, sympy.sqrt(2)/2], [sympy.sqrt(2)/2, -sympy.sqrt(2)*sympy.I/2]])),
-    "SxY": (1, [], lambda: compile_gates(1, clifford_decomps["SxY"]),
-        lambda: sympy.Matrix([[-(sympy.I + 1)/2, (1 - sympy.I)/2], [(sympy.I - 1)/2, (sympy.I + 1)/2]])),
-    "SxY_q1": (1, [], lambda: compile_gates(1, clifford_decomps["SxY_q1"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[-sympy.sqrt(2)*sympy.I/2, sympy.sqrt(2)/2], [-sympy.sqrt(2)/2, sympy.sqrt(2)*sympy.I/2]])),
-    "SxY_q2": (1, [], lambda: compile_gates(1, clifford_decomps["SxY_q2"]),
-        lambda: sympy.Matrix([[(1 - sympy.I)/2, (sympy.I + 1)/2], [-(sympy.I + 1)/2, (sympy.I - 1)/2]])),
-    "SxY_q3": (1, [], lambda: compile_gates(1, clifford_decomps["SxY_q3"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[sympy.sqrt(2)/2, sympy.sqrt(2)*sympy.I/2], [-sympy.sqrt(2)*sympy.I/2, -sympy.sqrt(2)/2]])),
-    "SxY_q4": (1, [], lambda: compile_gates(1, clifford_decomps["SxY_q4"]),
-        lambda: sympy.Matrix([[(sympy.I + 1)/2, (sympy.I - 1)/2], [(1 - sympy.I)/2, -(sympy.I + 1)/2]])),
-    "SxY_q5": (1, [], lambda: compile_gates(1, clifford_decomps["SxY_q5"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[sympy.sqrt(2)*sympy.I/2, -sympy.sqrt(2)/2], [sympy.sqrt(2)/2, -sympy.sqrt(2)*sympy.I/2]])),
-    "SxY_q6": (1, [], lambda: compile_gates(1, clifford_decomps["SxY_q6"]),
-        lambda: sympy.Matrix([[(sympy.I - 1)/2, -(sympy.I + 1)/2], [(sympy.I + 1)/2, (1 - sympy.I)/2]])),
-    "SxY_q7": (1, [], lambda: compile_gates(1, clifford_decomps["SxY_q7"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[-sympy.sqrt(2)/2, -sympy.sqrt(2)*sympy.I/2], [sympy.sqrt(2)*sympy.I/2, sympy.sqrt(2)/2]])),
-    "SxZ": (1, [], lambda: compile_gates(1, clifford_decomps["SxZ"]),
-        lambda: sympy.Matrix([[(sympy.I + 1)/2, (1 - sympy.I)/2], [(sympy.I - 1)/2, -(sympy.I + 1)/2]])),
-    "SxZ_q1": (1, [], lambda: compile_gates(1, clifford_decomps["SxZ_q1"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[sympy.sqrt(2)*sympy.I/2, sympy.sqrt(2)/2], [-sympy.sqrt(2)/2, -sympy.sqrt(2)*sympy.I/2]])),
-    "SxZ_q2": (1, [], lambda: compile_gates(1, clifford_decomps["SxZ_q2"]),
-        lambda: sympy.Matrix([[(sympy.I - 1)/2, (sympy.I + 1)/2], [-(sympy.I + 1)/2, (1 - sympy.I)/2]])),
-    "SxZ_q3": (1, [], lambda: compile_gates(1, clifford_decomps["SxZ_q3"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[-sympy.sqrt(2)/2, sympy.sqrt(2)*sympy.I/2], [-sympy.sqrt(2)*sympy.I/2, sympy.sqrt(2)/2]])),
-    "SxZ_q4": (1, [], lambda: compile_gates(1, clifford_decomps["SxZ_q4"]),
-        lambda: sympy.Matrix([[-(sympy.I + 1)/2, (sympy.I - 1)/2], [(1 - sympy.I)/2, (sympy.I + 1)/2]])),
-    "SxZ_q5": (1, [], lambda: compile_gates(1, clifford_decomps["SxZ_q5"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[-sympy.sqrt(2)*sympy.I/2, -sympy.sqrt(2)/2], [sympy.sqrt(2)/2, sympy.sqrt(2)*sympy.I/2]])),
-    "SxZ_q6": (1, [], lambda: compile_gates(1, clifford_decomps["SxZ_q6"]),
-        lambda: sympy.Matrix([[(1 - sympy.I)/2, -(sympy.I + 1)/2], [(sympy.I + 1)/2, (sympy.I - 1)/2]])),
-    "SxZ_q7": (1, [], lambda: compile_gates(1, clifford_decomps["SxZ_q7"]).applyfunc(textbook_simp),
-        lambda: sympy.Matrix([[sympy.sqrt(2)/2, -sympy.sqrt(2)*sympy.I/2], [sympy.sqrt(2)*sympy.I/2, -sympy.sqrt(2)/2]])),
-}
 gate_descs.update(clifford_descs)
 
 #T=Rz(π/4)GP(pi/4), S=Rz(π/2)GP(pi/2), Z=Rz(π)GP(pi)
@@ -914,44 +376,22 @@ identities = ( #(gate1, gate2, result_gate)
     ("Rz", "Rz", "Rz"),
 )
 
-gate_inverses_clifford = (
-    ('I', 'I'), ('I_q1', 'I_q7'), ('I_q2', 'I_q6'), ('I_q3', 'I_q5'), ('I_q4', 'I_q4'), ('I_q5', 'I_q3'), ('I_q6', 'I_q2'), ('I_q7', 'I_q1'), 
-    ('X', 'X'), ('X_q1', 'X_q7'), ('X_q2', 'X_q6'), ('X_q3', 'X_q5'), ('X_q4', 'X_q4'), ('X_q5', 'X_q3'), ('X_q6', 'X_q2'), ('X_q7', 'X_q1'), 
-    ('Y', 'Y'), ('Y_q1', 'Y_q7'), ('Y_q2', 'Y_q6'), ('Y_q3', 'Y_q5'), ('Y_q4', 'Y_q4'), ('Y_q5', 'Y_q3'), ('Y_q6', 'Y_q2'), ('Y_q7', 'Y_q1'), 
-    ('Z', 'Z'), ('Z_q1', 'Z_q7'), ('Z_q2', 'Z_q6'), ('Z_q3', 'Z_q5'), ('Z_q4', 'Z_q4'), ('Z_q5', 'Z_q3'), ('Z_q6', 'Z_q2'), ('Z_q7', 'Z_q1'), 
-    ('H', 'H'), ('H_q1', 'H_q7'), ('H_q2', 'H_q6'), ('H_q3', 'H_q5'), ('H_q4', 'H_q4'), ('H_q5', 'H_q3'), ('H_q6', 'H_q2'), ('H_q7', 'H_q1'), 
-    ('HX', 'HZ'), ('HX_q1', 'HZ_q7'), ('HX_q2', 'HZ_q6'), ('HX_q3', 'HZ_q5'), ('HX_q4', 'HZ_q4'), ('HX_q5', 'HZ_q3'), ('HX_q6', 'HZ_q2'), ('HX_q7', 'HZ_q1'), 
-    ('HY', 'HY_q4'), ('HY_q1', 'HY_q3'), ('HY_q2', 'HY_q2'), ('HY_q3', 'HY_q1'), ('HY_q4', 'HY'), ('HY_q5', 'HY_q7'), ('HY_q6', 'HY_q6'), ('HY_q7', 'HY_q5'), 
-    ('HZ', 'HX'), ('HZ_q1', 'HX_q7'), ('HZ_q2', 'HX_q6'), ('HZ_q3', 'HX_q5'), ('HZ_q4', 'HX_q4'), ('HZ_q5', 'HX_q3'), ('HZ_q6', 'HX_q2'), ('HZ_q7', 'HX_q1'), 
-    ('S', 'Sdg'), ('S_q1', 'Sdg_q7'), ('S_q2', 'Sdg_q6'), ('S_q3', 'Sdg_q5'), ('S_q4', 'Sdg_q4'), ('S_q5', 'Sdg_q3'), ('S_q6', 'Sdg_q2'), ('S_q7', 'Sdg_q1'), 
-    ('SX', 'SX_q6'), ('SX_q1', 'SX_q5'), ('SX_q2', 'SX_q4'), ('SX_q3', 'SX_q3'), ('SX_q4', 'SX_q2'), ('SX_q5', 'SX_q1'), ('SX_q6', 'SX'), ('SX_q7', 'SX_q7'), 
-    ('SY', 'SY_q6'), ('SY_q1', 'SY_q5'), ('SY_q2', 'SY_q4'), ('SY_q3', 'SY_q3'), ('SY_q4', 'SY_q2'), ('SY_q5', 'SY_q1'), ('SY_q6', 'SY'), ('SY_q7', 'SY_q7'), 
-    ('Sdg', 'S'), ('Sdg_q1', 'S_q7'), ('Sdg_q2', 'S_q6'), ('Sdg_q3', 'S_q5'), ('Sdg_q4', 'S_q4'), ('Sdg_q5', 'S_q3'), ('Sdg_q6', 'S_q2'), ('Sdg_q7', 'S_q1'), 
-    ('HS', 'SHX'), ('HS_q1', 'SHX_q7'), ('HS_q2', 'SHX_q6'), ('HS_q3', 'SHX_q5'), ('HS_q4', 'SHX_q4'), ('HS_q5', 'SHX_q3'), ('HS_q6', 'SHX_q2'), ('HS_q7', 'SHX_q1'), 
-    ('HSX', 'SHZ_q6'), ('HSX_q1', 'SHZ_q5'), ('HSX_q2', 'SHZ_q4'), ('HSX_q3', 'SHZ_q3'), ('HSX_q4', 'SHZ_q2'), ('HSX_q5', 'SHZ_q1'), ('HSX_q6', 'SHZ'), ('HSX_q7', 'SHZ_q7'), 
-    ('HSY', 'SHY_q2'), ('HSY_q1', 'SHY_q1'), ('HSY_q2', 'SHY'), ('HSY_q3', 'SHY_q7'), ('HSY_q4', 'SHY_q6'), ('HSY_q5', 'SHY_q5'), ('HSY_q6', 'SHY_q4'), ('HSY_q7', 'SHY_q3'), 
-    ('HSdg', 'SH'), ('HSdg_q1', 'SH_q7'), ('HSdg_q2', 'SH_q6'), ('HSdg_q3', 'SH_q5'), ('HSdg_q4', 'SH_q4'), ('HSdg_q5', 'SH_q3'), ('HSdg_q6', 'SH_q2'), ('HSdg_q7', 'SH_q1'), 
-    ('SH', 'HSdg'), ('SH_q1', 'HSdg_q7'), ('SH_q2', 'HSdg_q6'), ('SH_q3', 'HSdg_q5'), ('SH_q4', 'HSdg_q4'), ('SH_q5', 'HSdg_q3'), ('SH_q6', 'HSdg_q2'), ('SH_q7', 'HSdg_q1'), 
-    ('SHX', 'HS'), ('SHX_q1', 'HS_q7'), ('SHX_q2', 'HS_q6'), ('SHX_q3', 'HS_q5'), ('SHX_q4', 'HS_q4'), ('SHX_q5', 'HS_q3'), ('SHX_q6', 'HS_q2'), ('SHX_q7', 'HS_q1'), 
-    ('SHY', 'HSY_q2'), ('SHY_q1', 'HSY_q1'), ('SHY_q2', 'HSY'), ('SHY_q3', 'HSY_q7'), ('SHY_q4', 'HSY_q6'), ('SHY_q5', 'HSY_q5'), ('SHY_q6', 'HSY_q4'), ('SHY_q7', 'HSY_q3'), 
-    ('SHZ', 'HSX_q6'), ('SHZ_q1', 'HSX_q5'), ('SHZ_q2', 'HSX_q4'), ('SHZ_q3', 'HSX_q3'), ('SHZ_q4', 'HSX_q2'), ('SHZ_q5', 'HSX_q1'), ('SHZ_q6', 'HSX'), ('SHZ_q7', 'HSX_q7'), 
-    ('Sx', 'Sxdg'), ('Sx_q1', 'Sxdg_q7'), ('Sx_q2', 'Sxdg_q6'), ('Sx_q3', 'Sxdg_q5'), ('Sx_q4', 'Sxdg_q4'), ('Sx_q5', 'Sxdg_q3'), ('Sx_q6', 'Sxdg_q2'), ('Sx_q7', 'Sxdg_q1'), 
-    ('Sxdg', 'Sx'), ('Sxdg_q1', 'Sx_q7'), ('Sxdg_q2', 'Sx_q6'), ('Sxdg_q3', 'Sx_q5'), ('Sxdg_q4', 'Sx_q4'), ('Sxdg_q5', 'Sx_q3'), ('Sxdg_q6', 'Sx_q2'), ('Sxdg_q7', 'Sx_q1'), 
-    ('SxY', 'SxY_q6'), ('SxY_q1', 'SxY_q5'), ('SxY_q2', 'SxY_q4'), ('SxY_q3', 'SxY_q3'), ('SxY_q4', 'SxY_q2'), ('SxY_q5', 'SxY_q1'), ('SxY_q6', 'SxY'), ('SxY_q7', 'SxY_q7'), 
-    ('SxZ', 'SxZ_q6'), ('SxZ_q1', 'SxZ_q5'), ('SxZ_q2', 'SxZ_q4'), ('SxZ_q3', 'SxZ_q3'), ('SxZ_q4', 'SxZ_q2'), ('SxZ_q5', 'SxZ_q1'), ('SxZ_q6', 'SxZ'), ('SxZ_q7', 'SxZ_q7'),
-)
-
 #also single parameter angle inverses
 identity_pairs = ('T', 'Tdg'), ('Tdg', 'T')
-identity_angle_pairs = ('Rx', 'Rx'), ('Ry', 'Ry'), ('Rz', 'Rz')
-gate_inverses = gate_inverses_clifford + identity_pairs + identity_angle_pairs
+identity_angle_pairs = ('Rx', 'Rx', lambda x: (-x,)), ('Ry', 'Ry', lambda x: (-x,)), ('Rz', 'Rz', lambda x: (-x,)), ('P', 'P', lambda x: (-x,)), ('U2', 'U2', lambda x, y: (-y-sympy.pi, -x+sympy.pi)), ('U3', 'U3', lambda x, y, z: (-x, -z, -y))
+gate_inverses = {x[0]: x[1:] for x in gate_inverses_clifford + identity_pairs + identity_angle_pairs}
 basic_pauli = ('I', 'X', 'Y', 'Z')
+t_gates = ('T', 'Tdg')
 basic_clifford = basic_pauli + ('H', 'S', "Sdg", "Sx", "Sxdg")
 extended_clifford = basic_clifford+("HX", "HY", "HZ", "SX", "SY", "HS", "HSX", "HSY", "HSdg", "SH", "SHX", "SHY", "SHZ", "SxY", "SxZ")
-full_clifford = tuple(x[0] for x in gate_inverses_clifford if x[0] == x[1] and x[0][-1] not in ('4', '6', '7') or x[0] != x[1] and x[0][-1]==x[1][-1] and x[0][-1] not in ('5', '7'))
-print(full_clifford)
+single_gate_clifford = tuple(x[0] for x in gate_inverses_clifford if x[0] not in clifford_decomps or len(clifford_decomps[x[0]]) == 1)
+full_clifford = tuple(min([z for z in single_gate_clifford if (z == x or z.startswith(x + "_")) and (gate_inverses[z][0] == z or z[-1] == gate_inverses[z][0][-1] or not gate_inverses[z][0].startswith(z + "_") and (z[-1] if '_' in z else False, gate_inverses[z][0][-1] if '_' in gate_inverses[z][0] else False) in ((False, False), ('2', False), (False, '2'), ('6', False), (False, '6')))],
+                          key=lambda z: 0 if z not in clifford_decomps else len(clifford_decomps[z]), default=None) for x in extended_clifford)
+#print(full_clifford)
+assert all(gate_inverses[x][0] in full_clifford for x in full_clifford), [x for x in full_clifford if gate_inverses[x][0] not in full_clifford]
 assert len(full_clifford) == 24
 complete_clifford = tuple(x[0] for x in gate_inverses_clifford)
+cnot_full_clifford_t = ('CNOT',) + full_clifford + t_gates
 
 qasm_standard_gate_library = (
     "P", "X", "Y", "Z", "H", "S", "Sdg", "T", "Tdg", "Sx", "Rx", "Ry", "Rz",
@@ -984,32 +424,43 @@ decomp_dict = {
     'iSWAP_pow': lambda alpha: make_gate_decomp("Rxy", -sympy.pi*alpha), #compile_gates(2, [("H", [0]), ("H", [1]), ("CNOT", [0,1]), ("Rz", -(alpha*sympy.pi)/2, [1]), ("CNOT", [0,1]), ("H", [0]), ("H", [1]), ("Sdg", [0]), ("Sdg", [1]), ("H", [0]), ("H", [1]), ("CNOT", [0,1]), ("Rz", -(alpha*sympy.pi)/2, [1]), ("CNOT", [0,1]), ("H", [0]), ("H", [1]), ("S", [0]), ("S", [1])]).applyfunc(textbook_simp)
     'fSim': lambda theta, phi: compile_gates(2, [(make_gate_decomp("iSWAP_pow", -2*theta/sympy.pi), [0, 1]), (make_gate_decomp("CZPowGate", -phi/sympy.pi), [0, 1])]).applyfunc(textbook_simp),
     #3 CNOT SYC: https://epjquantumtechnology.springeropen.com/articles/10.1140/epjqt/s40507-024-00248-8
-    'SYC': lambda: compile_gates(2, [("Rz", -3*sympy.pi/4, [0]), ("Rz", sympy.pi/4, [1]), ("Sx", [0]), ("Sx", [1]), ("Rz", -sympy.pi, [0]), ("Rz", sympy.pi, [1]), ("Sx", [1]), ("Rz", 5*sympy.pi/2, [1]), ("CNOT", [0, 1]), ("Sx", [0]), ("Rz", -3*sympy.pi/4, [1]), ("Sx", [1]), ("Rz", sympy.pi, [1]), ("Sx", [1]), ("Rz", 9*sympy.pi/4, [1]), ("CNOT", [0, 1]), ("Rz", sympy.pi/2, [0]), ("Sx", [1]), ("Sx", [0]), ("Rz", sympy.pi/2, [1]), ("Rz", 11*sympy.pi/12, [0]), ("Sx", [1]), ("Sx", [0]), ("Rz", sympy.pi/2, [1]), ("CNOT", [0, 1]), ("Sx", [0]), ("Rz", sympy.pi/2, [1]), ("Rz", sympy.pi/6, [0]), ("Sx", [1]), ("Rz", -sympy.pi/3, [1]), ("GP", 17*sympy.pi/24, 2, [0, 1])]).applyfunc(textbook_simp), #gen_fSim_decomp(sympy.pi/2, sympy.pi/6)
+    #'SYC': lambda: compile_gates(2, [("Rz", -3*sympy.pi/4, [0]), ("Rz", sympy.pi/4, [1]), ("Sx", [0]), ("Sx", [1]), ("Rz", -sympy.pi, [0]), ("Rz", sympy.pi, [1]), ("Sx", [1]), ("Rz", 5*sympy.pi/2, [1]), ("CNOT", [0, 1]), ("Sx", [0]), ("Rz", -3*sympy.pi/4, [1]), ("Sx", [1]), ("Rz", sympy.pi, [1]), ("Sx", [1]), ("Rz", 9*sympy.pi/4, [1]), ("CNOT", [0, 1]), ("Rz", sympy.pi/2, [0]), ("Sx", [1]), ("Sx", [0]), ("Rz", sympy.pi/2, [1]), ("Rz", 11*sympy.pi/12, [0]), ("Sx", [1]), ("Sx", [0]), ("Rz", sympy.pi/2, [1]), ("CNOT", [0, 1]), ("Sx", [0]), ("Rz", sympy.pi/2, [1]), ("Rz", sympy.pi/6, [0]), ("Sx", [1]), ("Rz", -sympy.pi/3, [1]), ("GP", 17*sympy.pi/24, 2, [0, 1])]).applyfunc(textbook_simp), #gen_fSim_decomp(sympy.pi/2, sympy.pi/6)
+    'SYC': lambda: compile_gates(2, [('P', -sympy.pi/12, (0,)), ('P', -sympy.pi/12, (1,)), ('CNOT', [0, 1]), ('P', -5*sympy.pi/12, (1,)), ('CNOT', [1, 0]), ('CNOT', [0, 1])]).applyfunc(textbook_simp),
     'CU': lambda theta, phi, lbda, gamma: compile_gates(2, [("Rz", (lbda-phi)/2, [1]), ("CNOT", [0, 1]), ("Rz", -(phi+lbda)/2, [1]), ("Ry", -theta/2, [1]), ("CNOT", [0, 1]), ("Ry", theta/2, [1]), ("Rz", phi, [1]), ("P", (lbda+phi)/2+gamma, [0])]).applyfunc(textbook_simp),
     'CU3': lambda theta, phi, lbda: compile_gates(2, [("Rz", (lbda-phi)/2, [1]), ("CNOT", [0, 1]), ("Rz", -(phi+lbda)/2, [1]), ("Ry", -theta/2, [1]), ("CNOT", [0, 1]), ("Ry", theta/2, [1]), ("Rz", phi, [1]), ("P", (lbda+phi)/2, [0])]).applyfunc(textbook_simp),
     'CCZ': lambda: compile_gates(3, [("CNOT", [1, 2]), ("Tdg", [2]), ("CNOT", [0, 2]), ("T", [2]), ("CNOT", [1, 2]), ("Tdg", [2]), ("CNOT", [0, 2]), ("T", [1]), ("T", [2]), ("CNOT", [0, 1]), ("T", [0]), ("Tdg", [1]), ("CNOT", [0, 1])]),
     'CCX': lambda: compile_gates(3, [("H", [2]), ("CNOT", [1, 2]), ("Tdg", [2]), ("CNOT", [0, 2]), ("T", [2]), ("CNOT", [1, 2]), ("Tdg", [2]), ("CNOT", [0, 2]), ("T", [1]), ("T", [2]), ("H", [2]), ("CNOT", [0, 1]), ("T", [0]), ("Tdg", [1]), ("CNOT", [0, 1])]),
     'SWAP': lambda: compile_gates(2, [("CNOT", [0, 1]), ("CNOT", [1, 0]), ("CNOT", [0, 1])]),
     #7 CNOT CSWAP: https://arxiv.org/pdf/2305.18128
-    'CSWAP': lambda: compile_gates(3, [("S", [1]), ("CNOT", [2, 1]), ("Sdg", [1]), ("Sx", [2]), ("T", [2]), ("CNOT", [0, 2]), ("T", [2]), ("CNOT", [1, 2]), ("T", [1]), ("Tdg", [2]), ("CNOT", [0, 2]), ("CNOT", [0, 1]), ("T", [2]), ("T", [0]), ("Tdg", [1]), ("H", [2]), ("CNOT", [0, 1]), ("CNOT", [2, 1]), ("GP", -sympy.pi/4, 3, [0, 1, 2])]).applyfunc(textbook_simp), #compile_gates(3, [("CNOT", [2, 1]), ("H", [2]), ("CNOT", [1, 2]), ("Tdg", [2]), ("CNOT", [0, 2]), ("T", [2]), ("CNOT", [1, 2]), ("Tdg", [2]), ("CNOT", [0, 2]), ("T", [1]), ("T", [2]), ("H", [2]), ("CNOT", [0, 1]), ("T", [0]), ("Tdg", [1]), ("CNOT", [0, 1]), ("CNOT", [2, 1])])
+    #'CSWAP': lambda: compile_gates(3, [("S", [1]), ("CNOT", [2, 1]), ("Sdg", [1]), ("Sx", [2]), ("T", [2]), ("CNOT", [0, 2]), ("T", [2]), ("CNOT", [1, 2]), ("T", [1]), ("Tdg", [2]), ("CNOT", [0, 2]), ("CNOT", [0, 1]), ("T", [2]), ("T", [0]), ("Tdg", [1]), ("H", [2]), ("CNOT", [0, 1]), ("CNOT", [2, 1]), ("GP", -sympy.pi/4, 3, [0, 1, 2])]).applyfunc(textbook_simp), #compile_gates(3, [("CNOT", [2, 1]), ("H", [2]), ("CNOT", [1, 2]), ("Tdg", [2]), ("CNOT", [0, 2]), ("T", [2]), ("CNOT", [1, 2]), ("Tdg", [2]), ("CNOT", [0, 2]), ("T", [1]), ("T", [2]), ("H", [2]), ("CNOT", [0, 1]), ("T", [0]), ("Tdg", [1]), ("CNOT", [0, 1]), ("CNOT", [2, 1])])
+    #'CSWAP': lambda: compile_gates(3, [('Tdg', (1,)), ('T', (2,)), ('CNOT', [2, 1]), ('T', (1,)), ('Rx', sympy.pi/2, (2,)), ('T', (2,)), ('CNOT', [0, 2]), ('T', (2,)), ('CNOT', [1, 2]), ('Tdg', (2,)), ('CNOT', [0, 2]), ('T', (2,)), ('Rx', -sympy.pi/4, (2,)), ('Ry', -sympy.pi/2, (2,)), ('CNOT', [0, 1]), ('T', (1,)), ('CNOT', [0, 1]), ('CNOT', [2, 1]), ('Tdg', (0,)), ('Tdg', (1,)), ('GP', -sympy.pi/8, 3, [0, 1, 2])]),
+    'CSWAP': lambda: compile_gates(3, [('Tdg', (1,)), ('T', (2,)), ('CNOT', [2, 1]), ('T', (1,)), ('T', (2,)), ('U2', -sympy.pi/4, sympy.pi/4, (2,)), ('CNOT', [0, 2]), ('T', (2,)), ('CNOT', [1, 2]), ('Tdg', (2,)), ('CNOT', [0, 2]), ('U2', 3*sympy.pi/4, -3*sympy.pi/4, (2,)), ('CNOT', [0, 1]), ('T', (1,)), ('CNOT', [0, 1]), ('CNOT', [2, 1]), ('Tdg', (0,)), ('Tdg', (1,))]),
     'iSWAP': lambda: compile_gates(2, [("S", [0]), ("S", [1]), ("H", [0]), ("CNOT", [0, 1]), ("CNOT", [1, 0]), ("H", [1])]),
     'SSWAP': lambda: compile_gates(2, [("CNOT", [0, 1]), ("H", [0]), ("T", [0]), ("Tdg", [1]), ("H", [0]), ("H", [1]), ("CNOT", [0, 1]), ("H", [0]), ("H", [1]), ("Tdg", [0]), ("H", [0]), ("CNOT", [0, 1]), ("Sdg", [0]), ("S", [1])]).applyfunc(textbook_simp),
     #'SiSWAP': lambda: compile_gates(2, [("Sx", [0]), ("Rz", sympy.pi/2, [0]), ("CNOT", [0, 1]), ("Sx", [0]), ("Sx", [1]), ("Rz", sympy.pi*7/4, [0]), ("Rz", sympy.pi*7/4, [1]), ("Sx", [0]), ("Rz", sympy.pi/2, [0]), ("CNOT", [0, 1]), ("Sx", [0]), ("Sx", [1])]).applyfunc(textbook_simp),
     'SiSWAP': lambda: compile_gates(2, [("Ry", sympy.pi/2, [0]), ("S", [1]), ("CNOT", [0, 1]), ("Ry", sympy.pi/4, [0]), ("Ry", sympy.pi/4, [1]), ("CNOT", [0, 1]), ("Ry", -sympy.pi/2, [0]), ("Sdg", [1])]).applyfunc(textbook_simp),
 }
 
+decomp_dict.update({gen: lambda gen=gen: compile_gates(1, clifford_decomps[gen]).applyfunc(textbook_simp) for gen in clifford_decomps})
+
 def test_decomp():
-    #for gatepair in identity_pairs + gate_inverses_clifford:
-    #    assert compile_gates(1, [(gatepair[0], [0]), (gatepair[1], [0])]) == sympy.eye(2), gatepair
+    for gatepair in identity_pairs + gate_inverses_clifford:
+        assert compile_gates(1, [(gatepair[0], [0]), (gatepair[1], [0])]) == sympy.eye(2), gatepair
+    for inv in gate_inverses:
+        if len(gate_inverses[inv]) == 1:
+            assert compile_gates(1, [(inv, [0]), (gate_inverses[inv][0], [0])]) == sympy.eye(2), inv
+        else:
+            params = [vardict[param[1]] for param in gate_descs[gate_inverses[inv][0]][1]]
+            assert compile_gates(1, [(inv, *params, [0]), (gate_inverses[inv][0], *gate_inverses[inv][1](*params), [0])]).applyfunc(textbook_simp) == sympy.eye(2), inv
     for gate in gate_descs:
         print(gate)
+        if gate != 'CSWAP': continue
         params = [vardict[param[1]] for param in gate_descs[gate][1]]
         if gate == "GP": params.append(1)
         textbook = make_gate(gate, *params)
         for i in range(len(gate_descs[gate][1])):
-            if gate in ("U", "U2"): continue
             print(i, params[i], gate_descs[gate][1][i][0], 2*sympy.pi)
-            testperiod = make_gate(gate, *params[:i], params[i]+gate_descs[gate][1][i][0]*2*sympy.pi, *params[i+1:])
+            testperiod = make_gate(gate, *params[:i], params[i]+gate_descs[gate][1][i][0]*2*sympy.pi, *params[i+1:], prep=True)
             testperiod = testperiod.applyfunc(textbook_simp)
             assert textbook == testperiod, (textbook, testperiod, i)
         if len(gate_descs[gate]) == 4:
@@ -1030,18 +481,22 @@ def test_decomp():
         for j in range(3):
             if i == j : continue
             print(f"CRY({i}, {j})@CRY(0, 1) pure, sparse control:", find_control_qubits(compile_gates(3, [("CRY", theta, [i, j]), ("CRY", theta2, (0, 1))]), 3))
-#test_decomp(); assert False
+test_decomp(); assert False
 
 QUBIT = int #np.int32
 
 class ParamIndex:
     def __init__(self, index):
         self.index = index
+    def __hash__(self): return hash(self.index)
+    def __eq__(self, other): return self.index == other.index
     def __repr__(self): return f"ParamIndex({self.index})"
 class AngleScale:
     def __init__(self, num, scale):
         self.num = num
         self.scale = scale
+    def __hash__(self): return hash((self.num, self.scale))
+    def __eq__(self, other): return self.num == other.num and self.scale == other.scale
     def __repr__(self): return f"AngleScale_{'m' if self.num < 0 else ''}{abs(self.num)}_{self.scale}"
 class ParamIndexSum:
     def __init__(self):
@@ -1055,7 +510,9 @@ class ParamIndexSum:
     def to_sympy(self, params):
         return sum([(2*sympy.pi if index.index == -1 else params[index.index]) * scale.num / scale.scale for index, scale in self.params])
     def to_qiskit(self, params):
-        return sum([(2*np.pi if index.index == -1 else params[index.index]) * (scale.num / scale.scale) for index, scale in self.params])
+        return sum([(2*np.pi if index.index == -1 else params[index.index]) * (int(scale.num) / int(scale.scale)) for index, scale in self.params])
+    def __hash__(self): return hash(tuple(self.params))
+    def __eq__(self, other): return self.params == other.params
     def __lt__(self, other): return len(self.params) < len(other.params)
     def __repr__(self): return f"ParamIndexSum({self.params})"
     def __str__(self):
@@ -1241,28 +698,34 @@ def get_eval_circ(unitary, param_syms, compiled_circuit):
     rescirc = compile_gates(num_qubits, [(unitary, list(range(num_qubits)))] + spcirc)
     return num_qubits, rescirc
 def eval_osrcost(num_qubits, rescirc, params, param_syms):
+    if num_qubits == 1: return 0.0
     tol = 1e-3
     Fnorm = np.sqrt(1<<num_qubits)
-    osrcosts = []
     rescircnps = [np.array(rescirc.evalf(subs={x: y for x, y in zip(param_syms, pos)})).astype(np.complex128) for pos in get_param_space(params)]
-    for cut in N_Qubit_Decomposition_Guided_Tree.unique_cuts(num_qubits):
-        #R = build_osr_matrix(rescirc, num_qubits, cut)
-        #p1 = sum(R.multiply_elementwise(R.conjugate()))
-        """
-        g = R * dagger_gate(R)
-        p1 = sympy.Trace(g).rewrite(sympy.Sum)
-        p2 = sum(g.multiply_elementwise(g.conjugate()))
-        kappa = 1.0 - complex((p2 / (p1 * p1)).simplify().evalf()).real
-        osrcosts.append(R.rank()+kappa)
-        """        
-        for rescircnp in rescircnps:
+    all_cuts = list(N_Qubit_Decomposition_Guided_Tree.unique_cuts(num_qubits))
+    topology = [(i, j) for i in range(num_qubits) for j in range(i+1, num_qubits)]
+    osr_results = []    
+    for rescircnp in rescircnps:
+        osr_result = []
+        for cut in all_cuts:
+            #R = build_osr_matrix(rescirc, num_qubits, cut)
+            #p1 = sum(R.multiply_elementwise(R.conjugate()))
+            """
+            g = R * dagger_gate(R)
+            p1 = sympy.Trace(g).rewrite(sympy.Sum)
+            p2 = sum(g.multiply_elementwise(g.conjugate()))
+            kappa = 1.0 - complex((p2 / (p1 * p1)).simplify().evalf()).real
+            osrcosts.append(R.rank()+kappa)
+            """        
             rank, s = N_Qubit_Decomposition_Guided_Tree.operator_schmidt_rank(rescircnp, num_qubits, cut, Fnorm, tol)
+            num_cnot = N_Qubit_Decomposition_Guided_Tree.ceil_log2(rank)
             #s2 = [x*x for x in s]
             #ss2 = sum(s2)
             #kappa = 1.0 - sum(x*x for x in s2)/(ss2*ss2)
-            kappa = sum(x*x for i, x in enumerate(s[1:]))
-            osrcosts.append(float(rank + kappa))
-    osrcost = 1.0 if num_qubits==1 else sum(osrcosts)/len(osrcosts) 
+            kappa = N_Qubit_Decomposition_Guided_Tree.dyadic_loss(s, N_Qubit_Decomposition_Guided_Tree.ceil_log2(len(s)))
+            osr_result.append((num_cnot, kappa))
+        osr_results.append(N_Qubit_Decomposition_Guided_Tree.solve_best_min_cnots(num_qubits, all_cuts, osr_result, topology, use_surplus=True))
+    osrcost = sum(max(osr_results)) #sum(sum(x) for x in osr_results)/len(osr_results)
     return osrcost
 def eval_symcost(num_qubits, rescirc, allow_global_phase=False):
     if allow_global_phase:
@@ -1276,6 +739,10 @@ def eval_symcost(num_qubits, rescirc, allow_global_phase=False):
     #print(rescirc)
     symcost = sum(expr_structural_cost(expr) for expr in rescirc) / len(rescirc)
     return symcost
+def get_gatecost(compiled_circuit, param_syms):
+    param_cost = 0.2
+    gatecost = sum((1<<len(x[1]))+sum((complex(sympy.log(sympy.Abs(z.to_sympy(param_syms).simplify().as_numer_denom()[1]), 2).evalf()).real+0.01)*param_cost for z in x[2]) for x in compiled_circuit.gates)
+    return gatecost
 def eval_circ(unitary, params, compiled_circuit, symonly=False, allow_global_phase=False):
     param_syms = [vardict[x[1]] for x in params]
     num_qubits, rescirc = get_eval_circ(unitary, param_syms, compiled_circuit)
@@ -1291,10 +758,10 @@ def eval_circ(unitary, params, compiled_circuit, symonly=False, allow_global_pha
     else: cost = 0.0
     symcost = eval_symcost(num_qubits, rescirc, allow_global_phase=allow_global_phase)
     osrcost = eval_osrcost(num_qubits, rescirc, params, param_syms)
-    param_cost = 0.2
-    gatecost = sum(1+sum(complex(sympy.log(sympy.Abs(z.to_sympy(param_syms).simplify().as_numer_denom()[1]), 2).evalf()).real*param_cost for z in x[2]) for x in compiled_circuit.gates)
-    if osrcost == 1.0 and (symcost == 0.0 or cost == 0.0):
+    gatecost = get_gatecost(compiled_circuit, param_syms)
+    if osrcost == 0.0 and (symcost == 0.0 or cost == 0.0):
         print("Found exact solution:", compiled_circuit, osrcost, symcost, cost, gatecost)
+        print(rescirc)
     return (osrcost, symcost, cost, gatecost), rescirc
 def evaluate(individual, pset, hof, unitary, params, num_qubits, ansatz, cost_func_method):
     #print(individual)
@@ -1321,7 +788,7 @@ def evaluate(individual, pset, hof, unitary, params, num_qubits, ansatz, cost_fu
         print("NaN cost detected:", [str(x) for x in individual], osrcost, symcost, cost, rescirc, unitary)
     #print(cost)
     #if cost < 0.0: print(individual, "Negative cost!", cost, tr, rescirc, unitary)
-    return osrcost, symcost, cost, gatecost
+    return osrcost, symcost, cost, gatecost #return osrcost, symcost, cost, gatecost
 
 def find_best_orientation(cnot_structure, Umtx, param_info):
     results = []
@@ -1354,7 +821,7 @@ def gen_ansatz(gate, scale_max, layers, basis, u3_ansatz=False, gp_gate=False):
     elif gate in ("CSWAP",): cnot_structure = [(2, 1), (0, 2), (1, 2), (0, 2), (0, 1), (0, 1), (2, 1)]
     elif num_qubits > 1: cnot_structure = determine_CNOT_structure(Umtx, param_info)
     else: cnot_structure = []
-    if len(cnot_structure):
+    if len(cnot_structure) and False:
         cnot_structure = find_best_orientation(cnot_structure, Umtx, param_info)
         print("CNOT structure:", cnot_structure)
     if u3_ansatz:
@@ -1409,7 +876,7 @@ def decompose_unitary(gate, scale_max, layers=4, basis=('CNOT', 'S', 'Sdg', 'T',
     # Set up the DEAP framework
     def init_individual(regions):
         return creator.Individual([gp.PrimitiveTree((toolbox if is_circ else toolboxangle).expr()) for is_circ in regions])
-    creator.create("FitnessMin", base.Fitness, weights=(-1.0, -0.1, -0.01))
+    creator.create("FitnessMin", base.Fitness, weights=(-1.0, -0.1, -0.01, -0.001))
     creator.create("Individual", list, fitness=creator.FitnessMin)
     tree_depth = num_qubits * (num_qubits - 1) * layers
     # Register the genetic operators
@@ -1514,23 +981,22 @@ def best_first(starts, is_goal, neighbors, eval_E, canonicalize, find_min=False)
     while pq:
         E, node = heapq.heappop(pq)
 
-        goal = is_goal(bestE, E)
-        if goal is None: continue
-        if goal:
+        if is_goal(E):
             bestE, best = E, node
             if not find_min: return node
-
-        if any(x in best_E_by_key and best_E_by_key[x] <= E for x in canonicalize(node)):
             continue
+
+        #if any(x in best_E_by_key and best_E_by_key[x] <= E for x in canonicalize(node)):
+        #    continue
 
         _, k = eval_E(node)
         knb = key_conv(k)
         if knb in best_E_by_key and E > best_E_by_key[knb]:
             continue
-        print(E, node, k, knb)
 
-        nbrs = neighbors(node)
-        
+        nbrs = neighbors(node, E, bestE)
+        if len(nbrs) == 0: continue
+        print(E, node, k, knb)
         for nb, (Enb, knb) in zip(nbrs, p.map(eval_E, nbrs)):
         #for nb in nbrs:
         #    Enb, knb = eval_E(nb)
@@ -1593,7 +1059,7 @@ def gen_clifford():
                 cb.add_circuit(gate)
             cb.add_circuit(gen_gate_qubits("GP", [0], phases[i]))
             mat = sympy.ImmutableMatrix(compile_gates(1, cb.to_sympy([])).applyfunc(textbook_simp))
-            res = decompose_unitary_search((1, [], lambda: mat), 8, basis=('CNOT', 'H', 'S', 'Sdg', 'Sx', 'Sxdg', 'X', 'Y', 'Z', 'T', 'Tdg', 'P', 'Rx', 'Ry', 'Rz'), allow_global_phase=False, find_min=True)[1]
+            res = decompose_unitary_search((1, [], lambda: mat), 8, basis=('CNOT', 'H', 'S', 'Sdg', 'Sx', 'Sxdg', 'X', 'Y', 'Z', 'T', 'Tdg', 'P', 'Rx', 'Ry', 'Rz', 'U2', 'U3'), allow_global_phase=False, find_min=True)[1]
             name = "".join(cliff).replace('I', '').replace("SZ", "Sdg").replace("SxX", "Sxdg")
             if name == "": name = "I"
             clifford_gates[mat] = (name+(f"_q{i}" if i!=0 else ""), res)
@@ -1607,7 +1073,7 @@ def gen_clifford():
     for gate in clifford_gates:
         if clifford_gates[gate][0] in basic_clifford: continue
         strmat = str(gate.subs(subs).applyfunc(sympy.factor_terms)) #.replace(sympy.sqrt(2)/2, 1/sympy.sqrt(2))
-        print(f'    \"{clifford_gates[gate][0]}\": (1, [], lambda: compile_gates(1, clifford_decomps[\"{clifford_gates[gate][0]}\"]){".applyfunc(textbook_simp)" if "sqrt" in strmat else ""},\n        lambda: sympy.{strmat.replace("sqrt", "sympy.sqrt")}),')
+        print(f'    \"{clifford_gates[gate][0]}\": (1, [], lambda: sympy.{strmat.replace("sqrt", "sympy.sqrt")}.applyfunc(sympy.factor_terms)),')
     s, count = "", 0
     for gate in clifford_gates:
         rev = sympy.ImmutableMatrix(compile_gates(1, [(dagger_gate(gate), [0])]).applyfunc(textbook_simp))
@@ -1620,47 +1086,131 @@ def gen_clifford():
 #not maximally entangling: CS, CT
 #maximally entangling: CNOT, CZ, CY, CH, iSWAP, SiSWAP (partial), XX(pi/4), exp(i pi/4 (X⊗X + Y⊗Y)), SSWAP (partial)
 #maximally entangling only at specific angles: CRX, CRY, CRZ, CP, Rxy, iSWAP_pow
-def decompose_unitary_search(gate, scale_max, layers=4, basis=('CNOT',)+full_clifford+('T', 'Tdg', 'P', 'Rx', 'Ry', 'Rz'), allow_global_phase=True, find_min=False):
-    ansatz, regions, num_qubits, Umtx, param_info = gen_ansatz(gate, scale_max, layers, basis)
+def decompose_unitary_search(orig_gate, scale_max, layers=4, basis=('CNOT',)+single_gate_clifford+('T', 'Tdg', 'P', 'Rx', 'Ry', 'Rz', 'U2'), allow_global_phase=True, find_min=False):
+    ansatz, regions, num_qubits, Umtx, param_info = gen_ansatz(orig_gate, scale_max, layers, basis)
+    no_ansatz = False
+    if no_ansatz: ansatz, regions = [None], [True]
+    params = [vardict[x[1]] for x in param_info]
     num_regions = len(regions)*num_qubits
-    all_angles = [
-        make_angle(ParamIndex(i), AngleScale(scale*(1 if i==-1 else param_info[i][0]), scale_max)) for i in range(-1, len(param_info)) for scale in range(-scale_max+1, scale_max+1) if scale != 0
-    ]
+    def gen_angles(s, reversed=False): #we use a half open interval based on (−π,π].
+        return [make_angle(ParamIndex(i), AngleScale(scale*s, scale_max*(1 if i==-1 else param_info[i][0]))) for i in range(-1, len(param_info)) for scale in (range(scale_max//2-1, -scale_max//2-1, -1) if reversed else range(-scale_max//2+1, scale_max//2+1)) if scale != 0 or i == 0]
+    def sympy_to_paramsum(expr, s):
+        res = ParamIndexSum()
+        for term in sympy.Add.make_args(expr):
+            if term.is_constant():
+                if term <= s*sympy.pi: term += s*2*sympy.pi
+                if term > s*sympy.pi: term -= s*2*sympy.pi
+                term = term/(2*sympy.pi)
+                num, denom = term.as_numer_denom()
+                res = angle_sum(res, make_angle(ParamIndex(-1), AngleScale(num*scale_max/denom, scale_max)))
+            else:
+                coeff, rest = term.as_coeff_Mul()
+                paramidx = params.index(rest)
+                num, denom = coeff.as_numer_denom()
+                res = angle_sum(res, make_angle(ParamIndex(paramidx), AngleScale(num*scale_max*param_info[paramidx][0]/denom, scale_max*param_info[paramidx][0])))
+        return res
+    @functools.lru_cache(None)
+    def reverse_gate(gate, angles):
+        if len(gate_inverses[gate]) == 1: return gate_inverses[gate][0], angles
+        target_gate, angle_mapper = gate_inverses[gate]
+        mapped_angles = tuple(sympy_to_paramsum(z, gate_descs[target_gate][1][i][0]) for i, z in enumerate(angle_mapper(*(x.to_sympy(params) for x in angles))))
+        #print(gate, angles, target_gate, mapped_angles)
+        test = compile_gates(1, [(gate, *[x.to_sympy(params) for x in angles], (0,)), (target_gate, *[x.to_sympy(params) for x in mapped_angles], (0,))]).applyfunc(textbook_simp)
+        assert test == sympy.eye(2), test
+        return target_gate, mapped_angles
+    def gen_gate_angles(gate):
+        return itertools.product(*[gen_angles(x[0]) for x in gate_descs[gate][1]])
     #comp_angles = {make_angle(ParamIndex(i), AngleScale(scale, scale_max)): make_angle(ParamIndex(i), AngleScale(-scale, scale_max)) for i in range(-1, len(param_info)) for scale in range(-scale_max, scale_max+1) if scale != 0}
+    gatecheck = {}
+    for gate in basis:
+        if gate_descs[gate][0] == 1:
+            for angles in gen_gate_angles(gate):
+                mat = sympy.ImmutableMatrix(compile_gates(1, [(gate, *[x.to_sympy(params) for x in angles], (0,))]).applyfunc(textbook_simp))
+                if mat == sympy.eye(2): continue
+                if not mat in gatecheck: gatecheck[mat] = []
+                gatecheck[mat].append((gate, angles))
+    subs = {sympy.I: sympy.Symbol("sympy.I", real=True),
+            sympy.pi: sympy.Symbol("sympy.pi", real=True)}
+    # for mat in gatecheck:
+    #     if len(gatecheck[mat]) > 1:
+    #         primgate = next(iter(x for x in gatecheck[mat] if len(x[1]) == 0), next(iter(gatecheck[mat])))
+    #         if primgate is not None:
+    #             print(f'\"{primgate[0] + ("" if len(primgate[1]) == 0 else "_" + "_".join(str(x.to_sympy(params)/sympy.pi*scale_max).replace("-", "m") for x in primgate[1]))}\": ({", ".join(["(" + repr(x[0]) + ", (" + ", ".join([str(z.to_sympy(params).subs(subs)) for z in x[1]]) + ",))" for x in gatecheck[mat] if x!=primgate or len(x[1]) != 0])},),')
+        
+    unique_gates = {min(z, key=lambda x: get_gatecost(gen_gate(x[0], *x[1], 0), params)) for z in gatecheck.values()}
     all_gates = [tuple(((gate, *angles, qbit),) if i==region*num_qubits+qbit else () for i in range(num_regions))
                  for gate in basis if gate_descs[gate][0] == 1
                  for region in range(len(regions)) if regions[region]
                  for qbit in range(num_qubits)
-                 for angles in itertools.product(*[all_angles for _ in gate_descs[gate][1]])
-             ]
+                 for angles in gen_gate_angles(gate) if (gate, angles) in unique_gates
+            ]
+    """
+    motifs = [((SINGLE_QUBIT_GATES, ANY_QUBIT_POS),),
+        ((SINGLE_QUBIT_GATES, ANY_QUBIT_POS), (SAME_GATE, ANY_OTHER_QUBIT_POS),),
+        ((SINGLE_QUBIT_GATES, ANY_QUBIT_POS), (INV_GATE, SAME_POS),),
+        ((TWO_QUBIT_GATES, ANY_TWOQUBIT_POS),),
+        ((TWO_QUBIT_GATES, ANY_TWOQUBIT_POS), (TWO_QUBIT_GATES, ANY_COMMON_TWOQUBIT_POS),),
+        ((TWO_QUBIT_GATES, ANY_TWOQUBIT_POS), (TWO_QUBIT_GATES, SAME_REV_POS), (TWO_QUBIT_GATES, SAME_POS))] #SWAP motif
+    """
+    if no_ansatz: #1, 2 and 3 CNOT motifs
+        all_gates.extend([tuple((("CNOT", qbit1, qbit2),) if i==region*num_qubits+qbit1 or i==region*num_qubits+qbit2 else () for i in range(num_regions)) for qbit1 in range(num_qubits) for qbit2 in range(num_qubits) if qbit1 != qbit2
+                                    for region in range(len(regions)) if regions[region]])
+        all_gates.extend([tuple((("CNOT", qbit1, qbit2),("CNOT", qbit3, qbit4)) if i==region*num_qubits+qbit1 or i==region*num_qubits+qbit2 else () for i in range(num_regions)) for qbit1 in range(num_qubits) for qbit2 in range(num_qubits) for qbit3 in range(num_qubits) for qbit4 in range(num_qubits) if qbit1 != qbit2 and qbit3 != qbit4 and len({qbit1, qbit2} & {qbit3, qbit4}) != 0
+                                    for region in range(len(regions)) if regions[region]])
+        all_gates.extend([tuple((("CNOT", qbit1, qbit2),("CNOT", qbit2, qbit1),("CNOT", qbit1, qbit2)) if i==region*num_qubits+qbit1 or i==region*num_qubits+qbit2 else () for i in range(num_regions)) for qbit1 in range(num_qubits) for qbit2 in range(num_qubits) if qbit1 != qbit2
+                                    for region in range(len(regions)) if regions[region]]) #SWAP motif
+        all_gates.extend([tuple(((gate1, *angles1, qbit1), ("CNOT", qbit1, qbit2), (gate2, *angles2, qbit1)) if i==region*num_qubits+qbit1 else () for i in range(num_regions)) for qbit1 in range(num_qubits) for qbit2 in range(num_qubits) if qbit1 != qbit2
+                                    for region in range(len(regions)) if regions[region]
+                                    for gate1 in gate_inverses if gate1 in basis
+                                    for angles1 in gen_gate_angles(gate1) if (gate1, angles1) in unique_gates
+                                    for gate2, angles2 in (reverse_gate(gate1, angles1),)                        ])
+        all_gates.extend([tuple(((gate1, *angles1, qbit2), ("CNOT", qbit1, qbit2), (gate2, *angles2, qbit2)) if i==region*num_qubits+qbit1 else () for i in range(num_regions)) for qbit1 in range(num_qubits) for qbit2 in range(num_qubits) if qbit1 != qbit2
+                                    for region in range(len(regions)) if regions[region]
+                                    for gate1 in gate_inverses if gate1 in basis
+                                    for angles1 in gen_gate_angles(gate1) if (gate1, angles1) in unique_gates
+                                    for gate2, angles2 in (reverse_gate(gate1, angles1),)
+                        ])
+        all_gates.extend([tuple((("CNOT", qbit1, qbit2),(gate, *angles, qbit1),(gate, *angles, qbit2),("CNOT", qbit3, qbit4)) if i==region*num_qubits+qbit1 or i==region*num_qubits+qbit2 else () for i in range(num_regions)) for qbit1 in range(num_qubits) for qbit2 in range(num_qubits) for qbit3 in range(num_qubits) for qbit4 in range(num_qubits) if qbit1 != qbit2 and qbit3 != qbit4 and len({qbit1, qbit2} & {qbit3, qbit4}) != 0
+                                    for region in range(len(regions)) if regions[region]
+                                    for gate in basis if gate_descs[gate][0] == 1
+                                    for angles in gen_gate_angles(gate) if (gate, angles) in unique_gates
+                                    ])
     if num_qubits > 1:
-        rev_angles = [
-            make_angle(ParamIndex(i), AngleScale(scale*(1 if i==-1 else param_info[i][0]), scale_max)) for i in range(-1, len(param_info)) for scale in range(scale_max, -scale_max, -1) if scale != 0
-        ]
         all_gates.extend([tuple(((gate, *angles, qbit1),) if i==region*num_qubits+qbit1 else ((gate, *angles, qbit2),) if i==region*num_qubits+qbit2 else () for i in range(num_regions))
                         for gate in basis if gate_descs[gate][0] == 1
                         for region in range(len(regions)) if regions[region]
                         for qbit1 in range(num_qubits) for qbit2 in range(qbit1+1, num_qubits)
-                        for angles in itertools.product(*[all_angles for _ in gate_descs[gate][1]])
+                        for angles in gen_gate_angles(gate) if (gate, angles) in unique_gates
                 ])
-        all_gates.extend([tuple(((gate1, *[x[0] for x in angles], qbit),) if i==region1*num_qubits+qbit else ((gate2, *[x[1] for x in angles], qbit),) if i==region2*num_qubits+qbit else () for i in range(num_regions))
-                        for gate1, gate2 in gate_inverses if gate1 in basis and gate2 in basis
+        all_gates.extend([tuple(((gate1, *angles1, qbit),) if i==region1*num_qubits+qbit else ((gate2, *angles2, qbit),) if i==region2*num_qubits+qbit else () for i in range(num_regions))
+                        for gate1 in gate_inverses if gate1 in basis
                         for region1 in range(len(regions)) if regions[region1]
                         #for region2 in (next(iter(region2 for region2 in range(region1+1, len(regions)) if regions[region2]), None),) if region2 is not None
                         for region2 in range(region1+1, len(regions)) if regions[region2]
                         for qbit in range(num_qubits)
-                        for angles in itertools.product(*[list(zip(all_angles, rev_angles)) for _ in gate_descs[gate1][1]])
+                        for angles1 in gen_gate_angles(gate1) if (gate1, angles1) in unique_gates
+                        for gate2, angles2 in (reverse_gate(gate1, angles1),)
                 ])
     #print(all_gates)
 
     #startcost = eval_circ(Umtx, param_info, CircuitBuilder())[0]
-    starts = list(itertools.product(*[(((),) if region else ((x,) for x in all_angles)) for region in regions for qbit in range(num_qubits if region else 1)]))
-    #print(starts)
+    starts = list(itertools.product(*[(((),) if region else ((x,) for x in gen_angles(1))) for region in regions for qbit in range(num_qubits if region else 1)]))
+    starts[0] = ((), (('Tdg', 1,),), (('T', 2,),), (), (('T', 1,),), (('Rx', sympy.pi/2, 2,), ('T', 2,)), (), (), (('T', 2,),),
+                 (), (), (('Tdg', 2,),), (), (), (('T', 2,), ('Rx', -sympy.pi/4, 2,), ('Ry', -sympy.pi/2, 2,)), (), (('T', 1,),), (),
+                 (), (), (), (('Tdg', 0,),), (('Tdg', 1,),), ())
+    starts[0] = ((), (('Tdg', 1,),), (('T', 2,),), (), (('T', 1,),), (('T', 2,),), (), (), (('T', 2,),),
+                 (), (), (('Tdg', 2,),), (), (), (('T', 2,),), (), (('T', 1,),), (),
+                 (), (), (), (('Tdg', 0,),), (('Tdg', 1,),), ())
+    #'CSWAP': lambda: compile_gates(3, [('Tdg', (1,)), ('T', (2,)), ('CNOT', [2, 1]), ('T', (1,)), ('Rx', sympy.pi/2, (2,)), ('T', (2,)), ('CNOT', [0, 2]), ('T', (2,)), ('CNOT', [1, 2]), ('Tdg', (2,)), ('CNOT', [0, 2]), ('T', (2,)), ('Rx', -sympy.pi/4, (2,)), ('Ry', -sympy.pi/2, (2,)), ('CNOT', [0, 1]), ('T', (1,)), ('CNOT', [0, 1]), ('CNOT', [2, 1]), ('Tdg', (0,)), ('Tdg', (1,)), ('GP', -sympy.pi/8, 3, [0, 1, 2])]),
     #res = A_star(starts, lambda node: eval(node) == 0, lambda node: eval(node),
     #       lambda node: [tuple(x+((gate[1:],) if gate[0] == i else ()) for i, x in enumerate(node)) for gate in gates],
     #       lambda node1, node2: abs(eval(node2) - eval(node1)))
-    def get_neighbors(node):
-        return [tuple(x[:i]+y+x[i:] for x, y, i in zip(node, gates, pos)) for gates in all_gates
+    gate_costs = {gates: sum(get_gatecost(gen_gate(x[0], *x[1:-1], 0), params) for region in gates for x in region) for gates in all_gates}
+    min_gate_costs = min(gate_costs.values())
+    def get_neighbors(node, E, bestE):
+        if bestE is not None and bestE[3] <= E[3] + min_gate_costs: return []
+        try_gates = all_gates if bestE is None else (gates for gates in all_gates if bestE[3] > E[3]+gate_costs[gates])
+        return [tuple(x[:i]+y+x[i:] for x, y, i in zip(node, gates, pos)) for gates in try_gates
                 for pos in itertools.product(*[range((len(x) if len(gates[i]) > 0 else 0)+1) for i, x in enumerate(node)])]
     if num_qubits == 1:
         pauli_dressings = [
@@ -1673,7 +1223,6 @@ def decompose_unitary_search(gate, scale_max, layers=4, basis=('CNOT',)+full_cli
             for qubit1 in range(num_qubits) for qubit2 in range(qubit1+1, num_qubits)
         ]
 
-    params = [vardict[x[1]] for x in param_info]
     def canonicalize(node):
         return
         _, _, U = eval(Umtx, param_info, ansatz, allow_global_phase, node)  # populate cache
@@ -1681,19 +1230,18 @@ def decompose_unitary_search(gate, scale_max, layers=4, basis=('CNOT',)+full_cli
         yield from (mat for pauli_dressing in pauli_dressings for preU in preUs for mat in (sympy.ImmutableMatrix(eval_circ(preU, param_info, pauli_dressing, True, allow_global_phase=allow_global_phase)[2]),) if mat != U)
         #yield from (mat for pauli_dressing in pauli_dressings for mat in (sympy.ImmutableMatrix(eval_circ(U, param_info, pauli_dressing, True, allow_global_phase=allow_global_phase)[2]),) if mat != U)
 
-    res = best_first(starts, lambda bestE, E: None if bestE is not None and bestE[3] <= E[3] else E[0] == 1.0 and (E[1] == 0.0 or E[2] == 0.0), get_neighbors,
+    res = best_first(starts, lambda E: E[0] == 0.0 and (E[1] == 0.0 or E[2] == 0.0), get_neighbors,
                      functools.partial(eval, Umtx, param_info, ansatz, allow_global_phase), canonicalize, find_min=find_min)
     if res is None: return res
-    if not find_min:
+    if not find_min and not no_ansatz:
         basis_no_clifford = tuple(g for g in basis if g not in clifford_descs)
         print(res)
         def remap_qubits(x, qbit): return tuple(z[:-1] + (qbit,) for z in x)
-        res = tuple(remap_qubits(decompose_unitary_search((1, param_info, lambda *args: compile_gates(1, make_circ([None], (remap_qubits(region, 0),), 1).to_sympy(args))), scale_max, layers, basis=basis_no_clifford, find_min=True)[0][0], i % num_qubits)
+        res = tuple(region if len(region) <= 1 else remap_qubits(decompose_unitary_search((1, param_info, lambda *args: compile_gates(1, make_circ([None], (remap_qubits(region, 0),), 1).to_sympy(args))), scale_max, layers, basis=basis_no_clifford, find_min=True)[0][0], i % num_qubits)
                     for i, region in enumerate(res))
         print(res)
     invparams = {vardict[x[1]]: x[1] for x in param_info}
-    invparams.update({sympy.pi: sympy.Symbol("sympy.pi", real=True),
-                      sympy.I: sympy.Symbol("sympy.I", real=True)})
+    invparams.update(subs)
     def circ_to_code(circ):
         return ", ".join(f"({gate}({', '.join(str(x.to_sympy(params)) for x in angles)}), ({', '.join(str(q) for q in qubits)},))" for gate, qubits, angles in circ.gates)
     def circ_to_compile(circ):
@@ -1702,9 +1250,10 @@ def decompose_unitary_search(gate, scale_max, layers=4, basis=('CNOT',)+full_cli
         from qiskit.circuit import QuantumCircuit, Parameter
         qc = QuantumCircuit(num_qubits)
         namedict = {"CNOT": "cx", "H": "h", "S": "s", "Sdg": "sdg", "Sx": "sx", "Sxdg": "sxdg",
-                    "T": "t", "Tdg": "tdg", "X": "x", "Y": "y", "Z": "z", "P": "p", "Rx": "rx", "Ry": "ry", "Rz": "rz",}
+                    "T": "t", "Tdg": "tdg", "X": "x", "Y": "y", "Z": "z", "P": "p", "Rx": "rx", "Ry": "ry", "Rz": "rz", "U3": "u"}
         p = [Parameter(str(x)) for x in params]
         for gate, qubits, angles in circ.gates:
+            if gate == "U2": gate, angles = "U3", [make_angle(ParamIndex(-1), AngleScale(1, 4)), *angles]
             if gate in namedict:
                 #if isinstance(namedict[gate], tuple):
                 #    for g in namedict[gate]:
@@ -1716,7 +1265,7 @@ def decompose_unitary_search(gate, scale_max, layers=4, basis=('CNOT',)+full_cli
     fincirc = make_circ(ansatz, res, num_qubits)
     #print(circ_to_code(fincirc))
     compress = circ_to_compile(fincirc)
-    print(compress)
+    print(orig_gate, compress)
     print(circ_to_qiskit(fincirc).draw())
 
     return res, compress
@@ -1749,14 +1298,17 @@ def decompose_unitary_search(gate, scale_max, layers=4, basis=('CNOT',)+full_cli
 #decompose_unitary_search("CRX", 4)
 #decompose_unitary_search("CRY", 4)
 #decompose_unitary_search("CRZ", 4)
-decompose_unitary_search("SYC", 8)
-#decompose_unitary_search("CSWAP", 2)
-#decompose_unitary_search("CU3", 1)
+#decompose_unitary_search("SYC", 24)
+decompose_unitary_search("CSWAP", 8, allow_global_phase=False)
+#decompose_unitary_search("CSWAP", 8, basis=cnot_full_clifford_t, allow_global_phase=False)
+#decompose_unitary_search("CU3", 4)
 #decompose_unitary_search("U3", 2, allow_global_phase=False)
 #decompose_unitary_search("GP", 1)
 #decompose_unitary_search("P", 1)
 #decompose_unitary_search("Deutsch", 1)
-#decompose_unitary_search("Peres", 1)
-#decompose_unitary_search("CCX", 1)
+#decompose_unitary_search("fFredkin", 8, basis=cnot_full_clifford_t)
+#decompose_unitary_search("Peres", 8, basis=cnot_full_clifford_t)
+#decompose_unitary_search("CCX", 1, basis=cnot_full_clifford_t)
+#decompose_unitary_search("CCZ", 1)
 #decompose_unitary_search((1, [], lambda: compile_gates(1, [("Rx", -3*sympy.pi/2, [0]), ("Rz", -sympy.pi/4, [0]), ("H", [0]), ("X", [0]), ("Rz", -3*sympy.pi/2, [0])])), 8)
 #gen_clifford()
