@@ -546,6 +546,29 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
         # call the C wrapper function
         super().apply_from_right(parameters_mtx, unitary_mtx, parallel=parallel, is_f32=is_f32)
 
+    def apply_to_list(self, inputs, parameters_mtx, parallel=1):
+        """Apply the circuit to a list of input matrices (float64/complex128 only).
+
+        Args:
+            inputs: List of numpy arrays (complex128) to transform in-place
+            parameters_mtx: Parameter array (float64 numpy array)
+            parallel: Parallel execution mode (int, optional, default=1)
+        """
+        super().apply_to_list(inputs, parameters_mtx, parallel)
+
+    def apply_derivate_to(self, parameters_mtx, unitary_mtx, parallel=1):
+        """Evaluate the derivative of the circuit on an input matrix w.r.t. all free parameters.
+
+        Args:
+            parameters_mtx: Parameter array (float64 numpy array)
+            unitary_mtx: Input matrix (complex128 numpy array)
+            parallel: Parallel execution mode (int, optional, default=1)
+
+        Returns:
+            list of numpy arrays: One complex128 matrix per free parameter
+        """
+        return super().apply_derivate_to(parameters_mtx, unitary_mtx, parallel)
+
     def get_Second_Renyi_Entropy(
         self, parameters=None, input_state=None, qubit_list=None
     ):

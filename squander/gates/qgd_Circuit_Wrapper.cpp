@@ -975,6 +975,241 @@ qgd_Circuit_Wrapper_apply_from_right( qgd_Circuit_Wrapper *self, PyObject *args,
 
 
 /**
+@brief Capsule destructor: calls delete on a heap-allocated Matrix, which correctly
+       decrements the reference counter and then calls scalable_aligned_free.
+*/
+static void
+circuit_matrix_owner_capsule_destruct( PyObject* cap ) {
+    Matrix* m = static_cast<Matrix*>( PyCapsule_GetPointer(cap, "squander.circuit_matrix_owner") );
+    delete m;
+}
+
+
+/**
+@brief Apply the circuit to a list of input matrices (float64 only — no float32 overload
+       exists in Gates_block for apply_to_list).
+@param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper
+@param args A tuple of the input arguments: inputs (list of numpy arrays), parameters_arr (numpy array), parallel (int, optional)
+@param kwds Optional keyword arguments
+@return Returns 0 on success
+*/
+static PyObject *
+qgd_Circuit_Wrapper_apply_to_list( qgd_Circuit_Wrapper *self, PyObject *args, PyObject *kwds ) {
+
+    static char *kwlist[] = {(char*)"inputs", (char*)"parameters", (char*)"parallel", NULL};
+
+    PyObject * inputs_obj = NULL;
+    PyArrayObject * parameters_arr = NULL;
+    int parallel = 1;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "OO|i", kwlist, &inputs_obj, &parameters_arr, &parallel )) {
+        PyErr_SetString(PyExc_Exception, "Unable to parse input");
+        return NULL;
+    }
+
+    if ( inputs_obj == NULL ) {
+        PyErr_SetString(PyExc_Exception, "Input list was not given");
+        return NULL;
+    }
+
+    if ( parameters_arr == NULL ) {
+        PyErr_SetString(PyExc_Exception, "Parameters were not given");
+        return NULL;
+    }
+
+    if ( PyArray_TYPE(parameters_arr) != NPY_DOUBLE ) {
+        PyErr_SetString(PyExc_TypeError, "Parameter vector should be float64");
+        return NULL;
+    }
+
+    PyObject* seq = PySequence_Fast(inputs_obj, "inputs must be a sequence of numpy arrays");
+    if (seq == NULL) {
+        return NULL;
+    }
+
+    if ( PyArray_IS_C_CONTIGUOUS(parameters_arr) ) {
+        Py_INCREF(parameters_arr);
+    }
+    else {
+        parameters_arr = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+    }
+
+    Matrix_real parameters_mtx = numpy2matrix_real( parameters_arr );
+
+    const Py_ssize_t n = PySequence_Fast_GET_SIZE(seq);
+    PyObject** items = PySequence_Fast_ITEMS(seq);
+
+    std::vector<Matrix> inputs;
+    inputs.reserve((size_t)n);
+
+    for (Py_ssize_t idx = 0; idx < n; idx++) {
+        PyObject* item = items[idx];
+        if (!PyArray_Check(item)) {
+            Py_DECREF(seq);
+            Py_DECREF(parameters_arr);
+            PyErr_SetString(PyExc_TypeError, "All inputs should be numpy arrays");
+            return NULL;
+        }
+
+        PyArrayObject* input = (PyArrayObject*)item;
+        if ( PyArray_TYPE(input) != NPY_COMPLEX128 ) {
+            Py_DECREF(seq);
+            Py_DECREF(parameters_arr);
+            PyErr_SetString(PyExc_TypeError, "All inputs should be complex128");
+            return NULL;
+        }
+
+        if ( !PyArray_IS_C_CONTIGUOUS(input) ) {
+            Py_DECREF(seq);
+            Py_DECREF(parameters_arr);
+            PyErr_SetString(PyExc_TypeError, "All inputs should be C-contiguous");
+            return NULL;
+        }
+
+        inputs.push_back( numpy2matrix(input) );
+    }
+
+    try {
+        self->circuit->apply_to_list( parameters_mtx, inputs, parallel );
+    }
+    catch (std::string err) {
+        Py_DECREF(seq);
+        Py_DECREF(parameters_arr);
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    catch(...) {
+        Py_DECREF(seq);
+        Py_DECREF(parameters_arr);
+        std::string err( "Invalid pointer to circuit class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+    // Copy back any data that was reallocated inside C++
+    for (Py_ssize_t idx = 0; idx < n; idx++) {
+        PyArrayObject* input = (PyArrayObject*)items[idx];
+        Matrix& mtx = inputs[(size_t)idx];
+        if (mtx.data != PyArray_DATA(input)) {
+            memcpy(PyArray_DATA(input), mtx.data, mtx.size() * sizeof(QGD_Complex16));
+        }
+    }
+
+    Py_DECREF(seq);
+    Py_DECREF(parameters_arr);
+    return Py_BuildValue("i", 0);
+}
+
+
+/**
+@brief Evaluate the derivative of the circuit on an input matrix with respect to all free parameters (float64 only).
+@param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper
+@param args A tuple of the input arguments: parameters_arr (numpy array), unitary_arg (numpy array), parallel (int, optional)
+@param kwds Optional keyword arguments
+@return Returns a Python list of numpy arrays, one per free parameter
+*/
+static PyObject *
+qgd_Circuit_Wrapper_apply_derivate_to( qgd_Circuit_Wrapper *self, PyObject *args, PyObject *kwds ) {
+
+    static char *kwlist[] = {(char*)"parameters", (char*)"unitary", (char*)"parallel", NULL};
+
+    PyArrayObject * parameters_arr = NULL;
+    PyArrayObject * unitary_arg = NULL;
+    int parallel = 1;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "OO|i", kwlist, &parameters_arr, &unitary_arg, &parallel )) {
+        PyErr_SetString(PyExc_Exception, "Unable to parse input");
+        return NULL;
+    }
+
+    if ( unitary_arg == NULL ) {
+        PyErr_SetString(PyExc_Exception, "Input matrix was not given");
+        return NULL;
+    }
+
+    if ( parameters_arr == NULL ) {
+        PyErr_SetString(PyExc_Exception, "Parameters were not given");
+        return NULL;
+    }
+
+    if ( PyArray_TYPE(parameters_arr) != NPY_DOUBLE ) {
+        PyErr_SetString(PyExc_TypeError, "Parameter vector should be float64");
+        return NULL;
+    }
+
+    if ( PyArray_TYPE(unitary_arg) != NPY_COMPLEX128 ) {
+        PyErr_SetString(PyExc_TypeError, "Input matrix should be complex128");
+        return NULL;
+    }
+
+    if ( !PyArray_IS_C_CONTIGUOUS(unitary_arg) ) {
+        PyErr_SetString(PyExc_Exception, "input matrix is not memory contiguous");
+        return NULL;
+    }
+
+    if ( PyArray_IS_C_CONTIGUOUS(parameters_arr) ) {
+        Py_INCREF(parameters_arr);
+    }
+    else {
+        parameters_arr = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+    }
+
+    Matrix_real parameters_mtx = numpy2matrix_real( parameters_arr );
+    Matrix unitary_mtx = numpy2matrix( unitary_arg );
+
+    std::vector<Matrix> derivs;
+    try {
+        derivs = self->circuit->apply_derivate_to( parameters_mtx, unitary_mtx, parallel );
+    }
+    catch (std::string err) {
+        Py_DECREF(parameters_arr);
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    catch(...) {
+        Py_DECREF(parameters_arr);
+        std::string err( "Invalid pointer to circuit class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+    PyObject* deriv_list = PyList_New((Py_ssize_t)derivs.size());
+    if (deriv_list == NULL) {
+        Py_DECREF(parameters_arr);
+        return NULL;
+    }
+
+    for (Py_ssize_t idx = 0; idx < (Py_ssize_t)derivs.size(); ++idx) {
+        Matrix* owned = new Matrix(derivs[(size_t)idx]);
+        PyObject* cap = PyCapsule_New(
+            owned, "squander.circuit_matrix_owner",
+            circuit_matrix_owner_capsule_destruct);
+        if (cap == NULL) {
+            delete owned;
+            Py_DECREF(deriv_list);
+            Py_DECREF(parameters_arr);
+            return NULL;
+        }
+        npy_intp shape[2] = { (npy_intp)owned->rows, (npy_intp)owned->cols };
+        PyObject* deriv_py = PyArray_SimpleNewFromData(
+            2, shape, NPY_COMPLEX128, owned->get_data());
+        if (deriv_py == NULL) {
+            Py_DECREF(cap);
+            Py_DECREF(deriv_list);
+            Py_DECREF(parameters_arr);
+            return NULL;
+        }
+        PyArray_SetBaseObject((PyArrayObject*)deriv_py, cap);
+        PyList_SET_ITEM(deriv_list, idx, deriv_py);
+    }
+
+    Py_DECREF(parameters_arr);
+    return deriv_list;
+}
+
+
+
+/**
 @brief Wrapper function to evaluate the second Rényi entropy of a quantum circuit at a specific parameter set
 @param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper
 @param args A tuple of the input arguments: parameters_arr (numpy array, optional), input_state_arg (numpy array, optional), qubit_list_arg (list, optional)
@@ -2489,6 +2724,12 @@ static PyMethodDef qgd_Circuit_Wrapper_Methods[] = {
     },
     {"apply_from_right", (PyCFunction) qgd_Circuit_Wrapper_apply_from_right, METH_VARARGS | METH_KEYWORDS,
      "Call to apply the gate from the right on the input matrix. Keyword is_f32=True selects float32/complex64 path."
+    },
+    {"apply_to_list", (PyCFunction) qgd_Circuit_Wrapper_apply_to_list, METH_VARARGS | METH_KEYWORDS,
+     "Call to apply the circuit on a list of input matrices (float64/complex128 only)."
+    },
+    {"apply_derivate_to", (PyCFunction) qgd_Circuit_Wrapper_apply_derivate_to, METH_VARARGS | METH_KEYWORDS,
+     "Call to evaluate the derivative of the circuit on an input matrix. Returns a list of derivative matrices."
     },
     {"get_Second_Renyi_Entropy", (PyCFunction) qgd_Circuit_Wrapper_get_Second_Renyi_Entropy, METH_VARARGS,
      "Wrapper function to evaluate the second Rényi entropy of a quantum circuit at a specific parameter set."

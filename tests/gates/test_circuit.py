@@ -594,3 +594,172 @@ class TestCircuitMisc:
         circ.apply_to(p32, mat32, is_f32=True)
 
         _assert_unitary_close(ref, mat32.astype(np.complex128), rtol=1e-4)
+
+
+class TestApplyToList:
+    """apply_to_list: applies circuit to a list of matrices, all in float64."""
+
+    @pytest.mark.parametrize("qbit_num", [2, 3, 4])
+    def test_apply_to_list_matches_individual_apply_to(self, qbit_num):
+        """apply_to_list result must equal calling apply_to on each matrix separately."""
+        circ = _build_rx_rz_cnot_circuit(qbit_num)
+        params = _params64(circ.get_Parameter_Num())
+        dim = 2 ** qbit_num
+
+        matrices_list = [_identity(dim) for _ in range(5)]
+        matrices_individual = [m.copy() for m in matrices_list]
+
+        circ.apply_to_list(matrices_list, params)
+
+        for m in matrices_individual:
+            circ.apply_to(params, m)
+
+        for got, expected in zip(matrices_list, matrices_individual):
+            _assert_unitary_close(expected, got)
+
+    @pytest.mark.parametrize("qbit_num", [2, 3])
+    def test_apply_to_list_single_element(self, qbit_num):
+        """Single-element list should behave like apply_to."""
+        circ = _build_rx_rz_cnot_circuit(qbit_num)
+        params = _params64(circ.get_Parameter_Num())
+        dim = 2 ** qbit_num
+
+        m_list = [_identity(dim)]
+        m_single = _identity(dim)
+
+        circ.apply_to_list(m_list, params)
+        circ.apply_to(params, m_single)
+
+        _assert_unitary_close(m_single, m_list[0])
+
+    @pytest.mark.parametrize("qbit_num", [2, 3, 4])
+    def test_apply_to_list_state_vectors(self, qbit_num):
+        """apply_to_list works on state vector arrays (dim-column vectors)."""
+        circ = _build_rx_rz_cnot_circuit(qbit_num)
+        params = _params64(circ.get_Parameter_Num())
+        dim = 2 ** qbit_num
+
+        states = [_random_state(dim, seed=i).reshape(dim, 1).copy()
+                  for i in range(4)]
+        references = [s.copy() for s in states]
+
+        circ.apply_to_list(states, params)
+        for ref in references:
+            circ.apply_to(params, ref)
+
+        for got, expected in zip(states, references):
+            _assert_state_close(expected.reshape(-1), got.reshape(-1))
+
+    def test_apply_to_list_empty_list_no_crash(self):
+        """Empty list should not crash (no-op)."""
+        circ = Circuit(2)
+        circ.add_RX(0)
+        params = _params64(circ.get_Parameter_Num())
+        circ.apply_to_list([], params)  # should not raise
+
+    @pytest.mark.parametrize("qbit_num", [2, 3])
+    def test_apply_to_list_wrong_dtype_raises(self, qbit_num):
+        """Passing complex64 inputs to apply_to_list should raise a TypeError."""
+        circ = _build_rx_rz_cnot_circuit(qbit_num)
+        params = _params64(circ.get_Parameter_Num())
+        dim = 2 ** qbit_num
+        bad = [_identity(dim, dtype=np.complex64)]
+        with pytest.raises(Exception):
+            circ.apply_to_list(bad, params)
+
+
+class TestApplyDerivateTo:
+    """apply_derivate_to: derivative of circuit w.r.t. each free parameter."""
+
+    @pytest.mark.parametrize("qbit_num", [2, 3, 4])
+    def test_derivative_count_matches_parameter_num(self, qbit_num):
+        """Number of returned derivative matrices must equal get_Parameter_Num()."""
+        circ = _build_rx_rz_cnot_circuit(qbit_num)
+        params = _params64(circ.get_Parameter_Num())
+        dim = 2 ** qbit_num
+
+        mat = _identity(dim)
+        derivs = circ.apply_derivate_to(params, mat)
+
+        assert len(derivs) == circ.get_Parameter_Num()
+
+    @pytest.mark.parametrize("qbit_num", [2, 3, 4])
+    def test_derivative_shapes_match_input(self, qbit_num):
+        """Each derivative matrix must have the same shape as the input."""
+        circ = _build_rx_rz_cnot_circuit(qbit_num)
+        params = _params64(circ.get_Parameter_Num())
+        dim = 2 ** qbit_num
+
+        mat = _identity(dim)
+        derivs = circ.apply_derivate_to(params, mat)
+
+        for i, d in enumerate(derivs):
+            assert d.shape == (dim, dim), f"deriv[{i}] shape {d.shape} != ({dim},{dim})"
+
+    @pytest.mark.parametrize("qbit_num", [2, 3])
+    def test_derivative_dtype_is_complex128(self, qbit_num):
+        """Derivative matrices must be complex128."""
+        circ = _build_rx_rz_cnot_circuit(qbit_num)
+        params = _params64(circ.get_Parameter_Num())
+        dim = 2 ** qbit_num
+
+        mat = _identity(dim)
+        derivs = circ.apply_derivate_to(params, mat)
+
+        for i, d in enumerate(derivs):
+            assert d.dtype == np.complex128, f"deriv[{i}] dtype {d.dtype} != complex128"
+
+    @pytest.mark.parametrize("qbit_num", [2, 3])
+    def test_derivative_finite_difference_validation(self, qbit_num):
+        """Analytic derivative must match finite-difference estimate."""
+        circ = _build_rx_rz_cnot_circuit(qbit_num)
+        n_params = circ.get_Parameter_Num()
+        params = _params64(n_params)
+        dim = 2 ** qbit_num
+        eps = 1e-5
+
+        mat = _identity(dim)
+        derivs = circ.apply_derivate_to(params, mat)
+
+        for k in range(n_params):
+            p_plus = params.copy(); p_plus[k] += eps
+            p_minus = params.copy(); p_minus[k] -= eps
+            U_plus = np.array(circ.get_Matrix(p_plus))
+            U_minus = np.array(circ.get_Matrix(p_minus))
+            fd = (U_plus - U_minus) / (2.0 * eps)
+            err = np.linalg.norm(derivs[k] - fd)
+            assert err < 1e-5, (
+                f"Param {k}: analytic vs FD error = {err:.3e}"
+            )
+
+    @pytest.mark.parametrize("qbit_num", [2, 3])
+    def test_derivative_nonzero_for_parametric_circuit(self, qbit_num):
+        """All derivative matrices must be non-zero for a parametric circuit."""
+        circ = _build_rx_rz_cnot_circuit(qbit_num)
+        params = _params64(circ.get_Parameter_Num())
+        dim = 2 ** qbit_num
+
+        mat = _identity(dim)
+        derivs = circ.apply_derivate_to(params, mat)
+
+        for i, d in enumerate(derivs):
+            assert np.linalg.norm(d) > 1e-10, f"deriv[{i}] is unexpectedly zero"
+
+    def test_no_params_returns_empty_list(self):
+        """Parameter-free circuit should return an empty list of derivatives."""
+        circ = Circuit(2)
+        circ.add_H(0)
+        circ.add_CNOT(0, 1)
+        params = np.array([], dtype=np.float64)
+        mat = _identity(4)
+        derivs = circ.apply_derivate_to(params, mat)
+        assert len(derivs) == 0
+
+    def test_wrong_param_dtype_raises(self):
+        """Passing float32 parameters to apply_derivate_to should raise."""
+        circ = Circuit(2)
+        circ.add_RX(0)
+        params32 = np.array([0.3], dtype=np.float32)
+        mat = _identity(4)
+        with pytest.raises(Exception):
+            circ.apply_derivate_to(params32, mat)
