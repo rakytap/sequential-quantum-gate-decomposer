@@ -951,23 +951,28 @@ class qgd_Partition_Aware_Mapping:
         partition_order = []
         step = 0
 
-        for partition_idx in list(F):
-            if isinstance(optimized_partitions[partition_idx], SingleQubitPartitionResult):
+        # Drain initial single-qubit partitions from F, recursively resolving
+        # any single-qubit descendants that become ready.  Children that are
+        # multi-qubit are pushed into F for the main search loop.
+        queue = [p for p in F if isinstance(optimized_partitions[p], SingleQubitPartitionResult)]
+        while queue:
+            partition_idx = queue.pop()
+            if resolved_partitions[partition_idx]:
+                continue
+            if partition_idx in F:
                 F.remove(partition_idx)
-                single_qubit_part = optimized_partitions[partition_idx]
-                qubit = single_qubit_part.circuit.get_Qbits()[0]
-                single_qubit_part.circuit = single_qubit_part.circuit.Remap_Qbits({int(qubit): int(pi[qubit])},max(D.shape))
-                partition_order.append(single_qubit_part)
-
-                resolved_partitions[partition_idx] = True
-                children = list(DAG[partition_idx])
-                while len(children) !=0:
-                    child = children.pop(0)
-                    parents_resolved = True
-                    for parent in IDAG[child]:
-                        parents_resolved *= resolved_partitions[parent]
-                    if parents_resolved:
-                        F.append(child)
+            single_qubit_part = optimized_partitions[partition_idx]
+            qubit = single_qubit_part.circuit.get_Qbits()[0]
+            single_qubit_part.circuit = single_qubit_part.circuit.Remap_Qbits({int(qubit): int(pi[qubit])}, max(D.shape))
+            partition_order.append(single_qubit_part)
+            resolved_partitions[partition_idx] = True
+            for child in DAG[partition_idx]:
+                if not resolved_partitions[child] and child not in F:
+                    if all(resolved_partitions[p] for p in IDAG[child]):
+                        if isinstance(optimized_partitions[child], SingleQubitPartitionResult):
+                            queue.append(child)
+                        else:
+                            F.append(child)
 
         # Initialize progress bar
         total_partitions = len(DAG)
@@ -1095,14 +1100,23 @@ class qgd_Partition_Aware_Mapping:
         resolved_partitions = [False] * len(DAG)
         total_swaps = 0
 
-        # Resolve initial single-qubit partitions
-        for partition_idx in list(F):
-            if isinstance(optimized_partitions[partition_idx], SingleQubitPartitionResult):
+        # Resolve initial single-qubit partitions, recursively draining any
+        # single-qubit descendants.  Multi-qubit descendants go into F.
+        queue = [p for p in F if isinstance(optimized_partitions[p], SingleQubitPartitionResult)]
+        while queue:
+            partition_idx = queue.pop()
+            if resolved_partitions[partition_idx]:
+                continue
+            if partition_idx in F:
                 F.remove(partition_idx)
-                resolved_partitions[partition_idx] = True
-                for child in DAG[partition_idx]:
+            resolved_partitions[partition_idx] = True
+            for child in DAG[partition_idx]:
+                if not resolved_partitions[child] and child not in F:
                     if all(resolved_partitions[p] for p in IDAG[child]):
-                        F.append(child)
+                        if isinstance(optimized_partitions[child], SingleQubitPartitionResult):
+                            queue.append(child)
+                        else:
+                            F.append(child)
 
         max_E_size = self.config.get('max_E_size', 20)
         max_lookahead = self.config.get('max_lookahead', 4)
