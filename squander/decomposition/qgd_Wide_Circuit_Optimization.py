@@ -19,8 +19,7 @@ from typing import List, Callable, Tuple, Optional, Set, Dict, Any, cast, Union
 
 import multiprocessing as mp
 from multiprocessing import Process, Pool, parent_process
-from multiprocessing.pool import AsyncResult
-import os
+import os, contextlib, collections, time
 
 
 from squander.partitioning.partition import PartitionCircuit
@@ -45,10 +44,6 @@ def extract_subtopology(involved_qbits, qbit_map, config):
             mini_topology.append((qbit_map[edge[0]], qbit_map[edge[1]]))
     return mini_topology
 
-def CNOTGateCount( circ: Circuit ) -> int :
-    """
-    Call to get the number of CNOT-equivalent gates in the circuit.
-    Counts all two-qubit gates, converting them to CNOT equivalents.
 
 CNOT_COUNT_DICT = {
     "CNOT": 1,
@@ -78,7 +73,9 @@ def CNOTGateCount(circ: Circuit, max_gates: int = 0) -> int:
     When ``max_gates > 0``, the function returns a lexicographic-style score:
     ``two_qubit_cost * max_gates + single_qubit_gate_count``.
 
-        Returns with the CNOT-equivalent gate count (all two-qubit gates counted)
+    Args:
+        circ: Squander circuit representation.
+        max_gates: Weight multiplier for the two-qubit cost term.
 
     Returns:
         Integer gate-cost score used by optimization heuristics.
@@ -1291,6 +1288,7 @@ class qgd_Wide_Circuit_Optimization:
 
     Supports multiple decomposition strategies, optional global recombination (ILP),
     and routing when the circuit does not match the target topology.
+
     """
 
     def __init__(self, config):
@@ -1393,7 +1391,8 @@ class qgd_Wide_Circuit_Optimization:
     def DecomposePartition(
         Umtx: np.ndarray, config: dict, mini_topology=None, structure=None
     ) -> list[tuple[Circuit, np.ndarray]]:
-        """Decompose a unitary ``Umtx`` (e.g. from a partition) using ``config['strategy']``.
+        """
+        Decompose a unitary ``Umtx`` (e.g. from a partition) using ``config['strategy']``.
 
         Args:
             Umtx: Complex unitary matrix.
@@ -1402,11 +1401,7 @@ class qgd_Wide_Circuit_Optimization:
             structure: Required gate structure when ``strategy == "Custom"``.
 
         Returns:
-            Normally ``[(circuit, parameters)]`` on success, or ``[]`` if the
-            decomposition error exceeds ``tolerance``. If
-            ``config.get('stop_first_solution')`` is false, returns
-            ``cDecompose.all_solutions`` from the underlying decomposer instead of
-            a single best pair.
+            List of ``(squander_circuit, parameters)`` on success, or ``[]`` if error exceeds tolerance.
         """
         strategy = config["strategy"]
         if strategy == "TreeSearch":
@@ -1489,15 +1484,25 @@ class qgd_Wide_Circuit_Optimization:
         parameter_arrs: List[np.ndarray],
         metric: Callable[[Circuit], int] = CNOTGateCount,
     ) -> tuple[Circuit, np.ndarray]:
-        """Select the circuit with the lowest ``metric`` value.
+        """
+        Call to pick the most optimal circuit corresponding a specific metric. Looks for the circuit
+        with the minimal metric value.
+
 
         Args:
-            circs: Candidate Squander circuits (same length as ``parameter_arrs``).
-            parameter_arrs: Parameter vectors aligned with ``circs``.
-            metric: Scalar cost functional; lower is better. Defaults to ``CNOTGateCount``.
 
-        Returns:
-            ``(best_circuit, best_parameters)`` for the minimizing index.
+            circs ( List[Circuit] ) A list of Squander circuits to be compared
+
+            parameter_arrs ( List[np.ndarray] ) A list of parameter arrays associated with the sqaunder circuits
+
+            metric (optional) The metric function to decide which input circuit is better.
+
+
+        Return:
+
+            Returns with the chosen circuit and the corresponding parameter array
+
+
         """
 
         if not isinstance(circs, list):
@@ -1524,10 +1529,8 @@ class qgd_Wide_Circuit_Optimization:
         config: dict,
         structure=None,
     ) -> Tuple[Circuit, np.ndarray]:
-        """Decompose one partition subcircuit (multiprocessing-safe entry point).
-
-        For ``TreeGuided`` on large registers, may recursively partition and
-        enumerate combinations before returning remapped results.
+        """
+        Worker-friendly entry: decompose a partition subcircuit (optionally nested for TreeGuided).
 
         Args:
             subcircuit: Subcircuit acting on a subset of the wide register.
@@ -1536,8 +1539,7 @@ class qgd_Wide_Circuit_Optimization:
             structure: Optional fixed gate structure when ``strategy == "Custom"``.
 
         Returns:
-            Tuple of ``(decomposed_circuit, decomposed_parameters)`` pairs, each
-            remapped back to the original qubit indices of ``subcircuit``.
+            List of ``(Circuit, parameters)`` pairs (or empty list on failure), remapped to the original register.
         """
 
         qbit_num_orig_circuit = subcircuit.get_Qbit_Num()
@@ -1693,15 +1695,7 @@ class qgd_Wide_Circuit_Optimization:
 
     @staticmethod
     def build_partition_topo_deps(allparts):
-        """Order partition gate-sets by dependencies and build a reverse-dependency map.
-
-        Args:
-            allparts: List of sets of gate indices, one per partition.
-
-        Returns:
-            ``(ordered_parts, rg_new)`` where ``ordered_parts`` lists partitions in
-            topological order and ``rg_new`` maps each new index to predecessors.
-        """
+        """Topological sort of partition gate-sets; returns ordered partitions and reverse-dependency map."""
         gate_to_parts = {}
         for i, part in enumerate(allparts):
             for gate in part:
@@ -1815,15 +1809,7 @@ class qgd_Wide_Circuit_Optimization:
 
     @staticmethod
     def strip_single_qubit_head_tails(circ, params):
-        """Drop single-qubit gates that sit only at the head or tail of the dependency DAG.
-
-        Args:
-            circ: Input circuit.
-            params: Flat parameter array for ``circ``.
-
-        Returns:
-            ``(new_circuit, new_params)`` with head/tail single-qubit gates removed.
-        """
+        """Remove single-qubit gates that are purely at the head/tail of the dependency graph."""
         gate_dict, g, rg, gate_to_qubit, _ = build_dependency(circ)
         newcirc = Circuit(circ.get_Qbit_Num())
         new_params = []
@@ -1842,15 +1828,7 @@ class qgd_Wide_Circuit_Optimization:
 
     @staticmethod
     def get_fingerprint(circ, params):
-        """Hashable signature of gate layout and parameters (for decomposition caching).
-
-        Args:
-            circ: Squander circuit.
-            params: Parameter array associated with ``circ``.
-
-        Returns:
-            Tuple usable as a dict key for memoizing decompositions.
-        """
+        """Hashable signature of gate types, qubits, and parameters (for decomposition caching)."""
         return tuple(
             (gate.get_Name(), tuple(gate.get_Involved_Qbits()))
             for gate in circ.get_Gates()
@@ -1860,16 +1838,10 @@ class qgd_Wide_Circuit_Optimization:
     def recombine_all_partition_circuit(
         circ, optimized_subcircuits, optimized_parameter_list, recombine_info
     ):
-        """Reorder optimized partitions to respect global gate dependencies.
+        """Reorder partition results to satisfy global dependencies.
 
-        Args:
-            circ: Original flat circuit (for topological ordering context).
-            optimized_subcircuits: One optimized subcircuit per partition slot.
-            optimized_parameter_list: Parameter lists aligned with ``optimized_subcircuits``.
-            recombine_info: Tuple from ``make_all_partition_circuit`` (ILP metadata).
-
-        Returns:
-            ``(reordered_circuits, reordered_parameter_lists)`` in execution order.
+        Uses ILP-based ordering and a final topological sort, then returns
+        reordered subcircuits and parameter arrays aligned by structure index.
         """
         from squander.partitioning.ilp import (
             topo_sort_partitions,
@@ -2132,9 +2104,6 @@ class qgd_Wide_Circuit_Optimization:
         if not in_parent:
             print(len(subcircuits), "partitions found to optimize")
 
-        if parent_process() is None and self.config["verbosity"] > 0: print(len(subcircuits), "partitions found to optimize")
-
-
         # the list of optimized subcircuits
         optimized_subcircuits: List[Optional[Circuit]] = [None] * len(subcircuits)
 
@@ -2143,34 +2112,154 @@ class qgd_Wide_Circuit_Optimization:
             subcircuits
         )
 
+        # list of AsyncResult objects
         async_results = [None] * len(subcircuits)
-        n_cpus = mp.cpu_count()
-        with Pool(processes=n_cpus) as pool:
 
-            for partition_idx, subcircuit in enumerate(subcircuits):
-                start_idx = subcircuit.get_Parameter_Start_Index()
-                end_idx   = start_idx + subcircuit.get_Parameter_Num()
-                subcircuit_parameters = parameters[start_idx:end_idx]
+        total_opt = [0]
 
-                config = {**self.config, 'tree_level_max': max(0, subcircuit.get_Gate_Nums().get('CNOT', 0)-1)}
-                config = config if structures is None or partition_idx >= len(structures) else {**config, 'strategy': 'Custom', 'max_inner_iterations': 10000, 'max_iteration_loops': 4}
+        def process_result(partition_idx):
+            """Finalize async decomposition for partition ``partition_idx`` and update caches / lists."""
+            if optimized_subcircuits[partition_idx] is not None:
+                return
+            subcircuit = subcircuits[partition_idx]
+            # callback function done on the master process to compare the new decomposed and the original suncircuit
+            start_idx = subcircuit.get_Parameter_Start_Index()
+            subcircuit_parameters = parameters[
+                start_idx : start_idx + subcircuit.get_Parameter_Num()
+            ]
+            fingerprint = (
+                None
+                if fingerprint_dict is None
+                else qgd_Wide_Circuit_Optimization.get_fingerprint(
+                    subcircuit, subcircuit_parameters
+                )
+            )
+            callback_fnc = lambda x: self.CompareAndPickCircuits(
+                [subcircuit, *(z[0] for z in x)],
+                [subcircuit_parameters, *(z[1] for z in x)],
+                lambda c: CNOTGateCount(c, max_gates),
+            )
+            if fingerprint_dict is not None and fingerprint in fingerprint_dict:
+                new_subcircuit, new_parameters = fingerprint_dict[fingerprint]
+            else:
+                new_subcircuit, new_parameters = callback_fnc(
+                    async_results[partition_idx][0](*async_results[partition_idx][1])
+                    if in_parent
+                    else async_results[partition_idx].get(timeout=None)
+                )
 
-                async_results[partition_idx] = pool.apply_async(self.PartitionDecompositionProcess, (subcircuit, subcircuit_parameters, config,
-                                                                                                    None if structures is None or partition_idx >= len(structures) else structures[partition_idx]))
-
-            for partition_idx, subcircuit in enumerate(subcircuits):
-                start_idx = subcircuit.get_Parameter_Start_Index()
-                subcircuit_parameters = parameters[start_idx:start_idx + subcircuit.get_Parameter_Num()]
-                callback_fnc = lambda  x : self.CompareAndPickCircuits( [subcircuit, *(z[0] for z in x)], [subcircuit_parameters, *(z[1] for z in x)] )
-                new_subcircuit, new_parameters = callback_fnc(async_results[partition_idx].get(timeout=None))
-
-                if subcircuit != new_subcircuit and self.config["verbosity"] > 0:
-                    print("original subcircuit:    ", subcircuit.get_Gate_Nums())
+                if subcircuit != new_subcircuit:
+                    print(
+                        "original subcircuit:    ",
+                        subcircuit.get_Gate_Nums(),
+                        partition_idx,
+                    )
                     print("reoptimized subcircuit: ", new_subcircuit.get_Gate_Nums())
-                if partition_idx % 100 == 99 and self.config["verbosity"] > 0: print(partition_idx+1, "partitions optimized")
-                optimized_subcircuits[partition_idx] = new_subcircuit
-                optimized_parameter_list[partition_idx] = new_parameters
+                if fingerprint_dict is not None:
+                    fingerprint_dict[fingerprint] = (new_subcircuit, new_parameters)
+                    fingerprint_dict[
+                        qgd_Wide_Circuit_Optimization.get_fingerprint(
+                            new_subcircuit, new_parameters
+                        )
+                    ] = (new_subcircuit, new_parameters)
+                    trim_subcirc, trim_parameters = (
+                        qgd_Wide_Circuit_Optimization.strip_single_qubit_head_tails(
+                            new_subcircuit, new_parameters
+                        )
+                    )
+                    fingerprint_dict[
+                        qgd_Wide_Circuit_Optimization.get_fingerprint(
+                            trim_subcirc, trim_parameters
+                        )
+                    ] = (trim_subcirc, trim_parameters)
+            if total_opt[0] % 100 == 99:
+                print(total_opt[0] + 1, "partitions optimized")
+            total_opt[0] += 1
+            optimized_subcircuits[partition_idx] = new_subcircuit
+            optimized_parameter_list[partition_idx] = new_parameters
 
+        with (
+            contextlib.nullcontext()
+            if in_parent
+            else Pool(processes=mp.cpu_count())
+        ) as pool:
+            remaining = list(range(len(subcircuits)))
+            while remaining:
+                still_remaining = []
+                #  code for iterate over partitions and optimize them
+                for partition_idx in remaining:
+                    subcircuit = subcircuits[partition_idx]
+
+                    # isolate the parameters corresponding to the given sub-circuit
+                    start_idx = subcircuit.get_Parameter_Start_Index()
+                    end_idx = start_idx + subcircuit.get_Parameter_Num()
+                    subcircuit_parameters = parameters[start_idx:end_idx]
+
+                    fingerprint = (
+                        None
+                        if fingerprint_dict is None
+                        else qgd_Wide_Circuit_Optimization.get_fingerprint(
+                            subcircuit, subcircuit_parameters
+                        )
+                    )
+                    if fingerprint_dict is not None and fingerprint in fingerprint_dict:
+                        (
+                            optimized_subcircuits[partition_idx],
+                            optimized_parameter_list[partition_idx],
+                        ) = fingerprint_dict[fingerprint]
+                        continue
+                    if part_deps is not None and partition_idx in part_deps:
+                        any_optimized, any_remaining = False, False
+                        for dep_idx in part_deps[partition_idx]:
+                            if optimized_subcircuits[dep_idx] is None and (
+                                async_results[dep_idx] is None
+                                or not isinstance(async_results[dep_idx], tuple)
+                                and not async_results[dep_idx].ready()
+                            ):
+                                any_remaining = True
+                                continue
+                            elif optimized_subcircuits[dep_idx] is None:
+                                process_result(dep_idx)
+
+                            optimized_subcircuits_loc = optimized_subcircuits[dep_idx]
+                            assert isinstance(optimized_subcircuits_loc, Circuit)
+                            assert optimized_subcircuits_loc is not None
+
+                            if CNOTGateCount(optimized_subcircuits_loc) < CNOTGateCount(
+                                subcircuits[dep_idx]
+                            ):  # if the dependency partition was optimized, skip
+                                any_optimized = True
+                                break
+                        if any_optimized:
+                            optimized_subcircuits[partition_idx] = subcircuit
+                            optimized_parameter_list[partition_idx] = (
+                                subcircuit_parameters
+                            )
+                            continue
+                        if any_remaining:
+                            still_remaining.append(partition_idx)
+                            continue
+                    # call a process to decompose a subcircuit
+                    config = {
+                        **self.config,
+                        "tree_level_max": max(0, CNOTGateCount(subcircuit, 0) - 1),
+                    }
+                    fargs = (
+                        self.PartitionDecompositionProcess,
+                        (subcircuit, subcircuit_parameters, config, None),
+                    )
+                    # print("Dispatching", subcircuit.get_Involved_Qubits(), "qubits with", CNOGateCount(subcircuit, 0), "CNOT gates, partition ", partition_idx)
+                    async_results[partition_idx] = (
+                        fargs
+                        if in_parent
+                        else pool.apply_async(*fargs)
+                    )
+                if len(remaining) == len(still_remaining):
+                    time.sleep(0.1)
+                remaining = still_remaining
+            #  code for iterate over async results and retrieve the new subcircuits
+            for partition_idx in range(len(subcircuits)):
+                process_result(partition_idx)
 
         # construct the wide circuit from the optimized suncircuits
         if global_min:
@@ -2183,9 +2272,16 @@ class qgd_Wide_Circuit_Optimization:
                 )
             )
 
-        if parent_process() is None and self.config["verbosity"] > 0:
-            print( "original circuit:    ", circ.get_Gate_Nums())
-            print( "reoptimized circuit: ", wide_circuit.get_Gate_Nums()) 
+        if any(c is None for c in optimized_subcircuits) or any(
+            p is None for p in optimized_parameter_list
+        ):
+            raise RuntimeError(
+                "Internal error: some partitions were not optimized before reconstruction."
+            )
+        wide_circuit, wide_parameters = self.ConstructCircuitFromPartitions(
+            cast(List[Circuit], optimized_subcircuits),
+            cast(List[List[np.ndarray]], optimized_parameter_list),
+        )
 
         if not in_parent:
             print("original circuit:    ", circ.get_Gate_Nums())
@@ -2236,16 +2332,15 @@ class qgd_Wide_Circuit_Optimization:
 
     @staticmethod
     def heavy_hexagonal_topology(rows, cols):
-        """Build a finite heavy-hex coupling list (honeycomb with subdivided edges).
+        """
+        Finite heavy-hex patch.
 
-        Args:
-            rows: Number of rows in the brick-wall honeycomb patch.
-            cols: Number of columns in the patch.
+        rows, cols describe the underlying honeycomb 'brick-wall' patch.
+        The first rows*cols qubits are the original honeycomb vertices.
+        Every original edge gets one inserted degree-2 qubit.
 
         Returns:
-            List of undirected edges ``(u, v)``. The first ``rows * cols`` qubit
-            indices are honeycomb vertices; each original edge introduces one
-            additional degree-2 qubit on the subdivided link.
+            list[(u, v)]  undirected couplers
         """
 
         def vid(r, c):
@@ -2328,26 +2423,9 @@ class qgd_Wide_Circuit_Optimization:
         ), "Final circuit contains gates that do not respect the routing constraints."
 
     def check_compare_circuits(
-        self,
-        circ,
-        orig_parameters,
-        wide_circuit,
-        wide_parameters,
-        routing=False,
-        forced_test=False,
+        self, circ, orig_parameters, wide_circuit, wide_parameters, routing=False, forced_test=False,
     ):
-        """Optionally verify equivalence of ``circ`` and ``wide_circuit`` via ``CompareCircuits``.
-
-        Args:
-            circ: Original circuit.
-            orig_parameters: Parameters for ``circ``.
-            wide_circuit: Optimized or routed circuit.
-            wide_parameters: Parameters for ``wide_circuit``.
-            routing: If true and initial/final mappings exist in ``self.config``,
-                pass them to ``CompareCircuits`` for layout-aware comparison.
-            forced_test: If true, run the comparison even when ``test_final_circuit``
-                is false in config.
-        """
+        """If ``test_final_circuit``, numerically compare unitaries (optional initial/final layout for routing)."""
         if self.config["test_final_circuit"] or forced_test:
             if (
                 routing
@@ -2367,11 +2445,188 @@ class qgd_Wide_Circuit_Optimization:
                 CompareCircuits(circ, orig_parameters, wide_circuit, wide_parameters)
 
     def route_circuit(self, circ: Circuit, orig_parameters: np.ndarray):
-        """Map ``circ`` onto ``self.config['topology']`` using the configured router.
+        """Map ``circ`` onto ``self.config['topology']`` using BQSKit SeQPAM, Qiskit SABRE, or Squander SABRE."""
+        strategy = self.config.get("routing-strategy", "seqpam-ilp")
 
-        sabre = SABRE(circ, self.config["topology"])
-        Squander_remapped_circuit, parameters_remapped_circuit, pi, final_pi, swap_count = sabre.map_circuit(orig_parameters)
-        self.config.setdefault("initial_mapping",pi)
-        self.config.setdefault("final_mapping",sabre.get_inverse_pi(final_pi))
-        self.config["routed"] = True
+        if strategy in ("seqpam-ilp", "seqpam-quick", "bqskit-sabre"):
+            from squander import Qiskit_IO
+            from bqskit import Circuit as BQSKitCircuit, compile
+            from bqskit.compiler import Compiler
+            from bqskit.compiler.compile import (
+                build_seqpam_mapping_optimization_workflow,
+            )
+            from bqskit.compiler.basepass import BasePass
+
+            class SquanderPartitioner(BasePass):
+                """BQSKit pass: replace circuit body with Squander ILP partition blocks (QASM round-trip)."""
+
+                def __init__(self, max_partition_size):
+                    super().__init__()
+                    self.max_partition_size = max_partition_size
+
+                async def run(self, circuit: BQSKitCircuit, data=None):
+                    from squander import Qiskit_IO
+                    from squander.partitioning.partition import PartitionCircuit
+
+                    circ_qiskit = QuantumCircuit.from_qasm_str(
+                        OPENQASM2Language().encode(circuit)
+                    )
+                    circ, orig_parameters = Qiskit_IO.convert_Qiskit_to_Squander(
+                        circ_qiskit
+                    )
+                    partitioned_circuit, parameters, _ = PartitionCircuit(
+                        circ, orig_parameters, self.max_partition_size, strategy="ilp"
+                    )
+                    partitioned_circuit_qiskit = Qiskit_IO.get_Qiskit_Circuit(
+                        partitioned_circuit, parameters
+                    )
+                    partitioned_circuit_bqskit = OPENQASM2Language().decode(
+                        qasm2.dumps(partitioned_circuit_qiskit)
+                    )
+                    circuit.become(partitioned_circuit_bqskit, False)
+
+            from bqskit.passes import (
+                GeneralizedSabreLayoutPass,
+                GeneralizedSabreRoutingPass,
+                SetModelPass,
+                IfThenElsePass,
+                QuickPartitioner,
+            )
+            from bqskit.ir.gates import CNOTGate  # example; extend as needed
+            from bqskit.compiler.machine import MachineModel
+            from bqskit.ir.lang.qasm2 import OPENQASM2Language
+            from qiskit import qasm2, QuantumCircuit
+
+            # Build BQSKit machine model from your topology
+            model = MachineModel(circ.get_Qbit_Num(), self.config["topology"])
+
+            # Convert squander circuit → qiskit → BQSKit
+            # (BQSKit has a from_qiskit helper if you go via Qiskit IR)
+            circo = Qiskit_IO.get_Qiskit_Circuit(circ, orig_parameters)
+
+            bqskit_circ = OPENQASM2Language().decode(qasm2.dumps(circo))
+            # Customizable knobs
+
+            # Routing-only pass pipeline — NO optimization passes
+            mainflow = build_seqpam_mapping_optimization_workflow(
+                block_size=self.config["max_partition_size"]
+            )
+            if strategy == "seqpam-ilp":
+                for curpass in mainflow._passes:
+                    if isinstance(curpass, IfThenElsePass):
+                        for i in range(len(curpass.on_true._passes)):
+                            if isinstance(curpass.on_true._passes[i], QuickPartitioner):
+                                curpass.on_true._passes[i] = SquanderPartitioner(
+                                    self.config["max_partition_size"]
+                                )
+
+            routing_workflow = [
+                SetModelPass(model),  # attach hardware model to circuit
+                *(
+                    (build_seqpam_mapping_optimization_workflow(),)
+                    if strategy != "bqskit-sabre"
+                    else (
+                        GeneralizedSabreLayoutPass(),  # SABRE-style layout
+                        GeneralizedSabreRoutingPass(),
+                    )
+                ),  # SABRE-style routing
+            ]
+
+            with Compiler() as compiler:
+                routed_bqskit_circ, pass_data = compiler.compile(
+                    bqskit_circ, routing_workflow, True
+                )
+
+            # Convert back: BQSKit → Qiskit → Squander
+            circuit_qiskit_routed = QuantumCircuit.from_qasm_str(
+                OPENQASM2Language().encode(routed_bqskit_circ)
+            )
+            Squander_remapped_circuit, parameters_remapped_circuit = (
+                Qiskit_IO.convert_Qiskit_to_Squander(circuit_qiskit_routed)
+            )
+            Squander_remapped_circuit = Squander_remapped_circuit.Remap_Qbits(
+                {i: j for i, j in enumerate(pass_data.placement)}
+            )
+            self.config["initial_mapping"] = list(
+                pass_data.placement[x] for x in pass_data.initial_mapping
+            )
+            self.config["final_mapping"] = list(
+                pass_data.placement[x] for x in pass_data.final_mapping
+            )
+
+        elif strategy == "light-sabre":
+            from squander import Qiskit_IO
+            from qiskit import transpile
+            from qiskit.transpiler.preset_passmanagers import (
+                generate_preset_pass_manager,
+            )
+            from qiskit.transpiler.passes import SabreLayout, SabreSwap
+            from qiskit.transpiler import PassManager, CouplingMap
+            from squander.gates import gates_Wrapper as gate
+
+            # SUPPORTED_GATES_NAMES = {n.lower().replace("cnot", "cx") for n in dir(gate) if not n.startswith("_") and issubclass(getattr(gate, n), gate.Gate) and n not in ("Gate", "CROT", "CR", "SYC", "CCX", "CSWAP")}
+            circo = Qiskit_IO.get_Qiskit_Circuit(circ, orig_parameters)
+            coupling_map = [[i, j] for i, j in self.config["topology"]]
+            # circuit_qiskit_sabre = transpile(circo, basis_gates=SUPPORTED_GATES_NAMES, coupling_map=coupling_map, optimization_level=0)
+            coupling_map = CouplingMap(coupling_map)
+            # Customizable SABRE parameters
+            sabre_seed = self.config.get("sabre_seed", 42)
+            sabre_trials = self.config.get("sabre_trials", 5)  # layout trials
+            swap_trials = self.config.get("sabre_swap_trials", sabre_trials)
+            heuristic = self.config.get(
+                "sabre_heuristic", "decay"
+            )  # "basic" | "lookahead" | "decay"
+
+            layout_pass = SabreLayout(
+                coupling_map,
+                seed=sabre_seed,
+                max_iterations=sabre_trials,
+                swap_trials=swap_trials,
+            )
+            swap_pass = SabreSwap(
+                coupling_map,
+                heuristic=heuristic,
+                seed=sabre_seed,
+                trials=swap_trials,
+            )
+
+            pm = PassManager(
+                [
+                    layout_pass,  # find initial qubit mapping via SABRE
+                    swap_pass,  # insert SWAP gates for routing
+                ]
+            )
+            circuit_qiskit_sabre = pm.run(circo)
+            Squander_remapped_circuit, parameters_remapped_circuit = (
+                Qiskit_IO.convert_Qiskit_to_Squander(circuit_qiskit_sabre)
+            )
+            self.config["initial_mapping"] = (
+                circuit_qiskit_sabre.layout.initial_index_layout()
+            )
+            self.config["final_mapping"] = (
+                circuit_qiskit_sabre.layout.final_index_layout()
+            )
+        elif strategy == "sabre":
+            sabre = SABRE(circ, self.config["topology"])
+            (
+                Squander_remapped_circuit,
+                parameters_remapped_circuit,
+                pi,
+                final_pi,
+                swap_count,
+            ) = sabre.map_circuit(orig_parameters)
+            self.config["initial_mapping"] = pi
+            self.config["final_mapping"] = final_pi
+        qgd_Wide_Circuit_Optimization.check_valid_routing(
+            Squander_remapped_circuit, self.config["topology"]
+        )
+
+        print("cheking circuit after routing")
+        self.check_compare_circuits(
+            circ,
+            orig_parameters,
+            Squander_remapped_circuit,
+            parameters_remapped_circuit,
+            routing=True,
+        )
         return Squander_remapped_circuit, parameters_remapped_circuit
