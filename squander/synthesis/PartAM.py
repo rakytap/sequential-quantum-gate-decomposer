@@ -583,6 +583,7 @@ class qgd_Partition_Aware_Mapping:
                 cleanup_config['routed'] = True
                 cleanup_config['test_subcircuits'] = False
                 cleanup_config['test_final_circuit'] = False
+                cleanup_config['global_min'] = False
                 wco = qgd_Wide_Circuit_Optimization(cleanup_config)
 
                 # Save single-qubit partition circuits before trial loop
@@ -629,7 +630,7 @@ class qgd_Partition_Aware_Mapping:
                     )
                     pre_cleanup_cnots = trial_circuit.get_Gate_Nums().get('CNOT', 0)
                     trial_circuit, trial_params = wco.OptimizeWideCircuit(
-                        trial_circuit.get_Flat_Circuit(), trial_params, global_min = False
+                        trial_circuit.get_Flat_Circuit(), trial_params
                     )
 
                     cost = trial_circuit.get_Gate_Nums().get('CNOT', 0)
@@ -701,9 +702,10 @@ class qgd_Partition_Aware_Mapping:
                 cleanup_config['routed'] = True
                 cleanup_config['test_subcircuits'] = False
                 cleanup_config['test_final_circuit'] = False
+                cleanup_config['global_min'] = False
                 wco = qgd_Wide_Circuit_Optimization(cleanup_config)
                 final_circuit, final_parameters = wco.OptimizeWideCircuit(
-                    final_circuit.get_Flat_Circuit(), final_parameters, global_min = False
+                    final_circuit.get_Flat_Circuit(), final_parameters
                 )
 
         return final_circuit, final_parameters, pi_initial, pi

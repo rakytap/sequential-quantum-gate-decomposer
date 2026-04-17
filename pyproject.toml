@@ -9,7 +9,8 @@ requires = [
     "tbb-devel; platform_machine == 'x86' or platform_machine == 'x86_64'",
     "cmake>=3.10.2",
     "networkx",
-    "qiskit"
+    "qiskit",
+    "tqdm"
 ]
 build-backend = "setuptools.build_meta"
 
