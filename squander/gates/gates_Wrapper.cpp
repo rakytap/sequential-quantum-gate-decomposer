@@ -746,21 +746,6 @@ Gate_Wrapper_get_Matrix( Gate_Wrapper *self, PyObject *args, PyObject *kwds ) {
         }
 }
 
-        int parallel = 1;
-        try {
-            gate_mtx = gate->get_matrix( parallel );
-        }
-        catch (std::string err) {
-            PyErr_SetString(PyExc_Exception, err.c_str());
-            std::cout << err << std::endl;
-            return NULL;
-        }
-        catch(...) {
-            std::string err( "Invalid pointer to gate class or error in get_matrix");
-            PyErr_SetString(PyExc_Exception, err.c_str());
-            return NULL;
-        }
-
 /**
 @brief Call to apply the gate operation from the right side on an input state or matrix
 */
@@ -943,24 +928,8 @@ Gate_Wrapper_Wrapper_apply_from_right( Gate_Wrapper *self, PyObject *args, PyObj
         memcpy(PyArray_DATA(input), input_mtx.data, input_mtx.size() * sizeof(QGD_Complex16));
     }
 
-        // get the C++ wrapper around the input data
-        Matrix_real&& parameters_mtx = numpy2matrix_real( parameters_arr );
-        int parallel = 1;
-        try {
-            gate_mtx = self->gate->get_matrix( parameters_mtx, parallel );
-        }
-        catch (std::string err) {
-            Py_DECREF(parameters_arr);
-            PyErr_SetString(PyExc_Exception, err.c_str());
-            std::cout << err << std::endl;
-            return NULL;
-        }
-        catch(...) {
-            Py_DECREF(parameters_arr);
-            std::string err( "Invalid pointer to gate class or error in get_matrix");
-            PyErr_SetString(PyExc_Exception, err.c_str());
-            return NULL;
-        }
+    return Py_BuildValue("i", 0);
+}
 
 
 /**
