@@ -1467,7 +1467,7 @@ class qgd_Wide_Circuit_Optimization:
                 parameters = cDecompose.get_Optimized_Parameters()
                 err = cDecompose.Optimization_Problem(parameters)
                 it += 1
-            if err > tolerance or it != 0:
+            if (err > tolerance or it != 0) and config.get("verbosity", 0) >= 1:
                 print("Decomposition error: ", err, it)
         else:
             err = cDecompose.get_Decomposition_Error()
@@ -1893,13 +1893,15 @@ class qgd_Wide_Circuit_Optimization:
             circ, self.config["topology"]
         ):
 
-            print("fixing topology in the circuit")
+            if self.config["verbosity"] >= 1:
+                print("fixing topology in the circuit")
             topo = self.config["topology"]
             self.config["topology"] = None
             strat = self.config["strategy"]
             self.config["strategy"] = self.config["pre-opt-strategy"]
 
-            print("Optimizing circuit with all-to-all (a2a) connectivity")
+            if self.config["verbosity"] >= 1:
+                print("Optimizing circuit with all-to-all (a2a) connectivity")
             circ, parameters = self.OptimizeWideCircuit(circ, parameters)
             self.config["all_to_all_optimization_time"] = self.config[
                 "optimization_time"
@@ -1910,17 +1912,20 @@ class qgd_Wide_Circuit_Optimization:
             self.config["topology"] = topo
             start_time = time.time()
 
-            print("Routing circuit to fix the topology")
+            if self.config["verbosity"] >= 1:
+                print("Routing circuit to fix the topology")
             circ, parameters = self.route_circuit(circ, parameters)
             self.config["routing_time"] = time.time() - start_time
             self.config["routed_circuit"] = circ
             self.config["routed_parameters"] = parameters
         else:
-            print("No additional routing is needed on the circuit")
+            if self.config["verbosity"] >= 1:
+                print("No additional routing is needed on the circuit")
 
         start_time = time.time()
         if self.config["strategy"] == "bqskit":
-            print("Optimizing circuit with BQSkit")
+            if self.config["verbosity"] >= 1:
+                print("Optimizing circuit with BQSkit")
             from squander import Qiskit_IO
             from bqskit import compile
 
@@ -1984,12 +1989,14 @@ class qgd_Wide_Circuit_Optimization:
             qgd_Wide_Circuit_Optimization.check_valid_routing(
                 newcirc, self.config["topology"]
             )
-            print("OptimizeWideCircuit::check_compare_circuits")
+            if self.config["verbosity"] >= 2:
+                print("OptimizeWideCircuit::check_compare_circuits")
             self.check_compare_circuits(circ, parameters, newcirc, newparameters)
             circ, parameters = newcirc, newparameters
 
         elif self.config["strategy"] == "qiskit":
-            print("Optimizing circuit with Qiskit")
+            if self.config["verbosity"] >= 1:
+                print("Optimizing circuit with Qiskit")
             from squander import Qiskit_IO
             from qiskit import transpile
             from qiskit.transpiler import CouplingMap
@@ -2020,12 +2027,14 @@ class qgd_Wide_Circuit_Optimization:
             qgd_Wide_Circuit_Optimization.check_valid_routing(
                 newcirc, self.config["topology"]
             )
-            print("OptimizeWideCircuit::check_compare_circuits")
+            if self.config["verbosity"] >= 2:
+                print("OptimizeWideCircuit::check_compare_circuits")
             self.check_compare_circuits(circ, parameters, newcirc, newparameters)
             circ, parameters = newcirc, newparameters
         else:
 
-            print("Optimizing circuit with Squander")
+            if self.config["verbosity"] >= 1:
+                print("Optimizing circuit with Squander")
             part_size_start = self.max_partition_size
             part_size_end = self.max_partition_size
             if self.config.get("use_osr", False) or self.config.get(
@@ -2101,7 +2110,7 @@ class qgd_Wide_Circuit_Optimization:
 
         in_parent = parent_process() is not None
 
-        if not in_parent:
+        if not in_parent and self.config["verbosity"] >= 1:
             print(len(subcircuits), "partitions found to optimize")
 
         # the list of optimized subcircuits
@@ -2148,7 +2157,7 @@ class qgd_Wide_Circuit_Optimization:
                     else async_results[partition_idx].get(timeout=None)
                 )
 
-                if subcircuit != new_subcircuit:
+                if subcircuit != new_subcircuit and self.config["verbosity"] >= 2:
                     print(
                         "original subcircuit:    ",
                         subcircuit.get_Gate_Nums(),
@@ -2172,7 +2181,7 @@ class qgd_Wide_Circuit_Optimization:
                             trim_subcirc, trim_parameters
                         )
                     ] = (trim_subcirc, trim_parameters)
-            if total_opt[0] % 100 == 99:
+            if total_opt[0] % 100 == 99 and self.config["verbosity"] >= 1:
                 print(total_opt[0] + 1, "partitions optimized")
             total_opt[0] += 1
             optimized_subcircuits[partition_idx] = new_subcircuit
@@ -2283,14 +2292,15 @@ class qgd_Wide_Circuit_Optimization:
             cast(List[List[np.ndarray]], optimized_parameter_list),
         )
 
-        if not in_parent:
+        if not in_parent and self.config["verbosity"] >= 1:
             print("original circuit:    ", circ.get_Gate_Nums())
             print("reoptimized circuit: ", wide_circuit.get_Gate_Nums())
 
         qgd_Wide_Circuit_Optimization.check_valid_routing(
             wide_circuit, self.config["topology"]
         )
-        print("InnerOptimizeWideCircuit: check_compare_circuits")
+        if self.config["verbosity"] >= 2:
+            print("InnerOptimizeWideCircuit: check_compare_circuits")
         self.check_compare_circuits(
             circ, orig_parameters, wide_circuit, wide_parameters
         )
@@ -2621,7 +2631,8 @@ class qgd_Wide_Circuit_Optimization:
             Squander_remapped_circuit, self.config["topology"]
         )
 
-        print("cheking circuit after routing")
+        if self.config["verbosity"] >= 2:
+            print("cheking circuit after routing")
         self.check_compare_circuits(
             circ,
             orig_parameters,
