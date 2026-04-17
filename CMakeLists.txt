@@ -67,6 +67,7 @@ endif()
 enable_testing()
 
 option(ENABLE_FLOAT32 "Enable float32 matrix support (experimental)" ON)
+option(ENABLE_AVX "Enable AVX/AVX2/AVX512 kernels and compiler flags" ON)
 
 if(SKBUILD)
     message(STATUS "The project is built using scikit-build")
@@ -79,13 +80,37 @@ find_package(PythonLibs)
 find_package(NumPy REQUIRED)
 
 
+# Detect Python version for compatibility
+exec_program(${PYTHON_EXECUTABLE}
+             ARGS "-c \"import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')\""
+             OUTPUT_VARIABLE PYTHON_VERSION_STRING
+             RETURN_VALUE PYTHON_VERSION_NOT_FOUND
+            )
+
+if(PYTHON_VERSION_NOT_FOUND)
+    message(FATAL_ERROR "Python version detection failed")
+endif()
+
+message("Detected Python version: " ${PYTHON_VERSION_STRING})
+
 # contruct library directories
-execute_process(
-    COMMAND ${PYTHON_EXECUTABLE} -c "from distutils.sysconfig import get_python_lib; tmp = [s + '/../..' for s in [get_python_lib()]]; ret=';'.join(tmp); print(ret)"
-    OUTPUT_VARIABLE PYTHON_SYS_PATH
-    RESULT_VARIABLE SYSPATH_NOT_FOUND
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-)
+# Use sysconfig for Python >= 3.10 (distutils deprecated in 3.10, removed in 3.12)
+if(${PYTHON_VERSION_STRING} VERSION_GREATER_EQUAL "3.10")
+    message("Using sysconfig (Python >= 3.10)")
+    exec_program(${PYTHON_EXECUTABLE}
+                 ARGS "-c \"import sysconfig; lib = sysconfig.get_path('purelib'); tmp = [lib + '/../..']; ret=';'.join(tmp); print(ret)\""
+                 OUTPUT_VARIABLE PYTHON_SYS_PATH
+                 RETURN_VALUE SYSPATH_NOT_FOUND
+                )
+else()
+    message("Using distutils.sysconfig (Python < 3.10)")
+    exec_program(${PYTHON_EXECUTABLE}
+                 ARGS "-c \"from distutils.sysconfig import get_python_lib; tmp = [s + '/../..' for s in [get_python_lib()]]; ret=';'.join(tmp); print(ret)\""
+                 OUTPUT_VARIABLE PYTHON_SYS_PATH
+                 RETURN_VALUE SYSPATH_NOT_FOUND
+                )
+endif()
+
 if(SYSPATH_NOT_FOUND)
     message(FATAL_ERROR "Python syspath not found")
 endif()
@@ -96,12 +121,21 @@ message("Python syspaths: " ${PYTHON_SYS_PATH})
 
 
 # contruct include directories
-execute_process(
-    COMMAND ${PYTHON_EXECUTABLE} -c "from distutils.sysconfig import get_python_lib; tmp = [s + '/../../../include' for s in [get_python_lib()]]; ret=';'.join(tmp); print(ret)"
-    OUTPUT_VARIABLE CMAKE_REQUIRED_INCLUDES
-    RESULT_VARIABLE SYSPATH_NOT_FOUND
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-)
+# Use sysconfig for Python >= 3.10 (distutils deprecated in 3.10, removed in 3.12)
+if(${PYTHON_VERSION_STRING} VERSION_GREATER_EQUAL "3.10")
+    exec_program(${PYTHON_EXECUTABLE}
+                 ARGS "-c \"import sysconfig; lib = sysconfig.get_path('purelib'); tmp = [lib + '/../../../include']; ret=';'.join(tmp); print(ret)\""
+                 OUTPUT_VARIABLE CMAKE_REQUIRED_INCLUDES
+                 RETURN_VALUE SYSPATH_NOT_FOUND
+                )
+else()
+    exec_program(${PYTHON_EXECUTABLE}
+                 ARGS "-c \"from distutils.sysconfig import get_python_lib; tmp = [s + '/../../../include' for s in [get_python_lib()]]; ret=';'.join(tmp); print(ret)\""
+                 OUTPUT_VARIABLE CMAKE_REQUIRED_INCLUDES
+                 RETURN_VALUE SYSPATH_NOT_FOUND
+                )
+endif()
+
 if(SYSPATH_NOT_FOUND)
     message(FATAL_ERROR "Python include path not found")
 endif()
@@ -397,7 +431,14 @@ if(ENABLE_FLOAT32)
 endif()
 
 # checking for AVX/AVX2 support
-CHECK_FOR_AVX()
+if(ENABLE_AVX)
+  CHECK_FOR_AVX()
+else()
+  set(HAVE_AVX_EXTENSIONS FALSE)
+  set(HAVE_AVX2_EXTENSIONS FALSE)
+  set(HAVE_AVX512F_EXTENSIONS FALSE)
+  message(STATUS "AVX support disabled via ENABLE_AVX=OFF")
+endif()
 
 # Identify the compiler type and set compiler specific options
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
@@ -794,12 +835,20 @@ list(APPEND qgd_files
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/decomposition/N_Qubit_Decomposition_Tabu_Search.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/variational_quantum_eigensolver/Variational_Quantum_Eigensolver_Base.cpp  
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/variational_quantum_eigensolver/Generative_Quantum_Machine_Learning_Base.cpp  
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/density_matrix/density_matrix.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/density_matrix/noisy_circuit.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/density_matrix/noise_channel.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/density_matrix/gate_operation.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/density_matrix/noise_operation.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/random_unitary/Random_Unitary.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/random_unitary/Random_Orthogonal.cpp
 )
 
 if(ENABLE_FLOAT32)
-  list(APPEND qgd_files ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/matrix_float.cpp)
+  list(APPEND qgd_files
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/matrix_float.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/matrix_real_float.cpp
+  )
 endif()
 
 if (${HAVE_AVX512F_EXTENSIONS})
@@ -937,6 +986,7 @@ target_include_directories(qgd PRIVATE
                             ./squander/src-cpp/nn/include
                             ./squander/src-cpp/gates/kernels/include
                             ./squander/src-cpp/variational_quantum_eigensolver/include
+                            ./squander/src-cpp/density_matrix/include
                             )
 
 
@@ -970,12 +1020,44 @@ if(WIN32)
     )
 endif()
 
+# ===================================================================
+# Modern CMake: INTERFACE library for common dependencies
+# ===================================================================
+
+add_library(squander_common INTERFACE)
+
+target_include_directories(squander_common INTERFACE
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/squander/src-cpp/common/include>
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/include>
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/squander/src-cpp/decomposition/include>
+    $<BUILD_INTERFACE:${NUMPY_INC_DIR}>
+    $<BUILD_INTERFACE:${EXTRA_INCLUDES}>
+    $<INSTALL_INTERFACE:include/squander>
+)
+
+target_link_libraries(squander_common INTERFACE
+    ${BLAS_LIBRARIES}
+    ${LAPACK_LIBRARIES}
+    ${LAPACKE_LIBRARIES}
+    ${TBB_LIB}
+    ${TBBMALLOC_LIB}
+    ${OpenMP_CXX_LIBRARIES}
+)
+
+target_compile_features(squander_common INTERFACE cxx_std_11)
+
 
 # adding CMAKE files for Python extensions
 add_subdirectory (squander/decomposition)
 add_subdirectory (squander/gates)
 add_subdirectory (squander/nn)
 add_subdirectory (squander/VQA)
+
+# ===================================================================
+# Density Matrix Module
+# ===================================================================
+
+add_subdirectory (squander/src-cpp/density_matrix)
 
 if(DEFINED ENV{QGD_CTEST})
     # adding CMAKE files for executables
@@ -987,4 +1069,3 @@ install(TARGETS qgd
         LIBRARY DESTINATION squander
         RUNTIME DESTINATION squander  # Add this for Windows
         COMPONENT python)
-

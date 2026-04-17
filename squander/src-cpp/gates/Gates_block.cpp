@@ -259,8 +259,8 @@ Gates_block::apply_to( Matrix_real& parameters_mtx_in, Matrix& input, int parall
         throw err;    
     }
 
-    if (qbit_num > 30) {
-        std::string err("Gates_block::apply_to: Number of qubits supported up to 30"); 
+    if (qbit_num > 31) {
+        std::string err("Gates_block::apply_to: Number of qubits supported up to 31"); 
         throw err;        
     }
 
@@ -321,6 +321,83 @@ Gates_block::apply_to( Matrix_real& parameters_mtx_in, Matrix& input, int parall
 #endif
         }
     }
+}
+
+
+void
+Gates_block::apply_to( Matrix_float& input, int parallel ) {
+
+    Matrix_real_float parameters_empty(1, 0);
+    apply_to(parameters_empty, input, parallel);
+}
+
+
+void
+Gates_block::apply_to( Matrix_real_float& parameters_mtx_in, Matrix_float& input, int parallel ) {
+
+    Matrix_real_any params_any(parameters_mtx_in);
+    Matrix_any input_any(input);
+    apply_to(params_any, input_any, parallel);
+}
+
+
+void
+Gates_block::apply_to( Matrix_real_any& parameters_mtx_in, Matrix_any& input, int parallel ) {
+
+    if (parameters_mtx_in.is_float64() && input.is_float64()) {
+        apply_to(parameters_mtx_in.as_float64(), input.as_float64(), parallel);
+        return;
+    }
+
+    if (parameters_mtx_in.is_float32() && input.is_float32()) {
+
+        Matrix_float& input32 = input.as_float32();
+        Matrix_real_float& params32 = parameters_mtx_in.as_float32();
+
+        std::vector<int> involved_qubits = get_involved_qubits();
+
+        if (input32.rows != matrix_size ) {
+            std::string err("Gates_block::apply_to(Matrix_real_any&, Matrix_any&): Wrong input size in Gates_block apply.");
+            throw err;
+        }
+
+        if (qbit_num > 31) {
+            std::string err("Gates_block::apply_to(Matrix_real_any&, Matrix_any&): Number of qubits supported up to 31");
+            throw err;
+        }
+
+        int size = static_cast<int>(involved_qubits.size());
+        (void)size;
+
+        for (size_t idx = 0; idx < gates.size(); idx++) {
+            Gate* operation = gates[idx];
+
+            Matrix_real_float parameters_mtx_loc(
+                params32.get_data() + operation->get_parameter_start_idx(),
+                1,
+                operation->get_parameter_num()
+            );
+
+            if (parameters_mtx_loc.size() == 0 && operation->get_type() != BLOCK_OPERATION) {
+                operation->apply_to(input32, parallel);
+            }
+            else {
+                operation->apply_to(parameters_mtx_loc, input32, parallel);
+            }
+
+#ifdef DEBUG
+            if (input32.isnan()) {
+                std::string err("Gates_block::apply_to(Matrix_real_any&, Matrix_any&): transformed matrix contains NaN.");
+                throw(err);
+            }
+#endif
+        }
+
+        return;
+    }
+
+    std::string err("Gates_block::apply_to(Matrix_real_any&, Matrix_any&): precision mismatch between parameters and input");
+    throw err;
 }
 
 
@@ -448,6 +525,45 @@ Gates_block::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
     }
 
 
+}
+
+
+void
+Gates_block::apply_from_right( Matrix_real_float& parameters_mtx, Matrix_float& input ) {
+
+    int parameters_num_total = 0;
+    for (size_t idx = 0; idx < gates.size(); idx++) {
+        Gate* gate = gates[idx];
+        parameters_num_total += gate->get_parameter_num();
+    }
+
+    float* parameters = parameters_mtx.get_data() + parameters_num_total;
+
+    for (int idx = 0; idx < (int)gates.size(); idx++) {
+
+        Gate* operation = gates[idx];
+        Matrix_real_float parameters_mtx_loc(
+            parameters - operation->get_parameter_num(),
+            1,
+            operation->get_parameter_num()
+        );
+
+        if (parameters_mtx_loc.size() == 0 && operation->get_type() != BLOCK_OPERATION) {
+            operation->apply_from_right(input);
+        }
+        else {
+            operation->apply_from_right(parameters_mtx_loc, input);
+        }
+
+        parameters = parameters - operation->get_parameter_num();
+
+#ifdef DEBUG
+        if (input.isnan()) {
+            std::string err("Gates_block::apply_from_right(Matrix_real_float&, Matrix_float&): transformed matrix contains NaN.");
+            throw(err);
+        }
+#endif
+    }
 }
 
 
@@ -1767,7 +1883,9 @@ void Gates_block::add_gate( Gate* gate ) {
 
         //set the number of qubit in the gate
         gate->set_qbit_num( qbit_num );
-        
+
+        gate->clear_children();
+        gate->clear_parents();
         // determine the parents of the gate
         determine_parents( gate );
 
@@ -1798,6 +1916,8 @@ void Gates_block::add_gate( Gate* gate ) {
 
         // set the number of qubit in the gate
         gate->set_qbit_num( qbit_num );
+        gate->clear_children();
+        gate->clear_parents();
 
         // determine the parents of the gate
         determine_children( gate );
@@ -2519,6 +2639,8 @@ void Gates_block::combine(Gates_block* op_block) {
     for(std::vector<Gate*>::iterator it = (gates_in).begin(); it != (gates_in).end(); ++it) {
         Gate* op = *it;
         Gate* op_cloned = op->clone();
+        op_cloned->clear_children();
+        op_cloned->clear_parents();
         add_gate( op_cloned );
     }
 

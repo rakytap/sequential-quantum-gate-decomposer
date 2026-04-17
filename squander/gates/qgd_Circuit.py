@@ -54,8 +54,10 @@ from squander.gates.gates_Wrapper import (
     CRZ,
     CRX,
     CP,
+    CU,
     CR,
     CROT,
+    SXdg,
     CCX,
     CSWAP,
     SWAP,
@@ -260,6 +262,16 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
 
         # call the C wrapper function
         super().add_SX(target_qbit)
+
+    def add_SXdg(self, target_qbit):
+        """Add a SXdg gate to the front of the gate structure.
+
+        Args:
+            target_qbit: Target qubit index (int)
+        """
+
+        # call the C wrapper function
+        super().add_SXdg(target_qbit)
 
     def add_S(self, target_qbit):
         """Add a S gate to the front of the gate structure.
@@ -725,6 +737,8 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
             self.add_RZ(qgd_gate.get_Target_Qbit())
         elif isinstance(qgd_gate, SX):
             self.add_SX(qgd_gate.get_Target_Qbit())
+        elif isinstance(qgd_gate, SXdg):
+            self.add_SXdg(qgd_gate.get_Target_Qbit())
         elif isinstance(qgd_gate, U1):
             self.add_U1(qgd_gate.get_Target_Qbit())
         elif isinstance(qgd_gate, U2):
@@ -757,6 +771,8 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
             self.add_CRX(qgd_gate.get_Target_Qbit(), qgd_gate.get_Control_Qbit())
         elif isinstance(qgd_gate, CP):
             self.add_CP(qgd_gate.get_Target_Qbit(), qgd_gate.get_Control_Qbit())
+        elif isinstance(qgd_gate, CU):
+            self.add_CU(qgd_gate.get_Target_Qbit(), qgd_gate.get_Control_Qbit())
         elif isinstance(qgd_gate, SWAP):
             self.add_SWAP(qgd_gate.get_Target_Qbits())
         elif isinstance(qgd_gate, RXX):

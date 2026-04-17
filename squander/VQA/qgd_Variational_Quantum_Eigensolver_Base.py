@@ -30,6 +30,114 @@ from os import path
 from squander.VQA.qgd_Variational_Quantum_Eigensolver_Base_Wrapper import qgd_Variational_Quantum_Eigensolver_Base_Wrapper
 from squander.gates.qgd_Circuit import qgd_Circuit
 
+_VQE_BACKEND_NAME_TO_CODE = {
+    "state_vector": 0,
+    "density_matrix": 1,
+}
+_VQE_DEFAULT_BACKEND = "state_vector"
+_VQE_BACKEND_CONFIG_KEY = "backend_mode"
+_DENSITY_NOISE_CHANNEL_SPECS = {
+    "depolarizing": ("local_depolarizing", "error_rate"),
+    "local_depolarizing": ("local_depolarizing", "error_rate"),
+    "amplitude_damping": ("amplitude_damping", "gamma"),
+    "phase_damping": ("phase_damping", "lambda"),
+    "dephasing": ("phase_damping", "lambda"),
+}
+
+
+def _normalize_vqe_backend_name(backend):
+
+    if backend is None:
+        return _VQE_DEFAULT_BACKEND
+
+    if not isinstance(backend, str):
+        raise TypeError(
+            "backend should be one of 'state_vector', 'density_matrix', or None"
+        )
+
+    normalized_backend = backend.strip()
+    if normalized_backend not in _VQE_BACKEND_NAME_TO_CODE:
+        raise ValueError(
+            "Unsupported backend '{}'. Supported backends are 'state_vector' and "
+            "'density_matrix'.".format(backend)
+        )
+
+    return normalized_backend
+
+
+def _normalize_density_noise_spec(density_noise):
+
+    if density_noise is None:
+        return []
+
+    if not isinstance(density_noise, (list, tuple)):
+        raise TypeError("density_noise should be a list or tuple of dictionaries")
+
+    normalized_density_noise = []
+    for item_idx, noise_item in enumerate(density_noise):
+        if not isinstance(noise_item, dict):
+            raise TypeError(
+                "density_noise[{}] should be a dictionary".format(item_idx)
+            )
+
+        channel = noise_item.get("channel", noise_item.get("type"))
+        if not isinstance(channel, str):
+            raise TypeError(
+                "density_noise[{}] should define a string 'channel'".format(
+                    item_idx
+                )
+            )
+
+        channel_name = channel.strip()
+        if channel_name not in _DENSITY_NOISE_CHANNEL_SPECS:
+            raise ValueError(
+                "Unsupported density-noise channel '{}'. Supported channels are "
+                "'local_depolarizing', 'amplitude_damping', and "
+                "'phase_damping'.".format(channel)
+            )
+
+        canonical_channel, value_key = _DENSITY_NOISE_CHANNEL_SPECS[channel_name]
+        raw_value = noise_item.get("value", noise_item.get(value_key))
+        if canonical_channel == "phase_damping" and raw_value is None:
+            raw_value = noise_item.get("lambda_param")
+
+        if raw_value is None:
+            raise ValueError(
+                "density_noise[{}] is missing the '{}' value".format(
+                    item_idx, value_key
+                )
+            )
+
+        target = noise_item.get("target")
+        after_gate_index = noise_item.get("after_gate_index")
+        if isinstance(target, bool) or not isinstance(target, int):
+            raise TypeError(
+                "density_noise[{}].target should be an integer".format(item_idx)
+            )
+        if isinstance(after_gate_index, bool) or not isinstance(after_gate_index, int):
+            raise TypeError(
+                "density_noise[{}].after_gate_index should be an integer".format(
+                    item_idx
+                )
+            )
+
+        value = float(raw_value)
+        if not np.isfinite(value):
+            raise ValueError(
+                "density_noise[{}] has a non-finite value".format(item_idx)
+            )
+
+        normalized_density_noise.append(
+            {
+                "channel": canonical_channel,
+                "target": int(target),
+                "after_gate_index": int(after_gate_index),
+                "value": value,
+            }
+        )
+
+    return normalized_density_noise
+
 
 
 ##
@@ -40,21 +148,54 @@ class qgd_Variational_Quantum_Eigensolver_Base(qgd_Variational_Quantum_Eigensolv
 ## 
 # @brief Constructor of the class.
 # @param Umtx The unitary matrix to be decomposed.
-# @param optimize_layer_num Set true to optimize the minimum number of operation layers required in the decomposition, or false when the predefined maximal number of layer gates is used (ideal for general unitaries).
-# @param initial_guess String indicating the method to guess initial values for the optimalization. Possible values: "zeros" ,"random", "close_to_zero".
+# @param config Dictionary describing optimization hyperparameters.
+# @param accelerator_num Optional accelerator identifier.
+# @param backend Optional backend selector. Supported values are
+#   "state_vector" and "density_matrix". When omitted, the VQE keeps the
+#   legacy state-vector behavior. Explicit `backend="density_matrix"` activates
+#   the supported exact noisy mixed-state energy path for the Phase 2 anchor
+#   workflow.
+# @param density_noise Optional ordered list of fixed local density-noise
+#   insertions. Each entry must define a channel, target qubit,
+#   after_gate_index, and fixed noise value. The canonical Phase 2 local-noise
+#   channels are `local_depolarizing`, `amplitude_damping`, and
+#   `phase_damping`; the aliases `depolarizing` and `dephasing` normalize to
+#   the local canonical names. Phase 2 only supports this surface together
+#   with `backend="density_matrix"` on the supported `HEA` anchor circuit.
 # @return An instance of the class
-    def __init__( self, Hamiltonian, qbit_num, config={}, accelerator_num=0):
+    def __init__(
+        self,
+        Hamiltonian,
+        qbit_num,
+        config=None,
+        accelerator_num=0,
+        *,
+        backend=None,
+        density_noise=None,
+    ):
     
 
+        if config is None:
+            config = {}
+
         # config
-        if not( type(config) is dict):
+        if not isinstance(config, dict):
             print("Input parameter config should be a dictionary describing the following hyperparameters:") #TODO
             return
 
+        normalized_backend = _normalize_vqe_backend_name(backend)
+        config_copy = dict(config)
+        config_copy[_VQE_BACKEND_CONFIG_KEY] = _VQE_BACKEND_NAME_TO_CODE[normalized_backend]
 
         # call the constructor of the wrapper class
-        super(qgd_Variational_Quantum_Eigensolver_Base, self).__init__(Hamiltonian.data, Hamiltonian.indices, Hamiltonian.indptr, qbit_num, config=config, accelerator_num=accelerator_num)
+        super(qgd_Variational_Quantum_Eigensolver_Base, self).__init__(Hamiltonian.data, Hamiltonian.indices, Hamiltonian.indptr, qbit_num, config=config_copy, accelerator_num=accelerator_num)
         self.qbit_num = qbit_num
+        # Keep the selected backend visible on the Python object so tests,
+        # validation harnesses, and reproducibility artifacts can attribute
+        # which execution path was requested.
+        self.backend = normalized_backend
+        self.density_noise = []
+        self.set_Density_Matrix_Noise(density_noise)
 
 
 ## 
@@ -235,6 +376,38 @@ class qgd_Variational_Quantum_Eigensolver_Base(qgd_Variational_Quantum_Eigensolv
     def set_Initial_State( self, initial_state ):
 
         super(qgd_Variational_Quantum_Eigensolver_Base, self).set_Initial_State( initial_state )
+
+
+##
+# @brief Configure ordered fixed local-noise insertions for the density backend.
+# @param density_noise A list of dictionaries with channel, target,
+#   after_gate_index, and noise value metadata. The supported required
+#   Phase 2 local-noise vocabulary is `local_depolarizing`,
+#   `amplitude_damping`, and `phase_damping`; `depolarizing` and `dephasing`
+#   are accepted aliases that normalize to the canonical local names. Phase 2
+#   treats this as a mixed-state-only surface and rejects it on
+#   `state_vector` workflows. The supported positive path is the exact noisy
+#   `HEA` anchor workflow on the `density_matrix` backend.
+    def set_Density_Matrix_Noise(self, density_noise):
+
+        normalized_density_noise = _normalize_density_noise_spec(density_noise)
+        super(qgd_Variational_Quantum_Eigensolver_Base, self).set_Density_Matrix_Noise(
+            normalized_density_noise
+        )
+        self.density_noise = [dict(item) for item in normalized_density_noise]
+
+
+##
+# @brief Return reviewable metadata for the currently supported density bridge.
+# @return A dictionary describing the generated source, ordered bridge
+#   operations, and fixed local-noise insertions used by the density path.
+    def describe_density_bridge(self):
+
+        bridge_metadata = super(
+            qgd_Variational_Quantum_Eigensolver_Base, self
+        ).get_Density_Matrix_Bridge_Metadata()
+        bridge_metadata["density_noise"] = [dict(item) for item in self.density_noise]
+        return bridge_metadata
 
 
 ##

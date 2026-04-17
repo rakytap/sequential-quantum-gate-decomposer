@@ -63,14 +63,14 @@ Tdg(int qbit_num_in, int target_qbit_in);
 @brief Call to retrieve the gate matrix
 @return Returns with a matrix of the gate
 */
-Matrix get_matrix();
+Matrix get_matrix() override;
 
 /**
 @brief Call to retrieve the gate matrix
 @param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 @return Returns with a matrix of the gate
 */
-Matrix get_matrix( int parallel );
+Matrix get_matrix( int parallel ) override;
 
 
 /**
@@ -79,7 +79,7 @@ Matrix get_matrix( int parallel );
 @param input The input array on which the gate is applied
 @param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
-void apply_to( Matrix& input, int parallel );
+void apply_to( Matrix& input, int parallel ) override;
 
 
 /**
@@ -87,21 +87,21 @@ void apply_to( Matrix& input, int parallel );
 @param parameters An array of parameters to calculate the matrix of the U3 gate.
 @param input The input array on which the gate is applied
 */
-void apply_from_right( Matrix& input );
+void apply_from_right( Matrix& input ) override;
 
 
 /**
 @brief Call to create a clone of the present class
 @return Return with a pointer pointing to the cloned object
 */
-Tdg* clone();
+Tdg* clone() override;
 
 
 /**
 @brief Call to set the number of qubits spanning the matrix of the gate
 @param qbit_num_in The number of qubits
 */
-void set_qbit_num(int qbit_num_in);
+void set_qbit_num(int qbit_num_in) override;
 
 
 
@@ -109,14 +109,14 @@ void set_qbit_num(int qbit_num_in);
 @brief Call to reorder the qubits in the matrix of the gate
 @param qbit_list The reordered list of qubits spanning the matrix
 */
-void reorder_qubits( std::vector<int> qbit_list);
+void reorder_qubits( std::vector<int> qbit_list) override;
 
 /**
 @brief Set static values for matrix of the gates.
 @param u3_1qbit Matrix parameter for the gate.
 
 */
-Matrix calc_one_qubit_u3( );
+Matrix calc_one_qubit_u3( ) override;
 
 };
 

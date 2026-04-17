@@ -88,7 +88,7 @@ Generative_Quantum_Machine_Learning_Base::Generative_Quantum_Machine_Learning_Ba
 
 	sample_indices = sample_indices_in;
 
-    sample_size = sample_indices.size();
+    sample_size = static_cast<int>(sample_indices.size());
 
     P_star = P_star_in;
     // config maps
@@ -236,7 +236,7 @@ double Generative_Quantum_Machine_Learning_Base::Gaussian_kernel(int x, int y, M
 @brief Call to calculate and save the values of the gaussian kernel needed for traing
 */
 void Generative_Quantum_Machine_Learning_Base::fill_lookup_table() {
-    gaussian_lookup_table = std::vector<std::vector<double>>(1<<qbit_num, std::vector<double>(1<<qbit_num, 0));
+    gaussian_lookup_table = std::vector<std::vector<double>>(size_t(1)<<qbit_num, std::vector<double>(size_t(1)<<qbit_num, 0));
     for (int idx1=0; idx1 < 1<<qbit_num; idx1++) {
         for (int idx2=0; idx2 < 1<<qbit_num; idx2++) {
             gaussian_lookup_table[idx1][idx2] = Gaussian_kernel(idx1, idx2, sigma);
@@ -321,7 +321,7 @@ double Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions_exact(
     }
 
     // We calculate the distribution created by our circuit at the given traing data points "we sample our distribution"
-    std::vector<double> P_theta(1<<qbit_num);
+    std::vector<double> P_theta(size_t(1)<<qbit_num);
     tbb::parallel_for( tbb::blocked_range<int>(0, 1<<qbit_num, 1024), [&](tbb::blocked_range<int> r) {
         for (int idx=r.begin(); idx<r.end(); idx++) {
             P_theta[idx] = State_right[idx].real*State_right[idx].real + State_right[idx].imag*State_right[idx].imag;
@@ -382,7 +382,7 @@ double Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions_approx
     }
 
     // We calculate the distribution created by our circuit at the given traing data points "we sample our distribution"
-    std::vector<double> P_theta(1<<qbit_num);
+    std::vector<double> P_theta(size_t(1)<<qbit_num);
     tbb::parallel_for( tbb::blocked_range<int>(0, 1<<qbit_num, 1024), [&](tbb::blocked_range<int> r) {
         for (int idx=r.begin(); idx<r.end(); idx++) {
             P_theta[idx] = State_right[idx].real*State_right[idx].real + State_right[idx].imag*State_right[idx].imag;
@@ -626,6 +626,9 @@ void Generative_Quantum_Machine_Learning_Base::export_current_cost_fnc(double cu
     if (project_name != ""){filename = project_name + "_" + filename;}
 
         const char* c_filename = filename.c_str();
+#ifdef _WIN32
+#pragma warning(suppress: 4996)
+#endif
 	pFile = fopen(c_filename, "a");
 
         if (pFile==NULL) {
@@ -638,7 +641,7 @@ void Generative_Quantum_Machine_Learning_Base::export_current_cost_fnc(double cu
 
     std::uniform_int_distribution<> distrib(0, qbit_num-2); 
 
-    memset(input_state.get_data(), 0.0, (input_state.size()*2)*sizeof(double) ); 
+    memset(input_state.get_data(), 0, (input_state.size()*2)*sizeof(double) ); 
     input_state[0].real = 1.0;
 
     matrix_base<int> qbit_sublist(1,2);
@@ -675,7 +678,7 @@ void Generative_Quantum_Machine_Learning_Base::initialize_zero_state( ) {
 
     initial_state[0].real = 1.0;
     initial_state[0].imag = 0.0;
-    memset(initial_state.get_data()+2, 0.0, (initial_state.size()*2-2)*sizeof(double) );      
+    memset(initial_state.get_data()+2, 0, (initial_state.size()*2-2)*sizeof(double) );      
 
     return;
 }
@@ -835,7 +838,7 @@ void Generative_Quantum_Machine_Learning_Base::generate_circuit( int layers, int
 
         case QCMRF:
         {
-            int num_cliques = cliques.size();
+            int num_cliques = static_cast<int>(cliques.size());
             if (cliques.size() == 0) {
                 std::string error("Variational_Quantum_Eigensolver_Base::generate_initial_circuit: input the cliques for using QCMRF ansatz");
                 throw error;
@@ -871,7 +874,7 @@ void Generative_Quantum_Machine_Learning_Base::MultyRZ(std::vector<int>& qbits) 
         add_cnot(qbits[idx+1], qbits[idx]);
     }
     add_rz(qbits[qbits.size()-1]);
-    for (int idx=qbits.size()-1; idx>0; idx--) {
+    for (int idx=static_cast<int>(qbits.size())-1; idx>0; idx--) {
         add_cnot(qbits[idx], qbits[idx-1]);
     }
 }

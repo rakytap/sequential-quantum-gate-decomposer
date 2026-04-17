@@ -26,8 +26,12 @@ limitations under the License.
 #include <vector>
 #include "common.h"
 #include "matrix.h"
+#include "matrix_float.h"
 #include "logging.h"
 #include "matrix_real.h"
+#include "matrix_real_float.h"
+#include "matrix_any.h"
+#include "matrix_real_any.h"
 
 
 /// @brief Type definition of operation types (also generalized for decomposition classes derived from the class Operation_Block)
@@ -80,12 +84,6 @@ typedef enum gate_type {GENERAL_OPERATION=1,
                         SXDG_OPERATION=47,
                         PERMUTATION_OPERATION=48} gate_type;
 
-
-#ifdef _WIN32
-void sincos(double x, double *s, double *c);
-#elif defined(__APPLE__)
-#define sincos __sincos
-#endif
 
 
 /**
@@ -211,12 +209,42 @@ virtual void apply_to_list( Matrix_real& parameters_mtx, std::vector<Matrix>& in
 virtual void apply_to( Matrix& input, int parallel );
 
 /**
+@brief Float32 overload for gate application.
+@param input Float32 input matrix/state
+@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
+*/
+virtual void apply_to( Matrix_float& input, int parallel );
+
+/**
 @brief Abstract function to be overriden in derived classes to be used to transform an input upon a parametric gate operation
 @param parameter_mtx An array conatining the parameters
 @param input The input array on which the gate is applied
 @param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
 virtual void apply_to( Matrix_real& parameter_mtx, Matrix& input, int parallel );
+
+/**
+@brief Float32 overload for parametric gate application.
+@param parameter_mtx Float32 parameter matrix
+@param input Float32 input matrix/state
+@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
+*/
+virtual void apply_to( Matrix_real_float& parameter_mtx, Matrix_float& input, int parallel );
+
+/**
+@brief Precision-agnostic dispatch helper for matrix/state application.
+@param input Precision-tagged matrix carrier
+@param parallel Parallel mode selector
+*/
+void apply_to( Matrix_any& input, int parallel );
+
+/**
+@brief Precision-agnostic dispatch helper for parametric application.
+@param parameter_mtx Precision-tagged parameter carrier
+@param input Precision-tagged matrix carrier
+@param parallel Parallel mode selector
+*/
+void apply_to( Matrix_real_any& parameter_mtx, Matrix_any& input, int parallel );
 
 
 /**
@@ -227,6 +255,14 @@ virtual void apply_to( Matrix_real& parameter_mtx, Matrix& input, int parallel )
 */
 virtual std::vector<Matrix> apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input, int parallel );
 
+/**
+@brief Float32 overload for derivative evaluation.
+@param parameters_mtx_in Float32 parameter matrix
+@param input Float32 input matrix/state
+@param parallel Parallel mode selector
+*/
+virtual std::vector<Matrix_float> apply_derivate_to( Matrix_real_float& parameters_mtx_in, Matrix_float& input, int parallel );
+
 
 /**
 @brief Call to apply the gate on the input array/matrix by input*Gate
@@ -235,11 +271,24 @@ virtual std::vector<Matrix> apply_derivate_to( Matrix_real& parameters_mtx_in, M
 virtual void apply_from_right( Matrix& input );
 
 /**
+@brief Float32 overload for right-side gate application by input*Gate.
+@param input The float32 input array on which the gate is applied
+*/
+virtual void apply_from_right( Matrix_float& input );
+
+/**
 @brief Call to apply the gate on the input array/matrix by input*Gate
 @param parameter_mtx An array of the input parameters.
 @param input The input array on which the gate is applied
 */
 void apply_from_right( Matrix_real& parameter_mtx, Matrix& input );
+
+/**
+@brief Float32 overload for right-side parametric gate application by input*Gate.
+@param parameter_mtx Float32 parameter matrix
+@param input The float32 input array on which the gate is applied
+*/
+virtual void apply_from_right( Matrix_real_float& parameter_mtx, Matrix_float& input );
 
 /**
 @brief Call to set the stored matrix in the operation.
@@ -460,6 +509,11 @@ protected:
 @param parallel Set 0 for sequential execution (default), 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
 void apply_kernel_to( Matrix& u3_1qbit, Matrix& input, bool deriv=false, int parallel=0 );
+
+/**
+@brief Float32 overload of one-qubit kernel application helper.
+*/
+void apply_kernel_to( Matrix_float& u3_1qbit, Matrix_float& input, bool deriv=false, int parallel=0 );
 
 
 

@@ -26,7 +26,9 @@ limitations under the License.
 #include <vector>
 #include "common.h"
 #include "matrix.h"
+#include "matrix_float.h"
 #include "matrix_real.h"
+#include "matrix_real_float.h"
 #include "Gate.h"
 
 /**
@@ -67,14 +69,14 @@ ON(int qbit_num_in);
 @param parallel Set true to apply parallel kernels, false otherwise
 @return Returns with a matrix of the operation
 */
-Matrix get_matrix(Matrix_real& parameters);
+Matrix get_matrix(Matrix_real& parameters) override;
 
 /**
 @brief Call to retrieve the operation matrix
 @param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 @return Returns with a matrix of the operation
 */
-Matrix get_matrix(Matrix_real& parameters, int parallel=0);
+Matrix get_matrix(Matrix_real& parameters, int parallel=0) override;
 
 
 /**
@@ -82,7 +84,16 @@ Matrix get_matrix(Matrix_real& parameters, int parallel=0);
 @param input The input array on which the gate is applied
 @param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
-void apply_to( Matrix_real& parameters, Matrix& input, int parallel );
+void apply_to( Matrix_real& parameters, Matrix& input, int parallel ) override;
+
+
+/**
+@brief Float32 overload for parametric gate application.
+@param parameters Float32 gate parameters
+@param input Float32 input matrix/state
+@param parallel Parallel mode selector
+*/
+void apply_to( Matrix_real_float& parameters, Matrix_float& input, int parallel ) override;
 
 
 /**
@@ -91,10 +102,17 @@ void apply_to( Matrix_real& parameters, Matrix& input, int parallel );
 Matrix get_submatrix( Matrix_real& parameters );
 
 /**
+@brief Float32 overload to retrieve the qbit_num-1 kernel of the operation.
+*/
+Matrix_float get_submatrix( Matrix_real_float& parameters );
+
+/**
 @brief Call to apply the gate on the input array/matrix by input*Gate
 @param input The input array on which the gate is applied
 */
 void apply_from_right( Matrix_real& parameters, Matrix& input );
+
+void apply_from_right( Matrix_real_float& parameters, Matrix_float& input ) override;
 
 
 
@@ -102,13 +120,13 @@ void apply_from_right( Matrix_real& parameters, Matrix& input );
 @brief Set the number of qubits spanning the matrix of the operation
 @param qbit_num_in The number of qubits spanning the matrix
 */
-virtual void set_qbit_num( int qbit_num_in );
+virtual void set_qbit_num( int qbit_num_in ) override;
 
 /**
 @brief Call to reorder the qubits in the matrix of the operation
 @param qbit_list The reordered list of qubits spanning the matrix
 */
-virtual void reorder_qubits( std::vector<int> qbit_list );
+virtual void reorder_qubits( std::vector<int> qbit_list ) override;
 
 
 /**
@@ -145,7 +163,7 @@ int get_qbit_num();
 @brief Call to create a clone of the present class
 @return Return with a pointer pointing to the cloned object
 */
-ON* clone();
+ON* clone() override;
 
 };
 

@@ -23,15 +23,18 @@ limitations under the License.
 
 #include "Gate.h"
 #include "common.h"
+#include "qgd_math.h"
 #include <sstream>
 
 #ifdef USE_AVX 
 #include "apply_kernel_to_input_AVX.h"
 #include "apply_kernel_to_state_vector_input_AVX.h"
+#include "apply_large_kernel_to_input_AVX.h"
 #endif
 
 #include "apply_kernel_to_input.h"
 #include "apply_kernel_to_state_vector_input.h"
+#include "apply_large_kernel_to_input.h"
 
 /**
 @brief Deafult constructor of the class.
@@ -307,6 +310,274 @@ Gate::apply_to( Matrix& input, int parallel ) {
 }
 
 
+void
+Gate::apply_to( Matrix_float& input, int parallel ) {
+
+    if (input.rows != matrix_size) {
+        std::string err("Gate::apply_to(Matrix_float&): Wrong matrix size in gate apply.");
+        throw err;
+    }
+
+    // Stabilized path: execute via the validated float64 implementation and cast back.
+    Matrix input_float64 = input.to_float64();
+    this->apply_to(input_float64, parallel);
+    for (int idx = 0; idx < input.size(); ++idx) {
+        input[idx].real = static_cast<float>(input_float64[idx].real);
+        input[idx].imag = static_cast<float>(input_float64[idx].imag);
+    }
+    return;
+
+    Matrix_float u3_1qbit(2, 2);
+
+    const float inv_sqrt2 = 0.7071067811865475f;
+    const float inv2 = 0.5f;
+    const float pi_over_4 = 0.7853981633974483f;
+
+    for (int idx = 0; idx < 4; ++idx) {
+        u3_1qbit[idx].real = 0.0f;
+        u3_1qbit[idx].imag = 0.0f;
+    }
+
+    switch (type) {
+        case X_OPERATION:
+        case CNOT_OPERATION:
+            u3_1qbit[1].real = 1.0f;
+            u3_1qbit[2].real = 1.0f;
+            break;
+
+        case Y_OPERATION:
+            u3_1qbit[1].imag = -1.0f;
+            u3_1qbit[2].imag = 1.0f;
+            break;
+
+        case Z_OPERATION:
+        case CZ_OPERATION:
+            u3_1qbit[0].real = 1.0f;
+            u3_1qbit[3].real = -1.0f;
+            break;
+
+        case H_OPERATION:
+        case CH_OPERATION:
+            u3_1qbit[0].real = inv_sqrt2;
+            u3_1qbit[1].real = inv_sqrt2;
+            u3_1qbit[2].real = inv_sqrt2;
+            u3_1qbit[3].real = -inv_sqrt2;
+            break;
+
+        case S_OPERATION:
+            u3_1qbit[0].real = 1.0f;
+            u3_1qbit[3].imag = 1.0f;
+            break;
+
+        case SDG_OPERATION:
+            u3_1qbit[0].real = 1.0f;
+            u3_1qbit[3].imag = -1.0f;
+            break;
+
+        case T_OPERATION:
+            u3_1qbit[0].real = 1.0f;
+            qgd_sincos<float>(pi_over_4, &u3_1qbit[3].imag, &u3_1qbit[3].real);
+            break;
+
+        case TDG_OPERATION:
+            u3_1qbit[0].real = 1.0f;
+            qgd_sincos<float>(-pi_over_4, &u3_1qbit[3].imag, &u3_1qbit[3].real);
+            break;
+
+        case SX_OPERATION:
+            u3_1qbit[0].real = inv2;
+            u3_1qbit[0].imag = inv2;
+            u3_1qbit[1].real = inv2;
+            u3_1qbit[1].imag = -inv2;
+            u3_1qbit[2].real = inv2;
+            u3_1qbit[2].imag = -inv2;
+            u3_1qbit[3].real = inv2;
+            u3_1qbit[3].imag = inv2;
+            break;
+
+        case SXDG_OPERATION:
+            u3_1qbit[0].real = inv2;
+            u3_1qbit[0].imag = -inv2;
+            u3_1qbit[1].real = inv2;
+            u3_1qbit[1].imag = inv2;
+            u3_1qbit[2].real = inv2;
+            u3_1qbit[2].imag = inv2;
+            u3_1qbit[3].real = inv2;
+            u3_1qbit[3].imag = -inv2;
+            break;
+
+        case SWAP_OPERATION: {
+            if (target_qbits.size() != 2) {
+                throw std::string("Gate::apply_to(Matrix_float&): SWAP expects exactly 2 target qubits.");
+            }
+
+            Matrix_float u_2qbit(4, 4);
+            for (int idx = 0; idx < 16; ++idx) {
+                u_2qbit[idx].real = 0.0f;
+                u_2qbit[idx].imag = 0.0f;
+            }
+
+            u_2qbit[0].real = 1.0f;
+            u_2qbit[1 * 4 + 2].real = 1.0f;
+            u_2qbit[2 * 4 + 1].real = 1.0f;
+            u_2qbit[3 * 4 + 3].real = 1.0f;
+
+#ifdef USE_AVX
+            switch (parallel) {
+                case 0:
+                    apply_large_kernel_to_input_AVX32(u_2qbit, input, target_qbits, input.rows);
+                    break;
+                case 1:
+                    apply_large_kernel_to_input_AVX_OpenMP32(u_2qbit, input, target_qbits, input.rows);
+                    break;
+                case 2:
+                    apply_large_kernel_to_input_AVX_TBB32(u_2qbit, input, target_qbits, input.rows);
+                    break;
+                default:
+                    throw std::string("Gate::apply_to(Matrix_float&): invalid parallel mode");
+            }
+#else
+            throw std::string("Gate::apply_to(Matrix_float&): SWAP float32 requires AVX float32 kernels.");
+#endif
+            return;
+        }
+
+        case CSWAP_OPERATION: {
+            if (target_qbits.size() != 2) {
+                throw std::string("Gate::apply_to(Matrix_float&): CSWAP expects exactly 2 target qubits.");
+            }
+            if (control_qbits.size() != 1) {
+                throw std::string("Gate::apply_to(Matrix_float&): CSWAP expects exactly 1 control qubit.");
+            }
+
+            Matrix_float u_3qbit(8, 8);
+            for (int idx = 0; idx < 64; ++idx) {
+                u_3qbit[idx].real = 0.0f;
+                u_3qbit[idx].imag = 0.0f;
+            }
+
+            for (int idx = 0; idx < 8; ++idx) {
+                u_3qbit[idx * 8 + idx].real = 1.0f;
+            }
+            u_3qbit[5 * 8 + 5].real = 0.0f;
+            u_3qbit[6 * 8 + 6].real = 0.0f;
+            u_3qbit[5 * 8 + 6].real = 1.0f;
+            u_3qbit[6 * 8 + 5].real = 1.0f;
+
+            std::vector<int> involved_qbits = {control_qbits[0], target_qbits[0], target_qbits[1]};
+
+#ifdef USE_AVX
+            switch (parallel) {
+                case 0:
+                    apply_large_kernel_to_input_AVX32(u_3qbit, input, involved_qbits, input.rows);
+                    break;
+                case 1:
+                    apply_large_kernel_to_input_AVX_OpenMP32(u_3qbit, input, involved_qbits, input.rows);
+                    break;
+                case 2:
+                    apply_large_kernel_to_input_AVX_TBB32(u_3qbit, input, involved_qbits, input.rows);
+                    break;
+                default:
+                    throw std::string("Gate::apply_to(Matrix_float&): invalid parallel mode");
+            }
+#else
+            throw std::string("Gate::apply_to(Matrix_float&): CSWAP float32 requires AVX float32 kernels.");
+#endif
+            return;
+        }
+
+        case CCX_OPERATION: {
+            if (target_qbits.size() != 1) {
+                throw std::string("Gate::apply_to(Matrix_float&): CCX expects exactly 1 target qubit.");
+            }
+            if (control_qbits.size() != 2) {
+                throw std::string("Gate::apply_to(Matrix_float&): CCX expects exactly 2 control qubits.");
+            }
+
+            Matrix_float u_3qbit(8, 8);
+            for (int idx = 0; idx < 64; ++idx) {
+                u_3qbit[idx].real = 0.0f;
+                u_3qbit[idx].imag = 0.0f;
+            }
+
+            for (int idx = 0; idx < 8; ++idx) {
+                u_3qbit[idx * 8 + idx].real = 1.0f;
+            }
+            u_3qbit[6 * 8 + 6].real = 0.0f;
+            u_3qbit[7 * 8 + 7].real = 0.0f;
+            u_3qbit[6 * 8 + 7].real = 1.0f;
+            u_3qbit[7 * 8 + 6].real = 1.0f;
+
+            std::vector<int> involved_qbits = {control_qbits[0], control_qbits[1], target_qbits[0]};
+
+#ifdef USE_AVX
+            switch (parallel) {
+                case 0:
+                    apply_large_kernel_to_input_AVX32(u_3qbit, input, involved_qbits, input.rows);
+                    break;
+                case 1:
+                    apply_large_kernel_to_input_AVX_OpenMP32(u_3qbit, input, involved_qbits, input.rows);
+                    break;
+                case 2:
+                    apply_large_kernel_to_input_AVX_TBB32(u_3qbit, input, involved_qbits, input.rows);
+                    break;
+                default:
+                    throw std::string("Gate::apply_to(Matrix_float&): invalid parallel mode");
+            }
+#else
+            throw std::string("Gate::apply_to(Matrix_float&): CCX float32 requires AVX float32 kernels.");
+#endif
+            return;
+        }
+
+        case SYC_OPERATION: {
+            Matrix_float u_2qbit(4, 4);
+            for (int idx = 0; idx < 16; ++idx) {
+                u_2qbit[idx].real = 0.0f;
+                u_2qbit[idx].imag = 0.0f;
+            }
+
+            // |00> -> |00>
+            u_2qbit[0].real = 1.0f;
+            // |01> <-> |10> with factor -i
+            u_2qbit[1 * 4 + 2].imag = -1.0f;
+            u_2qbit[2 * 4 + 1].imag = -1.0f;
+            // |11> -> (sqrt(3)/2 - i/2) |11>
+            u_2qbit[3 * 4 + 3].real = 0.8660254037844386f;
+            u_2qbit[3 * 4 + 3].imag = -0.5f;
+
+            std::vector<int> involved_qbits = {control_qbit, target_qbit};
+
+#ifdef USE_AVX
+            switch (parallel) {
+                case 0:
+                    apply_large_kernel_to_input_AVX32(u_2qbit, input, involved_qbits, input.rows);
+                    break;
+                case 1:
+                    apply_large_kernel_to_input_AVX_OpenMP32(u_2qbit, input, involved_qbits, input.rows);
+                    break;
+                case 2:
+                    apply_large_kernel_to_input_AVX_TBB32(u_2qbit, input, involved_qbits, input.rows);
+                    break;
+                default:
+                    throw std::string("Gate::apply_to(Matrix_float&): invalid parallel mode");
+            }
+#else
+            throw std::string("Gate::apply_to(Matrix_float&): SYC float32 requires AVX float32 kernels.");
+#endif
+            return;
+        }
+
+        default: {
+            std::string err("Gate::apply_to(Matrix_float&): Float32 gate path is not implemented for gate type " + name);
+            throw err;
+        }
+    }
+
+    apply_kernel_to(u3_1qbit, input, false, parallel);
+}
+
+
 /**
 @brief Abstract function to be overriden in derived classes to be used to transform an input upon a parametric gate operation
 @param parameter_mtx An array conatining the parameters
@@ -320,6 +591,340 @@ Gate::apply_to( Matrix_real& parameter_mtx, Matrix& input, int parallel ) {
     throw( err );
 
     return;
+}
+
+
+void
+Gate::apply_to( Matrix_real_float& parameter_mtx, Matrix_float& input, int parallel ) {
+
+    if (input.rows != matrix_size) {
+        std::string err("Gate::apply_to(Matrix_real_float&, Matrix_float&): Wrong matrix size in gate apply.");
+        throw err;
+    }
+
+    // Stabilized path: execute via validated float64 parameterized implementation and cast back.
+    Matrix input_float64 = input.to_float64();
+    Matrix_real parameter_float64(parameter_mtx.rows, parameter_mtx.cols);
+    for (int idx = 0; idx < parameter_mtx.size(); ++idx) {
+        parameter_float64[idx] = static_cast<double>(parameter_mtx[idx]);
+    }
+
+    this->apply_to(parameter_float64, input_float64, parallel);
+
+    for (int idx = 0; idx < input.size(); ++idx) {
+        input[idx].real = static_cast<float>(input_float64[idx].real);
+        input[idx].imag = static_cast<float>(input_float64[idx].imag);
+    }
+    return;
+
+    Matrix_float u3_1qbit(2, 2);
+
+    for (int idx = 0; idx < 4; ++idx) {
+        u3_1qbit[idx].real = 0.0f;
+        u3_1qbit[idx].imag = 0.0f;
+    }
+
+    float theta_over_2 = 0.0f;
+    float phi = 0.0f;
+    float lambda = 0.0f;
+    float global_phase = 0.0f;
+
+    switch (type) {
+        case U3_OPERATION:
+        case CU_OPERATION:
+            if (parameter_mtx.size() < 3) {
+                throw std::string("Gate::apply_to(Matrix_real_float&, Matrix_float&): U3/CU expects at least 3 parameters.");
+            }
+            theta_over_2 = parameter_mtx[0];
+            phi = parameter_mtx[1];
+            lambda = parameter_mtx[2];
+            if (type == CU_OPERATION) {
+                if (parameter_mtx.size() < 4) {
+                    throw std::string("Gate::apply_to(Matrix_real_float&, Matrix_float&): CU expects 4 parameters.");
+                }
+                global_phase = parameter_mtx[3];
+            }
+            break;
+
+        case U2_OPERATION:
+            if (parameter_mtx.size() < 2) {
+                throw std::string("Gate::apply_to(Matrix_real_float&, Matrix_float&): U2 expects 2 parameters.");
+            }
+            theta_over_2 = static_cast<float>(M_PI / 4.0);
+            phi = parameter_mtx[0];
+            lambda = parameter_mtx[1];
+            break;
+
+        case U1_OPERATION:
+        case CP_OPERATION:
+        case RZ_OPERATION:
+        case CRZ_OPERATION:
+        case RZ_P_OPERATION:
+            if (parameter_mtx.size() < 1) {
+                throw std::string("Gate::apply_to(Matrix_real_float&, Matrix_float&): U1/CP/RZ-family expects 1 parameter.");
+            }
+            theta_over_2 = 0.0f;
+            phi = 0.0f;
+            lambda = parameter_mtx[0];
+            break;
+
+        case CZ_NU_OPERATION:
+            if (parameter_mtx.size() < 1) {
+                throw std::string("Gate::apply_to(Matrix_real_float&, Matrix_float&): CZ_NU expects 1 parameter.");
+            }
+            u3_1qbit[0].real = 1.0f;
+            u3_1qbit[0].imag = 0.0f;
+            u3_1qbit[1].real = 0.0f;
+            u3_1qbit[1].imag = 0.0f;
+            u3_1qbit[2].real = 0.0f;
+            u3_1qbit[2].imag = 0.0f;
+            u3_1qbit[3].real = qgd_cos<float>(parameter_mtx[0]);
+            u3_1qbit[3].imag = 0.0f;
+            apply_kernel_to(u3_1qbit, input, false, parallel);
+            return;
+
+        case RX_OPERATION:
+        case CRX_OPERATION:
+            if (parameter_mtx.size() < 1) {
+                throw std::string("Gate::apply_to(Matrix_real_float&, Matrix_float&): RX-family expects 1 parameter.");
+            }
+            theta_over_2 = parameter_mtx[0];
+            phi = -static_cast<float>(M_PI / 2.0);
+            lambda = static_cast<float>(M_PI / 2.0);
+            break;
+
+        case RY_OPERATION:
+        case CRY_OPERATION:
+        case ADAPTIVE_OPERATION:
+            if (parameter_mtx.size() < 1) {
+                throw std::string("Gate::apply_to(Matrix_real_float&, Matrix_float&): RY-family expects 1 parameter.");
+            }
+            theta_over_2 = parameter_mtx[0];
+            phi = 0.0f;
+            lambda = 0.0f;
+            break;
+
+        case R_OPERATION:
+        case CR_OPERATION:
+            if (parameter_mtx.size() < 2) {
+                throw std::string("Gate::apply_to(Matrix_real_float&, Matrix_float&): R-family expects 2 parameters.");
+            }
+            theta_over_2 = parameter_mtx[0];
+            phi = parameter_mtx[1] - static_cast<float>(M_PI / 2.0);
+            lambda = -parameter_mtx[1] + static_cast<float>(M_PI / 2.0);
+            break;
+
+        case CROT_OPERATION: {
+            if (parameter_mtx.size() < 2) {
+                throw std::string("Gate::apply_to(Matrix_real_float&, Matrix_float&): CROT expects 2 parameters.");
+            }
+
+            int crot_target_qbit = target_qbit;
+            int crot_control_qbit = control_qbit;
+
+            if (target_qbits.size() == 1) {
+                crot_target_qbit = target_qbits[0];
+            }
+            else if (crot_target_qbit < 0) {
+                throw std::string("Gate::apply_to(Matrix_real_float&, Matrix_float&): CROT expects exactly 1 target qubit.");
+            }
+
+            if (control_qbits.size() == 1) {
+                crot_control_qbit = control_qbits[0];
+            }
+            else if (crot_control_qbit < 0) {
+                throw std::string("Gate::apply_to(Matrix_real_float&, Matrix_float&): CROT expects exactly 1 control qubit.");
+            }
+
+            float theta = parameter_mtx[0];
+            float phi_crot = parameter_mtx[1];
+
+            float c = qgd_cos<float>(theta);
+            float s = qgd_sin<float>(theta);
+            float s_neg = qgd_sin<float>(-theta);
+            float sin_phi = qgd_sin<float>(phi_crot);
+            float cos_phi = qgd_cos<float>(phi_crot);
+
+            Matrix_float u_2qbit(4, 4);
+            for (int idx = 0; idx < 16; ++idx) {
+                u_2qbit[idx].real = 0.0f;
+                u_2qbit[idx].imag = 0.0f;
+            }
+
+            u_2qbit[0].real = c;
+            u_2qbit[2].real = s * sin_phi;
+            u_2qbit[2].imag = s * cos_phi;
+            u_2qbit[1 * 4 + 3].real = -s_neg * sin_phi;
+            u_2qbit[1 * 4 + 3].imag = -s_neg * cos_phi;
+            u_2qbit[1 * 4 + 1].real = c;
+            u_2qbit[2 * 4 + 2].real = c;
+            u_2qbit[2 * 4].real = -s * sin_phi;
+            u_2qbit[2 * 4].imag = s * cos_phi;
+            u_2qbit[3 * 4 + 3].real = c;
+            u_2qbit[3 * 4 + 1].real = s_neg * sin_phi;
+            u_2qbit[3 * 4 + 1].imag = -s_neg * cos_phi;
+
+            std::vector<int> involved_qbits = {crot_control_qbit, crot_target_qbit};
+
+#ifdef USE_AVX
+            switch (parallel) {
+                case 0:
+                    apply_large_kernel_to_input_AVX32(u_2qbit, input, involved_qbits, input.rows);
+                    break;
+                case 1:
+                    apply_large_kernel_to_input_AVX_OpenMP32(u_2qbit, input, involved_qbits, input.rows);
+                    break;
+                case 2:
+                    apply_large_kernel_to_input_AVX_TBB32(u_2qbit, input, involved_qbits, input.rows);
+                    break;
+                default:
+                    throw std::string("Gate::apply_to(Matrix_real_float&, Matrix_float&): invalid parallel mode");
+            }
+#else
+            throw std::string("Gate::apply_to(Matrix_real_float&, Matrix_float&): CROT float32 requires AVX float32 kernels.");
+#endif
+            return;
+        }
+
+        case RXX_OPERATION:
+        case RYY_OPERATION:
+        case RZZ_OPERATION: {
+            if (parameter_mtx.size() < 1) {
+                throw std::string("Gate::apply_to(Matrix_real_float&, Matrix_float&): RXX/RYY/RZZ expects 1 parameter.");
+            }
+            if (target_qbits.size() != 2) {
+                throw std::string("Gate::apply_to(Matrix_real_float&, Matrix_float&): RXX/RYY/RZZ expects exactly 2 target qubits.");
+            }
+
+            float theta = parameter_mtx[0];
+            Matrix_float u_2qbit(4, 4);
+            for (int idx = 0; idx < 16; ++idx) {
+                u_2qbit[idx].real = 0.0f;
+                u_2qbit[idx].imag = 0.0f;
+            }
+
+            float c = qgd_cos<float>(theta);
+            float s = qgd_sin<float>(theta);
+
+            if (type == RXX_OPERATION) {
+                u_2qbit[0].real = c;
+                u_2qbit[3].imag = -s;
+                u_2qbit[1 * 4 + 1].real = c;
+                u_2qbit[1 * 4 + 2].imag = -s;
+                u_2qbit[2 * 4 + 2].real = c;
+                u_2qbit[2 * 4 + 1].imag = -s;
+                u_2qbit[3 * 4 + 3].real = c;
+                u_2qbit[3 * 4].imag = -s;
+            }
+            else if (type == RYY_OPERATION) {
+                u_2qbit[0].real = c;
+                u_2qbit[3].imag = s;
+                u_2qbit[1 * 4 + 1].real = c;
+                u_2qbit[1 * 4 + 2].imag = -s;
+                u_2qbit[2 * 4 + 2].real = c;
+                u_2qbit[2 * 4 + 1].imag = -s;
+                u_2qbit[3 * 4 + 3].real = c;
+                u_2qbit[3 * 4].imag = s;
+            }
+            else {
+                u_2qbit[0].real = c;
+                u_2qbit[0].imag = -s;
+                u_2qbit[1 * 4 + 1].real = c;
+                u_2qbit[1 * 4 + 1].imag = s;
+                u_2qbit[2 * 4 + 2].real = c;
+                u_2qbit[2 * 4 + 2].imag = s;
+                u_2qbit[3 * 4 + 3].real = c;
+                u_2qbit[3 * 4 + 3].imag = -s;
+            }
+
+#ifdef USE_AVX
+            switch (parallel) {
+                case 0:
+                    apply_large_kernel_to_input_AVX32(u_2qbit, input, target_qbits, input.rows);
+                    break;
+                case 1:
+                    apply_large_kernel_to_input_AVX_OpenMP32(u_2qbit, input, target_qbits, input.rows);
+                    break;
+                case 2:
+                    apply_large_kernel_to_input_AVX_TBB32(u_2qbit, input, target_qbits, input.rows);
+                    break;
+                default:
+                    throw std::string("Gate::apply_to(Matrix_real_float&, Matrix_float&): invalid parallel mode");
+            }
+#else
+            throw std::string("Gate::apply_to(Matrix_real_float&, Matrix_float&): RXX/RYY/RZZ float32 requires AVX float32 kernels.");
+#endif
+            return;
+        }
+
+        default: {
+            std::string err("Gate::apply_to(Matrix_real_float&, Matrix_float&): Float32 parametric gate path is not implemented for gate type " + name);
+            throw err;
+        }
+    }
+
+    float c = qgd_cos<float>(theta_over_2);
+    float s = qgd_sin<float>(theta_over_2);
+
+    float sin_phi, cos_phi;
+    float sin_lambda, cos_lambda;
+    float sin_phl, cos_phl;
+    qgd_sincos<float>(phi, &sin_phi, &cos_phi);
+    qgd_sincos<float>(lambda, &sin_lambda, &cos_lambda);
+    qgd_sincos<float>(phi + lambda, &sin_phl, &cos_phl);
+
+    // [ c, -exp(i*lambda) s ; exp(i*phi) s, exp(i*(phi+lambda)) c ]
+    u3_1qbit[0].real = c;
+    u3_1qbit[0].imag = 0.0f;
+    u3_1qbit[1].real = -cos_lambda * s;
+    u3_1qbit[1].imag = -sin_lambda * s;
+    u3_1qbit[2].real = cos_phi * s;
+    u3_1qbit[2].imag = sin_phi * s;
+    u3_1qbit[3].real = cos_phl * c;
+    u3_1qbit[3].imag = sin_phl * c;
+
+    if (type == CU_OPERATION && global_phase != 0.0f) {
+        float gp_sin, gp_cos;
+        qgd_sincos<float>(global_phase, &gp_sin, &gp_cos);
+        for (int idx = 0; idx < 4; ++idx) {
+            float real_new = gp_cos * u3_1qbit[idx].real - gp_sin * u3_1qbit[idx].imag;
+            float imag_new = gp_sin * u3_1qbit[idx].real + gp_cos * u3_1qbit[idx].imag;
+            u3_1qbit[idx].real = real_new;
+            u3_1qbit[idx].imag = imag_new;
+        }
+    }
+
+    apply_kernel_to(u3_1qbit, input, false, parallel);
+}
+
+
+void
+Gate::apply_to( Matrix_any& input, int parallel ) {
+
+    if (input.is_float64()) {
+        apply_to(input.as_float64(), parallel);
+        return;
+    }
+
+    apply_to(input.as_float32(), parallel);
+}
+
+
+void
+Gate::apply_to( Matrix_real_any& parameter_mtx, Matrix_any& input, int parallel ) {
+
+    if (parameter_mtx.is_float64() && input.is_float64()) {
+        apply_to(parameter_mtx.as_float64(), input.as_float64(), parallel);
+        return;
+    }
+
+    if (parameter_mtx.is_float32() && input.is_float32()) {
+        apply_to(parameter_mtx.as_float32(), input.as_float32(), parallel);
+        return;
+    }
+
+    std::string err("Gate::apply_to(Matrix_real_any&, Matrix_any&): precision mismatch between parameters and input");
+    throw err;
 }
 
 
@@ -339,6 +944,18 @@ Gate::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input, int para
 }
 
 
+std::vector<Matrix_float>
+Gate::apply_derivate_to( Matrix_real_float& parameters_mtx_in, Matrix_float& input, int parallel ) {
+
+    (void)parameters_mtx_in;
+    (void)input;
+    (void)parallel;
+
+    std::vector<Matrix_float> ret;
+    return ret;
+}
+
+
 
 /**
 @brief Call to apply the gate on the input array/matrix by input*Gate
@@ -347,9 +964,33 @@ Gate::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input, int para
 void 
 Gate::apply_from_right( Matrix& input ) {
 
-    Matrix ret = dot(input, matrix_alloc);
+    if (input.cols != matrix_size ) {
+        std::string err("Gate::apply_from_right(Matrix&): Wrong matrix size in gate apply.");
+        throw err;
+    }
+
+    Matrix gate_matrix = create_identity(matrix_size);
+    apply_to(gate_matrix, 0);
+
+    Matrix ret = dot(input, gate_matrix);
     memcpy( input.get_data(), ret.get_data(), ret.size()*sizeof(QGD_Complex16) );
 
+}
+
+
+void
+Gate::apply_from_right( Matrix_float& input ) {
+
+    if (input.cols != matrix_size ) {
+        std::string err("Gate::apply_from_right(Matrix_float&): Wrong matrix size in gate apply.");
+        throw err;
+    }
+
+    Matrix_float gate_matrix = create_identity_float(matrix_size);
+    apply_to(gate_matrix, 0);
+
+    Matrix_float ret = dot(input, gate_matrix);
+    memcpy( input.get_data(), ret.get_data(), ret.size()*sizeof(QGD_Complex8) );
 }
 
 
@@ -361,11 +1002,35 @@ Gate::apply_from_right( Matrix& input ) {
 void 
 Gate::apply_from_right( Matrix_real& parameter_mtx, Matrix& input ) {
 
-    std::string err("Unimplemented abstract function apply_from_right");
-    throw( err );
-    
+    if (input.cols != matrix_size ) {
+        std::string err("Gate::apply_from_right(Matrix_real&, Matrix&): Wrong matrix size in gate apply.");
+        throw err;
+    }
+
+    Matrix gate_matrix = create_identity(matrix_size);
+    apply_to(parameter_mtx, gate_matrix, 0);
+
+    Matrix ret = dot(input, gate_matrix);
+    memcpy( input.get_data(), ret.get_data(), ret.size()*sizeof(QGD_Complex16) );
+
     return;
 
+}
+
+
+void
+Gate::apply_from_right( Matrix_real_float& parameter_mtx, Matrix_float& input ) {
+
+    if (input.cols != matrix_size ) {
+        std::string err("Gate::apply_from_right(Matrix_real_float&, Matrix_float&): Wrong matrix size in gate apply.");
+        throw err;
+    }
+
+    Matrix_float gate_matrix = create_identity_float(matrix_size);
+    apply_to(parameter_mtx, gate_matrix, 0);
+
+    Matrix_float ret = dot(input, gate_matrix);
+    memcpy( input.get_data(), ret.get_data(), ret.size()*sizeof(QGD_Complex8) );
 }
 
 
@@ -771,6 +1436,50 @@ Gate::apply_kernel_to(Matrix& u3_1qbit, Matrix& input, bool deriv, int parallel)
 }
 
 
+void
+Gate::apply_kernel_to(Matrix_float& u3_1qbit, Matrix_float& input, bool deriv, int parallel) {
+
+#ifdef USE_AVX
+
+    if ( input.cols == 1 && (qbit_num<14 || !parallel) ) {
+        apply_kernel_to_state_vector_input_AVX32(u3_1qbit, input, deriv, target_qbit, control_qbit, matrix_size);
+        return;
+    }
+    else if ( input.cols == 1 ) {
+        if ( parallel == 1 ) {
+            apply_kernel_to_state_vector_input_parallel_OpenMP_AVX32(u3_1qbit, input, deriv, target_qbit, control_qbit, matrix_size);
+        }
+        else if ( parallel == 2 ) {
+            apply_kernel_to_state_vector_input_parallel_AVX32(u3_1qbit, input, deriv, target_qbit, control_qbit, matrix_size);
+        }
+        else {
+            std::string err("Gate::apply_kernel_to(Matrix_float&): the argument parallel should be either 0,1 or 2.");
+            throw err;
+        }
+        return;
+    }
+
+    if ( qbit_num < 4 ) {
+        apply_kernel_to_input_AVX_small32(u3_1qbit, input, deriv, target_qbit, control_qbit, matrix_size);
+        return;
+    }
+    else if ( qbit_num < 10 || !parallel) {
+        apply_kernel_to_input_AVX32(u3_1qbit, input, deriv, target_qbit, control_qbit, matrix_size);
+        return;
+     }
+    else {
+        apply_kernel_to_input_AVX_parallel32(u3_1qbit, input, deriv, target_qbit, control_qbit, matrix_size);
+        return;
+     }
+
+#else
+    std::string err("Gate::apply_kernel_to(Matrix_float&): Float32 path requires USE_AVX kernels.");
+    throw err;
+#endif
+
+}
+
+
 
 
 
@@ -847,13 +1556,6 @@ Gate::apply_kernel_from_right( Matrix& u3_1qbit, Matrix& input ) {
 
 }
 
-#ifdef _WIN32
-void sincos(double x, double *s, double *c)
-{
-	*s = sin(x), *c = cos(x);
-}
-#endif
-
 /**
 @brief Calculate the matrix of a U3 gate gate corresponding to the given parameters acting on a single qbit space.
 @param ThetaOver2 Real parameter standing for the parameter theta.
@@ -886,9 +1588,9 @@ Matrix Gate::calc_one_qubit_u3(double ThetaOver2, double Phi, double Lambda ) {
 		double cos_phi = 1.0, sin_phi = 0.0;
 		double cos_lambda = 1.0, sin_lambda = 0.0;
 
-		if (ThetaOver2!=0.0) sincos(ThetaOver2, &sin_theta, &cos_theta);
-		if (Phi!=0.0) sincos(Phi, &sin_phi, &cos_phi);
-		if (Lambda!=0.0) sincos(Lambda, &sin_lambda, &cos_lambda);
+        if (ThetaOver2!=0.0) qgd_sincos<double>(ThetaOver2, &sin_theta, &cos_theta);
+        if (Phi!=0.0) qgd_sincos<double>(Phi, &sin_phi, &cos_phi);
+        if (Lambda!=0.0) qgd_sincos<double>(Lambda, &sin_lambda, &cos_lambda);
 
         // the 1,1 element
         u3_1qbit[0].real = cos_theta;

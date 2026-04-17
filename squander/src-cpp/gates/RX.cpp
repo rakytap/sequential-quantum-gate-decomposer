@@ -28,26 +28,11 @@ limitations under the License.
 /**
 @brief NullaRX constructor of the class.
 */
-RX::RX() {
-
-    // A string labeling the gate operation
-    name = "RX";
-
-    // number of qubits spanning the matrix of the gate
-    qbit_num = -1;
-    // the size of the matrix
-    matrix_size = -1;
-    // A string describing the type of the gate
-    type = RX_OPERATION;
-
-    // The index of the qubit on which the gate acts (target_qbit >= 0)
-    target_qbit = -1;
-    // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gates
-    control_qbit = -1;
-
-    parameter_num = 0;
+RX::RX() : RX(-1, -1) {
 
 }
+
+
 
 
 
@@ -67,12 +52,12 @@ RX::RX(int qbit_num_in, int target_qbit_in) {
     // number of qubits spanning the matrix of the gate
     qbit_num = qbit_num_in;
     // the size of the matrix
-    matrix_size = Power_of_2(qbit_num);
+    matrix_size = (qbit_num >= 0) ? Power_of_2(qbit_num) : -1;
     // A string describing the type of the gate
     type = RX_OPERATION;
 
 
-    if (target_qbit_in >= qbit_num) {
+    if (qbit_num_in >= 0 && target_qbit_in >= qbit_num) {
         std::stringstream sstream;
         sstream << "The index of the target qubit is larger than the number of qubits" << std::endl;
 	print(sstream, 0);		
@@ -181,15 +166,23 @@ RX::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input, int parallel 
 
     std::vector<Matrix> ret;
 
-    Matrix_real parameters_tmp(1,1);
+    double ThetaOver2, Phi, Lambda;
 
-    parameters_tmp[0] = parameters_mtx[0] + M_PI/2;
+    ThetaOver2 = parameters_mtx[0] + M_PI/2;
+    parameters_for_calc_one_qubit(ThetaOver2, Phi, Lambda);
+
+    // the resulting matrix
     Matrix res_mtx = input.copy();
-    apply_to(parameters_tmp, res_mtx, parallel );
+
+    // get the U3 gate of one qubit
+    Matrix u3_1qbit = calc_one_qubit_u3(ThetaOver2, Phi, Lambda);
+
+    // apply the computing kernel on the matrix
+    bool deriv = true;
+    apply_kernel_to(u3_1qbit, res_mtx, deriv, parallel);
+
     ret.push_back(res_mtx);
 
-    
-    
     return ret;
 
 

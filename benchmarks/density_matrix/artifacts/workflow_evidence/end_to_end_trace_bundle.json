@@ -1,0 +1,657 @@
+{
+  "backend": "density_matrix",
+  "cases": [
+    {
+      "absolute_energy_error": 2.1094237467877974e-15,
+      "aer_energy_imag": 0.0,
+      "aer_energy_real": 0.9355438663723166,
+      "aer_purity": 0.8971677230501789,
+      "aer_trace_imag": 0.0,
+      "aer_trace_real": 0.9999999999999982,
+      "ansatz": "HEA",
+      "backend": "density_matrix",
+      "bridge_gate_count": 9,
+      "bridge_gate_sequence": [
+        "U3",
+        "U3",
+        "CNOT",
+        "U3",
+        "U3",
+        "CNOT",
+        "U3",
+        "U3",
+        "CNOT"
+      ],
+      "bridge_noise_count": 3,
+      "bridge_noise_sequence": [
+        "local_depolarizing",
+        "amplitude_damping",
+        "phase_damping"
+      ],
+      "bridge_operation_count": 12,
+      "bridge_parameter_count": 18,
+      "bridge_source_type": "generated_hea",
+      "bridge_supported_pass": true,
+      "case_name": "exact_regime_4q_set_00",
+      "case_purpose": "mandatory_baseline",
+      "contract_version": "v1",
+      "counts_toward_mandatory_baseline": true,
+      "density_max_diff": 4.719930521726021e-16,
+      "density_noise": [
+        {
+          "after_gate_index": 0,
+          "channel": "local_depolarizing",
+          "error_rate": 0.1,
+          "target": 0
+        },
+        {
+          "after_gate_index": 2,
+          "channel": "amplitude_damping",
+          "gamma": 0.05,
+          "target": 1
+        },
+        {
+          "after_gate_index": 4,
+          "channel": "phase_damping",
+          "lambda": 0.07,
+          "target": 0
+        }
+      ],
+      "density_trace_distance": 1.0935060130343436e-15,
+      "density_valid_pass": true,
+      "energy_pass": true,
+      "execution_ready": true,
+      "gate_pass": true,
+      "hamiltonian": {
+        "Jx": 1.0,
+        "Jy": 1.0,
+        "Jz": 1.0,
+        "h": 0.5
+      },
+      "inner_blocks": 1,
+      "layers": 1,
+      "noise_pass": true,
+      "observable_pass": true,
+      "parameter_set_id": "set_00",
+      "parameter_vector": [
+        0.05,
+        0.1,
+        0.15,
+        0.2,
+        0.25,
+        0.3,
+        0.35,
+        0.39999999999999997,
+        0.44999999999999996,
+        0.49999999999999994,
+        0.5499999999999999,
+        0.6,
+        0.65,
+        0.7,
+        0.75,
+        0.7999999999999999,
+        0.85,
+        0.9
+      ],
+      "process_peak_rss_kb": 140760,
+      "qbit_num": 4,
+      "reference_backend": "qiskit_aer_density_matrix",
+      "reference_runtime_ms": 4.606688977219164,
+      "required_workflow_case": true,
+      "rho_is_valid": true,
+      "rho_is_valid_tol": 1e-10,
+      "source_pass": true,
+      "squander_energy": 0.9355438663723187,
+      "squander_energy_from_rho_real": 0.9355438663723182,
+      "squander_energy_imag": 5.551115123125783e-17,
+      "squander_purity": 0.8971677230501824,
+      "squander_runtime_ms": 0.09864103049039841,
+      "squander_trace_imag": 2.8947873981405094e-17,
+      "squander_trace_real": 1.0,
+      "state_fidelity": 0.9999999999999993,
+      "status": "pass",
+      "support_tier": "required",
+      "topology": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ]
+      ],
+      "total_case_runtime_ms": 6.260176014620811,
+      "trace_deviation": 2.8947873981405094e-17,
+      "trace_pass": true,
+      "workflow_completed": true,
+      "workflow_evidence_role": "required_end_to_end",
+      "workflow_id": "phase2_xxz_hea_density_matrix_anchor_workflow"
+    },
+    {
+      "absolute_energy_error": 2.7755575615628914e-16,
+      "aer_energy_imag": -1.1102230246251565e-16,
+      "aer_energy_real": -0.3218201911024714,
+      "aer_purity": 0.8971677230501791,
+      "aer_trace_imag": -2.168404344971009e-19,
+      "aer_trace_real": 0.9999999999999982,
+      "ansatz": "HEA",
+      "backend": "density_matrix",
+      "bridge_gate_count": 15,
+      "bridge_gate_sequence": [
+        "U3",
+        "U3",
+        "CNOT",
+        "U3",
+        "U3",
+        "CNOT",
+        "U3",
+        "U3",
+        "CNOT",
+        "U3",
+        "U3",
+        "CNOT",
+        "U3",
+        "U3",
+        "CNOT"
+      ],
+      "bridge_noise_count": 3,
+      "bridge_noise_sequence": [
+        "local_depolarizing",
+        "amplitude_damping",
+        "phase_damping"
+      ],
+      "bridge_operation_count": 18,
+      "bridge_parameter_count": 30,
+      "bridge_source_type": "generated_hea",
+      "bridge_supported_pass": true,
+      "case_name": "exact_regime_6q_set_00",
+      "case_purpose": "mandatory_baseline",
+      "contract_version": "v1",
+      "counts_toward_mandatory_baseline": true,
+      "density_max_diff": 2.581417751465236e-16,
+      "density_noise": [
+        {
+          "after_gate_index": 0,
+          "channel": "local_depolarizing",
+          "error_rate": 0.1,
+          "target": 0
+        },
+        {
+          "after_gate_index": 2,
+          "channel": "amplitude_damping",
+          "gamma": 0.05,
+          "target": 1
+        },
+        {
+          "after_gate_index": 4,
+          "channel": "phase_damping",
+          "lambda": 0.07,
+          "target": 0
+        }
+      ],
+      "density_trace_distance": 1.4499861395505688e-15,
+      "density_valid_pass": true,
+      "energy_pass": true,
+      "execution_ready": true,
+      "gate_pass": true,
+      "hamiltonian": {
+        "Jx": 1.0,
+        "Jy": 1.0,
+        "Jz": 1.0,
+        "h": 0.5
+      },
+      "inner_blocks": 1,
+      "layers": 1,
+      "noise_pass": true,
+      "observable_pass": true,
+      "parameter_set_id": "set_00",
+      "parameter_vector": [
+        0.05,
+        0.1,
+        0.15,
+        0.2,
+        0.25,
+        0.3,
+        0.35,
+        0.39999999999999997,
+        0.44999999999999996,
+        0.49999999999999994,
+        0.5499999999999999,
+        0.6,
+        0.65,
+        0.7,
+        0.75,
+        0.7999999999999999,
+        0.85,
+        0.9,
+        0.95,
+        1.0,
+        1.0499999999999998,
+        1.0999999999999999,
+        1.15,
+        1.2,
+        1.25,
+        1.3,
+        1.3499999999999999,
+        1.4,
+        1.45,
+        1.5
+      ],
+      "process_peak_rss_kb": 157304,
+      "qbit_num": 6,
+      "reference_backend": "qiskit_aer_density_matrix",
+      "reference_runtime_ms": 4.930369963403791,
+      "required_workflow_case": true,
+      "rho_is_valid": true,
+      "rho_is_valid_tol": 1e-10,
+      "source_pass": true,
+      "squander_energy": -0.3218201911024711,
+      "squander_energy_from_rho_real": -0.32182019110247195,
+      "squander_energy_imag": -1.1102230246251565e-16,
+      "squander_purity": 0.8971677230501827,
+      "squander_runtime_ms": 1.0623749694786966,
+      "squander_trace_imag": 2.3922957063845076e-17,
+      "squander_trace_real": 1.0000000000000002,
+      "state_fidelity": 1.0000000000000098,
+      "status": "pass",
+      "support_tier": "required",
+      "topology": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          4,
+          5
+        ]
+      ],
+      "total_case_runtime_ms": 12.749304005410522,
+      "trace_deviation": 2.233296094363482e-16,
+      "trace_pass": true,
+      "workflow_completed": true,
+      "workflow_evidence_role": "required_end_to_end",
+      "workflow_id": "phase2_xxz_hea_density_matrix_anchor_workflow"
+    }
+  ],
+  "contract_version": "v1",
+  "provenance": {
+    "generation_command": "python benchmarks/density_matrix/workflow_evidence/end_to_end_trace_validation.py",
+    "git_revision": "77cd8168869d9b4c67c0dd0dbe49baab02b0fe25",
+    "validation_trace_artifact_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/validation_evidence/optimization_trace_4q.json",
+    "validation_workflow_baseline_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/validation_evidence/workflow_baseline_bundle.json",
+    "workflow_contract_path": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer/benchmarks/density_matrix/artifacts/workflow_evidence/workflow_contract_bundle.json",
+    "working_directory": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer"
+  },
+  "reference_backend": "qiskit_aer_density_matrix",
+  "required_artifacts": {
+    "validation_trace_artifact": {
+      "case_name": "optimization_trace_4q",
+      "status": "completed",
+      "workflow_completed": true
+    },
+    "validation_workflow_baseline_reference": {
+      "status": "pass",
+      "suite_name": "workflow_baseline_validation",
+      "summary": {
+        "all_cases_count_toward_mandatory_baseline": true,
+        "all_cases_required": true,
+        "bridge_supported_cases": 40,
+        "cases_per_qbit": {
+          "10": 10,
+          "4": 10,
+          "6": 10,
+          "8": 10
+        },
+        "documented_10q_anchor_present": true,
+        "documented_10q_anchor_required": true,
+        "duplicate_case_names": [],
+        "duplicate_parameter_set_ids_by_qbit": {
+          "10": [],
+          "4": [],
+          "6": [],
+          "8": []
+        },
+        "failed_cases": 0,
+        "fixed_parameter_sets_per_size": 10,
+        "mandatory_baseline_case_count": 40,
+        "mandatory_baseline_completed": true,
+        "mandatory_baseline_passed_cases": 40,
+        "missing_mandatory_case_names": [],
+        "missing_parameter_set_ids_by_qbit": {
+          "10": [],
+          "4": [],
+          "6": [],
+          "8": []
+        },
+        "observed_case_names": [
+          "exact_regime_4q_set_00",
+          "exact_regime_4q_set_01",
+          "exact_regime_4q_set_02",
+          "exact_regime_4q_set_03",
+          "exact_regime_4q_set_04",
+          "exact_regime_4q_set_05",
+          "exact_regime_4q_set_06",
+          "exact_regime_4q_set_07",
+          "exact_regime_4q_set_08",
+          "exact_regime_4q_set_09",
+          "exact_regime_6q_set_00",
+          "exact_regime_6q_set_01",
+          "exact_regime_6q_set_02",
+          "exact_regime_6q_set_03",
+          "exact_regime_6q_set_04",
+          "exact_regime_6q_set_05",
+          "exact_regime_6q_set_06",
+          "exact_regime_6q_set_07",
+          "exact_regime_6q_set_08",
+          "exact_regime_6q_set_09",
+          "exact_regime_8q_set_00",
+          "exact_regime_8q_set_01",
+          "exact_regime_8q_set_02",
+          "exact_regime_8q_set_03",
+          "exact_regime_8q_set_04",
+          "exact_regime_8q_set_05",
+          "exact_regime_8q_set_06",
+          "exact_regime_8q_set_07",
+          "exact_regime_8q_set_08",
+          "exact_regime_8q_set_09",
+          "exact_regime_10q_set_00",
+          "exact_regime_10q_set_01",
+          "exact_regime_10q_set_02",
+          "exact_regime_10q_set_03",
+          "exact_regime_10q_set_04",
+          "exact_regime_10q_set_05",
+          "exact_regime_10q_set_06",
+          "exact_regime_10q_set_07",
+          "exact_regime_10q_set_08",
+          "exact_regime_10q_set_09"
+        ],
+        "optional_cases_count_toward_mandatory_baseline": 0,
+        "passed_cases": 40,
+        "required_cases": 40,
+        "required_pass_rate": 1.0,
+        "required_passed_cases": 40,
+        "required_workflow_qubits": [
+          4,
+          6,
+          8,
+          10
+        ],
+        "stable_case_ids_present": true,
+        "stable_parameter_set_ids_present": true,
+        "total_cases": 40,
+        "unexpected_case_names": [],
+        "unsupported_cases": 0,
+        "unsupported_status_cases": 0,
+        "workflow_baseline_completed": true
+      }
+    },
+    "workflow_contract": {
+      "contract_version": "v1",
+      "status": "pass",
+      "suite_name": "workflow_contract_validation",
+      "summary": {
+        "boundary_class_count": 4,
+        "contract_sections_complete": true,
+        "mandatory_reference_artifact_count": 6,
+        "reference_artifact_count": 6,
+        "required_bundle_field_count": 15,
+        "required_input_field_count": 10,
+        "required_output_field_count": 9,
+        "required_threshold_field_count": 9
+      },
+      "thresholds": {
+        "absolute_energy_error": 1e-08,
+        "documented_anchor_qubit": 10,
+        "fixed_parameter_sets_per_size": 10,
+        "observable_imag_abs": 1e-10,
+        "required_end_to_end_qubits": [
+          4,
+          6
+        ],
+        "required_pass_rate": 1.0,
+        "required_workflow_qubits": [
+          4,
+          6,
+          8,
+          10
+        ],
+        "rho_is_valid_tol": 1e-10,
+        "trace_deviation": 1e-10
+      },
+      "workflow_id": "phase2_xxz_hea_density_matrix_anchor_workflow"
+    }
+  },
+  "requirements": {
+    "contract_version": "v1",
+    "mandatory_end_to_end_case_names": [
+      "exact_regime_4q_set_00",
+      "exact_regime_6q_set_00"
+    ],
+    "mandatory_end_to_end_qubits": [
+      4,
+      6
+    ],
+    "required_bundle_sources": [
+      "workflow_contract_validation",
+      "workflow_baseline_validation",
+      "trace_anchor_validation"
+    ],
+    "required_trace_case_name": "optimization_trace_4q",
+    "status_vocabulary": [
+      "pass",
+      "fail",
+      "incomplete",
+      "completed",
+      "unsupported"
+    ],
+    "workflow_id": "phase2_xxz_hea_density_matrix_anchor_workflow"
+  },
+  "software": {
+    "numpy": "2.3.5",
+    "python": "3.13.9",
+    "qiskit": "2.2.3",
+    "qiskit_aer": "0.17.2"
+  },
+  "status": "pass",
+  "suite_name": "end_to_end_trace_validation",
+  "summary": {
+    "all_cases_count_toward_mandatory_baseline": true,
+    "all_cases_match_contract": true,
+    "all_cases_required": true,
+    "duplicate_case_names": [],
+    "end_to_end_gate_completed": true,
+    "end_to_end_qubits_match_contract": true,
+    "failed_end_to_end_cases": 0,
+    "missing_mandatory_case_names": [],
+    "missing_mandatory_qubits": [],
+    "observed_case_names": [
+      "exact_regime_4q_set_00",
+      "exact_regime_6q_set_00"
+    ],
+    "observed_qubits": [
+      4,
+      6
+    ],
+    "passed_end_to_end_cases": 2,
+    "required_trace_bridge_supported": true,
+    "required_trace_case_name": "optimization_trace_4q",
+    "required_trace_completed": true,
+    "required_trace_present": true,
+    "stable_case_ids_present": true,
+    "total_end_to_end_cases": 2,
+    "trace_case_name_matches_contract": true,
+    "trace_matches_contract": true,
+    "unexpected_case_names": [],
+    "unexpected_mandatory_qubits": [],
+    "unsupported_end_to_end_cases": 0,
+    "workflow_thresholds_match_contract": true
+  },
+  "thresholds": {
+    "absolute_energy_error": 1e-08,
+    "observable_imag_abs": 1e-10,
+    "required_end_to_end_qubits": [
+      4,
+      6
+    ],
+    "required_pass_rate": 1.0,
+    "required_trace_case_name": "optimization_trace_4q",
+    "rho_is_valid_tol": 1e-10,
+    "trace_deviation": 1e-10,
+    "workflow_thresholds_match_contract": true
+  },
+  "trace_artifact": {
+    "ansatz": "HEA",
+    "backend": "density_matrix",
+    "bridge_gate_count": 9,
+    "bridge_gate_sequence": [
+      "U3",
+      "U3",
+      "CNOT",
+      "U3",
+      "U3",
+      "CNOT",
+      "U3",
+      "U3",
+      "CNOT"
+    ],
+    "bridge_noise_count": 3,
+    "bridge_noise_sequence": [
+      "local_depolarizing",
+      "amplitude_damping",
+      "phase_damping"
+    ],
+    "bridge_operation_count": 12,
+    "bridge_parameter_count": 18,
+    "bridge_source_type": "generated_hea",
+    "bridge_supported_pass": true,
+    "case_name": "optimization_trace_4q",
+    "case_purpose": "mandatory_baseline",
+    "contract_version": "v1",
+    "counts_toward_mandatory_baseline": false,
+    "density_noise": [
+      {
+        "after_gate_index": 0,
+        "channel": "local_depolarizing",
+        "error_rate": 0.1,
+        "target": 0
+      },
+      {
+        "after_gate_index": 2,
+        "channel": "amplitude_damping",
+        "gamma": 0.05,
+        "target": 1
+      },
+      {
+        "after_gate_index": 4,
+        "channel": "phase_damping",
+        "lambda": 0.07,
+        "target": 0
+      }
+    ],
+    "energy_improvement": 5.194998592054739,
+    "execution_ready": true,
+    "final_energy": -4.25945472568242,
+    "final_parameters": [
+      0.4247997981089508,
+      0.2980618717479162,
+      -4.379420772675507,
+      0.08629288760498999,
+      0.7036901011252076,
+      -0.923085558760532,
+      0.3384692758751413,
+      0.8719145429344937,
+      -4.079420772675507,
+      1.6753872983319538,
+      -0.6625963503906505,
+      -3.929420772675507,
+      1.5103127307965862,
+      1.8605202679955288,
+      1.2219145429344938,
+      1.2544228993775475,
+      1.870543247638433,
+      1.0674469751095814
+    ],
+    "gate_pass": true,
+    "hamiltonian": {
+      "Jx": 1.0,
+      "Jy": 1.0,
+      "Jz": 1.0,
+      "h": 0.5
+    },
+    "initial_energy": 0.9355438663723187,
+    "initial_parameters": [
+      0.05,
+      0.1,
+      0.15,
+      0.2,
+      0.25,
+      0.3,
+      0.35,
+      0.39999999999999997,
+      0.44999999999999996,
+      0.49999999999999994,
+      0.5499999999999999,
+      0.6,
+      0.65,
+      0.7,
+      0.75,
+      0.7999999999999999,
+      0.85,
+      0.9
+    ],
+    "inner_blocks": 1,
+    "layers": 1,
+    "noise_pass": true,
+    "optimizer": "COSINE",
+    "optimizer_config": {
+      "convergence_length": 2,
+      "max_inner_iterations": 4,
+      "max_iterations": 1
+    },
+    "parameter_count": 18,
+    "process_peak_rss_kb": 858664,
+    "qbit_num": 4,
+    "required_validation_trace": true,
+    "required_workflow_trace": true,
+    "source_pass": true,
+    "status": "completed",
+    "support_tier": "required",
+    "topology": [
+      [
+        0,
+        1
+      ],
+      [
+        1,
+        2
+      ],
+      [
+        2,
+        3
+      ]
+    ],
+    "total_trace_runtime_ms": 67.86125298822299,
+    "trace_kind": "bounded_optimization_trace",
+    "workflow_completed": true,
+    "workflow_evidence_role": "required_trace",
+    "workflow_id": "phase2_xxz_hea_density_matrix_anchor_workflow"
+  },
+  "workflow_id": "phase2_xxz_hea_density_matrix_anchor_workflow"
+}

@@ -1,7 +1,7 @@
-import os
+import os, heapq
 from squander.partitioning.tools import get_qubits, build_dependency, parts_to_float_ops, total_float_ops
 
-def topo_sort_partitions(c, max_qubits_per_partition, parts):
+def topo_sort_partitions(c, parts):
     """
     Topologically sort partition groups and re-partition with Kahn’s algorithm.
 
@@ -59,7 +59,7 @@ def ilp_max_partitions(c, max_qubits_per_partition):
     parts = []
     while sum(len(x) for x in parts) != num_gates:
         parts.append(find_next_biggest_partition(c, max_qubits_per_partition, parts))
-    L = topo_sort_partitions(c, max_qubits_per_partition, parts)
+    L = topo_sort_partitions(c, parts)
     from squander.partitioning.kahn import kahn_partition_preparts
     return kahn_partition_preparts(c, max_qubits_per_partition, [parts[i] for i in L])
 
@@ -179,7 +179,7 @@ def nuutila_reach_scc(succ, subg=None):
       index = nuutila(v, index)
   return sccs, reach #keys are SCCs, values are reachable vertices
 
-def _get_topo_order(g, rg):
+def _get_topo_order(g, rg, gate_to_qubit):
     """
     Get a topological order of a DAG given forward and reverse adjacency.
 
@@ -192,17 +192,18 @@ def _get_topo_order(g, rg):
     """
     g = { x: set(y) for x, y in g.items() }
     rg = { x: set(y) for x, y in rg.items() }
-    S = {m for m in rg if len(rg[m]) == 0}
+    S = [(tuple(sorted(gate_to_qubit[m])), m) for m in rg if len(rg[m]) == 0]
+    heapq.heapify(S)
     L = []
     while S:
-        n = S.pop()
+        n = heapq.heappop(S)[1]
         L.append(n)
         assert not rg[n]
         for m in set(g[n]):
             g[n].remove(m)
             rg[m].remove(n)
             if not rg[m]:
-                S.add(m)
+                heapq.heappush(S, (tuple(sorted(gate_to_qubit[m])), m))
     return L
 
 def contract_single_qubit_chains(go, rgo, gate_to_qubit, topo_order):
@@ -244,10 +245,10 @@ def contract_single_qubit_chains(go, rgo, gate_to_qubit, topo_order):
                 rg[v].remove(gate)
                 rg[v] |= rg[gate]
             del g[gate]; del rg[gate]
-    topo_order = [x for x in topo_order if not x in single_qubit_gates] #topo_order = _get_topo_order(g, rg)
+    topo_order = [x for x in topo_order if not x in single_qubit_gates] #topo_order = _get_topo_order(g, rg, gate_to_qubit)
     return g, rg, topo_order, set(tuple(x) for x in single_qubit_chains.values())
 
-def recombine_single_qubit_chains(g, rg, single_qubit_chains, gate_to_tqubit, L, fusion_info):
+def recombine_single_qubit_chains(g, rg, single_qubit_chains, gate_to_tqubit, L, fusion_info, surrounded_only=False):
     """
     Re-insert contracted single-qubit chains back into partition groups.
 
@@ -271,17 +272,17 @@ def recombine_single_qubit_chains(g, rg, single_qubit_chains, gate_to_tqubit, L,
         if rg[chain[0]] and g[chain[-1]]:
             v = next(iter(rg[chain[0]]))
             w = next(iter(g[chain[-1]]))
-            if fusion_info is None or gate_to_part[v] == gate_to_part[w] or chain[0] in inpre:
+            if not surrounded_only and (fusion_info is None or chain[0] in inpre) or gate_to_part[v] == gate_to_part[w]:
                 gate_to_part[v] |= frozenset(chain)
-            elif fusion_info is None or chain[-1] in inpost:
+            elif not surrounded_only and (fusion_info is None or chain[-1] in inpost):
                 gate_to_part[w] |= frozenset(chain)
             else: L.append(frozenset(chain))
-        elif rg[chain[0]]:
+        elif not surrounded_only and rg[chain[0]]:
             v = next(iter(rg[chain[0]]))
             if fusion_info is None or chain[0] in inpre:
                 gate_to_part[v] |= frozenset(chain)
             else: L.append(frozenset(chain))
-        elif g[chain[-1]]:
+        elif not surrounded_only and g[chain[-1]]:
             v = next(iter(g[chain[-1]]))
             if fusion_info is None or chain[-1] in inpost:
                 gate_to_part[v] |= frozenset(chain)
@@ -777,7 +778,7 @@ def ilp_global_optimal(allparts, g, weighted_info=None, gurobi_direct=False, use
         prob.solve(pulp.GUROBI(manageEnv=True, msg=False, timeLimit=180, Threads=os.cpu_count(), IntegralityFocus=1, LazyConstraints=1), callback=cb)
         #prob.solve(pulp.PULP_CBC_CMD(msg=False))
         #print(f"Status: {pulp.LpStatus[prob.status]}")
-        L = [i for i in range(N) if int(pulp.value(x[i]))]
+        L = [i for i in range(N) if int(round(pulp.value(x[i])))]
         badsccs = sol_to_badsccs(g, allparts, L)
         if not badsccs: break #if all partitions do not have any cycles with more than one element per SCC terminate
         for badscc in badsccs:
@@ -804,7 +805,7 @@ def get_all_partitions(c, max_qubits_per_partition):
     """
     gate_dict, go, rgo, gate_to_qubit, S = build_dependency(c)
     gate_to_tqubit = { i: g.get_Target_Qbit() for i, g in gate_dict.items() }
-    topo_order = _get_topo_order(go, rgo)
+    topo_order = _get_topo_order(go, rgo, gate_to_qubit)
     g, rg, topo_order, single_qubit_chains = contract_single_qubit_chains(go, rgo, gate_to_qubit, topo_order)
     topo_index = {x: i for i, x in enumerate(topo_order)} #all topological sorts of the DAG are the same as acyclic orderings of the transitive closure
     _, reach = nuutila_reach_scc(g)
@@ -895,7 +896,7 @@ def max_partitions(c, max_qubits_per_partition, use_ilp=True, fusion_cost=False,
     #assert sum(len(x) for x in L) == len(g), (sum(len(x) for x in L), len(g))
     parts = recombine_single_qubit_chains(go, rgo, single_qubit_chains, gate_to_tqubit, [allparts[i] for i in L], fusion_info)
     #assert sum(len(x) for x in parts) == len(go), (sum(len(x) for x in parts), len(go))
-    L = topo_sort_partitions(c, max_qubits_per_partition, parts)
+    L = topo_sort_partitions(c, parts)
     from squander.partitioning.kahn import kahn_partition_preparts
     return kahn_partition_preparts(c, max_qubits_per_partition, [parts[i] for i in L])
 

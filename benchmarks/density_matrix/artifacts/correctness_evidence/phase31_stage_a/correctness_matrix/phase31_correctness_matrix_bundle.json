@@ -1,0 +1,275 @@
+{
+  "cases": [
+    {
+      "candidate_id": "span_budget_q4",
+      "case_kind": "microcase",
+      "case_name": "phase31_microcase_1q_u3_local_noise_chain",
+      "claim_surface_id": "phase31_bounded_mixed_motif_v1",
+      "contains_noise": true,
+      "counted_phase31_case": true,
+      "external_reference_required": true,
+      "family_name": null,
+      "fused_block_support_qbits": [
+        0
+      ],
+      "max_partition_qubits": 4,
+      "noise_pattern": "dense",
+      "parameter_count": 9,
+      "planner_calibration_claim_selection_rule": "min_median_density_aware_score_then_min_p90_then_smaller_span_budget",
+      "planner_calibration_claim_selection_schema_version": "phase3_planner_calibration_claim_selection_v1",
+      "planner_calibration_selected_candidate_id": "span_budget_q4",
+      "planner_family": "phase3_span_budget",
+      "planner_settings": {
+        "max_partition_qubits": 4
+      },
+      "planner_variant": "max_partition_qubits_4",
+      "qbit_num": 1,
+      "reference_backend": "qiskit_aer_density_matrix",
+      "reference_backend_internal": "sequential_density_descriptor_reference",
+      "representation_primary": "kraus_bundle",
+      "seed": null,
+      "source_type": "microcase_builder",
+      "topology": null,
+      "validation_slice": "internal_plus_external",
+      "workload_id": "phase31_microcase_1q_u3_local_noise_chain"
+    },
+    {
+      "candidate_id": "span_budget_q4",
+      "case_kind": "microcase",
+      "case_name": "phase31_microcase_2q_cnot_local_noise_pair",
+      "claim_surface_id": "phase31_bounded_mixed_motif_v1",
+      "contains_noise": true,
+      "counted_phase31_case": true,
+      "external_reference_required": true,
+      "family_name": null,
+      "fused_block_support_qbits": [
+        0,
+        1
+      ],
+      "max_partition_qubits": 4,
+      "noise_pattern": "periodic",
+      "parameter_count": 9,
+      "planner_calibration_claim_selection_rule": "min_median_density_aware_score_then_min_p90_then_smaller_span_budget",
+      "planner_calibration_claim_selection_schema_version": "phase3_planner_calibration_claim_selection_v1",
+      "planner_calibration_selected_candidate_id": "span_budget_q4",
+      "planner_family": "phase3_span_budget",
+      "planner_settings": {
+        "max_partition_qubits": 4
+      },
+      "planner_variant": "max_partition_qubits_4",
+      "qbit_num": 2,
+      "reference_backend": "qiskit_aer_density_matrix",
+      "reference_backend_internal": "sequential_density_descriptor_reference",
+      "representation_primary": "kraus_bundle",
+      "seed": null,
+      "source_type": "microcase_builder",
+      "topology": null,
+      "validation_slice": "internal_plus_external",
+      "workload_id": "phase31_microcase_2q_cnot_local_noise_pair"
+    },
+    {
+      "candidate_id": "span_budget_q4",
+      "case_kind": "microcase",
+      "case_name": "phase31_microcase_2q_multi_noise_entangler_chain",
+      "claim_surface_id": "phase31_bounded_mixed_motif_v1",
+      "contains_noise": true,
+      "counted_phase31_case": true,
+      "external_reference_required": true,
+      "family_name": null,
+      "fused_block_support_qbits": [
+        0,
+        1
+      ],
+      "max_partition_qubits": 4,
+      "noise_pattern": "periodic",
+      "parameter_count": 12,
+      "planner_calibration_claim_selection_rule": "min_median_density_aware_score_then_min_p90_then_smaller_span_budget",
+      "planner_calibration_claim_selection_schema_version": "phase3_planner_calibration_claim_selection_v1",
+      "planner_calibration_selected_candidate_id": "span_budget_q4",
+      "planner_family": "phase3_span_budget",
+      "planner_settings": {
+        "max_partition_qubits": 4
+      },
+      "planner_variant": "max_partition_qubits_4",
+      "qbit_num": 2,
+      "reference_backend": "qiskit_aer_density_matrix",
+      "reference_backend_internal": "sequential_density_descriptor_reference",
+      "representation_primary": "kraus_bundle",
+      "seed": null,
+      "source_type": "microcase_builder",
+      "topology": null,
+      "validation_slice": "internal_plus_external",
+      "workload_id": "phase31_microcase_2q_multi_noise_entangler_chain"
+    },
+    {
+      "candidate_id": "span_budget_q4",
+      "case_kind": "microcase",
+      "case_name": "phase31_microcase_2q_dense_same_support_motif",
+      "claim_surface_id": "phase31_bounded_mixed_motif_v1",
+      "contains_noise": true,
+      "counted_phase31_case": true,
+      "external_reference_required": true,
+      "family_name": null,
+      "fused_block_support_qbits": [
+        0,
+        1
+      ],
+      "max_partition_qubits": 4,
+      "noise_pattern": "dense",
+      "parameter_count": 12,
+      "planner_calibration_claim_selection_rule": "min_median_density_aware_score_then_min_p90_then_smaller_span_budget",
+      "planner_calibration_claim_selection_schema_version": "phase3_planner_calibration_claim_selection_v1",
+      "planner_calibration_selected_candidate_id": "span_budget_q4",
+      "planner_family": "phase3_span_budget",
+      "planner_settings": {
+        "max_partition_qubits": 4
+      },
+      "planner_variant": "max_partition_qubits_4",
+      "qbit_num": 2,
+      "reference_backend": "qiskit_aer_density_matrix",
+      "reference_backend_internal": "sequential_density_descriptor_reference",
+      "representation_primary": "kraus_bundle",
+      "seed": null,
+      "source_type": "microcase_builder",
+      "topology": null,
+      "validation_slice": "internal_plus_external",
+      "workload_id": "phase31_microcase_2q_dense_same_support_motif"
+    },
+    {
+      "candidate_id": "span_budget_q4",
+      "case_kind": "continuity",
+      "case_name": "phase2_xxz_hea_q4_continuity",
+      "claim_surface_id": "phase31_bounded_mixed_motif_v1",
+      "contains_noise": true,
+      "counted_phase31_case": true,
+      "external_reference_required": true,
+      "family_name": null,
+      "fused_block_support_qbits": null,
+      "max_partition_qubits": 4,
+      "noise_pattern": null,
+      "parameter_count": 18,
+      "planner_calibration_claim_selection_rule": "min_median_density_aware_score_then_min_p90_then_smaller_span_budget",
+      "planner_calibration_claim_selection_schema_version": "phase3_planner_calibration_claim_selection_v1",
+      "planner_calibration_selected_candidate_id": "span_budget_q4",
+      "planner_family": "phase3_span_budget",
+      "planner_settings": {
+        "max_partition_qubits": 4
+      },
+      "planner_variant": "max_partition_qubits_4",
+      "qbit_num": 4,
+      "reference_backend": "qiskit_aer_density_matrix",
+      "reference_backend_internal": "sequential_density_descriptor_reference",
+      "representation_primary": "kraus_bundle",
+      "seed": null,
+      "source_type": "generated_hea",
+      "topology": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ]
+      ],
+      "validation_slice": "internal_plus_external",
+      "workload_id": "phase2_xxz_hea_q4_continuity"
+    },
+    {
+      "candidate_id": "span_budget_q4",
+      "case_kind": "continuity",
+      "case_name": "phase2_xxz_hea_q6_continuity",
+      "claim_surface_id": "phase31_bounded_mixed_motif_v1",
+      "contains_noise": true,
+      "counted_phase31_case": true,
+      "external_reference_required": false,
+      "family_name": null,
+      "fused_block_support_qbits": null,
+      "max_partition_qubits": 4,
+      "noise_pattern": null,
+      "parameter_count": 30,
+      "planner_calibration_claim_selection_rule": "min_median_density_aware_score_then_min_p90_then_smaller_span_budget",
+      "planner_calibration_claim_selection_schema_version": "phase3_planner_calibration_claim_selection_v1",
+      "planner_calibration_selected_candidate_id": "span_budget_q4",
+      "planner_family": "phase3_span_budget",
+      "planner_settings": {
+        "max_partition_qubits": 4
+      },
+      "planner_variant": "max_partition_qubits_4",
+      "qbit_num": 6,
+      "reference_backend": null,
+      "reference_backend_internal": "sequential_density_descriptor_reference",
+      "representation_primary": "kraus_bundle",
+      "seed": null,
+      "source_type": "generated_hea",
+      "topology": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          4,
+          5
+        ]
+      ],
+      "validation_slice": "internal_only",
+      "workload_id": "phase2_xxz_hea_q6_continuity"
+    }
+  ],
+  "record_schema_version": "correctness_evidence_phase31_case_record_v1",
+  "selected_candidate": {
+    "candidate_id": "span_budget_q4",
+    "candidate_schema_version": "phase3_planner_calibration_candidate_v1",
+    "claim_selection_rule": "min_median_density_aware_score_then_min_p90_then_smaller_span_budget",
+    "claim_selection_schema_version": "phase3_planner_calibration_claim_selection_v1",
+    "counted_cases": 25,
+    "max_density_aware_score": 1746.0800799308345,
+    "max_partition_qubits": 4,
+    "mean_peak_rss_mb": 505.29921875,
+    "mean_planning_time_ms": 0.7369691948406398,
+    "mean_runtime_ms": 390.22179051535204,
+    "median_density_aware_score": 102.95129893347621,
+    "p90_density_aware_score": 1096.648766018916,
+    "planner_family": "phase3_span_budget",
+    "planner_settings": {
+      "max_partition_qubits": 4
+    },
+    "planner_variant": "max_partition_qubits_4",
+    "selected_candidate_id": "span_budget_q4",
+    "total_cases": 25
+  },
+  "software": {
+    "numpy": "2.3.5",
+    "planner_calibration_selected_candidate_id": "span_budget_q4",
+    "python": "3.13.9",
+    "scipy": "1.16.3"
+  },
+  "status": "pass",
+  "suite_name": "correctness_evidence_phase31_correctness_matrix",
+  "summary": {
+    "continuity_cases": 2,
+    "external_slice_cases": 5,
+    "internal_only_cases": 1,
+    "internal_plus_external_cases": 5,
+    "microcases": 4,
+    "package_kind": "phase31_stage_a_bounded",
+    "structured_cases": 0,
+    "total_cases": 6
+  }
+}

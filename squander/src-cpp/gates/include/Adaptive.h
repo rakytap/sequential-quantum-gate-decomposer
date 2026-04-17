@@ -26,6 +26,8 @@ limitations under the License.
 #include "CRY.h"
 #include "matrix.h"
 #include "matrix_real.h"
+#include "matrix_float.h"
+#include "matrix_real_float.h"
 #define _USE_MATH_DEFINES
 #include <math.h>
 
@@ -96,6 +98,8 @@ std::vector<Matrix> apply_derivate_to( Matrix_real& parameters, Matrix& input, i
 */
 virtual void apply_to( Matrix_real& parameters, Matrix& input, int parallel ) override;
 
+virtual void apply_to( Matrix_real_float& parameters, Matrix_float& input, int parallel ) override;
+
 
 /**
 @brief Call to apply the gate on the input array/matrix by input*U3
@@ -103,6 +107,8 @@ virtual void apply_to( Matrix_real& parameters, Matrix& input, int parallel ) ov
 @param input The input array on which the gate is applied
 */
 void apply_from_right( Matrix_real& parameters, Matrix& input ) override;
+
+void apply_from_right( Matrix_real_float& parameters, Matrix_float& input ) override;
 
 
 /**

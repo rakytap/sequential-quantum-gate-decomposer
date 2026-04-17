@@ -1,7 +1,3 @@
-#ifndef ENABLE_FLOAT32
-  #error "matrix_float.cpp compiled without ENABLE_FLOAT32 defined"
-#endif
-
 #include "matrix_float.h"
 #include "matrix.h"
 

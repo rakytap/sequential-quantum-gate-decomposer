@@ -133,7 +133,9 @@ std::map<std::string, Config_Element> extract_config(PyObject* config_arg) {
     while (PyDict_Next(config_arg, &pos, &key, &value)) {
         std::string key_str = PyUnicode_AsUTF8(key);
         Config_Element element;
-        if (PyLong_Check(value)) {
+        if (PyBool_Check(value)) {
+            element.set_property(key_str, value == Py_True);
+        } else if (PyLong_Check(value)) {
             element.set_property(key_str, PyLong_AsLongLong(value));
         } else if (PyFloat_Check(value)) {
             element.set_property(key_str, PyFloat_AsDouble(value));

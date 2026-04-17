@@ -2,7 +2,7 @@ from itertools import dropwhile
 
 from squander.gates.qgd_Circuit import qgd_Circuit as Circuit
 from squander.partitioning.tools import build_dependency
-
+import heapq
 
 def kahn_partition(c, max_qubit, preparts=None):
     """
@@ -22,11 +22,17 @@ def kahn_partition(c, max_qubit, preparts=None):
     """
     # Build dependency graphs
     gate_dict, g, rg, gate_to_qubit, S = build_dependency(c)
+    S = [(tuple(sorted(gate_to_qubit[x])), x) for x in S]
+    heapq.heapify(S)
     
     L = []
 
-    def partition_condition(gate):
-        return len(gate_to_qubit[gate] | curr_partition) > max_qubit
+    if preparts is None:
+        def partition_condition(idx):
+            return len(gate_to_qubit[S[idx][1]] | curr_partition) > max_qubit
+    else:
+        def partition_condition(idx):
+            return not S[idx][1] in preparts[len(parts)-1]
     
     curr_partition = set()
     curr_idx = 0
@@ -34,10 +40,9 @@ def kahn_partition(c, max_qubit, preparts=None):
     parts = [[]]
 
     while S:
-        if preparts is None:
-            n = next(dropwhile(partition_condition, S), None)
-        else:
-            n = next(iter(S & set(preparts[len(parts)-1])), None)
+        idx = next(dropwhile(partition_condition, range(len(S))), None)
+        n = S[idx][1] if idx is not None else None
+        if preparts is not None:
             assert (n is None) == (len(preparts[len(parts)-1]) == len(parts[-1])) #sanity check valid partitioning
 
         if n is None:  # partition cannot be expanded
@@ -46,8 +51,8 @@ def kahn_partition(c, max_qubit, preparts=None):
             # Reset for next partition
             curr_partition = set()
             parts.append([])
-            if preparts is None: n = next(iter(S))
-            else: n = next(iter(S & set(preparts[len(parts)-1])))
+            idx = next(dropwhile(partition_condition, range(len(S))), None)
+            n = S[idx][1] if idx is not None else None
 
 
         # Add gate to current partition
@@ -57,13 +62,13 @@ def kahn_partition(c, max_qubit, preparts=None):
 
         # Update dependencies
         L.append(n)
-        S.remove(n)
+        del S[idx]
         assert len(rg[n]) == 0
         for child in set(g[n]):
             g[n].remove(child)
             rg[child].remove(n)
             if not rg[child]:
-                S.add(child)
+                heapq.heappush(S, (tuple(sorted(gate_to_qubit[child])), child))
 
     # Add the last partition
     total += len(parts[-1])
@@ -92,14 +97,20 @@ def kahn_partition_preparts(c, max_qubit, preparts):
 
     # Build dependency graphs
     gate_dict, g, rg, gate_to_qubit, S = build_dependency(c)
+    S = [(tuple(sorted(gate_to_qubit[x])), x) for x in S]
+    heapq.heapify(S)
     
     preparts = split_partition(preparts, g, rg)
 
     L = []
     param_order = []
 
-    def partition_condition(gate):
-        return len(gate_to_qubit[gate] | curr_partition) > max_qubit
+    if preparts is None:
+        def partition_condition(idx):
+            return len(gate_to_qubit[S[idx][1]] | curr_partition) > max_qubit
+    else:
+        def partition_condition(idx):
+            return not S[idx][1] in preparts[len(parts)-1]
     
     c = Circuit(c.get_Qbit_Num())
     curr_partition = set()
@@ -108,10 +119,9 @@ def kahn_partition_preparts(c, max_qubit, preparts):
     parts = [[]]
 
     while S:
-        if preparts is None:
-            n = next(dropwhile(partition_condition, S), None)
-        else:
-            n = next(iter(S & set(preparts[len(parts)-1])), None)
+        idx = next(dropwhile(partition_condition, range(len(S))), None)
+        n = S[idx][1] if idx is not None else None
+        if preparts is not None:
             assert (n is None) == (len(preparts[len(parts)-1]) == len(parts[-1])) #sanity check valid partitioning
 
         if n is None:  # partition cannot be expanded
@@ -122,8 +132,8 @@ def kahn_partition_preparts(c, max_qubit, preparts):
             curr_partition = set()
             c = Circuit(c.get_Qbit_Num())
             parts.append([])
-            if preparts is None: n = next(iter(S))
-            else: n = next(iter(S & set(preparts[len(parts)-1])))
+            idx = next(dropwhile(partition_condition, range(len(S))), None)
+            n = S[idx][1] if idx is not None else None
 
 
         # Add gate to current partition
@@ -139,13 +149,13 @@ def kahn_partition_preparts(c, max_qubit, preparts):
 
         # Update dependencies
         L.append(n)
-        S.remove(n)
+        del S[idx]
         assert len(rg[n]) == 0
         for child in set(g[n]):
             g[n].remove(child)
             rg[child].remove(n)
             if not rg[child]:
-                S.add(child)
+                heapq.heappush(S, (tuple(sorted(gate_to_qubit[child])), child))
 
     # Add the last partition
     top_circuit.add_Circuit(c)
@@ -185,7 +195,8 @@ def split_partition(preparts, g, rg):
                 L[-1].add(node)
                 S.extend(rg[node])
                 S.extend(g[node])
-    return L
+    ord_dict = {x: i for i, part in enumerate(preparts) for x in part}
+    return [list(sorted(x, key=ord_dict.get)) for x in L]
 
 
 def test_split_partition():
