@@ -282,12 +282,19 @@ class qgd_Partition_Aware_Mapping:
         """
         Partition and synthesize a full circuit.
 
+        Flow:
+            1) Enumerate candidate partitions.
+            2) ILP-select the minimum-count non-overlapping cover (uniform weights).
+            3) Synthesize only the selected partitions via SeqPAM (two-stage P_i/P_o
+               sweep over mini_topologies, executed by _run_parallel_synthesis).
+
         Args:
             circ: The full quantum circuit (must be flat — no subcircuit blocks)
             orig_parameters: Parameters for circ
 
         Returns:
-            optimized_partitions: List of PartitionSynthesisResult / SingleQubitPartitionResult
+            optimized_partitions: List of PartitionSynthesisResult /
+                SingleQubitPartitionResult, in topological order.
         """
         working_circ = circ
         working_parameters = orig_parameters
@@ -305,39 +312,56 @@ class qgd_Partition_Aware_Mapping:
         single_qubit_chains_post = {x[-1]: x for x in single_qubit_chains if go[x[-1]]}
         single_qubit_chains_prepost = {x[0]: x for x in single_qubit_chains if x[0] in single_qubit_chains_pre and x[-1] in single_qubit_chains_post}
 
-        partitioned_circuit = Circuit( qbit_num_orig_circuit )
+        # ---- Phase 2: Minimum-count ILP partition selection ----
+        L_parts, _ = ilp_global_optimal(allparts, g)
+
+        # ---- Phase 3: Build gate sets for selected partitions (+ standalone chains) ----
+        selected_surrounded_starts = set()
+        selected_parts_gates = []
+        for i in L_parts:
+            part = allparts[i]
+            surrounded = {t for s in part for t in go[s]
+                          if t in single_qubit_chains_prepost
+                          and go[single_qubit_chains_prepost[t][-1]]
+                          and next(iter(go[single_qubit_chains_prepost[t][-1]])) in part}
+            gates = frozenset.union(part, *(single_qubit_chains_prepost[v] for v in surrounded))
+            selected_parts_gates.append(gates)
+            selected_surrounded_starts.update(surrounded)
+
+        standalone_chains = []
+        for chain in single_qubit_chains:
+            if chain[0] not in selected_surrounded_starts:
+                selected_parts_gates.append(frozenset(chain))
+                standalone_chains.append(chain)
+
+        n_multi = len(L_parts)
+
+        # ---- Phase 4: Assemble partitioned circuit from selected partitions only ----
+        partitioned_circuit = Circuit(qbit_num_orig_circuit)
         params = []
 
-        for part in allparts:
-            surrounded_chains = {t for s in part for t in go[s] if t in single_qubit_chains_prepost and go[single_qubit_chains_prepost[t][-1]] and next(iter(go[single_qubit_chains_prepost[t][-1]])) in part}
-            gates = frozenset.union(part, *(single_qubit_chains_prepost[v] for v in surrounded_chains))
-            #topo sort part + surrounded chains
-            c = Circuit( qbit_num_orig_circuit )
-
-            for gate_idx in _get_topo_order({x: go[x] & gates for x in gates}, {x: rgo[x] & gates for x in gates}):
-                c.add_Gate( gate_dict[gate_idx] )
+        for gates in selected_parts_gates[:n_multi]:
+            c = Circuit(qbit_num_orig_circuit)
+            for gate_idx in _get_topo_order({x: go[x] & gates for x in gates},
+                                            {x: rgo[x] & gates for x in gates}):
+                c.add_Gate(gate_dict[gate_idx])
                 start = gate_dict[gate_idx].get_Parameter_Start_Index()
                 params.append(working_parameters[start:start + gate_dict[gate_idx].get_Parameter_Num()])
-
             partitioned_circuit.add_Circuit(c)
-        # Only add single-qubit chains as separate partitions if minimum_partition_size allows it
-        for chain in single_qubit_chains:
-            c = Circuit( qbit_num_orig_circuit )
+
+        for chain in standalone_chains:
+            c = Circuit(qbit_num_orig_circuit)
             for gate_idx in chain:
-                c.add_Gate( gate_dict[gate_idx] )
+                c.add_Gate(gate_dict[gate_idx])
                 start = gate_dict[gate_idx].get_Parameter_Start_Index()
                 params.append(working_parameters[start:start + gate_dict[gate_idx].get_Parameter_Num()])
             partitioned_circuit.add_Circuit(c)
+
         parameters = np.concatenate(params, axis=0)
 
-        # ---- Phase 2: Fine-grained parallel synthesis ----
-        # Instead of 1 coarse task per partition (each doing ~12 sequential
-        # C++ decompositions), submit individual (partition, topology, permutation)
-        # tasks for much better pool load balancing.
+        # ---- Phase 5: SeqPAM synthesis on selected partitions only ----
         subcircuits = partitioned_circuit.get_Gates()
         optimized_results = [None] * len(subcircuits)
-
-        # Pre-compute partition metadata and base unitaries
         partition_meta = []
         for partition_idx, subcircuit in enumerate(subcircuits):
             start_idx = subcircuit.get_Parameter_Start_Index()
@@ -345,7 +369,6 @@ class qgd_Partition_Aware_Mapping:
             subcircuit_parameters = parameters[start_idx:end_idx]
             involved_qbits = subcircuit.get_Qbits()
             qbit_num_sub = len(involved_qbits)
-            mini_topologies = get_unique_subtopologies(self.topology, qbit_num_sub)
             qbit_map = {involved_qbits[idx]: idx for idx in range(len(involved_qbits))}
             remapped_subcircuit = subcircuit.Remap_Qbits(qbit_map, qbit_num_sub)
 
@@ -355,6 +378,7 @@ class qgd_Partition_Aware_Mapping:
                 )
                 partition_meta.append(None)
             else:
+                mini_topologies = get_unique_subtopologies(self.topology, qbit_num_sub)
                 partition_meta.append({
                     'N': qbit_num_sub,
                     'circuit': remapped_subcircuit,
@@ -364,65 +388,13 @@ class qgd_Partition_Aware_Mapping:
                     'qbit_map': qbit_map,
                 })
 
-        # ---- Phase 2: Fine-grained parallel synthesis ----
         results_map = self._run_parallel_synthesis(partition_meta)
         for partition_idx, result in results_map.items():
             optimized_results[partition_idx] = result
 
-        # ---- Phase 3: ILP partition selection with synthesis-cost weights ----
-        weights = []
-        for idx, result in enumerate(optimized_results[:len(allparts)]):
-            if isinstance(result, SingleQubitPartitionResult):
-                weights.append(0)
-            else:
-                weights.append(result.get_partition_synthesis_score())
-
-        L_parts, fusion_info = ilp_global_optimal(allparts, g, weights=weights)
-
-        # ---- Phase 4: Reuse Phase 2 results (no re-synthesis) ----
-        # Build non-overlapping parts from selected allparts + standalone chains.
-        # Phase 2 already synthesized each allpart (with surrounded chains included),
-        # so we reuse those results directly.
-        selected_surrounded_starts = set()
-        selected_parts_gates = []
-        for i in L_parts:
-            part = allparts[i]
-            surrounded = {t for s in part for t in go[s]
-                         if t in single_qubit_chains_prepost
-                         and go[single_qubit_chains_prepost[t][-1]]
-                         and next(iter(go[single_qubit_chains_prepost[t][-1]])) in part}
-            gates = frozenset.union(part, *(single_qubit_chains_prepost[v] for v in surrounded))
-            selected_parts_gates.append(gates)
-            selected_surrounded_starts.update(surrounded)
-
-        # Non-surrounded chains become standalone SingleQubitPartitionResult entries
-        standalone_chains = []
-        for chain in single_qubit_chains:
-            if chain[0] not in selected_surrounded_starts:
-                selected_parts_gates.append(frozenset(chain))
-                standalone_chains.append(chain)
-
-        L = topo_sort_partitions(working_circ, self.config["max_partition_size"], selected_parts_gates)
-
-        n_selected = len(L_parts)
-        optimized_partitions = []
-        for part_idx in L:
-            if part_idx < n_selected:
-                # Multi-qubit partition — reuse Phase 2 PartitionSynthesisResult
-                optimized_partitions.append(optimized_results[L_parts[part_idx]])
-            else:
-                # Standalone single-qubit chain
-                chain = standalone_chains[part_idx - n_selected]
-                c = Circuit(qbit_num_orig_circuit)
-                chain_params = []
-                for gate_idx in chain:
-                    c.add_Gate(gate_dict[gate_idx])
-                    start = gate_dict[gate_idx].get_Parameter_Start_Index()
-                    chain_params.append(working_parameters[start:start + gate_dict[gate_idx].get_Parameter_Num()])
-                chain_parameters = np.concatenate(chain_params) if chain_params else np.array([])
-                optimized_partitions.append(SingleQubitPartitionResult(c, chain_parameters))
-
-        return optimized_partitions
+        # ---- Phase 6: Topologically order selected partitions ----
+        L = topo_sort_partitions(working_circ, selected_parts_gates)
+        return [optimized_results[idx] for idx in L]
 
     def _run_parallel_synthesis(self, partition_meta):
         """Phase 2: Run parallel synthesis for all multi-qubit partitions.
@@ -448,7 +420,7 @@ class qgd_Partition_Aware_Mapping:
                     continue
                 results_map[partition_idx] = PartitionSynthesisResult(
                     meta['N'], meta['mini_topologies'], meta['involved_qbits'],
-                    meta['qbit_map'], meta['circuit']
+                    meta['qbit_map'],
                 )
 
             # ---- Stage 1: fix random P_o, sweep all P_i ----

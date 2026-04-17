@@ -374,30 +374,25 @@ def derive_result_from_automorphism(sigma, P_i, P_o, circuit, parameters, N):
 # ============================================================================
 
 class SingleQubitPartitionResult:
-    
-    def __init__(self,circuit_in,parameters_in):
+
+    def __init__(self, circuit_in, parameters_in):
         self.circuit = circuit_in
         self.parameters = parameters_in
         self.involved_qbits = circuit_in.get_Qbits()
-    
-    def get_partition_synthesis_score(self):
-        return 0
 
 # Virtual qubits q, reduced virtual qubits (the remapped circuit only up to partition_size) q*
-# Physical qubits Q, reduced physical qubits Q* 
+# Physical qubits Q, reduced physical qubits Q*
 class PartitionSynthesisResult:
-    
-    def __init__(self, N , mini_topologies, involved_qbits, qubit_map, original_circuit, topology=None, topology_cache=None):
-        #The physical mini_topology of the partition q*
+
+    def __init__(self, N, mini_topologies, involved_qbits, qubit_map, topology=None, topology_cache=None):
+        # Physical mini_topology of the partition q*
         self.mini_topologies = mini_topologies
-        #number of topologies
-        self.topology_count = len(mini_topologies)
-        #Qubit num of the partition
+        # Qubit num of the partition
         self.N = N
-        # P_i in q*->Q* permutation pattern: [q*1 q*0 q*2] where q*1 goes to Q* qubit 0 and etc 
+        # P_i in q*->Q* permutation pattern: [q*1 q*0 q*2] where q*1 goes to Q* qubit 0 and etc
         # P_o in Q*->q* permutation pattern [Q*1 Q*0 Q*2] This means that the current output of Q*1 is equal to q*0
         self.permutations_pairs = [[] for _ in range(len(mini_topologies))]
-        # results of synthesis
+        # Synthesis results
         self.synthesised_circuits = [[] for _ in range(len(mini_topologies))]
         self.synthesised_parameters = [[] for _ in range(len(mini_topologies))]
         self.cnot_counts = [[] for _ in range(len(mini_topologies))]
@@ -406,12 +401,10 @@ class PartitionSynthesisResult:
         self.involved_qbits = involved_qbits
         # {q:q*}
         self.qubit_map = qubit_map
-        # the original circuit
-        self.original_circuit = original_circuit
-        # Pre-computed topology candidates for each mini_topology (lazy initialization)
+        # Lazy per-topology candidate cache
         self._topology_candidates = [None] * len(mini_topologies)
-        self._topology = topology  # Full topology for computing candidates
-        self._topology_cache = topology_cache  # Cache to use for lookups
+        self._topology = topology
+        self._topology_cache = topology_cache
 
     def add_result(self, permutations_pair, synthesised_circuit, synthesised_parameters, topology_idx):
         self.permutations_pairs[topology_idx].append(permutations_pair)
@@ -431,25 +424,7 @@ class PartitionSynthesisResult:
     def get_best_result(self, topology_idx):
         best_index = np.argmin(self.cnot_counts[topology_idx])
         return self.permutations_pairs[topology_idx][best_index], self.synthesised_circuits[topology_idx][best_index], self.synthesised_parameters[topology_idx][best_index]
-    
-    #get the circuit structure in q 
-    def get_original_circuit_structure(self):
-        #q*->q
-        qbit_map_inverse = {v:k for k,v in self.qubit_map.items()}
-        circuit_structure = []
-        for gate in self.original_circuit.get_Gates():
-            involved_qbits = gate.get_Involved_Qbits()
-            if len(involved_qbits) != 1:
-                circuit_structure.append((qbit_map_inverse[involved_qbits[0]],qbit_map_inverse[involved_qbits[1]]))
-        return circuit_structure
-        
-    def get_partition_synthesis_score(self):
-        score = np.inf
-        for topology_idx in range(self.topology_count):
-            cnot_count_topology = np.min(self.cnot_counts[topology_idx])#np.mean(self.cnot_counts[topology_idx])*0.5 + np.min(self.cnot_counts[topology_idx])*0.5
-            score = min(cnot_count_topology,score)
-        return score
-    
+
     def get_topology_candidates(self, topology_idx):
         """
         Get topology candidates for a given topology index, using cache if available.
