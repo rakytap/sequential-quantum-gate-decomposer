@@ -13,7 +13,7 @@ from squander.gates.qgd_Circuit import qgd_Circuit as Circuit
 # ============================================================================
 # SWAP Routing Algorithms
 # ============================================================================
-def find_constrained_swaps_partial(pi_A, pi_B_dict, dist_matrix):
+def find_constrained_swaps_partial(pi_A, pi_B_dict, dist_matrix, adj=None, neighbor_info=None):
     """
     Route partition qubits to their target physical positions using A* over
     the k-dimensional state space of partition qubit positions only.
@@ -39,13 +39,14 @@ def find_constrained_swaps_partial(pi_A, pi_B_dict, dist_matrix):
     """
     n = len(pi_A)
 
-    # Build adjacency list from dist_matrix
-    adj = [[] for _ in range(n)]
-    for i in range(n):
-        for j in range(i + 1, n):
-            if dist_matrix[i][j] == 1:
-                adj[i].append(j)
-                adj[j].append(i)
+    # Build adjacency list from dist_matrix if not provided
+    if adj is None:
+        adj = [[] for _ in range(n)]
+        for i in range(n):
+            for j in range(i + 1, n):
+                if dist_matrix[i][j] == 1:
+                    adj[i].append(j)
+                    adj[j].append(i)
 
     partition_qubits = sorted(pi_B_dict.keys())
     k = len(partition_qubits)
@@ -60,6 +61,36 @@ def find_constrained_swaps_partial(pi_A, pi_B_dict, dist_matrix):
         # Admissible lower bound: sum of individual distances / 2
         return sum(dist_matrix[positions[i]][target_positions[i]] for i in range(k)) / 2
 
+    # SABRE-aware tiebreaker: prefer SWAP paths that keep future-partition
+    # qubits closer together.  The weight is small enough to never override
+    # optimality (same SWAP count), only break ties among equal-length paths.
+    if neighbor_info is not None and neighbor_info['edges']:
+        n_vqs = neighbor_info['neighbor_vqs']
+        n_edges = neighbor_info['edges']       # list of (idx_u, idx_v, edge_weight)
+        n_weight = neighbor_info['weight']
+        initial_n_pos = neighbor_info['initial_pos']
+        # Reverse map: physical position → index in n_vqs (for displacement tracking)
+        _n_len = len(n_vqs)
+        use_neighbor = True
+
+        # Normalize so neighbor_heuristic returns values in [0, 1].
+        # This guarantees n_weight * neighbor_heuristic < 1 (for n_weight < 1),
+        # so the tiebreaker never overrides SWAP-count optimality.
+        _total_edge_weight = sum(w for _, _, w in n_edges)
+        _diameter = int(np.max(dist_matrix[dist_matrix < np.inf])) if n > 1 else 1
+        _norm = max(1.0, _total_edge_weight * _diameter)
+
+        def neighbor_heuristic(n_pos):
+            return sum(w * dist_matrix[n_pos[i]][n_pos[j]] for i, j, w in n_edges) / _norm
+    else:
+        initial_n_pos = ()
+        n_weight = 0.0
+        _n_len = 0
+        use_neighbor = False
+
+        def neighbor_heuristic(n_pos):
+            return 0.0
+
     # A* over k-dimensional state space.
     # Each state is a tuple of physical positions, one per partition qubit.
     # Paths are reconstructed via a parent-pointer dict to avoid copying lists
@@ -68,12 +99,14 @@ def find_constrained_swaps_partial(pi_A, pi_B_dict, dist_matrix):
     parent = {}  # state → (parent_state, swap) for path reconstruction
     parent[initial_positions] = None
 
+    h0 = heuristic(initial_positions)
+    nh0 = n_weight * neighbor_heuristic(initial_n_pos) if use_neighbor else 0.0
     heap = []
-    heapq.heappush(heap, (heuristic(initial_positions), 0, counter, initial_positions))
+    heapq.heappush(heap, (h0 + nh0, 0, counter, initial_positions, initial_n_pos))
     visited = {initial_positions: 0}
 
     while heap:
-        f, g, _, positions = heapq.heappop(heap)
+        f, g, _, positions, n_pos = heapq.heappop(heap)
 
         if positions == target_positions:
             # Reconstruct swap path via parent pointers
@@ -102,6 +135,10 @@ def find_constrained_swaps_partial(pi_A, pi_B_dict, dist_matrix):
         # Quick lookup: physical position → index within partition_qubits list
         pos_to_k_idx = {p: i for i, p in enumerate(positions)}
 
+        # Build reverse map for neighbor displacement tracking
+        if use_neighbor:
+            n_phys_to_idx = {n_pos[idx]: idx for idx in range(_n_len)}
+
         # Expand: try every SWAP that moves at least one partition qubit
         for i, p in enumerate(positions):
             for nb in adj[p]:
@@ -117,12 +154,26 @@ def find_constrained_swaps_partial(pi_A, pi_B_dict, dist_matrix):
                 if visited.get(new_positions, float('inf')) <= new_g:
                     continue
 
+                # Update neighbor qubit positions: partition qubit at p
+                # moves to nb, displacing whatever was at nb to p.
+                if use_neighbor:
+                    if nb in n_phys_to_idx:
+                        new_n_pos = list(n_pos)
+                        new_n_pos[n_phys_to_idx[nb]] = p
+                        new_n_pos = tuple(new_n_pos)
+                    else:
+                        new_n_pos = n_pos
+                    new_nh = n_weight * neighbor_heuristic(new_n_pos)
+                else:
+                    new_n_pos = n_pos
+                    new_nh = 0.0
+
                 visited[new_positions] = new_g
                 swap_key = (min(p, nb), max(p, nb))
                 parent[new_positions] = (positions, swap_key)
                 counter += 1
-                heapq.heappush(heap, (new_g + heuristic(new_positions), new_g,
-                                      counter, new_positions))
+                heapq.heappush(heap, (new_g + heuristic(new_positions) + new_nh,
+                                      new_g, counter, new_positions, new_n_pos))
 
     logging.warning(
         "find_constrained_swaps_partial: failed to route %s → %s",
@@ -461,7 +512,7 @@ class PartitionCandidate:
         # {Q*:Q}
         self.node_mapping = get_node_mapping(mini_topology, topology)
 
-    def transform_pi(self, pi, D, swap_cache=None, reverse=False):
+    def transform_pi(self, pi, D, swap_cache=None, reverse=False, adj=None, neighbor_info=None):
         # The synthesized circuit S implements: add_Permutation(P_i) -> Original -> add_Permutation(P_o)
         #
         # Forward (reverse=False):
@@ -491,10 +542,10 @@ class PartitionCandidate:
             if cache_key in swap_cache:
                 swaps, pi_init = swap_cache[cache_key]
             else:
-                swaps, pi_init = find_constrained_swaps_partial(pi_list, qbit_map_input, D)
+                swaps, pi_init = find_constrained_swaps_partial(pi_list, qbit_map_input, D, adj=adj, neighbor_info=neighbor_info)
                 swap_cache[cache_key] = (swaps, pi_init)
         else:
-            swaps, pi_init = find_constrained_swaps_partial(pi_list, qbit_map_input, D)
+            swaps, pi_init = find_constrained_swaps_partial(pi_list, qbit_map_input, D, adj=adj, neighbor_info=neighbor_info)
 
         pi_output = pi_init.copy()
         qbit_map_inverse = {v: k for k, v in self.qbit_map.items()}
@@ -504,13 +555,14 @@ class PartitionCandidate:
                 pi_output[k] = self.node_mapping[P_exit[q_star]]
         return swaps, pi_output
     
-    def estimate_swap_count(self, pi, D) -> int:
+    def estimate_swap_count(self, pi, D, reverse=False) -> int:
         """O(n) lower-bound on the number of SWAPs needed to route this
         partition's virtual qubits to their target physical positions.
         Uses the same admissible heuristic as the A* search internaly:
             floor(sum_of_distances / 2)
         """
-        P_i_inv = [self.P_i.index(i) for i in range(len(self.P_i))]
+        P_route = self.P_o if reverse else self.P_i
+        P_i_inv = [P_route.index(i) for i in range(len(P_route))]
         total = 0.0
         for k, v in self.qbit_map.items():
             target_P = self.node_mapping[P_i_inv[v]]
@@ -523,7 +575,7 @@ class PartitionCandidate:
     def get_final_circuit(self,optimized_partitions,N):
         partition = optimized_partitions[self.partition_idx]
         part_parameters = partition.synthesised_parameters[self.topology_idx][self.permutation_idx]
-        part_circuit = partition.synthesised_circuits[self.topology_idx][self.permutation_idx]
+        part_circuit = partition.synthesised_circuits[self.topology_idx][self.permutation_idx].get_Flat_Circuit()
         part_circuit = part_circuit.Remap_Qbits(self.node_mapping, N)
         return part_circuit, part_parameters
 

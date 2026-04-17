@@ -1001,72 +1001,33 @@ class qgd_Wide_Circuit_Optimization:
         # the list of parameters associated with the optimized subcircuits
         optimized_parameter_list = [None] * len(subcircuits)
 
-        if parent_process() is not None:
-            #  code for iterate over partitions and optimize them
-            for partition_idx, subcircuit in enumerate( subcircuits ):
-        
+        async_results = [None] * len(subcircuits)
+        n_cpus = mp.cpu_count()
+        with Pool(processes=n_cpus) as pool:
 
-                # isolate the parameters corresponding to the given sub-circuit
+            for partition_idx, subcircuit in enumerate(subcircuits):
                 start_idx = subcircuit.get_Parameter_Start_Index()
                 end_idx   = start_idx + subcircuit.get_Parameter_Num()
-                subcircuit_parameters = parameters[ start_idx:end_idx ]
-    
-        
-            
-                # callback function done on the master process to compare the new decomposed and the original suncircuit
-                callback_fnc = lambda  x : self.CompareAndPickCircuits( [subcircuit, *(z[0] for z in x)], [subcircuit_parameters, *(z[1] for z in x)] )
+                subcircuit_parameters = parameters[start_idx:end_idx]
 
-                # call a process to decompose a subcircuit
                 config = {**self.config, 'tree_level_max': max(0, subcircuit.get_Gate_Nums().get('CNOT', 0)-1)}
                 config = config if structures is None or partition_idx >= len(structures) else {**config, 'strategy': 'Custom', 'max_inner_iterations': 10000, 'max_iteration_loops': 4}
-                new_subcircuit, new_parameters = callback_fnc(self.PartitionDecompositionProcess( subcircuit, subcircuit_parameters, config,
-                                                                                     None if structures is None or partition_idx >= len(structures) else structures[partition_idx] ))
+
+                async_results[partition_idx] = pool.apply_async(self.PartitionDecompositionProcess, (subcircuit, subcircuit_parameters, config,
+                                                                                                    None if structures is None or partition_idx >= len(structures) else structures[partition_idx]))
+
+            for partition_idx, subcircuit in enumerate(subcircuits):
+                start_idx = subcircuit.get_Parameter_Start_Index()
+                subcircuit_parameters = parameters[start_idx:start_idx + subcircuit.get_Parameter_Num()]
+                callback_fnc = lambda  x : self.CompareAndPickCircuits( [subcircuit, *(z[0] for z in x)], [subcircuit_parameters, *(z[1] for z in x)] )
+                new_subcircuit, new_parameters = callback_fnc(async_results[partition_idx].get(timeout=None))
+
                 if subcircuit != new_subcircuit and self.config["verbosity"] > 0:
-                    print( "original subcircuit:    ", subcircuit.get_Gate_Nums())
-                    print( "reoptimized subcircuit: ", new_subcircuit.get_Gate_Nums())
-
+                    print("original subcircuit:    ", subcircuit.get_Gate_Nums())
+                    print("reoptimized subcircuit: ", new_subcircuit.get_Gate_Nums())
                 if partition_idx % 100 == 99 and self.config["verbosity"] > 0: print(partition_idx+1, "partitions optimized")
-                optimized_subcircuits[ partition_idx ] = new_subcircuit
-                optimized_parameter_list[ partition_idx ] = new_parameters
-        else:
-            # list of AsyncResult objects (for 2-qubit) or direct results (for 1-qubit and 3+ qubit)
-            async_results = [None] * len(subcircuits)
-            n_cpus = mp.cpu_count()
-            with Pool(processes=n_cpus) as pool:
-
-                #  code for iterate over partitions and optimize them
-                for partition_idx, subcircuit in enumerate( subcircuits ):
-
-
-                    # isolate the parameters corresponding to the given sub-circuit
-                    start_idx = subcircuit.get_Parameter_Start_Index()
-                    end_idx   = start_idx + subcircuit.get_Parameter_Num()
-                    subcircuit_parameters = parameters[ start_idx:end_idx ]
-
-
-
-                    # call a process to decompose a subcircuit
-                    config = {**self.config, 'tree_level_max': max(0, subcircuit.get_Gate_Nums().get('CNOT', 0)-1)}
-                    config = config if structures is None or partition_idx >= len(structures) else {**config, 'strategy': 'Custom', 'max_inner_iterations': 10000, 'max_iteration_loops': 4}
-
-                    qbit_num_sub = len(subcircuit.get_Qbits())
-                    async_results[partition_idx]  = pool.apply_async( self.PartitionDecompositionProcess, (subcircuit, subcircuit_parameters, config,
-                                                                                                        None if structures is None or partition_idx >= len(structures) else structures[partition_idx]))
-
-                #  code for iterate over async results and retrieve the new subcircuits
-                for partition_idx, subcircuit in enumerate( subcircuits ):
-                    # callback function done on the master process to compare the new decomposed and the original suncircuit
-                    start_idx = subcircuit.get_Parameter_Start_Index()
-                    subcircuit_parameters = parameters[ start_idx:start_idx + subcircuit.get_Parameter_Num() ]
-                    callback_fnc = lambda  x : self.CompareAndPickCircuits( [subcircuit, *(z[0] for z in x)], [subcircuit_parameters, *(z[1] for z in x)] )
-                    new_subcircuit, new_parameters = callback_fnc(async_results[partition_idx].get( timeout = None ))
-
-                    if subcircuit != new_subcircuit and self.config["verbosity"] > 0:
-                        print( "original subcircuit:    ", subcircuit.get_Gate_Nums())
-                        print( "reoptimized subcircuit: ", new_subcircuit.get_Gate_Nums())
-                    if partition_idx % 100 == 99 and self.config["verbosity"] > 0: print(partition_idx+1, "partitions optimized")
-                    optimized_subcircuits[ partition_idx ] = new_subcircuit
-                    optimized_parameter_list[ partition_idx ] = new_parameters
+                optimized_subcircuits[partition_idx] = new_subcircuit
+                optimized_parameter_list[partition_idx] = new_parameters
 
 
         # construct the wide circuit from the optimized suncircuits

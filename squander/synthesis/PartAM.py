@@ -25,7 +25,6 @@ from squander.partitioning.ilp import (
     topo_sort_partitions,
     ilp_global_optimal,
 )
-
 # Module-level globals for pool workers (set via Pool initializer)
 _worker_config = None
 
@@ -93,6 +92,13 @@ class qgd_Partition_Aware_Mapping:
         self.config.setdefault('score_tolerance', 0.05)
         self.config.setdefault('random_seed', 42)
         self.config.setdefault('cleanup', True)
+        self.config.setdefault('prefilter_top_k', 50)
+        self.config.setdefault('neighbor_weight', 0.5)
+        self.config.setdefault('E_overlap_floor', 0.2)
+        self.config.setdefault('branch_budget', 3)
+        self.config.setdefault('branch_threshold', 0.1)
+        self.config.setdefault('congestion_weight', 0.1)
+        self.config.setdefault('congestion_decay', 0.9)
         strategy = self.config['strategy']
         allowed_strategies = ['TreeSearch', 'TabuSearch', 'Adaptive']
         if not strategy in allowed_strategies:
@@ -101,6 +107,7 @@ class qgd_Partition_Aware_Mapping:
         # Initialize caches for performance optimization
         self._topology_cache = {}  # {frozenset(edges): [topology_candidates]}
         self._swap_cache = {}     # {(pi_tuple, qbit_map_frozen): (swaps, output_perm)}
+        self._adj = None          # Precomputed adjacency list (built by compute_distances_bfs)
 
     # ------------------------------------------------------------------------
     # Caching Methods
@@ -430,9 +437,6 @@ class qgd_Partition_Aware_Mapping:
         use_auts = self.config.get('use_automorphisms', True)
         disable_pbar = self.config.get('progressbar', 0) == False
         aut_cache = {}
-        # Cache: (rounded_unitary_bytes, topo_key) -> (circuit, parameters)
-        # Avoids redundant C++ decompositions when different partitions or
-        # permutations produce the same unitary matrix.
         decomp_cache = {}
 
         with Pool(processes=n_cpus, initializer=_init_decompose_worker,
@@ -652,7 +656,7 @@ class qgd_Partition_Aware_Mapping:
                     )
                     pre_cleanup_cnots = trial_circuit.get_Gate_Nums().get('CNOT', 0)
                     trial_circuit, trial_params = wco.OptimizeWideCircuit(
-                        trial_circuit.get_Flat_Circuit(), trial_params,
+                        trial_circuit.get_Flat_Circuit(), trial_params, global_min = False
                     )
 
                     cost = trial_circuit.get_Gate_Nums().get('CNOT', 0)
@@ -726,7 +730,7 @@ class qgd_Partition_Aware_Mapping:
                 cleanup_config['test_final_circuit'] = False
                 wco = qgd_Wide_Circuit_Optimization(cleanup_config)
                 final_circuit, final_parameters = wco.OptimizeWideCircuit(
-                    final_circuit.get_Flat_Circuit(), final_parameters
+                    final_circuit.get_Flat_Circuit(), final_parameters, global_min = False
                 )
 
         return final_circuit, final_parameters, pi_initial, pi
@@ -749,6 +753,223 @@ class qgd_Partition_Aware_Mapping:
             return partition_candidates[close_indices[0]]
         else:
             return partition_candidates[np.argmin(scores_array)]
+
+    def _prefilter_candidates(self, partition_candidates, pi, D, top_k, reverse=False):
+        """Pre-filter candidates using cheap swap-count estimate before full A* scoring."""
+        if len(partition_candidates) <= top_k:
+            return partition_candidates
+        estimates = np.array([
+            pc.estimate_swap_count(pi, D, reverse=reverse) * 3 + 0.1 * len(pc.circuit_structure)
+            for pc in partition_candidates
+        ])
+        top_k_indices = np.argpartition(estimates, top_k)[:top_k]
+        return [partition_candidates[i] for i in top_k_indices]
+
+    def _select_with_lookahead(self, partition_candidates, scores, pi, F,
+                               DAG, IDAG, resolved_partitions,
+                               optimized_partitions, scoring_partitions, D,
+                               E_W, E_alpha, E_overlap_floor,
+                               neighbor_data, neighbor_weight,
+                               reverse=False, rng=None):
+        """1-step lookahead branching: when top candidates are close in score,
+        tentatively commit each, score one step ahead, and pick the best 2-step total.
+
+        Falls back to _select_best_candidate when there is a clear winner or
+        branching is disabled (branch_budget <= 1).
+        """
+        branch_budget = self.config.get('branch_budget', 3)
+        branch_threshold = self.config.get('branch_threshold', 0.1)
+
+        if branch_budget <= 1:
+            return self._select_best_candidate(partition_candidates, scores, rng=rng)
+
+        scores_array = np.array(scores)
+        min_score = np.min(scores_array)
+
+        # Find candidates within threshold of best
+        if min_score > 0:
+            threshold = min_score * (1 + branch_threshold)
+        else:
+            threshold = branch_threshold
+        close_indices = np.where(scores_array <= threshold)[0]
+
+        if len(close_indices) <= 1:
+            return self._select_best_candidate(partition_candidates, scores, rng=rng)
+
+        # Limit to branch_budget
+        if len(close_indices) > branch_budget:
+            # Keep the top branch_budget by score
+            sorted_close = close_indices[np.argsort(scores_array[close_indices])]
+            close_indices = sorted_close[:branch_budget]
+
+        # Evaluate each branch one step ahead
+        best_branch_score = float('inf')
+        best_candidate = None
+        top_k = self.config.get('prefilter_top_k', 50)
+
+        for idx in close_indices:
+            candidate = partition_candidates[idx]
+            candidate_score = scores_array[idx]
+
+            # Tentatively apply this candidate's routing
+            temp_swap_cache = {}
+            neighbor_info = self._compute_neighbor_info(
+                candidate, tuple(F), None, neighbor_data, pi,
+                alpha=E_alpha, weight=neighbor_weight,
+            )
+            swaps, pi_next = candidate.transform_pi(
+                pi, D, temp_swap_cache, reverse=reverse,
+                adj=self._adj, neighbor_info=neighbor_info,
+            )
+
+            # Compute tentative front layer after committing this candidate
+            F_next = [p for p in F if p != candidate.partition_idx]
+            temp_resolved = list(resolved_partitions)
+            temp_resolved[candidate.partition_idx] = True
+
+            # Promote children (skip single-qubit partitions)
+            for child in DAG[candidate.partition_idx]:
+                if not temp_resolved[child] and child not in F_next:
+                    if all(temp_resolved[p] for p in IDAG[child]):
+                        if isinstance(optimized_partitions[child], SingleQubitPartitionResult):
+                            temp_resolved[child] = True
+                            stack = list(DAG[child])
+                            while stack:
+                                gc = stack.pop()
+                                if not temp_resolved[gc] and gc not in F_next:
+                                    if all(temp_resolved[p] for p in IDAG[gc]):
+                                        if isinstance(optimized_partitions[gc], SingleQubitPartitionResult):
+                                            temp_resolved[gc] = True
+                                            stack.extend(DAG[gc])
+                                        else:
+                                            F_next.append(gc)
+                        else:
+                            F_next.append(child)
+
+            if not F_next:
+                # No next step — use candidate score alone
+                branch_score = candidate_score
+            else:
+                # Generate and score next-step candidates
+                next_candidates = self.obtain_partition_candidates(F_next, optimized_partitions)
+                if next_candidates:
+                    next_candidates = self._prefilter_candidates(
+                        next_candidates, pi_next, D, top_k, reverse=reverse
+                    )
+                    F_next_snapshot = tuple(F_next)
+                    E_next = self.generate_extended_set(
+                        F_next, DAG, IDAG, temp_resolved, optimized_partitions,
+                        max_E_size=self.config.get('max_E_size', 20),
+                        max_lookahead=self.config.get('max_lookahead', 4),
+                    )
+                    next_scores = [
+                        self.score_partition_candidate(
+                            pc, F_next_snapshot, pi_next, scoring_partitions, D,
+                            temp_swap_cache,
+                            E=E_next, W=E_W, alpha=E_alpha,
+                            reverse=reverse,
+                            neighbor_data=neighbor_data,
+                            adj=self._adj,
+                            neighbor_info=self._compute_neighbor_info(
+                                pc, F_next_snapshot, E_next, neighbor_data, pi_next,
+                                alpha=E_alpha, weight=neighbor_weight,
+                            ),
+                            E_overlap_floor=E_overlap_floor,
+                        )
+                        for pc in next_candidates
+                    ]
+                    branch_score = candidate_score + min(next_scores)
+                else:
+                    branch_score = candidate_score
+
+            if branch_score < best_branch_score:
+                best_branch_score = branch_score
+                best_candidate = candidate
+
+        return best_candidate
+
+    @staticmethod
+    def _compute_neighbor_info(partition_candidate, F, E, neighbor_data, pi,
+                               alpha=0.9, weight=0.01):
+        """Build neighbor_info dict for SABRE-aware A* tiebreaker.
+
+        Collects virtual qubit edges from front-layer and extended-set partitions
+        (excluding the current partition) so the A* can prefer SWAP paths that
+        leave future-partition qubits closer together.
+        """
+        if weight == 0 or neighbor_data is None:
+            return None
+
+        own_qubits = set(partition_candidate.involved_qbits)
+        # Collect weighted edges: (virtual_q_u, virtual_q_v, edge_weight)
+        raw_edges = []
+
+        # Front layer partitions (weight 1.0)
+        for part_idx in F:
+            if part_idx == partition_candidate.partition_idx:
+                continue
+            entry = neighbor_data.get(part_idx)
+            if entry is None:
+                continue
+            cnot_arr, q_u_arr, q_v_arr = entry
+            if q_u_arr is None:
+                continue
+            # Use the best (min-CNOT) permutation's edges
+            best_pdx = int(np.argmin(cnot_arr))
+            for e in range(q_u_arr.shape[1]):
+                qu, qv = int(q_u_arr[best_pdx, e]), int(q_v_arr[best_pdx, e])
+                if qu == qv:  # padding
+                    continue
+                if qu not in own_qubits or qv not in own_qubits:
+                    raw_edges.append((qu, qv, 1.0))
+
+        # Extended set partitions (weight alpha^depth)
+        if E:
+            for part_idx, depth in E:
+                if part_idx == partition_candidate.partition_idx:
+                    continue
+                entry = neighbor_data.get(part_idx)
+                if entry is None:
+                    continue
+                cnot_arr, q_u_arr, q_v_arr = entry
+                if q_u_arr is None:
+                    continue
+                best_pdx = int(np.argmin(cnot_arr))
+                ew = alpha ** depth
+                for e in range(q_u_arr.shape[1]):
+                    qu, qv = int(q_u_arr[best_pdx, e]), int(q_v_arr[best_pdx, e])
+                    if qu == qv:
+                        continue
+                    if qu not in own_qubits or qv not in own_qubits:
+                        raw_edges.append((qu, qv, ew))
+
+        if not raw_edges:
+            return None
+
+        # Build ordered list of unique neighbor virtual qubits
+        vq_set = set()
+        for qu, qv, _ in raw_edges:
+            vq_set.add(qu)
+            vq_set.add(qv)
+        neighbor_vqs = sorted(vq_set)
+        vq_to_idx = {vq: i for i, vq in enumerate(neighbor_vqs)}
+
+        # Convert edges to index-based, dedup by summing weights
+        edge_map = {}
+        for qu, qv, ew in raw_edges:
+            iu, iv = vq_to_idx[qu], vq_to_idx[qv]
+            key = (min(iu, iv), max(iu, iv))
+            edge_map[key] = edge_map.get(key, 0.0) + ew
+
+        edges = [(iu, iv, w) for (iu, iv), w in edge_map.items()]
+        initial_pos = tuple(int(pi[vq]) for vq in neighbor_vqs)
+
+        return {
+            'neighbor_vqs': neighbor_vqs,
+            'initial_pos': initial_pos,
+            'edges': edges,
+            'weight': weight,
+        }
 
     def Heuristic_Search(self, F, pi, DAG, IDAG, optimized_partitions, scoring_partitions, D):
         pi_initial = pi.copy()
@@ -785,13 +1006,24 @@ class qgd_Partition_Aware_Mapping:
         max_lookahead = self.config.get('max_lookahead', 4)
         E_W = self.config.get('E_weight', 0.5)
         E_alpha = self.config.get('E_alpha', 0.9)
+        E_overlap_floor = self.config.get('E_overlap_floor', 0.2)
 
         neighbor_data = self._precompute_neighbor_data(scoring_partitions, reverse=False)
+        neighbor_weight = self.config.get('neighbor_weight', 0.5)
+
+        congestion_weight = self.config.get('congestion_weight', 0.1)
+        congestion_decay = self.config.get('congestion_decay', 0.9)
+        congestion = np.zeros(len(pi))
+        betweenness = getattr(self, '_betweenness', None)
 
         while len(F) != 0:
                 partition_candidates = self.obtain_partition_candidates(F,optimized_partitions)
                 if len(partition_candidates) == 0:
                     break
+
+                top_k = self.config.get('prefilter_top_k', 50)
+                partition_candidates = self._prefilter_candidates(partition_candidates, pi, D, top_k)
+
                 F_snapshot = tuple(F)
 
                 E = self.generate_extended_set(
@@ -811,10 +1043,25 @@ class qgd_Partition_Aware_Mapping:
                             W=E_W,
                             alpha=E_alpha,
                             neighbor_data=neighbor_data,
+                            adj=self._adj,
+                            neighbor_info=self._compute_neighbor_info(
+                                partition_candidate, F_snapshot, E, neighbor_data, pi,
+                                alpha=E_alpha, weight=neighbor_weight,
+                            ),
+                            E_overlap_floor=E_overlap_floor,
+                            congestion=congestion,
+                            betweenness=betweenness,
+                            congestion_weight=congestion_weight,
                         )
                         for partition_candidate in partition_candidates
                     ]
-                min_partition_candidate = self._select_best_candidate(partition_candidates, scores, rng=None)
+                min_partition_candidate = self._select_with_lookahead(
+                    partition_candidates, scores, pi, F,
+                    DAG, IDAG, resolved_partitions,
+                    optimized_partitions, scoring_partitions, D,
+                    E_W, E_alpha, E_overlap_floor,
+                    neighbor_data, neighbor_weight,
+                )
 
                 F.remove(min_partition_candidate.partition_idx)
                 resolved_partitions[min_partition_candidate.partition_idx] = True
@@ -822,9 +1069,20 @@ class qgd_Partition_Aware_Mapping:
                 pbar.n = resolved_count
                 pbar.refresh()
 
-                swap_order, pi = min_partition_candidate.transform_pi(pi, D, self._swap_cache)
+                neighbor_info = self._compute_neighbor_info(
+                    min_partition_candidate, F_snapshot, E, neighbor_data, pi,
+                    alpha=E_alpha, weight=neighbor_weight,
+                )
+                swap_order, pi = min_partition_candidate.transform_pi(pi, D, self._swap_cache, adj=self._adj, neighbor_info=neighbor_info)
                 if len(swap_order)!=0:
                     partition_order.append(construct_swap_circuit(swap_order, len(pi)))
+                    # Update congestion: increment for nodes used in SWAPs
+                    for p1, p2 in swap_order:
+                        congestion[p1] += 1.0
+                        congestion[p2] += 1.0
+
+                # Decay congestion each step
+                congestion *= congestion_decay
 
                 partition_order.append(min_partition_candidate)
                 children = list(DAG[min_partition_candidate.partition_idx])
@@ -877,13 +1135,24 @@ class qgd_Partition_Aware_Mapping:
         max_lookahead = self.config.get('max_lookahead', 4)
         E_W = self.config.get('E_weight', 0.5)
         E_alpha = self.config.get('E_alpha', 0.9)
+        E_overlap_floor = self.config.get('E_overlap_floor', 0.2)
 
         neighbor_data = self._precompute_neighbor_data(scoring_partitions, reverse=reverse)
+        neighbor_weight = self.config.get('neighbor_weight', 0.5)
+
+        congestion_weight = self.config.get('congestion_weight', 0.1)
+        congestion_decay = self.config.get('congestion_decay', 0.9)
+        N_layout = len(pi)
+        congestion = np.zeros(N_layout)
+        betweenness = getattr(self, '_betweenness', None)
 
         while F:
             partition_candidates = self.obtain_partition_candidates(F, optimized_partitions)
             if not partition_candidates:
                 break
+
+            top_k = self.config.get('prefilter_top_k', 50)
+            partition_candidates = self._prefilter_candidates(partition_candidates, pi, D, top_k, reverse=reverse)
 
             F_snapshot = tuple(F)
 
@@ -899,16 +1168,42 @@ class qgd_Partition_Aware_Mapping:
                     E=E, W=E_W, alpha=E_alpha,
                     reverse=reverse,
                     neighbor_data=neighbor_data,
+                    adj=self._adj,
+                    neighbor_info=self._compute_neighbor_info(
+                        pc, F_snapshot, E, neighbor_data, pi,
+                        alpha=E_alpha, weight=neighbor_weight,
+                    ),
+                    E_overlap_floor=E_overlap_floor,
+                    congestion=congestion,
+                    betweenness=betweenness,
+                    congestion_weight=congestion_weight,
                 )
                 for pc in partition_candidates
             ]
 
-            best = self._select_best_candidate(partition_candidates, scores, rng=rng)
+            best = self._select_with_lookahead(
+                partition_candidates, scores, pi, F,
+                DAG, IDAG, resolved_partitions,
+                optimized_partitions, scoring_partitions, D,
+                E_W, E_alpha, E_overlap_floor,
+                neighbor_data, neighbor_weight,
+                reverse=reverse, rng=rng,
+            )
             F.remove(best.partition_idx)
             resolved_partitions[best.partition_idx] = True
 
-            swaps, pi = best.transform_pi(pi, D, self._swap_cache, reverse=reverse)
+            neighbor_info = self._compute_neighbor_info(
+                best, F_snapshot, E, neighbor_data, pi,
+                alpha=E_alpha, weight=neighbor_weight,
+            )
+            swaps, pi = best.transform_pi(pi, D, self._swap_cache, reverse=reverse, adj=self._adj, neighbor_info=neighbor_info)
             total_swaps += len(swaps)
+
+            # Update and decay congestion
+            for p1, p2 in swaps:
+                congestion[p1] += 1.0
+                congestion[p2] += 1.0
+            congestion *= congestion_decay
 
             # Promote children
             for child in DAG[best.partition_idx]:
@@ -1025,12 +1320,22 @@ class qgd_Partition_Aware_Mapping:
     @staticmethod
     def score_partition_candidate(partition_candidate, F, pi, scoring_partitions, D, swap_cache,
                                   E=None, W=0.5, alpha=0.9, reverse=False,
-                                  neighbor_data=None):
+                                  neighbor_data=None, adj=None, neighbor_info=None,
+                                  E_overlap_floor=0.2,
+                                  congestion=None, betweenness=None, congestion_weight=0.0):
         score = 0
         swap_weight = 1
-        swaps, output_perm = partition_candidate.transform_pi(pi, D, swap_cache, reverse=reverse)
+        swaps, output_perm = partition_candidate.transform_pi(pi, D, swap_cache, reverse=reverse, adj=adj, neighbor_info=neighbor_info)
         score += swap_weight * len(swaps) * 3
         score += 0.1*len(partition_candidate.circuit_structure)
+
+        # Congestion penalty: penalize SWAP paths through congested bottleneck nodes
+        if congestion is not None and betweenness is not None and congestion_weight > 0 and swaps:
+            cong_penalty = 0.0
+            for p1, p2 in swaps:
+                cong_penalty += congestion[p1] * betweenness[p1]
+                cong_penalty += congestion[p2] * betweenness[p2]
+            score += congestion_weight * cong_penalty
 
         if neighbor_data is not None:
             output_perm_arr = np.asarray(output_perm, dtype=np.intp)
@@ -1053,20 +1358,31 @@ class qgd_Partition_Aware_Mapping:
 
             if E:
                 e_score = 0.0
+                cand_qubits = set(partition_candidate.involved_qbits)
                 for partition_idx, depth in E:
                     if partition_idx == partition_candidate.partition_idx:
                         continue
                     entry = neighbor_data.get(partition_idx)
                     if entry is None:
                         continue
+                    # Overlap-aware decay: partitions sharing qubits with
+                    # the candidate are weighted more heavily.
+                    e_part = scoring_partitions[partition_idx]
+                    if e_part is not None and e_part.involved_qbits:
+                        e_qubits = set(e_part.involved_qbits)
+                        overlap = len(cand_qubits & e_qubits)
+                        relevance = overlap / len(e_qubits)
+                    else:
+                        relevance = 0.0
+                    decay = (alpha ** depth) * (E_overlap_floor + (1 - E_overlap_floor) * relevance)
                     cnot_arr, q_u_arr, q_v_arr = entry
                     if q_u_arr is not None:
                         phys_u = output_perm_arr[q_u_arr]
                         phys_v = output_perm_arr[q_v_arr]
                         routing = 3.0 * np.maximum(0, D_arr[phys_u, phys_v] - 1).sum(axis=1)
-                        e_score += float((routing + cnot_arr).min()) * (alpha ** depth)
+                        e_score += float((routing + cnot_arr).min()) * decay
                     else:
-                        e_score += float(cnot_arr.min()) * (alpha ** depth)
+                        e_score += float(cnot_arr.min()) * decay
                 if len(E) > 0:
                     score += W * e_score / len(E)
         else:
@@ -1094,10 +1410,19 @@ class qgd_Partition_Aware_Mapping:
 
             if E:
                 e_score = 0
+                cand_qubits = set(partition_candidate.involved_qbits)
                 for partition_idx, depth in E:
                     partition = scoring_partitions[partition_idx]
                     if partition is None or partition_idx == partition_candidate.partition_idx:
                         continue
+                    # Overlap-aware decay
+                    if partition.involved_qbits:
+                        e_qubits = set(partition.involved_qbits)
+                        overlap = len(cand_qubits & e_qubits)
+                        relevance = overlap / len(e_qubits)
+                    else:
+                        relevance = 0.0
+                    decay = (alpha ** depth) * (E_overlap_floor + (1 - E_overlap_floor) * relevance)
                     qbit_map_inv = {v: q for q, v in partition.qubit_map.items()}
                     mini_scores = []
                     for tdx, mini_topology in enumerate(partition.mini_topologies):
@@ -1113,7 +1438,7 @@ class qgd_Partition_Aware_Mapping:
                                 routing_cost = 0
                             mini_scores.append(routing_cost + cnot_count)
                     if mini_scores:
-                        e_score += min(mini_scores) * (alpha ** depth)
+                        e_score += min(mini_scores) * decay
                 if len(E) > 0:
                     score += W * e_score / len(E)
 
@@ -1284,6 +1609,44 @@ class qgd_Partition_Aware_Mapping:
                         D[start][neighbor] = dist + 1
                         queue.append((neighbor, dist + 1))
         
+        # Store adjacency list for reuse by A* routing
+        self._adj = [list(adj[i]) for i in range(N)]
+
+        # Compute betweenness centrality for congestion-aware scoring.
+        # Brandes' algorithm adapted for unweighted BFS graphs: O(N * E).
+        bc = np.zeros(N)
+        for s in range(N):
+            # BFS from s
+            S = []  # stack of nodes in order of non-decreasing distance
+            P = [[] for _ in range(N)]  # predecessors on shortest paths
+            sigma = np.zeros(N)  # number of shortest paths from s
+            sigma[s] = 1.0
+            d = np.full(N, -1)
+            d[s] = 0
+            Q = deque([s])
+            while Q:
+                v = Q.popleft()
+                S.append(v)
+                for w in adj[v]:
+                    if d[w] < 0:
+                        Q.append(w)
+                        d[w] = d[v] + 1
+                    if d[w] == d[v] + 1:
+                        sigma[w] += sigma[v]
+                        P[w].append(v)
+            delta = np.zeros(N)
+            while S:
+                w = S.pop()
+                for v in P[w]:
+                    delta[v] += (sigma[v] / sigma[w]) * (1.0 + delta[w])
+                if w != s:
+                    bc[w] += delta[w]
+        # Normalize to [0, 1]
+        max_bc = bc.max()
+        if max_bc > 0:
+            bc /= max_bc
+        self._betweenness = bc
+
         return D #multiply by 3 to make it CNOT cost instead of SWAP cost
 
 
