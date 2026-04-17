@@ -343,7 +343,8 @@ class qgd_Partition_Aware_Mapping:
         for gates in selected_parts_gates[:n_multi]:
             c = Circuit(qbit_num_orig_circuit)
             for gate_idx in _get_topo_order({x: go[x] & gates for x in gates},
-                                            {x: rgo[x] & gates for x in gates}):
+                                            {x: rgo[x] & gates for x in gates},
+                                            gate_to_qubit):
                 c.add_Gate(gate_dict[gate_idx])
                 start = gate_dict[gate_idx].get_Parameter_Start_Index()
                 params.append(working_parameters[start:start + gate_dict[gate_idx].get_Parameter_Num()])
