@@ -375,10 +375,10 @@ def derive_result_from_automorphism(sigma, P_i, P_o, circuit, parameters, N):
 
 class SingleQubitPartitionResult:
 
-    def __init__(self, circuit_in, parameters_in):
+    def __init__(self, circuit_in, parameters_in, original_qubits=None):
         self.circuit = circuit_in
         self.parameters = parameters_in
-        self.involved_qbits = circuit_in.get_Qbits()
+        self.involved_qbits = original_qubits if original_qubits is not None else circuit_in.get_Qbits()
 
 # Virtual qubits q, reduced virtual qubits (the remapped circuit only up to partition_size) q*
 # Physical qubits Q, reduced physical qubits Q*
