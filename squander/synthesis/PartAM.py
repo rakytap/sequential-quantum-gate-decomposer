@@ -398,7 +398,8 @@ class qgd_Partition_Aware_Mapping:
 
             if qbit_num_sub == 1:
                 optimized_results[partition_idx] = SingleQubitPartitionResult(
-                    remapped_subcircuit, subcircuit_parameters
+                    remapped_subcircuit, subcircuit_parameters,
+                    original_qubits=list(involved_qbits)
                 )
                 partition_meta.append(None)
             else:
@@ -987,8 +988,9 @@ class qgd_Partition_Aware_Mapping:
             if partition_idx in F:
                 F.remove(partition_idx)
             single_qubit_part = optimized_partitions[partition_idx]
-            qubit = single_qubit_part.circuit.get_Qbits()[0]
-            single_qubit_part.circuit = single_qubit_part.circuit.Remap_Qbits({int(qubit): int(pi[qubit])}, max(D.shape))
+            original_qubit = int(single_qubit_part.involved_qbits[0])
+            circuit_qubit = int(single_qubit_part.circuit.get_Qbits()[0])
+            single_qubit_part.circuit = single_qubit_part.circuit.Remap_Qbits({circuit_qubit: int(pi[original_qubit])}, max(D.shape))
             partition_order.append(single_qubit_part)
             resolved_partitions[partition_idx] = True
             for child in DAG[partition_idx]:
@@ -1098,8 +1100,9 @@ class qgd_Partition_Aware_Mapping:
                     if (not resolved_partitions[child] and child not in F) and parents_resolved:
                         if isinstance(optimized_partitions[child], SingleQubitPartitionResult):
                             child_partition = optimized_partitions[child]
-                            qubit = child_partition.circuit.get_Qbits()[0]
-                            child_partition.circuit = child_partition.circuit.Remap_Qbits({int(qubit): int(pi[qubit])},max(D.shape))
+                            original_qubit = int(child_partition.involved_qbits[0])
+                            circuit_qubit = int(child_partition.circuit.get_Qbits()[0])
+                            child_partition.circuit = child_partition.circuit.Remap_Qbits({circuit_qubit: int(pi[original_qubit])},max(D.shape))
                             partition_order.append(child_partition)
                             resolved_partitions[child] = True
                             resolved_count = sum(resolved_partitions)
