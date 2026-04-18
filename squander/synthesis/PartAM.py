@@ -243,36 +243,53 @@ class qgd_Partition_Aware_Mapping:
     def DecomposePartition_and_Perm(Umtx: np.ndarray, config: dict, mini_topology = None, max_retries: int = 5) -> Circuit:
         """
         Call to decompose a partition. Retries up to max_retries times if the
-        decomposition error exceeds the configured tolerance.
+        decomposition error exceeds the configured tolerance.  Returns the
+        best-error attempt across all retries and logs a warning when no
+        attempt reaches ``config["tolerance"]``.
         """
         tolerance = config["tolerance"]
         strategy = config["strategy"]
 
+        best_err = float('inf')
+        best_circuit = None
+        best_params = None
+
         for attempt in range(max_retries):
             if strategy == "TreeSearch":
-                cDecompose = N_Qubit_Decomposition_Tree_Search( Umtx.conj().T, config=config, accelerator_num=0, topology=mini_topology)
+                cDecompose = N_Qubit_Decomposition_Tree_Search(Umtx.conj().T, config=config, accelerator_num=0, topology=mini_topology)
             elif strategy == "TabuSearch":
-                cDecompose = N_Qubit_Decomposition_Tabu_Search( Umtx.conj().T, config=config, accelerator_num=0, topology=mini_topology )
+                cDecompose = N_Qubit_Decomposition_Tabu_Search(Umtx.conj().T, config=config, accelerator_num=0, topology=mini_topology)
             elif strategy == "Adaptive":
-                cDecompose = N_Qubit_Decomposition_adaptive( Umtx.conj().T, level_limit_max=5, level_limit_min=1, topology=mini_topology )
+                cDecompose = N_Qubit_Decomposition_adaptive(Umtx.conj().T, level_limit_max=5, level_limit_min=1, topology=mini_topology)
             else:
                 raise Exception(f"Unsupported decomposition type: {strategy}")
-            cDecompose.set_Verbose( config["verbosity"] )
-            cDecompose.set_Cost_Function_Variant( 3 )
-            cDecompose.set_Optimization_Tolerance( tolerance )
-            cDecompose.set_Optimizer( config["optimizer"] )
+            cDecompose.set_Verbose(config["verbosity"])
+            cDecompose.set_Cost_Function_Variant(3)
+            cDecompose.set_Optimization_Tolerance(tolerance)
+            cDecompose.set_Optimizer(config["optimizer"])
             cDecompose.Start_Decomposition()
 
             err = cDecompose.get_Decomposition_Error()
-            if err <= tolerance:
+            if err < best_err:
+                best_err = err
+                best_circuit = cDecompose.get_Circuit()
+                best_params = cDecompose.get_Optimized_Parameters()
+
+            if best_err <= tolerance:
                 break
 
-            if attempt >= max_retries - 1:
-                break
+        if best_err > tolerance:
+            N = int(np.log2(Umtx.shape[0]))
+            logging.warning(
+                "DecomposePartition_and_Perm: %d-qubit partition on topology %s "
+                "did not reach tolerance %.2e after %d retries "
+                "(best error %.2e). Returning best attempt; final circuit error "
+                "may be elevated.",
+                N, list(mini_topology) if mini_topology else None,
+                tolerance, max_retries, best_err,
+            )
 
-        squander_circuit = cDecompose.get_Circuit()
-        parameters       = cDecompose.get_Optimized_Parameters()
-        return squander_circuit, parameters
+        return best_circuit, best_params
 
     # ------------------------------------------------------------------------
     # Circuit Synthesis
@@ -312,8 +329,14 @@ class qgd_Partition_Aware_Mapping:
         single_qubit_chains_post = {x[-1]: x for x in single_qubit_chains if go[x[-1]]}
         single_qubit_chains_prepost = {x[0]: x for x in single_qubit_chains if x[0] in single_qubit_chains_pre and x[-1] in single_qubit_chains_post}
 
-        # ---- Phase 2: Minimum-count ILP partition selection ----
-        L_parts, _ = ilp_global_optimal(allparts, g)
+        # ---- Phase 2: ILP partition selection ----
+        # 2-qubit partitions are free (weight 0) since they are trivially
+        # synthesized as themselves; 3+ qubit partitions cost 1.
+        weights = [
+            0 if len({q for gate in part for q in gate_to_qubit[gate]}) == 2 else 1
+            for part in allparts
+        ]
+        L_parts, _ = ilp_global_optimal(allparts, g, weights=weights)
 
         # ---- Phase 3: Build gate sets for selected partitions (+ standalone chains) ----
         selected_surrounded_starts = set()
