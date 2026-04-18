@@ -506,7 +506,8 @@ class qgd_Partition_Aware_Mapping:
                     N, mini_topology, known_pairs, pair_key, use_auts, aut_cache
                 )
 
-            # ---- Stage 2: fix best P_i from Stage 1, sweep all P_o ----
+            # ---- Stage 2: fix top-k P_i from Stage 1, sweep all P_o ----
+            top_k_pi = self.config.get('top_k_pi', 1)
             stage2_futures = []
             stage2_cached = []
 
@@ -517,38 +518,38 @@ class qgd_Partition_Aware_Mapping:
                 perms_all = list(permutations(range(N)))
                 result = results_map[partition_idx]
                 for topology_idx, mini_topology in enumerate(meta['mini_topologies']):
-                    P_i_best, _ = result.get_best_result(topology_idx)[0]
                     pair_key = (partition_idx, topology_idx)
                     kp = known_pairs.get(pair_key, set()) if use_auts else set()
-                    for P_o in perms_all:
-                        if use_auts and (tuple(P_i_best), P_o) in kp:
-                            continue
-                        Umtx = self._build_permuted_unitary(meta, P_i_best, P_o)
-                        ck = self._cache_key(Umtx, mini_topology)
-                        if ck in decomp_cache:
-                            stage2_cached.append((partition_idx, topology_idx, P_i_best, P_o, ck))
-                        else:
-                            future = pool.apply_async(
-                                _decompose_one, (Umtx, mini_topology)
-                            )
-                            stage2_futures.append((partition_idx, topology_idx, P_i_best, P_o, ck, future))
+                    for P_i_cand in result.get_top_k_results(topology_idx, top_k_pi):
+                        for P_o in perms_all:
+                            if use_auts and (tuple(P_i_cand), P_o) in kp:
+                                continue
+                            Umtx = self._build_permuted_unitary(meta, P_i_cand, P_o)
+                            ck = self._cache_key(Umtx, mini_topology)
+                            if ck in decomp_cache:
+                                stage2_cached.append((partition_idx, topology_idx, P_i_cand, P_o, ck))
+                            else:
+                                future = pool.apply_async(
+                                    _decompose_one, (Umtx, mini_topology)
+                                )
+                                stage2_futures.append((partition_idx, topology_idx, P_i_cand, P_o, ck, future))
 
             # Process Stage 2 cache hits
-            for partition_idx, topology_idx, P_i_best, P_o, ck in stage2_cached:
+            for partition_idx, topology_idx, P_i_cand, P_o, ck in stage2_cached:
                 meta = partition_meta[partition_idx]
                 N = meta['N']
                 mini_topology = meta['mini_topologies'][topology_idx]
                 synth_circuit, synth_params = decomp_cache[ck]
                 pair_key = (partition_idx, topology_idx)
                 self._add_result_with_auts(
-                    results_map[partition_idx], (tuple(P_i_best), P_o),
+                    results_map[partition_idx], (tuple(P_i_cand), P_o),
                     synth_circuit, synth_params, topology_idx,
                     N, mini_topology, known_pairs, pair_key, use_auts, aut_cache
                 )
 
             # Collect Stage 2 pool results
             cache_hits_s2 = len(stage2_cached)
-            for partition_idx, topology_idx, P_i_best, P_o, ck, future in tqdm(
+            for partition_idx, topology_idx, P_i_cand, P_o, ck, future in tqdm(
                 stage2_futures, desc=f"Stage 2 Synthesis ({cache_hits_s2} cached)",
                 disable=disable_pbar
             ):
@@ -559,7 +560,7 @@ class qgd_Partition_Aware_Mapping:
                 mini_topology = meta['mini_topologies'][topology_idx]
                 pair_key = (partition_idx, topology_idx)
                 self._add_result_with_auts(
-                    results_map[partition_idx], (tuple(P_i_best), P_o),
+                    results_map[partition_idx], (tuple(P_i_cand), P_o),
                     synth_circuit, synth_params, topology_idx,
                     N, mini_topology, known_pairs, pair_key, use_auts, aut_cache
                 )
@@ -757,8 +758,9 @@ class qgd_Partition_Aware_Mapping:
         """Pre-filter candidates using cheap swap-count estimate before full A* scoring."""
         if len(partition_candidates) <= top_k:
             return partition_candidates
+        local_cost_weight = self.config.get('local_cost_weight', 0.1)
         estimates = np.array([
-            pc.estimate_swap_count(pi, D, reverse=reverse) * 3 + 0.1 * len(pc.circuit_structure)
+            pc.estimate_swap_count(pi, D, reverse=reverse) * 3 + local_cost_weight * pc.cnot_count
             for pc in partition_candidates
         ])
         top_k_indices = np.argpartition(estimates, top_k)[:top_k]
@@ -874,6 +876,7 @@ class qgd_Partition_Aware_Mapping:
                                 alpha=E_alpha, weight=neighbor_weight,
                             ),
                             E_overlap_floor=E_overlap_floor,
+                            local_cost_weight=self.config.get('local_cost_weight', 0.1),
                         )
                         for pc in next_candidates
                     ]
@@ -1057,6 +1060,7 @@ class qgd_Partition_Aware_Mapping:
                             congestion=congestion,
                             betweenness=betweenness,
                             congestion_weight=congestion_weight,
+                            local_cost_weight=self.config.get('local_cost_weight', 0.1),
                         )
                         for partition_candidate in partition_candidates
                     ]
@@ -1192,6 +1196,7 @@ class qgd_Partition_Aware_Mapping:
                     congestion=congestion,
                     betweenness=betweenness,
                     congestion_weight=congestion_weight,
+                    local_cost_weight=self.config.get('local_cost_weight', 0.1),
                 )
                 for pc in partition_candidates
             ]
@@ -1337,12 +1342,13 @@ class qgd_Partition_Aware_Mapping:
                                   E=None, W=0.5, alpha=0.9, reverse=False,
                                   neighbor_data=None, adj=None, neighbor_info=None,
                                   E_overlap_floor=0.2,
-                                  congestion=None, betweenness=None, congestion_weight=0.0):
+                                  congestion=None, betweenness=None, congestion_weight=0.0,
+                                  local_cost_weight=0.1):
         score = 0
         swap_weight = 1
         swaps, output_perm = partition_candidate.transform_pi(pi, D, swap_cache, reverse=reverse, adj=adj, neighbor_info=neighbor_info)
         score += swap_weight * len(swaps) * 3
-        score += 0.1*len(partition_candidate.circuit_structure)
+        score += local_cost_weight * partition_candidate.cnot_count
 
         # Congestion penalty: penalize SWAP paths through congested bottleneck nodes
         if congestion is not None and betweenness is not None and congestion_weight > 0 and swaps:
@@ -1532,7 +1538,7 @@ class qgd_Partition_Aware_Mapping:
                     topology_candidates = self._get_subtopologies_of_type_cached(mini_topology)
                 for topology_candidate in topology_candidates:
                     for pdx, permutation_pair in enumerate(partition.permutations_pairs[tdx]):
-                        partition_candidates.append(PartitionCandidate(partition_idx,tdx,pdx,partition.circuit_structures[tdx][pdx],permutation_pair[0],permutation_pair[1],topology_candidate,mini_topology,partition.qubit_map,partition.involved_qbits))
+                        partition_candidates.append(PartitionCandidate(partition_idx,tdx,pdx,partition.circuit_structures[tdx][pdx],permutation_pair[0],permutation_pair[1],topology_candidate,mini_topology,partition.qubit_map,partition.involved_qbits,cnot_count=partition.cnot_counts[tdx][pdx]))
         return partition_candidates
 
     # ------------------------------------------------------------------------
