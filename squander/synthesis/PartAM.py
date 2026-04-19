@@ -578,6 +578,7 @@ class qgd_Partition_Aware_Mapping:
 
         D = self.compute_distances_bfs(N)
         scoring_partitions = self._build_scoring_partitions(optimized_partitions)
+        seeded_pi = self._compute_seeded_layout(optimized_partitions, D, N, circ)
 
         n_iterations = self.config.get('sabre_iterations', 1)
         n_trials = self.config.get('n_layout_trials', 1)
@@ -585,10 +586,10 @@ class qgd_Partition_Aware_Mapping:
         do_cleanup = self.config.get('cleanup', True)
         routing_start = time.time()
         if n_iterations == 0:
-            # Single forward pass from identity layout
+            # Single forward pass from seeded layout
             F = self.get_initial_layer(IDAG, N, optimized_partitions)
             partition_order, pi, pi_initial = self.Heuristic_Search(
-                F, pi=np.arange(N), DAG=DAG, IDAG=IDAG,
+                F, pi=seeded_pi.copy(), DAG=DAG, IDAG=IDAG,
                 optimized_partitions=optimized_partitions,
                 scoring_partitions=scoring_partitions, D=D,
             )
@@ -612,7 +613,7 @@ class qgd_Partition_Aware_Mapping:
 
                 for trial in range(max(1, n_trials)):
                     rng = np.random.RandomState(random_seed + trial) if n_trials > 1 else None
-                    pi = np.arange(N)
+                    pi = seeded_pi.copy() if trial == 0 else np.arange(N)
 
                     for iteration in range(n_iterations):
                         # Reverse pass: walk DAG backwards (swap DAG↔IDAG)
@@ -667,7 +668,7 @@ class qgd_Partition_Aware_Mapping:
 
                 for trial in range(max(1, n_trials)):
                     rng = np.random.RandomState(random_seed + trial) if n_trials > 1 else None
-                    pi = np.arange(N)
+                    pi = seeded_pi.copy() if trial == 0 else np.arange(N)
 
                     for iteration in range(n_iterations):
                         # Reverse pass: walk DAG backwards (swap DAG↔IDAG)
@@ -751,8 +752,9 @@ class qgd_Partition_Aware_Mapping:
         if len(partition_candidates) <= top_k:
             return partition_candidates
         local_cost_weight = self.config.get('local_cost_weight', 0.1)
+        swap_cost = self.config.get('swap_cost', 15.0)
         estimates = np.array([
-            pc.estimate_swap_count(pi, D, reverse=reverse) * 3 + local_cost_weight * pc.cnot_count
+            pc.estimate_swap_count(pi, D, reverse=reverse) * swap_cost + local_cost_weight * pc.cnot_count
             for pc in partition_candidates
         ])
         top_k_indices = np.argpartition(estimates, top_k)[:top_k]
@@ -927,6 +929,7 @@ class qgd_Partition_Aware_Mapping:
                             canonical_data=canonical_data,
                             adj=self._adj,
                             local_cost_weight=self.config.get('local_cost_weight', 0.1),
+                            swap_cost=self.config.get('swap_cost', 15.0),
                         )
                         for partition_candidate in partition_candidates
                     ]
@@ -1035,6 +1038,7 @@ class qgd_Partition_Aware_Mapping:
                     canonical_data=canonical_data,
                     adj=self._adj,
                     local_cost_weight=self.config.get('local_cost_weight', 0.1),
+                    swap_cost=self.config.get('swap_cost', 15.0),
                 )
                 for pc in partition_candidates
             ]
@@ -1150,10 +1154,10 @@ class qgd_Partition_Aware_Mapping:
     def score_partition_candidate(partition_candidate, F, pi, scoring_partitions, D, swap_cache,
                                   E=None, W=0.5, alpha=0.9, reverse=False,
                                   canonical_data=None, adj=None,
-                                  local_cost_weight=0.1):
+                                  local_cost_weight=0.1, swap_cost=15.0):
         """LightSABRE-style relative scoring (arXiv:2409.08368, eq. 1).
 
-        H = 3 * |swaps|
+        H = swap_cost * |swaps|
           + local_cost_weight * cand.cnot_count
           + (1/|F'|) * average routing cost over F \\ {cand}
           + (W/|E|)  * alpha^d-decayed routing cost over E
@@ -1161,7 +1165,7 @@ class qgd_Partition_Aware_Mapping:
         swaps, output_perm = partition_candidate.transform_pi(
             pi, D, swap_cache, reverse=reverse, adj=adj, neighbor_info=None,
         )
-        score = 3.0 * len(swaps)
+        score = swap_cost * len(swaps)
         score += local_cost_weight * partition_candidate.cnot_count
 
         if canonical_data is None:
@@ -1186,7 +1190,7 @@ class qgd_Partition_Aware_Mapping:
                 continue
             phys_u = output_perm_arr[eu]
             phys_v = output_perm_arr[entry['edges_v']]
-            f_sum += 3.0 * np.maximum(0, D_arr[phys_u, phys_v] - 1).sum()
+            f_sum += swap_cost * np.maximum(0, D_arr[phys_u, phys_v] - 1).sum()
         if n_other > 0:
             score += f_sum / n_other
 
@@ -1204,7 +1208,7 @@ class qgd_Partition_Aware_Mapping:
                     continue
                 phys_u = output_perm_arr[eu]
                 phys_v = output_perm_arr[entry['edges_v']]
-                d_cost = 3.0 * np.maximum(0, D_arr[phys_u, phys_v] - 1).sum()
+                d_cost = swap_cost * np.maximum(0, D_arr[phys_u, phys_v] - 1).sum()
                 e_sum += (alpha ** depth) * d_cost
             score += W * e_sum / len(E)
 
@@ -1379,6 +1383,196 @@ class qgd_Partition_Aware_Mapping:
         self._adj = [list(adj[i]) for i in range(N)]
 
         return D
+
+    def _compute_seeded_layout(self, optimized_partitions, D, N, circ):
+        """VF2Layout + SabrePreLayout seeded initial layout (LightSABRE §II.3).
+
+        The interaction graph is built from the circuit's two-qubit gate pairs
+        (matching the paper's gate-level approach), not from partition cliques.
+        Partition-level weights are used only for the greedy fallback.
+
+        Steps:
+        1. VF2Layout: subgraph isomorphism of gate interaction graph into
+           hardware topology.  If a mapping exists, every gate qubit pair
+           lands on adjacent physical qubits (zero SWAPs).
+        2. SabrePreLayout: augment topology with distance-d edges (d=2),
+           retry VF2 — handles "almost perfect" embeddings.
+        3. Fallback: greedy weighted-distance placement from partition weights.
+        """
+        from collections import defaultdict
+        from squander.synthesis.PartAM_utils import PartitionSynthesisResult, SingleQubitPartitionResult
+
+        if not self.topology:
+            return np.arange(N)
+
+        # --- build gate-level interaction graph from circuit CNOT pairs ---
+        gate_edges = set()
+        for g in circ.get_Gates():
+            gname = str(type(g).__name__)
+            if 'CNOT' in gname or 'CX' in gname:
+                ctrl = g.get_Control_Qbit()
+                tgt = g.get_Target_Qbit()
+                gate_edges.add((min(ctrl, tgt), max(ctrl, tgt)))
+
+        if not gate_edges:
+            return np.arange(N)
+
+        # --- try rustworkx VF2 approaches ---
+        try:
+            import rustworkx as rx
+        except ImportError:
+            return self._greedy_seeded_layout(optimized_partitions, D, N)
+
+        G_int = rx.PyGraph()
+        G_int.add_nodes_from(range(N))
+        for u, v in gate_edges:
+            G_int.add_edge(u, v, None)
+
+        G_hw = rx.PyGraph()
+        G_hw.add_nodes_from(range(N))
+        for u, v in self.topology:
+            G_hw.add_edge(u, v, None)
+
+        # Step 1: VF2Layout — exact subgraph isomorphism
+        pi = self._try_vf2_layout(G_int, G_hw, N)
+        if pi is not None:
+            return pi
+
+        # Step 2: SabrePreLayout — augment topology with distance-2 edges
+        G_aug = rx.PyGraph()
+        G_aug.add_nodes_from(range(N))
+        seen = set()
+        for u, v in self.topology:
+            G_aug.add_edge(u, v, None)
+            seen.add((min(u, v), max(u, v)))
+        for i in range(N):
+            for j in range(i + 1, N):
+                if (i, j) not in seen and D[i][j] <= 2:
+                    G_aug.add_edge(i, j, None)
+                    seen.add((i, j))
+
+        pi = self._try_vf2_layout(G_int, G_aug, N)
+        if pi is not None:
+            return pi
+
+        # Step 3: greedy fallback using partition-level weights
+        return self._greedy_seeded_layout(optimized_partitions, D, N)
+
+    def _try_vf2_layout(self, G_int, G_hw, N):
+        """Try VF2 subgraph isomorphism of G_int into G_hw.
+
+        Returns pi (logical->physical mapping) or None if no embedding exists.
+        Uses induced=False to allow non-edges in the interaction graph to
+        correspond to edges in the hardware graph (monotone subgraph iso).
+        """
+        import rustworkx as rx
+
+        try:
+            vf2_iter = rx.vf2_mapping(G_hw, G_int, subgraph=True, induced=False)
+            mapping = next(vf2_iter)  # {hw_node: int_node}
+        except StopIteration:
+            return None
+
+        # Invert: pi[logical_q] = physical_q
+        pi = np.zeros(N, dtype=int)
+        inv = {v: k for k, v in mapping.items()}
+        used = set(inv.values())
+        free = [p for p in range(N) if p not in used]
+        fi = 0
+        for q in range(N):
+            if q in inv:
+                pi[q] = inv[q]
+            else:
+                pi[q] = free[fi]
+                fi += 1
+        return pi
+
+    def _greedy_seeded_layout(self, optimized_partitions, D, N):
+        """Greedy weighted-distance placement (fallback when VF2 fails)."""
+        from collections import defaultdict
+        from squander.synthesis.PartAM_utils import PartitionSynthesisResult, SingleQubitPartitionResult
+
+        # Build interaction weights from partitions
+        interaction_weight = defaultdict(float)
+        for partition in optimized_partitions:
+            if isinstance(partition, SingleQubitPartitionResult):
+                continue
+            if not isinstance(partition, PartitionSynthesisResult):
+                continue
+            involved = list(partition.involved_qbits)
+            if len(involved) < 2:
+                continue
+            best_cnot = float('inf')
+            for tdx in range(len(partition.cnot_counts)):
+                if not partition.cnot_counts[tdx]:
+                    continue
+                cnot_min = min(partition.cnot_counts[tdx])
+                if cnot_min < best_cnot:
+                    best_cnot = cnot_min
+            if best_cnot == float('inf'):
+                continue
+            for i in range(len(involved)):
+                for j in range(i + 1, len(involved)):
+                    key = (min(involved[i], involved[j]),
+                           max(involved[i], involved[j]))
+                    interaction_weight[key] += best_cnot
+
+        if not interaction_weight:
+            return np.arange(N)
+
+        pi = np.arange(N)
+        placed_logical = set()
+        placed_physical = set()
+
+        (q1, q2), _ = max(interaction_weight.items(), key=lambda x: x[1])
+        p1, p2 = self.topology[0]
+
+        holder1 = np.where(pi == p1)[0][0]
+        pi[q1], pi[holder1] = p1, pi[q1]
+        holder2 = np.where(pi == p2)[0][0]
+        pi[q2], pi[holder2] = p2, pi[q2]
+        placed_logical.update([q1, q2])
+        placed_physical.update([p1, p2])
+
+        remaining = [q for q in range(N) if q not in placed_logical]
+
+        def _score(q):
+            return sum(
+                interaction_weight.get((min(q, pq), max(q, pq)), 0.0)
+                for pq in placed_logical
+            )
+
+        remaining.sort(key=_score, reverse=True)
+
+        for logical_q in remaining:
+            best_physical = None
+            best_dist = float('inf')
+
+            for physical_q in range(N):
+                if physical_q in placed_physical:
+                    continue
+
+                total_dist = 0.0
+                total_w = 0.0
+                for other_q in placed_logical:
+                    key = (min(logical_q, other_q), max(logical_q, other_q))
+                    w = interaction_weight.get(key, 0.0)
+                    if w > 0:
+                        total_dist += D[physical_q][pi[other_q]] * w
+                        total_w += w
+
+                avg = total_dist / total_w if total_w > 0 else 0.0
+                if avg < best_dist:
+                    best_dist = avg
+                    best_physical = physical_q
+
+            if best_physical is not None:
+                holder = np.where(pi == best_physical)[0][0]
+                pi[logical_q], pi[holder] = best_physical, pi[logical_q]
+                placed_logical.add(logical_q)
+                placed_physical.add(best_physical)
+
+        return pi
 
 
     def generate_DAG_levels(self, circuit):
