@@ -91,6 +91,7 @@ class qgd_Partition_Aware_Mapping:
         self.config.setdefault('random_seed', 42)
         self.config.setdefault('cleanup', True)
         self.config.setdefault('prefilter_top_k', 50)
+        self.config.setdefault('cleanup_top_k', 3)
         strategy = self.config['strategy']
         allowed_strategies = ['TreeSearch', 'TabuSearch', 'Adaptive']
         if not strategy in allowed_strategies:
@@ -608,8 +609,7 @@ class qgd_Partition_Aware_Mapping:
                 saved_sq_circuits = {i: p.circuit for i, p in enumerate(optimized_partitions)
                                      if isinstance(p, SingleQubitPartitionResult)}
 
-                best_circuit = best_params = best_pi_init = best_pi = None
-                best_cost = float('inf')
+                trial_results = []  # (pre_cleanup_cnots, circuit, params, pi_init, pi_out)
 
                 for trial in range(max(1, n_trials)):
                     rng = np.random.RandomState(random_seed + trial) if n_trials > 1 else None
@@ -642,21 +642,30 @@ class qgd_Partition_Aware_Mapping:
                         F_trial, pi, DAG, IDAG, optimized_partitions, scoring_partitions, D,
                     )
 
-                    # Build circuit + cleanup
                     trial_circuit, trial_params = self.Construct_circuit_from_HS(
                         partition_order, optimized_partitions, N,
                     )
                     pre_cleanup_cnots = trial_circuit.get_Gate_Nums().get('CNOT', 0)
-                    trial_circuit, trial_params = wco.OptimizeWideCircuit(
+                    trial_results.append((pre_cleanup_cnots, trial_circuit, trial_params, pi_init, pi_out))
+
+                # Apply cleanup only to the top-k candidates by pre-cleanup CNOT count
+                cleanup_top_k = self.config.get('cleanup_top_k', 3)
+                trial_results.sort(key=lambda x: x[0])
+                top_k_results = trial_results[:cleanup_top_k]
+
+                best_circuit = best_params = best_pi_init = best_pi = None
+                best_cost = float('inf')
+                best_pre_cleanup = None
+
+                for pre_cleanup_cnots, trial_circuit, trial_params, pi_init, pi_out in top_k_results:
+                    cleaned_circuit, cleaned_params = wco.OptimizeWideCircuit(
                         trial_circuit.get_Flat_Circuit(), trial_params
                     )
-
-                    cost = trial_circuit.get_Gate_Nums().get('CNOT', 0)
-
+                    cost = cleaned_circuit.get_Gate_Nums().get('CNOT', 0)
                     if cost < best_cost:
                         best_cost = cost
                         best_pre_cleanup = pre_cleanup_cnots
-                        best_circuit, best_params = trial_circuit, trial_params
+                        best_circuit, best_params = cleaned_circuit, cleaned_params
                         best_pi_init, best_pi = pi_init, pi_out
 
                 final_circuit, final_parameters = best_circuit, best_params
