@@ -305,16 +305,6 @@ class qgd_Partition_Aware_Mapping:
             if best_err <= tolerance:
                 break
 
-        if best_err > tolerance:
-            N = int(np.log2(Umtx.shape[0]))
-            logging.warning(
-                "DecomposePartition_and_Perm: %d-qubit partition on topology %s "
-                "did not reach tolerance %.2e after %d retries "
-                "(best error %.2e). Will attempt Qiskit routing fallback.",
-                N, list(mini_topology) if mini_topology else None,
-                tolerance, max_retries, best_err,
-            )
-
         return best_circuit, best_params, best_err
 
     # ------------------------------------------------------------------------
