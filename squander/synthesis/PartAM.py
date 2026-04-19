@@ -180,6 +180,40 @@ class qgd_Partition_Aware_Mapping:
                     result.add_result((new_P_i, new_P_o), new_circ, new_params, topology_idx)
                     known_pairs[pair_key].add((new_P_i, new_P_o))
 
+    @staticmethod
+    def _qiskit_routing_fallback(meta, mini_topology):
+        """Route original partition circuit on mini_topology using Qiskit transpiler.
+
+        Called when unitary synthesis fails to reach tolerance.  Routes the
+        original (un-permuted) circuit and returns it with identity P_i/P_o.
+        Returns (circuit, params) or (None, None) if Qiskit is unavailable or
+        routing fails.
+        """
+        try:
+            from squander.IO_interfaces.Qiskit_IO import get_Qiskit_Circuit, convert_Qiskit_to_Squander
+            from qiskit.compiler import transpile
+            from qiskit.transpiler import CouplingMap
+        except ImportError:
+            return None, None
+
+        try:
+            qk_circ = get_Qiskit_Circuit(meta['circuit'], meta['params'])
+            edges = []
+            for u, v in mini_topology:
+                edges.append([u, v])
+                edges.append([v, u])
+            coupling_map = CouplingMap(couplinglist=edges)
+            qk_routed = transpile(
+                qk_circ,
+                coupling_map=coupling_map,
+                optimization_level=1,
+                basis_gates=['cx', 'u3'],
+            )
+            return convert_Qiskit_to_Squander(qk_routed)
+        except Exception as exc:
+            logging.warning("Qiskit routing fallback failed: %s", exc)
+            return None, None
+
     def _build_scoring_partitions(self, optimized_partitions) -> List[Optional[PartitionScoreData]]:
         """
         Create lightweight, picklable views of partitions that contain only the
@@ -276,13 +310,12 @@ class qgd_Partition_Aware_Mapping:
             logging.warning(
                 "DecomposePartition_and_Perm: %d-qubit partition on topology %s "
                 "did not reach tolerance %.2e after %d retries "
-                "(best error %.2e). Returning best attempt; final circuit error "
-                "may be elevated.",
+                "(best error %.2e). Will attempt Qiskit routing fallback.",
                 N, list(mini_topology) if mini_topology else None,
                 tolerance, max_retries, best_err,
             )
 
-        return best_circuit, best_params
+        return best_circuit, best_params, best_err
 
     # ------------------------------------------------------------------------
     # Circuit Synthesis
@@ -472,13 +505,14 @@ class qgd_Partition_Aware_Mapping:
                 N = meta['N']
                 P_o_initial = stage1_P_o[(partition_idx, topology_idx)]
                 mini_topology = meta['mini_topologies'][topology_idx]
-                synth_circuit, synth_params = decomp_cache[ck]
-                pair_key = (partition_idx, topology_idx)
-                self._add_result_with_auts(
-                    results_map[partition_idx], (P_i, P_o_initial),
-                    synth_circuit, synth_params, topology_idx,
-                    N, mini_topology, known_pairs, pair_key, use_auts, aut_cache
-                )
+                synth_circuit, synth_params, synth_err = decomp_cache[ck]
+                if synth_err <= self.config['tolerance']:
+                    pair_key = (partition_idx, topology_idx)
+                    self._add_result_with_auts(
+                        results_map[partition_idx], (P_i, P_o_initial),
+                        synth_circuit, synth_params, topology_idx,
+                        N, mini_topology, known_pairs, pair_key, use_auts, aut_cache
+                    )
 
             # Collect Stage 1 pool results
             cache_hits_s1 = len(stage1_cached)
@@ -486,18 +520,19 @@ class qgd_Partition_Aware_Mapping:
                 stage1_futures, desc=f"Stage 1 Synthesis ({cache_hits_s1} cached)",
                 disable=disable_pbar
             ):
-                synth_circuit, synth_params = future.get()
-                decomp_cache[ck] = (synth_circuit, synth_params)
+                synth_circuit, synth_params, synth_err = future.get()
+                decomp_cache[ck] = (synth_circuit, synth_params, synth_err)
                 meta = partition_meta[partition_idx]
                 N = meta['N']
                 P_o_initial = stage1_P_o[(partition_idx, topology_idx)]
                 mini_topology = meta['mini_topologies'][topology_idx]
-                pair_key = (partition_idx, topology_idx)
-                self._add_result_with_auts(
-                    results_map[partition_idx], (P_i, P_o_initial),
-                    synth_circuit, synth_params, topology_idx,
-                    N, mini_topology, known_pairs, pair_key, use_auts, aut_cache
-                )
+                if synth_err <= self.config['tolerance']:
+                    pair_key = (partition_idx, topology_idx)
+                    self._add_result_with_auts(
+                        results_map[partition_idx], (P_i, P_o_initial),
+                        synth_circuit, synth_params, topology_idx,
+                        N, mini_topology, known_pairs, pair_key, use_auts, aut_cache
+                    )
 
             # ---- Stage 2: fix top-k P_i from Stage 1, sweep all P_o ----
             top_k_pi = self.config.get('top_k_pi', 1)
@@ -532,13 +567,14 @@ class qgd_Partition_Aware_Mapping:
                 meta = partition_meta[partition_idx]
                 N = meta['N']
                 mini_topology = meta['mini_topologies'][topology_idx]
-                synth_circuit, synth_params = decomp_cache[ck]
-                pair_key = (partition_idx, topology_idx)
-                self._add_result_with_auts(
-                    results_map[partition_idx], (tuple(P_i_cand), P_o),
-                    synth_circuit, synth_params, topology_idx,
-                    N, mini_topology, known_pairs, pair_key, use_auts, aut_cache
-                )
+                synth_circuit, synth_params, synth_err = decomp_cache[ck]
+                if synth_err <= self.config['tolerance']:
+                    pair_key = (partition_idx, topology_idx)
+                    self._add_result_with_auts(
+                        results_map[partition_idx], (tuple(P_i_cand), P_o),
+                        synth_circuit, synth_params, topology_idx,
+                        N, mini_topology, known_pairs, pair_key, use_auts, aut_cache
+                    )
 
             # Collect Stage 2 pool results
             cache_hits_s2 = len(stage2_cached)
@@ -546,16 +582,45 @@ class qgd_Partition_Aware_Mapping:
                 stage2_futures, desc=f"Stage 2 Synthesis ({cache_hits_s2} cached)",
                 disable=disable_pbar
             ):
-                synth_circuit, synth_params = future.get()
-                decomp_cache[ck] = (synth_circuit, synth_params)
+                synth_circuit, synth_params, synth_err = future.get()
+                decomp_cache[ck] = (synth_circuit, synth_params, synth_err)
                 meta = partition_meta[partition_idx]
                 N = meta['N']
                 mini_topology = meta['mini_topologies'][topology_idx]
-                pair_key = (partition_idx, topology_idx)
-                self._add_result_with_auts(
-                    results_map[partition_idx], (tuple(P_i_cand), P_o),
-                    synth_circuit, synth_params, topology_idx,
-                    N, mini_topology, known_pairs, pair_key, use_auts, aut_cache
+                if synth_err <= self.config['tolerance']:
+                    pair_key = (partition_idx, topology_idx)
+                    self._add_result_with_auts(
+                        results_map[partition_idx], (tuple(P_i_cand), P_o),
+                        synth_circuit, synth_params, topology_idx,
+                        N, mini_topology, known_pairs, pair_key, use_auts, aut_cache
+                    )
+
+        # Qiskit routing fallback: for any (partition, topology) pair where all
+        # synthesis attempts failed (no results stored), route the original circuit
+        # with Qiskit and add the result with identity P_i/P_o permutations.
+        qiskit_fallback_cache = {}
+        for partition_idx, meta in enumerate(partition_meta):
+            if meta is None:
+                continue
+            N = meta['N']
+            for topology_idx, mini_topology in enumerate(meta['mini_topologies']):
+                if results_map[partition_idx].permutations_pairs[topology_idx]:
+                    continue
+                fkey = (partition_idx, topology_idx)
+                if fkey not in qiskit_fallback_cache:
+                    fb_circuit, fb_params = self._qiskit_routing_fallback(meta, mini_topology)
+                    qiskit_fallback_cache[fkey] = (fb_circuit, fb_params)
+                fb_circuit, fb_params = qiskit_fallback_cache[fkey]
+                if fb_circuit is None:
+                    logging.warning(
+                        "Partition %d topology_idx %d: synthesis failed and Qiskit "
+                        "fallback unavailable; no result for this combination.",
+                        partition_idx, topology_idx,
+                    )
+                    continue
+                identity = tuple(range(N))
+                results_map[partition_idx].add_result(
+                    (identity, identity), fb_circuit, fb_params, topology_idx
                 )
 
         return results_map
