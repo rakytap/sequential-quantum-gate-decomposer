@@ -652,6 +652,9 @@ qgd_Generative_Quantum_Machine_Learning_Base_Wrapper_set_Optimizer( qgd_Generati
     else if ( strcmp("bfgs", optimizer_C)==0 || strcmp("BFGS", optimizer_C)==0) {
         qgd_optimizer = BFGS;        
     }
+    else if ( strcmp("bfgs2", optimizer_C)==0 || strcmp("BFGS2", optimizer_C)==0) {
+        qgd_optimizer = BFGS2;        
+    }
     else if ( strcmp("adam", optimizer_C)==0 || strcmp("ADAM", optimizer_C)==0) {
         qgd_optimizer = ADAM;        
     }

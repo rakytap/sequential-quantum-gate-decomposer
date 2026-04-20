@@ -157,7 +157,7 @@ CPU_time = 0.0;
             config["use_dual_annealing"].get_property( use_dual_annealing );  
         }
         if (!use_basin_hopping && !use_de && !use_dual_annealing) {
-            use_dual_annealing = true; //use_basin_hopping = true;
+            use_dual_annealing = true;// use_basin_hopping = true;
         } 
 
         if (use_basin_hopping) {
@@ -193,6 +193,7 @@ CPU_time = 0.0;
             Matrix_real x_current = solution_guess.copy();   // current basin representative
 
 
+            export_current_cost_fnc(current_minimum);
             for (long long iter_idx=0; iter_idx<iteration_loops_max; iter_idx++) {
 
                 for (int j = 0; j < num_of_parameters; ++j) {
@@ -483,6 +484,7 @@ CPU_time = 0.0;
             long long da_maxfun          = 10000000; // max function evaluations
             double da_tol                = 1e-6;     // required improvement threshold
             long long da_no_local_search = 0;        // 0 => do local search (polish), 1 => skip
+            long long check_for_convergence = 1;    // 0 => no convergence check, 1 => stop if no improvement
             if (config.count("da_initial_temp") > 0)        config["da_initial_temp"].get_property(da_initial_temp);
             if (config.count("da_restart_temp_ratio") > 0)  config["da_restart_temp_ratio"].get_property(da_restart_temp_ratio);
             if (config.count("da_visit") > 0)               config["da_visit"].get_property(da_visit);
@@ -499,6 +501,10 @@ CPU_time = 0.0;
             if (config.count("da_no_local_search") > 0) {
                 long long v; config["da_no_local_search"].get_property(v);
                 da_no_local_search = v ? 1 : 0;
+            }
+            if (config.count("check_for_convergence") > 0) {
+                long long v; config["check_for_convergence"].get_property(v);
+                check_for_convergence = v ? 1 : 0;
             }
 
             // Sanity
@@ -620,7 +626,9 @@ CPU_time = 0.0;
                 if (std::abs(last_best - f_best) <= da_tol) {
                     // one "cooling" step with negligible improvement
                     // You could require multiple stagnant steps if desired.
-                    break;
+                    if (check_for_convergence) {
+                        break;
+                    }
                 }
                 last_best = f_best;
             }

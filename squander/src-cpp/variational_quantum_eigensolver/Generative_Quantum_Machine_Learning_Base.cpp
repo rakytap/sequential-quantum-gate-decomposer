@@ -170,6 +170,7 @@ Generative_Quantum_Machine_Learning_Base::Generative_Quantum_Machine_Learning_Ba
         dis = std::discrete_distribution<>(P_star.data, P_star.data + P_star.size());
         current_samples_P_star = std::vector<int>(batch_size);
         ev_P_star_P_star = expectation_value_P_star_P_star_approx();
+        std::cout << "Expectation value of P_star_P_star calculated: " << ev_P_star_P_star << std::endl;
         last_sampled_iteration = -1;
     }
     number_of_iters_per_trhead = 0;
@@ -339,9 +340,10 @@ double Generative_Quantum_Machine_Learning_Base::expectation_value_P_star_P_star
         double& ev_local = priv_partial_ev.local();
 
 
-        for (int d = r.begin(); d < r.end(); d++) {
+        for (size_t d = r.begin(); d < r.end(); d++) {
             // Calculate Hamming distance: popcount of XOR value
-            size_t hamming_dist = __builtin_popcount(d);
+            // gray code
+            size_t hamming_dist = __builtin_popcount(d^(d>>1));
 
             // Get kernel value for this Hamming distance
             if (hamming_dist >= gaussian_lookup_table.size()) {
@@ -371,12 +373,13 @@ double Generative_Quantum_Machine_Learning_Base::expectation_value_P_star_P_star
         for (int idx2 = 0; idx2 < batch_size; idx2++) {
             int sample_idx1 = current_samples_P_star[idx1];
             int sample_idx2 = current_samples_P_star[idx2];
+            sample_idx1 = sample_idx1 ^ (sample_idx1 >> 1);
+            sample_idx2 = sample_idx2 ^ (sample_idx2 >> 1);
             int hamming_dist = __builtin_popcount(sample_idx1 ^ sample_idx2);
             ev += gaussian_lookup_table[hamming_dist];
         }
     }
     ev /= (batch_size * (batch_size-1));
-    std::cout << "Expectation value of P_star_P_star calculated: " << ev << std::endl;
     return ev;
 }
 
@@ -482,9 +485,8 @@ double Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions_exact(
         double& ev_P_theta_P_star_local = priv_partial_ev_P_theta_P_star.local();
         double& ev_P_theta_P_theta_local = priv_partial_ev_P_theta_P_theta.local();
 
-        for (int d = r.begin(); d < r.end(); d++) {
-            int hamming_dist = __builtin_popcount(d);
-
+        for (size_t d = r.begin(); d < r.end(); d++) {
+            int hamming_dist = __builtin_popcount(d^(d>>1));
 
             double kernel_val = gaussian_lookup_table[hamming_dist];
             ev_P_theta_P_star_local += sum_pairs_precalc_P_star_squared[d]/N * kernel_val;
@@ -545,12 +547,12 @@ double Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions_approx
         double& ev_P_theta_P_theta_local = priv_partial_ev_P_theta_P_theta.local();
         double& ev_P_theta_P_star_local = priv_partial_ev_P_theta_P_star.local();
         for (int idx1 = r.begin(); idx1 < r.end(); idx1++) {
-            int hamming_dist = __builtin_popcount(idx1);
+            int hamming_dist = __builtin_popcount(idx1^(idx1>>1));
             double kernel_val = gaussian_lookup_table[hamming_dist];
             ev_P_theta_P_theta_local += sum_pairs_precalc[idx1]/N * kernel_val;
 
             for (int idx2 = 0; idx2 < batch_size; idx2++) {
-                int hamming_dist = __builtin_popcount(idx1 ^ current_samples_P_star[idx2]);
+                int hamming_dist = __builtin_popcount((idx1^(idx1>>1)) ^ (current_samples_P_star[idx2]^(current_samples_P_star[idx2]>>1)));
                 ev_P_theta_P_star_local += P_theta[idx1]*gaussian_lookup_table[hamming_dist];
             }
         }
@@ -558,7 +560,7 @@ double Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions_approx
     priv_partial_ev_P_theta_P_theta.combine_each([&ev_P_theta_P_theta](double a) { ev_P_theta_P_theta += a; });
     priv_partial_ev_P_theta_P_star.combine_each([&ev_P_theta_P_star](double a) { ev_P_theta_P_star += a; });
 
-    ev_P_theta_P_star /= batch_size-1;
+    ev_P_theta_P_star /= batch_size;
 
     {
         tbb::spin_mutex::scoped_lock my_lock{my_mutex};
@@ -848,7 +850,7 @@ double Generative_Quantum_Machine_Learning_Base::MMD_gradient_exact(Matrix& Stat
                     sum_pairs_P_theta_deriv_P_star += P_theta_deriv[x] * P_star[y];
                 }
             }
-            size_t hamming_dist = __builtin_popcount(d);
+            size_t hamming_dist = __builtin_popcount(d^(d>>1));
             if (hamming_dist >= gaussian_lookup_table.size()) {
                 throw std::runtime_error("Hamming distance is greater than the size of the lookup table");
             }
