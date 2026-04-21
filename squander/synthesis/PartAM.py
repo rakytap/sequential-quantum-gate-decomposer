@@ -54,7 +54,52 @@ from squander.synthesis.PartAM_utils import (
     construct_swap_circuit,
 )
 
+_routing_worker_state = None
 
+
+def _init_layout_trial_worker(state):
+    global _routing_worker_state
+    from squander.synthesis.PartAM import qgd_Partition_Aware_Mapping
+
+    worker_config = dict(state["config"])
+    worker_config["progressbar"] = False
+
+    mapper = qgd_Partition_Aware_Mapping(worker_config)
+    mapper._adj = [list(neighbors) for neighbors in state["adj"]]
+    mapper._swap_cache = {}
+
+    _routing_worker_state = {
+        "mapper": mapper,
+        "seeded_pi": np.asarray(state["seeded_pi"]),
+        "DAG": state["DAG"],
+        "IDAG": state["IDAG"],
+        "layout_partitions": state["layout_partitions"],
+        "scoring_partitions": state["scoring_partitions"],
+        "D": np.asarray(state["D"]),
+        "candidate_cache": state["candidate_cache"],
+        "n_iterations": state["n_iterations"],
+        "n_trials": state["n_trials"],
+        "random_seed": state["random_seed"],
+    }
+
+
+def _run_layout_trial_worker(trial_idx):
+    state = _routing_worker_state
+    mapper = state["mapper"]
+
+    return mapper._run_single_layout_trial(
+        trial_idx=trial_idx,
+        seeded_pi=state["seeded_pi"],
+        DAG=state["DAG"],
+        IDAG=state["IDAG"],
+        layout_partitions=state["layout_partitions"],
+        scoring_partitions=state["scoring_partitions"],
+        D=state["D"],
+        candidate_cache=state["candidate_cache"],
+        n_iterations=state["n_iterations"],
+        n_trials=state["n_trials"],
+        random_seed=state["random_seed"],
+    )
 # ============================================================================
 # Main Class: qgd_Partition_Aware_Mapping
 # ============================================================================
@@ -93,6 +138,8 @@ class qgd_Partition_Aware_Mapping:
         self.config.setdefault('prefilter_top_k', 50)
         self.config.setdefault('cleanup_top_k', 3)
         strategy = self.config['strategy']
+        self.config.setdefault('parallel_layout_trials', False)
+        self.config.setdefault('layout_trial_workers', 0)
         allowed_strategies = ['TreeSearch', 'TabuSearch', 'Adaptive']
         if not strategy in allowed_strategies:
             raise Exception(f"The strategy should be either of {allowed_strategies}, got {strategy}.")
@@ -261,7 +308,75 @@ class qgd_Partition_Aware_Mapping:
                 )
             )
         return scoring_partitions
+    @staticmethod
+    def _partition_is_single(partition):
+        if isinstance(partition, dict):
+            return partition.get("is_single", False)
+        return isinstance(partition, SingleQubitPartitionResult)
 
+
+    @staticmethod
+    def _partition_involved_qbits(partition):
+        if isinstance(partition, dict):
+            return partition["involved_qbits"]
+        return partition.involved_qbits
+
+
+    @staticmethod
+    def _build_layout_partition_info(optimized_partitions):
+        return [
+            {
+                "is_single": isinstance(
+                    partition, SingleQubitPartitionResult
+                ),
+                "involved_qbits": tuple(partition.involved_qbits),
+            }
+            for partition in optimized_partitions
+        ]
+    def _build_partition_candidate_cache(self, scoring_partitions):
+        """
+        Precompute all PartitionCandidate objects once, grouped by partition_idx.
+
+        Returns:
+            tuple where candidate_cache[partition_idx] is a tuple of
+            PartitionCandidate objects for that partition. Single-qubit
+            partitions get an empty tuple.
+        """
+        candidate_cache = []
+
+        for partition_idx, partition in enumerate(scoring_partitions):
+            if partition is None:
+                candidate_cache.append(())
+                continue
+
+            cached_candidates = []
+            for tdx, mini_topology in enumerate(partition.mini_topologies):
+                topology_candidates = partition.topology_candidates[tdx]
+                permutation_pairs = partition.permutations_pairs[tdx]
+                circuit_structures = partition.circuit_structures[tdx]
+
+                for topology_candidate in topology_candidates:
+                    for pdx, permutation_pair in enumerate(permutation_pairs):
+                        circuit_structure = circuit_structures[pdx]
+                        cached_candidates.append(
+                            PartitionCandidate(
+                                partition_idx,
+                                tdx,
+                                pdx,
+                                circuit_structure,
+                                permutation_pair[0],
+                                permutation_pair[1],
+                                topology_candidate,
+                                mini_topology,
+                                partition.qubit_map,
+                                partition.involved_qbits,
+                                cnot_count=len(circuit_structure),
+                            )
+                        )
+
+            candidate_cache.append(tuple(cached_candidates))
+
+        return tuple(candidate_cache)
     # ------------------------------------------------------------------------
     # Partition Decomposition Methods
     # ------------------------------------------------------------------------
@@ -618,10 +733,139 @@ class qgd_Partition_Aware_Mapping:
     # ------------------------------------------------------------------------
     # Main Public API
     # ------------------------------------------------------------------------
+    def _run_single_layout_trial(
+        self,
+        trial_idx,
+        seeded_pi,
+        DAG,
+        IDAG,
+        layout_partitions,
+        scoring_partitions,
+        D,
+        candidate_cache,
+        n_iterations,
+        n_trials,
+        random_seed,
+    ):
+        N = len(seeded_pi)
+        rng = (
+            np.random.RandomState(random_seed + trial_idx)
+            if n_trials > 1
+            else None
+        )
+        pi = seeded_pi.copy() if trial_idx == 0 else np.arange(N)
 
-    def Partition_Aware_Mapping(self, circ: Circuit, orig_parameters: np.ndarray):
+        for iteration in range(n_iterations):
+            F_rev = self.get_final_layer(DAG, N, layout_partitions)
+            pi, _ = self._heuristic_search_layout_only(
+                F_rev,
+                pi,
+                IDAG,
+                DAG,
+                layout_partitions,
+                scoring_partitions,
+                D,
+                rng=rng,
+                reverse=True,
+                candidate_cache=candidate_cache,
+            )
+
+            if iteration < n_iterations - 1:
+                F_fwd = self.get_initial_layer(IDAG, N, layout_partitions)
+                pi, _ = self._heuristic_search_layout_only(
+                    F_fwd,
+                    pi,
+                    DAG,
+                    IDAG,
+                    layout_partitions,
+                    scoring_partitions,
+                    D,
+                    rng=rng,
+                    candidate_cache=candidate_cache,
+                )
+
+        F_eval = self.get_initial_layer(IDAG, N, layout_partitions)
+        _, cost = self._heuristic_search_layout_only(
+            F_eval,
+            pi.copy(),
+            DAG,
+            IDAG,
+            layout_partitions,
+            scoring_partitions,
+            D,
+            rng=None,
+            candidate_cache=candidate_cache,
+        )
+        return cost, pi
+
+
+    def _run_layout_trials(
+        self,
+        seeded_pi,
+        DAG,
+        IDAG,
+        layout_partitions,
+        scoring_partitions,
+        D,
+        candidate_cache,
+        n_iterations,
+        n_trials,
+        random_seed,
+    ):
+        trial_indices = list(range(max(1, n_trials)))
+        use_parallel = (
+            self.config.get("parallel_layout_trials", False)
+            and len(trial_indices) > 1
+        )
+
+        if not use_parallel:
+            return [
+                self._run_single_layout_trial(
+                    trial_idx=trial_idx,
+                    seeded_pi=seeded_pi,
+                    DAG=DAG,
+                    IDAG=IDAG,
+                    layout_partitions=layout_partitions,
+                    scoring_partitions=scoring_partitions,
+                    D=D,
+                    candidate_cache=candidate_cache,
+                    n_iterations=n_iterations,
+                    n_trials=n_trials,
+                    random_seed=random_seed,
+                )
+                for trial_idx in trial_indices
+            ]
+
+        workers = self.config.get("layout_trial_workers", 0)
+        if workers <= 0:
+            workers = min(len(trial_indices), mp.cpu_count())
+
+        worker_state = {
+            "config": dict(self.config),
+            "adj": tuple(tuple(neighbors) for neighbors in self._adj),
+            "seeded_pi": np.asarray(seeded_pi),
+            "DAG": DAG,
+            "IDAG": IDAG,
+            "layout_partitions": layout_partitions,
+            "scoring_partitions": scoring_partitions,
+            "D": np.asarray(D),
+            "candidate_cache": candidate_cache,
+            "n_iterations": n_iterations,
+            "n_trials": n_trials,
+            "random_seed": random_seed,
+        }
+
+        with Pool(
+            processes=workers,
+            initializer=_init_layout_trial_worker,
+            initargs=(worker_state,),
+        ) as pool:
+            return pool.map(_run_layout_trial_worker, trial_indices)
+        
+    def Partition_Aware_Mapping(
+        self, circ: Circuit, orig_parameters: np.ndarray
+    ):
         N = circ.get_Qbit_Num()
-
 
         optimized_partitions = self.SynthesizeWideCircuit(circ, orig_parameters)
 
@@ -634,24 +878,59 @@ class qgd_Partition_Aware_Mapping:
 
         D = self.compute_distances_bfs(N)
         scoring_partitions = self._build_scoring_partitions(optimized_partitions)
-        seeded_pi = self._compute_seeded_layout(optimized_partitions, D, N, circ)
+        candidate_cache = self._build_partition_candidate_cache(
+            scoring_partitions
+        )
+        layout_partitions = self._build_layout_partition_info(
+            optimized_partitions
+        )
+        seeded_pi = self._compute_seeded_layout(
+            optimized_partitions, D, N, circ
+        )
 
         n_iterations = self.config.get('sabre_iterations', 1)
         n_trials = self.config.get('n_layout_trials', 1)
         random_seed = self.config.get('random_seed', 42)
         do_cleanup = self.config.get('cleanup', True)
+
         routing_start = time.time()
+
         if n_iterations == 0:
-            # Single forward pass from seeded layout
             F = self.get_initial_layer(IDAG, N, optimized_partitions)
             partition_order, pi, pi_initial = self.Heuristic_Search(
-                F, pi=seeded_pi.copy(), DAG=DAG, IDAG=IDAG,
+                F,
+                pi=seeded_pi.copy(),
+                DAG=DAG,
+                IDAG=IDAG,
                 optimized_partitions=optimized_partitions,
-                scoring_partitions=scoring_partitions, D=D,
+                scoring_partitions=scoring_partitions,
+                D=D,
+                candidate_cache=candidate_cache,
             )
+            final_circuit, final_parameters = self.Construct_circuit_from_HS(
+                partition_order, optimized_partitions, N
+            )
+
         else:
+            trial_results = self._run_layout_trials(
+                seeded_pi=seeded_pi,
+                DAG=DAG,
+                IDAG=IDAG,
+                layout_partitions=layout_partitions,
+                scoring_partitions=scoring_partitions,
+                D=D,
+                candidate_cache=candidate_cache,
+                n_iterations=n_iterations,
+                n_trials=max(1, n_trials),
+                random_seed=random_seed,
+            )
+            trial_results.sort(key=lambda x: x[0])
+
             if do_cleanup:
-                from squander.decomposition.qgd_Wide_Circuit_Optimization import qgd_Wide_Circuit_Optimization
+                from squander.decomposition.qgd_Wide_Circuit_Optimization import (
+                    qgd_Wide_Circuit_Optimization,
+                )
+
                 cleanup_config = dict(self.config)
                 cleanup_config['topology'] = self.topology
                 cleanup_config['routed'] = True
@@ -660,125 +939,100 @@ class qgd_Partition_Aware_Mapping:
                 cleanup_config['global_min'] = False
                 wco = qgd_Wide_Circuit_Optimization(cleanup_config)
 
-                # Save single-qubit partition circuits before trial loop
-                saved_sq_circuits = {i: p.circuit for i, p in enumerate(optimized_partitions)
-                                     if isinstance(p, SingleQubitPartitionResult)}
+                saved_sq_circuits = {
+                    i: p.circuit.copy()
+                    for i, p in enumerate(optimized_partitions)
+                    if isinstance(p, SingleQubitPartitionResult)
+                }
 
-                trial_results = []  # (pre_cleanup_cnots, circuit, params, pi_init, pi_out)
-
-                for trial in range(max(1, n_trials)):
-                    rng = np.random.RandomState(random_seed + trial) if n_trials > 1 else None
-                    pi = seeded_pi.copy() if trial == 0 else np.arange(N)
-
-                    for iteration in range(n_iterations):
-                        # Reverse pass: walk DAG backwards (swap DAG↔IDAG)
-                        F_rev = self.get_final_layer(DAG, N, optimized_partitions)
-                        pi, _ = self._heuristic_search_layout_only(
-                            F_rev, pi, IDAG, DAG, optimized_partitions, scoring_partitions, D,
-                            rng=rng,
-                            reverse=True,
-                        )
-
-                        # Forward layout-only pass (skip on last iteration)
-                        if iteration < n_iterations - 1:
-                            F_fwd = self.get_initial_layer(IDAG, N, optimized_partitions)
-                            pi, _ = self._heuristic_search_layout_only(
-                                F_fwd, pi, DAG, IDAG, optimized_partitions, scoring_partitions, D,
-                                rng=rng,
-                            )
-
-                    # Restore single-qubit partition circuits before full forward pass
-                    for i, orig in saved_sq_circuits.items():
-                        optimized_partitions[i].circuit = orig.copy()
-
-                    # Full forward pass
-                    F_trial = self.get_initial_layer(IDAG, N, optimized_partitions)
-                    partition_order, pi_out, pi_init = self.Heuristic_Search(
-                        F_trial, pi, DAG, IDAG, optimized_partitions, scoring_partitions, D,
-                    )
-
-                    trial_circuit, trial_params = self.Construct_circuit_from_HS(
-                        partition_order, optimized_partitions, N,
-                    )
-                    pre_cleanup_cnots = trial_circuit.get_Gate_Nums().get('CNOT', 0)
-                    trial_results.append((pre_cleanup_cnots, trial_circuit, trial_params, pi_init, pi_out))
-
-                # Apply cleanup only to the top-k candidates by pre-cleanup CNOT count
                 cleanup_top_k = self.config.get('cleanup_top_k', 3)
-                trial_results.sort(key=lambda x: x[0])
-                top_k_results = trial_results[:cleanup_top_k]
+                top_layouts = trial_results[:cleanup_top_k]
 
-                best_circuit = best_params = best_pi_init = best_pi = None
+                best_circuit = None
+                best_params = None
+                best_pi_init = None
+                best_pi = None
                 best_cost = float('inf')
                 best_pre_cleanup = None
 
-                for pre_cleanup_cnots, trial_circuit, trial_params, pi_init, pi_out in top_k_results:
-                    cleaned_circuit, cleaned_params = wco.OptimizeWideCircuit(
-                        trial_circuit.get_Flat_Circuit(), trial_params
-                    )
-                    cost = cleaned_circuit.get_Gate_Nums().get('CNOT', 0)
-                    if cost < best_cost:
-                        best_cost = cost
-                        best_pre_cleanup = pre_cleanup_cnots
-                        best_circuit, best_params = cleaned_circuit, cleaned_params
-                        best_pi_init, best_pi = pi_init, pi_out
+                for _, trial_pi in top_layouts:
+                    for idx, orig in saved_sq_circuits.items():
+                        optimized_partitions[idx].circuit = orig.copy()
 
-                final_circuit, final_parameters = best_circuit, best_params
-                pi_initial, pi = best_pi_init, best_pi
+                    F_trial = self.get_initial_layer(
+                        IDAG, N, optimized_partitions
+                    )
+                    partition_order, pi_out, pi_init = self.Heuristic_Search(
+                        F_trial,
+                        trial_pi.copy(),
+                        DAG,
+                        IDAG,
+                        optimized_partitions,
+                        scoring_partitions,
+                        D,
+                        candidate_cache=candidate_cache,
+                    )
+
+                    trial_circuit, trial_params = self.Construct_circuit_from_HS(
+                        partition_order, optimized_partitions, N
+                    )
+                    pre_cleanup_cnots = trial_circuit.get_Gate_Nums().get(
+                        'CNOT', 0
+                    )
+
+                    cleaned_circuit, cleaned_params = wco.OptimizeWideCircuit(
+                        trial_circuit.get_Flat_Circuit(),
+                        trial_params,
+                    )
+                    cleaned_cost = cleaned_circuit.get_Gate_Nums().get(
+                        'CNOT', 0
+                    )
+
+                    if cleaned_cost < best_cost:
+                        best_cost = cleaned_cost
+                        best_pre_cleanup = pre_cleanup_cnots
+                        best_circuit = cleaned_circuit
+                        best_params = cleaned_params
+                        best_pi_init = pi_init
+                        best_pi = pi_out
+
+                final_circuit = best_circuit
+                final_parameters = best_params
+                pi_initial = best_pi_init
+                pi = best_pi
 
             else:
-                best_pi = None
-                best_cost = float('inf')
+                _, best_pi = trial_results[0]
 
-                for trial in range(max(1, n_trials)):
-                    rng = np.random.RandomState(random_seed + trial) if n_trials > 1 else None
-                    pi = seeded_pi.copy() if trial == 0 else np.arange(N)
-
-                    for iteration in range(n_iterations):
-                        # Reverse pass: walk DAG backwards (swap DAG↔IDAG)
-                        F_rev = self.get_final_layer(DAG, N, optimized_partitions)
-                        pi, _ = self._heuristic_search_layout_only(
-                            F_rev, pi, IDAG, DAG, optimized_partitions, scoring_partitions, D,
-                            rng=rng,
-                            reverse=True,
-                        )
-
-                        # Forward layout-only pass (skip on last iteration — real pass follows)
-                        if iteration < n_iterations - 1:
-                            F_fwd = self.get_initial_layer(IDAG, N, optimized_partitions)
-                            pi, _ = self._heuristic_search_layout_only(
-                                F_fwd, pi, DAG, IDAG, optimized_partitions, scoring_partitions, D,
-                                rng=rng,
-                            )
-
-                    # Score this trial: deterministic forward layout-only pass
-                    F_eval = self.get_initial_layer(IDAG, N, optimized_partitions)
-                    _, cost = self._heuristic_search_layout_only(
-                        F_eval, pi.copy(), DAG, IDAG, optimized_partitions, scoring_partitions, D,
-                        rng=None,
-                    )
-
-                    if cost < best_cost:
-                        best_cost = cost
-                        best_pi = pi.copy()
-
-                # Final forward pass — builds actual circuits
                 F = self.get_initial_layer(IDAG, N, optimized_partitions)
                 partition_order, pi, pi_initial = self.Heuristic_Search(
-                    F, best_pi, DAG, IDAG, optimized_partitions, scoring_partitions, D,
+                    F,
+                    best_pi.copy(),
+                    DAG,
+                    IDAG,
+                    optimized_partitions,
+                    scoring_partitions,
+                    D,
+                    candidate_cache=candidate_cache,
+                )
+                final_circuit, final_parameters = self.Construct_circuit_from_HS(
+                    partition_order, optimized_partitions, N
                 )
 
         if do_cleanup and n_iterations > 0:
-            # Cleanup already done per-trial
             self._routing_time = time.time() - routing_start
             self._cnot_pre_cleanup = best_pre_cleanup
         else:
-            final_circuit, final_parameters = self.Construct_circuit_from_HS(partition_order, optimized_partitions, N)
             self._routing_time = time.time() - routing_start
-            self._cnot_pre_cleanup = final_circuit.get_Gate_Nums().get('CNOT', 0)
+            self._cnot_pre_cleanup = final_circuit.get_Gate_Nums().get(
+                'CNOT', 0
+            )
 
             if self.config.get('cleanup', True):
-                from squander.decomposition.qgd_Wide_Circuit_Optimization import qgd_Wide_Circuit_Optimization
+                from squander.decomposition.qgd_Wide_Circuit_Optimization import (
+                    qgd_Wide_Circuit_Optimization,
+                )
+
                 cleanup_config = dict(self.config)
                 cleanup_config['topology'] = self.topology
                 cleanup_config['routed'] = True
@@ -786,6 +1040,7 @@ class qgd_Partition_Aware_Mapping:
                 cleanup_config['test_final_circuit'] = False
                 cleanup_config['global_min'] = False
                 wco = qgd_Wide_Circuit_Optimization(cleanup_config)
+
                 final_circuit, final_parameters = wco.OptimizeWideCircuit(
                     final_circuit.get_Flat_Circuit(), final_parameters
                 )
@@ -908,226 +1163,320 @@ class qgd_Partition_Aware_Mapping:
         pi_new = self._apply_swaps_to_pi(pi, swaps)
         return swaps, pi_new
 
-    def Heuristic_Search(self, F, pi, DAG, IDAG, optimized_partitions, scoring_partitions, D):
+    def Heuristic_Search(
+        self,
+        F,
+        pi,
+        DAG,
+        IDAG,
+        optimized_partitions,
+        scoring_partitions,
+        D,
+        candidate_cache=None,
+    ):
         pi_initial = pi.copy()
+        F = list(F)
 
         resolved_partitions = [False] * len(DAG)
         partition_order = []
-        step = 0
+        resolved_count = 0
 
-        # Drain initial single-qubit partitions from F, recursively resolving
-        # any single-qubit descendants that become ready.  Children that are
-        # multi-qubit are pushed into F for the main search loop.
-        queue = [p for p in F if isinstance(optimized_partitions[p], SingleQubitPartitionResult)]
+        queue = deque(
+            p
+            for p in F
+            if isinstance(optimized_partitions[p], SingleQubitPartitionResult)
+        )
         while queue:
             partition_idx = queue.pop()
             if resolved_partitions[partition_idx]:
                 continue
             if partition_idx in F:
                 F.remove(partition_idx)
+
             single_qubit_part = optimized_partitions[partition_idx]
             original_qubit = int(single_qubit_part.involved_qbits[0])
             circuit_qubit = int(single_qubit_part.circuit.get_Qbits()[0])
-            single_qubit_part.circuit = single_qubit_part.circuit.Remap_Qbits({circuit_qubit: int(pi[original_qubit])}, max(D.shape))
+            single_qubit_part.circuit = single_qubit_part.circuit.Remap_Qbits(
+                {circuit_qubit: int(pi[original_qubit])},
+                max(D.shape),
+            )
             partition_order.append(single_qubit_part)
             resolved_partitions[partition_idx] = True
+            resolved_count += 1
+
             for child in DAG[partition_idx]:
                 if not resolved_partitions[child] and child not in F:
                     if all(resolved_partitions[p] for p in IDAG[child]):
-                        if isinstance(optimized_partitions[child], SingleQubitPartitionResult):
+                        if isinstance(
+                            optimized_partitions[child],
+                            SingleQubitPartitionResult,
+                        ):
                             queue.append(child)
                         else:
                             F.append(child)
 
-        # Initialize progress bar
         total_partitions = len(DAG)
-        pbar = tqdm(total=total_partitions, desc="Heuristic Search",
-                   bar_format='{desc}: {percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt} resolved',
-                   disable=self.config.get('progressbar', 0) == False)
+        pbar = tqdm(
+            total=total_partitions,
+            desc="Heuristic Search",
+            bar_format=(
+                "{desc}: {percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt} resolved"
+            ),
+            disable=self.config.get("progressbar", 0) is False,
+            mininterval=0.2,
+        )
+        if resolved_count:
+            pbar.update(resolved_count)
 
-        max_E_size = self.config.get('max_E_size', 20)
-        max_lookahead = self.config.get('max_lookahead', 4)
-        E_W = self.config.get('E_weight', 0.5)
-        E_alpha = self.config.get('E_alpha', 0.9)
+        max_E_size = self.config.get("max_E_size", 20)
+        max_lookahead = self.config.get("max_lookahead", 4)
+        E_W = self.config.get("E_weight", 0.5)
+        E_alpha = self.config.get("E_alpha", 0.9)
 
-        canonical_data = self._build_canonical_neighbor_data(scoring_partitions, reverse=False)
+        canonical_data = self._build_canonical_neighbor_data(
+            scoring_partitions, reverse=False
+        )
 
-        valve_enabled = self.config.get('release_valve_enabled', True)
-        valve_threshold = self.config.get('release_valve_threshold', 20)
+        valve_enabled = self.config.get("release_valve_enabled", True)
+        valve_threshold = self.config.get("release_valve_threshold", 20)
         swaps_since_clean = 0
 
-        while len(F) != 0:
-                if valve_enabled and swaps_since_clean > valve_threshold:
-                    valve_swaps, pi_bridged = self._release_valve(F, pi, D, canonical_data)
-                    if valve_swaps:
-                        partition_order.append(construct_swap_circuit(valve_swaps, len(pi)))
-                        pi = np.asarray(pi_bridged)
-                    swaps_since_clean = 0
-                    continue
-
-                partition_candidates = self.obtain_partition_candidates(F,optimized_partitions)
-                if len(partition_candidates) == 0:
-                    break
-
-                top_k = self.config.get('prefilter_top_k', 50)
-                partition_candidates = self._prefilter_candidates(partition_candidates, pi, D, top_k)
-
-                F_snapshot = tuple(F)
-
-                E = self.generate_extended_set(
-                    F, DAG, IDAG, resolved_partitions, optimized_partitions,
-                    max_E_size=max_E_size, max_lookahead=max_lookahead
-                )
-
-                scores = [
-                        self.score_partition_candidate(
-                            partition_candidate,
-                            F_snapshot,
-                            pi,
-                            scoring_partitions,
-                            D,
-                            self._swap_cache,
-                            E=E,
-                            W=E_W,
-                            alpha=E_alpha,
-                            canonical_data=canonical_data,
-                            adj=self._adj,
-                            local_cost_weight=self.config.get('local_cost_weight', 0.1),
-                            swap_cost=self.config.get('swap_cost', 15.0),
-                        )
-                        for partition_candidate in partition_candidates
-                    ]
-                min_partition_candidate = self._select_best_candidate(partition_candidates, scores)
-
-                F.remove(min_partition_candidate.partition_idx)
-                resolved_partitions[min_partition_candidate.partition_idx] = True
-                resolved_count = sum(resolved_partitions)
-                pbar.n = resolved_count
-                pbar.refresh()
-
-                swap_order, pi = min_partition_candidate.transform_pi(
-                    pi, D, self._swap_cache, adj=self._adj,
-                )
-                if len(swap_order) != 0:
-                    partition_order.append(construct_swap_circuit(swap_order, len(pi)))
-                    swaps_since_clean += len(swap_order)
-                else:
-                    swaps_since_clean = 0
-
-                partition_order.append(min_partition_candidate)
-                children = list(DAG[min_partition_candidate.partition_idx])
-                step += 1
-                while len(children) != 0:
-                    child = children.pop(0)
-                    parents_resolved = True
-                    for parent in IDAG[child]:
-                        parents_resolved *= resolved_partitions[parent]
-                    if (not resolved_partitions[child] and child not in F) and parents_resolved:
-                        if isinstance(optimized_partitions[child], SingleQubitPartitionResult):
-                            child_partition = optimized_partitions[child]
-                            original_qubit = int(child_partition.involved_qbits[0])
-                            circuit_qubit = int(child_partition.circuit.get_Qbits()[0])
-                            child_partition.circuit = child_partition.circuit.Remap_Qbits({circuit_qubit: int(pi[original_qubit])},max(D.shape))
-                            partition_order.append(child_partition)
-                            resolved_partitions[child] = True
-                            resolved_count = sum(resolved_partitions)
-                            pbar.n = resolved_count
-                            pbar.refresh()
-                            children.extend(DAG[child])
-                        else:
-                            F.append(child)
-
-        pbar.close()
-        return partition_order, pi, pi_initial
-
-    def _heuristic_search_layout_only(self, F, pi, DAG, IDAG, optimized_partitions, scoring_partitions, D, rng=None, reverse=False):
-        """Run heuristic search but only track layout (pi). No circuit modification.
-
-        Args:
-            reverse: When True, swap P_i/P_o roles in scoring and layout
-                     updates (used for backward passes in SABRE iterations).
-
-        Returns:
-            (pi, total_swaps): final layout and total number of SWAPs accumulated.
-        """
-        resolved_partitions = [False] * len(DAG)
-        total_swaps = 0
-
-        # Resolve initial single-qubit partitions, recursively draining any
-        # single-qubit descendants.  Multi-qubit descendants go into F.
-        queue = [p for p in F if isinstance(optimized_partitions[p], SingleQubitPartitionResult)]
-        while queue:
-            partition_idx = queue.pop()
-            if resolved_partitions[partition_idx]:
-                continue
-            if partition_idx in F:
-                F.remove(partition_idx)
-            resolved_partitions[partition_idx] = True
-            for child in DAG[partition_idx]:
-                if not resolved_partitions[child] and child not in F:
-                    if all(resolved_partitions[p] for p in IDAG[child]):
-                        if isinstance(optimized_partitions[child], SingleQubitPartitionResult):
-                            queue.append(child)
-                        else:
-                            F.append(child)
-
-        max_E_size = self.config.get('max_E_size', 20)
-        max_lookahead = self.config.get('max_lookahead', 4)
-        E_W = self.config.get('E_weight', 0.5)
-        E_alpha = self.config.get('E_alpha', 0.9)
-
-        canonical_data = self._build_canonical_neighbor_data(scoring_partitions, reverse=reverse)
-
         while F:
-            partition_candidates = self.obtain_partition_candidates(F, optimized_partitions)
+            if valve_enabled and swaps_since_clean > valve_threshold:
+                valve_swaps, pi_bridged = self._release_valve(
+                    F, pi, D, canonical_data
+                )
+                if valve_swaps:
+                    partition_order.append(
+                        construct_swap_circuit(valve_swaps, len(pi))
+                    )
+                    pi = np.asarray(pi_bridged)
+                swaps_since_clean = 0
+                continue
+
+            partition_candidates = self.obtain_partition_candidates(
+            F,
+            optimized_partitions,
+            candidate_cache=candidate_cache,
+            )
+
             if not partition_candidates:
                 break
 
-            top_k = self.config.get('prefilter_top_k', 50)
-            partition_candidates = self._prefilter_candidates(partition_candidates, pi, D, top_k, reverse=reverse)
+            top_k = self.config.get("prefilter_top_k", 50)
+            partition_candidates = self._prefilter_candidates(
+                partition_candidates, pi, D, top_k
+            )
 
             F_snapshot = tuple(F)
-
             E = self.generate_extended_set(
-                F, DAG, IDAG, resolved_partitions, optimized_partitions,
-                max_E_size=max_E_size, max_lookahead=max_lookahead
+                F,
+                DAG,
+                IDAG,
+                resolved_partitions,
+                optimized_partitions,
+                max_E_size=max_E_size,
+                max_lookahead=max_lookahead,
             )
 
             scores = [
                 self.score_partition_candidate(
-                    pc, F_snapshot, pi, scoring_partitions, D,
+                    partition_candidate,
+                    F_snapshot,
+                    pi,
+                    scoring_partitions,
+                    D,
                     self._swap_cache,
-                    E=E, W=E_W, alpha=E_alpha,
+                    E=E,
+                    W=E_W,
+                    alpha=E_alpha,
+                    canonical_data=canonical_data,
+                    adj=self._adj,
+                    local_cost_weight=self.config.get("local_cost_weight", 0.1),
+                    swap_cost=self.config.get("swap_cost", 15.0),
+                )
+                for partition_candidate in partition_candidates
+            ]
+            min_partition_candidate = self._select_best_candidate(
+                partition_candidates, scores
+            )
+
+            F.remove(min_partition_candidate.partition_idx)
+            resolved_partitions[min_partition_candidate.partition_idx] = True
+            resolved_count += 1
+            pbar.update(1)
+
+            swap_order, pi = min_partition_candidate.transform_pi(
+                pi, D, self._swap_cache, adj=self._adj
+            )
+            if swap_order:
+                partition_order.append(construct_swap_circuit(swap_order, len(pi)))
+                swaps_since_clean += len(swap_order)
+            else:
+                swaps_since_clean = 0
+
+            partition_order.append(min_partition_candidate)
+
+            children = deque(DAG[min_partition_candidate.partition_idx])
+            while children:
+                child = children.popleft()
+                parents_resolved = all(
+                    resolved_partitions[parent] for parent in IDAG[child]
+                )
+                if (not resolved_partitions[child] and child not in F) and (
+                    parents_resolved
+                ):
+                    if isinstance(
+                        optimized_partitions[child], SingleQubitPartitionResult
+                    ):
+                        child_partition = optimized_partitions[child]
+                        original_qubit = int(child_partition.involved_qbits[0])
+                        circuit_qubit = int(child_partition.circuit.get_Qbits()[0])
+                        child_partition.circuit = child_partition.circuit.Remap_Qbits(
+                            {circuit_qubit: int(pi[original_qubit])},
+                            max(D.shape),
+                        )
+                        partition_order.append(child_partition)
+                        resolved_partitions[child] = True
+                        resolved_count += 1
+                        pbar.update(1)
+                        children.extend(DAG[child])
+                    else:
+                        F.append(child)
+
+        pbar.close()
+        return partition_order, pi, pi_initial
+
+    def _heuristic_search_layout_only(
+        self,
+        F,
+        pi,
+        DAG,
+        IDAG,
+        optimized_partitions,
+        scoring_partitions,
+        D,
+        rng=None,
+        reverse=False,
+        candidate_cache=None,
+    ):
+        """Run heuristic search but only track layout (pi). No circuit modification.
+
+        Args:
+            reverse: When True, swap P_i/P_o roles in scoring and layout
+                    updates (used for backward passes in SABRE iterations).
+
+        Returns:
+            (pi, total_swaps): final layout and total number of SWAPs accumulated.
+        """
+        F = list(F)
+        resolved_partitions = [False] * len(DAG)
+        total_swaps = 0
+
+        queue = deque(
+            p for p in F if self._partition_is_single(optimized_partitions[p])
+        )
+        while queue:
+            partition_idx = queue.pop()
+            if resolved_partitions[partition_idx]:
+                continue
+            if partition_idx in F:
+                F.remove(partition_idx)
+            resolved_partitions[partition_idx] = True
+
+            for child in DAG[partition_idx]:
+                if not resolved_partitions[child] and child not in F:
+                    if all(resolved_partitions[p] for p in IDAG[child]):
+                        if self._partition_is_single(optimized_partitions[child]):
+                            queue.append(child)
+                        else:
+                            F.append(child)
+
+        max_E_size = self.config.get("max_E_size", 20)
+        max_lookahead = self.config.get("max_lookahead", 4)
+        E_W = self.config.get("E_weight", 0.5)
+        E_alpha = self.config.get("E_alpha", 0.9)
+
+        canonical_data = self._build_canonical_neighbor_data(
+            scoring_partitions, reverse=reverse
+        )
+
+        while F:
+            partition_candidates = self.obtain_partition_candidates(
+                F,
+                optimized_partitions,
+                candidate_cache=candidate_cache,
+            )
+            if not partition_candidates:
+                break
+
+            top_k = self.config.get("prefilter_top_k", 50)
+            partition_candidates = self._prefilter_candidates(
+                partition_candidates, pi, D, top_k, reverse=reverse
+            )
+
+            F_snapshot = tuple(F)
+            E = self.generate_extended_set(
+                F,
+                DAG,
+                IDAG,
+                resolved_partitions,
+                optimized_partitions,
+                max_E_size=max_E_size,
+                max_lookahead=max_lookahead,
+            )
+
+            scores = [
+                self.score_partition_candidate(
+                    pc,
+                    F_snapshot,
+                    pi,
+                    scoring_partitions,
+                    D,
+                    self._swap_cache,
+                    E=E,
+                    W=E_W,
+                    alpha=E_alpha,
                     reverse=reverse,
                     canonical_data=canonical_data,
                     adj=self._adj,
-                    local_cost_weight=self.config.get('local_cost_weight', 0.1),
-                    swap_cost=self.config.get('swap_cost', 15.0),
+                    local_cost_weight=self.config.get("local_cost_weight", 0.1),
+                    swap_cost=self.config.get("swap_cost", 15.0),
                 )
                 for pc in partition_candidates
             ]
 
-            best = self._select_best_candidate(partition_candidates, scores, rng=rng)
+            best = self._select_best_candidate(
+                partition_candidates, scores, rng=rng
+            )
             F.remove(best.partition_idx)
             resolved_partitions[best.partition_idx] = True
 
             swaps, pi = best.transform_pi(
-                pi, D, self._swap_cache, reverse=reverse, adj=self._adj,
+                pi,
+                D,
+                self._swap_cache,
+                reverse=reverse,
+                adj=self._adj,
             )
             total_swaps += len(swaps)
 
-            # Promote children
             for child in DAG[best.partition_idx]:
                 if not resolved_partitions[child] and child not in F:
                     if all(resolved_partitions[p] for p in IDAG[child]):
-                        if isinstance(optimized_partitions[child], SingleQubitPartitionResult):
+                        if self._partition_is_single(optimized_partitions[child]):
                             resolved_partitions[child] = True
-                            stack = list(DAG[child])
+                            stack = deque(DAG[child])
                             while stack:
                                 gc = stack.pop()
                                 if not resolved_partitions[gc] and gc not in F:
-                                    if all(resolved_partitions[p] for p in IDAG[gc]):
-                                        if isinstance(optimized_partitions[gc], SingleQubitPartitionResult):
+                                    if all(
+                                        resolved_partitions[p]
+                                        for p in IDAG[gc]
+                                    ):
+                                        if self._partition_is_single(
+                                            optimized_partitions[gc]
+                                        ):
                                             resolved_partitions[gc] = True
                                             stack.extend(DAG[gc])
                                         else:
@@ -1135,8 +1484,7 @@ class qgd_Partition_Aware_Mapping:
                         else:
                             F.append(child)
 
-        return pi, total_swaps
-
+        return pi, total_swaps    
     # ------------------------------------------------------------------------
     # Circuit Construction
     # ------------------------------------------------------------------------
@@ -1283,12 +1631,19 @@ class qgd_Partition_Aware_Mapping:
     # ------------------------------------------------------------------------
 
     @staticmethod
-    def generate_extended_set(F, DAG, IDAG, resolved_partitions, optimized_partitions,
-                              max_E_size=20, max_lookahead=4):
+    def generate_extended_set(
+        F,
+        DAG,
+        IDAG,
+        resolved_partitions,
+        optimized_partitions,
+        max_E_size=20,
+        max_lookahead=4,
+    ):
         """
         Generate SABRE-style extended set: multi-qubit partitions near the
         front layer, up to ``max_lookahead`` levels deep and ``max_E_size``
-        entries.  Returns list of (partition_idx, depth) tuples.
+        entries. Returns list of (partition_idx, depth) tuples.
         """
         E = []
         E_set = set()
@@ -1298,13 +1653,10 @@ class qgd_Partition_Aware_Mapping:
             if len(E) >= max_E_size:
                 break
 
-            # BFS from front_idx through DAG children
-            queue = []  # (child_idx, depth)
-            for child in DAG[front_idx]:
-                queue.append((child, 1))
+            queue = deque((child, 1) for child in DAG[front_idx])
 
             while queue and len(E) < max_E_size:
-                child_idx, depth = queue.pop(0)
+                child_idx, depth = queue.popleft()
                 if depth > max_lookahead:
                     continue
                 if child_idx in E_set or child_idx in F_set:
@@ -1312,16 +1664,15 @@ class qgd_Partition_Aware_Mapping:
                 if resolved_partitions[child_idx]:
                     continue
 
-                # Check all parents resolved (except those still in F)
                 parents_resolved = all(
-                    resolved_partitions[p] or p in F_set
-                    for p in IDAG[child_idx]
+                    resolved_partitions[p] or p in F_set for p in IDAG[child_idx]
                 )
                 if not parents_resolved:
                     continue
 
-                # Skip single-qubit partitions — follow through them
-                if isinstance(optimized_partitions[child_idx], SingleQubitPartitionResult):
+                if qgd_Partition_Aware_Mapping._partition_is_single(
+                    optimized_partitions[child_idx]
+                ):
                     for grandchild in DAG[child_idx]:
                         queue.append((grandchild, depth))
                     continue
@@ -1339,19 +1690,49 @@ class qgd_Partition_Aware_Mapping:
     # Candidate Generation
     # ------------------------------------------------------------------------
 
-    def obtain_partition_candidates(self, F, optimized_partitions):
+    def obtain_partition_candidates(
+        self,
+        F,
+        optimized_partitions=None,
+        candidate_cache=None,
+    ):
+        if candidate_cache is not None:
+            partition_candidates = []
+            for partition_idx in F:
+                cached = candidate_cache[partition_idx]
+                if cached:
+                    partition_candidates.extend(cached)
+            return partition_candidates
+
         partition_candidates = []
         for partition_idx in F:
             partition = optimized_partitions[partition_idx]
             for tdx, mini_topology in enumerate(partition.mini_topologies):
-                # Use pre-computed topology candidates if available, otherwise compute and cache
                 if hasattr(partition, 'get_topology_candidates'):
                     topology_candidates = partition.get_topology_candidates(tdx)
                 else:
-                    topology_candidates = self._get_subtopologies_of_type_cached(mini_topology)
+                    topology_candidates = self._get_subtopologies_of_type_cached(
+                        mini_topology
+                    )
                 for topology_candidate in topology_candidates:
-                    for pdx, permutation_pair in enumerate(partition.permutations_pairs[tdx]):
-                        partition_candidates.append(PartitionCandidate(partition_idx,tdx,pdx,partition.circuit_structures[tdx][pdx],permutation_pair[0],permutation_pair[1],topology_candidate,mini_topology,partition.qubit_map,partition.involved_qbits,cnot_count=partition.cnot_counts[tdx][pdx]))
+                    for pdx, permutation_pair in enumerate(
+                        partition.permutations_pairs[tdx]
+                    ):
+                        partition_candidates.append(
+                            PartitionCandidate(
+                                partition_idx,
+                                tdx,
+                                pdx,
+                                partition.circuit_structures[tdx][pdx],
+                                permutation_pair[0],
+                                permutation_pair[1],
+                                topology_candidate,
+                                mini_topology,
+                                partition.qubit_map,
+                                partition.involved_qbits,
+                                cnot_count=partition.cnot_counts[tdx][pdx],
+                            )
+                        )
         return partition_candidates
 
     # ------------------------------------------------------------------------
@@ -1360,29 +1741,33 @@ class qgd_Partition_Aware_Mapping:
         
     def get_initial_layer(self, IDAG, N, optimized_partitions):
         initial_layer = []
-        active_qbits = list(range(N))
+        active_qbits = set(range(N))
         for idx in range(len(IDAG)):
             if len(IDAG[idx]) == 0:
                 initial_layer.append(idx)
-                for qbit in optimized_partitions[idx].involved_qbits:
-                    active_qbits.remove(qbit)
-            if len(active_qbits) == 0:
+                for qbit in self._partition_involved_qbits(
+                    optimized_partitions[idx]
+                ):
+                    active_qbits.discard(qbit)
+            if not active_qbits:
                 break
         return initial_layer
 
+
     def get_final_layer(self, DAG, N, optimized_partitions):
         final_layer = []
-        active_qbits = list(range(N))
+        active_qbits = set(range(N))
         for idx in range(len(DAG) - 1, -1, -1):
             if len(DAG[idx]) == 0:
                 final_layer.append(idx)
-                for qbit in optimized_partitions[idx].involved_qbits:
-                    if qbit in active_qbits:
-                        active_qbits.remove(qbit)
-            if len(active_qbits) == 0:
+                for qbit in self._partition_involved_qbits(
+                    optimized_partitions[idx]
+                ):
+                    active_qbits.discard(qbit)
+            if not active_qbits:
                 break
         return final_layer
-            
+                
     def construct_DAG_and_IDAG(self, optimized_partitions):
         DAG = []
         IDAG = []
