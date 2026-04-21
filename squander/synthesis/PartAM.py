@@ -753,7 +753,7 @@ class qgd_Partition_Aware_Mapping:
             if n_trials > 1
             else None
         )
-        pi = seeded_pi.copy() if trial_idx == 0 else np.arange(N)
+        pi = seeded_pi.copy() if trial_idx == 0 else rng.permutation(N)
 
         for iteration in range(n_iterations):
             F_rev = self.get_final_layer(DAG, N, layout_partitions)
