@@ -62,7 +62,8 @@ from squander.gates.gates_Wrapper import (
     CCX,
     RXX,
     RYY,
-    RZZ )
+    RZZ,
+    Permutation )
 
 
 
@@ -79,7 +80,6 @@ def scalar(param):
 def get_Qiskit_Circuit( Squander_circuit, parameters ):
 
     from qiskit import QuantumCircuit
-
     # creating Qiskit quantum circuit  
     circuit = QuantumCircuit(Squander_circuit.get_Qbit_Num() )
     
@@ -218,6 +218,13 @@ def get_Qiskit_Circuit( Squander_circuit, parameters ):
             #CCX gate
             target_qbits = gate.get_Target_Qbits()
             circuit.swap(target_qbits[0], target_qbits[1])
+        elif isinstance(gate, Permutation):
+            #Permutation gate
+            from qiskit.circuit.library import PermutationGate
+            pattern = gate.get_Pattern()
+            qubits = list(range(len(pattern)))
+            circuit.append( PermutationGate(pattern),qubits)
+        
         
         elif isinstance( gate, RXX ):
             # RXX gate
@@ -593,6 +600,11 @@ def convert_Qiskit_to_Squander( qc_in ):
                 parameters = parameters + [float(param)]
 
             Circuit_Squander.add_RZZ(  [qubit0, qubit1] )
+
+        elif name[:11] == 'permutation':
+            #Permutation gate
+            pattern = gate.operation.pattern
+            Circuit_Squander.add_Permutation( pattern )
 
         else:
             print(f"convert_Qiskit_to_Squander: Unimplemented gate: {name}")

@@ -25,7 +25,8 @@ limitations under the License.
 //#include <immintrin.h>
 #include "tbb/tbb.h"
 #include <omp.h>
-
+#include <unordered_map>
+#include <unordered_set>
 
 
 
@@ -303,6 +304,97 @@ void apply_SWAP_kernel_to_input(Matrix& input, const std::vector<int>& target_qb
             input.get_data() + swap_idx*input.stride + input.cols,
             input.get_data() + swap_idx_pair*input.stride
         );
+    }
+}
+
+void apply_Permutation_kernel_to_input(Matrix& input, const std::vector<int>& pattern, const int& matrix_size){
+
+    int qbit_num = pattern.size();
+
+    auto permuted_index = [&](int row_idx) -> int {
+        int new_row_idx = 0;
+        for (int idx = 0; idx < qbit_num; idx++) {
+            int bit = (row_idx >> pattern[idx]) & 1;
+            new_row_idx |= (bit << idx);
+        }
+        return new_row_idx;
+    };
+
+    std::vector<uint8_t> visited(matrix_size, 0);
+
+    for (int start = 0; start < matrix_size; ++start) {
+        if (visited[start]) continue;
+
+        std::vector<int> cycle;
+        int current = start;
+        while (!visited[current]) {
+            visited[current] = 1;
+            cycle.push_back(current);
+            current = permuted_index(current);
+        }
+
+        if (cycle.size() <= 1) continue;
+
+        for (size_t idx = 0; idx < cycle.size() - 1; idx++) {
+            std::swap_ranges(
+                input.get_data() + cycle[idx] * input.stride,
+                input.get_data() + cycle[idx] * input.stride + input.cols,
+                input.get_data() + cycle[idx + 1] * input.stride
+            );
+        }
+    }
+}
+
+// Overload that applies permutation using precomputed cycles
+void apply_Permutation_kernel_to_input(Matrix& input, const std::vector<int>& pattern, const int& matrix_size, const std::vector<std::vector<int>>& cycles){
+    (void)pattern; // currently unused, kept for interface symmetry / potential validation
+    (void)matrix_size; // rows already validated by caller
+
+    for (const auto& cycle : cycles) {
+        for (size_t idx = 0; idx + 1 < cycle.size(); ++idx) {
+            std::swap_ranges(
+                input.get_data() + cycle[idx] * input.stride,
+                input.get_data() + cycle[idx] * input.stride + input.cols,
+                input.get_data() + cycle[idx + 1] * input.stride
+            );
+        }
+    }
+}
+
+void apply_Permutation_kernel_to_input_tbb(Matrix& input, const std::vector<int>& pattern, const int& matrix_size, const std::vector<std::vector<int>>& cycles){
+    (void)pattern;
+    (void)matrix_size;
+
+    tbb::parallel_for(tbb::blocked_range<size_t>(0, cycles.size(), 64),
+        [&](const tbb::blocked_range<size_t>& range) {
+            for (size_t cdx = range.begin(); cdx != range.end(); ++cdx) {
+                const auto& cycle = cycles[cdx];
+                for (size_t idx = 0; idx + 1 < cycle.size(); ++idx) {
+                    std::swap_ranges(
+                        input.get_data() + cycle[idx] * input.stride,
+                        input.get_data() + cycle[idx] * input.stride + input.cols,
+                        input.get_data() + cycle[idx + 1] * input.stride
+                    );
+                }
+            }
+        }
+    );
+}
+
+void apply_Permutation_kernel_to_input_omp(Matrix& input, const std::vector<int>& pattern, const int& matrix_size, const std::vector<std::vector<int>>& cycles){
+    (void)pattern;
+    (void)matrix_size;
+
+    #pragma omp parallel for schedule(static)
+    for (int cdx = 0; cdx < (int)cycles.size(); ++cdx) {
+        const auto& cycle = cycles[cdx];
+        for (size_t idx = 0; idx + 1 < cycle.size(); ++idx) {
+            std::swap_ranges(
+                input.get_data() + cycle[idx] * input.stride,
+                input.get_data() + cycle[idx] * input.stride + input.cols,
+                input.get_data() + cycle[idx + 1] * input.stride
+            );
+        }
     }
 }
 

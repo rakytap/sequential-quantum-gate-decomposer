@@ -49,7 +49,8 @@ def _discover_gate_names():
 
 
 ALL_GATE_NAMES = _discover_gate_names()
-QISKIT_EXCLUDED_GATES = {"SYC", "CR", "CROT"}
+QISKIT_EXCLUDED_GATES = {"SYC", "CR", "CROT", "Permutation"}
+CIRCUIT_UNSUPPORTED_GATES = {"Gate", "Permutation"}
 QISKIT_MATRIX_UNSUPPORTED = {"Gate"} | QISKIT_EXCLUDED_GATES
 NATIVE_UNSAFE_MATRIX_GATES = {"Gate"}
 NATIVE_UNSAFE_APPLY_GATES = {"Gate"}
@@ -70,7 +71,7 @@ def _discover_parameterized_gate_names():
 def _discover_multi_qubit_gate_names():
     names = []
     for gate_name in ALL_GATE_NAMES:
-        if gate_name == "Gate":
+        if gate_name in CIRCUIT_UNSUPPORTED_GATES:
             continue
         gate_obj = _instantiate_gate(gate_name)
         if len(gate_obj.get_Involved_Qbits()) >= 2:
@@ -93,6 +94,8 @@ def _instantiate_gate(gate_name, qbit_num=4):
         return gate_cls(qbit_num, 0, qbit_num - 1)
     if gate_name.startswith("C"):
         return gate_cls(qbit_num, 0, qbit_num - 1)
+    if gate_name == "Permutation":
+        return gate_cls(qbit_num, list(range(qbit_num)))
     return gate_cls(qbit_num, 0)
 
 
@@ -608,7 +611,7 @@ except Exception as exc:
 
     @pytest.mark.parametrize(
         "gate_name",
-        [name for name in ALL_GATE_NAMES if name != "Gate"],
+        [name for name in ALL_GATE_NAMES if name not in CIRCUIT_UNSUPPORTED_GATES],
     )
     def test_squander_invert_circuit(self, gate_name):
         script = f"""

@@ -1228,6 +1228,7 @@ GrayCodeCNOT N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures
 
     int parallel = get_parallel_configuration();
 
+
     int64_t work_batch = 1;
     if (parallel == 0) {
         work_batch = concurrency;

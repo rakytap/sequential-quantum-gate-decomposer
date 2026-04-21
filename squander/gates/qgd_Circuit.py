@@ -80,6 +80,14 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
         # call the constructor of the wrapper class
         super().__init__(qbit_num)
 
+    def copy(self):
+        """
+        Create a deep copy of the circuit.
+        @return A new qgd_Circuit instance with all gates copied.
+        """
+        # Call the C wrapper function that uses the clone() method
+        return super().copy()
+
     def add_U1(self, target_qbit):
         """Add a U1 gate to the front of the gate structure.
 
@@ -382,6 +390,18 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
         # call the C wrapper function
         super(qgd_Circuit, self).add_CP(target_qbit, control_qbit)
 
+#@brief Call to add a Permutation gate to the front of the gate structure.
+#@param self A pointer pointing to an instance of the class qgd_Circuit.
+#@param Input arguments: pattern (list of int) - permutation pattern.
+
+    def add_Permutation( self, pattern):
+
+	# call the C wrapper function
+        super(qgd_Circuit, self).add_Permutation(pattern)
+
+#@brief Call to add a SWAP gate to the front of the gate structure.
+#@param self A pointer pointing to an instance of the class qgd_Circuit.
+#@param Input arguments: target_qbits (list of int) - list of target qubits (at least 2).
     def add_SWAP(self, target_qbits, target_qbit2=-1):
         """Add a SWAP gate to the front of the gate structure.
 
@@ -600,12 +620,12 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
 
         return super().get_Qbits()
 
-    def set_min_fusion(self, min_fusion):
-        """Set the minimum fusion parameter in the circuit.
+    def get_Involved_Qbits(self):
 
-        Args:
-            min_fusion: Minimum fusion value (int)
-        """
+        return super().get_Qbits()
+#@brief Call to set hte min fusion in the circuit
+#@param Input arguments: min_fusion
+    def set_min_fusion( self, min_fusion):
 
         super().set_min_fusion(min_fusion)
 

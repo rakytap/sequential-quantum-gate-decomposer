@@ -81,7 +81,8 @@ typedef enum gate_type {GENERAL_OPERATION=1,
                         RXX_OPERATION=44,
                         RYY_OPERATION=45,
                         RZZ_OPERATION=46,
-                        SXDG_OPERATION=47} gate_type;
+                        SXDG_OPERATION=47,
+                        PERMUTATION_OPERATION=48} gate_type;
 
 
 

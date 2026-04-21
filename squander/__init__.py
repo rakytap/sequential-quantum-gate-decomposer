@@ -14,7 +14,7 @@ from squander.decomposition.qgd_N_Qubit_State_Preparation_adaptive import qgd_N_
 
 # optimization of wide circuits (optimize wide circuits)
 from squander.decomposition.qgd_Wide_Circuit_Optimization import qgd_Wide_Circuit_Optimization as Wide_Circuit_Optimization
-
+from squander.synthesis.PartAM import qgd_Partition_Aware_Mapping as Partition_Aware_Mapping
 # variational quantum solver
 from squander.VQA.qgd_Variational_Quantum_Eigensolver_Base import qgd_Variational_Quantum_Eigensolver_Base as Variational_Quantum_Eigensolver
 from squander.VQA.qgd_Generative_Quantum_Machine_Learning_Base import qgd_Generative_Quantum_Machine_Learning_Base as Generative_Quantum_Machine_Learning
@@ -52,7 +52,8 @@ from squander.gates.gates_Wrapper import (
     RXX,
     RYY,
     RZZ,
-    SXdg
+    SXdg,
+    Permutation
 )
 
 

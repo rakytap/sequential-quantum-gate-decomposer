@@ -61,6 +61,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "SWAP.h"
 #include "CSWAP.h"
 #include "numpy_interface.h"
+#include "Permutation.h"
 #include "RXX.h"
 #include "RYY.h"
 #include "RZZ.h"
@@ -76,7 +77,6 @@ typedef struct {
     /// Pointer to the C++ class of the CH gate
     Gate* gate;
 } Gate_Wrapper;
-
 
 
 
@@ -120,6 +120,11 @@ Gate* create_multi_target_controlled_gate( int qbit_num, const std::vector<int>&
 }
 
 
+Gate* create_permutation_gate( int qbit_num, const std::vector<int>& pattern ) {
+    Permutation* gate = new Permutation( qbit_num, pattern );
+    return static_cast<Gate*>( gate );
+}
+
 
 /**
 @brief Method called when a python instance of the class  Gate_Wrapper is destroyed
@@ -135,6 +140,7 @@ static void
 
     Py_TYPE(self)->tp_free((PyObject *) self);
 }
+
 
 
 /**
@@ -448,6 +454,112 @@ static PyObject *
 }
 
 
+template<typename GateT>
+static PyObject *
+ permutation_gate_Wrapper_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {(char*)"qbit_num", (char*)"pattern", NULL};
+    int qbit_num = -1;
+    PyObject* pattern_py = NULL;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|iO", kwlist, &qbit_num, &pattern_py)) {
+        std::string err("Unable to parse arguments");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+    if (qbit_num == -1 || pattern_py == NULL) {
+        PyErr_SetString(PyExc_ValueError, "qbit_num and pattern must be provided!");
+        return NULL;
+    }
+
+    // Convert tuple to list if necessary, or check if it's a list
+    PyObject* pattern_list = NULL;
+    bool created_list = false;
+    if (PyTuple_Check(pattern_py)) {
+        pattern_list = PySequence_List(pattern_py);
+        if (pattern_list == NULL) {
+            PyErr_SetString(PyExc_TypeError, "Failed to convert tuple to list");
+            return NULL;
+        }
+        created_list = true;  // We created it, so we need to DECREF
+    } else if (PyList_Check(pattern_py)) {
+        pattern_list = pattern_py;
+        // We're borrowing the reference, no need to INCREF/DECREF
+    } else {
+        PyErr_SetString(PyExc_TypeError, "pattern must be a list or tuple!");
+        return NULL;
+    }
+
+    std::vector<int> pattern;
+    Py_ssize_t pattern_size = PyList_Size(pattern_list);
+
+    // Check pattern size matches qbit_num
+    if (pattern_size != qbit_num) {
+        if (created_list) {
+            Py_DECREF(pattern_list);
+        }
+        std::string err = "Pattern size " + std::to_string(pattern_size) + 
+                         " does not match qubit number " + std::to_string(qbit_num);
+        PyErr_SetString(PyExc_ValueError, err.c_str());
+        return NULL;
+    }
+
+    // Track which values we've seen to validate it's a permutation
+    std::vector<bool> seen(qbit_num, false);
+
+    for (Py_ssize_t i = 0; i < pattern_size; i++) {
+        PyObject* item = PyList_GetItem(pattern_list, i);
+        if (!PyLong_Check(item)) {
+            if (created_list) {
+                Py_DECREF(pattern_list);
+            }
+            PyErr_SetString(PyExc_TypeError, "pattern must contain integers!");
+            return NULL;
+        }
+        int qbit = PyLong_AsLong(item);
+        if (qbit < 0 || qbit >= qbit_num) {
+            if (created_list) {
+                Py_DECREF(pattern_list);
+            }
+            std::string err = "Pattern qubit index " + std::to_string(qbit) + 
+                             " out of range [0, " + std::to_string(qbit_num - 1) + "]";
+            PyErr_SetString(PyExc_ValueError, err.c_str());
+            return NULL;
+        }
+        if (seen[qbit]) {
+            if (created_list) {
+                Py_DECREF(pattern_list);
+            }
+            std::string err = "Pattern contains duplicate value " + std::to_string(qbit);
+            PyErr_SetString(PyExc_ValueError, err.c_str());
+            return NULL;
+        }
+        seen[qbit] = true;
+        pattern.push_back(qbit);
+    }
+
+    // Release the pattern_list reference (only if we created it from a tuple)
+    if (created_list) {
+        Py_DECREF(pattern_list);
+    }
+
+    Gate_Wrapper *self;
+    self = (Gate_Wrapper *) type->tp_alloc(type, 0);
+    if (self != NULL) {
+        try {
+            self->gate = create_permutation_gate(qbit_num, pattern);
+        } catch (const std::string& e) {
+            PyErr_SetString(PyExc_ValueError, e.c_str());
+            return NULL;
+        } catch (const std::exception& e) {
+            PyErr_SetString(PyExc_ValueError, e.what());
+            return NULL;
+        }
+    }
+
+    return (PyObject *) self;
+}
 /**
 @brief Method called when a python instance of a non-controlled gate class is initialized
 @param self A pointer pointing to an instance of the class  Gate_Wrapper.
@@ -633,7 +745,6 @@ Gate_Wrapper_get_Matrix( Gate_Wrapper *self, PyObject *args, PyObject *kwds ) {
             return NULL;
         }
 }
-
 
 /**
 @brief Call to apply the gate operation from the right side on an input state or matrix
@@ -2134,8 +2245,139 @@ Gate_Wrapper_getstate( Gate_Wrapper *self ) {
 }
 
 
+static PyObject * Gate_Wrapper_get_Pattern( Gate_Wrapper *self ) {
+    std::vector<int> pattern;
+    try {
+        // Cast to Permutation* to access pattern methods
+        Permutation* perm_gate = dynamic_cast<Permutation*>(self->gate);
+        if (perm_gate == nullptr) {
+            PyErr_SetString(PyExc_TypeError, "Gate is not a Permutation gate");
+            return NULL;
+        }
+        pattern = perm_gate->get_pattern();
+    }
+    catch (std::string err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    catch(...) {
+        std::string err( "Invalid pointer to gate class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
 
+    PyObject* pattern_py = PyList_New(pattern.size());
+    for (size_t i = 0; i < pattern.size(); i++) {
+        PyList_SetItem(pattern_py, i, Py_BuildValue("i", pattern[i]));
+    }
+    return pattern_py;
+}
 
+static PyObject * Gate_Wrapper_set_Pattern( Gate_Wrapper *self, PyObject *args ) {
+    PyObject* pattern_py = NULL;
+    if (!PyArg_ParseTuple(args, "O", &pattern_py)) {
+        std::string err("Unable to parse arguments");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    // Convert tuple to list if necessary, or check if it's a list
+    PyObject* pattern_list = NULL;
+    bool created_list = false;
+    if (PyTuple_Check(pattern_py)) {
+        pattern_list = PySequence_List(pattern_py);
+        if (pattern_list == NULL) {
+            PyErr_SetString(PyExc_TypeError, "Failed to convert tuple to list");
+            return NULL;
+        }
+        created_list = true;  // We created it, so we need to DECREF
+    } else if (PyList_Check(pattern_py)) {
+        pattern_list = pattern_py;
+        // We're borrowing the reference, no need to INCREF/DECREF
+    } else {
+        std::string err("Pattern must be a list or tuple!");
+        PyErr_SetString(PyExc_TypeError, err.c_str());
+        return NULL;
+    }
+    
+    // Cast to Permutation* to access pattern methods and get qbit_num
+    Permutation* perm_gate = dynamic_cast<Permutation*>(self->gate);
+    if (perm_gate == nullptr) {
+        if (created_list) {
+            Py_DECREF(pattern_list);
+        }
+        PyErr_SetString(PyExc_TypeError, "Gate is not a Permutation gate");
+        return NULL;
+    }
+    
+    int qbit_num = perm_gate->get_qbit_num();
+    std::vector<int> pattern;
+    Py_ssize_t pattern_size = PyList_Size(pattern_list);
+    
+    // Check pattern size matches qbit_num
+    if (pattern_size != qbit_num) {
+        if (created_list) {
+            Py_DECREF(pattern_list);
+        }
+        std::string err = "Pattern size " + std::to_string(pattern_size) + 
+                         " does not match qubit number " + std::to_string(qbit_num);
+        PyErr_SetString(PyExc_ValueError, err.c_str());
+        return NULL;
+    }
+    
+    // Track which values we've seen to validate it's a permutation
+    std::vector<bool> seen(qbit_num, false);
+    
+    for (Py_ssize_t i = 0; i < pattern_size; i++) {
+        PyObject* item = PyList_GetItem(pattern_list, i);
+        if (!PyLong_Check(item)) {
+            if (created_list) {
+                Py_DECREF(pattern_list);
+            }
+            std::string err("Pattern must contain integers!");
+            PyErr_SetString(PyExc_TypeError, err.c_str());
+            return NULL;
+        }
+        int qbit = PyLong_AsLong(item);
+        if (qbit < 0 || qbit >= qbit_num) {
+            if (created_list) {
+                Py_DECREF(pattern_list);
+            }
+            std::string err = "Pattern qubit index " + std::to_string(qbit) + 
+                             " out of range [0, " + std::to_string(qbit_num - 1) + "]";
+            PyErr_SetString(PyExc_ValueError, err.c_str());
+            return NULL;
+        }
+        if (seen[qbit]) {
+            if (created_list) {
+                Py_DECREF(pattern_list);
+            }
+            std::string err = "Pattern contains duplicate value " + std::to_string(qbit);
+            PyErr_SetString(PyExc_ValueError, err.c_str());
+            return NULL;
+        }
+        seen[qbit] = true;
+        pattern.push_back(qbit);
+    }
+    
+    // Release the pattern_list reference (only if we created it from a tuple)
+    if (created_list) {
+        Py_DECREF(pattern_list);
+    }
+    
+    try {
+        perm_gate->set_pattern(pattern);
+    }
+    catch (std::string err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    catch(...) {
+        std::string err( "Invalid pointer to gate class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    return Py_BuildValue("i", 0);
+}
 
 /**
 @brief Call to set the state of quantum gate from a human-readable data serialized and pickle-able format
@@ -2524,6 +2766,12 @@ extern "C"
     }, \
     {"get_Name", (PyCFunction) Gate_Wrapper_get_Name, METH_NOARGS, \
      "Method to get the name label of the gate" \
+    }, \
+    {"get_Pattern", (PyCFunction) Gate_Wrapper_get_Pattern, METH_NOARGS, \
+     "Method to get the pattern of the permutation gate." \
+    }, \
+    {"set_Pattern", (PyCFunction) Gate_Wrapper_set_Pattern, METH_VARARGS, \
+     "Method to set the pattern of the permutation gate." \
     }
 
 static PyMethodDef Gate_Wrapper_methods[] = {
@@ -2539,12 +2787,14 @@ static PyMethodDef Gate_Wrapper_methods[] = {
 };
 
 
+
 /**
 @brief Structure containing metadata about the members of class  qgd_CH_Wrapper.
 */
 static PyMemberDef  Gate_Wrapper_members[] = {
     {NULL}  /* Sentinel */
 };
+
 
 
 struct Gate_Wrapper_Type_tmp : PyTypeObject {
@@ -2708,6 +2958,8 @@ gate_wrapper_type_template(Tdg, Gate_Wrapper_new);
 
 gate_wrapper_type_template(R, Gate_Wrapper_new);
 
+gate_wrapper_type_template(Permutation, permutation_gate_Wrapper_new);
+
 
 
 
@@ -2784,7 +3036,8 @@ PyInit_gates_Wrapper(void)
         PyType_Ready(&CCX_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&SWAP_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&CSWAP_Wrapper_Type_ins) < 0 ||
-        PyType_Ready(&R_Wrapper_Type_ins) < 0 ) {
+        PyType_Ready(&R_Wrapper_Type_ins) < 0 ||
+        PyType_Ready(&Permutation_Wrapper_Type_ins) < 0 ) {
 
         Py_DECREF(m);
         return NULL;
@@ -2881,6 +3134,8 @@ PyInit_gates_Wrapper(void)
     Py_INCREF_template(SWAP);
 
     Py_INCREF_template(CSWAP);
+
+    Py_INCREF_template(Permutation);
 
     return m;
 }

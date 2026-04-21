@@ -58,6 +58,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "ON.h"
 #include "Adaptive.h"
 #include "Composite.h"
+#include "Permutation.h"
 #include "RXX.h"
 #include "RYY.h"
 #include "RZZ.h"
@@ -465,6 +466,49 @@ qgd_Circuit_Wrapper_add_CSWAP(qgd_Circuit_Wrapper *self, PyObject *args, PyObjec
 }
 
 /**
+@brief Wrapper function to add a Permutation gate to the front of the gate structure.
+@param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper.
+@param args A tuple of the input arguments: pattern (list of ints)
+@param kwds A tuple of keywords
+*/
+static PyObject *
+qgd_Circuit_Wrapper_add_Permutation(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {(char*)"pattern", NULL};
+    PyObject* pattern_py = NULL;
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|O", kwlist, &pattern_py))
+        return Py_BuildValue("i", -1);
+
+    if (pattern_py != NULL && PyList_Check(pattern_py)) {
+        std::vector<int> pattern;
+        Py_ssize_t list_size = PyList_Size(pattern_py);
+        for (Py_ssize_t i = 0; i < list_size; i++) {
+            PyObject* item = PyList_GetItem(pattern_py, i);
+            pattern.push_back(PyLong_AsLong(item));
+        }
+        if (pattern.size() == self->circuit->get_qbit_num()) {
+            try {
+                self->circuit->add_permutation(pattern);
+            } catch (const std::string& e) {
+                PyErr_SetString(PyExc_ValueError, e.c_str());
+                return Py_BuildValue("i", -1);
+            } catch (const std::exception& e) {
+                PyErr_SetString(PyExc_ValueError, e.what());
+                return Py_BuildValue("i", -1);
+            } catch (...) {
+                PyErr_SetString(PyExc_ValueError, "Unknown error occurred in add_permutation");
+                return Py_BuildValue("i", -1);
+            }
+        } else {
+            std::string err = "Pattern size " + std::to_string(pattern.size()) + 
+                             " does not match circuit qubit number " + std::to_string(self->circuit->get_qbit_num());
+            PyErr_SetString(PyExc_ValueError, err.c_str());
+            return Py_BuildValue("i", -1);
+        }
+    }   
+    return Py_BuildValue("i", 0);
+}
+/**
 @brief Wrapper function to add a block of operations to the front of the gate structure.
 @param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper.
 @param args A tuple of the input arguments: Py_qgd_Circuit_Wrapper (PyObject)
@@ -667,8 +711,22 @@ qgd_Circuit_Wrapper_get_Matrix( qgd_Circuit_Wrapper *self, PyObject *args ) {
     // get the C++ wrapper around the data
     Matrix_real&& parameters_mtx = numpy2matrix_real( parameters_arr );
 
-
-    Matrix mtx = self->circuit->get_matrix( parameters_mtx );
+    Matrix mtx;
+    try {
+        mtx = self->circuit->get_matrix( parameters_mtx );
+    }
+    catch (std::string err) {
+        Py_DECREF(parameters_arr);
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        std::cout << err << std::endl;
+        return NULL;
+    }
+    catch(...) {
+        Py_DECREF(parameters_arr);
+        std::string err( "Invalid pointer to circuit class or error in get_matrix");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
     
     // convert to numpy array
     mtx.set_owner(false);
@@ -1513,6 +1571,33 @@ get_gate( Gates_block* circuit, int &idx ) {
         Py_DECREF( circuit_input );
 
     }
+    else if (gate->get_type() == PERMUTATION_OPERATION) {
+        // Handle Permutation gate
+        PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
+        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "Permutation");
+        
+        // Get the pattern from the Permutation gate
+        Permutation* perm_gate = static_cast<Permutation*>(gate);
+        std::vector<int> pattern = perm_gate->get_pattern();
+        
+        // Convert pattern to Python list
+        PyObject* pattern_list = PyList_New(pattern.size());
+        for (size_t i = 0; i < pattern.size(); i++) {
+            PyList_SetItem(pattern_list, i, Py_BuildValue("i", pattern[i]));
+        }
+        
+        PyObject* gate_input = Py_BuildValue("(OO)", qbit_num, pattern_list);
+        py_gate = PyObject_CallObject(py_gate_class, gate_input);
+        
+        // replace dummy data with real gate data
+        qgd_Gate* py_gate_C = reinterpret_cast<qgd_Gate*>( py_gate );
+        delete( py_gate_C->gate );
+        py_gate_C->gate = static_cast<Gate*>( gate->clone() );
+        
+        Py_DECREF( qgd_gate );
+        Py_DECREF( gate_input );
+        Py_DECREF( pattern_list );
+    }
     else {
 
             Py_DECREF( qgd_gate );    
@@ -1897,6 +1982,62 @@ qgd_Circuit_Wrapper_get_Flat_Circuit( qgd_Circuit_Wrapper *self ) {
 
 
 /**
+@brief Wrapper function to create a deep copy of the circuit.
+@param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper.
+@return Returns a new qgd_Circuit Python object that is a deep copy.
+*/
+static PyObject *
+qgd_Circuit_Wrapper_copy( qgd_Circuit_Wrapper *self ) {
+
+    Gates_block* copied_circuit = NULL;
+
+    try {
+        copied_circuit = self->circuit->clone();
+    }
+    catch (std::string err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        std::cout << err << std::endl;
+        return NULL;
+    }
+    catch(...) {
+        std::string err( "Invalid pointer to circuit class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+    int qbit_num = copied_circuit->get_qbit_num();
+
+    // import gate operation modules
+    PyObject* qgd_circuit  = PyImport_ImportModule("squander.gates.qgd_Circuit");
+
+    if ( qgd_circuit == NULL ) {
+        PyErr_SetString(PyExc_Exception, "Module import error: squander.gates.qgd_Circuit" );
+        delete copied_circuit;
+        return NULL;
+    }
+
+    PyObject* qgd_circuit_Dict  = PyModule_GetDict( qgd_circuit );
+
+    // PyDict_GetItemString creates a borrowed reference to the item in the dict. Reference counting is not increased on this element, dont need to decrease the reference counting at the end
+    PyObject* py_circuit_class = PyDict_GetItemString( qgd_circuit_Dict, "qgd_Circuit");
+
+    PyObject* circuit_input = Py_BuildValue("(O)", Py_BuildValue("i", qbit_num) );
+    PyObject* py_circuit    = PyObject_CallObject(py_circuit_class, circuit_input);
+
+    // replace dummy data with real gate data
+    qgd_Circuit_Wrapper* py_circuit_C = reinterpret_cast<qgd_Circuit_Wrapper*>( py_circuit );
+
+    delete( py_circuit_C->circuit );
+    py_circuit_C->circuit = copied_circuit;
+
+    Py_DECREF( qgd_circuit );
+    Py_DECREF( circuit_input );
+
+    return py_circuit;
+}
+
+
+/**
 @brief Method to extract the stored quantum circuit in a human-readable data serialized and pickle-able format
 @param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper
 @return Returns a Python dictionary containing the serialized circuit state
@@ -2263,14 +2404,17 @@ static PyMethodDef qgd_Circuit_Wrapper_Methods[] = {
     {"add_CRY", (PyCFunction) qgd_Circuit_Wrapper_add_CRY, METH_VARARGS | METH_KEYWORDS,
      "Call to add a CRY gate to the front of the gate structure"
     },
+    {"add_Permutation", (PyCFunction) qgd_Circuit_Wrapper_add_Permutation, METH_VARARGS | METH_KEYWORDS,
+     "Call to add a Permutation gate to the front of the gate structure"
+    },
     {"add_CRX", (PyCFunction) qgd_Circuit_Wrapper_add_CRX, METH_VARARGS | METH_KEYWORDS,
-     "Call to add a CRY gate to the front of the gate structure"
+     "Call to add a CRX gate to the front of the gate structure"
     },
     {"add_CRZ", (PyCFunction) qgd_Circuit_Wrapper_add_CRZ, METH_VARARGS | METH_KEYWORDS,
-     "Call to add a CRY gate to the front of the gate structure"
+     "Call to add a CRZ gate to the front of the gate structure"
     },
     {"add_CP", (PyCFunction) qgd_Circuit_Wrapper_add_CP, METH_VARARGS | METH_KEYWORDS,
-     "Call to add a CRY gate to the front of the gate structure"
+     "Call to add a CP gate to the front of the gate structure"
     },
     {"add_CCX", (PyCFunction) qgd_Circuit_Wrapper_add_CCX, METH_VARARGS | METH_KEYWORDS,
      "Call to add a CCX gate to the front of the gate structure"
@@ -2357,6 +2501,9 @@ static PyMethodDef qgd_Circuit_Wrapper_Methods[] = {
     },
     {"get_Children", (PyCFunction) qgd_Circuit_Wrapper_get_children, METH_VARARGS,
      "Method to get the list of child gate indices. Then the children gates can be obtained from the list of gates involved in the circuit."
+    },
+    {"copy", (PyCFunction) qgd_Circuit_Wrapper_copy, METH_NOARGS,
+     "Method to create a deep copy of the circuit."
     },
     {"__getstate__", (PyCFunction) qgd_Circuit_Wrapper_getstate, METH_NOARGS,
      "Method to extract the stored quantum circuit in a human-readable data serialized and pickle-able format."
