@@ -936,7 +936,7 @@ class qgd_Partition_Aware_Mapping:
                 cleanup_config['routed'] = True
                 cleanup_config['test_subcircuits'] = False
                 cleanup_config['test_final_circuit'] = False
-                cleanup_config['global_min'] = False
+                cleanup_config['global_min'] = True
                 wco = qgd_Wide_Circuit_Optimization(cleanup_config)
 
                 saved_sq_circuits = {
@@ -1038,7 +1038,7 @@ class qgd_Partition_Aware_Mapping:
                 cleanup_config['routed'] = True
                 cleanup_config['test_subcircuits'] = False
                 cleanup_config['test_final_circuit'] = False
-                cleanup_config['global_min'] = False
+                cleanup_config['global_min'] = True
                 wco = qgd_Wide_Circuit_Optimization(cleanup_config)
 
                 final_circuit, final_parameters = wco.OptimizeWideCircuit(
