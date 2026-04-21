@@ -954,6 +954,7 @@ class qgd_Partition_Aware_Mapping:
                 best_pi = None
                 best_cost = float('inf')
                 best_pre_cleanup = None
+                cleanup_total = 0.0
 
                 for _, trial_pi in top_layouts:
                     for idx, orig in saved_sq_circuits.items():
@@ -980,10 +981,12 @@ class qgd_Partition_Aware_Mapping:
                         'CNOT', 0
                     )
 
+                    cleanup_t0 = time.time()
                     cleaned_circuit, cleaned_params = wco.OptimizeWideCircuit(
                         trial_circuit.get_Flat_Circuit(),
                         trial_params,
                     )
+                    cleanup_total += time.time() - cleanup_t0
                     cleaned_cost = cleaned_circuit.get_Gate_Nums().get(
                         'CNOT', 0
                     )
@@ -1020,7 +1023,7 @@ class qgd_Partition_Aware_Mapping:
                 )
 
         if do_cleanup and n_iterations > 0:
-            self._routing_time = time.time() - routing_start
+            self._routing_time = time.time() - routing_start - cleanup_total
             self._cnot_pre_cleanup = best_pre_cleanup
         else:
             self._routing_time = time.time() - routing_start
