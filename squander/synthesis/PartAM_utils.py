@@ -154,15 +154,17 @@ def find_constrained_swaps_partial(pi_A, pi_B_dict, dist_matrix, adj=None, neigh
                 if visited.get(new_positions, float('inf')) <= new_g:
                     continue
 
-                # Update neighbor qubit positions: partition qubit at p
-                # moves to nb, displacing whatever was at nb to p.
+                # Bug B fix: update neighbor positions for BOTH sides of the swap.
+                # A neighbor qubit at nb gets displaced to p, AND a neighbor qubit
+                # at p (if it's also tracked, e.g. overlaps with a partition qubit)
+                # moves to nb.
                 if use_neighbor:
+                    new_n_pos = list(n_pos)
                     if nb in n_phys_to_idx:
-                        new_n_pos = list(n_pos)
                         new_n_pos[n_phys_to_idx[nb]] = p
-                        new_n_pos = tuple(new_n_pos)
-                    else:
-                        new_n_pos = n_pos
+                    if p in n_phys_to_idx:
+                        new_n_pos[n_phys_to_idx[p]] = nb
+                    new_n_pos = tuple(new_n_pos)
                     new_nh = n_weight * neighbor_heuristic(new_n_pos)
                 else:
                     new_n_pos = n_pos
@@ -375,10 +377,10 @@ def derive_result_from_automorphism(sigma, P_i, P_o, circuit, parameters, N):
 
 class SingleQubitPartitionResult:
 
-    def __init__(self, circuit_in, parameters_in):
+    def __init__(self, circuit_in, parameters_in, original_qubits=None):
         self.circuit = circuit_in
         self.parameters = parameters_in
-        self.involved_qbits = circuit_in.get_Qbits()
+        self.involved_qbits = original_qubits if original_qubits is not None else circuit_in.get_Qbits()
 
 # Virtual qubits q, reduced virtual qubits (the remapped circuit only up to partition_size) q*
 # Physical qubits Q, reduced physical qubits Q*
@@ -425,6 +427,23 @@ class PartitionSynthesisResult:
         best_index = np.argmin(self.cnot_counts[topology_idx])
         return self.permutations_pairs[topology_idx][best_index], self.synthesised_circuits[topology_idx][best_index], self.synthesised_parameters[topology_idx][best_index]
 
+    def get_top_k_results(self, topology_idx, k):
+        counts = self.cnot_counts[topology_idx]
+        pairs = self.permutations_pairs[topology_idx]
+        if not counts:
+            return []
+        indices = np.argsort(counts)
+        seen_pi = set()
+        result = []
+        for i in indices:
+            pi_key = tuple(pairs[i][0])
+            if pi_key not in seen_pi:
+                seen_pi.add(pi_key)
+                result.append(pairs[i][0])
+                if len(result) >= k:
+                    break
+        return result
+
     def get_topology_candidates(self, topology_idx):
         """
         Get topology candidates for a given topology index, using cache if available.
@@ -463,7 +482,7 @@ class PartitionSynthesisResult:
 
 class PartitionCandidate:
     
-    def __init__(self, partition_idx, topology_idx, permutation_idx, circuit_structure, P_i, P_o, topology, mini_topology, qbit_map, involved_qbits):
+    def __init__(self, partition_idx, topology_idx, permutation_idx, circuit_structure, P_i, P_o, topology, mini_topology, qbit_map, involved_qbits, cnot_count=0):
         #Which partition does this belong to
         self.partition_idx = partition_idx
         #the index of the Q* topology
@@ -484,6 +503,7 @@ class PartitionCandidate:
         self.qbit_map = qbit_map
         # q belonging to the original circuit
         self.involved_qbits = involved_qbits
+        self.cnot_count = cnot_count
         # {Q*:Q}
         self.node_mapping = get_node_mapping(mini_topology, topology)
 
@@ -509,18 +529,24 @@ class PartitionCandidate:
         pi_list = [int(x) for x in pi]
         n = len(pi_list)
 
-        # Check cache if provided
-        if swap_cache is not None:
+        # Check cache if provided (Bug A: skip cache when neighbor heuristic is active,
+        # since cached paths were computed with different future context)
+        use_cache = (neighbor_info is None or
+                      neighbor_info.get('weight', 0) == 0 or
+                      not neighbor_info.get('edges', []))
+        if swap_cache is not None and use_cache:
             pi_tuple = tuple(pi_list)
             qbit_map_frozen = frozenset(qbit_map_input.items())
             cache_key = (pi_tuple, qbit_map_frozen)
             if cache_key in swap_cache:
                 swaps, pi_init = swap_cache[cache_key]
             else:
-                swaps, pi_init = find_constrained_swaps_partial(pi_list, qbit_map_input, D, adj=adj, neighbor_info=neighbor_info)
+                swaps, pi_init = find_constrained_swaps_partial(
+                    pi_list, qbit_map_input, D, adj=adj, neighbor_info=neighbor_info)
                 swap_cache[cache_key] = (swaps, pi_init)
         else:
-            swaps, pi_init = find_constrained_swaps_partial(pi_list, qbit_map_input, D, adj=adj, neighbor_info=neighbor_info)
+            swaps, pi_init = find_constrained_swaps_partial(
+                pi_list, qbit_map_input, D, adj=adj, neighbor_info=neighbor_info)
 
         pi_output = pi_init.copy()
         qbit_map_inverse = {v: k for k, v in self.qbit_map.items()}
