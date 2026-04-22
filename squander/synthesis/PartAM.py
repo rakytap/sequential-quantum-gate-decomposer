@@ -3,6 +3,7 @@ This is an implementation of Partition Aware Mapping.
 """
 import logging
 import multiprocessing as mp
+import os
 import time
 from collections import deque, defaultdict
 from itertools import permutations
@@ -38,6 +39,18 @@ def _decompose_one(Umtx, mini_topology):
     return qgd_Partition_Aware_Mapping.DecomposePartition_and_Perm(
         Umtx, _worker_config, mini_topology
     )
+
+def _available_cpus():
+    """Return the number of CPUs available to this process.
+
+    Respects affinity masks set by taskset, cgroups, SLURM, etc.
+    Falls back to mp.cpu_count() on platforms without sched_getaffinity.
+    """
+    try:
+        return len(os.sched_getaffinity(0))
+    except (AttributeError, OSError):
+        return mp.cpu_count()
+
 
 from squander.synthesis.PartAM_utils import (
     get_subtopologies_of_type,
@@ -561,7 +574,7 @@ class qgd_Partition_Aware_Mapping:
         Returns:
             results_map: Dict mapping partition_idx to PartitionSynthesisResult.
         """
-        n_cpus = mp.cpu_count()
+        n_cpus = _available_cpus()
         use_auts = self.config.get('use_automorphisms', True)
         disable_pbar = self.config.get('progressbar', 0) == False
         aut_cache = {}
@@ -850,7 +863,7 @@ class qgd_Partition_Aware_Mapping:
 
         workers = self.config.get("layout_trial_workers", 0)
         if workers <= 0:
-            workers = min(len(trial_indices), mp.cpu_count())
+            workers = min(len(trial_indices), _available_cpus())
 
         worker_state = {
             "config": dict(self.config),
@@ -942,7 +955,7 @@ class qgd_Partition_Aware_Mapping:
         from concurrent.futures import ThreadPoolExecutor
         workers = self.config.get("layout_trial_workers", 0)
         if workers <= 0:
-            workers = min(n_trials_actual, mp.cpu_count())
+            workers = min(n_trials_actual, _available_cpus())
 
         with ThreadPoolExecutor(max_workers=workers) as pool:
             futures = [

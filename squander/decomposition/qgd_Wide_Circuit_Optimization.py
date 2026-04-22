@@ -2190,7 +2190,7 @@ class qgd_Wide_Circuit_Optimization:
         with (
             contextlib.nullcontext()
             if in_parent
-            else Pool(processes=mp.cpu_count())
+            else Pool(processes=len(os.sched_getaffinity(0)) if hasattr(os, 'sched_getaffinity') else mp.cpu_count())
         ) as pool:
             remaining = list(range(len(subcircuits)))
             while remaining:
