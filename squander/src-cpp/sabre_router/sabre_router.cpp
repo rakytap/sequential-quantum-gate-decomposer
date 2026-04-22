@@ -214,7 +214,8 @@ std::vector<int> SabreRouter::get_final_layer() const {
 // estimate_swap_count
 // ---------------------------------------------------------------------------
 
-int SabreRouter::estimate_swap_count(
+// Change return type to double!
+double SabreRouter::estimate_swap_count(
     const CandidateData& cand,
     const std::vector<int>& pi,
     bool reverse
@@ -236,7 +237,7 @@ int SabreRouter::estimate_swap_count(
             total += d;
         }
     }
-    return static_cast<int>(total / 2.0);
+    return total / 2.0; // NO MORE STATIC_CAST<INT>!
 }
 
 // ---------------------------------------------------------------------------
@@ -478,15 +479,13 @@ std::vector<std::pair<int,int>> SabreRouter::generate_extended_set(
         int depth;
     };
 
-    // Seed per front partition, matching Python's per-partition BFS seeding
     for (int front_idx : F) {
         if (static_cast<int>(E.size()) >= config_.max_E_size) break;
 
         std::deque<BFSNode> queue;
+        // EXACT Python logic: No pre-checks before pushing!
         for (int child : children_graph[front_idx]) {
-            if (!in_F[child] && !in_E[child] && !resolved[child]) {
-                queue.push_back({child, 1});
-            }
+            queue.push_back({child, 1});
         }
 
         while (!queue.empty() && static_cast<int>(E.size()) < config_.max_E_size) {
@@ -496,7 +495,6 @@ std::vector<std::pair<int,int>> SabreRouter::generate_extended_set(
             if (depth > config_.max_lookahead) continue;
             if (in_E[part] || in_F[part] || resolved[part]) continue;
 
-            // Check all parents resolved or in F
             bool parents_ok = true;
             for (int par : parents_graph[part]) {
                 if (!resolved[par] && !in_F[par]) {
@@ -506,12 +504,10 @@ std::vector<std::pair<int,int>> SabreRouter::generate_extended_set(
             }
             if (!parents_ok) continue;
 
-            if (partition_is_single(part)) {
-                // Single-qubit partitions are free — don't increment depth
+            if (layout_partitions_[part].is_single) {
+                // EXACT Python logic: blindly push grandchildren!
                 for (int child : children_graph[part]) {
-                    if (!in_F[child] && !in_E[child] && !resolved[child]) {
-                        queue.push_back({child, depth});
-                    }
+                    queue.push_back({child, depth});
                 }
                 continue;
             }
@@ -521,9 +517,7 @@ std::vector<std::pair<int,int>> SabreRouter::generate_extended_set(
 
             if (depth < config_.max_lookahead) {
                 for (int child : children_graph[part]) {
-                    if (!in_F[child] && !in_E[child] && !resolved[child]) {
-                        queue.push_back({child, depth + 1});
-                    }
+                    queue.push_back({child, depth + 1});
                 }
             }
         }
@@ -684,16 +678,16 @@ std::vector<const CandidateData*> SabreRouter::prefilter_candidates(
     std::vector<Pair> estimated;
     estimated.reserve(candidates.size());
     for (const auto* cand : candidates) {
+        // Now returns double, properly capturing precise costs!
         double est = estimate_swap_count(*cand, pi, reverse) * config_.swap_cost
                      + config_.local_cost_weight * cand->cnot_count;
         estimated.push_back({est, cand});
     }
 
-    int kth = std::min(top_k, static_cast<int>(estimated.size()));
-    std::nth_element(estimated.begin(),
-                     estimated.begin() + kth,
-                     estimated.end(),
-                     [](const Pair& a, const Pair& b) { return a.first < b.first; });
+    // Stable sort perfectly preserves tie-breaker alignments
+    std::stable_sort(estimated.begin(), estimated.end(), [](const Pair& a, const Pair& b) {
+        return a.first < b.first;
+    });
 
     std::vector<const CandidateData*> result;
     result.reserve(top_k);
