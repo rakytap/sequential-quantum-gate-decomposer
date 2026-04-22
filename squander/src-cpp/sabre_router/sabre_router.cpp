@@ -476,51 +476,53 @@ std::vector<std::pair<int,int>> SabreRouter::generate_extended_set(
         int partition;
         int depth;
     };
-    std::deque<BFSNode> queue;
 
-    // Seed with children of F partitions
-    for (int p : F) {
-        for (int child : children_graph[p]) {
+    // Seed per front partition, matching Python's per-partition BFS seeding
+    for (int front_idx : F) {
+        if (static_cast<int>(E.size()) >= config_.max_E_size) break;
+
+        std::deque<BFSNode> queue;
+        for (int child : children_graph[front_idx]) {
             if (!in_F[child] && !in_E[child] && !resolved[child]) {
                 queue.push_back({child, 1});
             }
         }
-    }
 
-    while (!queue.empty() && static_cast<int>(E.size()) < config_.max_E_size) {
-        auto [part, depth] = queue.front();
-        queue.pop_front();
+        while (!queue.empty() && static_cast<int>(E.size()) < config_.max_E_size) {
+            auto [part, depth] = queue.front();
+            queue.pop_front();
 
-        if (depth > config_.max_lookahead) continue;
-        if (in_E[part] || in_F[part] || resolved[part]) continue;
+            if (depth > config_.max_lookahead) continue;
+            if (in_E[part] || in_F[part] || resolved[part]) continue;
 
-        // Check all parents resolved or in F
-        bool parents_ok = true;
-        for (int par : parents_graph[part]) {
-            if (!resolved[par] && !in_F[par]) {
-                parents_ok = false;
-                break;
-            }
-        }
-        if (!parents_ok) continue;
-
-        if (partition_is_single(part)) {
-            // Single-qubit: skip, add children
-            for (int child : children_graph[part]) {
-                if (!in_F[child] && !in_E[child] && !resolved[child]) {
-                    queue.push_back({child, depth + 1});
+            // Check all parents resolved or in F
+            bool parents_ok = true;
+            for (int par : parents_graph[part]) {
+                if (!resolved[par] && !in_F[par]) {
+                    parents_ok = false;
+                    break;
                 }
             }
-            continue;
-        }
+            if (!parents_ok) continue;
 
-        E.push_back({part, depth});
-        in_E[part] = 1;
+            if (partition_is_single(part)) {
+                // Single-qubit partitions are free — don't increment depth
+                for (int child : children_graph[part]) {
+                    if (!in_F[child] && !in_E[child] && !resolved[child]) {
+                        queue.push_back({child, depth});
+                    }
+                }
+                continue;
+            }
 
-        if (depth < config_.max_lookahead) {
-            for (int child : children_graph[part]) {
-                if (!in_F[child] && !in_E[child] && !resolved[child]) {
-                    queue.push_back({child, depth + 1});
+            E.push_back({part, depth});
+            in_E[part] = 1;
+
+            if (depth < config_.max_lookahead) {
+                for (int child : children_graph[part]) {
+                    if (!in_F[child] && !in_E[child] && !resolved[child]) {
+                        queue.push_back({child, depth + 1});
+                    }
                 }
             }
         }
