@@ -1059,6 +1059,12 @@ add_subdirectory (squander/VQA)
 
 add_subdirectory (squander/src-cpp/density_matrix)
 
+# ===================================================================
+# SABRE Router Module
+# ===================================================================
+
+add_subdirectory (squander/src-cpp/sabre_router)
+
 if(DEFINED ENV{QGD_CTEST})
     # adding CMAKE files for executables
     add_subdirectory (test_standalone)

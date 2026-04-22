@@ -816,6 +816,14 @@ class qgd_Partition_Aware_Mapping:
         n_trials,
         random_seed,
     ):
+        use_cpp = self.config.get('use_cpp_router', True)
+        if use_cpp:
+            return self._run_layout_trials_cpp(
+                seeded_pi, DAG, IDAG, layout_partitions,
+                scoring_partitions, D, candidate_cache,
+                n_iterations, n_trials, random_seed,
+            )
+
         trial_indices = list(range(max(1, n_trials)))
         use_parallel = (
             self.config.get("parallel_layout_trials", False)
@@ -865,6 +873,83 @@ class qgd_Partition_Aware_Mapping:
             initargs=(worker_state,),
         ) as pool:
             return pool.map(_run_layout_trial_worker, trial_indices)
+
+    def _run_layout_trials_cpp(
+        self,
+        seeded_pi,
+        DAG,
+        IDAG,
+        layout_partitions,
+        scoring_partitions,
+        D,
+        candidate_cache,
+        n_iterations,
+        n_trials,
+        random_seed,
+    ):
+        from squander.synthesis._sabre_router import SabreRouter, SabreConfig
+
+        cfg = SabreConfig()
+        cfg.prefilter_top_k = self.config.get('prefilter_top_k', 50)
+        cfg.max_E_size = self.config.get('max_E_size', 20)
+        cfg.max_lookahead = self.config.get('max_lookahead', 4)
+        cfg.E_weight = self.config.get('E_weight', 0.5)
+        cfg.E_alpha = self.config.get('E_alpha', 0.9)
+        cfg.local_cost_weight = self.config.get('local_cost_weight', 0.1)
+        cfg.swap_cost = self.config.get('swap_cost', 15.0)
+        cfg.score_tolerance = self.config.get('score_tolerance', 0.05)
+        cfg.sabre_iterations = n_iterations
+        cfg.n_layout_trials = max(1, n_trials)
+        cfg.random_seed = random_seed
+
+        canonical_fwd = self._build_canonical_neighbor_data(
+            scoring_partitions, reverse=False
+        )
+        canonical_rev = self._build_canonical_neighbor_data(
+            scoring_partitions, reverse=True
+        )
+
+        # Convert candidate_cache: list of tuples -> list of lists
+        candidate_cache_lists = [list(cands) for cands in candidate_cache]
+
+        # Convert layout_partitions: list of dicts with tuple involved_qbits
+        layout_partitions_lists = [
+            {'is_single': lp['is_single'], 'involved_qbits': list(lp['involved_qbits'])}
+            for lp in layout_partitions
+        ]
+
+        router = SabreRouter(
+            cfg, D, self._adj, DAG, IDAG,
+            candidate_cache_lists, layout_partitions_lists,
+            canonical_fwd, canonical_rev,
+        )
+
+        seeded_pi_list = [int(x) for x in seeded_pi]
+        n_trials_actual = max(1, n_trials)
+        trial_indices = list(range(n_trials_actual))
+
+        use_parallel = (
+            self.config.get("parallel_layout_trials", False)
+            and n_trials_actual > 1
+        )
+
+        if not use_parallel:
+            return [
+                router.run_trial(idx, seeded_pi_list, n_iterations, n_trials_actual)
+                for idx in trial_indices
+            ]
+
+        from concurrent.futures import ThreadPoolExecutor
+        workers = self.config.get("layout_trial_workers", 0)
+        if workers <= 0:
+            workers = min(n_trials_actual, mp.cpu_count())
+
+        with ThreadPoolExecutor(max_workers=workers) as pool:
+            futures = [
+                pool.submit(router.run_trial, idx, seeded_pi_list, n_iterations, n_trials_actual)
+                for idx in trial_indices
+            ]
+            return [f.result() for f in futures]
         
     def Partition_Aware_Mapping(
         self, circ: Circuit, orig_parameters: np.ndarray
