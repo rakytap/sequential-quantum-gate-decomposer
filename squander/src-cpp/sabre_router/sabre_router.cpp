@@ -476,53 +476,51 @@ std::vector<std::pair<int,int>> SabreRouter::generate_extended_set(
         int partition;
         int depth;
     };
+    std::deque<BFSNode> queue;
 
-    // Seed per front partition, matching Python's per-partition BFS seeding
-    for (int front_idx : F) {
-        if (static_cast<int>(E.size()) >= config_.max_E_size) break;
-
-        std::deque<BFSNode> queue;
-        for (int child : children_graph[front_idx]) {
+    // Seed with children of F partitions
+    for (int p : F) {
+        for (int child : children_graph[p]) {
             if (!in_F[child] && !in_E[child] && !resolved[child]) {
                 queue.push_back({child, 1});
             }
         }
+    }
 
-        while (!queue.empty() && static_cast<int>(E.size()) < config_.max_E_size) {
-            auto [part, depth] = queue.front();
-            queue.pop_front();
+    while (!queue.empty() && static_cast<int>(E.size()) < config_.max_E_size) {
+        auto [part, depth] = queue.front();
+        queue.pop_front();
 
-            if (depth > config_.max_lookahead) continue;
-            if (in_E[part] || in_F[part] || resolved[part]) continue;
+        if (depth > config_.max_lookahead) continue;
+        if (in_E[part] || in_F[part] || resolved[part]) continue;
 
-            // Check all parents resolved or in F
-            bool parents_ok = true;
-            for (int par : parents_graph[part]) {
-                if (!resolved[par] && !in_F[par]) {
-                    parents_ok = false;
-                    break;
+        // Check all parents resolved or in F
+        bool parents_ok = true;
+        for (int par : parents_graph[part]) {
+            if (!resolved[par] && !in_F[par]) {
+                parents_ok = false;
+                break;
+            }
+        }
+        if (!parents_ok) continue;
+
+        if (partition_is_single(part)) {
+            // Single-qubit: skip, add children
+            for (int child : children_graph[part]) {
+                if (!in_F[child] && !in_E[child] && !resolved[child]) {
+                    queue.push_back({child, depth + 1});
                 }
             }
-            if (!parents_ok) continue;
+            continue;
+        }
 
-            if (partition_is_single(part)) {
-                // Single-qubit: skip, add children
-                for (int child : children_graph[part]) {
-                    if (!in_F[child] && !in_E[child] && !resolved[child]) {
-                        queue.push_back({child, depth});
-                    }
-                }
-                continue;
-            }
+        E.push_back({part, depth});
+        in_E[part] = 1;
 
-            E.push_back({part, depth});
-            in_E[part] = 1;
-
-            if (depth < config_.max_lookahead) {
-                for (int child : children_graph[part]) {
-                    if (!in_F[child] && !in_E[child] && !resolved[child]) {
-                        queue.push_back({child, depth + 1});
-                    }
+        if (depth < config_.max_lookahead) {
+            for (int child : children_graph[part]) {
+                if (!in_F[child] && !in_E[child] && !resolved[child]) {
+                    queue.push_back({child, depth + 1});
                 }
             }
         }
@@ -803,34 +801,10 @@ std::pair<std::vector<int>, int> SabreRouter::heuristic_search(
     // Swap cache for this search call (thread-local, on stack)
     std::unordered_map<SwapCacheKey, std::pair<std::vector<std::pair<int,int>>, std::vector<int>>, SwapCacheKeyHash> swap_cache;
 
-    // Resolve single-qubit partitions upfront (Python _heuristic_search_layout_only lines 1481-1498)
-    std::deque<int> sq_queue;
-    for (int p : F) {
-        if (partition_is_single(p)) sq_queue.push_back(p);
-    }
-    while (!sq_queue.empty()) {
-        int p_idx = sq_queue.front();
-        sq_queue.pop_front();
-        if (resolved[p_idx]) continue;
-        F.erase(std::remove(F.begin(), F.end(), p_idx), F.end());
-        resolved[p_idx] = 1;
-
-        for (int child : cg[p_idx]) {
-            if (!resolved[child] && std::find(F.begin(), F.end(), child) == F.end()) {
-                bool all_resolved = true;
-                for (int par : pg[child]) {
-                    if (!resolved[par]) { all_resolved = false; break; }
-                }
-                if (all_resolved) {
-                    if (partition_is_single(child)) {
-                        sq_queue.push_back(child);
-                    } else {
-                        F.push_back(child);
-                    }
-                }
-            }
-        }
-    }
+    // Note: single-qubit partitions are NOT auto-resolved upfront, matching
+    // Python behavior when layout_partitions (dicts) are passed to
+    // _heuristic_search_layout_only. Single-qubit children get resolved
+    // via the cascade after each candidate is selected.
 
     // Main search loop
     while (!F.empty()) {
@@ -864,9 +838,7 @@ std::pair<std::vector<int>, int> SabreRouter::heuristic_search(
         total_swaps += static_cast<int>(swaps.size());
         pi = std::move(pi_new);
 
-        // Update F with newly eligible children (cascade single-qubit)
-        // Python _heuristic_search_layout_only lines 1569-1590
-        std::deque<int> child_queue;
+        // Update F with newly eligible children
         for (int child : cg[best.partition_idx]) {
             if (!resolved[child]) {
                 bool in_F = std::find(F.begin(), F.end(), child) != F.end();
@@ -879,34 +851,9 @@ std::pair<std::vector<int>, int> SabreRouter::heuristic_search(
                         }
                     }
                     if (all_parents_resolved) {
-                        if (partition_is_single(child)) {
-                            resolved[child] = 1;
-                            for (int gc : cg[child]) child_queue.push_back(gc);
-                        } else {
-                            F.push_back(child);
-                        }
+                        F.push_back(child);
                     }
                 }
-            }
-        }
-        // Cascade: resolve single-qubit grandchildren
-        while (!child_queue.empty()) {
-            int gc = child_queue.front();
-            child_queue.pop_front();
-            if (resolved[gc] || std::find(F.begin(), F.end(), gc) != F.end()) continue;
-            bool all_parents_resolved = true;
-            for (int par : pg[gc]) {
-                if (!resolved[par]) {
-                    all_parents_resolved = false;
-                    break;
-                }
-            }
-            if (!all_parents_resolved) continue;
-            if (partition_is_single(gc)) {
-                resolved[gc] = 1;
-                for (int ggc : cg[gc]) child_queue.push_back(ggc);
-            } else {
-                F.push_back(gc);
             }
         }
     }
