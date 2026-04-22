@@ -714,24 +714,27 @@ const CandidateData& SabreRouter::select_best_candidate(
 ) const {
     // Find minimum score
     double min_score = scores[0];
+    size_t min_idx = 0;
     for (size_t i = 1; i < scores.size(); i++) {
-        if (scores[i] < min_score) min_score = scores[i];
-    }
-
-    // Collect all candidates within tolerance of minimum
-    std::vector<size_t> near_best;
-    for (size_t i = 0; i < scores.size(); i++) {
-        if (scores[i] <= min_score * (1.0 + config_.score_tolerance)) {
-            near_best.push_back(i);
+        if (scores[i] < min_score) {
+            min_score = scores[i];
+            min_idx = i;
         }
     }
 
-    // Select randomly among near-best if rng provided and min_score > 0
-    if (min_score > 0.0 && rng && near_best.size() > 1) {
-        std::uniform_int_distribution<size_t> dist(0, near_best.size() - 1);
-        return *candidates[near_best[dist(*rng)]];
+    if (rng && min_score > 0.0) {
+        std::vector<size_t> near_best;
+        double threshold = min_score * (1.0 + config_.score_tolerance);
+        for (size_t i = 0; i < scores.size(); i++) {
+            if (scores[i] <= threshold) near_best.push_back(i);
+        }
+        if (near_best.size() > 1) {
+            std::uniform_int_distribution<size_t> dist(0, near_best.size() - 1);
+            return *candidates[near_best[dist(*rng)]];
+        }
     }
-    return *candidates[near_best[0]];
+
+    return *candidates[min_idx];
 }
 
 // ---------------------------------------------------------------------------
@@ -902,9 +905,9 @@ TrialResult SabreRouter::run_trial(
 
     // Final evaluation pass (deterministic, no RNG)
     auto F_eval = get_initial_layer();
-    auto [pi_final, cost] = heuristic_search(F_eval, pi, false, nullptr, canonical_data_fwd_, DAG_, IDAG_);
+    auto [pi_final, cost] = heuristic_search(F_eval, pi, false, nullptr, canonical_data_fwd_, DAG_, IDAG_); // Evaluates cost using a copy under the hood
 
-    return TrialResult{std::move(pi_final), cost};
+    return TrialResult{std::move(pi), cost}; // Return the pi from AFTER the backward pass, BEFORE the eval pass
 }
 
 } // namespace squander::routing
