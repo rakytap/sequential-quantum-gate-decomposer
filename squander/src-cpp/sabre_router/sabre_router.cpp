@@ -311,21 +311,22 @@ SabreRouter::find_constrained_swaps(
     h0 /= 2.0;
 
     // Priority queue: (f_score, g_score, counter, packed_state)
-    // Using greater for min-heap behavior
-    using PQEntry = std::tuple<double, int, int64_t>;
+    // Counter provides FIFO tie-breaking, matching Python's counter variable
+    using PQEntry = std::tuple<double, int, uint64_t, int64_t>;
     std::priority_queue<PQEntry, std::vector<PQEntry>, std::greater<PQEntry>> pq;
+    uint64_t counter = 0;
 
     // Visited: packed_state -> best g_score
     std::unordered_map<int64_t, int> visited;
     // Parent: packed_state -> (parent_packed_state, swap)
     std::unordered_map<int64_t, std::pair<int64_t, std::pair<int,int>>> parent;
 
-    pq.push({h0, 0, initial_packed});
+    pq.push({h0, 0, counter++, initial_packed});
     visited[initial_packed] = 0;
     parent[initial_packed] = {-1, {-1, -1}};
 
     while (!pq.empty()) {
-        auto [f, g, packed] = pq.top();
+        auto [f, g, cnt, packed] = pq.top();
         pq.pop();
 
         if (packed == target_packed) {
@@ -399,7 +400,7 @@ SabreRouter::find_constrained_swaps(
 
                 visited[new_packed] = new_g;
                 parent[new_packed] = {packed, {std::min(p, nb), std::max(p, nb)}};
-                pq.push({new_g + h, new_g, new_packed});
+                pq.push({new_g + h, new_g, counter++, new_packed});
             }
         }
     }
@@ -688,10 +689,11 @@ std::vector<const CandidateData*> SabreRouter::prefilter_candidates(
         estimated.push_back({est, cand});
     }
 
-    std::partial_sort(estimated.begin(),
-                      estimated.begin() + std::min(top_k, static_cast<int>(estimated.size())),
-                      estimated.end(),
-                      [](const Pair& a, const Pair& b) { return a.first < b.first; });
+    int kth = std::min(top_k, static_cast<int>(estimated.size()));
+    std::nth_element(estimated.begin(),
+                     estimated.begin() + kth,
+                     estimated.end(),
+                     [](const Pair& a, const Pair& b) { return a.first < b.first; });
 
     std::vector<const CandidateData*> result;
     result.reserve(top_k);
@@ -724,8 +726,8 @@ const CandidateData& SabreRouter::select_best_candidate(
         }
     }
 
-    // Select randomly among near-best if rng provided
-    if (rng && near_best.size() > 1) {
+    // Select randomly among near-best if rng provided and min_score > 0
+    if (min_score > 0.0 && rng && near_best.size() > 1) {
         std::uniform_int_distribution<size_t> dist(0, near_best.size() - 1);
         return *candidates[near_best[dist(*rng)]];
     }
@@ -804,11 +806,6 @@ std::pair<std::vector<int>, int> SabreRouter::heuristic_search(
 
     // Swap cache for this search call (thread-local, on stack)
     std::unordered_map<SwapCacheKey, std::pair<std::vector<std::pair<int,int>>, std::vector<int>>, SwapCacheKeyHash> swap_cache;
-
-    // Note: single-qubit partitions are NOT auto-resolved upfront, matching
-    // Python behavior when layout_partitions (dicts) are passed to
-    // _heuristic_search_layout_only. Single-qubit children get resolved
-    // via the cascade after each candidate is selected.
 
     // Main search loop
     while (!F.empty()) {
