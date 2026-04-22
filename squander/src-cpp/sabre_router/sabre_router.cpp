@@ -679,11 +679,13 @@ std::vector<const CandidateData*> SabreRouter::prefilter_candidates(
 ) const {
     if (static_cast<int>(candidates.size()) <= top_k) return candidates;
 
-    using Pair = std::pair<int, const CandidateData*>;
+    using Pair = std::pair<double, const CandidateData*>;
     std::vector<Pair> estimated;
     estimated.reserve(candidates.size());
     for (const auto* cand : candidates) {
-        estimated.push_back({estimate_swap_count(*cand, pi, reverse), cand});
+        double est = estimate_swap_count(*cand, pi, reverse) * config_.swap_cost
+                     + config_.local_cost_weight * cand->cnot_count;
+        estimated.push_back({est, cand});
     }
 
     std::partial_sort(estimated.begin(),
