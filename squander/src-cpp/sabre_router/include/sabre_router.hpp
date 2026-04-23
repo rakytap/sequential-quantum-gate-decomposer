@@ -239,6 +239,13 @@ private:
         const std::vector<std::vector<int>>& parents_graph
     ) const;
 
+    // Pre-resolved canonical entries for an F-step (avoids hash lookups per candidate)
+    struct ResolvedEntry {
+        int partition_idx;
+        const CanonicalEntry* entry; // may be null
+        double alpha; // 1.0 for F, alpha^depth for E
+    };
+
     // LightSABRE scoring (port of score_partition_candidate)
     double score_candidate(
         const CandidateData& cand,
@@ -248,7 +255,12 @@ private:
         bool reverse,
         const std::unordered_map<int, CanonicalEntry>& canonical_data,
         SwapCache* swap_cache,
-        const std::vector<double>* decay = nullptr
+        const std::vector<double>* decay = nullptr,
+        std::vector<std::pair<int,int>>* out_swaps = nullptr,
+        std::vector<int>* out_pi_new = nullptr,
+        const std::vector<ResolvedEntry>* resolved_F = nullptr,
+        const std::vector<ResolvedEntry>* resolved_E = nullptr,
+        const NeighborInfo* cached_neighbor_info = nullptr
     ) const;
 
     // Route and update layout for a candidate (port of transform_pi)
@@ -362,6 +374,9 @@ private:
     int num_partitions_;
     std::vector<double> D_; // flat N*N distance matrix (owned copy)
     std::vector<std::vector<int>> adj_;
+    // CSR view of adj_ for tight inner loops
+    std::vector<int> adj_offsets_;
+    std::vector<int> adj_flat_;
     std::vector<std::vector<int>> DAG_;
     std::vector<std::vector<int>> IDAG_;
     std::vector<std::vector<CandidateData>> candidate_cache_;
