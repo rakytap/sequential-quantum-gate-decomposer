@@ -83,6 +83,7 @@ struct SabreConfig {
     double local_cost_weight = 0.1;
     double swap_cost = 15.0;
     double score_tolerance = 0.05;
+    int trial_swap_cnot_cost = 3;
     int sabre_iterations = 1;
     int n_layout_trials = 1;
     int random_seed = 42;

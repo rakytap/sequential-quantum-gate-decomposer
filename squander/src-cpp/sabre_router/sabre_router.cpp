@@ -856,7 +856,7 @@ std::pair<std::vector<int>, int> SabreRouter::heuristic_search(
     std::vector<int> queue;
     std::vector<uint8_t> resolved(num_partitions_, 0);
     std::vector<uint8_t> in_F(num_partitions_, 0);
-    int total_swaps = 0;
+    int total_cost = 0;
 
     // Split F_init into F (multi-qubit) and queue (single-qubit)
     for (int p : F_init) {
@@ -927,7 +927,8 @@ std::pair<std::vector<int>, int> SabreRouter::heuristic_search(
 
         // Apply transform
         auto [swaps, pi_new] = transform_pi(best, pi, reverse, &swap_cache);
-        total_swaps += static_cast<int>(swaps.size());
+        total_cost += config_.trial_swap_cnot_cost * static_cast<int>(swaps.size())
+                      + best.cnot_count;
         pi = std::move(pi_new);
 
         // Update F with newly eligible children
@@ -973,7 +974,7 @@ std::pair<std::vector<int>, int> SabreRouter::heuristic_search(
         }
     }
 
-    return {pi, total_swaps};
+    return {pi, total_cost};
 }
 
 // ---------------------------------------------------------------------------

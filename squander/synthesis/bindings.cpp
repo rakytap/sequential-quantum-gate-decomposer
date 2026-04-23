@@ -127,6 +127,7 @@ PYBIND11_MODULE(_sabre_router, m) {
         .def_readwrite("local_cost_weight", &SabreConfig::local_cost_weight)
         .def_readwrite("swap_cost", &SabreConfig::swap_cost)
         .def_readwrite("score_tolerance", &SabreConfig::score_tolerance)
+        .def_readwrite("trial_swap_cnot_cost", &SabreConfig::trial_swap_cnot_cost)
         .def_readwrite("sabre_iterations", &SabreConfig::sabre_iterations)
         .def_readwrite("n_layout_trials", &SabreConfig::n_layout_trials)
         .def_readwrite("random_seed", &SabreConfig::random_seed);

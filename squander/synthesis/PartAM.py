@@ -146,6 +146,7 @@ class qgd_Partition_Aware_Mapping:
         self.config.setdefault('use_osr', 0)
         self.config.setdefault('n_layout_trials', 1)
         self.config.setdefault('score_tolerance', 0.05)
+        self.config.setdefault('trial_swap_cnot_cost', 3)
         self.config.setdefault('random_seed', 42)
         self.config.setdefault('cleanup', True)
         self.config.setdefault('prefilter_top_k', 50)
@@ -911,6 +912,7 @@ class qgd_Partition_Aware_Mapping:
         cfg.local_cost_weight = self.config.get('local_cost_weight', 0.1)
         cfg.swap_cost = self.config.get('swap_cost', 15.0)
         cfg.score_tolerance = self.config.get('score_tolerance', 0.05)
+        cfg.trial_swap_cnot_cost = self.config.get('trial_swap_cnot_cost', 3)
         cfg.sabre_iterations = n_iterations
         cfg.n_layout_trials = max(1, n_trials)
         cfg.random_seed = random_seed
@@ -1472,11 +1474,14 @@ class qgd_Partition_Aware_Mapping:
                     updates (used for backward passes in SABRE iterations).
 
         Returns:
-            (pi, total_swaps): final layout and total number of SWAPs accumulated.
+            (pi, total_cost): final layout and estimated routed CNOT cost.
+            The online heuristic still uses ``swap_cost`` for lookahead pressure;
+            this accounting is only used to rank completed layout trials.
         """
         F = list(F)
         resolved_partitions = [False] * len(DAG)
-        total_swaps = 0
+        total_cost = 0
+        swap_cnot_cost = self.config.get("trial_swap_cnot_cost", 3)
 
         queue = deque(
             p for p in F if self._partition_is_single(optimized_partitions[p])
@@ -1564,7 +1569,7 @@ class qgd_Partition_Aware_Mapping:
                 reverse=reverse,
                 adj=self._adj,
             )
-            total_swaps += len(swaps)
+            total_cost += swap_cnot_cost * len(swaps) + best.cnot_count
 
             for child in DAG[best.partition_idx]:
                 if not resolved_partitions[child] and child not in F:
@@ -1589,7 +1594,7 @@ class qgd_Partition_Aware_Mapping:
                         else:
                             F.append(child)
 
-        return pi, total_swaps    
+        return pi, total_cost    
     # ------------------------------------------------------------------------
     # Circuit Construction
     # ------------------------------------------------------------------------
@@ -2187,4 +2192,3 @@ class qgd_Partition_Aware_Mapping:
             current_level = next_level
         
         return levels
-
