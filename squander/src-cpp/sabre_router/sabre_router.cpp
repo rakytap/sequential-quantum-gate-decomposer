@@ -9,6 +9,7 @@ C++ backend for the SABRE-style partition-aware routing engine.
 #include <algorithm>
 #include <cmath>
 #include <deque>
+#include <limits>
 #include <numeric>
 #include <queue>
 #include <random>
@@ -214,8 +215,7 @@ std::vector<int> SabreRouter::get_final_layer() const {
 // estimate_swap_count
 // ---------------------------------------------------------------------------
 
-// Change return type to double!
-double SabreRouter::estimate_swap_count(
+int SabreRouter::estimate_swap_count(
     const CandidateData& cand,
     const std::vector<int>& pi,
     bool reverse
@@ -237,7 +237,7 @@ double SabreRouter::estimate_swap_count(
             total += d;
         }
     }
-    return total / 2.0; // NO MORE STATIC_CAST<INT>!
+    return static_cast<int>(total / 2.0);
 }
 
 // ---------------------------------------------------------------------------
@@ -254,18 +254,23 @@ SabreRouter::find_constrained_swaps(
     const std::vector<int>& P_route_inv,
     std::unordered_map<SwapCacheKey, std::pair<std::vector<std::pair<int,int>>, std::vector<int>>, SwapCacheKeyHash>* swap_cache
 ) const {
-    // Build target dict: {q -> target_physical}
+    // Python find_constrained_swaps_partial sorts pi_B_dict.keys().
     int k = static_cast<int>(qbit_map_keys.size());
-    std::vector<int> partition_qubits(k);
+    std::vector<int> order(k);
+    std::iota(order.begin(), order.end(), 0);
+    std::sort(order.begin(), order.end(), [&](int a, int b) {
+        return qbit_map_keys[a] < qbit_map_keys[b];
+    });
+
     std::vector<int> target_positions(k);
     std::vector<int> initial_positions(k);
 
-    for (int i = 0; i < k; i++) {
-        int q = qbit_map_keys[i];
-        int v = qbit_map_vals[i];
-        partition_qubits[i] = q;
-        target_positions[i] = node_mapping_flat[P_route_inv[v]];
-        initial_positions[i] = pi[q];
+    for (int out_idx = 0; out_idx < k; out_idx++) {
+        int src_idx = order[out_idx];
+        int q = qbit_map_keys[src_idx];
+        int v = qbit_map_vals[src_idx];
+        target_positions[out_idx] = node_mapping_flat[P_route_inv[v]];
+        initial_positions[out_idx] = pi[q];
     }
 
     // Check if already at target
@@ -608,8 +613,8 @@ double SabreRouter::score_candidate(
         auto it = canonical_data.find(p_idx);
         if (it == canonical_data.end()) continue;
         const auto& entry = it->second;
-        if (entry.edges_u.empty()) continue;
         n_other++;
+        if (entry.edges_u.empty()) continue;
         for (size_t i = 0; i < entry.edges_u.size(); i++) {
             int u = entry.edges_u[i];
             int v = entry.edges_v[i];
@@ -673,25 +678,29 @@ std::vector<const CandidateData*> SabreRouter::prefilter_candidates(
     bool reverse
 ) const {
     if (static_cast<int>(candidates.size()) <= top_k) return candidates;
+    if (top_k <= 0) return {};
 
     using Pair = std::pair<double, const CandidateData*>;
     std::vector<Pair> estimated;
     estimated.reserve(candidates.size());
     for (const auto* cand : candidates) {
-        // Now returns double, properly capturing precise costs!
         double est = estimate_swap_count(*cand, pi, reverse) * config_.swap_cost
                      + config_.local_cost_weight * cand->cnot_count;
         estimated.push_back({est, cand});
     }
 
-    // Stable sort perfectly preserves tie-breaker alignments
-    std::stable_sort(estimated.begin(), estimated.end(), [](const Pair& a, const Pair& b) {
-        return a.first < b.first;
-    });
+    std::nth_element(
+        estimated.begin(),
+        estimated.begin() + top_k,
+        estimated.end(),
+        [](const Pair& a, const Pair& b) {
+            return a.first < b.first;
+        }
+    );
 
     std::vector<const CandidateData*> result;
     result.reserve(top_k);
-    for (int i = 0; i < top_k && i < static_cast<int>(estimated.size()); i++) {
+    for (int i = 0; i < top_k; i++) {
         result.push_back(estimated[i].second);
     }
     return result;
@@ -797,9 +806,44 @@ std::pair<std::vector<int>, int> SabreRouter::heuristic_search(
     const std::vector<std::vector<int>>& cg,
     const std::vector<std::vector<int>>& pg
 ) const {
-    std::vector<int> F = F_init;
+    std::vector<int> F;
+    std::vector<int> queue;
     std::vector<uint8_t> resolved(num_partitions_, 0);
     int total_swaps = 0;
+
+    // Split F_init into F (multi-qubit) and queue (single-qubit)
+    for (int p : F_init) {
+        if (layout_partitions_[p].is_single) {
+            queue.push_back(p);
+        } else {
+            F.push_back(p);
+        }
+    }
+
+    // Flush initial single-qubit partitions
+    while (!queue.empty()) {
+        int p = queue.back();
+        queue.pop_back();
+
+        if (resolved[p]) continue;
+        resolved[p] = 1;
+
+        for (int child : cg[p]) {
+            if (!resolved[child] && std::find(F.begin(), F.end(), child) == F.end()) {
+                bool parents_ok = true;
+                for (int par : pg[child]) {
+                    if (!resolved[par]) { parents_ok = false; break; }
+                }
+                if (parents_ok) {
+                    if (layout_partitions_[child].is_single) {
+                        queue.push_back(child);
+                    } else {
+                        F.push_back(child);
+                    }
+                }
+            }
+        }
+    }
 
     // Swap cache for this search call (thread-local, on stack)
     std::unordered_map<SwapCacheKey, std::pair<std::vector<std::pair<int,int>>, std::vector<int>>, SwapCacheKeyHash> swap_cache;
@@ -838,17 +882,38 @@ std::pair<std::vector<int>, int> SabreRouter::heuristic_search(
 
         // Update F with newly eligible children
         for (int child : cg[best.partition_idx]) {
-            if (!resolved[child]) {
-                bool in_F = std::find(F.begin(), F.end(), child) != F.end();
-                if (!in_F) {
-                    bool all_parents_resolved = true;
-                    for (int par : pg[child]) {
-                        if (!resolved[par]) {
-                            all_parents_resolved = false;
-                            break;
+            if (!resolved[child] && std::find(F.begin(), F.end(), child) == F.end()) {
+                bool parents_ok = true;
+                for (int par : pg[child]) {
+                    if (!resolved[par]) { parents_ok = false; break; }
+                }
+                
+                if (parents_ok) {
+                    if (layout_partitions_[child].is_single) {
+                        resolved[child] = 1;
+                        std::vector<int> stack;
+                        for (int gc : cg[child]) stack.push_back(gc);
+                        
+                        while (!stack.empty()) {
+                            int gc = stack.back();
+                            stack.pop_back();
+                            
+                            if (!resolved[gc] && std::find(F.begin(), F.end(), gc) == F.end()) {
+                                bool gc_parents_ok = true;
+                                for (int p_gc : pg[gc]) {
+                                    if (!resolved[p_gc]) { gc_parents_ok = false; break; }
+                                }
+                                if (gc_parents_ok) {
+                                    if (layout_partitions_[gc].is_single) {
+                                        resolved[gc] = 1;
+                                        for (int ggc : cg[gc]) stack.push_back(ggc);
+                                    } else {
+                                        F.push_back(gc);
+                                    }
+                                }
+                            }
                         }
-                    }
-                    if (all_parents_resolved) {
+                    } else {
                         F.push_back(child);
                     }
                 }

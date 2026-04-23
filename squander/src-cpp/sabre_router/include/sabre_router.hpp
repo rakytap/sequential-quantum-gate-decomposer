@@ -191,7 +191,7 @@ private:
     ) const;
 
     // Lower-bound swap estimate (port of estimate_swap_count)
-    double estimate_swap_count(
+    int estimate_swap_count(
         const CandidateData& cand,
         const std::vector<int>& pi,
         bool reverse
