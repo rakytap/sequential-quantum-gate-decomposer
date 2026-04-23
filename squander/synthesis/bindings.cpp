@@ -67,7 +67,9 @@ static std::unordered_map<int, CanonicalEntry> extract_canonical_data(py::dict c
         // val is a dict with 'edges_u', 'edges_v', 'cnot'
         py::dict d = py::reinterpret_borrow<py::dict>(val);
         if (d.contains("edges_u") && !d["edges_u"].is_none()) {
-            auto buf_u = py::array_t<int, py::array::c_style>::ensure(d["edges_u"]);
+            // Python builds these arrays as np.intp; forcecast keeps the C++
+            // router from silently dropping canonical lookahead edges.
+            auto buf_u = py::array_t<int, py::array::c_style | py::array::forcecast>::ensure(d["edges_u"]);
             if (buf_u) {
                 auto acc = buf_u.unchecked<1>();
                 entry.edges_u.resize(acc.shape(0));
@@ -75,7 +77,7 @@ static std::unordered_map<int, CanonicalEntry> extract_canonical_data(py::dict c
             }
         }
         if (d.contains("edges_v") && !d["edges_v"].is_none()) {
-            auto buf_v = py::array_t<int, py::array::c_style>::ensure(d["edges_v"]);
+            auto buf_v = py::array_t<int, py::array::c_style | py::array::forcecast>::ensure(d["edges_v"]);
             if (buf_v) {
                 auto acc = buf_v.unchecked<1>();
                 entry.edges_v.resize(acc.shape(0));
