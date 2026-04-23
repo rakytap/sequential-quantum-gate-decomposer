@@ -607,9 +607,9 @@ double SabreRouter::score_candidate(
         if (p_idx == cand_idx) continue;
         auto it = canonical_data.find(p_idx);
         if (it == canonical_data.end()) continue;
-        n_other++;
         const auto& entry = it->second;
         if (entry.edges_u.empty()) continue;
+        n_other++;
         for (size_t i = 0; i < entry.edges_u.size(); i++) {
             int u = entry.edges_u[i];
             int v = entry.edges_v[i];
