@@ -54,6 +54,13 @@ struct CandidateData {
 
     // Original circuit qubits involved in this partition
     std::vector<int> involved_qbits;
+
+    // Precomputed routing helpers.
+    std::vector<int> P_i_inv;
+    std::vector<int> P_o_inv;
+    std::vector<int> qbit_map_keys_sorted;
+    std::vector<int> qbit_map_vals_sorted;
+    std::vector<int> qstar_to_q;
 };
 
 struct CanonicalEntry {
@@ -91,23 +98,26 @@ struct TrialResult {
 // ---------------------------------------------------------------------------
 
 struct SwapCacheKey {
-    // Snapshot of pi[] at the involved qubit positions + target positions
-    std::vector<int> pi_snapshot;
-    std::vector<int> targets;
+    int64_t pi_snapshot;
+    int64_t targets;
+    int k;
 
     bool operator==(const SwapCacheKey& o) const {
-        return pi_snapshot == o.pi_snapshot && targets == o.targets;
+        return pi_snapshot == o.pi_snapshot && targets == o.targets && k == o.k;
     }
 };
 
 struct SwapCacheKeyHash {
     size_t operator()(const SwapCacheKey& k) const {
-        size_t h = 0;
-        for (int v : k.pi_snapshot) h = h * 31 + static_cast<size_t>(v);
-        for (int v : k.targets) h = h * 31 + static_cast<size_t>(v);
+        size_t h = static_cast<size_t>(k.pi_snapshot);
+        h ^= static_cast<size_t>(k.targets) + 0x9e3779b97f4a7c15ULL + (h << 6) + (h >> 2);
+        h ^= static_cast<size_t>(k.k) + 0x9e3779b97f4a7c15ULL + (h << 6) + (h >> 2);
         return h;
     }
 };
+
+using SwapList = std::vector<std::pair<int,int>>;
+using SwapCache = std::unordered_map<SwapCacheKey, SwapList, SwapCacheKeyHash>;
 
 // ---------------------------------------------------------------------------
 // A* state packing helpers
@@ -143,14 +153,14 @@ public:
     SabreRouter(
         const SabreConfig& config,
         int N,
-        const std::vector<double>& D,
-        const std::vector<std::vector<int>>& adj,
-        const std::vector<std::vector<int>>& DAG,
-        const std::vector<std::vector<int>>& IDAG,
-        const std::vector<std::vector<CandidateData>>& candidate_cache,
-        const std::vector<LayoutPartInfo>& layout_partitions,
-        const std::unordered_map<int, CanonicalEntry>& canonical_data_fwd,
-        const std::unordered_map<int, CanonicalEntry>& canonical_data_rev
+        std::vector<double> D,
+        std::vector<std::vector<int>> adj,
+        std::vector<std::vector<int>> DAG,
+        std::vector<std::vector<int>> IDAG,
+        std::vector<std::vector<CandidateData>> candidate_cache,
+        std::vector<LayoutPartInfo> layout_partitions,
+        std::unordered_map<int, CanonicalEntry> canonical_data_fwd,
+        std::unordered_map<int, CanonicalEntry> canonical_data_rev
     );
 
     // Thread-safe: all mutable state is stack-local
@@ -187,7 +197,7 @@ private:
         const std::vector<int>& qbit_map_vals,
         const std::vector<int>& node_mapping_flat,
         const std::vector<int>& P_route_inv,
-        std::unordered_map<SwapCacheKey, std::pair<std::vector<std::pair<int,int>>, std::vector<int>>, SwapCacheKeyHash>* swap_cache
+        SwapCache* swap_cache
     ) const;
 
     // Lower-bound swap estimate (port of estimate_swap_count)
@@ -213,7 +223,7 @@ private:
         const std::vector<std::pair<int,int>>& E,
         bool reverse,
         const std::unordered_map<int, CanonicalEntry>& canonical_data,
-        std::unordered_map<SwapCacheKey, std::pair<std::vector<std::pair<int,int>>, std::vector<int>>, SwapCacheKeyHash>* swap_cache
+        SwapCache* swap_cache
     ) const;
 
     // Route and update layout for a candidate (port of transform_pi)
@@ -222,7 +232,7 @@ private:
         const CandidateData& cand,
         const std::vector<int>& pi,
         bool reverse,
-        std::unordered_map<SwapCacheKey, std::pair<std::vector<std::pair<int,int>>, std::vector<int>>, SwapCacheKeyHash>* swap_cache
+        SwapCache* swap_cache
     ) const;
 
     // Release valve for stuck front layers
@@ -315,6 +325,7 @@ private:
     std::vector<LayoutPartInfo> layout_partitions_;
     std::unordered_map<int, CanonicalEntry> canonical_data_fwd_;
     std::unordered_map<int, CanonicalEntry> canonical_data_rev_;
+    std::vector<double> alpha_weights_;
 };
 
 } // namespace squander::routing

@@ -8,6 +8,8 @@ pybind11 bindings for the SABRE routing engine.
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
 
+#include <utility>
+
 #include "sabre_router.hpp"
 
 namespace py = pybind11;
@@ -134,9 +136,9 @@ PYBIND11_MODULE(_sabre_router, m) {
         .def(py::init(
             [](const SabreConfig& config,
                py::array_t<double, py::array::c_style> D_arr,
-               const std::vector<std::vector<int>>& adj,
-               const std::vector<std::vector<int>>& DAG,
-               const std::vector<std::vector<int>>& IDAG,
+               std::vector<std::vector<int>> adj,
+               std::vector<std::vector<int>> DAG,
+               std::vector<std::vector<int>> IDAG,
                py::list candidate_cache_py,
                py::list layout_partitions_py,
                py::dict canonical_data_fwd_py,
@@ -170,8 +172,8 @@ PYBIND11_MODULE(_sabre_router, m) {
                 auto cd_rev = extract_canonical_data(canonical_data_rev_py);
 
                 return new SabreRouter(
-                    config, N, D_flat, adj, DAG, IDAG,
-                    cc, lp, cd_fwd, cd_rev
+                    config, N, std::move(D_flat), std::move(adj), std::move(DAG), std::move(IDAG),
+                    std::move(cc), std::move(lp), std::move(cd_fwd), std::move(cd_rev)
                 );
             }),
             py::arg("config"),

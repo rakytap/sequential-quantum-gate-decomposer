@@ -9,17 +9,80 @@ C++ backend for the SABRE-style partition-aware routing engine.
 #include <algorithm>
 #include <cmath>
 #include <deque>
+#include <functional>
+#include <initializer_list>
 #include <limits>
 #include <numeric>
 #include <queue>
 #include <random>
 #include <stdexcept>
+#include <tuple>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
 #include <vector>
 
 namespace squander::routing {
+
+namespace {
+
+std::vector<int> invert_permutation(const std::vector<int>& P) {
+    std::vector<int> inv(P.size());
+    for (size_t i = 0; i < P.size(); i++) {
+        inv[P[i]] = static_cast<int>(i);
+    }
+    return inv;
+}
+
+void prepare_candidate(CandidateData& cand) {
+    cand.P_i_inv = invert_permutation(cand.P_i);
+    cand.P_o_inv = invert_permutation(cand.P_o);
+
+    const int k = static_cast<int>(cand.qbit_map_keys.size());
+    std::vector<int> order(k);
+    std::iota(order.begin(), order.end(), 0);
+    std::sort(order.begin(), order.end(), [&](int a, int b) {
+        return cand.qbit_map_keys[a] < cand.qbit_map_keys[b];
+    });
+
+    cand.qbit_map_keys_sorted.resize(k);
+    cand.qbit_map_vals_sorted.resize(k);
+    int max_qstar = -1;
+    for (int i = 0; i < k; i++) {
+        const int src_idx = order[i];
+        const int qstar = cand.qbit_map_vals[src_idx];
+        cand.qbit_map_keys_sorted[i] = cand.qbit_map_keys[src_idx];
+        cand.qbit_map_vals_sorted[i] = qstar;
+        if (qstar > max_qstar) max_qstar = qstar;
+    }
+
+    const int dense_size = std::max(
+        {max_qstar + 1,
+         static_cast<int>(cand.P_i.size()),
+         static_cast<int>(cand.P_o.size()),
+         static_cast<int>(cand.node_mapping_flat.size())}
+    );
+    cand.qstar_to_q.assign(dense_size, -1);
+    for (size_t i = 0; i < cand.qbit_map_keys.size(); i++) {
+        const int qstar = cand.qbit_map_vals[i];
+        if (qstar >= 0) {
+            if (qstar >= static_cast<int>(cand.qstar_to_q.size())) {
+                cand.qstar_to_q.resize(qstar + 1, -1);
+            }
+            cand.qstar_to_q[qstar] = cand.qbit_map_keys[i];
+        }
+    }
+}
+
+inline void unpack_state_into(int64_t packed, int k, int N, std::vector<int>& positions) {
+    positions.resize(k);
+    for (int i = 0; i < k; i++) {
+        positions[i] = static_cast<int>(packed % N);
+        packed /= N;
+    }
+}
+
+} // namespace
 
 // ---------------------------------------------------------------------------
 // Constructor
@@ -28,29 +91,43 @@ namespace squander::routing {
 SabreRouter::SabreRouter(
     const SabreConfig& config,
     int N,
-    const std::vector<double>& D,
-    const std::vector<std::vector<int>>& adj,
-    const std::vector<std::vector<int>>& DAG,
-    const std::vector<std::vector<int>>& IDAG,
-    const std::vector<std::vector<CandidateData>>& candidate_cache,
-    const std::vector<LayoutPartInfo>& layout_partitions,
-    const std::unordered_map<int, CanonicalEntry>& canonical_data_fwd,
-    const std::unordered_map<int, CanonicalEntry>& canonical_data_rev
+    std::vector<double> D,
+    std::vector<std::vector<int>> adj,
+    std::vector<std::vector<int>> DAG,
+    std::vector<std::vector<int>> IDAG,
+    std::vector<std::vector<CandidateData>> candidate_cache,
+    std::vector<LayoutPartInfo> layout_partitions,
+    std::unordered_map<int, CanonicalEntry> canonical_data_fwd,
+    std::unordered_map<int, CanonicalEntry> canonical_data_rev
 )
     : config_(config)
     , N_(N)
     , num_partitions_(static_cast<int>(DAG.size()))
-    , D_(D)
-    , adj_(adj)
-    , DAG_(DAG)
-    , IDAG_(IDAG)
-    , candidate_cache_(candidate_cache)
-    , layout_partitions_(layout_partitions)
-    , canonical_data_fwd_(canonical_data_fwd)
-    , canonical_data_rev_(canonical_data_rev)
+    , D_(std::move(D))
+    , adj_(std::move(adj))
+    , DAG_(std::move(DAG))
+    , IDAG_(std::move(IDAG))
+    , candidate_cache_(std::move(candidate_cache))
+    , layout_partitions_(std::move(layout_partitions))
+    , canonical_data_fwd_(std::move(canonical_data_fwd))
+    , canonical_data_rev_(std::move(canonical_data_rev))
 {
     if (static_cast<int>(D_.size()) != N_ * N_) {
         throw std::invalid_argument("Distance matrix D must be N x N");
+    }
+    for (auto& partition_candidates : candidate_cache_) {
+        for (auto& cand : partition_candidates) {
+            prepare_candidate(cand);
+        }
+    }
+
+    const int max_depth = std::max(0, config_.max_lookahead);
+    alpha_weights_.resize(max_depth + 1);
+    if (!alpha_weights_.empty()) {
+        alpha_weights_[0] = 1.0;
+        for (int depth = 1; depth <= max_depth; depth++) {
+            alpha_weights_[depth] = alpha_weights_[depth - 1] * config_.E_alpha;
+        }
     }
 }
 
@@ -95,11 +172,7 @@ void SabreRouter::build_target_positions(
     std::vector<int>& out_keys,
     std::vector<int>& out_targets
 ) const {
-    const std::vector<int>& P_route = reverse ? cand.P_o : cand.P_i;
-    std::vector<int> P_route_inv(P_route.size());
-    for (size_t i = 0; i < P_route.size(); i++) {
-        P_route_inv[P_route[i]] = static_cast<int>(i);
-    }
+    const std::vector<int>& P_route_inv = reverse ? cand.P_o_inv : cand.P_i_inv;
 
     out_keys = cand.qbit_map_keys;
     out_targets.resize(cand.qbit_map_keys.size());
@@ -220,11 +293,7 @@ int SabreRouter::estimate_swap_count(
     const std::vector<int>& pi,
     bool reverse
 ) const {
-    const std::vector<int>& P_route = reverse ? cand.P_o : cand.P_i;
-    std::vector<int> P_route_inv(P_route.size());
-    for (size_t i = 0; i < P_route.size(); i++) {
-        P_route_inv[P_route[i]] = static_cast<int>(i);
-    }
+    const std::vector<int>& P_route_inv = reverse ? cand.P_o_inv : cand.P_i_inv;
 
     double total = 0.0;
     for (size_t i = 0; i < cand.qbit_map_keys.size(); i++) {
@@ -252,25 +321,17 @@ SabreRouter::find_constrained_swaps(
     const std::vector<int>& qbit_map_vals,
     const std::vector<int>& node_mapping_flat,
     const std::vector<int>& P_route_inv,
-    std::unordered_map<SwapCacheKey, std::pair<std::vector<std::pair<int,int>>, std::vector<int>>, SwapCacheKeyHash>* swap_cache
+    SwapCache* swap_cache
 ) const {
-    // Python find_constrained_swaps_partial sorts pi_B_dict.keys().
     int k = static_cast<int>(qbit_map_keys.size());
-    std::vector<int> order(k);
-    std::iota(order.begin(), order.end(), 0);
-    std::sort(order.begin(), order.end(), [&](int a, int b) {
-        return qbit_map_keys[a] < qbit_map_keys[b];
-    });
-
     std::vector<int> target_positions(k);
     std::vector<int> initial_positions(k);
 
-    for (int out_idx = 0; out_idx < k; out_idx++) {
-        int src_idx = order[out_idx];
-        int q = qbit_map_keys[src_idx];
-        int v = qbit_map_vals[src_idx];
-        target_positions[out_idx] = node_mapping_flat[P_route_inv[v]];
-        initial_positions[out_idx] = pi[q];
+    for (int i = 0; i < k; i++) {
+        const int q = qbit_map_keys[i];
+        const int v = qbit_map_vals[i];
+        target_positions[i] = node_mapping_flat[P_route_inv[v]];
+        initial_positions[i] = pi[q];
     }
 
     // Check if already at target
@@ -285,29 +346,22 @@ SabreRouter::find_constrained_swaps(
         return {{}, pi};
     }
 
-    // Check swap cache
+    int64_t initial_packed = pack_state(initial_positions, N_);
+    int64_t target_packed = pack_state(target_positions, N_);
+    const SwapCacheKey cache_key{initial_packed, target_packed, k};
+
     if (swap_cache) {
-        SwapCacheKey key;
-        key.pi_snapshot.resize(k);
-        key.targets.resize(k);
-        for (int i = 0; i < k; i++) {
-            key.pi_snapshot[i] = initial_positions[i];
-            key.targets[i] = target_positions[i];
-        }
-        auto it = swap_cache->find(key);
+        auto it = swap_cache->find(cache_key);
         if (it != swap_cache->end()) {
             // Replay cached swaps on current pi
-            auto result_pi = apply_swaps_to_pi(pi, it->second.first);
-            return {it->second.first, result_pi};
+            auto result_pi = apply_swaps_to_pi(pi, it->second);
+            return {it->second, result_pi};
         }
     }
 
     // A* search over k-dimensional state space
     // State: vector of physical positions for each partition qubit
     // Heuristic: sum(D[pos_i][target_i]) / 2
-
-    int64_t initial_packed = pack_state(initial_positions, N_);
-    int64_t target_packed = pack_state(target_positions, N_);
 
     // Compute initial heuristic
     double h0 = 0.0;
@@ -326,14 +380,22 @@ SabreRouter::find_constrained_swaps(
     std::unordered_map<int64_t, int> visited;
     // Parent: packed_state -> (parent_packed_state, swap)
     std::unordered_map<int64_t, std::pair<int64_t, std::pair<int,int>>> parent;
+    visited.reserve(256);
+    parent.reserve(256);
 
     pq.push({h0, 0, counter++, initial_packed});
     visited[initial_packed] = 0;
     parent[initial_packed] = {-1, {-1, -1}};
 
+    std::vector<int> positions;
+    std::vector<int> new_positions(k);
+    positions.reserve(k);
+
     while (!pq.empty()) {
-        auto [f, g, cnt, packed] = pq.top();
+        auto entry = pq.top();
         pq.pop();
+        int g = std::get<1>(entry);
+        int64_t packed = std::get<3>(entry);
 
         if (packed == target_packed) {
             // Reconstruct swap path
@@ -350,14 +412,7 @@ SabreRouter::find_constrained_swaps(
 
             // Store in cache
             if (swap_cache) {
-                SwapCacheKey key;
-                key.pi_snapshot.resize(k);
-                key.targets.resize(k);
-                for (int i = 0; i < k; i++) {
-                    key.pi_snapshot[i] = initial_positions[i];
-                    key.targets[i] = target_positions[i];
-                }
-                (*swap_cache)[key] = {path, result_pi};
+                (*swap_cache)[cache_key] = path;
             }
 
             return {path, result_pi};
@@ -369,24 +424,20 @@ SabreRouter::find_constrained_swaps(
             continue;
         }
 
-        auto positions = unpack_state(packed, k, N_);
-
-        // pos_to_k_idx: physical position -> index in partition_qubits
-        std::unordered_map<int, int> pos_to_k_idx;
-        for (int i = 0; i < k; i++) {
-            pos_to_k_idx[positions[i]] = i;
-        }
+        unpack_state_into(packed, k, N_, positions);
 
         // Try every SWAP that moves at least one partition qubit
         for (int i = 0; i < k; i++) {
             int p = positions[i];
             for (int nb : adj_[p]) {
-                auto new_positions = positions;
+                std::copy(positions.begin(), positions.end(), new_positions.begin());
                 new_positions[i] = nb;
                 // If neighbor also holds a partition qubit, swap it
-                auto it = pos_to_k_idx.find(nb);
-                if (it != pos_to_k_idx.end()) {
-                    new_positions[it->second] = p;
+                for (int j = 0; j < k; j++) {
+                    if (positions[j] == nb) {
+                        new_positions[j] = p;
+                        break;
+                    }
                 }
 
                 int64_t new_packed = pack_state(new_positions, N_);
@@ -424,20 +475,15 @@ SabreRouter::transform_pi(
     const CandidateData& cand,
     const std::vector<int>& pi,
     bool reverse,
-    std::unordered_map<SwapCacheKey, std::pair<std::vector<std::pair<int,int>>, std::vector<int>>, SwapCacheKeyHash>* swap_cache
+    SwapCache* swap_cache
 ) const {
-    // Build P_route_inv
-    const std::vector<int>& P_route = reverse ? cand.P_o : cand.P_i;
-    std::vector<int> P_route_inv(P_route.size());
-    for (size_t i = 0; i < P_route.size(); i++) {
-        P_route_inv[P_route[i]] = static_cast<int>(i);
-    }
+    const std::vector<int>& P_route_inv = reverse ? cand.P_o_inv : cand.P_i_inv;
 
     // Route qubits to input positions
     auto [swaps, pi_routed] = find_constrained_swaps(
         pi,
-        cand.qbit_map_keys,
-        cand.qbit_map_vals,
+        cand.qbit_map_keys_sorted,
+        cand.qbit_map_vals_sorted,
         cand.node_mapping_flat,
         P_route_inv,
         swap_cache
@@ -447,16 +493,10 @@ SabreRouter::transform_pi(
     const std::vector<int>& P_exit = reverse ? cand.P_i : cand.P_o;
     std::vector<int> pi_output = pi_routed;
 
-    // Build inverse qbit_map: q* -> q
-    std::unordered_map<int, int> qbit_map_inv;
-    for (size_t i = 0; i < cand.qbit_map_keys.size(); i++) {
-        qbit_map_inv[cand.qbit_map_vals[i]] = cand.qbit_map_keys[i];
-    }
-
     for (size_t q_star = 0; q_star < P_exit.size(); q_star++) {
-        auto it = qbit_map_inv.find(static_cast<int>(q_star));
-        if (it != qbit_map_inv.end()) {
-            int k = it->second;
+        if (q_star < cand.qstar_to_q.size()) {
+            int k = cand.qstar_to_q[q_star];
+            if (k < 0) continue;
             pi_output[k] = cand.node_mapping_flat[P_exit[q_star]];
         }
     }
@@ -581,7 +621,10 @@ double SabreRouter::compute_lookahead_cost(
             double cost = d - 1.0;
             if (cost > 0.0) d_cost += config_.swap_cost * cost;
         }
-        total += std::pow(config_.E_alpha, depth) * d_cost;
+        const double alpha = (depth >= 0 && depth < static_cast<int>(alpha_weights_.size()))
+            ? alpha_weights_[depth]
+            : std::pow(config_.E_alpha, depth);
+        total += alpha * d_cost;
     }
     return config_.E_weight * total / static_cast<double>(E.size());
 }
@@ -597,7 +640,7 @@ double SabreRouter::score_candidate(
     const std::vector<std::pair<int,int>>& E,
     bool reverse,
     const std::unordered_map<int, CanonicalEntry>& canonical_data,
-    std::unordered_map<SwapCacheKey, std::pair<std::vector<std::pair<int,int>>, std::vector<int>>, SwapCacheKeyHash>* swap_cache
+    SwapCache* swap_cache
 ) const {
     auto [swaps, output_perm] = transform_pi(cand, pi, reverse, swap_cache);
 
@@ -642,7 +685,10 @@ double SabreRouter::score_candidate(
                 double cost = d - 1.0;
                 if (cost > 0.0) d_cost += config_.swap_cost * cost;
             }
-            e_sum += std::pow(config_.E_alpha, depth) * d_cost;
+            const double alpha = (depth >= 0 && depth < static_cast<int>(alpha_weights_.size()))
+                ? alpha_weights_[depth]
+                : std::pow(config_.E_alpha, depth);
+            e_sum += alpha * d_cost;
         }
         score += config_.E_weight * e_sum / static_cast<double>(E.size());
     }
@@ -809,6 +855,7 @@ std::pair<std::vector<int>, int> SabreRouter::heuristic_search(
     std::vector<int> F;
     std::vector<int> queue;
     std::vector<uint8_t> resolved(num_partitions_, 0);
+    std::vector<uint8_t> in_F(num_partitions_, 0);
     int total_swaps = 0;
 
     // Split F_init into F (multi-qubit) and queue (single-qubit)
@@ -817,6 +864,7 @@ std::pair<std::vector<int>, int> SabreRouter::heuristic_search(
             queue.push_back(p);
         } else {
             F.push_back(p);
+            in_F[p] = 1;
         }
     }
 
@@ -829,7 +877,7 @@ std::pair<std::vector<int>, int> SabreRouter::heuristic_search(
         resolved[p] = 1;
 
         for (int child : cg[p]) {
-            if (!resolved[child] && std::find(F.begin(), F.end(), child) == F.end()) {
+            if (!resolved[child] && !in_F[child]) {
                 bool parents_ok = true;
                 for (int par : pg[child]) {
                     if (!resolved[par]) { parents_ok = false; break; }
@@ -839,6 +887,7 @@ std::pair<std::vector<int>, int> SabreRouter::heuristic_search(
                         queue.push_back(child);
                     } else {
                         F.push_back(child);
+                        in_F[child] = 1;
                     }
                 }
             }
@@ -846,7 +895,7 @@ std::pair<std::vector<int>, int> SabreRouter::heuristic_search(
     }
 
     // Swap cache for this search call (thread-local, on stack)
-    std::unordered_map<SwapCacheKey, std::pair<std::vector<std::pair<int,int>>, std::vector<int>>, SwapCacheKeyHash> swap_cache;
+    SwapCache swap_cache;
 
     // Main search loop
     while (!F.empty()) {
@@ -873,6 +922,7 @@ std::pair<std::vector<int>, int> SabreRouter::heuristic_search(
 
         // Remove from F and mark resolved
         F.erase(std::remove(F.begin(), F.end(), best.partition_idx), F.end());
+        in_F[best.partition_idx] = 0;
         resolved[best.partition_idx] = 1;
 
         // Apply transform
@@ -882,7 +932,7 @@ std::pair<std::vector<int>, int> SabreRouter::heuristic_search(
 
         // Update F with newly eligible children
         for (int child : cg[best.partition_idx]) {
-            if (!resolved[child] && std::find(F.begin(), F.end(), child) == F.end()) {
+            if (!resolved[child] && !in_F[child]) {
                 bool parents_ok = true;
                 for (int par : pg[child]) {
                     if (!resolved[par]) { parents_ok = false; break; }
@@ -898,7 +948,7 @@ std::pair<std::vector<int>, int> SabreRouter::heuristic_search(
                             int gc = stack.back();
                             stack.pop_back();
                             
-                            if (!resolved[gc] && std::find(F.begin(), F.end(), gc) == F.end()) {
+                            if (!resolved[gc] && !in_F[gc]) {
                                 bool gc_parents_ok = true;
                                 for (int p_gc : pg[gc]) {
                                     if (!resolved[p_gc]) { gc_parents_ok = false; break; }
@@ -909,12 +959,14 @@ std::pair<std::vector<int>, int> SabreRouter::heuristic_search(
                                         for (int ggc : cg[gc]) stack.push_back(ggc);
                                     } else {
                                         F.push_back(gc);
+                                        in_F[gc] = 1;
                                     }
                                 }
                             }
                         }
                     } else {
                         F.push_back(child);
+                        in_F[child] = 1;
                     }
                 }
             }
@@ -947,24 +999,25 @@ TrialResult SabreRouter::run_trial(
         pi = random_permutation(N_, rng_gen);
     }
 
+    auto F_rev = get_final_layer();
+    auto F_fwd = get_initial_layer();
+
     // Forward-backward-forward iterations
     for (int iteration = 0; iteration < n_iterations; iteration++) {
         // Backward pass: swap DAG/IDAG
-        auto F_rev = get_final_layer();
-        auto [pi_bwd, _] = heuristic_search(F_rev, pi, true, rng, canonical_data_rev_, IDAG_, DAG_);
-        pi = std::move(pi_bwd);
+        auto bwd_result = heuristic_search(F_rev, pi, true, rng, canonical_data_rev_, IDAG_, DAG_);
+        pi = std::move(bwd_result.first);
 
         // Forward pass (skip on last iteration)
         if (iteration < n_iterations - 1) {
-            auto F_fwd = get_initial_layer();
-            auto [pi_fwd, __] = heuristic_search(F_fwd, pi, false, rng, canonical_data_fwd_, DAG_, IDAG_);
-            pi = std::move(pi_fwd);
+            auto fwd_result = heuristic_search(F_fwd, pi, false, rng, canonical_data_fwd_, DAG_, IDAG_);
+            pi = std::move(fwd_result.first);
         }
     }
 
     // Final evaluation pass (deterministic, no RNG)
-    auto F_eval = get_initial_layer();
-    auto [pi_final, cost] = heuristic_search(F_eval, pi, false, nullptr, canonical_data_fwd_, DAG_, IDAG_); // Evaluates cost using a copy under the hood
+    auto eval_result = heuristic_search(F_fwd, pi, false, nullptr, canonical_data_fwd_, DAG_, IDAG_); // Evaluates cost using a copy under the hood
+    int cost = eval_result.second;
 
     return TrialResult{std::move(pi), cost}; // Return the pi from AFTER the backward pass, BEFORE the eval pass
 }
