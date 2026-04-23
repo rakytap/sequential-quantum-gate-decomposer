@@ -87,6 +87,11 @@ struct SabreConfig {
     int sabre_iterations = 1;
     int n_layout_trials = 1;
     int random_seed = 42;
+    // 0 = canonical future scoring, 1 = candidate-aware future scoring.
+    int future_cost_mode = 0;
+    double future_candidate_weight = 1.0;
+    int future_candidate_top_k = 0;
+    double order_weight = 0.0;
 };
 
 struct TrialResult {
@@ -225,6 +230,24 @@ private:
         bool reverse,
         const std::unordered_map<int, CanonicalEntry>& canonical_data,
         SwapCache* swap_cache
+    ) const;
+
+    double candidate_aware_future_cost(
+        int partition_idx,
+        const std::vector<int>& output_perm,
+        bool reverse
+    ) const;
+
+    double output_layout_quality_cost(
+        const std::vector<int>& output_perm,
+        const std::vector<int>& future_indices,
+        const std::unordered_map<int, CanonicalEntry>& canonical_data
+    ) const;
+
+    double output_layout_quality_cost(
+        const std::vector<int>& output_perm,
+        const std::vector<std::pair<int,int>>& future_indices,
+        const std::unordered_map<int, CanonicalEntry>& canonical_data
     ) const;
 
     // Route and update layout for a candidate (port of transform_pi)

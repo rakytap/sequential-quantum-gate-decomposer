@@ -151,6 +151,10 @@ class qgd_Partition_Aware_Mapping:
         self.config.setdefault('cleanup', True)
         self.config.setdefault('prefilter_top_k', 50)
         self.config.setdefault('cleanup_top_k', 3)
+        self.config.setdefault('future_cost_mode', 'canonical')
+        self.config.setdefault('future_candidate_weight', 1.0)
+        self.config.setdefault('future_candidate_top_k', 0)
+        self.config.setdefault('order_weight', 0.0)
         strategy = self.config['strategy']
         self.config.setdefault('parallel_layout_trials', False)
         self.config.setdefault('layout_trial_workers', 0)
@@ -916,6 +920,15 @@ class qgd_Partition_Aware_Mapping:
         cfg.sabre_iterations = n_iterations
         cfg.n_layout_trials = max(1, n_trials)
         cfg.random_seed = random_seed
+        future_cost_mode = self.config.get('future_cost_mode', 'canonical')
+        cfg.future_cost_mode = 1 if future_cost_mode == 'candidate_aware' else 0
+        cfg.future_candidate_weight = self.config.get(
+            'future_candidate_weight', 1.0
+        )
+        cfg.future_candidate_top_k = self.config.get(
+            'future_candidate_top_k', 0
+        )
+        cfg.order_weight = self.config.get('order_weight', 0.0)
 
         canonical_fwd = self._build_canonical_neighbor_data(
             scoring_partitions, reverse=False
@@ -1401,6 +1414,17 @@ class qgd_Partition_Aware_Mapping:
                     adj=self._adj,
                     local_cost_weight=self.config.get("local_cost_weight", 0.1),
                     swap_cost=self.config.get("swap_cost", 15.0),
+                    candidate_cache=candidate_cache,
+                    future_cost_mode=self.config.get(
+                        "future_cost_mode", "canonical"
+                    ),
+                    future_candidate_weight=self.config.get(
+                        "future_candidate_weight", 1.0
+                    ),
+                    future_candidate_top_k=self.config.get(
+                        "future_candidate_top_k", 0
+                    ),
+                    order_weight=self.config.get("order_weight", 0.0),
                 )
                 for partition_candidate in partition_candidates
             ]
@@ -1552,6 +1576,17 @@ class qgd_Partition_Aware_Mapping:
                     adj=self._adj,
                     local_cost_weight=self.config.get("local_cost_weight", 0.1),
                     swap_cost=self.config.get("swap_cost", 15.0),
+                    candidate_cache=candidate_cache,
+                    future_cost_mode=self.config.get(
+                        "future_cost_mode", "canonical"
+                    ),
+                    future_candidate_weight=self.config.get(
+                        "future_candidate_weight", 1.0
+                    ),
+                    future_candidate_top_k=self.config.get(
+                        "future_candidate_top_k", 0
+                    ),
+                    order_weight=self.config.get("order_weight", 0.0),
                 )
                 for pc in partition_candidates
             ]
@@ -1673,10 +1708,100 @@ class qgd_Partition_Aware_Mapping:
         return data
 
     @staticmethod
+    def _candidate_aware_future_cost(
+        partition_idx,
+        output_perm,
+        D,
+        candidate_cache,
+        reverse=False,
+        local_cost_weight=0.1,
+        swap_cost=15.0,
+        future_candidate_top_k=0,
+    ):
+        """Estimate a future partition by its best existing candidate.
+
+        This does not synthesize any extra candidates.  It only asks: from the
+        candidate output layout, how expensive would each already stored
+        candidate be to enter?
+        """
+        if candidate_cache is None:
+            return 0.0
+        if partition_idx < 0 or partition_idx >= len(candidate_cache):
+            return 0.0
+
+        candidates = candidate_cache[partition_idx]
+        if not candidates:
+            return 0.0
+
+        if future_candidate_top_k and future_candidate_top_k > 0:
+            candidates = sorted(
+                candidates,
+                key=lambda pc: (
+                    pc.estimate_swap_count(output_perm, D, reverse=reverse),
+                    pc.cnot_count,
+                ),
+            )[:future_candidate_top_k]
+
+        best = float("inf")
+        for candidate in candidates:
+            estimate = (
+                swap_cost
+                * candidate.estimate_swap_count(output_perm, D, reverse=reverse)
+                + local_cost_weight * candidate.cnot_count
+            )
+            if estimate < best:
+                best = estimate
+
+        return 0.0 if best == float("inf") else best
+
+    @staticmethod
+    def _output_layout_quality_cost(
+        output_perm_arr,
+        future_indices,
+        canonical_data,
+        D_arr,
+        alpha=0.9,
+        weighted_depths=None,
+    ):
+        """Penalize output layouts that leave future interaction edges far apart."""
+        if not future_indices or canonical_data is None:
+            return 0.0
+
+        total = 0.0
+        count = 0
+        for item in future_indices:
+            if isinstance(item, tuple):
+                partition_idx, depth = item
+            else:
+                partition_idx, depth = item, 0
+
+            entry = canonical_data.get(partition_idx)
+            if entry is None:
+                continue
+            eu = entry["edges_u"]
+            if eu is None:
+                continue
+
+            phys_u = output_perm_arr[eu]
+            phys_v = output_perm_arr[entry["edges_v"]]
+            weight = weighted_depths.get(partition_idx, 1.0) if weighted_depths else 1.0
+            if depth:
+                weight *= alpha ** depth
+            total += weight * D_arr[phys_u, phys_v].sum()
+            count += len(eu)
+
+        return total / count if count else 0.0
+
+    @staticmethod
     def score_partition_candidate(partition_candidate, F, pi, scoring_partitions, D, swap_cache,
                                   E=None, W=0.5, alpha=0.9, reverse=False,
                                   canonical_data=None, adj=None,
-                                  local_cost_weight=0.1, swap_cost=15.0):
+                                  local_cost_weight=0.1, swap_cost=15.0,
+                                  candidate_cache=None,
+                                  future_cost_mode="canonical",
+                                  future_candidate_weight=1.0,
+                                  future_candidate_top_k=0,
+                                  order_weight=0.0):
         """LightSABRE-style relative scoring (arXiv:2409.08368, eq. 1).
 
         H = swap_cost * |swaps|
@@ -1703,16 +1828,29 @@ class qgd_Partition_Aware_Mapping:
         for partition_idx in F:
             if partition_idx == cand_idx:
                 continue
-            entry = canonical_data.get(partition_idx)
-            if entry is None:
-                continue
-            n_other += 1
-            eu = entry['edges_u']
-            if eu is None:
-                continue
-            phys_u = output_perm_arr[eu]
-            phys_v = output_perm_arr[entry['edges_v']]
-            f_sum += swap_cost * np.maximum(0, D_arr[phys_u, phys_v] - 1).sum()
+            if future_cost_mode == "candidate_aware":
+                n_other += 1
+                f_sum += future_candidate_weight * qgd_Partition_Aware_Mapping._candidate_aware_future_cost(
+                    partition_idx,
+                    output_perm,
+                    D,
+                    candidate_cache,
+                    reverse=reverse,
+                    local_cost_weight=local_cost_weight,
+                    swap_cost=swap_cost,
+                    future_candidate_top_k=future_candidate_top_k,
+                )
+            else:
+                entry = canonical_data.get(partition_idx)
+                if entry is None:
+                    continue
+                n_other += 1
+                eu = entry['edges_u']
+                if eu is None:
+                    continue
+                phys_u = output_perm_arr[eu]
+                phys_v = output_perm_arr[entry['edges_v']]
+                f_sum += swap_cost * np.maximum(0, D_arr[phys_u, phys_v] - 1).sum()
         if n_other > 0:
             score += f_sum / n_other
 
@@ -1722,17 +1860,47 @@ class qgd_Partition_Aware_Mapping:
             for partition_idx, depth in E:
                 if partition_idx == cand_idx:
                     continue
-                entry = canonical_data.get(partition_idx)
-                if entry is None:
-                    continue
-                eu = entry['edges_u']
-                if eu is None:
-                    continue
-                phys_u = output_perm_arr[eu]
-                phys_v = output_perm_arr[entry['edges_v']]
-                d_cost = swap_cost * np.maximum(0, D_arr[phys_u, phys_v] - 1).sum()
-                e_sum += (alpha ** depth) * d_cost
+                if future_cost_mode == "candidate_aware":
+                    d_cost = qgd_Partition_Aware_Mapping._candidate_aware_future_cost(
+                        partition_idx,
+                        output_perm,
+                        D,
+                        candidate_cache,
+                        reverse=reverse,
+                        local_cost_weight=local_cost_weight,
+                        swap_cost=swap_cost,
+                        future_candidate_top_k=future_candidate_top_k,
+                    )
+                    e_sum += (alpha ** depth) * future_candidate_weight * d_cost
+                else:
+                    entry = canonical_data.get(partition_idx)
+                    if entry is None:
+                        continue
+                    eu = entry['edges_u']
+                    if eu is None:
+                        continue
+                    phys_u = output_perm_arr[eu]
+                    phys_v = output_perm_arr[entry['edges_v']]
+                    d_cost = swap_cost * np.maximum(0, D_arr[phys_u, phys_v] - 1).sum()
+                    e_sum += (alpha ** depth) * d_cost
             score += W * e_sum / len(E)
+
+        if order_weight:
+            future_indices = [idx for idx in F if idx != cand_idx]
+            score += order_weight * qgd_Partition_Aware_Mapping._output_layout_quality_cost(
+                output_perm_arr,
+                future_indices,
+                canonical_data,
+                D_arr,
+            )
+            if E:
+                score += order_weight * W * qgd_Partition_Aware_Mapping._output_layout_quality_cost(
+                    output_perm_arr,
+                    [(idx, depth) for idx, depth in E if idx != cand_idx],
+                    canonical_data,
+                    D_arr,
+                    alpha=alpha,
+                )
 
         return score
 

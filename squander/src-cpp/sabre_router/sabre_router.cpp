@@ -629,6 +629,109 @@ double SabreRouter::compute_lookahead_cost(
     return config_.E_weight * total / static_cast<double>(E.size());
 }
 
+double SabreRouter::candidate_aware_future_cost(
+    int partition_idx,
+    const std::vector<int>& output_perm,
+    bool reverse
+) const {
+    if (partition_idx < 0 || partition_idx >= static_cast<int>(candidate_cache_.size())) {
+        return 0.0;
+    }
+
+    const auto& candidates = candidate_cache_[partition_idx];
+    if (candidates.empty()) {
+        return 0.0;
+    }
+
+    double best = std::numeric_limits<double>::infinity();
+
+    if (config_.future_candidate_top_k > 0 &&
+        config_.future_candidate_top_k < static_cast<int>(candidates.size())) {
+        std::vector<const CandidateData*> ranked;
+        ranked.reserve(candidates.size());
+        for (const auto& cand : candidates) {
+            ranked.push_back(&cand);
+        }
+        const int top_k = config_.future_candidate_top_k;
+        std::nth_element(
+            ranked.begin(),
+            ranked.begin() + top_k,
+            ranked.end(),
+            [&](const CandidateData* a, const CandidateData* b) {
+                const int a_swaps = estimate_swap_count(*a, output_perm, reverse);
+                const int b_swaps = estimate_swap_count(*b, output_perm, reverse);
+                if (a_swaps != b_swaps) return a_swaps < b_swaps;
+                return a->cnot_count < b->cnot_count;
+            }
+        );
+        for (int i = 0; i < top_k; i++) {
+            const auto& cand = *ranked[i];
+            const double estimate =
+                config_.swap_cost * static_cast<double>(estimate_swap_count(cand, output_perm, reverse)) +
+                config_.local_cost_weight * static_cast<double>(cand.cnot_count);
+            if (estimate < best) best = estimate;
+        }
+    } else {
+        for (const auto& cand : candidates) {
+            const double estimate =
+                config_.swap_cost * static_cast<double>(estimate_swap_count(cand, output_perm, reverse)) +
+                config_.local_cost_weight * static_cast<double>(cand.cnot_count);
+            if (estimate < best) best = estimate;
+        }
+    }
+
+    return std::isinf(best) ? 0.0 : best;
+}
+
+double SabreRouter::output_layout_quality_cost(
+    const std::vector<int>& output_perm,
+    const std::vector<int>& future_indices,
+    const std::unordered_map<int, CanonicalEntry>& canonical_data
+) const {
+    if (future_indices.empty()) return 0.0;
+
+    double total = 0.0;
+    int count = 0;
+    for (int p_idx : future_indices) {
+        auto it = canonical_data.find(p_idx);
+        if (it == canonical_data.end()) continue;
+        const auto& entry = it->second;
+        if (entry.edges_u.empty()) continue;
+
+        for (size_t i = 0; i < entry.edges_u.size(); i++) {
+            total += dist(output_perm[entry.edges_u[i]], output_perm[entry.edges_v[i]]);
+            count++;
+        }
+    }
+    return count > 0 ? total / static_cast<double>(count) : 0.0;
+}
+
+double SabreRouter::output_layout_quality_cost(
+    const std::vector<int>& output_perm,
+    const std::vector<std::pair<int,int>>& future_indices,
+    const std::unordered_map<int, CanonicalEntry>& canonical_data
+) const {
+    if (future_indices.empty()) return 0.0;
+
+    double total = 0.0;
+    int count = 0;
+    for (auto [p_idx, depth] : future_indices) {
+        auto it = canonical_data.find(p_idx);
+        if (it == canonical_data.end()) continue;
+        const auto& entry = it->second;
+        if (entry.edges_u.empty()) continue;
+
+        const double alpha = (depth >= 0 && depth < static_cast<int>(alpha_weights_.size()))
+            ? alpha_weights_[depth]
+            : std::pow(config_.E_alpha, depth);
+        for (size_t i = 0; i < entry.edges_u.size(); i++) {
+            total += alpha * dist(output_perm[entry.edges_u[i]], output_perm[entry.edges_v[i]]);
+            count++;
+        }
+    }
+    return count > 0 ? total / static_cast<double>(count) : 0.0;
+}
+
 // ---------------------------------------------------------------------------
 // score_candidate (LightSABRE scoring)
 // ---------------------------------------------------------------------------
@@ -653,17 +756,23 @@ double SabreRouter::score_candidate(
     double f_sum = 0.0;
     for (int p_idx : F_snapshot) {
         if (p_idx == cand_idx) continue;
-        auto it = canonical_data.find(p_idx);
-        if (it == canonical_data.end()) continue;
-        const auto& entry = it->second;
-        n_other++;
-        if (entry.edges_u.empty()) continue;
-        for (size_t i = 0; i < entry.edges_u.size(); i++) {
-            int u = entry.edges_u[i];
-            int v = entry.edges_v[i];
-            double d = dist(output_perm[u], output_perm[v]);
-            double cost = d - 1.0;
-            if (cost > 0.0) f_sum += config_.swap_cost * cost;
+        if (config_.future_cost_mode == 1) {
+            n_other++;
+            f_sum += config_.future_candidate_weight *
+                     candidate_aware_future_cost(p_idx, output_perm, reverse);
+        } else {
+            auto it = canonical_data.find(p_idx);
+            if (it == canonical_data.end()) continue;
+            const auto& entry = it->second;
+            n_other++;
+            if (entry.edges_u.empty()) continue;
+            for (size_t i = 0; i < entry.edges_u.size(); i++) {
+                int u = entry.edges_u[i];
+                int v = entry.edges_v[i];
+                double d = dist(output_perm[u], output_perm[v]);
+                double cost = d - 1.0;
+                if (cost > 0.0) f_sum += config_.swap_cost * cost;
+            }
         }
     }
     if (n_other > 0) score += f_sum / static_cast<double>(n_other);
@@ -673,24 +782,49 @@ double SabreRouter::score_candidate(
         double e_sum = 0.0;
         for (auto [p_idx, depth] : E) {
             if (p_idx == cand_idx) continue;
-            auto it = canonical_data.find(p_idx);
-            if (it == canonical_data.end()) continue;
-            const auto& entry = it->second;
-            if (entry.edges_u.empty()) continue;
-            double d_cost = 0.0;
-            for (size_t i = 0; i < entry.edges_u.size(); i++) {
-                int u = entry.edges_u[i];
-                int v = entry.edges_v[i];
-                double d = dist(output_perm[u], output_perm[v]);
-                double cost = d - 1.0;
-                if (cost > 0.0) d_cost += config_.swap_cost * cost;
-            }
             const double alpha = (depth >= 0 && depth < static_cast<int>(alpha_weights_.size()))
                 ? alpha_weights_[depth]
                 : std::pow(config_.E_alpha, depth);
-            e_sum += alpha * d_cost;
+            if (config_.future_cost_mode == 1) {
+                e_sum += alpha * config_.future_candidate_weight *
+                         candidate_aware_future_cost(p_idx, output_perm, reverse);
+            } else {
+                auto it = canonical_data.find(p_idx);
+                if (it == canonical_data.end()) continue;
+                const auto& entry = it->second;
+                if (entry.edges_u.empty()) continue;
+                double d_cost = 0.0;
+                for (size_t i = 0; i < entry.edges_u.size(); i++) {
+                    int u = entry.edges_u[i];
+                    int v = entry.edges_v[i];
+                    double d = dist(output_perm[u], output_perm[v]);
+                    double cost = d - 1.0;
+                    if (cost > 0.0) d_cost += config_.swap_cost * cost;
+                }
+                e_sum += alpha * d_cost;
+            }
         }
         score += config_.E_weight * e_sum / static_cast<double>(E.size());
+    }
+
+    if (config_.order_weight != 0.0) {
+        std::vector<int> future_indices;
+        future_indices.reserve(F_snapshot.size());
+        for (int p_idx : F_snapshot) {
+            if (p_idx != cand_idx) future_indices.push_back(p_idx);
+        }
+        score += config_.order_weight *
+                 output_layout_quality_cost(output_perm, future_indices, canonical_data);
+
+        if (!E.empty()) {
+            std::vector<std::pair<int,int>> future_E;
+            future_E.reserve(E.size());
+            for (auto [p_idx, depth] : E) {
+                if (p_idx != cand_idx) future_E.push_back({p_idx, depth});
+            }
+            score += config_.order_weight * config_.E_weight *
+                     output_layout_quality_cost(output_perm, future_E, canonical_data);
+        }
     }
 
     return score;

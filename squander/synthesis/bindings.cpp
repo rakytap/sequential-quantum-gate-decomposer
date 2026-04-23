@@ -130,7 +130,11 @@ PYBIND11_MODULE(_sabre_router, m) {
         .def_readwrite("trial_swap_cnot_cost", &SabreConfig::trial_swap_cnot_cost)
         .def_readwrite("sabre_iterations", &SabreConfig::sabre_iterations)
         .def_readwrite("n_layout_trials", &SabreConfig::n_layout_trials)
-        .def_readwrite("random_seed", &SabreConfig::random_seed);
+        .def_readwrite("random_seed", &SabreConfig::random_seed)
+        .def_readwrite("future_cost_mode", &SabreConfig::future_cost_mode)
+        .def_readwrite("future_candidate_weight", &SabreConfig::future_candidate_weight)
+        .def_readwrite("future_candidate_top_k", &SabreConfig::future_candidate_top_k)
+        .def_readwrite("order_weight", &SabreConfig::order_weight);
 
     // Bind SabreRouter with data-converting constructor
     py::class_<SabreRouter>(m, "SabreRouter")
