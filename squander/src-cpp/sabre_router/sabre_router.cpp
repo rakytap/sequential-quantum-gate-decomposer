@@ -129,6 +129,13 @@ SabreRouter::SabreRouter(
             alpha_weights_[depth] = alpha_weights_[depth - 1] * config_.E_alpha;
         }
     }
+
+    max_finite_distance_ = 1.0;
+    for (double d : D_) {
+        if (std::isfinite(d) && d > max_finite_distance_) {
+            max_finite_distance_ = d;
+        }
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -183,45 +190,6 @@ void SabreRouter::build_target_positions(
 }
 
 // ---------------------------------------------------------------------------
-// BFS shortest path
-// ---------------------------------------------------------------------------
-
-std::vector<int> SabreRouter::bfs_shortest_path(int src, int dst) const {
-    if (src == dst) return {src};
-
-    std::vector<int> parent(N_, -1);
-    std::vector<uint8_t> visited(N_, 0);
-    std::deque<int> queue;
-    queue.push_back(src);
-    visited[src] = 1;
-
-    while (!queue.empty()) {
-        int node = queue.front();
-        queue.pop_front();
-        for (int nb : adj_[node]) {
-            if (!visited[nb]) {
-                visited[nb] = 1;
-                parent[nb] = node;
-                if (nb == dst) {
-                    // Reconstruct path
-                    std::vector<int> path;
-                    int cur = dst;
-                    while (cur != src) {
-                        path.push_back(cur);
-                        cur = parent[cur];
-                    }
-                    path.push_back(src);
-                    std::reverse(path.begin(), path.end());
-                    return path;
-                }
-                queue.push_back(nb);
-            }
-        }
-    }
-    return {}; // unreachable
-}
-
-// ---------------------------------------------------------------------------
 // apply_swaps_to_pi
 // ---------------------------------------------------------------------------
 
@@ -242,6 +210,220 @@ std::vector<int> SabreRouter::apply_swaps_to_pi(
         result[q2] = P1;
     }
     return result;
+}
+
+NeighborInfo SabreRouter::build_neighbor_info(
+    int exclude_partition_idx,
+    const std::vector<int>& F_snapshot,
+    const std::vector<std::pair<int,int>>& E,
+    const std::vector<int>& pi,
+    const std::unordered_map<int, CanonicalEntry>& canonical_data
+) const {
+    NeighborInfo info;
+    info.weight = config_.path_tiebreak_weight;
+    if (info.weight <= 0.0) {
+        return info;
+    }
+
+    std::unordered_map<int, int> q_to_idx;
+    std::unordered_map<uint64_t, double> edge_weights;
+    std::unordered_map<uint64_t, std::pair<int, int>> edge_nodes;
+
+    auto ensure_qubit = [&](int q) -> int {
+        auto it = q_to_idx.find(q);
+        if (it != q_to_idx.end()) {
+            return it->second;
+        }
+        const int idx = static_cast<int>(info.neighbor_vqs.size());
+        q_to_idx.emplace(q, idx);
+        info.neighbor_vqs.push_back(q);
+        info.initial_pos.push_back(pi[q]);
+        return idx;
+    };
+
+    auto add_partition_edges = [&](int partition_idx, double weight) {
+        if (partition_idx == exclude_partition_idx || weight <= 0.0) {
+            return;
+        }
+        auto it = canonical_data.find(partition_idx);
+        if (it == canonical_data.end()) {
+            return;
+        }
+        const auto& entry = it->second;
+        for (size_t i = 0; i < entry.edges_u.size(); i++) {
+            const int u = entry.edges_u[i];
+            const int v = entry.edges_v[i];
+            ensure_qubit(u);
+            ensure_qubit(v);
+            const int lo = std::min(u, v);
+            const int hi = std::max(u, v);
+            const uint64_t key =
+                (static_cast<uint64_t>(static_cast<uint32_t>(lo)) << 32)
+                | static_cast<uint32_t>(hi);
+            edge_weights[key] += weight;
+            edge_nodes[key] = {u, v};
+        }
+    };
+
+    for (int partition_idx : F_snapshot) {
+        add_partition_edges(partition_idx, 1.0);
+    }
+
+    for (auto [partition_idx, depth] : E) {
+        const double alpha =
+            (depth >= 0 && depth < static_cast<int>(alpha_weights_.size()))
+                ? alpha_weights_[depth]
+                : std::pow(config_.E_alpha, depth);
+        add_partition_edges(partition_idx, config_.E_weight * alpha);
+    }
+
+    info.edges.reserve(edge_weights.size());
+    for (const auto& [key, weight] : edge_weights) {
+        (void)key;
+        const auto nodes = edge_nodes.at(key);
+        info.edges.push_back(
+            NeighborEdge{
+                q_to_idx.at(nodes.first),
+                q_to_idx.at(nodes.second),
+                weight,
+            }
+        );
+    }
+
+    return info;
+}
+
+double SabreRouter::decay_factor_for_swaps(
+    const std::vector<std::pair<int,int>>& swaps,
+    const std::vector<double>& decay
+) const {
+    double factor = 1.0;
+    for (auto [u, v] : swaps) {
+        factor = std::max(factor, std::max(decay[u], decay[v]));
+    }
+    return factor;
+}
+
+void SabreRouter::apply_decay_for_swaps(
+    const std::vector<std::pair<int,int>>& swaps,
+    std::vector<double>& decay
+) const {
+    if (config_.decay_delta <= 0.0) {
+        return;
+    }
+    for (auto [u, v] : swaps) {
+        decay[u] += config_.decay_delta;
+        decay[v] += config_.decay_delta;
+    }
+}
+
+void SabreRouter::reset_decay(std::vector<double>& decay) const {
+    std::fill(decay.begin(), decay.end(), 1.0);
+}
+
+std::vector<int> SabreRouter::bfs_shortest_path(int src, int dst) const {
+    if (src == dst) {
+        return {src};
+    }
+
+    std::vector<int> parent(N_, -1);
+    std::vector<uint8_t> visited(N_, 0);
+    std::deque<int> queue;
+    queue.push_back(src);
+    visited[src] = 1;
+
+    while (!queue.empty()) {
+        const int node = queue.front();
+        queue.pop_front();
+        for (int nb : adj_[node]) {
+            if (visited[nb]) {
+                continue;
+            }
+            visited[nb] = 1;
+            parent[nb] = node;
+            if (nb == dst) {
+                std::vector<int> path;
+                int cur = dst;
+                while (cur != src) {
+                    path.push_back(cur);
+                    cur = parent[cur];
+                }
+                path.push_back(src);
+                std::reverse(path.begin(), path.end());
+                return path;
+            }
+            queue.push_back(nb);
+        }
+    }
+
+    return {};
+}
+
+std::pair<std::vector<std::pair<int,int>>, std::vector<int>> SabreRouter::release_valve(
+    const std::vector<int>& F,
+    const std::vector<int>& pi,
+    const std::unordered_map<int, CanonicalEntry>& canonical_data
+) const {
+    double best_worst_dist = std::numeric_limits<double>::infinity();
+    int best_u = -1;
+    int best_v = -1;
+
+    for (int partition_idx : F) {
+        auto it = canonical_data.find(partition_idx);
+        if (it == canonical_data.end()) {
+            continue;
+        }
+        const auto& entry = it->second;
+        if (entry.edges_u.empty()) {
+            continue;
+        }
+
+        double worst_dist = 0.0;
+        int worst_u = -1;
+        int worst_v = -1;
+        for (size_t i = 0; i < entry.edges_u.size(); i++) {
+            const int u = entry.edges_u[i];
+            const int v = entry.edges_v[i];
+            const double d = dist(pi[u], pi[v]);
+            if (d > worst_dist) {
+                worst_dist = d;
+                worst_u = u;
+                worst_v = v;
+            }
+        }
+
+        if (worst_dist <= 1.0 || worst_u < 0) {
+            continue;
+        }
+
+        if (worst_dist < best_worst_dist) {
+            best_worst_dist = worst_dist;
+            best_u = worst_u;
+            best_v = worst_v;
+        }
+    }
+
+    if (best_u < 0) {
+        return {{}, pi};
+    }
+
+    const auto path = bfs_shortest_path(pi[best_u], pi[best_v]);
+    if (path.size() < 2) {
+        return {{}, pi};
+    }
+
+    const int k = static_cast<int>(path.size()) - 1;
+    const int m = k / 2;
+    std::vector<std::pair<int,int>> swaps;
+    for (int i = 0; i < m; i++) {
+        swaps.push_back({path[i], path[i + 1]});
+    }
+    for (int i = k; i > m + 1; i--) {
+        swaps.push_back({path[i], path[i - 1]});
+    }
+
+    auto pi_new = apply_swaps_to_pi(pi, swaps);
+    return {swaps, pi_new};
 }
 
 // ---------------------------------------------------------------------------
@@ -321,7 +503,8 @@ SabreRouter::find_constrained_swaps(
     const std::vector<int>& qbit_map_vals,
     const std::vector<int>& node_mapping_flat,
     const std::vector<int>& P_route_inv,
-    SwapCache* swap_cache
+    SwapCache* swap_cache,
+    const NeighborInfo* neighbor_info
 ) const {
     int k = static_cast<int>(qbit_map_keys.size());
     std::vector<int> target_positions(k);
@@ -349,8 +532,10 @@ SabreRouter::find_constrained_swaps(
     int64_t initial_packed = pack_state(initial_positions, N_);
     int64_t target_packed = pack_state(target_positions, N_);
     const SwapCacheKey cache_key{initial_packed, target_packed, k};
+    const bool use_neighbor =
+        neighbor_info != nullptr && neighbor_info->uses_tiebreak();
 
-    if (swap_cache) {
+    if (swap_cache && !use_neighbor) {
         auto it = swap_cache->find(cache_key);
         if (it != swap_cache->end()) {
             // Replay cached swaps on current pi
@@ -370,9 +555,41 @@ SabreRouter::find_constrained_swaps(
     }
     h0 /= 2.0;
 
-    // Priority queue: (f_score, g_score, counter, packed_state)
+    double total_edge_weight = 0.0;
+    if (use_neighbor) {
+        for (const auto& edge : neighbor_info->edges) {
+            total_edge_weight += edge.weight;
+        }
+    }
+    const double neighbor_norm = std::max(
+        1.0,
+        total_edge_weight * std::max(1.0, max_finite_distance_)
+    );
+    auto neighbor_heuristic = [&](const std::vector<int>& neighbor_positions) {
+        if (!use_neighbor) {
+            return 0.0;
+        }
+        double total = 0.0;
+        for (const auto& edge : neighbor_info->edges) {
+            total += edge.weight
+                * dist(
+                    neighbor_positions[edge.u_idx],
+                    neighbor_positions[edge.v_idx]
+                );
+        }
+        return (neighbor_info->weight * total) / neighbor_norm;
+    };
+
+    std::vector<int> initial_neighbor_positions;
+    double nh0 = 0.0;
+    if (use_neighbor) {
+        initial_neighbor_positions = neighbor_info->initial_pos;
+        nh0 = neighbor_heuristic(initial_neighbor_positions);
+    }
+
+    // Priority queue: (f_score, g_score, counter, packed_state, neighbor_state)
     // Counter provides FIFO tie-breaking, matching Python's counter variable
-    using PQEntry = std::tuple<double, int, uint64_t, int64_t>;
+    using PQEntry = std::tuple<double, int, uint64_t, int64_t, std::vector<int>>;
     std::priority_queue<PQEntry, std::vector<PQEntry>, std::greater<PQEntry>> pq;
     uint64_t counter = 0;
 
@@ -383,7 +600,7 @@ SabreRouter::find_constrained_swaps(
     visited.reserve(256);
     parent.reserve(256);
 
-    pq.push({h0, 0, counter++, initial_packed});
+    pq.push({h0 + nh0, 0, counter++, initial_packed, initial_neighbor_positions});
     visited[initial_packed] = 0;
     parent[initial_packed] = {-1, {-1, -1}};
 
@@ -396,6 +613,7 @@ SabreRouter::find_constrained_swaps(
         pq.pop();
         int g = std::get<1>(entry);
         int64_t packed = std::get<3>(entry);
+        const std::vector<int>& neighbor_positions = std::get<4>(entry);
 
         if (packed == target_packed) {
             // Reconstruct swap path
@@ -411,7 +629,7 @@ SabreRouter::find_constrained_swaps(
             auto result_pi = apply_swaps_to_pi(pi, path);
 
             // Store in cache
-            if (swap_cache) {
+            if (swap_cache && !use_neighbor) {
                 (*swap_cache)[cache_key] = path;
             }
 
@@ -448,6 +666,26 @@ SabreRouter::find_constrained_swaps(
                     continue;
                 }
 
+                std::vector<int> new_neighbor_positions = neighbor_positions;
+                double new_nh = 0.0;
+                if (use_neighbor) {
+                    std::unordered_map<int, int> phys_to_neighbor_idx;
+                    phys_to_neighbor_idx.reserve(new_neighbor_positions.size());
+                    for (int idx = 0; idx < static_cast<int>(new_neighbor_positions.size()); idx++) {
+                        phys_to_neighbor_idx.emplace(new_neighbor_positions[idx], idx);
+                    }
+
+                    auto it_nb = phys_to_neighbor_idx.find(nb);
+                    if (it_nb != phys_to_neighbor_idx.end()) {
+                        new_neighbor_positions[it_nb->second] = p;
+                    }
+                    auto it_p = phys_to_neighbor_idx.find(p);
+                    if (it_p != phys_to_neighbor_idx.end()) {
+                        new_neighbor_positions[it_p->second] = nb;
+                    }
+                    new_nh = neighbor_heuristic(new_neighbor_positions);
+                }
+
                 // Compute heuristic
                 double h = 0.0;
                 for (int j = 0; j < k; j++) {
@@ -457,7 +695,13 @@ SabreRouter::find_constrained_swaps(
 
                 visited[new_packed] = new_g;
                 parent[new_packed] = {packed, {std::min(p, nb), std::max(p, nb)}};
-                pq.push({new_g + h, new_g, counter++, new_packed});
+                pq.push({
+                    new_g + h + new_nh,
+                    new_g,
+                    counter++,
+                    new_packed,
+                    std::move(new_neighbor_positions),
+                });
             }
         }
     }
@@ -475,7 +719,8 @@ SabreRouter::transform_pi(
     const CandidateData& cand,
     const std::vector<int>& pi,
     bool reverse,
-    SwapCache* swap_cache
+    SwapCache* swap_cache,
+    const NeighborInfo* neighbor_info
 ) const {
     const std::vector<int>& P_route_inv = reverse ? cand.P_o_inv : cand.P_i_inv;
 
@@ -486,7 +731,8 @@ SabreRouter::transform_pi(
         cand.qbit_map_vals_sorted,
         cand.node_mapping_flat,
         P_route_inv,
-        swap_cache
+        swap_cache,
+        neighbor_info
     );
 
     // Update output positions using P_exit
@@ -629,109 +875,6 @@ double SabreRouter::compute_lookahead_cost(
     return config_.E_weight * total / static_cast<double>(E.size());
 }
 
-double SabreRouter::candidate_aware_future_cost(
-    int partition_idx,
-    const std::vector<int>& output_perm,
-    bool reverse
-) const {
-    if (partition_idx < 0 || partition_idx >= static_cast<int>(candidate_cache_.size())) {
-        return 0.0;
-    }
-
-    const auto& candidates = candidate_cache_[partition_idx];
-    if (candidates.empty()) {
-        return 0.0;
-    }
-
-    double best = std::numeric_limits<double>::infinity();
-
-    if (config_.future_candidate_top_k > 0 &&
-        config_.future_candidate_top_k < static_cast<int>(candidates.size())) {
-        std::vector<const CandidateData*> ranked;
-        ranked.reserve(candidates.size());
-        for (const auto& cand : candidates) {
-            ranked.push_back(&cand);
-        }
-        const int top_k = config_.future_candidate_top_k;
-        std::nth_element(
-            ranked.begin(),
-            ranked.begin() + top_k,
-            ranked.end(),
-            [&](const CandidateData* a, const CandidateData* b) {
-                const int a_swaps = estimate_swap_count(*a, output_perm, reverse);
-                const int b_swaps = estimate_swap_count(*b, output_perm, reverse);
-                if (a_swaps != b_swaps) return a_swaps < b_swaps;
-                return a->cnot_count < b->cnot_count;
-            }
-        );
-        for (int i = 0; i < top_k; i++) {
-            const auto& cand = *ranked[i];
-            const double estimate =
-                config_.swap_cost * static_cast<double>(estimate_swap_count(cand, output_perm, reverse)) +
-                config_.local_cost_weight * static_cast<double>(cand.cnot_count);
-            if (estimate < best) best = estimate;
-        }
-    } else {
-        for (const auto& cand : candidates) {
-            const double estimate =
-                config_.swap_cost * static_cast<double>(estimate_swap_count(cand, output_perm, reverse)) +
-                config_.local_cost_weight * static_cast<double>(cand.cnot_count);
-            if (estimate < best) best = estimate;
-        }
-    }
-
-    return std::isinf(best) ? 0.0 : best;
-}
-
-double SabreRouter::output_layout_quality_cost(
-    const std::vector<int>& output_perm,
-    const std::vector<int>& future_indices,
-    const std::unordered_map<int, CanonicalEntry>& canonical_data
-) const {
-    if (future_indices.empty()) return 0.0;
-
-    double total = 0.0;
-    int count = 0;
-    for (int p_idx : future_indices) {
-        auto it = canonical_data.find(p_idx);
-        if (it == canonical_data.end()) continue;
-        const auto& entry = it->second;
-        if (entry.edges_u.empty()) continue;
-
-        for (size_t i = 0; i < entry.edges_u.size(); i++) {
-            total += dist(output_perm[entry.edges_u[i]], output_perm[entry.edges_v[i]]);
-            count++;
-        }
-    }
-    return count > 0 ? total / static_cast<double>(count) : 0.0;
-}
-
-double SabreRouter::output_layout_quality_cost(
-    const std::vector<int>& output_perm,
-    const std::vector<std::pair<int,int>>& future_indices,
-    const std::unordered_map<int, CanonicalEntry>& canonical_data
-) const {
-    if (future_indices.empty()) return 0.0;
-
-    double total = 0.0;
-    int count = 0;
-    for (auto [p_idx, depth] : future_indices) {
-        auto it = canonical_data.find(p_idx);
-        if (it == canonical_data.end()) continue;
-        const auto& entry = it->second;
-        if (entry.edges_u.empty()) continue;
-
-        const double alpha = (depth >= 0 && depth < static_cast<int>(alpha_weights_.size()))
-            ? alpha_weights_[depth]
-            : std::pow(config_.E_alpha, depth);
-        for (size_t i = 0; i < entry.edges_u.size(); i++) {
-            total += alpha * dist(output_perm[entry.edges_u[i]], output_perm[entry.edges_v[i]]);
-            count++;
-        }
-    }
-    return count > 0 ? total / static_cast<double>(count) : 0.0;
-}
-
 // ---------------------------------------------------------------------------
 // score_candidate (LightSABRE scoring)
 // ---------------------------------------------------------------------------
@@ -743,12 +886,31 @@ double SabreRouter::score_candidate(
     const std::vector<std::pair<int,int>>& E,
     bool reverse,
     const std::unordered_map<int, CanonicalEntry>& canonical_data,
-    SwapCache* swap_cache
+    SwapCache* swap_cache,
+    const std::vector<double>* decay
 ) const {
-    auto [swaps, output_perm] = transform_pi(cand, pi, reverse, swap_cache);
+    const auto neighbor_info = build_neighbor_info(
+        cand.partition_idx,
+        F_snapshot,
+        E,
+        pi,
+        canonical_data
+    );
+    const NeighborInfo* neighbor_ptr =
+        neighbor_info.uses_tiebreak() ? &neighbor_info : nullptr;
+    auto [swaps, output_perm] = transform_pi(
+        cand,
+        pi,
+        reverse,
+        swap_cache,
+        neighbor_ptr
+    );
 
     double score = config_.swap_cost * static_cast<double>(swaps.size());
     score += config_.local_cost_weight * static_cast<double>(cand.cnot_count);
+    if (decay != nullptr && !swaps.empty()) {
+        score *= decay_factor_for_swaps(swaps, *decay);
+    }
 
     // F cost: average routing cost over F \ {cand}
     int cand_idx = cand.partition_idx;
@@ -756,23 +918,17 @@ double SabreRouter::score_candidate(
     double f_sum = 0.0;
     for (int p_idx : F_snapshot) {
         if (p_idx == cand_idx) continue;
-        if (config_.future_cost_mode == 1) {
-            n_other++;
-            f_sum += config_.future_candidate_weight *
-                     candidate_aware_future_cost(p_idx, output_perm, reverse);
-        } else {
-            auto it = canonical_data.find(p_idx);
-            if (it == canonical_data.end()) continue;
-            const auto& entry = it->second;
-            n_other++;
-            if (entry.edges_u.empty()) continue;
-            for (size_t i = 0; i < entry.edges_u.size(); i++) {
-                int u = entry.edges_u[i];
-                int v = entry.edges_v[i];
-                double d = dist(output_perm[u], output_perm[v]);
-                double cost = d - 1.0;
-                if (cost > 0.0) f_sum += config_.swap_cost * cost;
-            }
+        auto it = canonical_data.find(p_idx);
+        if (it == canonical_data.end()) continue;
+        const auto& entry = it->second;
+        n_other++;
+        if (entry.edges_u.empty()) continue;
+        for (size_t i = 0; i < entry.edges_u.size(); i++) {
+            int u = entry.edges_u[i];
+            int v = entry.edges_v[i];
+            double d = dist(output_perm[u], output_perm[v]);
+            double cost = d - 1.0;
+            if (cost > 0.0) f_sum += config_.swap_cost * cost;
         }
     }
     if (n_other > 0) score += f_sum / static_cast<double>(n_other);
@@ -785,46 +941,21 @@ double SabreRouter::score_candidate(
             const double alpha = (depth >= 0 && depth < static_cast<int>(alpha_weights_.size()))
                 ? alpha_weights_[depth]
                 : std::pow(config_.E_alpha, depth);
-            if (config_.future_cost_mode == 1) {
-                e_sum += alpha * config_.future_candidate_weight *
-                         candidate_aware_future_cost(p_idx, output_perm, reverse);
-            } else {
-                auto it = canonical_data.find(p_idx);
-                if (it == canonical_data.end()) continue;
-                const auto& entry = it->second;
-                if (entry.edges_u.empty()) continue;
-                double d_cost = 0.0;
-                for (size_t i = 0; i < entry.edges_u.size(); i++) {
-                    int u = entry.edges_u[i];
-                    int v = entry.edges_v[i];
-                    double d = dist(output_perm[u], output_perm[v]);
-                    double cost = d - 1.0;
-                    if (cost > 0.0) d_cost += config_.swap_cost * cost;
-                }
-                e_sum += alpha * d_cost;
+            auto it = canonical_data.find(p_idx);
+            if (it == canonical_data.end()) continue;
+            const auto& entry = it->second;
+            if (entry.edges_u.empty()) continue;
+            double d_cost = 0.0;
+            for (size_t i = 0; i < entry.edges_u.size(); i++) {
+                int u = entry.edges_u[i];
+                int v = entry.edges_v[i];
+                double d = dist(output_perm[u], output_perm[v]);
+                double cost = d - 1.0;
+                if (cost > 0.0) d_cost += config_.swap_cost * cost;
             }
+            e_sum += alpha * d_cost;
         }
         score += config_.E_weight * e_sum / static_cast<double>(E.size());
-    }
-
-    if (config_.order_weight != 0.0) {
-        std::vector<int> future_indices;
-        future_indices.reserve(F_snapshot.size());
-        for (int p_idx : F_snapshot) {
-            if (p_idx != cand_idx) future_indices.push_back(p_idx);
-        }
-        score += config_.order_weight *
-                 output_layout_quality_cost(output_perm, future_indices, canonical_data);
-
-        if (!E.empty()) {
-            std::vector<std::pair<int,int>> future_E;
-            future_E.reserve(E.size());
-            for (auto [p_idx, depth] : E) {
-                if (p_idx != cand_idx) future_E.push_back({p_idx, depth});
-            }
-            score += config_.order_weight * config_.E_weight *
-                     output_layout_quality_cost(output_perm, future_E, canonical_data);
-        }
     }
 
     return score;
@@ -921,58 +1052,6 @@ const CandidateData& SabreRouter::select_best_candidate(
 }
 
 // ---------------------------------------------------------------------------
-// release_valve
-// ---------------------------------------------------------------------------
-
-std::pair<std::vector<std::pair<int,int>>, std::vector<int>>
-SabreRouter::release_valve(
-    const std::vector<int>& F,
-    const std::vector<int>& pi,
-    const std::unordered_map<int, CanonicalEntry>& canonical_data
-) const {
-    // Find the F partition whose worst-pair distance is smallest
-    int best_d = std::numeric_limits<int>::max();
-    int best_p = -1;
-    int best_u = -1, best_v = -1;
-
-    for (int p_idx : F) {
-        auto it = canonical_data.find(p_idx);
-        if (it == canonical_data.end()) continue;
-        const auto& entry = it->second;
-        if (entry.edges_u.empty()) continue;
-        for (size_t i = 0; i < entry.edges_u.size(); i++) {
-            int u = entry.edges_u[i];
-            int v = entry.edges_v[i];
-            double d = dist(pi[u], pi[v]);
-            int di = static_cast<int>(d);
-            if (di > 1 && (di < best_d || (di == best_d && p_idx < best_p))) {
-                best_d = di;
-                best_p = p_idx;
-                best_u = u;
-                best_v = v;
-            }
-        }
-    }
-
-    if (best_p < 0) return {{}, pi};
-
-    auto path = bfs_shortest_path(pi[best_u], pi[best_v]);
-    if (static_cast<int>(path.size()) < 2) return {{}, pi};
-
-    int k = static_cast<int>(path.size()) - 1;
-    int m = k / 2;
-    std::vector<std::pair<int,int>> swaps;
-    for (int i = 0; i < m; i++) {
-        swaps.push_back({path[i], path[i + 1]});
-    }
-    for (int i = k; i > m; i--) {
-        swaps.push_back({path[i], path[i - 1]});
-    }
-
-    auto pi_new = apply_swaps_to_pi(pi, swaps);
-    return {swaps, pi_new};
-}
-
 // ---------------------------------------------------------------------------
 // heuristic_search (main loop)
 // ---------------------------------------------------------------------------
@@ -1030,9 +1109,32 @@ std::pair<std::vector<int>, int> SabreRouter::heuristic_search(
 
     // Swap cache for this search call (thread-local, on stack)
     SwapCache swap_cache;
+    std::vector<double> decay(N_, 1.0);
+    int swap_burst = 0;
+    int swap_heavy_partitions = 0;
 
     // Main search loop
     while (!F.empty()) {
+        if (
+            config_.release_valve_enabled
+            && swap_burst > config_.release_valve_threshold
+        ) {
+            auto [valve_swaps, pi_bridged] = release_valve(
+                F,
+                pi,
+                canonical_data
+            );
+            if (!valve_swaps.empty()) {
+                total_cost += config_.trial_swap_cnot_cost
+                    * static_cast<int>(valve_swaps.size());
+                apply_decay_for_swaps(valve_swaps, decay);
+                pi = std::move(pi_bridged);
+                swap_burst = 0;
+                continue;
+            }
+            swap_burst = 0;
+        }
+
         auto all_candidates = obtain_partition_candidates(F);
         if (all_candidates.empty()) break;
 
@@ -1048,7 +1150,15 @@ std::pair<std::vector<int>, int> SabreRouter::heuristic_search(
         scores.reserve(candidates.size());
         for (const auto* cand : candidates) {
             scores.push_back(score_candidate(
-                *cand, F, pi, E, reverse, canonical_data, &swap_cache));
+                *cand,
+                F,
+                pi,
+                E,
+                reverse,
+                canonical_data,
+                &swap_cache,
+                &decay
+            ));
         }
 
         // Select best
@@ -1060,10 +1170,41 @@ std::pair<std::vector<int>, int> SabreRouter::heuristic_search(
         resolved[best.partition_idx] = 1;
 
         // Apply transform
-        auto [swaps, pi_new] = transform_pi(best, pi, reverse, &swap_cache);
+        const auto neighbor_info = build_neighbor_info(
+            best.partition_idx,
+            F,
+            E,
+            pi,
+            canonical_data
+        );
+        const NeighborInfo* neighbor_ptr =
+            neighbor_info.uses_tiebreak() ? &neighbor_info : nullptr;
+        auto [swaps, pi_new] = transform_pi(
+            best,
+            pi,
+            reverse,
+            &swap_cache,
+            neighbor_ptr
+        );
         total_cost += config_.trial_swap_cnot_cost * static_cast<int>(swaps.size())
                       + best.cnot_count;
         pi = std::move(pi_new);
+        apply_decay_for_swaps(swaps, decay);
+        if (swaps.empty()) {
+            swap_burst = 0;
+            swap_heavy_partitions = 0;
+            reset_decay(decay);
+        } else {
+            swap_burst += static_cast<int>(swaps.size());
+            swap_heavy_partitions++;
+            if (
+                config_.decay_reset_interval > 0
+                && swap_heavy_partitions >= config_.decay_reset_interval
+            ) {
+                reset_decay(decay);
+                swap_heavy_partitions = 0;
+            }
+        }
 
         // Update F with newly eligible children
         for (int child : cg[best.partition_idx]) {

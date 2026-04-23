@@ -87,16 +87,33 @@ struct SabreConfig {
     int sabre_iterations = 1;
     int n_layout_trials = 1;
     int random_seed = 42;
-    // 0 = canonical future scoring, 1 = candidate-aware future scoring.
-    int future_cost_mode = 0;
-    double future_candidate_weight = 1.0;
-    int future_candidate_top_k = 0;
-    double order_weight = 0.0;
+    double decay_delta = 0.1;
+    int decay_reset_interval = 5;
+    bool release_valve_enabled = true;
+    int release_valve_threshold = 20;
+    double path_tiebreak_weight = 0.2;
 };
 
 struct TrialResult {
     std::vector<int> pi;
     int total_cost;
+};
+
+struct NeighborEdge {
+    int u_idx;
+    int v_idx;
+    double weight;
+};
+
+struct NeighborInfo {
+    std::vector<int> neighbor_vqs;
+    std::vector<int> initial_pos;
+    std::vector<NeighborEdge> edges;
+    double weight = 0.0;
+
+    bool uses_tiebreak() const {
+        return weight > 0.0 && !edges.empty();
+    }
 };
 
 // ---------------------------------------------------------------------------
@@ -203,7 +220,8 @@ private:
         const std::vector<int>& qbit_map_vals,
         const std::vector<int>& node_mapping_flat,
         const std::vector<int>& P_route_inv,
-        SwapCache* swap_cache
+        SwapCache* swap_cache,
+        const NeighborInfo* neighbor_info = nullptr
     ) const;
 
     // Lower-bound swap estimate (port of estimate_swap_count)
@@ -229,25 +247,8 @@ private:
         const std::vector<std::pair<int,int>>& E,
         bool reverse,
         const std::unordered_map<int, CanonicalEntry>& canonical_data,
-        SwapCache* swap_cache
-    ) const;
-
-    double candidate_aware_future_cost(
-        int partition_idx,
-        const std::vector<int>& output_perm,
-        bool reverse
-    ) const;
-
-    double output_layout_quality_cost(
-        const std::vector<int>& output_perm,
-        const std::vector<int>& future_indices,
-        const std::unordered_map<int, CanonicalEntry>& canonical_data
-    ) const;
-
-    double output_layout_quality_cost(
-        const std::vector<int>& output_perm,
-        const std::vector<std::pair<int,int>>& future_indices,
-        const std::unordered_map<int, CanonicalEntry>& canonical_data
+        SwapCache* swap_cache,
+        const std::vector<double>* decay = nullptr
     ) const;
 
     // Route and update layout for a candidate (port of transform_pi)
@@ -256,19 +257,37 @@ private:
         const CandidateData& cand,
         const std::vector<int>& pi,
         bool reverse,
-        SwapCache* swap_cache
+        SwapCache* swap_cache,
+        const NeighborInfo* neighbor_info = nullptr
     ) const;
 
-    // Release valve for stuck front layers
-    std::pair<std::vector<std::pair<int,int>>, std::vector<int>>
-    release_valve(
-        const std::vector<int>& F,
+    NeighborInfo build_neighbor_info(
+        int exclude_partition_idx,
+        const std::vector<int>& F_snapshot,
+        const std::vector<std::pair<int,int>>& E,
         const std::vector<int>& pi,
         const std::unordered_map<int, CanonicalEntry>& canonical_data
     ) const;
 
-    // BFS shortest path on adjacency graph
+    double decay_factor_for_swaps(
+        const std::vector<std::pair<int,int>>& swaps,
+        const std::vector<double>& decay
+    ) const;
+
+    void apply_decay_for_swaps(
+        const std::vector<std::pair<int,int>>& swaps,
+        std::vector<double>& decay
+    ) const;
+
+    void reset_decay(std::vector<double>& decay) const;
+
     std::vector<int> bfs_shortest_path(int src, int dst) const;
+
+    std::pair<std::vector<std::pair<int,int>>, std::vector<int>> release_valve(
+        const std::vector<int>& F,
+        const std::vector<int>& pi,
+        const std::unordered_map<int, CanonicalEntry>& canonical_data
+    ) const;
 
     // Apply a list of SWAPs to pi
     std::vector<int> apply_swaps_to_pi(
@@ -350,6 +369,7 @@ private:
     std::unordered_map<int, CanonicalEntry> canonical_data_fwd_;
     std::unordered_map<int, CanonicalEntry> canonical_data_rev_;
     std::vector<double> alpha_weights_;
+    double max_finite_distance_ = 1.0;
 };
 
 } // namespace squander::routing
