@@ -137,12 +137,6 @@ class qgd_Partition_Aware_Mapping:
         self.config.setdefault('routed', False)
         self.config.setdefault('partition_strategy','ilp')
         self.config.setdefault('optimizer', 'BFGS')
-        self.config.setdefault('use_basin_hopping', 1)
-        self.config.setdefault('bh_T', 1.0)
-        self.config.setdefault('bh_stepsize', 0.5)
-        self.config.setdefault('bh_interval', 50)
-        self.config.setdefault('bh_target_accept_rate', 0.5)
-        self.config.setdefault('bh_stepwise_factor', 0.9)
         self.config.setdefault('use_osr', 0)
         self.config.setdefault("use_graph_search", 0)
         self.config.setdefault('n_layout_trials', 1)
@@ -163,7 +157,7 @@ class qgd_Partition_Aware_Mapping:
                 self.config['path_tiebreak_weight'],
             )
             self.config['path_tiebreak_weight'] = 0.49
-        self.config.setdefault('cnot_cost', 0.1 / 15.0)
+        self.config.setdefault('cnot_cost', 1.0 / 3.0)  # 1 SWAP = 3 CNOTs
         strategy = self.config['strategy']
         self.config.setdefault('parallel_layout_trials', False)
         self.config.setdefault('layout_trial_workers', 0)
@@ -921,7 +915,7 @@ class qgd_Partition_Aware_Mapping:
         cfg.max_lookahead = self.config.get('max_lookahead', 4)
         cfg.E_weight = self.config.get('E_weight', 0.5)
         cfg.E_alpha = self.config.get('E_alpha', 1.0)
-        cfg.cnot_cost = self.config.get('cnot_cost', 0.1 / 15.0)
+        cfg.cnot_cost = self.config.get('cnot_cost', 1.0 / 3.0)
         cfg.sabre_iterations = n_iterations
         cfg.n_layout_trials = max(1, n_trials)
         cfg.random_seed = random_seed
@@ -1346,7 +1340,7 @@ class qgd_Partition_Aware_Mapping:
         """Pre-filter candidates using cheap swap-count estimate before full A* scoring."""
         if len(partition_candidates) <= top_k:
             return partition_candidates
-        cnot_cost = self.config.get('cnot_cost', 0.1 / 15.0)
+        cnot_cost = self.config.get('cnot_cost', 1.0 / 3.0)
         estimates = np.array([
             self._routing_objective(
                 pc.estimate_swap_count(pi, D, reverse=reverse),
@@ -1743,7 +1737,7 @@ class qgd_Partition_Aware_Mapping:
                     alpha=E_alpha,
                     canonical_data=canonical_data,
                     adj=self._adj,
-                    cnot_cost=self.config.get("cnot_cost", 0.1 / 15.0),
+                    cnot_cost=self.config.get("cnot_cost", 1.0 / 3.0),
                     path_tiebreak_weight=self.config.get(
                         "path_tiebreak_weight", 0.2
                     ),
@@ -1857,7 +1851,7 @@ class qgd_Partition_Aware_Mapping:
         max_lookahead = self.config.get("max_lookahead", 4)
         E_W = self.config.get("E_weight", 0.5)
         E_alpha = self.config.get("E_alpha", 1.0)
-        cnot_cost = self.config.get("cnot_cost", 0.1 / 15.0)
+        cnot_cost = self.config.get("cnot_cost", 1.0 / 3.0)
         swap_burst_budget = self.config.get("swap_burst_budget", 5)
 
         canonical_data = self._build_canonical_neighbor_data(
@@ -2098,7 +2092,7 @@ class qgd_Partition_Aware_Mapping:
     def score_partition_candidate(partition_candidate, F, pi, scoring_partitions, D, swap_cache,
                                   E=None, W=0.5, alpha=0.9, reverse=False,
                                   canonical_data=None, adj=None,
-                                  cnot_cost=0.1 / 15.0,
+                                  cnot_cost=1.0 / 3.0,
                                   path_tiebreak_weight=0.2, decay=None,
                                   cached_neighbor_info=None,
                                   return_transforms=False):

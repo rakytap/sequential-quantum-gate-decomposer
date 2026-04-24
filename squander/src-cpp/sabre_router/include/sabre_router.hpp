@@ -82,7 +82,7 @@ struct SabreConfig {
     int max_lookahead = 4;
     double E_weight = 0.5;
     double E_alpha = 1.0; // LightSABRE uses no per-depth decay; set <1 for SQUANDER-style decay
-    double cnot_cost = 0.1 / 15.0; // weight on candidate.cnot_count; swap cost is fixed at 1.0
+    double cnot_cost = 1.0 / 3.0; // weight on candidate.cnot_count; swap cost is fixed at 1.0 (1 SWAP = 3 CNOTs)
     int sabre_iterations = 1;
     int n_layout_trials = 1;
     int random_seed = 42;
