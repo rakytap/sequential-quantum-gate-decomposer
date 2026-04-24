@@ -1331,7 +1331,7 @@ class qgd_Partition_Aware_Mapping:
     def _entry_variants(entry, future_cost_mode="canonical"):
         variants = entry.get("variants")
         if variants:
-            if future_cost_mode in ("topk_min", "fullpas_min"):
+            if future_cost_mode == "topk_min":
                 return variants
             return variants[:1]
         return (entry,)
@@ -1365,7 +1365,7 @@ class qgd_Partition_Aware_Mapping:
             )
             cnot_weight = (
                 future_candidate_weight
-                if future_cost_mode in ("topk_min", "fullpas_min")
+                if future_cost_mode == "topk_min"
                 else 0.0
             )
             variant_cost = qgd_Partition_Aware_Mapping._routing_objective(
@@ -1377,67 +1377,6 @@ class qgd_Partition_Aware_Mapping:
             if best is None or variant_cost < best:
                 best = variant_cost
         return 0.0 if best is None else best
-
-    @staticmethod
-    def _future_partition_cost_fullpas(
-        partition_idx,
-        output_perm_arr,
-        D,
-        swap_cache,
-        adj=None,
-        reverse=False,
-        candidate_cache=None,
-        future_candidate_top_k=4,
-        local_cost_weight=0.1,
-        swap_cost=15.0,
-        future_candidate_weight=1.0,
-    ):
-        if candidate_cache is None:
-            return 0.0
-        candidates = candidate_cache[partition_idx]
-        if not candidates:
-            return 0.0
-
-        candidates = list(candidates)
-        top_k = max(1, int(future_candidate_top_k))
-        if len(candidates) > top_k:
-            estimates = np.array(
-                [
-                    qgd_Partition_Aware_Mapping._routing_objective(
-                        candidate.estimate_swap_count(
-                            output_perm_arr, D, reverse=reverse
-                        )
-                        * swap_cost,
-                        candidate.cnot_count,
-                        local_cost_weight,
-                        cnot_weight=future_candidate_weight,
-                    )
-                    for candidate in candidates
-                ],
-                dtype=float,
-            )
-            idx = np.argpartition(estimates, top_k - 1)[:top_k]
-            candidates = [candidates[i] for i in idx]
-
-        best = None
-        for candidate in candidates:
-            swaps, _ = candidate.transform_pi(
-                output_perm_arr,
-                D,
-                swap_cache,
-                reverse=reverse,
-                adj=adj,
-                neighbor_info=None,
-            )
-            cost = qgd_Partition_Aware_Mapping._routing_objective(
-                swap_cost * len(swaps),
-                candidate.cnot_count,
-                local_cost_weight,
-                cnot_weight=future_candidate_weight,
-            )
-            if best is None or cost < best:
-                best = cost
-        return 0.0 if best is None else float(best)
 
     @staticmethod
     def _best_release_variant(entry, pi_arr, D_arr, future_cost_mode="canonical"):
@@ -1653,9 +1592,6 @@ class qgd_Partition_Aware_Mapping:
         future_candidate_weight = self.config.get(
             "future_candidate_weight", 1.0
         )
-        future_candidate_top_k = self.config.get(
-            "future_candidate_top_k", 4
-        )
 
         canonical_data = self._build_canonical_neighbor_data(
             scoring_partitions, reverse=False
@@ -1732,8 +1668,6 @@ class qgd_Partition_Aware_Mapping:
                     decay=decay,
                     future_cost_mode=future_cost_mode,
                     future_candidate_weight=future_candidate_weight,
-                    future_candidate_top_k=future_candidate_top_k,
-                    candidate_cache=candidate_cache,
                 )
                 for partition_candidate in partition_candidates
             ]
@@ -1870,9 +1804,6 @@ class qgd_Partition_Aware_Mapping:
         future_candidate_weight = self.config.get(
             "future_candidate_weight", 1.0
         )
-        future_candidate_top_k = self.config.get(
-            "future_candidate_top_k", 4
-        )
 
         canonical_data = self._build_canonical_neighbor_data(
             scoring_partitions, reverse=reverse
@@ -1953,8 +1884,6 @@ class qgd_Partition_Aware_Mapping:
                     decay=decay,
                     future_cost_mode=future_cost_mode,
                     future_candidate_weight=future_candidate_weight,
-                    future_candidate_top_k=future_candidate_top_k,
-                    candidate_cache=candidate_cache,
                 )
                 for pc in partition_candidates
             ]
@@ -2079,7 +2008,7 @@ class qgd_Partition_Aware_Mapping:
         future_cost_mode = self.config.get("future_cost_mode", "canonical")
         top_k = (
             max(1, int(self.config.get("future_candidate_top_k", 4)))
-            if future_cost_mode in ("topk_min", "fullpas_min")
+            if future_cost_mode == "topk_min"
             else 1
         )
         data = {}
@@ -2142,9 +2071,7 @@ class qgd_Partition_Aware_Mapping:
                                   local_cost_weight=0.1, swap_cost=15.0,
                                   path_tiebreak_weight=0.2, decay=None,
                                   future_cost_mode="canonical",
-                                  future_candidate_weight=1.0,
-                                  future_candidate_top_k=4,
-                                  candidate_cache=None):
+                                  future_candidate_weight=1.0):
         """LightSABRE-style relative scoring (arXiv:2409.08368, eq. 1).
 
         H = swap_cost * |swaps|
@@ -2200,30 +2127,15 @@ class qgd_Partition_Aware_Mapping:
             if entry is None:
                 continue
             n_other += 1
-            if future_cost_mode == "fullpas_min":
-                f_sum += qgd_Partition_Aware_Mapping._future_partition_cost_fullpas(
-                    partition_idx,
-                    output_perm_arr,
-                    D,
-                    swap_cache,
-                    adj=adj,
-                    reverse=reverse,
-                    candidate_cache=candidate_cache,
-                    future_candidate_top_k=future_candidate_top_k,
-                    local_cost_weight=local_cost_weight,
-                    swap_cost=swap_cost,
-                    future_candidate_weight=future_candidate_weight,
-                )
-            else:
-                f_sum += qgd_Partition_Aware_Mapping._entry_future_cost(
-                    entry,
-                    output_perm_arr,
-                    D_arr,
-                    swap_cost,
-                    local_cost_weight,
-                    future_cost_mode=future_cost_mode,
-                    future_candidate_weight=future_candidate_weight,
-                )
+            f_sum += qgd_Partition_Aware_Mapping._entry_future_cost(
+                entry,
+                output_perm_arr,
+                D_arr,
+                swap_cost,
+                local_cost_weight,
+                future_cost_mode=future_cost_mode,
+                future_candidate_weight=future_candidate_weight,
+            )
         if n_other > 0:
             score += f_sum / n_other
 
@@ -2236,30 +2148,15 @@ class qgd_Partition_Aware_Mapping:
                 entry = canonical_data.get(partition_idx)
                 if entry is None:
                     continue
-                if future_cost_mode == "fullpas_min":
-                    d_cost = qgd_Partition_Aware_Mapping._future_partition_cost_fullpas(
-                        partition_idx,
-                        output_perm_arr,
-                        D,
-                        swap_cache,
-                        adj=adj,
-                        reverse=reverse,
-                        candidate_cache=candidate_cache,
-                        future_candidate_top_k=future_candidate_top_k,
-                        local_cost_weight=local_cost_weight,
-                        swap_cost=swap_cost,
-                        future_candidate_weight=future_candidate_weight,
-                    )
-                else:
-                    d_cost = qgd_Partition_Aware_Mapping._entry_future_cost(
-                        entry,
-                        output_perm_arr,
-                        D_arr,
-                        swap_cost,
-                        local_cost_weight,
-                        future_cost_mode=future_cost_mode,
-                        future_candidate_weight=future_candidate_weight,
-                    )
+                d_cost = qgd_Partition_Aware_Mapping._entry_future_cost(
+                    entry,
+                    output_perm_arr,
+                    D_arr,
+                    swap_cost,
+                    local_cost_weight,
+                    future_cost_mode=future_cost_mode,
+                    future_candidate_weight=future_candidate_weight,
+                )
                 e_sum += (alpha ** depth) * d_cost
             score += W * e_sum / len(E)
 

@@ -410,13 +410,6 @@ private:
         const std::vector<int>& pi
     ) const;
 
-    double future_partition_cost_fullpas(
-        int partition_idx,
-        const std::vector<int>& pi,
-        bool reverse,
-        SwapCache* swap_cache
-    ) const;
-
     // Immutable data members
     SabreConfig config_;
     int N_; // number of physical qubits

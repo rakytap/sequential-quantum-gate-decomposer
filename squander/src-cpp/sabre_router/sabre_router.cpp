@@ -370,7 +370,6 @@ NeighborInfo SabreRouter::build_neighbor_info(
         if (!entry.variants.empty()) {
             const size_t limit = (
                 config_.future_cost_mode == "topk_min"
-                || config_.future_cost_mode == "fullpas_min"
             )
                 ? entry.variants.size()
                 : std::min<size_t>(1, entry.variants.size());
@@ -556,7 +555,6 @@ std::pair<std::vector<std::pair<int,int>>, std::vector<int>> SabreRouter::releas
         if (!entry.variants.empty()) {
             const size_t limit = (
                 config_.future_cost_mode == "topk_min"
-                || config_.future_cost_mode == "fullpas_min"
             )
                 ? entry.variants.size()
                 : std::min<size_t>(1, entry.variants.size());
@@ -1108,7 +1106,6 @@ double SabreRouter::entry_future_cost(
     if (!entry.variants.empty()) {
         const size_t limit = (
             config_.future_cost_mode == "topk_min"
-            || config_.future_cost_mode == "fullpas_min"
         )
             ? entry.variants.size()
             : std::min<size_t>(1, entry.variants.size());
@@ -1117,7 +1114,6 @@ double SabreRouter::entry_future_cost(
             const auto& variant = entry.variants[i];
             const double cnot_weight = (
                 config_.future_cost_mode == "topk_min"
-                || config_.future_cost_mode == "fullpas_min"
             )
                 ? config_.future_candidate_weight
                 : 0.0;
@@ -1138,71 +1134,6 @@ double SabreRouter::entry_future_cost(
     primary.edges_v = entry.edges_v;
     primary.cnot = entry.cnot;
     return routing_objective(variant_routing_cost(primary, pi), primary.cnot, 0.0);
-}
-
-double SabreRouter::future_partition_cost_fullpas(
-    int partition_idx,
-    const std::vector<int>& pi,
-    bool reverse,
-    SwapCache* swap_cache
-) const {
-    if (partition_idx < 0 || partition_idx >= static_cast<int>(candidate_cache_.size())) {
-        return 0.0;
-    }
-    const auto& candidates_all = candidate_cache_[partition_idx];
-    if (candidates_all.empty()) {
-        return 0.0;
-    }
-
-    const int top_k = std::max(1, config_.future_candidate_top_k);
-    std::vector<const CandidateData*> candidates;
-    candidates.reserve(candidates_all.size());
-    for (const auto& cand : candidates_all) {
-        candidates.push_back(&cand);
-    }
-
-    if (static_cast<int>(candidates.size()) > top_k) {
-        using Pair = std::pair<double, const CandidateData*>;
-        std::vector<Pair> estimated;
-        estimated.reserve(candidates.size());
-        for (const auto* cand : candidates) {
-            const double est = routing_objective(
-                estimate_swap_count(*cand, pi, reverse) * config_.swap_cost,
-                cand->cnot_count,
-                config_.future_candidate_weight
-            );
-            estimated.push_back({est, cand});
-        }
-        std::nth_element(
-            estimated.begin(),
-            estimated.begin() + (top_k - 1),
-            estimated.end(),
-            [](const Pair& a, const Pair& b) {
-                return a.first < b.first;
-            }
-        );
-        candidates.clear();
-        candidates.reserve(top_k);
-        for (int i = 0; i < top_k; i++) {
-            candidates.push_back(estimated[i].second);
-        }
-    }
-
-    double best = std::numeric_limits<double>::infinity();
-    for (const auto* cand : candidates) {
-        auto [swaps, pi_out] = transform_pi(*cand, pi, reverse, swap_cache, nullptr);
-        (void)pi_out;
-        const double cost = routing_objective(
-            config_.swap_cost * static_cast<double>(swaps.size()),
-            cand->cnot_count,
-            config_.future_candidate_weight
-        );
-        if (cost < best) {
-            best = cost;
-        }
-    }
-
-    return std::isfinite(best) ? best : 0.0;
 }
 
 double SabreRouter::compute_routing_cost(
@@ -1298,13 +1229,7 @@ double SabreRouter::score_candidate(
             if (re.partition_idx == cand_idx) continue;
             if (!re.entry) continue;
             n_other++;
-            if (config_.future_cost_mode == "fullpas_min") {
-                f_sum += future_partition_cost_fullpas(
-                    re.partition_idx, output_perm, reverse, swap_cache
-                );
-            } else {
-                f_sum += entry_future_cost(*re.entry, output_perm);
-            }
+            f_sum += entry_future_cost(*re.entry, output_perm);
         }
     } else {
         for (int p_idx : F_snapshot) {
@@ -1312,13 +1237,7 @@ double SabreRouter::score_candidate(
             auto it = canonical_data.find(p_idx);
             if (it == canonical_data.end()) continue;
             n_other++;
-            if (config_.future_cost_mode == "fullpas_min") {
-                f_sum += future_partition_cost_fullpas(
-                    p_idx, output_perm, reverse, swap_cache
-                );
-            } else {
-                f_sum += entry_future_cost(it->second, output_perm);
-            }
+            f_sum += entry_future_cost(it->second, output_perm);
         }
     }
     if (n_other > 0) score += f_sum / static_cast<double>(n_other);
@@ -1330,13 +1249,7 @@ double SabreRouter::score_candidate(
             for (const auto& re : *resolved_E) {
                 if (re.partition_idx == cand_idx) continue;
                 if (!re.entry) continue;
-                if (config_.future_cost_mode == "fullpas_min") {
-                    e_sum += re.alpha * future_partition_cost_fullpas(
-                        re.partition_idx, output_perm, reverse, swap_cache
-                    );
-                } else {
-                    e_sum += re.alpha * entry_future_cost(*re.entry, output_perm);
-                }
+                e_sum += re.alpha * entry_future_cost(*re.entry, output_perm);
             }
         } else {
             for (auto [p_idx, depth] : E) {
@@ -1346,13 +1259,7 @@ double SabreRouter::score_candidate(
                     : std::pow(config_.E_alpha, depth);
                 auto it = canonical_data.find(p_idx);
                 if (it == canonical_data.end()) continue;
-                if (config_.future_cost_mode == "fullpas_min") {
-                    e_sum += alpha * future_partition_cost_fullpas(
-                        p_idx, output_perm, reverse, swap_cache
-                    );
-                } else {
-                    e_sum += alpha * entry_future_cost(it->second, output_perm);
-                }
+                e_sum += alpha * entry_future_cost(it->second, output_perm);
             }
         }
         score += config_.E_weight * e_sum / static_cast<double>(E.size());
