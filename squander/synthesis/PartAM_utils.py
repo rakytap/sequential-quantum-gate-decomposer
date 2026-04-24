@@ -610,6 +610,7 @@ class PartitionScoreData:
         Tuple[Tuple[Tuple[int, ...], Tuple[int, ...]], ...], ...
     ]
     circuit_structures: Tuple[Tuple[Tuple[int, ...], ...], ...]
+    cnot_counts: Tuple[Tuple[int, ...], ...]
     qubit_map: Dict[int, int]
     involved_qbits: Tuple[int, ...]
 
@@ -650,4 +651,3 @@ def construct_swap_circuit(swap_order, N):
         swap_circ.add_CNOT(swap[1],swap[0])
         swap_circ.add_CNOT(swap[0],swap[1])
     return swap_circ
-

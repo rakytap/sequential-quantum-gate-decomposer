@@ -865,6 +865,14 @@ SabreRouter::find_constrained_swaps(
         const int g = g_e;
         const int64_t packed = arena[idx].packed;
 
+        // A state can be reinserted with a lower g-cost after this queue entry
+        // was pushed. The hash table always points at the current best arena
+        // node for a packed state, so discard stale superseded nodes before
+        // accepting a target or expanding neighbors.
+        if (table[table_slot(packed)] != idx) {
+            continue;
+        }
+
         if (packed == target_packed) {
             // Reconstruct path
             std::vector<std::pair<int,int>> path;

@@ -329,6 +329,10 @@ class qgd_Partition_Aware_Mapping:
                 tuple(tuple(struct) for struct in partition.circuit_structures[tdx])
                 for tdx in range(len(partition.mini_topologies))
             )
+            cnot_counts = tuple(
+                tuple(int(cnot) for cnot in partition.cnot_counts[tdx])
+                for tdx in range(len(partition.mini_topologies))
+            )
 
             scoring_partitions.append(
                 PartitionScoreData(
@@ -336,6 +340,7 @@ class qgd_Partition_Aware_Mapping:
                     topology_candidates=tuple(topology_candidates),
                     permutations_pairs=permutations_pairs,
                     circuit_structures=circuit_structures,
+                    cnot_counts=cnot_counts,
                     qubit_map=dict(partition.qubit_map),
                     involved_qbits=tuple(partition.involved_qbits),
                 )
@@ -387,6 +392,7 @@ class qgd_Partition_Aware_Mapping:
                 topology_candidates = partition.topology_candidates[tdx]
                 permutation_pairs = partition.permutations_pairs[tdx]
                 circuit_structures = partition.circuit_structures[tdx]
+                cnot_counts = partition.cnot_counts[tdx]
 
                 for topology_candidate in topology_candidates:
                     for pdx, permutation_pair in enumerate(permutation_pairs):
@@ -403,7 +409,7 @@ class qgd_Partition_Aware_Mapping:
                                 mini_topology,
                                 partition.qubit_map,
                                 partition.involved_qbits,
-                                cnot_count=len(circuit_structure),
+                                cnot_count=cnot_counts[pdx],
                             )
                         )
 
@@ -2052,7 +2058,7 @@ class qgd_Partition_Aware_Mapping:
             variant_map = {}
             for tdx, mini_topology in enumerate(partition.mini_topologies):
                 for pdx, (P_i, P_o) in enumerate(partition.permutations_pairs[tdx]):
-                    cnot = len(partition.circuit_structures[tdx][pdx])
+                    cnot = partition.cnot_counts[tdx][pdx]
                     P_route = P_o if reverse else P_i
                     if mini_topology:
                         edge_key = tuple(
