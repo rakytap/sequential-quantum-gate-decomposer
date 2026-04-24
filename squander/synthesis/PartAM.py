@@ -143,7 +143,8 @@ class qgd_Partition_Aware_Mapping:
         self.config.setdefault('bh_interval', 50)
         self.config.setdefault('bh_target_accept_rate', 0.5)
         self.config.setdefault('bh_stepwise_factor', 0.9)
-        self.config.setdefault('use_osr', 0)
+        self.config.setdefault('use_osr', 1)
+        self.config.setdefault("use_graph_search", 1)
         self.config.setdefault('n_layout_trials', 1)
         self.config.setdefault('score_tolerance', 0.05)
         self.config.setdefault('trial_swap_cnot_cost', 3)
@@ -156,6 +157,16 @@ class qgd_Partition_Aware_Mapping:
         self.config.setdefault('release_valve_enabled', True)
         self.config.setdefault('release_valve_threshold', 20)
         self.config.setdefault('path_tiebreak_weight', 0.2)
+        # The neighbor heuristic is normalized to [0, 1] and added to A*'s f-value.
+        # g-deltas are integer and h-deltas are half-integer, so preserving
+        # swap-count optimality requires weight < 0.5.
+        if self.config['path_tiebreak_weight'] >= 0.5:
+            logging.warning(
+                "path_tiebreak_weight=%.3f ≥ 0.5 may override SWAP-count "
+                "optimality; clamping to 0.49.",
+                self.config['path_tiebreak_weight'],
+            )
+            self.config['path_tiebreak_weight'] = 0.49
         self.config.setdefault('future_cost_mode', 'canonical')
         self.config.setdefault('future_candidate_top_k', 4)
         self.config.setdefault('future_candidate_weight', 1.0)
@@ -1647,9 +1658,33 @@ class qgd_Partition_Aware_Mapping:
                 max_lookahead=max_lookahead,
             )
 
-            scores = [
-                self.score_partition_candidate(
-                    partition_candidate,
+            # Group candidates by partition_idx to reuse _build_neighbor_info
+            candidate_order = sorted(
+                range(len(partition_candidates)),
+                key=lambda i: partition_candidates[i].partition_idx
+            )
+            scores = [0.0] * len(partition_candidates)
+            cached_swaps = [None] * len(partition_candidates)
+            cached_pi = [None] * len(partition_candidates)
+            prev_partition_idx = None
+            cached_neighbor_info = None
+            for ci in candidate_order:
+                cand = partition_candidates[ci]
+                if cand.partition_idx != prev_partition_idx:
+                    cached_neighbor_info = self._build_neighbor_info(
+                        cand.partition_idx,
+                        F_snapshot,
+                        E,
+                        pi,
+                        canonical_data,
+                        weight=self.config.get("path_tiebreak_weight", 0.2),
+                        W=E_W,
+                        alpha=E_alpha,
+                        future_cost_mode=future_cost_mode,
+                    )
+                    prev_partition_idx = cand.partition_idx
+                score, swaps, output_perm = self.score_partition_candidate(
+                    cand,
                     F_snapshot,
                     pi,
                     scoring_partitions,
@@ -1668,36 +1703,24 @@ class qgd_Partition_Aware_Mapping:
                     decay=decay,
                     future_cost_mode=future_cost_mode,
                     future_candidate_weight=future_candidate_weight,
+                    cached_neighbor_info=cached_neighbor_info,
+                    return_transforms=True,
                 )
-                for partition_candidate in partition_candidates
-            ]
+                scores[ci] = score
+                cached_swaps[ci] = swaps
+                cached_pi[ci] = output_perm
+
             min_partition_candidate = self._select_best_candidate(
                 partition_candidates, scores
             )
+            best_idx = partition_candidates.index(min_partition_candidate)
 
             F.remove(min_partition_candidate.partition_idx)
             resolved_partitions[min_partition_candidate.partition_idx] = True
             resolved_count += 1
             pbar.update(1)
 
-            best_neighbor_info = self._build_neighbor_info(
-                min_partition_candidate.partition_idx,
-                F_snapshot,
-                E,
-                pi,
-                canonical_data,
-                weight=self.config.get("path_tiebreak_weight", 0.2),
-                W=E_W,
-                alpha=E_alpha,
-                future_cost_mode=future_cost_mode,
-            )
-            swap_order, pi = min_partition_candidate.transform_pi(
-                pi,
-                D,
-                self._swap_cache,
-                adj=self._adj,
-                neighbor_info=best_neighbor_info,
-            )
+            swap_order, pi = cached_swaps[best_idx], cached_pi[best_idx]
             if swap_order:
                 partition_order.append(construct_swap_circuit(swap_order, len(pi)))
                 self._apply_decay_for_swaps(swap_order, decay)
@@ -1862,9 +1885,33 @@ class qgd_Partition_Aware_Mapping:
                 max_lookahead=max_lookahead,
             )
 
-            scores = [
-                self.score_partition_candidate(
-                    pc,
+            # Group candidates by partition_idx to reuse _build_neighbor_info
+            candidate_order = sorted(
+                range(len(partition_candidates)),
+                key=lambda i: partition_candidates[i].partition_idx
+            )
+            scores = [0.0] * len(partition_candidates)
+            cached_swaps = [None] * len(partition_candidates)
+            cached_pi = [None] * len(partition_candidates)
+            prev_partition_idx = None
+            cached_neighbor_info = None
+            for ci in candidate_order:
+                cand = partition_candidates[ci]
+                if cand.partition_idx != prev_partition_idx:
+                    cached_neighbor_info = self._build_neighbor_info(
+                        cand.partition_idx,
+                        F_snapshot,
+                        E,
+                        pi,
+                        canonical_data,
+                        weight=self.config.get("path_tiebreak_weight", 0.2),
+                        W=E_W,
+                        alpha=E_alpha,
+                        future_cost_mode=future_cost_mode,
+                    )
+                    prev_partition_idx = cand.partition_idx
+                score, swaps, output_perm = self.score_partition_candidate(
+                    cand,
                     F_snapshot,
                     pi,
                     scoring_partitions,
@@ -1884,35 +1931,21 @@ class qgd_Partition_Aware_Mapping:
                     decay=decay,
                     future_cost_mode=future_cost_mode,
                     future_candidate_weight=future_candidate_weight,
+                    cached_neighbor_info=cached_neighbor_info,
+                    return_transforms=True,
                 )
-                for pc in partition_candidates
-            ]
+                scores[ci] = score
+                cached_swaps[ci] = swaps
+                cached_pi[ci] = output_perm
 
             best = self._select_best_candidate(
                 partition_candidates, scores, rng=rng
             )
+            best_idx = partition_candidates.index(best)
             F.remove(best.partition_idx)
             resolved_partitions[best.partition_idx] = True
 
-            best_neighbor_info = self._build_neighbor_info(
-                best.partition_idx,
-                F_snapshot,
-                E,
-                pi,
-                canonical_data,
-                weight=self.config.get("path_tiebreak_weight", 0.2),
-                W=E_W,
-                alpha=E_alpha,
-                future_cost_mode=future_cost_mode,
-            )
-            swaps, pi = best.transform_pi(
-                pi,
-                D,
-                self._swap_cache,
-                reverse=reverse,
-                adj=self._adj,
-                neighbor_info=best_neighbor_info,
-            )
+            swaps, pi = cached_swaps[best_idx], cached_pi[best_idx]
             decay_factor = 1.0
             if swaps:
                 decay_factor = self._decay_factor_for_swaps(swaps, decay)
@@ -2071,7 +2104,9 @@ class qgd_Partition_Aware_Mapping:
                                   local_cost_weight=0.1, swap_cost=15.0,
                                   path_tiebreak_weight=0.2, decay=None,
                                   future_cost_mode="canonical",
-                                  future_candidate_weight=1.0):
+                                  future_candidate_weight=1.0,
+                                  cached_neighbor_info=None,
+                                  return_transforms=False):
         """LightSABRE-style relative scoring (arXiv:2409.08368, eq. 1).
 
         H = swap_cost * |swaps|
@@ -2079,17 +2114,20 @@ class qgd_Partition_Aware_Mapping:
           + (1/|F'|) * average routing cost over F \\ {cand}
           + (W/|E|)  * alpha^d-decayed routing cost over E
         """
-        neighbor_info = qgd_Partition_Aware_Mapping._build_neighbor_info(
-            partition_candidate.partition_idx,
-            F,
-            E,
-            pi,
-            canonical_data,
-            weight=path_tiebreak_weight,
-            W=W,
-            alpha=alpha,
-            future_cost_mode=future_cost_mode,
-        )
+        if cached_neighbor_info is not None:
+            neighbor_info = cached_neighbor_info
+        else:
+            neighbor_info = qgd_Partition_Aware_Mapping._build_neighbor_info(
+                partition_candidate.partition_idx,
+                F,
+                E,
+                pi,
+                canonical_data,
+                weight=path_tiebreak_weight,
+                W=W,
+                alpha=alpha,
+                future_cost_mode=future_cost_mode,
+            )
         swaps, output_perm = partition_candidate.transform_pi(
             pi,
             D,
@@ -2111,6 +2149,8 @@ class qgd_Partition_Aware_Mapping:
         )
 
         if canonical_data is None:
+            if return_transforms:
+                return score, swaps, output_perm
             return score
 
         output_perm_arr = np.asarray(output_perm, dtype=np.intp)
@@ -2160,6 +2200,8 @@ class qgd_Partition_Aware_Mapping:
                 e_sum += (alpha ** depth) * d_cost
             score += W * e_sum / len(E)
 
+        if return_transforms:
+            return score, swaps, output_perm
         return score
 
     # ------------------------------------------------------------------------

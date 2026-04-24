@@ -134,9 +134,14 @@ struct SwapCacheKey {
     int64_t pi_snapshot;
     int64_t targets;
     int k;
+    // 0 when the neighbor tiebreak is inactive; otherwise a stable hash of
+    // (edges, initial_pos, weight) from NeighborInfo so that two calls with
+    // the same active future context share cache entries.
+    uint64_t neighbor_hash;
 
     bool operator==(const SwapCacheKey& o) const {
-        return pi_snapshot == o.pi_snapshot && targets == o.targets && k == o.k;
+        return pi_snapshot == o.pi_snapshot && targets == o.targets
+            && k == o.k && neighbor_hash == o.neighbor_hash;
     }
 };
 
@@ -145,6 +150,7 @@ struct SwapCacheKeyHash {
         size_t h = static_cast<size_t>(k.pi_snapshot);
         h ^= static_cast<size_t>(k.targets) + 0x9e3779b97f4a7c15ULL + (h << 6) + (h >> 2);
         h ^= static_cast<size_t>(k.k) + 0x9e3779b97f4a7c15ULL + (h << 6) + (h >> 2);
+        h ^= static_cast<size_t>(k.neighbor_hash) + 0x9e3779b97f4a7c15ULL + (h << 6) + (h >> 2);
         return h;
     }
 };

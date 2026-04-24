@@ -8,6 +8,7 @@ C++ backend for the SABRE-style partition-aware routing engine.
 
 #include <algorithm>
 #include <cmath>
+#include <cstring>
 #include <deque>
 #include <functional>
 #include <initializer_list>
@@ -366,25 +367,20 @@ NeighborInfo SabreRouter::build_neighbor_info(
         auto it = canonical_data.find(partition_idx);
         if (it == canonical_data.end()) return;
         const auto& entry = it->second;
+        if (entry.variants.empty()) {
+            return;
+        }
+        const size_t limit = (
+            config_.future_cost_mode == "topk_min"
+        )
+            ? entry.variants.size()
+            : std::min<size_t>(1, entry.variants.size());
         std::vector<const CanonicalEntry::FutureVariant*> active_variants;
-        if (!entry.variants.empty()) {
-            const size_t limit = (
-                config_.future_cost_mode == "topk_min"
-            )
-                ? entry.variants.size()
-                : std::min<size_t>(1, entry.variants.size());
-            active_variants.reserve(limit);
-            for (size_t i = 0; i < limit; i++) {
-                if (!entry.variants[i].edges_u.empty()) {
-                    active_variants.push_back(&entry.variants[i]);
-                }
+        active_variants.reserve(limit);
+        for (size_t i = 0; i < limit; i++) {
+            if (!entry.variants[i].edges_u.empty()) {
+                active_variants.push_back(&entry.variants[i]);
             }
-        } else if (!entry.edges_u.empty()) {
-            CanonicalEntry::FutureVariant primary;
-            primary.edges_u = entry.edges_u;
-            primary.edges_v = entry.edges_v;
-            primary.cnot = entry.cnot;
-            active_variants.push_back(&primary);
         }
         if (active_variants.empty()) {
             return;
@@ -552,21 +548,16 @@ std::pair<std::vector<std::pair<int,int>>, std::vector<int>> SabreRouter::releas
             }
         };
 
-        if (!entry.variants.empty()) {
-            const size_t limit = (
-                config_.future_cost_mode == "topk_min"
-            )
-                ? entry.variants.size()
-                : std::min<size_t>(1, entry.variants.size());
-            for (size_t i = 0; i < limit; i++) {
-                consider_variant(entry.variants[i]);
-            }
-        } else {
-            CanonicalEntry::FutureVariant primary;
-            primary.edges_u = entry.edges_u;
-            primary.edges_v = entry.edges_v;
-            primary.cnot = entry.cnot;
-            consider_variant(primary);
+        if (entry.variants.empty()) {
+            continue;
+        }
+        const size_t limit = (
+            config_.future_cost_mode == "topk_min"
+        )
+            ? entry.variants.size()
+            : std::min<size_t>(1, entry.variants.size());
+        for (size_t i = 0; i < limit; i++) {
+            consider_variant(entry.variants[i]);
         }
 
         if (worst_dist <= 1.0 || worst_u < 0) {
@@ -722,11 +713,38 @@ SabreRouter::find_constrained_swaps(
         return {{}, pi};
     }
 
-    const SwapCacheKey cache_key{initial_packed, target_packed, k};
     const bool use_neighbor =
         neighbor_info != nullptr && neighbor_info->uses_tiebreak();
 
-    if (swap_cache && !use_neighbor) {
+    auto mix64 = [](uint64_t h, uint64_t v) -> uint64_t {
+        h ^= v + 0x9e3779b97f4a7c15ULL + (h << 6) + (h >> 2);
+        return h;
+    };
+
+    uint64_t neighbor_hash = 0;
+    if (use_neighbor) {
+        neighbor_hash = 0xcbf29ce484222325ULL;
+        for (const auto& edge : neighbor_info->edges) {
+            const int lo = std::min(edge.u_idx, edge.v_idx);
+            const int hi = std::max(edge.u_idx, edge.v_idx);
+            uint64_t w_bits;
+            std::memcpy(&w_bits, &edge.weight, sizeof(w_bits));
+            neighbor_hash = mix64(neighbor_hash, static_cast<uint64_t>(lo));
+            neighbor_hash = mix64(neighbor_hash, static_cast<uint64_t>(hi));
+            neighbor_hash = mix64(neighbor_hash, w_bits);
+        }
+        for (int p : neighbor_info->initial_pos) {
+            neighbor_hash = mix64(neighbor_hash, static_cast<uint64_t>(p));
+        }
+        uint64_t weight_bits;
+        const double weight_val = neighbor_info->weight;
+        std::memcpy(&weight_bits, &weight_val, sizeof(weight_bits));
+        neighbor_hash = mix64(neighbor_hash, weight_bits);
+    }
+
+    const SwapCacheKey cache_key{initial_packed, target_packed, k, neighbor_hash};
+
+    if (swap_cache) {
         auto it = swap_cache->find(cache_key);
         if (it != swap_cache->end()) {
             auto result_pi = apply_swaps_to_pi(pi, it->second);
@@ -858,7 +876,7 @@ SabreRouter::find_constrained_swaps(
             std::reverse(path.begin(), path.end());
 
             auto result_pi = apply_swaps_to_pi(pi, path);
-            if (swap_cache && !use_neighbor) {
+            if (swap_cache) {
                 (*swap_cache)[cache_key] = path;
             }
             return {path, result_pi};
@@ -1103,37 +1121,32 @@ double SabreRouter::entry_future_cost(
     const CanonicalEntry& entry,
     const std::vector<int>& pi
 ) const {
-    if (!entry.variants.empty()) {
-        const size_t limit = (
+    if (entry.variants.empty()) {
+        return 0.0;
+    }
+    const size_t limit = (
+        config_.future_cost_mode == "topk_min"
+    )
+        ? entry.variants.size()
+        : std::min<size_t>(1, entry.variants.size());
+    double best = std::numeric_limits<double>::infinity();
+    for (size_t i = 0; i < limit; i++) {
+        const auto& variant = entry.variants[i];
+        const double cnot_weight = (
             config_.future_cost_mode == "topk_min"
         )
-            ? entry.variants.size()
-            : std::min<size_t>(1, entry.variants.size());
-        double best = std::numeric_limits<double>::infinity();
-        for (size_t i = 0; i < limit; i++) {
-            const auto& variant = entry.variants[i];
-            const double cnot_weight = (
-                config_.future_cost_mode == "topk_min"
-            )
-                ? config_.future_candidate_weight
-                : 0.0;
-            const double cost = routing_objective(
-                variant_routing_cost(variant, pi),
-                variant.cnot,
-                cnot_weight
-            );
-            if (cost < best) {
-                best = cost;
-            }
+            ? config_.future_candidate_weight
+            : 0.0;
+        const double cost = routing_objective(
+            variant_routing_cost(variant, pi),
+            variant.cnot,
+            cnot_weight
+        );
+        if (cost < best) {
+            best = cost;
         }
-        return std::isfinite(best) ? best : 0.0;
     }
-
-    CanonicalEntry::FutureVariant primary;
-    primary.edges_u = entry.edges_u;
-    primary.edges_v = entry.edges_v;
-    primary.cnot = entry.cnot;
-    return routing_objective(variant_routing_cost(primary, pi), primary.cnot, 0.0);
+    return std::isfinite(best) ? best : 0.0;
 }
 
 double SabreRouter::compute_routing_cost(

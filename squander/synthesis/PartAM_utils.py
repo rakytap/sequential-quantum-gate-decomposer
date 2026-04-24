@@ -13,6 +13,28 @@ from squander.gates.qgd_Circuit import qgd_Circuit as Circuit
 # ============================================================================
 # SWAP Routing Algorithms
 # ============================================================================
+def _neighbor_signature(neighbor_info):
+    """Stable hash-friendly signature of an active neighbor_info.
+
+    Returns None when the neighbor heuristic is inactive (no info, zero
+    weight, or empty edge list) — callers treat all such calls as cache-
+    compatible.  Otherwise returns a tuple of (sorted edges as
+    (min(u,v), max(u,v), weight), initial_pos tuple, rounded weight).
+    """
+    if neighbor_info is None:
+        return None
+    weight = neighbor_info.get('weight', 0.0)
+    edges = neighbor_info.get('edges') or ()
+    if weight == 0.0 or not edges:
+        return None
+    canonical_edges = tuple(sorted(
+        (min(int(u), int(v)), max(int(u), int(v)), float(w))
+        for u, v, w in edges
+    ))
+    initial_pos = tuple(int(p) for p in neighbor_info.get('initial_pos', ()))
+    return (canonical_edges, initial_pos, round(float(weight), 6))
+
+
 def find_constrained_swaps_partial(pi_A, pi_B_dict, dist_matrix, adj=None, neighbor_info=None):
     """
     Route partition qubits to their target physical positions using A* over
@@ -529,15 +551,14 @@ class PartitionCandidate:
         pi_list = [int(x) for x in pi]
         n = len(pi_list)
 
-        # Check cache if provided (Bug A: skip cache when neighbor heuristic is active,
-        # since cached paths were computed with different future context)
-        use_cache = (neighbor_info is None or
-                      neighbor_info.get('weight', 0) == 0 or
-                      not neighbor_info.get('edges', []))
-        if swap_cache is not None and use_cache:
+        # Cache is keyed on (pi, qbit_map, neighbor_signature). The signature
+        # captures the neighbor-heuristic context so hits across calls with
+        # the same active neighbor_info are safe.
+        if swap_cache is not None:
             pi_tuple = tuple(pi_list)
             qbit_map_frozen = frozenset(qbit_map_input.items())
-            cache_key = (pi_tuple, qbit_map_frozen)
+            neighbor_sig = _neighbor_signature(neighbor_info)
+            cache_key = (pi_tuple, qbit_map_frozen, neighbor_sig)
             if cache_key in swap_cache:
                 swaps, pi_init = swap_cache[cache_key]
             else:

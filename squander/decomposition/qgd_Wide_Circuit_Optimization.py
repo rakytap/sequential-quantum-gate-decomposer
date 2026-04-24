@@ -2040,7 +2040,7 @@ class qgd_Wide_Circuit_Optimization:
             if self.config.get("use_osr", False) or self.config.get(
                 "use_graph_search", False
             ):
-                part_size_end = min(4, circ.get_Qbit_Num())
+                part_size_end = min(3, circ.get_Qbit_Num())
             count = CNOTGateCount(circ, 0)
             fingerprint_dict = {}
             for max_part_size in range(part_size_start, part_size_end + 1):
