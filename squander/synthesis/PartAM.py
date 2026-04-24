@@ -772,11 +772,7 @@ class qgd_Partition_Aware_Mapping:
             if n_trials > 1
             else None
         )
-        vf2_cutoff = max(1, int(n_trials * 0.05))
-        if trial_idx < vf2_cutoff:
-            pi = seeded_pi.copy()
-        else:
-            pi = rng.permutation(N)
+        pi = self._sample_initial_layout(trial_idx, n_trials, seeded_pi, rng)
 
         for iteration in range(n_iterations):
             F_rev = self.get_final_layer(DAG, N, layout_partitions)
@@ -1232,6 +1228,58 @@ class qgd_Partition_Aware_Mapping:
             p2v[P1], p2v[P2] = q2, q1
             pi_new[q1], pi_new[q2] = P2, P1
         return pi_new
+
+    def _perturb_layout(self, base_pi, num_swaps, rng):
+        if num_swaps <= 0 or rng is None or not self._adj:
+            return np.asarray(base_pi, dtype=np.int64).copy()
+
+        swaps = []
+        N = len(base_pi)
+        for _ in range(num_swaps):
+            phys = int(rng.randint(N))
+            retries = 0
+            while not self._adj[phys] and retries < N:
+                phys = (phys + 1) % N
+                retries += 1
+            if not self._adj[phys]:
+                break
+            nb = int(self._adj[phys][rng.randint(len(self._adj[phys]))])
+            swaps.append((min(phys, nb), max(phys, nb)))
+
+        if not swaps:
+            return np.asarray(base_pi, dtype=np.int64).copy()
+
+        return np.asarray(
+            self._apply_swaps_to_pi(base_pi, swaps), dtype=np.int64
+        )
+
+    def _sample_initial_layout(self, trial_idx, n_trials, seeded_pi, rng):
+        seeded_pi = np.asarray(seeded_pi, dtype=np.int64)
+        if n_trials <= 1 or rng is None:
+            return seeded_pi.copy()
+
+        mirrored_pi = (len(seeded_pi) - 1) - seeded_pi
+
+        if trial_idx == 0:
+            return seeded_pi.copy()
+        if trial_idx == 1:
+            return mirrored_pi.copy()
+
+        local_cutoff = max(3, int(np.ceil(n_trials * 0.6)))
+        if trial_idx < local_cutoff:
+            local_idx = trial_idx - 2
+            band_idx = local_idx // 2
+            local_budget = max(1, local_cutoff - 2)
+            phase = band_idx / max(1, local_budget // 2)
+            num_swaps = (
+                1 + (band_idx % 3)
+                if phase < 0.5
+                else 4 + (band_idx % 5)
+            )
+            base = seeded_pi if local_idx % 2 == 0 else mirrored_pi
+            return self._perturb_layout(base, num_swaps, rng)
+
+        return rng.permutation(len(seeded_pi))
 
     def _bfs_shortest_path(self, src, dst):
         if src == dst:

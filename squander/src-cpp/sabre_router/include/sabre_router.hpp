@@ -341,6 +341,21 @@ private:
     // Random permutation of [0..N-1]
     std::vector<int> random_permutation(int n, std::mt19937& rng) const;
 
+    // Apply a small random walk on topology edges to diversify a seeded layout.
+    std::vector<int> perturb_layout(
+        const std::vector<int>& base,
+        int num_swaps,
+        std::mt19937& rng
+    ) const;
+
+    // Stratified initial-layout sampling with the same total trial budget.
+    std::vector<int> sample_initial_layout(
+        int trial_idx,
+        int n_trials,
+        const std::vector<int>& seeded_pi,
+        std::mt19937& rng
+    ) const;
+
     // Build P_route_inv: the inverse permutation used for routing
     std::vector<int> build_route_inv(const std::vector<int>& P, bool reverse) const;
 

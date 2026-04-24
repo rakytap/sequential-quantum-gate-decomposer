@@ -167,6 +167,85 @@ std::vector<int> SabreRouter::random_permutation(int n, std::mt19937& rng) const
     return perm;
 }
 
+std::vector<int> SabreRouter::perturb_layout(
+    const std::vector<int>& base,
+    int num_swaps,
+    std::mt19937& rng
+) const {
+    if (num_swaps <= 0 || adj_.empty()) {
+        return base;
+    }
+
+    std::vector<std::pair<int, int>> swaps;
+    swaps.reserve(num_swaps);
+    std::uniform_int_distribution<int> phys_dist(0, N_ - 1);
+
+    for (int step = 0; step < num_swaps; step++) {
+        int phys = phys_dist(rng);
+        int retries = 0;
+        while (adj_[phys].empty() && retries < N_) {
+            phys = (phys + 1) % N_;
+            retries++;
+        }
+        if (adj_[phys].empty()) {
+            break;
+        }
+        std::uniform_int_distribution<int> nb_dist(
+            0, static_cast<int>(adj_[phys].size()) - 1
+        );
+        int nb = adj_[phys][nb_dist(rng)];
+        swaps.push_back({std::min(phys, nb), std::max(phys, nb)});
+    }
+
+    if (swaps.empty()) {
+        return base;
+    }
+
+    return apply_swaps_to_pi(base, swaps);
+}
+
+std::vector<int> SabreRouter::sample_initial_layout(
+    int trial_idx,
+    int n_trials,
+    const std::vector<int>& seeded_pi,
+    std::mt19937& rng
+) const {
+    if (n_trials <= 1) {
+        return seeded_pi;
+    }
+
+    std::vector<int> mirrored_pi(N_);
+    for (int q = 0; q < N_; q++) {
+        mirrored_pi[q] = (N_ - 1) - seeded_pi[q];
+    }
+
+    if (trial_idx == 0) {
+        return seeded_pi;
+    }
+    if (trial_idx == 1) {
+        return mirrored_pi;
+    }
+
+    const int local_cutoff = std::max(
+        3, static_cast<int>(std::ceil(n_trials * 0.6))
+    );
+    if (trial_idx < local_cutoff) {
+        const int local_idx = trial_idx - 2;
+        const int band_idx = local_idx / 2;
+        const int local_budget = std::max(1, local_cutoff - 2);
+        const double phase = static_cast<double>(band_idx)
+            / std::max(1, local_budget / 2);
+        const int num_swaps = (phase < 0.5)
+            ? (1 + (band_idx % 3))
+            : (4 + (band_idx % 5));
+        const std::vector<int>& base =
+            (local_idx % 2 == 0) ? seeded_pi : mirrored_pi;
+        return perturb_layout(base, num_swaps, rng);
+    }
+
+    return random_permutation(N_, rng);
+}
+
 // ---------------------------------------------------------------------------
 // Helper: build P_route_inv
 // ---------------------------------------------------------------------------
@@ -1429,14 +1508,9 @@ TrialResult SabreRouter::run_trial(
     std::mt19937 rng_gen(config_.random_seed + trial_idx);
     std::mt19937* rng = (n_trials > 1) ? &rng_gen : nullptr;
 
-    // vf2_cutoff: first 5% of trials use seeded layout
-    int vf2_cutoff = std::max(1, static_cast<int>(n_trials * 0.05));
-    std::vector<int> pi;
-    if (trial_idx < vf2_cutoff) {
-        pi = seeded_pi;
-    } else {
-        pi = random_permutation(N_, rng_gen);
-    }
+    std::vector<int> pi = sample_initial_layout(
+        trial_idx, n_trials, seeded_pi, rng_gen
+    );
 
     auto F_rev = get_final_layer();
     auto F_fwd = get_initial_layer();
