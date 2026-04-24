@@ -136,26 +136,22 @@ class qgd_Partition_Aware_Mapping:
         self.config.setdefault('topology', None)
         self.config.setdefault('routed', False)
         self.config.setdefault('partition_strategy','ilp')
-        self.config.setdefault('optimizer', 'BFGS2')
+        self.config.setdefault('optimizer', 'BFGS')
         self.config.setdefault('use_basin_hopping', 1)
         self.config.setdefault('bh_T', 1.0)
         self.config.setdefault('bh_stepsize', 0.5)
         self.config.setdefault('bh_interval', 50)
         self.config.setdefault('bh_target_accept_rate', 0.5)
         self.config.setdefault('bh_stepwise_factor', 0.9)
-        self.config.setdefault('use_osr', 1)
-        self.config.setdefault("use_graph_search", 1)
+        self.config.setdefault('use_osr', 0)
+        self.config.setdefault("use_graph_search", 0)
         self.config.setdefault('n_layout_trials', 1)
-        self.config.setdefault('score_tolerance', 0.05)
-        self.config.setdefault('trial_swap_cnot_cost', 3)
         self.config.setdefault('random_seed', 42)
         self.config.setdefault('cleanup', True)
         self.config.setdefault('prefilter_top_k', 50)
         self.config.setdefault('cleanup_top_k', 3)
-        self.config.setdefault('decay_delta', 0.1)
-        self.config.setdefault('decay_reset_interval', 5)
-        self.config.setdefault('release_valve_enabled', True)
-        self.config.setdefault('release_valve_threshold', 20)
+        self.config.setdefault('decay_delta', 0.001)  # Qiskit LightSABRE DECAY_RATE
+        self.config.setdefault('swap_burst_budget', 5)  # Qiskit LightSABRE DECAY_RESET_INTERVAL
         self.config.setdefault('path_tiebreak_weight', 0.2)
         # The neighbor heuristic is normalized to [0, 1] and added to A*'s f-value.
         # g-deltas are integer and h-deltas are half-integer, so preserving
@@ -167,9 +163,7 @@ class qgd_Partition_Aware_Mapping:
                 self.config['path_tiebreak_weight'],
             )
             self.config['path_tiebreak_weight'] = 0.49
-        self.config.setdefault('future_cost_mode', 'canonical')
-        self.config.setdefault('future_candidate_top_k', 4)
-        self.config.setdefault('future_candidate_weight', 1.0)
+        self.config.setdefault('cnot_cost', 0.1 / 15.0)
         strategy = self.config['strategy']
         self.config.setdefault('parallel_layout_trials', False)
         self.config.setdefault('layout_trial_workers', 0)
@@ -926,33 +920,15 @@ class qgd_Partition_Aware_Mapping:
         cfg.max_E_size = self.config.get('max_E_size', 20)
         cfg.max_lookahead = self.config.get('max_lookahead', 4)
         cfg.E_weight = self.config.get('E_weight', 0.5)
-        cfg.E_alpha = self.config.get('E_alpha', 0.9)
-        cfg.local_cost_weight = self.config.get('local_cost_weight', 0.1)
-        cfg.swap_cost = self.config.get('swap_cost', 15.0)
-        cfg.score_tolerance = self.config.get('score_tolerance', 0.05)
-        cfg.trial_swap_cnot_cost = self.config.get('trial_swap_cnot_cost', 3)
+        cfg.E_alpha = self.config.get('E_alpha', 1.0)
+        cfg.cnot_cost = self.config.get('cnot_cost', 0.1 / 15.0)
         cfg.sabre_iterations = n_iterations
         cfg.n_layout_trials = max(1, n_trials)
         cfg.random_seed = random_seed
-        cfg.decay_delta = self.config.get('decay_delta', 0.1)
-        cfg.decay_reset_interval = self.config.get('decay_reset_interval', 5)
-        cfg.release_valve_enabled = self.config.get(
-            'release_valve_enabled', True
-        )
-        cfg.release_valve_threshold = self.config.get(
-            'release_valve_threshold', 20
-        )
+        cfg.decay_delta = self.config.get('decay_delta', 0.001)
+        cfg.swap_burst_budget = self.config.get('swap_burst_budget', 5)
         cfg.path_tiebreak_weight = self.config.get(
             'path_tiebreak_weight', 0.2
-        )
-        cfg.future_cost_mode = self.config.get(
-            'future_cost_mode', 'canonical'
-        )
-        cfg.future_candidate_top_k = self.config.get(
-            'future_candidate_top_k', 4
-        )
-        cfg.future_candidate_weight = self.config.get(
-            'future_candidate_weight', 1.0
         )
         canonical_fwd = self._build_canonical_neighbor_data(
             scoring_partitions, reverse=False
@@ -986,23 +962,154 @@ class qgd_Partition_Aware_Mapping:
         )
 
         if not use_parallel:
-            return [
+            trial_results = [
                 router.run_trial(idx, seeded_pi_list, n_iterations, n_trials_actual)
                 for idx in trial_indices
             ]
+        else:
+            from concurrent.futures import ThreadPoolExecutor
+            workers = self.config.get("layout_trial_workers", 0)
+            if workers <= 0:
+                workers = min(n_trials_actual, _available_cpus())
 
-        from concurrent.futures import ThreadPoolExecutor
-        workers = self.config.get("layout_trial_workers", 0)
-        if workers <= 0:
-            workers = min(n_trials_actual, _available_cpus())
+            with ThreadPoolExecutor(max_workers=workers) as pool:
+                futures = [
+                    pool.submit(router.run_trial, idx, seeded_pi_list, n_iterations, n_trials_actual)
+                    for idx in trial_indices
+                ]
+                trial_results = [f.result() for f in futures]
 
-        with ThreadPoolExecutor(max_workers=workers) as pool:
-            futures = [
-                pool.submit(router.run_trial, idx, seeded_pi_list, n_iterations, n_trials_actual)
-                for idx in trial_indices
-            ]
-            return [f.result() for f in futures]
+        heuristic_ranked = sorted(trial_results, key=lambda x: x[0])
+        actual_rank_default = min(
+            max(1, self.config.get("cleanup_top_k", 3) * 2),
+            n_trials_actual,
+        )
+        actual_rank_top_k = self.config.get(
+            "actual_routing_rank_top_k", actual_rank_default
+        )
+        if actual_rank_top_k is None or actual_rank_top_k <= 0:
+            actual_rank_top_k = len(heuristic_ranked)
+        actual_rank_top_k = min(int(actual_rank_top_k), len(heuristic_ranked))
+
+        ranked = []
+        for heuristic_cost, trial_pi in heuristic_ranked[:actual_rank_top_k]:
+            actual_cnot, pi_out, pi_init, steps = router.route_forward(
+                [int(x) for x in trial_pi]
+            )
+            ranked.append((actual_cnot, pi_out, heuristic_cost, pi_init, steps))
+        ranked.sort(key=lambda x: (x[0], x[2]))
+        ranked.extend(
+            (float("inf"), pi, cost, None, None)
+            for cost, pi in heuristic_ranked[actual_rank_top_k:]
+        )
+        return ranked
         
+    @staticmethod
+    def _snapshot_single_qubit_circuits(optimized_partitions):
+        return {
+            i: p.circuit.copy()
+            for i, p in enumerate(optimized_partitions)
+            if isinstance(p, SingleQubitPartitionResult)
+        }
+
+    @staticmethod
+    def _restore_single_qubit_circuits(optimized_partitions, saved_circuits):
+        for idx, orig in saved_circuits.items():
+            optimized_partitions[idx].circuit = orig.copy()
+
+    def _partition_order_from_cpp_steps(
+        self, steps, optimized_partitions, candidate_cache, N
+    ):
+        partition_order = []
+        for step in steps:
+            kind = step[0]
+            if kind == "swap":
+                swaps = [(int(u), int(v)) for u, v in step[1]]
+                if swaps:
+                    partition_order.append(construct_swap_circuit(swaps, N))
+            elif kind == "partition":
+                partition_idx = int(step[1])
+                candidate_idx = int(step[2])
+                partition_order.append(
+                    candidate_cache[partition_idx][candidate_idx]
+                )
+            elif kind == "single":
+                partition_idx = int(step[1])
+                physical_qubit = int(step[2])
+                part = optimized_partitions[partition_idx]
+                circuit_qubit = int(part.circuit.get_Qbits()[0])
+                part.circuit = part.circuit.Remap_Qbits(
+                    {circuit_qubit: physical_qubit}, N
+                )
+                partition_order.append(part)
+        return partition_order
+
+
+    def _rank_layout_trials_by_actual_routing(
+        self,
+        trial_results,
+        DAG,
+        IDAG,
+        optimized_partitions,
+        scoring_partitions,
+        D,
+        candidate_cache,
+        rank_top_k=None,
+    ):
+        """Reroute a bounded candidate set and rank it by actual CNOT count."""
+        if trial_results and len(trial_results[0]) >= 5:
+            return sorted(trial_results, key=lambda x: (x[0], x[2]))
+        heuristic_ranked = sorted(trial_results, key=lambda x: x[0])
+        if rank_top_k is None or rank_top_k <= 0:
+            rank_top_k = len(heuristic_ranked)
+        rank_top_k = min(int(rank_top_k), len(heuristic_ranked))
+        actual_candidates = heuristic_ranked[:rank_top_k]
+        heuristic_tail = heuristic_ranked[rank_top_k:]
+
+        saved_sq_circuits = self._snapshot_single_qubit_circuits(
+            optimized_partitions
+        )
+        ranked_results = []
+        old_progressbar = self.config.get("progressbar", 0)
+        self.config["progressbar"] = False
+        try:
+            for heuristic_cost, trial_pi in actual_candidates:
+                self._restore_single_qubit_circuits(
+                    optimized_partitions, saved_sq_circuits
+                )
+                F_trial = self.get_initial_layer(
+                    IDAG, len(trial_pi), optimized_partitions
+                )
+                partition_order, _, _ = self.Heuristic_Search(
+                    F_trial,
+                    np.asarray(trial_pi, dtype=np.int64).copy(),
+                    DAG,
+                    IDAG,
+                    optimized_partitions,
+                    scoring_partitions,
+                    D,
+                    candidate_cache=candidate_cache,
+                )
+                trial_circuit, _ = self.Construct_circuit_from_HS(
+                    partition_order, optimized_partitions, len(trial_pi)
+                )
+                actual_cnot = trial_circuit.get_Gate_Nums().get("CNOT", 0)
+                ranked_results.append((actual_cnot, trial_pi, heuristic_cost, None, None))
+        finally:
+            if old_progressbar is None:
+                self.config.pop("progressbar", None)
+            else:
+                self.config["progressbar"] = old_progressbar
+            self._restore_single_qubit_circuits(
+                optimized_partitions, saved_sq_circuits
+            )
+
+        ranked_results.sort(key=lambda x: (x[0], x[2]))
+        ranked_results.extend(
+            (float("inf"), pi, cost, None, None) for cost, pi in heuristic_tail
+        )
+        return ranked_results
+
     def Partition_Aware_Mapping(
         self, circ: Circuit, orig_parameters: np.ndarray
     ):
@@ -1065,7 +1172,23 @@ class qgd_Partition_Aware_Mapping:
                 n_trials=max(1, n_trials),
                 random_seed=random_seed,
             )
-            trial_results.sort(key=lambda x: x[0])
+            actual_rank_default = min(
+                max(1, self.config.get("cleanup_top_k", 3) * 2),
+                max(1, n_trials),
+            )
+            actual_rank_top_k = self.config.get(
+                "actual_routing_rank_top_k", actual_rank_default
+            )
+            trial_results = self._rank_layout_trials_by_actual_routing(
+                trial_results,
+                DAG,
+                IDAG,
+                optimized_partitions,
+                scoring_partitions,
+                D,
+                candidate_cache,
+                rank_top_k=actual_rank_top_k,
+            )
 
             if do_cleanup:
                 from squander.decomposition.qgd_Wide_Circuit_Optimization import (
@@ -1080,11 +1203,9 @@ class qgd_Partition_Aware_Mapping:
                 cleanup_config['global_min'] = True
                 wco = qgd_Wide_Circuit_Optimization(cleanup_config)
 
-                saved_sq_circuits = {
-                    i: p.circuit.copy()
-                    for i, p in enumerate(optimized_partitions)
-                    if isinstance(p, SingleQubitPartitionResult)
-                }
+                saved_sq_circuits = self._snapshot_single_qubit_circuits(
+                    optimized_partitions
+                )
 
                 cleanup_top_k = self.config.get('cleanup_top_k', 3)
                 top_layouts = trial_results[:cleanup_top_k]
@@ -1097,23 +1218,30 @@ class qgd_Partition_Aware_Mapping:
                 best_pre_cleanup = None
                 cleanup_total = 0.0
 
-                for _, trial_pi in top_layouts:
-                    for idx, orig in saved_sq_circuits.items():
-                        optimized_partitions[idx].circuit = orig.copy()
-
-                    F_trial = self.get_initial_layer(
-                        IDAG, N, optimized_partitions
+                for _, trial_pi, _, trace_pi_init, route_steps in top_layouts:
+                    self._restore_single_qubit_circuits(
+                        optimized_partitions, saved_sq_circuits
                     )
-                    partition_order, pi_out, pi_init = self.Heuristic_Search(
-                        F_trial,
-                        trial_pi.copy(),
-                        DAG,
-                        IDAG,
-                        optimized_partitions,
-                        scoring_partitions,
-                        D,
-                        candidate_cache=candidate_cache,
-                    )
+                    if route_steps is not None:
+                        partition_order = self._partition_order_from_cpp_steps(
+                            route_steps, optimized_partitions, candidate_cache, N
+                        )
+                        pi_out = np.asarray(trial_pi, dtype=np.int64)
+                        pi_init = np.asarray(trace_pi_init, dtype=np.int64)
+                    else:
+                        F_trial = self.get_initial_layer(
+                            IDAG, N, optimized_partitions
+                        )
+                        partition_order, pi_out, pi_init = self.Heuristic_Search(
+                            F_trial,
+                            trial_pi.copy(),
+                            DAG,
+                            IDAG,
+                            optimized_partitions,
+                            scoring_partitions,
+                            D,
+                            candidate_cache=candidate_cache,
+                        )
 
                     trial_circuit, trial_params = self.Construct_circuit_from_HS(
                         partition_order, optimized_partitions, N
@@ -1146,19 +1274,32 @@ class qgd_Partition_Aware_Mapping:
                 pi = best_pi
 
             else:
-                _, best_pi = trial_results[0]
+                _, best_pi, _, trace_pi_init, route_steps = trial_results[0]
 
-                F = self.get_initial_layer(IDAG, N, optimized_partitions)
-                partition_order, pi, pi_initial = self.Heuristic_Search(
-                    F,
-                    best_pi.copy(),
-                    DAG,
-                    IDAG,
-                    optimized_partitions,
-                    scoring_partitions,
-                    D,
-                    candidate_cache=candidate_cache,
-                )
+                if route_steps is not None:
+                    saved_sq_circuits = self._snapshot_single_qubit_circuits(
+                        optimized_partitions
+                    )
+                    self._restore_single_qubit_circuits(
+                        optimized_partitions, saved_sq_circuits
+                    )
+                    partition_order = self._partition_order_from_cpp_steps(
+                        route_steps, optimized_partitions, candidate_cache, N
+                    )
+                    pi = np.asarray(best_pi, dtype=np.int64)
+                    pi_initial = np.asarray(trace_pi_init, dtype=np.int64)
+                else:
+                    F = self.get_initial_layer(IDAG, N, optimized_partitions)
+                    partition_order, pi, pi_initial = self.Heuristic_Search(
+                        F,
+                        best_pi.copy(),
+                        DAG,
+                        IDAG,
+                        optimized_partitions,
+                        scoring_partitions,
+                        D,
+                        candidate_cache=candidate_cache,
+                    )
                 final_circuit, final_parameters = self.Construct_circuit_from_HS(
                     partition_order, optimized_partitions, N
                 )
@@ -1196,31 +1337,21 @@ class qgd_Partition_Aware_Mapping:
     # ------------------------------------------------------------------------
 
     def _select_best_candidate(self, partition_candidates, scores, rng=None):
-        """Select best candidate, with optional stochastic tie-breaking."""
+        """Select the lowest-scoring candidate deterministically."""
+        del rng
         scores_array = np.array(scores)
-        min_score = np.min(scores_array)
-        tolerance = self.config.get('score_tolerance', 0.05)
-
-        if rng is not None and min_score > 0:
-            threshold = min_score * (1 + tolerance)
-            close_indices = np.where(scores_array <= threshold)[0]
-            if len(close_indices) > 1:
-                return partition_candidates[rng.choice(close_indices)]
-            return partition_candidates[close_indices[0]]
-        else:
-            return partition_candidates[np.argmin(scores_array)]
+        return partition_candidates[np.argmin(scores_array)]
 
     def _prefilter_candidates(self, partition_candidates, pi, D, top_k, reverse=False):
         """Pre-filter candidates using cheap swap-count estimate before full A* scoring."""
         if len(partition_candidates) <= top_k:
             return partition_candidates
-        local_cost_weight = self.config.get('local_cost_weight', 0.1)
-        swap_cost = self.config.get('swap_cost', 15.0)
+        cnot_cost = self.config.get('cnot_cost', 0.1 / 15.0)
         estimates = np.array([
             self._routing_objective(
-                pc.estimate_swap_count(pi, D, reverse=reverse) * swap_cost,
+                pc.estimate_swap_count(pi, D, reverse=reverse),
                 pc.cnot_count,
-                local_cost_weight,
+                cnot_cost,
             )
             for pc in partition_candidates
         ])
@@ -1237,17 +1368,17 @@ class qgd_Partition_Aware_Mapping:
     def _routing_objective(
         route_cost,
         cnot_count,
-        local_cost_weight,
+        cnot_cost,
         cnot_weight=1.0,
         decay_factor=1.0,
     ):
         return decay_factor * (
             float(route_cost)
-            + cnot_weight * local_cost_weight * float(cnot_count)
+            + cnot_weight * cnot_cost * float(cnot_count)
         )
 
     def _apply_decay_for_swaps(self, swaps, decay):
-        delta = self.config.get("decay_delta", 0.1)
+        delta = self.config.get("decay_delta", 0.001)
         if delta <= 0:
             return
         for u, v in swaps:
@@ -1345,89 +1476,15 @@ class qgd_Partition_Aware_Mapping:
         return []
 
     @staticmethod
-    def _entry_variants(entry, future_cost_mode="canonical"):
-        variants = entry.get("variants")
-        if variants:
-            if future_cost_mode == "topk_min":
-                return variants
-            return variants[:1]
-        return (entry,)
-
-    @staticmethod
-    def _variant_routing_cost(variant, output_perm_arr, D_arr, swap_cost):
-        eu = variant["edges_u"]
+    def _entry_future_cost(entry, output_perm_arr, D_arr):
+        eu = entry.get("edges_u")
         if eu is None:
             return 0.0
         phys_u = output_perm_arr[eu]
-        phys_v = output_perm_arr[variant["edges_v"]]
-        return float(swap_cost * np.maximum(0, D_arr[phys_u, phys_v] - 1).sum())
+        phys_v = output_perm_arr[entry["edges_v"]]
+        return float(np.maximum(0, D_arr[phys_u, phys_v] - 1).sum())
 
-    @staticmethod
-    def _entry_future_cost(
-        entry,
-        output_perm_arr,
-        D_arr,
-        swap_cost,
-        local_cost_weight,
-        future_cost_mode="canonical",
-        future_candidate_weight=1.0,
-    ):
-        variants = qgd_Partition_Aware_Mapping._entry_variants(
-            entry, future_cost_mode=future_cost_mode
-        )
-        best = None
-        for variant in variants:
-            route_cost = qgd_Partition_Aware_Mapping._variant_routing_cost(
-                variant, output_perm_arr, D_arr, swap_cost
-            )
-            cnot_weight = (
-                future_candidate_weight
-                if future_cost_mode == "topk_min"
-                else 0.0
-            )
-            variant_cost = qgd_Partition_Aware_Mapping._routing_objective(
-                route_cost,
-                variant["cnot"],
-                local_cost_weight,
-                cnot_weight=cnot_weight,
-            )
-            if best is None or variant_cost < best:
-                best = variant_cost
-        return 0.0 if best is None else best
-
-    @staticmethod
-    def _best_release_variant(entry, pi_arr, D_arr, future_cost_mode="canonical"):
-        best = None
-        for variant in qgd_Partition_Aware_Mapping._entry_variants(
-            entry, future_cost_mode=future_cost_mode
-        ):
-            eu = variant["edges_u"]
-            if eu is None:
-                continue
-            ev = variant["edges_v"]
-            phys_u = pi_arr[eu]
-            phys_v = pi_arr[ev]
-            dists = D_arr[phys_u, phys_v]
-            if dists.size == 0:
-                continue
-            route_sum = float(np.maximum(0, dists - 1).sum())
-            worst_idx = int(np.argmax(dists))
-            worst_d = float(dists[worst_idx])
-            worst_pair = (int(eu[worst_idx]), int(ev[worst_idx]))
-            if (
-                best is None
-                or route_sum < best[0]
-                or (route_sum == best[0] and worst_d < best[1])
-                or (
-                    route_sum == best[0]
-                    and worst_d == best[1]
-                    and worst_pair < best[2]
-                )
-            ):
-                best = (route_sum, worst_d, worst_pair)
-        return best
-
-    def _release_valve(self, F, pi, D, canonical_data, future_cost_mode="canonical"):
+    def _release_valve(self, F, pi, D, canonical_data):
         pi_arr = np.asarray(pi, dtype=np.intp)
         D_arr = np.asarray(D)
         best = None
@@ -1435,21 +1492,23 @@ class qgd_Partition_Aware_Mapping:
             entry = canonical_data.get(p_idx)
             if entry is None:
                 continue
-            best_variant = self._best_release_variant(
-                entry,
-                pi_arr,
-                D_arr,
-                future_cost_mode=future_cost_mode,
-            )
-            if best_variant is None:
+            eu = entry.get("edges_u")
+            if eu is None:
                 continue
-            _, worst_d, worst_pair = best_variant
-            if worst_d <= 1 or worst_pair is None:
+            ev = entry["edges_v"]
+            phys_u = pi_arr[eu]
+            phys_v = pi_arr[ev]
+            dists = D_arr[phys_u, phys_v]
+            if dists.size == 0:
+                continue
+            worst_idx = int(np.argmax(dists))
+            worst_d = float(dists[worst_idx])
+            if worst_d <= 1:
                 continue
             if best is None or worst_d > best[0] or (
                 worst_d == best[0] and p_idx < best[1]
             ):
-                best = (worst_d, p_idx, worst_pair[0], worst_pair[1])
+                best = (worst_d, p_idx, int(eu[worst_idx]), int(ev[worst_idx]))
 
         if best is None:
             return [], list(pi)
@@ -1479,7 +1538,6 @@ class qgd_Partition_Aware_Mapping:
         weight=0.2,
         W=0.5,
         alpha=0.9,
-        future_cost_mode="canonical",
     ):
         if canonical_data is None or weight <= 0:
             return None
@@ -1493,26 +1551,18 @@ class qgd_Partition_Aware_Mapping:
             entry = canonical_data.get(target_idx)
             if entry is None:
                 return
-            variants = [
-                variant
-                for variant in qgd_Partition_Aware_Mapping._entry_variants(
-                    entry, future_cost_mode=future_cost_mode
-                )
-                if variant["edges_u"] is not None
-            ]
-            if not variants:
+            eu = entry.get("edges_u")
+            if eu is None:
                 return
-            variant_weight = edge_weight / len(variants)
-            for variant in variants:
-                for u, v in zip(variant["edges_u"], variant["edges_v"]):
-                    u = int(u)
-                    v = int(v)
-                    qubits.add(u)
-                    qubits.add(v)
-                    key = (u, v) if u <= v else (v, u)
-                    edge_weights[key] = (
-                        edge_weights.get(key, 0.0) + variant_weight
-                    )
+            for u, v in zip(eu, entry["edges_v"]):
+                u = int(u)
+                v = int(v)
+                qubits.add(u)
+                qubits.add(v)
+                key = (u, v) if u <= v else (v, u)
+                edge_weights[key] = (
+                    edge_weights.get(key, 0.0) + edge_weight
+                )
 
         for future_idx in F:
             add_edges(future_idx, 1.0)
@@ -1604,30 +1654,22 @@ class qgd_Partition_Aware_Mapping:
         max_E_size = self.config.get("max_E_size", 20)
         max_lookahead = self.config.get("max_lookahead", 4)
         E_W = self.config.get("E_weight", 0.5)
-        E_alpha = self.config.get("E_alpha", 0.9)
-        future_cost_mode = self.config.get("future_cost_mode", "canonical")
-        future_candidate_weight = self.config.get(
-            "future_candidate_weight", 1.0
-        )
+        E_alpha = self.config.get("E_alpha", 1.0)
+        swap_burst_budget = self.config.get("swap_burst_budget", 5)
 
         canonical_data = self._build_canonical_neighbor_data(
             scoring_partitions, reverse=False
         )
         decay = [1.0] * len(pi)
-        swap_burst = 0
         swap_heavy_partitions = 0
 
         while F:
             if (
-                self.config.get("release_valve_enabled", True)
-                and swap_burst > self.config.get("release_valve_threshold", 20)
+                swap_burst_budget > 0
+                and swap_heavy_partitions >= swap_burst_budget
             ):
                 valve_swaps, pi_bridged = self._release_valve(
-                    F,
-                    pi,
-                    D,
-                    canonical_data,
-                    future_cost_mode=future_cost_mode,
+                    F, pi, D, canonical_data
                 )
                 if valve_swaps:
                     partition_order.append(
@@ -1635,9 +1677,10 @@ class qgd_Partition_Aware_Mapping:
                     )
                     self._apply_decay_for_swaps(valve_swaps, decay)
                     pi = np.asarray(pi_bridged)
-                    swap_burst = 0
+                    swap_heavy_partitions = 0
                     continue
-                swap_burst = 0
+                self._reset_decay(decay)
+                swap_heavy_partitions = 0
 
             partition_candidates = self.obtain_partition_candidates(
             F,
@@ -1686,7 +1729,6 @@ class qgd_Partition_Aware_Mapping:
                         weight=self.config.get("path_tiebreak_weight", 0.2),
                         W=E_W,
                         alpha=E_alpha,
-                        future_cost_mode=future_cost_mode,
                     )
                     prev_partition_idx = cand.partition_idx
                 score, swaps, output_perm = self.score_partition_candidate(
@@ -1701,14 +1743,11 @@ class qgd_Partition_Aware_Mapping:
                     alpha=E_alpha,
                     canonical_data=canonical_data,
                     adj=self._adj,
-                    local_cost_weight=self.config.get("local_cost_weight", 0.1),
-                    swap_cost=self.config.get("swap_cost", 15.0),
+                    cnot_cost=self.config.get("cnot_cost", 0.1 / 15.0),
                     path_tiebreak_weight=self.config.get(
                         "path_tiebreak_weight", 0.2
                     ),
                     decay=decay,
-                    future_cost_mode=future_cost_mode,
-                    future_candidate_weight=future_candidate_weight,
                     cached_neighbor_info=cached_neighbor_info,
                     return_transforms=True,
                 )
@@ -1730,17 +1769,8 @@ class qgd_Partition_Aware_Mapping:
             if swap_order:
                 partition_order.append(construct_swap_circuit(swap_order, len(pi)))
                 self._apply_decay_for_swaps(swap_order, decay)
-                swap_burst += len(swap_order)
                 swap_heavy_partitions += 1
-                if (
-                    self.config.get("decay_reset_interval", 5) > 0
-                    and swap_heavy_partitions
-                    >= self.config.get("decay_reset_interval", 5)
-                ):
-                    self._reset_decay(decay)
-                    swap_heavy_partitions = 0
             else:
-                swap_burst = 0
                 swap_heavy_partitions = 0
                 self._reset_decay(decay)
 
@@ -1796,9 +1826,9 @@ class qgd_Partition_Aware_Mapping:
                     updates (used for backward passes in SABRE iterations).
 
         Returns:
-            (pi, total_cost): final layout and heuristic trial score.
-            Trial ranking uses the same immediate routing objective as the
-            online scorer: weighted SWAP pressure plus weighted local CNOT cost.
+            (pi, total_cost): final layout and layout-only heuristic score.
+            Trial ranking reroutes returned layouts and sorts by actual
+            constructed-circuit CNOT count; this score is only a tie-breaker.
         """
         F = list(F)
         resolved_partitions = [False] * len(DAG)
@@ -1826,46 +1856,36 @@ class qgd_Partition_Aware_Mapping:
         max_E_size = self.config.get("max_E_size", 20)
         max_lookahead = self.config.get("max_lookahead", 4)
         E_W = self.config.get("E_weight", 0.5)
-        E_alpha = self.config.get("E_alpha", 0.9)
-        local_cost_weight = self.config.get("local_cost_weight", 0.1)
-        swap_cost = self.config.get("swap_cost", 15.0)
-        future_cost_mode = self.config.get("future_cost_mode", "canonical")
-        future_candidate_weight = self.config.get(
-            "future_candidate_weight", 1.0
-        )
+        E_alpha = self.config.get("E_alpha", 1.0)
+        cnot_cost = self.config.get("cnot_cost", 0.1 / 15.0)
+        swap_burst_budget = self.config.get("swap_burst_budget", 5)
 
         canonical_data = self._build_canonical_neighbor_data(
             scoring_partitions, reverse=reverse
         )
         decay = [1.0] * len(pi)
-        swap_burst = 0
         swap_heavy_partitions = 0
 
         while F:
             if (
-                self.config.get("release_valve_enabled", True)
-                and swap_burst > self.config.get("release_valve_threshold", 20)
+                swap_burst_budget > 0
+                and swap_heavy_partitions >= swap_burst_budget
             ):
-                valve_swaps, pi = self._release_valve(
-                    F,
-                    pi,
-                    D,
-                    canonical_data,
-                    future_cost_mode=future_cost_mode,
-                )
+                valve_swaps, pi = self._release_valve(F, pi, D, canonical_data)
                 if valve_swaps:
                     total_cost += self._routing_objective(
-                        swap_cost * len(valve_swaps),
+                        len(valve_swaps),
                         0,
-                        local_cost_weight,
+                        cnot_cost,
                         decay_factor=self._decay_factor_for_swaps(
                             valve_swaps, decay
                         ),
                     )
                     self._apply_decay_for_swaps(valve_swaps, decay)
-                    swap_burst = 0
+                    swap_heavy_partitions = 0
                     continue
-                swap_burst = 0
+                self._reset_decay(decay)
+                swap_heavy_partitions = 0
 
             partition_candidates = self.obtain_partition_candidates(
                 F,
@@ -1913,7 +1933,6 @@ class qgd_Partition_Aware_Mapping:
                         weight=self.config.get("path_tiebreak_weight", 0.2),
                         W=E_W,
                         alpha=E_alpha,
-                        future_cost_mode=future_cost_mode,
                     )
                     prev_partition_idx = cand.partition_idx
                 score, swaps, output_perm = self.score_partition_candidate(
@@ -1929,14 +1948,11 @@ class qgd_Partition_Aware_Mapping:
                     reverse=reverse,
                     canonical_data=canonical_data,
                     adj=self._adj,
-                    local_cost_weight=self.config.get("local_cost_weight", 0.1),
-                    swap_cost=self.config.get("swap_cost", 15.0),
+                    cnot_cost=cnot_cost,
                     path_tiebreak_weight=self.config.get(
                         "path_tiebreak_weight", 0.2
                     ),
                     decay=decay,
-                    future_cost_mode=future_cost_mode,
-                    future_candidate_weight=future_candidate_weight,
                     cached_neighbor_info=cached_neighbor_info,
                     return_transforms=True,
                 )
@@ -1956,24 +1972,15 @@ class qgd_Partition_Aware_Mapping:
             if swaps:
                 decay_factor = self._decay_factor_for_swaps(swaps, decay)
             total_cost += self._routing_objective(
-                swap_cost * len(swaps),
+                len(swaps),
                 best.cnot_count,
-                local_cost_weight,
+                cnot_cost,
                 decay_factor=decay_factor,
             )
             if swaps:
                 self._apply_decay_for_swaps(swaps, decay)
-                swap_burst += len(swaps)
                 swap_heavy_partitions += 1
-                if (
-                    self.config.get("decay_reset_interval", 5) > 0
-                    and swap_heavy_partitions
-                    >= self.config.get("decay_reset_interval", 5)
-                ):
-                    self._reset_decay(decay)
-                    swap_heavy_partitions = 0
             else:
-                swap_burst = 0
                 swap_heavy_partitions = 0
                 self._reset_decay(decay)
 
@@ -2038,18 +2045,12 @@ class qgd_Partition_Aware_Mapping:
     # ------------------------------------------------------------------------
 
     def _build_canonical_neighbor_data(self, scoring_partitions, reverse=False):
-        """Build compact future-routing surrogates per partition.
+        """Build a compact future-routing surrogate per partition.
 
-        The first stored variant is the old "canonical" lowest-CNOT surrogate.
-        Additional variants keep distinct future edge patterns alive so the
-        router can score a future partition by its best still-available option.
+        For each partition, pick the edge pattern with the lowest CNOT count;
+        the router uses this as a canonical "best still-available option" when
+        scoring future partitions.
         """
-        future_cost_mode = self.config.get("future_cost_mode", "canonical")
-        top_k = (
-            max(1, int(self.config.get("future_candidate_top_k", 4)))
-            if future_cost_mode == "topk_min"
-            else 1
-        )
         data = {}
         for idx, partition in enumerate(scoring_partitions):
             if partition is None:
@@ -2081,42 +2082,30 @@ class qgd_Partition_Aware_Mapping:
                         variant_map[edge_key] = cnot
             if not variant_map:
                 continue
-            variants = []
-            for edge_key, cnot in sorted(
+            edge_key, cnot = min(
                 variant_map.items(),
                 key=lambda item: (item[1], len(item[0]), item[0]),
-            )[:top_k]:
-                if edge_key:
-                    eu = np.array([e[0] for e in edge_key], dtype=np.intp)
-                    ev = np.array([e[1] for e in edge_key], dtype=np.intp)
-                else:
-                    eu = ev = None
-                variants.append(
-                    {"edges_u": eu, "edges_v": ev, "cnot": cnot}
-                )
-            primary = variants[0]
-            data[idx] = {
-                "edges_u": primary["edges_u"],
-                "edges_v": primary["edges_v"],
-                "cnot": primary["cnot"],
-                "variants": tuple(variants),
-            }
+            )
+            if edge_key:
+                eu = np.array([e[0] for e in edge_key], dtype=np.intp)
+                ev = np.array([e[1] for e in edge_key], dtype=np.intp)
+            else:
+                eu = ev = None
+            data[idx] = {"edges_u": eu, "edges_v": ev, "cnot": cnot}
         return data
 
     @staticmethod
     def score_partition_candidate(partition_candidate, F, pi, scoring_partitions, D, swap_cache,
                                   E=None, W=0.5, alpha=0.9, reverse=False,
                                   canonical_data=None, adj=None,
-                                  local_cost_weight=0.1, swap_cost=15.0,
+                                  cnot_cost=0.1 / 15.0,
                                   path_tiebreak_weight=0.2, decay=None,
-                                  future_cost_mode="canonical",
-                                  future_candidate_weight=1.0,
                                   cached_neighbor_info=None,
                                   return_transforms=False):
         """LightSABRE-style relative scoring (arXiv:2409.08368, eq. 1).
 
-        H = swap_cost * |swaps|
-          + local_cost_weight * cand.cnot_count
+        H = |swaps|
+          + cnot_cost * cand.cnot_count
           + (1/|F'|) * average routing cost over F \\ {cand}
           + (W/|E|)  * alpha^d-decayed routing cost over E
         """
@@ -2132,7 +2121,6 @@ class qgd_Partition_Aware_Mapping:
                 weight=path_tiebreak_weight,
                 W=W,
                 alpha=alpha,
-                future_cost_mode=future_cost_mode,
             )
         swaps, output_perm = partition_candidate.transform_pi(
             pi,
@@ -2148,9 +2136,9 @@ class qgd_Partition_Aware_Mapping:
                 swaps, decay
             )
         score = qgd_Partition_Aware_Mapping._routing_objective(
-            swap_cost * len(swaps),
+            len(swaps),
             partition_candidate.cnot_count,
-            local_cost_weight,
+            cnot_cost,
             decay_factor=decay_factor,
         )
 
@@ -2174,13 +2162,7 @@ class qgd_Partition_Aware_Mapping:
                 continue
             n_other += 1
             f_sum += qgd_Partition_Aware_Mapping._entry_future_cost(
-                entry,
-                output_perm_arr,
-                D_arr,
-                swap_cost,
-                local_cost_weight,
-                future_cost_mode=future_cost_mode,
-                future_candidate_weight=future_candidate_weight,
+                entry, output_perm_arr, D_arr
             )
         if n_other > 0:
             score += f_sum / n_other
@@ -2195,13 +2177,7 @@ class qgd_Partition_Aware_Mapping:
                 if entry is None:
                     continue
                 d_cost = qgd_Partition_Aware_Mapping._entry_future_cost(
-                    entry,
-                    output_perm_arr,
-                    D_arr,
-                    swap_cost,
-                    local_cost_weight,
-                    future_cost_mode=future_cost_mode,
-                    future_candidate_weight=future_candidate_weight,
+                    entry, output_perm_arr, D_arr
                 )
                 e_sum += (alpha ** depth) * d_cost
             score += W * e_sum / len(E)

@@ -37,6 +37,7 @@ struct CandidateData {
     int partition_idx;
     int topology_idx;
     int permutation_idx;
+    int candidate_idx = -1;
     int cnot_count;
 
     // Permutations within the reduced (q*) space
@@ -67,13 +68,7 @@ struct CandidateData {
 struct CanonicalEntry {
     std::vector<int> edges_u; // virtual qubit indices
     std::vector<int> edges_v;
-    int cnot;
-    struct FutureVariant {
-        std::vector<int> edges_u;
-        std::vector<int> edges_v;
-        int cnot = 0;
-    };
-    std::vector<FutureVariant> variants;
+    int cnot = 0;
 };
 
 struct LayoutPartInfo {
@@ -86,22 +81,29 @@ struct SabreConfig {
     int max_E_size = 20;
     int max_lookahead = 4;
     double E_weight = 0.5;
-    double E_alpha = 0.9;
-    double local_cost_weight = 0.1;
-    double swap_cost = 15.0;
-    double score_tolerance = 0.05;
-    int trial_swap_cnot_cost = 3;
+    double E_alpha = 1.0; // LightSABRE uses no per-depth decay; set <1 for SQUANDER-style decay
+    double cnot_cost = 0.1 / 15.0; // weight on candidate.cnot_count; swap cost is fixed at 1.0
     int sabre_iterations = 1;
     int n_layout_trials = 1;
     int random_seed = 42;
-    double decay_delta = 0.1;
-    int decay_reset_interval = 5;
-    bool release_valve_enabled = true;
-    int release_valve_threshold = 20;
+    double decay_delta = 0.001; // Qiskit LightSABRE DECAY_RATE
+    int swap_burst_budget = 5; // Qiskit LightSABRE DECAY_RESET_INTERVAL
     double path_tiebreak_weight = 0.2;
-    std::string future_cost_mode = "canonical";
-    int future_candidate_top_k = 4;
-    double future_candidate_weight = 1.0;
+};
+
+struct RouteStep {
+    int type = 0; // 0=swap, 1=partition, 2=single
+    int partition_idx = -1;
+    int candidate_idx = -1;
+    int physical_qubit = -1;
+    std::vector<std::pair<int,int>> swaps;
+};
+
+struct ForwardRouteResult {
+    std::vector<int> pi_initial;
+    std::vector<int> pi;
+    int cnot_count = 0;
+    std::vector<RouteStep> steps;
 };
 
 struct TrialResult {
@@ -203,6 +205,10 @@ public:
     );
 
     // Thread-safe: all mutable state is stack-local
+    ForwardRouteResult route_forward(
+        const std::vector<int>& pi
+    ) const;
+
     TrialResult run_trial(
         int trial_idx,
         const std::vector<int>& seeded_pi,
@@ -225,7 +231,8 @@ private:
         std::mt19937* rng,
         const std::unordered_map<int, CanonicalEntry>& canonical_data,
         const std::vector<std::vector<int>>& children_graph,
-        const std::vector<std::vector<int>>& parents_graph
+        const std::vector<std::vector<int>>& parents_graph,
+        ForwardRouteResult* route_trace = nullptr
     ) const;
 
     // A* constrained swap search (port of find_constrained_swaps_partial)
@@ -404,11 +411,6 @@ private:
         int exclude_partition_idx,
         const std::vector<std::pair<int,int>>& E,
         const std::unordered_map<int, CanonicalEntry>& canonical_data
-    ) const;
-
-    double variant_routing_cost(
-        const CanonicalEntry::FutureVariant& variant,
-        const std::vector<int>& pi
     ) const;
 
     double entry_future_cost(

@@ -75,24 +75,11 @@ static std::vector<int> extract_int_array(py::handle obj) {
     return result;
 }
 
-static CanonicalEntry::FutureVariant extract_future_variant(py::dict d) {
-    CanonicalEntry::FutureVariant variant;
-    if (d.contains("edges_u") && !d["edges_u"].is_none()) {
-        variant.edges_u = extract_int_array(d["edges_u"]);
-    }
-    if (d.contains("edges_v") && !d["edges_v"].is_none()) {
-        variant.edges_v = extract_int_array(d["edges_v"]);
-    }
-    variant.cnot = d["cnot"].cast<int>();
-    return variant;
-}
-
 static std::unordered_map<int, CanonicalEntry> extract_canonical_data(py::dict cd) {
     std::unordered_map<int, CanonicalEntry> result;
     for (auto [key, val] : cd) {
         int pidx = key.cast<int>();
         CanonicalEntry entry;
-        // val is a dict with 'edges_u', 'edges_v', 'cnot'
         py::dict d = py::reinterpret_borrow<py::dict>(val);
         if (d.contains("edges_u") && !d["edges_u"].is_none()) {
             entry.edges_u = extract_int_array(d["edges_u"]);
@@ -101,22 +88,6 @@ static std::unordered_map<int, CanonicalEntry> extract_canonical_data(py::dict c
             entry.edges_v = extract_int_array(d["edges_v"]);
         }
         entry.cnot = d["cnot"].cast<int>();
-
-        if (d.contains("variants") && !d["variants"].is_none()) {
-            py::iterable variants = py::reinterpret_borrow<py::iterable>(d["variants"]);
-            for (auto item : variants) {
-                entry.variants.push_back(
-                    extract_future_variant(py::reinterpret_borrow<py::dict>(item))
-                );
-            }
-        }
-        if (entry.variants.empty()) {
-            CanonicalEntry::FutureVariant primary;
-            primary.edges_u = entry.edges_u;
-            primary.edges_v = entry.edges_v;
-            primary.cnot = entry.cnot;
-            entry.variants.push_back(std::move(primary));
-        }
         result[pidx] = std::move(entry);
     }
     return result;
@@ -154,21 +125,13 @@ PYBIND11_MODULE(_sabre_router, m) {
         .def_readwrite("max_lookahead", &SabreConfig::max_lookahead)
         .def_readwrite("E_weight", &SabreConfig::E_weight)
         .def_readwrite("E_alpha", &SabreConfig::E_alpha)
-        .def_readwrite("local_cost_weight", &SabreConfig::local_cost_weight)
-        .def_readwrite("swap_cost", &SabreConfig::swap_cost)
-        .def_readwrite("score_tolerance", &SabreConfig::score_tolerance)
-        .def_readwrite("trial_swap_cnot_cost", &SabreConfig::trial_swap_cnot_cost)
+        .def_readwrite("cnot_cost", &SabreConfig::cnot_cost)
         .def_readwrite("sabre_iterations", &SabreConfig::sabre_iterations)
         .def_readwrite("n_layout_trials", &SabreConfig::n_layout_trials)
         .def_readwrite("random_seed", &SabreConfig::random_seed)
         .def_readwrite("decay_delta", &SabreConfig::decay_delta)
-        .def_readwrite("decay_reset_interval", &SabreConfig::decay_reset_interval)
-        .def_readwrite("release_valve_enabled", &SabreConfig::release_valve_enabled)
-        .def_readwrite("release_valve_threshold", &SabreConfig::release_valve_threshold)
-        .def_readwrite("path_tiebreak_weight", &SabreConfig::path_tiebreak_weight)
-        .def_readwrite("future_cost_mode", &SabreConfig::future_cost_mode)
-        .def_readwrite("future_candidate_top_k", &SabreConfig::future_candidate_top_k)
-        .def_readwrite("future_candidate_weight", &SabreConfig::future_candidate_weight);
+        .def_readwrite("swap_burst_budget", &SabreConfig::swap_burst_budget)
+        .def_readwrite("path_tiebreak_weight", &SabreConfig::path_tiebreak_weight);
 
     // Bind SabreRouter with data-converting constructor
     py::class_<SabreRouter>(m, "SabreRouter")
@@ -201,7 +164,9 @@ PYBIND11_MODULE(_sabre_router, m) {
                     py::list cl = py::reinterpret_borrow<py::list>(part_cands);
                     cands.reserve(py::len(cl));
                     for (auto c : cl) {
-                        cands.push_back(extract_candidate(c));
+                        auto cd = extract_candidate(c);
+                        cd.candidate_idx = static_cast<int>(cands.size());
+                        cands.push_back(std::move(cd));
                     }
                     cc.push_back(std::move(cands));
                 }
@@ -224,6 +189,28 @@ PYBIND11_MODULE(_sabre_router, m) {
             py::arg("layout_partitions"),
             py::arg("canonical_data_fwd"),
             py::arg("canonical_data_rev")
+        )
+        .def("route_forward",
+            [](const SabreRouter& self,
+               const std::vector<int>& pi
+            ) -> py::tuple {
+                py::gil_scoped_release release;
+                auto result = self.route_forward(pi);
+                py::gil_scoped_acquire acquire;
+                py::list steps;
+                for (const auto& step : result.steps) {
+                    if (step.type == 0) {
+                        steps.append(py::make_tuple("swap", step.swaps));
+                    } else if (step.type == 1) {
+                        steps.append(py::make_tuple("partition", step.partition_idx, step.candidate_idx));
+                    } else {
+                        steps.append(py::make_tuple("single", step.partition_idx, step.physical_qubit));
+                    }
+                }
+                return py::make_tuple(result.cnot_count, result.pi, result.pi_initial, steps);
+            },
+            py::arg("pi"),
+            "Run actual forward routing and return CNOT count, final pi, initial pi, and route steps"
         )
         .def("run_trial",
             [](const SabreRouter& self,
