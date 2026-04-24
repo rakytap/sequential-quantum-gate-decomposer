@@ -106,7 +106,7 @@ struct SabreConfig {
 
 struct TrialResult {
     std::vector<int> pi;
-    int total_cost;
+    double total_cost;
 };
 
 struct NeighborEdge {
@@ -212,7 +212,7 @@ private:
 
     // Heuristic search (port of _heuristic_search_layout_only)
     // children_graph/parents_graph: swapped for backward passes
-    std::pair<std::vector<int>, int> heuristic_search(
+    std::pair<std::vector<int>, double> heuristic_search(
         const std::vector<int>& F_init,
         std::vector<int> pi,
         bool reverse,
@@ -294,6 +294,13 @@ private:
     double decay_factor_for_swaps(
         const std::vector<std::pair<int,int>>& swaps,
         const std::vector<double>& decay
+    ) const;
+
+    double routing_objective(
+        double route_cost,
+        int cnot_count,
+        double cnot_weight = 1.0,
+        double decay_factor = 1.0
     ) const;
 
     void apply_decay_for_swaps(

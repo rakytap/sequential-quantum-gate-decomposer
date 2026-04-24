@@ -431,6 +431,18 @@ double SabreRouter::decay_factor_for_swaps(
     return factor;
 }
 
+double SabreRouter::routing_objective(
+    double route_cost,
+    int cnot_count,
+    double cnot_weight,
+    double decay_factor
+) const {
+    return decay_factor * (
+        route_cost
+        + cnot_weight * config_.local_cost_weight * static_cast<double>(cnot_count)
+    );
+}
+
 void SabreRouter::apply_decay_for_swaps(
     const std::vector<std::pair<int,int>>& swaps,
     std::vector<double>& decay
@@ -1103,15 +1115,17 @@ double SabreRouter::entry_future_cost(
         double best = std::numeric_limits<double>::infinity();
         for (size_t i = 0; i < limit; i++) {
             const auto& variant = entry.variants[i];
-            double cost = variant_routing_cost(variant, pi);
-            if (
+            const double cnot_weight = (
                 config_.future_cost_mode == "topk_min"
                 || config_.future_cost_mode == "fullpas_min"
-            ) {
-                cost += config_.future_candidate_weight
-                    * config_.local_cost_weight
-                    * static_cast<double>(variant.cnot);
-            }
+            )
+                ? config_.future_candidate_weight
+                : 0.0;
+            const double cost = routing_objective(
+                variant_routing_cost(variant, pi),
+                variant.cnot,
+                cnot_weight
+            );
             if (cost < best) {
                 best = cost;
             }
@@ -1123,7 +1137,7 @@ double SabreRouter::entry_future_cost(
     primary.edges_u = entry.edges_u;
     primary.edges_v = entry.edges_v;
     primary.cnot = entry.cnot;
-    return variant_routing_cost(primary, pi);
+    return routing_objective(variant_routing_cost(primary, pi), primary.cnot, 0.0);
 }
 
 double SabreRouter::future_partition_cost_fullpas(
@@ -1152,10 +1166,11 @@ double SabreRouter::future_partition_cost_fullpas(
         std::vector<Pair> estimated;
         estimated.reserve(candidates.size());
         for (const auto* cand : candidates) {
-            double est = estimate_swap_count(*cand, pi, reverse) * config_.swap_cost
-                         + config_.future_candidate_weight
-                           * config_.local_cost_weight
-                           * static_cast<double>(cand->cnot_count);
+            const double est = routing_objective(
+                estimate_swap_count(*cand, pi, reverse) * config_.swap_cost,
+                cand->cnot_count,
+                config_.future_candidate_weight
+            );
             estimated.push_back({est, cand});
         }
         std::nth_element(
@@ -1177,10 +1192,11 @@ double SabreRouter::future_partition_cost_fullpas(
     for (const auto* cand : candidates) {
         auto [swaps, pi_out] = transform_pi(*cand, pi, reverse, swap_cache, nullptr);
         (void)pi_out;
-        double cost = config_.swap_cost * static_cast<double>(swaps.size())
-                    + config_.future_candidate_weight
-                      * config_.local_cost_weight
-                      * static_cast<double>(cand->cnot_count);
+        const double cost = routing_objective(
+            config_.swap_cost * static_cast<double>(swaps.size()),
+            cand->cnot_count,
+            config_.future_candidate_weight
+        );
         if (cost < best) {
             best = cost;
         }
@@ -1262,11 +1278,16 @@ double SabreRouter::score_candidate(
         neighbor_ptr
     );
 
-    double score = config_.swap_cost * static_cast<double>(swaps.size());
-    score += config_.local_cost_weight * static_cast<double>(cand.cnot_count);
+    double decay_factor = 1.0;
     if (decay != nullptr && !swaps.empty()) {
-        score *= decay_factor_for_swaps(swaps, *decay);
+        decay_factor = decay_factor_for_swaps(swaps, *decay);
     }
+    double score = routing_objective(
+        config_.swap_cost * static_cast<double>(swaps.size()),
+        cand.cnot_count,
+        1.0,
+        decay_factor
+    );
 
     // F cost: average routing cost over F \ {cand}
     const int cand_idx = cand.partition_idx;
@@ -1376,8 +1397,10 @@ std::vector<const CandidateData*> SabreRouter::prefilter_candidates(
     std::vector<Pair> estimated;
     estimated.reserve(candidates.size());
     for (const auto* cand : candidates) {
-        double est = estimate_swap_count(*cand, pi, reverse) * config_.swap_cost
-                     + config_.local_cost_weight * cand->cnot_count;
+        const double est = routing_objective(
+            estimate_swap_count(*cand, pi, reverse) * config_.swap_cost,
+            cand->cnot_count
+        );
         estimated.push_back({est, cand});
     }
 
@@ -1437,7 +1460,7 @@ const CandidateData& SabreRouter::select_best_candidate(
 // heuristic_search (main loop)
 // ---------------------------------------------------------------------------
 
-std::pair<std::vector<int>, int> SabreRouter::heuristic_search(
+std::pair<std::vector<int>, double> SabreRouter::heuristic_search(
     const std::vector<int>& F_init,
     std::vector<int> pi,
     bool reverse,
@@ -1450,7 +1473,7 @@ std::pair<std::vector<int>, int> SabreRouter::heuristic_search(
     std::vector<int> queue;
     std::vector<uint8_t> resolved(num_partitions_, 0);
     std::vector<uint8_t> in_F(num_partitions_, 0);
-    int total_cost = 0;
+    double total_cost = 0.0;
 
     // Split F_init into F (multi-qubit) and queue (single-qubit)
     for (int p : F_init) {
@@ -1506,8 +1529,13 @@ std::pair<std::vector<int>, int> SabreRouter::heuristic_search(
                 canonical_data
             );
             if (!valve_swaps.empty()) {
-                total_cost += config_.trial_swap_cnot_cost
-                    * static_cast<int>(valve_swaps.size());
+                total_cost += routing_objective(
+                    config_.swap_cost
+                        * static_cast<double>(valve_swaps.size()),
+                    0,
+                    1.0,
+                    decay_factor_for_swaps(valve_swaps, decay)
+                );
                 apply_decay_for_swaps(valve_swaps, decay);
                 pi = std::move(pi_bridged);
                 swap_burst = 0;
@@ -1592,8 +1620,15 @@ std::pair<std::vector<int>, int> SabreRouter::heuristic_search(
         // because exclude_partition_idx == best.partition_idx in both cases)
         std::vector<std::pair<int,int>> swaps = std::move(cached_swaps[best_ci]);
         std::vector<int> pi_new = std::move(cached_pi[best_ci]);
-        total_cost += config_.trial_swap_cnot_cost * static_cast<int>(swaps.size())
-                      + best.cnot_count;
+        const double decay_factor = swaps.empty()
+            ? 1.0
+            : decay_factor_for_swaps(swaps, decay);
+        total_cost += routing_objective(
+            config_.swap_cost * static_cast<double>(swaps.size()),
+            best.cnot_count,
+            1.0,
+            decay_factor
+        );
         pi = std::move(pi_new);
         apply_decay_for_swaps(swaps, decay);
         if (swaps.empty()) {
@@ -1694,7 +1729,7 @@ TrialResult SabreRouter::run_trial(
 
     // Final evaluation pass (deterministic, no RNG)
     auto eval_result = heuristic_search(F_fwd, pi, false, nullptr, canonical_data_fwd_, DAG_, IDAG_); // Evaluates cost using a copy under the hood
-    int cost = eval_result.second;
+    double cost = eval_result.second;
 
     return TrialResult{std::move(pi), cost}; // Return the pi from AFTER the backward pass, BEFORE the eval pass
 }

@@ -483,13 +483,10 @@ class qgd_Partition_Aware_Mapping:
         single_qubit_chains_prepost = {x[0]: x for x in single_qubit_chains if x[0] in single_qubit_chains_pre and x[-1] in single_qubit_chains_post}
 
         # ---- Phase 2: ILP partition selection ----
-        # 2-qubit partitions are free (weight 0) since they are trivially
-        # synthesized as themselves; 3+ qubit partitions cost 1.
-        weights = [
-            0 if len({q for gate in part for q in gate_to_qubit[gate]}) == 2 else 1
-            for part in allparts
-        ]
-        L_parts, _ = ilp_global_optimal(allparts, g, weights=weights)
+        # Minimize total partition count so PAM gets the largest blocks possible
+        # under max_partition_size. Larger blocks = more (P_i, P_o) freedom to
+        # absorb routing SWAPs.
+        L_parts, _ = ilp_global_optimal(allparts, g)
 
         # ---- Phase 3: Build gate sets for selected partitions (+ standalone chains) ----
         selected_surrounded_starts = set()
@@ -1203,7 +1200,11 @@ class qgd_Partition_Aware_Mapping:
         local_cost_weight = self.config.get('local_cost_weight', 0.1)
         swap_cost = self.config.get('swap_cost', 15.0)
         estimates = np.array([
-            pc.estimate_swap_count(pi, D, reverse=reverse) * swap_cost + local_cost_weight * pc.cnot_count
+            self._routing_objective(
+                pc.estimate_swap_count(pi, D, reverse=reverse) * swap_cost,
+                pc.cnot_count,
+                local_cost_weight,
+            )
             for pc in partition_candidates
         ])
         top_k_indices = np.argpartition(estimates, top_k)[:top_k]
@@ -1214,6 +1215,19 @@ class qgd_Partition_Aware_Mapping:
         if not swaps:
             return 1.0
         return max(max(decay[u], decay[v]) for u, v in swaps)
+
+    @staticmethod
+    def _routing_objective(
+        route_cost,
+        cnot_count,
+        local_cost_weight,
+        cnot_weight=1.0,
+        decay_factor=1.0,
+    ):
+        return decay_factor * (
+            float(route_cost)
+            + cnot_weight * local_cost_weight * float(cnot_count)
+        )
 
     def _apply_decay_for_swaps(self, swaps, decay):
         delta = self.config.get("decay_delta", 0.1)
@@ -1349,14 +1363,17 @@ class qgd_Partition_Aware_Mapping:
             route_cost = qgd_Partition_Aware_Mapping._variant_routing_cost(
                 variant, output_perm_arr, D_arr, swap_cost
             )
-            if future_cost_mode in ("topk_min", "fullpas_min"):
-                variant_cost = route_cost + (
-                    future_candidate_weight
-                    * local_cost_weight
-                    * variant["cnot"]
-                )
-            else:
-                variant_cost = route_cost
+            cnot_weight = (
+                future_candidate_weight
+                if future_cost_mode in ("topk_min", "fullpas_min")
+                else 0.0
+            )
+            variant_cost = qgd_Partition_Aware_Mapping._routing_objective(
+                route_cost,
+                variant["cnot"],
+                local_cost_weight,
+                cnot_weight=cnot_weight,
+            )
             if best is None or variant_cost < best:
                 best = variant_cost
         return 0.0 if best is None else best
@@ -1386,13 +1403,15 @@ class qgd_Partition_Aware_Mapping:
         if len(candidates) > top_k:
             estimates = np.array(
                 [
-                    candidate.estimate_swap_count(
-                        output_perm_arr, D, reverse=reverse
+                    qgd_Partition_Aware_Mapping._routing_objective(
+                        candidate.estimate_swap_count(
+                            output_perm_arr, D, reverse=reverse
+                        )
+                        * swap_cost,
+                        candidate.cnot_count,
+                        local_cost_weight,
+                        cnot_weight=future_candidate_weight,
                     )
-                    * swap_cost
-                    + future_candidate_weight
-                    * local_cost_weight
-                    * candidate.cnot_count
                     for candidate in candidates
                 ],
                 dtype=float,
@@ -1410,11 +1429,11 @@ class qgd_Partition_Aware_Mapping:
                 adj=adj,
                 neighbor_info=None,
             )
-            cost = (
-                swap_cost * len(swaps)
-                + future_candidate_weight
-                * local_cost_weight
-                * candidate.cnot_count
+            cost = qgd_Partition_Aware_Mapping._routing_objective(
+                swap_cost * len(swaps),
+                candidate.cnot_count,
+                local_cost_weight,
+                cnot_weight=future_candidate_weight,
             )
             if best is None or cost < best:
                 best = cost
@@ -1814,14 +1833,13 @@ class qgd_Partition_Aware_Mapping:
                     updates (used for backward passes in SABRE iterations).
 
         Returns:
-            (pi, total_cost): final layout and estimated routed CNOT cost.
-            The online heuristic still uses ``swap_cost`` for lookahead pressure;
-            this accounting is only used to rank completed layout trials.
+            (pi, total_cost): final layout and heuristic trial score.
+            Trial ranking uses the same immediate routing objective as the
+            online scorer: weighted SWAP pressure plus weighted local CNOT cost.
         """
         F = list(F)
         resolved_partitions = [False] * len(DAG)
-        total_cost = 0
-        swap_cnot_cost = self.config.get("trial_swap_cnot_cost", 3)
+        total_cost = 0.0
 
         queue = deque(
             p for p in F if self._partition_is_single(optimized_partitions[p])
@@ -1846,6 +1864,8 @@ class qgd_Partition_Aware_Mapping:
         max_lookahead = self.config.get("max_lookahead", 4)
         E_W = self.config.get("E_weight", 0.5)
         E_alpha = self.config.get("E_alpha", 0.9)
+        local_cost_weight = self.config.get("local_cost_weight", 0.1)
+        swap_cost = self.config.get("swap_cost", 15.0)
         future_cost_mode = self.config.get("future_cost_mode", "canonical")
         future_candidate_weight = self.config.get(
             "future_candidate_weight", 1.0
@@ -1874,7 +1894,14 @@ class qgd_Partition_Aware_Mapping:
                     future_cost_mode=future_cost_mode,
                 )
                 if valve_swaps:
-                    total_cost += swap_cnot_cost * len(valve_swaps)
+                    total_cost += self._routing_objective(
+                        swap_cost * len(valve_swaps),
+                        0,
+                        local_cost_weight,
+                        decay_factor=self._decay_factor_for_swaps(
+                            valve_swaps, decay
+                        ),
+                    )
                     self._apply_decay_for_swaps(valve_swaps, decay)
                     swap_burst = 0
                     continue
@@ -1957,7 +1984,15 @@ class qgd_Partition_Aware_Mapping:
                 adj=self._adj,
                 neighbor_info=best_neighbor_info,
             )
-            total_cost += swap_cnot_cost * len(swaps) + best.cnot_count
+            decay_factor = 1.0
+            if swaps:
+                decay_factor = self._decay_factor_for_swaps(swaps, decay)
+            total_cost += self._routing_objective(
+                swap_cost * len(swaps),
+                best.cnot_count,
+                local_cost_weight,
+                decay_factor=decay_factor,
+            )
             if swaps:
                 self._apply_decay_for_swaps(swaps, decay)
                 swap_burst += len(swaps)
@@ -2136,12 +2171,17 @@ class qgd_Partition_Aware_Mapping:
             adj=adj,
             neighbor_info=neighbor_info,
         )
-        score = swap_cost * len(swaps)
-        score += local_cost_weight * partition_candidate.cnot_count
+        decay_factor = 1.0
         if decay is not None and swaps:
-            score *= qgd_Partition_Aware_Mapping._decay_factor_for_swaps(
+            decay_factor = qgd_Partition_Aware_Mapping._decay_factor_for_swaps(
                 swaps, decay
             )
+        score = qgd_Partition_Aware_Mapping._routing_objective(
+            swap_cost * len(swaps),
+            partition_candidate.cnot_count,
+            local_cost_weight,
+            decay_factor=decay_factor,
+        )
 
         if canonical_data is None:
             return score
