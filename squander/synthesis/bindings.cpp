@@ -61,6 +61,32 @@ static CandidateData extract_candidate(py::handle pc) {
 // Helper: extract canonical_data dict -> unordered_map
 // ---------------------------------------------------------------------------
 
+static std::vector<int> extract_int_array(py::handle obj) {
+    std::vector<int> result;
+    auto arr = py::array_t<int, py::array::c_style | py::array::forcecast>::ensure(obj);
+    if (!arr) {
+        return result;
+    }
+    auto acc = arr.unchecked<1>();
+    result.resize(acc.shape(0));
+    for (ssize_t i = 0; i < acc.shape(0); i++) {
+        result[i] = acc(i);
+    }
+    return result;
+}
+
+static CanonicalEntry::FutureVariant extract_future_variant(py::dict d) {
+    CanonicalEntry::FutureVariant variant;
+    if (d.contains("edges_u") && !d["edges_u"].is_none()) {
+        variant.edges_u = extract_int_array(d["edges_u"]);
+    }
+    if (d.contains("edges_v") && !d["edges_v"].is_none()) {
+        variant.edges_v = extract_int_array(d["edges_v"]);
+    }
+    variant.cnot = d["cnot"].cast<int>();
+    return variant;
+}
+
 static std::unordered_map<int, CanonicalEntry> extract_canonical_data(py::dict cd) {
     std::unordered_map<int, CanonicalEntry> result;
     for (auto [key, val] : cd) {
@@ -69,24 +95,28 @@ static std::unordered_map<int, CanonicalEntry> extract_canonical_data(py::dict c
         // val is a dict with 'edges_u', 'edges_v', 'cnot'
         py::dict d = py::reinterpret_borrow<py::dict>(val);
         if (d.contains("edges_u") && !d["edges_u"].is_none()) {
-            // Python builds these arrays as np.intp; forcecast keeps the C++
-            // router from silently dropping canonical lookahead edges.
-            auto buf_u = py::array_t<int, py::array::c_style | py::array::forcecast>::ensure(d["edges_u"]);
-            if (buf_u) {
-                auto acc = buf_u.unchecked<1>();
-                entry.edges_u.resize(acc.shape(0));
-                for (ssize_t i = 0; i < acc.shape(0); i++) entry.edges_u[i] = acc(i);
-            }
+            entry.edges_u = extract_int_array(d["edges_u"]);
         }
         if (d.contains("edges_v") && !d["edges_v"].is_none()) {
-            auto buf_v = py::array_t<int, py::array::c_style | py::array::forcecast>::ensure(d["edges_v"]);
-            if (buf_v) {
-                auto acc = buf_v.unchecked<1>();
-                entry.edges_v.resize(acc.shape(0));
-                for (ssize_t i = 0; i < acc.shape(0); i++) entry.edges_v[i] = acc(i);
-            }
+            entry.edges_v = extract_int_array(d["edges_v"]);
         }
         entry.cnot = d["cnot"].cast<int>();
+
+        if (d.contains("variants") && !d["variants"].is_none()) {
+            py::iterable variants = py::reinterpret_borrow<py::iterable>(d["variants"]);
+            for (auto item : variants) {
+                entry.variants.push_back(
+                    extract_future_variant(py::reinterpret_borrow<py::dict>(item))
+                );
+            }
+        }
+        if (entry.variants.empty()) {
+            CanonicalEntry::FutureVariant primary;
+            primary.edges_u = entry.edges_u;
+            primary.edges_v = entry.edges_v;
+            primary.cnot = entry.cnot;
+            entry.variants.push_back(std::move(primary));
+        }
         result[pidx] = std::move(entry);
     }
     return result;
@@ -135,7 +165,10 @@ PYBIND11_MODULE(_sabre_router, m) {
         .def_readwrite("decay_reset_interval", &SabreConfig::decay_reset_interval)
         .def_readwrite("release_valve_enabled", &SabreConfig::release_valve_enabled)
         .def_readwrite("release_valve_threshold", &SabreConfig::release_valve_threshold)
-        .def_readwrite("path_tiebreak_weight", &SabreConfig::path_tiebreak_weight);
+        .def_readwrite("path_tiebreak_weight", &SabreConfig::path_tiebreak_weight)
+        .def_readwrite("future_cost_mode", &SabreConfig::future_cost_mode)
+        .def_readwrite("future_candidate_top_k", &SabreConfig::future_candidate_top_k)
+        .def_readwrite("future_candidate_weight", &SabreConfig::future_candidate_weight);
 
     // Bind SabreRouter with data-converting constructor
     py::class_<SabreRouter>(m, "SabreRouter")

@@ -156,6 +156,9 @@ class qgd_Partition_Aware_Mapping:
         self.config.setdefault('release_valve_enabled', True)
         self.config.setdefault('release_valve_threshold', 20)
         self.config.setdefault('path_tiebreak_weight', 0.2)
+        self.config.setdefault('future_cost_mode', 'candidate_min')
+        self.config.setdefault('future_candidate_top_k', 4)
+        self.config.setdefault('future_candidate_weight', 1.0)
         strategy = self.config['strategy']
         self.config.setdefault('parallel_layout_trials', False)
         self.config.setdefault('layout_trial_workers', 0)
@@ -928,6 +931,15 @@ class qgd_Partition_Aware_Mapping:
         cfg.path_tiebreak_weight = self.config.get(
             'path_tiebreak_weight', 0.2
         )
+        cfg.future_cost_mode = self.config.get(
+            'future_cost_mode', 'candidate_min'
+        )
+        cfg.future_candidate_top_k = self.config.get(
+            'future_candidate_top_k', 4
+        )
+        cfg.future_candidate_weight = self.config.get(
+            'future_candidate_weight', 1.0
+        )
         canonical_fwd = self._build_canonical_neighbor_data(
             scoring_partitions, reverse=False
         )
@@ -1301,24 +1313,149 @@ class qgd_Partition_Aware_Mapping:
                 q.append(nb)
         return []
 
-    def _release_valve(self, F, pi, D, canonical_data):
+    @staticmethod
+    def _entry_variants(entry, future_cost_mode="canonical"):
+        variants = entry.get("variants")
+        if variants:
+            if future_cost_mode == "canonical":
+                return variants[:1]
+            return variants
+        return (entry,)
+
+    @staticmethod
+    def _variant_routing_cost(variant, output_perm_arr, D_arr, swap_cost):
+        eu = variant["edges_u"]
+        if eu is None:
+            return 0.0
+        phys_u = output_perm_arr[eu]
+        phys_v = output_perm_arr[variant["edges_v"]]
+        return float(swap_cost * np.maximum(0, D_arr[phys_u, phys_v] - 1).sum())
+
+    @staticmethod
+    def _entry_future_cost(
+        entry,
+        output_perm_arr,
+        D_arr,
+        swap_cost,
+        local_cost_weight,
+        future_cost_mode="canonical",
+        future_candidate_weight=1.0,
+    ):
+        variants = qgd_Partition_Aware_Mapping._entry_variants(
+            entry, future_cost_mode=future_cost_mode
+        )
+        best = None
+        for variant in variants:
+            route_cost = qgd_Partition_Aware_Mapping._variant_routing_cost(
+                variant, output_perm_arr, D_arr, swap_cost
+            )
+            if future_cost_mode == "canonical":
+                variant_cost = route_cost
+            else:
+                variant_cost = route_cost + (
+                    future_candidate_weight
+                    * local_cost_weight
+                    * variant["cnot"]
+                )
+            if best is None or variant_cost < best:
+                best = variant_cost
+        return 0.0 if best is None else best
+
+    @staticmethod
+    def _future_partition_cost(
+        partition_idx,
+        entry,
+        output_perm_arr,
+        D_arr,
+        swap_cost,
+        local_cost_weight,
+        reverse=False,
+        candidate_cache=None,
+        future_cost_mode="canonical",
+        future_candidate_weight=1.0,
+    ):
+        if future_cost_mode == "candidate_min" and candidate_cache is not None:
+            candidates = candidate_cache[partition_idx]
+            if candidates:
+                best = None
+                for candidate in candidates:
+                    candidate_cost = (
+                        swap_cost
+                        * candidate.estimate_swap_count(
+                            output_perm_arr, D_arr, reverse=reverse
+                        )
+                        + future_candidate_weight
+                        * local_cost_weight
+                        * candidate.cnot_count
+                    )
+                    if best is None or candidate_cost < best:
+                        best = candidate_cost
+                if best is not None:
+                    return float(best)
+        if entry is None:
+            return 0.0
+        return qgd_Partition_Aware_Mapping._entry_future_cost(
+            entry,
+            output_perm_arr,
+            D_arr,
+            swap_cost,
+            local_cost_weight,
+            future_cost_mode=future_cost_mode,
+            future_candidate_weight=future_candidate_weight,
+        )
+
+    @staticmethod
+    def _best_release_variant(entry, pi_arr, D_arr, future_cost_mode="canonical"):
+        best = None
+        for variant in qgd_Partition_Aware_Mapping._entry_variants(
+            entry, future_cost_mode=future_cost_mode
+        ):
+            eu = variant["edges_u"]
+            if eu is None:
+                continue
+            ev = variant["edges_v"]
+            phys_u = pi_arr[eu]
+            phys_v = pi_arr[ev]
+            dists = D_arr[phys_u, phys_v]
+            if dists.size == 0:
+                continue
+            route_sum = float(np.maximum(0, dists - 1).sum())
+            worst_idx = int(np.argmax(dists))
+            worst_d = float(dists[worst_idx])
+            worst_pair = (int(eu[worst_idx]), int(ev[worst_idx]))
+            if (
+                best is None
+                or route_sum < best[0]
+                or (route_sum == best[0] and worst_d < best[1])
+                or (
+                    route_sum == best[0]
+                    and worst_d == best[1]
+                    and worst_pair < best[2]
+                )
+            ):
+                best = (route_sum, worst_d, worst_pair)
+        return best
+
+    def _release_valve(self, F, pi, D, canonical_data, future_cost_mode="canonical"):
+        pi_arr = np.asarray(pi, dtype=np.intp)
+        D_arr = np.asarray(D)
         best = None
         for p_idx in F:
             entry = canonical_data.get(p_idx)
-            if entry is None or entry["edges_u"] is None:
+            if entry is None:
                 continue
-            eu, ev = entry["edges_u"], entry["edges_v"]
-            worst_d = 0
-            worst_pair = None
-            for i in range(len(eu)):
-                u, v = int(eu[i]), int(ev[i])
-                d = D[int(pi[u])][int(pi[v])]
-                if d > worst_d:
-                    worst_d = d
-                    worst_pair = (u, v)
+            best_variant = self._best_release_variant(
+                entry,
+                pi_arr,
+                D_arr,
+                future_cost_mode=future_cost_mode,
+            )
+            if best_variant is None:
+                continue
+            _, worst_d, worst_pair = best_variant
             if worst_d <= 1 or worst_pair is None:
                 continue
-            if best is None or worst_d < best[0] or (
+            if best is None or worst_d > best[0] or (
                 worst_d == best[0] and p_idx < best[1]
             ):
                 best = (worst_d, p_idx, worst_pair[0], worst_pair[1])
@@ -1351,6 +1488,7 @@ class qgd_Partition_Aware_Mapping:
         weight=0.2,
         W=0.5,
         alpha=0.9,
+        future_cost_mode="canonical",
     ):
         if canonical_data is None or weight <= 0:
             return None
@@ -1362,15 +1500,28 @@ class qgd_Partition_Aware_Mapping:
             if target_idx == partition_idx or edge_weight <= 0:
                 return
             entry = canonical_data.get(target_idx)
-            if entry is None or entry["edges_u"] is None:
+            if entry is None:
                 return
-            for u, v in zip(entry["edges_u"], entry["edges_v"]):
-                u = int(u)
-                v = int(v)
-                qubits.add(u)
-                qubits.add(v)
-                key = (u, v) if u <= v else (v, u)
-                edge_weights[key] = edge_weights.get(key, 0.0) + edge_weight
+            variants = [
+                variant
+                for variant in qgd_Partition_Aware_Mapping._entry_variants(
+                    entry, future_cost_mode=future_cost_mode
+                )
+                if variant["edges_u"] is not None
+            ]
+            if not variants:
+                return
+            variant_weight = edge_weight / len(variants)
+            for variant in variants:
+                for u, v in zip(variant["edges_u"], variant["edges_v"]):
+                    u = int(u)
+                    v = int(v)
+                    qubits.add(u)
+                    qubits.add(v)
+                    key = (u, v) if u <= v else (v, u)
+                    edge_weights[key] = (
+                        edge_weights.get(key, 0.0) + variant_weight
+                    )
 
         for future_idx in F:
             add_edges(future_idx, 1.0)
@@ -1463,6 +1614,10 @@ class qgd_Partition_Aware_Mapping:
         max_lookahead = self.config.get("max_lookahead", 4)
         E_W = self.config.get("E_weight", 0.5)
         E_alpha = self.config.get("E_alpha", 0.9)
+        future_cost_mode = self.config.get("future_cost_mode", "candidate_min")
+        future_candidate_weight = self.config.get(
+            "future_candidate_weight", 1.0
+        )
 
         canonical_data = self._build_canonical_neighbor_data(
             scoring_partitions, reverse=False
@@ -1477,7 +1632,11 @@ class qgd_Partition_Aware_Mapping:
                 and swap_burst > self.config.get("release_valve_threshold", 20)
             ):
                 valve_swaps, pi_bridged = self._release_valve(
-                    F, pi, D, canonical_data
+                    F,
+                    pi,
+                    D,
+                    canonical_data,
+                    future_cost_mode=future_cost_mode,
                 )
                 if valve_swaps:
                     partition_order.append(
@@ -1533,6 +1692,9 @@ class qgd_Partition_Aware_Mapping:
                         "path_tiebreak_weight", 0.2
                     ),
                     decay=decay,
+                    future_cost_mode=future_cost_mode,
+                    future_candidate_weight=future_candidate_weight,
+                    candidate_cache=candidate_cache,
                 )
                 for partition_candidate in partition_candidates
             ]
@@ -1554,6 +1716,7 @@ class qgd_Partition_Aware_Mapping:
                 weight=self.config.get("path_tiebreak_weight", 0.2),
                 W=E_W,
                 alpha=E_alpha,
+                future_cost_mode=future_cost_mode,
             )
             swap_order, pi = min_partition_candidate.transform_pi(
                 pi,
@@ -1663,6 +1826,10 @@ class qgd_Partition_Aware_Mapping:
         max_lookahead = self.config.get("max_lookahead", 4)
         E_W = self.config.get("E_weight", 0.5)
         E_alpha = self.config.get("E_alpha", 0.9)
+        future_cost_mode = self.config.get("future_cost_mode", "candidate_min")
+        future_candidate_weight = self.config.get(
+            "future_candidate_weight", 1.0
+        )
 
         canonical_data = self._build_canonical_neighbor_data(
             scoring_partitions, reverse=reverse
@@ -1676,7 +1843,13 @@ class qgd_Partition_Aware_Mapping:
                 self.config.get("release_valve_enabled", True)
                 and swap_burst > self.config.get("release_valve_threshold", 20)
             ):
-                valve_swaps, pi = self._release_valve(F, pi, D, canonical_data)
+                valve_swaps, pi = self._release_valve(
+                    F,
+                    pi,
+                    D,
+                    canonical_data,
+                    future_cost_mode=future_cost_mode,
+                )
                 if valve_swaps:
                     total_cost += swap_cnot_cost * len(valve_swaps)
                     self._apply_decay_for_swaps(valve_swaps, decay)
@@ -1728,6 +1901,9 @@ class qgd_Partition_Aware_Mapping:
                         "path_tiebreak_weight", 0.2
                     ),
                     decay=decay,
+                    future_cost_mode=future_cost_mode,
+                    future_candidate_weight=future_candidate_weight,
+                    candidate_cache=candidate_cache,
                 )
                 for pc in partition_candidates
             ]
@@ -1747,6 +1923,7 @@ class qgd_Partition_Aware_Mapping:
                 weight=self.config.get("path_tiebreak_weight", 0.2),
                 W=E_W,
                 alpha=E_alpha,
+                future_cost_mode=future_cost_mode,
             )
             swaps, pi = best.transform_pi(
                 pi,
@@ -1833,45 +2010,68 @@ class qgd_Partition_Aware_Mapping:
     # Scoring
     # ------------------------------------------------------------------------
 
-    @staticmethod
-    def _build_canonical_neighbor_data(scoring_partitions, reverse=False):
-        """Per partition, keep only the virtual-qubit edges of the lowest-CNOT
-        (mini_topology, P_i, P_o) combo — LightSABRE-style: assume each F/E
-        partition will be scheduled with its best combo.
+    def _build_canonical_neighbor_data(self, scoring_partitions, reverse=False):
+        """Build compact future-routing surrogates per partition.
 
-        Returns dict {partition_idx: {'edges_u': np.intp[n_edges],
-                                       'edges_v': np.intp[n_edges],
-                                       'cnot': int}}.
-        Partitions with no mini-topology edges have edges_u = edges_v = None.
+        The first stored variant is the old "canonical" lowest-CNOT surrogate.
+        Additional variants keep distinct future edge patterns alive so the
+        router can score a future partition by its best still-available option.
         """
+        future_cost_mode = self.config.get("future_cost_mode", "candidate_min")
+        top_k = 1 if future_cost_mode == "canonical" else max(
+            1, int(self.config.get("future_candidate_top_k", 4))
+        )
         data = {}
         for idx, partition in enumerate(scoring_partitions):
             if partition is None:
                 continue
             qbit_map_inv = {v: q for q, v in partition.qubit_map.items()}
-            best_cnot = None
-            best_edges = None
+            variant_map = {}
             for tdx, mini_topology in enumerate(partition.mini_topologies):
                 for pdx, (P_i, P_o) in enumerate(partition.permutations_pairs[tdx]):
                     cnot = len(partition.circuit_structures[tdx][pdx])
-                    if best_cnot is not None and cnot >= best_cnot:
-                        continue
                     P_route = P_o if reverse else P_i
                     if mini_topology:
-                        edges = [(qbit_map_inv[P_route[u]], qbit_map_inv[P_route[v]])
-                                 for u, v in mini_topology]
+                        edge_key = tuple(
+                            sorted(
+                                tuple(
+                                    sorted(
+                                        (
+                                            qbit_map_inv[P_route[u]],
+                                            qbit_map_inv[P_route[v]],
+                                        )
+                                    )
+                                )
+                                for u, v in mini_topology
+                            )
+                        )
                     else:
-                        edges = []
-                    best_cnot = cnot
-                    best_edges = edges
-            if best_cnot is None:
+                        edge_key = tuple()
+                    prev_cnot = variant_map.get(edge_key)
+                    if prev_cnot is None or cnot < prev_cnot:
+                        variant_map[edge_key] = cnot
+            if not variant_map:
                 continue
-            if best_edges:
-                eu = np.array([e[0] for e in best_edges], dtype=np.intp)
-                ev = np.array([e[1] for e in best_edges], dtype=np.intp)
-            else:
-                eu = ev = None
-            data[idx] = {'edges_u': eu, 'edges_v': ev, 'cnot': best_cnot}
+            variants = []
+            for edge_key, cnot in sorted(
+                variant_map.items(),
+                key=lambda item: (item[1], len(item[0]), item[0]),
+            )[:top_k]:
+                if edge_key:
+                    eu = np.array([e[0] for e in edge_key], dtype=np.intp)
+                    ev = np.array([e[1] for e in edge_key], dtype=np.intp)
+                else:
+                    eu = ev = None
+                variants.append(
+                    {"edges_u": eu, "edges_v": ev, "cnot": cnot}
+                )
+            primary = variants[0]
+            data[idx] = {
+                "edges_u": primary["edges_u"],
+                "edges_v": primary["edges_v"],
+                "cnot": primary["cnot"],
+                "variants": tuple(variants),
+            }
         return data
 
     @staticmethod
@@ -1879,7 +2079,10 @@ class qgd_Partition_Aware_Mapping:
                                   E=None, W=0.5, alpha=0.9, reverse=False,
                                   canonical_data=None, adj=None,
                                   local_cost_weight=0.1, swap_cost=15.0,
-                                  path_tiebreak_weight=0.2, decay=None):
+                                  path_tiebreak_weight=0.2, decay=None,
+                                  future_cost_mode="canonical",
+                                  future_candidate_weight=1.0,
+                                  candidate_cache=None):
         """LightSABRE-style relative scoring (arXiv:2409.08368, eq. 1).
 
         H = swap_cost * |swaps|
@@ -1896,6 +2099,7 @@ class qgd_Partition_Aware_Mapping:
             weight=path_tiebreak_weight,
             W=W,
             alpha=alpha,
+            future_cost_mode=future_cost_mode,
         )
         swaps, output_perm = partition_candidate.transform_pi(
             pi,
@@ -1926,15 +2130,19 @@ class qgd_Partition_Aware_Mapping:
             if partition_idx == cand_idx:
                 continue
             entry = canonical_data.get(partition_idx)
-            if entry is None:
-                continue
             n_other += 1
-            eu = entry['edges_u']
-            if eu is None:
-                continue
-            phys_u = output_perm_arr[eu]
-            phys_v = output_perm_arr[entry['edges_v']]
-            f_sum += swap_cost * np.maximum(0, D_arr[phys_u, phys_v] - 1).sum()
+            f_sum += qgd_Partition_Aware_Mapping._future_partition_cost(
+                partition_idx,
+                entry,
+                output_perm_arr,
+                D_arr,
+                swap_cost,
+                local_cost_weight,
+                reverse=reverse,
+                candidate_cache=candidate_cache,
+                future_cost_mode=future_cost_mode,
+                future_candidate_weight=future_candidate_weight,
+            )
         if n_other > 0:
             score += f_sum / n_other
 
@@ -1945,14 +2153,18 @@ class qgd_Partition_Aware_Mapping:
                 if partition_idx == cand_idx:
                     continue
                 entry = canonical_data.get(partition_idx)
-                if entry is None:
-                    continue
-                eu = entry['edges_u']
-                if eu is None:
-                    continue
-                phys_u = output_perm_arr[eu]
-                phys_v = output_perm_arr[entry['edges_v']]
-                d_cost = swap_cost * np.maximum(0, D_arr[phys_u, phys_v] - 1).sum()
+                d_cost = qgd_Partition_Aware_Mapping._future_partition_cost(
+                    partition_idx,
+                    entry,
+                    output_perm_arr,
+                    D_arr,
+                    swap_cost,
+                    local_cost_weight,
+                    reverse=reverse,
+                    candidate_cache=candidate_cache,
+                    future_cost_mode=future_cost_mode,
+                    future_candidate_weight=future_candidate_weight,
+                )
                 e_sum += (alpha ** depth) * d_cost
             score += W * e_sum / len(E)
 

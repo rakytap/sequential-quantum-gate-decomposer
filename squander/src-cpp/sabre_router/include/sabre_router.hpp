@@ -17,6 +17,7 @@ Ported from squander/synthesis/PartAM.py and PartAM_utils.py.
 #include <optional>
 #include <queue>
 #include <random>
+#include <string>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
@@ -67,6 +68,12 @@ struct CanonicalEntry {
     std::vector<int> edges_u; // virtual qubit indices
     std::vector<int> edges_v;
     int cnot;
+    struct FutureVariant {
+        std::vector<int> edges_u;
+        std::vector<int> edges_v;
+        int cnot = 0;
+    };
+    std::vector<FutureVariant> variants;
 };
 
 struct LayoutPartInfo {
@@ -92,6 +99,9 @@ struct SabreConfig {
     bool release_valve_enabled = true;
     int release_valve_threshold = 20;
     double path_tiebreak_weight = 0.2;
+    std::string future_cost_mode = "candidate_min";
+    int future_candidate_top_k = 4;
+    double future_candidate_weight = 1.0;
 };
 
 struct TrialResult {
@@ -381,6 +391,23 @@ private:
         int exclude_partition_idx,
         const std::vector<std::pair<int,int>>& E,
         const std::unordered_map<int, CanonicalEntry>& canonical_data
+    ) const;
+
+    double variant_routing_cost(
+        const CanonicalEntry::FutureVariant& variant,
+        const std::vector<int>& pi
+    ) const;
+
+    double entry_future_cost(
+        const CanonicalEntry& entry,
+        const std::vector<int>& pi
+    ) const;
+
+    double future_partition_cost(
+        int partition_idx,
+        const CanonicalEntry* entry,
+        const std::vector<int>& pi,
+        bool reverse
     ) const;
 
     // Immutable data members
