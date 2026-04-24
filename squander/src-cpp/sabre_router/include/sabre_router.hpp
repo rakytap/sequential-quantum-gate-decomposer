@@ -99,7 +99,7 @@ struct SabreConfig {
     bool release_valve_enabled = true;
     int release_valve_threshold = 20;
     double path_tiebreak_weight = 0.2;
-    std::string future_cost_mode = "candidate_min";
+    std::string future_cost_mode = "canonical";
     int future_candidate_top_k = 4;
     double future_candidate_weight = 1.0;
 };
@@ -401,13 +401,6 @@ private:
     double entry_future_cost(
         const CanonicalEntry& entry,
         const std::vector<int>& pi
-    ) const;
-
-    double future_partition_cost(
-        int partition_idx,
-        const CanonicalEntry* entry,
-        const std::vector<int>& pi,
-        bool reverse
     ) const;
 
     // Immutable data members

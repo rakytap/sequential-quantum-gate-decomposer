@@ -156,7 +156,7 @@ class qgd_Partition_Aware_Mapping:
         self.config.setdefault('release_valve_enabled', True)
         self.config.setdefault('release_valve_threshold', 20)
         self.config.setdefault('path_tiebreak_weight', 0.2)
-        self.config.setdefault('future_cost_mode', 'candidate_min')
+        self.config.setdefault('future_cost_mode', 'canonical')
         self.config.setdefault('future_candidate_top_k', 4)
         self.config.setdefault('future_candidate_weight', 1.0)
         strategy = self.config['strategy']
@@ -932,7 +932,7 @@ class qgd_Partition_Aware_Mapping:
             'path_tiebreak_weight', 0.2
         )
         cfg.future_cost_mode = self.config.get(
-            'future_cost_mode', 'candidate_min'
+            'future_cost_mode', 'canonical'
         )
         cfg.future_candidate_top_k = self.config.get(
             'future_candidate_top_k', 4
@@ -1317,9 +1317,9 @@ class qgd_Partition_Aware_Mapping:
     def _entry_variants(entry, future_cost_mode="canonical"):
         variants = entry.get("variants")
         if variants:
-            if future_cost_mode == "canonical":
-                return variants[:1]
-            return variants
+            if future_cost_mode == "topk_min":
+                return variants
+            return variants[:1]
         return (entry,)
 
     @staticmethod
@@ -1349,60 +1349,17 @@ class qgd_Partition_Aware_Mapping:
             route_cost = qgd_Partition_Aware_Mapping._variant_routing_cost(
                 variant, output_perm_arr, D_arr, swap_cost
             )
-            if future_cost_mode == "canonical":
-                variant_cost = route_cost
-            else:
+            if future_cost_mode == "topk_min":
                 variant_cost = route_cost + (
                     future_candidate_weight
                     * local_cost_weight
                     * variant["cnot"]
                 )
+            else:
+                variant_cost = route_cost
             if best is None or variant_cost < best:
                 best = variant_cost
         return 0.0 if best is None else best
-
-    @staticmethod
-    def _future_partition_cost(
-        partition_idx,
-        entry,
-        output_perm_arr,
-        D_arr,
-        swap_cost,
-        local_cost_weight,
-        reverse=False,
-        candidate_cache=None,
-        future_cost_mode="canonical",
-        future_candidate_weight=1.0,
-    ):
-        if future_cost_mode == "candidate_min" and candidate_cache is not None:
-            candidates = candidate_cache[partition_idx]
-            if candidates:
-                best = None
-                for candidate in candidates:
-                    candidate_cost = (
-                        swap_cost
-                        * candidate.estimate_swap_count(
-                            output_perm_arr, D_arr, reverse=reverse
-                        )
-                        + future_candidate_weight
-                        * local_cost_weight
-                        * candidate.cnot_count
-                    )
-                    if best is None or candidate_cost < best:
-                        best = candidate_cost
-                if best is not None:
-                    return float(best)
-        if entry is None:
-            return 0.0
-        return qgd_Partition_Aware_Mapping._entry_future_cost(
-            entry,
-            output_perm_arr,
-            D_arr,
-            swap_cost,
-            local_cost_weight,
-            future_cost_mode=future_cost_mode,
-            future_candidate_weight=future_candidate_weight,
-        )
 
     @staticmethod
     def _best_release_variant(entry, pi_arr, D_arr, future_cost_mode="canonical"):
@@ -1614,7 +1571,7 @@ class qgd_Partition_Aware_Mapping:
         max_lookahead = self.config.get("max_lookahead", 4)
         E_W = self.config.get("E_weight", 0.5)
         E_alpha = self.config.get("E_alpha", 0.9)
-        future_cost_mode = self.config.get("future_cost_mode", "candidate_min")
+        future_cost_mode = self.config.get("future_cost_mode", "canonical")
         future_candidate_weight = self.config.get(
             "future_candidate_weight", 1.0
         )
@@ -1694,7 +1651,6 @@ class qgd_Partition_Aware_Mapping:
                     decay=decay,
                     future_cost_mode=future_cost_mode,
                     future_candidate_weight=future_candidate_weight,
-                    candidate_cache=candidate_cache,
                 )
                 for partition_candidate in partition_candidates
             ]
@@ -1826,7 +1782,7 @@ class qgd_Partition_Aware_Mapping:
         max_lookahead = self.config.get("max_lookahead", 4)
         E_W = self.config.get("E_weight", 0.5)
         E_alpha = self.config.get("E_alpha", 0.9)
-        future_cost_mode = self.config.get("future_cost_mode", "candidate_min")
+        future_cost_mode = self.config.get("future_cost_mode", "canonical")
         future_candidate_weight = self.config.get(
             "future_candidate_weight", 1.0
         )
@@ -1903,7 +1859,6 @@ class qgd_Partition_Aware_Mapping:
                     decay=decay,
                     future_cost_mode=future_cost_mode,
                     future_candidate_weight=future_candidate_weight,
-                    candidate_cache=candidate_cache,
                 )
                 for pc in partition_candidates
             ]
@@ -2017,9 +1972,11 @@ class qgd_Partition_Aware_Mapping:
         Additional variants keep distinct future edge patterns alive so the
         router can score a future partition by its best still-available option.
         """
-        future_cost_mode = self.config.get("future_cost_mode", "candidate_min")
-        top_k = 1 if future_cost_mode == "canonical" else max(
-            1, int(self.config.get("future_candidate_top_k", 4))
+        future_cost_mode = self.config.get("future_cost_mode", "canonical")
+        top_k = (
+            max(1, int(self.config.get("future_candidate_top_k", 4)))
+            if future_cost_mode == "topk_min"
+            else 1
         )
         data = {}
         for idx, partition in enumerate(scoring_partitions):
@@ -2081,8 +2038,7 @@ class qgd_Partition_Aware_Mapping:
                                   local_cost_weight=0.1, swap_cost=15.0,
                                   path_tiebreak_weight=0.2, decay=None,
                                   future_cost_mode="canonical",
-                                  future_candidate_weight=1.0,
-                                  candidate_cache=None):
+                                  future_candidate_weight=1.0):
         """LightSABRE-style relative scoring (arXiv:2409.08368, eq. 1).
 
         H = swap_cost * |swaps|
@@ -2130,16 +2086,15 @@ class qgd_Partition_Aware_Mapping:
             if partition_idx == cand_idx:
                 continue
             entry = canonical_data.get(partition_idx)
+            if entry is None:
+                continue
             n_other += 1
-            f_sum += qgd_Partition_Aware_Mapping._future_partition_cost(
-                partition_idx,
+            f_sum += qgd_Partition_Aware_Mapping._entry_future_cost(
                 entry,
                 output_perm_arr,
                 D_arr,
                 swap_cost,
                 local_cost_weight,
-                reverse=reverse,
-                candidate_cache=candidate_cache,
                 future_cost_mode=future_cost_mode,
                 future_candidate_weight=future_candidate_weight,
             )
@@ -2153,15 +2108,14 @@ class qgd_Partition_Aware_Mapping:
                 if partition_idx == cand_idx:
                     continue
                 entry = canonical_data.get(partition_idx)
-                d_cost = qgd_Partition_Aware_Mapping._future_partition_cost(
-                    partition_idx,
+                if entry is None:
+                    continue
+                d_cost = qgd_Partition_Aware_Mapping._entry_future_cost(
                     entry,
                     output_perm_arr,
                     D_arr,
                     swap_cost,
                     local_cost_weight,
-                    reverse=reverse,
-                    candidate_cache=candidate_cache,
                     future_cost_mode=future_cost_mode,
                     future_candidate_weight=future_candidate_weight,
                 )

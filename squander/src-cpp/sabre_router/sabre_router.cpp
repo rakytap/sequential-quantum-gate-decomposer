@@ -368,9 +368,9 @@ NeighborInfo SabreRouter::build_neighbor_info(
         const auto& entry = it->second;
         std::vector<const CanonicalEntry::FutureVariant*> active_variants;
         if (!entry.variants.empty()) {
-            const size_t limit = (config_.future_cost_mode == "canonical")
-                ? std::min<size_t>(1, entry.variants.size())
-                : entry.variants.size();
+            const size_t limit = (config_.future_cost_mode == "topk_min")
+                ? entry.variants.size()
+                : std::min<size_t>(1, entry.variants.size());
             active_variants.reserve(limit);
             for (size_t i = 0; i < limit; i++) {
                 if (!entry.variants[i].edges_u.empty()) {
@@ -539,9 +539,9 @@ std::pair<std::vector<std::pair<int,int>>, std::vector<int>> SabreRouter::releas
         };
 
         if (!entry.variants.empty()) {
-            const size_t limit = (config_.future_cost_mode == "canonical")
-                ? std::min<size_t>(1, entry.variants.size())
-                : entry.variants.size();
+            const size_t limit = (config_.future_cost_mode == "topk_min")
+                ? entry.variants.size()
+                : std::min<size_t>(1, entry.variants.size());
             for (size_t i = 0; i < limit; i++) {
                 consider_variant(entry.variants[i]);
             }
@@ -1088,14 +1088,14 @@ double SabreRouter::entry_future_cost(
     const std::vector<int>& pi
 ) const {
     if (!entry.variants.empty()) {
-        const size_t limit = (config_.future_cost_mode == "canonical")
-            ? std::min<size_t>(1, entry.variants.size())
-            : entry.variants.size();
+        const size_t limit = (config_.future_cost_mode == "topk_min")
+            ? entry.variants.size()
+            : std::min<size_t>(1, entry.variants.size());
         double best = std::numeric_limits<double>::infinity();
         for (size_t i = 0; i < limit; i++) {
             const auto& variant = entry.variants[i];
             double cost = variant_routing_cost(variant, pi);
-            if (config_.future_cost_mode != "canonical") {
+            if (config_.future_cost_mode == "topk_min") {
                 cost += config_.future_candidate_weight
                     * config_.local_cost_weight
                     * static_cast<double>(variant.cnot);
@@ -1112,39 +1112,6 @@ double SabreRouter::entry_future_cost(
     primary.edges_v = entry.edges_v;
     primary.cnot = entry.cnot;
     return variant_routing_cost(primary, pi);
-}
-
-double SabreRouter::future_partition_cost(
-    int partition_idx,
-    const CanonicalEntry* entry,
-    const std::vector<int>& pi,
-    bool reverse
-) const {
-    if (
-        config_.future_cost_mode == "candidate_min"
-        && partition_idx >= 0
-        && partition_idx < static_cast<int>(candidate_cache_.size())
-        && !candidate_cache_[partition_idx].empty()
-    ) {
-        double best = std::numeric_limits<double>::infinity();
-        for (const auto& cand : candidate_cache_[partition_idx]) {
-            double cost = config_.swap_cost
-                * static_cast<double>(estimate_swap_count(cand, pi, reverse));
-            cost += config_.future_candidate_weight
-                * config_.local_cost_weight
-                * static_cast<double>(cand.cnot_count);
-            if (cost < best) {
-                best = cost;
-            }
-        }
-        if (std::isfinite(best)) {
-            return best;
-        }
-    }
-    if (entry == nullptr) {
-        return 0.0;
-    }
-    return entry_future_cost(*entry, pi);
 }
 
 double SabreRouter::compute_routing_cost(
@@ -1233,21 +1200,17 @@ double SabreRouter::score_candidate(
     if (resolved_F) {
         for (const auto& re : *resolved_F) {
             if (re.partition_idx == cand_idx) continue;
+            if (!re.entry) continue;
             n_other++;
-            f_sum += future_partition_cost(
-                re.partition_idx, re.entry, output_perm, reverse
-            );
+            f_sum += entry_future_cost(*re.entry, output_perm);
         }
     } else {
         for (int p_idx : F_snapshot) {
             if (p_idx == cand_idx) continue;
             auto it = canonical_data.find(p_idx);
+            if (it == canonical_data.end()) continue;
             n_other++;
-            const CanonicalEntry* entry =
-                (it != canonical_data.end()) ? &it->second : nullptr;
-            f_sum += future_partition_cost(
-                p_idx, entry, output_perm, reverse
-            );
+            f_sum += entry_future_cost(it->second, output_perm);
         }
     }
     if (n_other > 0) score += f_sum / static_cast<double>(n_other);
@@ -1258,9 +1221,8 @@ double SabreRouter::score_candidate(
         if (resolved_E) {
             for (const auto& re : *resolved_E) {
                 if (re.partition_idx == cand_idx) continue;
-                e_sum += re.alpha * future_partition_cost(
-                    re.partition_idx, re.entry, output_perm, reverse
-                );
+                if (!re.entry) continue;
+                e_sum += re.alpha * entry_future_cost(*re.entry, output_perm);
             }
         } else {
             for (auto [p_idx, depth] : E) {
@@ -1269,11 +1231,8 @@ double SabreRouter::score_candidate(
                     ? alpha_weights_[depth]
                     : std::pow(config_.E_alpha, depth);
                 auto it = canonical_data.find(p_idx);
-                const CanonicalEntry* entry =
-                    (it != canonical_data.end()) ? &it->second : nullptr;
-                e_sum += alpha * future_partition_cost(
-                    p_idx, entry, output_perm, reverse
-                );
+                if (it == canonical_data.end()) continue;
+                e_sum += alpha * entry_future_cost(it->second, output_perm);
             }
         }
         score += config_.E_weight * e_sum / static_cast<double>(E.size());
