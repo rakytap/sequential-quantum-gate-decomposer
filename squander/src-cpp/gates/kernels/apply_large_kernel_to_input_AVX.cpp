@@ -411,7 +411,7 @@ void apply_nqbit_unitary_parallel_AVX( Matrix& gate_kernel_unitary, Matrix& inpu
                 complex_prod_AVX(mv_xy, rdx, cdx, indices, input, result);
             }
         alignas(32) double tmp[4];
-        _mm256_store_pd(tmp, result); 
+        _mm256_storeu_pd(tmp, result); 
         new_block_real[rdx]=tmp[0]+tmp[2];
         new_block_imag[rdx]=tmp[1]+tmp[3];
         }
@@ -3575,14 +3575,14 @@ apply_crot_kernel_to_matrix_input_AVX(Matrix& u3_1qbit1, Matrix& u3_1qbit2, Matr
 
     
                               // extract successive elements from arrays element, element_pair
-                              __m256d element_vec = _mm256_load_pd(element + col_idx);
-                              __m256d element_vec2 = _mm256_load_pd(element + col_idx + 4);
+                              __m256d element_vec = _mm256_loadu_pd(element + col_idx);
+                              __m256d element_vec2 = _mm256_loadu_pd(element + col_idx + 4);
                               __m256d tmp = _mm256_shuffle_pd(element_vec, element_vec2, 0);
                               element_vec2 = _mm256_shuffle_pd(element_vec, element_vec2, 0xf);
                               element_vec = tmp;
 
-                              __m256d element_pair_vec = _mm256_load_pd(element_pair + col_idx);
-                              __m256d element_pair_vec2 = _mm256_load_pd(element_pair + col_idx + 4);
+                              __m256d element_pair_vec = _mm256_loadu_pd(element_pair + col_idx);
+                              __m256d element_pair_vec2 = _mm256_loadu_pd(element_pair + col_idx + 4);
                               tmp = _mm256_shuffle_pd(element_pair_vec, element_pair_vec2, 0);
                               element_pair_vec2 = _mm256_shuffle_pd(element_pair_vec, element_pair_vec2, 0xf);
                               element_pair_vec = tmp;
@@ -3602,8 +3602,8 @@ apply_crot_kernel_to_matrix_input_AVX(Matrix& u3_1qbit1, Matrix& u3_1qbit2, Matr
                               tmp = _mm256_shuffle_pd(vec3, vec5, 0);
                               vec5 = _mm256_shuffle_pd(vec3, vec5, 0xf);
                               vec3 = tmp;
-                              _mm256_store_pd(element + col_idx, vec3);
-                              _mm256_store_pd(element + col_idx + 4, vec5);
+                              _mm256_storeu_pd(element + col_idx, vec3);
+                              _mm256_storeu_pd(element + col_idx + 4, vec5);
 
                               __m256d vec7 = _mm256_mul_pd(u3_1bit_10r_vec, element_vec);
                               vec7 = _mm256_fnmadd_pd(u3_1bit_10i_vec, element_vec2, vec7);
@@ -3620,8 +3620,8 @@ apply_crot_kernel_to_matrix_input_AVX(Matrix& u3_1qbit1, Matrix& u3_1qbit2, Matr
                               tmp = _mm256_shuffle_pd(vec7, vec9, 0);
                               vec9 = _mm256_shuffle_pd(vec7, vec9, 0xf);
                               vec7 = tmp;
-                              _mm256_store_pd(element_pair + col_idx, vec7);
-                              _mm256_store_pd(element_pair + col_idx + 4, vec9);
+                              _mm256_storeu_pd(element_pair + col_idx, vec7);
+                              _mm256_storeu_pd(element_pair + col_idx + 4, vec9);
 
 
 
@@ -3630,14 +3630,14 @@ apply_crot_kernel_to_matrix_input_AVX(Matrix& u3_1qbit1, Matrix& u3_1qbit2, Matr
 
     
                               // extract successive elements from arrays element, element_pair
-                              __m256d element_vec = _mm256_load_pd(element + col_idx);
-                              __m256d element_vec2 = _mm256_load_pd(element + col_idx + 4);
+                              __m256d element_vec = _mm256_loadu_pd(element + col_idx);
+                              __m256d element_vec2 = _mm256_loadu_pd(element + col_idx + 4);
                               __m256d tmp = _mm256_shuffle_pd(element_vec, element_vec2, 0);
                               element_vec2 = _mm256_shuffle_pd(element_vec, element_vec2, 0xf);
                               element_vec = tmp;
 
-                              __m256d element_pair_vec = _mm256_load_pd(element_pair + col_idx);
-                              __m256d element_pair_vec2 = _mm256_load_pd(element_pair + col_idx + 4);
+                              __m256d element_pair_vec = _mm256_loadu_pd(element_pair + col_idx);
+                              __m256d element_pair_vec2 = _mm256_loadu_pd(element_pair + col_idx + 4);
                               tmp = _mm256_shuffle_pd(element_pair_vec, element_pair_vec2, 0);
                               element_pair_vec2 = _mm256_shuffle_pd(element_pair_vec, element_pair_vec2, 0xf);
                               element_pair_vec = tmp;
@@ -3657,8 +3657,8 @@ apply_crot_kernel_to_matrix_input_AVX(Matrix& u3_1qbit1, Matrix& u3_1qbit2, Matr
                               tmp = _mm256_shuffle_pd(vec3, vec5, 0);
                               vec5 = _mm256_shuffle_pd(vec3, vec5, 0xf);
                               vec3 = tmp;
-                              _mm256_store_pd(element + col_idx, vec3);
-                              _mm256_store_pd(element + col_idx + 4, vec5);
+                              _mm256_storeu_pd(element + col_idx, vec3);
+                              _mm256_storeu_pd(element + col_idx + 4, vec5);
 
                               __m256d vec7 = _mm256_mul_pd(u3_1bit2_10r_vec, element_vec);
                               vec7 = _mm256_fnmadd_pd(u3_1bit2_10i_vec, element_vec2, vec7);
@@ -3675,8 +3675,8 @@ apply_crot_kernel_to_matrix_input_AVX(Matrix& u3_1qbit1, Matrix& u3_1qbit2, Matr
                               tmp = _mm256_shuffle_pd(vec7, vec9, 0);
                               vec9 = _mm256_shuffle_pd(vec7, vec9, 0xf);
                               vec7 = tmp;
-                              _mm256_store_pd(element_pair + col_idx, vec7);
-                              _mm256_store_pd(element_pair + col_idx + 4, vec9);
+                              _mm256_storeu_pd(element_pair + col_idx, vec7);
+                              _mm256_storeu_pd(element_pair + col_idx + 4, vec9);
                       }
                 }
 
@@ -3824,14 +3824,14 @@ apply_crot_kernel_to_matrix_input_AVX_parallel(Matrix& u3_1qbit1,Matrix& u3_1qbi
                         for (int col_idx = 0; col_idx < 2 * (input.cols - 3); col_idx = col_idx + 8) {
 
                             // extract successive elements from arrays element, element_pair
-                            __m256d element_vec = _mm256_load_pd(element + col_idx);
-                            __m256d element_vec2 = _mm256_load_pd(element + col_idx + 4);
+                            __m256d element_vec = _mm256_loadu_pd(element + col_idx);
+                            __m256d element_vec2 = _mm256_loadu_pd(element + col_idx + 4);
                             __m256d tmp = _mm256_shuffle_pd(element_vec, element_vec2, 0);
                             element_vec2 = _mm256_shuffle_pd(element_vec, element_vec2, 0xf);
                             element_vec = tmp;
 
-                            __m256d element_pair_vec = _mm256_load_pd(element_pair + col_idx);
-                            __m256d element_pair_vec2 = _mm256_load_pd(element_pair + col_idx + 4);
+                            __m256d element_pair_vec = _mm256_loadu_pd(element_pair + col_idx);
+                            __m256d element_pair_vec2 = _mm256_loadu_pd(element_pair + col_idx + 4);
                             tmp = _mm256_shuffle_pd(element_pair_vec, element_pair_vec2, 0);
                             element_pair_vec2 = _mm256_shuffle_pd(element_pair_vec, element_pair_vec2, 0xf);
                             element_pair_vec = tmp;
@@ -3851,8 +3851,8 @@ apply_crot_kernel_to_matrix_input_AVX_parallel(Matrix& u3_1qbit1,Matrix& u3_1qbi
                             tmp = _mm256_shuffle_pd(vec3, vec5, 0);
                             vec5 = _mm256_shuffle_pd(vec3, vec5, 0xf);
                             vec3 = tmp;
-                            _mm256_store_pd(element + col_idx, vec3);
-                            _mm256_store_pd(element + col_idx + 4, vec5);
+                            _mm256_storeu_pd(element + col_idx, vec3);
+                            _mm256_storeu_pd(element + col_idx + 4, vec5);
 
                             __m256d vec7 = _mm256_mul_pd(u3_1bit_10r_vec, element_vec);
                             vec7 = _mm256_fnmadd_pd(u3_1bit_10i_vec, element_vec2, vec7);
@@ -3869,8 +3869,8 @@ apply_crot_kernel_to_matrix_input_AVX_parallel(Matrix& u3_1qbit1,Matrix& u3_1qbi
                             tmp = _mm256_shuffle_pd(vec7, vec9, 0);
                             vec9 = _mm256_shuffle_pd(vec7, vec9, 0xf);
                             vec7 = tmp;
-                            _mm256_store_pd(element_pair + col_idx, vec7);
-                            _mm256_store_pd(element_pair + col_idx + 4, vec9);
+                            _mm256_storeu_pd(element_pair + col_idx, vec7);
+                            _mm256_storeu_pd(element_pair + col_idx + 4, vec9);
                         }
 
                         int remainder = input.cols % 4;
@@ -3909,14 +3909,14 @@ apply_crot_kernel_to_matrix_input_AVX_parallel(Matrix& u3_1qbit1,Matrix& u3_1qbi
                         for (int col_idx = 0; col_idx < 2 * (input.cols - 3); col_idx = col_idx + 8) {
 
                               // extract successive elements from arrays element, element_pair
-                              __m256d element_vec = _mm256_load_pd(element + col_idx);
-                              __m256d element_vec2 = _mm256_load_pd(element + col_idx + 4);
+                              __m256d element_vec = _mm256_loadu_pd(element + col_idx);
+                              __m256d element_vec2 = _mm256_loadu_pd(element + col_idx + 4);
                               __m256d tmp = _mm256_shuffle_pd(element_vec, element_vec2, 0);
                               element_vec2 = _mm256_shuffle_pd(element_vec, element_vec2, 0xf);
                               element_vec = tmp;
 
-                              __m256d element_pair_vec = _mm256_load_pd(element_pair + col_idx);
-                              __m256d element_pair_vec2 = _mm256_load_pd(element_pair + col_idx + 4);
+                              __m256d element_pair_vec = _mm256_loadu_pd(element_pair + col_idx);
+                              __m256d element_pair_vec2 = _mm256_loadu_pd(element_pair + col_idx + 4);
                               tmp = _mm256_shuffle_pd(element_pair_vec, element_pair_vec2, 0);
                               element_pair_vec2 = _mm256_shuffle_pd(element_pair_vec, element_pair_vec2, 0xf);
                               element_pair_vec = tmp;
@@ -3936,8 +3936,8 @@ apply_crot_kernel_to_matrix_input_AVX_parallel(Matrix& u3_1qbit1,Matrix& u3_1qbi
                               tmp = _mm256_shuffle_pd(vec3, vec5, 0);
                               vec5 = _mm256_shuffle_pd(vec3, vec5, 0xf);
                               vec3 = tmp;
-                              _mm256_store_pd(element + col_idx, vec3);
-                              _mm256_store_pd(element + col_idx + 4, vec5);
+                              _mm256_storeu_pd(element + col_idx, vec3);
+                              _mm256_storeu_pd(element + col_idx + 4, vec5);
 
                               __m256d vec7 = _mm256_mul_pd(u3_1bit2_10r_vec, element_vec);
                               vec7 = _mm256_fnmadd_pd(u3_1bit2_10i_vec, element_vec2, vec7);
@@ -3954,8 +3954,8 @@ apply_crot_kernel_to_matrix_input_AVX_parallel(Matrix& u3_1qbit1,Matrix& u3_1qbi
                               tmp = _mm256_shuffle_pd(vec7, vec9, 0);
                               vec9 = _mm256_shuffle_pd(vec7, vec9, 0xf);
                               vec7 = tmp;
-                              _mm256_store_pd(element_pair + col_idx, vec7);
-                              _mm256_store_pd(element_pair + col_idx + 4, vec9);
+                              _mm256_storeu_pd(element_pair + col_idx, vec7);
+                              _mm256_storeu_pd(element_pair + col_idx + 4, vec9);
                         }
 
                         int remainder = input.cols % 4;
