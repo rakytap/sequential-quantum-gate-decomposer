@@ -160,6 +160,7 @@ class qgd_Partition_Aware_Mapping:
             self.config['path_tiebreak_weight'] = 0.49
         self.config.setdefault('cnot_cost', 1.0 / 3.0)  # 1 SWAP = 3 CNOTs
         self.config.setdefault('overlap_tiebreak', True)
+        self.config.setdefault('three_qubit_exit_weight', 1.0)
         strategy = self.config['strategy']
         self.config.setdefault('parallel_layout_trials', False)
         self.config.setdefault('layout_trial_workers', 0)
@@ -932,6 +933,10 @@ class qgd_Partition_Aware_Mapping:
         cfg.path_tiebreak_weight = self.config.get(
             'path_tiebreak_weight', 0.2
         )
+        if hasattr(cfg, 'three_qubit_exit_weight'):
+            cfg.three_qubit_exit_weight = self.config.get(
+                'three_qubit_exit_weight', 1.0
+            )
         canonical_fwd = self._build_canonical_neighbor_data(
             scoring_partitions, reverse=False
         )
@@ -1861,6 +1866,9 @@ class qgd_Partition_Aware_Mapping:
                     candidate_cache=candidate_cache,
                     layout_partitions=optimized_partitions,
                     return_transforms=True,
+                    three_qubit_exit_weight=self.config.get(
+                        "three_qubit_exit_weight", 1.0
+                    ),
                 )
                 scores[ci] = score
                 cached_swaps[ci] = swaps
@@ -2080,6 +2088,9 @@ class qgd_Partition_Aware_Mapping:
                     candidate_cache=candidate_cache,
                     layout_partitions=optimized_partitions,
                     return_transforms=True,
+                    three_qubit_exit_weight=self.config.get(
+                        "three_qubit_exit_weight", 1.0
+                    ),
                 )
                 scores[ci] = score
                 cached_swaps[ci] = swaps
@@ -2228,7 +2239,8 @@ class qgd_Partition_Aware_Mapping:
                                   cached_neighbor_info=None,
                                   candidate_cache=None,
                                   layout_partitions=None,
-                                  return_transforms=False):
+                                  return_transforms=False,
+                                  three_qubit_exit_weight=1.0):
         """LightSABRE-style relative scoring (arXiv:2409.08368, eq. 1).
 
         H = |swaps|
@@ -2276,7 +2288,7 @@ class qgd_Partition_Aware_Mapping:
             return score
 
         cand_idx = partition_candidate.partition_idx
-        score += qgd_Partition_Aware_Mapping._future_context_cost(
+        future_score = qgd_Partition_Aware_Mapping._future_context_cost(
             cand_idx,
             output_perm,
             F,
@@ -2290,6 +2302,9 @@ class qgd_Partition_Aware_Mapping:
             layout_partitions=layout_partitions,
             canonical_data=canonical_data,
         )
+        if len(partition_candidate.involved_qbits) >= 3:
+            future_score *= three_qubit_exit_weight
+        score += future_score
 
         if return_transforms:
             return score, swaps, output_perm

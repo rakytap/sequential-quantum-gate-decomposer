@@ -131,7 +131,8 @@ PYBIND11_MODULE(_sabre_router, m) {
         .def_readwrite("random_seed", &SabreConfig::random_seed)
         .def_readwrite("decay_delta", &SabreConfig::decay_delta)
         .def_readwrite("swap_burst_budget", &SabreConfig::swap_burst_budget)
-        .def_readwrite("path_tiebreak_weight", &SabreConfig::path_tiebreak_weight);
+        .def_readwrite("path_tiebreak_weight", &SabreConfig::path_tiebreak_weight)
+        .def_readwrite("three_qubit_exit_weight", &SabreConfig::three_qubit_exit_weight);
 
     // Bind SabreRouter with data-converting constructor
     py::class_<SabreRouter>(m, "SabreRouter")

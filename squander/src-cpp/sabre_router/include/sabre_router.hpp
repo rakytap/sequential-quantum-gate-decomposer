@@ -89,6 +89,7 @@ struct SabreConfig {
     double decay_delta = 0.001; // Qiskit LightSABRE DECAY_RATE
     int swap_burst_budget = 5; // Qiskit LightSABRE DECAY_RESET_INTERVAL
     double path_tiebreak_weight = 0.2;
+    double three_qubit_exit_weight = 1.0;
 };
 
 struct RouteStep {

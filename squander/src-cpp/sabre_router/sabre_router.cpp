@@ -1176,7 +1176,7 @@ double SabreRouter::score_candidate(
     );
 
     const int cand_idx = cand.partition_idx;
-    score += future_context_cost(
+    double future_score = future_context_cost(
         cand_idx,
         output_perm,
         F_snapshot,
@@ -1184,6 +1184,10 @@ double SabreRouter::score_candidate(
         reverse,
         canonical_data
     );
+    if (cand.involved_qbits.size() >= 3) {
+        future_score *= config_.three_qubit_exit_weight;
+    }
+    score += future_score;
 
     if (out_swaps) *out_swaps = std::move(swaps);
     if (out_pi_new) *out_pi_new = std::move(output_perm);
