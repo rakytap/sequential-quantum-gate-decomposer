@@ -1131,7 +1131,8 @@ double SabreRouter::future_context_cost(
     const std::vector<int>& pi,
     const std::vector<int>& F_snapshot,
     const std::vector<std::pair<int,int>>& E,
-    bool reverse
+    bool reverse,
+    const std::unordered_map<int, CanonicalEntry>& canonical_data
 ) const {
     double f_sum = 0.0;
     int n_other = 0;
@@ -1145,16 +1146,19 @@ double SabreRouter::future_context_cost(
         ? f_sum / static_cast<double>(n_other)
         : 0.0;
 
+    // Extended set: BQSKit-style — just sum gate-edge distances on the
+    // partition's logical qubits, ignoring candidate permutations entirely.
     if (!E.empty()) {
         double e_sum = 0.0;
         for (auto [p_idx, depth] : E) {
             if (p_idx == exclude_partition_idx) continue;
+            auto it = canonical_data.find(p_idx);
+            if (it == canonical_data.end()) continue;
             const double alpha =
                 (depth >= 0 && depth < static_cast<int>(alpha_weights_.size()))
                     ? alpha_weights_[depth]
                     : std::pow(config_.E_alpha, depth);
-            e_sum += alpha * partition_future_lower_bound(
-                p_idx, pi, reverse);
+            e_sum += alpha * entry_future_cost(it->second, pi);
         }
         score += config_.E_weight * e_sum / static_cast<double>(E.size());
     }
@@ -1271,7 +1275,8 @@ double SabreRouter::score_candidate(
         output_perm,
         F_snapshot,
         E,
-        reverse
+        reverse,
+        canonical_data
     );
     (void)resolved_F;
     (void)resolved_E;
@@ -1308,7 +1313,8 @@ std::vector<const CandidateData*> SabreRouter::prefilter_candidates(
     int top_k,
     const std::vector<int>& F_snapshot,
     const std::vector<std::pair<int,int>>& E,
-    bool reverse
+    bool reverse,
+    const std::unordered_map<int, CanonicalEntry>& canonical_data
 ) const {
     if (static_cast<int>(candidates.size()) <= top_k) return candidates;
     if (top_k <= 0) return {};
@@ -1323,7 +1329,8 @@ std::vector<const CandidateData*> SabreRouter::prefilter_candidates(
             static_cast<double>(estimate_swap_count(*cand, pi, reverse)),
             cand->cnot_count
         ) + future_context_cost(
-            cand->partition_idx, approx_output, F_snapshot, E, reverse);
+            cand->partition_idx, approx_output, F_snapshot, E, reverse,
+            canonical_data);
         estimated.push_back({est, cand});
     }
 
@@ -1481,7 +1488,8 @@ std::pair<std::vector<int>, double> SabreRouter::heuristic_search(
 
         // Prefilter with a cheap estimate of the candidate's future context.
         auto candidates = prefilter_candidates(
-            all_candidates, pi, config_.prefilter_top_k, F, E, reverse);
+            all_candidates, pi, config_.prefilter_top_k, F, E, reverse,
+            canonical_data);
 
         // Pre-resolve canonical entries for F and E once per F-step
         std::vector<ResolvedEntry> resolved_F;

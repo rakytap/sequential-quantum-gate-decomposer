@@ -24,6 +24,7 @@ from squander.partitioning.ilp import (
     _get_topo_order,
     topo_sort_partitions,
     ilp_global_optimal,
+    parts_to_overlap_scores,
 )
 # Module-level globals for pool workers (set via Pool initializer)
 _worker_config = None
@@ -158,6 +159,7 @@ class qgd_Partition_Aware_Mapping:
             )
             self.config['path_tiebreak_weight'] = 0.49
         self.config.setdefault('cnot_cost', 1.0 / 3.0)  # 1 SWAP = 3 CNOTs
+        self.config.setdefault('overlap_tiebreak', True)
         strategy = self.config['strategy']
         self.config.setdefault('parallel_layout_trials', False)
         self.config.setdefault('layout_trial_workers', 0)
@@ -490,8 +492,14 @@ class qgd_Partition_Aware_Mapping:
         # ---- Phase 2: ILP partition selection ----
         # Minimize total partition count so PAM gets the largest blocks possible
         # under max_partition_size. Larger blocks = more (P_i, P_o) freedom to
-        # absorb routing SWAPs.
-        L_parts, _ = ilp_global_optimal(allparts, g)
+        # absorb routing SWAPs. Overlap-based tie-breaker (when enabled)
+        # picks deterministically among min-count covers, preferring covers
+        # whose parts share more logical qubits with their DAG successors.
+        if self.config['overlap_tiebreak']:
+            tb_weights = parts_to_overlap_scores(allparts, g, gate_to_qubit)
+            L_parts, _ = ilp_global_optimal(allparts, g, weights=tb_weights)
+        else:
+            L_parts, _ = ilp_global_optimal(allparts, g)
 
         # ---- Phase 3: Build gate sets for selected partitions (+ standalone chains) ----
         selected_surrounded_starts = set()
@@ -1349,6 +1357,7 @@ class qgd_Partition_Aware_Mapping:
         reverse=False,
         W=0.5,
         alpha=1.0,
+        canonical_data=None,
     ):
         """Pre-filter candidates using cheap swap-count estimate before full A* scoring."""
         if len(partition_candidates) <= top_k:
@@ -1375,6 +1384,7 @@ class qgd_Partition_Aware_Mapping:
                     W=W,
                     alpha=alpha,
                     layout_partitions=layout_partitions,
+                    canonical_data=canonical_data,
                 )
             )
             for pc in partition_candidates
@@ -1593,6 +1603,7 @@ class qgd_Partition_Aware_Mapping:
         W=0.5,
         alpha=1.0,
         layout_partitions=None,
+        canonical_data=None,
     ):
         f_sum = 0.0
         n_other = 0
@@ -1611,21 +1622,22 @@ class qgd_Partition_Aware_Mapping:
             n_other += 1
         score = f_sum / n_other if n_other > 0 else 0.0
 
+        # Extended set: BQSKit-style — sum gate-edge distances on the partition's
+        # logical qubits, ignoring candidate permutations entirely.
         if E:
             e_sum = 0.0
+            pi_arr = np.asarray(pi, dtype=np.intp)
+            D_arr = np.asarray(D)
             for p_idx, depth in E:
                 if p_idx == exclude_partition_idx:
                     continue
-                e_sum += (
-                    alpha ** depth
-                ) * qgd_Partition_Aware_Mapping._partition_future_lower_bound(
-                    p_idx,
-                    pi,
-                    D,
-                    candidate_cache,
-                    reverse=reverse,
-                    cnot_cost=cnot_cost,
-                    layout_partitions=layout_partitions,
+                if canonical_data is None:
+                    continue
+                entry = canonical_data.get(p_idx)
+                if entry is None:
+                    continue
+                e_sum += (alpha ** depth) * qgd_Partition_Aware_Mapping._entry_future_cost(
+                    entry, pi_arr, D_arr
                 )
             score += W * e_sum / len(E)
         return score
@@ -1861,6 +1873,7 @@ class qgd_Partition_Aware_Mapping:
                 layout_partitions=optimized_partitions,
                 W=E_W,
                 alpha=E_alpha,
+                canonical_data=canonical_data,
             )
 
             # Group candidates by partition_idx to reuse _build_neighbor_info
@@ -2078,6 +2091,7 @@ class qgd_Partition_Aware_Mapping:
                 reverse=reverse,
                 W=E_W,
                 alpha=E_alpha,
+                canonical_data=canonical_data,
             )
 
             # Group candidates by partition_idx to reuse _build_neighbor_info
@@ -2335,6 +2349,7 @@ class qgd_Partition_Aware_Mapping:
             W=W,
             alpha=alpha,
             layout_partitions=layout_partitions,
+            canonical_data=canonical_data,
         )
 
         if return_transforms:

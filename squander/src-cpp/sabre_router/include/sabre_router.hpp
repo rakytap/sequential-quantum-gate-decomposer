@@ -350,7 +350,8 @@ private:
         int top_k,
         const std::vector<int>& F_snapshot,
         const std::vector<std::pair<int,int>>& E,
-        bool reverse
+        bool reverse,
+        const std::unordered_map<int, CanonicalEntry>& canonical_data
     ) const;
 
     // Select best candidate with optional stochastic tie-breaking
@@ -436,7 +437,8 @@ private:
         const std::vector<int>& pi,
         const std::vector<int>& F_snapshot,
         const std::vector<std::pair<int,int>>& E,
-        bool reverse
+        bool reverse,
+        const std::unordered_map<int, CanonicalEntry>& canonical_data
     ) const;
 
     std::vector<int> estimate_candidate_output_layout(

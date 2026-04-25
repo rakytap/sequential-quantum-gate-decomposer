@@ -539,6 +539,48 @@ def sol_to_badsccs(g, allparts, L):
     _, scc = scc_tarjan_iterative(G_part)
     return {frozenset(v) for v in scc if len(v) > 1}
 
+def parts_to_overlap_scores(allparts, g, gate_to_qubit):
+    """
+    Per-part tie-breaker weights from logical-qubit overlap with DAG-downstream
+    candidate parts.
+
+    For each part i, score s[i] is the mean over candidate parts j reachable
+    from i in the gate DAG of |support(i) ∩ support(j)|. Returned weights are
+    `(s_max - s[i]) * eps` (lower is better — ILP minimizes), with eps small
+    enough that count-minimization in `ilp_global_optimal` is strictly
+    preserved when these weights are passed via `weights=`.
+
+    Args:
+        allparts (list[frozenset[int]]): Candidate parts (gate sets).
+        g (dict[int, set[int]]): Contracted gate DAG (u -> successors v) as
+            returned by `get_all_partitions`.
+        gate_to_qubit (dict[int, set[int]]): Gate -> qubits acted on.
+
+    Returns:
+        list[float]: weights[i] indexed like allparts, all in
+            [0, 1 / (len(allparts) * len(g))).
+    """
+    N = len(allparts)
+    if N == 0: return []
+    _, reach = nuutila_reach_scc(g)
+    gate_to_parts = {gate: [] for gate in g}
+    for i, part in enumerate(allparts):
+        for gate in part: gate_to_parts[gate].append(i)
+    supports = [set.union(*(gate_to_qubit[v] for v in part)) for part in allparts]
+    scores = [0.0] * N
+    for i, part in enumerate(allparts):
+        dgates = set().union(*(reach[u] for u in part)) - part
+        if not dgates: continue
+        succ_idxs = set().union(*(gate_to_parts[v] for v in dgates))
+        succ_idxs.discard(i)
+        if not succ_idxs: continue
+        sup_i = supports[i]
+        scores[i] = sum(len(sup_i & supports[j]) for j in succ_idxs) / len(succ_idxs)
+    s_max = max(scores)
+    if s_max == 0.0: return [0.0] * N
+    eps = 0.9 / (N * max(len(g), 1) * (s_max + 1.0))
+    return [(s_max - s) * eps for s in scores]
+
 def ilp_global_optimal(allparts, g, weighted_info=None, gurobi_direct=False, use_order=False, weights=None):
     """
     Select an optimal set of non-overlapping parts via ILP/MIP with cycle cuts.
