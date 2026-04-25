@@ -421,17 +421,6 @@ private:
         const std::vector<int>& pi
     ) const;
 
-    double partition_compactness_cost(
-        int partition_idx,
-        const std::vector<int>& pi
-    ) const;
-
-    double partition_future_lower_bound(
-        int partition_idx,
-        const std::vector<int>& pi,
-        bool reverse
-    ) const;
-
     double future_context_cost(
         int exclude_partition_idx,
         const std::vector<int>& pi,
