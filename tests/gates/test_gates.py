@@ -54,6 +54,7 @@ QISKIT_MATRIX_UNSUPPORTED = {"Gate"} | QISKIT_EXCLUDED_GATES
 NATIVE_UNSAFE_MATRIX_GATES = {"Gate"}
 NATIVE_UNSAFE_APPLY_GATES = {"Gate"}
 DERIVATIVE_TEST_EXCLUDED_GATES = set()
+RECT_COLS_MAX = 32
 
 
 def _discover_parameterized_gate_names():
@@ -450,6 +451,149 @@ except Exception as exc:
         assert result["status"] == "ok", result
         assert result["max_err"] < 1e-4, f"float32/float64 apply_to_list parity mismatch for {gate_name}: {result['max_err']}"
 
+    @pytest.mark.parametrize("gate_name", [name for name in ALL_GATE_NAMES if name != "Gate"])
+    def test_gate_apply_rectangular_sweep_paths(self, gate_name):
+        script = f"""
+import json
+import numpy as np
+from tests.gates.test_gates import _instantiate_gate, _parameters_for_gate, RECT_COLS_MAX
+
+gate_name = {gate_name!r}
+
+try:
+    gate_obj = _instantiate_gate(gate_name)
+    p64 = _parameters_for_gate(gate_obj, dtype=np.float64)
+    p32 = p64.astype(np.float32)
+
+    rng = np.random.default_rng(2026)
+
+    # apply_to path: 16xN (N=1..32)
+    left64 = np.ascontiguousarray(
+        rng.standard_normal((1 << 4, RECT_COLS_MAX))
+        + 1j * rng.standard_normal((1 << 4, RECT_COLS_MAX)),
+        dtype=np.complex128,
+    )
+    left32 = left64.astype(np.complex64)
+
+    out_full64 = left64.copy()
+    out_full32 = left32.copy()
+    if gate_obj.get_Parameter_Num() == 0:
+        gate_obj.apply_to(out_full64, parallel=0, is_f32=False)
+        gate_obj.apply_to(out_full32, parallel=0, is_f32=True)
+    else:
+        gate_obj.apply_to(out_full64, parameters=p64, parallel=0, is_f32=False)
+        gate_obj.apply_to(out_full32, parameters=p32, parallel=0, is_f32=True)
+
+    left_subset_err64 = 0.0
+    left_subset_err32 = 0.0
+    for ncols in range(1, RECT_COLS_MAX + 1):
+        p64_m = np.ascontiguousarray(left64[:, :ncols].copy())
+        p32_m = np.ascontiguousarray(left32[:, :ncols].copy())
+        if gate_obj.get_Parameter_Num() == 0:
+            gate_obj.apply_to(p64_m, parallel=0, is_f32=False)
+            gate_obj.apply_to(p32_m, parallel=0, is_f32=True)
+        else:
+            gate_obj.apply_to(p64_m, parameters=p64, parallel=0, is_f32=False)
+            gate_obj.apply_to(p32_m, parameters=p32, parallel=0, is_f32=True)
+        left_subset_err64 = max(left_subset_err64, float(np.linalg.norm(p64_m - out_full64[:, :ncols])))
+        left_subset_err32 = max(left_subset_err32, float(np.linalg.norm(p32_m - out_full32[:, :ncols])))
+
+    # apply_from_right path: Nx16 (N=1..32), columns must equal matrix_size.
+    right64 = np.ascontiguousarray(
+        rng.standard_normal((RECT_COLS_MAX, 1 << 4))
+        + 1j * rng.standard_normal((RECT_COLS_MAX, 1 << 4)),
+        dtype=np.complex128,
+    )
+    right32 = right64.astype(np.complex64)
+
+    out_right64 = right64.copy()
+    out_right32 = right32.copy()
+    if gate_obj.get_Parameter_Num() == 0:
+        gate_obj.apply_from_right(out_right64, is_f32=False)
+        gate_obj.apply_from_right(out_right32, is_f32=True)
+    else:
+        gate_obj.apply_from_right(out_right64, parameters=p64, is_f32=False)
+        gate_obj.apply_from_right(out_right32, parameters=p32, is_f32=True)
+
+    right_subset_err64 = 0.0
+    right_subset_err32 = 0.0
+    for nrows in range(1, RECT_COLS_MAX + 1):
+        p64_m = np.ascontiguousarray(right64[:nrows, :].copy())
+        p32_m = np.ascontiguousarray(right32[:nrows, :].copy())
+        if gate_obj.get_Parameter_Num() == 0:
+            gate_obj.apply_from_right(p64_m, is_f32=False)
+            gate_obj.apply_from_right(p32_m, is_f32=True)
+        else:
+            gate_obj.apply_from_right(p64_m, parameters=p64, is_f32=False)
+            gate_obj.apply_from_right(p32_m, parameters=p32, is_f32=True)
+        right_subset_err64 = max(right_subset_err64, float(np.linalg.norm(p64_m - out_right64[:nrows, :])))
+        right_subset_err32 = max(right_subset_err32, float(np.linalg.norm(p32_m - out_right32[:nrows, :])))
+
+    # apply_to_list path over 16xN for N=1..32.
+    list_in64 = [
+        np.ascontiguousarray(
+            rng.standard_normal((1 << 4, ncols)) + 1j * rng.standard_normal((1 << 4, ncols)),
+            dtype=np.complex128,
+        )
+        for ncols in range(1, RECT_COLS_MAX + 1)
+    ]
+    list_in32 = [m.astype(np.complex64) for m in list_in64]
+    ref64 = [m.copy() for m in list_in64]
+    ref32 = [m.copy() for m in list_in32]
+
+    if gate_obj.get_Parameter_Num() == 0:
+        gate_obj.apply_to_list(list_in64, parallel=0, is_f32=False)
+        gate_obj.apply_to_list(list_in32, parallel=0, is_f32=True)
+        for m in ref64:
+            gate_obj.apply_to(m, parallel=0, is_f32=False)
+        for m in ref32:
+            gate_obj.apply_to(m, parallel=0, is_f32=True)
+    else:
+        gate_obj.apply_to_list(list_in64, parameters=p64, parallel=0, is_f32=False)
+        gate_obj.apply_to_list(list_in32, parameters=p32, parallel=0, is_f32=True)
+        for m in ref64:
+            gate_obj.apply_to(m, parameters=p64, parallel=0, is_f32=False)
+        for m in ref32:
+            gate_obj.apply_to(m, parameters=p32, parallel=0, is_f32=True)
+
+    list_err64 = max(float(np.linalg.norm(a - b)) for a, b in zip(list_in64, ref64))
+    list_err32 = max(float(np.linalg.norm(a - b)) for a, b in zip(list_in32, ref32))
+
+    print(json.dumps({{
+        "status": "ok",
+        "left_subset_err64": left_subset_err64,
+        "left_subset_err32": left_subset_err32,
+        "right_subset_err64": right_subset_err64,
+        "right_subset_err32": right_subset_err32,
+        "list_err64": list_err64,
+        "list_err32": list_err32,
+    }}))
+except Exception as exc:
+    print(json.dumps({{"status": "exception", "message": str(exc)}}))
+"""
+
+        proc = subprocess.run(
+            [sys.executable, "-c", script],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+        if proc.returncode != 0:
+            pytest.fail(
+                f"Gate {gate_name} crashed in rectangular apply* sweep subprocess. "
+                f"returncode={proc.returncode}\nstdout={proc.stdout}\nstderr={proc.stderr}"
+            )
+
+        result = json.loads(proc.stdout.strip().splitlines()[-1])
+        assert result["status"] == "ok", result
+        assert result["left_subset_err64"] < 1e-10, result
+        assert result["left_subset_err32"] < 5e-5, result
+        assert result["right_subset_err64"] < 1e-10, result
+        assert result["right_subset_err32"] < 5e-5, result
+        assert result["list_err64"] < 1e-10, result
+        assert result["list_err32"] < 5e-5, result
+
     @pytest.mark.parametrize("gate_name", DERIVATIVE_GATE_NAMES)
     def test_gate_apply_derivate_wrapper_smoke(self, gate_name):
         script = f"""
@@ -506,6 +650,67 @@ except Exception as exc:
         if proc.returncode != 0:
             pytest.fail(
                 f"Gate {gate_name} crashed in apply_derivate_to wrapper subprocess. "
+                f"returncode={proc.returncode}\nstdout={proc.stdout}\nstderr={proc.stderr}"
+            )
+
+        result = json.loads(proc.stdout.strip().splitlines()[-1])
+        assert result["status"] == "ok", result
+
+    @pytest.mark.parametrize("gate_name", DERIVATIVE_GATE_NAMES)
+    def test_gate_apply_to_combined_wrapper_smoke(self, gate_name):
+        script = f"""
+import json
+import numpy as np
+from tests.gates.test_gates import _instantiate_gate, _parameters_for_gate
+
+gate_name = {gate_name!r}
+
+try:
+    gate_obj = _instantiate_gate(gate_name)
+    p64 = _parameters_for_gate(gate_obj, dtype=np.float64)
+    p32 = p64.astype(np.float32)
+
+    state64 = np.random.uniform(-1.0, 1.0, (1 << 4,)) + 1j * np.random.uniform(-1.0, 1.0, (1 << 4,))
+    state64 = state64.astype(np.complex128)
+    state64 = state64 / np.linalg.norm(state64)
+
+    state32 = state64.astype(np.complex64)
+    state32 = state32 / np.linalg.norm(state32)
+
+    c64 = gate_obj.apply_to_combined(state64.copy(), parameters=p64, parallel=0, is_f32=False)
+    c32 = gate_obj.apply_to_combined(state32.copy(), parameters=p32, parallel=0, is_f32=True)
+
+    if not isinstance(c64, list) or not isinstance(c32, list):
+        raise RuntimeError("apply_to_combined must return a list")
+
+    if len(c64) != len(p64) + 1 or len(c32) != len(p32) + 1:
+        raise RuntimeError("apply_to_combined returned wrong list length")
+
+    fwd64_ref = state64.copy()
+    gate_obj.apply_to(fwd64_ref, parameters=p64, parallel=0, is_f32=False)
+    fwd32_ref = state32.copy()
+    gate_obj.apply_to(fwd32_ref, parameters=p32, parallel=0, is_f32=True)
+
+    if np.linalg.norm(np.asarray(c64[0]).reshape(-1) - fwd64_ref.reshape(-1)) > 1e-10:
+        raise RuntimeError("float64 combined forward output mismatch")
+    if np.linalg.norm(np.asarray(c32[0]).astype(np.complex128).reshape(-1) - fwd32_ref.astype(np.complex128).reshape(-1)) > 5e-5:
+        raise RuntimeError("float32 combined forward output mismatch")
+
+    print(json.dumps({{"status": "ok", "n64": len(c64), "n32": len(c32)}}))
+except Exception as exc:
+    print(json.dumps({{"status": "exception", "message": str(exc)}}))
+"""
+
+        proc = subprocess.run(
+            [sys.executable, "-c", script],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+        if proc.returncode != 0:
+            pytest.fail(
+                f"Gate {gate_name} crashed in apply_to_combined wrapper subprocess. "
                 f"returncode={proc.returncode}\nstdout={proc.stdout}\nstderr={proc.stderr}"
             )
 
@@ -659,6 +864,38 @@ except Exception as exc:
         assert result["status"] == "ok", result
         assert result["err"] < 1e-8, f"invert_circuit error for {gate_name}: {result['err']}"
 
+    @pytest.mark.parametrize("gate_name", DERIVATIVE_GATE_NAMES)
+    def test_extract_parameters_wraps_out_of_range(self, gate_name):
+        """extract_parameters should normalise each parameter via fmod(m*p, m*2pi).
+        Values already inside [0, m*2pi) should be unchanged; values above should wrap."""
+        gate_obj = _instantiate_gate(gate_name)
+        pnum = gate_obj.get_Parameter_Num()
+
+        two_pi = 2.0 * np.pi
+
+        # Build a circuit-level parameter array; start_idx is 0 by default.
+        # Use one small (in-range) and one large (out-of-range) value per parameter.
+        small_params = np.linspace(0.1, 0.1 * pnum, pnum, dtype=np.float64)
+        large_params = small_params + 10.0 * two_pi  # shift by 5 full periods
+
+        small_extracted = gate_obj.Extract_Parameters(small_params)
+        large_extracted = gate_obj.Extract_Parameters(large_params)
+
+        assert len(small_extracted) == pnum, "wrong number of extracted parameters"
+        assert len(large_extracted) == pnum
+
+        # Both in-range and shifted versions should give the same normalised result
+        np.testing.assert_allclose(
+            small_extracted,
+            large_extracted,
+            atol=1e-10,
+            err_msg=f"{gate_name}: extract_parameters did not wrap large parameters to same value as small",
+        )
+
+        # In-range values should pass through unchanged (fmod(m*p, m*2pi) == m*p when m*p < m*2pi)
+        for i, p in enumerate(small_params):
+            assert small_extracted[i] >= 0.0, f"{gate_name}: extracted param {i} is negative"
+
     @pytest.mark.parametrize("gate_name", MULTI_QUBIT_GATE_NAMES)
     def test_circuit_to_cnot_basis_removes_non_cnot_multi_qubit_gates(self, gate_name):
         circuit = Circuit(4)
@@ -680,3 +917,33 @@ except Exception as exc:
         original_matrix = np.asarray(circuit.get_Matrix(params))
         transpiled_matrix = np.asarray(cnot_circuit.get_Matrix(cnot_params))
         _assert_matrices_close(original_matrix, transpiled_matrix, tol=1e-6)
+
+
+class TestGateDerivativeFiniteDifference:
+    """Verify that each parametric gate's apply_derivate_to matches a central finite difference."""
+
+    FD_EPS = 1e-5
+    FD_TOL = 1e-5
+
+    @pytest.mark.parametrize("gate_name", DERIVATIVE_GATE_NAMES)
+    def test_gate_derivative_fd_f64(self, gate_name):
+        """Analytic derivative must agree with finite difference (float64)."""
+        gate_obj = _instantiate_gate(gate_name)
+        pnum = gate_obj.get_Parameter_Num()
+        params = _parameters_for_gate(gate_obj)
+
+        dim = np.asarray(gate_obj.get_Matrix(params)).shape[0]
+        mat = np.eye(dim, dtype=np.complex128)
+        derivs = gate_obj.apply_derivate_to(mat.copy(), parameters=params, parallel=0, is_f32=False)
+
+        assert len(derivs) == pnum, f"{gate_name}: got {len(derivs)} derivatives, expected {pnum}"
+
+        eps = self.FD_EPS
+        for k in range(pnum):
+            p_plus = params.copy(); p_plus[k] += eps
+            p_minus = params.copy(); p_minus[k] -= eps
+            fd = (np.asarray(gate_obj.get_Matrix(p_plus)) - np.asarray(gate_obj.get_Matrix(p_minus))) / (2 * eps)
+            err = float(np.linalg.norm(np.asarray(derivs[k]) - fd))
+            assert err < self.FD_TOL, (
+                f"{gate_name} param {k}: analytic vs FD error = {err:.3e} > {self.FD_TOL:.1e}"
+            )

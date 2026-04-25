@@ -32,12 +32,11 @@ limitations under the License.
 #include "matrix_real_float.h"
 #include "matrix_any.h"
 #include "matrix_real_any.h"
+#include <utility>
 
 
 /// @brief Type definition of operation types (also generalized for decomposition classes derived from the class Operation_Block)
 typedef enum gate_type {GENERAL_OPERATION=1, 
-                        UN_OPERATION=2, 
-                        ON_OPERATION=3, 
                         CZ_OPERATION=4, 
                         CNOT_OPERATION=5, 
                         CH_OPERATION=6, 
@@ -45,13 +44,11 @@ typedef enum gate_type {GENERAL_OPERATION=1,
                         RY_OPERATION=8, 
                         RX_OPERATION=9, 
                         RZ_OPERATION=10, 
-                        RZ_P_OPERATION=11, 
                         X_OPERATION=12, 
                         SX_OPERATION=13, 
                         CRY_OPERATION=14, 
                         SYC_OPERATION=15, 
                         BLOCK_OPERATION=16, 
-                        COMPOSITE_OPERATION=17, 
                         ADAPTIVE_OPERATION=18, 
                         DECOMPOSITION_BASE_CLASS=19, 
                         SUB_MATRIX_DECOMPOSITION_CLASS=20, 
@@ -60,7 +57,6 @@ typedef enum gate_type {GENERAL_OPERATION=1,
                         Y_OPERATION=23, 
                         Z_OPERATION=24, 
                         H_OPERATION=25, 
-                        CZ_NU_OPERATION=26,
                         CROT_OPERATION=27,
                         R_OPERATION=28,
                         T_OPERATION=29,
@@ -71,7 +67,6 @@ typedef enum gate_type {GENERAL_OPERATION=1,
                         S_OPERATION=34,
                         SDG_OPERATION=35,
                         CU_OPERATION=36,
-                        CUSTOM_KERNEL_1QUBIT_GATE_OPERATION=37,
                         CP_OPERATION=38,
                         CRX_OPERATION=39,
                         CRZ_OPERATION=40,
@@ -154,28 +149,6 @@ Gate(int qbit_num_in);
 Gate(int qbit_num_in, const std::vector<int>& target_qbits_in, const std::vector<int>& control_qbits_in = std::vector<int>());
 
 /**
-@brief Call to retrieve the operation matrix
-@return Returns with a matrix of the operation
-*/
-virtual Matrix get_matrix();
-
-/**
-@brief Call to retrieve the operation matrix
-@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
-@return Returns with the matrix of the operation
-*/
-virtual Matrix get_matrix(int parallel);
-
-
-/**
-@brief Call to retrieve the gate matrix
-@param parameters An array of parameters to calculate the matrix of the U3 gate.
-@return Returns with a matrix of the gate
-*/
-virtual Matrix get_matrix( Matrix_real& parameters  );
-
-
-/**
 @brief Call to retrieve the gate matrix
 @param parameters An array of parameters to calculate the matrix of the U3 gate.
 @param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
@@ -183,6 +156,28 @@ virtual Matrix get_matrix( Matrix_real& parameters  );
 */
 virtual Matrix get_matrix( Matrix_real& parameters, int parallel  );
 
+/**
+@brief Convenience overload: retrieve the gate matrix (sequential).
+*/
+virtual Matrix get_matrix( Matrix_real& parameters );
+
+/**
+@brief Retrieve the gate matrix for zero-parameter gates (no parameters).
+*/
+virtual Matrix get_matrix();
+
+/**
+@brief Retrieve the gate matrix for zero-parameter gates with parallel flag.
+*/
+virtual Matrix get_matrix( int parallel );
+
+/**
+@brief Float32 overload: retrieve the gate matrix
+@param parameters Float32 parameter array
+@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
+@return Returns with a float32 matrix of the gate
+*/
+virtual Matrix_float get_matrix( Matrix_real_float& parameters, int parallel );
 
 /**
 @brief Call to apply the gate on a list of inputs
@@ -276,6 +271,24 @@ virtual std::vector<Matrix> apply_derivate_to( Matrix_real& parameters_mtx_in, M
 @param parallel Parallel mode selector
 */
 virtual std::vector<Matrix_float> apply_derivate_to( Matrix_real_float& parameters_mtx_in, Matrix_float& input, int parallel );
+
+/**
+@brief Combined forward + derivative application with shared precomputed trig cache.
+    Return format: first element is forward apply_to result, remaining elements are derivatives.
+@param parameters_mtx_in Parameter matrix for the gate
+@param input Input matrix/state
+@param parallel Parallel mode selector
+*/
+virtual std::vector<Matrix> apply_to_combined( Matrix_real& parameters_mtx_in, Matrix& input, int parallel );
+
+/**
+@brief Float32 combined forward + derivative application.
+    Return format: first element is forward apply_to result, remaining elements are derivatives.
+@param parameters_mtx_in Float32 parameter matrix for the gate
+@param input Float32 input matrix/state
+@param parallel Parallel mode selector
+*/
+virtual std::vector<Matrix_float> apply_to_combined( Matrix_real_float& parameters_mtx_in, Matrix_float& input, int parallel );
 
 
 /**
@@ -409,7 +422,7 @@ void clear_parents();
 @brief Call to get the number of free parameters
 @return Return with the number of the free parameters
 */
-int get_parameter_num();
+virtual int get_parameter_num();
 
 
 /**
@@ -480,30 +493,37 @@ std::string get_name();
 */
 virtual Gate* clone();
 
+/**
+@brief Compute the gate kernel matrix from precomputed trigonometric values.
+       Returns a 2x2 matrix for single-qubit (and controlled single-qubit) gates,
+       or a 4x4 matrix for 2-qubit gates (RXX, RYY, RZZ, etc.).
+    Zero-parameter gates ignore the precomputed_sincos argument.
+@param precomputed_sincos Gate-local sin/cos table with shape (parameter_num, 2).
+@return Gate kernel matrix (2x2 or 4x4).
+*/
+virtual Matrix gate_kernel(const Matrix_real& precomputed_sincos);
+virtual Matrix_float gate_kernel(const Matrix_real_float& precomputed_sincos);
+virtual Matrix inverse_gate_kernel(const Matrix_real& precomputed_sincos);
+virtual Matrix_float inverse_gate_kernel(const Matrix_real_float& precomputed_sincos);
+virtual Matrix derivative_kernel(const Matrix_real& precomputed_sincos, int param_idx);
+virtual Matrix_float derivative_kernel(const Matrix_real_float& precomputed_sincos, int param_idx);
+virtual Matrix derivative_aux_kernel(const Matrix_real& precomputed_sincos, int param_idx);
+virtual Matrix_float derivative_aux_kernel(const Matrix_real_float& precomputed_sincos, int param_idx);
 
 /**
-@brief Calculate the matrix of a U3 gate gate corresponding to the given parameters acting on a single qbit space.
-@param Theta Real parameter standing for the parameter theta.
-@param Phi Real parameter standing for the parameter phi.
-@param Lambda Real parameter standing for the parameter lambda.
-@return Returns with the matrix of the one-qubit matrix.
+@brief Returns the per-parameter multipliers relative to 2π used by extract_parameters.
+       A multiplier of 2 means extracted = fmod(2*p, 4π); multiplier of 1 means fmod(p, 2π).
+       Zero-parameter gates return an empty vector. Override in every parametric gate subclass.
+@return Vector of multipliers (one per parameter, in order).
 */
-virtual Matrix calc_one_qubit_u3(double Theta, double Phi, double Lambda );
+virtual std::vector<double> get_parameter_multipliers() const;
 
 /**
-@brief Calculate the matrix of the constans gates.
-@return Returns with the matrix of the one-qubit matrix.
+@brief Build a 2x2 U3 kernel from angles (theta/2, phi, lambda).
+    Static utility to avoid gate-specific conversion hooks.
 */
-virtual Matrix calc_one_qubit_u3( );
-
-/**
-@brief Calculate the matrix of a U3 gate gate corresponding to the given parameters acting on a single qbit space.
-@param Theta Real parameter standing for the parameter theta.
-@param Phi Real parameter standing for the parameter phi.
-@param Lambda Real parameter standing for the parameter lambda.
-@return Returns with the matrix of the one-qubit matrix.
-*/
-virtual void parameters_for_calc_one_qubit(double& ThetaOver2, double& Phi, double& Lambda);
+static Matrix calc_one_qubit_u3(double ThetaOver2 = 0.0, double Phi = 0.0, double Lambda = 0.0);
+static Matrix_float calc_one_qubit_u3(float ThetaOver2, float Phi, float Lambda);
 
 /**
 @brief Call to extract parameters from the parameter array corresponding to the circuit, in which the gate is embedded.
@@ -512,8 +532,29 @@ virtual void parameters_for_calc_one_qubit(double& ThetaOver2, double& Phi, doub
 */
 virtual Matrix_real extract_parameters( Matrix_real& parameters );
 
+/**
+@brief Float32 overload of extract_parameters. Uses get_parameter_multipliers() identically.
+@param parameters The float32 parameter array corresponding to the circuit in which the gate is embedded
+@return Returns with the float32 array of the extracted parameters.
+*/
+virtual Matrix_real_float extract_parameters( Matrix_real_float& parameters );
+
 
 protected:
+/**
+@brief Precompute sin/cos pairs for each gate-local parameter.
+@param parameters Gate-local angle parameters.
+@return Matrix with shape (parameter_num, 2): [sin(theta_i), cos(theta_i)].
+*/
+Matrix_real precompute_sincos(const Matrix_real& parameters) const;
+
+/**
+@brief Float32 precompute sin/cos pairs for each gate-local parameter.
+@param parameters Gate-local angle parameters.
+@return Matrix with shape (parameter_num, 2): [sin(theta_i), cos(theta_i)].
+*/
+Matrix_real_float precompute_sincos(const Matrix_real_float& parameters) const;
+
 /**
 @brief Call to apply the gate kernel on the input state or unitary with optional AVX support
 @param u3_1qbit The 2x2 kernel of the gate operation
@@ -522,12 +563,12 @@ protected:
 @param parallel Set true to apply parallel kernels, false otherwise (optional)
 @param parallel Set 0 for sequential execution (default), 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
-void apply_kernel_to( Matrix& u3_1qbit, Matrix& input, bool deriv=false, int parallel=0 );
+void apply_kernel_to( Matrix& u3_1qbit, Matrix& input, bool deriv=false, int parallel=0, const Matrix* alt_kernel=nullptr );
 
 /**
 @brief Float32 overload of one-qubit kernel application helper.
 */
-void apply_kernel_to( Matrix_float& u3_1qbit, Matrix_float& input, bool deriv=false, int parallel=0 );
+void apply_kernel_to( Matrix_float& u3_1qbit, Matrix_float& input, bool deriv=false, int parallel=0, const Matrix_float* alt_kernel=nullptr );
 
 
 
@@ -537,7 +578,9 @@ void apply_kernel_to( Matrix_float& u3_1qbit, Matrix_float& input, bool deriv=fa
 @param input The input matrix on which the transformation is applied
 @param deriv Set true to apply derivate transformation, false otherwise
 */
-void apply_kernel_from_right( Matrix& u3_1qbit, Matrix& input );
+void apply_kernel_from_right( Matrix& u3_1qbit, Matrix& input, const Matrix* alt_kernel=nullptr );
+
+void apply_kernel_from_right( Matrix_float& u3_1qbit, Matrix_float& input, const Matrix_float* alt_kernel=nullptr );
 
 
 };

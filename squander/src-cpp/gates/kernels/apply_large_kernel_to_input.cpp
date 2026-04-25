@@ -23,6 +23,32 @@ limitations under the License.
 
 #include "apply_large_kernel_to_input.h"
 #include "tbb/tbb.h"
+#include <type_traits>
+#include <utility>
+
+template<typename MatrixT>
+using KernelLargeComplexT = typename std::remove_reference<decltype(std::declval<MatrixT&>()[0])>::type;
+
+template<typename MatrixT>
+void apply_large_kernel_to_input_impl(MatrixT& unitary, MatrixT& input, std::vector<int> involved_qbits, const int& matrix_size);
+
+template<typename MatrixT>
+void apply_2qbit_kernel_to_state_vector_input_impl(MatrixT& two_qbit_unitary, MatrixT& input, const int& inner_qbit, const int& outer_qbit, const int& matrix_size);
+
+template<typename MatrixT>
+void apply_2qbit_kernel_to_matrix_input_impl(MatrixT& two_qbit_unitary, MatrixT& input, const int& inner_qbit, const int& outer_qbit, const int& matrix_size);
+
+template<typename MatrixT>
+void apply_3qbit_kernel_to_state_vector_input_impl(MatrixT& unitary, MatrixT& input, std::vector<int> involved_qbits, const int& matrix_size);
+
+template<typename MatrixT>
+void apply_4qbit_kernel_to_state_vector_input_impl(MatrixT& unitary, MatrixT& input, std::vector<int> involved_qbits, const int& matrix_size);
+
+template<typename MatrixT>
+void apply_5qbit_kernel_to_state_vector_input_impl(MatrixT& unitary, MatrixT& input, std::vector<int> involved_qbits, const int& matrix_size);
+
+template<typename MatrixT>
+void apply_crot_kernel_to_matrix_input_impl(MatrixT& u3_1qbit1, MatrixT& u3_1qbit2, MatrixT& input, const int& target_qbit, const int& control_qbit, const int& matrix_size);
 
 
 int get_grain_size(int index_step){
@@ -35,20 +61,21 @@ int get_grain_size(int index_step){
     return grain_size;
 }
 
-void apply_large_kernel_to_input(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size){
+template<typename MatrixT>
+void apply_large_kernel_to_input_impl(MatrixT& unitary, MatrixT& input, std::vector<int> involved_qbits, const int& matrix_size){
 
     if (input.cols==1){
         switch(involved_qbits.size()){
-            case 2: apply_2qbit_kernel_to_state_vector_input(unitary, input, involved_qbits[0], involved_qbits[1], matrix_size); break;
-            case 3: apply_3qbit_kernel_to_state_vector_input(unitary,input,involved_qbits,matrix_size); break;
-            case 4: apply_4qbit_kernel_to_state_vector_input(unitary,input,involved_qbits,matrix_size); break;
-            case 5: apply_5qbit_kernel_to_state_vector_input(unitary,input,involved_qbits,matrix_size); break;
+            case 2: apply_2qbit_kernel_to_state_vector_input_impl(unitary, input, involved_qbits[0], involved_qbits[1], matrix_size); break;
+            case 3: apply_3qbit_kernel_to_state_vector_input_impl(unitary,input,involved_qbits,matrix_size); break;
+            case 4: apply_4qbit_kernel_to_state_vector_input_impl(unitary,input,involved_qbits,matrix_size); break;
+            case 5: apply_5qbit_kernel_to_state_vector_input_impl(unitary,input,involved_qbits,matrix_size); break;
             default: throw std::invalid_argument("Unsupported number of qubits for state vector.");
         }
     }
     else 
     {
-        apply_2qbit_kernel_to_matrix_input(unitary, input, involved_qbits[0], involved_qbits[1], matrix_size);
+        apply_2qbit_kernel_to_matrix_input_impl(unitary, input, involved_qbits[0], involved_qbits[1], matrix_size);
     }
 }
 
@@ -60,7 +87,8 @@ void apply_large_kernel_to_input(Matrix& unitary, Matrix& input, std::vector<int
 @param outer_qbit The higher significance qubit (little endian convention)
 @param matrix_size The size of the input
 */
-void apply_2qbit_kernel_to_state_vector_input(Matrix& two_qbit_unitary, Matrix& input, const int& inner_qbit, const int& outer_qbit, const int& matrix_size){
+template<typename MatrixT>
+void apply_2qbit_kernel_to_state_vector_input_impl(MatrixT& two_qbit_unitary, MatrixT& input, const int& inner_qbit, const int& outer_qbit, const int& matrix_size){
 
     int index_step_outer = 1 << outer_qbit;
     int index_step_inner = 1 << inner_qbit;
@@ -79,15 +107,15 @@ void apply_2qbit_kernel_to_state_vector_input(Matrix& two_qbit_unitary, Matrix& 
 			int current_idx_inner_pair_loc = current_idx_pair_outer + idx + current_idx_inner + index_step_inner;
 			int indexes[4] = {current_idx_outer_loc,current_idx_inner_loc,current_idx_outer_pair_loc,current_idx_inner_pair_loc};
 			
-			QGD_Complex16 element_outer = input[current_idx_outer_loc];
-			QGD_Complex16 element_outer_pair = input[current_idx_outer_pair_loc];
-			QGD_Complex16 element_inner = input[current_idx_inner_loc];
-			QGD_Complex16 element_inner_pair = input[current_idx_inner_pair_loc];
+			KernelLargeComplexT<MatrixT> element_outer = input[current_idx_outer_loc];
+			KernelLargeComplexT<MatrixT> element_outer_pair = input[current_idx_outer_pair_loc];
+			KernelLargeComplexT<MatrixT> element_inner = input[current_idx_inner_loc];
+			KernelLargeComplexT<MatrixT> element_inner_pair = input[current_idx_inner_pair_loc];
 			
-			QGD_Complex16 tmp1;
-			QGD_Complex16 tmp2;
-			QGD_Complex16 tmp3;
-			QGD_Complex16 tmp4;
+			KernelLargeComplexT<MatrixT> tmp1;
+			KernelLargeComplexT<MatrixT> tmp2;
+			KernelLargeComplexT<MatrixT> tmp3;
+			KernelLargeComplexT<MatrixT> tmp4;
 			for (int mult_idx=0; mult_idx<4; mult_idx++){
 			
 				tmp1 = mult(two_qbit_unitary[mult_idx*4], element_outer);
@@ -111,7 +139,8 @@ void apply_2qbit_kernel_to_state_vector_input(Matrix& two_qbit_unitary, Matrix& 
 @param outer_qbit The higher significance qubit (little endian convention)
 @param matrix_size The size of the input
 */
-void apply_2qbit_kernel_to_matrix_input(Matrix& two_qbit_unitary, Matrix& input, const int& inner_qbit, const int& outer_qbit, const int& matrix_size){
+template<typename MatrixT>
+void apply_2qbit_kernel_to_matrix_input_impl(MatrixT& two_qbit_unitary, MatrixT& input, const int& inner_qbit, const int& outer_qbit, const int& matrix_size){
 
     int index_step_outer = 1 << outer_qbit;
     int index_step_inner = 1 << inner_qbit;
@@ -139,15 +168,15 @@ void apply_2qbit_kernel_to_matrix_input(Matrix& two_qbit_unitary, Matrix& input,
                 int index_inner = row_offset_inner+col_idx;
                 int index_inner_pair = row_offset_inner_pair + col_idx;
       			int indexes[4] = {index_outer,index_inner,index_outer_pair,index_inner_pair};
-			QGD_Complex16 element_outer = input[index_outer];
-			QGD_Complex16 element_outer_pair = input[index_outer_pair];
-			QGD_Complex16 element_inner = input[index_inner];
-			QGD_Complex16 element_inner_pair = input[index_inner_pair];
+			KernelLargeComplexT<MatrixT> element_outer = input[index_outer];
+			KernelLargeComplexT<MatrixT> element_outer_pair = input[index_outer_pair];
+			KernelLargeComplexT<MatrixT> element_inner = input[index_inner];
+			KernelLargeComplexT<MatrixT> element_inner_pair = input[index_inner_pair];
 			
-			QGD_Complex16 tmp1;
-			QGD_Complex16 tmp2;
-			QGD_Complex16 tmp3;
-			QGD_Complex16 tmp4;
+			KernelLargeComplexT<MatrixT> tmp1;
+			KernelLargeComplexT<MatrixT> tmp2;
+			KernelLargeComplexT<MatrixT> tmp3;
+			KernelLargeComplexT<MatrixT> tmp4;
 			for (int mult_idx=0; mult_idx<4; mult_idx++){
 			
 				tmp1 = mult(two_qbit_unitary[mult_idx*4], element_outer);
@@ -172,7 +201,8 @@ void apply_2qbit_kernel_to_matrix_input(Matrix& two_qbit_unitary, Matrix& input,
 @param involved_qbits The qubits affected by the gate in order
 @param matrix_size The size of the input
 */
-void apply_3qbit_kernel_to_state_vector_input(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size){
+template<typename MatrixT>
+void apply_3qbit_kernel_to_state_vector_input_impl(MatrixT& unitary, MatrixT& input, std::vector<int> involved_qbits, const int& matrix_size){
 
     int index_step_inner = 1 << involved_qbits[0];
     int index_step_middle = 1 << involved_qbits[1];
@@ -204,26 +234,26 @@ void apply_3qbit_kernel_to_state_vector_input(Matrix& unitary, Matrix& input, st
 			    
 			    int indexes[8] = {current_idx_outer_loc,current_idx_inner_loc,current_idx_middle_loc,current_idx_middle_inner_loc,current_idx_outer_pair_loc,current_idx_inner_pair_loc,current_idx_middle_pair_loc,current_idx_middle_inner_pair_loc};
 			    //input.print_matrix();
-			    QGD_Complex16 element_outer = input[current_idx_outer_loc];
-			    QGD_Complex16 element_outer_pair = input[current_idx_outer_pair_loc];
+			    KernelLargeComplexT<MatrixT> element_outer = input[current_idx_outer_loc];
+			    KernelLargeComplexT<MatrixT> element_outer_pair = input[current_idx_outer_pair_loc];
 			    
-			    QGD_Complex16 element_inner = input[current_idx_inner_loc];
-			    QGD_Complex16 element_inner_pair = input[current_idx_inner_pair_loc];
+			    KernelLargeComplexT<MatrixT> element_inner = input[current_idx_inner_loc];
+			    KernelLargeComplexT<MatrixT> element_inner_pair = input[current_idx_inner_pair_loc];
 			    
-			    QGD_Complex16 element_middle = input[current_idx_middle_loc];
-			    QGD_Complex16 element_middle_pair = input[current_idx_middle_pair_loc];
+			    KernelLargeComplexT<MatrixT> element_middle = input[current_idx_middle_loc];
+			    KernelLargeComplexT<MatrixT> element_middle_pair = input[current_idx_middle_pair_loc];
 			    
-			    QGD_Complex16 element_middle_inner = input[current_idx_middle_inner_loc];
-			    QGD_Complex16 element_middle_inner_pair = input[current_idx_middle_inner_pair_loc];
+			    KernelLargeComplexT<MatrixT> element_middle_inner = input[current_idx_middle_inner_loc];
+			    KernelLargeComplexT<MatrixT> element_middle_inner_pair = input[current_idx_middle_inner_pair_loc];
 			    
-			    QGD_Complex16 tmp1;
-			    QGD_Complex16 tmp2;
-			    QGD_Complex16 tmp3;
-			    QGD_Complex16 tmp4;
-			    QGD_Complex16 tmp5;
-			    QGD_Complex16 tmp6;
-			    QGD_Complex16 tmp7;
-			    QGD_Complex16 tmp8;
+			    KernelLargeComplexT<MatrixT> tmp1;
+			    KernelLargeComplexT<MatrixT> tmp2;
+			    KernelLargeComplexT<MatrixT> tmp3;
+			    KernelLargeComplexT<MatrixT> tmp4;
+			    KernelLargeComplexT<MatrixT> tmp5;
+			    KernelLargeComplexT<MatrixT> tmp6;
+			    KernelLargeComplexT<MatrixT> tmp7;
+			    KernelLargeComplexT<MatrixT> tmp8;
 			   for (int mult_idx=0; mult_idx<8; mult_idx++){
 				    tmp1 = mult(unitary[mult_idx*8], element_outer);
 				    tmp2 = mult(unitary[mult_idx*8 + 1], element_inner);
@@ -251,7 +281,8 @@ void apply_3qbit_kernel_to_state_vector_input(Matrix& unitary, Matrix& input, st
 @param involved_qbits The qubits affected by the gate in order
 @param matrix_size The size of the input
 */
-void apply_4qbit_kernel_to_state_vector_input(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size) {
+template<typename MatrixT>
+void apply_4qbit_kernel_to_state_vector_input_impl(MatrixT& unitary, MatrixT& input, std::vector<int> involved_qbits, const int& matrix_size) {
 
     int index_step_q0 = 1 << involved_qbits[0];
     int index_step_q1 = 1 << involved_qbits[1];
@@ -305,40 +336,40 @@ void apply_4qbit_kernel_to_state_vector_input(Matrix& unitary, Matrix& input, st
                         current_idx_q3_q2_0_pair_loc, current_idx_q3_q2_1_pair_loc, current_idx_q3_q2_q1_0_pair_loc, current_idx_q3_q2_q1_1_pair_loc
                     };
 
-                    QGD_Complex16 element_0  = input[current_idx_q0_0_loc];
-                    QGD_Complex16 element_1  = input[current_idx_q0_1_loc];
-                    QGD_Complex16 element_2  = input[current_idx_q1_0_loc];
-                    QGD_Complex16 element_3  = input[current_idx_q1_1_loc];
-                    QGD_Complex16 element_4  = input[current_idx_q2_0_loc];
-                    QGD_Complex16 element_5  = input[current_idx_q2_1_loc];
-                    QGD_Complex16 element_6  = input[current_idx_q2_q1_0_loc];
-                    QGD_Complex16 element_7  = input[current_idx_q2_q1_1_loc];
-                    QGD_Complex16 element_8  = input[current_idx_q3_q0_0_pair_loc];
-                    QGD_Complex16 element_9  = input[current_idx_q3_q0_1_pair_loc];
-                    QGD_Complex16 element_10 = input[current_idx_q3_q1_0_pair_loc];
-                    QGD_Complex16 element_11 = input[current_idx_q3_q1_1_pair_loc];
-                    QGD_Complex16 element_12 = input[current_idx_q3_q2_0_pair_loc];
-                    QGD_Complex16 element_13 = input[current_idx_q3_q2_1_pair_loc];
-                    QGD_Complex16 element_14 = input[current_idx_q3_q2_q1_0_pair_loc];
-                    QGD_Complex16 element_15 = input[current_idx_q3_q2_q1_1_pair_loc];
+                    KernelLargeComplexT<MatrixT> element_0  = input[current_idx_q0_0_loc];
+                    KernelLargeComplexT<MatrixT> element_1  = input[current_idx_q0_1_loc];
+                    KernelLargeComplexT<MatrixT> element_2  = input[current_idx_q1_0_loc];
+                    KernelLargeComplexT<MatrixT> element_3  = input[current_idx_q1_1_loc];
+                    KernelLargeComplexT<MatrixT> element_4  = input[current_idx_q2_0_loc];
+                    KernelLargeComplexT<MatrixT> element_5  = input[current_idx_q2_1_loc];
+                    KernelLargeComplexT<MatrixT> element_6  = input[current_idx_q2_q1_0_loc];
+                    KernelLargeComplexT<MatrixT> element_7  = input[current_idx_q2_q1_1_loc];
+                    KernelLargeComplexT<MatrixT> element_8  = input[current_idx_q3_q0_0_pair_loc];
+                    KernelLargeComplexT<MatrixT> element_9  = input[current_idx_q3_q0_1_pair_loc];
+                    KernelLargeComplexT<MatrixT> element_10 = input[current_idx_q3_q1_0_pair_loc];
+                    KernelLargeComplexT<MatrixT> element_11 = input[current_idx_q3_q1_1_pair_loc];
+                    KernelLargeComplexT<MatrixT> element_12 = input[current_idx_q3_q2_0_pair_loc];
+                    KernelLargeComplexT<MatrixT> element_13 = input[current_idx_q3_q2_1_pair_loc];
+                    KernelLargeComplexT<MatrixT> element_14 = input[current_idx_q3_q2_q1_0_pair_loc];
+                    KernelLargeComplexT<MatrixT> element_15 = input[current_idx_q3_q2_q1_1_pair_loc];
 
                     for (int mult_idx = 0; mult_idx < 16; mult_idx++) {
-                        QGD_Complex16 tmp0  = mult(unitary[mult_idx*16], element_0);
-                        QGD_Complex16 tmp1  = mult(unitary[mult_idx*16 + 1], element_1);
-                        QGD_Complex16 tmp2  = mult(unitary[mult_idx*16 + 2], element_2);
-                        QGD_Complex16 tmp3  = mult(unitary[mult_idx*16 + 3], element_3);
-                        QGD_Complex16 tmp4  = mult(unitary[mult_idx*16 + 4], element_4);
-                        QGD_Complex16 tmp5  = mult(unitary[mult_idx*16 + 5], element_5);
-                        QGD_Complex16 tmp6  = mult(unitary[mult_idx*16 + 6], element_6);
-                        QGD_Complex16 tmp7  = mult(unitary[mult_idx*16 + 7], element_7);
-                        QGD_Complex16 tmp8  = mult(unitary[mult_idx*16 + 8], element_8);
-                        QGD_Complex16 tmp9  = mult(unitary[mult_idx*16 + 9], element_9);
-                        QGD_Complex16 tmp10 = mult(unitary[mult_idx*16 + 10], element_10);
-                        QGD_Complex16 tmp11 = mult(unitary[mult_idx*16 + 11], element_11);
-                        QGD_Complex16 tmp12 = mult(unitary[mult_idx*16 + 12], element_12);
-                        QGD_Complex16 tmp13 = mult(unitary[mult_idx*16 + 13], element_13);
-                        QGD_Complex16 tmp14 = mult(unitary[mult_idx*16 + 14], element_14);
-                        QGD_Complex16 tmp15 = mult(unitary[mult_idx*16 + 15], element_15);
+                        KernelLargeComplexT<MatrixT> tmp0  = mult(unitary[mult_idx*16], element_0);
+                        KernelLargeComplexT<MatrixT> tmp1  = mult(unitary[mult_idx*16 + 1], element_1);
+                        KernelLargeComplexT<MatrixT> tmp2  = mult(unitary[mult_idx*16 + 2], element_2);
+                        KernelLargeComplexT<MatrixT> tmp3  = mult(unitary[mult_idx*16 + 3], element_3);
+                        KernelLargeComplexT<MatrixT> tmp4  = mult(unitary[mult_idx*16 + 4], element_4);
+                        KernelLargeComplexT<MatrixT> tmp5  = mult(unitary[mult_idx*16 + 5], element_5);
+                        KernelLargeComplexT<MatrixT> tmp6  = mult(unitary[mult_idx*16 + 6], element_6);
+                        KernelLargeComplexT<MatrixT> tmp7  = mult(unitary[mult_idx*16 + 7], element_7);
+                        KernelLargeComplexT<MatrixT> tmp8  = mult(unitary[mult_idx*16 + 8], element_8);
+                        KernelLargeComplexT<MatrixT> tmp9  = mult(unitary[mult_idx*16 + 9], element_9);
+                        KernelLargeComplexT<MatrixT> tmp10 = mult(unitary[mult_idx*16 + 10], element_10);
+                        KernelLargeComplexT<MatrixT> tmp11 = mult(unitary[mult_idx*16 + 11], element_11);
+                        KernelLargeComplexT<MatrixT> tmp12 = mult(unitary[mult_idx*16 + 12], element_12);
+                        KernelLargeComplexT<MatrixT> tmp13 = mult(unitary[mult_idx*16 + 13], element_13);
+                        KernelLargeComplexT<MatrixT> tmp14 = mult(unitary[mult_idx*16 + 14], element_14);
+                        KernelLargeComplexT<MatrixT> tmp15 = mult(unitary[mult_idx*16 + 15], element_15);
 
                         input[indexes[mult_idx]].real = tmp0.real + tmp1.real + tmp2.real + tmp3.real
                         + tmp4.real + tmp5.real + tmp6.real + tmp7.real
@@ -367,7 +398,8 @@ void apply_4qbit_kernel_to_state_vector_input(Matrix& unitary, Matrix& input, st
 @param involved_qbits The qubits affected by the gate in order
 @param matrix_size The size of the input
 */
-void apply_5qbit_kernel_to_state_vector_input(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size){
+template<typename MatrixT>
+void apply_5qbit_kernel_to_state_vector_input_impl(MatrixT& unitary, MatrixT& input, std::vector<int> involved_qbits, const int& matrix_size){
 
     int index_step_q0 = 1 << involved_qbits[0];
     int index_step_q1 = 1 << involved_qbits[1];
@@ -469,72 +501,72 @@ void apply_5qbit_kernel_to_state_vector_input(Matrix& unitary, Matrix& input, st
                         current_idx_q4_q3_q2_q1_1_pair_loc // state 31: |11111>
                     };
 
-                    QGD_Complex16 element_0 = input[current_idx_q0_0_loc];
-                    QGD_Complex16 element_1 = input[current_idx_q0_1_loc];
-                    QGD_Complex16 element_2 = input[current_idx_q1_0_loc];
-                    QGD_Complex16 element_3 = input[current_idx_q1_1_loc];
-                    QGD_Complex16 element_4 = input[current_idx_q2_0_loc];
-                    QGD_Complex16 element_5 = input[current_idx_q2_1_loc];
-                    QGD_Complex16 element_6 = input[current_idx_q2_q1_0_loc];
-                    QGD_Complex16 element_7 = input[current_idx_q2_q1_1_loc];
-                    QGD_Complex16 element_8 = input[current_idx_q3_0_loc];
-                    QGD_Complex16 element_9 = input[current_idx_q3_1_loc];
-                    QGD_Complex16 element_10 = input[current_idx_q3_q1_0_loc];
-                    QGD_Complex16 element_11 = input[current_idx_q3_q1_1_loc];
-                    QGD_Complex16 element_12 = input[current_idx_q3_q2_0_loc];
-                    QGD_Complex16 element_13 = input[current_idx_q3_q2_1_loc];
-                    QGD_Complex16 element_14 = input[current_idx_q3_q2_q1_0_loc];
-                    QGD_Complex16 element_15 = input[current_idx_q3_q2_q1_1_loc];
-                    QGD_Complex16 element_16 = input[current_idx_q4_q0_0_pair_loc];
-                    QGD_Complex16 element_17 = input[current_idx_q4_q0_1_pair_loc];
-                    QGD_Complex16 element_18 = input[current_idx_q4_q1_0_pair_loc];
-                    QGD_Complex16 element_19 = input[current_idx_q4_q1_1_pair_loc];
-                    QGD_Complex16 element_20 = input[current_idx_q4_q2_0_pair_loc];
-                    QGD_Complex16 element_21 = input[current_idx_q4_q2_1_pair_loc];
-                    QGD_Complex16 element_22 = input[current_idx_q4_q2_q1_0_pair_loc];
-                    QGD_Complex16 element_23 = input[current_idx_q4_q2_q1_1_pair_loc];
-                    QGD_Complex16 element_24 = input[current_idx_q4_q3_0_pair_loc];
-                    QGD_Complex16 element_25 = input[current_idx_q4_q3_1_pair_loc];
-                    QGD_Complex16 element_26 = input[current_idx_q4_q3_q1_0_pair_loc];
-                    QGD_Complex16 element_27 = input[current_idx_q4_q3_q1_1_pair_loc];
-                    QGD_Complex16 element_28 = input[current_idx_q4_q3_q2_0_pair_loc];
-                    QGD_Complex16 element_29 = input[current_idx_q4_q3_q2_1_pair_loc];
-                    QGD_Complex16 element_30 = input[current_idx_q4_q3_q2_q1_0_pair_loc];
-                    QGD_Complex16 element_31 = input[current_idx_q4_q3_q2_q1_1_pair_loc];
+                    KernelLargeComplexT<MatrixT> element_0 = input[current_idx_q0_0_loc];
+                    KernelLargeComplexT<MatrixT> element_1 = input[current_idx_q0_1_loc];
+                    KernelLargeComplexT<MatrixT> element_2 = input[current_idx_q1_0_loc];
+                    KernelLargeComplexT<MatrixT> element_3 = input[current_idx_q1_1_loc];
+                    KernelLargeComplexT<MatrixT> element_4 = input[current_idx_q2_0_loc];
+                    KernelLargeComplexT<MatrixT> element_5 = input[current_idx_q2_1_loc];
+                    KernelLargeComplexT<MatrixT> element_6 = input[current_idx_q2_q1_0_loc];
+                    KernelLargeComplexT<MatrixT> element_7 = input[current_idx_q2_q1_1_loc];
+                    KernelLargeComplexT<MatrixT> element_8 = input[current_idx_q3_0_loc];
+                    KernelLargeComplexT<MatrixT> element_9 = input[current_idx_q3_1_loc];
+                    KernelLargeComplexT<MatrixT> element_10 = input[current_idx_q3_q1_0_loc];
+                    KernelLargeComplexT<MatrixT> element_11 = input[current_idx_q3_q1_1_loc];
+                    KernelLargeComplexT<MatrixT> element_12 = input[current_idx_q3_q2_0_loc];
+                    KernelLargeComplexT<MatrixT> element_13 = input[current_idx_q3_q2_1_loc];
+                    KernelLargeComplexT<MatrixT> element_14 = input[current_idx_q3_q2_q1_0_loc];
+                    KernelLargeComplexT<MatrixT> element_15 = input[current_idx_q3_q2_q1_1_loc];
+                    KernelLargeComplexT<MatrixT> element_16 = input[current_idx_q4_q0_0_pair_loc];
+                    KernelLargeComplexT<MatrixT> element_17 = input[current_idx_q4_q0_1_pair_loc];
+                    KernelLargeComplexT<MatrixT> element_18 = input[current_idx_q4_q1_0_pair_loc];
+                    KernelLargeComplexT<MatrixT> element_19 = input[current_idx_q4_q1_1_pair_loc];
+                    KernelLargeComplexT<MatrixT> element_20 = input[current_idx_q4_q2_0_pair_loc];
+                    KernelLargeComplexT<MatrixT> element_21 = input[current_idx_q4_q2_1_pair_loc];
+                    KernelLargeComplexT<MatrixT> element_22 = input[current_idx_q4_q2_q1_0_pair_loc];
+                    KernelLargeComplexT<MatrixT> element_23 = input[current_idx_q4_q2_q1_1_pair_loc];
+                    KernelLargeComplexT<MatrixT> element_24 = input[current_idx_q4_q3_0_pair_loc];
+                    KernelLargeComplexT<MatrixT> element_25 = input[current_idx_q4_q3_1_pair_loc];
+                    KernelLargeComplexT<MatrixT> element_26 = input[current_idx_q4_q3_q1_0_pair_loc];
+                    KernelLargeComplexT<MatrixT> element_27 = input[current_idx_q4_q3_q1_1_pair_loc];
+                    KernelLargeComplexT<MatrixT> element_28 = input[current_idx_q4_q3_q2_0_pair_loc];
+                    KernelLargeComplexT<MatrixT> element_29 = input[current_idx_q4_q3_q2_1_pair_loc];
+                    KernelLargeComplexT<MatrixT> element_30 = input[current_idx_q4_q3_q2_q1_0_pair_loc];
+                    KernelLargeComplexT<MatrixT> element_31 = input[current_idx_q4_q3_q2_q1_1_pair_loc];
 
                     for (int mult_idx = 0; mult_idx < 32; mult_idx++) {
-                        QGD_Complex16 tmp1 = mult(unitary[mult_idx*32], element_0);
-                        QGD_Complex16 tmp2 = mult(unitary[mult_idx*32 + 1], element_1);
-                        QGD_Complex16 tmp3 = mult(unitary[mult_idx*32 + 2], element_2);
-                        QGD_Complex16 tmp4 = mult(unitary[mult_idx*32 + 3], element_3);
-                        QGD_Complex16 tmp5 = mult(unitary[mult_idx*32 + 4], element_4);
-                        QGD_Complex16 tmp6 = mult(unitary[mult_idx*32 + 5], element_5);
-                        QGD_Complex16 tmp7 = mult(unitary[mult_idx*32 + 6], element_6);
-                        QGD_Complex16 tmp8 = mult(unitary[mult_idx*32 + 7], element_7);
-                        QGD_Complex16 tmp9 = mult(unitary[mult_idx*32 + 8], element_8);
-                        QGD_Complex16 tmp10 = mult(unitary[mult_idx*32 + 9], element_9);
-                        QGD_Complex16 tmp11 = mult(unitary[mult_idx*32 + 10], element_10);
-                        QGD_Complex16 tmp12 = mult(unitary[mult_idx*32 + 11], element_11);
-                        QGD_Complex16 tmp13 = mult(unitary[mult_idx*32 + 12], element_12);
-                        QGD_Complex16 tmp14 = mult(unitary[mult_idx*32 + 13], element_13);
-                        QGD_Complex16 tmp15 = mult(unitary[mult_idx*32 + 14], element_14);
-                        QGD_Complex16 tmp16 = mult(unitary[mult_idx*32 + 15], element_15);
-                        QGD_Complex16 tmp17 = mult(unitary[mult_idx*32 + 16], element_16);
-                        QGD_Complex16 tmp18 = mult(unitary[mult_idx*32 + 17], element_17);
-                        QGD_Complex16 tmp19 = mult(unitary[mult_idx*32 + 18], element_18);
-                        QGD_Complex16 tmp20 = mult(unitary[mult_idx*32 + 19], element_19);
-                        QGD_Complex16 tmp21 = mult(unitary[mult_idx*32 + 20], element_20);
-                        QGD_Complex16 tmp22 = mult(unitary[mult_idx*32 + 21], element_21);
-                        QGD_Complex16 tmp23 = mult(unitary[mult_idx*32 + 22], element_22);
-                        QGD_Complex16 tmp24 = mult(unitary[mult_idx*32 + 23], element_23);
-                        QGD_Complex16 tmp25 = mult(unitary[mult_idx*32 + 24], element_24);
-                        QGD_Complex16 tmp26 = mult(unitary[mult_idx*32 + 25], element_25);
-                        QGD_Complex16 tmp27 = mult(unitary[mult_idx*32 + 26], element_26);
-                        QGD_Complex16 tmp28 = mult(unitary[mult_idx*32 + 27], element_27);
-                        QGD_Complex16 tmp29 = mult(unitary[mult_idx*32 + 28], element_28);
-                        QGD_Complex16 tmp30 = mult(unitary[mult_idx*32 + 29], element_29);
-                        QGD_Complex16 tmp31 = mult(unitary[mult_idx*32 + 30], element_30);
-                        QGD_Complex16 tmp32 = mult(unitary[mult_idx*32 + 31], element_31);
+                        KernelLargeComplexT<MatrixT> tmp1 = mult(unitary[mult_idx*32], element_0);
+                        KernelLargeComplexT<MatrixT> tmp2 = mult(unitary[mult_idx*32 + 1], element_1);
+                        KernelLargeComplexT<MatrixT> tmp3 = mult(unitary[mult_idx*32 + 2], element_2);
+                        KernelLargeComplexT<MatrixT> tmp4 = mult(unitary[mult_idx*32 + 3], element_3);
+                        KernelLargeComplexT<MatrixT> tmp5 = mult(unitary[mult_idx*32 + 4], element_4);
+                        KernelLargeComplexT<MatrixT> tmp6 = mult(unitary[mult_idx*32 + 5], element_5);
+                        KernelLargeComplexT<MatrixT> tmp7 = mult(unitary[mult_idx*32 + 6], element_6);
+                        KernelLargeComplexT<MatrixT> tmp8 = mult(unitary[mult_idx*32 + 7], element_7);
+                        KernelLargeComplexT<MatrixT> tmp9 = mult(unitary[mult_idx*32 + 8], element_8);
+                        KernelLargeComplexT<MatrixT> tmp10 = mult(unitary[mult_idx*32 + 9], element_9);
+                        KernelLargeComplexT<MatrixT> tmp11 = mult(unitary[mult_idx*32 + 10], element_10);
+                        KernelLargeComplexT<MatrixT> tmp12 = mult(unitary[mult_idx*32 + 11], element_11);
+                        KernelLargeComplexT<MatrixT> tmp13 = mult(unitary[mult_idx*32 + 12], element_12);
+                        KernelLargeComplexT<MatrixT> tmp14 = mult(unitary[mult_idx*32 + 13], element_13);
+                        KernelLargeComplexT<MatrixT> tmp15 = mult(unitary[mult_idx*32 + 14], element_14);
+                        KernelLargeComplexT<MatrixT> tmp16 = mult(unitary[mult_idx*32 + 15], element_15);
+                        KernelLargeComplexT<MatrixT> tmp17 = mult(unitary[mult_idx*32 + 16], element_16);
+                        KernelLargeComplexT<MatrixT> tmp18 = mult(unitary[mult_idx*32 + 17], element_17);
+                        KernelLargeComplexT<MatrixT> tmp19 = mult(unitary[mult_idx*32 + 18], element_18);
+                        KernelLargeComplexT<MatrixT> tmp20 = mult(unitary[mult_idx*32 + 19], element_19);
+                        KernelLargeComplexT<MatrixT> tmp21 = mult(unitary[mult_idx*32 + 20], element_20);
+                        KernelLargeComplexT<MatrixT> tmp22 = mult(unitary[mult_idx*32 + 21], element_21);
+                        KernelLargeComplexT<MatrixT> tmp23 = mult(unitary[mult_idx*32 + 22], element_22);
+                        KernelLargeComplexT<MatrixT> tmp24 = mult(unitary[mult_idx*32 + 23], element_23);
+                        KernelLargeComplexT<MatrixT> tmp25 = mult(unitary[mult_idx*32 + 24], element_24);
+                        KernelLargeComplexT<MatrixT> tmp26 = mult(unitary[mult_idx*32 + 25], element_25);
+                        KernelLargeComplexT<MatrixT> tmp27 = mult(unitary[mult_idx*32 + 26], element_26);
+                        KernelLargeComplexT<MatrixT> tmp28 = mult(unitary[mult_idx*32 + 27], element_27);
+                        KernelLargeComplexT<MatrixT> tmp29 = mult(unitary[mult_idx*32 + 28], element_28);
+                        KernelLargeComplexT<MatrixT> tmp30 = mult(unitary[mult_idx*32 + 29], element_29);
+                        KernelLargeComplexT<MatrixT> tmp31 = mult(unitary[mult_idx*32 + 30], element_30);
+                        KernelLargeComplexT<MatrixT> tmp32 = mult(unitary[mult_idx*32 + 31], element_31);
 
                         input[indexes[mult_idx]].real = tmp1.real + tmp2.real + tmp3.real + tmp4.real 
                         + tmp5.real + tmp6.real + tmp7.real + tmp8.real + tmp9.real + tmp10.real 
@@ -569,8 +601,9 @@ void apply_5qbit_kernel_to_state_vector_input(Matrix& unitary, Matrix& input, st
 @param control_qbit The control qubit
 @param matrix_size The size of the input
 */
+template<typename MatrixT>
 void
-apply_crot_kernel_to_matrix_input(Matrix& u3_1qbit1, Matrix& u3_1qbit2, Matrix& input, const int& target_qbit, const int& control_qbit, const int& matrix_size) {
+apply_crot_kernel_to_matrix_input_impl(MatrixT& u3_1qbit1, MatrixT& u3_1qbit2, MatrixT& input, const int& target_qbit, const int& control_qbit, const int& matrix_size) {
 
     int index_step_target = 1 << target_qbit;
     int current_idx = 0;
@@ -594,11 +627,11 @@ apply_crot_kernel_to_matrix_input(Matrix& u3_1qbit1, Matrix& u3_1qbit2, Matrix& 
 
               
 
-                    QGD_Complex16 element      = input[index];
-                    QGD_Complex16 element_pair = input[index_pair];              
+                    KernelLargeComplexT<MatrixT> element      = input[index];
+                    KernelLargeComplexT<MatrixT> element_pair = input[index_pair];              
 
-                    QGD_Complex16 tmp1 = mult(u3_1qbit1[0], element);
-                    QGD_Complex16 tmp2 = mult(u3_1qbit1[1], element_pair);
+                    KernelLargeComplexT<MatrixT> tmp1 = mult(u3_1qbit1[0], element);
+                    KernelLargeComplexT<MatrixT> tmp2 = mult(u3_1qbit1[1], element_pair);
  
                     input[index].real = tmp1.real + tmp2.real;
                     input[index].imag = tmp1.imag + tmp2.imag;
@@ -612,11 +645,11 @@ apply_crot_kernel_to_matrix_input(Matrix& u3_1qbit1, Matrix& u3_1qbit2, Matrix& 
                 }
 
             else {
-                    QGD_Complex16 element      = input[index];
-                    QGD_Complex16 element_pair = input[index_pair];              
+                    KernelLargeComplexT<MatrixT> element      = input[index];
+                    KernelLargeComplexT<MatrixT> element_pair = input[index_pair];              
 
-                    QGD_Complex16 tmp1 = mult(u3_1qbit2[0], element);
-                    QGD_Complex16 tmp2 = mult(u3_1qbit2[1], element_pair);
+                    KernelLargeComplexT<MatrixT> tmp1 = mult(u3_1qbit2[0], element);
+                    KernelLargeComplexT<MatrixT> tmp2 = mult(u3_1qbit2[1], element_pair);
  
                     input[index].real = tmp1.real + tmp2.real;
                     input[index].imag = tmp1.imag + tmp2.imag;
@@ -641,4 +674,62 @@ apply_crot_kernel_to_matrix_input(Matrix& u3_1qbit1, Matrix& u3_1qbit2, Matrix& 
 
 
 
+}
+
+void
+apply_crot_kernel_to_matrix_input(Matrix& u3_1qbit1, Matrix& u3_1qbit2, Matrix& input, const int& target_qbit, const int& control_qbit, const int& matrix_size) {
+    apply_crot_kernel_to_matrix_input_impl(u3_1qbit1, u3_1qbit2, input, target_qbit, control_qbit, matrix_size);
+}
+
+void
+apply_crot_kernel_to_matrix_input(Matrix_float& u3_1qbit1, Matrix_float& u3_1qbit2, Matrix_float& input, const int& target_qbit, const int& control_qbit, const int& matrix_size) {
+    apply_crot_kernel_to_matrix_input_impl(u3_1qbit1, u3_1qbit2, input, target_qbit, control_qbit, matrix_size);
+}
+
+void apply_large_kernel_to_input(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size) {
+    apply_large_kernel_to_input_impl(unitary, input, involved_qbits, matrix_size);
+}
+
+void apply_large_kernel_to_input(Matrix_float& unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size) {
+    apply_large_kernel_to_input_impl(unitary, input, involved_qbits, matrix_size);
+}
+
+void apply_2qbit_kernel_to_state_vector_input(Matrix& two_qbit_unitary, Matrix& input, const int& inner_qbit, const int& outer_qbit, const int& matrix_size) {
+    apply_2qbit_kernel_to_state_vector_input_impl(two_qbit_unitary, input, inner_qbit, outer_qbit, matrix_size);
+}
+
+void apply_2qbit_kernel_to_state_vector_input(Matrix_float& two_qbit_unitary, Matrix_float& input, const int& inner_qbit, const int& outer_qbit, const int& matrix_size) {
+    apply_2qbit_kernel_to_state_vector_input_impl(two_qbit_unitary, input, inner_qbit, outer_qbit, matrix_size);
+}
+
+void apply_2qbit_kernel_to_matrix_input(Matrix& two_qbit_unitary, Matrix& input, const int& inner_qbit, const int& outer_qbit, const int& matrix_size) {
+    apply_2qbit_kernel_to_matrix_input_impl(two_qbit_unitary, input, inner_qbit, outer_qbit, matrix_size);
+}
+
+void apply_2qbit_kernel_to_matrix_input(Matrix_float& two_qbit_unitary, Matrix_float& input, const int& inner_qbit, const int& outer_qbit, const int& matrix_size) {
+    apply_2qbit_kernel_to_matrix_input_impl(two_qbit_unitary, input, inner_qbit, outer_qbit, matrix_size);
+}
+
+void apply_3qbit_kernel_to_state_vector_input(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size) {
+    apply_3qbit_kernel_to_state_vector_input_impl(unitary, input, involved_qbits, matrix_size);
+}
+
+void apply_3qbit_kernel_to_state_vector_input(Matrix_float& unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size) {
+    apply_3qbit_kernel_to_state_vector_input_impl(unitary, input, involved_qbits, matrix_size);
+}
+
+void apply_4qbit_kernel_to_state_vector_input(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size) {
+    apply_4qbit_kernel_to_state_vector_input_impl(unitary, input, involved_qbits, matrix_size);
+}
+
+void apply_4qbit_kernel_to_state_vector_input(Matrix_float& unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size) {
+    apply_4qbit_kernel_to_state_vector_input_impl(unitary, input, involved_qbits, matrix_size);
+}
+
+void apply_5qbit_kernel_to_state_vector_input(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size) {
+    apply_5qbit_kernel_to_state_vector_input_impl(unitary, input, involved_qbits, matrix_size);
+}
+
+void apply_5qbit_kernel_to_state_vector_input(Matrix_float& unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size) {
+    apply_5qbit_kernel_to_state_vector_input_impl(unitary, input, involved_qbits, matrix_size);
 }

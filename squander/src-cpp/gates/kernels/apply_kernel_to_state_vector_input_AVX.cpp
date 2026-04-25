@@ -360,7 +360,7 @@ copies or substantial portions of the Software.
 
                    __m256 data_r = _mm256_hadd_ps(data_u2, data_d2);
 
-                   data_r = _mm256_permutevar8x32_ps(data_r, _mm256_setr_epi32(0, 1, 4, 5, 2, 3, 6, 7));
+                   data_r = _mm256_permutevar8x32_ps(data_r, _mm256_setr_epi32(0, 4, 2, 6, 1, 5, 3, 7));
                    _mm_storeu_ps(ptr, _mm256_castps256_ps128(data_r));
 
                 }
@@ -589,7 +589,7 @@ copies or substantial portions of the Software.
 
                    __m256 data_r = _mm256_hadd_ps(data_u2, data_d2);
 
-                   data_r = _mm256_permutevar8x32_ps(data_r, _mm256_setr_epi32(0, 1, 4, 5, 2, 3, 6, 7));
+                   data_r = _mm256_permutevar8x32_ps(data_r, _mm256_setr_epi32(0, 4, 2, 6, 1, 5, 3, 7));
                    _mm_storeu_ps(ptr, _mm256_castps256_ps128(data_r));
 
                 }
@@ -829,7 +829,7 @@ copies or substantial portions of the Software.
 
                    __m256 data_r = _mm256_hadd_ps(data_u2, data_d2);
 
-                   data_r = _mm256_permutevar8x32_ps(data_r, _mm256_setr_epi32(0, 1, 4, 5, 2, 3, 6, 7));
+                   data_r = _mm256_permutevar8x32_ps(data_r, _mm256_setr_epi32(0, 4, 2, 6, 1, 5, 3, 7));
                    _mm_storeu_ps(ptr, _mm256_castps256_ps128(data_r));
 
                 }

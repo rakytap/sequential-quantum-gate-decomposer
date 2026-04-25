@@ -40,4 +40,21 @@ limitations under the License.
 void
 apply_kernel_to_input(Matrix& u3_1qbit, Matrix& input, const bool& deriv, const int& target_qbit, const int& control_qbit, const int& matrix_size);
 
+void
+apply_kernel_to_input(Matrix_float& u3_1qbit, Matrix_float& input, const bool& deriv, const int& target_qbit, const int& control_qbit, const int& matrix_size);
+
+/**
+@brief Apply a 2x2 kernel from the right: input = input * U.
+@param u3_1qbit The 2x2 kernel of the gate operation.
+@param input The input matrix on which the transformation is applied.
+@param target_qbit The target qubit on which the transformation should be applied.
+@param control_qbit The control qubit (-1 if there is no control qubit).
+@param matrix_size The full Hilbert-space dimension.
+*/
+void
+apply_kernel_from_right(Matrix& u3_1qbit, Matrix& input, const int& target_qbit, const int& control_qbit, const int& matrix_size);
+
+void
+apply_kernel_from_right(Matrix_float& u3_1qbit, Matrix_float& input, const int& target_qbit, const int& control_qbit, const int& matrix_size);
+
 #endif

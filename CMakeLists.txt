@@ -780,8 +780,6 @@ list(APPEND qgd_files
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/CZ.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/CH.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/Gate.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/UN.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/ON.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/CROT.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/Gates_block.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/H.cpp
@@ -813,10 +811,6 @@ list(APPEND qgd_files
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/CR.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/Adaptive.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/R.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/RZ_P.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/CZ_NU.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/custom_kernel_1qubit_gate.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/Composite.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/kernels/apply_kernel_to_input.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/kernels/apply_kernel_to_state_vector_input.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/kernels/apply_large_kernel_to_input.cpp

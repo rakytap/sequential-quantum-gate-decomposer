@@ -1,245 +1,73 @@
-/*
-Created on Fri Jun 26 14:13:26 2020
-Copyright 2020 Peter Rakyta, Ph.D.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-
-@author: Peter Rakyta, Ph.D.
-*/
-/*! \file RX.cpp
-    \brief Class representing a RX gate.
-*/
-
+#include "gate_kernel_templates.h"
 #include "RX.h"
 
+RX::RX() : RX(-1, -1) {}
 
-
-//static tbb::spin_mutex my_mutex;
-/**
-@brief NullaRX constructor of the class.
-*/
-RX::RX() : RX(-1, -1) {
-
-}
-
-
-
-
-
-/**
-@brief Constructor of the class.
-@param qbit_num_in The number of qubits spanning the gate.
-@param target_qbit_in The 0<=ID<qbit_num of the target qubit.
-@param theta_in logical value indicating whether the matrix creation takes an argument theta.
-@param phi_in logical value indicating whether the matrix creation takes an argument phi
-@param lambda_in logical value indicating whether the matrix creation takes an argument lambda
-*/
-RX::RX(int qbit_num_in, int target_qbit_in) {
-
-    // A string labeling the gate operation
-    name = "RX";
-
-    // number of qubits spanning the matrix of the gate
-    qbit_num = qbit_num_in;
-    // the size of the matrix
-    matrix_size = (qbit_num >= 0) ? Power_of_2(qbit_num) : -1;
-    // A string describing the type of the gate
-    type = RX_OPERATION;
-
-
-    if (qbit_num_in >= 0 && target_qbit_in >= qbit_num) {
-        std::stringstream sstream;
-        sstream << "The index of the target qubit is larger than the number of qubits" << std::endl;
-	print(sstream, 0);		
-        throw "The index of the target qubit is larger than the number of qubits";
-    }
-	
-    // The index of the qubit on which the gate acts (target_qbit >= 0)
-    target_qbit = target_qbit_in;
-    // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gates
-    control_qbit = -1;
-
+RX::RX(int qbit_num_in, int target_qbit_in) : U3(qbit_num_in, target_qbit_in) {
+    name          = "RX";
+    type          = RX_OPERATION;
     parameter_num = 1;
-
+    control_qbit  = -1;
 }
 
+RX::~RX() {}
 
-/**
-@brief Destructor of the class
-*/
-RX::~RX() {
-
-}
-
-
-
-
-/**
-@brief Call to apply the gate on the input array/matrix by RX*input
-@param parameters An array of parameters to calculate the matrix of the U3 gate.
-@param input The input array on which the gate is applied
-@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
-*/
-void 
-RX::apply_to( Matrix_real& parameters, Matrix& input, int parallel ) {
-
-    if (input.rows != matrix_size ) {
-        std::string err("RX::apply_to: Wrong input size in RX gate apply.");
-        throw err;    
-    }
-
-
-    double ThetaOver2, Phi, Lambda;
-
-    ThetaOver2 = parameters[0];
-    parameters_for_calc_one_qubit(ThetaOver2, Phi, Lambda);
-  
-    // get the U3 gate of one qubit
-    Matrix u3_1qbit = calc_one_qubit_u3(ThetaOver2, Phi, Lambda );
-
-
-    apply_kernel_to( u3_1qbit, input, false, parallel );
-
-
-}
-
-
-
-/**
-@brief Call to apply the gate on the input array/matrix by input*U3
-@param parameters An array of parameters to calculate the matrix of the U3 gate.
-@param input The input array on which the gate is applied
-*/
-void 
-RX::apply_from_right( Matrix_real& parameters, Matrix& input ) {
-
-    if (input.cols != matrix_size ) {
-        std::stringstream sstream;
-	sstream << "Wrong matrix size in U3 apply_from_right" << std::endl;
-        print(sstream, 0);	   
-        exit(-1);
-    }
-
-
-    double ThetaOver2, Phi, Lambda;
-
-    ThetaOver2 = parameters[0];
-    parameters_for_calc_one_qubit(ThetaOver2, Phi, Lambda);
-
-    // get the U3 gate of one qubit
-    Matrix u3_1qbit = calc_one_qubit_u3(ThetaOver2, Phi, Lambda );
-
-
-    apply_kernel_from_right(u3_1qbit, input);
-
-
-}
-
-
-
-/**
-@brief Call to evaluate the derivate of the circuit on an inout with respect to all of the free parameters.
-@param parameters An array of the input parameters.
-@param input The input array on which the gate is applied
-@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
-*/
-std::vector<Matrix> 
-RX::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input, int parallel ) {
-
-    if (input.rows != matrix_size ) {
-        std::stringstream sstream;
-	sstream << "Wrong matrix size in RX apply_derivate_to" << std::endl;
-        print(sstream, 0);	      
-        exit(-1);
-    }
-
-
-    std::vector<Matrix> ret;
-
-    double ThetaOver2, Phi, Lambda;
-
-    ThetaOver2 = parameters_mtx[0] + M_PI/2;
-    parameters_for_calc_one_qubit(ThetaOver2, Phi, Lambda);
-
-    // the resulting matrix
-    Matrix res_mtx = input.copy();
-
-    // get the U3 gate of one qubit
-    Matrix u3_1qbit = calc_one_qubit_u3(ThetaOver2, Phi, Lambda);
-
-    // apply the computing kernel on the matrix
-    bool deriv = true;
-    apply_kernel_to(u3_1qbit, res_mtx, deriv, parallel);
-
-    ret.push_back(res_mtx);
-
-    return ret;
-
-
-}
-
-
-/**
-@brief Calculate the matrix of a U3 gate gate corresponding to the given parameters acting on a single qbit space.
-@param Theta Real parameter standing for the parameter theta.
-@param Phi Real parameter standing for the parameter phi.
-@param Lambda Real parameter standing for the parameter lambda.
-@return Returns with the matrix of the one-qubit matrix.
-*/
-void 
-RX::parameters_for_calc_one_qubit( double& ThetaOver2, double& Phi, double& Lambda){
-
-    Phi = -M_PI/2;
-    Lambda = M_PI/2;
-}
-
-/**
-@brief Call to create a clone of the present class
-@return Return with a pointer pointing to the cloned object
-*/
 RX* RX::clone() {
-
     RX* ret = new RX(qbit_num, target_qbit);
-    
-    ret->set_parameter_start_idx( get_parameter_start_idx() );
-    ret->set_parents( parents );
-    ret->set_children( children );
-
-
+    ret->set_parameter_start_idx(get_parameter_start_idx());
+    ret->set_parents(parents);
+    ret->set_children(children);
     return ret;
-
 }
 
+std::vector<double> RX::get_parameter_multipliers() const {
+    return {2.0};
+}
 
+Matrix RX::gate_kernel(const Matrix_real& precomputed_sincos) {
+    const int theta_offset = 0 * precomputed_sincos.stride;
+    const double s_theta = precomputed_sincos[theta_offset + 0];
+    const double c_theta = precomputed_sincos[theta_offset + 1];
+    return rx_gate_kernel_from_trig<Matrix, double>(s_theta, c_theta);
+}
 
+Matrix_float RX::gate_kernel(const Matrix_real_float& precomputed_sincos) {
+    const int theta_offset = 0 * precomputed_sincos.stride;
+    const float s_theta = precomputed_sincos[theta_offset + 0];
+    const float c_theta = precomputed_sincos[theta_offset + 1];
+    return rx_gate_kernel_from_trig<Matrix_float, float>(s_theta, c_theta);
+}
 
-/**
-@brief Call to extract parameters from the parameter array corresponding to the circuit, in which the gate is embedded.
-@param parameters The parameter array corresponding to the circuit in which the gate is embedded
-@return Returns with the array of the extracted parameters.
-*/
-Matrix_real 
-RX::extract_parameters( Matrix_real& parameters ) {
+Matrix RX::inverse_gate_kernel(const Matrix_real& precomputed_sincos) {
+    const int theta_offset = 0 * precomputed_sincos.stride;
+    const double s_theta = precomputed_sincos[theta_offset + 0];
+    const double c_theta = precomputed_sincos[theta_offset + 1];
+    return rx_inverse_gate_kernel_from_trig<Matrix, double>(s_theta, c_theta);
+}
 
-    if ( get_parameter_start_idx() + get_parameter_num() > parameters.size()  ) {
-        std::string err("RX::extract_parameters: Cant extract parameters, since the dinput arary has not enough elements.");
-        throw err;     
+Matrix_float RX::inverse_gate_kernel(const Matrix_real_float& precomputed_sincos) {
+    const int theta_offset = 0 * precomputed_sincos.stride;
+    const float s_theta = precomputed_sincos[theta_offset + 0];
+    const float c_theta = precomputed_sincos[theta_offset + 1];
+    return rx_inverse_gate_kernel_from_trig<Matrix_float, float>(s_theta, c_theta);
+}
+
+Matrix RX::derivative_kernel(const Matrix_real& precomputed_sincos, int param_idx) {
+    if (param_idx != 0) {
+        return Matrix();
     }
+    const int theta_offset = 0 * precomputed_sincos.stride;
+    const double s_theta = precomputed_sincos[theta_offset + 0];
+    const double c_theta = precomputed_sincos[theta_offset + 1];
+    return rx_derivative_kernel_from_trig<Matrix, double>(s_theta, c_theta);
+}
 
-    Matrix_real extracted_parameters(1,1);
-
-    extracted_parameters[0] = std::fmod( 2*parameters[ get_parameter_start_idx() ], 4*M_PI);
-
-    return extracted_parameters;
-
+Matrix_float RX::derivative_kernel(const Matrix_real_float& precomputed_sincos, int param_idx) {
+    if (param_idx != 0) {
+        return Matrix_float();
+    }
+    const int theta_offset = 0 * precomputed_sincos.stride;
+    const float s_theta = precomputed_sincos[theta_offset + 0];
+    const float c_theta = precomputed_sincos[theta_offset + 1];
+    return rx_derivative_kernel_from_trig<Matrix_float, float>(s_theta, c_theta);
 }

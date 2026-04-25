@@ -90,6 +90,17 @@ def _assert_state_close(a, b, rtol=1e-6):
     assert err < rtol, f"state mismatch: error={err:.3e}"
 
 
+def _random_unitary(dim, seed=123):
+    """Create a deterministic random unitary matrix using QR decomposition."""
+    rng = np.random.default_rng(seed)
+    a = rng.standard_normal((dim, dim)) + 1j * rng.standard_normal((dim, dim))
+    q, r = np.linalg.qr(a)
+    d = np.diag(r)
+    phase = np.where(np.abs(d) > 0, d / np.abs(d), 1.0)
+    q = q * phase
+    return np.ascontiguousarray(q, dtype=np.complex128)
+
+
 # ──────────────────────────────────────────────────────────────────────────────
 # Qubit counts chosen to stress different AVX dispatch paths.
 #   qbit_num = 1,2,3  → small gate kernel (direct index arithmetic)
@@ -99,6 +110,7 @@ def _assert_state_close(a, b, rtol=1e-6):
 QBIT_NUMS_SMALL = [1, 2, 3]
 QBIT_NUMS_MEDIUM = [4, 5, 6]
 QBIT_NUMS_ALL = QBIT_NUMS_SMALL + QBIT_NUMS_MEDIUM
+RECT_COLS_MAX = 32
 
 
 class TestApplyToFloat64:
@@ -300,6 +312,269 @@ class TestApplyFromRight:
         circ.apply_from_right(p32, A32, is_f32=True)
 
         _assert_unitary_close(ref, A32.astype(np.complex128), rtol=1e-4)
+
+
+class TestRectangularApplyRoutes:
+    """4-qubit rectangular matrix coverage for all apply* methods.
+
+    For apply_to routes, the matrix shape is 16xN (N=1..32).
+    For apply_from_right routes, the matrix shape is Nx16 (N=1..32), since
+    the right-multiply path requires the number of columns to be 16.
+    """
+
+    def _build_circuit_q4(self):
+        circ = Circuit(4)
+        circ.add_RX(0)
+        circ.add_RZ(0)
+        circ.add_CNOT(0, 1)
+        circ.add_RY(1)
+        return circ
+
+    @staticmethod
+    def _max_subset_err_apply_to(circ, params, full_input, is_f32=False):
+        out_full = np.ascontiguousarray(full_input.copy())
+        if is_f32:
+            circ.apply_to(params, out_full, is_f32=True)
+        else:
+            circ.apply_to(params, out_full)
+
+        errs = []
+        for ncols in range(1, RECT_COLS_MAX + 1):
+            part = np.ascontiguousarray(full_input[:, :ncols].copy())
+            if is_f32:
+                circ.apply_to(params, part, is_f32=True)
+            else:
+                circ.apply_to(params, part)
+            errs.append(np.linalg.norm(part - out_full[:, :ncols]))
+
+        return float(max(errs))
+
+    @staticmethod
+    def _max_subset_err_apply_from_right(circ, params, full_input, is_f32=False):
+        out_full = np.ascontiguousarray(full_input.copy())
+        if is_f32:
+            circ.apply_from_right(params, out_full, is_f32=True)
+        else:
+            circ.apply_from_right(params, out_full)
+
+        errs = []
+        for nrows in range(1, RECT_COLS_MAX + 1):
+            part = np.ascontiguousarray(full_input[:nrows, :].copy())
+            if is_f32:
+                circ.apply_from_right(params, part, is_f32=True)
+            else:
+                circ.apply_from_right(params, part)
+            errs.append(np.linalg.norm(part - out_full[:nrows, :]))
+
+        return float(max(errs))
+
+    def test_apply_to_rectangular_subset_consistency_f64(self):
+        circ = self._build_circuit_q4()
+        params = _params64(circ.get_Parameter_Num())
+
+        rng = np.random.default_rng(123)
+        full = np.ascontiguousarray(
+            rng.standard_normal((16, RECT_COLS_MAX))
+            + 1j * rng.standard_normal((16, RECT_COLS_MAX)),
+            dtype=np.complex128,
+        )
+
+        max_err = self._max_subset_err_apply_to(circ, params, full, is_f32=False)
+        assert max_err < 1e-10, f"apply_to f64 16xN subset mismatch: {max_err:.3e}"
+
+    def test_apply_to_rectangular_subset_consistency_f32(self):
+        circ = self._build_circuit_q4()
+        params = _params32(circ.get_Parameter_Num())
+
+        rng = np.random.default_rng(123)
+        full = np.ascontiguousarray(
+            rng.standard_normal((16, RECT_COLS_MAX))
+            + 1j * rng.standard_normal((16, RECT_COLS_MAX)),
+            dtype=np.complex64,
+        )
+
+        max_err = self._max_subset_err_apply_to(circ, params, full, is_f32=True)
+        assert max_err < 5e-5, f"apply_to f32 16xN subset mismatch: {max_err:.3e}"
+
+    def test_apply_from_right_rectangular_subset_consistency_f64(self):
+        circ = self._build_circuit_q4()
+        params = _params64(circ.get_Parameter_Num())
+
+        rng = np.random.default_rng(124)
+        full = np.ascontiguousarray(
+            rng.standard_normal((RECT_COLS_MAX, 16))
+            + 1j * rng.standard_normal((RECT_COLS_MAX, 16)),
+            dtype=np.complex128,
+        )
+
+        max_err = self._max_subset_err_apply_from_right(circ, params, full, is_f32=False)
+        assert max_err < 1e-10, f"apply_from_right f64 Nx16 subset mismatch: {max_err:.3e}"
+
+    def test_apply_from_right_rectangular_subset_consistency_f32(self):
+        circ = self._build_circuit_q4()
+        params = _params32(circ.get_Parameter_Num())
+
+        rng = np.random.default_rng(124)
+        full = np.ascontiguousarray(
+            rng.standard_normal((RECT_COLS_MAX, 16))
+            + 1j * rng.standard_normal((RECT_COLS_MAX, 16)),
+            dtype=np.complex64,
+        )
+
+        max_err = self._max_subset_err_apply_from_right(circ, params, full, is_f32=True)
+        assert max_err < 5e-5, f"apply_from_right f32 Nx16 subset mismatch: {max_err:.3e}"
+
+
+class TestGeneralOperation:
+    """Coverage for explicit GENERAL_OPERATION matrix insertion."""
+
+    def _build_circuit_q4(self):
+        circ = Circuit(4)
+        circ.add_RX(0)
+        circ.add_RZ(0)
+        circ.add_CNOT(0, 1)
+        circ.add_RY(1)
+        return circ
+
+    def test_general_operation_all_paths_f64(self):
+        qbit_num = 2
+        dim = 1 << qbit_num
+        U = _random_unitary(dim, seed=91)
+
+        circ = Circuit(qbit_num)
+        circ.add_GENERAL(U)
+
+        params = np.array([], dtype=np.float64)
+
+        # get_Matrix
+        got = np.asarray(circ.get_Matrix(params), dtype=np.complex128)
+        _assert_unitary_close(U, got, rtol=1e-10)
+
+        # apply_to
+        rng = np.random.default_rng(92)
+        A = np.ascontiguousarray(rng.standard_normal((dim, dim)) + 1j * rng.standard_normal((dim, dim)), dtype=np.complex128)
+        expected_left = U @ A
+        got_left = A.copy(order="C")
+        circ.apply_to(params, got_left)
+        assert np.allclose(expected_left, got_left, atol=1e-10)
+
+        # apply_from_right
+        B = np.ascontiguousarray(rng.standard_normal((dim, dim)) + 1j * rng.standard_normal((dim, dim)), dtype=np.complex128)
+        expected_right = B @ U
+        got_right = B.copy(order="C")
+        circ.apply_from_right(params, got_right)
+        assert np.allclose(expected_right, got_right, atol=1e-10)
+
+        # apply_to_list
+        M0 = np.ascontiguousarray(rng.standard_normal((dim, dim)) + 1j * rng.standard_normal((dim, dim)), dtype=np.complex128)
+        M1 = np.ascontiguousarray(rng.standard_normal((dim, 1)) + 1j * rng.standard_normal((dim, 1)), dtype=np.complex128)
+        inputs = [M0.copy(order="C"), M1.copy(order="C")]
+        circ.apply_to_list(inputs, params)
+        assert np.allclose(inputs[0], U @ M0, atol=1e-10)
+        assert np.allclose(inputs[1], U @ M1, atol=1e-10)
+
+        # derivative is empty for zero-parameter GENERAL_OPERATION
+        deriv = circ.apply_derivate_to(params, _identity(dim))
+        assert isinstance(deriv, list)
+        assert len(deriv) == 0
+
+    def test_general_operation_all_paths_f32(self):
+        qbit_num = 2
+        dim = 1 << qbit_num
+        U64 = _random_unitary(dim, seed=193)
+        U32 = np.ascontiguousarray(U64.astype(np.complex64))
+
+        circ = Circuit(qbit_num)
+        circ.add_GENERAL(U32, is_f32=True)
+
+        params32 = np.array([], dtype=np.float32)
+
+        # get_Matrix
+        got32 = np.asarray(circ.get_Matrix(params32, is_f32=True), dtype=np.complex64)
+        assert np.allclose(got32, U32, atol=5e-5)
+
+        rng = np.random.default_rng(194)
+
+        # apply_to
+        A32 = np.ascontiguousarray(
+            rng.standard_normal((dim, dim)) + 1j * rng.standard_normal((dim, dim)),
+            dtype=np.complex64,
+        )
+        expected_left = U32 @ A32
+        got_left = A32.copy(order="C")
+        circ.apply_to(params32, got_left, is_f32=True)
+        assert np.allclose(expected_left, got_left, atol=5e-5)
+
+        # apply_from_right
+        B32 = np.ascontiguousarray(
+            rng.standard_normal((dim, dim)) + 1j * rng.standard_normal((dim, dim)),
+            dtype=np.complex64,
+        )
+        expected_right = B32 @ U32
+        got_right = B32.copy(order="C")
+        circ.apply_from_right(params32, got_right, is_f32=True)
+        assert np.allclose(expected_right, got_right, atol=5e-5)
+
+        # apply_to_list
+        M0 = np.ascontiguousarray(
+            rng.standard_normal((dim, dim)) + 1j * rng.standard_normal((dim, dim)),
+            dtype=np.complex64,
+        )
+        M1 = np.ascontiguousarray(
+            rng.standard_normal((dim, 1)) + 1j * rng.standard_normal((dim, 1)),
+            dtype=np.complex64,
+        )
+        inputs = [M0.copy(order="C"), M1.copy(order="C")]
+        circ.apply_to_list(inputs, params32, is_f32=True)
+        assert np.allclose(inputs[0], U32 @ M0, atol=5e-5)
+        assert np.allclose(inputs[1], U32 @ M1, atol=5e-5)
+
+        # derivative is empty for zero-parameter GENERAL_OPERATION
+        deriv = circ.apply_derivate_to(params32, _identity(dim, dtype=np.complex64), is_f32=True)
+        assert isinstance(deriv, list)
+        assert len(deriv) == 0
+
+    def test_apply_to_list_rectangular_sweep_f64(self):
+        circ = self._build_circuit_q4()
+        params = _params64(circ.get_Parameter_Num())
+
+        rng = np.random.default_rng(125)
+        mats = [
+            np.ascontiguousarray(
+                rng.standard_normal((16, ncols)) + 1j * rng.standard_normal((16, ncols)),
+                dtype=np.complex128,
+            )
+            for ncols in range(1, RECT_COLS_MAX + 1)
+        ]
+        refs = [m.copy() for m in mats]
+
+        circ.apply_to_list(mats, params)
+        for ref in refs:
+            circ.apply_to(params, ref)
+
+        errs = [np.linalg.norm(got - expected) for got, expected in zip(mats, refs)]
+        assert max(errs) < 1e-10, f"apply_to_list f64 16xN mismatch: {max(errs):.3e}"
+
+    def test_apply_to_list_rectangular_sweep_f32(self):
+        circ = self._build_circuit_q4()
+        params = _params32(circ.get_Parameter_Num())
+
+        rng = np.random.default_rng(125)
+        mats = [
+            np.ascontiguousarray(
+                rng.standard_normal((16, ncols)) + 1j * rng.standard_normal((16, ncols)),
+                dtype=np.complex64,
+            )
+            for ncols in range(1, RECT_COLS_MAX + 1)
+        ]
+        refs = [m.copy() for m in mats]
+
+        circ.apply_to_list(mats, params, is_f32=True)
+        for ref in refs:
+            circ.apply_to(params, ref, is_f32=True)
+
+        errs = [np.linalg.norm(got - expected) for got, expected in zip(mats, refs)]
+        assert max(errs) < 5e-5, f"apply_to_list f32 16xN mismatch: {max(errs):.3e}"
 
 
 class TestGateFusion:
@@ -762,6 +1037,68 @@ class TestApplyDerivateTo:
         mat = _identity(4)
         with pytest.raises(Exception):
             circ.apply_derivate_to(params32, mat)
+
+
+class TestApplyToCombined:
+    """apply_to_combined: returns [forward_output, derivatives...]."""
+
+    @pytest.mark.parametrize("qbit_num", [2, 3])
+    def test_combined_matches_apply_and_derivative_f64(self, qbit_num):
+        circ = _build_rx_rz_cnot_circuit(qbit_num)
+        params = _params64(circ.get_Parameter_Num())
+        dim = 2 ** qbit_num
+
+        mat = _identity(dim)
+        combined = circ.apply_to_combined(params, mat)
+
+        assert isinstance(combined, list)
+        assert len(combined) == circ.get_Parameter_Num() + 1
+
+        expected_forward = _identity(dim)
+        circ.apply_to(params, expected_forward)
+        _assert_unitary_close(expected_forward, np.asarray(combined[0]))
+
+        expected_derivs = circ.apply_derivate_to(params, mat)
+        assert len(expected_derivs) == len(combined) - 1
+        for idx, d in enumerate(expected_derivs):
+            _assert_unitary_close(d, np.asarray(combined[idx + 1]))
+
+    @pytest.mark.parametrize("qbit_num", [2, 3])
+    def test_combined_matches_apply_and_derivative_f32(self, qbit_num):
+        circ = _build_rx_rz_cnot_circuit(qbit_num)
+        params32 = _params32(circ.get_Parameter_Num())
+        dim = 2 ** qbit_num
+
+        mat32 = _identity(dim, dtype=np.complex64)
+        combined = circ.apply_to_combined(params32, mat32, is_f32=True)
+
+        assert isinstance(combined, list)
+        assert len(combined) == circ.get_Parameter_Num() + 1
+        for arr in combined:
+            assert np.asarray(arr).dtype == np.complex64
+
+        expected_forward = _identity(dim, dtype=np.complex64)
+        circ.apply_to(params32, expected_forward, is_f32=True)
+        _assert_unitary_close(expected_forward.astype(np.complex128), np.asarray(combined[0]).astype(np.complex128), rtol=1e-4)
+
+        expected_derivs = circ.apply_derivate_to(params32, mat32, is_f32=True)
+        assert len(expected_derivs) == len(combined) - 1
+        for idx, d in enumerate(expected_derivs):
+            _assert_unitary_close(d.astype(np.complex128), np.asarray(combined[idx + 1]).astype(np.complex128), rtol=1e-4)
+
+    def test_combined_no_params_returns_forward_only(self):
+        circ = Circuit(2)
+        circ.add_H(0)
+        circ.add_CNOT(0, 1)
+        params = np.array([], dtype=np.float64)
+
+        mat = _identity(4)
+        combined = circ.apply_to_combined(params, mat)
+
+        assert len(combined) == 1
+        expected_forward = _identity(4)
+        circ.apply_to(params, expected_forward)
+        _assert_unitary_close(expected_forward, np.asarray(combined[0]))
 
 
 # ---------------------------------------------------------------------------

@@ -86,6 +86,12 @@ Gate* create_gate( int qbit_num, int target_qbit ) {
     return static_cast<Gate*>( gate );
 }
 
+template<typename GateT>
+Gate* create_qbit_gate( int qbit_num ) {
+    GateT* gate = new GateT( qbit_num );
+    return static_cast<Gate*>( gate );
+}
+
 
 template<typename GateT>
 Gate* create_controlled_gate( int qbit_num, int target_qbit, int control_qbit ) {
@@ -209,6 +215,39 @@ static PyObject *
         self->gate = create_gate<GateT>( qbit_num, target_qbit );
     }
 
+
+    return (PyObject *) self;
+}
+
+/**
+@brief Method called when a python instance of a qbit-only gate class is initialized
+@param type A pointer pointing to an instance of the class Gate_Wrapper.
+@param args A tuple of the input arguments: qbit_num (int)
+@param kwds A tuple of keywords
+*/
+template<typename GateT>
+static PyObject *
+ qbit_gate_Wrapper_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {(char*)"qbit_num", NULL};
+    int qbit_num = -1;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i", kwlist, &qbit_num)) {
+        std::string err( "Unable to parse arguments");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+    if (qbit_num == -1){
+        PyErr_SetString(PyExc_ValueError, "Qubit_num must be set!");
+        return NULL;
+    }
+
+    Gate_Wrapper *self;
+    self = (Gate_Wrapper *) type->tp_alloc(type, 0);
+    if (self != NULL) {
+        self->gate = create_qbit_gate<GateT>( qbit_num );
+    }
 
     return (PyObject *) self;
 }
@@ -504,16 +543,6 @@ Gate_Wrapper_get_Matrix( Gate_Wrapper *self, PyObject *args, PyObject *kwds ) {
                     }
                 }
 
-                const int matrix_size = 1 << gate->get_qbit_num();
-                gate_mtx = Matrix_float(matrix_size, matrix_size);
-                for (int idx = 0; idx < gate_mtx.size(); idx++) {
-                    gate_mtx[idx].real = 0.0f;
-                    gate_mtx[idx].imag = 0.0f;
-                }
-                for (int idx = 0; idx < matrix_size; idx++) {
-                    gate_mtx[idx * gate_mtx.stride + idx].real = 1.0f;
-                }
-
                 if (gate->get_parameter_num() == 0) {
 
                     if (parameters_arr != NULL) {
@@ -522,8 +551,17 @@ Gate_Wrapper_get_Matrix( Gate_Wrapper *self, PyObject *args, PyObject *kwds ) {
                         return NULL;
                     }
 
-                    int parallel = 1;
-                    gate->Gate::apply_to(gate_mtx, parallel);
+                    // No-parameter gate: use apply_to on identity (existing path)
+                    const int matrix_size = 1 << gate->get_qbit_num();
+                    gate_mtx = Matrix_float(matrix_size, matrix_size);
+                    for (int idx = 0; idx < gate_mtx.size(); idx++) {
+                        gate_mtx[idx].real = 0.0f;
+                        gate_mtx[idx].imag = 0.0f;
+                    }
+                    for (int idx = 0; idx < matrix_size; idx++) {
+                        gate_mtx[idx * gate_mtx.stride + idx].real = 1.0f;
+                    }
+                    gate->apply_to(gate_mtx, 0);
 
                 }
                 else if (gate->get_parameter_num() > 0) {
@@ -534,8 +572,8 @@ Gate_Wrapper_get_Matrix( Gate_Wrapper *self, PyObject *args, PyObject *kwds ) {
                     }
 
                     Matrix_real_float&& parameters_mtx = numpy2matrix_real_float(parameters_arr);
-                    int parallel = 1;
-                    gate->Gate::apply_to(parameters_mtx, gate_mtx, parallel);
+                    // Use get_matrix so it never calls apply_to internally
+                    gate_mtx = gate->get_matrix(parameters_mtx, 1);
 
                     Py_DECREF(parameters_arr);
 
@@ -657,20 +695,13 @@ Gate_Wrapper_Wrapper_apply_from_right( Gate_Wrapper *self, PyObject *args, PyObj
     const int param_count = gate->get_parameter_num();
     bool release_parameters_arr = false;
 
-    if (param_count == 0) {
-        if ( input == NULL ) {
-            PyErr_SetString(PyExc_Exception, "Input matrix was not given");
-            return NULL;
-        }
-        if (parameters_arr != NULL) {
-            PyErr_SetString(PyExc_Exception, "The gate contains no parameters to set, but parameter array was given as input");
-            return NULL;
-        }
-        return PyList_New(0);
-    }
-
     if ( input == NULL ) {
         PyErr_SetString(PyExc_Exception, "Input matrix was not given");
+        return NULL;
+    }
+
+    if (param_count == 0 && parameters_arr != NULL) {
+        PyErr_SetString(PyExc_Exception, "The gate contains no parameters to set, but parameter array was given as input");
         return NULL;
     }
 
@@ -698,7 +729,7 @@ Gate_Wrapper_Wrapper_apply_from_right( Gate_Wrapper *self, PyObject *args, PyObj
 
         try {
             if (param_count == 0) {
-                gate->Gate::apply_from_right(input_mtx);
+                gate->apply_from_right(input_mtx);
             }
             else if (param_count > 0) {
                 if( parameters_arr == NULL ) {
@@ -726,7 +757,7 @@ Gate_Wrapper_Wrapper_apply_from_right( Gate_Wrapper *self, PyObject *args, PyObj
                 release_parameters_arr = true;
 
                 Matrix_real_float&& parameters_mtx = numpy2matrix_real_float( parameters_arr );
-                gate->Gate::apply_from_right(parameters_mtx, input_mtx);
+                gate->apply_from_right(parameters_mtx, input_mtx);
 
                 Py_DECREF(parameters_arr);
             }
@@ -922,10 +953,10 @@ Gate_Wrapper_Wrapper_apply_to_list( Gate_Wrapper *self, PyObject *args, PyObject
 
                 Matrix_float input_mtx = numpy2matrix_float(input);
                 if (param_count == 0) {
-                    gate->Gate::apply_to(input_mtx, parallel);
+                    gate->apply_to(input_mtx, parallel);
                 }
                 else if (param_count > 0) {
-                    gate->Gate::apply_to(parameters_mtx, input_mtx, parallel);
+                    gate->apply_to(parameters_mtx, input_mtx, parallel);
                 }
                 else {
                     Py_DECREF(seq);
@@ -1110,7 +1141,7 @@ Gate_Wrapper_Wrapper_apply_to( Gate_Wrapper *self, PyObject *args, PyObject *kwd
 
         try {
             if (param_count == 0) {
-                gate->Gate::apply_to(input_mtx, parallel);
+                gate->apply_to(input_mtx, parallel);
             }
             else if (param_count > 0) {
                 if( parameters_arr == NULL ) {
@@ -1138,7 +1169,7 @@ Gate_Wrapper_Wrapper_apply_to( Gate_Wrapper *self, PyObject *args, PyObject *kwd
                 release_parameters_arr = true;
 
                 Matrix_real_float&& parameters_mtx = numpy2matrix_real_float( parameters_arr );
-                gate->Gate::apply_to(parameters_mtx, input_mtx, parallel);
+                gate->apply_to(parameters_mtx, input_mtx, parallel);
 
                 Py_DECREF(parameters_arr);
             }
@@ -1333,7 +1364,7 @@ Gate_Wrapper_Wrapper_apply_derivate_to( Gate_Wrapper *self, PyObject *args, PyOb
             parameters_mtx = numpy2matrix_real_float(parameters_arr);
 
             std::vector<Matrix_float> derivs;
-            derivs = gate->Gate::apply_derivate_to(parameters_mtx, input_mtx, parallel);
+            derivs = gate->apply_derivate_to(parameters_mtx, input_mtx, parallel);
 
             PyObject* deriv_list = PyList_New((Py_ssize_t)derivs.size());
             if (deriv_list == NULL) {
@@ -1496,6 +1527,238 @@ Gate_Wrapper_Wrapper_apply_derivate_to( Gate_Wrapper *self, PyObject *args, PyOb
 }
 
 
+/**
+@brief Call to evaluate forward gate action and all derivatives in one call.
+       Return format: list where item[0] is apply_to output, item[1:] are derivatives.
+*/
+static PyObject *
+Gate_Wrapper_Wrapper_apply_to_combined( Gate_Wrapper *self, PyObject *args, PyObject *kwds ) {
+
+    static char *kwlist[] = {(char*)"unitary", (char*)"parameters", (char*)"parallel", (char*)"is_f32", NULL};
+
+    PyArrayObject * input = NULL;
+    PyArrayObject * parameters_arr = NULL;
+    int parallel = 1;
+    int is_f32 = 0;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|Oip", kwlist, &input, &parameters_arr, &parallel, &is_f32 )) {
+        std::string err( "Unable to parse keyword arguments");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+    if ( input == NULL ) {
+        PyErr_SetString(PyExc_Exception, "Input matrix was not given");
+        return NULL;
+    }
+
+    if (is_f32) {
+        if ( PyArray_TYPE(input) != NPY_COMPLEX64 ) {
+            PyErr_SetString(PyExc_TypeError, "input matrix or state should be complex64 when is_f32=True");
+            return NULL;
+        }
+    }
+    else {
+        if ( PyArray_TYPE(input) != NPY_COMPLEX128 ) {
+            PyErr_SetString(PyExc_TypeError, "input matrix or state should be complex128 when is_f32=False");
+            return NULL;
+        }
+    }
+
+    if ( !PyArray_IS_C_CONTIGUOUS(input) ) {
+        PyErr_SetString(PyExc_Exception, "input state/matrix is not memory contiguous");
+        return NULL;
+    }
+
+    Gate* gate = self->gate;
+    const int param_count = gate->get_parameter_num();
+    bool release_parameters_arr = false;
+
+    if (is_f32) {
+
+        Matrix_float input_mtx = numpy2matrix_float(input);
+
+        try {
+            Matrix_real_float parameters_mtx(0, 0);
+
+            if (param_count > 0) {
+                if( parameters_arr == NULL ) {
+                    std::string err( "The gate has free parameters to set, but no parameter array was given as input");
+                    PyErr_SetString(PyExc_Exception, err.c_str());
+                    return NULL;
+                }
+
+                if ( PyArray_TYPE(parameters_arr) != NPY_FLOAT32 ) {
+                    PyErr_SetString(PyExc_TypeError, "Parameter vector should be float32 when is_f32=True");
+                    return NULL;
+                }
+
+                if ( PyArray_IS_C_CONTIGUOUS(parameters_arr) ) {
+                    Py_INCREF(parameters_arr);
+                }
+                else {
+                    parameters_arr = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)parameters_arr, NPY_FLOAT32, NPY_ARRAY_IN_ARRAY);
+                }
+
+                if (parameters_arr == NULL) {
+                    PyErr_SetString(PyExc_TypeError, "Failed to cast parameters to a contiguous float32 numpy array");
+                    return NULL;
+                }
+                release_parameters_arr = true;
+                parameters_mtx = numpy2matrix_real_float(parameters_arr);
+            }
+
+            std::vector<Matrix_float> combined = gate->apply_to_combined(parameters_mtx, input_mtx, parallel);
+
+            PyObject* combined_list = PyList_New((Py_ssize_t)combined.size());
+            if (combined_list == NULL) {
+                if (release_parameters_arr) {
+                    Py_DECREF(parameters_arr);
+                }
+                return NULL;
+            }
+
+            for (Py_ssize_t idx = 0; idx < (Py_ssize_t)combined.size(); ++idx) {
+                Matrix_float* owned = new Matrix_float(combined[(size_t)idx]);
+                PyObject* cap = PyCapsule_New(
+                    owned, "squander.matrix_float_owner",
+                    matrix_float_owner_capsule_destruct);
+                if (cap == NULL) {
+                    delete owned;
+                    Py_DECREF(combined_list);
+                    if (release_parameters_arr) {
+                        Py_DECREF(parameters_arr);
+                    }
+                    return NULL;
+                }
+                npy_intp shape[2] = { (npy_intp)owned->rows, (npy_intp)owned->cols };
+                PyObject* out_py = PyArray_SimpleNewFromData(
+                    2, shape, NPY_COMPLEX64, owned->get_data());
+                if (out_py == NULL) {
+                    Py_DECREF(cap);
+                    Py_DECREF(combined_list);
+                    if (release_parameters_arr) {
+                        Py_DECREF(parameters_arr);
+                    }
+                    return NULL;
+                }
+                PyArray_SetBaseObject((PyArrayObject*)out_py, cap);
+                PyList_SET_ITEM(combined_list, idx, out_py);
+            }
+
+            if (release_parameters_arr) {
+                Py_DECREF(parameters_arr);
+            }
+            return combined_list;
+        }
+        catch (const std::string& err) {
+            if (release_parameters_arr) {
+                Py_DECREF(parameters_arr);
+            }
+            PyErr_SetString(PyExc_RuntimeError, err.c_str());
+            return NULL;
+        }
+        catch(...) {
+            if (release_parameters_arr) {
+                Py_DECREF(parameters_arr);
+            }
+            PyErr_SetString(PyExc_RuntimeError, "Unknown error in gate combined operation");
+            return NULL;
+        }
+    }
+
+    Matrix input_mtx = numpy2matrix(input);
+
+    try {
+        Matrix_real parameters_mtx(0, 0);
+
+        if (param_count > 0) {
+            if( parameters_arr == NULL ) {
+                std::string err( "The gate has free parameters to set, but no parameter array was given as input");
+                PyErr_SetString(PyExc_Exception, err.c_str());
+                return NULL;
+            }
+
+            if ( PyArray_TYPE(parameters_arr) != NPY_DOUBLE ) {
+                PyErr_SetString(PyExc_TypeError, "Parameter vector should be float64 when is_f32=False");
+                return NULL;
+            }
+
+            if ( PyArray_IS_C_CONTIGUOUS(parameters_arr) ) {
+                Py_INCREF(parameters_arr);
+            }
+            else {
+                parameters_arr = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+            }
+
+            if (parameters_arr == NULL) {
+                PyErr_SetString(PyExc_TypeError, "Failed to cast parameters to a contiguous double numpy array");
+                return NULL;
+            }
+            release_parameters_arr = true;
+            parameters_mtx = numpy2matrix_real(parameters_arr);
+        }
+
+        std::vector<Matrix> combined = gate->apply_to_combined(parameters_mtx, input_mtx, parallel);
+
+        PyObject* combined_list = PyList_New((Py_ssize_t)combined.size());
+        if (combined_list == NULL) {
+            if (release_parameters_arr) {
+                Py_DECREF(parameters_arr);
+            }
+            return NULL;
+        }
+
+        for (Py_ssize_t idx = 0; idx < (Py_ssize_t)combined.size(); ++idx) {
+            Matrix* owned = new Matrix(combined[(size_t)idx]);
+            PyObject* cap = PyCapsule_New(
+                owned, "squander.matrix_owner",
+                matrix_owner_capsule_destruct);
+            if (cap == NULL) {
+                delete owned;
+                Py_DECREF(combined_list);
+                if (release_parameters_arr) {
+                    Py_DECREF(parameters_arr);
+                }
+                return NULL;
+            }
+            npy_intp shape[2] = { (npy_intp)owned->rows, (npy_intp)owned->cols };
+            PyObject* out_py = PyArray_SimpleNewFromData(
+                2, shape, NPY_COMPLEX128, owned->get_data());
+            if (out_py == NULL) {
+                Py_DECREF(cap);
+                Py_DECREF(combined_list);
+                if (release_parameters_arr) {
+                    Py_DECREF(parameters_arr);
+                }
+                return NULL;
+            }
+            PyArray_SetBaseObject((PyArrayObject*)out_py, cap);
+            PyList_SET_ITEM(combined_list, idx, out_py);
+        }
+
+        if (release_parameters_arr) {
+            Py_DECREF(parameters_arr);
+        }
+        return combined_list;
+    }
+    catch (const std::string& err) {
+        if (release_parameters_arr) {
+            Py_DECREF(parameters_arr);
+        }
+        PyErr_SetString(PyExc_RuntimeError, err.c_str());
+        return NULL;
+    }
+    catch(...) {
+        if (release_parameters_arr) {
+            Py_DECREF(parameters_arr);
+        }
+        PyErr_SetString(PyExc_RuntimeError, "Unknown error in gate combined operation");
+        return NULL;
+    }
+}
+
+
 
 /**
 @brief Calculate the matrix of a U3 gate gate corresponding to the given parameters acting on a single qbit space.
@@ -1517,7 +1780,9 @@ Gate_Wrapper_get_Gate_Kernel( Gate_Wrapper *self, PyObject *args, PyObject *kwds
 
 
     try {
-        self->gate->parameters_for_calc_one_qubit(ThetaOver2, Phi, Lambda);
+        ThetaOver2 = 0.0;
+        Phi = 0.0;
+        Lambda = 0.0;
     }
     catch (std::string err) {    
         PyErr_SetString(PyExc_Exception, err.c_str());
@@ -1543,10 +1808,11 @@ Gate_Wrapper_get_Gate_Kernel( Gate_Wrapper *self, PyObject *args, PyObject *kwds
     Gate* gate = self->gate;
 
     if( gate->get_parameter_num() == 0 ) {
-       CH_1qbit_ = self->gate->calc_one_qubit_u3( );
+         Matrix_real empty_params(0, 0);
+         CH_1qbit_ = gate->gate_kernel(empty_params);
     }
     else if( gate->get_parameter_num() > 0 ) {
-       CH_1qbit_ = self->gate->calc_one_qubit_u3( ThetaOver2, Phi, Lambda );
+         CH_1qbit_ = Gate::calc_one_qubit_u3(ThetaOver2, Phi, Lambda);
     }
     else {
         std::string err( "The number of parameters in a gate is set to a negative value");
@@ -2129,6 +2395,34 @@ Gate_Wrapper_getstate( Gate_Wrapper *self ) {
     }
     Py_DECREF(control_qbits_py);
 
+    if (self->gate->get_type() == GENERAL_OPERATION) {
+        try {
+            Matrix gate_mtx = self->gate->get_matrix();
+            gate_mtx.set_owner(false);
+            PyObject* gate_mtx_py = matrix_to_numpy(gate_mtx);
+            if (gate_mtx_py == NULL) {
+                Py_DECREF(gate_state);
+                return NULL;
+            }
+            if (PyDict_SetItemString(gate_state, "matrix", gate_mtx_py) != 0) {
+                Py_DECREF(gate_mtx_py);
+                Py_DECREF(gate_state);
+                return NULL;
+            }
+            Py_DECREF(gate_mtx_py);
+        }
+        catch (std::string err) {
+            PyErr_SetString(PyExc_Exception, err.c_str());
+            Py_DECREF(gate_state);
+            return NULL;
+        }
+        catch (...) {
+            PyErr_SetString(PyExc_Exception, "Failed to serialize GENERAL_OPERATION matrix");
+            Py_DECREF(gate_state);
+            return NULL;
+        }
+    }
+
     return gate_state;
 
 }
@@ -2437,6 +2731,45 @@ Gate_Wrapper_setstate( Gate_Wrapper *self, PyObject *args ) {
         PyErr_SetString(PyExc_Exception, err.c_str());
         return NULL;
     }
+    case GENERAL_OPERATION: {
+        gate = new Gate(qbit_num);
+
+        PyObject* matrix_key = Py_BuildValue("s", "matrix");
+        if (PyDict_Contains(gate_state, matrix_key) == 0) {
+            Py_DECREF(matrix_key);
+            std::string err("GENERAL_OPERATION gate state should contain a matrix");
+            PyErr_SetString(PyExc_Exception, err.c_str());
+            delete gate;
+            return NULL;
+        }
+
+        PyObject* matrix_obj = PyDict_GetItem(gate_state, matrix_key); // borrowed
+        Py_DECREF(matrix_key);
+
+        PyArrayObject* matrix_arr = (PyArrayObject*)PyArray_FROM_OTF(matrix_obj, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
+        if (matrix_arr == NULL) {
+            delete gate;
+            return NULL;
+        }
+
+        Matrix gate_matrix = numpy2matrix(matrix_arr);
+        gate->set_matrix(gate_matrix);
+        Py_DECREF(matrix_arr);
+
+        if (!target_qbits.empty()) {
+            gate->set_target_qbits(target_qbits);
+        } else if (target_qbit >= 0) {
+            gate->set_target_qbit(target_qbit);
+        }
+
+        if (!control_qbits.empty()) {
+            gate->set_control_qbits(control_qbits);
+        } else if (control_qbit >= 0) {
+            gate->set_control_qbit(control_qbit);
+        }
+
+        break;
+    }
     default:
         std::string err( "Unsupported gate type");
         PyErr_SetString(PyExc_Exception, err.c_str());
@@ -2476,6 +2809,9 @@ extern "C"
     }, \
     {"apply_derivate_to", (PyCFunction) Gate_Wrapper_Wrapper_apply_derivate_to, METH_VARARGS | METH_KEYWORDS, \
      "Call to evaluate derivatives of the gate action on an input state/matrix." \
+    }, \
+    {"apply_to_combined", (PyCFunction) Gate_Wrapper_Wrapper_apply_to_combined, METH_VARARGS | METH_KEYWORDS, \
+     "Call to evaluate forward gate action and all derivatives in one call." \
     }, \
     {"apply_from_right", (PyCFunction) Gate_Wrapper_Wrapper_apply_from_right, METH_VARARGS | METH_KEYWORDS, \
      "Call to apply the gate from right side on an input state/matrix." \

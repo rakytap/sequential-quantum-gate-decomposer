@@ -2093,8 +2093,6 @@ qgd_N_Qubit_Decomposition_Wrapper_get_Gates(qgd_N_Qubit_Decomposition_Wrapper* s
         const char* type_str = nullptr;
         switch(gate->get_type()) {
             case GENERAL_OPERATION: type_str = "GENERAL"; break;
-            case UN_OPERATION: type_str = "UN"; break;
-            case ON_OPERATION: type_str = "ON"; break;
             case CZ_OPERATION: type_str = "CZ"; break;
             case CNOT_OPERATION: type_str = "CNOT"; break;
             case CH_OPERATION: type_str = "CH"; break;
@@ -2102,13 +2100,11 @@ qgd_N_Qubit_Decomposition_Wrapper_get_Gates(qgd_N_Qubit_Decomposition_Wrapper* s
             case RY_OPERATION: type_str = "RY"; break;
             case RX_OPERATION: type_str = "RX"; break;
             case RZ_OPERATION: type_str = "RZ"; break;
-            case RZ_P_OPERATION: type_str = "RZ_P"; break;
             case X_OPERATION: type_str = "X"; break;
             case SX_OPERATION: type_str = "SX"; break;
             case CRY_OPERATION: type_str = "CRY"; break;
             case SYC_OPERATION: type_str = "SYC"; break;
             case BLOCK_OPERATION: type_str = "BLOCK"; break;
-            case COMPOSITE_OPERATION: type_str = "COMPOSITE"; break;
             case ADAPTIVE_OPERATION: type_str = "ADAPTIVE"; break;
             case DECOMPOSITION_BASE_CLASS: type_str = "DECOMPOSITION_BASE_CLASS"; break;
             case SUB_MATRIX_DECOMPOSITION_CLASS: type_str = "SUB_MATRIX_DECOMPOSITION_CLASS"; break;
@@ -2117,7 +2113,6 @@ qgd_N_Qubit_Decomposition_Wrapper_get_Gates(qgd_N_Qubit_Decomposition_Wrapper* s
             case Y_OPERATION: type_str = "Y"; break;
             case Z_OPERATION: type_str = "Z"; break;
             case H_OPERATION: type_str = "H"; break;
-            case CZ_NU_OPERATION: type_str = "CZ_NU"; break;
             case CROT_OPERATION: type_str = "CROT"; break;
             case R_OPERATION: type_str = "R"; break;
             case T_OPERATION: type_str = "T"; break;
@@ -2128,7 +2123,6 @@ qgd_N_Qubit_Decomposition_Wrapper_get_Gates(qgd_N_Qubit_Decomposition_Wrapper* s
             case S_OPERATION: type_str = "S"; break;
             case SDG_OPERATION: type_str = "SDG"; break;
             case CU_OPERATION: type_str = "CU"; break;
-            case CUSTOM_KERNEL_1QUBIT_GATE_OPERATION: type_str = "CUSTOM_KERNEL_1QUBIT_GATE"; break;
             case CP_OPERATION: type_str = "CP"; break;
             case CRX_OPERATION: type_str = "CRX"; break;
             case CRZ_OPERATION: type_str = "CRZ"; break;

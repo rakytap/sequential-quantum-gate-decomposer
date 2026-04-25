@@ -54,10 +54,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "SX.h"
 #include "SXdg.h"
 #include "SYC.h"
-#include "UN.h"
-#include "ON.h"
 #include "Adaptive.h"
-#include "Composite.h"
 #include "RXX.h"
 #include "RYY.h"
 #include "RZZ.h"
@@ -198,6 +195,16 @@ qgd_Circuit_Wrapper_add_##GATE_NAME(qgd_Circuit_Wrapper *self, PyObject *args, P
         self->circuit->add_##gate_name(target_qbit);\
     }\
 \
+    return Py_BuildValue("i", 0);\
+}
+
+#define qgd_Circuit_Wrapper_add_qbit_only_gate(gate_name, GATE_NAME)\
+static PyObject * \
+qgd_Circuit_Wrapper_add_##GATE_NAME(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *kwds) \
+{\
+    (void)args;\
+    (void)kwds;\
+    self->circuit->add_##gate_name();\
     return Py_BuildValue("i", 0);\
 }
 
@@ -493,6 +500,143 @@ qgd_Circuit_Wrapper_add_Circuit(qgd_Circuit_Wrapper *self, PyObject *args)
 
 }
 
+
+/**
+@brief Wrapper function to add a GENERAL_OPERATION gate from an explicit matrix.
+@param self A pointer to an instance of qgd_Circuit_Wrapper.
+@param args Positional args: operation_mtx (numpy.ndarray), optional target_qbits, optional control_qbits.
+@param kwds Keywords: is_f32 (bool, optional, default False).
+*/
+static PyObject *
+qgd_Circuit_Wrapper_add_GENERAL(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *kwds)
+{
+
+    static char *kwlist[] = {(char*)"operation_mtx", (char*)"target_qbits", (char*)"control_qbits", (char*)"is_f32", NULL};
+
+    PyObject* operation_mtx_obj = NULL;
+    PyObject* target_qbits_py = NULL;
+    PyObject* control_qbits_py = NULL;
+    int is_f32 = 0;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|OOp", kwlist,
+                                     &operation_mtx_obj, &target_qbits_py, &control_qbits_py, &is_f32)) {
+        return Py_BuildValue("i", -1);
+    }
+
+    if (operation_mtx_obj == NULL) {
+        PyErr_SetString(PyExc_ValueError, "operation_mtx must be provided");
+        return NULL;
+    }
+
+    PyArrayObject* operation_mtx = NULL;
+    if (is_f32) {
+        operation_mtx = (PyArrayObject*)PyArray_FROM_OTF(operation_mtx_obj, NPY_COMPLEX64, NPY_ARRAY_IN_ARRAY);
+    } else {
+        operation_mtx = (PyArrayObject*)PyArray_FROM_OTF(operation_mtx_obj, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
+    }
+
+    if (operation_mtx == NULL) {
+        return NULL;
+    }
+
+    if (PyArray_NDIM(operation_mtx) != 2) {
+        Py_DECREF(operation_mtx);
+        PyErr_SetString(PyExc_ValueError, "operation_mtx must be a 2D square matrix");
+        return NULL;
+    }
+
+    const npy_intp* shape = PyArray_DIMS(operation_mtx);
+    if (shape[0] != shape[1]) {
+        Py_DECREF(operation_mtx);
+        PyErr_SetString(PyExc_ValueError, "operation_mtx must be square");
+        return NULL;
+    }
+
+    const int matrix_size = 1 << self->circuit->get_qbit_num();
+    if ((int)shape[0] != matrix_size) {
+        Py_DECREF(operation_mtx);
+        PyErr_SetString(PyExc_ValueError, "operation_mtx size does not match circuit qubit count");
+        return NULL;
+    }
+
+    std::vector<int> target_qbits;
+    if (target_qbits_py != NULL && target_qbits_py != Py_None) {
+        if (!PyList_Check(target_qbits_py)) {
+            Py_DECREF(operation_mtx);
+            PyErr_SetString(PyExc_TypeError, "target_qbits must be a list of integers");
+            return NULL;
+        }
+
+        Py_ssize_t list_size = PyList_Size(target_qbits_py);
+        for (Py_ssize_t i = 0; i < list_size; i++) {
+            PyObject* item = PyList_GetItem(target_qbits_py, i);
+            if (!PyLong_Check(item)) {
+                Py_DECREF(operation_mtx);
+                PyErr_SetString(PyExc_TypeError, "target_qbits must contain integers");
+                return NULL;
+            }
+            int qbit = (int)PyLong_AsLong(item);
+            if (qbit < 0 || qbit >= self->circuit->get_qbit_num()) {
+                Py_DECREF(operation_mtx);
+                PyErr_SetString(PyExc_ValueError, "target_qbits contains out-of-range index");
+                return NULL;
+            }
+            target_qbits.push_back(qbit);
+        }
+    }
+
+    std::vector<int> control_qbits;
+    if (control_qbits_py != NULL && control_qbits_py != Py_None) {
+        if (!PyList_Check(control_qbits_py)) {
+            Py_DECREF(operation_mtx);
+            PyErr_SetString(PyExc_TypeError, "control_qbits must be a list of integers");
+            return NULL;
+        }
+
+        Py_ssize_t list_size = PyList_Size(control_qbits_py);
+        for (Py_ssize_t i = 0; i < list_size; i++) {
+            PyObject* item = PyList_GetItem(control_qbits_py, i);
+            if (!PyLong_Check(item)) {
+                Py_DECREF(operation_mtx);
+                PyErr_SetString(PyExc_TypeError, "control_qbits must contain integers");
+                return NULL;
+            }
+            int qbit = (int)PyLong_AsLong(item);
+            if (qbit < 0 || qbit >= self->circuit->get_qbit_num()) {
+                Py_DECREF(operation_mtx);
+                PyErr_SetString(PyExc_ValueError, "control_qbits contains out-of-range index");
+                return NULL;
+            }
+            control_qbits.push_back(qbit);
+        }
+    }
+
+    try {
+        Matrix operation_qgd;
+        if (is_f32) {
+            Matrix_float operation32 = numpy2matrix_float(operation_mtx);
+            operation_qgd = operation32.to_float64();
+        } else {
+            operation_qgd = numpy2matrix(operation_mtx);
+        }
+
+        self->circuit->add_general_operation(operation_qgd, target_qbits, control_qbits);
+    }
+    catch (std::string err) {
+        Py_DECREF(operation_mtx);
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    catch (...) {
+        Py_DECREF(operation_mtx);
+        PyErr_SetString(PyExc_Exception, "Failed to add GENERAL_OPERATION gate");
+        return NULL;
+    }
+
+    Py_DECREF(operation_mtx);
+    return Py_BuildValue("i", 0);
+}
+
 #ifdef __DFE__
 
 static PyObject*
@@ -646,34 +790,45 @@ qgd_Circuit_Wrapper_convert_to_DFE_gates(qgd_Circuit_Wrapper *self, PyObject *ar
 @return Returns a numpy array containing the matrix representation of the circuit
 */
 static PyObject *
-qgd_Circuit_Wrapper_get_Matrix( qgd_Circuit_Wrapper *self, PyObject *args ) {
+qgd_Circuit_Wrapper_get_Matrix( qgd_Circuit_Wrapper *self, PyObject *args, PyObject *kwds ) {
 
     PyArrayObject * parameters_arr = NULL;
+    int is_f32 = 0;
 
+    static char *kwlist[] = {(char*)"", (char*)"is_f32", NULL};
 
     // parsing input arguments
-    if (!PyArg_ParseTuple(args, "|O", &parameters_arr )) 
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|p", kwlist, &parameters_arr, &is_f32))
         return Py_BuildValue("i", -1);
 
-    
-    if ( PyArray_IS_C_CONTIGUOUS(parameters_arr) ) {
-        Py_INCREF(parameters_arr);
-    }
-    else {
-        parameters_arr = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+    if (is_f32) {
+        if (!PyArray_IS_C_CONTIGUOUS(parameters_arr)) {
+            parameters_arr = (PyArrayObject*)PyArray_FROM_OTF((PyObject*)parameters_arr, NPY_FLOAT, NPY_ARRAY_IN_ARRAY);
+        } else {
+            Py_INCREF(parameters_arr);
+        }
+        Matrix_real_float parameters_mtx = numpy2matrix_real_float(parameters_arr);
+        Matrix_float mtx = self->circuit->get_matrix(parameters_mtx);
+        mtx.set_owner(false);
+        PyObject *mtx_py = matrix_float_to_numpy(mtx);
+        Py_DECREF(parameters_arr);
+        return mtx_py;
     }
 
+    if (PyArray_IS_C_CONTIGUOUS(parameters_arr)) {
+        Py_INCREF(parameters_arr);
+    } else {
+        parameters_arr = (PyArrayObject*)PyArray_FROM_OTF((PyObject*)parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+    }
 
     // get the C++ wrapper around the data
-    Matrix_real&& parameters_mtx = numpy2matrix_real( parameters_arr );
+    Matrix_real parameters_mtx = numpy2matrix_real(parameters_arr);
 
+    Matrix mtx = self->circuit->get_matrix(parameters_mtx);
 
-    Matrix mtx = self->circuit->get_matrix( parameters_mtx );
-    
     // convert to numpy array
     mtx.set_owner(false);
-    PyObject *mtx_py = matrix_to_numpy( mtx );
-
+    PyObject *mtx_py = matrix_to_numpy(mtx);
 
     Py_DECREF(parameters_arr);
 
@@ -1371,6 +1526,189 @@ qgd_Circuit_Wrapper_apply_derivate_to( qgd_Circuit_Wrapper *self, PyObject *args
 
     Py_DECREF(parameters_arr);
     return deriv_list;
+}
+
+
+/**
+@brief Evaluate forward circuit action and all derivatives in one call.
+       Return format: list where item[0] is apply_to output and item[1:] are derivatives.
+@param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper
+@param args A tuple of the input arguments: parameters_arr (numpy array), unitary_arg (numpy array), parallel (int, optional)
+@param kwds Optional keyword arguments
+@return Returns a Python list of numpy arrays [forward, deriv_0, deriv_1, ...]
+*/
+static PyObject *
+qgd_Circuit_Wrapper_apply_to_combined( qgd_Circuit_Wrapper *self, PyObject *args, PyObject *kwds ) {
+
+    static char *kwlist[] = {(char*)"parameters", (char*)"unitary", (char*)"parallel", (char*)"is_f32", NULL};
+
+    PyArrayObject * parameters_arr = NULL;
+    PyArrayObject * unitary_arg = NULL;
+    int parallel = 1;
+    int is_f32 = 0;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "OO|ip", kwlist, &parameters_arr, &unitary_arg, &parallel, &is_f32 )) {
+        PyErr_SetString(PyExc_Exception, "Unable to parse input");
+        return NULL;
+    }
+
+    if ( unitary_arg == NULL ) {
+        PyErr_SetString(PyExc_Exception, "Input matrix was not given");
+        return NULL;
+    }
+
+    if ( parameters_arr == NULL ) {
+        PyErr_SetString(PyExc_Exception, "Parameters were not given");
+        return NULL;
+    }
+
+    if ( !PyArray_IS_C_CONTIGUOUS(unitary_arg) ) {
+        PyErr_SetString(PyExc_Exception, "input matrix is not memory contiguous");
+        return NULL;
+    }
+
+    // ---- float32 path ----
+    if (is_f32) {
+
+        if ( PyArray_TYPE(parameters_arr) != NPY_FLOAT ) {
+            PyErr_SetString(PyExc_TypeError, "Parameter vector should be float32 when is_f32=True");
+            return NULL;
+        }
+
+        if ( PyArray_TYPE(unitary_arg) != NPY_COMPLEX64 ) {
+            PyErr_SetString(PyExc_TypeError, "Input matrix should be complex64 when is_f32=True");
+            return NULL;
+        }
+
+        if ( PyArray_IS_C_CONTIGUOUS(parameters_arr) ) {
+            Py_INCREF(parameters_arr);
+        }
+        else {
+            parameters_arr = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)parameters_arr, NPY_FLOAT, NPY_ARRAY_IN_ARRAY);
+        }
+
+        Matrix_real_float parameters_mtx = numpy2matrix_real_float( parameters_arr );
+        Matrix_float unitary_mtx = numpy2matrix_float( unitary_arg );
+
+        std::vector<Matrix_float> combined;
+        try {
+            combined = self->circuit->apply_to_combined( parameters_mtx, unitary_mtx, parallel );
+        }
+        catch (std::string err) {
+            Py_DECREF(parameters_arr);
+            PyErr_SetString(PyExc_Exception, err.c_str());
+            return NULL;
+        }
+        catch(...) {
+            Py_DECREF(parameters_arr);
+            std::string err( "Invalid pointer to circuit class");
+            PyErr_SetString(PyExc_Exception, err.c_str());
+            return NULL;
+        }
+
+        PyObject* combined_list = PyList_New((Py_ssize_t)combined.size());
+        if (combined_list == NULL) {
+            Py_DECREF(parameters_arr);
+            return NULL;
+        }
+
+        for (Py_ssize_t idx = 0; idx < (Py_ssize_t)combined.size(); ++idx) {
+            Matrix_float* owned = new Matrix_float(combined[(size_t)idx]);
+            PyObject* cap = PyCapsule_New(
+                owned, "squander.circuit_matrix_float_owner",
+                circuit_matrix_float_owner_capsule_destruct);
+            if (cap == NULL) {
+                delete owned;
+                Py_DECREF(combined_list);
+                Py_DECREF(parameters_arr);
+                return NULL;
+            }
+            npy_intp shape[2] = { (npy_intp)owned->rows, (npy_intp)owned->cols };
+            PyObject* out_py = PyArray_SimpleNewFromData(
+                2, shape, NPY_COMPLEX64, owned->get_data());
+            if (out_py == NULL) {
+                Py_DECREF(cap);
+                Py_DECREF(combined_list);
+                Py_DECREF(parameters_arr);
+                return NULL;
+            }
+            PyArray_SetBaseObject((PyArrayObject*)out_py, cap);
+            PyList_SET_ITEM(combined_list, idx, out_py);
+        }
+
+        Py_DECREF(parameters_arr);
+        return combined_list;
+    }
+
+    // ---- float64 path ----
+    if ( PyArray_TYPE(parameters_arr) != NPY_DOUBLE ) {
+        PyErr_SetString(PyExc_TypeError, "Parameter vector should be float64 when is_f32=False");
+        return NULL;
+    }
+
+    if ( PyArray_TYPE(unitary_arg) != NPY_COMPLEX128 ) {
+        PyErr_SetString(PyExc_TypeError, "Input matrix should be complex128 when is_f32=False");
+        return NULL;
+    }
+
+    if ( PyArray_IS_C_CONTIGUOUS(parameters_arr) ) {
+        Py_INCREF(parameters_arr);
+    }
+    else {
+        parameters_arr = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+    }
+
+    Matrix_real parameters_mtx = numpy2matrix_real( parameters_arr );
+    Matrix unitary_mtx = numpy2matrix( unitary_arg );
+
+    std::vector<Matrix> combined;
+    try {
+        combined = self->circuit->apply_to_combined( parameters_mtx, unitary_mtx, parallel );
+    }
+    catch (std::string err) {
+        Py_DECREF(parameters_arr);
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    catch(...) {
+        Py_DECREF(parameters_arr);
+        std::string err( "Invalid pointer to circuit class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+    PyObject* combined_list = PyList_New((Py_ssize_t)combined.size());
+    if (combined_list == NULL) {
+        Py_DECREF(parameters_arr);
+        return NULL;
+    }
+
+    for (Py_ssize_t idx = 0; idx < (Py_ssize_t)combined.size(); ++idx) {
+        Matrix* owned = new Matrix(combined[(size_t)idx]);
+        PyObject* cap = PyCapsule_New(
+            owned, "squander.circuit_matrix_owner",
+            circuit_matrix_owner_capsule_destruct);
+        if (cap == NULL) {
+            delete owned;
+            Py_DECREF(combined_list);
+            Py_DECREF(parameters_arr);
+            return NULL;
+        }
+        npy_intp shape[2] = { (npy_intp)owned->rows, (npy_intp)owned->cols };
+        PyObject* out_py = PyArray_SimpleNewFromData(
+            2, shape, NPY_COMPLEX128, owned->get_data());
+        if (out_py == NULL) {
+            Py_DECREF(cap);
+            Py_DECREF(combined_list);
+            Py_DECREF(parameters_arr);
+            return NULL;
+        }
+        PyArray_SetBaseObject((PyArrayObject*)out_py, cap);
+        PyList_SET_ITEM(combined_list, idx, out_py);
+    }
+
+    Py_DECREF(parameters_arr);
+    return combined_list;
 }
 
 
@@ -2865,6 +3203,9 @@ static PyMethodDef qgd_Circuit_Wrapper_Methods[] = {
     {"add_Circuit", (PyCFunction) qgd_Circuit_Wrapper_add_Circuit, METH_VARARGS,
      "Call to add a block of operations to the front of the gate structure."
     },
+    {"add_GENERAL", (PyCFunction) qgd_Circuit_Wrapper_add_GENERAL, METH_VARARGS | METH_KEYWORDS,
+     "Call to add a GENERAL_OPERATION gate from an explicit matrix."
+    },
 #ifdef __DFE__
     {"convert_to_DFE_gates_with_derivates", (PyCFunction) qgd_Circuit_Wrapper_convert_to_DFE_gates_with_derivates, METH_VARARGS,
      "Call to convert to DFE gates with derivates."
@@ -2879,7 +3220,7 @@ static PyMethodDef qgd_Circuit_Wrapper_Methods[] = {
      "Call to convert to DFE gates."
     },
 #endif
-    {"get_Matrix", (PyCFunction) qgd_Circuit_Wrapper_get_Matrix, METH_VARARGS,
+    {"get_Matrix", (PyCFunction) qgd_Circuit_Wrapper_get_Matrix, METH_VARARGS | METH_KEYWORDS,
      "Method to get the matrix of the operation."
     },
     {"get_Parameter_Num", (PyCFunction) qgd_Circuit_Wrapper_get_Parameter_Num, METH_NOARGS,
@@ -2896,6 +3237,9 @@ static PyMethodDef qgd_Circuit_Wrapper_Methods[] = {
     },
     {"apply_derivate_to", (PyCFunction) qgd_Circuit_Wrapper_apply_derivate_to, METH_VARARGS | METH_KEYWORDS,
      "Call to evaluate the derivative of the circuit on an input matrix. Returns a list of derivative matrices."
+    },
+    {"apply_to_combined", (PyCFunction) qgd_Circuit_Wrapper_apply_to_combined, METH_VARARGS | METH_KEYWORDS,
+     "Call to evaluate forward action and derivatives of the circuit on an input matrix. Returns [forward, derivatives...]."
     },
     {"get_Second_Renyi_Entropy", (PyCFunction) qgd_Circuit_Wrapper_get_Second_Renyi_Entropy, METH_VARARGS,
      "Wrapper function to evaluate the second Rényi entropy of a quantum circuit at a specific parameter set."

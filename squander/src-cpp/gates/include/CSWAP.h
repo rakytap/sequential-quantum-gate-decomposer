@@ -62,21 +62,6 @@ virtual ~CSWAP();
 */
 virtual CSWAP* clone() override;
 
-/**
-@brief Call to apply the gate operation on the input matrix
-@param input The input matrix on which the transformation is applied
-@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with Intel TBB
-*/
-virtual void apply_to(Matrix& input, int parallel = 0) override;
-
-virtual void apply_to(Matrix& input, const Matrix_real& parameters, int parallel) override;
-
-/**
-@brief Get list of involved qubits
-@param only_target If true, return only target qubits, otherwise include control qubits too
-@return Vector of qubit indices
-*/
-std::vector<int> get_involved_qubits(bool only_target = false) override;
 
 };
 

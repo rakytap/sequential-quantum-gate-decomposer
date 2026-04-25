@@ -73,6 +73,8 @@ void apply_T_kernel_to_input(Matrix& input, const int& target_qbit, const int& c
  * @param matrix_size The size of the input.
  */
 void apply_SWAP_kernel_to_input(Matrix& input, const std::vector<int>& target_qbits, const std::vector<int>& control_qbits, const int& matrix_size);
+void apply_SYC_kernel_to_input(Matrix& input, const int& target_qbit, const int& control_qbit, const int& matrix_size);
+void apply_SYC_kernel_from_right(Matrix& input, const int& target_qbit, const int& control_qbit, const int& matrix_size);
 
 // TBB Parallelized versions
 void apply_X_kernel_to_input_tbb(Matrix& input, const std::vector<int>& target_qbits, const std::vector<int>& control_qbits, const int& matrix_size);
@@ -82,6 +84,7 @@ void apply_H_kernel_to_input_tbb(Matrix& input, const int& target_qbit, const in
 void apply_S_kernel_to_input_tbb(Matrix& input, const int& target_qbit, const int& control_qbit, const int& matrix_size);
 void apply_T_kernel_to_input_tbb(Matrix& input, const int& target_qbit, const int& control_qbit, const int& matrix_size);
 void apply_SWAP_kernel_to_input_tbb(Matrix& input, const std::vector<int>& target_qbits, const std::vector<int>& control_qbits, const int& matrix_size);
+void apply_SYC_kernel_to_input_tbb(Matrix& input, const int& target_qbit, const int& control_qbit, const int& matrix_size);
 
 // OpenMP Parallelized versions
 void apply_X_kernel_to_input_omp(Matrix& input, const std::vector<int>& target_qbits, const std::vector<int>& control_qbits, const int& matrix_size);
@@ -91,5 +94,35 @@ void apply_H_kernel_to_input_omp(Matrix& input, const int& target_qbit, const in
 void apply_S_kernel_to_input_omp(Matrix& input, const int& target_qbit, const int& control_qbit, const int& matrix_size);
 void apply_T_kernel_to_input_omp(Matrix& input, const int& target_qbit, const int& control_qbit, const int& matrix_size);
 void apply_SWAP_kernel_to_input_omp(Matrix& input, const std::vector<int>& target_qbits, const std::vector<int>& control_qbits, const int& matrix_size);
+void apply_SYC_kernel_to_input_omp(Matrix& input, const int& target_qbit, const int& control_qbit, const int& matrix_size);
+
+// Float32 overloads
+void apply_X_kernel_to_input(Matrix_float& input, const std::vector<int>& target_qbits, const std::vector<int>& control_qbits, const int& matrix_size);
+void apply_Y_kernel_to_input(Matrix_float& input, const int& target_qbit, const int& control_qbit, const int& matrix_size);
+void apply_Z_kernel_to_input(Matrix_float& input, const int& target_qbit, const int& control_qbit, const int& matrix_size);
+void apply_H_kernel_to_input(Matrix_float& input, const int& target_qbit, const int& control_qbit, const int& matrix_size);
+void apply_S_kernel_to_input(Matrix_float& input, const int& target_qbit, const int& control_qbit, const int& matrix_size);
+void apply_T_kernel_to_input(Matrix_float& input, const int& target_qbit, const int& control_qbit, const int& matrix_size);
+void apply_SWAP_kernel_to_input(Matrix_float& input, const std::vector<int>& target_qbits, const std::vector<int>& control_qbits, const int& matrix_size);
+void apply_SYC_kernel_to_input(Matrix_float& input, const int& target_qbit, const int& control_qbit, const int& matrix_size);
+void apply_SYC_kernel_from_right(Matrix_float& input, const int& target_qbit, const int& control_qbit, const int& matrix_size);
+
+void apply_X_kernel_to_input_tbb(Matrix_float& input, const std::vector<int>& target_qbits, const std::vector<int>& control_qbits, const int& matrix_size);
+void apply_Y_kernel_to_input_tbb(Matrix_float& input, const int& target_qbit, const int& control_qbit, const int& matrix_size);
+void apply_Z_kernel_to_input_tbb(Matrix_float& input, const int& target_qbit, const int& control_qbit, const int& matrix_size);
+void apply_H_kernel_to_input_tbb(Matrix_float& input, const int& target_qbit, const int& control_qbit, const int& matrix_size);
+void apply_S_kernel_to_input_tbb(Matrix_float& input, const int& target_qbit, const int& control_qbit, const int& matrix_size);
+void apply_T_kernel_to_input_tbb(Matrix_float& input, const int& target_qbit, const int& control_qbit, const int& matrix_size);
+void apply_SWAP_kernel_to_input_tbb(Matrix_float& input, const std::vector<int>& target_qbits, const std::vector<int>& control_qbits, const int& matrix_size);
+void apply_SYC_kernel_to_input_tbb(Matrix_float& input, const int& target_qbit, const int& control_qbit, const int& matrix_size);
+
+void apply_X_kernel_to_input_omp(Matrix_float& input, const std::vector<int>& target_qbits, const std::vector<int>& control_qbits, const int& matrix_size);
+void apply_Y_kernel_to_input_omp(Matrix_float& input, const int& target_qbit, const int& control_qbit, const int& matrix_size);
+void apply_Z_kernel_to_input_omp(Matrix_float& input, const int& target_qbit, const int& control_qbit, const int& matrix_size);
+void apply_H_kernel_to_input_omp(Matrix_float& input, const int& target_qbit, const int& control_qbit, const int& matrix_size);
+void apply_S_kernel_to_input_omp(Matrix_float& input, const int& target_qbit, const int& control_qbit, const int& matrix_size);
+void apply_T_kernel_to_input_omp(Matrix_float& input, const int& target_qbit, const int& control_qbit, const int& matrix_size);
+void apply_SWAP_kernel_to_input_omp(Matrix_float& input, const std::vector<int>& target_qbits, const std::vector<int>& control_qbits, const int& matrix_size);
+void apply_SYC_kernel_to_input_omp(Matrix_float& input, const int& target_qbit, const int& control_qbit, const int& matrix_size);
 
 #endif // APPLY_DEDICATED_GATE_KERNEL_TO_INPUT_H

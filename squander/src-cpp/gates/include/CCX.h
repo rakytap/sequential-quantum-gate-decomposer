@@ -66,36 +66,6 @@ virtual ~CCX();
 */
 virtual CCX* clone() override;
 
-/**
-@brief Call to retrieve the gate matrix
-@return Returns with a matrix of the gate
-*/
-virtual Matrix get_matrix() override;
-
-/**
-@brief Call to retrieve the gate matrix
-@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with Intel TBB (optional)
-@return Returns with a matrix of the gate
-*/
-virtual Matrix get_matrix(int parallel) override;
-
-/**
-@brief Call to apply the gate operation on the input matrix (without parameters)
-@param input The input matrix on which the transformation is applied
-@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with Intel TBB
-*/
-virtual void apply_to(Matrix& input, int parallel = 0) override;
-
-/**
-@brief Call to apply the gate operation on the input matrix
-@param input The input matrix on which the transformation is applied
-@param parameters An array of parameters to calculate the matrix elements
-@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with Intel TBB
-*/
-virtual void apply_to(Matrix& input, const Matrix_real& parameters, int parallel = 0);
-
-std::vector<int> get_involved_qubits(bool only_target) override;
-
 };
 
 #endif //CCX

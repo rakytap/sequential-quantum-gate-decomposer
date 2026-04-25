@@ -107,10 +107,9 @@ CP::apply_to( Matrix_real& parameters_mtx, Matrix& input, int parallel ) {
     }
 
 
-    double ThetaOver2, Phi, Lambda;
-
-    Lambda = parameters_mtx[0];
-    parameters_for_calc_one_qubit(ThetaOver2, Phi, Lambda);
+    double ThetaOver2 = 0.0;
+    double Phi = 0.0;
+    double Lambda = parameters_mtx[0];
   
     // get the U3 gate of one qubit
     Matrix u3_1qbit = calc_one_qubit_u3(ThetaOver2, Phi, Lambda );
@@ -144,10 +143,9 @@ CP::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
     }
 
 
-    double ThetaOver2, Phi, Lambda;
-
-    Lambda = parameters_mtx[0];
-    parameters_for_calc_one_qubit(ThetaOver2, Phi, Lambda);
+    double ThetaOver2 = 0.0;
+    double Phi = 0.0;
+    double Lambda = parameters_mtx[0];
   
     // get the U3 gate of one qubit
     Matrix u3_1qbit = calc_one_qubit_u3(ThetaOver2, Phi, Lambda );
@@ -181,11 +179,9 @@ CP::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input, int parallel 
     
     Matrix_real parameters_tmp(1,1);
 
-    double ThetaOver2, Phi, Lambda;
-
-    Lambda = parameters_mtx[0] + M_PI/2; 
-
-    parameters_for_calc_one_qubit(ThetaOver2, Phi, Lambda);
+    double ThetaOver2 = 0.0;
+    double Phi = 0.0;
+    double Lambda = parameters_mtx[0] + M_PI/2;
 
     // get the U3 gate of one qubit
     Matrix u3_1qbit = calc_one_qubit_u3(ThetaOver2, Phi, Lambda );

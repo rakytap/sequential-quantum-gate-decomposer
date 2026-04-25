@@ -60,45 +60,14 @@ SYC(int qbit_num_in, int target_qbit_in,  int control_qbit_in);
 ~SYC();
 
 /**
-@brief Call to retrieve the operation matrix
-@return Returns with the matrix of the operation
+@brief Return the fixed 4x4 SYC two-qubit kernel.
 */
-Matrix get_matrix() override;
+Matrix gate_kernel(const Matrix_real& precomputed_sincos) override;
+Matrix_float gate_kernel(const Matrix_real_float& precomputed_sincos) override;
+Matrix inverse_gate_kernel(const Matrix_real& precomputed_sincos) override;
+Matrix_float inverse_gate_kernel(const Matrix_real_float& precomputed_sincos) override;
 
 
-/**
-@brief Call to retrieve the operation matrix
-@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
-@return Returns with the matrix of the operation
-*/
-Matrix get_matrix(int parallel) override;
-
-/**
-@brief Call to apply the gate on the input array/matrix by SYC*input
-@param input The input array on which the gate is applied
-@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
-*/
-void apply_to( Matrix& input, int parallel ) override;
-
-
-/**
-@brief Call to apply the gate on the input array/matrix by input*SYC
-@param input The input array on which the gate is applied
-*/
-void apply_from_right( Matrix& input ) override;
-
-
-/**
-@brief Call to set the number of qubits spanning the matrix of the operation
-@param qbit_num The number of qubits
-*/
-void set_qbit_num(int qbit_num) override;
-
-/**
-@brief Call to reorder the qubits in the matrix of the operation
-@param qbit_list The reordered list of qubits spanning the matrix
-*/
-void reorder_qubits( std::vector<int> qbit_list) override;
 
 /**
 @brief Call to create a clone of the present class

@@ -91,7 +91,7 @@ virtual std::vector<Matrix> apply_derivate_to( Matrix_real& parameters, Matrix& 
 @param Lambda Real parameter standing for the parameter lambda.
 @return Returns with the matrix of the one-qubit matrix.
 */
-void parameters_for_calc_one_qubit( double& ThetaOver2, double& Phi, double& Lambda) override;
+void parameters_for_calc_one_qubit( double& ThetaOver2, double& Phi, double& Lambda);
 
 /**
 @brief Call to create a clone of the present class
