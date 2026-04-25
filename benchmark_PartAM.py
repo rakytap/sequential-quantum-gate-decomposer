@@ -68,31 +68,29 @@ def run_once(circ_orig, parameters_orig, topology):
         'topology': topology,
         'verbosity': 0,
         'cleanup': True,
-        'sabre_iterations':5,
-        'n_layout_trials':64,
+        'sabre_iterations':20,
+        'n_layout_trials':128,
         'random_seed':random.randint(1,100),
-        # Diagnostic routing mode: score every candidate exactly. The current
-        # PartAM router bypasses prefiltering, so this is kept only for older
-        # code paths/config visibility.
-        'prefilter_top_k': 5000,
+        # Cheap candidate prefilter before full A* scoring.
+        'prefilter_top_k': 50,
         # Rank every layout trial by actual constructed routing, not only by
         # the heuristic trial cost.
         'actual_routing_rank_top_k': None,
         'top_k_pi': 1,
-        'cnot_cost': 1.0 / 3.0,  # old: swap_cost=15, local_cost_weight=1.0 -> 15:1 swap:cnot
+        'cnot_cost': 0.5 / 3.0,  # old: swap_cost=15, local_cost_weight=1.0 -> 15:1 swap:cnot
         'cleanup_top_k': 3,
         "parallel_layout_trials": True,
         "layout_trial_workers": 0,
         'max_E_size': 40,
         'max_lookahead': 6,
-        'E_weight': 0.7,
+        'E_weight': 0.3,
         'E_alpha': 1.0,        # LightSABRE-style uniform lookahead (no per-depth decay)
         # Disable extra routing heuristics while diagnosing 3-qubit partition
         # quality.
         'decay_delta': 0.0,
-        'swap_burst_budget': 0,
+        'swap_burst_budget': 5,
         'path_tiebreak_weight': 0.0,
-        'three_qubit_exit_weight': 2.0,
+        'three_qubit_exit_weight': 1.5,
     }
 
     # Clean the initial circuit using the same config pattern as in PartAM.py
@@ -106,7 +104,7 @@ def run_once(circ_orig, parameters_orig, topology):
     cleanup_config['pre-opt-strategy'] = 'TreeSearch'
 
     wco = qgd_Wide_Circuit_Optimization(cleanup_config)
-    circ_orig, parameters_orig = wco.OptimizeWideCircuit(circ_orig.get_Flat_Circuit(), parameters_orig)
+    #circ_orig, parameters_orig = wco.OptimizeWideCircuit(circ_orig.get_Flat_Circuit(), parameters_orig)
 
     start = time.time()
     pam = Partition_Aware_Mapping(config)

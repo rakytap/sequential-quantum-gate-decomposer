@@ -1213,7 +1213,6 @@ std::vector<const CandidateData*> SabreRouter::obtain_partition_candidates(
 
 // ---------------------------------------------------------------------------
 // prefilter_candidates
-// Disabled for routing quality: exact scoring sees every candidate.
 // ---------------------------------------------------------------------------
 
 std::vector<const CandidateData*> SabreRouter::prefilter_candidates(
@@ -1225,13 +1224,39 @@ std::vector<const CandidateData*> SabreRouter::prefilter_candidates(
     bool reverse,
     const std::unordered_map<int, CanonicalEntry>& canonical_data
 ) const {
-    (void)pi;
-    (void)top_k;
-    (void)F_snapshot;
-    (void)E;
-    (void)reverse;
-    (void)canonical_data;
-    return candidates;
+    if (static_cast<int>(candidates.size()) <= top_k) return candidates;
+    if (top_k <= 0) return {};
+
+    using Pair = std::pair<double, const CandidateData*>;
+    std::vector<Pair> estimated;
+    estimated.reserve(candidates.size());
+    for (const auto* cand : candidates) {
+        const auto approx_output = estimate_candidate_output_layout(
+            *cand, pi, reverse);
+        const double est = routing_objective(
+            static_cast<double>(estimate_swap_count(*cand, pi, reverse)),
+            cand->cnot_count
+        ) + future_context_cost(
+            cand->partition_idx, approx_output, F_snapshot, E, reverse,
+            canonical_data);
+        estimated.push_back({est, cand});
+    }
+
+    std::nth_element(
+        estimated.begin(),
+        estimated.begin() + top_k,
+        estimated.end(),
+        [](const Pair& a, const Pair& b) {
+            return a.first < b.first;
+        }
+    );
+
+    std::vector<const CandidateData*> result;
+    result.reserve(top_k);
+    for (int i = 0; i < top_k; i++) {
+        result.push_back(estimated[i].second);
+    }
+    return result;
 }
 
 // ---------------------------------------------------------------------------

@@ -1364,21 +1364,40 @@ class qgd_Partition_Aware_Mapping:
         alpha=1.0,
         canonical_data=None,
     ):
-        """Return all candidates; cheap prefiltering is disabled for routing quality."""
-        del (
-            pi,
-            D,
-            top_k,
-            F,
-            E,
-            candidate_cache,
-            layout_partitions,
-            reverse,
-            W,
-            alpha,
-            canonical_data,
-        )
-        return partition_candidates
+        """Pre-filter candidates using cheap swap-count estimate before full A* scoring."""
+        if top_k <= 0:
+            return []
+        if len(partition_candidates) <= top_k:
+            return partition_candidates
+        cnot_cost = self.config.get('cnot_cost', 1.0 / 3.0)
+        estimates = np.array([
+            (
+                self._routing_objective(
+                    pc.estimate_swap_count(pi, D, reverse=reverse),
+                    pc.cnot_count,
+                    cnot_cost,
+                )
+                + self._future_context_cost(
+                    pc.partition_idx,
+                    self._estimate_candidate_output_layout(
+                        pc, pi, reverse=reverse
+                    ),
+                    F or (),
+                    E or (),
+                    D,
+                    candidate_cache,
+                    reverse=reverse,
+                    cnot_cost=cnot_cost,
+                    W=W,
+                    alpha=alpha,
+                    layout_partitions=layout_partitions,
+                    canonical_data=canonical_data,
+                )
+            )
+            for pc in partition_candidates
+        ])
+        top_k_indices = np.argpartition(estimates, top_k)[:top_k]
+        return [partition_candidates[i] for i in top_k_indices]
 
     @staticmethod
     def _decay_factor_for_swaps(swaps, decay):
