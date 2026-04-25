@@ -262,13 +262,6 @@ private:
         const std::vector<std::vector<int>>& parents_graph
     ) const;
 
-    // Pre-resolved canonical entries for an F-step (avoids hash lookups per candidate)
-    struct ResolvedEntry {
-        int partition_idx;
-        const CanonicalEntry* entry; // may be null
-        double alpha; // 1.0 for F, alpha^depth for E
-    };
-
     // LightSABRE scoring (port of score_partition_candidate)
     double score_candidate(
         const CandidateData& cand,
@@ -281,8 +274,6 @@ private:
         const std::vector<double>* decay = nullptr,
         std::vector<std::pair<int,int>>* out_swaps = nullptr,
         std::vector<int>* out_pi_new = nullptr,
-        const std::vector<ResolvedEntry>* resolved_F = nullptr,
-        const std::vector<ResolvedEntry>* resolved_E = nullptr,
         const NeighborInfo* cached_neighbor_info = nullptr
     ) const;
 
@@ -387,33 +378,6 @@ private:
         int n_trials,
         const std::vector<int>& seeded_pi,
         std::mt19937& rng
-    ) const;
-
-    // Build P_route_inv: the inverse permutation used for routing
-    std::vector<int> build_route_inv(const std::vector<int>& P, bool reverse) const;
-
-    // Build target dict for A*: {qbit_map_key -> node_mapping[P_route_inv[qbit_map_val]]}
-    void build_target_positions(
-        const CandidateData& cand,
-        bool reverse,
-        std::vector<int>& out_keys,
-        std::vector<int>& out_targets
-    ) const;
-
-    // Compute routing cost for canonical edges under a given pi
-    double compute_routing_cost(
-        const std::vector<int>& pi,
-        int exclude_partition_idx,
-        const std::vector<int>& partition_indices,
-        const std::unordered_map<int, CanonicalEntry>& canonical_data
-    ) const;
-
-    // Compute lookahead cost with alpha^depth decay
-    double compute_lookahead_cost(
-        const std::vector<int>& pi,
-        int exclude_partition_idx,
-        const std::vector<std::pair<int,int>>& E,
-        const std::unordered_map<int, CanonicalEntry>& canonical_data
     ) const;
 
     double entry_future_cost(

@@ -1359,38 +1359,21 @@ class qgd_Partition_Aware_Mapping:
         alpha=1.0,
         canonical_data=None,
     ):
-        """Pre-filter candidates using cheap swap-count estimate before full A* scoring."""
-        if len(partition_candidates) <= top_k:
-            return partition_candidates
-        cnot_cost = self.config.get('cnot_cost', 1.0 / 3.0)
-        estimates = np.array([
-            (
-                self._routing_objective(
-                    pc.estimate_swap_count(pi, D, reverse=reverse),
-                    pc.cnot_count,
-                    cnot_cost,
-                )
-                + self._future_context_cost(
-                    pc.partition_idx,
-                    self._estimate_candidate_output_layout(
-                        pc, pi, reverse=reverse
-                    ),
-                    F or (),
-                    E or (),
-                    D,
-                    candidate_cache,
-                    reverse=reverse,
-                    cnot_cost=cnot_cost,
-                    W=W,
-                    alpha=alpha,
-                    layout_partitions=layout_partitions,
-                    canonical_data=canonical_data,
-                )
-            )
-            for pc in partition_candidates
-        ])
-        top_k_indices = np.argpartition(estimates, top_k)[:top_k]
-        return [partition_candidates[i] for i in top_k_indices]
+        """Return all candidates; cheap prefiltering is disabled for routing quality."""
+        del (
+            pi,
+            D,
+            top_k,
+            F,
+            E,
+            candidate_cache,
+            layout_partitions,
+            reverse,
+            W,
+            alpha,
+            canonical_data,
+        )
+        return partition_candidates
 
     @staticmethod
     def _decay_factor_for_swaps(swaps, decay):
@@ -1642,7 +1625,6 @@ class qgd_Partition_Aware_Mapping:
         alpha=0.9,
         layout_partitions=None,
     ):
-        del canonical_data
         if weight <= 0 or layout_partitions is None:
             return None
 
@@ -1654,6 +1636,19 @@ class qgd_Partition_Aware_Mapping:
                 return
             if target_idx >= len(layout_partitions):
                 return
+            entry = canonical_data.get(target_idx) if canonical_data else None
+            if entry is not None and entry.get("edges_u") is not None:
+                for u, v in zip(entry["edges_u"], entry["edges_v"]):
+                    u = int(u)
+                    v = int(v)
+                    qubits.add(u)
+                    qubits.add(v)
+                    key = (u, v) if u <= v else (v, u)
+                    edge_weights[key] = (
+                        edge_weights.get(key, 0.0) + edge_weight
+                    )
+                return
+
             involved = qgd_Partition_Aware_Mapping._partition_involved_qbits(
                 layout_partitions[target_idx]
             )
@@ -2414,33 +2409,13 @@ class qgd_Partition_Aware_Mapping:
     # ------------------------------------------------------------------------
         
     def get_initial_layer(self, IDAG, N, optimized_partitions):
-        initial_layer = []
-        active_qbits = set(range(N))
-        for idx in range(len(IDAG)):
-            if len(IDAG[idx]) == 0:
-                initial_layer.append(idx)
-                for qbit in self._partition_involved_qbits(
-                    optimized_partitions[idx]
-                ):
-                    active_qbits.discard(qbit)
-            if not active_qbits:
-                break
-        return initial_layer
+        del N, optimized_partitions
+        return [idx for idx in range(len(IDAG)) if not IDAG[idx]]
 
 
     def get_final_layer(self, DAG, N, optimized_partitions):
-        final_layer = []
-        active_qbits = set(range(N))
-        for idx in range(len(DAG) - 1, -1, -1):
-            if len(DAG[idx]) == 0:
-                final_layer.append(idx)
-                for qbit in self._partition_involved_qbits(
-                    optimized_partitions[idx]
-                ):
-                    active_qbits.discard(qbit)
-            if not active_qbits:
-                break
-        return final_layer
+        del N, optimized_partitions
+        return [idx for idx in range(len(DAG) - 1, -1, -1) if not DAG[idx]]
                 
     def construct_DAG_and_IDAG(self, optimized_partitions):
         DAG = []

@@ -118,22 +118,31 @@ def find_constrained_swaps_partial(pi_A, pi_B_dict, dist_matrix, adj=None, neigh
     # Paths are reconstructed via a parent-pointer dict to avoid copying lists
     # on every heap push (which would be O(depth²) total).
     counter = 0  # tiebreak counter so tuples never compare paths
-    parent = {}  # state → (parent_state, swap) for path reconstruction
-    parent[initial_positions] = None
+    # When the neighbor tie-breaker is active, the full search state must
+    # include the tracked future-qubit positions.  Otherwise two equal-length
+    # paths to the same partition positions but different bystander layouts
+    # collapse into one visited entry, defeating the downstream-layout signal.
+    initial_state = (
+        (initial_positions, initial_n_pos) if use_neighbor else initial_positions
+    )
+    parent = {}  # state_key → (parent_state_key, swap) for path reconstruction
+    parent[initial_state] = None
 
     h0 = heuristic(initial_positions)
     nh0 = n_weight * neighbor_heuristic(initial_n_pos) if use_neighbor else 0.0
     heap = []
     heapq.heappush(heap, (h0 + nh0, 0, counter, initial_positions, initial_n_pos))
-    visited = {initial_positions: 0}
+    visited = {initial_state: 0}
 
     while heap:
         f, g, _, positions, n_pos = heapq.heappop(heap)
 
+        state_key = (positions, n_pos) if use_neighbor else positions
+
         if positions == target_positions:
             # Reconstruct swap path via parent pointers
             path = []
-            state = positions
+            state = state_key
             while parent[state] is not None:
                 prev_state, swap = parent[state]
                 path.append(swap)
@@ -151,7 +160,7 @@ def find_constrained_swaps_partial(pi_A, pi_B_dict, dist_matrix, adj=None, neigh
                 final_v2p[q1], final_v2p[q2] = P2, P1
             return path, final_v2p
 
-        if visited.get(positions, float('inf')) < g:
+        if visited.get(state_key, float('inf')) < g:
             continue
 
         # Quick lookup: physical position → index within partition_qubits list
@@ -173,9 +182,6 @@ def find_constrained_swaps_partial(pi_A, pi_B_dict, dist_matrix, adj=None, neigh
                 new_positions = tuple(new_positions)
 
                 new_g = g + 1
-                if visited.get(new_positions, float('inf')) <= new_g:
-                    continue
-
                 # Bug B fix: update neighbor positions for BOTH sides of the swap.
                 # A neighbor qubit at nb gets displaced to p, AND a neighbor qubit
                 # at p (if it's also tracked, e.g. overlaps with a partition qubit)
@@ -192,9 +198,15 @@ def find_constrained_swaps_partial(pi_A, pi_B_dict, dist_matrix, adj=None, neigh
                     new_n_pos = n_pos
                     new_nh = 0.0
 
-                visited[new_positions] = new_g
+                new_state_key = (
+                    (new_positions, new_n_pos) if use_neighbor else new_positions
+                )
+                if visited.get(new_state_key, float('inf')) <= new_g:
+                    continue
+
+                visited[new_state_key] = new_g
                 swap_key = (min(p, nb), max(p, nb))
-                parent[new_positions] = (positions, swap_key)
+                parent[new_state_key] = (state_key, swap_key)
                 counter += 1
                 heapq.heappush(heap, (new_g + heuristic(new_positions) + new_nh,
                                       new_g, counter, new_positions, new_n_pos))
