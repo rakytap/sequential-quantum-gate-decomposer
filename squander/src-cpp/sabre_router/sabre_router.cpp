@@ -134,6 +134,18 @@ SabreRouter::SabreRouter(
         }
     }
 
+    min_cnot_by_partition_.assign(num_partitions_, 0);
+    for (int p_idx = 0; p_idx < num_partitions_; p_idx++) {
+        if (p_idx >= static_cast<int>(candidate_cache_.size())) break;
+        const auto& cands = candidate_cache_[p_idx];
+        if (cands.empty()) continue;
+        int best = cands.front().cnot_count;
+        for (const auto& cand : cands) {
+            if (cand.cnot_count < best) best = cand.cnot_count;
+        }
+        min_cnot_by_partition_[p_idx] = best;
+    }
+
     const int max_depth = std::max(0, config_.max_lookahead);
     alpha_weights_.resize(max_depth + 1);
     if (!alpha_weights_.empty()) {
@@ -1168,9 +1180,13 @@ double SabreRouter::score_candidate(
     if (decay != nullptr && !swaps.empty()) {
         decay_factor = decay_factor_for_swaps(swaps, *decay);
     }
+    const int baseline = (cand.partition_idx >= 0
+                          && cand.partition_idx < static_cast<int>(min_cnot_by_partition_.size()))
+        ? min_cnot_by_partition_[cand.partition_idx]
+        : 0;
     double score = routing_objective(
         static_cast<double>(swaps.size()),
-        cand.cnot_count,
+        cand.cnot_count - baseline,
         1.0,
         decay_factor
     );
@@ -1233,9 +1249,13 @@ std::vector<const CandidateData*> SabreRouter::prefilter_candidates(
     for (const auto* cand : candidates) {
         const auto approx_output = estimate_candidate_output_layout(
             *cand, pi, reverse);
+        const int baseline = (cand->partition_idx >= 0
+                              && cand->partition_idx < static_cast<int>(min_cnot_by_partition_.size()))
+            ? min_cnot_by_partition_[cand->partition_idx]
+            : 0;
         const double est = routing_objective(
             static_cast<double>(estimate_swap_count(*cand, pi, reverse)),
-            cand->cnot_count
+            cand->cnot_count - baseline
         ) + future_context_cost(
             cand->partition_idx, approx_output, F_snapshot, E, reverse,
             canonical_data);

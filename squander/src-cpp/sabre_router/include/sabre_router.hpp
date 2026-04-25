@@ -416,6 +416,10 @@ private:
     std::vector<LayoutPartInfo> layout_partitions_;
     std::unordered_map<int, CanonicalEntry> canonical_data_fwd_;
     std::unordered_map<int, CanonicalEntry> canonical_data_rev_;
+    // Per-partition cnot baseline subtracted from cand.cnot_count in scoring
+    // so the cnot term ranks variants WITHIN a partition only. Indexed by
+    // partition_idx; 0 for partitions with no candidates.
+    std::vector<int> min_cnot_by_partition_;
     std::vector<double> alpha_weights_;
     double max_finite_distance_ = 1.0;
 };
