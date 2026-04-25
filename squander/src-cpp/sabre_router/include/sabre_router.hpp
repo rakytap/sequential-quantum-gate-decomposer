@@ -348,6 +348,8 @@ private:
         const std::vector<const CandidateData*>& candidates,
         const std::vector<int>& pi,
         int top_k,
+        const std::vector<int>& F_snapshot,
+        const std::vector<std::pair<int,int>>& E,
         bool reverse
     ) const;
 
@@ -416,6 +418,31 @@ private:
     double entry_future_cost(
         const CanonicalEntry& entry,
         const std::vector<int>& pi
+    ) const;
+
+    double partition_compactness_cost(
+        int partition_idx,
+        const std::vector<int>& pi
+    ) const;
+
+    double partition_future_lower_bound(
+        int partition_idx,
+        const std::vector<int>& pi,
+        bool reverse
+    ) const;
+
+    double future_context_cost(
+        int exclude_partition_idx,
+        const std::vector<int>& pi,
+        const std::vector<int>& F_snapshot,
+        const std::vector<std::pair<int,int>>& E,
+        bool reverse
+    ) const;
+
+    std::vector<int> estimate_candidate_output_layout(
+        const CandidateData& cand,
+        const std::vector<int>& pi,
+        bool reverse
     ) const;
 
     // Immutable data members

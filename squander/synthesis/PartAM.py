@@ -1336,16 +1336,46 @@ class qgd_Partition_Aware_Mapping:
         scores_array = np.array(scores)
         return partition_candidates[np.argmin(scores_array)]
 
-    def _prefilter_candidates(self, partition_candidates, pi, D, top_k, reverse=False):
+    def _prefilter_candidates(
+        self,
+        partition_candidates,
+        pi,
+        D,
+        top_k,
+        F=None,
+        E=None,
+        candidate_cache=None,
+        layout_partitions=None,
+        reverse=False,
+        W=0.5,
+        alpha=1.0,
+    ):
         """Pre-filter candidates using cheap swap-count estimate before full A* scoring."""
         if len(partition_candidates) <= top_k:
             return partition_candidates
         cnot_cost = self.config.get('cnot_cost', 1.0 / 3.0)
         estimates = np.array([
-            self._routing_objective(
-                pc.estimate_swap_count(pi, D, reverse=reverse),
-                pc.cnot_count,
-                cnot_cost,
+            (
+                self._routing_objective(
+                    pc.estimate_swap_count(pi, D, reverse=reverse),
+                    pc.cnot_count,
+                    cnot_cost,
+                )
+                + self._future_context_cost(
+                    pc.partition_idx,
+                    self._estimate_candidate_output_layout(
+                        pc, pi, reverse=reverse
+                    ),
+                    F or (),
+                    E or (),
+                    D,
+                    candidate_cache,
+                    reverse=reverse,
+                    cnot_cost=cnot_cost,
+                    W=W,
+                    alpha=alpha,
+                    layout_partitions=layout_partitions,
+                )
             )
             for pc in partition_candidates
         ])
@@ -1478,6 +1508,128 @@ class qgd_Partition_Aware_Mapping:
         phys_v = output_perm_arr[entry["edges_v"]]
         return float(np.maximum(0, D_arr[phys_u, phys_v] - 1).sum())
 
+    @staticmethod
+    def _partition_compactness_cost(partition_idx, pi, layout_partitions, D):
+        if (
+            layout_partitions is None
+            or partition_idx < 0
+            or partition_idx >= len(layout_partitions)
+        ):
+            return 0.0
+        involved = qgd_Partition_Aware_Mapping._partition_involved_qbits(
+            layout_partitions[partition_idx]
+        )
+        if len(involved) < 2:
+            return 0.0
+
+        pi_arr = np.asarray(pi, dtype=np.intp)
+        D_arr = np.asarray(D)
+        best = float("inf")
+        for q in involved:
+            term = 0.0
+            for p in involved:
+                if p != q:
+                    term += float(D_arr[pi_arr[q], pi_arr[p]])
+            best = min(best, term)
+        return 0.0 if not np.isfinite(best) else best
+
+    @staticmethod
+    def _partition_future_lower_bound(
+        partition_idx,
+        pi,
+        D,
+        candidate_cache,
+        reverse=False,
+        cnot_cost=1.0 / 3.0,
+        layout_partitions=None,
+    ):
+        if (
+            candidate_cache is None
+            or partition_idx < 0
+            or partition_idx >= len(candidate_cache)
+            or not candidate_cache[partition_idx]
+        ):
+            return qgd_Partition_Aware_Mapping._partition_compactness_cost(
+                partition_idx, pi, layout_partitions, D
+            )
+
+        best = float("inf")
+        for cand in candidate_cache[partition_idx]:
+            cost = qgd_Partition_Aware_Mapping._routing_objective(
+                cand.estimate_swap_count(pi, D, reverse=reverse),
+                cand.cnot_count,
+                cnot_cost,
+            )
+            best = min(best, cost)
+        if np.isfinite(best):
+            return best
+        return qgd_Partition_Aware_Mapping._partition_compactness_cost(
+            partition_idx, pi, layout_partitions, D
+        )
+
+    @staticmethod
+    def _estimate_candidate_output_layout(partition_candidate, pi, reverse=False):
+        P_exit = partition_candidate.P_i if reverse else partition_candidate.P_o
+        pi_output = [int(x) for x in pi]
+        qbit_map_inverse = {
+            v: k for k, v in partition_candidate.qbit_map.items()
+        }
+        for q_star in range(len(P_exit)):
+            if q_star in qbit_map_inverse:
+                k = qbit_map_inverse[q_star]
+                pi_output[k] = partition_candidate.node_mapping[P_exit[q_star]]
+        return pi_output
+
+    @staticmethod
+    def _future_context_cost(
+        exclude_partition_idx,
+        pi,
+        F,
+        E,
+        D,
+        candidate_cache,
+        reverse=False,
+        cnot_cost=1.0 / 3.0,
+        W=0.5,
+        alpha=1.0,
+        layout_partitions=None,
+    ):
+        f_sum = 0.0
+        n_other = 0
+        for p_idx in F:
+            if p_idx == exclude_partition_idx:
+                continue
+            f_sum += qgd_Partition_Aware_Mapping._partition_future_lower_bound(
+                p_idx,
+                pi,
+                D,
+                candidate_cache,
+                reverse=reverse,
+                cnot_cost=cnot_cost,
+                layout_partitions=layout_partitions,
+            )
+            n_other += 1
+        score = f_sum / n_other if n_other > 0 else 0.0
+
+        if E:
+            e_sum = 0.0
+            for p_idx, depth in E:
+                if p_idx == exclude_partition_idx:
+                    continue
+                e_sum += (
+                    alpha ** depth
+                ) * qgd_Partition_Aware_Mapping._partition_future_lower_bound(
+                    p_idx,
+                    pi,
+                    D,
+                    candidate_cache,
+                    reverse=reverse,
+                    cnot_cost=cnot_cost,
+                    layout_partitions=layout_partitions,
+                )
+            score += W * e_sum / len(E)
+        return score
+
     def _release_valve(self, F, pi, D, canonical_data):
         pi_arr = np.asarray(pi, dtype=np.intp)
         D_arr = np.asarray(D)
@@ -1532,8 +1684,10 @@ class qgd_Partition_Aware_Mapping:
         weight=0.2,
         W=0.5,
         alpha=0.9,
+        layout_partitions=None,
     ):
-        if canonical_data is None or weight <= 0:
+        del canonical_data
+        if weight <= 0 or layout_partitions is None:
             return None
 
         edge_weights = {}
@@ -1542,21 +1696,21 @@ class qgd_Partition_Aware_Mapping:
         def add_edges(target_idx, edge_weight):
             if target_idx == partition_idx or edge_weight <= 0:
                 return
-            entry = canonical_data.get(target_idx)
-            if entry is None:
+            if target_idx >= len(layout_partitions):
                 return
-            eu = entry.get("edges_u")
-            if eu is None:
-                return
-            for u, v in zip(eu, entry["edges_v"]):
-                u = int(u)
-                v = int(v)
-                qubits.add(u)
-                qubits.add(v)
-                key = (u, v) if u <= v else (v, u)
-                edge_weights[key] = (
-                    edge_weights.get(key, 0.0) + edge_weight
-                )
+            involved = qgd_Partition_Aware_Mapping._partition_involved_qbits(
+                layout_partitions[target_idx]
+            )
+            for i, u in enumerate(involved):
+                for v in involved[i + 1:]:
+                    u = int(u)
+                    v = int(v)
+                    qubits.add(u)
+                    qubits.add(v)
+                    key = (u, v) if u <= v else (v, u)
+                    edge_weights[key] = (
+                        edge_weights.get(key, 0.0) + edge_weight
+                    )
 
         for future_idx in F:
             add_edges(future_idx, 1.0)
@@ -1676,20 +1830,6 @@ class qgd_Partition_Aware_Mapping:
                 self._reset_decay(decay)
                 swap_heavy_partitions = 0
 
-            partition_candidates = self.obtain_partition_candidates(
-            F,
-            optimized_partitions,
-            candidate_cache=candidate_cache,
-            )
-
-            if not partition_candidates:
-                break
-
-            top_k = self.config.get("prefilter_top_k", 50)
-            partition_candidates = self._prefilter_candidates(
-                partition_candidates, pi, D, top_k
-            )
-
             F_snapshot = tuple(F)
             E = self.generate_extended_set(
                 F,
@@ -1699,6 +1839,28 @@ class qgd_Partition_Aware_Mapping:
                 optimized_partitions,
                 max_E_size=max_E_size,
                 max_lookahead=max_lookahead,
+            )
+
+            partition_candidates = self.obtain_partition_candidates(
+                F,
+                optimized_partitions,
+                candidate_cache=candidate_cache,
+            )
+            if not partition_candidates:
+                break
+
+            top_k = self.config.get("prefilter_top_k", 50)
+            partition_candidates = self._prefilter_candidates(
+                partition_candidates,
+                pi,
+                D,
+                top_k,
+                F=F_snapshot,
+                E=E,
+                candidate_cache=candidate_cache,
+                layout_partitions=optimized_partitions,
+                W=E_W,
+                alpha=E_alpha,
             )
 
             # Group candidates by partition_idx to reuse _build_neighbor_info
@@ -1723,6 +1885,7 @@ class qgd_Partition_Aware_Mapping:
                         weight=self.config.get("path_tiebreak_weight", 0.2),
                         W=E_W,
                         alpha=E_alpha,
+                        layout_partitions=optimized_partitions,
                     )
                     prev_partition_idx = cand.partition_idx
                 score, swaps, output_perm = self.score_partition_candidate(
@@ -1743,6 +1906,8 @@ class qgd_Partition_Aware_Mapping:
                     ),
                     decay=decay,
                     cached_neighbor_info=cached_neighbor_info,
+                    candidate_cache=candidate_cache,
+                    layout_partitions=optimized_partitions,
                     return_transforms=True,
                 )
                 scores[ci] = score
@@ -1881,6 +2046,17 @@ class qgd_Partition_Aware_Mapping:
                 self._reset_decay(decay)
                 swap_heavy_partitions = 0
 
+            F_snapshot = tuple(F)
+            E = self.generate_extended_set(
+                F,
+                DAG,
+                IDAG,
+                resolved_partitions,
+                optimized_partitions,
+                max_E_size=max_E_size,
+                max_lookahead=max_lookahead,
+            )
+
             partition_candidates = self.obtain_partition_candidates(
                 F,
                 optimized_partitions,
@@ -1891,18 +2067,17 @@ class qgd_Partition_Aware_Mapping:
 
             top_k = self.config.get("prefilter_top_k", 50)
             partition_candidates = self._prefilter_candidates(
-                partition_candidates, pi, D, top_k, reverse=reverse
-            )
-
-            F_snapshot = tuple(F)
-            E = self.generate_extended_set(
-                F,
-                DAG,
-                IDAG,
-                resolved_partitions,
-                optimized_partitions,
-                max_E_size=max_E_size,
-                max_lookahead=max_lookahead,
+                partition_candidates,
+                pi,
+                D,
+                top_k,
+                F=F_snapshot,
+                E=E,
+                candidate_cache=candidate_cache,
+                layout_partitions=optimized_partitions,
+                reverse=reverse,
+                W=E_W,
+                alpha=E_alpha,
             )
 
             # Group candidates by partition_idx to reuse _build_neighbor_info
@@ -1927,6 +2102,7 @@ class qgd_Partition_Aware_Mapping:
                         weight=self.config.get("path_tiebreak_weight", 0.2),
                         W=E_W,
                         alpha=E_alpha,
+                        layout_partitions=optimized_partitions,
                     )
                     prev_partition_idx = cand.partition_idx
                 score, swaps, output_perm = self.score_partition_candidate(
@@ -1948,6 +2124,8 @@ class qgd_Partition_Aware_Mapping:
                     ),
                     decay=decay,
                     cached_neighbor_info=cached_neighbor_info,
+                    candidate_cache=candidate_cache,
+                    layout_partitions=optimized_partitions,
                     return_transforms=True,
                 )
                 scores[ci] = score
@@ -2095,6 +2273,8 @@ class qgd_Partition_Aware_Mapping:
                                   cnot_cost=1.0 / 3.0,
                                   path_tiebreak_weight=0.2, decay=None,
                                   cached_neighbor_info=None,
+                                  candidate_cache=None,
+                                  layout_partitions=None,
                                   return_transforms=False):
         """LightSABRE-style relative scoring (arXiv:2409.08368, eq. 1).
 
@@ -2115,6 +2295,7 @@ class qgd_Partition_Aware_Mapping:
                 weight=path_tiebreak_weight,
                 W=W,
                 alpha=alpha,
+                layout_partitions=layout_partitions,
             )
         swaps, output_perm = partition_candidate.transform_pi(
             pi,
@@ -2136,45 +2317,25 @@ class qgd_Partition_Aware_Mapping:
             decay_factor=decay_factor,
         )
 
-        if canonical_data is None:
+        if candidate_cache is None:
             if return_transforms:
                 return score, swaps, output_perm
             return score
 
-        output_perm_arr = np.asarray(output_perm, dtype=np.intp)
-        D_arr = np.asarray(D)
         cand_idx = partition_candidate.partition_idx
-
-        # Basic component: average dist over F \ {cand}
-        f_sum = 0.0
-        n_other = 0
-        for partition_idx in F:
-            if partition_idx == cand_idx:
-                continue
-            entry = canonical_data.get(partition_idx)
-            if entry is None:
-                continue
-            n_other += 1
-            f_sum += qgd_Partition_Aware_Mapping._entry_future_cost(
-                entry, output_perm_arr, D_arr
-            )
-        if n_other > 0:
-            score += f_sum / n_other
-
-        # Lookahead component: alpha^depth-decayed average over E
-        if E:
-            e_sum = 0.0
-            for partition_idx, depth in E:
-                if partition_idx == cand_idx:
-                    continue
-                entry = canonical_data.get(partition_idx)
-                if entry is None:
-                    continue
-                d_cost = qgd_Partition_Aware_Mapping._entry_future_cost(
-                    entry, output_perm_arr, D_arr
-                )
-                e_sum += (alpha ** depth) * d_cost
-            score += W * e_sum / len(E)
+        score += qgd_Partition_Aware_Mapping._future_context_cost(
+            cand_idx,
+            output_perm,
+            F,
+            E,
+            D,
+            candidate_cache,
+            reverse=reverse,
+            cnot_cost=cnot_cost,
+            W=W,
+            alpha=alpha,
+            layout_partitions=layout_partitions,
+        )
 
         if return_transforms:
             return score, swaps, output_perm
