@@ -122,6 +122,8 @@ struct TrialResult {
 struct BlockInfo {
     std::vector<int> tracked_vqs;
     std::vector<int> initial_pos;
+    std::vector<std::vector<int>> f_blocks_idx;
+    std::vector<std::vector<int>> e_blocks_idx;
     std::vector<int> pair_a_idx; // index into tracked_vqs
     std::vector<int> pair_b_idx;
     std::vector<double> pair_weight; // (F_count/f_size) + (W_E * E_count / e_size)
