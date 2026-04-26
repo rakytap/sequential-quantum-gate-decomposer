@@ -164,6 +164,7 @@ class qgd_Partition_Aware_Mapping:
         self.config.setdefault('log_schedule', False)
         self.config.setdefault('size_density_weight', False)
         self.config.setdefault('sparse_penalty', 3.0)
+        self.config.setdefault('base_3q_penalty', 1.0)
         strategy = self.config['strategy']
         self.config.setdefault('parallel_layout_trials', False)
         self.config.setdefault('layout_trial_workers', 0)
@@ -207,23 +208,21 @@ class qgd_Partition_Aware_Mapping:
     # ------------------------------------------------------------------------
 
     @staticmethod
-    def _parts_to_density_weights(allparts, gate_dict, sparse_penalty=3.0):
-        """Per-part ILP weights that penalise sparse 3-qubit partitions.
+    def _parts_to_density_weights(allparts, gate_dict, sparse_penalty=3.0, base_3q_penalty=1.0):
+        """Per-part ILP weights that penalise 3-qubit partitions.
 
-        A 3-qubit partition is penalised when its qubits interact through few
-        distinct pairs (a "passenger qubit" situation).  The penalty is scaled
-        so that the ILP base cost (1 per partition) increases by
-        ``(active_pairs_penalty / N)``, making the ILP prefer two cheaper 2q
-        partitions over one expensive sparse 3q partition.
+        All 3-qubit partitions pay a base_3q_penalty so the ILP requires them
+        to justify their coverage over 2-qubit alternatives.  Sparse ones
+        (few active qubit pairs) pay an additional density penalty.
 
-        Penalty by active-pair count for a 3q partition:
-          1 pair  -> sparse_penalty        (e.g. 3 → total ILP cost 4)
-          2 pairs -> sparse_penalty / 3    (e.g. 1 → total ILP cost 2)
-          3 pairs -> 0                     (no penalty)
-        For 2q (or 1q) partitions the weight is always 0.
+        ILP cost = weights[i] * N + 1, so:
+          2q partition:           cost = 1
+          3q, 3 active pairs:     cost = 1 + base_3q_penalty
+          3q, 2 active pairs:     cost = 1 + base_3q_penalty + sparse_penalty/3
+          3q, 1 active pair:      cost = 1 + base_3q_penalty + sparse_penalty
 
         Returns:
-            list[float]: weights[i] such that the ILP cost of partition i is
+            list[float]: weights[i] such that ILP cost of partition i is
                 ``weights[i] * N + 1``.
         """
         N = max(len(allparts), 1)
@@ -249,12 +248,12 @@ class qgd_Partition_Aware_Mapping:
                         active_pairs.add((min(qbs[a], qbs[b]), max(qbs[a], qbs[b])))
             n_pairs = len(active_pairs)
             if n_pairs >= 3:
-                penalty = 0.0
+                density_penalty = 0.0
             elif n_pairs == 2:
-                penalty = sparse_penalty / 3.0
+                density_penalty = sparse_penalty / 3.0
             else:
-                penalty = sparse_penalty
-            weights.append(penalty / N)
+                density_penalty = sparse_penalty
+            weights.append((base_3q_penalty + density_penalty) / N)
         return weights
 
     @staticmethod
@@ -556,8 +555,11 @@ class qgd_Partition_Aware_Mapping:
         ilp_weights = None
         if self.config.get('size_density_weight', False):
             sparse_penalty = float(self.config.get('sparse_penalty', 3.0))
+            base_3q_penalty = float(self.config.get('base_3q_penalty', 1.0))
             ilp_weights = self._parts_to_density_weights(
-                allparts, gate_dict, sparse_penalty=sparse_penalty
+                allparts, gate_dict,
+                sparse_penalty=sparse_penalty,
+                base_3q_penalty=base_3q_penalty,
             )
         if self.config['overlap_tiebreak']:
             tb_weights = parts_to_overlap_scores(allparts, g, gate_to_qubit)
