@@ -112,20 +112,26 @@ struct TrialResult {
     double total_cost;
 };
 
-struct NeighborEdge {
-    int u_idx;
-    int v_idx;
-    double weight;
-};
-
-struct NeighborInfo {
-    std::vector<int> neighbor_vqs;
+// SABRE H(π) block-aware heuristic context.
+//
+// H(π) = (1/|F|) Σ_{b∈F} Σ_{i,j∈b} D[π(b.i)][π(b.j)]
+//      + (W_E/|E|) Σ_{b∈E} Σ_{i,j∈b} D[π(b.i)][π(b.j)]
+//
+// Pairs are deduplicated across blocks; pair_weight[k] folds in 1/|F| and
+// W_E/|E| so the per-state heuristic is a single weighted dot-product.
+struct BlockInfo {
+    std::vector<int> tracked_vqs;
     std::vector<int> initial_pos;
-    std::vector<NeighborEdge> edges;
-    double weight = 0.0;
+    std::vector<int> pair_a_idx; // index into tracked_vqs
+    std::vector<int> pair_b_idx;
+    std::vector<double> pair_weight; // (F_count/f_size) + (W_E * E_count / e_size)
+    std::vector<std::vector<int>> vq_pairs; // vq_pairs[idx] = pair indices touching tracked vq idx
+    int f_size = 0;
+    int e_size = 0;
+    double W_E = 0.0;
 
-    bool uses_tiebreak() const {
-        return weight > 0.0 && !edges.empty();
+    bool active() const {
+        return !pair_a_idx.empty();
     }
 };
 
@@ -137,9 +143,9 @@ struct SwapCacheKey {
     int64_t pi_snapshot;
     int64_t targets;
     int k;
-    // 0 when the neighbor tiebreak is inactive; otherwise a stable hash of
-    // (edges, initial_pos, weight) from NeighborInfo so that two calls with
-    // the same active future context share cache entries.
+    // 0 when block_info is inactive; otherwise a stable hash of
+    // (pair_a_idx, pair_b_idx, pair_weight, initial_pos, W_E) from BlockInfo
+    // so that two calls with the same active SABRE H context share cache entries.
     uint64_t neighbor_hash;
 
     bool operator==(const SwapCacheKey& o) const {
@@ -245,7 +251,7 @@ private:
         const std::vector<int>& node_mapping_flat,
         const std::vector<int>& P_route_inv,
         SwapCache* swap_cache,
-        const NeighborInfo* neighbor_info = nullptr
+        const BlockInfo* block_info = nullptr
     ) const;
 
     // Lower-bound swap estimate (port of estimate_swap_count)
@@ -275,7 +281,7 @@ private:
         const std::vector<double>* decay = nullptr,
         std::vector<std::pair<int,int>>* out_swaps = nullptr,
         std::vector<int>* out_pi_new = nullptr,
-        const NeighborInfo* cached_neighbor_info = nullptr
+        const BlockInfo* cached_block_info = nullptr
     ) const;
 
     // Route and update layout for a candidate (port of transform_pi)
@@ -285,15 +291,26 @@ private:
         const std::vector<int>& pi,
         bool reverse,
         SwapCache* swap_cache,
-        const NeighborInfo* neighbor_info = nullptr
+        const BlockInfo* block_info = nullptr
     ) const;
 
-    NeighborInfo build_neighbor_info(
-        int exclude_partition_idx,
+    // Build SABRE H(π) block-aware heuristic context (port of _build_block_info).
+    // The candidate (cand_partition_idx) is included as a member of F so the
+    // inner A* feels pressure to close it.
+    BlockInfo build_block_info(
+        int cand_partition_idx,
         const std::vector<int>& F_snapshot,
         const std::vector<std::pair<int,int>>& E,
+        const std::vector<int>& pi
+    ) const;
+
+    // Compute SABRE H(π) for an arbitrary layout over an arbitrary F/E.
+    // Used by post-routing scoring and the prefilter.
+    double sabre_H(
         const std::vector<int>& pi,
-        const std::unordered_map<int, CanonicalEntry>& canonical_data
+        const std::vector<int>& F_partitions,
+        const std::vector<std::pair<int,int>>& E_partitions,
+        int exclude_partition_idx
     ) const;
 
     double decay_factor_for_swaps(
@@ -335,15 +352,14 @@ private:
     // Get final layer (partitions with no children)
     std::vector<int> get_final_layer() const;
 
-    // Prefilter candidates by cheap swap estimate
+    // Prefilter candidates by SABRE H(π) on the estimated post-routing layout.
     std::vector<const CandidateData*> prefilter_candidates(
         const std::vector<const CandidateData*>& candidates,
         const std::vector<int>& pi,
         int top_k,
         const std::vector<int>& F_snapshot,
         const std::vector<std::pair<int,int>>& E,
-        bool reverse,
-        const std::unordered_map<int, CanonicalEntry>& canonical_data
+        bool reverse
     ) const;
 
     // Select best candidate with optional stochastic tie-breaking
@@ -379,20 +395,6 @@ private:
         int n_trials,
         const std::vector<int>& seeded_pi,
         std::mt19937& rng
-    ) const;
-
-    double entry_future_cost(
-        const CanonicalEntry& entry,
-        const std::vector<int>& pi
-    ) const;
-
-    double future_context_cost(
-        int exclude_partition_idx,
-        const std::vector<int>& pi,
-        const std::vector<int>& F_snapshot,
-        const std::vector<std::pair<int,int>>& E,
-        bool reverse,
-        const std::unordered_map<int, CanonicalEntry>& canonical_data
     ) const;
 
     std::vector<int> estimate_candidate_output_layout(
