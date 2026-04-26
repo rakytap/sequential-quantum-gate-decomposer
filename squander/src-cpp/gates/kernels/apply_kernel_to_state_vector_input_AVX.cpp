@@ -430,9 +430,13 @@ copies or substantial portions of the Software.
                     float* element = (float*)input.get_data() + 2 * current_idx;
                     float* element_pair = (float*)input.get_data() + 2 * current_idx_pair;
 
-                   
-                    __m256 data0 = _mm256_loadu_ps(element);
-                    __m256 data1 = _mm256_loadu_ps(element_pair);
+                    // Load 2 complex32 (4 floats) and broadcast to both 128-bit AVX lanes.
+                    // A full 256-bit load (_mm256_loadu_ps) would overlap with element_pair
+                    // when 1<<target_qbit < 4 (e.g. target_qbit==1, stride==2 complex32).
+                    __m128 lo = _mm_loadu_ps(element);
+                    __m256 data0 = _mm256_set_m128(lo, lo);
+                    __m128 hi = _mm_loadu_ps(element_pair);
+                    __m256 data1 = _mm256_set_m128(hi, hi);
 
                     __m256 data_u2 = _mm256_mul_ps(data0, mv00);
                     __m256 data_u3 = _mm256_mul_ps(data1, mv10);
@@ -453,8 +457,14 @@ copies or substantial portions of the Software.
                     __m256 data_r0 = _mm256_add_ps(data_u6, data_u7);
                     __m256 data_r1 = _mm256_add_ps(data_d6, data_d7);
 
-                    _mm256_storeu_ps(element, data_r0);
-                    _mm256_storeu_ps(element_pair, data_r1);
+                    // hadd_ps within 128-bit lanes gives [Re(r0),Re(r1),Im(r0),Im(r1)];
+                    // shuffle to correct interleaved layout [Re(r0),Im(r0),Re(r1),Im(r1)].
+                    __m128 r0 = _mm256_castps256_ps128(data_r0);
+                    r0 = _mm_shuffle_ps(r0, r0, _MM_SHUFFLE(3, 1, 2, 0));
+                    _mm_storeu_ps(element, r0);
+                    __m128 r1 = _mm256_castps256_ps128(data_r1);
+                    r1 = _mm_shuffle_ps(r1, r1, _MM_SHUFFLE(3, 1, 2, 0));
+                    _mm_storeu_ps(element_pair, r1);
 
 
                 }
@@ -659,9 +669,13 @@ copies or substantial portions of the Software.
                     float* element = (float*)input.get_data() + 2 * current_idx;
                     float* element_pair = (float*)input.get_data() + 2 * current_idx_pair;
 
-                   
-                    __m256 data0 = _mm256_loadu_ps(element);
-                    __m256 data1 = _mm256_loadu_ps(element_pair);
+                    // Load 2 complex32 (4 floats) and broadcast to both 128-bit AVX lanes.
+                    // A full 256-bit load (_mm256_loadu_ps) would overlap with element_pair
+                    // when 1<<target_qbit < 4 (e.g. target_qbit==1, stride==2 complex32).
+                    __m128 lo = _mm_loadu_ps(element);
+                    __m256 data0 = _mm256_set_m128(lo, lo);
+                    __m128 hi = _mm_loadu_ps(element_pair);
+                    __m256 data1 = _mm256_set_m128(hi, hi);
 
                     __m256 data_u2 = _mm256_mul_ps(data0, mv00);
                     __m256 data_u3 = _mm256_mul_ps(data1, mv10);
@@ -682,8 +696,14 @@ copies or substantial portions of the Software.
                     __m256 data_r0 = _mm256_add_ps(data_u6, data_u7);
                     __m256 data_r1 = _mm256_add_ps(data_d6, data_d7);
 
-                    _mm256_storeu_ps(element, data_r0);
-                    _mm256_storeu_ps(element_pair, data_r1);
+                    // hadd_ps within 128-bit lanes gives [Re(r0),Re(r1),Im(r0),Im(r1)];
+                    // shuffle to correct interleaved layout [Re(r0),Im(r0),Re(r1),Im(r1)].
+                    __m128 r0 = _mm256_castps256_ps128(data_r0);
+                    r0 = _mm_shuffle_ps(r0, r0, _MM_SHUFFLE(3, 1, 2, 0));
+                    _mm_storeu_ps(element, r0);
+                    __m128 r1 = _mm256_castps256_ps128(data_r1);
+                    r1 = _mm_shuffle_ps(r1, r1, _MM_SHUFFLE(3, 1, 2, 0));
+                    _mm_storeu_ps(element_pair, r1);
 
 
                 }
@@ -899,9 +919,13 @@ copies or substantial portions of the Software.
                     float* element = (float*)input.get_data() + 2 * current_idx;
                     float* element_pair = (float*)input.get_data() + 2 * current_idx_pair;
 
-                   
-                    __m256 data0 = _mm256_loadu_ps(element);
-                    __m256 data1 = _mm256_loadu_ps(element_pair);
+                    // Load 2 complex32 (4 floats) and broadcast to both 128-bit AVX lanes.
+                    // A full 256-bit load (_mm256_loadu_ps) would overlap with element_pair
+                    // when 1<<target_qbit < 4 (e.g. target_qbit==1, stride==2 complex32).
+                    __m128 lo = _mm_loadu_ps(element);
+                    __m256 data0 = _mm256_set_m128(lo, lo);
+                    __m128 hi = _mm_loadu_ps(element_pair);
+                    __m256 data1 = _mm256_set_m128(hi, hi);
 
                     __m256 data_u2 = _mm256_mul_ps(data0, mv00);
                     __m256 data_u3 = _mm256_mul_ps(data1, mv10);
@@ -922,8 +946,14 @@ copies or substantial portions of the Software.
                     __m256 data_r0 = _mm256_add_ps(data_u6, data_u7);
                     __m256 data_r1 = _mm256_add_ps(data_d6, data_d7);
 
-                    _mm256_storeu_ps(element, data_r0);
-                    _mm256_storeu_ps(element_pair, data_r1);
+                    // hadd_ps within 128-bit lanes gives [Re(r0),Re(r1),Im(r0),Im(r1)];
+                    // shuffle to correct interleaved layout [Re(r0),Im(r0),Re(r1),Im(r1)].
+                    __m128 r0 = _mm256_castps256_ps128(data_r0);
+                    r0 = _mm_shuffle_ps(r0, r0, _MM_SHUFFLE(3, 1, 2, 0));
+                    _mm_storeu_ps(element, r0);
+                    __m128 r1 = _mm256_castps256_ps128(data_r1);
+                    r1 = _mm_shuffle_ps(r1, r1, _MM_SHUFFLE(3, 1, 2, 0));
+                    _mm_storeu_ps(element_pair, r1);
 
 
                 }
