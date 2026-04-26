@@ -1588,7 +1588,7 @@ class qgd_Partition_Aware_Mapping:
         D_arr = np.asarray(D)
 
         f_sum = 0.0
-        n_other = 0
+        n_edges = 0
         for p_idx in F:
             if p_idx == exclude_partition_idx:
                 continue
@@ -1600,11 +1600,13 @@ class qgd_Partition_Aware_Mapping:
             f_sum += qgd_Partition_Aware_Mapping._entry_future_cost(
                 entry, pi_arr, D_arr
             )
-            n_other += 1
-        score = f_sum / n_other if n_other > 0 else 0.0
+            eu = entry.get("edges_u")
+            n_edges += len(eu) if eu is not None else 0
+        score = f_sum / n_edges if n_edges > 0 else 0.0
 
         if E:
             e_sum = 0.0
+            e_edges = 0
             for p_idx, depth in E:
                 if p_idx == exclude_partition_idx:
                     continue
@@ -1616,7 +1618,10 @@ class qgd_Partition_Aware_Mapping:
                 e_sum += (alpha ** depth) * qgd_Partition_Aware_Mapping._entry_future_cost(
                     entry, pi_arr, D_arr
                 )
-            score += W * e_sum / len(E)
+                eu = entry.get("edges_u")
+                e_edges += len(eu) if eu is not None else 0
+            if e_edges > 0:
+                score += W * e_sum / e_edges
         return score
 
     def _release_valve(self, F, pi, D, canonical_data):

@@ -1080,21 +1080,22 @@ double SabreRouter::future_context_cost(
     // the future signal is monotone in distance instead of flickering with
     // whichever candidate happens to win the lower bound.
     double f_sum = 0.0;
-    int n_other = 0;
+    int n_edges = 0;
     for (int p_idx : F_snapshot) {
         if (p_idx == exclude_partition_idx) continue;
         auto it = canonical_data.find(p_idx);
         if (it == canonical_data.end()) continue;
         f_sum += entry_future_cost(it->second, pi);
-        n_other++;
+        n_edges += static_cast<int>(it->second.edges_u.size());
     }
 
-    double score = n_other > 0
-        ? f_sum / static_cast<double>(n_other)
+    double score = n_edges > 0
+        ? f_sum / static_cast<double>(n_edges)
         : 0.0;
 
     if (!E.empty()) {
         double e_sum = 0.0;
+        int e_edges = 0;
         for (auto [p_idx, depth] : E) {
             if (p_idx == exclude_partition_idx) continue;
             auto it = canonical_data.find(p_idx);
@@ -1104,8 +1105,11 @@ double SabreRouter::future_context_cost(
                     ? alpha_weights_[depth]
                     : std::pow(config_.E_alpha, depth);
             e_sum += alpha * entry_future_cost(it->second, pi);
+            e_edges += static_cast<int>(it->second.edges_u.size());
         }
-        score += config_.E_weight * e_sum / static_cast<double>(E.size());
+        if (e_edges > 0) {
+            score += config_.E_weight * e_sum / static_cast<double>(e_edges);
+        }
     }
 
     return score;
