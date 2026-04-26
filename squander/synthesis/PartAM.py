@@ -343,25 +343,6 @@ class qgd_Partition_Aware_Mapping:
             return partition.get("is_single", False)
         return isinstance(partition, SingleQubitPartitionResult)
 
-    @staticmethod
-    def _compute_min_cnot_by_partition(scoring_partitions):
-        # Per-partition cnot baseline: subtracted from cand.cnot_count in the
-        # routing score so the cnot term only ranks variants WITHIN a partition.
-        # Cross-partition selection then sees identical (zero) cnot contribution
-        # from each partition's best variant, removing the bias against larger
-        # partitions whose intrinsic synthesis cost is higher.
-        result = {}
-        for idx, partition in enumerate(scoring_partitions):
-            if partition is None:
-                continue
-            best = None
-            for cnots in partition.cnot_counts:
-                for c in cnots:
-                    if best is None or c < best:
-                        best = c
-            if best is not None:
-                result[idx] = int(best)
-        return result
 
     @staticmethod
     def _partition_involved_qbits(partition):
@@ -1382,7 +1363,6 @@ class qgd_Partition_Aware_Mapping:
         W=0.5,
         alpha=1.0,
         canonical_data=None,
-        min_cnot_by_partition=None,
     ):
         """Pre-filter candidates using cheap swap-count estimate before full A* scoring."""
         if top_k <= 0:
@@ -1390,12 +1370,11 @@ class qgd_Partition_Aware_Mapping:
         if len(partition_candidates) <= top_k:
             return partition_candidates
         cnot_cost = self.config.get('cnot_cost', 1.0 / 3.0)
-        baseline = min_cnot_by_partition or {}
         estimates = np.array([
             (
                 self._routing_objective(
                     pc.estimate_swap_count(pi, D, reverse=reverse),
-                    pc.cnot_count - baseline.get(pc.partition_idx, 0),
+                    pc.cnot_count,
                     cnot_cost,
                 )
                 + self._future_context_cost(
@@ -1804,9 +1783,6 @@ class qgd_Partition_Aware_Mapping:
         canonical_data = self._build_canonical_neighbor_data(
             scoring_partitions, reverse=False
         )
-        min_cnot_by_partition = self._compute_min_cnot_by_partition(
-            scoring_partitions
-        )
         decay = [1.0] * len(pi)
         swap_heavy_partitions = 0
 
@@ -1861,7 +1837,6 @@ class qgd_Partition_Aware_Mapping:
                 W=E_W,
                 alpha=E_alpha,
                 canonical_data=canonical_data,
-                min_cnot_by_partition=min_cnot_by_partition,
             )
 
             # Group candidates by partition_idx to reuse _build_neighbor_info
@@ -1913,7 +1888,6 @@ class qgd_Partition_Aware_Mapping:
                     three_qubit_exit_weight=self.config.get(
                         "three_qubit_exit_weight", 1.0
                     ),
-                    min_cnot_by_partition=min_cnot_by_partition,
                 )
                 scores[ci] = score
                 cached_swaps[ci] = swaps
@@ -2027,9 +2001,6 @@ class qgd_Partition_Aware_Mapping:
         canonical_data = self._build_canonical_neighbor_data(
             scoring_partitions, reverse=reverse
         )
-        min_cnot_by_partition = self._compute_min_cnot_by_partition(
-            scoring_partitions
-        )
         decay = [1.0] * len(pi)
         swap_heavy_partitions = 0
 
@@ -2087,7 +2058,6 @@ class qgd_Partition_Aware_Mapping:
                 W=E_W,
                 alpha=E_alpha,
                 canonical_data=canonical_data,
-                min_cnot_by_partition=min_cnot_by_partition,
             )
 
             # Group candidates by partition_idx to reuse _build_neighbor_info
@@ -2140,7 +2110,6 @@ class qgd_Partition_Aware_Mapping:
                     three_qubit_exit_weight=self.config.get(
                         "three_qubit_exit_weight", 1.0
                     ),
-                    min_cnot_by_partition=min_cnot_by_partition,
                 )
                 scores[ci] = score
                 cached_swaps[ci] = swaps
@@ -2290,19 +2259,13 @@ class qgd_Partition_Aware_Mapping:
                                   candidate_cache=None,
                                   layout_partitions=None,
                                   return_transforms=False,
-                                  three_qubit_exit_weight=1.0,
-                                  min_cnot_by_partition=None):
+                                  three_qubit_exit_weight=1.0):
         """LightSABRE-style relative scoring (arXiv:2409.08368, eq. 1).
 
         H = |swaps|
-          + cnot_cost * (cand.cnot_count - min_cnot_for_partition)
+          + cnot_cost * cand.cnot_count
           + (1/|F'|) * average routing cost over F \\ {cand}
           + (W/|E|)  * alpha^d-decayed routing cost over E
-
-        The cnot term subtracts a per-partition baseline so it only ranks
-        variants WITHIN a partition; cross-partition selection is unbiased
-        by the partition's intrinsic synthesis cost (which gets paid no
-        matter when the partition is scheduled).
         """
         if cached_neighbor_info is not None:
             neighbor_info = cached_neighbor_info
@@ -2331,14 +2294,9 @@ class qgd_Partition_Aware_Mapping:
             decay_factor = qgd_Partition_Aware_Mapping._decay_factor_for_swaps(
                 swaps, decay
             )
-        baseline = 0
-        if min_cnot_by_partition is not None:
-            baseline = min_cnot_by_partition.get(
-                partition_candidate.partition_idx, 0
-            )
         score = qgd_Partition_Aware_Mapping._routing_objective(
             len(swaps),
-            partition_candidate.cnot_count - baseline,
+            partition_candidate.cnot_count,
             cnot_cost,
             decay_factor=decay_factor,
         )
