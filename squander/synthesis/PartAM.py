@@ -161,6 +161,7 @@ class qgd_Partition_Aware_Mapping:
         self.config.setdefault('cnot_cost', 1.0 / 3.0)  # 1 SWAP = 3 CNOTs
         self.config.setdefault('overlap_tiebreak', True)
         self.config.setdefault('three_qubit_exit_weight', 1.0)
+        self.config.setdefault('log_schedule', False)
         strategy = self.config['strategy']
         self.config.setdefault('parallel_layout_trials', False)
         self.config.setdefault('layout_trial_workers', 0)
@@ -1028,18 +1029,34 @@ class qgd_Partition_Aware_Mapping:
         self, steps, optimized_partitions, candidate_cache, N
     ):
         partition_order = []
+        log = self.config.get('log_schedule', False)
+        pending_swaps = 0
+        sched_idx = 0
+        size_swap_totals = {}  # qubit_count -> [count, total_swaps]
         for step in steps:
             kind = step[0]
             if kind == "swap":
                 swaps = [(int(u), int(v)) for u, v in step[1]]
+                pending_swaps += len(swaps)
                 if swaps:
                     partition_order.append(construct_swap_circuit(swaps, N))
             elif kind == "partition":
                 partition_idx = int(step[1])
                 candidate_idx = int(step[2])
-                partition_order.append(
-                    candidate_cache[partition_idx][candidate_idx]
-                )
+                cand = candidate_cache[partition_idx][candidate_idx]
+                partition_order.append(cand)
+                if log:
+                    size = len(getattr(cand, 'involved_qbits', ()) or ())
+                    cnots = int(getattr(cand, 'cnot_count', 0))
+                    print(
+                        f"[sched {sched_idx:>4}] part_idx={partition_idx:>4} "
+                        f"size={size} |swaps|={pending_swaps:>3} cnots={cnots:>3}"
+                    )
+                    size_swap_totals.setdefault(size, [0, 0])
+                    size_swap_totals[size][0] += 1
+                    size_swap_totals[size][1] += pending_swaps
+                pending_swaps = 0
+                sched_idx += 1
             elif kind == "single":
                 partition_idx = int(step[1])
                 physical_qubit = int(step[2])
@@ -1049,6 +1066,15 @@ class qgd_Partition_Aware_Mapping:
                     {circuit_qubit: physical_qubit}, N
                 )
                 partition_order.append(part)
+        if log and size_swap_totals:
+            print("[sched summary] avg |swaps| per partition by size:")
+            for size in sorted(size_swap_totals):
+                count, total = size_swap_totals[size]
+                avg = total / count if count else 0.0
+                print(
+                    f"  size={size}: n={count} total_swaps={total} "
+                    f"avg={avg:.2f}"
+                )
         return partition_order
 
 
@@ -1911,6 +1937,16 @@ class qgd_Partition_Aware_Mapping:
             else:
                 swap_heavy_partitions = 0
                 self._reset_decay(decay)
+
+            if self.config.get('log_schedule', False):
+                size = len(
+                    getattr(min_partition_candidate, 'involved_qbits', ()) or ()
+                )
+                print(
+                    f"[sched py] part_idx={min_partition_candidate.partition_idx:>4} "
+                    f"size={size} |swaps|={len(swap_order):>3} "
+                    f"cnots={int(getattr(min_partition_candidate, 'cnot_count', 0)):>3}"
+                )
 
             partition_order.append(min_partition_candidate)
 
