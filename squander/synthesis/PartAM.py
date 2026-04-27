@@ -24,7 +24,6 @@ from squander.partitioning.ilp import (
     _get_topo_order,
     topo_sort_partitions,
     ilp_global_optimal,
-    parts_to_overlap_scores,
 )
 # Module-level globals for pool workers (set via Pool initializer)
 _worker_config = None
@@ -159,8 +158,9 @@ class qgd_Partition_Aware_Mapping:
             )
             self.config['path_tiebreak_weight'] = 0.49
         self.config.setdefault('cnot_cost', 1.0 / 3.0)  # 1 SWAP = 3 CNOTs
-        self.config.setdefault('overlap_tiebreak', True)
         self.config.setdefault('three_qubit_exit_weight', 1.0)
+        self.config.setdefault('size_density_weight', False)
+        self.config.setdefault('sparse_penalty', 3.0)
         strategy = self.config['strategy']
         self.config.setdefault('parallel_layout_trials', False)
         self.config.setdefault('layout_trial_workers', 0)
@@ -202,6 +202,46 @@ class qgd_Partition_Aware_Mapping:
     # ------------------------------------------------------------------------
     # Static Synthesis Helpers (extracted from SynthesizeWideCircuit)
     # ------------------------------------------------------------------------
+
+    @staticmethod
+    def _parts_to_density_weights(allparts, gate_dict, sparse_penalty=3.0):
+        """Per-part ILP weights that penalise sparse 3-qubit partitions.
+
+        Penalty by active-pair count for a 3q partition:
+          1 pair  -> sparse_penalty        (e.g. 3 → total ILP cost 4)
+          2 pairs -> sparse_penalty / 3    (e.g. 1 → total ILP cost 2)
+          3 pairs -> 0                     (no penalty)
+        For 2q (or 1q) partitions the weight is always 0.
+        """
+        N = max(len(allparts), 1)
+        weights = []
+        for part in allparts:
+            qubits_in_part = set()
+            for gate_idx in part:
+                gate = gate_dict.get(gate_idx)
+                if gate is not None:
+                    qubits_in_part.update(gate.get_Involved_Qbits())
+            if len(qubits_in_part) != 3:
+                weights.append(0.0)
+                continue
+            active_pairs = set()
+            for gate_idx in part:
+                gate = gate_dict.get(gate_idx)
+                if gate is None:
+                    continue
+                qbs = list(gate.get_Involved_Qbits())
+                for a in range(len(qbs)):
+                    for b in range(a + 1, len(qbs)):
+                        active_pairs.add((min(qbs[a], qbs[b]), max(qbs[a], qbs[b])))
+            n_pairs = len(active_pairs)
+            if n_pairs >= 3:
+                penalty = 0.0
+            elif n_pairs == 2:
+                penalty = sparse_penalty / 3.0
+            else:
+                penalty = sparse_penalty
+            weights.append(penalty / N)
+        return weights
 
     @staticmethod
     def _topo_key(mini_topology):
@@ -496,11 +536,13 @@ class qgd_Partition_Aware_Mapping:
         # absorb routing SWAPs. Overlap-based tie-breaker (when enabled)
         # picks deterministically among min-count covers, preferring covers
         # whose parts share more logical qubits with their DAG successors.
-        if self.config['overlap_tiebreak']:
-            tb_weights = parts_to_overlap_scores(allparts, g, gate_to_qubit)
-            L_parts, _ = ilp_global_optimal(allparts, g, weights=tb_weights)
-        else:
-            L_parts, _ = ilp_global_optimal(allparts, g)
+        ilp_weights = None
+        if self.config.get('size_density_weight', False):
+            sparse_penalty = float(self.config.get('sparse_penalty', 3.0))
+            ilp_weights = self._parts_to_density_weights(
+                allparts, gate_dict, sparse_penalty=sparse_penalty
+            )
+        L_parts, _ = ilp_global_optimal(allparts, g, weights=ilp_weights)
 
         # ---- Phase 3: Build gate sets for selected partitions (+ standalone chains) ----
         selected_surrounded_starts = set()
@@ -612,11 +654,13 @@ class qgd_Partition_Aware_Mapping:
                     meta['qbit_map'],
                 )
 
-            # ---- Stage 1: fix random P_o, sweep all P_i ----
+            # ---- Stage 1: sweep all P_i (and all P_o for N==2 partitions) ----
+            # For N==2 there are only 4 permutation pairs total, so we enumerate
+            # them all here and skip Stage 2 for those partitions.
             stage1_futures = []
             stage1_cached = []
-            stage1_P_o = {}
             known_pairs = {}
+            full_enum_keys = set()  # (partition_idx, topology_idx) fully covered in S1
 
             for partition_idx, meta in enumerate(partition_meta):
                 if meta is None:
@@ -624,37 +668,40 @@ class qgd_Partition_Aware_Mapping:
                 N = meta['N']
                 perms_all = list(permutations(range(N)))
                 for topology_idx, mini_topology in enumerate(meta['mini_topologies']):
-                    P_o_initial = perms_all[np.random.choice(len(perms_all))]
-                    stage1_P_o[(partition_idx, topology_idx)] = P_o_initial
-                    for P_i in perms_all:
-                        Umtx = self._build_permuted_unitary(meta, P_i, P_o_initial)
-                        ck = self._cache_key(Umtx, mini_topology)
-                        if ck in decomp_cache:
-                            stage1_cached.append((partition_idx, topology_idx, P_i, ck))
-                        else:
-                            future = pool.apply_async(
-                                _decompose_one, (Umtx, mini_topology)
-                            )
-                            stage1_futures.append((partition_idx, topology_idx, P_i, ck, future))
+                    if N == 2:
+                        full_enum_keys.add((partition_idx, topology_idx))
+                        po_sweep = perms_all
+                    else:
+                        po_sweep = [perms_all[np.random.choice(len(perms_all))]]
+                    for P_o in po_sweep:
+                        for P_i in perms_all:
+                            Umtx = self._build_permuted_unitary(meta, P_i, P_o)
+                            ck = self._cache_key(Umtx, mini_topology)
+                            if ck in decomp_cache:
+                                stage1_cached.append((partition_idx, topology_idx, P_i, P_o, ck))
+                            else:
+                                future = pool.apply_async(
+                                    _decompose_one, (Umtx, mini_topology)
+                                )
+                                stage1_futures.append((partition_idx, topology_idx, P_i, P_o, ck, future))
 
             # Process Stage 1 cache hits immediately
-            for partition_idx, topology_idx, P_i, ck in stage1_cached:
+            for partition_idx, topology_idx, P_i, P_o, ck in stage1_cached:
                 meta = partition_meta[partition_idx]
                 N = meta['N']
-                P_o_initial = stage1_P_o[(partition_idx, topology_idx)]
                 mini_topology = meta['mini_topologies'][topology_idx]
                 synth_circuit, synth_params, synth_err = decomp_cache[ck]
                 if synth_err <= self.config['tolerance']:
                     pair_key = (partition_idx, topology_idx)
                     self._add_result_with_auts(
-                        results_map[partition_idx], (P_i, P_o_initial),
+                        results_map[partition_idx], (P_i, P_o),
                         synth_circuit, synth_params, topology_idx,
                         N, mini_topology, known_pairs, pair_key, use_auts, aut_cache
                     )
 
             # Collect Stage 1 pool results
             cache_hits_s1 = len(stage1_cached)
-            for partition_idx, topology_idx, P_i, ck, future in tqdm(
+            for partition_idx, topology_idx, P_i, P_o, ck, future in tqdm(
                 stage1_futures, desc=f"Stage 1 Synthesis ({cache_hits_s1} cached)",
                 disable=disable_pbar
             ):
@@ -662,17 +709,17 @@ class qgd_Partition_Aware_Mapping:
                 decomp_cache[ck] = (synth_circuit, synth_params, synth_err)
                 meta = partition_meta[partition_idx]
                 N = meta['N']
-                P_o_initial = stage1_P_o[(partition_idx, topology_idx)]
                 mini_topology = meta['mini_topologies'][topology_idx]
                 if synth_err <= self.config['tolerance']:
                     pair_key = (partition_idx, topology_idx)
                     self._add_result_with_auts(
-                        results_map[partition_idx], (P_i, P_o_initial),
+                        results_map[partition_idx], (P_i, P_o),
                         synth_circuit, synth_params, topology_idx,
                         N, mini_topology, known_pairs, pair_key, use_auts, aut_cache
                     )
 
             # ---- Stage 2: fix top-k P_i from Stage 1, sweep all P_o ----
+            # Skipped for partitions already fully enumerated in Stage 1 (N==2).
             top_k_pi = self.config.get('top_k_pi', 1)
             stage2_futures = []
             stage2_cached = []
@@ -684,6 +731,8 @@ class qgd_Partition_Aware_Mapping:
                 perms_all = list(permutations(range(N)))
                 result = results_map[partition_idx]
                 for topology_idx, mini_topology in enumerate(meta['mini_topologies']):
+                    if (partition_idx, topology_idx) in full_enum_keys:
+                        continue
                     pair_key = (partition_idx, topology_idx)
                     kp = known_pairs.get(pair_key, set()) if use_auts else set()
                     for P_i_cand in result.get_top_k_results(topology_idx, top_k_pi):
