@@ -689,27 +689,7 @@ SabreRouter::find_constrained_swaps(
         double h_sum;       // sum(dist(pos[i], target[i])) — twice the admissible h
         double nb_total;    // sum(edge.weight * dist(...)) — pre-scale
         int nb_arena_idx;   // -1 if !use_neighbor; else slot in nb_pos_flat
-    };
-    struct StateKey {
-        int64_t packed;
-        std::vector<int> nb_pos;
-
-        bool operator==(const StateKey& other) const {
-            return packed == other.packed && nb_pos == other.nb_pos;
-        }
-    };
-    struct StateKeyHash {
-        size_t operator()(const StateKey& key) const {
-            uint64_t h = static_cast<uint64_t>(key.packed);
-            h ^= h >> 33; h *= 0xff51afd7ed558ccdULL;
-            h ^= h >> 33; h *= 0xc4ceb9fe1a85ec53ULL;
-            h ^= h >> 33;
-            for (int v : key.nb_pos) {
-                h ^= static_cast<uint64_t>(v) + 0x9e3779b97f4a7c15ULL
-                   + (h << 6) + (h >> 2);
-            }
-            return static_cast<size_t>(h);
-        }
+        uint64_t nb_hash;   // incremental XOR hash of neighbor VQ positions
     };
     thread_local std::vector<Node> arena;
     // Flat storage for neighbor positions: slot s lives at
@@ -721,7 +701,9 @@ SabreRouter::find_constrained_swaps(
     arena.clear();
     nb_pos_flat.clear();
     arena.reserve(1024);
-    std::unordered_map<StateKey, int32_t, StateKeyHash> best_node;
+    // key = mix(packed) ^ nb_hash; no heap allocation per lookup
+    thread_local std::unordered_map<uint64_t, int32_t> best_node;
+    best_node.clear();
     best_node.reserve(2048);
 
     const int nb_stride = use_neighbor
@@ -744,18 +726,28 @@ SabreRouter::find_constrained_swaps(
         nb_scratch.resize(nb_stride);
     }
 
-    auto make_state_key = [&](int64_t packed, int nb_arena_idx) {
-        StateKey key;
-        key.packed = packed;
-        if (use_neighbor) {
-            const size_t base = static_cast<size_t>(nb_arena_idx) * nb_stride;
-            key.nb_pos.assign(
-                nb_pos_flat.begin() + static_cast<std::ptrdiff_t>(base),
-                nb_pos_flat.begin() + static_cast<std::ptrdiff_t>(base + nb_stride)
-            );
-        }
-        return key;
+    // Per-(vq_idx, phys) contribution to nb_hash; XOR-based so removals are
+    // identical to additions (self-inverse), enabling incremental updates.
+    auto slot_hash = [](int vq_idx, int phys) -> uint64_t {
+        uint64_t h = static_cast<uint64_t>(vq_idx) * 0x9e3779b97f4a7c15ULL
+                   ^ static_cast<uint64_t>(phys)   * 0x6c62272e07bb0142ULL;
+        h ^= h >> 33; h *= 0xff51afd7ed558ccdULL; h ^= h >> 33;
+        return h;
     };
+    auto make_key = [](int64_t packed, uint64_t nb_hash) -> uint64_t {
+        uint64_t h = static_cast<uint64_t>(packed);
+        h ^= h >> 33; h *= 0xff51afd7ed558ccdULL;
+        h ^= h >> 33; h *= 0xc4ceb9fe1a85ec53ULL;
+        h ^= h >> 33;
+        return h ^ nb_hash;
+    };
+
+    uint64_t initial_nb_hash = 0;
+    if (use_neighbor) {
+        for (int z = 0; z < nb_stride; z++) {
+            initial_nb_hash ^= slot_hash(z, neighbor_info->initial_pos[z]);
+        }
+    }
 
     // ---- Push initial node ----
     // Slot 0 of nb_pos_flat already holds neighbor_info->initial_pos.
@@ -768,8 +760,9 @@ SabreRouter::find_constrained_swaps(
         n.h_sum = h0_sum;
         n.nb_total = initial_nb_total;
         n.nb_arena_idx = use_neighbor ? 0 : -1;
+        n.nb_hash = initial_nb_hash;
         arena.push_back(n);
-        best_node.emplace(make_state_key(initial_packed, n.nb_arena_idx), 0);
+        best_node.emplace(make_key(initial_packed, initial_nb_hash), 0);
     }
 
     // PQ entry: (f, g, counter, arena_idx)
@@ -787,12 +780,13 @@ SabreRouter::find_constrained_swaps(
         (void)f; (void)ctr;
         const int g = g_e;
         const int64_t packed = arena[idx].packed;
+        const uint64_t cur_nb_hash = arena[idx].nb_hash;
 
         // A state can be reinserted with a lower g-cost after this queue entry
         // was pushed. When the neighbor tie-breaker is active, future-qubit
         // positions are part of the state so equal-length paths with different
         // bystander layouts are not collapsed.
-        StateKey cur_key = make_state_key(packed, arena[idx].nb_arena_idx);
+        const uint64_t cur_key = make_key(packed, cur_nb_hash);
         auto cur_best = best_node.find(cur_key);
         if (cur_best == best_node.end() || cur_best->second != idx) {
             continue;
@@ -829,6 +823,7 @@ SabreRouter::find_constrained_swaps(
         const double cur_h_sum = arena[idx].h_sum;
         const double cur_nb_total = arena[idx].nb_total;
         const int cur_nb_arena_idx = arena[idx].nb_arena_idx;
+        // cur_nb_hash already read above
 
         // Expand: every SWAP that moves at least one partition qubit
         for (int i = 0; i < k; i++) {
@@ -865,6 +860,7 @@ SabreRouter::find_constrained_swaps(
                 // contributes the same dist as in the parent state.
                 double new_nb_total = cur_nb_total;
                 int new_nb_arena_idx = -1;
+                uint64_t new_nb_hash = cur_nb_hash;
                 if (use_neighbor) {
                     const size_t parent_base =
                         static_cast<size_t>(cur_nb_arena_idx) * nb_stride;
@@ -901,12 +897,22 @@ SabreRouter::find_constrained_swaps(
                         nb_pos_flat.insert(nb_pos_flat.end(),
                                            nb_scratch.begin(),
                                            nb_scratch.end());
+                        // Incremental hash: XOR out old slots, XOR in new ones
+                        if (idx_nb_vq >= 0) {
+                            new_nb_hash ^= slot_hash(idx_nb_vq, nb)
+                                         ^ slot_hash(idx_nb_vq, p);
+                        }
+                        if (idx_p_vq >= 0) {
+                            new_nb_hash ^= slot_hash(idx_p_vq, p)
+                                         ^ slot_hash(idx_p_vq, nb);
+                        }
                     } else {
                         new_nb_arena_idx = cur_nb_arena_idx;
+                        // new_nb_hash unchanged
                     }
                 }
 
-                StateKey new_key = make_state_key(new_packed, new_nb_arena_idx);
+                const uint64_t new_key = make_key(new_packed, new_nb_hash);
                 auto existing = best_node.find(new_key);
                 if (existing != best_node.end()
                     && arena[existing->second].g <= new_g
@@ -925,10 +931,11 @@ SabreRouter::find_constrained_swaps(
                 n.h_sum = new_h_sum;
                 n.nb_total = new_nb_total;
                 n.nb_arena_idx = new_nb_arena_idx;
+                n.nb_hash = new_nb_hash;
 
                 int32_t new_idx = static_cast<int32_t>(arena.size());
                 arena.push_back(n);
-                best_node[std::move(new_key)] = new_idx;
+                best_node[new_key] = new_idx;
 
                 const double f_new = static_cast<double>(new_g)
                                    + 0.5 * new_h_sum
