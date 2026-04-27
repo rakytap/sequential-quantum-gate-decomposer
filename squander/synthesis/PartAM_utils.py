@@ -13,34 +13,29 @@ from squander.gates.qgd_Circuit import qgd_Circuit as Circuit
 # ============================================================================
 # SWAP Routing Algorithms
 # ============================================================================
-def _block_signature(block_info):
-    """Stable hash-friendly signature of an active block_info.
+def _neighbor_signature(neighbor_info):
+    """Stable hash-friendly signature of an active neighbor_info.
 
-    Returns None when no block info is supplied or it carries no blocks at
-    all — callers treat all such calls as cache-compatible.  Otherwise
-    returns a tuple of (f_blocks_idx, e_blocks_idx, f_size, e_size, W_E
-    rounded, initial_pos tuple).
+    Returns None when the neighbor heuristic is inactive (no info, zero
+    weight, or empty edge list) — callers treat all such calls as cache-
+    compatible.  Otherwise returns a tuple of (sorted edges as
+    (min(u,v), max(u,v), weight), initial_pos tuple, rounded weight).
     """
-    if block_info is None:
+    if neighbor_info is None:
         return None
-    f_blocks = block_info.get('f_blocks_idx') or ()
-    e_blocks = block_info.get('e_blocks_idx') or ()
-    if not f_blocks and not e_blocks:
+    weight = neighbor_info.get('weight', 0.0)
+    edges = neighbor_info.get('edges') or ()
+    if weight == 0.0 or not edges:
         return None
-    f_canon = tuple(tuple(int(i) for i in b) for b in f_blocks)
-    e_canon = tuple(tuple(int(i) for i in b) for b in e_blocks)
-    initial_pos = tuple(int(p) for p in block_info.get('initial_pos', ()))
-    return (
-        f_canon,
-        e_canon,
-        int(block_info.get('f_size', 0)),
-        int(block_info.get('e_size', 0)),
-        round(float(block_info.get('W_E', 0.0)), 6),
-        initial_pos,
-    )
+    canonical_edges = tuple(sorted(
+        (min(int(u), int(v)), max(int(u), int(v)), float(w))
+        for u, v, w in edges
+    ))
+    initial_pos = tuple(int(p) for p in neighbor_info.get('initial_pos', ()))
+    return (canonical_edges, initial_pos, round(float(weight), 6))
 
 
-def find_constrained_swaps_partial(pi_A, pi_B_dict, dist_matrix, adj=None, block_info=None):
+def find_constrained_swaps_partial(pi_A, pi_B_dict, dist_matrix, adj=None, neighbor_info=None):
     """
     Route partition qubits to their target physical positions using A* over
     the k-dimensional state space of partition qubit positions only.
@@ -84,57 +79,38 @@ def find_constrained_swaps_partial(pi_A, pi_B_dict, dist_matrix, adj=None, block
     if initial_positions == target_positions:
         return [], list(pi_A)
 
-    def admissible_dist(positions):
+    def heuristic(positions):
         # Admissible lower bound: sum of individual distances / 2
         return sum(dist_matrix[positions[i]][target_positions[i]] for i in range(k)) / 2
 
-    # SABRE H(π) heuristic over tracked F and E blocks.
-    # H(π) = (1/|F|) Σ_{b∈F} Σ_{i,j∈b} D[π(b.i)][π(b.j)]
-    #      + (W_E/|E|) Σ_{b∈E} Σ_{i,j∈b} D[π(b.i)][π(b.j)]
-    # The candidate block is included in F by the caller so swaps that close
-    # it lower H. No normalization to <1 — H drives ordering directly.
-    if block_info is not None and (
-        block_info.get('f_blocks_idx') or block_info.get('e_blocks_idx')
-    ):
-        n_vqs = block_info['tracked_vqs']
-        f_blocks_idx = block_info.get('f_blocks_idx') or ()
-        e_blocks_idx = block_info.get('e_blocks_idx') or ()
-        f_size = max(int(block_info.get('f_size', 0)), 1)
-        e_size = int(block_info.get('e_size', 0))
-        W_E = float(block_info.get('W_E', 0.0))
-        initial_n_pos = block_info['initial_pos']
+    # SABRE-aware tiebreaker: prefer SWAP paths that keep future-partition
+    # qubits closer together.  The weight is small enough to never override
+    # optimality (same SWAP count), only break ties among equal-length paths.
+    if neighbor_info is not None and neighbor_info['edges']:
+        n_vqs = neighbor_info['neighbor_vqs']
+        n_edges = neighbor_info['edges']       # list of (idx_u, idx_v, edge_weight)
+        n_weight = neighbor_info['weight']
+        initial_n_pos = neighbor_info['initial_pos']
+        # Reverse map: physical position → index in n_vqs (for displacement tracking)
         _n_len = len(n_vqs)
-        use_block_h = True
+        use_neighbor = True
 
-        # Pre-expand block index pairs to avoid combinations() overhead in hot path.
-        f_pairs = [
-            tuple((int(b[i]), int(b[j])) for i in range(len(b)) for j in range(i + 1, len(b)))
-            for b in f_blocks_idx
-        ]
-        e_pairs = [
-            tuple((int(b[i]), int(b[j])) for i in range(len(b)) for j in range(i + 1, len(b)))
-            for b in e_blocks_idx
-        ]
+        # Normalize so neighbor_heuristic returns values in [0, 1].
+        # This guarantees n_weight * neighbor_heuristic < 1 (for n_weight < 1),
+        # so the tiebreaker never overrides SWAP-count optimality.
+        _total_edge_weight = sum(w for _, _, w in n_edges)
+        _diameter = int(np.max(dist_matrix[dist_matrix < np.inf])) if n > 1 else 1
+        _norm = max(1.0, _total_edge_weight * _diameter)
 
-        def block_h(n_pos):
-            f_sum = 0.0
-            for pairs in f_pairs:
-                for a, b in pairs:
-                    f_sum += dist_matrix[n_pos[a]][n_pos[b]]
-            h_val = f_sum / f_size
-            if e_size > 0 and e_pairs:
-                e_sum = 0.0
-                for pairs in e_pairs:
-                    for a, b in pairs:
-                        e_sum += dist_matrix[n_pos[a]][n_pos[b]]
-                h_val += W_E * e_sum / e_size
-            return h_val
+        def neighbor_heuristic(n_pos):
+            return sum(w * dist_matrix[n_pos[i]][n_pos[j]] for i, j, w in n_edges) / _norm
     else:
         initial_n_pos = ()
+        n_weight = 0.0
         _n_len = 0
-        use_block_h = False
+        use_neighbor = False
 
-        def block_h(n_pos):
+        def neighbor_heuristic(n_pos):
             return 0.0
 
     # A* over k-dimensional state space.
@@ -142,33 +118,22 @@ def find_constrained_swaps_partial(pi_A, pi_B_dict, dist_matrix, adj=None, block
     # Paths are reconstructed via a parent-pointer dict to avoid copying lists
     # on every heap push (which would be O(depth²) total).
     counter = 0  # tiebreak counter so tuples never compare paths
-    # When the neighbor tie-breaker is active, the full search state must
-    # include the tracked future-qubit positions.  Otherwise two equal-length
-    # paths to the same partition positions but different bystander layouts
-    # collapse into one visited entry, defeating the downstream-layout signal.
-    initial_state = (
-        (initial_positions, initial_n_pos) if use_block_h else initial_positions
-    )
-    parent = {}  # state_key → (parent_state_key, swap) for path reconstruction
-    parent[initial_state] = None
+    parent = {}  # state → (parent_state, swap) for path reconstruction
+    parent[initial_positions] = None
 
-    if use_block_h:
-        h0 = block_h(initial_n_pos)
-    else:
-        h0 = admissible_dist(initial_positions)
+    h0 = heuristic(initial_positions)
+    nh0 = n_weight * neighbor_heuristic(initial_n_pos) if use_neighbor else 0.0
     heap = []
-    heapq.heappush(heap, (h0, 0, counter, initial_positions, initial_n_pos))
-    visited = {initial_state: 0}
+    heapq.heappush(heap, (h0 + nh0, 0, counter, initial_positions, initial_n_pos))
+    visited = {initial_positions: 0}
 
     while heap:
         f, g, _, positions, n_pos = heapq.heappop(heap)
 
-        state_key = (positions, n_pos) if use_block_h else positions
-
         if positions == target_positions:
             # Reconstruct swap path via parent pointers
             path = []
-            state = state_key
+            state = positions
             while parent[state] is not None:
                 prev_state, swap = parent[state]
                 path.append(swap)
@@ -186,14 +151,14 @@ def find_constrained_swaps_partial(pi_A, pi_B_dict, dist_matrix, adj=None, block
                 final_v2p[q1], final_v2p[q2] = P2, P1
             return path, final_v2p
 
-        if visited.get(state_key, float('inf')) < g:
+        if visited.get(positions, float('inf')) < g:
             continue
 
         # Quick lookup: physical position → index within partition_qubits list
         pos_to_k_idx = {p: i for i, p in enumerate(positions)}
 
-        # Build reverse map for tracked-qubit displacement tracking
-        if use_block_h:
+        # Build reverse map for neighbor displacement tracking
+        if use_neighbor:
             n_phys_to_idx = {n_pos[idx]: idx for idx in range(_n_len)}
 
         # Expand: try every SWAP that moves at least one partition qubit
@@ -208,32 +173,30 @@ def find_constrained_swaps_partial(pi_A, pi_B_dict, dist_matrix, adj=None, block
                 new_positions = tuple(new_positions)
 
                 new_g = g + 1
-                # Update tracked-qubit positions on both sides of the swap. A
-                # tracked qubit at nb gets displaced to p, and a tracked qubit
-                # at p (if it overlaps with a partition qubit) moves to nb.
-                if use_block_h:
+                if visited.get(new_positions, float('inf')) <= new_g:
+                    continue
+
+                # Bug B fix: update neighbor positions for BOTH sides of the swap.
+                # A neighbor qubit at nb gets displaced to p, AND a neighbor qubit
+                # at p (if it's also tracked, e.g. overlaps with a partition qubit)
+                # moves to nb.
+                if use_neighbor:
                     new_n_pos = list(n_pos)
                     if nb in n_phys_to_idx:
                         new_n_pos[n_phys_to_idx[nb]] = p
                     if p in n_phys_to_idx:
                         new_n_pos[n_phys_to_idx[p]] = nb
                     new_n_pos = tuple(new_n_pos)
-                    new_h = block_h(new_n_pos)
+                    new_nh = n_weight * neighbor_heuristic(new_n_pos)
                 else:
                     new_n_pos = n_pos
-                    new_h = admissible_dist(new_positions)
+                    new_nh = 0.0
 
-                new_state_key = (
-                    (new_positions, new_n_pos) if use_block_h else new_positions
-                )
-                if visited.get(new_state_key, float('inf')) <= new_g:
-                    continue
-
-                visited[new_state_key] = new_g
+                visited[new_positions] = new_g
                 swap_key = (min(p, nb), max(p, nb))
-                parent[new_state_key] = (state_key, swap_key)
+                parent[new_positions] = (positions, swap_key)
                 counter += 1
-                heapq.heappush(heap, (new_g + new_h,
+                heapq.heappush(heap, (new_g + heuristic(new_positions) + new_nh,
                                       new_g, counter, new_positions, new_n_pos))
 
     logging.warning(
@@ -566,7 +529,7 @@ class PartitionCandidate:
         # {Q*:Q}
         self.node_mapping = get_node_mapping(mini_topology, topology)
 
-    def transform_pi(self, pi, D, swap_cache=None, reverse=False, adj=None, block_info=None):
+    def transform_pi(self, pi, D, swap_cache=None, reverse=False, adj=None, neighbor_info=None):
         # The synthesized circuit S implements: add_Permutation(P_i) -> Original -> add_Permutation(P_o)
         #
         # Forward (reverse=False):
@@ -588,23 +551,23 @@ class PartitionCandidate:
         pi_list = [int(x) for x in pi]
         n = len(pi_list)
 
-        # Cache is keyed on (pi, qbit_map, block_signature). The signature
-        # captures the SABRE-H block context so hits across calls with the
-        # same active block_info are safe.
+        # Cache is keyed on (pi, qbit_map, neighbor_signature). The signature
+        # captures the neighbor-heuristic context so hits across calls with
+        # the same active neighbor_info are safe.
         if swap_cache is not None:
             pi_tuple = tuple(pi_list)
             qbit_map_frozen = frozenset(qbit_map_input.items())
-            block_sig = _block_signature(block_info)
-            cache_key = (pi_tuple, qbit_map_frozen, block_sig)
+            neighbor_sig = _neighbor_signature(neighbor_info)
+            cache_key = (pi_tuple, qbit_map_frozen, neighbor_sig)
             if cache_key in swap_cache:
                 swaps, pi_init = swap_cache[cache_key]
             else:
                 swaps, pi_init = find_constrained_swaps_partial(
-                    pi_list, qbit_map_input, D, adj=adj, block_info=block_info)
+                    pi_list, qbit_map_input, D, adj=adj, neighbor_info=neighbor_info)
                 swap_cache[cache_key] = (swaps, pi_init)
         else:
             swaps, pi_init = find_constrained_swaps_partial(
-                pi_list, qbit_map_input, D, adj=adj, block_info=block_info)
+                pi_list, qbit_map_input, D, adj=adj, neighbor_info=neighbor_info)
 
         pi_output = pi_init.copy()
         qbit_map_inverse = {v: k for k, v in self.qbit_map.items()}

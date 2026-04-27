@@ -63,7 +63,7 @@ def run_once(circ_orig, parameters_orig, topology):
         'strategy': "TreeSearch",
         'test_subcircuits': False,
         'test_final_circuit': False,
-        'max_partition_size': 2,
+        'max_partition_size': 3,
         'progressbar': False,
         'topology': topology,
         'verbosity': 0,

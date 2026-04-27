@@ -248,6 +248,40 @@ std::vector<int> SabreRouter::sample_initial_layout(
 }
 
 // ---------------------------------------------------------------------------
+// Helper: build P_route_inv
+// ---------------------------------------------------------------------------
+
+std::vector<int> SabreRouter::build_route_inv(const std::vector<int>& P, bool /*reverse*/) const {
+    // P_route_inv[i] = index of i in P (inverse permutation)
+    int k = static_cast<int>(P.size());
+    std::vector<int> inv(k);
+    for (int i = 0; i < k; i++) {
+        inv[P[i]] = i;
+    }
+    return inv;
+}
+
+// ---------------------------------------------------------------------------
+// Helper: build target positions for A*
+// ---------------------------------------------------------------------------
+
+void SabreRouter::build_target_positions(
+    const CandidateData& cand,
+    bool reverse,
+    std::vector<int>& out_keys,
+    std::vector<int>& out_targets
+) const {
+    const std::vector<int>& P_route_inv = reverse ? cand.P_o_inv : cand.P_i_inv;
+
+    out_keys = cand.qbit_map_keys;
+    out_targets.resize(cand.qbit_map_keys.size());
+    for (size_t i = 0; i < cand.qbit_map_keys.size(); i++) {
+        int v = cand.qbit_map_vals[i];
+        out_targets[i] = cand.node_mapping_flat[P_route_inv[v]];
+    }
+}
+
+// ---------------------------------------------------------------------------
 // apply_swaps_to_pi
 // ---------------------------------------------------------------------------
 
@@ -271,44 +305,21 @@ std::vector<int> SabreRouter::apply_swaps_to_pi(
     return result;
 }
 
-BlockInfo SabreRouter::build_block_info(
-    int cand_partition_idx,
+NeighborInfo SabreRouter::build_neighbor_info(
+    int exclude_partition_idx,
     const std::vector<int>& F_snapshot,
     const std::vector<std::pair<int,int>>& E,
-    const std::vector<int>& pi
+    const std::vector<int>& pi,
+    const std::unordered_map<int, CanonicalEntry>& canonical_data
 ) const {
-    // SABRE H(π) heuristic context. The candidate is included as a member
-    // of F so the inner A* feels pressure to close it. Pairs are
-    // deduplicated across blocks; pair_weight folds in 1/|F| and W_E/|E|.
-    BlockInfo info;
-    info.W_E = config_.E_weight;
-
-    // Collect F partitions (excl. candidate) and E partitions. Singleton
-    // blocks still count toward the layer normalization even though they
-    // contribute zero pairwise distance. The candidate is excluded so the
-    // block_h signal matches the outer sabre_H which also excludes it.
-    std::vector<int> f_partitions;
-    f_partitions.reserve(F_snapshot.size());
-    for (int p_idx : F_snapshot) {
-        if (p_idx == cand_partition_idx) continue;
-        if (p_idx < 0 || p_idx >= static_cast<int>(layout_partitions_.size())) continue;
-        f_partitions.push_back(p_idx);
+    (void)canonical_data;
+    NeighborInfo info;
+    info.weight = config_.path_tiebreak_weight;
+    if (info.weight <= 0.0) {
+        return info;
     }
 
-    std::vector<int> e_partitions;
-    e_partitions.reserve(E.size());
-    for (auto [p_idx, depth] : E) {
-        (void)depth;
-        if (p_idx < 0 || p_idx >= static_cast<int>(layout_partitions_.size())) continue;
-        e_partitions.push_back(p_idx);
-    }
-
-    info.f_size = static_cast<int>(f_partitions.size());
-    info.e_size = static_cast<int>(e_partitions.size());
-
-    if (info.f_size == 0 && info.e_size == 0) return info;
-
-    // Build tracked_vqs as the sorted union of involved qubits.
+    // Per-call scratch via thread_local, reset by tracking touched entries
     thread_local std::vector<int> q_to_idx;
     thread_local std::vector<int> q_touched;
     if (static_cast<int>(q_to_idx.size()) < N_) q_to_idx.assign(N_, -1);
@@ -317,137 +328,76 @@ BlockInfo SabreRouter::build_block_info(
     auto ensure_qubit = [&](int q) -> int {
         int idx = q_to_idx[q];
         if (idx >= 0) return idx;
-        idx = static_cast<int>(info.tracked_vqs.size());
+        idx = static_cast<int>(info.neighbor_vqs.size());
         q_to_idx[q] = idx;
         q_touched.push_back(q);
-        info.tracked_vqs.push_back(q);
+        info.neighbor_vqs.push_back(q);
+        info.initial_pos.push_back(pi[q]);
         return idx;
     };
 
-    // Pair dedup: parallel arrays keyed by (lo, hi).
+    // edges: parallel arrays keyed by (lo, hi) — small linear scan dedup
     thread_local std::vector<int> ekey_lo;
     thread_local std::vector<int> ekey_hi;
-    thread_local std::vector<int> ea_idx;
-    thread_local std::vector<int> eb_idx;
-    thread_local std::vector<int> e_f_count;
-    thread_local std::vector<int> e_e_count;
+    thread_local std::vector<int> eu_idx;
+    thread_local std::vector<int> ev_idx;
+    thread_local std::vector<double> ew;
     ekey_lo.clear(); ekey_hi.clear();
-    ea_idx.clear(); eb_idx.clear();
-    e_f_count.clear(); e_e_count.clear();
+    eu_idx.clear(); ev_idx.clear(); ew.clear();
 
-    auto add_pair = [&](int u, int v, bool is_f) {
+    auto add_edge = [&](int u, int v, double weight) {
         const int u_idx = ensure_qubit(u);
         const int v_idx = ensure_qubit(v);
         const int lo = std::min(u, v);
         const int hi = std::max(u, v);
         for (size_t i = 0; i < ekey_lo.size(); i++) {
             if (ekey_lo[i] == lo && ekey_hi[i] == hi) {
-                if (is_f) e_f_count[i]++; else e_e_count[i]++;
+                ew[i] += weight;
                 return;
             }
         }
         ekey_lo.push_back(lo);
         ekey_hi.push_back(hi);
-        ea_idx.push_back(u_idx);
-        eb_idx.push_back(v_idx);
-        e_f_count.push_back(is_f ? 1 : 0);
-        e_e_count.push_back(is_f ? 0 : 1);
+        eu_idx.push_back(u_idx);
+        ev_idx.push_back(v_idx);
+        ew.push_back(weight);
     };
 
-    auto add_block = [&](int partition_idx, bool is_f) {
+    auto add_partition_edges = [&](int partition_idx, double weight) {
+        if (partition_idx == exclude_partition_idx || weight <= 0.0) return;
+        if (
+            partition_idx < 0
+            || partition_idx >= static_cast<int>(layout_partitions_.size())
+        ) return;
         const auto& involved = layout_partitions_[partition_idx].involved_qbits;
-        std::vector<int> block_idx;
-        block_idx.reserve(involved.size());
-        for (int q : involved) {
-            block_idx.push_back(ensure_qubit(q));
-        }
-        if (is_f) {
-            info.f_blocks_idx.push_back(block_idx);
-        } else {
-            info.e_blocks_idx.push_back(block_idx);
-        }
+        if (involved.size() < 2) return;
         for (size_t i = 0; i < involved.size(); i++) {
             for (size_t j = i + 1; j < involved.size(); j++) {
-                add_pair(involved[i], involved[j], is_f);
+                add_edge(involved[i], involved[j], weight);
             }
         }
     };
 
-    for (int p_idx : f_partitions) add_block(p_idx, true);
-    for (int p_idx : e_partitions) add_block(p_idx, false);
-
-    // Materialize tracked_vqs initial_pos
-    info.initial_pos.reserve(info.tracked_vqs.size());
-    for (int q : info.tracked_vqs) info.initial_pos.push_back(pi[q]);
-
-    // Pair weights and per-vq pair index
-    const double f_inv = info.f_size > 0 ? 1.0 / info.f_size : 0.0;
-    const double e_inv = info.e_size > 0 ? info.W_E / info.e_size : 0.0;
-    info.pair_a_idx.reserve(ea_idx.size());
-    info.pair_b_idx.reserve(eb_idx.size());
-    info.pair_weight.reserve(ea_idx.size());
-    info.vq_pairs.assign(info.tracked_vqs.size(), {});
-    for (size_t i = 0; i < ea_idx.size(); i++) {
-        const double w = f_inv * e_f_count[i] + e_inv * e_e_count[i];
-        if (w <= 0.0) continue;
-        const int pi_idx = static_cast<int>(info.pair_a_idx.size());
-        info.pair_a_idx.push_back(ea_idx[i]);
-        info.pair_b_idx.push_back(eb_idx[i]);
-        info.pair_weight.push_back(w);
-        info.vq_pairs[ea_idx[i]].push_back(pi_idx);
-        if (eb_idx[i] != ea_idx[i]) {
-            info.vq_pairs[eb_idx[i]].push_back(pi_idx);
-        }
+    for (int partition_idx : F_snapshot) {
+        add_partition_edges(partition_idx, 1.0);
+    }
+    for (auto [partition_idx, depth] : E) {
+        const double alpha =
+            (depth >= 0 && depth < static_cast<int>(alpha_weights_.size()))
+                ? alpha_weights_[depth]
+                : std::pow(config_.E_alpha, depth);
+        add_partition_edges(partition_idx, config_.E_weight * alpha);
     }
 
-    // Reset q_to_idx via touched-list
+    info.edges.reserve(ew.size());
+    for (size_t i = 0; i < ew.size(); i++) {
+        info.edges.push_back(NeighborEdge{eu_idx[i], ev_idx[i], ew[i]});
+    }
+
+    // Reset q_to_idx via touched-list (avoids O(N) clear)
     for (int q : q_touched) q_to_idx[q] = -1;
 
     return info;
-}
-
-// SABRE H(π) over arbitrary F and E (post-routing scoring + prefilter).
-double SabreRouter::sabre_H(
-    const std::vector<int>& pi,
-    const std::vector<int>& F_partitions,
-    const std::vector<std::pair<int,int>>& E_partitions,
-    int exclude_partition_idx
-) const {
-    int f_count = 0;
-    double f_sum = 0.0;
-    for (int p_idx : F_partitions) {
-        if (p_idx == exclude_partition_idx) continue;
-        if (p_idx < 0 || p_idx >= static_cast<int>(layout_partitions_.size())) continue;
-        const auto& involved = layout_partitions_[p_idx].involved_qbits;
-        for (size_t i = 0; i < involved.size(); i++) {
-            for (size_t j = i + 1; j < involved.size(); j++) {
-                f_sum += dist(pi[involved[i]], pi[involved[j]]);
-            }
-        }
-        f_count++;
-    }
-    double h = f_count > 0 ? f_sum / static_cast<double>(f_count) : 0.0;
-
-    if (!E_partitions.empty()) {
-        int e_count = 0;
-        double e_sum = 0.0;
-        for (auto [p_idx, depth] : E_partitions) {
-            (void)depth;
-            if (p_idx == exclude_partition_idx) continue;
-            if (p_idx < 0 || p_idx >= static_cast<int>(layout_partitions_.size())) continue;
-            const auto& involved = layout_partitions_[p_idx].involved_qbits;
-            for (size_t i = 0; i < involved.size(); i++) {
-                for (size_t j = i + 1; j < involved.size(); j++) {
-                    e_sum += dist(pi[involved[i]], pi[involved[j]]);
-                }
-            }
-            e_count++;
-        }
-        if (e_count > 0) {
-            h += config_.E_weight * e_sum / static_cast<double>(e_count);
-        }
-    }
-    return h;
 }
 
 double SabreRouter::decay_factor_for_swaps(
@@ -601,16 +551,36 @@ std::pair<std::vector<std::pair<int,int>>, std::vector<int>> SabreRouter::releas
 
 std::vector<int> SabreRouter::get_initial_layer() const {
     std::vector<int> layer;
-    for (int p = 0; p < num_partitions_; p++) {
-        if (IDAG_[p].empty()) layer.push_back(p);
+    std::vector<uint8_t> covered(N_, 0);
+    int uncovered = N_;
+    for (int p = 0; p < num_partitions_ && uncovered > 0; p++) {
+        if (IDAG_[p].empty()) {
+            layer.push_back(p);
+            for (int q : layout_partitions_[p].involved_qbits) {
+                if (q < N_ && !covered[q]) {
+                    covered[q] = 1;
+                    uncovered--;
+                }
+            }
+        }
     }
     return layer;
 }
 
 std::vector<int> SabreRouter::get_final_layer() const {
     std::vector<int> layer;
-    for (int p = num_partitions_ - 1; p >= 0; p--) {
-        if (DAG_[p].empty()) layer.push_back(p);
+    std::vector<uint8_t> covered(N_, 0);
+    int uncovered = N_;
+    for (int p = num_partitions_ - 1; p >= 0 && uncovered > 0; p--) {
+        if (DAG_[p].empty()) {
+            layer.push_back(p);
+            for (int q : layout_partitions_[p].involved_qbits) {
+                if (q < N_ && !covered[q]) {
+                    covered[q] = 1;
+                    uncovered--;
+                }
+            }
+        }
     }
     return layer;
 }
@@ -653,7 +623,7 @@ SabreRouter::find_constrained_swaps(
     const std::vector<int>& node_mapping_flat,
     const std::vector<int>& P_route_inv,
     SwapCache* swap_cache,
-    const BlockInfo* block_info
+    const NeighborInfo* neighbor_info
 ) const {
     const int k = static_cast<int>(qbit_map_keys.size());
 
@@ -689,8 +659,8 @@ SabreRouter::find_constrained_swaps(
         return {{}, pi};
     }
 
-    const bool use_block_h =
-        block_info != nullptr && block_info->active();
+    const bool use_neighbor =
+        neighbor_info != nullptr && neighbor_info->uses_tiebreak();
 
     auto mix64 = [](uint64_t h, uint64_t v) -> uint64_t {
         h ^= v + 0x9e3779b97f4a7c15ULL + (h << 6) + (h >> 2);
@@ -698,40 +668,24 @@ SabreRouter::find_constrained_swaps(
     };
 
     uint64_t neighbor_hash = 0;
-    if (use_block_h) {
+    if (use_neighbor) {
         neighbor_hash = 0xcbf29ce484222325ULL;
-        auto hash_int = [&](int v) {
-            neighbor_hash = mix64(neighbor_hash, static_cast<uint64_t>(v));
-        };
-        hash_int(block_info->f_size);
-        hash_int(block_info->e_size);
-        hash_int(static_cast<int>(block_info->f_blocks_idx.size()));
-        for (const auto& block : block_info->f_blocks_idx) {
-            hash_int(static_cast<int>(block.size()));
-            for (int q : block) hash_int(q);
-        }
-        hash_int(static_cast<int>(block_info->e_blocks_idx.size()));
-        for (const auto& block : block_info->e_blocks_idx) {
-            hash_int(static_cast<int>(block.size()));
-            for (int q : block) hash_int(q);
-        }
-        for (size_t i = 0; i < block_info->pair_a_idx.size(); i++) {
-            const int lo = std::min(block_info->pair_a_idx[i], block_info->pair_b_idx[i]);
-            const int hi = std::max(block_info->pair_a_idx[i], block_info->pair_b_idx[i]);
+        for (const auto& edge : neighbor_info->edges) {
+            const int lo = std::min(edge.u_idx, edge.v_idx);
+            const int hi = std::max(edge.u_idx, edge.v_idx);
             uint64_t w_bits;
-            const double w = block_info->pair_weight[i];
-            std::memcpy(&w_bits, &w, sizeof(w_bits));
+            std::memcpy(&w_bits, &edge.weight, sizeof(w_bits));
             neighbor_hash = mix64(neighbor_hash, static_cast<uint64_t>(lo));
             neighbor_hash = mix64(neighbor_hash, static_cast<uint64_t>(hi));
             neighbor_hash = mix64(neighbor_hash, w_bits);
         }
-        for (int p : block_info->initial_pos) {
+        for (int p : neighbor_info->initial_pos) {
             neighbor_hash = mix64(neighbor_hash, static_cast<uint64_t>(p));
         }
-        uint64_t we_bits;
-        const double we_val = block_info->W_E;
-        std::memcpy(&we_bits, &we_val, sizeof(we_bits));
-        neighbor_hash = mix64(neighbor_hash, we_bits);
+        uint64_t weight_bits;
+        const double weight_val = neighbor_info->weight;
+        std::memcpy(&weight_bits, &weight_val, sizeof(weight_bits));
+        neighbor_hash = mix64(neighbor_hash, weight_bits);
     }
 
     const SwapCacheKey cache_key{initial_packed, target_packed, k, neighbor_hash};
@@ -744,81 +698,83 @@ SabreRouter::find_constrained_swaps(
         }
     }
 
-    // ---- SABRE H setup ----
-    auto block_h = [&](const std::vector<int>& tracked_pos) -> double {
-        if (!use_block_h) return 0.0;
-        double h = 0.0;
-        for (size_t i = 0; i < block_info->pair_a_idx.size(); i++) {
-            const int a = block_info->pair_a_idx[i];
-            const int b = block_info->pair_b_idx[i];
-            h += block_info->pair_weight[i] * dist(tracked_pos[a], tracked_pos[b]);
+    // ---- Neighbor heuristic setup ----
+    double total_edge_weight = 0.0;
+    if (use_neighbor) {
+        for (const auto& edge : neighbor_info->edges) {
+            total_edge_weight += edge.weight;
         }
-        return h;
+    }
+    const double neighbor_norm = std::max(
+        1.0, total_edge_weight * std::max(1.0, max_finite_distance_)
+    );
+    const double neighbor_scale =
+        use_neighbor ? (neighbor_info->weight / neighbor_norm) : 0.0;
+
+    auto compute_nb_total = [&](const std::vector<int>& pos_nb) {
+        double total = 0.0;
+        for (const auto& edge : neighbor_info->edges) {
+            total += edge.weight * dist(pos_nb[edge.u_idx], pos_nb[edge.v_idx]);
+        }
+        return total;
     };
 
-    const int nb_stride = use_block_h
-        ? static_cast<int>(block_info->tracked_vqs.size())
-        : 0;
+    double initial_nb_total = 0.0;
+    if (use_neighbor) {
+        initial_nb_total = compute_nb_total(neighbor_info->initial_pos);
+    }
 
-    // ---- Arena + best-state table ----
+    // ---- Arena + open-addressed hash table (replaces visited+parent maps) ----
     struct Node {
         int64_t packed;
         int parent_idx;
         int g;
         int sw_lo, sw_hi;
-        double h_score;
-        int nb_arena_idx;   // -1 if !use_block_h; else slot in nb_pos_flat
-    };
-    struct StateKey {
-        int64_t packed;
-        std::vector<int> nb_pos;
-
-        bool operator==(const StateKey& other) const {
-            return packed == other.packed && nb_pos == other.nb_pos;
-        }
-    };
-    struct StateKeyHash {
-        size_t operator()(const StateKey& key) const {
-            uint64_t h = static_cast<uint64_t>(key.packed);
-            h ^= h >> 33; h *= 0xff51afd7ed558ccdULL;
-            h ^= h >> 33; h *= 0xc4ceb9fe1a85ec53ULL;
-            h ^= h >> 33;
-            for (int v : key.nb_pos) {
-                h ^= static_cast<uint64_t>(v) + 0x9e3779b97f4a7c15ULL
-                   + (h << 6) + (h >> 2);
-            }
-            return static_cast<size_t>(h);
-        }
+        double h_sum;       // sum(dist(pos[i], target[i])) — twice the admissible h
+        double nb_total;    // sum(edge.weight * dist(...)) — pre-scale
+        int nb_arena_idx;   // -1 if !use_neighbor; else index into nb_arena
     };
     thread_local std::vector<Node> arena;
-    // Flat storage for tracked virtual-qubit positions. Slot s lives at
-    // [s * nb_stride, (s+1) * nb_stride).
-    thread_local std::vector<int> nb_pos_flat;
+    thread_local std::vector<int32_t> table;
+    thread_local std::vector<std::vector<int>> nb_arena;
     arena.clear();
-    nb_pos_flat.clear();
+    nb_arena.clear();
     arena.reserve(1024);
-    std::unordered_map<StateKey, int32_t, StateKeyHash> best_node;
-    best_node.reserve(2048);
-    if (use_block_h) {
-        nb_pos_flat.reserve(static_cast<size_t>(nb_stride) * 1024);
-        nb_pos_flat.insert(
-            nb_pos_flat.end(),
-            block_info->initial_pos.begin(),
-            block_info->initial_pos.end()
-        );
-    }
 
-    auto make_state_key = [&](int64_t packed, int nb_arena_idx) {
-        StateKey key;
-        key.packed = packed;
-        if (use_block_h) {
-            const size_t base = static_cast<size_t>(nb_arena_idx) * nb_stride;
-            key.nb_pos.assign(
-                nb_pos_flat.begin() + static_cast<std::ptrdiff_t>(base),
-                nb_pos_flat.begin() + static_cast<std::ptrdiff_t>(base + nb_stride)
-            );
+    // table size: power of 2, ~2x expected entries
+    size_t cap = 1024;
+    table.assign(cap, -1);
+
+    auto hash_packed = [](int64_t v) -> uint64_t {
+        uint64_t x = static_cast<uint64_t>(v);
+        x ^= x >> 33; x *= 0xff51afd7ed558ccdULL;
+        x ^= x >> 33; x *= 0xc4ceb9fe1a85ec53ULL;
+        x ^= x >> 33;
+        return x;
+    };
+
+    auto table_grow = [&]() {
+        std::vector<int32_t> new_table(table.size() * 2, -1);
+        const size_t mask = new_table.size() - 1;
+        for (int32_t idx : table) {
+            if (idx < 0) continue;
+            size_t i = hash_packed(arena[idx].packed) & mask;
+            while (new_table[i] >= 0) i = (i + 1) & mask;
+            new_table[i] = idx;
         }
-        return key;
+        table = std::move(new_table);
+    };
+
+    // Returns slot index in `table`. *slot is -1 if empty.
+    auto table_slot = [&](int64_t packed) -> size_t {
+        const size_t mask = table.size() - 1;
+        size_t i = hash_packed(packed) & mask;
+        while (true) {
+            int32_t idx = table[i];
+            if (idx < 0) return i;
+            if (arena[idx].packed == packed) return i;
+            i = (i + 1) & mask;
+        }
     };
 
     // ---- Push initial node ----
@@ -828,18 +784,22 @@ SabreRouter::find_constrained_swaps(
         n.parent_idx = -1;
         n.g = 0;
         n.sw_lo = -1; n.sw_hi = -1;
-        n.h_score = 0.5 * h0_sum
-            + (use_block_h ? config_.path_tiebreak_weight * block_h(block_info->initial_pos) : 0.0);
-        n.nb_arena_idx = use_block_h ? 0 : -1;
+        n.h_sum = h0_sum;
+        n.nb_total = initial_nb_total;
+        n.nb_arena_idx = -1;
+        if (use_neighbor) {
+            n.nb_arena_idx = static_cast<int>(nb_arena.size());
+            nb_arena.push_back(neighbor_info->initial_pos);
+        }
         arena.push_back(n);
-        best_node.emplace(make_state_key(initial_packed, n.nb_arena_idx), 0);
+        table[table_slot(initial_packed)] = 0;
     }
 
     // PQ entry: (f, g, counter, arena_idx)
     using PQEntry = std::tuple<double, int, uint64_t, int32_t>;
     std::priority_queue<PQEntry, std::vector<PQEntry>, std::greater<PQEntry>> pq;
     uint64_t counter = 0;
-    pq.push({arena[0].h_score, 0, counter++, 0});
+    pq.push({0.5 * h0_sum + neighbor_scale * initial_nb_total, 0, counter++, 0});
 
     thread_local std::vector<int> positions;
     positions.resize(k);
@@ -852,12 +812,10 @@ SabreRouter::find_constrained_swaps(
         const int64_t packed = arena[idx].packed;
 
         // A state can be reinserted with a lower g-cost after this queue entry
-        // was pushed. When the neighbor tie-breaker is active, future-qubit
-        // positions are part of the state so equal-length paths with different
-        // bystander layouts are not collapsed.
-        StateKey cur_key = make_state_key(packed, arena[idx].nb_arena_idx);
-        auto cur_best = best_node.find(cur_key);
-        if (cur_best == best_node.end() || cur_best->second != idx) {
+        // was pushed. The hash table always points at the current best arena
+        // node for a packed state, so discard stale superseded nodes before
+        // accepting a target or expanding neighbors.
+        if (table[table_slot(packed)] != idx) {
             continue;
         }
 
@@ -889,16 +847,9 @@ SabreRouter::find_constrained_swaps(
                 p /= N_;
             }
         }
-        const double cur_h_score = arena[idx].h_score;
+        const double cur_h_sum = arena[idx].h_sum;
+        const double cur_nb_total = arena[idx].nb_total;
         const int cur_nb_arena_idx = arena[idx].nb_arena_idx;
-        std::vector<int> cur_block_pos;
-        if (use_block_h) {
-            const size_t base = static_cast<size_t>(cur_nb_arena_idx) * nb_stride;
-            cur_block_pos.assign(
-                nb_pos_flat.begin() + static_cast<std::ptrdiff_t>(base),
-                nb_pos_flat.begin() + static_cast<std::ptrdiff_t>(base + nb_stride)
-            );
-        }
 
         // Expand: every SWAP that moves at least one partition qubit
         for (int i = 0; i < k; i++) {
@@ -920,46 +871,42 @@ SabreRouter::find_constrained_swaps(
                     new_packed += static_cast<int64_t>(p - nb) * pow_N[j_swap];
                 }
 
-                const int new_g = g + 1;
-                double new_h_score = 0.0;
-                int new_nb_arena_idx = -1;
-                // Delta for the 0.5 * h0_sum routing-distance component
-                double delta_h0 = -0.5 * dist(p, t_i) + 0.5 * dist(nb, t_i);
+                // Incremental h_sum
+                double new_h_sum = cur_h_sum
+                    - dist(p, t_i) + dist(nb, t_i);
                 if (j_swap >= 0) {
                     const int t_j = target_positions[j_swap];
-                    delta_h0 += -0.5 * dist(nb, t_j) + 0.5 * dist(p, t_j);
+                    new_h_sum += -dist(nb, t_j) + dist(p, t_j);
                 }
 
-                if (use_block_h) {
-                    std::vector<int> new_block_pos = cur_block_pos;
-                    for (int z = 0; z < nb_stride; z++) {
-                        if (new_block_pos[z] == p) {
-                            new_block_pos[z] = nb;
-                        } else if (new_block_pos[z] == nb) {
-                            new_block_pos[z] = p;
-                        }
-                    }
-                    // Combined: routing-distance delta + scaled block_h delta.
-                    // Invariant: h = 0.5*h0_sum_current + path_tiebreak_weight*block_h_current
-                    new_h_score = cur_h_score + delta_h0
-                        + config_.path_tiebreak_weight
-                          * (block_h(new_block_pos) - block_h(cur_block_pos));
-                    new_nb_arena_idx = static_cast<int>(nb_pos_flat.size() / nb_stride);
-                    nb_pos_flat.insert(
-                        nb_pos_flat.end(),
-                        new_block_pos.begin(),
-                        new_block_pos.end()
-                    );
-                } else {
-                    new_h_score = cur_h_score + delta_h0;
-                }
-
-                StateKey new_key = make_state_key(new_packed, new_nb_arena_idx);
-                auto existing = best_node.find(new_key);
-                if (existing != best_node.end()
-                    && arena[existing->second].g <= new_g
-                ) {
+                const int new_g = g + 1;
+                const size_t slot = table_slot(new_packed);
+                const int32_t existing = table[slot];
+                if (existing >= 0 && arena[existing].g <= new_g) {
                     continue;
+                }
+
+                // Neighbor heuristic: simple recompute (cheaper than incremental for small edge counts)
+                double new_nb_total = cur_nb_total;
+                int new_nb_arena_idx = -1;
+                if (use_neighbor) {
+                    std::vector<int> new_pos_nb = nb_arena[cur_nb_arena_idx];
+                    int idx_nb = -1, idx_p = -1;
+                    for (size_t z = 0; z < new_pos_nb.size(); z++) {
+                        const int phys = new_pos_nb[z];
+                        if (phys == nb) idx_nb = static_cast<int>(z);
+                        else if (phys == p) idx_p = static_cast<int>(z);
+                        if (idx_nb >= 0 && idx_p >= 0) break;
+                    }
+                    if (idx_nb >= 0 || idx_p >= 0) {
+                        if (idx_nb >= 0) new_pos_nb[idx_nb] = p;
+                        if (idx_p >= 0)  new_pos_nb[idx_p]  = nb;
+                        new_nb_total = compute_nb_total(new_pos_nb);
+                        new_nb_arena_idx = static_cast<int>(nb_arena.size());
+                        nb_arena.push_back(std::move(new_pos_nb));
+                    } else {
+                        new_nb_arena_idx = cur_nb_arena_idx;
+                    }
                 }
 
                 // Insert/update node
@@ -970,14 +917,25 @@ SabreRouter::find_constrained_swaps(
                 const int lo = std::min(p, nb);
                 const int hi = std::max(p, nb);
                 n.sw_lo = lo; n.sw_hi = hi;
-                n.h_score = new_h_score;
+                n.h_sum = new_h_sum;
+                n.nb_total = new_nb_total;
                 n.nb_arena_idx = new_nb_arena_idx;
 
                 int32_t new_idx = static_cast<int32_t>(arena.size());
                 arena.push_back(n);
-                best_node[std::move(new_key)] = new_idx;
 
-                const double f_new = static_cast<double>(new_g) + new_h_score;
+                // Re-find slot if arena grew (table didn't, but slot is still valid
+                // since we didn't grow `table`); just write
+                table[slot] = new_idx;
+
+                // Grow table if load factor too high (> 0.5)
+                if (arena.size() * 2 > table.size()) {
+                    table_grow();
+                }
+
+                const double f_new = static_cast<double>(new_g)
+                                   + 0.5 * new_h_sum
+                                   + neighbor_scale * new_nb_total;
                 pq.push({f_new, new_g, counter++, new_idx});
             }
         }
@@ -997,7 +955,7 @@ SabreRouter::transform_pi(
     const std::vector<int>& pi,
     bool reverse,
     SwapCache* swap_cache,
-    const BlockInfo* block_info
+    const NeighborInfo* neighbor_info
 ) const {
     const std::vector<int>& P_route_inv = reverse ? cand.P_o_inv : cand.P_i_inv;
 
@@ -1009,7 +967,7 @@ SabreRouter::transform_pi(
         cand.node_mapping_flat,
         P_route_inv,
         swap_cache,
-        block_info
+        neighbor_info
     );
 
     // Update output positions using P_exit
@@ -1094,6 +1052,116 @@ std::vector<std::pair<int,int>> SabreRouter::generate_extended_set(
     return E;
 }
 
+// ---------------------------------------------------------------------------
+// Routing cost helpers
+// ---------------------------------------------------------------------------
+
+double SabreRouter::entry_future_cost(
+    const CanonicalEntry& entry,
+    const std::vector<int>& pi
+) const {
+    double total = 0.0;
+    for (size_t i = 0; i < entry.edges_u.size(); i++) {
+        const double d = dist(pi[entry.edges_u[i]], pi[entry.edges_v[i]]);
+        if (d > 1.0) total += d - 1.0;
+    }
+    return total;
+}
+
+double SabreRouter::partition_compactness_cost(
+    int partition_idx,
+    const std::vector<int>& pi
+) const {
+    if (
+        partition_idx < 0
+        || partition_idx >= static_cast<int>(layout_partitions_.size())
+    ) {
+        return 0.0;
+    }
+
+    const auto& involved = layout_partitions_[partition_idx].involved_qbits;
+    if (involved.size() < 2) {
+        return 0.0;
+    }
+
+    double best = std::numeric_limits<double>::infinity();
+    for (int q : involved) {
+        double term = 0.0;
+        for (int p : involved) {
+            if (p == q) continue;
+            term += dist(pi[q], pi[p]);
+        }
+        best = std::min(best, term);
+    }
+    return std::isfinite(best) ? best : 0.0;
+}
+
+double SabreRouter::partition_future_lower_bound(
+    int partition_idx,
+    const std::vector<int>& pi,
+    bool reverse
+) const {
+    if (
+        partition_idx < 0
+        || partition_idx >= static_cast<int>(candidate_cache_.size())
+    ) {
+        return 0.0;
+    }
+
+    const auto& candidates = candidate_cache_[partition_idx];
+    if (candidates.empty()) {
+        return partition_compactness_cost(partition_idx, pi);
+    }
+
+    double best = std::numeric_limits<double>::infinity();
+    for (const auto& cand : candidates) {
+        const double cost = routing_objective(
+            static_cast<double>(estimate_swap_count(cand, pi, reverse)),
+            cand.cnot_count
+        );
+        best = std::min(best, cost);
+    }
+    return std::isfinite(best)
+        ? best
+        : partition_compactness_cost(partition_idx, pi);
+}
+
+double SabreRouter::future_context_cost(
+    int exclude_partition_idx,
+    const std::vector<int>& pi,
+    const std::vector<int>& F_snapshot,
+    const std::vector<std::pair<int,int>>& E,
+    bool reverse
+) const {
+    double f_sum = 0.0;
+    int n_other = 0;
+    for (int p_idx : F_snapshot) {
+        if (p_idx == exclude_partition_idx) continue;
+        f_sum += partition_future_lower_bound(p_idx, pi, reverse);
+        n_other++;
+    }
+
+    double score = n_other > 0
+        ? f_sum / static_cast<double>(n_other)
+        : 0.0;
+
+    if (!E.empty()) {
+        double e_sum = 0.0;
+        for (auto [p_idx, depth] : E) {
+            if (p_idx == exclude_partition_idx) continue;
+            const double alpha =
+                (depth >= 0 && depth < static_cast<int>(alpha_weights_.size()))
+                    ? alpha_weights_[depth]
+                    : std::pow(config_.E_alpha, depth);
+            e_sum += alpha * partition_future_lower_bound(
+                p_idx, pi, reverse);
+        }
+        score += config_.E_weight * e_sum / static_cast<double>(E.size());
+    }
+
+    return score;
+}
+
 std::vector<int> SabreRouter::estimate_candidate_output_layout(
     const CandidateData& cand,
     const std::vector<int>& pi,
@@ -1113,6 +1181,43 @@ std::vector<int> SabreRouter::estimate_candidate_output_layout(
     return pi_output;
 }
 
+double SabreRouter::compute_routing_cost(
+    const std::vector<int>& pi,
+    int exclude_partition_idx,
+    const std::vector<int>& partition_indices,
+    const std::unordered_map<int, CanonicalEntry>& canonical_data
+) const {
+    double total = 0.0;
+    for (int p_idx : partition_indices) {
+        if (p_idx == exclude_partition_idx) continue;
+        auto it = canonical_data.find(p_idx);
+        if (it == canonical_data.end()) continue;
+        total += entry_future_cost(it->second, pi);
+    }
+    return total;
+}
+
+double SabreRouter::compute_lookahead_cost(
+    const std::vector<int>& pi,
+    int exclude_partition_idx,
+    const std::vector<std::pair<int,int>>& E,
+    const std::unordered_map<int, CanonicalEntry>& canonical_data
+) const {
+    if (E.empty()) return 0.0;
+    double total = 0.0;
+    for (auto [p_idx, depth] : E) {
+        if (p_idx == exclude_partition_idx) continue;
+        auto it = canonical_data.find(p_idx);
+        if (it == canonical_data.end()) continue;
+        const double d_cost = entry_future_cost(it->second, pi);
+        const double alpha = (depth >= 0 && depth < static_cast<int>(alpha_weights_.size()))
+            ? alpha_weights_[depth]
+            : std::pow(config_.E_alpha, depth);
+        total += alpha * d_cost;
+    }
+    return config_.E_weight * total / static_cast<double>(E.size());
+}
+
 // ---------------------------------------------------------------------------
 // score_candidate (LightSABRE scoring)
 // ---------------------------------------------------------------------------
@@ -1128,44 +1233,52 @@ double SabreRouter::score_candidate(
     const std::vector<double>* decay,
     std::vector<std::pair<int,int>>* out_swaps,
     std::vector<int>* out_pi_new,
-    const BlockInfo* cached_block_info
+    const std::vector<ResolvedEntry>* resolved_F,
+    const std::vector<ResolvedEntry>* resolved_E,
+    const NeighborInfo* cached_neighbor_info
 ) const {
-    (void)canonical_data;
-    BlockInfo local_block_info;
-    const BlockInfo* block_ptr;
-    if (cached_block_info) {
-        block_ptr = cached_block_info->active() ? cached_block_info : nullptr;
+    NeighborInfo local_neighbor_info;
+    const NeighborInfo* neighbor_ptr;
+    if (cached_neighbor_info) {
+        neighbor_ptr = cached_neighbor_info->uses_tiebreak() ? cached_neighbor_info : nullptr;
     } else {
-        local_block_info = build_block_info(cand.partition_idx, F_snapshot, E, pi);
-        block_ptr = local_block_info.active() ? &local_block_info : nullptr;
+        local_neighbor_info = build_neighbor_info(
+            cand.partition_idx, F_snapshot, E, pi, canonical_data);
+        neighbor_ptr = local_neighbor_info.uses_tiebreak() ? &local_neighbor_info : nullptr;
     }
     auto [swaps, output_perm] = transform_pi(
         cand,
         pi,
         reverse,
         swap_cache,
-        block_ptr
+        neighbor_ptr
     );
 
-    const int cand_idx = cand.partition_idx;
-
-    // Future Lookahead distance
-    double h_score = sabre_H(output_perm, F_snapshot, E, cand_idx);
-
-    // Calculate actual movement penalty including decay multipliers
     double decay_factor = 1.0;
     if (decay != nullptr && !swaps.empty()) {
         decay_factor = decay_factor_for_swaps(swaps, *decay);
     }
-    double objective_score = routing_objective(static_cast<double>(swaps.size()), cand.cnot_count, 1.0, decay_factor);
+    double score = routing_objective(
+        static_cast<double>(swaps.size()),
+        cand.cnot_count,
+        1.0,
+        decay_factor
+    );
 
-    // sabre_H drives selection; routing_obj is the tiebreaker
-    double final_score = h_score + config_.path_tiebreak_weight * objective_score;
+    const int cand_idx = cand.partition_idx;
+    score += future_context_cost(
+        cand_idx,
+        output_perm,
+        F_snapshot,
+        E,
+        reverse
+    );
+    (void)resolved_F;
+    (void)resolved_E;
 
     if (out_swaps) *out_swaps = std::move(swaps);
     if (out_pi_new) *out_pi_new = std::move(output_perm);
-
-    return final_score;
+    return score;
 }
 
 // ---------------------------------------------------------------------------
@@ -1206,14 +1319,11 @@ std::vector<const CandidateData*> SabreRouter::prefilter_candidates(
     for (const auto* cand : candidates) {
         const auto approx_output = estimate_candidate_output_layout(
             *cand, pi, reverse);
-        const double h_score = sabre_H(
-            approx_output,
-            F_snapshot,
-            E,
-            cand->partition_idx
-        );
-        // sabre_H primary, CNOT cost tiebreaker (mirrors score_candidate formula)
-        const double est = h_score + config_.path_tiebreak_weight * (cand->cnot_count * config_.cnot_cost);
+        const double est = routing_objective(
+            static_cast<double>(estimate_swap_count(*cand, pi, reverse)),
+            cand->cnot_count
+        ) + future_context_cost(
+            cand->partition_idx, approx_output, F_snapshot, E, reverse);
         estimated.push_back({est, cand});
     }
 
@@ -1359,6 +1469,7 @@ std::pair<std::vector<int>, double> SabreRouter::heuristic_search(
                 swap_heavy_partitions = 0;
                 continue;
             }
+            reset_decay(decay);
             swap_heavy_partitions = 0;
         }
 
@@ -1372,7 +1483,26 @@ std::pair<std::vector<int>, double> SabreRouter::heuristic_search(
         auto candidates = prefilter_candidates(
             all_candidates, pi, config_.prefilter_top_k, F, E, reverse);
 
-        // Group candidates by partition_idx so build_block_info is shared
+        // Pre-resolve canonical entries for F and E once per F-step
+        std::vector<ResolvedEntry> resolved_F;
+        resolved_F.reserve(F.size());
+        for (int p_idx : F) {
+            auto it = canonical_data.find(p_idx);
+            const CanonicalEntry* ent = (it != canonical_data.end()) ? &it->second : nullptr;
+            resolved_F.push_back({p_idx, ent, 1.0});
+        }
+        std::vector<ResolvedEntry> resolved_E;
+        resolved_E.reserve(E.size());
+        for (auto [p_idx, depth] : E) {
+            auto it = canonical_data.find(p_idx);
+            const CanonicalEntry* ent = (it != canonical_data.end()) ? &it->second : nullptr;
+            const double alpha = (depth >= 0 && depth < static_cast<int>(alpha_weights_.size()))
+                ? alpha_weights_[depth]
+                : std::pow(config_.E_alpha, depth);
+            resolved_E.push_back({p_idx, ent, alpha});
+        }
+
+        // Group candidates by partition_idx so build_neighbor_info is shared
         std::vector<size_t> order(candidates.size());
         std::iota(order.begin(), order.end(), 0);
         std::sort(order.begin(), order.end(), [&](size_t a, size_t b) {
@@ -1384,12 +1514,12 @@ std::pair<std::vector<int>, double> SabreRouter::heuristic_search(
         std::vector<std::vector<std::pair<int,int>>> cached_swaps(candidates.size());
         std::vector<std::vector<int>> cached_pi(candidates.size());
         int prev_partition_idx = -1;
-        BlockInfo cached_block_info;
+        NeighborInfo cached_ni;
         for (size_t k_ord = 0; k_ord < order.size(); k_ord++) {
             const size_t ci = order[k_ord];
             const int p_idx = candidates[ci]->partition_idx;
             if (p_idx != prev_partition_idx) {
-                cached_block_info = build_block_info(p_idx, F, E, pi);
+                cached_ni = build_neighbor_info(p_idx, F, E, pi, canonical_data);
                 prev_partition_idx = p_idx;
             }
             scores[ci] = score_candidate(
@@ -1397,7 +1527,8 @@ std::pair<std::vector<int>, double> SabreRouter::heuristic_search(
                 F, pi, E, reverse, canonical_data,
                 &swap_cache, &decay,
                 &cached_swaps[ci], &cached_pi[ci],
-                &cached_block_info
+                &resolved_F, &resolved_E,
+                &cached_ni
             );
         }
 
@@ -1446,13 +1577,9 @@ std::pair<std::vector<int>, double> SabreRouter::heuristic_search(
         apply_decay_for_swaps(swaps, decay);
         if (swaps.empty()) {
             swap_heavy_partitions = 0;
+            reset_decay(decay);
         } else {
             swap_heavy_partitions++;
-        }
-
-        // Target decay reset for executing physical qubits
-        for (int q : layout_partitions_[best.partition_idx].involved_qbits) {
-            decay[pi[q]] = 1.0;
         }
 
         // Update F with newly eligible children

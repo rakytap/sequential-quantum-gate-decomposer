@@ -24,7 +24,6 @@ from squander.partitioning.ilp import (
     _get_topo_order,
     topo_sort_partitions,
     ilp_global_optimal,
-    parts_to_overlap_scores,
 )
 # Module-level globals for pool workers (set via Pool initializer)
 _worker_config = None
@@ -159,12 +158,6 @@ class qgd_Partition_Aware_Mapping:
             )
             self.config['path_tiebreak_weight'] = 0.49
         self.config.setdefault('cnot_cost', 1.0 / 3.0)  # 1 SWAP = 3 CNOTs
-        self.config.setdefault('overlap_tiebreak', True)
-        self.config.setdefault('three_qubit_exit_weight', 1.0)
-        self.config.setdefault('log_schedule', False)
-        self.config.setdefault('size_density_weight', False)
-        self.config.setdefault('sparse_penalty', 3.0)
-        self.config.setdefault('base_3q_penalty', 1.0)
         strategy = self.config['strategy']
         self.config.setdefault('parallel_layout_trials', False)
         self.config.setdefault('layout_trial_workers', 0)
@@ -206,55 +199,6 @@ class qgd_Partition_Aware_Mapping:
     # ------------------------------------------------------------------------
     # Static Synthesis Helpers (extracted from SynthesizeWideCircuit)
     # ------------------------------------------------------------------------
-
-    @staticmethod
-    def _parts_to_density_weights(allparts, gate_dict, sparse_penalty=3.0, base_3q_penalty=1.0):
-        """Per-part ILP weights that penalise 3-qubit partitions.
-
-        All 3-qubit partitions pay a base_3q_penalty so the ILP requires them
-        to justify their coverage over 2-qubit alternatives.  Sparse ones
-        (few active qubit pairs) pay an additional density penalty.
-
-        ILP cost = weights[i] * N + 1, so:
-          2q partition:           cost = 1
-          3q, 3 active pairs:     cost = 1 + base_3q_penalty
-          3q, 2 active pairs:     cost = 1 + base_3q_penalty + sparse_penalty/3
-          3q, 1 active pair:      cost = 1 + base_3q_penalty + sparse_penalty
-
-        Returns:
-            list[float]: weights[i] such that ILP cost of partition i is
-                ``weights[i] * N + 1``.
-        """
-        N = max(len(allparts), 1)
-        weights = []
-        for part in allparts:
-            qubits_in_part = set()
-            for gate_idx in part:
-                gate = gate_dict.get(gate_idx)
-                if gate is not None:
-                    qubits_in_part.update(gate.get_Involved_Qbits())
-            if len(qubits_in_part) != 3:
-                weights.append(0.0)
-                continue
-            # Count distinct qubit pairs that share at least one gate
-            active_pairs = set()
-            for gate_idx in part:
-                gate = gate_dict.get(gate_idx)
-                if gate is None:
-                    continue
-                qbs = list(gate.get_Involved_Qbits())
-                for a in range(len(qbs)):
-                    for b in range(a + 1, len(qbs)):
-                        active_pairs.add((min(qbs[a], qbs[b]), max(qbs[a], qbs[b])))
-            n_pairs = len(active_pairs)
-            if n_pairs >= 3:
-                density_penalty = 0.0
-            elif n_pairs == 2:
-                density_penalty = sparse_penalty / 3.0
-            else:
-                density_penalty = sparse_penalty
-            weights.append((base_3q_penalty + density_penalty) / N)
-        return weights
 
     @staticmethod
     def _topo_key(mini_topology):
@@ -546,30 +490,8 @@ class qgd_Partition_Aware_Mapping:
         # ---- Phase 2: ILP partition selection ----
         # Minimize total partition count so PAM gets the largest blocks possible
         # under max_partition_size. Larger blocks = more (P_i, P_o) freedom to
-        # absorb routing SWAPs. Overlap-based tie-breaker (when enabled)
-        # picks deterministically among min-count covers, preferring covers
-        # whose parts share more logical qubits with their DAG successors.
-        # Size-density weight (when enabled) adds a cost penalty for 3-qubit
-        # partitions that have few active qubit pairs, preferring two 2-qubit
-        # partitions over one sparsely-interacting 3-qubit partition.
-        ilp_weights = None
-        if self.config.get('size_density_weight', False):
-            sparse_penalty = float(self.config.get('sparse_penalty', 3.0))
-            base_3q_penalty = float(self.config.get('base_3q_penalty', 1.0))
-            ilp_weights = self._parts_to_density_weights(
-                allparts, gate_dict,
-                sparse_penalty=sparse_penalty,
-                base_3q_penalty=base_3q_penalty,
-            )
-        if self.config['overlap_tiebreak']:
-            tb_weights = parts_to_overlap_scores(allparts, g, gate_to_qubit)
-            if ilp_weights is not None:
-                combined = [ilp_weights[i] + tb_weights[i] for i in range(len(allparts))]
-            else:
-                combined = tb_weights
-            L_parts, _ = ilp_global_optimal(allparts, g, weights=combined)
-        else:
-            L_parts, _ = ilp_global_optimal(allparts, g, weights=ilp_weights)
+        # absorb routing SWAPs.
+        L_parts, _ = ilp_global_optimal(allparts, g)
 
         # ---- Phase 3: Build gate sets for selected partitions (+ standalone chains) ----
         selected_surrounded_starts = set()
@@ -591,16 +513,6 @@ class qgd_Partition_Aware_Mapping:
                 standalone_chains.append(chain)
 
         n_multi = len(L_parts)
-
-        # Count partition sizes
-        size_counts = {}
-        for gates in selected_parts_gates:
-            involved = set()
-            for g in gates:
-                involved.update(gate_dict[g].get_Involved_Qbits())
-            size = len(involved)
-            size_counts[size] = size_counts.get(size, 0) + 1
-        print(f"Selected partitions: 2-qubit={size_counts.get(2, 0)}, 3-qubit={size_counts.get(3, 0)}, total_multi={sum(size_counts.get(s, 0) for s in size_counts if s > 1)}")
 
         # ---- Phase 4: Assemble partitioned circuit from selected partitions only ----
         partitioned_circuit = Circuit(qbit_num_orig_circuit)
@@ -691,13 +603,11 @@ class qgd_Partition_Aware_Mapping:
                     meta['qbit_map'],
                 )
 
-            # ---- Stage 1: sweep all P_i (and all P_o for N==2 partitions) ----
-            # For N==2 there are only 4 permutation pairs total, so we enumerate
-            # them all here and skip Stage 2 for those partitions.
+            # ---- Stage 1: fix random P_o, sweep all P_i ----
             stage1_futures = []
             stage1_cached = []
+            stage1_P_o = {}
             known_pairs = {}
-            full_enum_keys = set()  # (partition_idx, topology_idx) fully covered in S1
 
             for partition_idx, meta in enumerate(partition_meta):
                 if meta is None:
@@ -705,40 +615,37 @@ class qgd_Partition_Aware_Mapping:
                 N = meta['N']
                 perms_all = list(permutations(range(N)))
                 for topology_idx, mini_topology in enumerate(meta['mini_topologies']):
-                    if N == 2:
-                        full_enum_keys.add((partition_idx, topology_idx))
-                        po_sweep = perms_all
-                    else:
-                        po_sweep = [perms_all[np.random.choice(len(perms_all))]]
-                    for P_o in po_sweep:
-                        for P_i in perms_all:
-                            Umtx = self._build_permuted_unitary(meta, P_i, P_o)
-                            ck = self._cache_key(Umtx, mini_topology)
-                            if ck in decomp_cache:
-                                stage1_cached.append((partition_idx, topology_idx, P_i, P_o, ck))
-                            else:
-                                future = pool.apply_async(
-                                    _decompose_one, (Umtx, mini_topology)
-                                )
-                                stage1_futures.append((partition_idx, topology_idx, P_i, P_o, ck, future))
+                    P_o_initial = perms_all[np.random.choice(len(perms_all))]
+                    stage1_P_o[(partition_idx, topology_idx)] = P_o_initial
+                    for P_i in perms_all:
+                        Umtx = self._build_permuted_unitary(meta, P_i, P_o_initial)
+                        ck = self._cache_key(Umtx, mini_topology)
+                        if ck in decomp_cache:
+                            stage1_cached.append((partition_idx, topology_idx, P_i, ck))
+                        else:
+                            future = pool.apply_async(
+                                _decompose_one, (Umtx, mini_topology)
+                            )
+                            stage1_futures.append((partition_idx, topology_idx, P_i, ck, future))
 
             # Process Stage 1 cache hits immediately
-            for partition_idx, topology_idx, P_i, P_o, ck in stage1_cached:
+            for partition_idx, topology_idx, P_i, ck in stage1_cached:
                 meta = partition_meta[partition_idx]
                 N = meta['N']
+                P_o_initial = stage1_P_o[(partition_idx, topology_idx)]
                 mini_topology = meta['mini_topologies'][topology_idx]
                 synth_circuit, synth_params, synth_err = decomp_cache[ck]
                 if synth_err <= self.config['tolerance']:
                     pair_key = (partition_idx, topology_idx)
                     self._add_result_with_auts(
-                        results_map[partition_idx], (P_i, P_o),
+                        results_map[partition_idx], (P_i, P_o_initial),
                         synth_circuit, synth_params, topology_idx,
                         N, mini_topology, known_pairs, pair_key, use_auts, aut_cache
                     )
 
             # Collect Stage 1 pool results
             cache_hits_s1 = len(stage1_cached)
-            for partition_idx, topology_idx, P_i, P_o, ck, future in tqdm(
+            for partition_idx, topology_idx, P_i, ck, future in tqdm(
                 stage1_futures, desc=f"Stage 1 Synthesis ({cache_hits_s1} cached)",
                 disable=disable_pbar
             ):
@@ -746,17 +653,17 @@ class qgd_Partition_Aware_Mapping:
                 decomp_cache[ck] = (synth_circuit, synth_params, synth_err)
                 meta = partition_meta[partition_idx]
                 N = meta['N']
+                P_o_initial = stage1_P_o[(partition_idx, topology_idx)]
                 mini_topology = meta['mini_topologies'][topology_idx]
                 if synth_err <= self.config['tolerance']:
                     pair_key = (partition_idx, topology_idx)
                     self._add_result_with_auts(
-                        results_map[partition_idx], (P_i, P_o),
+                        results_map[partition_idx], (P_i, P_o_initial),
                         synth_circuit, synth_params, topology_idx,
                         N, mini_topology, known_pairs, pair_key, use_auts, aut_cache
                     )
 
             # ---- Stage 2: fix top-k P_i from Stage 1, sweep all P_o ----
-            # Skipped for partitions already fully enumerated in Stage 1 (N==2).
             top_k_pi = self.config.get('top_k_pi', 1)
             stage2_futures = []
             stage2_cached = []
@@ -768,8 +675,6 @@ class qgd_Partition_Aware_Mapping:
                 perms_all = list(permutations(range(N)))
                 result = results_map[partition_idx]
                 for topology_idx, mini_topology in enumerate(meta['mini_topologies']):
-                    if (partition_idx, topology_idx) in full_enum_keys:
-                        continue
                     pair_key = (partition_idx, topology_idx)
                     kp = known_pairs.get(pair_key, set()) if use_auts else set()
                     for P_i_cand in result.get_top_k_results(topology_idx, top_k_pi):
@@ -1019,10 +924,6 @@ class qgd_Partition_Aware_Mapping:
         cfg.path_tiebreak_weight = self.config.get(
             'path_tiebreak_weight', 0.2
         )
-        if hasattr(cfg, 'three_qubit_exit_weight'):
-            cfg.three_qubit_exit_weight = self.config.get(
-                'three_qubit_exit_weight', 1.0
-            )
         canonical_fwd = self._build_canonical_neighbor_data(
             scoring_partitions, reverse=False
         )
@@ -1114,34 +1015,18 @@ class qgd_Partition_Aware_Mapping:
         self, steps, optimized_partitions, candidate_cache, N
     ):
         partition_order = []
-        log = self.config.get('log_schedule', False)
-        pending_swaps = 0
-        sched_idx = 0
-        size_swap_totals = {}  # qubit_count -> [count, total_swaps]
         for step in steps:
             kind = step[0]
             if kind == "swap":
                 swaps = [(int(u), int(v)) for u, v in step[1]]
-                pending_swaps += len(swaps)
                 if swaps:
                     partition_order.append(construct_swap_circuit(swaps, N))
             elif kind == "partition":
                 partition_idx = int(step[1])
                 candidate_idx = int(step[2])
-                cand = candidate_cache[partition_idx][candidate_idx]
-                partition_order.append(cand)
-                if log:
-                    size = len(getattr(cand, 'involved_qbits', ()) or ())
-                    cnots = int(getattr(cand, 'cnot_count', 0))
-                    print(
-                        f"[sched {sched_idx:>4}] part_idx={partition_idx:>4} "
-                        f"size={size} |swaps|={pending_swaps:>3} cnots={cnots:>3}"
-                    )
-                    size_swap_totals.setdefault(size, [0, 0])
-                    size_swap_totals[size][0] += 1
-                    size_swap_totals[size][1] += pending_swaps
-                pending_swaps = 0
-                sched_idx += 1
+                partition_order.append(
+                    candidate_cache[partition_idx][candidate_idx]
+                )
             elif kind == "single":
                 partition_idx = int(step[1])
                 physical_qubit = int(step[2])
@@ -1151,15 +1036,6 @@ class qgd_Partition_Aware_Mapping:
                     {circuit_qubit: physical_qubit}, N
                 )
                 partition_order.append(part)
-        if log and size_swap_totals:
-            print("[sched summary] avg |swaps| per partition by size:")
-            for size in sorted(size_swap_totals):
-                count, total = size_swap_totals[size]
-                avg = total / count if count else 0.0
-                print(
-                    f"  size={size}: n={count} total_swaps={total} "
-                    f"avg={avg:.2f}"
-                )
         return partition_order
 
 
@@ -1473,46 +1349,33 @@ class qgd_Partition_Aware_Mapping:
         reverse=False,
         W=0.5,
         alpha=1.0,
-        canonical_data=None,
     ):
-        """Pre-filter candidates using SABRE H(π) on the estimated post-routing layout."""
-        del candidate_cache, canonical_data
-        if top_k <= 0:
-            return []
+        """Pre-filter candidates using cheap swap-count estimate before full A* scoring."""
         if len(partition_candidates) <= top_k:
             return partition_candidates
-
-        F = F or ()
-        E = E or ()
-
-        def _blocks(idx_iter, exclude):
-            blocks = []
-            if layout_partitions is None:
-                return blocks
-            for entry in idx_iter:
-                p_idx = entry[0] if isinstance(entry, tuple) else entry
-                if p_idx == exclude:
-                    continue
-                if p_idx >= len(layout_partitions):
-                    continue
-                blocks.append(
-                    qgd_Partition_Aware_Mapping._partition_involved_qbits(
-                        layout_partitions[p_idx]
-                    )
-                )
-            return blocks
-
-        tiebreak = self.config.get("path_tiebreak_weight", 0.2)
-        cnot_cost = self.config.get("cnot_cost", 1.0 / 3.0)
-
+        cnot_cost = self.config.get('cnot_cost', 1.0 / 3.0)
         estimates = np.array([
-            (getattr(pc, 'cnot_count', 0) * cnot_cost) +
-            tiebreak * qgd_Partition_Aware_Mapping._sabre_H(
-                self._estimate_candidate_output_layout(pc, pi, reverse=reverse),
-                _blocks(F, pc.partition_idx),
-                _blocks(E, pc.partition_idx),
-                D,
-                W,
+            (
+                self._routing_objective(
+                    pc.estimate_swap_count(pi, D, reverse=reverse),
+                    pc.cnot_count,
+                    cnot_cost,
+                )
+                + self._future_context_cost(
+                    pc.partition_idx,
+                    self._estimate_candidate_output_layout(
+                        pc, pi, reverse=reverse
+                    ),
+                    F or (),
+                    E or (),
+                    D,
+                    candidate_cache,
+                    reverse=reverse,
+                    cnot_cost=cnot_cost,
+                    W=W,
+                    alpha=alpha,
+                    layout_partitions=layout_partitions,
+                )
             )
             for pc in partition_candidates
         ])
@@ -1646,6 +1509,65 @@ class qgd_Partition_Aware_Mapping:
         return float(np.maximum(0, D_arr[phys_u, phys_v] - 1).sum())
 
     @staticmethod
+    def _partition_compactness_cost(partition_idx, pi, layout_partitions, D):
+        if (
+            layout_partitions is None
+            or partition_idx < 0
+            or partition_idx >= len(layout_partitions)
+        ):
+            return 0.0
+        involved = qgd_Partition_Aware_Mapping._partition_involved_qbits(
+            layout_partitions[partition_idx]
+        )
+        if len(involved) < 2:
+            return 0.0
+
+        pi_arr = np.asarray(pi, dtype=np.intp)
+        D_arr = np.asarray(D)
+        best = float("inf")
+        for q in involved:
+            term = 0.0
+            for p in involved:
+                if p != q:
+                    term += float(D_arr[pi_arr[q], pi_arr[p]])
+            best = min(best, term)
+        return 0.0 if not np.isfinite(best) else best
+
+    @staticmethod
+    def _partition_future_lower_bound(
+        partition_idx,
+        pi,
+        D,
+        candidate_cache,
+        reverse=False,
+        cnot_cost=1.0 / 3.0,
+        layout_partitions=None,
+    ):
+        if (
+            candidate_cache is None
+            or partition_idx < 0
+            or partition_idx >= len(candidate_cache)
+            or not candidate_cache[partition_idx]
+        ):
+            return qgd_Partition_Aware_Mapping._partition_compactness_cost(
+                partition_idx, pi, layout_partitions, D
+            )
+
+        best = float("inf")
+        for cand in candidate_cache[partition_idx]:
+            cost = qgd_Partition_Aware_Mapping._routing_objective(
+                cand.estimate_swap_count(pi, D, reverse=reverse),
+                cand.cnot_count,
+                cnot_cost,
+            )
+            best = min(best, cost)
+        if np.isfinite(best):
+            return best
+        return qgd_Partition_Aware_Mapping._partition_compactness_cost(
+            partition_idx, pi, layout_partitions, D
+        )
+
+    @staticmethod
     def _estimate_candidate_output_layout(partition_candidate, pi, reverse=False):
         P_exit = partition_candidate.P_i if reverse else partition_candidate.P_o
         pi_output = [int(x) for x in pi]
@@ -1657,38 +1579,6 @@ class qgd_Partition_Aware_Mapping:
                 k = qbit_map_inverse[q_star]
                 pi_output[k] = partition_candidate.node_mapping[P_exit[q_star]]
         return pi_output
-
-    @staticmethod
-    def _sabre_H(pi, F_blocks, E_blocks, D, W_E):
-        """SABRE H(π) cost.
-
-        H(π) = (1/|F|) Σ_{b∈F} Σ_{i,j∈b} D[π(b.i)][π(b.j)]
-             + (W_E/|E|) Σ_{b∈E} Σ_{i,j∈b} D[π(b.i)][π(b.j)]
-
-        ``F_blocks`` and ``E_blocks`` are sequences of tuples of involved
-        virtual-qubit indices (one per block). Empty layers contribute 0.
-        Distance is raw D — no max(0, d-1), no depth decay.
-        """
-        D_arr = np.asarray(D)
-        pi_arr = np.asarray(pi, dtype=np.intp)
-        h = 0.0
-        if F_blocks:
-            f_sum = 0.0
-            for block in F_blocks:
-                qs = [int(q) for q in block]
-                for i in range(len(qs)):
-                    for j in range(i + 1, len(qs)):
-                        f_sum += float(D_arr[pi_arr[qs[i]], pi_arr[qs[j]]])
-            h += f_sum / len(F_blocks)
-        if E_blocks and W_E:
-            e_sum = 0.0
-            for block in E_blocks:
-                qs = [int(q) for q in block]
-                for i in range(len(qs)):
-                    for j in range(i + 1, len(qs)):
-                        e_sum += float(D_arr[pi_arr[qs[i]], pi_arr[qs[j]]])
-            h += W_E * e_sum / len(E_blocks)
-        return h
 
     @staticmethod
     def _future_context_cost(
@@ -1703,39 +1593,42 @@ class qgd_Partition_Aware_Mapping:
         W=0.5,
         alpha=1.0,
         layout_partitions=None,
-        canonical_data=None,
     ):
-        """SABRE H(π) over F\\{exclude} and E using full per-block pairs."""
-        del candidate_cache, reverse, cnot_cost, alpha, canonical_data
-        if layout_partitions is None:
-            return 0.0
-        F_blocks = []
+        f_sum = 0.0
+        n_other = 0
         for p_idx in F:
             if p_idx == exclude_partition_idx:
                 continue
-            if p_idx >= len(layout_partitions):
-                continue
-            F_blocks.append(
-                qgd_Partition_Aware_Mapping._partition_involved_qbits(
-                    layout_partitions[p_idx]
-                )
+            f_sum += qgd_Partition_Aware_Mapping._partition_future_lower_bound(
+                p_idx,
+                pi,
+                D,
+                candidate_cache,
+                reverse=reverse,
+                cnot_cost=cnot_cost,
+                layout_partitions=layout_partitions,
             )
-        E_blocks = []
+            n_other += 1
+        score = f_sum / n_other if n_other > 0 else 0.0
+
         if E:
-            for entry in E:
-                p_idx = entry[0] if isinstance(entry, tuple) else entry
+            e_sum = 0.0
+            for p_idx, depth in E:
                 if p_idx == exclude_partition_idx:
                     continue
-                if p_idx >= len(layout_partitions):
-                    continue
-                E_blocks.append(
-                    qgd_Partition_Aware_Mapping._partition_involved_qbits(
-                        layout_partitions[p_idx]
-                    )
+                e_sum += (
+                    alpha ** depth
+                ) * qgd_Partition_Aware_Mapping._partition_future_lower_bound(
+                    p_idx,
+                    pi,
+                    D,
+                    candidate_cache,
+                    reverse=reverse,
+                    cnot_cost=cnot_cost,
+                    layout_partitions=layout_partitions,
                 )
-        return qgd_Partition_Aware_Mapping._sabre_H(
-            pi, F_blocks, E_blocks, D, W
-        )
+            score += W * e_sum / len(E)
+        return score
 
     def _release_valve(self, F, pi, D, canonical_data):
         pi_arr = np.asarray(pi, dtype=np.intp)
@@ -1782,80 +1675,63 @@ class qgd_Partition_Aware_Mapping:
         return swaps, self._apply_swaps_to_pi(pi, swaps)
 
     @staticmethod
-    def _build_block_info(
+    def _build_neighbor_info(
         partition_idx,
         F,
         E,
         pi,
-        layout_partitions,
-        W_E=0.5,
+        canonical_data,
+        weight=0.2,
+        W=0.5,
+        alpha=0.9,
+        layout_partitions=None,
     ):
-        """Build SABRE H(π) block info for the inner A* heuristic.
-
-        ``partition_idx`` (the candidate being routed) is excluded from
-        ``F`` so the block_h signal matches the outer sabre_H which also
-        excludes the candidate. The returned dict carries each block as a
-        tuple of indices into a flat ``tracked_vqs`` list of all involved
-        virtual qubits.
-        """
-        if layout_partitions is None:
+        del canonical_data
+        if weight <= 0 or layout_partitions is None:
             return None
 
-        f_partitions = [p for p in (F or []) if p != partition_idx]
+        edge_weights = {}
+        qubits = set()
 
-        e_partitions = []
+        def add_edges(target_idx, edge_weight):
+            if target_idx == partition_idx or edge_weight <= 0:
+                return
+            if target_idx >= len(layout_partitions):
+                return
+            involved = qgd_Partition_Aware_Mapping._partition_involved_qbits(
+                layout_partitions[target_idx]
+            )
+            for i, u in enumerate(involved):
+                for v in involved[i + 1:]:
+                    u = int(u)
+                    v = int(v)
+                    qubits.add(u)
+                    qubits.add(v)
+                    key = (u, v) if u <= v else (v, u)
+                    edge_weights[key] = (
+                        edge_weights.get(key, 0.0) + edge_weight
+                    )
+
+        for future_idx in F:
+            add_edges(future_idx, 1.0)
         if E:
-            for entry in E:
-                p = entry[0] if isinstance(entry, tuple) else entry
-                e_partitions.append(p)
+            for future_idx, depth in E:
+                add_edges(future_idx, W * (alpha ** depth))
 
-        f_block_qubits = []
-        for p_idx in f_partitions:
-            if p_idx >= len(layout_partitions):
-                continue
-            f_block_qubits.append(
-                tuple(int(q) for q in
-                      qgd_Partition_Aware_Mapping._partition_involved_qbits(
-                          layout_partitions[p_idx]
-                      ))
-            )
-        e_block_qubits = []
-        for p_idx in e_partitions:
-            if p_idx >= len(layout_partitions):
-                continue
-            e_block_qubits.append(
-                tuple(int(q) for q in
-                      qgd_Partition_Aware_Mapping._partition_involved_qbits(
-                          layout_partitions[p_idx]
-                      ))
-            )
-
-        if not f_block_qubits and not e_block_qubits:
+        if not edge_weights:
             return None
 
-        tracked = set()
-        for b in f_block_qubits:
-            tracked.update(b)
-        for b in e_block_qubits:
-            tracked.update(b)
-        tracked_vqs = sorted(tracked)
-        q_to_idx = {q: idx for idx, q in enumerate(tracked_vqs)}
-
-        f_blocks_idx = tuple(
-            tuple(q_to_idx[q] for q in b) for b in f_block_qubits
-        )
-        e_blocks_idx = tuple(
-            tuple(q_to_idx[q] for q in b) for b in e_block_qubits
-        )
-
+        neighbor_vqs = sorted(qubits)
+        q_to_idx = {q: idx for idx, q in enumerate(neighbor_vqs)}
+        edges = [
+            (q_to_idx[u], q_to_idx[v], edge_weight)
+            for (u, v), edge_weight in edge_weights.items()
+        ]
         return {
-            "tracked_vqs": tracked_vqs,
-            "initial_pos": tuple(int(pi[q]) for q in tracked_vqs),
-            "f_blocks_idx": f_blocks_idx,
-            "e_blocks_idx": e_blocks_idx,
-            "f_size": len(f_block_qubits),
-            "e_size": len(e_block_qubits),
-            "W_E": float(W_E),
+            "neighbor_vqs": neighbor_vqs,
+            "initial_pos": tuple(int(pi[q]) for q in neighbor_vqs),
+            "edges": edges,
+            "weight": weight,
         }
 
     def Heuristic_Search(
@@ -1951,6 +1827,7 @@ class qgd_Partition_Aware_Mapping:
                     pi = np.asarray(pi_bridged)
                     swap_heavy_partitions = 0
                     continue
+                self._reset_decay(decay)
                 swap_heavy_partitions = 0
 
             F_snapshot = tuple(F)
@@ -1984,10 +1861,9 @@ class qgd_Partition_Aware_Mapping:
                 layout_partitions=optimized_partitions,
                 W=E_W,
                 alpha=E_alpha,
-                canonical_data=canonical_data,
             )
 
-            # Group candidates by partition_idx to reuse _build_block_info
+            # Group candidates by partition_idx to reuse _build_neighbor_info
             candidate_order = sorted(
                 range(len(partition_candidates)),
                 key=lambda i: partition_candidates[i].partition_idx
@@ -1996,17 +1872,20 @@ class qgd_Partition_Aware_Mapping:
             cached_swaps = [None] * len(partition_candidates)
             cached_pi = [None] * len(partition_candidates)
             prev_partition_idx = None
-            cached_block_info = None
+            cached_neighbor_info = None
             for ci in candidate_order:
                 cand = partition_candidates[ci]
                 if cand.partition_idx != prev_partition_idx:
-                    cached_block_info = self._build_block_info(
+                    cached_neighbor_info = self._build_neighbor_info(
                         cand.partition_idx,
                         F_snapshot,
                         E,
                         pi,
-                        optimized_partitions,
-                        W_E=E_W,
+                        canonical_data,
+                        weight=self.config.get("path_tiebreak_weight", 0.2),
+                        W=E_W,
+                        alpha=E_alpha,
+                        layout_partitions=optimized_partitions,
                     )
                     prev_partition_idx = cand.partition_idx
                 score, swaps, output_perm = self.score_partition_candidate(
@@ -2018,14 +1897,18 @@ class qgd_Partition_Aware_Mapping:
                     self._swap_cache,
                     E=E,
                     W=E_W,
+                    alpha=E_alpha,
+                    canonical_data=canonical_data,
                     adj=self._adj,
-                    cached_block_info=cached_block_info,
+                    cnot_cost=self.config.get("cnot_cost", 1.0 / 3.0),
+                    path_tiebreak_weight=self.config.get(
+                        "path_tiebreak_weight", 0.2
+                    ),
+                    decay=decay,
+                    cached_neighbor_info=cached_neighbor_info,
                     candidate_cache=candidate_cache,
                     layout_partitions=optimized_partitions,
                     return_transforms=True,
-                    decay=decay,
-                    cnot_cost=self.config.get("cnot_cost", 1.0/3.0),
-                    path_tiebreak_weight=self.config.get("path_tiebreak_weight", 0.2),
                 )
                 scores[ci] = score
                 cached_swaps[ci] = swaps
@@ -2048,20 +1931,7 @@ class qgd_Partition_Aware_Mapping:
                 swap_heavy_partitions += 1
             else:
                 swap_heavy_partitions = 0
-
-            # Target decay reset for qubits executing this partition
-            for q in min_partition_candidate.involved_qbits:
-                decay[pi[q]] = 1.0
-
-            if self.config.get('log_schedule', False):
-                size = len(
-                    getattr(min_partition_candidate, 'involved_qbits', ()) or ()
-                )
-                print(
-                    f"[sched py] part_idx={min_partition_candidate.partition_idx:>4} "
-                    f"size={size} |swaps|={len(swap_order):>3} "
-                    f"cnots={int(getattr(min_partition_candidate, 'cnot_count', 0)):>3}"
-                )
+                self._reset_decay(decay)
 
             partition_order.append(min_partition_candidate)
 
@@ -2173,6 +2043,7 @@ class qgd_Partition_Aware_Mapping:
                     self._apply_decay_for_swaps(valve_swaps, decay)
                     swap_heavy_partitions = 0
                     continue
+                self._reset_decay(decay)
                 swap_heavy_partitions = 0
 
             F_snapshot = tuple(F)
@@ -2207,10 +2078,9 @@ class qgd_Partition_Aware_Mapping:
                 reverse=reverse,
                 W=E_W,
                 alpha=E_alpha,
-                canonical_data=canonical_data,
             )
 
-            # Group candidates by partition_idx to reuse _build_block_info
+            # Group candidates by partition_idx to reuse _build_neighbor_info
             candidate_order = sorted(
                 range(len(partition_candidates)),
                 key=lambda i: partition_candidates[i].partition_idx
@@ -2219,17 +2089,20 @@ class qgd_Partition_Aware_Mapping:
             cached_swaps = [None] * len(partition_candidates)
             cached_pi = [None] * len(partition_candidates)
             prev_partition_idx = None
-            cached_block_info = None
+            cached_neighbor_info = None
             for ci in candidate_order:
                 cand = partition_candidates[ci]
                 if cand.partition_idx != prev_partition_idx:
-                    cached_block_info = self._build_block_info(
+                    cached_neighbor_info = self._build_neighbor_info(
                         cand.partition_idx,
                         F_snapshot,
                         E,
                         pi,
-                        optimized_partitions,
-                        W_E=E_W,
+                        canonical_data,
+                        weight=self.config.get("path_tiebreak_weight", 0.2),
+                        W=E_W,
+                        alpha=E_alpha,
+                        layout_partitions=optimized_partitions,
                     )
                     prev_partition_idx = cand.partition_idx
                 score, swaps, output_perm = self.score_partition_candidate(
@@ -2241,15 +2114,19 @@ class qgd_Partition_Aware_Mapping:
                     self._swap_cache,
                     E=E,
                     W=E_W,
+                    alpha=E_alpha,
                     reverse=reverse,
+                    canonical_data=canonical_data,
                     adj=self._adj,
-                    cached_block_info=cached_block_info,
+                    cnot_cost=cnot_cost,
+                    path_tiebreak_weight=self.config.get(
+                        "path_tiebreak_weight", 0.2
+                    ),
+                    decay=decay,
+                    cached_neighbor_info=cached_neighbor_info,
                     candidate_cache=candidate_cache,
                     layout_partitions=optimized_partitions,
                     return_transforms=True,
-                    decay=decay,
-                    cnot_cost=self.config.get("cnot_cost", 1.0/3.0),
-                    path_tiebreak_weight=self.config.get("path_tiebreak_weight", 0.2),
                 )
                 scores[ci] = score
                 cached_swaps[ci] = swaps
@@ -2277,10 +2154,7 @@ class qgd_Partition_Aware_Mapping:
                 swap_heavy_partitions += 1
             else:
                 swap_heavy_partitions = 0
-
-            # Target decay reset for qubits executing this partition
-            for q in best.involved_qbits:
-                decay[pi[q]] = 1.0
+                self._reset_decay(decay)
 
             for child in DAG[best.partition_idx]:
                 if not resolved_partitions[child] and child not in F:
@@ -2398,33 +2272,30 @@ class qgd_Partition_Aware_Mapping:
                                   canonical_data=None, adj=None,
                                   cnot_cost=1.0 / 3.0,
                                   path_tiebreak_weight=0.2, decay=None,
-                                  cached_block_info=None,
+                                  cached_neighbor_info=None,
                                   candidate_cache=None,
                                   layout_partitions=None,
-                                  return_transforms=False,
-                                  three_qubit_exit_weight=1.0,
-                                  cached_neighbor_info=None):
-        """SABRE H(π) candidate scoring.
+                                  return_transforms=False):
+        """LightSABRE-style relative scoring (arXiv:2409.08368, eq. 1).
 
-        Score = H(pi_output, F\\{cand}, E, W_E)
-
-        where pi_output is the layout after routing this candidate. A* over
-        SWAPs (driven by H over F∪{cand}+E) finds the swap sequence that
-        lands the partition qubits at their target positions.
+        H = |swaps|
+          + cnot_cost * cand.cnot_count
+          + (1/|F'|) * average routing cost over F \\ {cand}
+          + (W/|E|)  * alpha^d-decayed routing cost over E
         """
-        del scoring_partitions, alpha, canonical_data, three_qubit_exit_weight
-        if cached_neighbor_info is not None and cached_block_info is None:
-            cached_block_info = cached_neighbor_info  # legacy alias
-        if cached_block_info is not None:
-            block_info = cached_block_info
+        if cached_neighbor_info is not None:
+            neighbor_info = cached_neighbor_info
         else:
-            block_info = qgd_Partition_Aware_Mapping._build_block_info(
+            neighbor_info = qgd_Partition_Aware_Mapping._build_neighbor_info(
                 partition_candidate.partition_idx,
                 F,
                 E,
                 pi,
-                layout_partitions,
-                W_E=W,
+                canonical_data,
+                weight=path_tiebreak_weight,
+                W=W,
+                alpha=alpha,
+                layout_partitions=layout_partitions,
             )
         swaps, output_perm = partition_candidate.transform_pi(
             pi,
@@ -2432,57 +2303,43 @@ class qgd_Partition_Aware_Mapping:
             swap_cache,
             reverse=reverse,
             adj=adj,
-            block_info=block_info,
+            neighbor_info=neighbor_info,
         )
+        decay_factor = 1.0
+        if decay is not None and swaps:
+            decay_factor = qgd_Partition_Aware_Mapping._decay_factor_for_swaps(
+                swaps, decay
+            )
+        score = qgd_Partition_Aware_Mapping._routing_objective(
+            len(swaps),
+            partition_candidate.cnot_count,
+            cnot_cost,
+            decay_factor=decay_factor,
+        )
+
+        if candidate_cache is None:
+            if return_transforms:
+                return score, swaps, output_perm
+            return score
 
         cand_idx = partition_candidate.partition_idx
-        F_blocks_after = []
-        if layout_partitions is not None:
-            for p_idx in F:
-                if p_idx == cand_idx:
-                    continue
-                if p_idx >= len(layout_partitions):
-                    continue
-                F_blocks_after.append(
-                    qgd_Partition_Aware_Mapping._partition_involved_qbits(
-                        layout_partitions[p_idx]
-                    )
-                )
-        E_blocks_after = []
-        if E and layout_partitions is not None:
-            for entry in E:
-                p_idx = entry[0] if isinstance(entry, tuple) else entry
-                if p_idx == cand_idx:
-                    continue
-                if p_idx >= len(layout_partitions):
-                    continue
-                E_blocks_after.append(
-                    qgd_Partition_Aware_Mapping._partition_involved_qbits(
-                        layout_partitions[p_idx]
-                    )
-                )
-
-        # Calculate lookahead score
-        score = qgd_Partition_Aware_Mapping._sabre_H(
-            output_perm, F_blocks_after, E_blocks_after, D, W
+        score += qgd_Partition_Aware_Mapping._future_context_cost(
+            cand_idx,
+            output_perm,
+            F,
+            E,
+            D,
+            candidate_cache,
+            reverse=reverse,
+            cnot_cost=cnot_cost,
+            W=W,
+            alpha=alpha,
+            layout_partitions=layout_partitions,
         )
-
-        # Incorporate the swap cost and CNOT count penalized by SABRE decay
-        decay_factor = 1.0
-        if decay and swaps:
-            decay_factor = qgd_Partition_Aware_Mapping._decay_factor_for_swaps(swaps, decay)
-
-        cnot_count = getattr(partition_candidate, 'cnot_count', 0)
-        objective_score = qgd_Partition_Aware_Mapping._routing_objective(
-            len(swaps), cnot_count, cnot_cost, decay_factor=decay_factor
-        )
-
-        # sabre_H drives selection; routing_obj is the tiebreaker
-        final_score = score + path_tiebreak_weight * objective_score
 
         if return_transforms:
-            return final_score, swaps, output_perm
-        return final_score
+            return score, swaps, output_perm
+        return score
 
     # ------------------------------------------------------------------------
     # Extended Set
@@ -2598,13 +2455,33 @@ class qgd_Partition_Aware_Mapping:
     # ------------------------------------------------------------------------
         
     def get_initial_layer(self, IDAG, N, optimized_partitions):
-        del N, optimized_partitions
-        return [idx for idx in range(len(IDAG)) if not IDAG[idx]]
+        initial_layer = []
+        active_qbits = set(range(N))
+        for idx in range(len(IDAG)):
+            if len(IDAG[idx]) == 0:
+                initial_layer.append(idx)
+                for qbit in self._partition_involved_qbits(
+                    optimized_partitions[idx]
+                ):
+                    active_qbits.discard(qbit)
+            if not active_qbits:
+                break
+        return initial_layer
 
 
     def get_final_layer(self, DAG, N, optimized_partitions):
-        del N, optimized_partitions
-        return [idx for idx in range(len(DAG) - 1, -1, -1) if not DAG[idx]]
+        final_layer = []
+        active_qbits = set(range(N))
+        for idx in range(len(DAG) - 1, -1, -1):
+            if len(DAG[idx]) == 0:
+                final_layer.append(idx)
+                for qbit in self._partition_involved_qbits(
+                    optimized_partitions[idx]
+                ):
+                    active_qbits.discard(qbit)
+            if not active_qbits:
+                break
+        return final_layer
                 
     def construct_DAG_and_IDAG(self, optimized_partitions):
         DAG = []
