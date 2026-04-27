@@ -85,12 +85,12 @@ def run_once(circ_orig, parameters_orig, topology):
         'max_lookahead': 6,
         'E_weight': 0.3,
         'E_alpha': 1.0,        # LightSABRE-style uniform lookahead (no per-depth decay)
-        # Disable extra routing heuristics while diagnosing 3-qubit partition
-        # quality.
-        'decay_delta': 0.0,
+        'decay_delta': 0.001,
         'swap_burst_budget': 5,
-        'path_tiebreak_weight': 0.0,
+        'path_tiebreak_weight': 0.2,
         'three_qubit_exit_weight': 1.5,
+        'size_density_weight': True,
+        'sparse_penalty': 3.0,
     }
 
     # Clean the initial circuit using the same config pattern as in PartAM.py
