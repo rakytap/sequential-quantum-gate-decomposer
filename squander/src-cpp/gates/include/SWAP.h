@@ -54,7 +54,7 @@ SWAP(int qbit_num_in, const std::vector<int>& target_qbits_in);
 /**
 @brief Destructor of the class
 */
-virtual ~SWAP();
+~SWAP() override;
 
 /**
 @brief Call to create a clone of the present class

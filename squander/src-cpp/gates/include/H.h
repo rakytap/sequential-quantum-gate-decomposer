@@ -16,7 +16,7 @@ public:
 
     H();
     H(int qbit_num_in, int target_qbit_in);
-    virtual ~H();
+    ~H() override;
     virtual H* clone() override;
     virtual Matrix       gate_kernel(const Matrix_real&       parameters) override;
     virtual Matrix_float gate_kernel(const Matrix_real_float& parameters) override;

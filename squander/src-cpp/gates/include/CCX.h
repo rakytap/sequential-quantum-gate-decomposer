@@ -55,7 +55,7 @@ CCX(int qbit_num_in, int target_qbit_in, const std::vector<int>& control_qbits_i
 /**
 @brief Destructor of the class
 */
-virtual ~CCX();
+~CCX() override;
 
 
 

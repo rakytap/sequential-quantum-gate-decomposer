@@ -12,7 +12,7 @@ class RY : public U3 {
 public:
     RY();
     RY(int qbit_num_in, int target_qbit_in);
-    virtual ~RY();
+    ~RY() override;
     virtual RY* clone() override;
     virtual std::vector<double> get_parameter_multipliers() const override;
     virtual Matrix       gate_kernel(const Matrix_real&       precomputed_sincos) override;

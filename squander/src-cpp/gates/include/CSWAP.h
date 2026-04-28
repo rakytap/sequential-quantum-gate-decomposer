@@ -54,7 +54,7 @@ CSWAP(int qbit_num_in, const std::vector<int>& target_qbits_in, const std::vecto
 /**
 @brief Destructor of the class
 */
-virtual ~CSWAP();
+~CSWAP() override;
 
 /**
 @brief Call to create a clone of the present class

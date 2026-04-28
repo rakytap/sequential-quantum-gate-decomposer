@@ -47,7 +47,7 @@ CROT();
 
 CROT(int qbit_num_in, int target_qbit_in, int control_qbit_in);
 
-virtual ~CROT();
+~CROT() override;
 
 virtual Matrix gate_kernel(const Matrix_real& precomputed_sincos) override;
 virtual Matrix_float gate_kernel(const Matrix_real_float& precomputed_sincos) override;

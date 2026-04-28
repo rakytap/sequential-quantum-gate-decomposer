@@ -20,7 +20,7 @@ class U3: public Gate {
 public:
     U3();
     U3(int qbit_num_in, int target_qbit_in);
-    virtual ~U3();
+    ~U3() override;
 
     virtual U3* clone() override;
     virtual std::vector<double> get_parameter_multipliers() const override;

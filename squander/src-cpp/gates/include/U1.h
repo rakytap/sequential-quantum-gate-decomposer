@@ -12,7 +12,7 @@ class U1 : public U3 {
 public:
     U1();
     U1(int qbit_num_in, int target_qbit_in);
-    virtual ~U1();
+    ~U1() override;
     virtual U1* clone() override;
     virtual std::vector<double> get_parameter_multipliers() const override;
     virtual Matrix       gate_kernel(const Matrix_real&       precomputed_sincos) override;

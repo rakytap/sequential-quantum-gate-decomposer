@@ -12,7 +12,7 @@ class RZ : public U3 {
 public:
     RZ();
     RZ(int qbit_num_in, int target_qbit_in);
-    virtual ~RZ();
+    ~RZ() override;
     virtual RZ* clone() override;
     virtual std::vector<double> get_parameter_multipliers() const override;
     virtual Matrix       gate_kernel(const Matrix_real&       precomputed_sincos) override;

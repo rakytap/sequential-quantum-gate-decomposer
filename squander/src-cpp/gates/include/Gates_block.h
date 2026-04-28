@@ -71,7 +71,7 @@ Gates_block(int qbit_num_in);
 /**
 @brief Destructor of the class.
 */
-virtual ~Gates_block();
+~Gates_block() override;
 
 /**
 @brief Call to release the stored gates
@@ -100,7 +100,7 @@ Matrix get_matrix( Matrix_real& parameters, int parallel ) override;
 
 Matrix_float get_matrix( Matrix_real_float& parameters );
 
-Matrix_float get_matrix( Matrix_real_float& parameters, int parallel );
+Matrix_float get_matrix( Matrix_real_float& parameters, int parallel ) override;
 
 
 /**
@@ -144,7 +144,7 @@ virtual void apply_to( Matrix_real_any& parameters_mtx, Matrix_any& input, int p
 @brief Call to apply the gate on the input array/matrix by input*CNOT
 @param input The input array on which the gate is applied
 */
-virtual void apply_from_right( Matrix_real& parameters_mtx, Matrix& input );
+virtual void apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) override;
 
 virtual void apply_from_right_inner( Matrix_real& parameters_mtx, const Matrix_real& precomputed_sincos, Matrix& input ) override;
 
@@ -722,7 +722,7 @@ std::map<std::string, int> get_gate_nums();
 @brief Call to get the number of free parameters
 @return Return with the number of parameters of the gates grouped in the gate block.
 */
-int get_parameter_num();
+int get_parameter_num() override;
 
 
 
