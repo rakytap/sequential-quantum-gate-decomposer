@@ -57,6 +57,7 @@ limitations under the License.
 #include "RZZ.h"
 #include "Adaptive.h"
 #include "Gates_block.h"
+#include "qgd_math.h"
 
 #ifdef _WIN32
 #include <cstdio>
@@ -230,6 +231,46 @@ static void apply_to_list_impl(Gates_block* self, Params& parameters_mtx, std::v
             }
         });
 }
+
+static Matrix_real precompute_block_sincos(const Matrix_real& parameters) {
+    const int parameter_count = static_cast<int>(parameters.size());
+    if (parameter_count <= 0) {
+        return Matrix_real(0, 0);
+    }
+
+    Matrix_real sincos(parameter_count, 2);
+    for (int idx = 0; idx < parameter_count; ++idx) {
+        double sin_theta;
+        double cos_theta;
+        qgd_sincos<double>((double)parameters[idx], &sin_theta, &cos_theta);
+
+        const int offset = idx * sincos.stride;
+        sincos[offset + 0] = sin_theta;
+        sincos[offset + 1] = cos_theta;
+    }
+
+    return sincos;
+}
+
+static Matrix_real_float precompute_block_sincos(const Matrix_real_float& parameters) {
+    const int parameter_count = static_cast<int>(parameters.size());
+    if (parameter_count <= 0) {
+        return Matrix_real_float(0, 0);
+    }
+
+    Matrix_real_float sincos(parameter_count, 2);
+    for (int idx = 0; idx < parameter_count; ++idx) {
+        float sin_theta;
+        float cos_theta;
+        qgd_sincos<float>((float)parameters[idx], &sin_theta, &cos_theta);
+
+        const int offset = idx * sincos.stride;
+        sincos[offset + 0] = sin_theta;
+        sincos[offset + 1] = cos_theta;
+    }
+
+    return sincos;
+}
 } // anonymous namespace
 
 
@@ -269,7 +310,7 @@ Gates_block::apply_to_list( Matrix_real_float& parameters_mtx, std::vector<Matri
 void 
 Gates_block::apply_to( Matrix_real& parameters_mtx_in, Matrix& input, int parallel ) {
 
-    Matrix_real precomputed_sincos = compute_precomputed_sincos(parameters_mtx_in);
+    Matrix_real precomputed_sincos = precompute_block_sincos(parameters_mtx_in);
     apply_to_inner(parameters_mtx_in, precomputed_sincos, input, parallel);
 }
 
@@ -363,7 +404,7 @@ Gates_block::apply_to( Matrix_float& input, int parallel ) {
 void
 Gates_block::apply_to( Matrix_real_float& parameters_mtx_in, Matrix_float& input, int parallel ) {
 
-    Matrix_real_float precomputed_sincos = compute_precomputed_sincos(parameters_mtx_in);
+    Matrix_real_float precomputed_sincos = precompute_block_sincos(parameters_mtx_in);
     apply_to_inner(parameters_mtx_in, precomputed_sincos, input, parallel);
 }
 
@@ -504,7 +545,7 @@ bool is_qbit_present(std::vector<int> involved_qubits, int new_qbit, int num_of_
 void 
 Gates_block::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
 
-    Matrix_real precomputed_sincos = compute_precomputed_sincos(parameters_mtx);
+    Matrix_real precomputed_sincos = precompute_block_sincos(parameters_mtx);
     apply_from_right_inner(parameters_mtx, precomputed_sincos, input);
 }
 
@@ -567,7 +608,7 @@ Gates_block::apply_from_right_inner( Matrix_real& parameters_mtx, const Matrix_r
 void
 Gates_block::apply_from_right( Matrix_real_float& parameters_mtx, Matrix_float& input ) {
 
-    Matrix_real_float precomputed_sincos = compute_precomputed_sincos(parameters_mtx);
+    Matrix_real_float precomputed_sincos = precompute_block_sincos(parameters_mtx);
     apply_from_right_inner(parameters_mtx, precomputed_sincos, input);
 }
 
@@ -674,8 +715,6 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input, i
                 
                 Matrix_real parameters_mtx(parameters_mtx_in.get_data() + operation->get_parameter_start_idx(), 1, operation->get_parameter_num());
 
-                gate_type op_type = operation->get_type();
-                
                     if ( operation->get_parameter_num() == 0 ) {
                 
                         if( idx < deriv_idx ) {
@@ -768,8 +807,6 @@ Gates_block::apply_derivate_to( Matrix_real_float& parameters_mtx_in, Matrix_flo
                 
                 Matrix_real_float parameters_mtx(parameters_mtx_in.get_data() + operation->get_parameter_start_idx(), 1, operation->get_parameter_num());
 
-                gate_type op_type = operation->get_type();
-                
                     if ( operation->get_parameter_num() == 0 ) {
                 
                         if( idx < deriv_idx ) {
@@ -814,7 +851,7 @@ Gates_block::apply_derivate_to( Matrix_real_float& parameters_mtx_in, Matrix_flo
 std::vector<Matrix>
 Gates_block::apply_to_combined( Matrix_real& parameters_mtx_in, Matrix& input, int parallel ) {
 
-    Matrix_real precomputed_sincos = compute_precomputed_sincos(parameters_mtx_in);
+    Matrix_real precomputed_sincos = precompute_block_sincos(parameters_mtx_in);
     return apply_to_combined_inner(parameters_mtx_in, precomputed_sincos, input, parallel);
 }
 
@@ -841,7 +878,7 @@ Gates_block::apply_to_combined_inner( Matrix_real& parameters_mtx_in, const Matr
 std::vector<Matrix_float>
 Gates_block::apply_to_combined( Matrix_real_float& parameters_mtx_in, Matrix_float& input, int parallel ) {
 
-    Matrix_real_float precomputed_sincos = compute_precomputed_sincos(parameters_mtx_in);
+    Matrix_real_float precomputed_sincos = precompute_block_sincos(parameters_mtx_in);
     return apply_to_combined_inner(parameters_mtx_in, precomputed_sincos, input, parallel);
 }
 
