@@ -675,10 +675,6 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input, i
                 Matrix_real parameters_mtx(parameters_mtx_in.get_data() + operation->get_parameter_start_idx(), 1, operation->get_parameter_num());
 
                 gate_type op_type = operation->get_type();
-                if (op_type == SYC_OPERATION) {
-                    std::string err("Gates_block::apply_derivate_to: Given operation not supported in gradient calculation");
-                    throw(err);
-                }
                 
                     if ( operation->get_parameter_num() == 0 ) {
                 
@@ -732,40 +728,85 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input, i
 std::vector<Matrix_float>
 Gates_block::apply_derivate_to( Matrix_real_float& parameters_mtx_in, Matrix_float& input, int parallel ) {
 
-    // Cast float32 parameters -> float64
-    Matrix_real params_f64(1, parameters_mtx_in.size());
-    {
-        const float* src = parameters_mtx_in.get_data();
-        double* dst = params_f64.get_data();
-        for (int i = 0; i < parameters_mtx_in.size(); i++) {
-            dst[i] = static_cast<double>(src[i]);
-        }
+    std::vector<Matrix_float> grad(parameter_num, Matrix_float(0,0));
+
+    int work_batch = 1;
+    if ( parallel == 0 ) {
+        work_batch = static_cast<int>(gates.size());
+    }
+    else {
+        work_batch = 1;
     }
 
-    // Cast float32 input -> float64
-    Matrix input_f64 = input.to_float64();
+    // deriv_idx ... the index of the gate block for which the gradient is to be calculated
 
-    // Run the float64 derivate path (identical route)
-    std::vector<Matrix> derivs_f64 = apply_derivate_to(params_f64, input_f64, parallel);
+    tbb::parallel_for( tbb::blocked_range<size_t>(0,gates.size(),work_batch), [&](tbb::blocked_range<size_t> r) {
+        for (size_t deriv_idx=r.begin(); deriv_idx<r.end(); ++deriv_idx) { 
 
-    // Cast results back to float32
-    std::vector<Matrix_float> derivs_f32;
-    derivs_f32.reserve(derivs_f64.size());
-    for (Matrix& d : derivs_f64) {
-        if (d.rows == 0 || d.cols == 0) {
-            derivs_f32.push_back(Matrix_float(0, 0));
-            continue;
-        }
-        Matrix_float df(d.rows, d.cols);
-        const QGD_Complex16* src_data = d.get_data();
-        QGD_Complex8* dst_data = df.get_data();
-        for (int i = 0; i < d.size(); i++) {
-            dst_data[i].real = static_cast<float>(src_data[i].real);
-            dst_data[i].imag = static_cast<float>(src_data[i].imag);
-        }
-        derivs_f32.push_back(std::move(df));
-    }
-    return derivs_f32;
+        //for (int deriv_idx=0; deriv_idx<gates.size(); ++deriv_idx) { 
+
+
+            Gate* gate_deriv = gates[deriv_idx];            
+
+            // for constant gate no gardient component is calculated
+            if ( gate_deriv->get_parameter_num() == 0 ) {
+                continue;
+            }
+            
+            int deriv_parameter_idx = gate_deriv->get_parameter_start_idx();       
+
+
+
+            Matrix_float&& input_loc = input.copy();
+
+            std::vector<Matrix_float> grad_loc;
+
+            for( size_t idx=0; idx<gates.size(); idx++) {            
+
+                Gate* operation = gates[idx];
+                
+                
+                Matrix_real_float parameters_mtx(parameters_mtx_in.get_data() + operation->get_parameter_start_idx(), 1, operation->get_parameter_num());
+
+                gate_type op_type = operation->get_type();
+                
+                    if ( operation->get_parameter_num() == 0 ) {
+                
+                        if( idx < deriv_idx ) {
+                            operation->apply_to( input_loc, parallel );    
+                        }
+                        else {
+                            operation->apply_to_list(grad_loc, parallel );
+                        }
+                    
+                    }
+                    else  {
+                        // Gates such as U1, U2, and U3 fall here.
+                        if( idx < deriv_idx ) {
+                            operation->apply_to( parameters_mtx, input_loc, parallel );    
+                        }
+                        else if ( idx == deriv_idx ) {
+                            grad_loc = operation->apply_derivate_to( parameters_mtx, input_loc, parallel );
+                        }
+                        else {
+                            operation->apply_to_list(parameters_mtx, grad_loc, parallel );
+                        }                       
+                    
+                    }
+            }
+
+
+            for ( int idx = 0; idx<(int)grad_loc.size(); idx++ ) {
+                grad[deriv_parameter_idx+idx] = grad_loc[idx];
+            }
+
+
+        } // tbb range end
+    
+    });
+   
+
+    return grad;
 
 }
 
