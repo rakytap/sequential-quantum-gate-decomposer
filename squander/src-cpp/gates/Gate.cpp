@@ -1151,19 +1151,53 @@ Gate::apply_kernel_to(Matrix& u3_1qbit, Matrix& input, bool deriv, int parallel,
     }
 
     if (type == GENERAL_OPERATION) {
-        if (matrix_alloc.rows != matrix_size || matrix_alloc.cols != matrix_size) {
-            return;
-        }
-
         const std::vector<int> involved_qbits = get_involved_qubits();
         const bool has_any_control = (control_qbit >= 0) || !control_qbits.empty();
         const bool is_state_vector = (input.cols == 1);
         const int involved_qbit_num = static_cast<int>(involved_qbits.size());
+        const bool has_full_matrix = matrix_alloc.rows == matrix_size && matrix_alloc.cols == matrix_size;
+        const bool has_local_matrix = involved_qbit_num > 0
+            && matrix_alloc.rows == Power_of_2(involved_qbit_num)
+            && matrix_alloc.cols == Power_of_2(involved_qbit_num);
         const bool can_use_large_kernel = !has_any_control
             && ((is_state_vector && involved_qbit_num >= 2 && involved_qbit_num <= 5)
                 || (!is_state_vector && involved_qbit_num == 2));
 
-        if (can_use_large_kernel) {
+        if (has_full_matrix) {
+            if (can_use_large_kernel) {
+                switch (parallel) {
+                    case 0:
+                        apply_large_kernel_to_input(matrix_alloc, input, involved_qbits, matrix_size);
+                        break;
+                    case 1:
+#ifdef USE_AVX
+                        apply_large_kernel_to_input_AVX_OpenMP(matrix_alloc, input, involved_qbits, matrix_size);
+#else
+                        apply_large_kernel_to_input(matrix_alloc, input, involved_qbits, matrix_size);
+#endif
+                        break;
+                    case 2:
+#ifdef USE_AVX
+                        apply_large_kernel_to_input_AVX_TBB(matrix_alloc, input, involved_qbits, matrix_size);
+#else
+                        apply_large_kernel_to_input(matrix_alloc, input, involved_qbits, matrix_size);
+#endif
+                        break;
+                    default:
+                        apply_large_kernel_to_input(matrix_alloc, input, involved_qbits, matrix_size);
+                }
+            }
+            else {
+                Matrix transformed = dot(matrix_alloc, input);
+                memcpy(input.get_data(), transformed.get_data(), transformed.size() * sizeof(QGD_Complex16));
+            }
+            return;
+        }
+
+        if (has_local_matrix && matrix_alloc.rows == 2 && matrix_alloc.cols == 2 && involved_qbit_num == 1) {
+            u3_1qbit = matrix_alloc;
+        }
+        else if (has_local_matrix && can_use_large_kernel) {
             switch (parallel) {
                 case 0:
                     apply_large_kernel_to_input(matrix_alloc, input, involved_qbits, matrix_size);
@@ -1185,12 +1219,12 @@ Gate::apply_kernel_to(Matrix& u3_1qbit, Matrix& input, bool deriv, int parallel,
                 default:
                     apply_large_kernel_to_input(matrix_alloc, input, involved_qbits, matrix_size);
             }
+            return;
         }
         else {
-            Matrix transformed = dot(matrix_alloc, input);
-            memcpy(input.get_data(), transformed.get_data(), transformed.size() * sizeof(QGD_Complex16));
+            std::string err("Gate::apply_kernel_to(Matrix&): unsupported GENERAL_OPERATION dispatch for stored matrix size.");
+            throw err;
         }
-        return;
     }
 
     if (u3_1qbit.rows != 2 || u3_1qbit.cols != 2) {
@@ -1389,20 +1423,50 @@ Gate::apply_kernel_to(Matrix_float& u3_1qbit, Matrix_float& input, bool deriv, i
     }
 
     if (type == GENERAL_OPERATION) {
-        if (matrix_alloc.rows != matrix_size || matrix_alloc.cols != matrix_size) {
-            return;
-        }
-
-        Matrix_float matrix_alloc32 = matrix_alloc.to_float32();
         const std::vector<int> involved_qbits = get_involved_qubits();
         const bool has_any_control = (control_qbit >= 0) || !control_qbits.empty();
         const bool is_state_vector = (input.cols == 1);
         const int involved_qbit_num = static_cast<int>(involved_qbits.size());
+        const bool has_full_matrix = matrix_alloc.rows == matrix_size && matrix_alloc.cols == matrix_size;
+        const bool has_local_matrix = involved_qbit_num > 0
+            && matrix_alloc.rows == Power_of_2(involved_qbit_num)
+            && matrix_alloc.cols == Power_of_2(involved_qbit_num);
         const bool can_use_large_kernel = !has_any_control
             && ((is_state_vector && involved_qbit_num >= 2 && involved_qbit_num <= 5)
                 || (!is_state_vector && involved_qbit_num == 2));
+        Matrix_float matrix_alloc32 = matrix_alloc.to_float32();
 
-        if (can_use_large_kernel) {
+        if (has_full_matrix) {
+            if (can_use_large_kernel) {
+#ifdef USE_AVX
+                switch (parallel) {
+                    case 0:
+                        apply_large_kernel_to_input_AVX32(matrix_alloc32, input, involved_qbits, matrix_size);
+                        break;
+                    case 1:
+                        apply_large_kernel_to_input_AVX_OpenMP32(matrix_alloc32, input, involved_qbits, matrix_size);
+                        break;
+                    case 2:
+                        apply_large_kernel_to_input_AVX_TBB32(matrix_alloc32, input, involved_qbits, matrix_size);
+                        break;
+                    default:
+                        apply_large_kernel_to_input_AVX32(matrix_alloc32, input, involved_qbits, matrix_size);
+                }
+#else
+                apply_large_kernel_to_input(matrix_alloc32, input, involved_qbits, matrix_size);
+#endif
+            }
+            else {
+                Matrix_float transformed = dot(matrix_alloc32, input);
+                memcpy(input.get_data(), transformed.get_data(), transformed.size() * sizeof(QGD_Complex8));
+            }
+            return;
+        }
+
+        if (has_local_matrix && matrix_alloc32.rows == 2 && matrix_alloc32.cols == 2 && involved_qbit_num == 1) {
+            u3_1qbit = matrix_alloc32;
+        }
+        else if (has_local_matrix && can_use_large_kernel) {
 #ifdef USE_AVX
             switch (parallel) {
                 case 0:
@@ -1420,12 +1484,12 @@ Gate::apply_kernel_to(Matrix_float& u3_1qbit, Matrix_float& input, bool deriv, i
 #else
             apply_large_kernel_to_input(matrix_alloc32, input, involved_qbits, matrix_size);
 #endif
+            return;
         }
         else {
-            Matrix_float transformed = dot(matrix_alloc32, input);
-            memcpy(input.get_data(), transformed.get_data(), transformed.size() * sizeof(QGD_Complex8));
+            std::string err("Gate::apply_kernel_to(Matrix_float&): unsupported GENERAL_OPERATION dispatch for stored matrix size.");
+            throw err;
         }
-        return;
     }
 
     if (u3_1qbit.rows != 2 || u3_1qbit.cols != 2) {
