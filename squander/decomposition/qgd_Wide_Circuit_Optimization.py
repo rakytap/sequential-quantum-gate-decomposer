@@ -1412,7 +1412,7 @@ def generate_squander_seqpam(squander_config, block_size):
 
             circuit.become(partitioned, False)
 
-    squander    = SquanderSynthesisPass(squander_config)
+    squander    = SquanderSynthesisPass(squander_config=squander_config)
     partitioner = SquanderILPPartitioner(block_size, squander_config)
     post_pam_seq: BasePass = PAMVerificationSequence(8)
 
