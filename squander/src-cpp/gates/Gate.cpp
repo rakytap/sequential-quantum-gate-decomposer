@@ -442,12 +442,6 @@ Gate::apply_to( Matrix_real_float& parameter_mtx, Matrix_float& input, int paral
 void
 Gate::apply_to_inner( Matrix_real& parameter_mtx, const Matrix_real& precomputed_sincos, Matrix& input, int parallel ) {
 
-    // Adaptive gate keeps custom branching logic in its own apply_to overload.
-    if (type == ADAPTIVE_OPERATION) {
-        apply_to(parameter_mtx, input, parallel);
-        return;
-    }
-
     if (parameter_num == 0) {
         apply_to(input, parallel);
         return;
@@ -461,12 +455,6 @@ Gate::apply_to_inner( Matrix_real& parameter_mtx, const Matrix_real& precomputed
 
 void
 Gate::apply_to_inner( Matrix_real_float& parameter_mtx, const Matrix_real_float& precomputed_sincos, Matrix_float& input, int parallel ) {
-
-    // Adaptive gate keeps custom branching logic in its own apply_to overload.
-    if (type == ADAPTIVE_OPERATION) {
-        apply_to(parameter_mtx, input, parallel);
-        return;
-    }
 
     if (parameter_num == 0) {
         apply_to(input, parallel);
@@ -694,12 +682,6 @@ Gate::apply_from_right( Matrix_real_float& parameter_mtx, Matrix_float& input ) 
 void
 Gate::apply_from_right_inner( Matrix_real& parameter_mtx, const Matrix_real& precomputed_sincos, Matrix& input ) {
 
-    // Adaptive gate keeps custom branching logic in its own apply_from_right overload.
-    if (type == ADAPTIVE_OPERATION) {
-        apply_from_right(parameter_mtx, input);
-        return;
-    }
-
     Matrix kernel = gate_kernel(precomputed_sincos);
     Matrix inv_kernel = inverse_gate_kernel(precomputed_sincos);
     apply_kernel_from_right(kernel, input, &inv_kernel);
@@ -708,12 +690,6 @@ Gate::apply_from_right_inner( Matrix_real& parameter_mtx, const Matrix_real& pre
 
 void
 Gate::apply_from_right_inner( Matrix_real_float& parameter_mtx, const Matrix_real_float& precomputed_sincos, Matrix_float& input ) {
-
-    // Adaptive gate keeps custom branching logic in its own apply_from_right overload.
-    if (type == ADAPTIVE_OPERATION) {
-        apply_from_right(parameter_mtx, input);
-        return;
-    }
 
     Matrix_float kernel = gate_kernel(precomputed_sincos);
     Matrix_float inv_kernel = inverse_gate_kernel(precomputed_sincos);

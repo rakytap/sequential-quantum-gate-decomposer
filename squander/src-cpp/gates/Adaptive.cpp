@@ -23,6 +23,22 @@ limitations under the License.
 #include "Adaptive.h"
 #include "common.h"
 
+namespace {
+
+Matrix_real transform_adaptive_parameter(const Matrix_real& parameters, int limit) {
+    Matrix_real phi_transformed(1, 1);
+    phi_transformed[0] = activation_function(parameters[0], limit);
+    return phi_transformed;
+}
+
+Matrix_real_float transform_adaptive_parameter(const Matrix_real_float& parameters, int limit) {
+    Matrix_real_float phi_transformed(1, 1);
+    phi_transformed[0] = static_cast<float>(activation_function(static_cast<double>(parameters[0]), limit));
+    return phi_transformed;
+}
+
+}
+
 
 
 //static tbb::spin_mutex my_mutex;
@@ -108,24 +124,9 @@ Adaptive::apply_to( Matrix_real& parameters, Matrix& input, int parallel ) {
         throw err;    
     }
 
-    double Phi = parameters[0];
-
-    Matrix_real Phi_transformed(1,1);
-//    Phi_transformed[0] = Phi;
-//    Phi_transformed[0] = 0.5*(1.0-std::cos(Phi))*M_PI;
-    Phi = activation_function( Phi, limit );
-    Phi_transformed[0] = Phi;
-
-
-/*
-Phi = Phi + M_PI;
-Phi = (1.0-std::cos(Phi/2))*M_PI;
-Phi_transformed[0] = Phi - M_PI;
-*/
-
-
-
-    CRY::apply_to( Phi_transformed, input, parallel );
+    Matrix_real phi_transformed = transform_adaptive_parameter(parameters, limit);
+    Matrix_real phi_precomputed_sincos = compute_precomputed_sincos(phi_transformed);
+    CRY::apply_to_inner(phi_transformed, phi_precomputed_sincos, input, parallel);
 
 
 
@@ -140,13 +141,27 @@ Adaptive::apply_to( Matrix_real_float& parameters, Matrix_float& input, int para
         throw err;
     }
 
-    float phi = parameters[0];
-    phi = static_cast<float>(activation_function(static_cast<double>(phi), limit));
+    Matrix_real_float phi_transformed = transform_adaptive_parameter(parameters, limit);
+    Matrix_real_float phi_precomputed_sincos = compute_precomputed_sincos(phi_transformed);
+    CRY::apply_to_inner(phi_transformed, phi_precomputed_sincos, input, parallel);
+}
 
-    Matrix_real_float phi_transformed(1,1);
-    phi_transformed[0] = phi;
 
-    Gate::apply_to(phi_transformed, input, parallel);
+void
+Adaptive::apply_to_inner( Matrix_real& parameters, const Matrix_real& /*precomputed_sincos*/, Matrix& input, int parallel ) {
+
+    Matrix_real phi_transformed = transform_adaptive_parameter(parameters, limit);
+    Matrix_real phi_precomputed_sincos = compute_precomputed_sincos(phi_transformed);
+    CRY::apply_to_inner(phi_transformed, phi_precomputed_sincos, input, parallel);
+}
+
+
+void
+Adaptive::apply_to_inner( Matrix_real_float& parameters, const Matrix_real_float& /*precomputed_sincos*/, Matrix_float& input, int parallel ) {
+
+    Matrix_real_float phi_transformed = transform_adaptive_parameter(parameters, limit);
+    Matrix_real_float phi_precomputed_sincos = compute_precomputed_sincos(phi_transformed);
+    CRY::apply_to_inner(phi_transformed, phi_precomputed_sincos, input, parallel);
 }
 
 
@@ -167,20 +182,9 @@ Adaptive::apply_from_right( Matrix_real& parameters, Matrix& input ) {
         exit(-1);
     }
 
-    double Phi = parameters[0];
-
-    Matrix_real Phi_transformed(1,1);
-//    Phi_transformed[0] = Phi;
-//    Phi_transformed[0] = 0.5*(1.0-std::cos(Phi))*M_PI;
-    Phi = activation_function( Phi, limit );
-    Phi_transformed[0] = Phi;
-/*
-Phi = Phi + M_PI;
-Phi = (1.0-std::cos(Phi/2))*M_PI;
-Phi_transformed[0] = Phi - M_PI;
-*/
-
-    CRY::apply_from_right( Phi_transformed, input );
+    Matrix_real phi_transformed = transform_adaptive_parameter(parameters, limit);
+    Matrix_real phi_precomputed_sincos = compute_precomputed_sincos(phi_transformed);
+    CRY::apply_from_right_inner(phi_transformed, phi_precomputed_sincos, input);
 
 
 }
@@ -194,13 +198,27 @@ Adaptive::apply_from_right( Matrix_real_float& parameters, Matrix_float& input )
         throw err;
     }
 
-    float phi = parameters[0];
-    phi = static_cast<float>(activation_function(static_cast<double>(phi), limit));
+    Matrix_real_float phi_transformed = transform_adaptive_parameter(parameters, limit);
+    Matrix_real_float phi_precomputed_sincos = compute_precomputed_sincos(phi_transformed);
+    CRY::apply_from_right_inner(phi_transformed, phi_precomputed_sincos, input);
+}
 
-    Matrix_real_float phi_transformed(1, 1);
-    phi_transformed[0] = phi;
 
-    Gate::apply_from_right(phi_transformed, input);
+void
+Adaptive::apply_from_right_inner( Matrix_real& parameters, const Matrix_real& /*precomputed_sincos*/, Matrix& input ) {
+
+    Matrix_real phi_transformed = transform_adaptive_parameter(parameters, limit);
+    Matrix_real phi_precomputed_sincos = compute_precomputed_sincos(phi_transformed);
+    CRY::apply_from_right_inner(phi_transformed, phi_precomputed_sincos, input);
+}
+
+
+void
+Adaptive::apply_from_right_inner( Matrix_real_float& parameters, const Matrix_real_float& /*precomputed_sincos*/, Matrix_float& input ) {
+
+    Matrix_real_float phi_transformed = transform_adaptive_parameter(parameters, limit);
+    Matrix_real_float phi_precomputed_sincos = compute_precomputed_sincos(phi_transformed);
+    CRY::apply_from_right_inner(phi_transformed, phi_precomputed_sincos, input);
 }
 
 
@@ -223,12 +241,9 @@ Adaptive::apply_derivate_to( Matrix_real& parameters, Matrix& input, int paralle
 
     double Phi = parameters[0];
 
-    Matrix_real Phi_transformed(1,1);
+    Matrix_real Phi_transformed = transform_adaptive_parameter(parameters, limit);
 //    Phi_transformed[0] = Phi;
 //    Phi_transformed[0] = 0.5*(1.0-std::cos(Phi))*M_PI;
-    Phi = activation_function( Phi, limit );
-    Phi_transformed[0] = Phi;
-
 
 /*
 Phi = Phi + M_PI;
@@ -236,12 +251,36 @@ Phi = (1.0-std::cos(Phi/2))*M_PI;
 Phi_transformed[0] = Phi - M_PI;
 */
 
-
-
     return CRY::apply_derivate_to( Phi_transformed, input, parallel );
 
 
 
+}
+
+
+std::vector<Matrix_float>
+Adaptive::apply_derivate_to( Matrix_real_float& parameters, Matrix_float& input, int parallel ) {
+
+    if (input.rows != matrix_size ) {
+        std::stringstream sstream;
+	sstream << "Wrong matrix size in Adaptive gate apply" << std::endl;
+        print(sstream, 0);	     
+        exit(-1);
+    }
+
+    float Phi = parameters[0];
+
+    Matrix_real_float Phi_transformed = transform_adaptive_parameter(parameters, limit);
+//    Phi_transformed[0] = Phi;
+//    Phi_transformed[0] = 0.5*(1.0-std::cos(Phi))*M_PI;
+
+/*
+Phi = Phi + M_PI;
+Phi = (1.0-std::cos(Phi/2))*M_PI;
+Phi_transformed[0] = Phi - M_PI;
+*/
+
+    return CRY::apply_derivate_to( Phi_transformed, input, parallel );
 }
 
 /**
@@ -262,30 +301,6 @@ Adaptive* Adaptive::clone() {
     return ret;
 
 }
-
-
-
-/**
-@brief Call to extract parameters from the parameter array corresponding to the circuit, in which the gate is embedded.
-@param parameters The parameter array corresponding to the circuit in which the gate is embedded
-@return Returns with the array of the extracted parameters.
-*/
-Matrix_real 
-Adaptive::extract_parameters( Matrix_real& parameters ) {
-
-    if ( get_parameter_start_idx() + get_parameter_num() > parameters.size()  ) {
-        std::string err("Adaptive::extract_parameters: Cant extract parameters, since the dinput arary has not enough elements.");
-        throw err;     
-    }
-
-    Matrix_real extracted_parameters(1,1);
-
-    extracted_parameters[0] = std::fmod( 2*parameters[ get_parameter_start_idx() ], 4*M_PI);
-
-    return extracted_parameters;
-
-}
-
 
 
 /**
