@@ -1283,6 +1283,183 @@ class N_Qubit_Decomposition_Guided_Tree(N_Qubit_Decomposition_custom):
 # N_Qubit_Decomposition_Guided_Tree.gen_all_min_cnots(3); assert False
 # N_Qubit_Decomposition_Guided_Tree.build_sequence(); assert False
 # print(len(list(N_Qubit_Decomposition_Guided_Tree.enumerate_unordered_cnot_BFS(3, [(0,1),(1,2),])))); assert False
+
+
+def generate_squander_seqpam(squander_config, block_size):
+    """Build a bqskit SeqPAM workflow using Squander as the inner synthesis engine.
+
+    Partitioning uses squander's ILP (same logic as PartAM.SynthesizeWideCircuit),
+    with optional density-penalty weights for sparse 3-qubit blocks when
+    ``squander_config['size_density_weight']`` is True.
+
+    Args:
+        squander_config: Config dict passed to SquanderSynthesisPass (bqskit-squander keys:
+            ``strategy`` ("Tree_search"/"Tabu_search"), ``verbosity``,
+            ``optimization_tolerance``, ``optimizer_engine``, etc.).
+            Also read by SquanderILPPartitioner: ``size_density_weight`` (bool),
+            ``sparse_penalty`` (float).
+        block_size: Maximum block size for ILP partitioning and SubtopologySelectionPass.
+
+    Returns:
+        bqskit Workflow implementing the two-stage permutation-aware mapping.
+    """
+    from bqskit.passes import (
+        SquanderSynthesisPass,
+        ForEachBlockPass,
+        EmbedAllPermutationsPass,
+        PAMRoutingPass,
+        PAMLayoutPass,
+        PAMVerificationSequence,
+        SubtopologySelectionPass,
+        ApplyPlacement,
+        UnfoldPass,
+        ExtractModelConnectivityPass,
+        RestoreModelConnectivityPass,
+        LogPass,
+    )
+    from bqskit.passes.control import IfThenElsePass
+    from bqskit.passes.control.predicates import NotPredicate, WidthPredicate
+    from bqskit.compiler import Workflow, BasePass
+
+    class SquanderILPPartitioner(BasePass):
+        """Partition a bqskit circuit using squander's ILP with PartAM density weights.
+
+        Mirrors the partition-selection logic of PartAM.SynthesizeWideCircuit:
+        get_all_partitions → ilp_global_optimal (with optional density weights)
+        → wrap each selected partition as a bqskit CircuitGate block.
+        """
+
+        def __init__(self, block_size, squander_config):
+            self.block_size = block_size
+            self.squander_config = squander_config
+
+        async def run(self, circuit, data):
+            from bqskit.ir import Circuit as BQCircuit
+            from bqskit.ir.lang.qasm2 import OPENQASM2Language
+            from qiskit import QuantumCircuit as QkCircuit, qasm2 as qasm2_module
+            from squander import Qiskit_IO
+            from squander.partitioning.ilp import (
+                get_all_partitions, _get_topo_order, ilp_global_optimal,
+            )
+            from squander.synthesis.PartAM import qgd_Partition_Aware_Mapping
+
+            # bqskit → squander via QASM; gate order is preserved
+            qasm_str = OPENQASM2Language().encode(circuit)
+            qk_circ = QkCircuit.from_qasm_str(qasm_str)
+            sqdr_circ, _ = Qiskit_IO.convert_Qiskit_to_Squander(qk_circ)
+
+            # Enumerate candidate partitions
+            allparts, g, go, rgo, sq_chains, gate_to_qubit, _ = \
+                get_all_partitions(sqdr_circ, self.block_size)
+            gate_dict = {i: gate for i, gate in enumerate(sqdr_circ.get_Gates())}
+
+            # ILP selection with optional density-penalty weights
+            ilp_weights = None
+            if self.squander_config.get('size_density_weight', False):
+                sparse_penalty = float(self.squander_config.get('sparse_penalty', 3.0))
+                ilp_weights = qgd_Partition_Aware_Mapping._parts_to_density_weights(
+                    allparts, gate_dict, sparse_penalty=sparse_penalty
+                )
+            L_parts, _ = ilp_global_optimal(allparts, g, weights=ilp_weights)
+
+            # bqskit_ops[i] corresponds to squander gate index i (QASM order preserved)
+            bqskit_ops = list(circuit.operations_with_cycles())
+
+            # Single-qubit chains that are surrounded by selected partitions
+            sqc_pre     = {x[0]: x for x in sq_chains if rgo[x[0]]}
+            sqc_post    = {x[-1]: x for x in sq_chains if go[x[-1]]}
+            sqc_prepost = {x[0]: x for x in sq_chains
+                           if x[0] in sqc_pre and x[-1] in sqc_post}
+
+            covered = set()
+            partitioned = BQCircuit(circuit.num_qudits, circuit.radixes)
+
+            for i in L_parts:
+                part = allparts[i]
+                surrounded = {
+                    t for s in part for t in go[s]
+                    if t in sqc_prepost
+                    and go[sqc_prepost[t][-1]]
+                    and next(iter(go[sqc_prepost[t][-1]])) in part
+                }
+                gate_idxs = frozenset.union(part, *(sqc_prepost[v] for v in surrounded))
+
+                global_qudits = sorted({
+                    q for gi in gate_idxs
+                    for q in gate_dict[gi].get_Involved_Qbits()
+                })
+                local_map = {gq: l for l, gq in enumerate(global_qudits)}
+
+                topo = _get_topo_order(
+                    {x: go[x] & gate_idxs for x in gate_idxs},
+                    {x: rgo[x] & gate_idxs for x in gate_idxs},
+                    gate_to_qubit,
+                )
+                sub = BQCircuit(len(global_qudits))
+                for gi in topo:
+                    _, op = bqskit_ops[gi]
+                    sub.append(op.gate, [local_map[q] for q in op.location])
+
+                partitioned.append_circuit(sub, global_qudits, as_circuit_gate=True)
+                covered.update(gate_idxs)
+
+            # Standalone single-qubit gates → 1-qudit blocks
+            for gi, (_, op) in enumerate(bqskit_ops):
+                if gi not in covered:
+                    sub_1q = BQCircuit(1)
+                    sub_1q.append(op.gate, [0])
+                    partitioned.append_circuit(sub_1q, list(op.location), as_circuit_gate=True)
+
+            circuit.become(partitioned, False)
+
+    squander    = SquanderSynthesisPass(squander_config)
+    partitioner = SquanderILPPartitioner(block_size, squander_config)
+    post_pam_seq: BasePass = PAMVerificationSequence(8)
+
+    return Workflow(
+        IfThenElsePass(
+            NotPredicate(WidthPredicate(2)),
+            [
+                LogPass("Caching permutation-aware synthesis results."),
+                ExtractModelConnectivityPass(),
+                partitioner,
+                ForEachBlockPass(
+                    EmbedAllPermutationsPass(
+                        inner_synthesis=squander,
+                        input_perm=True,
+                        output_perm=False,
+                        vary_topology=False,
+                    ),
+                ),
+                LogPass("Preoptimizing with permutation-aware mapping."),
+                PAMRoutingPass(),
+                post_pam_seq,
+                UnfoldPass(),
+                RestoreModelConnectivityPass(),
+                LogPass("Recaching permutation-aware synthesis results."),
+                SubtopologySelectionPass(block_size),
+                partitioner,
+                ForEachBlockPass(
+                    EmbedAllPermutationsPass(
+                        inner_synthesis=squander,
+                        input_perm=False,
+                        output_perm=True,
+                        vary_topology=True,
+                    ),
+                ),
+                LogPass("Performing permutation-aware mapping."),
+                ApplyPlacement(),
+                PAMLayoutPass(3),
+                PAMRoutingPass(0.1),
+                post_pam_seq,
+                ApplyPlacement(),
+                UnfoldPass(),
+            ],
+        ),
+        name="SeqPAM Mapping",
+    )
+
+
 class qgd_Wide_Circuit_Optimization:
     """Optimize wide (many-qubit) circuits via partitioning and subcircuit decomposition.
 
@@ -1313,6 +1490,7 @@ class qgd_Wide_Circuit_Optimization:
             "TreeGuided",
             "qiskit",
             "bqskit",
+            "seqpam_PartAM",
         ]
         if not strategy in allowed_startegies:
             raise Exception(
@@ -1985,6 +2163,53 @@ class qgd_Wide_Circuit_Optimization:
             newcirc, newparameters = Qiskit_IO.convert_Qiskit_to_Squander(
                 circuit_qiskit
             )
+
+            qgd_Wide_Circuit_Optimization.check_valid_routing(
+                newcirc, self.config["topology"]
+            )
+            if self.config["verbosity"] >= 2:
+                print("OptimizeWideCircuit::check_compare_circuits")
+            self.check_compare_circuits(circ, parameters, newcirc, newparameters)
+            circ, parameters = newcirc, newparameters
+
+        elif self.config["strategy"] == "seqpam_PartAM":
+            if self.config["verbosity"] >= 1:
+                print("Optimizing circuit with BQSKit SeqPAM + Squander (PartAM ILP weights)")
+            from squander import Qiskit_IO
+            from bqskit.compiler import Compiler
+            from bqskit.compiler.machine import MachineModel
+            from bqskit.ir.lang.qasm2 import OPENQASM2Language
+            from bqskit.passes import SetModelPass
+            from qiskit import qasm2, QuantumCircuit
+
+            strategy_map = {"TreeSearch": "Tree_search", "TabuSearch": "Tabu_search"}
+            squander_config = {
+                "strategy": strategy_map.get(self.config.get("strategy", "TreeSearch"), "Tree_search"),
+                "optimization_tolerance": self.config.get("tolerance", 1e-8),
+                "verbosity": self.config.get("verbosity", 0),
+                "optimizer_engine": self.config.get("optimizer_engine", "BFGS"),
+                "Cost_Function_Variant": self.config.get("Cost_Function_Variant", 3),
+                "size_density_weight": True,
+                "sparse_penalty": self.config.get("sparse_penalty", 3.0),
+                "max_partition_size": self.max_partition_size,
+            }
+            block_size = self.max_partition_size
+
+            model = MachineModel(circ.get_Qbit_Num(), self.config["topology"])
+            circo = Qiskit_IO.get_Qiskit_Circuit(circ, parameters)
+            bqskit_circ = OPENQASM2Language().decode(qasm2.dumps(circo))
+
+            workflow = generate_squander_seqpam(squander_config, block_size)
+
+            with Compiler() as compiler:
+                routed_bqskit_circ = compiler.compile(
+                    bqskit_circ, [SetModelPass(model), workflow]
+                )
+
+            circuit_qiskit = QuantumCircuit.from_qasm_str(
+                OPENQASM2Language().encode(routed_bqskit_circ)
+            )
+            newcirc, newparameters = Qiskit_IO.convert_Qiskit_to_Squander(circuit_qiskit)
 
             qgd_Wide_Circuit_Optimization.check_valid_routing(
                 newcirc, self.config["topology"]
