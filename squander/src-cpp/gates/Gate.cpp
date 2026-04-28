@@ -415,10 +415,8 @@ Gate::apply_to( Matrix_real& parameter_mtx, Matrix& input, int parallel ) {
         return;
     }
 
-    Matrix_real precomputed_sincos = precompute_sincos(parameter_mtx);
-    Matrix u3 = gate_kernel(precomputed_sincos);
-    Matrix u3_aux = inverse_gate_kernel(precomputed_sincos);
-    apply_kernel_to(u3, input, false, parallel, &u3_aux);
+    Matrix_real precomputed_sincos = compute_precomputed_sincos(parameter_mtx);
+    apply_to_inner(parameter_mtx, precomputed_sincos, input, parallel);
 }
 
 
@@ -436,7 +434,45 @@ Gate::apply_to( Matrix_real_float& parameter_mtx, Matrix_float& input, int paral
         return;
     }
 
-    Matrix_real_float precomputed_sincos = precompute_sincos(parameter_mtx);
+    Matrix_real_float precomputed_sincos = compute_precomputed_sincos(parameter_mtx);
+    apply_to_inner(parameter_mtx, precomputed_sincos, input, parallel);
+}
+
+
+void
+Gate::apply_to_inner( Matrix_real& parameter_mtx, const Matrix_real& precomputed_sincos, Matrix& input, int parallel ) {
+
+    // Adaptive gate keeps custom branching logic in its own apply_to overload.
+    if (type == ADAPTIVE_OPERATION) {
+        apply_to(parameter_mtx, input, parallel);
+        return;
+    }
+
+    if (parameter_num == 0) {
+        apply_to(input, parallel);
+        return;
+    }
+
+    Matrix u3 = gate_kernel(precomputed_sincos);
+    Matrix u3_aux = inverse_gate_kernel(precomputed_sincos);
+    apply_kernel_to(u3, input, false, parallel, &u3_aux);
+}
+
+
+void
+Gate::apply_to_inner( Matrix_real_float& parameter_mtx, const Matrix_real_float& precomputed_sincos, Matrix_float& input, int parallel ) {
+
+    // Adaptive gate keeps custom branching logic in its own apply_to overload.
+    if (type == ADAPTIVE_OPERATION) {
+        apply_to(parameter_mtx, input, parallel);
+        return;
+    }
+
+    if (parameter_num == 0) {
+        apply_to(input, parallel);
+        return;
+    }
+
     Matrix_float u3 = gate_kernel(precomputed_sincos);
     Matrix_float u3_aux = inverse_gate_kernel(precomputed_sincos);
     apply_kernel_to(u3, input, false, parallel, &u3_aux);
@@ -541,11 +577,19 @@ Gate::apply_derivate_to( Matrix_real_float& parameters_mtx_in, Matrix_float& inp
 std::vector<Matrix>
 Gate::apply_to_combined( Matrix_real& parameters_mtx_in, Matrix& input, int parallel ) {
 
+    Matrix_real precomputed_sincos = compute_precomputed_sincos(parameters_mtx_in);
+    return apply_to_combined_inner(parameters_mtx_in, precomputed_sincos, input, parallel);
+}
+
+
+std::vector<Matrix>
+Gate::apply_to_combined_inner( Matrix_real& parameters_mtx_in, const Matrix_real& precomputed_sincos, Matrix& input, int parallel ) {
+
     std::vector<Matrix> ret;
     ret.reserve(get_parameter_num() + 1);
 
     Matrix applied = input.copy();
-    apply_to(parameters_mtx_in, applied, parallel);
+    apply_to_inner(parameters_mtx_in, precomputed_sincos, applied, parallel);
     ret.push_back(std::move(applied));
 
     std::vector<Matrix> derivs = apply_derivate_to(parameters_mtx_in, input, parallel);
@@ -560,11 +604,19 @@ Gate::apply_to_combined( Matrix_real& parameters_mtx_in, Matrix& input, int para
 std::vector<Matrix_float>
 Gate::apply_to_combined( Matrix_real_float& parameters_mtx_in, Matrix_float& input, int parallel ) {
 
+    Matrix_real_float precomputed_sincos = compute_precomputed_sincos(parameters_mtx_in);
+    return apply_to_combined_inner(parameters_mtx_in, precomputed_sincos, input, parallel);
+}
+
+
+std::vector<Matrix_float>
+Gate::apply_to_combined_inner( Matrix_real_float& parameters_mtx_in, const Matrix_real_float& precomputed_sincos, Matrix_float& input, int parallel ) {
+
     std::vector<Matrix_float> ret;
     ret.reserve(get_parameter_num() + 1);
 
     Matrix_float applied = input.copy();
-    apply_to(parameters_mtx_in, applied, parallel);
+    apply_to_inner(parameters_mtx_in, precomputed_sincos, applied, parallel);
     ret.push_back(std::move(applied));
 
     std::vector<Matrix_float> derivs = apply_derivate_to(parameters_mtx_in, input, parallel);
@@ -620,10 +672,8 @@ Gate::apply_from_right( Matrix_real& parameter_mtx, Matrix& input ) {
         throw err;
     }
 
-    Matrix_real precomputed_sincos = precompute_sincos(parameter_mtx);
-    Matrix kernel = gate_kernel(precomputed_sincos);
-    Matrix inv_kernel = inverse_gate_kernel(precomputed_sincos);
-    apply_kernel_from_right(kernel, input, &inv_kernel);
+    Matrix_real precomputed_sincos = compute_precomputed_sincos(parameter_mtx);
+    apply_from_right_inner(parameter_mtx, precomputed_sincos, input);
 
 }
 
@@ -636,10 +686,52 @@ Gate::apply_from_right( Matrix_real_float& parameter_mtx, Matrix_float& input ) 
         throw err;
     }
 
-    Matrix_real_float precomputed_sincos = precompute_sincos(parameter_mtx);
+    Matrix_real_float precomputed_sincos = compute_precomputed_sincos(parameter_mtx);
+    apply_from_right_inner(parameter_mtx, precomputed_sincos, input);
+}
+
+
+void
+Gate::apply_from_right_inner( Matrix_real& parameter_mtx, const Matrix_real& precomputed_sincos, Matrix& input ) {
+
+    // Adaptive gate keeps custom branching logic in its own apply_from_right overload.
+    if (type == ADAPTIVE_OPERATION) {
+        apply_from_right(parameter_mtx, input);
+        return;
+    }
+
+    Matrix kernel = gate_kernel(precomputed_sincos);
+    Matrix inv_kernel = inverse_gate_kernel(precomputed_sincos);
+    apply_kernel_from_right(kernel, input, &inv_kernel);
+}
+
+
+void
+Gate::apply_from_right_inner( Matrix_real_float& parameter_mtx, const Matrix_real_float& precomputed_sincos, Matrix_float& input ) {
+
+    // Adaptive gate keeps custom branching logic in its own apply_from_right overload.
+    if (type == ADAPTIVE_OPERATION) {
+        apply_from_right(parameter_mtx, input);
+        return;
+    }
+
     Matrix_float kernel = gate_kernel(precomputed_sincos);
     Matrix_float inv_kernel = inverse_gate_kernel(precomputed_sincos);
     apply_kernel_from_right(kernel, input, &inv_kernel);
+}
+
+
+Matrix_real
+Gate::compute_precomputed_sincos(const Matrix_real& parameters) const {
+
+    return precompute_sincos(parameters);
+}
+
+
+Matrix_real_float
+Gate::compute_precomputed_sincos(const Matrix_real_float& parameters) const {
+
+    return precompute_sincos(parameters);
 }
 
 

@@ -241,6 +241,18 @@ virtual void apply_to( Matrix_real& parameter_mtx, Matrix& input, int parallel )
 virtual void apply_to( Matrix_real_float& parameter_mtx, Matrix_float& input, int parallel );
 
 /**
+@brief Internal apply entry that consumes already precomputed sin/cos values.
+    parameter_mtx is preserved for gates with custom parameter handling.
+*/
+virtual void apply_to_inner( Matrix_real& parameter_mtx, const Matrix_real& precomputed_sincos, Matrix& input, int parallel );
+
+/**
+@brief Float32 internal apply entry that consumes already precomputed sin/cos values.
+    parameter_mtx is preserved for gates with custom parameter handling.
+*/
+virtual void apply_to_inner( Matrix_real_float& parameter_mtx, const Matrix_real_float& precomputed_sincos, Matrix_float& input, int parallel );
+
+/**
 @brief Precision-agnostic dispatch helper for matrix/state application.
 @param input Precision-tagged matrix carrier
 @param parallel Parallel mode selector
@@ -290,6 +302,16 @@ virtual std::vector<Matrix> apply_to_combined( Matrix_real& parameters_mtx_in, M
 */
 virtual std::vector<Matrix_float> apply_to_combined( Matrix_real_float& parameters_mtx_in, Matrix_float& input, int parallel );
 
+/**
+@brief Internal combined forward+derivative entry with precomputed sin/cos.
+*/
+virtual std::vector<Matrix> apply_to_combined_inner( Matrix_real& parameters_mtx_in, const Matrix_real& precomputed_sincos, Matrix& input, int parallel );
+
+/**
+@brief Float32 internal combined forward+derivative entry with precomputed sin/cos.
+*/
+virtual std::vector<Matrix_float> apply_to_combined_inner( Matrix_real_float& parameters_mtx_in, const Matrix_real_float& precomputed_sincos, Matrix_float& input, int parallel );
+
 
 /**
 @brief Call to apply the gate on the input array/matrix by input*Gate
@@ -316,6 +338,26 @@ virtual void apply_from_right( Matrix_real& parameter_mtx, Matrix& input );
 @param input The float32 input array on which the gate is applied
 */
 virtual void apply_from_right( Matrix_real_float& parameter_mtx, Matrix_float& input );
+
+/**
+@brief Internal right-apply entry that consumes already precomputed sin/cos values.
+*/
+virtual void apply_from_right_inner( Matrix_real& parameter_mtx, const Matrix_real& precomputed_sincos, Matrix& input );
+
+/**
+@brief Float32 internal right-apply entry that consumes already precomputed sin/cos values.
+*/
+virtual void apply_from_right_inner( Matrix_real_float& parameter_mtx, const Matrix_real_float& precomputed_sincos, Matrix_float& input );
+
+/**
+@brief Public wrapper to precompute gate-local sin/cos pairs.
+*/
+Matrix_real compute_precomputed_sincos(const Matrix_real& parameters) const;
+
+/**
+@brief Float32 public wrapper to precompute gate-local sin/cos pairs.
+*/
+Matrix_real_float compute_precomputed_sincos(const Matrix_real_float& parameters) const;
 
 /**
 @brief Call to set the stored matrix in the operation.

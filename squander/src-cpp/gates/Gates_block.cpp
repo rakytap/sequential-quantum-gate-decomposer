@@ -269,6 +269,14 @@ Gates_block::apply_to_list( Matrix_real_float& parameters_mtx, std::vector<Matri
 void 
 Gates_block::apply_to( Matrix_real& parameters_mtx_in, Matrix& input, int parallel ) {
 
+    Matrix_real precomputed_sincos = compute_precomputed_sincos(parameters_mtx_in);
+    apply_to_inner(parameters_mtx_in, precomputed_sincos, input, parallel);
+}
+
+
+void
+Gates_block::apply_to_inner( Matrix_real& parameters_mtx_in, const Matrix_real& precomputed_sincos_in, Matrix& input, int parallel ) {
+
 
 
     std::vector<int> involved_qubits = get_involved_qubits();
@@ -285,7 +293,7 @@ Gates_block::apply_to( Matrix_real& parameters_mtx_in, Matrix& input, int parall
 
     int size = static_cast<int>(involved_qubits.size());
 
-    if (min_fusion != -1 && qbit_num >= min_fusion && size <= (input.cols == 1 ? 5 : 2) && qbit_num != size && gates.size() > 1) {        
+    if (min_fusion != -1 && qbit_num >= min_fusion && size <= (input.cols == 1 ? 5 : 2) && qbit_num != size && gates.size() > 1) {
         auto fb = fusion_block.get();
         Matrix Umtx_mini = create_identity(Power_of_2(size));
         if (fb == nullptr) {
@@ -301,38 +309,37 @@ Gates_block::apply_to( Matrix_real& parameters_mtx_in, Matrix& input, int parall
             fusion_block.update(clone_block);
             fb = fusion_block.get();
         }
-        fb->apply_to(parameters_mtx_in, Umtx_mini, parallel);
+        fb->apply_to_inner(parameters_mtx_in, precomputed_sincos_in, Umtx_mini, parallel);
 
-        if (size == 1) {
-            Gate merged_gate(qbit_num);
-            merged_gate.set_target_qbit(involved_qubits[0]);
-            merged_gate.set_matrix(Umtx_mini);
-            merged_gate.apply_to(input, parallel);
+        Gate merged_gate(qbit_num);
+        merged_gate.set_target_qbits(involved_qubits);
+        merged_gate.set_matrix(Umtx_mini);
+
+        // Keep legacy high-qubit fused execution behavior, but route through Gate::apply_to.
+        int fused_parallel = parallel;
+        if (parallel != 0 && size <= 5 && qbit_num >= 14) {
+            fused_parallel = 2;
         }
-        else
-        {
-#ifdef USE_AVX
-            if (size <= 5 && qbit_num >= 14){
-                apply_large_kernel_to_input_AVX_TBB(Umtx_mini, input, involved_qubits, input.size() );
-            }
-            else{
-                apply_large_kernel_to_input_AVX(Umtx_mini, input, involved_qubits, input.size() );
-            }
-#else
-            apply_large_kernel_to_input(Umtx_mini, input, involved_qubits, input.size() );
-#endif  
-        }
+        merged_gate.apply_to(input, fused_parallel);
     } else {
         for( size_t idx=0; idx<gates.size(); idx++) {
             Gate* operation = gates[idx];
+            const int op_param_num = operation->get_parameter_num();
+            const int op_param_start_idx = operation->get_parameter_start_idx();
             
-            Matrix_real parameters_mtx_loc(parameters_mtx_in.get_data() + operation->get_parameter_start_idx(), 1, operation->get_parameter_num());
+            Matrix_real parameters_mtx_loc(parameters_mtx_in.get_data() + op_param_start_idx, 1, op_param_num);
+            Matrix_real precomputed_sincos_loc(precomputed_sincos_in.get_data() + 2 * op_param_start_idx, op_param_num, 2);
             
             if  ( parameters_mtx_loc.size() == 0 && operation->get_type() != BLOCK_OPERATION ) {
                 operation->apply_to(input, parallel);            
             }
             else {
-                operation->apply_to( parameters_mtx_loc, input, parallel );
+                if (operation->get_type() == ADAPTIVE_OPERATION) {
+                    operation->apply_to(parameters_mtx_loc, input, parallel);
+                }
+                else {
+                    operation->apply_to_inner(parameters_mtx_loc, precomputed_sincos_loc, input, parallel);
+                }
             }
 #ifdef DEBUG
             if (input.isnan()) {
@@ -356,9 +363,94 @@ Gates_block::apply_to( Matrix_float& input, int parallel ) {
 void
 Gates_block::apply_to( Matrix_real_float& parameters_mtx_in, Matrix_float& input, int parallel ) {
 
-    Matrix_real_any params_any(parameters_mtx_in);
-    Matrix_any input_any(input);
-    apply_to(params_any, input_any, parallel);
+    Matrix_real_float precomputed_sincos = compute_precomputed_sincos(parameters_mtx_in);
+    apply_to_inner(parameters_mtx_in, precomputed_sincos, input, parallel);
+}
+
+
+void
+Gates_block::apply_to_inner( Matrix_real_float& parameters_mtx_in, const Matrix_real_float& precomputed_sincos_in, Matrix_float& input, int parallel ) {
+
+    std::vector<int> involved_qubits = get_involved_qubits();
+
+    if (input.rows != matrix_size ) {
+        std::string err("Gates_block::apply_to(Matrix_real_float&, Matrix_float&): Wrong input size in Gates_block gate apply.");
+        throw err;
+    }
+
+    if (qbit_num > 31) {
+        std::string err("Gates_block::apply_to(Matrix_real_float&, Matrix_float&): Number of qubits supported up to 31");
+        throw err;
+    }
+
+    int size = static_cast<int>(involved_qubits.size());
+
+    if (min_fusion != -1 && qbit_num >= min_fusion && size <= (input.cols == 1 ? 5 : 2) && qbit_num != size && gates.size() > 1) {
+        auto fb = fusion_block.get();
+        Matrix_float Umtx_mini = create_identity_float(Power_of_2(size));
+        if (fb == nullptr) {
+
+            std::vector<int> old_to_new(qbit_num, -2);
+            for (int i = 0; i < size; i++) {
+                old_to_new[i] = involved_qubits[i];
+            }
+
+            Gates_block* clone_block = clone();
+            clone_block->reorder_qubits(old_to_new);
+            clone_block->set_qbit_num(size);
+            fusion_block.update(clone_block);
+            fb = fusion_block.get();
+        }
+        fb->apply_to_inner(parameters_mtx_in, precomputed_sincos_in, Umtx_mini, parallel);
+
+        Gate merged_gate(qbit_num);
+        merged_gate.set_target_qbits(involved_qubits);
+        merged_gate.set_matrix(Umtx_mini.to_float64());
+
+        // Keep legacy high-qubit fused execution behavior, but route through Gate::apply_to.
+        int fused_parallel = parallel;
+        if (parallel != 0 && size <= 5 && qbit_num >= 14) {
+            fused_parallel = 2;
+        }
+        merged_gate.apply_to(input, fused_parallel);
+    }
+    else {
+        for (size_t idx = 0; idx < gates.size(); idx++) {
+            Gate* operation = gates[idx];
+            const int op_param_num = operation->get_parameter_num();
+            const int op_param_start_idx = operation->get_parameter_start_idx();
+
+            Matrix_real_float parameters_mtx_loc(
+                parameters_mtx_in.get_data() + op_param_start_idx,
+                1,
+                op_param_num
+            );
+
+            Matrix_real_float precomputed_sincos_loc(
+                precomputed_sincos_in.get_data() + 2 * op_param_start_idx,
+                op_param_num,
+                2
+            );
+
+            if (parameters_mtx_loc.size() == 0 && operation->get_type() != BLOCK_OPERATION) {
+                operation->apply_to(input, parallel);
+            }
+            else {
+                if (operation->get_type() == ADAPTIVE_OPERATION) {
+                    operation->apply_to(parameters_mtx_loc, input, parallel);
+                }
+                else {
+                    operation->apply_to_inner(parameters_mtx_loc, precomputed_sincos_loc, input, parallel);
+                }
+            }
+#ifdef DEBUG
+            if (input.isnan()) {
+                std::string err("Gates_block::apply_to(Matrix_real_float&, Matrix_float&): transformed matrix contains NaN.");
+                throw(err);
+            }
+#endif
+        }
+    }
 }
 
 
@@ -371,49 +463,7 @@ Gates_block::apply_to( Matrix_real_any& parameters_mtx_in, Matrix_any& input, in
     }
 
     if (parameters_mtx_in.is_float32() && input.is_float32()) {
-
-        Matrix_float& input32 = input.as_float32();
-        Matrix_real_float& params32 = parameters_mtx_in.as_float32();
-
-        std::vector<int> involved_qubits = get_involved_qubits();
-
-        if (input32.rows != matrix_size ) {
-            std::string err("Gates_block::apply_to(Matrix_real_any&, Matrix_any&): Wrong input size in Gates_block apply.");
-            throw err;
-        }
-
-        if (qbit_num > 31) {
-            std::string err("Gates_block::apply_to(Matrix_real_any&, Matrix_any&): Number of qubits supported up to 31");
-            throw err;
-        }
-
-        int size = static_cast<int>(involved_qubits.size());
-        (void)size;
-
-        for (size_t idx = 0; idx < gates.size(); idx++) {
-            Gate* operation = gates[idx];
-
-            Matrix_real_float parameters_mtx_loc(
-                params32.get_data() + operation->get_parameter_start_idx(),
-                1,
-                operation->get_parameter_num()
-            );
-
-            if (parameters_mtx_loc.size() == 0 && operation->get_type() != BLOCK_OPERATION) {
-                operation->apply_to(input32, parallel);
-            }
-            else {
-                operation->apply_to(parameters_mtx_loc, input32, parallel);
-            }
-
-#ifdef DEBUG
-            if (input32.isnan()) {
-                std::string err("Gates_block::apply_to(Matrix_real_any&, Matrix_any&): transformed matrix contains NaN.");
-                throw(err);
-            }
-#endif
-        }
-
+        apply_to(parameters_mtx_in.as_float32(), input.as_float32(), parallel);
         return;
     }
 
@@ -454,6 +504,14 @@ bool is_qbit_present(std::vector<int> involved_qubits, int new_qbit, int num_of_
 void 
 Gates_block::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
 
+    Matrix_real precomputed_sincos = compute_precomputed_sincos(parameters_mtx);
+    apply_from_right_inner(parameters_mtx, precomputed_sincos, input);
+}
+
+
+void
+Gates_block::apply_from_right_inner( Matrix_real& parameters_mtx, const Matrix_real& precomputed_sincos, Matrix& input ) {
+
     // determine the number of parameters
     int parameters_num_total = 0;  
     for (size_t idx=0; idx<gates.size(); idx++) {
@@ -472,16 +530,25 @@ Gates_block::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
     for( int idx=0; idx<(int)gates.size(); idx++) {
 
         Gate* operation = gates[idx];
-        Matrix_real parameters_mtx_loc(parameters-operation->get_parameter_num(), 1, operation->get_parameter_num());
+        const int op_param_num = operation->get_parameter_num();
+        const int param_offset = static_cast<int>((parameters - op_param_num) - parameters_mtx.get_data());
+
+        Matrix_real parameters_mtx_loc(parameters - op_param_num, 1, op_param_num);
+        Matrix_real precomputed_sincos_loc(precomputed_sincos.get_data() + 2 * param_offset, op_param_num, 2);
 
         if (parameters_mtx_loc.size() == 0 && operation->get_type() != BLOCK_OPERATION) {
             operation->apply_from_right(input);
         }
         else {
-            operation->apply_from_right(parameters_mtx_loc, input);
+            if (operation->get_type() == ADAPTIVE_OPERATION) {
+                operation->apply_from_right(parameters_mtx_loc, input);
+            }
+            else {
+                operation->apply_from_right_inner(parameters_mtx_loc, precomputed_sincos_loc, input);
+            }
         }
 
-        parameters = parameters - operation->get_parameter_num();
+        parameters = parameters - op_param_num;
 
 #ifdef DEBUG
         if (input.isnan()) { 
@@ -500,6 +567,14 @@ Gates_block::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
 void
 Gates_block::apply_from_right( Matrix_real_float& parameters_mtx, Matrix_float& input ) {
 
+    Matrix_real_float precomputed_sincos = compute_precomputed_sincos(parameters_mtx);
+    apply_from_right_inner(parameters_mtx, precomputed_sincos, input);
+}
+
+
+void
+Gates_block::apply_from_right_inner( Matrix_real_float& parameters_mtx, const Matrix_real_float& precomputed_sincos, Matrix_float& input ) {
+
     int parameters_num_total = 0;
     for (size_t idx = 0; idx < gates.size(); idx++) {
         Gate* gate = gates[idx];
@@ -511,20 +586,34 @@ Gates_block::apply_from_right( Matrix_real_float& parameters_mtx, Matrix_float& 
     for (int idx = 0; idx < (int)gates.size(); idx++) {
 
         Gate* operation = gates[idx];
+        const int op_param_num = operation->get_parameter_num();
+        const int param_offset = static_cast<int>((parameters - op_param_num) - parameters_mtx.get_data());
+
         Matrix_real_float parameters_mtx_loc(
-            parameters - operation->get_parameter_num(),
+            parameters - op_param_num,
             1,
-            operation->get_parameter_num()
+            op_param_num
+        );
+
+        Matrix_real_float precomputed_sincos_loc(
+            precomputed_sincos.get_data() + 2 * param_offset,
+            op_param_num,
+            2
         );
 
         if (parameters_mtx_loc.size() == 0 && operation->get_type() != BLOCK_OPERATION) {
             operation->apply_from_right(input);
         }
         else {
-            operation->apply_from_right(parameters_mtx_loc, input);
+            if (operation->get_type() == ADAPTIVE_OPERATION) {
+                operation->apply_from_right(parameters_mtx_loc, input);
+            }
+            else {
+                operation->apply_from_right_inner(parameters_mtx_loc, precomputed_sincos_loc, input);
+            }
         }
 
-        parameters = parameters - operation->get_parameter_num();
+        parameters = parameters - op_param_num;
 
 #ifdef DEBUG
         if (input.isnan()) {
@@ -684,11 +773,19 @@ Gates_block::apply_derivate_to( Matrix_real_float& parameters_mtx_in, Matrix_flo
 std::vector<Matrix>
 Gates_block::apply_to_combined( Matrix_real& parameters_mtx_in, Matrix& input, int parallel ) {
 
+    Matrix_real precomputed_sincos = compute_precomputed_sincos(parameters_mtx_in);
+    return apply_to_combined_inner(parameters_mtx_in, precomputed_sincos, input, parallel);
+}
+
+
+std::vector<Matrix>
+Gates_block::apply_to_combined_inner( Matrix_real& parameters_mtx_in, const Matrix_real& precomputed_sincos, Matrix& input, int parallel ) {
+
     std::vector<Matrix> ret;
     ret.reserve(parameter_num + 1);
 
     Matrix applied = input.copy();
-    apply_to(parameters_mtx_in, applied, parallel);
+    apply_to_inner(parameters_mtx_in, precomputed_sincos, applied, parallel);
     ret.push_back(std::move(applied));
 
     std::vector<Matrix> derivs = apply_derivate_to(parameters_mtx_in, input, parallel);
@@ -703,11 +800,19 @@ Gates_block::apply_to_combined( Matrix_real& parameters_mtx_in, Matrix& input, i
 std::vector<Matrix_float>
 Gates_block::apply_to_combined( Matrix_real_float& parameters_mtx_in, Matrix_float& input, int parallel ) {
 
+    Matrix_real_float precomputed_sincos = compute_precomputed_sincos(parameters_mtx_in);
+    return apply_to_combined_inner(parameters_mtx_in, precomputed_sincos, input, parallel);
+}
+
+
+std::vector<Matrix_float>
+Gates_block::apply_to_combined_inner( Matrix_real_float& parameters_mtx_in, const Matrix_real_float& precomputed_sincos, Matrix_float& input, int parallel ) {
+
     std::vector<Matrix_float> ret;
     ret.reserve(parameter_num + 1);
 
     Matrix_float applied = input.copy();
-    apply_to(parameters_mtx_in, applied, parallel);
+    apply_to_inner(parameters_mtx_in, precomputed_sincos, applied, parallel);
     ret.push_back(std::move(applied));
 
     std::vector<Matrix_float> derivs = apply_derivate_to(parameters_mtx_in, input, parallel);

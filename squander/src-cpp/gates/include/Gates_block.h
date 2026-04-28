@@ -121,9 +121,13 @@ void apply_to_list( Matrix_real_float& parameters, std::vector<Matrix_float>& in
 */
 virtual void apply_to( Matrix_real& parameters_mtx, Matrix& input, int parallel=0 ) override;
 
+virtual void apply_to_inner( Matrix_real& parameters_mtx, const Matrix_real& precomputed_sincos, Matrix& input, int parallel=0 ) override;
+
 virtual void apply_to( Matrix_float& input, int parallel=0 ) override;
 
 virtual void apply_to( Matrix_real_float& parameters_mtx, Matrix_float& input, int parallel=0 ) override;
+
+virtual void apply_to_inner( Matrix_real_float& parameters_mtx, const Matrix_real_float& precomputed_sincos, Matrix_float& input, int parallel=0 ) override;
 
 /**
 @brief Precision-agnostic apply entry point for float32/float64 execution.
@@ -142,7 +146,11 @@ virtual void apply_to( Matrix_real_any& parameters_mtx, Matrix_any& input, int p
 */
 virtual void apply_from_right( Matrix_real& parameters_mtx, Matrix& input );
 
+virtual void apply_from_right_inner( Matrix_real& parameters_mtx, const Matrix_real& precomputed_sincos, Matrix& input ) override;
+
 virtual void apply_from_right( Matrix_real_float& parameters_mtx, Matrix_float& input ) override;
+
+virtual void apply_from_right_inner( Matrix_real_float& parameters_mtx, const Matrix_real_float& precomputed_sincos, Matrix_float& input ) override;
 
 
 /**
@@ -157,7 +165,11 @@ virtual std::vector<Matrix_float> apply_derivate_to( Matrix_real_float& paramete
 
 virtual std::vector<Matrix> apply_to_combined( Matrix_real& parameters_mtx, Matrix& input, int parallel ) override;
 
+virtual std::vector<Matrix> apply_to_combined_inner( Matrix_real& parameters_mtx, const Matrix_real& precomputed_sincos, Matrix& input, int parallel ) override;
+
 virtual std::vector<Matrix_float> apply_to_combined( Matrix_real_float& parameters_mtx, Matrix_float& input, int parallel ) override;
+
+virtual std::vector<Matrix_float> apply_to_combined_inner( Matrix_real_float& parameters_mtx, const Matrix_real_float& precomputed_sincos, Matrix_float& input, int parallel ) override;
 
 /**
 @brief Append a U1 gate to the list of gates
