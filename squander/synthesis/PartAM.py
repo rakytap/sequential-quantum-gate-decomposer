@@ -1785,44 +1785,57 @@ class qgd_Partition_Aware_Mapping:
         layout_partitions=None,
         canonical_data=None,
     ):
-        del candidate_cache, reverse, cnot_cost, layout_partitions
+        del cnot_cost, layout_partitions
 
-        # BQSKit-style cost: sum max(0, dist - 1) over each canonical gate edge,
-        # for both F and E. No candidate-permutation enumeration so the future
-        # signal stays monotone in distance.
+        # Candidate-aware lower bound: for each future partition, use the best
+        # available candidate entry cost under this layout.  This preserves the
+        # monotone distance signal while allowing 3q line blocks to distinguish
+        # which logical qubit should sit on the path center.
         pi_arr = np.asarray(pi, dtype=np.intp)
         D_arr = np.asarray(D)
+
+        def partition_cost(p_idx):
+            if candidate_cache is not None and 0 <= p_idx < len(candidate_cache):
+                candidates = candidate_cache[p_idx]
+                if candidates and len(candidates[0].involved_qbits) >= 3:
+                    return min(
+                        cand.estimate_swap_count(pi, D, reverse=reverse)
+                        for cand in candidates
+                    )
+            if canonical_data is None:
+                return None
+            entry = canonical_data.get(p_idx)
+            if entry is None:
+                return None
+            return qgd_Partition_Aware_Mapping._entry_future_cost(
+                entry, pi_arr, D_arr
+            )
 
         f_sum = 0.0
         n_other = 0
         for p_idx in F:
             if p_idx == exclude_partition_idx:
                 continue
-            if canonical_data is None:
+            cost = partition_cost(p_idx)
+            if cost is None:
                 continue
-            entry = canonical_data.get(p_idx)
-            if entry is None:
-                continue
-            f_sum += qgd_Partition_Aware_Mapping._entry_future_cost(
-                entry, pi_arr, D_arr
-            )
+            f_sum += cost
             n_other += 1
         score = f_sum / n_other if n_other > 0 else 0.0
 
         if E:
             e_sum = 0.0
+            e_count = 0
             for p_idx, depth in E:
                 if p_idx == exclude_partition_idx:
                     continue
-                if canonical_data is None:
+                cost = partition_cost(p_idx)
+                if cost is None:
                     continue
-                entry = canonical_data.get(p_idx)
-                if entry is None:
-                    continue
-                e_sum += (alpha ** depth) * qgd_Partition_Aware_Mapping._entry_future_cost(
-                    entry, pi_arr, D_arr
-                )
-            score += W * e_sum / len(E)
+                e_sum += (alpha ** depth) * cost
+                e_count += 1
+            if e_count:
+                score += W * e_sum / e_count
         return score
 
     def _release_valve(self, F, pi, D, canonical_data):

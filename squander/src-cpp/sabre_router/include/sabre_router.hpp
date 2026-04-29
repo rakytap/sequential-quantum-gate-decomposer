@@ -310,6 +310,13 @@ private:
         double decay_factor = 1.0
     ) const;
 
+    double future_partition_cost(
+        int partition_idx,
+        const std::vector<int>& pi,
+        bool reverse,
+        const std::unordered_map<int, CanonicalEntry>& canonical_data
+    ) const;
+
     void apply_decay_for_swaps(
         const std::vector<std::pair<int,int>>& swaps,
         std::vector<double>& decay

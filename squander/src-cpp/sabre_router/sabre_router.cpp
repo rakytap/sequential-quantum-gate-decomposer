@@ -1072,6 +1072,35 @@ double SabreRouter::entry_future_cost(
     return total;
 }
 
+double SabreRouter::future_partition_cost(
+    int partition_idx,
+    const std::vector<int>& pi,
+    bool reverse,
+    const std::unordered_map<int, CanonicalEntry>& canonical_data
+) const {
+    if (
+        partition_idx >= 0
+        && partition_idx < static_cast<int>(candidate_cache_.size())
+        && !candidate_cache_[partition_idx].empty()
+        && candidate_cache_[partition_idx].front().involved_qbits.size() >= 3
+    ) {
+        double best = std::numeric_limits<double>::infinity();
+        for (const auto& cand : candidate_cache_[partition_idx]) {
+            best = std::min(
+                best,
+                static_cast<double>(estimate_swap_count(cand, pi, reverse))
+            );
+        }
+        return best;
+    }
+
+    auto it = canonical_data.find(partition_idx);
+    if (it == canonical_data.end()) {
+        return std::numeric_limits<double>::infinity();
+    }
+    return entry_future_cost(it->second, pi);
+}
+
 double SabreRouter::future_context_cost(
     int exclude_partition_idx,
     const std::vector<int>& pi,
@@ -1080,19 +1109,17 @@ double SabreRouter::future_context_cost(
     bool reverse,
     const std::unordered_map<int, CanonicalEntry>& canonical_data
 ) const {
-    (void)reverse;
-
-    // BQSKit-style cost: sum max(0, dist - 1) over each canonical gate edge,
-    // with no candidate-permutation enumeration. Same shape for F and E so
-    // the future signal is monotone in distance instead of flickering with
-    // whichever candidate happens to win the lower bound.
+    // Candidate-aware lower bound: for each future partition, use the best
+    // available candidate entry cost under this layout. This lets 3q line
+    // blocks distinguish which logical qubit should sit on the path center.
     double f_sum = 0.0;
     int n_other = 0;
     for (int p_idx : F_snapshot) {
         if (p_idx == exclude_partition_idx) continue;
-        auto it = canonical_data.find(p_idx);
-        if (it == canonical_data.end()) continue;
-        f_sum += entry_future_cost(it->second, pi);
+        const double cost = future_partition_cost(
+            p_idx, pi, reverse, canonical_data);
+        if (!std::isfinite(cost)) continue;
+        f_sum += cost;
         n_other++;
     }
 
@@ -1102,17 +1129,22 @@ double SabreRouter::future_context_cost(
 
     if (!E.empty()) {
         double e_sum = 0.0;
+        int e_count = 0;
         for (auto [p_idx, depth] : E) {
             if (p_idx == exclude_partition_idx) continue;
-            auto it = canonical_data.find(p_idx);
-            if (it == canonical_data.end()) continue;
+            const double cost = future_partition_cost(
+                p_idx, pi, reverse, canonical_data);
+            if (!std::isfinite(cost)) continue;
             const double alpha =
                 (depth >= 0 && depth < static_cast<int>(alpha_weights_.size()))
                     ? alpha_weights_[depth]
                     : std::pow(config_.E_alpha, depth);
-            e_sum += alpha * entry_future_cost(it->second, pi);
+            e_sum += alpha * cost;
+            e_count++;
         }
-        score += config_.E_weight * e_sum / static_cast<double>(E.size());
+        if (e_count > 0) {
+            score += config_.E_weight * e_sum / static_cast<double>(e_count);
+        }
     }
 
     return score;
