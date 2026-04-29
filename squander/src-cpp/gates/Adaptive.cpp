@@ -239,8 +239,6 @@ Adaptive::apply_derivate_to( Matrix_real& parameters, Matrix& input, int paralle
         exit(-1);
     }
 
-    double Phi = parameters[0];
-
     Matrix_real Phi_transformed = transform_adaptive_parameter(parameters, limit);
 //    Phi_transformed[0] = Phi;
 //    Phi_transformed[0] = 0.5*(1.0-std::cos(Phi))*M_PI;
@@ -267,8 +265,6 @@ Adaptive::apply_derivate_to( Matrix_real_float& parameters, Matrix_float& input,
         print(sstream, 0);	     
         exit(-1);
     }
-
-    float Phi = parameters[0];
 
     Matrix_real_float Phi_transformed = transform_adaptive_parameter(parameters, limit);
 //    Phi_transformed[0] = Phi;
