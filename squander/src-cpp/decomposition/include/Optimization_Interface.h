@@ -23,6 +23,8 @@ limitations under the License.
 #ifndef Optimization_Interface_H
 #define Optimization_Interface_H
 
+#include <atomic>
+
 #include "Decomposition_Base.h"
 #include "BFGS_Powell.h"
 #include "Bayes_Opt.h"
@@ -94,7 +96,7 @@ protected:
     
 
     /// number of iterations
-    int number_of_iters;
+    std::atomic<int> number_of_iters;
 
     /// logical variable indicating whether adaptive learning reate is used in the ADAM algorithm
     bool adaptive_eta;
@@ -125,6 +127,12 @@ public:
 */
 Optimization_Interface();
 
+/**
+@brief Copy constructor of the class.
+@param other Source instance.
+*/
+Optimization_Interface( const Optimization_Interface& other );
+
 
 
 /**
@@ -144,6 +152,13 @@ Optimization_Interface( Matrix Umtx_in, int qbit_num_in, bool optimize_layer_num
 @brief Destructor of the class
 */
 virtual ~Optimization_Interface();
+
+/**
+@brief Copy assignment operator.
+@param other Source instance.
+@return Reference to this instance.
+*/
+Optimization_Interface& operator=( const Optimization_Interface& other );
 
 /**
 @brief Calculate the error of the decomposition according to the spectral norm of \f$ U-U_{approx} \f$, where \f$ U_{approx} \f$ is the unitary produced by the decomposing quantum cirquit. The calculated error is stored in the attribute decomposition_error.
@@ -311,6 +326,14 @@ double optimization_problem( double* parameters);
 @return Returns with the cost function.
 */
 virtual double optimization_problem( Matrix_real& parameters);
+
+/**
+@brief Calculate the current cost function value from an already transformed matrix.
+@param matrix_new The transformed matrix/state produced by applying the circuit.
+@param ret_temp Optional temporary storage for trace-based cost variants.
+@return Returns with the cost function.
+*/
+double calculate_cost_function( Matrix& matrix_new, Matrix* ret_temp=NULL );
 
 
 
@@ -523,6 +546,12 @@ void set_trace_offset(int trace_offset_in);
 @brief Get the number of processed iterations during the optimization process
 */
 int get_num_iters();
+
+/**
+@brief Atomically increment the tracked number of optimization iterations.
+@param delta The number of iterations to add.
+*/
+void increment_num_iters( int delta=1 );
 
 /**
 @brief Call to set custom layers to the gate structure that are intended to be used in the subdecomposition.

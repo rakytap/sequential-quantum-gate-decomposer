@@ -536,7 +536,7 @@ void N_Qubit_Decomposition_adaptive::finalize_circuit() {
         cDecomp_custom.set_max_inner_iterations( max_inner_iterations_loc );  
     }
     cDecomp_custom.start_decomposition();
-    number_of_iters += cDecomp_custom.get_num_iters();
+    increment_num_iters(cDecomp_custom.get_num_iters());
 
     current_minimum = cDecomp_custom.get_current_minimum();
     optimized_parameters_mtx = cDecomp_custom.get_optimized_parameters();
@@ -656,7 +656,7 @@ N_Qubit_Decomposition_adaptive::optimize_imported_gate_structure(Matrix_real& op
         cDecomp_custom.set_max_inner_iterations( max_inner_iterations_loc );    
     }
     cDecomp_custom.start_decomposition();
-    number_of_iters += cDecomp_custom.get_num_iters();
+    increment_num_iters(cDecomp_custom.get_num_iters());
     //cDecomp_custom.list_gates(0);
 
     tbb::tick_count end_time_loc = tbb::tick_count::now();
@@ -800,7 +800,7 @@ N_Qubit_Decomposition_adaptive::determine_initial_gate_structure(Matrix_real& op
                 
 
                 
-                number_of_iters += cDecomp_custom_random.get_num_iters(); // retrive the number of iterations spent on optimization
+                increment_num_iters(cDecomp_custom_random.get_num_iters()); // retrive the number of iterations spent on optimization
 /*
 #ifndef __DFE__
             },
@@ -823,7 +823,7 @@ N_Qubit_Decomposition_adaptive::determine_initial_gate_structure(Matrix_real& op
                 }
                 cDecomp_custom.close_to_zero.set_trace_offset( trace_offset ); 
                 cDecomp_custom_close_to_zero.start_decomposition(true);
-                number_of_iters += cDecomp_custom_close_to_zero.get_num_iters();
+                increment_num_iters(cDecomp_custom_close_to_zero.get_num_iters());
                }
          );
 #endif
@@ -1123,7 +1123,7 @@ N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_struc
     gate_structure           = gate_structures_vec[idx_min];
     optimized_parameters_mtx = optimized_parameters_vec[idx_min];
     current_minimum          = current_minimum_vec[idx_min];
-    number_of_iters         += iteration_num_vec[idx_min]; // the total number of the accumulated optimization iterations
+    increment_num_iters(iteration_num_vec[idx_min]); // the total number of the accumulated optimization iterations
     Umtx                     = Umtx_vec[idx_min];
     
     int layer_num = gate_structure->get_gate_num();
@@ -1632,7 +1632,7 @@ N_Qubit_Decomposition_adaptive::remove_trivial_gates( Gates_block* gate_structur
             // remove gate from the structure
             int iteration_num_loc = 0;
             Gates_block* gate_structure_tmp = compress_gate_structure( gate_structure_loc, idx, optimized_parameters_loc, current_minimum_loc, iteration_num_loc );
-	    number_of_iters += iteration_num_loc;
+        increment_num_iters(iteration_num_loc);
 
 	    /*
             N_Qubit_Decomposition_custom cDecomp_custom_( Umtx.copy(), qbit_num, false, config_copy, initial_guess);

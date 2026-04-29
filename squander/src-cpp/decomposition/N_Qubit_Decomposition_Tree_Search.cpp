@@ -1086,9 +1086,9 @@ TreeSearchResult N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_struct
                     const GrayCodeCNOT& solution = all_pairs[iter_idx];
 
                     SearchNode sn = evaluate_path(cDecomp_custom_random, osr_bound_solver, all_cuts, Fnorm, osr_tol, distrib_real, ts_gen, solution);
-                    number_of_iters +=
+                    increment_num_iters(
                         cDecomp_custom_random
-                            .get_num_iters(); // retrieve the number of iterations spent on optimization
+                            .get_num_iters()); // retrieve the number of iterations spent on optimization
 
                     const std::tuple<int, double, std::vector<int>, std::vector<std::pair<int, double>>>& osr_result = sn.get_best_osr_result();
                     bool isWorse = false;
@@ -1184,8 +1184,8 @@ GrayCodeCNOT N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures
 
         N_Qubit_Decomposition_custom&& cDecomp_custom_random = perform_optimization(gate_structure_loc);
 
-        number_of_iters +=
-            cDecomp_custom_random.get_num_iters(); // retrieve the number of iterations spent on optimization
+        increment_num_iters(
+            cDecomp_custom_random.get_num_iters()); // retrieve the number of iterations spent on optimization
 
         double current_minimum_tmp = cDecomp_custom_random.get_current_minimum();
         sstream.str("");
@@ -1283,8 +1283,8 @@ GrayCodeCNOT N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures
                     delete (gate_structure_loc);
                     gate_structure_loc = NULL;
 
-                    number_of_iters += cDecomp_custom_random
-                                           .get_num_iters(); // retrieve the number of iterations spent on optimization
+                    increment_num_iters(cDecomp_custom_random
+                                           .get_num_iters()); // retrieve the number of iterations spent on optimization
 
                     double current_minimum_tmp = cDecomp_custom_random.get_current_minimum();
                     sstream.str("");
