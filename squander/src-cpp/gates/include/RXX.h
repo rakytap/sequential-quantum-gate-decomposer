@@ -53,67 +53,27 @@ RXX(int qbit_num_in, const std::vector<int>& target_qbits_in);
 */
 ~RXX();
 
-/**
-@brief Call to retrieve the gate matrix
-@return Returns with a matrix of the gate
-*/
-Matrix
-get_matrix(Matrix_real& parameters) override;
+/// Build and return the 4x4 RXX unitary for the given parameter.
+Matrix gate_kernel(const Matrix_real& precomputed_sincos) override;
+Matrix_float gate_kernel(const Matrix_real_float& precomputed_sincos) override;
+Matrix inverse_gate_kernel(const Matrix_real& precomputed_sincos) override;
+Matrix_float inverse_gate_kernel(const Matrix_real_float& precomputed_sincos) override;
+Matrix derivative_kernel(const Matrix_real& precomputed_sincos, int param_idx) override;
+Matrix_float derivative_kernel(const Matrix_real_float& precomputed_sincos, int param_idx) override;
 
-/**
-@brief Call to retrieve the gate matrix
-@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
-@return Returns with a matrix of the gate
-*/
-Matrix
-get_matrix(Matrix_real& parameters, int parallel) override;
-
-
-/**
-@brief Call to apply the gate operation on the input matrix
-@param parameters An array of parameters to calculate the matrix elements
-@param input The input matrix on which the transformation is applied
-@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with Intel TBB
-*/
-void apply_to(Matrix_real& parameters, Matrix& input, int parallel) override;
-/**
-@brief Call to evaluate the derivate of the circuit on an inout with respect to all of the free parameters.
-@param parameters An array of the input parameters.
-@param input The input array on which the gate is applied
-@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
-*/
-
-std::vector<Matrix> apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input, int parallel ) override;
 /**
 @brief Call to create a clone of the present class
 @return Return with a pointer pointing to the cloned object
 */
 RXX* clone() override;
 
-/**
-@brief Call to reorder the qubits in the matrix of the gate
-@param qbit_list The reordered list of qubits spanning the matrix
-*/
-void reorder_qubits(std::vector<int> qbit_list) override;
-
-/**
-@brief Call to set the number of qubits spanning the matrix of the gate
-@param qbit_num_in The number of qubits
-*/
-void set_qbit_num(int qbit_num_in) override;
-
-/**
-@brief Get list of involved qubits
-@param only_target If true, return only target qubits, otherwise include control qubits too
-@return Vector of qubit indices
-*/
-std::vector<int> get_involved_qubits(bool only_target) override;
 
 /**
 @brief Call to extract parameters from the parameter array corresponding to the circuit, in which the gate is embedded.
 @param parameters The parameter array corresponding to the circuit in which the gate is embedded
 @return Returns with the array of the extracted parameters.
 */
-virtual Matrix_real extract_parameters( Matrix_real& parameters ) override;
+std::vector<double> get_parameter_multipliers() const override;
+
 };
 #endif //RXX,

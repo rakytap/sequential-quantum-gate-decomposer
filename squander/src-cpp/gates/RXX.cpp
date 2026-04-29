@@ -21,12 +21,10 @@ limitations under the License.
 */
 
 #include "RXX.h"
-#include "apply_large_kernel_to_input.h"
-#ifdef USE_AVX
-    #include "apply_large_kernel_to_input_AVX.h"
-#endif
+#include "gate_kernel_templates.h"
 using namespace std;
 
+// Build the 4x4 RXX kernel matrix for either float32 or float64 precision.
 /**
 @brief Nullary constructor of the class.
 */
@@ -88,121 +86,60 @@ RXX::~RXX() {
 @brief Call to retrieve the gate matrix
 @return Returns with a matrix of the gate
 */
-Matrix
-RXX::get_matrix(Matrix_real& parameters) {
-    return get_matrix(parameters,false);
-}
-
-/**
-@brief Call to retrieve the gate matrix
-@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
-@return Returns with a matrix of the gate
-*/
-Matrix
-RXX::get_matrix(Matrix_real& parameters, int parallel) {
-    Matrix RXX_matrix = create_identity(matrix_size);
-    apply_to(parameters, RXX_matrix, parallel);
-
-#ifdef DEBUG
-    if (RXX_matrix.isnan()) {
-        std::stringstream sstream;
-        sstream << "RXX::get_matrix: RXX_matrix contains NaN." << std::endl;
-        print(sstream, 1);
-    }
-#endif
-
-    return RXX_matrix;
-}
-
-
 /**
 @brief Call to apply the gate operation on the input matrix
 @param input The input matrix on which the transformation is applied
 @param parameters An array of parameters to calculate the matrix elements
 @param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with Intel TBB
 */
-void RXX::apply_to(Matrix_real& parameters, Matrix& input, int parallel) {
-
-    if (input.rows != matrix_size ) {
-        std::string err("RXX::apply_to: Wrong input size in RXX gate apply.");
-        throw err;
-    }
-
-    if (parameters.size() < 1) {
-        std::string err("RXX::apply_to: Wrong number of parameters.");
-        throw err;
-    }
-
-    double ThetaOver2;
-    ThetaOver2 = parameters[0];
-    Matrix U_2qbit(4,4);
-    memset(U_2qbit.get_data(),0,(U_2qbit.size()*2)*sizeof(double));
-    U_2qbit[0].real = std::cos(ThetaOver2);
-    U_2qbit[3].imag = -1.*std::sin(ThetaOver2);
-    U_2qbit[1*4+1].real = std::cos(ThetaOver2);
-    U_2qbit[1*4+2].imag = -1.*std::sin(ThetaOver2);
-    U_2qbit[2*4+2].real = std::cos(ThetaOver2);
-    U_2qbit[2*4+1].imag = -1.*std::sin(ThetaOver2);
-    U_2qbit[3*4+3].real = std::cos(ThetaOver2);
-    U_2qbit[3*4].imag = -1.*std::sin(ThetaOver2);
-    switch (parallel){
-        case 0:{
-            apply_large_kernel_to_input(U_2qbit,input,target_qbits,input.rows);
-            break;
-        }
-        case 1:{
-            #ifdef USE_AVX
-                apply_large_kernel_to_input_AVX_OpenMP(U_2qbit,input,target_qbits,input.rows);
-            #else
-                apply_large_kernel_to_input(U_2qbit,input,target_qbits,input.rows);
-            #endif
-            break;
-        }
-        case 2:{
-            #ifdef USE_AVX
-                apply_large_kernel_to_input_AVX_TBB(U_2qbit,input,target_qbits,input.rows);
-            #else
-                apply_large_kernel_to_input(U_2qbit,input,target_qbits,input.rows);
-            #endif
-            break;        }
-    }
-
+Matrix RXX::gate_kernel(const Matrix_real& precomputed_sincos) {
+    const int theta_offset = 0 * precomputed_sincos.stride;
+    const double s_theta = precomputed_sincos[theta_offset + 0];
+    const double c_theta = precomputed_sincos[theta_offset + 1];
+    return build_rxx_kernel_from_trig<Matrix, double>(s_theta, c_theta);
 }
-/**
-@brief Call to evaluate the derivate of the circuit on an inout with respect to all of the free parameters.
-@param parameters An array of the input parameters.
-@param input The input array on which the gate is applied
-@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
-*/
 
-std::vector<Matrix> RXX::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input, int parallel ){
-    if (input.rows != matrix_size ) {
-        std::stringstream sstream;
-	sstream << "Wrong matrix size in RXX apply_derivate_to" << std::endl;
-        print(sstream, 0);	      
-        exit(-1);
-    }
-
-    if (parameters_mtx.size() < 1) {
-        std::string err("RXX::apply_derivate_to: Wrong number of parameters.");
-        throw err;
-    }
-
-
-    std::vector<Matrix> ret;
-
-    Matrix_real parameters_tmp(1,1);
-
-    parameters_tmp[0] = parameters_mtx[0] + M_PI/2;
-    Matrix res_mtx = input.copy();
-    apply_to(parameters_tmp, res_mtx,  parallel );
-    ret.push_back(res_mtx);
-
-    
-    
-    return ret;
-
+Matrix_float RXX::gate_kernel(const Matrix_real_float& precomputed_sincos) {
+    const int theta_offset = 0 * precomputed_sincos.stride;
+    const float s_theta = precomputed_sincos[theta_offset + 0];
+    const float c_theta = precomputed_sincos[theta_offset + 1];
+    return build_rxx_kernel_from_trig<Matrix_float, float>(s_theta, c_theta);
 }
+
+Matrix RXX::inverse_gate_kernel(const Matrix_real& precomputed_sincos) {
+    const int theta_offset = 0 * precomputed_sincos.stride;
+    const double s_theta = precomputed_sincos[theta_offset + 0];
+    const double c_theta = precomputed_sincos[theta_offset + 1];
+    return build_rxx_kernel_from_trig<Matrix, double>(-s_theta, c_theta);
+}
+
+Matrix_float RXX::inverse_gate_kernel(const Matrix_real_float& precomputed_sincos) {
+    const int theta_offset = 0 * precomputed_sincos.stride;
+    const float s_theta = precomputed_sincos[theta_offset + 0];
+    const float c_theta = precomputed_sincos[theta_offset + 1];
+    return build_rxx_kernel_from_trig<Matrix_float, float>(-s_theta, c_theta);
+}
+
+Matrix RXX::derivative_kernel(const Matrix_real& precomputed_sincos, int param_idx) {
+    if (param_idx != 0) {
+        return Matrix();
+    }
+    const int theta_offset = 0 * precomputed_sincos.stride;
+    const double s_theta = precomputed_sincos[theta_offset + 0];
+    const double c_theta = precomputed_sincos[theta_offset + 1];
+    return build_rxx_derivative_kernel_from_trig<Matrix, double>(s_theta, c_theta);
+}
+
+Matrix_float RXX::derivative_kernel(const Matrix_real_float& precomputed_sincos, int param_idx) {
+    if (param_idx != 0) {
+        return Matrix_float();
+    }
+    const int theta_offset = 0 * precomputed_sincos.stride;
+    const float s_theta = precomputed_sincos[theta_offset + 0];
+    const float c_theta = precomputed_sincos[theta_offset + 1];
+    return build_rxx_derivative_kernel_from_trig<Matrix_float, float>(s_theta, c_theta);
+}
+
 /**
 @brief Call to create a clone of the present class
 @return Return with a pointer pointing to the cloned object
@@ -218,49 +155,7 @@ RXX* RXX::clone() {
     return ret;
 }
 
-/**
-@brief Call to reorder the qubits in the matrix of the gate
-@param qbit_list The reordered list of qubits spanning the matrix
-*/
-void RXX::reorder_qubits(std::vector<int> qbit_list) {
-    // Use Gate's implementation which now handles vectors
-    Gate::reorder_qubits(qbit_list);
-}
-
-/**
-@brief Call to set the number of qubits spanning the matrix of the gate
-@param qbit_num_in The number of qubits
-*/
-void RXX::set_qbit_num(int qbit_num_in) {
-    // setting the number of qubits
-    Gate::set_qbit_num(qbit_num_in);
-}
-
-/**
-@brief Get list of involved qubits
-@param only_target If true, return only target qubits, otherwise include control qubits too
-@return Vector of qubit indices
-*/
-std::vector<int> RXX::get_involved_qubits(bool only_target) {
-    // Use Gate's implementation which now handles vectors
-    return Gate::get_involved_qubits(only_target);
-}
-
-/**
-@brief Call to extract parameters from the parameter array corresponding to the circuit, in which the gate is embedded.
-@param parameters The parameter array corresponding to the circuit in which the gate is embedded
-@return Returns with the array of the extracted parameters.
-*/
-Matrix_real
-RXX::extract_parameters( Matrix_real& parameters ) {
-
-    if ( get_parameter_start_idx() + get_parameter_num() > parameters.size() ) {
-        std::string err("RXX::extract_parameters: Cant extract parameters, since the input arary has not enough elements.");
-        throw err;
-    }
-
-    Matrix_real extracted_parameters(1, 1);
-    extracted_parameters[0] = std::fmod(2 * parameters[get_parameter_start_idx()], 4 * M_PI);
-
-    return extracted_parameters;
+std::vector<double>
+RXX::get_parameter_multipliers() const {
+    return {2.0};
 }

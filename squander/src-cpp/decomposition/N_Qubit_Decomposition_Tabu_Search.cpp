@@ -238,7 +238,7 @@ N_Qubit_Decomposition_Tabu_Search::tabu_search_over_gate_structures() {
         gate_structure_loc = NULL;
         
                 
-        number_of_iters += cDecomp_custom_random.get_num_iters(); // retrive the number of iterations spent on optimization  
+        increment_num_iters(cDecomp_custom_random.get_num_iters()); // retrive the number of iterations spent on optimization  
     
         sstream.str("");
         sstream << "Optimization with " << gcode.size() << " levels converged to " << current_minimum_tmp;

@@ -24,6 +24,15 @@ limitations under the License.
 #include "apply_kernel_to_state_vector_input.h"
 //#include <immintrin.h>
 #include "tbb/tbb.h"
+#include <type_traits>
+#include <utility>
+
+template<typename MatrixT>
+using StateVecComplexT = typename std::remove_reference<decltype(std::declval<MatrixT&>()[0])>::type;
+
+template<typename MatrixT>
+void
+apply_kernel_to_state_vector_input_impl(MatrixT& u3_1qbit, MatrixT& input, const bool& deriv, const int& target_qbit, const int& control_qbit, const int& matrix_size) {
 
 /**
 @brief Call to apply a gate kernel on a state vector
@@ -34,8 +43,7 @@ limitations under the License.
 @param control_qbit The contron qubit (-1 if the is no control qubit)
 @param matrix_size The size of the input
 */
-void
-apply_kernel_to_state_vector_input(Matrix& u3_1qbit, Matrix& input, const bool& deriv, const int& target_qbit, const int& control_qbit, const int& matrix_size) {
+    using ComplexT = StateVecComplexT<MatrixT>;
 
 
     int index_step_target = 1 << target_qbit;
@@ -55,11 +63,11 @@ apply_kernel_to_state_vector_input(Matrix& u3_1qbit, Matrix& input, const bool& 
 
             if (control_qbit < 0 || ((current_idx_loc >> control_qbit) & 1)) {
 
-                QGD_Complex16 element = input[row_offset];
-                QGD_Complex16 element_pair = input[row_offset_pair];
+                ComplexT element = input[row_offset];
+                ComplexT element_pair = input[row_offset_pair];
 
-                QGD_Complex16 tmp1 = mult(u3_1qbit[0], element);
-                QGD_Complex16 tmp2 = mult(u3_1qbit[1], element_pair);
+                ComplexT tmp1 = mult(u3_1qbit[0], element);
+                ComplexT tmp2 = mult(u3_1qbit[1], element_pair);
 
                 input[row_offset].real = tmp1.real + tmp2.real;
                 input[row_offset].imag = tmp1.imag + tmp2.imag;
@@ -75,8 +83,8 @@ apply_kernel_to_state_vector_input(Matrix& u3_1qbit, Matrix& input, const bool& 
             }
             else if (deriv) {
                 // when calculating derivatives, the constant element should be zeros
-                memset(input.get_data() + row_offset, 0, input.cols * sizeof(QGD_Complex16));
-                memset(input.get_data() + row_offset_pair, 0, input.cols * sizeof(QGD_Complex16));
+                memset(input.get_data() + row_offset, 0, input.cols * sizeof(ComplexT));
+                memset(input.get_data() + row_offset_pair, 0, input.cols * sizeof(ComplexT));
             }
             else {
                 // leave the state as it is
@@ -95,10 +103,18 @@ apply_kernel_to_state_vector_input(Matrix& u3_1qbit, Matrix& input, const bool& 
 
 
     }
+}
 
 
+void
+apply_kernel_to_state_vector_input(Matrix& u3_1qbit, Matrix& input, const bool& deriv, const int& target_qbit, const int& control_qbit, const int& matrix_size) {
+    apply_kernel_to_state_vector_input_impl(u3_1qbit, input, deriv, target_qbit, control_qbit, matrix_size);
+}
 
 
+void
+apply_kernel_to_state_vector_input(Matrix_float& u3_1qbit, Matrix_float& input, const bool& deriv, const int& target_qbit, const int& control_qbit, const int& matrix_size) {
+    apply_kernel_to_state_vector_input_impl(u3_1qbit, input, deriv, target_qbit, control_qbit, matrix_size);
 }
 
 
@@ -114,8 +130,11 @@ apply_kernel_to_state_vector_input(Matrix& u3_1qbit, Matrix& input, const bool& 
 @param control_qbit The contron qubit (-1 if the is no control qubit)
 @param matrix_size The size of the input
 */
+template<typename MatrixT>
 void
-apply_kernel_to_state_vector_input_parallel(Matrix& u3_1qbit, Matrix& input, const bool& deriv, const int& target_qbit, const int& control_qbit, const int& matrix_size) {
+apply_kernel_to_state_vector_input_parallel_impl(MatrixT& u3_1qbit, MatrixT& input, const bool& deriv, const int& target_qbit, const int& control_qbit, const int& matrix_size) {
+
+    using ComplexT = StateVecComplexT<MatrixT>;
 
 
     int index_step_target = 1 << target_qbit;
@@ -161,11 +180,11 @@ apply_kernel_to_state_vector_input_parallel(Matrix& u3_1qbit, Matrix& input, con
 
                     if (control_qbit < 0 || ((current_idx_loc >> control_qbit) & 1)) {
 
-                        QGD_Complex16 element = input[row_offset];
-                        QGD_Complex16 element_pair = input[row_offset_pair];
+                        ComplexT element = input[row_offset];
+                        ComplexT element_pair = input[row_offset_pair];
 
-                        QGD_Complex16 tmp1 = mult(u3_1qbit[0], element);
-                        QGD_Complex16 tmp2 = mult(u3_1qbit[1], element_pair);
+                        ComplexT tmp1 = mult(u3_1qbit[0], element);
+                        ComplexT tmp2 = mult(u3_1qbit[1], element_pair);
 
                         input[row_offset].real = tmp1.real + tmp2.real;
                         input[row_offset].imag = tmp1.imag + tmp2.imag;
@@ -181,8 +200,8 @@ apply_kernel_to_state_vector_input_parallel(Matrix& u3_1qbit, Matrix& input, con
                     }
                     else if (deriv) {
                         // when calculating derivatives, the constant element should be zeros
-                        memset(input.get_data() + row_offset, 0, input.cols * sizeof(QGD_Complex16));
-                        memset(input.get_data() + row_offset_pair, 0, input.cols * sizeof(QGD_Complex16));
+                        memset(input.get_data() + row_offset, 0, input.cols * sizeof(ComplexT));
+                        memset(input.get_data() + row_offset_pair, 0, input.cols * sizeof(ComplexT));
                     }
                     else {
                         // leave the state as it is
@@ -207,6 +226,18 @@ apply_kernel_to_state_vector_input_parallel(Matrix& u3_1qbit, Matrix& input, con
 
 
 
+}
+
+
+void
+apply_kernel_to_state_vector_input_parallel(Matrix& u3_1qbit, Matrix& input, const bool& deriv, const int& target_qbit, const int& control_qbit, const int& matrix_size) {
+    apply_kernel_to_state_vector_input_parallel_impl(u3_1qbit, input, deriv, target_qbit, control_qbit, matrix_size);
+}
+
+
+void
+apply_kernel_to_state_vector_input_parallel(Matrix_float& u3_1qbit, Matrix_float& input, const bool& deriv, const int& target_qbit, const int& control_qbit, const int& matrix_size) {
+    apply_kernel_to_state_vector_input_parallel_impl(u3_1qbit, input, deriv, target_qbit, control_qbit, matrix_size);
 }
 
 

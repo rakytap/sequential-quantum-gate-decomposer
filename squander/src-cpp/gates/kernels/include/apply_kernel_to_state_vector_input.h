@@ -38,6 +38,8 @@ limitations under the License.
 */
 void apply_kernel_to_state_vector_input(Matrix& u3_1qbit, Matrix& input, const bool& deriv, const int& target_qbit, const int& control_qbit, const int& matrix_size);
 
+void apply_kernel_to_state_vector_input(Matrix_float& u3_1qbit, Matrix_float& input, const bool& deriv, const int& target_qbit, const int& control_qbit, const int& matrix_size);
+
 
 
 /**
@@ -50,6 +52,8 @@ void apply_kernel_to_state_vector_input(Matrix& u3_1qbit, Matrix& input, const b
 @param matrix_size The size of the input
 */
 void apply_kernel_to_state_vector_input_parallel(Matrix& u3_1qbit, Matrix& input, const bool& deriv, const int& target_qbit, const int& control_qbit, const int& matrix_size);
+
+void apply_kernel_to_state_vector_input_parallel(Matrix_float& u3_1qbit, Matrix_float& input, const bool& deriv, const int& target_qbit, const int& control_qbit, const int& matrix_size);
 
 
 

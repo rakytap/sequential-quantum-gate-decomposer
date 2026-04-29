@@ -21,7 +21,6 @@ limitations under the License.
 */
 
 #include "CSWAP.h"
-#include "apply_dedicated_gate_kernel_to_input.h"
 
 using namespace std;
 
@@ -105,58 +104,4 @@ CSWAP* CSWAP::clone() {
     ret->set_children(children);
 
     return ret;
-}
-
-/**
-@brief Call to apply the gate operation on the input matrix
-@param input The input matrix on which the transformation is applied
-@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with Intel TBB
-*/
-void
-CSWAP::apply_to(Matrix& input, int parallel) {
-
-    if (input.rows != matrix_size) {
-        std::string err("CSWAP::apply_to: Wrong input size in CSWAP gate apply");
-        throw(err);
-    }
-    // Use the dedicated SWAP kernel with control_qbits vector
-    switch (parallel){
-    case 0:
-        apply_SWAP_kernel_to_input(input, target_qbits, control_qbits, matrix_size); break;
-    case 1:
-        apply_SWAP_kernel_to_input_omp(input, target_qbits, control_qbits, matrix_size); break;
-    case 2:
-        apply_SWAP_kernel_to_input_tbb(input, target_qbits, control_qbits, matrix_size); break;
-    }
-}
-
-/**
-@brief Call to apply the gate operation on the input matrix
-@param input The input matrix on which the transformation is applied
-@param parameters An array of parameters to calculate the matrix elements
-@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with Intel TBB
-*/
-void CSWAP::apply_to(Matrix& input, const Matrix_real& parameters, int parallel) {
-
-    int matrix_size = input.rows;
-
-    // Use the dedicated SWAP kernel with control_qbits vector
-    switch (parallel){
-    case 0:
-        apply_SWAP_kernel_to_input(input, target_qbits, control_qbits, matrix_size); break;
-    case 1:
-        apply_SWAP_kernel_to_input_omp(input, target_qbits, control_qbits, matrix_size); break;
-    case 2:
-        apply_SWAP_kernel_to_input_tbb(input, target_qbits, control_qbits, matrix_size); break;
-    }
-}
-
-/**
-@brief Get list of involved qubits
-@param only_target If true, return only target qubits, otherwise include control qubits too
-@return Vector of qubit indices
-*/
-std::vector<int> CSWAP::get_involved_qubits(bool only_target) {
-    // Use Gate's implementation which now handles vectors
-    return Gate::get_involved_qubits(only_target);
 }

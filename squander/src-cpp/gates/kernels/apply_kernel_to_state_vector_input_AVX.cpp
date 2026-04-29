@@ -360,7 +360,7 @@ copies or substantial portions of the Software.
 
                    __m256 data_r = _mm256_hadd_ps(data_u2, data_d2);
 
-                   data_r = _mm256_permutevar8x32_ps(data_r, _mm256_setr_epi32(0, 1, 4, 5, 2, 3, 6, 7));
+                   data_r = _mm256_permutevar8x32_ps(data_r, _mm256_setr_epi32(0, 4, 2, 6, 1, 5, 3, 7));
                    _mm_storeu_ps(ptr, _mm256_castps256_ps128(data_r));
 
                 }
@@ -416,21 +416,72 @@ copies or substantial portions of the Software.
                          u3_1qbit[3].real, u3_1qbit[3].imag,  u3_1qbit[3].real, u3_1qbit[3].imag);
 
 
-        for (int idx=0; idx<matrix_size/2; idx=idx+2 ) {
+        if ( target_qbit == 1 ) {
+            // Stride=2 complex32=4 floats; element_pair=element+4 floats.
+            // One 256-bit load covers both; broadcast each 128-bit half to both lanes.
+            for (int idx=0; idx<matrix_size/2; idx=idx+2 ) {
 
-                // generate index by inserting state 0 into the place of the target qbit while pushing high bits left by one
                 int current_idx = ((idx & bitmask_high) << 1) | (idx & bitmask_low);
-		
-                // the index pair with target qubit state 1
                 int current_idx_pair = current_idx | (1<<target_qbit);
 
                 if (control_qbit < 0 || (current_idx & control_qbit_step_index) ) {
 
+                    float* element = (float*)input.get_data() + 2 * current_idx;
+                    float* element_pair = (float*)input.get_data() + 2 * current_idx_pair;
+
+                    __m256 data_both = _mm256_loadu_ps(element);
+                    __m256 data0 = _mm256_set_m128(_mm256_castps256_ps128(data_both), _mm256_castps256_ps128(data_both));
+                    __m256 data1 = _mm256_set_m128(_mm256_extractf128_ps(data_both, 1), _mm256_extractf128_ps(data_both, 1));
+
+                    __m256 data_u2 = _mm256_mul_ps(data0, mv00);
+                    __m256 data_u3 = _mm256_mul_ps(data1, mv10);
+                    __m256 data_u4 = _mm256_mul_ps(data0, mv01);
+                    __m256 data_u5 = _mm256_mul_ps(data1, mv11);
+
+                    __m256 data_u6 = _mm256_hadd_ps(data_u2, data_u4);
+                    __m256 data_u7 = _mm256_hadd_ps(data_u3, data_u5);
+
+                    __m256 data_d2 = _mm256_mul_ps(data0, mv20);
+                    __m256 data_d3 = _mm256_mul_ps(data1, mv30);
+                    __m256 data_d4 = _mm256_mul_ps(data0, mv21);
+                    __m256 data_d5 = _mm256_mul_ps(data1, mv31);
+
+                    __m256 data_d6 = _mm256_hadd_ps(data_d2, data_d4);
+                    __m256 data_d7 = _mm256_hadd_ps(data_d3, data_d5);
+
+                    __m256 data_r0 = _mm256_add_ps(data_u6, data_u7);
+                    __m256 data_r1 = _mm256_add_ps(data_d6, data_d7);
+
+                    // hadd_ps gives [Re(r0),Re(r1),Im(r0),Im(r1)] per lane; shuffle lower lane
+                    // to [Re(r0),Im(r0),Re(r1),Im(r1)]; combined 256-bit store covers both.
+                    __m128 r0 = _mm256_castps256_ps128(data_r0);
+                    r0 = _mm_shuffle_ps(r0, r0, _MM_SHUFFLE(3, 1, 2, 0));
+                    __m128 r1 = _mm256_castps256_ps128(data_r1);
+                    r1 = _mm_shuffle_ps(r1, r1, _MM_SHUFFLE(3, 1, 2, 0));
+                    _mm256_storeu_ps(element, _mm256_set_m128(r1, r0));
+
+                }
+                else if (deriv) {
+                    memset(input.get_data() + current_idx, 0, input.cols * sizeof(QGD_Complex8));
+                    memset(input.get_data() + current_idx_pair, 0, input.cols * sizeof(QGD_Complex8));
+                }
+                else { continue; }
+
+            }
+        }
+        else {
+            // target_qbit >= 2: stride >= 4 complex32 = 8 floats; full 256-bit loads, no overlap.
+            // idx+=4: 4 complex32 per side per iteration — matches f64 register-width scaling.
+            for (int idx=0; idx<matrix_size/2; idx=idx+4 ) {
+
+                int current_idx = ((idx & bitmask_high) << 1) | (idx & bitmask_low);
+                int current_idx_pair = current_idx | (1<<target_qbit);
+
+                if (control_qbit < 0 || (current_idx & control_qbit_step_index) ) {
 
                     float* element = (float*)input.get_data() + 2 * current_idx;
                     float* element_pair = (float*)input.get_data() + 2 * current_idx_pair;
 
-                   
                     __m256 data0 = _mm256_loadu_ps(element);
                     __m256 data1 = _mm256_loadu_ps(element_pair);
 
@@ -453,26 +504,21 @@ copies or substantial portions of the Software.
                     __m256 data_r0 = _mm256_add_ps(data_u6, data_u7);
                     __m256 data_r1 = _mm256_add_ps(data_d6, data_d7);
 
+                    // hadd_ps within each 128-bit lane gives [Re(r0),Re(r1),Im(r0),Im(r1)];
+                    // _mm256_shuffle_ps deinterleaves both lanes: [Re(r0),Im(r0),Re(r1),Im(r1)].
+                    data_r0 = _mm256_shuffle_ps(data_r0, data_r0, _MM_SHUFFLE(3, 1, 2, 0));
+                    data_r1 = _mm256_shuffle_ps(data_r1, data_r1, _MM_SHUFFLE(3, 1, 2, 0));
                     _mm256_storeu_ps(element, data_r0);
                     _mm256_storeu_ps(element_pair, data_r1);
 
-
                 }
                 else if (deriv) {
-                    // when calculating derivatives, the constant element should be zeros
                     memset(input.get_data() + current_idx, 0, input.cols * sizeof(QGD_Complex8));
                     memset(input.get_data() + current_idx_pair, 0, input.cols * sizeof(QGD_Complex8));
                 }
-                else {
-                    // leave the state as it is
-                    continue;
-                }
+                else { continue; }
 
-
-            //std::cout << current_idx_target << " " << current_idx_target_pair << std::endl;
-
-
-
+            }
         }
 
 
@@ -589,7 +635,7 @@ copies or substantial portions of the Software.
 
                    __m256 data_r = _mm256_hadd_ps(data_u2, data_d2);
 
-                   data_r = _mm256_permutevar8x32_ps(data_r, _mm256_setr_epi32(0, 1, 4, 5, 2, 3, 6, 7));
+                   data_r = _mm256_permutevar8x32_ps(data_r, _mm256_setr_epi32(0, 4, 2, 6, 1, 5, 3, 7));
                    _mm_storeu_ps(ptr, _mm256_castps256_ps128(data_r));
 
                 }
@@ -644,22 +690,74 @@ copies or substantial portions of the Software.
         __m256 mv31 = _mm256_set_ps( u3_1qbit[3].real, u3_1qbit[3].imag,  u3_1qbit[3].real, u3_1qbit[3].imag,
                          u3_1qbit[3].real, u3_1qbit[3].imag,  u3_1qbit[3].real, u3_1qbit[3].imag);
 
+        if ( target_qbit == 1 ) {
+            // Stride=2 complex32=4 floats; element_pair=element+4 floats.
+            // One 256-bit load covers both; broadcast each 128-bit half to both lanes.
 #pragma omp parallel for
-        for (int idx=0; idx<matrix_size/2; idx=idx+2 ) {
+            for (int idx=0; idx<matrix_size/2; idx=idx+2 ) {
 
-                // generate index by inserting state 0 into the place of the target qbit while pushing high bits left by one
                 int current_idx = ((idx & bitmask_high) << 1) | (idx & bitmask_low);
-		
-                // the index pair with target qubit state 1
                 int current_idx_pair = current_idx | (1<<target_qbit);
 
                 if (control_qbit < 0 || (current_idx & control_qbit_step_index) ) {
 
+                    float* element = (float*)input.get_data() + 2 * current_idx;
+                    float* element_pair = (float*)input.get_data() + 2 * current_idx_pair;
+
+                    __m256 data_both = _mm256_loadu_ps(element);
+                    __m256 data0 = _mm256_set_m128(_mm256_castps256_ps128(data_both), _mm256_castps256_ps128(data_both));
+                    __m256 data1 = _mm256_set_m128(_mm256_extractf128_ps(data_both, 1), _mm256_extractf128_ps(data_both, 1));
+
+                    __m256 data_u2 = _mm256_mul_ps(data0, mv00);
+                    __m256 data_u3 = _mm256_mul_ps(data1, mv10);
+                    __m256 data_u4 = _mm256_mul_ps(data0, mv01);
+                    __m256 data_u5 = _mm256_mul_ps(data1, mv11);
+
+                    __m256 data_u6 = _mm256_hadd_ps(data_u2, data_u4);
+                    __m256 data_u7 = _mm256_hadd_ps(data_u3, data_u5);
+
+                    __m256 data_d2 = _mm256_mul_ps(data0, mv20);
+                    __m256 data_d3 = _mm256_mul_ps(data1, mv30);
+                    __m256 data_d4 = _mm256_mul_ps(data0, mv21);
+                    __m256 data_d5 = _mm256_mul_ps(data1, mv31);
+
+                    __m256 data_d6 = _mm256_hadd_ps(data_d2, data_d4);
+                    __m256 data_d7 = _mm256_hadd_ps(data_d3, data_d5);
+
+                    __m256 data_r0 = _mm256_add_ps(data_u6, data_u7);
+                    __m256 data_r1 = _mm256_add_ps(data_d6, data_d7);
+
+                    // hadd_ps gives [Re(r0),Re(r1),Im(r0),Im(r1)] per lane; shuffle lower lane
+                    // to [Re(r0),Im(r0),Re(r1),Im(r1)]; combined 256-bit store covers both.
+                    __m128 r0 = _mm256_castps256_ps128(data_r0);
+                    r0 = _mm_shuffle_ps(r0, r0, _MM_SHUFFLE(3, 1, 2, 0));
+                    __m128 r1 = _mm256_castps256_ps128(data_r1);
+                    r1 = _mm_shuffle_ps(r1, r1, _MM_SHUFFLE(3, 1, 2, 0));
+                    _mm256_storeu_ps(element, _mm256_set_m128(r1, r0));
+
+                }
+                else if (deriv) {
+                    memset(input.get_data() + current_idx, 0, input.cols * sizeof(QGD_Complex8));
+                    memset(input.get_data() + current_idx_pair, 0, input.cols * sizeof(QGD_Complex8));
+                }
+                else { continue; }
+
+            }
+        }
+        else {
+            // target_qbit >= 2: stride >= 4 complex32 = 8 floats; full 256-bit loads, no overlap.
+            // idx+=4: 4 complex32 per side per iteration — matches f64 register-width scaling.
+#pragma omp parallel for
+            for (int idx=0; idx<matrix_size/2; idx=idx+4 ) {
+
+                int current_idx = ((idx & bitmask_high) << 1) | (idx & bitmask_low);
+                int current_idx_pair = current_idx | (1<<target_qbit);
+
+                if (control_qbit < 0 || (current_idx & control_qbit_step_index) ) {
 
                     float* element = (float*)input.get_data() + 2 * current_idx;
                     float* element_pair = (float*)input.get_data() + 2 * current_idx_pair;
 
-                   
                     __m256 data0 = _mm256_loadu_ps(element);
                     __m256 data1 = _mm256_loadu_ps(element_pair);
 
@@ -682,26 +780,21 @@ copies or substantial portions of the Software.
                     __m256 data_r0 = _mm256_add_ps(data_u6, data_u7);
                     __m256 data_r1 = _mm256_add_ps(data_d6, data_d7);
 
+                    // hadd_ps within each 128-bit lane gives [Re(r0),Re(r1),Im(r0),Im(r1)];
+                    // _mm256_shuffle_ps deinterleaves both lanes: [Re(r0),Im(r0),Re(r1),Im(r1)].
+                    data_r0 = _mm256_shuffle_ps(data_r0, data_r0, _MM_SHUFFLE(3, 1, 2, 0));
+                    data_r1 = _mm256_shuffle_ps(data_r1, data_r1, _MM_SHUFFLE(3, 1, 2, 0));
                     _mm256_storeu_ps(element, data_r0);
                     _mm256_storeu_ps(element_pair, data_r1);
 
-
                 }
                 else if (deriv) {
-                    // when calculating derivatives, the constant element should be zeros
                     memset(input.get_data() + current_idx, 0, input.cols * sizeof(QGD_Complex8));
                     memset(input.get_data() + current_idx_pair, 0, input.cols * sizeof(QGD_Complex8));
                 }
-                else {
-                    // leave the state as it is
-                    continue;
-                }
+                else { continue; }
 
-
-            //std::cout << current_idx_target << " " << current_idx_target_pair << std::endl;
-
-
-
+            }
         }
 
 
@@ -829,7 +922,7 @@ copies or substantial portions of the Software.
 
                    __m256 data_r = _mm256_hadd_ps(data_u2, data_d2);
 
-                   data_r = _mm256_permutevar8x32_ps(data_r, _mm256_setr_epi32(0, 1, 4, 5, 2, 3, 6, 7));
+                   data_r = _mm256_permutevar8x32_ps(data_r, _mm256_setr_epi32(0, 4, 2, 6, 1, 5, 3, 7));
                    _mm_storeu_ps(ptr, _mm256_castps256_ps128(data_r));
 
                 }
@@ -884,22 +977,77 @@ copies or substantial portions of the Software.
                          u3_1qbit[3].real, u3_1qbit[3].imag,  u3_1qbit[3].real, u3_1qbit[3].imag);
 
 
-        tbb::parallel_for( tbb::blocked_range<int>(0,matrix_size/2,grain_size), [&](tbb::blocked_range<int> r) { 
+        if ( target_qbit == 1 ) {
+            // Stride=2 complex32=4 floats; element_pair=element+4 floats.
+            // One 256-bit load covers both; broadcast each 128-bit half to both lanes.
+        tbb::parallel_for( tbb::blocked_range<int>(0,matrix_size/2,grain_size), [&](tbb::blocked_range<int> r) {
 
             for (int idx=r.begin(); idx<r.end(); idx=idx+2) {
-                // generate index by inserting state 0 into the place of the target qbit while pushing high bits left by one
+
                 int current_idx = ((idx & bitmask_high) << 1) | (idx & bitmask_low);
-		
-                // the index pair with target qubit state 1
                 int current_idx_pair = current_idx | (1<<target_qbit);
 
                 if (control_qbit < 0 || (current_idx & control_qbit_step_index) ) {
 
+                    float* element = (float*)input.get_data() + 2 * current_idx;
+                    float* element_pair = (float*)input.get_data() + 2 * current_idx_pair;
+
+                    __m256 data_both = _mm256_loadu_ps(element);
+                    __m256 data0 = _mm256_set_m128(_mm256_castps256_ps128(data_both), _mm256_castps256_ps128(data_both));
+                    __m256 data1 = _mm256_set_m128(_mm256_extractf128_ps(data_both, 1), _mm256_extractf128_ps(data_both, 1));
+
+                    __m256 data_u2 = _mm256_mul_ps(data0, mv00);
+                    __m256 data_u3 = _mm256_mul_ps(data1, mv10);
+                    __m256 data_u4 = _mm256_mul_ps(data0, mv01);
+                    __m256 data_u5 = _mm256_mul_ps(data1, mv11);
+
+                    __m256 data_u6 = _mm256_hadd_ps(data_u2, data_u4);
+                    __m256 data_u7 = _mm256_hadd_ps(data_u3, data_u5);
+
+                    __m256 data_d2 = _mm256_mul_ps(data0, mv20);
+                    __m256 data_d3 = _mm256_mul_ps(data1, mv30);
+                    __m256 data_d4 = _mm256_mul_ps(data0, mv21);
+                    __m256 data_d5 = _mm256_mul_ps(data1, mv31);
+
+                    __m256 data_d6 = _mm256_hadd_ps(data_d2, data_d4);
+                    __m256 data_d7 = _mm256_hadd_ps(data_d3, data_d5);
+
+                    __m256 data_r0 = _mm256_add_ps(data_u6, data_u7);
+                    __m256 data_r1 = _mm256_add_ps(data_d6, data_d7);
+
+                    // hadd_ps gives [Re(r0),Re(r1),Im(r0),Im(r1)] per lane; shuffle lower lane
+                    // to [Re(r0),Im(r0),Re(r1),Im(r1)]; combined 256-bit store covers both.
+                    __m128 r0 = _mm256_castps256_ps128(data_r0);
+                    r0 = _mm_shuffle_ps(r0, r0, _MM_SHUFFLE(3, 1, 2, 0));
+                    __m128 r1 = _mm256_castps256_ps128(data_r1);
+                    r1 = _mm_shuffle_ps(r1, r1, _MM_SHUFFLE(3, 1, 2, 0));
+                    _mm256_storeu_ps(element, _mm256_set_m128(r1, r0));
+
+                }
+                else if (deriv) {
+                    memset(input.get_data() + current_idx, 0, input.cols * sizeof(QGD_Complex8));
+                    memset(input.get_data() + current_idx_pair, 0, input.cols * sizeof(QGD_Complex8));
+                }
+                else { continue; }
+
+            }
+        }, aff_p);
+        }
+        else {
+            // target_qbit >= 2: stride >= 4 complex32 = 8 floats; full 256-bit loads, no overlap.
+            // idx+=4: 4 complex32 per side per iteration — matches f64 register-width scaling.
+        tbb::parallel_for( tbb::blocked_range<int>(0,matrix_size/2,grain_size), [&](tbb::blocked_range<int> r) {
+
+            for (int idx=r.begin(); idx<r.end(); idx=idx+4) {
+
+                int current_idx = ((idx & bitmask_high) << 1) | (idx & bitmask_low);
+                int current_idx_pair = current_idx | (1<<target_qbit);
+
+                if (control_qbit < 0 || (current_idx & control_qbit_step_index) ) {
 
                     float* element = (float*)input.get_data() + 2 * current_idx;
                     float* element_pair = (float*)input.get_data() + 2 * current_idx_pair;
 
-                   
                     __m256 data0 = _mm256_loadu_ps(element);
                     __m256 data1 = _mm256_loadu_ps(element_pair);
 
@@ -922,29 +1070,23 @@ copies or substantial portions of the Software.
                     __m256 data_r0 = _mm256_add_ps(data_u6, data_u7);
                     __m256 data_r1 = _mm256_add_ps(data_d6, data_d7);
 
+                    // hadd_ps within each 128-bit lane gives [Re(r0),Re(r1),Im(r0),Im(r1)];
+                    // _mm256_shuffle_ps deinterleaves both lanes: [Re(r0),Im(r0),Re(r1),Im(r1)].
+                    data_r0 = _mm256_shuffle_ps(data_r0, data_r0, _MM_SHUFFLE(3, 1, 2, 0));
+                    data_r1 = _mm256_shuffle_ps(data_r1, data_r1, _MM_SHUFFLE(3, 1, 2, 0));
                     _mm256_storeu_ps(element, data_r0);
                     _mm256_storeu_ps(element_pair, data_r1);
 
-
                 }
                 else if (deriv) {
-                    // when calculating derivatives, the constant element should be zeros
                     memset(input.get_data() + current_idx, 0, input.cols * sizeof(QGD_Complex8));
                     memset(input.get_data() + current_idx_pair, 0, input.cols * sizeof(QGD_Complex8));
                 }
-                else {
-                    // leave the state as it is
-                    continue;
-                }
-
-
-            //std::cout << current_idx_target << " " << current_idx_target_pair << std::endl;
-
-
+                else { continue; }
 
             }
         }, aff_p);
-
+        }
 
 
     } // else

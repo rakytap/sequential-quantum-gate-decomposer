@@ -1,137 +1,44 @@
-/*
-Created on Fri Jun 26 14:13:26 2020
-Copyright 2020 Peter Rakyta, Ph.D.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-
-@author: Peter Rakyta, Ph.D.
-*/
-/*! \file U3.h
-    \brief Header file for a class representing a U3 gate.
-*/
-
+/**
+ * Copyright (C) Miklos Maroti, 2021
+ * SPDX-License-Identifier: Apache-2.0
+ */
 #ifndef U3_H
 #define U3_H
 
 #include "Gate.h"
 #include "matrix.h"
 #include "matrix_real.h"
-#define _USE_MATH_DEFINES
+#include "matrix_real_float.h"
+#include "matrix_float.h"
 #include <math.h>
 
-
 /**
-@brief A class representing a U3 gate.
+@brief Class representing a general 3-parameter single-qubit gate U3(θ,φ,λ).
+All constant and rotation single-qubit gates inherit from U3.
 */
 class U3: public Gate {
-
-
 public:
+    U3();
+    U3(int qbit_num_in, int target_qbit_in);
+    ~U3() override;
 
-/**
-@brief Nullary constructor of the class.
-*/
-U3();
-
-
-/**
-@brief Constructor of the class.
-@param qbit_num_in The number of qubits spanning the gate.
-@param target_qbit_in The 0<=ID<qbit_num of the target qubit.
-*/
-U3(int qbit_num_in, int target_qbit_in);
-
-
-/**
-@brief Destructor of the class
-*/
-virtual ~U3();
-
-
-/**
-@brief Call to retrieve the gate matrix
-@param parameters An array of parameters to calculate the matrix of the U3 gate.
-@return Returns with a matrix of the gate
-*/
-Matrix get_matrix( Matrix_real& parameters  ) override;
-
-
-/**
-@brief Call to retrieve the gate matrix
-@param parameters An array of parameters to calculate the matrix of the U3 gate.
-@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
-@return Returns with a matrix of the gate
-*/
-Matrix get_matrix( Matrix_real& parameters, int parallel  ) override;
-
-
-/**
-@brief Call to apply the gate on the input array/matrix by U3*input
-@param parameters An array of parameters to calculate the matrix of the U3 gate.
-@param input The input array on which the gate is applied
-@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
-*/
-void apply_to_list( Matrix_real& parameters, std::vector<Matrix>& inputs, int parallel ) override;
-
-
-/**
-@brief Call to apply the gate on the input array/matrix by U3*input
-@param parameters An array of parameters to calculate the matrix of the U3 gate.
-@param input The input array on which the gate is applied
-@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
-*/
-virtual void apply_to( Matrix_real& parameters, Matrix& input, int parallel ) override;
-
-/**
-@brief Call to apply the gate on the input array/matrix by input*U3
-@param parameters An array of parameters to calculate the matrix of the U3 gate.
-@param input The input array on which the gate is applied
-*/
-virtual void apply_from_right( Matrix_real& parameters, Matrix& input );
-
-
-/**
-@brief Call to evaluate the derivate of the circuit on an inout with respect to all of the free parameters.
-@param parameters An array of the input parameters.
-@param input The input array on which the gate is applied
-@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
-*/
-virtual std::vector<Matrix> apply_derivate_to( Matrix_real& parameters, Matrix& input, int parallel ) override;
-
-/**
-@brief Calculate the matrix of a U3 gate gate corresponding to the given parameters acting on a single qbit space.
-@param ThetaOver2 Real parameter standing for the parameter theta/2.
-@param Phi Real parameter standing for the parameter phi.
-@param Lambda Real parameter standing for the parameter lambda.
-@return Returns with the matrix of the one-qubit matrix.
-*/
-virtual void parameters_for_calc_one_qubit( double& ThetaOver2, double& Phi, double& Lambda) override;
-
-/**
-@brief Call to create a clone of the present class
-@return Return with a pointer pointing to the cloned object
-*/
-virtual U3* clone() override;
-
-
-/**
-@brief Call to extract parameters from the parameter array corresponding to the circuit, in which the gate is embedded.
-@param parameters The parameter array corresponding to the circuit in which the gate is embedded
-@return Returns with the array of the extracted parameters.
-*/
-virtual Matrix_real extract_parameters( Matrix_real& parameters ) override;
-
+    virtual U3* clone() override;
+    virtual std::vector<double> get_parameter_multipliers() const override;
+    virtual Matrix gate_kernel(const Matrix_real& precomputed_sincos) override;
+    virtual Matrix_float gate_kernel(const Matrix_real_float& precomputed_sincos) override;
+    virtual Matrix inverse_gate_kernel(const Matrix_real& precomputed_sincos) override;
+    virtual Matrix_float inverse_gate_kernel(const Matrix_real_float& precomputed_sincos) override;
+    virtual Matrix derivative_kernel(const Matrix_real& precomputed_sincos, int param_idx) override;
+    virtual Matrix_float derivative_kernel(const Matrix_real_float& precomputed_sincos, int param_idx) override;
 
 };
 
-#endif //U3
+// Free helper functions — compute a 2×2 U3 matrix without constructing a gate object.
+Matrix       u3_matrix_kernel(double ThetaOver2, double Phi, double Lambda);
+Matrix_float u3_matrix_kernel_f(float ThetaOver2, float Phi, float Lambda);
+
+// Free helpers — compute a 2x2 U3 kernel without constructing a gate object.
+Matrix       u3_matrix_kernel(double ThetaOver2, double Phi, double Lambda);
+Matrix_float u3_matrix_kernel_f(float ThetaOver2, float Phi, float Lambda);
+
+#endif //U3_H
