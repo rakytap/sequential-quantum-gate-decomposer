@@ -121,6 +121,8 @@ PYBIND11_MODULE(_sabre_router, m) {
     py::class_<SabreConfig>(m, "SabreConfig")
         .def(py::init<>())
         .def_readwrite("prefilter_top_k", &SabreConfig::prefilter_top_k)
+        .def_readwrite("prefilter_min_per_partition", &SabreConfig::prefilter_min_per_partition)
+        .def_readwrite("prefilter_min_3q", &SabreConfig::prefilter_min_3q)
         .def_readwrite("max_E_size", &SabreConfig::max_E_size)
         .def_readwrite("max_lookahead", &SabreConfig::max_lookahead)
         .def_readwrite("E_weight", &SabreConfig::E_weight)

@@ -143,6 +143,8 @@ class qgd_Partition_Aware_Mapping:
         self.config.setdefault('random_seed', 42)
         self.config.setdefault('cleanup', True)
         self.config.setdefault('prefilter_top_k', 50)
+        self.config.setdefault('prefilter_min_per_partition', 2)
+        self.config.setdefault('prefilter_min_3q', 12)
         self.config.setdefault('cleanup_top_k', 3)
         self.config.setdefault('decay_delta', 0.001)  # Qiskit LightSABRE DECAY_RATE
         self.config.setdefault('swap_burst_budget', 5)  # Qiskit LightSABRE DECAY_RESET_INTERVAL
@@ -159,8 +161,14 @@ class qgd_Partition_Aware_Mapping:
             self.config['path_tiebreak_weight'] = 0.49
         self.config.setdefault('cnot_cost', 1.0 / 3.0)  # 1 SWAP = 3 CNOTs
         self.config.setdefault('three_qubit_exit_weight', 1.0)
+        self.config.setdefault('routing_aware_partitioning', True)
         self.config.setdefault('size_density_weight', False)
         self.config.setdefault('sparse_penalty', 3.0)
+        self.config.setdefault('two_pair_3q_penalty', None)
+        self.config.setdefault('dense_3q_penalty', None)
+        self.config.setdefault('triangle_free_3q_penalty', 1.0)
+        self.config.setdefault('three_qubit_reuse_discount', 0.15)
+        self.config.setdefault('three_qubit_reuse_discount_cap', 1.0)
         strategy = self.config['strategy']
         self.config.setdefault('parallel_layout_trials', False)
         self.config.setdefault('layout_trial_workers', 0)
@@ -240,6 +248,114 @@ class qgd_Partition_Aware_Mapping:
                 penalty = sparse_penalty / 3.0
             else:
                 penalty = sparse_penalty
+            weights.append(penalty / N)
+        return weights
+
+    @staticmethod
+    def _topology_has_triangle(topology):
+        """Return True when the hardware graph contains a 3-cycle."""
+        if not topology:
+            return False
+        adj = defaultdict(set)
+        for u, v in topology:
+            adj[int(u)].add(int(v))
+            adj[int(v)].add(int(u))
+        for u, neighbors in adj.items():
+            ordered = sorted(v for v in neighbors if v > u)
+            for idx, v in enumerate(ordered):
+                if any(w in adj[v] for w in ordered[idx + 1:]):
+                    return True
+        return False
+
+    @staticmethod
+    def _parts_to_routing_aware_weights(
+        allparts,
+        gate_dict,
+        topology=None,
+        sparse_penalty=3.0,
+        two_pair_3q_penalty=None,
+        dense_3q_penalty=None,
+        triangle_free_3q_penalty=1.0,
+        reuse_discount=0.15,
+        reuse_discount_cap=1.0,
+    ):
+        """Per-part ILP weights for routing-aware 3q partition selection.
+
+        ``ilp_global_optimal`` minimizes ``1 + N * weight[i]`` for each
+        selected part.  Returning ``penalty / N`` therefore makes ``penalty``
+        the extra cost of selecting that part.
+
+        The older density tie-breaker preserved minimum partition count, which
+        still lets a sparse 3q block beat the two 2q blocks it would replace.
+        This cost is intentionally allowed to cross that boundary:
+
+          one active pair  -> strongly prefer the equivalent 2q partition
+          two active pairs -> prefer two 2q partitions unless the block is reused
+          three pairs      -> keep 3q attractive, but penalize triangle-free HW
+        """
+        N = max(len(allparts), 1)
+        reuse_discount = float(reuse_discount or 0.0)
+        reuse_discount_cap = float(reuse_discount_cap or 0.0)
+        two_pair_penalty = (
+            sparse_penalty / 2.0
+            if two_pair_3q_penalty is None
+            else float(two_pair_3q_penalty)
+        )
+        triangle_free_penalty = float(triangle_free_3q_penalty or 0.0)
+        if dense_3q_penalty is None:
+            dense_penalty = (
+                triangle_free_penalty
+                if not qgd_Partition_Aware_Mapping._topology_has_triangle(topology)
+                else 0.0
+            )
+        else:
+            dense_penalty = float(dense_3q_penalty)
+
+        weights = []
+        for part in allparts:
+            qubits_in_part = set()
+            active_pairs = set()
+            multi_qubit_gate_count = 0
+
+            for gate_idx in part:
+                gate = gate_dict.get(gate_idx)
+                if gate is None:
+                    continue
+                qbs = list(gate.get_Involved_Qbits())
+                qubits_in_part.update(qbs)
+                if len(qbs) < 2:
+                    continue
+                multi_qubit_gate_count += 1
+                for a in range(len(qbs)):
+                    for b in range(a + 1, len(qbs)):
+                        active_pairs.add(
+                            (min(qbs[a], qbs[b]), max(qbs[a], qbs[b]))
+                        )
+
+            if len(qubits_in_part) != 3:
+                weights.append(0.0)
+                continue
+
+            n_pairs = len(active_pairs)
+            if n_pairs <= 1:
+                penalty = float(sparse_penalty)
+            elif n_pairs == 2:
+                penalty = two_pair_penalty
+            else:
+                penalty = dense_penalty
+
+            extra_reuse = (
+                max(0, multi_qubit_gate_count - n_pairs)
+                if n_pairs >= 2
+                else 0
+            )
+            if extra_reuse and reuse_discount > 0:
+                discount = min(
+                    float(reuse_discount_cap),
+                    float(reuse_discount) * float(extra_reuse),
+                )
+                penalty = max(0.0, penalty - discount)
+
             weights.append(penalty / N)
         return weights
 
@@ -531,13 +647,32 @@ class qgd_Partition_Aware_Mapping:
         single_qubit_chains_prepost = {x[0]: x for x in single_qubit_chains if x[0] in single_qubit_chains_pre and x[-1] in single_qubit_chains_post}
 
         # ---- Phase 2: ILP partition selection ----
-        # Minimize total partition count so PAM gets the largest blocks possible
-        # under max_partition_size. Larger blocks = more (P_i, P_o) freedom to
-        # absorb routing SWAPs. Overlap-based tie-breaker (when enabled)
-        # picks deterministically among min-count covers, preferring covers
-        # whose parts share more logical qubits with their DAG successors.
+        # Route-aware weights let sparse 3q blocks lose to the 2q blocks they
+        # would otherwise replace.  Without weights, the ILP minimizes selected
+        # partition count and therefore over-selects 3q partitions.
         ilp_weights = None
-        if self.config.get('size_density_weight', False):
+        if self.config.get('routing_aware_partitioning', True):
+            sparse_penalty = float(self.config.get('sparse_penalty', 3.0))
+            ilp_weights = self._parts_to_routing_aware_weights(
+                allparts,
+                gate_dict,
+                topology=self.topology,
+                sparse_penalty=sparse_penalty,
+                two_pair_3q_penalty=self.config.get(
+                    'two_pair_3q_penalty', None
+                ),
+                dense_3q_penalty=self.config.get('dense_3q_penalty', None),
+                triangle_free_3q_penalty=self.config.get(
+                    'triangle_free_3q_penalty', 1.0
+                ),
+                reuse_discount=self.config.get(
+                    'three_qubit_reuse_discount', 0.15
+                ),
+                reuse_discount_cap=self.config.get(
+                    'three_qubit_reuse_discount_cap', 1.0
+                ),
+            )
+        elif self.config.get('size_density_weight', False):
             sparse_penalty = float(self.config.get('sparse_penalty', 3.0))
             ilp_weights = self._parts_to_density_weights(
                 allparts, gate_dict, sparse_penalty=sparse_penalty
@@ -978,6 +1113,12 @@ class qgd_Partition_Aware_Mapping:
 
         cfg = SabreConfig()
         cfg.prefilter_top_k = self.config.get('prefilter_top_k', 50)
+        if hasattr(cfg, 'prefilter_min_per_partition'):
+            cfg.prefilter_min_per_partition = self.config.get(
+                'prefilter_min_per_partition', 2
+            )
+        if hasattr(cfg, 'prefilter_min_3q'):
+            cfg.prefilter_min_3q = self.config.get('prefilter_min_3q', 12)
         cfg.max_E_size = self.config.get('max_E_size', 20)
         cfg.max_lookahead = self.config.get('max_lookahead', 4)
         cfg.E_weight = self.config.get('E_weight', 0.5)
@@ -1454,8 +1595,41 @@ class qgd_Partition_Aware_Mapping:
             )
             for pc in partition_candidates
         ])
-        top_k_indices = np.argpartition(estimates, top_k)[:top_k]
-        return [partition_candidates[i] for i in top_k_indices]
+        selected = set()
+        min_per_partition = int(
+            self.config.get('prefilter_min_per_partition', 0) or 0
+        )
+        min_3q = int(self.config.get('prefilter_min_3q', 0) or 0)
+        if min_per_partition > 0 or min_3q > 0:
+            by_partition = defaultdict(list)
+            for idx, pc in enumerate(partition_candidates):
+                by_partition[pc.partition_idx].append(idx)
+            for indices in by_partition.values():
+                sample = partition_candidates[indices[0]]
+                quota = min_per_partition
+                if len(sample.involved_qbits) >= 3:
+                    quota = max(quota, min_3q)
+                if quota <= 0:
+                    continue
+                ranked = sorted(indices, key=lambda i: estimates[i])
+                selected.update(ranked[:min(quota, len(ranked))])
+
+        remaining = max(0, top_k - len(selected))
+        if remaining > 0:
+            ranked_global = np.argsort(estimates)
+            for idx in ranked_global:
+                selected.add(int(idx))
+                if len(selected) >= top_k:
+                    break
+
+        if not selected:
+            top_k_indices = np.argpartition(estimates, top_k)[:top_k]
+            selected.update(int(i) for i in top_k_indices)
+
+        return [
+            partition_candidates[i]
+            for i in sorted(selected, key=lambda idx: estimates[idx])
+        ]
 
     @staticmethod
     def _decay_factor_for_swaps(swaps, decay):

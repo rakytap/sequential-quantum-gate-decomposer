@@ -1249,19 +1249,60 @@ std::vector<const CandidateData*> SabreRouter::prefilter_candidates(
         estimated.push_back({est, cand});
     }
 
-    std::nth_element(
+    std::stable_sort(
         estimated.begin(),
-        estimated.begin() + top_k,
         estimated.end(),
         [](const Pair& a, const Pair& b) {
-            return a.first < b.first;
+            if (a.first != b.first) return a.first < b.first;
+            if (a.second->partition_idx != b.second->partition_idx) {
+                return a.second->partition_idx < b.second->partition_idx;
+            }
+            return a.second->candidate_idx < b.second->candidate_idx;
         }
     );
 
+    const int min_per_partition =
+        std::max(0, config_.prefilter_min_per_partition);
+    const int min_3q = std::max(0, config_.prefilter_min_3q);
+
     std::vector<const CandidateData*> result;
-    result.reserve(top_k);
-    for (int i = 0; i < top_k; i++) {
-        result.push_back(estimated[i].second);
+    result.reserve(std::min(static_cast<int>(candidates.size()), top_k));
+    std::unordered_set<const CandidateData*> selected;
+
+    if (min_per_partition > 0 || min_3q > 0) {
+        std::unordered_map<int, int> quota_by_partition;
+        for (const auto& item : estimated) {
+            const CandidateData* cand = item.second;
+            int quota = min_per_partition;
+            if (cand->involved_qbits.size() >= 3) {
+                quota = std::max(quota, min_3q);
+            }
+            if (quota <= 0) continue;
+            auto it = quota_by_partition.find(cand->partition_idx);
+            if (it == quota_by_partition.end() || quota > it->second) {
+                quota_by_partition[cand->partition_idx] = quota;
+            }
+        }
+
+        std::unordered_map<int, int> selected_by_partition;
+        for (const auto& item : estimated) {
+            const CandidateData* cand = item.second;
+            auto quota_it = quota_by_partition.find(cand->partition_idx);
+            if (quota_it == quota_by_partition.end()) continue;
+            int& count = selected_by_partition[cand->partition_idx];
+            if (count >= quota_it->second) continue;
+            result.push_back(cand);
+            selected.insert(cand);
+            count++;
+        }
+    }
+
+    for (const auto& item : estimated) {
+        if (static_cast<int>(result.size()) >= top_k) break;
+        const CandidateData* cand = item.second;
+        if (selected.find(cand) != selected.end()) continue;
+        result.push_back(cand);
+        selected.insert(cand);
     }
     return result;
 }

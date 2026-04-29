@@ -78,6 +78,8 @@ struct LayoutPartInfo {
 
 struct SabreConfig {
     int prefilter_top_k = 50;
+    int prefilter_min_per_partition = 2;
+    int prefilter_min_3q = 12;
     int max_E_size = 20;
     int max_lookahead = 4;
     double E_weight = 0.5;
