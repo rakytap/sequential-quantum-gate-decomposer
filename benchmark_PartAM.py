@@ -73,10 +73,16 @@ def run_once(circ_orig, parameters_orig, topology):
         'random_seed':random.randint(1,100),
         # Cheap candidate prefilter before full A* scoring.
         'prefilter_top_k': 50,
+        'prefilter_min_per_partition': 2,
+        'prefilter_min_3q': 12,
         # Rank every layout trial by actual constructed routing, not only by
         # the heuristic trial cost.
         'actual_routing_rank_top_k': None,
         'top_k_pi': 1,
+        # Boundary-state beam routing is a Python prototype on this branch.
+        # Set width/depth to 1 to recover the greedy router.
+        'boundary_beam_width': 4,
+        'boundary_beam_depth': 3,
         'cnot_cost': 0.5 / 3.0,  # old: swap_cost=15, local_cost_weight=1.0 -> 15:1 swap:cnot
         'cleanup_top_k': 3,
         "parallel_layout_trials": True,
@@ -89,8 +95,12 @@ def run_once(circ_orig, parameters_orig, topology):
         'swap_burst_budget': 5,
         'path_tiebreak_weight': 0.2,
         'three_qubit_exit_weight': 1.5,
-        'size_density_weight': True,
+        'routing_aware_partitioning': True,
         'sparse_penalty': 3.0,
+        'two_pair_3q_penalty': 1.5,
+        'triangle_free_3q_penalty': 1.0,
+        'three_qubit_reuse_discount': 0.15,
+        'three_qubit_reuse_discount_cap': 1.0,
     }
 
     # Clean the initial circuit using the same config pattern as in PartAM.py

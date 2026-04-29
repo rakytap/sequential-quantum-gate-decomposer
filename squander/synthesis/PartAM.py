@@ -161,6 +161,8 @@ class qgd_Partition_Aware_Mapping:
             self.config['path_tiebreak_weight'] = 0.49
         self.config.setdefault('cnot_cost', 1.0 / 3.0)  # 1 SWAP = 3 CNOTs
         self.config.setdefault('three_qubit_exit_weight', 1.0)
+        self.config.setdefault('boundary_beam_width', 1)
+        self.config.setdefault('boundary_beam_depth', 1)
         self.config.setdefault('routing_aware_partitioning', True)
         self.config.setdefault('size_density_weight', False)
         self.config.setdefault('sparse_penalty', 3.0)
@@ -1038,7 +1040,11 @@ class qgd_Partition_Aware_Mapping:
         n_trials,
         random_seed,
     ):
-        use_cpp = self.config.get('use_cpp_router', True)
+        use_boundary_beam = (
+            int(self.config.get("boundary_beam_width", 1) or 1) > 1
+            and int(self.config.get("boundary_beam_depth", 1) or 1) > 1
+        )
+        use_cpp = self.config.get('use_cpp_router', True) and not use_boundary_beam
         if use_cpp:
             return self._run_layout_trials_cpp(
                 seeded_pi, DAG, IDAG, layout_partitions,
@@ -1954,6 +1960,232 @@ class qgd_Partition_Aware_Mapping:
             "weight": weight,
         }
 
+    def _advance_layout_frontier(
+        self,
+        selected_partition_idx,
+        F,
+        resolved_partitions,
+        DAG,
+        IDAG,
+        optimized_partitions,
+    ):
+        """Advance a copied frontier without mutating circuits.
+
+        This mirrors the layout-only single-qubit elision logic and is used by
+        the boundary beam rollout.  It intentionally tracks only dependency
+        state and layout; final circuit construction still happens through the
+        concrete chosen route.
+        """
+        F_next = list(F)
+        resolved_next = list(resolved_partitions)
+
+        if selected_partition_idx in F_next:
+            F_next.remove(selected_partition_idx)
+        resolved_next[selected_partition_idx] = True
+
+        stack = deque(DAG[selected_partition_idx])
+        while stack:
+            child = stack.popleft()
+            if resolved_next[child] or child in F_next:
+                continue
+            if not all(resolved_next[parent] for parent in IDAG[child]):
+                continue
+            if self._partition_is_single(optimized_partitions[child]):
+                resolved_next[child] = True
+                stack.extend(DAG[child])
+            else:
+                F_next.append(child)
+
+        return tuple(F_next), tuple(resolved_next)
+
+    def _boundary_beam_select_index(
+        self,
+        partition_candidates,
+        scores,
+        cached_swaps,
+        cached_pi,
+        F_snapshot,
+        resolved_partitions,
+        DAG,
+        IDAG,
+        optimized_partitions,
+        scoring_partitions,
+        D,
+        candidate_cache,
+        canonical_data,
+        reverse=False,
+        W=0.5,
+        alpha=1.0,
+        cnot_cost=1.0 / 3.0,
+        adj=None,
+    ):
+        """Choose the next candidate by rolling out boundary-layout states.
+
+        The ordinary SABRE selector commits to the locally best candidate. This
+        keeps a small beam of possible boundary layouts across several future
+        partitions, then returns the first candidate from the best rollout.
+        """
+        beam_width = int(self.config.get("boundary_beam_width", 1) or 1)
+        beam_depth = int(self.config.get("boundary_beam_depth", 1) or 1)
+        fallback_idx = int(np.argmin(np.asarray(scores)))
+        if beam_width <= 1 or beam_depth <= 1 or len(partition_candidates) <= 1:
+            return fallback_idx
+        if not any(len(cand.involved_qbits) >= 3 for cand in partition_candidates):
+            return fallback_idx
+
+        max_E_size = self.config.get("max_E_size", 20)
+        max_lookahead = self.config.get("max_lookahead", 4)
+        top_k = self.config.get("prefilter_top_k", 50)
+        path_weight = self.config.get("path_tiebreak_weight", 0.2)
+        three_q_weight = self.config.get("three_qubit_exit_weight", 1.0)
+
+        def transition_cost(cand, swaps):
+            return self._routing_objective(
+                len(swaps or ()),
+                cand.cnot_count,
+                cnot_cost,
+            )
+
+        states = []
+        for idx, cand in enumerate(partition_candidates):
+            if cached_pi[idx] is None:
+                continue
+            trans_cost = transition_cost(cand, cached_swaps[idx])
+            F_next, resolved_next = self._advance_layout_frontier(
+                cand.partition_idx,
+                F_snapshot,
+                resolved_partitions,
+                DAG,
+                IDAG,
+                optimized_partitions,
+            )
+            states.append(
+                (
+                    float(scores[idx]),
+                    float(trans_cost),
+                    tuple(int(x) for x in cached_pi[idx]),
+                    F_next,
+                    resolved_next,
+                    idx,
+                )
+            )
+
+        if not states:
+            return fallback_idx
+
+        states.sort(key=lambda item: (item[0], item[5]))
+        states = states[:beam_width]
+
+        for _ in range(1, beam_depth):
+            expanded = []
+            for _, total_cost, pi_state, F_state, resolved_state, first_idx in states:
+                if not F_state:
+                    expanded.append(
+                        (total_cost, total_cost, pi_state, F_state, resolved_state, first_idx)
+                    )
+                    continue
+
+                resolved_list = list(resolved_state)
+                F_list = list(F_state)
+                E = self.generate_extended_set(
+                    F_list,
+                    DAG,
+                    IDAG,
+                    resolved_list,
+                    optimized_partitions,
+                    max_E_size=max_E_size,
+                    max_lookahead=max_lookahead,
+                )
+                candidates = self.obtain_partition_candidates(
+                    F_list,
+                    optimized_partitions,
+                    candidate_cache=candidate_cache,
+                )
+                if not candidates:
+                    expanded.append(
+                        (total_cost, total_cost, pi_state, F_state, resolved_state, first_idx)
+                    )
+                    continue
+                candidates = self._prefilter_candidates(
+                    candidates,
+                    list(pi_state),
+                    D,
+                    top_k,
+                    F=F_state,
+                    E=E,
+                    candidate_cache=candidate_cache,
+                    layout_partitions=optimized_partitions,
+                    reverse=reverse,
+                    W=W,
+                    alpha=alpha,
+                    canonical_data=canonical_data,
+                )
+
+                for cand in candidates:
+                    neighbor_info = self._build_neighbor_info(
+                        cand.partition_idx,
+                        F_state,
+                        E,
+                        pi_state,
+                        canonical_data,
+                        weight=path_weight,
+                        W=W,
+                        alpha=alpha,
+                        layout_partitions=optimized_partitions,
+                    )
+                    score, swaps, output_perm = self.score_partition_candidate(
+                        cand,
+                        F_state,
+                        list(pi_state),
+                        scoring_partitions,
+                        D,
+                        self._swap_cache,
+                        E=E,
+                        W=W,
+                        alpha=alpha,
+                        reverse=reverse,
+                        canonical_data=canonical_data,
+                        adj=adj,
+                        cnot_cost=cnot_cost,
+                        path_tiebreak_weight=path_weight,
+                        cached_neighbor_info=neighbor_info,
+                        candidate_cache=candidate_cache,
+                        layout_partitions=optimized_partitions,
+                        return_transforms=True,
+                        three_qubit_exit_weight=three_q_weight,
+                    )
+                    trans_cost = transition_cost(cand, swaps)
+                    future_cost = float(score) - trans_cost
+                    new_total = total_cost + trans_cost
+                    rank_cost = new_total + future_cost
+                    F_next, resolved_next = self._advance_layout_frontier(
+                        cand.partition_idx,
+                        F_state,
+                        resolved_state,
+                        DAG,
+                        IDAG,
+                        optimized_partitions,
+                    )
+                    expanded.append(
+                        (
+                            rank_cost,
+                            new_total,
+                            tuple(int(x) for x in output_perm),
+                            F_next,
+                            resolved_next,
+                            first_idx,
+                        )
+                    )
+
+            if not expanded:
+                break
+            expanded.sort(key=lambda item: (item[0], item[5]))
+            states = expanded[:beam_width]
+
+        if not states:
+            return fallback_idx
+        return int(min(states, key=lambda item: (item[0], item[5]))[5])
+
     def Heuristic_Search(
         self,
         F,
@@ -2138,10 +2370,26 @@ class qgd_Partition_Aware_Mapping:
                 cached_swaps[ci] = swaps
                 cached_pi[ci] = output_perm
 
-            min_partition_candidate = self._select_best_candidate(
-                partition_candidates, scores
+            best_idx = self._boundary_beam_select_index(
+                partition_candidates,
+                scores,
+                cached_swaps,
+                cached_pi,
+                F_snapshot,
+                resolved_partitions,
+                DAG,
+                IDAG,
+                optimized_partitions,
+                scoring_partitions,
+                D,
+                candidate_cache,
+                canonical_data,
+                W=E_W,
+                alpha=E_alpha,
+                cnot_cost=self.config.get("cnot_cost", 1.0 / 3.0),
+                adj=self._adj,
             )
-            best_idx = partition_candidates.index(min_partition_candidate)
+            min_partition_candidate = partition_candidates[best_idx]
 
             F.remove(min_partition_candidate.partition_idx)
             resolved_partitions[min_partition_candidate.partition_idx] = True
@@ -2360,10 +2608,27 @@ class qgd_Partition_Aware_Mapping:
                 cached_swaps[ci] = swaps
                 cached_pi[ci] = output_perm
 
-            best = self._select_best_candidate(
-                partition_candidates, scores, rng=rng
+            best_idx = self._boundary_beam_select_index(
+                partition_candidates,
+                scores,
+                cached_swaps,
+                cached_pi,
+                F_snapshot,
+                resolved_partitions,
+                DAG,
+                IDAG,
+                optimized_partitions,
+                scoring_partitions,
+                D,
+                candidate_cache,
+                canonical_data,
+                reverse=reverse,
+                W=E_W,
+                alpha=E_alpha,
+                cnot_cost=cnot_cost,
+                adj=self._adj,
             )
-            best_idx = partition_candidates.index(best)
+            best = partition_candidates[best_idx]
             F.remove(best.partition_idx)
             resolved_partitions[best.partition_idx] = True
 
