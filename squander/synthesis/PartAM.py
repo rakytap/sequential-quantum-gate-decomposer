@@ -372,6 +372,93 @@ class qgd_Partition_Aware_Mapping:
         return weights
 
     @staticmethod
+    def _side_window_turnover_cnot_cost(support, neighbor_support):
+        if len(support) < 3 or len(neighbor_support) < 2:
+            return None
+        entering_or_leaving = len(support - neighbor_support)
+        if entering_or_leaving == 0:
+            return 0.0
+
+        # A new qubit in a 3q window implies at least one SWAP on a line.
+        # If both sides are 3q candidates the boundary is seen from both
+        # candidate scores, so each side pays half of the 3-CNOT SWAP cost.
+        cnot_per_window_qubit = 1.5 if len(neighbor_support) >= 3 else 3.0
+        return cnot_per_window_qubit * entering_or_leaving
+
+    @staticmethod
+    def _average_window_cnot_cost(part_idx, part, neighbor_gate_sets,
+                                  gate_to_parts, allparts, supports):
+        costs = []
+        support = supports[part_idx]
+        turnover_cost = (
+            qgd_Partition_Aware_Mapping._side_window_turnover_cnot_cost
+        )
+        for gate_set in neighbor_gate_sets:
+            for gate_idx in gate_set - part:
+                for other_idx in gate_to_parts.get(gate_idx, ()):
+                    if other_idx == part_idx:
+                        continue
+                    other_part = allparts[other_idx]
+                    if part & other_part:
+                        continue
+                    cost = turnover_cost(support, supports[other_idx])
+                    if cost is not None:
+                        costs.append(cost)
+        if not costs:
+            return 0.0
+        return sum(costs) / len(costs)
+
+    @staticmethod
+    def _parts_to_window_turnover_cnot_costs(allparts, gate_dict, g):
+        supports = []
+        for part in allparts:
+            support, _ = (
+                qgd_Partition_Aware_Mapping._part_support_and_active_pairs(
+                    part,
+                    gate_dict,
+                )
+            )
+            supports.append(support)
+
+        gate_to_parts = defaultdict(list)
+        for part_idx, part in enumerate(allparts):
+            for gate_idx in part:
+                gate_to_parts[gate_idx].append(part_idx)
+
+        rg = defaultdict(set)
+        for src, dsts in g.items():
+            for dst in dsts:
+                rg[dst].add(src)
+
+        costs = []
+        for part_idx, part in enumerate(allparts):
+            support = supports[part_idx]
+            if len(support) < 3:
+                costs.append(0.0)
+                continue
+            succ_gate_sets = [g.get(gate_idx, set()) for gate_idx in part]
+            pred_gate_sets = [rg.get(gate_idx, set()) for gate_idx in part]
+            costs.append(
+                qgd_Partition_Aware_Mapping._average_window_cnot_cost(
+                    part_idx,
+                    part,
+                    pred_gate_sets,
+                    gate_to_parts,
+                    allparts,
+                    supports,
+                )
+                + qgd_Partition_Aware_Mapping._average_window_cnot_cost(
+                    part_idx,
+                    part,
+                    succ_gate_sets,
+                    gate_to_parts,
+                    allparts,
+                    supports,
+                )
+            )
+        return costs
+
+    @staticmethod
     def _subcircuit_from_gate_set(gates, gate_dict, parameters, go, rgo,
                                   gate_to_qubit, qbit_num):
         subcircuit = Circuit(qbit_num)
@@ -446,7 +533,9 @@ class qgd_Partition_Aware_Mapping:
         return max(1, int(meta.get('original_cnot_count', 1)))
 
     def _parts_to_synthesis_cnot_weights(self, allparts, gate_dict, parameters,
-                                         go, rgo, gate_to_qubit, qbit_num):
+                                         go, rgo, gate_to_qubit, qbit_num,
+                                         gate_dag=None,
+                                         include_window_route_cost=False):
         """Linear ILP weights from measured SeqPAM CNOT cost.
 
         Each candidate partition is synthesized over the input-identity and
@@ -532,6 +621,17 @@ class qgd_Partition_Aware_Mapping:
                 scores[part_idx] = self._synthesis_score_fallback(
                     metas[part_idx],
                 )
+
+        if include_window_route_cost and gate_dag is not None:
+            window_route_costs = self._parts_to_window_turnover_cnot_costs(
+                allparts,
+                gate_dict,
+                gate_dag,
+            )
+            scores = [
+                float(score) + window_route_costs[part_idx]
+                for part_idx, score in enumerate(scores)
+            ]
 
         self._partition_synthesis_cnot_scores = list(scores)
         return [(float(score) - 1.0) / N_parts for score in scores]
@@ -838,7 +938,10 @@ class qgd_Partition_Aware_Mapping:
                 gate_dict,
                 g,
             )
-        elif partition_weight_model == 'synthesis_cnot':
+        elif partition_weight_model in (
+            'synthesis_cnot',
+            'synthesis_route_cnot',
+        ):
             ilp_weights = self._parts_to_synthesis_cnot_weights(
                 allparts,
                 gate_dict,
@@ -847,6 +950,10 @@ class qgd_Partition_Aware_Mapping:
                 rgo,
                 gate_to_qubit,
                 qbit_num_orig_circuit,
+                gate_dag=g,
+                include_window_route_cost=(
+                    partition_weight_model == 'synthesis_route_cnot'
+                ),
             )
         elif self.config.get('size_density_weight', False):
             sparse_penalty = float(self.config.get('sparse_penalty', 3.0))
