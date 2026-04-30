@@ -177,6 +177,7 @@ class qgd_Partition_Aware_Mapping:
         self._topology_cache = {}  # {frozenset(edges): [topology_candidates]}
         self._swap_cache = {}     # {(pi_tuple, qbit_map_frozen): (swaps, output_perm)}
         self._adj = None          # Precomputed adjacency list (built by compute_distances_bfs)
+        self._decomp_cache = {}   # {(rounded unitary bytes, topology): synthesis result}
 
     # ------------------------------------------------------------------------
     # Caching Methods
@@ -369,6 +370,171 @@ class qgd_Partition_Aware_Mapping:
             )
             weights.append((conceptual_cost - 1.0) / N)
         return weights
+
+    @staticmethod
+    def _subcircuit_from_gate_set(gates, gate_dict, parameters, go, rgo,
+                                  gate_to_qubit, qbit_num):
+        subcircuit = Circuit(qbit_num)
+        subparams = []
+        ordered_gates = _get_topo_order(
+            {gate_idx: go[gate_idx] & gates for gate_idx in gates},
+            {gate_idx: rgo[gate_idx] & gates for gate_idx in gates},
+            gate_to_qubit,
+        )
+        for gate_idx in ordered_gates:
+            gate = gate_dict[gate_idx]
+            subcircuit.add_Gate(gate)
+            start = gate.get_Parameter_Start_Index()
+            stop = start + gate.get_Parameter_Num()
+            subparams.append(parameters[start:stop])
+        return subcircuit, np.concatenate(subparams, axis=0)
+
+    def _meta_from_gate_set(self, gates, gate_dict, parameters, go, rgo,
+                            gate_to_qubit, qbit_num):
+        subcircuit, subparams = self._subcircuit_from_gate_set(
+            gates,
+            gate_dict,
+            parameters,
+            go,
+            rgo,
+            gate_to_qubit,
+            qbit_num,
+        )
+        involved_qbits = subcircuit.get_Qbits()
+        qbit_num_sub = len(involved_qbits)
+        qbit_map = {
+            involved_qbits[idx]: idx for idx in range(len(involved_qbits))
+        }
+        remapped_subcircuit = subcircuit.Remap_Qbits(qbit_map, qbit_num_sub)
+        return {
+            'N': qbit_num_sub,
+            'circuit': remapped_subcircuit,
+            'params': subparams,
+            'mini_topologies': get_unique_subtopologies(
+                self.topology,
+                qbit_num_sub,
+            ),
+            'involved_qbits': involved_qbits,
+            'qbit_map': qbit_map,
+            'original_cnot_count': subcircuit.get_Gate_Nums().get('CNOT', 0),
+        }
+
+    @staticmethod
+    def _synthesis_score_pairs(N):
+        identity = tuple(range(N))
+        pairs = []
+        seen = set()
+        for perm in permutations(range(N)):
+            for pair in ((identity, tuple(perm)), (tuple(perm), identity)):
+                if pair in seen:
+                    continue
+                seen.add(pair)
+                pairs.append(pair)
+        return pairs
+
+    def _synthesis_score_fallback(self, meta):
+        best_cost = float('inf')
+        for mini_topology in meta['mini_topologies']:
+            fb_circuit, _ = self._qiskit_routing_fallback(meta, mini_topology)
+            if fb_circuit is not None:
+                best_cost = min(
+                    best_cost,
+                    fb_circuit.get_Gate_Nums().get('CNOT', 0),
+                )
+        if best_cost < float('inf'):
+            return best_cost
+        return max(1, int(meta.get('original_cnot_count', 1)))
+
+    def _parts_to_synthesis_cnot_weights(self, allparts, gate_dict, parameters,
+                                         go, rgo, gate_to_qubit, qbit_num):
+        """Linear ILP weights from measured SeqPAM CNOT cost.
+
+        Each candidate partition is synthesized over the input-identity and
+        output-identity boundary sweeps, i.e. up to 2*N! local decompositions
+        per local topology.  The selected partitions are later fully
+        enumerated by _run_parallel_synthesis, reusing the shared decomposition
+        cache populated here.
+        """
+        N_parts = max(len(allparts), 1)
+        metas = []
+        scores = [None] * len(allparts)
+
+        for part_idx, part in enumerate(allparts):
+            meta = self._meta_from_gate_set(
+                part,
+                gate_dict,
+                parameters,
+                go,
+                rgo,
+                gate_to_qubit,
+                qbit_num,
+            )
+            metas.append(meta)
+            if meta['N'] < 2:
+                scores[part_idx] = 0
+
+        disable_pbar = self.config.get('progressbar', 0) == False
+        futures = []
+        cached = []
+        n_cpus = _available_cpus()
+
+        with Pool(processes=n_cpus, initializer=_init_decompose_worker,
+                  initargs=(self.config,)) as pool:
+            for part_idx, meta in enumerate(metas):
+                if scores[part_idx] is not None:
+                    continue
+                pairs = self._synthesis_score_pairs(meta['N'])
+                for topology_idx, mini_topology in enumerate(
+                    meta['mini_topologies']
+                ):
+                    for P_i, P_o in pairs:
+                        Umtx = self._build_permuted_unitary(meta, P_i, P_o)
+                        ck = self._cache_key(Umtx, mini_topology)
+                        if ck in self._decomp_cache:
+                            cached.append((part_idx, ck))
+                        else:
+                            future = pool.apply_async(
+                                _decompose_one,
+                                (Umtx, mini_topology),
+                            )
+                            futures.append((part_idx, ck, future))
+
+            for part_idx, ck in cached:
+                _, _, synth_err = self._decomp_cache[ck]
+                if synth_err <= self.config['tolerance']:
+                    synth_circuit, _, _ = self._decomp_cache[ck]
+                    cnot_count = synth_circuit.get_Gate_Nums().get('CNOT', 0)
+                    if scores[part_idx] is None:
+                        scores[part_idx] = cnot_count
+                    else:
+                        scores[part_idx] = min(scores[part_idx], cnot_count)
+
+            for part_idx, ck, future in tqdm(
+                futures,
+                desc="Partition Weight Synthesis",
+                disable=disable_pbar,
+            ):
+                synth_circuit, synth_params, synth_err = future.get()
+                self._decomp_cache[ck] = (
+                    synth_circuit,
+                    synth_params,
+                    synth_err,
+                )
+                if synth_err <= self.config['tolerance']:
+                    cnot_count = synth_circuit.get_Gate_Nums().get('CNOT', 0)
+                    if scores[part_idx] is None:
+                        scores[part_idx] = cnot_count
+                    else:
+                        scores[part_idx] = min(scores[part_idx], cnot_count)
+
+        for part_idx, score in enumerate(scores):
+            if score is None:
+                scores[part_idx] = self._synthesis_score_fallback(
+                    metas[part_idx],
+                )
+
+        self._partition_synthesis_cnot_scores = list(scores)
+        return [(float(score) - 1.0) / N_parts for score in scores]
 
     @staticmethod
     def _topo_key(mini_topology):
@@ -672,6 +838,16 @@ class qgd_Partition_Aware_Mapping:
                 gate_dict,
                 g,
             )
+        elif partition_weight_model == 'synthesis_cnot':
+            ilp_weights = self._parts_to_synthesis_cnot_weights(
+                allparts,
+                gate_dict,
+                working_parameters,
+                go,
+                rgo,
+                gate_to_qubit,
+                qbit_num_orig_circuit,
+            )
         elif self.config.get('size_density_weight', False):
             sparse_penalty = float(self.config.get('sparse_penalty', 3.0))
             ilp_weights = self._parts_to_density_weights(
@@ -794,7 +970,7 @@ class qgd_Partition_Aware_Mapping:
         use_auts = self.config.get('use_automorphisms', True)
         disable_pbar = self.config.get('progressbar', 0) == False
         aut_cache = {}
-        decomp_cache = {}
+        decomp_cache = self._decomp_cache
 
         with Pool(processes=n_cpus, initializer=_init_decompose_worker,
                   initargs=(self.config,)) as pool:
