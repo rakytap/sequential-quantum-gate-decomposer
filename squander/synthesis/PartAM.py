@@ -272,14 +272,25 @@ class qgd_Partition_Aware_Mapping:
         return filtered
 
     @staticmethod
-    def _parts_to_embeddable_edge_weights(allparts):
-        """Uniform conceptual cost: every allowed partition has weight 1.
+    def _parts_to_active_edge_weights(allparts, gate_dict):
+        """Use active logical two-qubit edges as the structural part cost.
 
         ``ilp_global_optimal`` turns stored weight ``w`` into objective cost
-        ``1 + N*w``.  Returning zero therefore gives every already-filtered
-        2q part and embeddable 3q part the same conceptual cost of one.
+        ``1 + N*w``.  A 2q partition therefore has stored weight zero
+        because its active-edge cost is one.  A path-shaped 3q partition has
+        cost two, matching the two 2q edges it represents instead of making
+        the merge artificially cheaper.
         """
-        return [0.0] * len(allparts)
+        N = max(len(allparts), 1)
+        weights = []
+        for part in allparts:
+            _, active_pairs = (
+                qgd_Partition_Aware_Mapping
+                ._part_support_and_active_pairs(part, gate_dict)
+            )
+            cost = max(1, len(active_pairs))
+            weights.append((cost - 1) / N)
+        return weights
 
     @staticmethod
     def _topo_key(mini_topology):
@@ -576,14 +587,17 @@ class qgd_Partition_Aware_Mapping:
 
         # ---- Phase 2: ILP partition selection ----
         # Invalid 3q merge candidates were removed above.  The remaining
-        # candidates all have conceptual cost 1: 2q parts cost 1, and 3q
-        # parts cost 1 only when their active-pair graph is embeddable.
+        # candidates are priced by active logical two-qubit edges, so a valid
+        # 3q path is no cheaper than the two 2q interactions it represents.
         ilp_weights = None
         if (
             self.config.get('routing_aware_partitioning', True)
             and self.config.get('embeddable_3q_partitions_only', True)
         ):
-            ilp_weights = self._parts_to_embeddable_edge_weights(allparts)
+            ilp_weights = self._parts_to_active_edge_weights(
+                allparts,
+                gate_dict,
+            )
         L_parts, _ = ilp_global_optimal(allparts, g, weights=ilp_weights)
 
         # ---- Phase 3: Build gate sets for selected partitions (+ standalone chains) ----
