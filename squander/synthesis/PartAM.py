@@ -576,6 +576,7 @@ class qgd_Partition_Aware_Mapping:
                 involved.update(gate_dict[g].get_Involved_Qbits())
             size = len(involved)
             size_counts[size] = size_counts.get(size, 0) + 1
+        self._selected_partition_counts = dict(size_counts)
         print(f"Selected partitions: 2-qubit={size_counts.get(2, 0)}, 3-qubit={size_counts.get(3, 0)}, total_multi={sum(size_counts.get(s, 0) for s in size_counts if s > 1)}")
 
         # ---- Phase 4: Assemble partitioned circuit from selected partitions only ----
