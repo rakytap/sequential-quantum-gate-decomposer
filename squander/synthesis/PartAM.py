@@ -165,6 +165,7 @@ class qgd_Partition_Aware_Mapping:
         self.config.setdefault('boundary_beam_depth', 1)
         self.config.setdefault('size_density_weight', False)
         self.config.setdefault('sparse_penalty', 3.0)
+        self.config.setdefault('partition_weight_model', 'density')
         strategy = self.config['strategy']
         self.config.setdefault('parallel_layout_trials', False)
         self.config.setdefault('layout_trial_workers', 0)
@@ -245,6 +246,128 @@ class qgd_Partition_Aware_Mapping:
             else:
                 penalty = sparse_penalty
             weights.append(penalty / N)
+        return weights
+
+    @staticmethod
+    def _part_support_and_active_pairs(part, gate_dict):
+        qubits_in_part = set()
+        active_pairs = set()
+        for gate_idx in part:
+            gate = gate_dict.get(gate_idx)
+            if gate is None:
+                continue
+            qbs = list(gate.get_Involved_Qbits())
+            qubits_in_part.update(qbs)
+            if len(qbs) < 2:
+                continue
+            for a in range(len(qbs)):
+                for b in range(a + 1, len(qbs)):
+                    active_pairs.add(
+                        (min(qbs[a], qbs[b]), max(qbs[a], qbs[b]))
+                    )
+        return frozenset(qubits_in_part), frozenset(active_pairs)
+
+    @staticmethod
+    def _turnover_between_supports(support_a, support_b):
+        if len(support_a) < 2 or len(support_b) < 2:
+            return None
+        return min(len(support_a), len(support_b)) - len(support_a & support_b)
+
+    @staticmethod
+    def _average_turnover(part_idx, part, neighbor_gate_sets,
+                          gate_to_parts, allparts, supports):
+        turnovers = []
+        for gate_set in neighbor_gate_sets:
+            for gate_idx in gate_set - part:
+                for other_idx in gate_to_parts.get(gate_idx, ()):
+                    if other_idx == part_idx:
+                        continue
+                    other_part = allparts[other_idx]
+                    if part & other_part:
+                        continue
+                    turnover = (
+                        qgd_Partition_Aware_Mapping._turnover_between_supports(
+                            supports[part_idx],
+                            supports[other_idx],
+                        )
+                    )
+                    if turnover is not None:
+                        turnovers.append(turnover)
+        if not turnovers:
+            return None
+        return sum(turnovers) / len(turnovers)
+
+    @staticmethod
+    def _parts_to_window_turnover_weights(allparts, gate_dict, g):
+        """Linear ILP weights for 3q window continuity.
+
+        Dense 3q blocks are only routing-friendly when their local qubit window
+        persists into adjacent work.  A block like (0, i, j) followed by
+        (0, k, l) replaces two qubits in the 3q window, which is exactly the
+        expensive pattern on a line.  This cost keeps 2q parts at conceptual
+        cost one and charges 3q parts for active-pair count plus average
+        predecessor/successor window turnover.
+        """
+        N = max(len(allparts), 1)
+        supports = []
+        active_pairs_by_part = []
+        for part in allparts:
+            support, active_pairs = (
+                qgd_Partition_Aware_Mapping._part_support_and_active_pairs(
+                    part,
+                    gate_dict,
+                )
+            )
+            supports.append(support)
+            active_pairs_by_part.append(active_pairs)
+
+        gate_to_parts = defaultdict(list)
+        for part_idx, part in enumerate(allparts):
+            for gate_idx in part:
+                gate_to_parts[gate_idx].append(part_idx)
+
+        rg = defaultdict(set)
+        for src, dsts in g.items():
+            for dst in dsts:
+                rg[dst].add(src)
+
+        weights = []
+        for part_idx, part in enumerate(allparts):
+            support = supports[part_idx]
+            active_pairs = active_pairs_by_part[part_idx]
+            if len(support) < 3:
+                weights.append(0.0)
+                continue
+
+            succ_gate_sets = [g.get(gate_idx, set()) for gate_idx in part]
+            pred_gate_sets = [rg.get(gate_idx, set()) for gate_idx in part]
+            succ_turnover = qgd_Partition_Aware_Mapping._average_turnover(
+                part_idx,
+                part,
+                succ_gate_sets,
+                gate_to_parts,
+                allparts,
+                supports,
+            )
+            pred_turnover = qgd_Partition_Aware_Mapping._average_turnover(
+                part_idx,
+                part,
+                pred_gate_sets,
+                gate_to_parts,
+                allparts,
+                supports,
+            )
+            boundary_turnover = len(support)
+            if succ_turnover is None:
+                succ_turnover = boundary_turnover
+            if pred_turnover is None:
+                pred_turnover = boundary_turnover
+            conceptual_cost = (
+                max(len(support), len(active_pairs), 1)
+                + succ_turnover
+                + pred_turnover
+            )
+            weights.append((conceptual_cost - 1.0) / N)
         return weights
 
     @staticmethod
@@ -535,13 +658,21 @@ class qgd_Partition_Aware_Mapping:
         single_qubit_chains_prepost = {x[0]: x for x in single_qubit_chains if x[0] in single_qubit_chains_pre and x[-1] in single_qubit_chains_post}
 
         # ---- Phase 2: ILP partition selection ----
-        # Minimize total partition count so PAM gets the largest blocks possible
-        # under max_partition_size. Larger blocks = more (P_i, P_o) freedom to
-        # absorb routing SWAPs. Overlap-based tie-breaker (when enabled)
-        # picks deterministically among min-count covers, preferring covers
-        # whose parts share more logical qubits with their DAG successors.
+        # By default this minimizes partition count. Optional weight models can
+        # replace that unit cost with a routing-oriented conceptual cost while
+        # preserving a linear ILP objective.
         ilp_weights = None
-        if self.config.get('size_density_weight', False):
+        partition_weight_model = self.config.get(
+            'partition_weight_model',
+            'density',
+        )
+        if partition_weight_model == 'window_turnover':
+            ilp_weights = self._parts_to_window_turnover_weights(
+                allparts,
+                gate_dict,
+                g,
+            )
+        elif self.config.get('size_density_weight', False):
             sparse_penalty = float(self.config.get('sparse_penalty', 3.0))
             ilp_weights = self._parts_to_density_weights(
                 allparts, gate_dict, sparse_penalty=sparse_penalty
@@ -577,7 +708,16 @@ class qgd_Partition_Aware_Mapping:
             size = len(involved)
             size_counts[size] = size_counts.get(size, 0) + 1
         self._selected_partition_counts = dict(size_counts)
-        print(f"Selected partitions: 2-qubit={size_counts.get(2, 0)}, 3-qubit={size_counts.get(3, 0)}, total_multi={sum(size_counts.get(s, 0) for s in size_counts if s > 1)}")
+        if self.config.get('verbosity', 0) > 0:
+            selected_multi = sum(
+                count for size, count in size_counts.items() if size > 1
+            )
+            print(
+                "Selected partitions: "
+                f"2-qubit={size_counts.get(2, 0)}, "
+                f"3-qubit={size_counts.get(3, 0)}, "
+                f"total_multi={selected_multi}"
+            )
 
         # ---- Phase 4: Assemble partitioned circuit from selected partitions only ----
         partitioned_circuit = Circuit(qbit_num_orig_circuit)
@@ -1103,6 +1243,19 @@ class qgd_Partition_Aware_Mapping:
         for idx, orig in saved_circuits.items():
             optimized_partitions[idx].circuit = orig.copy()
 
+    @staticmethod
+    def _partition_order_cnot_breakdown(partition_order):
+        routing_cnot = 0
+        partition_cnot = 0
+        for part in partition_order:
+            if isinstance(part, Circuit):
+                routing_cnot += part.get_Gate_Nums().get('CNOT', 0)
+            elif isinstance(part, SingleQubitPartitionResult):
+                continue
+            else:
+                partition_cnot += int(getattr(part, 'cnot_count', 0))
+        return routing_cnot, partition_cnot
+
     def _partition_order_from_cpp_steps(
         self, steps, optimized_partitions, candidate_cache, N
     ):
@@ -1228,6 +1381,8 @@ class qgd_Partition_Aware_Mapping:
         do_cleanup = self.config.get('cleanup', True)
 
         routing_start = time.time()
+        routing_swap_cnot = 0
+        partition_body_cnot = 0
 
         if n_iterations == 0:
             F = self.get_initial_layer(IDAG, N, optimized_partitions)
@@ -1243,6 +1398,9 @@ class qgd_Partition_Aware_Mapping:
             )
             final_circuit, final_parameters = self.Construct_circuit_from_HS(
                 partition_order, optimized_partitions, N
+            )
+            routing_swap_cnot, partition_body_cnot = (
+                self._partition_order_cnot_breakdown(partition_order)
             )
 
         else:
@@ -1302,6 +1460,8 @@ class qgd_Partition_Aware_Mapping:
                 best_pi = None
                 best_cost = float('inf')
                 best_pre_cleanup = None
+                best_routing_swap_cnot = 0
+                best_partition_body_cnot = 0
                 cleanup_total = 0.0
 
                 for _, trial_pi, _, trace_pi_init, route_steps in top_layouts:
@@ -1335,6 +1495,9 @@ class qgd_Partition_Aware_Mapping:
                     pre_cleanup_cnots = trial_circuit.get_Gate_Nums().get(
                         'CNOT', 0
                     )
+                    trial_routing_cnot, trial_partition_cnot = (
+                        self._partition_order_cnot_breakdown(partition_order)
+                    )
 
                     cleanup_t0 = time.time()
                     cleaned_circuit, cleaned_params = wco.OptimizeWideCircuit(
@@ -1353,11 +1516,15 @@ class qgd_Partition_Aware_Mapping:
                         best_params = cleaned_params
                         best_pi_init = pi_init
                         best_pi = pi_out
+                        best_routing_swap_cnot = trial_routing_cnot
+                        best_partition_body_cnot = trial_partition_cnot
 
                 final_circuit = best_circuit
                 final_parameters = best_params
                 pi_initial = best_pi_init
                 pi = best_pi
+                routing_swap_cnot = best_routing_swap_cnot
+                partition_body_cnot = best_partition_body_cnot
 
             else:
                 _, best_pi, _, trace_pi_init, route_steps = trial_results[0]
@@ -1389,6 +1556,9 @@ class qgd_Partition_Aware_Mapping:
                 final_circuit, final_parameters = self.Construct_circuit_from_HS(
                     partition_order, optimized_partitions, N
                 )
+                routing_swap_cnot, partition_body_cnot = (
+                    self._partition_order_cnot_breakdown(partition_order)
+                )
 
         if do_cleanup and n_iterations > 0:
             self._routing_time = time.time() - routing_start - cleanup_total
@@ -1415,6 +1585,9 @@ class qgd_Partition_Aware_Mapping:
                 final_circuit, final_parameters = wco.OptimizeWideCircuit(
                     final_circuit.get_Flat_Circuit(), final_parameters
                 )
+
+        self._routing_swap_cnot = routing_swap_cnot
+        self._partition_body_cnot = partition_body_cnot
 
         return final_circuit, final_parameters, pi_initial, pi
 
