@@ -188,6 +188,15 @@ class Generative_Quantum_Machine_Learning_Base : public Optimization_Interface {
     */
     double MMD_of_the_distributions_approx(Matrix& State_right);
 
+    using Decomposition_Base::optimization_problem;
+
+    /**
+    @brief The optimization problem of the final optimization
+    @param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
+    @return Returns with the cost function. (zero if the qubits are desintangled.)
+    */
+    double optimization_problem( double* parameters);
+
     /**
     @brief The optimization problem of the final optimization
     @param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be
@@ -220,14 +229,6 @@ class Generative_Quantum_Machine_Learning_Base : public Optimization_Interface {
     @return Returns with the cost function values.
     */
     Matrix_real optimization_problem_batched( std::vector<Matrix_real>& parameters_vec) override;
-
-    /**
-    @brief The optimization problem of the final optimization
-    @param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be
-    equal to the number of parameters in one sub-layer)
-    @return Returns with the cost function. (zero if the qubits are desintangled.)
-    */
-    double optimization_problem(double* parameters);
 
     /**
     @brief Call to evaluate the gradient of the maximum mean discrepancy of the given distribution and the one created
@@ -279,7 +280,7 @@ class Generative_Quantum_Machine_Learning_Base : public Optimization_Interface {
     @param current_minimum The current minimum (to avoid calculating it again
     @param parameters Parameters to be used in the calculations (For Rényi entropy)
     */
-    void export_current_cost_fnc(double current_minimum, Matrix_real& parameters);
+    void export_current_cost_fnc(double current_minimum, Matrix_real& parameters) override;
 
     /**
     @brief Initialize the state used in the quantun circuit. All qubits are initialized to state 0

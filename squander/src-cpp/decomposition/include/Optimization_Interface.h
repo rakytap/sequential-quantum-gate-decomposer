@@ -87,6 +87,10 @@ protected:
     double correction2_scale;    
     /// cuts used for OSR entanglement cost function
     std::vector<std::vector<int>> use_cuts;
+    /// rank used for OSR entanglement cost function
+    int osr_rank = -1;
+    /// logical variable indicating whether to use softmax or average in the OSR entanglement cost function
+    bool use_softmax = false;
     
 
     /// number of iterations
@@ -289,6 +293,9 @@ void solve_layer_optimization_problem_ADAM( int num_of_parameters, Matrix_real& 
 */
 void randomize_parameters( Matrix_real& input, Matrix_real& output, const double f0 );
 
+
+// Bring base class optimization_problem into scope to avoid hiding
+using Decomposition_Base::optimization_problem;
 
 /**
 @brief Evaluate the optimization problem of the optimization
@@ -539,6 +546,8 @@ void upload_Umtx_to_DFE();
 @brief Get the number of accelerators to be reserved on DFEs on users demand.
 */
 int get_accelerator_num();
+
+void set_osr_params( std::vector<std::vector<int>> use_cuts_in, int osr_rank_in, bool use_softmax_in );
 
 
 

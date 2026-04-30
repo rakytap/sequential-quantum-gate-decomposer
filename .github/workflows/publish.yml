@@ -3,64 +3,46 @@ name: Publish to PyPI
 on:
   workflow_dispatch:
     inputs:
-      bump-segment:
-        description: "SemVer segment to bump (major, minor, patch)"
+      target:
+        description: "Publish target (pypi or testpypi)"
+        required: true
+        default: pypi
+      version:
+        description: "Version to publish (leave empty to use version from pyproject.toml)"
         required: false
-        default: patch
+        default: ""
 
 permissions:
   contents: write
   id-token: write
 
 jobs:
-  # bump-version:
-  #   runs-on: ubuntu-latest
-  #   outputs:
-  #     version: ${{ steps.bump.outputs.version }}
-  #   steps:
-  #     - name: Checkout repository
-  #       uses: actions/checkout@v4
-  #       with:
-  #         token: ${{ secrets.GITHUB_TOKEN }}
-  #         fetch-depth: 0
+  get-version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-  #     - name: Set up Python
-  #       uses: actions/setup-python@v5
-  #       with:
-  #         python-version: "3.11"
-
-  #     - name: Install dependencies
-  #       run: |
-  #         python -m pip install --upgrade pip
-  #         python -m pip install packaging
-
-  #     - name: Bump project version
-  #       id: bump
-  #       env:
-  #         BUMP_SEGMENT: ${{ github.event.inputs.bump-segment || 'patch' }}
-  #       run: python .github/scripts/bump_version.py
-
-  #     - name: Commit version bump
-  #       run: |
-  #         git config --local user.email "peter.rakyta@ttk.elte.hu"
-  #         git config --local user.name "Peter Rakyta"
-  #         git add setup.py CMakeLists.txt Doxyfile
-  #         git commit -m "Bump version to ${{ steps.bump.outputs.version }}"
-  #         git push
+      - name: Get version from pyproject.toml
+        id: version
+        run: |
+          if [ -n "${{ github.event.inputs.version }}" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            VERSION=$(grep -E '^version\s*=\s*["'\'']([^"'\'']+)["'\'']' pyproject.toml | sed -E 's/^version\s*=\s*["'\'']([^"'\'']+)["'\'']/\1/')
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Publishing version: $VERSION"
 
   build-wheels:
-    #needs: bump-version
+    needs: get-version
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
-        python-version: ["3.13"]
-        exclude:
-          # Reduce build matrix - adjust as needed
-          - os: windows-latest
-            python-version: "3.10"
-          - os: macos-latest
-            python-version: "3.10"
+        os: [windows-latest, macos-latest]
+        python-version: ["3.10", "3.11", "3.12",  "3.13"]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout repository
@@ -94,7 +76,7 @@ jobs:
       - name: Install macOS system dependencies
         if: runner.os == 'macOS'
         run: |
-          brew install cmake tbb openblas lapack
+          brew install cmake tbb openblas lapack libomp
 
       - name: Install Windows system dependencies
         if: runner.os == 'Windows'
@@ -165,6 +147,14 @@ jobs:
         run: |
           echo "TBB_LIB_DIR=$(brew --prefix tbb)/lib" >> $GITHUB_ENV
           echo "TBB_INC_DIR=$(brew --prefix tbb)/include" >> $GITHUB_ENV
+          echo "OMP_NUM_THREADS=1" >> $GITHUB_ENV
+          # Help CMake find OpenMP on macOS
+          export OMP_PREFIX=$(brew --prefix libomp)
+          echo "OpenMP_C_FLAGS=-Xpreprocessor -fopenmp -I$OMP_PREFIX/include" >> $GITHUB_ENV
+          echo "OpenMP_CXX_FLAGS=-Xpreprocessor -fopenmp -I$OMP_PREFIX/include" >> $GITHUB_ENV
+          echo "OpenMP_C_LIB_NAMES=omp" >> $GITHUB_ENV
+          echo "OpenMP_CXX_LIB_NAMES=omp" >> $GITHUB_ENV
+          echo "OpenMP_omp_LIBRARY=$OMP_PREFIX/lib/libomp.dylib" >> $GITHUB_ENV
 
       - name: Build wheel
         env:
@@ -185,12 +175,48 @@ jobs:
         run: |
           for wheel in dist/*.whl; do
             if [[ "$wheel" != *"wheelhouse"* ]]; then
-              delocate-wheel -w dist/ "$wheel"
-              # Remove original wheel, keep only repaired one
-              rm -f "$wheel" || true
+              # Extract wheel
+              temp_dir=$(mktemp -d)
+              wheel_name=$(basename "$wheel")
+              unzip -q "$wheel" -d "$temp_dir"
+              
+              # Find libqgd.dylib
+              libqgd_path=$(find "$temp_dir" -name "libqgd.dylib" -type f | head -1)
+              
+              if [ -z "$libqgd_path" ]; then
+                echo "ERROR: libqgd.dylib not found in wheel"
+                rm -rf "$temp_dir"
+                exit 1
+              fi
+              
+              echo "Found libqgd.dylib at: ${libqgd_path#$temp_dir/}"
+              
+              # Fix @rpath references in all Python extension modules
+              # Since INSTALL_RPATH is "$ORIGIN/..", change @rpath to @loader_path/..
+              for ext_module in $(find "$temp_dir" -name "*.so" -type f); do
+                if otool -L "$ext_module" 2>/dev/null | grep -q "@rpath/libqgd.dylib"; then
+                  echo "Fixing @rpath in: ${ext_module#$temp_dir/}"
+                  install_name_tool -change "@rpath/libqgd.dylib" "@loader_path/../libqgd.dylib" "$ext_module"
+                fi
+              done
+              
+              # Now run delocate-path to handle external dependencies
+              delocate-path "$temp_dir"
+              
+              # Rebuild wheel in temp_dir
+              (cd "$temp_dir" && zip -q -r "$wheel_name" .)
+              
+              # Remove original wheel first
+              rm -f "$wheel"
+              
+              # Move repaired wheel to dist/
+              mv "$temp_dir/$wheel_name" "dist/$wheel_name"
+              
+              # Clean up
+              rm -rf "$temp_dir"
             fi
           done
-
+          
       - name: Repair wheel (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
@@ -261,40 +287,136 @@ jobs:
           path: dist/*.whl
           retention-days: 1
 
-  # publish:
-  #   needs: [bump-version, build-wheels]
-  #   runs-on: ubuntu-latest
-  #   if: needs.bump-version.outputs.version != ''
-  #   steps:
-  #     - name: Download all wheels
-  #       uses: actions/download-artifact@v4
-  #       with:
-  #         pattern: wheels-*
-  #         path: dist/
-  #         merge-multiple: true
+  build-manylinux-wheels:
+    needs: get-version
+    strategy:
+      fail-fast: false
+      matrix:
+        image: [manylinux_2_28_x86_64]
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-  #     - name: Display wheel files
-  #       run: |
-  #         echo "Wheels to be published:"
-  #         ls -lh dist/*.whl || echo "No wheels found"
+      - name: Build wheel
+        run: |
+          docker run --rm -v ${{ github.workspace }}:/io \
+            quay.io/pypa/${{ matrix.image }} \
+            /bin/bash -c "
+              yum install -y cmake tbb-devel openblas-devel lapack-devel
+              PYTHON_TAG=$(echo '${{ matrix.python-version }}' | tr -d '.')
+              /opt/python/cp\${PYTHON_TAG}-cp\${PYTHON_TAG}/bin/pip install --upgrade pip
+              /opt/python/cp\${PYTHON_TAG}-cp\${PYTHON_TAG}/bin/pip install build setuptools wheel scikit-build ninja numpy auditwheel
+              
+              # Find TBB library location
+              TBB_LIB_PATH=\$(find /usr -name 'libtbb.so*' 2>/dev/null | head -1 | xargs dirname)
+              TBB_INC_PATH=\$(find /usr -name 'tbb.h' 2>/dev/null | head -1 | xargs dirname)
+              
+              if [ -z \"\${TBB_LIB_PATH}\" ]; then
+                # Try common locations
+                for path in /usr/lib64 /usr/local/lib64 /usr/lib; do
+                  if [ -f \"\${path}/libtbb.so\" ] || [ -f \"\${path}/libtbb.so.12\" ]; then
+                    TBB_LIB_PATH=\${path}
+                    break
+                  fi
+                done
+              fi
+              
+              if [ -z \"\${TBB_INC_PATH}\" ]; then
+                TBB_INC_PATH=/usr/include
+              fi
+              
+              echo \"TBB_LIB_PATH: \${TBB_LIB_PATH}\"
+              echo \"TBB_INC_PATH: \${TBB_INC_PATH}\"
+              
+              # List all TBB libraries found
+              echo \"Searching for TBB libraries:\"
+              find /usr -name 'libtbb*.so*' 2>/dev/null | head -10
+              
+              # Ensure TBB libraries are in a standard location that auditwheel can find
+              if [ -n \"\${TBB_LIB_PATH}\" ] && [ \"\${TBB_LIB_PATH}\" != \"/usr/lib64\" ] && [ \"\${TBB_LIB_PATH}\" != \"/usr/lib\" ]; then
+                echo \"Copying TBB libraries to /usr/lib64 for auditwheel\"
+                cp \${TBB_LIB_PATH}/libtbb*.so* /usr/lib64/ 2>/dev/null || true
+              fi
+              
+              export TBB_LIB_DIR=\${TBB_LIB_PATH}
+              export TBB_INC_DIR=\${TBB_INC_PATH}
+              export LD_LIBRARY_PATH=/usr/lib64:/usr/lib:\${TBB_LIB_PATH}:\${LD_LIBRARY_PATH}
+              
+              cd /io
+              /opt/python/cp\${PYTHON_TAG}-cp\${PYTHON_TAG}/bin/python -m build --wheel
+              
+              # Repair wheel - auditwheel should now find TBB in /usr/lib64
+              /opt/python/cp\${PYTHON_TAG}-cp\${PYTHON_TAG}/bin/auditwheel repair dist/*.whl -w dist/
+              rm -f dist/*linux_x86_64.whl
+            "
 
-  #     - name: Publish to PyPI
-  #       uses: pypa/gh-action-pypi-publish@release/v1
-  #       with:
-  #         password: ${{ secrets.PYPI_API_TOKEN }}
-  #         packages-dir: dist/
-  #         verbose: true
+      - name: Upload wheel artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheels-manylinux-${{ matrix.image }}-py${{ matrix.python-version }}
+          path: dist/*.whl
+          retention-days: 1
 
-  #     - name: Create GitHub Release
-  #       run: |
-  #         gh release create "v${{ needs.bump-version.outputs.version }}" \
-  #           --title "Release v${{ needs.bump-version.outputs.version }}" \
-  #           --notes "## Release v${{ needs.bump-version.outputs.version }}
+  publish:
+    needs: [get-version, build-wheels, build-manylinux-wheels]
+    runs-on: ubuntu-latest
+    if: needs.get-version.outputs.version != '' && github.event.inputs.target == 'pypi'
+    steps:
+      - name: Download all wheels
+        uses: actions/download-artifact@v4
+        with:
+          pattern: wheels-*
+          path: dist/
+          merge-multiple: true
+
+      - name: Display wheel files
+        run: |
+          echo "Wheels to be published:"
+          ls -lh dist/*.whl || echo "No wheels found"
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}
+          packages-dir: dist/
+          verbose: true
+
+      - name: Create GitHub Release
+        run: |
+          gh release create "v${{ needs.get-version.outputs.version }}" \
+            --title "Release v${{ needs.get-version.outputs.version }}" \
+            --notes "## Release v${{ needs.get-version.outputs.version }}
           
-  #         This release includes version ${{ needs.bump-version.outputs.version }} of the squander package.
+          This release includes version ${{ needs.get-version.outputs.version }} of the squander package.
           
-  #         ### Changes
-  #         - Version bumped to ${{ needs.bump-version.outputs.version }}
-  #         - Package published to PyPI with wheels for Linux, Windows, and macOS"
-  #       env:
-  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ### Changes
+          - Package published to PyPI with wheels for Linux, Windows, and macOS"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  publish-testpypi:
+    needs: [get-version, build-wheels, build-manylinux-wheels]
+    runs-on: ubuntu-latest
+    if: needs.get-version.outputs.version != '' && github.event.inputs.target == 'testpypi'
+    steps:
+      - name: Download all wheels
+        uses: actions/download-artifact@v4
+        with:
+          pattern: wheels-*
+          path: dist/
+          merge-multiple: true
+
+      - name: Display wheel files (TestPyPI)
+        run: |
+          echo "Wheels to be published to TestPyPI:"
+          ls -lh dist/*.whl || echo "No wheels found"
+
+      - name: Publish to TestPyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+          repository-url: https://test.pypi.org/legacy/
+          packages-dir: dist/
+          verbose: true

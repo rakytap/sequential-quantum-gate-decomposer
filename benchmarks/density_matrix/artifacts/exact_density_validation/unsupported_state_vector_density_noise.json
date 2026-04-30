@@ -1,0 +1,51 @@
+{
+  "ansatz": "HEA",
+  "backend": "state_vector",
+  "case_name": "unsupported_state_vector_density_noise",
+  "density_noise": [
+    {
+      "after_gate_index": 0,
+      "channel": "local_depolarizing",
+      "error_rate": 0.1,
+      "target": 0
+    },
+    {
+      "after_gate_index": 2,
+      "channel": "amplitude_damping",
+      "gamma": 0.05,
+      "target": 1
+    },
+    {
+      "after_gate_index": 4,
+      "channel": "phase_damping",
+      "lambda": 0.07,
+      "target": 0
+    }
+  ],
+  "hamiltonian": {
+    "Jx": 1.0,
+    "Jy": 1.0,
+    "Jz": 1.0,
+    "h": 0.5
+  },
+  "inner_blocks": 1,
+  "layers": 1,
+  "qbit_num": 4,
+  "status": "unsupported",
+  "topology": [
+    [
+      0,
+      1
+    ],
+    [
+      1,
+      2
+    ],
+    [
+      2,
+      3
+    ]
+  ],
+  "unsupported_category": "phase2_support_matrix",
+  "unsupported_reason": "Variational_Quantum_Eigensolver_Base::validate_density_anchor_support: state_vector backend does not support density_matrix-only noise configuration"
+}

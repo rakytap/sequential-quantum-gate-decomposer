@@ -65,7 +65,7 @@ virtual ~CNOT();
 @brief Call to create a clone of the present class
 @return Return with a pointer pointing to the cloned object
 */
-virtual CNOT* clone();
+virtual CNOT* clone() override;
 
 };
 

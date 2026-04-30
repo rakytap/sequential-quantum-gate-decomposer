@@ -1,0 +1,474 @@
+# Full Paper Draft: Bounded Exact Channel-Native Fusion for Local Noisy Motifs
+
+## Draft Status
+
+Decision-study closure draft aligned to
+`PRE_PUBLICATION_EVIDENCE_REVIEW_PHASE_3_1.md`, which now records the frozen
+Phase 3.1 v1 slice as `decision-study-ready`. This full paper therefore uses
+the recorded bounded decision-study claim boundary rather than a pre-closure
+placeholder stance.
+
+## Title Candidates
+
+- `Bounded Exact Channel-Native Fusion for Local Noisy Motifs in Partitioned Density-Matrix Simulation`
+- `Beyond Unitary Fusion: Exact CPTP Motif Composition for Noisy Quantum Simulation`
+- `Exact Local Noisy-Motif Fusion in a Partitioned Density-Matrix Runtime`
+
+## Abstract
+
+Exact density-matrix simulation is the most reliable classical baseline for
+studying variational quantum circuits under realistic local noise, yet most
+partitioning and fusion techniques are still centered on unitary or
+state-vector-style subcircuits. We study a bounded exact alternative inside the
+SQUANDER mixed-state execution stack: channel-native fusion of small same-
+support gate-noise motifs. The current design now has two execution
+interpretations. A **strict** motif-proof path treats 1- and 2-qubit motifs
+built from `U3`, `CNOT`, and local depolarizing, amplitude-damping, or phase-
+damping channels as exact CPTP objects represented primarily by Kraus bundles.
+An explicit **hybrid** whole-workload path is the current evaluation vehicle
+for continuity and structured benchmark cases, where eligible partitions run
+channel-natively and Phase-3-supported but Phase-3.1-ineligible partitions stay
+on the shipped exact baseline with route attribution. Composition follows
+ordered noisy-circuit semantics, invariant checks enforce trace preservation and
+positivity, and the fused object can be applied on local support within a larger
+density state. Current implementation-backed validation now spans both layers:
+the bounded counted microcase surface agrees with the sequential exact
+reference below `1e-10`, both counted hybrid continuity anchors
+(`phase2_xxz_hea_q4_continuity` and `phase2_xxz_hea_q6_continuity`) also match
+the sequential oracle under the same threshold, and the required bounded
+Qiskit Aer slice is already present for the four strict microcases plus
+`phase2_xxz_hea_q4_continuity`. A first frozen 8-qubit structured hybrid pilot
+row records route coverage plus sequential, Phase 3 fused, and hybrid timings;
+on the current evidence, that row remains slower than the existing Phase 3
+fused baseline. The full frozen 26-row whole-workload matrix now records the
+same baseline trio on every counted case and emits a machine-readable decision
+artifact. That matrix supports a bounded **decision-study** conclusion rather
+than a positive-methods closure: `17` rows are classified
+`phase3_sufficient`, `9` rows are classified `phase31_not_justified_yet`, and
+`0` rows are classified `phase31_justified`. These results therefore establish
+a bounded exactness-and-decision-study contribution: exact channel-native
+fusion is feasible and scientifically auditable on the frozen motif slice, but
+the stronger performance-justification threshold is not met on the frozen
+whole-workload matrix.
+
+## Publication Surface Role
+
+This document is the full-paper surface for the Phase 3.1 decision-study
+publication track. It follows a research-paper structure with explicit problem
+statement, method, current results, limitations, and reproducibility posture.
+
+## Current Claim Boundary
+
+**Implemented and validated on the current evidence boundary**
+
+- Small same-support noisy motifs can be fused exactly as CPTP objects inside a
+  partitioned density-matrix execution flow, carried by the **strict**
+  motif-proof runtime interpretation.
+- The fused object can be validated through sequential-reference agreement plus
+  channel-invariant checks across the bounded counted strict microcase surface.
+- Local-support embedding into a larger density state is feasible on the current
+  bounded slice, including a larger but still fully eligible smoke workload.
+- Explicit **hybrid** whole-workload execution with partition-level route
+  attribution is implemented and scientifically interpretable.
+- The counted hybrid continuity anchors `phase2_xxz_hea_q4_continuity` and
+  `phase2_xxz_hea_q6_continuity` execute exactly under the hybrid
+  interpretation.
+- The required bounded external Qiskit Aer slice is present on the four strict
+  `phase31_microcase_*` rows plus hybrid `phase2_xxz_hea_q4_continuity`.
+- One frozen structured hybrid pilot row,
+  `phase31_pair_repeat_q8_periodic_seed20260318`, records baseline-trio timing
+  and route coverage. The current row supports only the
+  negative-to-inconclusive conclusion that hybrid overhead still dominates the
+  shipped Phase 3 fused baseline.
+- Unsupported motifs remain explicit rather than silently falling back.
+
+**Decision-study claim now closed**
+
+- The bounded counted correctness and external slices are formally closed in the
+  recorded review state.
+- The full structured 8- and 10-qubit performance matrix is emitted with
+  control-family coverage and the required machine-readable
+  `break_even_table` / `justification_map`.
+- The recorded review state is `decision-study-ready`, not
+  `positive-methods-ready`, because the matrix contains `0`
+  `phase31_justified` rows.
+
+**Out of scope / still not claimed**
+
+- General support beyond 2 qubits, correlated noise, or arbitrary unbounded
+  CPTP fusion.
+- Any positive-methods acceleration claim against the Phase 3 fused baseline on
+  the frozen slice.
+
+## 1. Introduction
+
+Exact noisy simulation matters because many scientifically relevant questions in
+quantum computing and quantum machine learning depend on how realistic local
+noise reshapes circuit behavior. This is especially true for variational
+workflows, where the interaction among ansatz structure, optimization, and noise
+can change convergence behavior, effective trainability, and the interpretation
+of benchmark results.
+
+Density-matrix simulation provides the cleanest exact reference for these
+questions, but it is also expensive. That expense has made reuse-oriented
+acceleration strategies such as partitioning and fusion attractive in the
+unitary setting. The challenge is that noisy evolution is governed by channels,
+not just unitary subcircuits, and therefore the usual unitary-island viewpoint
+does not fully capture the structure of a noisy mixed-state computation.
+
+This paper studies a bounded exact alternative inside SQUANDER: can small noisy
+motifs themselves become the fused object? The current answer is intentionally
+narrow. We focus on 1- and 2-qubit same-support motifs containing both gates and
+local noise, and we ask whether they can be fused exactly, validated
+rigorously, and embedded into a larger partitioned density-matrix execution
+flow.
+
+The current contribution is therefore a methods-grounding result rather than a
+finished acceleration paper. It establishes the exact fused object, the current
+validation discipline, and the scientific boundary of the claim.
+
+The runtime interpretation now has two levels. The **strict** path proves the
+exact fused object on fully eligible motif workloads. The explicit **hybrid**
+path is the current whole-workload evaluation vehicle for continuity and
+structured benchmark cases, where some partitions are eligible for the new exact
+channel-native treatment and others remain on the shipped exact Phase 3 path.
+
+The current contribution can therefore be stated in three parts:
+
+- a bounded exact fused object for 1- and 2-qubit mixed motifs under a strict
+  motif-proof interpretation,
+- a route-attributed hybrid whole-workload interpretation together with an
+  exact counted `q4` and `q6` continuity anchors,
+- and a first structured `q8` pilot row showing that whole-workload performance
+  justification remains open and may be narrower than motif-level feasibility.
+
+## 2. Related Work and Scientific Gap
+
+### 2.1 Partitioning and Fusion in the Unitary Setting
+
+Graph-based partitioning and gate-fusion methods such as TDAG, GTQCP, QGo, and
+QMin show that substantial structure can be exploited when quantum circuits are
+treated as dependency objects rather than as flat gate lists. These methods are
+highly relevant for identifying reusable motifs and for motivating bounded
+fusion.
+
+However, most of this literature is developed around unitary or state-vector
+simulation, where the fused object is itself unitary. That assumption becomes
+insufficient when local noise channels are interleaved with gates in a way that
+is semantically important.
+
+### 2.2 Open-System and Density-Matrix Background
+
+Quantum operations theory provides the language needed for exact noisy
+simulation. Nielsen and Chuang formalize Kraus maps and CPTP structure, while
+Wood, Biamonte, and Cory make explicit the relations among Kraus, Choi,
+Liouville, and related channel representations. High-performance density-matrix
+simulation work, including Li et al., QuEST, and Qulacs, shows that exact noisy
+simulation is already a nontrivial systems problem.
+
+These references provide the mathematical and computational background, but they
+do not by themselves answer the present question: how to fuse a bounded noisy
+motif inside an exact partitioned runtime while keeping ordered circuit
+semantics explicit.
+
+### 2.3 Scientific Gap
+
+The gap addressed here lies between these two literatures. The unitary fusion
+literature identifies reusable local structure, while the open-system literature
+defines valid noisy evolution. The missing bridge is a scientifically auditable
+bounded exact fused object for mixed gate-noise motifs.
+
+## 3. Problem Formulation
+
+The current study focuses on three research questions.
+
+**RQ1.** Can a small mixed gate-noise motif be represented as one exact CPTP
+object without changing the ordered semantics of the original noisy circuit?
+
+**RQ2.** Can that fused object be applied on local support inside a larger
+density state without breaking correctness on the full global matrix?
+
+**RQ3.** What validation discipline is needed before any performance claim about
+exact noisy fusion becomes scientifically credible?
+
+The current bounded support surface is deliberately narrow:
+
+- same-support 1- and 2-qubit motifs,
+- `U3` and `CNOT` gates,
+- local depolarizing, amplitude-damping, and phase-damping channels,
+- and at least one noise operation per fused motif.
+
+This scope is a design decision, not a claim of generality.
+
+The current execution interpretation is likewise split deliberately:
+
+- **strict** execution proves the bounded fused object on fully eligible
+  workloads,
+- **hybrid** execution is the current whole-workload path for the
+  counted continuity and structured benchmark slice.
+
+## 4. Method
+
+### 4.1 Primary Exact Representation
+
+The current counted representation is a **Kraus bundle**. This choice keeps the
+claim tied to a standard exact channel formalism rather than to an opaque
+execution cache. Other views such as Liouville or superoperator matrices may
+still be useful internally later, but the current claim is anchored in Kraus
+form.
+
+### 4.2 Ordered Composition
+
+The fused object is constructed in the exact operation order of the noisy motif.
+This is essential because a noisy circuit is not invariant under arbitrary
+reordering of gates and channels. In the current method, descriptor order is
+part of the scientific object, not merely a software detail.
+
+### 4.3 Physical-Invariant Checks
+
+Before a fused object is counted as valid, it must satisfy representation-level
+checks consistent with the current numerical policy:
+
+- trace-preservation via Kraus completeness,
+- positivity-style checks through the associated Choi object,
+- and state-level agreement with the sequential exact reference.
+
+This is the minimal discipline needed to distinguish an exact noisy method from
+an implementation shortcut.
+
+### 4.4 Local-Support Embedding and Failure Semantics
+
+The current method also requires that a fused local object can be embedded into
+a larger density state without weakening the claim to a reduced-subsystem check.
+For this reason, the current validation uses full-matrix comparison on the
+larger-workload smoke case.
+
+Equally important, unsupported motifs fail explicitly. This no-silent-fallback
+rule keeps future benchmark interpretation honest.
+
+### 4.5 Strict and Hybrid Execution Interpretation
+
+The current contract separates two execution interpretations.
+
+In **strict** execution, every partition in the workload must be fully eligible
+for the bounded 1- and 2-qubit mixed-motif contract. This is the correct path
+for proving the fused object itself and for small counted motif cases. Any
+ineligible partition is a hard failure.
+
+In **hybrid** execution, eligible partitions use the channel-native exact path,
+while partitions that remain supported by the shipped Phase 3 exact runtime but
+fall outside the bounded Phase 3.1 eligibility surface stay on that baseline
+with explicit route attribution. This interpretation is required for continuity
+and structured whole-workload benchmarking because many such workloads mix
+strictly eligible and merely Phase-3-supported partitions.
+
+The scientific importance of this split is interpretability: the field should be
+able to distinguish "the new fused object was proved here" from "the new fused
+object was exercised inside a larger exact workload here."
+
+## 5. Current Implementation-Backed Evaluation
+
+### 5.1 Current Implemented Slice
+
+The current implementation-backed slice now spans both the **strict** and the
+initial **hybrid** layer. It includes:
+
+- four counted strict `phase31_microcase_*` motifs,
+- one non-counted 4-qubit spectator-support smoke case whose partitions all
+  remain fully eligible for the strict path,
+- two counted hybrid continuity anchors at `q4` and `q6`,
+- and one frozen 8-qubit structured hybrid pilot row.
+
+The required bounded external-reference slice is already present on the four
+strict microcases plus `phase2_xxz_hea_q4_continuity`. Deterministic workload
+inventories also already exist for the future 8- and 10-qubit structured
+performance families. Under the current contract, those remaining whole-
+workload rows are to be carried by the explicit **hybrid** path rather than by
+the strict path, but they are not yet wired into the claim-closing Phase 3.1
+performance matrix and decision artifact.
+
+### 5.2 Metrics and Thresholds
+
+The current bounded slice uses:
+
+- Frobenius-norm density-matrix agreement with the sequential exact reference,
+- maximum absolute matrix difference,
+- trace deviation,
+- density validity checks,
+- and representation-level invariant residuals.
+
+The current exactness threshold for the slice is `<= 1e-10` on the density
+comparison metrics.
+
+### 5.3 Current Results
+
+The current results support six statements.
+
+First, the bounded counted strict microcase surface now matches the sequential
+exact reference within the frozen threshold across all four
+`phase31_microcase_*` rows.
+
+Second, the strict microcase package also carries the current invariant checks
+and the bounded external-reference slice on the frozen required rows, so the
+strict layer is no longer supported only by internal-reference agreement.
+
+Third, the 4-qubit spectator-support smoke case shows that a bounded 2-qubit
+fused noisy object can be embedded into a larger density state while preserving
+the correctness of the full global output.
+
+Fourth, the counted `q4` and `q6` continuity anchors show that the new fused
+object can be exercised inside larger exact workloads that mix channel-native
+and shipped Phase 3 partitions without losing full-matrix correctness or route
+auditability.
+
+Fifth, the first frozen `q8` structured pilot row records the baseline trio and
+explicit route coverage. On the current evidence, this row is overhead-dominant
+relative to the existing Phase 3 fused baseline, so it supports a negative-to-
+inconclusive whole-workload decision result rather than a positive acceleration
+claim.
+
+Sixth, out-of-scope motifs fail deterministically, and ordered composition
+remains claim-bearing: pure unitary motifs, motifs with support above two
+qubits, and motifs using unsupported operations remain visible as unsupported
+behavior rather than being silently absorbed into a different path, and
+reversing the composed sequence changes the result.
+
+### 5.4 Decision-study outcome and remaining non-claims
+
+The current full-paper claim is no longer blocked on missing matrix evidence.
+The emitted matrix and the recorded review state now close the bounded
+decision-study mode:
+
+- `17` counted rows are classified `phase3_sufficient`,
+- `9` counted rows are classified `phase31_not_justified_yet`,
+- `0` counted rows are classified `phase31_justified`.
+
+As a result, this paper should report a bounded exactness-and-decision-study
+result. What remains outside the claim is not the existence of a matrix-level
+answer, but the absence of any positive-methods win on the frozen slice.
+
+## 6. Discussion
+
+The scientific importance of the current result is not that it proves noisy
+fusion is broadly beneficial. It does not. The important result is that it
+changes the status of a noisy motif from "mandatory fusion barrier" to
+"candidate exact fused object" on a narrow but nontrivial support surface.
+
+This already answers part of the motivating scientific question. The existing
+unitary-only baseline stops being enough when repeated local noise insertions
+fragment a motif that is still small enough to admit exact bounded channel
+composition. The current study shows that such motifs exist and can be handled
+exactly.
+
+What remains unknown is whether this mathematically justified object is also a
+performance-justified object on the workload families that matter most. Under
+the current contract, that question is now explicitly assigned to the **hybrid**
+whole-workload interpretation rather than to the strict motif-proof path alone.
+The emitted counted matrix now makes that separation concrete. The exact fused
+object can be sound and scientifically useful even when the matrix-level result
+shows that the shipped Phase 3 fused runtime is already sufficient on many rows
+and that the richer Phase 3.1 path is not yet justified on the remainder. That
+is a real methods result, but it is a decision-study result rather than a
+positive acceleration result.
+
+## 7. Threats to Validity and Limitations
+
+Several limitations must remain explicit.
+
+### 7.1 Narrow Support Surface
+
+The current result is deliberately restricted to bounded 1- and 2-qubit local
+motifs with specific gate and noise families. It should not be interpreted as a
+claim about correlated noise, larger supports, or arbitrary CPTP fusion.
+
+### 7.2 Decision-study, not positive-methods, closure
+
+The current paper already has the bounded external Qiskit Aer slice, both
+counted hybrid continuity anchors, the full structured 8- and 10-qubit matrix,
+and its decision artifact. The limitation is therefore not missing matrix
+evidence; it is that the matrix does **not** support the stronger positive-
+methods closure. Broader acceleration language must remain withheld because the
+frozen counted matrix contains no `phase31_justified` rows.
+
+### 7.3 Dense-Regime Scale Limits
+
+Even a successful bounded exact fusion method remains inside the scaling limits
+of dense density-matrix simulation. The present result improves structure, not
+the asymptotic memory law.
+
+### 7.4 Representation Choice
+
+Kraus form is the current primary exact representation, but it may not be the
+only useful representation for later larger-scale studies. The present paper
+should treat it as the current counted choice, not as a universal theorem about
+best representation.
+
+## 8. Reproducibility and Reporting
+
+The current reproducibility posture follows five rules.
+
+- Use deterministic microcase definitions and stable case identifiers.
+- Report explicit numerical thresholds for exactness and invariant checks.
+- Keep unsupported cases visible.
+- Separate strict motif-proof evidence from future hybrid whole-workload
+  evidence.
+- For hybrid rows, report route coverage and the baseline trio explicitly rather
+  than treating all Phase 3.1 execution as one opaque class.
+
+At the current state of the work, reproducibility spans deterministic workload
+definitions, exact-threshold regression tests, the bounded correctness/external
+packages, and the full counted matrix with explicit decision-surface artifacts.
+The remaining reproducibility work is program-level packaging and top-level
+synchronization, not matrix emission itself.
+
+## 9. Conclusion
+
+This paper surface now supports a clear, bounded conclusion. Exact channel-
+native fusion of local noisy motifs is feasible, auditable, and already
+demonstrated on a narrow implementation-backed **strict** slice. That is
+scientifically useful because it establishes a concrete bridge between unitary
+fusion ideas and open-system channel semantics. The hybrid layer is also fully
+claim-bearing on the frozen whole-workload surface: counted `q4` and `q6`
+continuity anchors show whole-workload exactness with explicit route
+attribution, the bounded external slice is present on the required rows, and
+the full emitted 26-row matrix shows that the stronger positive-methods
+threshold is not met. Phase 3.1 therefore closes as a bounded decision-study:
+the richer fused object is real and exact, but the shipped Phase 3 fused
+baseline remains sufficient on `17` counted rows and Phase 3.1 remains not yet
+justified on the remaining `9`.
+
+## Selected References
+
+1. Peter Rakyta and Zoltan Zimboras, *Approaching the theoretical limit in
+   quantum gate decomposition*, `Quantum 6, 710 (2022)`.
+2. Joseph Clark, Travis S. Humble, and Himanshu Thapliyal, *TDAG: Tree-based
+   Directed Acyclic Graph Partitioning for Quantum Circuits*, ACM GLSVLSI 2023.
+3. Joseph Clark, Travis S. Humble, and Himanshu Thapliyal, *GTQCP: Greedy
+   Topology-Aware Quantum Circuit Partitioning*, `arXiv:2410.02901`.
+4. Xin-Chuan Wu, Marc Grau Davis, Frederic T. Chong, and Costin Iancu, *QGo:
+   Scalable Quantum Circuit Optimization Using Automated Synthesis*,
+   `arXiv:2012.09835`.
+5. Longshan Xu, Edwin Hsing-Mean Sha, Yuhong Song, and Qingfeng Zhu, *QMin:
+   Quantum Circuit Minimization via Gate Fusions for Efficient State Vector
+   Simulation*, `Quantum Information Processing 25, 6 (2026)`.
+6. Michael A. Nielsen and Isaac L. Chuang, *Quantum Computation and Quantum
+   Information*, Cambridge University Press (2010).
+7. Christopher J. Wood, Jacob D. Biamonte, and David G. Cory, *Tensor networks
+   and graphical calculus for open quantum systems*, `Quantum Information and
+   Computation 15, 759-811 (2015)`.
+8. Ang Li, Omer Subasi, Xiu Yang, and Sriram Krishnamoorthy, *Density Matrix
+   Quantum Circuit Simulation via the BSP Machine on Modern GPU Clusters*, SC20.
+9. Tyson Jones, Anna Brown, Ian Bush, and Simon C. Benjamin, *QuEST and High
+   Performance Simulation of Quantum Computers*, `Scientific Reports 9, 10736
+   (2019)`.
+10. Yasunari Suzuki et al., *Qulacs: a fast and versatile quantum circuit
+    simulator for research purpose*, `Quantum 5, 559 (2021)`.
+
+## Traceability
+
+- `DETAILED_PLANNING_PHASE_3_1.md`
+- `ADRs_PHASE_3_1.md`
+- `PRE_IMPLEMENTATION_COMPLETION_CHECKLIST.md`
+- `CLOSURE_PLAN_PHASE_3_1.md`
+- `SHORT_PAPER_PHASE_3_1.md`
+- `task-5/TASK_5_MINI_SPEC.md`

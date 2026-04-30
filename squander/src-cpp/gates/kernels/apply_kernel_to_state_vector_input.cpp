@@ -75,8 +75,8 @@ apply_kernel_to_state_vector_input(Matrix& u3_1qbit, Matrix& input, const bool& 
             }
             else if (deriv) {
                 // when calculating derivatives, the constant element should be zeros
-                memset(input.get_data() + row_offset, 0.0, input.cols * sizeof(QGD_Complex16));
-                memset(input.get_data() + row_offset_pair, 0.0, input.cols * sizeof(QGD_Complex16));
+                memset(input.get_data() + row_offset, 0, input.cols * sizeof(QGD_Complex16));
+                memset(input.get_data() + row_offset_pair, 0, input.cols * sizeof(QGD_Complex16));
             }
             else {
                 // leave the state as it is
@@ -181,8 +181,8 @@ apply_kernel_to_state_vector_input_parallel(Matrix& u3_1qbit, Matrix& input, con
                     }
                     else if (deriv) {
                         // when calculating derivatives, the constant element should be zeros
-                        memset(input.get_data() + row_offset, 0.0, input.cols * sizeof(QGD_Complex16));
-                        memset(input.get_data() + row_offset_pair, 0.0, input.cols * sizeof(QGD_Complex16));
+                        memset(input.get_data() + row_offset, 0, input.cols * sizeof(QGD_Complex16));
+                        memset(input.get_data() + row_offset_pair, 0, input.cols * sizeof(QGD_Complex16));
                     }
                     else {
                         // leave the state as it is

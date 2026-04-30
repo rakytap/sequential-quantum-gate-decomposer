@@ -4,6 +4,8 @@ requires = [
     "wheel",
     "scikit-build",
     "scipy", 
+    "numpy",
+    "pybind11",
     "tbb-devel; platform_machine == 'x86' or platform_machine == 'x86_64'",
     "cmake>=3.10.2",
     "networkx",
@@ -17,7 +19,7 @@ cmake.install.component = "python"
 
 [project]
 name = "squander"
-version = "1.9.4"
+version = "1.9.6"
 description = "C++ library with Python interface to train quantum circuits, quantum gate synthesis and state preparation."
 readme = "README.md"
 requires-python = ">=3.8"
@@ -38,9 +40,6 @@ dependencies = [
     "numpy",
     "scipy",
     "networkx",
-    "qiskit",
-    "qiskit-aer",
-    "matplotlib",
 ]
 
 [project.optional-dependencies]

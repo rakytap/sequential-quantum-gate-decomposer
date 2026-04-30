@@ -1,0 +1,153 @@
+{
+  "artifacts": [
+    {
+      "artifact_class": "supported_positive_bridge_case",
+      "artifact_id": "bridge_fixed_parameters_4q",
+      "expected_statuses": [
+        "completed"
+      ],
+      "generation_command": "python benchmarks/density_matrix/workflow_evidence/exact_density_vqe_validation.py --output-dir benchmarks/density_matrix/artifacts/bridge_scope",
+      "mandatory": true,
+      "path": "fixed_parameters_4q.json",
+      "purpose": "Supported positive 4-qubit bridge artifact for the generated-HEA anchor workflow.",
+      "status": "completed",
+      "summary": {
+        "absolute_energy_error": 2.1094237467877974e-15,
+        "bridge_noise_count": 3,
+        "bridge_operation_count": 12,
+        "bridge_source_type": "generated_hea",
+        "qbit_num": 4
+      }
+    },
+    {
+      "artifact_class": "supported_positive_bridge_case",
+      "artifact_id": "bridge_fixed_parameters_6q",
+      "expected_statuses": [
+        "completed"
+      ],
+      "generation_command": "python benchmarks/density_matrix/workflow_evidence/exact_density_vqe_validation.py --output-dir benchmarks/density_matrix/artifacts/bridge_scope",
+      "mandatory": true,
+      "path": "fixed_parameters_6q.json",
+      "purpose": "Supported positive 6-qubit bridge artifact for the generated-HEA anchor workflow.",
+      "status": "completed",
+      "summary": {
+        "absolute_energy_error": 2.7755575615628914e-16,
+        "bridge_noise_count": 3,
+        "bridge_operation_count": 18,
+        "bridge_source_type": "generated_hea",
+        "qbit_num": 6
+      }
+    },
+    {
+      "artifact_class": "bridge_micro_validation_bundle",
+      "artifact_id": "bridge_micro_validation_bundle",
+      "expected_statuses": [
+        "pass"
+      ],
+      "generation_command": "python benchmarks/density_matrix/bridge_scope/bridge_validation.py --output-dir benchmarks/density_matrix/artifacts/bridge_scope",
+      "mandatory": true,
+      "path": "bridge_micro_validation_bundle.json",
+      "purpose": "Canonical local bridge-support validation bundle for 1 to 3 qubit generated-HEA microcases.",
+      "status": "pass",
+      "summary": {
+        "microcase_qubits": [
+          1,
+          2,
+          3
+        ],
+        "pass_rate": 1.0,
+        "passed_cases": 5,
+        "total_cases": 5
+      }
+    },
+    {
+      "artifact_class": "workflow_exact_regime_bundle",
+      "artifact_id": "bridge_exact_regime_workflow_bundle",
+      "expected_statuses": [
+        "pass"
+      ],
+      "generation_command": "python benchmarks/density_matrix/workflow_evidence/exact_density_vqe_validation.py --workflow-bundle --output-dir benchmarks/density_matrix/artifacts/bridge_scope",
+      "mandatory": true,
+      "path": "exact_regime_workflow_bundle.json",
+      "purpose": "Canonical workflow-scale bridge bundle across the mandatory 4/6/8/10 exact regime.",
+      "status": "pass",
+      "summary": {
+        "bridge_supported_cases": 40,
+        "documented_10q_anchor_present": true,
+        "pass_rate": 1.0,
+        "passed_cases": 40,
+        "supported_trace_case_name": "optimization_trace_4q",
+        "supported_trace_completed": true,
+        "total_cases": 40,
+        "unsupported_cases": 0
+      }
+    },
+    {
+      "artifact_class": "supported_optimization_trace",
+      "artifact_id": "bridge_optimization_trace_4q",
+      "expected_statuses": [
+        "completed"
+      ],
+      "generation_command": "python benchmarks/density_matrix/workflow_evidence/exact_density_vqe_validation.py --workflow-bundle --output-dir benchmarks/density_matrix/artifacts/bridge_scope",
+      "mandatory": true,
+      "path": "optimization_trace_4q.json",
+      "purpose": "Supported bounded 4-qubit optimization trace proving the full workflow crosses the bridge.",
+      "status": "completed",
+      "summary": {
+        "bridge_supported_pass": true,
+        "case_name": "optimization_trace_4q",
+        "final_energy": -4.25945472568242,
+        "initial_energy": 0.9355438663723187,
+        "optimizer": "COSINE",
+        "parameter_count": 18,
+        "workflow_completed": true
+      }
+    },
+    {
+      "artifact_class": "unsupported_bridge_bundle",
+      "artifact_id": "unsupported_bridge_bundle",
+      "expected_statuses": [
+        "pass"
+      ],
+      "generation_command": "python benchmarks/density_matrix/bridge_scope/unsupported_bridge_validation.py --output-dir benchmarks/density_matrix/artifacts/bridge_scope",
+      "mandatory": true,
+      "path": "unsupported_bridge_bundle.json",
+      "purpose": "Canonical representative unsupported-bridge bundle covering source, lowering, insertion, and noise-type failures.",
+      "status": "pass",
+      "summary": {
+        "error_match_count": 4,
+        "required_case_count": 4,
+        "required_categories": [
+          "circuit_source",
+          "lowering_path",
+          "noise_insertion",
+          "noise_type"
+        ],
+        "total_cases": 4,
+        "unsupported_cases": 4
+      }
+    }
+  ],
+  "backend": "density_matrix",
+  "provenance": {
+    "generation_command": "python benchmarks/density_matrix/bridge_scope/bridge_publication_bundle.py --output-dir benchmarks/density_matrix/artifacts/bridge_scope",
+    "git_revision": "77cd8168869d9b4c67c0dd0dbe49baab02b0fe25",
+    "working_directory": "/home/zkegli/work/squander-with-density-matrix/sequential-quantum-gate-decomposer"
+  },
+  "reference_backend": "qiskit_aer_density_matrix",
+  "software": {
+    "numpy": "2.3.5",
+    "python": "3.13.9",
+    "qiskit": "2.2.3",
+    "qiskit_aer": "0.17.2"
+  },
+  "status": "pass",
+  "suite_name": "bridge_publication_evidence",
+  "summary": {
+    "mandatory_artifact_count": 6,
+    "mismatched_status_count": 0,
+    "missing_artifact_count": 0,
+    "present_artifact_count": 6,
+    "status_match_count": 6
+  }
+}

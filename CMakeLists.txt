@@ -3,15 +3,34 @@ cmake_minimum_required(VERSION 3.10.2)
 # CMAKE to create the shared library of the quantum gate decomposition project
 
 # set the project name and version
-project(CQGD VERSION 1.9.5)
+project(CQGD VERSION 1.9.6)
 
 # reuse compilation time linking for use runtime linking 
 SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+
+# Configure RPATH to prioritize conda libraries and avoid conflicts
+if(DEFINED ENV{CONDA_PREFIX})
+    set(CONDA_PREFIX "$ENV{CONDA_PREFIX}")
+    set(CONDA_LIB_DIR "${CONDA_PREFIX}/lib")
+    # Add conda lib directory to BUILD_RPATH to prioritize conda libraries at runtime
+    set(CMAKE_BUILD_RPATH "${CONDA_LIB_DIR}" ${CMAKE_BUILD_RPATH})
+    set(CMAKE_BUILD_RPATH_USE_ORIGIN TRUE)
+    # Suppress RPATH warnings when conda libraries are prioritized
+    # These warnings occur because system libraries might conflict with conda libraries,
+    # but BUILD_RPATH ensures conda libraries are found first
+    if(POLICY CMP0144)
+        cmake_policy(SET CMP0144 NEW)
+    endif()
+    message(STATUS "Configured BUILD_RPATH to prioritize conda libraries: ${CONDA_LIB_DIR}")
+endif()
 
 # specify the C++ standard
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON) #for lib not just dll when no exports
+
+# Export compile commands for clang-tidy and other tools
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # include CMAKE modules
 include(CheckIncludeFile)
@@ -47,6 +66,8 @@ endif()
 #enable test target
 enable_testing()
 
+option(ENABLE_FLOAT32 "Enable float32 matrix support (experimental)" ON)
+option(ENABLE_AVX "Enable AVX/AVX2/AVX512 kernels and compiler flags" ON)
 
 if(SKBUILD)
     message(STATUS "The project is built using scikit-build")
@@ -59,12 +80,37 @@ find_package(PythonLibs)
 find_package(NumPy REQUIRED)
 
 
-# contruct library directories
+# Detect Python version for compatibility
 exec_program(${PYTHON_EXECUTABLE}
-             ARGS "-c \"from distutils.sysconfig import get_python_lib; tmp = [s + '/../..' for s in [get_python_lib()]]; ret=';'.join(tmp); print(ret)\""
-             OUTPUT_VARIABLE PYTHON_SYS_PATH
-             RETURN_VALUE SYSPATH_NOT_FOUND
+             ARGS "-c \"import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')\""
+             OUTPUT_VARIABLE PYTHON_VERSION_STRING
+             RETURN_VALUE PYTHON_VERSION_NOT_FOUND
             )
+
+if(PYTHON_VERSION_NOT_FOUND)
+    message(FATAL_ERROR "Python version detection failed")
+endif()
+
+message("Detected Python version: " ${PYTHON_VERSION_STRING})
+
+# contruct library directories
+# Use sysconfig for Python >= 3.10 (distutils deprecated in 3.10, removed in 3.12)
+if(${PYTHON_VERSION_STRING} VERSION_GREATER_EQUAL "3.10")
+    message("Using sysconfig (Python >= 3.10)")
+    exec_program(${PYTHON_EXECUTABLE}
+                 ARGS "-c \"import sysconfig; lib = sysconfig.get_path('purelib'); tmp = [lib + '/../..']; ret=';'.join(tmp); print(ret)\""
+                 OUTPUT_VARIABLE PYTHON_SYS_PATH
+                 RETURN_VALUE SYSPATH_NOT_FOUND
+                )
+else()
+    message("Using distutils.sysconfig (Python < 3.10)")
+    exec_program(${PYTHON_EXECUTABLE}
+                 ARGS "-c \"from distutils.sysconfig import get_python_lib; tmp = [s + '/../..' for s in [get_python_lib()]]; ret=';'.join(tmp); print(ret)\""
+                 OUTPUT_VARIABLE PYTHON_SYS_PATH
+                 RETURN_VALUE SYSPATH_NOT_FOUND
+                )
+endif()
+
 if(SYSPATH_NOT_FOUND)
     message(FATAL_ERROR "Python syspath not found")
 endif()
@@ -75,11 +121,21 @@ message("Python syspaths: " ${PYTHON_SYS_PATH})
 
 
 # contruct include directories
-exec_program(${PYTHON_EXECUTABLE}
-             ARGS "-c \"from distutils.sysconfig import get_python_lib; tmp = [s + '/../../../include' for s in [get_python_lib()]]; ret=';'.join(tmp); print(ret)\""
-             OUTPUT_VARIABLE CMAKE_REQUIRED_INCLUDES
-             RETURN_VALUE SYSPATH_NOT_FOUND
-            )
+# Use sysconfig for Python >= 3.10 (distutils deprecated in 3.10, removed in 3.12)
+if(${PYTHON_VERSION_STRING} VERSION_GREATER_EQUAL "3.10")
+    exec_program(${PYTHON_EXECUTABLE}
+                 ARGS "-c \"import sysconfig; lib = sysconfig.get_path('purelib'); tmp = [lib + '/../../../include']; ret=';'.join(tmp); print(ret)\""
+                 OUTPUT_VARIABLE CMAKE_REQUIRED_INCLUDES
+                 RETURN_VALUE SYSPATH_NOT_FOUND
+                )
+else()
+    exec_program(${PYTHON_EXECUTABLE}
+                 ARGS "-c \"from distutils.sysconfig import get_python_lib; tmp = [s + '/../../../include' for s in [get_python_lib()]]; ret=';'.join(tmp); print(ret)\""
+                 OUTPUT_VARIABLE CMAKE_REQUIRED_INCLUDES
+                 RETURN_VALUE SYSPATH_NOT_FOUND
+                )
+endif()
+
 if(SYSPATH_NOT_FOUND)
     message(FATAL_ERROR "Python include path not found")
 endif()
@@ -203,12 +259,55 @@ endif()
 
 
 find_package(LAPACK REQUIRED)
+
+# macOS-specific OpenMP detection
+# On macOS, OpenMP is typically installed via Homebrew as libomp
+# CMake's FindOpenMP module needs help finding it
+if(APPLE)
+  execute_process(
+    COMMAND brew --prefix libomp
+    OUTPUT_VARIABLE HOMEBREW_LIBOMP_PREFIX
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    ERROR_QUIET
+  )
+  if(HOMEBREW_LIBOMP_PREFIX)
+    set(OpenMP_C_FLAGS "-Xpreprocessor -fopenmp -I${HOMEBREW_LIBOMP_PREFIX}/include" CACHE STRING "C compiler flags for OpenMP" FORCE)
+    set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp -I${HOMEBREW_LIBOMP_PREFIX}/include" CACHE STRING "C++ compiler flags for OpenMP" FORCE)
+    set(OpenMP_C_LIB_NAMES "omp" CACHE STRING "C library names for OpenMP" FORCE)
+    set(OpenMP_CXX_LIB_NAMES "omp" CACHE STRING "C++ library names for OpenMP" FORCE)
+    find_library(OpenMP_omp_LIBRARY
+      NAMES omp
+      PATHS ${HOMEBREW_LIBOMP_PREFIX}/lib
+      NO_DEFAULT_PATH
+    )
+    if(OpenMP_omp_LIBRARY)
+      set(OpenMP_omp_LIBRARY ${OpenMP_omp_LIBRARY} CACHE PATH "Path to OpenMP omp library" FORCE)
+    endif()
+    message(STATUS "Found Homebrew libomp at: ${HOMEBREW_LIBOMP_PREFIX}")
+    message(STATUS "OpenMP_C_FLAGS: ${OpenMP_C_FLAGS}")
+    message(STATUS "OpenMP_CXX_FLAGS: ${OpenMP_CXX_FLAGS}")
+    message(STATUS "OpenMP_omp_LIBRARY: ${OpenMP_omp_LIBRARY}")
+    # Add linker flags to ensure libomp is found during linking
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${HOMEBREW_LIBOMP_PREFIX}/lib -lomp")
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -L${HOMEBREW_LIBOMP_PREFIX}/lib -lomp")
+  endif()
+endif()
+
 find_package(OpenMP REQUIRED)
+
+# Convert OpenMP flags from string to list for proper handling on macOS
+# This is especially important on macOS where flags are set manually as a single string
+if(APPLE AND OpenMP_CXX_FLAGS)
+  separate_arguments(OpenMP_CXX_FLAGS_LIST UNIX_COMMAND "${OpenMP_CXX_FLAGS}")
+else()
+  # On other platforms, use the flags as-is (they should already be a list)
+  set(OpenMP_CXX_FLAGS_LIST ${OpenMP_CXX_FLAGS})
+endif()
 
 list(APPEND EXTRA_INCLUDES "${OpenMP_CXX_INCLUDE_DIRS}") 
 
 # make difference between MKL and OPENBLAS by checking specific functions
-set(CMAKE_REQUIRED_LIBRARIES "${BLAS_LIBRARIES}" "-lm")
+set(CMAKE_REQUIRED_LIBRARIES "${BLAS_LIBRARIES}" "${LAPACK_LIBRARIES}" "-lm")
 check_function_exists(MKL_Set_Num_Threads BLAS_IS_MKL)
 check_function_exists(openblas_set_num_threads BLAS_IS_OPENBLAS)
 
@@ -216,8 +315,97 @@ message(STATUS "BLAS_IS_MKL: ${BLAS_IS_MKL}")
 message(STATUS "BLAS_IS_OPENBLAS: ${BLAS_IS_OPENBLAS}")
 
 # check the presence of lapacke library
-check_function_exists(LAPACKE_zgesvd LAPACKE_FOUND)
-set(CMAKE_REQUIRED_LIBRARIES "")
+# First, try to find LAPACKE library paths on macOS
+set(LAPACKE_CHECK_LIBRARIES "${LAPACK_LIBRARIES}")
+set(CMAKE_REQUIRED_LIBRARIES "${LAPACKE_CHECK_LIBRARIES}" "-lm")
+
+# Try to find LAPACKE library
+if(APPLE)
+    # On macOS, try to find LAPACKE in Homebrew's lapack installation
+    execute_process(
+        COMMAND brew --prefix lapack
+        OUTPUT_VARIABLE HOMEBREW_LAPACK_PREFIX
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        ERROR_QUIET
+    )
+    if(HOMEBREW_LAPACK_PREFIX)
+        # Try to find liblapacke in Homebrew's lapack lib directory
+        find_library(LAPACKE_LIBRARIES
+            NAMES lapacke
+            PATHS ${HOMEBREW_LAPACK_PREFIX}/lib
+                  /opt/homebrew/opt/lapack/lib
+                  /usr/local/opt/lapack/lib
+            NO_DEFAULT_PATH
+        )
+        if(LAPACKE_LIBRARIES)
+            message(STATUS "Found LAPACKE library for function check: ${LAPACKE_LIBRARIES}")
+        endif()
+    endif()
+
+
+elseif(WIN32)
+
+
+  # If MKL is being used, MKL includes LAPACKE
+  if(${BLAS_IS_MKL})
+    # MKL includes LAPACKE, so we can use MKL libraries
+    # LAPACKE functions are in the same MKL libraries
+    set(LAPACKE_CHECK_LIBRARIES "${BLAS_LIBRARIES}")
+    message(STATUS "Using MKL libraries for LAPACKE: ${LAPACKE_LIBRARIES}")
+  # If OpenBLAS is being used, it often includes LAPACKE on Windows
+
+  elseif(${BLAS_IS_OPENBLAS})
+    # OpenBLAS on Windows often includes LAPACKE
+    set(LAPACKE_CHECK_LIBRARIES "${BLAS_LIBRARIES}")
+    message(STATUS "Using OpenBLAS libraries for LAPACKE: ${LAPACKE_LIBRARIES}")
+
+  endif()
+
+  set(CMAKE_REQUIRED_LIBRARIES "${LAPACKE_CHECK_LIBRARIES}" "${LAPACK_LIBRARIES}" "-lm")
+
+  check_function_exists(LAPACKE_dgesv LAPACKE_FOUND)
+
+  if(LAPACKE_FOUND)
+    message(STATUS "Found LAPACKE library for function check: ${LAPACKE_CHECK_LIBRARIES}")
+    set(LAPACKE_LIBRARIES "${LAPACKE_CHECK_LIBRARIES}")
+
+  else()
+
+    # Try to find LAPACKE in conda environment
+    if(DEFINED ENV{CONDA_PREFIX})
+      set(CONDA_PREFIX "$ENV{CONDA_PREFIX}")
+      find_library(LAPACKE_LIBRARIES
+        NAMES lapacke
+        PATHS
+          "${CONDA_PREFIX}/Library/lib"
+          "${BLAS_DIR}/Library/lib"
+          ${CMAKE_LIBRARY_PATH}
+        NO_DEFAULT_PATH
+      )
+    endif()
+    
+    # If still not found, try standard search with paths
+    if(NOT LAPACKE_LIBRARIES)
+      find_library(LAPACKE_LIBRARIES
+        NAMES lapacke
+        PATHS
+          "${BLAS_DIR}/Library/lib"
+          ${CMAKE_LIBRARY_PATH}
+          ENV{PATH}
+      )
+    endif()
+
+  endif()
+
+else()
+  find_library(LAPACKE_LIBRARIES lapacke)
+endif()
+
+if(NOT LAPACKE_LIBRARIES)
+    message(FATAL_ERROR "Could not find LAPACKE library")
+endif()
+
+
 
 # If MKL is enabled
 if(${BLAS_IS_MKL})
@@ -236,18 +424,21 @@ else()
   list(APPEND CXX_FLAGS_RELEASE "-DBLAS=0")
 endif()
 
-
-# if LAPACKE not found try another round
-if(${LAPACKE_FOUND})
-    set(LAPACKE_LIBRARIES)
-else()
-    find_library(LAPACKE_LIBRARIES lapacke REQUIRED)
+# Float32 matrix support
+if(ENABLE_FLOAT32)
+  list(APPEND CXX_FLAGS_DEBUG "-DENABLE_FLOAT32")
+  list(APPEND CXX_FLAGS_RELEASE "-DENABLE_FLOAT32")
 endif()
 
-
-
 # checking for AVX/AVX2 support
-CHECK_FOR_AVX()
+if(ENABLE_AVX)
+  CHECK_FOR_AVX()
+else()
+  set(HAVE_AVX_EXTENSIONS FALSE)
+  set(HAVE_AVX2_EXTENSIONS FALSE)
+  set(HAVE_AVX512F_EXTENSIONS FALSE)
+  message(STATUS "AVX support disabled via ENABLE_AVX=OFF")
+endif()
 
 # Identify the compiler type and set compiler specific options
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
@@ -562,6 +753,7 @@ list(APPEND qgd_files
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/config_element.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/dot.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/matrix.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/matrix_template.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/matrix_real.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/matrix_sparse.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/logging.cpp
@@ -601,12 +793,16 @@ list(APPEND qgd_files
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/T.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/Tdg.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/SX.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/SXdg.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/U1.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/U2.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/U3.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/RY.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/CRY.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/RX.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/RXX.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/RYY.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/RZZ.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/RZ.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/CRX.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/CRZ.cpp
@@ -638,10 +834,21 @@ list(APPEND qgd_files
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/decomposition/N_Qubit_Decomposition_Tabu_Search.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/variational_quantum_eigensolver/Variational_Quantum_Eigensolver_Base.cpp  
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/variational_quantum_eigensolver/Generative_Quantum_Machine_Learning_Base.cpp  
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/density_matrix/density_matrix.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/density_matrix/noisy_circuit.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/density_matrix/noise_channel.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/density_matrix/gate_operation.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/density_matrix/noise_operation.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/random_unitary/Random_Unitary.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/random_unitary/Random_Orthogonal.cpp
 )
 
+if(ENABLE_FLOAT32)
+  list(APPEND qgd_files
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/matrix_float.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/matrix_real_float.cpp
+  )
+endif()
 
 if (${HAVE_AVX512F_EXTENSIONS})
   list(APPEND qgd_files 
@@ -701,13 +908,50 @@ endif()
 
 add_library(qgd SHARED
     ${qgd_files})
+# Ensure nlohmann/json is available for CI and local builds. Prefer a
+# vendored single-header in-tree to avoid FetchContent/configuring the
+# upstream CMake project (which can fail on some CI macOS/toolchain combos).
+
+# Path where a vendored single-header would live if added to repo
+set(NLOHMANN_VENDOR_HEADER "${PROJECT_SOURCE_DIR}/third_party/nlohmann/single_include/nlohmann/json.hpp")
+if(EXISTS "${NLOHMANN_VENDOR_HEADER}")
+  message(STATUS "Using vendored nlohmann/json.hpp from ${NLOHMANN_VENDOR_HEADER}")
+  list(APPEND EXTRA_INCLUDES "${PROJECT_SOURCE_DIR}/third_party/nlohmann/single_include")
+  set(NLOHMANN_USING_VENDOR TRUE)
+else()
+  # Try to find an installed package first
+  find_package(nlohmann_json QUIET)
+  if(TARGET nlohmann_json::nlohmann_json)
+    message(STATUS "Found system nlohmann_json target")
+    set(NLOHMANN_USING_PACKAGE TRUE)
+  else()
+    # Last resort: use FetchContent to fetch the project (may attempt to
+    # configure the dependency project which can fail on some platforms).
+    # Instead of configuring the upstream nlohmann CMake project (which can
+    # fail on some CI/toolchains), attempt to download the single-header
+    # directly into the build tree as a header-only fallback.
+    message(STATUS "Attempting to download nlohmann single_header as fallback")
+    set(NLOHMANN_BUILD_DIR "${CMAKE_BINARY_DIR}/third_party/nlohmann/single_include/nlohmann")
+    file(MAKE_DIRECTORY "${NLOHMANN_BUILD_DIR}")
+    set(NLOHMANN_RAW_URL "https://raw.githubusercontent.com/nlohmann/json/v3.11.2/single_include/nlohmann/json.hpp")
+    set(NLOHMANN_OUT "${NLOHMANN_BUILD_DIR}/json.hpp")
+    file(DOWNLOAD "${NLOHMANN_RAW_URL}" "${NLOHMANN_OUT}" SHOW_PROGRESS STATUS _nlohmann_dl_status EXPECTED_HASH SHA256=665fa14b8af3837966949e8eb0052d583e2ac105d3438baba9951785512cf921)
+    list(GET _nlohmann_dl_status 0 _nlohmann_dl_code)
+    if(_nlohmann_dl_code EQUAL 0 AND EXISTS "${NLOHMANN_OUT}")
+      message(STATUS "Downloaded nlohmann/json.hpp to ${NLOHMANN_OUT}")
+      list(APPEND EXTRA_INCLUDES "${CMAKE_BINARY_DIR}/third_party/nlohmann/single_include")
+    else()
+      message(WARNING "Could not download nlohmann/json.hpp fallback. Consider vendoring the header at third_party/nlohmann/single_include/nlohmann/json.hpp")
+    endif()
+  endif()
+endif()
 
 # adding compile options
 target_compile_options(qgd PUBLIC
     ${CXX_FLAGS}
     "$<$<CONFIG:Debug>:${CXX_FLAGS_DEBUG}>"
     "$<$<CONFIG:Release>:${CXX_FLAGS_RELEASE}>"
-    ${OpenMP_CXX_FLAGS}
+    ${OpenMP_CXX_FLAGS_LIST}
 )
 
 # adding linking options
@@ -722,6 +966,13 @@ target_link_libraries( qgd PRIVATE
     ${OpenMP_CXX_LIBRARIES}
     )
 
+# Link the imported nlohmann target if available (preferred when find_package
+# or FetchContent provided it). If we're using a header-only vendor include,
+# no link is necessary.
+if(TARGET nlohmann_json::nlohmann_json)
+  target_link_libraries(qgd PRIVATE nlohmann_json::nlohmann_json)
+endif()
+
 
 target_include_directories(qgd PRIVATE
                             ${EXTRA_INCLUDES}
@@ -734,6 +985,7 @@ target_include_directories(qgd PRIVATE
                             ./squander/src-cpp/nn/include
                             ./squander/src-cpp/gates/kernels/include
                             ./squander/src-cpp/variational_quantum_eigensolver/include
+                            ./squander/src-cpp/density_matrix/include
                             )
 
 
@@ -745,12 +997,53 @@ configure_file(${PROJECT_SOURCE_DIR}/squander/src-cpp/common/include/Config.h.in
                ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/include/Config.h)
 
 
+# Set BUILD_RPATH for qgd to prioritize conda libraries
+if(DEFINED ENV{CONDA_PREFIX})
+    set_target_properties(qgd PROPERTIES
+        BUILD_RPATH "${CONDA_PREFIX}/lib"
+        BUILD_RPATH_USE_ORIGIN TRUE
+    )
+endif()
+
 set_target_properties(
     qgd
     PROPERTIES
         LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/squander
     )
 
+if(WIN32)
+    set_target_properties(
+        qgd
+        PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/squander/decomposition
+    )
+endif()
+
+# ===================================================================
+# Modern CMake: INTERFACE library for common dependencies
+# ===================================================================
+
+add_library(squander_common INTERFACE)
+
+target_include_directories(squander_common INTERFACE
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/squander/src-cpp/common/include>
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/include>
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/squander/src-cpp/decomposition/include>
+    $<BUILD_INTERFACE:${NUMPY_INC_DIR}>
+    $<BUILD_INTERFACE:${EXTRA_INCLUDES}>
+    $<INSTALL_INTERFACE:include/squander>
+)
+
+target_link_libraries(squander_common INTERFACE
+    ${BLAS_LIBRARIES}
+    ${LAPACK_LIBRARIES}
+    ${LAPACKE_LIBRARIES}
+    ${TBB_LIB}
+    ${TBBMALLOC_LIB}
+    ${OpenMP_CXX_LIBRARIES}
+)
+
+target_compile_features(squander_common INTERFACE cxx_std_11)
 
 
 # adding CMAKE files for Python extensions
@@ -759,10 +1052,19 @@ add_subdirectory (squander/gates)
 add_subdirectory (squander/nn)
 add_subdirectory (squander/VQA)
 
+# ===================================================================
+# Density Matrix Module
+# ===================================================================
+
+add_subdirectory (squander/src-cpp/density_matrix)
+
 if(DEFINED ENV{QGD_CTEST})
     # adding CMAKE files for executables
     add_subdirectory (test_standalone)
 endif()
 
 
-install(TARGETS qgd LIBRARY DESTINATION squander)
+install(TARGETS qgd 
+        LIBRARY DESTINATION squander
+        RUNTIME DESTINATION squander  # Add this for Windows
+        COMPONENT python)

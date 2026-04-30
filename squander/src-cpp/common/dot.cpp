@@ -543,3 +543,73 @@ zgemm_Task::execute(tbb::task_group& g) {
 } //execute
 
 
+/**
+@brief Call to calculate the product of two single-precision complex matrices using CBLAS cgemm.
+@param A The first matrix.
+@param B The second matrix.
+@return Returns with the result matrix.
+*/
+Matrix_float
+dot( Matrix_float &A, Matrix_float &B ) {
+
+#if BLAS==0
+    int NumThreads = omp_get_max_threads();
+    omp_set_num_threads(1);
+#elif BLAS==1
+    int NumThreads = mkl_get_max_threads();
+    MKL_Set_Num_Threads(1);
+#elif BLAS==2
+    int NumThreads = openblas_get_num_threads();
+    openblas_set_num_threads(1);
+#endif
+
+    // determine transpose flags
+    CBLAS_TRANSPOSE Atranspose, Btranspose;
+    if ( A.is_conjugated() && A.is_transposed() ) {
+        Atranspose = CblasConjTrans;
+    } else if ( A.is_transposed() ) {
+        Atranspose = CblasTrans;
+    } else {
+        Atranspose = CblasNoTrans;
+    }
+    if ( B.is_conjugated() && B.is_transposed() ) {
+        Btranspose = CblasConjTrans;
+    } else if ( B.is_transposed() ) {
+        Btranspose = CblasTrans;
+    } else {
+        Btranspose = CblasNoTrans;
+    }
+
+    // output dimensions
+    int C_rows = A.is_transposed() ? A.cols : A.rows;
+    int C_cols = B.is_transposed() ? B.rows : B.cols;
+    Matrix_float C(C_rows, C_cols);
+
+    // inner dimension and leading dims
+    int m = C_rows;
+    int n = C_cols;
+    int k = A.is_transposed() ? A.rows : A.cols;
+    int lda = A.stride;
+    int ldb = B.stride;
+    int ldc = C.stride;
+
+    QGD_Complex8 alpha; alpha.real = 1.0f; alpha.imag = 0.0f;
+    QGD_Complex8 beta;  beta.real  = 0.0f; beta.imag  = 0.0f;
+
+    cblas_cgemm(CblasRowMajor, Atranspose, Btranspose, m, n, k,
+                (float*)&alpha, (float*)A.get_data(), lda,
+                (float*)B.get_data(), ldb,
+                (float*)&beta,  (float*)C.get_data(), ldc);
+
+#if BLAS==0
+    omp_set_num_threads(NumThreads);
+#elif BLAS==1
+    MKL_Set_Num_Threads(NumThreads);
+#elif BLAS==2
+    openblas_set_num_threads(NumThreads);
+#endif
+
+    return C;
+}
+
+

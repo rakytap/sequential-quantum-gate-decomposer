@@ -25,6 +25,7 @@ limitations under the License.
 #define apply_kerel_to_input_AVX_H
 
 #include "matrix.h"
+#include "matrix_float.h"
 #include "common.h"
 
 /**
@@ -62,6 +63,10 @@ void apply_kernel_to_input_AVX(Matrix& u3_1qbit, Matrix& input, const bool& deri
 @param matrix_size The size of the input
 */
 void apply_kernel_to_input_AVX_parallel(Matrix& u3_1qbit, Matrix& input, const bool& deriv, const int& target_qbit, const int& control_qbit, const int& matrix_size);
+
+void apply_kernel_to_input_AVX_small32(Matrix_float& u3_1qbit, Matrix_float& input, const bool& deriv, const int& target_qbit, const int& control_qbit, const int& matrix_size);
+void apply_kernel_to_input_AVX32(Matrix_float& u3_1qbit, Matrix_float& input, const bool& deriv, const int& target_qbit, const int& control_qbit, const int& matrix_size);
+void apply_kernel_to_input_AVX_parallel32(Matrix_float& u3_1qbit, Matrix_float& input, const bool& deriv, const int& target_qbit, const int& control_qbit, const int& matrix_size);
 
 
 #endif

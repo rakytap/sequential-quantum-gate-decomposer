@@ -132,6 +132,24 @@ Phi_transformed[0] = Phi - M_PI;
 }
 
 
+void
+Adaptive::apply_to( Matrix_real_float& parameters, Matrix_float& input, int parallel ) {
+
+    if (input.rows != matrix_size ) {
+        std::string err("Adaptive::apply_to: Wrong input size in Adaptive gate apply.");
+        throw err;
+    }
+
+    float phi = parameters[0];
+    phi = static_cast<float>(activation_function(static_cast<double>(phi), limit));
+
+    Matrix_real_float phi_transformed(1,1);
+    phi_transformed[0] = phi;
+
+    Gate::apply_to(phi_transformed, input, parallel);
+}
+
+
 
 /**
 @brief Call to apply the gate on the input array/matrix by input*U3
@@ -165,6 +183,24 @@ Phi_transformed[0] = Phi - M_PI;
     CRY::apply_from_right( Phi_transformed, input );
 
 
+}
+
+
+void
+Adaptive::apply_from_right( Matrix_real_float& parameters, Matrix_float& input ) {
+
+    if (input.cols != matrix_size ) {
+        std::string err("Wrong matrix size in Adaptive apply_from_right");
+        throw err;
+    }
+
+    float phi = parameters[0];
+    phi = static_cast<float>(activation_function(static_cast<double>(phi), limit));
+
+    Matrix_real_float phi_transformed(1, 1);
+    phi_transformed[0] = phi;
+
+    Gate::apply_from_right(phi_transformed, input);
 }
 
 

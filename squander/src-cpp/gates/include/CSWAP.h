@@ -60,16 +60,16 @@ virtual ~CSWAP();
 @brief Call to create a clone of the present class
 @return Return with a pointer pointing to the cloned object
 */
-virtual CSWAP* clone();
+virtual CSWAP* clone() override;
 
 /**
 @brief Call to apply the gate operation on the input matrix
 @param input The input matrix on which the transformation is applied
 @param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with Intel TBB
 */
-virtual void apply_to(Matrix& input, int parallel = 0);
+virtual void apply_to(Matrix& input, int parallel = 0) override;
 
-virtual void apply_to(Matrix& input, const Matrix_real& parameters, int parallel);
+virtual void apply_to(Matrix& input, const Matrix_real& parameters, int parallel) override;
 
 /**
 @brief Get list of involved qubits

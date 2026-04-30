@@ -43,7 +43,7 @@ void  BFGS_Powell::Initialize_Zmtx()
    
 
     // initialize array Z
-    memset( Zmtx.get_data(), 0.0, variable_num*variable_num*sizeof(double) );
+    memset( Zmtx.get_data(), 0, variable_num*variable_num*sizeof(double) );
 
     
     // initialite Z to identiy matrix
@@ -312,7 +312,7 @@ void BFGS_Powell::BFGS_iteration(Matrix_real& x, Matrix_real& g, Matrix_real& x0
 
     // calculate the dot product of gamma.T @ Z
     Matrix_real gamma_T__dot__Z(1, variable_num);
-    memset( gamma_T__dot__Z.get_data(), 0.0, gamma_T__dot__Z.size()*sizeof(double) );
+    memset( gamma_T__dot__Z.get_data(), 0, gamma_T__dot__Z.size()*sizeof(double) );
 
     row_offset = 0;
     for (long row_idx = 0; row_idx < variable_num; row_idx++) {
@@ -336,7 +336,7 @@ void BFGS_Powell::BFGS_iteration(Matrix_real& x, Matrix_real& g, Matrix_real& x0
 
     // Eq (2.2) in M.J.D. POWELL: UPDATING CONJUGATE DIRECTIONS BY THE BFGS FORMULA, Mathematical Programming 38 (1987) 29-46 + column-wise Frobenius norm of Z
     Matrix_real norm_Z_tmp_mtx( 1, variable_num);
-    memset( norm_Z_tmp_mtx.get_data(), 0.0, norm_Z_tmp_mtx.size()*sizeof(double) );
+    memset( norm_Z_tmp_mtx.get_data(), 0, norm_Z_tmp_mtx.size()*sizeof(double) );
 
     row_offset = 0;
     for (long row_idx = 0; row_idx < variable_num; row_idx++) {
@@ -398,7 +398,7 @@ void BFGS_Powell::get_search_direction(Matrix_real& g, Matrix_real& search_direc
 
 
     // calculate Z.T @ g
-    memset(Z_T__dot__g.get_data(), 0.0, Z_T__dot__g.size()*sizeof(double) );
+    memset(Z_T__dot__g.get_data(), 0, Z_T__dot__g.size()*sizeof(double) );
     long row_offset = 0;
     for (long row_idx = 0; row_idx < variable_num; row_idx++) {
 
@@ -414,7 +414,7 @@ void BFGS_Powell::get_search_direction(Matrix_real& g, Matrix_real& search_direc
 
 
     // calculate the search direction d by -Z @ Z_T__dot__g
-    memset(search_direction.get_data(), 0.0, search_direction.size()*sizeof(double) );
+    memset(search_direction.get_data(), 0, search_direction.size()*sizeof(double) );
     row_offset = 0;
     for (long row_idx = 0; row_idx < variable_num; row_idx++) {
 

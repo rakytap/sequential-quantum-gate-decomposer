@@ -181,6 +181,37 @@ ON::apply_to( Matrix_real& parameters, Matrix& input, int parallel ) {
 }
 
 
+void
+ON::apply_to( Matrix_real_float& parameters, Matrix_float& input, int parallel ) {
+
+    (void)parallel;
+
+    if (input.rows != matrix_size ) {
+        std::string err("ON::apply_to(Matrix_real_float&, Matrix_float&): Wrong input size in ON gate apply.");
+        throw err;
+    }
+
+    if (parameters.size() < parameter_num) {
+        throw std::string("ON::apply_to(Matrix_real_float&, Matrix_float&): Not enough parameters given for the ON gate.");
+    }
+
+    Matrix_float&& Umtx = get_submatrix( parameters );
+
+    // get horizontal strided blocks of the input matrix
+    Matrix_float Block0 = Matrix_float( input.get_data(), input.rows/2, input.cols, input.stride );
+    Matrix_float Block1 = Matrix_float( input.get_data()+input.rows/2*input.stride, input.rows/2, input.cols, input.stride );
+
+    // get the transformation of the blocks
+    Matrix_float Transformed_Block0 = dot( Umtx, Block0 );
+    Matrix_float Transformed_Block1 = dot( Umtx, Block1 );
+
+    // put back the transformed data into input
+    memcpy( input.get_data(), Transformed_Block0.get_data(), Transformed_Block0.size()*sizeof(QGD_Complex8) );
+    memcpy( input.get_data()+input.rows/2*input.stride, Transformed_Block1.get_data(), Transformed_Block0.size()*sizeof(QGD_Complex8) );
+
+}
+
+
 /**
 @brief Call to apply the gate on the input array/matrix by input*Gate
 @param input The input array on which the gate is applied
@@ -222,6 +253,35 @@ ON::apply_from_right( Matrix_real& parameters, Matrix& input ) {
 }
 
 
+void
+ON::apply_from_right( Matrix_real_float& parameters, Matrix_float& input ) {
+
+    if (input.rows != matrix_size ) {
+        throw std::string("ON::apply_from_right(Matrix_real_float&, Matrix_float&): Wrong matrix size in ON gate apply.");
+    }
+
+    if (parameters.size() < parameter_num) {
+        throw std::string("ON::apply_from_right(Matrix_real_float&, Matrix_float&): Not enough parameters given for the ON gate.");
+    }
+
+    Matrix_float&& Umtx = get_submatrix( parameters );
+
+    // get vertical strided blocks of the input matrix
+    Matrix_float Block0 = Matrix_float( input.get_data(), input.rows, input.cols/2, input.stride );
+    Matrix_float Block1 = Matrix_float( input.get_data()+input.cols/2, input.rows, input.cols/2, input.stride );
+
+    // get the transformation of the blocks
+    Matrix_float Transformed_Block0 = dot( Block0, Umtx );
+    Matrix_float Transformed_Block1 = dot( Block1, Umtx );
+
+    // put back the transformed data into input
+    for (int row_idx=0; row_idx<input.rows; row_idx++) {
+        memcpy( input.get_data()+row_idx*input.stride, Transformed_Block0.get_data() + row_idx*Transformed_Block0.stride, Transformed_Block0.cols*sizeof(QGD_Complex8) );
+        memcpy( input.get_data()+row_idx*input.stride + input.cols/2, Transformed_Block1.get_data() + row_idx*Transformed_Block1.stride, Transformed_Block1.cols*sizeof(QGD_Complex8) );
+    }
+}
+
+
 
 /**
 @brief ?????
@@ -234,6 +294,23 @@ ON::get_submatrix( Matrix_real& parameters ) {
 
     Random_Orthogonal ro( matrix_size_loc );
     Matrix Umtx = ro.Construct_Orthogonal_Matrix( parameters );
+
+    return Umtx;
+
+}
+
+
+/**
+@brief Call to retrieve the float32 qbit_num-1 kernel of the operation.
+*/
+Matrix_float
+ON::get_submatrix( Matrix_real_float& parameters ) {
+
+    // create array of random parameters to construct random ONitary
+    int matrix_size_loc = matrix_size/2;
+
+    Random_Orthogonal ro( matrix_size_loc );
+    Matrix_float Umtx = ro.Construct_Orthogonal_Matrix( parameters );
 
     return Umtx;
 

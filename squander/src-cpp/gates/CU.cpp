@@ -21,6 +21,7 @@ limitations under the License.
 */
 
 #include "CU.h"
+#include "../common/include/qgd_math.h"
 
 
 // pi/2
@@ -120,7 +121,7 @@ CU::apply_to( Matrix_real& parameters_mtx, Matrix& input, int parallel ) {
     global_phase_factor.imag = 0.0;
 
 	if (global_phase != 0.0) {
-        sincos(global_phase, &global_phase_factor.imag, &global_phase_factor.real);
+        qgd_sincos<double>(global_phase, &global_phase_factor.imag, &global_phase_factor.real);
     }
 
     // apply the global phase on th egate kernel
@@ -163,7 +164,7 @@ CU::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
     global_phase_factor.imag = 0.0;
 
 	if (global_phase != 0.0) {
-        sincos(global_phase, &global_phase_factor.imag, &global_phase_factor.real);
+        qgd_sincos<double>(global_phase, &global_phase_factor.imag, &global_phase_factor.real);
     }
 
     // apply the global phase on th egate kernel
@@ -209,7 +210,7 @@ CU::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input, int parallel 
     global_phase_factor.imag = 0.0;
 
 	if (global_phase != 0.0) {
-        sincos(global_phase, &global_phase_factor.imag, &global_phase_factor.real);
+        qgd_sincos<double>(global_phase, &global_phase_factor.imag, &global_phase_factor.real);
     }
 
     // apply the global phase on th egate kernel
@@ -221,7 +222,7 @@ CU::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input, int parallel 
 
     /////////////////////////////////////////////////////////
     Matrix u3_1qbit_phi = calc_one_qubit_u3(ThetaOver2, Phi+M_PIOver2, Lambda );
-    memset(u3_1qbit_phi.get_data(), 0.0, 2*sizeof(QGD_Complex16) );
+    memset(u3_1qbit_phi.get_data(), 0, 2*sizeof(QGD_Complex16) );
 
     // apply the global phase on th egate kernel
     mult( global_phase_factor, u3_1qbit_phi);
@@ -232,8 +233,8 @@ CU::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input, int parallel 
 
     //////////////////////////////////////////////////////////
     Matrix u3_1qbit_lambda = calc_one_qubit_u3(ThetaOver2, Phi, Lambda+M_PIOver2 );
-    memset(u3_1qbit_lambda.get_data(), 0.0, sizeof(QGD_Complex16) );
-    memset(u3_1qbit_lambda.get_data()+2, 0.0, sizeof(QGD_Complex16) );
+    memset(u3_1qbit_lambda.get_data(), 0, sizeof(QGD_Complex16) );
+    memset(u3_1qbit_lambda.get_data()+2, 0, sizeof(QGD_Complex16) );
 
     // apply the global phase on th egate kernel
     mult( global_phase_factor, u3_1qbit_lambda);

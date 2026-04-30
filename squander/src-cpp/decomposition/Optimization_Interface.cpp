@@ -29,6 +29,10 @@ limitations under the License.
 
 #include "RL_experience.h"
 
+#ifdef _WIN32
+#include <cstdio>
+#endif
+
 #include <fstream>
 
 
@@ -82,9 +86,6 @@ Optimization_Interface::Optimization_Interface() {
     // set the trace offset
     trace_offset = 0;
 
-    // unique id indentifying the instance of the class
-    std::uniform_int_distribution<> distrib_int(0, INT_MAX);  
-    int id = distrib_int(gen);
 
 
     // Time spent on circuit simulation/cost function evaluation
@@ -215,7 +216,14 @@ void Optimization_Interface::export_current_cost_fnc(double current_minimum, Mat
     }
 
     const char* c_filename = filename.c_str();
-	pFile = fopen(c_filename, "a");
+#ifdef _WIN32
+    errno_t err = fopen_s(&pFile, c_filename, "a");
+    if (err != 0) {
+        pFile = NULL;
+    }
+#else
+    pFile = fopen(c_filename, "a");
+#endif
 
     if (pFile==NULL) {
         fputs ("File error",stderr); 
@@ -227,7 +235,7 @@ void Optimization_Interface::export_current_cost_fnc(double current_minimum, Mat
 
     std::uniform_int_distribution<> distrib(0, qbit_num-2); 
 
-    memset(input_state.get_data(), 0.0, (input_state.size()*2)*sizeof(double) ); 
+    memset(input_state.get_data(), 0, (input_state.size()*2)*sizeof(double) ); 
     input_state[0].real = 1.0;
 
     matrix_base<int> qbit_sublist(1,2);
@@ -326,7 +334,7 @@ Optimization_Interface::calc_decomposition_error(Matrix& decomposed_matrix ) {
         decomposition_error = get_infidelity(decomposed_matrix);
         break;
     case OSR_ENTANGLEMENT:
-        decomposition_error = get_osr_entanglement_test(decomposed_matrix, use_cuts);
+        decomposition_error = get_osr_entanglement_test(decomposed_matrix, use_cuts, osr_rank, use_softmax);
         break;
     default: {
         std::string err("Optimization_Interface::optimization_problem: Cost function variant not implmented.");
@@ -521,7 +529,7 @@ double Optimization_Interface::optimization_problem( Matrix_real& parameters ) {
     case INFIDELITY:
         return get_infidelity(matrix_new);
     case OSR_ENTANGLEMENT:
-        return get_osr_entanglement_test(matrix_new, use_cuts);
+        return get_osr_entanglement_test(matrix_new, use_cuts, osr_rank, use_softmax);
     default: {
         std::string err("Optimization_Interface::optimization_problem: Cost function variant not implmented.");
         throw err;
@@ -701,7 +709,7 @@ Optimization_Interface::optimization_problem_batched( std::vector<Matrix_real>& 
 #endif 
 
 
-    Matrix_real cost_fnc_mtx(parameters_vec.size(), 1);
+    Matrix_real cost_fnc_mtx(static_cast<int>(parameters_vec.size()), 1);
     int parallel = get_parallel_configuration();
     
 #ifdef __MPI__
@@ -746,7 +754,7 @@ Optimization_Interface::optimization_problem_batched( std::vector<Matrix_real>& 
 
     int work_batch = 1;
     if( parallel==0) {
-        work_batch = parameters_vec.size();
+        work_batch = static_cast<int>(parameters_vec.size());
     }
 
     tbb::parallel_for( tbb::blocked_range<int>(0, (int)parameters_vec.size(), work_batch), [&](tbb::blocked_range<int> r) {
@@ -839,7 +847,7 @@ double Optimization_Interface::optimization_problem( Matrix_real parameters, voi
         return 1.0-((trace_temp.real*trace_temp.real+trace_temp.imag*trace_temp.imag)/d+1)/(d+1);
     }
     case OSR_ENTANGLEMENT:
-        return get_osr_entanglement_test(matrix_new, use_cuts);
+        return get_osr_entanglement_test(matrix_new, use_cuts, osr_rank, use_softmax);
     default: {
         std::string err("Optimization_Interface::optimization_problem: Cost function variant not implmented.");
         throw err;
@@ -1069,7 +1077,7 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();////////////////////////////////
     } else if (cost_fnc == OSR_ENTANGLEMENT) {
         Matrix matrix_new = instance->get_Umtx().copy();
         instance->apply_to( parameters, matrix_new );
-        Upartial = get_deriv_osr_entanglement(matrix_new, use_cuts);
+        Upartial = get_deriv_osr_entanglement(matrix_new, use_cuts, osr_rank, use_softmax);
     }
 
 
@@ -1120,7 +1128,7 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();////////////////////////////////
                     auto paramcopy = parameters.copy();
                     paramcopy[idx] += 1e-10;
                     instance->apply_to( paramcopy, matrix_new );
-                    double f1 = instance->get_cost_function_variant() == SUM_OF_SQUARES ? get_cost_function_sum_of_squares(matrix_new) : get_osr_entanglement_test(matrix_new, use_cuts);
+                    double f1 = instance->get_cost_function_variant() == SUM_OF_SQUARES ? get_cost_function_sum_of_squares(matrix_new) : get_osr_entanglement_test(matrix_new, use_cuts, osr_rank, use_softmax);
                     double check = (f1 - *f0) / 1e-10;
                     //printf("%d: %g %g\n", idx, grad_comp, check);
                     grad_comp = check;
@@ -1313,13 +1321,13 @@ void Optimization_Interface::set_optimizer( optimization_aglorithms alg_in ) {
 
     switch ( alg ) {
         case ADAM:
-            max_inner_iterations = 1e5; 
+            max_inner_iterations = 100000; 
             random_shift_count_max = 100;
             max_outer_iterations = 1;
             return;
 
         case ADAM_BATCHED:
-            max_inner_iterations = 2.5e3;
+            max_inner_iterations = 2500;
             random_shift_count_max = 3;
             max_outer_iterations = 1;
             return;
@@ -1327,29 +1335,29 @@ void Optimization_Interface::set_optimizer( optimization_aglorithms alg_in ) {
         case GRAD_DESCEND:
             max_inner_iterations = 10000;
             random_shift_count_max = 1;  
-            max_outer_iterations = 1e8; 
+            max_outer_iterations = 100000000; 
             return;
 
         case COSINE:
-            max_inner_iterations = 2.5e3;
+            max_inner_iterations = 2500;
             random_shift_count_max = 3;
             max_outer_iterations = 1;
             return;
             
         case GRAD_DESCEND_PARAMETER_SHIFT_RULE:
-            max_inner_iterations = 2.5e3;
+            max_inner_iterations = 2500;
             random_shift_count_max = 3;
             max_outer_iterations = 1;
             return;                       
 
         case AGENTS:
-            max_inner_iterations = 2.5e3;
+            max_inner_iterations = 2500;
             random_shift_count_max = 3;
             max_outer_iterations = 1;
             return;
 
         case AGENTS_COMBINED:
-            max_inner_iterations = 2.5e3;
+            max_inner_iterations = 2500;
             random_shift_count_max = 3;
             max_outer_iterations = 1;
             return;
@@ -1357,11 +1365,11 @@ void Optimization_Interface::set_optimizer( optimization_aglorithms alg_in ) {
         case BFGS:
             max_inner_iterations = 10000;
             random_shift_count_max = 1;  
-            max_outer_iterations = 1e8; 
+            max_outer_iterations = 100000000; 
             return;
 
         case BFGS2:
-            max_inner_iterations = 1e5;
+            max_inner_iterations = 100000;
             random_shift_count_max = 100;
             max_outer_iterations = 1;
             return;
@@ -1526,6 +1534,15 @@ Optimization_Interface::get_accelerator_num() {
 }
 
 
+void Optimization_Interface::set_osr_params( std::vector<std::vector<int>> use_cuts_in, int osr_rank_in, bool use_softmax_in )
+{
+    use_cuts = use_cuts_in;
+    osr_rank = osr_rank_in;
+    use_softmax = use_softmax_in;
+    //std::stringstream sstream;
+    //sstream << "Optimization_Interface::set_osr_params: OSR entanglement test parameters set. osr_rank: " << osr_rank << ", use_softmax: " << use_softmax << std::endl;
+    //print(sstream, 2);
+}
 
 
 

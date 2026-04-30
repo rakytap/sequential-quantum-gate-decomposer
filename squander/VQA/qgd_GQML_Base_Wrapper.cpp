@@ -21,7 +21,7 @@ limitations under the License.
 */
 
 #define PY_SSIZE_T_CLEAN
-
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 
 #include <Python.h>
 #include <numpy/arrayobject.h>
@@ -200,7 +200,7 @@ qgd_Generative_Quantum_Machine_Learning_Base_Wrapper_init(qgd_Generative_Quantum
     p_star_data_arg  = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)p_star_data_arg, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
     double* p_star_data = (double*)PyArray_DATA(p_star_data_arg);
     int p_star_ndim = PyArray_NDIM(p_star_data_arg);
-    int p_star_shape = PyArray_DIMS(p_star_data_arg)[0];
+    int p_star_shape = static_cast<int>(PyArray_DIMS(p_star_data_arg)[0]);
 
     if ( p_star_ndim != 1 ) {
         PyErr_SetString(PyExc_ValueError, "p_star_data should be 1D array!");
@@ -230,7 +230,7 @@ qgd_Generative_Quantum_Machine_Learning_Base_Wrapper_init(qgd_Generative_Quantum
     sigma_data_arg = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)sigma_data_arg, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
     double* sigma_data = (double*)PyArray_DATA(sigma_data_arg);
     int sigma_ndim = PyArray_NDIM(sigma_data_arg);
-    int sigma_shape = PyArray_DIMS(sigma_data_arg)[0];
+    int sigma_shape = static_cast<int>(PyArray_DIMS(sigma_data_arg)[0]);
 
     if ( sigma_ndim != 1 ) {
         PyErr_SetString(PyExc_TypeError, "sigma expected to be a 1D list");
@@ -267,7 +267,7 @@ qgd_Generative_Quantum_Machine_Learning_Base_Wrapper_init(qgd_Generative_Quantum
                 return -1;
             }
 
-            clique.push_back(PyFloat_AsDouble(item));
+            clique.push_back(static_cast<int>(PyFloat_AsDouble(item)));
         }
         cliques.push_back(clique);
     }
@@ -290,7 +290,11 @@ qgd_Generative_Quantum_Machine_Learning_Base_Wrapper_init(qgd_Generative_Quantum
         std::string key_Cpp( key_C );
         Config_Element element;
 
-        if ( PyLong_Check( value ) ) { 
+        if (PyBool_Check(value)) {
+            element.set_property(key_Cpp, value == Py_True);
+            config[key_Cpp] = element;
+        }
+        else if ( PyLong_Check( value ) ) { 
             element.set_property( key_Cpp, PyLong_AsLongLong( value ) );
             config[ key_Cpp ] = element;
         }

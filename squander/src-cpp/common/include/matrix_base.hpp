@@ -261,7 +261,7 @@ matrix_base(const matrix_base<scalar> &in) {
 @brief Call to get whether the matrix should be conjugated in CBLAS functions or not.
 @return Returns with true if the matrix should be conjugated in CBLAS functions or false otherwise.
 */
-bool is_conjugated() {
+bool is_conjugated() const {
   return conjugated;
 }
 
@@ -279,7 +279,7 @@ void conjugate() {
 @brief Call to get whether the matrix should be conjugated in CBLAS functions or not.
 @return Returns with true if the matrix should be conjugated in CBLAS functions or false otherwise.
 */
-bool is_transposed() {
+bool is_transposed() const {
 
   return transposed;
 

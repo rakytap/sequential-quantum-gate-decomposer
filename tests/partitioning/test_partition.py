@@ -12,14 +12,15 @@ from squander.partitioning.tools import get_qubits
 CORRECTNESS TESTS
 """
 
+
 @pytest.mark.parametrize("max_qubits", [3, 4, 5])
 def test_PartitionEmptyCircuit(max_qubits):
     """
     Test partitioning an empty circuit
     """
     empty_c = Circuit(5)
-    top_c, param_order, _  = kahn_partition(empty_c, max_qubits)
-    assert len(top_c.get_Gates()) == 1 # NOTE: should be 0
+    top_c, param_order, _ = kahn_partition(empty_c, max_qubits)
+    assert len(top_c.get_Gates()) == 1  # NOTE: should be 0
     assert len(param_order) == 0
 
 
@@ -30,7 +31,7 @@ def test_PartitionSingleGate(max_qubits):
     """
     single_c = Circuit(5)
     single_c.add_CNOT(0, 1)
-    top_c, param_order, _  = kahn_partition(single_c, max_qubits)
+    top_c, param_order, _ = kahn_partition(single_c, max_qubits)
     assert len(top_c.get_Gates()) == 1
     assert len(param_order) == 1
 
@@ -72,52 +73,42 @@ def test_PartitionMaxQubitsEqualsTotalQubits(max_qubits):
     c = Circuit(max_qubits)
     c.add_CNOT(0, 1)
     c.add_CNOT(1, 2)
-    c.add_CCX(1, [2,0])
-    c.add_CSWAP([1, 2],[0])
+    c.add_CCX(1, [2, 0])
+    c.add_CSWAP([1, 2], [0])
     c.add_SWAP([1, 2])
 
     top_c, _, _ = kahn_partition(c, max_qubits)
     assert len(top_c.get_Gates()) == 1
-    
-    
-    
-    
+
+
 def test_CorrectnessOfPartitionedCircuit():
     """
     Test correctness of partitioned circuit by comparing output states
     """
     filename = "examples/partitioning/qasm_samples/heisenberg-16-20.qasm"
-    
-    initial_circuit, initial_parameters = utils.qasm_to_squander_circuit(filename)
-    
+
+    initial_circuit, initial_parameters, _ = utils.qasm_to_squander_circuit(filename)
+
     max_partition_size = 4
-    partitined_circuit, partitioned_parameters, _ = PartitionCircuitQasm( filename, max_partition_size )
-    
-    
+    partitined_circuit, partitioned_parameters, _ = PartitionCircuitQasm(
+        filename, max_partition_size
+    )
+
     # generate random initial state on which we test the circuits
     qbit_num = initial_circuit.get_Qbit_Num()
-    
-    
-    matrix_size = 1 << qbit_num
-    initial_state_real = np.random.uniform(-1.0,1.0, (matrix_size,) )
-    initial_state_imag = np.random.uniform(-1.0,1.0, (matrix_size,) )
-    initial_state = initial_state_real + initial_state_imag*1j
-    initial_state = initial_state/np.linalg.norm(initial_state)
-    
 
+    matrix_size = 1 << qbit_num
+    initial_state_real = np.random.uniform(-1.0, 1.0, (matrix_size,))
+    initial_state_imag = np.random.uniform(-1.0, 1.0, (matrix_size,))
+    initial_state = initial_state_real + initial_state_imag * 1j
+    initial_state = initial_state / np.linalg.norm(initial_state)
 
     transformed_state_1 = initial_state.copy()
-    transformed_state_2 = initial_state.copy()    
-    
-    initial_circuit.apply_to( initial_parameters, transformed_state_1 )
-    partitined_circuit.apply_to( partitioned_parameters, transformed_state_2)    
-    
-    diff = np.linalg.norm( transformed_state_1 - transformed_state_2 )
-    
-    assert( diff < 1e-10 )
-    
-    
-    
-    
-    
+    transformed_state_2 = initial_state.copy()
 
+    initial_circuit.apply_to(initial_parameters, transformed_state_1)
+    partitined_circuit.apply_to(partitioned_parameters, transformed_state_2)
+
+    diff = np.linalg.norm(transformed_state_1 - transformed_state_2)
+
+    assert diff < 1e-10

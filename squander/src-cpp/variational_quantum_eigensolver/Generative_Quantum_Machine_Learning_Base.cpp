@@ -77,16 +77,11 @@ Generative_Quantum_Machine_Learning_Base::Generative_Quantum_Machine_Learning_Ba
 @param config_in A map that can be used to set hyperparameters during the process
 @return An instance of the class
 */
-Generative_Quantum_Machine_Learning_Base::Generative_Quantum_Machine_Learning_Base(
-    std::vector<int> sample_indices_in, Matrix_real P_star_in, Matrix_real sigma_in, int qbit_num_in,
-    bool use_lookup_table_in, std::vector<std::vector<int>> cliques_in, bool use_exact_in,
-    std::map<std::string, Config_Element>& config_in, int accelerator_num)
-    : Optimization_Interface(Matrix(Power_of_2(qbit_num_in), 1), qbit_num_in, false, config_in, RANDOM,
-                             accelerator_num) {
+Generative_Quantum_Machine_Learning_Base::Generative_Quantum_Machine_Learning_Base( std::vector<int> sample_indices_in, Matrix_real P_star_in, Matrix_real sigma_in, int qbit_num_in, bool use_lookup_table_in, std::vector<std::vector<int>> cliques_in, bool use_exact_in, std::map<std::string, Config_Element>& config_in, int accelerator_num) : Optimization_Interface(Matrix(Power_of_2(qbit_num_in), 1), qbit_num_in, false, config_in, RANDOM, accelerator_num) {
 
     sample_indices = sample_indices_in;
 
-    sample_size = sample_indices.size();
+    sample_size = static_cast<int>(sample_indices.size());
 
     P_star = P_star_in;
     // config maps
@@ -391,13 +386,13 @@ double Generative_Quantum_Machine_Learning_Base::expectation_value_P_star_P_star
 double Generative_Quantum_Machine_Learning_Base::TV_of_the_distributions(Matrix& State_right) {
     Matrix_real P_theta(1 << qbit_num, 1);
 
-    for (int x_idx = 0; x_idx < State_right.size(); x_idx++) {
+    for (int x_idx=0; x_idx < static_cast<int>(State_right.size()); x_idx++){
         P_theta[x_idx] =
             State_right[x_idx].real * State_right[x_idx].real + State_right[x_idx].imag * State_right[x_idx].imag;
     }
 
     double TV = 0.0;
-    for (int i = 0; i < P_theta.size(); i++) {
+    for (int i=0; i < static_cast<int>(P_theta.size()); i++) {
         TV += abs(P_theta[i] - P_star[i]);
     }
     return TV * 0.5;
@@ -1059,22 +1054,25 @@ void Generative_Quantum_Machine_Learning_Base::export_current_cost_fnc(double cu
 
     if (project_name != "") {
         filename = project_name + "_" + filename;
-    }
+        const char* c_filename = filename.c_str();
+#ifdef _WIN32
+#pragma warning(suppress: 4996)
+#endif
+	pFile = fopen(c_filename, "a");
 
-    const char* c_filename = filename.c_str();
-    pFile = fopen(c_filename, "a");
+        if (pFile==NULL) {
+            fputs ("File error",stderr); 
+            std::string error("Cannot open file.");
+            throw error;
+        }
 
-    if (pFile == NULL) {
-        fputs("File error", stderr);
-        std::string error("Cannot open file.");
-        throw error;
     }
 
     Matrix input_state(Power_of_2(qbit_num), 1);
 
     std::uniform_int_distribution<> distrib(0, qbit_num - 2);
 
-    memset(input_state.get_data(), 0.0, (input_state.size() * 2) * sizeof(double));
+    memset(input_state.get_data(), 0, (input_state.size()*2)*sizeof(double) ); 
     input_state[0].real = 1.0;
 
     matrix_base<int> qbit_sublist(1, 2);
@@ -1108,7 +1106,7 @@ void Generative_Quantum_Machine_Learning_Base::initialize_zero_state() {
 
     initial_state[0].real = 1.0;
     initial_state[0].imag = 0.0;
-    memset(initial_state.get_data() + 2, 0.0, (initial_state.size() * 2 - 2) * sizeof(double));
+    memset(initial_state.get_data()+2, 0, (initial_state.size()*2-2)*sizeof(double) );      
 
     return;
 }
@@ -1137,9 +1135,149 @@ void Generative_Quantum_Machine_Learning_Base::generate_circuit(int layers, int 
 
         release_gates();
 
-        if (qbit_num < 2) {
-            std::string error("Variational_Quantum_Eigensolver_Base::generate_initial_circuit: number of qubits should "
-                              "be at least 2");
+            if ( qbit_num < 2 ) {
+                std::string error("Variational_Quantum_Eigensolver_Base::generate_initial_circuit: number of qubits should be at least 2");
+                throw error;
+            }
+
+            for (int layer_idx=0; layer_idx<layers ;layer_idx++){
+
+                for( int idx=0; idx<inner_blocks; idx++) {
+                    add_u3(1);                          
+                    add_u3(0);
+                    add_cnot(1,0);
+                }
+
+
+                for (int control_qbit=1; control_qbit<qbit_num-1; control_qbit=control_qbit+2){
+                    if (control_qbit+2<qbit_num){
+
+                        for( int idx=0; idx<inner_blocks; idx++) {
+                            add_u3(control_qbit+1);
+                            add_u3(control_qbit+2); 
+                        
+                            add_cnot(control_qbit+2,control_qbit+1);
+                        }
+
+                    }
+
+                    for( int idx=0; idx<inner_blocks; idx++) {
+                        add_u3(control_qbit+1);  
+                        add_u3(control_qbit);  
+
+                        add_cnot(control_qbit+1,control_qbit);
+
+                    }
+
+                }
+            }
+
+
+            return;
+        }
+        case HEA_ZYZ:
+        {
+
+            release_gates();
+
+            if ( qbit_num < 2 ) {
+                std::string error("Variational_Quantum_Eigensolver_Base::generate_initial_circuit: number of qubits should be at least 2");
+                throw error;
+            }
+
+            for (int layer_idx=0; layer_idx<layers ;layer_idx++){
+
+                for( int idx=0; idx<inner_blocks; idx++) {
+                    Gates_block* block_1 = new Gates_block( qbit_num );
+                    Gates_block* block_2 = new Gates_block( qbit_num );
+ 
+                    // single qubit gates in a ablock are then merged into a single gate kernel.
+                    block_1->add_rz(1);
+                    block_1->add_ry(1);
+                    block_1->add_rz(1);     
+
+                    add_gate( block_1 );                           
+
+                    block_2->add_rz(0);
+                    block_2->add_ry(0);
+                    block_2->add_rz(0);         
+
+                    add_gate( block_2 );           
+                
+                    add_cnot(1,0);
+                }
+
+                for (int control_qbit=1; control_qbit<qbit_num-1; control_qbit=control_qbit+2){
+                    if (control_qbit+2<qbit_num){
+
+                        for( int idx=0; idx<inner_blocks; idx++) {
+
+                            Gates_block* block_1 = new Gates_block( qbit_num );
+                            Gates_block* block_2 = new Gates_block( qbit_num );
+
+                            block_1->add_rz(control_qbit+1);
+                            block_1->add_ry(control_qbit+1);
+                            block_1->add_rz(control_qbit+1); 
+                            add_gate( block_1 );                                
+
+                            block_2->add_rz(control_qbit+2);
+                            block_2->add_ry(control_qbit+2);
+                            block_2->add_rz(control_qbit+2);  
+                            add_gate( block_2 );                              
+
+                            add_cnot(control_qbit+2,control_qbit+1);
+                        }
+
+                    }
+
+                    for( int idx=0; idx<inner_blocks; idx++) {
+
+                        Gates_block* block_1 = new Gates_block( qbit_num );
+                        Gates_block* block_2 = new Gates_block( qbit_num );
+
+                        block_1->add_rz(control_qbit+1);
+                        block_1->add_ry(control_qbit+1);
+                        block_1->add_rz(control_qbit+1); 
+                        add_gate( block_1 );                      
+
+                        block_2->add_rz(control_qbit);
+                        block_2->add_ry(control_qbit);
+                        block_2->add_rz(control_qbit);     
+                        add_gate( block_2 );                  
+
+                        add_cnot(control_qbit+1,control_qbit);
+                    }
+
+                }
+            }
+
+            return;
+        }        
+
+        case QCMRF:
+        {
+            int num_cliques = static_cast<int>(cliques.size());
+            if (cliques.size() == 0) {
+                std::string error("Variational_Quantum_Eigensolver_Base::generate_initial_circuit: input the cliques for using QCMRF ansatz");
+                throw error;
+            }
+            release_gates();
+            for (int qbit_idx=0; qbit_idx < qbit_num; qbit_idx++) {
+                add_h(qbit_idx);
+            }
+
+            std::vector<std::vector<int>> all_subsets;
+            for (int clique_idx = 0; clique_idx < num_cliques; clique_idx++) {
+                std::vector<int> subset;
+                generate_clique_circuit(0, cliques[clique_idx], all_subsets, subset);
+            }
+            for (int qbit_idx=0; qbit_idx < qbit_num; qbit_idx++) {
+                add_u3(qbit_idx);
+            }
+            return;
+        }
+        default:
+            std::string error("Generative_Quantum_Machine_Learning_Base::generate_initial_circuit: ansatz not implemented");
             throw error;
         }
 
@@ -1172,110 +1310,6 @@ void Generative_Quantum_Machine_Learning_Base::generate_circuit(int layers, int 
         }
 
         return;
-    }
-    case HEA_ZYZ: {
-
-        release_gates();
-
-        if (qbit_num < 2) {
-            std::string error("Variational_Quantum_Eigensolver_Base::generate_initial_circuit: number of qubits should "
-                              "be at least 2");
-            throw error;
-        }
-
-        for (int layer_idx = 0; layer_idx < layers; layer_idx++) {
-
-            for (int idx = 0; idx < inner_blocks; idx++) {
-                Gates_block* block_1 = new Gates_block(qbit_num);
-                Gates_block* block_2 = new Gates_block(qbit_num);
-
-                // single qubit gates in a ablock are then merged into a single gate kernel.
-                block_1->add_rz(1);
-                block_1->add_ry(1);
-                block_1->add_rz(1);
-
-                add_gate(block_1);
-
-                block_2->add_rz(0);
-                block_2->add_ry(0);
-                block_2->add_rz(0);
-
-                add_gate(block_2);
-
-                add_cnot(1, 0);
-            }
-
-            for (int control_qbit = 1; control_qbit < qbit_num - 1; control_qbit = control_qbit + 2) {
-                if (control_qbit + 2 < qbit_num) {
-
-                    for (int idx = 0; idx < inner_blocks; idx++) {
-
-                        Gates_block* block_1 = new Gates_block(qbit_num);
-                        Gates_block* block_2 = new Gates_block(qbit_num);
-
-                        block_1->add_rz(control_qbit + 1);
-                        block_1->add_ry(control_qbit + 1);
-                        block_1->add_rz(control_qbit + 1);
-                        add_gate(block_1);
-
-                        block_2->add_rz(control_qbit + 2);
-                        block_2->add_ry(control_qbit + 2);
-                        block_2->add_rz(control_qbit + 2);
-                        add_gate(block_2);
-
-                        add_cnot(control_qbit + 2, control_qbit + 1);
-                    }
-                }
-
-                for (int idx = 0; idx < inner_blocks; idx++) {
-
-                    Gates_block* block_1 = new Gates_block(qbit_num);
-                    Gates_block* block_2 = new Gates_block(qbit_num);
-
-                    block_1->add_rz(control_qbit + 1);
-                    block_1->add_ry(control_qbit + 1);
-                    block_1->add_rz(control_qbit + 1);
-                    add_gate(block_1);
-
-                    block_2->add_rz(control_qbit);
-                    block_2->add_ry(control_qbit);
-                    block_2->add_rz(control_qbit);
-                    add_gate(block_2);
-
-                    add_cnot(control_qbit + 1, control_qbit);
-                }
-            }
-        }
-
-        return;
-    }
-
-    case QCMRF: {
-        int num_cliques = cliques.size();
-        if (cliques.size() == 0) {
-            std::string error("Variational_Quantum_Eigensolver_Base::generate_initial_circuit: input the cliques for "
-                              "using QCMRF ansatz");
-            throw error;
-        }
-        release_gates();
-        for (int qbit_idx = 0; qbit_idx < qbit_num; qbit_idx++) {
-            add_h(qbit_idx);
-        }
-
-        std::vector<std::vector<int>> all_subsets;
-        for (int clique_idx = 0; clique_idx < num_cliques; clique_idx++) {
-            std::vector<int> subset;
-            generate_clique_circuit(0, cliques[clique_idx], all_subsets, subset);
-        }
-        for (int qbit_idx = 0; qbit_idx < qbit_num; qbit_idx++) {
-            add_u3(qbit_idx);
-        }
-        return;
-    }
-    default:
-        std::string error("Generative_Quantum_Machine_Learning_Base::generate_initial_circuit: ansatz not implemented");
-        throw error;
-    }
 }
 
 /**
@@ -1283,12 +1317,12 @@ void Generative_Quantum_Machine_Learning_Base::generate_circuit(int layers, int 
 @param qbits The qbits the gate operates on. The depth of the generated circuit is 2*number of qbits
 */
 void Generative_Quantum_Machine_Learning_Base::MultyRZ(std::vector<int>& qbits) {
-    for (size_t idx = 0; idx < qbits.size() - 1; idx++) {
-        add_cnot(qbits[idx + 1], qbits[idx]);
+    for (size_t idx=0; idx<qbits.size()-1; idx++) {
+        add_cnot(qbits[idx+1], qbits[idx]);
     }
-    add_rz(qbits[qbits.size() - 1]);
-    for (size_t idx = qbits.size() - 1; idx > 0; idx--) {
-        add_cnot(qbits[idx], qbits[idx - 1]);
+    add_rz(qbits[qbits.size()-1]);
+    for (int idx=static_cast<int>(qbits.size())-1; idx>0; idx--) {
+        add_cnot(qbits[idx], qbits[idx-1]);
     }
 }
 
@@ -1298,9 +1332,7 @@ void Generative_Quantum_Machine_Learning_Base::MultyRZ(std::vector<int>& qbits) 
 @param res The qbits for previously generated gates to avoid duplication
 @param subset Temporary variable for storing subsets.
 */
-void Generative_Quantum_Machine_Learning_Base::generate_clique_circuit(int i, std::vector<int>& arr,
-                                                                       std::vector<std::vector<int>>& res,
-                                                                       std::vector<int>& subset) {
+void Generative_Quantum_Machine_Learning_Base::generate_clique_circuit(int i, std::vector<int>& arr, std::vector<std::vector<int>>& res, std::vector<int>& subset) {
     if (static_cast<size_t>(i) == arr.size()) {
         if (subset.size() != 0) {
             if (std::find(res.begin(), res.end(), subset) == res.end()) {

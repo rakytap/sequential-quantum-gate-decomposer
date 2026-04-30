@@ -520,7 +520,7 @@ void N_Qubit_Decomposition_adaptive::finalize_circuit() {
     cDecomp_custom.set_optimizer( alg );  
     if (alg==ADAM || alg==BFGS2) { 
         int param_num_loc = gate_structure_loc->get_parameter_num();
-        int max_inner_iterations_loc = (double)param_num_loc/852 * 1e7;
+        int max_inner_iterations_loc = static_cast<int>((double)param_num_loc/852 * 10000000.0);
         cDecomp_custom.set_max_inner_iterations( max_inner_iterations_loc );  
         cDecomp_custom.set_random_shift_count_max( 10000 );         
     }
@@ -640,7 +640,7 @@ N_Qubit_Decomposition_adaptive::optimize_imported_gate_structure(Matrix_real& op
     cDecomp_custom.set_project_name( project_name );
     if (alg==ADAM || alg==BFGS2) { 
         int param_num_loc = gate_structure_loc->get_parameter_num();
-        int max_inner_iterations_loc = (double)param_num_loc/852 * 1e7;
+        int max_inner_iterations_loc = static_cast<int>((double)param_num_loc/852 * 10000000.0);
         cDecomp_custom.set_max_inner_iterations( max_inner_iterations_loc );  
         cDecomp_custom.set_random_shift_count_max( 10000 );          
     }
@@ -779,7 +779,7 @@ N_Qubit_Decomposition_adaptive::determine_initial_gate_structure(Matrix_real& op
                 cDecomp_custom_random.set_project_name( project_name );
                 if ( alg == ADAM || alg == BFGS2 ) {
                     int param_num_loc = gate_structure_loc->get_parameter_num();
-                    int max_inner_iterations_loc = (double)param_num_loc/852 * 1e7;
+                    int max_inner_iterations_loc = static_cast<int>((double)param_num_loc/852 * 10000000.0);
                     cDecomp_custom_random.set_max_inner_iterations( max_inner_iterations_loc );  
                     cDecomp_custom_random.set_random_shift_count_max( 10000 ); 
                 }
@@ -817,7 +817,7 @@ N_Qubit_Decomposition_adaptive::determine_initial_gate_structure(Matrix_real& op
                 cDecomp_custom_close_to_zero.set_optimizer( alg );
                 if ( alg == ADAM || alg == BFGS2 ) {
                     int param_num_loc = gate_structure_loc->get_parameter_num();
-                    int max_inner_iterations_loc = (double)param_num_loc/852 * 1e7;
+                    int max_inner_iterations_loc = static_cast<int>((double)param_num_loc/852 * 10000000.0);
                     cDecomp_custom_close_to_zero.set_max_inner_iterations( max_inner_iterations_loc );  
                     cDecomp_custom_close_to_zero.set_random_shift_count_max( 10000 ); 
                 }
@@ -1081,13 +1081,13 @@ N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_struc
     for (size_t idx=0; idx<panelties.size(); idx++) {
         if ( panelty_min > panelties[idx] ) {
             panelty_min = panelties[idx];
-            idx_min = idx;
+            idx_min = static_cast<unsigned int>(idx);
         }
 
         else if ( panelty_min == panelties[idx] ) {
 
             if ( (distrib_int(gen) % 2) == 1 ) {
-                idx_min = idx;
+                idx_min = static_cast<unsigned int>(idx);
 
                 panelty_min = panelties[idx];
             }
@@ -1207,7 +1207,7 @@ N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_struc
     cDecomp_custom.set_trace_offset( trace_offset ); 
     cDecomp_custom.set_optimizer( alg );
     if ( alg == ADAM || alg==BFGS2) {
-        cDecomp_custom.set_max_inner_iterations( 1e5 );  
+        cDecomp_custom.set_max_inner_iterations( 100000 );  
         cDecomp_custom.set_random_shift_count_max( 1 );        
     }
     else if ( alg==BFGS ) {
@@ -1520,7 +1520,7 @@ N_Qubit_Decomposition_adaptive::remove_trivial_gates( Gates_block* gate_structur
             std::vector<int>&& involved_qbits = layer->get_involved_qubits();
             for( size_t rdx=0; rdx<involved_qbits.size(); rdx++ ) {
 
-                U3* U_gate_to_be_removed = static_cast<U3*>(layer->get_gate(rdx));
+                U3* U_gate_to_be_removed = static_cast<U3*>(layer->get_gate(static_cast<int>(rdx)));
                 int qbit_to_be_matched = U_gate_to_be_removed->get_target_qbit();
 
                 int parameter_idx_loc = parameter_idx_to_be_removed + layer->get_parameter_num(); 
