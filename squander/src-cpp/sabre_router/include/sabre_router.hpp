@@ -92,6 +92,8 @@ struct SabreConfig {
     int swap_burst_budget = 5; // Qiskit LightSABRE DECAY_RESET_INTERVAL
     double path_tiebreak_weight = 0.2;
     double three_qubit_exit_weight = 1.0;
+    int boundary_beam_width = 1;
+    int boundary_beam_depth = 1;
 };
 
 struct RouteStep {
@@ -360,6 +362,28 @@ private:
         const std::vector<const CandidateData*>& candidates,
         const std::vector<double>& scores,
         std::mt19937* rng
+    ) const;
+
+    std::pair<std::vector<int>, std::vector<uint8_t>> advance_layout_frontier(
+        int selected_partition_idx,
+        const std::vector<int>& F,
+        const std::vector<uint8_t>& resolved,
+        const std::vector<std::vector<int>>& children_graph,
+        const std::vector<std::vector<int>>& parents_graph
+    ) const;
+
+    size_t boundary_beam_select_index(
+        const std::vector<const CandidateData*>& candidates,
+        const std::vector<double>& scores,
+        const std::vector<std::vector<std::pair<int,int>>>& cached_swaps,
+        const std::vector<std::vector<int>>& cached_pi,
+        const std::vector<int>& F_snapshot,
+        const std::vector<uint8_t>& resolved,
+        const std::vector<std::vector<int>>& children_graph,
+        const std::vector<std::vector<int>>& parents_graph,
+        bool reverse,
+        const std::unordered_map<int, CanonicalEntry>& canonical_data,
+        SwapCache* swap_cache
     ) const;
 
     // Check if partition is single-qubit

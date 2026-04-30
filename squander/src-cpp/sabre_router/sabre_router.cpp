@@ -1364,6 +1364,268 @@ const CandidateData& SabreRouter::select_best_candidate(
 }
 
 // ---------------------------------------------------------------------------
+// Boundary beam search helpers
+// ---------------------------------------------------------------------------
+
+std::pair<std::vector<int>, std::vector<uint8_t>>
+SabreRouter::advance_layout_frontier(
+    int selected_partition_idx,
+    const std::vector<int>& F,
+    const std::vector<uint8_t>& resolved,
+    const std::vector<std::vector<int>>& children_graph,
+    const std::vector<std::vector<int>>& parents_graph
+) const {
+    std::vector<int> F_next(F);
+    std::vector<uint8_t> resolved_next(resolved);
+
+    F_next.erase(
+        std::remove(F_next.begin(), F_next.end(), selected_partition_idx),
+        F_next.end()
+    );
+    if (
+        selected_partition_idx >= 0
+        && selected_partition_idx < static_cast<int>(resolved_next.size())
+    ) {
+        resolved_next[selected_partition_idx] = 1;
+    }
+
+    std::deque<int> stack;
+    for (int child : children_graph[selected_partition_idx]) {
+        stack.push_back(child);
+    }
+
+    while (!stack.empty()) {
+        const int child = stack.front();
+        stack.pop_front();
+
+        if (resolved_next[child]) continue;
+        if (std::find(F_next.begin(), F_next.end(), child) != F_next.end()) {
+            continue;
+        }
+
+        bool parents_ok = true;
+        for (int parent : parents_graph[child]) {
+            if (!resolved_next[parent]) {
+                parents_ok = false;
+                break;
+            }
+        }
+        if (!parents_ok) continue;
+
+        if (layout_partitions_[child].is_single) {
+            resolved_next[child] = 1;
+            for (int grandchild : children_graph[child]) {
+                stack.push_back(grandchild);
+            }
+        } else {
+            F_next.push_back(child);
+        }
+    }
+
+    return {std::move(F_next), std::move(resolved_next)};
+}
+
+size_t SabreRouter::boundary_beam_select_index(
+    const std::vector<const CandidateData*>& candidates,
+    const std::vector<double>& scores,
+    const std::vector<std::vector<std::pair<int,int>>>& cached_swaps,
+    const std::vector<std::vector<int>>& cached_pi,
+    const std::vector<int>& F_snapshot,
+    const std::vector<uint8_t>& resolved,
+    const std::vector<std::vector<int>>& children_graph,
+    const std::vector<std::vector<int>>& parents_graph,
+    bool reverse,
+    const std::unordered_map<int, CanonicalEntry>& canonical_data,
+    SwapCache* swap_cache
+) const {
+    size_t fallback_idx = 0;
+    for (size_t i = 1; i < scores.size(); i++) {
+        if (scores[i] < scores[fallback_idx]) {
+            fallback_idx = i;
+        }
+    }
+
+    const int beam_width = std::max(1, config_.boundary_beam_width);
+    const int beam_depth = std::max(1, config_.boundary_beam_depth);
+    if (beam_width <= 1 || beam_depth <= 1 || candidates.size() <= 1) {
+        return fallback_idx;
+    }
+
+    bool has_three_qubit_candidate = false;
+    for (const auto* cand : candidates) {
+        if (cand->involved_qbits.size() >= 3) {
+            has_three_qubit_candidate = true;
+            break;
+        }
+    }
+    if (!has_three_qubit_candidate) {
+        return fallback_idx;
+    }
+
+    struct BeamState {
+        double rank_cost;
+        double total_cost;
+        std::vector<int> pi;
+        std::vector<int> F;
+        std::vector<uint8_t> resolved;
+        size_t first_idx;
+    };
+
+    auto transition_cost = [&](const CandidateData& cand, size_t idx) {
+        return routing_objective(
+            static_cast<double>(cached_swaps[idx].size()),
+            cand.cnot_count
+        );
+    };
+
+    auto sort_states = [](const BeamState& a, const BeamState& b) {
+        if (a.rank_cost != b.rank_cost) return a.rank_cost < b.rank_cost;
+        return a.first_idx < b.first_idx;
+    };
+
+    std::vector<BeamState> states;
+    states.reserve(candidates.size());
+    for (size_t idx = 0; idx < candidates.size(); idx++) {
+        if (cached_pi[idx].empty()) continue;
+        const auto& cand = *candidates[idx];
+        auto [F_next, resolved_next] = advance_layout_frontier(
+            cand.partition_idx,
+            F_snapshot,
+            resolved,
+            children_graph,
+            parents_graph
+        );
+        const double trans_cost = transition_cost(cand, idx);
+        states.push_back(BeamState{
+            scores[idx],
+            trans_cost,
+            cached_pi[idx],
+            std::move(F_next),
+            std::move(resolved_next),
+            idx
+        });
+    }
+
+    if (states.empty()) {
+        return fallback_idx;
+    }
+    std::sort(states.begin(), states.end(), sort_states);
+    if (static_cast<int>(states.size()) > beam_width) {
+        states.resize(beam_width);
+    }
+
+    for (int depth = 1; depth < beam_depth; depth++) {
+        std::vector<BeamState> expanded;
+
+        for (const auto& state : states) {
+            if (state.F.empty()) {
+                expanded.push_back(BeamState{
+                    state.total_cost,
+                    state.total_cost,
+                    state.pi,
+                    state.F,
+                    state.resolved,
+                    state.first_idx
+                });
+                continue;
+            }
+
+            auto E = generate_extended_set(
+                state.F,
+                state.resolved,
+                children_graph,
+                parents_graph
+            );
+
+            auto rollout_candidates = obtain_partition_candidates(state.F);
+            if (rollout_candidates.empty()) {
+                expanded.push_back(BeamState{
+                    state.total_cost,
+                    state.total_cost,
+                    state.pi,
+                    state.F,
+                    state.resolved,
+                    state.first_idx
+                });
+                continue;
+            }
+
+            rollout_candidates = prefilter_candidates(
+                rollout_candidates,
+                state.pi,
+                config_.prefilter_top_k,
+                state.F,
+                E,
+                reverse,
+                canonical_data
+            );
+
+            for (const CandidateData* cand : rollout_candidates) {
+                NeighborInfo neighbor_info = build_neighbor_info(
+                    cand->partition_idx,
+                    state.F,
+                    E,
+                    state.pi,
+                    canonical_data
+                );
+                std::vector<std::pair<int,int>> swaps;
+                std::vector<int> output_perm;
+                const double score = score_candidate(
+                    *cand,
+                    state.F,
+                    state.pi,
+                    E,
+                    reverse,
+                    canonical_data,
+                    swap_cache,
+                    nullptr,
+                    &swaps,
+                    &output_perm,
+                    &neighbor_info
+                );
+                const double trans_cost = routing_objective(
+                    static_cast<double>(swaps.size()),
+                    cand->cnot_count
+                );
+                const double future_cost = score - trans_cost;
+                const double new_total = state.total_cost + trans_cost;
+                const double rank_cost = new_total + future_cost;
+
+                auto [F_next, resolved_next] = advance_layout_frontier(
+                    cand->partition_idx,
+                    state.F,
+                    state.resolved,
+                    children_graph,
+                    parents_graph
+                );
+                expanded.push_back(BeamState{
+                    rank_cost,
+                    new_total,
+                    std::move(output_perm),
+                    std::move(F_next),
+                    std::move(resolved_next),
+                    state.first_idx
+                });
+            }
+        }
+
+        if (expanded.empty()) {
+            break;
+        }
+        std::sort(expanded.begin(), expanded.end(), sort_states);
+        if (static_cast<int>(expanded.size()) > beam_width) {
+            expanded.resize(beam_width);
+        }
+        states = std::move(expanded);
+    }
+
+    if (states.empty()) {
+        return fallback_idx;
+    }
+    return std::min_element(states.begin(), states.end(), sort_states)->first_idx;
+}
+
+// ---------------------------------------------------------------------------
 // ---------------------------------------------------------------------------
 // heuristic_search (main loop)
 // ---------------------------------------------------------------------------
@@ -1378,6 +1640,8 @@ std::pair<std::vector<int>, double> SabreRouter::heuristic_search(
     const std::vector<std::vector<int>>& pg,
     ForwardRouteResult* route_trace
 ) const {
+    (void)rng;
+
     std::vector<int> F;
     std::vector<int> queue;
     std::vector<uint8_t> resolved(num_partitions_, 0);
@@ -1508,13 +1772,21 @@ std::pair<std::vector<int>, double> SabreRouter::heuristic_search(
             );
         }
 
-        // Select best
-        const auto& best = select_best_candidate(candidates, scores, rng);
-        // Find selected index to retrieve cached transform
-        size_t best_ci = 0;
-        for (size_t ci = 0; ci < candidates.size(); ci++) {
-            if (candidates[ci] == &best) { best_ci = ci; break; }
-        }
+        // Select best, optionally using boundary-layout beam rollout
+        const size_t best_ci = boundary_beam_select_index(
+            candidates,
+            scores,
+            cached_swaps,
+            cached_pi,
+            F,
+            resolved,
+            cg,
+            pg,
+            reverse,
+            canonical_data,
+            &swap_cache
+        );
+        const auto& best = *candidates[best_ci];
 
         // Remove from F and mark resolved
         F.erase(std::remove(F.begin(), F.end(), best.partition_idx), F.end());

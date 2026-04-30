@@ -164,13 +164,7 @@ class qgd_Partition_Aware_Mapping:
         self.config.setdefault('boundary_beam_width', 1)
         self.config.setdefault('boundary_beam_depth', 1)
         self.config.setdefault('routing_aware_partitioning', True)
-        self.config.setdefault('size_density_weight', False)
-        self.config.setdefault('sparse_penalty', 3.0)
-        self.config.setdefault('two_pair_3q_penalty', None)
-        self.config.setdefault('dense_3q_penalty', None)
-        self.config.setdefault('triangle_free_3q_penalty', 1.0)
-        self.config.setdefault('three_qubit_reuse_discount', 0.15)
-        self.config.setdefault('three_qubit_reuse_discount_cap', 1.0)
+        self.config.setdefault('embeddable_3q_partitions_only', True)
         strategy = self.config['strategy']
         self.config.setdefault('parallel_layout_trials', False)
         self.config.setdefault('layout_trial_workers', 0)
@@ -214,152 +208,78 @@ class qgd_Partition_Aware_Mapping:
     # ------------------------------------------------------------------------
 
     @staticmethod
-    def _parts_to_density_weights(allparts, gate_dict, sparse_penalty=3.0):
-        """Per-part ILP weights that penalise sparse 3-qubit partitions.
-
-        Penalty by active-pair count for a 3q partition:
-          1 pair  -> sparse_penalty        (e.g. 3 → total ILP cost 4)
-          2 pairs -> sparse_penalty / 3    (e.g. 1 → total ILP cost 2)
-          3 pairs -> 0                     (no penalty)
-        For 2q (or 1q) partitions the weight is always 0.
-        """
-        N = max(len(allparts), 1)
-        weights = []
-        for part in allparts:
-            qubits_in_part = set()
-            for gate_idx in part:
-                gate = gate_dict.get(gate_idx)
-                if gate is not None:
-                    qubits_in_part.update(gate.get_Involved_Qbits())
-            if len(qubits_in_part) != 3:
-                weights.append(0.0)
-                continue
-            active_pairs = set()
-            for gate_idx in part:
-                gate = gate_dict.get(gate_idx)
-                if gate is None:
-                    continue
-                qbs = list(gate.get_Involved_Qbits())
-                for a in range(len(qbs)):
-                    for b in range(a + 1, len(qbs)):
-                        active_pairs.add((min(qbs[a], qbs[b]), max(qbs[a], qbs[b])))
-            n_pairs = len(active_pairs)
-            if n_pairs >= 3:
-                penalty = 0.0
-            elif n_pairs == 2:
-                penalty = sparse_penalty / 3.0
-            else:
-                penalty = sparse_penalty
-            weights.append(penalty / N)
-        return weights
-
-    @staticmethod
-    def _topology_has_triangle(topology):
-        """Return True when the hardware graph contains a 3-cycle."""
+    def _max_edges_in_three_qubit_subtopologies(topology):
+        """Maximum edge count of any connected 3-node hardware subtopology."""
         if not topology:
-            return False
-        adj = defaultdict(set)
-        for u, v in topology:
-            adj[int(u)].add(int(v))
-            adj[int(v)].add(int(u))
-        for u, neighbors in adj.items():
-            ordered = sorted(v for v in neighbors if v > u)
-            for idx, v in enumerate(ordered):
-                if any(w in adj[v] for w in ordered[idx + 1:]):
-                    return True
-        return False
+            return 0
+        return max(
+            (
+                len({tuple(sorted(edge)) for edge in mini_topology})
+                for mini_topology in get_unique_subtopologies(topology, 3)
+            ),
+            default=0,
+        )
 
     @staticmethod
-    def _parts_to_routing_aware_weights(
-        allparts,
-        gate_dict,
-        topology=None,
-        sparse_penalty=3.0,
-        two_pair_3q_penalty=None,
-        dense_3q_penalty=None,
-        triangle_free_3q_penalty=1.0,
-        reuse_discount=0.15,
-        reuse_discount_cap=1.0,
-    ):
-        """Per-part ILP weights for routing-aware 3q partition selection.
-
-        ``ilp_global_optimal`` minimizes ``1 + N * weight[i]`` for each
-        selected part.  Returning ``penalty / N`` therefore makes ``penalty``
-        the extra cost of selecting that part.
-
-        The older density tie-breaker preserved minimum partition count, which
-        still lets a sparse 3q block beat the two 2q blocks it would replace.
-        This cost is intentionally allowed to cross that boundary:
-
-          one active pair  -> strongly prefer the equivalent 2q partition
-          two active pairs -> prefer two 2q partitions unless the block is reused
-          three pairs      -> keep 3q attractive, but penalize triangle-free HW
-        """
-        N = max(len(allparts), 1)
-        reuse_discount = float(reuse_discount or 0.0)
-        reuse_discount_cap = float(reuse_discount_cap or 0.0)
-        two_pair_penalty = (
-            sparse_penalty / 2.0
-            if two_pair_3q_penalty is None
-            else float(two_pair_3q_penalty)
-        )
-        triangle_free_penalty = float(triangle_free_3q_penalty or 0.0)
-        if dense_3q_penalty is None:
-            dense_penalty = (
-                triangle_free_penalty
-                if not qgd_Partition_Aware_Mapping._topology_has_triangle(topology)
-                else 0.0
-            )
-        else:
-            dense_penalty = float(dense_3q_penalty)
-
-        weights = []
-        for part in allparts:
-            qubits_in_part = set()
-            active_pairs = set()
-            multi_qubit_gate_count = 0
-
-            for gate_idx in part:
-                gate = gate_dict.get(gate_idx)
-                if gate is None:
-                    continue
-                qbs = list(gate.get_Involved_Qbits())
-                qubits_in_part.update(qbs)
-                if len(qbs) < 2:
-                    continue
-                multi_qubit_gate_count += 1
-                for a in range(len(qbs)):
-                    for b in range(a + 1, len(qbs)):
-                        active_pairs.add(
-                            (min(qbs[a], qbs[b]), max(qbs[a], qbs[b]))
-                        )
-
-            if len(qubits_in_part) != 3:
-                weights.append(0.0)
+    def _part_support_and_active_pairs(part, gate_dict):
+        qubits_in_part = set()
+        active_pairs = set()
+        for gate_idx in part:
+            gate = gate_dict.get(gate_idx)
+            if gate is None:
                 continue
+            qbs = list(gate.get_Involved_Qbits())
+            qubits_in_part.update(qbs)
+            if len(qbs) < 2:
+                continue
+            for a in range(len(qbs)):
+                for b in range(a + 1, len(qbs)):
+                    active_pairs.add(
+                        (min(qbs[a], qbs[b]), max(qbs[a], qbs[b]))
+                    )
+        return qubits_in_part, active_pairs
 
-            n_pairs = len(active_pairs)
-            if n_pairs <= 1:
-                penalty = float(sparse_penalty)
-            elif n_pairs == 2:
-                penalty = two_pair_penalty
-            else:
-                penalty = dense_penalty
+    @staticmethod
+    def _filter_embeddable_three_qubit_parts(allparts, gate_dict, topology):
+        """Keep only 3q parts whose active-pair graph fits hardware shape.
 
-            extra_reuse = (
-                max(0, multi_qubit_gate_count - n_pairs)
-                if n_pairs >= 2
-                else 0
-            )
-            if extra_reuse and reuse_discount > 0:
-                discount = min(
-                    float(reuse_discount_cap),
-                    float(reuse_discount) * float(extra_reuse),
-                )
-                penalty = max(0.0, penalty - discount)
+        On a line, connected 3q hardware subtopologies have two edges, so
+        only connected two-edge 3q interaction graphs are legal 3q merge
+        candidates. Logical triangles stay as separate 2q partitions.
+        """
+        max_edges = qgd_Partition_Aware_Mapping._max_edges_in_three_qubit_subtopologies(
+            topology
+        )
+        support_and_pairs = (
+            qgd_Partition_Aware_Mapping._part_support_and_active_pairs
+        )
+        if max_edges <= 0:
+            filtered = []
+            for part in allparts:
+                qubits_in_part, _ = support_and_pairs(part, gate_dict)
+                if len(qubits_in_part) != 3:
+                    filtered.append(part)
+            return filtered
 
-            weights.append(penalty / N)
-        return weights
+        filtered = []
+        for part in allparts:
+            qubits_in_part, active_pairs = support_and_pairs(part, gate_dict)
+            if len(qubits_in_part) == 3 and (
+                len(active_pairs) < 2 or len(active_pairs) > max_edges
+            ):
+                continue
+            filtered.append(part)
+        return filtered
+
+    @staticmethod
+    def _parts_to_embeddable_edge_weights(allparts):
+        """Uniform conceptual cost: every allowed partition has weight 1.
+
+        ``ilp_global_optimal`` turns stored weight ``w`` into objective cost
+        ``1 + N*w``.  Returning zero therefore gives every already-filtered
+        2q part and embeddable 3q part the same conceptual cost of one.
+        """
+        return [0.0] * len(allparts)
 
     @staticmethod
     def _topo_key(mini_topology):
@@ -643,42 +563,27 @@ class qgd_Partition_Aware_Mapping:
         allparts, g, go, rgo, single_qubit_chains, gate_to_qubit, gate_to_tqubit = get_all_partitions(working_circ, self.config["max_partition_size"])
         qbit_num_orig_circuit = working_circ.get_Qbit_Num()
         gate_dict = {i: gate for i, gate in enumerate(working_circ.get_Gates())}
+        if self.config.get('embeddable_3q_partitions_only', True):
+            allparts = self._filter_embeddable_three_qubit_parts(
+                allparts,
+                gate_dict,
+                self.topology,
+            )
 
         single_qubit_chains_pre = {x[0]: x for x in single_qubit_chains if rgo[x[0]]}
         single_qubit_chains_post = {x[-1]: x for x in single_qubit_chains if go[x[-1]]}
         single_qubit_chains_prepost = {x[0]: x for x in single_qubit_chains if x[0] in single_qubit_chains_pre and x[-1] in single_qubit_chains_post}
 
         # ---- Phase 2: ILP partition selection ----
-        # Route-aware weights let sparse 3q blocks lose to the 2q blocks they
-        # would otherwise replace.  Without weights, the ILP minimizes selected
-        # partition count and therefore over-selects 3q partitions.
+        # Invalid 3q merge candidates were removed above.  The remaining
+        # candidates all have conceptual cost 1: 2q parts cost 1, and 3q
+        # parts cost 1 only when their active-pair graph is embeddable.
         ilp_weights = None
-        if self.config.get('routing_aware_partitioning', True):
-            sparse_penalty = float(self.config.get('sparse_penalty', 3.0))
-            ilp_weights = self._parts_to_routing_aware_weights(
-                allparts,
-                gate_dict,
-                topology=self.topology,
-                sparse_penalty=sparse_penalty,
-                two_pair_3q_penalty=self.config.get(
-                    'two_pair_3q_penalty', None
-                ),
-                dense_3q_penalty=self.config.get('dense_3q_penalty', None),
-                triangle_free_3q_penalty=self.config.get(
-                    'triangle_free_3q_penalty', 1.0
-                ),
-                reuse_discount=self.config.get(
-                    'three_qubit_reuse_discount', 0.15
-                ),
-                reuse_discount_cap=self.config.get(
-                    'three_qubit_reuse_discount_cap', 1.0
-                ),
-            )
-        elif self.config.get('size_density_weight', False):
-            sparse_penalty = float(self.config.get('sparse_penalty', 3.0))
-            ilp_weights = self._parts_to_density_weights(
-                allparts, gate_dict, sparse_penalty=sparse_penalty
-            )
+        if (
+            self.config.get('routing_aware_partitioning', True)
+            and self.config.get('embeddable_3q_partitions_only', True)
+        ):
+            ilp_weights = self._parts_to_embeddable_edge_weights(allparts)
         L_parts, _ = ilp_global_optimal(allparts, g, weights=ilp_weights)
 
         # ---- Phase 3: Build gate sets for selected partitions (+ standalone chains) ----
@@ -1040,11 +945,7 @@ class qgd_Partition_Aware_Mapping:
         n_trials,
         random_seed,
     ):
-        use_boundary_beam = (
-            int(self.config.get("boundary_beam_width", 1) or 1) > 1
-            and int(self.config.get("boundary_beam_depth", 1) or 1) > 1
-        )
-        use_cpp = self.config.get('use_cpp_router', True) and not use_boundary_beam
+        use_cpp = self.config.get('use_cpp_router', True)
         if use_cpp:
             return self._run_layout_trials_cpp(
                 seeded_pi, DAG, IDAG, layout_partitions,
@@ -1141,6 +1042,14 @@ class qgd_Partition_Aware_Mapping:
         if hasattr(cfg, 'three_qubit_exit_weight'):
             cfg.three_qubit_exit_weight = self.config.get(
                 'three_qubit_exit_weight', 1.0
+            )
+        if hasattr(cfg, 'boundary_beam_width'):
+            cfg.boundary_beam_width = self.config.get(
+                'boundary_beam_width', 1
+            )
+        if hasattr(cfg, 'boundary_beam_depth'):
+            cfg.boundary_beam_depth = self.config.get(
+                'boundary_beam_depth', 1
             )
         canonical_fwd = self._build_canonical_neighbor_data(
             scoring_partitions, reverse=False
