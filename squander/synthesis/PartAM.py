@@ -543,6 +543,11 @@ class qgd_Partition_Aware_Mapping:
         per local topology.  The selected partitions are later fully
         enumerated by _run_parallel_synthesis, reusing the shared decomposition
         cache populated here.
+
+        The ILP objective always keeps the original one-unit partition cost.
+        The measured CNOT score is an additional cost, not a replacement for
+        partition count; otherwise small local CNOT savings can fragment the
+        circuit into many routing boundaries.
         """
         N_parts = max(len(allparts), 1)
         metas = []
@@ -634,7 +639,7 @@ class qgd_Partition_Aware_Mapping:
             ]
 
         self._partition_synthesis_cnot_scores = list(scores)
-        return [(float(score) - 1.0) / N_parts for score in scores]
+        return [float(score) / N_parts for score in scores]
 
     @staticmethod
     def _topo_key(mini_topology):
