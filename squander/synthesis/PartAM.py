@@ -1733,6 +1733,11 @@ class qgd_Partition_Aware_Mapping:
                 cleanup_config['test_subcircuits'] = False
                 cleanup_config['test_final_circuit'] = False
                 cleanup_config['global_min'] = True
+                cleanup_config['use_osr'] = 1
+                cleanup_config['use_graph_search'] = 1
+                cleanup_config['part_size_end'] = 4
+                cleanup_config['max_partition_size'] = 4
+
                 wco = qgd_Wide_Circuit_Optimization(cleanup_config)
 
                 saved_sq_circuits = self._snapshot_single_qubit_circuits(
