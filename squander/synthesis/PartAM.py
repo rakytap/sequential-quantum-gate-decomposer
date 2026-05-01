@@ -149,9 +149,6 @@ class qgd_Partition_Aware_Mapping:
         self.config.setdefault('decay_delta', 0.001)  # Qiskit LightSABRE DECAY_RATE
         self.config.setdefault('swap_burst_budget', 5)  # Qiskit LightSABRE DECAY_RESET_INTERVAL
         self.config.setdefault('path_tiebreak_weight', 0.2)
-        self.config.setdefault('hot_qubit_swap_weight', 0.15)
-        self.config.setdefault('hot_qubit_active_discount', 0.35)
-        self.config.setdefault('hot_qubit_depth_decay', 0.7)
         # The neighbor heuristic is normalized to [0, 1] and added to A*'s f-value.
         # g-deltas are integer and h-deltas are half-integer, so preserving
         # swap-count optimality requires weight < 0.5.
@@ -1439,18 +1436,6 @@ class qgd_Partition_Aware_Mapping:
             cfg.three_qubit_exit_weight = self.config.get(
                 'three_qubit_exit_weight', 1.0
             )
-        if hasattr(cfg, 'hot_qubit_swap_weight'):
-            cfg.hot_qubit_swap_weight = self.config.get(
-                'hot_qubit_swap_weight', 0.15
-            )
-        if hasattr(cfg, 'hot_qubit_active_discount'):
-            cfg.hot_qubit_active_discount = self.config.get(
-                'hot_qubit_active_discount', 0.35
-            )
-        if hasattr(cfg, 'hot_qubit_depth_decay'):
-            cfg.hot_qubit_depth_decay = self.config.get(
-                'hot_qubit_depth_decay', 0.7
-            )
         if hasattr(cfg, 'boundary_beam_width'):
             cfg.boundary_beam_width = self.config.get(
                 'boundary_beam_width', 1
@@ -2310,92 +2295,6 @@ class qgd_Partition_Aware_Mapping:
             "weight": weight,
         }
 
-    @staticmethod
-    def _build_hot_qubit_weights(
-        F,
-        E,
-        layout_partitions,
-        depth_decay=0.7,
-    ):
-        """Return normalized future-use weights by logical qubit.
-
-        Front-layer partitions count at full weight.  Extended-set partitions
-        are depth-decayed, making repeatedly reused near-future qubits more
-        expensive to move as bystanders.
-        """
-        if layout_partitions is None:
-            return {}
-
-        depth_decay = max(0.0, float(depth_decay))
-        weights = defaultdict(float)
-
-        def add_partition(partition_idx, weight):
-            if (
-                weight <= 0
-                or partition_idx < 0
-                or partition_idx >= len(layout_partitions)
-            ):
-                return
-            if qgd_Partition_Aware_Mapping._partition_is_single(
-                layout_partitions[partition_idx]
-            ):
-                return
-            for qbit in qgd_Partition_Aware_Mapping._partition_involved_qbits(
-                layout_partitions[partition_idx]
-            ):
-                weights[int(qbit)] += weight
-
-        for partition_idx in F:
-            add_partition(int(partition_idx), 1.0)
-
-        if E:
-            for partition_idx, depth in E:
-                add_partition(
-                    int(partition_idx),
-                    depth_decay ** max(0, int(depth)),
-                )
-
-        if not weights:
-            return {}
-        max_weight = max(weights.values())
-        if max_weight <= 0:
-            return {}
-        return {qbit: weight / max_weight for qbit, weight in weights.items()}
-
-    @staticmethod
-    def _hot_qubit_swap_tax(
-        swaps,
-        pi,
-        hot_qubit_weights,
-        active_qbits=None,
-        active_discount=0.35,
-    ):
-        if not swaps or not hot_qubit_weights:
-            return 0.0
-
-        active_discount = min(1.0, max(0.0, float(active_discount)))
-        active = set(int(qbit) for qbit in (active_qbits or ()))
-        pi_list = [int(x) for x in pi]
-        p2v = [None] * len(pi_list)
-        for logical_q, physical_q in enumerate(pi_list):
-            p2v[int(physical_q)] = logical_q
-
-        tax = 0.0
-        for p1, p2 in swaps:
-            p1 = int(p1)
-            p2 = int(p2)
-            q1 = p2v[p1]
-            q2 = p2v[p2]
-            for qbit in (q1, q2):
-                if qbit is None:
-                    continue
-                contribution = float(hot_qubit_weights.get(int(qbit), 0.0))
-                if qbit in active:
-                    contribution *= active_discount
-                tax += contribution
-            p2v[p1], p2v[p2] = q2, q1
-        return tax
-
     def _advance_layout_frontier(
         self,
         selected_partition_idx,
@@ -2440,7 +2339,6 @@ class qgd_Partition_Aware_Mapping:
         scores,
         cached_swaps,
         cached_pi,
-        pi,
         F_snapshot,
         resolved_partitions,
         DAG,
@@ -2455,7 +2353,6 @@ class qgd_Partition_Aware_Mapping:
         alpha=1.0,
         cnot_cost=1.0 / 3.0,
         adj=None,
-        hot_qubit_weights=None,
     ):
         """Choose the next candidate by rolling out boundary-layout states.
 
@@ -2476,36 +2373,19 @@ class qgd_Partition_Aware_Mapping:
         top_k = self.config.get("prefilter_top_k", 50)
         path_weight = self.config.get("path_tiebreak_weight", 0.2)
         three_q_weight = self.config.get("three_qubit_exit_weight", 1.0)
-        hot_weight = self.config.get("hot_qubit_swap_weight", 0.15)
-        hot_discount = self.config.get("hot_qubit_active_discount", 0.35)
-        hot_decay = self.config.get("hot_qubit_depth_decay", 0.7)
 
-        def transition_cost(cand, swaps, pi_state, hot_weights):
-            route_score = self._routing_objective(
+        def transition_cost(cand, swaps):
+            return self._routing_objective(
                 len(swaps or ()),
                 cand.cnot_count,
                 cnot_cost,
-            )
-            if hot_weight <= 0:
-                return route_score
-            return route_score + hot_weight * self._hot_qubit_swap_tax(
-                swaps,
-                pi_state,
-                hot_weights,
-                active_qbits=cand.involved_qbits,
-                active_discount=hot_discount,
             )
 
         states = []
         for idx, cand in enumerate(partition_candidates):
             if cached_pi[idx] is None:
                 continue
-            trans_cost = transition_cost(
-                cand,
-                cached_swaps[idx],
-                pi,
-                hot_qubit_weights,
-            )
+            trans_cost = transition_cost(cand, cached_swaps[idx])
             F_next, resolved_next = self._advance_layout_frontier(
                 cand.partition_idx,
                 F_snapshot,
@@ -2550,12 +2430,6 @@ class qgd_Partition_Aware_Mapping:
                     optimized_partitions,
                     max_E_size=max_E_size,
                     max_lookahead=max_lookahead,
-                )
-                rollout_hot_weights = self._build_hot_qubit_weights(
-                    F_state,
-                    E,
-                    optimized_partitions,
-                    depth_decay=hot_decay,
                 )
                 candidates = self.obtain_partition_candidates(
                     F_list,
@@ -2614,16 +2488,8 @@ class qgd_Partition_Aware_Mapping:
                         layout_partitions=optimized_partitions,
                         return_transforms=True,
                         three_qubit_exit_weight=three_q_weight,
-                        hot_qubit_weights=rollout_hot_weights,
-                        hot_qubit_swap_weight=hot_weight,
-                        hot_qubit_active_discount=hot_discount,
                     )
-                    trans_cost = transition_cost(
-                        cand,
-                        swaps,
-                        pi_state,
-                        rollout_hot_weights,
-                    )
+                    trans_cost = transition_cost(cand, swaps)
                     future_cost = float(score) - trans_cost
                     new_total = total_cost + trans_cost
                     rank_cost = new_total + future_cost
@@ -2761,12 +2627,6 @@ class qgd_Partition_Aware_Mapping:
                 max_E_size=max_E_size,
                 max_lookahead=max_lookahead,
             )
-            hot_qubit_weights = self._build_hot_qubit_weights(
-                F_snapshot,
-                E,
-                optimized_partitions,
-                depth_decay=self.config.get("hot_qubit_depth_decay", 0.7),
-            )
 
             partition_candidates = self.obtain_partition_candidates(
                 F,
@@ -2840,13 +2700,6 @@ class qgd_Partition_Aware_Mapping:
                     three_qubit_exit_weight=self.config.get(
                         "three_qubit_exit_weight", 1.0
                     ),
-                    hot_qubit_weights=hot_qubit_weights,
-                    hot_qubit_swap_weight=self.config.get(
-                        "hot_qubit_swap_weight", 0.15
-                    ),
-                    hot_qubit_active_discount=self.config.get(
-                        "hot_qubit_active_discount", 0.35
-                    ),
                 )
                 scores[ci] = score
                 cached_swaps[ci] = swaps
@@ -2857,7 +2710,6 @@ class qgd_Partition_Aware_Mapping:
                 scores,
                 cached_swaps,
                 cached_pi,
-                pi,
                 F_snapshot,
                 resolved_partitions,
                 DAG,
@@ -2871,7 +2723,6 @@ class qgd_Partition_Aware_Mapping:
                 alpha=E_alpha,
                 cnot_cost=self.config.get("cnot_cost", 1.0 / 3.0),
                 adj=self._adj,
-                hot_qubit_weights=hot_qubit_weights,
             )
             min_partition_candidate = partition_candidates[best_idx]
 
@@ -2974,9 +2825,6 @@ class qgd_Partition_Aware_Mapping:
         E_alpha = self.config.get("E_alpha", 1.0)
         cnot_cost = self.config.get("cnot_cost", 1.0 / 3.0)
         swap_burst_budget = self.config.get("swap_burst_budget", 5)
-        hot_weight = self.config.get("hot_qubit_swap_weight", 0.15)
-        hot_discount = self.config.get("hot_qubit_active_discount", 0.35)
-        hot_decay = self.config.get("hot_qubit_depth_decay", 0.7)
 
         canonical_data = self._build_canonical_neighbor_data(
             scoring_partitions, reverse=reverse
@@ -3014,12 +2862,6 @@ class qgd_Partition_Aware_Mapping:
                 optimized_partitions,
                 max_E_size=max_E_size,
                 max_lookahead=max_lookahead,
-            )
-            hot_qubit_weights = self._build_hot_qubit_weights(
-                F_snapshot,
-                E,
-                optimized_partitions,
-                depth_decay=hot_decay,
             )
 
             partition_candidates = self.obtain_partition_candidates(
@@ -3096,9 +2938,6 @@ class qgd_Partition_Aware_Mapping:
                     three_qubit_exit_weight=self.config.get(
                         "three_qubit_exit_weight", 1.0
                     ),
-                    hot_qubit_weights=hot_qubit_weights,
-                    hot_qubit_swap_weight=hot_weight,
-                    hot_qubit_active_discount=hot_discount,
                 )
                 scores[ci] = score
                 cached_swaps[ci] = swaps
@@ -3109,7 +2948,6 @@ class qgd_Partition_Aware_Mapping:
                 scores,
                 cached_swaps,
                 cached_pi,
-                pi,
                 F_snapshot,
                 resolved_partitions,
                 DAG,
@@ -3124,14 +2962,12 @@ class qgd_Partition_Aware_Mapping:
                 alpha=E_alpha,
                 cnot_cost=cnot_cost,
                 adj=self._adj,
-                hot_qubit_weights=hot_qubit_weights,
             )
             best = partition_candidates[best_idx]
             F.remove(best.partition_idx)
             resolved_partitions[best.partition_idx] = True
 
-            swaps = cached_swaps[best_idx]
-            pi_next = cached_pi[best_idx]
+            swaps, pi = cached_swaps[best_idx], cached_pi[best_idx]
             decay_factor = 1.0
             if swaps:
                 decay_factor = self._decay_factor_for_swaps(swaps, decay)
@@ -3141,15 +2977,6 @@ class qgd_Partition_Aware_Mapping:
                 cnot_cost,
                 decay_factor=decay_factor,
             )
-            if hot_weight > 0:
-                total_cost += hot_weight * self._hot_qubit_swap_tax(
-                    swaps,
-                    pi,
-                    hot_qubit_weights,
-                    active_qbits=best.involved_qbits,
-                    active_discount=hot_discount,
-                )
-            pi = pi_next
             if swaps:
                 self._apply_decay_for_swaps(swaps, decay)
                 swap_heavy_partitions += 1
@@ -3277,10 +3104,7 @@ class qgd_Partition_Aware_Mapping:
                                   candidate_cache=None,
                                   layout_partitions=None,
                                   return_transforms=False,
-                                  three_qubit_exit_weight=1.0,
-                                  hot_qubit_weights=None,
-                                  hot_qubit_swap_weight=0.0,
-                                  hot_qubit_active_discount=0.35):
+                                  three_qubit_exit_weight=1.0):
         """LightSABRE-style relative scoring (arXiv:2409.08368, eq. 1).
 
         H = |swaps|
@@ -3321,17 +3145,6 @@ class qgd_Partition_Aware_Mapping:
             cnot_cost,
             decay_factor=decay_factor,
         )
-        if hot_qubit_swap_weight > 0:
-            score += (
-                float(hot_qubit_swap_weight)
-                * qgd_Partition_Aware_Mapping._hot_qubit_swap_tax(
-                    swaps,
-                    pi,
-                    hot_qubit_weights,
-                    active_qbits=partition_candidate.involved_qbits,
-                    active_discount=hot_qubit_active_discount,
-                )
-            )
 
         if candidate_cache is None:
             if return_transforms:

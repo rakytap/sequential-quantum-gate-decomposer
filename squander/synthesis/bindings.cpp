@@ -135,9 +135,6 @@ PYBIND11_MODULE(_sabre_router, m) {
         .def_readwrite("swap_burst_budget", &SabreConfig::swap_burst_budget)
         .def_readwrite("path_tiebreak_weight", &SabreConfig::path_tiebreak_weight)
         .def_readwrite("three_qubit_exit_weight", &SabreConfig::three_qubit_exit_weight)
-        .def_readwrite("hot_qubit_swap_weight", &SabreConfig::hot_qubit_swap_weight)
-        .def_readwrite("hot_qubit_active_discount", &SabreConfig::hot_qubit_active_discount)
-        .def_readwrite("hot_qubit_depth_decay", &SabreConfig::hot_qubit_depth_decay)
         .def_readwrite("boundary_beam_width", &SabreConfig::boundary_beam_width)
         .def_readwrite("boundary_beam_depth", &SabreConfig::boundary_beam_depth);
 

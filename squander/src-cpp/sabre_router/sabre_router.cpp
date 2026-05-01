@@ -399,108 +399,6 @@ double SabreRouter::routing_objective(
     );
 }
 
-std::vector<double> SabreRouter::build_hot_qubit_weights(
-    const std::vector<int>& F_snapshot,
-    const std::vector<std::pair<int,int>>& E
-) const {
-    std::vector<double> weights(N_, 0.0);
-    if (config_.hot_qubit_swap_weight <= 0.0) {
-        return weights;
-    }
-
-    auto add_partition = [&](int partition_idx, double weight) {
-        if (
-            weight <= 0.0
-            || partition_idx < 0
-            || partition_idx >= static_cast<int>(layout_partitions_.size())
-            || layout_partitions_[partition_idx].is_single
-        ) {
-            return;
-        }
-        for (int q : layout_partitions_[partition_idx].involved_qbits) {
-            if (q >= 0 && q < N_) {
-                weights[q] += weight;
-            }
-        }
-    };
-
-    for (int partition_idx : F_snapshot) {
-        add_partition(partition_idx, 1.0);
-    }
-
-    const double depth_decay = std::max(0.0, config_.hot_qubit_depth_decay);
-    for (auto [partition_idx, depth] : E) {
-        add_partition(partition_idx, std::pow(depth_decay, std::max(0, depth)));
-    }
-
-    const double max_weight = *std::max_element(weights.begin(), weights.end());
-    if (max_weight <= 0.0) {
-        return weights;
-    }
-    for (double& weight : weights) {
-        weight /= max_weight;
-    }
-    return weights;
-}
-
-double SabreRouter::hot_qubit_swap_tax(
-    const std::vector<std::pair<int,int>>& swaps,
-    const std::vector<int>& pi,
-    const CandidateData& cand,
-    const std::vector<double>& hot_qubit_weights
-) const {
-    if (
-        swaps.empty()
-        || config_.hot_qubit_swap_weight <= 0.0
-        || hot_qubit_weights.empty()
-    ) {
-        return 0.0;
-    }
-
-    std::vector<int> p2v(N_, -1);
-    for (int q = 0; q < static_cast<int>(pi.size()); q++) {
-        const int p = pi[q];
-        if (p >= 0 && p < N_) {
-            p2v[p] = q;
-        }
-    }
-
-    std::vector<uint8_t> active(N_, 0);
-    for (int q : cand.involved_qbits) {
-        if (q >= 0 && q < N_) {
-            active[q] = 1;
-        }
-    }
-    const double active_discount = std::min(
-        1.0,
-        std::max(0.0, config_.hot_qubit_active_discount)
-    );
-
-    double tax = 0.0;
-    auto add_q = [&](int q) {
-        if (q < 0 || q >= static_cast<int>(hot_qubit_weights.size())) {
-            return;
-        }
-        double contribution = hot_qubit_weights[q];
-        if (q < static_cast<int>(active.size()) && active[q]) {
-            contribution *= active_discount;
-        }
-        tax += contribution;
-    };
-
-    for (auto [p1, p2] : swaps) {
-        if (p1 < 0 || p1 >= N_ || p2 < 0 || p2 >= N_) {
-            continue;
-        }
-        const int q1 = p2v[p1];
-        const int q2 = p2v[p2];
-        add_q(q1);
-        add_q(q2);
-        std::swap(p2v[p1], p2v[p2]);
-    }
-    return tax;
-}
-
 void SabreRouter::apply_decay_for_swaps(
     const std::vector<std::pair<int,int>>& swaps,
     std::vector<double>& decay
@@ -1286,8 +1184,7 @@ double SabreRouter::score_candidate(
     const std::vector<double>* decay,
     std::vector<std::pair<int,int>>* out_swaps,
     std::vector<int>* out_pi_new,
-    const NeighborInfo* cached_neighbor_info,
-    const std::vector<double>* hot_qubit_weights
+    const NeighborInfo* cached_neighbor_info
 ) const {
     NeighborInfo local_neighbor_info;
     const NeighborInfo* neighbor_ptr;
@@ -1316,14 +1213,6 @@ double SabreRouter::score_candidate(
         1.0,
         decay_factor
     );
-    if (hot_qubit_weights != nullptr && config_.hot_qubit_swap_weight > 0.0) {
-        score += config_.hot_qubit_swap_weight * hot_qubit_swap_tax(
-            swaps,
-            pi,
-            cand,
-            *hot_qubit_weights
-        );
-    }
 
     const int cand_idx = cand.partition_idx;
     double future_score = future_context_cost(
@@ -1541,15 +1430,13 @@ size_t SabreRouter::boundary_beam_select_index(
     const std::vector<double>& scores,
     const std::vector<std::vector<std::pair<int,int>>>& cached_swaps,
     const std::vector<std::vector<int>>& cached_pi,
-    const std::vector<int>& pi,
     const std::vector<int>& F_snapshot,
     const std::vector<uint8_t>& resolved,
     const std::vector<std::vector<int>>& children_graph,
     const std::vector<std::vector<int>>& parents_graph,
     bool reverse,
     const std::unordered_map<int, CanonicalEntry>& canonical_data,
-    SwapCache* swap_cache,
-    const std::vector<double>& hot_qubit_weights
+    SwapCache* swap_cache
 ) const {
     size_t fallback_idx = 0;
     for (size_t i = 1; i < scores.size(); i++) {
@@ -1584,25 +1471,11 @@ size_t SabreRouter::boundary_beam_select_index(
         size_t first_idx;
     };
 
-    auto transition_cost = [&](
-        const CandidateData& cand,
-        const std::vector<std::pair<int,int>>& swaps,
-        const std::vector<int>& pi_state,
-        const std::vector<double>& hot_weights
-    ) {
-        double cost = routing_objective(
-            static_cast<double>(swaps.size()),
+    auto transition_cost = [&](const CandidateData& cand, size_t idx) {
+        return routing_objective(
+            static_cast<double>(cached_swaps[idx].size()),
             cand.cnot_count
         );
-        if (config_.hot_qubit_swap_weight > 0.0) {
-            cost += config_.hot_qubit_swap_weight * hot_qubit_swap_tax(
-                swaps,
-                pi_state,
-                cand,
-                hot_weights
-            );
-        }
-        return cost;
     };
 
     auto sort_states = [](const BeamState& a, const BeamState& b) {
@@ -1622,12 +1495,7 @@ size_t SabreRouter::boundary_beam_select_index(
             children_graph,
             parents_graph
         );
-        const double trans_cost = transition_cost(
-            cand,
-            cached_swaps[idx],
-            pi,
-            hot_qubit_weights
-        );
+        const double trans_cost = transition_cost(cand, idx);
         states.push_back(BeamState{
             scores[idx],
             trans_cost,
@@ -1667,10 +1535,6 @@ size_t SabreRouter::boundary_beam_select_index(
                 state.resolved,
                 children_graph,
                 parents_graph
-            );
-            auto rollout_hot_qubit_weights = build_hot_qubit_weights(
-                state.F,
-                E
             );
 
             auto rollout_candidates = obtain_partition_candidates(state.F);
@@ -1717,14 +1581,11 @@ size_t SabreRouter::boundary_beam_select_index(
                     nullptr,
                     &swaps,
                     &output_perm,
-                    &neighbor_info,
-                    &rollout_hot_qubit_weights
+                    &neighbor_info
                 );
-                const double trans_cost = transition_cost(
-                    *cand,
-                    swaps,
-                    state.pi,
-                    rollout_hot_qubit_weights
+                const double trans_cost = routing_objective(
+                    static_cast<double>(swaps.size()),
+                    cand->cnot_count
                 );
                 const double future_cost = score - trans_cost;
                 const double new_total = state.total_cost + trans_cost;
@@ -1876,7 +1737,6 @@ std::pair<std::vector<int>, double> SabreRouter::heuristic_search(
 
         // Generate extended set
         auto E = generate_extended_set(F, resolved, cg, pg);
-        auto hot_qubit_weights = build_hot_qubit_weights(F, E);
 
         // Prefilter with a cheap estimate of the candidate's future context.
         auto candidates = prefilter_candidates(
@@ -1908,8 +1768,7 @@ std::pair<std::vector<int>, double> SabreRouter::heuristic_search(
                 F, pi, E, reverse, canonical_data,
                 &swap_cache, &decay,
                 &cached_swaps[ci], &cached_pi[ci],
-                &cached_ni,
-                &hot_qubit_weights
+                &cached_ni
             );
         }
 
@@ -1919,15 +1778,13 @@ std::pair<std::vector<int>, double> SabreRouter::heuristic_search(
             scores,
             cached_swaps,
             cached_pi,
-            pi,
             F,
             resolved,
             cg,
             pg,
             reverse,
             canonical_data,
-            &swap_cache,
-            hot_qubit_weights
+            &swap_cache
         );
         const auto& best = *candidates[best_ci];
 
@@ -1949,14 +1806,6 @@ std::pair<std::vector<int>, double> SabreRouter::heuristic_search(
             1.0,
             decay_factor
         );
-        if (config_.hot_qubit_swap_weight > 0.0) {
-            total_cost += config_.hot_qubit_swap_weight * hot_qubit_swap_tax(
-                swaps,
-                pi,
-                best,
-                hot_qubit_weights
-            );
-        }
         if (route_trace) {
             if (!swaps.empty()) {
                 RouteStep swap_step;
