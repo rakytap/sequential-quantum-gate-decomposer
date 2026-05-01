@@ -92,6 +92,9 @@ struct SabreConfig {
     int swap_burst_budget = 5; // Qiskit LightSABRE DECAY_RESET_INTERVAL
     double path_tiebreak_weight = 0.2;
     double three_qubit_exit_weight = 1.0;
+    double hot_qubit_swap_weight = 0.15;
+    double hot_qubit_active_discount = 0.35;
+    double hot_qubit_depth_decay = 0.7;
     int boundary_beam_width = 1;
     int boundary_beam_depth = 1;
 };
@@ -279,7 +282,8 @@ private:
         const std::vector<double>* decay = nullptr,
         std::vector<std::pair<int,int>>* out_swaps = nullptr,
         std::vector<int>* out_pi_new = nullptr,
-        const NeighborInfo* cached_neighbor_info = nullptr
+        const NeighborInfo* cached_neighbor_info = nullptr,
+        const std::vector<double>* hot_qubit_weights = nullptr
     ) const;
 
     // Route and update layout for a candidate (port of transform_pi)
@@ -310,6 +314,18 @@ private:
         int cnot_count,
         double cnot_weight = 1.0,
         double decay_factor = 1.0
+    ) const;
+
+    std::vector<double> build_hot_qubit_weights(
+        const std::vector<int>& F_snapshot,
+        const std::vector<std::pair<int,int>>& E
+    ) const;
+
+    double hot_qubit_swap_tax(
+        const std::vector<std::pair<int,int>>& swaps,
+        const std::vector<int>& pi,
+        const CandidateData& cand,
+        const std::vector<double>& hot_qubit_weights
     ) const;
 
     double future_partition_cost(
@@ -377,13 +393,15 @@ private:
         const std::vector<double>& scores,
         const std::vector<std::vector<std::pair<int,int>>>& cached_swaps,
         const std::vector<std::vector<int>>& cached_pi,
+        const std::vector<int>& pi,
         const std::vector<int>& F_snapshot,
         const std::vector<uint8_t>& resolved,
         const std::vector<std::vector<int>>& children_graph,
         const std::vector<std::vector<int>>& parents_graph,
         bool reverse,
         const std::unordered_map<int, CanonicalEntry>& canonical_data,
-        SwapCache* swap_cache
+        SwapCache* swap_cache,
+        const std::vector<double>& hot_qubit_weights
     ) const;
 
     // Check if partition is single-qubit
