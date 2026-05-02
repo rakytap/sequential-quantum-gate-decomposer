@@ -26,7 +26,6 @@
 #include "N_Qubit_Decomposition_adaptive.h"
 #include "N_Qubit_Decomposition_Tree_Search.h"
 #include "N_Qubit_Decomposition_Tabu_Search.h"
-#include "N_Qubit_Decomposition_OSR_Compression.h"
 #include "Gates_block.h"
 
 /**
@@ -319,43 +318,6 @@ qgd_N_Qubit_Decomposition_Tree_Search_Wrapper_init(qgd_N_Qubit_Decomposition_Wra
 static int
 qgd_N_Qubit_Decomposition_Tabu_Search_Wrapper_init(qgd_N_Qubit_Decomposition_Wrapper* self, PyObject* args, PyObject* kwds) {
     return search_wrapper_init<N_Qubit_Decomposition_Tabu_Search>(self, args, kwds);
-}
-
-static int
-qgd_N_Qubit_Decomposition_OSR_Compression_Wrapper_init(qgd_N_Qubit_Decomposition_Wrapper* self, PyObject* args, PyObject* kwds)
-{
-    static char* kwlist[] = {
-        (char*)"Umtx", (char*)"qbit_num", (char*)"config", (char*)"accelerator_num",
-        (char*)"topology", NULL
-    };
-
-    PyObject *Umtx_arg = NULL, *config_arg = NULL, *topology_arg = NULL;
-    int qbit_num = -1, accelerator_num = 0;
-
-    if (!PyArg_ParseTupleAndKeywords(
-        args, kwds, "O|iOiO", kwlist,
-        &Umtx_arg, &qbit_num, &config_arg, &accelerator_num, &topology_arg)
-    ) {
-        return -1;
-    }
-
-    try {
-        Matrix Umtx_mtx = extract_matrix(Umtx_arg, &self->Umtx);
-        if (qbit_num == -1) {
-            qbit_num = (int)std::round(std::log2(Umtx_mtx.rows));
-        }
-
-        auto config = extract_config(config_arg);
-        auto topology_cpp = extract_topology(topology_arg);
-
-        self->decomp = new N_Qubit_Decomposition_OSR_Compression(
-            Umtx_mtx, qbit_num, topology_cpp, config, accelerator_num);
-
-        return 0;
-    } catch (const std::exception& e) {
-        PyErr_SetString(PyExc_Exception, e.what());
-        return -1;
-    }
 }
 
 /**
@@ -3101,14 +3063,6 @@ static PyMethodDef qgd_N_Qubit_Decomposition_Tree_Search_methods[] = {
     {NULL}
 };
 
-/**
-@brief Method table for N_Qubit_Decomposition_OSR_Compression
-*/
-static PyMethodDef qgd_N_Qubit_Decomposition_OSR_Compression_methods[] = {
-    DECOMPOSITION_WRAPPER_BASE_METHODS
-    {NULL}
-};
-
 #define decomposition_wrapper_type_template(decomp_class) \
 static PyTypeObject qgd_##decomp_class##_Wrapper_Type = { \
     PyVarObject_HEAD_INIT(NULL, 0) \
@@ -3167,7 +3121,6 @@ decomposition_wrapper_type_template(N_Qubit_Decomposition_adaptive)
 decomposition_wrapper_type_template(N_Qubit_Decomposition_custom)
 decomposition_wrapper_type_template(N_Qubit_Decomposition_Tree_Search)
 decomposition_wrapper_type_template(N_Qubit_Decomposition_Tabu_Search)
-decomposition_wrapper_type_template(N_Qubit_Decomposition_OSR_Compression)
 
 //////////////////////////////////////////////////////////////////
 
@@ -3209,8 +3162,7 @@ PyInit_qgd_N_Qubit_Decompositions_Wrapper(void)
         PyType_Ready(&qgd_N_Qubit_Decomposition_adaptive_Wrapper_Type) < 0 ||
         PyType_Ready(&qgd_N_Qubit_Decomposition_custom_Wrapper_Type) < 0 ||
         PyType_Ready(&qgd_N_Qubit_Decomposition_Tree_Search_Wrapper_Type) < 0 ||
-        PyType_Ready(&qgd_N_Qubit_Decomposition_Tabu_Search_Wrapper_Type) < 0 ||
-        PyType_Ready(&qgd_N_Qubit_Decomposition_OSR_Compression_Wrapper_Type) < 0) {
+        PyType_Ready(&qgd_N_Qubit_Decomposition_Tabu_Search_Wrapper_Type) < 0) {
         return NULL;
     }
 
@@ -3223,7 +3175,6 @@ PyInit_qgd_N_Qubit_Decompositions_Wrapper(void)
     Py_INCREF_template(N_Qubit_Decomposition_custom);
     Py_INCREF_template(N_Qubit_Decomposition_Tree_Search);
     Py_INCREF_template(N_Qubit_Decomposition_Tabu_Search);
-    Py_INCREF_template(N_Qubit_Decomposition_OSR_Compression);
 
     return m;
 }
