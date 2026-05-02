@@ -1726,18 +1726,22 @@ class qgd_Partition_Aware_Mapping:
             routing_elapsed_before_cleanup = time.time() - routing_start
 
             if do_cleanup:
-                from squander.decomposition.qgd_WideCircuitCompression import (
-                    qgd_WideCircuitCompression,
+                from squander.decomposition.qgd_Wide_Circuit_Optimization import (
+                    qgd_Wide_Circuit_Optimization,
                 )
 
                 cleanup_config = dict(self.config)
                 cleanup_config['topology'] = self.topology
+                cleanup_config['routed'] = True
                 cleanup_config['test_subcircuits'] = False
                 cleanup_config['test_final_circuit'] = False
+                cleanup_config['global_min'] = True
+                cleanup_config['use_osr'] = 0
+                cleanup_config['use_graph_search'] = 0
                 cleanup_config['part_size_end'] = 3
                 cleanup_config['max_partition_size'] = 3
 
-                wco = qgd_WideCircuitCompression(cleanup_config)
+                wco = qgd_Wide_Circuit_Optimization(cleanup_config)
 
                 saved_sq_circuits = self._snapshot_single_qubit_circuits(
                     optimized_partitions
@@ -1791,7 +1795,7 @@ class qgd_Partition_Aware_Mapping:
                     )
 
                     cleanup_t0 = time.time()
-                    cleaned_circuit, cleaned_params = wco.CompressWideCircuit(
+                    cleaned_circuit, cleaned_params = wco.OptimizeWideCircuit(
                         trial_circuit.get_Flat_Circuit(),
                         trial_params,
                     )
@@ -1811,12 +1815,14 @@ class qgd_Partition_Aware_Mapping:
                         best_partition_body_cnot = trial_partition_cnot
 
                 final_cleanup_config = dict(cleanup_config)
+                final_cleanup_config['use_osr'] = 1
+                final_cleanup_config['use_graph_search'] = 1
                 final_cleanup_config['part_size_end'] = 4
 
-                wco = qgd_WideCircuitCompression(final_cleanup_config)
+                wco = qgd_Wide_Circuit_Optimization(final_cleanup_config)
 
                 cleanup_t0 = time.time()
-                final_circuit, final_parameters = wco.CompressWideCircuit(
+                final_circuit, final_parameters = wco.OptimizeWideCircuit(
                     best_circuit.get_Flat_Circuit(),
                     best_params,
                 )
@@ -1872,17 +1878,19 @@ class qgd_Partition_Aware_Mapping:
             )
 
             if self.config.get('cleanup', True):
-                from squander.decomposition.qgd_WideCircuitCompression import (
-                    qgd_WideCircuitCompression,
+                from squander.decomposition.qgd_Wide_Circuit_Optimization import (
+                    qgd_Wide_Circuit_Optimization,
                 )
 
                 cleanup_config = dict(self.config)
                 cleanup_config['topology'] = self.topology
+                cleanup_config['routed'] = True
                 cleanup_config['test_subcircuits'] = False
                 cleanup_config['test_final_circuit'] = False
-                wco = qgd_WideCircuitCompression(cleanup_config)
+                cleanup_config['global_min'] = True
+                wco = qgd_Wide_Circuit_Optimization(cleanup_config)
 
-                final_circuit, final_parameters = wco.CompressWideCircuit(
+                final_circuit, final_parameters = wco.OptimizeWideCircuit(
                     final_circuit.get_Flat_Circuit(), final_parameters
                 )
 
