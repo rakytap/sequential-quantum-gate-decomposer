@@ -1733,9 +1733,9 @@ class qgd_Partition_Aware_Mapping:
                 cleanup_config['test_subcircuits'] = False
                 cleanup_config['test_final_circuit'] = False
                 cleanup_config['global_min'] = True
-                cleanup_config['use_osr'] = 1
-                cleanup_config['use_graph_search'] = 1
-                cleanup_config['part_size_end'] = 4
+                cleanup_config['use_osr'] = 0
+                cleanup_config['use_graph_search'] = 0
+                cleanup_config['part_size_end'] = 3
                 cleanup_config['max_partition_size'] = 3
 
                 wco = qgd_Wide_Circuit_Optimization(cleanup_config)
@@ -1812,8 +1812,19 @@ class qgd_Partition_Aware_Mapping:
                         best_routing_swap_cnot = trial_routing_cnot
                         best_partition_body_cnot = trial_partition_cnot
 
-                final_circuit = best_circuit
-                final_parameters = best_params
+                final_cleanup_config = dict(cleanup_config)
+                final_cleanup_config['use_osr'] = 1
+                final_cleanup_config['use_graph_search'] = 1
+                final_cleanup_config['part_size_end'] = 4
+
+                wco = qgd_Wide_Circuit_Optimization(final_cleanup_config)
+
+                cleanup_t0 = time.time()
+                final_circuit, final_parameters = wco.OptimizeWideCircuit(
+                    best_circuit.get_Flat_Circuit(),
+                    best_params,
+                )
+                cleanup_total += time.time() - cleanup_t0
                 pi_initial = best_pi_init
                 pi = best_pi
                 routing_swap_cnot = best_routing_swap_cnot
