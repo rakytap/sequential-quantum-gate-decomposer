@@ -1736,7 +1736,7 @@ class qgd_Partition_Aware_Mapping:
                 cleanup_config['use_osr'] = 1
                 cleanup_config['use_graph_search'] = 1
                 cleanup_config['part_size_end'] = 4
-                cleanup_config['max_partition_size'] = 4
+                cleanup_config['max_partition_size'] = 3
 
                 wco = qgd_Wide_Circuit_Optimization(cleanup_config)
 
