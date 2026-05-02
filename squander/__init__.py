@@ -7,6 +7,7 @@ from squander.decomposition.qgd_N_Qubit_Decompositions_Wrapper import (
     qgd_N_Qubit_Decomposition_custom as N_Qubit_Decomposition_custom,
     qgd_N_Qubit_Decomposition_Tree_Search as N_Qubit_Decomposition_Tree_Search,
     qgd_N_Qubit_Decomposition_Tabu_Search as N_Qubit_Decomposition_Tabu_Search,
+    qgd_N_Qubit_Decomposition_OSR_Compression as N_Qubit_Decomposition_OSR_Compression,
 )
 
 # State preparation (depends on adaptive decomposition)
@@ -71,6 +72,5 @@ import squander.utils
 
 ## NN component (experimental interface)
 from squander.nn.qgd_nn import qgd_nn as NN
-
 
 
