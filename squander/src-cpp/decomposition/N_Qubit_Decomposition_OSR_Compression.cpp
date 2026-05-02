@@ -1393,14 +1393,12 @@ N_Qubit_Decomposition_OSR_Compression::compress_gate_structure(
         return std::lexicographical_compare(a.begin(), a.end(), b.begin(), b.end());
     });
 
-    bool topology_user_set = !this->topology.empty();
-    std::vector<matrix_base<int>> active_topology = topology_user_set
+    std::vector<matrix_base<int>> active_topology = !this->topology.empty()
         ? this->topology
         : topology_from_gate_structure(gate_structure_in, qbit_num);
-    std::vector<std::pair<int, int>> mutation_edges =
-        (options.mutate_full_topology && !topology_user_set)
-            ? complete_topology_pairs(qbit_num)
-            : topology_pairs_from_matrices(active_topology);
+    std::vector<std::pair<int, int>> mutation_edges = options.mutate_full_topology
+        ? complete_topology_pairs(qbit_num)
+        : topology_pairs_from_matrices(active_topology);
     MinCnotBoundSolver osr_bound_solver(qbit_num, all_cuts, active_topology);
 
     CompressionCandidate root;
@@ -1519,11 +1517,10 @@ N_Qubit_Decomposition_OSR_Compression::compress_gate_structure(
     }
 
     if (options.enable_skeleton_search) {
-        std::vector<std::pair<int, int>> skeleton_edges = topology_user_set
-            ? topology_pairs_from_matrices(active_topology)
-            : ((options.mutate_full_topology || qbit_num <= 3)
-                   ? complete_topology_pairs(qbit_num)
-                   : mutation_edges);
+        std::vector<std::pair<int, int>> skeleton_edges =
+            (options.mutate_full_topology || qbit_num <= 3)
+                ? complete_topology_pairs(qbit_num)
+                : mutation_edges;
         std::vector<CompressionCandidate> skeleton_candidates =
             generate_cnot_skeleton_candidates(
                 qbit_num, static_cast<int>(removable_paths.size()),
