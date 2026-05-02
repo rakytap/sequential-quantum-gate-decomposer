@@ -1671,6 +1671,8 @@ class qgd_Partition_Aware_Mapping:
         routing_start = time.time()
         routing_swap_cnot = 0
         partition_body_cnot = 0
+        routing_elapsed_before_cleanup = None
+        cleanup_total = 0.0
 
         if n_iterations == 0:
             F = self.get_initial_layer(IDAG, N, optimized_partitions)
@@ -1721,6 +1723,7 @@ class qgd_Partition_Aware_Mapping:
                 candidate_cache,
                 rank_top_k=actual_rank_top_k,
             )
+            routing_elapsed_before_cleanup = time.time() - routing_start
 
             if do_cleanup:
                 from squander.decomposition.qgd_Wide_Circuit_Optimization import (
@@ -1755,7 +1758,6 @@ class qgd_Partition_Aware_Mapping:
                 best_pre_cleanup = None
                 best_routing_swap_cnot = 0
                 best_partition_body_cnot = 0
-                cleanup_total = 0.0
 
                 for _, trial_pi, _, trace_pi_init, route_steps in top_layouts:
                     self._restore_single_qubit_circuits(
@@ -1797,10 +1799,10 @@ class qgd_Partition_Aware_Mapping:
                         trial_circuit.get_Flat_Circuit(),
                         trial_params,
                     )
-                    cleanup_total += time.time() - cleanup_t0
                     cleaned_cost = cleaned_circuit.get_Gate_Nums().get(
                         'CNOT', 0
                     )
+                    cleanup_total += time.time() - cleanup_t0
 
                     if cleaned_cost < best_cost:
                         best_cost = cleaned_cost
@@ -1865,10 +1867,12 @@ class qgd_Partition_Aware_Mapping:
                 )
 
         if do_cleanup and n_iterations > 0:
-            self._routing_time = time.time() - routing_start - cleanup_total
+            self._routing_time = routing_elapsed_before_cleanup
+            self._cleanup_time = cleanup_total
             self._cnot_pre_cleanup = best_pre_cleanup
         else:
             self._routing_time = time.time() - routing_start
+            self._cleanup_time = 0.0
             self._cnot_pre_cleanup = final_circuit.get_Gate_Nums().get(
                 'CNOT', 0
             )
