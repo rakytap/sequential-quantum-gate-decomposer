@@ -130,7 +130,7 @@ def qasm_to_squander_circuit(filename: str, return_transpiled=False):
         for n in dir(gate)
         if not n.startswith("_")
         and issubclass(getattr(gate, n), gate.Gate)
-        and n not in ("Gate", "CROT", "CR", "SYC")
+        and n not in ("Gate", "CROT", "CR", "SYC","Permutation")
     }
     if any(gate.operation.name not in SUPPORTED_GATES_NAMES for gate in qc.data):
         qc_transpiled = qiskit.transpile(
