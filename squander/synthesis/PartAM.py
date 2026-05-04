@@ -133,6 +133,7 @@ class qgd_Partition_Aware_Mapping:
         self.config.setdefault('test_subcircuits', False )
         self.config.setdefault('test_final_circuit', True )
         self.config.setdefault('max_partition_size', 3 )
+        self.config.setdefault('pack_credit_weight', 0.0)
         self.config.setdefault('topology', None)
         self.config.setdefault('routed', False)
         self.config.setdefault('optimizer', 'BFGS')
@@ -256,7 +257,7 @@ class qgd_Partition_Aware_Mapping:
         return sum(turnovers) / len(turnovers)
 
     @staticmethod
-    def _parts_to_window_turnover_weights(allparts, gate_dict, g):
+    def _parts_to_window_turnover_weights(allparts, gate_dict, g, pack_credit_weight=0.0):
         """Linear ILP weights for 3q window continuity.
 
         Dense 3q blocks are only routing-friendly when their local qubit window
@@ -325,7 +326,17 @@ class qgd_Partition_Aware_Mapping:
                 + succ_turnover
                 + pred_turnover
             )
-            weights.append((conceptual_cost - 1.0) / N)
+            if pack_credit_weight:
+                k = len(support)
+                full_clique_pairs = k * (k - 1) // 2
+                if len(active_pairs) == full_clique_pairs:
+                    multi_qubit_gate_count = sum(
+                        1 for gate_idx in part
+                        if gate_dict.get(gate_idx) is not None
+                        and len(gate_dict[gate_idx].get_Involved_Qbits()) >= 2
+                    )
+                    conceptual_cost -= pack_credit_weight * max(multi_qubit_gate_count - 1, 0)
+            weights.append(max((conceptual_cost - 1.0) / N, 0.0))
         return weights
 
     @staticmethod
@@ -621,6 +632,7 @@ class qgd_Partition_Aware_Mapping:
             allparts,
             gate_dict,
             g,
+            pack_credit_weight=self.config['pack_credit_weight'],
         )
         L_parts, _ = ilp_global_optimal(allparts, g, weights=ilp_weights)
 
