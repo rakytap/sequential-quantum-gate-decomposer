@@ -16,6 +16,7 @@ dependencies:
   - numpy
   - scipy
   - tbb-devel
+  - pybind11
   - pip:
       - gurobipy
       - matplotlib
