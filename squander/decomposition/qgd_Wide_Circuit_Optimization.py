@@ -96,10 +96,6 @@ def CNOTGateCount(circ: Circuit, max_gates: int = 0) -> int:
         )
     return num_cnots
 
-def _topology_le_to_be(n_qubits, topology):
-    """Convert a topology from squander LE convention to bqskit BE convention."""
-    return [(n_qubits - 1 - i, n_qubits - 1 - j) for i, j in topology]
-
 
 def generate_squander_seqpam(squander_config, block_size):
     """Build a bqskit SeqPAM workflow using Squander as the inner synthesis engine with ILP partitioning.
@@ -265,10 +261,11 @@ def generate_squander_seqpam(squander_config, block_size):
                 )
             data.placement = list(self.placement)
 
+    from bqskit.passes import QuickPartitioner
     squander    = SquanderSynthesisPass(squander_config=squander_config)
     partitioner = SquanderILPPartitioner(block_size)
-    post_pam_seq: BasePass = PAMVerificationSequence(8)
-    num_layout_passes = int(squander_config.get("num_layout_passes", 100))
+    post_pam_seq: BasePass = PAMVerificationSequence(block_size)
+    num_layout_passes = int(squander_config.get("num_layout_passes", 3))
     pam_initial_placement = squander_config.get("pam_initial_placement", None)
 
     return Workflow(
@@ -293,7 +290,7 @@ def generate_squander_seqpam(squander_config, block_size):
                 RestoreModelConnectivityPass(),
                 LogPass("Recaching permutation-aware synthesis results."),
                 SubtopologySelectionPass(block_size),
-                partitioner,
+                QuickPartitioner(block_size),
                 ForEachBlockPass(
                     EmbedAllPermutationsPass(
                         inner_synthesis=squander,
@@ -874,7 +871,7 @@ class qgd_Wide_Circuit_Optimization:
             )
 
             # Build BQSKit machine model from your topology
-            model = MachineModel(circ.get_Qbit_Num(), _topology_le_to_be(circ.get_Qbit_Num(), self.config["topology"]))
+            model = MachineModel(circ.get_Qbit_Num(), self.config["topology"])
 
             # Convert squander circuit → qiskit → BQSKit
             # (BQSKit has a from_qiskit helper if you go via Qiskit IR)
@@ -947,7 +944,7 @@ class qgd_Wide_Circuit_Optimization:
             }
             block_size = self.max_partition_size
 
-            model = MachineModel(circ.get_Qbit_Num(), _topology_le_to_be(circ.get_Qbit_Num(), self.config["topology"]))
+            model = MachineModel(circ.get_Qbit_Num(), self.config["topology"])
             circo = Qiskit_IO.get_Qiskit_Circuit(circ, parameters)
             bqskit_circ = OPENQASM2Language().decode(qasm2.dumps(circo))
 
@@ -1440,7 +1437,7 @@ class qgd_Wide_Circuit_Optimization:
             from bqskit.passes import SetModelPass
             from qiskit import qasm2, QuantumCircuit
 
-            model = MachineModel(circ.get_Qbit_Num(), _topology_le_to_be(circ.get_Qbit_Num(), self.config["topology"]))
+            model = MachineModel(circ.get_Qbit_Num(), self.config["topology"])
             circo = Qiskit_IO.get_Qiskit_Circuit(circ, orig_parameters)
             bqskit_circ = OPENQASM2Language().decode(qasm2.dumps(circo))
 
@@ -1530,7 +1527,7 @@ class qgd_Wide_Circuit_Optimization:
             from qiskit import qasm2, QuantumCircuit
 
             # Build BQSKit machine model from your topology
-            model = MachineModel(circ.get_Qbit_Num(), _topology_le_to_be(circ.get_Qbit_Num(), self.config["topology"]))
+            model = MachineModel(circ.get_Qbit_Num(), self.config["topology"])
 
             # Convert squander circuit → qiskit → BQSKit
             # (BQSKit has a from_qiskit helper if you go via Qiskit IR)
@@ -1587,7 +1584,7 @@ class qgd_Wide_Circuit_Optimization:
             from bqskit.passes import SetModelPass
             from qiskit import qasm2, QuantumCircuit
 
-            model = MachineModel(circ.get_Qbit_Num(), _topology_le_to_be(circ.get_Qbit_Num(), self.config["topology"]))
+            model = MachineModel(circ.get_Qbit_Num(), self.config["topology"])
             circo = Qiskit_IO.get_Qiskit_Circuit(circ, orig_parameters)
             bqskit_circ = OPENQASM2Language().decode(qasm2.dumps(circo))
 
