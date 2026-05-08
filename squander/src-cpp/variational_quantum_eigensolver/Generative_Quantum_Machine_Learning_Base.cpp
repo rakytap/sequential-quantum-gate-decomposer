@@ -335,7 +335,7 @@ double Generative_Quantum_Machine_Learning_Base::expectation_value_P_star_P_star
         double& ev_local = priv_partial_ev.local();
 
 
-        for (size_t d = r.begin(); d < r.end(); d++) {
+        for (int d = r.begin(); d < r.end(); d++) {
             // Calculate Hamming distance: popcount of XOR value
             // gray code
             size_t hamming_dist = __builtin_popcount(d^(d>>1));
@@ -480,7 +480,7 @@ double Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions_exact(
         double& ev_P_theta_P_star_local = priv_partial_ev_P_theta_P_star.local();
         double& ev_P_theta_P_theta_local = priv_partial_ev_P_theta_P_theta.local();
 
-        for (size_t d = r.begin(); d < r.end(); d++) {
+        for (int d = r.begin(); d < r.end(); d++) {
             int hamming_dist = __builtin_popcount(d^(d>>1));
 
             double kernel_val = gaussian_lookup_table[hamming_dist];
@@ -1049,7 +1049,7 @@ qubits 0 and 1, and the TV distance.
 void Generative_Quantum_Machine_Learning_Base::export_current_cost_fnc(double current_minimum,
                                                                        Matrix_real& parameters) {
 
-    FILE* pFile;
+    FILE* pFile = NULL;
     std::string filename("costfuncs_entropy_and_tv.txt");
 
     if (project_name != "") {
@@ -1058,7 +1058,7 @@ void Generative_Quantum_Machine_Learning_Base::export_current_cost_fnc(double cu
 #ifdef _WIN32
 #pragma warning(suppress: 4996)
 #endif
-	pFile = fopen(c_filename, "a");
+        pFile = fopen(c_filename, "a");
 
         if (pFile==NULL) {
             fputs ("File error",stderr); 
@@ -1091,8 +1091,10 @@ void Generative_Quantum_Machine_Learning_Base::export_current_cost_fnc(double cu
 
     double tv_distance = TV_of_the_distributions(State);
 
-    fprintf(pFile, "%i\t%f\t%f\t%f\n", (int)number_of_iters, current_minimum, renyi_entropy, tv_distance);
-    fclose(pFile);
+    if (pFile != NULL) {
+        fprintf(pFile, "%i\t%f\t%f\t%f\n", (int)number_of_iters, current_minimum, renyi_entropy, tv_distance);
+        fclose(pFile);
+    }
 
     return;
 }
