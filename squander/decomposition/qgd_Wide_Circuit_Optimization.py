@@ -218,9 +218,20 @@ def generate_squander_seqpam(squander_config, block_size):
                 for gi in gate_idxs:
                     gate_to_part[gi] = pidx
 
+            # PAMRoutingPass expects permutation data for every non-barrier
+            # operation it may execute.  Keep gates outside ILP blocks wrapped as
+            # CircuitGates too, but group whole unclaimed 1q chains to avoid
+            # spawning one BQSKit task per single-qubit gate.
+            unclaimed_chain_by_gate = {}
+            for chain in sq_chains:
+                if all(gi not in gate_to_part for gi in chain):
+                    for gi in chain:
+                        unclaimed_chain_by_gate[gi] = chain
+
             # Build partitioned circuit by iterating gates in original order
             partitioned = BQCircuit(circuit.num_qudits, circuit.radixes)
             built_parts = set()
+            built_chains = set()
 
             for gi, (_, op) in enumerate(bqskit_ops):
                 pidx = gate_to_part.get(gi, -1)
@@ -246,7 +257,32 @@ def generate_squander_seqpam(squander_config, block_size):
                     partitioned.append_circuit(sub, global_qudits, as_circuit_gate=True)
 
                 elif pidx < 0:
-                    partitioned.append_gate(op.gate, op.location, op.params)
+                    chain = unclaimed_chain_by_gate.get(gi)
+                    if chain is not None:
+                        if chain in built_chains:
+                            continue
+                        built_chains.add(chain)
+                        global_qudits = list(gate_dict[chain[0]].get_Involved_Qbits())
+                        local_map = {gq: l for l, gq in enumerate(global_qudits)}
+                        sub = BQCircuit(len(global_qudits))
+                        for ggi in chain:
+                            _, gop = bqskit_ops[ggi]
+                            sub.append_gate(
+                                gop.gate,
+                                [local_map[q] for q in gop.location],
+                                gop.params,
+                            )
+                        partitioned.append_circuit(
+                            sub, global_qudits, as_circuit_gate=True
+                        )
+                    else:
+                        sub = BQCircuit(len(op.location))
+                        sub.append_gate(
+                            op.gate, list(range(len(op.location))), op.params
+                        )
+                        partitioned.append_circuit(
+                            sub, list(op.location), as_circuit_gate=True
+                        )
 
             circuit.become(partitioned, False)
 
