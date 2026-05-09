@@ -484,6 +484,10 @@ int SabreRouter::estimate_swap_count(
     const std::vector<int>& pi,
     bool reverse
 ) const {
+    if (cand.cnot_count == 0) {
+        return 0;
+    }
+
     const std::vector<int>& P_route_inv = reverse ? cand.P_o_inv : cand.P_i_inv;
 
     double total = 0.0;
@@ -896,6 +900,26 @@ SabreRouter::transform_pi(
     const NeighborInfo* neighbor_info
 ) const {
     const std::vector<int>& P_route_inv = reverse ? cand.P_o_inv : cand.P_i_inv;
+    const std::vector<int>& P_exit = reverse ? cand.P_i : cand.P_o;
+
+    if (cand.cnot_count == 0) {
+        std::vector<int> dynamic_node_mapping(P_route_inv.size(), -1);
+        for (size_t i = 0; i < cand.qbit_map_keys_sorted.size(); i++) {
+            const int logical_q = cand.qbit_map_keys_sorted[i];
+            const int qstar = cand.qbit_map_vals_sorted[i];
+            dynamic_node_mapping[P_route_inv[qstar]] = pi[logical_q];
+        }
+
+        std::vector<int> pi_output = pi;
+        for (size_t q_star = 0; q_star < P_exit.size(); q_star++) {
+            if (q_star < cand.qstar_to_q.size()) {
+                const int logical_q = cand.qstar_to_q[q_star];
+                if (logical_q < 0) continue;
+                pi_output[logical_q] = dynamic_node_mapping[P_exit[q_star]];
+            }
+        }
+        return {{}, std::move(pi_output)};
+    }
 
     // Route qubits to input positions
     auto [swaps, pi_routed] = find_constrained_swaps(
@@ -909,7 +933,6 @@ SabreRouter::transform_pi(
     );
 
     // Update output positions using P_exit
-    const std::vector<int>& P_exit = reverse ? cand.P_i : cand.P_o;
     std::vector<int> pi_output = pi_routed;
 
     for (size_t q_star = 0; q_star < P_exit.size(); q_star++) {
@@ -1089,6 +1112,27 @@ std::vector<int> SabreRouter::estimate_candidate_output_layout(
     const std::vector<int>& pi,
     bool reverse
 ) const {
+    if (cand.cnot_count == 0) {
+        const std::vector<int>& P_route_inv = reverse ? cand.P_o_inv : cand.P_i_inv;
+        const std::vector<int>& P_exit = reverse ? cand.P_i : cand.P_o;
+        std::vector<int> dynamic_node_mapping(P_route_inv.size(), -1);
+        for (size_t i = 0; i < cand.qbit_map_keys_sorted.size(); i++) {
+            const int logical_q = cand.qbit_map_keys_sorted[i];
+            const int qstar = cand.qbit_map_vals_sorted[i];
+            dynamic_node_mapping[P_route_inv[qstar]] = pi[logical_q];
+        }
+
+        std::vector<int> pi_output = pi;
+        for (size_t q_star = 0; q_star < P_exit.size(); q_star++) {
+            if (q_star < cand.qstar_to_q.size()) {
+                const int logical_q = cand.qstar_to_q[q_star];
+                if (logical_q < 0) continue;
+                pi_output[logical_q] = dynamic_node_mapping[P_exit[q_star]];
+            }
+        }
+        return pi_output;
+    }
+
     const std::vector<int>& P_exit = reverse ? cand.P_i : cand.P_o;
     std::vector<int> pi_output = pi;
 

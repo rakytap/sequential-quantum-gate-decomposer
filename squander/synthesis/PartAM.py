@@ -71,6 +71,34 @@ from squander.synthesis.PartAM_utils import (
 _routing_worker_state = None
 
 
+class _DynamicMappedPartitionCandidate:
+    """Partition candidate remapped to a route-time physical layout.
+
+    This is used for synthesized partition bodies with zero CNOTs.  They do
+    not require adjacent physical nodes, but their single-qubit gates still
+    need to be emitted on the physical wires occupied by the partition's
+    logical qubits at that point in the route.
+    """
+
+    def __init__(self, candidate, node_mapping):
+        self.candidate = candidate
+        self.partition_idx = candidate.partition_idx
+        self.topology_idx = candidate.topology_idx
+        self.permutation_idx = candidate.permutation_idx
+        self.cnot_count = candidate.cnot_count
+        self.node_mapping = dict(node_mapping)
+
+    def get_final_circuit(self, optimized_partitions, N):
+        partition = optimized_partitions[self.partition_idx]
+        params = partition.synthesised_parameters[
+            self.topology_idx
+        ][self.permutation_idx]
+        circuit = partition.synthesised_circuits[
+            self.topology_idx
+        ][self.permutation_idx].get_Flat_Circuit()
+        return circuit.Remap_Qbits(self.node_mapping, N), params
+
+
 def _init_layout_trial_worker(state):
     global _routing_worker_state
     from squander.synthesis.PartAM import qgd_Partition_Aware_Mapping
@@ -1244,21 +1272,38 @@ class qgd_Partition_Aware_Mapping:
         return routing_cnot, partition_cnot
 
     def _partition_order_from_cpp_steps(
-        self, steps, optimized_partitions, candidate_cache, N
+        self, steps, optimized_partitions, candidate_cache, N, pi_initial=None
     ):
         partition_order = []
+        pi = [int(x) for x in pi_initial] if pi_initial is not None else None
         for step in steps:
             kind = step[0]
             if kind == "swap":
                 swaps = [(int(u), int(v)) for u, v in step[1]]
                 if swaps:
                     partition_order.append(construct_swap_circuit(swaps, N))
+                    if pi is not None:
+                        pi = self._apply_swaps_to_pi(pi, swaps)
             elif kind == "partition":
                 partition_idx = int(step[1])
                 candidate_idx = int(step[2])
-                partition_order.append(
-                    candidate_cache[partition_idx][candidate_idx]
-                )
+                candidate = candidate_cache[partition_idx][candidate_idx]
+                if pi is not None and int(candidate.cnot_count) == 0:
+                    node_mapping = self._zero_cnot_dynamic_node_mapping(
+                        pi, candidate
+                    )
+                    partition_order.append(
+                        _DynamicMappedPartitionCandidate(
+                            candidate, node_mapping
+                        )
+                    )
+                    pi = self._apply_zero_cnot_candidate_exit_to_pi(
+                        pi, candidate, node_mapping
+                    )
+                else:
+                    partition_order.append(candidate)
+                    if pi is not None:
+                        pi = self._apply_candidate_exit_to_pi(pi, candidate)
             elif kind == "single":
                 partition_idx = int(step[1])
                 physical_qubit = int(step[2])
@@ -1296,6 +1341,24 @@ class qgd_Partition_Aware_Mapping:
             if q_star in qbit_map_inverse:
                 logical_q = qbit_map_inverse[q_star]
                 pi_out[logical_q] = candidate.node_mapping[mapped_qstar]
+        return pi_out
+
+    @staticmethod
+    def _zero_cnot_dynamic_node_mapping(pi, candidate):
+        P_i_inv = [candidate.P_i.index(i) for i in range(len(candidate.P_i))]
+        node_mapping = {}
+        for logical_q, q_star in candidate.qbit_map.items():
+            node_mapping[P_i_inv[q_star]] = int(pi[int(logical_q)])
+        return node_mapping
+
+    @staticmethod
+    def _apply_zero_cnot_candidate_exit_to_pi(pi, candidate, node_mapping):
+        pi_out = [int(x) for x in pi]
+        qbit_map_inverse = {v: k for k, v in candidate.qbit_map.items()}
+        for q_star, mapped_qstar in enumerate(candidate.P_o):
+            if q_star in qbit_map_inverse:
+                logical_q = qbit_map_inverse[q_star]
+                pi_out[logical_q] = node_mapping[mapped_qstar]
         return pi_out
 
     @staticmethod
@@ -1427,9 +1490,21 @@ class qgd_Partition_Aware_Mapping:
             candidate = candidate_cache[partition_idx][candidate_idx]
             logical_qubits = tuple(int(q) for q in candidate.involved_qbits)
             entry_layout = [int(pi[q]) for q in logical_qubits]
-            exit_pi = self._apply_candidate_exit_to_pi(pi, candidate)
+            if int(candidate.cnot_count) == 0:
+                dynamic_node_mapping = self._zero_cnot_dynamic_node_mapping(
+                    pi, candidate
+                )
+                exit_pi = self._apply_zero_cnot_candidate_exit_to_pi(
+                    pi, candidate, dynamic_node_mapping
+                )
+                physical_nodes = sorted(dynamic_node_mapping.values())
+                topology_edges = ""
+            else:
+                dynamic_node_mapping = None
+                exit_pi = self._apply_candidate_exit_to_pi(pi, candidate)
+                physical_nodes = self._candidate_physical_nodes(candidate)
+                topology_edges = self._csv_edges(candidate.topology)
             exit_layout = [int(exit_pi[q]) for q in logical_qubits]
-            physical_nodes = self._candidate_physical_nodes(candidate)
             successors = self._immediate_multi_successors(
                 partition_idx, DAG, layout_partitions
             )
@@ -1456,7 +1531,7 @@ class qgd_Partition_Aware_Mapping:
                 "permutation_idx": int(candidate.permutation_idx),
                 "logical_qubits": self._csv_list(logical_qubits),
                 "physical_nodes": self._csv_list(physical_nodes),
-                "topology_edges": self._csv_edges(candidate.topology),
+                "topology_edges": topology_edges,
                 "entry_layout": self._csv_list(entry_layout),
                 "exit_layout": self._csv_list(exit_layout),
                 "swap_count": swap_count,
@@ -1705,7 +1780,11 @@ class qgd_Partition_Aware_Mapping:
                     )
                     if route_steps is not None:
                         partition_order = self._partition_order_from_cpp_steps(
-                            route_steps, optimized_partitions, candidate_cache, N
+                            route_steps,
+                            optimized_partitions,
+                            candidate_cache,
+                            N,
+                            pi_initial=trace_pi_init,
                         )
                         pi_out = np.asarray(trial_pi, dtype=np.int64)
                         pi_init = np.asarray(trace_pi_init, dtype=np.int64)
@@ -1786,7 +1865,11 @@ class qgd_Partition_Aware_Mapping:
                         optimized_partitions, saved_sq_circuits
                     )
                     partition_order = self._partition_order_from_cpp_steps(
-                        route_steps, optimized_partitions, candidate_cache, N
+                        route_steps,
+                        optimized_partitions,
+                        candidate_cache,
+                        N,
+                        pi_initial=trace_pi_init,
                     )
                     pi = np.asarray(best_pi, dtype=np.int64)
                     pi_initial = np.asarray(trace_pi_init, dtype=np.int64)
