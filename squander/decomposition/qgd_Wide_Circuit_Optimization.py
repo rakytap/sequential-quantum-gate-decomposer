@@ -150,7 +150,7 @@ def generate_squander_seqpam(squander_config, block_size):
         async def run(self, circuit, data):
             from bqskit.ir import Circuit as BQCircuit
             from bqskit.ir.lang.qasm2 import OPENQASM2Language
-            from qiskit import QuantumCircuit as QkCircuit, qasm2 as qasm2_module
+            from qiskit import QuantumCircuit as QkCircuit
             from squander import Qiskit_IO
             from squander.partitioning.ilp import (
                 get_all_partitions, _get_topo_order, ilp_global_optimal,
@@ -179,7 +179,12 @@ def generate_squander_seqpam(squander_config, block_size):
             sqc_prepost = {x[0]: x for x in sq_chains
                            if x[0] in sqc_pre and x[-1] in sqc_post}
 
-            # Build expanded gate_idxs per ILP partition (include surrounding 1q gates)
+            # Build expanded gate_idxs per ILP partition.  The ILP operates on a
+            # graph with single-qubit chains contracted out, so only reinsert
+            # chains that are enclosed by a selected partition.  Do not absorb
+            # every intermediate operation on these qubits: BQSKit sees each
+            # CircuitGate as a synthesis block, and broad expansion creates
+            # large overlapping blocks that are expensive and can duplicate work.
             expanded = {}
             for i in L_parts:
                 part = allparts[i]
@@ -192,32 +197,19 @@ def generate_squander_seqpam(squander_config, block_size):
                 gate_idxs = frozenset.union(part, *(sqc_prepost[v] for v in surrounded))
                 expanded[i] = gate_idxs
 
-            # Further expand: include ALL intermediate gates on partition qubits
-            for i in L_parts:
-                gate_idxs = expanded[i]
-                part_qubits = set()
-                for gi in gate_idxs:
-                    part_qubits.update(gate_dict[gi].get_Involved_Qbits())
-                lo = min(gate_idxs)
-                hi = max(gate_idxs)
-                extra = set()
-                for gi in range(lo, hi + 1):
-                    if gi not in gate_idxs:
-                        gq = set(gate_dict[gi].get_Involved_Qbits())
-                        if gq & part_qubits:
-                            extra.add(gi)
-                if extra:
-                    expanded[i] = gate_idxs | frozenset(extra)
-
             # Sort partitions by their minimum gate index to preserve original order
             seen_parts = set()
             sorted_parts = []
+            claimed_gates = set()
             for i in L_parts:
-                gate_idxs = expanded[i]
+                gate_idxs = expanded[i] - claimed_gates
+                if not gate_idxs:
+                    continue
                 part_key = min(gate_idxs)
                 if part_key not in seen_parts:
                     seen_parts.add(part_key)
                     sorted_parts.append((part_key, gate_idxs))
+                    claimed_gates.update(gate_idxs)
             sorted_parts.sort(key=lambda x: x[0])
 
             # Map gate_idx -> sorted partition index
@@ -254,9 +246,7 @@ def generate_squander_seqpam(squander_config, block_size):
                     partitioned.append_circuit(sub, global_qudits, as_circuit_gate=True)
 
                 elif pidx < 0:
-                    sub_1q = BQCircuit(1)
-                    sub_1q.append_gate(op.gate, [0], op.params)
-                    partitioned.append_circuit(sub_1q, list(op.location), as_circuit_gate=True)
+                    partitioned.append_gate(op.gate, op.location, op.params)
 
             circuit.become(partitioned, False)
 
