@@ -138,7 +138,9 @@ PYBIND11_MODULE(_sabre_router, m) {
         .def_readwrite("boundary_beam_width", &SabreConfig::boundary_beam_width)
         .def_readwrite("boundary_beam_depth", &SabreConfig::boundary_beam_depth)
         .def_readwrite("layout_trial_boundary_beam_width", &SabreConfig::layout_trial_boundary_beam_width)
-        .def_readwrite("layout_trial_boundary_beam_depth", &SabreConfig::layout_trial_boundary_beam_depth);
+        .def_readwrite("layout_trial_boundary_beam_depth", &SabreConfig::layout_trial_boundary_beam_depth)
+        .def_readwrite("adaptive_boundary_beam", &SabreConfig::adaptive_boundary_beam)
+        .def_readwrite("successor_handoff_weight", &SabreConfig::successor_handoff_weight);
 
     // Bind SabreRouter with data-converting constructor
     py::class_<SabreRouter>(m, "SabreRouter")

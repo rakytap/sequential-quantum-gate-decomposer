@@ -96,6 +96,8 @@ struct SabreConfig {
     int boundary_beam_depth = 1;
     int layout_trial_boundary_beam_width = 1;
     int layout_trial_boundary_beam_depth = 1;
+    bool adaptive_boundary_beam = true;
+    double successor_handoff_weight = 1.0;
 };
 
 struct RouteStep {
@@ -389,6 +391,27 @@ private:
         bool final_route
     ) const;
 
+    int boundary_beam_risk(
+        const std::vector<int>& F_snapshot,
+        const std::vector<const CandidateData*>& candidates,
+        const std::vector<std::vector<int>>& children_graph
+    ) const;
+
+    void collect_immediate_multi_successors(
+        int partition_idx,
+        const std::vector<std::vector<int>>& children_graph,
+        std::vector<int>& successors
+    ) const;
+
+    double successor_handoff_cost(
+        int selected_partition_idx,
+        const std::vector<int>& pi,
+        const std::vector<int>& F_after,
+        bool reverse,
+        const std::vector<std::vector<int>>& children_graph,
+        const std::unordered_map<int, CanonicalEntry>& canonical_data
+    ) const;
+
     // Check if partition is single-qubit
     inline bool partition_is_single(int partition_idx) const {
         return layout_partitions_[partition_idx].is_single;
@@ -402,14 +425,7 @@ private:
     // Random permutation of [0..N-1]
     std::vector<int> random_permutation(int n, std::mt19937& rng) const;
 
-    // Apply a small random walk on topology edges to diversify a seeded layout.
-    std::vector<int> perturb_layout(
-        const std::vector<int>& base,
-        int num_swaps,
-        std::mt19937& rng
-    ) const;
-
-    // Stratified initial-layout sampling with the same total trial budget.
+    // Initial-layout sampling: trial 0 uses the seed, later trials are random.
     std::vector<int> sample_initial_layout(
         int trial_idx,
         int n_trials,
