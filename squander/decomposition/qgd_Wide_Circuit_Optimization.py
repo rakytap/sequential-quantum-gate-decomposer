@@ -27,6 +27,20 @@ from squander.partitioning.tools import translate_param_order, build_dependency
 from squander.synthesis.qgd_SABRE import qgd_SABRE as SABRE
 
 
+def _affinity_num_workers():
+    """Return CPU count visible to this process via sched affinity, falling back to cpu_count.
+
+    Use this to size BQSKit ``Compiler(num_workers=...)`` so it does not oversubscribe
+    when the job is bound (taskset/cgroup) to a subset of the machine's CPUs.
+    """
+    if hasattr(os, "sched_getaffinity"):
+        try:
+            return max(1, len(os.sched_getaffinity(0)))
+        except OSError:
+            pass
+    return max(1, mp.cpu_count())
+
+
 def extract_subtopology(involved_qbits, qbit_map, config):
     """Return topology edges restricted to ``involved_qbits``, with indices remapped via ``qbit_map``.
 
@@ -264,50 +278,56 @@ def generate_squander_seqpam(squander_config, block_size):
     from bqskit.passes import QuickPartitioner
     squander    = SquanderSynthesisPass(squander_config=squander_config)
     partitioner = SquanderILPPartitioner(block_size)
-    post_pam_seq: BasePass = PAMVerificationSequence(block_size)
+    enable_pam_verification = bool(squander_config.get("enable_pam_verification", False))
     num_layout_passes = int(squander_config.get("num_layout_passes", 3))
     pam_initial_placement = squander_config.get("pam_initial_placement", None)
+
+    pam_verify_passes = (
+        [PAMVerificationSequence(block_size)] if enable_pam_verification else []
+    )
+
+    inner_passes = [
+        LogPass("Caching permutation-aware synthesis results."),
+        ExtractModelConnectivityPass(),
+        partitioner,
+        ForEachBlockPass(
+            EmbedAllPermutationsPass(
+                inner_synthesis=squander,
+                input_perm=True,
+                output_perm=False,
+                vary_topology=False,
+            ),
+        ),
+        LogPass("Preoptimizing with permutation-aware mapping."),
+        PAMRoutingPass(),
+        *pam_verify_passes,
+        UnfoldPass(),
+        RestoreModelConnectivityPass(),
+        LogPass("Recaching permutation-aware synthesis results."),
+        SubtopologySelectionPass(block_size),
+        QuickPartitioner(block_size),
+        ForEachBlockPass(
+            EmbedAllPermutationsPass(
+                inner_synthesis=squander,
+                input_perm=False,
+                output_perm=True,
+                vary_topology=True,
+            ),
+        ),
+        LogPass("Performing permutation-aware mapping."),
+        ApplyPlacement(),
+        SetPAMInitialPlacementPass(pam_initial_placement),
+        PAMLayoutPass(num_layout_passes),
+        PAMRoutingPass(0.1),
+        *pam_verify_passes,
+        ApplyPlacement(),
+        UnfoldPass(),
+    ]
 
     return Workflow(
         IfThenElsePass(
             NotPredicate(WidthPredicate(2)),
-            [
-                LogPass("Caching permutation-aware synthesis results."),
-                ExtractModelConnectivityPass(),
-                partitioner,
-                ForEachBlockPass(
-                    EmbedAllPermutationsPass(
-                        inner_synthesis=squander,
-                        input_perm=True,
-                        output_perm=False,
-                        vary_topology=False,
-                    ),
-                ),
-                LogPass("Preoptimizing with permutation-aware mapping."),
-                PAMRoutingPass(),
-                post_pam_seq,
-                UnfoldPass(),
-                RestoreModelConnectivityPass(),
-                LogPass("Recaching permutation-aware synthesis results."),
-                SubtopologySelectionPass(block_size),
-                QuickPartitioner(block_size),
-                ForEachBlockPass(
-                    EmbedAllPermutationsPass(
-                        inner_synthesis=squander,
-                        input_perm=False,
-                        output_perm=True,
-                        vary_topology=True,
-                    ),
-                ),
-                LogPass("Performing permutation-aware mapping."),
-                ApplyPlacement(),
-                SetPAMInitialPlacementPass(pam_initial_placement),
-                PAMLayoutPass(num_layout_passes),
-                PAMRoutingPass(0.1),
-                post_pam_seq,
-                ApplyPlacement(),
-                UnfoldPass(),
-            ],
+            inner_passes,
         ),
         name="SeqPAM Mapping",
     )
@@ -896,7 +916,7 @@ class qgd_Wide_Circuit_Optimization:
                 LogErrorPass(),
             ]
 
-            with Compiler() as compiler:
+            with Compiler(num_workers=int(self.config.get("num_workers", _affinity_num_workers()))) as compiler:
                 routed_bqskit_circ, pass_data = compiler.compile(
                     bqskit_circ, compilation_workflow, True
                 )
@@ -950,7 +970,7 @@ class qgd_Wide_Circuit_Optimization:
 
             workflow = generate_squander_seqpam(squander_config, block_size)
 
-            with Compiler() as compiler:
+            with Compiler(num_workers=int(self.config.get("num_workers", _affinity_num_workers()))) as compiler:
                 routed_bqskit_circ = compiler.compile(
                     bqskit_circ, [SetModelPass(model), workflow]
                 )
@@ -1456,7 +1476,7 @@ class qgd_Wide_Circuit_Optimization:
 
             workflow = generate_squander_seqpam(squander_config, block_size)
 
-            with Compiler() as compiler:
+            with Compiler(num_workers=int(self.config.get("num_workers", _affinity_num_workers()))) as compiler:
                 routed_bqskit_circ, pass_data = compiler.compile(
                     bqskit_circ, [SetModelPass(model), workflow], True
                 )
@@ -1553,7 +1573,7 @@ class qgd_Wide_Circuit_Optimization:
                 ),  # SABRE-style routing
             ]
 
-            with Compiler() as compiler:
+            with Compiler(num_workers=int(self.config.get("num_workers", _affinity_num_workers()))) as compiler:
                 routed_bqskit_circ, pass_data = compiler.compile(
                     bqskit_circ, routing_workflow, True
                 )
@@ -1601,7 +1621,7 @@ class qgd_Wide_Circuit_Optimization:
             }
             workflow = generate_squander_seqpam(squander_config, self.max_partition_size)
 
-            with Compiler() as compiler:
+            with Compiler(num_workers=int(self.config.get("num_workers", _affinity_num_workers()))) as compiler:
                 routed_bqskit_circ, pass_data = compiler.compile(
                     bqskit_circ, [SetModelPass(model), workflow], True
                 )
