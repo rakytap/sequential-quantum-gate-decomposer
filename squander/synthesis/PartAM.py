@@ -163,6 +163,9 @@ class qgd_Partition_Aware_Mapping:
         self.config.setdefault('three_qubit_exit_weight', 1.0)
         self.config.setdefault('boundary_beam_width', 1)
         self.config.setdefault('boundary_beam_depth', 1)
+        self.config.setdefault('layout_trial_boundary_beam_width', None)
+        self.config.setdefault('layout_trial_boundary_beam_depth', None)
+        self.config.setdefault('initial_layout_seed_pair_top_k', 8)
         self.config['partition_weight_model'] = 'window_turnover'
         strategy = self.config['strategy']
         self.config.setdefault('parallel_layout_trials', False)
@@ -1113,6 +1116,20 @@ class qgd_Partition_Aware_Mapping:
             cfg.boundary_beam_depth = self.config.get(
                 'boundary_beam_depth', 1
             )
+        if hasattr(cfg, 'layout_trial_boundary_beam_width'):
+            layout_beam_width = self.config.get(
+                'layout_trial_boundary_beam_width', None
+            )
+            if layout_beam_width is None:
+                layout_beam_width = cfg.boundary_beam_width
+            cfg.layout_trial_boundary_beam_width = layout_beam_width
+        if hasattr(cfg, 'layout_trial_boundary_beam_depth'):
+            layout_beam_depth = self.config.get(
+                'layout_trial_boundary_beam_depth', None
+            )
+            if layout_beam_depth is None:
+                layout_beam_depth = cfg.boundary_beam_depth
+            cfg.layout_trial_boundary_beam_depth = layout_beam_depth
         canonical_fwd = self._build_canonical_neighbor_data(
             scoring_partitions, reverse=False
         )
@@ -3071,14 +3088,17 @@ class qgd_Partition_Aware_Mapping:
         if not self.topology:
             return np.arange(N)
 
-        # --- build gate-level interaction graph from circuit CNOT pairs ---
+        # --- build gate-level interaction graph from all multi-qubit gates ---
         gate_edges = set()
         for g in circ.get_Gates():
-            gname = str(type(g).__name__)
-            if 'CNOT' in gname or 'CX' in gname:
-                ctrl = g.get_Control_Qbit()
-                tgt = g.get_Target_Qbit()
-                gate_edges.add((min(ctrl, tgt), max(ctrl, tgt)))
+            qbits = list(g.get_Involved_Qbits())
+            if len(qbits) < 2:
+                continue
+            for i in range(len(qbits)):
+                for j in range(i + 1, len(qbits)):
+                    gate_edges.add(
+                        (min(qbits[i], qbits[j]), max(qbits[i], qbits[j]))
+                    )
 
         if not gate_edges:
             return np.arange(N)
@@ -3186,59 +3206,105 @@ class qgd_Partition_Aware_Mapping:
         if not interaction_weight:
             return np.arange(N)
 
-        pi = np.arange(N)
-        placed_logical = set()
-        placed_physical = set()
+        logical_degree = defaultdict(float)
+        for (u, v), weight in interaction_weight.items():
+            logical_degree[u] += weight
+            logical_degree[v] += weight
 
-        (q1, q2), _ = max(interaction_weight.items(), key=lambda x: x[1])
-        p1, p2 = self.topology[0]
+        physical_centrality = np.sum(D, axis=1)
+        ranked_logical_pairs = sorted(
+            interaction_weight.items(),
+            key=lambda item: (
+                -item[1],
+                -(logical_degree[item[0][0]] + logical_degree[item[0][1]]),
+                item[0],
+            ),
+        )
+        seed_pair_top_k = int(
+            self.config.get('initial_layout_seed_pair_top_k', 8)
+        )
+        if seed_pair_top_k > 0:
+            ranked_logical_pairs = ranked_logical_pairs[:seed_pair_top_k]
 
-        holder1 = np.where(pi == p1)[0][0]
-        pi[q1], pi[holder1] = p1, pi[q1]
-        holder2 = np.where(pi == p2)[0][0]
-        pi[q2], pi[holder2] = p2, pi[q2]
-        placed_logical.update([q1, q2])
-        placed_physical.update([p1, p2])
+        physical_edges = sorted(
+            [(int(u), int(v)) for u, v in self.topology],
+            key=lambda edge: (
+                physical_centrality[edge[0]] + physical_centrality[edge[1]],
+                edge,
+            ),
+        )
 
-        remaining = [q for q in range(N) if q not in placed_logical]
+        def layout_score(pi):
+            total = 0.0
+            for (u, v), weight in interaction_weight.items():
+                total += weight * D[int(pi[u])][int(pi[v])]
+            return total
 
-        def _score(q):
-            return sum(
-                interaction_weight.get((min(q, pq), max(q, pq)), 0.0)
-                for pq in placed_logical
+        def build_layout(q1, q2, p1, p2):
+            pi = np.arange(N)
+            placed_logical = {q1, q2}
+            placed_physical = {p1, p2}
+
+            holder1 = int(np.where(pi == p1)[0][0])
+            pi[q1], pi[holder1] = p1, pi[q1]
+            holder2 = int(np.where(pi == p2)[0][0])
+            pi[q2], pi[holder2] = p2, pi[q2]
+
+            remaining = [q for q in range(N) if q not in placed_logical]
+
+            def logical_frontier_score(q):
+                return sum(
+                    interaction_weight.get((min(q, pq), max(q, pq)), 0.0)
+                    for pq in placed_logical
+                )
+
+            remaining.sort(
+                key=lambda q: (-logical_frontier_score(q), -logical_degree[q], q)
             )
 
-        remaining.sort(key=_score, reverse=True)
+            for logical_q in remaining:
+                best_physical = None
+                best_key = None
 
-        for logical_q in remaining:
-            best_physical = None
-            best_dist = float('inf')
+                for physical_q in range(N):
+                    if physical_q in placed_physical:
+                        continue
 
-            for physical_q in range(N):
-                if physical_q in placed_physical:
-                    continue
+                    total_dist = 0.0
+                    total_w = 0.0
+                    for other_q in placed_logical:
+                        key = (min(logical_q, other_q), max(logical_q, other_q))
+                        w = interaction_weight.get(key, 0.0)
+                        if w > 0:
+                            total_dist += D[physical_q][pi[other_q]] * w
+                            total_w += w
 
-                total_dist = 0.0
-                total_w = 0.0
-                for other_q in placed_logical:
-                    key = (min(logical_q, other_q), max(logical_q, other_q))
-                    w = interaction_weight.get(key, 0.0)
-                    if w > 0:
-                        total_dist += D[physical_q][pi[other_q]] * w
-                        total_w += w
+                    avg = total_dist / total_w if total_w > 0 else 0.0
+                    candidate_key = (avg, physical_centrality[physical_q], physical_q)
+                    if best_key is None or candidate_key < best_key:
+                        best_key = candidate_key
+                        best_physical = physical_q
 
-                avg = total_dist / total_w if total_w > 0 else 0.0
-                if avg < best_dist:
-                    best_dist = avg
-                    best_physical = physical_q
+                if best_physical is not None:
+                    holder = int(np.where(pi == best_physical)[0][0])
+                    pi[logical_q], pi[holder] = best_physical, pi[logical_q]
+                    placed_logical.add(logical_q)
+                    placed_physical.add(best_physical)
 
-            if best_physical is not None:
-                holder = np.where(pi == best_physical)[0][0]
-                pi[logical_q], pi[holder] = best_physical, pi[logical_q]
-                placed_logical.add(logical_q)
-                placed_physical.add(best_physical)
+            return pi
 
-        return pi
+        best_pi = None
+        best_score = float('inf')
+        for (q1, q2), _ in ranked_logical_pairs:
+            for p1, p2 in physical_edges:
+                for seed in ((q1, q2, p1, p2), (q1, q2, p2, p1)):
+                    pi = build_layout(*seed)
+                    score = layout_score(pi)
+                    if score < best_score:
+                        best_score = score
+                        best_pi = pi
+
+        return best_pi if best_pi is not None else np.arange(N)
 
 
     def generate_DAG_levels(self, circuit):

@@ -1436,7 +1436,8 @@ size_t SabreRouter::boundary_beam_select_index(
     const std::vector<std::vector<int>>& parents_graph,
     bool reverse,
     const std::unordered_map<int, CanonicalEntry>& canonical_data,
-    SwapCache* swap_cache
+    SwapCache* swap_cache,
+    bool final_route
 ) const {
     size_t fallback_idx = 0;
     for (size_t i = 1; i < scores.size(); i++) {
@@ -1445,8 +1446,18 @@ size_t SabreRouter::boundary_beam_select_index(
         }
     }
 
-    const int beam_width = std::max(1, config_.boundary_beam_width);
-    const int beam_depth = std::max(1, config_.boundary_beam_depth);
+    const int beam_width = std::max(
+        1,
+        final_route
+            ? config_.boundary_beam_width
+            : config_.layout_trial_boundary_beam_width
+    );
+    const int beam_depth = std::max(
+        1,
+        final_route
+            ? config_.boundary_beam_depth
+            : config_.layout_trial_boundary_beam_depth
+    );
     if (beam_width <= 1 || beam_depth <= 1 || candidates.size() <= 1) {
         return fallback_idx;
     }
@@ -1784,7 +1795,8 @@ std::pair<std::vector<int>, double> SabreRouter::heuristic_search(
             pg,
             reverse,
             canonical_data,
-            &swap_cache
+            &swap_cache,
+            route_trace != nullptr
         );
         const auto& best = *candidates[best_ci];
 

@@ -94,6 +94,8 @@ struct SabreConfig {
     double three_qubit_exit_weight = 1.0;
     int boundary_beam_width = 1;
     int boundary_beam_depth = 1;
+    int layout_trial_boundary_beam_width = 1;
+    int layout_trial_boundary_beam_depth = 1;
 };
 
 struct RouteStep {
@@ -383,7 +385,8 @@ private:
         const std::vector<std::vector<int>>& parents_graph,
         bool reverse,
         const std::unordered_map<int, CanonicalEntry>& canonical_data,
-        SwapCache* swap_cache
+        SwapCache* swap_cache,
+        bool final_route
     ) const;
 
     // Check if partition is single-qubit
