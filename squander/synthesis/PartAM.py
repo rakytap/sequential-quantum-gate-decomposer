@@ -1196,12 +1196,37 @@ class qgd_Partition_Aware_Mapping:
             actual_rank_top_k = len(heuristic_ranked)
         actual_rank_top_k = min(int(actual_rank_top_k), len(heuristic_ranked))
 
-        ranked = []
-        for heuristic_cost, trial_pi in heuristic_ranked[:actual_rank_top_k]:
+        actual_rank_inputs = heuristic_ranked[:actual_rank_top_k]
+
+        def route_rank_input(item):
+            heuristic_cost, trial_pi = item
             actual_cnot, pi_out, pi_init, steps = router.route_forward(
                 [int(x) for x in trial_pi]
             )
-            ranked.append((actual_cnot, pi_out, heuristic_cost, pi_init, steps))
+            return (actual_cnot, pi_out, heuristic_cost, pi_init, steps)
+
+        use_parallel_actual_routing = (
+            self.config.get("parallel_layout_trials", False)
+            and len(actual_rank_inputs) > 1
+        )
+        if use_parallel_actual_routing:
+            from concurrent.futures import ThreadPoolExecutor
+            workers = self.config.get("layout_trial_workers", 0)
+            if workers <= 0:
+                workers = min(len(actual_rank_inputs), _available_cpus())
+
+            with ThreadPoolExecutor(max_workers=workers) as pool:
+                futures = [
+                    pool.submit(route_rank_input, item)
+                    for item in actual_rank_inputs
+                ]
+                ranked = [f.result() for f in futures]
+        else:
+            ranked = [
+                route_rank_input(item)
+                for item in actual_rank_inputs
+            ]
+
         ranked.sort(key=lambda x: (x[0], x[2]))
         ranked.extend(
             (float("inf"), pi, cost, None, None)
