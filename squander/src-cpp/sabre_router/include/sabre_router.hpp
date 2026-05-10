@@ -97,7 +97,7 @@ struct SabreConfig {
     int boundary_beam_depth = 1;
     int layout_trial_boundary_beam_width = 1;
     int layout_trial_boundary_beam_depth = 1;
-    bool adaptive_boundary_beam = true;
+    bool adaptive_boundary_beam = false;
     double successor_handoff_weight = 1.0;
 };
 

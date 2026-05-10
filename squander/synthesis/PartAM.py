@@ -194,7 +194,7 @@ class qgd_Partition_Aware_Mapping:
         self.config.setdefault('boundary_beam_depth', 1)
         self.config.setdefault('layout_trial_boundary_beam_width', None)
         self.config.setdefault('layout_trial_boundary_beam_depth', None)
-        self.config.setdefault('adaptive_boundary_beam', True)
+        self.config.setdefault('adaptive_boundary_beam', False)
         self.config.setdefault('successor_handoff_weight', 1.0)
         self.config.setdefault('initial_layout_seed_pair_top_k', 8)
         self.config.setdefault('initial_layout_line_ordering', True)
@@ -1165,7 +1165,7 @@ class qgd_Partition_Aware_Mapping:
             cfg.layout_trial_boundary_beam_depth = layout_beam_depth
         if hasattr(cfg, 'adaptive_boundary_beam'):
             cfg.adaptive_boundary_beam = bool(
-                self.config.get('adaptive_boundary_beam', True)
+                self.config.get('adaptive_boundary_beam', False)
             )
         if hasattr(cfg, 'successor_handoff_weight'):
             cfg.successor_handoff_weight = self.config.get(
