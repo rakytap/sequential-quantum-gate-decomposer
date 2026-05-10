@@ -185,6 +185,8 @@ class qgd_Partition_Aware_Mapping:
         self.config.setdefault('three_qubit_exit_weight', 1.0)
         self.config.setdefault('boundary_beam_width', 1)
         self.config.setdefault('boundary_beam_depth', 1)
+        self.config.setdefault('layout_boundary_beam_width', None)
+        self.config.setdefault('layout_boundary_beam_depth', None)
         self.config['partition_weight_model'] = 'window_turnover'
         strategy = self.config['strategy']
         self.config.setdefault('parallel_layout_trials', False)
@@ -1102,39 +1104,65 @@ class qgd_Partition_Aware_Mapping:
     ):
         from squander.synthesis._sabre_router import SabreRouter, SabreConfig
 
-        cfg = SabreConfig()
-        cfg.prefilter_top_k = self.config.get('prefilter_top_k', 50)
-        if hasattr(cfg, 'prefilter_min_per_partition'):
-            cfg.prefilter_min_per_partition = self.config.get(
-                'prefilter_min_per_partition', 2
-            )
-        if hasattr(cfg, 'prefilter_min_3q'):
-            cfg.prefilter_min_3q = self.config.get('prefilter_min_3q', 12)
-        cfg.max_E_size = self.config.get('max_E_size', 20)
-        cfg.max_lookahead = self.config.get('max_lookahead', 4)
-        cfg.E_weight = self.config.get('E_weight', 0.5)
-        cfg.E_alpha = self.config.get('E_alpha', 1.0)
-        cfg.cnot_cost = self.config.get('cnot_cost', 1.0 / 3.0)
-        cfg.sabre_iterations = n_iterations
-        cfg.n_layout_trials = max(1, n_trials)
-        cfg.random_seed = random_seed
-        cfg.decay_delta = self.config.get('decay_delta', 0.001)
-        cfg.swap_burst_budget = self.config.get('swap_burst_budget', 5)
-        cfg.path_tiebreak_weight = self.config.get(
-            'path_tiebreak_weight', 0.2
+        route_beam_width = self.config.get('boundary_beam_width', 1)
+        route_beam_depth = self.config.get('boundary_beam_depth', 1)
+        layout_beam_width = self.config.get(
+            'layout_boundary_beam_width', route_beam_width
         )
-        if hasattr(cfg, 'three_qubit_exit_weight'):
-            cfg.three_qubit_exit_weight = self.config.get(
-                'three_qubit_exit_weight', 1.0
+        layout_beam_depth = self.config.get(
+            'layout_boundary_beam_depth', route_beam_depth
+        )
+        if layout_beam_width is None:
+            layout_beam_width = route_beam_width
+        if layout_beam_depth is None:
+            layout_beam_depth = route_beam_depth
+
+        def make_cpp_config(beam_width, beam_depth):
+            cfg = SabreConfig()
+            cfg.prefilter_top_k = self.config.get('prefilter_top_k', 50)
+            if hasattr(cfg, 'prefilter_min_per_partition'):
+                cfg.prefilter_min_per_partition = self.config.get(
+                    'prefilter_min_per_partition', 2
+                )
+            if hasattr(cfg, 'prefilter_min_3q'):
+                cfg.prefilter_min_3q = self.config.get('prefilter_min_3q', 12)
+            cfg.max_E_size = self.config.get('max_E_size', 20)
+            cfg.max_lookahead = self.config.get('max_lookahead', 4)
+            cfg.E_weight = self.config.get('E_weight', 0.5)
+            cfg.E_alpha = self.config.get('E_alpha', 1.0)
+            cfg.cnot_cost = self.config.get('cnot_cost', 1.0 / 3.0)
+            cfg.sabre_iterations = n_iterations
+            cfg.n_layout_trials = max(1, n_trials)
+            cfg.random_seed = random_seed
+            cfg.decay_delta = self.config.get('decay_delta', 0.001)
+            cfg.swap_burst_budget = self.config.get('swap_burst_budget', 5)
+            cfg.path_tiebreak_weight = self.config.get(
+                'path_tiebreak_weight', 0.2
             )
-        if hasattr(cfg, 'boundary_beam_width'):
-            cfg.boundary_beam_width = self.config.get(
-                'boundary_beam_width', 1
-            )
-        if hasattr(cfg, 'boundary_beam_depth'):
-            cfg.boundary_beam_depth = self.config.get(
-                'boundary_beam_depth', 1
-            )
+            if hasattr(cfg, 'three_qubit_exit_weight'):
+                cfg.three_qubit_exit_weight = self.config.get(
+                    'three_qubit_exit_weight', 1.0
+                )
+            if hasattr(cfg, 'boundary_beam_width'):
+                cfg.boundary_beam_width = beam_width
+            if hasattr(cfg, 'boundary_beam_depth'):
+                cfg.boundary_beam_depth = beam_depth
+            return cfg
+
+        layout_cfg = make_cpp_config(layout_beam_width, layout_beam_depth)
+        route_cfg = make_cpp_config(route_beam_width, route_beam_depth)
+        use_distinct_route_router = (
+            layout_beam_width != route_beam_width
+            or layout_beam_depth != route_beam_depth
+        )
+        self._routing_layout_boundary_beam = (
+            int(layout_beam_width),
+            int(layout_beam_depth),
+        )
+        self._routing_boundary_beam = (
+            int(route_beam_width),
+            int(route_beam_depth),
+        )
         canonical_fwd = self._build_canonical_neighbor_data(
             scoring_partitions, reverse=False
         )
@@ -1151,11 +1179,18 @@ class qgd_Partition_Aware_Mapping:
             for lp in layout_partitions
         ]
 
-        router = SabreRouter(
-            cfg, D, self._adj, DAG, IDAG,
+        trial_router = SabreRouter(
+            layout_cfg, D, self._adj, DAG, IDAG,
             candidate_cache_lists, layout_partitions_lists,
             canonical_fwd, canonical_rev,
         )
+        router = trial_router
+        if use_distinct_route_router:
+            router = SabreRouter(
+                route_cfg, D, self._adj, DAG, IDAG,
+                candidate_cache_lists, layout_partitions_lists,
+                canonical_fwd, canonical_rev,
+            )
 
         seeded_pi_list = [int(x) for x in seeded_pi]
         n_trials_actual = max(1, n_trials)
@@ -1167,8 +1202,12 @@ class qgd_Partition_Aware_Mapping:
         )
 
         if not use_parallel:
+            self._routing_layout_trial_workers = 1
+            layout_trials_t0 = time.time()
             trial_results = [
-                router.run_trial(idx, seeded_pi_list, n_iterations, n_trials_actual)
+                trial_router.run_trial(
+                    idx, seeded_pi_list, n_iterations, n_trials_actual
+                )
                 for idx in trial_indices
             ]
         else:
@@ -1177,12 +1216,21 @@ class qgd_Partition_Aware_Mapping:
             if workers <= 0:
                 workers = min(n_trials_actual, _available_cpus())
 
+            self._routing_layout_trial_workers = workers
+            layout_trials_t0 = time.time()
             with ThreadPoolExecutor(max_workers=workers) as pool:
                 futures = [
-                    pool.submit(router.run_trial, idx, seeded_pi_list, n_iterations, n_trials_actual)
+                    pool.submit(
+                        trial_router.run_trial,
+                        idx,
+                        seeded_pi_list,
+                        n_iterations,
+                        n_trials_actual,
+                    )
                     for idx in trial_indices
                 ]
                 trial_results = [f.result() for f in futures]
+        self._routing_layout_trials_time = time.time() - layout_trials_t0
 
         heuristic_ranked = sorted(trial_results, key=lambda x: x[0])
         actual_rank_default = min(
@@ -1197,6 +1245,7 @@ class qgd_Partition_Aware_Mapping:
         actual_rank_top_k = min(int(actual_rank_top_k), len(heuristic_ranked))
 
         actual_rank_inputs = heuristic_ranked[:actual_rank_top_k]
+        self._routing_actual_rank_count = len(actual_rank_inputs)
 
         def route_rank_input(item):
             heuristic_cost, trial_pi = item
@@ -1209,12 +1258,14 @@ class qgd_Partition_Aware_Mapping:
             self.config.get("parallel_layout_trials", False)
             and len(actual_rank_inputs) > 1
         )
+        actual_rank_t0 = time.time()
         if use_parallel_actual_routing:
             from concurrent.futures import ThreadPoolExecutor
             workers = self.config.get("layout_trial_workers", 0)
             if workers <= 0:
                 workers = min(len(actual_rank_inputs), _available_cpus())
 
+            self._routing_actual_rank_workers = workers
             with ThreadPoolExecutor(max_workers=workers) as pool:
                 futures = [
                     pool.submit(route_rank_input, item)
@@ -1222,10 +1273,12 @@ class qgd_Partition_Aware_Mapping:
                 ]
                 ranked = [f.result() for f in futures]
         else:
+            self._routing_actual_rank_workers = 1
             ranked = [
                 route_rank_input(item)
                 for item in actual_rank_inputs
             ]
+        self._routing_actual_rank_time = time.time() - actual_rank_t0
 
         ranked.sort(key=lambda x: (x[0], x[2]))
         ranked.extend(
