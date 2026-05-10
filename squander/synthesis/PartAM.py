@@ -1288,7 +1288,10 @@ class qgd_Partition_Aware_Mapping:
                 partition_idx = int(step[1])
                 candidate_idx = int(step[2])
                 candidate = candidate_cache[partition_idx][candidate_idx]
-                if pi is not None and int(candidate.cnot_count) == 0:
+                if (
+                    pi is not None
+                    and self._candidate_is_layout_transparent(candidate)
+                ):
                     node_mapping = self._zero_cnot_dynamic_node_mapping(
                         pi, candidate
                     )
@@ -1332,6 +1335,16 @@ class qgd_Partition_Aware_Mapping:
         if not nodes:
             nodes.update(int(v) for v in candidate.node_mapping.values())
         return sorted(nodes)
+
+    @staticmethod
+    def _candidate_has_multi_qubit_body(candidate):
+        return bool(getattr(candidate, "circuit_structure", ()))
+
+    @staticmethod
+    def _candidate_is_layout_transparent(candidate):
+        return not qgd_Partition_Aware_Mapping._candidate_has_multi_qubit_body(
+            candidate
+        )
 
     @staticmethod
     def _apply_candidate_exit_to_pi(pi, candidate):
@@ -1490,7 +1503,7 @@ class qgd_Partition_Aware_Mapping:
             candidate = candidate_cache[partition_idx][candidate_idx]
             logical_qubits = tuple(int(q) for q in candidate.involved_qbits)
             entry_layout = [int(pi[q]) for q in logical_qubits]
-            if int(candidate.cnot_count) == 0:
+            if self._candidate_is_layout_transparent(candidate):
                 dynamic_node_mapping = self._zero_cnot_dynamic_node_mapping(
                     pi, candidate
                 )

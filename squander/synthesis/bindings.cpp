@@ -25,6 +25,7 @@ static CandidateData extract_candidate(py::handle pc) {
     cd.topology_idx = pc.attr("topology_idx").cast<int>();
     cd.permutation_idx = pc.attr("permutation_idx").cast<int>();
     cd.cnot_count = pc.attr("cnot_count").cast<int>();
+    cd.has_multi_qubit_body = py::len(pc.attr("circuit_structure")) > 0;
 
     // P_i, P_o: tuples of ints
     cd.P_i = pc.attr("P_i").cast<std::vector<int>>();

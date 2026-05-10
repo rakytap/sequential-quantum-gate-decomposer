@@ -484,7 +484,7 @@ int SabreRouter::estimate_swap_count(
     const std::vector<int>& pi,
     bool reverse
 ) const {
-    if (cand.cnot_count == 0) {
+    if (!cand.has_multi_qubit_body) {
         return 0;
     }
 
@@ -902,7 +902,7 @@ SabreRouter::transform_pi(
     const std::vector<int>& P_route_inv = reverse ? cand.P_o_inv : cand.P_i_inv;
     const std::vector<int>& P_exit = reverse ? cand.P_i : cand.P_o;
 
-    if (cand.cnot_count == 0) {
+    if (!cand.has_multi_qubit_body) {
         std::vector<int> dynamic_node_mapping(P_route_inv.size(), -1);
         for (size_t i = 0; i < cand.qbit_map_keys_sorted.size(); i++) {
             const int logical_q = cand.qbit_map_keys_sorted[i];
@@ -1112,7 +1112,7 @@ std::vector<int> SabreRouter::estimate_candidate_output_layout(
     const std::vector<int>& pi,
     bool reverse
 ) const {
-    if (cand.cnot_count == 0) {
+    if (!cand.has_multi_qubit_body) {
         const std::vector<int>& P_route_inv = reverse ? cand.P_o_inv : cand.P_i_inv;
         const std::vector<int>& P_exit = reverse ? cand.P_i : cand.P_o;
         std::vector<int> dynamic_node_mapping(P_route_inv.size(), -1);

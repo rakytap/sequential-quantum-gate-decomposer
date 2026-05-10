@@ -39,6 +39,7 @@ struct CandidateData {
     int permutation_idx;
     int candidate_idx = -1;
     int cnot_count;
+    bool has_multi_qubit_body = true;
 
     // Permutations within the reduced (q*) space
     // P_i[v] = position in Q* space for input routing
