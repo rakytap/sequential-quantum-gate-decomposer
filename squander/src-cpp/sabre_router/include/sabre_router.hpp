@@ -95,10 +95,6 @@ struct SabreConfig {
     double three_qubit_exit_weight = 1.0;
     int boundary_beam_width = 1;
     int boundary_beam_depth = 1;
-    int layout_trial_boundary_beam_width = 1;
-    int layout_trial_boundary_beam_depth = 1;
-    bool adaptive_boundary_beam = false;
-    double successor_handoff_weight = 1.0;
 };
 
 struct RouteStep {
@@ -388,29 +384,7 @@ private:
         const std::vector<std::vector<int>>& parents_graph,
         bool reverse,
         const std::unordered_map<int, CanonicalEntry>& canonical_data,
-        SwapCache* swap_cache,
-        bool final_route
-    ) const;
-
-    int boundary_beam_risk(
-        const std::vector<int>& F_snapshot,
-        const std::vector<const CandidateData*>& candidates,
-        const std::vector<std::vector<int>>& children_graph
-    ) const;
-
-    void collect_immediate_multi_successors(
-        int partition_idx,
-        const std::vector<std::vector<int>>& children_graph,
-        std::vector<int>& successors
-    ) const;
-
-    double successor_handoff_cost(
-        int selected_partition_idx,
-        const std::vector<int>& pi,
-        const std::vector<int>& F_after,
-        bool reverse,
-        const std::vector<std::vector<int>>& children_graph,
-        const std::unordered_map<int, CanonicalEntry>& canonical_data
+        SwapCache* swap_cache
     ) const;
 
     // Check if partition is single-qubit

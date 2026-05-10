@@ -1403,131 +1403,6 @@ SabreRouter::advance_layout_frontier(
     return {std::move(F_next), std::move(resolved_next)};
 }
 
-void SabreRouter::collect_immediate_multi_successors(
-    int partition_idx,
-    const std::vector<std::vector<int>>& children_graph,
-    std::vector<int>& successors
-) const {
-    successors.clear();
-    std::vector<uint8_t> seen(num_partitions_, 0);
-    std::deque<int> queue;
-    for (int child : children_graph[partition_idx]) {
-        queue.push_back(child);
-    }
-
-    while (!queue.empty()) {
-        const int child = queue.front();
-        queue.pop_front();
-        if (child < 0 || child >= num_partitions_ || seen[child]) {
-            continue;
-        }
-        seen[child] = 1;
-
-        if (layout_partitions_[child].is_single) {
-            for (int grandchild : children_graph[child]) {
-                queue.push_back(grandchild);
-            }
-        } else {
-            successors.push_back(child);
-        }
-    }
-}
-
-int SabreRouter::boundary_beam_risk(
-    const std::vector<int>& F_snapshot,
-    const std::vector<const CandidateData*>& candidates,
-    const std::vector<std::vector<int>>& children_graph
-) const {
-    int risk = 0;
-    for (const auto* cand : candidates) {
-        if (cand->involved_qbits.size() >= 3) {
-            risk = std::max(risk, 1);
-            break;
-        }
-    }
-
-    auto support_turnover = [&](int a, int b) {
-        const auto& as = layout_partitions_[a].involved_qbits;
-        const auto& bs = layout_partitions_[b].involved_qbits;
-        if (as.size() < 2 || bs.size() < 2) {
-            return 0;
-        }
-        int overlap = 0;
-        for (int qa : as) {
-            for (int qb : bs) {
-                if (qa == qb) {
-                    overlap++;
-                    break;
-                }
-            }
-        }
-        const int min_size = static_cast<int>(std::min(as.size(), bs.size()));
-        return min_size - overlap;
-    };
-
-    std::vector<int> successors;
-    for (int p : F_snapshot) {
-        collect_immediate_multi_successors(p, children_graph, successors);
-        for (int child : successors) {
-            const int turnover = support_turnover(p, child);
-            const int min_size = static_cast<int>(std::min(
-                layout_partitions_[p].involved_qbits.size(),
-                layout_partitions_[child].involved_qbits.size()
-            ));
-            if (turnover >= 2 || (min_size >= 3 && turnover >= min_size - 1)) {
-                risk = std::max(risk, 2);
-            }
-        }
-    }
-
-    if (risk > 0 && F_snapshot.size() > 2) {
-        risk = std::max(risk, 2);
-    }
-    return risk;
-}
-
-double SabreRouter::successor_handoff_cost(
-    int selected_partition_idx,
-    const std::vector<int>& pi,
-    const std::vector<int>& F_after,
-    bool reverse,
-    const std::vector<std::vector<int>>& children_graph,
-    const std::unordered_map<int, CanonicalEntry>& canonical_data
-) const {
-    if (config_.successor_handoff_weight <= 0.0 || F_after.empty()) {
-        return 0.0;
-    }
-
-    std::vector<int> successors;
-    collect_immediate_multi_successors(
-        selected_partition_idx,
-        children_graph,
-        successors
-    );
-    if (successors.empty()) {
-        return 0.0;
-    }
-
-    double total = 0.0;
-    int count = 0;
-    for (int child : successors) {
-        if (std::find(F_after.begin(), F_after.end(), child) == F_after.end()) {
-            continue;
-        }
-        const double cost = future_partition_cost(
-            child,
-            pi,
-            reverse,
-            canonical_data
-        );
-        if (std::isfinite(cost)) {
-            total += cost;
-            count++;
-        }
-    }
-    return count > 0 ? total / static_cast<double>(count) : 0.0;
-}
-
 size_t SabreRouter::boundary_beam_select_index(
     const std::vector<const CandidateData*>& candidates,
     const std::vector<double>& scores,
@@ -1539,8 +1414,7 @@ size_t SabreRouter::boundary_beam_select_index(
     const std::vector<std::vector<int>>& parents_graph,
     bool reverse,
     const std::unordered_map<int, CanonicalEntry>& canonical_data,
-    SwapCache* swap_cache,
-    bool final_route
+    SwapCache* swap_cache
 ) const {
     size_t fallback_idx = 0;
     for (size_t i = 1; i < scores.size(); i++) {
@@ -1549,37 +1423,20 @@ size_t SabreRouter::boundary_beam_select_index(
         }
     }
 
-    const int max_beam_width = std::max(
-        1,
-        final_route
-            ? config_.boundary_beam_width
-            : config_.layout_trial_boundary_beam_width
-    );
-    const int max_beam_depth = std::max(
-        1,
-        final_route
-            ? config_.boundary_beam_depth
-            : config_.layout_trial_boundary_beam_depth
-    );
-    const int risk = boundary_beam_risk(
-        F_snapshot,
-        candidates,
-        children_graph
-    );
-    int beam_width = max_beam_width;
-    int beam_depth = max_beam_depth;
-    if (config_.adaptive_boundary_beam) {
-        if (risk <= 0) {
-            return fallback_idx;
-        }
-        beam_width = (risk >= 2)
-            ? max_beam_width
-            : std::min(max_beam_width, 2);
-        beam_depth = (risk >= 2)
-            ? max_beam_depth
-            : std::min(max_beam_depth, 2);
-    }
+    const int beam_width = std::max(1, config_.boundary_beam_width);
+    const int beam_depth = std::max(1, config_.boundary_beam_depth);
     if (beam_width <= 1 || beam_depth <= 1 || candidates.size() <= 1) {
+        return fallback_idx;
+    }
+
+    bool has_three_qubit_candidate = false;
+    for (const auto* cand : candidates) {
+        if (cand->involved_qbits.size() >= 3) {
+            has_three_qubit_candidate = true;
+            break;
+        }
+    }
+    if (!has_three_qubit_candidate) {
         return fallback_idx;
     }
 
@@ -1617,16 +1474,8 @@ size_t SabreRouter::boundary_beam_select_index(
             parents_graph
         );
         const double trans_cost = transition_cost(cand, idx);
-        const double handoff_cost = successor_handoff_cost(
-            cand.partition_idx,
-            cached_pi[idx],
-            F_next,
-            reverse,
-            children_graph,
-            canonical_data
-        );
         states.push_back(BeamState{
-            scores[idx] + config_.successor_handoff_weight * handoff_cost,
+            scores[idx],
             trans_cost,
             cached_pi[idx],
             std::move(F_next),
@@ -1718,6 +1567,7 @@ size_t SabreRouter::boundary_beam_select_index(
                 );
                 const double future_cost = score - trans_cost;
                 const double new_total = state.total_cost + trans_cost;
+                const double rank_cost = new_total + future_cost;
 
                 auto [F_next, resolved_next] = advance_layout_frontier(
                     cand->partition_idx,
@@ -1725,19 +1575,6 @@ size_t SabreRouter::boundary_beam_select_index(
                     state.resolved,
                     children_graph,
                     parents_graph
-                );
-                const double handoff_cost = successor_handoff_cost(
-                    cand->partition_idx,
-                    output_perm,
-                    F_next,
-                    reverse,
-                    children_graph,
-                    canonical_data
-                );
-                const double rank_cost = (
-                    new_total
-                    + future_cost
-                    + config_.successor_handoff_weight * handoff_cost
                 );
                 expanded.push_back(BeamState{
                     rank_cost,
@@ -1925,8 +1762,7 @@ std::pair<std::vector<int>, double> SabreRouter::heuristic_search(
             pg,
             reverse,
             canonical_data,
-            &swap_cache,
-            route_trace != nullptr
+            &swap_cache
         );
         const auto& best = *candidates[best_ci];
 
