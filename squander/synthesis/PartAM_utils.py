@@ -443,11 +443,12 @@ class PartitionSynthesisResult:
         self._topology_cache = topology_cache
 
     def add_result(self, permutations_pair, synthesised_circuit, synthesised_parameters, topology_idx):
+        flat_circuit = synthesised_circuit.get_Flat_Circuit()
         self.permutations_pairs[topology_idx].append(permutations_pair)
         self.synthesised_circuits[topology_idx].append(synthesised_circuit)
         self.synthesised_parameters[topology_idx].append(synthesised_parameters)
-        self.cnot_counts[topology_idx].append(synthesised_circuit.get_Gate_Nums().get('CNOT', 0))
-        self.circuit_structures[topology_idx].append(self.extract_circuit_structure(synthesised_circuit))
+        self.cnot_counts[topology_idx].append(flat_circuit.get_Gate_Nums().get('CNOT', 0))
+        self.circuit_structures[topology_idx].append(self.extract_circuit_structure(flat_circuit))
     
     def extract_circuit_structure(self, circuit):
         circuit_structure = []
