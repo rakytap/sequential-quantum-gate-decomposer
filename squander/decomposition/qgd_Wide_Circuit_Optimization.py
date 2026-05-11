@@ -142,7 +142,7 @@ def generate_squander_seqpam(squander_config, block_size):
     from bqskit.compiler import Workflow, BasePass
 
     class SquanderILPPartitioner(BasePass):
-        """Partition a bqskit circuit using squander's ILP."""
+        """Partition a bqskit circuit using Squander's ILP partitioner."""
 
         def __init__(self, block_size):
             self.block_size = block_size
@@ -150,11 +150,10 @@ def generate_squander_seqpam(squander_config, block_size):
         async def run(self, circuit, data):
             from bqskit.ir import Circuit as BQCircuit
             from bqskit.ir.lang.qasm2 import OPENQASM2Language
+            from qiskit import qasm2
             from qiskit import QuantumCircuit as QkCircuit
             from squander import Qiskit_IO
-            from squander.partitioning.ilp import (
-                get_all_partitions, _get_topo_order, ilp_global_optimal,
-            )
+            from squander.partitioning.partition import PartitionCircuit
 
             # Unfold any CircuitGate blocks (e.g. from a prior SubtopologySelectionPass)
             # so that bqskit op indices align 1:1 with squander gate indices after the
@@ -164,125 +163,42 @@ def generate_squander_seqpam(squander_config, block_size):
 
             qasm_str = OPENQASM2Language().encode(flat_circuit)
             qk_circ = QkCircuit.from_qasm_str(qasm_str)
-            sqdr_circ, _ = Qiskit_IO.convert_Qiskit_to_Squander(qk_circ)
+            sqdr_circ, sqdr_parameters = Qiskit_IO.convert_Qiskit_to_Squander(
+                qk_circ
+            )
+            partitioned_circuit, parameters, _ = PartitionCircuit(
+                sqdr_circ,
+                sqdr_parameters,
+                self.block_size,
+                strategy="ilp",
+            )
 
-            allparts, g, go, rgo, sq_chains, gate_to_qubit, _ = \
-                get_all_partitions(sqdr_circ, self.block_size)
-            gate_dict = {i: gate for i, gate in enumerate(sqdr_circ.get_Gates())}
-
-            L_parts, _ = ilp_global_optimal(allparts, g)
-
-            bqskit_ops = list(flat_circuit.operations_with_cycles())
-
-            sqc_pre     = {x[0]: x for x in sq_chains if rgo[x[0]]}
-            sqc_post    = {x[-1]: x for x in sq_chains if go[x[-1]]}
-            sqc_prepost = {x[0]: x for x in sq_chains
-                           if x[0] in sqc_pre and x[-1] in sqc_post}
-
-            # Build expanded gate_idxs per ILP partition.  The ILP operates on a
-            # graph with single-qubit chains contracted out, so only reinsert
-            # chains that are enclosed by a selected partition.  Do not absorb
-            # every intermediate operation on these qubits: BQSKit sees each
-            # CircuitGate as a synthesis block, and broad expansion creates
-            # large overlapping blocks that are expensive and can duplicate work.
-            expanded = {}
-            for i in L_parts:
-                part = allparts[i]
-                surrounded = {
-                    t for s in part for t in go[s]
-                    if t in sqc_prepost
-                    and go[sqc_prepost[t][-1]]
-                    and next(iter(go[sqc_prepost[t][-1]])) in part
-                }
-                gate_idxs = frozenset.union(part, *(sqc_prepost[v] for v in surrounded))
-                expanded[i] = gate_idxs
-
-            # Sort partitions by their minimum gate index to preserve original order
-            seen_parts = set()
-            sorted_parts = []
-            claimed_gates = set()
-            for i in L_parts:
-                gate_idxs = expanded[i] - claimed_gates
-                if not gate_idxs:
-                    continue
-                part_key = min(gate_idxs)
-                if part_key not in seen_parts:
-                    seen_parts.add(part_key)
-                    sorted_parts.append((part_key, gate_idxs))
-                    claimed_gates.update(gate_idxs)
-            sorted_parts.sort(key=lambda x: x[0])
-
-            # Map gate_idx -> sorted partition index
-            gate_to_part = {}
-            for pidx, (_, gate_idxs) in enumerate(sorted_parts):
-                for gi in gate_idxs:
-                    gate_to_part[gi] = pidx
-
-            # PAMRoutingPass expects permutation data for every non-barrier
-            # operation it may execute.  Keep gates outside ILP blocks wrapped as
-            # CircuitGates too, but group whole unclaimed 1q chains to avoid
-            # spawning one BQSKit task per single-qubit gate.
-            unclaimed_chain_by_gate = {}
-            for chain in sq_chains:
-                if all(gi not in gate_to_part for gi in chain):
-                    for gi in chain:
-                        unclaimed_chain_by_gate[gi] = chain
-
-            # Build partitioned circuit by iterating gates in original order
             partitioned = BQCircuit(circuit.num_qudits, circuit.radixes)
-            built_parts = set()
-            built_chains = set()
+            qasm = OPENQASM2Language()
 
-            for gi, (_, op) in enumerate(bqskit_ops):
-                pidx = gate_to_part.get(gi, -1)
+            for subcircuit in partitioned_circuit.get_Gates():
+                global_qudits = list(subcircuit.get_Qbits())
+                if not global_qudits:
+                    continue
 
-                if pidx >= 0 and pidx not in built_parts:
-                    built_parts.add(pidx)
-                    _, gate_idxs = sorted_parts[pidx]
-                    global_qudits = sorted({
-                        q for ggi in gate_idxs
-                        for q in gate_dict[ggi].get_Involved_Qbits()
-                    })
-                    local_map = {gq: l for l, gq in enumerate(global_qudits)}
-
-                    topo = _get_topo_order(
-                        {x: go[x] & gate_idxs for x in gate_idxs},
-                        {x: rgo[x] & gate_idxs for x in gate_idxs},
-                        gate_to_qubit,
-                    )
-                    sub = BQCircuit(len(global_qudits))
-                    for ggi in topo:
-                        _, gop = bqskit_ops[ggi]
-                        sub.append_gate(gop.gate, [local_map[q] for q in gop.location], gop.params)
-                    partitioned.append_circuit(sub, global_qudits, as_circuit_gate=True)
-
-                elif pidx < 0:
-                    chain = unclaimed_chain_by_gate.get(gi)
-                    if chain is not None:
-                        if chain in built_chains:
-                            continue
-                        built_chains.add(chain)
-                        global_qudits = list(gate_dict[chain[0]].get_Involved_Qbits())
-                        local_map = {gq: l for l, gq in enumerate(global_qudits)}
-                        sub = BQCircuit(len(global_qudits))
-                        for ggi in chain:
-                            _, gop = bqskit_ops[ggi]
-                            sub.append_gate(
-                                gop.gate,
-                                [local_map[q] for q in gop.location],
-                                gop.params,
-                            )
-                        partitioned.append_circuit(
-                            sub, global_qudits, as_circuit_gate=True
-                        )
-                    else:
-                        sub = BQCircuit(len(op.location))
-                        sub.append_gate(
-                            op.gate, list(range(len(op.location))), op.params
-                        )
-                        partitioned.append_circuit(
-                            sub, list(op.location), as_circuit_gate=True
-                        )
+                start = subcircuit.get_Parameter_Start_Index()
+                stop = start + subcircuit.get_Parameter_Num()
+                sub_parameters = parameters[start:stop]
+                local_map = {q: i for i, q in enumerate(global_qudits)}
+                local_subcircuit = subcircuit.Remap_Qbits(
+                    local_map,
+                    len(global_qudits),
+                )
+                local_qiskit = Qiskit_IO.get_Qiskit_Circuit(
+                    local_subcircuit,
+                    sub_parameters,
+                )
+                local_bqskit = qasm.decode(qasm2.dumps(local_qiskit))
+                partitioned.append_circuit(
+                    local_bqskit,
+                    global_qudits,
+                    as_circuit_gate=True,
+                )
 
             circuit.become(partitioned, False)
 
