@@ -443,9 +443,26 @@ class PartitionSynthesisResult:
         self._topology_cache = topology_cache
 
     def add_result(self, permutations_pair, synthesised_circuit, synthesised_parameters, topology_idx):
+        from squander.utils import circuit_to_CNOT_basis
+
         flat_circuit = synthesised_circuit.get_Flat_Circuit()
+        flat_circuit, synthesised_parameters = circuit_to_CNOT_basis(
+            flat_circuit,
+            np.asarray(synthesised_parameters),
+        )
+        unsupported_multi = [
+            gate.get_Name()
+            for gate in flat_circuit.get_Gates()
+            if len(gate.get_Involved_Qbits()) > 1
+            and gate.get_Name() != "CNOT"
+        ]
+        if unsupported_multi:
+            raise ValueError(
+                "Partition synthesis produced non-CNOT multi-qubit gates "
+                f"after CNOT-basis conversion: {unsupported_multi}"
+            )
         self.permutations_pairs[topology_idx].append(permutations_pair)
-        self.synthesised_circuits[topology_idx].append(synthesised_circuit)
+        self.synthesised_circuits[topology_idx].append(flat_circuit)
         self.synthesised_parameters[topology_idx].append(synthesised_parameters)
         self.cnot_counts[topology_idx].append(flat_circuit.get_Gate_Nums().get('CNOT', 0))
         self.circuit_structures[topology_idx].append(self.extract_circuit_structure(flat_circuit))

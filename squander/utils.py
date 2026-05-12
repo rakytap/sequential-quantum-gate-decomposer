@@ -460,6 +460,7 @@ def circuit_to_CNOT_basis(circ: Circuit, parameters: np.ndarray):
         RXX,
         RYY,
         RZZ,
+        Permutation,
     )
 
     gates = circ.get_Gates()
@@ -652,6 +653,24 @@ def circuit_to_CNOT_basis(circ: Circuit, parameters: np.ndarray):
             circuit.add_CNOT(t2, t1)
             circuit.add_CNOT(t1, t2)
             params.append([])
+        elif isinstance(gate, Permutation):
+            pattern = list(gate.get_Pattern())
+            inverse_pattern = [0] * len(pattern)
+            for idx, mapped_idx in enumerate(pattern):
+                inverse_pattern[mapped_idx] = idx
+            current = list(range(len(pattern)))
+            for idx, target in enumerate(inverse_pattern):
+                swap_idx = current.index(target)
+                if swap_idx == idx:
+                    continue
+                circuit.add_CNOT(idx, swap_idx)
+                circuit.add_CNOT(swap_idx, idx)
+                circuit.add_CNOT(idx, swap_idx)
+                current[idx], current[swap_idx] = (
+                    current[swap_idx],
+                    current[idx],
+                )
+            params.append([])
         elif isinstance(gate, RXX):
             t1, t2 = gate.get_Target_Qbits()
             circuit.add_CNOT(t1, t2)
@@ -695,6 +714,8 @@ def circuit_to_CNOT_basis(circ: Circuit, parameters: np.ndarray):
                 ]
             )
 
+    if not params:
+        return circuit, np.array([])
     return circuit, np.concatenate(params)
 
 
