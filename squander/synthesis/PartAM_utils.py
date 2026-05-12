@@ -634,24 +634,28 @@ class PartitionScoreData:
 
 def check_circuit_compatibility(circuit: Circuit, topology):
     circuit_topology = []
-    gates = circuit.get_Gates()
-    for gate in gates:
+
+    def collect_two_qubit_edges(gate):
+        if isinstance(gate, Circuit):
+            for subgate in gate.get_Gates():
+                collect_two_qubit_edges(subgate)
+            return
+
         qubits = gate.get_Involved_Qbits()
         if len(qubits) == 1:
-            continue
-        elif len(qubits) == 2:
+            return
+        if len(qubits) == 2:
             qubits = tuple(qubits)
             if qubits not in circuit_topology and qubits[::-1] not in circuit_topology:
                 circuit_topology.append(qubits)
-        else:
-            gates_new = gate.get_Gates()
-            for gate_new in gates_new:
-                qubits_new = gate_new.get_Involved_Qbits()
-                if len(qubits_new)==1:
-                    continue
-                qubits_new = tuple(qubits_new)
-                if qubits_new not in circuit_topology and qubits_new[::-1] not in circuit_topology:
-                    circuit_topology.append(qubits_new)
+            return
+
+        for subgate in gate.get_Gates():
+            collect_two_qubit_edges(subgate)
+
+    for gate in circuit.get_Gates():
+        collect_two_qubit_edges(gate)
+
     for qubits in circuit_topology:
         if qubits not in topology and qubits[::-1] not in topology:
             return False
