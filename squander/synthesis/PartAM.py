@@ -1,6 +1,7 @@
 """
 This is an implementation of Partition Aware Mapping.
 """
+import csv
 import logging
 import multiprocessing as mp
 import os
@@ -187,6 +188,7 @@ class qgd_Partition_Aware_Mapping:
         self.config.setdefault('boundary_beam_depth', 1)
         self.config.setdefault('layout_boundary_beam_width', None)
         self.config.setdefault('layout_boundary_beam_depth', None)
+        self.config.setdefault('routing_trace_path', None)
         self.config['partition_weight_model'] = 'window_turnover'
         strategy = self.config['strategy']
         self.config.setdefault('parallel_layout_trials', False)
@@ -1361,6 +1363,24 @@ class qgd_Partition_Aware_Mapping:
         return partition_order
 
     @staticmethod
+    def _csv_list(values):
+        return " ".join(str(int(v)) for v in values)
+
+    @staticmethod
+    def _csv_edges(edges):
+        return " ".join(f"{int(u)}-{int(v)}" for u, v in edges)
+
+    @staticmethod
+    def _candidate_physical_nodes(candidate):
+        nodes = set()
+        for u, v in candidate.topology:
+            nodes.add(int(u))
+            nodes.add(int(v))
+        if not nodes:
+            nodes.update(int(v) for v in candidate.node_mapping.values())
+        return sorted(nodes)
+
+    @staticmethod
     def _candidate_has_multi_qubit_body(candidate):
         return bool(getattr(candidate, "circuit_structure", ()))
 
@@ -1397,6 +1417,233 @@ class qgd_Partition_Aware_Mapping:
                 logical_q = qbit_map_inverse[q_star]
                 pi_out[logical_q] = node_mapping[mapped_qstar]
         return pi_out
+
+    @staticmethod
+    def _immediate_multi_successors(partition_idx, DAG, layout_partitions):
+        successors = []
+        seen = set()
+        queue = deque(DAG[partition_idx])
+        while queue:
+            child = queue.popleft()
+            if child in seen:
+                continue
+            seen.add(child)
+            if layout_partitions[child]["is_single"]:
+                queue.extend(DAG[child])
+            else:
+                successors.append(child)
+        return successors
+
+    @staticmethod
+    def _support_overlap_summary(partition_idx, successors, layout_partitions):
+        support = set(layout_partitions[partition_idx]["involved_qbits"])
+        summary = []
+        max_overlap = 0
+        min_turnover = None
+        for child in successors:
+            child_support = set(layout_partitions[child]["involved_qbits"])
+            overlap = len(support & child_support)
+            turnover = min(len(support), len(child_support)) - overlap
+            max_overlap = max(max_overlap, overlap)
+            min_turnover = (
+                turnover
+                if min_turnover is None
+                else min(min_turnover, turnover)
+            )
+            summary.append(f"{child}:{overlap}/{turnover}")
+        return (
+            max_overlap,
+            0 if min_turnover is None else min_turnover,
+            " ".join(summary),
+        )
+
+    @staticmethod
+    def _eligible_multi_frontier(resolved, IDAG, layout_partitions):
+        frontier = []
+        for idx, info in enumerate(layout_partitions):
+            if resolved[idx] or info["is_single"]:
+                continue
+            if all(resolved[parent] for parent in IDAG[idx]):
+                frontier.append(idx)
+        return frontier
+
+    def _write_cpp_routing_trace(
+        self,
+        trace_path,
+        steps,
+        pi_initial,
+        candidate_cache,
+        layout_partitions,
+        DAG,
+        IDAG,
+        N,
+    ):
+        """Write a CSV trace for the final selected C++ route."""
+        if not trace_path:
+            return
+
+        trace_dir = os.path.dirname(os.path.abspath(trace_path))
+        if trace_dir:
+            os.makedirs(trace_dir, exist_ok=True)
+
+        pi = [int(x) for x in pi_initial]
+        resolved = [False] * len(layout_partitions)
+        pending_swaps = []
+        cumulative_swaps = 0
+        cumulative_body_cnot = 0
+        rows = []
+
+        for route_step_idx, step in enumerate(steps):
+            kind = step[0]
+            if kind == "swap":
+                swaps = [(int(u), int(v)) for u, v in step[1]]
+                if swaps:
+                    pending_swaps.extend(swaps)
+                    pi = self._apply_swaps_to_pi(pi, swaps)
+                continue
+
+            if kind == "single":
+                partition_idx = int(step[1])
+                logical_qubits = tuple(
+                    layout_partitions[partition_idx]["involved_qbits"]
+                )
+                physical_qubit = int(step[2])
+                resolved[partition_idx] = True
+                rows.append({
+                    "row": len(rows),
+                    "route_step": route_step_idx,
+                    "kind": "single",
+                    "partition_idx": partition_idx,
+                    "candidate_idx": "",
+                    "topology_idx": "",
+                    "permutation_idx": "",
+                    "logical_qubits": self._csv_list(logical_qubits),
+                    "physical_nodes": str(physical_qubit),
+                    "topology_edges": "",
+                    "entry_layout": self._csv_list(
+                        pi[q] for q in logical_qubits
+                    ),
+                    "exit_layout": self._csv_list(
+                        pi[q] for q in logical_qubits
+                    ),
+                    "swap_count": 0,
+                    "routing_cnot": 0,
+                    "body_cnot": 0,
+                    "cumulative_swap_count": cumulative_swaps,
+                    "cumulative_routing_cnot": 3 * cumulative_swaps,
+                    "cumulative_body_cnot": cumulative_body_cnot,
+                    "frontier_size": len(
+                        self._eligible_multi_frontier(
+                            resolved, IDAG, layout_partitions
+                        )
+                    ),
+                    "successor_count": 0,
+                    "max_successor_overlap": 0,
+                    "min_successor_turnover": 0,
+                    "successor_overlap": "",
+                    "swaps": "",
+                })
+                continue
+
+            if kind != "partition":
+                continue
+
+            partition_idx = int(step[1])
+            candidate_idx = int(step[2])
+            candidate = candidate_cache[partition_idx][candidate_idx]
+            logical_qubits = tuple(int(q) for q in candidate.involved_qbits)
+            entry_layout = [int(pi[q]) for q in logical_qubits]
+            if self._candidate_is_layout_transparent(candidate):
+                dynamic_node_mapping = self._zero_cnot_dynamic_node_mapping(
+                    pi, candidate
+                )
+                exit_pi = self._apply_zero_cnot_candidate_exit_to_pi(
+                    pi, candidate, dynamic_node_mapping
+                )
+                physical_nodes = sorted(dynamic_node_mapping.values())
+                topology_edges = ""
+            else:
+                exit_pi = self._apply_candidate_exit_to_pi(pi, candidate)
+                physical_nodes = self._candidate_physical_nodes(candidate)
+                topology_edges = self._csv_edges(candidate.topology)
+            exit_layout = [int(exit_pi[q]) for q in logical_qubits]
+            successors = self._immediate_multi_successors(
+                partition_idx, DAG, layout_partitions
+            )
+            max_overlap, min_turnover, overlap_summary = (
+                self._support_overlap_summary(
+                    partition_idx, successors, layout_partitions
+                )
+            )
+            frontier_size = len(
+                self._eligible_multi_frontier(
+                    resolved, IDAG, layout_partitions
+                )
+            )
+            swap_count = len(pending_swaps)
+            cumulative_swaps += swap_count
+            cumulative_body_cnot += int(candidate.cnot_count)
+            rows.append({
+                "row": len(rows),
+                "route_step": route_step_idx,
+                "kind": "partition",
+                "partition_idx": partition_idx,
+                "candidate_idx": candidate_idx,
+                "topology_idx": int(candidate.topology_idx),
+                "permutation_idx": int(candidate.permutation_idx),
+                "logical_qubits": self._csv_list(logical_qubits),
+                "physical_nodes": self._csv_list(physical_nodes),
+                "topology_edges": topology_edges,
+                "entry_layout": self._csv_list(entry_layout),
+                "exit_layout": self._csv_list(exit_layout),
+                "swap_count": swap_count,
+                "routing_cnot": 3 * swap_count,
+                "body_cnot": int(candidate.cnot_count),
+                "cumulative_swap_count": cumulative_swaps,
+                "cumulative_routing_cnot": 3 * cumulative_swaps,
+                "cumulative_body_cnot": cumulative_body_cnot,
+                "frontier_size": frontier_size,
+                "successor_count": len(successors),
+                "max_successor_overlap": max_overlap,
+                "min_successor_turnover": min_turnover,
+                "successor_overlap": overlap_summary,
+                "swaps": self._csv_edges(pending_swaps),
+            })
+            resolved[partition_idx] = True
+            pi = exit_pi
+            pending_swaps = []
+
+        fieldnames = [
+            "row",
+            "route_step",
+            "kind",
+            "partition_idx",
+            "candidate_idx",
+            "topology_idx",
+            "permutation_idx",
+            "logical_qubits",
+            "physical_nodes",
+            "topology_edges",
+            "entry_layout",
+            "exit_layout",
+            "swap_count",
+            "routing_cnot",
+            "body_cnot",
+            "cumulative_swap_count",
+            "cumulative_routing_cnot",
+            "cumulative_body_cnot",
+            "frontier_size",
+            "successor_count",
+            "max_successor_overlap",
+            "min_successor_turnover",
+            "successor_overlap",
+            "swaps",
+        ]
+        with open(trace_path, "w", newline="") as f:
+            writer = csv.DictWriter(f, fieldnames=fieldnames)
+            writer.writeheader()
+            writer.writerows(rows)
+        self._routing_trace_path = trace_path
 
 
     def _rank_layout_trials_by_actual_routing(
@@ -1500,6 +1747,8 @@ class qgd_Partition_Aware_Mapping:
         partition_body_cnot = 0
         routing_elapsed_before_cleanup = None
         cleanup_total = 0.0
+        final_route_steps = None
+        final_route_pi_initial = None
 
         if n_iterations == 0:
             F = self.get_initial_layer(IDAG, N, optimized_partitions)
@@ -1585,6 +1834,8 @@ class qgd_Partition_Aware_Mapping:
                 best_pre_cleanup = None
                 best_routing_swap_cnot = 0
                 best_partition_body_cnot = 0
+                best_route_steps = None
+                best_route_pi_initial = None
 
                 for _, trial_pi, _, trace_pi_init, route_steps in top_layouts:
                     self._restore_single_qubit_circuits(
@@ -1644,6 +1895,12 @@ class qgd_Partition_Aware_Mapping:
                         best_pi = pi_out
                         best_routing_swap_cnot = trial_routing_cnot
                         best_partition_body_cnot = trial_partition_cnot
+                        best_route_steps = route_steps
+                        best_route_pi_initial = (
+                            pi_init.copy()
+                            if hasattr(pi_init, "copy")
+                            else list(pi_init)
+                        )
 
                 final_cleanup_config = dict(cleanup_config)
                 final_cleanup_config['use_osr'] = 1
@@ -1662,6 +1919,8 @@ class qgd_Partition_Aware_Mapping:
                 pi = best_pi
                 routing_swap_cnot = best_routing_swap_cnot
                 partition_body_cnot = best_partition_body_cnot
+                final_route_steps = best_route_steps
+                final_route_pi_initial = best_route_pi_initial
 
             else:
                 _, best_pi, _, trace_pi_init, route_steps = trial_results[0]
@@ -1682,6 +1941,8 @@ class qgd_Partition_Aware_Mapping:
                     )
                     pi = np.asarray(best_pi, dtype=np.int64)
                     pi_initial = np.asarray(trace_pi_init, dtype=np.int64)
+                    final_route_steps = route_steps
+                    final_route_pi_initial = pi_initial.copy()
                 else:
                     F = self.get_initial_layer(IDAG, N, optimized_partitions)
                     partition_order, pi, pi_initial = self.Heuristic_Search(
@@ -1731,6 +1992,25 @@ class qgd_Partition_Aware_Mapping:
 
         self._routing_swap_cnot = routing_swap_cnot
         self._partition_body_cnot = partition_body_cnot
+
+        routing_trace_path = self.config.get("routing_trace_path", None)
+        if routing_trace_path:
+            if final_route_steps is not None and final_route_pi_initial is not None:
+                self._write_cpp_routing_trace(
+                    routing_trace_path,
+                    final_route_steps,
+                    final_route_pi_initial,
+                    candidate_cache,
+                    layout_partitions,
+                    DAG,
+                    IDAG,
+                    N,
+                )
+            else:
+                logging.warning(
+                    "routing_trace_path was set, but no C++ route steps were "
+                    "available for the selected route."
+                )
 
         return final_circuit, final_parameters, pi_initial, pi
 

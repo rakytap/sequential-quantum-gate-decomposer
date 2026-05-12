@@ -453,6 +453,8 @@ class PartitionSynthesisResult:
     def extract_circuit_structure(self, circuit):
         circuit_structure = []
         for gate in circuit.get_Gates():
+            if gate.get_Name() == "Permutation":
+                continue
             involved_qbits = gate.get_Involved_Qbits()
             if len(involved_qbits) != 1:
                 circuit_structure.append(involved_qbits)
