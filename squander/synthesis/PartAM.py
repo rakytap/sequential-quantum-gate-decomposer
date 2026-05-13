@@ -189,13 +189,20 @@ class qgd_Partition_Aware_Mapping:
         self.config.setdefault('layout_boundary_beam_width', None)
         self.config.setdefault('layout_boundary_beam_depth', None)
         self.config.setdefault('routing_trace_path', None)
-        self.config['partition_weight_model'] = 'window_turnover'
+        self.config.setdefault('partition_weight_model', 'window_turnover')
         strategy = self.config['strategy']
         self.config.setdefault('parallel_layout_trials', False)
         self.config.setdefault('layout_trial_workers', 0)
         allowed_strategies = ['TreeSearch', 'TabuSearch', 'Adaptive']
         if not strategy in allowed_strategies:
             raise Exception(f"The strategy should be either of {allowed_strategies}, got {strategy}.")
+        allowed_partition_weight_models = ['window_turnover', 'ilp']
+        if self.config['partition_weight_model'] not in allowed_partition_weight_models:
+            raise Exception(
+                f"The partition_weight_model should be either of "
+                f"{allowed_partition_weight_models}, got "
+                f"{self.config['partition_weight_model']}."
+            )
         
         # Initialize caches for performance optimization
         self._topology_cache = {}  # {frozenset(edges): [topology_candidates]}
@@ -653,13 +660,20 @@ class qgd_Partition_Aware_Mapping:
         single_qubit_chains_prepost = {x[0]: x for x in single_qubit_chains if x[0] in single_qubit_chains_pre and x[-1] in single_qubit_chains_post}
 
         # ---- Phase 2: ILP partition selection ----
-        # PartAM keeps one partitioning strategy: window_turnover.
-        ilp_weights = self._parts_to_window_turnover_weights(
-            allparts,
-            gate_dict,
-            g,
-            pack_credit_weight=self.config['pack_credit_weight'],
-        )
+        partition_weight_model = self.config['partition_weight_model']
+        if partition_weight_model == 'ilp':
+            ilp_weights = None
+        elif partition_weight_model == 'window_turnover':
+            ilp_weights = self._parts_to_window_turnover_weights(
+                allparts,
+                gate_dict,
+                g,
+                pack_credit_weight=self.config['pack_credit_weight'],
+            )
+        else:
+            raise Exception(
+                f"Unknown partition_weight_model: {partition_weight_model}."
+            )
         L_parts, _ = ilp_global_optimal(allparts, g, weights=ilp_weights)
 
         # ---- Phase 3: Build gate sets for selected partitions (+ standalone chains) ----
