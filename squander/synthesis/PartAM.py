@@ -7,7 +7,7 @@ import multiprocessing as mp
 import os
 import time
 from collections import deque, defaultdict
-from itertools import permutations
+from itertools import combinations, permutations
 from multiprocessing import Pool
 from typing import List, Optional
 
@@ -189,7 +189,19 @@ class qgd_Partition_Aware_Mapping:
         self.config.setdefault('layout_boundary_beam_width', None)
         self.config.setdefault('layout_boundary_beam_depth', None)
         self.config.setdefault('routing_trace_path', None)
-        self.config.setdefault('partition_weight_model', 'window_turnover')
+        self.config['partition_weight_model'] = 'window_turnover'
+        self.config.setdefault('partition_density_weight', 4.0)
+        self.config.setdefault('partition_boundary_weight', 0.9)
+        self.config.setdefault('partition_depth_balance_weight', 0.25)
+        self.config.setdefault('partition_triangle_weight', 2.5)
+        self.config.setdefault('partition_triangle_threshold', 0.6)
+        self.config.setdefault('partition_triangle_window_radius', 8)
+        self.config.setdefault('partition_synthesis_cost_weight', 1.0)
+        self.config.setdefault('partition_min_cost', 0.05)
+        self.config.setdefault(
+            'partition_width_penalties',
+            {1: 0.25, 2: 1.0, 3: 4.0, 4: 16.0},
+        )
         strategy = self.config['strategy']
         self.config.setdefault('parallel_layout_trials', False)
         self.config.setdefault('layout_trial_workers', 0)
@@ -260,6 +272,147 @@ class qgd_Partition_Aware_Mapping:
         return frozenset(qubits_in_part), frozenset(active_pairs)
 
     @staticmethod
+    def _two_qubit_gate_pair(gate):
+        qbs = list(gate.get_Involved_Qbits())
+        if len(qbs) != 2:
+            return None
+        return (min(qbs[0], qbs[1]), max(qbs[0], qbs[1]))
+
+    @staticmethod
+    def _part_two_qubit_gate_count(part, gate_dict):
+        count = 0
+        for gate_idx in part:
+            gate = gate_dict.get(gate_idx)
+            if gate is None:
+                continue
+            if qgd_Partition_Aware_Mapping._two_qubit_gate_pair(gate) is not None:
+                count += 1
+        return count
+
+    @staticmethod
+    def _synthesis_capacity(width):
+        return float(4 ** max(int(width), 1))
+
+    @staticmethod
+    def _configured_width_penalty(width, penalties):
+        if penalties is None:
+            penalties = {1: 0.25, 2: 1.0, 3: 4.0, 4: 16.0}
+
+        exact = None
+        if isinstance(penalties, dict):
+            exact = penalties.get(width)
+            if exact is None:
+                exact = penalties.get(str(width))
+        if exact is not None:
+            return float(exact)
+
+        if width <= 1:
+            return 0.25
+        if width == 2:
+            return 1.0
+        if width == 3:
+            return 4.0
+        if width == 4:
+            return 16.0
+        return 16.0 * (4.0 ** (width - 4))
+
+    @staticmethod
+    def _restricted_longest_path_depth(nodes, g, rg, topo_order):
+        nodes = set(nodes)
+        if not nodes:
+            return 0
+
+        depth = {}
+        best = 0
+        for gate_idx in topo_order:
+            if gate_idx not in nodes:
+                continue
+            pred_depth = 0
+            for pred in rg.get(gate_idx, ()):
+                if pred in nodes:
+                    pred_depth = max(pred_depth, depth.get(pred, 0))
+            depth[gate_idx] = pred_depth + 1
+            best = max(best, depth[gate_idx])
+        return best
+
+    @staticmethod
+    def _boundary_two_qubit_gate_count(part, support, g, rg, gate_dict,
+                                       max_partition_size):
+        """Count adjacent 2q gates that this candidate leaves over a boundary."""
+        support = set(support)
+        boundary_gates = set()
+        for gate_idx in part:
+            neighbors = set(g.get(gate_idx, ())) | set(rg.get(gate_idx, ()))
+            for other_idx in neighbors:
+                if other_idx in part:
+                    continue
+                gate = gate_dict.get(other_idx)
+                if gate is None:
+                    continue
+                if qgd_Partition_Aware_Mapping._two_qubit_gate_pair(gate) is None:
+                    continue
+                other_support = set(gate.get_Involved_Qbits())
+                if not (support & other_support):
+                    continue
+                if (
+                    max_partition_size is not None
+                    and len(support | other_support) > max_partition_size
+                ):
+                    continue
+                boundary_gates.add(other_idx)
+        return len(boundary_gates)
+
+    @staticmethod
+    def _pair_counts_in_topological_window(part, topo_order, topo_index,
+                                           gate_dict, radius):
+        if not part:
+            return defaultdict(int)
+
+        positions = [topo_index[g] for g in part if g in topo_index]
+        if not positions:
+            return defaultdict(int)
+
+        lo = max(0, min(positions) - radius)
+        hi = min(len(topo_order) - 1, max(positions) + radius)
+        pair_counts = defaultdict(int)
+        for pos in range(lo, hi + 1):
+            gate = gate_dict.get(topo_order[pos])
+            if gate is None:
+                continue
+            pair = qgd_Partition_Aware_Mapping._two_qubit_gate_pair(gate)
+            if pair is not None:
+                pair_counts[pair] += 1
+        return pair_counts
+
+    @staticmethod
+    def _triangle_density_from_pair_counts(support, pair_counts):
+        """Return a balanced local triangle score in [0, 1].
+
+        A chain has density zero because one triangle edge is missing.  A
+        balanced three-edge interaction has density one, while skewed triangles
+        are discounted by the weakest edge's share of the local interactions.
+        """
+        support = sorted(support)
+        if len(support) < 3:
+            return 0.0
+
+        best_density = 0.0
+        for a, b, c in combinations(support, 3):
+            counts = [
+                pair_counts.get((min(a, b), max(a, b)), 0),
+                pair_counts.get((min(a, c), max(a, c)), 0),
+                pair_counts.get((min(b, c), max(b, c)), 0),
+            ]
+            if min(counts) <= 0:
+                continue
+            total = sum(counts)
+            if total <= 0:
+                continue
+            density = (3.0 * min(counts)) / float(total)
+            best_density = max(best_density, min(density, 1.0))
+        return best_density
+
+    @staticmethod
     def _turnover_between_supports(support_a, support_b):
         if len(support_a) < 2 or len(support_b) < 2:
             return None
@@ -290,86 +443,154 @@ class qgd_Partition_Aware_Mapping:
         return sum(turnovers) / len(turnovers)
 
     @staticmethod
-    def _parts_to_window_turnover_weights(allparts, gate_dict, g, pack_credit_weight=0.0):
-        """Linear ILP weights for 3q window continuity.
+    def _parts_to_window_turnover_weights(allparts, gate_dict, g,
+                                          pack_credit_weight=0.0,
+                                          config=None,
+                                          max_partition_size=None):
+        """Linear ILP weights for local block quality.
 
-        Dense 3q blocks are only routing-friendly when their local qubit window
-        persists into adjacent work.  A block like (0, i, j) followed by
-        (0, k, l) replaces two qubits in the 3q window, which is exactly the
-        expensive pattern on a line.  This cost keeps 2q parts at conceptual
-        cost one and charges 3q parts for active-pair count plus average
-        predecessor/successor window turnover.
+        The ILP accepts one linear cost per candidate part, so pairwise boundary
+        effects are approximated locally.  Lower cost is better.  The model
+        rewards dense blocks, penalizes adjacent 2q gates left across a block
+        boundary, charges a nonlinear synthesis-width cost, gives 3q blocks a
+        local triangle incentive only above a density threshold, and adds a
+        light critical-path depth balance penalty.
         """
+        cfg = {} if config is None else config
+        if max_partition_size is None:
+            max_partition_size = cfg.get("max_partition_size")
+
+        density_weight = float(cfg.get("partition_density_weight", 4.0))
+        boundary_weight = float(cfg.get("partition_boundary_weight", 0.9))
+        depth_balance_weight = float(
+            cfg.get("partition_depth_balance_weight", 0.25)
+        )
+        triangle_weight = float(cfg.get("partition_triangle_weight", 2.5))
+        triangle_threshold = float(
+            cfg.get("partition_triangle_threshold", 0.6)
+        )
+        triangle_threshold = min(max(triangle_threshold, 0.0), 1.0)
+        triangle_window_radius = max(
+            int(cfg.get("partition_triangle_window_radius", 8)),
+            0,
+        )
+        synthesis_cost_weight = float(
+            cfg.get("partition_synthesis_cost_weight", 1.0)
+        )
+        min_cost = float(cfg.get("partition_min_cost", 0.05))
+        width_penalties = cfg.get("partition_width_penalties")
+
         N = max(len(allparts), 1)
         supports = []
-        active_pairs_by_part = []
         for part in allparts:
-            support, active_pairs = (
+            support, _ = (
                 qgd_Partition_Aware_Mapping._part_support_and_active_pairs(
                     part,
                     gate_dict,
                 )
             )
             supports.append(support)
-            active_pairs_by_part.append(active_pairs)
 
-        gate_to_parts = defaultdict(list)
-        for part_idx, part in enumerate(allparts):
-            for gate_idx in part:
-                gate_to_parts[gate_idx].append(part_idx)
-
-        rg = defaultdict(set)
+        rg = {gate_idx: set() for gate_idx in g}
         for src, dsts in g.items():
             for dst in dsts:
-                rg[dst].add(src)
+                rg.setdefault(dst, set()).add(src)
+
+        gate_to_qubit = {
+            gate_idx: set(gate.get_Involved_Qbits())
+            for gate_idx, gate in gate_dict.items()
+            if gate is not None
+        }
+        topo_order = _get_topo_order(g, rg, gate_to_qubit) if g else []
+        topo_index = {gate_idx: idx for idx, gate_idx in enumerate(topo_order)}
+        global_depth = max(
+            qgd_Partition_Aware_Mapping._restricted_longest_path_depth(
+                set(g), g, rg, topo_order
+            ),
+            1,
+        )
 
         weights = []
         for part_idx, part in enumerate(allparts):
             support = supports[part_idx]
-            active_pairs = active_pairs_by_part[part_idx]
-            if len(support) < 3:
-                weights.append(0.0)
-                continue
+            width = len(support)
+            width_penalty = (
+                qgd_Partition_Aware_Mapping._configured_width_penalty(
+                    width, width_penalties
+                )
+            )
+            two_qubit_gate_count = (
+                qgd_Partition_Aware_Mapping._part_two_qubit_gate_count(
+                    part, gate_dict
+                )
+            )
+            block_density = (
+                two_qubit_gate_count
+                / qgd_Partition_Aware_Mapping._synthesis_capacity(width)
+            )
+            boundary_crossings = (
+                qgd_Partition_Aware_Mapping._boundary_two_qubit_gate_count(
+                    part,
+                    support,
+                    g,
+                    rg,
+                    gate_dict,
+                    max_partition_size,
+                )
+            )
+            pair_counts = (
+                qgd_Partition_Aware_Mapping._pair_counts_in_topological_window(
+                    part,
+                    topo_order,
+                    topo_index,
+                    gate_dict,
+                    triangle_window_radius,
+                )
+            )
+            triangle_density = (
+                qgd_Partition_Aware_Mapping._triangle_density_from_pair_counts(
+                    support,
+                    pair_counts,
+                )
+            )
+            if triangle_threshold >= 1.0:
+                triangle_bonus = 0.0
+            else:
+                triangle_bonus = triangle_weight * max(
+                    triangle_density - triangle_threshold,
+                    0.0,
+                ) / (1.0 - triangle_threshold)
 
-            succ_gate_sets = [g.get(gate_idx, set()) for gate_idx in part]
-            pred_gate_sets = [rg.get(gate_idx, set()) for gate_idx in part]
-            succ_turnover = qgd_Partition_Aware_Mapping._average_turnover(
-                part_idx,
-                part,
-                succ_gate_sets,
-                gate_to_parts,
-                allparts,
-                supports,
+            internal_depth = (
+                qgd_Partition_Aware_Mapping._restricted_longest_path_depth(
+                    part, g, rg, topo_order
+                )
             )
-            pred_turnover = qgd_Partition_Aware_Mapping._average_turnover(
-                part_idx,
-                part,
-                pred_gate_sets,
-                gate_to_parts,
-                allparts,
-                supports,
+            depth_fraction = internal_depth / float(global_depth)
+            depth_penalty = (
+                depth_balance_weight
+                * depth_fraction
+                * depth_fraction
+                * max(width_penalty, 1.0)
             )
-            boundary_turnover = len(support)
-            if succ_turnover is None:
-                succ_turnover = boundary_turnover
-            if pred_turnover is None:
-                pred_turnover = boundary_turnover
-            conceptual_cost = (
-                max(len(support), len(active_pairs), 1)
-                + succ_turnover
-                + pred_turnover
-            )
+
+            density_bonus = density_weight * block_density
             if pack_credit_weight:
-                k = len(support)
-                full_clique_pairs = k * (k - 1) // 2
-                if len(active_pairs) == full_clique_pairs:
-                    multi_qubit_gate_count = sum(
-                        1 for gate_idx in part
-                        if gate_dict.get(gate_idx) is not None
-                        and len(gate_dict[gate_idx].get_Involved_Qbits()) >= 2
-                    )
-                    conceptual_cost -= pack_credit_weight * max(multi_qubit_gate_count - 1, 0)
-            weights.append(max((conceptual_cost - 1.0) / N, 0.0))
+                density_bonus += (
+                    pack_credit_weight
+                    * block_density
+                    * max(two_qubit_gate_count - 1, 0)
+                )
+
+            conceptual_cost = (
+                synthesis_cost_weight * width_penalty
+                + boundary_weight * boundary_crossings
+                + depth_penalty
+                - density_bonus
+                - triangle_bonus
+            )
+            conceptual_cost = max(conceptual_cost, min_cost)
+            weights.append((conceptual_cost - 1.0) / N)
         return weights
 
     @staticmethod
@@ -660,20 +881,18 @@ class qgd_Partition_Aware_Mapping:
         single_qubit_chains_prepost = {x[0]: x for x in single_qubit_chains if x[0] in single_qubit_chains_pre and x[-1] in single_qubit_chains_post}
 
         # ---- Phase 2: ILP partition selection ----
+        # PartAM keeps one partitioning strategy: window_turnover.
+        ilp_weights = self._parts_to_window_turnover_weights(
+            allparts,
+            gate_dict,
+            g,
+            pack_credit_weight=self.config['pack_credit_weight'],
+            config=self.config,
+            max_partition_size=self.config["max_partition_size"],
+        )
         partition_weight_model = self.config['partition_weight_model']
         if partition_weight_model == 'ilp':
             ilp_weights = None
-        elif partition_weight_model == 'window_turnover':
-            ilp_weights = self._parts_to_window_turnover_weights(
-                allparts,
-                gate_dict,
-                g,
-                pack_credit_weight=self.config['pack_credit_weight'],
-            )
-        else:
-            raise Exception(
-                f"Unknown partition_weight_model: {partition_weight_model}."
-            )
         L_parts, _ = ilp_global_optimal(allparts, g, weights=ilp_weights)
 
         # ---- Phase 3: Build gate sets for selected partitions (+ standalone chains) ----
