@@ -190,7 +190,12 @@ class qgd_Partition_Aware_Mapping:
         self.config.setdefault('layout_boundary_beam_depth', None)
         self.config.setdefault('routing_trace_path', None)
         self.config['partition_weight_model'] = 'window_turnover'
-        self.config.setdefault('partition_density_weight', 4.0)
+        # With partition_synthesis_capacity set to CNOT lower bounds
+        # ({2:3, 3:14, 4:61}), block_density saturates at 1.0 for every
+        # width, so density_weight 1.0 gives a max bonus that exactly
+        # cancels the width-2 penalty (1.0) and leaves wider widths to
+        # earn the rest via triangle/topology terms.
+        self.config.setdefault('partition_density_weight', 1.0)
         self.config.setdefault('partition_boundary_weight', 0.9)
         self.config.setdefault('partition_depth_balance_weight', 0.25)
         self.config.setdefault('partition_triangle_weight', 2.5)
@@ -206,6 +211,14 @@ class qgd_Partition_Aware_Mapping:
         self.config.setdefault(
             'partition_width_penalties',
             {1: 0.25, 2: 1.0, 3: 4.0, 4: 16.0},
+        )
+        # CNOT lower-bound synthesis budgets (Vidal–Dawson for w=2,
+        # Shende–Markov–Bullock for w=3, QSD for w=4). Sets block_density
+        # to "fraction of synthesis budget used" with consistent semantics
+        # across widths — saturation reward matches across all w.
+        self.config.setdefault(
+            'partition_synthesis_capacity',
+            {1: 1, 2: 3, 3: 14, 4: 61},
         )
         strategy = self.config['strategy']
         self.config.setdefault('parallel_layout_trials', False)
@@ -295,8 +308,37 @@ class qgd_Partition_Aware_Mapping:
         return count
 
     @staticmethod
-    def _synthesis_capacity(width):
-        return float(4 ** max(int(width), 1))
+    def _synthesis_capacity(width, capacities=None):
+        """CNOT lower-bound budget for a generic width-qubit unitary.
+
+        Defaults reflect known synthesis bounds:
+          width 2 → 3   (Vidal–Dawson 2004, tight)
+          width 3 → 14  (Shende–Markov–Bullock 2004 counting bound)
+          width 4 → 61  (QSD recursion, practical upper bound)
+        Width 1 → 1 (no 2q gates; avoids division by zero in block_density).
+        Widths beyond 4 extrapolate as 61 · 4^(w−4), matching the asymptotic
+        (23/48)·4^w scaling of QSD.
+        """
+        if capacities is None:
+            capacities = {1: 1, 2: 3, 3: 14, 4: 61}
+
+        exact = None
+        if isinstance(capacities, dict):
+            exact = capacities.get(width)
+            if exact is None:
+                exact = capacities.get(str(width))
+        if exact is not None:
+            return float(max(exact, 1))
+
+        if width <= 1:
+            return 1.0
+        if width == 2:
+            return 3.0
+        if width == 3:
+            return 14.0
+        if width == 4:
+            return 61.0
+        return 61.0 * (4.0 ** (width - 4))
 
     @staticmethod
     def _configured_width_penalty(width, penalties):
@@ -491,6 +533,7 @@ class qgd_Partition_Aware_Mapping:
         )
         min_cost = float(cfg.get("partition_min_cost", 0.05))
         width_penalties = cfg.get("partition_width_penalties")
+        synthesis_capacities = cfg.get("partition_synthesis_capacity")
 
         use_routing_span = (
             topology_distances is not None and routing_span_weight
@@ -547,7 +590,9 @@ class qgd_Partition_Aware_Mapping:
             )
             block_density = (
                 two_qubit_gate_count
-                / qgd_Partition_Aware_Mapping._synthesis_capacity(width)
+                / qgd_Partition_Aware_Mapping._synthesis_capacity(
+                    width, synthesis_capacities
+                )
             )
             boundary_crossings = (
                 qgd_Partition_Aware_Mapping._boundary_two_qubit_gate_count(
