@@ -197,6 +197,11 @@ class qgd_Partition_Aware_Mapping:
         self.config.setdefault('partition_triangle_threshold', 0.6)
         self.config.setdefault('partition_triangle_window_radius', 8)
         self.config.setdefault('partition_synthesis_cost_weight', 1.0)
+        # Calibrated so a width-3 block whose three qubits are mutually
+        # non-adjacent on a sparse grid (sum_extra ≈ 3) takes ~+1.5 cost,
+        # enough to overpower a saturated triangle bonus (≤ 2.5) and pull
+        # the ILP back to width-2 unless the block is topology-aligned.
+        self.config.setdefault('partition_routing_span_weight', 0.5)
         self.config.setdefault('partition_min_cost', 0.05)
         self.config.setdefault(
             'partition_width_penalties',
@@ -446,7 +451,8 @@ class qgd_Partition_Aware_Mapping:
     def _parts_to_window_turnover_weights(allparts, gate_dict, g,
                                           pack_credit_weight=0.0,
                                           config=None,
-                                          max_partition_size=None):
+                                          max_partition_size=None,
+                                          topology_distances=None):
         """Linear ILP weights for local block quality.
 
         The ILP accepts one linear cost per candidate part, so pairwise boundary
@@ -454,7 +460,10 @@ class qgd_Partition_Aware_Mapping:
         rewards dense blocks, penalizes adjacent 2q gates left across a block
         boundary, charges a nonlinear synthesis-width cost, gives 3q blocks a
         local triangle incentive only above a density threshold, and adds a
-        light critical-path depth balance penalty.
+        light critical-path depth balance penalty.  When ``topology_distances``
+        is supplied, also adds ``routing_span_weight · Σ max(D[u,v]−1, 0)`` over
+        the part's active 2q pairs, capturing the SWAP overhead of bringing
+        interacting qubits adjacent on the device coupling map.
         """
         cfg = {} if config is None else config
         if max_partition_size is None:
@@ -477,19 +486,31 @@ class qgd_Partition_Aware_Mapping:
         synthesis_cost_weight = float(
             cfg.get("partition_synthesis_cost_weight", 1.0)
         )
+        routing_span_weight = float(
+            cfg.get("partition_routing_span_weight", 0.0)
+        )
         min_cost = float(cfg.get("partition_min_cost", 0.05))
         width_penalties = cfg.get("partition_width_penalties")
 
+        use_routing_span = (
+            topology_distances is not None and routing_span_weight
+        )
+        inf_distance_cap = float(
+            max(len(topology_distances) - 1, 1)
+        ) if topology_distances is not None else 0.0
+
         N = max(len(allparts), 1)
         supports = []
+        active_pairs_list = []
         for part in allparts:
-            support, _ = (
+            support, active_pairs = (
                 qgd_Partition_Aware_Mapping._part_support_and_active_pairs(
                     part,
                     gate_dict,
                 )
             )
             supports.append(support)
+            active_pairs_list.append(active_pairs)
 
         rg = {gate_idx: set() for gate_idx in g}
         for src, dsts in g.items():
@@ -538,6 +559,15 @@ class qgd_Partition_Aware_Mapping:
                     max_partition_size,
                 )
             )
+            if use_routing_span:
+                span_cost = 0.0
+                for u, v in active_pairs_list[part_idx]:
+                    d = topology_distances[u][v]
+                    if not np.isfinite(d):
+                        d = inf_distance_cap
+                    span_cost += max(float(d) - 1.0, 0.0)
+            else:
+                span_cost = 0.0
             pair_counts = (
                 qgd_Partition_Aware_Mapping._pair_counts_in_topological_window(
                     part,
@@ -585,6 +615,7 @@ class qgd_Partition_Aware_Mapping:
             conceptual_cost = (
                 synthesis_cost_weight * width_penalty
                 + boundary_weight * boundary_crossings
+                + routing_span_weight * span_cost
                 + depth_penalty
                 - density_bonus
                 - triangle_bonus
@@ -889,6 +920,7 @@ class qgd_Partition_Aware_Mapping:
             pack_credit_weight=self.config['pack_credit_weight'],
             config=self.config,
             max_partition_size=self.config["max_partition_size"],
+            topology_distances=D,
         )
         partition_weight_model = self.config['partition_weight_model']
         if partition_weight_model == 'ilp':
