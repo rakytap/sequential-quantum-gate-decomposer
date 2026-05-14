@@ -198,7 +198,12 @@ class qgd_Partition_Aware_Mapping:
         self.config.setdefault('partition_density_weight', 1.0)
         self.config.setdefault('partition_boundary_weight', 0.9)
         self.config.setdefault('partition_depth_balance_weight', 0.25)
-        self.config.setdefault('partition_triangle_weight', 2.5)
+        # Triangle bonus rebalanced against the new density baseline:
+        # density_bonus already saturates at 1.0 for every width under the
+        # CNOT-budget capacities, so triangle should be a tie-breaker not a
+        # second density signal. 1.5 keeps grover-style adjacent triples
+        # competitive while letting span_cost suppress spread-out 3q blocks.
+        self.config.setdefault('partition_triangle_weight', 1.5)
         self.config.setdefault('partition_triangle_threshold', 0.6)
         self.config.setdefault('partition_triangle_window_radius', 8)
         self.config.setdefault('partition_synthesis_cost_weight', 1.0)
@@ -207,6 +212,12 @@ class qgd_Partition_Aware_Mapping:
         # enough to overpower a saturated triangle bonus (≤ 2.5) and pull
         # the ILP back to width-2 unless the block is topology-aligned.
         self.config.setdefault('partition_routing_span_weight', 0.5)
+        # Averaged turnover with DAG successor partitions: penalises blocks
+        # whose support has little qubit overlap with the candidate parts
+        # immediately downstream. Captures inter-block routing churn that
+        # routing_span (intra-block spread) misses. Linear in ILP vars
+        # since each candidate gets a precomputed scalar.
+        self.config.setdefault('partition_turnover_weight', 0.5)
         self.config.setdefault('partition_min_cost', 0.05)
         self.config.setdefault(
             'partition_width_penalties',
@@ -505,7 +516,12 @@ class qgd_Partition_Aware_Mapping:
         light critical-path depth balance penalty.  When ``topology_distances``
         is supplied, also adds ``routing_span_weight · Σ max(D[u,v]−1, 0)`` over
         the part's active 2q pairs, capturing the SWAP overhead of bringing
-        interacting qubits adjacent on the device coupling map.
+        interacting qubits adjacent on the device coupling map.  Finally adds
+        ``turnover_weight · avg_turnover`` where ``avg_turnover`` averages
+        ``min(|supp_p|, |supp_q|) − |supp_p ∩ supp_q|`` over candidate
+        partitions ``q`` that immediately follow ``p`` in the gate DAG —
+        penalising blocks whose downstream neighbours have little qubit
+        overlap (high inter-block routing churn).
         """
         cfg = {} if config is None else config
         if max_partition_size is None:
@@ -531,6 +547,7 @@ class qgd_Partition_Aware_Mapping:
         routing_span_weight = float(
             cfg.get("partition_routing_span_weight", 0.0)
         )
+        turnover_weight = float(cfg.get("partition_turnover_weight", 0.0))
         min_cost = float(cfg.get("partition_min_cost", 0.05))
         width_penalties = cfg.get("partition_width_penalties")
         synthesis_capacities = cfg.get("partition_synthesis_capacity")
@@ -559,6 +576,22 @@ class qgd_Partition_Aware_Mapping:
         for src, dsts in g.items():
             for dst in dsts:
                 rg.setdefault(dst, set()).add(src)
+
+        use_turnover = turnover_weight != 0.0
+        if use_turnover:
+            gate_to_parts = defaultdict(list)
+            for idx, part in enumerate(allparts):
+                for gate_idx in part:
+                    gate_to_parts[gate_idx].append(idx)
+            successor_gate_sets = []
+            for part in allparts:
+                downstream = set()
+                for gate_idx in part:
+                    downstream.update(g.get(gate_idx, ()))
+                successor_gate_sets.append(downstream)
+        else:
+            gate_to_parts = None
+            successor_gate_sets = None
 
         gate_to_qubit = {
             gate_idx: set(gate.get_Involved_Qbits())
@@ -613,6 +646,20 @@ class qgd_Partition_Aware_Mapping:
                     span_cost += max(float(d) - 1.0, 0.0)
             else:
                 span_cost = 0.0
+            if use_turnover:
+                avg_turnover = (
+                    qgd_Partition_Aware_Mapping._average_turnover(
+                        part_idx,
+                        part,
+                        [successor_gate_sets[part_idx]],
+                        gate_to_parts,
+                        allparts,
+                        supports,
+                    )
+                )
+                turnover_cost = 0.0 if avg_turnover is None else float(avg_turnover)
+            else:
+                turnover_cost = 0.0
             pair_counts = (
                 qgd_Partition_Aware_Mapping._pair_counts_in_topological_window(
                     part,
@@ -661,6 +708,7 @@ class qgd_Partition_Aware_Mapping:
                 synthesis_cost_weight * width_penalty
                 + boundary_weight * boundary_crossings
                 + routing_span_weight * span_cost
+                + turnover_weight * turnover_cost
                 + depth_penalty
                 - density_bonus
                 - triangle_bonus
