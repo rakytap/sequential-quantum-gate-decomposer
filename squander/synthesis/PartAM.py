@@ -190,19 +190,17 @@ class qgd_Partition_Aware_Mapping:
         self.config.setdefault('layout_boundary_beam_depth', None)
         self.config.setdefault('routing_trace_path', None)
         self.config['partition_weight_model'] = 'window_turnover'
-        # With partition_synthesis_capacity set to CNOT lower bounds
-        # ({2:3, 3:14, 4:61}), block_density saturates at 1.0 for every
-        # width, so density_weight 1.0 gives a max bonus that exactly
-        # cancels the width-2 penalty (1.0) and leaves wider widths to
-        # earn the rest via triangle/topology terms.
+        # Absorption credit: each absorbed 2q gate pays a flat 1.0 credit
+        # regardless of partition width. With width_penalty[2]=1.0, a
+        # saturated w-2 (k=3) gets bonus 3 → net synth cost −2; a w-3 needs
+        # to absorb ≥4 gates to beat width_penalty[3]=4. Narrow vs wide is
+        # decided by total absorbed work + topology, not by normalisation.
         self.config.setdefault('partition_density_weight', 1.0)
         self.config.setdefault('partition_boundary_weight', 0.9)
         self.config.setdefault('partition_depth_balance_weight', 0.25)
-        # Triangle bonus rebalanced against the new density baseline:
-        # density_bonus already saturates at 1.0 for every width under the
-        # CNOT-budget capacities, so triangle should be a tie-breaker not a
-        # second density signal. 1.5 keeps grover-style adjacent triples
-        # competitive while letting span_cost suppress spread-out 3q blocks.
+        # Triangle is a small tie-breaker on top of absorption-credit density
+        # and discounted boundary. A truly triangular 3q block (Toffoli, etc.)
+        # gets a modest extra reward; chain-shaped 3q blocks don't.
         self.config.setdefault('partition_triangle_weight', 1.5)
         self.config.setdefault('partition_triangle_threshold', 0.6)
         self.config.setdefault('partition_triangle_window_radius', 8)
@@ -394,9 +392,9 @@ class qgd_Partition_Aware_Mapping:
         return best
 
     @staticmethod
-    def _boundary_two_qubit_gate_count(part, support, g, rg, gate_dict,
-                                       max_partition_size):
-        """Count adjacent 2q gates that this candidate leaves over a boundary."""
+    def _boundary_two_qubit_gate_set(part, support, g, rg, gate_dict,
+                                     max_partition_size):
+        """Return the set of adjacent 2q gates this candidate leaves over a boundary."""
         support = set(support)
         boundary_gates = set()
         for gate_idx in part:
@@ -418,7 +416,17 @@ class qgd_Partition_Aware_Mapping:
                 ):
                     continue
                 boundary_gates.add(other_idx)
-        return len(boundary_gates)
+        return boundary_gates
+
+    @staticmethod
+    def _boundary_two_qubit_gate_count(part, support, g, rg, gate_dict,
+                                       max_partition_size):
+        """Count adjacent 2q gates that this candidate leaves over a boundary."""
+        return len(
+            qgd_Partition_Aware_Mapping._boundary_two_qubit_gate_set(
+                part, support, g, rg, gate_dict, max_partition_size,
+            )
+        )
 
     @staticmethod
     def _pair_counts_in_topological_window(part, topo_order, topo_index,
@@ -509,24 +517,35 @@ class qgd_Partition_Aware_Mapping:
                                           seed_layout=None):
         """Linear ILP weights for local block quality.
 
-        The ILP accepts one linear cost per candidate part, so pairwise boundary
-        effects are approximated locally.  Lower cost is better.  The model
-        rewards dense blocks, penalizes adjacent 2q gates left across a block
-        boundary, charges a nonlinear synthesis-width cost, gives 3q blocks a
-        local triangle incentive only above a density threshold, and adds a
-        light critical-path depth balance penalty.  When ``topology_distances``
-        is supplied, also adds ``routing_span_weight · Σ max(D[u,v]−1, 0)`` over
-        the part's active 2q pairs, capturing the SWAP overhead of bringing
-        interacting qubits adjacent on the device coupling map.  When
-        ``seed_layout`` is also supplied, ``D`` is permuted through the layout
-        so the span penalty reflects *physical* qubit distance under the
-        routing layer's chosen placement, not abstract logical distance.
-        Finally adds
-        ``turnover_weight · avg_turnover`` where ``avg_turnover`` averages
+        The ILP accepts one linear cost per candidate part, so pairwise
+        interactions are approximated locally.  Lower cost is better.
+
+        Core cost terms:
+          * ``synthesis_cost_weight · width_penalty[width]`` — non-linear
+            penalty for synthesising a wider unitary block.
+          * ``− density_weight · k_2q`` — *absorption credit*: each 2q gate the
+            partition absorbs pays a flat credit, independent of width.  This
+            puts narrow and wide partitions on equal per-gate footing; wider
+            partitions only win when they absorb enough gates to amortise the
+            larger synthesis cost.
+          * ``boundary_weight · effective_boundary_crossings`` — only counts
+            adjacent 2q gates that have *no* candidate home Q (disjoint from
+            this part) with base_cost(Q) ≤ base_cost(this part).  In other
+            words, gates that another comparably-cheap partition will absorb
+            are not double-penalised here.
+          * Triangle bonus (only above a density threshold), depth-balance
+            penalty, optional routing-span penalty, and optional turnover
+            penalty as documented per knob below.
+
+        When ``topology_distances`` is supplied, also adds
+        ``routing_span_weight · Σ max(D[u,v]−1, 0)`` over the part's active 2q
+        pairs.  When ``seed_layout`` is also supplied, ``D`` is permuted
+        through the layout so the span penalty reflects *physical* qubit
+        distance under the routing layer's chosen placement.  When
+        ``turnover_weight`` is non-zero, also adds
+        ``turnover_weight · avg_turnover`` averaging
         ``min(|supp_p|, |supp_q|) − |supp_p ∩ supp_q|`` over candidate
-        partitions ``q`` that immediately follow ``p`` in the gate DAG —
-        penalising blocks whose downstream neighbours have little qubit
-        overlap (high inter-block routing churn).
+        partitions ``q`` immediately downstream of ``p`` in the gate DAG.
         """
         cfg = {} if config is None else config
         if max_partition_size is None:
@@ -587,12 +606,15 @@ class qgd_Partition_Aware_Mapping:
             for dst in dsts:
                 rg.setdefault(dst, set()).add(src)
 
+        # Always build gate_to_parts — needed by the discounted boundary
+        # check below as well as by turnover.
+        gate_to_parts = defaultdict(list)
+        for idx, part in enumerate(allparts):
+            for gate_idx in part:
+                gate_to_parts[gate_idx].append(idx)
+
         use_turnover = turnover_weight != 0.0
         if use_turnover:
-            gate_to_parts = defaultdict(list)
-            for idx, part in enumerate(allparts):
-                for gate_idx in part:
-                    gate_to_parts[gate_idx].append(idx)
             successor_gate_sets = []
             for part in allparts:
                 downstream = set()
@@ -600,7 +622,6 @@ class qgd_Partition_Aware_Mapping:
                     downstream.update(g.get(gate_idx, ()))
                 successor_gate_sets.append(downstream)
         else:
-            gate_to_parts = None
             successor_gate_sets = None
 
         gate_to_qubit = {
@@ -617,28 +638,50 @@ class qgd_Partition_Aware_Mapping:
             1,
         )
 
+        # Pre-pass: cache per-partition width_penalty, k_2q, and base_cost.
+        # base_cost = synthesis_cost - absorption_credit, the "fundamental"
+        # local cost used by the discounted boundary check to decide whether
+        # a boundary gate has a cheaper-or-equal home elsewhere in the
+        # candidate space.  Each absorbed 2q gate pays a flat credit of
+        # ``density_weight`` regardless of partition width — wider partitions
+        # only win when they absorb enough gates to amortize their (larger)
+        # synthesis cost, not because of arithmetic from a capacity-based
+        # normalisation.
+        two_qubit_gate_counts = []
+        width_penalties_cache = []
+        base_costs = []
+        for part_idx, part in enumerate(allparts):
+            width = len(supports[part_idx])
+            wp = qgd_Partition_Aware_Mapping._configured_width_penalty(
+                width, width_penalties
+            )
+            k_2q = qgd_Partition_Aware_Mapping._part_two_qubit_gate_count(
+                part, gate_dict
+            )
+            width_penalties_cache.append(wp)
+            two_qubit_gate_counts.append(k_2q)
+            density_bonus_local = density_weight * k_2q
+            if pack_credit_weight:
+                density_bonus_local += (
+                    pack_credit_weight * k_2q * max(k_2q - 1, 0)
+                )
+            base_costs.append(synthesis_cost_weight * wp - density_bonus_local)
+
         weights = []
         for part_idx, part in enumerate(allparts):
             support = supports[part_idx]
             width = len(support)
-            width_penalty = (
-                qgd_Partition_Aware_Mapping._configured_width_penalty(
-                    width, width_penalties
-                )
-            )
-            two_qubit_gate_count = (
-                qgd_Partition_Aware_Mapping._part_two_qubit_gate_count(
-                    part, gate_dict
-                )
-            )
-            block_density = (
-                two_qubit_gate_count
-                / qgd_Partition_Aware_Mapping._synthesis_capacity(
-                    width, synthesis_capacities
-                )
-            )
-            boundary_crossings = (
-                qgd_Partition_Aware_Mapping._boundary_two_qubit_gate_count(
+            width_penalty = width_penalties_cache[part_idx]
+            two_qubit_gate_count = two_qubit_gate_counts[part_idx]
+            part_base_cost = base_costs[part_idx]
+
+            # Discounted boundary: skip boundary gates that have a candidate
+            # home Q (disjoint from this part) with base_cost(Q) ≤ base_cost(P).
+            # Those gates aren't actually "stranded" by selecting P — a
+            # comparably cheap Q is available in the candidate space to absorb
+            # them, so the ILP would naturally pick it.
+            boundary_gate_set = (
+                qgd_Partition_Aware_Mapping._boundary_two_qubit_gate_set(
                     part,
                     support,
                     g,
@@ -647,6 +690,20 @@ class qgd_Partition_Aware_Mapping:
                     max_partition_size,
                 )
             )
+            boundary_crossings = 0
+            for other_idx in boundary_gate_set:
+                has_home = False
+                for q_idx in gate_to_parts.get(other_idx, ()):
+                    if q_idx == part_idx:
+                        continue
+                    q_part = allparts[q_idx]
+                    if q_part & part:
+                        continue
+                    if base_costs[q_idx] <= part_base_cost:
+                        has_home = True
+                        break
+                if not has_home:
+                    boundary_crossings += 1
             if use_routing_span:
                 span_cost = 0.0
                 for u, v in active_pairs_list[part_idx]:
@@ -706,11 +763,14 @@ class qgd_Partition_Aware_Mapping:
                 * max(width_penalty, 1.0)
             )
 
-            density_bonus = density_weight * block_density
+            # Absorption-credit density: flat per-absorbed-gate reward,
+            # independent of partition width.  Pre-pass already used this same
+            # formula to compute base_costs for the boundary discount.
+            density_bonus = density_weight * two_qubit_gate_count
             if pack_credit_weight:
                 density_bonus += (
                     pack_credit_weight
-                    * block_density
+                    * two_qubit_gate_count
                     * max(two_qubit_gate_count - 1, 0)
                 )
 
