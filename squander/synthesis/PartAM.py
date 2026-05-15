@@ -190,11 +190,12 @@ class qgd_Partition_Aware_Mapping:
         self.config.setdefault('layout_boundary_beam_depth', None)
         self.config.setdefault('routing_trace_path', None)
         self.config['partition_weight_model'] = 'window_turnover'
-        # Absorption credit: each absorbed 2q gate pays a flat 1.0 credit
-        # regardless of partition width. With width_penalty[2]=1.0, a
-        # saturated w-2 (k=3) gets bonus 3 → net synth cost −2; a w-3 needs
-        # to absorb ≥4 gates to beat width_penalty[3]=4. Narrow vs wide is
-        # decided by total absorbed work + topology, not by normalisation.
+        # Capacity-normalised density: block_density = k_2q / capacity[w].
+        # With CNOT-budget capacities {2:3, 3:14, 4:61}, density saturates at
+        # 1.0 for every width, so density_weight 1.0 gives a max bonus that
+        # exactly cancels the width-2 penalty (1.0). Wider widths need extra
+        # signal (triangle / discounted boundary / negative span_cost) to
+        # justify selection.
         self.config.setdefault('partition_density_weight', 1.0)
         self.config.setdefault('partition_boundary_weight', 0.9)
         self.config.setdefault('partition_depth_balance_weight', 0.25)
@@ -523,16 +524,16 @@ class qgd_Partition_Aware_Mapping:
         Core cost terms:
           * ``synthesis_cost_weight · width_penalty[width]`` — non-linear
             penalty for synthesising a wider unitary block.
-          * ``− density_weight · k_2q`` — *absorption credit*: each 2q gate the
-            partition absorbs pays a flat credit, independent of width.  This
-            puts narrow and wide partitions on equal per-gate footing; wider
-            partitions only win when they absorb enough gates to amortise the
-            larger synthesis cost.
+          * ``− density_weight · (k_2q / synthesis_capacity[width])`` —
+            capacity-normalised density reward.  Each width has the same
+            saturation level (1.0), implicitly pricing that wider partitions
+            don't compress to zero body CNOTs.
           * ``boundary_weight · effective_boundary_crossings`` — only counts
             adjacent 2q gates that have *no* candidate home Q (disjoint from
             this part) with base_cost(Q) ≤ base_cost(this part).  In other
             words, gates that another comparably-cheap partition will absorb
-            are not double-penalised here.
+            are not double-penalised here.  base_cost = synthesis_cost −
+            density_bonus, the same quantity precomputed in the pre-pass.
           * Triangle bonus (only above a density threshold), depth-balance
             penalty, optional routing-span penalty, and optional turnover
             penalty as documented per knob below.
@@ -638,17 +639,18 @@ class qgd_Partition_Aware_Mapping:
             1,
         )
 
-        # Pre-pass: cache per-partition width_penalty, k_2q, and base_cost.
-        # base_cost = synthesis_cost - absorption_credit, the "fundamental"
-        # local cost used by the discounted boundary check to decide whether
-        # a boundary gate has a cheaper-or-equal home elsewhere in the
-        # candidate space.  Each absorbed 2q gate pays a flat credit of
-        # ``density_weight`` regardless of partition width — wider partitions
-        # only win when they absorb enough gates to amortize their (larger)
-        # synthesis cost, not because of arithmetic from a capacity-based
-        # normalisation.
+        # Pre-pass: cache per-partition width_penalty, k_2q, block_density,
+        # and base_cost.  base_cost = synthesis_cost − density_bonus is the
+        # fundamental local cost used by the discounted boundary check below
+        # to decide whether a boundary gate has a cheaper-or-equal home
+        # elsewhere in the candidate space.  Density is capacity-normalised
+        # (k_2q / synthesis_capacity[w]) so wider partitions need
+        # proportionally more absorbed gates to claim equal credit — this
+        # implicitly prices that a saturated w-3 doesn't compress to zero
+        # body CNOTs, it compresses to its lower-bound synthesis count.
         two_qubit_gate_counts = []
         width_penalties_cache = []
+        block_densities_cache = []
         base_costs = []
         for part_idx, part in enumerate(allparts):
             width = len(supports[part_idx])
@@ -658,12 +660,16 @@ class qgd_Partition_Aware_Mapping:
             k_2q = qgd_Partition_Aware_Mapping._part_two_qubit_gate_count(
                 part, gate_dict
             )
+            block_density = k_2q / qgd_Partition_Aware_Mapping._synthesis_capacity(
+                width, synthesis_capacities
+            )
             width_penalties_cache.append(wp)
             two_qubit_gate_counts.append(k_2q)
-            density_bonus_local = density_weight * k_2q
+            block_densities_cache.append(block_density)
+            density_bonus_local = density_weight * block_density
             if pack_credit_weight:
                 density_bonus_local += (
-                    pack_credit_weight * k_2q * max(k_2q - 1, 0)
+                    pack_credit_weight * block_density * max(k_2q - 1, 0)
                 )
             base_costs.append(synthesis_cost_weight * wp - density_bonus_local)
 
@@ -763,14 +769,14 @@ class qgd_Partition_Aware_Mapping:
                 * max(width_penalty, 1.0)
             )
 
-            # Absorption-credit density: flat per-absorbed-gate reward,
-            # independent of partition width.  Pre-pass already used this same
-            # formula to compute base_costs for the boundary discount.
-            density_bonus = density_weight * two_qubit_gate_count
+            # Capacity-normalised density: pre-pass already used this same
+            # formula when filling base_costs for the boundary discount.
+            block_density = block_densities_cache[part_idx]
+            density_bonus = density_weight * block_density
             if pack_credit_weight:
                 density_bonus += (
                     pack_credit_weight
-                    * two_qubit_gate_count
+                    * block_density
                     * max(two_qubit_gate_count - 1, 0)
                 )
 
