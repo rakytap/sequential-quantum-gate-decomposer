@@ -505,7 +505,8 @@ class qgd_Partition_Aware_Mapping:
                                           pack_credit_weight=0.0,
                                           config=None,
                                           max_partition_size=None,
-                                          topology_distances=None):
+                                          topology_distances=None,
+                                          seed_layout=None):
         """Linear ILP weights for local block quality.
 
         The ILP accepts one linear cost per candidate part, so pairwise boundary
@@ -516,7 +517,11 @@ class qgd_Partition_Aware_Mapping:
         light critical-path depth balance penalty.  When ``topology_distances``
         is supplied, also adds ``routing_span_weight · Σ max(D[u,v]−1, 0)`` over
         the part's active 2q pairs, capturing the SWAP overhead of bringing
-        interacting qubits adjacent on the device coupling map.  Finally adds
+        interacting qubits adjacent on the device coupling map.  When
+        ``seed_layout`` is also supplied, ``D`` is permuted through the layout
+        so the span penalty reflects *physical* qubit distance under the
+        routing layer's chosen placement, not abstract logical distance.
+        Finally adds
         ``turnover_weight · avg_turnover`` where ``avg_turnover`` averages
         ``min(|supp_p|, |supp_q|) − |supp_p ∩ supp_q|`` over candidate
         partitions ``q`` that immediately follow ``p`` in the gate DAG —
@@ -555,9 +560,14 @@ class qgd_Partition_Aware_Mapping:
         use_routing_span = (
             topology_distances is not None and routing_span_weight
         )
+        if topology_distances is not None and seed_layout is not None:
+            pi_arr = np.asarray(seed_layout, dtype=int)
+            layout_distances = topology_distances[np.ix_(pi_arr, pi_arr)]
+        else:
+            layout_distances = topology_distances
         inf_distance_cap = float(
-            max(len(topology_distances) - 1, 1)
-        ) if topology_distances is not None else 0.0
+            max(len(layout_distances) - 1, 1)
+        ) if layout_distances is not None else 0.0
 
         N = max(len(allparts), 1)
         supports = []
@@ -640,7 +650,7 @@ class qgd_Partition_Aware_Mapping:
             if use_routing_span:
                 span_cost = 0.0
                 for u, v in active_pairs_list[part_idx]:
-                    d = topology_distances[u][v]
+                    d = layout_distances[u][v]
                     if not np.isfinite(d):
                         d = inf_distance_cap
                     span_cost += max(float(d) - 1.0, 0.0)
@@ -995,6 +1005,12 @@ class qgd_Partition_Aware_Mapping:
         # ---- Phase 0: Compute distance matrix ----
         D = self.compute_distances_bfs(qbit_num)
 
+        # ---- Phase 0b: Compute seed layout for layout-aware scoring ----
+        # Empty partitions list makes _compute_seeded_layout skip the
+        # partition-weighted greedy fallback; it returns identity if VF2
+        # and SabrePreLayout-augmented VF2 both fail (safe no-op).
+        seed_layout = self._compute_seeded_layout([], D, qbit_num, working_circ)
+
         # ---- Phase 1: Partition enumeration ----
         allparts, g, go, rgo, single_qubit_chains, gate_to_qubit, gate_to_tqubit = get_all_partitions(working_circ, self.config["max_partition_size"])
         qbit_num_orig_circuit = working_circ.get_Qbit_Num()
@@ -1014,6 +1030,7 @@ class qgd_Partition_Aware_Mapping:
             config=self.config,
             max_partition_size=self.config["max_partition_size"],
             topology_distances=D,
+            seed_layout=seed_layout,
         )
         partition_weight_model = self.config['partition_weight_model']
         if partition_weight_model == 'ilp':
