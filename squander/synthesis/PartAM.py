@@ -217,6 +217,13 @@ class qgd_Partition_Aware_Mapping:
         # routing_span (intra-block spread) misses. Linear in ILP vars
         # since each candidate gets a precomputed scalar.
         self.config.setdefault('partition_turnover_weight', 0.5)
+        # Anti-chain penalty: a width>=3 block whose qubits are wired as a
+        # chain (low triangle density) synthesises to more body CNOTs than
+        # the equivalent 2q blocks and adds a routing boundary with no
+        # entanglement payoff. triangle_bonus only ever rewards, so without
+        # this term such blocks are picked purely on boundary absorption.
+        # 0.0 disables it (recovers prior behaviour). Sweepable.
+        self.config.setdefault('partition_chain_penalty_weight', 2.0)
         self.config.setdefault('partition_min_cost', 0.05)
         self.config.setdefault(
             'partition_width_penalties',
@@ -570,6 +577,9 @@ class qgd_Partition_Aware_Mapping:
             cfg.get("partition_routing_span_weight", 0.0)
         )
         turnover_weight = float(cfg.get("partition_turnover_weight", 0.0))
+        chain_penalty_weight = float(
+            cfg.get("partition_chain_penalty_weight", 0.0)
+        )
         min_cost = float(cfg.get("partition_min_cost", 0.05))
         width_penalties = cfg.get("partition_width_penalties")
         synthesis_capacities = cfg.get("partition_synthesis_capacity")
@@ -711,6 +721,20 @@ class qgd_Partition_Aware_Mapping:
                     0.0,
                 ) / (1.0 - triangle_threshold)
 
+            if (
+                chain_penalty_weight
+                and width >= 3
+                and triangle_threshold > 0.0
+            ):
+                chain_deficit = max(
+                    triangle_threshold - triangle_density, 0.0
+                ) / triangle_threshold
+                chain_penalty = (
+                    chain_penalty_weight * chain_deficit * (width - 2)
+                )
+            else:
+                chain_penalty = 0.0
+
             internal_depth = (
                 qgd_Partition_Aware_Mapping._restricted_longest_path_depth(
                     part, g, rg, topo_order
@@ -737,6 +761,7 @@ class qgd_Partition_Aware_Mapping:
                 + boundary_weight * boundary_crossings
                 + routing_span_weight * span_cost
                 + turnover_weight * turnover_cost
+                + chain_penalty
                 + depth_penalty
                 - density_bonus
                 - triangle_bonus
