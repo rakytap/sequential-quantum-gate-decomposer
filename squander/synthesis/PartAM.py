@@ -224,6 +224,13 @@ class qgd_Partition_Aware_Mapping:
         # this term such blocks are picked purely on boundary absorption.
         # 0.0 disables it (recovers prior behaviour). Sweepable.
         self.config.setdefault('partition_chain_penalty_weight', 2.0)
+        # Knee of the anti-chain penalty. None reuses
+        # partition_triangle_threshold (the triangle-bonus knee), which
+        # leaves a dead zone: 3q blocks with mid triangle density get
+        # penalised yet earn no bonus. Set a lower value to spare
+        # moderately-entangled 3q blocks while still nuking near-pure
+        # chains (triD ~ 0). Sweepable.
+        self.config.setdefault('partition_chain_penalty_threshold', None)
         self.config.setdefault('partition_min_cost', 0.05)
         self.config.setdefault(
             'partition_width_penalties',
@@ -580,6 +587,13 @@ class qgd_Partition_Aware_Mapping:
         chain_penalty_weight = float(
             cfg.get("partition_chain_penalty_weight", 0.0)
         )
+        chain_penalty_threshold = cfg.get("partition_chain_penalty_threshold")
+        if chain_penalty_threshold is None:
+            chain_penalty_threshold = triangle_threshold
+        else:
+            chain_penalty_threshold = min(
+                max(float(chain_penalty_threshold), 0.0), 1.0
+            )
         min_cost = float(cfg.get("partition_min_cost", 0.05))
         width_penalties = cfg.get("partition_width_penalties")
         synthesis_capacities = cfg.get("partition_synthesis_capacity")
@@ -724,11 +738,11 @@ class qgd_Partition_Aware_Mapping:
             if (
                 chain_penalty_weight
                 and width >= 3
-                and triangle_threshold > 0.0
+                and chain_penalty_threshold > 0.0
             ):
                 chain_deficit = max(
-                    triangle_threshold - triangle_density, 0.0
-                ) / triangle_threshold
+                    chain_penalty_threshold - triangle_density, 0.0
+                ) / chain_penalty_threshold
                 chain_penalty = (
                     chain_penalty_weight * chain_deficit * (width - 2)
                 )
