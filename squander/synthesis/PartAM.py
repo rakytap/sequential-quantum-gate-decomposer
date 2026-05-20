@@ -199,6 +199,13 @@ class qgd_Partition_Aware_Mapping:
         self.config.setdefault('partition_density_weight', 1.0)
         self.config.setdefault('partition_boundary_weight', 0.9)
         self.config.setdefault('partition_depth_balance_weight', 0.25)
+        # Shape of the depth-balance penalty: depth_balance_weight *
+        # depth_fraction**exponent * max(width_penalty, 1). 2.0 (current
+        # squared form) over-penalises tall partitions in deep circuits
+        # (qft, multiplier) so they get fragmented into shallow wide
+        # slices, creating extra boundaries and routing SWAPs. Lower to
+        # 1.0 for a linear penalty. Sweepable.
+        self.config.setdefault('partition_depth_balance_exponent', 2.0)
         # Triangle is a small tie-breaker on top of absorption-credit density
         # and discounted boundary. A truly triangular 3q block (Toffoli, etc.)
         # gets a modest extra reward; chain-shaped 3q blocks don't.
@@ -561,6 +568,9 @@ class qgd_Partition_Aware_Mapping:
         depth_balance_weight = float(
             cfg.get("partition_depth_balance_weight", 0.25)
         )
+        depth_balance_exponent = float(
+            cfg.get("partition_depth_balance_exponent", 2.0)
+        )
         triangle_weight = float(cfg.get("partition_triangle_weight", 2.5))
         triangle_threshold = float(
             cfg.get("partition_triangle_threshold", 0.6)
@@ -743,8 +753,7 @@ class qgd_Partition_Aware_Mapping:
             depth_fraction = internal_depth / float(global_depth)
             depth_penalty = (
                 depth_balance_weight
-                * depth_fraction
-                * depth_fraction
+                * (depth_fraction ** depth_balance_exponent)
                 * max(width_penalty, 1.0)
             )
 
