@@ -146,6 +146,11 @@ Optimization_Interface( const Optimization_Interface& other );
 */
 Optimization_Interface( Matrix Umtx_in, int qbit_num_in, bool optimize_layer_num_in, std::map<std::string, Config_Element>& config, guess_type initial_guess_in, int accelerator_num_in=0 );
 
+/**
+@brief Constructor of the class from a single precision unitary matrix.
+*/
+Optimization_Interface( Matrix_float Umtx_in, int qbit_num_in, bool optimize_layer_num_in, std::map<std::string, Config_Element>& config, guess_type initial_guess_in, int accelerator_num_in=0 );
+
 
 
 /**
@@ -334,6 +339,12 @@ virtual double optimization_problem( Matrix_real& parameters);
 @return Returns with the cost function.
 */
 double calculate_cost_function( Matrix& matrix_new, Matrix* ret_temp=NULL );
+
+/**
+@brief Float32 cost-function entry. Expensive trace-like reductions run on Matrix_float;
+       uncommon double-only variants upcast locally.
+*/
+double calculate_cost_function( Matrix_float& matrix_new, Matrix_float* ret_temp=NULL );
 
 
 

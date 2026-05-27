@@ -22,6 +22,7 @@ limitations under the License.
 
 #include "Optimization_Interface.h"
 #include "N_Qubit_Decomposition_Cost_Function.h"
+#include "matrix_float.h"
 #include "Adam.h"
 #include "grad_descend.h"
 #include "BFGS_Powell.h"
@@ -34,6 +35,106 @@ limitations under the License.
 #endif
 
 #include <fstream>
+
+static Matrix_real_float
+to_float32_parameters(Matrix_real& parameters) {
+    Matrix_real_float ret(parameters.rows, parameters.cols, parameters.stride);
+    for (int row=0; row<parameters.rows; row++) {
+        for (int col=0; col<parameters.cols; col++) {
+            int idx = row*parameters.stride + col;
+            ret[idx] = static_cast<float>(parameters[idx]);
+        }
+    }
+    return ret;
+}
+
+static double
+get_cost_function_float(Matrix_float& matrix, int trace_offset) {
+    const int matrix_size = matrix.cols;
+    double trace_real = 0.0;
+    if ( trace_offset == 0 ) {
+        for (int idx=0; idx<matrix_size; idx++) {
+            trace_real += matrix[idx*matrix.stride + idx].real;
+        }
+    }
+    else {
+        for (int idx=0; idx<matrix_size; idx++) {
+            trace_real += matrix[(idx+trace_offset)*matrix.stride + idx].real;
+        }
+    }
+    return 1.0 - trace_real/matrix_size;
+}
+
+static void
+get_cost_function_with_correction_float(Matrix_float& matrix, int qbit_num, int trace_offset, double* ret) {
+    ret[0] = get_cost_function_float(matrix, trace_offset);
+    const int matrix_size = matrix.cols;
+    double trace_real = 0.0;
+    if ( trace_offset == 0 ) {
+        for (int qbit_idx=0; qbit_idx<qbit_num; qbit_idx++) {
+            int qbit_error_mask = 1 << qbit_idx;
+            for (int col_idx=0; col_idx<matrix_size; col_idx++) {
+                int row_idx = col_idx ^ qbit_error_mask;
+                trace_real += matrix[row_idx*matrix.stride + col_idx].real;
+            }
+        }
+    }
+    else {
+        for (int qbit_idx=0; qbit_idx<qbit_num; qbit_idx++) {
+            int qbit_error_mask = 1 << qbit_idx;
+            for (int col_idx=0; col_idx<matrix_size; col_idx++) {
+                int row_idx = (col_idx + trace_offset) ^ qbit_error_mask;
+                trace_real += matrix[row_idx*matrix.stride + col_idx].real;
+            }
+        }
+    }
+    ret[1] = trace_real/matrix_size;
+}
+
+static void
+get_cost_function_with_correction2_float(Matrix_float& matrix, int qbit_num, int trace_offset, double* ret) {
+    get_cost_function_with_correction_float(matrix, qbit_num, trace_offset, ret);
+    const int matrix_size = matrix.cols;
+    double trace_real = 0.0;
+    if ( trace_offset == 0 ) {
+        for (int qbit_idx1=0; qbit_idx1<qbit_num; qbit_idx1++) {
+            int qbit_error_mask1 = 1 << qbit_idx1;
+            for (int qbit_idx2=qbit_idx1+1; qbit_idx2<qbit_num; qbit_idx2++) {
+                int qbit_error_mask = qbit_error_mask1 | (1 << qbit_idx2);
+                for (int col_idx=0; col_idx<matrix_size; col_idx++) {
+                    int row_idx = col_idx ^ qbit_error_mask;
+                    trace_real += matrix[row_idx*matrix.stride + col_idx].real;
+                }
+            }
+        }
+    }
+    else {
+        for (int qbit_idx1=0; qbit_idx1<qbit_num; qbit_idx1++) {
+            int qbit_error_mask1 = 1 << qbit_idx1;
+            for (int qbit_idx2=qbit_idx1+1; qbit_idx2<qbit_num; qbit_idx2++) {
+                int qbit_error_mask = qbit_error_mask1 | (1 << qbit_idx2);
+                for (int col_idx=0; col_idx<matrix_size; col_idx++) {
+                    int row_idx = (col_idx + trace_offset) ^ qbit_error_mask;
+                    trace_real += matrix[row_idx*matrix.stride + col_idx].real;
+                }
+            }
+        }
+    }
+    ret[2] = trace_real/matrix_size;
+}
+
+static QGD_Complex16
+get_trace_float(Matrix_float& matrix) {
+    QGD_Complex16 trace;
+    trace.real = 0.0;
+    trace.imag = 0.0;
+    const int matrix_size = matrix.cols;
+    for (int idx=0; idx<matrix_size; idx++) {
+        trace.real += matrix[idx*matrix.stride + idx].real;
+        trace.imag += matrix[idx*matrix.stride + idx].imag;
+    }
+    return trace;
+}
 
 
 
@@ -181,6 +282,71 @@ Optimization_Interface::Optimization_Interface( Matrix Umtx_in, int qbit_num_in,
     id = distrib_int(gen);
 
 
+
+    // Time spent on circuit simulation/cost function evaluation
+    circuit_simulation_time = 0.0;
+    // time spent on optimization
+    CPU_time = 0.0;
+
+#if defined __DFE__
+    // number of utilized accelerators
+    accelerator_num = accelerator_num_in;
+#elif defined __GROQ__
+    // number of utilized accelerators
+    accelerator_num = accelerator_num_in;
+#else
+    accelerator_num = 0;
+#endif
+
+}
+
+/**
+@brief Constructor of the class from a single precision unitary matrix.
+*/
+Optimization_Interface::Optimization_Interface( Matrix_float Umtx_in, int qbit_num_in, bool optimize_layer_num_in, std::map<std::string, Config_Element>& config, guess_type initial_guess_in, int accelerator_num_in ) : Decomposition_Base(Umtx_in, qbit_num_in, config, initial_guess_in) {
+
+    // logical value. Set true if finding the minimum number of gate layers is required (default), or false when the maximal number of two-qubit gates is used (ideal for general unitaries).
+    optimize_layer_num  = optimize_layer_num_in;
+
+    // A string describing the type of the class
+    type = N_QUBIT_DECOMPOSITION_CLASS_BASE;
+
+    // The global minimum of the optimization problem
+    global_target_minimum = 0;
+
+    number_of_iters.store(0, std::memory_order_relaxed);
+
+    // number of iteratrion loops in the optimization
+    iteration_loops[2] = 3;
+
+    // filling in numbers that were not given in the input
+    for ( std::map<int,int>::iterator it = max_layer_num_def.begin(); it!=max_layer_num_def.end(); it++) {
+        if ( max_layer_num.count( it->first ) == 0 ) {
+            max_layer_num.insert( std::pair<int, int>(it->first,  it->second) );
+        }
+    }
+
+    // logical variable indicating whether adaptive learning reate is used in the ADAM algorithm
+    adaptive_eta = true;
+
+    // parameter to contron the radius of parameter randomization around the curren tminimum
+    radius = 1.0;
+    randomization_rate = 0.3;
+
+    // The chosen variant of the cost function
+    cost_fnc = FROBENIUS_NORM;
+
+    // variables to calculate the cost function with first and second corrections
+    prev_cost_fnv_val = 1.0;
+    correction1_scale = 1/1.7;
+    correction2_scale = 1/2.0;
+
+    // set the trace offset
+    trace_offset = 0;
+
+    // unique id indentifying the instance of the class
+    std::uniform_int_distribution<> distrib_int(0, INT_MAX);
+    id = distrib_int(gen);
 
     // Time spent on circuit simulation/cost function evaluation
     circuit_simulation_time = 0.0;
@@ -458,42 +624,48 @@ void Optimization_Interface::solve_layer_optimization_problem( int num_of_parame
     switch ( alg ) {
         case ADAM:
             solve_layer_optimization_problem_ADAM( num_of_parameters, solution_guess);
-            return;
+            break;
         case ADAM_BATCHED:
             solve_layer_optimization_problem_ADAM_BATCHED( num_of_parameters, solution_guess);
-            return;
+            break;
         case GRAD_DESCEND:
             solve_layer_optimization_problem_GRAD_DESCEND( num_of_parameters, solution_guess);
-            return;
+            break;
         case AGENTS:
             solve_layer_optimization_problem_AGENTS( num_of_parameters, solution_guess);
-            return;
+            break;
         case COSINE:
             solve_layer_optimization_problem_COSINE( num_of_parameters, solution_guess);
-            return;
+            break;
         case GRAD_DESCEND_PARAMETER_SHIFT_RULE:
             solve_layer_optimization_problem_GRAD_DESCEND_PARAMETER_SHIFT_RULE( num_of_parameters, solution_guess);
-            return;           
+            break;
         case AGENTS_COMBINED:
             solve_layer_optimization_problem_AGENTS_COMBINED( num_of_parameters, solution_guess);
-            return;
+            break;
         case BFGS:
             solve_layer_optimization_problem_BFGS( num_of_parameters, solution_guess);
-            return;
+            break;
         case BAYES_OPT:
             solve_layer_optimization_problem_BAYES_OPT( num_of_parameters, solution_guess);
-            return;
+            break;
         case BAYES_AGENTS:
             solve_layer_optimization_problem_BAYES_AGENTS( num_of_parameters, solution_guess);
-            return;
+            break;
         case BFGS2:
             solve_layer_optimization_problem_BFGS2( num_of_parameters, solution_guess);
-            return;
+            break;
         default:
             std::string error("Optimization_Interface::solve_layer_optimization_problem: unimplemented optimization algorithm");
             throw error;
     }
 
+    if ( use_float ) {
+        optimized_parameters_mtx_float = Matrix_real_float(1, optimized_parameters_mtx.size());
+        for (int idx=0; idx<optimized_parameters_mtx.size(); idx++) {
+            optimized_parameters_mtx_float[idx] = static_cast<float>(optimized_parameters_mtx[idx]);
+        }
+    }
 
 }
 
@@ -572,8 +744,15 @@ double Optimization_Interface::optimization_problem( Matrix_real& parameters ) {
         throw err;
     }  
     
+    if ( use_float ) {
+        Matrix_real_float parameters_float = to_float32_parameters(parameters);
+        Matrix_float matrix_new = Umtx_float.copy();
+        Gates_block::apply_to( parameters_float, matrix_new );
+        return calculate_cost_function(matrix_new, NULL);
+    }
+
     Matrix matrix_new = Umtx.copy();
-    apply_to( parameters, matrix_new );
+    Gates_block::apply_to( parameters, matrix_new );
 
     return calculate_cost_function(matrix_new, NULL);
 
@@ -641,6 +820,48 @@ double Optimization_Interface::calculate_cost_function( Matrix& matrix_new, Matr
         return get_osr_entanglement_test(matrix_new, use_cuts, osr_rank, use_softmax);
     default: {
         std::string err("Optimization_Interface::optimization_problem: Cost function variant not implmented.");
+        throw err;
+    } }
+
+}
+
+double Optimization_Interface::calculate_cost_function( Matrix_float& matrix_new, Matrix_float* ret_temp ) {
+
+    switch (cost_fnc) {
+    case FROBENIUS_NORM:
+        return get_cost_function_float(matrix_new, trace_offset);
+    case FROBENIUS_NORM_CORRECTION1: {
+        double ret[2];
+        get_cost_function_with_correction_float(matrix_new, qbit_num, trace_offset, ret);
+        return ret[0] - std::sqrt(prev_cost_fnv_val)*ret[1]*correction1_scale; }
+    case FROBENIUS_NORM_CORRECTION2: {
+        double ret[3];
+        get_cost_function_with_correction2_float(matrix_new, qbit_num, trace_offset, ret);
+        return ret[0] - std::sqrt(prev_cost_fnv_val)*(ret[1]*correction1_scale + ret[2]*correction2_scale); }
+    case HILBERT_SCHMIDT_TEST: {
+        QGD_Complex16 trace_temp = get_trace_float(matrix_new);
+        if ( ret_temp != NULL ) {
+            (*ret_temp)[0].real = static_cast<float>(trace_temp.real);
+            (*ret_temp)[0].imag = static_cast<float>(trace_temp.imag);
+        }
+        double d = 1.0/matrix_new.cols;
+        return 1 - d*d*(trace_temp.real*trace_temp.real + trace_temp.imag*trace_temp.imag); }
+    case INFIDELITY: {
+        QGD_Complex16 trace_temp = get_trace_float(matrix_new);
+        if ( ret_temp != NULL ) {
+            (*ret_temp)[0].real = static_cast<float>(trace_temp.real);
+            (*ret_temp)[0].imag = static_cast<float>(trace_temp.imag);
+        }
+        double d = matrix_new.cols;
+        return 1.0-((trace_temp.real*trace_temp.real+trace_temp.imag*trace_temp.imag)/d+1)/(d+1); }
+    case HILBERT_SCHMIDT_TEST_CORRECTION1:
+    case HILBERT_SCHMIDT_TEST_CORRECTION2:
+    case SUM_OF_SQUARES:
+    case OSR_ENTANGLEMENT: {
+        Matrix matrix_new64 = matrix_new.to_float64();
+        return calculate_cost_function(matrix_new64, NULL); }
+    default: {
+        std::string err("Optimization_Interface::calculate_cost_function(Matrix_float&): Cost function variant not implmented.");
         throw err;
     } }
 
@@ -896,10 +1117,18 @@ double Optimization_Interface::optimization_problem( Matrix_real parameters, voi
     Optimization_Interface* instance = reinterpret_cast<Optimization_Interface*>(void_instance);
     instance->increment_num_iters();
 
-    // get the transformed matrix with the gates in the list
+    if ( instance->get_use_float() ) {
+        Matrix_real_float parameters_float = to_float32_parameters(parameters);
+        Matrix_float Umtx_loc = instance->get_Umtx_float();
+        Matrix_float matrix_new = Umtx_loc.copy();
+        instance->Gates_block::apply_to( parameters_float, matrix_new );
+        Matrix_float ret_temp_float(ret_temp.rows, ret_temp.cols);
+        return instance->calculate_cost_function(matrix_new, &ret_temp_float);
+    }
+
     Matrix Umtx_loc = instance->get_Umtx();
     Matrix matrix_new = Umtx_loc.copy();
-    instance->apply_to( parameters, matrix_new );
+    instance->Gates_block::apply_to( parameters, matrix_new );
 
     return instance->calculate_cost_function(matrix_new, &ret_temp);
 
@@ -988,6 +1217,100 @@ void Optimization_Interface::optimization_problem_combined_non_static( Matrix_re
 
     int qbit_num = instance->get_qbit_num();
     int trace_offset_loc = instance->get_trace_offset();
+
+    if ( instance->get_use_float() ) {
+        Matrix_real_float parameters_float = to_float32_parameters(parameters);
+        Matrix_float Umtx_loc = instance->get_Umtx_float();
+        std::vector<Matrix_float> combined_result = instance->Gates_block::apply_to_combined( parameters_float, Umtx_loc, parallel );
+        Matrix_float matrix_new = std::move(combined_result[0]);
+        std::vector<Matrix_float> Umtx_deriv;
+        Umtx_deriv.reserve(combined_result.size() - 1);
+        for (size_t idx = 1; idx < combined_result.size(); ++idx) {
+            Umtx_deriv.push_back(std::move(combined_result[idx]));
+        }
+
+        Matrix_float trace_tmp(1,3);
+        *f0 = instance->calculate_cost_function(matrix_new, &trace_tmp);
+
+        Matrix Upartial;
+        Matrix matrix_new64;
+        if (cost_fnc == SUM_OF_SQUARES || cost_fnc == OSR_ENTANGLEMENT) {
+            matrix_new64 = matrix_new.to_float64();
+            Upartial = (cost_fnc == SUM_OF_SQUARES)
+                ? get_deriv_sum_of_squares(matrix_new64)
+                : get_deriv_osr_entanglement(matrix_new64, use_cuts, osr_rank, use_softmax);
+        }
+
+        int work_batch = ( parallel == 0 ) ? parameter_num_loc : 10;
+        tbb::parallel_for( tbb::blocked_range<int>(0,parameter_num_loc,work_batch), [&](tbb::blocked_range<int> r) {
+            for (int idx=r.begin(); idx<r.end(); ++idx) {
+                double grad_comp;
+                switch (cost_fnc) {
+                case FROBENIUS_NORM:
+                    grad_comp = (get_cost_function_float(Umtx_deriv[idx], trace_offset_loc) - 1.0);
+                    break;
+                case FROBENIUS_NORM_CORRECTION1: {
+                    double deriv_tmp[2];
+                    get_cost_function_with_correction_float(Umtx_deriv[idx], qbit_num, trace_offset_loc, deriv_tmp);
+                    grad_comp = (deriv_tmp[0] - std::sqrt(prev_cost_fnv_val)*deriv_tmp[1]*correction1_scale - 1.0);
+                    break;
+                }
+                case FROBENIUS_NORM_CORRECTION2: {
+                    double deriv_tmp[3];
+                    get_cost_function_with_correction2_float(Umtx_deriv[idx], qbit_num, trace_offset_loc, deriv_tmp);
+                    grad_comp = (deriv_tmp[0] - std::sqrt(prev_cost_fnv_val)*(deriv_tmp[1]*correction1_scale + deriv_tmp[2]*correction2_scale) - 1.0);
+                    break;
+                }
+                case HILBERT_SCHMIDT_TEST: {
+                    double d = 1.0/Umtx_deriv[idx].cols;
+                    QGD_Complex16 deriv_tmp = get_trace_float(Umtx_deriv[idx]);
+                    grad_comp = -2.0*d*d*trace_tmp[0].real*deriv_tmp.real-2.0*d*d*trace_tmp[0].imag*deriv_tmp.imag;
+                    break;
+                }
+                case INFIDELITY: {
+                    double d = Umtx_deriv[idx].cols;
+                    QGD_Complex16 deriv_tmp = get_trace_float(Umtx_deriv[idx]);
+                    grad_comp = -2.0/d/(d+1)*trace_tmp[0].real*deriv_tmp.real-2.0/d/(d+1)*trace_tmp[0].imag*deriv_tmp.imag;
+                    break;
+                }
+                case SUM_OF_SQUARES:
+                case OSR_ENTANGLEMENT: {
+                    Matrix deriv64 = Umtx_deriv[idx].to_float64();
+                    grad_comp = real_trace_conj_dot(Upartial, deriv64);
+                    break;
+                }
+                case HILBERT_SCHMIDT_TEST_CORRECTION1:
+                case HILBERT_SCHMIDT_TEST_CORRECTION2: {
+                    Matrix deriv64 = Umtx_deriv[idx].to_float64();
+                    Matrix matrix_new_for_trace = matrix_new.to_float64();
+                    Matrix trace_tmp64(1,3);
+                    instance->calculate_cost_function(matrix_new_for_trace, &trace_tmp64);
+                    if (cost_fnc == HILBERT_SCHMIDT_TEST_CORRECTION1) {
+                        Matrix&& deriv_tmp = get_trace_with_correction(deriv64, qbit_num);
+                        double d = 1.0/deriv64.cols;
+                        grad_comp = -2.0*d*d*(trace_tmp64[0].real*deriv_tmp[0].real+trace_tmp64[0].imag*deriv_tmp[0].imag+std::sqrt(prev_cost_fnv_val)*correction1_scale*(trace_tmp64[1].real*deriv_tmp[1].real+trace_tmp64[1].imag*deriv_tmp[1].imag));
+                    }
+                    else {
+                        Matrix&& deriv_tmp = get_trace_with_correction2(deriv64, qbit_num);
+                        double d = 1.0/deriv64.cols;
+                        grad_comp = -2.0*d*d*(trace_tmp64[0].real*deriv_tmp[0].real+trace_tmp64[0].imag*deriv_tmp[0].imag+std::sqrt(prev_cost_fnv_val)*(correction1_scale*(trace_tmp64[1].real*deriv_tmp[1].real+trace_tmp64[1].imag*deriv_tmp[1].imag) + correction2_scale*(trace_tmp64[2].real*deriv_tmp[2].real+trace_tmp64[2].imag*deriv_tmp[2].imag)));
+                    }
+                    break;
+                }
+                default: {
+                    std::string err("Optimization_Interface::optimization_problem_combined: Cost function variant not implmented.");
+                    throw err;
+                } }
+                grad[idx] = grad_comp;
+            }
+        });
+
+        instance->increment_num_iters(parameter_num_loc + 1);
+        std::stringstream sstream;
+        sstream << *f0 << std::endl;
+        instance->print(sstream, 5);
+        return;
+    }
 
 #ifdef __DFE__
 
@@ -1568,6 +1891,3 @@ void Optimization_Interface::set_osr_params( std::vector<std::vector<int>> use_c
     //sstream << "Optimization_Interface::set_osr_params: OSR entanglement test parameters set. osr_rank: " << osr_rank << ", use_softmax: " << use_softmax << std::endl;
     //print(sstream, 2);
 }
-
-
-

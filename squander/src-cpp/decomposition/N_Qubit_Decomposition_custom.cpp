@@ -75,6 +75,28 @@ N_Qubit_Decomposition_custom::N_Qubit_Decomposition_custom( Matrix Umtx_in, int 
 
 }
 
+/**
+@brief Constructor of the class from a single precision unitary matrix.
+*/
+N_Qubit_Decomposition_custom::N_Qubit_Decomposition_custom( Matrix_float Umtx_in, int qbit_num_in, bool optimize_layer_num_in, std::map<std::string, Config_Element>& config, guess_type initial_guess_in, int accelerator_num ) : Optimization_Interface(Umtx_in, qbit_num_in, optimize_layer_num_in, config, initial_guess_in, accelerator_num) {
+
+
+    // BFGS is better for smaller problems, while ADAM for larger ones
+    if ( qbit_num <= 5 ) {
+        set_optimizer( BFGS );
+
+        // Maximal number of iteartions in the optimization process
+        max_outer_iterations = 4;
+    }
+    else {
+        set_optimizer( ADAM );
+
+        // Maximal number of iteartions in the optimization process
+        max_outer_iterations = 1;
+    }
+
+}
+
 
 
 /**
@@ -166,7 +188,6 @@ N_Qubit_Decomposition_custom::start_decomposition() {
 #endif
 
 }
-
 
 
 

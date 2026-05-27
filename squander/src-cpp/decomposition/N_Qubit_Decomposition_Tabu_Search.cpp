@@ -62,6 +62,14 @@ N_Qubit_Decomposition_Tabu_Search::N_Qubit_Decomposition_Tabu_Search( Matrix Umt
 
 }
 
+/**
+@brief Constructor of the class from a single precision unitary matrix.
+*/
+N_Qubit_Decomposition_Tabu_Search::N_Qubit_Decomposition_Tabu_Search( Matrix_float Umtx_in, int qbit_num_in, std::map<std::string, Config_Element>& config, int accelerator_num ) : N_Qubit_Decomposition_Tree_Search( Umtx_in, qbit_num_in, config, accelerator_num) {
+
+
+}
+
 
 
 /**
@@ -74,6 +82,16 @@ N_Qubit_Decomposition_Tabu_Search::N_Qubit_Decomposition_Tabu_Search( Matrix Umt
 @return An instance of the class
 */
 N_Qubit_Decomposition_Tabu_Search::N_Qubit_Decomposition_Tabu_Search( Matrix Umtx_in, int qbit_num_in, std::vector<matrix_base<int>> topology_in, std::map<std::string, Config_Element>& config, int accelerator_num ) : N_Qubit_Decomposition_Tree_Search( Umtx_in, qbit_num_in,  topology_in, config, accelerator_num ) {
+
+    // A string labeling the gate operation
+    name = "Tabu_Search";
+
+}
+
+/**
+@brief Constructor of the class from a single precision unitary matrix.
+*/
+N_Qubit_Decomposition_Tabu_Search::N_Qubit_Decomposition_Tabu_Search( Matrix_float Umtx_in, int qbit_num_in, std::vector<matrix_base<int>> topology_in, std::map<std::string, Config_Element>& config, int accelerator_num ) : N_Qubit_Decomposition_Tree_Search( Umtx_in, qbit_num_in,  topology_in, config, accelerator_num ) {
 
     // A string labeling the gate operation
     name = "Tabu_Search";
@@ -222,6 +240,7 @@ N_Qubit_Decomposition_Tabu_Search::tabu_search_over_gate_structures() {
                     if ( current_inner_min < optimization_tolerance_loc ) {
                         current_minimum = current_inner_min;
                         optimized_parameters_mtx = cDecomp_custom_random.get_optimized_parameters().copy();
+                        sync_optimized_parameters_float();
                         gcode_best_solution   = gcode;
                         break;
                     }
@@ -262,6 +281,7 @@ N_Qubit_Decomposition_Tabu_Search::tabu_search_over_gate_structures() {
             current_minimum     = current_minimum_tmp;                        
             gcode_best_solution = gcode;
             optimized_parameters_mtx = cDecomp_custom_random.get_optimized_parameters();
+            sync_optimized_parameters_float();
             
             possible_gate_structures.clear();            
             insert_into_best_solution( gcode, current_minimum_tmp ); 
@@ -279,6 +299,7 @@ N_Qubit_Decomposition_Tabu_Search::tabu_search_over_gate_structures() {
                 current_minimum     = current_minimum_tmp;                        
                 gcode_best_solution = gcode;
                 optimized_parameters_mtx = cDecomp_custom_random.get_optimized_parameters();
+                sync_optimized_parameters_float();
                 
                 possible_gate_structures.clear();            
                 insert_into_best_solution( gcode, current_minimum_tmp ); 
@@ -541,8 +562,6 @@ N_Qubit_Decomposition_Tabu_Search::draw_gate_structure_from_list( std::vector<Gr
     return chosen_gcode;
 
 }
-
-
 
 
 

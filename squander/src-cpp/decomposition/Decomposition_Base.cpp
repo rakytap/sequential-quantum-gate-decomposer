@@ -81,6 +81,8 @@ Decomposition_Base::Decomposition_Base() {
 
     // The convergence threshold in the optimization process
     convergence_threshold = 1e-5;
+
+    use_float = false;
     
     //global phase of the unitary matrix
     global_phase_factor.real = 1;
@@ -178,9 +180,104 @@ Decomposition_Base::Decomposition_Base( Matrix Umtx_in, int qbit_num_in, std::ma
     // config maps
     config   = config_in;
 
+    use_float = false;
+    if ( config.count("use_float") > 0 ) {
+        config["use_float"].get_property( use_float );
+    }
+
+    if ( use_float ) {
+        Umtx_float = Umtx.to_float32();
+    }
 
     // Will be used to obtain a seed for the random number engine
     std::random_device rd;  
+
+    // seedign the random generator
+    gen = std::mt19937(rd());
+
+#if CBLAS==1
+    num_threads = mkl_get_max_threads();
+#elif CBLAS==2
+    num_threads = openblas_get_num_threads();
+#endif
+
+#ifdef __MPI__
+    // Get the number of processes
+    MPI_Comm_size(MPI_COMM_WORLD, &world_size);
+
+    // Get the rank of the process
+    MPI_Comm_rank(MPI_COMM_WORLD, &current_rank);
+
+#endif
+
+}
+
+/**
+@brief Constructor of the class from a single precision unitary matrix.
+*/
+Decomposition_Base::Decomposition_Base( Matrix_float Umtx_in, int qbit_num_in, std::map<std::string, Config_Element>& config_in, guess_type initial_guess_in ) : Gates_block(qbit_num_in) {
+
+    // A string labeling the gate operation
+    name = "Decomposition_Interface";
+
+    Init_max_layer_num();
+
+    // Keep the single precision input as the active unitary for the hot path.
+    Umtx_float = Umtx_in;
+    Umtx = Umtx_in.to_float64();
+
+    // logical value describing whether the decomposition was finalized or not
+    decomposition_finalized = false;
+
+    // A string describing the type of the class
+    type = DECOMPOSITION_BASE_CLASS;
+
+    // error of the unitarity of the final decomposition
+    decomposition_error = DBL_MAX;
+
+    // number of finalizing (deterministic) opertaions counted from the top of the array of gates
+    finalizing_gates_num = 0;
+
+    // the number of the finalizing (deterministic) parameters counted from the top of the optimized_parameters list
+    finalizing_parameter_num = 0;
+
+    // The current minimum of the optimization problem
+    current_minimum = std::numeric_limits<double>::max();
+
+    // The global minimum of the optimization problem
+    global_target_minimum = 0;
+
+    // logical value describing whether the optimization problem was solved or not
+    optimization_problem_solved = false;
+
+    // The maximal allowed error of the optimization problem
+    optimization_tolerance = 1e-7;
+
+    // Maximal number of iteartions in the optimization process
+    max_outer_iterations = 1e8;
+
+    // number of operators in one sub-layer of the optimization process
+    optimization_block = -1;
+
+    // method to guess initial values for the optimization. Possible values: ZEROS, RANDOM, CLOSE_TO_ZERO (default)
+    initial_guess = initial_guess_in;
+
+    // The convergence threshold in the optimization process
+    convergence_threshold = 1e-5;
+
+    //global phase of the unitary matrix
+    global_phase_factor.real = 1;
+    global_phase_factor.imag = 0;
+
+    //name of the SQUANDER project
+    std::string projectname = "";
+
+    // config maps
+    config = config_in;
+    use_float = true;
+
+    // Will be used to obtain a seed for the random number engine
+    std::random_device rd;
 
     // seedign the random generator
     gen = std::mt19937(rd());
@@ -212,6 +309,18 @@ Decomposition_Base::~Decomposition_Base() {
         optimized_parameters = NULL;
     }
 */
+}
+
+void Decomposition_Base::sync_optimized_parameters_float() {
+
+    if ( !use_float ) {
+        return;
+    }
+
+    optimized_parameters_mtx_float = Matrix_real_float(1, optimized_parameters_mtx.size());
+    for (int pidx=0; pidx<optimized_parameters_mtx.size(); pidx++) {
+        optimized_parameters_mtx_float[pidx] = static_cast<float>(optimized_parameters_mtx[pidx]);
+    }
 }
 
 
@@ -280,6 +389,10 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
 
         // store the initial unitary to be decomposed
         Matrix Umtx_loc = Umtx;
+        Matrix_float Umtx_float_loc;
+        if ( use_float ) {
+            Umtx_float_loc = Umtx_float.copy();
+        }
 
         // storing the initial computational parameters
         int optimization_block_loc = optimization_block;
@@ -391,12 +504,24 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
                     gates.push_back( *gate_it );
                 }
                 reset_parameter_start_indices();
-                apply_to( optimized_parameters_mtx, Umtx );
+                if ( use_float ) {
+                    Matrix_real_float optimized_parameters_float(1, optimized_parameters_mtx.size());
+                    for (int pidx=0; pidx<optimized_parameters_mtx.size(); pidx++) {
+                        optimized_parameters_float[pidx] = static_cast<float>(optimized_parameters_mtx[pidx]);
+                    }
+                    Gates_block::apply_to( optimized_parameters_float, Umtx_float );
+                }
+                else {
+                    apply_to( optimized_parameters_mtx, Umtx );
+                }
                 
                 gates = gates_save;
             }
             else {
                 Umtx = Umtx_loc.copy();              
+                if ( use_float ) {
+                    Umtx_float = Umtx_float_loc.copy();
+                }
             }
 
 
@@ -434,12 +559,26 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
                 }
                 reset_parameter_start_indices();
                 
-                Matrix post_mtx = Identity.copy();
-                apply_to( optimized_parameters_partial, post_mtx );
-                
-                gates = gates_save;
-                
-                fixed_gate_post->set_matrix( post_mtx );
+                if ( use_float ) {
+                    Matrix_real_float optimized_parameters_partial_float(1, optimized_parameters_partial.size());
+                    for (int pidx=0; pidx<optimized_parameters_partial.size(); pidx++) {
+                        optimized_parameters_partial_float[pidx] = static_cast<float>(optimized_parameters_partial[pidx]);
+                    }
+                    Matrix_float post_mtx_float = create_identity_float( matrix_size );
+                    Gates_block::apply_to( optimized_parameters_partial_float, post_mtx_float );
+
+                    gates = gates_save;
+
+                    fixed_gate_post->set_matrix( post_mtx_float.to_float64() );
+                }
+                else {
+                    Matrix post_mtx = Identity.copy();
+                    apply_to( optimized_parameters_partial, post_mtx );
+
+                    gates = gates_save;
+
+                    fixed_gate_post->set_matrix( post_mtx );
+                }
                 
                 gates.push_back( fixed_gate_post ); 
                 reset_parameter_start_indices();           
@@ -460,6 +599,8 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
 
             // solve the optimization problem of the block
             solve_layer_optimization_problem( parameter_num, solution_guess_tmp );
+
+            sync_optimized_parameters_float();
 
             // add the current minimum to the array of minimums and calculate the mean
             double minvec_mean = 0;
@@ -544,11 +685,15 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
         optimized_parameters_mtx = Matrix_real( 1, parameter_num );
 
         memcpy( optimized_parameters_mtx.get_data(), optimized_parameters.get_data(), parameter_num*sizeof(double) );
+        sync_optimized_parameters_float();
 
         delete(fixed_gate_post);
 
         // restore the original unitary
         Umtx = Umtx_loc; // copy?
+        if ( use_float ) {
+            Umtx_float = Umtx_float_loc;
+        }
 
 
 }
@@ -607,6 +752,14 @@ Matrix Decomposition_Base::get_Umtx() {
     return Umtx;
 }
 
+Matrix_float Decomposition_Base::get_Umtx_float() {
+    return Umtx_float;
+}
+
+bool Decomposition_Base::get_use_float() const {
+    return use_float;
+}
+
 
 /**
 @brief Call to get the size of the unitary to be transformed
@@ -623,6 +776,13 @@ int Decomposition_Base::get_Umtx_size() {
 Matrix_real Decomposition_Base::get_optimized_parameters() {    
     
     return optimized_parameters_mtx.copy();
+
+}
+
+Matrix_real_float Decomposition_Base::get_optimized_parameters_float() {
+
+    sync_optimized_parameters_float();
+    return optimized_parameters_mtx_float.copy();
 
 }
 
@@ -644,6 +804,7 @@ void Decomposition_Base::set_optimized_parameters( double* parameters, int num_o
 
     if ( num_of_parameters == 0 ) {
         optimized_parameters_mtx = Matrix_real(1, num_of_parameters);
+        sync_optimized_parameters_float();
         return;
     }
 
@@ -654,6 +815,7 @@ void Decomposition_Base::set_optimized_parameters( double* parameters, int num_o
 
     optimized_parameters_mtx = Matrix_real(1, num_of_parameters);
     memcpy( optimized_parameters_mtx.get_data(), parameters, num_of_parameters*sizeof(double) );
+    sync_optimized_parameters_float();
 
     return;
 }
@@ -664,7 +826,13 @@ void Decomposition_Base::set_optimized_parameters( double* parameters, int num_o
 @return Returns with the decomposed matrix.
 */
 Matrix Decomposition_Base::get_decomposed_matrix() {
-        
+        if ( use_float ) {
+            sync_optimized_parameters_float();
+            Matrix_float ret = Umtx_float.copy();
+            Gates_block::apply_to( optimized_parameters_mtx_float, ret );
+            return ret.to_float64();
+        }
+
         Matrix ret = Umtx.copy();
         apply_to( optimized_parameters_mtx, ret );
         

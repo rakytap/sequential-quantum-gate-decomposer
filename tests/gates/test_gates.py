@@ -55,6 +55,7 @@ NATIVE_UNSAFE_MATRIX_GATES = {"Gate"}
 NATIVE_UNSAFE_APPLY_GATES = {"Gate"}
 DERIVATIVE_TEST_EXCLUDED_GATES = set()
 RECT_COLS_MAX = 32
+F32_TOL = 2e-4
 
 
 def _discover_parameterized_gate_names():
@@ -115,6 +116,39 @@ def _apply_gate(gate_obj, state, parameters, is_f32=False, parallel=0):
         gate_obj.apply_to(state, parallel=parallel, is_f32=is_f32)
     else:
         gate_obj.apply_to(state, parameters=parameters, parallel=parallel, is_f32=is_f32)
+
+
+def _get_matrix_with_precision(gate_obj, parameters, is_f32):
+    if gate_obj.get_Parameter_Num() == 0:
+        return np.asarray(gate_obj.get_Matrix(is_f32=is_f32))
+    return np.asarray(gate_obj.get_Matrix(parameters, is_f32=is_f32))
+
+
+def _apply_to_state_with_precision(gate_obj, state, parameters, is_f32):
+    out = state.copy()
+    if gate_obj.get_Parameter_Num() == 0:
+        gate_obj.apply_to(out, parallel=0, is_f32=is_f32)
+    else:
+        gate_obj.apply_to(out, parameters=parameters, parallel=0, is_f32=is_f32)
+    return out
+
+
+def _apply_to_matrix_with_precision(gate_obj, matrix, parameters, is_f32):
+    out = matrix.copy()
+    if gate_obj.get_Parameter_Num() == 0:
+        gate_obj.apply_to(out, parallel=0, is_f32=is_f32)
+    else:
+        gate_obj.apply_to(out, parameters=parameters, parallel=0, is_f32=is_f32)
+    return out
+
+
+def _apply_from_right_with_precision(gate_obj, matrix, parameters, is_f32):
+    out = matrix.copy()
+    if gate_obj.get_Parameter_Num() == 0:
+        gate_obj.apply_from_right(out, is_f32=is_f32)
+    else:
+        gate_obj.apply_from_right(out, parameters=parameters, is_f32=is_f32)
+    return out
 
 
 def _assert_matrices_close(a, b, tol=1e-8):
@@ -917,6 +951,88 @@ except Exception as exc:
         original_matrix = np.asarray(circuit.get_Matrix(params))
         transpiled_matrix = np.asarray(cnot_circuit.get_Matrix(cnot_params))
         _assert_matrices_close(original_matrix, transpiled_matrix, tol=1e-6)
+
+
+class TestGateScalarPaths:
+    """Direct in-process scalar-path checks for gate methods.
+
+    The subprocess tests above are crash-isolation sweeps. These tests stay in-process
+    so dtype mistakes and scalar dispatch regressions are reported at the failing call.
+    """
+
+    @pytest.fixture(scope="class")
+    def scalar_inputs(self):
+        rng_state = np.random.default_rng(42)
+        state = rng_state.standard_normal(1 << 4) + 1j * rng_state.standard_normal(1 << 4)
+        state = (state / np.linalg.norm(state)).astype(np.complex128)
+
+        rng_matrix = np.random.default_rng(7)
+        matrix = rng_matrix.standard_normal((1 << 4, 1 << 4)) + 1j * rng_matrix.standard_normal((1 << 4, 1 << 4))
+        return state, matrix.astype(np.complex128)
+
+    @pytest.mark.parametrize("gate_name", [name for name in ALL_GATE_NAMES if name != "Gate"])
+    def test_get_matrix_scalar_f64_unitary(self, gate_name):
+        gate_obj = _instantiate_gate(gate_name)
+        params = _parameters_for_gate(gate_obj, dtype=np.float64)
+        matrix = _get_matrix_with_precision(gate_obj, params, is_f32=False)
+
+        assert matrix.dtype == np.complex128
+        product = matrix.conj().T @ matrix
+        assert np.linalg.norm(product - np.eye(matrix.shape[0])) < 1e-8
+
+    @pytest.mark.parametrize("gate_name", [name for name in ALL_GATE_NAMES if name != "Gate"])
+    def test_get_matrix_scalar_f32_parity(self, gate_name):
+        gate_obj = _instantiate_gate(gate_name)
+        p64 = _parameters_for_gate(gate_obj, dtype=np.float64)
+        p32 = p64.astype(np.float32)
+
+        m64 = _get_matrix_with_precision(gate_obj, p64, is_f32=False)
+        m32 = _get_matrix_with_precision(gate_obj, p32, is_f32=True)
+
+        assert m32.dtype == np.complex64
+        assert np.linalg.norm(m32 - m64.astype(np.complex64)) < F32_TOL
+
+    @pytest.mark.parametrize("gate_name", [name for name in ALL_GATE_NAMES if name != "Gate"])
+    def test_apply_to_state_scalar_matches_matrix_and_f32_parity(self, gate_name, scalar_inputs):
+        state64, _ = scalar_inputs
+        gate_obj = _instantiate_gate(gate_name)
+        p64 = _parameters_for_gate(gate_obj, dtype=np.float64)
+        p32 = p64.astype(np.float32)
+
+        matrix = _get_matrix_with_precision(gate_obj, p64, is_f32=False)
+        result64 = _apply_to_state_with_precision(gate_obj, state64, p64, is_f32=False)
+        result32 = _apply_to_state_with_precision(gate_obj, state64.astype(np.complex64), p32, is_f32=True)
+
+        assert np.linalg.norm(result64 - matrix @ state64) < 1e-8
+        assert np.linalg.norm(result32 - result64.astype(np.complex64)) < F32_TOL
+
+    @pytest.mark.parametrize("gate_name", [name for name in ALL_GATE_NAMES if name != "Gate"])
+    def test_apply_to_matrix_scalar_matches_matrix_and_f32_parity(self, gate_name, scalar_inputs):
+        _, matrix64 = scalar_inputs
+        gate_obj = _instantiate_gate(gate_name)
+        p64 = _parameters_for_gate(gate_obj, dtype=np.float64)
+        p32 = p64.astype(np.float32)
+
+        gate_matrix = _get_matrix_with_precision(gate_obj, p64, is_f32=False)
+        result64 = _apply_to_matrix_with_precision(gate_obj, matrix64, p64, is_f32=False)
+        result32 = _apply_to_matrix_with_precision(gate_obj, matrix64.astype(np.complex64), p32, is_f32=True)
+
+        assert np.linalg.norm(result64 - gate_matrix @ matrix64) < 1e-8
+        assert np.linalg.norm(result32 - result64.astype(np.complex64)) < F32_TOL
+
+    @pytest.mark.parametrize("gate_name", [name for name in ALL_GATE_NAMES if name != "Gate"])
+    def test_apply_from_right_scalar_matches_matrix_and_f32_parity(self, gate_name, scalar_inputs):
+        _, matrix64 = scalar_inputs
+        gate_obj = _instantiate_gate(gate_name)
+        p64 = _parameters_for_gate(gate_obj, dtype=np.float64)
+        p32 = p64.astype(np.float32)
+
+        gate_matrix = _get_matrix_with_precision(gate_obj, p64, is_f32=False)
+        result64 = _apply_from_right_with_precision(gate_obj, matrix64, p64, is_f32=False)
+        result32 = _apply_from_right_with_precision(gate_obj, matrix64.astype(np.complex64), p32, is_f32=True)
+
+        assert np.linalg.norm(result64 - matrix64 @ gate_matrix) < 1e-8
+        assert np.linalg.norm(result32 - result64.astype(np.complex64)) < F32_TOL
 
 
 class TestGateDerivativeFiniteDifference:

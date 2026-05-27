@@ -377,6 +377,14 @@ N_Qubit_Decomposition_Tree_Search::N_Qubit_Decomposition_Tree_Search(Matrix Umtx
     : N_Qubit_Decomposition_Tree_Search(Umtx_in, qbit_num_in, {}, config, accelerator_num) {}
 
 /**
+@brief Constructor of the class from a single precision unitary matrix.
+*/
+N_Qubit_Decomposition_Tree_Search::N_Qubit_Decomposition_Tree_Search(Matrix_float Umtx_in, int qbit_num_in,
+                                                                     std::map<std::string, Config_Element>& config,
+                                                                     int accelerator_num)
+    : N_Qubit_Decomposition_Tree_Search(Umtx_in, qbit_num_in, {}, config, accelerator_num) {}
+
+/**
 @brief Constructor of the class.
 @param Umtx_in The unitary matrix to be decomposed
 @param qbit_num_in The number of qubits spanning the unitary Umtx
@@ -386,6 +394,82 @@ N_Qubit_Decomposition_Tree_Search::N_Qubit_Decomposition_Tree_Search(Matrix Umtx
 @return An instance of the class
 */
 N_Qubit_Decomposition_Tree_Search::N_Qubit_Decomposition_Tree_Search(Matrix Umtx_in, int qbit_num_in,
+                                                                     std::vector<matrix_base<int>> topology_in,
+                                                                     std::map<std::string, Config_Element>& config,
+                                                                     int accelerator_num)
+    : Optimization_Interface(Umtx_in, qbit_num_in, false, config, RANDOM, accelerator_num) {
+
+    // set the level limit
+    level_limit = 0;
+
+    // Maximal number of iterations in the optimization process
+    max_outer_iterations = 1;
+
+    // setting the topology
+    topology = topology_in;
+
+    if (topology.size() == 0) {
+        for (int qbit1 = 0; qbit1 < qbit_num; qbit1++) {
+            for (int qbit2 = qbit1 + 1; qbit2 < qbit_num; qbit2++) {
+                matrix_base<int> edge(2, 1);
+                edge[0] = qbit1;
+                edge[1] = qbit2;
+
+                topology.push_back(edge);
+            }
+        }
+    } else {
+        for (size_t idx = 0; idx < topology.size(); idx++) {
+            if (topology[idx].size() != 2) {
+                std::string error("invalid topology: each element should be a pair of integers");
+                throw error;
+            }
+            if (topology[idx][0] < 0 || topology[idx][0] >= qbit_num || topology[idx][1] < 0 || topology[idx][1] >= qbit_num) {
+                std::string error("invalid topology: qubit indices should be between 0 and qbit_num-1");
+                throw error;
+            }
+            if (topology[idx][0] == topology[idx][1]) {
+                std::string error("invalid topology: target and control qubits should be different");
+                throw error;
+            }
+            if (topology[idx][0] > topology[idx][1]) {
+                std::swap(topology[idx][0], topology[idx][1]);
+            }
+        }
+    }
+
+    // construct the possible CNOT combinations within a single level
+    // the number of possible CNOT connections netween the qubits (including topology constraints)
+    int n_ary_limit_max = static_cast<int>(topology.size());
+
+    possible_target_qbits = matrix_base<int>(1, n_ary_limit_max);
+    possible_control_qbits = matrix_base<int>(1, n_ary_limit_max);
+    for (int element_idx = 0; element_idx < n_ary_limit_max; element_idx++) {
+
+        matrix_base<int>& edge = topology[element_idx];
+        possible_target_qbits[element_idx] = edge[0];
+        possible_control_qbits[element_idx] = edge[1];
+    }
+
+    // BFGS is better for smaller problems, while ADAM for larger ones
+    if (qbit_num <= 5) {
+        alg = BFGS;
+
+        // Maximal number of iterations in the optimization process
+        max_outer_iterations = 4;
+        max_inner_iterations = 10000;
+    } else {
+        alg = ADAM;
+
+        // Maximal number of iterations in the optimization process
+        max_outer_iterations = 1;
+    }
+}
+
+/**
+@brief Constructor of the class from a single precision unitary matrix.
+*/
+N_Qubit_Decomposition_Tree_Search::N_Qubit_Decomposition_Tree_Search(Matrix_float Umtx_in, int qbit_num_in,
                                                                      std::vector<matrix_base<int>> topology_in,
                                                                      std::map<std::string, Config_Element>& config,
                                                                      int accelerator_num)
@@ -672,6 +756,7 @@ Gates_block* N_Qubit_Decomposition_Tree_Search::determine_gate_structure(Matrix_
             if (current_minimum_tmp < current_minimum) {
                 current_minimum = current_minimum_tmp;
                 optimized_parameters_mtx = cDecomp_custom_random.get_optimized_parameters().copy();
+                sync_optimized_parameters_float();
                 best_solution = solution;
             }
             if (current_minimum < optimization_tolerance_loc && stop_first_solution) {
@@ -1195,6 +1280,7 @@ GrayCodeCNOT N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures
         if (current_minimum_tmp < current_minimum) {
             current_minimum = current_minimum_tmp;
             optimized_parameters_mtx = cDecomp_custom_random.get_optimized_parameters();
+            sync_optimized_parameters_float();
         }
 
         // std::cout << "iiiiiiiiiiiiiiiiii " << current_minimum_tmp << std::endl;
@@ -1303,6 +1389,7 @@ GrayCodeCNOT N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures
                             gcode_best_solution = gcode;
 
                             optimized_parameters_mtx = cDecomp_custom_random.get_optimized_parameters();
+                            sync_optimized_parameters_float();
                         }
 
                         if (current_minimum < optimization_tolerance_loc && !found_optimal_solution) {
@@ -1344,8 +1431,15 @@ N_Qubit_Decomposition_custom N_Qubit_Decomposition_Tree_Search::perform_optimiza
         optimization_tolerance_loc = optimization_tolerance;
     }
 
-    N_Qubit_Decomposition_custom cDecomp_custom_random =
-        N_Qubit_Decomposition_custom(Umtx.copy(), qbit_num, false, config, RANDOM, accelerator_num);
+    N_Qubit_Decomposition_custom cDecomp_custom_random;
+    if ( use_float ) {
+        cDecomp_custom_random =
+            N_Qubit_Decomposition_custom(Umtx_float.copy(), qbit_num, false, config, RANDOM, accelerator_num);
+    }
+    else {
+        cDecomp_custom_random =
+            N_Qubit_Decomposition_custom(Umtx.copy(), qbit_num, false, config, RANDOM, accelerator_num);
+    }
     if (gate_structure_loc != nullptr) {
         cDecomp_custom_random.set_custom_gate_structure(gate_structure_loc);
         cDecomp_custom_random.set_optimization_blocks(gate_structure_loc->get_gate_num());
@@ -1499,4 +1593,14 @@ void N_Qubit_Decomposition_Tree_Search::add_finalyzing_layer(Gates_block* gate_s
 void N_Qubit_Decomposition_Tree_Search::set_unitary(Matrix& Umtx_new) {
 
     Umtx = Umtx_new;
+    if ( use_float ) {
+        Umtx_float = Umtx_new.to_float32();
+    }
+}
+
+void N_Qubit_Decomposition_Tree_Search::set_unitary(Matrix_float& Umtx_new) {
+
+    Umtx_float = Umtx_new;
+    Umtx = Umtx_new.to_float64();
+    use_float = true;
 }
