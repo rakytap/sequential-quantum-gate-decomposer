@@ -46,6 +46,15 @@ extern "C" int LAPACKE_zgesvd( int matrix_order, char jobu, char jobvt,
 extern "C" int LAPACKE_zgesdd(int matrix_order, char jobz, int m, int n, QGD_Complex16* a,
                           int lda, double* s, QGD_Complex16* u, int ldu,
                           QGD_Complex16* vt, int ldvt);
+extern "C" int LAPACKE_cgesvd( int matrix_order, char jobu, char jobvt,
+                            int m, int n, QGD_Complex8* a,
+                            int lda, float* s, QGD_Complex8* u,
+                            int ldu, QGD_Complex8* vt,
+                            int ldvt, float* superb );
+
+extern "C" int LAPACKE_cgesdd(int matrix_order, char jobz, int m, int n, QGD_Complex8* a,
+                          int lda, float* s, QGD_Complex8* u, int ldu,
+                          QGD_Complex8* vt, int ldvt);
 #define USE_SDD
 #define USE_COL_MAJ
 
@@ -152,6 +161,25 @@ double get_cost_function(Matrix matrix, int trace_offset) {
 
 }
 
+double get_cost_function(Matrix_float matrix, int trace_offset) {
+
+    int matrix_size = matrix.cols;
+    double trace_real = 0.0;
+
+    if ( trace_offset == 0 ) {
+        for (int idx=0; idx<matrix_size; idx++) {
+            trace_real += matrix[idx*matrix.stride + idx].real;
+        }
+    }
+    else {
+        for (int idx=0; idx<matrix_size; idx++) {
+            trace_real += matrix[(idx+trace_offset)*matrix.stride + idx].real;
+        }
+    }
+
+    return 1.0 - trace_real/matrix_size;
+}
+
 
 
 /**
@@ -221,6 +249,38 @@ Matrix_real get_cost_function_with_correction(Matrix matrix, int qbit_num, int t
 
     
 
+}
+
+Matrix_real_float get_cost_function_with_correction(Matrix_float matrix, int qbit_num, int trace_offset) {
+
+    Matrix_real_float ret(1,2);
+
+    ret[0] = static_cast<float>(get_cost_function( matrix, trace_offset ));
+
+    int matrix_size = matrix.cols;
+    double trace_real = 0.0;
+
+    if ( trace_offset == 0 ) {
+        for (int qbit_idx=0; qbit_idx<qbit_num; qbit_idx++) {
+            int qbit_error_mask = 1 << qbit_idx;
+            for (int col_idx=0; col_idx<matrix_size; col_idx++) {
+                int row_idx = col_idx ^ qbit_error_mask;
+                trace_real += matrix[row_idx*matrix.stride + col_idx].real;
+            }
+        }
+    }
+    else {
+        for (int qbit_idx=0; qbit_idx<qbit_num; qbit_idx++) {
+            int qbit_error_mask = 1 << qbit_idx;
+            for (int col_idx=0; col_idx<matrix_size; col_idx++) {
+                int row_idx = (col_idx + trace_offset) ^ qbit_error_mask;
+                trace_real += matrix[row_idx*matrix.stride + col_idx].real;
+            }
+        }
+    }
+
+    ret[1] = static_cast<float>(trace_real/matrix_size);
+    return ret;
 }
 
 
@@ -343,6 +403,43 @@ Matrix_real get_cost_function_with_correction2(Matrix matrix, int qbit_num, int 
 
 }
 
+Matrix_real_float get_cost_function_with_correction2(Matrix_float matrix, int qbit_num, int trace_offset) {
+
+    Matrix_real_float correction1 = get_cost_function_with_correction(matrix, qbit_num, trace_offset);
+    Matrix_real_float ret(1,3);
+    ret[0] = correction1[0];
+    ret[1] = correction1[1];
+
+    int matrix_size = matrix.cols;
+    double trace_real = 0.0;
+
+    if ( trace_offset == 0 ) {
+        for (int qbit_idx=0; qbit_idx<qbit_num-1; qbit_idx++) {
+            for (int qbit_idx2=qbit_idx+1; qbit_idx2<qbit_num; qbit_idx2++) {
+                int qbit_error_mask = (1 << qbit_idx) + (1 << qbit_idx2);
+                for (int col_idx=0; col_idx<matrix_size; col_idx++) {
+                    int row_idx = col_idx ^ qbit_error_mask;
+                    trace_real += matrix[row_idx*matrix.stride + col_idx].real;
+                }
+            }
+        }
+    }
+    else {
+        for (int qbit_idx=0; qbit_idx<qbit_num-1; qbit_idx++) {
+            for (int qbit_idx2=qbit_idx+1; qbit_idx2<qbit_num; qbit_idx2++) {
+                int qbit_error_mask = (1 << qbit_idx) + (1 << qbit_idx2);
+                for (int col_idx=0; col_idx<matrix_size; col_idx++) {
+                    int row_idx = (col_idx+trace_offset) ^ qbit_error_mask;
+                    trace_real += matrix[row_idx*matrix.stride + col_idx].real;
+                }
+            }
+        }
+    }
+
+    ret[2] = static_cast<float>(trace_real/matrix_size);
+    return ret;
+}
+
 double get_cost_function_sum_of_squares(Matrix& matrix)
 {
     double ret = 0.0;
@@ -401,6 +498,23 @@ QGD_Complex16 get_trace(Matrix& matrix){
     return ret;
 }
 
+QGD_Complex16 get_trace(Matrix_float& matrix){
+
+    int matrix_size = matrix.cols;
+    double trace_real=0.0;
+    double trace_imag=0.0;
+    QGD_Complex16 ret;
+
+    for (int idx=0; idx<matrix_size; idx++) {
+        trace_real += matrix[idx*matrix.stride + idx].real;
+        trace_imag += matrix[idx*matrix.stride + idx].imag;
+    }
+    ret.real = trace_real;
+    ret.imag = trace_imag;
+
+    return ret;
+}
+
 /**
 @brief Call co calculate the cost function of the optimization process according to https://arxiv.org/pdf/2210.09191.pdf
 @param matrix The square shaped complex matrix from which the cost function is calculated.
@@ -417,6 +531,13 @@ double get_hilbert_schmidt_test(Matrix& matrix){
     return cost_function;
 }
 
+double get_hilbert_schmidt_test(Matrix_float& matrix){
+
+    double d = 1.0/matrix.cols;
+    QGD_Complex16 ret = get_trace(matrix);
+    return 1.0-d*d*(ret.real*ret.real+ret.imag*ret.imag);
+}
+
 double get_infidelity(Matrix& matrix){
     
     double d = matrix.cols;
@@ -425,6 +546,13 @@ double get_infidelity(Matrix& matrix){
     cost_function = 1.0-((ret.real*ret.real+ret.imag*ret.imag)/d+1)/(d+1);
 
     return cost_function;
+}
+
+double get_infidelity(Matrix_float& matrix){
+
+    double d = matrix.cols;
+    QGD_Complex16 ret = get_trace(matrix);
+    return 1.0-((ret.real*ret.real+ret.imag*ret.imag)/d+1)/(d+1);
 }
 
 /**
@@ -641,7 +769,8 @@ static inline size_t mat_idx(int row, int col, int nrows, int ncols) {
 //https://arxiv.org/pdf/2111.03132
 // Build the (dA*dA) x (dB*dB) OSR matrix M for cut A|B from U (2^n x 2^n), row-major.
 // M_{ (a' * dA + a), (b' * dB + b) } = U_{ (a',b'), (a,b) }.
-static std::vector<QGD_Complex16> build_osr_matrix(const Matrix& U, int n,
+template<class MatrixT, class ComplexT>
+static std::vector<ComplexT> build_osr_matrix(const MatrixT& U, int n,
                              const std::vector<int>& A, // qubits on A
                              int& m_rows, int& m_cols)
 {
@@ -658,7 +787,7 @@ static std::vector<QGD_Complex16> build_osr_matrix(const Matrix& U, int n,
 
     m_rows = dA * dA;
     m_cols = dB * dB;
-    std::vector<QGD_Complex16> M;
+    std::vector<ComplexT> M;
     M.resize((size_t)m_rows * (size_t)m_cols);
 
     // Row-major indexing: U[in + out*N] is element (in, out)
@@ -677,9 +806,10 @@ static std::vector<QGD_Complex16> build_osr_matrix(const Matrix& U, int n,
     return M;
 }
 
-static void accumulate_grad_for_cut(Matrix& accum, const std::vector<double>& G,
-                             const std::vector<QGD_Complex16> & Umat,
-                             const std::vector<QGD_Complex16> & VTmat,
+template<class MatrixT, class ComplexT>
+static void accumulate_grad_for_cut(MatrixT& accum, const std::vector<double>& G,
+                             const std::vector<ComplexT> & Umat,
+                             const std::vector<ComplexT> & VTmat,
                              int n, const std::vector<int>& A, int rank=-1) // qubits on A
 {
     std::vector<int> A_sorted = A;
@@ -708,47 +838,74 @@ static void accumulate_grad_for_cut(Matrix& accum, const std::vector<double>& G,
             const int bp = extract_bits(out, B);
             const int r = a + ap;   // row in M
             const int c = b + bp;   // col in M
-            QGD_Complex16 val{0.0, 0.0};
+            double val_real = 0.0;
+            double val_imag = 0.0;
             if (rank < 0) {
                 // Old dyadic mode: G[i] applies to singular index 2^i
                 for (int i = 0; i < tot_dyadic; i++) {
                     int idx = 1<<i; //here we would conjugate again but that cancels out so we do nothing
                     if (idx >= k) break;  // critical safety check
-                    QGD_Complex16 u_val = Umat[mat_idx(r, idx, m_rows, k)];
-                    QGD_Complex16 vt_val = VTmat[mat_idx(idx, c, k, m_cols)];
+                    ComplexT u_val = Umat[mat_idx(r, idx, m_rows, k)];
+                    ComplexT vt_val = VTmat[mat_idx(idx, c, k, m_cols)];
                     // Multiply: G[i] * u_val * vt_val
                     // (a+bi) * (c+di) = (ac-bd) + (ad+bc)i
                     double re_prod = u_val.real * vt_val.real - u_val.imag * vt_val.imag;
                     double im_prod = u_val.real * vt_val.imag + u_val.imag * vt_val.real;
                     // Multiply by G[i] and add to val
-                    val.real += G[i] * re_prod;
-                    val.imag += G[i] * im_prod;
+                    val_real += G[i] * re_prod;
+                    val_imag += G[i] * im_prod;
                 }
             } else {
                 // New rank-tail mode: G[j] applies directly to singular index j
                 const int diag_len = std::min<int>((int)G.size(), k);
                 for (int j = 0; j < diag_len; ++j) {
-                    const QGD_Complex16 u_val = Umat[mat_idx(r, j, m_rows, k)];
-                    const QGD_Complex16 vt_val = VTmat[mat_idx(j, c, k, m_cols)];
+                    const ComplexT u_val = Umat[mat_idx(r, j, m_rows, k)];
+                    const ComplexT vt_val = VTmat[mat_idx(j, c, k, m_cols)];
 
                     const double re_prod = u_val.real * vt_val.real - u_val.imag * vt_val.imag;
                     const double im_prod = u_val.real * vt_val.imag + u_val.imag * vt_val.real;
 
-                    val.real += G[j] * re_prod;
-                    val.imag += G[j] * im_prod;
+                    val_real += G[j] * re_prod;
+                    val_imag += G[j] * im_prod;
                 }
             }
-            accum[(size_t)in + (size_t)out * (size_t)N].real += val.real;
-            accum[(size_t)in + (size_t)out * (size_t)N].imag += val.imag;
+            accum[(size_t)in + (size_t)out * (size_t)N].real += static_cast<decltype(accum[0].real)>(val_real);
+            accum[(size_t)in + (size_t)out * (size_t)N].imag += static_cast<decltype(accum[0].imag)>(val_imag);
         }
     }
 }
 
-static std::vector<double> osr(std::vector<QGD_Complex16>& A, int m_rows, int m_cols, double Fnorm)
+static int lapack_gesdd_dispatch(int lapack_layout, char jobz, int m, int n, QGD_Complex16* a,
+                          int lda, double* s, QGD_Complex16* u, int ldu,
+                          QGD_Complex16* vt, int ldvt) {
+    return LAPACKE_zgesdd(lapack_layout, jobz, m, n, a, lda, s, u, ldu, vt, ldvt);
+}
+
+static int lapack_gesdd_dispatch(int lapack_layout, char jobz, int m, int n, QGD_Complex8* a,
+                          int lda, float* s, QGD_Complex8* u, int ldu,
+                          QGD_Complex8* vt, int ldvt) {
+    return LAPACKE_cgesdd(lapack_layout, jobz, m, n, a, lda, s, u, ldu, vt, ldvt);
+}
+
+#ifndef USE_SDD
+static int lapack_gesvd_dispatch(int lapack_layout, char jobu, char jobvt, int m, int n, QGD_Complex16* a,
+                          int lda, double* s, QGD_Complex16* u, int ldu,
+                          QGD_Complex16* vt, int ldvt, double* superb) {
+    return LAPACKE_zgesvd(lapack_layout, jobu, jobvt, m, n, a, lda, s, u, ldu, vt, ldvt, superb);
+}
+
+static int lapack_gesvd_dispatch(int lapack_layout, char jobu, char jobvt, int m, int n, QGD_Complex8* a,
+                          int lda, float* s, QGD_Complex8* u, int ldu,
+                          QGD_Complex8* vt, int ldvt, float* superb) {
+    return LAPACKE_cgesvd(lapack_layout, jobu, jobvt, m, n, a, lda, s, u, ldu, vt, ldvt, superb);
+}
+#endif
+
+template<class ComplexT, class RealT>
+static std::vector<double> osr(std::vector<ComplexT>& A, int m_rows, int m_cols, double Fnorm)
 {
-    std::vector<double> S;
     int k = std::min(m_rows, m_cols);
-    S.resize(k);
+    std::vector<RealT> S(k);
 #ifdef USE_COL_MAJ
     constexpr int lapack_layout = LAPACK_COL_MAJOR;
     const int lda  = m_rows;
@@ -761,7 +918,7 @@ static std::vector<double> osr(std::vector<QGD_Complex16>& A, int m_rows, int m_
     const int ldvt = m_cols;
 #endif
 #ifdef USE_SDD
-    int info = LAPACKE_zgesdd(lapack_layout,
+    int info = lapack_gesdd_dispatch(lapack_layout,
                               'N',
                               m_rows, m_cols,
                               A.data(), lda,
@@ -769,9 +926,9 @@ static std::vector<double> osr(std::vector<QGD_Complex16>& A, int m_rows, int m_
                               nullptr, ldu,
                               nullptr, ldvt);
 #else
-    std::vector<double> superb(std::max(1, k - 1));  // REQUIRED for complex *gesvd
+    std::vector<RealT> superb(std::max(1, k - 1));  // REQUIRED for complex *gesvd
     // We don’t need U/V; job='N' for economy; gesvd is fine too.
-    int info = LAPACKE_zgesvd(lapack_layout,
+    int info = lapack_gesvd_dispatch(lapack_layout,
                               'N','N',
                               m_rows, m_cols,
                               A.data(), lda,
@@ -781,11 +938,13 @@ static std::vector<double> osr(std::vector<QGD_Complex16>& A, int m_rows, int m_
                               superb.data());
 #endif
     if (info != 0) {
-        throw std::runtime_error("zgesvd failed, info=" + std::to_string(info));
+        throw std::runtime_error("gesvd failed, info=" + std::to_string(info));
     }
-    for (double& s : S) s /= Fnorm; //normalize
+    std::vector<double> normalized;
+    normalized.reserve(S.size());
+    for (RealT s : S) normalized.push_back(static_cast<double>(s)/Fnorm); //normalize
     //std::copy(S.begin(), S.end(), std::ostream_iterator<double>(std::cout, " ")); std::cout << std::endl;
-    return S;
+    return normalized;
 }
 
 // Numerical rank via LAPACKE_zgesdd/svd (SVD)
@@ -1098,8 +1257,8 @@ std::pair<int, double> operator_schmidt_rank(const Matrix& U, int n,
 {
     
     int mr=0, mc=0;
-    std::vector<QGD_Complex16> M = build_osr_matrix(U, n, A_qubits, mr, mc);
-    std::vector<double> S = osr(M, mr, mc, Fnorm);
+    std::vector<QGD_Complex16> M = build_osr_matrix<Matrix, QGD_Complex16>(U, n, A_qubits, mr, mc);
+    std::vector<double> S = osr<QGD_Complex16, double>(M, mr, mc, Fnorm);
     int min_cnot = numerical_rank_osr(S, tol);
     return std::pair<int, double>(min_cnot,
         //tail_loss(S, static_cast<int>(lg_up(static_cast<uint32_t>(S.size()))))
@@ -1107,7 +1266,22 @@ std::pair<int, double> operator_schmidt_rank(const Matrix& U, int n,
     );
 }
 
-double get_osr_entanglement_test(Matrix& matrix, std::vector<std::vector<int>> &use_cuts, int rank, bool use_softmax) {
+std::pair<int, double> operator_schmidt_rank(const Matrix_float& U, int n,
+                          const std::vector<int>& A_qubits,
+                          double Fnorm, double tol)
+{
+
+    int mr=0, mc=0;
+    std::vector<QGD_Complex8> M = build_osr_matrix<Matrix_float, QGD_Complex8>(U, n, A_qubits, mr, mc);
+    std::vector<double> S = osr<QGD_Complex8, float>(M, mr, mc, Fnorm);
+    int min_cnot = numerical_rank_osr(S, tol);
+    return std::pair<int, double>(min_cnot,
+        weighted_loss_for_rank(S, min_cnot)
+    );
+}
+
+template<class MatrixT, class ComplexT, class RealT>
+static double get_osr_entanglement_test_impl(MatrixT& matrix, std::vector<std::vector<int>> &use_cuts, int rank, bool use_softmax) {
     //double hscost = get_hilbert_schmidt_test(matrix);
     int qbit_num = lg_down(matrix.rows);
     const auto& cuts = use_cuts.size() == 0 ? unique_cuts(qbit_num) : use_cuts;
@@ -1116,8 +1290,8 @@ double get_osr_entanglement_test(Matrix& matrix, std::vector<std::vector<int>> &
     allS.reserve(cuts.size());
     for (const auto& cut : cuts) {
         int mr=0, mc=0;
-        std::vector<QGD_Complex16> M = build_osr_matrix(matrix, qbit_num, cut, mr, mc);
-        std::vector<double> S = osr(M, mr, mc, Fnorm);
+        std::vector<ComplexT> M = build_osr_matrix<MatrixT, ComplexT>(matrix, qbit_num, cut, mr, mc);
+        std::vector<double> S = osr<ComplexT, RealT>(M, mr, mc, Fnorm);
         allS.emplace_back(S);
         //printf("%f ", S[0]);
     }
@@ -1131,24 +1305,34 @@ double get_osr_entanglement_test(Matrix& matrix, std::vector<std::vector<int>> &
     return res;
 }
 
+double get_osr_entanglement_test(Matrix& matrix, std::vector<std::vector<int>> &use_cuts, int rank, bool use_softmax) {
+    return get_osr_entanglement_test_impl<Matrix, QGD_Complex16, double>(matrix, use_cuts, rank, use_softmax);
+}
+
+double get_osr_entanglement_test(Matrix_float& matrix, std::vector<std::vector<int>> &use_cuts, int rank, bool use_softmax) {
+    return get_osr_entanglement_test_impl<Matrix_float, QGD_Complex8, float>(matrix, use_cuts, rank, use_softmax);
+}
+
+template<class ComplexT>
 struct OSRTriplet {
     std::vector<double> singulars;
-    std::vector<QGD_Complex16> left_factors;
-    std::vector<QGD_Complex16> right_factors;
+    std::vector<ComplexT> left_factors;
+    std::vector<ComplexT> right_factors;
 
     OSRTriplet() = default;
 
     OSRTriplet(std::vector<double> s,
-               std::vector<QGD_Complex16> u,
-               std::vector<QGD_Complex16> vt)
+               std::vector<ComplexT> u,
+               std::vector<ComplexT> vt)
         : singulars(std::move(s)),
           left_factors(std::move(u)),
           right_factors(std::move(vt)) {}
 };
 
 // Build M with build_osr_matrix, then SVD (econ) and grab top triplet.
-static OSRTriplet top_k_triplet_for_cut(
-    const Matrix& U, // (N x N), row-major, N = 1<<q
+template<class MatrixT, class ComplexT, class RealT>
+static OSRTriplet<ComplexT> top_k_triplet_for_cut(
+    const MatrixT& U, // (N x N), row-major, N = 1<<q
     int q,                  // number of qubits
     const std::vector<int>& A,  // qubits on side A
     double Fnorm,            // e.g., sqrt(N)
@@ -1156,14 +1340,14 @@ static OSRTriplet top_k_triplet_for_cut(
 ){
     // 1) Build M for this cut
     
-    std::vector<QGD_Complex16> M = build_osr_matrix(U, q, A, m_rows, m_cols);
+    std::vector<ComplexT> M = build_osr_matrix<MatrixT, ComplexT>(U, q, A, m_rows, m_cols);
 
     const int k = std::min(m_rows, m_cols);
 
     // 2) Allocate outputs for SVD (econ)
-    std::vector<double> S(k);
-    std::vector<QGD_Complex16> Umat((size_t)m_rows * (size_t)k); // m x k
-    std::vector<QGD_Complex16> VTmat((size_t)k * (size_t)m_cols); // k x n
+    std::vector<RealT> S(k);
+    std::vector<ComplexT> Umat((size_t)m_rows * (size_t)k); // m x k
+    std::vector<ComplexT> VTmat((size_t)k * (size_t)m_cols); // k x n
 
     // 3) SVD: M = U * diag(S) * VT  (VT = V^H)
     // Row-major API handles leading dims as col counts.
@@ -1179,7 +1363,7 @@ static OSRTriplet top_k_triplet_for_cut(
     const int ldvt = m_cols;
 #endif
 #ifdef USE_SDD
-    int info = LAPACKE_zgesdd(
+    int info = lapack_gesdd_dispatch(
         lapack_layout,
         'S',                    // econ / thin U, VT
         m_rows, m_cols,
@@ -1189,8 +1373,8 @@ static OSRTriplet top_k_triplet_for_cut(
         VTmat.data(), ldvt    // VT is (k x m_cols), row-major => ldvt = m_cols
     );
 #else
-    std::vector<double> superb(std::max(1, k - 1));  // REQUIRED for complex *gesvd
-    int info = LAPACKE_zgesvd(
+    std::vector<RealT> superb(std::max(1, k - 1));  // REQUIRED for complex *gesvd
+    int info = lapack_gesvd_dispatch(
         lapack_layout,
         'S', 'S',           // econ U, VT
         m_rows, m_cols,
@@ -1202,29 +1386,32 @@ static OSRTriplet top_k_triplet_for_cut(
     );
 #endif
     if (info != 0) {
-        throw std::runtime_error("zgesvd failed, info=" + std::to_string(info));
+        throw std::runtime_error("gesvd failed, info=" + std::to_string(info));
     }
-    for (double& s : S) s /= Fnorm; // normalized singular value
+    std::vector<double> S_normalized;
+    S_normalized.reserve(S.size());
+    for (RealT s : S) S_normalized.push_back(static_cast<double>(s)/Fnorm); // normalized singular value
 
-    return OSRTriplet(std::move(S), std::move(Umat), std::move(VTmat));
+    return OSRTriplet<ComplexT>(std::move(S_normalized), std::move(Umat), std::move(VTmat));
 }
 
-Matrix get_deriv_osr_entanglement(Matrix &matrix, std::vector<std::vector<int>> &use_cuts, int rank, bool use_softmax) {
+template<class MatrixT, class ComplexT, class RealT>
+static MatrixT get_deriv_osr_entanglement_impl(MatrixT &matrix, std::vector<std::vector<int>> &use_cuts, int rank, bool use_softmax) {
     int qbit_num = lg_down(matrix.rows);
     const auto& cuts = use_cuts.size() == 0 ? unique_cuts(qbit_num) : use_cuts;
     double Fnorm = std::sqrt(matrix.rows);
-    Matrix deriv(matrix.rows, matrix.cols);
-    std::fill(deriv.data, deriv.data+deriv.size(), QGD_Complex16{0.0, 0.0});
+    MatrixT deriv(matrix.rows, matrix.cols);
+    std::fill(deriv.data, deriv.data+deriv.size(), ComplexT{0.0, 0.0});
     // Compute the derivative of the OSR entanglement cost function
-    std::vector<OSRTriplet> triplets;
+    std::vector<OSRTriplet<ComplexT>> triplets;
     std::vector<std::vector<double>> allS;
     triplets.reserve(cuts.size());
     for (const auto& cut : cuts) {
         // 1) top k triplet on the normalized reshape M_c
         int m_rows = 0, m_cols = 0;
-        OSRTriplet triplet = top_k_triplet_for_cut(matrix, qbit_num, cut, Fnorm, m_rows, m_cols);
+        OSRTriplet<ComplexT> triplet = top_k_triplet_for_cut<MatrixT, ComplexT, RealT>(matrix, qbit_num, cut, Fnorm, m_rows, m_cols);
         allS.emplace_back(std::move(triplet.singulars));
-        OSRTriplet stored;
+        OSRTriplet<ComplexT> stored;
         stored.left_factors = std::move(triplet.left_factors);
         stored.right_factors = std::move(triplet.right_factors);
         triplets.emplace_back(std::move(stored));
@@ -1240,8 +1427,8 @@ Matrix get_deriv_osr_entanglement(Matrix &matrix, std::vector<std::vector<int>> 
         triplets[i].singulars = std::move(allS[i]);
     }
     for (int i = 0; i < (int)cuts.size(); ++i) {
-        const OSRTriplet& triplet = triplets[i];
-        accumulate_grad_for_cut(deriv,
+        const OSRTriplet<ComplexT>& triplet = triplets[i];
+        accumulate_grad_for_cut<MatrixT, ComplexT>(deriv,
                                 triplet.singulars,
                                 triplet.left_factors,
                                 triplet.right_factors,
@@ -1249,6 +1436,14 @@ Matrix get_deriv_osr_entanglement(Matrix &matrix, std::vector<std::vector<int>> 
                                 cuts[i], rank);
     }
     return deriv;
+}
+
+Matrix get_deriv_osr_entanglement(Matrix &matrix, std::vector<std::vector<int>> &use_cuts, int rank, bool use_softmax) {
+    return get_deriv_osr_entanglement_impl<Matrix, QGD_Complex16, double>(matrix, use_cuts, rank, use_softmax);
+}
+
+Matrix_float get_deriv_osr_entanglement(Matrix_float &matrix, std::vector<std::vector<int>> &use_cuts, int rank, bool use_softmax) {
+    return get_deriv_osr_entanglement_impl<Matrix_float, QGD_Complex8, float>(matrix, use_cuts, rank, use_softmax);
 }
 
 // Compute grad component = Re Tr( A^† B ) for A = dL/dU, B = dU/dθ
@@ -1263,4 +1458,16 @@ double real_trace_conj_dot(Matrix& A, Matrix& B)
         }
     }
     return acc; // Re Tr(A^† B)
+}
+
+double real_trace_conj_dot(Matrix_float& A, Matrix_float& B)
+{
+    double acc = 0.0;
+    for (int r = 0; r < A.rows; ++r) {
+        int offs = r * A.stride;
+        for (int c = 0; c < A.cols; ++c) {
+            acc += A[offs + c].real * B[offs + c].real + A[offs + c].imag * B[offs + c].imag;
+        }
+    }
+    return acc;
 }

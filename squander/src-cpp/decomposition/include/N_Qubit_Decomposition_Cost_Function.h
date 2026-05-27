@@ -25,6 +25,8 @@ limitations under the License.
 
 #include "common.h"
 #include "matrix_real.h"
+#include "matrix_real_float.h"
+#include "matrix_float.h"
 #include <tbb/combinable.h>
 #include "logging.h"
 
@@ -35,6 +37,7 @@ limitations under the License.
 @return Returns with the calculated cost function.
 */
 double get_cost_function(Matrix matrix, int trace_offset=0);
+double get_cost_function(Matrix_float matrix, int trace_offset=0);
 
 
 /**
@@ -44,6 +47,7 @@ double get_cost_function(Matrix matrix, int trace_offset=0);
 @return Returns with the matrix containing the cost function (index 0) and the first correction (index 1).
 */
 Matrix_real get_cost_function_with_correction(Matrix matrix, int qbit_num, int trace_offset=0);
+Matrix_real_float get_cost_function_with_correction(Matrix_float matrix, int qbit_num, int trace_offset=0);
 
 
 /**
@@ -53,6 +57,7 @@ Matrix_real get_cost_function_with_correction(Matrix matrix, int qbit_num, int t
 @return Returns with the matrix containing the cost function (index 0), the first correction (index 1) and the second correction (index 2).
 */
 Matrix_real get_cost_function_with_correction2(Matrix matrix, int qbit_num, int trace_offset=0);
+Matrix_real_float get_cost_function_with_correction2(Matrix_float matrix, int qbit_num, int trace_offset=0);
 
 double get_cost_function_sum_of_squares(Matrix& matrix);
 Matrix get_deriv_sum_of_squares(Matrix& matrix);
@@ -63,6 +68,7 @@ Matrix get_deriv_sum_of_squares(Matrix& matrix);
 @return Returns with the calculated trace
 */
 QGD_Complex16 get_trace(Matrix& matrix);
+QGD_Complex16 get_trace(Matrix_float& matrix);
 
 
 /**
@@ -72,6 +78,7 @@ QGD_Complex16 get_trace(Matrix& matrix);
 @return Returns the cost function
 */
 double get_hilbert_schmidt_test(Matrix& matrix);
+double get_hilbert_schmidt_test(Matrix_float& matrix);
 
 /**
 @brief Call to calculate infidelity
@@ -80,6 +87,7 @@ double get_hilbert_schmidt_test(Matrix& matrix);
 @return Returns the cost function
 */
 double get_infidelity(Matrix& matrix);
+double get_infidelity(Matrix_float& matrix);
 
 /**
 @brief Call co calculate the Hilbert Schmidt testof the optimization process, and the first correction to the cost finction according to https://arxiv.org/pdf/2210.09191.pdf
@@ -134,13 +142,18 @@ void operator()( tbb::blocked_range<int> r ) const;
 std::pair<int, double> operator_schmidt_rank(const Matrix& U, int n,
                           const std::vector<int>& A_qubits,
                           double Fnorm, double tol = 1e-10);
+std::pair<int, double> operator_schmidt_rank(const Matrix_float& U, int n,
+                          const std::vector<int>& A_qubits,
+                          double Fnorm, double tol = 1e-10);
 std::vector<std::vector<int>> unique_cuts(int n);
 double get_osr_entanglement_test(Matrix& matrix, std::vector<std::vector<int>> &use_cuts, int rank=-1, bool use_softmax=false);
+double get_osr_entanglement_test(Matrix_float& matrix, std::vector<std::vector<int>> &use_cuts, int rank=-1, bool use_softmax=false);
 Matrix get_deriv_osr_entanglement(Matrix &matrix, std::vector<std::vector<int>> &use_cuts, int rank=-1, bool use_softmax=false);
+Matrix_float get_deriv_osr_entanglement(Matrix_float &matrix, std::vector<std::vector<int>> &use_cuts, int rank=-1, bool use_softmax=false);
 double real_trace_conj_dot(Matrix& A, Matrix& B);
+double real_trace_conj_dot(Matrix_float& A, Matrix_float& B);
 
 #endif
-
 
 
 

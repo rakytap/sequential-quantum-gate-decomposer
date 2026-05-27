@@ -48,98 +48,6 @@ to_float32_parameters(Matrix_real& parameters) {
     return ret;
 }
 
-static double
-get_cost_function_float(Matrix_float& matrix, int trace_offset) {
-    const int matrix_size = matrix.cols;
-    double trace_real = 0.0;
-    if ( trace_offset == 0 ) {
-        for (int idx=0; idx<matrix_size; idx++) {
-            trace_real += matrix[idx*matrix.stride + idx].real;
-        }
-    }
-    else {
-        for (int idx=0; idx<matrix_size; idx++) {
-            trace_real += matrix[(idx+trace_offset)*matrix.stride + idx].real;
-        }
-    }
-    return 1.0 - trace_real/matrix_size;
-}
-
-static void
-get_cost_function_with_correction_float(Matrix_float& matrix, int qbit_num, int trace_offset, double* ret) {
-    ret[0] = get_cost_function_float(matrix, trace_offset);
-    const int matrix_size = matrix.cols;
-    double trace_real = 0.0;
-    if ( trace_offset == 0 ) {
-        for (int qbit_idx=0; qbit_idx<qbit_num; qbit_idx++) {
-            int qbit_error_mask = 1 << qbit_idx;
-            for (int col_idx=0; col_idx<matrix_size; col_idx++) {
-                int row_idx = col_idx ^ qbit_error_mask;
-                trace_real += matrix[row_idx*matrix.stride + col_idx].real;
-            }
-        }
-    }
-    else {
-        for (int qbit_idx=0; qbit_idx<qbit_num; qbit_idx++) {
-            int qbit_error_mask = 1 << qbit_idx;
-            for (int col_idx=0; col_idx<matrix_size; col_idx++) {
-                int row_idx = (col_idx + trace_offset) ^ qbit_error_mask;
-                trace_real += matrix[row_idx*matrix.stride + col_idx].real;
-            }
-        }
-    }
-    ret[1] = trace_real/matrix_size;
-}
-
-static void
-get_cost_function_with_correction2_float(Matrix_float& matrix, int qbit_num, int trace_offset, double* ret) {
-    get_cost_function_with_correction_float(matrix, qbit_num, trace_offset, ret);
-    const int matrix_size = matrix.cols;
-    double trace_real = 0.0;
-    if ( trace_offset == 0 ) {
-        for (int qbit_idx1=0; qbit_idx1<qbit_num; qbit_idx1++) {
-            int qbit_error_mask1 = 1 << qbit_idx1;
-            for (int qbit_idx2=qbit_idx1+1; qbit_idx2<qbit_num; qbit_idx2++) {
-                int qbit_error_mask = qbit_error_mask1 | (1 << qbit_idx2);
-                for (int col_idx=0; col_idx<matrix_size; col_idx++) {
-                    int row_idx = col_idx ^ qbit_error_mask;
-                    trace_real += matrix[row_idx*matrix.stride + col_idx].real;
-                }
-            }
-        }
-    }
-    else {
-        for (int qbit_idx1=0; qbit_idx1<qbit_num; qbit_idx1++) {
-            int qbit_error_mask1 = 1 << qbit_idx1;
-            for (int qbit_idx2=qbit_idx1+1; qbit_idx2<qbit_num; qbit_idx2++) {
-                int qbit_error_mask = qbit_error_mask1 | (1 << qbit_idx2);
-                for (int col_idx=0; col_idx<matrix_size; col_idx++) {
-                    int row_idx = (col_idx + trace_offset) ^ qbit_error_mask;
-                    trace_real += matrix[row_idx*matrix.stride + col_idx].real;
-                }
-            }
-        }
-    }
-    ret[2] = trace_real/matrix_size;
-}
-
-static QGD_Complex16
-get_trace_float(Matrix_float& matrix) {
-    QGD_Complex16 trace;
-    trace.real = 0.0;
-    trace.imag = 0.0;
-    const int matrix_size = matrix.cols;
-    for (int idx=0; idx<matrix_size; idx++) {
-        trace.real += matrix[idx*matrix.stride + idx].real;
-        trace.imag += matrix[idx*matrix.stride + idx].imag;
-    }
-    return trace;
-}
-
-
-
-
-
 extern "C" int LAPACKE_dgesv( 	int  matrix_layout, int n, int nrhs, double *a, int lda, int *ipiv, double *b, int ldb); 	
 
 
@@ -829,17 +737,15 @@ double Optimization_Interface::calculate_cost_function( Matrix_float& matrix_new
 
     switch (cost_fnc) {
     case FROBENIUS_NORM:
-        return get_cost_function_float(matrix_new, trace_offset);
+        return get_cost_function(matrix_new, trace_offset);
     case FROBENIUS_NORM_CORRECTION1: {
-        double ret[2];
-        get_cost_function_with_correction_float(matrix_new, qbit_num, trace_offset, ret);
+        Matrix_real_float ret = get_cost_function_with_correction(matrix_new, qbit_num, trace_offset);
         return ret[0] - std::sqrt(prev_cost_fnv_val)*ret[1]*correction1_scale; }
     case FROBENIUS_NORM_CORRECTION2: {
-        double ret[3];
-        get_cost_function_with_correction2_float(matrix_new, qbit_num, trace_offset, ret);
+        Matrix_real_float ret = get_cost_function_with_correction2(matrix_new, qbit_num, trace_offset);
         return ret[0] - std::sqrt(prev_cost_fnv_val)*(ret[1]*correction1_scale + ret[2]*correction2_scale); }
     case HILBERT_SCHMIDT_TEST: {
-        QGD_Complex16 trace_temp = get_trace_float(matrix_new);
+        QGD_Complex16 trace_temp = get_trace(matrix_new);
         if ( ret_temp != NULL ) {
             (*ret_temp)[0].real = static_cast<float>(trace_temp.real);
             (*ret_temp)[0].imag = static_cast<float>(trace_temp.imag);
@@ -847,7 +753,7 @@ double Optimization_Interface::calculate_cost_function( Matrix_float& matrix_new
         double d = 1.0/matrix_new.cols;
         return 1 - d*d*(trace_temp.real*trace_temp.real + trace_temp.imag*trace_temp.imag); }
     case INFIDELITY: {
-        QGD_Complex16 trace_temp = get_trace_float(matrix_new);
+        QGD_Complex16 trace_temp = get_trace(matrix_new);
         if ( ret_temp != NULL ) {
             (*ret_temp)[0].real = static_cast<float>(trace_temp.real);
             (*ret_temp)[0].imag = static_cast<float>(trace_temp.imag);
@@ -858,6 +764,9 @@ double Optimization_Interface::calculate_cost_function( Matrix_float& matrix_new
     case HILBERT_SCHMIDT_TEST_CORRECTION2:
     case SUM_OF_SQUARES:
     case OSR_ENTANGLEMENT: {
+        if (cost_fnc == OSR_ENTANGLEMENT) {
+            return get_osr_entanglement_test(matrix_new, use_cuts, osr_rank, use_softmax);
+        }
         Matrix matrix_new64 = matrix_new.to_float64();
         return calculate_cost_function(matrix_new64, NULL); }
     default: {
@@ -1233,12 +1142,14 @@ void Optimization_Interface::optimization_problem_combined_non_static( Matrix_re
         *f0 = instance->calculate_cost_function(matrix_new, &trace_tmp);
 
         Matrix Upartial;
+        Matrix_float Upartial_float;
         Matrix matrix_new64;
-        if (cost_fnc == SUM_OF_SQUARES || cost_fnc == OSR_ENTANGLEMENT) {
+        if (cost_fnc == SUM_OF_SQUARES) {
             matrix_new64 = matrix_new.to_float64();
-            Upartial = (cost_fnc == SUM_OF_SQUARES)
-                ? get_deriv_sum_of_squares(matrix_new64)
-                : get_deriv_osr_entanglement(matrix_new64, use_cuts, osr_rank, use_softmax);
+            Upartial = get_deriv_sum_of_squares(matrix_new64);
+        }
+        else if (cost_fnc == OSR_ENTANGLEMENT) {
+            Upartial_float = get_deriv_osr_entanglement(matrix_new, use_cuts, osr_rank, use_softmax);
         }
 
         int work_batch = ( parallel == 0 ) ? parameter_num_loc : 10;
@@ -1247,38 +1158,38 @@ void Optimization_Interface::optimization_problem_combined_non_static( Matrix_re
                 double grad_comp;
                 switch (cost_fnc) {
                 case FROBENIUS_NORM:
-                    grad_comp = (get_cost_function_float(Umtx_deriv[idx], trace_offset_loc) - 1.0);
+                    grad_comp = (get_cost_function(Umtx_deriv[idx], trace_offset_loc) - 1.0);
                     break;
                 case FROBENIUS_NORM_CORRECTION1: {
-                    double deriv_tmp[2];
-                    get_cost_function_with_correction_float(Umtx_deriv[idx], qbit_num, trace_offset_loc, deriv_tmp);
+                    Matrix_real_float deriv_tmp = get_cost_function_with_correction(Umtx_deriv[idx], qbit_num, trace_offset_loc);
                     grad_comp = (deriv_tmp[0] - std::sqrt(prev_cost_fnv_val)*deriv_tmp[1]*correction1_scale - 1.0);
                     break;
                 }
                 case FROBENIUS_NORM_CORRECTION2: {
-                    double deriv_tmp[3];
-                    get_cost_function_with_correction2_float(Umtx_deriv[idx], qbit_num, trace_offset_loc, deriv_tmp);
+                    Matrix_real_float deriv_tmp = get_cost_function_with_correction2(Umtx_deriv[idx], qbit_num, trace_offset_loc);
                     grad_comp = (deriv_tmp[0] - std::sqrt(prev_cost_fnv_val)*(deriv_tmp[1]*correction1_scale + deriv_tmp[2]*correction2_scale) - 1.0);
                     break;
                 }
                 case HILBERT_SCHMIDT_TEST: {
                     double d = 1.0/Umtx_deriv[idx].cols;
-                    QGD_Complex16 deriv_tmp = get_trace_float(Umtx_deriv[idx]);
+                    QGD_Complex16 deriv_tmp = get_trace(Umtx_deriv[idx]);
                     grad_comp = -2.0*d*d*trace_tmp[0].real*deriv_tmp.real-2.0*d*d*trace_tmp[0].imag*deriv_tmp.imag;
                     break;
                 }
                 case INFIDELITY: {
                     double d = Umtx_deriv[idx].cols;
-                    QGD_Complex16 deriv_tmp = get_trace_float(Umtx_deriv[idx]);
+                    QGD_Complex16 deriv_tmp = get_trace(Umtx_deriv[idx]);
                     grad_comp = -2.0/d/(d+1)*trace_tmp[0].real*deriv_tmp.real-2.0/d/(d+1)*trace_tmp[0].imag*deriv_tmp.imag;
                     break;
                 }
-                case SUM_OF_SQUARES:
-                case OSR_ENTANGLEMENT: {
+                case SUM_OF_SQUARES: {
                     Matrix deriv64 = Umtx_deriv[idx].to_float64();
                     grad_comp = real_trace_conj_dot(Upartial, deriv64);
                     break;
                 }
+                case OSR_ENTANGLEMENT:
+                    grad_comp = real_trace_conj_dot(Upartial_float, Umtx_deriv[idx]);
+                    break;
                 case HILBERT_SCHMIDT_TEST_CORRECTION1:
                 case HILBERT_SCHMIDT_TEST_CORRECTION2: {
                     Matrix deriv64 = Umtx_deriv[idx].to_float64();
