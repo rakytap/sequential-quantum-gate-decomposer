@@ -69,6 +69,8 @@ limitations under the License.
 #include "apply_large_kernel_to_input_AVX.h"
 #endif
 
+static thread_local int gates_block_derivative_depth = 0;
+
 
 //static tbb::spin_mutex my_mutex;
 /**
@@ -702,12 +704,14 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input, i
             
             int deriv_parameter_idx = gate_deriv->get_parameter_start_idx();       
 
-
-
-            Matrix&& input_loc = input.copy();
+            thread_local Matrix input_loc_reusable;
+            Matrix input_loc_local;
+            Matrix& input_loc = (gates_block_derivative_depth == 0) ? input_loc_reusable : input_loc_local;
+            input.copy_to(input_loc);
 
             std::vector<Matrix> grad_loc;
 
+            gates_block_derivative_depth++;
             for( size_t idx=0; idx<gates.size(); idx++) {            
 
                 Gate* operation = gates[idx];
@@ -739,6 +743,7 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input, i
                     
                     }
             }
+            gates_block_derivative_depth--;
 
 
             for ( int idx = 0; idx<(int)grad_loc.size(); idx++ ) {
@@ -794,12 +799,14 @@ Gates_block::apply_derivate_to( Matrix_real_float& parameters_mtx_in, Matrix_flo
             
             int deriv_parameter_idx = gate_deriv->get_parameter_start_idx();       
 
-
-
-            Matrix_float&& input_loc = input.copy();
+            thread_local Matrix_float input_loc_reusable;
+            Matrix_float input_loc_local;
+            Matrix_float& input_loc = (gates_block_derivative_depth == 0) ? input_loc_reusable : input_loc_local;
+            input.copy_to(input_loc);
 
             std::vector<Matrix_float> grad_loc;
 
+            gates_block_derivative_depth++;
             for( size_t idx=0; idx<gates.size(); idx++) {            
 
                 Gate* operation = gates[idx];
@@ -831,6 +838,7 @@ Gates_block::apply_derivate_to( Matrix_real_float& parameters_mtx_in, Matrix_flo
                     
                     }
             }
+            gates_block_derivative_depth--;
 
 
             for ( int idx = 0; idx<(int)grad_loc.size(); idx++ ) {
@@ -4986,5 +4994,3 @@ Matrix_real inverse_reverse_parameters( const Matrix_real& parameters_in, std::v
 
 
 }
-
-

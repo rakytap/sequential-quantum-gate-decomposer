@@ -790,6 +790,9 @@ SearchNode N_Qubit_Decomposition_Tree_Search::evaluate_path(
     }
     cDecomp_custom_random.set_optimized_parameters(optimized_parameters.data(),
                                                     static_cast<int>(optimized_parameters.size()));
+    Matrix U;
+    Matrix_float U_float;
+    Matrix_real_float params_float;
     for (const std::vector<int>& cut : all_cuts) {
         if (cut.size() != 1) continue;
         int max_rank = 2*(int)std::min(cut.size(), qbit_num-cut.size());
@@ -800,18 +803,13 @@ SearchNode N_Qubit_Decomposition_Tree_Search::evaluate_path(
             //cDecomp_custom_random.set_osr_params(all_cuts, rank, true);
             cDecomp_custom_random.start_decomposition();
             Matrix_real params = cDecomp_custom_random.get_optimized_parameters();
-            Matrix U;
-            Matrix_float U_float;
             if ( use_float ) {
-                Matrix_real_float params_float(1, params.size());
-                for (int pidx=0; pidx<params.size(); pidx++) {
-                    params_float[pidx] = static_cast<float>(params[pidx]);
-                }
-                U_float = Umtx_float.copy();
+                params.copy_to(params_float);
+                Umtx_float.copy_to(U_float);
                 cDecomp_custom_random.apply_to(params_float, U_float);
             }
             else {
-                U = Umtx.copy();
+                Umtx.copy_to(U);
                 cDecomp_custom_random.apply_to(params, U);
             }
             std::vector<std::pair<int, double>> osr_result;

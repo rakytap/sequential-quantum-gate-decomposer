@@ -465,6 +465,27 @@ matrix_base<scalar> copy() const {
 
 }
 
+/**
+@brief Copy the current matrix storage into a reusable target matrix.
+The target is reallocated when dimensions or stride differ; otherwise its
+existing allocation is reused.
+@param target The matrix receiving a deep copy of the current storage.
+*/
+void copy_to(matrix_base<scalar>& target) const {
+
+  if (target.rows != rows || target.cols != cols || target.stride != stride) {
+    target = matrix_base<scalar>(rows, cols, stride);
+  }
+
+  if (data != NULL && target.data != data) {
+    memcpy(target.data, data, rows*stride*sizeof(scalar));
+  }
+
+  target.conjugated = conjugated;
+  target.transposed = transposed;
+
+}
+
 void ensure_aligned() {
     if (((uintptr_t)(void*)data & (CACHELINE-1)) == 0) return; //CACHELINE must be power of 2, 16 sufficient, 64 is okay though
     scalar* newdata = (scalar*)scalable_aligned_malloc( rows*stride*sizeof(scalar), CACHELINE);

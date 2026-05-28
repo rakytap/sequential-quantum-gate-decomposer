@@ -36,18 +36,6 @@ limitations under the License.
 
 #include <fstream>
 
-static Matrix_real_float
-to_float32_parameters(Matrix_real& parameters) {
-    Matrix_real_float ret(parameters.rows, parameters.cols, parameters.stride);
-    for (int row=0; row<parameters.rows; row++) {
-        for (int col=0; col<parameters.cols; col++) {
-            int idx = row*parameters.stride + col;
-            ret[idx] = static_cast<float>(parameters[idx]);
-        }
-    }
-    return ret;
-}
-
 extern "C" int LAPACKE_dgesv( 	int  matrix_layout, int n, int nrhs, double *a, int lda, int *ipiv, double *b, int ldb); 	
 
 
@@ -653,13 +641,16 @@ double Optimization_Interface::optimization_problem( Matrix_real& parameters ) {
     }  
     
     if ( use_float ) {
-        Matrix_real_float parameters_float = to_float32_parameters(parameters);
-        Matrix_float matrix_new = Umtx_float.copy();
+        thread_local Matrix_real_float parameters_float;
+        thread_local Matrix_float matrix_new;
+        parameters.copy_to(parameters_float);
+        Umtx_float.copy_to(matrix_new);
         Gates_block::apply_to( parameters_float, matrix_new );
         return calculate_cost_function(matrix_new, NULL);
     }
 
-    Matrix matrix_new = Umtx.copy();
+    thread_local Matrix matrix_new;
+    Umtx.copy_to(matrix_new);
     Gates_block::apply_to( parameters, matrix_new );
 
     return calculate_cost_function(matrix_new, NULL);
@@ -1027,16 +1018,20 @@ double Optimization_Interface::optimization_problem( Matrix_real parameters, voi
     instance->increment_num_iters();
 
     if ( instance->get_use_float() ) {
-        Matrix_real_float parameters_float = to_float32_parameters(parameters);
-        Matrix_float Umtx_loc = instance->get_Umtx_float();
-        Matrix_float matrix_new = Umtx_loc.copy();
+        thread_local Matrix_real_float parameters_float;
+        thread_local Matrix_float matrix_new;
+        thread_local Matrix_float ret_temp_float;
+        parameters.copy_to(parameters_float);
+        instance->Umtx_float.copy_to(matrix_new);
         instance->Gates_block::apply_to( parameters_float, matrix_new );
-        Matrix_float ret_temp_float(ret_temp.rows, ret_temp.cols);
+        if (ret_temp_float.rows != ret_temp.rows || ret_temp_float.cols != ret_temp.cols || ret_temp_float.stride != ret_temp.stride) {
+            ret_temp_float = Matrix_float(ret_temp.rows, ret_temp.cols, ret_temp.stride);
+        }
         return instance->calculate_cost_function(matrix_new, &ret_temp_float);
     }
 
-    Matrix Umtx_loc = instance->get_Umtx();
-    Matrix matrix_new = Umtx_loc.copy();
+    thread_local Matrix matrix_new;
+    instance->Umtx.copy_to(matrix_new);
     instance->Gates_block::apply_to( parameters, matrix_new );
 
     return instance->calculate_cost_function(matrix_new, &ret_temp);
@@ -1128,7 +1123,8 @@ void Optimization_Interface::optimization_problem_combined_non_static( Matrix_re
     int trace_offset_loc = instance->get_trace_offset();
 
     if ( instance->get_use_float() ) {
-        Matrix_real_float parameters_float = to_float32_parameters(parameters);
+        thread_local Matrix_real_float parameters_float;
+        parameters.copy_to(parameters_float);
         Matrix_float Umtx_loc = instance->get_Umtx_float();
         std::vector<Matrix_float> combined_result = instance->Gates_block::apply_to_combined( parameters_float, Umtx_loc, parallel );
         Matrix_float matrix_new = std::move(combined_result[0]);

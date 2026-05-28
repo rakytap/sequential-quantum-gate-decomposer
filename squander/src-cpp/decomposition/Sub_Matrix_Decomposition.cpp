@@ -412,7 +412,8 @@ double Sub_Matrix_Decomposition::optimization_problem( double* parameters ) {
 
         // get the transformed matrix with the gates in the list
         Matrix_real parameters_mtx(parameters, 1, parameter_num );
-        Matrix matrix_new = Umtx.copy();
+        thread_local Matrix matrix_new;
+        Umtx.copy_to(matrix_new);
         apply_to( parameters_mtx, matrix_new );
 
 #ifdef DEBUG
@@ -441,13 +442,8 @@ double Sub_Matrix_Decomposition::optimization_problem( Matrix_real parameters, v
     Sub_Matrix_Decomposition* instance = reinterpret_cast<Sub_Matrix_Decomposition*>(void_instance);
     std::vector<Gate*> gates_loc = instance->get_gates();
 
-    Matrix Umtx_loc, matrix_new;
-
-//{
-//tbb::spin_mutex::scoped_lock my_lock{my_mutex};
-
-    Umtx_loc = instance->get_Umtx();
-    matrix_new = Umtx_loc.copy();
+    thread_local Matrix matrix_new;
+    instance->get_Umtx().copy_to(matrix_new);
     instance->apply_to( parameters, matrix_new );
 
 #ifdef DEBUG
@@ -457,9 +453,6 @@ double Sub_Matrix_Decomposition::optimization_problem( Matrix_real parameters, v
 	   print(sstream, 1);	 
         }
 #endif
-
-//}
-
 
     double cost_function = get_submatrix_cost_function(matrix_new);  //NEW METHOD
 
@@ -517,7 +510,8 @@ void Sub_Matrix_Decomposition::optimization_problem_combined( Matrix_real parame
         }
         else {
 
-            Matrix_real parameters_d = parameters.copy();
+            thread_local Matrix_real parameters_d;
+            parameters.copy_to(parameters_d);
             parameters_d[i] = parameters_d[i] + dparam;
 
             // calculate the cost function at the displaced point
@@ -622,5 +616,3 @@ Sub_Matrix_Decomposition* Sub_Matrix_Decomposition::clone() {
     return ret;
 
 }
-
-

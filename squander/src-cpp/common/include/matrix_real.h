@@ -28,6 +28,8 @@ limitations under the License.
 #include "matrix_base.hpp"
 #include <cmath>
 
+class Matrix_real_float;
+
 
 /*! \file matrix.h
     \brief Header file matrix storing complex types.
@@ -108,6 +110,18 @@ Matrix_real& operator=(const Matrix_real &mtx);
 @return Returns with the instance of the class.
 */
 Matrix_real copy() const;
+
+/**
+@brief Copy the matrix to a reusable double-precision target matrix.
+@param target The matrix receiving the deep copy.
+*/
+void copy_to(Matrix_real& target) const;
+
+/**
+@brief Copy and cast the matrix to a reusable single-precision target matrix.
+@param target The float32 matrix receiving the converted copy.
+*/
+void copy_to(Matrix_real_float& target) const;
 
 
 /**

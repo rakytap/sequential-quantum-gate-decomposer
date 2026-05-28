@@ -1044,7 +1044,8 @@ Gate::derivative_kernel(const Matrix_real& precomputed_sincos, int param_idx) {
         return Matrix();
     }
 
-    Matrix_real shifted = precomputed_sincos.copy();
+    thread_local Matrix_real shifted;
+    precomputed_sincos.copy_to(shifted);
     const int offset = param_idx * shifted.stride;
     const double sin_theta = shifted[offset + 0];
     const double cos_theta = shifted[offset + 1];
@@ -1064,7 +1065,8 @@ Gate::derivative_kernel(const Matrix_real_float& precomputed_sincos, int param_i
         return Matrix_float();
     }
 
-    Matrix_real_float shifted = precomputed_sincos.copy();
+    thread_local Matrix_real_float shifted;
+    precomputed_sincos.copy_to(shifted);
     const int offset = param_idx * shifted.stride;
     const float sin_theta = shifted[offset + 0];
     const float cos_theta = shifted[offset + 1];
@@ -1936,4 +1938,3 @@ Gate::get_name() {
     return name;
 
 }
-
