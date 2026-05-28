@@ -66,7 +66,6 @@ endif()
 #enable test target
 enable_testing()
 
-option(ENABLE_FLOAT32 "Enable float32 matrix support (experimental)" ON)
 option(ENABLE_AVX "Enable AVX/AVX2/AVX512 kernels and compiler flags" ON)
 
 if(SKBUILD)
@@ -424,12 +423,6 @@ else()
   list(APPEND CXX_FLAGS_RELEASE "-DBLAS=0")
 endif()
 
-# Float32 matrix support
-if(ENABLE_FLOAT32)
-  list(APPEND CXX_FLAGS_DEBUG "-DENABLE_FLOAT32")
-  list(APPEND CXX_FLAGS_RELEASE "-DENABLE_FLOAT32")
-endif()
-
 # checking for AVX/AVX2 support
 if(ENABLE_AVX)
   CHECK_FOR_AVX()
@@ -753,6 +746,8 @@ list(APPEND qgd_files
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/config_element.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/dot.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/matrix.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/matrix_float.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/matrix_real_float.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/matrix_template.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/matrix_real.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/matrix_sparse.cpp
@@ -836,13 +831,6 @@ list(APPEND qgd_files
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/random_unitary/Random_Unitary.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/random_unitary/Random_Orthogonal.cpp
 )
-
-if(ENABLE_FLOAT32)
-  list(APPEND qgd_files
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/matrix_float.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/matrix_real_float.cpp
-  )
-endif()
 
 if (${HAVE_AVX512F_EXTENSIONS})
   list(APPEND qgd_files 
