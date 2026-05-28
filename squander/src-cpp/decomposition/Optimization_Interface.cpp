@@ -961,16 +961,23 @@ Optimization_Interface::optimization_problem_batched( std::vector<Matrix_real>& 
 
     Matrix_real cost_fnc_mtx_loc(mpi_batch_element_num, 1);
 
-    int work_batch = 1;
-    if( parallel==0) {
-        work_batch = mpi_batch_element_num;
-    }
+    auto calculate_local_batch_element = [&](int idx) {
+        cost_fnc_mtx_loc[idx] = optimization_problem( parameters_vec[idx + mpi_starting_batchIdx] );
+    };
 
-    tbb::parallel_for( tbb::blocked_range<int>(0, (int)mpi_batch_element_num, work_batch), [&](tbb::blocked_range<int> r) {
-        for (int idx=r.begin(); idx<r.end(); ++idx) { 
-            cost_fnc_mtx_loc[idx] = optimization_problem( parameters_vec[idx + mpi_starting_batchIdx] );
+    if ( parallel == 0 ) {
+        for (int idx=0; idx<mpi_batch_element_num; ++idx) {
+            calculate_local_batch_element(idx);
         }
-    });
+    }
+    else {
+        int work_batch = 1;
+        tbb::parallel_for( tbb::blocked_range<int>(0, (int)mpi_batch_element_num, work_batch), [&](tbb::blocked_range<int> r) {
+            for (int idx=r.begin(); idx<r.end(); ++idx) { 
+                calculate_local_batch_element(idx);
+            }
+        });
+    }
 
     //number_of_iters = number_of_iters + mpi_batch_element_num; 
 
@@ -982,16 +989,23 @@ Optimization_Interface::optimization_problem_batched( std::vector<Matrix_real>& 
 
 #else
 
-    int work_batch = 1;
-    if( parallel==0) {
-        work_batch = static_cast<int>(parameters_vec.size());
-    }
+    auto calculate_batch_element = [&](int idx) {
+        cost_fnc_mtx[idx] = optimization_problem( parameters_vec[idx] );
+    };
 
-    tbb::parallel_for( tbb::blocked_range<int>(0, (int)parameters_vec.size(), work_batch), [&](tbb::blocked_range<int> r) {
-        for (int idx=r.begin(); idx<r.end(); ++idx) { 
-            cost_fnc_mtx[idx] = optimization_problem( parameters_vec[idx] );
+    if ( parallel == 0 ) {
+        for (int idx=0; idx<(int)parameters_vec.size(); ++idx) {
+            calculate_batch_element(idx);
         }
-    });
+    }
+    else {
+        int work_batch = 1;
+        tbb::parallel_for( tbb::blocked_range<int>(0, (int)parameters_vec.size(), work_batch), [&](tbb::blocked_range<int> r) {
+            for (int idx=r.begin(); idx<r.end(); ++idx) { 
+                calculate_batch_element(idx);
+            }
+        });
+    }
 
 
 #endif  // __MPI__
@@ -1148,69 +1162,80 @@ void Optimization_Interface::optimization_problem_combined_non_static( Matrix_re
             Upartial_float = get_deriv_osr_entanglement(matrix_new, use_cuts, osr_rank, use_softmax);
         }
 
-        int work_batch = ( parallel == 0 ) ? parameter_num_loc : 10;
-        tbb::parallel_for( tbb::blocked_range<int>(0,parameter_num_loc,work_batch), [&](tbb::blocked_range<int> r) {
-            for (int idx=r.begin(); idx<r.end(); ++idx) {
-                double grad_comp;
-                switch (cost_fnc) {
-                case FROBENIUS_NORM:
-                    grad_comp = (get_cost_function(Umtx_deriv[idx], trace_offset_loc) - 1.0);
-                    break;
-                case FROBENIUS_NORM_CORRECTION1: {
-                    Matrix_real_float deriv_tmp = get_cost_function_with_correction(Umtx_deriv[idx], qbit_num, trace_offset_loc);
-                    grad_comp = (deriv_tmp[0] - std::sqrt(prev_cost_fnv_val)*deriv_tmp[1]*correction1_scale - 1.0);
-                    break;
-                }
-                case FROBENIUS_NORM_CORRECTION2: {
-                    Matrix_real_float deriv_tmp = get_cost_function_with_correction2(Umtx_deriv[idx], qbit_num, trace_offset_loc);
-                    grad_comp = (deriv_tmp[0] - std::sqrt(prev_cost_fnv_val)*(deriv_tmp[1]*correction1_scale + deriv_tmp[2]*correction2_scale) - 1.0);
-                    break;
-                }
-                case HILBERT_SCHMIDT_TEST: {
-                    double d = 1.0/Umtx_deriv[idx].cols;
-                    QGD_Complex16 deriv_tmp = get_trace(Umtx_deriv[idx]);
-                    grad_comp = -2.0*d*d*trace_tmp[0].real*deriv_tmp.real-2.0*d*d*trace_tmp[0].imag*deriv_tmp.imag;
-                    break;
-                }
-                case INFIDELITY: {
-                    double d = Umtx_deriv[idx].cols;
-                    QGD_Complex16 deriv_tmp = get_trace(Umtx_deriv[idx]);
-                    grad_comp = -2.0/d/(d+1)*trace_tmp[0].real*deriv_tmp.real-2.0/d/(d+1)*trace_tmp[0].imag*deriv_tmp.imag;
-                    break;
-                }
-                case SUM_OF_SQUARES: {
-                    Matrix deriv64 = Umtx_deriv[idx].to_float64();
-                    grad_comp = real_trace_conj_dot(Upartial, deriv64);
-                    break;
-                }
-                case OSR_ENTANGLEMENT:
-                    grad_comp = real_trace_conj_dot(Upartial_float, Umtx_deriv[idx]);
-                    break;
-                case HILBERT_SCHMIDT_TEST_CORRECTION1:
-                case HILBERT_SCHMIDT_TEST_CORRECTION2: {
-                    Matrix deriv64 = Umtx_deriv[idx].to_float64();
-                    Matrix matrix_new_for_trace = matrix_new.to_float64();
-                    Matrix trace_tmp64(1,3);
-                    instance->calculate_cost_function(matrix_new_for_trace, &trace_tmp64);
-                    if (cost_fnc == HILBERT_SCHMIDT_TEST_CORRECTION1) {
-                        Matrix&& deriv_tmp = get_trace_with_correction(deriv64, qbit_num);
-                        double d = 1.0/deriv64.cols;
-                        grad_comp = -2.0*d*d*(trace_tmp64[0].real*deriv_tmp[0].real+trace_tmp64[0].imag*deriv_tmp[0].imag+std::sqrt(prev_cost_fnv_val)*correction1_scale*(trace_tmp64[1].real*deriv_tmp[1].real+trace_tmp64[1].imag*deriv_tmp[1].imag));
-                    }
-                    else {
-                        Matrix&& deriv_tmp = get_trace_with_correction2(deriv64, qbit_num);
-                        double d = 1.0/deriv64.cols;
-                        grad_comp = -2.0*d*d*(trace_tmp64[0].real*deriv_tmp[0].real+trace_tmp64[0].imag*deriv_tmp[0].imag+std::sqrt(prev_cost_fnv_val)*(correction1_scale*(trace_tmp64[1].real*deriv_tmp[1].real+trace_tmp64[1].imag*deriv_tmp[1].imag) + correction2_scale*(trace_tmp64[2].real*deriv_tmp[2].real+trace_tmp64[2].imag*deriv_tmp[2].imag)));
-                    }
-                    break;
-                }
-                default: {
-                    std::string err("Optimization_Interface::optimization_problem_combined: Cost function variant not implmented.");
-                    throw err;
-                } }
-                grad[idx] = grad_comp;
+        auto calculate_gradient_component = [&](int idx) {
+            double grad_comp;
+            switch (cost_fnc) {
+            case FROBENIUS_NORM:
+                grad_comp = (get_cost_function(Umtx_deriv[idx], trace_offset_loc) - 1.0);
+                break;
+            case FROBENIUS_NORM_CORRECTION1: {
+                Matrix_real_float deriv_tmp = get_cost_function_with_correction(Umtx_deriv[idx], qbit_num, trace_offset_loc);
+                grad_comp = (deriv_tmp[0] - std::sqrt(prev_cost_fnv_val)*deriv_tmp[1]*correction1_scale - 1.0);
+                break;
             }
-        });
+            case FROBENIUS_NORM_CORRECTION2: {
+                Matrix_real_float deriv_tmp = get_cost_function_with_correction2(Umtx_deriv[idx], qbit_num, trace_offset_loc);
+                grad_comp = (deriv_tmp[0] - std::sqrt(prev_cost_fnv_val)*(deriv_tmp[1]*correction1_scale + deriv_tmp[2]*correction2_scale) - 1.0);
+                break;
+            }
+            case HILBERT_SCHMIDT_TEST: {
+                double d = 1.0/Umtx_deriv[idx].cols;
+                QGD_Complex16 deriv_tmp = get_trace(Umtx_deriv[idx]);
+                grad_comp = -2.0*d*d*trace_tmp[0].real*deriv_tmp.real-2.0*d*d*trace_tmp[0].imag*deriv_tmp.imag;
+                break;
+            }
+            case INFIDELITY: {
+                double d = Umtx_deriv[idx].cols;
+                QGD_Complex16 deriv_tmp = get_trace(Umtx_deriv[idx]);
+                grad_comp = -2.0/d/(d+1)*trace_tmp[0].real*deriv_tmp.real-2.0/d/(d+1)*trace_tmp[0].imag*deriv_tmp.imag;
+                break;
+            }
+            case SUM_OF_SQUARES: {
+                Matrix deriv64 = Umtx_deriv[idx].to_float64();
+                grad_comp = real_trace_conj_dot(Upartial, deriv64);
+                break;
+            }
+            case OSR_ENTANGLEMENT:
+                grad_comp = real_trace_conj_dot(Upartial_float, Umtx_deriv[idx]);
+                break;
+            case HILBERT_SCHMIDT_TEST_CORRECTION1:
+            case HILBERT_SCHMIDT_TEST_CORRECTION2: {
+                Matrix deriv64 = Umtx_deriv[idx].to_float64();
+                Matrix matrix_new_for_trace = matrix_new.to_float64();
+                Matrix trace_tmp64(1,3);
+                instance->calculate_cost_function(matrix_new_for_trace, &trace_tmp64);
+                if (cost_fnc == HILBERT_SCHMIDT_TEST_CORRECTION1) {
+                    Matrix&& deriv_tmp = get_trace_with_correction(deriv64, qbit_num);
+                    double d = 1.0/deriv64.cols;
+                    grad_comp = -2.0*d*d*(trace_tmp64[0].real*deriv_tmp[0].real+trace_tmp64[0].imag*deriv_tmp[0].imag+std::sqrt(prev_cost_fnv_val)*correction1_scale*(trace_tmp64[1].real*deriv_tmp[1].real+trace_tmp64[1].imag*deriv_tmp[1].imag));
+                }
+                else {
+                    Matrix&& deriv_tmp = get_trace_with_correction2(deriv64, qbit_num);
+                    double d = 1.0/deriv64.cols;
+                    grad_comp = -2.0*d*d*(trace_tmp64[0].real*deriv_tmp[0].real+trace_tmp64[0].imag*deriv_tmp[0].imag+std::sqrt(prev_cost_fnv_val)*(correction1_scale*(trace_tmp64[1].real*deriv_tmp[1].real+trace_tmp64[1].imag*deriv_tmp[1].imag) + correction2_scale*(trace_tmp64[2].real*deriv_tmp[2].real+trace_tmp64[2].imag*deriv_tmp[2].imag)));
+                }
+                break;
+            }
+            default: {
+                std::string err("Optimization_Interface::optimization_problem_combined: Cost function variant not implmented.");
+                throw err;
+            } }
+            grad[idx] = grad_comp;
+        };
+
+        if ( parallel == 0 ) {
+            for (int idx=0; idx<parameter_num_loc; ++idx) {
+                calculate_gradient_component(idx);
+            }
+        }
+        else {
+            int work_batch = 10;
+            tbb::parallel_for( tbb::blocked_range<int>(0,parameter_num_loc,work_batch), [&](tbb::blocked_range<int> r) {
+                for (int idx=r.begin(); idx<r.end(); ++idx) {
+                    calculate_gradient_component(idx);
+                }
+            });
+        }
 
         instance->increment_num_iters(parameter_num_loc + 1);
         std::stringstream sstream;
@@ -1332,8 +1357,6 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();////////////////////////////////
 
     *f0 = instance->calculate_cost_function(matrix_new, &trace_tmp);
 
-    int work_batch = ( parallel == 0 ) ? parameter_num_loc : 10;
-
     Matrix Upartial;
     if (cost_fnc == SUM_OF_SQUARES) {
         Upartial = get_deriv_sum_of_squares(matrix_new);
@@ -1342,77 +1365,81 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();////////////////////////////////
     }
 
 
-    tbb::parallel_for( tbb::blocked_range<int>(0,parameter_num_loc,work_batch), [&](tbb::blocked_range<int> r) {
-        for (int idx=r.begin(); idx<r.end(); ++idx) { 
-
-
-        //for( int idx=0; idx<parameter_num_loc; idx++ ) {
-
-            double grad_comp;
-            switch (cost_fnc) {
-            case FROBENIUS_NORM:
-                grad_comp = (get_cost_function(Umtx_deriv[idx], trace_offset_loc) - 1.0);
-                break;
-            case FROBENIUS_NORM_CORRECTION1: {
-                Matrix_real deriv_tmp = get_cost_function_with_correction( Umtx_deriv[idx], qbit_num, trace_offset_loc );
-                grad_comp = (deriv_tmp[0] - std::sqrt(prev_cost_fnv_val)*deriv_tmp[1]*correction1_scale - 1.0);
-                break;
-            }
-            case FROBENIUS_NORM_CORRECTION2: {
-                Matrix_real deriv_tmp = get_cost_function_with_correction2( Umtx_deriv[idx], qbit_num, trace_offset_loc );
-                grad_comp = (deriv_tmp[0] - std::sqrt(prev_cost_fnv_val)*(deriv_tmp[1]*correction1_scale + deriv_tmp[2]*correction2_scale) - 1.0);
-                break;
-            }
-            case HILBERT_SCHMIDT_TEST: {
-                double d = 1.0/Umtx_deriv[idx].cols;
-                QGD_Complex16 deriv_tmp = get_trace(Umtx_deriv[idx]);
-                grad_comp = -2.0*d*d*trace_tmp[0].real*deriv_tmp.real-2.0*d*d*trace_tmp[0].imag*deriv_tmp.imag;
-                break;
-            }
-            case HILBERT_SCHMIDT_TEST_CORRECTION1: {
-                Matrix&&  deriv_tmp = get_trace_with_correction( Umtx_deriv[idx], qbit_num);
-                double d = 1.0/Umtx_deriv[idx].cols;
-                grad_comp = -2.0*d*d* (trace_tmp[0].real*deriv_tmp[0].real+trace_tmp[0].imag*deriv_tmp[0].imag+std::sqrt(prev_cost_fnv_val)*correction1_scale*(trace_tmp[1].real*deriv_tmp[1].real+trace_tmp[1].imag*deriv_tmp[1].imag));
-                break;
-            }
-            case HILBERT_SCHMIDT_TEST_CORRECTION2: {
-                Matrix&& deriv_tmp = get_trace_with_correction2( Umtx_deriv[idx], qbit_num);
-                double d = 1.0/Umtx_deriv[idx].cols;
-                grad_comp = -2.0*d*d* (trace_tmp[0].real*deriv_tmp[0].real+trace_tmp[0].imag*deriv_tmp[0].imag+std::sqrt(prev_cost_fnv_val)*(correction1_scale*(trace_tmp[1].real*deriv_tmp[1].real+trace_tmp[1].imag*deriv_tmp[1].imag) + correction2_scale*(trace_tmp[2].real*deriv_tmp[2].real+trace_tmp[2].imag*deriv_tmp[2].imag)));
-                break;
-            }
-            case SUM_OF_SQUARES:
-            case OSR_ENTANGLEMENT:
-                grad_comp = real_trace_conj_dot(Upartial, Umtx_deriv[idx]);
-                /*{
-                    Matrix matrix_new = instance->get_Umtx().copy();
-                    auto paramcopy = parameters.copy();
-                    paramcopy[idx] += 1e-10;
-                    instance->apply_to( paramcopy, matrix_new );
-                    double f1 = instance->get_cost_function_variant() == SUM_OF_SQUARES ? get_cost_function_sum_of_squares(matrix_new) : get_osr_entanglement_test(matrix_new, use_cuts, osr_rank, use_softmax);
-                    double check = (f1 - *f0) / 1e-10;
-                    //printf("%d: %g %g\n", idx, grad_comp, check);
-                    grad_comp = check;
-                }*/
-                break;
-            case INFIDELITY: {
-                double d = Umtx_deriv[idx].cols;
-                QGD_Complex16 deriv_tmp = get_trace(Umtx_deriv[idx]);
-                grad_comp = -2.0/d/(d+1)*trace_tmp[0].real*deriv_tmp.real-2.0/d/(d+1)*trace_tmp[0].imag*deriv_tmp.imag;
-                break;
-            }
-            default: {
-                std::string err("Optimization_Interface::optimization_problem_combined: Cost function variant not implmented.");
-                throw err;
-            } }
-            
-            grad[idx] = grad_comp;
-
-
-
+    auto calculate_gradient_component = [&](int idx) {
+        double grad_comp;
+        switch (cost_fnc) {
+        case FROBENIUS_NORM:
+            grad_comp = (get_cost_function(Umtx_deriv[idx], trace_offset_loc) - 1.0);
+            break;
+        case FROBENIUS_NORM_CORRECTION1: {
+            Matrix_real deriv_tmp = get_cost_function_with_correction( Umtx_deriv[idx], qbit_num, trace_offset_loc );
+            grad_comp = (deriv_tmp[0] - std::sqrt(prev_cost_fnv_val)*deriv_tmp[1]*correction1_scale - 1.0);
+            break;
         }
+        case FROBENIUS_NORM_CORRECTION2: {
+            Matrix_real deriv_tmp = get_cost_function_with_correction2( Umtx_deriv[idx], qbit_num, trace_offset_loc );
+            grad_comp = (deriv_tmp[0] - std::sqrt(prev_cost_fnv_val)*(deriv_tmp[1]*correction1_scale + deriv_tmp[2]*correction2_scale) - 1.0);
+            break;
+        }
+        case HILBERT_SCHMIDT_TEST: {
+            double d = 1.0/Umtx_deriv[idx].cols;
+            QGD_Complex16 deriv_tmp = get_trace(Umtx_deriv[idx]);
+            grad_comp = -2.0*d*d*trace_tmp[0].real*deriv_tmp.real-2.0*d*d*trace_tmp[0].imag*deriv_tmp.imag;
+            break;
+        }
+        case HILBERT_SCHMIDT_TEST_CORRECTION1: {
+            Matrix&&  deriv_tmp = get_trace_with_correction( Umtx_deriv[idx], qbit_num);
+            double d = 1.0/Umtx_deriv[idx].cols;
+            grad_comp = -2.0*d*d* (trace_tmp[0].real*deriv_tmp[0].real+trace_tmp[0].imag*deriv_tmp[0].imag+std::sqrt(prev_cost_fnv_val)*correction1_scale*(trace_tmp[1].real*deriv_tmp[1].real+trace_tmp[1].imag*deriv_tmp[1].imag));
+            break;
+        }
+        case HILBERT_SCHMIDT_TEST_CORRECTION2: {
+            Matrix&& deriv_tmp = get_trace_with_correction2( Umtx_deriv[idx], qbit_num);
+            double d = 1.0/Umtx_deriv[idx].cols;
+            grad_comp = -2.0*d*d* (trace_tmp[0].real*deriv_tmp[0].real+trace_tmp[0].imag*deriv_tmp[0].imag+std::sqrt(prev_cost_fnv_val)*(correction1_scale*(trace_tmp[1].real*deriv_tmp[1].real+trace_tmp[1].imag*deriv_tmp[1].imag) + correction2_scale*(trace_tmp[2].real*deriv_tmp[2].real+trace_tmp[2].imag*deriv_tmp[2].imag)));
+            break;
+        }
+        case SUM_OF_SQUARES:
+        case OSR_ENTANGLEMENT:
+            grad_comp = real_trace_conj_dot(Upartial, Umtx_deriv[idx]);
+            /*{
+                Matrix matrix_new = instance->get_Umtx().copy();
+                auto paramcopy = parameters.copy();
+                paramcopy[idx] += 1e-10;
+                instance->apply_to( paramcopy, matrix_new );
+                double f1 = instance->get_cost_function_variant() == SUM_OF_SQUARES ? get_cost_function_sum_of_squares(matrix_new) : get_osr_entanglement_test(matrix_new, use_cuts, osr_rank, use_softmax);
+                double check = (f1 - *f0) / 1e-10;
+                //printf("%d: %g %g\n", idx, grad_comp, check);
+                grad_comp = check;
+            }*/
+            break;
+        case INFIDELITY: {
+            double d = Umtx_deriv[idx].cols;
+            QGD_Complex16 deriv_tmp = get_trace(Umtx_deriv[idx]);
+            grad_comp = -2.0/d/(d+1)*trace_tmp[0].real*deriv_tmp.real-2.0/d/(d+1)*trace_tmp[0].imag*deriv_tmp.imag;
+            break;
+        }
+        default: {
+            std::string err("Optimization_Interface::optimization_problem_combined: Cost function variant not implmented.");
+            throw err;
+        } }
+        
+        grad[idx] = grad_comp;
+    };
 
-    });
+    if ( parallel == 0 ) {
+        for (int idx=0; idx<parameter_num_loc; ++idx) {
+            calculate_gradient_component(idx);
+        }
+    }
+    else {
+        int work_batch = 10;
+        tbb::parallel_for( tbb::blocked_range<int>(0,parameter_num_loc,work_batch), [&](tbb::blocked_range<int> r) {
+            for (int idx=r.begin(); idx<r.end(); ++idx) {
+                calculate_gradient_component(idx);
+            }
+        });
+    }
 
     instance->increment_num_iters(parameter_num_loc + 1);
 

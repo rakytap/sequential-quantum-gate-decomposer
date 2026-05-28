@@ -501,9 +501,7 @@ void Sub_Matrix_Decomposition::optimization_problem_combined( Matrix_real parame
     // the difference in one direction in the parameter for the gradient calculation
     double dparam = 1e-8;
 
-    // calculate the function values at displaced x and the central x0 points through TBB parallel for
-    tbb::parallel_for(0, parameter_num_loc+1, 1, [&](int i) {
-
+    auto calculate_displaced_cost = [&](int i) {
         if (i == (int)parameters.size()) {
             // calculate function value at x0
             *f0 = instance->optimization_problem(parameters, reinterpret_cast<void*>(instance));
@@ -518,7 +516,19 @@ void Sub_Matrix_Decomposition::optimization_problem_combined( Matrix_real parame
             f[i] = instance->optimization_problem(parameters_d, reinterpret_cast<void*>(instance));
 
         }
-    });
+    };
+
+    if (instance->get_parallel_configuration() == 0) {
+        for (int i=0; i<parameter_num_loc+1; ++i) {
+            calculate_displaced_cost(i);
+        }
+    }
+    else {
+        // calculate the function values at displaced x and the central x0 points through TBB parallel for
+        tbb::parallel_for(0, parameter_num_loc+1, 1, [&](int i) {
+            calculate_displaced_cost(i);
+        });
+    }
 
 
 /*

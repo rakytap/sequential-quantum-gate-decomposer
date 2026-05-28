@@ -242,15 +242,14 @@ Gate::get_matrix( Matrix_real_float& parameters, int parallel ) {
 void 
 Gate::apply_to_list( std::vector<Matrix>& inputs, int parallel ) {
 
+    if (parallel == 0) {
+        for (Matrix& input : inputs) {
+            apply_to(input, parallel);
+        }
+        return;
+    }
+
     int work_batch = 1;
-    if ( parallel == 0 ) {
-        work_batch = static_cast<int>(inputs.size());
-    }
-    else {
-        work_batch = 1;
-    }
-
-
     tbb::parallel_for( tbb::blocked_range<int>(0,static_cast<int>(inputs.size()),work_batch), [&](tbb::blocked_range<int> r) {
         for (int idx=r.begin(); idx<r.end(); ++idx) { 
 
@@ -278,8 +277,14 @@ Gate::apply_to_list( std::vector<Matrix>& inputs, int parallel ) {
 void 
 Gate::apply_to_list( Matrix_real& parameters_mtx, std::vector<Matrix>& inputs, int parallel ) {
 
-    int work_batch = ( parallel == 0 ) ? static_cast<int>(inputs.size()) : 1;
+    if (parallel == 0) {
+        for (Matrix& input : inputs) {
+            apply_to(parameters_mtx, input, parallel);
+        }
+        return;
+    }
 
+    int work_batch = 1;
     tbb::parallel_for( tbb::blocked_range<int>(0,static_cast<int>(inputs.size()),work_batch), [&](tbb::blocked_range<int> r) {
         for (int idx=r.begin(); idx<r.end(); ++idx) {
             apply_to( parameters_mtx, inputs[idx], parallel );
@@ -297,14 +302,14 @@ Gate::apply_to_list( Matrix_real& parameters_mtx, std::vector<Matrix>& inputs, i
 void
 Gate::apply_to_list( std::vector<Matrix_float>& inputs, int parallel ) {
 
-    int work_batch = 1;
-    if ( parallel == 0 ) {
-        work_batch = static_cast<int>(inputs.size());
-    }
-    else {
-        work_batch = 1;
+    if (parallel == 0) {
+        for (Matrix_float& input : inputs) {
+            apply_to(input, parallel);
+        }
+        return;
     }
 
+    int work_batch = 1;
     tbb::parallel_for( tbb::blocked_range<int>(0,static_cast<int>(inputs.size()),work_batch), [&](tbb::blocked_range<int> r) {
         for (int idx=r.begin(); idx<r.end(); ++idx) {
             Matrix_float* input = &inputs[idx];
@@ -324,8 +329,14 @@ Gate::apply_to_list( std::vector<Matrix_float>& inputs, int parallel ) {
 void
 Gate::apply_to_list( Matrix_real_float& parameters_mtx, std::vector<Matrix_float>& inputs, int parallel ) {
 
-    int work_batch = ( parallel == 0 ) ? static_cast<int>(inputs.size()) : 1;
+    if (parallel == 0) {
+        for (Matrix_float& input : inputs) {
+            apply_to(parameters_mtx, input, parallel);
+        }
+        return;
+    }
 
+    int work_batch = 1;
     tbb::parallel_for( tbb::blocked_range<int>(0,static_cast<int>(inputs.size()),work_batch), [&](tbb::blocked_range<int> r) {
         for (int idx=r.begin(); idx<r.end(); ++idx) {
             apply_to( parameters_mtx, inputs[idx], parallel );
@@ -576,11 +587,26 @@ Gate::apply_to_combined_inner( Matrix_real& parameters_mtx_in, const Matrix_real
     std::vector<Matrix> ret;
     ret.reserve(get_parameter_num() + 1);
 
-    Matrix applied = input.copy();
-    apply_to_inner(parameters_mtx_in, precomputed_sincos, applied, parallel);
+    Matrix applied;
+    std::vector<Matrix> derivs;
+    if (parallel == 0) {
+        applied = input.copy();
+        apply_to_inner(parameters_mtx_in, precomputed_sincos, applied, parallel);
+        derivs = apply_derivate_to(parameters_mtx_in, input, parallel);
+    }
+    else {
+        tbb::parallel_invoke(
+            [&]() {
+                applied = input.copy();
+                apply_to_inner(parameters_mtx_in, precomputed_sincos, applied, parallel);
+            },
+            [&]() {
+                derivs = apply_derivate_to(parameters_mtx_in, input, parallel);
+            }
+        );
+    }
     ret.push_back(std::move(applied));
 
-    std::vector<Matrix> derivs = apply_derivate_to(parameters_mtx_in, input, parallel);
     for (size_t idx = 0; idx < derivs.size(); ++idx) {
         ret.push_back(std::move(derivs[idx]));
     }
@@ -603,11 +629,26 @@ Gate::apply_to_combined_inner( Matrix_real_float& parameters_mtx_in, const Matri
     std::vector<Matrix_float> ret;
     ret.reserve(get_parameter_num() + 1);
 
-    Matrix_float applied = input.copy();
-    apply_to_inner(parameters_mtx_in, precomputed_sincos, applied, parallel);
+    Matrix_float applied;
+    std::vector<Matrix_float> derivs;
+    if (parallel == 0) {
+        applied = input.copy();
+        apply_to_inner(parameters_mtx_in, precomputed_sincos, applied, parallel);
+        derivs = apply_derivate_to(parameters_mtx_in, input, parallel);
+    }
+    else {
+        tbb::parallel_invoke(
+            [&]() {
+                applied = input.copy();
+                apply_to_inner(parameters_mtx_in, precomputed_sincos, applied, parallel);
+            },
+            [&]() {
+                derivs = apply_derivate_to(parameters_mtx_in, input, parallel);
+            }
+        );
+    }
     ret.push_back(std::move(applied));
 
-    std::vector<Matrix_float> derivs = apply_derivate_to(parameters_mtx_in, input, parallel);
     for (size_t idx = 0; idx < derivs.size(); ++idx) {
         ret.push_back(std::move(derivs[idx]));
     }

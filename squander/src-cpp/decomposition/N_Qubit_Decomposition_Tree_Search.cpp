@@ -1151,80 +1151,85 @@ TreeSearchResult N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_struct
 
     int parallel = get_parallel_configuration();
 
-    int64_t work_batch = 1;
-    if (parallel == 0) {
-        work_batch = concurrency;
-    }
+    auto process_job_range = [&](int64_t begin, int64_t end) {
+        N_Qubit_Decomposition_custom&& cDecomp_custom_random = perform_optimization(nullptr);
+        cDecomp_custom_random.set_cost_function_variant(OSR_ENTANGLEMENT);
+        std::mt19937 ts_gen(std::random_device{}());
 
-    // std::cout << "levels " << level_num << std::endl;
-    tbb::parallel_for(
-        tbb::blocked_range<int64_t>((int64_t)0, concurrency, work_batch), [&](tbb::blocked_range<int64_t> r) {
-            N_Qubit_Decomposition_custom&& cDecomp_custom_random = perform_optimization(nullptr);
-            cDecomp_custom_random.set_cost_function_variant(OSR_ENTANGLEMENT);
-            std::mt19937 ts_gen(std::random_device{}());
+        for (int64_t job_idx = begin; job_idx < end; ++job_idx) {
 
-            for (int64_t job_idx = r.begin(); job_idx < r.end(); ++job_idx) {
+            // for( int64_t job_idx=0; job_idx<concurrency; job_idx++ ) {
 
-                // for( int64_t job_idx=0; job_idx<concurrency; job_idx++ ) {
+            // initial offset and upper boundary of the gray code counter
+            int64_t work_batch = iteration_max / concurrency;
+            int64_t initial_offset = job_idx * work_batch;
+            int64_t offset_max = (job_idx + 1) * work_batch - 1;
 
-                // initial offset and upper boundary of the gray code counter
-                int64_t work_batch = iteration_max / concurrency;
-                int64_t initial_offset = job_idx * work_batch;
-                int64_t offset_max = (job_idx + 1) * work_batch - 1;
+            if (job_idx == concurrency - 1) {
+                offset_max = iteration_max - 1;
+            }
 
-                if (job_idx == concurrency - 1) {
-                    offset_max = iteration_max - 1;
+            // std::cout << initial_offset << " " << offset_max << " " << iteration_max << " " << work_batch << " "
+            // << concurrency << std::endl;
+
+            for (int64_t iter_idx = initial_offset; iter_idx < offset_max + 1; iter_idx++) {
+                if (stop_first_solution && found_optimal_solution) {
+                    break;
                 }
+                const GrayCodeCNOT& solution = all_pairs[iter_idx];
 
-                // std::cout << initial_offset << " " << offset_max << " " << iteration_max << " " << work_batch << " "
-                // << concurrency << std::endl;
+                SearchNode sn = evaluate_path(cDecomp_custom_random, osr_bound_solver, all_cuts, Fnorm, osr_tol, distrib_real, ts_gen, solution);
+                increment_num_iters(
+                    cDecomp_custom_random
+                        .get_num_iters()); // retrieve the number of iterations spent on optimization
 
-                for (int64_t iter_idx = initial_offset; iter_idx < offset_max + 1; iter_idx++) {
-                    if (stop_first_solution && found_optimal_solution) {
+                const std::tuple<int, double, std::vector<int>, std::vector<std::pair<int, double>>>& osr_result = sn.get_best_osr_result();
+                bool isWorse = false;
+                for (int idx = 0; idx < solution.size(); idx++) {
+                    const GrayCodeCNOT& prefix = solution.remove_Digit(idx);
+                    std::map<GrayCodeCNOT, SearchNode>::const_iterator prefix_it = prefixes.find(prefix);
+                    if (prefix_it == prefixes.end()) {
+                        isWorse = true;
                         break;
                     }
-                    const GrayCodeCNOT& solution = all_pairs[iter_idx];
-
-                    SearchNode sn = evaluate_path(cDecomp_custom_random, osr_bound_solver, all_cuts, Fnorm, osr_tol, distrib_real, ts_gen, solution);
-                    increment_num_iters(
-                        cDecomp_custom_random
-                            .get_num_iters()); // retrieve the number of iterations spent on optimization
-
-                    const std::tuple<int, double, std::vector<int>, std::vector<std::pair<int, double>>>& osr_result = sn.get_best_osr_result();
-                    bool isWorse = false;
-                    for (int idx = 0; idx < solution.size(); idx++) {
-                        const GrayCodeCNOT& prefix = solution.remove_Digit(idx);
-                        std::map<GrayCodeCNOT, SearchNode>::const_iterator prefix_it = prefixes.find(prefix);
-                        if (prefix_it == prefixes.end()) {
-                            isWorse = true;
-                            break;
-                        }
-                        //if (sn > *prefix_it)
-                        const std::tuple<int, double, std::vector<int>, std::vector<std::pair<int, double>>>& prefix_osr_result = prefix_it->second.get_best_osr_result();
-                        if (std::get<0>(osr_result) > std::get<0>(prefix_osr_result) ||
-                                   (std::get<0>(osr_result) == std::get<0>(prefix_osr_result) &&
-                                    std::get<1>(osr_result) + 1e-3 < std::get<1>(prefix_osr_result))) {
-                            isWorse = true;
-                            break;
-                        }
+                    //if (sn > *prefix_it)
+                    const std::tuple<int, double, std::vector<int>, std::vector<std::pair<int, double>>>& prefix_osr_result = prefix_it->second.get_best_osr_result();
+                    if (std::get<0>(osr_result) > std::get<0>(prefix_osr_result) ||
+                               (std::get<0>(osr_result) == std::get<0>(prefix_osr_result) &&
+                                std::get<1>(osr_result) + 1e-3 < std::get<1>(prefix_osr_result))) {
+                        isWorse = true;
+                        break;
                     }
-                    int cnot_lower_bound = std::get<0>(osr_result);
-                    if (cnot_lower_bound <= level_limit - level_num && !isWorse) {
-                        tbb::spin_mutex::scoped_lock tree_search_lock{tree_search_mutex};
-                        all_osr_results.emplace(std::move(sn));
-                        if (cnot_lower_bound == 0) {
-                            found_optimal_solution = true;
-                            successful_solutions.push_back(solution.copy());
-                        }
-                    }
-
-                    /*for( int gcode_idx=0; gcode_idx<solution.size(); gcode_idx++ ) {
-                        std::cout << solution[gcode_idx] << ", ";
-                    }
-                    std::cout << current_minimum << std::endl;*/
                 }
+                int cnot_lower_bound = std::get<0>(osr_result);
+                if (cnot_lower_bound <= level_limit - level_num && !isWorse) {
+                    tbb::spin_mutex::scoped_lock tree_search_lock{tree_search_mutex};
+                    all_osr_results.emplace(std::move(sn));
+                    if (cnot_lower_bound == 0) {
+                        found_optimal_solution = true;
+                        successful_solutions.push_back(solution.copy());
+                    }
+                }
+
+                /*for( int gcode_idx=0; gcode_idx<solution.size(); gcode_idx++ ) {
+                    std::cout << solution[gcode_idx] << ", ";
+                }
+                std::cout << current_minimum << std::endl;*/
             }
+        }
+    };
+
+    if (parallel == 0) {
+        process_job_range(0, concurrency);
+    }
+    else {
+        int64_t work_batch = 1;
+        // std::cout << "levels " << level_num << std::endl;
+        tbb::parallel_for(
+            tbb::blocked_range<int64_t>((int64_t)0, concurrency, work_batch), [&](tbb::blocked_range<int64_t> r) {
+                process_job_range(r.begin(), r.end());
         });
+    }
 
     long long beam_width = all_osr_results.size();
     if (config.count("beam") > 0) {
@@ -1329,105 +1334,110 @@ GrayCodeCNOT N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures
 
     int parallel = get_parallel_configuration();
 
-    int64_t work_batch = 1;
-    if (parallel == 0) {
-        work_batch = concurrency;
-    }
+    auto process_job_range = [&](int64_t begin, int64_t end) {
+        for (int64_t job_idx = begin; job_idx < end; ++job_idx) {
 
-    // std::cout << "levels " << level_num << std::endl;
-    tbb::parallel_for(
-        tbb::blocked_range<int64_t>((int64_t)0, concurrency, work_batch), [&](tbb::blocked_range<int64_t> r) {
-            for (int64_t job_idx = r.begin(); job_idx < r.end(); ++job_idx) {
+            // for( int64_t job_idx=0; job_idx<concurrency; job_idx++ ) {
 
-                // for( int64_t job_idx=0; job_idx<concurrency; job_idx++ ) {
+            // initial offset and upper boundary of the gray code counter
+            int64_t work_batch = iteration_max / concurrency;
+            int64_t initial_offset = job_idx * work_batch;
+            int64_t offset_max = (job_idx + 1) * work_batch - 1;
 
-                // initial offset and upper boundary of the gray code counter
-                int64_t work_batch = iteration_max / concurrency;
-                int64_t initial_offset = job_idx * work_batch;
-                int64_t offset_max = (job_idx + 1) * work_batch - 1;
+            if (job_idx == concurrency - 1) {
+                offset_max = iteration_max - 1;
+            }
 
-                if (job_idx == concurrency - 1) {
-                    offset_max = iteration_max - 1;
+            // std::cout << initial_offset << " " << offset_max << " " << iteration_max << " " << work_batch << " "
+            // << concurrency << std::endl;
+
+            n_aryGrayCodeCounter gcode_counter(
+                n_ary_limits, initial_offset); // see piquassoboost for details of the implementation
+            gcode_counter.set_offset_max(offset_max);
+            GrayCodeCNOT gcode(n_ary_limits_int8);
+
+            for (int64_t iter_idx = initial_offset; iter_idx < offset_max + 1; iter_idx++) {
+
+                if (found_optimal_solution) {
+                    return;
                 }
 
-                // std::cout << initial_offset << " " << offset_max << " " << iteration_max << " " << work_batch << " "
-                // << concurrency << std::endl;
+                GrayCode&& gcodeint = gcode_counter.get();
+                std::transform(gcodeint.data, gcodeint.data + gcodeint.size(), gcode.data,
+                               [](int val) { return static_cast<int8_t>(val); });
 
-                n_aryGrayCodeCounter gcode_counter(
-                    n_ary_limits, initial_offset); // see piquassoboost for details of the implementation
-                gcode_counter.set_offset_max(offset_max);
-                GrayCodeCNOT gcode(n_ary_limits_int8);
+                if (!is_unique_structure(gcode, topology)) continue;
 
-                for (int64_t iter_idx = initial_offset; iter_idx < offset_max + 1; iter_idx++) {
+                Gates_block* gate_structure_loc = construct_gate_structure_from_Gray_code(gcode);
 
-                    if (found_optimal_solution) {
-                        return;
+                // ----------- start the decomposition -----------
+
+                std::stringstream sstream;
+                sstream << "Starting optimization with " << gate_structure_loc->get_gate_num()
+                        << " decomposing layers." << std::endl;
+                print(sstream, 1);
+
+                N_Qubit_Decomposition_custom&& cDecomp_custom_random = perform_optimization(gate_structure_loc);
+
+                delete (gate_structure_loc);
+                gate_structure_loc = NULL;
+
+                increment_num_iters(cDecomp_custom_random
+                                       .get_num_iters()); // retrieve the number of iterations spent on optimization
+
+                double current_minimum_tmp = cDecomp_custom_random.get_current_minimum();
+                sstream.str("");
+                sstream << "Optimization with " << level_num << " levels converged to " << current_minimum_tmp;
+                print(sstream, 1);
+
+                // std::cout << "Optimization with " << level_num << " levels converged to " << current_minimum_tmp
+                // << std::endl;
+
+                {
+                    tbb::spin_mutex::scoped_lock tree_search_lock{tree_search_mutex};
+
+                    if (current_minimum_tmp < current_minimum && !found_optimal_solution) {
+
+                        current_minimum = current_minimum_tmp;
+                        gcode_best_solution = gcode;
+
+                        optimized_parameters_mtx = cDecomp_custom_random.get_optimized_parameters();
+                        sync_optimized_parameters_float();
                     }
 
-                    GrayCode&& gcodeint = gcode_counter.get();
-                    std::transform(gcodeint.data, gcodeint.data + gcodeint.size(), gcode.data,
-                                   [](int val) { return static_cast<int8_t>(val); });
-
-                    if (!is_unique_structure(gcode, topology)) continue;
-
-                    Gates_block* gate_structure_loc = construct_gate_structure_from_Gray_code(gcode);
-
-                    // ----------- start the decomposition -----------
-
-                    std::stringstream sstream;
-                    sstream << "Starting optimization with " << gate_structure_loc->get_gate_num()
-                            << " decomposing layers." << std::endl;
-                    print(sstream, 1);
-
-                    N_Qubit_Decomposition_custom&& cDecomp_custom_random = perform_optimization(gate_structure_loc);
-
-                    delete (gate_structure_loc);
-                    gate_structure_loc = NULL;
-
-                    increment_num_iters(cDecomp_custom_random
-                                           .get_num_iters()); // retrieve the number of iterations spent on optimization
-
-                    double current_minimum_tmp = cDecomp_custom_random.get_current_minimum();
-                    sstream.str("");
-                    sstream << "Optimization with " << level_num << " levels converged to " << current_minimum_tmp;
-                    print(sstream, 1);
-
-                    // std::cout << "Optimization with " << level_num << " levels converged to " << current_minimum_tmp
-                    // << std::endl;
-
-                    {
-                        tbb::spin_mutex::scoped_lock tree_search_lock{tree_search_mutex};
-
-                        if (current_minimum_tmp < current_minimum && !found_optimal_solution) {
-
-                            current_minimum = current_minimum_tmp;
-                            gcode_best_solution = gcode;
-
-                            optimized_parameters_mtx = cDecomp_custom_random.get_optimized_parameters();
-                            sync_optimized_parameters_float();
-                        }
-
-                        if (current_minimum < optimization_tolerance_loc && !found_optimal_solution) {
-                            found_optimal_solution = true;
-                        }
+                    if (current_minimum < optimization_tolerance_loc && !found_optimal_solution) {
+                        found_optimal_solution = true;
                     }
+                }
 
-                    /*
-                    for( int gcode_idx=0; gcode_idx<gcode.size(); gcode_idx++ ) {
-                        std::cout << gcode[gcode_idx] << ", ";
-                    }
-                    std::cout << current_minimum_tmp  << std::endl;
-                    */
+                /*
+                for( int gcode_idx=0; gcode_idx<gcode.size(); gcode_idx++ ) {
+                    std::cout << gcode[gcode_idx] << ", ";
+                }
+                std::cout << current_minimum_tmp  << std::endl;
+                */
 
-                    // iterate the Gray code to the next element
-                    int changed_index, value_prev, value;
-                    if (gcode_counter.next(changed_index, value_prev, value)) {
-                        // exit from the for loop if no further gcode is present
-                        break;
-                    }
+                // iterate the Gray code to the next element
+                int changed_index, value_prev, value;
+                if (gcode_counter.next(changed_index, value_prev, value)) {
+                    // exit from the for loop if no further gcode is present
+                    break;
                 }
             }
+        }
+    };
+
+    if (parallel == 0) {
+        process_job_range(0, concurrency);
+    }
+    else {
+        int64_t work_batch = 1;
+        // std::cout << "levels " << level_num << std::endl;
+        tbb::parallel_for(
+            tbb::blocked_range<int64_t>((int64_t)0, concurrency, work_batch), [&](tbb::blocked_range<int64_t> r) {
+                process_job_range(r.begin(), r.end());
         });
+    }
 
     return gcode_best_solution;
 }

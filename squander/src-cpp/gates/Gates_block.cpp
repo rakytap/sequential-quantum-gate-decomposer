@@ -225,7 +225,14 @@ namespace {
 /// Helper used by both apply_to_list overloads (f64 and f32) to avoid code duplication.
 template<typename Params, typename Input>
 static void apply_to_list_impl(Gates_block* self, Params& parameters_mtx, std::vector<Input>& inputs, int parallel) {
-    int work_batch = (parallel == 0) ? static_cast<int>(inputs.size()) : 1;
+    if (parallel == 0) {
+        for (Input& input : inputs) {
+            self->apply_to(parameters_mtx, input, parallel);
+        }
+        return;
+    }
+
+    int work_batch = 1;
     tbb::parallel_for( tbb::blocked_range<int>(0, static_cast<int>(inputs.size()), work_batch),
         [&](tbb::blocked_range<int> r) {
             for (int idx = r.begin(); idx < r.end(); ++idx) {
@@ -679,80 +686,77 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input, i
 
     std::vector<Matrix> grad(parameter_num, Matrix(0,0));
 
-    int work_batch = 1;
-    if ( parallel == 0 ) {
-        work_batch = static_cast<int>(gates.size());
-    }
-    else {
-        work_batch = 1;
-    }
-
     // deriv_idx ... the index of the gate block for which the gradient is to be calculated
 
-    tbb::parallel_for( tbb::blocked_range<size_t>(0,gates.size(),work_batch), [&](tbb::blocked_range<size_t> r) {
-        for (size_t deriv_idx=r.begin(); deriv_idx<r.end(); ++deriv_idx) { 
+    auto apply_derivative_for_gate = [&](size_t deriv_idx) {
+        Gate* gate_deriv = gates[deriv_idx];            
 
-        //for (int deriv_idx=0; deriv_idx<gates.size(); ++deriv_idx) { 
-
-
-            Gate* gate_deriv = gates[deriv_idx];            
-
-            // for constant gate no gardient component is calculated
-            if ( gate_deriv->get_parameter_num() == 0 ) {
-                continue;
-            }
+        // for constant gate no gardient component is calculated
+        if ( gate_deriv->get_parameter_num() == 0 ) {
+            return;
+        }
             
-            int deriv_parameter_idx = gate_deriv->get_parameter_start_idx();       
+        int deriv_parameter_idx = gate_deriv->get_parameter_start_idx();       
 
-            thread_local Matrix input_loc_reusable;
-            Matrix input_loc_local;
-            Matrix& input_loc = (gates_block_derivative_depth == 0) ? input_loc_reusable : input_loc_local;
-            input.copy_to(input_loc);
+        thread_local Matrix input_loc_reusable;
+        Matrix input_loc_local;
+        Matrix& input_loc = (gates_block_derivative_depth == 0) ? input_loc_reusable : input_loc_local;
+        input.copy_to(input_loc);
 
-            std::vector<Matrix> grad_loc;
+        std::vector<Matrix> grad_loc;
 
-            gates_block_derivative_depth++;
-            for( size_t idx=0; idx<gates.size(); idx++) {            
+        gates_block_derivative_depth++;
+        for( size_t idx=0; idx<gates.size(); idx++) {            
 
-                Gate* operation = gates[idx];
+            Gate* operation = gates[idx];
                 
                 
-                Matrix_real parameters_mtx(parameters_mtx_in.get_data() + operation->get_parameter_start_idx(), 1, operation->get_parameter_num());
+            Matrix_real parameters_mtx(parameters_mtx_in.get_data() + operation->get_parameter_start_idx(), 1, operation->get_parameter_num());
 
-                    if ( operation->get_parameter_num() == 0 ) {
+            if ( operation->get_parameter_num() == 0 ) {
                 
-                        if( idx < deriv_idx ) {
-                            operation->apply_to( input_loc, parallel );    
-                        }
-                        else {
-                            operation->apply_to_list(grad_loc, parallel );
-                        }
+                if( idx < deriv_idx ) {
+                    operation->apply_to( input_loc, parallel );    
+                }
+                else {
+                    operation->apply_to_list(grad_loc, parallel );
+                }
                     
-                    }
-                    else  {
-                        // Gates such as U1, U2, and U3 fall here.
-                        if( idx < deriv_idx ) {
-                            operation->apply_to( parameters_mtx, input_loc, parallel );    
-                        }
-                        else if ( idx == deriv_idx ) {
-                            grad_loc = operation->apply_derivate_to( parameters_mtx, input_loc, parallel );
-                        }
-                        else {
-                            operation->apply_to_list(parameters_mtx, grad_loc, parallel );
-                        }                       
+            }
+            else  {
+                // Gates such as U1, U2, and U3 fall here.
+                if( idx < deriv_idx ) {
+                    operation->apply_to( parameters_mtx, input_loc, parallel );    
+                }
+                else if ( idx == deriv_idx ) {
+                    grad_loc = operation->apply_derivate_to( parameters_mtx, input_loc, parallel );
+                }
+                else {
+                    operation->apply_to_list(parameters_mtx, grad_loc, parallel );
+                }                       
                     
-                    }
             }
-            gates_block_derivative_depth--;
+        }
+        gates_block_derivative_depth--;
 
 
-            for ( int idx = 0; idx<(int)grad_loc.size(); idx++ ) {
-                grad[deriv_parameter_idx+idx] = grad_loc[idx];
-            }
+        for ( int idx = 0; idx<(int)grad_loc.size(); idx++ ) {
+            grad[deriv_parameter_idx+idx] = grad_loc[idx];
+        }
+    };
 
+    if (parallel == 0) {
+        for (size_t deriv_idx=0; deriv_idx<gates.size(); ++deriv_idx) {
+            apply_derivative_for_gate(deriv_idx);
+        }
+        return grad;
+    }
 
-        } // tbb range end
-    
+    int work_batch = 1;
+    tbb::parallel_for( tbb::blocked_range<size_t>(0,gates.size(),work_batch), [&](tbb::blocked_range<size_t> r) {
+        for (size_t deriv_idx=r.begin(); deriv_idx<r.end(); ++deriv_idx) {
+            apply_derivative_for_gate(deriv_idx);
+        }
     });
    
 
@@ -774,80 +778,77 @@ Gates_block::apply_derivate_to( Matrix_real_float& parameters_mtx_in, Matrix_flo
 
     std::vector<Matrix_float> grad(parameter_num, Matrix_float(0,0));
 
-    int work_batch = 1;
-    if ( parallel == 0 ) {
-        work_batch = static_cast<int>(gates.size());
-    }
-    else {
-        work_batch = 1;
-    }
-
     // deriv_idx ... the index of the gate block for which the gradient is to be calculated
 
-    tbb::parallel_for( tbb::blocked_range<size_t>(0,gates.size(),work_batch), [&](tbb::blocked_range<size_t> r) {
-        for (size_t deriv_idx=r.begin(); deriv_idx<r.end(); ++deriv_idx) { 
+    auto apply_derivative_for_gate = [&](size_t deriv_idx) {
+        Gate* gate_deriv = gates[deriv_idx];            
 
-        //for (int deriv_idx=0; deriv_idx<gates.size(); ++deriv_idx) { 
-
-
-            Gate* gate_deriv = gates[deriv_idx];            
-
-            // for constant gate no gardient component is calculated
-            if ( gate_deriv->get_parameter_num() == 0 ) {
-                continue;
-            }
+        // for constant gate no gardient component is calculated
+        if ( gate_deriv->get_parameter_num() == 0 ) {
+            return;
+        }
             
-            int deriv_parameter_idx = gate_deriv->get_parameter_start_idx();       
+        int deriv_parameter_idx = gate_deriv->get_parameter_start_idx();       
 
-            thread_local Matrix_float input_loc_reusable;
-            Matrix_float input_loc_local;
-            Matrix_float& input_loc = (gates_block_derivative_depth == 0) ? input_loc_reusable : input_loc_local;
-            input.copy_to(input_loc);
+        thread_local Matrix_float input_loc_reusable;
+        Matrix_float input_loc_local;
+        Matrix_float& input_loc = (gates_block_derivative_depth == 0) ? input_loc_reusable : input_loc_local;
+        input.copy_to(input_loc);
 
-            std::vector<Matrix_float> grad_loc;
+        std::vector<Matrix_float> grad_loc;
 
-            gates_block_derivative_depth++;
-            for( size_t idx=0; idx<gates.size(); idx++) {            
+        gates_block_derivative_depth++;
+        for( size_t idx=0; idx<gates.size(); idx++) {            
 
-                Gate* operation = gates[idx];
+            Gate* operation = gates[idx];
                 
                 
-                Matrix_real_float parameters_mtx(parameters_mtx_in.get_data() + operation->get_parameter_start_idx(), 1, operation->get_parameter_num());
+            Matrix_real_float parameters_mtx(parameters_mtx_in.get_data() + operation->get_parameter_start_idx(), 1, operation->get_parameter_num());
 
-                    if ( operation->get_parameter_num() == 0 ) {
+            if ( operation->get_parameter_num() == 0 ) {
                 
-                        if( idx < deriv_idx ) {
-                            operation->apply_to( input_loc, parallel );    
-                        }
-                        else {
-                            operation->apply_to_list(grad_loc, parallel );
-                        }
+                if( idx < deriv_idx ) {
+                    operation->apply_to( input_loc, parallel );    
+                }
+                else {
+                    operation->apply_to_list(grad_loc, parallel );
+                }
                     
-                    }
-                    else  {
-                        // Gates such as U1, U2, and U3 fall here.
-                        if( idx < deriv_idx ) {
-                            operation->apply_to( parameters_mtx, input_loc, parallel );    
-                        }
-                        else if ( idx == deriv_idx ) {
-                            grad_loc = operation->apply_derivate_to( parameters_mtx, input_loc, parallel );
-                        }
-                        else {
-                            operation->apply_to_list(parameters_mtx, grad_loc, parallel );
-                        }                       
+            }
+            else  {
+                // Gates such as U1, U2, and U3 fall here.
+                if( idx < deriv_idx ) {
+                    operation->apply_to( parameters_mtx, input_loc, parallel );    
+                }
+                else if ( idx == deriv_idx ) {
+                    grad_loc = operation->apply_derivate_to( parameters_mtx, input_loc, parallel );
+                }
+                else {
+                    operation->apply_to_list(parameters_mtx, grad_loc, parallel );
+                }                       
                     
-                    }
             }
-            gates_block_derivative_depth--;
+        }
+        gates_block_derivative_depth--;
 
 
-            for ( int idx = 0; idx<(int)grad_loc.size(); idx++ ) {
-                grad[deriv_parameter_idx+idx] = grad_loc[idx];
-            }
+        for ( int idx = 0; idx<(int)grad_loc.size(); idx++ ) {
+            grad[deriv_parameter_idx+idx] = grad_loc[idx];
+        }
+    };
 
+    if (parallel == 0) {
+        for (size_t deriv_idx=0; deriv_idx<gates.size(); ++deriv_idx) {
+            apply_derivative_for_gate(deriv_idx);
+        }
+        return grad;
+    }
 
-        } // tbb range end
-    
+    int work_batch = 1;
+    tbb::parallel_for( tbb::blocked_range<size_t>(0,gates.size(),work_batch), [&](tbb::blocked_range<size_t> r) {
+        for (size_t deriv_idx=r.begin(); deriv_idx<r.end(); ++deriv_idx) {
+            apply_derivative_for_gate(deriv_idx);
+        }
     });
    
 
@@ -870,11 +871,26 @@ Gates_block::apply_to_combined_inner( Matrix_real& parameters_mtx_in, const Matr
     std::vector<Matrix> ret;
     ret.reserve(parameter_num + 1);
 
-    Matrix applied = input.copy();
-    apply_to_inner(parameters_mtx_in, precomputed_sincos, applied, parallel);
+    Matrix applied;
+    std::vector<Matrix> derivs;
+    if (parallel == 0) {
+        applied = input.copy();
+        apply_to_inner(parameters_mtx_in, precomputed_sincos, applied, parallel);
+        derivs = apply_derivate_to(parameters_mtx_in, input, parallel);
+    }
+    else {
+        tbb::parallel_invoke(
+            [&]() {
+                applied = input.copy();
+                apply_to_inner(parameters_mtx_in, precomputed_sincos, applied, parallel);
+            },
+            [&]() {
+                derivs = apply_derivate_to(parameters_mtx_in, input, parallel);
+            }
+        );
+    }
     ret.push_back(std::move(applied));
 
-    std::vector<Matrix> derivs = apply_derivate_to(parameters_mtx_in, input, parallel);
     for (size_t idx = 0; idx < derivs.size(); ++idx) {
         ret.push_back(std::move(derivs[idx]));
     }
@@ -897,11 +913,26 @@ Gates_block::apply_to_combined_inner( Matrix_real_float& parameters_mtx_in, cons
     std::vector<Matrix_float> ret;
     ret.reserve(parameter_num + 1);
 
-    Matrix_float applied = input.copy();
-    apply_to_inner(parameters_mtx_in, precomputed_sincos, applied, parallel);
+    Matrix_float applied;
+    std::vector<Matrix_float> derivs;
+    if (parallel == 0) {
+        applied = input.copy();
+        apply_to_inner(parameters_mtx_in, precomputed_sincos, applied, parallel);
+        derivs = apply_derivate_to(parameters_mtx_in, input, parallel);
+    }
+    else {
+        tbb::parallel_invoke(
+            [&]() {
+                applied = input.copy();
+                apply_to_inner(parameters_mtx_in, precomputed_sincos, applied, parallel);
+            },
+            [&]() {
+                derivs = apply_derivate_to(parameters_mtx_in, input, parallel);
+            }
+        );
+    }
     ret.push_back(std::move(applied));
 
-    std::vector<Matrix_float> derivs = apply_derivate_to(parameters_mtx_in, input, parallel);
     for (size_t idx = 0; idx < derivs.size(); ++idx) {
         ret.push_back(std::move(derivs[idx]));
     }
