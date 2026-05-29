@@ -65,6 +65,7 @@ Gate::Gate() {
     parameter_num = 0;
     // the index in the parameter array (corrensponding to the encapsulated circuit) where the gate parameters begin (if gates are placed into a circuit a single parameter array is used to execute the whole circuit)
     parameter_start_idx = 0;
+    matrix_alloc_float_valid = false;
 }
 
 
@@ -97,6 +98,7 @@ Gate::Gate(int qbit_num_in) {
     parameter_num = 0;
     // the index in the parameter array (corrensponding to the encapsulated circuit) where the gate parameters begin (if gates are placed into a circuit a single parameter array is used to execute the whole circuit)
     parameter_start_idx = 0;
+    matrix_alloc_float_valid = false;
 }
 
 
@@ -123,6 +125,7 @@ Gate::Gate(int qbit_num_in, const std::vector<int>& target_qbits_in, const std::
     parameter_num = 0;
     // the index in the parameter array (corrensponding to the encapsulated circuit) where the gate parameters begin (if gates are placed into a circuit a single parameter array is used to execute the whole circuit)
     parameter_start_idx = 0;
+    matrix_alloc_float_valid = false;
 
     // Validate target qubits
     for (int tq : target_qbits_in) {
@@ -515,29 +518,41 @@ Gate::apply_to( Matrix_real_any& parameter_mtx, Matrix_any& input, int parallel 
 @param input The input array on which the gate is applied
 @param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP (NOT IMPLEMENTED YET) and 2 for parallel with TBB (optional)
 */
-std::vector<Matrix> 
-Gate::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input, int parallel ) {
+std::vector<Matrix>
+Gate::apply_derivative_to_precomputed(const Matrix_real& precomputed_sincos, Matrix& input, int parallel) {
 
     const int parameter_count = get_parameter_num();
-    std::vector<Matrix> ret;
-    ret.reserve(parameter_count);
+    std::vector<Matrix> ret(parameter_count);
 
     if (parameter_count <= 0) {
         return ret;
     }
 
-    Matrix_real precomputed_sincos = precompute_sincos(parameters_mtx_in);
-    for (int param_idx = 0; param_idx < parameter_count; ++param_idx) {
+    auto calculate_derivative = [&](int param_idx) {
         Matrix u3 = derivative_kernel(precomputed_sincos, param_idx);
         Matrix u3_aux = derivative_aux_kernel(precomputed_sincos, param_idx);
 
         Matrix res = input.copy();
         if (u3_aux.size() > 0) {
             apply_kernel_to(u3, res, true, parallel, &u3_aux);
-        } else {
+        }
+        else {
             apply_kernel_to(u3, res, true, parallel);
         }
-        ret.push_back(std::move(res));
+        ret[param_idx] = std::move(res);
+    };
+
+    if (parallel == 0 || parameter_count == 1) {
+        for (int param_idx = 0; param_idx < parameter_count; ++param_idx) {
+            calculate_derivative(param_idx);
+        }
+    }
+    else {
+        tbb::parallel_for(tbb::blocked_range<int>(0, parameter_count, 1), [&](tbb::blocked_range<int> r) {
+            for (int param_idx = r.begin(); param_idx < r.end(); ++param_idx) {
+                calculate_derivative(param_idx);
+            }
+        });
     }
 
     return ret;
@@ -545,31 +560,59 @@ Gate::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input, int para
 
 
 std::vector<Matrix_float>
-Gate::apply_derivate_to( Matrix_real_float& parameters_mtx_in, Matrix_float& input, int parallel ) {
+Gate::apply_derivative_to_precomputed(const Matrix_real_float& precomputed_sincos, Matrix_float& input, int parallel) {
 
     const int parameter_count = get_parameter_num();
-    std::vector<Matrix_float> ret;
-    ret.reserve(parameter_count);
+    std::vector<Matrix_float> ret(parameter_count);
 
     if (parameter_count <= 0) {
         return ret;
     }
 
-    Matrix_real_float precomputed_sincos = precompute_sincos(parameters_mtx_in);
-    for (int param_idx = 0; param_idx < parameter_count; ++param_idx) {
+    auto calculate_derivative = [&](int param_idx) {
         Matrix_float u3 = derivative_kernel(precomputed_sincos, param_idx);
         Matrix_float u3_aux = derivative_aux_kernel(precomputed_sincos, param_idx);
 
         Matrix_float res = input.copy();
         if (u3_aux.size() > 0) {
             apply_kernel_to(u3, res, true, parallel, &u3_aux);
-        } else {
+        }
+        else {
             apply_kernel_to(u3, res, true, parallel);
         }
-        ret.push_back(std::move(res));
+        ret[param_idx] = std::move(res);
+    };
+
+    if (parallel == 0 || parameter_count == 1) {
+        for (int param_idx = 0; param_idx < parameter_count; ++param_idx) {
+            calculate_derivative(param_idx);
+        }
+    }
+    else {
+        tbb::parallel_for(tbb::blocked_range<int>(0, parameter_count, 1), [&](tbb::blocked_range<int> r) {
+            for (int param_idx = r.begin(); param_idx < r.end(); ++param_idx) {
+                calculate_derivative(param_idx);
+            }
+        });
     }
 
     return ret;
+}
+
+
+std::vector<Matrix> 
+Gate::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input, int parallel ) {
+
+    Matrix_real precomputed_sincos = precompute_sincos(parameters_mtx_in);
+    return apply_derivative_to_precomputed(precomputed_sincos, input, parallel);
+}
+
+
+std::vector<Matrix_float>
+Gate::apply_derivate_to( Matrix_real_float& parameters_mtx_in, Matrix_float& input, int parallel ) {
+
+    Matrix_real_float precomputed_sincos = precompute_sincos(parameters_mtx_in);
+    return apply_derivative_to_precomputed(precomputed_sincos, input, parallel);
 }
 
 
@@ -592,7 +635,7 @@ Gate::apply_to_combined_inner( Matrix_real& parameters_mtx_in, const Matrix_real
     if (parallel == 0) {
         applied = input.copy();
         apply_to_inner(parameters_mtx_in, precomputed_sincos, applied, parallel);
-        derivs = apply_derivate_to(parameters_mtx_in, input, parallel);
+        derivs = apply_derivative_to_precomputed(precomputed_sincos, input, parallel);
     }
     else {
         tbb::parallel_invoke(
@@ -601,7 +644,7 @@ Gate::apply_to_combined_inner( Matrix_real& parameters_mtx_in, const Matrix_real
                 apply_to_inner(parameters_mtx_in, precomputed_sincos, applied, parallel);
             },
             [&]() {
-                derivs = apply_derivate_to(parameters_mtx_in, input, parallel);
+                derivs = apply_derivative_to_precomputed(precomputed_sincos, input, parallel);
             }
         );
     }
@@ -634,7 +677,7 @@ Gate::apply_to_combined_inner( Matrix_real_float& parameters_mtx_in, const Matri
     if (parallel == 0) {
         applied = input.copy();
         apply_to_inner(parameters_mtx_in, precomputed_sincos, applied, parallel);
-        derivs = apply_derivate_to(parameters_mtx_in, input, parallel);
+        derivs = apply_derivative_to_precomputed(precomputed_sincos, input, parallel);
     }
     else {
         tbb::parallel_invoke(
@@ -643,7 +686,7 @@ Gate::apply_to_combined_inner( Matrix_real_float& parameters_mtx_in, const Matri
                 apply_to_inner(parameters_mtx_in, precomputed_sincos, applied, parallel);
             },
             [&]() {
-                derivs = apply_derivate_to(parameters_mtx_in, input, parallel);
+                derivs = apply_derivative_to_precomputed(precomputed_sincos, input, parallel);
             }
         );
     }
@@ -760,6 +803,15 @@ Gate::compute_precomputed_sincos(const Matrix_real_float& parameters) const {
 void
 Gate::set_matrix( Matrix input ) {
     matrix_alloc = input;
+    matrix_alloc_float = Matrix_float();
+    matrix_alloc_float_valid = false;
+}
+
+void
+Gate::set_matrix( Matrix_float input ) {
+    matrix_alloc_float = input;
+    matrix_alloc_float_valid = true;
+    matrix_alloc = Matrix();
 }
 
 
@@ -1067,7 +1119,12 @@ int Gate::get_qbit_num() {
 Gate* Gate::clone() {
 
     Gate* ret = new Gate( qbit_num );
-    ret->set_matrix( matrix_alloc );
+    if (matrix_alloc_float_valid) {
+        ret->set_matrix( matrix_alloc_float );
+    }
+    else {
+        ret->set_matrix( matrix_alloc );
+    }
     
     ret->set_parameter_start_idx( get_parameter_start_idx() );
     ret->set_parents( parents );
@@ -1262,6 +1319,9 @@ Gate::apply_kernel_to(Matrix& u3_1qbit, Matrix& input, bool deriv, int parallel,
     }
 
     if (type == GENERAL_OPERATION) {
+        if (matrix_alloc_float_valid && matrix_alloc.rows == 0 && matrix_alloc_float.rows > 0) {
+            matrix_alloc = matrix_alloc_float.to_float64();
+        }
         const std::vector<int> involved_qbits = get_involved_qubits();
         const bool has_any_control = (control_qbit >= 0) || !control_qbits.empty();
         const bool is_state_vector = (input.cols == 1);
@@ -1545,7 +1605,13 @@ Gate::apply_kernel_to(Matrix_float& u3_1qbit, Matrix_float& input, bool deriv, i
         const bool can_use_large_kernel = !has_any_control
             && ((is_state_vector && involved_qbit_num >= 2 && involved_qbit_num <= 5)
                 || (!is_state_vector && involved_qbit_num == 2));
-        Matrix_float matrix_alloc32 = matrix_alloc.to_float32();
+        Matrix_float matrix_alloc32;
+        if (matrix_alloc_float_valid) {
+            matrix_alloc32 = matrix_alloc_float;
+        }
+        else {
+            matrix_alloc32 = matrix_alloc.to_float32();
+        }
 
         if (has_full_matrix) {
             if (can_use_large_kernel) {

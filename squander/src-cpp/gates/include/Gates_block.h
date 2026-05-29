@@ -53,6 +53,13 @@ protected:
     /// maximal number of qubits in partitions
     int min_fusion;
     SmartAtomicPtr<Gates_block> fusion_block;
+    mutable bool involved_qubits_cache_valid;
+    mutable bool involved_target_qubits_cache_valid;
+    mutable std::vector<int> involved_qubits_cache;
+    mutable std::vector<int> involved_target_qubits_cache;
+    mutable std::shared_ptr<tbb::spin_mutex> involved_qubits_cache_mutex;
+
+    void invalidate_structure_cache();
 
 public:
 
@@ -999,4 +1006,3 @@ Matrix_real reverse_parameters( const Matrix_real& v_in, std::vector<Gate*>::ite
 Matrix_real inverse_reverse_parameters( const Matrix_real& v_in, std::vector<Gate*>::iterator gates_it, int num_of_gates );
 
 #endif //GATES_BLOCK,
-

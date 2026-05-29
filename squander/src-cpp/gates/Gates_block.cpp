@@ -70,6 +70,7 @@ limitations under the License.
 #endif
 
 static thread_local int gates_block_derivative_depth = 0;
+static thread_local int gates_block_fusion_depth = 0;
 
 
 //static tbb::spin_mutex my_mutex;
@@ -85,6 +86,10 @@ Gates_block::Gates_block() : Gate() {
     type = BLOCK_OPERATION;
     // number of operation layers
     layer_num = 0;
+    min_fusion = 14;
+    involved_qubits_cache_valid = false;
+    involved_target_qubits_cache_valid = false;
+    involved_qubits_cache_mutex = std::make_shared<tbb::spin_mutex>();
 }
 
 
@@ -104,7 +109,22 @@ Gates_block::Gates_block(int qbit_num_in) : Gate(qbit_num_in) {
     layer_num = 0;
     
     min_fusion = 14;
+    involved_qubits_cache_valid = false;
+    involved_target_qubits_cache_valid = false;
+    involved_qubits_cache_mutex = std::make_shared<tbb::spin_mutex>();
     
+}
+
+void
+Gates_block::invalidate_structure_cache() {
+    {
+        tbb::spin_mutex::scoped_lock lock(*involved_qubits_cache_mutex);
+        involved_qubits_cache_valid = false;
+        involved_target_qubits_cache_valid = false;
+        involved_qubits_cache.clear();
+        involved_target_qubits_cache.clear();
+    }
+    fusion_block.update(std::shared_ptr<Gates_block>{});
 }
 
 
@@ -134,6 +154,7 @@ Gates_block::release_gates() {
     gates.clear();
     layer_num = 0;
     parameter_num = 0;
+    invalidate_structure_cache();
 
 }
 
@@ -151,10 +172,12 @@ Gates_block::release_gate( int idx) {
     parameter_num -= gate->get_parameter_num();
 
     gates.erase( gates.begin() + idx );
+    delete gate;
     
     // TODO: develop a more efficient method for large circuits. Now it is updating the whole circuit
     reset_parameter_start_indices();
     reset_dependency_graph();
+    invalidate_structure_cache();
 
 
 }
@@ -280,6 +303,26 @@ static Matrix_real_float precompute_block_sincos(const Matrix_real_float& parame
 
     return sincos;
 }
+
+static void reset_identity(Matrix& mtx, int matrix_size) {
+    if (mtx.rows != matrix_size || mtx.cols != matrix_size || mtx.stride != matrix_size) {
+        mtx = Matrix(matrix_size, matrix_size);
+    }
+    memset(mtx.get_data(), 0, mtx.size()*sizeof(QGD_Complex16));
+    for (int idx = 0; idx < matrix_size; ++idx) {
+        mtx[idx*mtx.stride + idx].real = 1.0;
+    }
+}
+
+static void reset_identity(Matrix_float& mtx, int matrix_size) {
+    if (mtx.rows != matrix_size || mtx.cols != matrix_size || mtx.stride != matrix_size) {
+        mtx = Matrix_float(matrix_size, matrix_size);
+    }
+    memset(mtx.get_data(), 0, mtx.size()*sizeof(QGD_Complex8));
+    for (int idx = 0; idx < matrix_size; ++idx) {
+        mtx[idx*mtx.stride + idx].real = 1.0f;
+    }
+}
 } // anonymous namespace
 
 
@@ -345,7 +388,10 @@ Gates_block::apply_to_inner( Matrix_real& parameters_mtx_in, const Matrix_real& 
 
     if (min_fusion != -1 && qbit_num >= min_fusion && size <= (input.cols == 1 ? 5 : 2) && qbit_num != size && gates.size() > 1) {
         auto fb = fusion_block.get();
-        Matrix Umtx_mini = create_identity(Power_of_2(size));
+        thread_local Matrix Umtx_mini_reusable;
+        Matrix Umtx_mini_local;
+        Matrix& Umtx_mini = (gates_block_fusion_depth == 0) ? Umtx_mini_reusable : Umtx_mini_local;
+        reset_identity(Umtx_mini, Power_of_2(size));
         if (fb == nullptr) {
 
             std::vector<int> old_to_new(qbit_num, -2);
@@ -359,9 +405,16 @@ Gates_block::apply_to_inner( Matrix_real& parameters_mtx_in, const Matrix_real& 
             fusion_block.update(clone_block);
             fb = fusion_block.get();
         }
+        gates_block_fusion_depth++;
         fb->apply_to_inner(parameters_mtx_in, precomputed_sincos_in, Umtx_mini, parallel);
+        gates_block_fusion_depth--;
 
-        Gate merged_gate(qbit_num);
+        thread_local Gate merged_gate;
+        thread_local int merged_gate_qbit_num = -1;
+        if (merged_gate_qbit_num != qbit_num) {
+            merged_gate = Gate(qbit_num);
+            merged_gate_qbit_num = qbit_num;
+        }
         merged_gate.set_target_qbits(involved_qubits);
         merged_gate.set_matrix(Umtx_mini);
 
@@ -437,7 +490,10 @@ Gates_block::apply_to_inner( Matrix_real_float& parameters_mtx_in, const Matrix_
 
     if (min_fusion != -1 && qbit_num >= min_fusion && size <= (input.cols == 1 ? 5 : 2) && qbit_num != size && gates.size() > 1) {
         auto fb = fusion_block.get();
-        Matrix_float Umtx_mini = create_identity_float(Power_of_2(size));
+        thread_local Matrix_float Umtx_mini_reusable;
+        Matrix_float Umtx_mini_local;
+        Matrix_float& Umtx_mini = (gates_block_fusion_depth == 0) ? Umtx_mini_reusable : Umtx_mini_local;
+        reset_identity(Umtx_mini, Power_of_2(size));
         if (fb == nullptr) {
 
             std::vector<int> old_to_new(qbit_num, -2);
@@ -451,11 +507,18 @@ Gates_block::apply_to_inner( Matrix_real_float& parameters_mtx_in, const Matrix_
             fusion_block.update(clone_block);
             fb = fusion_block.get();
         }
+        gates_block_fusion_depth++;
         fb->apply_to_inner(parameters_mtx_in, precomputed_sincos_in, Umtx_mini, parallel);
+        gates_block_fusion_depth--;
 
-        Gate merged_gate(qbit_num);
+        thread_local Gate merged_gate;
+        thread_local int merged_gate_qbit_num = -1;
+        if (merged_gate_qbit_num != qbit_num) {
+            merged_gate = Gate(qbit_num);
+            merged_gate_qbit_num = qbit_num;
+        }
         merged_gate.set_target_qbits(involved_qubits);
-        merged_gate.set_matrix(Umtx_mini.to_float64());
+        merged_gate.set_matrix(Umtx_mini);
 
         // Keep legacy high-qubit fused execution behavior, but route through Gate::apply_to.
         int fused_parallel = parallel;
@@ -684,7 +747,7 @@ Gates_block::apply_from_right_inner( Matrix_real_float& parameters_mtx, const Ma
 std::vector<Matrix> 
 Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input, int parallel ) {
 
-    std::vector<Matrix> grad(parameter_num, Matrix(0,0));
+    std::vector<Matrix> grad(parameter_num);
 
     // deriv_idx ... the index of the gate block for which the gradient is to be calculated
 
@@ -704,6 +767,7 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input, i
         input.copy_to(input_loc);
 
         std::vector<Matrix> grad_loc;
+        grad_loc.reserve(parameter_num);
 
         gates_block_derivative_depth++;
         for( size_t idx=0; idx<gates.size(); idx++) {            
@@ -741,7 +805,7 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input, i
 
 
         for ( int idx = 0; idx<(int)grad_loc.size(); idx++ ) {
-            grad[deriv_parameter_idx+idx] = grad_loc[idx];
+            grad[deriv_parameter_idx+idx] = std::move(grad_loc[idx]);
         }
     };
 
@@ -776,7 +840,7 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input, i
 std::vector<Matrix_float>
 Gates_block::apply_derivate_to( Matrix_real_float& parameters_mtx_in, Matrix_float& input, int parallel ) {
 
-    std::vector<Matrix_float> grad(parameter_num, Matrix_float(0,0));
+    std::vector<Matrix_float> grad(parameter_num);
 
     // deriv_idx ... the index of the gate block for which the gradient is to be calculated
 
@@ -796,6 +860,7 @@ Gates_block::apply_derivate_to( Matrix_real_float& parameters_mtx_in, Matrix_flo
         input.copy_to(input_loc);
 
         std::vector<Matrix_float> grad_loc;
+        grad_loc.reserve(parameter_num);
 
         gates_block_derivative_depth++;
         for( size_t idx=0; idx<gates.size(); idx++) {            
@@ -833,7 +898,7 @@ Gates_block::apply_derivate_to( Matrix_real_float& parameters_mtx_in, Matrix_flo
 
 
         for ( int idx = 0; idx<(int)grad_loc.size(); idx++ ) {
-            grad[deriv_parameter_idx+idx] = grad_loc[idx];
+            grad[deriv_parameter_idx+idx] = std::move(grad_loc[idx]);
         }
     };
 
@@ -2038,6 +2103,7 @@ void Gates_block::add_gate( Gate* gate ) {
 
         // append the gate to the list
         gates.push_back(gate);
+        invalidate_structure_cache();
         
         // set the parameter starting index in the parameters array used to execute the circuit.
         gate->set_parameter_start_idx( parameter_num );
@@ -2070,6 +2136,7 @@ void Gates_block::add_gate( Gate* gate ) {
         determine_children( gate );
 
         gates.insert( gates.begin(), gate);
+        invalidate_structure_cache();
 
         // increase the number of U3 gate parameters by the number of parameters
         parameter_num = parameter_num + gate->get_parameter_num();
@@ -2100,6 +2167,7 @@ Gates_block::insert_gate( Gate* gate, int idx ) {
         gate->set_qbit_num( qbit_num );
 
         gates.insert( gates.begin()+idx, gate);
+        invalidate_structure_cache();
 
         // increase the number of U3 gate parameters by the number of parameters
         parameter_num = parameter_num + gate->get_parameter_num();
@@ -2674,6 +2742,7 @@ void Gates_block::reorder_qubits( std::vector<int>  qbit_list ) {
 
     }
 
+    invalidate_structure_cache();
 }
 
 /**
@@ -2682,7 +2751,18 @@ void Gates_block::reorder_qubits( std::vector<int>  qbit_list ) {
 */
 std::vector<int> Gates_block::get_involved_qubits(bool only_target) {
 
-    std::set<int> involved_qbits;
+    {
+        tbb::spin_mutex::scoped_lock lock(*involved_qubits_cache_mutex);
+        if (only_target && involved_target_qubits_cache_valid) {
+            return involved_target_qubits_cache;
+        }
+        if (!only_target && involved_qubits_cache_valid) {
+            return involved_qubits_cache;
+        }
+    }
+
+    std::vector<int> involved_qbits;
+    std::vector<char> seen(qbit_num > 0 ? qbit_num : 0, 0);
 
     for(std::vector<Gate*>::iterator it = gates.begin(); it != gates.end(); ++it) {
 
@@ -2692,12 +2772,38 @@ std::vector<int> Gates_block::get_involved_qubits(bool only_target) {
         // both single and vector-based qubits (SWAP, CSWAP, CCX, etc.)
         std::vector<int> gate_qbits = gate->get_involved_qubits(only_target);
         for (std::vector<int>::iterator in_it = gate_qbits.begin(); in_it != gate_qbits.end(); ++in_it){
-            involved_qbits.insert(*in_it);
+            const int qbit = *in_it;
+            if (qbit < 0) {
+                continue;
+            }
+            if (qbit >= static_cast<int>(seen.size())) {
+                if (std::find(involved_qbits.begin(), involved_qbits.end(), qbit) == involved_qbits.end()) {
+                    involved_qbits.push_back(qbit);
+                }
+            }
+            else if (!seen[qbit]) {
+                seen[qbit] = 1;
+                involved_qbits.push_back(qbit);
+            }
         }
 
     }
 
-    return std::vector<int>(involved_qbits.begin(), involved_qbits.end());
+    std::sort(involved_qbits.begin(), involved_qbits.end());
+
+    {
+        tbb::spin_mutex::scoped_lock lock(*involved_qubits_cache_mutex);
+        if (only_target) {
+            involved_target_qubits_cache = involved_qbits;
+            involved_target_qubits_cache_valid = true;
+        }
+        else {
+            involved_qubits_cache = involved_qbits;
+            involved_qubits_cache_valid = true;
+        }
+    }
+
+    return involved_qbits;
 }
 
 
@@ -2751,6 +2857,7 @@ void Gates_block::combine(Gates_block* op_block) {
 
 void Gates_block::set_min_fusion( int min_fusion ) {
     this->min_fusion = min_fusion;
+    fusion_block.update(std::shared_ptr<Gates_block>{});
     for (size_t i = 0; i < gates.size(); i++){
         if ( gates[i]->get_type() == BLOCK_OPERATION ) {
             ((Gates_block*)gates[i])->set_min_fusion( min_fusion );
@@ -2797,6 +2904,7 @@ void Gates_block::set_qbit_num( int qbit_num_in ) {
             throw err;
         }
     }
+    invalidate_structure_cache();
 }
 
 

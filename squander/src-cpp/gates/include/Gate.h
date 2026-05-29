@@ -117,6 +117,9 @@ private:
 
     /// Matrix of the operation
     Matrix matrix_alloc;
+    /// Float32 matrix of the operation, when provided directly.
+    Matrix_float matrix_alloc_float;
+    bool matrix_alloc_float_valid;
 
 public:
 
@@ -366,6 +369,8 @@ Matrix_real_float compute_precomputed_sincos(const Matrix_real_float& parameters
 */
 void set_matrix( Matrix input );
 
+void set_matrix( Matrix_float input );
+
 
 /**
 @brief Call to set the control qubit for the gate operation
@@ -596,6 +601,10 @@ Matrix_real precompute_sincos(const Matrix_real& parameters) const;
 @return Matrix with shape (parameter_num, 2): [sin(theta_i), cos(theta_i)].
 */
 Matrix_real_float precompute_sincos(const Matrix_real_float& parameters) const;
+
+std::vector<Matrix> apply_derivative_to_precomputed(const Matrix_real& precomputed_sincos, Matrix& input, int parallel);
+
+std::vector<Matrix_float> apply_derivative_to_precomputed(const Matrix_real_float& precomputed_sincos, Matrix_float& input, int parallel);
 
 /**
 @brief Call to apply the gate kernel on the input state or unitary with optional AVX support
