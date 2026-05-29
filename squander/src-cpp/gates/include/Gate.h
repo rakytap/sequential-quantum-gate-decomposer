@@ -279,6 +279,8 @@ void apply_to( Matrix_real_any& parameter_mtx, Matrix_any& input, int parallel )
 */
 virtual std::vector<Matrix> apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input, int parallel );
 
+virtual void apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input, int parallel, std::vector<Matrix>& output );
+
 /**
 @brief Float32 overload for derivative evaluation.
 @param parameters_mtx_in Float32 parameter matrix
@@ -286,6 +288,8 @@ virtual std::vector<Matrix> apply_derivate_to( Matrix_real& parameters_mtx_in, M
 @param parallel Parallel mode selector
 */
 virtual std::vector<Matrix_float> apply_derivate_to( Matrix_real_float& parameters_mtx_in, Matrix_float& input, int parallel );
+
+virtual void apply_derivate_to( Matrix_real_float& parameters_mtx_in, Matrix_float& input, int parallel, std::vector<Matrix_float>& output );
 
 /**
 @brief Combined forward + derivative application with shared precomputed trig cache.
@@ -296,6 +300,8 @@ virtual std::vector<Matrix_float> apply_derivate_to( Matrix_real_float& paramete
 */
 virtual std::vector<Matrix> apply_to_combined( Matrix_real& parameters_mtx_in, Matrix& input, int parallel );
 
+virtual void apply_to_combined( Matrix_real& parameters_mtx_in, Matrix& input, int parallel, std::vector<Matrix>& output );
+
 /**
 @brief Float32 combined forward + derivative application.
     Return format: first element is forward apply_to result, remaining elements are derivatives.
@@ -305,15 +311,21 @@ virtual std::vector<Matrix> apply_to_combined( Matrix_real& parameters_mtx_in, M
 */
 virtual std::vector<Matrix_float> apply_to_combined( Matrix_real_float& parameters_mtx_in, Matrix_float& input, int parallel );
 
+virtual void apply_to_combined( Matrix_real_float& parameters_mtx_in, Matrix_float& input, int parallel, std::vector<Matrix_float>& output );
+
 /**
 @brief Internal combined forward+derivative entry with precomputed sin/cos.
 */
 virtual std::vector<Matrix> apply_to_combined_inner( Matrix_real& parameters_mtx_in, const Matrix_real& precomputed_sincos, Matrix& input, int parallel );
 
+virtual void apply_to_combined_inner( Matrix_real& parameters_mtx_in, const Matrix_real& precomputed_sincos, Matrix& input, int parallel, std::vector<Matrix>& output );
+
 /**
 @brief Float32 internal combined forward+derivative entry with precomputed sin/cos.
 */
 virtual std::vector<Matrix_float> apply_to_combined_inner( Matrix_real_float& parameters_mtx_in, const Matrix_real_float& precomputed_sincos, Matrix_float& input, int parallel );
+
+virtual void apply_to_combined_inner( Matrix_real_float& parameters_mtx_in, const Matrix_real_float& precomputed_sincos, Matrix_float& input, int parallel, std::vector<Matrix_float>& output );
 
 
 /**
@@ -604,7 +616,11 @@ Matrix_real_float precompute_sincos(const Matrix_real_float& parameters) const;
 
 std::vector<Matrix> apply_derivative_to_precomputed(const Matrix_real& precomputed_sincos, Matrix& input, int parallel);
 
+void apply_derivative_to_precomputed(const Matrix_real& precomputed_sincos, Matrix& input, int parallel, std::vector<Matrix>& output, size_t offset = 0, bool resize_output = true);
+
 std::vector<Matrix_float> apply_derivative_to_precomputed(const Matrix_real_float& precomputed_sincos, Matrix_float& input, int parallel);
+
+void apply_derivative_to_precomputed(const Matrix_real_float& precomputed_sincos, Matrix_float& input, int parallel, std::vector<Matrix_float>& output, size_t offset = 0, bool resize_output = true);
 
 /**
 @brief Call to apply the gate kernel on the input state or unitary with optional AVX support

@@ -521,82 +521,114 @@ Gate::apply_to( Matrix_real_any& parameter_mtx, Matrix_any& input, int parallel 
 std::vector<Matrix>
 Gate::apply_derivative_to_precomputed(const Matrix_real& precomputed_sincos, Matrix& input, int parallel) {
 
-    const int parameter_count = get_parameter_num();
-    std::vector<Matrix> ret(parameter_count);
+    std::vector<Matrix> ret;
+    apply_derivative_to_precomputed(precomputed_sincos, input, parallel, ret);
+    return ret;
+}
 
+
+void
+Gate::apply_derivative_to_precomputed(const Matrix_real& precomputed_sincos, Matrix& input, int parallel, std::vector<Matrix>& output, size_t offset, bool resize_output) {
+
+    const int parameter_count = get_parameter_num();
     if (parameter_count <= 0) {
-        return ret;
+        if (resize_output) {
+            output.clear();
+        }
+        return;
     }
 
-    auto calculate_derivative = [&](int param_idx) {
+    const size_t required_size = offset + static_cast<size_t>(parameter_count);
+    if (resize_output) {
+        output.resize(required_size);
+    }
+    else if (output.size() < required_size) {
+        std::string err("Gate::apply_derivative_to_precomputed: output vector is too small.");
+        throw err;
+    }
+
+    auto calculate_derivative = [&](int param_idx, Matrix& result) {
         Matrix u3 = derivative_kernel(precomputed_sincos, param_idx);
         Matrix u3_aux = derivative_aux_kernel(precomputed_sincos, param_idx);
 
-        Matrix res = input.copy();
+        input.copy_to(result);
         if (u3_aux.size() > 0) {
-            apply_kernel_to(u3, res, true, parallel, &u3_aux);
+            apply_kernel_to(u3, result, true, parallel, &u3_aux);
         }
         else {
-            apply_kernel_to(u3, res, true, parallel);
+            apply_kernel_to(u3, result, true, parallel);
         }
-        ret[param_idx] = std::move(res);
     };
 
     if (parallel == 0 || parameter_count == 1) {
         for (int param_idx = 0; param_idx < parameter_count; ++param_idx) {
-            calculate_derivative(param_idx);
+            calculate_derivative(param_idx, output[offset + static_cast<size_t>(param_idx)]);
         }
     }
     else {
         tbb::parallel_for(tbb::blocked_range<int>(0, parameter_count, 1), [&](tbb::blocked_range<int> r) {
             for (int param_idx = r.begin(); param_idx < r.end(); ++param_idx) {
-                calculate_derivative(param_idx);
+                calculate_derivative(param_idx, output[offset + static_cast<size_t>(param_idx)]);
             }
         });
     }
-
-    return ret;
 }
 
 
 std::vector<Matrix_float>
 Gate::apply_derivative_to_precomputed(const Matrix_real_float& precomputed_sincos, Matrix_float& input, int parallel) {
 
-    const int parameter_count = get_parameter_num();
-    std::vector<Matrix_float> ret(parameter_count);
+    std::vector<Matrix_float> ret;
+    apply_derivative_to_precomputed(precomputed_sincos, input, parallel, ret);
+    return ret;
+}
 
+
+void
+Gate::apply_derivative_to_precomputed(const Matrix_real_float& precomputed_sincos, Matrix_float& input, int parallel, std::vector<Matrix_float>& output, size_t offset, bool resize_output) {
+
+    const int parameter_count = get_parameter_num();
     if (parameter_count <= 0) {
-        return ret;
+        if (resize_output) {
+            output.clear();
+        }
+        return;
     }
 
-    auto calculate_derivative = [&](int param_idx) {
+    const size_t required_size = offset + static_cast<size_t>(parameter_count);
+    if (resize_output) {
+        output.resize(required_size);
+    }
+    else if (output.size() < required_size) {
+        std::string err("Gate::apply_derivative_to_precomputed(Matrix_real_float): output vector is too small.");
+        throw err;
+    }
+
+    auto calculate_derivative = [&](int param_idx, Matrix_float& result) {
         Matrix_float u3 = derivative_kernel(precomputed_sincos, param_idx);
         Matrix_float u3_aux = derivative_aux_kernel(precomputed_sincos, param_idx);
 
-        Matrix_float res = input.copy();
+        input.copy_to(result);
         if (u3_aux.size() > 0) {
-            apply_kernel_to(u3, res, true, parallel, &u3_aux);
+            apply_kernel_to(u3, result, true, parallel, &u3_aux);
         }
         else {
-            apply_kernel_to(u3, res, true, parallel);
+            apply_kernel_to(u3, result, true, parallel);
         }
-        ret[param_idx] = std::move(res);
     };
 
     if (parallel == 0 || parameter_count == 1) {
         for (int param_idx = 0; param_idx < parameter_count; ++param_idx) {
-            calculate_derivative(param_idx);
+            calculate_derivative(param_idx, output[offset + static_cast<size_t>(param_idx)]);
         }
     }
     else {
         tbb::parallel_for(tbb::blocked_range<int>(0, parameter_count, 1), [&](tbb::blocked_range<int> r) {
             for (int param_idx = r.begin(); param_idx < r.end(); ++param_idx) {
-                calculate_derivative(param_idx);
+                calculate_derivative(param_idx, output[offset + static_cast<size_t>(param_idx)]);
             }
         });
     }
-
-    return ret;
 }
 
 
@@ -608,11 +640,27 @@ Gate::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input, int para
 }
 
 
+void
+Gate::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input, int parallel, std::vector<Matrix>& output ) {
+
+    Matrix_real precomputed_sincos = precompute_sincos(parameters_mtx_in);
+    apply_derivative_to_precomputed(precomputed_sincos, input, parallel, output);
+}
+
+
 std::vector<Matrix_float>
 Gate::apply_derivate_to( Matrix_real_float& parameters_mtx_in, Matrix_float& input, int parallel ) {
 
     Matrix_real_float precomputed_sincos = precompute_sincos(parameters_mtx_in);
     return apply_derivative_to_precomputed(precomputed_sincos, input, parallel);
+}
+
+
+void
+Gate::apply_derivate_to( Matrix_real_float& parameters_mtx_in, Matrix_float& input, int parallel, std::vector<Matrix_float>& output ) {
+
+    Matrix_real_float precomputed_sincos = precompute_sincos(parameters_mtx_in);
+    apply_derivative_to_precomputed(precomputed_sincos, input, parallel, output);
 }
 
 
@@ -624,37 +672,44 @@ Gate::apply_to_combined( Matrix_real& parameters_mtx_in, Matrix& input, int para
 }
 
 
+void
+Gate::apply_to_combined( Matrix_real& parameters_mtx_in, Matrix& input, int parallel, std::vector<Matrix>& output ) {
+
+    Matrix_real precomputed_sincos = compute_precomputed_sincos(parameters_mtx_in);
+    apply_to_combined_inner(parameters_mtx_in, precomputed_sincos, input, parallel, output);
+}
+
+
 std::vector<Matrix>
 Gate::apply_to_combined_inner( Matrix_real& parameters_mtx_in, const Matrix_real& precomputed_sincos, Matrix& input, int parallel ) {
 
     std::vector<Matrix> ret;
-    ret.reserve(get_parameter_num() + 1);
+    apply_to_combined_inner(parameters_mtx_in, precomputed_sincos, input, parallel, ret);
+    return ret;
+}
 
-    Matrix applied;
-    std::vector<Matrix> derivs;
+
+void
+Gate::apply_to_combined_inner( Matrix_real& parameters_mtx_in, const Matrix_real& precomputed_sincos, Matrix& input, int parallel, std::vector<Matrix>& output ) {
+
+    const size_t output_size = static_cast<size_t>(get_parameter_num()) + 1;
+    output.resize(output_size);
     if (parallel == 0) {
-        applied = input.copy();
-        apply_to_inner(parameters_mtx_in, precomputed_sincos, applied, parallel);
-        derivs = apply_derivative_to_precomputed(precomputed_sincos, input, parallel);
+        input.copy_to(output[0]);
+        apply_to_inner(parameters_mtx_in, precomputed_sincos, output[0], parallel);
+        apply_derivative_to_precomputed(precomputed_sincos, input, parallel, output, 1, false);
     }
     else {
         tbb::parallel_invoke(
             [&]() {
-                applied = input.copy();
-                apply_to_inner(parameters_mtx_in, precomputed_sincos, applied, parallel);
+                input.copy_to(output[0]);
+                apply_to_inner(parameters_mtx_in, precomputed_sincos, output[0], parallel);
             },
             [&]() {
-                derivs = apply_derivative_to_precomputed(precomputed_sincos, input, parallel);
+                apply_derivative_to_precomputed(precomputed_sincos, input, parallel, output, 1, false);
             }
         );
     }
-    ret.push_back(std::move(applied));
-
-    for (size_t idx = 0; idx < derivs.size(); ++idx) {
-        ret.push_back(std::move(derivs[idx]));
-    }
-
-    return ret;
 }
 
 
@@ -666,37 +721,44 @@ Gate::apply_to_combined( Matrix_real_float& parameters_mtx_in, Matrix_float& inp
 }
 
 
+void
+Gate::apply_to_combined( Matrix_real_float& parameters_mtx_in, Matrix_float& input, int parallel, std::vector<Matrix_float>& output ) {
+
+    Matrix_real_float precomputed_sincos = compute_precomputed_sincos(parameters_mtx_in);
+    apply_to_combined_inner(parameters_mtx_in, precomputed_sincos, input, parallel, output);
+}
+
+
 std::vector<Matrix_float>
 Gate::apply_to_combined_inner( Matrix_real_float& parameters_mtx_in, const Matrix_real_float& precomputed_sincos, Matrix_float& input, int parallel ) {
 
     std::vector<Matrix_float> ret;
-    ret.reserve(get_parameter_num() + 1);
+    apply_to_combined_inner(parameters_mtx_in, precomputed_sincos, input, parallel, ret);
+    return ret;
+}
 
-    Matrix_float applied;
-    std::vector<Matrix_float> derivs;
+
+void
+Gate::apply_to_combined_inner( Matrix_real_float& parameters_mtx_in, const Matrix_real_float& precomputed_sincos, Matrix_float& input, int parallel, std::vector<Matrix_float>& output ) {
+
+    const size_t output_size = static_cast<size_t>(get_parameter_num()) + 1;
+    output.resize(output_size);
     if (parallel == 0) {
-        applied = input.copy();
-        apply_to_inner(parameters_mtx_in, precomputed_sincos, applied, parallel);
-        derivs = apply_derivative_to_precomputed(precomputed_sincos, input, parallel);
+        input.copy_to(output[0]);
+        apply_to_inner(parameters_mtx_in, precomputed_sincos, output[0], parallel);
+        apply_derivative_to_precomputed(precomputed_sincos, input, parallel, output, 1, false);
     }
     else {
         tbb::parallel_invoke(
             [&]() {
-                applied = input.copy();
-                apply_to_inner(parameters_mtx_in, precomputed_sincos, applied, parallel);
+                input.copy_to(output[0]);
+                apply_to_inner(parameters_mtx_in, precomputed_sincos, output[0], parallel);
             },
             [&]() {
-                derivs = apply_derivative_to_precomputed(precomputed_sincos, input, parallel);
+                apply_derivative_to_precomputed(precomputed_sincos, input, parallel, output, 1, false);
             }
         );
     }
-    ret.push_back(std::move(applied));
-
-    for (size_t idx = 0; idx < derivs.size(); ++idx) {
-        ret.push_back(std::move(derivs[idx]));
-    }
-
-    return ret;
 }
 
 

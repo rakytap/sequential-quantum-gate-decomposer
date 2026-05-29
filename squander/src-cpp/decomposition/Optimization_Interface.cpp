@@ -1140,13 +1140,9 @@ void Optimization_Interface::optimization_problem_combined_non_static( Matrix_re
         thread_local Matrix_real_float parameters_float;
         parameters.copy_to(parameters_float);
         Matrix_float Umtx_loc = instance->get_Umtx_float();
-        std::vector<Matrix_float> combined_result = instance->Gates_block::apply_to_combined( parameters_float, Umtx_loc, parallel );
-        Matrix_float matrix_new = std::move(combined_result[0]);
-        std::vector<Matrix_float> Umtx_deriv;
-        Umtx_deriv.reserve(combined_result.size() - 1);
-        for (size_t idx = 1; idx < combined_result.size(); ++idx) {
-            Umtx_deriv.push_back(std::move(combined_result[idx]));
-        }
+        thread_local std::vector<Matrix_float> combined_result;
+        instance->Gates_block::apply_to_combined( parameters_float, Umtx_loc, parallel, combined_result );
+        Matrix_float& matrix_new = combined_result[0];
 
         Matrix_float trace_tmp(1,3);
         *f0 = instance->calculate_cost_function(matrix_new, &trace_tmp);
@@ -1164,43 +1160,44 @@ void Optimization_Interface::optimization_problem_combined_non_static( Matrix_re
 
         auto calculate_gradient_component = [&](int idx) {
             double grad_comp;
+            Matrix_float& deriv_mtx = combined_result[static_cast<size_t>(idx) + 1];
             switch (cost_fnc) {
             case FROBENIUS_NORM:
-                grad_comp = (get_cost_function(Umtx_deriv[idx], trace_offset_loc) - 1.0);
+                grad_comp = (get_cost_function(deriv_mtx, trace_offset_loc) - 1.0);
                 break;
             case FROBENIUS_NORM_CORRECTION1: {
-                Matrix_real_float deriv_tmp = get_cost_function_with_correction(Umtx_deriv[idx], qbit_num, trace_offset_loc);
+                Matrix_real_float deriv_tmp = get_cost_function_with_correction(deriv_mtx, qbit_num, trace_offset_loc);
                 grad_comp = (deriv_tmp[0] - std::sqrt(prev_cost_fnv_val)*deriv_tmp[1]*correction1_scale - 1.0);
                 break;
             }
             case FROBENIUS_NORM_CORRECTION2: {
-                Matrix_real_float deriv_tmp = get_cost_function_with_correction2(Umtx_deriv[idx], qbit_num, trace_offset_loc);
+                Matrix_real_float deriv_tmp = get_cost_function_with_correction2(deriv_mtx, qbit_num, trace_offset_loc);
                 grad_comp = (deriv_tmp[0] - std::sqrt(prev_cost_fnv_val)*(deriv_tmp[1]*correction1_scale + deriv_tmp[2]*correction2_scale) - 1.0);
                 break;
             }
             case HILBERT_SCHMIDT_TEST: {
-                double d = 1.0/Umtx_deriv[idx].cols;
-                QGD_Complex16 deriv_tmp = get_trace(Umtx_deriv[idx]);
+                double d = 1.0/deriv_mtx.cols;
+                QGD_Complex16 deriv_tmp = get_trace(deriv_mtx);
                 grad_comp = -2.0*d*d*trace_tmp[0].real*deriv_tmp.real-2.0*d*d*trace_tmp[0].imag*deriv_tmp.imag;
                 break;
             }
             case INFIDELITY: {
-                double d = Umtx_deriv[idx].cols;
-                QGD_Complex16 deriv_tmp = get_trace(Umtx_deriv[idx]);
+                double d = deriv_mtx.cols;
+                QGD_Complex16 deriv_tmp = get_trace(deriv_mtx);
                 grad_comp = -2.0/d/(d+1)*trace_tmp[0].real*deriv_tmp.real-2.0/d/(d+1)*trace_tmp[0].imag*deriv_tmp.imag;
                 break;
             }
             case SUM_OF_SQUARES: {
-                Matrix deriv64 = Umtx_deriv[idx].to_float64();
+                Matrix deriv64 = deriv_mtx.to_float64();
                 grad_comp = real_trace_conj_dot(Upartial, deriv64);
                 break;
             }
             case OSR_ENTANGLEMENT:
-                grad_comp = real_trace_conj_dot(Upartial_float, Umtx_deriv[idx]);
+                grad_comp = real_trace_conj_dot(Upartial_float, deriv_mtx);
                 break;
             case HILBERT_SCHMIDT_TEST_CORRECTION1:
             case HILBERT_SCHMIDT_TEST_CORRECTION2: {
-                Matrix deriv64 = Umtx_deriv[idx].to_float64();
+                Matrix deriv64 = deriv_mtx.to_float64();
                 Matrix matrix_new_for_trace = matrix_new.to_float64();
                 Matrix trace_tmp64(1,3);
                 instance->calculate_cost_function(matrix_new_for_trace, &trace_tmp64);
@@ -1347,13 +1344,9 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();////////////////////////////////
     // vector containing gradients of the transformed matrix
     Matrix trace_tmp(1,3);
     Matrix Umtx_loc = instance->get_Umtx();
-    std::vector<Matrix> combined_result = instance->apply_to_combined( parameters, Umtx_loc, parallel );
-    Matrix matrix_new = std::move(combined_result[0]);
-    std::vector<Matrix> Umtx_deriv;
-    Umtx_deriv.reserve(combined_result.size() - 1);
-    for (size_t idx = 1; idx < combined_result.size(); ++idx) {
-        Umtx_deriv.push_back(std::move(combined_result[idx]));
-    }
+    thread_local std::vector<Matrix> combined_result;
+    instance->apply_to_combined( parameters, Umtx_loc, parallel, combined_result );
+    Matrix& matrix_new = combined_result[0];
 
     *f0 = instance->calculate_cost_function(matrix_new, &trace_tmp);
 
@@ -1367,41 +1360,42 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();////////////////////////////////
 
     auto calculate_gradient_component = [&](int idx) {
         double grad_comp;
+        Matrix& deriv_mtx = combined_result[static_cast<size_t>(idx) + 1];
         switch (cost_fnc) {
         case FROBENIUS_NORM:
-            grad_comp = (get_cost_function(Umtx_deriv[idx], trace_offset_loc) - 1.0);
+            grad_comp = (get_cost_function(deriv_mtx, trace_offset_loc) - 1.0);
             break;
         case FROBENIUS_NORM_CORRECTION1: {
-            Matrix_real deriv_tmp = get_cost_function_with_correction( Umtx_deriv[idx], qbit_num, trace_offset_loc );
+            Matrix_real deriv_tmp = get_cost_function_with_correction( deriv_mtx, qbit_num, trace_offset_loc );
             grad_comp = (deriv_tmp[0] - std::sqrt(prev_cost_fnv_val)*deriv_tmp[1]*correction1_scale - 1.0);
             break;
         }
         case FROBENIUS_NORM_CORRECTION2: {
-            Matrix_real deriv_tmp = get_cost_function_with_correction2( Umtx_deriv[idx], qbit_num, trace_offset_loc );
+            Matrix_real deriv_tmp = get_cost_function_with_correction2( deriv_mtx, qbit_num, trace_offset_loc );
             grad_comp = (deriv_tmp[0] - std::sqrt(prev_cost_fnv_val)*(deriv_tmp[1]*correction1_scale + deriv_tmp[2]*correction2_scale) - 1.0);
             break;
         }
         case HILBERT_SCHMIDT_TEST: {
-            double d = 1.0/Umtx_deriv[idx].cols;
-            QGD_Complex16 deriv_tmp = get_trace(Umtx_deriv[idx]);
+            double d = 1.0/deriv_mtx.cols;
+            QGD_Complex16 deriv_tmp = get_trace(deriv_mtx);
             grad_comp = -2.0*d*d*trace_tmp[0].real*deriv_tmp.real-2.0*d*d*trace_tmp[0].imag*deriv_tmp.imag;
             break;
         }
         case HILBERT_SCHMIDT_TEST_CORRECTION1: {
-            Matrix&&  deriv_tmp = get_trace_with_correction( Umtx_deriv[idx], qbit_num);
-            double d = 1.0/Umtx_deriv[idx].cols;
+            Matrix&&  deriv_tmp = get_trace_with_correction( deriv_mtx, qbit_num);
+            double d = 1.0/deriv_mtx.cols;
             grad_comp = -2.0*d*d* (trace_tmp[0].real*deriv_tmp[0].real+trace_tmp[0].imag*deriv_tmp[0].imag+std::sqrt(prev_cost_fnv_val)*correction1_scale*(trace_tmp[1].real*deriv_tmp[1].real+trace_tmp[1].imag*deriv_tmp[1].imag));
             break;
         }
         case HILBERT_SCHMIDT_TEST_CORRECTION2: {
-            Matrix&& deriv_tmp = get_trace_with_correction2( Umtx_deriv[idx], qbit_num);
-            double d = 1.0/Umtx_deriv[idx].cols;
+            Matrix&& deriv_tmp = get_trace_with_correction2( deriv_mtx, qbit_num);
+            double d = 1.0/deriv_mtx.cols;
             grad_comp = -2.0*d*d* (trace_tmp[0].real*deriv_tmp[0].real+trace_tmp[0].imag*deriv_tmp[0].imag+std::sqrt(prev_cost_fnv_val)*(correction1_scale*(trace_tmp[1].real*deriv_tmp[1].real+trace_tmp[1].imag*deriv_tmp[1].imag) + correction2_scale*(trace_tmp[2].real*deriv_tmp[2].real+trace_tmp[2].imag*deriv_tmp[2].imag)));
             break;
         }
         case SUM_OF_SQUARES:
         case OSR_ENTANGLEMENT:
-            grad_comp = real_trace_conj_dot(Upartial, Umtx_deriv[idx]);
+            grad_comp = real_trace_conj_dot(Upartial, deriv_mtx);
             /*{
                 Matrix matrix_new = instance->get_Umtx().copy();
                 auto paramcopy = parameters.copy();
@@ -1414,8 +1408,8 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();////////////////////////////////
             }*/
             break;
         case INFIDELITY: {
-            double d = Umtx_deriv[idx].cols;
-            QGD_Complex16 deriv_tmp = get_trace(Umtx_deriv[idx]);
+            double d = deriv_mtx.cols;
+            QGD_Complex16 deriv_tmp = get_trace(deriv_mtx);
             grad_comp = -2.0/d/(d+1)*trace_tmp[0].real*deriv_tmp.real-2.0/d/(d+1)*trace_tmp[0].imag*deriv_tmp.imag;
             break;
         }
@@ -1499,12 +1493,12 @@ void Optimization_Interface::optimization_problem_combined_unitary( Matrix_real 
     int parallel = instance->get_parallel_configuration();
 
     Matrix Umtx_loc = instance->get_Umtx();
-    std::vector<Matrix> combined_result = instance->apply_to_combined( parameters, Umtx_loc, parallel );
-    Umtx = std::move(combined_result[0]);
-    Umtx_deriv.clear();
-    Umtx_deriv.reserve(combined_result.size() - 1);
+    std::vector<Matrix> combined_result;
+    instance->apply_to_combined( parameters, Umtx_loc, parallel, combined_result );
+    combined_result[0].copy_to(Umtx);
+    Umtx_deriv.resize(combined_result.size() - 1);
     for (size_t idx = 1; idx < combined_result.size(); ++idx) {
-        Umtx_deriv.push_back(std::move(combined_result[idx]));
+        combined_result[idx].copy_to(Umtx_deriv[idx - 1]);
     }
 
 
