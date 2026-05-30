@@ -22,6 +22,10 @@ public:
     virtual Matrix_float gate_kernel(const Matrix_real_float& parameters) override;
     virtual Matrix       inverse_gate_kernel(const Matrix_real&       parameters) override;
     virtual Matrix_float inverse_gate_kernel(const Matrix_real_float& parameters) override;
+    virtual void gate_kernel_to(const Matrix_real& parameters, Matrix& output) override;
+    virtual void gate_kernel_to(const Matrix_real_float& parameters, Matrix_float& output) override;
+    virtual void inverse_gate_kernel_to(const Matrix_real& parameters, Matrix& output) override;
+    virtual void inverse_gate_kernel_to(const Matrix_real_float& parameters, Matrix_float& output) override;
 };
 
 #endif //HADAMARD_H

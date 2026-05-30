@@ -24,6 +24,24 @@ limitations under the License.
 #include "gate_kernel_templates.h"
 
 //static tbb::spin_mutex my_mutex;
+
+namespace {
+template<typename RealMatrixT, typename RealT>
+void read_crot_trig(
+    const RealMatrixT& precomputed_sincos,
+    RealT& s_theta,
+    RealT& c_theta,
+    RealT& s_phi,
+    RealT& c_phi) {
+
+    const int theta_offset = 0 * precomputed_sincos.stride;
+    const int phi_offset = 1 * precomputed_sincos.stride;
+    s_theta = precomputed_sincos[theta_offset + 0];
+    c_theta = precomputed_sincos[theta_offset + 1];
+    s_phi = precomputed_sincos[phi_offset + 0];
+    c_phi = precomputed_sincos[phi_offset + 1];
+}
+}
 /**
 @brief Nullary constructor of the class.
 */
@@ -99,118 +117,146 @@ CROT::~CROT() {
 
 Matrix
 CROT::gate_kernel(const Matrix_real& precomputed_sincos) {
-    const int theta_offset = 0 * precomputed_sincos.stride;
-    const int phi_offset = 1 * precomputed_sincos.stride;
-    const double s_theta = precomputed_sincos[theta_offset + 0];
-    const double c_theta = precomputed_sincos[theta_offset + 1];
-    const double s_phi = precomputed_sincos[phi_offset + 0];
-    const double c_phi = precomputed_sincos[phi_offset + 1];
-    return build_crot_gate_kernels_from_trig<Matrix, double>(s_theta, c_theta, s_phi, c_phi).first;
+    Matrix ret;
+    gate_kernel_to(precomputed_sincos, ret);
+    return ret;
 }
 
 Matrix_float
 CROT::gate_kernel(const Matrix_real_float& precomputed_sincos) {
-    const int theta_offset = 0 * precomputed_sincos.stride;
-    const int phi_offset = 1 * precomputed_sincos.stride;
-    const float s_theta = precomputed_sincos[theta_offset + 0];
-    const float c_theta = precomputed_sincos[theta_offset + 1];
-    const float s_phi = precomputed_sincos[phi_offset + 0];
-    const float c_phi = precomputed_sincos[phi_offset + 1];
-    return build_crot_gate_kernels_from_trig<Matrix_float, float>(s_theta, c_theta, s_phi, c_phi).first;
+    Matrix_float ret;
+    gate_kernel_to(precomputed_sincos, ret);
+    return ret;
 }
 
 Matrix
 CROT::inverse_gate_kernel(const Matrix_real& precomputed_sincos) {
-    const int theta_offset = 0 * precomputed_sincos.stride;
-    const int phi_offset = 1 * precomputed_sincos.stride;
-    const double s_theta = precomputed_sincos[theta_offset + 0];
-    const double c_theta = precomputed_sincos[theta_offset + 1];
-    const double s_phi = precomputed_sincos[phi_offset + 0];
-    const double c_phi = precomputed_sincos[phi_offset + 1];
-    return build_crot_gate_kernels_from_trig<Matrix, double>(s_theta, c_theta, s_phi, c_phi).second;
+    Matrix ret;
+    inverse_gate_kernel_to(precomputed_sincos, ret);
+    return ret;
 }
 
 Matrix_float
 CROT::inverse_gate_kernel(const Matrix_real_float& precomputed_sincos) {
-    const int theta_offset = 0 * precomputed_sincos.stride;
-    const int phi_offset = 1 * precomputed_sincos.stride;
-    const float s_theta = precomputed_sincos[theta_offset + 0];
-    const float c_theta = precomputed_sincos[theta_offset + 1];
-    const float s_phi = precomputed_sincos[phi_offset + 0];
-    const float c_phi = precomputed_sincos[phi_offset + 1];
-    return build_crot_gate_kernels_from_trig<Matrix_float, float>(s_theta, c_theta, s_phi, c_phi).second;
+    Matrix_float ret;
+    inverse_gate_kernel_to(precomputed_sincos, ret);
+    return ret;
 }
 
 Matrix
 CROT::derivative_kernel(const Matrix_real& precomputed_sincos, int param_idx) {
-    const int theta_offset = 0 * precomputed_sincos.stride;
-    const int phi_offset = 1 * precomputed_sincos.stride;
-    const double s_theta = precomputed_sincos[theta_offset + 0];
-    const double c_theta = precomputed_sincos[theta_offset + 1];
-    const double s_phi = precomputed_sincos[phi_offset + 0];
-    const double c_phi = precomputed_sincos[phi_offset + 1];
-
-    if (param_idx == 0) {
-        return build_crot_theta_derivative_kernels_from_trig<Matrix, double>(s_theta, c_theta, s_phi, c_phi).first;
-    }
-    if (param_idx == 1) {
-        return build_crot_phi_derivative_kernels_from_trig<Matrix, double>(s_theta, c_theta, s_phi, c_phi).first;
-    }
-    return Matrix();
+    Matrix ret;
+    derivative_kernel_to(precomputed_sincos, param_idx, ret);
+    return ret;
 }
 
 Matrix_float
 CROT::derivative_kernel(const Matrix_real_float& precomputed_sincos, int param_idx) {
-    const int theta_offset = 0 * precomputed_sincos.stride;
-    const int phi_offset = 1 * precomputed_sincos.stride;
-    const float s_theta = precomputed_sincos[theta_offset + 0];
-    const float c_theta = precomputed_sincos[theta_offset + 1];
-    const float s_phi = precomputed_sincos[phi_offset + 0];
-    const float c_phi = precomputed_sincos[phi_offset + 1];
-
-    if (param_idx == 0) {
-        return build_crot_theta_derivative_kernels_from_trig<Matrix_float, float>(s_theta, c_theta, s_phi, c_phi).first;
-    }
-    if (param_idx == 1) {
-        return build_crot_phi_derivative_kernels_from_trig<Matrix_float, float>(s_theta, c_theta, s_phi, c_phi).first;
-    }
-    return Matrix_float();
+    Matrix_float ret;
+    derivative_kernel_to(precomputed_sincos, param_idx, ret);
+    return ret;
 }
 
 Matrix
 CROT::derivative_aux_kernel(const Matrix_real& precomputed_sincos, int param_idx) {
-    const int theta_offset = 0 * precomputed_sincos.stride;
-    const int phi_offset = 1 * precomputed_sincos.stride;
-    const double s_theta = precomputed_sincos[theta_offset + 0];
-    const double c_theta = precomputed_sincos[theta_offset + 1];
-    const double s_phi = precomputed_sincos[phi_offset + 0];
-    const double c_phi = precomputed_sincos[phi_offset + 1];
-
-    if (param_idx == 0) {
-        return build_crot_theta_derivative_kernels_from_trig<Matrix, double>(s_theta, c_theta, s_phi, c_phi).second;
-    }
-    if (param_idx == 1) {
-        return build_crot_phi_derivative_kernels_from_trig<Matrix, double>(s_theta, c_theta, s_phi, c_phi).second;
-    }
-    return Matrix();
+    Matrix ret;
+    derivative_aux_kernel_to(precomputed_sincos, param_idx, ret);
+    return ret;
 }
 
 Matrix_float
 CROT::derivative_aux_kernel(const Matrix_real_float& precomputed_sincos, int param_idx) {
-    const int theta_offset = 0 * precomputed_sincos.stride;
-    const int phi_offset = 1 * precomputed_sincos.stride;
-    const float s_theta = precomputed_sincos[theta_offset + 0];
-    const float c_theta = precomputed_sincos[theta_offset + 1];
-    const float s_phi = precomputed_sincos[phi_offset + 0];
-    const float c_phi = precomputed_sincos[phi_offset + 1];
+    Matrix_float ret;
+    derivative_aux_kernel_to(precomputed_sincos, param_idx, ret);
+    return ret;
+}
 
+void
+CROT::gate_kernel_to(const Matrix_real& precomputed_sincos, Matrix& output) {
+    double s_theta, c_theta, s_phi, c_phi;
+    read_crot_trig<Matrix_real, double>(precomputed_sincos, s_theta, c_theta, s_phi, c_phi);
+    build_crot_gate_kernel_from_trig_to<Matrix, double>(output, s_theta, c_theta, s_phi, c_phi);
+}
+
+void
+CROT::gate_kernel_to(const Matrix_real_float& precomputed_sincos, Matrix_float& output) {
+    float s_theta, c_theta, s_phi, c_phi;
+    read_crot_trig<Matrix_real_float, float>(precomputed_sincos, s_theta, c_theta, s_phi, c_phi);
+    build_crot_gate_kernel_from_trig_to<Matrix_float, float>(output, s_theta, c_theta, s_phi, c_phi);
+}
+
+void
+CROT::inverse_gate_kernel_to(const Matrix_real& precomputed_sincos, Matrix& output) {
+    double s_theta, c_theta, s_phi, c_phi;
+    read_crot_trig<Matrix_real, double>(precomputed_sincos, s_theta, c_theta, s_phi, c_phi);
+    build_crot_inverse_gate_kernel_from_trig_to<Matrix, double>(output, s_theta, c_theta, s_phi, c_phi);
+}
+
+void
+CROT::inverse_gate_kernel_to(const Matrix_real_float& precomputed_sincos, Matrix_float& output) {
+    float s_theta, c_theta, s_phi, c_phi;
+    read_crot_trig<Matrix_real_float, float>(precomputed_sincos, s_theta, c_theta, s_phi, c_phi);
+    build_crot_inverse_gate_kernel_from_trig_to<Matrix_float, float>(output, s_theta, c_theta, s_phi, c_phi);
+}
+
+void
+CROT::derivative_kernel_to(const Matrix_real& precomputed_sincos, int param_idx, Matrix& output) {
+    double s_theta, c_theta, s_phi, c_phi;
+    read_crot_trig<Matrix_real, double>(precomputed_sincos, s_theta, c_theta, s_phi, c_phi);
     if (param_idx == 0) {
-        return build_crot_theta_derivative_kernels_from_trig<Matrix_float, float>(s_theta, c_theta, s_phi, c_phi).second;
+        build_crot_theta_derivative_kernel_from_trig_to<Matrix, double>(output, s_theta, c_theta, s_phi, c_phi);
+        return;
     }
     if (param_idx == 1) {
-        return build_crot_phi_derivative_kernels_from_trig<Matrix_float, float>(s_theta, c_theta, s_phi, c_phi).second;
+        build_crot_phi_derivative_kernel_from_trig_to<Matrix, double>(output, s_theta, c_theta, s_phi, c_phi);
+        return;
     }
-    return Matrix_float();
+    output = Matrix();
+}
+
+void
+CROT::derivative_kernel_to(const Matrix_real_float& precomputed_sincos, int param_idx, Matrix_float& output) {
+    float s_theta, c_theta, s_phi, c_phi;
+    read_crot_trig<Matrix_real_float, float>(precomputed_sincos, s_theta, c_theta, s_phi, c_phi);
+    if (param_idx == 0) {
+        build_crot_theta_derivative_kernel_from_trig_to<Matrix_float, float>(output, s_theta, c_theta, s_phi, c_phi);
+        return;
+    }
+    if (param_idx == 1) {
+        build_crot_phi_derivative_kernel_from_trig_to<Matrix_float, float>(output, s_theta, c_theta, s_phi, c_phi);
+        return;
+    }
+    output = Matrix_float();
+}
+
+void
+CROT::derivative_aux_kernel_to(const Matrix_real& precomputed_sincos, int param_idx, Matrix& output) {
+    double s_theta, c_theta, s_phi, c_phi;
+    read_crot_trig<Matrix_real, double>(precomputed_sincos, s_theta, c_theta, s_phi, c_phi);
+    if (param_idx == 0) {
+        build_crot_theta_derivative_aux_kernel_from_trig_to<Matrix, double>(output, s_theta, c_theta, s_phi, c_phi);
+        return;
+    }
+    if (param_idx == 1) {
+        build_crot_phi_derivative_aux_kernel_from_trig_to<Matrix, double>(output, s_theta, c_theta, s_phi, c_phi);
+        return;
+    }
+    output = Matrix();
+}
+
+void
+CROT::derivative_aux_kernel_to(const Matrix_real_float& precomputed_sincos, int param_idx, Matrix_float& output) {
+    float s_theta, c_theta, s_phi, c_phi;
+    read_crot_trig<Matrix_real_float, float>(precomputed_sincos, s_theta, c_theta, s_phi, c_phi);
+    if (param_idx == 0) {
+        build_crot_theta_derivative_aux_kernel_from_trig_to<Matrix_float, float>(output, s_theta, c_theta, s_phi, c_phi);
+        return;
+    }
+    if (param_idx == 1) {
+        build_crot_phi_derivative_aux_kernel_from_trig_to<Matrix_float, float>(output, s_theta, c_theta, s_phi, c_phi);
+        return;
+    }
+    output = Matrix_float();
 }
 
 /**

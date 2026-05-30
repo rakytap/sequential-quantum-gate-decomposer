@@ -3,6 +3,34 @@
 
 static const double M_PIOver2 = M_PI / 2.0;
 
+namespace {
+template<typename RealMatrixT, typename RealT>
+void read_cu_trig(
+    const RealMatrixT& precomputed_sincos,
+    RealT& sin_theta,
+    RealT& cos_theta,
+    RealT& sin_phi,
+    RealT& cos_phi,
+    RealT& sin_lambda,
+    RealT& cos_lambda,
+    RealT& sin_gamma,
+    RealT& cos_gamma) {
+
+    const int theta_offset = 0 * precomputed_sincos.stride;
+    const int phi_offset = 1 * precomputed_sincos.stride;
+    const int lambda_offset = 2 * precomputed_sincos.stride;
+    const int gamma_offset = 3 * precomputed_sincos.stride;
+    sin_theta = precomputed_sincos[theta_offset + 0];
+    cos_theta = precomputed_sincos[theta_offset + 1];
+    sin_phi = precomputed_sincos[phi_offset + 0];
+    cos_phi = precomputed_sincos[phi_offset + 1];
+    sin_lambda = precomputed_sincos[lambda_offset + 0];
+    cos_lambda = precomputed_sincos[lambda_offset + 1];
+    sin_gamma = precomputed_sincos[gamma_offset + 0];
+    cos_gamma = precomputed_sincos[gamma_offset + 1];
+}
+}
+
 CU::CU() : CU(-1, -1, -1) {}
 
 CU::CU(int qbit_num_in, int target_qbit_in, int control_qbit_in)
@@ -32,141 +60,163 @@ std::vector<double> CU::get_parameter_multipliers() const {
 }
 
 Matrix CU::gate_kernel(const Matrix_real& precomputed_sincos) {
-    const int theta_offset = 0 * precomputed_sincos.stride;
-    const int phi_offset = 1 * precomputed_sincos.stride;
-    const int lambda_offset = 2 * precomputed_sincos.stride;
-    const int gamma_offset = 3 * precomputed_sincos.stride;
-    const double sin_theta = precomputed_sincos[theta_offset + 0];
-    const double cos_theta = precomputed_sincos[theta_offset + 1];
-    const double sin_phi = precomputed_sincos[phi_offset + 0];
-    const double cos_phi = precomputed_sincos[phi_offset + 1];
-    const double sin_lambda = precomputed_sincos[lambda_offset + 0];
-    const double cos_lambda = precomputed_sincos[lambda_offset + 1];
-    const double sin_gamma = precomputed_sincos[gamma_offset + 0];
-    const double cos_gamma = precomputed_sincos[gamma_offset + 1];
-    return cu_gate_kernel_from_trig<Matrix, double>(
-        sin_theta, cos_theta, sin_phi, cos_phi, sin_lambda, cos_lambda, sin_gamma, cos_gamma);
+    Matrix ret;
+    gate_kernel_to(precomputed_sincos, ret);
+    return ret;
 }
 
 Matrix_float CU::gate_kernel(const Matrix_real_float& precomputed_sincos) {
-    const int theta_offset = 0 * precomputed_sincos.stride;
-    const int phi_offset = 1 * precomputed_sincos.stride;
-    const int lambda_offset = 2 * precomputed_sincos.stride;
-    const int gamma_offset = 3 * precomputed_sincos.stride;
-    const float sin_theta = precomputed_sincos[theta_offset + 0];
-    const float cos_theta = precomputed_sincos[theta_offset + 1];
-    const float sin_phi = precomputed_sincos[phi_offset + 0];
-    const float cos_phi = precomputed_sincos[phi_offset + 1];
-    const float sin_lambda = precomputed_sincos[lambda_offset + 0];
-    const float cos_lambda = precomputed_sincos[lambda_offset + 1];
-    const float sin_gamma = precomputed_sincos[gamma_offset + 0];
-    const float cos_gamma = precomputed_sincos[gamma_offset + 1];
-    return cu_gate_kernel_from_trig<Matrix_float, float>(
-        sin_theta, cos_theta, sin_phi, cos_phi, sin_lambda, cos_lambda, sin_gamma, cos_gamma);
+    Matrix_float ret;
+    gate_kernel_to(precomputed_sincos, ret);
+    return ret;
 }
 
 Matrix CU::inverse_gate_kernel(const Matrix_real& precomputed_sincos) {
-    const int theta_offset = 0 * precomputed_sincos.stride;
-    const int phi_offset = 1 * precomputed_sincos.stride;
-    const int lambda_offset = 2 * precomputed_sincos.stride;
-    const int gamma_offset = 3 * precomputed_sincos.stride;
-    const double sin_theta = precomputed_sincos[theta_offset + 0];
-    const double cos_theta = precomputed_sincos[theta_offset + 1];
-    const double sin_phi = precomputed_sincos[phi_offset + 0];
-    const double cos_phi = precomputed_sincos[phi_offset + 1];
-    const double sin_lambda = precomputed_sincos[lambda_offset + 0];
-    const double cos_lambda = precomputed_sincos[lambda_offset + 1];
-    const double sin_gamma = precomputed_sincos[gamma_offset + 0];
-    const double cos_gamma = precomputed_sincos[gamma_offset + 1];
-    return cu_inverse_gate_kernel_from_trig<Matrix, double>(
-        sin_theta, cos_theta, sin_phi, cos_phi, sin_lambda, cos_lambda, sin_gamma, cos_gamma);
+    Matrix ret;
+    inverse_gate_kernel_to(precomputed_sincos, ret);
+    return ret;
 }
 
 Matrix_float CU::inverse_gate_kernel(const Matrix_real_float& precomputed_sincos) {
-    const int theta_offset = 0 * precomputed_sincos.stride;
-    const int phi_offset = 1 * precomputed_sincos.stride;
-    const int lambda_offset = 2 * precomputed_sincos.stride;
-    const int gamma_offset = 3 * precomputed_sincos.stride;
-    const float sin_theta = precomputed_sincos[theta_offset + 0];
-    const float cos_theta = precomputed_sincos[theta_offset + 1];
-    const float sin_phi = precomputed_sincos[phi_offset + 0];
-    const float cos_phi = precomputed_sincos[phi_offset + 1];
-    const float sin_lambda = precomputed_sincos[lambda_offset + 0];
-    const float cos_lambda = precomputed_sincos[lambda_offset + 1];
-    const float sin_gamma = precomputed_sincos[gamma_offset + 0];
-    const float cos_gamma = precomputed_sincos[gamma_offset + 1];
-    return cu_inverse_gate_kernel_from_trig<Matrix_float, float>(
-        sin_theta, cos_theta, sin_phi, cos_phi, sin_lambda, cos_lambda, sin_gamma, cos_gamma);
+    Matrix_float ret;
+    inverse_gate_kernel_to(precomputed_sincos, ret);
+    return ret;
 }
 
 Matrix CU::derivative_kernel(const Matrix_real& precomputed_sincos, int param_idx) {
-    const int theta_offset = 0 * precomputed_sincos.stride;
-    const int phi_offset = 1 * precomputed_sincos.stride;
-    const int lambda_offset = 2 * precomputed_sincos.stride;
-    const int gamma_offset = 3 * precomputed_sincos.stride;
-    const double sin_theta = precomputed_sincos[theta_offset + 0];
-    const double cos_theta = precomputed_sincos[theta_offset + 1];
-    const double sin_phi = precomputed_sincos[phi_offset + 0];
-    const double cos_phi = precomputed_sincos[phi_offset + 1];
-    const double sin_lambda = precomputed_sincos[lambda_offset + 0];
-    const double cos_lambda = precomputed_sincos[lambda_offset + 1];
-    const double sin_gamma = precomputed_sincos[gamma_offset + 0];
-    const double cos_gamma = precomputed_sincos[gamma_offset + 1];
-
-    if (param_idx == 0) {
-        Matrix kernel = u3_derivative_kernel_theta_from_trig<Matrix, double>(sin_theta, cos_theta, sin_phi, cos_phi, sin_lambda, cos_lambda);
-        multiply_2x2_by_phase<Matrix, double>(kernel, sin_gamma, cos_gamma);
-        return kernel;
-    }
-    if (param_idx == 1) {
-        Matrix kernel = u3_derivative_kernel_phi_from_trig<Matrix, double>(sin_theta, cos_theta, sin_phi, cos_phi, sin_lambda, cos_lambda);
-        multiply_2x2_by_phase<Matrix, double>(kernel, sin_gamma, cos_gamma);
-        return kernel;
-    }
-    if (param_idx == 2) {
-        Matrix kernel = u3_derivative_kernel_lambda_from_trig<Matrix, double>(sin_theta, cos_theta, sin_phi, cos_phi, sin_lambda, cos_lambda);
-        multiply_2x2_by_phase<Matrix, double>(kernel, sin_gamma, cos_gamma);
-        return kernel;
-    }
-    if (param_idx == 3) {
-        return cu_derivative_kernel_gamma_from_trig<Matrix, double>(sin_theta, cos_theta, sin_phi, cos_phi, sin_lambda, cos_lambda, sin_gamma, cos_gamma);
-    }
-
-    return Matrix();
+    Matrix ret;
+    derivative_kernel_to(precomputed_sincos, param_idx, ret);
+    return ret;
 }
 
 Matrix_float CU::derivative_kernel(const Matrix_real_float& precomputed_sincos, int param_idx) {
-    const int theta_offset = 0 * precomputed_sincos.stride;
-    const int phi_offset = 1 * precomputed_sincos.stride;
-    const int lambda_offset = 2 * precomputed_sincos.stride;
-    const int gamma_offset = 3 * precomputed_sincos.stride;
-    const float sin_theta = precomputed_sincos[theta_offset + 0];
-    const float cos_theta = precomputed_sincos[theta_offset + 1];
-    const float sin_phi = precomputed_sincos[phi_offset + 0];
-    const float cos_phi = precomputed_sincos[phi_offset + 1];
-    const float sin_lambda = precomputed_sincos[lambda_offset + 0];
-    const float cos_lambda = precomputed_sincos[lambda_offset + 1];
-    const float sin_gamma = precomputed_sincos[gamma_offset + 0];
-    const float cos_gamma = precomputed_sincos[gamma_offset + 1];
+    Matrix_float ret;
+    derivative_kernel_to(precomputed_sincos, param_idx, ret);
+    return ret;
+}
+
+void
+CU::gate_kernel_to(const Matrix_real& precomputed_sincos, Matrix& output) {
+    double sin_theta, cos_theta, sin_phi, cos_phi, sin_lambda, cos_lambda, sin_gamma, cos_gamma;
+    read_cu_trig<Matrix_real, double>(
+        precomputed_sincos,
+        sin_theta, cos_theta, sin_phi, cos_phi, sin_lambda, cos_lambda, sin_gamma, cos_gamma
+    );
+    cu_gate_kernel_from_trig_to<Matrix, double>(
+        output, sin_theta, cos_theta, sin_phi, cos_phi, sin_lambda, cos_lambda, sin_gamma, cos_gamma
+    );
+}
+
+void
+CU::gate_kernel_to(const Matrix_real_float& precomputed_sincos, Matrix_float& output) {
+    float sin_theta, cos_theta, sin_phi, cos_phi, sin_lambda, cos_lambda, sin_gamma, cos_gamma;
+    read_cu_trig<Matrix_real_float, float>(
+        precomputed_sincos,
+        sin_theta, cos_theta, sin_phi, cos_phi, sin_lambda, cos_lambda, sin_gamma, cos_gamma
+    );
+    cu_gate_kernel_from_trig_to<Matrix_float, float>(
+        output, sin_theta, cos_theta, sin_phi, cos_phi, sin_lambda, cos_lambda, sin_gamma, cos_gamma
+    );
+}
+
+void
+CU::inverse_gate_kernel_to(const Matrix_real& precomputed_sincos, Matrix& output) {
+    double sin_theta, cos_theta, sin_phi, cos_phi, sin_lambda, cos_lambda, sin_gamma, cos_gamma;
+    read_cu_trig<Matrix_real, double>(
+        precomputed_sincos,
+        sin_theta, cos_theta, sin_phi, cos_phi, sin_lambda, cos_lambda, sin_gamma, cos_gamma
+    );
+    cu_inverse_gate_kernel_from_trig_to<Matrix, double>(
+        output, sin_theta, cos_theta, sin_phi, cos_phi, sin_lambda, cos_lambda, sin_gamma, cos_gamma
+    );
+}
+
+void
+CU::inverse_gate_kernel_to(const Matrix_real_float& precomputed_sincos, Matrix_float& output) {
+    float sin_theta, cos_theta, sin_phi, cos_phi, sin_lambda, cos_lambda, sin_gamma, cos_gamma;
+    read_cu_trig<Matrix_real_float, float>(
+        precomputed_sincos,
+        sin_theta, cos_theta, sin_phi, cos_phi, sin_lambda, cos_lambda, sin_gamma, cos_gamma
+    );
+    cu_inverse_gate_kernel_from_trig_to<Matrix_float, float>(
+        output, sin_theta, cos_theta, sin_phi, cos_phi, sin_lambda, cos_lambda, sin_gamma, cos_gamma
+    );
+}
+
+void
+CU::derivative_kernel_to(const Matrix_real& precomputed_sincos, int param_idx, Matrix& output) {
+    double sin_theta, cos_theta, sin_phi, cos_phi, sin_lambda, cos_lambda, sin_gamma, cos_gamma;
+    read_cu_trig<Matrix_real, double>(
+        precomputed_sincos,
+        sin_theta, cos_theta, sin_phi, cos_phi, sin_lambda, cos_lambda, sin_gamma, cos_gamma
+    );
 
     if (param_idx == 0) {
-        Matrix_float kernel = u3_derivative_kernel_theta_from_trig<Matrix_float, float>(sin_theta, cos_theta, sin_phi, cos_phi, sin_lambda, cos_lambda);
-        multiply_2x2_by_phase<Matrix_float, float>(kernel, sin_gamma, cos_gamma);
-        return kernel;
+        u3_derivative_kernel_theta_from_trig_to<Matrix, double>(
+            output, sin_theta, cos_theta, sin_phi, cos_phi, sin_lambda, cos_lambda
+        );
+        multiply_2x2_by_phase<Matrix, double>(output, sin_gamma, cos_gamma);
+        return;
     }
     if (param_idx == 1) {
-        Matrix_float kernel = u3_derivative_kernel_phi_from_trig<Matrix_float, float>(sin_theta, cos_theta, sin_phi, cos_phi, sin_lambda, cos_lambda);
-        multiply_2x2_by_phase<Matrix_float, float>(kernel, sin_gamma, cos_gamma);
-        return kernel;
+        u3_derivative_kernel_phi_from_trig_to<Matrix, double>(
+            output, sin_theta, cos_theta, sin_phi, cos_phi, sin_lambda, cos_lambda
+        );
+        multiply_2x2_by_phase<Matrix, double>(output, sin_gamma, cos_gamma);
+        return;
     }
     if (param_idx == 2) {
-        Matrix_float kernel = u3_derivative_kernel_lambda_from_trig<Matrix_float, float>(sin_theta, cos_theta, sin_phi, cos_phi, sin_lambda, cos_lambda);
-        multiply_2x2_by_phase<Matrix_float, float>(kernel, sin_gamma, cos_gamma);
-        return kernel;
+        u3_derivative_kernel_lambda_from_trig_to<Matrix, double>(
+            output, sin_theta, cos_theta, sin_phi, cos_phi, sin_lambda, cos_lambda
+        );
+        multiply_2x2_by_phase<Matrix, double>(output, sin_gamma, cos_gamma);
+        return;
     }
     if (param_idx == 3) {
-        return cu_derivative_kernel_gamma_from_trig<Matrix_float, float>(sin_theta, cos_theta, sin_phi, cos_phi, sin_lambda, cos_lambda, sin_gamma, cos_gamma);
+        cu_derivative_kernel_gamma_from_trig_to<Matrix, double>(
+            output, sin_theta, cos_theta, sin_phi, cos_phi, sin_lambda, cos_lambda, sin_gamma, cos_gamma
+        );
+        return;
     }
 
-    return Matrix_float();
+    output = Matrix();
+}
+
+void
+CU::derivative_kernel_to(const Matrix_real_float& precomputed_sincos, int param_idx, Matrix_float& output) {
+    float sin_theta, cos_theta, sin_phi, cos_phi, sin_lambda, cos_lambda, sin_gamma, cos_gamma;
+    read_cu_trig<Matrix_real_float, float>(
+        precomputed_sincos,
+        sin_theta, cos_theta, sin_phi, cos_phi, sin_lambda, cos_lambda, sin_gamma, cos_gamma
+    );
+
+    if (param_idx == 0) {
+        u3_derivative_kernel_theta_from_trig_to<Matrix_float, float>(
+            output, sin_theta, cos_theta, sin_phi, cos_phi, sin_lambda, cos_lambda
+        );
+        multiply_2x2_by_phase<Matrix_float, float>(output, sin_gamma, cos_gamma);
+        return;
+    }
+    if (param_idx == 1) {
+        u3_derivative_kernel_phi_from_trig_to<Matrix_float, float>(
+            output, sin_theta, cos_theta, sin_phi, cos_phi, sin_lambda, cos_lambda
+        );
+        multiply_2x2_by_phase<Matrix_float, float>(output, sin_gamma, cos_gamma);
+        return;
+    }
+    if (param_idx == 2) {
+        u3_derivative_kernel_lambda_from_trig_to<Matrix_float, float>(
+            output, sin_theta, cos_theta, sin_phi, cos_phi, sin_lambda, cos_lambda
+        );
+        multiply_2x2_by_phase<Matrix_float, float>(output, sin_gamma, cos_gamma);
+        return;
+    }
+    if (param_idx == 3) {
+        cu_derivative_kernel_gamma_from_trig_to<Matrix_float, float>(
+            output, sin_theta, cos_theta, sin_phi, cos_phi, sin_lambda, cos_lambda, sin_gamma, cos_gamma
+        );
+        return;
+    }
+
+    output = Matrix_float();
 }

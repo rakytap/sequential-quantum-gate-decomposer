@@ -100,3 +100,82 @@ Matrix_float R::derivative_kernel(const Matrix_real_float& precomputed_sincos, i
     return Matrix_float();
 }
 
+void R::gate_kernel_to(const Matrix_real& precomputed_sincos, Matrix& output) {
+    const int phi_offset = precomputed_sincos.stride;
+    r_gate_kernel_from_trig_to<Matrix, double>(
+        output,
+        precomputed_sincos[0],
+        precomputed_sincos[1],
+        precomputed_sincos[phi_offset + 0],
+        precomputed_sincos[phi_offset + 1]
+    );
+}
+
+void R::gate_kernel_to(const Matrix_real_float& precomputed_sincos, Matrix_float& output) {
+    const int phi_offset = precomputed_sincos.stride;
+    r_gate_kernel_from_trig_to<Matrix_float, float>(
+        output,
+        precomputed_sincos[0],
+        precomputed_sincos[1],
+        precomputed_sincos[phi_offset + 0],
+        precomputed_sincos[phi_offset + 1]
+    );
+}
+
+void R::inverse_gate_kernel_to(const Matrix_real& precomputed_sincos, Matrix& output) {
+    const int phi_offset = precomputed_sincos.stride;
+    r_inverse_gate_kernel_from_trig_to<Matrix, double>(
+        output,
+        precomputed_sincos[0],
+        precomputed_sincos[1],
+        precomputed_sincos[phi_offset + 0],
+        precomputed_sincos[phi_offset + 1]
+    );
+}
+
+void R::inverse_gate_kernel_to(const Matrix_real_float& precomputed_sincos, Matrix_float& output) {
+    const int phi_offset = precomputed_sincos.stride;
+    r_inverse_gate_kernel_from_trig_to<Matrix_float, float>(
+        output,
+        precomputed_sincos[0],
+        precomputed_sincos[1],
+        precomputed_sincos[phi_offset + 0],
+        precomputed_sincos[phi_offset + 1]
+    );
+}
+
+void R::derivative_kernel_to(const Matrix_real& precomputed_sincos, int param_idx, Matrix& output) {
+    const int phi_offset = precomputed_sincos.stride;
+    const double s_theta = precomputed_sincos[0];
+    const double c_theta = precomputed_sincos[1];
+    const double s_phi = precomputed_sincos[phi_offset + 0];
+    const double c_phi = precomputed_sincos[phi_offset + 1];
+
+    if (param_idx == 0) {
+        r_derivative_kernel_theta_from_trig_to<Matrix, double>(output, s_theta, c_theta, s_phi, c_phi);
+        return;
+    }
+    if (param_idx == 1) {
+        r_derivative_kernel_phi_from_trig_to<Matrix, double>(output, s_theta, s_phi, c_phi);
+        return;
+    }
+    output = Matrix();
+}
+
+void R::derivative_kernel_to(const Matrix_real_float& precomputed_sincos, int param_idx, Matrix_float& output) {
+    const int phi_offset = precomputed_sincos.stride;
+    const float s_theta = precomputed_sincos[0];
+    const float c_theta = precomputed_sincos[1];
+    const float s_phi = precomputed_sincos[phi_offset + 0];
+    const float c_phi = precomputed_sincos[phi_offset + 1];
+
+    if (param_idx == 0) {
+        r_derivative_kernel_theta_from_trig_to<Matrix_float, float>(output, s_theta, c_theta, s_phi, c_phi);
+        return;
+    }
+    if (param_idx == 1) {
+        r_derivative_kernel_phi_from_trig_to<Matrix_float, float>(output, s_theta, s_phi, c_phi);
+        return;
+    }
+    output = Matrix_float();
+}

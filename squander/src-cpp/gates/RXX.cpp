@@ -93,51 +93,89 @@ RXX::~RXX() {
 @param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with Intel TBB
 */
 Matrix RXX::gate_kernel(const Matrix_real& precomputed_sincos) {
-    const int theta_offset = 0 * precomputed_sincos.stride;
-    const double s_theta = precomputed_sincos[theta_offset + 0];
-    const double c_theta = precomputed_sincos[theta_offset + 1];
-    return build_rxx_kernel_from_trig<Matrix, double>(s_theta, c_theta);
+    Matrix ret;
+    gate_kernel_to(precomputed_sincos, ret);
+    return ret;
 }
 
 Matrix_float RXX::gate_kernel(const Matrix_real_float& precomputed_sincos) {
-    const int theta_offset = 0 * precomputed_sincos.stride;
-    const float s_theta = precomputed_sincos[theta_offset + 0];
-    const float c_theta = precomputed_sincos[theta_offset + 1];
-    return build_rxx_kernel_from_trig<Matrix_float, float>(s_theta, c_theta);
+    Matrix_float ret;
+    gate_kernel_to(precomputed_sincos, ret);
+    return ret;
 }
 
 Matrix RXX::inverse_gate_kernel(const Matrix_real& precomputed_sincos) {
-    const int theta_offset = 0 * precomputed_sincos.stride;
-    const double s_theta = precomputed_sincos[theta_offset + 0];
-    const double c_theta = precomputed_sincos[theta_offset + 1];
-    return build_rxx_kernel_from_trig<Matrix, double>(-s_theta, c_theta);
+    Matrix ret;
+    inverse_gate_kernel_to(precomputed_sincos, ret);
+    return ret;
 }
 
 Matrix_float RXX::inverse_gate_kernel(const Matrix_real_float& precomputed_sincos) {
-    const int theta_offset = 0 * precomputed_sincos.stride;
-    const float s_theta = precomputed_sincos[theta_offset + 0];
-    const float c_theta = precomputed_sincos[theta_offset + 1];
-    return build_rxx_kernel_from_trig<Matrix_float, float>(-s_theta, c_theta);
+    Matrix_float ret;
+    inverse_gate_kernel_to(precomputed_sincos, ret);
+    return ret;
 }
 
 Matrix RXX::derivative_kernel(const Matrix_real& precomputed_sincos, int param_idx) {
+    Matrix ret;
+    derivative_kernel_to(precomputed_sincos, param_idx, ret);
+    return ret;
+}
+
+Matrix_float RXX::derivative_kernel(const Matrix_real_float& precomputed_sincos, int param_idx) {
+    Matrix_float ret;
+    derivative_kernel_to(precomputed_sincos, param_idx, ret);
+    return ret;
+}
+
+void RXX::gate_kernel_to(const Matrix_real& precomputed_sincos, Matrix& output) {
+    const int theta_offset = 0 * precomputed_sincos.stride;
+    const double s_theta = precomputed_sincos[theta_offset + 0];
+    const double c_theta = precomputed_sincos[theta_offset + 1];
+    build_rxx_kernel_from_trig_to<Matrix, double>(output, s_theta, c_theta);
+}
+
+void RXX::gate_kernel_to(const Matrix_real_float& precomputed_sincos, Matrix_float& output) {
+    const int theta_offset = 0 * precomputed_sincos.stride;
+    const float s_theta = precomputed_sincos[theta_offset + 0];
+    const float c_theta = precomputed_sincos[theta_offset + 1];
+    build_rxx_kernel_from_trig_to<Matrix_float, float>(output, s_theta, c_theta);
+}
+
+void RXX::inverse_gate_kernel_to(const Matrix_real& precomputed_sincos, Matrix& output) {
+    const int theta_offset = 0 * precomputed_sincos.stride;
+    const double s_theta = precomputed_sincos[theta_offset + 0];
+    const double c_theta = precomputed_sincos[theta_offset + 1];
+    build_rxx_kernel_from_trig_to<Matrix, double>(output, -s_theta, c_theta);
+}
+
+void RXX::inverse_gate_kernel_to(const Matrix_real_float& precomputed_sincos, Matrix_float& output) {
+    const int theta_offset = 0 * precomputed_sincos.stride;
+    const float s_theta = precomputed_sincos[theta_offset + 0];
+    const float c_theta = precomputed_sincos[theta_offset + 1];
+    build_rxx_kernel_from_trig_to<Matrix_float, float>(output, -s_theta, c_theta);
+}
+
+void RXX::derivative_kernel_to(const Matrix_real& precomputed_sincos, int param_idx, Matrix& output) {
     if (param_idx != 0) {
-        return Matrix();
+        output = Matrix();
+        return;
     }
     const int theta_offset = 0 * precomputed_sincos.stride;
     const double s_theta = precomputed_sincos[theta_offset + 0];
     const double c_theta = precomputed_sincos[theta_offset + 1];
-    return build_rxx_derivative_kernel_from_trig<Matrix, double>(s_theta, c_theta);
+    build_rxx_derivative_kernel_from_trig_to<Matrix, double>(output, s_theta, c_theta);
 }
 
-Matrix_float RXX::derivative_kernel(const Matrix_real_float& precomputed_sincos, int param_idx) {
+void RXX::derivative_kernel_to(const Matrix_real_float& precomputed_sincos, int param_idx, Matrix_float& output) {
     if (param_idx != 0) {
-        return Matrix_float();
+        output = Matrix_float();
+        return;
     }
     const int theta_offset = 0 * precomputed_sincos.stride;
     const float s_theta = precomputed_sincos[theta_offset + 0];
     const float c_theta = precomputed_sincos[theta_offset + 1];
-    return build_rxx_derivative_kernel_from_trig<Matrix_float, float>(s_theta, c_theta);
+    build_rxx_derivative_kernel_from_trig_to<Matrix_float, float>(output, s_theta, c_theta);
 }
 
 /**

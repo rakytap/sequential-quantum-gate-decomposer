@@ -21,6 +21,12 @@ public:
     virtual Matrix_float inverse_gate_kernel(const Matrix_real_float& precomputed_sincos) override;
     virtual Matrix       derivative_kernel(const Matrix_real&       precomputed_sincos, int param_idx) override;
     virtual Matrix_float derivative_kernel(const Matrix_real_float& precomputed_sincos, int param_idx) override;
+    virtual void gate_kernel_to(const Matrix_real& precomputed_sincos, Matrix& output) override;
+    virtual void gate_kernel_to(const Matrix_real_float& precomputed_sincos, Matrix_float& output) override;
+    virtual void inverse_gate_kernel_to(const Matrix_real& precomputed_sincos, Matrix& output) override;
+    virtual void inverse_gate_kernel_to(const Matrix_real_float& precomputed_sincos, Matrix_float& output) override;
+    virtual void derivative_kernel_to(const Matrix_real& precomputed_sincos, int param_idx, Matrix& output) override;
+    virtual void derivative_kernel_to(const Matrix_real_float& precomputed_sincos, int param_idx, Matrix_float& output) override;
 };
 
 #endif //U2_H

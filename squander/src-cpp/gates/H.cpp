@@ -35,3 +35,19 @@ Matrix H::inverse_gate_kernel(const Matrix_real& /*parameters*/) {
 Matrix_float H::inverse_gate_kernel(const Matrix_real_float& /*parameters*/) {
     return h_gate_kernel<Matrix_float, float>();
 }
+
+void H::gate_kernel_to(const Matrix_real& /*parameters*/, Matrix& output) {
+    h_gate_kernel_to<Matrix, double>(output);
+}
+
+void H::gate_kernel_to(const Matrix_real_float& /*parameters*/, Matrix_float& output) {
+    h_gate_kernel_to<Matrix_float, float>(output);
+}
+
+void H::inverse_gate_kernel_to(const Matrix_real& /*parameters*/, Matrix& output) {
+    h_gate_kernel_to<Matrix, double>(output);
+}
+
+void H::inverse_gate_kernel_to(const Matrix_real_float& /*parameters*/, Matrix_float& output) {
+    h_gate_kernel_to<Matrix_float, float>(output);
+}

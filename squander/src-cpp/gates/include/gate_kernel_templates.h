@@ -506,8 +506,8 @@ inline MT u2_derivative_kernel_lambda_from_trig(RT s_phi, RT c_phi, RT s_lambda,
 }
 
 template<typename MT, typename RT>
-inline MT calc_one_qubit_u3_from_trig(RT sin_theta, RT cos_theta, RT sin_phi, RT cos_phi, RT sin_lambda, RT cos_lambda) {
-    MT u3(2, 2);
+inline void calc_one_qubit_u3_from_trig_to(MT& u3, RT sin_theta, RT cos_theta, RT sin_phi, RT cos_phi, RT sin_lambda, RT cos_lambda) {
+    ensure_kernel_storage(u3, 2, 2);
     const RT sin_phi_lambda = sin_phi * cos_lambda + cos_phi * sin_lambda;
     const RT cos_phi_lambda = cos_phi * cos_lambda - sin_phi * sin_lambda;
 
@@ -519,12 +519,18 @@ inline MT calc_one_qubit_u3_from_trig(RT sin_theta, RT cos_theta, RT sin_phi, RT
     u3[2].imag =  sin_theta * sin_phi;
     u3[3].real =  cos_theta * cos_phi_lambda;
     u3[3].imag =  cos_theta * sin_phi_lambda;
+}
+
+template<typename MT, typename RT>
+inline MT calc_one_qubit_u3_from_trig(RT sin_theta, RT cos_theta, RT sin_phi, RT cos_phi, RT sin_lambda, RT cos_lambda) {
+    MT u3(2, 2);
+    calc_one_qubit_u3_from_trig_to<MT, RT>(u3, sin_theta, cos_theta, sin_phi, cos_phi, sin_lambda, cos_lambda);
     return u3;
 }
 
 template<typename MT, typename RT>
-inline MT calc_one_qubit_u3_inverse_from_trig(RT sin_theta, RT cos_theta, RT sin_phi, RT cos_phi, RT sin_lambda, RT cos_lambda) {
-    MT u3(2, 2);
+inline void calc_one_qubit_u3_inverse_from_trig_to(MT& u3, RT sin_theta, RT cos_theta, RT sin_phi, RT cos_phi, RT sin_lambda, RT cos_lambda) {
+    ensure_kernel_storage(u3, 2, 2);
     const RT sin_phi_lambda = sin_phi * cos_lambda + cos_phi * sin_lambda;
     const RT cos_phi_lambda = cos_phi * cos_lambda - sin_phi * sin_lambda;
 
@@ -536,12 +542,18 @@ inline MT calc_one_qubit_u3_inverse_from_trig(RT sin_theta, RT cos_theta, RT sin
     u3[2].imag =  sin_theta * sin_lambda;
     u3[3].real =  cos_theta * cos_phi_lambda;
     u3[3].imag = -cos_theta * sin_phi_lambda;
+}
+
+template<typename MT, typename RT>
+inline MT calc_one_qubit_u3_inverse_from_trig(RT sin_theta, RT cos_theta, RT sin_phi, RT cos_phi, RT sin_lambda, RT cos_lambda) {
+    MT u3(2, 2);
+    calc_one_qubit_u3_inverse_from_trig_to<MT, RT>(u3, sin_theta, cos_theta, sin_phi, cos_phi, sin_lambda, cos_lambda);
     return u3;
 }
 
 template<typename MT, typename RT>
-inline MT u3_derivative_kernel_theta_from_trig(RT sin_theta, RT cos_theta, RT sin_phi, RT cos_phi, RT sin_lambda, RT cos_lambda) {
-    MT u3(2, 2);
+inline void u3_derivative_kernel_theta_from_trig_to(MT& u3, RT sin_theta, RT cos_theta, RT sin_phi, RT cos_phi, RT sin_lambda, RT cos_lambda) {
+    ensure_kernel_storage(u3, 2, 2);
     const RT sin_phi_lambda = sin_phi * cos_lambda + cos_phi * sin_lambda;
     const RT cos_phi_lambda = cos_phi * cos_lambda - sin_phi * sin_lambda;
     u3[0].real = -sin_theta;               u3[0].imag = (RT)0;
@@ -549,12 +561,18 @@ inline MT u3_derivative_kernel_theta_from_trig(RT sin_theta, RT cos_theta, RT si
     u3[2].real =  cos_theta * cos_phi;    u3[2].imag =  cos_theta * sin_phi;
     u3[3].real = -sin_theta * cos_phi_lambda;
     u3[3].imag = -sin_theta * sin_phi_lambda;
+}
+
+template<typename MT, typename RT>
+inline MT u3_derivative_kernel_theta_from_trig(RT sin_theta, RT cos_theta, RT sin_phi, RT cos_phi, RT sin_lambda, RT cos_lambda) {
+    MT u3(2, 2);
+    u3_derivative_kernel_theta_from_trig_to<MT, RT>(u3, sin_theta, cos_theta, sin_phi, cos_phi, sin_lambda, cos_lambda);
     return u3;
 }
 
 template<typename MT, typename RT>
-inline MT u3_derivative_kernel_phi_from_trig(RT sin_theta, RT cos_theta, RT sin_phi, RT cos_phi, RT sin_lambda, RT cos_lambda) {
-    MT u3(2, 2);
+inline void u3_derivative_kernel_phi_from_trig_to(MT& u3, RT sin_theta, RT cos_theta, RT sin_phi, RT cos_phi, RT sin_lambda, RT cos_lambda) {
+    ensure_kernel_storage(u3, 2, 2);
     const RT sin_phi_lambda = sin_phi * cos_lambda + cos_phi * sin_lambda;
     const RT cos_phi_lambda = cos_phi * cos_lambda - sin_phi * sin_lambda;
     u3[0].real = (RT)0;                  u3[0].imag = (RT)0;
@@ -562,12 +580,18 @@ inline MT u3_derivative_kernel_phi_from_trig(RT sin_theta, RT cos_theta, RT sin_
     u3[2].real = -sin_theta * sin_phi;   u3[2].imag =  sin_theta * cos_phi;
     u3[3].real = -cos_theta * sin_phi_lambda;
     u3[3].imag =  cos_theta * cos_phi_lambda;
+}
+
+template<typename MT, typename RT>
+inline MT u3_derivative_kernel_phi_from_trig(RT sin_theta, RT cos_theta, RT sin_phi, RT cos_phi, RT sin_lambda, RT cos_lambda) {
+    MT u3(2, 2);
+    u3_derivative_kernel_phi_from_trig_to<MT, RT>(u3, sin_theta, cos_theta, sin_phi, cos_phi, sin_lambda, cos_lambda);
     return u3;
 }
 
 template<typename MT, typename RT>
-inline MT u3_derivative_kernel_lambda_from_trig(RT sin_theta, RT cos_theta, RT sin_phi, RT cos_phi, RT sin_lambda, RT cos_lambda) {
-    MT u3(2, 2);
+inline void u3_derivative_kernel_lambda_from_trig_to(MT& u3, RT sin_theta, RT cos_theta, RT sin_phi, RT cos_phi, RT sin_lambda, RT cos_lambda) {
+    ensure_kernel_storage(u3, 2, 2);
     const RT sin_phi_lambda = sin_phi * cos_lambda + cos_phi * sin_lambda;
     const RT cos_phi_lambda = cos_phi * cos_lambda - sin_phi * sin_lambda;
     u3[0].real = (RT)0;                 u3[0].imag = (RT)0;
@@ -575,6 +599,12 @@ inline MT u3_derivative_kernel_lambda_from_trig(RT sin_theta, RT cos_theta, RT s
     u3[2].real = (RT)0;                 u3[2].imag = (RT)0;
     u3[3].real = -cos_theta * sin_phi_lambda;
     u3[3].imag =  cos_theta * cos_phi_lambda;
+}
+
+template<typename MT, typename RT>
+inline MT u3_derivative_kernel_lambda_from_trig(RT sin_theta, RT cos_theta, RT sin_phi, RT cos_phi, RT sin_lambda, RT cos_lambda) {
+    MT u3(2, 2);
+    u3_derivative_kernel_lambda_from_trig_to<MT, RT>(u3, sin_theta, cos_theta, sin_phi, cos_phi, sin_lambda, cos_lambda);
     return u3;
 }
 
@@ -589,28 +619,46 @@ inline void multiply_2x2_by_phase(MT& u3, RT sin_gamma, RT cos_gamma) {
 }
 
 template<typename MT, typename RT>
-inline MT cu_gate_kernel_from_trig(RT sin_theta, RT cos_theta, RT sin_phi, RT cos_phi, RT sin_lambda, RT cos_lambda, RT sin_gamma, RT cos_gamma) {
-    MT u3 = calc_one_qubit_u3_from_trig<MT, RT>(sin_theta, cos_theta, sin_phi, cos_phi, sin_lambda, cos_lambda);
+inline void cu_gate_kernel_from_trig_to(MT& u3, RT sin_theta, RT cos_theta, RT sin_phi, RT cos_phi, RT sin_lambda, RT cos_lambda, RT sin_gamma, RT cos_gamma) {
+    calc_one_qubit_u3_from_trig_to<MT, RT>(u3, sin_theta, cos_theta, sin_phi, cos_phi, sin_lambda, cos_lambda);
     multiply_2x2_by_phase<MT, RT>(u3, sin_gamma, cos_gamma);
+}
+
+template<typename MT, typename RT>
+inline MT cu_gate_kernel_from_trig(RT sin_theta, RT cos_theta, RT sin_phi, RT cos_phi, RT sin_lambda, RT cos_lambda, RT sin_gamma, RT cos_gamma) {
+    MT u3(2, 2);
+    cu_gate_kernel_from_trig_to<MT, RT>(u3, sin_theta, cos_theta, sin_phi, cos_phi, sin_lambda, cos_lambda, sin_gamma, cos_gamma);
     return u3;
+}
+
+template<typename MT, typename RT>
+inline void cu_inverse_gate_kernel_from_trig_to(MT& u3, RT sin_theta, RT cos_theta, RT sin_phi, RT cos_phi, RT sin_lambda, RT cos_lambda, RT sin_gamma, RT cos_gamma) {
+    calc_one_qubit_u3_inverse_from_trig_to<MT, RT>(u3, sin_theta, cos_theta, sin_phi, cos_phi, sin_lambda, cos_lambda);
+    multiply_2x2_by_phase<MT, RT>(u3, -sin_gamma, cos_gamma);
 }
 
 template<typename MT, typename RT>
 inline MT cu_inverse_gate_kernel_from_trig(RT sin_theta, RT cos_theta, RT sin_phi, RT cos_phi, RT sin_lambda, RT cos_lambda, RT sin_gamma, RT cos_gamma) {
-    MT u3 = calc_one_qubit_u3_inverse_from_trig<MT, RT>(sin_theta, cos_theta, sin_phi, cos_phi, sin_lambda, cos_lambda);
-    multiply_2x2_by_phase<MT, RT>(u3, -sin_gamma, cos_gamma);
+    MT u3(2, 2);
+    cu_inverse_gate_kernel_from_trig_to<MT, RT>(u3, sin_theta, cos_theta, sin_phi, cos_phi, sin_lambda, cos_lambda, sin_gamma, cos_gamma);
     return u3;
 }
 
 template<typename MT, typename RT>
-inline MT cu_derivative_kernel_gamma_from_trig(RT sin_theta, RT cos_theta, RT sin_phi, RT cos_phi, RT sin_lambda, RT cos_lambda, RT sin_gamma, RT cos_gamma) {
-    MT u3 = cu_gate_kernel_from_trig<MT, RT>(sin_theta, cos_theta, sin_phi, cos_phi, sin_lambda, cos_lambda, sin_gamma, cos_gamma);
+inline void cu_derivative_kernel_gamma_from_trig_to(MT& u3, RT sin_theta, RT cos_theta, RT sin_phi, RT cos_phi, RT sin_lambda, RT cos_lambda, RT sin_gamma, RT cos_gamma) {
+    cu_gate_kernel_from_trig_to<MT, RT>(u3, sin_theta, cos_theta, sin_phi, cos_phi, sin_lambda, cos_lambda, sin_gamma, cos_gamma);
     for (int k = 0; k < 4; ++k) {
         const RT real = u3[k].real;
         const RT imag = u3[k].imag;
         u3[k].real = -imag;
         u3[k].imag = real;
     }
+}
+
+template<typename MT, typename RT>
+inline MT cu_derivative_kernel_gamma_from_trig(RT sin_theta, RT cos_theta, RT sin_phi, RT cos_phi, RT sin_lambda, RT cos_lambda, RT sin_gamma, RT cos_gamma) {
+    MT u3(2, 2);
+    cu_derivative_kernel_gamma_from_trig_to<MT, RT>(u3, sin_theta, cos_theta, sin_phi, cos_phi, sin_lambda, cos_lambda, sin_gamma, cos_gamma);
     return u3;
 }
 
@@ -620,70 +668,106 @@ inline MT cu_derivative_kernel_gamma_from_trig(RT sin_theta, RT cos_theta, RT si
 
 /// RXX(theta): exp(-i * theta/2 * XX)
 template<typename MT, typename RT>
-inline MT build_rxx_kernel_from_trig(RT s, RT c) {
-    MT U(4, 4);
+inline void build_rxx_kernel_from_trig_to(MT& U, RT s, RT c) {
+    ensure_kernel_storage(U, 4, 4);
     for (int i = 0; i < 16; ++i) { U[i].real = RT(0); U[i].imag = RT(0); }
     U[0].real = c;    U[3].imag  = -s;
     U[5].real = c;    U[6].imag  = -s;
     U[10].real = c;   U[9].imag  = -s;
     U[15].real = c;   U[12].imag = -s;
+}
+
+template<typename MT, typename RT>
+inline MT build_rxx_kernel_from_trig(RT s, RT c) {
+    MT U(4, 4);
+    build_rxx_kernel_from_trig_to<MT, RT>(U, s, c);
     return U;
 }
 
 template<typename MT, typename RT>
-inline MT build_rxx_derivative_kernel_from_trig(RT s, RT c) {
-    MT U(4, 4);
+inline void build_rxx_derivative_kernel_from_trig_to(MT& U, RT s, RT c) {
+    ensure_kernel_storage(U, 4, 4);
     for (int i = 0; i < 16; ++i) { U[i].real = RT(0); U[i].imag = RT(0); }
     U[0].real = -s;   U[3].imag  = -c;
     U[5].real = -s;   U[6].imag  = -c;
     U[10].real = -s;  U[9].imag  = -c;
     U[15].real = -s;  U[12].imag = -c;
+}
+
+template<typename MT, typename RT>
+inline MT build_rxx_derivative_kernel_from_trig(RT s, RT c) {
+    MT U(4, 4);
+    build_rxx_derivative_kernel_from_trig_to<MT, RT>(U, s, c);
     return U;
 }
 
 /// RYY(theta): exp(-i * theta/2 * YY)
 template<typename MT, typename RT>
-inline MT build_ryy_kernel_from_trig(RT s, RT c) {
-    MT U(4, 4);
+inline void build_ryy_kernel_from_trig_to(MT& U, RT s, RT c) {
+    ensure_kernel_storage(U, 4, 4);
     for (int i = 0; i < 16; ++i) { U[i].real = RT(0); U[i].imag = RT(0); }
     U[0].real = c;    U[3].imag  = +s;
     U[5].real = c;    U[6].imag  = -s;
     U[10].real = c;   U[9].imag  = -s;
     U[15].real = c;   U[12].imag = +s;
+}
+
+template<typename MT, typename RT>
+inline MT build_ryy_kernel_from_trig(RT s, RT c) {
+    MT U(4, 4);
+    build_ryy_kernel_from_trig_to<MT, RT>(U, s, c);
     return U;
 }
 
 template<typename MT, typename RT>
-inline MT build_ryy_derivative_kernel_from_trig(RT s, RT c) {
-    MT U(4, 4);
+inline void build_ryy_derivative_kernel_from_trig_to(MT& U, RT s, RT c) {
+    ensure_kernel_storage(U, 4, 4);
     for (int i = 0; i < 16; ++i) { U[i].real = RT(0); U[i].imag = RT(0); }
     U[0].real = -s;   U[3].imag  = +c;
     U[5].real = -s;   U[6].imag  = -c;
     U[10].real = -s;  U[9].imag  = -c;
     U[15].real = -s;  U[12].imag = +c;
+}
+
+template<typename MT, typename RT>
+inline MT build_ryy_derivative_kernel_from_trig(RT s, RT c) {
+    MT U(4, 4);
+    build_ryy_derivative_kernel_from_trig_to<MT, RT>(U, s, c);
     return U;
 }
 
 /// RZZ(theta): exp(-i * theta/2 * ZZ)
 template<typename MT, typename RT>
-inline MT build_rzz_kernel_from_trig(RT s, RT c) {
-    MT U(4, 4);
+inline void build_rzz_kernel_from_trig_to(MT& U, RT s, RT c) {
+    ensure_kernel_storage(U, 4, 4);
     for (int i = 0; i < 16; ++i) { U[i].real = RT(0); U[i].imag = RT(0); }
     U[0].real  = c;   U[0].imag  = -s;
     U[5].real  = c;   U[5].imag  = +s;
     U[10].real = c;   U[10].imag = +s;
     U[15].real = c;   U[15].imag = -s;
+}
+
+template<typename MT, typename RT>
+inline MT build_rzz_kernel_from_trig(RT s, RT c) {
+    MT U(4, 4);
+    build_rzz_kernel_from_trig_to<MT, RT>(U, s, c);
     return U;
 }
 
 template<typename MT, typename RT>
-inline MT build_rzz_derivative_kernel_from_trig(RT s, RT c) {
-    MT U(4, 4);
+inline void build_rzz_derivative_kernel_from_trig_to(MT& U, RT s, RT c) {
+    ensure_kernel_storage(U, 4, 4);
     for (int i = 0; i < 16; ++i) { U[i].real = RT(0); U[i].imag = RT(0); }
     U[0].real  = -s;  U[0].imag  = -c;
     U[5].real  = -s;  U[5].imag  = +c;
     U[10].real = -s;  U[10].imag = +c;
     U[15].real = -s;  U[15].imag = -c;
+}
+
+template<typename MT, typename RT>
+inline MT build_rzz_derivative_kernel_from_trig(RT s, RT c) {
+    MT U(4, 4);
+    build_rzz_derivative_kernel_from_trig_to<MT, RT>(U, s, c);
     return U;
 }
 
@@ -692,7 +776,7 @@ inline MT build_rzz_derivative_kernel_from_trig(RT s, RT c) {
 // ---------------------------------------------------------------------------
 
 template<typename MT, typename RT>
-inline std::pair<MT, MT> build_crot_gate_kernels_from_trig(RT s_theta, RT c_theta, RT s_phi, RT c_phi) {
+inline void build_crot_gate_kernel_from_trig_to(MT& forward, RT s_theta, RT c_theta, RT s_phi, RT c_phi) {
     // CROT uses U3(theta, phi-pi/2, -phi+pi/2) on one branch and U3(-theta, ...) on the other.
     // Convert shifted angles directly from sin(phi), cos(phi):
     // sin(phi-pi/2)=-cos(phi), cos(phi-pi/2)=sin(phi)
@@ -702,34 +786,100 @@ inline std::pair<MT, MT> build_crot_gate_kernels_from_trig(RT s_theta, RT c_thet
     const RT s_nphi_p_pi2 =  c_phi;
     const RT c_nphi_p_pi2 =  s_phi;
 
-    MT forward = calc_one_qubit_u3_from_trig<MT, RT>(
+    calc_one_qubit_u3_from_trig_to<MT, RT>(
+        forward,
         s_theta, c_theta, s_phi_m_pi2, c_phi_m_pi2, s_nphi_p_pi2, c_nphi_p_pi2
     );
-    MT inverse = calc_one_qubit_u3_from_trig<MT, RT>(
+}
+
+template<typename MT, typename RT>
+inline void build_crot_inverse_gate_kernel_from_trig_to(MT& inverse, RT s_theta, RT c_theta, RT s_phi, RT c_phi) {
+    const RT s_phi_m_pi2 = -c_phi;
+    const RT c_phi_m_pi2 =  s_phi;
+    const RT s_nphi_p_pi2 =  c_phi;
+    const RT c_nphi_p_pi2 =  s_phi;
+
+    calc_one_qubit_u3_from_trig_to<MT, RT>(
+        inverse,
         -s_theta, c_theta, s_phi_m_pi2, c_phi_m_pi2, s_nphi_p_pi2, c_nphi_p_pi2
     );
-    return std::make_pair(std::move(forward), std::move(inverse));
+}
+
+template<typename MT, typename RT>
+inline void build_crot_gate_kernels_from_trig_to(MT& forward, MT& inverse, RT s_theta, RT c_theta, RT s_phi, RT c_phi) {
+    build_crot_gate_kernel_from_trig_to<MT, RT>(forward, s_theta, c_theta, s_phi, c_phi);
+    build_crot_inverse_gate_kernel_from_trig_to<MT, RT>(inverse, s_theta, c_theta, s_phi, c_phi);
+}
+
+template<typename MT, typename RT>
+inline std::pair<MT, MT> build_crot_gate_kernels_from_trig(RT s_theta, RT c_theta, RT s_phi, RT c_phi) {
+    MT forward(2, 2);
+    MT inverse(2, 2);
+    build_crot_gate_kernels_from_trig_to<MT, RT>(forward, inverse, s_theta, c_theta, s_phi, c_phi);
+    return std::make_pair(forward, inverse);
+}
+
+template<typename MT, typename RT>
+inline void build_crot_theta_derivative_kernels_from_trig_to(MT& forward, MT& inverse, RT s_theta, RT c_theta, RT s_phi, RT c_phi) {
+    // d/dtheta implemented via phase shift theta -> theta + pi/2 on both branches.
+    const RT s_theta_shift = c_theta;
+    const RT c_theta_shift = -s_theta;
+    build_crot_gate_kernels_from_trig_to<MT, RT>(forward, inverse, s_theta_shift, c_theta_shift, s_phi, c_phi);
+}
+
+template<typename MT, typename RT>
+inline void build_crot_theta_derivative_kernel_from_trig_to(MT& forward, RT s_theta, RT c_theta, RT s_phi, RT c_phi) {
+    const RT s_theta_shift = c_theta;
+    const RT c_theta_shift = -s_theta;
+    build_crot_gate_kernel_from_trig_to<MT, RT>(forward, s_theta_shift, c_theta_shift, s_phi, c_phi);
+}
+
+template<typename MT, typename RT>
+inline void build_crot_theta_derivative_aux_kernel_from_trig_to(MT& inverse, RT s_theta, RT c_theta, RT s_phi, RT c_phi) {
+    const RT s_theta_shift = c_theta;
+    const RT c_theta_shift = -s_theta;
+    build_crot_inverse_gate_kernel_from_trig_to<MT, RT>(inverse, s_theta_shift, c_theta_shift, s_phi, c_phi);
 }
 
 template<typename MT, typename RT>
 inline std::pair<MT, MT> build_crot_theta_derivative_kernels_from_trig(RT s_theta, RT c_theta, RT s_phi, RT c_phi) {
-    // d/dtheta implemented via phase shift theta -> theta + pi/2 on both branches.
-    const RT s_theta_shift = c_theta;
-    const RT c_theta_shift = -s_theta;
-    return build_crot_gate_kernels_from_trig<MT, RT>(s_theta_shift, c_theta_shift, s_phi, c_phi);
+    MT forward(2, 2);
+    MT inverse(2, 2);
+    build_crot_theta_derivative_kernels_from_trig_to<MT, RT>(forward, inverse, s_theta, c_theta, s_phi, c_phi);
+    return std::make_pair(forward, inverse);
 }
 
 template<typename MT, typename RT>
-inline std::pair<MT, MT> build_crot_phi_derivative_kernels_from_trig(RT s_theta, RT c_theta, RT s_phi, RT c_phi) {
+inline void build_crot_phi_derivative_kernels_from_trig_to(MT& forward, MT& inverse, RT s_theta, RT c_theta, RT s_phi, RT c_phi) {
     // Matches legacy implementation: U3(theta, phi, -phi) and U3(-theta, phi, -phi)
     // with zeroed diagonal entries.
-    MT forward = calc_one_qubit_u3_from_trig<MT, RT>(s_theta, c_theta, s_phi, c_phi, -s_phi, c_phi);
-    MT inverse = calc_one_qubit_u3_from_trig<MT, RT>(-s_theta, c_theta, s_phi, c_phi, -s_phi, c_phi);
+    calc_one_qubit_u3_from_trig_to<MT, RT>(forward, s_theta, c_theta, s_phi, c_phi, -s_phi, c_phi);
+    calc_one_qubit_u3_from_trig_to<MT, RT>(inverse, -s_theta, c_theta, s_phi, c_phi, -s_phi, c_phi);
 
     forward[0].real = (RT)0; forward[0].imag = (RT)0;
     forward[3].real = (RT)0; forward[3].imag = (RT)0;
     inverse[0].real = (RT)0; inverse[0].imag = (RT)0;
     inverse[3].real = (RT)0; inverse[3].imag = (RT)0;
+}
 
-    return std::make_pair(std::move(forward), std::move(inverse));
+template<typename MT, typename RT>
+inline void build_crot_phi_derivative_kernel_from_trig_to(MT& forward, RT s_theta, RT c_theta, RT s_phi, RT c_phi) {
+    calc_one_qubit_u3_from_trig_to<MT, RT>(forward, s_theta, c_theta, s_phi, c_phi, -s_phi, c_phi);
+    forward[0].real = (RT)0; forward[0].imag = (RT)0;
+    forward[3].real = (RT)0; forward[3].imag = (RT)0;
+}
+
+template<typename MT, typename RT>
+inline void build_crot_phi_derivative_aux_kernel_from_trig_to(MT& inverse, RT s_theta, RT c_theta, RT s_phi, RT c_phi) {
+    calc_one_qubit_u3_from_trig_to<MT, RT>(inverse, -s_theta, c_theta, s_phi, c_phi, -s_phi, c_phi);
+    inverse[0].real = (RT)0; inverse[0].imag = (RT)0;
+    inverse[3].real = (RT)0; inverse[3].imag = (RT)0;
+}
+
+template<typename MT, typename RT>
+inline std::pair<MT, MT> build_crot_phi_derivative_kernels_from_trig(RT s_theta, RT c_theta, RT s_phi, RT c_phi) {
+    MT forward(2, 2);
+    MT inverse(2, 2);
+    build_crot_phi_derivative_kernels_from_trig_to<MT, RT>(forward, inverse, s_theta, c_theta, s_phi, c_phi);
+    return std::make_pair(forward, inverse);
 }

@@ -82,51 +82,89 @@ RYY::~RYY() {
 }
 
 Matrix RYY::gate_kernel(const Matrix_real& precomputed_sincos) {
-    const int theta_offset = 0 * precomputed_sincos.stride;
-    const double s_theta = precomputed_sincos[theta_offset + 0];
-    const double c_theta = precomputed_sincos[theta_offset + 1];
-    return build_ryy_kernel_from_trig<Matrix, double>(s_theta, c_theta);
+    Matrix ret;
+    gate_kernel_to(precomputed_sincos, ret);
+    return ret;
 }
 
 Matrix_float RYY::gate_kernel(const Matrix_real_float& precomputed_sincos) {
-    const int theta_offset = 0 * precomputed_sincos.stride;
-    const float s_theta = precomputed_sincos[theta_offset + 0];
-    const float c_theta = precomputed_sincos[theta_offset + 1];
-    return build_ryy_kernel_from_trig<Matrix_float, float>(s_theta, c_theta);
+    Matrix_float ret;
+    gate_kernel_to(precomputed_sincos, ret);
+    return ret;
 }
 
 Matrix RYY::inverse_gate_kernel(const Matrix_real& precomputed_sincos) {
-    const int theta_offset = 0 * precomputed_sincos.stride;
-    const double s_theta = precomputed_sincos[theta_offset + 0];
-    const double c_theta = precomputed_sincos[theta_offset + 1];
-    return build_ryy_kernel_from_trig<Matrix, double>(-s_theta, c_theta);
+    Matrix ret;
+    inverse_gate_kernel_to(precomputed_sincos, ret);
+    return ret;
 }
 
 Matrix_float RYY::inverse_gate_kernel(const Matrix_real_float& precomputed_sincos) {
-    const int theta_offset = 0 * precomputed_sincos.stride;
-    const float s_theta = precomputed_sincos[theta_offset + 0];
-    const float c_theta = precomputed_sincos[theta_offset + 1];
-    return build_ryy_kernel_from_trig<Matrix_float, float>(-s_theta, c_theta);
+    Matrix_float ret;
+    inverse_gate_kernel_to(precomputed_sincos, ret);
+    return ret;
 }
 
 Matrix RYY::derivative_kernel(const Matrix_real& precomputed_sincos, int param_idx) {
+    Matrix ret;
+    derivative_kernel_to(precomputed_sincos, param_idx, ret);
+    return ret;
+}
+
+Matrix_float RYY::derivative_kernel(const Matrix_real_float& precomputed_sincos, int param_idx) {
+    Matrix_float ret;
+    derivative_kernel_to(precomputed_sincos, param_idx, ret);
+    return ret;
+}
+
+void RYY::gate_kernel_to(const Matrix_real& precomputed_sincos, Matrix& output) {
+    const int theta_offset = 0 * precomputed_sincos.stride;
+    const double s_theta = precomputed_sincos[theta_offset + 0];
+    const double c_theta = precomputed_sincos[theta_offset + 1];
+    build_ryy_kernel_from_trig_to<Matrix, double>(output, s_theta, c_theta);
+}
+
+void RYY::gate_kernel_to(const Matrix_real_float& precomputed_sincos, Matrix_float& output) {
+    const int theta_offset = 0 * precomputed_sincos.stride;
+    const float s_theta = precomputed_sincos[theta_offset + 0];
+    const float c_theta = precomputed_sincos[theta_offset + 1];
+    build_ryy_kernel_from_trig_to<Matrix_float, float>(output, s_theta, c_theta);
+}
+
+void RYY::inverse_gate_kernel_to(const Matrix_real& precomputed_sincos, Matrix& output) {
+    const int theta_offset = 0 * precomputed_sincos.stride;
+    const double s_theta = precomputed_sincos[theta_offset + 0];
+    const double c_theta = precomputed_sincos[theta_offset + 1];
+    build_ryy_kernel_from_trig_to<Matrix, double>(output, -s_theta, c_theta);
+}
+
+void RYY::inverse_gate_kernel_to(const Matrix_real_float& precomputed_sincos, Matrix_float& output) {
+    const int theta_offset = 0 * precomputed_sincos.stride;
+    const float s_theta = precomputed_sincos[theta_offset + 0];
+    const float c_theta = precomputed_sincos[theta_offset + 1];
+    build_ryy_kernel_from_trig_to<Matrix_float, float>(output, -s_theta, c_theta);
+}
+
+void RYY::derivative_kernel_to(const Matrix_real& precomputed_sincos, int param_idx, Matrix& output) {
     if (param_idx != 0) {
-        return Matrix();
+        output = Matrix();
+        return;
     }
     const int theta_offset = 0 * precomputed_sincos.stride;
     const double s_theta = precomputed_sincos[theta_offset + 0];
     const double c_theta = precomputed_sincos[theta_offset + 1];
-    return build_ryy_derivative_kernel_from_trig<Matrix, double>(s_theta, c_theta);
+    build_ryy_derivative_kernel_from_trig_to<Matrix, double>(output, s_theta, c_theta);
 }
 
-Matrix_float RYY::derivative_kernel(const Matrix_real_float& precomputed_sincos, int param_idx) {
+void RYY::derivative_kernel_to(const Matrix_real_float& precomputed_sincos, int param_idx, Matrix_float& output) {
     if (param_idx != 0) {
-        return Matrix_float();
+        output = Matrix_float();
+        return;
     }
     const int theta_offset = 0 * precomputed_sincos.stride;
     const float s_theta = precomputed_sincos[theta_offset + 0];
     const float c_theta = precomputed_sincos[theta_offset + 1];
-    return build_ryy_derivative_kernel_from_trig<Matrix_float, float>(s_theta, c_theta);
+    build_ryy_derivative_kernel_from_trig_to<Matrix_float, float>(output, s_theta, c_theta);
 }
 
 

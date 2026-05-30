@@ -572,6 +572,8 @@ virtual void inverse_gate_kernel_to(const Matrix_real& precomputed_sincos, Matri
 virtual void inverse_gate_kernel_to(const Matrix_real_float& precomputed_sincos, Matrix_float& output);
 virtual void derivative_kernel_to(const Matrix_real& precomputed_sincos, int param_idx, Matrix& output);
 virtual void derivative_kernel_to(const Matrix_real_float& precomputed_sincos, int param_idx, Matrix_float& output);
+virtual void derivative_aux_kernel_to(const Matrix_real& precomputed_sincos, int param_idx, Matrix& output);
+virtual void derivative_aux_kernel_to(const Matrix_real_float& precomputed_sincos, int param_idx, Matrix_float& output);
 virtual Matrix derivative_aux_kernel(const Matrix_real& precomputed_sincos, int param_idx);
 virtual Matrix_float derivative_aux_kernel(const Matrix_real_float& precomputed_sincos, int param_idx);
 

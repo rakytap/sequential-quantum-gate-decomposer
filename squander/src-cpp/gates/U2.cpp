@@ -101,3 +101,83 @@ Matrix_float U2::derivative_kernel(const Matrix_real_float& precomputed_sincos, 
 
     return Matrix_float();
 }
+
+void U2::gate_kernel_to(const Matrix_real& precomputed_sincos, Matrix& output) {
+    const int lambda_offset = precomputed_sincos.stride;
+    u2_gate_kernel_from_trig_to<Matrix, double>(
+        output,
+        precomputed_sincos[0],
+        precomputed_sincos[1],
+        precomputed_sincos[lambda_offset + 0],
+        precomputed_sincos[lambda_offset + 1]
+    );
+}
+
+void U2::gate_kernel_to(const Matrix_real_float& precomputed_sincos, Matrix_float& output) {
+    const int lambda_offset = precomputed_sincos.stride;
+    u2_gate_kernel_from_trig_to<Matrix_float, float>(
+        output,
+        precomputed_sincos[0],
+        precomputed_sincos[1],
+        precomputed_sincos[lambda_offset + 0],
+        precomputed_sincos[lambda_offset + 1]
+    );
+}
+
+void U2::inverse_gate_kernel_to(const Matrix_real& precomputed_sincos, Matrix& output) {
+    const int lambda_offset = precomputed_sincos.stride;
+    u2_inverse_gate_kernel_from_trig_to<Matrix, double>(
+        output,
+        precomputed_sincos[0],
+        precomputed_sincos[1],
+        precomputed_sincos[lambda_offset + 0],
+        precomputed_sincos[lambda_offset + 1]
+    );
+}
+
+void U2::inverse_gate_kernel_to(const Matrix_real_float& precomputed_sincos, Matrix_float& output) {
+    const int lambda_offset = precomputed_sincos.stride;
+    u2_inverse_gate_kernel_from_trig_to<Matrix_float, float>(
+        output,
+        precomputed_sincos[0],
+        precomputed_sincos[1],
+        precomputed_sincos[lambda_offset + 0],
+        precomputed_sincos[lambda_offset + 1]
+    );
+}
+
+void U2::derivative_kernel_to(const Matrix_real& precomputed_sincos, int param_idx, Matrix& output) {
+    const int lambda_offset = precomputed_sincos.stride;
+    const double s_phi = precomputed_sincos[0];
+    const double c_phi = precomputed_sincos[1];
+    const double s_lambda = precomputed_sincos[lambda_offset + 0];
+    const double c_lambda = precomputed_sincos[lambda_offset + 1];
+
+    if (param_idx == 0) {
+        u2_derivative_kernel_phi_from_trig_to<Matrix, double>(output, s_phi, c_phi, s_lambda, c_lambda);
+        return;
+    }
+    if (param_idx == 1) {
+        u2_derivative_kernel_lambda_from_trig_to<Matrix, double>(output, s_phi, c_phi, s_lambda, c_lambda);
+        return;
+    }
+    output = Matrix();
+}
+
+void U2::derivative_kernel_to(const Matrix_real_float& precomputed_sincos, int param_idx, Matrix_float& output) {
+    const int lambda_offset = precomputed_sincos.stride;
+    const float s_phi = precomputed_sincos[0];
+    const float c_phi = precomputed_sincos[1];
+    const float s_lambda = precomputed_sincos[lambda_offset + 0];
+    const float c_lambda = precomputed_sincos[lambda_offset + 1];
+
+    if (param_idx == 0) {
+        u2_derivative_kernel_phi_from_trig_to<Matrix_float, float>(output, s_phi, c_phi, s_lambda, c_lambda);
+        return;
+    }
+    if (param_idx == 1) {
+        u2_derivative_kernel_lambda_from_trig_to<Matrix_float, float>(output, s_phi, c_phi, s_lambda, c_lambda);
+        return;
+    }
+    output = Matrix_float();
+}

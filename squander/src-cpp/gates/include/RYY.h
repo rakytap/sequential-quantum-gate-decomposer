@@ -60,6 +60,12 @@ Matrix inverse_gate_kernel(const Matrix_real& precomputed_sincos) override;
 Matrix_float inverse_gate_kernel(const Matrix_real_float& precomputed_sincos) override;
 Matrix derivative_kernel(const Matrix_real& precomputed_sincos, int param_idx) override;
 Matrix_float derivative_kernel(const Matrix_real_float& precomputed_sincos, int param_idx) override;
+void gate_kernel_to(const Matrix_real& precomputed_sincos, Matrix& output) override;
+void gate_kernel_to(const Matrix_real_float& precomputed_sincos, Matrix_float& output) override;
+void inverse_gate_kernel_to(const Matrix_real& precomputed_sincos, Matrix& output) override;
+void inverse_gate_kernel_to(const Matrix_real_float& precomputed_sincos, Matrix_float& output) override;
+void derivative_kernel_to(const Matrix_real& precomputed_sincos, int param_idx, Matrix& output) override;
+void derivative_kernel_to(const Matrix_real_float& precomputed_sincos, int param_idx, Matrix_float& output) override;
 
 /**
 @brief Call to create a clone of the present class

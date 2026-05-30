@@ -71,3 +71,35 @@ Matrix_float RX::derivative_kernel(const Matrix_real_float& precomputed_sincos, 
     const float c_theta = precomputed_sincos[theta_offset + 1];
     return rx_derivative_kernel_from_trig<Matrix_float, float>(s_theta, c_theta);
 }
+
+void RX::gate_kernel_to(const Matrix_real& precomputed_sincos, Matrix& output) {
+    rx_gate_kernel_from_trig_to<Matrix, double>(output, precomputed_sincos[0], precomputed_sincos[1]);
+}
+
+void RX::gate_kernel_to(const Matrix_real_float& precomputed_sincos, Matrix_float& output) {
+    rx_gate_kernel_from_trig_to<Matrix_float, float>(output, precomputed_sincos[0], precomputed_sincos[1]);
+}
+
+void RX::inverse_gate_kernel_to(const Matrix_real& precomputed_sincos, Matrix& output) {
+    rx_inverse_gate_kernel_from_trig_to<Matrix, double>(output, precomputed_sincos[0], precomputed_sincos[1]);
+}
+
+void RX::inverse_gate_kernel_to(const Matrix_real_float& precomputed_sincos, Matrix_float& output) {
+    rx_inverse_gate_kernel_from_trig_to<Matrix_float, float>(output, precomputed_sincos[0], precomputed_sincos[1]);
+}
+
+void RX::derivative_kernel_to(const Matrix_real& precomputed_sincos, int param_idx, Matrix& output) {
+    if (param_idx != 0) {
+        output = Matrix();
+        return;
+    }
+    rx_derivative_kernel_from_trig_to<Matrix, double>(output, precomputed_sincos[0], precomputed_sincos[1]);
+}
+
+void RX::derivative_kernel_to(const Matrix_real_float& precomputed_sincos, int param_idx, Matrix_float& output) {
+    if (param_idx != 0) {
+        output = Matrix_float();
+        return;
+    }
+    rx_derivative_kernel_from_trig_to<Matrix_float, float>(output, precomputed_sincos[0], precomputed_sincos[1]);
+}

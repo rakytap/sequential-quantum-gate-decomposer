@@ -35,3 +35,19 @@ Matrix SX::inverse_gate_kernel(const Matrix_real& /*parameters*/) {
 Matrix_float SX::inverse_gate_kernel(const Matrix_real_float& /*parameters*/) {
     return sxdg_gate_kernel<Matrix_float, float>();
 }
+
+void SX::gate_kernel_to(const Matrix_real& /*parameters*/, Matrix& output) {
+    sx_gate_kernel_to<Matrix, double>(output);
+}
+
+void SX::gate_kernel_to(const Matrix_real_float& /*parameters*/, Matrix_float& output) {
+    sx_gate_kernel_to<Matrix_float, float>(output);
+}
+
+void SX::inverse_gate_kernel_to(const Matrix_real& /*parameters*/, Matrix& output) {
+    sxdg_gate_kernel_to<Matrix, double>(output);
+}
+
+void SX::inverse_gate_kernel_to(const Matrix_real_float& /*parameters*/, Matrix_float& output) {
+    sxdg_gate_kernel_to<Matrix_float, float>(output);
+}

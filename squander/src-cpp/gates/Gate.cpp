@@ -46,11 +46,13 @@ namespace {
 struct GateKernelScratch {
     Matrix kernel;
     Matrix inverse_kernel;
+    Matrix aux_kernel;
 };
 
 struct GateKernelScratchFloat {
     Matrix_float kernel;
     Matrix_float inverse_kernel;
+    Matrix_float aux_kernel;
 };
 
 inline bool has_inplace_small_kernel(gate_type type) {
@@ -72,6 +74,11 @@ inline bool has_inplace_small_kernel(gate_type type) {
         case S_OPERATION:
         case SDG_OPERATION:
         case SXDG_OPERATION:
+        case CU_OPERATION:
+        case CROT_OPERATION:
+        case RXX_OPERATION:
+        case RYY_OPERATION:
+        case RZZ_OPERATION:
             return true;
         default:
             return false;
@@ -661,8 +668,14 @@ Gate::apply_derivative_to_precomputed(const Matrix_real& precomputed_sincos, Mat
             ReentrantScratchLease<GateKernelScratch> scratch_lease(scratch_tls, depth_tls);
             GateKernelScratch& scratch = scratch_lease.get();
             derivative_kernel_to(precomputed_sincos, param_idx, scratch.kernel);
+            derivative_aux_kernel_to(precomputed_sincos, param_idx, scratch.aux_kernel);
             input.copy_to(result);
-            apply_kernel_to(scratch.kernel, result, true, parallel);
+            if (scratch.aux_kernel.size() > 0) {
+                apply_kernel_to(scratch.kernel, result, true, parallel, &scratch.aux_kernel);
+            }
+            else {
+                apply_kernel_to(scratch.kernel, result, true, parallel);
+            }
             return;
         }
 
@@ -729,8 +742,14 @@ Gate::apply_derivative_to_precomputed(const Matrix_real_float& precomputed_sinco
             ReentrantScratchLease<GateKernelScratchFloat> scratch_lease(scratch_tls, depth_tls);
             GateKernelScratchFloat& scratch = scratch_lease.get();
             derivative_kernel_to(precomputed_sincos, param_idx, scratch.kernel);
+            derivative_aux_kernel_to(precomputed_sincos, param_idx, scratch.aux_kernel);
             input.copy_to(result);
-            apply_kernel_to(scratch.kernel, result, true, parallel);
+            if (scratch.aux_kernel.size() > 0) {
+                apply_kernel_to(scratch.kernel, result, true, parallel, &scratch.aux_kernel);
+            }
+            else {
+                apply_kernel_to(scratch.kernel, result, true, parallel);
+            }
             return;
         }
 
@@ -957,6 +976,17 @@ Gate::apply_from_right( Matrix_real_float& parameter_mtx, Matrix_float& input ) 
 void
 Gate::apply_from_right_inner( Matrix_real& parameter_mtx, const Matrix_real& precomputed_sincos, Matrix& input ) {
 
+    if (has_inplace_small_kernel(type)) {
+        static tbb::enumerable_thread_specific<std::vector<GateKernelScratch>> scratch_tls;
+        static tbb::enumerable_thread_specific<int> depth_tls([](){ return 0; });
+        ReentrantScratchLease<GateKernelScratch> scratch_lease(scratch_tls, depth_tls);
+        GateKernelScratch& scratch = scratch_lease.get();
+        gate_kernel_to(precomputed_sincos, scratch.kernel);
+        inverse_gate_kernel_to(precomputed_sincos, scratch.inverse_kernel);
+        apply_kernel_from_right(scratch.kernel, input, &scratch.inverse_kernel);
+        return;
+    }
+
     Matrix kernel = gate_kernel(precomputed_sincos);
     Matrix inv_kernel = inverse_gate_kernel(precomputed_sincos);
     apply_kernel_from_right(kernel, input, &inv_kernel);
@@ -965,6 +995,17 @@ Gate::apply_from_right_inner( Matrix_real& parameter_mtx, const Matrix_real& pre
 
 void
 Gate::apply_from_right_inner( Matrix_real_float& parameter_mtx, const Matrix_real_float& precomputed_sincos, Matrix_float& input ) {
+
+    if (has_inplace_small_kernel(type)) {
+        static tbb::enumerable_thread_specific<std::vector<GateKernelScratchFloat>> scratch_tls;
+        static tbb::enumerable_thread_specific<int> depth_tls([](){ return 0; });
+        ReentrantScratchLease<GateKernelScratchFloat> scratch_lease(scratch_tls, depth_tls);
+        GateKernelScratchFloat& scratch = scratch_lease.get();
+        gate_kernel_to(precomputed_sincos, scratch.kernel);
+        inverse_gate_kernel_to(precomputed_sincos, scratch.inverse_kernel);
+        apply_kernel_from_right(scratch.kernel, input, &scratch.inverse_kernel);
+        return;
+    }
 
     Matrix_float kernel = gate_kernel(precomputed_sincos);
     Matrix_float inv_kernel = inverse_gate_kernel(precomputed_sincos);
@@ -2166,6 +2207,18 @@ Gate::derivative_kernel_to(const Matrix_real& precomputed_sincos, int param_idx,
 void
 Gate::derivative_kernel_to(const Matrix_real_float& precomputed_sincos, int param_idx, Matrix_float& output) {
     output = derivative_kernel(precomputed_sincos, param_idx);
+}
+
+
+void
+Gate::derivative_aux_kernel_to(const Matrix_real& precomputed_sincos, int param_idx, Matrix& output) {
+    output = derivative_aux_kernel(precomputed_sincos, param_idx);
+}
+
+
+void
+Gate::derivative_aux_kernel_to(const Matrix_real_float& precomputed_sincos, int param_idx, Matrix_float& output) {
+    output = derivative_aux_kernel(precomputed_sincos, param_idx);
 }
 
 /**
