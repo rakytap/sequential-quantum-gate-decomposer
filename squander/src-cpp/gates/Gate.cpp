@@ -1791,13 +1791,6 @@ Gate::apply_kernel_to(Matrix_float& u3_1qbit, Matrix_float& input, bool deriv, i
         const bool has_any_control = (control_qbit >= 0) || !control_qbits.empty();
         const bool is_state_vector = (input.cols == 1);
         const int involved_qbit_num = static_cast<int>(involved_qbits.size());
-        const bool has_full_matrix = matrix_alloc.rows == matrix_size && matrix_alloc.cols == matrix_size;
-        const bool has_local_matrix = involved_qbit_num > 0
-            && matrix_alloc.rows == Power_of_2(involved_qbit_num)
-            && matrix_alloc.cols == Power_of_2(involved_qbit_num);
-        const bool can_use_large_kernel = !has_any_control
-            && ((is_state_vector && involved_qbit_num >= 2 && involved_qbit_num <= 5)
-                || (!is_state_vector && involved_qbit_num == 2));
         Matrix_float matrix_alloc32;
         if (matrix_alloc_float_valid) {
             matrix_alloc32 = matrix_alloc_float;
@@ -1805,6 +1798,13 @@ Gate::apply_kernel_to(Matrix_float& u3_1qbit, Matrix_float& input, bool deriv, i
         else {
             matrix_alloc32 = matrix_alloc.to_float32();
         }
+        const bool has_full_matrix = matrix_alloc32.rows == matrix_size && matrix_alloc32.cols == matrix_size;
+        const bool has_local_matrix = involved_qbit_num > 0
+            && matrix_alloc32.rows == Power_of_2(involved_qbit_num)
+            && matrix_alloc32.cols == Power_of_2(involved_qbit_num);
+        const bool can_use_large_kernel = !has_any_control
+            && ((is_state_vector && involved_qbit_num >= 2 && involved_qbit_num <= 5)
+                || (!is_state_vector && involved_qbit_num == 2));
 
         if (has_full_matrix) {
             if (can_use_large_kernel) {

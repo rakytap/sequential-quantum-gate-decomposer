@@ -325,6 +325,128 @@ static void reset_identity(Matrix_float& mtx, int matrix_size) {
         mtx[idx*mtx.stride + idx].real = 1.0f;
     }
 }
+
+static std::vector<int> all_qubits(int qbit_num) {
+    std::vector<int> qubits(static_cast<size_t>(qbit_num));
+    for (int idx = 0; idx < qbit_num; ++idx) {
+        qubits[static_cast<size_t>(idx)] = idx;
+    }
+    return qubits;
+}
+
+static void build_suffix_gates(
+    const std::vector<Gate*>& gates,
+    int qbit_num,
+    int matrix_size,
+    Matrix_real& parameters_mtx_in,
+    const Matrix_real& precomputed_sincos,
+    std::vector<Gate>& suffix_gates) {
+
+    suffix_gates.clear();
+    suffix_gates.reserve(gates.size());
+    for (size_t idx = 0; idx < gates.size(); ++idx) {
+        suffix_gates.emplace_back(qbit_num);
+    }
+
+    if (gates.size() < 2) {
+        return;
+    }
+
+    const std::vector<int> targets = all_qubits(qbit_num);
+    Matrix suffix;
+    reset_identity(suffix, matrix_size);
+
+    for (int idx = static_cast<int>(gates.size()) - 1; idx >= 0; --idx) {
+        if (static_cast<size_t>(idx) + 1 < gates.size()) {
+            Matrix suffix_after_current;
+            suffix.copy_to(suffix_after_current);
+            Gate& suffix_gate = suffix_gates[static_cast<size_t>(idx)];
+            suffix_gate.set_target_qbits(targets);
+            suffix_gate.set_matrix(suffix_after_current);
+        }
+
+        Gate* operation = gates[static_cast<size_t>(idx)];
+        const int op_param_num = operation->get_parameter_num();
+        const int op_param_start_idx = operation->get_parameter_start_idx();
+        Matrix_real parameters_mtx(
+            parameters_mtx_in.get_data() + op_param_start_idx,
+            1,
+            op_param_num
+        );
+        Matrix_real precomputed_sincos_loc(
+            precomputed_sincos.get_data() + 2 * op_param_start_idx,
+            op_param_num,
+            2
+        );
+
+        if (op_param_num == 0 && operation->get_type() != BLOCK_OPERATION) {
+            operation->apply_from_right(suffix);
+        }
+        else if (operation->get_type() == ADAPTIVE_OPERATION) {
+            operation->apply_from_right(parameters_mtx, suffix);
+        }
+        else {
+            operation->apply_from_right_inner(parameters_mtx, precomputed_sincos_loc, suffix);
+        }
+    }
+}
+
+static void build_suffix_gates(
+    const std::vector<Gate*>& gates,
+    int qbit_num,
+    int matrix_size,
+    Matrix_real_float& parameters_mtx_in,
+    const Matrix_real_float& precomputed_sincos,
+    std::vector<Gate>& suffix_gates) {
+
+    suffix_gates.clear();
+    suffix_gates.reserve(gates.size());
+    for (size_t idx = 0; idx < gates.size(); ++idx) {
+        suffix_gates.emplace_back(qbit_num);
+    }
+
+    if (gates.size() < 2) {
+        return;
+    }
+
+    const std::vector<int> targets = all_qubits(qbit_num);
+    Matrix_float suffix;
+    reset_identity(suffix, matrix_size);
+
+    for (int idx = static_cast<int>(gates.size()) - 1; idx >= 0; --idx) {
+        if (static_cast<size_t>(idx) + 1 < gates.size()) {
+            Matrix_float suffix_after_current;
+            suffix.copy_to(suffix_after_current);
+            Gate& suffix_gate = suffix_gates[static_cast<size_t>(idx)];
+            suffix_gate.set_target_qbits(targets);
+            suffix_gate.set_matrix(suffix_after_current);
+        }
+
+        Gate* operation = gates[static_cast<size_t>(idx)];
+        const int op_param_num = operation->get_parameter_num();
+        const int op_param_start_idx = operation->get_parameter_start_idx();
+        Matrix_real_float parameters_mtx(
+            parameters_mtx_in.get_data() + op_param_start_idx,
+            1,
+            op_param_num
+        );
+        Matrix_real_float precomputed_sincos_loc(
+            precomputed_sincos.get_data() + 2 * op_param_start_idx,
+            op_param_num,
+            2
+        );
+
+        if (op_param_num == 0 && operation->get_type() != BLOCK_OPERATION) {
+            operation->apply_from_right(suffix);
+        }
+        else if (operation->get_type() == ADAPTIVE_OPERATION) {
+            operation->apply_from_right(parameters_mtx, suffix);
+        }
+        else {
+            operation->apply_from_right_inner(parameters_mtx, precomputed_sincos_loc, suffix);
+        }
+    }
+}
 } // anonymous namespace
 
 
@@ -798,12 +920,45 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input, i
         throw err;
     }
 
-    // deriv_idx ... the index of the gate block for which the gradient is to be calculated
+    Matrix_real precomputed_sincos = precompute_block_sincos(parameters_mtx_in);
+    std::vector<Gate> suffix_gates;
+    build_suffix_gates(gates, qbit_num, matrix_size, parameters_mtx_in, precomputed_sincos, suffix_gates);
+
+    std::vector<Matrix> forward_inputs(gates.size());
+    if (!gates.empty()) {
+        input.copy_to(forward_inputs[0]);
+        for (size_t idx = 0; idx + 1 < gates.size(); ++idx) {
+            forward_inputs[idx].copy_to(forward_inputs[idx + 1]);
+            Gate* operation = gates[idx];
+            const int op_param_num = operation->get_parameter_num();
+            const int op_param_start_idx = operation->get_parameter_start_idx();
+            Matrix_real parameters_mtx(
+                parameters_mtx_in.get_data() + op_param_start_idx,
+                1,
+                op_param_num
+            );
+            Matrix_real precomputed_sincos_loc(
+                precomputed_sincos.get_data() + 2 * op_param_start_idx,
+                op_param_num,
+                2
+            );
+
+            if (op_param_num == 0) {
+                operation->apply_to(forward_inputs[idx + 1], parallel);
+            }
+            else if (operation->get_type() == ADAPTIVE_OPERATION) {
+                operation->apply_to(parameters_mtx, forward_inputs[idx + 1], parallel);
+            }
+            else {
+                operation->apply_to_inner(parameters_mtx, precomputed_sincos_loc, forward_inputs[idx + 1], parallel);
+            }
+        }
+    }
 
     auto apply_derivative_for_gate = [&](size_t deriv_idx) {
         Gate* gate_deriv = gates[deriv_idx];            
 
-        // for constant gate no gardient component is calculated
+        // for constant gate no gradient component is calculated
         if ( gate_deriv->get_parameter_num() == 0 ) {
             return;
         }
@@ -817,46 +972,36 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input, i
             input_loc_reusable.resize(derivative_depth + 1);
         }
         Matrix& input_loc = input_loc_reusable[derivative_depth];
-        input.copy_to(input_loc);
+        forward_inputs[deriv_idx].copy_to(input_loc);
 
         std::vector<Matrix> grad_loc;
         grad_loc.reserve(parameter_num);
 
         derivative_depth++;
-        for( size_t idx=0; idx<gates.size(); idx++) {            
+        Gate* operation = gates[deriv_idx];
+        const int op_param_num = operation->get_parameter_num();
+        const int op_param_start_idx = operation->get_parameter_start_idx();
+        Matrix_real parameters_mtx(parameters_mtx_in.get_data() + op_param_start_idx, 1, op_param_num);
 
-            Gate* operation = gates[idx];
-                
-                
-            Matrix_real parameters_mtx(parameters_mtx_in.get_data() + operation->get_parameter_start_idx(), 1, operation->get_parameter_num());
+        if (operation->get_type() == ADAPTIVE_OPERATION) {
+            grad_loc = operation->apply_derivate_to( parameters_mtx, input_loc, parallel );
+        }
+        else {
+            operation->apply_derivate_to( parameters_mtx, input_loc, parallel, grad_loc );
+        }
 
-            if ( operation->get_parameter_num() == 0 ) {
-                
-                if( idx < deriv_idx ) {
-                    operation->apply_to( input_loc, parallel );    
-                }
-                else {
-                    operation->apply_to_list(grad_loc, parallel );
-                }
-                    
+        if (deriv_idx + 1 < gates.size()) {
+            Gate& suffix_gate = suffix_gates[deriv_idx];
+            if (parallel == 0) {
+                suffix_gate.apply_to_list(grad_loc, parallel);
             }
-            else  {
-                // Gates such as U1, U2, and U3 fall here.
-                if( idx < deriv_idx ) {
-                    operation->apply_to( parameters_mtx, input_loc, parallel );    
-                }
-                else if ( idx == deriv_idx ) {
-                    if (operation->get_type() == ADAPTIVE_OPERATION) {
-                        grad_loc = operation->apply_derivate_to( parameters_mtx, input_loc, parallel );
-                    }
-                    else {
-                        operation->apply_derivate_to( parameters_mtx, input_loc, parallel, grad_loc );
-                    }
-                }
-                else {
-                    operation->apply_to_list(parameters_mtx, grad_loc, parallel );
-                }                       
-                    
+            else {
+                tbb::parallel_for(tbb::blocked_range<int>(0, static_cast<int>(grad_loc.size()), 1),
+                    [&](tbb::blocked_range<int> r) {
+                        for (int grad_idx = r.begin(); grad_idx < r.end(); ++grad_idx) {
+                            suffix_gate.apply_to(grad_loc[static_cast<size_t>(grad_idx)], parallel);
+                        }
+                    });
             }
         }
         derivative_depth--;
@@ -921,12 +1066,45 @@ Gates_block::apply_derivate_to( Matrix_real_float& parameters_mtx_in, Matrix_flo
         throw err;
     }
 
-    // deriv_idx ... the index of the gate block for which the gradient is to be calculated
+    Matrix_real_float precomputed_sincos = precompute_block_sincos(parameters_mtx_in);
+    std::vector<Gate> suffix_gates;
+    build_suffix_gates(gates, qbit_num, matrix_size, parameters_mtx_in, precomputed_sincos, suffix_gates);
+
+    std::vector<Matrix_float> forward_inputs(gates.size());
+    if (!gates.empty()) {
+        input.copy_to(forward_inputs[0]);
+        for (size_t idx = 0; idx + 1 < gates.size(); ++idx) {
+            forward_inputs[idx].copy_to(forward_inputs[idx + 1]);
+            Gate* operation = gates[idx];
+            const int op_param_num = operation->get_parameter_num();
+            const int op_param_start_idx = operation->get_parameter_start_idx();
+            Matrix_real_float parameters_mtx(
+                parameters_mtx_in.get_data() + op_param_start_idx,
+                1,
+                op_param_num
+            );
+            Matrix_real_float precomputed_sincos_loc(
+                precomputed_sincos.get_data() + 2 * op_param_start_idx,
+                op_param_num,
+                2
+            );
+
+            if (op_param_num == 0) {
+                operation->apply_to(forward_inputs[idx + 1], parallel);
+            }
+            else if (operation->get_type() == ADAPTIVE_OPERATION) {
+                operation->apply_to(parameters_mtx, forward_inputs[idx + 1], parallel);
+            }
+            else {
+                operation->apply_to_inner(parameters_mtx, precomputed_sincos_loc, forward_inputs[idx + 1], parallel);
+            }
+        }
+    }
 
     auto apply_derivative_for_gate = [&](size_t deriv_idx) {
         Gate* gate_deriv = gates[deriv_idx];            
 
-        // for constant gate no gardient component is calculated
+        // for constant gate no gradient component is calculated
         if ( gate_deriv->get_parameter_num() == 0 ) {
             return;
         }
@@ -940,46 +1118,36 @@ Gates_block::apply_derivate_to( Matrix_real_float& parameters_mtx_in, Matrix_flo
             input_loc_reusable.resize(derivative_depth + 1);
         }
         Matrix_float& input_loc = input_loc_reusable[derivative_depth];
-        input.copy_to(input_loc);
+        forward_inputs[deriv_idx].copy_to(input_loc);
 
         std::vector<Matrix_float> grad_loc;
         grad_loc.reserve(parameter_num);
 
         derivative_depth++;
-        for( size_t idx=0; idx<gates.size(); idx++) {            
+        Gate* operation = gates[deriv_idx];
+        const int op_param_num = operation->get_parameter_num();
+        const int op_param_start_idx = operation->get_parameter_start_idx();
+        Matrix_real_float parameters_mtx(parameters_mtx_in.get_data() + op_param_start_idx, 1, op_param_num);
 
-            Gate* operation = gates[idx];
-                
-                
-            Matrix_real_float parameters_mtx(parameters_mtx_in.get_data() + operation->get_parameter_start_idx(), 1, operation->get_parameter_num());
+        if (operation->get_type() == ADAPTIVE_OPERATION) {
+            grad_loc = operation->apply_derivate_to( parameters_mtx, input_loc, parallel );
+        }
+        else {
+            operation->apply_derivate_to( parameters_mtx, input_loc, parallel, grad_loc );
+        }
 
-            if ( operation->get_parameter_num() == 0 ) {
-                
-                if( idx < deriv_idx ) {
-                    operation->apply_to( input_loc, parallel );    
-                }
-                else {
-                    operation->apply_to_list(grad_loc, parallel );
-                }
-                    
+        if (deriv_idx + 1 < gates.size()) {
+            Gate& suffix_gate = suffix_gates[deriv_idx];
+            if (parallel == 0) {
+                suffix_gate.apply_to_list(grad_loc, parallel);
             }
-            else  {
-                // Gates such as U1, U2, and U3 fall here.
-                if( idx < deriv_idx ) {
-                    operation->apply_to( parameters_mtx, input_loc, parallel );    
-                }
-                else if ( idx == deriv_idx ) {
-                    if (operation->get_type() == ADAPTIVE_OPERATION) {
-                        grad_loc = operation->apply_derivate_to( parameters_mtx, input_loc, parallel );
-                    }
-                    else {
-                        operation->apply_derivate_to( parameters_mtx, input_loc, parallel, grad_loc );
-                    }
-                }
-                else {
-                    operation->apply_to_list(parameters_mtx, grad_loc, parallel );
-                }                       
-                    
+            else {
+                tbb::parallel_for(tbb::blocked_range<int>(0, static_cast<int>(grad_loc.size()), 1),
+                    [&](tbb::blocked_range<int> r) {
+                        for (int grad_idx = r.begin(); grad_idx < r.end(); ++grad_idx) {
+                            suffix_gate.apply_to(grad_loc[static_cast<size_t>(grad_idx)], parallel);
+                        }
+                    });
             }
         }
         derivative_depth--;
