@@ -806,17 +806,19 @@ Optimization_Interface::optimization_problem_batched_DFE( std::vector<Matrix_rea
     increment_num_iters(mpi_gateSetNum);
         
 
-    lock_lib();
-    calcqgdKernelDFE( Umtx.rows, Umtx.cols, DFEgates+mpi_starting_gateSetIdx*gatesNum, gatesNum, mpi_gateSetNum, trace_offset, mpi_trace_DFE_mtx.get_data() );
-    unlock_lib();
+    {
+        DFE_Lib_Read_Lock dfe_lock;
+        calcqgdKernelDFE( Umtx.rows, Umtx.cols, DFEgates+mpi_starting_gateSetIdx*gatesNum, gatesNum, mpi_gateSetNum, trace_offset, mpi_trace_DFE_mtx.get_data() );
+    }
 
     int bytes = mpi_trace_DFE_mtx.size()*sizeof(double);
     MPI_Allgather(mpi_trace_DFE_mtx.get_data(), bytes, MPI_BYTE, trace_DFE_mtx.get_data(), bytes, MPI_BYTE, MPI_COMM_WORLD);
 
 #else
-    lock_lib();
-    calcqgdKernelDFE( Umtx.rows, Umtx.cols, DFEgates, gatesNum, gateSetNum, trace_offset, trace_DFE_mtx.get_data() );
-    unlock_lib();    
+    {
+        DFE_Lib_Read_Lock dfe_lock;
+        calcqgdKernelDFE( Umtx.rows, Umtx.cols, DFEgates, gatesNum, gateSetNum, trace_offset, trace_DFE_mtx.get_data() );
+    }
                                                                       
 #endif  // __MPI__
       
@@ -1275,9 +1277,10 @@ if ( Umtx.cols == Umtx.rows && instance->qbit_num >= 5 && instance->get_accelera
     
     instance->increment_num_iters(mpi_gateSetNum);
 
-    lock_lib();
-    calcqgdKernelDFE( Umtx_loc.rows, Umtx_loc.cols, DFEgates+mpi_starting_gateSetIdx*gatesNum, gatesNum, mpi_gateSetNum, trace_offset_loc, mpi_trace_DFE_mtx.get_data() );
-    unlock_lib();
+    {
+        DFE_Lib_Read_Lock dfe_lock;
+        calcqgdKernelDFE( Umtx_loc.rows, Umtx_loc.cols, DFEgates+mpi_starting_gateSetIdx*gatesNum, gatesNum, mpi_gateSetNum, trace_offset_loc, mpi_trace_DFE_mtx.get_data() );
+    }
 
     int bytes = mpi_trace_DFE_mtx.size()*sizeof(double);
     MPI_Allgather(mpi_trace_DFE_mtx.get_data(), bytes, MPI_BYTE, trace_DFE_mtx.get_data(), bytes, MPI_BYTE, MPI_COMM_WORLD);
@@ -1286,9 +1289,10 @@ if ( Umtx.cols == Umtx.rows && instance->qbit_num >= 5 && instance->get_accelera
 
     instance->increment_num_iters(gateSetNum);
 
-    lock_lib();
-    calcqgdKernelDFE( Umtx_loc.rows, Umtx_loc.cols, DFEgates, gatesNum, gateSetNum, trace_offset_loc, trace_DFE_mtx.get_data() );
-    unlock_lib();
+    {
+        DFE_Lib_Read_Lock dfe_lock;
+        calcqgdKernelDFE( Umtx_loc.rows, Umtx_loc.cols, DFEgates, gatesNum, gateSetNum, trace_offset_loc, trace_DFE_mtx.get_data() );
+    }
 
 #endif  
 
@@ -1793,17 +1797,7 @@ Optimization_Interface::set_trace_offset(int trace_offset_in) {
 void 
 Optimization_Interface::upload_Umtx_to_DFE() {
     if (Umtx.cols == Umtx.rows) {
-        lock_lib();
-
-        if ( get_initialize_id() != id ) {
-            // initialize DFE library
-            init_dfe_lib( accelerator_num, qbit_num, id );
-        }
-
-        uploadMatrix2DFE( Umtx );
-
-
-        unlock_lib();
+        init_dfe_lib_and_upload(accelerator_num, qbit_num, id, Umtx);
     }
 
 }
