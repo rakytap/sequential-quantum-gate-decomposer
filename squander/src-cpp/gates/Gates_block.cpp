@@ -773,29 +773,22 @@ Gates_block::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
 void
 Gates_block::apply_from_right_inner( Matrix_real& parameters_mtx, const Matrix_real& precomputed_sincos, Matrix& input ) {
 
-    // determine the number of parameters
-    int parameters_num_total = 0;  
-    for (size_t idx=0; idx<gates.size(); idx++) {
-
-        // The current gate
-        Gate* gate = gates[idx];
-        parameters_num_total = parameters_num_total + gate->get_parameter_num();
-
-    }
-
-
-    double* parameters = parameters_mtx.get_data() + parameters_num_total;
-
-
-
-    for( int idx=0; idx<(int)gates.size(); idx++) {
+    for (int idx = static_cast<int>(gates.size()) - 1; idx >= 0; --idx) {
 
         Gate* operation = gates[idx];
         const int op_param_num = operation->get_parameter_num();
-        const int param_offset = static_cast<int>((parameters - op_param_num) - parameters_mtx.get_data());
+        const int op_param_start_idx = operation->get_parameter_start_idx();
 
-        Matrix_real parameters_mtx_loc(parameters - op_param_num, 1, op_param_num);
-        Matrix_real precomputed_sincos_loc(precomputed_sincos.get_data() + 2 * param_offset, op_param_num, 2);
+        Matrix_real parameters_mtx_loc(
+            parameters_mtx.get_data() + op_param_start_idx,
+            1,
+            op_param_num
+        );
+        Matrix_real precomputed_sincos_loc(
+            precomputed_sincos.get_data() + 2 * op_param_start_idx,
+            op_param_num,
+            2
+        );
 
         if (parameters_mtx_loc.size() == 0 && operation->get_type() != BLOCK_OPERATION) {
             operation->apply_from_right(input);
@@ -808,8 +801,6 @@ Gates_block::apply_from_right_inner( Matrix_real& parameters_mtx, const Matrix_r
                 operation->apply_from_right_inner(parameters_mtx_loc, precomputed_sincos_loc, input);
             }
         }
-
-        parameters = parameters - op_param_num;
 
 #ifdef DEBUG
         if (input.isnan()) { 
@@ -836,28 +827,20 @@ Gates_block::apply_from_right( Matrix_real_float& parameters_mtx, Matrix_float& 
 void
 Gates_block::apply_from_right_inner( Matrix_real_float& parameters_mtx, const Matrix_real_float& precomputed_sincos, Matrix_float& input ) {
 
-    int parameters_num_total = 0;
-    for (size_t idx = 0; idx < gates.size(); idx++) {
-        Gate* gate = gates[idx];
-        parameters_num_total += gate->get_parameter_num();
-    }
-
-    float* parameters = parameters_mtx.get_data() + parameters_num_total;
-
-    for (int idx = 0; idx < (int)gates.size(); idx++) {
+    for (int idx = static_cast<int>(gates.size()) - 1; idx >= 0; --idx) {
 
         Gate* operation = gates[idx];
         const int op_param_num = operation->get_parameter_num();
-        const int param_offset = static_cast<int>((parameters - op_param_num) - parameters_mtx.get_data());
+        const int op_param_start_idx = operation->get_parameter_start_idx();
 
         Matrix_real_float parameters_mtx_loc(
-            parameters - op_param_num,
+            parameters_mtx.get_data() + op_param_start_idx,
             1,
             op_param_num
         );
 
         Matrix_real_float precomputed_sincos_loc(
-            precomputed_sincos.get_data() + 2 * param_offset,
+            precomputed_sincos.get_data() + 2 * op_param_start_idx,
             op_param_num,
             2
         );
@@ -873,8 +856,6 @@ Gates_block::apply_from_right_inner( Matrix_real_float& parameters_mtx, const Ma
                 operation->apply_from_right_inner(parameters_mtx_loc, precomputed_sincos_loc, input);
             }
         }
-
-        parameters = parameters - op_param_num;
 
 #ifdef DEBUG
         if (input.isnan()) {
