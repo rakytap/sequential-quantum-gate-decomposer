@@ -4072,6 +4072,189 @@ void apply_large_kernel_to_input_AVX_TBB32(Matrix_float& unitary, Matrix_float& 
     }
 }
 
+inline __m256* construct_mv_xy_vectors32(const Matrix_float& gate_kernel_unitary, const int& matrix_size) {
+    __m256* mv_xy = (__m256*) _mm_malloc(sizeof(__m256) * matrix_size * matrix_size, 32);
+
+    for (int rdx = 0; rdx < matrix_size; ++rdx) {
+        for (int cdx = 0; cdx < matrix_size; cdx += 4) {
+            mv_xy[rdx * matrix_size + cdx] = _mm256_set_ps(
+                -gate_kernel_unitary[matrix_size * rdx + cdx + 3].imag,
+                gate_kernel_unitary[matrix_size * rdx + cdx + 3].real,
+                -gate_kernel_unitary[matrix_size * rdx + cdx + 2].imag,
+                gate_kernel_unitary[matrix_size * rdx + cdx + 2].real,
+                -gate_kernel_unitary[matrix_size * rdx + cdx + 1].imag,
+                gate_kernel_unitary[matrix_size * rdx + cdx + 1].real,
+                -gate_kernel_unitary[matrix_size * rdx + cdx].imag,
+                gate_kernel_unitary[matrix_size * rdx + cdx].real
+            );
+
+            mv_xy[rdx * matrix_size + cdx + 1] = _mm256_set_ps(
+                gate_kernel_unitary[matrix_size * rdx + cdx + 3].real,
+                gate_kernel_unitary[matrix_size * rdx + cdx + 3].imag,
+                gate_kernel_unitary[matrix_size * rdx + cdx + 2].real,
+                gate_kernel_unitary[matrix_size * rdx + cdx + 2].imag,
+                gate_kernel_unitary[matrix_size * rdx + cdx + 1].real,
+                gate_kernel_unitary[matrix_size * rdx + cdx + 1].imag,
+                gate_kernel_unitary[matrix_size * rdx + cdx].real,
+                gate_kernel_unitary[matrix_size * rdx + cdx].imag
+            );
+        }
+    }
+
+    return mv_xy;
+}
+
+inline void complex_prod_AVX32(const __m256* mv_xy, int rdx, int cdx, const std::vector<int>& indices, const Matrix_float& input, int col, __m256& result) {
+    const int block_size = (int)indices.size();
+    const float* data_ptr = (const float*)input.get_data();
+    const int stride = input.stride;
+
+    const int idx0 = indices[cdx] * stride + col;
+    const int idx1 = indices[cdx + 1] * stride + col;
+    const int idx2 = indices[cdx + 2] * stride + col;
+    const int idx3 = indices[cdx + 3] * stride + col;
+
+    const __m256 data = _mm256_set_ps(
+        data_ptr[2 * idx3 + 1],
+        data_ptr[2 * idx3 + 0],
+        data_ptr[2 * idx2 + 1],
+        data_ptr[2 * idx2 + 0],
+        data_ptr[2 * idx1 + 1],
+        data_ptr[2 * idx1 + 0],
+        data_ptr[2 * idx0 + 1],
+        data_ptr[2 * idx0 + 0]
+    );
+
+    const __m256 mv_x0 = mv_xy[block_size * rdx + cdx];
+    const __m256 mv_x1 = mv_xy[block_size * rdx + cdx + 1];
+    result = _mm256_add_ps(result, _mm256_hadd_ps(_mm256_mul_ps(data, mv_x0), _mm256_mul_ps(data, mv_x1)));
+}
+
+template<int n>
+inline void construct_mv_xy_vectors32_fixed(const Matrix_float& gate_kernel_unitary, __m256* mv_xy) {
+    constexpr int block_size = 1 << n;
+
+    for (int rdx = 0; rdx < block_size; ++rdx) {
+        for (int cdx = 0; cdx < block_size; cdx += 4) {
+            mv_xy[rdx * block_size + cdx] = _mm256_set_ps(
+                -gate_kernel_unitary[block_size * rdx + cdx + 3].imag,
+                gate_kernel_unitary[block_size * rdx + cdx + 3].real,
+                -gate_kernel_unitary[block_size * rdx + cdx + 2].imag,
+                gate_kernel_unitary[block_size * rdx + cdx + 2].real,
+                -gate_kernel_unitary[block_size * rdx + cdx + 1].imag,
+                gate_kernel_unitary[block_size * rdx + cdx + 1].real,
+                -gate_kernel_unitary[block_size * rdx + cdx].imag,
+                gate_kernel_unitary[block_size * rdx + cdx].real
+            );
+
+            mv_xy[rdx * block_size + cdx + 1] = _mm256_set_ps(
+                gate_kernel_unitary[block_size * rdx + cdx + 3].real,
+                gate_kernel_unitary[block_size * rdx + cdx + 3].imag,
+                gate_kernel_unitary[block_size * rdx + cdx + 2].real,
+                gate_kernel_unitary[block_size * rdx + cdx + 2].imag,
+                gate_kernel_unitary[block_size * rdx + cdx + 1].real,
+                gate_kernel_unitary[block_size * rdx + cdx + 1].imag,
+                gate_kernel_unitary[block_size * rdx + cdx].real,
+                gate_kernel_unitary[block_size * rdx + cdx].imag
+            );
+        }
+    }
+}
+
+template<int n>
+inline void complex_prod_AVX32_fixed(const __m256* mv_xy, int rdx, int cdx, const int* indices, const Matrix_float& input, int col, __m256& result) {
+    constexpr int block_size = 1 << n;
+    const float* data_ptr = (const float*)input.get_data();
+    const int stride = input.stride;
+
+    const int idx0 = indices[cdx] * stride + col;
+    const int idx1 = indices[cdx + 1] * stride + col;
+    const int idx2 = indices[cdx + 2] * stride + col;
+    const int idx3 = indices[cdx + 3] * stride + col;
+
+    const __m256 data = _mm256_set_ps(
+        data_ptr[2 * idx3 + 1],
+        data_ptr[2 * idx3 + 0],
+        data_ptr[2 * idx2 + 1],
+        data_ptr[2 * idx2 + 0],
+        data_ptr[2 * idx1 + 1],
+        data_ptr[2 * idx1 + 0],
+        data_ptr[2 * idx0 + 1],
+        data_ptr[2 * idx0 + 0]
+    );
+
+    const __m256 mv_x0 = mv_xy[block_size * rdx + cdx];
+    const __m256 mv_x1 = mv_xy[block_size * rdx + cdx + 1];
+    result = _mm256_add_ps(result, _mm256_hadd_ps(_mm256_mul_ps(data, mv_x0), _mm256_mul_ps(data, mv_x1)));
+}
+
+template<int n>
+void apply_fixed_qbit_unitary_AVX32(Matrix_float& gate_kernel_unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size) {
+    constexpr int block_size = 1 << n;
+    const int qubit_num = (int) std::log2(matrix_size);
+    const int num_blocks = matrix_size >> n;
+    std::sort(involved_qbits.begin(), involved_qbits.end());
+
+    int non_targets[64];
+    int non_target_count = 0;
+    for (int q = 0; q < qubit_num; ++q) {
+        bool is_target = false;
+        for (int target : involved_qbits) {
+            is_target = is_target || (q == target);
+        }
+        if (!is_target) {
+            non_targets[non_target_count++] = q;
+        }
+    }
+
+    int block_pattern[block_size];
+    for (int k = 0; k < block_size; ++k) {
+        int idx = 0;
+        for (int bit = 0; bit < n; ++bit) {
+            if (k & (1 << bit)) {
+                idx |= (1 << involved_qbits[bit]);
+            }
+        }
+        block_pattern[k] = idx;
+    }
+
+    int indices[block_size];
+    QGD_Complex8 out[block_size];
+    __m256 mv_xy[block_size * block_size];
+    construct_mv_xy_vectors32_fixed<n>(gate_kernel_unitary, mv_xy);
+
+    for (int iter_idx = 0; iter_idx < num_blocks; ++iter_idx) {
+        int base = 0;
+        for (int i = 0; i < non_target_count; ++i) {
+            if (iter_idx & (1ULL << i)) {
+                base |= (1 << non_targets[i]);
+            }
+        }
+        for (int k = 0; k < block_size; ++k) {
+            indices[k] = base | block_pattern[k];
+        }
+
+        for (int col = 0; col < input.cols; ++col) {
+            for (int rdx = 0; rdx < block_size; ++rdx) {
+                __m256 result = _mm256_setzero_ps();
+
+                for (int cdx = 0; cdx < block_size; cdx += 4) {
+                    complex_prod_AVX32_fixed<n>(mv_xy, rdx, cdx, indices, input, col, result);
+                }
+
+                alignas(32) float acc[8];
+                _mm256_store_ps(acc, result);
+                out[rdx].real = acc[0] + acc[1] + acc[4] + acc[5];
+                out[rdx].imag = acc[2] + acc[3] + acc[6] + acc[7];
+            }
+
+            for (int rdx = 0; rdx < block_size; ++rdx) {
+                input[indices[rdx] * input.stride + col] = out[rdx];
+            }
+        }
+    }
+}
+
 void apply_nqbit_unitary_AVX32(Matrix_float& gate_kernel_unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size) {
     const int n = static_cast<int>(involved_qbits.size());
     const int qubit_num = (int) std::log2(input.rows);
@@ -4091,24 +4274,23 @@ void apply_nqbit_unitary_AVX32(Matrix_float& gate_kernel_unitary, Matrix_float& 
     precompute_index_mapping(involved_qbits, non_targets, block_pattern);
     std::vector<int> indices(block_size);
     std::vector<QGD_Complex8> out(block_size);
+    __m256* mv_xy = construct_mv_xy_vectors32(gate_kernel_unitary, gate_kernel_unitary.rows);
 
     for (int iter_idx = 0; iter_idx < num_blocks; ++iter_idx) {
         get_block_indices_fast(iter_idx, involved_qbits, non_targets, block_pattern, indices);
 
         for (int col = 0; col < input.cols; ++col) {
             for (int rdx = 0; rdx < block_size; ++rdx) {
-                float acc_real = 0.0f;
-                float acc_imag = 0.0f;
+                __m256 result = _mm256_setzero_ps();
 
-                for (int cdx = 0; cdx < block_size; ++cdx) {
-                    const QGD_Complex8& a = gate_kernel_unitary[rdx * block_size + cdx];
-                    const QGD_Complex8& b = input[indices[cdx] * input.stride + col];
-                    acc_real += a.real * b.real - a.imag * b.imag;
-                    acc_imag += a.real * b.imag + a.imag * b.real;
+                for (int cdx = 0; cdx < block_size; cdx += 4) {
+                    complex_prod_AVX32(mv_xy, rdx, cdx, indices, input, col, result);
                 }
 
-                out[rdx].real = acc_real;
-                out[rdx].imag = acc_imag;
+                alignas(32) float acc[8];
+                _mm256_store_ps(acc, result);
+                out[rdx].real = acc[0] + acc[1] + acc[4] + acc[5];
+                out[rdx].imag = acc[2] + acc[3] + acc[6] + acc[7];
             }
 
             for (int rdx = 0; rdx < block_size; ++rdx) {
@@ -4116,6 +4298,8 @@ void apply_nqbit_unitary_AVX32(Matrix_float& gate_kernel_unitary, Matrix_float& 
             }
         }
     }
+
+    _mm_free(mv_xy);
 }
 
 void apply_nqbit_unitary_parallel_AVX32(Matrix_float& gate_kernel_unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size) {
@@ -4123,55 +4307,55 @@ void apply_nqbit_unitary_parallel_AVX32(Matrix_float& gate_kernel_unitary, Matri
 }
 
 void apply_2qbit_kernel_to_state_vector_input_AVX32(Matrix_float& two_qbit_unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size) {
-    apply_nqbit_unitary_AVX32(two_qbit_unitary, input, std::move(involved_qbits), matrix_size);
+    apply_fixed_qbit_unitary_AVX32<2>(two_qbit_unitary, input, std::move(involved_qbits), matrix_size);
 }
 
 void apply_2qbit_kernel_to_state_vector_input_AVX_OpenMP32(Matrix_float& two_qbit_unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size) {
-    apply_nqbit_unitary_AVX32(two_qbit_unitary, input, std::move(involved_qbits), matrix_size);
+    apply_fixed_qbit_unitary_AVX32<2>(two_qbit_unitary, input, std::move(involved_qbits), matrix_size);
 }
 
 void apply_2qbit_kernel_to_state_vector_input_AVX_TBB32(Matrix_float& two_qbit_unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size) {
-    apply_nqbit_unitary_AVX32(two_qbit_unitary, input, std::move(involved_qbits), matrix_size);
+    apply_fixed_qbit_unitary_AVX32<2>(two_qbit_unitary, input, std::move(involved_qbits), matrix_size);
 }
 
 void apply_2qbit_kernel_to_matrix_input_parallel_AVX_OpenMP32(Matrix_float& two_qbit_unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size) {
-    apply_nqbit_unitary_AVX32(two_qbit_unitary, input, std::move(involved_qbits), matrix_size);
+    apply_fixed_qbit_unitary_AVX32<2>(two_qbit_unitary, input, std::move(involved_qbits), matrix_size);
 }
 
 void apply_3qbit_kernel_to_state_vector_input_AVX32(Matrix_float& unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size) {
-    apply_nqbit_unitary_AVX32(unitary, input, std::move(involved_qbits), matrix_size);
+    apply_fixed_qbit_unitary_AVX32<3>(unitary, input, std::move(involved_qbits), matrix_size);
 }
 
 void apply_3qbit_kernel_to_state_vector_input_AVX_OpenMP32(Matrix_float& unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size) {
-    apply_nqbit_unitary_AVX32(unitary, input, std::move(involved_qbits), matrix_size);
+    apply_fixed_qbit_unitary_AVX32<3>(unitary, input, std::move(involved_qbits), matrix_size);
 }
 
 void apply_3qbit_kernel_to_state_vector_input_AVX_TBB32(Matrix_float& unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size) {
-    apply_nqbit_unitary_AVX32(unitary, input, std::move(involved_qbits), matrix_size);
+    apply_fixed_qbit_unitary_AVX32<3>(unitary, input, std::move(involved_qbits), matrix_size);
 }
 
 void apply_4qbit_kernel_to_state_vector_input_AVX32(Matrix_float& unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size) {
-    apply_nqbit_unitary_AVX32(unitary, input, std::move(involved_qbits), matrix_size);
+    apply_fixed_qbit_unitary_AVX32<4>(unitary, input, std::move(involved_qbits), matrix_size);
 }
 
 void apply_4qbit_kernel_to_state_vector_input_AVX_OpenMP32(Matrix_float& unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size) {
-    apply_nqbit_unitary_AVX32(unitary, input, std::move(involved_qbits), matrix_size);
+    apply_fixed_qbit_unitary_AVX32<4>(unitary, input, std::move(involved_qbits), matrix_size);
 }
 
 void apply_4qbit_kernel_to_state_vector_input_AVX_TBB32(Matrix_float& unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size) {
-    apply_nqbit_unitary_AVX32(unitary, input, std::move(involved_qbits), matrix_size);
+    apply_fixed_qbit_unitary_AVX32<4>(unitary, input, std::move(involved_qbits), matrix_size);
 }
 
 void apply_5qbit_kernel_to_state_vector_input_AVX32(Matrix_float& unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size) {
-    apply_nqbit_unitary_AVX32(unitary, input, std::move(involved_qbits), matrix_size);
+    apply_fixed_qbit_unitary_AVX32<5>(unitary, input, std::move(involved_qbits), matrix_size);
 }
 
 void apply_5qbit_kernel_to_state_vector_input_AVX_OpenMP32(Matrix_float& unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size) {
-    apply_nqbit_unitary_AVX32(unitary, input, std::move(involved_qbits), matrix_size);
+    apply_fixed_qbit_unitary_AVX32<5>(unitary, input, std::move(involved_qbits), matrix_size);
 }
 
 void apply_5qbit_kernel_to_state_vector_input_AVX_TBB32(Matrix_float& unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size) {
-    apply_nqbit_unitary_AVX32(unitary, input, std::move(involved_qbits), matrix_size);
+    apply_fixed_qbit_unitary_AVX32<5>(unitary, input, std::move(involved_qbits), matrix_size);
 }
 
 void apply_crot_kernel_to_matrix_input_AVX_parallel32(Matrix_float& u3_1qbit1, Matrix_float& u3_1qbit2, Matrix_float& input, const int& target_qbit, const int& control_qbit, const int& matrix_size) {
@@ -4197,19 +4381,26 @@ void apply_crot_kernel_to_matrix_input_AVX32(Matrix_float& u3_1qbit1, Matrix_flo
                 QGD_Complex8 a = input[index];
                 QGD_Complex8 b = input[index_pair];
 
-                QGD_Complex8 tmp1 = mult(gate[0], a);
-                QGD_Complex8 tmp2 = mult(gate[1], b);
-                input[index].real = tmp1.real + tmp2.real;
-                input[index].imag = tmp1.imag + tmp2.imag;
+                float real = std::fma(gate[0].real, a.real, -gate[0].imag * a.imag);
+                real = std::fma(gate[1].real, b.real, real);
+                real = std::fma(-gate[1].imag, b.imag, real);
+                float imag = std::fma(gate[0].real, a.imag, gate[0].imag * a.real);
+                imag = std::fma(gate[1].real, b.imag, imag);
+                imag = std::fma(gate[1].imag, b.real, imag);
+                input[index].real = real;
+                input[index].imag = imag;
 
-                tmp1 = mult(gate[2], a);
-                tmp2 = mult(gate[3], b);
-                input[index_pair].real = tmp1.real + tmp2.real;
-                input[index_pair].imag = tmp1.imag + tmp2.imag;
+                real = std::fma(gate[2].real, a.real, -gate[2].imag * a.imag);
+                real = std::fma(gate[3].real, b.real, real);
+                real = std::fma(-gate[3].imag, b.imag, real);
+                imag = std::fma(gate[2].real, a.imag, gate[2].imag * a.real);
+                imag = std::fma(gate[3].real, b.imag, imag);
+                imag = std::fma(gate[3].imag, b.real, imag);
+                input[index_pair].real = real;
+                input[index_pair].imag = imag;
             }
         }
 
         current_idx += (index_step_target << 1);
     }
 }
-

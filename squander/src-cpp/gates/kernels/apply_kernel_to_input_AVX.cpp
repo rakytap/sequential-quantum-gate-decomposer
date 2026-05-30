@@ -218,9 +218,7 @@ apply_kernel_to_input_AVX_small32(Matrix_float& u3_1qbit, Matrix_float& input, c
 
     auto cmul_ps = [](__m256 ar, __m256 ai, __m256 x) {
         const __m256 swapped = _mm256_permute_ps(x, 0xB1);
-        const __m256 mul1 = _mm256_mul_ps(ar, x);
-        const __m256 mul2 = _mm256_mul_ps(ai, swapped);
-        return _mm256_addsub_ps(mul1, mul2);
+        return _mm256_fmaddsub_ps(ar, x, _mm256_mul_ps(ai, swapped));
     };
 
     const int index_step_target = 1 << target_qbit;
@@ -292,9 +290,7 @@ apply_kernel_to_input_AVX32(Matrix_float& u3_1qbit, Matrix_float& input, const b
 
     auto cmul_ps = [](__m256 ar, __m256 ai, __m256 x) {
         const __m256 swapped = _mm256_permute_ps(x, 0xB1);
-        const __m256 mul1 = _mm256_mul_ps(ar, x);
-        const __m256 mul2 = _mm256_mul_ps(ai, swapped);
-        return _mm256_addsub_ps(mul1, mul2);
+        return _mm256_fmaddsub_ps(ar, x, _mm256_mul_ps(ai, swapped));
     };
 
     const int index_step_target = 1 << target_qbit;
@@ -366,9 +362,7 @@ apply_kernel_to_input_AVX_parallel32(Matrix_float& u3_1qbit, Matrix_float& input
 
     auto cmul_ps = [](__m256 ar, __m256 ai, __m256 x) {
         const __m256 swapped = _mm256_permute_ps(x, 0xB1);
-        const __m256 mul1 = _mm256_mul_ps(ar, x);
-        const __m256 mul2 = _mm256_mul_ps(ai, swapped);
-        return _mm256_addsub_ps(mul1, mul2);
+        return _mm256_fmaddsub_ps(ar, x, _mm256_mul_ps(ai, swapped));
     };
 
     const int index_step_target = 1 << target_qbit;
@@ -771,7 +765,6 @@ apply_kernel_to_input_AVX_parallel(Matrix& u3_1qbit, Matrix& input, const bool& 
     
 
 }
-
 
 
 

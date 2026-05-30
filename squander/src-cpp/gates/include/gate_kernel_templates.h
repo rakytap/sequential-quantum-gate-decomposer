@@ -11,110 +11,177 @@
 #include <utility>
 #include "../../common/include/qgd_math.h"
 
+template<typename MT>
+inline void ensure_kernel_storage(MT& kernel, int rows, int cols) {
+    if (kernel.rows != rows || kernel.cols != cols || kernel.stride != cols) {
+        kernel = MT(rows, cols);
+    }
+}
+
 // ---------------------------------------------------------------------------
 // Zero-parameter gates
 // ---------------------------------------------------------------------------
 
 template<typename MT, typename RT>
-inline MT h_gate_kernel() {
-    MT u3(2, 2);
+inline void h_gate_kernel_to(MT& u3) {
+    ensure_kernel_storage(u3, 2, 2);
     const RT sq = (RT)M_SQRT1_2;
     u3[0].real =  sq; u3[0].imag = (RT)0;
     u3[1].real =  sq; u3[1].imag = (RT)0;
     u3[2].real =  sq; u3[2].imag = (RT)0;
     u3[3].real = -sq; u3[3].imag = (RT)0;
+}
+
+template<typename MT, typename RT>
+inline MT h_gate_kernel() {
+    MT u3(2, 2);
+    h_gate_kernel_to<MT, RT>(u3);
     return u3;
+}
+
+template<typename MT, typename RT>
+inline void x_gate_kernel_to(MT& u3) {
+    ensure_kernel_storage(u3, 2, 2);
+    u3[0].real = (RT)0; u3[0].imag = (RT)0;
+    u3[1].real = (RT)1; u3[1].imag = (RT)0;
+    u3[2].real = (RT)1; u3[2].imag = (RT)0;
+    u3[3].real = (RT)0; u3[3].imag = (RT)0;
 }
 
 template<typename MT, typename RT>
 inline MT x_gate_kernel() {
     MT u3(2, 2);
-    u3[0].real = (RT)0; u3[0].imag = (RT)0;
-    u3[1].real = (RT)1; u3[1].imag = (RT)0;
-    u3[2].real = (RT)1; u3[2].imag = (RT)0;
-    u3[3].real = (RT)0; u3[3].imag = (RT)0;
+    x_gate_kernel_to<MT, RT>(u3);
     return u3;
+}
+
+template<typename MT, typename RT>
+inline void y_gate_kernel_to(MT& u3) {
+    ensure_kernel_storage(u3, 2, 2);
+    u3[0].real = (RT)0; u3[0].imag =  (RT)0;
+    u3[1].real = (RT)0; u3[1].imag = -(RT)1;
+    u3[2].real = (RT)0; u3[2].imag =  (RT)1;
+    u3[3].real = (RT)0; u3[3].imag =  (RT)0;
 }
 
 template<typename MT, typename RT>
 inline MT y_gate_kernel() {
     MT u3(2, 2);
-    u3[0].real = (RT)0; u3[0].imag =  (RT)0;
-    u3[1].real = (RT)0; u3[1].imag = -(RT)1;
-    u3[2].real = (RT)0; u3[2].imag =  (RT)1;
-    u3[3].real = (RT)0; u3[3].imag =  (RT)0;
+    y_gate_kernel_to<MT, RT>(u3);
     return u3;
+}
+
+template<typename MT, typename RT>
+inline void z_gate_kernel_to(MT& u3) {
+    ensure_kernel_storage(u3, 2, 2);
+    u3[0].real =  (RT)1; u3[0].imag = (RT)0;
+    u3[1].real =  (RT)0; u3[1].imag = (RT)0;
+    u3[2].real =  (RT)0; u3[2].imag = (RT)0;
+    u3[3].real = -(RT)1; u3[3].imag = (RT)0;
 }
 
 template<typename MT, typename RT>
 inline MT z_gate_kernel() {
     MT u3(2, 2);
-    u3[0].real =  (RT)1; u3[0].imag = (RT)0;
-    u3[1].real =  (RT)0; u3[1].imag = (RT)0;
-    u3[2].real =  (RT)0; u3[2].imag = (RT)0;
-    u3[3].real = -(RT)1; u3[3].imag = (RT)0;
+    z_gate_kernel_to<MT, RT>(u3);
     return u3;
+}
+
+template<typename MT, typename RT>
+inline void s_gate_kernel_to(MT& u3) {
+    ensure_kernel_storage(u3, 2, 2);
+    u3[0].real = (RT)1; u3[0].imag = (RT)0;
+    u3[1].real = (RT)0; u3[1].imag = (RT)0;
+    u3[2].real = (RT)0; u3[2].imag = (RT)0;
+    u3[3].real = (RT)0; u3[3].imag = (RT)1;
 }
 
 template<typename MT, typename RT>
 inline MT s_gate_kernel() {
     MT u3(2, 2);
-    u3[0].real = (RT)1; u3[0].imag = (RT)0;
-    u3[1].real = (RT)0; u3[1].imag = (RT)0;
-    u3[2].real = (RT)0; u3[2].imag = (RT)0;
-    u3[3].real = (RT)0; u3[3].imag = (RT)1;
+    s_gate_kernel_to<MT, RT>(u3);
     return u3;
+}
+
+template<typename MT, typename RT>
+inline void sdg_gate_kernel_to(MT& u3) {
+    ensure_kernel_storage(u3, 2, 2);
+    u3[0].real = (RT)1; u3[0].imag =  (RT)0;
+    u3[1].real = (RT)0; u3[1].imag =  (RT)0;
+    u3[2].real = (RT)0; u3[2].imag =  (RT)0;
+    u3[3].real = (RT)0; u3[3].imag = -(RT)1;
 }
 
 template<typename MT, typename RT>
 inline MT sdg_gate_kernel() {
     MT u3(2, 2);
-    u3[0].real = (RT)1; u3[0].imag =  (RT)0;
-    u3[1].real = (RT)0; u3[1].imag =  (RT)0;
-    u3[2].real = (RT)0; u3[2].imag =  (RT)0;
-    u3[3].real = (RT)0; u3[3].imag = -(RT)1;
+    sdg_gate_kernel_to<MT, RT>(u3);
     return u3;
 }
 
 template<typename MT, typename RT>
-inline MT t_gate_kernel() {
-    MT u3(2, 2);
+inline void t_gate_kernel_to(MT& u3) {
+    ensure_kernel_storage(u3, 2, 2);
     const RT sq = (RT)M_SQRT1_2;
     u3[0].real = (RT)1; u3[0].imag = (RT)0;
     u3[1].real = (RT)0; u3[1].imag = (RT)0;
     u3[2].real = (RT)0; u3[2].imag = (RT)0;
     u3[3].real =    sq; u3[3].imag =    sq;
+}
+
+template<typename MT, typename RT>
+inline MT t_gate_kernel() {
+    MT u3(2, 2);
+    t_gate_kernel_to<MT, RT>(u3);
     return u3;
 }
 
 template<typename MT, typename RT>
-inline MT tdg_gate_kernel() {
-    MT u3(2, 2);
+inline void tdg_gate_kernel_to(MT& u3) {
+    ensure_kernel_storage(u3, 2, 2);
     const RT sq = (RT)M_SQRT1_2;
     u3[0].real = (RT)1; u3[0].imag =  (RT)0;
     u3[1].real = (RT)0; u3[1].imag =  (RT)0;
     u3[2].real = (RT)0; u3[2].imag =  (RT)0;
     u3[3].real =    sq; u3[3].imag =    -sq;
+}
+
+template<typename MT, typename RT>
+inline MT tdg_gate_kernel() {
+    MT u3(2, 2);
+    tdg_gate_kernel_to<MT, RT>(u3);
     return u3;
+}
+
+template<typename MT, typename RT>
+inline void sx_gate_kernel_to(MT& u3) {
+    ensure_kernel_storage(u3, 2, 2);
+    u3[0].real = (RT)0.5; u3[0].imag =  (RT)0.5;
+    u3[1].real = (RT)0.5; u3[1].imag = -(RT)0.5;
+    u3[2].real = (RT)0.5; u3[2].imag = -(RT)0.5;
+    u3[3].real = (RT)0.5; u3[3].imag =  (RT)0.5;
 }
 
 template<typename MT, typename RT>
 inline MT sx_gate_kernel() {
     MT u3(2, 2);
-    u3[0].real = (RT)0.5; u3[0].imag =  (RT)0.5;
-    u3[1].real = (RT)0.5; u3[1].imag = -(RT)0.5;
-    u3[2].real = (RT)0.5; u3[2].imag = -(RT)0.5;
-    u3[3].real = (RT)0.5; u3[3].imag =  (RT)0.5;
+    sx_gate_kernel_to<MT, RT>(u3);
     return u3;
+}
+
+template<typename MT, typename RT>
+inline void sxdg_gate_kernel_to(MT& u3) {
+    ensure_kernel_storage(u3, 2, 2);
+    u3[0].real = (RT)0.5; u3[0].imag = -(RT)0.5;
+    u3[1].real = (RT)0.5; u3[1].imag =  (RT)0.5;
+    u3[2].real = (RT)0.5; u3[2].imag =  (RT)0.5;
+    u3[3].real = (RT)0.5; u3[3].imag = -(RT)0.5;
 }
 
 template<typename MT, typename RT>
 inline MT sxdg_gate_kernel() {
     MT u3(2, 2);
-    u3[0].real = (RT)0.5; u3[0].imag = -(RT)0.5;
-    u3[1].real = (RT)0.5; u3[1].imag =  (RT)0.5;
-    u3[2].real = (RT)0.5; u3[2].imag =  (RT)0.5;
-    u3[3].real = (RT)0.5; u3[3].imag = -(RT)0.5;
+    sxdg_gate_kernel_to<MT, RT>(u3);
     return u3;
 }
 
@@ -123,83 +190,140 @@ inline MT sxdg_gate_kernel() {
 // ---------------------------------------------------------------------------
 
 template<typename MT, typename RT>
-inline MT rx_gate_kernel_from_trig(RT s, RT c) {
-    MT u3(2, 2);
+inline void rx_gate_kernel_from_trig_to(MT& u3, RT s, RT c) {
+    ensure_kernel_storage(u3, 2, 2);
     u3[0].real =  (RT)c; u3[0].imag =  (RT)0;
     u3[1].real =  (RT)0; u3[1].imag = -(RT)s;
     u3[2].real =  (RT)0; u3[2].imag = -(RT)s;
     u3[3].real =  (RT)c; u3[3].imag =  (RT)0;
+}
+
+template<typename MT, typename RT>
+inline MT rx_gate_kernel_from_trig(RT s, RT c) {
+    MT u3(2, 2);
+    rx_gate_kernel_from_trig_to<MT, RT>(u3, s, c);
     return u3;
 }
 
 template<typename MT, typename RT>
+inline void rx_inverse_gate_kernel_from_trig_to(MT& u3, RT s, RT c) {
+    rx_gate_kernel_from_trig_to<MT, RT>(u3, -s, c);
+}
+
+template<typename MT, typename RT>
 inline MT rx_inverse_gate_kernel_from_trig(RT s, RT c) {
-    return rx_gate_kernel_from_trig<MT, RT>(-s, c);
+    MT u3(2, 2);
+    rx_inverse_gate_kernel_from_trig_to<MT, RT>(u3, s, c);
+    return u3;
+}
+
+template<typename MT, typename RT>
+inline void rx_derivative_kernel_from_trig_to(MT& u3, RT s, RT c) {
+    ensure_kernel_storage(u3, 2, 2);
+    u3[0].real = -(RT)s; u3[0].imag =  (RT)0;
+    u3[1].real =  (RT)0; u3[1].imag = -(RT)c;
+    u3[2].real =  (RT)0; u3[2].imag = -(RT)c;
+    u3[3].real = -(RT)s; u3[3].imag =  (RT)0;
 }
 
 template<typename MT, typename RT>
 inline MT rx_derivative_kernel_from_trig(RT s, RT c) {
     MT u3(2, 2);
-    u3[0].real = -(RT)s; u3[0].imag =  (RT)0;
-    u3[1].real =  (RT)0; u3[1].imag = -(RT)c;
-    u3[2].real =  (RT)0; u3[2].imag = -(RT)c;
-    u3[3].real = -(RT)s; u3[3].imag =  (RT)0;
+    rx_derivative_kernel_from_trig_to<MT, RT>(u3, s, c);
     return u3;
+}
+
+template<typename MT, typename RT>
+inline void ry_gate_kernel_from_trig_to(MT& u3, RT s, RT c) {
+    ensure_kernel_storage(u3, 2, 2);
+    u3[0].real =  (RT)c; u3[0].imag = (RT)0;
+    u3[1].real = -(RT)s; u3[1].imag = (RT)0;
+    u3[2].real =  (RT)s; u3[2].imag = (RT)0;
+    u3[3].real =  (RT)c; u3[3].imag = (RT)0;
 }
 
 template<typename MT, typename RT>
 inline MT ry_gate_kernel_from_trig(RT s, RT c) {
     MT u3(2, 2);
-    u3[0].real =  (RT)c; u3[0].imag = (RT)0;
-    u3[1].real = -(RT)s; u3[1].imag = (RT)0;
-    u3[2].real =  (RT)s; u3[2].imag = (RT)0;
-    u3[3].real =  (RT)c; u3[3].imag = (RT)0;
+    ry_gate_kernel_from_trig_to<MT, RT>(u3, s, c);
     return u3;
 }
 
 template<typename MT, typename RT>
+inline void ry_inverse_gate_kernel_from_trig_to(MT& u3, RT s, RT c) {
+    ry_gate_kernel_from_trig_to<MT, RT>(u3, -s, c);
+}
+
+template<typename MT, typename RT>
 inline MT ry_inverse_gate_kernel_from_trig(RT s, RT c) {
-    return ry_gate_kernel_from_trig<MT, RT>(-s, c);
+    MT u3(2, 2);
+    ry_inverse_gate_kernel_from_trig_to<MT, RT>(u3, s, c);
+    return u3;
+}
+
+template<typename MT, typename RT>
+inline void ry_derivative_kernel_from_trig_to(MT& u3, RT s, RT c) {
+    ensure_kernel_storage(u3, 2, 2);
+    u3[0].real = -(RT)s; u3[0].imag = (RT)0;
+    u3[1].real = -(RT)c; u3[1].imag = (RT)0;
+    u3[2].real =  (RT)c; u3[2].imag = (RT)0;
+    u3[3].real = -(RT)s; u3[3].imag = (RT)0;
 }
 
 template<typename MT, typename RT>
 inline MT ry_derivative_kernel_from_trig(RT s, RT c) {
     MT u3(2, 2);
-    u3[0].real = -(RT)s; u3[0].imag = (RT)0;
-    u3[1].real = -(RT)c; u3[1].imag = (RT)0;
-    u3[2].real =  (RT)c; u3[2].imag = (RT)0;
-    u3[3].real = -(RT)s; u3[3].imag = (RT)0;
+    ry_derivative_kernel_from_trig_to<MT, RT>(u3, s, c);
     return u3;
+}
+
+template<typename MT, typename RT>
+inline void rz_gate_kernel_from_trig_to(MT& u3, RT s, RT c) {
+    ensure_kernel_storage(u3, 2, 2);
+    u3[0].real =  (RT)c; u3[0].imag = -(RT)s;
+    u3[1].real =  (RT)0; u3[1].imag =  (RT)0;
+    u3[2].real =  (RT)0; u3[2].imag =  (RT)0;
+    u3[3].real =  (RT)c; u3[3].imag =  (RT)s;
 }
 
 template<typename MT, typename RT>
 inline MT rz_gate_kernel_from_trig(RT s, RT c) {
     MT u3(2, 2);
-    u3[0].real =  (RT)c; u3[0].imag = -(RT)s;
-    u3[1].real =  (RT)0; u3[1].imag =  (RT)0;
-    u3[2].real =  (RT)0; u3[2].imag =  (RT)0;
-    u3[3].real =  (RT)c; u3[3].imag =  (RT)s;
+    rz_gate_kernel_from_trig_to<MT, RT>(u3, s, c);
     return u3;
 }
 
 template<typename MT, typename RT>
+inline void rz_inverse_gate_kernel_from_trig_to(MT& u3, RT s, RT c) {
+    rz_gate_kernel_from_trig_to<MT, RT>(u3, -s, c);
+}
+
+template<typename MT, typename RT>
 inline MT rz_inverse_gate_kernel_from_trig(RT s, RT c) {
-    return rz_gate_kernel_from_trig<MT, RT>(-s, c);
+    MT u3(2, 2);
+    rz_inverse_gate_kernel_from_trig_to<MT, RT>(u3, s, c);
+    return u3;
+}
+
+template<typename MT, typename RT>
+inline void rz_derivative_kernel_from_trig_to(MT& u3, RT s, RT c) {
+    ensure_kernel_storage(u3, 2, 2);
+    u3[0].real = -(RT)s; u3[0].imag = -(RT)c;
+    u3[1].real =  (RT)0; u3[1].imag =  (RT)0;
+    u3[2].real =  (RT)0; u3[2].imag =  (RT)0;
+    u3[3].real = -(RT)s; u3[3].imag =  (RT)c;
 }
 
 template<typename MT, typename RT>
 inline MT rz_derivative_kernel_from_trig(RT s, RT c) {
     MT u3(2, 2);
-    u3[0].real = -(RT)s; u3[0].imag = -(RT)c;
-    u3[1].real =  (RT)0; u3[1].imag =  (RT)0;
-    u3[2].real =  (RT)0; u3[2].imag =  (RT)0;
-    u3[3].real = -(RT)s; u3[3].imag =  (RT)c;
+    rz_derivative_kernel_from_trig_to<MT, RT>(u3, s, c);
     return u3;
 }
 
 template<typename MT, typename RT>
-inline MT r_gate_kernel_from_trig(RT s_theta, RT c_theta, RT s_phi, RT c_phi) {
-    MT u3(2, 2);
+inline void r_gate_kernel_from_trig_to(MT& u3, RT s_theta, RT c_theta, RT s_phi, RT c_phi) {
+    ensure_kernel_storage(u3, 2, 2);
     u3[0].real =  (RT)c_theta;
     u3[0].imag =  (RT)0;
     u3[1].real = -(RT)s_theta * s_phi;
@@ -208,62 +332,106 @@ inline MT r_gate_kernel_from_trig(RT s_theta, RT c_theta, RT s_phi, RT c_phi) {
     u3[2].imag = -(RT)s_theta * c_phi;
     u3[3].real =  (RT)c_theta;
     u3[3].imag =  (RT)0;
+}
+
+template<typename MT, typename RT>
+inline MT r_gate_kernel_from_trig(RT s_theta, RT c_theta, RT s_phi, RT c_phi) {
+    MT u3(2, 2);
+    r_gate_kernel_from_trig_to<MT, RT>(u3, s_theta, c_theta, s_phi, c_phi);
     return u3;
 }
 
 template<typename MT, typename RT>
+inline void r_inverse_gate_kernel_from_trig_to(MT& u3, RT s_theta, RT c_theta, RT s_phi, RT c_phi) {
+    r_gate_kernel_from_trig_to<MT, RT>(u3, -s_theta, c_theta, s_phi, c_phi);
+}
+
+template<typename MT, typename RT>
 inline MT r_inverse_gate_kernel_from_trig(RT s_theta, RT c_theta, RT s_phi, RT c_phi) {
-    return r_gate_kernel_from_trig<MT, RT>(-s_theta, c_theta, s_phi, c_phi);
+    MT u3(2, 2);
+    r_inverse_gate_kernel_from_trig_to<MT, RT>(u3, s_theta, c_theta, s_phi, c_phi);
+    return u3;
+}
+
+template<typename MT, typename RT>
+inline void r_derivative_kernel_theta_from_trig_to(MT& u3, RT s_theta, RT c_theta, RT s_phi, RT c_phi) {
+    ensure_kernel_storage(u3, 2, 2);
+    u3[0].real = -(RT)s_theta;     u3[0].imag =  (RT)0;
+    u3[1].real = -(RT)c_theta * s_phi; u3[1].imag = -(RT)c_theta * c_phi;
+    u3[2].real =  (RT)c_theta * s_phi; u3[2].imag = -(RT)c_theta * c_phi;
+    u3[3].real = -(RT)s_theta;     u3[3].imag =  (RT)0;
 }
 
 template<typename MT, typename RT>
 inline MT r_derivative_kernel_theta_from_trig(RT s_theta, RT c_theta, RT s_phi, RT c_phi) {
     MT u3(2, 2);
-    u3[0].real = -(RT)s_theta;     u3[0].imag =  (RT)0;
-    u3[1].real = -(RT)c_theta * s_phi; u3[1].imag = -(RT)c_theta * c_phi;
-    u3[2].real =  (RT)c_theta * s_phi; u3[2].imag = -(RT)c_theta * c_phi;
-    u3[3].real = -(RT)s_theta;     u3[3].imag =  (RT)0;
+    r_derivative_kernel_theta_from_trig_to<MT, RT>(u3, s_theta, c_theta, s_phi, c_phi);
     return u3;
+}
+
+template<typename MT, typename RT>
+inline void r_derivative_kernel_phi_from_trig_to(MT& u3, RT s_theta, RT s_phi, RT c_phi) {
+    ensure_kernel_storage(u3, 2, 2);
+    u3[0].real =  (RT)0;              u3[0].imag = (RT)0;
+    u3[1].real = -(RT)s_theta * c_phi; u3[1].imag =  (RT)s_theta * s_phi;
+    u3[2].real =  (RT)s_theta * c_phi; u3[2].imag =  (RT)s_theta * s_phi;
+    u3[3].real =  (RT)0;              u3[3].imag = (RT)0;
 }
 
 template<typename MT, typename RT>
 inline MT r_derivative_kernel_phi_from_trig(RT s_theta, RT s_phi, RT c_phi) {
     MT u3(2, 2);
-    u3[0].real =  (RT)0;              u3[0].imag = (RT)0;
-    u3[1].real = -(RT)s_theta * c_phi; u3[1].imag =  (RT)s_theta * s_phi;
-    u3[2].real =  (RT)s_theta * c_phi; u3[2].imag =  (RT)s_theta * s_phi;
-    u3[3].real =  (RT)0;              u3[3].imag = (RT)0;
+    r_derivative_kernel_phi_from_trig_to<MT, RT>(u3, s_theta, s_phi, c_phi);
     return u3;
+}
+
+template<typename MT, typename RT>
+inline void u1_gate_kernel_from_trig_to(MT& u3, RT s_lambda, RT c_lambda) {
+    ensure_kernel_storage(u3, 2, 2);
+    u3[0].real = (RT)1; u3[0].imag = (RT)0;
+    u3[1].real = (RT)0; u3[1].imag = (RT)0;
+    u3[2].real = (RT)0; u3[2].imag = (RT)0;
+    u3[3].real = (RT)c_lambda; u3[3].imag = (RT)s_lambda;
 }
 
 template<typename MT, typename RT>
 inline MT u1_gate_kernel_from_trig(RT s_lambda, RT c_lambda) {
     MT u3(2, 2);
-    u3[0].real = (RT)1; u3[0].imag = (RT)0;
-    u3[1].real = (RT)0; u3[1].imag = (RT)0;
-    u3[2].real = (RT)0; u3[2].imag = (RT)0;
-    u3[3].real = (RT)c_lambda; u3[3].imag = (RT)s_lambda;
+    u1_gate_kernel_from_trig_to<MT, RT>(u3, s_lambda, c_lambda);
     return u3;
 }
 
 template<typename MT, typename RT>
+inline void u1_inverse_gate_kernel_from_trig_to(MT& u3, RT s_lambda, RT c_lambda) {
+    u1_gate_kernel_from_trig_to<MT, RT>(u3, -s_lambda, c_lambda);
+}
+
+template<typename MT, typename RT>
 inline MT u1_inverse_gate_kernel_from_trig(RT s_lambda, RT c_lambda) {
-    return u1_gate_kernel_from_trig<MT, RT>(-s_lambda, c_lambda);
+    MT u3(2, 2);
+    u1_inverse_gate_kernel_from_trig_to<MT, RT>(u3, s_lambda, c_lambda);
+    return u3;
+}
+
+template<typename MT, typename RT>
+inline void u1_derivative_kernel_from_trig_to(MT& u3, RT s_lambda, RT c_lambda) {
+    ensure_kernel_storage(u3, 2, 2);
+    u3[0].real = (RT)0; u3[0].imag = (RT)0;
+    u3[1].real = (RT)0; u3[1].imag = (RT)0;
+    u3[2].real = (RT)0; u3[2].imag = (RT)0;
+    u3[3].real = -(RT)s_lambda; u3[3].imag = (RT)c_lambda;
 }
 
 template<typename MT, typename RT>
 inline MT u1_derivative_kernel_from_trig(RT s_lambda, RT c_lambda) {
     MT u3(2, 2);
-    u3[0].real = (RT)0; u3[0].imag = (RT)0;
-    u3[1].real = (RT)0; u3[1].imag = (RT)0;
-    u3[2].real = (RT)0; u3[2].imag = (RT)0;
-    u3[3].real = -(RT)s_lambda; u3[3].imag = (RT)c_lambda;
+    u1_derivative_kernel_from_trig_to<MT, RT>(u3, s_lambda, c_lambda);
     return u3;
 }
 
 template<typename MT, typename RT>
-inline MT u2_gate_kernel_from_trig(RT s_phi, RT c_phi, RT s_lambda, RT c_lambda) {
-    MT u3(2, 2);
+inline void u2_gate_kernel_from_trig_to(MT& u3, RT s_phi, RT c_phi, RT s_lambda, RT c_lambda) {
+    ensure_kernel_storage(u3, 2, 2);
     const RT s_pl = s_phi * c_lambda + c_phi * s_lambda;
     const RT c_pl = c_phi * c_lambda - s_phi * s_lambda;
     const RT sq = (RT)M_SQRT1_2;
@@ -271,12 +439,18 @@ inline MT u2_gate_kernel_from_trig(RT s_phi, RT c_phi, RT s_lambda, RT c_lambda)
     u3[1].real = -sq * c_lambda;  u3[1].imag = -sq * s_lambda;
     u3[2].real =  sq * c_phi;     u3[2].imag =  sq * s_phi;
     u3[3].real =  sq * c_pl;      u3[3].imag =  sq * s_pl;
+}
+
+template<typename MT, typename RT>
+inline MT u2_gate_kernel_from_trig(RT s_phi, RT c_phi, RT s_lambda, RT c_lambda) {
+    MT u3(2, 2);
+    u2_gate_kernel_from_trig_to<MT, RT>(u3, s_phi, c_phi, s_lambda, c_lambda);
     return u3;
 }
 
 template<typename MT, typename RT>
-inline MT u2_inverse_gate_kernel_from_trig(RT s_phi, RT c_phi, RT s_lambda, RT c_lambda) {
-    MT u3(2, 2);
+inline void u2_inverse_gate_kernel_from_trig_to(MT& u3, RT s_phi, RT c_phi, RT s_lambda, RT c_lambda) {
+    ensure_kernel_storage(u3, 2, 2);
     const RT s_pl = s_phi * c_lambda + c_phi * s_lambda;
     const RT c_pl = c_phi * c_lambda - s_phi * s_lambda;
     const RT sq = (RT)M_SQRT1_2;
@@ -284,12 +458,18 @@ inline MT u2_inverse_gate_kernel_from_trig(RT s_phi, RT c_phi, RT s_lambda, RT c
     u3[1].real =  sq * c_phi;     u3[1].imag = -sq * s_phi;
     u3[2].real = -sq * c_lambda;  u3[2].imag =  sq * s_lambda;
     u3[3].real =  sq * c_pl;      u3[3].imag = -sq * s_pl;
+}
+
+template<typename MT, typename RT>
+inline MT u2_inverse_gate_kernel_from_trig(RT s_phi, RT c_phi, RT s_lambda, RT c_lambda) {
+    MT u3(2, 2);
+    u2_inverse_gate_kernel_from_trig_to<MT, RT>(u3, s_phi, c_phi, s_lambda, c_lambda);
     return u3;
 }
 
 template<typename MT, typename RT>
-inline MT u2_derivative_kernel_phi_from_trig(RT s_phi, RT c_phi, RT s_lambda, RT c_lambda) {
-    MT u3(2, 2);
+inline void u2_derivative_kernel_phi_from_trig_to(MT& u3, RT s_phi, RT c_phi, RT s_lambda, RT c_lambda) {
+    ensure_kernel_storage(u3, 2, 2);
     const RT s_pl = s_phi * c_lambda + c_phi * s_lambda;
     const RT c_pl = c_phi * c_lambda - s_phi * s_lambda;
     const RT sq = (RT)M_SQRT1_2;
@@ -297,12 +477,18 @@ inline MT u2_derivative_kernel_phi_from_trig(RT s_phi, RT c_phi, RT s_lambda, RT
     u3[1].real = (RT)0;          u3[1].imag = (RT)0;
     u3[2].real = -sq * s_phi;    u3[2].imag =  sq * c_phi;
     u3[3].real = -sq * s_pl;     u3[3].imag =  sq * c_pl;
+}
+
+template<typename MT, typename RT>
+inline MT u2_derivative_kernel_phi_from_trig(RT s_phi, RT c_phi, RT s_lambda, RT c_lambda) {
+    MT u3(2, 2);
+    u2_derivative_kernel_phi_from_trig_to<MT, RT>(u3, s_phi, c_phi, s_lambda, c_lambda);
     return u3;
 }
 
 template<typename MT, typename RT>
-inline MT u2_derivative_kernel_lambda_from_trig(RT s_phi, RT c_phi, RT s_lambda, RT c_lambda) {
-    MT u3(2, 2);
+inline void u2_derivative_kernel_lambda_from_trig_to(MT& u3, RT s_phi, RT c_phi, RT s_lambda, RT c_lambda) {
+    ensure_kernel_storage(u3, 2, 2);
     const RT s_pl = s_phi * c_lambda + c_phi * s_lambda;
     const RT c_pl = c_phi * c_lambda - s_phi * s_lambda;
     const RT sq = (RT)M_SQRT1_2;
@@ -310,6 +496,12 @@ inline MT u2_derivative_kernel_lambda_from_trig(RT s_phi, RT c_phi, RT s_lambda,
     u3[1].real =  sq * s_lambda;  u3[1].imag = -sq * c_lambda;
     u3[2].real = (RT)0;           u3[2].imag = (RT)0;
     u3[3].real = -sq * s_pl;      u3[3].imag =  sq * c_pl;
+}
+
+template<typename MT, typename RT>
+inline MT u2_derivative_kernel_lambda_from_trig(RT s_phi, RT c_phi, RT s_lambda, RT c_lambda) {
+    MT u3(2, 2);
+    u2_derivative_kernel_lambda_from_trig_to<MT, RT>(u3, s_phi, c_phi, s_lambda, c_lambda);
     return u3;
 }
 
