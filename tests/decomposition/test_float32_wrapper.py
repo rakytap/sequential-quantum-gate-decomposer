@@ -7,6 +7,7 @@ from squander import (
     N_Qubit_Decomposition_Tabu_Search,
     N_Qubit_Decomposition_Tree_Search,
 )
+from squander.gates.qgd_Circuit import qgd_Circuit as Circuit
 
 
 def _identity(n=2, dtype=np.complex64):
@@ -80,3 +81,31 @@ def test_float32_parameters_work_for_cost_grad_and_batch():
     batched = np.asarray(decomp.Optimization_Problem_Batch(batch))
     assert batched.dtype == np.float32
     np.testing.assert_allclose(batched, np.zeros(2, dtype=np.float32), atol=1e-6)
+
+
+def test_float32_combined_handles_nested_gate_blocks_repeatedly():
+    qbit_num = 4
+    inner = Circuit(qbit_num)
+    parameters = []
+    for qbit in range(qbit_num):
+        inner.add_U3(qbit)
+        parameters.extend([0.1, 0.2, 0.3])
+    inner.add_CNOT(1, 0)
+    for qbit in range(qbit_num):
+        inner.add_U3(qbit)
+        parameters.extend([0.1, 0.2, 0.3])
+
+    outer = Circuit(qbit_num)
+    outer.add_Circuit(inner)
+    parameters = np.asarray(parameters, dtype=np.float32)
+
+    decomp = N_Qubit_Decomposition_custom(
+        _identity(qbit_num, dtype=np.complex64),
+        config={"use_float": True, "parallel": 0},
+    )
+    decomp.set_Gate_Structure(outer)
+
+    for _ in range(20):
+        cost, grad = decomp.Optimization_Problem_Combined(parameters)
+        assert np.isfinite(cost)
+        assert np.asarray(grad).dtype == np.float32

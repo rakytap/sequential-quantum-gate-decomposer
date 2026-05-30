@@ -35,6 +35,7 @@ limitations under the License.
 #endif
 
 #include <fstream>
+#include <tbb/enumerable_thread_specific.h>
 
 extern "C" int LAPACKE_dgesv( 	int  matrix_layout, int n, int nrhs, double *a, int lda, int *ipiv, double *b, int ldb); 	
 
@@ -641,15 +642,18 @@ double Optimization_Interface::optimization_problem( Matrix_real& parameters ) {
     }  
     
     if ( use_float ) {
-        thread_local Matrix_real_float parameters_float;
-        thread_local Matrix_float matrix_new;
+        static tbb::enumerable_thread_specific<Matrix_real_float> parameters_float_tls;
+        static tbb::enumerable_thread_specific<Matrix_float> matrix_new_tls;
+        Matrix_real_float& parameters_float = parameters_float_tls.local();
+        Matrix_float& matrix_new = matrix_new_tls.local();
         parameters.copy_to(parameters_float);
         Umtx_float.copy_to(matrix_new);
         Gates_block::apply_to( parameters_float, matrix_new );
         return calculate_cost_function(matrix_new, NULL);
     }
 
-    thread_local Matrix matrix_new;
+    static tbb::enumerable_thread_specific<Matrix> matrix_new_tls;
+    Matrix& matrix_new = matrix_new_tls.local();
     Umtx.copy_to(matrix_new);
     Gates_block::apply_to( parameters, matrix_new );
 
@@ -1032,9 +1036,12 @@ double Optimization_Interface::optimization_problem( Matrix_real parameters, voi
     instance->increment_num_iters();
 
     if ( instance->get_use_float() ) {
-        thread_local Matrix_real_float parameters_float;
-        thread_local Matrix_float matrix_new;
-        thread_local Matrix_float ret_temp_float;
+        static tbb::enumerable_thread_specific<Matrix_real_float> parameters_float_tls;
+        static tbb::enumerable_thread_specific<Matrix_float> matrix_new_tls;
+        static tbb::enumerable_thread_specific<Matrix_float> ret_temp_float_tls;
+        Matrix_real_float& parameters_float = parameters_float_tls.local();
+        Matrix_float& matrix_new = matrix_new_tls.local();
+        Matrix_float& ret_temp_float = ret_temp_float_tls.local();
         parameters.copy_to(parameters_float);
         instance->Umtx_float.copy_to(matrix_new);
         instance->Gates_block::apply_to( parameters_float, matrix_new );
@@ -1044,7 +1051,8 @@ double Optimization_Interface::optimization_problem( Matrix_real parameters, voi
         return instance->calculate_cost_function(matrix_new, &ret_temp_float);
     }
 
-    thread_local Matrix matrix_new;
+    static tbb::enumerable_thread_specific<Matrix> matrix_new_tls;
+    Matrix& matrix_new = matrix_new_tls.local();
     instance->Umtx.copy_to(matrix_new);
     instance->Gates_block::apply_to( parameters, matrix_new );
 
@@ -1137,10 +1145,12 @@ void Optimization_Interface::optimization_problem_combined_non_static( Matrix_re
     int trace_offset_loc = instance->get_trace_offset();
 
     if ( instance->get_use_float() ) {
-        thread_local Matrix_real_float parameters_float;
+        static tbb::enumerable_thread_specific<Matrix_real_float> parameters_float_tls;
+        Matrix_real_float& parameters_float = parameters_float_tls.local();
         parameters.copy_to(parameters_float);
         Matrix_float Umtx_loc = instance->get_Umtx_float();
-        thread_local std::vector<Matrix_float> combined_result;
+        static tbb::enumerable_thread_specific<std::vector<Matrix_float>> combined_result_tls;
+        std::vector<Matrix_float>& combined_result = combined_result_tls.local();
         instance->Gates_block::apply_to_combined( parameters_float, Umtx_loc, parallel, combined_result );
         Matrix_float& matrix_new = combined_result[0];
 
@@ -1344,7 +1354,8 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();////////////////////////////////
     // vector containing gradients of the transformed matrix
     Matrix trace_tmp(1,3);
     Matrix Umtx_loc = instance->get_Umtx();
-    thread_local std::vector<Matrix> combined_result;
+    static tbb::enumerable_thread_specific<std::vector<Matrix>> combined_result_tls;
+    std::vector<Matrix>& combined_result = combined_result_tls.local();
     instance->apply_to_combined( parameters, Umtx_loc, parallel, combined_result );
     Matrix& matrix_new = combined_result[0];
 
@@ -1493,7 +1504,8 @@ void Optimization_Interface::optimization_problem_combined_unitary( Matrix_real 
     int parallel = instance->get_parallel_configuration();
 
     Matrix Umtx_loc = instance->get_Umtx();
-    std::vector<Matrix> combined_result;
+    static tbb::enumerable_thread_specific<std::vector<Matrix>> combined_result_tls;
+    std::vector<Matrix>& combined_result = combined_result_tls.local();
     instance->apply_to_combined( parameters, Umtx_loc, parallel, combined_result );
     combined_result[0].copy_to(Umtx);
     Umtx_deriv.resize(combined_result.size() - 1);

@@ -36,8 +36,8 @@ limitations under the License.
 @param matrix The square shaped complex matrix from which the cost function is calculated.
 @return Returns with the calculated cost function.
 */
-double get_cost_function(Matrix matrix, int trace_offset=0);
-double get_cost_function(Matrix_float matrix, int trace_offset=0);
+double get_cost_function(const Matrix& matrix, int trace_offset=0);
+double get_cost_function(const Matrix_float& matrix, int trace_offset=0);
 
 
 /**
@@ -46,8 +46,8 @@ double get_cost_function(Matrix_float matrix, int trace_offset=0);
 @param qbit_num The number of qubits
 @return Returns with the matrix containing the cost function (index 0) and the first correction (index 1).
 */
-Matrix_real get_cost_function_with_correction(Matrix matrix, int qbit_num, int trace_offset=0);
-Matrix_real_float get_cost_function_with_correction(Matrix_float matrix, int qbit_num, int trace_offset=0);
+Matrix_real get_cost_function_with_correction(const Matrix& matrix, int qbit_num, int trace_offset=0);
+Matrix_real_float get_cost_function_with_correction(const Matrix_float& matrix, int qbit_num, int trace_offset=0);
 
 
 /**
@@ -56,8 +56,8 @@ Matrix_real_float get_cost_function_with_correction(Matrix_float matrix, int qbi
 @param qbit_num The number of qubits
 @return Returns with the matrix containing the cost function (index 0), the first correction (index 1) and the second correction (index 2).
 */
-Matrix_real get_cost_function_with_correction2(Matrix matrix, int qbit_num, int trace_offset=0);
-Matrix_real_float get_cost_function_with_correction2(Matrix_float matrix, int qbit_num, int trace_offset=0);
+Matrix_real get_cost_function_with_correction2(const Matrix& matrix, int qbit_num, int trace_offset=0);
+Matrix_real_float get_cost_function_with_correction2(const Matrix_float& matrix, int qbit_num, int trace_offset=0);
 
 double get_cost_function_sum_of_squares(Matrix& matrix);
 Matrix get_deriv_sum_of_squares(Matrix& matrix);
@@ -154,7 +154,6 @@ double real_trace_conj_dot(Matrix& A, Matrix& B);
 double real_trace_conj_dot(Matrix_float& A, Matrix_float& B);
 
 #endif
-
 
 
 

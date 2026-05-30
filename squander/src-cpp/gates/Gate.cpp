@@ -28,6 +28,7 @@ limitations under the License.
 #include <algorithm>
 #include <cmath>
 #include <sstream>
+#include <tbb/enumerable_thread_specific.h>
 
 #ifdef USE_AVX 
 #include "apply_kernel_to_input_AVX.h"
@@ -1204,7 +1205,8 @@ Gate::derivative_kernel(const Matrix_real& precomputed_sincos, int param_idx) {
         return Matrix();
     }
 
-    thread_local Matrix_real shifted;
+    static tbb::enumerable_thread_specific<Matrix_real> shifted_tls;
+    Matrix_real& shifted = shifted_tls.local();
     precomputed_sincos.copy_to(shifted);
     const int offset = param_idx * shifted.stride;
     const double sin_theta = shifted[offset + 0];
@@ -1225,7 +1227,8 @@ Gate::derivative_kernel(const Matrix_real_float& precomputed_sincos, int param_i
         return Matrix_float();
     }
 
-    thread_local Matrix_real_float shifted;
+    static tbb::enumerable_thread_specific<Matrix_real_float> shifted_tls;
+    Matrix_real_float& shifted = shifted_tls.local();
     precomputed_sincos.copy_to(shifted);
     const int offset = param_idx * shifted.stride;
     const float sin_theta = shifted[offset + 0];

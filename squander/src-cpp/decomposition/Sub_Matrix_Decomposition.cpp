@@ -25,6 +25,8 @@ limitations under the License.
 
 #include "BFGS_Powell.h"
 
+#include <tbb/enumerable_thread_specific.h>
+
 
 #ifdef __MPI__
 #include <mpi.h>
@@ -412,7 +414,8 @@ double Sub_Matrix_Decomposition::optimization_problem( double* parameters ) {
 
         // get the transformed matrix with the gates in the list
         Matrix_real parameters_mtx(parameters, 1, parameter_num );
-        thread_local Matrix matrix_new;
+        static tbb::enumerable_thread_specific<Matrix> matrix_new_tls;
+        Matrix& matrix_new = matrix_new_tls.local();
         Umtx.copy_to(matrix_new);
         apply_to( parameters_mtx, matrix_new );
 
@@ -442,7 +445,8 @@ double Sub_Matrix_Decomposition::optimization_problem( Matrix_real parameters, v
     Sub_Matrix_Decomposition* instance = reinterpret_cast<Sub_Matrix_Decomposition*>(void_instance);
     std::vector<Gate*> gates_loc = instance->get_gates();
 
-    thread_local Matrix matrix_new;
+    static tbb::enumerable_thread_specific<Matrix> matrix_new_tls;
+    Matrix& matrix_new = matrix_new_tls.local();
     instance->get_Umtx().copy_to(matrix_new);
     instance->apply_to( parameters, matrix_new );
 
@@ -508,7 +512,8 @@ void Sub_Matrix_Decomposition::optimization_problem_combined( Matrix_real parame
         }
         else {
 
-            thread_local Matrix_real parameters_d;
+            static tbb::enumerable_thread_specific<Matrix_real> parameters_d_tls;
+            Matrix_real& parameters_d = parameters_d_tls.local();
             parameters.copy_to(parameters_d);
             parameters_d[i] = parameters_d[i] + dparam;
 

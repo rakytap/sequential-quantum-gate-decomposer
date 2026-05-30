@@ -70,7 +70,7 @@ extern "C" int LAPACKE_cgesdd(int matrix_order, char jobz, int m, int n, QGD_Com
 @param trace_offset The offset in the first columns from which the "trace" is calculated. In this case Tr(A) = sum_(i-offset=j) A_{ij}
 @return Returns with the calculated cost function.
 */
-double get_cost_function(Matrix matrix, int trace_offset) {
+double get_cost_function(const Matrix& matrix, int trace_offset) {
 
     int matrix_size = matrix.cols ;
 /*
@@ -161,7 +161,7 @@ double get_cost_function(Matrix matrix, int trace_offset) {
 
 }
 
-double get_cost_function(Matrix_float matrix, int trace_offset) {
+double get_cost_function(const Matrix_float& matrix, int trace_offset) {
 
     int matrix_size = matrix.cols;
     double trace_real = 0.0;
@@ -188,7 +188,7 @@ double get_cost_function(Matrix_float matrix, int trace_offset) {
 @param qbit_num The number of qubits
 @return Returns with the matrix containing the cost function (index 0) and the first correction (index 1).
 */
-Matrix_real get_cost_function_with_correction(Matrix matrix, int qbit_num, int trace_offset) {
+Matrix_real get_cost_function_with_correction(const Matrix& matrix, int qbit_num, int trace_offset) {
 
     Matrix_real ret(1,2);
 
@@ -251,7 +251,7 @@ Matrix_real get_cost_function_with_correction(Matrix matrix, int qbit_num, int t
 
 }
 
-Matrix_real_float get_cost_function_with_correction(Matrix_float matrix, int qbit_num, int trace_offset) {
+Matrix_real_float get_cost_function_with_correction(const Matrix_float& matrix, int qbit_num, int trace_offset) {
 
     Matrix_real_float ret(1,2);
 
@@ -292,7 +292,7 @@ Matrix_real_float get_cost_function_with_correction(Matrix_float matrix, int qbi
 @param qbit_num The number of qubits
 @return Returns with the matrix containing the cost function (index 0), the first correction (index 1) and the second correction (index 2).
 */
-Matrix_real get_cost_function_with_correction2(Matrix matrix, int qbit_num, int trace_offset) {
+Matrix_real get_cost_function_with_correction2(const Matrix& matrix, int qbit_num, int trace_offset) {
 
 
     Matrix_real ret(1,3);
@@ -403,7 +403,7 @@ Matrix_real get_cost_function_with_correction2(Matrix matrix, int qbit_num, int 
 
 }
 
-Matrix_real_float get_cost_function_with_correction2(Matrix_float matrix, int qbit_num, int trace_offset) {
+Matrix_real_float get_cost_function_with_correction2(const Matrix_float& matrix, int qbit_num, int trace_offset) {
 
     Matrix_real_float correction1 = get_cost_function_with_correction(matrix, qbit_num, trace_offset);
     Matrix_real_float ret(1,3);

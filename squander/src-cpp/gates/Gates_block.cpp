@@ -22,6 +22,7 @@ limitations under the License.
 
 #include <deque>
 #include <set>
+#include <tbb/enumerable_thread_specific.h>
 #include "CU.h"
 #include "CZ.h"
 #include "CH.h"
@@ -70,8 +71,8 @@ limitations under the License.
 #include "apply_large_kernel_to_input_AVX.h"
 #endif
 
-static thread_local int gates_block_derivative_depth = 0;
-static thread_local int gates_block_fusion_depth = 0;
+static tbb::enumerable_thread_specific<int> gates_block_derivative_depth([](){ return 0; });
+static tbb::enumerable_thread_specific<int> gates_block_fusion_depth([](){ return 0; });
 
 
 //static tbb::spin_mutex my_mutex;
@@ -389,11 +390,13 @@ Gates_block::apply_to_inner( Matrix_real& parameters_mtx_in, const Matrix_real& 
 
     if (min_fusion != -1 && qbit_num >= min_fusion && size <= (input.cols == 1 ? 5 : 2) && qbit_num != size && gates.size() > 1) {
         auto fb = fusion_block.get();
-        thread_local std::deque<Matrix> Umtx_mini_reusable;
-        if (Umtx_mini_reusable.size() <= static_cast<size_t>(gates_block_fusion_depth)) {
-            Umtx_mini_reusable.resize(gates_block_fusion_depth + 1);
+        int& fusion_depth = gates_block_fusion_depth.local();
+        static tbb::enumerable_thread_specific<std::deque<Matrix>> Umtx_mini_reusable_tls([](){ return std::deque<Matrix>{}; });
+        std::deque<Matrix>& Umtx_mini_reusable = Umtx_mini_reusable_tls.local();
+        if (Umtx_mini_reusable.size() <= static_cast<size_t>(fusion_depth)) {
+            Umtx_mini_reusable.resize(fusion_depth + 1);
         }
-        Matrix& Umtx_mini = Umtx_mini_reusable[gates_block_fusion_depth];
+        Matrix& Umtx_mini = Umtx_mini_reusable[fusion_depth];
         reset_identity(Umtx_mini, Power_of_2(size));
         if (fb == nullptr) {
 
@@ -408,18 +411,20 @@ Gates_block::apply_to_inner( Matrix_real& parameters_mtx_in, const Matrix_real& 
             fusion_block.update(clone_block);
             fb = fusion_block.get();
         }
-        gates_block_fusion_depth++;
+        fusion_depth++;
         fb->apply_to_inner(parameters_mtx_in, precomputed_sincos_in, Umtx_mini, parallel);
-        gates_block_fusion_depth--;
+        fusion_depth--;
 
-        thread_local std::deque<Gate> merged_gate_reusable;
-        thread_local std::deque<int> merged_gate_qbit_num;
-        if (merged_gate_reusable.size() <= static_cast<size_t>(gates_block_fusion_depth)) {
-            merged_gate_reusable.resize(gates_block_fusion_depth + 1);
-            merged_gate_qbit_num.resize(gates_block_fusion_depth + 1, -1);
+        static tbb::enumerable_thread_specific<std::deque<Gate>> merged_gate_reusable_tls([](){ return std::deque<Gate>{}; });
+        static tbb::enumerable_thread_specific<std::deque<int>> merged_gate_qbit_num_tls([](){ return std::deque<int>{}; });
+        std::deque<Gate>& merged_gate_reusable = merged_gate_reusable_tls.local();
+        std::deque<int>& merged_gate_qbit_num = merged_gate_qbit_num_tls.local();
+        if (merged_gate_reusable.size() <= static_cast<size_t>(fusion_depth)) {
+            merged_gate_reusable.resize(fusion_depth + 1);
+            merged_gate_qbit_num.resize(fusion_depth + 1, -1);
         }
-        Gate& merged_gate = merged_gate_reusable[gates_block_fusion_depth];
-        int& merged_gate_qbits = merged_gate_qbit_num[gates_block_fusion_depth];
+        Gate& merged_gate = merged_gate_reusable[fusion_depth];
+        int& merged_gate_qbits = merged_gate_qbit_num[fusion_depth];
         if (merged_gate_qbits != qbit_num) {
             merged_gate = Gate(qbit_num);
             merged_gate_qbits = qbit_num;
@@ -499,11 +504,13 @@ Gates_block::apply_to_inner( Matrix_real_float& parameters_mtx_in, const Matrix_
 
     if (min_fusion != -1 && qbit_num >= min_fusion && size <= (input.cols == 1 ? 5 : 2) && qbit_num != size && gates.size() > 1) {
         auto fb = fusion_block.get();
-        thread_local std::deque<Matrix_float> Umtx_mini_reusable;
-        if (Umtx_mini_reusable.size() <= static_cast<size_t>(gates_block_fusion_depth)) {
-            Umtx_mini_reusable.resize(gates_block_fusion_depth + 1);
+        int& fusion_depth = gates_block_fusion_depth.local();
+        static tbb::enumerable_thread_specific<std::deque<Matrix_float>> Umtx_mini_reusable_tls([](){ return std::deque<Matrix_float>{}; });
+        std::deque<Matrix_float>& Umtx_mini_reusable = Umtx_mini_reusable_tls.local();
+        if (Umtx_mini_reusable.size() <= static_cast<size_t>(fusion_depth)) {
+            Umtx_mini_reusable.resize(fusion_depth + 1);
         }
-        Matrix_float& Umtx_mini = Umtx_mini_reusable[gates_block_fusion_depth];
+        Matrix_float& Umtx_mini = Umtx_mini_reusable[fusion_depth];
         reset_identity(Umtx_mini, Power_of_2(size));
         if (fb == nullptr) {
 
@@ -518,18 +525,20 @@ Gates_block::apply_to_inner( Matrix_real_float& parameters_mtx_in, const Matrix_
             fusion_block.update(clone_block);
             fb = fusion_block.get();
         }
-        gates_block_fusion_depth++;
+        fusion_depth++;
         fb->apply_to_inner(parameters_mtx_in, precomputed_sincos_in, Umtx_mini, parallel);
-        gates_block_fusion_depth--;
+        fusion_depth--;
 
-        thread_local std::deque<Gate> merged_gate_reusable;
-        thread_local std::deque<int> merged_gate_qbit_num;
-        if (merged_gate_reusable.size() <= static_cast<size_t>(gates_block_fusion_depth)) {
-            merged_gate_reusable.resize(gates_block_fusion_depth + 1);
-            merged_gate_qbit_num.resize(gates_block_fusion_depth + 1, -1);
+        static tbb::enumerable_thread_specific<std::deque<Gate>> merged_gate_reusable_tls([](){ return std::deque<Gate>{}; });
+        static tbb::enumerable_thread_specific<std::deque<int>> merged_gate_qbit_num_tls([](){ return std::deque<int>{}; });
+        std::deque<Gate>& merged_gate_reusable = merged_gate_reusable_tls.local();
+        std::deque<int>& merged_gate_qbit_num = merged_gate_qbit_num_tls.local();
+        if (merged_gate_reusable.size() <= static_cast<size_t>(fusion_depth)) {
+            merged_gate_reusable.resize(fusion_depth + 1);
+            merged_gate_qbit_num.resize(fusion_depth + 1, -1);
         }
-        Gate& merged_gate = merged_gate_reusable[gates_block_fusion_depth];
-        int& merged_gate_qbits = merged_gate_qbit_num[gates_block_fusion_depth];
+        Gate& merged_gate = merged_gate_reusable[fusion_depth];
+        int& merged_gate_qbits = merged_gate_qbit_num[fusion_depth];
         if (merged_gate_qbits != qbit_num) {
             merged_gate = Gate(qbit_num);
             merged_gate_qbits = qbit_num;
@@ -801,17 +810,19 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input, i
             
         int deriv_parameter_idx = gate_deriv->get_parameter_start_idx();       
 
-        thread_local std::deque<Matrix> input_loc_reusable;
-        if (input_loc_reusable.size() <= static_cast<size_t>(gates_block_derivative_depth)) {
-            input_loc_reusable.resize(gates_block_derivative_depth + 1);
+        int& derivative_depth = gates_block_derivative_depth.local();
+        static tbb::enumerable_thread_specific<std::deque<Matrix>> input_loc_reusable_tls([](){ return std::deque<Matrix>{}; });
+        std::deque<Matrix>& input_loc_reusable = input_loc_reusable_tls.local();
+        if (input_loc_reusable.size() <= static_cast<size_t>(derivative_depth)) {
+            input_loc_reusable.resize(derivative_depth + 1);
         }
-        Matrix& input_loc = input_loc_reusable[gates_block_derivative_depth];
+        Matrix& input_loc = input_loc_reusable[derivative_depth];
         input.copy_to(input_loc);
 
         std::vector<Matrix> grad_loc;
         grad_loc.reserve(parameter_num);
 
-        gates_block_derivative_depth++;
+        derivative_depth++;
         for( size_t idx=0; idx<gates.size(); idx++) {            
 
             Gate* operation = gates[idx];
@@ -848,7 +859,7 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input, i
                     
             }
         }
-        gates_block_derivative_depth--;
+        derivative_depth--;
 
 
         for ( int idx = 0; idx<(int)grad_loc.size(); idx++ ) {
@@ -922,17 +933,19 @@ Gates_block::apply_derivate_to( Matrix_real_float& parameters_mtx_in, Matrix_flo
             
         int deriv_parameter_idx = gate_deriv->get_parameter_start_idx();       
 
-        thread_local std::deque<Matrix_float> input_loc_reusable;
-        if (input_loc_reusable.size() <= static_cast<size_t>(gates_block_derivative_depth)) {
-            input_loc_reusable.resize(gates_block_derivative_depth + 1);
+        int& derivative_depth = gates_block_derivative_depth.local();
+        static tbb::enumerable_thread_specific<std::deque<Matrix_float>> input_loc_reusable_tls([](){ return std::deque<Matrix_float>{}; });
+        std::deque<Matrix_float>& input_loc_reusable = input_loc_reusable_tls.local();
+        if (input_loc_reusable.size() <= static_cast<size_t>(derivative_depth)) {
+            input_loc_reusable.resize(derivative_depth + 1);
         }
-        Matrix_float& input_loc = input_loc_reusable[gates_block_derivative_depth];
+        Matrix_float& input_loc = input_loc_reusable[derivative_depth];
         input.copy_to(input_loc);
 
         std::vector<Matrix_float> grad_loc;
         grad_loc.reserve(parameter_num);
 
-        gates_block_derivative_depth++;
+        derivative_depth++;
         for( size_t idx=0; idx<gates.size(); idx++) {            
 
             Gate* operation = gates[idx];
@@ -969,7 +982,7 @@ Gates_block::apply_derivate_to( Matrix_real_float& parameters_mtx_in, Matrix_flo
                     
             }
         }
-        gates_block_derivative_depth--;
+        derivative_depth--;
 
 
         for ( int idx = 0; idx<(int)grad_loc.size(); idx++ ) {

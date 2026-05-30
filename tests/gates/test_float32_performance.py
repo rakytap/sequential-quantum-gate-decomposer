@@ -13,6 +13,14 @@ MIN_FLOAT32_SPEEDUP = 2.0
 MIN_CNOT_SPEEDUP = 0.25
 
 
+def _make_cnot():
+    return CNOT(QUBIT_NUM, 0, QUBIT_NUM - 1)
+
+
+def _make_u3():
+    return U3(QUBIT_NUM, 0)
+
+
 def _parameters(gate, dtype):
     pnum = gate.get_Parameter_Num()
     if pnum == 0:
@@ -53,22 +61,22 @@ def _time_apply(gate, dtype):
 
 
 @pytest.mark.parametrize(
-    "gate,min_speedup",
+    "gate_factory,gate_name,min_speedup",
     [
-        pytest.param(CNOT(QUBIT_NUM, 0, QUBIT_NUM - 1), MIN_CNOT_SPEEDUP, id="CNOT"),
-        pytest.param(U3(QUBIT_NUM, 0), MIN_FLOAT32_SPEEDUP, id="U3"),
+        pytest.param(_make_cnot, "CNOT", MIN_CNOT_SPEEDUP, id="CNOT"),
+        pytest.param(_make_u3, "U3", MIN_FLOAT32_SPEEDUP, id="U3"),
     ],
 )
-def test_float32_apply_to_hot_path_has_expected_speed(gate, min_speedup):
+def test_float32_apply_to_hot_path_has_expected_speed(gate_factory, gate_name, min_speedup):
     """Float32 should be a real HPC path, not just accepted at the API boundary."""
     timings = []
     for _ in range(3):
-        t64 = _time_apply(gate, np.float64)
-        t32 = _time_apply(gate, np.float32)
+        t64 = _time_apply(gate_factory(), np.float64)
+        t32 = _time_apply(gate_factory(), np.float32)
         timings.append(t64 / t32)
 
     speedup = float(np.median(timings))
     assert speedup >= min_speedup, (
-        f"{gate.get_Name()} float32 speedup {speedup:.2f}x is below "
+        f"{gate_name} float32 speedup {speedup:.2f}x is below "
         f"{min_speedup:.1f}x; timings={timings}"
     )
