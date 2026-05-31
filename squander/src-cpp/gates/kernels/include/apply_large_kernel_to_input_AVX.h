@@ -295,6 +295,7 @@ void apply_5qbit_kernel_to_state_vector_input_AVX_TBB(Matrix& unitary, Matrix& i
 @param matrix_size The size of the input matrix (should be a power of 2)
 */
 void apply_crot_kernel_to_matrix_input_AVX_parallel(Matrix& u3_1qbit1,Matrix& u3_1qbit2,Matrix& input, const int& target_qbit, const int& control_qbit, const int& matrix_size);
+void apply_crot_kernel_to_matrix_input_from_right_AVX_parallel(Matrix& u3_1qbit1,Matrix& u3_1qbit2,Matrix& input, const int& target_qbit, const int& control_qbit, const int& matrix_size);
 
 /**
 @brief Apply controlled rotation (CROT) kernel to a matrix input using AVX optimization
@@ -306,6 +307,7 @@ void apply_crot_kernel_to_matrix_input_AVX_parallel(Matrix& u3_1qbit1,Matrix& u3
 @param matrix_size The size of the input matrix (should be a power of 2)
 */
 void apply_crot_kernel_to_matrix_input_AVX(Matrix& u3_1qbit1, Matrix& u3_qbit2, Matrix& input, const int& target_qbit, const int& control_qbit, const int& matrix_size);
+void apply_crot_kernel_to_matrix_input_from_right_AVX(Matrix& u3_1qbit1, Matrix& u3_qbit2, Matrix& input, const int& target_qbit, const int& control_qbit, const int& matrix_size);
 
 void apply_large_kernel_to_input_AVX32(Matrix_float& unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size);
 void apply_large_kernel_to_input_AVX_OpenMP32(Matrix_float& unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size);
@@ -336,4 +338,6 @@ void apply_5qbit_kernel_to_state_vector_input_AVX_TBB32(Matrix_float& unitary, M
 
 void apply_crot_kernel_to_matrix_input_AVX_parallel32(Matrix_float& u3_1qbit1, Matrix_float& u3_1qbit2, Matrix_float& input, const int& target_qbit, const int& control_qbit, const int& matrix_size);
 void apply_crot_kernel_to_matrix_input_AVX32(Matrix_float& u3_1qbit1, Matrix_float& u3_qbit2, Matrix_float& input, const int& target_qbit, const int& control_qbit, const int& matrix_size);
+void apply_crot_kernel_to_matrix_input_from_right_AVX_parallel32(Matrix_float& u3_1qbit1, Matrix_float& u3_1qbit2, Matrix_float& input, const int& target_qbit, const int& control_qbit, const int& matrix_size);
+void apply_crot_kernel_to_matrix_input_from_right_AVX32(Matrix_float& u3_1qbit1, Matrix_float& u3_qbit2, Matrix_float& input, const int& target_qbit, const int& control_qbit, const int& matrix_size);
 #endif

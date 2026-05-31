@@ -2037,7 +2037,15 @@ Gate::apply_kernel_from_right( Matrix& u3_1qbit, Matrix& input, const Matrix* al
     if (type == CROT_OPERATION && alt_kernel != nullptr) {
         Matrix branch0 = alt_kernel->copy();
         Matrix branch1 = u3_1qbit.copy();
+#ifdef USE_AVX
+        if (qbit_num < 10) {
+            apply_crot_kernel_to_matrix_input_from_right_AVX(branch0, branch1, input, target_qbit, control_qbit, input.rows);
+        } else {
+            apply_crot_kernel_to_matrix_input_from_right_AVX_parallel(branch0, branch1, input, target_qbit, control_qbit, input.rows);
+        }
+#else
         apply_crot_kernel_to_matrix_input_from_right(branch0, branch1, input, target_qbit, control_qbit, input.rows);
+#endif
         return;
     }
 
@@ -2118,7 +2126,15 @@ Gate::apply_kernel_from_right( Matrix_float& u3_1qbit, Matrix_float& input, cons
     if (type == CROT_OPERATION && alt_kernel != nullptr) {
         Matrix_float branch0 = alt_kernel->copy();
         Matrix_float branch1 = u3_1qbit.copy();
+#ifdef USE_AVX
+        if (qbit_num < 10) {
+            apply_crot_kernel_to_matrix_input_from_right_AVX32(branch0, branch1, input, target_qbit, control_qbit, input.rows);
+        } else {
+            apply_crot_kernel_to_matrix_input_from_right_AVX_parallel32(branch0, branch1, input, target_qbit, control_qbit, input.rows);
+        }
+#else
         apply_crot_kernel_to_matrix_input_from_right(branch0, branch1, input, target_qbit, control_qbit, input.rows);
+#endif
         return;
     }
 

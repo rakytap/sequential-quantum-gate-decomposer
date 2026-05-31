@@ -4002,6 +4002,253 @@ apply_crot_kernel_to_matrix_input_AVX_parallel(Matrix& u3_1qbit1,Matrix& u3_1qbi
 
 }
 
+void
+apply_crot_kernel_to_matrix_input_from_right_AVX(Matrix& u3_1qbit1, Matrix& u3_1qbit2, Matrix& input, const int& target_qbit, const int& control_qbit, const int& matrix_size) {
+
+    input.ensure_aligned();
+
+    const int index_step_target = 1 << target_qbit;
+
+    auto select_gate = [&](int block_start) -> Matrix& {
+        return ((control_qbit < 0) || ((block_start >> control_qbit) & 1)) ? u3_1qbit1 : u3_1qbit2;
+    };
+
+    auto apply_gate_block = [&](Matrix& gate, double* element, double* element_pair, int avx_limit, int& col_idx) {
+        const __m256d u00r = _mm256_broadcast_sd(&gate[0].real);
+        const __m256d u00i = _mm256_broadcast_sd(&gate[0].imag);
+        const __m256d u01r = _mm256_broadcast_sd(&gate[1].real);
+        const __m256d u01i = _mm256_broadcast_sd(&gate[1].imag);
+        const __m256d u10r = _mm256_broadcast_sd(&gate[2].real);
+        const __m256d u10i = _mm256_broadcast_sd(&gate[2].imag);
+        const __m256d u11r = _mm256_broadcast_sd(&gate[3].real);
+        const __m256d u11i = _mm256_broadcast_sd(&gate[3].imag);
+
+        for (col_idx = 0; col_idx < avx_limit; col_idx += 8) {
+            __m256d element_vec = _mm256_loadu_pd(element + col_idx);
+            __m256d element_vec2 = _mm256_loadu_pd(element + col_idx + 4);
+            __m256d tmp = _mm256_shuffle_pd(element_vec, element_vec2, 0);
+            element_vec2 = _mm256_shuffle_pd(element_vec, element_vec2, 0xf);
+            element_vec = tmp;
+
+            __m256d element_pair_vec = _mm256_loadu_pd(element_pair + col_idx);
+            __m256d element_pair_vec2 = _mm256_loadu_pd(element_pair + col_idx + 4);
+            tmp = _mm256_shuffle_pd(element_pair_vec, element_pair_vec2, 0);
+            element_pair_vec2 = _mm256_shuffle_pd(element_pair_vec, element_pair_vec2, 0xf);
+            element_pair_vec = tmp;
+
+            __m256d vec3 = _mm256_mul_pd(u00r, element_vec);
+            vec3 = _mm256_fnmadd_pd(u00i, element_vec2, vec3);
+            __m256d vec4 = _mm256_mul_pd(u10r, element_pair_vec);
+            vec4 = _mm256_fnmadd_pd(u10i, element_pair_vec2, vec4);
+            vec3 = _mm256_add_pd(vec3, vec4);
+            __m256d vec5 = _mm256_mul_pd(u00r, element_vec2);
+            vec5 = _mm256_fmadd_pd(u00i, element_vec, vec5);
+            __m256d vec6 = _mm256_mul_pd(u10r, element_pair_vec2);
+            vec6 = _mm256_fmadd_pd(u10i, element_pair_vec, vec6);
+            vec5 = _mm256_add_pd(vec5, vec6);
+
+            tmp = _mm256_shuffle_pd(vec3, vec5, 0);
+            vec5 = _mm256_shuffle_pd(vec3, vec5, 0xf);
+            vec3 = tmp;
+            _mm256_storeu_pd(element + col_idx, vec3);
+            _mm256_storeu_pd(element + col_idx + 4, vec5);
+
+            __m256d vec7 = _mm256_mul_pd(u01r, element_vec);
+            vec7 = _mm256_fnmadd_pd(u01i, element_vec2, vec7);
+            __m256d vec8 = _mm256_mul_pd(u11r, element_pair_vec);
+            vec8 = _mm256_fnmadd_pd(u11i, element_pair_vec2, vec8);
+            vec7 = _mm256_add_pd(vec7, vec8);
+            __m256d vec9 = _mm256_mul_pd(u01r, element_vec2);
+            vec9 = _mm256_fmadd_pd(u01i, element_vec, vec9);
+            __m256d vec10 = _mm256_mul_pd(u11r, element_pair_vec2);
+            vec10 = _mm256_fmadd_pd(u11i, element_pair_vec, vec10);
+            vec9 = _mm256_add_pd(vec9, vec10);
+
+            tmp = _mm256_shuffle_pd(vec7, vec9, 0);
+            vec9 = _mm256_shuffle_pd(vec7, vec9, 0xf);
+            vec7 = tmp;
+            _mm256_storeu_pd(element_pair + col_idx, vec7);
+            _mm256_storeu_pd(element_pair + col_idx + 4, vec9);
+        }
+    };
+
+    for (int row_idx = 0; row_idx < input.rows; ++row_idx) {
+        const int row_offset = row_idx * input.stride;
+        int current_idx = 0;
+        int current_idx_pair = index_step_target;
+
+        while (current_idx_pair < input.cols) {
+            const bool mixed = (control_qbit >= 0 && control_qbit < target_qbit);
+
+            if (!mixed) {
+                Matrix& gate = select_gate(current_idx);
+                double* element = (double*)input.get_data() + 2 * (row_offset + current_idx);
+                double* element_pair = (double*)input.get_data() + 2 * (row_offset + current_idx_pair);
+                int col_idx = 0;
+                const int avx_limit = 2 * (index_step_target - 3);
+                apply_gate_block(gate, element, element_pair, avx_limit, col_idx);
+
+                for (int c = col_idx / 2; c < index_step_target; ++c) {
+                    const int index = row_offset + current_idx + c;
+                    const int index_pair = row_offset + current_idx_pair + c;
+                    QGD_Complex16 a = input[index];
+                    QGD_Complex16 b = input[index_pair];
+                    QGD_Complex16 tmp1 = mult(gate[0], a);
+                    QGD_Complex16 tmp2 = mult(gate[2], b);
+                    input[index].real = tmp1.real + tmp2.real;
+                    input[index].imag = tmp1.imag + tmp2.imag;
+                    tmp1 = mult(gate[1], a);
+                    tmp2 = mult(gate[3], b);
+                    input[index_pair].real = tmp1.real + tmp2.real;
+                    input[index_pair].imag = tmp1.imag + tmp2.imag;
+                }
+            } else {
+                for (int idx = 0; idx < index_step_target; ++idx) {
+                    const int current_idx_loc = current_idx + idx;
+                    const int current_idx_pair_loc = current_idx_pair + idx;
+                    Matrix& gate = select_gate(current_idx_loc);
+                    const int index = row_offset + current_idx_loc;
+                    const int index_pair = row_offset + current_idx_pair_loc;
+                    QGD_Complex16 a = input[index];
+                    QGD_Complex16 b = input[index_pair];
+                    QGD_Complex16 tmp1 = mult(gate[0], a);
+                    QGD_Complex16 tmp2 = mult(gate[2], b);
+                    input[index].real = tmp1.real + tmp2.real;
+                    input[index].imag = tmp1.imag + tmp2.imag;
+                    tmp1 = mult(gate[1], a);
+                    tmp2 = mult(gate[3], b);
+                    input[index_pair].real = tmp1.real + tmp2.real;
+                    input[index_pair].imag = tmp1.imag + tmp2.imag;
+                }
+            }
+
+            current_idx += (index_step_target << 1);
+            current_idx_pair += (index_step_target << 1);
+        }
+    }
+
+    (void)matrix_size;
+}
+
+void
+apply_crot_kernel_to_matrix_input_from_right_AVX_parallel(Matrix& u3_1qbit1,Matrix& u3_1qbit2, Matrix& input, const int& target_qbit, const int& control_qbit, const int& matrix_size) {
+
+    input.ensure_aligned();
+
+    const int index_step_target = 1 << target_qbit;
+
+    tbb::parallel_for(tbb::blocked_range<int>(0, input.rows, 16), [&](const tbb::blocked_range<int>& range) {
+        for (int row_idx = range.begin(); row_idx < range.end(); ++row_idx) {
+            const int row_offset = row_idx * input.stride;
+            int current_idx = 0;
+            int current_idx_pair = index_step_target;
+
+            while (current_idx_pair < input.cols) {
+                const bool mixed = (control_qbit >= 0 && control_qbit < target_qbit);
+
+                if (!mixed) {
+                    Matrix& gate = ((control_qbit < 0) || ((current_idx >> control_qbit) & 1)) ? u3_1qbit1 : u3_1qbit2;
+                    const __m256d u00r = _mm256_broadcast_sd(&gate[0].real);
+                    const __m256d u00i = _mm256_broadcast_sd(&gate[0].imag);
+                    const __m256d u01r = _mm256_broadcast_sd(&gate[1].real);
+                    const __m256d u01i = _mm256_broadcast_sd(&gate[1].imag);
+                    const __m256d u10r = _mm256_broadcast_sd(&gate[2].real);
+                    const __m256d u10i = _mm256_broadcast_sd(&gate[2].imag);
+                    const __m256d u11r = _mm256_broadcast_sd(&gate[3].real);
+                    const __m256d u11i = _mm256_broadcast_sd(&gate[3].imag);
+                    double* element = (double*)input.get_data() + 2 * (row_offset + current_idx);
+                    double* element_pair = (double*)input.get_data() + 2 * (row_offset + current_idx_pair);
+                    int col_idx = 0;
+                    const int avx_limit = 2 * (index_step_target - 3);
+
+                    for (; col_idx < avx_limit; col_idx += 8) {
+                        __m256d element_vec = _mm256_loadu_pd(element + col_idx);
+                        __m256d element_vec2 = _mm256_loadu_pd(element + col_idx + 4);
+                        __m256d tmp = _mm256_shuffle_pd(element_vec, element_vec2, 0);
+                        element_vec2 = _mm256_shuffle_pd(element_vec, element_vec2, 0xf);
+                        element_vec = tmp;
+                        __m256d element_pair_vec = _mm256_loadu_pd(element_pair + col_idx);
+                        __m256d element_pair_vec2 = _mm256_loadu_pd(element_pair + col_idx + 4);
+                        tmp = _mm256_shuffle_pd(element_pair_vec, element_pair_vec2, 0);
+                        element_pair_vec2 = _mm256_shuffle_pd(element_pair_vec, element_pair_vec2, 0xf);
+                        element_pair_vec = tmp;
+
+                        __m256d vec3 = _mm256_mul_pd(u00r, element_vec);
+                        vec3 = _mm256_fnmadd_pd(u00i, element_vec2, vec3);
+                        __m256d vec4 = _mm256_mul_pd(u10r, element_pair_vec);
+                        vec4 = _mm256_fnmadd_pd(u10i, element_pair_vec2, vec4);
+                        vec3 = _mm256_add_pd(vec3, vec4);
+                        __m256d vec5 = _mm256_mul_pd(u00r, element_vec2);
+                        vec5 = _mm256_fmadd_pd(u00i, element_vec, vec5);
+                        __m256d vec6 = _mm256_mul_pd(u10r, element_pair_vec2);
+                        vec6 = _mm256_fmadd_pd(u10i, element_pair_vec, vec6);
+                        vec5 = _mm256_add_pd(vec5, vec6);
+                        tmp = _mm256_shuffle_pd(vec3, vec5, 0);
+                        vec5 = _mm256_shuffle_pd(vec3, vec5, 0xf);
+                        vec3 = tmp;
+                        _mm256_storeu_pd(element + col_idx, vec3);
+                        _mm256_storeu_pd(element + col_idx + 4, vec5);
+
+                        __m256d vec7 = _mm256_mul_pd(u01r, element_vec);
+                        vec7 = _mm256_fnmadd_pd(u01i, element_vec2, vec7);
+                        __m256d vec8 = _mm256_mul_pd(u11r, element_pair_vec);
+                        vec8 = _mm256_fnmadd_pd(u11i, element_pair_vec2, vec8);
+                        vec7 = _mm256_add_pd(vec7, vec8);
+                        __m256d vec9 = _mm256_mul_pd(u01r, element_vec2);
+                        vec9 = _mm256_fmadd_pd(u01i, element_vec, vec9);
+                        __m256d vec10 = _mm256_mul_pd(u11r, element_pair_vec2);
+                        vec10 = _mm256_fmadd_pd(u11i, element_pair_vec, vec10);
+                        vec9 = _mm256_add_pd(vec9, vec10);
+                        tmp = _mm256_shuffle_pd(vec7, vec9, 0);
+                        vec9 = _mm256_shuffle_pd(vec7, vec9, 0xf);
+                        vec7 = tmp;
+                        _mm256_storeu_pd(element_pair + col_idx, vec7);
+                        _mm256_storeu_pd(element_pair + col_idx + 4, vec9);
+                    }
+
+                    for (int c = col_idx / 2; c < index_step_target; ++c) {
+                        const int index = row_offset + current_idx + c;
+                        const int index_pair = row_offset + current_idx_pair + c;
+                        QGD_Complex16 a = input[index];
+                        QGD_Complex16 b = input[index_pair];
+                        QGD_Complex16 tmp1 = mult(gate[0], a);
+                        QGD_Complex16 tmp2 = mult(gate[2], b);
+                        input[index].real = tmp1.real + tmp2.real;
+                        input[index].imag = tmp1.imag + tmp2.imag;
+                        tmp1 = mult(gate[1], a);
+                        tmp2 = mult(gate[3], b);
+                        input[index_pair].real = tmp1.real + tmp2.real;
+                        input[index_pair].imag = tmp1.imag + tmp2.imag;
+                    }
+                } else {
+                    for (int idx = 0; idx < index_step_target; ++idx) {
+                        const int current_idx_loc = current_idx + idx;
+                        const int current_idx_pair_loc = current_idx_pair + idx;
+                        Matrix& gate = ((current_idx_loc >> control_qbit) & 1) ? u3_1qbit1 : u3_1qbit2;
+                        const int index = row_offset + current_idx_loc;
+                        const int index_pair = row_offset + current_idx_pair_loc;
+                        QGD_Complex16 a = input[index];
+                        QGD_Complex16 b = input[index_pair];
+                        QGD_Complex16 tmp1 = mult(gate[0], a);
+                        QGD_Complex16 tmp2 = mult(gate[2], b);
+                        input[index].real = tmp1.real + tmp2.real;
+                        input[index].imag = tmp1.imag + tmp2.imag;
+                        tmp1 = mult(gate[1], a);
+                        tmp2 = mult(gate[3], b);
+                        input[index_pair].real = tmp1.real + tmp2.real;
+                        input[index_pair].imag = tmp1.imag + tmp2.imag;
+                    }
+                }
+
+                current_idx += (index_step_target << 1);
+                current_idx_pair += (index_step_target << 1);
+            }
+        }
+    });
+
+    (void)matrix_size;
+}
+
 
 void apply_large_kernel_to_input_AVX32(Matrix_float& unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size) {
     if (input.cols == 1) {
@@ -4811,6 +5058,106 @@ void apply_crot_kernel_to_matrix_input_AVX_parallel32(Matrix_float& u3_1qbit1, M
     apply_crot_kernel_to_matrix_input_AVX32(u3_1qbit1, u3_1qbit2, input, target_qbit, control_qbit, matrix_size);
 }
 
+void apply_crot_kernel_to_matrix_input_from_right_AVX_parallel32(Matrix_float& u3_1qbit1, Matrix_float& u3_1qbit2, Matrix_float& input, const int& target_qbit, const int& control_qbit, const int& matrix_size) {
+    const int index_step_target = 1 << target_qbit;
+
+    auto cmul_ps = [](__m256 ar, __m256 ai, __m256 x) {
+        const __m256 swapped = _mm256_permute_ps(x, 0xB1);
+        return _mm256_fmaddsub_ps(ar, x, _mm256_mul_ps(ai, swapped));
+    };
+
+    tbb::parallel_for(tbb::blocked_range<int>(0, input.rows, 16), [&](const tbb::blocked_range<int>& range) {
+        for (int row_idx = range.begin(); row_idx < range.end(); ++row_idx) {
+            const int row_offset = row_idx * input.stride;
+            int current_idx = 0;
+            int current_idx_pair = index_step_target;
+
+            while (current_idx_pair < input.cols) {
+                const bool mixed = (control_qbit >= 0 && control_qbit < target_qbit);
+
+                if (!mixed) {
+                    Matrix_float& gate = ((control_qbit < 0) || ((current_idx >> control_qbit) & 1)) ? u3_1qbit1 : u3_1qbit2;
+                    const __m256 u00r = _mm256_set1_ps(gate[0].real);
+                    const __m256 u00i = _mm256_set1_ps(gate[0].imag);
+                    const __m256 u01r = _mm256_set1_ps(gate[1].real);
+                    const __m256 u01i = _mm256_set1_ps(gate[1].imag);
+                    const __m256 u10r = _mm256_set1_ps(gate[2].real);
+                    const __m256 u10i = _mm256_set1_ps(gate[2].imag);
+                    const __m256 u11r = _mm256_set1_ps(gate[3].real);
+                    const __m256 u11i = _mm256_set1_ps(gate[3].imag);
+                    float* element = (float*)input.get_data() + 2 * (row_offset + current_idx);
+                    float* element_pair = (float*)input.get_data() + 2 * (row_offset + current_idx_pair);
+                    int col_idx = 0;
+                    const int avx_limit = 2 * index_step_target - 8;
+
+                    for (; col_idx <= avx_limit; col_idx += 8) {
+                        const __m256 e = _mm256_loadu_ps(element + col_idx);
+                        const __m256 p = _mm256_loadu_ps(element_pair + col_idx);
+                        const __m256 out0 = _mm256_add_ps(cmul_ps(u00r, u00i, e), cmul_ps(u10r, u10i, p));
+                        const __m256 out1 = _mm256_add_ps(cmul_ps(u01r, u01i, e), cmul_ps(u11r, u11i, p));
+                        _mm256_storeu_ps(element + col_idx, out0);
+                        _mm256_storeu_ps(element_pair + col_idx, out1);
+                    }
+
+                    for (int c = col_idx / 2; c < index_step_target; ++c) {
+                        const int index = row_offset + current_idx + c;
+                        const int index_pair = row_offset + current_idx_pair + c;
+                        QGD_Complex8 a = input[index];
+                        QGD_Complex8 b = input[index_pair];
+                        float real = std::fma(gate[0].real, a.real, -gate[0].imag * a.imag);
+                        real = std::fma(gate[2].real, b.real, real);
+                        real = std::fma(-gate[2].imag, b.imag, real);
+                        float imag = std::fma(gate[0].real, a.imag, gate[0].imag * a.real);
+                        imag = std::fma(gate[2].real, b.imag, imag);
+                        imag = std::fma(gate[2].imag, b.real, imag);
+                        input[index].real = real;
+                        input[index].imag = imag;
+                        real = std::fma(gate[1].real, a.real, -gate[1].imag * a.imag);
+                        real = std::fma(gate[3].real, b.real, real);
+                        real = std::fma(-gate[3].imag, b.imag, real);
+                        imag = std::fma(gate[1].real, a.imag, gate[1].imag * a.real);
+                        imag = std::fma(gate[3].real, b.imag, imag);
+                        imag = std::fma(gate[3].imag, b.real, imag);
+                        input[index_pair].real = real;
+                        input[index_pair].imag = imag;
+                    }
+                } else {
+                    for (int idx = 0; idx < index_step_target; ++idx) {
+                        const int current_idx_loc = current_idx + idx;
+                        const int current_idx_pair_loc = current_idx_pair + idx;
+                        Matrix_float& gate = ((current_idx_loc >> control_qbit) & 1) ? u3_1qbit1 : u3_1qbit2;
+                        const int index = row_offset + current_idx_loc;
+                        const int index_pair = row_offset + current_idx_pair_loc;
+                        QGD_Complex8 a = input[index];
+                        QGD_Complex8 b = input[index_pair];
+                        float real = std::fma(gate[0].real, a.real, -gate[0].imag * a.imag);
+                        real = std::fma(gate[2].real, b.real, real);
+                        real = std::fma(-gate[2].imag, b.imag, real);
+                        float imag = std::fma(gate[0].real, a.imag, gate[0].imag * a.real);
+                        imag = std::fma(gate[2].real, b.imag, imag);
+                        imag = std::fma(gate[2].imag, b.real, imag);
+                        input[index].real = real;
+                        input[index].imag = imag;
+                        real = std::fma(gate[1].real, a.real, -gate[1].imag * a.imag);
+                        real = std::fma(gate[3].real, b.real, real);
+                        real = std::fma(-gate[3].imag, b.imag, real);
+                        imag = std::fma(gate[1].real, a.imag, gate[1].imag * a.real);
+                        imag = std::fma(gate[3].real, b.imag, imag);
+                        imag = std::fma(gate[3].imag, b.real, imag);
+                        input[index_pair].real = real;
+                        input[index_pair].imag = imag;
+                    }
+                }
+
+                current_idx += (index_step_target << 1);
+                current_idx_pair += (index_step_target << 1);
+            }
+        }
+    });
+
+    (void)matrix_size;
+}
+
 void apply_crot_kernel_to_matrix_input_AVX32(Matrix_float& u3_1qbit1, Matrix_float& u3_qbit2, Matrix_float& input, const int& target_qbit, const int& control_qbit, const int& matrix_size) {
     const int index_step_target = 1 << target_qbit;
     int current_idx = 0;
@@ -4852,4 +5199,103 @@ void apply_crot_kernel_to_matrix_input_AVX32(Matrix_float& u3_1qbit1, Matrix_flo
 
         current_idx += (index_step_target << 1);
     }
+}
+
+void apply_crot_kernel_to_matrix_input_from_right_AVX32(Matrix_float& u3_1qbit1, Matrix_float& u3_qbit2, Matrix_float& input, const int& target_qbit, const int& control_qbit, const int& matrix_size) {
+    const int index_step_target = 1 << target_qbit;
+
+    auto cmul_ps = [](__m256 ar, __m256 ai, __m256 x) {
+        const __m256 swapped = _mm256_permute_ps(x, 0xB1);
+        return _mm256_fmaddsub_ps(ar, x, _mm256_mul_ps(ai, swapped));
+    };
+
+    int row_idx = 0;
+    for (; row_idx < input.rows; ++row_idx) {
+        const int row_offset = row_idx * input.stride;
+        int current_idx = 0;
+        int current_idx_pair = index_step_target;
+
+        while (current_idx_pair < input.cols) {
+            const bool mixed = (control_qbit >= 0 && control_qbit < target_qbit);
+
+            if (!mixed) {
+                Matrix_float& gate = ((control_qbit < 0) || ((current_idx >> control_qbit) & 1)) ? u3_1qbit1 : u3_qbit2;
+                const __m256 u00r = _mm256_set1_ps(gate[0].real);
+                const __m256 u00i = _mm256_set1_ps(gate[0].imag);
+                const __m256 u01r = _mm256_set1_ps(gate[1].real);
+                const __m256 u01i = _mm256_set1_ps(gate[1].imag);
+                const __m256 u10r = _mm256_set1_ps(gate[2].real);
+                const __m256 u10i = _mm256_set1_ps(gate[2].imag);
+                const __m256 u11r = _mm256_set1_ps(gate[3].real);
+                const __m256 u11i = _mm256_set1_ps(gate[3].imag);
+                float* element = (float*)input.get_data() + 2 * (row_offset + current_idx);
+                float* element_pair = (float*)input.get_data() + 2 * (row_offset + current_idx_pair);
+                int col_idx = 0;
+                const int avx_limit = 2 * index_step_target - 8;
+
+                for (; col_idx <= avx_limit; col_idx += 8) {
+                    const __m256 e = _mm256_loadu_ps(element + col_idx);
+                    const __m256 p = _mm256_loadu_ps(element_pair + col_idx);
+                    const __m256 out0 = _mm256_add_ps(cmul_ps(u00r, u00i, e), cmul_ps(u10r, u10i, p));
+                    const __m256 out1 = _mm256_add_ps(cmul_ps(u01r, u01i, e), cmul_ps(u11r, u11i, p));
+                    _mm256_storeu_ps(element + col_idx, out0);
+                    _mm256_storeu_ps(element_pair + col_idx, out1);
+                }
+
+                for (int c = col_idx / 2; c < index_step_target; ++c) {
+                    const int index = row_offset + current_idx + c;
+                    const int index_pair = row_offset + current_idx_pair + c;
+                    QGD_Complex8 a = input[index];
+                    QGD_Complex8 b = input[index_pair];
+                    float real = std::fma(gate[0].real, a.real, -gate[0].imag * a.imag);
+                    real = std::fma(gate[2].real, b.real, real);
+                    real = std::fma(-gate[2].imag, b.imag, real);
+                    float imag = std::fma(gate[0].real, a.imag, gate[0].imag * a.real);
+                    imag = std::fma(gate[2].real, b.imag, imag);
+                    imag = std::fma(gate[2].imag, b.real, imag);
+                    input[index].real = real;
+                    input[index].imag = imag;
+                    real = std::fma(gate[1].real, a.real, -gate[1].imag * a.imag);
+                    real = std::fma(gate[3].real, b.real, real);
+                    real = std::fma(-gate[3].imag, b.imag, real);
+                    imag = std::fma(gate[1].real, a.imag, gate[1].imag * a.real);
+                    imag = std::fma(gate[3].real, b.imag, imag);
+                    imag = std::fma(gate[3].imag, b.real, imag);
+                    input[index_pair].real = real;
+                    input[index_pair].imag = imag;
+                }
+            } else {
+                for (int idx = 0; idx < index_step_target; ++idx) {
+                    const int current_idx_loc = current_idx + idx;
+                    const int current_idx_pair_loc = current_idx_pair + idx;
+                    Matrix_float& gate = ((current_idx_loc >> control_qbit) & 1) ? u3_1qbit1 : u3_qbit2;
+                    const int index = row_offset + current_idx_loc;
+                    const int index_pair = row_offset + current_idx_pair_loc;
+                    QGD_Complex8 a = input[index];
+                    QGD_Complex8 b = input[index_pair];
+                    float real = std::fma(gate[0].real, a.real, -gate[0].imag * a.imag);
+                    real = std::fma(gate[2].real, b.real, real);
+                    real = std::fma(-gate[2].imag, b.imag, real);
+                    float imag = std::fma(gate[0].real, a.imag, gate[0].imag * a.real);
+                    imag = std::fma(gate[2].real, b.imag, imag);
+                    imag = std::fma(gate[2].imag, b.real, imag);
+                    input[index].real = real;
+                    input[index].imag = imag;
+                    real = std::fma(gate[1].real, a.real, -gate[1].imag * a.imag);
+                    real = std::fma(gate[3].real, b.real, real);
+                    real = std::fma(-gate[3].imag, b.imag, real);
+                    imag = std::fma(gate[1].real, a.imag, gate[1].imag * a.real);
+                    imag = std::fma(gate[3].real, b.imag, imag);
+                    imag = std::fma(gate[3].imag, b.real, imag);
+                    input[index_pair].real = real;
+                    input[index_pair].imag = imag;
+                }
+            }
+
+            current_idx += (index_step_target << 1);
+            current_idx_pair += (index_step_target << 1);
+        }
+    }
+
+    (void)matrix_size;
 }
