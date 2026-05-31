@@ -2009,6 +2009,18 @@ Gate::apply_kernel_to(Matrix_float& u3_1qbit, Matrix_float& input, bool deriv, i
 void 
 Gate::apply_kernel_from_right( Matrix& u3_1qbit, Matrix& input, const Matrix* alt_kernel ) {
 
+    const std::vector<int> involved_qbits = get_involved_qubits();
+    const int involved_qbit_num = static_cast<int>(involved_qbits.size());
+    const bool has_any_control = (control_qbit >= 0) || !control_qbits.empty();
+    const bool has_local_matrix = involved_qbit_num > 0
+        && u3_1qbit.rows == Power_of_2(involved_qbit_num)
+        && u3_1qbit.cols == Power_of_2(involved_qbit_num);
+    const bool can_use_large_kernel_from_right = !has_any_control
+        && input.cols != 1
+        && has_local_matrix
+        && involved_qbit_num >= 2
+        && involved_qbit_num <= 5;
+
     if (type == SYC_OPERATION) {
         apply_SYC_kernel_from_right(input, target_qbit, control_qbit, matrix_size);
         return;
@@ -2019,6 +2031,30 @@ Gate::apply_kernel_from_right( Matrix& u3_1qbit, Matrix& input, const Matrix* al
         apply_to(gate_matrix, 0);
         Matrix ret = dot(input, gate_matrix);
         memcpy(input.get_data(), ret.get_data(), ret.size() * sizeof(QGD_Complex16));
+        return;
+    }
+
+    if (type == CROT_OPERATION && alt_kernel != nullptr) {
+        Matrix branch0 = alt_kernel->copy();
+        Matrix branch1 = u3_1qbit.copy();
+        apply_crot_kernel_to_matrix_input_from_right(branch0, branch1, input, target_qbit, control_qbit, input.rows);
+        return;
+    }
+
+    if (can_use_large_kernel_from_right) {
+#ifdef USE_AVX
+        if (involved_qbit_num == 2 && qbit_num < 10) {
+            apply_large_kernel_from_right_AVX(u3_1qbit, input, involved_qbits, matrix_size);
+        }
+        else if (involved_qbit_num == 2) {
+            apply_large_kernel_from_right_AVX_TBB(u3_1qbit, input, involved_qbits, matrix_size);
+        }
+        else {
+            apply_large_kernel_from_right(u3_1qbit, input, involved_qbits, matrix_size);
+        }
+#else
+        apply_large_kernel_from_right(u3_1qbit, input, involved_qbits, matrix_size);
+#endif
         return;
     }
 
@@ -2036,8 +2072,16 @@ Gate::apply_kernel_from_right( Matrix& u3_1qbit, Matrix& input, const Matrix* al
         return;
     }
 
-   
+
+#ifdef USE_AVX
+    if (qbit_num < 10) {
+        apply_kernel_from_right_AVX(u3_1qbit, input, target_qbit, control_qbit, matrix_size);
+    } else {
+        apply_kernel_from_right_AVX_parallel(u3_1qbit, input, target_qbit, control_qbit, matrix_size);
+    }
+#else
     ::apply_kernel_from_right(u3_1qbit, input, target_qbit, control_qbit, matrix_size);
+#endif
 
 
 }
@@ -2045,6 +2089,18 @@ Gate::apply_kernel_from_right( Matrix& u3_1qbit, Matrix& input, const Matrix* al
 
 void
 Gate::apply_kernel_from_right( Matrix_float& u3_1qbit, Matrix_float& input, const Matrix_float* alt_kernel ) {
+
+    const std::vector<int> involved_qbits = get_involved_qubits();
+    const int involved_qbit_num = static_cast<int>(involved_qbits.size());
+    const bool has_any_control = (control_qbit >= 0) || !control_qbits.empty();
+    const bool has_local_matrix = involved_qbit_num > 0
+        && u3_1qbit.rows == Power_of_2(involved_qbit_num)
+        && u3_1qbit.cols == Power_of_2(involved_qbit_num);
+    const bool can_use_large_kernel_from_right = !has_any_control
+        && input.cols != 1
+        && has_local_matrix
+        && involved_qbit_num >= 2
+        && involved_qbit_num <= 5;
 
     if (type == SYC_OPERATION) {
         apply_SYC_kernel_from_right(input, target_qbit, control_qbit, matrix_size);
@@ -2056,6 +2112,30 @@ Gate::apply_kernel_from_right( Matrix_float& u3_1qbit, Matrix_float& input, cons
         apply_to(gate_matrix, 0);
         Matrix_float ret = dot(input, gate_matrix);
         memcpy(input.get_data(), ret.get_data(), ret.size() * sizeof(QGD_Complex8));
+        return;
+    }
+
+    if (type == CROT_OPERATION && alt_kernel != nullptr) {
+        Matrix_float branch0 = alt_kernel->copy();
+        Matrix_float branch1 = u3_1qbit.copy();
+        apply_crot_kernel_to_matrix_input_from_right(branch0, branch1, input, target_qbit, control_qbit, input.rows);
+        return;
+    }
+
+    if (can_use_large_kernel_from_right) {
+#ifdef USE_AVX
+        if (involved_qbit_num == 2 && qbit_num < 10) {
+            apply_large_kernel_from_right_AVX32(u3_1qbit, input, involved_qbits, matrix_size);
+        }
+        else if (involved_qbit_num == 2) {
+            apply_large_kernel_from_right_AVX_TBB32(u3_1qbit, input, involved_qbits, matrix_size);
+        }
+        else {
+            apply_large_kernel_from_right(u3_1qbit, input, involved_qbits, matrix_size);
+        }
+#else
+        apply_large_kernel_from_right(u3_1qbit, input, involved_qbits, matrix_size);
+#endif
         return;
     }
 
@@ -2073,7 +2153,15 @@ Gate::apply_kernel_from_right( Matrix_float& u3_1qbit, Matrix_float& input, cons
         return;
     }
 
+#ifdef USE_AVX
+    if (qbit_num < 10) {
+        apply_kernel_from_right_AVX32(u3_1qbit, input, target_qbit, control_qbit, matrix_size);
+    } else {
+        apply_kernel_from_right_AVX_parallel32(u3_1qbit, input, target_qbit, control_qbit, matrix_size);
+    }
+#else
     ::apply_kernel_from_right(u3_1qbit, input, target_qbit, control_qbit, matrix_size);
+#endif
 
 }
 

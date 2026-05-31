@@ -23,6 +23,7 @@ limitations under the License.
 
 #include "apply_large_kernel_to_input.h"
 #include "tbb/tbb.h"
+#include <algorithm>
 #include <type_traits>
 #include <utility>
 
@@ -33,10 +34,19 @@ template<typename MatrixT>
 void apply_large_kernel_to_input_impl(MatrixT& unitary, MatrixT& input, std::vector<int> involved_qbits, const int& matrix_size);
 
 template<typename MatrixT>
+void apply_large_kernel_from_right_impl(MatrixT& unitary, MatrixT& input, std::vector<int> involved_qbits, const int& matrix_size);
+
+template<typename MatrixT>
+void apply_nqbit_kernel_to_matrix_input_from_right_impl(MatrixT& unitary, MatrixT& input, std::vector<int> involved_qbits, const int& matrix_size);
+
+template<typename MatrixT>
 void apply_2qbit_kernel_to_state_vector_input_impl(MatrixT& two_qbit_unitary, MatrixT& input, const int& inner_qbit, const int& outer_qbit, const int& matrix_size);
 
 template<typename MatrixT>
 void apply_2qbit_kernel_to_matrix_input_impl(MatrixT& two_qbit_unitary, MatrixT& input, const int& inner_qbit, const int& outer_qbit, const int& matrix_size);
+
+template<typename MatrixT>
+void apply_2qbit_kernel_to_matrix_input_from_right_impl(MatrixT& two_qbit_unitary, MatrixT& input, const int& inner_qbit, const int& outer_qbit, const int& matrix_size);
 
 template<typename MatrixT>
 void apply_3qbit_kernel_to_state_vector_input_impl(MatrixT& unitary, MatrixT& input, std::vector<int> involved_qbits, const int& matrix_size);
@@ -50,6 +60,9 @@ void apply_5qbit_kernel_to_state_vector_input_impl(MatrixT& unitary, MatrixT& in
 template<typename MatrixT>
 void apply_crot_kernel_to_matrix_input_impl(MatrixT& u3_1qbit1, MatrixT& u3_1qbit2, MatrixT& input, const int& target_qbit, const int& control_qbit, const int& matrix_size);
 
+template<typename MatrixT>
+void apply_crot_kernel_to_matrix_input_from_right_impl(MatrixT& u3_1qbit1, MatrixT& u3_1qbit2, MatrixT& input, const int& target_qbit, const int& control_qbit, const int& matrix_size);
+
 
 int get_grain_size(int index_step){
     int grain_size=2;
@@ -59,6 +72,17 @@ int get_grain_size(int index_step){
         }
     }
     return grain_size;
+}
+
+template<typename MatrixT>
+MatrixT transpose_local_kernel_impl(const MatrixT& unitary) {
+    MatrixT transposed = unitary.copy();
+    for (int row = 0; row < unitary.rows; ++row) {
+        for (int col = 0; col < unitary.cols; ++col) {
+            transposed[row * unitary.cols + col] = unitary[col * unitary.cols + row];
+        }
+    }
+    return transposed;
 }
 
 template<typename MatrixT>
@@ -76,6 +100,109 @@ void apply_large_kernel_to_input_impl(MatrixT& unitary, MatrixT& input, std::vec
     else 
     {
         apply_2qbit_kernel_to_matrix_input_impl(unitary, input, involved_qbits[0], involved_qbits[1], matrix_size);
+    }
+}
+
+template<typename MatrixT>
+void apply_large_kernel_from_right_impl(MatrixT& unitary, MatrixT& input, std::vector<int> involved_qbits, const int& matrix_size){
+
+    if (input.cols == 1) {
+        throw std::invalid_argument("Right-apply is not supported for column state vectors.");
+    }
+
+    if (involved_qbits.size() < 2 || involved_qbits.size() > 5) {
+        throw std::invalid_argument("Unsupported number of qubits for right-applied matrix input.");
+    }
+
+    if (involved_qbits.size() == 2) {
+        apply_2qbit_kernel_to_matrix_input_from_right_impl(unitary, input, involved_qbits[0], involved_qbits[1], matrix_size);
+        return;
+    }
+
+    apply_nqbit_kernel_to_matrix_input_from_right_impl(unitary, input, std::move(involved_qbits), matrix_size);
+}
+
+template<typename MatrixT>
+void apply_nqbit_kernel_to_matrix_input_from_right_impl(MatrixT& unitary, MatrixT& input, std::vector<int> involved_qbits, const int& matrix_size) {
+
+    using ComplexT = KernelLargeComplexT<MatrixT>;
+
+    const int n = static_cast<int>(involved_qbits.size());
+    const int block_size = 1 << n;
+
+    if (unitary.rows != block_size || unitary.cols != block_size) {
+        throw std::invalid_argument("Right-apply large-kernel dispatch received a mismatched local kernel size.");
+    }
+
+    std::sort(involved_qbits.begin(), involved_qbits.end());
+
+    int qubit_num = 0;
+    int dim = 1;
+    while (dim < matrix_size) {
+        dim <<= 1;
+        qubit_num++;
+    }
+
+    std::vector<int> non_targets;
+    non_targets.reserve(qubit_num - n);
+    for (int q = 0; q < qubit_num; ++q) {
+        if (!std::binary_search(involved_qbits.begin(), involved_qbits.end(), q)) {
+            non_targets.push_back(q);
+        }
+    }
+
+    std::vector<int> block_pattern(block_size);
+    for (int k = 0; k < block_size; ++k) {
+        int idx = 0;
+        for (int bit = 0; bit < n; ++bit) {
+            if (k & (1 << bit)) {
+                idx |= (1 << involved_qbits[bit]);
+            }
+        }
+        block_pattern[k] = idx;
+    }
+
+    const MatrixT transposed = transpose_local_kernel_impl(unitary);
+    const int num_blocks = matrix_size >> n;
+    std::vector<int> indices(block_size);
+    std::vector<ComplexT> source(block_size);
+    std::vector<ComplexT> out(block_size);
+
+    for (int row = 0; row < input.rows; ++row) {
+        const int row_offset = row * input.stride;
+
+        for (int iter_idx = 0; iter_idx < num_blocks; ++iter_idx) {
+            int base = 0;
+            for (size_t i = 0; i < non_targets.size(); ++i) {
+                if (iter_idx & (1ULL << i)) {
+                    base |= (1 << non_targets[i]);
+                }
+            }
+
+            for (int k = 0; k < block_size; ++k) {
+                indices[k] = base | block_pattern[k];
+                source[k] = input[row_offset + indices[k]];
+            }
+
+            for (int out_idx = 0; out_idx < block_size; ++out_idx) {
+                ComplexT accum{};
+                accum.real = 0;
+                accum.imag = 0;
+
+                const int kernel_row_offset = out_idx * block_size;
+                for (int in_idx = 0; in_idx < block_size; ++in_idx) {
+                    ComplexT tmp = mult(transposed[kernel_row_offset + in_idx], source[in_idx]);
+                    accum.real += tmp.real;
+                    accum.imag += tmp.imag;
+                }
+
+                out[out_idx] = accum;
+            }
+
+            for (int out_idx = 0; out_idx < block_size; ++out_idx) {
+                input[row_offset + indices[out_idx]] = out[out_idx];
+            }
+        }
     }
 }
 
@@ -192,6 +319,65 @@ void apply_2qbit_kernel_to_matrix_input_impl(MatrixT& two_qbit_unitary, MatrixT&
         current_idx = current_idx + (index_step_outer << 1);
     }
 
+}
+
+template<typename MatrixT>
+void apply_2qbit_kernel_to_matrix_input_from_right_impl(MatrixT& two_qbit_unitary, MatrixT& input, const int& inner_qbit, const int& outer_qbit, const int& matrix_size){
+
+    int index_step_outer = 1 << outer_qbit;
+    int index_step_inner = 1 << inner_qbit;
+
+    for (int row_idx = 0; row_idx < input.rows; row_idx++) {
+
+        int row_offset = row_idx * input.stride;
+        int current_idx = 0;
+
+        for (int current_idx_pair_outer = current_idx + index_step_outer; current_idx_pair_outer < input.cols; current_idx_pair_outer = current_idx_pair_outer + (index_step_outer << 1)) {
+
+            for (int current_idx_inner = 0; current_idx_inner < index_step_outer; current_idx_inner = current_idx_inner + (index_step_inner << 1)) {
+
+                for (int idx = 0; idx < index_step_inner; idx++) {
+
+                    int current_idx_outer_loc = current_idx + current_idx_inner + idx;
+                    int current_idx_inner_loc = current_idx + current_idx_inner + idx + index_step_inner;
+                    int current_idx_outer_pair_loc = current_idx_pair_outer + idx + current_idx_inner;
+                    int current_idx_inner_pair_loc = current_idx_pair_outer + idx + current_idx_inner + index_step_inner;
+
+                    int indexes[4] = {
+                        row_offset + current_idx_outer_loc,
+                        row_offset + current_idx_inner_loc,
+                        row_offset + current_idx_outer_pair_loc,
+                        row_offset + current_idx_inner_pair_loc,
+                    };
+
+                    KernelLargeComplexT<MatrixT> element_outer = input[indexes[0]];
+                    KernelLargeComplexT<MatrixT> element_inner = input[indexes[1]];
+                    KernelLargeComplexT<MatrixT> element_outer_pair = input[indexes[2]];
+                    KernelLargeComplexT<MatrixT> element_inner_pair = input[indexes[3]];
+
+                    KernelLargeComplexT<MatrixT> tmp1;
+                    KernelLargeComplexT<MatrixT> tmp2;
+                    KernelLargeComplexT<MatrixT> tmp3;
+                    KernelLargeComplexT<MatrixT> tmp4;
+
+                    for (int out_idx = 0; out_idx < 4; out_idx++) {
+
+                        tmp1 = mult(two_qbit_unitary[out_idx], element_outer);
+                        tmp2 = mult(two_qbit_unitary[4 + out_idx], element_inner);
+                        tmp3 = mult(two_qbit_unitary[8 + out_idx], element_outer_pair);
+                        tmp4 = mult(two_qbit_unitary[12 + out_idx], element_inner_pair);
+
+                        input[indexes[out_idx]].real = tmp1.real + tmp2.real + tmp3.real + tmp4.real;
+                        input[indexes[out_idx]].imag = tmp1.imag + tmp2.imag + tmp3.imag + tmp4.imag;
+                    }
+                }
+            }
+
+            current_idx = current_idx + (index_step_outer << 1);
+        }
+    }
+
+    (void)matrix_size;
 }
 
 /**
@@ -676,6 +862,51 @@ apply_crot_kernel_to_matrix_input_impl(MatrixT& u3_1qbit1, MatrixT& u3_1qbit2, M
 
 }
 
+template<typename MatrixT>
+void
+apply_crot_kernel_to_matrix_input_from_right_impl(MatrixT& u3_1qbit1, MatrixT& u3_1qbit2, MatrixT& input, const int& target_qbit, const int& control_qbit, const int& matrix_size) {
+
+    int index_step_target = 1 << target_qbit;
+
+    for (int row_idx = 0; row_idx < input.rows; ++row_idx) {
+
+        int row_offset = row_idx * input.stride;
+        int current_idx = 0;
+        int current_idx_pair = index_step_target;
+
+        while (current_idx_pair < input.cols) {
+
+            for (int idx = 0; idx < index_step_target; ++idx) {
+
+                int current_idx_loc = current_idx + idx;
+                int current_idx_pair_loc = current_idx_pair + idx;
+                int index = row_offset + current_idx_loc;
+                int index_pair = row_offset + current_idx_pair_loc;
+
+                const MatrixT& gate = ((current_idx_loc >> control_qbit) & 1) ? u3_1qbit1 : u3_1qbit2;
+
+                KernelLargeComplexT<MatrixT> element = input[index];
+                KernelLargeComplexT<MatrixT> element_pair = input[index_pair];
+
+                KernelLargeComplexT<MatrixT> tmp1 = mult(gate[0], element);
+                KernelLargeComplexT<MatrixT> tmp2 = mult(gate[2], element_pair);
+                input[index].real = tmp1.real + tmp2.real;
+                input[index].imag = tmp1.imag + tmp2.imag;
+
+                tmp1 = mult(gate[1], element);
+                tmp2 = mult(gate[3], element_pair);
+                input[index_pair].real = tmp1.real + tmp2.real;
+                input[index_pair].imag = tmp1.imag + tmp2.imag;
+            }
+
+            current_idx += (index_step_target << 1);
+            current_idx_pair += (index_step_target << 1);
+        }
+    }
+
+    (void)matrix_size;
+}
+
 void
 apply_crot_kernel_to_matrix_input(Matrix& u3_1qbit1, Matrix& u3_1qbit2, Matrix& input, const int& target_qbit, const int& control_qbit, const int& matrix_size) {
     apply_crot_kernel_to_matrix_input_impl(u3_1qbit1, u3_1qbit2, input, target_qbit, control_qbit, matrix_size);
@@ -686,12 +917,30 @@ apply_crot_kernel_to_matrix_input(Matrix_float& u3_1qbit1, Matrix_float& u3_1qbi
     apply_crot_kernel_to_matrix_input_impl(u3_1qbit1, u3_1qbit2, input, target_qbit, control_qbit, matrix_size);
 }
 
+void
+apply_crot_kernel_to_matrix_input_from_right(Matrix& u3_1qbit1, Matrix& u3_1qbit2, Matrix& input, const int& target_qbit, const int& control_qbit, const int& matrix_size) {
+    apply_crot_kernel_to_matrix_input_from_right_impl(u3_1qbit1, u3_1qbit2, input, target_qbit, control_qbit, matrix_size);
+}
+
+void
+apply_crot_kernel_to_matrix_input_from_right(Matrix_float& u3_1qbit1, Matrix_float& u3_1qbit2, Matrix_float& input, const int& target_qbit, const int& control_qbit, const int& matrix_size) {
+    apply_crot_kernel_to_matrix_input_from_right_impl(u3_1qbit1, u3_1qbit2, input, target_qbit, control_qbit, matrix_size);
+}
+
 void apply_large_kernel_to_input(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size) {
     apply_large_kernel_to_input_impl(unitary, input, involved_qbits, matrix_size);
 }
 
 void apply_large_kernel_to_input(Matrix_float& unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size) {
     apply_large_kernel_to_input_impl(unitary, input, involved_qbits, matrix_size);
+}
+
+void apply_large_kernel_from_right(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size) {
+    apply_large_kernel_from_right_impl(unitary, input, involved_qbits, matrix_size);
+}
+
+void apply_large_kernel_from_right(Matrix_float& unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size) {
+    apply_large_kernel_from_right_impl(unitary, input, involved_qbits, matrix_size);
 }
 
 void apply_2qbit_kernel_to_state_vector_input(Matrix& two_qbit_unitary, Matrix& input, const int& inner_qbit, const int& outer_qbit, const int& matrix_size) {
@@ -708,6 +957,14 @@ void apply_2qbit_kernel_to_matrix_input(Matrix& two_qbit_unitary, Matrix& input,
 
 void apply_2qbit_kernel_to_matrix_input(Matrix_float& two_qbit_unitary, Matrix_float& input, const int& inner_qbit, const int& outer_qbit, const int& matrix_size) {
     apply_2qbit_kernel_to_matrix_input_impl(two_qbit_unitary, input, inner_qbit, outer_qbit, matrix_size);
+}
+
+void apply_2qbit_kernel_to_matrix_input_from_right(Matrix& two_qbit_unitary, Matrix& input, const int& inner_qbit, const int& outer_qbit, const int& matrix_size) {
+    apply_2qbit_kernel_to_matrix_input_from_right_impl(two_qbit_unitary, input, inner_qbit, outer_qbit, matrix_size);
+}
+
+void apply_2qbit_kernel_to_matrix_input_from_right(Matrix_float& two_qbit_unitary, Matrix_float& input, const int& inner_qbit, const int& outer_qbit, const int& matrix_size) {
+    apply_2qbit_kernel_to_matrix_input_from_right_impl(two_qbit_unitary, input, inner_qbit, outer_qbit, matrix_size);
 }
 
 void apply_3qbit_kernel_to_state_vector_input(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size) {

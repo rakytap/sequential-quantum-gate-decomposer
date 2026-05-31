@@ -133,21 +133,23 @@ apply_kernel_from_right_impl(MatrixT& u3_1qbit, MatrixT& input, const int& targe
     using ComplexT = KernelComplexT<MatrixT>;
 
     int index_step_target = 1 << target_qbit;
-    int current_idx = 0;
-    int current_idx_pair = current_idx + index_step_target;
 
-    while (current_idx_pair < input.cols) {
+    // Outer loop over rows so all accesses within a row are sequential (row-major).
+    // The original column-pair-outer / row-inner order caused strided cache misses.
+    for (int row_idx = 0; row_idx < input.rows; row_idx++) {
 
-        for (int idx = 0; idx < index_step_target; idx++) {
+        int row_offset = row_idx * input.stride;
+        int current_idx = 0;
+        int current_idx_pair = index_step_target;
 
-            int current_idx_loc = current_idx + idx;
-            int current_idx_pair_loc = current_idx_pair + idx;
+        while (current_idx_pair < input.cols) {
 
-            if (control_qbit < 0 || ((current_idx_loc >> control_qbit) & 1)) {
+            for (int idx = 0; idx < index_step_target; idx++) {
 
-                for (int row_idx = 0; row_idx < input.rows; row_idx++) {
+                int current_idx_loc      = current_idx + idx;
+                int current_idx_pair_loc = current_idx_pair + idx;
 
-                    int row_offset = row_idx * input.stride;
+                if (control_qbit < 0 || ((current_idx_loc >> control_qbit) & 1)) {
 
                     int index      = row_offset + current_idx_loc;
                     int index_pair = row_offset + current_idx_pair_loc;
@@ -164,14 +166,12 @@ apply_kernel_from_right_impl(MatrixT& u3_1qbit, MatrixT& input, const int& targe
                     tmp2 = mult(u3_1qbit[3], element_pair);
                     input[index_pair].real = tmp1.real + tmp2.real;
                     input[index_pair].imag = tmp1.imag + tmp2.imag;
-
                 }
-
             }
-        }
 
-        current_idx = current_idx + (index_step_target << 1);
-        current_idx_pair = current_idx_pair + (index_step_target << 1);
+            current_idx      += (index_step_target << 1);
+            current_idx_pair += (index_step_target << 1);
+        }
     }
 
     (void)matrix_size;

@@ -60,6 +60,7 @@ __m256d complex_mult_AVX(__m256d input_vec, __m256d unitary_row_vec, __m256d neg
 @param matrix_size The size of the input matrix (should be a power of 2)
 */
 void apply_large_kernel_to_input_AVX(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size);
+void apply_large_kernel_from_right_AVX(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size);
 
 /**
 @brief Apply multi-qubit gate kernel to an input matrix using AVX optimization and OpenMP parallelization
@@ -69,6 +70,7 @@ void apply_large_kernel_to_input_AVX(Matrix& unitary, Matrix& input, std::vector
 @param matrix_size The size of the input matrix (should be a power of 2)
 */
 void apply_large_kernel_to_input_AVX_OpenMP(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size);
+void apply_large_kernel_from_right_AVX_OpenMP(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size);
 
 /**
 @brief Apply multi-qubit gate kernel to an input matrix using AVX optimization and TBB parallelization
@@ -78,6 +80,7 @@ void apply_large_kernel_to_input_AVX_OpenMP(Matrix& unitary, Matrix& input, std:
 @param matrix_size The size of the input matrix (should be a power of 2)
 */
 void apply_large_kernel_to_input_AVX_TBB(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size);
+void apply_large_kernel_from_right_AVX_TBB(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size);
 
 // general N qubit kernel functions
 
@@ -307,6 +310,9 @@ void apply_crot_kernel_to_matrix_input_AVX(Matrix& u3_1qbit1, Matrix& u3_qbit2, 
 void apply_large_kernel_to_input_AVX32(Matrix_float& unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size);
 void apply_large_kernel_to_input_AVX_OpenMP32(Matrix_float& unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size);
 void apply_large_kernel_to_input_AVX_TBB32(Matrix_float& unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size);
+void apply_large_kernel_from_right_AVX32(Matrix_float& unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size);
+void apply_large_kernel_from_right_AVX_OpenMP32(Matrix_float& unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size);
+void apply_large_kernel_from_right_AVX_TBB32(Matrix_float& unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size);
 
 void apply_nqbit_unitary_AVX32(Matrix_float& gate_kernel_unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size);
 void apply_nqbit_unitary_parallel_AVX32(Matrix_float& gate_kernel_unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size);
