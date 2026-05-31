@@ -2021,6 +2021,24 @@ Gate::apply_kernel_from_right( Matrix& u3_1qbit, Matrix& input, const Matrix* al
         && involved_qbit_num >= 2
         && involved_qbit_num <= 5;
 
+    if (type == SWAP_OPERATION || type == CSWAP_OPERATION) {
+        if (qbit_num < 10) {
+            apply_SWAP_kernel_from_right(input, target_qbits, control_qbits, matrix_size);
+        } else {
+            apply_SWAP_kernel_from_right_tbb(input, target_qbits, control_qbits, matrix_size);
+        }
+        return;
+    }
+
+    if (type == CCX_OPERATION) {
+        if (qbit_num < 10) {
+            apply_X_kernel_from_right(input, target_qbits, control_qbits, matrix_size);
+        } else {
+            apply_X_kernel_from_right_tbb(input, target_qbits, control_qbits, matrix_size);
+        }
+        return;
+    }
+
     if (type == SYC_OPERATION) {
         apply_SYC_kernel_from_right(input, target_qbit, control_qbit, matrix_size);
         return;
@@ -2066,7 +2084,7 @@ Gate::apply_kernel_from_right( Matrix& u3_1qbit, Matrix& input, const Matrix* al
         return;
     }
 
-    if (type == SWAP_OPERATION || type == CSWAP_OPERATION || type == CCX_OPERATION || type == CROT_OPERATION || u3_1qbit.rows != 2 || u3_1qbit.cols != 2) {
+    if (type == CROT_OPERATION || u3_1qbit.rows != 2 || u3_1qbit.cols != 2) {
         Matrix gate_matrix = create_identity(matrix_size);
         Matrix kernel_copy = u3_1qbit.copy();
         if (alt_kernel != nullptr) {
@@ -2109,6 +2127,24 @@ Gate::apply_kernel_from_right( Matrix_float& u3_1qbit, Matrix_float& input, cons
         && has_local_matrix
         && involved_qbit_num >= 2
         && involved_qbit_num <= 5;
+
+    if (type == SWAP_OPERATION || type == CSWAP_OPERATION) {
+        if (qbit_num < 10) {
+            apply_SWAP_kernel_from_right(input, target_qbits, control_qbits, matrix_size);
+        } else {
+            apply_SWAP_kernel_from_right_tbb(input, target_qbits, control_qbits, matrix_size);
+        }
+        return;
+    }
+
+    if (type == CCX_OPERATION) {
+        if (qbit_num < 10) {
+            apply_X_kernel_from_right(input, target_qbits, control_qbits, matrix_size);
+        } else {
+            apply_X_kernel_from_right_tbb(input, target_qbits, control_qbits, matrix_size);
+        }
+        return;
+    }
 
     if (type == SYC_OPERATION) {
         apply_SYC_kernel_from_right(input, target_qbit, control_qbit, matrix_size);
@@ -2155,7 +2191,7 @@ Gate::apply_kernel_from_right( Matrix_float& u3_1qbit, Matrix_float& input, cons
         return;
     }
 
-    if (type == SWAP_OPERATION || type == CSWAP_OPERATION || type == CCX_OPERATION || type == CROT_OPERATION || u3_1qbit.rows != 2 || u3_1qbit.cols != 2) {
+    if (type == CROT_OPERATION || u3_1qbit.rows != 2 || u3_1qbit.cols != 2) {
         Matrix_float gate_matrix = create_identity_float(matrix_size);
         Matrix_float kernel_copy = u3_1qbit.copy();
         if (alt_kernel != nullptr) {

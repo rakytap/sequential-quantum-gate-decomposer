@@ -285,6 +285,18 @@ apply_kernel_to_input_AVX_small32(Matrix_float& u3_1qbit, Matrix_float& input, c
 
 
 void
+apply_kernel_from_right_AVX_small(Matrix& u3_1qbit, Matrix& input, const int& target_qbit, const int& control_qbit, const int& matrix_size) {
+    apply_kernel_from_right_AVX(u3_1qbit, input, target_qbit, control_qbit, matrix_size);
+}
+
+
+void
+apply_kernel_from_right_AVX_small32(Matrix_float& u3_1qbit, Matrix_float& input, const int& target_qbit, const int& control_qbit, const int& matrix_size) {
+    apply_kernel_from_right_AVX32(u3_1qbit, input, target_qbit, control_qbit, matrix_size);
+}
+
+
+void
 apply_kernel_to_input_AVX32(Matrix_float& u3_1qbit, Matrix_float& input, const bool& deriv, const int& target_qbit, const int& control_qbit, const int& matrix_size) {
     input.ensure_aligned();
 
@@ -1108,6 +1120,24 @@ apply_kernel_from_right_AVX32(Matrix_float& u3_1qbit, Matrix_float& input, const
     const __m256 u11r = _mm256_set1_ps(u3_1qbit[3].real);
     const __m256 u11i = _mm256_set1_ps(u3_1qbit[3].imag);
 
+    const float u00r_s = u3_1qbit[0].real;
+    const float u00i_s = u3_1qbit[0].imag;
+    const float u01r_s = u3_1qbit[1].real;
+    const float u01i_s = u3_1qbit[1].imag;
+    const float u10r_s = u3_1qbit[2].real;
+    const float u10i_s = u3_1qbit[2].imag;
+    const float u11r_s = u3_1qbit[3].real;
+    const float u11i_s = u3_1qbit[3].imag;
+
+    auto apply_pair_scalar = [&](const int index, const int index_pair) {
+        const QGD_Complex8 e = input[index];
+        const QGD_Complex8 p = input[index_pair];
+        input[index].real = u00r_s * e.real - u00i_s * e.imag + u10r_s * p.real - u10i_s * p.imag;
+        input[index].imag = u00r_s * e.imag + u00i_s * e.real + u10r_s * p.imag + u10i_s * p.real;
+        input[index_pair].real = u01r_s * e.real - u01i_s * e.imag + u11r_s * p.real - u11i_s * p.imag;
+        input[index_pair].imag = u01r_s * e.imag + u01i_s * e.real + u11r_s * p.imag + u11i_s * p.real;
+    };
+
     for (int row_idx = 0; row_idx < input.rows; row_idx++) {
 
         const int row_offset = row_idx * input.stride;
@@ -1146,16 +1176,7 @@ apply_kernel_from_right_AVX32(Matrix_float& u3_1qbit, Matrix_float& input, const
                 for (int c = col_idx / 2; c < index_step_target; c++) {
                     const int index      = row_offset + current_idx      + c;
                     const int index_pair = row_offset + current_idx_pair + c;
-                    QGD_Complex8 e = input[index];
-                    QGD_Complex8 p = input[index_pair];
-                    QGD_Complex8 t1 = mult(u3_1qbit[0], e);
-                    QGD_Complex8 t2 = mult(u3_1qbit[2], p);
-                    input[index].real = t1.real + t2.real;
-                    input[index].imag = t1.imag + t2.imag;
-                    t1 = mult(u3_1qbit[1], e);
-                    t2 = mult(u3_1qbit[3], p);
-                    input[index_pair].real = t1.real + t2.real;
-                    input[index_pair].imag = t1.imag + t2.imag;
+                    apply_pair_scalar(index, index_pair);
                 }
 
             } else {
@@ -1165,16 +1186,7 @@ apply_kernel_from_right_AVX32(Matrix_float& u3_1qbit, Matrix_float& input, const
                     if ((col >> control_qbit) & 1) {
                         const int index      = row_offset + col;
                         const int index_pair = row_offset + col_pair;
-                        QGD_Complex8 e = input[index];
-                        QGD_Complex8 p = input[index_pair];
-                        QGD_Complex8 t1 = mult(u3_1qbit[0], e);
-                        QGD_Complex8 t2 = mult(u3_1qbit[2], p);
-                        input[index].real = t1.real + t2.real;
-                        input[index].imag = t1.imag + t2.imag;
-                        t1 = mult(u3_1qbit[1], e);
-                        t2 = mult(u3_1qbit[3], p);
-                        input[index_pair].real = t1.real + t2.real;
-                        input[index_pair].imag = t1.imag + t2.imag;
+                        apply_pair_scalar(index, index_pair);
                     }
                 }
             }
@@ -1213,6 +1225,15 @@ apply_kernel_from_right_AVX_parallel32(Matrix_float& u3_1qbit, Matrix_float& inp
     const __m256 u11r = _mm256_set1_ps(u3_1qbit[3].real);
     const __m256 u11i = _mm256_set1_ps(u3_1qbit[3].imag);
 
+    const float u00r_s = u3_1qbit[0].real;
+    const float u00i_s = u3_1qbit[0].imag;
+    const float u01r_s = u3_1qbit[1].real;
+    const float u01i_s = u3_1qbit[1].imag;
+    const float u10r_s = u3_1qbit[2].real;
+    const float u10i_s = u3_1qbit[2].imag;
+    const float u11r_s = u3_1qbit[3].real;
+    const float u11i_s = u3_1qbit[3].imag;
+
     const int grain = (input.rows < 64) ? 1 : 8;
 
     tbb::parallel_for(tbb::blocked_range<int>(0, input.rows, grain),
@@ -1222,6 +1243,15 @@ apply_kernel_from_right_AVX_parallel32(Matrix_float& u3_1qbit, Matrix_float& inp
 
             const int row_offset = row_idx * input.stride;
             float* const row_data = (float*)input.get_data() + 2 * row_offset;
+
+            auto apply_pair_scalar = [&](const int index, const int index_pair) {
+                const QGD_Complex8 e = input[index];
+                const QGD_Complex8 p = input[index_pair];
+                input[index].real = u00r_s * e.real - u00i_s * e.imag + u10r_s * p.real - u10i_s * p.imag;
+                input[index].imag = u00r_s * e.imag + u00i_s * e.real + u10r_s * p.imag + u10i_s * p.real;
+                input[index_pair].real = u01r_s * e.real - u01i_s * e.imag + u11r_s * p.real - u11i_s * p.imag;
+                input[index_pair].imag = u01r_s * e.imag + u01i_s * e.real + u11r_s * p.imag + u11i_s * p.real;
+            };
 
             int current_idx      = 0;
             int current_idx_pair = index_step_target;
@@ -1254,16 +1284,7 @@ apply_kernel_from_right_AVX_parallel32(Matrix_float& u3_1qbit, Matrix_float& inp
                     for (int c = col_idx / 2; c < index_step_target; c++) {
                         const int index      = row_offset + current_idx      + c;
                         const int index_pair = row_offset + current_idx_pair + c;
-                        QGD_Complex8 e = input[index];
-                        QGD_Complex8 p = input[index_pair];
-                        QGD_Complex8 t1 = mult(u3_1qbit[0], e);
-                        QGD_Complex8 t2 = mult(u3_1qbit[2], p);
-                        input[index].real = t1.real + t2.real;
-                        input[index].imag = t1.imag + t2.imag;
-                        t1 = mult(u3_1qbit[1], e);
-                        t2 = mult(u3_1qbit[3], p);
-                        input[index_pair].real = t1.real + t2.real;
-                        input[index_pair].imag = t1.imag + t2.imag;
+                        apply_pair_scalar(index, index_pair);
                     }
 
                 } else {
@@ -1273,16 +1294,7 @@ apply_kernel_from_right_AVX_parallel32(Matrix_float& u3_1qbit, Matrix_float& inp
                         if ((col >> control_qbit) & 1) {
                             const int index      = row_offset + col;
                             const int index_pair = row_offset + col_pair;
-                            QGD_Complex8 e = input[index];
-                            QGD_Complex8 p = input[index_pair];
-                            QGD_Complex8 t1 = mult(u3_1qbit[0], e);
-                            QGD_Complex8 t2 = mult(u3_1qbit[2], p);
-                            input[index].real = t1.real + t2.real;
-                            input[index].imag = t1.imag + t2.imag;
-                            t1 = mult(u3_1qbit[1], e);
-                            t2 = mult(u3_1qbit[3], p);
-                            input[index_pair].real = t1.real + t2.real;
-                            input[index_pair].imag = t1.imag + t2.imag;
+                            apply_pair_scalar(index, index_pair);
                         }
                     }
                 }
@@ -1295,6 +1307,5 @@ apply_kernel_from_right_AVX_parallel32(Matrix_float& u3_1qbit, Matrix_float& inp
 
     (void)matrix_size;
 }
-
 
 

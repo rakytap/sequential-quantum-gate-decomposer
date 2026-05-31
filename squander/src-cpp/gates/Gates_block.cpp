@@ -334,19 +334,42 @@ static std::vector<int> all_qubits(int qbit_num) {
     return qubits;
 }
 
+struct BlockDerivativeWorkspace {
+    std::vector<Gate> suffix_gates;
+    std::vector<Matrix> suffix_matrices;
+    std::vector<Matrix> forward_inputs;
+};
+
+struct BlockDerivativeWorkspaceFloat {
+    std::vector<Gate> suffix_gates;
+    std::vector<Matrix_float> suffix_matrices;
+    std::vector<Matrix_float> forward_inputs;
+};
+
+static void prepare_suffix_gates(std::vector<Gate>& suffix_gates, size_t gate_count, int qbit_num) {
+    if (suffix_gates.size() == gate_count
+        && (suffix_gates.empty() || suffix_gates[0].get_qbit_num() == qbit_num)) {
+        return;
+    }
+
+    suffix_gates.clear();
+    suffix_gates.reserve(gate_count);
+    for (size_t idx = 0; idx < gate_count; ++idx) {
+        suffix_gates.emplace_back(qbit_num);
+    }
+}
+
 static void build_suffix_gates(
     const std::vector<Gate*>& gates,
     int qbit_num,
     int matrix_size,
     Matrix_real& parameters_mtx_in,
     const Matrix_real& precomputed_sincos,
-    std::vector<Gate>& suffix_gates) {
+    std::vector<Gate>& suffix_gates,
+    std::vector<Matrix>& suffix_matrices) {
 
-    suffix_gates.clear();
-    suffix_gates.reserve(gates.size());
-    for (size_t idx = 0; idx < gates.size(); ++idx) {
-        suffix_gates.emplace_back(qbit_num);
-    }
+    prepare_suffix_gates(suffix_gates, gates.size(), qbit_num);
+    suffix_matrices.resize(gates.size());
 
     if (gates.size() < 2) {
         return;
@@ -358,7 +381,7 @@ static void build_suffix_gates(
 
     for (int idx = static_cast<int>(gates.size()) - 1; idx >= 0; --idx) {
         if (static_cast<size_t>(idx) + 1 < gates.size()) {
-            Matrix suffix_after_current;
+            Matrix& suffix_after_current = suffix_matrices[static_cast<size_t>(idx)];
             suffix.copy_to(suffix_after_current);
             Gate& suffix_gate = suffix_gates[static_cast<size_t>(idx)];
             suffix_gate.set_target_qbits(targets);
@@ -481,13 +504,11 @@ static void build_suffix_gates(
     int matrix_size,
     Matrix_real_float& parameters_mtx_in,
     const Matrix_real_float& precomputed_sincos,
-    std::vector<Gate>& suffix_gates) {
+    std::vector<Gate>& suffix_gates,
+    std::vector<Matrix_float>& suffix_matrices) {
 
-    suffix_gates.clear();
-    suffix_gates.reserve(gates.size());
-    for (size_t idx = 0; idx < gates.size(); ++idx) {
-        suffix_gates.emplace_back(qbit_num);
-    }
+    prepare_suffix_gates(suffix_gates, gates.size(), qbit_num);
+    suffix_matrices.resize(gates.size());
 
     if (gates.size() < 2) {
         return;
@@ -499,7 +520,7 @@ static void build_suffix_gates(
 
     for (int idx = static_cast<int>(gates.size()) - 1; idx >= 0; --idx) {
         if (static_cast<size_t>(idx) + 1 < gates.size()) {
-            Matrix_float suffix_after_current;
+            Matrix_float& suffix_after_current = suffix_matrices[static_cast<size_t>(idx)];
             suffix.copy_to(suffix_after_current);
             Gate& suffix_gate = suffix_gates[static_cast<size_t>(idx)];
             suffix_gate.set_target_qbits(targets);
@@ -986,17 +1007,26 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input, i
     }
 
     Matrix_real precomputed_sincos = precompute_block_sincos(parameters_mtx_in);
-    std::vector<Gate> suffix_gates;
-    std::vector<Matrix> forward_inputs(gates.size());
+    static tbb::enumerable_thread_specific<std::deque<BlockDerivativeWorkspace>> workspace_tls;
+    std::deque<BlockDerivativeWorkspace>& workspaces = workspace_tls.local();
+    int& workspace_depth = gates_block_derivative_depth.local();
+    if (workspaces.size() <= static_cast<size_t>(workspace_depth)) {
+        workspaces.resize(static_cast<size_t>(workspace_depth) + 1);
+    }
+    BlockDerivativeWorkspace& workspace = workspaces[static_cast<size_t>(workspace_depth)];
+    std::vector<Gate>& suffix_gates = workspace.suffix_gates;
+    std::vector<Matrix>& suffix_matrices = workspace.suffix_matrices;
+    std::vector<Matrix>& forward_inputs = workspace.forward_inputs;
+    forward_inputs.resize(gates.size());
 
     if (parallel == 0 || gates.size() < 2) {
-        build_suffix_gates(gates, qbit_num, matrix_size, parameters_mtx_in, precomputed_sincos, suffix_gates);
+        build_suffix_gates(gates, qbit_num, matrix_size, parameters_mtx_in, precomputed_sincos, suffix_gates, suffix_matrices);
         build_forward_inputs(gates, input, parameters_mtx_in, precomputed_sincos, parallel, forward_inputs);
     }
     else {
         tbb::parallel_invoke(
             [&]() {
-                build_suffix_gates(gates, qbit_num, matrix_size, parameters_mtx_in, precomputed_sincos, suffix_gates);
+                build_suffix_gates(gates, qbit_num, matrix_size, parameters_mtx_in, precomputed_sincos, suffix_gates, suffix_matrices);
             },
             [&]() {
                 build_forward_inputs(gates, input, parameters_mtx_in, precomputed_sincos, parallel, forward_inputs);
@@ -1023,8 +1053,14 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input, i
         Matrix& input_loc = input_loc_reusable[derivative_depth];
         forward_inputs[deriv_idx].copy_to(input_loc);
 
-        std::vector<Matrix> grad_loc;
-        grad_loc.reserve(parameter_num);
+        static tbb::enumerable_thread_specific<std::deque<std::vector<Matrix>>> grad_loc_reusable_tls([](){ return std::deque<std::vector<Matrix>>{}; });
+        std::deque<std::vector<Matrix>>& grad_loc_reusable = grad_loc_reusable_tls.local();
+        if (grad_loc_reusable.size() <= static_cast<size_t>(derivative_depth)) {
+            grad_loc_reusable.resize(derivative_depth + 1);
+        }
+        std::vector<Matrix>& grad_loc = grad_loc_reusable[derivative_depth];
+        grad_loc.clear();
+        grad_loc.reserve(static_cast<size_t>(gate_deriv->get_parameter_num()));
 
         derivative_depth++;
         Gate* operation = gates[deriv_idx];
@@ -1033,7 +1069,7 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input, i
         Matrix_real parameters_mtx(parameters_mtx_in.get_data() + op_param_start_idx, 1, op_param_num);
 
         if (operation->get_type() == ADAPTIVE_OPERATION) {
-            grad_loc = operation->apply_derivate_to( parameters_mtx, input_loc, parallel );
+            operation->apply_derivate_to( parameters_mtx, input_loc, parallel, grad_loc );
         }
         else {
             operation->apply_derivate_to( parameters_mtx, input_loc, parallel, grad_loc );
@@ -1116,17 +1152,26 @@ Gates_block::apply_derivate_to( Matrix_real_float& parameters_mtx_in, Matrix_flo
     }
 
     Matrix_real_float precomputed_sincos = precompute_block_sincos(parameters_mtx_in);
-    std::vector<Gate> suffix_gates;
-    std::vector<Matrix_float> forward_inputs(gates.size());
+    static tbb::enumerable_thread_specific<std::deque<BlockDerivativeWorkspaceFloat>> workspace_tls;
+    std::deque<BlockDerivativeWorkspaceFloat>& workspaces = workspace_tls.local();
+    int& workspace_depth = gates_block_derivative_depth.local();
+    if (workspaces.size() <= static_cast<size_t>(workspace_depth)) {
+        workspaces.resize(static_cast<size_t>(workspace_depth) + 1);
+    }
+    BlockDerivativeWorkspaceFloat& workspace = workspaces[static_cast<size_t>(workspace_depth)];
+    std::vector<Gate>& suffix_gates = workspace.suffix_gates;
+    std::vector<Matrix_float>& suffix_matrices = workspace.suffix_matrices;
+    std::vector<Matrix_float>& forward_inputs = workspace.forward_inputs;
+    forward_inputs.resize(gates.size());
 
     if (parallel == 0 || gates.size() < 2) {
-        build_suffix_gates(gates, qbit_num, matrix_size, parameters_mtx_in, precomputed_sincos, suffix_gates);
+        build_suffix_gates(gates, qbit_num, matrix_size, parameters_mtx_in, precomputed_sincos, suffix_gates, suffix_matrices);
         build_forward_inputs(gates, input, parameters_mtx_in, precomputed_sincos, parallel, forward_inputs);
     }
     else {
         tbb::parallel_invoke(
             [&]() {
-                build_suffix_gates(gates, qbit_num, matrix_size, parameters_mtx_in, precomputed_sincos, suffix_gates);
+                build_suffix_gates(gates, qbit_num, matrix_size, parameters_mtx_in, precomputed_sincos, suffix_gates, suffix_matrices);
             },
             [&]() {
                 build_forward_inputs(gates, input, parameters_mtx_in, precomputed_sincos, parallel, forward_inputs);
@@ -1153,8 +1198,14 @@ Gates_block::apply_derivate_to( Matrix_real_float& parameters_mtx_in, Matrix_flo
         Matrix_float& input_loc = input_loc_reusable[derivative_depth];
         forward_inputs[deriv_idx].copy_to(input_loc);
 
-        std::vector<Matrix_float> grad_loc;
-        grad_loc.reserve(parameter_num);
+        static tbb::enumerable_thread_specific<std::deque<std::vector<Matrix_float>>> grad_loc_reusable_tls([](){ return std::deque<std::vector<Matrix_float>>{}; });
+        std::deque<std::vector<Matrix_float>>& grad_loc_reusable = grad_loc_reusable_tls.local();
+        if (grad_loc_reusable.size() <= static_cast<size_t>(derivative_depth)) {
+            grad_loc_reusable.resize(derivative_depth + 1);
+        }
+        std::vector<Matrix_float>& grad_loc = grad_loc_reusable[derivative_depth];
+        grad_loc.clear();
+        grad_loc.reserve(static_cast<size_t>(gate_deriv->get_parameter_num()));
 
         derivative_depth++;
         Gate* operation = gates[deriv_idx];
@@ -1163,7 +1214,7 @@ Gates_block::apply_derivate_to( Matrix_real_float& parameters_mtx_in, Matrix_flo
         Matrix_real_float parameters_mtx(parameters_mtx_in.get_data() + op_param_start_idx, 1, op_param_num);
 
         if (operation->get_type() == ADAPTIVE_OPERATION) {
-            grad_loc = operation->apply_derivate_to( parameters_mtx, input_loc, parallel );
+            operation->apply_derivate_to( parameters_mtx, input_loc, parallel, grad_loc );
         }
         else {
             operation->apply_derivate_to( parameters_mtx, input_loc, parallel, grad_loc );
