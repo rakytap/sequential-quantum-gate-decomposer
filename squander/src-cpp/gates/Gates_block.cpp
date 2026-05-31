@@ -391,6 +391,90 @@ static void build_suffix_gates(
     }
 }
 
+static void build_forward_inputs(
+    const std::vector<Gate*>& gates,
+    Matrix& input,
+    Matrix_real& parameters_mtx_in,
+    const Matrix_real& precomputed_sincos,
+    int parallel,
+    std::vector<Matrix>& forward_inputs) {
+
+    forward_inputs.resize(gates.size());
+    if (gates.empty()) {
+        return;
+    }
+
+    input.copy_to(forward_inputs[0]);
+    for (size_t idx = 0; idx + 1 < gates.size(); ++idx) {
+        forward_inputs[idx].copy_to(forward_inputs[idx + 1]);
+        Gate* operation = gates[idx];
+        const int op_param_num = operation->get_parameter_num();
+        const int op_param_start_idx = operation->get_parameter_start_idx();
+        Matrix_real parameters_mtx(
+            parameters_mtx_in.get_data() + op_param_start_idx,
+            1,
+            op_param_num
+        );
+        Matrix_real precomputed_sincos_loc(
+            precomputed_sincos.get_data() + 2 * op_param_start_idx,
+            op_param_num,
+            2
+        );
+
+        if (op_param_num == 0) {
+            operation->apply_to(forward_inputs[idx + 1], parallel);
+        }
+        else if (operation->get_type() == ADAPTIVE_OPERATION) {
+            operation->apply_to(parameters_mtx, forward_inputs[idx + 1], parallel);
+        }
+        else {
+            operation->apply_to_inner(parameters_mtx, precomputed_sincos_loc, forward_inputs[idx + 1], parallel);
+        }
+    }
+}
+
+static void build_forward_inputs(
+    const std::vector<Gate*>& gates,
+    Matrix_float& input,
+    Matrix_real_float& parameters_mtx_in,
+    const Matrix_real_float& precomputed_sincos,
+    int parallel,
+    std::vector<Matrix_float>& forward_inputs) {
+
+    forward_inputs.resize(gates.size());
+    if (gates.empty()) {
+        return;
+    }
+
+    input.copy_to(forward_inputs[0]);
+    for (size_t idx = 0; idx + 1 < gates.size(); ++idx) {
+        forward_inputs[idx].copy_to(forward_inputs[idx + 1]);
+        Gate* operation = gates[idx];
+        const int op_param_num = operation->get_parameter_num();
+        const int op_param_start_idx = operation->get_parameter_start_idx();
+        Matrix_real_float parameters_mtx(
+            parameters_mtx_in.get_data() + op_param_start_idx,
+            1,
+            op_param_num
+        );
+        Matrix_real_float precomputed_sincos_loc(
+            precomputed_sincos.get_data() + 2 * op_param_start_idx,
+            op_param_num,
+            2
+        );
+
+        if (op_param_num == 0) {
+            operation->apply_to(forward_inputs[idx + 1], parallel);
+        }
+        else if (operation->get_type() == ADAPTIVE_OPERATION) {
+            operation->apply_to(parameters_mtx, forward_inputs[idx + 1], parallel);
+        }
+        else {
+            operation->apply_to_inner(parameters_mtx, precomputed_sincos_loc, forward_inputs[idx + 1], parallel);
+        }
+    }
+}
+
 static void build_suffix_gates(
     const std::vector<Gate*>& gates,
     int qbit_num,
@@ -903,37 +987,21 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input, i
 
     Matrix_real precomputed_sincos = precompute_block_sincos(parameters_mtx_in);
     std::vector<Gate> suffix_gates;
-    build_suffix_gates(gates, qbit_num, matrix_size, parameters_mtx_in, precomputed_sincos, suffix_gates);
-
     std::vector<Matrix> forward_inputs(gates.size());
-    if (!gates.empty()) {
-        input.copy_to(forward_inputs[0]);
-        for (size_t idx = 0; idx + 1 < gates.size(); ++idx) {
-            forward_inputs[idx].copy_to(forward_inputs[idx + 1]);
-            Gate* operation = gates[idx];
-            const int op_param_num = operation->get_parameter_num();
-            const int op_param_start_idx = operation->get_parameter_start_idx();
-            Matrix_real parameters_mtx(
-                parameters_mtx_in.get_data() + op_param_start_idx,
-                1,
-                op_param_num
-            );
-            Matrix_real precomputed_sincos_loc(
-                precomputed_sincos.get_data() + 2 * op_param_start_idx,
-                op_param_num,
-                2
-            );
 
-            if (op_param_num == 0) {
-                operation->apply_to(forward_inputs[idx + 1], parallel);
+    if (parallel == 0 || gates.size() < 2) {
+        build_suffix_gates(gates, qbit_num, matrix_size, parameters_mtx_in, precomputed_sincos, suffix_gates);
+        build_forward_inputs(gates, input, parameters_mtx_in, precomputed_sincos, parallel, forward_inputs);
+    }
+    else {
+        tbb::parallel_invoke(
+            [&]() {
+                build_suffix_gates(gates, qbit_num, matrix_size, parameters_mtx_in, precomputed_sincos, suffix_gates);
+            },
+            [&]() {
+                build_forward_inputs(gates, input, parameters_mtx_in, precomputed_sincos, parallel, forward_inputs);
             }
-            else if (operation->get_type() == ADAPTIVE_OPERATION) {
-                operation->apply_to(parameters_mtx, forward_inputs[idx + 1], parallel);
-            }
-            else {
-                operation->apply_to_inner(parameters_mtx, precomputed_sincos_loc, forward_inputs[idx + 1], parallel);
-            }
-        }
+        );
     }
 
     auto apply_derivative_for_gate = [&](size_t deriv_idx) {
@@ -1049,37 +1117,21 @@ Gates_block::apply_derivate_to( Matrix_real_float& parameters_mtx_in, Matrix_flo
 
     Matrix_real_float precomputed_sincos = precompute_block_sincos(parameters_mtx_in);
     std::vector<Gate> suffix_gates;
-    build_suffix_gates(gates, qbit_num, matrix_size, parameters_mtx_in, precomputed_sincos, suffix_gates);
-
     std::vector<Matrix_float> forward_inputs(gates.size());
-    if (!gates.empty()) {
-        input.copy_to(forward_inputs[0]);
-        for (size_t idx = 0; idx + 1 < gates.size(); ++idx) {
-            forward_inputs[idx].copy_to(forward_inputs[idx + 1]);
-            Gate* operation = gates[idx];
-            const int op_param_num = operation->get_parameter_num();
-            const int op_param_start_idx = operation->get_parameter_start_idx();
-            Matrix_real_float parameters_mtx(
-                parameters_mtx_in.get_data() + op_param_start_idx,
-                1,
-                op_param_num
-            );
-            Matrix_real_float precomputed_sincos_loc(
-                precomputed_sincos.get_data() + 2 * op_param_start_idx,
-                op_param_num,
-                2
-            );
 
-            if (op_param_num == 0) {
-                operation->apply_to(forward_inputs[idx + 1], parallel);
+    if (parallel == 0 || gates.size() < 2) {
+        build_suffix_gates(gates, qbit_num, matrix_size, parameters_mtx_in, precomputed_sincos, suffix_gates);
+        build_forward_inputs(gates, input, parameters_mtx_in, precomputed_sincos, parallel, forward_inputs);
+    }
+    else {
+        tbb::parallel_invoke(
+            [&]() {
+                build_suffix_gates(gates, qbit_num, matrix_size, parameters_mtx_in, precomputed_sincos, suffix_gates);
+            },
+            [&]() {
+                build_forward_inputs(gates, input, parameters_mtx_in, precomputed_sincos, parallel, forward_inputs);
             }
-            else if (operation->get_type() == ADAPTIVE_OPERATION) {
-                operation->apply_to(parameters_mtx, forward_inputs[idx + 1], parallel);
-            }
-            else {
-                operation->apply_to_inner(parameters_mtx, precomputed_sincos_loc, forward_inputs[idx + 1], parallel);
-            }
-        }
+        );
     }
 
     auto apply_derivative_for_gate = [&](size_t deriv_idx) {

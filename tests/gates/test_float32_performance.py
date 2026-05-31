@@ -63,8 +63,8 @@ def _time_apply(gate, dtype):
 @pytest.mark.parametrize(
     "gate_factory,gate_name,min_speedup",
     [
-        pytest.param(_make_cnot, "CNOT", MIN_CNOT_SPEEDUP, id="CNOT"),
         pytest.param(_make_u3, "U3", MIN_FLOAT32_SPEEDUP, id="U3"),
+        pytest.param(_make_cnot, "CNOT", MIN_CNOT_SPEEDUP, id="CNOT"),
     ],
 )
 def test_float32_apply_to_hot_path_has_expected_speed(gate_factory, gate_name, min_speedup):

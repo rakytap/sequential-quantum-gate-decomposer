@@ -109,3 +109,43 @@ def test_float32_combined_handles_nested_gate_blocks_repeatedly():
         cost, grad = decomp.Optimization_Problem_Combined(parameters)
         assert np.isfinite(cost)
         assert np.asarray(grad).dtype == np.float32
+
+
+def test_nested_gate_block_combined_gradient_matches_finite_difference():
+    qbit_num = 3
+    inner = Circuit(qbit_num)
+    inner.add_U3(0)
+    inner.add_U3(1)
+    inner.add_CNOT(1, 0)
+    inner.add_U3(2)
+    inner.add_CNOT(2, 1)
+    inner.add_U3(0)
+
+    outer = Circuit(qbit_num)
+    outer.add_U3(2)
+    outer.add_Circuit(inner)
+    outer.add_U3(1)
+
+    parameters = np.linspace(0.1, 1.7, 18, dtype=np.float64)
+    decomp = N_Qubit_Decomposition_custom(
+        _identity(qbit_num, dtype=np.complex128),
+        config={"parallel": 0},
+    )
+    decomp.set_Gate_Structure(outer)
+
+    _, grad = decomp.Optimization_Problem_Combined(parameters)
+    grad = np.asarray(grad)
+
+    eps = 1e-7
+    finite_diff = np.empty_like(parameters)
+    for idx in range(parameters.size):
+        params_plus = parameters.copy()
+        params_minus = parameters.copy()
+        params_plus[idx] += eps
+        params_minus[idx] -= eps
+        finite_diff[idx] = (
+            decomp.Optimization_Problem(params_plus)
+            - decomp.Optimization_Problem(params_minus)
+        ) / (2 * eps)
+
+    np.testing.assert_allclose(grad, finite_diff, rtol=1e-5, atol=1e-6)
