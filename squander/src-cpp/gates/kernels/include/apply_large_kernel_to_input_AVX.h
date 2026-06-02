@@ -113,50 +113,12 @@ inline void get_block_indices_fast(int iter_idx, const std::vector<int>& target_
 void precompute_index_mapping(const std::vector<int>& target_qubits, const std::vector<int>& non_targets, std::vector<int>& block_pattern);
 
 /**
-@brief Write the computed block back to the input matrix
-@param input The input matrix to be updated
-@param new_block_real The real parts of the new block
-@param new_block_imag The imaginary parts of the new block
-@param indices The indices where the new block should be written
-*/
-inline void write_out_block(Matrix& input, const std::vector<double>& new_block_real, const std::vector<double>& new_block_imag, const std::vector<int>& indices);
-
-/**
-@brief Perform complex multiplication and accumulation using AVX for a specific row and column
-@param mv_xy Precomputed AVX vectors for the unitary matrix
-@param rdx The row index of the unitary matrix
-@param cdx The column index of the unitary matrix
-@param indices The indices of the input matrix for the current block
-@param input The input matrix
-@param result The accumulated result of the multiplication (output parameter)
-*/
-inline void complex_prod_AVX(const __m256d* mv_xy, int rdx, int cdx,  const std::vector<int>& indices, const Matrix& input, __m256d& result);
-
-/**
 @brief Precompute AVX vectors for the unitary matrix to optimize complex multiplication
 @param gate_kernel_unitary The unitary matrix of the gate operation
 @param matrix_size The size of the unitary matrix
 @return Pointer to the precomputed AVX vectors
 */
 inline __m256d* construct_mv_xy_vectors(const Matrix& gate_kernel_unitary, const int& matrix_size);
-
-/**
-@brief Apply an n-qubit unitary operation to the input matrix using AVX optimization
-@param gate_kernel_unitary The unitary matrix of the gate operation
-@param input The input matrix to be transformed
-@param involved_qbits The qubits involved in the operation
-@param matrix_size The size of the input matrix
-*/
-void apply_nqbit_unitary_AVX( Matrix& gate_kernel_unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size );
-
-/**
-@brief Apply multi-qubit gate kernel to an input matrix using AVX optimization and parallel processing
-@param gate_kernel_unitary The 2^Nx2^N unitary matrix representing the gate operation
-@param input The input matrix on which the transformation is applied
-@param involved_qbits The qubits involved in the gate operation
-@param matrix_size The size of the input matrix (should be a power of 2)
-*/
-void apply_nqbit_unitary_parallel_AVX( Matrix& gate_kernel_unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size );
 
 /**
 @brief Apply two-qubit gate kernel to an input matrix using AVX optimization and OpenMP parallelization
@@ -201,8 +163,6 @@ void apply_large_kernel_from_right_AVX32(Matrix_float& unitary, Matrix_float& in
 void apply_large_kernel_from_right_AVX_OpenMP32(Matrix_float& unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size);
 void apply_large_kernel_from_right_AVX_TBB32(Matrix_float& unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size);
 
-void apply_nqbit_unitary_AVX32(Matrix_float& gate_kernel_unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size);
-void apply_nqbit_unitary_parallel_AVX32(Matrix_float& gate_kernel_unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size);
 void apply_2qbit_kernel_to_matrix_input_parallel_AVX_OpenMP32(Matrix_float& two_qbit_unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size);
 
 void apply_crot_kernel_to_matrix_input_AVX_parallel32(Matrix_float& u3_1qbit1, Matrix_float& u3_1qbit2, Matrix_float& input, const int& target_qbit, const int& control_qbit, const int& matrix_size);
