@@ -11,6 +11,7 @@ You may obtain a copy of the License at
 #ifndef QGD_MATH_H
 #define QGD_MATH_H
 
+#include <cstddef>
 #include <cmath>
 #if !defined(_WIN32)
 #include <math.h>
@@ -78,6 +79,9 @@ inline T qgd_cos(T x);
 template <typename T>
 inline void qgd_sincos(T x, T* s, T* c);
 
+template <typename T>
+inline void qgd_sincos_batch(const T* input, T* output, std::size_t count, int stride);
+
 template <>
 inline float qgd_sin<float>(float x) {
     return std::sin(x);
@@ -120,6 +124,22 @@ inline void qgd_sincos<double>(double x, double* s, double* c) {
 #else
     ::sincos(x, s, c);
 #endif
+}
+
+template <>
+inline void qgd_sincos_batch<float>(const float* input, float* output, std::size_t count, int stride) {
+    for (std::size_t idx = 0; idx < count; ++idx) {
+        const int offset = static_cast<int>(idx) * stride;
+        qgd_sincos<float>(input[idx], &output[offset + 0], &output[offset + 1]);
+    }
+}
+
+template <>
+inline void qgd_sincos_batch<double>(const double* input, double* output, std::size_t count, int stride) {
+    for (std::size_t idx = 0; idx < count; ++idx) {
+        const int offset = static_cast<int>(idx) * stride;
+        qgd_sincos<double>(input[idx], &output[offset + 0], &output[offset + 1]);
+    }
 }
 
 #endif

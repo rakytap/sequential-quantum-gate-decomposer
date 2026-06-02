@@ -24,6 +24,7 @@ limitations under the License.
 #include "apply_large_kernel_to_input.h"
 #include "tbb/tbb.h"
 #include <algorithm>
+#include <array>
 #include <type_traits>
 #include <utility>
 
@@ -38,6 +39,9 @@ void apply_large_kernel_from_right_impl(MatrixT& unitary, MatrixT& input, std::v
 
 template<typename MatrixT>
 void apply_nqbit_kernel_to_matrix_input_from_right_impl(MatrixT& unitary, MatrixT& input, std::vector<int> involved_qbits, const int& matrix_size);
+
+template<typename MatrixT>
+void apply_nqbit_kernel_to_matrix_input_impl(MatrixT& unitary, MatrixT& input, std::vector<int> involved_qbits, const int& matrix_size);
 
 template<typename MatrixT>
 void apply_2qbit_kernel_to_state_vector_input_impl(MatrixT& two_qbit_unitary, MatrixT& input, const int& inner_qbit, const int& outer_qbit, const int& matrix_size);
@@ -99,7 +103,12 @@ void apply_large_kernel_to_input_impl(MatrixT& unitary, MatrixT& input, std::vec
     }
     else 
     {
-        apply_2qbit_kernel_to_matrix_input_impl(unitary, input, involved_qbits[0], involved_qbits[1], matrix_size);
+        if (involved_qbits.size() == 2) {
+            apply_2qbit_kernel_to_matrix_input_impl(unitary, input, involved_qbits[0], involved_qbits[1], matrix_size);
+            return;
+        }
+
+        apply_nqbit_kernel_to_matrix_input_impl(unitary, input, std::move(involved_qbits), matrix_size);
     }
 }
 
@@ -120,6 +129,99 @@ void apply_large_kernel_from_right_impl(MatrixT& unitary, MatrixT& input, std::v
     }
 
     apply_nqbit_kernel_to_matrix_input_from_right_impl(unitary, input, std::move(involved_qbits), matrix_size);
+}
+
+template<typename MatrixT>
+void apply_nqbit_kernel_to_matrix_input_impl(MatrixT& unitary, MatrixT& input, std::vector<int> involved_qbits, const int& matrix_size) {
+
+    using ComplexT = KernelLargeComplexT<MatrixT>;
+
+    const int n = static_cast<int>(involved_qbits.size());
+    const int block_size = 1 << n;
+
+    if (input.cols == 1) {
+        throw std::invalid_argument("Left-apply large matrix-input dispatch received a column state vector.");
+    }
+
+    if (n < 2 || n > 5) {
+        throw std::invalid_argument("Unsupported number of qubits for left-applied matrix input.");
+    }
+
+    if (unitary.rows != block_size || unitary.cols != block_size) {
+        throw std::invalid_argument("Left-apply large-kernel dispatch received a mismatched local kernel size.");
+    }
+
+    std::sort(involved_qbits.begin(), involved_qbits.end());
+
+    int qubit_num = 0;
+    int dim = 1;
+    while (dim < matrix_size) {
+        dim <<= 1;
+        qubit_num++;
+    }
+
+    std::vector<int> non_targets;
+    non_targets.reserve(qubit_num - n);
+    for (int q = 0; q < qubit_num; ++q) {
+        if (!std::binary_search(involved_qbits.begin(), involved_qbits.end(), q)) {
+            non_targets.push_back(q);
+        }
+    }
+
+    std::vector<int> block_pattern(block_size);
+    for (int k = 0; k < block_size; ++k) {
+        int idx = 0;
+        for (int bit = 0; bit < n; ++bit) {
+            if (k & (1 << bit)) {
+                idx |= (1 << involved_qbits[bit]);
+            }
+        }
+        block_pattern[k] = idx;
+    }
+
+    const int num_blocks = matrix_size >> n;
+    const ComplexT* unitary_data = unitary.get_data();
+    ComplexT* input_data = input.get_data();
+    const int unitary_stride = unitary.stride;
+    const int input_stride = input.stride;
+    std::array<int, 32> indices;
+    std::array<ComplexT, 32> source;
+    std::array<ComplexT, 32> out;
+
+    for (int col = 0; col < input.cols; ++col) {
+        for (int iter_idx = 0; iter_idx < num_blocks; ++iter_idx) {
+            int base = 0;
+            for (size_t i = 0; i < non_targets.size(); ++i) {
+                if (iter_idx & (1ULL << i)) {
+                    base |= (1 << non_targets[i]);
+                }
+            }
+
+            for (int k = 0; k < block_size; ++k) {
+                indices[k] = base | block_pattern[k];
+                source[k] = input_data[indices[k] * input_stride + col];
+            }
+
+            for (int out_idx = 0; out_idx < block_size; ++out_idx) {
+                ComplexT accum{};
+                accum.real = 0;
+                accum.imag = 0;
+
+                for (int in_idx = 0; in_idx < block_size; ++in_idx) {
+                    const ComplexT kernel_element = unitary_data[out_idx * unitary_stride + in_idx];
+                    const ComplexT source_element = source[in_idx];
+                    accum.real += kernel_element.real * source_element.real - kernel_element.imag * source_element.imag;
+                    accum.imag += kernel_element.real * source_element.imag + kernel_element.imag * source_element.real;
+                }
+
+                out[out_idx] = accum;
+            }
+
+            for (int out_idx = 0; out_idx < block_size; ++out_idx) {
+                input_data[indices[out_idx] * input_stride + col] = out[out_idx];
+            }
+        }
+    }
 }
 
 template<typename MatrixT>
@@ -162,14 +264,17 @@ void apply_nqbit_kernel_to_matrix_input_from_right_impl(MatrixT& unitary, Matrix
         block_pattern[k] = idx;
     }
 
-    const MatrixT transposed = transpose_local_kernel_impl(unitary);
     const int num_blocks = matrix_size >> n;
-    std::vector<int> indices(block_size);
-    std::vector<ComplexT> source(block_size);
-    std::vector<ComplexT> out(block_size);
+    const ComplexT* unitary_data = unitary.get_data();
+    ComplexT* input_data = input.get_data();
+    const int unitary_stride = unitary.stride;
+    const int input_stride = input.stride;
+    std::array<int, 32> indices;
+    std::array<ComplexT, 32> source;
+    std::array<ComplexT, 32> out;
 
     for (int row = 0; row < input.rows; ++row) {
-        const int row_offset = row * input.stride;
+        const int row_offset = row * input_stride;
 
         for (int iter_idx = 0; iter_idx < num_blocks; ++iter_idx) {
             int base = 0;
@@ -181,7 +286,7 @@ void apply_nqbit_kernel_to_matrix_input_from_right_impl(MatrixT& unitary, Matrix
 
             for (int k = 0; k < block_size; ++k) {
                 indices[k] = base | block_pattern[k];
-                source[k] = input[row_offset + indices[k]];
+                source[k] = input_data[row_offset + indices[k]];
             }
 
             for (int out_idx = 0; out_idx < block_size; ++out_idx) {
@@ -189,18 +294,18 @@ void apply_nqbit_kernel_to_matrix_input_from_right_impl(MatrixT& unitary, Matrix
                 accum.real = 0;
                 accum.imag = 0;
 
-                const int kernel_row_offset = out_idx * block_size;
                 for (int in_idx = 0; in_idx < block_size; ++in_idx) {
-                    ComplexT tmp = mult(transposed[kernel_row_offset + in_idx], source[in_idx]);
-                    accum.real += tmp.real;
-                    accum.imag += tmp.imag;
+                    const ComplexT kernel_element = unitary_data[in_idx * unitary_stride + out_idx];
+                    const ComplexT source_element = source[in_idx];
+                    accum.real += kernel_element.real * source_element.real - kernel_element.imag * source_element.imag;
+                    accum.imag += kernel_element.real * source_element.imag + kernel_element.imag * source_element.real;
                 }
 
                 out[out_idx] = accum;
             }
 
             for (int out_idx = 0; out_idx < block_size; ++out_idx) {
-                input[row_offset + indices[out_idx]] = out[out_idx];
+                input_data[row_offset + indices[out_idx]] = out[out_idx];
             }
         }
     }
@@ -259,7 +364,7 @@ void apply_2qbit_kernel_to_state_vector_input_impl(MatrixT& two_qbit_unitary, Ma
 
 }
 /**
-@brief Call to apply kernel to apply two qubit gate kernel on an input matrix using AVX
+@brief Call to apply a two-qubit gate kernel on an input matrix
 @param two_qbit_unitary The 4x4 kernel of the gate operation
 @param input The input matrix on which the transformation is applied
 @param inner_qbit The lower significance qubit (little endian convention)

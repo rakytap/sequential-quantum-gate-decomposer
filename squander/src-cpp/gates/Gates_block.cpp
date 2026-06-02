@@ -273,15 +273,7 @@ static Matrix_real precompute_block_sincos(const Matrix_real& parameters) {
     }
 
     Matrix_real sincos(parameter_count, 2);
-    for (int idx = 0; idx < parameter_count; ++idx) {
-        double sin_theta;
-        double cos_theta;
-        qgd_sincos<double>((double)parameters[idx], &sin_theta, &cos_theta);
-
-        const int offset = idx * sincos.stride;
-        sincos[offset + 0] = sin_theta;
-        sincos[offset + 1] = cos_theta;
-    }
+    qgd_sincos_batch<double>(parameters.get_data(), sincos.get_data(), parameter_count, sincos.stride);
 
     return sincos;
 }
@@ -293,15 +285,7 @@ static Matrix_real_float precompute_block_sincos(const Matrix_real_float& parame
     }
 
     Matrix_real_float sincos(parameter_count, 2);
-    for (int idx = 0; idx < parameter_count; ++idx) {
-        float sin_theta;
-        float cos_theta;
-        qgd_sincos<float>((float)parameters[idx], &sin_theta, &cos_theta);
-
-        const int offset = idx * sincos.stride;
-        sincos[offset + 0] = sin_theta;
-        sincos[offset + 1] = cos_theta;
-    }
+    qgd_sincos_batch<float>(parameters.get_data(), sincos.get_data(), parameter_count, sincos.stride);
 
     return sincos;
 }

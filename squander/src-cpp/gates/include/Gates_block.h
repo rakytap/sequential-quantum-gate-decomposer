@@ -25,6 +25,7 @@ limitations under the License.
 
 #include <vector>
 #include <map>
+#include <tbb/spin_mutex.h>
 #include "common.h"
 #include "matrix_real.h"
 #include "matrix_real_any.h"

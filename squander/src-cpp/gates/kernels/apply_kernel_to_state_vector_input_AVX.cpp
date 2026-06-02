@@ -427,7 +427,7 @@ copies or substantial portions of the Software.
                 if (control_qbit < 0 || (current_idx & control_qbit_step_index) ) {
 
                     float* element = (float*)input.get_data() + 2 * current_idx;
-                    float* element_pair = (float*)input.get_data() + 2 * current_idx_pair;
+                    //float* element_pair = (float*)input.get_data() + 2 * current_idx_pair;
 
                     __m256 data_both = _mm256_loadu_ps(element);
                     __m256 data0 = _mm256_set_m128(_mm256_castps256_ps128(data_both), _mm256_castps256_ps128(data_both));
@@ -702,7 +702,7 @@ copies or substantial portions of the Software.
                 if (control_qbit < 0 || (current_idx & control_qbit_step_index) ) {
 
                     float* element = (float*)input.get_data() + 2 * current_idx;
-                    float* element_pair = (float*)input.get_data() + 2 * current_idx_pair;
+                    //float* element_pair = (float*)input.get_data() + 2 * current_idx_pair;
 
                     __m256 data_both = _mm256_loadu_ps(element);
                     __m256 data0 = _mm256_set_m128(_mm256_castps256_ps128(data_both), _mm256_castps256_ps128(data_both));
@@ -990,7 +990,7 @@ copies or substantial portions of the Software.
                 if (control_qbit < 0 || (current_idx & control_qbit_step_index) ) {
 
                     float* element = (float*)input.get_data() + 2 * current_idx;
-                    float* element_pair = (float*)input.get_data() + 2 * current_idx_pair;
+                    //float* element_pair = (float*)input.get_data() + 2 * current_idx_pair;
 
                     __m256 data_both = _mm256_loadu_ps(element);
                     __m256 data0 = _mm256_set_m128(_mm256_castps256_ps128(data_both), _mm256_castps256_ps128(data_both));

@@ -1440,15 +1440,7 @@ Gate::precompute_sincos(const Matrix_real& parameters) const {
     }
 
     Matrix_real sincos(parameter_num, 2);
-    for (int idx = 0; idx < parameter_num; ++idx) {
-        double sin_theta;
-        double cos_theta;
-        qgd_sincos<double>((double)parameters[idx], &sin_theta, &cos_theta);
-
-        const int offset = idx * sincos.stride;
-        sincos[offset + 0] = sin_theta;
-        sincos[offset + 1] = cos_theta;
-    }
+    qgd_sincos_batch<double>(parameters.get_data(), sincos.get_data(), parameter_num, sincos.stride);
 
     return sincos;
 }
@@ -1467,15 +1459,7 @@ Gate::precompute_sincos(const Matrix_real_float& parameters) const {
     }
 
     Matrix_real_float sincos(parameter_num, 2);
-    for (int idx = 0; idx < parameter_num; ++idx) {
-        float sin_theta;
-        float cos_theta;
-        qgd_sincos<float>((float)parameters[idx], &sin_theta, &cos_theta);
-
-        const int offset = idx * sincos.stride;
-        sincos[offset + 0] = sin_theta;
-        sincos[offset + 1] = cos_theta;
-    }
+    qgd_sincos_batch<float>(parameters.get_data(), sincos.get_data(), parameter_num, sincos.stride);
 
     return sincos;
 }
@@ -1566,7 +1550,7 @@ Gate::apply_kernel_to(Matrix& u3_1qbit, Matrix& input, bool deriv, int parallel,
             && matrix_alloc.cols == Power_of_2(involved_qbit_num);
         const bool can_use_large_kernel = !has_any_control
             && ((is_state_vector && involved_qbit_num >= 2 && involved_qbit_num <= 5)
-                || (!is_state_vector && involved_qbit_num == 2));
+                || (!is_state_vector && involved_qbit_num >= 2 && involved_qbit_num <= 5));
 
         if (has_full_matrix) {
             if (can_use_large_kernel) {
@@ -1639,7 +1623,7 @@ Gate::apply_kernel_to(Matrix& u3_1qbit, Matrix& input, bool deriv, int parallel,
         const int involved_qbit_num = static_cast<int>(involved_qbits.size());
         const bool can_use_large_kernel = !has_any_control
             && ((is_state_vector && involved_qbit_num >= 2 && involved_qbit_num <= 5)
-                || (!is_state_vector && involved_qbit_num == 2));
+                || (!is_state_vector && involved_qbit_num >= 2 && involved_qbit_num <= 5));
 
         if (can_use_large_kernel) {
             switch (parallel) {
@@ -1845,7 +1829,7 @@ Gate::apply_kernel_to(Matrix_float& u3_1qbit, Matrix_float& input, bool deriv, i
             && matrix_alloc32.cols == Power_of_2(involved_qbit_num);
         const bool can_use_large_kernel = !has_any_control
             && ((is_state_vector && involved_qbit_num >= 2 && involved_qbit_num <= 5)
-                || (!is_state_vector && involved_qbit_num == 2));
+                || (!is_state_vector && involved_qbit_num >= 2 && involved_qbit_num <= 5));
 
         if (has_full_matrix) {
             if (can_use_large_kernel) {
@@ -1910,7 +1894,7 @@ Gate::apply_kernel_to(Matrix_float& u3_1qbit, Matrix_float& input, bool deriv, i
         const int involved_qbit_num = static_cast<int>(involved_qbits.size());
         const bool can_use_large_kernel = !has_any_control
             && ((is_state_vector && involved_qbit_num >= 2 && involved_qbit_num <= 5)
-                || (!is_state_vector && involved_qbit_num == 2));
+                || (!is_state_vector && involved_qbit_num >= 2 && involved_qbit_num <= 5));
 
         if (can_use_large_kernel) {
 #ifdef USE_AVX
