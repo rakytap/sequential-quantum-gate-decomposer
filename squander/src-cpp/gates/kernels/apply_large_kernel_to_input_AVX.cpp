@@ -22,6 +22,7 @@ limitations under the License.
 
 
 #include "apply_large_kernel_to_input_AVX.h"
+#include "apply_kernel_to_state_vector_input_AVX.h"
 #include "tbb/tbb.h"
 #include "omp.h"
 
@@ -632,7 +633,7 @@ void apply_nqbit_unitary_parallel_AVX( Matrix& gate_kernel_unitary, Matrix& inpu
 @param involved_qbits The qubits involved in the gate operation (2 qubits)
 @param matrix_size The size of the input state vector (should be a power of 2)
 */
-void apply_2qbit_kernel_to_state_vector_input_AVX(Matrix& two_qbit_unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size){
+void apply_2qbit_kernel_to_state_vector_input_AVX_impl(Matrix& two_qbit_unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size){
     int inner_qbit = involved_qbits[0];
     int outer_qbit = involved_qbits[1];
     int index_step_outer = 1 << outer_qbit;
@@ -965,7 +966,7 @@ if (inner_qbit==0){
 @param matrix_size The size of the state vector (should be a power of 2).
 */
 
-void apply_3qbit_kernel_to_state_vector_input_AVX(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size){
+void apply_3qbit_kernel_to_state_vector_input_AVX_impl(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size){
     int inner_qbit = involved_qbits[0];
     int middle_qbit = involved_qbits[1];
     int outer_qbit = involved_qbits[2];
@@ -1129,7 +1130,7 @@ void apply_3qbit_kernel_to_state_vector_input_AVX(Matrix& unitary, Matrix& input
 @param involved_qbits The qubits involved in the gate operation (4 qubits)
 @param matrix_size The size of the input state vector (should be a power of 2)
 */
-void apply_4qbit_kernel_to_state_vector_input_AVX(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size){
+void apply_4qbit_kernel_to_state_vector_input_AVX_impl(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size){
     
     __m256d neg = _mm256_setr_pd(1.0, -1.0, 1.0, -1.0);
 
@@ -1332,7 +1333,7 @@ void apply_4qbit_kernel_to_state_vector_input_AVX(Matrix& unitary, Matrix& input
 @param matrix_size The size of the input state vector (should be a power of 2)
 */
 
-void apply_5qbit_kernel_to_state_vector_input_AVX(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size){
+void apply_5qbit_kernel_to_state_vector_input_AVX_impl(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size){
     __m256d neg = _mm256_setr_pd(1.0, -1.0, 1.0, -1.0);
     
     int index_step_inner   = 1 << involved_qbits[0];
@@ -1669,7 +1670,7 @@ void apply_5qbit_kernel_to_state_vector_input_AVX(Matrix& unitary, Matrix& input
 @param involved_qbits The qubits involved in the gate operation (2 qubits)
 @param matrix_size The size of the input state vector (should be a power of 2)
 */
-void apply_2qbit_kernel_to_state_vector_input_AVX_OpenMP(Matrix& two_qbit_unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size){
+void apply_2qbit_kernel_to_state_vector_input_AVX_OpenMP_impl(Matrix& two_qbit_unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size){
     int inner_qbit = involved_qbits[0];
     int outer_qbit = involved_qbits[1];
     int index_step_outer = 1 << outer_qbit;
@@ -1941,7 +1942,7 @@ if (inner_qbit==0){
 @param involved_qbits The qubits involved in the gate operation (2 qubits)
 @param matrix_size The size of the input state vector (should be a power of 2)
 */
-void apply_2qbit_kernel_to_state_vector_input_AVX_TBB(Matrix& two_qbit_unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size){
+void apply_2qbit_kernel_to_state_vector_input_AVX_TBB_impl(Matrix& two_qbit_unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size){
     int inner_qbit = involved_qbits[0];
     int outer_qbit = involved_qbits[1];
     int index_step_outer = 1 << outer_qbit;
@@ -2211,7 +2212,7 @@ void apply_2qbit_kernel_to_state_vector_input_AVX_TBB(Matrix& two_qbit_unitary, 
 @param involved_qbits The qubits involved in the gate operation (3 qubits)
 @param matrix_size The size of the input state vector (should be a power of 2)
 */
-void apply_3qbit_kernel_to_state_vector_input_AVX_OpenMP(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size){
+void apply_3qbit_kernel_to_state_vector_input_AVX_OpenMP_impl(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size){
     int inner_qbit = involved_qbits[0];
     int middle_qbit = involved_qbits[1];
     int outer_qbit = involved_qbits[2];
@@ -2384,7 +2385,7 @@ void apply_3qbit_kernel_to_state_vector_input_AVX_OpenMP(Matrix& unitary, Matrix
 @param involved_qbits The qubits involved in the gate operation (3 qubits)
 @param matrix_size The size of the input state vector (should be a power of 2)
 */
-void apply_3qbit_kernel_to_state_vector_input_AVX_TBB(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size){
+void apply_3qbit_kernel_to_state_vector_input_AVX_TBB_impl(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size){
     int inner_qbit = involved_qbits[0];
     int middle_qbit = involved_qbits[1];
     int outer_qbit = involved_qbits[2];
@@ -2559,7 +2560,7 @@ void apply_3qbit_kernel_to_state_vector_input_AVX_TBB(Matrix& unitary, Matrix& i
 @param involved_qbits The qubits involved in the gate operation (4 qubits)
 @param matrix_size The size of the input state vector (should be a power of 2)
 */
-void apply_4qbit_kernel_to_state_vector_input_AVX_OpenMP(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size){
+void apply_4qbit_kernel_to_state_vector_input_AVX_OpenMP_impl(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size){
     
     __m256d neg = _mm256_setr_pd(1.0, -1.0, 1.0, -1.0);
 
@@ -2756,7 +2757,7 @@ void apply_4qbit_kernel_to_state_vector_input_AVX_OpenMP(Matrix& unitary, Matrix
 @param involved_qbits The qubits involved in the gate operation (4 qubits)
 @param matrix_size The size of the input state vector (should be a power of 2)
 */
-void apply_4qbit_kernel_to_state_vector_input_AVX_TBB(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size){
+void apply_4qbit_kernel_to_state_vector_input_AVX_TBB_impl(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size){
     
     __m256d neg = _mm256_setr_pd(1.0, -1.0, 1.0, -1.0);
 
@@ -2958,7 +2959,7 @@ void apply_4qbit_kernel_to_state_vector_input_AVX_TBB(Matrix& unitary, Matrix& i
 @param involved_qbits The qubits involved in the gate operation (5 qubits)
 @param matrix_size The size of the input state vector (should be a power of 2)
 */
-void apply_5qbit_kernel_to_state_vector_input_AVX_OpenMP(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size){
+void apply_5qbit_kernel_to_state_vector_input_AVX_OpenMP_impl(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size){
     __m256d neg = _mm256_setr_pd(1.0, -1.0, 1.0, -1.0);
     
     int index_step_inner   = 1 << involved_qbits[0];
@@ -3295,7 +3296,7 @@ void apply_5qbit_kernel_to_state_vector_input_AVX_OpenMP(Matrix& unitary, Matrix
 @param involved_qbits The qubits involved in the gate operation (5 qubits)
 @param matrix_size The size of the input state vector (should be a power of 2)
 */
-void apply_5qbit_kernel_to_state_vector_input_AVX_TBB(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size){
+void apply_5qbit_kernel_to_state_vector_input_AVX_TBB_impl(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size){
     __m256d neg = _mm256_setr_pd(1.0, -1.0, 1.0, -1.0);
     
     int index_step_inner   = 1 << involved_qbits[0];
@@ -5936,15 +5937,15 @@ void apply_nqbit_unitary_parallel_AVX32(Matrix_float& gate_kernel_unitary, Matri
     (void)matrix_size;
 }
 
-void apply_2qbit_kernel_to_state_vector_input_AVX32(Matrix_float& two_qbit_unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size) {
+void apply_2qbit_kernel_to_state_vector_input_AVX32_impl(Matrix_float& two_qbit_unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size) {
     apply_fixed_qbit_unitary_AVX32<2>(two_qbit_unitary, input, std::move(involved_qbits), matrix_size);
 }
 
-void apply_2qbit_kernel_to_state_vector_input_AVX_OpenMP32(Matrix_float& two_qbit_unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size) {
+void apply_2qbit_kernel_to_state_vector_input_AVX_OpenMP32_impl(Matrix_float& two_qbit_unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size) {
     apply_fixed_qbit_unitary_AVX_OpenMP32<2>(two_qbit_unitary, input, std::move(involved_qbits), matrix_size);
 }
 
-void apply_2qbit_kernel_to_state_vector_input_AVX_TBB32(Matrix_float& two_qbit_unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size) {
+void apply_2qbit_kernel_to_state_vector_input_AVX_TBB32_impl(Matrix_float& two_qbit_unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size) {
     apply_fixed_qbit_unitary_AVX_TBB32<2>(two_qbit_unitary, input, std::move(involved_qbits), matrix_size);
 }
 
@@ -5952,39 +5953,39 @@ void apply_2qbit_kernel_to_matrix_input_parallel_AVX_OpenMP32(Matrix_float& two_
     apply_fixed_qbit_unitary_AVX_OpenMP32<2>(two_qbit_unitary, input, std::move(involved_qbits), matrix_size);
 }
 
-void apply_3qbit_kernel_to_state_vector_input_AVX32(Matrix_float& unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size) {
+void apply_3qbit_kernel_to_state_vector_input_AVX32_impl(Matrix_float& unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size) {
     apply_fixed_qbit_unitary_AVX32<3>(unitary, input, std::move(involved_qbits), matrix_size);
 }
 
-void apply_3qbit_kernel_to_state_vector_input_AVX_OpenMP32(Matrix_float& unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size) {
+void apply_3qbit_kernel_to_state_vector_input_AVX_OpenMP32_impl(Matrix_float& unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size) {
     apply_fixed_qbit_unitary_AVX_OpenMP32<3>(unitary, input, std::move(involved_qbits), matrix_size);
 }
 
-void apply_3qbit_kernel_to_state_vector_input_AVX_TBB32(Matrix_float& unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size) {
+void apply_3qbit_kernel_to_state_vector_input_AVX_TBB32_impl(Matrix_float& unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size) {
     apply_fixed_qbit_unitary_AVX_TBB32<3>(unitary, input, std::move(involved_qbits), matrix_size);
 }
 
-void apply_4qbit_kernel_to_state_vector_input_AVX32(Matrix_float& unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size) {
+void apply_4qbit_kernel_to_state_vector_input_AVX32_impl(Matrix_float& unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size) {
     apply_fixed_qbit_unitary_AVX32<4>(unitary, input, std::move(involved_qbits), matrix_size);
 }
 
-void apply_4qbit_kernel_to_state_vector_input_AVX_OpenMP32(Matrix_float& unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size) {
+void apply_4qbit_kernel_to_state_vector_input_AVX_OpenMP32_impl(Matrix_float& unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size) {
     apply_fixed_qbit_unitary_AVX_OpenMP32<4>(unitary, input, std::move(involved_qbits), matrix_size);
 }
 
-void apply_4qbit_kernel_to_state_vector_input_AVX_TBB32(Matrix_float& unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size) {
+void apply_4qbit_kernel_to_state_vector_input_AVX_TBB32_impl(Matrix_float& unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size) {
     apply_fixed_qbit_unitary_AVX_TBB32<4>(unitary, input, std::move(involved_qbits), matrix_size);
 }
 
-void apply_5qbit_kernel_to_state_vector_input_AVX32(Matrix_float& unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size) {
+void apply_5qbit_kernel_to_state_vector_input_AVX32_impl(Matrix_float& unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size) {
     apply_fixed_qbit_unitary_AVX32<5>(unitary, input, std::move(involved_qbits), matrix_size);
 }
 
-void apply_5qbit_kernel_to_state_vector_input_AVX_OpenMP32(Matrix_float& unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size) {
+void apply_5qbit_kernel_to_state_vector_input_AVX_OpenMP32_impl(Matrix_float& unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size) {
     apply_fixed_qbit_unitary_AVX_OpenMP32<5>(unitary, input, std::move(involved_qbits), matrix_size);
 }
 
-void apply_5qbit_kernel_to_state_vector_input_AVX_TBB32(Matrix_float& unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size) {
+void apply_5qbit_kernel_to_state_vector_input_AVX_TBB32_impl(Matrix_float& unitary, Matrix_float& input, std::vector<int> involved_qbits, const int& matrix_size) {
     apply_fixed_qbit_unitary_AVX_TBB32<5>(unitary, input, std::move(involved_qbits), matrix_size);
 }
 
