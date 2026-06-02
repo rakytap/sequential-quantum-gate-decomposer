@@ -23,6 +23,7 @@ limitations under the License.
 
 #include "apply_large_kernel_to_input_AVX.h"
 #include "apply_kernel_to_state_vector_input_AVX.h"
+#include <array>
 #include "tbb/tbb.h"
 #include "omp.h"
 
@@ -5803,8 +5804,8 @@ void apply_fixed_qbit_unitary_AVX_TBB32(Matrix_float& gate_kernel_unitary, Matri
 
     tbb::parallel_for(tbb::blocked_range<int>(0, num_blocks, 16), [&](const tbb::blocked_range<int>& range) {
         for (int iter_idx = range.begin(); iter_idx < range.end(); ++iter_idx) {
-            int indices[block_size];
-            QGD_Complex8 out[block_size];
+            std::array<int, 1 << n> indices;
+            std::array<QGD_Complex8, 1 << n> out;
 
             int base = 0;
             for (int i = 0; i < non_target_count; ++i) {
@@ -5821,7 +5822,7 @@ void apply_fixed_qbit_unitary_AVX_TBB32(Matrix_float& gate_kernel_unitary, Matri
                     __m256 result = _mm256_setzero_ps();
 
                     for (int cdx = 0; cdx < block_size; cdx += 4) {
-                        complex_prod_AVX32_fixed<n>(mv_xy, rdx, cdx, indices, input, col, result);
+                        complex_prod_AVX32_fixed<n>(mv_xy, rdx, cdx, indices.data(), input, col, result);
                     }
 
                     alignas(32) float acc[8];
