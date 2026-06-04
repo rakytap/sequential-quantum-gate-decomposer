@@ -2503,12 +2503,15 @@ class qgd_Wide_Circuit_Optimization:
 
         if strategy in ("seqpam-ilp", "seqpam-quick", "bqskit-sabre"):
             from squander import Qiskit_IO
+            import bqskit.compiler.compile as bqskit_compile_module
             from bqskit import Circuit as BQSKitCircuit, compile
             from bqskit.compiler import Compiler
             from bqskit.compiler.compile import (
+                build_sabre_mapping_workflow,
                 build_seqpam_mapping_optimization_workflow,
             )
             from bqskit.compiler.basepass import BasePass
+            from bqskit.passes.synthesis.synthesis import SynthesisPass
 
             class SquanderPartitioner(BasePass):
                 """BQSKit pass: replace circuit body with Squander ILP partition blocks (QASM round-trip)."""
@@ -2538,12 +2541,38 @@ class qgd_Wide_Circuit_Optimization:
                     )
                     circuit.become(partitioned_circuit_bqskit, False)
 
+            class SquanderSynthesisPass(SynthesisPass):
+                """BQSKit pass: keep partition blocks unchanged during routing-only SEQPAM."""
+
+                def __init__(self, *args, **kwargs):
+                    super().__init__()
+
+                async def synthesize(self, target, data=None):
+                    raise NotImplementedError(
+                        "SquanderSynthesisPass is routing-only and does not synthesize."
+                    )
+
+                async def run(self, circuit: BQSKitCircuit, data=None):
+                    return None
+
+            @contextlib.contextmanager
+            def patched_seqpam_workflow_classes(use_squander_partitioner: bool):
+                original_quick = bqskit_compile_module.QuickPartitioner
+                original_qsearch = bqskit_compile_module.QSearchSynthesisPass
+                original_leap = bqskit_compile_module.LEAPSynthesisPass
+                try:
+                    if use_squander_partitioner:
+                        bqskit_compile_module.QuickPartitioner = SquanderPartitioner
+                    bqskit_compile_module.QSearchSynthesisPass = SquanderSynthesisPass
+                    bqskit_compile_module.LEAPSynthesisPass = SquanderSynthesisPass
+                    yield
+                finally:
+                    bqskit_compile_module.QuickPartitioner = original_quick
+                    bqskit_compile_module.QSearchSynthesisPass = original_qsearch
+                    bqskit_compile_module.LEAPSynthesisPass = original_leap
+
             from bqskit.passes import (
-                GeneralizedSabreLayoutPass,
-                GeneralizedSabreRoutingPass,
                 SetModelPass,
-                IfThenElsePass,
-                QuickPartitioner,
             )
             from bqskit.ir.gates import CNOTGate  # example; extend as needed
             from bqskit.compiler.machine import MachineModel
@@ -2560,29 +2589,29 @@ class qgd_Wide_Circuit_Optimization:
             bqskit_circ = OPENQASM2Language().decode(qasm2.dumps(circo))
             # Customizable knobs
 
-            # Routing-only pass pipeline — NO optimization passes
-            mainflow = build_seqpam_mapping_optimization_workflow(
-                block_size=self.config["max_partition_size"]
-            )
             if strategy == "seqpam-ilp":
-                for curpass in mainflow._passes:
-                    if isinstance(curpass, IfThenElsePass):
-                        for i in range(len(curpass.on_true._passes)):
-                            if isinstance(curpass.on_true._passes[i], QuickPartitioner):
-                                curpass.on_true._passes[i] = SquanderPartitioner(
-                                    self.config["max_partition_size"]
-                                )
+                # Routing-only SEQPAM pass pipeline. Patch the classes BQSKit's
+                # workflow factory instantiates, so we do not depend on the private
+                # shape of the returned Workflow.
+                with patched_seqpam_workflow_classes(use_squander_partitioner=True):
+                    mainflow = build_seqpam_mapping_optimization_workflow(
+                        block_size=3 #self.config["max_partition_size"]
+                    )
+            elif strategy == "seqpam-quick":
+                # Keep BQSKit's QuickPartitioner, but replace QSearch/LEAP so
+                # routing does not synthesize/decompose partition blocks.
+                with patched_seqpam_workflow_classes(use_squander_partitioner=False):
+                    mainflow = build_seqpam_mapping_optimization_workflow(
+                        block_size=3 #self.config["max_partition_size"]
+                    )
+            elif strategy == "bqskit-sabre":
+                mainflow = build_sabre_mapping_workflow()
+            else:
+                raise ValueError(f"Unsupported BQSKit routing strategy: {strategy}")
 
             routing_workflow = [
                 SetModelPass(model),  # attach hardware model to circuit
-                *(
-                    (build_seqpam_mapping_optimization_workflow(),)
-                    if strategy != "bqskit-sabre"
-                    else (
-                        GeneralizedSabreLayoutPass(),  # SABRE-style layout
-                        GeneralizedSabreRoutingPass(),
-                    )
-                ),  # SABRE-style routing
+                mainflow,
             ]
 
             with Compiler() as compiler:
