@@ -8,7 +8,11 @@ pybind11 bindings for the SABRE routing engine.
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
 
+#include <algorithm>
+#include <stdexcept>
+#include <unordered_map>
 #include <utility>
+#include <vector>
 
 #include "sabre_router.hpp"
 
@@ -70,7 +74,7 @@ static std::vector<int> extract_int_array(py::handle obj) {
     }
     auto acc = arr.unchecked<1>();
     result.resize(acc.shape(0));
-    for (ssize_t i = 0; i < acc.shape(0); i++) {
+    for (py::ssize_t i = 0; i < acc.shape(0); i++) {
         result[i] = acc(i);
     }
     return result;
