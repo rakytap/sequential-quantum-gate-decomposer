@@ -2512,6 +2512,7 @@ class qgd_Wide_Circuit_Optimization:
             )
             from bqskit.compiler.basepass import BasePass
             from bqskit.passes.synthesis.synthesis import SynthesisPass
+            wide_circuit_optimizer = self
 
             class SquanderPartitioner(BasePass):
                 """BQSKit pass: replace circuit body with Squander ILP partition blocks (QASM round-trip)."""
@@ -2542,18 +2543,42 @@ class qgd_Wide_Circuit_Optimization:
                     circuit.become(partitioned_circuit_bqskit, False)
 
             class SquanderSynthesisPass(SynthesisPass):
-                """BQSKit pass: keep partition blocks unchanged during routing-only SEQPAM."""
+                """BQSKit synthesis pass: optimize partition blocks with Squander."""
 
                 def __init__(self, *args, **kwargs):
                     super().__init__()
+                    self.wide_circuit_optimizer = wide_circuit_optimizer
 
                 async def synthesize(self, target, data=None):
                     raise NotImplementedError(
-                        "SquanderSynthesisPass is routing-only and does not synthesize."
+                        "SquanderSynthesisPass optimizes BQSKit circuits via run()."
                     )
 
                 async def run(self, circuit: BQSKitCircuit, data=None):
-                    return None
+                    from squander import Qiskit_IO
+
+                    circ_qiskit = QuantumCircuit.from_qasm_str(
+                        OPENQASM2Language().encode(circuit)
+                    )
+                    circ, parameters = Qiskit_IO.convert_Qiskit_to_Squander(circ_qiskit)
+
+                    optimizer = qgd_Wide_Circuit_Optimization(
+                        {
+                            **self.wide_circuit_optimizer.config,
+                            "topology": None,
+                        }
+                    )
+                    optimized_circuit, optimized_parameters = optimizer.OptimizeWideCircuit(
+                        circ, parameters
+                    )
+
+                    optimized_qiskit = Qiskit_IO.get_Qiskit_Circuit(
+                        optimized_circuit, optimized_parameters
+                    )
+                    optimized_bqskit = OPENQASM2Language().decode(
+                        qasm2.dumps(optimized_qiskit)
+                    )
+                    circuit.become(optimized_bqskit, False)
 
             @contextlib.contextmanager
             def patched_seqpam_workflow_classes(use_squander_partitioner: bool):
